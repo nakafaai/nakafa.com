@@ -1,5 +1,3 @@
-import { captureServerException } from "@repo/analytics/posthog/server";
-import { importContentModule } from "@repo/contents/_lib/module";
 import { parseSubjectCategory } from "@repo/contents/_lib/subject/category";
 import {
   getGradeNonNumeric,
@@ -48,6 +46,7 @@ import {
   LayoutMaterialPagination,
   LayoutMaterialToc,
 } from "@/components/shared/layout-material";
+import { importContentModuleOrNull } from "@/lib/content/module";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
@@ -183,17 +182,11 @@ export default async function Page({
   }
 
   const filePath = getSlugPath(category, grade, material, slug);
-  const content = await importContentModule(filePath, locale).catch(
-    async (error) => {
-      await captureServerException(error, undefined, {
-        file_path: filePath,
-        locale,
-        source: "subject-content-module",
-      });
-
-      return null;
-    }
-  );
+  const content = await importContentModuleOrNull({
+    filePath,
+    locale,
+    source: "subject-content-module",
+  });
   const Content = content?.default;
   if (!Content) {
     notFound();

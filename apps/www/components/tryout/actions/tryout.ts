@@ -1,24 +1,19 @@
 "use server";
 
-import {
-  captureServerException,
-  extractDistinctIdFromPostHogCookie,
-} from "@repo/analytics/posthog/server";
 import { api } from "@repo/backend/convex/_generated/api";
-import { products } from "@repo/backend/convex/utils/polar/products";
 import { getPathname } from "@repo/internationalization/src/navigation";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
-import { cookies } from "next/headers";
-import { after } from "next/server";
+import { Effect } from "effect";
+import { createProCheckoutUrl } from "@/components/checkout/actions";
 import {
   revalidateTryoutOverview,
   revalidateTryoutSet,
   type TryoutSetRouteInput,
 } from "@/components/tryout/actions/revalidate";
 import { env } from "@/env";
+import { scheduleCurrentServerExceptionCapture } from "@/lib/analytics/server";
 import {
   AuthenticationRequiredError,
-  fetchAuthAction,
   fetchAuthMutation,
   requireAuth,
 } from "@/lib/auth/server";
@@ -46,6 +41,8 @@ export type StartTryoutResult =
   | { kind: "not-found" }
   | { kind: "unknown" };
 
+const unknownStartTryoutResult = { kind: "unknown" } as const;
+
 /** Builds a trusted absolute checkout return URL from one localized app path. */
 function getCheckoutSuccessUrl({
   locale,
@@ -69,7 +66,7 @@ function getCheckoutSuccessUrl({
 }
 
 /** Creates the checkout URL used when the tryout requires paid access. */
-async function getCheckoutUrl({
+function getCheckoutUrlEffect({
   locale,
   returnPath,
 }: {
@@ -82,37 +79,32 @@ async function getCheckoutUrl({
   });
 
   if (!successUrl) {
-    return null;
+    return Effect.succeed(null);
   }
 
-  try {
-    const result = await fetchAuthAction(
-      api.customers.actions.public.generateCheckoutLink,
-      {
-        productIds: [products.pro.id],
+  return Effect.tryPromise({
+    try: () =>
+      createProCheckoutUrl({
+        locale,
         successUrl,
-      }
-    );
-
-    return result.url;
-  } catch (error) {
-    after(async () => {
-      await captureServerException(
-        error,
-        extractDistinctIdFromPostHogCookie((await cookies()).toString()),
-        {
+      }),
+    catch: (error) => error,
+  }).pipe(
+    Effect.catchAll((error) =>
+      Effect.sync(() => {
+        scheduleCurrentServerExceptionCapture(error, {
           source: "tryout-checkout-url",
           success_url: successUrl,
-        }
-      );
-    });
+        });
 
-    return null;
-  }
+        return null;
+      })
+    )
+  );
 }
 
 /** Maps the public Convex start result into the route-level server action result. */
-async function getStartTryoutResult({
+function getStartTryoutResultEffect({
   locale,
   returnPath,
   startResult,
@@ -120,81 +112,97 @@ async function getStartTryoutResult({
   locale: StartTryoutInput["locale"];
   returnPath: string;
   startResult: StartTryoutMutationResult;
-}): Promise<StartTryoutResult> {
+}) {
   if (startResult.kind !== "requires-access") {
-    return startResult;
+    return Effect.succeed(startResult);
   }
 
-  const checkoutUrl = await getCheckoutUrl({
-    locale,
-    returnPath,
+  return Effect.gen(function* () {
+    const checkoutUrl = yield* getCheckoutUrlEffect({
+      locale,
+      returnPath,
+    });
+
+    if (!checkoutUrl) {
+      return unknownStartTryoutResult;
+    }
+
+    return {
+      kind: "requires-access",
+      url: checkoutUrl,
+    } as const;
   });
+}
 
-  if (!checkoutUrl) {
-    return { kind: "unknown" };
+/** Records unexpected start failures and returns the safe public fallback. */
+function recoverStartTryoutError(
+  error: unknown,
+  args: StartTryoutArgs
+): Effect.Effect<StartTryoutResult> {
+  if (error instanceof AuthenticationRequiredError) {
+    return Effect.succeed(unknownStartTryoutResult);
   }
 
-  return {
-    kind: "requires-access",
-    url: checkoutUrl,
-  };
+  return Effect.sync(() => {
+    scheduleCurrentServerExceptionCapture(error, {
+      locale: args.locale,
+      product: args.product,
+      source: "start-tryout",
+      tryout_slug: args.tryoutSlug,
+    });
+
+    return unknownStartTryoutResult;
+  });
 }
 
 /**
  * Starts one tryout attempt through Better Auth's official server helpers and
  * invalidates the SSR route family that depends on the new attempt state.
  */
-export async function startTryout({
+const startTryoutEffect = Effect.fn("www.tryout.start")(function* ({
   partKeys,
   returnPath,
   ...args
-}: StartTryoutInput): Promise<StartTryoutResult> {
-  try {
-    await requireAuth();
+}: StartTryoutInput) {
+  yield* Effect.tryPromise({
+    try: () => requireAuth(),
+    catch: (error) => error,
+  });
 
-    const result = await fetchAuthMutation(
-      api.tryouts.mutations.attempts.startTryout,
-      args
-    );
+  const result = yield* Effect.tryPromise({
+    try: () =>
+      fetchAuthMutation(api.tryouts.mutations.attempts.startTryout, args),
+    catch: (error) => error,
+  });
 
-    if (result.kind !== "started") {
-      return await getStartTryoutResult({
-        locale: args.locale,
-        returnPath,
-        startResult: result,
-      });
-    }
-
-    revalidateTryoutOverview({
+  if (result.kind !== "started") {
+    return yield* getStartTryoutResultEffect({
       locale: args.locale,
-      product: args.product,
+      returnPath,
+      startResult: result,
     });
-    revalidateTryoutSet({
-      locale: args.locale,
-      partKeys,
-      product: args.product,
-      tryoutSlug: args.tryoutSlug,
-    });
-
-    return result;
-  } catch (error) {
-    if (error instanceof AuthenticationRequiredError) {
-      return { kind: "unknown" };
-    }
-
-    after(async () => {
-      await captureServerException(
-        error,
-        extractDistinctIdFromPostHogCookie((await cookies()).toString()),
-        {
-          locale: args.locale,
-          product: args.product,
-          source: "start-tryout",
-          tryout_slug: args.tryoutSlug,
-        }
-      );
-    });
-
-    return { kind: "unknown" };
   }
+
+  revalidateTryoutOverview({
+    locale: args.locale,
+    product: args.product,
+  });
+  revalidateTryoutSet({
+    locale: args.locale,
+    partKeys,
+    product: args.product,
+    tryoutSlug: args.tryoutSlug,
+  });
+
+  return result;
+});
+
+export async function startTryout(
+  input: StartTryoutInput
+): Promise<StartTryoutResult> {
+  return await Effect.runPromise(
+    startTryoutEffect(input).pipe(
+      Effect.catchAll((error) => recoverStartTryoutError(error, input))
+    )
+  );
 }

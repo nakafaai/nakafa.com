@@ -7,20 +7,25 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
+import { headers } from "next/headers";
 import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
+import { use } from "react";
 import {
   PricingDithering,
   ProButton,
 } from "@/components/marketing/about/pricing.client";
-
-const PRO_PRICE = 8.99;
+import {
+  getProPricingDisplay,
+  pricingCountryHeaderName,
+} from "@/components/marketing/about/pricing-display";
 
 interface PricingFeatureProps {
   icon?: ComponentProps<typeof HugeIcons>["icon"];
   text: string;
 }
 
+/** Renders one pricing card feature row with a stable icon slot. */
 function PricingFeature({ text, icon }: PricingFeatureProps) {
   return (
     <div className="flex items-start gap-3">
@@ -30,8 +35,13 @@ function PricingFeature({ text, icon }: PricingFeatureProps) {
   );
 }
 
+/** Renders the marketing pricing section with request-location price display. */
 export function Pricing() {
   const t = useTranslations("Pricing");
+  const requestHeaders = use(headers());
+  const pricingDisplay = getProPricingDisplay(
+    requestHeaders.get(pricingCountryHeaderName)
+  );
 
   const freeFeatures = [
     t("free-feature-1"),
@@ -73,12 +83,9 @@ export function Pricing() {
                 <div className="pt-2">
                   <NumberFormat
                     className="font-semibold text-4xl tracking-tight"
-                    format={{
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    }}
-                    prefix="$"
-                    value={0}
+                    format={pricingDisplay.free.format}
+                    locales={pricingDisplay.free.locales}
+                    value={pricingDisplay.free.value}
                   />
                 </div>
               </div>
@@ -115,12 +122,9 @@ export function Pricing() {
                 <div className="flex items-baseline gap-1 pt-2">
                   <NumberFormat
                     className="font-semibold text-4xl tracking-tight"
-                    format={{
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    }}
-                    prefix="$"
-                    value={PRO_PRICE}
+                    format={pricingDisplay.pro.format}
+                    locales={pricingDisplay.pro.locales}
+                    value={pricingDisplay.pro.value}
                   />
                   <span className="ml-1 text-muted-foreground">
                     {t("pro-period")}

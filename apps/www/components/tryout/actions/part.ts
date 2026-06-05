@@ -1,18 +1,14 @@
 "use server";
 
-import {
-  captureServerException,
-  extractDistinctIdFromPostHogCookie,
-} from "@repo/analytics/posthog/server";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
-import { cookies } from "next/headers";
-import { after } from "next/server";
+import { Effect } from "effect";
 import {
   revalidateTryoutOverview,
   revalidateTryoutSet,
   type TryoutSetRouteInput,
 } from "@/components/tryout/actions/revalidate";
+import { scheduleCurrentServerExceptionCapture } from "@/lib/analytics/server";
 import {
   AuthenticationRequiredError,
   fetchAuthMutation,
@@ -52,6 +48,8 @@ export type CompleteTryoutPartResult =
   | CompletePartMutationResult
   | { kind: "unknown" };
 
+const unknownTryoutPartResult = { kind: "unknown" } as const;
+
 /** Revalidates the tryout routes that depend on one attempt's live runtime state. */
 function revalidateTryoutRoutes({
   locale,
@@ -71,75 +69,93 @@ function revalidateTryoutRoutes({
   });
 }
 
+/** Records unexpected part action failures and returns the safe public fallback. */
+function recoverTryoutPartError(
+  error: unknown,
+  args: StartTryoutPartInput | CompleteTryoutPartInput,
+  source: string
+) {
+  if (error instanceof AuthenticationRequiredError) {
+    return Effect.succeed(unknownTryoutPartResult);
+  }
+
+  return Effect.sync(() => {
+    scheduleCurrentServerExceptionCapture(error, {
+      locale: args.locale,
+      part_key: args.partKey,
+      product: args.product,
+      source,
+      tryout_attempt_id: args.tryoutAttemptId,
+      tryout_slug: args.tryoutSlug,
+    });
+
+    return unknownTryoutPartResult;
+  });
+}
+
 /**
  * Starts one tryout part through Better Auth's official server utilities and
  * invalidates the tryout routes whenever the runtime state changed.
  */
-export async function startTryoutPart({
+const startTryoutPartEffect = Effect.fn("www.tryout.part.start")(function* ({
   partKeys,
   ...args
-}: StartTryoutPartInput): Promise<StartTryoutPartResult> {
-  try {
-    await requireAuth();
+}: StartTryoutPartInput) {
+  yield* Effect.tryPromise({
+    try: () => requireAuth(),
+    catch: (error) => error,
+  });
 
-    const result = await fetchAuthMutation(
-      api.tryouts.mutations.attempts.startPart,
-      {
+  const result = yield* Effect.tryPromise({
+    try: () =>
+      fetchAuthMutation(api.tryouts.mutations.attempts.startPart, {
         partKey: args.partKey,
         tryoutAttemptId: args.tryoutAttemptId,
-      }
-    );
+      }),
+    catch: (error) => error,
+  });
 
-    revalidateTryoutRoutes({
-      locale: args.locale,
-      partKeys,
-      product: args.product,
-      tryoutSlug: args.tryoutSlug,
-    });
+  revalidateTryoutRoutes({
+    locale: args.locale,
+    partKeys,
+    product: args.product,
+    tryoutSlug: args.tryoutSlug,
+  });
 
-    return result;
-  } catch (error) {
-    if (error instanceof AuthenticationRequiredError) {
-      return { kind: "unknown" };
-    }
+  return result;
+});
 
-    after(async () => {
-      await captureServerException(
-        error,
-        extractDistinctIdFromPostHogCookie((await cookies()).toString()),
-        {
-          locale: args.locale,
-          part_key: args.partKey,
-          product: args.product,
-          source: "start-tryout-part",
-          tryout_attempt_id: args.tryoutAttemptId,
-          tryout_slug: args.tryoutSlug,
-        }
-      );
-    });
-
-    return { kind: "unknown" };
-  }
+export async function startTryoutPart(
+  input: StartTryoutPartInput
+): Promise<StartTryoutPartResult> {
+  return await Effect.runPromise(
+    startTryoutPartEffect(input).pipe(
+      Effect.catchAll((error) =>
+        recoverTryoutPartError(error, input, "start-tryout-part")
+      )
+    )
+  );
 }
 
 /**
  * Completes one tryout part through Better Auth's official server utilities and
  * invalidates the SSR route family that depends on the finished part state.
  */
-export async function completeTryoutPart({
-  partKeys,
-  ...args
-}: CompleteTryoutPartInput): Promise<CompleteTryoutPartResult> {
-  try {
-    await requireAuth();
+const completeTryoutPartEffect = Effect.fn("www.tryout.part.complete")(
+  function* ({ partKeys, ...args }: CompleteTryoutPartInput) {
+    yield* Effect.tryPromise({
+      try: () => requireAuth(),
+      catch: (error) => error,
+    });
 
-    const result = await fetchAuthMutation(
-      api.tryouts.mutations.attempts.completePart,
-      {
-        partKey: args.partKey,
-        tryoutAttemptId: args.tryoutAttemptId,
-      }
-    );
+    const result = yield* Effect.tryPromise({
+      try: () =>
+        fetchAuthMutation(api.tryouts.mutations.attempts.completePart, {
+          partKey: args.partKey,
+          tryoutAttemptId: args.tryoutAttemptId,
+        }),
+      catch: (error) => error,
+    });
 
     revalidateTryoutRoutes({
       locale: args.locale,
@@ -149,26 +165,17 @@ export async function completeTryoutPart({
     });
 
     return result;
-  } catch (error) {
-    if (error instanceof AuthenticationRequiredError) {
-      return { kind: "unknown" };
-    }
-
-    after(async () => {
-      await captureServerException(
-        error,
-        extractDistinctIdFromPostHogCookie((await cookies()).toString()),
-        {
-          locale: args.locale,
-          part_key: args.partKey,
-          product: args.product,
-          source: "complete-tryout-part",
-          tryout_attempt_id: args.tryoutAttemptId,
-          tryout_slug: args.tryoutSlug,
-        }
-      );
-    });
-
-    return { kind: "unknown" };
   }
+);
+
+export async function completeTryoutPart(
+  input: CompleteTryoutPartInput
+): Promise<CompleteTryoutPartResult> {
+  return await Effect.runPromise(
+    completeTryoutPartEffect(input).pipe(
+      Effect.catchAll((error) =>
+        recoverTryoutPartError(error, input, "complete-tryout-part")
+      )
+    )
+  );
 }

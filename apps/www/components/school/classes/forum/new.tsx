@@ -7,7 +7,6 @@ import {
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import { MIN_FORUM_THREAD_TEXT_LENGTH } from "@repo/backend/convex/classes/forums/utils/constants";
 import { PERMISSIONS } from "@repo/backend/convex/lib/helpers/permissions";
@@ -33,13 +32,14 @@ import { cn } from "@repo/design-system/lib/utils";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
 import { useParams, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Suspense } from "react";
 import { toast } from "sonner";
 import { getTag, getTagsByRole } from "@/components/school/classes/_data/tag";
 import { getSchoolClassesForumHref } from "@/components/school/classes/forum/helpers/routes";
+import { reportClientException } from "@/lib/analytics/client";
 import { useClass } from "@/lib/context/use-class";
 import { useClassPermissions } from "@/lib/hooks/use-class-permissions";
 
@@ -103,25 +103,36 @@ function SchoolClassesForumNewContent() {
       onChange: formSchema,
     },
     onSubmit: async ({ value }) => {
-      try {
-        const forumId = await createForum({ ...value, classId });
-        const href = getSchoolClassesForumHref({
-          classRouteId: routeParams.id,
-          forumId,
-          queryString: searchParams.toString(),
-          slug: routeParams.slug,
-        });
+      await Effect.runPromise(
+        Effect.tryPromise({
+          try: async () => {
+            const forumId = await createForum({ ...value, classId });
+            const href = getSchoolClassesForumHref({
+              classRouteId: routeParams.id,
+              forumId,
+              queryString: searchParams.toString(),
+              slug: routeParams.slug,
+            });
 
-        dialog.close();
-        form.reset();
-        router.push(href);
-      } catch (error) {
-        captureException(error, {
-          source: "school-forum-create",
-        });
-
-        toast.error(t("create-forum-failed"));
-      }
+            dialog.close();
+            form.reset();
+            router.push(href);
+          },
+          catch: (error) => error,
+        }).pipe(
+          Effect.catchAll((error) =>
+            reportClientException(error, {
+              source: "school-forum-create",
+            }).pipe(
+              Effect.zipRight(
+                Effect.sync(() => {
+                  toast.error(t("create-forum-failed"));
+                })
+              )
+            )
+          )
+        )
+      );
     },
   });
 

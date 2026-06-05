@@ -8,7 +8,6 @@ import {
   Tick01Icon,
   Time04Icon,
 } from "@hugeicons/core-free-icons";
-import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Calendar } from "@repo/design-system/components/ui/calendar";
@@ -37,6 +36,7 @@ import { cn } from "@repo/design-system/lib/utils";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
 import { startOfDay } from "date-fns";
+import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { Activity, useState } from "react";
 import { toast } from "sonner";
@@ -61,6 +61,7 @@ import {
   updateDate,
   updateTime,
 } from "@/components/school/classes/assessments/utils";
+import { reportClientException } from "@/lib/analytics/client";
 import { useClass } from "@/lib/context/use-class";
 
 interface AssessmentDialogShellProps {
@@ -203,16 +204,28 @@ function AssessmentDialogShell({
       onChange: createAssessmentFormSchema,
     },
     onSubmit: async ({ value }) => {
-      try {
-        await onSubmit(value);
-        form.reset();
-        setOpenAction(false);
-      } catch (error) {
-        captureException(error, {
-          source: "school-assessment-create",
-        });
-        toast.error(errorMessage);
-      }
+      await Effect.runPromise(
+        Effect.tryPromise({
+          try: async () => {
+            await onSubmit(value);
+            form.reset();
+            setOpenAction(false);
+          },
+          catch: (error) => error,
+        }).pipe(
+          Effect.catchAll((error) =>
+            reportClientException(error, {
+              source: "school-assessment-create",
+            }).pipe(
+              Effect.zipRight(
+                Effect.sync(() => {
+                  toast.error(errorMessage);
+                })
+              )
+            )
+          )
+        )
+      );
     },
   });
 

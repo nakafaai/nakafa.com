@@ -1,4 +1,6 @@
+import type { PolarCheckoutLocale } from "@repo/backend/convex/customers/checkout/localization";
 import type { ConvexTaggedError } from "@repo/backend/convex/lib/effect";
+import type { Locale } from "@repo/utilities/locales";
 import { Schema } from "effect";
 
 export const invalidCheckoutProductSelectionCode =
@@ -6,11 +8,16 @@ export const invalidCheckoutProductSelectionCode =
 export const invalidCheckoutSuccessUrlCode = "INVALID_CHECKOUT_SUCCESS_URL";
 
 export interface CheckoutRequestInput {
+  readonly customerIpAddress: string | null;
+  readonly locale: Locale;
   readonly productIds: readonly string[];
   readonly successUrl: string;
 }
 
 export interface CheckoutRequest {
+  readonly customerIpAddress: string | null;
+  readonly locale: Locale;
+  readonly polarLocale: PolarCheckoutLocale;
   readonly primaryProductId: string;
   readonly productIds: readonly string[];
   readonly successUrl: string;

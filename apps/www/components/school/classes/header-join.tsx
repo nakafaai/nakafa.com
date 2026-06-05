@@ -2,7 +2,6 @@
 
 import { InLoveIcon, Rocket01Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -20,9 +19,10 @@ import {
 } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
+import { reportClientException } from "@/lib/analytics/client";
 
 const form = Schema.Struct({
   code: Schema.Trim.pipe(Schema.minLength(1)),
@@ -50,18 +50,29 @@ export function SchoolClassesHeaderJoin() {
       onChange: formSchema,
     },
     onSubmit: async ({ value }) => {
-      try {
-        const { classId } = await joinClass(value);
-        router.push(`${pathname}/${classId}`);
-        openHandlers.close();
-        form.reset();
-      } catch (error) {
-        captureException(error, {
-          source: "school-class-join-header",
-        });
-
-        toast.error(t("join-class-failed"));
-      }
+      await Effect.runPromise(
+        Effect.tryPromise({
+          try: async () => {
+            const { classId } = await joinClass(value);
+            router.push(`${pathname}/${classId}`);
+            openHandlers.close();
+            form.reset();
+          },
+          catch: (error) => error,
+        }).pipe(
+          Effect.catchAll((error) =>
+            reportClientException(error, {
+              source: "school-class-join-header",
+            }).pipe(
+              Effect.zipRight(
+                Effect.sync(() => {
+                  toast.error(t("join-class-failed"));
+                })
+              )
+            )
+          )
+        )
+      );
     },
   });
 

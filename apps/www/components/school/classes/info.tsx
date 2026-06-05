@@ -2,7 +2,6 @@
 
 import { Cancel01Icon, PaintBrush04Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { SchoolClassImage } from "@repo/backend/convex/classes/schema";
 import { PERMISSIONS } from "@repo/backend/convex/lib/helpers/permissions";
@@ -21,9 +20,11 @@ import {
 } from "@repo/design-system/components/ui/sheet";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useMutation } from "convex/react";
+import { Effect } from "effect";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
+import { reportClientException } from "@/lib/analytics/client";
 import { useClass } from "@/lib/context/use-class";
 import { useClassPermissions } from "@/lib/hooks/use-class-permissions";
 
@@ -76,19 +77,26 @@ function InfoCustomizeButton() {
   const updateClassImage = useMutation(api.classes.mutations.updateClassImage);
 
   const handleImageClick = (image: SchoolClassImage) => {
-    startTransition(async () => {
-      try {
-        await updateClassImage({
-          classId,
-          image,
-        });
-        router.refresh();
-      } catch (error) {
-        captureException(error, {
-          image,
-          source: "school-class-image-update",
-        });
-      }
+    startTransition(() => {
+      Effect.runFork(
+        Effect.tryPromise({
+          try: async () => {
+            await updateClassImage({
+              classId,
+              image,
+            });
+            router.refresh();
+          },
+          catch: (error) => error,
+        }).pipe(
+          Effect.catchAll((error) =>
+            reportClientException(error, {
+              image,
+              source: "school-class-image-update",
+            })
+          )
+        )
+      );
     });
   };
 

@@ -1,8 +1,6 @@
-import { captureServerException } from "@repo/analytics/posthog/server";
 import { parseArticleCategory } from "@repo/contents/_lib/articles/category";
 import { getArticleReferences } from "@repo/contents/_lib/articles/references";
 import { getSlugPath } from "@repo/contents/_lib/articles/slug";
-import { importContentModule } from "@repo/contents/_lib/module";
 import { getHeadings } from "@repo/contents/_lib/toc";
 import { formatContentDateISO } from "@repo/contents/_shared/date";
 import type { ArticleCategory } from "@repo/contents/_types/articles/category";
@@ -28,6 +26,7 @@ import {
   LayoutMaterialMain,
   LayoutMaterialToc,
 } from "@/components/shared/layout-material";
+import { importContentModuleOrNull } from "@/lib/content/module";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
@@ -157,17 +156,11 @@ export default async function Page({
 }: PageProps<"/[locale]/articles/[category]/[slug]">) {
   const { locale, category, slug } = await getResolvedParams(params);
   const filePath = getSlugPath(category, slug);
-  const content = await importContentModule(filePath, locale).catch(
-    async (error) => {
-      await captureServerException(error, undefined, {
-        file_path: filePath,
-        locale,
-        source: "article-content-module",
-      });
-
-      return null;
-    }
-  );
+  const content = await importContentModuleOrNull({
+    filePath,
+    locale,
+    source: "article-content-module",
+  });
   const Content = content?.default;
   if (!Content) {
     notFound();

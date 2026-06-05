@@ -38,6 +38,11 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - Use `Effect.fn`, `Effect.Service`, `Schema.TaggedError`, `Effect.Cache`, `Config`, and `@effect/platform` APIs where they fit the seam.
 - Pure deterministic helpers should stay pure. A pure parser, path formatter, or route helper is still part of the Effect-native architecture when effectful callers compose it inside Effect programs.
 - If existing architecture is not Effect-native at an effectful seam, fix the seam directly instead of adding wrappers or compatibility patches around it.
+- App code is not exempt. In `apps/*`, Server Actions, Route Handlers, Server Components that load data, client event handlers that call mutations, scripts, dynamic imports, and analytics/logging boundaries must compose Effect programs and call `Effect.runPromise` only at the React, Next.js, CLI, or browser event boundary.
+- Do not start a non-fast-path Effect runtime inside a statically prerendered Server Component before Next.js has request data or uncached data. Installed `effect@3.21.2` creates fibers through `src/internal/runtime.ts` `unsafeRunPromiseExit()` -> `unsafeFork()` -> `FiberId.unsafeMake()`, and `src/internal/fiberId.ts` reads `Date.now()` for `startTimeMillis`; Next.js Cache Components reject that during static prerender. For SSG-only MDX/content dynamic imports, use the framework Promise boundary directly and document the exception with `https://nextjs.org/docs/messages/next-prerender-current-time`.
+- Do not preserve legacy raw `try/catch` or Promise `.catch()` in touched app code. Convert expected failures into Effect failures or explicit return values, then recover with `catchTag`, `catchTags`, `catchIf`, `match`, or a narrow outer `catchAll` that records the full cause/context.
+- Name shared modules by domain capability, not by the Effect implementation style. Prefer seams such as `lib/analytics`, `lib/content`, `lib/checkout`, or `lib/school`; do not create catch-all folders like `lib/effect` just because the implementation uses Effect.
+- After touching app effectful code, run `rg -n "\btry\s*\{|\bcatch\s*\(" <touched app paths> --glob '*.{ts,tsx}'` and either make it clean or document every remaining framework-mandated exception with the exact file and reason.
 
 ## Required Reading
 
@@ -183,6 +188,7 @@ Before any Next.js work, find and read the relevant installed Next.js doc. With 
 - Use semantic HTML and accessible component APIs.
 - Prefer Next.js primitives like `<Image>` when appropriate.
 - Keep server/client boundaries explicit and minimal.
+- When a static route hits Next.js current-time prerender errors, do not blindly add `connection()`. Installed Next.js docs state `connection()` opts the subtree into runtime rendering; use it only when the route is intentionally dynamic, not to hide an Effect runtime timestamp in content that should stay SSG.
 
 ## Convex Rules
 

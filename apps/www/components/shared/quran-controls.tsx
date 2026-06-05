@@ -8,6 +8,7 @@ import {
   DrawerPopup,
   DrawerTitle,
 } from "@repo/design-system/components/ui/drawer";
+import { Effect } from "effect";
 import { useEffectEvent, useLayoutEffect, useRef, useState } from "react";
 
 export interface QuranControlLabels {
@@ -264,7 +265,12 @@ export function QuranPageControls({
       audio.onerror = handlePlaybackFailure;
       audio.onended = stopThisAudio;
 
-      audio.play().catch(handlePlaybackFailure);
+      Effect.runFork(
+        Effect.tryPromise({
+          try: () => audio.play(),
+          catch: (error) => error,
+        }).pipe(Effect.catchAll(() => Effect.sync(handlePlaybackFailure)))
+      );
     }
 
     playNextSource();

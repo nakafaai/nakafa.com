@@ -9,7 +9,6 @@ import {
   Timer02Icon,
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -38,10 +37,11 @@ import {
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
 import { formatDuration } from "date-fns";
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { Activity, useLayoutEffect } from "react";
 import { toast } from "sonner";
+import { reportClientException } from "@/lib/analytics/client";
 import { useAttempt } from "@/lib/context/use-attempt";
 import { useExercise } from "@/lib/context/use-exercise";
 import { useUser } from "@/lib/context/use-user";
@@ -116,29 +116,40 @@ export function StartExerciseButton({
       const timeLimit =
         mode === "simulation" ? totalExercises * 90 : value.timeLimit;
 
-      try {
-        await startAttempt({
-          slug,
-          mode,
-          scope: "set",
-          totalExercises,
-          timeLimit,
-        });
-        close();
-        resetTimeSpent();
-        setShowStats(true);
-        toast.success(t("start-exercise-success"), {
-          position: "bottom-center",
-        });
-      } catch (error) {
-        captureException(error, {
-          source: "exercise-start-attempt",
-        });
-
-        toast.error(t("start-exercise-error"), {
-          position: "bottom-center",
-        });
-      }
+      await Effect.runPromise(
+        Effect.tryPromise({
+          try: async () => {
+            await startAttempt({
+              slug,
+              mode,
+              scope: "set",
+              totalExercises,
+              timeLimit,
+            });
+            close();
+            resetTimeSpent();
+            setShowStats(true);
+            toast.success(t("start-exercise-success"), {
+              position: "bottom-center",
+            });
+          },
+          catch: (error) => error,
+        }).pipe(
+          Effect.catchAll((error) =>
+            reportClientException(error, {
+              source: "exercise-start-attempt",
+            }).pipe(
+              Effect.zipRight(
+                Effect.sync(() => {
+                  toast.error(t("start-exercise-error"), {
+                    position: "bottom-center",
+                  });
+                })
+              )
+            )
+          )
+        )
+      );
     },
   });
 

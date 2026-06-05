@@ -1,3 +1,4 @@
+import { polarCheckoutDefaultLocale } from "@repo/backend/convex/customers/checkout/localization";
 import {
   type CheckoutRequest,
   type CheckoutRequestInput,
@@ -76,6 +77,9 @@ export const validateCheckoutRequest: (
   }
 
   return {
+    customerIpAddress: input.customerIpAddress,
+    locale: input.locale,
+    polarLocale: polarCheckoutDefaultLocale,
     primaryProductId,
     productIds: input.productIds,
     successUrl: input.successUrl,

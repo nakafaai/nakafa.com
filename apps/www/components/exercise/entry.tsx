@@ -1,11 +1,10 @@
-import { captureServerException } from "@repo/analytics/posthog/server";
-import { importContentModule } from "@repo/contents/_lib/module";
 import type { ExerciseWithoutDefaults } from "@repo/contents/_types/exercises/shared";
 import { slugify } from "@repo/design-system/lib/utils";
 import type { Locale } from "next-intl";
 import { Suspense } from "react";
 import { QuestionAnalytics } from "@/components/exercise/item/analytics";
 import { ExerciseArticle } from "@/components/exercise/item/article";
+import { importContentModuleOrNull } from "@/lib/content/module";
 
 /** Loads the compiled question module for one exercise entry. */
 async function QuestionContent({
@@ -18,17 +17,14 @@ async function QuestionContent({
   setPath: string;
 }) {
   const questionPath = `${setPath}/${exerciseNumber}/_question`;
-  const question = await importContentModule(questionPath, locale).catch(
-    async (error) => {
-      await captureServerException(error, undefined, {
-        exercise_number: exerciseNumber,
-        locale,
-        source: "exercise-question-module",
-      });
-
-      return null;
-    }
-  );
+  const question = await importContentModuleOrNull({
+    context: {
+      exercise_number: exerciseNumber,
+    },
+    filePath: questionPath,
+    locale,
+    source: "exercise-question-module",
+  });
   const Question = question?.default;
 
   return Question ? <Question /> : null;
@@ -45,17 +41,14 @@ async function AnswerContent({
   setPath: string;
 }) {
   const answerPath = `${setPath}/${exerciseNumber}/_answer`;
-  const answer = await importContentModule(answerPath, locale).catch(
-    async (error) => {
-      await captureServerException(error, undefined, {
-        exercise_number: exerciseNumber,
-        locale,
-        source: "exercise-answer-module",
-      });
-
-      return null;
-    }
-  );
+  const answer = await importContentModuleOrNull({
+    context: {
+      exercise_number: exerciseNumber,
+    },
+    filePath: answerPath,
+    locale,
+    source: "exercise-answer-module",
+  });
   const Answer = answer?.default;
 
   return Answer ? <Answer /> : null;

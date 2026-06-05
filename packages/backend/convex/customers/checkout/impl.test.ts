@@ -15,12 +15,40 @@ describe("customers/checkout/impl", () => {
 
     const request = await Effect.runPromise(
       validateCheckoutRequest({
+        customerIpAddress: "203.0.113.10",
+        locale: "en",
         productIds: [productId],
         successUrl,
       })
     );
 
     expect(request).toEqual({
+      customerIpAddress: "203.0.113.10",
+      locale: "en",
+      polarLocale: "en",
+      primaryProductId: productId,
+      productIds: [productId],
+      successUrl,
+    });
+  });
+
+  it("keeps Indonesian app locale separate from Polar checkout language", async () => {
+    const productId = products.pro.id;
+    const successUrl = `${siteOrigin}/id/home`;
+
+    const request = await Effect.runPromise(
+      validateCheckoutRequest({
+        customerIpAddress: "203.0.113.10",
+        locale: "id",
+        productIds: [productId],
+        successUrl,
+      })
+    );
+
+    expect(request).toEqual({
+      customerIpAddress: "203.0.113.10",
+      locale: "id",
+      polarLocale: "en",
       primaryProductId: productId,
       productIds: [productId],
       successUrl,
@@ -31,6 +59,8 @@ describe("customers/checkout/impl", () => {
     const result = await Effect.runPromise(
       Effect.either(
         validateCheckoutRequest({
+          customerIpAddress: null,
+          locale: "en",
           productIds: [],
           successUrl: `${siteOrigin}/en/home`,
         })
@@ -48,6 +78,8 @@ describe("customers/checkout/impl", () => {
     const result = await Effect.runPromise(
       Effect.either(
         validateCheckoutRequest({
+          customerIpAddress: null,
+          locale: "en",
           productIds: ["unsupported-product"],
           successUrl: `${siteOrigin}/en/home`,
         })
@@ -65,6 +97,8 @@ describe("customers/checkout/impl", () => {
     const result = await Effect.runPromise(
       Effect.either(
         validateCheckoutRequest({
+          customerIpAddress: null,
+          locale: "en",
           productIds: [products.pro.id],
           successUrl: "https://example.com/en/home",
         })
@@ -82,6 +116,8 @@ describe("customers/checkout/impl", () => {
     const result = await Effect.runPromise(
       Effect.either(
         validateCheckoutRequest({
+          customerIpAddress: null,
+          locale: "en",
           productIds: [products.pro.id],
           successUrl: "not-a-url",
         })

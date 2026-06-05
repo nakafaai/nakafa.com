@@ -1,7 +1,6 @@
 "use client";
 
 import { ArrowLeft02Icon, InLoveIcon } from "@hugeicons/core-free-icons";
-import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { SchoolClassVisibility } from "@repo/backend/convex/classes/schema";
@@ -22,10 +21,11 @@ import {
 } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { Activity, useTransition } from "react";
 import { toast } from "sonner";
+import { reportClientException } from "@/lib/analytics/client";
 import { useSchool } from "@/lib/context/use-school";
 
 const form = Schema.Struct({
@@ -57,18 +57,29 @@ export function SchoolClassesJoinForm({ classId, visibility }: Props) {
   const isPublic = visibility === "public";
 
   function handlePublicJoin() {
-    startTransition(async () => {
-      try {
-        await joinPublicClass({ classId });
-        router.replace(pathname);
-        router.refresh();
-      } catch (error) {
-        captureException(error, {
-          source: "school-class-join-public",
-        });
-
-        toast.error(t("join-class-failed"));
-      }
+    startTransition(() => {
+      Effect.runFork(
+        Effect.tryPromise({
+          try: async () => {
+            await joinPublicClass({ classId });
+            router.replace(pathname);
+            router.refresh();
+          },
+          catch: (error) => error,
+        }).pipe(
+          Effect.catchAll((error) =>
+            reportClientException(error, {
+              source: "school-class-join-public",
+            }).pipe(
+              Effect.zipRight(
+                Effect.sync(() => {
+                  toast.error(t("join-class-failed"));
+                })
+              )
+            )
+          )
+        )
+      );
     });
   }
 
@@ -78,17 +89,28 @@ export function SchoolClassesJoinForm({ classId, visibility }: Props) {
       onChange: formSchema,
     },
     onSubmit: async ({ value }) => {
-      try {
-        await joinClass(value);
-        router.replace(pathname);
-        router.refresh();
-      } catch (error) {
-        captureException(error, {
-          source: "school-class-join-private",
-        });
-
-        toast.error(t("join-class-failed"));
-      }
+      await Effect.runPromise(
+        Effect.tryPromise({
+          try: async () => {
+            await joinClass(value);
+            router.replace(pathname);
+            router.refresh();
+          },
+          catch: (error) => error,
+        }).pipe(
+          Effect.catchAll((error) =>
+            reportClientException(error, {
+              source: "school-class-join-private",
+            }).pipe(
+              Effect.zipRight(
+                Effect.sync(() => {
+                  toast.error(t("join-class-failed"));
+                })
+              )
+            )
+          )
+        )
+      );
     },
   });
 

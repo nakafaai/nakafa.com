@@ -33,6 +33,7 @@ import { cn } from "@repo/design-system/lib/utils";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { useMutation } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
+import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 import { Activity, useTransition } from "react";
@@ -186,13 +187,22 @@ function MaterialGroupActions({
   }
 
   function handleDelete() {
-    startTransition(async () => {
-      try {
-        await deleteGroup({ groupId: group._id });
-        toast.success(schoolT("material-deleted"));
-      } catch {
-        toast.error(schoolT("delete-material-failed"));
-      }
+    startTransition(() => {
+      Effect.runFork(
+        Effect.tryPromise({
+          try: async () => {
+            await deleteGroup({ groupId: group._id });
+            toast.success(schoolT("material-deleted"));
+          },
+          catch: (error) => error,
+        }).pipe(
+          Effect.catchAll(() =>
+            Effect.sync(() => {
+              toast.error(schoolT("delete-material-failed"));
+            })
+          )
+        )
+      );
     });
   }
 

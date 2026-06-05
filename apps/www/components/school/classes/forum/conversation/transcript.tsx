@@ -9,6 +9,7 @@ import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { useMutation } from "convex/react";
+import { Effect } from "effect";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   type ScrollToIndexOpts,
@@ -343,12 +344,22 @@ const HydratedTranscript = ({
         lastMarkedPostIdRef.current !== lastVisiblePostId
       ) {
         lastMarkedPostIdRef.current = lastVisiblePostId;
-        markForumRead({
-          forumId,
-          lastReadPostId: lastVisiblePostId,
-        }).catch(() => {
-          lastMarkedPostIdRef.current = null;
-        });
+        Effect.runFork(
+          Effect.tryPromise({
+            try: () =>
+              markForumRead({
+                forumId,
+                lastReadPostId: lastVisiblePostId,
+              }),
+            catch: (error) => error,
+          }).pipe(
+            Effect.catchAll(() =>
+              Effect.sync(() => {
+                lastMarkedPostIdRef.current = null;
+              })
+            )
+          )
+        );
       }
 
       const backView = backStackRef.current.at(-1);
