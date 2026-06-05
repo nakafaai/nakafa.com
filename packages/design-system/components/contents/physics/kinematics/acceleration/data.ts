@@ -1,7 +1,7 @@
 import { getColor } from "@repo/design-system/lib/color";
+import type { ReactNode } from "react";
 
 export type AccelerationCaseId = "speed-up" | "steady" | "slow-down";
-export type AccelerationLocale = "id" | "en";
 
 export interface AccelerationCase {
   color: string;
@@ -17,6 +17,24 @@ export interface AccelerationLabels {
   scenarioNames: Record<AccelerationCaseId, string>;
   timeAxis: string;
   velocityAxis: string;
+}
+
+export interface AccelerationLabLabels {
+  chooseCase: string;
+  factLabels: {
+    acceleration: ReactNode;
+    finalVelocity: ReactNode;
+    initialVelocity: ReactNode;
+    timeStep: ReactNode;
+  };
+  scenarioNames: Record<AccelerationCaseId, ReactNode>;
+  viewLabel: string;
+}
+
+export interface AccelerationLabProps {
+  description: ReactNode;
+  labels: AccelerationLabLabels;
+  title: ReactNode;
 }
 
 export const ACCELERATION_ROCKET_MODEL_PATH =
@@ -64,45 +82,6 @@ export const ACCELERATION_CASES: AccelerationCase[] = [
     v1: 2,
   },
 ];
-
-export const ACCELERATION_LAB_COPY = {
-  en: {
-    chooseCase: "Choose motion",
-    description:
-      "A chase camera follows the rocket while equal-time gates spread out, stay even, or bunch together.",
-    factLabels: {
-      acceleration: "Acceleration",
-      finalVelocity: "Final velocity",
-      initialVelocity: "Initial velocity",
-      timeStep: "Ghost interval",
-    },
-    scenarioNames: {
-      "slow-down": "Slowing Down",
-      "speed-up": "Speeding Up",
-      steady: "Constant",
-    },
-    title: "Rocket Acceleration Through Space",
-    viewLabel: "Rocket acceleration through space view",
-  },
-  id: {
-    chooseCase: "Pilih gerak",
-    description:
-      "Kamera mengikuti roket saat gerbang waktu yang berjarak 1 s makin renggang, tetap, atau makin rapat.",
-    factLabels: {
-      acceleration: "Percepatan",
-      finalVelocity: "Kecepatan akhir",
-      initialVelocity: "Kecepatan awal",
-      timeStep: "Selang bayangan",
-    },
-    scenarioNames: {
-      "slow-down": "Melambat",
-      "speed-up": "Makin Cepat",
-      steady: "Tetap",
-    },
-    title: "Percepatan Roket di Luar Angkasa",
-    viewLabel: "Tampilan percepatan roket di luar angkasa",
-  },
-} as const;
 
 export function getAccelerationCaseById(id: AccelerationCaseId) {
   return (

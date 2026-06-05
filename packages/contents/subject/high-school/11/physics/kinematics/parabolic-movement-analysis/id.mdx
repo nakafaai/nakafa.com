@@ -22,7 +22,33 @@ Setelah itu, arah mendatar dan arah vertikal dihitung dengan aturan yang berbeda
 
 > Kunci analisis gerak parabola adalah memakai waktu yang sama untuk dua arah yang berbeda.
 
-<ParabolicMovementAnalysisLab locale="id" />
+<ParabolicMovementAnalysisLab
+  decimalSeparator="comma"
+  title={<>Analisis Komponen Bola Meriam</>}
+  description={
+    <>
+      Bola meriam melintas di atas air, sementara bayangan bolanya menandai
+      selang waktu yang sama dari rumus yang dipakai dalam hitungan.
+    </>
+  }
+  labels={{
+    chooseScenario: "Pilih tembakan",
+    scenarioNames: {
+      "sixty-degree": <>Enam Puluh Derajat</>,
+      "long-drive": <>Jarak Jauh</>,
+      "high-arc": <>Lengkung Tinggi</>,
+    },
+    factLabels: {
+      horizontalComponent: <>Komponen mendatar</>,
+      verticalComponent: <>Komponen vertikal</>,
+      peakTime: <>Waktu puncak</>,
+      flightTime: <>Waktu terbang</>,
+      range: <>Jangkauan</>,
+      instantaneousVelocity: <>Kecepatan pada dua detik</>,
+    },
+    viewLabel: "Visual analisis gerak parabola bola meriam",
+  }}
+/>
 
 Lengkung dan bola bayangan menunjukkan posisi pada selang waktu yang sama, bukan lintasan mendatar dan vertikal yang terpisah. Angka di bawah adegan berasal dari pemecahan yang sama: <InlineMath math="v_{0x}" /> tetap, sedangkan <InlineMath math="v_y=v_{0y}-gt" /> berubah karena gravitasi menarik ke bawah.
 

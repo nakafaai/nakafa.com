@@ -7,11 +7,10 @@ import {
   formatMeterMath,
   formatVelocityMath,
   GLBB_COLORS,
-  GLBB_LAB_COPY,
   GLBB_SCENARIOS,
   GLBB_SCENE,
   GLBB_TRAIN_MODEL_PATH,
-  type GlbbLocale,
+  type GlbbLabProps,
   type GlbbMotionState,
   type GlbbScenarioId,
   getGlbbLoopTime,
@@ -45,14 +44,11 @@ const RAIL_COLOR = getColor("SLATE", 400);
 const SLEEPER_COLOR = getColor("STONE", 600);
 const SHADOW_COLOR = getColor("SLATE", 900);
 
-interface NonUniformLinearMotionLabProps {
-  locale: GlbbLocale;
-}
-
 export function NonUniformLinearMotionLab({
-  locale,
-}: NonUniformLinearMotionLabProps) {
-  const labels = GLBB_LAB_COPY[locale];
+  title,
+  description,
+  labels,
+}: GlbbLabProps) {
   const [scenarioId, setScenarioId] = useState<GlbbScenarioId>(
     DEFAULT_GLBB_SCENARIO_ID
   );
@@ -69,8 +65,8 @@ export function NonUniformLinearMotionLab({
   return (
     <Card className="overflow-hidden content-auto-card">
       <CardHeader>
-        <CardTitle>{labels.title}</CardTitle>
-        <CardDescription>{labels.description}</CardDescription>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
 
       <CardContent className="flex flex-col gap-4">
@@ -342,7 +338,7 @@ function LabFact({
   value,
 }: {
   indicatorColor?: string;
-  label: string;
+  label: ReactNode;
   value: ReactNode;
 }) {
   return (

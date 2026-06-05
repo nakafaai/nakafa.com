@@ -33,46 +33,30 @@ const TRAIL_POINT_COUNT = 8;
 const TRAILING_ZERO_PATTERN = /\.0$/;
 
 type Mode = (typeof MODES)[number];
-type Locale = "id" | "en";
-
-const COPY = {
-  id: {
-    condition: "Kondisi awal",
-    description:
-      "Pilih cara bola mulai bergerak untuk melihat gravitasi mengubah tinggi dan kecepatannya.",
-    finalVelocity: "Kecepatan akhir",
-    initialCondition: "Kondisi awal",
-    maxHeight: "Tinggi tertinggi",
-    modeLabels: {
-      drop: "Dijatuhkan",
-      throw: "Dilempar ke Atas",
-    },
-    time: "Waktu gerak",
-    title: "Bola pada Gerak Vertikal",
-  },
-  en: {
-    condition: "Initial condition",
-    description:
-      "Choose how the ball starts moving to see how gravity changes its height and velocity.",
-    finalVelocity: "Final velocity",
-    initialCondition: "Initial condition",
-    maxHeight: "Highest point",
-    modeLabels: {
-      drop: "Dropped",
-      throw: "Thrown Upward",
-    },
-    time: "Motion time",
-    title: "Ball in Vertical Motion",
-  },
-} as const;
+type DecimalSeparator = "comma" | "dot";
 
 interface VerticalMovementLabProps {
-  locale: Locale;
+  decimalSeparator?: DecimalSeparator;
+  description: ReactNode;
+  labels: {
+    condition: string;
+    finalVelocity: ReactNode;
+    initialCondition: ReactNode;
+    maxHeight: ReactNode;
+    modeLabels: Record<Mode, ReactNode>;
+    time: ReactNode;
+    viewLabel: string;
+  };
+  title: ReactNode;
 }
 
-export function VerticalMovementLab({ locale }: VerticalMovementLabProps) {
+export function VerticalMovementLab({
+  decimalSeparator,
+  title,
+  description,
+  labels,
+}: VerticalMovementLabProps) {
   const [mode, setMode] = useState<Mode>("throw");
-  const labels = COPY[locale];
   const motion = useMemo(() => getMotion(mode), [mode]);
 
   function handleModeChange(value: string) {
@@ -86,8 +70,8 @@ export function VerticalMovementLab({ locale }: VerticalMovementLabProps) {
   return (
     <Card className="overflow-hidden content-auto-card">
       <CardHeader>
-        <CardTitle>{labels.title}</CardTitle>
-        <CardDescription>{labels.description}</CardDescription>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
 
       <CardContent className="flex flex-col gap-4">
@@ -107,7 +91,7 @@ export function VerticalMovementLab({ locale }: VerticalMovementLabProps) {
         </ToggleGroup>
 
         <section
-          aria-label={labels.title}
+          aria-label={labels.viewLabel}
           className={threeSceneFrameVariants()}
         >
           <ThreeCanvas
@@ -152,12 +136,18 @@ export function VerticalMovementLab({ locale }: VerticalMovementLabProps) {
           />
           <LabFact
             label={labels.maxHeight}
-            value={<InlineMath math={formatMeter(motion.maxHeight, locale)} />}
+            value={
+              <InlineMath
+                math={formatMeter(motion.maxHeight, decimalSeparator)}
+              />
+            }
           />
           <LabFact
             label={labels.time}
             value={
-              <InlineMath math={formatSeconds(motion.motionTime, locale)} />
+              <InlineMath
+                math={formatSeconds(motion.motionTime, decimalSeparator)}
+              />
             }
           />
           <LabFact
@@ -280,7 +270,7 @@ function AnimatedBall({ motion }: { motion: MotionState }) {
   );
 }
 
-function LabFact({ label, value }: { label: string; value: ReactNode }) {
+function LabFact({ label, value }: { label: ReactNode; value: ReactNode }) {
   return (
     <div className="space-y-1">
       <dt className="text-muted-foreground">{label}</dt>
@@ -336,19 +326,19 @@ function getInitialConditionKey(motion: MotionState) {
   return `${motion.startVelocity}-${motion.startHeight}`;
 }
 
-function formatMeter(value: number, locale: Locale) {
-  return `${formatDecimal(value, locale)}\\text{ m}`;
+function formatMeter(value: number, decimalSeparator?: DecimalSeparator) {
+  return `${formatDecimal(value, decimalSeparator)}\\text{ m}`;
 }
 
-function formatSeconds(value: number, locale: Locale) {
-  return `${formatDecimal(value, locale)}\\text{ s}`;
+function formatSeconds(value: number, decimalSeparator?: DecimalSeparator) {
+  return `${formatDecimal(value, decimalSeparator)}\\text{ s}`;
 }
 
 function formatSpeed(value: number) {
   return `${Math.round(value)}\\text{ m/s}`;
 }
 
-function formatDecimal(value: number, locale: Locale) {
+function formatDecimal(value: number, decimalSeparator?: DecimalSeparator) {
   const rounded = value.toFixed(1).replace(TRAILING_ZERO_PATTERN, "");
-  return locale === "id" ? rounded.replace(".", "{,}") : rounded;
+  return decimalSeparator === "comma" ? rounded.replace(".", "{,}") : rounded;
 }

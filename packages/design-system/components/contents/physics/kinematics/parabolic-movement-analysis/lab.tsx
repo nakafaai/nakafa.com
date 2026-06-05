@@ -9,11 +9,10 @@ import {
   getProjectileMotionState,
   getVelocityAtTime,
   isProjectileScenarioId,
-  PROJECTILE_ANALYSIS_COPY,
   PROJECTILE_INSTANT_TIME,
   PROJECTILE_SCENARIOS,
   PROJECTILE_SCENE,
-  type ProjectileAnalysisLocale,
+  type ProjectileAnalysisLabProps,
   type ProjectileScenarioId,
 } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/data";
 import { PirateProjectileScene } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/scene";
@@ -39,11 +38,11 @@ import { type ReactNode, Suspense, useMemo, useState } from "react";
 const FLASH_COLOR = getColor("ORANGE", 500);
 
 export function ParabolicMovementAnalysisLab({
-  locale,
-}: {
-  locale: ProjectileAnalysisLocale;
-}) {
-  const labels = PROJECTILE_ANALYSIS_COPY[locale];
+  decimalSeparator,
+  title,
+  description,
+  labels,
+}: ProjectileAnalysisLabProps) {
   const [scenarioId, setScenarioId] = useState<ProjectileScenarioId>(
     DEFAULT_PROJECTILE_SCENARIO_ID
   );
@@ -54,45 +53,65 @@ export function ParabolicMovementAnalysisLab({
   const instantVelocity = getVelocityAtTime(motion, PROJECTILE_INSTANT_TIME);
   const facts = [
     {
+      id: "horizontal-component",
       label: labels.factLabels.horizontalComponent,
       value: (
         <InlineMath
-          math={`v_{0x}=${formatSpeedMath(motion.horizontalVelocity, locale)}`}
+          math={`v_{0x}=${formatSpeedMath(
+            motion.horizontalVelocity,
+            decimalSeparator
+          )}`}
         />
       ),
     },
     {
+      id: "vertical-component",
       label: labels.factLabels.verticalComponent,
       value: (
         <InlineMath
-          math={`v_{0y}=${formatSpeedMath(motion.verticalVelocity, locale)}`}
+          math={`v_{0y}=${formatSpeedMath(
+            motion.verticalVelocity,
+            decimalSeparator
+          )}`}
         />
       ),
     },
     {
+      id: "peak-time",
       label: labels.factLabels.peakTime,
       value: (
-        <InlineMath math={`t=${formatSecondMath(motion.peakTime, locale)}`} />
+        <InlineMath
+          math={`t=${formatSecondMath(motion.peakTime, decimalSeparator)}`}
+        />
       ),
     },
     {
+      id: "flight-time",
       label: labels.factLabels.flightTime,
       value: (
-        <InlineMath math={`T=${formatSecondMath(motion.flightTime, locale)}`} />
+        <InlineMath
+          math={`T=${formatSecondMath(motion.flightTime, decimalSeparator)}`}
+        />
       ),
     },
     {
+      id: "range",
       label: labels.factLabels.range,
-      value: <InlineMath math={`R=${formatMeterMath(motion.range, locale)}`} />,
+      value: (
+        <InlineMath
+          math={`R=${formatMeterMath(motion.range, decimalSeparator)}`}
+        />
+      ),
     },
     {
+      id: "instantaneous-velocity",
       label: labels.factLabels.instantaneousVelocity,
       value: (
         <InlineMath
           math={`\\vec{v}=${formatVelocityVectorMath(
             instantVelocity.horizontalVelocity,
             instantVelocity.verticalVelocity,
-            locale
+            decimalSeparator
           )}`}
         />
       ),
@@ -110,8 +129,8 @@ export function ParabolicMovementAnalysisLab({
   return (
     <Card className="overflow-hidden content-auto-card">
       <CardHeader>
-        <CardTitle>{labels.title}</CardTitle>
-        <CardDescription>{labels.description}</CardDescription>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
 
       <CardContent className="flex flex-col gap-4">
@@ -176,7 +195,7 @@ export function ParabolicMovementAnalysisLab({
       <CardFooter className="border-t">
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
           {facts.map((fact) => (
-            <LabFact key={fact.label} label={fact.label} value={fact.value} />
+            <LabFact key={fact.id} label={fact.label} value={fact.value} />
           ))}
         </dl>
       </CardFooter>
@@ -184,7 +203,7 @@ export function ParabolicMovementAnalysisLab({
   );
 }
 
-function LabFact({ label, value }: { label: string; value: ReactNode }) {
+function LabFact({ label, value }: { label: ReactNode; value: ReactNode }) {
   return (
     <div className="flex min-w-0 flex-col gap-1">
       <dt className="text-muted-foreground">{label}</dt>

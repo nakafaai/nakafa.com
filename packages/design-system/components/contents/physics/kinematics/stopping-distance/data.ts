@@ -1,4 +1,5 @@
 import { getColor } from "@repo/design-system/lib/color";
+import type { ReactNode } from "react";
 
 export const STOPPING_DISTANCE_CAR_MODEL_PATH =
   "/models/physics/kinematics/kenney-car-kit/suv.glb";
@@ -11,7 +12,20 @@ export const STOPPING_DISTANCE_SPEEDS = [10, 20, 30] as const;
 
 export type StoppingDistanceSpeed = (typeof STOPPING_DISTANCE_SPEEDS)[number];
 
-export type StoppingDistanceLocale = "id" | "en";
+export interface StoppingDistanceLabLabels {
+  brakingDistance: ReactNode;
+  chooseSpeed: string;
+  reactionDistance: ReactNode;
+  speed: ReactNode;
+  stoppingDistance: ReactNode;
+  viewLabel: string;
+}
+
+export interface StoppingDistanceLabProps {
+  description: ReactNode;
+  labels: StoppingDistanceLabLabels;
+  title: ReactNode;
+}
 
 export const STOPPING_DISTANCE_REACTION_TIME = 1;
 export const STOPPING_DISTANCE_BRAKING_DECELERATION = 5;
@@ -35,31 +49,6 @@ export const STOPPING_DISTANCE_SCENE = {
   roadLength: WORLD_MAX_STOP_X - WORLD_START_X + WORLD_ROAD_MARGIN * 2,
   roadWidth: 1.9,
   worldScale: WORLD_SCALE,
-} as const;
-
-export const STOPPING_DISTANCE_COPY = {
-  id: {
-    brakingDistance: "Jarak pengereman",
-    chooseSpeed: "Pilih kecepatan awal",
-    description:
-      "Ubah kecepatan awal untuk melihat jarak reaksi hijau dan jarak pengereman oranye.",
-    reactionDistance: "Jarak reaksi",
-    speed: "Kecepatan awal",
-    stoppingDistance: "Jarak henti",
-    title: "Jarak Henti Mobil",
-    viewLabel: "Tampilan jarak henti mobil",
-  },
-  en: {
-    brakingDistance: "Braking distance",
-    chooseSpeed: "Choose initial speed",
-    description:
-      "Change the initial speed to compare green reaction distance with orange braking distance.",
-    reactionDistance: "Reaction distance",
-    speed: "Initial speed",
-    stoppingDistance: "Stopping distance",
-    title: "Car Stopping Distance",
-    viewLabel: "Car stopping distance view",
-  },
 } as const;
 
 export type StoppingDistanceState = ReturnType<typeof getStoppingDistanceState>;

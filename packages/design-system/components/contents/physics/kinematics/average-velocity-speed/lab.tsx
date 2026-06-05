@@ -4,9 +4,8 @@ import {
   AVERAGE_VELOCITY_SPEED_CAMERA,
   AVERAGE_VELOCITY_SPEED_CASE_IDS,
   AVERAGE_VELOCITY_SPEED_COLORS,
-  AVERAGE_VELOCITY_SPEED_COPY,
   type AverageVelocitySpeedCaseId,
-  type AverageVelocitySpeedLocale,
+  type AverageVelocitySpeedLabProps,
   formatMeterMath,
   formatSecondsMath,
   formatSpeedMath,
@@ -32,40 +31,51 @@ import {
 import { useMemo, useState } from "react";
 
 export function AverageVelocitySpeedLab({
-  locale,
-}: {
-  locale: AverageVelocitySpeedLocale;
-}) {
+  decimalSeparator,
+  title,
+  description,
+  labels,
+}: AverageVelocitySpeedLabProps) {
   const [caseId, setCaseId] = useState<AverageVelocitySpeedCaseId>("bank");
-  const labels = AVERAGE_VELOCITY_SPEED_COPY[locale];
   const motion = useMemo(() => getAverageVelocitySpeedState(caseId), [caseId]);
   const facts = [
     {
+      id: "distance",
       label: labels.factLabels.distance,
-      math: `s_{\\text{total}}=${formatMeterMath(motion.distance, locale)}`,
+      math: `s_{\\text{total}}=${formatMeterMath(
+        motion.distance,
+        decimalSeparator
+      )}`,
       markerColor: AVERAGE_VELOCITY_SPEED_COLORS.distance,
     },
     {
+      id: "displacement",
       label: labels.factLabels.displacement,
-      math: `|\\Delta \\vec r|=${formatMeterMath(motion.displacement, locale)}`,
+      math: `|\\Delta \\vec r|=${formatMeterMath(
+        motion.displacement,
+        decimalSeparator
+      )}`,
       markerColor: AVERAGE_VELOCITY_SPEED_COLORS.displacement,
     },
     {
+      id: "time",
       label: labels.factLabels.time,
-      math: `\\Delta t=${formatSecondsMath(motion.duration, locale)}`,
+      math: `\\Delta t=${formatSecondsMath(motion.duration, decimalSeparator)}`,
     },
     {
+      id: "speed",
       label: labels.factLabels.speed,
       math: `\\frac{s_{\\text{total}}}{\\Delta t}=${formatSpeedMath(
         motion.speed,
-        locale
+        decimalSeparator
       )}`,
     },
     {
+      id: "velocity",
       label: labels.factLabels.velocity,
       math: `\\frac{|\\Delta \\vec r|}{\\Delta t}=${formatSpeedMath(
         motion.velocityMagnitude,
-        locale
+        decimalSeparator
       )}`,
     },
   ];
@@ -81,8 +91,8 @@ export function AverageVelocitySpeedLab({
   return (
     <Card className="overflow-hidden content-auto-card">
       <CardHeader>
-        <CardTitle>{labels.title}</CardTitle>
-        <CardDescription>{labels.description}</CardDescription>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
 
       <CardContent className="flex flex-col gap-4">
@@ -120,7 +130,7 @@ export function AverageVelocitySpeedLab({
       <CardFooter className="border-t">
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
           {facts.map((fact) => (
-            <div className="flex min-w-0 flex-col gap-1" key={fact.label}>
+            <div className="flex min-w-0 flex-col gap-1" key={fact.id}>
               <dt className="flex items-center gap-2 text-muted-foreground">
                 {"markerColor" in fact ? (
                   <span

@@ -1,4 +1,5 @@
 import { getColor } from "@repo/design-system/lib/color";
+import type { ReactNode } from "react";
 
 export const VELOCITY_SPEED_CAR_MODEL_PATH =
   "/models/physics/kinematics/poly-pizza-dodge-charger/dodge-charger.glb";
@@ -10,7 +11,24 @@ export const VELOCITY_SPEED_CASE_IDS = [
 ] as const;
 
 export type VelocitySpeedCaseId = (typeof VELOCITY_SPEED_CASE_IDS)[number];
-export type VelocitySpeedLocale = "id" | "en";
+
+export interface VelocitySpeedLabLabels {
+  chooseCase: string;
+  factLabels: {
+    displacement: ReactNode;
+    distance: ReactNode;
+    speed: ReactNode;
+    velocity: ReactNode;
+  };
+  modeLabels: Record<VelocitySpeedCaseId, ReactNode>;
+  viewLabel: string;
+}
+
+export interface VelocitySpeedLabProps {
+  description: ReactNode;
+  labels: VelocitySpeedLabLabels;
+  title: ReactNode;
+}
 
 interface MotionConfig {
   backDistance: number;
@@ -57,45 +75,6 @@ export const VELOCITY_SPEED_COLORS = {
   lane: getColor("SLATE", 800),
   shadow: getColor("SLATE", 900),
   stripe: getColor("SLATE", 50),
-} as const;
-
-export const VELOCITY_SPEED_COPY = {
-  en: {
-    chooseCase: "Choose car route",
-    description:
-      "Choose how the car moves to compare the green distance path with the purple displacement line when the final position changes.",
-    factLabels: {
-      displacement: "Displacement",
-      distance: "Distance traveled",
-      speed: "Average speed",
-      velocity: "Average velocity",
-    },
-    modeLabels: {
-      backToStart: "Back to Start",
-      forward: "Forward",
-      partialReturn: "Partial Return",
-    },
-    title: "Car Motion on One Line",
-    viewLabel: "Car motion for speed and velocity",
-  },
-  id: {
-    chooseCase: "Pilih gerak mobil",
-    description:
-      "Pilih gerak mobil untuk membandingkan garis hijau jarak tempuh dengan garis ungu saat posisi akhirnya berubah.",
-    factLabels: {
-      displacement: "Perpindahan",
-      distance: "Jarak tempuh",
-      speed: "Kelajuan rata-rata",
-      velocity: "Kecepatan rata-rata",
-    },
-    modeLabels: {
-      backToStart: "Kembali",
-      forward: "Maju",
-      partialReturn: "Balik Sebagian",
-    },
-    title: "Gerak Mobil pada Satu Garis",
-    viewLabel: "Tampilan mobil untuk kelajuan dan kecepatan",
-  },
 } as const;
 
 const MOTION_CONFIGS: Record<VelocitySpeedCaseId, MotionConfig> = {

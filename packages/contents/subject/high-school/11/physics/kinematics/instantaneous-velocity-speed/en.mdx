@@ -27,7 +27,24 @@ If motion is recorded as position data over time, the instantaneous value can be
 
 The smaller the time interval, the closer the reading is to the value at that exact instant. That is why an instantaneous value does not need to wait until the whole trip is over.
 
-<InstantaneousVelocitySpeedLab locale="en" />
+<InstantaneousVelocitySpeedLab
+  title={<>Reading at a Measuring Point</>}
+  description={
+    <>
+      Choose a reading moment to see the car pass a measuring point and its
+      instantaneous velocity value.
+    </>
+  }
+  labels={{
+    chooseMoment: "Choose reading moment",
+    factLabels: {
+      time: <>Reading time</>,
+      speed: <>Instantaneous speed</>,
+      velocity: <>Instantaneous velocity</>,
+    },
+    viewLabel: "Car passing a measuring point",
+  }}
+/>
 
 ## Reading Instant Motion
 

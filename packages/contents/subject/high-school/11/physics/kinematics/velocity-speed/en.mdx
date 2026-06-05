@@ -24,7 +24,30 @@ The symbol <InlineMath math="s" /> means distance traveled, <InlineMath math="\D
 
 > Speed uses the whole distance traveled. Velocity uses net displacement with its sign.
 
-<VelocitySpeedLab locale="en" />
+<VelocitySpeedLab
+  title={<>Car Motion on One Line</>}
+  description={
+    <>
+      Choose how the car moves to compare the green distance path with the
+      purple displacement line when the final position changes.
+    </>
+  }
+  labels={{
+    chooseCase: "Choose car route",
+    modeLabels: {
+      forward: <>Forward</>,
+      partialReturn: <>Partial Return</>,
+      backToStart: <>Back to Start</>,
+    },
+    factLabels: {
+      distance: <>Distance traveled</>,
+      displacement: <>Displacement</>,
+      speed: <>Average speed</>,
+      velocity: <>Average velocity</>,
+    },
+    viewLabel: "Car motion for speed and velocity",
+  }}
+/>
 
 ## Path and Position Change Are Not the Same
 

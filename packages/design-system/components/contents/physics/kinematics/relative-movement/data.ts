@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 export const RELATIVE_MOVEMENT_OBSERVER_CAR_MODEL_PATH =
   "/models/physics/kinematics/kenney-car-kit/hatchback-sports.glb";
 
@@ -12,7 +14,24 @@ export const RELATIVE_MOVEMENT_CASE_IDS = [
 export type RelativeMovementCaseId =
   (typeof RELATIVE_MOVEMENT_CASE_IDS)[number];
 
-export type RelativeMovementLocale = "id" | "en";
+export interface RelativeMovementLabLabels {
+  chooseCase: string;
+  directionLabels: Record<"left" | "right", ReactNode>;
+  factLabels: {
+    observer: ReactNode;
+    relativeVelocity: ReactNode;
+    target: ReactNode;
+    visibleDirection: ReactNode;
+  };
+  modeLabels: Record<RelativeMovementCaseId, ReactNode>;
+  viewLabel: string;
+}
+
+export interface RelativeMovementLabProps {
+  description: ReactNode;
+  labels: RelativeMovementLabLabels;
+  title: ReactNode;
+}
 
 const RELATIVE_MOVEMENT_CASES: Record<
   RelativeMovementCaseId,
@@ -44,51 +63,6 @@ export const RELATIVE_MOVEMENT_SCENE = {
   roadLength: 52,
   roadWidth: 2.72,
   stripeSpacing: 1.2,
-} as const;
-
-export const RELATIVE_MOVEMENT_COPY = {
-  en: {
-    chooseCase: "Choose direction",
-    description:
-      "Choose the direction of car B to see its motion as observed from car A.",
-    directionLabels: {
-      left: "B appears to move left relative to A.",
-      right: "B appears to move right relative to A.",
-    },
-    factLabels: {
-      observer: "Car A",
-      relativeVelocity: "Relative velocity of B to A",
-      target: "Car B",
-      visibleDirection: "As seen from A",
-    },
-    modeLabels: {
-      "opposite-direction": "Opposite",
-      "same-direction": "Same Direction",
-    },
-    title: "Relative Motion of Two Cars",
-    viewLabel: "Relative motion view",
-  },
-  id: {
-    chooseCase: "Pilih arah gerak",
-    description:
-      "Pilih arah mobil B untuk melihat geraknya menurut pengamat di mobil A.",
-    directionLabels: {
-      left: "B tampak bergerak ke kiri relatif terhadap A.",
-      right: "B tampak bergerak ke kanan relatif terhadap A.",
-    },
-    factLabels: {
-      observer: "Mobil A",
-      relativeVelocity: "Kecepatan relatif B terhadap A",
-      target: "Mobil B",
-      visibleDirection: "Menurut pengamat di A",
-    },
-    modeLabels: {
-      "opposite-direction": "Berlawanan",
-      "same-direction": "Searah",
-    },
-    title: "Gerak Relatif Dua Mobil",
-    viewLabel: "Tampilan gerak relatif",
-  },
 } as const;
 
 export type RelativeMovementState = ReturnType<typeof getRelativeMovementState>;

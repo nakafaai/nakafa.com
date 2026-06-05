@@ -32,7 +32,30 @@ In uniform linear motion, the position marks each second are equally spaced. In 
 
 Look at the "From Rest" motion. At the first instant the car is not moving yet, then the gaps between marks become longer. That is the sign that velocity is increasing. The graph rises in a straight line because the acceleration is constant.
 
-<NonUniformLinearMotionLab locale="en" />
+<NonUniformLinearMotionLab
+  title={<>Position Marks on a Rail</>}
+  description={
+    <>
+      Marks on the rail show the train position every{" "}
+      <InlineMath math="1\text{ s}" /> while acceleration stays constant.
+    </>
+  }
+  labels={{
+    chooseScenario: "Choose motion",
+    scenarioNames: {
+      "from-rest": <>From Rest</>,
+      "speed-up": <>Speeding Up</>,
+      brake: <>Braking</>,
+    },
+    factLabels: {
+      initialVelocity: <>Initial velocity</>,
+      acceleration: <>Acceleration</>,
+      finalVelocity: <>Final velocity</>,
+      displacement: <>Displacement</>,
+    },
+    viewLabel: "Uniformly accelerated motion visual",
+  }}
+/>
 
 ## Displacement Comes from Graph Area
 

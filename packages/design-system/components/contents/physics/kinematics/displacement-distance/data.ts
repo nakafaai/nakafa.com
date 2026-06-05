@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 export const DISPLACEMENT_DISTANCE_CAR_MODEL_PATH =
   "/models/physics/kinematics/kenney-car-kit/taxi.glb";
 
@@ -9,7 +11,25 @@ export const DISPLACEMENT_DISTANCE_CASE_IDS = [
 
 export type DisplacementDistanceCaseId =
   (typeof DISPLACEMENT_DISTANCE_CASE_IDS)[number];
-export type DisplacementDistanceLocale = "id" | "en";
+
+export interface DisplacementDistanceLabLabels {
+  chooseCase: string;
+  factLabels: {
+    displacement: ReactNode;
+    distance: ReactNode;
+    meaning: ReactNode;
+    vector: ReactNode;
+  };
+  meanings: Record<DisplacementDistanceCaseId, ReactNode>;
+  modeLabels: Record<DisplacementDistanceCaseId, ReactNode>;
+  viewLabel: string;
+}
+
+export interface DisplacementDistanceLabProps {
+  description: ReactNode;
+  labels: DisplacementDistanceLabLabels;
+  title: ReactNode;
+}
 
 interface RoutePoint {
   x: number;
@@ -36,55 +56,6 @@ export const DISPLACEMENT_DISTANCE_SCENE = {
   stripeLength: 0.32,
   stripeSpacing: 1.05,
   stripeWidth: 0.05,
-} as const;
-
-export const DISPLACEMENT_DISTANCE_COPY = {
-  en: {
-    chooseCase: "Choose route",
-    description:
-      "Choose a route to compare the traveled path with the straight displacement.",
-    factLabels: {
-      displacement: "Displacement magnitude",
-      distance: "Distance traveled",
-      meaning: "What changes",
-      vector: "Displacement vector",
-    },
-    meanings: {
-      return: "The car travels a path but ends where it started.",
-      straight: "Distance and displacement magnitude are equal.",
-      turn: "Distance is longer because the car follows the turn.",
-    },
-    modeLabels: {
-      return: "Back to Start",
-      straight: "Straight",
-      turn: "Turn",
-    },
-    title: "Path Length and Displacement",
-    viewLabel: "Distance and displacement view",
-  },
-  id: {
-    chooseCase: "Pilih rute",
-    description:
-      "Pilih rute untuk membandingkan jalur yang ditempuh dengan perpindahan lurus.",
-    factLabels: {
-      displacement: "Besar perpindahan",
-      distance: "Jarak tempuh",
-      meaning: "Yang berubah",
-      vector: "Vektor perpindahan",
-    },
-    meanings: {
-      return: "Mobil menempuh jalur tetapi berakhir di posisi awal.",
-      straight: "Jarak dan besar perpindahan bernilai sama.",
-      turn: "Jarak lebih panjang karena mobil mengikuti belokan.",
-    },
-    modeLabels: {
-      return: "Kembali",
-      straight: "Lurus",
-      turn: "Berbelok",
-    },
-    title: "Jalur Tempuh dan Perpindahan",
-    viewLabel: "Tampilan jarak dan perpindahan",
-  },
 } as const;
 
 const ROUTES: Record<DisplacementDistanceCaseId, RoutePoint[]> = {

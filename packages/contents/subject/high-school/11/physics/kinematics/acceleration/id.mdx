@@ -29,7 +29,31 @@ Satuan percepatan adalah <InlineMath math="\text{m/s}^2" />. Jika <InlineMath ma
 
 Ticker timer adalah alat yang memberi tanda pada pita kertas dalam selang waktu yang sama. Jika jarak antartanda makin renggang, benda menempuh jarak lebih besar pada setiap selang waktu yang sama. Itu berarti kecepatannya bertambah. Jika jaraknya sama, kecepatannya tetap. Jika jaraknya makin rapat, kecepatannya berkurang.
 
-<AccelerationLab locale="id" />
+<AccelerationLab
+  title={<>Percepatan Roket di Luar Angkasa</>}
+  description={
+    <>
+      Kamera mengikuti roket saat gerbang waktu berselang{" "}
+      <InlineMath math="1\text{ s}" /> makin renggang, tetap, atau makin
+      rapat.
+    </>
+  }
+  labels={{
+    chooseCase: "Pilih gerak",
+    scenarioNames: {
+      "speed-up": <>Makin Cepat</>,
+      steady: <>Tetap</>,
+      "slow-down": <>Melambat</>,
+    },
+    factLabels: {
+      initialVelocity: <>Kecepatan awal</>,
+      acceleration: <>Percepatan</>,
+      finalVelocity: <>Kecepatan akhir</>,
+      timeStep: <>Selang bayangan</>,
+    },
+    viewLabel: "Visual percepatan roket di luar angkasa",
+  }}
+/>
 
 Grafik kecepatan-waktu membaca ide yang sama dengan cara yang lebih ringkas. Kemiringan garis menunjukkan seberapa besar perubahan kecepatan dibandingkan waktu yang dibutuhkan.
 

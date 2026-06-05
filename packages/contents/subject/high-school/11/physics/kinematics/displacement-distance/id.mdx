@@ -26,7 +26,35 @@ Pada gerak dua dimensi, perpindahan ditunjukkan sebagai garis lurus dari titik a
 
 > Jarak menjumlahkan jalur yang benar-benar dilewati. Perpindahan melihat perubahan posisi dari awal ke akhir.
 
-<DisplacementDistanceLab locale="id" />
+<DisplacementDistanceLab
+  title={<>Jalur Tempuh dan Perpindahan</>}
+  description={
+    <>
+      Pilih rute untuk membandingkan jalur yang ditempuh dengan perpindahan
+      lurus.
+    </>
+  }
+  labels={{
+    chooseCase: "Pilih rute",
+    modeLabels: {
+      straight: <>Lurus</>,
+      turn: <>Berbelok</>,
+      return: <>Kembali</>,
+    },
+    factLabels: {
+      distance: <>Jarak tempuh</>,
+      displacement: <>Besar perpindahan</>,
+      vector: <>Vektor perpindahan</>,
+      meaning: <>Yang berubah</>,
+    },
+    meanings: {
+      straight: <>Jarak dan besar perpindahan bernilai sama.</>,
+      turn: <>Jarak lebih panjang karena mobil mengikuti belokan.</>,
+      return: <>Mobil menempuh jalur tetapi berakhir di posisi awal.</>,
+    },
+    viewLabel: "Visual jarak dan perpindahan",
+  }}
+/>
 
 ## Lintasan dan Garis Lurus Memberi Angka Berbeda
 

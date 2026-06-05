@@ -8,12 +8,11 @@ import {
   isRelativeMovementCaseId,
   RELATIVE_MOVEMENT_CAMERA,
   RELATIVE_MOVEMENT_CASE_IDS,
-  RELATIVE_MOVEMENT_COPY,
   RELATIVE_MOVEMENT_OBSERVER_CAR_MODEL_PATH,
   RELATIVE_MOVEMENT_SCENE,
   RELATIVE_MOVEMENT_TARGET_CAR_MODEL_PATH,
   type RelativeMovementCaseId,
-  type RelativeMovementLocale,
+  type RelativeMovementLabProps,
   type RelativeMovementState,
 } from "@repo/design-system/components/contents/physics/kinematics/relative-movement/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
@@ -44,14 +43,13 @@ const MIN_LOOP_SECONDS = 6.5;
 const MAX_LOOP_SECONDS = 10.5;
 const MAX_RELATIVE_SPEED = 24;
 
-interface RelativeMovementLabProps {
-  locale: RelativeMovementLocale;
-}
-
-export function RelativeMovementLab({ locale }: RelativeMovementLabProps) {
+export function RelativeMovementLab({
+  title,
+  description,
+  labels,
+}: RelativeMovementLabProps) {
   const [caseId, setCaseId] =
     useState<RelativeMovementCaseId>("same-direction");
-  const labels = RELATIVE_MOVEMENT_COPY[locale];
   const motion = useMemo(() => getRelativeMovementState(caseId), [caseId]);
 
   function handleCaseChange(value: string) {
@@ -65,8 +63,8 @@ export function RelativeMovementLab({ locale }: RelativeMovementLabProps) {
   return (
     <Card className="overflow-hidden content-auto-card">
       <CardHeader>
-        <CardTitle>{labels.title}</CardTitle>
-        <CardDescription>{labels.description}</CardDescription>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
 
       <CardContent className="flex flex-col gap-4">
@@ -313,7 +311,7 @@ function LabFact({
   value,
 }: {
   indicatorColor?: string;
-  label: string;
+  label: ReactNode;
   value: ReactNode;
 }) {
   return (

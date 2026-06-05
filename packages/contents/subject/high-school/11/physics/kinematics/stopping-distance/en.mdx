@@ -27,7 +27,23 @@ So stopping distance has two stages. The first stage happens when the driver not
 | Reaction distance | The vehicle still moves with its initial speed | Speed and reaction time |
 | Braking distance | The vehicle slows until it stops | Initial speed and deceleration magnitude |
 
-<StoppingDistanceLab locale="en" />
+<StoppingDistanceLab
+  title={<>Car Stopping Distance</>}
+  description={
+    <>
+      Change the initial speed to compare green reaction distance with orange
+      braking distance.
+    </>
+  }
+  labels={{
+    chooseSpeed: "Choose initial speed",
+    speed: <>Initial speed</>,
+    reactionDistance: <>Reaction distance</>,
+    brakingDistance: <>Braking distance</>,
+    stoppingDistance: <>Stopping distance</>,
+    viewLabel: "Car stopping distance visual",
+  }}
+/>
 
 ## Braking Distance Comes from Uniform Acceleration
 

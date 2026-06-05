@@ -24,7 +24,30 @@ Simbol <InlineMath math="s" /> menyatakan jarak tempuh, <InlineMath math="\Delta
 
 > Kelajuan memakai seluruh jarak tempuh. Kecepatan memakai perpindahan bersih beserta tandanya.
 
-<VelocitySpeedLab locale="id" />
+<VelocitySpeedLab
+  title={<>Gerak Mobil pada Satu Garis</>}
+  description={
+    <>
+      Pilih gerak mobil untuk membandingkan garis hijau jarak tempuh dengan
+      garis ungu saat posisi akhirnya berubah.
+    </>
+  }
+  labels={{
+    chooseCase: "Pilih gerak mobil",
+    modeLabels: {
+      forward: <>Maju</>,
+      partialReturn: <>Balik Sebagian</>,
+      backToStart: <>Kembali</>,
+    },
+    factLabels: {
+      distance: <>Jarak tempuh</>,
+      displacement: <>Perpindahan</>,
+      speed: <>Kelajuan rata-rata</>,
+      velocity: <>Kecepatan rata-rata</>,
+    },
+    viewLabel: "Visual mobil untuk kelajuan dan kecepatan",
+  }}
+/>
 
 ## Lintasan dan Perubahan Posisi Tidak Sama
 

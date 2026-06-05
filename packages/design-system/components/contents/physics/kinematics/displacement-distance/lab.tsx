@@ -6,10 +6,9 @@ import { PhysicsCarModel } from "@repo/design-system/components/contents/physics
 import {
   DISPLACEMENT_DISTANCE_CAR_MODEL_PATH,
   DISPLACEMENT_DISTANCE_CASE_IDS,
-  DISPLACEMENT_DISTANCE_COPY,
   DISPLACEMENT_DISTANCE_SCENE,
   type DisplacementDistanceCaseId,
-  type DisplacementDistanceLocale,
+  type DisplacementDistanceLabProps,
   type DisplacementDistanceState,
   formatMeterMath,
   formatVectorMath,
@@ -47,15 +46,12 @@ const END_PAUSE_SECONDS = 0.9;
 const MIN_TRAVEL_SECONDS = 4.8;
 const TRAVEL_SECONDS_PER_METER = 0.56;
 
-interface DisplacementDistanceLabProps {
-  locale: DisplacementDistanceLocale;
-}
-
 export function DisplacementDistanceLab({
-  locale,
+  title,
+  description,
+  labels,
 }: DisplacementDistanceLabProps) {
   const [caseId, setCaseId] = useState<DisplacementDistanceCaseId>("turn");
-  const labels = DISPLACEMENT_DISTANCE_COPY[locale];
   const motion = useMemo(() => getDisplacementDistanceState(caseId), [caseId]);
   const view = useMemo(() => getDisplacementDistanceView(motion), [motion]);
 
@@ -70,8 +66,8 @@ export function DisplacementDistanceLab({
   return (
     <Card className="overflow-hidden content-auto-card">
       <CardHeader>
-        <CardTitle>{labels.title}</CardTitle>
-        <CardDescription>{labels.description}</CardDescription>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
 
       <CardContent className="flex flex-col gap-4">
@@ -359,7 +355,7 @@ function LabFact({
   value,
 }: {
   indicatorColor?: string;
-  label: string;
+  label: ReactNode;
   value: ReactNode;
 }) {
   return (

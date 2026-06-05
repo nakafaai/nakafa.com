@@ -27,7 +27,24 @@ Jika gerak direkam sebagai data posisi terhadap waktu, nilai sesaat dapat dibaya
 
 Semakin kecil selang waktu yang dipakai, semakin dekat bacaan itu ke nilai tepat pada saat tersebut. Itulah mengapa nilai sesaat tidak perlu menunggu perjalanan selesai.
 
-<InstantaneousVelocitySpeedLab locale="id" />
+<InstantaneousVelocitySpeedLab
+  title={<>Bacaan di Titik Ukur</>}
+  description={
+    <>
+      Pilih momen baca untuk melihat mobil melewati titik ukur dan nilai
+      kecepatan sesaatnya.
+    </>
+  }
+  labels={{
+    chooseMoment: "Pilih momen baca",
+    factLabels: {
+      time: <>Waktu baca</>,
+      speed: <>Kelajuan sesaat</>,
+      velocity: <>Kecepatan sesaat</>,
+    },
+    viewLabel: "Visual mobil melewati titik ukur",
+  }}
+/>
 
 ## Membaca Gerak Sesaat
 

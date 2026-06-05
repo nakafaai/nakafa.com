@@ -41,7 +41,23 @@ Suppose the initial position is <InlineMath math="x_0=1\text{ m}" /> and the vel
 
 The equal part is the difference between positions, not the position value itself. From <InlineMath math="1" /> to <InlineMath math="3" />, from <InlineMath math="3" /> to <InlineMath math="5" />, and so on, the difference is always <InlineMath math="2\text{ m}" />.
 
-<UniformLinearMotionLab locale="en" />
+<UniformLinearMotionLab
+  title={<>Uniform Motion Car Marks</>}
+  description={
+    <>
+      Change the constant velocity to see the distance between marks stay equal
+      every second.
+    </>
+  }
+  labels={{
+    chooseSpeed: "Choose constant velocity",
+    speed: <>Constant velocity</>,
+    positionStep: <>Mark interval</>,
+    stepDistance: <>Distance between marks</>,
+    duration: <>Motion time</>,
+    viewLabel: "Uniform linear motion marks visual",
+  }}
+/>
 
 ## Calculating Final Position Without Guessing
 

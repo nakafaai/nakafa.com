@@ -4,11 +4,10 @@ import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import {
   ACCELERATION_CASES,
-  ACCELERATION_LAB_COPY,
   ACCELERATION_LAB_SCENE,
   ACCELERATION_ROCKET_MODEL_PATH,
   type AccelerationCaseId,
-  type AccelerationLocale,
+  type AccelerationLabProps,
   type AccelerationMotionState,
   DEFAULT_ACCELERATION_CASE_ID,
   formatAccelerationMath,
@@ -90,14 +89,18 @@ interface RocketExhaust {
   radius: number;
 }
 
-export function AccelerationLab({ locale }: { locale: AccelerationLocale }) {
-  const labels = ACCELERATION_LAB_COPY[locale];
+export function AccelerationLab({
+  title,
+  description,
+  labels,
+}: AccelerationLabProps) {
   const [caseId, setCaseId] = useState<AccelerationCaseId>(
     DEFAULT_ACCELERATION_CASE_ID
   );
   const motion = useMemo(() => getAccelerationMotionState(caseId), [caseId]);
   const facts = [
     {
+      id: "initial-velocity",
       label: labels.factLabels.initialVelocity,
       value: (
         <InlineMath
@@ -106,6 +109,7 @@ export function AccelerationLab({ locale }: { locale: AccelerationLocale }) {
       ),
     },
     {
+      id: "acceleration",
       indicatorColor: motion.scenario.color,
       label: labels.factLabels.acceleration,
       value: (
@@ -113,6 +117,7 @@ export function AccelerationLab({ locale }: { locale: AccelerationLocale }) {
       ),
     },
     {
+      id: "final-velocity",
       label: labels.factLabels.finalVelocity,
       value: (
         <InlineMath
@@ -121,6 +126,7 @@ export function AccelerationLab({ locale }: { locale: AccelerationLocale }) {
       ),
     },
     {
+      id: "time-step",
       label: labels.factLabels.timeStep,
       value: <InlineMath math={`\\Delta t=${formatSecondMath(1)}`} />,
     },
@@ -137,8 +143,8 @@ export function AccelerationLab({ locale }: { locale: AccelerationLocale }) {
   return (
     <Card className="overflow-hidden content-auto-card">
       <CardHeader>
-        <CardTitle>{labels.title}</CardTitle>
-        <CardDescription>{labels.description}</CardDescription>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
 
       <CardContent className="flex flex-col gap-4">
@@ -202,7 +208,7 @@ export function AccelerationLab({ locale }: { locale: AccelerationLocale }) {
               indicatorColor={
                 "indicatorColor" in fact ? fact.indicatorColor : undefined
               }
-              key={fact.label}
+              key={fact.id}
               label={fact.label}
               value={fact.value}
             />
@@ -719,7 +725,7 @@ function LabFact({
   value,
 }: {
   indicatorColor?: string;
-  label: string;
+  label: ReactNode;
   value: ReactNode;
 }) {
   return (

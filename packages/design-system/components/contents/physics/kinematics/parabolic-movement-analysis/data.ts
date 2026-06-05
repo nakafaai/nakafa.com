@@ -1,6 +1,7 @@
 import { getColor } from "@repo/design-system/lib/color";
+import type { ReactNode } from "react";
 
-export type ProjectileAnalysisLocale = "id" | "en";
+export type ProjectileAnalysisDecimalSeparator = "comma" | "dot";
 export type ProjectileScenarioId = "sixty-degree" | "long-drive" | "high-arc";
 
 export interface ProjectileScenario {
@@ -8,6 +9,27 @@ export interface ProjectileScenario {
   color: string;
   id: ProjectileScenarioId;
   initialSpeed: number;
+}
+
+export interface ProjectileAnalysisLabLabels {
+  chooseScenario: string;
+  factLabels: {
+    flightTime: ReactNode;
+    horizontalComponent: ReactNode;
+    instantaneousVelocity: ReactNode;
+    peakTime: ReactNode;
+    range: ReactNode;
+    verticalComponent: ReactNode;
+  };
+  scenarioNames: Record<ProjectileScenarioId, ReactNode>;
+  viewLabel: string;
+}
+
+export interface ProjectileAnalysisLabProps {
+  decimalSeparator?: ProjectileAnalysisDecimalSeparator;
+  description: ReactNode;
+  labels: ProjectileAnalysisLabLabels;
+  title: ReactNode;
 }
 
 export const PROJECTILE_GRAVITY = 10;
@@ -67,49 +89,6 @@ export const PROJECTILE_SCENARIOS: ProjectileScenario[] = [
     initialSpeed: 34,
   },
 ];
-
-export const PROJECTILE_ANALYSIS_COPY = {
-  en: {
-    chooseScenario: "Choose launch",
-    description:
-      "A cannonball crosses the water while the ghost balls mark equal time steps from the same formulas used in the calculation.",
-    factLabels: {
-      flightTime: "Flight time",
-      horizontalComponent: "Horizontal component",
-      instantaneousVelocity: "Velocity at two seconds",
-      peakTime: "Peak time",
-      range: "Range",
-      verticalComponent: "Vertical component",
-    },
-    scenarioNames: {
-      "high-arc": "High Arc",
-      "long-drive": "Long Drive",
-      "sixty-degree": "Sixty Degrees",
-    },
-    title: "Cannonball Component Analysis",
-    viewLabel: "Cannonball projectile analysis view",
-  },
-  id: {
-    chooseScenario: "Pilih tembakan",
-    description:
-      "Bola meriam melintas di atas air, sementara bayangan bolanya menandai selang waktu yang sama dari rumus yang dipakai dalam hitungan.",
-    factLabels: {
-      flightTime: "Waktu terbang",
-      horizontalComponent: "Komponen mendatar",
-      instantaneousVelocity: "Kecepatan pada dua detik",
-      peakTime: "Waktu puncak",
-      range: "Jangkauan",
-      verticalComponent: "Komponen vertikal",
-    },
-    scenarioNames: {
-      "high-arc": "Lengkung Tinggi",
-      "long-drive": "Jarak Jauh",
-      "sixty-degree": "Enam Puluh Derajat",
-    },
-    title: "Analisis Komponen Bola Meriam",
-    viewLabel: "Tampilan analisis gerak parabola bola meriam",
-  },
-} as const;
 
 const TRAILING_ZERO_DECIMAL_REGEX = /\.0$/;
 
@@ -205,32 +184,32 @@ export function getProjectileLoopSample(
 
 export function formatMeterMath(
   value: number,
-  locale: ProjectileAnalysisLocale
+  decimalSeparator?: ProjectileAnalysisDecimalSeparator
 ) {
-  return `${formatNumber(value, locale)}\\text{ m}`;
+  return `${formatNumber(value, decimalSeparator)}\\text{ m}`;
 }
 
 export function formatSecondMath(
   value: number,
-  locale: ProjectileAnalysisLocale
+  decimalSeparator?: ProjectileAnalysisDecimalSeparator
 ) {
-  return `${formatNumber(value, locale)}\\text{ s}`;
+  return `${formatNumber(value, decimalSeparator)}\\text{ s}`;
 }
 
 export function formatSpeedMath(
   value: number,
-  locale: ProjectileAnalysisLocale
+  decimalSeparator?: ProjectileAnalysisDecimalSeparator
 ) {
-  return `${formatNumber(value, locale)}\\text{ m/s}`;
+  return `${formatNumber(value, decimalSeparator)}\\text{ m/s}`;
 }
 
 export function formatVelocityVectorMath(
   horizontalVelocity: number,
   verticalVelocity: number,
-  locale: ProjectileAnalysisLocale
+  decimalSeparator?: ProjectileAnalysisDecimalSeparator
 ) {
-  const horizontal = formatNumber(horizontalVelocity, locale);
-  const vertical = formatNumber(verticalVelocity, locale);
+  const horizontal = formatNumber(horizontalVelocity, decimalSeparator);
+  const vertical = formatNumber(verticalVelocity, decimalSeparator);
 
   return `\\langle ${horizontal}, ${vertical}\\rangle\\text{ m/s}`;
 }
@@ -245,10 +224,13 @@ function getMuzzleFlashPower(cycleTime: number) {
   return 1 - cycleTime / flashSeconds;
 }
 
-function formatNumber(value: number, locale: ProjectileAnalysisLocale) {
+function formatNumber(
+  value: number,
+  decimalSeparator?: ProjectileAnalysisDecimalSeparator
+) {
   const rounded = value.toFixed(1).replace(TRAILING_ZERO_DECIMAL_REGEX, "");
 
-  if (locale === "id") {
+  if (decimalSeparator === "comma") {
     return rounded.replace(".", "{,}");
   }
 

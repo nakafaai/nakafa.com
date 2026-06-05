@@ -1,4 +1,5 @@
 import { getColor } from "@repo/design-system/lib/color";
+import type { ReactNode } from "react";
 
 export const AVERAGE_VELOCITY_SPEED_CASE_IDS = [
   "straight",
@@ -8,7 +9,27 @@ export const AVERAGE_VELOCITY_SPEED_CASE_IDS = [
 
 export type AverageVelocitySpeedCaseId =
   (typeof AVERAGE_VELOCITY_SPEED_CASE_IDS)[number];
-export type AverageVelocitySpeedLocale = "id" | "en";
+export type AverageVelocitySpeedDecimalSeparator = "comma" | "dot";
+
+export interface AverageVelocitySpeedLabLabels {
+  chooseCase: string;
+  factLabels: {
+    displacement: ReactNode;
+    distance: ReactNode;
+    speed: ReactNode;
+    time: ReactNode;
+    velocity: ReactNode;
+  };
+  modeLabels: Record<AverageVelocitySpeedCaseId, ReactNode>;
+  viewLabel: string;
+}
+
+export interface AverageVelocitySpeedLabProps {
+  decimalSeparator?: AverageVelocitySpeedDecimalSeparator;
+  description: ReactNode;
+  labels: AverageVelocitySpeedLabLabels;
+  title: ReactNode;
+}
 
 interface Point2 {
   x: number;
@@ -91,47 +112,6 @@ export const AVERAGE_VELOCITY_SPEED_COLORS = {
   route: getColor("TEAL", 500),
   shadow: getColor("SLATE", 900),
   start: getColor("YELLOW"),
-} as const;
-
-export const AVERAGE_VELOCITY_SPEED_COPY = {
-  en: {
-    chooseCase: "Choose route",
-    description:
-      "Watch the ball follow one measured track, then compare the traveled path with the start-to-finish displacement.",
-    factLabels: {
-      displacement: "Displacement magnitude",
-      distance: "Total distance",
-      speed: "Average speed",
-      time: "Elapsed time",
-      velocity: "Average velocity magnitude",
-    },
-    modeLabels: {
-      bank: "Smooth Bend",
-      loop: "Return Loop",
-      straight: "Straight Track",
-    },
-    title: "Rolling Ball Average Motion",
-    viewLabel: "Rolling ball route for average speed and velocity",
-  },
-  id: {
-    chooseCase: "Pilih rute",
-    description:
-      "Perhatikan bola mengikuti lintasan terukur, lalu bandingkan panjang lintasan dengan perpindahan awal-ke-akhir.",
-    factLabels: {
-      displacement: "Besar perpindahan",
-      distance: "Jarak total",
-      speed: "Kelajuan rata-rata",
-      time: "Selang waktu",
-      velocity: "Besar kecepatan rata-rata",
-    },
-    modeLabels: {
-      bank: "Belokan Halus",
-      loop: "Putaran Balik",
-      straight: "Lintasan Lurus",
-    },
-    title: "Gerak Rata-Rata Bola",
-    viewLabel: "Tampilan bola untuk kelajuan dan kecepatan rata-rata",
-  },
 } as const;
 
 const ROUTE_CONFIGS = {
@@ -258,23 +238,23 @@ export function toWorldRoutePoint(
 
 export function formatMeterMath(
   value: number,
-  locale: AverageVelocitySpeedLocale
+  decimalSeparator?: AverageVelocitySpeedDecimalSeparator
 ) {
-  return `${formatNumber(value, locale)}\\text{ m}`;
+  return `${formatNumber(value, decimalSeparator)}\\text{ m}`;
 }
 
 export function formatSecondsMath(
   value: number,
-  locale: AverageVelocitySpeedLocale
+  decimalSeparator?: AverageVelocitySpeedDecimalSeparator
 ) {
-  return `${formatNumber(value, locale)}\\text{ s}`;
+  return `${formatNumber(value, decimalSeparator)}\\text{ s}`;
 }
 
 export function formatSpeedMath(
   value: number,
-  locale: AverageVelocitySpeedLocale
+  decimalSeparator?: AverageVelocitySpeedDecimalSeparator
 ) {
-  return `${formatNumber(value, locale)}\\text{ m/s}`;
+  return `${formatNumber(value, decimalSeparator)}\\text{ m/s}`;
 }
 
 function createRouteSegments(config: RouteConfig) {
@@ -418,10 +398,13 @@ function lerp(start: number, end: number, progress: number) {
   return start + (end - start) * progress;
 }
 
-function formatNumber(value: number, locale: AverageVelocitySpeedLocale) {
+function formatNumber(
+  value: number,
+  decimalSeparator?: AverageVelocitySpeedDecimalSeparator
+) {
   const formatted = value.toFixed(1).replace(TRAILING_ZERO_PATTERN, "");
 
-  if (locale === "id") {
+  if (decimalSeparator === "comma") {
     return formatted.replace(".", "{,}");
   }
 

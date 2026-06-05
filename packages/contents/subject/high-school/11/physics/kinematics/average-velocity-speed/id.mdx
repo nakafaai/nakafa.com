@@ -24,7 +24,32 @@ Kecepatan rata-rata memakai perpindahan. Karena perpindahan punya arah, kecepata
 
 Simbol <InlineMath math="\Delta x" /> atau <InlineMath math="\Delta \vec{r}" /> menyatakan perubahan posisi dari awal ke akhir. Simbol <InlineMath math="s_{\text{total}}" /> menyatakan panjang lintasan yang ditempuh selama perjalanan.
 
-<AverageVelocitySpeedLab locale="id" />
+<AverageVelocitySpeedLab
+  decimalSeparator="comma"
+  title={<>Gerak Rata-Rata Bola</>}
+  description={
+    <>
+      Perhatikan bola mengikuti lintasan terukur, lalu bandingkan panjang
+      lintasan dengan perpindahan awal-ke-akhir.
+    </>
+  }
+  labels={{
+    chooseCase: "Pilih rute",
+    modeLabels: {
+      straight: <>Lintasan Lurus</>,
+      bank: <>Belokan Halus</>,
+      loop: <>Putaran Balik</>,
+    },
+    factLabels: {
+      distance: <>Jarak total</>,
+      displacement: <>Besar perpindahan</>,
+      time: <>Selang waktu</>,
+      speed: <>Kelajuan rata-rata</>,
+      velocity: <>Besar kecepatan rata-rata</>,
+    },
+    viewLabel: "Visual bola untuk kelajuan dan kecepatan rata-rata",
+  }}
+/>
 
 Angka pada kartu dihitung dari lintasan yang sama. Perhatikan dua garisnya dulu. Garis hijau mengikuti jalan bola, jadi garis itu dibaca sebagai jarak total. Garis ungu hanya menghubungkan titik awal dan titik akhir, jadi garis itu dibaca sebagai besar perpindahan.
 

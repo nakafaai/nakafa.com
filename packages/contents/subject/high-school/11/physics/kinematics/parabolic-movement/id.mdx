@@ -23,7 +23,28 @@ Cara paling mudah membacanya adalah memecah gerak menjadi dua arah. Arah horizon
 
 Di sini, <InlineMath math="v_0" /> adalah kelajuan awal, <InlineMath math="\theta" /> sudut tembak terhadap horizontal, <InlineMath math="g" /> percepatan gravitasi, <InlineMath math="x" /> posisi mendatar, dan <InlineMath math="y" /> ketinggian.
 
-<ParabolicMovementLab locale="id" />
+Ilustrasi berikut memakai satu bola agar perubahan sudut lontar, titik puncak, dan jangkauan lebih mudah dibandingkan.
+
+<ParabolicMovementLab
+  decimalSeparator="comma"
+  title={<>Lintasan Bola Lontar</>}
+  description={
+    <>
+      Ubah sudut lontar. Bola tetap bergerak mendatar, sementara gravitasi
+      mengubah ketinggiannya.
+    </>
+  }
+  labels={{
+    chooseLaunch: "Pilih sudut lontar",
+    factLabels: {
+      initialSpeed: <>Kelajuan awal</>,
+      flightTime: <>Waktu di udara</>,
+      range: <>Jangkauan</>,
+      peakHeight: <>Tinggi puncak</>,
+    },
+    viewLabel: "Visual lintasan bola lontar",
+  }}
+/>
 
 ## Gravitasi Mengubah Arah Vertikal Saja
 

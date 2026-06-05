@@ -24,7 +24,31 @@ Average velocity uses displacement. Since displacement has direction, average ve
 
 The symbol <InlineMath math="\Delta x" /> or <InlineMath math="\Delta \vec{r}" /> means the change in position from start to finish. The symbol <InlineMath math="s_{\text{total}}" /> means the length of the path traveled during the trip.
 
-<AverageVelocitySpeedLab locale="en" />
+<AverageVelocitySpeedLab
+  title={<>Rolling Ball Average Motion</>}
+  description={
+    <>
+      Watch the ball follow one measured track, then compare the traveled path
+      with the start-to-finish displacement.
+    </>
+  }
+  labels={{
+    chooseCase: "Choose route",
+    modeLabels: {
+      straight: <>Straight Track</>,
+      bank: <>Smooth Bend</>,
+      loop: <>Return Loop</>,
+    },
+    factLabels: {
+      distance: <>Total distance</>,
+      displacement: <>Displacement magnitude</>,
+      time: <>Elapsed time</>,
+      speed: <>Average speed</>,
+      velocity: <>Average velocity magnitude</>,
+    },
+    viewLabel: "Rolling ball route for average speed and velocity",
+  }}
+/>
 
 The numbers in the card come from the same route drawn in the scene. The green path is read as total distance because it follows the whole track. The purple line is read as displacement because it only connects the starting position to the ending position.
 

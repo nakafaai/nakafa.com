@@ -21,7 +21,28 @@ Dengan pilihan itu, percepatan gravitasi ditulis <InlineMath math="-g" /> karena
   <BlockMath math="v_y^2=v_0^2-2g(y-y_0)" />
 </MathContainer>
 
-<VerticalMovementLab locale="id" />
+<VerticalMovementLab
+  decimalSeparator="comma"
+  title={<>Bola pada Gerak Vertikal</>}
+  description={
+    <>
+      Pilih cara bola mulai bergerak untuk melihat gravitasi mengubah tinggi
+      dan kecepatannya.
+    </>
+  }
+  labels={{
+    condition: "Kondisi awal",
+    modeLabels: {
+      throw: <>Dilempar ke Atas</>,
+      drop: <>Dijatuhkan</>,
+    },
+    initialCondition: <>Kondisi awal</>,
+    maxHeight: <>Tinggi tertinggi</>,
+    time: <>Waktu gerak</>,
+    finalVelocity: <>Kecepatan akhir</>,
+    viewLabel: "Visual bola pada gerak vertikal",
+  }}
+/>
 
 ## Gravitasi Tetap Bekerja Saat Benda Naik
 

@@ -26,7 +26,35 @@ In two-dimensional motion, displacement is drawn as the straight line from the s
 
 > Distance adds the path actually traveled. Displacement reads the change from the start point to the end point.
 
-<DisplacementDistanceLab locale="en" />
+<DisplacementDistanceLab
+  title={<>Path Length and Displacement</>}
+  description={
+    <>
+      Choose a route to compare the traveled path with the straight
+      displacement.
+    </>
+  }
+  labels={{
+    chooseCase: "Choose route",
+    modeLabels: {
+      straight: <>Straight</>,
+      turn: <>Turn</>,
+      return: <>Back to Start</>,
+    },
+    factLabels: {
+      distance: <>Distance traveled</>,
+      displacement: <>Displacement magnitude</>,
+      vector: <>Displacement vector</>,
+      meaning: <>What changes</>,
+    },
+    meanings: {
+      straight: <>Distance and displacement magnitude are equal.</>,
+      turn: <>Distance is longer because the car follows the turn.</>,
+      return: <>The car travels a path but ends where it started.</>,
+    },
+    viewLabel: "Distance and displacement visual",
+  }}
+/>
 
 ## Detours Change Distance
 

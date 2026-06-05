@@ -12,10 +12,9 @@ import {
   INSTANTANEOUS_SPEED_CAR_MODEL_PATH,
   INSTANTANEOUS_SPEED_CASES,
   INSTANTANEOUS_SPEED_COLORS,
-  INSTANTANEOUS_SPEED_COPY,
   INSTANTANEOUS_SPEED_SCENE,
   type InstantaneousSpeedCaseId,
-  type InstantaneousVelocitySpeedLocale,
+  type InstantaneousVelocitySpeedLabProps,
   type InstantaneousVelocitySpeedState,
   isInstantaneousSpeedCaseId,
 } from "@repo/design-system/components/contents/physics/kinematics/instantaneous-velocity-speed/data";
@@ -36,17 +35,17 @@ import {
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
 import { getColor } from "@repo/design-system/lib/color";
+import type { ReactNode } from "react";
 import { Suspense, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
 
 const ROAD_Y = -0.03;
 
 export function InstantaneousVelocitySpeedLab({
-  locale,
-}: {
-  locale: InstantaneousVelocitySpeedLocale;
-}) {
-  const labels = INSTANTANEOUS_SPEED_COPY[locale];
+  title,
+  description,
+  labels,
+}: InstantaneousVelocitySpeedLabProps) {
   const [caseId, setCaseId] = useState<InstantaneousSpeedCaseId>(
     DEFAULT_INSTANTANEOUS_SPEED_CASE_ID
   );
@@ -56,14 +55,17 @@ export function InstantaneousVelocitySpeedLab({
   );
   const facts = [
     {
+      id: "time",
       label: labels.factLabels.time,
       math: `t=${formatTimeMath(motion.scenario.time)}`,
     },
     {
+      id: "speed",
       label: labels.factLabels.speed,
       math: formatSpeedMath(motion.scenario.speed),
     },
     {
+      id: "velocity",
       label: labels.factLabels.velocity,
       math: formatSignedSpeedMath(motion.velocity),
     },
@@ -78,8 +80,8 @@ export function InstantaneousVelocitySpeedLab({
   return (
     <Card className="overflow-hidden content-auto-card">
       <CardHeader>
-        <CardTitle>{labels.title}</CardTitle>
-        <CardDescription>{labels.description}</CardDescription>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
 
       <CardContent className="flex flex-col gap-4">
@@ -144,7 +146,7 @@ export function InstantaneousVelocitySpeedLab({
       <CardFooter className="border-t">
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
           {facts.map((fact) => (
-            <LabFact key={fact.label} label={fact.label} math={fact.math} />
+            <LabFact key={fact.id} label={fact.label} math={fact.math} />
           ))}
         </dl>
       </CardFooter>
@@ -312,7 +314,7 @@ function AnimatedCar({ motion }: { motion: InstantaneousVelocitySpeedState }) {
   );
 }
 
-function LabFact({ label, math }: { label: string; math: string }) {
+function LabFact({ label, math }: { label: ReactNode; math: string }) {
   return (
     <div className="flex min-w-0 flex-col gap-1">
       <dt className="text-muted-foreground">{label}</dt>

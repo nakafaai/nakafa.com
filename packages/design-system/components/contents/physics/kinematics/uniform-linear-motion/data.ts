@@ -1,4 +1,5 @@
 import { getColor } from "@repo/design-system/lib/color";
+import type { ReactNode } from "react";
 
 export const UNIFORM_LINEAR_MOTION_CAR_MODEL_PATH =
   "/models/physics/kinematics/kenney-car-kit/sedan-sports.glb";
@@ -8,7 +9,20 @@ export const UNIFORM_LINEAR_MOTION_SPEEDS = [2, 4, 6] as const;
 export type UniformLinearMotionSpeed =
   (typeof UNIFORM_LINEAR_MOTION_SPEEDS)[number];
 
-export type UniformLinearMotionLocale = "id" | "en";
+export interface UniformLinearMotionLabLabels {
+  chooseSpeed: string;
+  duration: ReactNode;
+  positionStep: ReactNode;
+  speed: ReactNode;
+  stepDistance: ReactNode;
+  viewLabel: string;
+}
+
+export interface UniformLinearMotionLabProps {
+  description: ReactNode;
+  labels: UniformLinearMotionLabLabels;
+  title: ReactNode;
+}
 
 export const UNIFORM_LINEAR_MOTION_SCENE = {
   carScale: 0.62,
@@ -34,31 +48,6 @@ export const UNIFORM_LINEAR_MOTION_COLORS = {
   road: getColor("GRAY", 800),
   stripe: getColor("SLATE", 50),
   track: getColor("TEAL"),
-} as const;
-
-export const UNIFORM_LINEAR_MOTION_COPY = {
-  id: {
-    chooseSpeed: "Pilih kecepatan tetap",
-    description:
-      "Ubah kecepatan tetap untuk melihat jarak antarjejak selalu sama pada setiap detik.",
-    duration: "Waktu gerak",
-    positionStep: "Selang jejak",
-    speed: "Kecepatan tetap",
-    stepDistance: "Jarak antarjejak",
-    title: "Jejak GLB Mobil",
-    viewLabel: "Tampilan jejak gerak lurus beraturan",
-  },
-  en: {
-    chooseSpeed: "Choose constant velocity",
-    description:
-      "Change the constant velocity to see the distance between marks stay equal every second.",
-    duration: "Motion time",
-    positionStep: "Mark interval",
-    speed: "Constant velocity",
-    stepDistance: "Distance between marks",
-    title: "Uniform Motion Car Marks",
-    viewLabel: "Uniform linear motion marks view",
-  },
 } as const;
 
 export type UniformLinearMotionState = ReturnType<

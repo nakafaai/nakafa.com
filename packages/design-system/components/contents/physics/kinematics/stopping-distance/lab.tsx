@@ -11,11 +11,10 @@ import {
   STOPPING_DISTANCE_CAMERA,
   STOPPING_DISTANCE_CAR_MODEL_PATH,
   STOPPING_DISTANCE_COLORS,
-  STOPPING_DISTANCE_COPY,
   STOPPING_DISTANCE_REACTION_TIME,
   STOPPING_DISTANCE_SCENE,
   STOPPING_DISTANCE_SPEEDS,
-  type StoppingDistanceLocale,
+  type StoppingDistanceLabProps,
   type StoppingDistanceSpeed,
   type StoppingDistanceState,
 } from "@repo/design-system/components/contents/physics/kinematics/stopping-distance/data";
@@ -47,13 +46,12 @@ const REACTION_DISTANCE_COLOR = getColor("TEAL");
 const BRAKING_DISTANCE_COLOR = getColor("ORANGE", 500);
 const DISTANCE_MARKER_Z = STOPPING_DISTANCE_SCENE.roadWidth * 0.2;
 
-interface StoppingDistanceLabProps {
-  locale: StoppingDistanceLocale;
-}
-
-export function StoppingDistanceLab({ locale }: StoppingDistanceLabProps) {
+export function StoppingDistanceLab({
+  title,
+  description,
+  labels,
+}: StoppingDistanceLabProps) {
   const [speed, setSpeed] = useState<StoppingDistanceSpeed>(20);
-  const labels = STOPPING_DISTANCE_COPY[locale];
   const motion = useMemo(() => getStoppingDistanceState(speed), [speed]);
 
   function handleSpeedChange(value: string) {
@@ -73,8 +71,8 @@ export function StoppingDistanceLab({ locale }: StoppingDistanceLabProps) {
   return (
     <Card className="overflow-hidden content-auto-card">
       <CardHeader>
-        <CardTitle>{labels.title}</CardTitle>
-        <CardDescription>{labels.description}</CardDescription>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
 
       <CardContent className="flex flex-col gap-4">
@@ -397,7 +395,7 @@ function LabFact({
   value,
 }: {
   indicatorColor?: string;
-  label: string;
+  label: ReactNode;
   value: ReactNode;
 }) {
   return (

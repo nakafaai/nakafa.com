@@ -32,7 +32,30 @@ Pada GLB, jejak posisi tiap detik berjarak sama. Pada GLBB, jaraknya berubah. Ji
 
 Perhatikan gerak "Dari Diam". Pada detik awal mobil belum melaju, lalu jarak jejaknya makin panjang. Itu tanda bahwa kecepatannya bertambah. Grafiknya juga naik lurus, karena percepatannya tetap.
 
-<NonUniformLinearMotionLab locale="id" />
+<NonUniformLinearMotionLab
+  title={<>Jejak GLBB pada Rel</>}
+  description={
+    <>
+      Titik di rel menandai posisi kereta setiap{" "}
+      <InlineMath math="1\text{ s}" /> saat percepatan tetap.
+    </>
+  }
+  labels={{
+    chooseScenario: "Pilih gerak",
+    scenarioNames: {
+      "from-rest": <>Dari Diam</>,
+      "speed-up": <>Makin Cepat</>,
+      brake: <>Direm</>,
+    },
+    factLabels: {
+      initialVelocity: <>Kecepatan awal</>,
+      acceleration: <>Percepatan</>,
+      finalVelocity: <>Kecepatan akhir</>,
+      displacement: <>Perpindahan</>,
+    },
+    viewLabel: "Visual gerak lurus berubah beraturan",
+  }}
+/>
 
 ## Perpindahan Dibaca dari Luas Grafik
 

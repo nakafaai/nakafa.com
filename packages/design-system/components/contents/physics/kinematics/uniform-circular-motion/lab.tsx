@@ -11,10 +11,9 @@ import {
   UNIFORM_CIRCULAR_MOTION_CAMERA,
   UNIFORM_CIRCULAR_MOTION_CAR_MODEL_PATH,
   UNIFORM_CIRCULAR_MOTION_COLORS,
-  UNIFORM_CIRCULAR_MOTION_COPY,
   UNIFORM_CIRCULAR_MOTION_PERIODS,
   UNIFORM_CIRCULAR_MOTION_SCENE,
-  type UniformCircularMotionLocale,
+  type UniformCircularMotionLabProps,
   type UniformCircularMotionPeriod,
   type UniformCircularMotionState,
 } from "@repo/design-system/components/contents/physics/kinematics/uniform-circular-motion/data";
@@ -39,15 +38,13 @@ import type { ReactNode } from "react";
 import { Suspense, useMemo, useRef, useState } from "react";
 import { DoubleSide, type Group } from "three";
 
-interface UniformCircularMotionLabProps {
-  locale: UniformCircularMotionLocale;
-}
-
 export function UniformCircularMotionLab({
-  locale,
+  decimalSeparator,
+  title,
+  description,
+  labels,
 }: UniformCircularMotionLabProps) {
   const [period, setPeriod] = useState<UniformCircularMotionPeriod>(6);
-  const labels = UNIFORM_CIRCULAR_MOTION_COPY[locale];
   const motion = useMemo(() => getUniformCircularMotionState(period), [period]);
 
   function handlePeriodChange(value: string) {
@@ -67,8 +64,8 @@ export function UniformCircularMotionLab({
   return (
     <Card className="overflow-hidden content-auto-card">
       <CardHeader>
-        <CardTitle>{labels.title}</CardTitle>
-        <CardDescription>{labels.description}</CardDescription>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
 
       <CardContent className="flex flex-col gap-4">
@@ -137,7 +134,7 @@ export function UniformCircularMotionLab({
               <InlineMath
                 math={`${formatCircularMotionDecimal(
                   motion.speed,
-                  locale
+                  decimalSeparator
                 )}\\text{ m/s}`}
               />
             }
@@ -148,7 +145,7 @@ export function UniformCircularMotionLab({
               <InlineMath
                 math={`${formatCircularMotionDecimal(
                   motion.acceleration,
-                  locale
+                  decimalSeparator
                 )}\\text{ m/s}^2`}
               />
             }
@@ -290,7 +287,7 @@ function CarContactShadow() {
   );
 }
 
-function LabFact({ label, value }: { label: string; value: ReactNode }) {
+function LabFact({ label, value }: { label: ReactNode; value: ReactNode }) {
   return (
     <div className="flex min-w-0 flex-col gap-1">
       <dt className="text-muted-foreground">{label}</dt>

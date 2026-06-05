@@ -11,10 +11,9 @@ import {
   UNIFORM_LINEAR_MOTION_CAMERA,
   UNIFORM_LINEAR_MOTION_CAR_MODEL_PATH,
   UNIFORM_LINEAR_MOTION_COLORS,
-  UNIFORM_LINEAR_MOTION_COPY,
   UNIFORM_LINEAR_MOTION_SCENE,
   UNIFORM_LINEAR_MOTION_SPEEDS,
-  type UniformLinearMotionLocale,
+  type UniformLinearMotionLabProps,
   type UniformLinearMotionSpeed,
   type UniformLinearMotionState,
 } from "@repo/design-system/components/contents/physics/kinematics/uniform-linear-motion/data";
@@ -44,28 +43,31 @@ const POSITION_MARK_Y = 0.08;
 const TRACK_Z = UNIFORM_LINEAR_MOTION_SCENE.roadWidth * 0.22;
 
 export function UniformLinearMotionLab({
-  locale,
-}: {
-  locale: UniformLinearMotionLocale;
-}) {
+  title,
+  description,
+  labels,
+}: UniformLinearMotionLabProps) {
   const [speed, setSpeed] = useState<UniformLinearMotionSpeed>(4);
-  const labels = UNIFORM_LINEAR_MOTION_COPY[locale];
   const motion = useMemo(() => getUniformLinearMotionState(speed), [speed]);
   const facts = [
     {
+      id: "speed",
       label: labels.speed,
       value: <InlineMath math={formatSpeedMath(motion.speed)} />,
     },
     {
+      id: "position-step",
       label: labels.positionStep,
       value: <InlineMath math={formatSecondMath(motion.timeStep)} />,
     },
     {
+      id: "step-distance",
       indicatorColor: UNIFORM_LINEAR_MOTION_COLORS.positionMark,
       label: labels.stepDistance,
       value: <InlineMath math={formatMeterMath(motion.stepDistance)} />,
     },
     {
+      id: "duration",
       label: labels.duration,
       value: <InlineMath math={formatSecondMath(motion.duration)} />,
     },
@@ -88,8 +90,8 @@ export function UniformLinearMotionLab({
   return (
     <Card className="overflow-hidden content-auto-card">
       <CardHeader>
-        <CardTitle>{labels.title}</CardTitle>
-        <CardDescription>{labels.description}</CardDescription>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
 
       <CardContent className="flex flex-col gap-4">
@@ -154,7 +156,7 @@ export function UniformLinearMotionLab({
       <CardFooter className="border-t">
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
           {facts.map((fact) => (
-            <div className="flex min-w-0 flex-col gap-1" key={fact.label}>
+            <div className="flex min-w-0 flex-col gap-1" key={fact.id}>
               <dt className="flex items-center gap-2 text-muted-foreground">
                 {fact.indicatorColor ? (
                   <span

@@ -1,6 +1,5 @@
 import { getColor } from "@repo/design-system/lib/color";
-
-export type InstantaneousVelocitySpeedLocale = "id" | "en";
+import type { ReactNode } from "react";
 
 export const INSTANTANEOUS_SPEED_CAR_MODEL_PATH =
   "/models/physics/kinematics/kenney-car-kit/suv-luxury.glb";
@@ -22,6 +21,22 @@ export const INSTANTANEOUS_SPEED_CASES = [
 
 export type InstantaneousSpeedCaseId =
   (typeof INSTANTANEOUS_SPEED_CASES)[number]["id"];
+
+export interface InstantaneousVelocitySpeedLabLabels {
+  chooseMoment: string;
+  factLabels: {
+    speed: ReactNode;
+    time: ReactNode;
+    velocity: ReactNode;
+  };
+  viewLabel: string;
+}
+
+export interface InstantaneousVelocitySpeedLabProps {
+  description: ReactNode;
+  labels: InstantaneousVelocitySpeedLabLabels;
+  title: ReactNode;
+}
 
 export const DEFAULT_INSTANTANEOUS_SPEED_CASE_ID =
   "right-fast" satisfies InstantaneousSpeedCaseId;
@@ -58,33 +73,6 @@ export const INSTANTANEOUS_SPEED_COLORS = {
   detectorBase: getColor("TEAL", 700),
   road: getColor("GRAY", 800),
   stripe: getColor("SLATE", 50),
-} as const;
-
-export const INSTANTANEOUS_SPEED_COPY = {
-  id: {
-    chooseMoment: "Pilih momen baca",
-    description:
-      "Pilih momen baca untuk melihat mobil melewati titik ukur dan nilai kecepatan sesaatnya.",
-    factLabels: {
-      speed: "Kelajuan sesaat",
-      time: "Waktu baca",
-      velocity: "Kecepatan sesaat",
-    },
-    title: "Bacaan di Titik Ukur",
-    viewLabel: "Tampilan mobil melewati titik ukur",
-  },
-  en: {
-    chooseMoment: "Choose reading moment",
-    description:
-      "Choose a reading moment to see the car pass a measuring point and its instantaneous velocity value.",
-    factLabels: {
-      speed: "Instantaneous speed",
-      time: "Reading time",
-      velocity: "Instantaneous velocity",
-    },
-    title: "Reading at a Measuring Point",
-    viewLabel: "Car passing a measuring point",
-  },
 } as const;
 
 export type InstantaneousVelocitySpeedState = ReturnType<

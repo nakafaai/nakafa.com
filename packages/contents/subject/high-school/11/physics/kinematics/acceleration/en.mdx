@@ -29,7 +29,31 @@ The unit of acceleration is <InlineMath math="\text{m/s}^2" />. If <InlineMath m
 
 A ticker timer marks a paper tape at equal time intervals. If the gaps between marks get wider, the object covers more distance in each equal time interval. Its velocity is increasing. If the gaps stay the same, its velocity is constant. If the gaps get smaller, its velocity is decreasing.
 
-<AccelerationLab locale="en" />
+<AccelerationLab
+  title={<>Rocket Acceleration Through Space</>}
+  description={
+    <>
+      A chase camera follows the rocket while{" "}
+      <InlineMath math="1\text{ s}" /> time gates spread out, stay even, or
+      bunch together.
+    </>
+  }
+  labels={{
+    chooseCase: "Choose motion",
+    scenarioNames: {
+      "speed-up": <>Speeding Up</>,
+      steady: <>Constant</>,
+      "slow-down": <>Slowing Down</>,
+    },
+    factLabels: {
+      initialVelocity: <>Initial velocity</>,
+      acceleration: <>Acceleration</>,
+      finalVelocity: <>Final velocity</>,
+      timeStep: <>Ghost interval</>,
+    },
+    viewLabel: "Rocket acceleration through space visual",
+  }}
+/>
 
 A velocity-time graph reads the same idea in a shorter way. The slope of the line shows how much velocity changes compared with the time it takes.
 

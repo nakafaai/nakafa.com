@@ -1,7 +1,7 @@
 import { getColor } from "@repo/design-system/lib/color";
+import type { ReactNode } from "react";
 
 export type GlbbScenarioId = "from-rest" | "speed-up" | "brake";
-export type GlbbLocale = "id" | "en";
 
 export interface GlbbScenario {
   acceleration: number;
@@ -16,6 +16,24 @@ export interface GlbbLabels {
   scenarioNames: Record<GlbbScenarioId, string>;
   timeAxis: string;
   velocityAxis: string;
+}
+
+export interface GlbbLabLabels {
+  chooseScenario: string;
+  factLabels: {
+    acceleration: ReactNode;
+    displacement: ReactNode;
+    finalVelocity: ReactNode;
+    initialVelocity: ReactNode;
+  };
+  scenarioNames: Record<GlbbScenarioId, ReactNode>;
+  viewLabel: string;
+}
+
+export interface GlbbLabProps {
+  description: ReactNode;
+  labels: GlbbLabLabels;
+  title: ReactNode;
 }
 
 export const GLBB_TRAIN_MODEL_PATH =
@@ -73,45 +91,6 @@ export const GLBB_SCENARIOS: GlbbScenario[] = [
     duration: 5,
   },
 ];
-
-export const GLBB_LAB_COPY = {
-  en: {
-    chooseScenario: "Choose motion",
-    description:
-      "Marks on the rail show the train position every 1 s while acceleration stays constant.",
-    factLabels: {
-      acceleration: "Acceleration",
-      displacement: "Displacement",
-      finalVelocity: "Final velocity",
-      initialVelocity: "Initial velocity",
-    },
-    scenarioNames: {
-      brake: "Braking",
-      "from-rest": "From Rest",
-      "speed-up": "Speeding Up",
-    },
-    title: "Position Marks on a Rail",
-    viewLabel: "Uniformly accelerated motion view",
-  },
-  id: {
-    chooseScenario: "Pilih gerak",
-    description:
-      "Titik di rel menandai posisi kereta setiap 1 s saat percepatan tetap.",
-    factLabels: {
-      acceleration: "Percepatan",
-      displacement: "Perpindahan",
-      finalVelocity: "Kecepatan akhir",
-      initialVelocity: "Kecepatan awal",
-    },
-    scenarioNames: {
-      brake: "Direm",
-      "from-rest": "Dari Diam",
-      "speed-up": "Makin Cepat",
-    },
-    title: "Jejak GLBB pada Rel",
-    viewLabel: "Tampilan gerak lurus berubah beraturan",
-  },
-} as const;
 
 const TRAILING_ZERO_DECIMAL_REGEX = /\.0$/;
 
@@ -210,6 +189,10 @@ export function formatMeterMath(value: number) {
 
 export function formatVelocityMath(value: number) {
   return `${formatSignedNumber(value)}\\text{ m/s}`;
+}
+
+export function formatSecondMath(value: number) {
+  return `${formatNumber(value)}\\text{ s}`;
 }
 
 function getTimeSamples(duration: number) {

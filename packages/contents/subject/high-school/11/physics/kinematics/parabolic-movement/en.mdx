@@ -23,7 +23,27 @@ The easiest way to read the motion is to split it into two directions. The horiz
 
 Here, <InlineMath math="v_0" /> is the initial speed, <InlineMath math="\theta" /> is the launch angle from the horizontal, <InlineMath math="g" /> is gravitational acceleration, <InlineMath math="x" /> is horizontal position, and <InlineMath math="y" /> is height.
 
-<ParabolicMovementLab locale="en" />
+The visual below uses one ball so the launch angle, peak, and range are easier to compare.
+
+<ParabolicMovementLab
+  title={<>Projectile Ball Path</>}
+  description={
+    <>
+      Change the launch angle. The ball keeps moving horizontally while
+      gravity changes its height.
+    </>
+  }
+  labels={{
+    chooseLaunch: "Choose launch angle",
+    factLabels: {
+      initialSpeed: <>Initial speed</>,
+      flightTime: <>Time in the air</>,
+      range: <>Range</>,
+      peakHeight: <>Peak height</>,
+    },
+    viewLabel: "Projectile ball path visual",
+  }}
+/>
 
 ## Gravity Changes Only the Vertical Part
 

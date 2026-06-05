@@ -22,7 +22,32 @@ After that, the horizontal and vertical directions are calculated with different
 
 > The key to projectile analysis is using the same time for two different directions.
 
-<ParabolicMovementAnalysisLab locale="en" />
+<ParabolicMovementAnalysisLab
+  title={<>Cannonball Component Analysis</>}
+  description={
+    <>
+      A cannonball crosses the water while the ghost balls mark equal time steps
+      from the same formulas used in the calculation.
+    </>
+  }
+  labels={{
+    chooseScenario: "Choose launch",
+    scenarioNames: {
+      "sixty-degree": <>Sixty Degrees</>,
+      "long-drive": <>Long Drive</>,
+      "high-arc": <>High Arc</>,
+    },
+    factLabels: {
+      horizontalComponent: <>Horizontal component</>,
+      verticalComponent: <>Vertical component</>,
+      peakTime: <>Peak time</>,
+      flightTime: <>Flight time</>,
+      range: <>Range</>,
+      instantaneousVelocity: <>Velocity at two seconds</>,
+    },
+    viewLabel: "Cannonball projectile analysis visual",
+  }}
+/>
 
 The arc and ghost balls show positions at equal time intervals, not separate horizontal and vertical paths. The values below the scene come from the same split: <InlineMath math="v_{0x}" /> stays constant, while <InlineMath math="v_y=v_{0y}-gt" /> changes because gravity acts downward.
 

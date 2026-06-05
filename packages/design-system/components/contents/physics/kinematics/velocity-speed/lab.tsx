@@ -14,10 +14,9 @@ import {
   VELOCITY_SPEED_CAR_MODEL_PATH,
   VELOCITY_SPEED_CASE_IDS,
   VELOCITY_SPEED_COLORS,
-  VELOCITY_SPEED_COPY,
   VELOCITY_SPEED_SCENE,
   type VelocitySpeedCaseId,
-  type VelocitySpeedLocale,
+  type VelocitySpeedLabProps,
   type VelocitySpeedState,
 } from "@repo/design-system/components/contents/physics/kinematics/velocity-speed/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
@@ -50,28 +49,33 @@ const DISPLACEMENT_GUIDE_Z = 0.46;
 const GUIDE_THICKNESS = 0.045;
 const ROUTE_CONE_Z = DISTANCE_GUIDE_Z - DISTANCE_GUIDE_STEP * 1.35;
 
-export function VelocitySpeedLab({ locale }: { locale: VelocitySpeedLocale }) {
-  const labels = VELOCITY_SPEED_COPY[locale];
+export function VelocitySpeedLab({
+  title,
+  description,
+  labels,
+}: VelocitySpeedLabProps) {
   const [caseId, setCaseId] = useState<VelocitySpeedCaseId>("partialReturn");
   const motion = useMemo(() => getVelocitySpeedState(caseId), [caseId]);
   const facts = [
     {
+      id: "distance",
       label: labels.factLabels.distance,
       math: `s=${formatMeterMath(motion.distance)}`,
       markerColor: VELOCITY_SPEED_COLORS.distanceGuide,
     },
     {
+      id: "displacement",
       label: labels.factLabels.displacement,
       math: `\\Delta x=${formatSignedMeterMath(motion.displacement)}`,
       markerColor: VELOCITY_SPEED_COLORS.displacementGuide,
     },
     {
+      id: "speed",
       label: labels.factLabels.speed,
-      math: `\\text{${locale === "id" ? "kelajuan" : "speed"}}=${formatSpeedMath(
-        motion.speed
-      )}`,
+      math: `\\frac{s}{\\Delta t}=${formatSpeedMath(motion.speed)}`,
     },
     {
+      id: "velocity",
       label: labels.factLabels.velocity,
       math: `v=${formatSignedSpeedMath(motion.velocity)}`,
     },
@@ -88,8 +92,8 @@ export function VelocitySpeedLab({ locale }: { locale: VelocitySpeedLocale }) {
   return (
     <Card className="overflow-hidden content-auto-card">
       <CardHeader>
-        <CardTitle>{labels.title}</CardTitle>
-        <CardDescription>{labels.description}</CardDescription>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
 
       <CardContent className="flex flex-col gap-4">
@@ -156,7 +160,7 @@ export function VelocitySpeedLab({ locale }: { locale: VelocitySpeedLocale }) {
       <CardFooter className="border-t">
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
           {facts.map((fact) => (
-            <div className="flex min-w-0 flex-col gap-1" key={fact.label}>
+            <div className="flex min-w-0 flex-col gap-1" key={fact.id}>
               <dt className="flex items-center gap-2 text-muted-foreground">
                 {"markerColor" in fact ? (
                   <span

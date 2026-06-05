@@ -27,7 +27,23 @@ Jadi, jarak henti terdiri dari dua tahap. Tahap pertama terjadi ketika pengemudi
 | Jarak reaksi | Kendaraan masih bergerak dengan kecepatan awal | Kecepatan dan waktu reaksi |
 | Jarak pengereman | Kendaraan melambat sampai berhenti | Kecepatan awal dan besar perlambatan |
 
-<StoppingDistanceLab locale="id" />
+<StoppingDistanceLab
+  title={<>Jarak Henti Mobil</>}
+  description={
+    <>
+      Ubah kecepatan awal untuk melihat jarak reaksi hijau dan jarak pengereman
+      oranye.
+    </>
+  }
+  labels={{
+    chooseSpeed: "Pilih kecepatan awal",
+    speed: <>Kecepatan awal</>,
+    reactionDistance: <>Jarak reaksi</>,
+    brakingDistance: <>Jarak pengereman</>,
+    stoppingDistance: <>Jarak henti</>,
+    viewLabel: "Visual jarak henti mobil",
+  }}
+/>
 
 ## Jarak Pengereman Dibaca dari GLBB
 

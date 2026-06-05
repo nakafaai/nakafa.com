@@ -21,7 +21,27 @@ With that choice, gravitational acceleration is written as <InlineMath math="-g"
   <BlockMath math="v_y^2=v_0^2-2g(y-y_0)" />
 </MathContainer>
 
-<VerticalMovementLab locale="en" />
+<VerticalMovementLab
+  title={<>Ball in Vertical Motion</>}
+  description={
+    <>
+      Choose how the ball starts moving to see how gravity changes its height
+      and velocity.
+    </>
+  }
+  labels={{
+    condition: "Initial condition",
+    modeLabels: {
+      throw: <>Thrown Upward</>,
+      drop: <>Dropped</>,
+    },
+    initialCondition: <>Initial condition</>,
+    maxHeight: <>Highest point</>,
+    time: <>Motion time</>,
+    finalVelocity: <>Final velocity</>,
+    viewLabel: "Ball in vertical motion visual",
+  }}
+/>
 
 ## Gravity Still Acts While the Object Rises
 

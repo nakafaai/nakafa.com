@@ -21,7 +21,32 @@ Tanda positif dan negatif tetap penting karena menunjukkan arah pada sumbu yang 
 
 > Gerak relatif tidak membuat gerak baru. Kita hanya membaca gerak yang sama dari kursi pengamat yang berbeda.
 
-<RelativeMovementLab locale="id" />
+<RelativeMovementLab
+  title={<>Gerak Relatif Dua Mobil</>}
+  description={
+    <>
+      Pilih arah mobil B untuk melihat geraknya menurut pengamat di mobil A.
+    </>
+  }
+  labels={{
+    chooseCase: "Pilih arah gerak",
+    modeLabels: {
+      "same-direction": <>Searah</>,
+      "opposite-direction": <>Berlawanan</>,
+    },
+    factLabels: {
+      observer: <>Mobil A</>,
+      target: <>Mobil B</>,
+      relativeVelocity: <>Kecepatan relatif B terhadap A</>,
+      visibleDirection: <>Menurut pengamat di A</>,
+    },
+    directionLabels: {
+      left: <>B tampak bergerak ke kiri relatif terhadap A.</>,
+      right: <>B tampak bergerak ke kanan relatif terhadap A.</>,
+    },
+    viewLabel: "Visual gerak relatif",
+  }}
+/>
 
 ## Kecepatan Berubah Saat Pengamat Ikut Bergerak
 

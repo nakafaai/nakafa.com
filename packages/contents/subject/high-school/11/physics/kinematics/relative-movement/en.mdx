@@ -21,7 +21,32 @@ Positive and negative signs still matter because they show direction along the c
 
 > Relative motion does not create a new motion. It reads the same motion from a different observer's seat.
 
-<RelativeMovementLab locale="en" />
+<RelativeMovementLab
+  title={<>Relative Motion of Two Cars</>}
+  description={
+    <>
+      Choose the direction of car B to see its motion as observed from car A.
+    </>
+  }
+  labels={{
+    chooseCase: "Choose direction",
+    modeLabels: {
+      "same-direction": <>Same Direction</>,
+      "opposite-direction": <>Opposite</>,
+    },
+    factLabels: {
+      observer: <>Car A</>,
+      target: <>Car B</>,
+      relativeVelocity: <>Relative velocity of B to A</>,
+      visibleDirection: <>As seen from A</>,
+    },
+    directionLabels: {
+      left: <>B appears to move left relative to A.</>,
+      right: <>B appears to move right relative to A.</>,
+    },
+    viewLabel: "Relative motion visual",
+  }}
+/>
 
 ## Velocity Changes When the Observer Moves Too
 
