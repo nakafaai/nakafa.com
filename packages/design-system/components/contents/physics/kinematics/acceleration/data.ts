@@ -174,16 +174,12 @@ export function getAccelerationVelocityAt(
   return item.v0 + getAccelerationValue(item) * time;
 }
 
-export function getMotionPoints() {
-  const firstCase = ACCELERATION_CASES[0];
-
-  return [
-    { time: firstCase.t0, velocity: firstCase.v0 },
-    ...ACCELERATION_CASES.map((item) => ({
-      time: item.t1,
-      velocity: item.v1,
-    })),
-  ];
+export function getMotionSegments() {
+  return ACCELERATION_CASES.map((item) => ({
+    end: { time: item.t1, velocity: item.v1 },
+    id: item.id,
+    start: { time: item.t0, velocity: item.v0 },
+  }));
 }
 
 export function formatAccelerationMath(value: number) {

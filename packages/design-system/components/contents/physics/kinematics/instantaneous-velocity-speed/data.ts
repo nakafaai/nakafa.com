@@ -47,14 +47,13 @@ export const INSTANTANEOUS_SPEED_SCENE = {
   detectorPostRadius: 0.045,
   detectorStripWidth: 0.08,
   pauseSeconds: 0.55,
-  readingDistanceMeters: 44,
   roadMinimumLength: 42,
   roadWidth: 1.8,
   stripeLength: 0.44,
   stripeSpacing: 1.5,
   stripeWidth: 0.06,
   trackZ: 0.18,
-  worldScale: 0.12,
+  worldScale: 0.06,
 } as const;
 
 export const INSTANTANEOUS_SPEED_CAMERA = {
@@ -85,13 +84,11 @@ export function getInstantaneousVelocitySpeedState(
   const scenario = getInstantaneousSpeedCaseById(id);
   const velocity = scenario.speed * scenario.direction;
   const halfTravelLength =
-    INSTANTANEOUS_SPEED_SCENE.readingDistanceMeters *
-    INSTANTANEOUS_SPEED_SCENE.worldScale;
+    scenario.speed * scenario.time * INSTANTANEOUS_SPEED_SCENE.worldScale;
   const trackLength = halfTravelLength * 2;
   const startX = -scenario.direction * halfTravelLength;
   const endX = scenario.direction * halfTravelLength;
-  const loopSeconds =
-    (INSTANTANEOUS_SPEED_SCENE.readingDistanceMeters * 2) / scenario.speed;
+  const loopSeconds = scenario.time * 2;
   const measurementX = 0;
   const roadLength = getRoadLength(trackLength);
 

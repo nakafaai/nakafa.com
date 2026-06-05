@@ -2,7 +2,7 @@ import {
   type AccelerationCase,
   type AccelerationLabels,
   getDeltaVelocity,
-  getMotionPoints,
+  getMotionSegments,
 } from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";
 import type { ChartConfig } from "@repo/design-system/components/ui/chart";
 import {
@@ -25,7 +25,11 @@ interface AccelerationGraphProps {
   selectedCase: AccelerationCase;
 }
 
-const MOTION_POINTS = getMotionPoints();
+const MOTION_SEGMENTS = getMotionSegments();
+const MOTION_POINTS = MOTION_SEGMENTS.flatMap((segment) => [
+  segment.start,
+  segment.end,
+]);
 const MAX_OBSERVED_TIME = Math.max(...MOTION_POINTS.map((point) => point.time));
 const MAX_OBSERVED_VELOCITY = Math.max(
   ...MOTION_POINTS.map((point) => point.velocity)
@@ -105,10 +109,13 @@ export function AccelerationGraph({
         <ChartTooltip
           content={<ChartTooltipContent labelFormatter={formatTooltipTime} />}
         />
-        {getMotionSegments(MOTION_POINTS).map((segment) => (
+        {MOTION_SEGMENTS.map((segment) => (
           <ReferenceLine
-            key={`${segment[0].x}-${segment[0].y}-${segment[1].x}-${segment[1].y}`}
-            segment={segment}
+            key={segment.id}
+            segment={[
+              { x: segment.start.time, y: segment.start.velocity },
+              { x: segment.end.time, y: segment.end.velocity },
+            ]}
             stroke="var(--muted-foreground)"
             strokeDasharray="7 7"
             strokeOpacity={0.72}
@@ -141,26 +148,6 @@ export function AccelerationGraph({
       </LineChart>
     </ChartContainer>
   );
-}
-
-function getMotionSegments(points: ReturnType<typeof getMotionPoints>) {
-  const segments: Array<readonly [GuidePoint, GuidePoint]> = [];
-
-  for (let index = 1; index < points.length; index += 1) {
-    const previousPoint = points[index - 1];
-    const currentPoint = points[index];
-
-    if (!(previousPoint && currentPoint)) {
-      continue;
-    }
-
-    segments.push([
-      { x: previousPoint.time, y: previousPoint.velocity },
-      { x: currentPoint.time, y: currentPoint.velocity },
-    ]);
-  }
-
-  return segments;
 }
 
 function getTicks(maxValue: number, step: number) {
