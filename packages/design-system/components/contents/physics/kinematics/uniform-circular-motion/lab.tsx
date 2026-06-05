@@ -38,6 +38,10 @@ import type { ReactNode } from "react";
 import { Suspense, useMemo, useRef, useState } from "react";
 import { DoubleSide, type Group } from "three";
 
+const SHADOW_CAMERA_RADIUS =
+  UNIFORM_CIRCULAR_MOTION_SCENE.outerRadius +
+  UNIFORM_CIRCULAR_MOTION_SCENE.carScale;
+
 export function UniformCircularMotionLab({
   decimalSeparator,
   title,
@@ -107,6 +111,10 @@ export function UniformCircularMotionLab({
                 intensity={1.25}
                 position={[3.5, 6, 4.5]}
                 shadow-bias={-0.0006}
+                shadow-camera-bottom={-SHADOW_CAMERA_RADIUS}
+                shadow-camera-left={-SHADOW_CAMERA_RADIUS}
+                shadow-camera-right={SHADOW_CAMERA_RADIUS}
+                shadow-camera-top={SHADOW_CAMERA_RADIUS}
                 shadow-mapSize-height={1024}
                 shadow-mapSize-width={1024}
                 shadow-normalBias={0.02}
@@ -254,7 +262,6 @@ function CircularCar({ motion }: { motion: UniformCircularMotionState }) {
       rotation={[0, 0, 0]}
       scale={UNIFORM_CIRCULAR_MOTION_SCENE.carScale}
     >
-      <CarContactShadow />
       <CarModel />
     </group>
   );
@@ -266,24 +273,6 @@ function CarModel() {
       bodyColor={UNIFORM_CIRCULAR_MOTION_COLORS.carBody}
       modelPath={UNIFORM_CIRCULAR_MOTION_CAR_MODEL_PATH}
     />
-  );
-}
-
-function CarContactShadow() {
-  return (
-    <mesh
-      position={[0, 0.012, 0]}
-      rotation={[-Math.PI / 2, 0, 0]}
-      scale={[1.45, 0.52, 1]}
-    >
-      <circleGeometry args={[0.7, 32]} />
-      <meshBasicMaterial
-        color={getColor("SLATE", 900)}
-        depthWrite={false}
-        opacity={0.16}
-        transparent
-      />
-    </mesh>
   );
 }
 

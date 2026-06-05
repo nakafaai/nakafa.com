@@ -2,10 +2,10 @@ import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 
 export const UNIFORM_CIRCULAR_MOTION_CAR_MODEL_PATH =
-  "/models/physics/kinematics/kenney-car-kit/kart-oobi.glb";
+  "/models/physics/kinematics/kenney-car-kit/race.glb";
 
 export const UNIFORM_CIRCULAR_MOTION_COLORS = {
-  carBody: getColor("ORANGE"),
+  carBody: getColor("ORANGE", 500),
 } as const;
 
 export const UNIFORM_CIRCULAR_MOTION_PERIODS = [8, 6, 4] as const;
@@ -34,7 +34,7 @@ export interface UniformCircularMotionLabProps {
 const TRACK_RADIUS = 4;
 
 export const UNIFORM_CIRCULAR_MOTION_SCENE = {
-  carScale: 0.58,
+  carScale: 0.84,
   innerRadius: 3.45,
   laneMarkerCount: 18,
   outerRadius: 4.55,
