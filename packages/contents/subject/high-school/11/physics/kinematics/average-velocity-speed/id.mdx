@@ -1,3 +1,5 @@
+import { AverageVelocitySpeedLab } from "@repo/design-system/components/contents/physics/kinematics/average-velocity-speed/lab";
+
 export const metadata = {
   title: "Kecepatan dan Kelajuan Rata-Rata",
   description:
@@ -21,6 +23,28 @@ Kecepatan rata-rata memakai perpindahan. Karena perpindahan punya arah, kecepata
 </MathContainer>
 
 Simbol <InlineMath math="\Delta x" /> atau <InlineMath math="\Delta \vec{r}" /> menyatakan perubahan posisi dari awal ke akhir. Simbol <InlineMath math="s_{\text{total}}" /> menyatakan panjang lintasan yang ditempuh selama perjalanan.
+
+<AverageVelocitySpeedLab locale="id" />
+
+Angka pada kartu dihitung dari lintasan yang sama. Perhatikan dua garisnya dulu. Garis hijau mengikuti jalan bola, jadi garis itu dibaca sebagai jarak total. Garis ungu hanya menghubungkan titik awal dan titik akhir, jadi garis itu dibaca sebagai besar perpindahan.
+
+Untuk menghitung jarak total, lintasan hijau dipecah menjadi bagian lurus dan bagian melengkung. Bagian lurus memakai panjang garis. Bagian melengkung memakai panjang busur, yaitu jari-jari dikali besar sudut. Setelah semua bagian dijumlahkan, hasilnya dibandingkan dengan waktu yang sama.
+
+<BlockMath math="\begin{aligned}
+s_{\text{total}}&=\sum L_{\text{segmen}} \\
+L_{\text{garis}}&=d,\qquad L_{\text{busur}}=r|\theta| \\
+|\Delta \vec r|&=\sqrt{(x_{\text{akhir}}-x_{\text{awal}})^2+(z_{\text{akhir}}-z_{\text{awal}})^2} \\
+\text{kelajuan rata-rata}&=\frac{s_{\text{total}}}{\Delta t} \\
+|\bar{\vec v}|&=\frac{|\Delta \vec r|}{\Delta t}
+\end{aligned}" />
+
+Pada pilihan Belokan Halus, bola tidak bergerak lurus dari awal ke akhir. Bola mengikuti tikungan, sehingga jarak totalnya sekitar <InlineMath math="16{,}7 \text{ m}" />. Namun posisi awal dan akhirnya hanya berjarak <InlineMath math="14 \text{ m}" />. Karena waktunya <InlineMath math="5 \text{ s}" />, kelajuan rata-rata dan besar kecepatan rata-ratanya menjadi:
+
+<BlockMath math="\begin{aligned}
+s_{\text{total}}&\approx 16{,}7\text{ m},\qquad |\Delta \vec r|=14\text{ m},\qquad \Delta t=5\text{ s} \\
+\text{kelajuan rata-rata}&\approx \frac{16{,}7}{5}=3{,}3\text{ m/s} \\
+|\bar{\vec v}|&=\frac{14}{5}=2{,}8\text{ m/s}
+\end{aligned}" />
 
 ## Selang Waktu Sama Belum Tentu Cerita Geraknya Sama
 

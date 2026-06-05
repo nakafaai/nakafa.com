@@ -41,7 +41,7 @@ import { Suspense, useState } from "react";
 const NARROW_CANVAS_ASPECT_RATIO = 1.4;
 
 /**
- * Renders a compact 3D model for visualizing length powers in dimensions.
+ * Renders a compact model for visualizing length powers in dimensions.
  *
  * The component uses demand rendering because the scene changes only when
  * students switch modes or move the camera.

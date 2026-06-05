@@ -66,7 +66,7 @@ export const RELATIVE_MOVEMENT_COPY = {
       "same-direction": "Same Direction",
     },
     title: "Relative Motion of Two Cars",
-    viewLabel: "3D relative motion view",
+    viewLabel: "Relative motion view",
   },
   id: {
     chooseCase: "Pilih arah gerak",
@@ -87,7 +87,7 @@ export const RELATIVE_MOVEMENT_COPY = {
       "same-direction": "Searah",
     },
     title: "Gerak Relatif Dua Mobil",
-    viewLabel: "Tampilan 3D gerak relatif",
+    viewLabel: "Tampilan gerak relatif",
   },
 } as const;
 

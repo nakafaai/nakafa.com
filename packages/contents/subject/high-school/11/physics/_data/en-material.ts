@@ -5,7 +5,7 @@ const enMaterials = [
   {
     title: "Vectors",
     description:
-      "Mathematical language to describe direction and magnitude in 3D world, from GPS to gaming.",
+      "Mathematical language to describe direction and magnitude in space, from GPS to gaming.",
     href: `${BASE_PATH}/vector`,
     items: [
       {

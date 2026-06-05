@@ -1,0 +1,143 @@
+"use client";
+
+import {
+  AVERAGE_VELOCITY_SPEED_CAMERA,
+  AVERAGE_VELOCITY_SPEED_CASE_IDS,
+  AVERAGE_VELOCITY_SPEED_COLORS,
+  AVERAGE_VELOCITY_SPEED_COPY,
+  type AverageVelocitySpeedCaseId,
+  type AverageVelocitySpeedLocale,
+  formatMeterMath,
+  formatSecondsMath,
+  formatSpeedMath,
+  getAverageVelocitySpeedState,
+  isAverageVelocitySpeedCaseId,
+} from "@repo/design-system/components/contents/physics/kinematics/average-velocity-speed/data";
+import { AverageMotionStage } from "@repo/design-system/components/contents/physics/kinematics/average-velocity-speed/scene";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
+import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@repo/design-system/components/ui/card";
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from "@repo/design-system/components/ui/toggle-group";
+import { useMemo, useState } from "react";
+
+export function AverageVelocitySpeedLab({
+  locale,
+}: {
+  locale: AverageVelocitySpeedLocale;
+}) {
+  const [caseId, setCaseId] = useState<AverageVelocitySpeedCaseId>("bank");
+  const labels = AVERAGE_VELOCITY_SPEED_COPY[locale];
+  const motion = useMemo(() => getAverageVelocitySpeedState(caseId), [caseId]);
+  const facts = [
+    {
+      label: labels.factLabels.distance,
+      math: `s_{\\text{total}}=${formatMeterMath(motion.distance, locale)}`,
+      markerColor: AVERAGE_VELOCITY_SPEED_COLORS.distance,
+    },
+    {
+      label: labels.factLabels.displacement,
+      math: `|\\Delta \\vec r|=${formatMeterMath(motion.displacement, locale)}`,
+      markerColor: AVERAGE_VELOCITY_SPEED_COLORS.displacement,
+    },
+    {
+      label: labels.factLabels.time,
+      math: `\\Delta t=${formatSecondsMath(motion.duration, locale)}`,
+    },
+    {
+      label: labels.factLabels.speed,
+      math: `\\frac{s_{\\text{total}}}{\\Delta t}=${formatSpeedMath(
+        motion.speed,
+        locale
+      )}`,
+    },
+    {
+      label: labels.factLabels.velocity,
+      math: `\\frac{|\\Delta \\vec r|}{\\Delta t}=${formatSpeedMath(
+        motion.velocityMagnitude,
+        locale
+      )}`,
+    },
+  ];
+
+  function handleCaseChange(value: string) {
+    if (!isAverageVelocitySpeedCaseId(value)) {
+      return;
+    }
+
+    setCaseId(value);
+  }
+
+  return (
+    <Card className="overflow-hidden content-auto-card">
+      <CardHeader>
+        <CardTitle>{labels.title}</CardTitle>
+        <CardDescription>{labels.description}</CardDescription>
+      </CardHeader>
+
+      <CardContent className="flex flex-col gap-4">
+        <ToggleGroup
+          aria-label={labels.chooseCase}
+          gridColumns="3"
+          onValueChange={handleCaseChange}
+          type="single"
+          value={caseId}
+          variant="outline"
+        >
+          {AVERAGE_VELOCITY_SPEED_CASE_IDS.map((caseOption) => (
+            <ToggleGroupItem key={caseOption} value={caseOption}>
+              {labels.modeLabels[caseOption]}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+
+        <section
+          aria-label={labels.viewLabel}
+          className={threeSceneFrameVariants()}
+        >
+          <ThreeCanvas
+            camera={{
+              fov: AVERAGE_VELOCITY_SPEED_CAMERA.fov,
+              position: AVERAGE_VELOCITY_SPEED_CAMERA.cameraPosition,
+            }}
+            frameloop="always"
+          >
+            <AverageMotionStage motion={motion} />
+          </ThreeCanvas>
+        </section>
+      </CardContent>
+
+      <CardFooter className="border-t">
+        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
+          {facts.map((fact) => (
+            <div className="flex min-w-0 flex-col gap-1" key={fact.label}>
+              <dt className="flex items-center gap-2 text-muted-foreground">
+                {"markerColor" in fact ? (
+                  <span
+                    aria-hidden
+                    className="size-2 rounded-full"
+                    style={{ backgroundColor: fact.markerColor }}
+                  />
+                ) : null}
+                {fact.label}
+              </dt>
+              <dd className="wrap-break-word text-foreground tabular-nums">
+                <InlineMath math={fact.math} />
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </CardFooter>
+    </Card>
+  );
+}

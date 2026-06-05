@@ -71,7 +71,7 @@ export const INSTANTANEOUS_SPEED_COPY = {
       velocity: "Kecepatan sesaat",
     },
     title: "Bacaan di Titik Ukur",
-    viewLabel: "Tampilan 3D mobil melewati titik ukur",
+    viewLabel: "Tampilan mobil melewati titik ukur",
   },
   en: {
     chooseMoment: "Choose reading moment",
@@ -83,7 +83,7 @@ export const INSTANTANEOUS_SPEED_COPY = {
       velocity: "Instantaneous velocity",
     },
     title: "Reading at a Measuring Point",
-    viewLabel: "3D car passing a measuring point",
+    viewLabel: "Car passing a measuring point",
   },
 } as const;
 

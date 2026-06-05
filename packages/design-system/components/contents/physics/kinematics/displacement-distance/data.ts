@@ -60,7 +60,7 @@ export const DISPLACEMENT_DISTANCE_COPY = {
       turn: "Turn",
     },
     title: "Path Length and Displacement",
-    viewLabel: "3D distance and displacement view",
+    viewLabel: "Distance and displacement view",
   },
   id: {
     chooseCase: "Pilih rute",
@@ -83,7 +83,7 @@ export const DISPLACEMENT_DISTANCE_COPY = {
       turn: "Berbelok",
     },
     title: "Jalur Tempuh dan Perpindahan",
-    viewLabel: "Tampilan 3D jarak dan perpindahan",
+    viewLabel: "Tampilan jarak dan perpindahan",
   },
 } as const;
 

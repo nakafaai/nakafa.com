@@ -5,7 +5,7 @@ const idMaterials = [
   {
     title: "Vektor",
     description:
-      "Bahasa matematika untuk menjelaskan arah dan besaran dalam dunia 3D, dari GPS hingga game.",
+      "Bahasa matematika untuk menjelaskan arah dan besaran dalam ruang, dari GPS hingga game.",
     href: `${BASE_PATH}/vector`,
     items: [
       {

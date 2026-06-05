@@ -1,3 +1,5 @@
+import { AverageVelocitySpeedLab } from "@repo/design-system/components/contents/physics/kinematics/average-velocity-speed/lab";
+
 export const metadata = {
   title: "Average Velocity and Average Speed",
   description:
@@ -21,6 +23,26 @@ Average velocity uses displacement. Since displacement has direction, average ve
 </MathContainer>
 
 The symbol <InlineMath math="\Delta x" /> or <InlineMath math="\Delta \vec{r}" /> means the change in position from start to finish. The symbol <InlineMath math="s_{\text{total}}" /> means the length of the path traveled during the trip.
+
+<AverageVelocitySpeedLab locale="en" />
+
+The numbers in the card come from the same route drawn in the scene. The green path is read as total distance because it follows the whole track. The purple line is read as displacement because it only connects the starting position to the ending position.
+
+<BlockMath math="\begin{aligned}
+s_{\text{total}}&=\sum L_{\text{segment}} \\
+L_{\text{line}}&=d,\qquad L_{\text{arc}}=r|\theta| \\
+|\Delta \vec r|&=\sqrt{(x_{\text{end}}-x_{\text{start}})^2+(z_{\text{end}}-z_{\text{start}})^2} \\
+\text{average speed}&=\frac{s_{\text{total}}}{\Delta t} \\
+|\bar{\vec v}|&=\frac{|\Delta \vec r|}{\Delta t}
+\end{aligned}" />
+
+In the Smooth Bend tab shown first, the green path is longer because the ball follows the bend. The purple line stays shorter because it only measures the start-to-finish position change.
+
+<BlockMath math="\begin{aligned}
+s_{\text{total}}&\approx 16.7\text{ m},\qquad |\Delta \vec r|=14\text{ m},\qquad \Delta t=5\text{ s} \\
+\text{average speed}&\approx \frac{16.7}{5}=3.3\text{ m/s} \\
+|\bar{\vec v}|&=\frac{14}{5}=2.8\text{ m/s}
+\end{aligned}" />
 
 ## The Same Time Interval Can Describe Different Trips
 

@@ -32,7 +32,7 @@ export function ReadingRoomProblem() {
             <span>4 m</span>
           </div>
 
-          {/* "x" labels - Positioned to match the reference image */}
+          {/* "x" labels - Positioned to match the reference layout */}
           {/* Top left corner labels */}
           <div className="absolute top-[6%] left-[14.5%]">
             <InlineMath math="x" />

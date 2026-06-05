@@ -87,7 +87,7 @@ export const PROJECTILE_ANALYSIS_COPY = {
       "sixty-degree": "Sixty Degrees",
     },
     title: "Cannonball Component Analysis",
-    viewLabel: "3D cannonball projectile analysis view",
+    viewLabel: "Cannonball projectile analysis view",
   },
   id: {
     chooseScenario: "Pilih tembakan",
@@ -107,7 +107,7 @@ export const PROJECTILE_ANALYSIS_COPY = {
       "sixty-degree": "Enam Puluh Derajat",
     },
     title: "Analisis Komponen Bola Meriam",
-    viewLabel: "Tampilan 3D analisis gerak parabola bola meriam",
+    viewLabel: "Tampilan analisis gerak parabola bola meriam",
   },
 } as const;
 

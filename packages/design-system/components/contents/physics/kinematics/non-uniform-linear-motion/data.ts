@@ -91,7 +91,7 @@ export const GLBB_LAB_COPY = {
       "speed-up": "Speeding Up",
     },
     title: "Position Marks on a Rail",
-    viewLabel: "3D uniformly accelerated motion view",
+    viewLabel: "Uniformly accelerated motion view",
   },
   id: {
     chooseScenario: "Pilih gerak",
@@ -109,7 +109,7 @@ export const GLBB_LAB_COPY = {
       "speed-up": "Makin Cepat",
     },
     title: "Jejak GLBB pada Rel",
-    viewLabel: "Tampilan 3D gerak lurus berubah beraturan",
+    viewLabel: "Tampilan gerak lurus berubah beraturan",
   },
 } as const;
 

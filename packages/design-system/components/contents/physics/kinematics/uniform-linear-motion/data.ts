@@ -46,7 +46,7 @@ export const UNIFORM_LINEAR_MOTION_COPY = {
     speed: "Kecepatan tetap",
     stepDistance: "Jarak antarjejak",
     title: "Jejak GLB Mobil",
-    viewLabel: "Tampilan 3D jejak gerak lurus beraturan",
+    viewLabel: "Tampilan jejak gerak lurus beraturan",
   },
   en: {
     chooseSpeed: "Choose constant velocity",
@@ -57,7 +57,7 @@ export const UNIFORM_LINEAR_MOTION_COPY = {
     speed: "Constant velocity",
     stepDistance: "Distance between marks",
     title: "Uniform Motion Car Marks",
-    viewLabel: "3D uniform linear motion marks view",
+    viewLabel: "Uniform linear motion marks view",
   },
 } as const;
 

@@ -47,7 +47,7 @@ export const STOPPING_DISTANCE_COPY = {
     speed: "Kecepatan awal",
     stoppingDistance: "Jarak henti",
     title: "Jarak Henti Mobil",
-    viewLabel: "Tampilan 3D jarak henti mobil",
+    viewLabel: "Tampilan jarak henti mobil",
   },
   en: {
     brakingDistance: "Braking distance",
@@ -58,7 +58,7 @@ export const STOPPING_DISTANCE_COPY = {
     speed: "Initial speed",
     stoppingDistance: "Stopping distance",
     title: "Car Stopping Distance",
-    viewLabel: "3D car stopping distance view",
+    viewLabel: "Car stopping distance view",
   },
 } as const;
 

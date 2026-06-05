@@ -82,7 +82,7 @@ export const ACCELERATION_LAB_COPY = {
       steady: "Constant",
     },
     title: "Rocket Acceleration Through Space",
-    viewLabel: "3D rocket acceleration through space view",
+    viewLabel: "Rocket acceleration through space view",
   },
   id: {
     chooseCase: "Pilih gerak",
@@ -100,7 +100,7 @@ export const ACCELERATION_LAB_COPY = {
       steady: "Tetap",
     },
     title: "Percepatan Roket di Luar Angkasa",
-    viewLabel: "Tampilan 3D percepatan roket di luar angkasa",
+    viewLabel: "Tampilan percepatan roket di luar angkasa",
   },
 } as const;
 

@@ -14,13 +14,13 @@ export const metadata = {
 
 Saat beberapa vektor bekerja berurutan atau bersama-sama, kita dapat menggantinya dengan satu vektor yang memberi efek akhir yang sama. Vektor pengganti ini disebut **resultan**.
 
-Metode grafis mencari resultan dengan gambar berskala. Panjang panah dibuat sebanding dengan besar vektor, sedangkan arah panah dibuat sesuai sudut atau arah mata angin.
+Metode grafis mencari resultan dengan sketsa berskala. Panjang panah dibuat sebanding dengan besar vektor, sedangkan arah panah dibuat sesuai sudut atau arah mata angin.
 
-> Dalam metode grafis, ketelitian hasil bergantung pada skala gambar, penggaris, dan pengukuran sudut.
+> Dalam metode grafis, ketelitian hasil bergantung pada skala sketsa, penggaris, dan pengukuran sudut.
 
 ## Metode Segitiga Kepala-ke-Ekor
 
-Metode segitiga dipakai untuk menjumlahkan dua vektor. Gambar vektor pertama, lalu letakkan pangkal vektor kedua di ujung vektor pertama. Resultan ditarik dari pangkal vektor pertama ke ujung vektor kedua.
+Metode segitiga dipakai untuk menjumlahkan dua vektor. Buat panah vektor pertama, lalu letakkan pangkal vektor kedua di ujung vektor pertama. Resultan ditarik dari pangkal vektor pertama ke ujung vektor kedua.
 
 <Vector3d
   title={<>Penjumlahan Kepala-ke-Ekor</>}
@@ -76,11 +76,11 @@ Jika seseorang berjalan <InlineMath math="4\text{ m}" /> ke timur lalu <InlineMa
 
 Jika dua vektor digambar dari pangkal yang sama, gunakan metode jajargenjang. Kedua vektor menjadi dua sisi jajargenjang, lalu resultan menjadi diagonal dari pangkal bersama menuju sudut berlawanan.
 
-Metode ini cocok untuk gaya yang bekerja pada satu benda dari titik yang sama, misalnya dua orang menarik cincin dengan tali pada arah berbeda. Di gambar, kedua gaya berangkat dari titik yang sama, sehingga diagonalnya menunjukkan gabungan kedua tarikan.
+Metode ini cocok untuk gaya yang bekerja pada satu benda dari titik yang sama, misalnya dua orang menarik cincin dengan tali pada arah berbeda. Pada ilustrasi, kedua gaya berangkat dari titik yang sama, sehingga diagonalnya menunjukkan gabungan kedua tarikan.
 
 Langkahnya:
 
-- Gambar kedua vektor dari pangkal yang sama.
+- Buat kedua vektor dari pangkal yang sama.
 - Salin vektor pertama di ujung vektor kedua dan salin vektor kedua di ujung vektor pertama.
 - Tarik diagonal dari pangkal bersama ke sudut jauh jajargenjang.
 
@@ -92,7 +92,7 @@ Urutan menggambar boleh diatur ulang selama besar dan arah tiap vektor tidak ber
 
 <BlockMath math="\vec{R}=\vec{a}+\vec{b}+\vec{c}" />
 
-Jika gambar poligon kembali ke titik awal, resultannya adalah vektor nol. Artinya, semua vektor saling menyeimbangkan.
+Jika poligon vektor kembali ke titik awal, resultannya adalah vektor nol. Artinya, semua vektor saling menyeimbangkan.
 
 ## Pengurangan Vektor secara Grafis
 
@@ -100,6 +100,6 @@ Pengurangan vektor tidak perlu aturan baru. Ubah pengurangan menjadi penjumlahan
 
 <BlockMath math="\vec{a}-\vec{b}=\vec{a}+(-\vec{b})" />
 
-Untuk menggambar <InlineMath math="\vec{a}-\vec{b}" />, gambar <InlineMath math="\vec{a}" /> terlebih dahulu. Setelah itu, gambar <InlineMath math="-\vec{b}" /> dari ujung <InlineMath math="\vec{a}" />. Vektor <InlineMath math="-\vec{b}" /> sama panjang dengan <InlineMath math="\vec{b}" />, tetapi arahnya dibalik.
+Untuk membuat <InlineMath math="\vec{a}-\vec{b}" />, buat <InlineMath math="\vec{a}" /> terlebih dahulu. Setelah itu, buat <InlineMath math="-\vec{b}" /> dari ujung <InlineMath math="\vec{a}" />. Vektor <InlineMath math="-\vec{b}" /> sama panjang dengan <InlineMath math="\vec{b}" />, tetapi arahnya dibalik.
 
 Hasil akhirnya tetap ditarik dari pangkal vektor pertama ke ujung vektor terakhir. Dengan cara ini, pengurangan vektor tetap mengikuti aturan kepala-ke-ekor yang sama.

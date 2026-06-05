@@ -52,6 +52,11 @@ export const COLORS = {
 } as const satisfies Record<ColorName, string>;
 
 const COLOR_SHADES = {
+  AMBER: {
+    100: "#fef3c7",
+    200: "#fde68a",
+    500: "#f59e0b",
+  },
   BLUE: {
     100: "#dbeafe",
     200: "#bfdbfe",
@@ -139,6 +144,8 @@ export function getColor(...args: ColorArgs) {
   }
 
   switch (args[0]) {
+    case "AMBER":
+      return COLOR_SHADES.AMBER[args[1]];
     case "BLUE":
       return COLOR_SHADES.BLUE[args[1]];
     case "EMERALD":

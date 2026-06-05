@@ -76,7 +76,7 @@ export const VELOCITY_SPEED_COPY = {
       partialReturn: "Partial Return",
     },
     title: "Car Motion on One Line",
-    viewLabel: "3D car motion for speed and velocity",
+    viewLabel: "Car motion for speed and velocity",
   },
   id: {
     chooseCase: "Pilih gerak mobil",
@@ -94,7 +94,7 @@ export const VELOCITY_SPEED_COPY = {
       partialReturn: "Balik Sebagian",
     },
     title: "Gerak Mobil pada Satu Garis",
-    viewLabel: "Tampilan 3D mobil untuk kelajuan dan kecepatan",
+    viewLabel: "Tampilan mobil untuk kelajuan dan kecepatan",
   },
 } as const;
 

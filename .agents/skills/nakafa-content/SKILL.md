@@ -46,6 +46,8 @@ Use this skill when creating or editing:
 - Use concrete examples or comparisons only when they immediately clarify the concept. Avoid meta-labels before comparisons; phrase them naturally.
 - Do not add activities, Mermaid diagrams, visuals, or closing sections unless they improve understanding.
 - Prefer show-over-tell visuals: avoid oversized explanatory scene titles or dense overlays when the model, interaction, and short captions can carry the concept.
+- Do not describe visible models, scene labels, captions, aria labels, metadata, or lesson copy as 3D/three-dimensional. Students can already see the medium. Mention three-dimensional only when it is the actual lesson concept, such as vector space, coordinate systems, arrays, or shapes.
+- Do not call interactive visuals or custom scenes `gambar`/image/picture. Use the most specific student-facing word: `ilustrasi`, `diagram`, `visual`, `grafik`, `model`, or the actual object being discussed. Reserve `gambar` for actual pictures, coin-face terminology, drawing actions, or quoted/source text.
 - Treat 3D and custom visuals as premium optional teaching aids, not a coverage quota. Do not add or keep a visual unless it clearly improves the lesson and can meet the quality bar for that domain.
 - Remove weak, unfinished, generic, or forced visuals instead of patching around them. Use prose, a compact table, Mermaid, or no visual when a custom visual would be ambiguous, broken, symbolic, or lower quality than the lesson around it.
 - Use `getColor()` from `packages/design-system/lib/color.ts` as the source of truth for visualization colors. Do not hard-code hex color literals in 3D or custom visual components; add the needed Tailwind palette shade to `getColor()` instead.
