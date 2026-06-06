@@ -11,7 +11,6 @@ import { useAction } from "convex/react";
 import { useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { useTransition } from "react";
-import { createProCheckoutUrl } from "@/components/checkout/actions";
 import { getColorFront } from "@/components/marketing/about/utils";
 import { authClient } from "@/lib/auth/client";
 import { useUser } from "@/lib/context/use-user";
@@ -53,6 +52,9 @@ export function ProButton() {
   const generateCustomerPortalUrl = useAction(
     api.customers.actions.public.generateCustomerPortalUrl
   );
+  const generateCheckoutLink = useAction(
+    api.customers.actions.public.generateCheckoutLink
+  );
 
   const handleCheckout = () => {
     startTransition(async () => {
@@ -64,7 +66,7 @@ export function ProButton() {
         return;
       }
 
-      const url = await createProCheckoutUrl({
+      const { url } = await generateCheckoutLink({
         locale,
         successUrl: window.location.href,
       });

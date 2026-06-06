@@ -9,7 +9,6 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useAction } from "convex/react";
 import { useLocale, useTranslations } from "next-intl";
 import { Activity, useTransition } from "react";
-import { createProCheckoutUrl } from "@/components/checkout/actions";
 import { FormBlock } from "@/components/shared/form-block";
 
 export function UserSettingsSubscriptions() {
@@ -25,10 +24,13 @@ export function UserSettingsSubscriptions() {
   const generateCustomerPortalUrl = useAction(
     api.customers.actions.public.generateCustomerPortalUrl
   );
+  const generateCheckoutLink = useAction(
+    api.customers.actions.public.generateCheckoutLink
+  );
 
   const handleCheckout = () => {
     startTransition(async () => {
-      const url = await createProCheckoutUrl({
+      const { url } = await generateCheckoutLink({
         locale,
         successUrl: window.location.href,
       });

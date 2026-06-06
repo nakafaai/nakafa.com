@@ -1,8 +1,5 @@
 import { validateCheckoutRequest } from "@repo/backend/convex/customers/checkout/impl";
-import {
-  InvalidCheckoutProductSelection,
-  InvalidCheckoutSuccessUrl,
-} from "@repo/backend/convex/customers/checkout/spec";
+import { InvalidCheckoutSuccessUrl } from "@repo/backend/convex/customers/checkout/spec";
 import { products } from "@repo/backend/convex/utils/polar/products";
 import { siteOrigin } from "@repo/backend/convex/utils/site";
 import { Effect, Either } from "effect";
@@ -15,15 +12,12 @@ describe("customers/checkout/impl", () => {
 
     const request = await Effect.runPromise(
       validateCheckoutRequest({
-        customerIpAddress: "203.0.113.10",
         locale: "en",
-        productIds: [productId],
         successUrl,
       })
     );
 
     expect(request).toEqual({
-      customerIpAddress: "203.0.113.10",
       locale: "en",
       polarLocale: "en",
       primaryProductId: productId,
@@ -38,15 +32,12 @@ describe("customers/checkout/impl", () => {
 
     const request = await Effect.runPromise(
       validateCheckoutRequest({
-        customerIpAddress: "203.0.113.10",
         locale: "id",
-        productIds: [productId],
         successUrl,
       })
     );
 
     expect(request).toEqual({
-      customerIpAddress: "203.0.113.10",
       locale: "id",
       polarLocale: "en",
       primaryProductId: productId,
@@ -55,51 +46,11 @@ describe("customers/checkout/impl", () => {
     });
   });
 
-  it("rejects empty product selections", async () => {
-    const result = await Effect.runPromise(
-      Effect.either(
-        validateCheckoutRequest({
-          customerIpAddress: null,
-          locale: "en",
-          productIds: [],
-          successUrl: `${siteOrigin}/en/home`,
-        })
-      )
-    );
-
-    if (Either.isRight(result)) {
-      throw new Error("Expected empty product selection to fail.");
-    }
-
-    expect(result.left).toBeInstanceOf(InvalidCheckoutProductSelection);
-  });
-
-  it("rejects unsupported product IDs", async () => {
-    const result = await Effect.runPromise(
-      Effect.either(
-        validateCheckoutRequest({
-          customerIpAddress: null,
-          locale: "en",
-          productIds: ["unsupported-product"],
-          successUrl: `${siteOrigin}/en/home`,
-        })
-      )
-    );
-
-    if (Either.isRight(result)) {
-      throw new Error("Expected unsupported product selection to fail.");
-    }
-
-    expect(result.left).toBeInstanceOf(InvalidCheckoutProductSelection);
-  });
-
   it("rejects off-site success URLs", async () => {
     const result = await Effect.runPromise(
       Effect.either(
         validateCheckoutRequest({
-          customerIpAddress: null,
           locale: "en",
-          productIds: [products.pro.id],
           successUrl: "https://example.com/en/home",
         })
       )
@@ -116,9 +67,7 @@ describe("customers/checkout/impl", () => {
     const result = await Effect.runPromise(
       Effect.either(
         validateCheckoutRequest({
-          customerIpAddress: null,
           locale: "en",
-          productIds: [products.pro.id],
           successUrl: "not-a-url",
         })
       )

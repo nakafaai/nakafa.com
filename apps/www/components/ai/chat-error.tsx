@@ -22,7 +22,6 @@ import { useLocale, useTranslations } from "next-intl";
 import { Activity, useTransition } from "react";
 import { CHAT_ERRORS } from "@/app/api/chat/constants";
 import { useChat } from "@/components/ai/context/use-chat";
-import { createProCheckoutUrl } from "@/components/checkout/actions";
 
 export const AiChatError = () => {
   const t = useTranslations("Ai");
@@ -69,10 +68,13 @@ const ButtonCheckout = () => {
   const generateCustomerPortalUrl = useAction(
     api.customers.actions.public.generateCustomerPortalUrl
   );
+  const generateCheckoutLink = useAction(
+    api.customers.actions.public.generateCheckoutLink
+  );
 
   const handleCheckout = () => {
     startTransition(async () => {
-      const url = await createProCheckoutUrl({
+      const { url } = await generateCheckoutLink({
         locale,
         successUrl: window.location.href,
       });

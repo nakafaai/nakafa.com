@@ -2,24 +2,14 @@ import { polarCheckoutDefaultLocale } from "@repo/backend/convex/customers/check
 import {
   type CheckoutRequest,
   type CheckoutRequestInput,
-  InvalidCheckoutProductSelection,
   InvalidCheckoutSuccessUrl,
-  invalidCheckoutProductSelectionCode,
   invalidCheckoutSuccessUrlCode,
 } from "@repo/backend/convex/customers/checkout/spec";
 import { products } from "@repo/backend/convex/utils/polar/products";
 import { siteOrigin } from "@repo/backend/convex/utils/site";
 import { Effect } from "effect";
 
-const allowedCheckoutProductIds = new Set(
-  Object.values(products).map((product) => product.id)
-);
-
-const invalidProductSelection = (message: string) =>
-  new InvalidCheckoutProductSelection({
-    code: invalidCheckoutProductSelectionCode,
-    message,
-  });
+const checkoutProductIds = [products.pro.id] as const;
 
 const invalidSuccessUrl = (message: string) =>
   new InvalidCheckoutSuccessUrl({
@@ -27,41 +17,12 @@ const invalidSuccessUrl = (message: string) =>
     message,
   });
 
-function hasProductId(
-  productIds: readonly string[]
-): productIds is readonly [string, ...string[]] {
-  return productIds.length > 0;
-}
-
 /**
- * Validate checkout products and redirect target before contacting Polar.
+ * Validate caller-controlled checkout redirect input before contacting Polar.
  */
-export const validateCheckoutRequest: (
-  input: CheckoutRequestInput
-) => Effect.Effect<
-  CheckoutRequest,
-  InvalidCheckoutProductSelection | InvalidCheckoutSuccessUrl
-> = Effect.fn("customers.checkout.validateCheckoutRequest")(function* (
-  input: CheckoutRequestInput
-) {
-  if (!hasProductId(input.productIds)) {
-    return yield* Effect.fail(
-      invalidProductSelection("Checkout requires at least one allowed product.")
-    );
-  }
-
-  for (const productId of input.productIds) {
-    if (allowedCheckoutProductIds.has(productId)) {
-      continue;
-    }
-
-    return yield* Effect.fail(
-      invalidProductSelection("Checkout requested an unsupported product.")
-    );
-  }
-
-  const [primaryProductId] = input.productIds;
-
+export const validateCheckoutRequest = Effect.fn(
+  "customers.checkout.validateCheckoutRequest"
+)(function* (input: CheckoutRequestInput) {
   const successUrl = yield* Effect.try({
     try: () => new URL(input.successUrl),
     catch: () =>
@@ -77,11 +38,10 @@ export const validateCheckoutRequest: (
   }
 
   return {
-    customerIpAddress: input.customerIpAddress,
     locale: input.locale,
     polarLocale: polarCheckoutDefaultLocale,
-    primaryProductId,
-    productIds: input.productIds,
+    primaryProductId: products.pro.id,
+    productIds: checkoutProductIds,
     successUrl: input.successUrl,
-  };
+  } satisfies CheckoutRequest;
 });

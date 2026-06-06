@@ -4,7 +4,6 @@ import { api } from "@repo/backend/convex/_generated/api";
 import { getPathname } from "@repo/internationalization/src/navigation";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
-import { createProCheckoutUrl } from "@/components/checkout/actions";
 import {
   revalidateTryoutOverview,
   revalidateTryoutSet,
@@ -31,7 +30,7 @@ export interface StartTryoutInput extends StartTryoutArgs, TryoutSetRouteInput {
 export type StartTryoutResult =
   | { kind: "started" }
   | { kind: "competition-attempt-used" }
-  | { kind: "requires-access"; url: string }
+  | { kind: "requires-access"; successUrl: string }
   | { kind: "not-ready" }
   | { kind: "inactive" }
   | { kind: "not-found" }
@@ -61,46 +60,8 @@ function getCheckoutSuccessUrl({
   return new URL(localizedPath, env.SITE_URL).toString();
 }
 
-/** Creates the checkout URL used when the tryout requires paid access. */
-function getCheckoutUrlEffect({
-  locale,
-  returnPath,
-}: {
-  locale: StartTryoutInput["locale"];
-  returnPath: string;
-}) {
-  const successUrl = getCheckoutSuccessUrl({
-    locale,
-    returnPath,
-  });
-
-  if (!successUrl) {
-    return Effect.succeed(null);
-  }
-
-  return Effect.tryPromise({
-    try: () =>
-      createProCheckoutUrl({
-        locale,
-        successUrl,
-      }),
-    catch: (error) => error,
-  }).pipe(
-    Effect.catchAll((error) =>
-      Effect.sync(() => {
-        scheduleCurrentServerExceptionCapture(error, {
-          source: "tryout-checkout-url",
-          success_url: successUrl,
-        });
-
-        return null;
-      })
-    )
-  );
-}
-
 /** Maps the public Convex start result into the route-level server action result. */
-function getStartTryoutResultEffect({
+function getStartTryoutResult({
   locale,
   returnPath,
   startResult,
@@ -110,24 +71,22 @@ function getStartTryoutResultEffect({
   startResult: StartTryoutMutationResult;
 }) {
   if (startResult.kind !== "requires-access") {
-    return Effect.succeed(startResult);
+    return startResult;
   }
 
-  return Effect.gen(function* () {
-    const checkoutUrl = yield* getCheckoutUrlEffect({
-      locale,
-      returnPath,
-    });
-
-    if (!checkoutUrl) {
-      return unknownStartTryoutResult;
-    }
-
-    return {
-      kind: "requires-access",
-      url: checkoutUrl,
-    } as const;
+  const successUrl = getCheckoutSuccessUrl({
+    locale,
+    returnPath,
   });
+
+  if (!successUrl) {
+    return unknownStartTryoutResult;
+  }
+
+  return {
+    kind: "requires-access",
+    successUrl,
+  } as const;
 }
 
 /** Records unexpected start failures and returns the safe public fallback. */
@@ -163,7 +122,7 @@ const startTryoutEffect = Effect.fn("www.tryout.start")(function* ({
   });
 
   if (result.kind !== "started") {
-    return yield* getStartTryoutResultEffect({
+    return getStartTryoutResult({
       locale: args.locale,
       returnPath,
       startResult: result,

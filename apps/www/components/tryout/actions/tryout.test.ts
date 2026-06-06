@@ -7,7 +7,6 @@ const mocks = vi.hoisted(() => {
 
   return {
     AuthenticationRequiredError: MockAuthenticationRequiredError,
-    createProCheckoutUrl: vi.fn(),
     fetchAuthMutation: vi.fn(),
     getPathname: vi.fn(),
     requireAuth: vi.fn(),
@@ -26,10 +25,6 @@ vi.mock("@/lib/auth/server", () => ({
   AuthenticationRequiredError: mocks.AuthenticationRequiredError,
   fetchAuthMutation: mocks.fetchAuthMutation,
   requireAuth: mocks.requireAuth,
-}));
-
-vi.mock("@/components/checkout/actions", () => ({
-  createProCheckoutUrl: mocks.createProCheckoutUrl,
 }));
 
 vi.mock("@repo/internationalization/src/navigation", () => ({
@@ -121,11 +116,8 @@ describe("components/tryout/actions/tryout", () => {
     });
   });
 
-  it("creates a checkout url when the backend requires access", async () => {
+  it("returns a checkout success url when the backend requires access", async () => {
     mocks.fetchAuthMutation.mockResolvedValue({ kind: "requires-access" });
-    mocks.createProCheckoutUrl.mockResolvedValue(
-      "https://checkout.example/session"
-    );
 
     const result = await startTryout({
       locale: "id",
@@ -137,15 +129,11 @@ describe("components/tryout/actions/tryout", () => {
 
     expect(result).toEqual({
       kind: "requires-access",
-      url: "https://checkout.example/session",
-    });
-    expect(mocks.createProCheckoutUrl).toHaveBeenCalledWith({
-      locale: "id",
       successUrl: "https://nakafa.com/id/try-out/snbt/2026-set-1",
     });
   });
 
-  it("returns unknown when checkout creation cannot build a safe return url", async () => {
+  it("returns unknown when checkout cannot build a safe return url", async () => {
     mocks.fetchAuthMutation.mockResolvedValue({ kind: "requires-access" });
 
     const result = await startTryout({
@@ -157,27 +145,6 @@ describe("components/tryout/actions/tryout", () => {
     });
 
     expect(result).toEqual({ kind: "unknown" });
-    expect(mocks.createProCheckoutUrl).not.toHaveBeenCalled();
-  });
-
-  it("captures checkout generation failures", async () => {
-    const error = new Error("checkout boom");
-    mocks.fetchAuthMutation.mockResolvedValue({ kind: "requires-access" });
-    mocks.createProCheckoutUrl.mockRejectedValue(error);
-
-    const result = await startTryout({
-      locale: "id",
-      partKeys: ["quantitative-knowledge"],
-      product: "snbt",
-      returnPath: "/id/try-out/snbt/2026-set-1",
-      tryoutSlug: "2026-set-1",
-    });
-
-    expect(result).toEqual({ kind: "unknown" });
-    expectScheduledServerException(error, {
-      source: "tryout-checkout-url",
-      success_url: "https://nakafa.com/id/try-out/snbt/2026-set-1",
-    });
   });
 
   it("returns explicit not-ready results without revalidation", async () => {

@@ -11,37 +11,39 @@ import { Effect } from "effect";
 
 /**
  * Create one authenticated Polar checkout session after validating the selected
- * products, redirect URL, and request-derived customer IP against backend-owned
+ * product, redirect URL, and Convex request metadata against backend-owned
  * policy.
  *
  * References:
+ * - https://docs.convex.dev/api/interfaces/server.ActionMeta#getrequestmetadata
+ * - https://docs.convex.dev/functions/actions
  * - https://polar.sh/docs/features/checkout/session
- * - https://vercel.com/kb/guide/geo-ip-headers-geolocation-vercel-functions
  */
 export const generateCheckoutLink = action({
   args: {
-    customerIpAddress: v.union(v.string(), v.null()),
     locale: checkoutLocaleValidator,
-    productIds: v.array(v.string()),
     successUrl: v.string(),
   },
   returns: v.object({ url: v.string() }),
-  handler: async (ctx, args): Promise<{ url: string }> => {
+  handler: async (ctx, args) => {
     const { appUser } = await requireAuthForAction(ctx);
     const appUserId = appUser._id;
-    const { checkout, request } = await runConvexProgram(
+    const { checkout, request, requestMetadata } = await runConvexProgram(
       Effect.gen(function* () {
         const request = yield* validateCheckoutRequest(args);
+        const requestMetadata = yield* Effect.promise(() =>
+          ctx.meta.getRequestMetadata()
+        );
         const customer = yield* requireCustomer(ctx, appUserId);
         const checkout = yield* polarGateway.createCheckoutSession({
           customerId: customer.id,
-          customerIpAddress: request.customerIpAddress,
+          customerIpAddress: requestMetadata.ip,
           locale: request.polarLocale,
           productIds: [...request.productIds],
           successUrl: request.successUrl,
         });
 
-        return { checkout, request };
+        return { checkout, request, requestMetadata };
       })
     );
 
@@ -51,7 +53,7 @@ export const generateCheckoutLink = action({
         name: "checkout started",
         properties: {
           checkout_locale: request.polarLocale,
-          customer_ip_available: request.customerIpAddress !== null,
+          customer_ip_available: requestMetadata.ip !== null,
           locale: request.locale,
           product_count: request.productIds.length,
           product_id: request.primaryProductId,
@@ -70,7 +72,7 @@ export const generateCheckoutLink = action({
 export const generateCustomerPortalUrl = action({
   args: {},
   returns: v.object({ url: v.string() }),
-  handler: async (ctx): Promise<{ url: string }> => {
+  handler: async (ctx) => {
     const { appUser } = await requireAuthForAction(ctx);
 
     return runConvexProgram(
