@@ -75,8 +75,8 @@ export function ExerciseChoices({
       return;
     }
 
-    startTransition(() => {
-      Effect.runFork(
+    startTransition(async () => {
+      await Effect.runPromise(
         Effect.tryPromise({
           try: () =>
             submitAttempt({

@@ -167,8 +167,8 @@ function AssessmentActions({
   }
 
   function handleDelete() {
-    startTransition(() => {
-      Effect.runFork(
+    startTransition(async () => {
+      await Effect.runPromise(
         Effect.tryPromise({
           try: async () => {
             await deleteAssessment({

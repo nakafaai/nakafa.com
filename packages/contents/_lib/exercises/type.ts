@@ -31,11 +31,17 @@ export const getSubjects = Effect.fn("contents.exercises.getSubjects")(
       )
     );
 
-    return EXERCISES_MATERIALS.filter((material) =>
-      materialFolders.has(material)
-    ).map((material) => ({
-      label: material,
-      href: getMaterialPath(category, type, material),
-    }));
+    return EXERCISES_MATERIALS.flatMap((material) => {
+      if (!materialFolders.has(material)) {
+        return [];
+      }
+
+      return [
+        {
+          label: material,
+          href: getMaterialPath(category, type, material),
+        },
+      ];
+    });
   }
 );

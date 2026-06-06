@@ -10,7 +10,7 @@ import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
 import { headers } from "next/headers";
 import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
-import { use } from "react";
+import { Suspense, use } from "react";
 import {
   PricingDithering,
   ProButton,
@@ -25,6 +25,12 @@ interface PricingFeatureProps {
   text: string;
 }
 
+type PricingDisplay = ReturnType<typeof getProPricingDisplay>;
+
+interface PricingPlanCardsProps {
+  pricingDisplay: PricingDisplay;
+}
+
 /** Renders one pricing card feature row with a stable icon slot. */
 function PricingFeature({ text, icon }: PricingFeatureProps) {
   return (
@@ -35,14 +41,9 @@ function PricingFeature({ text, icon }: PricingFeatureProps) {
   );
 }
 
-/** Renders the marketing pricing section with request-location price display. */
-export function Pricing() {
+/** Renders the pricing plan cards with an already resolved price display. */
+function PricingPlanCards({ pricingDisplay }: PricingPlanCardsProps) {
   const t = useTranslations("Pricing");
-  const requestHeaders = use(headers());
-  const pricingDisplay = getProPricingDisplay(
-    requestHeaders.get(pricingCountryHeaderName)
-  );
-
   const freeFeatures = [
     t("free-feature-1"),
     t("free-feature-2"),
@@ -60,6 +61,105 @@ export function Pricing() {
   ];
 
   return (
+    <div className="grid lg:grid-cols-2 lg:divide-x">
+      <div className="flex flex-col gap-6 px-6 py-12">
+        <div className="grid gap-2">
+          <h3 className="font-semibold text-3xl">{t("free-title")}</h3>
+          <p className="text-muted-foreground">{t("free-description")}</p>
+          <div className="pt-2">
+            <NumberFormat
+              className="font-semibold text-4xl tracking-tight"
+              format={pricingDisplay.free.format}
+              locales={pricingDisplay.free.locales}
+              value={pricingDisplay.free.value}
+            />
+          </div>
+        </div>
+
+        <div className="grid gap-3">
+          {freeFeatures.map((feature) => (
+            <PricingFeature key={feature} text={feature} />
+          ))}
+        </div>
+
+        <div className="mt-auto pt-4">
+          <Button
+            className="w-full"
+            nativeButton={false}
+            render={
+              <NavigationLink
+                href="/home"
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                <HugeIcons icon={ArrowUpRight01Icon} />
+                {t("free-cta")}
+              </NavigationLink>
+            }
+            variant="outline"
+          />
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-6 px-6 py-12">
+        <div className="grid gap-2">
+          <h3 className="font-semibold text-3xl">{t("pro-title")}</h3>
+          <p className="text-muted-foreground">{t("pro-description")}</p>
+          <div className="flex items-baseline gap-1 pt-2">
+            <NumberFormat
+              className="font-semibold text-4xl tracking-tight"
+              format={pricingDisplay.pro.format}
+              locales={pricingDisplay.pro.locales}
+              value={pricingDisplay.pro.value}
+            />
+            <span className="ml-1 text-muted-foreground">
+              {t("pro-period")}
+            </span>
+          </div>
+        </div>
+
+        <div className="grid gap-3">
+          <PricingFeature icon={Rocket01Icon} text={proFeatures[0]} />
+          <div className="grid gap-3 border-t pt-3">
+            {proFeatures.slice(1).map((feature) => (
+              <PricingFeature key={feature} text={feature} />
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-auto pt-4">
+          <ProButton />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Renders request-priced cards inside Suspense so Cache Components can keep the
+ * surrounding pricing shell prerenderable.
+ *
+ * Docs: https://nextjs.org/docs/app/getting-started/caching#dynamic-rendering
+ */
+function RequestPricedCards() {
+  const requestHeaders = use(headers());
+  const pricingDisplay = getProPricingDisplay(
+    requestHeaders.get(pricingCountryHeaderName)
+  );
+
+  return <PricingPlanCards pricingDisplay={pricingDisplay} />;
+}
+
+/** Renders stable default pricing while request-location pricing streams in. */
+function PricingCardsFallback() {
+  return <PricingPlanCards pricingDisplay={getProPricingDisplay(null)} />;
+}
+
+/** Renders the marketing pricing section with request-location price display. */
+export function Pricing() {
+  const t = useTranslations("Pricing");
+
+  return (
     <section className="border-b">
       <div className="mx-auto w-full max-w-7xl border-x">
         <div className="h-120 w-full overflow-hidden">
@@ -75,77 +175,9 @@ export function Pricing() {
         </div>
 
         <div className="border-t bg-card text-card-foreground">
-          <div className="grid lg:grid-cols-2 lg:divide-x">
-            <div className="flex flex-col gap-6 px-6 py-12">
-              <div className="grid gap-2">
-                <h3 className="font-semibold text-3xl">{t("free-title")}</h3>
-                <p className="text-muted-foreground">{t("free-description")}</p>
-                <div className="pt-2">
-                  <NumberFormat
-                    className="font-semibold text-4xl tracking-tight"
-                    format={pricingDisplay.free.format}
-                    locales={pricingDisplay.free.locales}
-                    value={pricingDisplay.free.value}
-                  />
-                </div>
-              </div>
-
-              <div className="grid gap-3">
-                {freeFeatures.map((feature) => (
-                  <PricingFeature key={feature} text={feature} />
-                ))}
-              </div>
-
-              <div className="mt-auto pt-4">
-                <Button
-                  className="w-full"
-                  nativeButton={false}
-                  render={
-                    <NavigationLink
-                      href="/home"
-                      rel="noopener noreferrer"
-                      target="_blank"
-                    >
-                      <HugeIcons icon={ArrowUpRight01Icon} />
-                      {t("free-cta")}
-                    </NavigationLink>
-                  }
-                  variant="outline"
-                />
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-6 px-6 py-12">
-              <div className="grid gap-2">
-                <h3 className="font-semibold text-3xl">{t("pro-title")}</h3>
-                <p className="text-muted-foreground">{t("pro-description")}</p>
-                <div className="flex items-baseline gap-1 pt-2">
-                  <NumberFormat
-                    className="font-semibold text-4xl tracking-tight"
-                    format={pricingDisplay.pro.format}
-                    locales={pricingDisplay.pro.locales}
-                    value={pricingDisplay.pro.value}
-                  />
-                  <span className="ml-1 text-muted-foreground">
-                    {t("pro-period")}
-                  </span>
-                </div>
-              </div>
-
-              <div className="grid gap-3">
-                <PricingFeature icon={Rocket01Icon} text={proFeatures[0]} />
-                <div className="grid gap-3 border-t pt-3">
-                  {proFeatures.slice(1).map((feature) => (
-                    <PricingFeature key={feature} text={feature} />
-                  ))}
-                </div>
-              </div>
-
-              <div className="mt-auto pt-4">
-                <ProButton />
-              </div>
-            </div>
-          </div>
+          <Suspense fallback={<PricingCardsFallback />}>
+            <RequestPricedCards />
+          </Suspense>
         </div>
       </div>
     </section>

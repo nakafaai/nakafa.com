@@ -22,6 +22,12 @@ import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 
 const THRESHOLD_VALUE = 1000;
 const THRESHOLD_VALUE_DECIMAL_PLACES = 0;
+const FUNCTION_CHART_CONFIG = {
+  y: {
+    label: "f(x)",
+    colors: { light: ["var(--chart-1)"] },
+  },
+} satisfies ChartConfig;
 
 interface Props {
   a: number;
@@ -47,13 +53,6 @@ export function FunctionChart({ p, a, title, description, n = 11 }: Props) {
     [a, p, n]
   );
 
-  const chartConfig = {
-    y: {
-      label: "f(x)",
-      colors: { light: ["var(--chart-1)"] },
-    },
-  } satisfies ChartConfig;
-
   return (
     <Card className="content-auto-card">
       <CardHeader>
@@ -61,7 +60,7 @@ export function FunctionChart({ p, a, title, description, n = 11 }: Props) {
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig}>
+        <ChartContainer config={FUNCTION_CHART_CONFIG}>
           <LineChart accessibilityLayer data={data}>
             <CartesianGrid />
             <XAxis

@@ -77,8 +77,8 @@ function InfoCustomizeButton() {
   const updateClassImage = useMutation(api.classes.mutations.updateClassImage);
 
   const handleImageClick = (image: SchoolClassImage) => {
-    startTransition(() => {
-      Effect.runFork(
+    startTransition(async () => {
+      await Effect.runPromise(
         Effect.tryPromise({
           try: async () => {
             await updateClassImage({

@@ -95,17 +95,18 @@ export function VectorChart({
       }
     }
 
-    // Sort the x values
-    const sortedXValues = [...allXValues].sort((a, b) => a - b);
+    const sortedXValues = Array.from(allXValues).sort((a, b) => a - b);
+    const vectorPointMaps = vectors.map((vector) => ({
+      id: vector.id,
+      pointsByX: new Map(vector.points.map((point) => [point.x, point.y])),
+    }));
 
     // Create data points for each x value
     return sortedXValues.map((x) => {
       const dataPoint: Record<string, number | null> = { x };
 
-      // Add the y value for each vector at this x point if it exists
-      for (const vector of vectors) {
-        const point = vector.points.find((p) => p.x === x);
-        dataPoint[vector.id] = point?.y ?? null;
+      for (const vector of vectorPointMaps) {
+        dataPoint[vector.id] = vector.pointsByX.get(x) ?? null;
       }
 
       return dataPoint;

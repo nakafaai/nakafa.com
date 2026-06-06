@@ -5,11 +5,9 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
 import type { MermaidConfig } from "mermaid";
 import { useTheme } from "next-themes";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
-const ALPHANUMERIC_BASE = 36;
-const MAGIC_NUMBER = 0;
-const RANDOM_STRING_LENGTH = 9;
+const HASH_SEED = 0;
 const SHIFT_5 = 5;
 
 /**
@@ -35,6 +33,25 @@ async function initializeMermaid(customConfig?: MermaidConfig) {
   return mermaid;
 }
 
+/** Creates a stable Mermaid DOM id for one component instance and chart body. */
+function getMermaidRenderId(componentId: string, chart: string) {
+  const chartHash = chart.split("").reduce((acc, char) => {
+    // biome-ignore lint/suspicious/noBitwiseOperators: Mermaid render ids only need a compact deterministic hash.
+    return ((acc << SHIFT_5) - acc + char.charCodeAt(0)) | HASH_SEED;
+  }, HASH_SEED);
+
+  return `mermaid-${componentId.replaceAll(":", "")}-${Math.abs(chartHash).toString(36)}`;
+}
+
+/** Converts unknown Mermaid renderer failures into a user-visible message. */
+function getMermaidRenderErrorMessage(error: unknown) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return "Failed to render Mermaid chart";
+}
+
 interface MermaidProps {
   chart: string;
   className?: string;
@@ -46,71 +63,64 @@ interface MermaidProps {
  * Renders Mermaid chart markup with a cached last-good SVG fallback.
  */
 export const Mermaid = ({ chart, className, config, label }: MermaidProps) => {
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [svgContent, setSvgContent] = useState<string>("");
-  const [lastValidSvg, setLastValidSvg] = useState<string>("");
-  const svgCacheRef = useRef({ current: "", lastValid: "" });
-
+  const componentId = useId();
   const { resolvedTheme } = useTheme();
+  const renderId = getMermaidRenderId(componentId, chart);
+  const theme =
+    config?.theme ?? (resolvedTheme === "dark" ? "dark" : "default");
+  const renderKey = `${renderId}-${theme}`;
+  const [renderState, setRenderState] = useState({
+    errorMessage: "",
+    renderKey: "",
+    svg: "",
+  });
+  const lastValidSvg = useRef("");
 
   useEffect(() => {
-    async function renderChart() {
-      try {
-        setError(null);
-        setIsLoading(true);
+    let isCurrentRender = true;
 
-        // Initialize mermaid with optional custom config
-        const mermaid = await initializeMermaid({
-          ...config,
-          theme:
-            config?.theme ?? (resolvedTheme === "dark" ? "dark" : "default"),
-        });
+    initializeMermaid({
+      ...config,
+      theme,
+    })
+      .then((mermaid) => mermaid.render(renderId, chart))
+      .then(({ svg }) => {
+        lastValidSvg.current = svg;
+        return {
+          errorMessage: "",
+          renderKey,
+          svg,
+        };
+      })
+      .catch((error) => {
+        const svg = lastValidSvg.current;
 
-        // Use a stable ID based on chart content hash and timestamp to ensure uniqueness
-        const chartHash = chart.split("").reduce((acc, char) => {
-          // biome-ignore lint/suspicious/noBitwiseOperators: "Required for Mermaid"
-          return ((acc << SHIFT_5) - acc + char.charCodeAt(0)) | MAGIC_NUMBER;
-        }, 0);
-        const uniqueId = `mermaid-${Math.abs(chartHash)}-${Date.now()}-${Math.random().toString(ALPHANUMERIC_BASE).slice(2, RANDOM_STRING_LENGTH)}`;
-
-        const { svg } = await mermaid.render(uniqueId, chart);
-
-        // Update both current and last valid SVG
-        svgCacheRef.current = { current: svg, lastValid: svg };
-        setSvgContent(svg);
-        setLastValidSvg(svg);
-      } catch (err) {
-        const hasCachedSvg = Boolean(
-          svgCacheRef.current.current || svgCacheRef.current.lastValid
-        );
-
-        captureException(err, {
-          has_cached_svg: hasCachedSvg,
+        captureException(error, {
+          has_cached_svg: !!svg,
           source: "mermaid-render",
         });
 
-        // Silently fail and keep the last valid SVG
-        // Don't update svgContent here - just keep what we have
-
-        // Only set error if we don't have any valid SVG
-        if (!hasCachedSvg) {
-          const errorMessage =
-            err instanceof Error
-              ? err.message
-              : "Failed to render Mermaid chart";
-          setError(errorMessage);
+        return {
+          errorMessage: svg ? "" : getMermaidRenderErrorMessage(error),
+          renderKey,
+          svg,
+        };
+      })
+      .then((nextRenderState) => {
+        if (isCurrentRender) {
+          setRenderState(nextRenderState);
         }
-      } finally {
-        setIsLoading(false);
-      }
-    }
+      });
 
-    renderChart();
-  }, [chart, config, resolvedTheme]);
+    return () => {
+      isCurrentRender = false;
+    };
+  }, [chart, config, renderId, renderKey, theme]);
+
+  const hasCurrentRender = renderState.renderKey === renderKey;
 
   // Show loading only on initial load when we have no content
-  if (isLoading && !svgContent && !lastValidSvg) {
+  if (!(hasCurrentRender || renderState.svg)) {
     return (
       <div className={cn("my-4 aspect-video p-4", className)}>
         <div className="flex size-full items-center justify-center">
@@ -121,7 +131,7 @@ export const Mermaid = ({ chart, className, config, label }: MermaidProps) => {
   }
 
   // Only show error if we have no valid SVG to display
-  if (error && !svgContent && !lastValidSvg) {
+  if (hasCurrentRender && renderState.errorMessage && !renderState.svg) {
     return (
       <div
         className={cn(
@@ -130,7 +140,7 @@ export const Mermaid = ({ chart, className, config, label }: MermaidProps) => {
         )}
       >
         <p className="font-mono text-destructive text-sm">
-          Mermaid Error: {error}
+          Mermaid Error: {renderState.errorMessage}
         </p>
         <details className="mt-2">
           <summary className="cursor-pointer text-destructive text-xs">
@@ -145,14 +155,12 @@ export const Mermaid = ({ chart, className, config, label }: MermaidProps) => {
   }
 
   // Always render the SVG if we have content (either current or last valid)
-  const displaySvg = svgContent || lastValidSvg;
-
   return (
     <div
       aria-label={label}
       className={cn("my-4 flex justify-center", className)}
       // biome-ignore lint/security/noDangerouslySetInnerHtml: "Required for Mermaid"
-      dangerouslySetInnerHTML={{ __html: displaySvg }}
+      dangerouslySetInnerHTML={{ __html: renderState.svg }}
       role="img"
     />
   );

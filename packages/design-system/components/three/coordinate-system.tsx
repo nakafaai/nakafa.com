@@ -88,10 +88,13 @@ export function CoordinateSystem({
   className,
 }: Props) {
   const { resolvedTheme } = useTheme();
-  const [showGrid, setShowGrid] = useState(initialShowGrid);
-  const [play, setPlay] = useState(false);
-  const [sceneReady, setSceneReady] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
+  const [sceneState, setSceneState] = useState(() => ({
+    isDragging: false,
+    play: false,
+    sceneReady: false,
+    showGrid: initialShowGrid,
+  }));
+  const { isDragging, play, sceneReady, showGrid } = sceneState;
 
   // Color mapping based on color scheme
   const gridColors = useMemo(() => {
@@ -114,30 +117,44 @@ export function CoordinateSystem({
 
   // Handle button clicks with proper invalidation for on-demand rendering
   const handleGridToggle = useCallback(() => {
-    setShowGrid(!showGrid);
-  }, [showGrid]);
+    setSceneState((current) => ({
+      ...current,
+      showGrid: !current.showGrid,
+    }));
+  }, []);
 
   const handlePlayToggle = useCallback(() => {
-    setPlay(!play);
-  }, [play]);
+    setSceneState((current) => ({
+      ...current,
+      play: !current.play,
+    }));
+  }, []);
 
   // Handle pointer events for cursor changes
   const handlePointerDown = useCallback(() => {
-    setIsDragging(true);
+    setSceneState((current) => ({
+      ...current,
+      isDragging: true,
+    }));
   }, []);
 
   const handlePointerUp = useCallback(() => {
-    setIsDragging(false);
+    setSceneState((current) => ({
+      ...current,
+      isDragging: false,
+    }));
   }, []);
 
   // Activity hides preserved routes by disconnecting effects. ThreeCanvas owns
   // WebGL remounting, so this cleanup only resets local interaction state.
   useLayoutEffect(
     () => () => {
-      setIsDragging(false);
-      setPlay(false);
-      setSceneReady(false);
-      setShowGrid(initialShowGrid);
+      setSceneState({
+        isDragging: false,
+        play: false,
+        sceneReady: false,
+        showGrid: initialShowGrid,
+      });
     },
     [initialShowGrid]
   );
@@ -155,7 +172,14 @@ export function CoordinateSystem({
     >
       <ThreeCanvas
         onCreated={() =>
-          setTimeout(() => setSceneReady(true), SCENE_READY_DELAY)
+          setTimeout(
+            () =>
+              setSceneState((current) => ({
+                ...current,
+                sceneReady: true,
+              })),
+            SCENE_READY_DELAY
+          )
         }
         style={{ background: backgroundColor }}
       >

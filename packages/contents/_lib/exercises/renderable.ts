@@ -70,7 +70,9 @@ export const getRenderableExercisesContent = Effect.fn(
     { concurrency: "unbounded" }
   ).pipe(
     Effect.map((exercises) =>
-      exercises.filter(Option.isSome).map((exercise) => exercise.value)
+      exercises.flatMap((exercise) =>
+        Option.isSome(exercise) ? [exercise.value] : []
+      )
     )
   );
 });

@@ -12,11 +12,7 @@ import {
 } from "@/components/tryout/actions/revalidate";
 import { env } from "@/env";
 import { scheduleCurrentServerExceptionCapture } from "@/lib/analytics/server";
-import {
-  AuthenticationRequiredError,
-  fetchAuthMutation,
-  requireAuth,
-} from "@/lib/auth/server";
+import { fetchAuthMutation, requireAuth } from "@/lib/auth/server";
 import { getSafeInternalRedirectPath } from "@/lib/auth/utils";
 
 type StartTryoutArgs = FunctionArgs<
@@ -139,10 +135,6 @@ function recoverStartTryoutError(
   error: unknown,
   args: StartTryoutArgs
 ): Effect.Effect<StartTryoutResult> {
-  if (error instanceof AuthenticationRequiredError) {
-    return Effect.succeed(unknownStartTryoutResult);
-  }
-
   return Effect.sync(() => {
     scheduleCurrentServerExceptionCapture(error, {
       locale: args.locale,
@@ -156,19 +148,14 @@ function recoverStartTryoutError(
 }
 
 /**
- * Starts one tryout attempt through Better Auth's official server helpers and
- * invalidates the SSR route family that depends on the new attempt state.
+ * Starts one tryout attempt and invalidates the SSR route family that depends
+ * on the new attempt state.
  */
 const startTryoutEffect = Effect.fn("www.tryout.start")(function* ({
   partKeys,
   returnPath,
   ...args
 }: StartTryoutInput) {
-  yield* Effect.tryPromise({
-    try: () => requireAuth(),
-    catch: (error) => error,
-  });
-
   const result = yield* Effect.tryPromise({
     try: () =>
       fetchAuthMutation(api.tryouts.mutations.attempts.startTryout, args),
@@ -197,9 +184,15 @@ const startTryoutEffect = Effect.fn("www.tryout.start")(function* ({
   return result;
 });
 
-export async function startTryout(
-  input: StartTryoutInput
-): Promise<StartTryoutResult> {
+/**
+ * Authenticates the public start-tryout Server Action before mutation work.
+ *
+ * @see https://nextjs.org/docs/app/guides/authentication#server-actions
+ * @see https://nextjs.org/docs/app/guides/data-security#mutations
+ */
+export async function startTryout(input: StartTryoutInput) {
+  await requireAuth();
+
   return await Effect.runPromise(
     startTryoutEffect(input).pipe(
       Effect.catchAll((error) => recoverStartTryoutError(error, input))

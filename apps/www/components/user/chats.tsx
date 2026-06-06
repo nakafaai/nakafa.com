@@ -165,8 +165,8 @@ function UserChatsListActions({ chat }: { chat: Doc<"chats"> }) {
   const [isPending, startTransition] = useTransition();
 
   function handleDelete() {
-    startTransition(() => {
-      deleteChat({ chatId: chat._id });
+    startTransition(async () => {
+      await deleteChat({ chatId: chat._id });
     });
   }
 

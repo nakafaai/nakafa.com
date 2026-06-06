@@ -43,6 +43,11 @@ const Q1 = 1;
 const Q2 = 2;
 const Q3 = 3;
 const Q4 = 4;
+const TRIANGLE_SIDE_CONFIG = [
+  { color: COLORS.CYAN, key: "adjacent" },
+  { color: COLORS.ORANGE, key: "opposite" },
+  { color: COLORS.ROSE, key: "hypotenuse" },
+];
 
 interface Props {
   /** Angle in degrees */
@@ -262,21 +267,14 @@ export function Triangle({
     }
   }, [quadrant, opposite, adjacent]);
 
-  // Line colors and semantic keys for triangle sides
-  const sideConfig = [
-    { color: COLORS.CYAN, key: "adjacent" },
-    { color: COLORS.ORANGE, key: "opposite" },
-    { color: COLORS.ROSE, key: "hypotenuse" },
-  ];
-
   return (
     <group frustumCulled {...props}>
       {/* Draw the triangle sides - optimized with single color array access */}
       {triangleSideLines.map((pts, i) => (
         <Line
-          color={sideConfig[i].color}
+          color={TRIANGLE_SIDE_CONFIG[i].color}
           frustumCulled
-          key={sideConfig[i].key}
+          key={TRIANGLE_SIDE_CONFIG[i].key}
           lineWidth={2}
           points={pts}
         />

@@ -57,8 +57,8 @@ export function SchoolClassesJoinForm({ classId, visibility }: Props) {
   const isPublic = visibility === "public";
 
   function handlePublicJoin() {
-    startTransition(() => {
-      Effect.runFork(
+    startTransition(async () => {
+      await Effect.runPromise(
         Effect.tryPromise({
           try: async () => {
             await joinPublicClass({ classId });

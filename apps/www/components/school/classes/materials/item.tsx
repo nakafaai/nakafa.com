@@ -175,20 +175,20 @@ function MaterialGroupActions({
   );
 
   function handleMoveUp() {
-    startTransition(() => {
-      reorderGroup({ groupId: group._id, direction: "up" });
+    startTransition(async () => {
+      await reorderGroup({ groupId: group._id, direction: "up" });
     });
   }
 
   function handleMoveDown() {
-    startTransition(() => {
-      reorderGroup({ groupId: group._id, direction: "down" });
+    startTransition(async () => {
+      await reorderGroup({ groupId: group._id, direction: "down" });
     });
   }
 
   function handleDelete() {
-    startTransition(() => {
-      Effect.runFork(
+    startTransition(async () => {
+      await Effect.runPromise(
         Effect.tryPromise({
           try: async () => {
             await deleteGroup({ groupId: group._id });

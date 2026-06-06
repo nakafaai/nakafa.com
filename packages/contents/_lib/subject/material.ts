@@ -157,14 +157,13 @@ export function getCurrentMaterial(path: string, materials: MaterialList) {
       };
     }
 
-    const foundItem = chapter.items.find(
-      (item) => cleanSlug(item.href) === normalizedPath
-    );
-    if (foundItem) {
-      return {
-        currentChapter: Option.some(chapter),
-        currentItem: Option.some(foundItem),
-      };
+    for (const item of chapter.items) {
+      if (cleanSlug(item.href) === normalizedPath) {
+        return {
+          currentChapter: Option.some(chapter),
+          currentItem: Option.some(item),
+        };
+      }
     }
   }
 

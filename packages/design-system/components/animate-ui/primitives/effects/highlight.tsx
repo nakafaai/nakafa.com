@@ -11,7 +11,7 @@ import {
 import * as React from "react";
 
 const MS_TO_S = 1000;
-const RANDOM_KEY_RADIX = 36;
+const AUTO_ITEM_KEY_PREFIX = "highlight-item";
 
 type HighlightMode = "children" | "parent";
 
@@ -143,21 +143,25 @@ function Highlight<T extends React.ElementType = "div">({
   const localRef = React.useRef<HTMLDivElement>(null);
   React.useImperativeHandle(ref, () => localRef.current as HTMLDivElement);
 
-  const [activeValue, setActiveValue] = React.useState<string | null>(
-    value ?? defaultValue ?? null
-  );
+  const [uncontrolledActiveValue, setUncontrolledActiveValue] = React.useState<
+    string | null
+  >(defaultValue ?? null);
+  const activeValue = value === undefined ? uncontrolledActiveValue : value;
   const [boundsState, setBoundsState] = React.useState<Bounds | null>(null);
   const [activeClassNameState, setActiveClassNameState] =
     React.useState<string>("");
 
   const safeSetActiveValue = React.useCallback(
     (newId: string | null) => {
-      setActiveValue((prev) => (prev === newId ? prev : newId));
+      if (value === undefined) {
+        setUncontrolledActiveValue((prev) => (prev === newId ? prev : newId));
+      }
+
       if (newId !== activeValue) {
         onValueChange?.(newId);
       }
     },
-    [activeValue, onValueChange]
+    [activeValue, onValueChange, value]
   );
 
   const boundsOffsetProp = (props as ParentModeHighlightProps)?.boundsOffset;
@@ -203,15 +207,23 @@ function Highlight<T extends React.ElementType = "div">({
     setBoundsState((prev) => (prev === null ? prev : null));
   }, []);
 
-  React.useEffect(() => {
-    if (value !== undefined) {
-      setActiveValue(value);
-    } else if (defaultValue !== undefined) {
-      setActiveValue(defaultValue);
-    }
-  }, [value, defaultValue]);
-
   const id = React.useId();
+
+  const syncBoundsOnScroll = React.useEffectEvent(
+    (container: HTMLDivElement) => {
+      if (!activeValue) {
+        return;
+      }
+
+      const activeEl = container.querySelector<HTMLElement>(
+        `[data-value="${activeValue}"][data-highlight="true"]`
+      );
+
+      if (activeEl) {
+        safeSetBounds(activeEl.getBoundingClientRect());
+      }
+    }
+  );
 
   React.useEffect(() => {
     if (mode !== "parent") {
@@ -222,21 +234,11 @@ function Highlight<T extends React.ElementType = "div">({
       return;
     }
 
-    const onScroll = () => {
-      if (!activeValue) {
-        return;
-      }
-      const activeEl = container.querySelector<HTMLElement>(
-        `[data-value="${activeValue}"][data-highlight="true"]`
-      );
-      if (activeEl) {
-        safeSetBounds(activeEl.getBoundingClientRect());
-      }
-    };
+    const onScroll = () => syncBoundsOnScroll(container);
 
     container.addEventListener("scroll", onScroll, { passive: true });
     return () => container.removeEventListener("scroll", onScroll);
-  }, [mode, activeValue, safeSetBounds]);
+  }, [mode]);
 
   const containerClassName = (props as ParentModeHighlightProps)
     ?.containerClassName;
@@ -357,7 +359,7 @@ function Highlight<T extends React.ElementType = "div">({
             return render(children);
           }
           return render(
-            React.Children.map(children, (child) => {
+            React.Children.map(children, (child, index) => {
               let childKey: string;
               if (React.isValidElement(child) && child.key) {
                 childKey = child.key;
@@ -367,7 +369,7 @@ function Highlight<T extends React.ElementType = "div">({
               ) {
                 childKey = (child.props as { id?: string }).id as string;
               } else {
-                childKey = Math.random().toString(RANDOM_KEY_RADIX);
+                childKey = `${AUTO_ITEM_KEY_PREFIX}-${index}`;
               }
               return (
                 <HighlightItem className={props?.itemsClassName} key={childKey}>

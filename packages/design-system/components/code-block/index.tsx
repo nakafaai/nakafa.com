@@ -459,24 +459,43 @@ export const CodeBlockContent = ({
   syntaxHighlighting = true,
   ...props
 }: CodeBlockContentProps) => {
-  const [html, setHtml] = useState<string | null>(null);
+  const [highlightedCode, setHighlightedCode] = useState({
+    html: "",
+    source: "",
+  });
 
   useEffect(() => {
     if (!syntaxHighlighting) {
       return;
     }
 
+    let isCurrentRender = true;
+
     highlight(children, language, themes)
-      .then(setHtml)
+      .then((html) => {
+        if (isCurrentRender) {
+          setHighlightedCode({ html, source: children });
+        }
+      })
       .catch((error) => {
-        setHtml(null);
+        if (!isCurrentRender) {
+          return;
+        }
+
+        setHighlightedCode({ html: "", source: children });
         captureException(error, {
           component: "CodeBlockContent",
           language: language ?? "plain-text",
           source: "code-block-highlight",
         });
       });
+
+    return () => {
+      isCurrentRender = false;
+    };
   }, [children, themes, syntaxHighlighting, language]);
+
+  const html = highlightedCode.source === children ? highlightedCode.html : "";
 
   if (!(syntaxHighlighting && html)) {
     return <CodeBlockFallback>{children}</CodeBlockFallback>;

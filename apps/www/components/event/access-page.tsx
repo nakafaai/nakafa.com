@@ -64,8 +64,8 @@ export function EventAccessPage({ code }: Props) {
 
   /** Redeems the current event code and lets the live page state refresh the UI. */
   function activateAccess() {
-    startTransition(() => {
-      Effect.runFork(
+    startTransition(async () => {
+      await Effect.runPromise(
         Effect.tryPromise({
           try: () => redeemEventAccess({ code }),
           catch: (error) => error,

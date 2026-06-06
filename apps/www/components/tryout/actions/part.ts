@@ -9,11 +9,7 @@ import {
   type TryoutSetRouteInput,
 } from "@/components/tryout/actions/revalidate";
 import { scheduleCurrentServerExceptionCapture } from "@/lib/analytics/server";
-import {
-  AuthenticationRequiredError,
-  fetchAuthMutation,
-  requireAuth,
-} from "@/lib/auth/server";
+import { fetchAuthMutation, requireAuth } from "@/lib/auth/server";
 
 type StartPartArgs = FunctionArgs<
   typeof api.tryouts.mutations.attempts.startPart
@@ -75,10 +71,6 @@ function recoverTryoutPartError(
   args: StartTryoutPartInput | CompleteTryoutPartInput,
   source: string
 ) {
-  if (error instanceof AuthenticationRequiredError) {
-    return Effect.succeed(unknownTryoutPartResult);
-  }
-
   return Effect.sync(() => {
     scheduleCurrentServerExceptionCapture(error, {
       locale: args.locale,
@@ -94,18 +86,13 @@ function recoverTryoutPartError(
 }
 
 /**
- * Starts one tryout part through Better Auth's official server utilities and
- * invalidates the tryout routes whenever the runtime state changed.
+ * Starts one tryout part and invalidates the tryout routes whenever the runtime
+ * state changed.
  */
 const startTryoutPartEffect = Effect.fn("www.tryout.part.start")(function* ({
   partKeys,
   ...args
 }: StartTryoutPartInput) {
-  yield* Effect.tryPromise({
-    try: () => requireAuth(),
-    catch: (error) => error,
-  });
-
   const result = yield* Effect.tryPromise({
     try: () =>
       fetchAuthMutation(api.tryouts.mutations.attempts.startPart, {
@@ -125,9 +112,15 @@ const startTryoutPartEffect = Effect.fn("www.tryout.part.start")(function* ({
   return result;
 });
 
-export async function startTryoutPart(
-  input: StartTryoutPartInput
-): Promise<StartTryoutPartResult> {
+/**
+ * Authenticates the public start-part Server Action before mutation work.
+ *
+ * @see https://nextjs.org/docs/app/guides/authentication#server-actions
+ * @see https://nextjs.org/docs/app/guides/data-security#mutations
+ */
+export async function startTryoutPart(input: StartTryoutPartInput) {
+  await requireAuth();
+
   return await Effect.runPromise(
     startTryoutPartEffect(input).pipe(
       Effect.catchAll((error) =>
@@ -138,16 +131,11 @@ export async function startTryoutPart(
 }
 
 /**
- * Completes one tryout part through Better Auth's official server utilities and
- * invalidates the SSR route family that depends on the finished part state.
+ * Completes one tryout part and invalidates the SSR route family that depends
+ * on the finished part state.
  */
 const completeTryoutPartEffect = Effect.fn("www.tryout.part.complete")(
   function* ({ partKeys, ...args }: CompleteTryoutPartInput) {
-    yield* Effect.tryPromise({
-      try: () => requireAuth(),
-      catch: (error) => error,
-    });
-
     const result = yield* Effect.tryPromise({
       try: () =>
         fetchAuthMutation(api.tryouts.mutations.attempts.completePart, {
@@ -168,9 +156,15 @@ const completeTryoutPartEffect = Effect.fn("www.tryout.part.complete")(
   }
 );
 
-export async function completeTryoutPart(
-  input: CompleteTryoutPartInput
-): Promise<CompleteTryoutPartResult> {
+/**
+ * Authenticates the public complete-part Server Action before mutation work.
+ *
+ * @see https://nextjs.org/docs/app/guides/authentication#server-actions
+ * @see https://nextjs.org/docs/app/guides/data-security#mutations
+ */
+export async function completeTryoutPart(input: CompleteTryoutPartInput) {
+  await requireAuth();
+
   return await Effect.runPromise(
     completeTryoutPartEffect(input).pipe(
       Effect.catchAll((error) =>

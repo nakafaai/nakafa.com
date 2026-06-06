@@ -142,37 +142,40 @@ function ChartContainer({
 
 /** Emits chart-scoped CSS color variables from EvilCharts chart config. */
 function ChartStyle({ id, config }: { id: string; config: ChartConfig }) {
-  const colorConfig = Object.entries(config).filter(
-    ([, itemConfig]) => itemConfig.colors
-  );
+  const styleBlocks: string[] = [];
 
-  if (!colorConfig.length) {
-    return null;
-  }
+  for (const { name, selector } of CHART_THEMES) {
+    const tokens: string[] = [];
 
-  const styleContent = CHART_THEMES.map(({ name, selector }) => {
-    const tokens = colorConfig.flatMap(([key, itemConfig]) => {
+    for (const [key, itemConfig] of Object.entries(config)) {
       const colors = itemConfig.colors?.[name];
 
       if (!colors?.length) {
-        return [];
+        continue;
       }
 
-      return distributeColors(colors, getColorsCount(itemConfig)).map(
-        (color, index) => `  ${getColorVariableName(key, index)}: ${color};`
+      const distributedColors = distributeColors(
+        colors,
+        getColorsCount(itemConfig)
       );
-    });
 
-    if (!tokens.length) {
-      return "";
+      for (const [index, color] of distributedColors.entries()) {
+        tokens.push(`  ${getColorVariableName(key, index)}: ${color};`);
+      }
     }
 
-    return `${selector} [data-chart=${id}] {\n${tokens.join("\n")}\n}`;
-  })
-    .filter(Boolean)
-    .join("\n");
+    if (tokens.length > 0) {
+      styleBlocks.push(
+        `${selector} [data-chart=${id}] {\n${tokens.join("\n")}\n}`
+      );
+    }
+  }
 
-  return <style>{styleContent}</style>;
+  if (!styleBlocks.length) {
+    return null;
+  }
+
+  return <style>{styleBlocks.join("\n")}</style>;
 }
 
 const ChartTooltip = Tooltip;
@@ -211,44 +214,33 @@ function ChartTooltipContent({
   }) {
   const { config } = useChart();
 
-  const tooltipLabel = useMemo(() => {
-    if (hideLabel || !payload?.length) {
-      return null;
-    }
-
-    const [item] = payload;
-    const key = `${labelKey || item?.dataKey || item?.name || "value"}`;
-    const itemConfig = getPayloadConfigFromPayload(config, item, key);
-    const value =
-      !labelKey && typeof label === "string"
-        ? config[label]?.label || label
-        : itemConfig?.label;
-
-    if (labelFormatter) {
-      return (
-        <div className={cn("font-medium", labelClassName)}>
-          {labelFormatter(value, payload)}
-        </div>
-      );
-    }
-
-    if (!value) {
-      return null;
-    }
-
-    return <div className={cn("font-medium", labelClassName)}>{value}</div>;
-  }, [
-    label,
-    labelFormatter,
-    payload,
-    hideLabel,
-    labelClassName,
-    config,
-    labelKey,
-  ]);
-
   if (!(active && payload?.length)) {
     return null;
+  }
+
+  const [labelItem] = payload;
+  const labelConfigKey = `${labelKey || labelItem?.dataKey || labelItem?.name || "value"}`;
+  const labelItemConfig = getPayloadConfigFromPayload(
+    config,
+    labelItem,
+    labelConfigKey
+  );
+  const labelValue =
+    !labelKey && typeof label === "string"
+      ? config[label]?.label || label
+      : labelItemConfig?.label;
+
+  let tooltipLabel: ReactNode = null;
+  if (!hideLabel && labelFormatter) {
+    tooltipLabel = (
+      <div className={cn("font-medium", labelClassName)}>
+        {labelFormatter(labelValue, payload)}
+      </div>
+    );
+  } else if (!hideLabel && labelValue) {
+    tooltipLabel = (
+      <div className={cn("font-medium", labelClassName)}>{labelValue}</div>
+    );
   }
 
   const nestLabel = payload.length === 1 && indicator !== "dot";
@@ -359,45 +351,43 @@ function ChartLegendContent({
         className
       )}
     >
-      {payload
-        .filter((item) => item.type !== "none")
-        .map((item) => {
-          const key = `${nameKey || item.value || item.dataKey || "value"}`;
-          const configKey = getPayloadConfigKey(config, item, key);
-          const itemConfig = configKey ? config[configKey] : undefined;
-          const dataKey = configKey || key;
-          let indicatorStyle = getLegendIndicatorStyle(
-            item,
-            dataKey,
-            itemConfig
-          );
+      {payload.map((item) => {
+        if (item.type === "none") {
+          return null;
+        }
 
-          if (
-            variant === "circle-outline" ||
-            variant === "rounded-square-outline"
-          ) {
-            indicatorStyle = getLegendOutlineStyle(item, dataKey, itemConfig);
-          }
+        const key = `${nameKey || item.value || item.dataKey || "value"}`;
+        const configKey = getPayloadConfigKey(config, item, key);
+        const itemConfig = configKey ? config[configKey] : undefined;
+        const dataKey = configKey || key;
+        let indicatorStyle = getLegendIndicatorStyle(item, dataKey, itemConfig);
 
-          return (
-            <div
-              className={cn(
-                "flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-muted-foreground"
-              )}
-              key={key}
-            >
-              {itemConfig?.icon && !hideIcon ? (
-                <itemConfig.icon />
-              ) : (
-                <div
-                  className={getLegendIndicatorClassName(variant)}
-                  style={indicatorStyle}
-                />
-              )}
-              {itemConfig?.label || item.value}
-            </div>
-          );
-        })}
+        if (
+          variant === "circle-outline" ||
+          variant === "rounded-square-outline"
+        ) {
+          indicatorStyle = getLegendOutlineStyle(item, dataKey, itemConfig);
+        }
+
+        return (
+          <div
+            className={cn(
+              "flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-muted-foreground"
+            )}
+            key={key}
+          >
+            {itemConfig?.icon && !hideIcon ? (
+              <itemConfig.icon />
+            ) : (
+              <div
+                className={getLegendIndicatorClassName(variant)}
+                style={indicatorStyle}
+              />
+            )}
+            {itemConfig?.label || item.value}
+          </div>
+        );
+      })}
     </div>
   );
 }

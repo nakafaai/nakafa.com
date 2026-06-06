@@ -68,40 +68,42 @@ describe("components/tryout/actions/part", () => {
     mocks.requireAuth.mockResolvedValue(undefined);
   });
 
-  it("returns unknown without touching Convex when start auth is missing", async () => {
+  it("rejects without touching Convex when start auth is missing", async () => {
     mocks.requireAuth.mockRejectedValue(
       new mocks.AuthenticationRequiredError()
     );
 
-    const result = await startTryoutPart({
-      locale: "id",
-      partKey: "mathematical-reasoning",
-      partKeys: ["mathematical-reasoning"],
-      product: "snbt",
-      tryoutAttemptId,
-      tryoutSlug: "2026-set-1",
-    });
+    await expect(
+      startTryoutPart({
+        locale: "id",
+        partKey: "mathematical-reasoning",
+        partKeys: ["mathematical-reasoning"],
+        product: "snbt",
+        tryoutAttemptId,
+        tryoutSlug: "2026-set-1",
+      })
+    ).rejects.toBeInstanceOf(mocks.AuthenticationRequiredError);
 
-    expect(result).toEqual({ kind: "unknown" });
     expect(mocks.fetchAuthMutation).not.toHaveBeenCalled();
     expect(mocks.scheduleCurrentServerExceptionCapture).not.toHaveBeenCalled();
   });
 
-  it("returns unknown without touching Convex when completion auth is missing", async () => {
+  it("rejects without touching Convex when completion auth is missing", async () => {
     mocks.requireAuth.mockRejectedValue(
       new mocks.AuthenticationRequiredError()
     );
 
-    const result = await completeTryoutPart({
-      locale: "id",
-      partKey: "mathematical-reasoning",
-      partKeys: ["mathematical-reasoning"],
-      product: "snbt",
-      tryoutAttemptId,
-      tryoutSlug: "2026-set-1",
-    });
+    await expect(
+      completeTryoutPart({
+        locale: "id",
+        partKey: "mathematical-reasoning",
+        partKeys: ["mathematical-reasoning"],
+        product: "snbt",
+        tryoutAttemptId,
+        tryoutSlug: "2026-set-1",
+      })
+    ).rejects.toBeInstanceOf(mocks.AuthenticationRequiredError);
 
-    expect(result).toEqual({ kind: "unknown" });
     expect(mocks.fetchAuthMutation).not.toHaveBeenCalled();
     expect(mocks.scheduleCurrentServerExceptionCapture).not.toHaveBeenCalled();
   });

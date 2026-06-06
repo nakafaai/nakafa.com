@@ -62,15 +62,15 @@ export function CompleteExerciseButton() {
       return;
     }
 
-    startTransition(() => {
-      if (!attempt) {
-        toast.error(t("complete-exercise-error"), {
-          position: "bottom-center",
-        });
-        return;
-      }
+    if (!attempt) {
+      toast.error(t("complete-exercise-error"), {
+        position: "bottom-center",
+      });
+      return;
+    }
 
-      Effect.runFork(
+    startTransition(async () => {
+      await Effect.runPromise(
         Effect.tryPromise({
           try: async () => {
             await completeAttempt({ attemptId: attempt._id });

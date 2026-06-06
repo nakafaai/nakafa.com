@@ -122,8 +122,7 @@ export function getExercisesContent(options: ExerciseContentOptions) {
     );
 
     return exercises
-      .filter(Option.isSome)
-      .map((option) => option.value)
+      .flatMap((exercise) => (Option.isSome(exercise) ? [exercise.value] : []))
       .sort((a, b) => a.number - b.number);
   });
 }

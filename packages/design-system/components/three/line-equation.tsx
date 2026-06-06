@@ -148,6 +148,8 @@ export interface Props {
   useMonoFont?: boolean;
 }
 
+const DEFAULT_LABELS: NonNullable<Props["labels"]> = [];
+
 /**
  * Renders a 3D line or curve with optional point markers, labels, and arrowheads.
  */
@@ -158,7 +160,7 @@ export function LineEquation({
   showPoints = true,
   smooth = true,
   curvePoints,
-  labels = [],
+  labels = DEFAULT_LABELS,
   useMonoFont = true,
   cone,
 }: Props) {

@@ -78,20 +78,21 @@ describe("components/tryout/actions/tryout", () => {
     mocks.requireAuth.mockResolvedValue(undefined);
   });
 
-  it("returns unknown without touching Convex when auth is missing", async () => {
+  it("rejects without touching Convex when auth is missing", async () => {
     mocks.requireAuth.mockRejectedValue(
       new mocks.AuthenticationRequiredError()
     );
 
-    const result = await startTryout({
-      locale: "id",
-      partKeys: ["quantitative-knowledge"],
-      product: "snbt",
-      returnPath: "/id/try-out/snbt/2026-set-1",
-      tryoutSlug: "2026-set-1",
-    });
+    await expect(
+      startTryout({
+        locale: "id",
+        partKeys: ["quantitative-knowledge"],
+        product: "snbt",
+        returnPath: "/id/try-out/snbt/2026-set-1",
+        tryoutSlug: "2026-set-1",
+      })
+    ).rejects.toBeInstanceOf(mocks.AuthenticationRequiredError);
 
-    expect(result).toEqual({ kind: "unknown" });
     expect(mocks.fetchAuthMutation).not.toHaveBeenCalled();
     expect(mocks.scheduleCurrentServerExceptionCapture).not.toHaveBeenCalled();
   });

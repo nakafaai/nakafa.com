@@ -117,5 +117,5 @@ export function getExerciseSetPathsFromSlugs(slugs: readonly string[]) {
     setPaths.add(pathParts.slice(0, -2).join("/"));
   }
 
-  return [...setPaths].sort();
+  return Array.from(setPaths).sort();
 }

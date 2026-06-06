@@ -79,12 +79,18 @@ export const getGradeSubjects = Effect.fn("contents.subject.getGradeSubjects")(
       )
     );
 
-    return orderedMaterials
-      .filter((material) => materialFolders.has(material))
-      .map((material) => ({
-        label: material,
-        href: getMaterialPath(category, grade, material),
-      }));
+    return orderedMaterials.flatMap((material) => {
+      if (!materialFolders.has(material)) {
+        return [];
+      }
+
+      return [
+        {
+          label: material,
+          href: getMaterialPath(category, grade, material),
+        },
+      ];
+    });
   }
 );
 
