@@ -20,23 +20,23 @@
     "@repo/internationalization": "workspace:*",
     "@repo/next-config": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
-    "convex": "^1.39.1",
-    "effect": "^3.21.2",
+    "convex": "^1.40.0",
+    "effect": "^3.21.3",
     "express": "^5.2.1",
-    "next": "16.2.6",
-    "react": "^19.2.6",
-    "react-dom": "^19.2.6"
+    "next": "16.2.7",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
   },
   "devDependencies": {
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "25.9.1",
-    "@types/react": "19.2.15",
+    "@types/node": "25.9.2",
+    "@types/react": "19.2.17",
     "@vercel/config": "^0.5.1",
-    "@vitest/coverage-istanbul": "^4.1.7",
-    "@vitest/ui": "^4.1.7",
+    "@vitest/coverage-istanbul": "^4.1.8",
+    "@vitest/ui": "^4.1.8",
     "jsdom": "^29.1.1",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.7"
+    "vitest": "^4.1.8"
   }
 }

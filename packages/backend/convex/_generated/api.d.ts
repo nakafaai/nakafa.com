@@ -148,6 +148,7 @@ import type * as crons from "../crons.js";
 import type * as customers_actions_internal from "../customers/actions/internal.js";
 import type * as customers_actions_public from "../customers/actions/public.js";
 import type * as customers_checkout_impl from "../customers/checkout/impl.js";
+import type * as customers_checkout_localization from "../customers/checkout/localization.js";
 import type * as customers_checkout_spec from "../customers/checkout/spec.js";
 import type * as customers_mutations_internal from "../customers/mutations/internal.js";
 import type * as customers_polar_impl from "../customers/polar/impl.js";
@@ -478,6 +479,7 @@ declare const fullApi: ApiFromModules<{
   "customers/actions/internal": typeof customers_actions_internal;
   "customers/actions/public": typeof customers_actions_public;
   "customers/checkout/impl": typeof customers_checkout_impl;
+  "customers/checkout/localization": typeof customers_checkout_localization;
   "customers/checkout/spec": typeof customers_checkout_spec;
   "customers/mutations/internal": typeof customers_mutations_internal;
   "customers/polar/impl": typeof customers_polar_impl;
