@@ -44,7 +44,6 @@ export const PARABOLIC_SCENE = {
   ghostCount: 7,
   groundPadding: 1.9,
   groundWidth: 3,
-  launchHeight: 0.62,
   launcherLength: 0.58,
   maxDistance: 13,
   minDistance: 2.8,

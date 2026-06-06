@@ -48,16 +48,18 @@ export const PROJECTILE_ASSET_PATHS = {
   ship: "/models/physics/kinematics/kenney-pirate-kit/ship-pirate-small.glb",
 } as const;
 
+const PROJECTILE_BALL_SCALE = 0.34;
+
 export const PROJECTILE_SCENE = {
   animationSeconds: 4.2,
-  ballScale: 0.34,
+  ballScale: PROJECTILE_BALL_SCALE,
   cameraFov: 39,
   cameraPosition: [-6.3, 3.25, 8.8],
   cameraTarget: [2.7, 0.78, -0.22],
   cannonRotationY: Math.PI / 2,
   cannonScale: 0.72,
   ghostCount: 8,
-  launchOffset: [0.72, 0.8, 0] as const,
+  launchOffset: [0.72, PROJECTILE_BALL_SCALE, 0] as const,
   maxDistance: 16,
   minDistance: 3.2,
   pauseSeconds: 0.9,

@@ -258,16 +258,13 @@ function ProjectileBall({ color }: { color: string }) {
 function getLaunchRampPose(motion: ParabolicMotionState) {
   const start = getProjectilePoint(motion, 0);
   const angle = motion.angleRadians;
-  const length = PARABOLIC_SCENE.launcherLength;
+  const length = getLauncherLength(angle);
+  const launchY = getProjectileSceneY(start.y);
   const base = {
     x: start.x - Math.cos(angle) * length,
-    y: PARABOLIC_SCENE.launchHeight - Math.sin(angle) * length,
+    y: launchY - Math.sin(angle) * length,
   };
-  const center = new Vector3(
-    (start.x + base.x) / 2,
-    (PARABOLIC_SCENE.launchHeight + base.y) / 2,
-    0
-  );
+  const center = new Vector3((start.x + base.x) / 2, (launchY + base.y) / 2, 0);
 
   return {
     angle,
@@ -281,10 +278,24 @@ function getGroundLength(rangeWorld: number) {
   return rangeWorld + PARABOLIC_SCENE.groundPadding;
 }
 
+/** Keeps the projectile center on the visible contact plane when y = 0. */
+function getProjectileSceneY(y: number) {
+  return PARABOLIC_SCENE.ballRadius + y;
+}
+
+/** Keeps the launch rail above the ground while preserving the launch angle. */
+function getLauncherLength(angle: number) {
+  const minimumSine = 0.1;
+  const safeSine = Math.max(Math.sin(angle), minimumSine);
+  const maximumGroundedLength = PARABOLIC_SCENE.ballRadius / safeSine;
+
+  return Math.min(PARABOLIC_SCENE.launcherLength, maximumGroundedLength * 0.9);
+}
+
 function toScenePoint(x: number, y: number, z: number) {
   return new Vector3(...toSceneTuple(x, y, z));
 }
 
 function toSceneTuple(x: number, y: number, z: number): VectorTuple {
-  return [x, PARABOLIC_SCENE.launchHeight + y, z];
+  return [x, getProjectileSceneY(y), z];
 }
