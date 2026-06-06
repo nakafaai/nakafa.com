@@ -21,10 +21,10 @@ function InputGroup({ className, ...props }: React.ComponentProps<"fieldset">) {
         "h-9 min-w-0 has-[>textarea]:h-auto",
 
         // Variants based on alignment.
-        "has-[>[data-align=inline-start]]:[&>[data-slot=input-group-control]]:pl-2",
-        "has-[>[data-align=inline-end]]:[&>[data-slot=input-group-control]]:pr-2",
-        "has-[>[data-align=block-start]]:h-auto has-[>[data-align=block-start]]:flex-col has-[>[data-align=block-start]]:[&>[data-slot=input-group-control]]:pb-3",
-        "has-[>[data-align=block-end]]:h-auto has-[>[data-align=block-end]]:flex-col has-[>[data-align=block-end]]:[&>[data-slot=input-group-control]]:pt-3",
+        "has-[>[data-align=inline-start]]:*:data-[slot=input-group-control]:pl-2",
+        "has-[>[data-align=inline-end]]:*:data-[slot=input-group-control]:pr-2",
+        "has-[>[data-align=block-start]]:h-auto has-[>[data-align=block-start]]:flex-col has-[>[data-align=block-start]]:*:data-[slot=input-group-control]:pb-3",
+        "has-[>[data-align=block-end]]:h-auto has-[>[data-align=block-end]]:flex-col has-[>[data-align=block-end]]:*:data-[slot=input-group-control]:pt-3",
 
         // Focus state.
         "has-[[data-slot=input-group-control]:focus-visible]:border-ring has-[[data-slot=input-group-control]:focus-visible]:ring-[3px] has-[[data-slot=input-group-control]:focus-visible]:ring-ring/50",
@@ -65,31 +65,21 @@ function InputGroupAddon({
   className,
   align = "inline-start",
   ...props
-}: React.ComponentProps<"fieldset"> &
-  VariantProps<typeof inputGroupAddonVariants>) {
+}: React.ComponentProps<"div"> & VariantProps<typeof inputGroupAddonVariants>) {
   // Addons are rendered after the single control in DOM order. The `align`
   // prop handles visual positioning while the addon forwards stray clicks to
   // the group's focusable control.
   return (
-    <fieldset
+    <div
       className={cn(inputGroupAddonVariants({ align }), className)}
       data-align={align}
       data-slot="input-group-addon"
-      onClick={(e) => {
-        if ((e.target as HTMLElement).closest("button")) {
+      onPointerDown={(event) => {
+        if ((event.target as HTMLElement).closest("button")) {
           return;
         }
 
-        getInputGroupControl(e.currentTarget.parentElement)?.focus();
-      }}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-
-          if (!(e.target as HTMLElement).closest("button")) {
-            getInputGroupControl(e.currentTarget.parentElement)?.focus();
-          }
-        }
+        getInputGroupControl(event.currentTarget.parentElement)?.focus();
       }}
       {...props}
     />

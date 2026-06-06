@@ -8,23 +8,21 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import {
+  ChartCartesianGrid,
+  ChartComposedChart,
   type ChartConfig,
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
+  ChartLine,
+  ChartReferenceLine,
+  ChartScatter,
   ChartTooltip,
   ChartTooltipContent,
+  ChartXAxis,
+  ChartYAxis,
 } from "@repo/design-system/components/ui/chart";
 import type { ReactNode } from "react";
-import {
-  CartesianGrid,
-  ComposedChart,
-  Line,
-  ReferenceLine,
-  Scatter,
-  XAxis,
-  YAxis,
-} from "recharts";
 
 interface Point {
   x: number;
@@ -106,9 +104,9 @@ export function ScatterDiagram({
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>
-          <ComposedChart accessibilityLayer>
-            <CartesianGrid vertical={false} />
-            <XAxis
+          <ChartComposedChart accessibilityLayer>
+            <ChartCartesianGrid vertical={false} />
+            <ChartXAxis
               dataKey="x"
               domain={
                 xAxisDomain === "min-max" ? ["dataMin", "dataMax"] : undefined
@@ -123,7 +121,7 @@ export function ScatterDiagram({
               tickMargin={8}
               type="number"
             />
-            <YAxis
+            <ChartYAxis
               dataKey="y"
               label={{
                 value: yAxisLabel || "Y",
@@ -139,7 +137,7 @@ export function ScatterDiagram({
               wrapperStyle={{ visibility: "hidden" }}
             />
             {datasets.map((dataset) => (
-              <Scatter
+              <ChartScatter
                 data={dataset.points}
                 fill={dataset.color}
                 key={dataset.name}
@@ -147,7 +145,7 @@ export function ScatterDiagram({
               />
             ))}
             {!!regressionLineData && !!calculateRegressionLine && (
-              <Line
+              <ChartLine
                 activeDot={false}
                 data={regressionLineData}
                 dataKey="y"
@@ -165,7 +163,7 @@ export function ScatterDiagram({
                   const yPredicted =
                     regressionParams.m * point.x + regressionParams.b;
                   return (
-                    <ReferenceLine
+                    <ChartReferenceLine
                       ifOverflow="visible"
                       key={`${dataset.name}-residual-${point.x}-${point.y}-${yPredicted}`}
                       segment={[
@@ -181,7 +179,7 @@ export function ScatterDiagram({
             <ChartLegend
               content={<ChartLegendContent className="mt-6" variant="circle" />}
             />
-          </ComposedChart>
+          </ChartComposedChart>
         </ChartContainer>
       </CardContent>
     </Card>

@@ -8,20 +8,19 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import {
+  ChartBar,
+  ChartBarChart,
+  ChartCartesianGrid,
   type ChartConfig,
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
+  ChartXAxis,
+  ChartYAxis,
 } from "@repo/design-system/components/ui/chart";
-import {
-  CartesianGrid,
-  Bar as RechartsBar,
-  BarChart as RechartsBarChart,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { type ReactNode, useMemo } from "react";
 
 const chartData = [
   { class: "A", passed: 15, failed: 5 },
@@ -32,78 +31,75 @@ const chartData = [
 ];
 
 interface Props {
-  lang?: "id" | "en";
+  classLabel: string;
+  description: ReactNode;
+  failedLabel: ReactNode;
+  passedLabel: ReactNode;
+  title: ReactNode;
 }
 
-const translations = {
-  id: {
-    title: "Data Kelulusan Ujian Matematika",
-    description:
-      "Jumlah siswa yang lulus dan tidak lulus per kelas di SMAN 22 SUKASUSU.",
-    passed: "Lulus",
-    failed: "Tidak Lulus",
-    classPrefix: "Kelas",
-  },
-  en: {
-    title: "Mathematics Exam Passing Data",
-    description:
-      "Number of students who passed and failed per class at SMAN 22 SUKASUSU.",
-    passed: "Passed",
-    failed: "Failed",
-    classPrefix: "Class",
-  },
-};
+/** Renders the mathematics exam graduation chart with MDX-owned copy. */
+export function GraduationChart({
+  classLabel,
+  description,
+  failedLabel,
+  passedLabel,
+  title,
+}: Props) {
+  const data = useMemo(
+    () =>
+      chartData.map((item) => ({
+        ...item,
+        formattedClass: `${classLabel} ${item.class}`,
+      })),
+    [classLabel]
+  );
 
-export function GraduationChart({ lang = "en" }: Props) {
-  const t = translations[lang];
-
-  // Transform data to include localized class names (e.g., "Kelas A" or "Class A")
-  const data = chartData.map((item) => ({
-    ...item,
-    formattedClass: `${t.classPrefix} ${item.class}`,
-  }));
-
-  const chartConfig = {
-    passed: {
-      label: t.passed,
-      colors: { light: ["var(--chart-1)"] },
-    },
-    failed: {
-      label: t.failed,
-      colors: { light: ["var(--chart-2)"] },
-    },
-  } satisfies ChartConfig;
+  const chartConfig = useMemo(
+    () =>
+      ({
+        passed: {
+          label: passedLabel,
+          colors: { light: ["var(--chart-1)"] },
+        },
+        failed: {
+          label: failedLabel,
+          colors: { light: ["var(--chart-2)"] },
+        },
+      }) satisfies ChartConfig,
+    [failedLabel, passedLabel]
+  );
 
   return (
     <Card className="content-auto-card">
       <CardHeader>
-        <CardTitle>{t.title}</CardTitle>
-        <CardDescription>{t.description}</CardDescription>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer className="aspect-video" config={chartConfig}>
-          <RechartsBarChart accessibilityLayer data={data}>
-            <CartesianGrid vertical={false} />
-            <XAxis
+          <ChartBarChart accessibilityLayer data={data}>
+            <ChartCartesianGrid vertical={false} />
+            <ChartXAxis
               axisLine={false}
               dataKey="formattedClass"
               tickLine={false}
               tickMargin={10}
             />
-            <YAxis axisLine={false} tickLine={false} tickMargin={10} />
+            <ChartYAxis axisLine={false} tickLine={false} tickMargin={10} />
             <ChartTooltip content={<ChartTooltipContent />} />
             <ChartLegend content={<ChartLegendContent />} />
-            <RechartsBar
+            <ChartBar
               dataKey="passed"
               fill="var(--color-passed-0)"
               radius={[4, 4, 0, 0]}
             />
-            <RechartsBar
+            <ChartBar
               dataKey="failed"
               fill="var(--color-failed-0)"
               radius={[4, 4, 0, 0]}
             />
-          </RechartsBarChart>
+          </ChartBarChart>
         </ChartContainer>
       </CardContent>
     </Card>

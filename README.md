@@ -67,15 +67,17 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    A[User Click] --> B[generateCheckoutLink]
-    B --> C[requireCustomer]
-    C --> D[ensureCustomer]
-    D <--> E[(Polar API)]
-    C --> F[upsertCustomer]
-    F --> G[(Convex DB)]
-    B --> H[createCheckoutSession]
-    H --> E
-    E --> I[Checkout URL]
+    A[User Click] --> B[createProCheckoutUrl]
+    B --> C[Read Vercel request IP]
+    C --> D[generateCheckoutLink]
+    D --> E[requireCustomer]
+    E --> F[ensureCustomer]
+    F <--> G[(Polar API)]
+    E --> H[upsertCustomer]
+    H --> I[(Convex DB)]
+    D --> J[createCheckoutSession with customerIpAddress]
+    J --> G
+    G --> K[Checkout URL]
 ```
 
 #### Webhook Flow

@@ -1,0 +1,63 @@
+export const metadata = {
+  title: "Motion as a Change in Position",
+  description:
+    "Learn how to identify motion by comparing initial and final position in one reference frame.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/31/2026",
+  subject: "Kinematics",
+};
+
+## Motion Needs Two Positions
+
+An object is moving if its position changes during a time interval. So one position is not enough. We need to compare the **initial position** and the **final position** using the same reference frame.
+
+If the initial position is <InlineMath math="x_{\text{initial}}" /> and the final position is <InlineMath math="x_{\text{final}}" />, the change in position is:
+
+<BlockMath math="\Delta x=x_{\text{final}}-x_{\text{initial}}" />
+
+The symbol <InlineMath math="\Delta x" /> is read as "delta x" and means change in position. Its value can be positive, negative, or zero.
+
+> Motion is read from a change in position within the same reference frame.
+
+## Position Difference on a Straight Track
+
+On a straight track with a fixed zero point, position change depends only on final position minus initial position. For example, if an object starts at <InlineMath math="20 \text{ m}" /> and ends at <InlineMath math="50 \text{ m}" />, the change in position is <InlineMath math="+30 \text{ m}" />.
+
+If the initial and final positions are the same, the change in position is zero. The object has not moved relative to that reference point during the interval.
+
+## Keep the Reference Consistent
+
+When calculating a change in position, the initial and final positions must be read from the same reference point. Do not take the initial position from the store and the final position from another house, because that no longer describes the same motion in one reference frame.
+
+| Reference | Initial position | Final position | Change in position |
+| :-------- | :--------------- | :------------- | :----------------- |
+| Store at <InlineMath math="0 \text{ m}" /> | <InlineMath math="+20 \text{ m}" /> | <InlineMath math="+50 \text{ m}" /> | <InlineMath math="+30 \text{ m}" /> |
+| Rani's house at <InlineMath math="20 \text{ m}" /> | <InlineMath math="0 \text{ m}" /> | <InlineMath math="+30 \text{ m}" /> | <InlineMath math="+30 \text{ m}" /> |
+| Naya's house at <InlineMath math="50 \text{ m}" /> | <InlineMath math="-30 \text{ m}" /> | <InlineMath math="0 \text{ m}" /> | <InlineMath math="+30 \text{ m}" /> |
+
+The three rows have different initial and final position numbers, but the same change in position. The reference point shifts the coordinate numbers; the final-minus-initial difference still describes the motion from start to finish.
+
+## Reading the Sign of Position Change
+
+On a straight line, we may choose one direction as positive. In this example, east is positive.
+
+- <InlineMath math="\Delta x>0" /> means the final position is east of the initial position.
+- <InlineMath math="\Delta x<0" /> means the final position is west of the initial position.
+- <InlineMath math="\Delta x=0" /> means the initial and final positions are the same.
+
+A negative sign does not mean the motion is smaller or wrong. It only tells the direction of the position change.
+
+## Subtract the Final and Initial Positions
+
+A student starts <InlineMath math="10 \text{ m}" /> east of a gate. A few seconds later, the student is <InlineMath math="40 \text{ m}" /> east of the gate. The change in position is:
+
+<BlockMath math="\begin{aligned}
+\Delta x
+&=x_{\text{final}}-x_{\text{initial}} \\
+&=40 \text{ m}-10 \text{ m} \\
+&=+30 \text{ m}
+\end{aligned}" />
+
+So, the student moves <InlineMath math="30 \text{ m}" /> to the east. We know motion happened because the final position is different from the initial position.
+
+Notice the order of subtraction. We always read final position minus initial position, then use the sign of the result to decide the direction of the position change.

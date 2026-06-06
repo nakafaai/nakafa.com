@@ -17,26 +17,23 @@
     "@repo/backend": "workspace:*",
     "@repo/contents": "workspace:*",
     "@repo/design-system": "workspace:*",
-    "@repo/internationalization": "workspace:*",
     "@repo/next-config": "workspace:*",
-    "@repo/security": "workspace:*",
     "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
     "better-auth": "~1.6.12",
-    "effect": "^3.21.2",
-    "next": "16.2.6",
-    "react": "^19.2.6",
-    "react-dom": "^19.2.6",
-    "shiki": "^4.1.0"
+    "effect": "^3.21.3",
+    "next": "16.2.7",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "25.9.1",
-    "@types/react": "19.2.15",
+    "@types/node": "25.9.2",
+    "@types/react": "19.2.17",
     "@vercel/config": "^0.5.1",
-    "@vitest/coverage-istanbul": "^4.1.7",
+    "@vitest/coverage-istanbul": "^4.1.8",
     "typescript": "^6.0.3",
-    "vite": "^8.0.14",
-    "vitest": "^4.1.7"
+    "vite": "^8.0.16",
+    "vitest": "^4.1.8"
   }
 }

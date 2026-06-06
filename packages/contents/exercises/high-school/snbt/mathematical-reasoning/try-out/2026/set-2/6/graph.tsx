@@ -1,46 +1,47 @@
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
-import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getColor } from "@repo/design-system/lib/color";
+import type { ReactNode } from "react";
 
-export function Graph() {
-  // Define vertices of the cube
-  const s = 4;
-  const A = { x: s, y: 0, z: 0 };
-  const B = { x: s, y: s, z: 0 };
-  const C = { x: 0, y: s, z: 0 };
-  const D = { x: 0, y: 0, z: 0 };
-  const E = { x: s, y: 0, z: s };
-  const F = { x: s, y: s, z: s };
-  const G = { x: 0, y: s, z: s };
-  const H = { x: 0, y: 0, z: s };
+const cubeSize = 4;
+const cubePointA = { x: cubeSize, y: 0, z: 0 };
+const cubePointB = { x: cubeSize, y: cubeSize, z: 0 };
+const cubePointC = { x: 0, y: cubeSize, z: 0 };
+const cubePointD = { x: 0, y: 0, z: 0 };
+const cubePointE = { x: cubeSize, y: 0, z: cubeSize };
+const cubePointF = { x: cubeSize, y: cubeSize, z: cubeSize };
+const cubePointG = { x: 0, y: cubeSize, z: cubeSize };
+const cubePointH = { x: 0, y: 0, z: cubeSize };
+const cubePointQ = {
+  x: (cubePointF.x + cubePointG.x) / 2,
+  y: (cubePointF.y + cubePointG.y) / 2,
+  z: (cubePointF.z + cubePointG.z) / 2,
+};
+const cubePointO = { x: 3, y: 3, z: 0 };
+const hiddenPoints = { showPoints: false };
 
-  // Point Q is midpoint of FG
-  const Q = {
-    x: (F.x + G.x) / 2,
-    y: (F.y + G.y) / 2,
-    z: (F.z + G.z) / 2,
+interface GraphProps {
+  description: ReactNode;
+  title: ReactNode;
+}
+
+/** Returns the midpoint between two cube points. */
+function getMidpoint(pointA: typeof cubePointA, pointB: typeof cubePointA) {
+  return {
+    x: (pointA.x + pointB.x) / 2,
+    y: (pointA.y + pointB.y) / 2,
+    z: (pointA.z + pointB.z) / 2,
   };
+}
 
-  // Helper to calculate midpoint for labels
-  const mid = (p1: typeof A, p2: typeof A) => ({
-    x: (p1.x + p2.x) / 2,
-    y: (p1.y + p2.y) / 2,
-    z: (p1.z + p2.z) / 2,
-  });
-
-  // Point O is projection of Q on BD
-  const O = { x: 3, y: 3, z: 0 };
-
-  const common = { showPoints: false };
-
+export function Graph({ description, title }: GraphProps) {
   return (
     <LineEquation
       cameraPosition={[9, 6, 9]}
       data={[
         // Bottom Face
         {
-          ...common,
-          points: [D, mid(D, A), A],
+          ...hiddenPoints,
+          points: [cubePointD, getMidpoint(cubePointD, cubePointA), cubePointA],
           color: getColor("INDIGO"),
           labels: [
             { text: "D", at: 0, offset: [-0.3, -0.3, 0] },
@@ -49,14 +50,14 @@ export function Graph() {
           ],
         },
         {
-          ...common,
-          points: [A, mid(A, B), B],
+          ...hiddenPoints,
+          points: [cubePointA, getMidpoint(cubePointA, cubePointB), cubePointB],
           color: getColor("INDIGO"),
           labels: [{ text: "4", at: 1, offset: [0.3, 0, 0] }],
         },
         {
-          ...common,
-          points: [B, mid(B, C), C],
+          ...hiddenPoints,
+          points: [cubePointB, getMidpoint(cubePointB, cubePointC), cubePointC],
           color: getColor("INDIGO"),
           labels: [
             { text: "B", at: 0, offset: [0.3, 0.3, 0] },
@@ -65,16 +66,16 @@ export function Graph() {
           ],
         },
         {
-          ...common,
-          points: [C, mid(C, D), D],
+          ...hiddenPoints,
+          points: [cubePointC, getMidpoint(cubePointC, cubePointD), cubePointD],
           color: getColor("INDIGO"),
           labels: [{ text: "4", at: 1, offset: [-0.3, 0, 0] }],
         },
 
         // Top Face
         {
-          ...common,
-          points: [H, mid(H, E), E],
+          ...hiddenPoints,
+          points: [cubePointH, getMidpoint(cubePointH, cubePointE), cubePointE],
           color: getColor("INDIGO"),
           labels: [
             { text: "H", at: 0, offset: [-0.3, -0.3, 0.3] },
@@ -83,14 +84,14 @@ export function Graph() {
           ],
         },
         {
-          ...common,
-          points: [E, mid(E, F), F],
+          ...hiddenPoints,
+          points: [cubePointE, getMidpoint(cubePointE, cubePointF), cubePointF],
           color: getColor("INDIGO"),
           labels: [{ text: "4", at: 1, offset: [0.3, 0, 0.3] }],
         },
         {
-          ...common,
-          points: [F, mid(F, Q), Q],
+          ...hiddenPoints,
+          points: [cubePointF, getMidpoint(cubePointF, cubePointQ), cubePointQ],
           color: getColor("INDIGO"),
           labels: [
             { text: "F", at: 0, offset: [0.3, 0.3, 0.3] },
@@ -98,8 +99,8 @@ export function Graph() {
           ],
         },
         {
-          ...common,
-          points: [Q, mid(Q, G), G],
+          ...hiddenPoints,
+          points: [cubePointQ, getMidpoint(cubePointQ, cubePointG), cubePointG],
           color: getColor("INDIGO"),
           labels: [
             { text: "2", at: 1, offset: [0, 0.3, 0.3] },
@@ -107,45 +108,49 @@ export function Graph() {
           ],
         },
         {
-          ...common,
-          points: [G, mid(G, H), H],
+          ...hiddenPoints,
+          points: [cubePointG, getMidpoint(cubePointG, cubePointH), cubePointH],
           color: getColor("INDIGO"),
           labels: [{ text: "4", at: 1, offset: [-0.3, 0, 0.3] }],
         },
 
         // Vertical Edges
         {
-          ...common,
-          points: [D, mid(D, H), H],
+          ...hiddenPoints,
+          points: [cubePointD, getMidpoint(cubePointD, cubePointH), cubePointH],
           color: getColor("INDIGO"),
           labels: [{ text: "4", at: 1, offset: [-0.3, -0.3, 0] }],
         },
         {
-          ...common,
-          points: [A, mid(A, E), E],
+          ...hiddenPoints,
+          points: [cubePointA, getMidpoint(cubePointA, cubePointE), cubePointE],
           color: getColor("INDIGO"),
           labels: [{ text: "4", at: 1, offset: [0.3, -0.3, 0] }],
         },
         {
-          ...common,
-          points: [B, mid(B, F), F],
+          ...hiddenPoints,
+          points: [cubePointB, getMidpoint(cubePointB, cubePointF), cubePointF],
           color: getColor("INDIGO"),
           labels: [{ text: "4", at: 1, offset: [0.3, 0.3, 0] }],
         },
         {
-          ...common,
-          points: [C, mid(C, G), G],
+          ...hiddenPoints,
+          points: [cubePointC, getMidpoint(cubePointC, cubePointG), cubePointG],
           color: getColor("INDIGO"),
           labels: [{ text: "4", at: 1, offset: [-0.3, 0.3, 0] }],
         },
 
         // Diagonal BD
-        { ...common, points: [B, D], color: getColor("ORANGE") },
+        {
+          ...hiddenPoints,
+          points: [cubePointB, cubePointD],
+          color: getColor("ORANGE"),
+        },
 
         // Triangle DBQ Lines
         {
-          ...common,
-          points: [D, mid(D, Q), Q],
+          ...hiddenPoints,
+          points: [cubePointD, getMidpoint(cubePointD, cubePointQ), cubePointQ],
           color: getColor("TEAL"),
           labels: [
             { text: "6", at: 1, offset: [-0.3, 0.3, 0] },
@@ -153,24 +158,24 @@ export function Graph() {
           ],
         },
         {
-          ...common,
-          points: [B, mid(B, Q), Q],
+          ...hiddenPoints,
+          points: [cubePointB, getMidpoint(cubePointB, cubePointQ), cubePointQ],
           color: getColor("TEAL"),
           labels: [{ text: "2√5", at: 1, offset: [0.3, 0, 0] }],
         },
 
         // Line HQ (from image)
         {
-          ...common,
-          points: [H, mid(H, Q), Q],
+          ...hiddenPoints,
+          points: [cubePointH, getMidpoint(cubePointH, cubePointQ), cubePointQ],
           color: getColor("VIOLET"),
           labels: [{ text: "2√5", at: 1, offset: [0, 0, 0.3] }],
         },
 
         // Height Line QO
         {
-          ...common,
-          points: [Q, mid(Q, O), O],
+          ...hiddenPoints,
+          points: [cubePointQ, getMidpoint(cubePointQ, cubePointO), cubePointO],
           color: getColor("ROSE"),
           labels: [
             { text: "y", at: 1, offset: [0.2, 0, 0] },
@@ -178,17 +183,8 @@ export function Graph() {
           ],
         },
       ]}
-      description={
-        <>
-          Visualisasi kubus dan jarak titik <InlineMath math="Q" /> ke garis{" "}
-          <InlineMath math="BD" />.
-        </>
-      }
-      title={
-        <>
-          Kubus <InlineMath math="ABCD.EFGH" />
-        </>
-      }
+      description={description}
+      title={title}
     />
   );
 }

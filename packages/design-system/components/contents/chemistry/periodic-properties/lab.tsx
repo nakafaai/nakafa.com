@@ -24,7 +24,7 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 
 /**
- * Renders an interactive 3D model for the main periodic-property trends.
+ * Renders an interactive model for the main periodic-property trends.
  */
 export function PeriodicPropertiesLab({
   title,
@@ -61,8 +61,7 @@ export function PeriodicPropertiesLab({
       <CardContent className="flex flex-col gap-4">
         <ToggleGroup
           aria-label={labels.chooseTrend}
-          className="grid w-full grid-cols-2 lg:grid-cols-4"
-          layout="grid"
+          gridColumns="4-lg"
           onValueChange={handleModeChange}
           type="single"
           value={selectedModeId}
@@ -114,7 +113,7 @@ export function PeriodicPropertiesLab({
 }
 
 /**
- * Presents one compact fact below the 3D model.
+ * Presents one compact fact below the model.
  */
 function TrendFact({ label, value }: { label: string; value: ReactNode }) {
   return (

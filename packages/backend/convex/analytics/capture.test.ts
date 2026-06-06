@@ -121,6 +121,9 @@ describe("analytics/capture", () => {
       validate(productAnalyticsEventValidator, {
         name: "checkout started",
         properties: {
+          checkout_locale: "en",
+          customer_ip_available: true,
+          locale: "id",
           product_count: 1,
           product_id: "product-pro",
         },

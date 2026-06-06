@@ -24,6 +24,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
 import { useMutation } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
+import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 import { Activity, useTransition } from "react";
@@ -167,15 +168,24 @@ function AssessmentActions({
 
   function handleDelete() {
     startTransition(async () => {
-      try {
-        await deleteAssessment({
-          schoolId: assessment.schoolId,
-          assessmentId: assessment._id,
-        });
-        toast.success(schoolT("assessment-deleted"));
-      } catch {
-        toast.error(schoolT("delete-assessment-failed"));
-      }
+      await Effect.runPromise(
+        Effect.tryPromise({
+          try: async () => {
+            await deleteAssessment({
+              schoolId: assessment.schoolId,
+              assessmentId: assessment._id,
+            });
+            toast.success(schoolT("assessment-deleted"));
+          },
+          catch: (error) => error,
+        }).pipe(
+          Effect.catchAll(() =>
+            Effect.sync(() => {
+              toast.error(schoolT("delete-assessment-failed"));
+            })
+          )
+        )
+      );
     });
   }
 

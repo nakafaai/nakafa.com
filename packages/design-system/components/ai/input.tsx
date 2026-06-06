@@ -58,6 +58,49 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+
+const submitTextareaOnEnter: KeyboardEventHandler<HTMLTextAreaElement> = (
+  event
+) => {
+  if (event.key !== "Enter") {
+    return;
+  }
+
+  if (event.nativeEvent.isComposing) {
+    return;
+  }
+
+  if (event.shiftKey) {
+    return;
+  }
+
+  event.preventDefault();
+  event.currentTarget.form?.requestSubmit();
+};
+
+/** Converts a browser blob URL into a data URL for attachment submission. */
+async function convertBlobUrlToDataUrl(url: string) {
+  const response = await fetch(url);
+  const blob = await response.blob();
+
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.addEventListener("loadend", () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+        return;
+      }
+
+      reject(new Error("FileReader did not return a data URL."));
+    });
+    reader.addEventListener("error", () => {
+      reject(reader.error ?? new Error("FileReader failed to read the blob."));
+    });
+    reader.readAsDataURL(blob);
+  });
+}
+
 // ============================================================================
 // Provider Context & Types
 // ============================================================================
@@ -363,6 +406,17 @@ export function PromptInputAttachments({
     return null;
   }
 
+  const fileAttachments: typeof attachments.files = [];
+  const imageAttachments: typeof attachments.files = [];
+
+  for (const file of attachments.files) {
+    if (file.mediaType?.startsWith("image/") && file.url) {
+      imageAttachments.push(file);
+    } else {
+      fileAttachments.push(file);
+    }
+  }
+
   return (
     <InputGroupAddon
       align="block-start"
@@ -374,20 +428,16 @@ export function PromptInputAttachments({
       style={{ height: attachments.files.length ? height : 0 }}
       {...props}
     >
-      <div className="space-y-2 py-1" ref={contentRef}>
+      <div className="flex flex-col gap-2 py-1" ref={contentRef}>
         <div className="flex flex-wrap gap-2">
-          {attachments.files
-            .filter((f) => !(f.mediaType?.startsWith("image/") && f.url))
-            .map((file) => (
-              <Fragment key={file.id}>{children(file)}</Fragment>
-            ))}
+          {fileAttachments.map((file) => (
+            <Fragment key={file.id}>{children(file)}</Fragment>
+          ))}
         </div>
         <div className="flex flex-wrap gap-2">
-          {attachments.files
-            .filter((f) => f.mediaType?.startsWith("image/") && f.url)
-            .map((file) => (
-              <Fragment key={file.id}>{children(file)}</Fragment>
-            ))}
+          {imageAttachments.map((file) => (
+            <Fragment key={file.id}>{children(file)}</Fragment>
+          ))}
         </div>
       </div>
     </InputGroupAddon>
@@ -672,17 +722,6 @@ export const PromptInput = ({
     }
   };
 
-  const convertBlobUrlToDataUrl = async (url: string): Promise<string> => {
-    const response = await fetch(url);
-    const blob = await response.blob();
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  };
-
   const ctx = useMemo<AttachmentsContext>(
     () => ({
       files: files.map((item) => ({ ...item, id: item.id })),
@@ -819,19 +858,6 @@ export const PromptInputTextarea = ({
   const controller = useOptionalPromptInputController();
   const attachments = usePromptInputAttachments();
 
-  const handleKeyDown: KeyboardEventHandler<HTMLTextAreaElement> = (e) => {
-    if (e.key === "Enter") {
-      if (e.nativeEvent.isComposing) {
-        return;
-      }
-      if (e.shiftKey) {
-        return;
-      }
-      e.preventDefault();
-      e.currentTarget.form?.requestSubmit();
-    }
-  };
-
   const handlePaste: ClipboardEventHandler<HTMLTextAreaElement> = (event) => {
     const items = event.clipboardData?.items;
 
@@ -872,7 +898,7 @@ export const PromptInputTextarea = ({
     <InputGroupTextarea
       className={cn("field-sizing-content max-h-48 min-h-16", className)}
       name="message"
-      onKeyDown={handleKeyDown}
+      onKeyDown={submitTextareaOnEnter}
       onPaste={handlePaste}
       placeholder={placeholder}
       {...props}

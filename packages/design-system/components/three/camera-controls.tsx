@@ -46,6 +46,10 @@ interface CameraControlsProps {
   autoRotate?: boolean;
   cameraPosition?: readonly [number, number, number];
   cameraTarget?: readonly [number, number, number];
+  enablePan?: boolean;
+  enableRotate?: boolean;
+  enableZoom?: boolean;
+  fov?: number;
   maxAzimuthAngle?: number;
   maxDistance?: number;
   maxPolarAngle?: number;
@@ -59,6 +63,10 @@ export function CameraControls(props: CameraControlsProps) {
     cameraPosition = DEFAULT_CAMERA_POSITION,
     cameraTarget = DEFAULT_CAMERA_TARGET,
     autoRotate = true,
+    enablePan = true,
+    enableRotate = true,
+    enableZoom = true,
+    fov = 50,
     maxAzimuthAngle,
     maxDistance = 100,
     maxPolarAngle,
@@ -144,12 +152,15 @@ export function CameraControls(props: CameraControlsProps) {
 
   return (
     <>
-      <PerspectiveCamera fov={50} makeDefault position={cameraPosition} />
+      <PerspectiveCamera fov={fov} makeDefault position={cameraPosition} />
       <OrbitControls
         autoRotate={autoRotate}
         autoRotateSpeed={0.5}
         dampingFactor={0.05}
         enableDamping
+        enablePan={enablePan}
+        enableRotate={enableRotate}
+        enableZoom={enableZoom}
         makeDefault
         maxAzimuthAngle={maxAzimuthAngle}
         maxDistance={maxDistance}

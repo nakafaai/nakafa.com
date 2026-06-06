@@ -1,6 +1,16 @@
 import { cn } from "@repo/design-system/lib/utils";
 
 const DOT_DELAY = 250;
+const DOT_SIZES = {
+  sm: "h-1 w-1",
+  md: "h-1.5 w-1.5",
+  lg: "h-2 w-2",
+};
+const CONTAINER_SIZES = {
+  sm: "h-4",
+  md: "h-5",
+  lg: "h-6",
+};
 
 export function TypingLoader({
   className,
@@ -9,23 +19,11 @@ export function TypingLoader({
   className?: string;
   size?: "sm" | "md" | "lg";
 }) {
-  const dotSizes = {
-    sm: "h-1 w-1",
-    md: "h-1.5 w-1.5",
-    lg: "h-2 w-2",
-  };
-
-  const containerSizes = {
-    sm: "h-4",
-    md: "h-5",
-    lg: "h-6",
-  };
-
   return (
     <div
       className={cn(
         "flex items-center space-x-1",
-        containerSizes[size],
+        CONTAINER_SIZES[size],
         className
       )}
     >
@@ -33,7 +31,7 @@ export function TypingLoader({
         <div
           className={cn(
             "animate-[typing_1s_infinite] rounded-full bg-primary",
-            dotSizes[size]
+            DOT_SIZES[size]
           )}
           // biome-ignore lint/suspicious/noArrayIndexKey: Dots are static and ordered, index is stable
           key={`dot-${i + 1}`}

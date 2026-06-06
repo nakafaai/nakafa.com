@@ -1,12 +1,12 @@
 "use client";
 
 import { useDisclosure } from "@mantine/hooks";
-import type { api } from "@repo/backend/convex/_generated/api";
+import { api } from "@repo/backend/convex/_generated/api";
 import {
   usePathname,
   useRouter,
 } from "@repo/internationalization/src/navigation";
-import { useConvexAuth } from "convex/react";
+import { useAction, useConvexAuth } from "convex/react";
 import type { FunctionArgs } from "convex/server";
 import { useTranslations } from "next-intl";
 import { useLayoutEffect, useTransition } from "react";
@@ -40,6 +40,9 @@ export function useTryoutStartFlow({
   const pathname = usePathname();
   const router = useRouter();
   const { isAuthenticated, isLoading } = useConvexAuth();
+  const generateCheckoutLink = useAction(
+    api.customers.actions.public.generateCheckoutLink
+  );
   const [isActionPending, startTransition] = useTransition();
   const [isDialogOpen, { close: closeDialog, open: openDialog }] =
     useDisclosure(false);
@@ -145,7 +148,11 @@ export function useTryoutStartFlow({
 
       if (result.kind === "requires-access") {
         closeDialog();
-        window.location.href = result.url;
+        const { url } = await generateCheckoutLink({
+          locale: params.locale,
+          successUrl: result.successUrl,
+        });
+        window.location.href = url;
         return;
       }
 

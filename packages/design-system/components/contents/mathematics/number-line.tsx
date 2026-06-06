@@ -87,6 +87,26 @@ function getSegmentEdge({
   return NUMBER_LINE_SEGMENT_EDGE.finite;
 }
 
+/** Returns the finite bounds that should contribute to the number-line range. */
+function getFiniteSegmentValues({ end, start }: NumberLineSegment) {
+  const hasFiniteStart = Number.isFinite(start);
+  const hasFiniteEnd = Number.isFinite(end);
+
+  if (hasFiniteStart && hasFiniteEnd) {
+    return [start, end];
+  }
+
+  if (hasFiniteStart) {
+    return [start];
+  }
+
+  if (hasFiniteEnd) {
+    return [end];
+  }
+
+  return [];
+}
+
 export function NumberLine({
   min,
   max,
@@ -94,9 +114,7 @@ export function NumberLine({
   title,
   description,
 }: NumberLineProps) {
-  const allValues = segments
-    .flatMap((s) => [s.start, s.end])
-    .filter((v) => Number.isFinite(v));
+  const allValues = segments.flatMap(getFiniteSegmentValues);
 
   const rangeMin = min ?? (allValues.length > 0 ? Math.min(...allValues) : -10);
   const rangeMax = max ?? (allValues.length > 0 ? Math.max(...allValues) : 10);

@@ -1,7 +1,6 @@
 "use client";
 
 import { InLoveIcon } from "@hugeicons/core-free-icons";
-import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -14,12 +13,14 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
+import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import {
   schoolJoinDefaultValues,
   schoolJoinFormSchema,
 } from "@/app/[locale]/(app)/school/(authenticated)/onboarding/join/schema";
+import { reportClientException } from "@/lib/analytics/client";
 
 /** Render the onboarding form for joining an existing school. */
 export function SchoolOnboardingJoinForm() {
@@ -34,16 +35,27 @@ export function SchoolOnboardingJoinForm() {
       onChange: schoolJoinFormSchema,
     },
     onSubmit: async ({ value }) => {
-      try {
-        const { slug } = await joinSchool(value);
-        router.push(`/school/${slug}`);
-      } catch (error) {
-        captureException(error, {
-          source: "school-onboarding-join",
-        });
-
-        toast.error(t("school-joining-failed"));
-      }
+      await Effect.runPromise(
+        Effect.tryPromise({
+          try: async () => {
+            const { slug } = await joinSchool(value);
+            router.push(`/school/${slug}`);
+          },
+          catch: (error) => error,
+        }).pipe(
+          Effect.catchAll((error) =>
+            reportClientException(error, {
+              source: "school-onboarding-join",
+            }).pipe(
+              Effect.zipRight(
+                Effect.sync(() => {
+                  toast.error(t("school-joining-failed"));
+                })
+              )
+            )
+          )
+        )
+      );
     },
   });
 

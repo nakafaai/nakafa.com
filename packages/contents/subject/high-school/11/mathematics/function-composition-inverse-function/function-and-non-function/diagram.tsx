@@ -7,8 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import type React from "react";
-import { useMemo } from "react";
+import { type ReactNode, useMemo } from "react";
 
 const SVG_PADDING = 20;
 const ELLIPSE_RX = 50;
@@ -19,9 +18,9 @@ const LINE_OFFSET = 0.3;
 const SLOT_CENTER_OFFSET = 0.5;
 
 interface DiagramProps {
-  children: React.ReactNode;
-  description: string;
-  title: string;
+  children: ReactNode;
+  description: ReactNode;
+  title: ReactNode;
 }
 
 export function Diagram({ title, description, children }: DiagramProps) {
@@ -38,7 +37,7 @@ export function Diagram({ title, description, children }: DiagramProps) {
 
 interface Element {
   id: string;
-  label: string;
+  label: ReactNode;
 }
 
 interface Mapping {
@@ -47,10 +46,11 @@ interface Mapping {
 }
 
 interface RelationVisualizerProps {
+  accessibilityLabel: string;
   codomain: Element[];
-  codomainLabel?: string;
+  codomainLabel: ReactNode;
   domain: Element[];
-  domainLabel?: string;
+  domainLabel: ReactNode;
   mappings: Mapping[];
 }
 
@@ -83,11 +83,12 @@ function calculateTextY(
 }
 
 export function RelationVisualizer({
+  accessibilityLabel,
   domain,
   codomain,
   mappings,
-  domainLabel = "X",
-  codomainLabel = "Y",
+  domainLabel,
+  codomainLabel,
 }: RelationVisualizerProps) {
   const renderableMappings = useMemo(() => {
     const seenMappings = new Map<string, number>();
@@ -127,13 +128,12 @@ export function RelationVisualizer({
   return (
     <div className="flex justify-center py-4">
       <svg
-        aria-labelledby="svgTitle" // Make SVG responsive
+        aria-label={accessibilityLabel}
         height={svgHeight} // Fixed height based on ellipse Ry
         preserveAspectRatio="xMidYMid meet"
         viewBox={`0 0 ${svgWidth} ${svgHeight}`}
         width="100%"
       >
-        <title id="svgTitle">Arrow diagram of relation between sets</title>
         <defs>
           <marker
             id="arrowhead-visualizer" // Unique ID for this component's marker

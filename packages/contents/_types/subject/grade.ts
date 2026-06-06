@@ -16,7 +16,7 @@ export const NUMERIC_GRADES = [
 ] as const;
 export const NON_NUMERIC_GRADES = ["bachelor", "master", "phd"] as const;
 
-export const NumericGradeSchema = Schema.Literal(...NUMERIC_GRADES);
+const NumericGradeSchema = Schema.Literal(...NUMERIC_GRADES);
 export const NonNumericGradeSchema = Schema.Literal(...NON_NUMERIC_GRADES);
 export type NumericGrade = Schema.Schema.Type<typeof NumericGradeSchema>;
 export type NonNumericGrade = Schema.Schema.Type<typeof NonNumericGradeSchema>;

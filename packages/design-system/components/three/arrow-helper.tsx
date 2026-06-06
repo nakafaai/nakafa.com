@@ -1,13 +1,13 @@
 "use client";
 
-import { Line, Text } from "@react-three/drei";
+import { Line } from "@react-three/drei";
 import {
   FONT_PATH,
   MONO_FONT_PATH,
-  resolveThreeFontSize,
   type ThreeFontSize,
 } from "@repo/design-system/components/three/data/constants";
 import { GRAPH_ARROW_SEGMENTS } from "@repo/design-system/components/three/helpers/quality";
+import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { COLORS } from "@repo/design-system/lib/color";
 import { useMemo } from "react";
 import {
@@ -23,6 +23,33 @@ const ARROW_SEGMENT_OFFSET = 0.2;
 // Shared geometry and material caches
 const coneGeometryCache = new Map<string, ConeGeometry>();
 const materialCache = new Map<string, MeshBasicMaterial>();
+
+type LabelAnchorX = "left" | "center" | "right";
+type LabelPosition = "start" | "middle" | "end";
+
+function clampLabelProgress(progress: number) {
+  if (progress < 0) {
+    return 0;
+  }
+
+  if (progress > 1) {
+    return 1;
+  }
+
+  return progress;
+}
+
+function getLabelPositionProgress(labelPosition: LabelPosition) {
+  if (labelPosition === "start") {
+    return 0;
+  }
+
+  if (labelPosition === "middle") {
+    return 0.5;
+  }
+
+  return 1;
+}
 
 /**
  * Reuses cone geometry per arrow size to avoid repeated GPU resource work.
@@ -75,8 +102,26 @@ interface Props {
   from?: readonly [number, number, number];
   /** Label for the vector */
   label?: string;
+  /** Horizontal anchor for the label text */
+  labelAnchorX?: LabelAnchorX;
+  /**
+   * Visual-only label offset in Three.js world units.
+   * This moves text away from arrowheads without changing vector coordinates.
+   */
+  labelOffset?: readonly [number, number, number];
+  /**
+   * Exact label point in Three.js world coordinates.
+   * When set, this overrides labelPosition and labelProgress.
+   */
+  labelPoint?: readonly [number, number, number];
   /** Position of the label */
-  labelPosition?: "start" | "middle" | "end";
+  labelPosition?: LabelPosition;
+  /**
+   * Exact label position along the vector segment.
+   * 0 is the tail, 0.5 is the midpoint, and 1 is the tip.
+   * When set, this overrides labelPosition.
+   */
+  labelProgress?: number;
   /** Font size of the label text */
   labelSize?: ThreeFontSize | number;
   /** Width of the vector line */
@@ -102,7 +147,11 @@ export function ArrowHelper({
   showArrow = true,
   arrowSize = 0.5,
   label,
+  labelAnchorX = "left",
+  labelOffset = [0, 0, 0],
   labelPosition = "end",
+  labelPoint,
+  labelProgress,
   labelSize = "diagram",
   useMonoFont = true,
   ...props
@@ -118,30 +167,29 @@ export function ArrowHelper({
 
   // Memoize label position calculation
   const labelPos = useMemo(() => {
-    const midPoint = new Vector3().addVectors(
-      vectors.fromVec,
-      new Vector3().copy(vectors.direction).multiplyScalar(vectors.length / 2)
-    );
-    const endPoint = new Vector3().copy(vectors.toVec);
-
-    switch (labelPosition) {
-      case "start":
-        return vectors.fromVec.clone();
-      case "middle":
-        return midPoint;
-      default:
-        // Add slight offset for end position
-        return endPoint
-          .clone()
-          .add(
-            new Vector3(
-              ARROW_SEGMENT_OFFSET,
-              ARROW_SEGMENT_OFFSET,
-              ARROW_SEGMENT_OFFSET
-            )
-          );
+    if (labelPoint) {
+      return new Vector3(...labelPoint).add(new Vector3(...labelOffset));
     }
-  }, [vectors, labelPosition]);
+
+    const hasCustomProgress =
+      typeof labelProgress === "number" && Number.isFinite(labelProgress);
+    const progress = hasCustomProgress
+      ? clampLabelProgress(labelProgress)
+      : getLabelPositionProgress(labelPosition);
+    const position = vectors.fromVec.clone().lerp(vectors.toVec, progress);
+
+    if (!hasCustomProgress && labelPosition === "end") {
+      position.add(
+        new Vector3(
+          ARROW_SEGMENT_OFFSET,
+          ARROW_SEGMENT_OFFSET,
+          ARROW_SEGMENT_OFFSET
+        )
+      );
+    }
+
+    return position.add(new Vector3(...labelOffset));
+  }, [vectors, labelPoint, labelProgress, labelPosition, labelOffset]);
 
   // Use shared geometry and material
   const coneGeometry = useMemo(
@@ -188,7 +236,6 @@ export function ArrowHelper({
   }, [showArrow, vectors, arrowSize]);
 
   const fontPath = useMonoFont ? MONO_FONT_PATH : FONT_PATH;
-  const resolvedLabelSize = resolveThreeFontSize(labelSize);
 
   return (
     <group frustumCulled {...props}>
@@ -212,19 +259,16 @@ export function ArrowHelper({
       )}
 
       {/* Label text */}
-      <Text
-        anchorX="left"
-        color={color instanceof Color ? color.getStyle() : color || ""}
+      <ThreeLabel
+        anchorX={labelAnchorX}
+        color={color}
         font={fontPath}
-        fontSize={resolvedLabelSize}
-        frustumCulled={false}
-        material-depthTest={false}
+        fontSize={labelSize}
         position={labelPos}
-        renderOrder={10}
         visible={Boolean(label)}
       >
         {label}
-      </Text>
+      </ThreeLabel>
     </group>
   );
 }

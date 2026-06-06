@@ -22,7 +22,7 @@ const VerseAudioSchema = Schema.Struct({
   secondary: Schema.Array(Schema.String).pipe(Schema.mutable),
 }).pipe(Schema.mutable);
 
-export const VerseSchema = Schema.Struct({
+const VerseSchema = Schema.Struct({
   number: VerseNumberSchema,
   meta: Schema.Struct({
     juz: Schema.Number,

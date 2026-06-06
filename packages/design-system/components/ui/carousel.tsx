@@ -79,6 +79,9 @@ function Carousel({
     setCanScrollPrev(carouselApi.canScrollPrev());
     setCanScrollNext(carouselApi.canScrollNext());
   });
+  const syncApi = useEffectEvent((carouselApi: CarouselApi) => {
+    setApi?.(carouselApi);
+  });
 
   const scrollPrev = useCallback(() => {
     api?.scrollPrev();
@@ -102,11 +105,11 @@ function Carousel({
   );
 
   useEffect(() => {
-    if (!(api && setApi)) {
+    if (!api) {
       return;
     }
-    setApi(api);
-  }, [api, setApi]);
+    syncApi(api);
+  }, [api]);
 
   useEffect(() => {
     if (!api) {

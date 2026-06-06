@@ -9,31 +9,29 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import {
+  ChartBar,
+  ChartBarChart,
+  ChartCartesianGrid,
   type ChartConfig,
   ChartContainer,
+  ChartLabelList,
   ChartLegend,
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
+  ChartXAxis,
+  ChartYAxis,
 } from "@repo/design-system/components/ui/chart";
 import type { ReactNode } from "react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  LabelList,
-  XAxis,
-  YAxis,
-} from "recharts";
 
 interface Props {
-  description: string;
+  description: ReactNode;
   footnote: ReactNode;
   labels: {
-    electability: string;
+    electability: ReactNode;
     notAnswering: string;
   };
-  title: string;
+  title: ReactNode;
 }
 
 export function ElectabilityChart({
@@ -95,7 +93,7 @@ export function ElectabilityChart({
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>
-          <BarChart
+          <ChartBarChart
             accessibilityLayer
             data={electabilityData}
             layout="vertical"
@@ -104,8 +102,8 @@ export function ElectabilityChart({
               left: 81,
             }}
           >
-            <CartesianGrid horizontal={false} />
-            <YAxis
+            <ChartCartesianGrid horizontal={false} />
+            <ChartYAxis
               axisLine={false}
               dataKey="name"
               hide
@@ -113,13 +111,13 @@ export function ElectabilityChart({
               tickMargin={10}
               type="category"
             />
-            <XAxis dataKey="value" hide type="number" />
+            <ChartXAxis dataKey="value" hide type="number" />
             <ChartTooltip
               content={<ChartTooltipContent indicator="line" />}
               cursor={false}
             />
-            <Bar dataKey="value" fill="var(--color-value-0)" radius={8}>
-              <LabelList
+            <ChartBar dataKey="value" fill="var(--color-value-0)" radius={8}>
+              <ChartLabelList
                 className="fill-foreground"
                 dataKey="name"
                 fontSize={12}
@@ -127,16 +125,16 @@ export function ElectabilityChart({
                 position="left"
                 width={75}
               />
-              <LabelList
+              <ChartLabelList
                 className="fill-foreground"
                 dataKey="value"
                 fontSize={12}
                 offset={8}
                 position="right"
               />
-            </Bar>
+            </ChartBar>
             <ChartLegend content={<ChartLegendContent />} />
-          </BarChart>
+          </ChartBarChart>
         </ChartContainer>
       </CardContent>
       <CardFooter>

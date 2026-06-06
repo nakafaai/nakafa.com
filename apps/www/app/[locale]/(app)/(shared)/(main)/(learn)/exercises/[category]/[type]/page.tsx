@@ -149,8 +149,8 @@ async function PageContent({
 }) {
   const FilePath = getExercisesPath(category, type);
 
-  const subjects = await getCachedSubjects(category, type);
-  const [t, tCommon] = await Promise.all([
+  const [subjects, t, tCommon] = await Promise.all([
+    getCachedSubjects(category, type),
     getTranslations({ locale, namespace: "Exercises" }),
     getTranslations({ locale, namespace: "Common" }),
   ]);

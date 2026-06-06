@@ -15,7 +15,7 @@ import { Origin } from "@repo/design-system/components/three/origin";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { COLORS } from "@repo/design-system/lib/color";
+import { COLORS, getColor } from "@repo/design-system/lib/color";
 import { cn } from "@repo/design-system/lib/utils";
 import { useTheme } from "next-themes";
 import {
@@ -39,6 +39,8 @@ interface Props {
   backgroundColor?: CSSProperties["backgroundColor"];
   /** Custom camera position */
   cameraPosition?: [number, number, number];
+  /** Custom point the camera looks at in Three.js world coordinates */
+  cameraTarget?: [number, number, number];
   /** Children elements to render inside the coordinate system */
   children?: ReactNode;
   /** Additional class name */
@@ -80,28 +82,32 @@ export function CoordinateSystem({
   size = 30,
   backgroundColor = "transparent",
   cameraPosition = [CAMERA_POSITION_X, CAMERA_POSITION_Y, CAMERA_POSITION_Z],
+  cameraTarget,
   font = "mono",
   children,
   className,
 }: Props) {
   const { resolvedTheme } = useTheme();
-  const [showGrid, setShowGrid] = useState(initialShowGrid);
-  const [play, setPlay] = useState(false);
-  const [sceneReady, setSceneReady] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
+  const [sceneState, setSceneState] = useState(() => ({
+    isDragging: false,
+    play: false,
+    sceneReady: false,
+    showGrid: initialShowGrid,
+  }));
+  const { isDragging, play, sceneReady, showGrid } = sceneState;
 
   // Color mapping based on color scheme
   const gridColors = useMemo(() => {
     switch (resolvedTheme) {
       case "dark":
         return {
-          main: "#404040",
-          secondary: "#262626",
+          main: getColor("NEUTRAL", 700),
+          secondary: getColor("NEUTRAL", 800),
         };
       default:
         return {
-          main: "#d4d4d4",
-          secondary: "#e5e5e5",
+          main: getColor("NEUTRAL", 300),
+          secondary: getColor("NEUTRAL", 200),
         };
     }
   }, [resolvedTheme]);
@@ -111,30 +117,44 @@ export function CoordinateSystem({
 
   // Handle button clicks with proper invalidation for on-demand rendering
   const handleGridToggle = useCallback(() => {
-    setShowGrid(!showGrid);
-  }, [showGrid]);
+    setSceneState((current) => ({
+      ...current,
+      showGrid: !current.showGrid,
+    }));
+  }, []);
 
   const handlePlayToggle = useCallback(() => {
-    setPlay(!play);
-  }, [play]);
+    setSceneState((current) => ({
+      ...current,
+      play: !current.play,
+    }));
+  }, []);
 
   // Handle pointer events for cursor changes
   const handlePointerDown = useCallback(() => {
-    setIsDragging(true);
+    setSceneState((current) => ({
+      ...current,
+      isDragging: true,
+    }));
   }, []);
 
   const handlePointerUp = useCallback(() => {
-    setIsDragging(false);
+    setSceneState((current) => ({
+      ...current,
+      isDragging: false,
+    }));
   }, []);
 
   // Activity hides preserved routes by disconnecting effects. ThreeCanvas owns
   // WebGL remounting, so this cleanup only resets local interaction state.
   useLayoutEffect(
     () => () => {
-      setIsDragging(false);
-      setPlay(false);
-      setSceneReady(false);
-      setShowGrid(initialShowGrid);
+      setSceneState({
+        isDragging: false,
+        play: false,
+        sceneReady: false,
+        showGrid: initialShowGrid,
+      });
     },
     [initialShowGrid]
   );
@@ -152,13 +172,24 @@ export function CoordinateSystem({
     >
       <ThreeCanvas
         onCreated={() =>
-          setTimeout(() => setSceneReady(true), SCENE_READY_DELAY)
+          setTimeout(
+            () =>
+              setSceneState((current) => ({
+                ...current,
+                sceneReady: true,
+              })),
+            SCENE_READY_DELAY
+          )
         }
         style={{ background: backgroundColor }}
       >
         <Suspense>
           {/* Camera Controls */}
-          <CameraControls autoRotate={play} cameraPosition={cameraPosition} />
+          <CameraControls
+            autoRotate={play}
+            cameraPosition={cameraPosition}
+            cameraTarget={cameraTarget}
+          />
 
           {/* Lighting */}
           <ambientLight intensity={0.5} />

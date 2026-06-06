@@ -9,7 +9,6 @@ import {
   ViewIcon,
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
   Autocomplete,
@@ -49,6 +48,7 @@ import {
 } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
+import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { subjectList } from "@/components/school/classes/_data/subject";
@@ -58,6 +58,7 @@ import {
   classVisibilityList,
 } from "@/components/school/classes/header-add-schema";
 import { getAcademicYearList } from "@/components/school/classes/header-add-utils";
+import { reportClientException } from "@/lib/analytics/client";
 import { useSchool } from "@/lib/context/use-school";
 
 /** Render the school class creation dialog. */
@@ -91,22 +92,33 @@ export function CreateSchoolClassDialog({
       onChange: classCreateFormSchema,
     },
     onSubmit: async ({ value }) => {
-      try {
-        const classId = await createClass({
-          ...value,
-          schoolId,
-        });
+      await Effect.runPromise(
+        Effect.tryPromise({
+          try: async () => {
+            const classId = await createClass({
+              ...value,
+              schoolId,
+            });
 
-        router.push(`${pathname}/${classId}`);
-        setOpenAction(false);
-        form.reset();
-      } catch (error) {
-        captureException(error, {
-          source: "school-class-create",
-        });
-
-        toast.error(t("create-class-failed"));
-      }
+            router.push(`${pathname}/${classId}`);
+            setOpenAction(false);
+            form.reset();
+          },
+          catch: (error) => error,
+        }).pipe(
+          Effect.catchAll((error) =>
+            reportClientException(error, {
+              source: "school-class-create",
+            }).pipe(
+              Effect.zipRight(
+                Effect.sync(() => {
+                  toast.error(t("create-class-failed"));
+                })
+              )
+            )
+          )
+        )
+      );
     },
   });
 

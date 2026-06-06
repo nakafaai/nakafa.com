@@ -5,12 +5,111 @@ import {
 } from "@repo/contents/_lib/agent/read/markdown";
 import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
 import { Effect, Option } from "effect";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 const ARTICLE_CONTENT_ID =
   "en/articles/politics/dynastic-politics-asian-values";
 const EXERCISE_CONTENT_ID =
   "en/exercises/high-school/snbt/general-knowledge/try-out/2026/set-2";
+
+vi.mock("@repo/contents/_lib/metadata", async () => {
+  const { Effect } = await import("effect");
+
+  return {
+    getContentMetadataWithRaw: (_locale: string, route: string) => {
+      if (route === "articles/missing") {
+        return Effect.fail(new Error("Missing content."));
+      }
+
+      return Effect.succeed({
+        metadata: {
+          authors: [{ name: "Nakafa" }],
+          date: "01/01/2026",
+          description: "Article description",
+          title: "Article",
+        },
+        raw: "## Article body",
+      });
+    },
+  };
+});
+
+vi.mock("@repo/contents/_lib/agent/exercise/read", async () => {
+  const { Effect, Option } = await import("effect");
+
+  return {
+    getNakafaAgentExercise: (contentId: string) => {
+      if (contentId.includes("/missing/")) {
+        return Effect.succeed(Option.none());
+      }
+
+      return Effect.succeed(
+        Option.some({
+          count: 1,
+          exercises: [
+            {
+              answer: {
+                raw: "Answer body",
+                title: "Answer",
+              },
+              choices: [
+                { correct: true, label: "A" },
+                { correct: false, label: "B" },
+              ],
+              number: 1,
+              question: {
+                raw: "Question body",
+                title: "Question",
+              },
+            },
+          ],
+          route:
+            "exercises/high-school/snbt/general-knowledge/try-out/2026/set-2",
+        })
+      );
+    },
+  };
+});
+
+vi.mock("@repo/contents/_lib/quran", async () => {
+  const { Effect } = await import("effect");
+
+  return {
+    getSurah: (surah: number) => {
+      if (surah !== 1) {
+        return Effect.fail(new Error("Missing surah."));
+      }
+
+      return Effect.succeed({
+        number: 1,
+        numberOfVerses: 1,
+      });
+    },
+  };
+});
+
+vi.mock("@repo/contents/_lib/agent/quran/read", async () => {
+  const { Effect, Option } = await import("effect");
+
+  return {
+    getNakafaAgentQuranReference: () =>
+      Effect.succeed(
+        Option.some({
+          name: "Al-Fatihah",
+          revelation: "Mecca",
+          translation: "The Opening",
+          verses: [
+            {
+              arabic: "Arabic verse",
+              number: 1,
+              translation: "In the name of Allah.",
+              transliteration: "Bismillah.",
+            },
+          ],
+        })
+      ),
+  };
+});
 
 describe("Nakafa agent markdown", () => {
   it("retrieves markdown for MDX, exercise, and Quran content", async () => {

@@ -1,14 +1,15 @@
 "use client";
 
-import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import { cn } from "@repo/design-system/lib/utils";
 import { useMutation } from "convex/react";
+import { Effect } from "effect";
 import { domAnimation, LazyMotion, m } from "motion/react";
 import { CompleteExerciseButton } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/exercises/[category]/[type]/[material]/[...slug]/attempt-complete-button";
 import { StartExerciseButton } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/exercises/[category]/[type]/[material]/[...slug]/attempt-start-button";
 import { Countdown } from "@/components/exercise/attempt-countdown";
 import { ExerciseStats } from "@/components/exercise/attempt-stats";
+import { reportClientException } from "@/lib/analytics/client";
 import { useAttempt } from "@/lib/context/use-attempt";
 import { useExerciseTimer } from "@/lib/hooks/use-exercise-timer";
 import { useStickyVisibility } from "@/lib/hooks/use-sticky-visibility";
@@ -26,13 +27,18 @@ export function ExerciseAttempt({ totalExercises }: Props) {
     attempt,
     onExpire: async () => {
       if (attempt) {
-        try {
-          await completeAttempt({ attemptId: attempt._id });
-        } catch (error) {
-          captureException(error, {
-            source: "exercise-expire-attempt",
-          });
-        }
+        await Effect.runPromise(
+          Effect.tryPromise({
+            try: () => completeAttempt({ attemptId: attempt._id }),
+            catch: (error) => error,
+          }).pipe(
+            Effect.catchAll((error) =>
+              reportClientException(error, {
+                source: "exercise-expire-attempt",
+              })
+            )
+          )
+        );
       }
     },
   });

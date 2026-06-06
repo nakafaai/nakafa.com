@@ -6,36 +6,23 @@ const mocks = vi.hoisted(() => {
   class MockAuthenticationRequiredError extends Error {}
 
   return {
-    after: vi.fn(async (callback) => await callback()),
     AuthenticationRequiredError: MockAuthenticationRequiredError,
-    captureServerException: vi.fn(),
-    cookies: vi.fn(),
-    extractDistinctIdFromPostHogCookie: vi.fn(),
-    fetchAuthAction: vi.fn(),
     fetchAuthMutation: vi.fn(),
     getPathname: vi.fn(),
     requireAuth: vi.fn(),
     revalidateTryoutOverview: vi.fn(),
     revalidateTryoutSet: vi.fn(),
+    scheduleCurrentServerExceptionCapture: vi.fn(),
   };
 });
 
-vi.mock("@repo/analytics/posthog/server", () => ({
-  captureServerException: mocks.captureServerException,
-  extractDistinctIdFromPostHogCookie: mocks.extractDistinctIdFromPostHogCookie,
-}));
-
-vi.mock("next/server", () => ({
-  after: mocks.after,
-}));
-
-vi.mock("next/headers", () => ({
-  cookies: mocks.cookies,
+vi.mock("@/lib/analytics/server", () => ({
+  scheduleCurrentServerExceptionCapture:
+    mocks.scheduleCurrentServerExceptionCapture,
 }));
 
 vi.mock("@/lib/auth/server", () => ({
   AuthenticationRequiredError: mocks.AuthenticationRequiredError,
-  fetchAuthAction: mocks.fetchAuthAction,
   fetchAuthMutation: mocks.fetchAuthMutation,
   requireAuth: mocks.requireAuth,
 }));
@@ -49,47 +36,60 @@ vi.mock("@/components/tryout/actions/revalidate", () => ({
   revalidateTryoutSet: mocks.revalidateTryoutSet,
 }));
 
-vi.mock("@repo/backend/convex/utils/polar/products", () => ({
-  products: {
-    pro: {
-      id: "pro-product-id",
-    },
-  },
-}));
-
 vi.mock("@/env", () => ({
   env: {
     SITE_URL: "https://nakafa.com",
   },
 }));
 
+/** Asserts the latest handled server exception scheduling payload. */
+function expectScheduledServerException(
+  error: Error,
+  properties: Record<string, unknown>
+) {
+  const latestCall =
+    mocks.scheduleCurrentServerExceptionCapture.mock.calls.at(-1);
+
+  expect(latestCall).toBeDefined();
+
+  if (!latestCall) {
+    return;
+  }
+
+  const [capturedError, capturedProperties] = latestCall;
+
+  expect(capturedError).toBeInstanceOf(Error);
+  expect(capturedError).toMatchObject({
+    message: error.message,
+    name: error.name,
+  });
+  expect(capturedProperties).toEqual(properties);
+}
+
 describe("components/tryout/actions/tryout", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.cookies.mockResolvedValue({
-      toString: () => "ph_cookie=user_123",
-    });
-    mocks.extractDistinctIdFromPostHogCookie.mockReturnValue("user_123");
     mocks.getPathname.mockImplementation((args) => args.href);
     mocks.requireAuth.mockResolvedValue(undefined);
   });
 
-  it("returns unknown without touching Convex when auth is missing", async () => {
+  it("rejects without touching Convex when auth is missing", async () => {
     mocks.requireAuth.mockRejectedValue(
       new mocks.AuthenticationRequiredError()
     );
 
-    const result = await startTryout({
-      locale: "id",
-      partKeys: ["quantitative-knowledge"],
-      product: "snbt",
-      returnPath: "/id/try-out/snbt/2026-set-1",
-      tryoutSlug: "2026-set-1",
-    });
+    await expect(
+      startTryout({
+        locale: "id",
+        partKeys: ["quantitative-knowledge"],
+        product: "snbt",
+        returnPath: "/id/try-out/snbt/2026-set-1",
+        tryoutSlug: "2026-set-1",
+      })
+    ).rejects.toBeInstanceOf(mocks.AuthenticationRequiredError);
 
-    expect(result).toEqual({ kind: "unknown" });
     expect(mocks.fetchAuthMutation).not.toHaveBeenCalled();
-    expect(mocks.captureServerException).not.toHaveBeenCalled();
+    expect(mocks.scheduleCurrentServerExceptionCapture).not.toHaveBeenCalled();
   });
 
   it("revalidates tryout routes after a successful start", async () => {
@@ -116,11 +116,8 @@ describe("components/tryout/actions/tryout", () => {
     });
   });
 
-  it("creates a checkout url when the backend requires access", async () => {
+  it("returns a checkout success url when the backend requires access", async () => {
     mocks.fetchAuthMutation.mockResolvedValue({ kind: "requires-access" });
-    mocks.fetchAuthAction.mockResolvedValue({
-      url: "https://checkout.example/session",
-    });
 
     const result = await startTryout({
       locale: "id",
@@ -132,15 +129,11 @@ describe("components/tryout/actions/tryout", () => {
 
     expect(result).toEqual({
       kind: "requires-access",
-      url: "https://checkout.example/session",
-    });
-    expect(mocks.fetchAuthAction).toHaveBeenCalledWith(expect.anything(), {
-      productIds: ["pro-product-id"],
       successUrl: "https://nakafa.com/id/try-out/snbt/2026-set-1",
     });
   });
 
-  it("returns unknown when checkout creation cannot build a safe return url", async () => {
+  it("returns unknown when checkout cannot build a safe return url", async () => {
     mocks.fetchAuthMutation.mockResolvedValue({ kind: "requires-access" });
 
     const result = await startTryout({
@@ -152,31 +145,6 @@ describe("components/tryout/actions/tryout", () => {
     });
 
     expect(result).toEqual({ kind: "unknown" });
-    expect(mocks.fetchAuthAction).not.toHaveBeenCalled();
-  });
-
-  it("captures checkout generation failures", async () => {
-    const error = new Error("checkout boom");
-    mocks.fetchAuthMutation.mockResolvedValue({ kind: "requires-access" });
-    mocks.fetchAuthAction.mockRejectedValue(error);
-
-    const result = await startTryout({
-      locale: "id",
-      partKeys: ["quantitative-knowledge"],
-      product: "snbt",
-      returnPath: "/id/try-out/snbt/2026-set-1",
-      tryoutSlug: "2026-set-1",
-    });
-
-    expect(result).toEqual({ kind: "unknown" });
-    expect(mocks.captureServerException).toHaveBeenCalledWith(
-      error,
-      "user_123",
-      {
-        source: "tryout-checkout-url",
-        success_url: "https://nakafa.com/id/try-out/snbt/2026-set-1",
-      }
-    );
   });
 
   it("returns explicit not-ready results without revalidation", async () => {
@@ -208,15 +176,11 @@ describe("components/tryout/actions/tryout", () => {
     });
 
     expect(result).toEqual({ kind: "unknown" });
-    expect(mocks.captureServerException).toHaveBeenCalledWith(
-      error,
-      "user_123",
-      {
-        locale: "id",
-        product: "snbt",
-        source: "start-tryout",
-        tryout_slug: "2026-set-1",
-      }
-    );
+    expectScheduledServerException(error, {
+      locale: "id",
+      product: "snbt",
+      source: "start-tryout",
+      tryout_slug: "2026-set-1",
+    });
   });
 });

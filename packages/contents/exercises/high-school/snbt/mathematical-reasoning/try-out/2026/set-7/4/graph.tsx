@@ -7,66 +7,50 @@ interface GraphProps {
   title: ReactNode;
 }
 
+const SIDE = 5;
+const HALF = SIDE / 2;
+
+const A = { x: -HALF, y: -HALF, z: HALF };
+const B = { x: HALF, y: -HALF, z: HALF };
+const C = { x: HALF, y: -HALF, z: -HALF };
+const D = { x: -HALF, y: -HALF, z: -HALF };
+const E = { x: -HALF, y: HALF, z: HALF };
+const F = { x: HALF, y: HALF, z: HALF };
+const G = { x: HALF, y: HALF, z: -HALF };
+const H = { x: -HALF, y: HALF, z: -HALF };
+
+const CENTER = { x: 0, y: 0, z: 0 };
+const FLOOR_CENTER = { x: 0, y: -HALF, z: 0 };
+const MID_DISTANCE = { x: 0, y: -HALF / 2, z: 0 };
+
+const COLOR_CUBE = getColor("INDIGO");
+const COLOR_DIAGONAL = getColor("ROSE");
+const COLOR_DISTANCE = getColor("AMBER");
+const COLOR_LABEL = getColor("VIOLET");
+
+const cubeEdges = [
+  [A, B],
+  [B, C],
+  [C, D],
+  [D, A],
+  [E, F],
+  [F, G],
+  [G, H],
+  [H, E],
+  [A, E],
+  [B, F],
+  [C, G],
+  [D, H],
+];
+
+const diagonals = [
+  [A, G],
+  [B, H],
+  [C, E],
+  [D, F],
+];
+
 export function Graph({ title, description }: GraphProps) {
-  // Cube Dimensions (Edge = 5)
-  const SIDE = 5;
-  const HALF = SIDE / 2;
-
-  // Vertices (Centered at origin, y is up)
-  // Bottom face (y = -HALF)
-  const A = { x: -HALF, y: -HALF, z: HALF };
-  const B = { x: HALF, y: -HALF, z: HALF };
-  const C = { x: HALF, y: -HALF, z: -HALF };
-  const D = { x: -HALF, y: -HALF, z: -HALF };
-
-  // Top face (y = HALF)
-  const E = { x: -HALF, y: HALF, z: HALF };
-  const F = { x: HALF, y: HALF, z: HALF };
-  const G = { x: HALF, y: HALF, z: -HALF };
-  const H = { x: -HALF, y: HALF, z: -HALF };
-
-  // Center Point
-  const CENTER = { x: 0, y: 0, z: 0 };
-
-  // Point on floor directly below center
-  const FLOOR_CENTER = { x: 0, y: -HALF, z: 0 };
-
-  // Midpoint for distance line label
-  const MID_DISTANCE = { x: 0, y: -HALF / 2, z: 0 };
-
-  // Colors
-  const COLOR_CUBE = getColor("INDIGO");
-  const COLOR_DIAGONAL = getColor("ROSE");
-  const COLOR_DISTANCE = getColor("AMBER");
-  const COLOR_LABEL = getColor("VIOLET");
-
-  // Edges of the cube
-  const cubeEdges = [
-    // Bottom face
-    [A, B],
-    [B, C],
-    [C, D],
-    [D, A],
-    // Top face
-    [E, F],
-    [F, G],
-    [G, H],
-    [H, E],
-    // Vertical edges
-    [A, E],
-    [B, F],
-    [C, G],
-    [D, H],
-  ];
-
-  // Main Diagonals (intersecting at center)
-  const diagonals = [
-    [A, G],
-    [B, H],
-    [C, E],
-    [D, F],
-  ];
-
   return (
     <LineEquation
       cameraPosition={[8, 6, 10]}

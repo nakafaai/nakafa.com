@@ -52,6 +52,9 @@ Berikut adalah contoh visualisasi relasi menggunakan diagram panah untuk membeda
     description="Elemen b memiliki lebih dari satu pasangan."
   >
     <RelationVisualizer
+      accessibilityLabel="Diagram panah relasi satu ke banyak"
+      domainLabel="X"
+      codomainLabel="Y"
       domain={[
         { id: "a", label: "a" },
         { id: "b", label: "b" },
@@ -75,6 +78,9 @@ Berikut adalah contoh visualisasi relasi menggunakan diagram panah untuk membeda
     description="Elemen c tidak memiliki pasangan di kodomain."
   >
     <RelationVisualizer
+      accessibilityLabel="Diagram panah dengan satu elemen domain tanpa pasangan"
+      domainLabel="X"
+      codomainLabel="Y"
       domain={[
         { id: "a", label: "a" },
         { id: "b", label: "b" },
@@ -101,6 +107,9 @@ Berikut adalah contoh visualisasi relasi menggunakan diagram panah untuk membeda
   description="Setiap elemen domain (p, q, r) memiliki tepat satu pasangan."
 >
   <RelationVisualizer
+    accessibilityLabel="Diagram panah relasi fungsi dengan tepat satu pasangan"
+    domainLabel="X"
+    codomainLabel="Y"
     domain={[
       { id: "p", label: "p" },
       { id: "q", label: "q" },

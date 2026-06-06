@@ -8,86 +8,93 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import {
+  ChartCartesianGrid,
   type ChartConfig,
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
+  ChartLine,
+  ChartLineChart,
   ChartTooltip,
   ChartTooltipContent,
+  ChartXAxis,
+  ChartYAxis,
 } from "@repo/design-system/components/ui/chart";
-import {
-  CartesianGrid,
-  Line as RechartsLine,
-  LineChart as RechartsLineChart,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { type ReactNode, useMemo } from "react";
 
 const chartData = [
-  { day: "Senin", library: 150, laboratory: 250 },
-  { day: "Selasa", library: 135, laboratory: 210 },
-  { day: "Rabu", library: 100, laboratory: 140 },
-  { day: "Kamis", library: 140, laboratory: 170 },
-  { day: "Jumat", library: 165, laboratory: 120 },
-];
+  { day: "monday", library: 150, laboratory: 250 },
+  { day: "tuesday", library: 135, laboratory: 210 },
+  { day: "wednesday", library: 100, laboratory: 140 },
+  { day: "thursday", library: 140, laboratory: 170 },
+  { day: "friday", library: 165, laboratory: 120 },
+] as const;
+
+type ChartDay = (typeof chartData)[number]["day"];
 
 interface Props {
-  lang?: "id" | "en";
+  dayLabels: Record<ChartDay, string>;
+  description: ReactNode;
+  seriesLabels: {
+    laboratory: ReactNode;
+    library: ReactNode;
+  };
+  title: ReactNode;
+  yAxisLabel: string;
 }
 
-const translations = {
-  id: {
-    title: "Data Pengunjung Fasilitas SMA MMM",
-    description:
-      "Jumlah pengunjung Perpustakaan dan Laboratorium (Senin - Jumat).",
-    yAxisLabel: "Jumlah Pengunjung",
-    library: "Perpustakaan",
-    laboratory: "Laboratorium",
-  },
-  en: {
-    title: "SMA MMM Facility Visitor Data",
-    description:
-      "Number of visitors for Library and Laboratory (Monday - Friday).",
-    yAxisLabel: "Number of Visitors",
-    library: "Library",
-    laboratory: "Laboratory",
-  },
-};
+/** Renders the school facility visitor chart with MDX-owned copy. */
+export function VisitorChart({
+  dayLabels,
+  description,
+  seriesLabels,
+  title,
+  yAxisLabel,
+}: Props) {
+  const data = useMemo(
+    () =>
+      chartData.map((item) => ({
+        ...item,
+        day: dayLabels[item.day],
+      })),
+    [dayLabels]
+  );
 
-export function VisitorChart({ lang = "id" }: Props) {
-  const t = translations[lang];
-
-  const chartConfig = {
-    library: {
-      label: t.library,
-      colors: { light: ["var(--chart-1)"] },
-    },
-    laboratory: {
-      label: t.laboratory,
-      colors: { light: ["var(--chart-2)"] },
-    },
-  } satisfies ChartConfig;
+  const chartConfig = useMemo(
+    () =>
+      ({
+        library: {
+          label: seriesLabels.library,
+          colors: { light: ["var(--chart-1)"] },
+        },
+        laboratory: {
+          label: seriesLabels.laboratory,
+          colors: { light: ["var(--chart-2)"] },
+        },
+      }) satisfies ChartConfig,
+    [seriesLabels.laboratory, seriesLabels.library]
+  );
 
   return (
     <Card className="content-auto-card">
       <CardHeader>
-        <CardTitle>{t.title}</CardTitle>
-        <CardDescription>{t.description}</CardDescription>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer className="aspect-video" config={chartConfig}>
-          <RechartsLineChart accessibilityLayer data={chartData}>
-            <CartesianGrid vertical={false} />
-            <XAxis
+          <ChartLineChart accessibilityLayer data={data}>
+            <ChartCartesianGrid vertical={false} />
+            <ChartXAxis
               axisLine={false}
               dataKey="day"
               tickLine={false}
               tickMargin={10}
             />
-            <YAxis
+            <ChartYAxis
               axisLine={false}
               label={{
-                value: t.yAxisLabel,
+                value: yAxisLabel,
                 angle: -90,
                 position: "insideLeft",
                 offset: 10,
@@ -98,19 +105,19 @@ export function VisitorChart({ lang = "id" }: Props) {
             />
             <ChartTooltip content={<ChartTooltipContent />} />
             <ChartLegend content={<ChartLegendContent />} />
-            <RechartsLine
+            <ChartLine
               dataKey="library"
               dot={{ r: 4 }}
               stroke="var(--color-library-0)"
               strokeWidth={2}
             />
-            <RechartsLine
+            <ChartLine
               dataKey="laboratory"
               dot={{ r: 4 }}
               stroke="var(--color-laboratory-0)"
               strokeWidth={2}
             />
-          </RechartsLineChart>
+          </ChartLineChart>
         </ChartContainer>
       </CardContent>
     </Card>

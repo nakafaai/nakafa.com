@@ -22,8 +22,8 @@ import {
 } from "@repo/design-system/components/ui/table";
 import { readMermaidMetadata } from "@repo/design-system/lib/mermaid";
 import { cn, filterWhitespaceNodes } from "@repo/design-system/lib/utils";
-import { isValidElement, memo } from "react";
-import type { Options } from "react-markdown";
+import { memo } from "react";
+import type { ExtraProps, Options } from "react-markdown";
 import type { BundledLanguage } from "shiki";
 
 const LANGUAGE_REGEX = /language-([^\s]+)/;
@@ -36,13 +36,20 @@ interface MarkdownPosition {
   end?: MarkdownPoint;
   start?: MarkdownPoint;
 }
-interface MarkdownNode {
+type MarkdownNode = NonNullable<ExtraProps["node"]>;
+type MarkdownChildNode = MarkdownNode["children"][number];
+type MarkdownTextNode = Extract<MarkdownChildNode, { type: "text" }>;
+
+interface MarkdownNodePositionTarget {
   data?: { meta?: string | null };
   position?: MarkdownPosition;
   properties?: { className?: string };
 }
 
-function sameNodePosition(prev?: MarkdownNode, next?: MarkdownNode): boolean {
+function sameNodePosition(
+  prev?: MarkdownNodePositionTarget,
+  next?: MarkdownNodePositionTarget
+): boolean {
   if (!(prev?.position || next?.position)) {
     return true;
   }
@@ -71,6 +78,31 @@ function sameClassAndNode(
   return (
     prev.className === next.className && sameNodePosition(prev.node, next.node)
   );
+}
+
+function isMarkdownTextNode(node: MarkdownChildNode): node is MarkdownTextNode {
+  return node.type === "text";
+}
+
+function hasMarkdownChildren(node: MarkdownChildNode): node is MarkdownNode {
+  return "children" in node;
+}
+
+/** Extracts rendered text from the markdown AST instead of React children. */
+function readMarkdownNodeText(node?: MarkdownChildNode | MarkdownNode): string {
+  if (!node) {
+    return "";
+  }
+
+  if (isMarkdownTextNode(node)) {
+    return node.value;
+  }
+
+  if (!(hasMarkdownChildren(node) && node.children.length)) {
+    return "";
+  }
+
+  return node.children.map(readMarkdownNodeText).join("");
 }
 
 export const reactMdxComponents: Options["components"] = {
@@ -312,20 +344,7 @@ export const reactMdxComponents: Options["components"] = {
 
       const match = className?.match(LANGUAGE_REGEX);
       const language = (match?.at(1) ?? "") as BundledLanguage | "math";
-
-      // Extract code content from children safely
-      let code = "";
-      if (
-        isValidElement(children) &&
-        children.props &&
-        typeof children.props === "object" &&
-        "children" in children.props &&
-        typeof children.props.children === "string"
-      ) {
-        code = children.props.children;
-      } else if (typeof children === "string") {
-        code = children;
-      }
+      const code = readMarkdownNodeText(node);
 
       if (language === "math") {
         return (

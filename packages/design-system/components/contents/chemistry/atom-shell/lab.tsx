@@ -74,8 +74,7 @@ export function AtomShellLab({
       <CardContent className="flex flex-col gap-4">
         <ToggleGroup
           aria-label={labels.chooseAtom}
-          className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6"
-          layout="grid"
+          gridColumns="6"
           onValueChange={handleSampleChange}
           type="single"
           value={selectedSampleId}

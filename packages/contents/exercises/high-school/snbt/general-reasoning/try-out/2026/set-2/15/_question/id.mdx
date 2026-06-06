@@ -8,6 +8,20 @@ export const metadata = {
 
 Perhatikan grafik berikut.
 
-<SalesChart lang="id" />
+<SalesChart
+  description="Perbandingan Harga Gabah dan Harga Pembelian Pemerintah (Jan-Apr 2019)."
+  monthLabels={{
+    April: "April",
+    Februari: "Februari",
+    Januari: "Januari",
+    Maret: "Maret",
+  }}
+  seriesLabels={{
+    governmentPrice: "Harga Pembelian Pemerintah",
+    grainPrice: "Harga Gabah",
+  }}
+  title="Harga Gabah di Tingkat Petani 2019"
+  yAxisLabel="Harga (Rp/kg)"
+/>
 
 Berdasarkan grafik tersebut, manakah pernyataan berikut yang paling benar?

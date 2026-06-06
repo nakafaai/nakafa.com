@@ -6,7 +6,7 @@ interface ContentDirectoryEntry {
 }
 
 /** Returns whether a directory name matches an exclusion pattern. */
-export function shouldExclude(name: string, excludeItems: readonly string[]) {
+function shouldExclude(name: string, excludeItems: readonly string[]) {
   for (const excludeItem of excludeItems) {
     if (name === excludeItem || name.startsWith(excludeItem)) {
       return true;

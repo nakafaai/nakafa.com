@@ -17,6 +17,8 @@ const DEFAULT_CAMERA_POSITION_Z = 10;
 
 interface Props {
   cameraPosition?: [number, number, number];
+  /** Custom point the camera looks at in Three.js world coordinates */
+  cameraTarget?: [number, number, number];
   description: ReactNode;
   title: ReactNode;
   vectors: ComponentProps<typeof Vector>[];
@@ -34,6 +36,7 @@ export function Vector3d({
     DEFAULT_CAMERA_POSITION_Y,
     DEFAULT_CAMERA_POSITION_Z,
   ],
+  cameraTarget,
 }: Props) {
   return (
     <Card className="content-auto-card">
@@ -42,7 +45,10 @@ export function Vector3d({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <CoordinateSystem cameraPosition={cameraPosition}>
+        <CoordinateSystem
+          cameraPosition={cameraPosition}
+          cameraTarget={cameraTarget}
+        >
           {vectors.map((vector) => (
             <Vector
               key={`vector-${vector.from?.join(",")}-${vector.to.join(",")}`}

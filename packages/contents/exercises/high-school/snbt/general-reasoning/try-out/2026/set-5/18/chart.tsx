@@ -8,19 +8,18 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import {
+  ChartBar,
+  ChartCartesianGrid,
+  ChartComposedChart,
   type ChartConfig,
   ChartContainer,
+  ChartLine,
   ChartTooltip,
   ChartTooltipContent,
+  ChartXAxis,
+  ChartYAxis,
 } from "@repo/design-system/components/ui/chart";
-import {
-  Bar,
-  CartesianGrid,
-  ComposedChart,
-  Line,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { type ReactNode, useMemo } from "react";
 
 const chartData = [
   { year: "2013", growth: 5.58, barValue: 5.58 },
@@ -32,49 +31,41 @@ const chartData = [
 ];
 
 interface Props {
-  lang?: "id" | "en";
+  description: ReactNode;
+  title: ReactNode;
+  yAxisLabel: string;
 }
 
-const translations = {
-  id: {
-    title: "Pertumbuhan Ekonomi Indonesia 2013—2018",
-    description: "Nilai pertumbuhan PDB Tahunan (%).",
-    yAxisLabel: "Pertumbuhan (%)",
-  },
-  en: {
-    title: "Indonesia's Economic Growth 2013—2018",
-    description: "Annual GDP Growth Value (%).",
-    yAxisLabel: "Growth (%)",
-  },
-};
-
-export function GrowthChart({ lang = "en" }: Props) {
-  const t = translations[lang];
-
-  const chartConfig = {
-    growth: {
-      label: t.yAxisLabel,
-      colors: { light: ["var(--chart-1)"] },
-    },
-  } satisfies ChartConfig;
+/** Renders Indonesia's GDP growth chart with MDX-owned copy. */
+export function GrowthChart({ description, title, yAxisLabel }: Props) {
+  const chartConfig = useMemo(
+    () =>
+      ({
+        growth: {
+          label: yAxisLabel,
+          colors: { light: ["var(--chart-1)"] },
+        },
+      }) satisfies ChartConfig,
+    [yAxisLabel]
+  );
 
   return (
     <Card className="content-auto-card">
       <CardHeader>
-        <CardTitle>{t.title}</CardTitle>
-        <CardDescription>{t.description}</CardDescription>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer className="aspect-video" config={chartConfig}>
-          <ComposedChart accessibilityLayer data={chartData}>
-            <CartesianGrid vertical={false} />
-            <XAxis
+          <ChartComposedChart accessibilityLayer data={chartData}>
+            <ChartCartesianGrid vertical={false} />
+            <ChartXAxis
               axisLine={false}
               dataKey="year"
               tickLine={false}
               tickMargin={10}
             />
-            <YAxis
+            <ChartYAxis
               axisLine={false}
               domain={[4, 6]}
               tickCount={6}
@@ -91,13 +82,13 @@ export function GrowthChart({ lang = "en" }: Props) {
                 />
               )}
             />
-            <Bar
+            <ChartBar
               barSize={40}
               dataKey="barValue"
               fill="var(--chart-2)"
               radius={[4, 4, 0, 0]}
             />
-            <Line
+            <ChartLine
               activeDot={{
                 r: 6,
               }}
@@ -110,7 +101,7 @@ export function GrowthChart({ lang = "en" }: Props) {
               strokeWidth={2}
               type="linear"
             />
-          </ComposedChart>
+          </ChartComposedChart>
         </ChartContainer>
       </CardContent>
     </Card>

@@ -1,0 +1,146 @@
+export const metadata = {
+  title: "Projectile Motion Analysis",
+  description:
+    "Learn how to calculate peak time, range, and instantaneous velocity in projectile motion from velocity components.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/01/2026",
+  subject: "Kinematics",
+};
+
+import { ParabolicMovementAnalysisLab } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/lab";
+
+## Start by Splitting the Initial Velocity
+
+Projectile analysis almost always starts with one simple question: how much of the velocity is horizontal, and how much is vertical? If the initial speed is <InlineMath math="v_0" /> and the launch angle is <InlineMath math="\theta" />, the initial components are:
+
+<MathContainer>
+  <BlockMath math="v_{0x}=v_0\cos\theta" />
+  <BlockMath math="v_{0y}=v_0\sin\theta" />
+</MathContainer>
+
+After that, the horizontal and vertical directions are calculated with different rules. The horizontal direction uses uniform motion because there is no horizontal acceleration. The vertical direction uses uniformly accelerated motion because gravity keeps acting downward.
+
+> The key to projectile analysis is using the same time for two different directions.
+
+<ParabolicMovementAnalysisLab
+  title={<>Cannonball Component Analysis</>}
+  description={
+    <>
+      A cannonball crosses the water while the ghost balls mark equal time steps
+      from the same formulas used in the calculation.
+    </>
+  }
+  labels={{
+    chooseScenario: "Choose launch",
+    scenarioNames: {
+      "sixty-degree": <>Sixty Degrees</>,
+      "long-drive": <>Long Drive</>,
+      "high-arc": <>High Arc</>,
+    },
+    factLabels: {
+      horizontalComponent: <>Horizontal component</>,
+      verticalComponent: <>Vertical component</>,
+      peakTime: <>Peak time</>,
+      flightTime: <>Flight time</>,
+      range: <>Range</>,
+      instantaneousVelocity: <>Velocity at two seconds</>,
+    },
+    viewLabel: "Cannonball projectile analysis visual",
+  }}
+/>
+
+The arc and ghost balls show positions at equal time intervals, not separate horizontal and vertical paths. The values below the scene come from the same split: <InlineMath math="v_{0x}" /> stays constant, while <InlineMath math="v_y=v_{0y}-gt" /> changes because gravity acts downward.
+
+The number flow is easier to read as one connected formula sequence:
+
+<BlockMath math="\begin{aligned}
+v_{0x}&=v_0\cos\theta\\
+v_{0y}&=v_0\sin\theta\\
+t_{\text{peak}}&=\frac{v_{0y}}{g}\\
+T&=2t_{\text{peak}}\\
+R&=v_{0x}T\\
+\vec{v}(2)&=\langle v_{0x},v_{0y}-g(2)\rangle,\quad g=10\text{ m/s}^2
+\end{aligned}" />
+
+So the values below the scene are not manually chosen numbers. They are calculated from the selected launch, then shown as components, time, range, and instantaneous velocity.
+
+## The Peak Happens When Vertical Velocity Is Zero
+
+At the peak, the object is still moving horizontally, but its up-and-down motion pauses for an instant. So the peak condition is <InlineMath math="v_y=0" />.
+
+<BlockMath math="v_y=v_{0y}-gt" />
+
+When <InlineMath math="v_y=0" />, the time to the peak is:
+
+<BlockMath math="t_{\text{peak}}=\frac{v_{0y}}{g}" />
+
+For an initial speed of <InlineMath math="40\text{ m/s}" /> at an angle of <InlineMath math="60^\circ" />, the initial vertical component is <InlineMath math="20\sqrt{3}\text{ m/s}" />. Before the peak it is positive, at the peak it becomes zero, and after the peak it is negative because the object is moving downward.
+
+## Maximum Range Uses Total Time
+
+If the object launches from the ground and returns to the ground at the same height, the total time is twice the time to the peak.
+
+<MathContainer>
+  <BlockMath math="t_{\text{total}}=2t_{\text{peak}}" />
+  <BlockMath math="R=v_{0x}t_{\text{total}}" />
+</MathContainer>
+
+This formula shows why range is not determined by angle alone. Range also depends on horizontal velocity and how long the object stays in the air.
+
+## Instantaneous Velocity Comes from Two Components
+
+To find velocity at a specific time, calculate <InlineMath math="v_x" /> and <InlineMath math="v_y" /> at that time first. The horizontal component stays constant, while the vertical component changes.
+
+<MathContainer>
+  <BlockMath math="v_x=v_{0x}" />
+  <BlockMath math="v_y=v_{0y}-gt" />
+  <BlockMath math="v=\sqrt{v_x^2+v_y^2}" />
+</MathContainer>
+
+The direction of velocity can also be read from the ratio of the vertical and horizontal components:
+
+<BlockMath math="\tan\alpha=\frac{v_y}{v_x}" />
+
+If <InlineMath math="v_y" /> is positive, the velocity points upward. If <InlineMath math="v_y" /> is negative, the velocity points downward.
+
+## A Sixty Degree Launch Sets Two Components
+
+A ball is launched with an initial speed of <InlineMath math="40\text{ m/s}" /> and an angle of <InlineMath math="60^\circ" />. Use <InlineMath math="g=10\text{ m/s}^2" />.
+
+This example uses an angle with clear trigonometric components, so the full analysis stays visible: split the initial velocity, get time from vertical motion, then use the same time to read range and instantaneous velocity.
+
+The initial components are:
+
+<MathContainer>
+  <BlockMath math="v_{0x}=40\cos60^\circ=20\text{ m/s}" />
+  <BlockMath math="v_{0y}=40\sin60^\circ=20\sqrt{3}\text{ m/s}" />
+</MathContainer>
+
+The time to the peak is:
+
+<BlockMath math="t_{\text{peak}}=\frac{20\sqrt{3}}{10}=2\sqrt{3}\text{ s}" />
+
+The total time and range are:
+
+<MathContainer>
+  <BlockMath math="t_{\text{total}}=4\sqrt{3}\text{ s}" />
+  <BlockMath math="R=20(4\sqrt{3})=80\sqrt{3}\text{ m}" />
+</MathContainer>
+
+Suppose we want the velocity at <InlineMath math="t=2\text{ s}" />. The vertical component is:
+
+<BlockMath math="v_y=20\sqrt{3}-10(2)=20\sqrt{3}-20\text{ m/s}" />
+
+Meanwhile, <InlineMath math="v_x=20\text{ m/s}" /> stays constant. The speed is:
+
+<BlockMath math="\begin{aligned}
+v&=\sqrt{20^2+(20\sqrt{3}-20)^2}\\
+&=\sqrt{2000-800\sqrt{3}}\\
+&\approx 24.8\text{ m/s}
+\end{aligned}" />
+
+The direction of the velocity from the horizontal is:
+
+<BlockMath math="\alpha=\tan^{-1}\left(\frac{20\sqrt{3}-20}{20}\right)\approx 36.2^\circ" />
+
+So at <InlineMath math="t=2\text{ s}" />, the ball is still moving upward at an angle because <InlineMath math="v_y" /> is still positive.

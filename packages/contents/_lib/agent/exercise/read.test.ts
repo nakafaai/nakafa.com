@@ -5,12 +5,44 @@ import {
 } from "@repo/contents/_lib/agent/exercise/read";
 import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
 import { Effect, Option } from "effect";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 const EXERCISE_CONTENT_ID =
   "en/exercises/high-school/snbt/general-knowledge/try-out/2026/set-2";
 const EXERCISE_ROUTE =
   "exercises/high-school/snbt/general-knowledge/try-out/2026/set-2";
+
+const mockExercises = vi.hoisted(() => [
+  {
+    answer: {
+      metadata: { title: "Answer 1" },
+      raw: "Jawaban nomor 1.",
+    },
+    choices: {
+      en: [
+        { label: "A", value: true },
+        { label: "B", value: false },
+      ],
+      id: [
+        { label: "A", value: true },
+        { label: "B", value: false },
+      ],
+    },
+    number: 1,
+    question: {
+      metadata: { title: "Question 1" },
+      raw: "Pertanyaan nomor 1.",
+    },
+  },
+]);
+
+vi.mock("@repo/contents/_lib/exercises/renderable", async () => {
+  const { Effect } = await import("effect");
+
+  return {
+    getRenderableExercisesContent: () => Effect.succeed(mockExercises),
+  };
+});
 
 describe("Nakafa agent exercises", () => {
   it("retrieves whole exercise sets, numbered exercises, and missing exercise paths", async () => {

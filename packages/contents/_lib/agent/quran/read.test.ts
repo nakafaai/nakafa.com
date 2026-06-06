@@ -22,6 +22,14 @@ describe("Nakafa agent Quran references", () => {
         to_verse: 2,
       })
     );
+    const referenceWithoutTafsir = await Effect.runPromise(
+      getNakafaAgentQuranReference({
+        from_verse: 1,
+        locale: "en",
+        surah: 1,
+        to_verse: 1,
+      })
+    );
     const reversed = await Effect.runPromise(
       getNakafaAgentQuranReference({
         from_verse: 3,
@@ -62,9 +70,13 @@ describe("Nakafa agent Quran references", () => {
     if (Option.isNone(reference)) {
       throw new Error("Expected Quran reference to exist.");
     }
+    if (Option.isNone(referenceWithoutTafsir)) {
+      throw new Error("Expected Quran reference without tafsir to exist.");
+    }
 
     expect(reference.value.verses).toHaveLength(2);
     expect(reference.value.verses[0]?.tafsir).toBeTruthy();
+    expect(referenceWithoutTafsir.value.verses[0]?.tafsir).toBeUndefined();
     expect(Option.isNone(reversed)).toBe(true);
     expect(Option.isNone(missingVerse)).toBe(true);
     expect(Option.isNone(outOfSurahRange)).toBe(true);

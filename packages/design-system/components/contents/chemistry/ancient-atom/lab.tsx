@@ -89,8 +89,7 @@ export function AncientAtomLab({
           <CardContent className="flex flex-col gap-5">
             <ToggleGroup
               aria-label={labels.chooseLevel}
-              className="grid w-full grid-cols-4"
-              layout="grid"
+              gridColumns="4"
               onValueChange={handleLevelChange}
               type="single"
               value={selectedLevelId}

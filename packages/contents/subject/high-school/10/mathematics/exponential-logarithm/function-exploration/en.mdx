@@ -44,7 +44,19 @@ This is an example of an exponential function.
 
 Using the equations above, we can visualize the virus spread through the following graph:
 
-<VirusChart />
+<VirusChart
+  labels={{
+    title: "Virus Spread",
+    description: "Number of people infected in each phase.",
+    exponential: "Exponential Function",
+    linear: "Linear Function",
+    logarithmic: "Logarithmic Function",
+    yLabel: "Number of people infected",
+    caption:
+      "Virus spread grows exponentially, accelerating rapidly after the initial phases.",
+    phase: "Phase",
+  }}
+/>
 
 ### Analysis Questions
 

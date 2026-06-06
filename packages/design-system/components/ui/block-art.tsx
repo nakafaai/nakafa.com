@@ -5,7 +5,13 @@ import { useStableMutableValue } from "@repo/design-system/hooks/use-stable-muta
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { createSeededRandom } from "@repo/design-system/lib/random";
 import { cn } from "@repo/design-system/lib/utils";
-import { MotionConfig, motion, useAnimate } from "motion/react";
+import {
+  domAnimation,
+  LazyMotion,
+  MotionConfig,
+  m,
+  useAnimate,
+} from "motion/react";
 import {
   type KeyboardEvent,
   type MouseEvent,
@@ -60,7 +66,7 @@ const MotionBlockCell = memo(function MotionBlockCell({
   onHoverEnd,
 }: BlockCellProps) {
   return (
-    <motion.div
+    <m.div
       className="size-full will-change-transform"
       data-cell-index={index}
       data-col={col}
@@ -677,34 +683,36 @@ export function BlockArt({
   );
 
   return (
-    <MotionConfig reducedMotion="user">
-      <section className={cn("size-full bg-border p-px", className)}>
-        <button
-          aria-label="Interactive grid art with wave effect"
-          className="size-full cursor-pointer"
-          onClick={triggerGridRippleFromClick}
-          onKeyDown={handleKeyDown}
-          ref={containerRef}
-          style={{
-            display: "grid",
-            gridTemplateColumns: `repeat(${Cols}, minmax(0, 1fr))`,
-            gridTemplateRows: `repeat(${Rows}, auto)`,
-            gap: "1px",
-          }}
-          type="button"
-        >
-          {cellData.map(({ index, row, col }) => (
-            <MotionBlockCell
-              col={col}
-              index={index}
-              key={`${row}-${col}`}
-              onHoverEnd={handleHoverEnd}
-              onHoverStart={handleHoverStart}
-              row={row}
-            />
-          ))}
-        </button>
-      </section>
-    </MotionConfig>
+    <LazyMotion features={domAnimation} strict>
+      <MotionConfig reducedMotion="user">
+        <section className={cn("size-full bg-border p-px", className)}>
+          <button
+            aria-label="Interactive grid art with wave effect"
+            className="size-full cursor-pointer"
+            onClick={triggerGridRippleFromClick}
+            onKeyDown={handleKeyDown}
+            ref={containerRef}
+            style={{
+              display: "grid",
+              gridTemplateColumns: `repeat(${Cols}, minmax(0, 1fr))`,
+              gridTemplateRows: `repeat(${Rows}, auto)`,
+              gap: "1px",
+            }}
+            type="button"
+          >
+            {cellData.map(({ index, row, col }) => (
+              <MotionBlockCell
+                col={col}
+                index={index}
+                key={`${row}-${col}`}
+                onHoverEnd={handleHoverEnd}
+                onHoverStart={handleHoverStart}
+                row={row}
+              />
+            ))}
+          </button>
+        </section>
+      </MotionConfig>
+    </LazyMotion>
   );
 }

@@ -40,14 +40,12 @@ export const BACHELOR_MATERIALS = [
   "international-relations",
 ] as const;
 
-export const MaterialHighSchoolSchema = Schema.Literal(
-  ...HIGH_SCHOOL_MATERIALS
-);
+const MaterialHighSchoolSchema = Schema.Literal(...HIGH_SCHOOL_MATERIALS);
 export type MaterialHighSchool = Schema.Schema.Type<
   typeof MaterialHighSchoolSchema
 >;
 
-export const MaterialBachelorSchema = Schema.Literal(...BACHELOR_MATERIALS);
+const MaterialBachelorSchema = Schema.Literal(...BACHELOR_MATERIALS);
 export type MaterialBachelor = Schema.Schema.Type<
   typeof MaterialBachelorSchema
 >;

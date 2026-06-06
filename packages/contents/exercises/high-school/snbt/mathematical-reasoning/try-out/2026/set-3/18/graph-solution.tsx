@@ -12,6 +12,8 @@ interface GraphSolutionProps {
   title: ReactNode;
 }
 
+const pointA = { x: 0, y: 0, z: 0 };
+
 export function GraphSolution({
   title,
   description,
@@ -58,7 +60,6 @@ export function GraphSolution({
   const arc45LabelIndex = Math.floor(arcSegments * 0.5);
 
   // Points
-  const A = { x: 0, y: 0, z: 0 };
   const B = { x: distanceAB, y: 0, z: 0 };
   const C = { x: 0, y: helicopterHeight, z: 0 };
   const D = { x: 0, y: buildingHeight, z: 0 };
@@ -79,7 +80,7 @@ export function GraphSolution({
       data={[
         // Vertical Line AC (A -> D -> C)
         {
-          points: [A, midAD, D],
+          points: [pointA, midAD, D],
           color: getColor("INDIGO"),
           showPoints: false,
           labels: [
@@ -130,7 +131,7 @@ export function GraphSolution({
         },
         // Horizontal Line AE (A -> B -> E)
         {
-          points: [A, midAB, B],
+          points: [pointA, midAB, B],
           color: getColor("TEAL"),
           showPoints: false,
           labels: [

@@ -18,7 +18,7 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useAction } from "convex/react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Activity, useTransition } from "react";
 import { CHAT_ERRORS } from "@/app/api/chat/constants";
 import { useChat } from "@/components/ai/context/use-chat";
@@ -56,6 +56,7 @@ export const AiChatError = () => {
 AiChatError.displayName = "AiChatError";
 
 const ButtonCheckout = () => {
+  const locale = useLocale();
   const t = useTranslations("Auth");
 
   const [isPending, startTransition] = useTransition();
@@ -64,17 +65,17 @@ const ButtonCheckout = () => {
     api.subscriptions.queries.hasActiveSubscription,
     { productId: products.pro.id }
   );
-  const generateCheckoutLink = useAction(
-    api.customers.actions.public.generateCheckoutLink
-  );
   const generateCustomerPortalUrl = useAction(
     api.customers.actions.public.generateCustomerPortalUrl
+  );
+  const generateCheckoutLink = useAction(
+    api.customers.actions.public.generateCheckoutLink
   );
 
   const handleCheckout = () => {
     startTransition(async () => {
       const { url } = await generateCheckoutLink({
-        productIds: [products.pro.id],
+        locale,
         successUrl: window.location.href,
       });
       window.location.href = url;

@@ -79,8 +79,7 @@ export function BiologyLabFrame({
         {hasMultipleItems && (
           <ToggleGroup
             aria-label={labels.chooseMode}
-            className="grid w-full grid-cols-1 sm:grid-cols-[repeat(auto-fit,minmax(8rem,1fr))]"
-            layout="grid"
+            gridColumns="auto"
             onValueChange={handleItemChange}
             type="single"
             value={String(selectedIndex)}

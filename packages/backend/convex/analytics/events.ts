@@ -3,6 +3,10 @@ import {
   modelIdValidator,
 } from "@repo/backend/convex/chats/schema";
 import {
+  checkoutLocaleValidator,
+  polarCheckoutLocaleValidator,
+} from "@repo/backend/convex/customers/checkout/localization";
+import {
   exerciseAttemptModeValidator,
   exerciseAttemptOriginValidator,
   exerciseAttemptScopeValidator,
@@ -109,6 +113,9 @@ export const productAnalyticsEventValidator = v.union(
   v.object({
     name: v.literal("checkout started"),
     properties: v.object({
+      checkout_locale: polarCheckoutLocaleValidator,
+      customer_ip_available: v.boolean(),
+      locale: checkoutLocaleValidator,
       product_count: v.number(),
       product_id: v.string(),
     }),

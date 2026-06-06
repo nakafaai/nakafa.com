@@ -5,7 +5,7 @@ export const EXERCISE_SET_REGEX =
   /^(exercises\/.*?)\/\d+\/_(?:question|answer)$/;
 export const EXERCISE_NUMBER_REGEX =
   /^(exercises\/.*?\/\d+)\/_(?:question|answer)$/;
-export const CONTENT_ROOT_ROUTES = Object.values(CONTENT_ROOT_VALUES).map(
+const CONTENT_ROOT_ROUTES = Object.values(CONTENT_ROOT_VALUES).map(
   (root) => `/${root}`
 );
 export const PUBLIC_CONTENT_BASE_ROUTES = [

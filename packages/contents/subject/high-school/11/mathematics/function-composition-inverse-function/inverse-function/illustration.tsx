@@ -12,11 +12,11 @@ import type { ReactNode } from "react";
 
 interface Props {
   content: {
-    input: string;
-    output: string;
+    input: ReactNode;
+    output: ReactNode;
   };
   description: ReactNode;
-  machineLabel: string;
+  machineLabel: ReactNode;
   title: ReactNode;
 }
 

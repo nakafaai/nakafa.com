@@ -1,6 +1,7 @@
 import { action } from "@repo/backend/convex/_generated/server";
 import { captureProductEvent } from "@repo/backend/convex/analytics/capture";
 import { validateCheckoutRequest } from "@repo/backend/convex/customers/checkout/impl";
+import { checkoutLocaleValidator } from "@repo/backend/convex/customers/checkout/localization";
 import { polarGateway } from "@repo/backend/convex/customers/polar/live";
 import { requireCustomer } from "@repo/backend/convex/customers/sync/impl";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -10,28 +11,39 @@ import { Effect } from "effect";
 
 /**
  * Create one authenticated Polar checkout session after validating the selected
- * products and redirect URL against backend-owned policy.
+ * product, redirect URL, and Convex request metadata against backend-owned
+ * policy.
+ *
+ * References:
+ * - https://docs.convex.dev/api/interfaces/server.ActionMeta#getrequestmetadata
+ * - https://docs.convex.dev/functions/actions
+ * - https://polar.sh/docs/features/checkout/session
  */
 export const generateCheckoutLink = action({
   args: {
-    productIds: v.array(v.string()),
+    locale: checkoutLocaleValidator,
     successUrl: v.string(),
   },
   returns: v.object({ url: v.string() }),
-  handler: async (ctx, args): Promise<{ url: string }> => {
+  handler: async (ctx, args) => {
     const { appUser } = await requireAuthForAction(ctx);
     const appUserId = appUser._id;
-    const { checkout, request } = await runConvexProgram(
+    const { checkout, request, requestMetadata } = await runConvexProgram(
       Effect.gen(function* () {
         const request = yield* validateCheckoutRequest(args);
+        const requestMetadata = yield* Effect.promise(() =>
+          ctx.meta.getRequestMetadata()
+        );
         const customer = yield* requireCustomer(ctx, appUserId);
         const checkout = yield* polarGateway.createCheckoutSession({
           customerId: customer.id,
+          customerIpAddress: requestMetadata.ip,
+          locale: request.polarLocale,
           productIds: [...request.productIds],
           successUrl: request.successUrl,
         });
 
-        return { checkout, request };
+        return { checkout, request, requestMetadata };
       })
     );
 
@@ -40,6 +52,9 @@ export const generateCheckoutLink = action({
       event: {
         name: "checkout started",
         properties: {
+          checkout_locale: request.polarLocale,
+          customer_ip_available: requestMetadata.ip !== null,
+          locale: request.locale,
           product_count: request.productIds.length,
           product_id: request.primaryProductId,
         },
@@ -57,7 +72,7 @@ export const generateCheckoutLink = action({
 export const generateCustomerPortalUrl = action({
   args: {},
   returns: v.object({ url: v.string() }),
-  handler: async (ctx): Promise<{ url: string }> => {
+  handler: async (ctx) => {
     const { appUser } = await requireAuthForAction(ctx);
 
     return runConvexProgram(

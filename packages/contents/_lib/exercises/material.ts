@@ -74,15 +74,13 @@ export function getCurrentMaterial(
       };
     }
 
-    const foundItem = mat.items.find(
-      (itm) => cleanSlug(itm.href) === normalizedPath
-    );
-
-    if (foundItem) {
-      return {
-        currentMaterial: Option.some(mat),
-        currentMaterialItem: Option.some(foundItem),
-      };
+    for (const item of mat.items) {
+      if (cleanSlug(item.href) === normalizedPath) {
+        return {
+          currentMaterial: Option.some(mat),
+          currentMaterialItem: Option.some(item),
+        };
+      }
     }
   }
 

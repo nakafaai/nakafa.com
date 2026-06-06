@@ -74,8 +74,7 @@ export function ChemicalReactionTypesLab({
       <CardContent className="flex flex-col gap-4">
         <ToggleGroup
           aria-label={labels.chooseType}
-          className="grid w-full grid-cols-2 sm:grid-cols-4"
-          layout="grid"
+          gridColumns="4"
           onValueChange={handleTypeChange}
           type="single"
           value={selectedTypeId}

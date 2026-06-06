@@ -9,17 +9,15 @@ import {
 } from "@repo/design-system/components/ui/card";
 import type { ChartConfig } from "@repo/design-system/components/ui/chart";
 import {
+  ChartBar,
+  ChartBarChart,
+  ChartCartesianGrid,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
+  ChartXAxis,
+  ChartYAxis,
 } from "@repo/design-system/components/ui/chart";
-import {
-  CartesianGrid,
-  Bar as RechartsBar,
-  BarChart as RechartsBarChart,
-  XAxis,
-  YAxis,
-} from "recharts";
 
 interface Props {
   chartConfig: ChartConfig;
@@ -47,21 +45,21 @@ export function HistogramChart({
       </CardHeader>
       <CardContent>
         <ChartContainer className="aspect-square" config={chartConfig}>
-          <RechartsBarChart
+          <ChartBarChart
             accessibilityLayer
             barCategoryGap={0}
             barGap={0}
             data={data}
           >
-            <CartesianGrid vertical={false} />
+            <ChartCartesianGrid vertical={false} />
 
-            <XAxis
+            <ChartXAxis
               axisLine={false}
               dataKey="name"
               tickLine={false}
               tickMargin={10}
             />
-            <YAxis
+            <ChartYAxis
               axisLine={false}
               dataKey="value"
               label={{
@@ -77,8 +75,8 @@ export function HistogramChart({
               content={<ChartTooltipContent indicator="line" />}
               cursor={false}
             />
-            <RechartsBar dataKey="value" radius={0} />
-          </RechartsBarChart>
+            <ChartBar dataKey="value" radius={0} />
+          </ChartBarChart>
         </ChartContainer>
       </CardContent>
     </Card>
@@ -100,15 +98,15 @@ export function BarChart({
       </CardHeader>
       <CardContent>
         <ChartContainer className="aspect-square" config={chartConfig}>
-          <RechartsBarChart accessibilityLayer data={data}>
-            <CartesianGrid vertical={false} />
-            <XAxis
+          <ChartBarChart accessibilityLayer data={data}>
+            <ChartCartesianGrid vertical={false} />
+            <ChartXAxis
               axisLine={false}
               dataKey="name"
               tickLine={false}
               tickMargin={10}
             />
-            <YAxis
+            <ChartYAxis
               axisLine={false}
               dataKey="value"
               label={{
@@ -124,8 +122,8 @@ export function BarChart({
               content={<ChartTooltipContent indicator="line" />}
               cursor={false}
             />
-            <RechartsBar dataKey="value" radius={8} />
-          </RechartsBarChart>
+            <ChartBar dataKey="value" radius={8} />
+          </ChartBarChart>
         </ChartContainer>
       </CardContent>
     </Card>

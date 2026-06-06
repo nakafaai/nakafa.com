@@ -1,4 +1,6 @@
-import { BudgetChart, ElectabilityChart, FundChart } from "./chart";
+import { BudgetChart } from "./budget-chart";
+import { ElectabilityChart } from "./electability-chart";
+import { FundChart } from "./fund-chart";
 
 export const metadata = {
   title:
@@ -155,6 +157,7 @@ baik di tingkat nasional maupun lokal (Rahmanto et al., 2021).
 
 <BudgetChart
   title="Anggaran Perlindungan Sosial dalam Laporan APBN"
+  description="Kemenkeu RI, 2024a."
   yLabel="Anggaran dalam triliun (IDR)"
   footnote="Terjadi peningkatan signifikan dari tahun 2023 ke 2024."
   labels={{
@@ -228,6 +231,11 @@ yang menunjukkan tren preferensi calon presiden dari Januari 2023 hingga Februar
   description="Tren pilihan calon presiden dan wakil presiden."
   yLabel="Tingkat elektabilitas (%)"
   footnote="Elektabilitas Prabowo-Gibran meningkat signifikan mulai September 2023."
+  labels={{
+    aniesMuhaimin: "Anies Baswedan-Muhaimin Iskandar",
+    ganjarMahfud: "Ganjar Pranowo-Mahfud MD",
+    prabowoGibran: "Prabowo Subianto-Gibran Rakabuming",
+  }}
 />
 
 Peningkatan drastis terjadi pada Oktober 2023, ketika keputusan Mahkamah Konstitusi mengenai pencalonan Gibran

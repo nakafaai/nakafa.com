@@ -208,8 +208,12 @@ function getMdxPathsForRoot(slugs: readonly string[], root: ContentRoot) {
   const prefix = `${root}/`;
 
   return new Set(
-    slugs
-      .filter((slug) => slug.startsWith(prefix))
-      .map((slug) => slug.slice(prefix.length))
+    slugs.flatMap((slug) => {
+      if (!slug.startsWith(prefix)) {
+        return [];
+      }
+
+      return [slug.slice(prefix.length)];
+    })
   );
 }

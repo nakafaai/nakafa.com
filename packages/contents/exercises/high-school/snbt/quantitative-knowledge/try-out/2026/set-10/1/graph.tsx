@@ -11,57 +11,63 @@ interface GraphProps
     | "explanation-final";
 }
 
+const T1_CENTER_X = -6;
+const T2_CENTER_X = 6;
+const SCALE = 1.2;
+
+const TOP = { x: 0, y: 3 * SCALE, z: 0 };
+const BOTTOM_LEFT = { x: -2.5 * SCALE, y: -2 * SCALE, z: 0 };
+const BOTTOM_RIGHT = { x: 2.5 * SCALE, y: -2 * SCALE, z: 0 };
+
+const t1Points = [
+  { x: T1_CENTER_X + TOP.x, y: TOP.y, z: 0 },
+  { x: T1_CENTER_X + BOTTOM_LEFT.x, y: BOTTOM_LEFT.y, z: 0 },
+  { x: T1_CENTER_X + BOTTOM_RIGHT.x, y: BOTTOM_RIGHT.y, z: 0 },
+  { x: T1_CENTER_X + TOP.x, y: TOP.y, z: 0 },
+];
+
+const t2Points = [
+  { x: T2_CENTER_X + TOP.x, y: TOP.y, z: 0 },
+  { x: T2_CENTER_X + BOTTOM_LEFT.x, y: BOTTOM_LEFT.y, z: 0 },
+  { x: T2_CENTER_X + BOTTOM_RIGHT.x, y: BOTTOM_RIGHT.y, z: 0 },
+  { x: T2_CENTER_X + TOP.x, y: TOP.y, z: 0 },
+];
+
+const offTop = [0, 0.5, 0] satisfies [number, number, number];
+const offLeft = [-1.25 * SCALE - 0.6, -2.5 * SCALE, 0] satisfies [
+  number,
+  number,
+  number,
+];
+const offRight = [1.25 * SCALE + 0.6, -2.5 * SCALE, 0] satisfies [
+  number,
+  number,
+  number,
+];
+const offBottom = [0, -5 * SCALE - 0.6, 0] satisfies [number, number, number];
+const offCenter = [0, -3.5 * SCALE, 0] satisfies [number, number, number];
+
+const triangleTextByMode = {
+  question: {
+    t1Text: { top: "A", left: "D", right: "F", bottom: "A", center: "T" },
+    t2Text: { top: "B", left: "A", right: "D", bottom: "C", center: "?" },
+  },
+  "explanation-numbers": {
+    t1Text: { top: "1", left: "4", right: "6", bottom: "1", center: "20" },
+    t2Text: { top: "2", left: "1", right: "4", bottom: "3", center: "?" },
+  },
+  "explanation-result": {
+    t1Text: { top: "1", left: "4", right: "6", bottom: "1", center: "20" },
+    t2Text: { top: "2", left: "1", right: "4", bottom: "3", center: "25" },
+  },
+  "explanation-final": {
+    t1Text: { top: "A", left: "D", right: "F", bottom: "A", center: "T" },
+    t2Text: { top: "B", left: "A", right: "D", bottom: "C", center: "Y" },
+  },
+};
+
 export function Graph({ title, description, mode = "question" }: GraphProps) {
-  const T1_CENTER_X = -6;
-  const T2_CENTER_X = 6;
-  const SCALE = 1.2;
-
-  const TOP = { x: 0, y: 3 * SCALE, z: 0 };
-  const BOTTOM_LEFT = { x: -2.5 * SCALE, y: -2 * SCALE, z: 0 };
-  const BOTTOM_RIGHT = { x: 2.5 * SCALE, y: -2 * SCALE, z: 0 };
-
-  const t1Points = [
-    { x: T1_CENTER_X + TOP.x, y: TOP.y, z: 0 },
-    { x: T1_CENTER_X + BOTTOM_LEFT.x, y: BOTTOM_LEFT.y, z: 0 },
-    { x: T1_CENTER_X + BOTTOM_RIGHT.x, y: BOTTOM_RIGHT.y, z: 0 },
-    { x: T1_CENTER_X + TOP.x, y: TOP.y, z: 0 },
-  ];
-
-  const t2Points = [
-    { x: T2_CENTER_X + TOP.x, y: TOP.y, z: 0 },
-    { x: T2_CENTER_X + BOTTOM_LEFT.x, y: BOTTOM_LEFT.y, z: 0 },
-    { x: T2_CENTER_X + BOTTOM_RIGHT.x, y: BOTTOM_RIGHT.y, z: 0 },
-    { x: T2_CENTER_X + TOP.x, y: TOP.y, z: 0 },
-  ];
-
-  const offTop = [0, 0.5, 0] satisfies [number, number, number];
-  const offLeft = [-1.25 * SCALE - 0.6, -2.5 * SCALE, 0] satisfies [
-    number,
-    number,
-    number,
-  ];
-  const offRight = [1.25 * SCALE + 0.6, -2.5 * SCALE, 0] satisfies [
-    number,
-    number,
-    number,
-  ];
-  const offBottom = [0, -5 * SCALE - 0.6, 0] satisfies [number, number, number];
-  const offCenter = [0, -3.5 * SCALE, 0] satisfies [number, number, number];
-
-  let t1Text = { top: "A", left: "D", right: "F", bottom: "A", center: "T" };
-  let t2Text = { top: "B", left: "A", right: "D", bottom: "C", center: "?" };
-
-  if (mode === "explanation-numbers") {
-    t1Text = { top: "1", left: "4", right: "6", bottom: "1", center: "20" };
-    t2Text = { top: "2", left: "1", right: "4", bottom: "3", center: "?" };
-  } else if (mode === "explanation-result") {
-    t1Text = { top: "1", left: "4", right: "6", bottom: "1", center: "20" };
-    t2Text = { top: "2", left: "1", right: "4", bottom: "3", center: "25" };
-  } else if (mode === "explanation-final") {
-    t1Text = { top: "A", left: "D", right: "F", bottom: "A", center: "T" };
-    t2Text = { top: "B", left: "A", right: "D", bottom: "C", center: "Y" };
-  }
-
+  const { t1Text, t2Text } = triangleTextByMode[mode];
   const data: ComponentProps<typeof LineEquation>["data"] = [
     {
       points: t1Points,

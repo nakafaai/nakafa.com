@@ -95,13 +95,19 @@ function getNakafaExerciseSummaries(locale: Locale) {
   return Effect.gen(function* () {
     const slugs = yield* getMdxSlugsForLocale(locale);
 
-    return getExerciseSetPathsFromSlugs(slugs)
-      .filter(isCanonicalNakafaExerciseSetPath)
-      .map((route) => ({
-        ...buildNakafaContentRef(locale, route, "exercises"),
-        description: `${getExerciseQuestionNumbers(slugs, route).length} exercises`,
-        title: formatNakafaRouteTitle(route, locale),
-      }));
+    return getExerciseSetPathsFromSlugs(slugs).flatMap((route) => {
+      if (!isCanonicalNakafaExerciseSetPath(route)) {
+        return [];
+      }
+
+      return [
+        {
+          ...buildNakafaContentRef(locale, route, "exercises"),
+          description: `${getExerciseQuestionNumbers(slugs, route).length} exercises`,
+          title: formatNakafaRouteTitle(route, locale),
+        },
+      ];
+    });
   });
 }
 
