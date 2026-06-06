@@ -3,8 +3,8 @@ import {
   hasInvalidTryOutYearSlug,
   LEGACY_YEARLESS_TRY_OUT_REDIRECT_YEAR,
 } from "@repo/contents/_lib/exercises/slug";
+import { PUBLIC_CONTENT_BASE_ROUTES } from "@repo/contents/_lib/manifest/constants";
 import { routing } from "@repo/internationalization/src/routing";
-import { Option } from "effect";
 import type { ProxyConfig } from "next/server";
 import { type NextRequest, NextResponse } from "next/server";
 import createMiddleware from "next-intl/middleware";
@@ -12,16 +12,12 @@ import {
   AGENT_DISCOVERY_LINK_HEADER,
   LLMS_TEXT_PATH,
 } from "@/lib/agent-discovery";
-import {
-  getPublicContentRedirects,
-  getPublicContentRequestRoutes,
-  getPublicContentRouteRoots,
-} from "@/lib/sitemap/routes";
 
 const handleLocalizedRequest = createMiddleware(routing);
 const TRAILING_SLASH_PATTERN = /\/+$/;
 const MARKDOWN_EXTENSION_PATTERN = /\.mdx?$/;
 const AUTH_REDIRECT_PATH_COOKIE = "auth-redirect-path";
+const PUBLIC_CONTENT_ROUTE_ROOTS = new Set(PUBLIC_CONTENT_BASE_ROUTES);
 const LOCALE_BYPASS_PATHS = new Set([
   "/mcp",
   "/llms.txt",
@@ -35,46 +31,17 @@ const LOCALE_BYPASS_PATHS = new Set([
   "/.well-known/skills/nakafa/SKILL.md",
   "/.well-known/skills/nakafa/skill.md",
 ]);
-const NEXT_INTL_LOCALE_HEADER = "X-NEXT-INTL-LOCALE";
-
-let publicContentRouteData =
-  Option.none<
-    Promise<{
-      contentRedirects: Map<string, string>;
-      publicContentRequestRoutes: Set<string>;
-      publicContentRouteRoots: Set<string>;
-    }>
-  >();
-
-/** Loads public content route lookup tables once per proxy runtime. */
-function getPublicContentRouteData() {
-  if (Option.isSome(publicContentRouteData)) {
-    return publicContentRouteData.value;
-  }
-
-  const data = Promise.all([
-    getPublicContentRedirects(),
-    getPublicContentRequestRoutes(),
-    getPublicContentRouteRoots(),
-  ]).then(([redirects, requestRoutes, routeRoots]) => ({
-    contentRedirects: new Map(redirects),
-    publicContentRequestRoutes: new Set(requestRoutes),
-    publicContentRouteRoots: new Set(routeRoots),
-  }));
-
-  publicContentRouteData = Option.some(data);
-
-  return data;
-}
 
 /**
  * Run locale routing while leaving the same-origin PostHog proxy untouched.
+ * Content existence belongs to app routes because Proxy executes before routes
+ * are rendered and can otherwise block valid prerendered content.
  *
  * References:
  * https://nextjs.org/docs/app/api-reference/file-conventions/proxy
  * https://posthog.com/docs/advanced/proxy/nextjs
  */
-export async function proxy(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (isPostHogProxyPathname(pathname)) {
@@ -92,15 +59,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const {
-    contentRedirects,
-    publicContentRequestRoutes,
-    publicContentRouteRoots,
-  } = await getPublicContentRouteData();
-  const localizedContentRoute = getLocalizedContentRoute(
-    pathname,
-    publicContentRouteRoots
-  );
+  const localizedContentRoute = getLocalizedContentRoute(pathname);
 
   if (localizedContentRoute) {
     const legacyRedirectPath = getLegacyTryOutRedirectPath(
@@ -116,20 +75,6 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(redirectUrl, 308);
     }
 
-    const contentRedirectPath = getPublicContentRedirectPath(
-      localizedContentRoute.locale,
-      localizedContentRoute.route,
-      localizedContentRoute.markdownExtension,
-      contentRedirects
-    );
-
-    if (contentRedirectPath) {
-      const redirectUrl = new URL(request.url);
-      redirectUrl.pathname = contentRedirectPath;
-
-      return NextResponse.redirect(redirectUrl, 308);
-    }
-
     if (
       localizedContentRoute.markdownExtension ||
       request.headers.get("accept")?.includes("text/markdown")
@@ -138,18 +83,6 @@ export async function proxy(request: NextRequest) {
       rewriteUrl.pathname = `/llms.mdx/${localizedContentRoute.locale}${localizedContentRoute.route}`;
 
       return NextResponse.rewrite(rewriteUrl);
-    }
-
-    if (!publicContentRequestRoutes.has(localizedContentRoute.route)) {
-      const rewriteUrl = new URL(request.url);
-      rewriteUrl.pathname = `/${localizedContentRoute.locale}/__not-found`;
-      const requestHeaders = new Headers(request.headers);
-      requestHeaders.set(NEXT_INTL_LOCALE_HEADER, localizedContentRoute.locale);
-
-      return NextResponse.rewrite(rewriteUrl, {
-        request: { headers: requestHeaders },
-        status: 404,
-      });
     }
   }
 
@@ -169,27 +102,8 @@ function isLocaleBypassPath(pathname: string) {
   );
 }
 
-/** Returns the canonical target for content routes that intentionally redirect. */
-function getPublicContentRedirectPath(
-  locale: string,
-  route: string,
-  markdownExtension: string,
-  contentRedirects: Map<string, string>
-) {
-  const targetRoute = contentRedirects.get(route);
-
-  if (!targetRoute) {
-    return null;
-  }
-
-  return `/${locale}${targetRoute}${markdownExtension}`;
-}
-
 /** Returns one localized public content route, stripped of markdown suffixes. */
-function getLocalizedContentRoute(
-  pathname: string,
-  publicContentRouteRoots: Set<string>
-) {
+function getLocalizedContentRoute(pathname: string) {
   const [locale, ...routeSegments] = pathname.split("/").filter(Boolean);
 
   if (!routing.locales.some((supportedLocale) => supportedLocale === locale)) {
@@ -201,7 +115,7 @@ function getLocalizedContentRoute(
     rawRoute.match(MARKDOWN_EXTENSION_PATTERN)?.[0] ?? "";
   const route = rawRoute.replace(MARKDOWN_EXTENSION_PATTERN, "");
 
-  if (!isPublicContentRoute(route, publicContentRouteRoots)) {
+  if (!isPublicContentRoute(route)) {
     return null;
   }
 
@@ -213,13 +127,10 @@ function getLocalizedContentRoute(
 }
 
 /** Returns whether one localized route belongs to public educational content. */
-function isPublicContentRoute(
-  route: string,
-  publicContentRouteRoots: Set<string>
-) {
+function isPublicContentRoute(route: string) {
   const [root] = route.split("/").filter(Boolean);
 
-  return root !== undefined && publicContentRouteRoots.has(`/${root}`);
+  return root !== undefined && PUBLIC_CONTENT_ROUTE_ROOTS.has(`/${root}`);
 }
 
 /** Builds the canonical redirect target for migrated yearless try-out routes. */

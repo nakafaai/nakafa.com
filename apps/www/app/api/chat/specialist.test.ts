@@ -1,7 +1,7 @@
 // @vitest-environment node
 import type { ToolName } from "@repo/ai/schema/tools";
 import type { LanguageModelUsage } from "ai";
-import { Effect, HashMap, Logger, Option } from "effect";
+import { Effect, Logger, Option } from "effect";
 import { describe, expect, it } from "vitest";
 import {
   recordSpecialistUsage,
@@ -75,7 +75,6 @@ describe("app/api/chat/specialist", () => {
           component: "deepResearch",
           error: new Error("network unavailable"),
           errorLocation: "runResearchAgent",
-          logContext: {},
           reportError: (error) => {
             reported.push(error);
           },
@@ -93,10 +92,7 @@ describe("app/api/chat/specialist", () => {
     );
 
     expect(reported).toHaveLength(1);
-    expect(entries.map((entry) => entry.logLevel.label)).toEqual([
-      "ERROR",
-      "WARN",
-    ]);
+    expect(entries.map((entry) => entry.logLevel.label)).toEqual(["WARN"]);
     expect(Option.isNone(result.usage)).toBe(true);
     expect(tracker.rows).toEqual([]);
     expect(result.text).toContain("Specialist: deepResearch");
@@ -112,18 +108,18 @@ describe("app/api/chat/specialist", () => {
         component: "nakafa",
         error: "content lookup failed",
         errorLocation: "runNakafaAgent",
-        logContext: {},
         reportError: (error) => {
           reported.push(error);
         },
       }).pipe(Effect.provide(Logger.replace(Logger.defaultLogger, logger)))
     );
 
-    expect(reported).toEqual(["content lookup failed"]);
-    expect(entries.map((entry) => entry.logLevel.label)).toEqual(["ERROR"]);
-    expect(
-      Option.getOrUndefined(HashMap.get(entries[0]?.annotations, "component"))
-    ).toBe("nakafa");
+    const reportedError = reported[0];
+    expect(reportedError).toBeInstanceOf(Error);
+    if (reportedError instanceof Error) {
+      expect(reportedError.message).toBe("content lookup failed");
+    }
+    expect(entries.map((entry) => entry.logLevel.label)).toEqual([]);
     expect(Option.isNone(result.usage)).toBe(true);
     expect(result.text).toContain("Specialist: nakafa");
     expect(result.text).toContain("Do not invent facts");

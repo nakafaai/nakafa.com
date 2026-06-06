@@ -1,6 +1,5 @@
 import { createPrompt } from "@repo/ai/prompt/utils";
 import type { ToolName } from "@repo/ai/schema/tools";
-import { logError } from "@repo/utilities/logging/effect";
 import type { LogContext } from "@repo/utilities/logging/types";
 import type { LanguageModelUsage } from "ai";
 import { Effect, Option } from "effect";
@@ -19,7 +18,6 @@ interface RecoverSpecialistFailureParams {
   component: ToolName;
   error: unknown;
   errorLocation: string;
-  logContext: LogContext;
   reportError: (error: unknown, source: string) => void;
 }
 
@@ -88,7 +86,6 @@ export const recoverSpecialistFailure = Effect.fn(
   component,
   error,
   errorLocation,
-  logContext,
   reportError,
 }: RecoverSpecialistFailureParams) {
   const normalizedError = normalizeError(error);
@@ -96,13 +93,7 @@ export const recoverSpecialistFailure = Effect.fn(
   yield* Effect.annotateCurrentSpan("component", component);
   yield* Effect.annotateCurrentSpan("errorLocation", errorLocation);
 
-  reportError(error, `chat-api-${component}-agent`);
-
-  yield* logError(normalizedError, {
-    ...logContext,
-    component,
-    errorLocation,
-  });
+  reportError(normalizedError, errorLocation);
 
   return {
     text: formatSpecialistFailure(component),

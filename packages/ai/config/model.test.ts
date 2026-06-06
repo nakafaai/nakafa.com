@@ -35,7 +35,7 @@ describe("Nakafa model registry", () => {
     ).toEqual([
       {
         credits: 2,
-        gatewayId: "google/gemini-3.1-flash-lite",
+        gatewayId: "google/gemini-3-flash",
       },
       {
         credits: 5,
@@ -48,7 +48,7 @@ describe("Nakafa model registry", () => {
     expect(hasEnoughCredits(2, liteModel)).toBe(true);
     expect(hasEnoughCredits(4, proModel)).toBe(false);
     expect(hasEnoughCredits(5, proModel)).toBe(true);
-    expect(getModelGatewayId(liteModel)).toBe("google/gemini-3.1-flash-lite");
+    expect(getModelGatewayId(liteModel)).toBe("google/gemini-3-flash");
     expect(getModelGatewayId(proModel)).toBe("google/gemini-3.5-flash");
   });
 

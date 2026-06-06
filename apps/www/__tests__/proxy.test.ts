@@ -24,33 +24,6 @@ vi.mock("next-intl/middleware", () => ({
   default: vi.fn(() => mockLocaleRouting.localeMiddleware),
 }));
 
-vi.mock("@/lib/sitemap/routes", () => ({
-  getPublicContentRedirects: () => [
-    [
-      "/subject/high-school/10/chemistry/green-chemistry",
-      "/subject/high-school/10/chemistry",
-    ],
-  ],
-  getPublicContentRouteRoots: () => [
-    "/articles",
-    "/subject",
-    "/exercises",
-    "/quran",
-  ],
-  getPublicContentRequestRoutes: () => [
-    "/articles",
-    "/exercises",
-    "/subject",
-    "/quran",
-    "/exercises/middle-school/grade-9",
-    "/exercises/middle-school/grade-9/mathematics",
-    "/subject/high-school/10/biology",
-    "/subject/high-school/10/chemistry/green-chemistry",
-    "/subject/high-school/10/chemistry/green-chemistry/definition",
-    "/exercises/high-school/snbt/general-knowledge/try-out/2026/set-1/9",
-  ],
-}));
-
 describe("proxy", () => {
   beforeEach(() => {
     mockLocaleRouting.localeMiddleware.mockClear();
@@ -201,18 +174,15 @@ describe("proxy", () => {
     );
   });
 
-  it("redirects subject chapter routes to the material root", async () => {
+  it("delegates subject chapter routes so app routes can redirect", async () => {
     const response = await proxy(
       new NextRequest(
         "http://localhost:3000/en/subject/high-school/10/chemistry/green-chemistry"
       )
     );
 
-    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
-    expect(response.status).toBe(308);
-    expect(response.headers.get("location")).toBe(
-      "http://localhost:3000/en/subject/high-school/10/chemistry"
-    );
+    expect(mockLocaleRouting.localeMiddleware).toHaveBeenCalledTimes(1);
+    expect(response.headers.get("x-locale-proxy")).toBe("1");
   });
 
   it("rewrites missing markdown public content to the markdown route", async () => {
@@ -233,17 +203,15 @@ describe("proxy", () => {
     );
   });
 
-  it("rewrites missing html public content to the localized not-found route", async () => {
+  it("delegates missing html public content so app routes can call notFound", async () => {
     const response = await proxy(
       new NextRequest(
         "http://localhost:3000/id/subject/high-school/10/history/history-introduction/human-space-time"
       )
     );
 
-    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
-    expect(response.headers.get("x-middleware-rewrite")).toBe(
-      "http://localhost:3000/id/__not-found"
-    );
+    expect(mockLocaleRouting.localeMiddleware).toHaveBeenCalledTimes(1);
+    expect(response.headers.get("x-locale-proxy")).toBe("1");
   });
 
   it("delegates public content folders to the localized app tree", async () => {

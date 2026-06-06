@@ -25,7 +25,6 @@ import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
 import { Nakafa } from "@repo/contents/_lib/agent/service";
 import { cleanSlug } from "@repo/utilities/helper";
-import { logError } from "@repo/utilities/logging/effect";
 import type { LogContext } from "@repo/utilities/logging/types";
 import { waitUntil } from "@vercel/functions";
 import {
@@ -94,16 +93,9 @@ interface Params {
 export function streamChat({ chat, page, runtime, user }: Params) {
   return createUIMessageStream<MyUIMessage>({
     onError: (error) => {
-      runtime.reportError(error, "chat-api-stream");
+      runtime.reportError(error, "createUIMessageStream");
 
       if (error instanceof Error) {
-        Effect.runFork(
-          logError(error, {
-            ...runtime.logContext,
-            errorLocation: "createUIMessageStream",
-            errorType: error.name,
-          })
-        );
         if (error.message.includes("Rate limit")) {
           Effect.runFork(
             Effect.logWarning("Rate limit exceeded in chat stream").pipe(
@@ -138,17 +130,9 @@ export function streamChat({ chat, page, runtime, user }: Params) {
               );
             }).pipe(
               Effect.catchAll((error) =>
-                Effect.gen(function* () {
-                  runtime.reportError(error, "chat-api-generate-title");
-
-                  yield* logError(
-                    error instanceof Error ? error : new Error(String(error)),
-                    {
-                      ...runtime.logContext,
-                      errorLocation: "generateTitle/updateChatTitle",
-                    }
-                  );
-                })
+                Effect.sync(() =>
+                  runtime.reportError(error, "generateTitle/updateChatTitle")
+                )
               )
             )
           )
@@ -180,17 +164,9 @@ export function streamChat({ chat, page, runtime, user }: Params) {
             )
           ).pipe(
             Effect.catchAll((error) =>
-              Effect.gen(function* () {
-                runtime.reportError(error, "chat-api-save-assistant-response");
-
-                yield* logError(
-                  error instanceof Error ? error : new Error(String(error)),
-                  {
-                    ...runtime.logContext,
-                    errorLocation: "saveAssistantResponse",
-                  }
-                );
-              })
+              Effect.sync(() =>
+                runtime.reportError(error, "saveAssistantResponse")
+              )
             )
           )
         )
@@ -267,7 +243,6 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                             component: TOOL_NAMES.nakafa,
                             error,
                             errorLocation: "runNakafaAgent",
-                            logContext: runtime.logContext,
                             reportError: runtime.reportError,
                           })
                         )
@@ -308,7 +283,6 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                             component: TOOL_NAMES.deepResearch,
                             error,
                             errorLocation: "runResearchAgent",
-                            logContext: runtime.logContext,
                             reportError: runtime.reportError,
                           })
                         )
@@ -345,7 +319,6 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                             component: TOOL_NAMES.math,
                             error,
                             errorLocation: "runMathAgent",
-                            logContext: runtime.logContext,
                             reportError: runtime.reportError,
                           })
                         )
@@ -411,16 +384,9 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                 }
               },
               onError: (error) => {
-                runtime.reportError(error, "chat-api-message-stream");
+                runtime.reportError(error, "toUIMessageStream");
 
                 if (error instanceof Error) {
-                  Effect.runFork(
-                    logError(error, {
-                      ...runtime.logContext,
-                      errorLocation: "toUIMessageStream",
-                      errorType: error.name,
-                    })
-                  );
                   if (error.message.includes("Rate limit")) {
                     Effect.runFork(
                       Effect.logWarning(
@@ -444,19 +410,17 @@ export function streamChat({ chat, page, runtime, user }: Params) {
           // AI SDK result promises consume the stream as needed; the merged UI
           // stream is already the client-facing consumer.
           // https://ai-sdk.dev/docs/reference/ai-sdk-core/stream-text
-          const response = yield* Effect.tryPromise(
-            () => streamTextResult.response
-          );
+          const response = yield* Effect.tryPromise({
+            try: () => streamTextResult.response,
+            catch: (error) => error,
+          });
           yield* writeSuggestions({
             locale: page.locale,
             messages: [...chat.finalMessages, ...response.messages],
             writer,
           }).pipe(
             Effect.catchAll((error) =>
-              logError(error, {
-                ...runtime.logContext,
-                errorLocation: "writeSuggestions",
-              })
+              Effect.sync(() => runtime.reportError(error, "writeSuggestions"))
             )
           );
         })

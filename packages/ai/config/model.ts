@@ -35,10 +35,7 @@ const fastProviderOptions = {
 
 export const ModelInfoSchema = Schema.Struct({
   credits: Schema.Number.pipe(Schema.int(), Schema.positive()),
-  gatewayId: Schema.Literal(
-    "google/gemini-3.1-flash-lite",
-    "google/gemini-3.5-flash"
-  ),
+  gatewayId: Schema.Literal("google/gemini-3-flash", "google/gemini-3.5-flash"),
 }).annotations({
   description: "Public Nakafa model metadata used for billing and routing.",
 });
@@ -48,7 +45,7 @@ export type ModelInfo = Schema.Schema.Type<typeof ModelInfoSchema>;
 export const modelRegistry = {
   "nakafa-lite": {
     credits: 2,
-    gatewayId: "google/gemini-3.1-flash-lite",
+    gatewayId: "google/gemini-3-flash",
     providerOptions: {
       fast: fastProviderOptions,
       interactive: interactiveProviderOptions,

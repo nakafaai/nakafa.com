@@ -5,12 +5,10 @@ import {
 import { hasEnoughCredits, ModelIdSchema } from "@repo/ai/config/model";
 import { compressMessages } from "@repo/ai/lib/message";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import { captureServerException } from "@repo/analytics/posthog/server";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { CorsValidator } from "@repo/security/lib/cors-validator";
 import { cleanSlug } from "@repo/utilities/helper";
-import { logError } from "@repo/utilities/logging/effect";
 import { geolocation } from "@vercel/functions";
 import {
   convertToModelMessages,
@@ -21,6 +19,7 @@ import { Effect, Option, Schema } from "effect";
 import { getTranslations } from "next-intl/server";
 import { CHAT_ERRORS } from "@/app/api/chat/constants";
 import { determinePageFetchNeed } from "@/app/api/chat/content";
+import { createChatErrorReporter } from "@/app/api/chat/observability";
 import { loadMessages, saveOrCreateChat } from "@/app/api/chat/persistence";
 import { streamChat } from "@/app/api/chat/stream";
 import { getUserInfo, getVerified } from "@/app/api/chat/utils";
@@ -148,41 +147,19 @@ export function POST(req: Request) {
         url,
       };
 
-      /**
-       * Forward one chat-route runtime error to PostHog without interrupting the
-       * user-facing stream or background persistence flow.
-       *
-       * Related docs:
-       * https://posthog.com/docs/error-tracking/capture
-       * https://posthog.com/docs/error-tracking/installation/nextjs
-       */
-      function reportChatErrorToPostHog(error: unknown, source: string) {
-        Effect.runFork(
-          Effect.tryPromise(() =>
-            captureServerException(error, userInfo.userId, { source })
-          ).pipe(
-            Effect.catchAll((captureError) =>
-              logError(
-                captureError instanceof Error
-                  ? captureError
-                  : new Error(String(captureError)),
-                {
-                  ...logContext,
-                  errorLocation: "posthog-capture",
-                  source,
-                }
-              )
-            )
-          )
-        );
-      }
-
       const chatId = yield* saveOrCreateChat({
         chatId: id,
         message,
         modelId: selectedModel,
         token,
       });
+      const reportChatError = createChatErrorReporter({
+        chatId,
+        logContext,
+        modelId: selectedModel,
+        userId: userInfo.userId,
+      });
+
       const messages = yield* loadMessages({ chatId, token });
       const isFirstMessage = messages.length === 1;
 
@@ -244,7 +221,7 @@ export function POST(req: Request) {
         currentDate,
         logContext,
         modelId: selectedModel,
-        reportError: reportChatErrorToPostHog,
+        reportError: reportChatError,
         translate,
       };
       const user = {

@@ -89,25 +89,27 @@ export const repairChatToolCall = Effect.fn("chat.repairChatToolCall")(
     }
 
     const schema = yield* Effect.tryPromise(() => inputSchema(toolCall));
-    const { output: repairedArgs } = yield* Effect.tryPromise(() =>
-      generateText({
-        model: provider.languageModel(defaultModel),
-        output: Output.object({ schema: tool.inputSchema }),
-        prompt: [
-          `The model tried to call the tool "${toolCall.toolName}"` +
-            " with the following arguments:",
-          JSON.stringify(toolCall.input, null, 2),
-          "The tool accepts the following schema:",
-          JSON.stringify(schema, null, 2),
-          "Please fix the arguments.",
-        ].join("\n"),
-        providerOptions: {
-          gateway: gatewayProviderOptions,
-          google: getFastModelProviderOptions(defaultModel),
-        },
-        timeout: backgroundGenerationTimeout,
-      })
-    );
+    const { output: repairedArgs } = yield* Effect.tryPromise({
+      try: () =>
+        generateText({
+          model: provider.languageModel(defaultModel),
+          output: Output.object({ schema: tool.inputSchema }),
+          prompt: [
+            `The model tried to call the tool "${toolCall.toolName}"` +
+              " with the following arguments:",
+            JSON.stringify(toolCall.input, null, 2),
+            "The tool accepts the following schema:",
+            JSON.stringify(schema, null, 2),
+            "Please fix the arguments.",
+          ].join("\n"),
+          providerOptions: {
+            gateway: gatewayProviderOptions,
+            google: getFastModelProviderOptions(defaultModel),
+          },
+          timeout: backgroundGenerationTimeout,
+        }),
+      catch: (error) => error,
+    });
 
     yield* Effect.logInfo("Tool call successfully repaired").pipe(
       Effect.annotateLogs(sessionLogger)

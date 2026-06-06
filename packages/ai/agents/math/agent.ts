@@ -53,161 +53,163 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
   context,
   writer,
 }: MathAgentParams) {
-  const result = yield* Effect.tryPromise(() =>
-    generateText({
-      messages: [{ role: "user", content: task }],
-      model: provider.languageModel(modelId),
-      providerOptions: {
-        gateway: gatewayProviderOptions,
-        google: getFastModelProviderOptions(modelId),
-      },
-      experimental_repairToolCall: (options) =>
-        Effect.runPromise(
-          repairMathToolCall({
-            ...options,
-            modelId,
-            task,
-          })
-        ),
-      prepareStep: prepareMathStep,
-      stopWhen: stepCountIs(MAX_MATH_STEPS),
-      system: mathPrompt({ locale, context }),
-      temperature: 0,
-      timeout: subAgentGenerationTimeout,
-      tools: {
-        algebra: tool({
-          description: mathAlgebra,
-          execute: (input, { toolCallId }) =>
-            Effect.runPromise(
-              compute({
-                input,
-                toolCallId,
-                writer,
-              }).pipe(Effect.provide(MathService.Default))
-            ),
-          inputSchema: mathAlgebraInput,
-          outputSchema: textOutputSchema,
-        }),
-        arithmetic: tool({
-          description: mathArithmetic,
-          execute: (input, { toolCallId }) =>
-            Effect.runPromise(
-              compute({
-                input,
-                toolCallId,
-                writer,
-              }).pipe(Effect.provide(MathService.Default))
-            ),
-          inputSchema: mathArithmeticInput,
-          outputSchema: textOutputSchema,
-        }),
-        calculus: tool({
-          description: mathCalculus,
-          execute: (input, { toolCallId }) =>
-            Effect.runPromise(
-              compute({
-                input,
-                toolCallId,
-                writer,
-              }).pipe(Effect.provide(MathService.Default))
-            ),
-          inputSchema: mathCalculusInput,
-          outputSchema: textOutputSchema,
-        }),
-        discrete: tool({
-          description: mathDiscrete,
-          execute: (input, { toolCallId }) =>
-            Effect.runPromise(
-              compute({
-                input,
-                toolCallId,
-                writer,
-              }).pipe(Effect.provide(MathService.Default))
-            ),
-          inputSchema: mathDiscreteInput,
-          outputSchema: textOutputSchema,
-        }),
-        equation: tool({
-          description: mathEquation,
-          execute: (input, { toolCallId }) =>
-            Effect.runPromise(
-              compute({
-                input,
-                toolCallId,
-                writer,
-              }).pipe(Effect.provide(MathService.Default))
-            ),
-          inputSchema: mathEquationInput,
-          outputSchema: textOutputSchema,
-        }),
-        geometry: tool({
-          description: mathGeometry,
-          execute: (input, { toolCallId }) =>
-            Effect.runPromise(
-              compute({
-                input,
-                toolCallId,
-                writer,
-              }).pipe(Effect.provide(MathService.Default))
-            ),
-          inputSchema: mathGeometryInput,
-          outputSchema: textOutputSchema,
-        }),
-        matrix: tool({
-          description: mathMatrix,
-          execute: (input, { toolCallId }) =>
-            Effect.runPromise(
-              compute({
-                input,
-                toolCallId,
-                writer,
-              }).pipe(Effect.provide(MathService.Default))
-            ),
-          inputSchema: mathMatrixInput,
-          outputSchema: textOutputSchema,
-        }),
-        probability: tool({
-          description: mathProbability,
-          execute: (input, { toolCallId }) =>
-            Effect.runPromise(
-              compute({
-                input,
-                toolCallId,
-                writer,
-              }).pipe(Effect.provide(MathService.Default))
-            ),
-          inputSchema: mathProbabilityInput,
-          outputSchema: textOutputSchema,
-        }),
-        series: tool({
-          description: mathSeries,
-          execute: (input, { toolCallId }) =>
-            Effect.runPromise(
-              compute({
-                input,
-                toolCallId,
-                writer,
-              }).pipe(Effect.provide(MathService.Default))
-            ),
-          inputSchema: mathSeriesInput,
-          outputSchema: textOutputSchema,
-        }),
-        statistics: tool({
-          description: mathStatistics,
-          execute: (input, { toolCallId }) =>
-            Effect.runPromise(
-              compute({
-                input,
-                toolCallId,
-                writer,
-              }).pipe(Effect.provide(MathService.Default))
-            ),
-          inputSchema: mathStatisticsInput,
-          outputSchema: textOutputSchema,
-        }),
-      },
-    })
-  );
+  const result = yield* Effect.tryPromise({
+    try: () =>
+      generateText({
+        messages: [{ role: "user", content: task }],
+        model: provider.languageModel(modelId),
+        providerOptions: {
+          gateway: gatewayProviderOptions,
+          google: getFastModelProviderOptions(modelId),
+        },
+        experimental_repairToolCall: (options) =>
+          Effect.runPromise(
+            repairMathToolCall({
+              ...options,
+              modelId,
+              task,
+            })
+          ),
+        prepareStep: prepareMathStep,
+        stopWhen: stepCountIs(MAX_MATH_STEPS),
+        system: mathPrompt({ locale, context }),
+        temperature: 0,
+        timeout: subAgentGenerationTimeout,
+        tools: {
+          algebra: tool({
+            description: mathAlgebra,
+            execute: (input, { toolCallId }) =>
+              Effect.runPromise(
+                compute({
+                  input,
+                  toolCallId,
+                  writer,
+                }).pipe(Effect.provide(MathService.Default))
+              ),
+            inputSchema: mathAlgebraInput,
+            outputSchema: textOutputSchema,
+          }),
+          arithmetic: tool({
+            description: mathArithmetic,
+            execute: (input, { toolCallId }) =>
+              Effect.runPromise(
+                compute({
+                  input,
+                  toolCallId,
+                  writer,
+                }).pipe(Effect.provide(MathService.Default))
+              ),
+            inputSchema: mathArithmeticInput,
+            outputSchema: textOutputSchema,
+          }),
+          calculus: tool({
+            description: mathCalculus,
+            execute: (input, { toolCallId }) =>
+              Effect.runPromise(
+                compute({
+                  input,
+                  toolCallId,
+                  writer,
+                }).pipe(Effect.provide(MathService.Default))
+              ),
+            inputSchema: mathCalculusInput,
+            outputSchema: textOutputSchema,
+          }),
+          discrete: tool({
+            description: mathDiscrete,
+            execute: (input, { toolCallId }) =>
+              Effect.runPromise(
+                compute({
+                  input,
+                  toolCallId,
+                  writer,
+                }).pipe(Effect.provide(MathService.Default))
+              ),
+            inputSchema: mathDiscreteInput,
+            outputSchema: textOutputSchema,
+          }),
+          equation: tool({
+            description: mathEquation,
+            execute: (input, { toolCallId }) =>
+              Effect.runPromise(
+                compute({
+                  input,
+                  toolCallId,
+                  writer,
+                }).pipe(Effect.provide(MathService.Default))
+              ),
+            inputSchema: mathEquationInput,
+            outputSchema: textOutputSchema,
+          }),
+          geometry: tool({
+            description: mathGeometry,
+            execute: (input, { toolCallId }) =>
+              Effect.runPromise(
+                compute({
+                  input,
+                  toolCallId,
+                  writer,
+                }).pipe(Effect.provide(MathService.Default))
+              ),
+            inputSchema: mathGeometryInput,
+            outputSchema: textOutputSchema,
+          }),
+          matrix: tool({
+            description: mathMatrix,
+            execute: (input, { toolCallId }) =>
+              Effect.runPromise(
+                compute({
+                  input,
+                  toolCallId,
+                  writer,
+                }).pipe(Effect.provide(MathService.Default))
+              ),
+            inputSchema: mathMatrixInput,
+            outputSchema: textOutputSchema,
+          }),
+          probability: tool({
+            description: mathProbability,
+            execute: (input, { toolCallId }) =>
+              Effect.runPromise(
+                compute({
+                  input,
+                  toolCallId,
+                  writer,
+                }).pipe(Effect.provide(MathService.Default))
+              ),
+            inputSchema: mathProbabilityInput,
+            outputSchema: textOutputSchema,
+          }),
+          series: tool({
+            description: mathSeries,
+            execute: (input, { toolCallId }) =>
+              Effect.runPromise(
+                compute({
+                  input,
+                  toolCallId,
+                  writer,
+                }).pipe(Effect.provide(MathService.Default))
+              ),
+            inputSchema: mathSeriesInput,
+            outputSchema: textOutputSchema,
+          }),
+          statistics: tool({
+            description: mathStatistics,
+            execute: (input, { toolCallId }) =>
+              Effect.runPromise(
+                compute({
+                  input,
+                  toolCallId,
+                  writer,
+                }).pipe(Effect.provide(MathService.Default))
+              ),
+            inputSchema: mathStatisticsInput,
+            outputSchema: textOutputSchema,
+          }),
+        },
+      }),
+    catch: (error) => error,
+  });
 
   return {
     text: result.text,
