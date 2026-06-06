@@ -77,7 +77,7 @@ export function Weather() {
             <Skeleton className="h-6 w-16" />
             <Skeleton className="h-3 w-20" />
           </div>
-          <Skeleton className="h-8 w-8" />
+          <Skeleton className="size-8" />
         </WeatherCardHeader>
 
         <Skeleton className="h-3 w-24" />

@@ -1,0 +1,93 @@
+import { RelativeMovementLab } from "@repo/design-system/components/contents/physics/kinematics/relative-movement/lab";
+
+export const metadata = {
+  title: "Gerak Relatif",
+  description:
+    "Pelajari mengapa gerak benda dapat terlihat berbeda ketika kerangka acuannya berbeda.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/31/2026",
+  subject: "Kinematika",
+};
+
+## Gerak Bergantung pada Pengamat
+
+Gerak selalu dibaca terhadap suatu kerangka acuan. Benda yang terlihat bergerak cepat bagi pengamat di pinggir jalan dapat terlihat pelan, diam, atau bergerak berlawanan arah bagi pengamat lain yang juga sedang bergerak.
+
+Jika benda yang diamati diberi nama <InlineMath math="X" /> dan pengamat diberi nama <InlineMath math="Y" />, kecepatan <InlineMath math="X" /> relatif terhadap <InlineMath math="Y" /> dapat ditulis:
+
+<BlockMath math="\vec{v}_{X/Y}=\vec{v}_X-\vec{v}_Y" />
+
+Tanda positif dan negatif tetap penting karena menunjukkan arah pada sumbu yang dipilih.
+
+> Gerak relatif tidak membuat gerak baru. Kita hanya membaca gerak yang sama dari kursi pengamat yang berbeda.
+
+<RelativeMovementLab
+  title={<>Gerak Relatif Dua Mobil</>}
+  description={
+    <>
+      Pilih arah mobil B untuk melihat geraknya menurut pengamat di mobil A.
+    </>
+  }
+  labels={{
+    chooseCase: "Pilih arah gerak",
+    modeLabels: {
+      "same-direction": <>Searah</>,
+      "opposite-direction": <>Berlawanan</>,
+    },
+    factLabels: {
+      observer: <>Mobil A</>,
+      target: <>Mobil B</>,
+      relativeVelocity: <>Kecepatan relatif B terhadap A</>,
+      visibleDirection: <>Menurut pengamat di A</>,
+    },
+    directionLabels: {
+      left: <>B tampak bergerak ke kiri relatif terhadap A.</>,
+      right: <>B tampak bergerak ke kanan relatif terhadap A.</>,
+    },
+    viewLabel: "Visual gerak relatif",
+  }}
+/>
+
+## Kecepatan Berubah Saat Pengamat Ikut Bergerak
+
+Kecepatan benda menurut pengamat berubah ketika pengamatnya juga bergerak. Yang dibandingkan bukan hanya benda yang diamati, tetapi juga gerak pengamatnya.
+
+Misalkan arah kanan dipilih sebagai positif. Mobil bergerak <InlineMath math="+12 \text{ m/s}" /> dan taksi bergerak <InlineMath math="+14 \text{ m/s}" />. Menurut penumpang taksi, mobil tampak bergerak ke belakang:
+
+<BlockMath math="v_{\text{mobil/taksi}}=12-14=-2 \text{ m/s}" />
+
+Nilai negatif berarti arah geraknya relatif ke kiri.
+
+Jika dua kendaraan bergerak searah, pengamat yang lebih cepat dapat melihat kendaraan lain seolah mundur. Ini bukan berarti mobil benar-benar berbalik arah terhadap jalan. Yang berubah adalah bacaan dari kursi taksi.
+
+## Pengamat yang Diam
+
+Jika pengamatnya tanah atau peron yang diam, kecepatan relatif sama dengan kecepatan benda terhadap tanah.
+
+<BlockMath math="v_{\text{benda/tanah}}=v_{\text{benda}}-0" />
+
+Karena itu, dalam banyak soal sederhana, kecepatan yang tidak diberi keterangan biasanya dianggap terhadap tanah.
+
+Bagian pentingnya bukan nama pengamatnya, tetapi apakah pengamat itu ikut bergerak atau tidak. Jika pengamat diam, tidak ada kecepatan pengamat yang perlu dikurangkan.
+
+## Ketika Keduanya Bergerak
+
+Jika dua benda bergerak berlawanan arah, besar kecepatan relatifnya dapat menjadi lebih besar daripada masing-masing kecepatan benda terhadap tanah. Misalnya, mobil bergerak ke kanan dengan kecepatan <InlineMath math="+12 \text{ m/s}" />, sedangkan truk bergerak ke kiri dengan kecepatan <InlineMath math="-8 \text{ m/s}" />.
+
+Bagi pengemudi truk, kecepatan mobil adalah:
+
+<BlockMath math="v_{\text{mobil/truk}}=12-(-8)=+20 \text{ m/s}" />
+
+Nilai <InlineMath math="+20 \text{ m/s}" /> berarti mobil tampak mendekat dari arah positif dengan laju relatif lebih besar daripada laju masing-masing kendaraan terhadap tanah.
+
+Gerak relatif bukan mengubah gerak sebenarnya. Gerak relatif mengubah **cara gerak dibaca** oleh pengamat yang berbeda.
+
+## Yang Dilihat Pengamat adalah Selisih
+
+| Situasi | Cara menghitung | Arti gerak relatif |
+| :------ | :-------------- | :---------------- |
+| Pengamat diam | <InlineMath math="v_Y=0" /> | <InlineMath math="v_{X/Y}=v_X" /> |
+| Pengamat lebih cepat searah | <InlineMath math="12-14=-2 \text{ m/s}" /> | Benda tampak bergerak ke arah negatif |
+| Pengamat berlawanan arah | <InlineMath math="12-(-8)=+20 \text{ m/s}" /> | Benda tampak bergerak ke arah positif |
+
+Jadi, sebelum menyebut suatu benda cepat, lambat, diam, atau bergerak mundur, selalu periksa kerangka acuannya.

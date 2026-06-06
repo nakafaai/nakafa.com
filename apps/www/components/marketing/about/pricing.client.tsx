@@ -49,11 +49,11 @@ export function ProButton() {
     api.subscriptions.queries.hasActiveSubscription,
     currentUser ? { productId: products.pro.id } : "skip"
   );
-  const generateCheckoutLink = useAction(
-    api.customers.actions.public.generateCheckoutLink
-  );
   const generateCustomerPortalUrl = useAction(
     api.customers.actions.public.generateCustomerPortalUrl
+  );
+  const generateCheckoutLink = useAction(
+    api.customers.actions.public.generateCheckoutLink
   );
 
   const handleCheckout = () => {
@@ -67,7 +67,7 @@ export function ProButton() {
       }
 
       const { url } = await generateCheckoutLink({
-        productIds: [products.pro.id],
+        locale,
         successUrl: window.location.href,
       });
       window.location.href = url;

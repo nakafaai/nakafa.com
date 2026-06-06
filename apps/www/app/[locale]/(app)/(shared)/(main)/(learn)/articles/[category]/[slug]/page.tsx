@@ -1,8 +1,6 @@
-import { captureServerException } from "@repo/analytics/posthog/server";
 import { parseArticleCategory } from "@repo/contents/_lib/articles/category";
 import { getArticleReferences } from "@repo/contents/_lib/articles/references";
 import { getSlugPath } from "@repo/contents/_lib/articles/slug";
-import { importContentModule } from "@repo/contents/_lib/module";
 import { getHeadings } from "@repo/contents/_lib/toc";
 import { formatContentDateISO } from "@repo/contents/_shared/date";
 import type { ArticleCategory } from "@repo/contents/_types/articles/category";
@@ -28,6 +26,7 @@ import {
   LayoutMaterialMain,
   LayoutMaterialToc,
 } from "@/components/shared/layout-material";
+import { importContentModuleOrNull } from "@/lib/content/module";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
@@ -43,11 +42,13 @@ async function getResolvedParams(
 ) {
   const { locale: rawLocale, category: rawCategory, slug } = await params;
   const locale = getLocaleOrThrow(rawLocale);
-  const category = parseArticleCategory(rawCategory);
+  const parsedCategory = parseArticleCategory(rawCategory);
 
-  if (!category) {
+  if (Option.isNone(parsedCategory)) {
     notFound();
   }
+
+  const category = parsedCategory.value;
 
   return { category, locale, slug };
 }
@@ -58,13 +59,14 @@ export async function generateMetadata({
   params: PageProps<"/[locale]/articles/[category]/[slug]">["params"];
 }): Promise<Metadata> {
   const { locale, category, slug } = await getResolvedParams(params);
-  const t = await getTranslations({ locale, namespace: "Articles" });
-
-  const { content, filePath } = await getArticleMetadataData({
-    locale,
-    category,
-    slug,
-  });
+  const [t, { content, filePath }] = await Promise.all([
+    getTranslations({ locale, namespace: "Articles" }),
+    getArticleMetadataData({
+      locale,
+      category,
+      slug,
+    }),
+  ]);
 
   if (!content) {
     notFound();
@@ -154,17 +156,11 @@ export default async function Page({
 }: PageProps<"/[locale]/articles/[category]/[slug]">) {
   const { locale, category, slug } = await getResolvedParams(params);
   const filePath = getSlugPath(category, slug);
-  const content = await importContentModule(filePath, locale).catch(
-    async (error) => {
-      await captureServerException(error, undefined, {
-        file_path: filePath,
-        locale,
-        source: "article-content-module",
-      });
-
-      return null;
-    }
-  );
+  const content = await importContentModuleOrNull({
+    filePath,
+    locale,
+    source: "article-content-module",
+  });
   const Content = content?.default;
   if (!Content) {
     notFound();
@@ -182,8 +178,10 @@ export default async function Page({
     getTranslations("Common"),
     getTranslations("Articles"),
   ]);
-  const publishedAt =
-    formatContentDateISO(contentMetadata.date) ?? contentMetadata.date;
+  const publishedAt = Option.getOrElse(
+    formatContentDateISO(contentMetadata.date),
+    () => contentMetadata.date
+  );
   const authorJsonLd = contentMetadata.authors.map((author) => ({
     "@type": "Person" as const,
     name: author.name,
@@ -262,12 +260,9 @@ async function CachedArticleShell({
 
   cacheLife("max");
 
-  const [tCommon, tArticles] = await Promise.all([
+  const [tCommon, tArticles, content, references] = await Promise.all([
     getTranslations("Common"),
     getTranslations("Articles"),
-  ]);
-
-  const [content, references] = await Promise.all([
     Effect.runPromise(
       Effect.match(fetchArticleMetadataContext({ locale, category, slug }), {
         onFailure: () => ({ content: null, FilePath: filePath }),

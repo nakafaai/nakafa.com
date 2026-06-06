@@ -1,4 +1,3 @@
-import { captureServerException } from "@repo/analytics/posthog/server";
 import {
   getSlugPath,
   hasInvalidTryOutYearSlug,
@@ -20,6 +19,8 @@ import { generateSEOMetadata } from "@/lib/utils/seo/generator";
 import type { SEOContext } from "@/lib/utils/seo/types";
 import { getStaticParams } from "@/lib/utils/system";
 
+const missingExerciseRouteData = { kind: "missing" } as const;
+
 /** Generates SEO metadata for one learn-exercises route. */
 export async function generateMetadata({
   params,
@@ -28,7 +29,6 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale, category, type, material, slug } =
     await getResolvedParams(params);
-  const pagePath = getSlugPath(category, type, material, slug);
   const legacyTryOutRedirectPath = getLegacyTryOutRedirectPath({
     category,
     locale,
@@ -47,15 +47,10 @@ export async function generateMetadata({
     type,
     material,
     slug.join("/")
-  ).catch(async (error) => {
-    await captureServerException(error, undefined, {
-      locale,
-      page_path: pagePath,
-      source: "exercise-route-metadata",
-    });
-
-    notFound();
-  });
+  ).then(
+    (routeData) => routeData,
+    () => missingExerciseRouteData
+  );
 
   if (data.kind === "missing") {
     notFound();
@@ -125,13 +120,15 @@ export async function generateMetadata({
 }
 
 /** Enumerates the prerenderable learn-exercises paths. */
-export function generateStaticParams() {
-  return getStaticParams({
+export async function generateStaticParams() {
+  const staticParams = await getStaticParams({
     basePath: "exercises",
     paramNames: ["category", "type", "material", "slug"],
     slugParam: "slug",
     isDeep: true,
-  }).filter((params) => {
+  });
+
+  return staticParams.filter((params) => {
     const slug = params.slug;
     return (
       Array.isArray(slug) &&

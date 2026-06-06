@@ -7,39 +7,41 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import { ChartContainer } from "@repo/design-system/components/ui/chart";
-import type { ReactNode } from "react";
 import {
-  CartesianGrid,
-  Label,
-  Line,
-  LineChart,
-  ReferenceLine,
-  XAxis,
-  YAxis,
-} from "recharts";
+  ChartCartesianGrid,
+  type ChartConfig,
+  ChartContainer,
+  ChartLabel,
+  ChartLine,
+  ChartLineChart,
+  ChartReferenceLine,
+  ChartXAxis,
+  ChartYAxis,
+} from "@repo/design-system/components/ui/chart";
+import type { ReactNode } from "react";
 
 interface Props {
   description: ReactNode;
-  title: string;
+  title: ReactNode;
 }
 
+const chartConfig = {
+  y: {
+    label: "y",
+    colors: { light: ["var(--chart-1)"] },
+  },
+} satisfies ChartConfig;
+
+// Generate data points for y = sin(2x + 60°)
+const graphData = Array.from({ length: 200 }, (_, i) => {
+  const x = (i / 199) * 200;
+  const xRad = (x * Math.PI) / 180;
+  const y = Math.sin(2 * xRad + (60 * Math.PI) / 180);
+
+  return { x, y };
+});
+
 export function Graph({ title, description }: Props) {
-  // Generate data points for y = sin(2x + 60°)
-  const data = Array.from({ length: 200 }, (_, i) => {
-    const x = (i / 199) * 200;
-    const xRad = (x * Math.PI) / 180;
-    const y = Math.sin(2 * xRad + (60 * Math.PI) / 180);
-    return { x, y };
-  });
-
-  const chartConfig = {
-    y: {
-      label: "y",
-      colors: { light: ["var(--chart-1)"] },
-    },
-  };
-
   return (
     <Card className="content-auto-card">
       <CardHeader>
@@ -48,16 +50,16 @@ export function Graph({ title, description }: Props) {
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>
-          <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis
+          <ChartLineChart data={graphData}>
+            <ChartCartesianGrid strokeDasharray="3 3" />
+            <ChartXAxis
               dataKey="x"
               domain={[0, 200]}
               tickFormatter={(value) => `${value}°`}
               ticks={[0, 15, 60, 150, 195]}
               type="number"
             />
-            <YAxis
+            <ChartYAxis
               domain={[-1.2, 1.2]}
               label={{
                 value: "y",
@@ -67,48 +69,48 @@ export function Graph({ title, description }: Props) {
               ticks={[-1, 0, 1]}
               type="number"
             />
-            <ReferenceLine stroke="transparent" y={0.866}>
-              <Label
+            <ChartReferenceLine stroke="transparent" y={0.866}>
+              <ChartLabel
                 offset={10}
                 position="left"
                 style={{ fill: "var(--muted-foreground)" }}
                 value="1/2√3"
               />
-            </ReferenceLine>
-            <ReferenceLine
+            </ChartReferenceLine>
+            <ChartReferenceLine
               stroke="var(--muted-foreground)"
               strokeDasharray="3 3"
               y={1}
             />
-            <ReferenceLine stroke="var(--muted-foreground)" y={0} />
-            <ReferenceLine
+            <ChartReferenceLine stroke="var(--muted-foreground)" y={0} />
+            <ChartReferenceLine
               stroke="var(--muted-foreground)"
               strokeDasharray="3 3"
               y={-1}
             />
-            <ReferenceLine
+            <ChartReferenceLine
               stroke="var(--muted-foreground)"
               strokeDasharray="3 3"
               x={0}
             />
-            <ReferenceLine
+            <ChartReferenceLine
               stroke="var(--muted-foreground)"
               strokeDasharray="3 3"
               x={15}
             />
-            <ReferenceLine
+            <ChartReferenceLine
               stroke="var(--muted-foreground)"
               strokeDasharray="3 3"
               x={195}
             />
-            <Line
+            <ChartLine
               dataKey="y"
               dot={false}
               stroke="var(--color-y-0)"
               strokeWidth={2}
               type="monotone"
             />
-          </LineChart>
+          </ChartLineChart>
         </ChartContainer>
       </CardContent>
     </Card>

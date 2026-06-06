@@ -1,6 +1,7 @@
 import { parseArticleCategory } from "@repo/contents/_lib/articles/category";
 import { getSlugPath } from "@repo/contents/_lib/articles/slug";
 import { cleanSlug } from "@repo/utilities/helper";
+import { Option } from "effect";
 import { notFound } from "next/navigation";
 import { use } from "react";
 import { ContentViewTracker } from "@/components/tracking/content-view-tracker";
@@ -12,12 +13,13 @@ export default function Layout(
   const { children, params } = props;
   const { locale: rawLocale, category: rawCategory, slug } = use(params);
   const locale = getLocaleOrThrow(rawLocale);
-  const category = parseArticleCategory(rawCategory);
+  const parsedCategory = parseArticleCategory(rawCategory);
 
-  if (!category) {
+  if (Option.isNone(parsedCategory)) {
     notFound();
   }
 
+  const category = parsedCategory.value;
   const filePath = getSlugPath(category, slug);
   const cleanedSlug = cleanSlug(filePath);
 

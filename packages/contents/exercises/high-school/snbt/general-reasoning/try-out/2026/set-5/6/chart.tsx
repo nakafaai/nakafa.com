@@ -8,20 +8,19 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import {
+  ChartBar,
+  ChartBarChart,
+  ChartCartesianGrid,
   type ChartConfig,
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
+  ChartXAxis,
+  ChartYAxis,
 } from "@repo/design-system/components/ui/chart";
-import {
-  CartesianGrid,
-  Bar as RechartsBar,
-  BarChart as RechartsBarChart,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { type ReactNode, useMemo } from "react";
 
 const chartData = [
   { month: "Jan-19", A: 27, B: 19.7, C: 11.8, D: 20.7 },
@@ -30,66 +29,67 @@ const chartData = [
 ];
 
 interface Props {
-  lang?: "id" | "en";
+  description: ReactNode;
+  seriesLabels: {
+    A: ReactNode;
+    B: ReactNode;
+    C: ReactNode;
+    D: ReactNode;
+  };
+  title: ReactNode;
+  yAxisLabel: string;
 }
 
-const translations = {
-  id: {
-    title: "5 Top Perusahaan Smartphone",
-    description:
-      "Jumlah pengguna smartphone dari perusahaan A, B, C, dan D (dalam ratus ribuan).",
-    yAxisLabel: "Jumlah Pengguna (Ratus Ribuan)",
-  },
-  en: {
-    title: "Top 5 Smartphone Companies",
-    description:
-      "Number of smartphone users from companies A, B, C, and D (in hundred thousands).",
-    yAxisLabel: "Number of Users (Hundred Thousands)",
-  },
-};
-
-export function SalesChart({ lang = "en" }: Props) {
-  const t = translations[lang];
-
-  const chartConfig = {
-    A: {
-      label: "A",
-      colors: { light: ["var(--chart-1)"] },
-    },
-    B: {
-      label: "B",
-      colors: { light: ["var(--chart-2)"] },
-    },
-    C: {
-      label: "C",
-      colors: { light: ["var(--chart-3)"] },
-    },
-    D: {
-      label: "D",
-      colors: { light: ["var(--chart-4)"] },
-    },
-  } satisfies ChartConfig;
+/** Renders the smartphone company user chart with MDX-owned copy. */
+export function SalesChart({
+  description,
+  seriesLabels,
+  title,
+  yAxisLabel,
+}: Props) {
+  const chartConfig = useMemo(
+    () =>
+      ({
+        A: {
+          label: seriesLabels.A,
+          colors: { light: ["var(--chart-1)"] },
+        },
+        B: {
+          label: seriesLabels.B,
+          colors: { light: ["var(--chart-2)"] },
+        },
+        C: {
+          label: seriesLabels.C,
+          colors: { light: ["var(--chart-3)"] },
+        },
+        D: {
+          label: seriesLabels.D,
+          colors: { light: ["var(--chart-4)"] },
+        },
+      }) satisfies ChartConfig,
+    [seriesLabels.A, seriesLabels.B, seriesLabels.C, seriesLabels.D]
+  );
 
   return (
     <Card className="content-auto-card">
       <CardHeader>
-        <CardTitle>{t.title}</CardTitle>
-        <CardDescription>{t.description}</CardDescription>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer className="aspect-video" config={chartConfig}>
-          <RechartsBarChart accessibilityLayer data={chartData}>
-            <CartesianGrid vertical={false} />
-            <XAxis
+          <ChartBarChart accessibilityLayer data={chartData}>
+            <ChartCartesianGrid vertical={false} />
+            <ChartXAxis
               axisLine={false}
               dataKey="month"
               tickLine={false}
               tickMargin={10}
             />
-            <YAxis
+            <ChartYAxis
               axisLine={false}
               label={{
-                value: t.yAxisLabel,
+                value: yAxisLabel,
                 angle: -90,
                 position: "insideLeft",
                 offset: 10,
@@ -101,14 +101,14 @@ export function SalesChart({ lang = "en" }: Props) {
             <ChartTooltip content={<ChartTooltipContent />} />
             <ChartLegend content={<ChartLegendContent />} />
             {Object.keys(chartConfig).map((key) => (
-              <RechartsBar
+              <ChartBar
                 dataKey={key}
                 fill={`var(--color-${key}-0)`}
                 key={key}
                 radius={[4, 4, 0, 0]}
               />
             ))}
-          </RechartsBarChart>
+          </ChartBarChart>
         </ChartContainer>
       </CardContent>
     </Card>

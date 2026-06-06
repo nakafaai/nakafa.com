@@ -1,19 +1,15 @@
 "use server";
 
-import {
-  captureServerException,
-  extractDistinctIdFromPostHogCookie,
-} from "@repo/analytics/posthog/server";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
-import { cookies } from "next/headers";
-import { after } from "next/server";
+import { Effect } from "effect";
 import {
   revalidateTryoutOverview,
   revalidateTryoutSet,
   type TryoutSetRouteInput,
 } from "@/components/tryout/actions/revalidate";
-import { fetchAuthMutation } from "@/lib/auth/server";
+import { scheduleCurrentServerExceptionCapture } from "@/lib/analytics/server";
+import { fetchAuthMutation, requireAuth } from "@/lib/auth/server";
 
 type StartPartArgs = FunctionArgs<
   typeof api.tryouts.mutations.attempts.startPart
@@ -48,6 +44,8 @@ export type CompleteTryoutPartResult =
   | CompletePartMutationResult
   | { kind: "unknown" };
 
+const unknownTryoutPartResult = { kind: "unknown" } as const;
+
 /** Revalidates the tryout routes that depend on one attempt's live runtime state. */
 function revalidateTryoutRoutes({
   locale,
@@ -67,67 +65,85 @@ function revalidateTryoutRoutes({
   });
 }
 
-/**
- * Starts one tryout part through Better Auth's official server utilities and
- * invalidates the tryout routes whenever the runtime state changed.
- */
-export async function startTryoutPart({
-  partKeys,
-  ...args
-}: StartTryoutPartInput): Promise<StartTryoutPartResult> {
-  try {
-    const result = await fetchAuthMutation(
-      api.tryouts.mutations.attempts.startPart,
-      {
-        partKey: args.partKey,
-        tryoutAttemptId: args.tryoutAttemptId,
-      }
-    );
-
-    revalidateTryoutRoutes({
+/** Records unexpected part action failures and returns the safe public fallback. */
+function recoverTryoutPartError(
+  error: unknown,
+  args: StartTryoutPartInput | CompleteTryoutPartInput,
+  source: string
+) {
+  return Effect.sync(() => {
+    scheduleCurrentServerExceptionCapture(error, {
       locale: args.locale,
-      partKeys,
+      part_key: args.partKey,
       product: args.product,
-      tryoutSlug: args.tryoutSlug,
+      source,
+      tryout_attempt_id: args.tryoutAttemptId,
+      tryout_slug: args.tryoutSlug,
     });
 
-    return result;
-  } catch (error) {
-    after(async () => {
-      await captureServerException(
-        error,
-        extractDistinctIdFromPostHogCookie((await cookies()).toString()),
-        {
-          locale: args.locale,
-          part_key: args.partKey,
-          product: args.product,
-          source: "start-tryout-part",
-          tryout_attempt_id: args.tryoutAttemptId,
-          tryout_slug: args.tryoutSlug,
-        }
-      );
-    });
-
-    return { kind: "unknown" };
-  }
+    return unknownTryoutPartResult;
+  });
 }
 
 /**
- * Completes one tryout part through Better Auth's official server utilities and
- * invalidates the SSR route family that depends on the finished part state.
+ * Starts one tryout part and invalidates the tryout routes whenever the runtime
+ * state changed.
  */
-export async function completeTryoutPart({
+const startTryoutPartEffect = Effect.fn("www.tryout.part.start")(function* ({
   partKeys,
   ...args
-}: CompleteTryoutPartInput): Promise<CompleteTryoutPartResult> {
-  try {
-    const result = await fetchAuthMutation(
-      api.tryouts.mutations.attempts.completePart,
-      {
+}: StartTryoutPartInput) {
+  const result = yield* Effect.tryPromise({
+    try: () =>
+      fetchAuthMutation(api.tryouts.mutations.attempts.startPart, {
         partKey: args.partKey,
         tryoutAttemptId: args.tryoutAttemptId,
-      }
-    );
+      }),
+    catch: (error) => error,
+  });
+
+  revalidateTryoutRoutes({
+    locale: args.locale,
+    partKeys,
+    product: args.product,
+    tryoutSlug: args.tryoutSlug,
+  });
+
+  return result;
+});
+
+/**
+ * Authenticates the public start-part Server Action before mutation work.
+ *
+ * @see https://nextjs.org/docs/app/guides/authentication#server-actions
+ * @see https://nextjs.org/docs/app/guides/data-security#mutations
+ */
+export async function startTryoutPart(input: StartTryoutPartInput) {
+  await requireAuth();
+
+  return await Effect.runPromise(
+    startTryoutPartEffect(input).pipe(
+      Effect.catchAll((error) =>
+        recoverTryoutPartError(error, input, "start-tryout-part")
+      )
+    )
+  );
+}
+
+/**
+ * Completes one tryout part and invalidates the SSR route family that depends
+ * on the finished part state.
+ */
+const completeTryoutPartEffect = Effect.fn("www.tryout.part.complete")(
+  function* ({ partKeys, ...args }: CompleteTryoutPartInput) {
+    const result = yield* Effect.tryPromise({
+      try: () =>
+        fetchAuthMutation(api.tryouts.mutations.attempts.completePart, {
+          partKey: args.partKey,
+          tryoutAttemptId: args.tryoutAttemptId,
+        }),
+      catch: (error) => error,
+    });
 
     revalidateTryoutRoutes({
       locale: args.locale,
@@ -137,22 +153,23 @@ export async function completeTryoutPart({
     });
 
     return result;
-  } catch (error) {
-    after(async () => {
-      await captureServerException(
-        error,
-        extractDistinctIdFromPostHogCookie((await cookies()).toString()),
-        {
-          locale: args.locale,
-          part_key: args.partKey,
-          product: args.product,
-          source: "complete-tryout-part",
-          tryout_attempt_id: args.tryoutAttemptId,
-          tryout_slug: args.tryoutSlug,
-        }
-      );
-    });
-
-    return { kind: "unknown" };
   }
+);
+
+/**
+ * Authenticates the public complete-part Server Action before mutation work.
+ *
+ * @see https://nextjs.org/docs/app/guides/authentication#server-actions
+ * @see https://nextjs.org/docs/app/guides/data-security#mutations
+ */
+export async function completeTryoutPart(input: CompleteTryoutPartInput) {
+  await requireAuth();
+
+  return await Effect.runPromise(
+    completeTryoutPartEffect(input).pipe(
+      Effect.catchAll((error) =>
+        recoverTryoutPartError(error, input, "complete-tryout-part")
+      )
+    )
+  );
 }

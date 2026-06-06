@@ -16,11 +16,11 @@ import {
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
 import { useTranslations } from "next-intl";
-import { memo, useState } from "react";
+import { useState } from "react";
 import { useMessage } from "@/components/ai/context/use-message";
 import { getAiModel } from "@/lib/data/models";
 
-export const AiChatMessageCredits = memo(() => {
+export const AiChatMessageCredits = () => {
   const t = useTranslations("Ai");
 
   const credits = useMessage((state) => state.message.metadata?.credits);
@@ -130,5 +130,5 @@ export const AiChatMessageCredits = memo(() => {
       </PopoverContent>
     </Popover>
   );
-});
+};
 AiChatMessageCredits.displayName = "AiChatMessageCredits";

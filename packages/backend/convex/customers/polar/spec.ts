@@ -1,3 +1,4 @@
+import type { PolarCheckoutLocale } from "@repo/backend/convex/customers/checkout/localization";
 import type { polarMetadataValidator } from "@repo/backend/convex/customers/schema";
 import type { ConvexTaggedError } from "@repo/backend/convex/lib/effect";
 import { type Infer, v } from "convex/values";
@@ -49,7 +50,9 @@ export interface EnsurePolarCustomerInput {
 
 export interface PolarCheckoutInput {
   readonly customerId: string;
+  readonly customerIpAddress: string | null;
   readonly embedOrigin?: string;
+  readonly locale: PolarCheckoutLocale;
   readonly productIds: string[];
   readonly subscriptionId?: string;
   readonly successUrl: string;

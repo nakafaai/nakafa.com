@@ -1,3 +1,4 @@
+import { SarsCov2VirionLab } from "@repo/design-system/components/contents/biology/sars-cov-2-virion";
 import {
   VirusMorphologyLab,
   VirusStructureLab,
@@ -26,7 +27,7 @@ Struktur seperti genom, kapsid, dan selubung ini juga dipakai dalam klasifikasi 
 
 ### Bagian Kecilnya Menjelaskan Cara Kerja
 
-Dalam riset nyata, virus tidak dibaca dari gejala penyakit saja. Ulasan virologi di [NCBI PMC](https://pmc.ncbi.nlm.nih.gov/articles/PMC7148634/) menekankan komposisi, tampilan, dan klasifikasi sebagai pintu masuk untuk memahami sifat virus. Jadi model 3D pada bagian ini sebaiknya dibaca sebagai peta bagian utama, bukan foto satu jenis virus tertentu.
+Dalam riset nyata, virus tidak dibaca dari gejala penyakit saja. Ulasan virologi di [NCBI PMC](https://pmc.ncbi.nlm.nih.gov/articles/PMC7148634/) menekankan komposisi, tampilan, dan klasifikasi sebagai pintu masuk untuk memahami sifat virus. Jadi model pada bagian ini sebaiknya dibaca sebagai peta bagian utama, bukan foto satu jenis virus tertentu.
 
 | Bagian virion | Fungsi sederhana | Cara membacanya |
 | --- | --- | --- |
@@ -49,7 +50,7 @@ Dalam riset nyata, virus tidak dibaca dari gejala penyakit saja. Ulasan virologi
     chooseMode: "Pilih bagian virion",
     focusLabel: "Yang harus dibaca",
     takeawayLabel: "Makna biologis",
-    viewLabel: "Model 3D struktur virion",
+    viewLabel: "Model struktur virion",
     items: [
       {
         tab: "Kapsid",
@@ -68,6 +69,31 @@ Dalam riset nyata, virus tidak dibaca dari gejala penyakit saja. Ulasan virologi
         caption: <>Sebagian virus memiliki selubung lipid dengan protein permukaan yang membantu pengenalan sel target.</>,
         focus: <>Selubung dibuat transparan karena lapisan ini membungkus kapsid, bukan menggantikan kapsid.</>,
         takeaway: <>Selubung dan protein permukaan ikut menentukan apakah virus dapat menempel pada sel tertentu.</>,
+      },
+    ],
+  }}
+/>
+
+Model berikut berbeda dari model bagian umum di atas. Ini menunjukkan contoh permukaan **SARS-CoV-2** yang lebih nyata. Gunakan model ini untuk membaca bentuk virion yang berselubung dan dipenuhi tonjolan permukaan, bukan sebagai bentuk semua virus.
+
+<SarsCov2VirionLab
+  title={<>Bentuk permukaan SARS-CoV-2</>}
+  description={
+    <>
+      Amati bentuk virion berselubung dengan banyak tonjolan protein di permukaannya.
+    </>
+  }
+  labels={{
+    chooseMode: "Pilih bagian permukaan",
+    focusLabel: "Yang harus dibaca",
+    takeawayLabel: "Makna biologis",
+    viewLabel: "Model permukaan SARS-CoV-2",
+    items: [
+      {
+        tab: "Permukaan",
+        caption: <>SARS-CoV-2 tampak sebagai virion berselubung dengan permukaan kasar dan banyak tonjolan protein.</>,
+        focus: <>Perhatikan bentuk keseluruhannya: bagian luar membulat, sedangkan tonjolan permukaannya tersebar di banyak titik.</>,
+        takeaway: <>Bentuk permukaan membantu menjelaskan mengapa virion dapat dikenali dan didekati oleh sel target tertentu.</>,
       },
     ],
   }}
@@ -104,7 +130,7 @@ Bentuk virus berbeda-beda karena susunan kapsomer dan lapisan luarnya berbeda. A
     chooseMode: "Pilih bentuk virus",
     focusLabel: "Yang harus dibaca",
     takeawayLabel: "Makna biologis",
-    viewLabel: "Model 3D ragam bentuk virus",
+    viewLabel: "Model ragam bentuk virus",
     items: [
       {
         tab: "Bentuk",
@@ -112,10 +138,10 @@ Bentuk virus berbeda-beda karena susunan kapsomer dan lapisan luarnya berbeda. A
         focus: <>Perhatikan apakah genom dibungkus oleh kapsid berulang, kapsid berbidang, selubung lipid, atau alat penempel khusus.</>,
         takeaway: <>Bentuk membantu menjelaskan cara virus menjaga genom dan mendekati sel target.</>,
         callouts: [
-          { id: "helical", label: "heliks" },
-          { id: "polyhedral", label: "polihedral" },
-          { id: "enveloped", label: "berselubung" },
-          { id: "complex", label: "kompleks" },
+          { id: "helical", label: "Heliks" },
+          { id: "polyhedral", label: "Polihedral" },
+          { id: "enveloped", label: "Berselubung" },
+          { id: "complex", label: "Kompleks" },
         ],
       },
     ],

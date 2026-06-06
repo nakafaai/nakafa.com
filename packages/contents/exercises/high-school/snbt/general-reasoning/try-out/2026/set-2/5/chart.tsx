@@ -8,20 +8,19 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import {
+  ChartBar,
+  ChartBarChart,
+  ChartCartesianGrid,
   type ChartConfig,
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
+  ChartXAxis,
+  ChartYAxis,
 } from "@repo/design-system/components/ui/chart";
-import {
-  CartesianGrid,
-  Bar as RechartsBar,
-  BarChart as RechartsBarChart,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { type ReactNode, useMemo } from "react";
 
 const chartData = [
   { year: "2011", shirts: 50, pants: 60, suits: 40 },
@@ -32,70 +31,62 @@ const chartData = [
 ];
 
 interface Props {
-  lang?: "id" | "en";
+  description: ReactNode;
+  seriesLabels: {
+    pants: ReactNode;
+    shirts: ReactNode;
+    suits: ReactNode;
+  };
+  title: ReactNode;
+  yAxisLabel: string;
 }
 
-const translations = {
-  id: {
-    title: "Grafik Penjualan di Factory Outlet",
-    description: "Data penjualan Baju, Celana, dan Jas (2011-2015).",
-    yAxisLabel: "Penjualan",
-    labels: {
-      shirts: "Baju",
-      pants: "Celana",
-      suits: "Jas",
-    },
-  },
-  en: {
-    title: "Factory Outlet Sales Chart",
-    description: "Sales data for Shirts, Pants, and Suits (2011-2015).",
-    yAxisLabel: "Sales",
-    labels: {
-      shirts: "Shirts",
-      pants: "Pants",
-      suits: "Suits",
-    },
-  },
-};
-
-export function SalesChart({ lang = "en" }: Props) {
-  const t = translations[lang];
-
-  const chartConfig = {
-    shirts: {
-      label: t.labels.shirts,
-      colors: { light: ["var(--chart-1)"] },
-    },
-    pants: {
-      label: t.labels.pants,
-      colors: { light: ["var(--chart-2)"] },
-    },
-    suits: {
-      label: t.labels.suits,
-      colors: { light: ["var(--chart-3)"] },
-    },
-  } satisfies ChartConfig;
+/** Renders the factory outlet sales chart with MDX-owned copy. */
+export function SalesChart({
+  description,
+  seriesLabels,
+  title,
+  yAxisLabel,
+}: Props) {
+  const chartConfig = useMemo(
+    () =>
+      ({
+        shirts: {
+          label: seriesLabels.shirts,
+          colors: { light: ["var(--chart-1)"] },
+        },
+        pants: {
+          label: seriesLabels.pants,
+          colors: { light: ["var(--chart-2)"] },
+        },
+        suits: {
+          label: seriesLabels.suits,
+          colors: { light: ["var(--chart-3)"] },
+        },
+      }) satisfies ChartConfig,
+    [seriesLabels.pants, seriesLabels.shirts, seriesLabels.suits]
+  );
 
   return (
     <Card className="content-auto-card">
       <CardHeader>
-        <CardTitle>{t.title}</CardTitle>
-        <CardDescription>{t.description}</CardDescription>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer className="aspect-video" config={chartConfig}>
-          <RechartsBarChart accessibilityLayer data={chartData}>
-            <CartesianGrid vertical={false} />
-            <XAxis
+          <ChartBarChart accessibilityLayer data={chartData}>
+            <ChartCartesianGrid vertical={false} />
+            <ChartXAxis
               axisLine={false}
               dataKey="year"
               tickLine={false}
               tickMargin={10}
             />
-            <YAxis
+            <ChartYAxis
               axisLine={false}
               label={{
-                value: t.yAxisLabel,
+                value: yAxisLabel,
                 angle: -90,
                 position: "insideLeft",
               }}
@@ -105,14 +96,14 @@ export function SalesChart({ lang = "en" }: Props) {
             <ChartTooltip content={<ChartTooltipContent />} />
             <ChartLegend content={<ChartLegendContent />} />
             {Object.keys(chartConfig).map((key) => (
-              <RechartsBar
+              <ChartBar
                 dataKey={key}
                 fill={`var(--color-${key}-0)`}
                 key={key}
                 radius={[4, 4, 0, 0]}
               />
             ))}
-          </RechartsBarChart>
+          </ChartBarChart>
         </ChartContainer>
       </CardContent>
     </Card>

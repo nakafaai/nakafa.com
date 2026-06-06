@@ -10,20 +10,34 @@ import { formatRouteTitle } from "@/lib/llms/format";
 import { getQuranRouteMetadata } from "@/lib/llms/quran";
 import { getSitemapRoutes } from "@/lib/sitemap/routes";
 
+const LLMS_ENTRY_BUILD_CONCURRENCY = 16;
+
 /** Builds sitemap-aligned llms entries for one locale. */
-export const getLocalizedLlmsEntries = Effect.fn("www.llms.entries")(function* (
+const buildLocalizedLlmsEntries = Effect.fn("www.llms.entries")(function* (
   locale: Locale
 ) {
-  const routes = getSitemapRoutes().sort((a, b) => a.localeCompare(b));
+  const routes = (yield* Effect.promise(() => getSitemapRoutes())).sort(
+    (a, b) => a.localeCompare(b)
+  );
 
   return yield* Effect.forEach(
     routes,
     (route) => buildLocalizedLlmsEntry({ locale, route }),
     {
-      concurrency: "unbounded",
+      concurrency: LLMS_ENTRY_BUILD_CONCURRENCY,
     }
   );
 });
+
+/**
+ * Reuses deterministic sitemap-derived entries within one server/build process.
+ * Effect's `cachedFunction` is intended for expensive deterministic effects.
+ *
+ * @see https://effect.website/docs/caching/caching-effects/
+ */
+export const getLocalizedLlmsEntries = Effect.runSync(
+  Effect.cachedFunction(buildLocalizedLlmsEntries)
+);
 
 /** Classifies a sitemap route into the llms section that owns it. */
 export function getRouteSection(route: string): LlmsSection {

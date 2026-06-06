@@ -1,8 +1,6 @@
-import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
-import { getFolderChildNames } from "@repo/contents/_lib/fs";
-import type { Locale } from "@repo/contents/_types/content";
+import { getFolderChildNames } from "@repo/contents/_lib/fs/cache";
 import { cleanSlug } from "@repo/utilities/helper";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 
 const NUMBER_REGEX = /^\d+$/;
 const EXERCISE_CONTENT_SEGMENTS = new Set(["_question", "_answer"]);
@@ -13,8 +11,8 @@ const EXERCISE_CONTENT_SEGMENTS = new Set(["_question", "_answer"]);
  * @param value - Path segment to validate
  * @returns True when the segment is `_question` or `_answer`
  */
-function isExerciseContentSegment(value: string | undefined) {
-  return value !== undefined && EXERCISE_CONTENT_SEGMENTS.has(value);
+function isExerciseContentSegment(value: string) {
+  return EXERCISE_CONTENT_SEGMENTS.has(value);
 }
 
 /**
@@ -61,33 +59,23 @@ export function getExerciseQuestionNumbers(
 
     const remainingPath = slug.slice(exercisePathPrefix.length);
     const pathParts = remainingPath.split("/");
+    const numberSegment = Option.fromNullable(pathParts.at(0));
+    const contentSegment = Option.fromNullable(pathParts.at(1));
 
     if (
       pathParts.length >= 2 &&
-      NUMBER_REGEX.test(pathParts[0]) &&
-      isExerciseContentSegment(pathParts[1])
+      Option.isSome(numberSegment) &&
+      Option.isSome(contentSegment) &&
+      NUMBER_REGEX.test(numberSegment.value) &&
+      isExerciseContentSegment(contentSegment.value)
     ) {
-      questionNumbers.add(pathParts[0]);
+      questionNumbers.add(numberSegment.value);
     }
   }
 
   return Array.from(questionNumbers).sort(
     (a, b) => Number.parseInt(a, 10) - Number.parseInt(b, 10)
   );
-}
-
-/**
- * Extracts unique exercise-set paths for one locale from cached exercise slugs.
- *
- * Exercise content is stored as numbered folders containing `_question` or
- * `_answer` entries. This helper strips the trailing number/content segments so
- * callers can work at the set level without re-encoding path rules.
- *
- * @param locale - Locale whose cached exercise slugs should be scanned
- * @returns Sorted list of unique exercise set paths
- */
-export function getExerciseSetPaths(locale: Locale) {
-  return getExerciseSetPathsFromSlugs(getMDXSlugsForLocale(locale));
 }
 
 /**
@@ -109,18 +97,25 @@ export function getExerciseSetPathsFromSlugs(slugs: readonly string[]) {
       continue;
     }
 
-    const [numberSegment, contentSegment] = pathParts.slice(-2);
+    const numberSegment = Option.fromNullable(pathParts.at(-2));
+    const contentSegment = Option.fromNullable(pathParts.at(-1));
 
-    if (!NUMBER_REGEX.test(numberSegment)) {
+    if (
+      Option.isNone(numberSegment) ||
+      !NUMBER_REGEX.test(numberSegment.value)
+    ) {
       continue;
     }
 
-    if (!isExerciseContentSegment(contentSegment)) {
+    if (
+      Option.isNone(contentSegment) ||
+      !isExerciseContentSegment(contentSegment.value)
+    ) {
       continue;
     }
 
     setPaths.add(pathParts.slice(0, -2).join("/"));
   }
 
-  return [...setPaths].sort();
+  return Array.from(setPaths).sort();
 }

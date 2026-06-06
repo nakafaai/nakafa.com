@@ -1,19 +1,24 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import anyAscii from "any-ascii";
 import { Effect } from "effect";
 import { cacheLife } from "next/cache";
-import type { ReactNode } from "react";
+import type { CSSProperties } from "react";
 import { ImageResponse } from "takumi-js/response";
+import { OgImage, type OgImageProps } from "@/lib/og/image";
 
-interface GenerateProps {
-  description?: ReactNode;
-  icon?: ReactNode;
-  primaryColor?: string;
-  primaryTextColor?: string;
-  site?: ReactNode;
-  title: ReactNode;
-}
+const ogLogoStyle = {
+  width: 48,
+  height: 48,
+  backgroundSize: "contain",
+  backgroundRepeat: "no-repeat",
+  backgroundPosition: "center",
+  borderRadius: "50%",
+} satisfies CSSProperties;
+
+type GenerateOGImageOptions = OgImageProps & {
+  height?: number;
+  width?: number;
+};
 
 /** Loads the shared logo asset as a serializable data URL for OG rendering. */
 async function getLogoDataUrl() {
@@ -33,143 +38,11 @@ async function getLogoDataUrl() {
   );
 }
 
-/** Renders the shared Open Graph image layout from already-resolved content. */
-function OgImage(props: GenerateProps) {
-  const {
-    title,
-    description,
-    icon,
-    primaryColor = "hsla(21.74, 66%, 55%, 1)",
-    primaryTextColor = "hsla(21.74, 66%, 55%, 1)",
-    site = "Nakafa",
-  } = props;
-
-  const sanitizedTitle = anyAscii(String(title));
-  const sanitizedDescription = description
-    ? anyAscii(String(description))
-    : undefined;
-
-  return (
-    <div
-      style={{
-        width: "100%",
-        height: "100%",
-        backgroundColor: "hsl(300 50% 100%)",
-        position: "relative",
-        display: "flex",
-        flexDirection: "column",
-        overflow: "hidden",
-        color: "hsl(220.91 39% 11%)",
-        backgroundImage: `linear-gradient(to bottom right, ${primaryColor}, transparent)`,
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          width: "100%",
-          height: "100%",
-          padding: "60px",
-          position: "relative",
-          justifyContent: "space-between",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "32px",
-            marginBottom: "40px",
-            textWrap: "pretty",
-          }}
-        >
-          <span
-            style={{
-              fontSize: 72,
-              fontWeight: 600,
-              lineHeight: 1.1,
-              letterSpacing: "-0.04em",
-              color: "hsl(220.91 39% 11%)",
-              lineClamp: 3,
-              textOverflow: "ellipsis",
-              overflow: "hidden",
-            }}
-          >
-            {sanitizedTitle}
-          </span>
-          {!!sanitizedDescription && (
-            <span
-              style={{
-                fontSize: 36,
-                color: "hsl(220.91 39% 11%)",
-                opacity: 0.8,
-                fontWeight: 400,
-                lineHeight: 1.4,
-                maxWidth: "95%",
-                letterSpacing: "-0.01em",
-                lineClamp: 2,
-                textOverflow: "ellipsis",
-                overflow: "hidden",
-              }}
-            >
-              {sanitizedDescription}
-            </span>
-          )}
-        </div>
-
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "28px",
-          }}
-        >
-          {icon}
-          <span
-            style={{
-              fontSize: 32,
-              fontWeight: 600,
-              letterSpacing: "-0.02em",
-              color: "hsl(220.91 39% 11%)",
-              opacity: 0.9,
-            }}
-          >
-            {site}
-          </span>
-          <div style={{ flexGrow: 1 }} />
-          <div
-            style={{
-              height: 4,
-              width: 60,
-              backgroundColor: primaryColor,
-              borderRadius: 2,
-            }}
-          />
-          <span
-            style={{
-              fontSize: 22,
-              fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: "0.2em",
-              color: primaryTextColor,
-              opacity: 0.8,
-            }}
-          >
-            Copyright Nakafa
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /** Generates one OG image response with cached persistent assets. */
-export function generateOGImage(
-  options: GenerateProps & { width?: number; height?: number }
-) {
+export function generateOGImage(options: GenerateOGImageOptions) {
   return Effect.runPromise(
     Effect.gen(function* () {
-      const { title, description, width = 1200, height = 630 } = options;
+      const { height = 630, icon, width = 1200, ...imageProps } = options;
       const logoDataUrl = yield* Effect.tryPromise({
         try: getLogoDataUrl,
         catch: (error) => error,
@@ -177,21 +50,17 @@ export function generateOGImage(
 
       return new ImageResponse(
         <OgImage
-          description={description}
+          {...imageProps}
           icon={
-            <div
-              style={{
-                width: 48,
-                height: 48,
-                backgroundImage: `url(${logoDataUrl})`,
-                backgroundSize: "contain",
-                backgroundRepeat: "no-repeat",
-                backgroundPosition: "center",
-                borderRadius: "50%",
-              }}
-            />
+            icon ?? (
+              <div
+                style={{
+                  ...ogLogoStyle,
+                  backgroundImage: `url(${logoDataUrl})`,
+                }}
+              />
+            )
           }
-          title={title}
         />,
         {
           width,

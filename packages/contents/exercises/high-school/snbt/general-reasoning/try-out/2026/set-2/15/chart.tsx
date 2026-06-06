@@ -8,20 +8,19 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import {
+  ChartCartesianGrid,
   type ChartConfig,
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
+  ChartLine,
+  ChartLineChart,
   ChartTooltip,
   ChartTooltipContent,
+  ChartXAxis,
+  ChartYAxis,
 } from "@repo/design-system/components/ui/chart";
-import {
-  CartesianGrid,
-  Line as RechartsLine,
-  LineChart as RechartsLineChart,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { type ReactNode, useMemo } from "react";
 
 const chartData = [
   { month: "Januari", grainPrice: 5353, governmentPrice: 3700 },
@@ -30,85 +29,72 @@ const chartData = [
   { month: "April", grainPrice: 4357, governmentPrice: 3700 },
 ] as const;
 
+type ChartMonth = (typeof chartData)[number]["month"];
+
 interface Props {
-  lang?: "id" | "en";
+  description: ReactNode;
+  monthLabels: Record<ChartMonth, string>;
+  seriesLabels: {
+    governmentPrice: ReactNode;
+    grainPrice: ReactNode;
+  };
+  title: ReactNode;
+  yAxisLabel: string;
 }
 
-const translations = {
-  id: {
-    title: "Harga Gabah di Tingkat Petani 2019",
-    description:
-      "Perbandingan Harga Gabah dan Harga Pembelian Pemerintah (Jan-Apr 2019).",
-    yAxisLabel: "Harga (Rp/kg)",
-    labels: {
-      grainPrice: "Harga Gabah",
-      governmentPrice: "Harga Pembelian Pemerintah",
-    },
-    months: {
-      Januari: "Januari",
-      Februari: "Februari",
-      Maret: "Maret",
-      April: "April",
-    },
-  },
-  en: {
-    title: "Grain Price at Farmer Level 2019",
-    description:
-      "Comparison of Grain Price and Government Purchase Price (Jan-Apr 2019).",
-    yAxisLabel: "Price (Rp/kg)",
-    labels: {
-      grainPrice: "Grain Price",
-      governmentPrice: "Government Purchase Price",
-    },
-    months: {
-      Januari: "January",
-      Februari: "February",
-      Maret: "March",
-      April: "April",
-    },
-  },
-} as const;
+/** Renders the grain price chart with MDX-owned copy. */
+export function SalesChart({
+  description,
+  monthLabels,
+  seriesLabels,
+  title,
+  yAxisLabel,
+}: Props) {
+  const chartConfig = useMemo(
+    () =>
+      ({
+        grainPrice: {
+          label: seriesLabels.grainPrice,
+          colors: { light: ["var(--chart-1)"] },
+        },
+        governmentPrice: {
+          label: seriesLabels.governmentPrice,
+          colors: { light: ["var(--chart-2)"] },
+        },
+      }) satisfies ChartConfig,
+    [seriesLabels.governmentPrice, seriesLabels.grainPrice]
+  );
 
-export function SalesChart({ lang = "en" }: Props) {
-  const t = translations[lang];
-
-  const chartConfig = {
-    grainPrice: {
-      label: t.labels.grainPrice,
-      colors: { light: ["var(--chart-1)"] },
-    },
-    governmentPrice: {
-      label: t.labels.governmentPrice,
-      colors: { light: ["var(--chart-2)"] },
-    },
-  } satisfies ChartConfig;
-
-  const translatedData = chartData.map((item) => ({
-    ...item,
-    month: t.months[item.month],
-  }));
+  const translatedData = useMemo(
+    () =>
+      chartData.map((item) => ({
+        ...item,
+        month: monthLabels[item.month],
+      })),
+    [monthLabels]
+  );
 
   return (
     <Card className="content-auto-card">
       <CardHeader>
-        <CardTitle>{t.title}</CardTitle>
-        <CardDescription>{t.description}</CardDescription>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer className="aspect-video" config={chartConfig}>
-          <RechartsLineChart accessibilityLayer data={translatedData}>
-            <CartesianGrid vertical={false} />
-            <XAxis
+          <ChartLineChart accessibilityLayer data={translatedData}>
+            <ChartCartesianGrid vertical={false} />
+            <ChartXAxis
               axisLine={false}
               dataKey="month"
               tickLine={false}
               tickMargin={10}
             />
-            <YAxis
+            <ChartYAxis
               axisLine={false}
               domain={[3000, 6000]}
               label={{
-                value: t.yAxisLabel,
+                value: yAxisLabel,
                 angle: -90,
                 position: "insideLeft",
                 offset: 0,
@@ -119,21 +105,21 @@ export function SalesChart({ lang = "en" }: Props) {
             />
             <ChartTooltip content={<ChartTooltipContent />} />
             <ChartLegend content={<ChartLegendContent />} />
-            <RechartsLine
+            <ChartLine
               dataKey="grainPrice"
               dot={{ r: 4 }}
               stroke="var(--color-grainPrice-0)"
               strokeWidth={2}
               type="monotone"
             />
-            <RechartsLine
+            <ChartLine
               dataKey="governmentPrice"
               dot={{ r: 4 }}
               stroke="var(--color-governmentPrice-0)"
               strokeWidth={2}
               type="monotone"
             />
-          </RechartsLineChart>
+          </ChartLineChart>
         </ChartContainer>
       </CardContent>
     </Card>

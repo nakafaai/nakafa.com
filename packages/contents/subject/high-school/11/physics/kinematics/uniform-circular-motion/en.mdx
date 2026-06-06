@@ -1,0 +1,106 @@
+import { UniformCircularMotionLab } from "@repo/design-system/components/contents/physics/kinematics/uniform-circular-motion/lab";
+
+export const metadata = {
+  title: "Uniform Circular Motion",
+  description:
+    "Learn uniform circular motion through angular displacement, period, frequency, linear velocity, and centripetal acceleration.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/01/2026",
+  subject: "Kinematics",
+};
+
+## Constant Speed Still Changes Direction
+
+Uniform circular motion is motion along a circular path with constant speed. The word "uniform" does not mean everything stays the same. The speed stays the same, while the direction of motion keeps changing because the object follows a curved path.
+
+Picture a small car moving around a round track. Every second, the car can cover the same length of track. But the car's velocity on the right side of the track points in a different direction from its velocity at the top of the track.
+
+> In uniform circular motion, speed is constant, but velocity still changes because its direction changes.
+
+That is the key difference between speed and velocity. Speed only describes how fast the object moves along the path. Velocity describes both speed and direction.
+
+<UniformCircularMotionLab
+  title={<>Car on a Circular Track</>}
+  description={
+    <>
+      Change the period to see the car complete each lap at a different speed.
+    </>
+  }
+  labels={{
+    choosePeriod: "Choose period",
+    period: <>Period</>,
+    radius: <>Radius</>,
+    speed: <>Speed</>,
+    acceleration: <>Centripetal acceleration</>,
+    viewLabel: "Car moving in uniform circular motion visual",
+  }}
+/>
+
+## Angular Displacement Reads Position on a Circle
+
+In straight-line motion, position is often read as distance from zero. In circular motion, position is easier to read with an angle. The angle swept by the object is called angular displacement.
+
+If an object moves from a reference line and sweeps an angle <InlineMath math="\Delta\theta" /> in time <InlineMath math="\Delta t" />, its angular velocity is:
+
+<BlockMath math="\omega=\frac{\Delta\theta}{\Delta t}" />
+
+The symbol <InlineMath math="\omega" /> is called omega. Its unit is radians per second, written <InlineMath math="\text{rad/s}" />. Radians are used because one full turn equals <InlineMath math="2\pi" /> radians.
+
+## Period and Frequency Read the Same Turn
+
+One full revolution can be read in two ways. Period, written <InlineMath math="T" />, is the time needed for one revolution. Frequency, written <InlineMath math="f" />, is the number of revolutions each second.
+
+They are reciprocals:
+
+<MathContainer>
+  <BlockMath math="f=\frac{1}{T}" />
+  <BlockMath math="\omega=\frac{2\pi}{T}=2\pi f" />
+</MathContainer>
+
+When the period is smaller, the object completes a revolution faster. As a result, its frequency and angular velocity are larger.
+
+## Velocity and Acceleration Directions on a Circle
+
+At every point on a circular path, velocity points tangent to the circle. Centripetal acceleration points toward the center. These two directions are perpendicular, so an object can have constant speed and still have acceleration.
+
+Imagine a small object on the right side of the circle moving counterclockwise. Its velocity points upward along the path, while its acceleration points left toward the center. This direction pair is what makes circular motion different from ordinary straight-line motion.
+
+## Linear Velocity Connects to Angular Velocity
+
+Linear velocity is the object's speed along the circular path. If the radius is <InlineMath math="r" />, one full circumference is <InlineMath math="2\pi r" />. Because one revolution takes time <InlineMath math="T" />, the linear velocity is:
+
+<MathContainer>
+  <BlockMath math="v=\frac{2\pi r}{T}" />
+  <BlockMath math="v=\omega r" />
+</MathContainer>
+
+The formula <InlineMath math="v=\omega r" /> means two objects with the same angular velocity do not always have the same linear velocity. The object farther from the center travels a longer path, so its linear velocity is larger.
+
+## Centripetal Acceleration Always Points Inward
+
+Even though speed is constant, the velocity direction keeps turning. Changing the direction of velocity requires acceleration. In uniform circular motion, this acceleration is called centripetal acceleration.
+
+<MathContainer>
+  <BlockMath math="a_s=\frac{v^2}{r}" />
+  <BlockMath math="a_s=\omega^2 r" />
+</MathContainer>
+
+Centripetal acceleration always points toward the center of the circle. So do not think of this acceleration as pointing along the object's motion. Velocity is tangent to the path, while centripetal acceleration points inward.
+
+## One Full Turn of a Small Car
+
+Suppose a small car moves on a track with radius <InlineMath math="4\text{ m}" /> and completes one revolution in <InlineMath math="6\text{ s}" />.
+
+Its angular velocity is:
+
+<BlockMath math="\omega=\frac{2\pi}{T}=\frac{2\pi}{6}=\frac{\pi}{3}\text{ rad/s}" />
+
+Its linear velocity is:
+
+<BlockMath math="v=\omega r=\frac{\pi}{3}(4)=\frac{4\pi}{3}\text{ m/s}\approx4.19\text{ m/s}" />
+
+Its centripetal acceleration is:
+
+<BlockMath math="a_s=\frac{v^2}{r}=\frac{(4.19)^2}{4}\approx4.39\text{ m/s}^2" />
+
+So the car moves with constant speed of about <InlineMath math="4.19\text{ m/s}" />, but it still has acceleration of about <InlineMath math="4.39\text{ m/s}^2" /> because the direction of its velocity keeps changing.

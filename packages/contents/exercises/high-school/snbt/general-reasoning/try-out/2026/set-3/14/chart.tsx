@@ -8,96 +8,98 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import {
+  ChartBar,
+  ChartBarChart,
+  ChartCartesianGrid,
   type ChartConfig,
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
+  ChartXAxis,
+  ChartYAxis,
 } from "@repo/design-system/components/ui/chart";
-import {
-  CartesianGrid,
-  Bar as RechartsBar,
-  BarChart as RechartsBarChart,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { type ReactNode, useMemo } from "react";
 
 const chartData = [
-  { month: "Agust-20", garlic: 58, shallot: 48, chili: 54 },
-  { month: "Sep-20", garlic: 61, shallot: 54, chili: 58 },
-  { month: "Okt-20", garlic: 67, shallot: 60, chili: 62 },
-  { month: "Nop-20", garlic: 76, shallot: 66, chili: 68 },
-  { month: "Des-20", garlic: 88, shallot: 72, chili: 72 },
-];
+  { month: "august", garlic: 58, shallot: 48, chili: 54 },
+  { month: "september", garlic: 61, shallot: 54, chili: 58 },
+  { month: "october", garlic: 67, shallot: 60, chili: 62 },
+  { month: "november", garlic: 76, shallot: 66, chili: 68 },
+  { month: "december", garlic: 88, shallot: 72, chili: 72 },
+] as const;
+
+type ChartMonth = (typeof chartData)[number]["month"];
 
 interface Props {
-  lang?: "id" | "en";
+  description: ReactNode;
+  monthLabels: Record<ChartMonth, string>;
+  seriesLabels: {
+    chili: ReactNode;
+    garlic: ReactNode;
+    shallot: ReactNode;
+  };
+  title: ReactNode;
+  yAxisLabel: string;
 }
 
-const translations = {
-  id: {
-    title: "Penjualan Jenis Rempah",
-    description:
-      "Data penjualan Bawang Putih, Bawang Merah, dan Cabai Merah (Agust-Des 2020).",
-    yAxisLabel: "Penjualan (ton)",
-    labels: {
-      garlic: "Bawang Putih",
-      shallot: "Bawang Merah",
-      chili: "Cabai Merah",
-    },
-  },
-  en: {
-    title: "Spice Sales",
-    description:
-      "Sales data for Garlic, Shallot, and Red Chili (Aug-Dec 2020).",
-    yAxisLabel: "Sales (tons)",
-    labels: {
-      garlic: "Garlic",
-      shallot: "Shallot",
-      chili: "Red Chili",
-    },
-  },
-};
+/** Renders the spice sales chart with MDX-owned copy. */
+export function SpiceSalesChart({
+  description,
+  monthLabels,
+  seriesLabels,
+  title,
+  yAxisLabel,
+}: Props) {
+  const data = useMemo(
+    () =>
+      chartData.map((item) => ({
+        ...item,
+        month: monthLabels[item.month],
+      })),
+    [monthLabels]
+  );
 
-export function SpiceSalesChart({ lang = "en" }: Props) {
-  const t = translations[lang];
-
-  const chartConfig = {
-    garlic: {
-      label: t.labels.garlic,
-      colors: { light: ["var(--chart-1)"] },
-    },
-    shallot: {
-      label: t.labels.shallot,
-      colors: { light: ["var(--chart-2)"] },
-    },
-    chili: {
-      label: t.labels.chili,
-      colors: { light: ["var(--chart-3)"] },
-    },
-  } satisfies ChartConfig;
+  const chartConfig = useMemo(
+    () =>
+      ({
+        garlic: {
+          label: seriesLabels.garlic,
+          colors: { light: ["var(--chart-1)"] },
+        },
+        shallot: {
+          label: seriesLabels.shallot,
+          colors: { light: ["var(--chart-2)"] },
+        },
+        chili: {
+          label: seriesLabels.chili,
+          colors: { light: ["var(--chart-3)"] },
+        },
+      }) satisfies ChartConfig,
+    [seriesLabels.chili, seriesLabels.garlic, seriesLabels.shallot]
+  );
 
   return (
     <Card className="content-auto-card">
       <CardHeader>
-        <CardTitle>{t.title}</CardTitle>
-        <CardDescription>{t.description}</CardDescription>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer className="aspect-video" config={chartConfig}>
-          <RechartsBarChart accessibilityLayer data={chartData}>
-            <CartesianGrid vertical={false} />
-            <XAxis
+          <ChartBarChart accessibilityLayer data={data}>
+            <ChartCartesianGrid vertical={false} />
+            <ChartXAxis
               axisLine={false}
               dataKey="month"
               tickLine={false}
               tickMargin={10}
             />
-            <YAxis
+            <ChartYAxis
               axisLine={false}
               label={{
-                value: t.yAxisLabel,
+                value: yAxisLabel,
                 angle: -90,
                 position: "insideLeft",
               }}
@@ -107,14 +109,14 @@ export function SpiceSalesChart({ lang = "en" }: Props) {
             <ChartTooltip content={<ChartTooltipContent />} />
             <ChartLegend content={<ChartLegendContent />} />
             {Object.keys(chartConfig).map((key) => (
-              <RechartsBar
+              <ChartBar
                 dataKey={key}
                 fill={`var(--color-${key}-0)`}
                 key={key}
                 radius={[4, 4, 0, 0]}
               />
             ))}
-          </RechartsBarChart>
+          </ChartBarChart>
         </ChartContainer>
       </CardContent>
     </Card>

@@ -1,3 +1,5 @@
+import { ClimateObservationLab } from "@repo/design-system/components/contents/biology/climate-observation";
+
 export const metadata = {
   title: "Symptoms of Climate Change",
   description:
@@ -24,6 +26,30 @@ Climate symptoms are read like signs in a medical checkup. One sign can mislead 
 [NOAA Climate.gov](https://www.climate.gov/news-features/understanding-climate/climate-change-ocean-heat-content) explains ocean heat as an important indicator because the ocean stores a large amount of heat energy. This helps us understand why climate symptoms are not read only from air over land.
 
 This is why climate symptoms should be read from many measurement tools. Satellites, ocean measurements, temperature records, and ice observations support one another. The point is not to memorize every number, but to understand that climate claims are strong because many indicators point in the same direction.
+
+<ClimateObservationLab
+  title={<>Satellites Help Read Several Indicators</>}
+  description={
+    <>
+      Notice how one Earth-observing satellite can point attention toward the
+      ocean, ice, land, and data patterns that must be compared.
+    </>
+  }
+  labels={{
+    chooseMode: "Choose a climate indicator",
+    focusLabel: "What to read",
+    takeawayLabel: "Climate meaning",
+    viewLabel: "Earth-observing satellite model",
+    items: [
+      {
+        tab: "Indicators",
+        caption: <>A satellite is not the only evidence, but it helps reveal broad patterns that are compared with other measurements.</>,
+        focus: <>Compare ocean, ice, and land as three observation areas. Each one gives a different sign about heat and water change.</>,
+        takeaway: <>A climate-change claim becomes stronger when several different indicators point in the same direction.</>,
+      },
+    ],
+  }}
+/>
 
 | Indicator | What students should read | Why one day is not enough |
 | --- | --- | --- |

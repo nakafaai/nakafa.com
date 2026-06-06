@@ -16,8 +16,9 @@ import {
   createContext,
   type HTMLAttributes,
   startTransition,
-  useContext,
+  use,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -31,6 +32,7 @@ import {
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
 
 const PRE_TAG_REGEX = /<pre(\s|>)/;
+const EMPTY_HIGHLIGHTED_CODE = { light: "", dark: "" };
 
 type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
   code: string;
@@ -202,6 +204,7 @@ function removePreBackground(html: string) {
   );
 }
 
+/** Renders highlighted code with paired light and dark Shiki themes. */
 export const CodeBlock = ({
   code,
   language,
@@ -210,25 +213,25 @@ export const CodeBlock = ({
   preClassName,
   ...rest
 }: CodeBlockProps) => {
-  const [html, setHtml] = useState<string>("");
-  const [darkHtml, setDarkHtml] = useState<string>("");
-  const mounted = useRef(false);
-  const [lightTheme, darkTheme] = useContext(ShikiThemeContext);
+  const [highlightedCode, setHighlightedCode] = useState(
+    EMPTY_HIGHLIGHTED_CODE
+  );
+  const [lightTheme, darkTheme] = use(ShikiThemeContext);
+  const codeContextValue = useMemo(() => ({ code }), [code]);
 
   const Icon =
     languageIconMap[language as keyof typeof languageIconMap] ??
     SiGnometerminal;
 
   useEffect(() => {
-    mounted.current = true;
+    let isCurrentRender = true;
 
     highlighterManager
       .highlightCode(code, language, [lightTheme, darkTheme], preClassName)
       .then(([light, dark]) => {
-        if (mounted.current) {
+        if (isCurrentRender) {
           startTransition(() => {
-            setHtml(light);
-            setDarkHtml(dark);
+            setHighlightedCode({ light, dark });
           });
         }
       })
@@ -238,21 +241,20 @@ export const CodeBlock = ({
           source: "ai-code-block-highlight",
         });
 
-        if (mounted.current) {
+        if (isCurrentRender) {
           startTransition(() => {
-            setHtml("");
-            setDarkHtml("");
+            setHighlightedCode(EMPTY_HIGHLIGHTED_CODE);
           });
         }
       });
 
     return () => {
-      mounted.current = false;
+      isCurrentRender = false;
     };
   }, [code, language, lightTheme, darkTheme, preClassName]);
 
   return (
-    <CodeBlockContext.Provider value={{ code }}>
+    <CodeBlockContext.Provider value={codeContextValue}>
       <div
         className="my-4 w-full overflow-hidden rounded-xl border"
         data-code-block-container
@@ -274,7 +276,7 @@ export const CodeBlock = ({
             <div
               className={cn("overflow-x-auto dark:hidden", className)}
               // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
-              dangerouslySetInnerHTML={{ __html: html }}
+              dangerouslySetInnerHTML={{ __html: highlightedCode.light }}
               data-code-block
               data-language={language}
               {...rest}
@@ -282,7 +284,7 @@ export const CodeBlock = ({
             <div
               className={cn("hidden overflow-x-auto dark:block", className)}
               // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
-              dangerouslySetInnerHTML={{ __html: darkHtml }}
+              dangerouslySetInnerHTML={{ __html: highlightedCode.dark }}
               data-code-block
               data-language={language}
               {...rest}
@@ -652,7 +654,7 @@ export const CodeBlockDownloadButton = ({
   code?: string;
   language?: BundledLanguage;
 }) => {
-  const contextCode = useContext(CodeBlockContext).code;
+  const contextCode = use(CodeBlockContext).code;
   const code = propCode ?? contextCode;
   const extension =
     language && language in languageExtensionMap
@@ -701,7 +703,7 @@ export const CodeBlockCopyButton = ({
 }: CodeBlockCopyButtonProps & { code?: string }) => {
   const [isCopied, setIsCopied] = useState(false);
   const timeoutRef = useRef(0);
-  const contextCode = useContext(CodeBlockContext).code;
+  const contextCode = use(CodeBlockContext).code;
   const code = propCode ?? contextCode;
 
   async function copyToClipboard() {

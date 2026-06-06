@@ -1,4 +1,4 @@
-import { getFolderChildNamesSync } from "@repo/contents/_lib/fs";
+import { getFolderChildNames } from "@repo/contents/_lib/fs/cache";
 import { getCategoryPath } from "@repo/contents/_lib/subject/category";
 import { getMaterialPath } from "@repo/contents/_lib/subject/route";
 import type { SubjectCategory } from "@repo/contents/_types/subject/category";
@@ -14,7 +14,7 @@ import {
   BACHELOR_MATERIALS,
   HIGH_SCHOOL_MATERIALS,
 } from "@repo/contents/_types/subject/material";
-import { Option, Schema } from "effect";
+import { Effect, Array as EffectArray, Option, Schema } from "effect";
 
 const orderedGrades = [...NUMERIC_GRADES, ...NON_NUMERIC_GRADES];
 const orderedMaterials = [...HIGH_SCHOOL_MATERIALS, ...BACHELOR_MATERIALS];
@@ -34,16 +34,10 @@ export function getGradePath(category: SubjectCategory, grade: Grade) {
  * Narrows a grade value to a non-numeric grade when applicable.
  *
  * @param grade - Grade value to inspect
- * @returns Non-numeric grade label, or `undefined` for numeric grades
+ * @returns Non-numeric grade label when applicable
  */
 export function getGradeNonNumeric(grade: Grade) {
-  const parsedGrade = Schema.decodeUnknownOption(NonNumericGradeSchema)(grade);
-
-  if (Option.isNone(parsedGrade)) {
-    return;
-  }
-
-  return parsedGrade.value;
+  return Schema.decodeUnknownOption(NonNumericGradeSchema)(grade);
 }
 
 /**
@@ -52,16 +46,21 @@ export function getGradeNonNumeric(grade: Grade) {
  * @param category - Subject category slug
  * @returns Ordered list of grades for the category
  */
-export function getCategoryGrades(category: SubjectCategory) {
+export const getCategoryGrades = Effect.fn(
+  "contents.subject.getCategoryGrades"
+)(function* (category: SubjectCategory) {
   const categoryPath = getCategoryPath(category).slice(1);
   const gradeFolders = new Set(
-    getFolderChildNamesSync(categoryPath)
-      .map(parseGrade)
-      .filter((grade) => grade !== null)
+    EffectArray.filterMap(
+      yield* getFolderChildNames(categoryPath).pipe(
+        Effect.orElse(() => Effect.succeed([]))
+      ),
+      parseGrade
+    )
   );
 
   return orderedGrades.filter((grade) => gradeFolders.has(grade));
-}
+});
 
 /**
  * Returns the subject list for a single category and grade from content folders.
@@ -70,18 +69,30 @@ export function getCategoryGrades(category: SubjectCategory) {
  * @param grade - Grade slug within the category
  * @returns Subject links backed by material folders, or an empty array when unavailable
  */
-export function getGradeSubjects(category: SubjectCategory, grade: Grade) {
-  const categoryPath = getCategoryPath(category);
-  const gradePath = `${categoryPath.slice(1)}/${grade}`;
-  const materialFolders = new Set(getFolderChildNamesSync(gradePath));
+export const getGradeSubjects = Effect.fn("contents.subject.getGradeSubjects")(
+  function* (category: SubjectCategory, grade: Grade) {
+    const categoryPath = getCategoryPath(category);
+    const gradePath = `${categoryPath.slice(1)}/${grade}`;
+    const materialFolders = new Set(
+      yield* getFolderChildNames(gradePath).pipe(
+        Effect.orElse(() => Effect.succeed([]))
+      )
+    );
 
-  return orderedMaterials
-    .filter((material) => materialFolders.has(material))
-    .map((material) => ({
-      label: material,
-      href: getMaterialPath(category, grade, material),
-    }));
-}
+    return orderedMaterials.flatMap((material) => {
+      if (!materialFolders.has(material)) {
+        return [];
+      }
+
+      return [
+        {
+          label: material,
+          href: getMaterialPath(category, grade, material),
+        },
+      ];
+    });
+  }
+);
 
 /**
  * Loads grade metadata together with subjects across one or more categories.
@@ -89,34 +100,42 @@ export function getGradeSubjects(category: SubjectCategory, grade: Grade) {
  * @param categories - Optional category filter; defaults to every subject category
  * @returns Grade entries with labels, hrefs, and resolved subject lists
  */
-export function getAllGradesWithSubjects(
-  categories?: readonly SubjectCategory[]
-) {
+export const getAllGradesWithSubjects = Effect.fn(
+  "contents.subject.getAllGradesWithSubjects"
+)(function* (categories?: readonly SubjectCategory[]) {
   const categoriesToFetch = categories ?? SUBJECT_CATEGORIES;
-
-  const gradeEntries = categoriesToFetch.flatMap((category) =>
-    getCategoryGrades(category).map((grade) => ({
-      category,
-      grade,
-    }))
+  const gradeEntryGroups = yield* Effect.all(
+    categoriesToFetch.map((category) =>
+      getCategoryGrades(category).pipe(
+        Effect.map((grades) =>
+          grades.map((grade) => ({
+            category,
+            grade,
+          }))
+        )
+      )
+    ),
+    { concurrency: "unbounded" }
   );
+  const gradeEntries = gradeEntryGroups.flat();
 
-  return gradeEntries.map(({ category, grade }) => ({
-    category,
-    grade,
-    label: getGradeNonNumeric(grade) ?? grade,
-    href: getGradePath(category, grade),
-    subjects: getGradeSubjects(category, grade),
-  }));
-}
+  return yield* Effect.all(
+    gradeEntries.map(({ category, grade }) =>
+      getGradeSubjects(category, grade).pipe(
+        Effect.map((subjects) => ({
+          category,
+          grade,
+          label: Option.getOrElse(getGradeNonNumeric(grade), () => grade),
+          href: getGradePath(category, grade),
+          subjects,
+        }))
+      )
+    ),
+    { concurrency: "unbounded" }
+  );
+});
 
 /** Narrows one subject grade route segment to the supported grade union. */
 export function parseGrade(value: string) {
-  const parsedGrade = Schema.decodeUnknownOption(GradeSchema)(value);
-
-  if (Option.isNone(parsedGrade)) {
-    return null;
-  }
-
-  return parsedGrade.value;
+  return Schema.decodeUnknownOption(GradeSchema)(value);
 }

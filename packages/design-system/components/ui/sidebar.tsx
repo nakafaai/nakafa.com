@@ -31,8 +31,8 @@ import { cva, type VariantProps } from "class-variance-authority";
 import {
   type ComponentProps,
   createContext,
+  use,
   useCallback,
-  useContext,
   useMemo,
   useState,
 } from "react";
@@ -61,8 +61,9 @@ interface SidebarContextProps {
 
 const SidebarContext = createContext<SidebarContextProps | null>(null);
 
+/** Reads sidebar state from the nearest SidebarProvider. */
 function useSidebar() {
-  const context = useContext(SidebarContext);
+  const context = use(SidebarContext);
   if (!context) {
     throw new Error("useSidebar must be used within a SidebarProvider.");
   }
@@ -342,6 +343,7 @@ function SidebarTrigger({
   );
 }
 
+/** Renders the narrow sidebar toggle rail for pointer resizing gestures. */
 function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
   const { isLocked, toggleSidebar } = useSidebar();
 
@@ -366,6 +368,7 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
       onClick={toggleSidebar}
       tabIndex={-1}
       title="Toggle Sidebar"
+      type="button"
       {...props}
     />
   );

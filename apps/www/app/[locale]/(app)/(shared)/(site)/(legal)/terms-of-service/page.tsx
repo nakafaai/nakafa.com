@@ -1,11 +1,17 @@
-import { captureServerException } from "@repo/analytics/posthog/server";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
+import type { ComponentType } from "react";
 import { use } from "react";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
+import TermsOfServiceEn from "./en.mdx";
+import TermsOfServiceId from "./id.mdx";
+
+const contentByLocale = {
+  en: TermsOfServiceEn,
+  id: TermsOfServiceId,
+} satisfies Record<Locale, ComponentType>;
 
 export async function generateMetadata({
   params,
@@ -31,26 +37,11 @@ export default function Page(props: PageProps<"/[locale]/terms-of-service">) {
 }
 
 async function PageContent({ locale }: { locale: Locale }) {
-  try {
-    const { default: Content } = await import(
-      `@/app/[locale]/(app)/(shared)/(site)/(legal)/terms-of-service/${locale}.mdx`
-    );
+  const Content = contentByLocale[locale];
 
-    if (!Content) {
-      notFound();
-    }
-
-    return (
-      <main className="mx-auto max-w-3xl px-6 py-20">
-        <Content />
-      </main>
-    );
-  } catch (error) {
-    await captureServerException(error, undefined, {
-      locale,
-      source: "terms-of-service-content",
-    });
-
-    notFound();
-  }
+  return (
+    <main className="mx-auto max-w-3xl px-6 py-20">
+      <Content />
+    </main>
+  );
 }

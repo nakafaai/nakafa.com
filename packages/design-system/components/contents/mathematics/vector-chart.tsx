@@ -8,15 +8,19 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import {
+  ChartCartesianGrid,
   type ChartConfig,
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
+  ChartLine,
+  ChartLineChart,
   ChartTooltip,
+  ChartXAxis,
+  ChartYAxis,
   getColorVariable,
 } from "@repo/design-system/components/ui/chart";
 import { Fragment, type ReactNode, useMemo } from "react";
-import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 
 interface Vector {
   /**
@@ -95,17 +99,18 @@ export function VectorChart({
       }
     }
 
-    // Sort the x values
-    const sortedXValues = [...allXValues].sort((a, b) => a - b);
+    const sortedXValues = Array.from(allXValues).sort((a, b) => a - b);
+    const vectorPointMaps = vectors.map((vector) => ({
+      id: vector.id,
+      pointsByX: new Map(vector.points.map((point) => [point.x, point.y])),
+    }));
 
     // Create data points for each x value
     return sortedXValues.map((x) => {
       const dataPoint: Record<string, number | null> = { x };
 
-      // Add the y value for each vector at this x point if it exists
-      for (const vector of vectors) {
-        const point = vector.points.find((p) => p.x === x);
-        dataPoint[vector.id] = point?.y ?? null;
+      for (const vector of vectorPointMaps) {
+        dataPoint[vector.id] = vector.pointsByX.get(x) ?? null;
       }
 
       return dataPoint;
@@ -196,8 +201,8 @@ export function VectorChart({
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>
-          <LineChart accessibilityLayer data={data}>
-            <CartesianGrid />
+          <ChartLineChart accessibilityLayer data={data}>
+            <ChartCartesianGrid />
             <defs>
               {/* Vector arrows for both directions */}
               {processedVectors.map((vector) => {
@@ -232,7 +237,7 @@ export function VectorChart({
                 );
               })}
             </defs>
-            <XAxis
+            <ChartXAxis
               dataKey="x"
               tickFormatter={(value) => {
                 if (typeof value === "number") {
@@ -244,7 +249,7 @@ export function VectorChart({
               }}
               tickMargin={8}
             />
-            <YAxis
+            <ChartYAxis
               label={{
                 value: labels.yAxis,
                 angle: -90,
@@ -316,7 +321,7 @@ export function VectorChart({
               }
 
               return (
-                <Line
+                <ChartLine
                   connectNulls
                   dataKey={vector.id}
                   dot
@@ -336,7 +341,7 @@ export function VectorChart({
             <ChartLegend
               content={<ChartLegendContent verticalAlign="bottom" />}
             />
-          </LineChart>
+          </ChartLineChart>
         </ChartContainer>
       </CardContent>
     </Card>

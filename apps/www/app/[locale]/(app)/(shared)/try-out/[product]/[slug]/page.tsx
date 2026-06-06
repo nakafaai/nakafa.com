@@ -5,6 +5,7 @@ import {
 } from "@repo/backend/convex/tryouts/products";
 import { parseExercisesMaterial } from "@repo/contents/_lib/exercises/route";
 import { fetchQuery, preloadQuery } from "convex/nextjs";
+import { Clock, Effect, Option } from "effect";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { TryoutSetProvider } from "@/components/tryout/providers/set-provider";
@@ -49,19 +50,21 @@ export default async function Page(
     notFound();
   }
 
-  const initialNowMs = Date.now();
-  const preloadedSetView = token
-    ? await preloadQuery(
-        api.tryouts.queries.me.setView.getUserTryoutSetView,
-        {
-          attemptId: attempt ?? undefined,
-          locale,
-          product,
-          tryoutSlug: slug,
-        },
-        { token }
-      )
-    : undefined;
+  const [preloadedSetView, initialNowMs] = await Promise.all([
+    token
+      ? preloadQuery(
+          api.tryouts.queries.me.setView.getUserTryoutSetView,
+          {
+            attemptId: attempt ?? undefined,
+            locale,
+            product,
+            tryoutSlug: slug,
+          },
+          { token }
+        )
+      : Promise.resolve(undefined),
+    Effect.runPromise(Clock.currentTimeMillis),
+  ]);
 
   const tryoutLabel = details.tryout.label;
   const partKeys = details.parts.map((part) => part.partKey);
@@ -108,7 +111,9 @@ export default async function Page(
                 return {
                   partIndex: part.partIndex,
                   partKey: part.partKey,
-                  label: material ? tExercises(material) : part.partKey,
+                  label: Option.isSome(material)
+                    ? tExercises(material.value)
+                    : part.partKey,
                   material: part.material,
                   questionCount: part.questionCount,
                 };

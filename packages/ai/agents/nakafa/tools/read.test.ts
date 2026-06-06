@@ -1,12 +1,17 @@
 import { read } from "@repo/ai/agents/nakafa/tools/read";
 import { createWriter } from "@repo/ai/agents/nakafa/tools/test";
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
+import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
 import { Nakafa } from "@repo/contents/_lib/agent/service";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
-const ARTICLE_CONTENT_ID =
-  "en/articles/politics/dynastic-politics-asian-values";
+const ARTICLE_CONTENT_ID = NakafaAgentContentRefInputSchema.make(
+  "en/articles/politics/dynastic-politics-asian-values"
+);
+const MISSING_CONTENT_ID = NakafaAgentContentRefInputSchema.make(
+  "en/articles/missing"
+);
 
 describe("nakafa read tool", () => {
   it("writes loading and done parts for content reads", async () => {
@@ -38,7 +43,7 @@ describe("nakafa read tool", () => {
     const { parts, writer } = createWriter();
     const output = await Effect.runPromise(
       read({
-        input: { content_ref: "en/articles/missing" },
+        input: { content_ref: MISSING_CONTENT_ID },
         toolCallId: "read-2",
         writer,
       }).pipe(Effect.provide(Nakafa.Default))

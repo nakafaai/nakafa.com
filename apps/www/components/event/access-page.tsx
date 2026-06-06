@@ -7,7 +7,6 @@ import {
   Tick01Icon,
   UnavailableIcon,
 } from "@hugeicons/core-free-icons";
-import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -17,6 +16,7 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { useMutation } from "convex/react";
 import { format } from "date-fns";
+import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { useLocale, useTranslations } from "next-intl";
 import { useTransition } from "react";
@@ -25,6 +25,7 @@ import {
   EventAccessCard,
   EventAccessLayout,
 } from "@/components/event/access-card";
+import { reportClientException } from "@/lib/analytics/client";
 import { getSafeInternalRedirectPath } from "@/lib/auth/utils";
 import { getLocale } from "@/lib/utils/date";
 
@@ -64,83 +65,113 @@ export function EventAccessPage({ code }: Props) {
   /** Redeems the current event code and lets the live page state refresh the UI. */
   function activateAccess() {
     startTransition(async () => {
-      try {
-        const result = await redeemEventAccess({ code });
+      await Effect.runPromise(
+        Effect.tryPromise({
+          try: () => redeemEventAccess({ code }),
+          catch: (error) => error,
+        }).pipe(
+          Effect.flatMap((result) => {
+            switch (result.kind) {
+              case "active": {
+                return Effect.sync(() => {
+                  toast.success(
+                    tEvent("redeem-success", {
+                      date: formatEventAccessDate(locale, result.endsAt),
+                    }),
+                    {
+                      position: "bottom-center",
+                    }
+                  );
+                });
+              }
+              case "already-active": {
+                return Effect.sync(() => {
+                  toast.info(
+                    tEvent("active-until", {
+                      date: formatEventAccessDate(locale, result.endsAt),
+                    }),
+                    {
+                      position: "bottom-center",
+                    }
+                  );
+                });
+              }
+              case "used": {
+                return Effect.sync(() => {
+                  toast.info(
+                    tEvent("ended-at", {
+                      date: formatEventAccessDate(locale, result.endsAt),
+                    }),
+                    {
+                      position: "bottom-center",
+                    }
+                  );
+                });
+              }
+              case "disabled": {
+                return Effect.sync(() => {
+                  toast.error(tEvent("unavailable-disabled"), {
+                    position: "bottom-center",
+                  });
+                });
+              }
+              case "not-started": {
+                return Effect.sync(() => {
+                  toast.error(tEvent("unavailable-not-started"), {
+                    position: "bottom-center",
+                  });
+                });
+              }
+              case "ended": {
+                return Effect.sync(() => {
+                  toast.error(tEvent("unavailable-ended"), {
+                    position: "bottom-center",
+                  });
+                });
+              }
+              case "not-found": {
+                return Effect.sync(() => {
+                  toast.error(tEvent("unavailable-invalid-code"), {
+                    position: "bottom-center",
+                  });
+                });
+              }
+              default: {
+                const unhandledResult: never = result;
 
-        switch (result.kind) {
-          case "active": {
-            toast.success(
-              tEvent("redeem-success", {
-                date: formatEventAccessDate(locale, result.endsAt),
-              }),
-              {
-                position: "bottom-center",
+                return reportClientException(
+                  new Error("Unhandled event redeem result"),
+                  {
+                    result: unhandledResult,
+                    source: "event-access-redeem",
+                  }
+                ).pipe(
+                  Effect.zipRight(
+                    Effect.sync(() => {
+                      toast.error(tEvent("redeem-error"), {
+                        position: "bottom-center",
+                      });
+                    })
+                  )
+                );
               }
-            );
-            return;
-          }
-          case "already-active": {
-            toast.info(
-              tEvent("active-until", {
-                date: formatEventAccessDate(locale, result.endsAt),
-              }),
-              {
-                position: "bottom-center",
-              }
-            );
-            return;
-          }
-          case "used": {
-            toast.info(
-              tEvent("ended-at", {
-                date: formatEventAccessDate(locale, result.endsAt),
-              }),
-              {
-                position: "bottom-center",
-              }
-            );
-            return;
-          }
-          case "disabled": {
-            toast.error(tEvent("unavailable-disabled"), {
-              position: "bottom-center",
-            });
-            return;
-          }
-          case "not-started": {
-            toast.error(tEvent("unavailable-not-started"), {
-              position: "bottom-center",
-            });
-            return;
-          }
-          case "ended": {
-            toast.error(tEvent("unavailable-ended"), {
-              position: "bottom-center",
-            });
-            return;
-          }
-          case "not-found": {
-            toast.error(tEvent("unavailable-invalid-code"), {
-              position: "bottom-center",
-            });
-            return;
-          }
-          default: {
-            const unhandledResult: never = result;
-
-            throw new Error(
-              `Unhandled event redeem result: ${JSON.stringify(unhandledResult)}`
-            );
-          }
-        }
-      } catch (error) {
-        captureException(error, {
-          source: "event-access-redeem",
-        });
-        toast.error(tEvent("redeem-error"), {
-          position: "bottom-center",
-        });
-      }
+            }
+          }),
+          Effect.catchAll((error) =>
+            reportClientException(error, {
+              source: "event-access-redeem",
+            }).pipe(
+              Effect.zipRight(
+                Effect.sync(() => {
+                  toast.error(tEvent("redeem-error"), {
+                    position: "bottom-center",
+                  });
+                })
+              )
+            )
+          )
+        )
+      );
     });
   }
 

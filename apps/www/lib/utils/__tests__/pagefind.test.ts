@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { normalizeLocalizedInternalHref } from "@repo/internationalization/src/href";
 import { describe, expect, it } from "vitest";
 import {

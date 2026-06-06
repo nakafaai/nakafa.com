@@ -1,6 +1,5 @@
 "use client";
 
-import { memo } from "react";
 import { useCurrentChat } from "@/components/ai/context/use-current-chat";
 import { useMessage } from "@/components/ai/context/use-message";
 import { AiChatMessageLoading } from "@/components/ai/message-loading";
@@ -8,7 +7,7 @@ import { AiMessagePart } from "@/components/ai/message-part";
 import { SuggestionsPart } from "@/components/ai/message-part/suggestions";
 import { useUser } from "@/lib/context/use-user";
 
-export const AiChatMessageContent = memo(() => {
+export const AiChatMessageContent = () => {
   const parts = useMessage((state) =>
     state.message.parts.filter(
       (p) => p.type !== "step-start" && p.type !== "data-suggestions"
@@ -28,10 +27,10 @@ export const AiChatMessageContent = memo(() => {
       <AiChatMessageLoading />
     </div>
   );
-});
+};
 AiChatMessageContent.displayName = "AiChatMessageContent";
 
-export const AiChatMessageSuggestions = memo(() => {
+export const AiChatMessageSuggestions = () => {
   const chat = useCurrentChat((s) => s.chat);
 
   const currentUser = useUser((s) => s.user);
@@ -46,5 +45,5 @@ export const AiChatMessageSuggestions = memo(() => {
   }
 
   return <SuggestionsPart message={suggestions} />;
-});
+};
 AiChatMessageSuggestions.displayName = "AiChatMessageSuggestions";

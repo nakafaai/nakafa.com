@@ -1,5 +1,5 @@
 import { createWrappedLanguageModel } from "@repo/ai/config/devtools";
-import { type ModelId, modelRegistry } from "@repo/ai/config/model";
+import { type ModelKey, modelRegistry } from "@repo/ai/config/model";
 import { customProvider } from "ai";
 
 const languageModels = {
@@ -9,7 +9,7 @@ const languageModels = {
   "nakafa-pro": createWrappedLanguageModel(
     modelRegistry["nakafa-pro"].gatewayId
   ),
-} satisfies Record<ModelId, ReturnType<typeof createWrappedLanguageModel>>;
+} satisfies Record<ModelKey, ReturnType<typeof createWrappedLanguageModel>>;
 
 /**
  * App-facing AI SDK provider.

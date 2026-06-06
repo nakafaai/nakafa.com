@@ -1,3 +1,5 @@
+import { WindEnergyConversionLab } from "@repo/design-system/components/contents/physics/renewable-energy/wind-conversion/lab";
+
 export const metadata = {
   title: "Energy Transformation",
   description:
@@ -35,6 +37,25 @@ The diagram below helps us ask one simple question: what does energy from nature
 In hydropower, the U.S. Department of Energy (DOE) explains that water flows through a penstock, spins turbine blades, and the turbine spins a generator that produces electricity. DOE's explanation of how hydropower works can be opened through [this source link](https://www.energy.gov/cmei/water/how-hydropower-works).
 
 In wind power, DOE explains that wind turns turbine blades, the rotor spins a generator, and the generator creates electricity. DOE's page on how wind turbines work can be opened through [this source link](https://www.energy.gov/cmei/systems/how-do-wind-turbines-work).
+
+<WindEnergyConversionLab
+  title={<>Wind Turbine Energy Conversion</>}
+  description={
+    <>
+      Change the wind speed to see the rotor spin faster and read the path from
+      moving air to electricity.
+    </>
+  }
+  labels={{
+    flow: <>Wind turns the rotor, the rotor turns the generator, and electricity flows out.</>,
+    flowLabel: "Conversion path",
+    meaning: <>Higher wind speed makes the rotor spin faster, but real output still depends on device limits and site conditions.</>,
+    meaningLabel: "Physics meaning",
+    speedControl: "Wind speed",
+    speedUnit: "m/s",
+    viewLabel: "Wind energy conversion model",
+  }}
+/>
 
 In a photovoltaic solar panel, EIA explains that a photovoltaic cell converts sunlight directly into electricity. However, only photons absorbed by the semiconductor material provide energy to generate electricity. EIA's Photovoltaics and Electricity page can be opened through [this source link](https://www.eia.gov/energyexplained/solar/photovoltaics-and-electricity.php).
 

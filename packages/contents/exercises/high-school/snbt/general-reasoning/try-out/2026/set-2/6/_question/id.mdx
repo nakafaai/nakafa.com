@@ -8,7 +8,12 @@ export const metadata = {
 
 Perhatikan grafik penjualan berikut!
 
-<SalesChart lang="id" />
+<SalesChart
+  description="Data penjualan Baju, Celana, dan Jas (2011-2015)."
+  seriesLabels={{ pants: "Celana", shirts: "Baju", suits: "Jas" }}
+  title="Grafik Penjualan di Factory Outlet"
+  yAxisLabel="Penjualan"
+/>
 
 | Barang | <InlineMath math="2011" /> | <InlineMath math="2012" /> | <InlineMath math="2013" /> | <InlineMath math="2014" /> | <InlineMath math="2015" /> |
 | :--- | :---: | :---: | :---: | :---: | :---: |

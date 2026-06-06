@@ -1,11 +1,11 @@
 import { ArrowTurnForwardIcon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Activity, memo } from "react";
+import { Activity } from "react";
 import { useControls } from "@/components/school/classes/forum/conversation/context/use-controls";
 import type { ForumPost } from "@/components/school/classes/forum/conversation/data/entities";
 
 /** Renders one lightweight reply preview that can jump to the replied message. */
-export const PostReplyIndicator = memo(({ post }: { post: ForumPost }) => {
+export const PostReplyIndicator = ({ post }: { post: ForumPost }) => {
   const { parentId, replyToBody, replyToUser } = post;
   const { goToPost } = useControls();
 
@@ -28,5 +28,5 @@ export const PostReplyIndicator = memo(({ post }: { post: ForumPost }) => {
       </Activity>
     </button>
   );
-});
+};
 PostReplyIndicator.displayName = "PostReplyIndicator";

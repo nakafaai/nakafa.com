@@ -1,0 +1,138 @@
+import { Vector3d } from "@repo/design-system/components/contents/mathematics/vector-3d";
+import { getColor } from "@repo/design-system/lib/color";
+
+export const metadata = {
+  title: "Komponen Vektor",
+  description:
+    "Pelajari cara menyatakan vektor sebagai komponen pada sumbu x, y, dan z menggunakan vektor satuan.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/31/2026",
+  subject: "Vektor",
+};
+
+## Mengapa Vektor Dipecah Menjadi Komponen
+
+Sebuah vektor miring sulit dijumlahkan langsung jika hanya dilihat sebagai panah. Agar mudah dihitung, vektor dipecah menjadi bagian yang sejajar sumbu koordinat. Bagian inilah yang disebut **komponen vektor**.
+
+Komponen horizontal menunjukkan seberapa besar vektor bergerak ke arah sumbu <InlineMath math="x" />. Komponen vertikal menunjukkan seberapa besar vektor bergerak ke arah sumbu <InlineMath math="y" />. Untuk ruang tiga dimensi, ada juga komponen pada sumbu <InlineMath math="z" />.
+
+> Komponen vektor mengubah satu panah miring menjadi beberapa bagian yang searah sumbu.
+
+## Membaca Komponen pada Bidang
+
+Pada bidang datar, vektor <InlineMath math="\vec{A}" /> dapat ditulis sebagai gabungan komponen pada sumbu <InlineMath math="x" /> dan sumbu <InlineMath math="y" />.
+
+<BlockMath math="\vec{A}=A_x\hat{i}+A_y\hat{j}" />
+
+Notasi <InlineMath math="\hat{i}" /> adalah vektor satuan arah sumbu <InlineMath math="x" />, sedangkan <InlineMath math="\hat{j}" /> adalah vektor satuan arah sumbu <InlineMath math="y" />. Angka <InlineMath math="A_x" /> dan <InlineMath math="A_y" /> memberi tahu besar komponen pada masing-masing arah.
+
+Misalnya, <InlineMath math="\vec{A}=6\hat{i}+8\hat{j}" /> berarti vektor bergerak <InlineMath math="6" /> satuan ke arah <InlineMath math="x" /> positif dan <InlineMath math="8" /> satuan ke arah <InlineMath math="y" /> positif.
+
+<BlockMath math="\lvert\vec{A}\rvert=\sqrt{6^2+8^2}=10" />
+
+Panjang vektor didapat dari teorema Pythagoras karena komponen <InlineMath math="x" /> dan <InlineMath math="y" /> saling tegak lurus.
+
+## Komponen pada Ruang Tiga Dimensi
+
+Dalam ruang tiga dimensi, vektor memerlukan tiga komponen. Bentuk umumnya adalah:
+
+<BlockMath math="\vec{A}=A_x\hat{i}+A_y\hat{j}+A_z\hat{k}" />
+
+Vektor satuan <InlineMath math="\hat{k}" /> menunjukkan arah sumbu <InlineMath math="z" />. Komponen ini diperlukan saat gerak atau gaya tidak hanya berada pada bidang datar, misalnya drone bergerak ke timur, ke utara, sekaligus naik.
+
+<Vector3d
+  title={<>Komponen Vektor <InlineMath math="\vec{A}" /></>}
+  description={
+    <>
+      Vektor <InlineMath math="\vec{A}=4\hat{i}+3\hat{j}+2\hat{k}" /> diuraikan
+      menjadi tiga komponen yang saling tegak lurus.
+    </>
+  }
+  vectors={(() => {
+    const components = [
+      [4, 0, 0],
+      [0, 3, 0],
+      [0, 0, 2],
+    ];
+    const points = components.reduce(
+      (path, component) => [
+        ...path,
+        path.at(-1).map((value, index) => value + component[index]),
+      ],
+      [[0, 0, 0]]
+    );
+    const resultant = components.reduce(
+      (sum, component) =>
+        sum.map((value, index) => value + component[index]),
+      [0, 0, 0]
+    );
+
+    return [
+      {
+        from: [0, 0, 0],
+        to: resultant,
+        color: getColor("VIOLET"),
+        label: "A",
+        labelAnchorX: "center",
+        labelProgress: 3 / 5,
+        labelOffset: [0.35, 0.55, 0.3],
+      },
+      {
+        from: points[0],
+        to: points[1],
+        color: getColor("TEAL"),
+        label: "Ax",
+        labelAnchorX: "center",
+        labelProgress: 1 / 2,
+        labelOffset: [0, -0.45, 0],
+      },
+      {
+        from: points[1],
+        to: points[2],
+        color: getColor("AMBER"),
+        label: "Ay",
+        labelAnchorX: "center",
+        labelProgress: 1 / 2,
+        labelOffset: [0.55, 0, 0.15],
+      },
+      {
+        from: points[2],
+        to: points[3],
+        color: getColor("CYAN"),
+        label: "Az",
+        labelAnchorX: "center",
+        labelProgress: 1 / 2,
+        labelOffset: [0.65, -0.25, 0.15],
+      },
+    ];
+  })()}
+  cameraPosition={[8, 6, 9]}
+  cameraTarget={[2, -0.5, 1]}
+/>
+
+Visual ini memakai langkah komponen yang berurutan: bergerak pada sumbu <InlineMath math="x" />, lalu sumbu <InlineMath math="y" />, lalu sumbu <InlineMath math="z" />. Ujung akhirnya tetap sama dengan ujung vektor <InlineMath math="\vec{A}" />.
+
+## Tanda Positif dan Negatif pada Komponen
+
+Komponen bisa bernilai positif atau negatif. Tanda tersebut menunjukkan arah terhadap sumbu acuan, bukan besar vektor yang negatif.
+
+| Komponen | Makna tanda positif | Makna tanda negatif |
+| :------- | :------------------ | :------------------ |
+| <InlineMath math="A_x" /> | ke arah <InlineMath math="x" /> positif | ke arah <InlineMath math="x" /> negatif |
+| <InlineMath math="A_y" /> | ke arah <InlineMath math="y" /> positif | ke arah <InlineMath math="y" /> negatif |
+| <InlineMath math="A_z" /> | ke arah <InlineMath math="z" /> positif | ke arah <InlineMath math="z" /> negatif |
+
+Jika <InlineMath math="\vec{B}=-5\hat{i}+2\hat{j}" />, vektor itu memiliki komponen <InlineMath math="5" /> satuan ke arah <InlineMath math="x" /> negatif dan <InlineMath math="2" /> satuan ke arah <InlineMath math="y" /> positif.
+
+## Contoh Menulis Vektor dari Perpindahan
+
+Seorang siswa berjalan <InlineMath math="3\text{ m}" /> ke timur, lalu <InlineMath math="4\text{ m}" /> ke utara. Jika timur dianggap sumbu <InlineMath math="x" /> positif dan utara dianggap sumbu <InlineMath math="y" /> positif, perpindahannya dapat ditulis:
+
+<MathContainer>
+  <BlockMath math="\vec{s}=3\hat{i}+4\hat{j}" />
+  <BlockMath math="\lvert\vec{s}\rvert=\sqrt{3^2+4^2}=5\text{ m}" />
+</MathContainer>
+
+Komponen membuat perhitungan lebih rapi karena setiap arah dihitung pada sumbunya sendiri.
+
+Dari bentuk komponen, kita langsung tahu bahwa perpindahan bersihnya mengarah ke timur dan utara sekaligus. Besarnya <InlineMath math="5\text{ m}" /> berasal dari segitiga siku-siku dengan sisi <InlineMath math="3\text{ m}" /> dan <InlineMath math="4\text{ m}" />.

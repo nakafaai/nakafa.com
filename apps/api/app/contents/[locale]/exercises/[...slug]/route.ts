@@ -1,14 +1,10 @@
-import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
 import { getExercisesContent } from "@repo/contents/_lib/exercises/set";
 import {
   hasInvalidTryOutYearSlug,
   isTryOutCollectionSlug,
   LEGACY_YEARLESS_TRY_OUT_REDIRECT_YEAR,
 } from "@repo/contents/_lib/exercises/slug";
-import {
-  getExerciseNumberPaths,
-  getExerciseSetPaths,
-} from "@repo/contents/_lib/params";
+import { getExerciseApiParamsForLocales } from "@repo/contents/_lib/manifest/cache/route-params";
 import { getScopedContent } from "@repo/contents/_lib/scoped";
 import {
   FileReadError,
@@ -17,7 +13,6 @@ import {
   MetadataParseError,
 } from "@repo/contents/_shared/error";
 import { LocaleSchema } from "@repo/contents/_types/content";
-import { routing } from "@repo/internationalization/src/routing";
 import { logError } from "@repo/utilities/logging/effect";
 import { Effect, Option, Schema } from "effect";
 import { NextResponse } from "next/server";
@@ -34,18 +29,7 @@ const LEGACY_TRY_OUT_SUFFIX_INDEX = 1;
  * large amount of pointless build work.
  */
 export function generateStaticParams() {
-  return routing.locales.flatMap((locale) => {
-    const mdxSlugs = getMDXSlugsForLocale(locale);
-    const exercisePaths = [
-      ...getExerciseSetPaths(mdxSlugs),
-      ...getExerciseNumberPaths(mdxSlugs),
-    ];
-
-    return exercisePaths.map((exercisePath) => ({
-      locale,
-      slug: exercisePath.slice("exercises/".length).split("/"),
-    }));
-  });
+  return getExerciseApiParamsForLocales();
 }
 
 /**
@@ -102,7 +86,7 @@ export async function GET(
     );
   }
 
-  let exerciseNumber: number | null = null;
+  let exerciseNumber = Option.none<number>();
   let rest = [...slug];
   let isQuestionOrAnswer = false;
 
@@ -122,7 +106,7 @@ export async function GET(
       const parsedNumber = Number.parseInt(lastSegment, 10);
       const isNumber = !Number.isNaN(parsedNumber);
       if (isNumber) {
-        exerciseNumber = parsedNumber;
+        exerciseNumber = Option.some(parsedNumber);
         rest = rest.slice(0, -1);
       }
     }
@@ -131,8 +115,8 @@ export async function GET(
   const basePath = rest.join("/");
 
   // If requesting _question or _answer MDX content directly
-  if (isQuestionOrAnswer && exerciseNumber !== null) {
-    const mdxPath = `exercises/${basePath}/${exerciseNumber}/${slug.at(-1)}`;
+  if (isQuestionOrAnswer && Option.isSome(exerciseNumber)) {
+    const mdxPath = `exercises/${basePath}/${exerciseNumber.value}/${slug.at(-1)}`;
 
     const program = getScopedContent(
       "exercises",
@@ -224,12 +208,13 @@ export async function GET(
           );
         }
 
-        const result =
-          exerciseNumber === null
-            ? content
-            : content.filter((exercise) => exercise.number === exerciseNumber);
+        const result = Option.isNone(exerciseNumber)
+          ? content
+          : content.filter(
+              (exercise) => exercise.number === exerciseNumber.value
+            );
 
-        if (exerciseNumber !== null && result.length === 0) {
+        if (Option.isSome(exerciseNumber) && result.length === 0) {
           return Effect.succeed<Response>(
             NextResponse.json({ error: "Exercise not found." }, { status: 404 })
           );

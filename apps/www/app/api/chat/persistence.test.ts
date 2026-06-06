@@ -1,4 +1,5 @@
 // @vitest-environment node
+import { ModelIdSchema } from "@repo/ai/config/model";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -34,6 +35,7 @@ const message = {
   parts: [],
   role: "user",
 } satisfies MyUIMessage;
+const modelId = ModelIdSchema.make("nakafa-lite");
 
 /** Returns one typed chat ID through the public persistence path. */
 async function savedChatId() {
@@ -43,7 +45,7 @@ async function savedChatId() {
     saveOrCreateChat({
       chatId: undefined,
       message,
-      modelId: "nakafa-lite",
+      modelId,
       token: "session-token",
     })
   );
@@ -72,7 +74,7 @@ describe("app/api/chat/persistence", () => {
       saveOrCreateChat({
         chatId: undefined,
         message,
-        modelId: "nakafa-lite",
+        modelId,
         token: "session-token",
       })
     );
@@ -83,7 +85,7 @@ describe("app/api/chat/persistence", () => {
       {
         message: {
           identifier: "message-1",
-          modelId: "nakafa-lite",
+          modelId,
           role: "user",
         },
         parts: [],
@@ -101,7 +103,7 @@ describe("app/api/chat/persistence", () => {
       saveOrCreateChat({
         chatId,
         message,
-        modelId: "nakafa-lite",
+        modelId,
         token: "session-token",
       })
     );
@@ -113,7 +115,7 @@ describe("app/api/chat/persistence", () => {
         message: {
           chatId,
           identifier: "message-1",
-          modelId: "nakafa-lite",
+          modelId,
           role: "user",
         },
         parts: [],
@@ -134,7 +136,7 @@ describe("app/api/chat/persistence", () => {
       saveOrCreateChat({
         chatId,
         message,
-        modelId: "nakafa-lite",
+        modelId,
         token: "session-token",
       })
     );
@@ -163,7 +165,7 @@ describe("app/api/chat/persistence", () => {
       expect.objectContaining({
         message: expect.objectContaining({
           chatId,
-          modelId: "nakafa-lite",
+          modelId,
         }),
       }),
       { token: "session-token" }

@@ -2,6 +2,7 @@ import {
   getMaterialPath,
   parseMaterial,
 } from "@repo/contents/_lib/subject/route";
+import { Option } from "effect";
 import { describe, expect, it } from "vitest";
 
 describe("subject route helpers", () => {
@@ -12,7 +13,7 @@ describe("subject route helpers", () => {
   });
 
   it("parses valid material segments and rejects invalid ones", () => {
-    expect(parseMaterial("biology")).toBe("biology");
-    expect(parseMaterial("not-a-material")).toBeNull();
+    expect(Option.getOrUndefined(parseMaterial("biology"))).toBe("biology");
+    expect(Option.isNone(parseMaterial("not-a-material"))).toBe(true);
   });
 });

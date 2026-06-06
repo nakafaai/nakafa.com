@@ -1,11 +1,17 @@
 "use client";
 
 import { cn } from "@repo/design-system/lib/utils";
-import { AnimatePresence, motion, type Transition } from "motion/react";
+import {
+  AnimatePresence,
+  domAnimation,
+  LazyMotion,
+  m,
+  type Transition,
+} from "motion/react";
 import * as React from "react";
 
 const MS_TO_S = 1000;
-const RANDOM_KEY_RADIX = 36;
+const AUTO_ITEM_KEY_PREFIX = "highlight-item";
 
 type HighlightMode = "children" | "parent";
 
@@ -41,8 +47,9 @@ const HighlightContext = React.createContext<
   HighlightContextType<string> | undefined
 >(undefined);
 
+/** Reads highlight state from the nearest Highlight provider. */
 function useHighlight<T extends string>(): HighlightContextType<T> {
-  const context = React.useContext(HighlightContext);
+  const context = React.use(HighlightContext);
   if (!context) {
     throw new Error("useHighlight must be used within a HighlightProvider");
   }
@@ -136,21 +143,25 @@ function Highlight<T extends React.ElementType = "div">({
   const localRef = React.useRef<HTMLDivElement>(null);
   React.useImperativeHandle(ref, () => localRef.current as HTMLDivElement);
 
-  const [activeValue, setActiveValue] = React.useState<string | null>(
-    value ?? defaultValue ?? null
-  );
+  const [uncontrolledActiveValue, setUncontrolledActiveValue] = React.useState<
+    string | null
+  >(defaultValue ?? null);
+  const activeValue = value === undefined ? uncontrolledActiveValue : value;
   const [boundsState, setBoundsState] = React.useState<Bounds | null>(null);
   const [activeClassNameState, setActiveClassNameState] =
     React.useState<string>("");
 
   const safeSetActiveValue = React.useCallback(
     (newId: string | null) => {
-      setActiveValue((prev) => (prev === newId ? prev : newId));
+      if (value === undefined) {
+        setUncontrolledActiveValue((prev) => (prev === newId ? prev : newId));
+      }
+
       if (newId !== activeValue) {
         onValueChange?.(newId);
       }
     },
-    [activeValue, onValueChange]
+    [activeValue, onValueChange, value]
   );
 
   const boundsOffsetProp = (props as ParentModeHighlightProps)?.boundsOffset;
@@ -196,15 +207,23 @@ function Highlight<T extends React.ElementType = "div">({
     setBoundsState((prev) => (prev === null ? prev : null));
   }, []);
 
-  React.useEffect(() => {
-    if (value !== undefined) {
-      setActiveValue(value);
-    } else if (defaultValue !== undefined) {
-      setActiveValue(defaultValue);
-    }
-  }, [value, defaultValue]);
-
   const id = React.useId();
+
+  const syncBoundsOnScroll = React.useEffectEvent(
+    (container: HTMLDivElement) => {
+      if (!activeValue) {
+        return;
+      }
+
+      const activeEl = container.querySelector<HTMLElement>(
+        `[data-value="${activeValue}"][data-highlight="true"]`
+      );
+
+      if (activeEl) {
+        safeSetBounds(activeEl.getBoundingClientRect());
+      }
+    }
+  );
 
   React.useEffect(() => {
     if (mode !== "parent") {
@@ -215,24 +234,16 @@ function Highlight<T extends React.ElementType = "div">({
       return;
     }
 
-    const onScroll = () => {
-      if (!activeValue) {
-        return;
-      }
-      const activeEl = container.querySelector<HTMLElement>(
-        `[data-value="${activeValue}"][data-highlight="true"]`
-      );
-      if (activeEl) {
-        safeSetBounds(activeEl.getBoundingClientRect());
-      }
-    };
+    const onScroll = () => syncBoundsOnScroll(container);
 
     container.addEventListener("scroll", onScroll, { passive: true });
     return () => container.removeEventListener("scroll", onScroll);
-  }, [mode, activeValue, safeSetBounds]);
+  }, [mode]);
 
   const containerClassName = (props as ParentModeHighlightProps)
     ?.containerClassName;
+  const forceUpdateBounds = (props as ParentModeHighlightProps)
+    ?.forceUpdateBounds;
 
   const render = React.useCallback(
     (renderChildren: React.ReactNode) => {
@@ -248,7 +259,7 @@ function Highlight<T extends React.ElementType = "div">({
           <>
             <AnimatePresence initial={false} mode="wait">
               {!!boundsState && (
-                <motion.div
+                <m.div
                   animate={{
                     top: boundsState.top,
                     left: boundsState.left,
@@ -297,58 +308,78 @@ function Highlight<T extends React.ElementType = "div">({
       activeClassNameState,
     ]
   );
+  const contextValue = React.useMemo(
+    () => ({
+      mode,
+      activeValue,
+      setActiveValue: safeSetActiveValue,
+      id,
+      hover,
+      click,
+      className,
+      style,
+      transition,
+      disabled,
+      enabled,
+      exitDelay,
+      setBounds: safeSetBounds,
+      clearBounds,
+      activeClassName: activeClassNameState,
+      setActiveClassName: setActiveClassNameState,
+      forceUpdateBounds,
+    }),
+    [
+      mode,
+      activeValue,
+      safeSetActiveValue,
+      id,
+      hover,
+      click,
+      className,
+      style,
+      transition,
+      disabled,
+      enabled,
+      exitDelay,
+      safeSetBounds,
+      clearBounds,
+      activeClassNameState,
+      forceUpdateBounds,
+    ]
+  );
 
   return (
-    <HighlightContext.Provider
-      value={{
-        mode,
-        activeValue,
-        setActiveValue: safeSetActiveValue,
-        id,
-        hover,
-        click,
-        className,
-        style,
-        transition,
-        disabled,
-        enabled,
-        exitDelay,
-        setBounds: safeSetBounds,
-        clearBounds,
-        activeClassName: activeClassNameState,
-        setActiveClassName: setActiveClassNameState,
-        forceUpdateBounds: (props as ParentModeHighlightProps)
-          ?.forceUpdateBounds,
-      }}
-    >
-      {(() => {
-        if (!enabled) {
-          return children;
-        }
-        if (controlledItems) {
-          return render(children);
-        }
-        return render(
-          React.Children.map(children, (child) => {
-            let childKey: string;
-            if (React.isValidElement(child) && child.key) {
-              childKey = child.key;
-            } else if (
-              React.isValidElement(child) &&
-              (child.props as { id?: string }).id
-            ) {
-              childKey = (child.props as { id?: string }).id as string;
-            } else {
-              childKey = Math.random().toString(RANDOM_KEY_RADIX);
-            }
-            return (
-              <HighlightItem className={props?.itemsClassName} key={childKey}>
-                {child}
-              </HighlightItem>
-            );
-          })
-        );
-      })()}
+    <HighlightContext.Provider value={contextValue}>
+      <LazyMotion features={domAnimation} strict>
+        {(() => {
+          if (!enabled) {
+            return children;
+          }
+          if (controlledItems) {
+            return render(children);
+          }
+          return render(
+            React.Children.map(children, (child, index) => {
+              let childKey: string;
+              if (React.isValidElement(child) && child.key) {
+                childKey = child.key;
+              } else if (
+                React.isValidElement(child) &&
+                (child.props as { id?: string }).id
+              ) {
+                childKey = (child.props as { id?: string }).id as string;
+              } else {
+                childKey = `${AUTO_ITEM_KEY_PREFIX}-${index}`;
+              }
+              return (
+                <HighlightItem className={props?.itemsClassName} key={childKey}>
+                  {child}
+                </HighlightItem>
+              );
+            })
+          );
+        })()}
+      </LazyMotion>
     </HighlightContext.Provider>
   );
 }
@@ -549,7 +580,7 @@ function HighlightItem<T extends React.ElementType>({
         <>
           <AnimatePresence initial={false} mode="wait">
             {!!isActive && !isDisabled && (
-              <motion.div
+              <m.div
                 animate={{ opacity: 1 }}
                 className={cn(contextClassName, activeClassName)}
                 data-slot="motion-highlight"
@@ -611,7 +642,7 @@ function HighlightItem<T extends React.ElementType>({
       {mode === "children" && (
         <AnimatePresence initial={false} mode="wait">
           {!!isActive && !isDisabled && (
-            <motion.div
+            <m.div
               animate={{ opacity: 1 }}
               className={cn(contextClassName, activeClassName)}
               data-slot="motion-highlight"

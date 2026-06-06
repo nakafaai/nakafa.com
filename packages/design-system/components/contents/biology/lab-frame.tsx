@@ -79,8 +79,7 @@ export function BiologyLabFrame({
         {hasMultipleItems && (
           <ToggleGroup
             aria-label={labels.chooseMode}
-            className="grid w-full grid-cols-1 sm:grid-cols-[repeat(auto-fit,minmax(8rem,1fr))]"
-            layout="grid"
+            gridColumns="auto"
             onValueChange={handleItemChange}
             type="single"
             value={String(selectedIndex)}
@@ -163,12 +162,8 @@ function ResponsiveBiologyCamera({ view }: { view: BiologySceneView }) {
       autoRotate={false}
       cameraPosition={cameraPosition}
       cameraTarget={view.cameraTarget}
-      maxAzimuthAngle={view.maxAzimuthAngle}
       maxDistance={7.4}
-      maxPolarAngle={view.maxPolarAngle}
-      minAzimuthAngle={view.minAzimuthAngle}
       minDistance={1.8}
-      minPolarAngle={view.minPolarAngle}
     />
   );
 }

@@ -1,0 +1,107 @@
+import { DisplacementDistanceLab } from "@repo/design-system/components/contents/physics/kinematics/displacement-distance/lab";
+
+export const metadata = {
+  title: "Displacement and Distance",
+  description:
+    "Learn the difference between distance as path length and displacement as the change from initial to final position.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/31/2026",
+  subject: "Kinematics",
+};
+
+## Two Ways to Read a Trip
+
+When an object moves from a starting point to an ending point, two quantities can sound similar but mean different things: **distance** and **displacement**.
+
+**Distance** is the total length of the path traveled. If the path turns, every part of the turn is included. **Displacement** is the change in position from start to finish, so it only depends on the starting point, ending point, and direction.
+
+<BlockMath math="\begin{aligned}
+s&=\text{path length} \\
+\Delta \vec{r}&=\vec{r}_{\text{final}}-\vec{r}_{\text{initial}}
+\end{aligned}" />
+
+Here, <InlineMath math="s" /> means the total path length, while <InlineMath math="\Delta \vec{r}" /> means the change in position from start to finish.
+
+In two-dimensional motion, displacement is drawn as the straight line from the starting point to the ending point.
+
+> Distance adds the path actually traveled. Displacement reads the change from the start point to the end point.
+
+<DisplacementDistanceLab
+  title={<>Path Length and Displacement</>}
+  description={
+    <>
+      Choose a route to compare the traveled path with the straight
+      displacement.
+    </>
+  }
+  labels={{
+    chooseCase: "Choose route",
+    modeLabels: {
+      straight: <>Straight</>,
+      turn: <>Turn</>,
+      return: <>Back to Start</>,
+    },
+    factLabels: {
+      distance: <>Distance traveled</>,
+      displacement: <>Displacement magnitude</>,
+      vector: <>Displacement vector</>,
+      meaning: <>What changes</>,
+    },
+    meanings: {
+      straight: <>Distance and displacement magnitude are equal.</>,
+      turn: <>Distance is longer because the car follows the turn.</>,
+      return: <>The car travels a path but ends where it started.</>,
+    },
+    viewLabel: "Distance and displacement visual",
+  }}
+/>
+
+## Detours Change Distance
+
+Compare an object that travels from the same start point to the same end point in two ways. A straight route gives a distance equal to the displacement magnitude. A detour gives a longer distance, but the displacement is still read as the line from start to finish.
+
+The detour route has a greater distance because the object travels along a longer path. But the displacement stays the same as long as the starting and ending points stay the same.
+
+This is the main question to keep separate: distance asks how much path was traveled, while displacement asks where the object ended up compared with where it started.
+
+## Distance Has No Direction
+
+Distance is always zero or positive. It answers the question, "how long is the path traveled?" So distance does not include direction.
+
+If an object moves <InlineMath math="4 \text{ m}" /> east and then <InlineMath math="3 \text{ m}" /> south, the distance is:
+
+<BlockMath math="s=4 \text{ m}+3 \text{ m}=7 \text{ m}" />
+
+The symbol <InlineMath math="s" /> is often used for distance traveled.
+
+## Displacement Has Direction
+
+Displacement is a vector quantity. That means displacement has magnitude and direction. For the example <InlineMath math="4 \text{ m}" /> east and then <InlineMath math="3 \text{ m}" /> south, the displacement magnitude is the straight line from start to finish:
+
+<BlockMath math="|\Delta \vec{r}|=\sqrt{4^2+3^2}=5 \text{ m}" />
+
+The direction of displacement does not follow the turns of the path. It follows the line from the starting point to the ending point.
+
+## Returning to the Starting Point
+
+If an object travels around and returns to the starting point, the distance is not zero because a path was still traveled. But the displacement is zero because the initial and final positions are the same.
+
+| Trip | Distance | Displacement |
+| :--- | :------- | :----------- |
+| From start to finish by a straight route | equal to the straight line | line from start to finish |
+| From start to finish by a detour | longer | still the line from start to finish |
+| Around a loop back to the start | not zero | <InlineMath math="0" /> |
+
+So, distance tells the length of the actual path traveled, while displacement tells the net change in position.
+
+## Winding Route with a Straight Result
+
+A student walks <InlineMath math="8 \text{ m}" /> east, then <InlineMath math="6 \text{ m}" /> north. The distance traveled is:
+
+<BlockMath math="s=8 \text{ m}+6 \text{ m}=14 \text{ m}" />
+
+The displacement magnitude is:
+
+<BlockMath math="|\Delta \vec{r}|=\sqrt{8^2+6^2}=10 \text{ m}" />
+
+The distance is <InlineMath math="14 \text{ m}" />, but the displacement magnitude is <InlineMath math="10 \text{ m}" />. The values are different because the path traveled is not the same as the straight line from start to finish.

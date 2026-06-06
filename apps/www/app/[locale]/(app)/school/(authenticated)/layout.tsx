@@ -30,8 +30,7 @@ async function AuthenticatedSchoolLayout({
   children: React.ReactNode;
   params: LayoutProps<"/[locale]/school">["params"];
 }) {
-  const { locale } = await params;
-  const token = await getToken();
+  const [{ locale }, token] = await Promise.all([params, getToken()]);
 
   if (!token) {
     const pathname =

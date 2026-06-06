@@ -10,14 +10,13 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useTranslations } from "next-intl";
-import { memo } from "react";
 
 interface Props {
   message: DataPart["scrape-url"];
 }
 
 /** Renders one inspected source URL used by the research agent. */
-export const ScrapeUrlPart = memo(({ message }: Props) => {
+export const ScrapeUrlPart = ({ message }: Props) => {
   const t = useTranslations("Ai");
 
   if (message.status === "loading") {
@@ -54,10 +53,10 @@ export const ScrapeUrlPart = memo(({ message }: Props) => {
       <ScrapeUrlSource message={message} />
     </div>
   );
-});
+};
 ScrapeUrlPart.displayName = "ScrapeUrlPart";
 
-const ScrapeUrlSource = memo(({ message }: Props) => (
+const ScrapeUrlSource = ({ message }: Props) => (
   <Source href={message.url}>
     <SourceTrigger faviconUrl={message.favicon} showFavicon />
     <SourceContent
@@ -66,7 +65,7 @@ const ScrapeUrlSource = memo(({ message }: Props) => (
       title={getSourceTitle(message)}
     />
   </Source>
-));
+);
 ScrapeUrlSource.displayName = "ScrapeUrlSource";
 
 /** Returns a compact source title for hover content. */

@@ -1,9 +1,8 @@
 import {
-  getCategoryIcon,
   getCategoryPath,
   parseSubjectCategory,
 } from "@repo/contents/_lib/subject/category";
-import { SUBJECT_CATEGORIES } from "@repo/contents/_types/subject/category";
+import { Option } from "effect";
 import { describe, expect, it } from "vitest";
 
 describe("subject category helpers", () => {
@@ -11,16 +10,10 @@ describe("subject category helpers", () => {
     expect(getCategoryPath("high-school")).toBe("/subject/high-school");
   });
 
-  it("resolves every category icon", () => {
-    for (const category of SUBJECT_CATEGORIES) {
-      expect(getCategoryIcon(category)).toBeDefined();
-    }
-
-    expect(getCategoryIcon("unknown")).toBeDefined();
-  });
-
   it("parses valid category segments and rejects invalid ones", () => {
-    expect(parseSubjectCategory("high-school")).toBe("high-school");
-    expect(parseSubjectCategory("not-a-category")).toBeNull();
+    expect(Option.getOrUndefined(parseSubjectCategory("high-school"))).toBe(
+      "high-school"
+    );
+    expect(Option.isNone(parseSubjectCategory("not-a-category"))).toBe(true);
   });
 });

@@ -1,0 +1,91 @@
+export const metadata = {
+  title: "Projectile Motion",
+  description:
+    "Learn projectile motion as a combination of constant horizontal motion and vertical motion accelerated by gravity.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/01/2026",
+  subject: "Kinematics",
+};
+
+import { ParabolicMovementLab } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/lab";
+
+## One Ball with Two Motions at Once
+
+Projectile motion is motion along a curved path because an object moves horizontally while also moving up and down vertically. In this lesson, air resistance is ignored, so the only acceleration is gravity downward.
+
+The easiest way to read the motion is to split it into two directions. The horizontal direction follows uniform linear motion because its velocity stays constant. The vertical direction follows uniformly accelerated motion because gravity keeps changing the vertical velocity.
+
+<MathContainer>
+  <BlockMath math="x=v_0\cos\theta\ t" />
+  <BlockMath math="y=v_0\sin\theta\ t-\frac{1}{2}gt^2" />
+  <BlockMath math="v_x=v_0\cos\theta,\qquad v_y=v_0\sin\theta-gt" />
+</MathContainer>
+
+Here, <InlineMath math="v_0" /> is the initial speed, <InlineMath math="\theta" /> is the launch angle from the horizontal, <InlineMath math="g" /> is gravitational acceleration, <InlineMath math="x" /> is horizontal position, and <InlineMath math="y" /> is height.
+
+The visual below uses one ball so the launch angle, peak, and range are easier to compare.
+
+<ParabolicMovementLab
+  title={<>Projectile Ball Path</>}
+  description={
+    <>
+      Change the launch angle. The ball keeps moving horizontally while
+      gravity changes its height.
+    </>
+  }
+  labels={{
+    chooseLaunch: "Choose launch angle",
+    factLabels: {
+      initialSpeed: <>Initial speed</>,
+      flightTime: <>Time in the air</>,
+      range: <>Range</>,
+      peakHeight: <>Peak height</>,
+    },
+    viewLabel: "Projectile ball path visual",
+  }}
+/>
+
+## Gravity Changes Only the Vertical Part
+
+Imagine a ball leaving a ramp at an angle. Its horizontal part keeps moving forward at the same velocity, while its vertical part slows down on the way up and speeds up on the way down.
+
+> In projectile motion without air resistance, <InlineMath math="v_x" /> stays constant, but <InlineMath math="v_y" /> changes every moment.
+
+This sentence prevents a common mistake. The object does not lose its horizontal motion at the top. Only the vertical velocity becomes zero there.
+
+## The Peak Still Moves
+
+At the top of the path, <InlineMath math="v_y=0" /> because the ball stops for an instant in its up-and-down motion. However, <InlineMath math="v_x" /> is still present, so the ball still moves forward.
+
+That is why the path does not stop at the top. After the top, gravity makes <InlineMath math="v_y" /> negative, which means the ball starts moving downward. At the same time, <InlineMath math="v_x" /> still carries the ball forward.
+
+| Part of the motion | What happens | Motion type |
+| --- | --- | --- |
+| Horizontal | Velocity stays constant | Uniform linear motion |
+| Vertical while rising | Vertical velocity gets smaller | Slowed uniformly accelerated motion |
+| Vertical while falling | Vertical velocity grows downward | Sped-up uniformly accelerated motion |
+
+## Range Comes from Time in the Air
+
+Horizontal range, usually written as <InlineMath math="R" />, is the horizontal distance from launch point to landing point. Because the horizontal motion has constant velocity, range is horizontal velocity multiplied by time in the air.
+
+<BlockMath math="R=v_x t_{\text{air}}" />
+
+If two balls have the same <InlineMath math="v_x" />, the one that stays in the air longer lands farther away. If the air time is the same, the ball with the larger <InlineMath math="v_x" /> has the larger range.
+
+## A Ball Leaves a Table Horizontally
+
+Suppose a ball leaves the edge of a table horizontally with <InlineMath math="v_x=4\text{ m/s}" /> and the table height is <InlineMath math="1.25\text{ m}" />. With <InlineMath math="g=10\text{ m/s}^2" />, the fall time comes from the vertical motion:
+
+<BlockMath math="\begin{aligned}
+y&=\frac{1}{2}gt^2\\
+1.25&=\frac{1}{2}(10)t^2\\
+t^2&=0.25\\
+t&=0.5\text{ s}
+\end{aligned}" />
+
+The horizontal range is:
+
+<BlockMath math="R=v_x t=4(0.5)=2\text{ m}" />
+
+So the ball lands <InlineMath math="2\text{ m}" /> from the foot of the table. Notice that fall time is determined by the vertical motion, while horizontal distance is determined by the horizontal motion during that time.

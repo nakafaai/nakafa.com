@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  useDocumentVisibility,
-  useLocalStorage,
-  useTimeout,
-} from "@mantine/hooks";
+import { useDocumentVisibility, useLocalStorage } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import type {
@@ -14,7 +10,7 @@ import type {
 import { generateNanoId } from "@repo/design-system/lib/utils";
 import { useMutation } from "convex/react";
 import { Effect } from "effect";
-import { useEffect, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useContentViews } from "@/lib/context/use-content-views";
 
 interface UseRecordContentViewOptions {
@@ -47,13 +43,24 @@ export function useRecordContentView({
   const documentState = useDocumentVisibility();
   const isVisible = documentState === "visible";
   const viewKey = `${contentView.type}:${locale}:${contentView.slug}`;
+  const [defaultDeviceId] = useState(
+    () => `${Date.now()}-${generateNanoId(9)}`
+  );
   const [deviceId] = useLocalStorage({
     key: "nakafa-device-id",
-    defaultValue: useMemo(() => `${Date.now()}-${generateNanoId(9)}`, []),
+    defaultValue: defaultDeviceId,
   });
 
-  const { start, clear } = useTimeout(
-    () => {
+  useEffect(() => {
+    if (isViewed(viewKey)) {
+      return;
+    }
+
+    if (!isVisible) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
       Effect.runFork(
         Effect.tryPromise({
           try: () =>
@@ -77,25 +84,21 @@ export function useRecordContentView({
           )
         )
       );
-    },
-    delay,
-    { autoInvoke: false }
-  );
-
-  useEffect(() => {
-    if (isViewed(viewKey)) {
-      clear();
-      return;
-    }
-
-    if (isVisible) {
-      start();
-    } else {
-      clear();
-    }
+    }, delay);
 
     return () => {
-      clear();
+      window.clearTimeout(timeoutId);
     };
-  }, [clear, isVisible, isViewed, start, viewKey]);
+  }, [
+    contentView.slug,
+    contentView.type,
+    delay,
+    deviceId,
+    isViewed,
+    isVisible,
+    locale,
+    markAsViewed,
+    recordView,
+    viewKey,
+  ]);
 }

@@ -44,13 +44,7 @@ export function UserSettingsName({ user }: { user: CurrentUser }) {
   });
 
   return (
-    <form
-      id="user-settings-name-form"
-      onSubmit={(e) => {
-        e.preventDefault();
-        form.handleSubmit();
-      }}
-    >
+    <form action={() => form.handleSubmit()} id="user-settings-name-form">
       <FormBlock
         description={t("name-description")}
         footer={

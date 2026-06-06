@@ -1,7 +1,7 @@
 "use client";
 
 import type { MyUIMessage } from "@repo/ai/types/message";
-import { memo } from "react";
+
 import { MessageProvider } from "@/components/ai/context/use-message";
 import { AiChatMessageActions } from "@/components/ai/message-actions";
 import { AiChatMessageCredits } from "@/components/ai/message-credits";
@@ -14,7 +14,7 @@ interface Props {
   message: MyUIMessage;
 }
 
-export const AiChatMessage = memo(({ message }: Props) => (
+export const AiChatMessage = ({ message }: Props) => (
   <MessageProvider message={message}>
     <div className="flex size-full flex-col gap-3 group-[.is-user]:items-end group-[.is-user]:justify-end">
       <AiChatMessageContent />
@@ -25,6 +25,6 @@ export const AiChatMessage = memo(({ message }: Props) => (
       <AiChatMessageSuggestions />
     </div>
   </MessageProvider>
-));
+);
 
 AiChatMessage.displayName = "AiChatMessage";

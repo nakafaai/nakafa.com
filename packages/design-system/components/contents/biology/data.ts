@@ -65,10 +65,6 @@ export const BIOLOGY_DEFAULT_VIEW = {
 export interface BiologySceneView {
   cameraPosition: BiologyScenePoint;
   cameraTarget: BiologyScenePoint;
-  maxAzimuthAngle?: number;
-  maxPolarAngle?: number;
-  minAzimuthAngle?: number;
-  minPolarAngle?: number;
   narrowCameraPosition: BiologyScenePoint;
 }
 

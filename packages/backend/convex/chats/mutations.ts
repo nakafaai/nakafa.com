@@ -1,4 +1,4 @@
-import { getModelCreditCost } from "@repo/ai/config/model";
+import { getModelCreditCost, ModelIdSchema } from "@repo/ai/config/model";
 import { DEFAULT_TITLE } from "@repo/ai/features/constants";
 import {
   deleteMessageBatchFromPoint,
@@ -297,14 +297,18 @@ export const saveAssistantResponse = internalMutation({
     let creditResetGrant: ReturnType<typeof getCreditResetGrantTransaction> =
       null;
 
-    if (message.modelId) {
+    const modelId = message.modelId
+      ? ModelIdSchema.make(message.modelId)
+      : undefined;
+
+    if (modelId) {
       const effectiveCredits = await resolveEffectiveCreditState(
         ctx.db,
         appUser,
         Date.now()
       );
 
-      credits = getModelCreditCost(message.modelId);
+      credits = getModelCreditCost(modelId);
       newBalance = effectiveCredits.credits - credits;
       nextResetTimestamp = effectiveCredits.creditsResetAt;
       creditResetGrant = getCreditResetGrantTransaction(
@@ -321,12 +325,12 @@ export const saveAssistantResponse = internalMutation({
       inputTokens: message.inputTokens,
       outputTokens: message.outputTokens,
       totalTokens: message.totalTokens,
-      credits: message.modelId ? credits : undefined,
+      credits: modelId ? credits : undefined,
     });
 
     const partIds = await insertParts(ctx, messageId, parts);
 
-    if (!message.modelId) {
+    if (!modelId) {
       return { messageId, partIds, credits, newBalance };
     }
 
@@ -345,7 +349,7 @@ export const saveAssistantResponse = internalMutation({
     const usageMetadata: CreditTransactionMetadata = {
       chatId: message.chatId,
       messageId,
-      modelId: message.modelId,
+      modelId,
     };
 
     if (message.inputTokens !== undefined) {

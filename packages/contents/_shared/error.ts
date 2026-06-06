@@ -97,12 +97,3 @@ export class ReferenceParseError extends Schema.TaggedError<ReferenceParseError>
     reason: Schema.String,
   }
 ) {}
-
-/** MDX cache build failure for invalid internal cache state. */
-export class CacheBuildError extends Schema.TaggedError<CacheBuildError>()(
-  "CacheBuildError",
-  {
-    message: Schema.String,
-    reason: Schema.String,
-  }
-) {}

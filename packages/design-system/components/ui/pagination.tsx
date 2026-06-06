@@ -43,6 +43,8 @@ type PaginationLinkProps = {
   React.ComponentProps<"a">;
 
 function PaginationLink({
+  "aria-label": ariaLabel,
+  children,
   className,
   isActive,
   size = "icon",
@@ -52,6 +54,7 @@ function PaginationLink({
   return (
     <a
       aria-current={isActive ? "page" : undefined}
+      aria-label={ariaLabel}
       className={cn(
         buttonVariants({
           variant: isActive ? "outline" : "ghost",
@@ -63,7 +66,13 @@ function PaginationLink({
       data-slot="pagination-link"
       href={href}
       {...props}
-    />
+    >
+      {children ?? (
+        <span className="sr-only">
+          {typeof ariaLabel === "string" ? ariaLabel : "Page"}
+        </span>
+      )}
+    </a>
   );
 }
 

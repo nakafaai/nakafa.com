@@ -8,7 +8,6 @@ import {
   Tick01Icon,
   Time04Icon,
 } from "@hugeicons/core-free-icons";
-import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Calendar } from "@repo/design-system/components/ui/calendar";
@@ -37,8 +36,9 @@ import { cn } from "@repo/design-system/lib/utils";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
 import { startOfDay } from "date-fns";
+import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
-import { Activity } from "react";
+import { Activity, useState } from "react";
 import { toast } from "sonner";
 import {
   assessmentModeList,
@@ -61,6 +61,7 @@ import {
   updateDate,
   updateTime,
 } from "@/components/school/classes/assessments/utils";
+import { reportClientException } from "@/lib/analytics/client";
 import { useClass } from "@/lib/context/use-class";
 
 interface AssessmentDialogShellProps {
@@ -193,6 +194,7 @@ function AssessmentDialogShell({
   submitLabel,
   title,
 }: AssessmentDialogShellProps) {
+  const [minimumDate] = useState(() => startOfDay(new Date()));
   const t = useTranslations("School.Classes");
   const locale = useLocale();
 
@@ -202,16 +204,28 @@ function AssessmentDialogShell({
       onChange: createAssessmentFormSchema,
     },
     onSubmit: async ({ value }) => {
-      try {
-        await onSubmit(value);
-        form.reset();
-        setOpenAction(false);
-      } catch (error) {
-        captureException(error, {
-          source: "school-assessment-create",
-        });
-        toast.error(errorMessage);
-      }
+      await Effect.runPromise(
+        Effect.tryPromise({
+          try: async () => {
+            await onSubmit(value);
+            form.reset();
+            setOpenAction(false);
+          },
+          catch: (error) => error,
+        }).pipe(
+          Effect.catchAll((error) =>
+            reportClientException(error, {
+              source: "school-assessment-create",
+            }).pipe(
+              Effect.zipRight(
+                Effect.sync(() => {
+                  toast.error(errorMessage);
+                })
+              )
+            )
+          )
+        )
+      );
     },
   });
 
@@ -220,13 +234,7 @@ function AssessmentDialogShell({
       selector={(state) => [state.isSubmitting, state.values.status]}
     >
       {([isSubmitting, status]) => (
-        <form
-          id={formId}
-          onSubmit={(event) => {
-            event.preventDefault();
-            form.handleSubmit();
-          }}
-        >
+        <form action={() => form.handleSubmit()} id={formId}>
           <ResponsiveDialog
             description={description}
             footer={
@@ -472,7 +480,7 @@ function AssessmentDialogShell({
                             className="w-auto overflow-hidden p-0"
                           >
                             <Calendar
-                              disabled={{ before: startOfDay(new Date()) }}
+                              disabled={{ before: minimumDate }}
                               mode="single"
                               onSelect={(date) => {
                                 if (!date) {

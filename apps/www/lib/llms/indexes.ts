@@ -75,22 +75,50 @@ export const getLlmsSectionIndexText = Effect.fn("www.llms.index.text")(
     }
 
     const entries = yield* getLocalizedLlmsEntries(locale);
-    const scopedEntries = entries.filter((entry) =>
-      entryBelongsToPrefix(entry, prefixParts)
-    );
-
-    if (scopedEntries.length === 0) {
-      return null;
-    }
-
-    return buildScopedLlmsIndexText({
-      entries: scopedEntries,
-      locale,
-      prefixParts,
-      section,
-    });
+    return buildLlmsSectionIndexTextFromEntries({ cleanSlug, entries });
   }
 );
+
+/** Builds a locale or section llms index from prebuilt entries. */
+export function buildLlmsSectionIndexTextFromEntries({
+  cleanSlug,
+  entries,
+}: {
+  cleanSlug: string;
+  entries: LlmsEntry[];
+}) {
+  const parsed = parseLlmsIndexSlug(cleanSlug);
+
+  if (!parsed) {
+    return null;
+  }
+
+  const { locale, prefixParts } = parsed;
+
+  if (prefixParts.length === 0) {
+    return buildLocaleLlmsIndexText(locale);
+  }
+
+  const section = prefixParts[0];
+  if (!isLlmsSection(section)) {
+    return null;
+  }
+
+  const scopedEntries = entries.filter((entry) =>
+    entryBelongsToPrefix(entry, prefixParts)
+  );
+
+  if (scopedEntries.length === 0) {
+    return null;
+  }
+
+  return buildScopedLlmsIndexText({
+    entries: scopedEntries,
+    locale,
+    prefixParts,
+    section,
+  });
+}
 
 /** Parses `/llms/:locale/...` index routes into locale and prefix parts. */
 function parseLlmsIndexSlug(cleanSlug: string) {
@@ -208,7 +236,17 @@ function entryBelongsToPrefix(entry: LlmsEntry, prefixParts: string[]) {
     return false;
   }
 
-  return prefixParts.every((part, index) => entry.segments[index] === part);
+  if (prefixParts.length > entry.segments.length) {
+    return false;
+  }
+
+  for (const [index, part] of prefixParts.entries()) {
+    if (entry.segments[index] !== part) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 /** Checks whether an entry is exactly the current prefix page. */

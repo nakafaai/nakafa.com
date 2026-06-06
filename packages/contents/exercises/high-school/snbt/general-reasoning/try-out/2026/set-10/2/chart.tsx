@@ -8,20 +8,19 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import {
+  ChartBar,
+  ChartBarChart,
+  ChartCartesianGrid,
   type ChartConfig,
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
+  ChartXAxis,
+  ChartYAxis,
 } from "@repo/design-system/components/ui/chart";
-import {
-  CartesianGrid,
-  Bar as RechartsBar,
-  BarChart as RechartsBarChart,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { type ReactNode, useMemo } from "react";
 
 const chartData = [
   { division: "A", rejected: 20, accepted: 30 },
@@ -32,78 +31,75 @@ const chartData = [
 ];
 
 interface Props {
-  lang?: "id" | "en";
+  acceptedLabel: ReactNode;
+  description: ReactNode;
+  divisionLabel: string;
+  rejectedLabel: ReactNode;
+  title: ReactNode;
 }
 
-const translations = {
-  id: {
-    title: "Data Penerimaan Pegawai Perusahaan A",
-    description:
-      "Jumlah calon pegawai yang diterima dan tidak diterima per divisi di Perusahaan A.",
-    accepted: "Diterima",
-    rejected: "Tidak Diterima",
-    divisionPrefix: "Divisi",
-  },
-  en: {
-    title: "Company A Employee Recruitment Data",
-    description:
-      "Number of accepted and rejected employee candidates per division at Company A.",
-    accepted: "Accepted",
-    rejected: "Rejected",
-    divisionPrefix: "Division",
-  },
-};
+/** Renders the employee recruitment chart with MDX-owned copy. */
+export function RecruitmentChart({
+  acceptedLabel,
+  description,
+  divisionLabel,
+  rejectedLabel,
+  title,
+}: Props) {
+  const data = useMemo(
+    () =>
+      chartData.map((item) => ({
+        ...item,
+        formattedDivision: `${divisionLabel} ${item.division}`,
+      })),
+    [divisionLabel]
+  );
 
-export function RecruitmentChart({ lang = "en" }: Props) {
-  const t = translations[lang];
-
-  // Transform data to include localized division names
-  const data = chartData.map((item) => ({
-    ...item,
-    formattedDivision: `${t.divisionPrefix} ${item.division}`,
-  }));
-
-  const chartConfig = {
-    rejected: {
-      label: t.rejected,
-      colors: { light: ["var(--chart-1)"] },
-    },
-    accepted: {
-      label: t.accepted,
-      colors: { light: ["var(--chart-2)"] },
-    },
-  } satisfies ChartConfig;
+  const chartConfig = useMemo(
+    () =>
+      ({
+        rejected: {
+          label: rejectedLabel,
+          colors: { light: ["var(--chart-1)"] },
+        },
+        accepted: {
+          label: acceptedLabel,
+          colors: { light: ["var(--chart-2)"] },
+        },
+      }) satisfies ChartConfig,
+    [acceptedLabel, rejectedLabel]
+  );
 
   return (
     <Card className="content-auto-card">
       <CardHeader>
-        <CardTitle>{t.title}</CardTitle>
-        <CardDescription>{t.description}</CardDescription>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer className="aspect-video" config={chartConfig}>
-          <RechartsBarChart accessibilityLayer data={data}>
-            <CartesianGrid vertical={false} />
-            <XAxis
+          <ChartBarChart accessibilityLayer data={data}>
+            <ChartCartesianGrid vertical={false} />
+            <ChartXAxis
               axisLine={false}
               dataKey="formattedDivision"
               tickLine={false}
               tickMargin={10}
             />
-            <YAxis axisLine={false} tickLine={false} tickMargin={10} />
+            <ChartYAxis axisLine={false} tickLine={false} tickMargin={10} />
             <ChartTooltip content={<ChartTooltipContent />} />
             <ChartLegend content={<ChartLegendContent />} />
-            <RechartsBar
+            <ChartBar
               dataKey="rejected"
               fill="var(--color-rejected-0)"
               radius={[4, 4, 0, 0]}
             />
-            <RechartsBar
+            <ChartBar
               dataKey="accepted"
               fill="var(--color-accepted-0)"
               radius={[4, 4, 0, 0]}
             />
-          </RechartsBarChart>
+          </ChartBarChart>
         </ChartContainer>
       </CardContent>
     </Card>

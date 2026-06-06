@@ -1,7 +1,6 @@
 import { formatNakafaRouteTitle } from "@repo/contents/_lib/agent/format";
 import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
 import type { NakafaAgentContentSummary } from "@repo/contents/_lib/agent/schema/ref";
-import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
 import {
   getExerciseQuestionNumbers,
   getExerciseSetPathsFromSlugs,
@@ -10,6 +9,7 @@ import {
   hasInvalidTryOutYearSlug,
   isYearlessTryOutCollectionSlug,
 } from "@repo/contents/_lib/exercises/slug";
+import { getMdxSlugsForLocale } from "@repo/contents/_lib/mdx-slugs/cache";
 import {
   type ContentMetadataListItem,
   getContentsMetadata,
@@ -17,20 +17,35 @@ import {
 import { getAllSurah, getSurahName } from "@repo/contents/_lib/quran";
 import type { Locale } from "@repo/contents/_types/content";
 import { routing } from "@repo/internationalization/src/routing";
-import { Effect } from "effect";
+import { Cache, Duration, Effect } from "effect";
 
 /** Builds the full public Nakafa content index for one locale. */
 export const getNakafaAgentContentIndex = Effect.fn(
   "NakafaAgent.getContentIndex"
 )(function* (locale: Locale = routing.defaultLocale) {
-  const mdxItems = yield* getNakafaMdxContentSummaries(locale);
-  const exerciseItems = getNakafaExerciseSummaries(locale);
-  const quranItems = getNakafaQuranSummaries(locale);
-
-  return [...mdxItems, ...exerciseItems, ...quranItems].sort(
-    compareNakafaContentSummaries
-  );
+  return yield* nakafaAgentContentIndexCache.get(locale);
 });
+
+const nakafaAgentContentIndexCache = Effect.runSync(
+  Cache.make({
+    capacity: routing.locales.length,
+    timeToLive: Duration.infinity,
+    lookup: buildNakafaAgentContentIndex,
+  })
+);
+
+/** Builds an uncached agent content index entry for one locale. */
+function buildNakafaAgentContentIndex(locale: Locale) {
+  return Effect.gen(function* () {
+    const mdxItems = yield* getNakafaMdxContentSummaries(locale);
+    const exerciseItems = yield* getNakafaExerciseSummaries(locale);
+    const quranItems = getNakafaQuranSummaries(locale);
+
+    return [...mdxItems, ...exerciseItems, ...quranItems].sort(
+      compareNakafaContentSummaries
+    );
+  });
+}
 
 /** Provides stable ordering across mixed content sections. */
 function compareNakafaContentSummaries(
@@ -77,15 +92,23 @@ function buildNakafaMdxContentSummary(
 
 /** Builds searchable summaries for canonical exercise sets. */
 function getNakafaExerciseSummaries(locale: Locale) {
-  const slugs = getMDXSlugsForLocale(locale);
+  return Effect.gen(function* () {
+    const slugs = yield* getMdxSlugsForLocale(locale);
 
-  return getExerciseSetPathsFromSlugs(slugs)
-    .filter(isCanonicalNakafaExerciseSetPath)
-    .map((route) => ({
-      ...buildNakafaContentRef(locale, route, "exercises"),
-      description: `${getExerciseQuestionNumbers(slugs, route).length} exercises`,
-      title: formatNakafaRouteTitle(route, locale),
-    }));
+    return getExerciseSetPathsFromSlugs(slugs).flatMap((route) => {
+      if (!isCanonicalNakafaExerciseSetPath(route)) {
+        return [];
+      }
+
+      return [
+        {
+          ...buildNakafaContentRef(locale, route, "exercises"),
+          description: `${getExerciseQuestionNumbers(slugs, route).length} exercises`,
+          title: formatNakafaRouteTitle(route, locale),
+        },
+      ];
+    });
+  });
 }
 
 /** Builds searchable summaries for Quran surahs. */

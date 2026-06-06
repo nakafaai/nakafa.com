@@ -2,12 +2,13 @@ import { getNakafaAgentContentIndex } from "@repo/contents/_lib/agent/catalog/so
 import { Effect } from "effect";
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("@repo/contents/_lib/cache", () => ({
-  getMDXSlugsForLocale: () => [
-    "broken/1/_question",
-    "exercises/high-school/snbt/general-reasoning/try-out/1/_question",
-    "exercises/high-school/snbt/general-reasoning/try-out/2026/set-1/1/_question",
-  ],
+vi.mock("@repo/contents/_lib/mdx-slugs/cache", () => ({
+  getMdxSlugsForLocale: () =>
+    Effect.succeed([
+      "broken/1/_question",
+      "exercises/high-school/snbt/general-reasoning/try-out/1/_question",
+      "exercises/high-school/snbt/general-reasoning/try-out/2026/set-1/1/_question",
+    ]),
 }));
 
 vi.mock("@repo/contents/_lib/metadata", () => ({
@@ -42,8 +43,18 @@ vi.mock("@repo/contents/_lib/metadata", () => ({
 }));
 
 vi.mock("@repo/contents/_lib/quran", () => ({
-  getAllSurah: () => [],
-  getSurahName: () => "",
+  getAllSurah: () => [
+    {
+      name: {
+        translation: {
+          en: "Opening",
+          id: "Pembuka",
+        },
+      },
+      number: 1,
+    },
+  ],
+  getSurahName: () => "Opening",
 }));
 
 describe("Nakafa agent content index", () => {
@@ -69,6 +80,10 @@ describe("Nakafa agent content index", () => {
         expect.objectContaining({
           description: "",
           route: "subject/empty",
+        }),
+        expect.objectContaining({
+          description: "Opening",
+          route: "quran/1",
         }),
       ])
     );

@@ -5,6 +5,7 @@ import {
   ResizableHandle,
   ResizablePanel,
 } from "@repo/design-system/components/ui/resizable";
+import { Suspense } from "react";
 import { SchoolClassesForumPanel } from "@/components/school/classes/forum/panel";
 import {
   SCHOOL_CLASSES_WORKSPACE_DETAIL_PANEL_ID,
@@ -27,7 +28,11 @@ export function SchoolClassesForumPanelSlot({
   const isCompact = useSchoolClassesWorkspaceIsCompact();
 
   if (isCompact) {
-    return <SchoolClassesForumPanel forumId={forumId} />;
+    return (
+      <Suspense fallback={null}>
+        <SchoolClassesForumPanel forumId={forumId} />
+      </Suspense>
+    );
   }
 
   return (
@@ -41,7 +46,9 @@ export function SchoolClassesForumPanelSlot({
         maxSize={SCHOOL_CLASSES_FORUM_PANEL_SLOT_MAX_SIZE}
         minSize={SCHOOL_CLASSES_FORUM_PANEL_SLOT_MIN_SIZE}
       >
-        <SchoolClassesForumPanel forumId={forumId} />
+        <Suspense fallback={null}>
+          <SchoolClassesForumPanel forumId={forumId} />
+        </Suspense>
       </ResizablePanel>
     </>
   );

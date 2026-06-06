@@ -1,4 +1,6 @@
 // @vitest-environment node
+
+import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   clearSitemapRouteCache,
@@ -10,7 +12,8 @@ import {
 } from "@/lib/sitemap/routes";
 
 const mockContentCache = vi.hoisted(() => ({
-  getMDXSlugsForLocale: vi.fn(),
+  clearMdxSlugCache: vi.fn(),
+  getMdxSlugsForLocale: vi.fn(),
   slugs: [
     "articles/politics/dynastic-politics-asian-values",
     "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1/1/_answer",
@@ -22,17 +25,40 @@ const mockContentCache = vi.hoisted(() => ({
 
 const mockContentFolders = vi.hoisted(() => ({
   clearFolderChildNamesCache: vi.fn(),
-  getFolderChildNamesSync: vi.fn(),
+  getFolderChildNames: vi.fn(),
+  getNestedSlugs: vi.fn(),
 }));
 
-vi.mock("@repo/contents/_lib/cache", () => ({
-  getMDXSlugsForLocale: mockContentCache.getMDXSlugsForLocale,
+vi.mock("@repo/contents/_lib/mdx-slugs/cache", () => ({
+  clearMdxSlugCache: () => {
+    mockContentCache.clearMdxSlugCache();
+    return Effect.void;
+  },
+  getMdxSlugsForLocale: (locale: string) =>
+    Effect.succeed(mockContentCache.getMdxSlugsForLocale(locale)),
 }));
 
-vi.mock("@repo/contents/_lib/fs", () => ({
-  clearFolderChildNamesCache: mockContentFolders.clearFolderChildNamesCache,
-  getFolderChildNamesSync: mockContentFolders.getFolderChildNamesSync,
-}));
+vi.mock("@repo/contents/_lib/fs/cache", async () => {
+  const { Effect: EffectModule } = await import("effect");
+
+  return {
+    clearFolderChildNamesCache: () => {
+      mockContentFolders.clearFolderChildNamesCache();
+      return EffectModule.void;
+    },
+    getFolderChildNames: mockContentFolders.getFolderChildNames,
+    getFolderChildNamesCacheVersion: vi.fn(() => EffectModule.succeed(0)),
+  };
+});
+
+vi.mock("@repo/contents/_lib/fs/nested-slugs", async () => {
+  const { Effect: EffectModule } = await import("effect");
+
+  return {
+    getNestedSlugs: (folder: string) =>
+      EffectModule.succeed(mockContentFolders.getNestedSlugs(folder)),
+  };
+});
 
 vi.mock("@repo/internationalization/src/routing", () => ({
   routing: {
@@ -42,18 +68,22 @@ vi.mock("@repo/internationalization/src/routing", () => ({
 }));
 
 function mockContentFolderTree(tree: Record<string, string[]>) {
-  mockContentFolders.getFolderChildNamesSync.mockImplementation(
-    (folder) => tree[folder] ?? []
+  mockContentFolders.getFolderChildNames.mockImplementation((folder) =>
+    Effect.succeed(tree[folder] ?? [])
   );
 }
 
 beforeEach(() => {
+  mockContentCache.clearMdxSlugCache.mockReset();
   mockContentFolders.clearFolderChildNamesCache.mockReset();
   clearSitemapRouteCache();
+  mockContentCache.clearMdxSlugCache.mockClear();
   mockContentFolders.clearFolderChildNamesCache.mockClear();
-  mockContentCache.getMDXSlugsForLocale.mockReset();
-  mockContentCache.getMDXSlugsForLocale.mockReturnValue(mockContentCache.slugs);
-  mockContentFolders.getFolderChildNamesSync.mockReset();
+  mockContentCache.getMdxSlugsForLocale.mockReset();
+  mockContentCache.getMdxSlugsForLocale.mockReturnValue(mockContentCache.slugs);
+  mockContentFolders.getFolderChildNames.mockReset();
+  mockContentFolders.getNestedSlugs.mockReset();
+  mockContentFolders.getNestedSlugs.mockReturnValue([]);
   mockContentFolderTree({
     exercises: ["middle-school", "high-school"],
     "exercises/high-school": ["snbt"],
@@ -73,12 +103,13 @@ describe("sitemap route discovery", () => {
     expect(
       mockContentFolders.clearFolderChildNamesCache
     ).toHaveBeenCalledOnce();
+    expect(mockContentCache.clearMdxSlugCache).toHaveBeenCalledOnce();
   });
 
-  it("builds sitemap routes from real content entries and quran routes", () => {
-    expect(getQuranRoutes()).toHaveLength(114);
+  it("builds sitemap routes from real content entries and quran routes", async () => {
+    expect(await getQuranRoutes()).toHaveLength(114);
 
-    const routes = getSitemapRoutes();
+    const routes = await getSitemapRoutes();
 
     expect(routes).not.toContain("/articles");
     expect(routes).not.toContain("/exercises");
@@ -120,24 +151,24 @@ describe("sitemap route discovery", () => {
     expect(routes).toContain(
       "/subject/high-school/10/chemistry/green-chemistry/definition"
     );
-    expect(getPublicContentRouteRoots()).toEqual(
+    expect(await getPublicContentRouteRoots()).toEqual(
       expect.arrayContaining(["/articles", "/subject", "/exercises", "/quran"])
     );
-    expect(getPublicContentRouteRoots()).toHaveLength(4);
-    expect(getPublicContentRequestRoutes()).toContain(
+    expect(await getPublicContentRouteRoots()).toHaveLength(4);
+    expect(await getPublicContentRequestRoutes()).toContain(
       "/subject/high-school/10/chemistry/green-chemistry"
     );
-    expect(getPublicContentRequestRoutes()).toContain("/subject");
-    expect(getPublicContentRequestRoutes()).toContain("/quran");
-    expect(getPublicContentRedirects()).toContainEqual([
+    expect(await getPublicContentRequestRoutes()).toContain("/subject");
+    expect(await getPublicContentRequestRoutes()).toContain("/quran");
+    expect(await getPublicContentRedirects()).toContainEqual([
       "/subject/high-school/10/chemistry/green-chemistry",
       "/subject/high-school/10/chemistry",
     ]);
-    expect(mockContentCache.getMDXSlugsForLocale).toHaveBeenCalledTimes(2);
+    expect(mockContentCache.getMdxSlugsForLocale).toHaveBeenCalledTimes(2);
   });
 
-  it("ignores malformed content entries instead of inventing sitemap pages", () => {
-    mockContentCache.getMDXSlugsForLocale.mockReturnValue([
+  it("ignores malformed content entries instead of inventing sitemap pages", async () => {
+    mockContentCache.getMdxSlugsForLocale.mockReturnValue([
       "articles",
       "articles/not-a-category/draft",
       "subject/high-school/10/chemistry",
@@ -164,7 +195,7 @@ describe("sitemap route discovery", () => {
       "subject/high-school/10": ["not-a-material"],
     });
 
-    const routes = getSitemapRoutes();
+    const routes = await getSitemapRoutes();
 
     expect(routes).toContain("/");
     expect(routes).not.toContain("/about");
@@ -174,10 +205,10 @@ describe("sitemap route discovery", () => {
     expect(routes).not.toContain(
       "/subject/high-school/10/chemistry/green-chemistry"
     );
-    expect(getPublicContentRequestRoutes()).toContain(
+    expect(await getPublicContentRequestRoutes()).toContain(
       "/subject/high-school/10/chemistry/green-chemistry"
     );
-    expect(getPublicContentRedirects()).toContainEqual([
+    expect(await getPublicContentRedirects()).toContainEqual([
       "/subject/high-school/10/chemistry/green-chemistry",
       "/subject/high-school/10/chemistry",
     ]);
@@ -200,10 +231,10 @@ describe("sitemap route discovery", () => {
     );
   });
 
-  it("keeps sitemap discovery working when subject folders cannot be read", () => {
-    mockContentFolders.getFolderChildNamesSync.mockReturnValue([]);
+  it("keeps sitemap discovery working when subject folders cannot be read", async () => {
+    mockContentFolders.getFolderChildNames.mockReturnValue(Effect.succeed([]));
 
-    const routes = getSitemapRoutes();
+    const routes = await getSitemapRoutes();
 
     expect(routes).toContain("/");
     expect(routes).not.toContain("/about");

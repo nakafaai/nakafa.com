@@ -49,14 +49,58 @@ import {
   type PropsWithChildren,
   type ReactNode,
   type RefObject,
+  use,
   useCallback,
-  useContext,
   useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
+
+const submitTextareaOnEnter: KeyboardEventHandler<HTMLTextAreaElement> = (
+  event
+) => {
+  if (event.key !== "Enter") {
+    return;
+  }
+
+  if (event.nativeEvent.isComposing) {
+    return;
+  }
+
+  if (event.shiftKey) {
+    return;
+  }
+
+  event.preventDefault();
+  event.currentTarget.form?.requestSubmit();
+};
+
+/** Converts a browser blob URL into a data URL for attachment submission. */
+async function convertBlobUrlToDataUrl(url: string) {
+  const response = await fetch(url);
+  const blob = await response.blob();
+
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.addEventListener("loadend", () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+        return;
+      }
+
+      reject(new Error("FileReader did not return a data URL."));
+    });
+    reader.addEventListener("error", () => {
+      reject(reader.error ?? new Error("FileReader failed to read the blob."));
+    });
+    reader.readAsDataURL(blob);
+  });
+}
+
 // ============================================================================
 // Provider Context & Types
 // ============================================================================
@@ -92,7 +136,7 @@ const ProviderAttachmentsContext = createContext<AttachmentsContext | null>(
 );
 
 export const usePromptInputController = () => {
-  const ctx = useContext(PromptInputContext);
+  const ctx = use(PromptInputContext);
   if (!ctx) {
     throw new Error(
       "Wrap your component inside <PromptInputProvider> to use usePromptInputController()."
@@ -103,11 +147,11 @@ export const usePromptInputController = () => {
 
 // Optional variants (do NOT throw). Useful for dual-mode components.
 function useOptionalPromptInputController() {
-  return useContext(PromptInputContext);
+  return use(PromptInputContext);
 }
 
 export function useProviderAttachments() {
-  const ctx = useContext(ProviderAttachmentsContext);
+  const ctx = use(ProviderAttachmentsContext);
   if (!ctx) {
     throw new Error(
       "Wrap your component inside <PromptInputProvider> to use useProviderAttachments()."
@@ -117,7 +161,7 @@ export function useProviderAttachments() {
 }
 
 function useOptionalProviderAttachments() {
-  return useContext(ProviderAttachmentsContext);
+  return use(ProviderAttachmentsContext);
 }
 
 export type PromptInputProviderProps = PropsWithChildren<{
@@ -240,7 +284,7 @@ const LocalAttachmentsContext = createContext<AttachmentsContext | null>(null);
 export function usePromptInputAttachments() {
   // Dual-mode: prefer provider if present, otherwise use local
   const provider = useOptionalProviderAttachments();
-  const local = useContext(LocalAttachmentsContext);
+  const local = use(LocalAttachmentsContext);
   const context = provider ?? local;
   if (!context) {
     throw new Error(
@@ -308,7 +352,7 @@ export function PromptInputAttachment({
       )}
       <Button
         aria-label="Remove attachment"
-        className="absolute -top-1.5 -right-1.5 h-6 w-6 rounded-full opacity-0 group-hover:opacity-100"
+        className="absolute -top-1.5 -right-1.5 size-6 rounded-full opacity-0 group-hover:opacity-100"
         onClick={() => attachments.remove(data.id)}
         size="icon"
         type="button"
@@ -362,6 +406,17 @@ export function PromptInputAttachments({
     return null;
   }
 
+  const fileAttachments: typeof attachments.files = [];
+  const imageAttachments: typeof attachments.files = [];
+
+  for (const file of attachments.files) {
+    if (file.mediaType?.startsWith("image/") && file.url) {
+      imageAttachments.push(file);
+    } else {
+      fileAttachments.push(file);
+    }
+  }
+
   return (
     <InputGroupAddon
       align="block-start"
@@ -373,20 +428,16 @@ export function PromptInputAttachments({
       style={{ height: attachments.files.length ? height : 0 }}
       {...props}
     >
-      <div className="space-y-2 py-1" ref={contentRef}>
+      <div className="flex flex-col gap-2 py-1" ref={contentRef}>
         <div className="flex flex-wrap gap-2">
-          {attachments.files
-            .filter((f) => !(f.mediaType?.startsWith("image/") && f.url))
-            .map((file) => (
-              <Fragment key={file.id}>{children(file)}</Fragment>
-            ))}
+          {fileAttachments.map((file) => (
+            <Fragment key={file.id}>{children(file)}</Fragment>
+          ))}
         </div>
         <div className="flex flex-wrap gap-2">
-          {attachments.files
-            .filter((f) => f.mediaType?.startsWith("image/") && f.url)
-            .map((file) => (
-              <Fragment key={file.id}>{children(file)}</Fragment>
-            ))}
+          {imageAttachments.map((file) => (
+            <Fragment key={file.id}>{children(file)}</Fragment>
+          ))}
         </div>
       </div>
     </InputGroupAddon>
@@ -665,21 +716,10 @@ export const PromptInput = ({
     [usingProvider, files]
   );
 
-  const handleChange: ChangeEventHandler<HTMLInputElement> = (event) => {
+  const addSelectedFiles: ChangeEventHandler<HTMLInputElement> = (event) => {
     if (event.currentTarget.files) {
       add(event.currentTarget.files);
     }
-  };
-
-  const convertBlobUrlToDataUrl = async (url: string): Promise<string> => {
-    const response = await fetch(url);
-    const blob = await response.blob();
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
   };
 
   const ctx = useMemo<AttachmentsContext>(
@@ -774,7 +814,7 @@ export const PromptInput = ({
         aria-label="Upload files"
         className="hidden"
         multiple={multiple}
-        onChange={handleChange}
+        onChange={addSelectedFiles}
         ref={inputRef}
         title="Upload files"
         type="file"
@@ -818,19 +858,6 @@ export const PromptInputTextarea = ({
   const controller = useOptionalPromptInputController();
   const attachments = usePromptInputAttachments();
 
-  const handleKeyDown: KeyboardEventHandler<HTMLTextAreaElement> = (e) => {
-    if (e.key === "Enter") {
-      if (e.nativeEvent.isComposing) {
-        return;
-      }
-      if (e.shiftKey) {
-        return;
-      }
-      e.preventDefault();
-      e.currentTarget.form?.requestSubmit();
-    }
-  };
-
   const handlePaste: ClipboardEventHandler<HTMLTextAreaElement> = (event) => {
     const items = event.clipboardData?.items;
 
@@ -871,7 +898,7 @@ export const PromptInputTextarea = ({
     <InputGroupTextarea
       className={cn("field-sizing-content max-h-48 min-h-16", className)}
       name="message"
-      onKeyDown={handleKeyDown}
+      onKeyDown={submitTextareaOnEnter}
       onPaste={handlePaste}
       placeholder={placeholder}
       {...props}
@@ -1069,6 +1096,34 @@ export type PromptInputSpeechButtonProps = ComponentProps<
   onTranscriptionChange?: (text: string) => void;
 };
 
+function getSpeechRecognitionApi() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  if (!("SpeechRecognition" in window || "webkitSpeechRecognition" in window)) {
+    return null;
+  }
+
+  return window.SpeechRecognition || window.webkitSpeechRecognition;
+}
+
+function getSpeechRecognitionSnapshot() {
+  return getSpeechRecognitionApi() !== null;
+}
+
+function getServerSpeechRecognitionSnapshot() {
+  return false;
+}
+
+function unsubscribeSpeechRecognitionAvailability() {
+  return;
+}
+
+function subscribeSpeechRecognitionAvailability(_listener: () => void) {
+  return unsubscribeSpeechRecognitionAvailability;
+}
+
 export const PromptInputSpeechButton = ({
   className,
   textareaRef,
@@ -1076,69 +1131,80 @@ export const PromptInputSpeechButton = ({
   ...props
 }: PromptInputSpeechButtonProps) => {
   const [isListening, setIsListening] = useState(false);
-  const [recognition, setRecognition] = useState<SpeechRecognition | null>(
-    null
+  const hasRecognition = useSyncExternalStore(
+    subscribeSpeechRecognitionAvailability,
+    getSpeechRecognitionSnapshot,
+    getServerSpeechRecognitionSnapshot
   );
+  const onTranscriptionChangeRef = useRef(onTranscriptionChange);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const textareaRefRef = useRef(textareaRef);
 
   useEffect(() => {
-    if (
-      typeof window !== "undefined" &&
-      ("SpeechRecognition" in window || "webkitSpeechRecognition" in window)
-    ) {
-      const SpeechRecognitionAPI =
-        window.SpeechRecognition || window.webkitSpeechRecognition;
-      const speechRecognition = new SpeechRecognitionAPI();
+    onTranscriptionChangeRef.current = onTranscriptionChange;
+  }, [onTranscriptionChange]);
 
-      speechRecognition.continuous = true;
-      speechRecognition.interimResults = true;
-      speechRecognition.lang = "en-US";
+  useEffect(() => {
+    textareaRefRef.current = textareaRef;
+  }, [textareaRef]);
 
-      speechRecognition.onstart = () => {
-        setIsListening(true);
-      };
+  useEffect(() => {
+    const SpeechRecognitionAPI = getSpeechRecognitionApi();
 
-      speechRecognition.onend = () => {
-        setIsListening(false);
-      };
-
-      speechRecognition.onresult = (event) => {
-        let finalTranscript = "";
-
-        for (const result of Array.from(event.results)) {
-          if (result.isFinal) {
-            finalTranscript += result[0].transcript;
-          }
-        }
-
-        if (finalTranscript && textareaRef?.current) {
-          const textarea = textareaRef.current;
-          const currentValue = textarea.value;
-          const newValue =
-            currentValue + (currentValue ? " " : "") + finalTranscript;
-
-          textarea.value = newValue;
-          textarea.dispatchEvent(new Event("input", { bubbles: true }));
-          onTranscriptionChange?.(newValue);
-        }
-      };
-
-      speechRecognition.onerror = () => {
-        setIsListening(false);
-      };
-
-      recognitionRef.current = speechRecognition;
-      setRecognition(speechRecognition);
+    if (!SpeechRecognitionAPI) {
+      return;
     }
 
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
+    const speechRecognition = new SpeechRecognitionAPI();
+
+    speechRecognition.continuous = true;
+    speechRecognition.interimResults = true;
+    speechRecognition.lang = "en-US";
+
+    speechRecognition.onstart = () => {
+      setIsListening(true);
+    };
+
+    speechRecognition.onend = () => {
+      setIsListening(false);
+    };
+
+    speechRecognition.onresult = (event) => {
+      let finalTranscript = "";
+
+      for (const result of Array.from(event.results)) {
+        if (result.isFinal) {
+          finalTranscript += result[0].transcript;
+        }
+      }
+
+      const textarea = textareaRefRef.current?.current;
+      if (finalTranscript && textarea) {
+        const currentValue = textarea.value;
+        const newValue =
+          currentValue + (currentValue ? " " : "") + finalTranscript;
+
+        textarea.value = newValue;
+        textarea.dispatchEvent(new Event("input", { bubbles: true }));
+        onTranscriptionChangeRef.current?.(newValue);
       }
     };
-  }, [textareaRef, onTranscriptionChange]);
+
+    speechRecognition.onerror = () => {
+      setIsListening(false);
+    };
+
+    recognitionRef.current = speechRecognition;
+
+    return () => {
+      speechRecognition.stop();
+      recognitionRef.current = null;
+    };
+  }, []);
 
   const toggleListening = useCallback(() => {
+    const recognition = recognitionRef.current;
+
     if (!recognition) {
       return;
     }
@@ -1148,7 +1214,7 @@ export const PromptInputSpeechButton = ({
     } else {
       recognition.start();
     }
-  }, [recognition, isListening]);
+  }, [isListening]);
 
   return (
     <PromptInputButton
@@ -1157,7 +1223,7 @@ export const PromptInputSpeechButton = ({
         !!isListening && "animate-pulse bg-accent text-accent-foreground",
         className
       )}
-      disabled={!recognition}
+      disabled={!hasRecognition}
       onClick={toggleListening}
       {...props}
     >

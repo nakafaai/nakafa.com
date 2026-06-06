@@ -1,13 +1,15 @@
 import { Books02Icon } from "@hugeicons/core-free-icons";
-import { getCategoryIcon } from "@repo/contents/_lib/subject/category";
 import {
   getAllGradesWithSubjects,
   getGradeNonNumeric,
 } from "@repo/contents/_lib/subject/grade";
+import { getCategoryIcon } from "@repo/contents/_lib/subject/icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
+import { Effect, Option } from "effect";
 import type { Metadata } from "next";
+import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { use } from "react";
@@ -57,8 +59,16 @@ export default function Page(props: PageProps<"/[locale]/subject">) {
   return <PageContent locale={locale} />;
 }
 
+/** Reads subject grade listings inside a Next Cache Components boundary. */
+async function getCachedGradesWithSubjects() {
+  "use cache";
+  cacheLife("max");
+
+  return Effect.runPromise(getAllGradesWithSubjects());
+}
+
 async function PageContent({ locale }: { locale: Locale }) {
-  const allGrades = getAllGradesWithSubjects();
+  const allGrades = await getCachedGradesWithSubjects();
   const categoryOrder = Array.from(
     new Set(allGrades.map((grade) => grade.category))
   );
@@ -107,7 +117,10 @@ async function PageContent({ locale }: { locale: Locale }) {
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                   {grades.map((grade) => {
                     const gradeLabel = tSubject(
-                      getGradeNonNumeric(grade.grade) ?? "grade",
+                      Option.getOrElse(
+                        getGradeNonNumeric(grade.grade),
+                        () => "grade"
+                      ),
                       { grade: grade.grade }
                     );
 

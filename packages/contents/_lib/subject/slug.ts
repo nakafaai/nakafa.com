@@ -5,6 +5,7 @@ import type {
   Material,
   MaterialList,
 } from "@repo/contents/_types/subject/material";
+import { Option } from "effect";
 
 /**
  * Builds the public path for a nested subject content page.
@@ -37,32 +38,36 @@ export function getMaterialsPagination(
   currentPath: string,
   materials: MaterialList
 ): ContentPagination {
-  // Default empty navigation item
   const emptyItem = { href: "", title: "" };
 
-  // Flatten all items from all subjects into a single array with subject information
   const allItems = materials.flatMap((subject) =>
     subject.items.map((item) => ({
       ...item,
     }))
   );
 
-  // Find the index of the current item in the flattened array
   const currentIndex = allItems.findIndex((item) => item.href === currentPath);
 
-  // If the current path is not found, return empty items
   if (currentIndex === -1) {
     return { prev: emptyItem, next: emptyItem };
   }
 
-  // Extract navigation data from an item or return empty values if not available
-  function getItemData(item: (typeof allItems)[number] | null) {
-    return item ? { href: item.href, title: item.title } : emptyItem;
+  function getItemData(item: Option.Option<(typeof allItems)[number]>) {
+    if (Option.isNone(item)) {
+      return emptyItem;
+    }
+
+    return { href: item.value.href, title: item.value.title };
   }
-  // Get previous and next items based on current index
-  const prevItem = currentIndex > 0 ? allItems[currentIndex - 1] : null;
+
+  const prevItem =
+    currentIndex > 0
+      ? Option.some(allItems[currentIndex - 1])
+      : Option.none<(typeof allItems)[number]>();
   const nextItem =
-    currentIndex < allItems.length - 1 ? allItems[currentIndex + 1] : null;
+    currentIndex < allItems.length - 1
+      ? Option.some(allItems[currentIndex + 1])
+      : Option.none<(typeof allItems)[number]>();
 
   return {
     prev: getItemData(prevItem),

@@ -2,7 +2,6 @@
 
 import { ArrowDown01Icon, StopIcon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -15,9 +14,11 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
 import { useMutation } from "convex/react";
+import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { useLayoutEffect, useTransition } from "react";
 import { toast } from "sonner";
+import { reportClientException } from "@/lib/analytics/client";
 import { useAttempt } from "@/lib/context/use-attempt";
 import { useExercise } from "@/lib/context/use-exercise";
 import { useUser } from "@/lib/context/use-user";
@@ -61,28 +62,39 @@ export function CompleteExerciseButton() {
       return;
     }
 
+    if (!attempt) {
+      toast.error(t("complete-exercise-error"), {
+        position: "bottom-center",
+      });
+      return;
+    }
+
     startTransition(async () => {
-      if (!attempt) {
-        toast.error(t("complete-exercise-error"), {
-          position: "bottom-center",
-        });
-        return;
-      }
-
-      try {
-        await completeAttempt({ attemptId: attempt._id });
-        close();
-        resetTimeSpent();
-        setShowStats(true);
-      } catch (error) {
-        captureException(error, {
-          source: "exercise-complete-attempt",
-        });
-
-        toast.error(t("complete-exercise-error"), {
-          position: "bottom-center",
-        });
-      }
+      await Effect.runPromise(
+        Effect.tryPromise({
+          try: async () => {
+            await completeAttempt({ attemptId: attempt._id });
+            close();
+            resetTimeSpent();
+            setShowStats(true);
+          },
+          catch: (error) => error,
+        }).pipe(
+          Effect.catchAll((error) =>
+            reportClientException(error, {
+              source: "exercise-complete-attempt",
+            }).pipe(
+              Effect.zipRight(
+                Effect.sync(() => {
+                  toast.error(t("complete-exercise-error"), {
+                    position: "bottom-center",
+                  });
+                })
+              )
+            )
+          )
+        )
+      );
     });
   };
 

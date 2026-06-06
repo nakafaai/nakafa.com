@@ -4,6 +4,11 @@ import * as rootParams from "next/root-params";
 import { hasLocale } from "next-intl";
 import { getRequestConfig } from "next-intl/server";
 
+const loadMessagesByLocale = {
+  en: () => import("@repo/internationalization/dictionaries/en.json"),
+  id: () => import("@repo/internationalization/dictionaries/id.json"),
+};
+
 /**
  * Resolves the request locale for `next-intl` from `next/root-params` so the
  * app can use Cache Components without threading `locale` through every cached
@@ -20,24 +25,25 @@ import { getRequestConfig } from "next-intl/server";
  *   `apps/www/node_modules/next-intl/dist/esm/production/server/react-server/getConfig.js`
  */
 export default getRequestConfig(async ({ locale }) => {
-  let resolvedLocale = locale;
+  if (hasLocale(routing.locales, locale)) {
+    const messages = await loadMessagesByLocale[locale]();
 
-  if (!resolvedLocale) {
-    const paramValue = await rootParams.locale();
-
-    if (hasLocale(routing.locales, paramValue)) {
-      resolvedLocale = paramValue;
-    } else {
-      notFound();
-    }
+    return {
+      locale,
+      messages: messages.default,
+    };
   }
 
+  const paramValue = await rootParams.locale();
+
+  if (!hasLocale(routing.locales, paramValue)) {
+    notFound();
+  }
+
+  const messages = await loadMessagesByLocale[paramValue]();
+
   return {
-    locale: resolvedLocale,
-    messages: (
-      await import(
-        `@repo/internationalization/dictionaries/${resolvedLocale}.json`
-      )
-    ).default,
+    locale: paramValue,
+    messages: messages.default,
   };
 });

@@ -9,6 +9,7 @@ import { routing } from "@repo/internationalization/src/routing";
 import { EducationalOrgJsonLd } from "@repo/seo/json-ld/educational-org";
 import { WebsiteJsonLd } from "@repo/seo/json-ld/website";
 import type { Metadata, Viewport } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
@@ -150,9 +151,10 @@ export default async function Layout({ children }: LayoutProps<"/[locale]">) {
     <html className={fonts} lang={locale} suppressHydrationWarning>
       <body className="relative">
         <p className="sr-only">
-          AI agents can use <a href="/llms.txt">/llms.txt</a> as a documentation
-          index. Markdown versions are available by appending <code>.md</code>{" "}
-          to content URLs or sending <code>Accept: text/markdown</code>.
+          AI agents can use <Link href="/llms.txt">/llms.txt</Link> as a
+          documentation index. Markdown versions are available by appending{" "}
+          <code>.md</code> to content URLs or sending{" "}
+          <code>Accept: text/markdown</code>.
         </p>
         <EducationalOrgJsonLd />
         <WebsiteJsonLd locale={locale} />

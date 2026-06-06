@@ -7,65 +7,75 @@ import {
   shouldAnswerFromNakafaEvidence,
   shouldReadAfterSearch,
 } from "@repo/ai/agents/nakafa/step";
+import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
+import type {
+  NakafaAgentContentSummary,
+  NakafaAgentSection,
+} from "@repo/contents/_lib/agent/schema/ref";
 import type { NakafaAgentSearchResult } from "@repo/contents/_lib/agent/schema/search";
 import { Option } from "effect";
 import { describe, expect, it } from "vitest";
+
+/** Builds a typed Nakafa content summary fixture from canonical route parts. */
+function contentSummary({
+  description,
+  locale,
+  route,
+  section,
+  title,
+}: {
+  description: string;
+  locale: "en" | "id";
+  route: string;
+  section: NakafaAgentSection;
+  title: string;
+}) {
+  return {
+    ...buildNakafaContentRef(locale, route, section),
+    description,
+    title,
+  } satisfies NakafaAgentContentSummary;
+}
 
 const exerciseResult = {
   count: 1,
   has_more: false,
   items: [
-    {
-      content_id:
-        "id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/11",
+    contentSummary({
       description: "Latihan fungsi rasional.",
       locale: "id",
-      markdown_url:
-        "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/11.md",
       route:
         "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/11",
       section: "exercises",
       title: "Soal 11",
-      url: "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/11",
-    },
+    }),
   ],
   limit: 1,
-  next_offset: null,
   offset: 0,
 } satisfies NakafaAgentSearchResult;
 
-const exerciseSetResult = {
-  ...exerciseResult.items[0],
-  content_id:
-    "id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
+const exerciseSetResult = contentSummary({
   description: "SNBT Pengetahuan Kuantitatif Try Out 2026 Set 2.",
-  markdown_url:
-    "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2.md",
+  locale: "id",
   route: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
+  section: "exercises",
   title: "SNBT Pengetahuan Kuantitatif Try Out 2026 Set 2",
-  url: "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
-};
+});
 
 const subjectResult = {
   count: 1,
   has_more: false,
   items: [
-    {
-      content_id:
-        "id/subject/high-school/11/mathematics/function-modeling/rational-function",
+    contentSummary({
       description: "Pelajari fungsi rasional.",
       locale: "id",
-      markdown_url:
-        "https://nakafa.com/id/subject/high-school/11/mathematics/function-modeling/rational-function.md",
       route:
         "subject/high-school/11/mathematics/function-modeling/rational-function",
       section: "subject",
       title: "Fungsi Rasional",
-      url: "https://nakafa.com/id/subject/high-school/11/mathematics/function-modeling/rational-function",
-    },
+    }),
   ],
   limit: 1,
-  next_offset: null,
   offset: 0,
 } satisfies NakafaAgentSearchResult;
 
@@ -90,17 +100,14 @@ describe("Nakafa agent step state", () => {
   });
 
   it("normalizes question-level search hits to their parent exercise set", () => {
-    const firstResult = {
-      ...exerciseResult.items[0],
-      content_id:
-        "id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/15",
-      markdown_url:
-        "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/15.md",
+    const firstResult = contentSummary({
+      description: "Latihan fungsi rasional.",
+      locale: "id",
       route:
         "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/15",
+      section: "exercises",
       title: "Soal 15",
-      url: "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/15",
-    };
+    });
     const ref = selectExerciseRef(
       {
         limit: 20,
@@ -149,18 +156,14 @@ describe("Nakafa agent step state", () => {
   });
 
   it("keeps search ordering instead of parsing the user request locally", () => {
-    const mathematicalReasoning = {
-      ...exerciseResult.items[0],
-      content_id:
-        "id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-2/11",
+    const mathematicalReasoning = contentSummary({
       description: "SMA SNBT Penalaran Matematika Try Out 2026 Set 2 Nomor 11",
-      markdown_url:
-        "https://nakafa.com/id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-2/11.md",
+      locale: "id",
       route:
         "exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-2/11",
+      section: "exercises",
       title: "SNBT Penalaran Matematika Try Out 2026 Set 2 Soal 11",
-      url: "https://nakafa.com/id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-2/11",
-    };
+    });
     const mathematicalReasoningSet =
       "id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-2";
     const quantitativeKnowledge = {
@@ -230,17 +233,14 @@ describe("Nakafa agent step state", () => {
   });
 
   it("keeps stable search order when exercise scores tie", () => {
-    const secondResult = {
-      ...exerciseResult.items[0],
-      content_id:
-        "id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/12",
-      markdown_url:
-        "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/12.md",
+    const secondResult = contentSummary({
+      description: "Latihan fungsi rasional.",
+      locale: "id",
       route:
         "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/12",
+      section: "exercises",
       title: "Soal 12",
-      url: "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/12",
-    };
+    });
     const ref = selectExerciseRef(
       {
         limit: 2,
@@ -411,7 +411,15 @@ describe("Nakafa agent step state", () => {
       },
       {
         ...subjectResult,
-        items: [{ ...subjectResult.items[0], section: "quran" }],
+        items: [
+          contentSummary({
+            description: "Surah pembuka.",
+            locale: "id",
+            route: "quran/1",
+            section: "quran",
+            title: "Al-Fatihah",
+          }),
+        ],
       }
     );
     const emptySearch = shouldReadAfterSearch(

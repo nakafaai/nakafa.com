@@ -37,11 +37,12 @@ export const getNakafaAgentExercise = Effect.fn("NakafaAgent.getExercise")(
 
     const target = getNakafaExerciseTarget(ref.value.route, exerciseNumber);
     const exercises = yield* loadExercises(ref.value.locale, target.setRoute);
-    const selectedExercises =
-      typeof target.number === "number"
-        ? exercises.filter((exercise) => exercise.number === target.number)
-        : exercises;
-
+    const targetNumberOption = target.number;
+    const selectedExercises = Option.isSome(targetNumberOption)
+      ? exercises.filter(
+          (exercise) => exercise.number === targetNumberOption.value
+        )
+      : exercises;
     if (selectedExercises.length === 0) {
       return Option.none();
     }
@@ -52,10 +53,9 @@ export const getNakafaAgentExercise = Effect.fn("NakafaAgent.getExercise")(
       "exercises"
     );
 
-    const result = yield* decodeNakafaAgentExerciseResult({
+    const exerciseResultInput = {
       ...setRef,
       count: selectedExercises.length,
-      exercise_number: target.number,
       exercises: selectedExercises.map((exercise) => ({
         answer: {
           raw: exercise.answer.raw,
@@ -71,7 +71,16 @@ export const getNakafaAgentExercise = Effect.fn("NakafaAgent.getExercise")(
           title: exercise.question.metadata.title,
         },
       })),
-    });
+    };
+    const result = yield* decodeNakafaAgentExerciseResult(
+      Option.match(targetNumberOption, {
+        onNone: () => exerciseResultInput,
+        onSome: (exerciseNumber) => ({
+          ...exerciseResultInput,
+          exercise_number: exerciseNumber,
+        }),
+      })
+    );
 
     return Option.some(result);
   }
@@ -98,7 +107,7 @@ function getNakafaExerciseTarget(route: string, exerciseNumber?: number) {
 
   if (typeof exerciseNumber === "number") {
     return {
-      number: exerciseNumber,
+      number: Option.some(exerciseNumber),
       setRoute,
     };
   }

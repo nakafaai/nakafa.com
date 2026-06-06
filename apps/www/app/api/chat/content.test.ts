@@ -1,7 +1,9 @@
 // @vitest-environment node
 import type { NakafaDataPart } from "@repo/ai/schema/data";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import { Effect } from "effect";
+import { parseNakafaContentRef } from "@repo/contents/_lib/agent/refs";
+import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
+import { Effect, Option } from "effect";
 import { describe, expect, it } from "vitest";
 import {
   determinePageFetchNeed,
@@ -33,7 +35,7 @@ function contentMessage({
           type: "data-nakafa",
           data: {
             kind: "content",
-            input: { content_ref: url },
+            input: { content_ref: NakafaAgentContentRefInputSchema.make(url) },
             status,
           },
         },
@@ -51,13 +53,19 @@ function contentMessage({
           type: "data-nakafa",
           data: {
             kind: "content",
-            input: { content_ref: url },
+            input: { content_ref: NakafaAgentContentRefInputSchema.make(url) },
             status,
             error: "Not found",
           },
         },
       ],
     } satisfies MyUIMessage;
+  }
+
+  const parsedRef = parseNakafaContentRef(url, "id");
+
+  if (Option.isNone(parsedRef)) {
+    throw new Error(`Expected a valid content URL fixture: ${url}`);
   }
 
   return {
@@ -69,19 +77,12 @@ function contentMessage({
         type: "data-nakafa",
         data: {
           kind: "content",
-          input: { content_ref: url },
+          input: { content_ref: NakafaAgentContentRefInputSchema.make(url) },
           status,
           result: {
-            content_id:
-              "id/subject/high-school/11/mathematics/function-modeling/rational-function",
-            locale: "id",
-            markdown_url: `${url}.md`,
-            route:
-              "subject/high-school/11/mathematics/function-modeling/rational-function",
-            section: "subject",
+            ...parsedRef.value,
             title: "Rational Function",
             description: "",
-            url,
           },
         },
       },

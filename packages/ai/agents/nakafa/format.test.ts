@@ -5,6 +5,7 @@ import {
   formatSearch,
   formatTaxonomy,
 } from "@repo/ai/agents/nakafa/format";
+import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
 import type { NakafaAgentExerciseResult } from "@repo/contents/_lib/agent/schema/exercise";
 import { describe, expect, it } from "vitest";
 
@@ -15,18 +16,12 @@ describe("Nakafa formatter", () => {
       has_more: false,
       items: [
         {
-          content_id: "id/subject/example",
+          ...buildNakafaContentRef("id", "subject/example", "subject"),
           description: "Pelajari contoh.",
-          locale: "id",
-          markdown_url: "https://nakafa.com/id/subject/example.md",
-          route: "subject/example",
-          section: "subject",
           title: "Contoh Materi",
-          url: "https://nakafa.com/id/subject/example",
         },
       ],
       limit: 1,
-      next_offset: null,
       offset: 0,
     });
 
@@ -40,15 +35,10 @@ describe("Nakafa formatter", () => {
 
   it("formats full content reads", () => {
     const text = formatRead({
-      content_id: "id/subject/example",
+      ...buildNakafaContentRef("id", "subject/example", "subject"),
       description: "Pelajari contoh.",
-      locale: "id",
-      markdown_url: "https://nakafa.com/id/subject/example.md",
-      route: "subject/example",
-      section: "subject",
       text: "Isi materi lengkap.",
       title: "Contoh Materi",
-      url: "https://nakafa.com/id/subject/example",
     });
 
     expect(text).toContain("# Nakafa Content");
@@ -60,7 +50,7 @@ describe("Nakafa formatter", () => {
 
   it("formats structured exercises", () => {
     const result = {
-      content_id: "id/exercises/example",
+      ...buildNakafaContentRef("id", "exercises/example", "exercises"),
       count: 1,
       exercise_number: 2,
       exercises: [
@@ -74,11 +64,6 @@ describe("Nakafa formatter", () => {
           question: { raw: "Berapa 1 + 1?", title: "Soal 2" },
         },
       ],
-      locale: "id",
-      markdown_url: "https://nakafa.com/id/exercises/example.md",
-      route: "exercises/example",
-      section: "exercises",
-      url: "https://nakafa.com/id/exercises/example",
     } satisfies NakafaAgentExerciseResult;
     const text = formatExercise(result);
 
@@ -88,22 +73,16 @@ describe("Nakafa formatter", () => {
     expect(text).toContain("Exercise number: 2");
     expect(text).toContain("Correct: Yes");
     expect(text).toContain("Correct: No");
-    expect(formatExercise({ ...result, exercise_number: null })).toContain(
-      "Exercise number: all"
-    );
+    const { exercise_number, ...wholeSetResult } = result;
+    expect(formatExercise(wholeSetResult)).toContain("Exercise number: all");
   });
 
   it("formats Quran references with and without tafsir", () => {
     const text = formatQuran({
-      content_id: "id/quran/1",
-      locale: "id",
-      markdown_url: "https://nakafa.com/id/quran/1.md",
+      ...buildNakafaContentRef("id", "quran/1", "quran"),
       name: "Al-Fatihah",
       revelation: "Makkiyah",
-      route: "quran/1",
-      section: "quran",
       translation: "Pembukaan",
-      url: "https://nakafa.com/id/quran/1",
       verses: [
         {
           arabic: "بِسْمِ اللَّهِ",

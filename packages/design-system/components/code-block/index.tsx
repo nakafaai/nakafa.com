@@ -27,7 +27,7 @@ import {
 import { cva } from "class-variance-authority";
 import { useTranslations } from "next-intl";
 import type { ComponentProps, HTMLAttributes, ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   type BundledLanguage,
   type CodeOptionsMultipleThemes,
@@ -127,6 +127,7 @@ export type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
   data: CodeBlockData[];
 };
 
+/** Provides code-block tab state and source data to child controls. */
 export const CodeBlock = ({
   value: controlledValue,
   onValueChange: controlledOnValueChange,
@@ -140,9 +141,13 @@ export const CodeBlock = ({
     prop: controlledValue,
     onChange: controlledOnValueChange,
   });
+  const contextValue = useMemo(
+    () => ({ value, onValueChange, data }),
+    [value, onValueChange, data]
+  );
 
   return (
-    <CodeBlockContext.Provider value={{ value, onValueChange, data }}>
+    <CodeBlockContext.Provider value={contextValue}>
       <div
         className={cn(
           "grid size-full grid-cols-1 overflow-hidden rounded-xl border shadow-sm",
@@ -454,24 +459,43 @@ export const CodeBlockContent = ({
   syntaxHighlighting = true,
   ...props
 }: CodeBlockContentProps) => {
-  const [html, setHtml] = useState<string | null>(null);
+  const [highlightedCode, setHighlightedCode] = useState({
+    html: "",
+    source: "",
+  });
 
   useEffect(() => {
     if (!syntaxHighlighting) {
       return;
     }
 
+    let isCurrentRender = true;
+
     highlight(children, language, themes)
-      .then(setHtml)
+      .then((html) => {
+        if (isCurrentRender) {
+          setHighlightedCode({ html, source: children });
+        }
+      })
       .catch((error) => {
-        setHtml(null);
+        if (!isCurrentRender) {
+          return;
+        }
+
+        setHighlightedCode({ html: "", source: children });
         captureException(error, {
           component: "CodeBlockContent",
           language: language ?? "plain-text",
           source: "code-block-highlight",
         });
       });
+
+    return () => {
+      isCurrentRender = false;
+    };
   }, [children, themes, syntaxHighlighting, language]);
+
+  const html = highlightedCode.source === children ? highlightedCode.html : "";
 
   if (!(syntaxHighlighting && html)) {
     return <CodeBlockFallback>{children}</CodeBlockFallback>;

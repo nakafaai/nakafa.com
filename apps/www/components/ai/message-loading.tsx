@@ -1,11 +1,11 @@
 "use client";
 
 import { TypingLoader } from "@repo/design-system/components/ui/typing-loader";
-import { memo } from "react";
+
 import { useChat } from "@/components/ai/context/use-chat";
 import { useMessage } from "@/components/ai/context/use-message";
 
-export const AiChatMessageLoading = memo(() => {
+export const AiChatMessageLoading = () => {
   const status = useChat((state) => state.chat.status);
   const messages = useChat((state) => state.chat.messages);
   const currentMessage = useMessage((state) => state.message);
@@ -38,5 +38,5 @@ export const AiChatMessageLoading = memo(() => {
   }
 
   return null;
-});
+};
 AiChatMessageLoading.displayName = "AiChatMessageLoading";

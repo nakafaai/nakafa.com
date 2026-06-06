@@ -7,6 +7,26 @@ interface GraphProps {
   title: ReactNode;
 }
 
+const common = { showPoints: false, color: getColor("INDIGO") };
+const labelColor = getColor("INDIGO");
+const highlightColor = getColor("ORANGE");
+const auxColor = getColor("TEAL");
+
+interface GraphPoint {
+  x: number;
+  y: number;
+  z: number;
+}
+
+/** Returns the midpoint used for stable edge labels. */
+function getMidpoint(firstPoint: GraphPoint, secondPoint: GraphPoint) {
+  return {
+    x: (firstPoint.x + secondPoint.x) / 2,
+    y: (firstPoint.y + secondPoint.y) / 2,
+    z: (firstPoint.z + secondPoint.z) / 2,
+  };
+}
+
 export function Graph({ title, description }: GraphProps) {
   // Dimensions based on problem: p = 2l, l = l, t = l
   // We use a scale factor for visualization
@@ -33,20 +53,6 @@ export function Graph({ title, description }: GraphProps) {
   const F = { x: xMax, y: yMax, z: zMax }; // Front-Right-Top
   const G = { x: xMax, y: yMax, z: zMin }; // Back-Right-Top
   const H = { x: xMin, y: yMax, z: zMin }; // Back-Left-Top
-
-  const common = { showPoints: false, color: getColor("INDIGO") };
-  const labelColor = getColor("INDIGO");
-  const highlightColor = getColor("ORANGE");
-  const auxColor = getColor("TEAL");
-
-  const getMidpoint = (
-    p1: { x: number; y: number; z: number },
-    p2: { x: number; y: number; z: number }
-  ) => ({
-    x: (p1.x + p2.x) / 2,
-    y: (p1.y + p2.y) / 2,
-    z: (p1.z + p2.z) / 2,
-  });
 
   return (
     <LineEquation

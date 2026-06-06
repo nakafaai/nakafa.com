@@ -1,22 +1,6 @@
-import { EvilIcon, News01Icon } from "@hugeicons/core-free-icons";
 import type { ArticleCategory } from "@repo/contents/_types/articles/category";
 import { ArticleCategorySchema } from "@repo/contents/_types/articles/category";
-import { Option, Schema } from "effect";
-
-/**
- * Resolves the icon used for an article category.
- *
- * @param category - Article category slug
- * @returns Hugeicons icon for the category
- */
-export function getCategoryIcon(category: ArticleCategory) {
-  switch (category) {
-    case "politics":
-      return EvilIcon;
-    default:
-      return News01Icon;
-  }
-}
+import { Schema } from "effect";
 
 /**
  * Builds the public route for an article category page.
@@ -30,13 +14,5 @@ export function getCategoryPath(category: ArticleCategory) {
 
 /** Narrows one article category route segment to the supported category union. */
 export function parseArticleCategory(value: string) {
-  const parsedCategory = Schema.decodeUnknownOption(ArticleCategorySchema)(
-    value
-  );
-
-  if (Option.isNone(parsedCategory)) {
-    return null;
-  }
-
-  return parsedCategory.value;
+  return Schema.decodeUnknownOption(ArticleCategorySchema)(value);
 }

@@ -8,7 +8,12 @@ export const metadata = {
 
 Consider the following sales chart!
 
-<SalesChart lang="en" />
+<SalesChart
+  description="Sales data for Shirts, Pants, and Suits (2011-2015)."
+  seriesLabels={{ pants: "Pants", shirts: "Shirts", suits: "Suits" }}
+  title="Factory Outlet Sales Chart"
+  yAxisLabel="Sales"
+/>
 
 | Item | <InlineMath math="2011" /> | <InlineMath math="2012" /> | <InlineMath math="2013" /> | <InlineMath math="2014" /> | <InlineMath math="2015" /> |
 | :--- | :---: | :---: | :---: | :---: | :---: |

@@ -1,5 +1,5 @@
 import posthogTest from "@posthog/convex/test";
-import { getModelCreditCost } from "@repo/ai/config/model";
+import { getModelCreditCost, ModelIdSchema } from "@repo/ai/config/model";
 import { captureProductEvent } from "@repo/backend/convex/analytics/capture";
 import { productAnalyticsEventValidator } from "@repo/backend/convex/analytics/events";
 import schema from "@repo/backend/convex/schema";
@@ -11,6 +11,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const NOW = Date.UTC(2026, 3, 2, 12, 0, 0);
 
 describe("analytics/capture", () => {
+  const liteModel = ModelIdSchema.make("nakafa-lite");
+
   beforeEach(() => {
     vi.setSystemTime(new Date(NOW));
   });
@@ -107,7 +109,7 @@ describe("analytics/capture", () => {
         name: "chat response completed",
         properties: {
           chat_type: "study",
-          credits: getModelCreditCost("nakafa-lite"),
+          credits: getModelCreditCost(liteModel),
           input_tokens: 10,
           model_id: "nakafa-lite",
           output_tokens: 20,
@@ -119,6 +121,9 @@ describe("analytics/capture", () => {
       validate(productAnalyticsEventValidator, {
         name: "checkout started",
         properties: {
+          checkout_locale: "en",
+          customer_ip_available: true,
+          locale: "id",
           product_count: 1,
           product_id: "product-pro",
         },

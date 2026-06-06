@@ -8,6 +8,18 @@ export const metadata = {
 
 Berikut ini adalah data pengunjung dua fasilitas di SMA MMM pada bulan September pada minggu pertama dari hari Senin hingga Jumat.
 
-<VisitorChart lang="id" />
+<VisitorChart
+  dayLabels={{
+    friday: "Jumat",
+    monday: "Senin",
+    thursday: "Kamis",
+    tuesday: "Selasa",
+    wednesday: "Rabu",
+  }}
+  description="Jumlah pengunjung Perpustakaan dan Laboratorium (Senin-Jumat)."
+  seriesLabels={{ laboratory: "Laboratorium", library: "Perpustakaan" }}
+  title="Data Pengunjung Fasilitas SMA MMM"
+  yAxisLabel="Jumlah Pengunjung"
+/>
 
 Berdasarkan data tersebut, jumlah pengunjung tertinggi kedua di dua fasilitas SMA MMM tersebut terjadi pada hari ...

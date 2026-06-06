@@ -1,3 +1,5 @@
+import { GreenhouseEffectLab } from "@repo/design-system/components/contents/biology/climate-greenhouse";
+
 export const metadata = {
   title: "Causes of Climate Change",
   description:
@@ -18,6 +20,24 @@ The **greenhouse effect** is the process in which certain gases in the atmospher
 **Greenhouse gases** include carbon dioxide, methane, nitrous oxide, and some synthetic gases. These gases do not work like a visible thick blanket, but the effect can be imagined like greenhouse glass. Sunlight enters, then some heat has more difficulty escaping back to space.
 
 The [IPCC AR6 Synthesis Report](https://www.ipcc.ch/report/ar6/syr/) states that warming is mainly driven by greenhouse gas emissions from human activities.
+
+<GreenhouseEffectLab
+  title={<>The Greenhouse Effect Holds Back Some Heat</>}
+  description={
+    <>
+      Change the greenhouse gas level to see the atmosphere retain more heat
+      emitted by Earth.
+    </>
+  }
+  labels={{
+    gasControl: "Greenhouse gas level",
+    heatFlow: <>Sunlight enters, Earth emits heat, and greenhouse gases hold back part of that heat.</>,
+    heatFlowLabel: "Energy flow",
+    meaning: <>As greenhouse gas concentration increases, a larger share of heat stays near Earth.</>,
+    meaningLabel: "Climate meaning",
+    viewLabel: "Greenhouse effect model",
+  }}
+/>
 
 ### Different Gases Have Different Sources
 

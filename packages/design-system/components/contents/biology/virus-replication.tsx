@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  BiologyCallouts,
-  type BiologyCalloutTarget,
-} from "@repo/design-system/components/contents/biology/callouts";
+import { BiologyCallouts } from "@repo/design-system/components/contents/biology/callouts";
 import type {
   BiologyLabProps,
   BiologySceneColors,
@@ -12,168 +9,155 @@ import type {
 } from "@repo/design-system/components/contents/biology/data";
 import { BiologyLabFrame } from "@repo/design-system/components/contents/biology/lab-frame";
 import { DnaDoubleHelix } from "@repo/design-system/components/contents/biology/parts";
-import { BacteriophageModel } from "@repo/design-system/components/contents/biology/virus-parts";
+import {
+  BacteriophageModel,
+  VirusTube,
+} from "@repo/design-system/components/contents/biology/virus-parts";
 
-const LYTIC_PHAGES = [
-  { id: "attach", position: [-1.26, 0.42, 0.36], scale: 0.52 },
-  { id: "entry", position: [-0.62, 0.18, 0.38], scale: 0.52 },
-  { id: "assembly", position: [0.58, 0.06, 0.4], scale: 0.44 },
-  { id: "release", position: [1.42, 0.32, 0.42], scale: 0.44 },
-] as const;
-
-const VIRAL_PARTS = [
+const REPLICATION_SCENE_POSITION = [0, 0.06, 0] as const;
+const REPLICATION_VIEW = {
+  cameraPosition: [2.65, 1.5, 3.35],
+  cameraTarget: [0, 0.05, 0],
+  narrowCameraPosition: [3.05, 1.78, 3.75],
+} satisfies BiologySceneView;
+const REPLICATION_SCENE_SCALE = 1.08;
+const LYTIC_LABEL_TARGETS = [
   {
-    id: "capsid-a",
-    kind: "capsid",
-    position: [-0.18, 0.22, 0.5],
-    scale: 0.9,
-  },
-  {
-    id: "capsid-b",
-    kind: "capsid",
-    position: [0.02, 0.28, 0.52],
-    scale: 0.78,
-  },
-  {
-    id: "capsid-c",
-    kind: "capsid",
-    position: [0.2, 0.18, 0.5],
-    scale: 0.7,
-  },
-  {
-    id: "genome-a",
-    kind: "genome",
-    position: [-0.02, 0.02, 0.5],
-    scale: 0.9,
-  },
-  {
-    id: "genome-b",
-    kind: "genome",
-    position: [0.2, -0.02, 0.5],
-    scale: 0.72,
-  },
-] as const;
-const DAUGHTER_CELLS = [
-  { id: "left", position: [-1.18, -0.08, 0.64] },
-  { id: "right", position: [1.18, -0.08, 0.64] },
-] as const;
-const LYTIC_CALLOUT_TARGETS = [
-  {
-    id: "genome-entry",
-    labelPosition: [-1.02, 0.98, 0.94],
-    target: [-0.5, 0.18, 0.66],
-  },
-  {
-    id: "new-virion",
-    labelPosition: [0.78, 0.98, 0.82],
-    target: [1.42, 0.44, 0.48],
-  },
-] satisfies readonly BiologyCalloutTarget[];
-const LYSOGENIC_CALLOUT_TARGETS = [
-  {
-    id: "host-dna",
-    labelPosition: [-0.62, 0.94, 0.82],
-    target: [-0.64, 0.04, 0.5],
+    id: "host-cell",
+    labelPosition: [-1.2, -0.3, 0.78],
+    target: [-0.68, -0.12, 0.34],
   },
   {
     id: "viral-genome",
-    labelPosition: [0.48, 0.94, 0.82],
-    target: [0.08, 0.15, 0.54],
+    labelPosition: [0.62, -0.46, 0.86],
+    target: [0.08, -0.18, 0.16],
+  },
+] as const;
+const LYSOGENIC_LABEL_TARGETS = [
+  {
+    id: "host-dna",
+    labelPosition: [-0.82, -0.18, 0.86],
+    target: [-0.38, -0.02, 0.2],
   },
   {
-    id: "daughter-cells",
-    labelPosition: [1.14, 0.38, 1.04],
+    id: "viral-genome",
+    labelPosition: [0.8, -0.34, 0.86],
+    target: [0.08, 0.02, 0.2],
   },
-] satisfies readonly BiologyCalloutTarget[];
-const REPLICATION_SCENE_POSITION = [0, 0.18, 0] as const;
-const REPLICATION_VIEW = {
-  cameraPosition: [0, 1.56, 3.02],
-  cameraTarget: [0, -0.06, 0.18],
-  maxAzimuthAngle: Math.PI * 0.12,
-  maxPolarAngle: Math.PI * 0.39,
-  minAzimuthAngle: Math.PI * -0.12,
-  minPolarAngle: Math.PI * 0.31,
-  narrowCameraPosition: [0, 1.88, 3.48],
-} satisfies BiologySceneView;
+] as const;
+
+type VirusReplicationMode = "both" | "lytic" | "lysogenic";
 
 /**
  * Renders the viral replication lab with lytic and lysogenic cycle views.
  */
-export function VirusReplicationLab(props: BiologyLabProps) {
+export function VirusReplicationLab({
+  mode = "both",
+  ...props
+}: BiologyLabProps & { mode?: VirusReplicationMode }) {
+  const Scene = getVirusReplicationScene(mode);
+
+  return <BiologyLabFrame scene={Scene} view={REPLICATION_VIEW} {...props} />;
+}
+
+function getVirusReplicationScene(mode: VirusReplicationMode) {
+  if (mode === "lytic") {
+    return LyticReplicationScene;
+  }
+
+  if (mode === "lysogenic") {
+    return LysogenicReplicationScene;
+  }
+
+  return VirusReplicationScene;
+}
+
+function LyticReplicationScene({ colors, item }: BiologySceneProps) {
   return (
-    <BiologyLabFrame
-      scene={VirusReplicationScene}
-      view={REPLICATION_VIEW}
-      {...props}
-    />
+    <group
+      position={REPLICATION_SCENE_POSITION}
+      scale={REPLICATION_SCENE_SCALE}
+    >
+      <LyticCycle colors={colors} />
+      <BiologyCallouts
+        callouts={item.callouts}
+        color={colors.text}
+        targets={LYTIC_LABEL_TARGETS}
+      />
+    </group>
+  );
+}
+
+function LysogenicReplicationScene({ colors, item }: BiologySceneProps) {
+  return (
+    <group
+      position={REPLICATION_SCENE_POSITION}
+      scale={REPLICATION_SCENE_SCALE}
+    >
+      <LysogenicCycle colors={colors} />
+      <BiologyCallouts
+        callouts={item.callouts}
+        color={colors.text}
+        targets={LYSOGENIC_LABEL_TARGETS}
+      />
+    </group>
   );
 }
 
 /**
  * Switches between immediate virion production and genome dormancy.
  */
-function VirusReplicationScene({
-  colors,
-  item,
-  selectedIndex,
-}: BiologySceneProps) {
+function VirusReplicationScene(props: BiologySceneProps) {
+  const { selectedIndex } = props;
+
   if (selectedIndex === 1) {
-    return (
-      <group position={REPLICATION_SCENE_POSITION}>
-        <LysogenicCycle colors={colors} item={item} />
-      </group>
-    );
+    return <LysogenicReplicationScene {...props} />;
   }
 
-  return (
-    <group position={REPLICATION_SCENE_POSITION}>
-      <LyticCycle colors={colors} item={item} />
-    </group>
-  );
+  return <LyticReplicationScene {...props} />;
 }
 
 /**
  * Shows the full lytic cycle at once so students do not need five separate tabs.
  */
-function LyticCycle({
-  colors,
-  item,
-}: Pick<BiologySceneProps, "colors" | "item">) {
+function LyticCycle({ colors }: Pick<BiologySceneProps, "colors">) {
   return (
     <group>
-      <mesh rotation={[0, 0, Math.PI / 2]} scale={[0.88, 1.5, 0.68]}>
-        <capsuleGeometry args={[0.62, 1.22, 14, 34]} />
-        <meshStandardMaterial color={colors.host} opacity={0.2} transparent />
-      </mesh>
+      <HostCell
+        color={colors.host}
+        radius={0.54}
+        scale={[0.92, 1.42, 0.72]}
+        straightLength={1.16}
+      />
 
-      {LYTIC_PHAGES.map((stage) => (
-        <group key={stage.id} position={stage.position}>
-          <BacteriophageModel colors={colors} scale={stage.scale} />
-        </group>
-      ))}
+      <group position={[-0.18, 0.92, 0.24]} rotation={[0.12, 0.08, -0.08]}>
+        <BacteriophageModel colors={colors} scale={0.9} />
+      </group>
 
-      <group position={[-0.54, 0.16, 0.5]} rotation={[0.08, 0.1, -0.48]}>
+      <VirusTube
+        color={colors.pathogen}
+        points={[
+          [-0.18, 0.38, 0.24],
+          [-0.12, 0.16, 0.2],
+          [-0.02, -0.08, 0.12],
+        ]}
+        radius={0.018}
+      />
+
+      <group position={[0.1, -0.18, 0.1]} rotation={[0.2, 0.3, -0.72]}>
         <DnaDoubleHelix
           backboneColor={colors.genome}
-          length={0.58}
-          lineWidth={3}
+          length={0.72}
+          lineWidth={3.2}
           pairColor={colors.muted}
-          radius={0.034}
-          turns={1.25}
+          pairLineWidth={1}
+          radius={0.046}
+          turns={1.7}
         />
       </group>
 
-      {VIRAL_PARTS.map((part) => (
-        <group key={part.id} position={part.position}>
-          <ViralPart colors={colors} part={part} />
-        </group>
-      ))}
-
-      <BiologyCallouts
-        callouts={item.callouts}
-        color={colors.text}
-        targets={LYTIC_CALLOUT_TARGETS}
-      />
+      <NewVirionPreview colors={colors} position={[0.78, -0.12, 0.18]} />
+      <NewVirionPreview colors={colors} position={[1.1, 0.18, -0.16]} />
     </group>
   );
 }
@@ -181,122 +165,82 @@ function LyticCycle({
 /**
  * Shows a viral genome carried quietly with the host genome before activation.
  */
-function LysogenicCycle({
-  colors,
-  item,
-}: Pick<BiologySceneProps, "colors" | "item">) {
+function LysogenicCycle({ colors }: Pick<BiologySceneProps, "colors">) {
   return (
     <group>
-      <mesh rotation={[0, 0, Math.PI / 2]} scale={[0.8, 1.3, 0.8]}>
-        <capsuleGeometry args={[0.48, 1.36, 12, 30]} />
-        <meshStandardMaterial color={colors.host} opacity={0.24} transparent />
-      </mesh>
+      <HostCell
+        color={colors.host}
+        radius={0.58}
+        scale={[0.9, 1.45, 0.82]}
+        straightLength={1.28}
+      />
 
-      <group position={[0, 0.14, 0.42]} rotation={[0.06, 0, 0.28]}>
+      <group position={[0, 0.04, 0.18]} rotation={[0.1, 0.28, 0.36]}>
         <DnaDoubleHelix
           backboneColor={colors.genome}
-          length={1.38}
-          lineWidth={3.2}
+          length={1.46}
+          lineWidth={3.8}
           pairColor={colors.muted}
-          radius={0.055}
-          turns={2.6}
+          pairLineWidth={1.1}
+          radius={0.066}
+          turns={2.8}
         />
         <DnaDoubleHelix
           backboneColor={colors.pathogen}
-          length={1.38}
-          lineWidth={4.2}
+          length={1.46}
+          lineWidth={4.8}
           pairColor={colors.pathogen}
-          pairLineWidth={1.4}
-          radius={0.058}
+          pairLineWidth={1.5}
+          radius={0.07}
           segment={[0.46, 0.62]}
-          turns={2.6}
+          turns={2.8}
         />
       </group>
-
-      {DAUGHTER_CELLS.map((cell) => (
-        <group key={cell.id} position={cell.position}>
-          <DaughterCell colors={colors} />
-        </group>
-      ))}
-
-      <BiologyCallouts
-        callouts={item.callouts}
-        color={colors.text}
-        targets={LYSOGENIC_CALLOUT_TARGETS}
-      />
     </group>
   );
 }
 
 /**
- * Renders copied viral parts as capsids and genome strands, not loose dots.
+ * Shows the bacterial host as a transparent cell with a subtle membrane edge.
  */
-function ViralPart({
+function HostCell({
+  color,
+  radius,
+  scale,
+  straightLength,
+}: {
+  color: string;
+  radius: number;
+  scale: readonly [number, number, number];
+  straightLength: number;
+}) {
+  return (
+    <group rotation={[0, 0, Math.PI / 2]} scale={scale}>
+      <mesh>
+        <capsuleGeometry args={[radius, straightLength, 14, 34]} />
+        <meshStandardMaterial color={color} opacity={0.2} transparent />
+      </mesh>
+      <mesh scale={1.02}>
+        <capsuleGeometry args={[radius, straightLength, 14, 34]} />
+        <meshStandardMaterial color={color} opacity={0.08} transparent />
+      </mesh>
+    </group>
+  );
+}
+
+/**
+ * Shows newly assembled phage particles inside the host as a secondary cue.
+ */
+function NewVirionPreview({
   colors,
-  part,
+  position,
 }: {
   colors: BiologySceneColors;
-  part: (typeof VIRAL_PARTS)[number];
+  position: readonly [number, number, number];
 }) {
-  if (part.kind === "capsid") {
-    return (
-      <mesh scale={part.scale}>
-        <icosahedronGeometry args={[0.08, 1]} />
-        <meshStandardMaterial color={colors.pathogen} roughness={0.72} />
-      </mesh>
-    );
-  }
-
   return (
-    <group scale={part.scale}>
-      <DnaDoubleHelix
-        backboneColor={colors.genome}
-        length={0.3}
-        lineWidth={2.4}
-        pairColor={colors.muted}
-        pairLineWidth={0.8}
-        radius={0.03}
-        turns={0.9}
-      />
-    </group>
-  );
-}
-
-/**
- * Shows daughter host cells carrying both host DNA and integrated viral genome.
- */
-function DaughterCell({ colors }: { colors: BiologySceneColors }) {
-  return (
-    <group>
-      <mesh rotation={[0, 0, Math.PI / 2]} scale={[0.34, 0.56, 0.34]}>
-        <capsuleGeometry args={[0.3, 0.62, 8, 18]} />
-        <meshStandardMaterial
-          color={colors.microbe}
-          opacity={0.78}
-          transparent
-        />
-      </mesh>
-      <group position={[0, 0.02, 0.32]} rotation={[0, 0, 0.26]} scale={0.4}>
-        <DnaDoubleHelix
-          backboneColor={colors.genome}
-          length={0.84}
-          lineWidth={2.2}
-          pairColor={colors.muted}
-          pairLineWidth={0.8}
-          radius={0.045}
-          turns={1.1}
-        />
-        <DnaDoubleHelix
-          backboneColor={colors.pathogen}
-          length={0.84}
-          lineWidth={2.8}
-          pairColor={colors.pathogen}
-          pairLineWidth={0.9}
-          radius={0.048}
-          segment={[0.44, 0.62]}
-          turns={1.1}
-        />
-      </group>
+    <group position={position} scale={0.34}>
+      <BacteriophageModel colors={colors} />
     </group>
   );
 }

@@ -15,19 +15,25 @@ import { getSubjects } from "@repo/contents/_lib/exercises/type";
 import { locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
 
+type TryoutPartKey = Effect.Effect.Success<
+  ReturnType<typeof getSubjects>
+>[number]["label"];
+
 const tryoutPartKeyReaders = {
   snbt: () =>
-    getSubjects("high-school", "snbt").map((subject) => subject.label),
+    getSubjects("high-school", "snbt").pipe(
+      Effect.map((subjects) => subjects.map((subject) => subject.label))
+    ),
 } satisfies Record<
   (typeof tryoutProducts)[number],
-  () => ReturnType<typeof getSubjects>[number]["label"][]
+  () => Effect.Effect<TryoutPartKey[]>
 >;
 
 /** Returns product part keys from the same content folders used by web listings. */
 const getTryoutPartKeys = Effect.fn("sync.getTryoutPartKeys")(function* (
   product: (typeof tryoutProducts)[number]
 ) {
-  const partKeys = tryoutPartKeyReaders[product]();
+  const partKeys = yield* tryoutPartKeyReaders[product]();
 
   if (partKeys.length === 0) {
     return yield* Effect.fail(

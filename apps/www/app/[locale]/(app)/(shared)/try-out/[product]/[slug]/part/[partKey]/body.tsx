@@ -6,6 +6,7 @@ import {
 import { parseExercisesMaterial } from "@repo/contents/_lib/exercises/route";
 import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import { preloadedQueryResult, preloadQuery } from "convex/nextjs";
+import { Clock, Effect, Option } from "effect";
 import { notFound, redirect } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
@@ -86,14 +87,16 @@ export async function TryoutPartBody({
     loadTryoutSearchParams(searchParams),
     getToken(),
   ]);
-  const initialNowMs = Date.now();
-  const { preloadedRuntime, runtime } = await getTryoutRuntime(token, {
-    attempt,
-    locale,
-    partKey,
-    product,
-    slug,
-  });
+  const [{ preloadedRuntime, runtime }, initialNowMs] = await Promise.all([
+    getTryoutRuntime(token, {
+      attempt,
+      locale,
+      partKey,
+      product,
+      slug,
+    }),
+    Effect.runPromise(Clock.currentTimeMillis),
+  ]);
 
   if (runtime && !runtime.part) {
     redirect(
@@ -125,8 +128,12 @@ export async function TryoutPartBody({
   }
 
   const material = parseExercisesMaterial(contentPart.material);
-  const partIcon = material ? getMaterialIcon(material) : undefined;
-  const partLabel = material ? tExercises(material) : contentPart.partKey;
+  const partIcon = Option.isSome(material)
+    ? getMaterialIcon(material.value)
+    : undefined;
+  const partLabel = Option.isSome(material)
+    ? tExercises(material.value)
+    : contentPart.partKey;
   const timeLimitSeconds = tryoutProductPolicies[
     product
   ].getPartTimeLimitSeconds(contentPart.questionCount);

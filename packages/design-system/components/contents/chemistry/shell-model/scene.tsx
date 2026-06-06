@@ -200,7 +200,6 @@ function ShellRing({
         />
       </mesh>
       <SceneLabel
-        alwaysOnTop
         color={colors.text}
         fontSize={THREE_FONT_SIZE.reading}
         position={[radius + 0.24, 0.12, 0.12]}

@@ -1,5 +1,5 @@
 import posthogTest from "@posthog/convex/test";
-import { getModelCreditCost } from "@repo/ai/config/model";
+import { getModelCreditCost, ModelIdSchema } from "@repo/ai/config/model";
 import { api, internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import {
@@ -11,7 +11,8 @@ import { convexTest } from "convex-test";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 3, 2, 12, 0, 0);
-const liteCreditCost = getModelCreditCost("nakafa-lite");
+const liteModel = ModelIdSchema.make("nakafa-lite");
+const liteCreditCost = getModelCreditCost(liteModel);
 
 describe("chats/mutations", () => {
   beforeEach(() => {

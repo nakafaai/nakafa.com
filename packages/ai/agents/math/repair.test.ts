@@ -3,6 +3,7 @@ import {
   mathAlgebraInput,
   mathEquationInput,
 } from "@repo/ai/agents/math/schema";
+import { ModelIdSchema } from "@repo/ai/config/model";
 import type { JSONSchema7 } from "ai";
 import { InvalidToolInputError, NoSuchToolError, tool } from "ai";
 import { Effect } from "effect";
@@ -60,6 +61,7 @@ const invalidInputError = new InvalidToolInputError({
 });
 
 const inputSchema = vi.fn(() => Promise.resolve(algebraSchema));
+const modelId = ModelIdSchema.make("nakafa-lite");
 
 afterEach(() => {
   generateText.mockReset();
@@ -80,7 +82,7 @@ describe("math tool repair", () => {
         error: invalidInputError,
         inputSchema,
         messages: [],
-        modelId: "nakafa-lite",
+        modelId,
         system: "system",
         task: "Sederhanakan (x^2 - 9)/(x - 3)",
         toolCall,
@@ -127,7 +129,7 @@ describe("math tool repair", () => {
         error: invalidInputError,
         inputSchema,
         messages: [],
-        modelId: "nakafa-lite",
+        modelId,
         system: "system",
         task: "Sederhanakan (x^2 - 9)/(x - 3)",
         toolCall,
@@ -196,7 +198,7 @@ describe("math tool repair", () => {
         error: equationInputError,
         inputSchema,
         messages: [],
-        modelId: "nakafa-lite",
+        modelId,
         system: "system",
         task: "x^2 = 1, y = 0, and x > 0",
         toolCall: equationToolCall,
@@ -236,7 +238,7 @@ describe("math tool repair", () => {
         error: invalidInputError,
         inputSchema,
         messages: [],
-        modelId: "nakafa-lite",
+        modelId,
         system: "system",
         task: "Sederhanakan x",
         toolCall,
@@ -265,7 +267,7 @@ describe("math tool repair", () => {
         error: invalidInputError,
         inputSchema,
         messages: [],
-        modelId: "nakafa-lite",
+        modelId,
         system: "system",
         task: "Sederhanakan (x^2 - 9)/(x - 3)",
         toolCall: incompleteToolCall,
@@ -304,7 +306,7 @@ describe("math tool repair", () => {
         error: invalidInputError,
         inputSchema,
         messages: [],
-        modelId: "nakafa-lite",
+        modelId,
         system: "system",
         task: "Sederhanakan (x^2 - 9)/(x - 3)",
         toolCall: malformedToolCall,
@@ -336,7 +338,7 @@ describe("math tool repair", () => {
         error: new NoSuchToolError({ toolName: "unknown" }),
         inputSchema,
         messages: [],
-        modelId: "nakafa-lite",
+        modelId,
         system: "system",
         task: "Sederhanakan x",
         toolCall: { ...toolCall, toolName: "unknown" },
@@ -354,7 +356,7 @@ describe("math tool repair", () => {
         error: invalidInputError,
         inputSchema,
         messages: [],
-        modelId: "nakafa-lite",
+        modelId,
         system: "system",
         task: "Sederhanakan x",
         toolCall,
@@ -372,7 +374,7 @@ describe("math tool repair", () => {
         error: invalidInputError,
         inputSchema: () => Promise.reject(new Error("schema unavailable")),
         messages: [],
-        modelId: "nakafa-lite",
+        modelId,
         system: "system",
         task: "Sederhanakan x",
         toolCall,
@@ -392,7 +394,7 @@ describe("math tool repair", () => {
         error: invalidInputError,
         inputSchema,
         messages: [],
-        modelId: "nakafa-lite",
+        modelId,
         system: "system",
         task: "Sederhanakan x",
         toolCall,

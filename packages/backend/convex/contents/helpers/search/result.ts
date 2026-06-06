@@ -27,12 +27,20 @@ export function buildContentSearchResult(
   const hasMore =
     ranked.length > nextOffset && nextOffset <= CONTENT_SEARCH_MAX_OFFSET;
 
-  return {
+  const result = {
     count: items.length,
     has_more: hasMore,
     items,
     limit: args.limit,
-    next_offset: hasMore ? nextOffset : null,
     offset: args.offset,
+  };
+
+  if (!hasMore) {
+    return result;
+  }
+
+  return {
+    ...result,
+    next_offset: nextOffset,
   };
 }

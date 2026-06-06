@@ -2,7 +2,8 @@ import { NakafaSearch } from "@repo/ai/agents/nakafa/search";
 import { search } from "@repo/ai/agents/nakafa/tools/search";
 import { createWriter } from "@repo/ai/agents/nakafa/tools/test";
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
-import { Effect } from "effect";
+import { NakafaAgentSearchResultSchema } from "@repo/contents/_lib/agent/schema/search";
+import { Effect, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 /** Extracts Nakafa search data parts from a recorded test writer stream. */
@@ -14,6 +15,11 @@ function getSearchParts(parts: ReturnType<typeof createWriter>["parts"]) {
 
     return [part.data];
   });
+}
+
+/** Decodes raw search fixtures through the production Nakafa search schema. */
+function searchResult(value: unknown) {
+  return Schema.decodeUnknownSync(NakafaAgentSearchResultSchema)(value);
 }
 
 describe("nakafa search tool", () => {
@@ -34,25 +40,26 @@ describe("nakafa search tool", () => {
       }).pipe(
         Effect.provideService(NakafaSearch, {
           search: (input) =>
-            Effect.succeed({
-              count: 1,
-              has_more: false,
-              items: [
-                {
-                  content_id: "en/quran/1",
-                  description: "The Opening",
-                  locale: input.locale,
-                  markdown_url: "https://nakafa.com/en/quran/1.md",
-                  route: "quran/1",
-                  section: "quran",
-                  title: "1. Al-Fatihah",
-                  url: "https://nakafa.com/en/quran/1",
-                },
-              ],
-              limit: input.limit,
-              next_offset: null,
-              offset: input.offset,
-            }),
+            Effect.succeed(
+              searchResult({
+                count: 1,
+                has_more: false,
+                items: [
+                  {
+                    content_id: "en/quran/1",
+                    description: "The Opening",
+                    locale: input.locale,
+                    markdown_url: "https://nakafa.com/en/quran/1.md",
+                    route: "quran/1",
+                    section: "quran",
+                    title: "1. Al-Fatihah",
+                    url: "https://nakafa.com/en/quran/1",
+                  },
+                ],
+                limit: input.limit,
+                offset: input.offset,
+              })
+            ),
         })
       )
     );
@@ -126,14 +133,15 @@ describe("nakafa search tool", () => {
       }).pipe(
         Effect.provideService(NakafaSearch, {
           search: (input) =>
-            Effect.succeed({
-              count: 0,
-              has_more: false,
-              items: [],
-              limit: input.limit,
-              next_offset: null,
-              offset: input.offset,
-            }),
+            Effect.succeed(
+              searchResult({
+                count: 0,
+                has_more: false,
+                items: [],
+                limit: input.limit,
+                offset: input.offset,
+              })
+            ),
         })
       )
     );
@@ -156,25 +164,26 @@ describe("nakafa search tool", () => {
       }).pipe(
         Effect.provideService(NakafaSearch, {
           search: (input) =>
-            Effect.succeed({
-              count: 1,
-              has_more: false,
-              items: [
-                {
-                  content_id: "en/articles/example",
-                  description: "Example article.",
-                  locale: input.locale,
-                  markdown_url: "https://nakafa.com/en/articles/example.md",
-                  route: "articles/example",
-                  section: "articles",
-                  title: "Example Article",
-                  url: "https://nakafa.com/en/articles/example",
-                },
-              ],
-              limit: input.limit,
-              next_offset: null,
-              offset: input.offset,
-            }),
+            Effect.succeed(
+              searchResult({
+                count: 1,
+                has_more: false,
+                items: [
+                  {
+                    content_id: "en/articles/example",
+                    description: "Example article.",
+                    locale: input.locale,
+                    markdown_url: "https://nakafa.com/en/articles/example.md",
+                    route: "articles/example",
+                    section: "articles",
+                    title: "Example Article",
+                    url: "https://nakafa.com/en/articles/example",
+                  },
+                ],
+                limit: input.limit,
+                offset: input.offset,
+              })
+            ),
         })
       )
     );
@@ -207,28 +216,29 @@ describe("nakafa search tool", () => {
       }).pipe(
         Effect.provideService(NakafaSearch, {
           search: (input) =>
-            Effect.succeed({
-              count: 1,
-              has_more: false,
-              items: [
-                {
-                  content_id:
-                    "id/subject/high-school/11/mathematics/function-modeling/rational-function",
-                  description: "Pelajari fungsi rasional.",
-                  locale: input.locale,
-                  markdown_url:
-                    "https://nakafa.com/id/subject/high-school/11/mathematics/function-modeling/rational-function.md",
-                  route:
-                    "subject/high-school/11/mathematics/function-modeling/rational-function",
-                  section: "subject",
-                  title: "Fungsi Rasional",
-                  url: "https://nakafa.com/id/subject/high-school/11/mathematics/function-modeling/rational-function",
-                },
-              ],
-              limit: input.limit,
-              next_offset: null,
-              offset: input.offset,
-            }),
+            Effect.succeed(
+              searchResult({
+                count: 1,
+                has_more: false,
+                items: [
+                  {
+                    content_id:
+                      "id/subject/high-school/11/mathematics/function-modeling/rational-function",
+                    description: "Pelajari fungsi rasional.",
+                    locale: input.locale,
+                    markdown_url:
+                      "https://nakafa.com/id/subject/high-school/11/mathematics/function-modeling/rational-function.md",
+                    route:
+                      "subject/high-school/11/mathematics/function-modeling/rational-function",
+                    section: "subject",
+                    title: "Fungsi Rasional",
+                    url: "https://nakafa.com/id/subject/high-school/11/mathematics/function-modeling/rational-function",
+                  },
+                ],
+                limit: input.limit,
+                offset: input.offset,
+              })
+            ),
         })
       )
     );
@@ -265,26 +275,27 @@ describe("nakafa search tool", () => {
       }).pipe(
         Effect.provideService(NakafaSearch, {
           search: (input) =>
-            Effect.succeed({
-              count: 1,
-              has_more: false,
-              items: [
-                {
-                  content_id: "id/articles/politics/example",
-                  description: "Analisis politik.",
-                  locale: input.locale,
-                  markdown_url:
-                    "https://nakafa.com/id/articles/politics/example.md",
-                  route: "articles/politics/example",
-                  section: "articles",
-                  title: "Artikel Politik",
-                  url: "https://nakafa.com/id/articles/politics/example",
-                },
-              ],
-              limit: input.limit,
-              next_offset: null,
-              offset: input.offset,
-            }),
+            Effect.succeed(
+              searchResult({
+                count: 1,
+                has_more: false,
+                items: [
+                  {
+                    content_id: "id/articles/politics/example",
+                    description: "Analisis politik.",
+                    locale: input.locale,
+                    markdown_url:
+                      "https://nakafa.com/id/articles/politics/example.md",
+                    route: "articles/politics/example",
+                    section: "articles",
+                    title: "Artikel Politik",
+                    url: "https://nakafa.com/id/articles/politics/example",
+                  },
+                ],
+                limit: input.limit,
+                offset: input.offset,
+              })
+            ),
         })
       )
     );
@@ -316,28 +327,29 @@ describe("nakafa search tool", () => {
       }).pipe(
         Effect.provideService(NakafaSearch, {
           search: (input) =>
-            Effect.succeed({
-              count: 1,
-              has_more: false,
-              items: [
-                {
-                  content_id:
-                    "id/subject/high-school/10/chemistry/basic-chemistry-laws/mass-conservation-law",
-                  description: "Pelajari hukum kekekalan massa.",
-                  locale: input.locale,
-                  markdown_url:
-                    "https://nakafa.com/id/subject/high-school/10/chemistry/basic-chemistry-laws/mass-conservation-law.md",
-                  route:
-                    "subject/high-school/10/chemistry/basic-chemistry-laws/mass-conservation-law",
-                  section: "subject",
-                  title: "Hukum Kekekalan Massa",
-                  url: "https://nakafa.com/id/subject/high-school/10/chemistry/basic-chemistry-laws/mass-conservation-law",
-                },
-              ],
-              limit: input.limit,
-              next_offset: null,
-              offset: input.offset,
-            }),
+            Effect.succeed(
+              searchResult({
+                count: 1,
+                has_more: false,
+                items: [
+                  {
+                    content_id:
+                      "id/subject/high-school/10/chemistry/basic-chemistry-laws/mass-conservation-law",
+                    description: "Pelajari hukum kekekalan massa.",
+                    locale: input.locale,
+                    markdown_url:
+                      "https://nakafa.com/id/subject/high-school/10/chemistry/basic-chemistry-laws/mass-conservation-law.md",
+                    route:
+                      "subject/high-school/10/chemistry/basic-chemistry-laws/mass-conservation-law",
+                    section: "subject",
+                    title: "Hukum Kekekalan Massa",
+                    url: "https://nakafa.com/id/subject/high-school/10/chemistry/basic-chemistry-laws/mass-conservation-law",
+                  },
+                ],
+                limit: input.limit,
+                offset: input.offset,
+              })
+            ),
         })
       )
     );
@@ -386,29 +398,30 @@ describe("nakafa search tool", () => {
           search: (input) => {
             capturedQueries.push(input.queries ?? []);
 
-            return Effect.succeed({
-              count: 1,
-              has_more: false,
-              items: [
-                {
-                  content_id:
-                    "id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
-                  description:
-                    "SMA SNBT Pengetahuan Kuantitatif Try Out 2026 Set 2 20 soal",
-                  locale: input.locale,
-                  markdown_url:
-                    "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2.md",
-                  route:
-                    "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
-                  section: "exercises",
-                  title: "SNBT Pengetahuan Kuantitatif Try Out 2026 Set 2",
-                  url: "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
-                },
-              ],
-              limit: input.limit,
-              next_offset: null,
-              offset: input.offset,
-            });
+            return Effect.succeed(
+              searchResult({
+                count: 1,
+                has_more: false,
+                items: [
+                  {
+                    content_id:
+                      "id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
+                    description:
+                      "SMA SNBT Pengetahuan Kuantitatif Try Out 2026 Set 2 20 soal",
+                    locale: input.locale,
+                    markdown_url:
+                      "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2.md",
+                    route:
+                      "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
+                    section: "exercises",
+                    title: "SNBT Pengetahuan Kuantitatif Try Out 2026 Set 2",
+                    url: "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
+                  },
+                ],
+                limit: input.limit,
+                offset: input.offset,
+              })
+            );
           },
         })
       )
@@ -446,14 +459,15 @@ describe("nakafa search tool", () => {
           search: (input) => {
             capturedQueries.push(input.queries ?? []);
 
-            return Effect.succeed({
-              count: 0,
-              has_more: false,
-              items: [],
-              limit: input.limit,
-              next_offset: null,
-              offset: input.offset,
-            });
+            return Effect.succeed(
+              searchResult({
+                count: 0,
+                has_more: false,
+                items: [],
+                limit: input.limit,
+                offset: input.offset,
+              })
+            );
           },
         })
       )
@@ -483,14 +497,15 @@ describe("nakafa search tool", () => {
           search: (input) => {
             capturedQueries.push(input.queries ?? []);
 
-            return Effect.succeed({
-              count: 0,
-              has_more: false,
-              items: [],
-              limit: input.limit,
-              next_offset: null,
-              offset: input.offset,
-            });
+            return Effect.succeed(
+              searchResult({
+                count: 0,
+                has_more: false,
+                items: [],
+                limit: input.limit,
+                offset: input.offset,
+              })
+            );
           },
         })
       )
@@ -519,14 +534,15 @@ describe("nakafa search tool", () => {
           search: (input) => {
             capturedQueries.push(input.queries ?? []);
 
-            return Effect.succeed({
-              count: 0,
-              has_more: false,
-              items: [],
-              limit: input.limit,
-              next_offset: null,
-              offset: input.offset,
-            });
+            return Effect.succeed(
+              searchResult({
+                count: 0,
+                has_more: false,
+                items: [],
+                limit: input.limit,
+                offset: input.offset,
+              })
+            );
           },
         })
       )
@@ -553,54 +569,56 @@ describe("nakafa search tool", () => {
         Effect.provideService(NakafaSearch, {
           search: (input) => {
             if (input.queries?.at(0) === "Penalaran Matematika") {
-              return Effect.succeed({
+              return Effect.succeed(
+                searchResult({
+                  count: 1,
+                  has_more: false,
+                  items: [
+                    {
+                      content_id:
+                        "id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1",
+                      description:
+                        "SNBT Penalaran Matematika Try Out 2026 Set 1 pola bilangan",
+                      locale: input.locale,
+                      markdown_url:
+                        "https://nakafa.com/id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1.md",
+                      route:
+                        "exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1",
+                      section: "exercises",
+                      title: "SNBT Penalaran Matematika Try Out 2026 Set 1",
+                      url: "https://nakafa.com/id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1",
+                    },
+                  ],
+                  limit: input.limit,
+                  offset: input.offset,
+                })
+              );
+            }
+
+            return Effect.succeed(
+              searchResult({
                 count: 1,
                 has_more: false,
                 items: [
                   {
                     content_id:
-                      "id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1",
+                      "id/exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1",
                     description:
-                      "SNBT Penalaran Matematika Try Out 2026 Set 1 pola bilangan",
+                      "Soal Bahasa Indonesia yang menyebut pola bilangan.",
                     locale: input.locale,
                     markdown_url:
-                      "https://nakafa.com/id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1.md",
+                      "https://nakafa.com/id/exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1.md",
                     route:
-                      "exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1",
+                      "exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1",
                     section: "exercises",
-                    title: "SNBT Penalaran Matematika Try Out 2026 Set 1",
-                    url: "https://nakafa.com/id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1",
+                    title: "Soal 1 Bahasa Indonesia",
+                    url: "https://nakafa.com/id/exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1",
                   },
                 ],
                 limit: input.limit,
-                next_offset: null,
                 offset: input.offset,
-              });
-            }
-
-            return Effect.succeed({
-              count: 1,
-              has_more: false,
-              items: [
-                {
-                  content_id:
-                    "id/exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1",
-                  description:
-                    "Soal Bahasa Indonesia yang menyebut pola bilangan.",
-                  locale: input.locale,
-                  markdown_url:
-                    "https://nakafa.com/id/exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1.md",
-                  route:
-                    "exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1",
-                  section: "exercises",
-                  title: "Soal 1 Bahasa Indonesia",
-                  url: "https://nakafa.com/id/exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1",
-                },
-              ],
-              limit: input.limit,
-              next_offset: null,
-              offset: input.offset,
-            });
+              })
+            );
           },
         })
       )
@@ -698,25 +716,26 @@ describe("nakafa search tool", () => {
       }).pipe(
         Effect.provideService(NakafaSearch, {
           search: (input) =>
-            Effect.succeed({
-              count: 1,
-              has_more: false,
-              items: [
-                {
-                  content_id: `id/exercises/${input.queries?.at(0) ?? "empty"}`,
-                  description: "",
-                  locale: input.locale,
-                  markdown_url: "https://nakafa.com/id/exercises/item.md",
-                  route: `exercises/${input.queries?.at(0) ?? "empty"}`,
-                  section: "exercises",
-                  title: input.queries?.at(0) ?? "empty",
-                  url: "https://nakafa.com/id/exercises/item",
-                },
-              ],
-              limit: input.limit,
-              next_offset: null,
-              offset: input.offset,
-            }),
+            Effect.succeed(
+              searchResult({
+                count: 1,
+                has_more: false,
+                items: [
+                  {
+                    content_id: `id/exercises/${input.queries?.at(0) ?? "empty"}`,
+                    description: "",
+                    locale: input.locale,
+                    markdown_url: "https://nakafa.com/id/exercises/item.md",
+                    route: `exercises/${input.queries?.at(0) ?? "empty"}`,
+                    section: "exercises",
+                    title: input.queries?.at(0) ?? "empty",
+                    url: "https://nakafa.com/id/exercises/item",
+                  },
+                ],
+                limit: input.limit,
+                offset: input.offset,
+              })
+            ),
         })
       )
     );
@@ -745,52 +764,54 @@ describe("nakafa search tool", () => {
         Effect.provideService(NakafaSearch, {
           search: (input) => {
             if (input.queries?.at(0) === "bilangan") {
-              return Effect.succeed({
+              return Effect.succeed(
+                searchResult({
+                  count: 1,
+                  has_more: false,
+                  items: [
+                    {
+                      content_id:
+                        "id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1",
+                      description: "pola",
+                      locale: input.locale,
+                      markdown_url:
+                        "https://nakafa.com/id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1.md",
+                      route:
+                        "exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1",
+                      section: "exercises",
+                      title: "Set Penalaran Matematika",
+                      url: "https://nakafa.com/id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1",
+                    },
+                  ],
+                  limit: input.limit,
+                  offset: input.offset,
+                })
+              );
+            }
+
+            return Effect.succeed(
+              searchResult({
                 count: 1,
                 has_more: false,
                 items: [
                   {
                     content_id:
-                      "id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1",
+                      "id/exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1",
                     description: "pola",
                     locale: input.locale,
                     markdown_url:
-                      "https://nakafa.com/id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1.md",
+                      "https://nakafa.com/id/exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1.md",
                     route:
-                      "exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1",
+                      "exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1",
                     section: "exercises",
-                    title: "Set Penalaran Matematika",
-                    url: "https://nakafa.com/id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1",
+                    title: "Soal 1",
+                    url: "https://nakafa.com/id/exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1",
                   },
                 ],
                 limit: input.limit,
-                next_offset: null,
                 offset: input.offset,
-              });
-            }
-
-            return Effect.succeed({
-              count: 1,
-              has_more: false,
-              items: [
-                {
-                  content_id:
-                    "id/exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1",
-                  description: "pola",
-                  locale: input.locale,
-                  markdown_url:
-                    "https://nakafa.com/id/exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1.md",
-                  route:
-                    "exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1",
-                  section: "exercises",
-                  title: "Soal 1",
-                  url: "https://nakafa.com/id/exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1",
-                },
-              ],
-              limit: input.limit,
-              next_offset: null,
-              offset: input.offset,
-            });
+              })
+            );
           },
         })
       )
@@ -822,14 +843,15 @@ describe("nakafa search tool", () => {
           search: (input) => {
             capturedQueries.push(input.queries ?? []);
 
-            return Effect.succeed({
-              count: 0,
-              has_more: false,
-              items: [],
-              limit: input.limit,
-              next_offset: null,
-              offset: input.offset,
-            });
+            return Effect.succeed(
+              searchResult({
+                count: 0,
+                has_more: false,
+                items: [],
+                limit: input.limit,
+                offset: input.offset,
+              })
+            );
           },
         })
       )
@@ -856,41 +878,42 @@ describe("nakafa search tool", () => {
       }).pipe(
         Effect.provideService(NakafaSearch, {
           search: (input) =>
-            Effect.succeed({
-              count: 2,
-              has_more: false,
-              items: [
-                {
-                  content_id:
-                    "id/subject/high-school/10/mathematics/arithmetic-operators",
-                  description: "Operasi aritmatika dasar.",
-                  locale: input.locale,
-                  markdown_url:
-                    "https://nakafa.com/id/subject/high-school/10/mathematics/arithmetic-operators.md",
-                  route:
-                    "subject/high-school/10/mathematics/arithmetic-operators",
-                  section: "subject",
-                  title: "Operator Aritmatika",
-                  url: "https://nakafa.com/id/subject/high-school/10/mathematics/arithmetic-operators",
-                },
-                {
-                  content_id:
-                    "id/subject/high-school/10/mathematics/sequence/arithmetic-sequence",
-                  description: "Pola bilangan pada barisan aritmatika.",
-                  locale: input.locale,
-                  markdown_url:
-                    "https://nakafa.com/id/subject/high-school/10/mathematics/sequence/arithmetic-sequence.md",
-                  route:
-                    "subject/high-school/10/mathematics/sequence/arithmetic-sequence",
-                  section: "subject",
-                  title: "Barisan Aritmatika",
-                  url: "https://nakafa.com/id/subject/high-school/10/mathematics/sequence/arithmetic-sequence",
-                },
-              ],
-              limit: input.limit,
-              next_offset: null,
-              offset: input.offset,
-            }),
+            Effect.succeed(
+              searchResult({
+                count: 2,
+                has_more: false,
+                items: [
+                  {
+                    content_id:
+                      "id/subject/high-school/10/mathematics/arithmetic-operators",
+                    description: "Operasi aritmatika dasar.",
+                    locale: input.locale,
+                    markdown_url:
+                      "https://nakafa.com/id/subject/high-school/10/mathematics/arithmetic-operators.md",
+                    route:
+                      "subject/high-school/10/mathematics/arithmetic-operators",
+                    section: "subject",
+                    title: "Operator Aritmatika",
+                    url: "https://nakafa.com/id/subject/high-school/10/mathematics/arithmetic-operators",
+                  },
+                  {
+                    content_id:
+                      "id/subject/high-school/10/mathematics/sequence/arithmetic-sequence",
+                    description: "Pola bilangan pada barisan aritmatika.",
+                    locale: input.locale,
+                    markdown_url:
+                      "https://nakafa.com/id/subject/high-school/10/mathematics/sequence/arithmetic-sequence.md",
+                    route:
+                      "subject/high-school/10/mathematics/sequence/arithmetic-sequence",
+                    section: "subject",
+                    title: "Barisan Aritmatika",
+                    url: "https://nakafa.com/id/subject/high-school/10/mathematics/sequence/arithmetic-sequence",
+                  },
+                ],
+                limit: input.limit,
+                offset: input.offset,
+              })
+            ),
         })
       )
     );
@@ -920,67 +943,71 @@ describe("nakafa search tool", () => {
         Effect.provideService(NakafaSearch, {
           search: (input) => {
             if (input.queries?.at(0) === "beta") {
-              return Effect.succeed({
-                count: 1,
-                has_more: true,
+              return Effect.succeed(
+                searchResult({
+                  count: 1,
+                  has_more: true,
+                  items: [
+                    {
+                      content_id: "en/articles/a",
+                      description: "Duplicate article.",
+                      locale: input.locale,
+                      markdown_url: "https://nakafa.com/en/articles/a.md",
+                      route: "articles/a",
+                      section: "articles",
+                      title: "Duplicate Article",
+                      url: "https://nakafa.com/en/articles/a",
+                    },
+                  ],
+                  limit: input.limit,
+                  next_offset: 6,
+                  offset: input.offset,
+                })
+              );
+            }
+
+            if (input.queries?.at(0) === "gamma") {
+              return Effect.succeed(
+                searchResult({
+                  count: 0,
+                  has_more: false,
+                  items: [],
+                  limit: input.limit,
+                  offset: input.offset,
+                })
+              );
+            }
+
+            return Effect.succeed(
+              searchResult({
+                count: 2,
+                has_more: false,
                 items: [
                   {
                     content_id: "en/articles/a",
-                    description: "Duplicate article.",
+                    description: "First article.",
                     locale: input.locale,
                     markdown_url: "https://nakafa.com/en/articles/a.md",
                     route: "articles/a",
                     section: "articles",
-                    title: "Duplicate Article",
+                    title: "First Article",
                     url: "https://nakafa.com/en/articles/a",
+                  },
+                  {
+                    content_id: "en/articles/b",
+                    description: "Second article.",
+                    locale: input.locale,
+                    markdown_url: "https://nakafa.com/en/articles/b.md",
+                    route: "articles/b",
+                    section: "articles",
+                    title: "Second Article",
+                    url: "https://nakafa.com/en/articles/b",
                   },
                 ],
                 limit: input.limit,
-                next_offset: 6,
                 offset: input.offset,
-              });
-            }
-
-            if (input.queries?.at(0) === "gamma") {
-              return Effect.succeed({
-                count: 0,
-                has_more: false,
-                items: [],
-                limit: input.limit,
-                next_offset: null,
-                offset: input.offset,
-              });
-            }
-
-            return Effect.succeed({
-              count: 2,
-              has_more: false,
-              items: [
-                {
-                  content_id: "en/articles/a",
-                  description: "First article.",
-                  locale: input.locale,
-                  markdown_url: "https://nakafa.com/en/articles/a.md",
-                  route: "articles/a",
-                  section: "articles",
-                  title: "First Article",
-                  url: "https://nakafa.com/en/articles/a",
-                },
-                {
-                  content_id: "en/articles/b",
-                  description: "Second article.",
-                  locale: input.locale,
-                  markdown_url: "https://nakafa.com/en/articles/b.md",
-                  route: "articles/b",
-                  section: "articles",
-                  title: "Second Article",
-                  url: "https://nakafa.com/en/articles/b",
-                },
-              ],
-              limit: input.limit,
-              next_offset: null,
-              offset: input.offset,
-            });
+              })
+            );
           },
         })
       )

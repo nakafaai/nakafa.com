@@ -2,7 +2,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { Effect } from "effect";
+import { Config, Effect, Option, Schema } from "effect";
 import { getSitemapEntries } from "@/lib/sitemap/entries";
 import { logger } from "@/scripts/utils";
 
@@ -30,89 +30,200 @@ const SUBMISSION_HISTORY_FILE = path.join(
   "submission-history.json"
 );
 
-// Ensure data folder exists
-if (!fs.existsSync(DATA_FOLDER)) {
-  fs.mkdirSync(DATA_FOLDER, { recursive: true });
-  logger.info(`Created data folder at: ${DATA_FOLDER}`);
-}
-
 // Regex patterns
 const QUOTA_REMAINING_REGEX = /Quota remaining for today: (\d+)/;
 const QUOTA_EXCEEDED_REGEX = /exceeded your daily url submission quota/i;
 
-// Load submission history
-function loadSubmissionHistory(): {
-  indexNow: Record<string, string>;
-  bing: Record<string, string>;
-} {
-  try {
-    if (fs.existsSync(SUBMISSION_HISTORY_FILE)) {
-      const data = fs.readFileSync(SUBMISSION_HISTORY_FILE, "utf8");
-      const parsed = JSON.parse(data);
+const ServiceHistorySchema = Schema.Record({
+  key: Schema.String,
+  value: Schema.String,
+});
+const SubmissionHistorySchema = Schema.Struct({
+  bing: ServiceHistorySchema,
+  indexNow: ServiceHistorySchema,
+});
+const BingQuotaMessageSchema = Schema.Struct({
+  Message: Schema.String,
+});
 
-      // Handle conversion from old format to new format
-      if (!(parsed.indexNow || parsed.bing)) {
-        // Old format detected - convert to new format
+/** Expected failure while creating the URL submission data folder. */
+class SubmissionDataFolderError extends Schema.TaggedError<SubmissionDataFolderError>()(
+  "SubmissionDataFolderError",
+  {
+    cause: Schema.Unknown,
+    message: Schema.String,
+  }
+) {}
+
+/** Expected failure while submitting one IndexNow batch. */
+class IndexNowBatchSubmitError extends Schema.TaggedError<IndexNowBatchSubmitError>()(
+  "IndexNowBatchSubmitError",
+  {
+    cause: Schema.Unknown,
+    message: Schema.String,
+  }
+) {}
+
+/** Expected failure while submitting one Bing batch. */
+class BingBatchSubmitError extends Schema.TaggedError<BingBatchSubmitError>()(
+  "BingBatchSubmitError",
+  {
+    cause: Schema.Unknown,
+    message: Schema.String,
+  }
+) {}
+
+const decodeSubmissionHistoryJson = Schema.decodeUnknown(
+  Schema.parseJson(Schema.Unknown)
+);
+const decodeSubmissionHistory = Schema.decodeUnknown(SubmissionHistorySchema);
+const decodeLegacyServiceHistory = Schema.decodeUnknown(ServiceHistorySchema);
+const decodeEmptyServiceHistory = Schema.decodeUnknown(ServiceHistorySchema);
+const decodeEmptySubmissionHistory = Schema.decodeUnknown(
+  SubmissionHistorySchema
+);
+const decodeBingQuotaMessage = Schema.decodeUnknown(
+  Schema.parseJson(BingQuotaMessageSchema)
+);
+const bingWebmasterApiKey = Config.string("BING_WEBMASTER_API_KEY").pipe(
+  Config.option
+);
+
+/** Builds the empty submission-history shape used when no history file exists. */
+function emptySubmissionHistory() {
+  return {
+    bing: {},
+    indexNow: {},
+  };
+}
+
+/** Ensures the local submission-history data folder exists. */
+const ensureSubmissionDataFolder = Effect.fn(
+  "scripts.indexNow.ensureDataFolder"
+)(function* () {
+  const exists = yield* Effect.try({
+    try: () => fs.existsSync(DATA_FOLDER),
+    catch: (cause) =>
+      new SubmissionDataFolderError({
+        cause,
+        message: `Failed to inspect ${DATA_FOLDER}.`,
+      }),
+  });
+
+  if (exists) {
+    return;
+  }
+
+  yield* Effect.try({
+    try: () => {
+      fs.mkdirSync(DATA_FOLDER, { recursive: true });
+      logger.info(`Created data folder at: ${DATA_FOLDER}`);
+    },
+    catch: (cause) =>
+      new SubmissionDataFolderError({
+        cause,
+        message: `Failed to create ${DATA_FOLDER}.`,
+      }),
+  });
+});
+
+/** Loads submission history and converts the legacy flat file format. */
+const loadSubmissionHistory = Effect.fn(
+  "scripts.indexNow.loadSubmissionHistory"
+)(function* () {
+  const exists = yield* Effect.try({
+    try: () => fs.existsSync(SUBMISSION_HISTORY_FILE),
+    catch: (error) => error,
+  });
+
+  if (!exists) {
+    return yield* decodeEmptySubmissionHistory(emptySubmissionHistory());
+  }
+
+  const data = yield* Effect.try({
+    try: () => fs.readFileSync(SUBMISSION_HISTORY_FILE, "utf8"),
+    catch: (error) => error,
+  });
+  const parsed = yield* decodeSubmissionHistoryJson(data);
+
+  return yield* decodeSubmissionHistory(parsed).pipe(
+    Effect.catchAll(() =>
+      Effect.gen(function* () {
+        const bing = yield* decodeEmptyServiceHistory({});
+        const indexNow = yield* decodeLegacyServiceHistory(parsed);
+
         return {
-          indexNow: parsed || {},
-          bing: {},
+          bing,
+          indexNow,
         };
-      }
+      })
+    )
+  );
+});
 
-      return parsed;
-    }
-  } catch (error) {
-    logger.warn(
-      `Error loading submission history: ${error}. Starting with empty history.`
-    );
-  }
-  return { indexNow: {}, bing: {} };
-}
-
-// Save submission history
-function saveSubmissionHistory(history: {
+/** Persists submission history without masking the rest of the script. */
+const saveSubmissionHistory = Effect.fn(
+  "scripts.indexNow.saveSubmissionHistory"
+)(function* (history: {
   indexNow: Record<string, string>;
   bing: Record<string, string>;
-}): void {
-  try {
-    fs.writeFileSync(
-      SUBMISSION_HISTORY_FILE,
-      JSON.stringify(history, null, 2),
-      "utf8"
-    );
-  } catch (error) {
-    logger.error(`Error saving submission history: ${error}`);
-  }
-}
-
-// Get all URLs from the sitemap that haven't been submitted yet
-async function getUnsubmittedUrls(service: "indexNow" | "bing"): Promise<{
-  urls: string[];
-  history: { indexNow: Record<string, string>; bing: Record<string, string> };
-}> {
-  // Load existing submission history
-  const history = loadSubmissionHistory();
-
-  const allEntries = await Effect.runPromise(getSitemapEntries());
-
-  // Extract unique URLs
-  const allUrls = new Set<string>();
-  for (const entry of allEntries) {
-    allUrls.add(entry.url);
-  }
-
-  // Filter out already submitted URLs for the specific service
-  const urls = Array.from(allUrls).filter((url) => !history[service][url]);
-
-  logger.stats("Total URLs in sitemap", allUrls.size);
-  logger.stats(
-    `Previously submitted URLs to ${service}`,
-    Object.keys(history[service]).length
+}) {
+  yield* Effect.try({
+    try: () => {
+      fs.writeFileSync(
+        SUBMISSION_HISTORY_FILE,
+        JSON.stringify(history, null, 2),
+        "utf8"
+      );
+    },
+    catch: (error) => error,
+  }).pipe(
+    Effect.catchAll((error) =>
+      Effect.sync(() => {
+        logger.error(`Error saving submission history: ${error}`);
+      })
+    )
   );
-  logger.stats(`New URLs to submit to ${service}`, urls.length);
+});
 
-  return { urls, history };
-}
+/** Gets all sitemap URLs that have not been submitted to the target service. */
+const getUnsubmittedUrls = Effect.fn("scripts.indexNow.getUnsubmittedUrls")(
+  function* (service: "indexNow" | "bing") {
+    // Load existing submission history
+    const history = yield* loadSubmissionHistory().pipe(
+      Effect.catchAll((error) =>
+        Effect.gen(function* () {
+          yield* Effect.sync(() => {
+            logger.warn(
+              `Error loading submission history: ${error}. Starting with empty history.`
+            );
+          });
+          return yield* decodeEmptySubmissionHistory(emptySubmissionHistory());
+        })
+      )
+    );
+
+    const allEntries = yield* getSitemapEntries();
+
+    // Extract unique URLs
+    const allUrls = new Set<string>();
+    for (const entry of allEntries) {
+      allUrls.add(entry.url);
+    }
+
+    // Filter out already submitted URLs for the specific service
+    const urls = Array.from(allUrls).filter((url) => !history[service][url]);
+
+    logger.stats("Total URLs in sitemap", allUrls.size);
+    logger.stats(
+      `Previously submitted URLs to ${service}`,
+      Object.keys(history[service]).length
+    );
+    logger.stats(`New URLs to submit to ${service}`, urls.length);
+
+    return { history, urls };
+  }
+);
 
 // Update submission history with successfully submitted URLs
 function updateSubmissionHistory(
@@ -133,70 +244,81 @@ function getApiKey(): string {
 }
 
 // Helper function to submit a single batch to IndexNow
-async function submitBatchToIndexNow(
-  batch: string[],
-  key: string,
-  batchCount: number,
-  totalBatches: number
-): Promise<string[]> {
-  const apiEndpoint = "https://api.indexnow.org";
+const submitBatchToIndexNow = Effect.fn("scripts.indexNow.submitIndexNowBatch")(
+  function* (
+    batch: string[],
+    key: string,
+    batchCount: number,
+    totalBatches: number
+  ) {
+    yield* Effect.sync(() => {
+      logger.progress(
+        batchCount,
+        totalBatches,
+        `Submitting batch ${batchCount} of ${totalBatches}`
+      );
+    });
 
-  logger.progress(
-    batchCount,
-    totalBatches,
-    `Submitting batch ${batchCount} of ${totalBatches}`
-  );
+    const status = yield* Effect.tryPromise({
+      try: () =>
+        fetch("https://api.indexnow.org", {
+          body: JSON.stringify({
+            host: new URL(host).hostname,
+            key,
+            keyLocation,
+            urlList: batch,
+          }),
+          headers: {
+            "Content-Type": "application/json; charset=utf-8",
+          },
+          method: "POST",
+        }).then((response) => response.status),
+      catch: (cause) =>
+        new IndexNowBatchSubmitError({
+          cause,
+          message: `Error submitting IndexNow batch ${batchCount}.`,
+        }),
+    }).pipe(
+      Effect.catchTag("IndexNowBatchSubmitError", (error) =>
+        Effect.sync(() => {
+          logger.error(`${error.message}: ${error.cause}`);
+          return 0;
+        })
+      )
+    );
 
-  const response = await fetch(apiEndpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json; charset=utf-8",
-    },
-    body: JSON.stringify({
-      host: new URL(host).hostname,
-      key,
-      keyLocation,
-      urlList: batch,
-    }),
-  });
+    if (status !== HTTP_STATUS_CODE_OK) {
+      logger.error(`Batch ${batchCount} failed with status: ${status}`);
+      return [];
+    }
 
-  const status = response.status;
-
-  if (status !== HTTP_STATUS_CODE_OK) {
-    logger.error(`Batch ${batchCount} failed with status: ${status}`);
-    return [];
+    logger.success(`Batch ${batchCount} completed (${batch.length} URLs)`);
+    return batch;
   }
-  logger.success(`Batch ${batchCount} completed (${batch.length} URLs)`);
-  return batch;
-}
+);
 
 // Submit URLs to IndexNow
-async function submitUrlsToIndexNow(
-  urls: string[],
-  key: string
-): Promise<string[]> {
-  if (urls.length === 0) {
-    logger.info("No new URLs to submit to IndexNow.");
-    return [];
-  }
+const submitUrlsToIndexNow = Effect.fn("scripts.indexNow.submitIndexNowUrls")(
+  function* (urls: string[], key: string) {
+    if (urls.length === 0) {
+      logger.info("No new URLs to submit to IndexNow.");
+      return [];
+    }
 
-  // Split URLs into batches of 100
-  const batches: string[][] = [];
-  for (let i = 0; i < urls.length; i += BATCH_SIZE) {
-    batches.push(urls.slice(i, i + BATCH_SIZE));
-  }
+    // Split URLs into batches of 100
+    const batches: string[][] = [];
+    for (let i = 0; i < urls.length; i += BATCH_SIZE) {
+      batches.push(urls.slice(i, i + BATCH_SIZE));
+    }
 
-  logger.info(`Submitting ${urls.length} URLs to IndexNow...`);
+    logger.info(`Submitting ${urls.length} URLs to IndexNow...`);
 
-  const successfullySubmitted: string[] = [];
-  const totalBatches = batches.length;
+    const successfullySubmitted: string[] = [];
+    const totalBatches = batches.length;
 
-  // Process batches sequentially using reduce
-  await batches.reduce(async (previousPromise, batch, index) => {
-    await previousPromise;
-
-    try {
-      const batchResult = await submitBatchToIndexNow(
+    for (let index = 0; index < batches.length; index += 1) {
+      const batch = batches[index];
+      const batchResult = yield* submitBatchToIndexNow(
         batch,
         key,
         index + 1,
@@ -206,162 +328,189 @@ async function submitUrlsToIndexNow(
 
       // Avoid rate limiting
       if (index < totalBatches - 1) {
-        await new Promise((resolve) => setTimeout(resolve, RATE_LIMIT_DELAY));
+        yield* Effect.sleep(RATE_LIMIT_DELAY);
       }
-    } catch (error) {
-      logger.error(`Error submitting batch ${index + 1}: ${error}`);
     }
-  }, Promise.resolve());
 
-  logger.info(
-    `IndexNow submission completed. Successfully submitted ${successfullySubmitted.length}/${urls.length} URLs.`
-  );
+    logger.info(
+      `IndexNow submission completed. Successfully submitted ${successfullySubmitted.length}/${urls.length} URLs.`
+    );
 
-  return successfullySubmitted;
-}
+    return successfullySubmitted;
+  }
+);
 
 // Helper function to extract quota from error message
-function extractRemainingQuota(responseText: string): number | null {
-  try {
-    const errorData = JSON.parse(responseText);
-    const quotaMessage = errorData.Message;
+const extractRemainingQuota = Effect.fn("scripts.indexNow.extractBingQuota")(
+  function* (responseText: string) {
+    const errorData = yield* decodeBingQuotaMessage(responseText).pipe(
+      Effect.catchAll((error) =>
+        Effect.sync(() => {
+          logger.error(`Error parsing quota information: ${error}`);
+          return { Message: "" };
+        })
+      )
+    );
 
-    const remainingQuotaMatch = quotaMessage.match(QUOTA_REMAINING_REGEX);
-    if (remainingQuotaMatch?.[1]) {
-      const remainingQuota = Number.parseInt(remainingQuotaMatch[1], 10);
-      if (!Number.isNaN(remainingQuota) && remainingQuota > 0) {
-        return remainingQuota;
-      }
+    const remainingQuotaMatch = errorData.Message.match(QUOTA_REMAINING_REGEX);
+    if (!remainingQuotaMatch?.[1]) {
+      return null;
     }
-  } catch (parseError) {
-    logger.error(`Error parsing quota information: ${parseError}`);
+
+    const remainingQuota = Number.parseInt(remainingQuotaMatch[1], 10);
+    if (Number.isNaN(remainingQuota) || remainingQuota <= 0) {
+      return null;
+    }
+
+    return remainingQuota;
   }
-  return null;
-}
+);
 
 // Helper function to process API response
-async function processBingResponse(
-  response: Response,
-  batch: string[]
-): Promise<{
-  success: boolean;
-  quotaRemaining: number | null;
-  shouldBreak: boolean;
-}> {
-  const status = response.status;
-  const responseText = await response.text();
+const processBingResponse = Effect.fn("scripts.indexNow.processBingResponse")(
+  function* (response: Response, batch: string[]) {
+    const status = response.status;
+    const responseText = yield* Effect.tryPromise({
+      try: () => response.text(),
+      catch: (cause) =>
+        new BingBatchSubmitError({
+          cause,
+          message: "Failed to read Bing response text.",
+        }),
+    });
 
-  logger.info(`Bing API response status: ${status}`);
+    logger.info(`Bing API response status: ${status}`);
 
-  if (status !== HTTP_STATUS_CODE_OK) {
-    logger.error(`Error submitting URLs to Bing. Status: ${status}`);
-    logger.error(`Response: ${responseText}`);
+    if (status !== HTTP_STATUS_CODE_OK) {
+      logger.error(`Error submitting URLs to Bing. Status: ${status}`);
+      logger.error(`Response: ${responseText}`);
 
-    // Check for quota exceeded error
-    if (QUOTA_EXCEEDED_REGEX.test(responseText)) {
-      logger.warn("Daily quota exceeded. Stopping submission.");
-      return { success: false, quotaRemaining: null, shouldBreak: true };
-    }
-
-    // Check if the error is related to quota limitations
-    if (responseText.includes("Quota remaining")) {
-      const quotaRemaining = extractRemainingQuota(responseText);
-      if (quotaRemaining) {
-        logger.info(
-          `Adjusting batch size to respect quota. New batch size: ${quotaRemaining}`
-        );
-        return { success: false, quotaRemaining, shouldBreak: false };
+      // Check for quota exceeded error
+      if (QUOTA_EXCEEDED_REGEX.test(responseText)) {
+        logger.warn("Daily quota exceeded. Stopping submission.");
+        return { success: false, quotaRemaining: null, shouldBreak: true };
       }
+
+      // Check if the error is related to quota limitations
+      if (responseText.includes("Quota remaining")) {
+        const quotaRemaining = yield* extractRemainingQuota(responseText);
+        if (quotaRemaining) {
+          logger.info(
+            `Adjusting batch size to respect quota. New batch size: ${quotaRemaining}`
+          );
+          return { success: false, quotaRemaining, shouldBreak: false };
+        }
+      }
+
+      return { success: false, quotaRemaining: null, shouldBreak: false };
     }
 
-    return { success: false, quotaRemaining: null, shouldBreak: false };
+    logger.success(
+      `Successfully submitted ${batch.length} URLs to Bing URL Submission API.`
+    );
+    return { success: true, quotaRemaining: null, shouldBreak: false };
   }
-
-  logger.success(
-    `Successfully submitted ${batch.length} URLs to Bing URL Submission API.`
-  );
-  return { success: true, quotaRemaining: null, shouldBreak: false };
-}
+);
 
 // Helper function to submit a single batch to Bing
-async function submitBatchToBing(
-  batch: string[],
-  apiKey: string,
-  startIdx: number,
-  endIdx: number
-): Promise<{
-  success: boolean;
-  urls: string[];
-  quotaRemaining?: number;
-  shouldBreak?: boolean;
-}> {
-  const apiEndpoint =
-    "https://ssl.bing.com/webmaster/api.svc/json/SubmitUrlbatch";
+const submitBatchToBing = Effect.fn("scripts.indexNow.submitBingBatch")(
+  function* (
+    batch: string[],
+    apiKey: string,
+    startIdx: number,
+    endIdx: number
+  ) {
+    const apiEndpoint =
+      "https://ssl.bing.com/webmaster/api.svc/json/SubmitUrlbatch";
 
-  logger.info(
-    `Submitting batch of ${batch.length} URLs to Bing (${startIdx} to ${endIdx})`
-  );
+    logger.info(
+      `Submitting batch of ${batch.length} URLs to Bing (${startIdx} to ${endIdx})`
+    );
 
-  const response = await fetch(`${apiEndpoint}?apikey=${apiKey}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json; charset=utf-8",
-      Host: "ssl.bing.com",
-    },
-    body: JSON.stringify({
-      siteUrl: host,
-      urlList: batch,
-    }),
-  });
+    const response = yield* Effect.tryPromise({
+      try: () =>
+        fetch(`${apiEndpoint}?apikey=${apiKey}`, {
+          body: JSON.stringify({
+            siteUrl: host,
+            urlList: batch,
+          }),
+          headers: {
+            "Content-Type": "application/json; charset=utf-8",
+            Host: "ssl.bing.com",
+          },
+          method: "POST",
+        }),
+      catch: (cause) =>
+        new BingBatchSubmitError({
+          cause,
+          message: "Error submitting URLs to Bing.",
+        }),
+    });
 
-  const result = await processBingResponse(response, batch);
+    const result = yield* processBingResponse(response, batch);
 
-  return {
-    success: result.success,
-    urls: result.success ? batch : [],
-    quotaRemaining: result.quotaRemaining ?? undefined,
-    shouldBreak: result.shouldBreak,
-  };
-}
+    return {
+      success: result.success,
+      urls: result.success ? batch : [],
+      quotaRemaining: result.quotaRemaining ?? undefined,
+      shouldBreak: result.shouldBreak,
+    };
+  }
+);
 
 // Submit URLs to Bing URL Submission API
-async function submitUrlsToBing(
-  urls: string[],
-  apiKey: string
-): Promise<string[]> {
-  if (urls.length === 0) {
-    logger.info("No new URLs to submit to Bing.");
-    return [];
-  }
-
-  // Set a safer default batch size to respect Bing's quota
-  let batchSize = BATCH_SIZE; // Reduced from 500 to 100 to stay within quota
-
-  logger.info("Starting Bing URL Submission API process...");
-  logger.stats("URLs to submit", urls.length);
-  logger.stats("Initial batch size", batchSize);
-
-  let submitted = 0;
-  let retryCount = 0;
-  const successfullySubmitted: string[] = [];
-
-  // Process URLs in batches using async iteration
-  async function processBatch(): Promise<boolean> {
-    if (submitted >= urls.length) {
-      return false;
+const submitUrlsToBing = Effect.fn("scripts.indexNow.submitBingUrls")(
+  function* (urls: string[], apiKey: string) {
+    if (urls.length === 0) {
+      logger.info("No new URLs to submit to Bing.");
+      return [];
     }
 
-    // Calculate how many URLs to submit in this batch
-    const currentBatchSize = Math.min(batchSize, urls.length - submitted);
-    const batch = urls.slice(submitted, submitted + currentBatchSize);
-    const startIdx = submitted + 1;
-    const endIdx = submitted + batch.length;
+    // Set a safer default batch size to respect Bing's quota
+    let batchSize = BATCH_SIZE; // Reduced from 500 to 100 to stay within quota
 
-    try {
-      const result = await submitBatchToBing(batch, apiKey, startIdx, endIdx);
+    logger.info("Starting Bing URL Submission API process...");
+    logger.stats("URLs to submit", urls.length);
+    logger.stats("Initial batch size", batchSize);
+
+    let submitted = 0;
+    let retryCount = 0;
+    const successfullySubmitted: string[] = [];
+
+    while (submitted < urls.length) {
+      // Calculate how many URLs to submit in this batch
+      const currentBatchSize = Math.min(batchSize, urls.length - submitted);
+      const batch = urls.slice(submitted, submitted + currentBatchSize);
+      const startIdx = submitted + 1;
+      const endIdx = submitted + batch.length;
+
+      const result = yield* submitBatchToBing(
+        batch,
+        apiKey,
+        startIdx,
+        endIdx
+      ).pipe(
+        Effect.catchAll((error) =>
+          Effect.sync(() => {
+            logger.error(`Error submitting URLs to Bing: ${error}`);
+            retryCount += 1;
+            return {
+              quotaRemaining: undefined,
+              shouldBreak: retryCount >= MAX_RETRIES,
+              success: false,
+              urls: [],
+            };
+          })
+        )
+      );
 
       if (result.shouldBreak) {
-        return false;
+        if (retryCount >= MAX_RETRIES) {
+          logger.warn(
+            `Maximum retries (${MAX_RETRIES}) reached. Stopping submission.`
+          );
+        }
+        break;
       }
 
       if (result.success) {
@@ -380,7 +529,7 @@ async function submitUrlsToBing(
             logger.info(
               `Retrying with smaller batch size of ${result.quotaRemaining}`
             );
-            return true; // Continue processing
+            continue;
           }
         }
 
@@ -390,50 +539,29 @@ async function submitUrlsToBing(
           logger.warn(
             `Maximum retries (${MAX_RETRIES}) reached. Stopping submission.`
           );
-          return false;
+          break;
         }
       }
 
       // Avoid rate limiting with a delay between batches
       if (submitted < urls.length) {
         logger.progress(submitted, urls.length, "Submission progress");
-        await new Promise((resolve) => setTimeout(resolve, RATE_LIMIT_DELAY));
+        yield* Effect.sleep(RATE_LIMIT_DELAY);
       }
-      return true;
-    } catch (error) {
-      logger.error(`Error submitting URLs to Bing: ${error}`);
-      // Increment retry count and exit if max retries reached
-      retryCount += 1;
-      if (retryCount >= MAX_RETRIES) {
-        logger.warn(
-          `Maximum retries (${MAX_RETRIES}) reached. Stopping submission.`
-        );
-        return false;
-      }
-      return true;
     }
+
+    logger.info(
+      `Bing URL Submission API process completed. Submitted ${submitted}/${urls.length} URLs.`
+    );
+
+    return successfullySubmitted;
   }
-
-  // Use tail recursion to avoid await in loop
-  async function processAllBatches(): Promise<void> {
-    const shouldContinue = await processBatch();
-    if (shouldContinue && submitted < urls.length) {
-      await processAllBatches();
-    }
-  }
-
-  await processAllBatches();
-
-  logger.info(
-    `Bing URL Submission API process completed. Submitted ${submitted}/${urls.length} URLs.`
-  );
-
-  return successfullySubmitted;
-}
+);
 
 // Main function to run the indexing process
-async function runIndexNow(): Promise<void> {
+const runIndexNow = Effect.fn("scripts.indexNow.run")(function* () {
   logger.header("Starting URL Submission Process");
+  yield* ensureSubmissionDataFolder();
 
   // Get API key
   const apiKey = getApiKey();
@@ -446,7 +574,7 @@ async function runIndexNow(): Promise<void> {
   logger.header("IndexNow Submission");
 
   // Get unsubmitted URLs for IndexNow
-  const indexNowData = await getUnsubmittedUrls("indexNow");
+  const indexNowData = yield* getUnsubmittedUrls("indexNow");
 
   if (indexNowData.urls.length === 0) {
     logger.info(
@@ -454,7 +582,7 @@ async function runIndexNow(): Promise<void> {
     );
   } else {
     // Submit URLs to IndexNow
-    const indexNowSuccessful = await submitUrlsToIndexNow(
+    const indexNowSuccessful = yield* submitUrlsToIndexNow(
       indexNowData.urls,
       apiKey
     );
@@ -467,7 +595,7 @@ async function runIndexNow(): Promise<void> {
         indexNowSuccessful,
         "indexNow"
       );
-      saveSubmissionHistory(updatedHistory);
+      yield* saveSubmissionHistory(updatedHistory);
       logger.success(
         `Submission history updated for IndexNow with ${indexNowSuccessful.length} successfully submitted URLs.`
       );
@@ -478,14 +606,14 @@ async function runIndexNow(): Promise<void> {
   logger.header("Bing URL Submission API");
 
   // Check if Bing API key is configured
-  if (
-    process.env.BING_WEBMASTER_API_KEY &&
-    process.env.BING_WEBMASTER_API_KEY !== "YOUR_BING_WEBMASTER_API_KEY"
-  ) {
-    const bingApiKey = process.env.BING_WEBMASTER_API_KEY;
+  const bingApiKey = yield* bingWebmasterApiKey;
 
+  if (
+    Option.isSome(bingApiKey) &&
+    bingApiKey.value !== "YOUR_BING_WEBMASTER_API_KEY"
+  ) {
     // Get unsubmitted URLs for Bing
-    const bingData = await getUnsubmittedUrls("bing");
+    const bingData = yield* getUnsubmittedUrls("bing");
 
     if (bingData.urls.length === 0) {
       logger.info(
@@ -493,7 +621,10 @@ async function runIndexNow(): Promise<void> {
       );
     } else {
       // Submit URLs to Bing URL Submission API
-      const bingSuccessful = await submitUrlsToBing(bingData.urls, bingApiKey);
+      const bingSuccessful = yield* submitUrlsToBing(
+        bingData.urls,
+        bingApiKey.value
+      );
 
       if (bingSuccessful.length > 0) {
         // Update submission history for Bing successful submissions
@@ -502,7 +633,7 @@ async function runIndexNow(): Promise<void> {
           bingSuccessful,
           "bing"
         );
-        saveSubmissionHistory(updatedHistory);
+        yield* saveSubmissionHistory(updatedHistory);
         logger.success(
           `Submission history updated for Bing with ${bingSuccessful.length} successfully submitted URLs.`
         );
@@ -518,10 +649,16 @@ async function runIndexNow(): Promise<void> {
   }
 
   logger.header("Submission Process Completed");
-}
+});
 
 // Run the script
-runIndexNow().catch((error) => {
-  logger.error(`Error running script: ${error}`);
-  process.exit(1);
-});
+Effect.runPromise(
+  runIndexNow().pipe(
+    Effect.catchAll((error) =>
+      Effect.sync(() => {
+        logger.error(`Error running script: ${error}`);
+        process.exit(1);
+      })
+    )
+  )
+);

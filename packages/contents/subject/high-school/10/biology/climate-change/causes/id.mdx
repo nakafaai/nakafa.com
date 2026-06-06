@@ -1,3 +1,5 @@
+import { GreenhouseEffectLab } from "@repo/design-system/components/contents/biology/climate-greenhouse";
+
 export const metadata = {
   title: "Penyebab Perubahan Iklim",
   description:
@@ -18,6 +20,24 @@ Bumi membutuhkan sebagian panas tetap tertahan agar tidak terlalu dingin. Masala
 **Gas rumah kaca** antara lain karbon dioksida, metana, dinitrogen oksida, dan beberapa gas sintetis. Gas-gas ini tidak bekerja seperti selimut tebal yang terlihat, tetapi pengaruhnya dapat dibayangkan seperti kaca rumah kaca. Energi matahari masuk, lalu sebagian panas sulit lepas kembali ke ruang angkasa.
 
 [IPCC AR6 Synthesis Report](https://www.ipcc.ch/report/ar6/syr/) menyatakan bahwa pemanasan terutama didorong oleh emisi gas rumah kaca dari aktivitas manusia.
+
+<GreenhouseEffectLab
+  title={<>Efek Rumah Kaca Menahan Sebagian Panas</>}
+  description={
+    <>
+      Ubah tingkat gas rumah kaca untuk melihat atmosfer makin banyak menahan
+      panas yang dipancarkan Bumi.
+    </>
+  }
+  labels={{
+    gasControl: "Tingkat gas rumah kaca",
+    heatFlow: <>Cahaya Matahari masuk, Bumi memancarkan panas, lalu sebagian panas tertahan oleh gas rumah kaca.</>,
+    heatFlowLabel: "Alur energi",
+    meaning: <>Semakin besar konsentrasi gas rumah kaca, semakin besar bagian panas yang tetap berada dekat Bumi.</>,
+    meaningLabel: "Makna iklim",
+    viewLabel: "Model efek rumah kaca",
+  }}
+/>
 
 ### Gas Berbeda Punya Sumber Berbeda
 

@@ -1,4 +1,4 @@
-import { getCategoryIcon } from "@repo/contents/_lib/exercises/category";
+import { getCategoryIcon } from "@repo/contents/_lib/exercises/icons";
 import {
   getExercisesPath,
   parseExercisesCategory,
@@ -9,7 +9,9 @@ import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
 import type { ExercisesType } from "@repo/contents/_types/exercises/type";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
+import { Effect, Option } from "effect";
 import type { Metadata } from "next";
+import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
@@ -38,12 +40,15 @@ async function getResolvedParams(
     type: rawType,
   } = await params;
   const locale = getLocaleOrThrow(rawLocale);
-  const category = parseExercisesCategory(rawCategory);
-  const type = parseExercisesType(rawType);
+  const parsedCategory = parseExercisesCategory(rawCategory);
+  const parsedType = parseExercisesType(rawType);
 
-  if (!(category && type)) {
+  if (Option.isNone(parsedCategory) || Option.isNone(parsedType)) {
     notFound();
   }
+
+  const category = parsedCategory.value;
+  const type = parsedType.value;
 
   return { category, locale, type };
 }
@@ -99,6 +104,17 @@ export function generateStaticParams() {
   });
 }
 
+/** Reads exercise subjects inside a Next Cache Components boundary. */
+async function getCachedSubjects(
+  category: ExercisesCategory,
+  type: ExercisesType
+) {
+  "use cache";
+  cacheLife("max");
+
+  return Effect.runPromise(getSubjects(category, type));
+}
+
 export default function Page(
   props: PageProps<"/[locale]/exercises/[category]/[type]">
 ) {
@@ -109,12 +125,15 @@ export default function Page(
     type: rawType,
   } = use(params);
   const locale = getLocaleOrThrow(rawLocale);
-  const category = parseExercisesCategory(rawCategory);
-  const type = parseExercisesType(rawType);
+  const parsedCategory = parseExercisesCategory(rawCategory);
+  const parsedType = parseExercisesType(rawType);
 
-  if (!(category && type)) {
+  if (Option.isNone(parsedCategory) || Option.isNone(parsedType)) {
     notFound();
   }
+
+  const category = parsedCategory.value;
+  const type = parsedType.value;
 
   return <PageContent category={category} locale={locale} type={type} />;
 }
@@ -130,8 +149,8 @@ async function PageContent({
 }) {
   const FilePath = getExercisesPath(category, type);
 
-  const subjects = getSubjects(category, type);
-  const [t, tCommon] = await Promise.all([
+  const [subjects, t, tCommon] = await Promise.all([
+    getCachedSubjects(category, type),
     getTranslations({ locale, namespace: "Exercises" }),
     getTranslations({ locale, namespace: "Common" }),
   ]);

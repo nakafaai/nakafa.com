@@ -1,5 +1,3 @@
-import { captureServerException } from "@repo/analytics/posthog/server";
-import { importContentModule } from "@repo/contents/_lib/module";
 import { parseSubjectCategory } from "@repo/contents/_lib/subject/category";
 import {
   getGradeNonNumeric,
@@ -48,6 +46,7 @@ import {
   LayoutMaterialPagination,
   LayoutMaterialToc,
 } from "@/components/shared/layout-material";
+import { importContentModuleOrNull } from "@/lib/content/module";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
@@ -73,11 +72,21 @@ async function getResolvedParams(
   const grade = parseGrade(rawGrade);
   const material = parseMaterial(rawMaterial);
 
-  if (!(category && grade && material)) {
+  if (
+    Option.isNone(category) ||
+    Option.isNone(grade) ||
+    Option.isNone(material)
+  ) {
     notFound();
   }
 
-  return { category, grade, locale, material, slug };
+  return {
+    category: category.value,
+    grade: grade.value,
+    locale,
+    material: material.value,
+    slug,
+  };
 }
 
 export async function generateMetadata({
@@ -92,15 +101,16 @@ export async function generateMetadata({
     redirect(getSlugPath(category, grade, material, []));
   }
 
-  const t = await getTranslations("Subject");
-
-  const { chapter, filePath, metadata, path } = await getSubjectMetadataData({
-    locale,
-    category,
-    grade,
-    material,
-    slug,
-  });
+  const [t, { chapter, filePath, metadata, path }] = await Promise.all([
+    getTranslations("Subject"),
+    getSubjectMetadataData({
+      locale,
+      category,
+      grade,
+      material,
+      slug,
+    }),
+  ]);
 
   if (!metadata) {
     notFound();
@@ -172,17 +182,11 @@ export default async function Page({
   }
 
   const filePath = getSlugPath(category, grade, material, slug);
-  const content = await importContentModule(filePath, locale).catch(
-    async (error) => {
-      await captureServerException(error, undefined, {
-        file_path: filePath,
-        locale,
-        source: "subject-content-module",
-      });
-
-      return null;
-    }
-  );
+  const content = await importContentModuleOrNull({
+    filePath,
+    locale,
+    source: "subject-content-module",
+  });
   const Content = content?.default;
   if (!Content) {
     notFound();
@@ -201,9 +205,14 @@ export default async function Page({
     getTranslations("Subject"),
   ]);
   const materialPath = getMaterialPath(category, grade, material);
-  const gradeLabel = tSubject(getGradeNonNumeric(grade) ?? "grade", { grade });
-  const publishedAt =
-    formatContentDateISO(contentMetadata.date) ?? contentMetadata.date;
+  const gradeLabel = tSubject(
+    Option.getOrElse(getGradeNonNumeric(grade), () => "grade"),
+    { grade }
+  );
+  const publishedAt = Option.getOrElse(
+    formatContentDateISO(contentMetadata.date),
+    () => contentMetadata.date
+  );
   const authorJsonLd = contentMetadata.authors.map((author) => ({
     "@type": "Person" as const,
     name: author.name,
@@ -309,9 +318,13 @@ async function getSubjectMetadataData({
   const chapterPath = getSlugPath(category, grade, material, [
     slug.at(0) ?? "",
   ]);
+  const currentMaterial = getCurrentMaterial(chapterPath, materials);
   const chapter =
     slug.length > 0 && materials.length > 0
-      ? getCurrentMaterial(chapterPath, materials).currentChapter?.title
+      ? Option.match(currentMaterial.currentChapter, {
+          onNone: () => undefined,
+          onSome: (chapter) => chapter.title,
+        })
       : undefined;
 
   return {
@@ -349,9 +362,8 @@ async function CachedSubjectShell({
 
   cacheLife("max");
 
-  const tCommon = await getTranslations("Common");
-
-  const [content, materials] = await Promise.all([
+  const [tCommon, content, materials] = await Promise.all([
+    getTranslations("Common"),
     Effect.runPromise(
       Effect.match(
         getContentMetadataContext({ locale, category, grade, material, slug }),

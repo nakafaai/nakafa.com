@@ -65,13 +65,7 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
   });
 
   return (
-    <form
-      id="user-settings-role-form"
-      onSubmit={(e) => {
-        e.preventDefault();
-        form.handleSubmit();
-      }}
-    >
+    <form action={() => form.handleSubmit()} id="user-settings-role-form">
       <FormBlock
         description={t("role-description")}
         footer={

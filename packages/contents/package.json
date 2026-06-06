@@ -10,26 +10,26 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@effect/platform": "0.96.1",
+    "@effect/platform-node": "0.107.0",
     "@hugeicons/core-free-icons": "^4.2.0",
-    "@hugeicons/react": "^1.1.6",
-    "@mantine/hooks": "^9.2.2",
+    "@mantine/hooks": "^9.3.0",
     "@repo/design-system": "workspace:*",
     "@repo/internationalization": "workspace:*",
     "@repo/utilities": "workspace:*",
     "date-fns": "4.4.0",
-    "effect": "^3.21.2",
-    "ky": "^2.0.2",
+    "effect": "^3.21.3",
+    "json5": "^2.2.3",
     "motion": "^12.40.0",
     "next-intl": "^4.13.0",
-    "react": "19.2.6",
-    "react-aria-components": "^1.18.0",
-    "recharts": "^3.8.1"
+    "react": "19.2.7",
+    "react-aria-components": "^1.18.0"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "25.9.1",
-    "@types/react": "^19.2.15",
-    "@vitest/coverage-istanbul": "^4.1.7",
-    "vitest": "^4.1.7"
+    "@types/node": "25.9.2",
+    "@types/react": "^19.2.17",
+    "@vitest/coverage-istanbul": "^4.1.8",
+    "vitest": "^4.1.8"
   }
 }

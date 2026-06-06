@@ -186,13 +186,21 @@ function combineSearchResults(
   const hasMore =
     ranked.length > items.length || results.some((result) => result.has_more);
 
-  return {
+  const result = {
     count: items.length,
     has_more: hasMore,
     items,
     limit: input.limit,
-    next_offset: hasMore ? nextOffset : null,
     offset: input.offset,
+  };
+
+  if (!hasMore) {
+    return result;
+  }
+
+  return {
+    ...result,
+    next_offset: nextOffset,
   };
 }
 

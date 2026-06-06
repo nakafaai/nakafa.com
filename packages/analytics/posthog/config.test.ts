@@ -1,15 +1,10 @@
 import {
   createPostHogProxyRewrites,
   isPostHogProxyPathname,
-  POSTHOG_PROXY_PATH,
 } from "@repo/analytics/posthog/config";
 import { describe, expect, it } from "vitest";
 
 describe("PostHog proxy config", () => {
-  it("uses the documented same-origin PostHog proxy path", () => {
-    expect(POSTHOG_PROXY_PATH).toBe("/_nakafa");
-  });
-
   it("builds the documented PostHog rewrite order", () => {
     expect(createPostHogProxyRewrites("https://t.nakafa.com")).toEqual([
       {

@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { proxy } from "@/proxy";
+import { config, proxy } from "@/proxy";
 
 const mockLocaleRouting = vi.hoisted(() => ({
   localeMiddleware: vi.fn(
@@ -56,8 +56,8 @@ describe("proxy", () => {
     mockLocaleRouting.localeMiddleware.mockClear();
   });
 
-  it("bypasses locale routing for PostHog proxy requests", () => {
-    const response = proxy(
+  it("bypasses locale routing for PostHog proxy requests", async () => {
+    const response = await proxy(
       new NextRequest("http://localhost:3000/_nakafa/i/v0/e/", {
         method: "POST",
       })
@@ -67,8 +67,10 @@ describe("proxy", () => {
     expect(response.headers.get("x-middleware-next")).toBe("1");
   });
 
-  it("keeps canonical no-slash URLs for application routes", () => {
-    const response = proxy(new NextRequest("http://localhost:3000/en/search/"));
+  it("keeps canonical no-slash URLs for application routes", async () => {
+    const response = await proxy(
+      new NextRequest("http://localhost:3000/en/search/")
+    );
 
     expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
     expect(response.status).toBe(308);
@@ -77,14 +79,14 @@ describe("proxy", () => {
     );
   });
 
-  it("bypasses locale routing for the same-origin MCP endpoint", () => {
-    const response = proxy(new NextRequest("http://localhost:3000/mcp"));
+  it("bypasses locale routing for the same-origin MCP endpoint", async () => {
+    const response = await proxy(new NextRequest("http://localhost:3000/mcp"));
 
     expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
     expect(response.headers.get("x-middleware-next")).toBe("1");
   });
 
-  it("bypasses locale routing for public AI discovery files", () => {
+  it("bypasses locale routing for public AI discovery files", async () => {
     const paths = [
       "/llms.txt",
       "/llms-full.txt",
@@ -102,7 +104,9 @@ describe("proxy", () => {
     ];
 
     for (const path of paths) {
-      const response = proxy(new NextRequest(`http://localhost:3000${path}`));
+      const response = await proxy(
+        new NextRequest(`http://localhost:3000${path}`)
+      );
 
       expect(response.headers.get("x-middleware-next")).toBe("1");
     }
@@ -110,8 +114,18 @@ describe("proxy", () => {
     expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
   });
 
-  it("delegates regular routes to the locale middleware", () => {
-    const response = proxy(new NextRequest("http://localhost:3000/en/search"));
+  it("keeps binary 3D model assets out of the locale proxy matcher", () => {
+    const matcher = config.matcher ?? [];
+
+    expect(matcher[0]).toContain("glb");
+    expect(matcher[0]).toContain("gltf");
+    expect(matcher[0]).toContain("bin");
+  });
+
+  it("delegates regular routes to the locale middleware", async () => {
+    const response = await proxy(
+      new NextRequest("http://localhost:3000/en/search")
+    );
 
     expect(mockLocaleRouting.localeMiddleware).toHaveBeenCalledTimes(1);
     expect(response.headers.get("x-locale-proxy")).toBe("1");
@@ -121,15 +135,17 @@ describe("proxy", () => {
     expect(response.headers.get("x-llms-txt")).toBe("/llms.txt");
   });
 
-  it("delegates unsupported locale paths to the locale middleware", () => {
-    const response = proxy(new NextRequest("http://localhost:3000/fr/quran/1"));
+  it("delegates unsupported locale paths to the locale middleware", async () => {
+    const response = await proxy(
+      new NextRequest("http://localhost:3000/fr/quran/1")
+    );
 
     expect(mockLocaleRouting.localeMiddleware).toHaveBeenCalledTimes(1);
     expect(response.headers.get("x-locale-proxy")).toBe("1");
   });
 
-  it("delegates real public content routes to the locale middleware", () => {
-    const response = proxy(
+  it("delegates real public content routes to the locale middleware", async () => {
+    const response = await proxy(
       new NextRequest(
         "http://localhost:3000/en/subject/high-school/10/chemistry/green-chemistry/definition"
       )
@@ -139,8 +155,8 @@ describe("proxy", () => {
     expect(response.headers.get("x-locale-proxy")).toBe("1");
   });
 
-  it("delegates subject material listing routes to the locale middleware", () => {
-    const response = proxy(
+  it("delegates subject material listing routes to the locale middleware", async () => {
+    const response = await proxy(
       new NextRequest("http://localhost:3000/id/subject/high-school/10/biology")
     );
 
@@ -148,14 +164,16 @@ describe("proxy", () => {
     expect(response.headers.get("x-locale-proxy")).toBe("1");
   });
 
-  it("delegates exercises listing routes to the locale middleware", () => {
+  it("delegates exercises listing routes to the locale middleware", async () => {
     const routes = [
       "/id/exercises/middle-school/grade-9",
       "/id/exercises/middle-school/grade-9/mathematics",
     ];
 
     for (const route of routes) {
-      const response = proxy(new NextRequest(`http://localhost:3000${route}`));
+      const response = await proxy(
+        new NextRequest(`http://localhost:3000${route}`)
+      );
 
       expect(response.headers.get("x-locale-proxy")).toBe("1");
     }
@@ -165,8 +183,8 @@ describe("proxy", () => {
     );
   });
 
-  it("rewrites real public content routes when markdown is requested", () => {
-    const response = proxy(
+  it("rewrites real public content routes when markdown is requested", async () => {
+    const response = await proxy(
       new NextRequest(
         "http://localhost:3000/en/subject/high-school/10/chemistry/green-chemistry/definition",
         {
@@ -183,8 +201,8 @@ describe("proxy", () => {
     );
   });
 
-  it("redirects subject chapter routes to the material root", () => {
-    const response = proxy(
+  it("redirects subject chapter routes to the material root", async () => {
+    const response = await proxy(
       new NextRequest(
         "http://localhost:3000/en/subject/high-school/10/chemistry/green-chemistry"
       )
@@ -197,8 +215,8 @@ describe("proxy", () => {
     );
   });
 
-  it("rewrites missing markdown public content to the markdown route", () => {
-    const response = proxy(
+  it("rewrites missing markdown public content to the markdown route", async () => {
+    const response = await proxy(
       new NextRequest(
         "http://localhost:3000/en/exercises/high-school/snbt/general-knowledge/try-out/2026/set-1/9-afdocs-nonexistent-8f3a",
         {
@@ -215,8 +233,8 @@ describe("proxy", () => {
     );
   });
 
-  it("rewrites missing html public content to the localized not-found route", () => {
-    const response = proxy(
+  it("rewrites missing html public content to the localized not-found route", async () => {
+    const response = await proxy(
       new NextRequest(
         "http://localhost:3000/id/subject/high-school/10/history/history-introduction/human-space-time"
       )
@@ -228,8 +246,8 @@ describe("proxy", () => {
     );
   });
 
-  it("delegates public content folders to the localized app tree", () => {
-    const response = proxy(
+  it("delegates public content folders to the localized app tree", async () => {
+    const response = await proxy(
       new NextRequest("http://localhost:3000/en/articles")
     );
 
@@ -237,8 +255,8 @@ describe("proxy", () => {
     expect(response.headers.get("x-locale-proxy")).toBe("1");
   });
 
-  it("preserves markdown alternates for real public content routes", () => {
-    const response = proxy(
+  it("preserves markdown alternates for real public content routes", async () => {
+    const response = await proxy(
       new NextRequest(
         "http://localhost:3000/en/exercises/high-school/snbt/general-knowledge/try-out/2026/set-1/9.md"
       )
@@ -250,8 +268,8 @@ describe("proxy", () => {
     );
   });
 
-  it("redirects legacy yearless try-out routes before rendering", () => {
-    const response = proxy(
+  it("redirects legacy yearless try-out routes before rendering", async () => {
+    const response = await proxy(
       new NextRequest(
         "http://localhost:3000/en/exercises/high-school/snbt/general-knowledge/try-out/set-1"
       )

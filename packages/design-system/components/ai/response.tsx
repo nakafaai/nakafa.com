@@ -12,6 +12,14 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 
+const DEFAULT_ALLOWED_PREFIXES = ["*"];
+const HASH_MODULO = 1_000_000_007;
+const HASH_MULTIPLIER = 31;
+const REMARK_PLUGINS = [
+  remarkGfm,
+  [remarkMath, { singleDollarTextMath: false }],
+] satisfies ComponentProps<typeof ReactMarkdown>["remarkPlugins"];
+
 export interface HardenedMarkdownProps {
   allowedImagePrefixes?: ComponentProps<
     ReturnType<typeof hardenReactMarkdown>
@@ -36,6 +44,30 @@ const MemoizedHardenedMarkdown = memo(
 );
 MemoizedHardenedMarkdown.displayName = "MemoizedHardenedMarkdown";
 
+/**
+ * Builds a compact, content-based key for a rendered markdown block.
+ */
+function getMarkdownBlockKey(
+  responseId: string,
+  block: string,
+  duplicateIndex: number
+) {
+  return `${responseId}-block-${hashString(block)}-${duplicateIndex}`;
+}
+
+/**
+ * Creates a deterministic non-cryptographic hash for React keys.
+ */
+function hashString(value: string) {
+  let hash = 0;
+
+  for (const char of value) {
+    hash = (hash * HASH_MULTIPLIER + char.charCodeAt(0)) % HASH_MODULO;
+  }
+
+  return hash.toString(36);
+}
+
 const Block = memo(
   ({
     children,
@@ -54,10 +86,7 @@ const Block = memo(
     return (
       <MemoizedHardenedMarkdown
         components={reactMdxComponents}
-        remarkPlugins={[
-          remarkGfm,
-          [remarkMath, { singleDollarTextMath: false }],
-        ]}
+        remarkPlugins={REMARK_PLUGINS}
         skipHtml
         {...props}
       >
@@ -76,16 +105,18 @@ const Blocks = memo(
     ...props
   }: HardenedMarkdownProps & Pick<ResponseProps, "children" | "id">) => {
     const blocks = useMemo(() => parseMarkdownIntoBlocks(children), [children]);
+    const blockOccurrences = new Map<string, number>();
 
-    return blocks.map((block, index) => (
-      <Block
-        // biome-ignore lint/suspicious/noArrayIndexKey: We need to use the index as key to prevent the component from re-rendering
-        key={`${id}-block_${index}`}
-        {...props}
-      >
-        {block}
-      </Block>
-    ));
+    return blocks.map((block) => {
+      const duplicateIndex = blockOccurrences.get(block) ?? 0;
+      blockOccurrences.set(block, duplicateIndex + 1);
+
+      return (
+        <Block key={getMarkdownBlockKey(id, block, duplicateIndex)} {...props}>
+          {block}
+        </Block>
+      );
+    });
   },
   (prevProps, nextProps) => prevProps.children === nextProps.children
 );
@@ -95,8 +126,8 @@ const ResponseContent = memo(
   ({
     className,
     children,
-    allowedImagePrefixes = ["*"],
-    allowedLinkPrefixes = ["*"],
+    allowedImagePrefixes = DEFAULT_ALLOWED_PREFIXES,
+    allowedLinkPrefixes = DEFAULT_ALLOWED_PREFIXES,
     defaultOrigin = "https://nakafa.com",
     ...props
   }: ResponseProps) => (

@@ -52,6 +52,9 @@ Here are visual examples of relations using arrow diagrams to distinguish betwee
     description="Element b has more than one pair."
   >
     <RelationVisualizer
+      accessibilityLabel="Arrow diagram of a one-to-many relation"
+      domainLabel="X"
+      codomainLabel="Y"
       domain={[
         { id: "a", label: "a" },
         { id: "b", label: "b" },
@@ -75,6 +78,9 @@ Here are visual examples of relations using arrow diagrams to distinguish betwee
     description="Element c does not have a pair in the codomain."
   >
     <RelationVisualizer
+      accessibilityLabel="Arrow diagram with one unpaired domain element"
+      domainLabel="X"
+      codomainLabel="Y"
       domain={[
         { id: "a", label: "a" },
         { id: "b", label: "b" },
@@ -101,6 +107,9 @@ Here are visual examples of relations using arrow diagrams to distinguish betwee
   description="Each domain element (p, q, r) has exactly one pair."
 >
   <RelationVisualizer
+    accessibilityLabel="Arrow diagram of a function relation with exactly one pair"
+    domainLabel="X"
+    codomainLabel="Y"
     domain={[
       { id: "p", label: "p" },
       { id: "q", label: "q" },

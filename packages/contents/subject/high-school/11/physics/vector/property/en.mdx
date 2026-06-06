@@ -1,0 +1,105 @@
+import { Vector3d } from "@repo/design-system/components/contents/mathematics/vector-3d";
+import { getColor } from "@repo/design-system/lib/color";
+
+export const metadata = {
+  title: "Vector Properties",
+  description:
+    "Learn equal vectors, negative vectors, zero vectors, and how scalar multiplication changes vector magnitude and direction.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/31/2026",
+  subject: "Vector",
+};
+
+## Equal Vectors Do Not Depend on Location
+
+Two vectors are equal if they have the same magnitude and the same direction. Their positions in a diagram may be different. This matters because forces, displacements, and velocities are often drawn at different places while still representing the same vector.
+
+> Two vectors are equal because their lengths and directions match, not because their tails sit at the same point.
+
+<Vector3d
+  title={<>Equal and Opposite Vectors</>}
+  description={
+    <>
+      Vectors <InlineMath math="\vec{a}" /> and <InlineMath math="\vec{b}" /> are
+      equal because they are parallel, point the same way, and have the same
+      length. Vector <InlineMath math="-\vec{a}" /> points the opposite way.
+    </>
+  }
+  vectors={(() => {
+    const a = [4, 2, 0];
+    const bShift = [0, 0, 2];
+    const negativeShift = [0, 0, -2];
+    const b = a.map((component, index) => component + bShift[index]);
+    const negativeA = a.map(
+      (component, index) => -component + negativeShift[index]
+    );
+
+    return [
+      {
+        from: [0, 0, 0],
+        to: a,
+        color: getColor("TEAL"),
+        label: "a",
+        labelAnchorX: "center",
+        labelProgress: 3 / 5,
+        labelOffset: [0.15, 0.45, 0],
+      },
+      {
+        from: bShift,
+        to: b,
+        color: getColor("TEAL"),
+        label: "b",
+        labelAnchorX: "center",
+        labelProgress: 3 / 5,
+        labelOffset: [0.15, 0.45, 0.15],
+      },
+      {
+        from: negativeShift,
+        to: negativeA,
+        color: getColor("VIOLET"),
+        label: "-a",
+        labelAnchorX: "center",
+        labelProgress: 1 / 2,
+        labelOffset: [0.1, -0.55, 0],
+      },
+    ];
+  })()}
+  cameraPosition={[8, 6, 10]}
+  cameraTarget={[0, -1.8, 0]}
+/>
+
+In the visual, <InlineMath math="\vec{a}" /> and <InlineMath math="\vec{b}" /> are not drawn on the same line, but they are still equal as vectors. Moving the drawing does not change the vector's magnitude or direction.
+
+## A Negative Vector Reverses Direction
+
+The negative of <InlineMath math="\vec{a}" /> is written as <InlineMath math="-\vec{a}" />. It has the same magnitude as <InlineMath math="\vec{a}" />, but points in the opposite direction.
+
+<MathContainer>
+  <BlockMath math="\lvert-\vec{a}\rvert=\lvert\vec{a}\rvert" />
+  <BlockMath math="\vec{a}+(-\vec{a})=\vec{0}" />
+</MathContainer>
+
+For example, a <InlineMath math="12\text{ N}" /> force to the right and a <InlineMath math="12\text{ N}" /> force to the left form an opposite-vector pair. If both act on the same object along the same line, their resultant can be the zero vector.
+
+## Scalar Multiplication Changes Length
+
+A scalar is an ordinary number with no direction. When a vector is multiplied by a scalar <InlineMath math="k" />, the vector length changes by a factor of <InlineMath math="\lvert k\rvert" />.
+
+| Form | Result magnitude | Result direction |
+| :--- | :--------------- | :--------------- |
+| <InlineMath math="2\vec{a}" /> | twice <InlineMath math="\vec{a}" /> | same as <InlineMath math="\vec{a}" /> |
+| <InlineMath math="\frac{1}{2}\vec{a}" /> | half of <InlineMath math="\vec{a}" /> | same as <InlineMath math="\vec{a}" /> |
+| <InlineMath math="-3\vec{a}" /> | three times <InlineMath math="\vec{a}" /> | opposite to <InlineMath math="\vec{a}" /> |
+| <InlineMath math="0\vec{a}" /> | <InlineMath math="0" /> | becomes the zero vector |
+
+A negative scalar does not make the magnitude negative. It reverses the vector direction.
+
+## The Zero Vector as Cancellation
+
+The zero vector is written as <InlineMath math="\vec{0}" />. Its magnitude is <InlineMath math="0" />, and its direction is undefined because the tail and tip coincide.
+
+The zero vector often appears when vectors cancel each other. For example, two students may pull a box with equal forces in opposite directions. If the forces are exactly along the same line, their combination does not produce a net push to the right or to the left.
+
+<BlockMath math="\vec{F}_1+\vec{F}_2=\vec{0}" />
+
+This idea becomes important in equilibrium: an object can remain at rest not because no forces act on it, but because the resultant of all forces is zero.

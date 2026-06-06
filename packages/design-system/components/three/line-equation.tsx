@@ -1,6 +1,6 @@
 "use client";
 
-import { Instance, Instances, Line, Text } from "@react-three/drei";
+import { Instance, Instances, Line } from "@react-three/drei";
 import {
   FONT_PATH,
   MONO_FONT_PATH,
@@ -13,6 +13,7 @@ import {
   GRAPH_POINT_SEGMENTS,
   getCurveDivisions,
 } from "@repo/design-system/components/three/helpers/quality";
+import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { randomColor } from "@repo/design-system/lib/color";
 import { useMemo } from "react";
 import {
@@ -147,6 +148,8 @@ export interface Props {
   useMonoFont?: boolean;
 }
 
+const DEFAULT_LABELS: NonNullable<Props["labels"]> = [];
+
 /**
  * Renders a 3D line or curve with optional point markers, labels, and arrowheads.
  */
@@ -157,7 +160,7 @@ export function LineEquation({
   showPoints = true,
   smooth = true,
   curvePoints,
-  labels = [],
+  labels = DEFAULT_LABELS,
   useMonoFont = true,
   cone,
 }: Props) {
@@ -364,20 +367,16 @@ export function LineEquation({
 
       {/* Render custom labels at specified indices */}
       {labelData.map((data) => (
-        <Text
+        <ThreeLabel
           anchorX="center"
-          anchorY="middle"
           color={data.color}
           font={fontPath}
           fontSize={data.fontSize}
-          frustumCulled={false}
           key={data.key}
-          material-depthTest={false}
           position={data.position}
-          renderOrder={10}
         >
           {data.text}
-        </Text>
+        </ThreeLabel>
       ))}
     </group>
   );

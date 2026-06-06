@@ -26,6 +26,8 @@ interface WelcomeProps {
   readonly name: string;
 }
 
+const COPYRIGHT_YEAR = new Date().getFullYear();
+
 export const Welcome = ({ name }: WelcomeProps) => (
   <Html>
     <Head />
@@ -152,8 +154,7 @@ export const Welcome = ({ name }: WelcomeProps) => (
 
           <Section className="text-center">
             <Text className="m-0 text-muted-foreground text-xs leading-relaxed">
-              © {new Date().getFullYear()} PT. Nakafa Tekno Kreatif. All rights
-              reserved.
+              © {COPYRIGHT_YEAR} PT. Nakafa Tekno Kreatif. All rights reserved.
             </Text>
             <Text className="m-0 mt-1 text-muted-foreground text-xs leading-relaxed">
               Taman Sukahati Permai H6, Kab. Bogor

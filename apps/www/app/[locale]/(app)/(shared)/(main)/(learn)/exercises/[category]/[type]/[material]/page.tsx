@@ -16,7 +16,7 @@ import type { ParsedHeading } from "@repo/contents/_types/toc";
 import { slugify } from "@repo/design-system/lib/utils";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import type { Metadata } from "next";
 import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
@@ -54,13 +54,21 @@ async function getResolvedParams(
     material: rawMaterial,
   } = await params;
   const locale = getLocaleOrThrow(rawLocale);
-  const category = parseExercisesCategory(rawCategory);
-  const type = parseExercisesType(rawType);
-  const material = parseExercisesMaterial(rawMaterial);
+  const parsedCategory = parseExercisesCategory(rawCategory);
+  const parsedType = parseExercisesType(rawType);
+  const parsedMaterial = parseExercisesMaterial(rawMaterial);
 
-  if (!(category && type && material)) {
+  if (
+    Option.isNone(parsedCategory) ||
+    Option.isNone(parsedType) ||
+    Option.isNone(parsedMaterial)
+  ) {
     notFound();
   }
+
+  const category = parsedCategory.value;
+  const type = parsedType.value;
+  const material = parsedMaterial.value;
 
   return { category, locale, material, type };
 }
@@ -131,13 +139,21 @@ export default function Page(
     material: rawMaterial,
   } = use(params);
   const locale = getLocaleOrThrow(rawLocale);
-  const category = parseExercisesCategory(rawCategory);
-  const type = parseExercisesType(rawType);
-  const material = parseExercisesMaterial(rawMaterial);
+  const parsedCategory = parseExercisesCategory(rawCategory);
+  const parsedType = parseExercisesType(rawType);
+  const parsedMaterial = parseExercisesMaterial(rawMaterial);
 
-  if (!(category && type && material)) {
+  if (
+    Option.isNone(parsedCategory) ||
+    Option.isNone(parsedType) ||
+    Option.isNone(parsedMaterial)
+  ) {
     notFound();
   }
+
+  const category = parsedCategory.value;
+  const type = parsedType.value;
+  const material = parsedMaterial.value;
 
   return (
     <PageContent
@@ -167,11 +183,11 @@ async function PageContent({
   const typePath = getExercisesPath(category, type);
   const FilePath = getMaterialPath(category, type, material);
 
-  const [t, tCommon] = await Promise.all([
+  const [t, tCommon, materials] = await Promise.all([
     getTranslations({ locale, namespace: "Exercises" }),
     getTranslations({ locale, namespace: "Common" }),
+    Effect.runPromise(getMaterials(FilePath, locale)),
   ]);
-  const materials = await Effect.runPromise(getMaterials(FilePath, locale));
 
   const chapters: ParsedHeading[] = materials.map((mat) => ({
     label: mat.title,

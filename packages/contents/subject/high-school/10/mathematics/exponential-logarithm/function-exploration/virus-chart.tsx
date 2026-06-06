@@ -9,14 +9,19 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import {
+  ChartCartesianGrid,
   type ChartConfig,
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
+  ChartLine,
+  ChartLineChart,
   ChartTooltip,
   ChartTooltipContent,
+  ChartXAxis,
+  ChartYAxis,
 } from "@repo/design-system/components/ui/chart";
-import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
+import type { ReactNode } from "react";
 
 const EXPONENTIAL_BASE = 3;
 const LINEAR_SCALING_FACTOR = 3;
@@ -26,14 +31,14 @@ const THRESHOLD_VALUE_DECIMAL_PLACES = 0;
 
 interface Props {
   labels: {
-    title?: string;
-    description?: string;
-    exponential?: string;
-    linear?: string;
-    logarithmic?: string;
-    yLabel?: string;
-    caption?: string;
-    phase?: string;
+    title: ReactNode;
+    description: ReactNode;
+    exponential: ReactNode;
+    linear: ReactNode;
+    logarithmic: ReactNode;
+    yLabel: string;
+    caption: ReactNode;
+    phase: string;
   };
 }
 
@@ -47,19 +52,7 @@ const data = Array.from({ length: 5 }, (_, i) => {
   };
 });
 
-export function VirusChart({
-  labels = {
-    title: "Virus Spread",
-    description: "Number of people infected in each phase of the virus spread.",
-    exponential: "Exponential Function",
-    linear: "Linear Function",
-    logarithmic: "Logarithmic Function",
-    yLabel: "Number of people infected",
-    caption:
-      "Virus spread grows exponentially, accelerating rapidly after initial phases.",
-    phase: "Phase",
-  },
-}: Props) {
+export function VirusChart({ labels }: Props) {
   const chartConfig = {
     exponential: {
       label: labels.exponential,
@@ -83,14 +76,14 @@ export function VirusChart({
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>
-          <LineChart accessibilityLayer data={data}>
-            <CartesianGrid />
-            <XAxis
+          <ChartLineChart accessibilityLayer data={data}>
+            <ChartCartesianGrid />
+            <ChartXAxis
               dataKey="phase"
               tickFormatter={(value) => value.toString()}
               tickMargin={8}
             />
-            <YAxis
+            <ChartYAxis
               label={{
                 value: labels.yLabel,
                 angle: -90,
@@ -120,7 +113,7 @@ export function VirusChart({
                 return null;
               }}
             />
-            <Line
+            <ChartLine
               dataKey="exponential"
               dot
               name="exponential"
@@ -128,7 +121,7 @@ export function VirusChart({
               strokeWidth={2}
               type="monotone"
             />
-            <Line
+            <ChartLine
               dataKey="linear"
               dot
               name="linear"
@@ -136,7 +129,7 @@ export function VirusChart({
               strokeWidth={2}
               type="monotone"
             />
-            <Line
+            <ChartLine
               dataKey="logarithmic"
               dot
               name="logarithmic"
@@ -147,7 +140,7 @@ export function VirusChart({
             <ChartLegend
               content={<ChartLegendContent verticalAlign="bottom" />}
             />
-          </LineChart>
+          </ChartLineChart>
         </ChartContainer>
       </CardContent>
       <CardFooter>

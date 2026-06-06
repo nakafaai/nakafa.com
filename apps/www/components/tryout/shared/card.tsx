@@ -63,10 +63,15 @@ export function TryoutCardCopy({
 }
 
 export function TryoutCardTitle({
+  children,
   className,
   ...props
 }: React.ComponentProps<"h2">) {
-  return <h2 className={cn("font-medium text-lg", className)} {...props} />;
+  return (
+    <h2 className={cn("font-medium text-lg", className)} {...props}>
+      {children}
+    </h2>
+  );
 }
 
 export function TryoutCardDescription({

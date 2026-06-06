@@ -9,6 +9,7 @@ import type { Locale } from "@repo/contents/_types/content";
 import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
 import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material";
 import type { ExercisesType } from "@repo/contents/_types/exercises/type";
+import { Option } from "effect";
 
 const whitespacePattern = /\s+/g;
 const slugSeparatorPattern = /[-_]+/g;
@@ -79,13 +80,13 @@ export function getExerciseSearchText(source: ExerciseSearchSource) {
     source.exerciseType,
     getSlugPhrase(source.exerciseType),
     source.exerciseTypeTitle,
-    source.year?.toString(),
+    Option.fromNullable(source.year?.toString()),
     source.setName,
     getSlugPhrase(source.setName),
     source.setTitle,
     source.title,
     getExerciseNumberLabel(source.locale, source.number),
-    source.description,
+    Option.fromNullable(source.description),
     source.questionBody,
     source.answerBody,
   ]);
@@ -127,12 +128,12 @@ export function getExerciseSetSearchText(source: ExerciseSetSearchSource) {
     source.exerciseType,
     getSlugPhrase(source.exerciseType),
     source.exerciseTypeTitle,
-    source.year?.toString(),
+    Option.fromNullable(source.year?.toString()),
     source.setName,
     getSlugPhrase(source.setName),
     source.setTitle,
     getExerciseQuestionCountLabel(source.locale, source.questionCount),
-    source.description,
+    Option.fromNullable(source.description),
   ]);
 }
 
@@ -142,10 +143,16 @@ function getSlugPhrase(value: string) {
 }
 
 /** Joins search text parts without leaking extra whitespace into the index. */
-function compactText(parts: Array<string | undefined>) {
-  return parts
-    .filter((part) => part && part.trim().length > 0)
-    .join(" ")
-    .replace(whitespacePattern, " ")
-    .trim();
+function compactText(parts: Array<string | Option.Option<string>>) {
+  const values = parts.flatMap((part) => {
+    const text = typeof part === "string" ? Option.some(part) : part;
+
+    if (Option.isNone(text) || text.value.trim().length === 0) {
+      return [];
+    }
+
+    return [text.value];
+  });
+
+  return values.join(" ").replace(whitespacePattern, " ").trim();
 }

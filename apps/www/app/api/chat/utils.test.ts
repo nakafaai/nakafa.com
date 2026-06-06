@@ -9,6 +9,37 @@ vi.mock("convex/nextjs", () => ({
   fetchMutation: vi.fn(),
 }));
 
+vi.mock("@repo/contents/_lib/agent/read/markdown", async () => {
+  const { Effect, Option } = await import("effect");
+
+  return {
+    getNakafaAgentMarkdown: (contentRef: string) => {
+      if (contentRef.includes("/missing")) {
+        return Effect.succeed(Option.none());
+      }
+
+      return Effect.succeed(Option.some({ contentRef }));
+    },
+  };
+});
+
+vi.mock("@repo/contents/_lib/quran", async () => {
+  const { Effect } = await import("effect");
+
+  return {
+    getSurah: (surah: number) => {
+      if (surah !== 1) {
+        return Effect.fail(new Error("Missing Surah."));
+      }
+
+      return Effect.succeed({
+        number: 1,
+        numberOfVerses: 1,
+      });
+    },
+  };
+});
+
 describe("app/api/chat/utils", () => {
   beforeEach(() => {
     vi.clearAllMocks();

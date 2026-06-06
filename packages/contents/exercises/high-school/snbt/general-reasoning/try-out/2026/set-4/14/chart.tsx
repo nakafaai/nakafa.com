@@ -8,20 +8,19 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import {
+  ChartBar,
+  ChartBarChart,
+  ChartCartesianGrid,
   type ChartConfig,
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
+  ChartXAxis,
+  ChartYAxis,
 } from "@repo/design-system/components/ui/chart";
-import {
-  CartesianGrid,
-  Bar as RechartsBar,
-  BarChart as RechartsBarChart,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { type ReactNode, useMemo } from "react";
 
 const chartData = [
   { year: "2017", mieA: 3500, mieB: 4500, mieC: 2250 },
@@ -31,70 +30,62 @@ const chartData = [
 ];
 
 interface Props {
-  lang?: "id" | "en";
+  description: ReactNode;
+  seriesLabels: {
+    mieA: ReactNode;
+    mieB: ReactNode;
+    mieC: ReactNode;
+  };
+  title: ReactNode;
+  yAxisLabel: string;
 }
 
-const translations = {
-  id: {
-    title: "Grafik Harga Mie Instan",
-    description: "Data harga Mie A, Mie B, dan Mie C (2017-2020).",
-    yAxisLabel: "Harga (Rp)",
-    labels: {
-      mieA: "Mie A",
-      mieB: "Mie B",
-      mieC: "Mie C",
-    },
-  },
-  en: {
-    title: "Instant Noodle Price Chart",
-    description: "Price data for Noodle A, Noodle B, and Noodle C (2017-2020).",
-    yAxisLabel: "Price (Rp)",
-    labels: {
-      mieA: "Noodle A",
-      mieB: "Noodle B",
-      mieC: "Noodle C",
-    },
-  },
-};
-
-export function PriceChart({ lang = "en" }: Props) {
-  const t = translations[lang];
-
-  const chartConfig = {
-    mieA: {
-      label: t.labels.mieA,
-      colors: { light: ["var(--chart-1)"] },
-    },
-    mieB: {
-      label: t.labels.mieB,
-      colors: { light: ["var(--chart-2)"] },
-    },
-    mieC: {
-      label: t.labels.mieC,
-      colors: { light: ["var(--chart-3)"] },
-    },
-  } satisfies ChartConfig;
+/** Renders the instant noodle price chart with MDX-owned copy. */
+export function PriceChart({
+  description,
+  seriesLabels,
+  title,
+  yAxisLabel,
+}: Props) {
+  const chartConfig = useMemo(
+    () =>
+      ({
+        mieA: {
+          label: seriesLabels.mieA,
+          colors: { light: ["var(--chart-1)"] },
+        },
+        mieB: {
+          label: seriesLabels.mieB,
+          colors: { light: ["var(--chart-2)"] },
+        },
+        mieC: {
+          label: seriesLabels.mieC,
+          colors: { light: ["var(--chart-3)"] },
+        },
+      }) satisfies ChartConfig,
+    [seriesLabels.mieA, seriesLabels.mieB, seriesLabels.mieC]
+  );
 
   return (
     <Card className="content-auto-card">
       <CardHeader>
-        <CardTitle>{t.title}</CardTitle>
-        <CardDescription>{t.description}</CardDescription>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer className="aspect-video" config={chartConfig}>
-          <RechartsBarChart accessibilityLayer data={chartData}>
-            <CartesianGrid vertical={false} />
-            <XAxis
+          <ChartBarChart accessibilityLayer data={chartData}>
+            <ChartCartesianGrid vertical={false} />
+            <ChartXAxis
               axisLine={false}
               dataKey="year"
               tickLine={false}
               tickMargin={10}
             />
-            <YAxis
+            <ChartYAxis
               axisLine={false}
               label={{
-                value: t.yAxisLabel,
+                value: yAxisLabel,
                 angle: -90,
                 position: "insideLeft",
               }}
@@ -105,14 +96,14 @@ export function PriceChart({ lang = "en" }: Props) {
             <ChartTooltip content={<ChartTooltipContent />} />
             <ChartLegend content={<ChartLegendContent />} />
             {Object.keys(chartConfig).map((key) => (
-              <RechartsBar
+              <ChartBar
                 dataKey={key}
                 fill={`var(--color-${key}-0)`}
                 key={key}
                 radius={[4, 4, 0, 0]}
               />
             ))}
-          </RechartsBarChart>
+          </ChartBarChart>
         </ChartContainer>
       </CardContent>
     </Card>

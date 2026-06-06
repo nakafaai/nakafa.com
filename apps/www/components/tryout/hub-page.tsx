@@ -5,6 +5,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { fetchQuery } from "convex/nextjs";
+import { Clock, Effect } from "effect";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { TryoutCatalogCard } from "@/components/tryout/catalog-card";
@@ -24,9 +25,7 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
     getToken(),
   ]);
 
-  const initialNowMs = Date.now();
-
-  const [catalogSnapshot, currentUser] = await Promise.all([
+  const [catalogSnapshot, currentUser, initialNowMs] = await Promise.all([
     fetchQuery(
       api.tryouts.queries.tryouts.getActiveTryoutCatalogSnapshot,
       {
@@ -39,6 +38,7 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
     token
       ? fetchQuery(api.auth.queries.getCurrentUser, {}, { token })
       : Promise.resolve(null),
+    Effect.runPromise(Clock.currentTimeMillis),
   ]);
   const userName = currentUser?.appUser.name ?? tHome("guest");
 

@@ -1,6 +1,7 @@
+import { NAKAFA_AGENT_DEFAULT_LIMIT } from "@repo/contents/_lib/agent/constants";
 import { fetchQuery } from "convex/nextjs";
 import { Effect, Schema } from "effect";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { getNakafaSearchContentToolResult } from "@/lib/mcp/tools/search";
 
 vi.mock("convex/nextjs", () => ({
@@ -10,11 +11,14 @@ vi.mock("convex/nextjs", () => ({
       has_more: false,
       items: [],
       limit: 10,
-      next_offset: null,
       offset: 0,
     })
   ),
 }));
+
+afterEach(() => {
+  vi.clearAllMocks();
+});
 
 const ToolErrorResultSchema = Schema.Struct({
   isError: Schema.Literal(true),
@@ -27,6 +31,20 @@ const ToolErrorResultSchema = Schema.Struct({
 });
 
 describe("nakafa_search_content", () => {
+  it("decodes omitted search options with native Effect schema defaults", async () => {
+    const result = await Effect.runPromise(
+      getNakafaSearchContentToolResult({})
+    );
+    const searchInput = vi.mocked(fetchQuery).mock.calls.at(0)?.at(1);
+
+    expect(result.isError).not.toBe(true);
+    expect(searchInput).toStrictEqual({
+      limit: NAKAFA_AGENT_DEFAULT_LIMIT,
+      locale: "en",
+      offset: 0,
+    });
+  });
+
   it("returns structured read-model input errors", async () => {
     const result = await Effect.runPromise(
       getNakafaSearchContentToolResult({
@@ -41,7 +59,7 @@ describe("nakafa_search_content", () => {
     ).toStrictEqual({
       message: "Invalid Nakafa content search options.",
       suggestions: [
-        expect.stringContaining("Too big: expected number to be <=50"),
+        expect.stringContaining("Expected a number between 1 and 50"),
       ],
     });
   });
