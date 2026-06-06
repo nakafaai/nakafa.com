@@ -42,7 +42,6 @@ import type { Group } from "three";
 const TRACK_COLOR = getColor("SLATE", 700);
 const RAIL_COLOR = getColor("SLATE", 400);
 const SLEEPER_COLOR = getColor("STONE", 600);
-const SHADOW_COLOR = getColor("SLATE", 900);
 
 export function NonUniformLinearMotionLab({
   title,
@@ -53,6 +52,7 @@ export function NonUniformLinearMotionLab({
     DEFAULT_GLBB_SCENARIO_ID
   );
   const motion = useMemo(() => getGlbbMotionState(scenarioId), [scenarioId]);
+  const shadowCameraRadius = motion.trackLength / 2 + GLBB_SCENE.trackWidth;
 
   function handleScenarioChange(value: string) {
     if (!isGlbbScenarioId(value)) {
@@ -102,6 +102,10 @@ export function NonUniformLinearMotionLab({
                 intensity={1.25}
                 position={[4, 6, 4]}
                 shadow-bias={-0.0006}
+                shadow-camera-bottom={-shadowCameraRadius}
+                shadow-camera-left={-shadowCameraRadius}
+                shadow-camera-right={shadowCameraRadius}
+                shadow-camera-top={shadowCameraRadius}
                 shadow-mapSize-height={1024}
                 shadow-mapSize-width={1024}
                 shadow-normalBias={0.02}
@@ -213,7 +217,6 @@ function AnimatedTrain({ motion }: { motion: GlbbMotionState }) {
       rotation={[0, Math.PI / 2, 0]}
       scale={GLBB_SCENE.trainScale}
     >
-      <TrainContactShadow />
       <PhysicsTrainModel
         bodyColor={GLBB_COLORS.trainBody}
         modelPath={GLBB_TRAIN_MODEL_PATH}
@@ -311,24 +314,6 @@ function PositionMarkers({ motion }: { motion: GlbbMotionState }) {
         </mesh>
       ))}
     </group>
-  );
-}
-
-function TrainContactShadow() {
-  return (
-    <mesh
-      position={[0, 0.01, 0]}
-      rotation={[-Math.PI / 2, 0, 0]}
-      scale={[1.75, 0.5, 1]}
-    >
-      <circleGeometry args={[0.72, 32]} />
-      <meshBasicMaterial
-        color={SHADOW_COLOR}
-        depthWrite={false}
-        opacity={0.16}
-        transparent
-      />
-    </mesh>
   );
 }
 

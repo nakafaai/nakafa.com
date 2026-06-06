@@ -12,8 +12,14 @@ export interface AccelerationCase {
   v1: number;
 }
 
+interface MotionPoint {
+  time: number;
+  velocity: number;
+}
+
 export interface AccelerationLabels {
   chooseCase: string;
+  contextLine: string;
   scenarioNames: Record<AccelerationCaseId, string>;
   timeAxis: string;
   velocityAxis: string;
@@ -40,6 +46,13 @@ export interface AccelerationLabProps {
 export const ACCELERATION_ROCKET_MODEL_PATH =
   "/models/physics/kinematics/nasa-pegasus-xl/pegasus-xl-textureless.glb";
 
+const ACCELERATION_PROFILE = {
+  accelerationMagnitude: 4,
+  segmentSeconds: 4,
+  startTime: 0,
+  startVelocity: 2,
+} as const;
+
 export const ACCELERATION_LAB_SCENE = {
   animationSeconds: 3.2,
   cameraFov: 42,
@@ -56,32 +69,65 @@ export const ACCELERATION_LAB_SCENE = {
 export const DEFAULT_ACCELERATION_CASE_ID =
   "speed-up" satisfies AccelerationCaseId;
 
+const MOTION_START = {
+  time: ACCELERATION_PROFILE.startTime,
+  velocity: ACCELERATION_PROFILE.startVelocity,
+};
+const SPEED_UP_END = getMotionPointAfterAcceleration(
+  MOTION_START,
+  ACCELERATION_PROFILE.accelerationMagnitude
+);
+const STEADY_END = getMotionPointAfterAcceleration(SPEED_UP_END, 0);
+const SLOW_DOWN_END = getMotionPointAfterAcceleration(
+  STEADY_END,
+  -ACCELERATION_PROFILE.accelerationMagnitude
+);
+
 export const ACCELERATION_CASES: AccelerationCase[] = [
-  {
-    id: "speed-up",
-    color: getColor("TEAL"),
-    t0: 0,
-    t1: 4,
-    v0: 2,
-    v1: 18,
-  },
-  {
-    id: "steady",
-    color: getColor("SKY"),
-    t0: 4,
-    t1: 8,
-    v0: 10,
-    v1: 10,
-  },
-  {
-    id: "slow-down",
-    color: getColor("VIOLET"),
-    t0: 8,
-    t1: 12,
-    v0: 18,
-    v1: 2,
-  },
+  createAccelerationCase(
+    "speed-up",
+    getColor("TEAL"),
+    MOTION_START,
+    SPEED_UP_END
+  ),
+  createAccelerationCase("steady", getColor("SKY"), SPEED_UP_END, STEADY_END),
+  createAccelerationCase(
+    "slow-down",
+    getColor("VIOLET"),
+    STEADY_END,
+    SLOW_DOWN_END
+  ),
 ];
+
+/** Creates one graph and lab scenario from calculated motion endpoints. */
+function createAccelerationCase(
+  id: AccelerationCaseId,
+  color: string,
+  start: MotionPoint,
+  end: MotionPoint
+) {
+  return {
+    color,
+    id,
+    t0: start.time,
+    t1: end.time,
+    v0: start.velocity,
+    v1: end.velocity,
+  };
+}
+
+/** Applies v = v0 + a * delta t for the next equal-duration segment. */
+function getMotionPointAfterAcceleration(
+  start: MotionPoint,
+  acceleration: number
+) {
+  const duration = ACCELERATION_PROFILE.segmentSeconds;
+
+  return {
+    time: start.time + duration,
+    velocity: start.velocity + acceleration * duration,
+  };
+}
 
 export function getAccelerationCaseById(id: AccelerationCaseId) {
   return (
@@ -180,6 +226,18 @@ export function getMotionSegments() {
     id: item.id,
     start: { time: item.t0, velocity: item.v0 },
   }));
+}
+
+/** Returns the connected velocity-time path shared by the graph tabs. */
+export function getMotionPoints() {
+  const segments = getMotionSegments();
+  const firstSegment = segments[0];
+
+  if (!firstSegment) {
+    return [];
+  }
+
+  return [firstSegment.start, ...segments.map((segment) => segment.end)];
 }
 
 export function formatAccelerationMath(value: number) {

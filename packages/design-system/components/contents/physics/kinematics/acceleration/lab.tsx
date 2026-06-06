@@ -51,7 +51,6 @@ const SPACE_COLORS = {
   flameCore: getColor("YELLOW"),
   flameOuter: getColor("ORANGE", 500),
   planet: getColor("TEAL", 700),
-  planetShadow: getColor("SLATE", 900),
   rocketAccent: getColor("ORANGE", 500),
   rocketBody: getColor("ZINC", 100),
   rocketDark: getColor("SLATE", 600),
@@ -290,14 +289,6 @@ function DistantPlanet() {
       <mesh>
         <sphereGeometry args={[1.12, 32, 20]} />
         <meshStandardMaterial color={SPACE_COLORS.planet} roughness={0.72} />
-      </mesh>
-      <mesh position={[-0.18, -0.08, -0.1]} scale={[1.02, 1.02, 1.02]}>
-        <sphereGeometry args={[1.12, 32, 20]} />
-        <meshBasicMaterial
-          color={SPACE_COLORS.planetShadow}
-          opacity={0.28}
-          transparent
-        />
       </mesh>
       <mesh rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[1.55, 0.018, 8, 96]} />

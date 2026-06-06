@@ -73,7 +73,6 @@ export const VELOCITY_SPEED_COLORS = {
   displacementGuide: getColor("VIOLET"),
   distanceGuide: getColor("TEAL", 500),
   lane: getColor("SLATE", 800),
-  shadow: getColor("SLATE", 900),
   stripe: getColor("SLATE", 50),
 } as const;
 

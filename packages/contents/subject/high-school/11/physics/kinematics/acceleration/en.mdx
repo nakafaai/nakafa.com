@@ -63,12 +63,13 @@ After the trace is visible, shift attention to the graph. The trace gives the mo
   title={<>Velocity-Time Graph</>}
   description={
     <>
-      Choose the same segment, then read the line slope as velocity change per
-      second.
+      Choose one segment on the same graph, then read the line slope as
+      velocity change per second.
     </>
   }
   labels={{
     chooseCase: "Choose Segment",
+    contextLine: "Full graph",
     scenarioNames: {
       "speed-up": "Speeding Up",
       steady: "Constant",
@@ -79,7 +80,7 @@ After the trace is visible, shift attention to the graph. The trace gives the mo
   }}
 />
 
-On the graph, the thick line is the segment being read. If the line rises, velocity increases. If it stays flat, velocity is constant. If it slopes downward, velocity decreases. Acceleration is the ratio of <InlineMath math="\Delta v" /> to <InlineMath math="\Delta t" />.
+On the graph, the dashed line shows the full connected graph. The thick line is the segment being read. If the line rises, velocity increases. If it stays flat, velocity is constant. If it slopes downward, velocity decreases. Acceleration is the ratio of <InlineMath math="\Delta v" /> to <InlineMath math="\Delta t" />.
 
 ## Reading the Sign of Acceleration
 
@@ -95,24 +96,24 @@ The last row is where many students trip up. Negative acceleration does not auto
 
 ## Calculating Velocity Change Each Second
 
-Suppose a car changes velocity from <InlineMath math="2\text{ m/s}" /> to <InlineMath math="10\text{ m/s}" /> in <InlineMath math="4\text{ s}" />. Its acceleration is:
+Suppose a car changes velocity from <InlineMath math="2\text{ m/s}" /> to <InlineMath math="18\text{ m/s}" /> in <InlineMath math="4\text{ s}" />. Its acceleration is:
 
 <BlockMath math="\begin{aligned}
 a &= \frac{v_t-v_0}{\Delta t} \\
-&= \frac{10-2}{4} \\
-&= 2\text{ m/s}^2
+&= \frac{18-2}{4} \\
+&= 4\text{ m/s}^2
 \end{aligned}" />
 
-That result means the velocity increases by <InlineMath math="2\text{ m/s}" /> each second. The sequence becomes <InlineMath math="2\text{ m/s}" />, <InlineMath math="4\text{ m/s}" />, <InlineMath math="6\text{ m/s}" />, and so on if the acceleration remains constant.
+That result means the velocity increases by <InlineMath math="4\text{ m/s}" /> each second. The sequence becomes <InlineMath math="2\text{ m/s}" />, <InlineMath math="6\text{ m/s}" />, <InlineMath math="10\text{ m/s}" />, and so on if the acceleration remains constant.
 
-Now compare it with a car whose velocity changes from <InlineMath math="10\text{ m/s}" /> to <InlineMath math="2\text{ m/s}" /> in <InlineMath math="4\text{ s}" />.
+Now compare it with a car whose velocity changes from <InlineMath math="18\text{ m/s}" /> to <InlineMath math="2\text{ m/s}" /> in <InlineMath math="4\text{ s}" />.
 
 <BlockMath math="\begin{aligned}
-a &= \frac{2-10}{4} \\
-&= -2\text{ m/s}^2
+a &= \frac{2-18}{4} \\
+&= -4\text{ m/s}^2
 \end{aligned}" />
 
-The value <InlineMath math="-2\text{ m/s}^2" /> means the velocity decreases by <InlineMath math="2\text{ m/s}" /> each second if the car is still moving in the positive direction.
+The value <InlineMath math="-4\text{ m/s}^2" /> means the velocity decreases by <InlineMath math="4\text{ m/s}" /> each second if the car is still moving in the positive direction.
 
 ## Zero Acceleration Still Needs Interpretation
 

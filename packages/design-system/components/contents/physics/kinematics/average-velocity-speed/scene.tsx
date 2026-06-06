@@ -360,19 +360,6 @@ function RollingBall({ motion }: { motion: AverageVelocitySpeedState }) {
         <BallBand rotation={[Math.PI / 2, 0, 0]} />
         <BallBand rotation={[0, Math.PI / 2, 0]} />
       </group>
-      <mesh
-        position={[0, -AVERAGE_VELOCITY_SPEED_SCENE.ballRadius - 0.03, 0]}
-        receiveShadow
-        rotation={[-Math.PI / 2, 0, 0]}
-      >
-        <circleGeometry args={[0.26, 28]} />
-        <meshBasicMaterial
-          color={AVERAGE_VELOCITY_SPEED_COLORS.shadow}
-          depthWrite={false}
-          opacity={0.16}
-          transparent
-        />
-      </mesh>
     </group>
   );
 }

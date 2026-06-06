@@ -20,7 +20,7 @@ import {
 import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 import { Suspense, useMemo, useRef, useState } from "react";
-import type { Group, MeshBasicMaterial } from "three";
+import type { Group } from "three";
 
 const MODES = ["throw", "drop"] as const;
 const GRAVITY = 10;
@@ -206,13 +206,11 @@ function VerticalTrail({ motion }: { motion: MotionState }) {
 
 function AnimatedBall({ motion }: { motion: MotionState }) {
   const ballRef = useRef<Group>(null);
-  const shadowRef = useRef<Group>(null);
-  const shadowMaterialRef = useRef<MeshBasicMaterial>(null);
   const animationStartRef = useRef<number | null>(null);
   const animationConditionRef = useRef<string | null>(null);
 
   useFrame((state) => {
-    if (!(ballRef.current && shadowRef.current && shadowMaterialRef.current)) {
+    if (!ballRef.current) {
       return;
     }
 
@@ -231,42 +229,22 @@ function AnimatedBall({ motion }: { motion: MotionState }) {
       (state.clock.elapsedTime - animationStartRef.current) % loopSeconds;
     const time = Math.min(elapsed, motion.motionTime);
     const height = getHeight(motion, time);
-    const heightRatio = motion.maxHeight === 0 ? 0 : height / motion.maxHeight;
 
     ballRef.current.position.y = height * WORLD_SCALE + BALL_RADIUS;
     ballRef.current.rotation.x = -elapsed * 2.3;
-    shadowRef.current.scale.setScalar(1 + heightRatio * 0.95);
-    shadowMaterialRef.current.opacity = 0.28 - heightRatio * 0.18;
   });
 
   return (
-    <>
-      <group ref={shadowRef}>
-        <mesh position={[0, 0.012, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <circleGeometry args={[0.36, 32]} />
-          <meshBasicMaterial
-            color={getColor("SLATE", 900)}
-            depthWrite={false}
-            opacity={0.28}
-            ref={shadowMaterialRef}
-            transparent
-          />
-        </mesh>
-      </group>
-      <group ref={ballRef}>
-        <mesh castShadow>
-          <sphereGeometry args={[BALL_RADIUS, 32, 32]} />
-          <meshStandardMaterial color={getColor("BLUE")} roughness={0.34} />
-        </mesh>
-        <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[BALL_RADIUS + 0.004, 0.008, 8, 32]} />
-          <meshStandardMaterial
-            color={getColor("BLUE", 200)}
-            roughness={0.42}
-          />
-        </mesh>
-      </group>
-    </>
+    <group ref={ballRef}>
+      <mesh castShadow>
+        <sphereGeometry args={[BALL_RADIUS, 32, 32]} />
+        <meshStandardMaterial color={getColor("BLUE")} roughness={0.34} />
+      </mesh>
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[BALL_RADIUS + 0.004, 0.008, 8, 32]} />
+        <meshStandardMaterial color={getColor("BLUE", 200)} roughness={0.42} />
+      </mesh>
+    </group>
   );
 }
 

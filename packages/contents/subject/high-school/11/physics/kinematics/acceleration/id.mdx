@@ -63,12 +63,13 @@ Setelah jejaknya terlihat, pindahkan perhatian ke grafik. Jejak memberi rasa ger
   title={<>Grafik Kecepatan terhadap Waktu</>}
   description={
     <>
-      Pilih segmen yang sama, lalu baca kemiringan garisnya sebagai perubahan
-      kecepatan setiap detik.
+      Pilih satu segmen pada grafik yang sama, lalu baca kemiringan garisnya
+      sebagai perubahan kecepatan setiap detik.
     </>
   }
   labels={{
     chooseCase: "Pilih Segmen",
+    contextLine: "Grafik lengkap",
     scenarioNames: {
       "speed-up": "Makin Cepat",
       steady: "Tetap",
@@ -79,7 +80,7 @@ Setelah jejaknya terlihat, pindahkan perhatian ke grafik. Jejak memberi rasa ger
   }}
 />
 
-Pada grafik, garis tebal adalah segmen yang sedang dibaca. Jika garisnya naik, kecepatannya bertambah. Jika datar, kecepatannya tetap. Jika turun, kecepatannya berkurang. Percepatan adalah perbandingan <InlineMath math="\Delta v" /> terhadap <InlineMath math="\Delta t" />.
+Pada grafik, garis putus-putus menunjukkan grafik lengkap yang saling tersambung. Garis tebal adalah segmen yang sedang dibaca. Jika garisnya naik, kecepatannya bertambah. Jika datar, kecepatannya tetap. Jika turun, kecepatannya berkurang. Percepatan adalah perbandingan <InlineMath math="\Delta v" /> terhadap <InlineMath math="\Delta t" />.
 
 ## Cara Membaca Tanda Percepatan
 
@@ -95,24 +96,24 @@ Bagian terakhir sering membuat siswa keliru. Percepatan negatif bukan otomatis b
 
 ## Menghitung Perubahan Kecepatan Setiap Detik
 
-Misalkan kecepatan mobil berubah dari <InlineMath math="2\text{ m/s}" /> menjadi <InlineMath math="10\text{ m/s}" /> dalam <InlineMath math="4\text{ s}" />. Percepatannya:
+Misalkan kecepatan mobil berubah dari <InlineMath math="2\text{ m/s}" /> menjadi <InlineMath math="18\text{ m/s}" /> dalam <InlineMath math="4\text{ s}" />. Percepatannya:
 
 <BlockMath math="\begin{aligned}
 a &= \frac{v_t-v_0}{\Delta t} \\
-&= \frac{10-2}{4} \\
-&= 2\text{ m/s}^2
+&= \frac{18-2}{4} \\
+&= 4\text{ m/s}^2
 \end{aligned}" />
 
-Hasil itu berarti kecepatan bertambah <InlineMath math="2\text{ m/s}" /> setiap detik. Urutannya menjadi <InlineMath math="2\text{ m/s}" />, <InlineMath math="4\text{ m/s}" />, <InlineMath math="6\text{ m/s}" />, dan seterusnya jika percepatannya tetap.
+Hasil itu berarti kecepatan bertambah <InlineMath math="4\text{ m/s}" /> setiap detik. Urutannya menjadi <InlineMath math="2\text{ m/s}" />, <InlineMath math="6\text{ m/s}" />, <InlineMath math="10\text{ m/s}" />, dan seterusnya jika percepatannya tetap.
 
-Sekarang bandingkan dengan mobil yang kecepatannya berubah dari <InlineMath math="10\text{ m/s}" /> menjadi <InlineMath math="2\text{ m/s}" /> dalam <InlineMath math="4\text{ s}" />.
+Sekarang bandingkan dengan mobil yang kecepatannya berubah dari <InlineMath math="18\text{ m/s}" /> menjadi <InlineMath math="2\text{ m/s}" /> dalam <InlineMath math="4\text{ s}" />.
 
 <BlockMath math="\begin{aligned}
-a &= \frac{2-10}{4} \\
-&= -2\text{ m/s}^2
+a &= \frac{2-18}{4} \\
+&= -4\text{ m/s}^2
 \end{aligned}" />
 
-Nilai <InlineMath math="-2\text{ m/s}^2" /> berarti kecepatan berkurang <InlineMath math="2\text{ m/s}" /> setiap detik jika mobil masih bergerak ke arah positif.
+Nilai <InlineMath math="-4\text{ m/s}^2" /> berarti kecepatan berkurang <InlineMath math="4\text{ m/s}" /> setiap detik jika mobil masih bergerak ke arah positif.
 
 ## Percepatan Nol Tetap Perlu Ditafsirkan
 

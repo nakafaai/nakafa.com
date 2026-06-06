@@ -114,6 +114,12 @@ export function StoppingDistanceLab({
                 intensity={1.35}
                 position={[3.5, 5.8, 4.5]}
                 shadow-bias={-0.0006}
+                shadow-camera-bottom={
+                  -STOPPING_DISTANCE_SCENE.shadowCameraRadius
+                }
+                shadow-camera-left={-STOPPING_DISTANCE_SCENE.shadowCameraRadius}
+                shadow-camera-right={STOPPING_DISTANCE_SCENE.shadowCameraRadius}
+                shadow-camera-top={STOPPING_DISTANCE_SCENE.shadowCameraRadius}
                 shadow-mapSize-height={1024}
                 shadow-mapSize-width={1024}
                 shadow-normalBias={0.02}
@@ -246,7 +252,6 @@ function AnimatedCar({
   return (
     <>
       <group ref={groupRef} rotation={[0, Math.PI / 2, 0]} scale={0.66}>
-        <CarContactShadow />
         <CarModel />
       </group>
       <BrakeDust dustRef={brakeDustRef} />
@@ -260,24 +265,6 @@ function CarModel() {
       bodyColor={STOPPING_DISTANCE_COLORS.carBody}
       modelPath={STOPPING_DISTANCE_CAR_MODEL_PATH}
     />
-  );
-}
-
-function CarContactShadow() {
-  return (
-    <mesh
-      position={[0, 0.012, 0]}
-      rotation={[-Math.PI / 2, 0, 0]}
-      scale={[1.45, 0.52, 1]}
-    >
-      <circleGeometry args={[0.72, 32]} />
-      <meshBasicMaterial
-        color={getColor("SLATE", 900)}
-        depthWrite={false}
-        opacity={0.16}
-        transparent
-      />
-    </mesh>
   );
 }
 

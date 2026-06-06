@@ -48,6 +48,8 @@ const DISTANCE_GUIDE_STEP = 0.18;
 const DISPLACEMENT_GUIDE_Z = 0.46;
 const GUIDE_THICKNESS = 0.045;
 const ROUTE_CONE_Z = DISTANCE_GUIDE_Z - DISTANCE_GUIDE_STEP * 1.35;
+const SHADOW_CAMERA_RADIUS =
+  VELOCITY_SPEED_SCENE.laneLength / 2 + VELOCITY_SPEED_SCENE.laneWidth;
 
 export function VelocitySpeedLab({
   title,
@@ -135,6 +137,10 @@ export function VelocitySpeedLab({
                 intensity={1.58}
                 position={[3.2, 6.2, 4.8]}
                 shadow-bias={-0.0006}
+                shadow-camera-bottom={-SHADOW_CAMERA_RADIUS}
+                shadow-camera-left={-SHADOW_CAMERA_RADIUS}
+                shadow-camera-right={SHADOW_CAMERA_RADIUS}
+                shadow-camera-top={SHADOW_CAMERA_RADIUS}
                 shadow-mapSize-height={1024}
                 shadow-mapSize-width={1024}
                 shadow-normalBias={0.02}
@@ -397,28 +403,10 @@ function AnimatedCar({ motion }: { motion: VelocitySpeedState }) {
 
   return (
     <group ref={groupRef} scale={VELOCITY_SPEED_SCENE.carScale}>
-      <CarContactShadow />
       <PhysicsCarModel
         bodyColor={VELOCITY_SPEED_COLORS.carBody}
         modelPath={VELOCITY_SPEED_CAR_MODEL_PATH}
       />
     </group>
-  );
-}
-
-function CarContactShadow() {
-  return (
-    <mesh
-      position={[0, 0.01, 0]}
-      rotation={[-Math.PI / 2, 0, 0]}
-      scale={[1.18, 3.2, 1]}
-    >
-      <circleGeometry args={[1, 36]} />
-      <meshBasicMaterial
-        color={VELOCITY_SPEED_COLORS.shadow}
-        opacity={0.16}
-        transparent
-      />
-    </mesh>
   );
 }

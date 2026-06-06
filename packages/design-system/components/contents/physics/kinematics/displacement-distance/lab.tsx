@@ -218,7 +218,6 @@ function AnimatedCar({ motion }: { motion: DisplacementDistanceState }) {
 
   return (
     <group ref={carRef} scale={DISPLACEMENT_DISTANCE_SCENE.carScale}>
-      <CarContactShadow />
       <PhysicsCarModel
         bodyColor={CAR_COLOR}
         modelPath={DISPLACEMENT_DISTANCE_CAR_MODEL_PATH}
@@ -328,24 +327,6 @@ function StartEndMarkers({ motion }: { motion: DisplacementDistanceState }) {
         <meshStandardMaterial color={CAR_COLOR} roughness={0.48} />
       </mesh>
     </>
-  );
-}
-
-function CarContactShadow() {
-  return (
-    <mesh
-      position={[0, 0.012, 0]}
-      rotation={[-Math.PI / 2, 0, 0]}
-      scale={[1.45, 0.52, 1]}
-    >
-      <circleGeometry args={[0.72, 32]} />
-      <meshBasicMaterial
-        color={getColor("SLATE", 900)}
-        depthWrite={false}
-        opacity={0.14}
-        transparent
-      />
-    </mesh>
   );
 }
 

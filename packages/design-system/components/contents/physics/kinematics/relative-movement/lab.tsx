@@ -42,6 +42,8 @@ const CAR_SCALE = 0.58;
 const MIN_LOOP_SECONDS = 6.5;
 const MAX_LOOP_SECONDS = 10.5;
 const MAX_RELATIVE_SPEED = 24;
+const SHADOW_CAMERA_RADIUS =
+  RELATIVE_MOVEMENT_SCENE.roadLength / 2 + RELATIVE_MOVEMENT_SCENE.roadWidth;
 
 export function RelativeMovementLab({
   title,
@@ -106,6 +108,10 @@ export function RelativeMovementLab({
                 intensity={1.25}
                 position={[3.4, 5.4, 4.2]}
                 shadow-bias={-0.0006}
+                shadow-camera-bottom={-SHADOW_CAMERA_RADIUS}
+                shadow-camera-left={-SHADOW_CAMERA_RADIUS}
+                shadow-camera-right={SHADOW_CAMERA_RADIUS}
+                shadow-camera-top={SHADOW_CAMERA_RADIUS}
                 shadow-mapSize-height={1024}
                 shadow-mapSize-width={1024}
                 shadow-normalBias={0.02}
@@ -244,27 +250,8 @@ function Car({
 
   return (
     <group position={position} rotation={[0, yRotation, 0]} scale={CAR_SCALE}>
-      <CarContactShadow />
       <PhysicsCarModel bodyColor={accentColor} modelPath={modelPath} />
     </group>
-  );
-}
-
-function CarContactShadow() {
-  return (
-    <mesh
-      position={[0, 0.012, 0]}
-      rotation={[-Math.PI / 2, 0, 0]}
-      scale={[1.45, 0.52, 1]}
-    >
-      <circleGeometry args={[0.72, 32]} />
-      <meshBasicMaterial
-        color={getColor("SLATE", 900)}
-        depthWrite={false}
-        opacity={0.14}
-        transparent
-      />
-    </mesh>
   );
 }
 

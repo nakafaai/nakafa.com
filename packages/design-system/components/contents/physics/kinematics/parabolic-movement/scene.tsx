@@ -20,7 +20,6 @@ const PROJECTILE_COLORS = {
   landingMat: getColor("EMERALD", 100),
   launcherBase: getColor("SLATE", 600),
   launcherRail: getColor("SLATE", 700),
-  shadow: getColor("SLATE", 900),
   trailGhost: getColor("WHITE"),
 } as const;
 
@@ -44,10 +43,6 @@ export function ProjectileBallScene({
 function ProjectileRange({ motion }: { motion: ParabolicMotionState }) {
   const groundLength = getGroundLength(motion.rangeWorld);
   const end = getProjectilePoint(motion, motion.flightTime);
-  const shadowTimes = useMemo(
-    () => getShadowSampleTimes(motion.flightTime),
-    [motion.flightTime]
-  );
 
   return (
     <group>
@@ -73,25 +68,6 @@ function ProjectileRange({ motion }: { motion: ParabolicMotionState }) {
           roughness={0.78}
         />
       </mesh>
-      {shadowTimes.map((time) => {
-        const point = getProjectilePoint(motion, time);
-
-        return (
-          <mesh
-            key={time}
-            position={[point.x, 0.035, 0]}
-            rotation={[Math.PI / 2, 0, 0]}
-          >
-            <circleGeometry args={[0.16, 28]} />
-            <meshBasicMaterial
-              color={PROJECTILE_COLORS.shadow}
-              depthWrite={false}
-              opacity={0.1}
-              transparent
-            />
-          </mesh>
-        );
-      })}
       <LaunchRamp motion={motion} />
     </group>
   );
@@ -276,13 +252,6 @@ function ProjectileBall({ color }: { color: string }) {
         />
       </mesh>
     </group>
-  );
-}
-
-function getShadowSampleTimes(duration: number) {
-  return Array.from(
-    { length: PARABOLIC_SCENE.ghostCount },
-    (_, index) => (duration * index) / (PARABOLIC_SCENE.ghostCount - 1)
   );
 }
 

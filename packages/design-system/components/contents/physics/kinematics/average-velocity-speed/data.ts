@@ -110,7 +110,6 @@ export const AVERAGE_VELOCITY_SPEED_COLORS = {
   platformEdge: getColor("AMBER", 500),
   rail: getColor("SLATE", 600),
   route: getColor("TEAL", 500),
-  shadow: getColor("SLATE", 900),
   start: getColor("YELLOW"),
 } as const;
 
