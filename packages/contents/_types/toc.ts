@@ -7,7 +7,7 @@ export interface ParsedHeading {
   label: string;
 }
 
-export const ParsedHeadingSchema = Schema.Struct({
+const ParsedHeadingSchema = Schema.Struct({
   label: Schema.String,
   href: Schema.String,
   index: Schema.optional(Schema.Number),

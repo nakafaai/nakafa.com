@@ -12,6 +12,8 @@ interface GraphProps {
   title: ReactNode;
 }
 
+const origin = { x: 0, y: 0, z: 0 };
+
 export function Graph({ title, description, labels }: GraphProps) {
   const scale = 4;
   const buildingHeight = 16 / scale;
@@ -55,7 +57,6 @@ export function Graph({ title, description, labels }: GraphProps) {
   const arc30LabelIndex = Math.floor(arcSegments * 0.5);
   const arc45LabelIndex = Math.floor(arcSegments * 0.5);
 
-  const origin = { x: 0, y: 0, z: 0 };
   const buildingTop = { x: 0, y: buildingHeight, z: 0 };
   const helicopter = { x: 0, y: helicopterHeight, z: 0 };
   const observationPoint = { x: observationDistance, y: 0, z: 0 };

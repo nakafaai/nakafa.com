@@ -78,6 +78,29 @@ const submitTextareaOnEnter: KeyboardEventHandler<HTMLTextAreaElement> = (
   event.currentTarget.form?.requestSubmit();
 };
 
+/** Converts a browser blob URL into a data URL for attachment submission. */
+async function convertBlobUrlToDataUrl(url: string) {
+  const response = await fetch(url);
+  const blob = await response.blob();
+
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.addEventListener("loadend", () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+        return;
+      }
+
+      reject(new Error("FileReader did not return a data URL."));
+    });
+    reader.addEventListener("error", () => {
+      reject(reader.error ?? new Error("FileReader failed to read the blob."));
+    });
+    reader.readAsDataURL(blob);
+  });
+}
+
 // ============================================================================
 // Provider Context & Types
 // ============================================================================
@@ -697,17 +720,6 @@ export const PromptInput = ({
     if (event.currentTarget.files) {
       add(event.currentTarget.files);
     }
-  };
-
-  const convertBlobUrlToDataUrl = async (url: string): Promise<string> => {
-    const response = await fetch(url);
-    const blob = await response.blob();
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
   };
 
   const ctx = useMemo<AttachmentsContext>(

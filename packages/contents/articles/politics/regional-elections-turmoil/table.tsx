@@ -17,26 +17,17 @@ export interface TableRowData {
 }
 
 interface Props {
-  caption: string;
-  headers?: {
-    category: string;
-    electionLaw: string;
-    courtDecision: string;
-    dprDecision: string;
+  caption: ReactNode;
+  headers: {
+    category: ReactNode;
+    electionLaw: ReactNode;
+    courtDecision: ReactNode;
+    dprDecision: ReactNode;
   };
   tableData: TableRowData[];
 }
 
-export function RulingTable({
-  caption,
-  tableData,
-  headers = {
-    category: "Regulation Category",
-    electionLaw: "Election Law",
-    courtDecision: "Constitutional Court Decision",
-    dprDecision: "DPR Decision",
-  },
-}: Props) {
+export function RulingTable({ caption, tableData, headers }: Props) {
   return (
     <div className="grid grid-cols-1">
       <Table containerClassName="pb-4">

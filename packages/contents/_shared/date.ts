@@ -1,7 +1,7 @@
 import { format, formatISO, isValid, parse } from "date-fns";
 import { Option } from "effect";
 
-export const CONTENT_DATE_FORMAT = "MM/dd/yyyy";
+const CONTENT_DATE_FORMAT = "MM/dd/yyyy";
 const CONTENT_DATE_REFERENCE = new Date(0);
 
 /**

@@ -7,18 +7,19 @@ import {
   TableHeader,
   TableRow,
 } from "@repo/design-system/components/ui/table";
+import type { ReactNode } from "react";
 
 interface Props {
-  caption: string;
+  caption: ReactNode;
   labels: {
-    corruptionIndex: string;
-    country: string;
-    good: string;
-    goodGovernanceIndex: string;
-    governanceQualityCategory: string;
-    judicialEfficiencyIndex: string;
-    low: string;
-    medium: string;
+    corruptionIndex: ReactNode;
+    country: ReactNode;
+    good: ReactNode;
+    goodGovernanceIndex: ReactNode;
+    governanceQualityCategory: ReactNode;
+    judicialEfficiencyIndex: ReactNode;
+    low: ReactNode;
+    medium: ReactNode;
   };
 }
 

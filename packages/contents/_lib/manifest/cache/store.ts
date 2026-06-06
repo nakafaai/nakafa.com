@@ -73,7 +73,7 @@ export function isRoutingLocaleSubset(locales: readonly string[]) {
 }
 
 /** Reads the folder cache version through the Effect source adapter. */
-export function getFolderCacheVersion() {
+function getFolderCacheVersion() {
   return Effect.runSync(
     ContentRouteSource.getFolderCacheVersion.pipe(
       Effect.provide(ContentRouteSource.Default)

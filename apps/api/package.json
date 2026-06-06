@@ -17,17 +17,14 @@
     "@repo/backend": "workspace:*",
     "@repo/contents": "workspace:*",
     "@repo/design-system": "workspace:*",
-    "@repo/internationalization": "workspace:*",
     "@repo/next-config": "workspace:*",
-    "@repo/security": "workspace:*",
     "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
     "better-auth": "~1.6.12",
     "effect": "^3.21.2",
     "next": "16.2.6",
     "react": "^19.2.6",
-    "react-dom": "^19.2.6",
-    "shiki": "^4.1.0"
+    "react-dom": "^19.2.6"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",

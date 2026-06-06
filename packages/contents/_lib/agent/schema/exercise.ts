@@ -4,7 +4,7 @@ import { NakafaAgentContentRefSchema } from "@repo/contents/_lib/agent/schema/re
 import { Option, Schema } from "effect";
 
 /** Content reference input accepted by the structured exercise reader. */
-export const NakafaAgentExerciseContentRefInputSchema =
+const NakafaAgentExerciseContentRefInputSchema =
   NakafaAgentContentRefInputSchema.pipe(
     Schema.filter(
       (value) => {
@@ -36,7 +36,7 @@ export const NakafaAgentExerciseOptionsSchema = Schema.Struct({
   .annotations({ description: "Nakafa exercise read options." });
 
 /** Runtime schema for one exercise choice. */
-export const NakafaAgentExerciseChoiceSchema = Schema.Struct({
+const NakafaAgentExerciseChoiceSchema = Schema.Struct({
   correct: Schema.Boolean.annotations({
     description: "Whether this choice is the correct answer.",
   }),
@@ -53,7 +53,7 @@ const NakafaAgentExerciseContentSchema = Schema.Struct({
 }).pipe(Schema.mutable);
 
 /** Runtime schema for one exercise question and explanation. */
-export const NakafaAgentExerciseItemSchema = Schema.Struct({
+const NakafaAgentExerciseItemSchema = Schema.Struct({
   answer: NakafaAgentExerciseContentSchema.annotations({
     description: "Published answer and explanation.",
   }),

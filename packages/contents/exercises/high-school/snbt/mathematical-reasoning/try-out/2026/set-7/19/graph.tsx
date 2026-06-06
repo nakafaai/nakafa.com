@@ -1,15 +1,16 @@
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
 import { getColor } from "@repo/design-system/lib/color";
+import type { ReactNode } from "react";
 
 interface GraphProps {
-  description: React.ReactNode;
+  description: ReactNode;
   labels: {
     atc: string;
     initialPos: string;
     finalPos: string;
     height: string;
   };
-  title: string;
+  title: ReactNode;
 }
 
 export function Graph({ title, description, labels }: GraphProps) {

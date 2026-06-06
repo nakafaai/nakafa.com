@@ -8,20 +8,19 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import {
+  ChartBar,
+  ChartBarChart,
+  ChartCartesianGrid,
   type ChartConfig,
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
+  ChartXAxis,
+  ChartYAxis,
 } from "@repo/design-system/components/ui/chart";
-import {
-  CartesianGrid,
-  Bar as RechartsBar,
-  BarChart as RechartsBarChart,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { type ReactNode, useMemo } from "react";
 
 const chartData = [
   { year: "1", capital: 50, revenue: 150 },
@@ -32,69 +31,56 @@ const chartData = [
 ];
 
 interface Props {
-  lang?: "id" | "en";
+  capitalLabel: ReactNode;
+  description: ReactNode;
+  revenueLabel: ReactNode;
+  title: ReactNode;
+  yearLabel: string;
 }
 
-const translations = {
-  id: {
-    title: "Data Modal dan Pendapatan Toko A",
-    description: "Modal dan Pendapatan (dalam juta) selama 5 tahun terakhir.",
-    xAxisLabel: "Tahun ke-",
-    capital: "Modal",
-    revenue: "Pendapatan",
-  },
-  en: {
-    title: "Store A Capital and Revenue Data",
-    description: "Capital and Revenue (in millions) over the last 5 years.",
-    xAxisLabel: "Year",
-    capital: "Capital",
-    revenue: "Revenue",
-  },
-};
+/** Renders the store capital and revenue chart with MDX-owned copy. */
+export function ProfitChart({
+  capitalLabel,
+  description,
+  revenueLabel,
+  title,
+  yearLabel,
+}: Props) {
+  const chartConfig = useMemo(
+    () =>
+      ({
+        capital: {
+          label: capitalLabel,
+          colors: { light: ["var(--chart-1)"] },
+        },
+        revenue: {
+          label: revenueLabel,
+          colors: { light: ["var(--chart-2)"] },
+        },
+      }) satisfies ChartConfig,
+    [capitalLabel, revenueLabel]
+  );
 
-export function ProfitChart({ lang = "en" }: Props) {
-  const t = translations[lang];
-
-  const chartConfig = {
-    capital: {
-      label: t.capital,
-      colors: { light: ["var(--chart-1)"] },
-    },
-    revenue: {
-      label: t.revenue,
-      colors: { light: ["var(--chart-2)"] },
-    },
-  } satisfies ChartConfig;
-
-  const formatYear = (value: string) => {
-    switch (lang) {
-      case "id":
-        return `Tahun ke-${value}`;
-      case "en":
-        return `Year ${value}`;
-      default:
-        return `Year ${value}`;
-    }
-  };
+  const formatYear = (value: string) => `${yearLabel}${value}`;
 
   return (
     <Card className="content-auto-card">
       <CardHeader>
-        <CardTitle>{t.title}</CardTitle>
-        <CardDescription>{t.description}</CardDescription>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer className="aspect-video" config={chartConfig}>
-          <RechartsBarChart accessibilityLayer data={chartData}>
-            <CartesianGrid vertical={false} />
-            <XAxis
+          <ChartBarChart accessibilityLayer data={chartData}>
+            <ChartCartesianGrid vertical={false} />
+            <ChartXAxis
               axisLine={false}
               dataKey="year"
               tickFormatter={formatYear}
               tickLine={false}
               tickMargin={10}
             />
-            <YAxis axisLine={false} tickLine={false} tickMargin={10} />
+            <ChartYAxis axisLine={false} tickLine={false} tickMargin={10} />
             <ChartTooltip
               content={
                 <ChartTooltipContent
@@ -103,17 +89,17 @@ export function ProfitChart({ lang = "en" }: Props) {
               }
             />
             <ChartLegend content={<ChartLegendContent />} />
-            <RechartsBar
+            <ChartBar
               dataKey="capital"
               fill="var(--color-capital-0)"
               radius={[4, 4, 0, 0]}
             />
-            <RechartsBar
+            <ChartBar
               dataKey="revenue"
               fill="var(--color-revenue-0)"
               radius={[4, 4, 0, 0]}
             />
-          </RechartsBarChart>
+          </ChartBarChart>
         </ChartContainer>
       </CardContent>
     </Card>

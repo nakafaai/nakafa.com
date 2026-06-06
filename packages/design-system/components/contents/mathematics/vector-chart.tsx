@@ -8,15 +8,19 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import {
+  ChartCartesianGrid,
   type ChartConfig,
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
+  ChartLine,
+  ChartLineChart,
   ChartTooltip,
+  ChartXAxis,
+  ChartYAxis,
   getColorVariable,
 } from "@repo/design-system/components/ui/chart";
 import { Fragment, type ReactNode, useMemo } from "react";
-import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 
 interface Vector {
   /**
@@ -197,8 +201,8 @@ export function VectorChart({
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>
-          <LineChart accessibilityLayer data={data}>
-            <CartesianGrid />
+          <ChartLineChart accessibilityLayer data={data}>
+            <ChartCartesianGrid />
             <defs>
               {/* Vector arrows for both directions */}
               {processedVectors.map((vector) => {
@@ -233,7 +237,7 @@ export function VectorChart({
                 );
               })}
             </defs>
-            <XAxis
+            <ChartXAxis
               dataKey="x"
               tickFormatter={(value) => {
                 if (typeof value === "number") {
@@ -245,7 +249,7 @@ export function VectorChart({
               }}
               tickMargin={8}
             />
-            <YAxis
+            <ChartYAxis
               label={{
                 value: labels.yAxis,
                 angle: -90,
@@ -317,7 +321,7 @@ export function VectorChart({
               }
 
               return (
-                <Line
+                <ChartLine
                   connectNulls
                   dataKey={vector.id}
                   dot
@@ -337,7 +341,7 @@ export function VectorChart({
             <ChartLegend
               content={<ChartLegendContent verticalAlign="bottom" />}
             />
-          </LineChart>
+          </ChartLineChart>
         </ChartContainer>
       </CardContent>
     </Card>

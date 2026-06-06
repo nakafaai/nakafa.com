@@ -24,64 +24,54 @@ import {
 } from "@repo/design-system/components/ui/chart";
 import type { ReactNode } from "react";
 
-interface Props {
+interface BudgetChartProps {
   description: ReactNode;
   footnote: ReactNode;
   labels: {
-    electability: ReactNode;
-    notAnswering: string;
+    budget: ReactNode;
   };
   title: ReactNode;
+  yLabel: string;
 }
 
-export function ElectabilityChart({
+const budgetChartData = [
+  {
+    year: "2020",
+    budget: 498,
+  },
+  {
+    year: "2021",
+    budget: 468.2,
+  },
+  {
+    year: "2022",
+    budget: 460.6,
+  },
+  {
+    year: "2023",
+    budget: 439.1,
+  },
+  {
+    year: "2024",
+    budget: 496.8,
+  },
+];
+
+/** Renders the social protection budget chart with MDX-owned copy. */
+export function BudgetChart({
   title,
   description,
+  yLabel,
   footnote,
   labels,
-}: Props) {
-  const electabilityData = [
-    {
-      name: "Anies Baswedan",
-      value: 40,
-    },
-    {
-      name: "Basuki Tjahaja Purnama",
-      value: 24,
-    },
-    {
-      name: "Ridwan Kamil",
-      value: 13,
-    },
-    {
-      name: "Tri Rismaharini",
-      value: 1,
-    },
-    {
-      name: "Erick Tohir",
-      value: 1,
-    },
-    {
-      name: "Erwin Aksa",
-      value: 1,
-    },
-    {
-      name: "Ahmad Sahroni",
-      value: 1,
-    },
-    {
-      name: labels.notAnswering,
-      value: 16,
-    },
-  ];
-
+}: BudgetChartProps) {
   const chartConfig = {
-    value: {
-      label: labels.electability,
-      colors: { light: ["var(--chart-3)"] },
+    budget: {
+      label: labels.budget,
+      colors: { light: ["var(--chart-4)"] },
     },
     label: {
-      colors: { light: ["var(--background)"] },
+      colors: { light: ["var(--foreground)"] },
     },
   } satisfies ChartConfig;
 
@@ -95,42 +85,39 @@ export function ElectabilityChart({
         <ChartContainer config={chartConfig}>
           <ChartBarChart
             accessibilityLayer
-            data={electabilityData}
-            layout="vertical"
+            data={budgetChartData}
             margin={{
-              right: 24,
-              left: 81,
+              right: 16,
             }}
           >
-            <ChartCartesianGrid horizontal={false} />
-            <ChartYAxis
+            <ChartCartesianGrid vertical={false} />
+            <ChartXAxis
               axisLine={false}
-              dataKey="name"
-              hide
+              dataKey="year"
               tickLine={false}
               tickMargin={10}
-              type="category"
             />
-            <ChartXAxis dataKey="value" hide type="number" />
+            <ChartYAxis
+              axisLine={false}
+              label={{
+                value: yLabel,
+                angle: -90,
+                position: "insideLeft",
+                style: { textAnchor: "middle" },
+              }}
+              tickLine={false}
+            />
             <ChartTooltip
               content={<ChartTooltipContent indicator="line" />}
               cursor={false}
             />
-            <ChartBar dataKey="value" fill="var(--color-value-0)" radius={8}>
+            <ChartBar dataKey="budget" fill="var(--color-budget-0)" radius={8}>
               <ChartLabelList
                 className="fill-foreground"
-                dataKey="name"
-                fontSize={12}
-                offset={10}
-                position="left"
-                width={75}
-              />
-              <ChartLabelList
-                className="fill-foreground"
-                dataKey="value"
+                dataKey="budget"
                 fontSize={12}
                 offset={8}
-                position="right"
+                position="top"
               />
             </ChartBar>
             <ChartLegend content={<ChartLegendContent />} />

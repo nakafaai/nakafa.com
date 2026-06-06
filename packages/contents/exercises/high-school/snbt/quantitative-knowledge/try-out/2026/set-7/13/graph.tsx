@@ -7,69 +7,65 @@ interface Props {
   title: ReactNode;
 }
 
+// Points are shifted down so the triangle sits near the visual center.
+const pointA = { x: -3, y: -2, z: 0 };
+const pointB = { x: 3, y: -2, z: 0 };
+const pointC = { x: 0, y: 2, z: 0 };
+const pointP = { x: 0, y: -2, z: 0 };
+const pointR = { x: -1.5, y: 0, z: 0 };
+const pointQ = { x: 1.5, y: 0, z: 0 };
+
+const graphData = [
+  {
+    points: [pointA, pointB, pointC, pointA],
+    color: getColor("INDIGO"),
+    showPoints: true,
+    smooth: false,
+    labels: [
+      {
+        text: "A",
+        at: 0,
+        offset: [-0.5, -0.5, 0],
+        color: getColor("INDIGO"),
+      },
+      { text: "B", at: 1, offset: [0.5, -0.5, 0], color: getColor("INDIGO") },
+      { text: "C", at: 2, offset: [0, 0.5, 0], color: getColor("INDIGO") },
+    ],
+  },
+  {
+    points: [pointC, pointP],
+    color: getColor("TEAL"),
+    showPoints: true,
+    smooth: false,
+    labels: [
+      { text: "P", at: 1, offset: [0, -0.5, 0], color: getColor("TEAL") },
+    ],
+  },
+  {
+    points: [pointA, pointQ],
+    color: getColor("VIOLET"),
+    showPoints: true,
+    smooth: false,
+    labels: [
+      { text: "Q", at: 1, offset: [0.3, 0.3, 0], color: getColor("VIOLET") },
+    ],
+  },
+  {
+    points: [pointB, pointR],
+    color: getColor("VIOLET"),
+    showPoints: true,
+    smooth: false,
+    labels: [
+      { text: "R", at: 1, offset: [-0.3, 0.3, 0], color: getColor("VIOLET") },
+    ],
+  },
+] satisfies ComponentProps<typeof LineEquation>["data"];
+
 export function Graph({ title, description }: Props) {
-  // Define points (shifted y by -2 to center the triangle vertically)
-  const A = { x: -3, y: -2, z: 0 };
-  const B = { x: 3, y: -2, z: 0 };
-  const C = { x: 0, y: 2, z: 0 };
-  const P = { x: 0, y: -2, z: 0 };
-  const R = { x: -1.5, y: 0, z: 0 };
-  const Q = { x: 1.5, y: 0, z: 0 };
-
-  const data: ComponentProps<typeof LineEquation>["data"] = [
-    // Triangle ABC
-    {
-      points: [A, B, C, A],
-      color: getColor("INDIGO"),
-      showPoints: true,
-      smooth: false,
-      labels: [
-        {
-          text: "A",
-          at: 0,
-          offset: [-0.5, -0.5, 0],
-          color: getColor("INDIGO"),
-        },
-        { text: "B", at: 1, offset: [0.5, -0.5, 0], color: getColor("INDIGO") },
-        { text: "C", at: 2, offset: [0, 0.5, 0], color: getColor("INDIGO") },
-      ],
-    },
-    // Line CP
-    {
-      points: [C, P],
-      color: getColor("TEAL"),
-      showPoints: true,
-      smooth: false,
-      labels: [
-        { text: "P", at: 1, offset: [0, -0.5, 0], color: getColor("TEAL") },
-      ],
-    },
-    // Line AQ
-    {
-      points: [A, Q],
-      color: getColor("VIOLET"),
-      showPoints: true,
-      smooth: false,
-      labels: [
-        { text: "Q", at: 1, offset: [0.3, 0.3, 0], color: getColor("VIOLET") },
-      ],
-    },
-    // Line BR
-    {
-      points: [B, R],
-      color: getColor("VIOLET"),
-      showPoints: true,
-      smooth: false,
-      labels: [
-        { text: "R", at: 1, offset: [-0.3, 0.3, 0], color: getColor("VIOLET") },
-      ],
-    },
-  ];
-
   return (
     <LineEquation
       cameraPosition={[0, 0, 10]}
-      data={data}
+      data={graphData}
       description={description}
       showZAxis={false}
       title={title}

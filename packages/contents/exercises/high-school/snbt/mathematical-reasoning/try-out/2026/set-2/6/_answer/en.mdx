@@ -6,7 +6,10 @@ export const metadata = {
   date: "01/31/2026",
 };
 
-<Graph />
+<Graph
+  title={<>Cube <InlineMath math="ABCD.EFGH" /></>}
+  description={<>Cube visualization and the distance from point <InlineMath math="Q" /> to line <InlineMath math="BD" />.</>}
+/>
 
 To find the distance from point <InlineMath math="Q" /> to line <InlineMath math="BD" />, we will form triangle <InlineMath math="BDQ" /> and calculate its height from the vertex <InlineMath math="Q" />. The first step is to calculate the lengths of all three sides of this triangle.
 

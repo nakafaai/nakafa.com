@@ -6,19 +6,17 @@ import {
 } from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";
 import type { ChartConfig } from "@repo/design-system/components/ui/chart";
 import {
+  ChartCartesianGrid,
   ChartContainer,
+  ChartLine,
+  ChartLineChart,
+  ChartReferenceLine,
   ChartTooltip,
   ChartTooltipContent,
+  ChartXAxis,
+  ChartYAxis,
   getColorVariable,
 } from "@repo/design-system/components/ui/chart";
-import {
-  CartesianGrid,
-  Line,
-  LineChart,
-  ReferenceLine,
-  XAxis,
-  YAxis,
-} from "recharts";
 
 interface AccelerationGraphProps {
   labels: AccelerationLabels;
@@ -79,9 +77,13 @@ export function AccelerationGraph({
       className="aspect-[1.45] sm:aspect-video"
       config={chartConfig}
     >
-      <LineChart accessibilityLayer data={motionData} margin={CHART_MARGIN}>
-        <CartesianGrid />
-        <XAxis
+      <ChartLineChart
+        accessibilityLayer
+        data={motionData}
+        margin={CHART_MARGIN}
+      >
+        <ChartCartesianGrid />
+        <ChartXAxis
           dataKey="time"
           domain={[0, MAX_TIME]}
           height={56}
@@ -94,7 +96,7 @@ export function AccelerationGraph({
           ticks={TIME_TICKS}
           type="number"
         />
-        <YAxis
+        <ChartYAxis
           domain={[0, MAX_VELOCITY]}
           label={{
             value: labels.velocityAxis,
@@ -110,7 +112,7 @@ export function AccelerationGraph({
           content={<ChartTooltipContent labelFormatter={formatTooltipTime} />}
         />
         {MOTION_SEGMENTS.map((segment) => (
-          <ReferenceLine
+          <ChartReferenceLine
             key={segment.id}
             segment={[
               { x: segment.start.time, y: segment.start.velocity },
@@ -123,7 +125,7 @@ export function AccelerationGraph({
           />
         ))}
         {guideSegments.map((segment) => (
-          <ReferenceLine
+          <ChartReferenceLine
             key={`${segment.points[0].x}-${segment.points[0].y}-${segment.points[1].x}-${segment.points[1].y}`}
             segment={segment.points}
             stroke="var(--muted-foreground)"
@@ -132,7 +134,7 @@ export function AccelerationGraph({
             strokeWidth={1}
           />
         ))}
-        <Line
+        <ChartLine
           animationDuration={360}
           animationEasing="ease-out"
           data={selectedData}
@@ -145,7 +147,7 @@ export function AccelerationGraph({
           strokeWidth={2}
           type="linear"
         />
-      </LineChart>
+      </ChartLineChart>
     </ChartContainer>
   );
 }

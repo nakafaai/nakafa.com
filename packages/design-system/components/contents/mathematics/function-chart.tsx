@@ -9,16 +9,20 @@ import {
 } from "@repo/design-system/components/ui/card";
 import type { ChartConfig } from "@repo/design-system/components/ui/chart";
 import {
+  ChartCartesianGrid,
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
+  ChartLine,
+  ChartLineChart,
   ChartTooltip,
   ChartTooltipContent,
+  ChartXAxis,
+  ChartYAxis,
   getColorVariable,
 } from "@repo/design-system/components/ui/chart";
 import type { ReactNode } from "react";
 import { useMemo } from "react";
-import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 
 const THRESHOLD_VALUE = 1000;
 const THRESHOLD_VALUE_DECIMAL_PLACES = 0;
@@ -61,14 +65,14 @@ export function FunctionChart({ p, a, title, description, n = 11 }: Props) {
       </CardHeader>
       <CardContent>
         <ChartContainer config={FUNCTION_CHART_CONFIG}>
-          <LineChart accessibilityLayer data={data}>
-            <CartesianGrid />
-            <XAxis
+          <ChartLineChart accessibilityLayer data={data}>
+            <ChartCartesianGrid />
+            <ChartXAxis
               dataKey="x"
               tickFormatter={(value) => value.toString()}
               tickMargin={8}
             />
-            <YAxis
+            <ChartYAxis
               label={{
                 value: "f(x)",
                 angle: -90,
@@ -110,7 +114,7 @@ export function FunctionChart({ p, a, title, description, n = 11 }: Props) {
                 return null;
               }}
             />
-            <Line
+            <ChartLine
               connectNulls={false}
               dataKey="y"
               dot
@@ -122,7 +126,7 @@ export function FunctionChart({ p, a, title, description, n = 11 }: Props) {
             <ChartLegend
               content={<ChartLegendContent verticalAlign="bottom" />}
             />
-          </LineChart>
+          </ChartLineChart>
         </ChartContainer>
       </CardContent>
     </Card>

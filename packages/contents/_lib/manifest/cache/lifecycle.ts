@@ -8,7 +8,7 @@ import { ContentRouteSource } from "@repo/contents/_lib/manifest/source";
 import { Effect } from "effect";
 
 /** Clears all native Effect caches that hold derived manifest data. */
-export function resetContentRouteManifestCache() {
+function resetContentRouteManifestCache() {
   Effect.runSync(
     Effect.all(
       [

@@ -5,20 +5,19 @@ import {
   type ComponentProps,
   type ComponentType,
   createContext,
+  lazy,
   type ReactNode,
+  Suspense,
   use,
   useId,
   useMemo,
 } from "react";
-import {
-  type DefaultLegendContentProps,
-  type DefaultTooltipContentProps,
-  Legend,
-  ResponsiveContainer,
-  Tooltip,
-  type TooltipContentProps,
-  type TooltipPayload,
-  type TooltipPayloadEntry,
+import type {
+  DefaultLegendContentProps,
+  DefaultTooltipContentProps,
+  TooltipContentProps,
+  TooltipPayload,
+  TooltipPayloadEntry,
 } from "recharts";
 
 const CHART_THEMES = [
@@ -47,6 +46,60 @@ type ChartLegendVariant =
   | "square"
   | "vertical-bar";
 type PayloadEntry = LegendPayloadEntry | TooltipPayloadEntry;
+type RechartsModule = typeof import("recharts");
+type RechartsChildren = ComponentProps<
+  RechartsModule["ResponsiveContainer"]
+>["children"];
+
+const LazyArea = lazy(async () => ({
+  default: (await import("recharts")).Area,
+}));
+const LazyAreaChart = lazy(async () => ({
+  default: (await import("recharts")).AreaChart,
+}));
+const LazyBar = lazy(async () => ({ default: (await import("recharts")).Bar }));
+const LazyBarChart = lazy(async () => ({
+  default: (await import("recharts")).BarChart,
+}));
+const LazyCartesianGrid = lazy(async () => ({
+  default: (await import("recharts")).CartesianGrid,
+}));
+const LazyComposedChart = lazy(async () => ({
+  default: (await import("recharts")).ComposedChart,
+}));
+const LazyLabel = lazy(async () => ({
+  default: (await import("recharts")).Label,
+}));
+const LazyLabelList = lazy(async () => ({
+  default: (await import("recharts")).LabelList,
+}));
+const LazyLegend = lazy(async () => ({
+  default: (await import("recharts")).Legend,
+}));
+const LazyLine = lazy(async () => ({
+  default: (await import("recharts")).Line,
+}));
+const LazyLineChart = lazy(async () => ({
+  default: (await import("recharts")).LineChart,
+}));
+const LazyReferenceLine = lazy(async () => ({
+  default: (await import("recharts")).ReferenceLine,
+}));
+const LazyResponsiveContainer = lazy(async () => ({
+  default: (await import("recharts")).ResponsiveContainer,
+}));
+const LazyScatter = lazy(async () => ({
+  default: (await import("recharts")).Scatter,
+}));
+const LazyTooltip = lazy(async () => ({
+  default: (await import("recharts")).Tooltip,
+}));
+const LazyXAxis = lazy(async () => ({
+  default: (await import("recharts")).XAxis,
+}));
+const LazyYAxis = lazy(async () => ({
+  default: (await import("recharts")).YAxis,
+}));
 
 export type ChartConfig = Record<
   string,
@@ -109,7 +162,7 @@ function ChartContainer({
   ...props
 }: ComponentProps<"div"> & {
   config: ChartConfig;
-  children: ComponentProps<typeof ResponsiveContainer>["children"];
+  children: RechartsChildren;
 }) {
   const uniqueId = useId();
   const chartId = `chart-${id || uniqueId.replace(/:/g, "")}`;
@@ -129,12 +182,14 @@ function ChartContainer({
         {...props}
       >
         <ChartStyle config={config} id={chartId} />
-        <ResponsiveContainer
-          className="min-h-0 w-full"
-          initialDimension={CHART_INITIAL_DIMENSION}
-        >
-          {children}
-        </ResponsiveContainer>
+        <Suspense fallback={null}>
+          <LazyResponsiveContainer
+            className="min-h-0 w-full"
+            initialDimension={CHART_INITIAL_DIMENSION}
+          >
+            {children}
+          </LazyResponsiveContainer>
+        </Suspense>
       </div>
     </ChartContext.Provider>
   );
@@ -178,7 +233,10 @@ function ChartStyle({ id, config }: { id: string; config: ChartConfig }) {
   return <style>{styleBlocks.join("\n")}</style>;
 }
 
-const ChartTooltip = Tooltip;
+/** Renders Recharts' tooltip primitive behind the shared lazy chart runtime. */
+function ChartTooltip(props: ComponentProps<RechartsModule["Tooltip"]>) {
+  return <LazyTooltip {...props} />;
+}
 
 /** Renders the shared EvilCharts tooltip content for Recharts payloads. */
 function ChartTooltipContent({
@@ -321,7 +379,86 @@ function ChartTooltipContent({
   );
 }
 
-const ChartLegend = Legend;
+/** Renders Recharts' legend primitive behind the shared lazy chart runtime. */
+function ChartLegend(props: ComponentProps<RechartsModule["Legend"]>) {
+  return <LazyLegend {...props} />;
+}
+
+/** Renders Recharts' area primitive behind the shared lazy chart runtime. */
+function ChartArea(props: ComponentProps<RechartsModule["Area"]>) {
+  return <LazyArea {...props} />;
+}
+
+/** Renders Recharts' area chart primitive behind the shared lazy chart runtime. */
+function ChartAreaChart(props: ComponentProps<RechartsModule["AreaChart"]>) {
+  return <LazyAreaChart {...props} />;
+}
+
+/** Renders Recharts' bar primitive behind the shared lazy chart runtime. */
+function ChartBar(props: ComponentProps<RechartsModule["Bar"]>) {
+  return <LazyBar {...props} />;
+}
+
+/** Renders Recharts' bar chart primitive behind the shared lazy chart runtime. */
+function ChartBarChart(props: ComponentProps<RechartsModule["BarChart"]>) {
+  return <LazyBarChart {...props} />;
+}
+
+/** Renders Recharts' Cartesian grid primitive behind the shared lazy chart runtime. */
+function ChartCartesianGrid(
+  props: ComponentProps<RechartsModule["CartesianGrid"]>
+) {
+  return <LazyCartesianGrid {...props} />;
+}
+
+/** Renders Recharts' composed chart primitive behind the shared lazy chart runtime. */
+function ChartComposedChart(
+  props: ComponentProps<RechartsModule["ComposedChart"]>
+) {
+  return <LazyComposedChart {...props} />;
+}
+
+/** Renders Recharts' label primitive behind the shared lazy chart runtime. */
+function ChartLabel(props: ComponentProps<RechartsModule["Label"]>) {
+  return <LazyLabel {...props} />;
+}
+
+/** Renders Recharts' label list primitive behind the shared lazy chart runtime. */
+function ChartLabelList(props: ComponentProps<RechartsModule["LabelList"]>) {
+  return <LazyLabelList {...props} />;
+}
+
+/** Renders Recharts' line primitive behind the shared lazy chart runtime. */
+function ChartLine(props: ComponentProps<RechartsModule["Line"]>) {
+  return <LazyLine {...props} />;
+}
+
+/** Renders Recharts' line chart primitive behind the shared lazy chart runtime. */
+function ChartLineChart(props: ComponentProps<RechartsModule["LineChart"]>) {
+  return <LazyLineChart {...props} />;
+}
+
+/** Renders Recharts' reference line primitive behind the shared lazy chart runtime. */
+function ChartReferenceLine(
+  props: ComponentProps<RechartsModule["ReferenceLine"]>
+) {
+  return <LazyReferenceLine {...props} />;
+}
+
+/** Renders Recharts' scatter primitive behind the shared lazy chart runtime. */
+function ChartScatter(props: ComponentProps<RechartsModule["Scatter"]>) {
+  return <LazyScatter {...props} />;
+}
+
+/** Renders Recharts' X axis primitive behind the shared lazy chart runtime. */
+function ChartXAxis(props: ComponentProps<RechartsModule["XAxis"]>) {
+  return <LazyXAxis {...props} />;
+}
+
+/** Renders Recharts' Y axis primitive behind the shared lazy chart runtime. */
+function ChartYAxis(props: ComponentProps<RechartsModule["YAxis"]>) {
+  return <LazyYAxis {...props} />;
+}
 
 /** Renders the shared EvilCharts legend content for Recharts payloads. */
 function ChartLegendContent({
@@ -646,12 +783,26 @@ function getTooltipIndicatorStyle(
 }
 
 export {
+  ChartArea,
+  ChartAreaChart,
+  ChartBar,
+  ChartBarChart,
+  ChartCartesianGrid,
+  ChartComposedChart,
   ChartContainer,
+  ChartLabel,
+  ChartLabelList,
   ChartLegend,
   ChartLegendContent,
+  ChartLine,
+  ChartLineChart,
+  ChartReferenceLine,
+  ChartScatter,
   ChartStyle,
   ChartTooltip,
   ChartTooltipContent,
+  ChartXAxis,
+  ChartYAxis,
   getColorsCount,
   getColorVariable,
   useChart,

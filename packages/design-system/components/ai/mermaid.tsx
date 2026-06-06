@@ -4,11 +4,15 @@ import { captureException } from "@repo/analytics/posthog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
 import type { MermaidConfig } from "mermaid";
+import Image from "next/image";
 import { useTheme } from "next-themes";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 
 const HASH_SEED = 0;
 const SHIFT_5 = 5;
+const DEFAULT_MERMAID_IMAGE_SIZE = { width: 960, height: 540 };
+const SVG_VIEWBOX_PATTERN = /\bviewBox="([^"]+)"/;
+const SVG_VIEWBOX_PART_PATTERN = /\s+/;
 
 /**
  * Loads Mermaid on the client and applies the site defaults before rendering.
@@ -50,6 +54,34 @@ function getMermaidRenderErrorMessage(error: unknown) {
   }
 
   return "Failed to render Mermaid chart";
+}
+
+/** Encodes Mermaid SVG output as an image source instead of live DOM markup. */
+function createMermaidImageSource(svg: string) {
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
+/** Reads the rendered SVG size so Next Image can preserve the diagram ratio. */
+function readMermaidImageSize(svg: string) {
+  const match = SVG_VIEWBOX_PATTERN.exec(svg);
+
+  if (!match) {
+    return DEFAULT_MERMAID_IMAGE_SIZE;
+  }
+
+  const parts = match[1].trim().split(SVG_VIEWBOX_PART_PATTERN);
+  const width = Number(parts[2]);
+  const height = Number(parts[3]);
+
+  if (!(Number.isFinite(width) && Number.isFinite(height))) {
+    return DEFAULT_MERMAID_IMAGE_SIZE;
+  }
+
+  if (width <= 0 || height <= 0) {
+    return DEFAULT_MERMAID_IMAGE_SIZE;
+  }
+
+  return { width, height };
 }
 
 interface MermaidProps {
@@ -118,6 +150,14 @@ export const Mermaid = ({ chart, className, config, label }: MermaidProps) => {
   }, [chart, config, renderId, renderKey, theme]);
 
   const hasCurrentRender = renderState.renderKey === renderKey;
+  const svgSource = useMemo(
+    () => createMermaidImageSource(renderState.svg),
+    [renderState.svg]
+  );
+  const imageSize = useMemo(
+    () => readMermaidImageSize(renderState.svg),
+    [renderState.svg]
+  );
 
   // Show loading only on initial load when we have no content
   if (!(hasCurrentRender || renderState.svg)) {
@@ -156,12 +196,15 @@ export const Mermaid = ({ chart, className, config, label }: MermaidProps) => {
 
   // Always render the SVG if we have content (either current or last valid)
   return (
-    <div
-      aria-label={label}
-      className={cn("my-4 flex justify-center", className)}
-      // biome-ignore lint/security/noDangerouslySetInnerHtml: "Required for Mermaid"
-      dangerouslySetInnerHTML={{ __html: renderState.svg }}
-      role="img"
-    />
+    <div className={cn("my-4 flex justify-center", className)}>
+      <Image
+        alt={label}
+        className="h-auto max-w-full"
+        height={imageSize.height}
+        src={svgSource}
+        unoptimized
+        width={imageSize.width}
+      />
+    </div>
   );
 };

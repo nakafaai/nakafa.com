@@ -8,15 +8,15 @@ export const LocaleSchema = Schema.Literal(...locales);
 export type Locale = Schema.Schema.Type<typeof LocaleSchema>;
 
 /** Supported top-level content roots under `packages/contents/`. */
-export const CONTENT_ROOTS = ["articles", "exercises", "subject"] as const;
+const CONTENT_ROOTS = ["articles", "exercises", "subject"] as const;
 
 /** Runtime validation schema for supported top-level content roots. */
-export const ContentRootSchema = Schema.Literal(...CONTENT_ROOTS);
+const ContentRootSchema = Schema.Literal(...CONTENT_ROOTS);
 
 /** Union of supported top-level content roots. */
 export type ContentRoot = Schema.Schema.Type<typeof ContentRootSchema>;
 
-export const ArticleSchema = Schema.Struct({
+const ArticleSchema = Schema.Struct({
   title: Schema.String,
   description: Schema.String,
   date: Schema.String,
@@ -58,7 +58,7 @@ const ContentPaginationItemSchema = Schema.Struct({
   title: Schema.String,
 }).pipe(Schema.mutable);
 
-export const ContentPaginationSchema = Schema.Struct({
+const ContentPaginationSchema = Schema.Struct({
   prev: ContentPaginationItemSchema,
   next: ContentPaginationItemSchema,
 }).pipe(Schema.mutable);
@@ -66,7 +66,7 @@ export type ContentPagination = Schema.Schema.Type<
   typeof ContentPaginationSchema
 >;
 
-export const ContentSchema = Schema.Struct({
+const ContentSchema = Schema.Struct({
   metadata: ContentMetadataSchema,
   raw: Schema.String,
   url: Schema.String,

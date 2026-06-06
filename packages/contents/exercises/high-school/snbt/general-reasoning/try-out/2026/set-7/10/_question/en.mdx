@@ -8,6 +8,18 @@ export const metadata = {
 
 The following is visitor data for two facilities at SMA MMM in September during the first week from Monday to Friday.
 
-<VisitorChart lang="en" />
+<VisitorChart
+  dayLabels={{
+    friday: "Friday",
+    monday: "Monday",
+    thursday: "Thursday",
+    tuesday: "Tuesday",
+    wednesday: "Wednesday",
+  }}
+  description="Number of visitors for Library and Laboratory (Monday-Friday)."
+  seriesLabels={{ laboratory: "Laboratory", library: "Library" }}
+  title="SMA MMM Facility Visitor Data"
+  yAxisLabel="Number of Visitors"
+/>
 
 Based on the data, what is the total number of visitors to the laboratory facility over the <InlineMath math="5\text{ days}" /> ...

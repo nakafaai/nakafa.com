@@ -17,7 +17,7 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import {
   Button,
   Group,
@@ -29,29 +29,34 @@ import {
 const DEFAULT_INPUT = 5;
 
 interface Props {
-  description: string;
-  title: string;
+  description: ReactNode;
+  inputLabel: string;
+  title: ReactNode;
 }
 
 /**
  * Renders the function-machine lesson card.
  */
-export function FunctionMachine({ title, description }: Props) {
+export function FunctionMachine({ title, description, inputLabel }: Props) {
   return (
     <Card className="content-auto-card">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
-      <Machine />
+      <Machine inputLabel={inputLabel} />
     </Card>
   );
+}
+
+interface MachineProps {
+  inputLabel: string;
 }
 
 /**
  * Provides the interactive linear-function input/output controls.
  */
-function Machine() {
+function Machine({ inputLabel }: MachineProps) {
   const [input, setInput] = useState<number>(DEFAULT_INPUT);
 
   // y = 2x + 1
@@ -100,7 +105,7 @@ function Machine() {
           onChange={setInput}
           value={input}
         >
-          <Label className="sr-only">Machine function</Label>
+          <Label className="sr-only">{inputLabel}</Label>
           <Group className="relative inline-flex h-9 w-full items-center overflow-hidden whitespace-nowrap rounded-md border border-[color-mix(in_oklch,var(--input)_5%,var(--border))] text-sm shadow-xs outline-none transition-[color,box-shadow] data-focus-within:border-ring data-disabled:opacity-50 data-focus-within:ring-[3px] data-focus-within:ring-ring/50 data-focus-within:has-aria-invalid:border-destructive data-focus-within:has-aria-invalid:ring-destructive/20 dark:data-focus-within:has-aria-invalid:ring-destructive/40">
             <Button
               className="-ms-px flex aspect-square h-[inherit] cursor-pointer items-center justify-center rounded-s-md border border-[color-mix(in_oklch,var(--input)_5%,var(--border))] bg-background text-muted-foreground/80 text-sm transition-[color,box-shadow] hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"

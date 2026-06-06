@@ -24,64 +24,50 @@ import {
 } from "@repo/design-system/components/ui/chart";
 import type { ReactNode } from "react";
 
-interface Props {
+interface FundChartProps {
   description: ReactNode;
   footnote: ReactNode;
   labels: {
-    electability: ReactNode;
-    notAnswering: string;
+    fund: ReactNode;
   };
   title: ReactNode;
+  yLabel: string;
 }
 
-export function ElectabilityChart({
+const fundChartData = [
+  {
+    year: "2015",
+    fund: 16.7,
+  },
+  {
+    year: "2016",
+    fund: 9.3,
+  },
+  {
+    year: "2017",
+    fund: 13.1,
+  },
+  {
+    year: "2018",
+    fund: 17.6,
+  },
+];
+
+/** Renders the social assistance fund chart with MDX-owned copy. */
+export function FundChart({
   title,
   description,
+  yLabel,
   footnote,
   labels,
-}: Props) {
-  const electabilityData = [
-    {
-      name: "Anies Baswedan",
-      value: 40,
-    },
-    {
-      name: "Basuki Tjahaja Purnama",
-      value: 24,
-    },
-    {
-      name: "Ridwan Kamil",
-      value: 13,
-    },
-    {
-      name: "Tri Rismaharini",
-      value: 1,
-    },
-    {
-      name: "Erick Tohir",
-      value: 1,
-    },
-    {
-      name: "Erwin Aksa",
-      value: 1,
-    },
-    {
-      name: "Ahmad Sahroni",
-      value: 1,
-    },
-    {
-      name: labels.notAnswering,
-      value: 16,
-    },
-  ];
-
+}: FundChartProps) {
   const chartConfig = {
-    value: {
-      label: labels.electability,
-      colors: { light: ["var(--chart-3)"] },
+    fund: {
+      label: labels.fund,
+      colors: { light: ["var(--chart-5)"] },
     },
     label: {
-      colors: { light: ["var(--background)"] },
+      colors: { light: ["var(--foreground)"] },
     },
   } satisfies ChartConfig;
 
@@ -95,42 +81,39 @@ export function ElectabilityChart({
         <ChartContainer config={chartConfig}>
           <ChartBarChart
             accessibilityLayer
-            data={electabilityData}
-            layout="vertical"
+            data={fundChartData}
             margin={{
-              right: 24,
-              left: 81,
+              right: 16,
             }}
           >
-            <ChartCartesianGrid horizontal={false} />
-            <ChartYAxis
+            <ChartCartesianGrid vertical={false} />
+            <ChartXAxis
               axisLine={false}
-              dataKey="name"
-              hide
+              dataKey="year"
               tickLine={false}
               tickMargin={10}
-              type="category"
             />
-            <ChartXAxis dataKey="value" hide type="number" />
+            <ChartYAxis
+              axisLine={false}
+              label={{
+                value: yLabel,
+                angle: -90,
+                position: "insideLeft",
+                style: { textAnchor: "middle" },
+              }}
+              tickLine={false}
+            />
             <ChartTooltip
               content={<ChartTooltipContent indicator="line" />}
               cursor={false}
             />
-            <ChartBar dataKey="value" fill="var(--color-value-0)" radius={8}>
+            <ChartBar dataKey="fund" fill="var(--color-fund-0)" radius={8}>
               <ChartLabelList
                 className="fill-foreground"
-                dataKey="name"
-                fontSize={12}
-                offset={10}
-                position="left"
-                width={75}
-              />
-              <ChartLabelList
-                className="fill-foreground"
-                dataKey="value"
+                dataKey="fund"
                 fontSize={12}
                 offset={8}
-                position="right"
+                position="top"
               />
             </ChartBar>
             <ChartLegend content={<ChartLegendContent />} />

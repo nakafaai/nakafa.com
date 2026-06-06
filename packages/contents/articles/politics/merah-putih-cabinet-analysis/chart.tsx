@@ -9,48 +9,46 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import {
+  ChartBar,
+  ChartBarChart,
+  ChartCartesianGrid,
   type ChartConfig,
   ChartContainer,
+  ChartLabelList,
   ChartLegend,
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
+  ChartXAxis,
+  ChartYAxis,
 } from "@repo/design-system/components/ui/chart";
 import type { ReactNode } from "react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  LabelList,
-  XAxis,
-  YAxis,
-} from "recharts";
 
 const TICK_LABEL_CHAR_LIMIT = 3;
 
 interface SharedProps {
-  description: string;
+  description: ReactNode;
   footnote: ReactNode;
-  title: string;
+  title: ReactNode;
 }
 
 interface CabinetChartProps extends SharedProps {
   labels: {
-    cabinet: string;
+    cabinet: ReactNode;
   };
 }
 
 interface CompositionChartProps extends SharedProps {
   labels: {
-    female: string;
+    female: ReactNode;
     gender: string;
-    incumbent: string;
-    male: string;
+    incumbent: ReactNode;
+    male: ReactNode;
     minister: string;
-    new: string;
-    nonPoliticians: string;
+    new: ReactNode;
+    nonPoliticians: ReactNode;
     politicalStatus: string;
-    politicians: string;
+    politicians: ReactNode;
   };
 }
 
@@ -89,7 +87,7 @@ export function CabinetChart({
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>
-          <BarChart
+          <ChartBarChart
             accessibilityLayer
             data={CabinetChartData}
             layout="vertical"
@@ -97,8 +95,8 @@ export function CabinetChart({
               right: 16,
             }}
           >
-            <CartesianGrid horizontal={false} />
-            <YAxis
+            <ChartCartesianGrid horizontal={false} />
+            <ChartYAxis
               axisLine={false}
               dataKey="name"
               hide
@@ -107,29 +105,33 @@ export function CabinetChart({
               tickMargin={10}
               type="category"
             />
-            <XAxis dataKey="cabinet" hide type="number" />
+            <ChartXAxis dataKey="cabinet" hide type="number" />
             <ChartTooltip
               content={<ChartTooltipContent indicator="line" />}
               cursor={false}
             />
-            <Bar dataKey="cabinet" fill="var(--color-cabinet-0)" radius={8}>
-              <LabelList
+            <ChartBar
+              dataKey="cabinet"
+              fill="var(--color-cabinet-0)"
+              radius={8}
+            >
+              <ChartLabelList
                 className="fill-(--color-label)"
                 dataKey="name"
                 fontSize={12}
                 offset={8}
                 position="insideLeft"
               />
-              <LabelList
+              <ChartLabelList
                 className="fill-foreground"
                 dataKey="cabinet"
                 fontSize={12}
                 offset={8}
                 position="right"
               />
-            </Bar>
+            </ChartBar>
             <ChartLegend content={<ChartLegendContent />} />
-          </BarChart>
+          </ChartBarChart>
         </ChartContainer>
       </CardContent>
       <CardFooter>
@@ -197,9 +199,9 @@ export function CompositionChart({
             className="aspect-square sm:aspect-square"
             config={chartConfig}
           >
-            <BarChart accessibilityLayer data={MinisterChartData}>
-              <CartesianGrid vertical={false} />
-              <XAxis
+            <ChartBarChart accessibilityLayer data={MinisterChartData}>
+              <ChartCartesianGrid vertical={false} />
+              <ChartXAxis
                 axisLine={false}
                 dataKey="name"
                 tickLine={false}
@@ -209,23 +211,23 @@ export function CompositionChart({
                 content={<ChartTooltipContent indicator="line" />}
                 cursor={false}
               />
-              <Bar dataKey="new" fill="var(--color-new-0)" radius={8} />
-              <Bar
+              <ChartBar dataKey="new" fill="var(--color-new-0)" radius={8} />
+              <ChartBar
                 dataKey="incumbent"
                 fill="var(--color-incumbent-0)"
                 radius={8}
               />
               <ChartLegend content={<ChartLegendContent />} />
-            </BarChart>
+            </ChartBarChart>
           </ChartContainer>
 
           <ChartContainer
             className="aspect-square sm:aspect-square"
             config={chartConfig}
           >
-            <BarChart data={GenderChartData}>
-              <CartesianGrid vertical={false} />
-              <XAxis
+            <ChartBarChart data={GenderChartData}>
+              <ChartCartesianGrid vertical={false} />
+              <ChartXAxis
                 axisLine={false}
                 dataKey="name"
                 tickLine={false}
@@ -235,19 +237,23 @@ export function CompositionChart({
                 content={<ChartTooltipContent indicator="line" />}
                 cursor={false}
               />
-              <Bar dataKey="male" fill="var(--color-male-0)" radius={8} />
-              <Bar dataKey="female" fill="var(--color-female-0)" radius={8} />
+              <ChartBar dataKey="male" fill="var(--color-male-0)" radius={8} />
+              <ChartBar
+                dataKey="female"
+                fill="var(--color-female-0)"
+                radius={8}
+              />
               <ChartLegend content={<ChartLegendContent />} />
-            </BarChart>
+            </ChartBarChart>
           </ChartContainer>
 
           <ChartContainer
             className="aspect-square sm:aspect-square"
             config={chartConfig}
           >
-            <BarChart data={PoliticalStatusChartData}>
-              <CartesianGrid vertical={false} />
-              <XAxis
+            <ChartBarChart data={PoliticalStatusChartData}>
+              <ChartCartesianGrid vertical={false} />
+              <ChartXAxis
                 axisLine={false}
                 dataKey="name"
                 tickLine={false}
@@ -257,18 +263,18 @@ export function CompositionChart({
                 content={<ChartTooltipContent indicator="line" />}
                 cursor={false}
               />
-              <Bar
+              <ChartBar
                 dataKey="politician"
                 fill="var(--color-politician-0)"
                 radius={8}
               />
-              <Bar
+              <ChartBar
                 dataKey="non_politician"
                 fill="var(--color-non_politician-0)"
                 radius={8}
               />
               <ChartLegend content={<ChartLegendContent />} />
-            </BarChart>
+            </ChartBarChart>
           </ChartContainer>
         </div>
       </CardContent>

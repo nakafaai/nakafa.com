@@ -13,7 +13,6 @@
     "@effect/platform": "0.96.1",
     "@effect/platform-node": "0.106.0",
     "@hugeicons/core-free-icons": "^4.2.0",
-    "@hugeicons/react": "^1.1.6",
     "@mantine/hooks": "^9.2.2",
     "@repo/design-system": "workspace:*",
     "@repo/internationalization": "workspace:*",
@@ -24,8 +23,7 @@
     "motion": "^12.40.0",
     "next-intl": "^4.13.0",
     "react": "19.2.6",
-    "react-aria-components": "^1.18.0",
-    "recharts": "^3.8.1"
+    "react-aria-components": "^1.18.0"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",

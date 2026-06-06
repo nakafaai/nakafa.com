@@ -14,7 +14,7 @@ import {
   BACHELOR_MATERIALS,
   HIGH_SCHOOL_MATERIALS,
 } from "@repo/contents/_types/subject/material";
-import { Effect, Option, Schema } from "effect";
+import { Effect, Array as EffectArray, Option, Schema } from "effect";
 
 const orderedGrades = [...NUMERIC_GRADES, ...NON_NUMERIC_GRADES];
 const orderedMaterials = [...HIGH_SCHOOL_MATERIALS, ...BACHELOR_MATERIALS];
@@ -51,12 +51,12 @@ export const getCategoryGrades = Effect.fn(
 )(function* (category: SubjectCategory) {
   const categoryPath = getCategoryPath(category).slice(1);
   const gradeFolders = new Set(
-    (yield* getFolderChildNames(categoryPath).pipe(
-      Effect.orElse(() => Effect.succeed([]))
-    ))
-      .map(parseGrade)
-      .filter(Option.isSome)
-      .map((grade) => grade.value)
+    EffectArray.filterMap(
+      yield* getFolderChildNames(categoryPath).pipe(
+        Effect.orElse(() => Effect.succeed([]))
+      ),
+      parseGrade
+    )
   );
 
   return orderedGrades.filter((grade) => gradeFolders.has(grade));

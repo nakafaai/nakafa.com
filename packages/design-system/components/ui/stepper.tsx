@@ -234,6 +234,7 @@ function StepperIndicator({
 
 // StepperTitle
 function StepperTitle({
+  children,
   className,
   ...props
 }: React.HTMLAttributes<HTMLHeadingElement>) {
@@ -242,7 +243,9 @@ function StepperTitle({
       className={cn("font-medium text-sm", className)}
       data-slot="stepper-title"
       {...props}
-    />
+    >
+      {children}
+    </h3>
   );
 }
 

@@ -1,6 +1,15 @@
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import type { ReactNode } from "react";
 
-export function ReadingRoomProblem() {
+interface ReadingRoomProblemProps {
+  heightLabel: ReactNode;
+  widthLabel: ReactNode;
+}
+
+export function ReadingRoomProblem({
+  heightLabel,
+  widthLabel,
+}: ReadingRoomProblemProps) {
   return (
     <div className="my-6 grid place-items-center">
       <div className="relative w-full max-w-md">
@@ -26,10 +35,10 @@ export function ReadingRoomProblem() {
 
           {/* Dimension labels */}
           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 -translate-y-2 transform text-center">
-            <span>6 m</span>
+            <span>{widthLabel}</span>
           </div>
           <div className="absolute top-1/2 -right-1 -translate-x-4 -translate-y-1/2 transform text-center">
-            <span>4 m</span>
+            <span>{heightLabel}</span>
           </div>
 
           {/* "x" labels - Positioned to match the reference layout */}

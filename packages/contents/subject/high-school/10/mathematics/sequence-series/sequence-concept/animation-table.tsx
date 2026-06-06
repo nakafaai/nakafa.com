@@ -2,6 +2,7 @@
 
 import { Clock04Icon, PauseIcon, PlayIcon } from "@hugeicons/core-free-icons";
 import { useIntersection, useMediaQuery } from "@mantine/hooks";
+import { getTableChairArrangement } from "@repo/contents/subject/high-school/10/mathematics/sequence-series/sequence-concept/animation-table-arrangement";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Card,
@@ -21,6 +22,7 @@ import {
 } from "motion/react";
 import { div as MotionDiv } from "motion/react-m";
 import {
+  type ReactNode,
   useCallback,
   useDeferredValue,
   useEffect,
@@ -28,42 +30,29 @@ import {
   useState,
 } from "react";
 
-// Constants for animation and layout
 const MAX_TABLES_MOBILE = 2;
 const MAX_TABLES_DESKTOP = 3;
 const ANIMATION_INTERVAL_MS = 2000;
-const INITIAL_SIDE_CHAIRS = 2;
 const STAGGER_DELAY = 0.01;
 const SPEED_HALF = 0.5;
 const SPEED_NORMAL = 1;
 const SPEED_FAST = 1.5;
 const SPEED_VERY_FAST = 2;
 const SPEED_VALUES = [SPEED_HALF, SPEED_NORMAL, SPEED_FAST, SPEED_VERY_FAST];
-const CHAIR_SIZE = 24;
 const Z_INDEX_TABLE = 10;
 const Z_INDEX_CHAIR = 20;
 
 interface TableChairsProps {
-  labels?: {
-    title?: string;
-    table?: string;
-    chair?: string;
+  labels: {
+    title: ReactNode;
+    table: string;
+    chair: string;
+    reset: string;
+    pause: string;
+    play: string;
+    setSpeed: string;
+    setTableCount: string;
   };
-}
-
-interface TableItem {
-  height: number;
-  id: number;
-  width: number;
-  x: number;
-  y: number;
-}
-
-interface ChairItem {
-  id: number;
-  side: "left" | "right" | "top" | "bottom";
-  x: number;
-  y: number;
 }
 
 /**
@@ -76,13 +65,7 @@ interface ChairItem {
  * @see https://motion.dev/docs/react-accessibility
  * @see https://motion.dev/docs/react-layout-animations
  */
-export default function TableChairsAnimation({
-  labels = {
-    title: "Table and Chair Sequence Pattern",
-    table: "Table",
-    chair: "Chair",
-  },
-}: TableChairsProps) {
+export default function TableChairsAnimation({ labels }: TableChairsProps) {
   const [tableCount, setTableCount] = useState(1);
   const [speed, setSpeed] = useState(1);
   const [isPlaying, setIsPlaying] = useState(true);
@@ -143,110 +126,10 @@ export default function TableChairsAnimation({
     setIsPlaying(!isPlaying);
   }, [isPlaying, tableCount, maxTables]);
 
-  // Constants for sizing and spacing
-  const tableWidth = 100;
-  const tableHeight = 80;
-  const tableSpacing = 4; // Gap between tables
-  const chairOffset = 8; // Distance of chair from table edge
-
-  // Generate arrangement of tables and chairs
-  const arrangement = useMemo(() => {
-    const tables: TableItem[] = [];
-    const chairs: ChairItem[] = [];
-
-    // Calculate total width of all tables
-    const totalWidth = deferredTableCount * tableWidth;
-
-    // For single table
-    if (deferredTableCount === 1) {
-      tables.push({
-        id: 1,
-        x: 0,
-        y: 0,
-        width: tableWidth,
-        height: tableHeight,
-      });
-
-      // Add 4 chairs around the table (positioned at midpoints of each side)
-      chairs.push(
-        {
-          id: 1,
-          x: -CHAIR_SIZE - chairOffset,
-          y: tableHeight / 2 - CHAIR_SIZE / 2,
-          side: "left",
-        },
-        {
-          id: 2,
-          x: tableWidth + chairOffset,
-          y: tableHeight / 2 - CHAIR_SIZE / 2,
-          side: "right",
-        },
-        {
-          id: 3,
-          x: tableWidth / 2 - CHAIR_SIZE / 2,
-          y: -CHAIR_SIZE - chairOffset,
-          side: "top",
-        },
-        {
-          id: 4,
-          x: tableWidth / 2 - CHAIR_SIZE / 2,
-          y: tableHeight + chairOffset,
-          side: "bottom",
-        }
-      );
-    } else {
-      // For multiple tables
-      for (let i = 0; i < deferredTableCount; i += 1) {
-        tables.push({
-          id: i + 1,
-          x: i * (tableWidth + tableSpacing),
-          y: 0,
-          width: tableWidth,
-          height: tableHeight,
-        });
-      }
-
-      // Add chairs on the left side of the leftmost table
-      chairs.push({
-        id: 1,
-        x: -CHAIR_SIZE - chairOffset, // No need to add spacing between tables for the first chair
-        y: tableHeight / 2 - CHAIR_SIZE / 2,
-        side: "left",
-      });
-
-      // Add chairs on the right side of the rightmost table
-      chairs.push({
-        id: 2,
-        x: totalWidth + chairOffset + (deferredTableCount - 1) * tableSpacing, // Add spacing between tables
-        y: tableHeight / 2 - CHAIR_SIZE / 2,
-        side: "right",
-      });
-
-      // Add chairs on the top of each table
-      for (let i = 0; i < deferredTableCount; i += 1) {
-        chairs.push({
-          id: INITIAL_SIDE_CHAIRS + 1 + i,
-          x:
-            i * tableWidth + tableWidth / 2 - CHAIR_SIZE / 2 + i * tableSpacing, // Add spacing between tables
-          y: -CHAIR_SIZE - chairOffset,
-          side: "top",
-        });
-      }
-
-      // Add chairs on the bottom of each table
-      for (let i = 0; i < deferredTableCount; i += 1) {
-        chairs.push({
-          id: INITIAL_SIDE_CHAIRS + 1 + deferredTableCount + i,
-          x:
-            i * tableWidth + tableWidth / 2 - CHAIR_SIZE / 2 + i * tableSpacing, // Add spacing between tables
-          y: tableHeight + chairOffset,
-          side: "bottom",
-        });
-      }
-    }
-
-    return { tables, chairs };
-  }, [deferredTableCount]);
+  const arrangement = useMemo(
+    () => getTableChairArrangement(deferredTableCount),
+    [deferredTableCount]
+  );
 
   return (
     <Card className="content-auto-card" ref={ref}>
@@ -265,10 +148,8 @@ export default function TableChairsAnimation({
               <div
                 className="relative"
                 style={{
-                  width:
-                    deferredTableCount * tableWidth +
-                    (deferredTableCount - 1) * tableSpacing,
-                  height: tableHeight,
+                  width: arrangement.width,
+                  height: arrangement.height,
                 }}
               >
                 <MotionConfig reducedMotion="user">
@@ -314,8 +195,8 @@ export default function TableChairsAnimation({
                             style={{
                               left: chair.x,
                               top: chair.y,
-                              width: CHAIR_SIZE,
-                              height: CHAIR_SIZE,
+                              width: arrangement.chairSize,
+                              height: arrangement.chairSize,
                               zIndex: Z_INDEX_CHAIR,
                             }}
                             transition={{
@@ -340,29 +221,31 @@ export default function TableChairsAnimation({
         <div className="flex w-full flex-col items-center justify-between gap-4 px-6 sm:flex-row">
           <div className="flex justify-between gap-2">
             <Button
-              aria-label="Reset"
+              aria-label={labels.reset}
               onClick={resetAnimation}
               size="icon"
               variant="outline"
             >
               <HugeIcons icon={Clock04Icon} />
-              <span className="sr-only">Reset</span>
+              <span className="sr-only">{labels.reset}</span>
             </Button>
             <Button
-              aria-label={isPlaying ? "Pause" : "Play"}
+              aria-label={isPlaying ? labels.pause : labels.play}
               onClick={togglePlayPause}
               size="icon"
               variant={isPlaying ? "outline" : "default"}
             >
               <HugeIcons icon={isPlaying ? PauseIcon : PlayIcon} />
-              <span className="sr-only">{isPlaying ? "Pause" : "Play"}</span>
+              <span className="sr-only">
+                {isPlaying ? labels.pause : labels.play}
+              </span>
             </Button>
           </div>
 
           <div className="flex flex-wrap justify-center gap-2">
             {SPEED_VALUES.map((speedValue) => (
               <Button
-                aria-label={`Set speed to ${speedValue}x`}
+                aria-label={`${labels.setSpeed} ${speedValue}x`}
                 key={speedValue}
                 onClick={() => setSpeed(speedValue)}
                 size="sm"
@@ -379,7 +262,7 @@ export default function TableChairsAnimation({
             {Array.from({ length: maxTables }, (_, index) => index + 1).map(
               (count) => (
                 <Button
-                  aria-label={`Set table count to ${count}`}
+                  aria-label={`${labels.setTableCount} ${count}`}
                   key={`table-count-${count}`}
                   onClick={() => {
                     setTableCount(count);

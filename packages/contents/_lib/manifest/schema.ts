@@ -27,31 +27,31 @@ export const ContentManifestRouteSchema = Schema.String.pipe(
   Schema.brand("@Nakafa/ContentManifestRoute")
 );
 
-export const ContentManifestRouteArraySchema = Schema.Array(
+const ContentManifestRouteArraySchema = Schema.Array(
   ContentManifestRouteSchema
 ).pipe(Schema.mutable);
 
-export const ContentManifestRouteEntrySchema = Schema.Struct({
+const ContentManifestRouteEntrySchema = Schema.Struct({
   locale: Schema.String,
   slug: Schema.String,
 }).pipe(Schema.mutable);
 
-export const LocaleSlugEntrySchema = Schema.Struct({
+const LocaleSlugEntrySchema = Schema.Struct({
   locale: Schema.String,
   slugs: mutableStringArray,
 }).pipe(Schema.mutable);
 
-export const ContentPathCandidateSchema = Schema.Struct({
+const ContentPathCandidateSchema = Schema.Struct({
   fullPath: Schema.String,
   slugParts: mutableStringArray,
 }).pipe(Schema.mutable);
 
-export const ContentManifestStaticParamSchema = Schema.Struct({
+const ContentManifestStaticParamSchema = Schema.Struct({
   locale: Schema.String,
   slug: mutableStringArray,
 }).pipe(Schema.mutable);
 
-export const ContentManifestRedirectsSchema = Schema.Array(
+const ContentManifestRedirectsSchema = Schema.Array(
   Schema.Tuple(ContentManifestRouteSchema, ContentManifestRouteSchema)
 ).pipe(Schema.mutable);
 
@@ -90,7 +90,7 @@ export const ContentRouteManifestSchema = Schema.Struct({
   }).pipe(Schema.mutable),
 }).pipe(Schema.mutable);
 
-export const ContentRouteParamManifestSchema = Schema.Struct({
+const ContentRouteParamManifestSchema = Schema.Struct({
   version: Schema.Number,
   exerciseApiParams: Schema.Array(ContentManifestStaticParamSchema).pipe(
     Schema.mutable
@@ -120,7 +120,7 @@ export const ContentRouteParamManifestSchema = Schema.Struct({
   }).pipe(Schema.mutable),
 }).pipe(Schema.mutable);
 
-export const ContentStaticParamManifestSchema = Schema.Struct({
+const ContentStaticParamManifestSchema = Schema.Struct({
   version: Schema.Number,
   localeParams: Schema.Array(ContentManifestStaticParamSchema).pipe(
     Schema.mutable

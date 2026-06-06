@@ -6,12 +6,16 @@ import {
 } from "@repo/design-system/components/contents/physics/kinematics/non-uniform-linear-motion/data";
 import type { ChartConfig } from "@repo/design-system/components/ui/chart";
 import {
+  ChartArea,
+  ChartAreaChart,
+  ChartCartesianGrid,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
+  ChartXAxis,
+  ChartYAxis,
   getColorVariable,
 } from "@repo/design-system/components/ui/chart";
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 const MAX_TIME = getAxisMaximum(
   Math.max(...GLBB_SCENARIOS.map((scenario) => scenario.duration)),
@@ -55,9 +59,9 @@ export function VelocityTimeGraph({
       className="aspect-[1.45] sm:aspect-video"
       config={chartConfig}
     >
-      <AreaChart accessibilityLayer data={chartData} margin={CHART_MARGIN}>
-        <CartesianGrid />
-        <XAxis
+      <ChartAreaChart accessibilityLayer data={chartData} margin={CHART_MARGIN}>
+        <ChartCartesianGrid />
+        <ChartXAxis
           dataKey="time"
           domain={[0, MAX_TIME]}
           height={56}
@@ -70,7 +74,7 @@ export function VelocityTimeGraph({
           ticks={TIME_TICKS}
           type="number"
         />
-        <YAxis
+        <ChartYAxis
           domain={[0, MAX_VELOCITY]}
           label={{
             value: labels.velocityAxis,
@@ -85,7 +89,7 @@ export function VelocityTimeGraph({
         <ChartTooltip
           content={<ChartTooltipContent labelFormatter={formatTooltipTime} />}
         />
-        <Area
+        <ChartArea
           activeDot={{ r: 4 }}
           baseValue={0}
           dataKey="velocity"
@@ -98,7 +102,7 @@ export function VelocityTimeGraph({
           strokeWidth={2}
           type="linear"
         />
-      </AreaChart>
+      </ChartAreaChart>
     </ChartContainer>
   );
 }
