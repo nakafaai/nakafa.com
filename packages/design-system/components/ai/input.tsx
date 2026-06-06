@@ -58,6 +58,26 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+
+const submitTextareaOnEnter: KeyboardEventHandler<HTMLTextAreaElement> = (
+  event
+) => {
+  if (event.key !== "Enter") {
+    return;
+  }
+
+  if (event.nativeEvent.isComposing) {
+    return;
+  }
+
+  if (event.shiftKey) {
+    return;
+  }
+
+  event.preventDefault();
+  event.currentTarget.form?.requestSubmit();
+};
+
 // ============================================================================
 // Provider Context & Types
 // ============================================================================
@@ -363,6 +383,17 @@ export function PromptInputAttachments({
     return null;
   }
 
+  const fileAttachments: typeof attachments.files = [];
+  const imageAttachments: typeof attachments.files = [];
+
+  for (const file of attachments.files) {
+    if (file.mediaType?.startsWith("image/") && file.url) {
+      imageAttachments.push(file);
+    } else {
+      fileAttachments.push(file);
+    }
+  }
+
   return (
     <InputGroupAddon
       align="block-start"
@@ -374,20 +405,16 @@ export function PromptInputAttachments({
       style={{ height: attachments.files.length ? height : 0 }}
       {...props}
     >
-      <div className="space-y-2 py-1" ref={contentRef}>
+      <div className="flex flex-col gap-2 py-1" ref={contentRef}>
         <div className="flex flex-wrap gap-2">
-          {attachments.files
-            .filter((f) => !(f.mediaType?.startsWith("image/") && f.url))
-            .map((file) => (
-              <Fragment key={file.id}>{children(file)}</Fragment>
-            ))}
+          {fileAttachments.map((file) => (
+            <Fragment key={file.id}>{children(file)}</Fragment>
+          ))}
         </div>
         <div className="flex flex-wrap gap-2">
-          {attachments.files
-            .filter((f) => f.mediaType?.startsWith("image/") && f.url)
-            .map((file) => (
-              <Fragment key={file.id}>{children(file)}</Fragment>
-            ))}
+          {imageAttachments.map((file) => (
+            <Fragment key={file.id}>{children(file)}</Fragment>
+          ))}
         </div>
       </div>
     </InputGroupAddon>
@@ -819,19 +846,6 @@ export const PromptInputTextarea = ({
   const controller = useOptionalPromptInputController();
   const attachments = usePromptInputAttachments();
 
-  const handleKeyDown: KeyboardEventHandler<HTMLTextAreaElement> = (e) => {
-    if (e.key === "Enter") {
-      if (e.nativeEvent.isComposing) {
-        return;
-      }
-      if (e.shiftKey) {
-        return;
-      }
-      e.preventDefault();
-      e.currentTarget.form?.requestSubmit();
-    }
-  };
-
   const handlePaste: ClipboardEventHandler<HTMLTextAreaElement> = (event) => {
     const items = event.clipboardData?.items;
 
@@ -872,7 +886,7 @@ export const PromptInputTextarea = ({
     <InputGroupTextarea
       className={cn("field-sizing-content max-h-48 min-h-16", className)}
       name="message"
-      onKeyDown={handleKeyDown}
+      onKeyDown={submitTextareaOnEnter}
       onPaste={handlePaste}
       placeholder={placeholder}
       {...props}

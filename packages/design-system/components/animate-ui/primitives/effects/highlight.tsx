@@ -1,7 +1,13 @@
 "use client";
 
 import { cn } from "@repo/design-system/lib/utils";
-import { AnimatePresence, motion, type Transition } from "motion/react";
+import {
+  AnimatePresence,
+  domAnimation,
+  LazyMotion,
+  m,
+  type Transition,
+} from "motion/react";
 import * as React from "react";
 
 const MS_TO_S = 1000;
@@ -251,7 +257,7 @@ function Highlight<T extends React.ElementType = "div">({
           <>
             <AnimatePresence initial={false} mode="wait">
               {!!boundsState && (
-                <motion.div
+                <m.div
                   animate={{
                     top: boundsState.top,
                     left: boundsState.left,
@@ -342,34 +348,36 @@ function Highlight<T extends React.ElementType = "div">({
 
   return (
     <HighlightContext.Provider value={contextValue}>
-      {(() => {
-        if (!enabled) {
-          return children;
-        }
-        if (controlledItems) {
-          return render(children);
-        }
-        return render(
-          React.Children.map(children, (child) => {
-            let childKey: string;
-            if (React.isValidElement(child) && child.key) {
-              childKey = child.key;
-            } else if (
-              React.isValidElement(child) &&
-              (child.props as { id?: string }).id
-            ) {
-              childKey = (child.props as { id?: string }).id as string;
-            } else {
-              childKey = Math.random().toString(RANDOM_KEY_RADIX);
-            }
-            return (
-              <HighlightItem className={props?.itemsClassName} key={childKey}>
-                {child}
-              </HighlightItem>
-            );
-          })
-        );
-      })()}
+      <LazyMotion features={domAnimation} strict>
+        {(() => {
+          if (!enabled) {
+            return children;
+          }
+          if (controlledItems) {
+            return render(children);
+          }
+          return render(
+            React.Children.map(children, (child) => {
+              let childKey: string;
+              if (React.isValidElement(child) && child.key) {
+                childKey = child.key;
+              } else if (
+                React.isValidElement(child) &&
+                (child.props as { id?: string }).id
+              ) {
+                childKey = (child.props as { id?: string }).id as string;
+              } else {
+                childKey = Math.random().toString(RANDOM_KEY_RADIX);
+              }
+              return (
+                <HighlightItem className={props?.itemsClassName} key={childKey}>
+                  {child}
+                </HighlightItem>
+              );
+            })
+          );
+        })()}
+      </LazyMotion>
     </HighlightContext.Provider>
   );
 }
@@ -570,7 +578,7 @@ function HighlightItem<T extends React.ElementType>({
         <>
           <AnimatePresence initial={false} mode="wait">
             {!!isActive && !isDisabled && (
-              <motion.div
+              <m.div
                 animate={{ opacity: 1 }}
                 className={cn(contextClassName, activeClassName)}
                 data-slot="motion-highlight"
@@ -632,7 +640,7 @@ function HighlightItem<T extends React.ElementType>({
       {mode === "children" && (
         <AnimatePresence initial={false} mode="wait">
           {!!isActive && !isDisabled && (
-            <motion.div
+            <m.div
               animate={{ opacity: 1 }}
               className={cn(contextClassName, activeClassName)}
               data-slot="motion-highlight"
