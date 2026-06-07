@@ -29,6 +29,7 @@ export function buildContentSearchExcerpt(
   return sliceExcerpt(text, matchIndex);
 }
 
+/** Extracts deduplicated search terms from the query variants. */
 function getUniqueQueryTokens(queryTexts: readonly string[]) {
   const tokens: string[] = [];
   const seen = new Set<string>();
@@ -51,10 +52,12 @@ function getUniqueQueryTokens(queryTexts: readonly string[]) {
   return tokens;
 }
 
+/** Collapses whitespace so excerpts stay compact and deterministic. */
 function normalizeText(value: string) {
   return value.replace(WHITESPACE_PATTERN, " ").trim();
 }
 
+/** Finds the earliest occurrence of any query token in normalized text. */
 function getFirstTokenIndex(text: string, tokens: readonly string[]) {
   const lowerText = text.toLowerCase();
   let firstIndex = -1;
@@ -74,6 +77,7 @@ function getFirstTokenIndex(text: string, tokens: readonly string[]) {
   return firstIndex;
 }
 
+/** Truncates unmatched fallback text to the configured excerpt length. */
 function truncateExcerpt(text: string) {
   if (text.length <= EXCERPT_MAX_LENGTH) {
     return text;
@@ -82,6 +86,7 @@ function truncateExcerpt(text: string) {
   return `${text.slice(0, EXCERPT_MAX_LENGTH).trim()}...`;
 }
 
+/** Slices a contextual excerpt around the first matched token. */
 function sliceExcerpt(text: string, matchIndex: number) {
   if (text.length <= EXCERPT_MAX_LENGTH) {
     return text;
@@ -96,6 +101,7 @@ function sliceExcerpt(text: string, matchIndex: number) {
   return `${prefix}${text.slice(start, end).trim()}${suffix}`;
 }
 
+/** Moves an excerpt start to a nearby word boundary when available. */
 function getExcerptStart(text: string, start: number) {
   if (start === 0) {
     return 0;
@@ -110,6 +116,7 @@ function getExcerptStart(text: string, start: number) {
   return nextSpace + 1;
 }
 
+/** Moves an excerpt end to a nearby word boundary when available. */
 function getExcerptEnd(text: string, end: number) {
   if (end >= text.length) {
     return text.length;

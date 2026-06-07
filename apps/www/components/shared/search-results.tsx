@@ -27,6 +27,7 @@ interface SearchResultGroup {
   title: string;
 }
 
+/** Renders full-page Convex search states and grouped results. */
 export function SearchResults({
   results,
   query,
@@ -131,6 +132,7 @@ function ResultGroup({
   );
 }
 
+/** Resolves localized section labels for the search results page. */
 function useSearchSectionLabels(): Record<
   ContentSearchResultItem["section"],
   string
@@ -148,6 +150,7 @@ function useSearchSectionLabels(): Record<
   };
 }
 
+/** Groups flat Convex search results by section for page rendering. */
 function getSearchResultGroups(
   results: ContentSearchResultItem[],
   sectionLabels: Record<ContentSearchResultItem["section"], string>

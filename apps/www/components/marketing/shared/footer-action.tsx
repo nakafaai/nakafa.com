@@ -41,6 +41,7 @@ const flagMap = {
   id: ID,
 };
 
+/** Renders the footer language switcher. */
 function Language() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -59,6 +60,7 @@ function Language() {
     );
   }
 
+  /** Replaces the current route with the selected locale. */
   function handleChangeLocale(locale: Locale) {
     startTransition(() => {
       router.replace(

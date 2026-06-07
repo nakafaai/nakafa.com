@@ -110,12 +110,14 @@ function fetchRuntimeQuery<Query extends FunctionReference<"query">>(
   return client.query(query, args);
 }
 
+/** Forces official Convex client reads to bypass Next fetch caching. */
 const fetchNoStore: typeof fetch = (input, init) =>
   fetch(input, {
     ...init,
     cache: "no-store",
   });
 
+/** Wraps a Convex runtime query in the agent data-read error model. */
 function fetchContentRuntimeQuery<T>(name: string, read: () => Promise<T>) {
   return Effect.tryPromise({
     try: read,

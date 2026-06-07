@@ -57,6 +57,7 @@ export function getSearchExcerptParts(excerpt: string, query: string) {
     : [createPart({ highlighted: false, start: 0, text: excerpt })];
 }
 
+/** Creates one stable keyed text part for excerpt highlighting. */
 function createPart({
   highlighted,
   start,
@@ -73,10 +74,12 @@ function createPart({
   };
 }
 
+/** Builds a deterministic key from the part offset and text. */
 function getPartKey(start: number, text: string) {
   return `${start}:${text}`;
 }
 
+/** Extracts distinct query tokens used for excerpt highlighting. */
 function getHighlightTokens(query: string) {
   const tokens: string[] = [];
   const seen = new Set<string>();
@@ -99,6 +102,7 @@ function getHighlightTokens(query: string) {
   return tokens;
 }
 
+/** Escapes a query token before building the highlight pattern. */
 function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }

@@ -100,6 +100,7 @@ export function SearchCommand() {
   );
 }
 
+/** Coordinates debounced Convex content search inside the command dialog. */
 function SearchMain() {
   const t = useTranslations("Utils");
   const query = useSearch((state) => state.query);
@@ -240,6 +241,7 @@ function SearchList({ groups }: { groups: SearchCommandGroup[] }) {
   );
 }
 
+/** Renders one navigation or content result inside the command list. */
 function SearchListItem({
   isPending,
   item,
@@ -347,6 +349,7 @@ function useDefaultSearchGroups(): SearchCommandGroup[] {
   ];
 }
 
+/** Resolves localized section labels for grouped command search results. */
 function useSearchSectionLabels(): Record<
   ContentSearchResultItem["section"],
   string
@@ -364,6 +367,7 @@ function useSearchSectionLabels(): Record<
   };
 }
 
+/** Groups flat Convex search results by section for command rendering. */
 function getResultGroups(
   results: ContentSearchResultItem[],
   sectionLabels: Record<ContentSearchResultItem["section"], string>,

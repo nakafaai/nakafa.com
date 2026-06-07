@@ -24,6 +24,7 @@ const flagMap = {
   id: ID,
 };
 
+/** Renders the sidebar language switcher menu. */
 export function LangMenuSwitcher() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -43,6 +44,7 @@ export function LangMenuSwitcher() {
     );
   }
 
+  /** Replaces the current route with the selected locale. */
   function handleChangeLocale(locale: Locale) {
     startTransition(() => {
       router.replace(

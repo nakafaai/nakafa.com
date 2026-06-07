@@ -114,6 +114,7 @@ export async function generateMetadata({
   };
 }
 
+/** Loads the cached Convex article row used to build page metadata. */
 async function getArticleMetadataData({
   locale,
   category,
@@ -148,6 +149,7 @@ export function generateStaticParams() {
   });
 }
 
+/** Renders an article after Convex confirms the published route exists. */
 export default async function Page({
   params,
 }: PageProps<"/[locale]/articles/[category]/[slug]">) {
@@ -235,6 +237,7 @@ export default async function Page({
   );
 }
 
+/** Wraps the imported rich MDX article body in the material layout. */
 async function ArticleShell({
   locale,
   category,

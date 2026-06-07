@@ -168,6 +168,7 @@ export function generateStaticParams() {
   });
 }
 
+/** Renders a subject lesson after Convex confirms the published route exists. */
 export default async function Page({
   params,
 }: {
@@ -277,6 +278,7 @@ export default async function Page({
   );
 }
 
+/** Loads the cached Convex subject row and navigation data for metadata. */
 async function getSubjectMetadataData({
   locale,
   category,
@@ -337,6 +339,7 @@ type SubjectRuntimePage = NonNullable<
   Awaited<ReturnType<typeof getSubjectMetadataData>>["content"]
 >;
 
+/** Wraps the imported rich MDX subject body in the material layout. */
 async function SubjectShell({
   locale,
   material,

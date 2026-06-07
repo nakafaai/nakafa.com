@@ -9,6 +9,7 @@ import { getErrorMessage } from "@/lib/utils/error";
 
 const DEBOUNCE_TIME = 500;
 
+/** Connects the search page query string to Convex search results. */
 export function SearchListItems() {
   const [{ q }] = useQueryStates(searchParsers);
 

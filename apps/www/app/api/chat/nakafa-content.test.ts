@@ -91,6 +91,7 @@ const exerciseSetPage = {
   ],
 };
 
+/** Builds a typed Nakafa content reference for chat adapter tests. */
 function contentRef(
   route: string,
   section: NakafaAgentSection = "exercises",
@@ -99,6 +100,7 @@ function contentRef(
   return buildNakafaContentRef(locale, route, section);
 }
 
+/** Builds an exercise ref with an overridden route for normalization tests. */
 function looseExerciseRef(route: string) {
   return {
     ...contentRef(validSetPath),

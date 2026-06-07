@@ -46,6 +46,7 @@ function ActiveBadge({ isActive }: { isActive: boolean }) {
   );
 }
 
+/** Renders the nested preferences language submenu. */
 function LanguageSubmenuContent({ side }: { side: SubmenuSide }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -61,6 +62,7 @@ function LanguageSubmenuContent({ side }: { side: SubmenuSide }) {
     );
   }
 
+  /** Replaces the current route with the selected locale. */
   function handleChangeLocale(locale: Locale) {
     startTransition(() => {
       router.replace(
