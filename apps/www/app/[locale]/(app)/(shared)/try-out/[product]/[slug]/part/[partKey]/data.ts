@@ -1,20 +1,10 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
-import { getRenderableExercisesContent } from "@repo/contents/_lib/exercises/renderable";
 import { fetchQuery } from "convex/nextjs";
-import { Effect } from "effect";
 import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
 
-/**
- * Loads the public tryout details for one part route from the Convex read model.
- *
- * Convex content sync can publish this read model after a web deployment, so the
- * cache must stay short-lived instead of allowing a temporary miss to become a
- * persistent prerendered 404.
- *
- * Docs: https://nextjs.org/docs/app/api-reference/functions/cacheLife#prerendering-behavior
- */
+/** Loads the public tryout details for one part route inside a cacheable scope. */
 export async function getTryoutPartData(
   locale: Locale,
   product: TryoutProduct,
@@ -23,7 +13,7 @@ export async function getTryoutPartData(
 ) {
   "use cache";
 
-  cacheLife("seconds");
+  cacheLife("max");
 
   const details = await fetchQuery(
     api.tryouts.queries.tryouts.getTryoutDetails,
@@ -51,13 +41,23 @@ export async function getTryoutPartData(
   };
 }
 
-/** Loads one tryout exercise set as serializable exercise rows. */
+/** Loads one synced tryout exercise set from the Convex content read model. */
 export async function getTryoutExercises(locale: Locale, setSlug: string) {
   "use cache";
 
   cacheLife("max");
 
-  return await Effect.runPromise(
-    getRenderableExercisesContent(locale, setSlug)
+  const exercises = await fetchQuery(
+    api.exercises.queries.getRenderableRowsBySlug,
+    {
+      locale,
+      slug: setSlug,
+    }
   );
+
+  if (!exercises) {
+    throw new Error(`Synced exercise set is missing for tryout: ${setSlug}`);
+  }
+
+  return exercises;
 }

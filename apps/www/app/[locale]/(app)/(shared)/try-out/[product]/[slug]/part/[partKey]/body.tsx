@@ -123,10 +123,6 @@ export async function TryoutPartBody({
 
   const exercises = await getTryoutExercises(locale, contentPart.setSlug);
 
-  if (exercises.length === 0) {
-    notFound();
-  }
-
   const material = parseExercisesMaterial(contentPart.material);
   const partIcon = Option.isSome(material)
     ? getMaterialIcon(material.value)
