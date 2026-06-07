@@ -3,7 +3,7 @@ import {
   type AudioPlaybackArgs,
   AudioPlaybackIoError,
   audioPlaybackIoFailedCode,
-} from "@repo/backend/convex/audioStudies/queries/public.spec";
+} from "@repo/backend/convex/audioStudies/queries/public/spec";
 import { getUnknownErrorMessage } from "@repo/backend/convex/lib/effect";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { Effect } from "effect";

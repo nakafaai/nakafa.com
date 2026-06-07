@@ -61,7 +61,7 @@ export async function startCalibrationRunWorkflow(
  * Returns the single pending queue row for one attempt.
  *
  * Multiple rows for the same attempt indicate a broken queue invariant and are
- * rejected explicitly so the operator can repair the data instead of silently
+ * rejected explicitly so the operator can reconcile the data instead of silently
  * continuing with ambiguous state.
  */
 export async function getPendingCalibrationQueueEntryForAttempt(

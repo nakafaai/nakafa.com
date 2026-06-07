@@ -193,7 +193,7 @@ describe("customers/mutations", () => {
       };
     });
 
-    const repairedId = await t.mutation(
+    const reconciledId = await t.mutation(
       internal.customers.mutations.internal.upsertCustomer,
       {
         customer: {
@@ -211,7 +211,7 @@ describe("customers/mutations", () => {
 
     expect(customers).toHaveLength(1);
     expect(customers[0]).toMatchObject({
-      _id: repairedId,
+      _id: reconciledId,
       externalId: "auth-current",
       id: "polar-target",
       userId: state.currentUserId,

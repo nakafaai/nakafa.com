@@ -127,7 +127,7 @@ const ensureSubmissionDataFolder = Effect.fn(
   });
 });
 
-/** Loads submission history and converts the legacy flat file format. */
+/** Loads submission history and converts the older flat file format. */
 const loadSubmissionHistory = Effect.fn(
   "scripts.indexNow.loadSubmissionHistory"
 )(function* () {

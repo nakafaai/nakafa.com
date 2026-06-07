@@ -1,67 +1,15 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { internalQuery } from "@repo/backend/convex/_generated/server";
+import { getLatestCompletedCalibrationRunStartedAt } from "@repo/backend/convex/irt/integrity/impl";
 import {
-  internalQuery,
-  type QueryCtx,
-} from "@repo/backend/convex/_generated/server";
+  calibrationCacheIntegrityPageResultValidator,
+  calibrationQueueAttemptIntegrityPageResultValidator,
+  calibrationQueueEntryIntegrityPageResultValidator,
+  scaleQualityIntegrityPageResultValidator,
+} from "@repo/backend/convex/irt/integrity/spec";
 import { getCalibrationAttemptCacheLimit } from "@repo/backend/convex/irt/policy";
 import { getLatestScaleVersionForTryout } from "@repo/backend/convex/irt/scales/read";
 import { paginationOptsValidator } from "convex/server";
-import { v } from "convex/values";
-
-const calibrationCacheIntegrityPageResultValidator = v.object({
-  continueCursor: v.string(),
-  isDone: v.boolean(),
-  missingStatsSetCount: v.number(),
-  oversizedSetCount: v.number(),
-});
-
-const scaleQualityIntegrityPageResultValidator = v.object({
-  continueCursor: v.string(),
-  isDone: v.boolean(),
-  missingQualityCheckTryoutCount: v.number(),
-  unstartableTryoutCount: v.number(),
-});
-
-const calibrationQueueAttemptIntegrityPageResultValidator = v.object({
-  continueCursor: v.string(),
-  duplicatePendingAttemptCount: v.number(),
-  isDone: v.boolean(),
-  missingPendingQueueAttemptCount: v.number(),
-  staleAttemptQueueSetCount: v.number(),
-});
-
-const calibrationQueueEntryIntegrityPageResultValidator = v.object({
-  continueCursor: v.string(),
-  isDone: v.boolean(),
-  orphanedQueueEntryCount: v.number(),
-  staleQueueEntryCount: v.number(),
-});
-
-/** Return the latest successful calibration run start time for one set. */
-async function getLatestCompletedCalibrationRunStartedAt(
-  ctx: QueryCtx,
-  latestCompletedRunStartedAtBySetId: Map<
-    Id<"exerciseSets">,
-    number | undefined
-  >,
-  setId: Id<"exerciseSets">
-) {
-  if (latestCompletedRunStartedAtBySetId.has(setId)) {
-    return latestCompletedRunStartedAtBySetId.get(setId);
-  }
-
-  const latestCompletedRun = await ctx.db
-    .query("irtCalibrationRuns")
-    .withIndex("by_setId_and_status_and_startedAt", (q) =>
-      q.eq("setId", setId).eq("status", "completed")
-    )
-    .order("desc")
-    .first();
-  const startedAt = latestCompletedRun?.startedAt;
-
-  latestCompletedRunStartedAtBySetId.set(setId, startedAt);
-  return startedAt;
-}
 
 /**
  * Return the integrity totals for one bounded page of exercise sets.

@@ -1,5 +1,5 @@
 /**
- * Single source for sync-managed table counts used by Convex maintenance
+ * Single source for sync-managed table counts used by Convex reset
  * queries and the local sync scripts.
  */
 export const contentCountTables = [

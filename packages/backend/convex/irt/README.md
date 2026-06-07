@@ -213,7 +213,7 @@ not "otherwise Nakafa breaks." The stronger statement is:
 | `policy.ts` | Centralized operational model and convergence policy |
 | `calibration.ts` | Pure TypeScript 2PL calibration math |
 | `queries/internal/calibration.ts` | Paginated response extraction for calibration |
-| `queries/internal/maintenance.ts` | Operational cache integrity checks |
+| `integrity/internal.ts` | Operational cache integrity checks |
 | `actions/internal/calibration.ts` | Set-level calibration job assembly and execution |
 | `mutations/internal/responses.ts` | Calibration response cache sync entrypoints |
 | `mutations/internal/cache.ts` | Cache stats rebuild and trim entrypoints |

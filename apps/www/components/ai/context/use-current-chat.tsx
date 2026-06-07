@@ -32,8 +32,8 @@ export function CurrentChatProvider({
   chatId,
   children,
 }: PropsWithChildren<{ chatId: Id<"chats"> }>) {
-  const { isAuthenticated, isLoading } = useConvexAuth();
-  const queryArgs = isAuthenticated && !isLoading ? { chatId } : "skip";
+  const { isLoading } = useConvexAuth();
+  const queryArgs = isLoading ? "skip" : { chatId };
   const chat = useQuery(api.chats.queries.getChat, queryArgs);
   const { results, status, loadMore } = usePaginatedQuery(
     api.chats.queries.loadMessagesPage,

@@ -1,10 +1,11 @@
-import { getModelCreditCost, ModelIdSchema } from "@repo/ai/config/model";
+import { ModelIdSchema } from "@repo/ai/config/model";
 import { DEFAULT_TITLE } from "@repo/ai/features/constants";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import {
+  deleteExistingResponseByIdentifier,
+  getAssistantCreditUsage,
+} from "@repo/backend/convex/chats/assistantResponses/impl";
 import {
   deleteMessageBatchFromPoint,
-  getMessageByIdentifier,
   insertParts,
   verifyChatOwnership,
 } from "@repo/backend/convex/chats/helpers";
@@ -14,41 +15,11 @@ import tables, {
   messageGenerationErrorCodeValidator,
   modelIdValueValidator,
 } from "@repo/backend/convex/chats/schema";
-import {
-  getCreditResetGrantTransaction,
-  resolveEffectiveCreditState,
-} from "@repo/backend/convex/credits/helpers/state";
 import type { CreditTransactionMetadata } from "@repo/backend/convex/credits/schema";
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { ConvexError, v } from "convex/values";
-
-/** Deletes an existing assistant response marker before saving its replacement. */
-async function deleteExistingResponseByIdentifier(
-  ctx: MutationCtx,
-  chatId: Id<"chats">,
-  identifier: string
-) {
-  const existingMessage = await getMessageByIdentifier(ctx, chatId, identifier);
-
-  if (!existingMessage) {
-    return;
-  }
-
-  const deleteResult = await deleteMessageBatchFromPoint(
-    ctx,
-    chatId,
-    existingMessage._creationTime
-  );
-
-  if (deleteResult.hasMore) {
-    throw new ConvexError({
-      code: "CHAT_ASSISTANT_RESPONSE_REWRITE_EXCEEDED",
-      message: "Assistant response rewrite exceeded the supported batch size.",
-    });
-  }
-}
 
 /** Creates a new chat for the authenticated user. */
 export const createChat = mutation({
@@ -303,31 +274,10 @@ export const saveAssistantResponse = internalMutation({
       message.identifier
     );
 
-    let credits = 0;
-    let newBalance = appUser.credits;
-    let nextResetTimestamp = appUser.creditsResetAt;
-    let creditResetGrant: ReturnType<typeof getCreditResetGrantTransaction> =
-      null;
-
     const modelId = message.modelId
       ? ModelIdSchema.make(message.modelId)
       : undefined;
-
-    if (modelId) {
-      const effectiveCredits = await resolveEffectiveCreditState(
-        ctx.db,
-        appUser,
-        Date.now()
-      );
-
-      credits = getModelCreditCost(modelId);
-      newBalance = effectiveCredits.credits - credits;
-      nextResetTimestamp = effectiveCredits.creditsResetAt;
-      creditResetGrant = getCreditResetGrantTransaction(
-        appUser,
-        effectiveCredits
-      );
-    }
+    const creditUsage = await getAssistantCreditUsage(ctx, appUser, modelId);
 
     const messageId = await ctx.db.insert("messages", {
       chatId: message.chatId,
@@ -337,25 +287,30 @@ export const saveAssistantResponse = internalMutation({
       inputTokens: message.inputTokens,
       outputTokens: message.outputTokens,
       totalTokens: message.totalTokens,
-      credits: modelId ? credits : undefined,
+      credits: creditUsage?.credits,
       generationStatus: "complete",
     });
 
     const partIds = await insertParts(ctx, messageId, parts);
 
-    if (!modelId) {
-      return { messageId, partIds, credits, newBalance };
+    if (!(modelId && creditUsage)) {
+      return {
+        messageId,
+        partIds,
+        credits: 0,
+        newBalance: appUser.credits,
+      };
     }
 
     await ctx.db.patch("users", appUser._id, {
-      credits: newBalance,
-      creditsResetAt: nextResetTimestamp,
+      credits: creditUsage.newBalance,
+      creditsResetAt: creditUsage.nextResetTimestamp,
     });
 
-    if (creditResetGrant) {
+    if (creditUsage.resetGrant) {
       await ctx.db.insert("creditTransactions", {
         userId: appUser._id,
-        ...creditResetGrant,
+        ...creditUsage.resetGrant,
       });
     }
 
@@ -379,13 +334,18 @@ export const saveAssistantResponse = internalMutation({
 
     await ctx.db.insert("creditTransactions", {
       userId: appUser._id,
-      amount: -credits,
+      amount: -creditUsage.credits,
       type: "usage",
-      balanceAfter: newBalance,
+      balanceAfter: creditUsage.newBalance,
       metadata: usageMetadata,
     });
 
-    return { messageId, partIds, credits, newBalance };
+    return {
+      messageId,
+      partIds,
+      credits: creditUsage.credits,
+      newBalance: creditUsage.newBalance,
+    };
   },
 });
 

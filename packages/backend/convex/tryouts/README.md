@@ -59,13 +59,13 @@ That policy owns:
   event entitlements plus active subscription source-of-truth rows
 - Generic ranking still uses aggregate components for O(log n) rank lookups
 - Competition campaign windows are immutable after the first redemption so the
-  runtime never needs to repair old attempts after ops edits campaign policy
+  runtime never needs to rewrite old attempts after ops edits campaign policy
 - Competition result finalization goes straight from `pending` to `finalized`:
   exact end-time scheduling is primary, and the cron sweep is only overdue
-  repair
+  reconciliation
 - Auth cleanup deletes user-scoped tryout runtime, access, and leaderboard rows
   together so deleted users do not leave orphaned runtime state behind
-- Ops can verify access time-state integrity through bounded maintenance queries
+- Ops can verify access time-state integrity through bounded integrity queries
   in dev and prod
 
 ## Catalog Read Model
