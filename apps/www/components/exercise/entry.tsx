@@ -6,6 +6,8 @@ import { QuestionAnalytics } from "@/components/exercise/item/analytics";
 import { ExerciseArticle } from "@/components/exercise/item/article";
 import { importContentModuleOrNull } from "@/lib/content/module";
 
+type ExerciseEntryData = Pick<ExerciseWithoutDefaults, "choices" | "number">;
+
 /** Loads the compiled question module for one exercise entry. */
 async function QuestionContent({
   exerciseNumber,
@@ -62,7 +64,7 @@ function ExerciseEntryBody({
   setPath,
   srLabel,
 }: {
-  exercise: ExerciseWithoutDefaults;
+  exercise: ExerciseEntryData;
   id: string;
   locale: Locale;
   setPath: string;
@@ -101,7 +103,7 @@ export function ExerciseEntry({
   setPath,
   srLabel,
 }: {
-  exercise: ExerciseWithoutDefaults;
+  exercise: ExerciseEntryData;
   locale: Locale;
   setPath: string;
   srLabel: string;
@@ -126,7 +128,7 @@ export function ExerciseTrackedEntry({
   setPath,
   srLabel,
 }: {
-  exercise: ExerciseWithoutDefaults;
+  exercise: ExerciseEntryData;
   locale: Locale;
   setPath: string;
   srLabel: string;

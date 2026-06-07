@@ -170,6 +170,8 @@ import type * as exercises_answerScoring_spec from "../exercises/answerScoring/s
 import type * as exercises_helpers from "../exercises/helpers.js";
 import type * as exercises_mutations from "../exercises/mutations.js";
 import type * as exercises_queries from "../exercises/queries.js";
+import type * as exercises_renderable_impl from "../exercises/renderable/impl.js";
+import type * as exercises_renderable_spec from "../exercises/renderable/spec.js";
 import type * as exercises_utils from "../exercises/utils.js";
 import type * as functions from "../functions.js";
 import type * as http from "../http.js";
@@ -508,6 +510,8 @@ declare const fullApi: ApiFromModules<{
   "exercises/helpers": typeof exercises_helpers;
   "exercises/mutations": typeof exercises_mutations;
   "exercises/queries": typeof exercises_queries;
+  "exercises/renderable/impl": typeof exercises_renderable_impl;
+  "exercises/renderable/spec": typeof exercises_renderable_spec;
   "exercises/utils": typeof exercises_utils;
   functions: typeof functions;
   http: typeof http;
