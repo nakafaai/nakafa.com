@@ -22,8 +22,8 @@ import { nullable } from "convex-helpers/validators";
 
 /**
  * Get a chat by its ID.
- * Requires authentication. Public chats are accessible by any logged-in user.
- * Private chats are only accessible by the owner.
+ * Public chats are readable by signed-in and signed-out viewers.
+ * Private chats are only readable by the owner.
  */
 export const getChat = query({
   args: {

@@ -38,8 +38,10 @@ import {
 import { fetchAction, fetchMutation } from "convex/nextjs";
 import { Effect } from "effect";
 import type { getTranslations } from "next-intl/server";
+import { persistAssistantFailure } from "@/app/api/chat/failure";
 import { search as nakafaSearch } from "@/app/api/chat/nakafa";
 import { repairChatToolCall } from "@/app/api/chat/repair";
+import { getAssistantResponseFailure } from "@/app/api/chat/response";
 import {
   recordSpecialistUsage,
   recoverSpecialistFailure,
@@ -62,6 +64,7 @@ interface Params {
     id: Id<"chats">;
     isFirstMessage: boolean;
     messages: MyUIMessage[];
+    responseMessageId: string;
     token: string;
   };
   page: {
@@ -89,11 +92,41 @@ interface Params {
  *
  * @see https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#streaming-tool-calls
  * @see https://ai-sdk.dev/docs/reference/ai-sdk-core/stream-text#to-ui-message-stream
+ * @see https://ai-sdk.dev/docs/ai-sdk-ui/chatbot-message-persistence
  */
 export function streamChat({ chat, page, runtime, user }: Params) {
+  let failureScheduled = false;
+
+  /** Records a durable failed assistant turn when the streamed generation fails. */
+  const scheduleAssistantFailure = (error: unknown, errorLocation: string) => {
+    if (failureScheduled) {
+      return;
+    }
+    failureScheduled = true;
+    runtime.reportError(error, errorLocation);
+
+    waitUntil(
+      Effect.runPromise(
+        persistAssistantFailure({
+          chatId: chat.id,
+          modelId: runtime.modelId,
+          responseMessageId: chat.responseMessageId,
+          token: chat.token,
+        }).pipe(
+          Effect.catchAll((saveError) =>
+            Effect.sync(() =>
+              runtime.reportError(saveError, "saveAssistantFailure")
+            )
+          )
+        )
+      )
+    );
+  };
+
   return createUIMessageStream<MyUIMessage>({
+    generateId: () => chat.responseMessageId,
     onError: (error) => {
-      runtime.reportError(error, "createUIMessageStream");
+      scheduleAssistantFailure(error, "createUIMessageStream");
 
       if (error instanceof Error) {
         if (error.message.includes("Rate limit")) {
@@ -114,7 +147,27 @@ export function streamChat({ chat, page, runtime, user }: Params) {
       return runtime.translate("error-message");
     },
     originalMessages: chat.messages,
-    onFinish: ({ messages: updatedMessages, responseMessage }) => {
+    onFinish: ({
+      finishReason,
+      isAborted,
+      messages: updatedMessages,
+      responseMessage,
+    }) => {
+      if (failureScheduled) {
+        return;
+      }
+
+      const responseFailure = getAssistantResponseFailure({
+        finishReason,
+        isAborted,
+        responseMessage,
+      });
+
+      if (responseFailure) {
+        scheduleAssistantFailure(responseFailure, "chatResponseFinalization");
+        return;
+      }
+
       if (chat.isFirstMessage) {
         waitUntil(
           Effect.runPromise(
@@ -384,7 +437,7 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                 }
               },
               onError: (error) => {
-                runtime.reportError(error, "toUIMessageStream");
+                scheduleAssistantFailure(error, "toUIMessageStream");
 
                 if (error instanceof Error) {
                   if (error.message.includes("Rate limit")) {

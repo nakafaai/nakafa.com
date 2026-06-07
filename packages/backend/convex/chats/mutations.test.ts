@@ -1,4 +1,5 @@
 import posthogTest from "@posthog/convex/test";
+import { chatResponseFailureCode } from "@repo/ai/config/generation";
 import { getModelCreditCost, ModelIdSchema } from "@repo/ai/config/model";
 import { api, internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
@@ -113,6 +114,152 @@ describe("chats/mutations", () => {
           }),
         ],
         name: expect.stringContaining("capture"),
+      }),
+    ]);
+  });
+
+  it("persists a failed assistant response without deducting credits", async () => {
+    const t = convexTest(schema, convexModules);
+    posthogTest.register(t);
+
+    const { chatId, userId } = await t.mutation(async (ctx) => {
+      const userId = await ctx.db.insert("users", {
+        authId: "failed_chat_user_auth",
+        email: "failed-chat-user@example.com",
+        name: "Failed Chat User",
+        plan: "free",
+        credits: 10,
+        creditsResetAt: NOW,
+      });
+      const chatId = await ctx.db.insert("chats", {
+        updatedAt: NOW,
+        title: "Failure",
+        userId,
+        visibility: "private",
+        type: "study",
+      });
+
+      return { chatId, userId };
+    });
+
+    const result = await t.mutation(
+      internal.chats.mutations.saveAssistantFailure,
+      {
+        userId,
+        message: {
+          chatId,
+          identifier: "assistant-failed",
+          modelId: "nakafa-lite",
+          generationErrorCode: chatResponseFailureCode,
+        },
+      }
+    );
+
+    const savedState = await t.query(async (ctx) => ({
+      creditTransactions: await ctx.db.query("creditTransactions").collect(),
+      messages: await ctx.db.query("messages").collect(),
+      scheduledJobs: await ctx.db.system
+        .query("_scheduled_functions")
+        .collect(),
+      user: await ctx.db.get("users", userId),
+    }));
+
+    expect(result.messageId).toBeDefined();
+    expect(savedState.user?.credits).toBe(10);
+    expect(savedState.creditTransactions).toEqual([]);
+    expect(savedState.messages).toEqual([
+      expect.objectContaining({
+        chatId,
+        role: "assistant",
+        identifier: "assistant-failed",
+        modelId: "nakafa-lite",
+        generationStatus: "failed",
+        generationErrorCode: chatResponseFailureCode,
+      }),
+    ]);
+    expect(savedState.scheduledJobs).toEqual([
+      expect.objectContaining({
+        args: [
+          expect.objectContaining({
+            disableGeoip: true,
+            distinctId: userId,
+            event: "chat response failed",
+            properties: JSON.stringify({
+              chat_type: "study",
+              error_code: chatResponseFailureCode,
+              model_id: "nakafa-lite",
+            }),
+          }),
+        ],
+        name: expect.stringContaining("capture"),
+      }),
+    ]);
+  });
+
+  it("replaces a failed assistant marker when the response is saved later", async () => {
+    const t = convexTest(schema, convexModules);
+    posthogTest.register(t);
+
+    const { chatId, userId } = await t.mutation(async (ctx) => {
+      const userId = await ctx.db.insert("users", {
+        authId: "retry_chat_user_auth",
+        email: "retry-chat-user@example.com",
+        name: "Retry Chat User",
+        plan: "free",
+        credits: 10,
+        creditsResetAt: NOW,
+      });
+      const chatId = await ctx.db.insert("chats", {
+        updatedAt: NOW,
+        title: "Retry",
+        userId,
+        visibility: "private",
+        type: "study",
+      });
+
+      return { chatId, userId };
+    });
+
+    await t.mutation(internal.chats.mutations.saveAssistantFailure, {
+      userId,
+      message: {
+        chatId,
+        identifier: "assistant-retry",
+        modelId: "nakafa-lite",
+        generationErrorCode: chatResponseFailureCode,
+      },
+    });
+
+    await t.mutation(internal.chats.mutations.saveAssistantResponse, {
+      userId,
+      message: {
+        chatId,
+        role: "assistant",
+        identifier: "assistant-retry",
+        modelId: "nakafa-lite",
+        inputTokens: 1,
+        outputTokens: 2,
+        totalTokens: 3,
+      },
+      parts: [],
+    });
+
+    const savedState = await t.query(async (ctx) => ({
+      messages: await ctx.db.query("messages").collect(),
+      user: await ctx.db.get("users", userId),
+    }));
+
+    expect(savedState.user?.credits).toBe(10 - liteCreditCost);
+    expect(savedState.messages).toEqual([
+      expect.objectContaining({
+        chatId,
+        role: "assistant",
+        identifier: "assistant-retry",
+        modelId: "nakafa-lite",
+        generationStatus: "complete",
+        inputTokens: 1,
+        outputTokens: 2,
+        totalTokens: 3,
       }),
     ]);
   });

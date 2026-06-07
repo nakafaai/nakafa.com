@@ -70,7 +70,7 @@ const getTryoutAccessCampaignIntegrity = Effect.fn(
     const page: TryoutAccessCampaignIntegrityPage = yield* callConvex(
       config,
       "query",
-      "tryoutAccess/queries/internal/maintenance:getTryoutAccessCampaignIntegrity",
+      "tryoutAccess/integrity/internal:getTryoutAccessCampaignIntegrity",
       {
         nowMs,
         paginationOpts: {
@@ -110,7 +110,7 @@ const getTryoutAccessGrantIntegrity = Effect.fn(
     const page: TryoutAccessGrantIntegrityPage = yield* callConvex(
       config,
       "query",
-      "tryoutAccess/queries/internal/maintenance:getTryoutAccessGrantIntegrity",
+      "tryoutAccess/integrity/internal:getTryoutAccessGrantIntegrity",
       {
         nowMs,
         paginationOpts: {
@@ -146,7 +146,7 @@ const getTryoutAccessEntitlementIntegrity = Effect.fn(
     const page: TryoutAccessEntitlementIntegrityPage = yield* callConvex(
       config,
       "query",
-      "tryoutAccess/queries/internal/maintenance:getTryoutAccessEntitlementIntegrity",
+      "tryoutAccess/integrity/internal:getTryoutAccessEntitlementIntegrity",
       {
         nowMs,
         paginationOpts: {
@@ -185,7 +185,7 @@ const getCompetitionCampaignProductOverlapIntegrity = Effect.fn(
       const page: CompetitionCampaignProductPage = yield* callConvex(
         config,
         "query",
-        "tryoutAccess/queries/internal/maintenance:listCompetitionCampaignProductsByProduct",
+        "tryoutAccess/integrity/internal:listCompetitionCampaignProductsByProduct",
         {
           product,
           paginationOpts: {

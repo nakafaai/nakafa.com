@@ -96,17 +96,17 @@ const getCustomerIntegrityReport = Effect.fn(
   const [users, customers, subscriptions] = yield* Effect.all([
     collectIntegrityPages(
       prod,
-      "customers/queries/internal/maintenance:listUsersForCustomerIntegrity",
+      "customers/integrity/internal:listUsersForCustomerIntegrity",
       customerIntegrityUserPageSchema
     ),
     collectIntegrityPages(
       prod,
-      "customers/queries/internal/maintenance:listCustomersForIntegrity",
+      "customers/integrity/internal:listCustomersForIntegrity",
       customerIntegrityCustomerPageSchema
     ),
     collectIntegrityPages(
       prod,
-      "customers/queries/internal/maintenance:listActiveSubscriptionsForIntegrity",
+      "customers/integrity/internal:listActiveSubscriptionsForIntegrity",
       customerIntegritySubscriptionPageSchema
     ),
   ]);

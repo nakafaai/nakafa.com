@@ -4,7 +4,7 @@ import { cronJobs } from "convex/server";
 
 const crons = cronJobs();
 const CONTENT_ANALYTICS_BACKSTOP_INTERVAL_MINUTES = 10;
-const CREDIT_RESET_PERIOD_REPAIR_INTERVAL_MINUTES = 1;
+const CREDIT_RESET_PERIOD_RECONCILE_INTERVAL_MINUTES = 1;
 const TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES = 5;
 const TRYOUT_ACCESS_STATUS_SWEEP_INTERVAL_MINUTES = 5;
 
@@ -29,11 +29,11 @@ crons.cron(
 );
 
 /**
- * Repairs materialized credit reset periods if an exact-boundary cron was missed.
+ * Reconciles materialized credit reset periods if an exact-boundary cron was missed.
  */
 crons.interval(
-  "repair credit reset periods",
-  { minutes: CREDIT_RESET_PERIOD_REPAIR_INTERVAL_MINUTES },
+  "reconcile credit reset periods",
+  { minutes: CREDIT_RESET_PERIOD_RECONCILE_INTERVAL_MINUTES },
   internal.credits.mutations.syncAllCreditResetPeriods,
   {}
 );

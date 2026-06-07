@@ -99,7 +99,7 @@ describe("credits/helpers/state", () => {
     expect(resolvedResetAt).toBe(resetAt);
   });
 
-  it("repairs a stale stored boundary and returns the current one", async () => {
+  it("reconciles a stale stored boundary and returns the current one", async () => {
     const t = convexTest(schema, convexModules);
     const staleResetAt = Date.UTC(2026, 3, 1, 0, 0, 0);
     const now = Date.UTC(2026, 3, 2, 10, 0, 0);
@@ -122,7 +122,7 @@ describe("credits/helpers/state", () => {
     expect(storedResetAt).toBe(currentResetAt);
   });
 
-  it("resolves effective credits from the repaired current reset period", async () => {
+  it("resolves effective credits from the reconciled current reset period", async () => {
     const t = convexTest(schema, convexModules);
     const staleResetAt = Date.UTC(2026, 3, 1, 0, 0, 0);
     const now = Date.UTC(2026, 3, 2, 10, 0, 0);

@@ -6,7 +6,7 @@ import {
 } from "@repo/backend/convex/tryouts/test.helpers";
 import { describe, expect, it } from "vitest";
 
-describe("tryoutAccess/queries/internal/maintenance", () => {
+describe("tryoutAccess/integrity/internal", () => {
   it("reports overdue campaign and grant integrity issues", async () => {
     const t = createTryoutTestConvex();
 
@@ -90,7 +90,7 @@ describe("tryoutAccess/queries/internal/maintenance", () => {
 
     const [campaigns, entitlements, grants] = await Promise.all([
       t.query(
-        internal.tryoutAccess.queries.internal.maintenance
+        internal.tryoutAccess.integrity.internal
           .getTryoutAccessCampaignIntegrity,
         {
           nowMs: NOW,
@@ -101,7 +101,7 @@ describe("tryoutAccess/queries/internal/maintenance", () => {
         }
       ),
       t.query(
-        internal.tryoutAccess.queries.internal.maintenance
+        internal.tryoutAccess.integrity.internal
           .getTryoutAccessEntitlementIntegrity,
         {
           nowMs: NOW,
@@ -112,8 +112,7 @@ describe("tryoutAccess/queries/internal/maintenance", () => {
         }
       ),
       t.query(
-        internal.tryoutAccess.queries.internal.maintenance
-          .getTryoutAccessGrantIntegrity,
+        internal.tryoutAccess.integrity.internal.getTryoutAccessGrantIntegrity,
         {
           nowMs: NOW,
           paginationOpts: {
@@ -171,7 +170,7 @@ describe("tryoutAccess/queries/internal/maintenance", () => {
     });
 
     const result = await t.query(
-      internal.tryoutAccess.queries.internal.maintenance
+      internal.tryoutAccess.integrity.internal
         .listCompetitionCampaignProductsByProduct,
       {
         product: "snbt",

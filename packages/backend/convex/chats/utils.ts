@@ -19,6 +19,8 @@ export function mapDBMessagesToUIMessages(
         ? ModelIdSchema.make(message.modelId)
         : defaultModel,
       credits: message.credits,
+      generationErrorCode: message.generationErrorCode,
+      generationStatus: message.generationStatus,
       tokens:
         message.inputTokens != null ||
         message.outputTokens != null ||

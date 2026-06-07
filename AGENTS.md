@@ -53,6 +53,8 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - Convex Helpers README: `https://github.com/get-convex/convex-helpers/blob/main/packages/convex-helpers/README.md`
 - Convex Aggregate: `https://www.convex.dev/components/aggregate`
 - Convex pagination: `https://docs.convex.dev/database/pagination`
+- Confect spec/impl model: `https://confect.dev/concepts/spec-impl-model`
+- Confect file naming conventions: `https://confect.dev/concepts/file-naming-conventions`
 - Effect docs: `https://effect.website/docs`
 - Effect LLM reference: `https://effect.website/llms.txt`
 - Effect Cache: `https://effect.website/docs/caching/cache/`
@@ -111,6 +113,7 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - Follow existing local patterns before inventing new abstractions.
 - Keep changes cohesive across frontend, Convex backend, and dev/prod behavior.
 - Avoid disconnected patches, workaround code, wrapper chains, and legacy leftovers.
+- Do not leave technical debt behind in touched code: remove dead code, redundant code, obsolete data repair paths, and one-off cleanup functions once the underlying data has been verified clean in every relevant environment.
 - Prefer small, direct helpers over abstraction layers.
 - Use early returns to keep logic flat and skimmable.
 - Run the smallest useful verification set after changes, then expand if risk is high.
@@ -197,6 +200,12 @@ Before any Next.js work, find and read the relevant installed Next.js doc. With 
 - Use auth helpers from `packages/backend/convex/lib/helpers/auth.ts`; do not reach for raw `ctx.auth` patterns first.
 - Add validators for every Convex function.
 - Use `query`, `mutation`, `action`, and internal variants appropriately; do not expose sensitive logic publicly.
+- Keep Convex route files focused on registered Convex functions. Move domain implementation details into capability folders such as `checkout/impl.ts`, `redeem/spec.ts`, or `integrity/internal.ts`; do not create prefix-suffixed files like `public.impl.ts` or `mutations.impl.ts`.
+- Use the Confect spec/impl split as structural inspiration, adapted to Convex routing with folder-owned `spec.ts`, `impl.ts`, and `internal.ts` files instead of prefix-suffixed filenames.
+- Prefer one clear capability token per Convex folder or filename. CamelCase domain terms such as `assistantResponses` or `contentAudios` are acceptable when they name one established concept; ambiguous generic names or compound prefix/suffix filenames are not.
+- Prefer direct imports from the owning module. Do not add new barrel re-exports or compatibility routes when callers can import the concrete capability directly.
+- Name Convex files by the capability they expose, not by generic lifecycle labels. Use names such as `reset`, `integrity`, `checkout`, `redeem`, or `assistantResponses`; avoid vague one-off names such as `maintenance` unless the module is a permanent, domain-specific maintenance surface.
+- When a Convex migration, backfill, or repair function is no longer needed, verify dev and prod data first, then remove both the function and its tests so no legacy repair path remains.
 - Prefer installed helpers/components when they fit: Better Auth, Workflow, Aggregate, Workpool, `convex-helpers`.
 - Keep pagination, relationships, aggregates, workflows, and cron jobs aligned with official patterns.
 - Make Convex schema and index names explicit and readable.

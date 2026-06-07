@@ -38,7 +38,8 @@ export async function verifyChatOwnership(
   return chat;
 }
 
-async function deletePartsForMessageBatch(
+/** Deletes the bounded persisted parts for one message. */
+export async function deletePartsForMessageBatch(
   ctx: MutationCtx,
   messageId: Id<"messages">
 ) {

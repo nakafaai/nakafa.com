@@ -8,6 +8,31 @@ import { describe, expect, it } from "vitest";
 const NOW = Date.UTC(2026, 4, 13, 12, 0, 0);
 
 describe("chats/queries", () => {
+  it("allows signed-out viewers to read public chat details", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const chatId = await t.mutation(async (ctx) => {
+      const user = await seedAuthenticatedUser(ctx, { now: NOW });
+
+      return ctx.db.insert("chats", {
+        title: "Public transcript",
+        type: "study",
+        updatedAt: NOW,
+        userId: user.userId,
+        visibility: "public",
+      });
+    });
+
+    const chat = await t.query(api.chats.queries.getChat, { chatId });
+
+    expect(chat).toEqual(
+      expect.objectContaining({
+        _id: chatId,
+        title: "Public transcript",
+        visibility: "public",
+      })
+    );
+  });
+
   it("keeps default chat pagination public when auth resolves", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(async (ctx) => {

@@ -59,7 +59,7 @@ export const updateUserName = mutation({
 });
 
 /**
- * Returns the authenticated user's chat-gating info and repairs stale credit
+ * Returns the authenticated user's chat-gating info and reconciles stale credit
  * state against the materialized reset-period table.
  */
 export const syncUserInfoForChat = mutation({

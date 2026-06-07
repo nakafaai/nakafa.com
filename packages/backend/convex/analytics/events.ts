@@ -1,5 +1,6 @@
 import {
   chatTypeValidator,
+  messageGenerationErrorCodeValidator,
   modelIdValidator,
 } from "@repo/backend/convex/chats/schema";
 import {
@@ -108,6 +109,14 @@ export const productAnalyticsEventValidator = v.union(
       model_id: modelIdValidator,
       output_tokens: optionalNumber,
       total_tokens: optionalNumber,
+    }),
+  }),
+  v.object({
+    name: v.literal("chat response failed"),
+    properties: v.object({
+      chat_type: chatTypeValidator,
+      error_code: messageGenerationErrorCodeValidator,
+      model_id: modelIdValidator,
     }),
   }),
   v.object({

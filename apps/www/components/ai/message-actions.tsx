@@ -32,6 +32,7 @@ export const AiChatMessageActions = () => {
 
     return textParts.join("\n");
   });
+  const hasText = text.trim().length > 0;
 
   const regenerate = useChat((state) => state.chat.regenerate);
   const status = useChat((state) => state.chat.status);
@@ -59,13 +60,15 @@ export const AiChatMessageActions = () => {
       >
         <HugeIcons icon={Refresh03Icon} />
       </Action>
-      <Action
-        label={t("copy-message")}
-        onClick={() => clipboard.copy(text)}
-        tooltip={t("copy-message")}
-      >
-        <HugeIcons icon={clipboard.copied ? Tick01Icon : Copy01Icon} />
-      </Action>
+      {hasText ? (
+        <Action
+          label={t("copy-message")}
+          onClick={() => clipboard.copy(text)}
+          tooltip={t("copy-message")}
+        >
+          <HugeIcons icon={clipboard.copied ? Tick01Icon : Copy01Icon} />
+        </Action>
+      ) : null}
     </Actions>
   );
 };

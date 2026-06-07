@@ -1,3 +1,4 @@
+import { CHAT_GENERATION_FAILURE_CODES } from "@repo/ai/config/generation";
 import { MODEL_IDS } from "@repo/ai/config/model";
 import {
   contentSearchInputValidator,
@@ -67,7 +68,14 @@ export const messageRoleValidator = literals("user", "assistant", "system");
  * Model ID validator using literals for type safety.
  * References MODEL_IDS from @repo/ai/config/model for single source of truth.
  */
-export const modelIdValidator = v.optional(literals(...MODEL_IDS));
+export const modelIdValueValidator = literals(...MODEL_IDS);
+export const modelIdValidator = v.optional(modelIdValueValidator);
+
+/** Assistant generation lifecycle persisted for refresh-safe chat recovery. */
+export const messageGenerationStatusValidator = literals("complete", "failed");
+export const messageGenerationErrorCodeValidator = literals(
+  ...CHAT_GENERATION_FAILURE_CODES
+);
 
 export const messageValidator = v.object({
   identifier: v.string(),
@@ -78,6 +86,8 @@ export const messageValidator = v.object({
   totalTokens: v.optional(v.number()),
   credits: v.optional(v.number()),
   modelId: modelIdValidator,
+  generationStatus: v.optional(messageGenerationStatusValidator),
+  generationErrorCode: v.optional(messageGenerationErrorCodeValidator),
 });
 
 /**
@@ -527,7 +537,8 @@ export const tables = {
 
   messages: defineTable(messageValidator)
     .index("by_chatId", ["chatId"])
-    .index("by_chatId_and_identifier", ["chatId", "identifier"]),
+    .index("by_chatId_and_identifier", ["chatId", "identifier"])
+    .index("by_role", ["role"]),
 
   parts: defineTable(partValidator).index("by_messageId_and_order", [
     "messageId",

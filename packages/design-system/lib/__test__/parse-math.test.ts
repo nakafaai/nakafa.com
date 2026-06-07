@@ -118,6 +118,15 @@ describe("preprocessLaTeX", () => {
     );
   });
 
+  it("normalizes group notation in single-dollar spans", () => {
+    const markdown =
+      "For a $p$-group $G$, the center $Z(G)$, order $|G|$, center order $|Z(G)|$, and quotient $G/Z(G)$ are standard notation.";
+
+    expect(preprocessLaTeX(markdown)).toBe(
+      "For a $$p$$-group $$G$$, the center $$Z(G)$$, order $$|G|$$, center order $$|Z(G)|$$, and quotient $$G/Z(G)$$ are standard notation."
+    );
+  });
+
   it("keeps plain single-dollar currency text unchanged", () => {
     const markdown = "Harga $15,00$ sekarang, bukan $12 dan $13.";
 

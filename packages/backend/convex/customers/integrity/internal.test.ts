@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 
 const NOW = new Date(Date.UTC(2026, 3, 5, 12, 0, 0)).toISOString();
 
-describe("customers/queries/internal/maintenance", () => {
+describe("customers/integrity/internal", () => {
   it("lists integrity pages for users, customers, and active subscriptions", async () => {
     const t = convexTest(schema, convexModules);
 
@@ -73,8 +73,7 @@ describe("customers/queries/internal/maintenance", () => {
 
     const [users, customers, subscriptions] = await Promise.all([
       t.query(
-        internal.customers.queries.internal.maintenance
-          .listUsersForCustomerIntegrity,
+        internal.customers.integrity.internal.listUsersForCustomerIntegrity,
         {
           paginationOpts: {
             cursor: null,
@@ -82,18 +81,14 @@ describe("customers/queries/internal/maintenance", () => {
           },
         }
       ),
+      t.query(internal.customers.integrity.internal.listCustomersForIntegrity, {
+        paginationOpts: {
+          cursor: null,
+          numItems: 100,
+        },
+      }),
       t.query(
-        internal.customers.queries.internal.maintenance
-          .listCustomersForIntegrity,
-        {
-          paginationOpts: {
-            cursor: null,
-            numItems: 100,
-          },
-        }
-      ),
-      t.query(
-        internal.customers.queries.internal.maintenance
+        internal.customers.integrity.internal
           .listActiveSubscriptionsForIntegrity,
         {
           paginationOpts: {

@@ -7,6 +7,7 @@ import { CHAT_MESSAGES_PAGE_SIZE } from "@repo/backend/convex/chats/constants";
 import { mapDBMessagesToUIMessages } from "@repo/backend/convex/chats/utils";
 import {
   type UsePaginatedQueryReturnType,
+  useConvexAuth,
   usePaginatedQuery,
   useQuery,
 } from "convex/react";
@@ -31,12 +32,12 @@ export function CurrentChatProvider({
   chatId,
   children,
 }: PropsWithChildren<{ chatId: Id<"chats"> }>) {
-  const chat = useQuery(api.chats.queries.getChat, {
-    chatId,
-  });
+  const { isLoading } = useConvexAuth();
+  const queryArgs = isLoading ? "skip" : { chatId };
+  const chat = useQuery(api.chats.queries.getChat, queryArgs);
   const { results, status, loadMore } = usePaginatedQuery(
     api.chats.queries.loadMessagesPage,
-    { chatId },
+    queryArgs,
     { initialNumItems: CHAT_MESSAGES_PAGE_SIZE }
   );
 

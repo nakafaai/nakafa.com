@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 
 const NOW = Date.UTC(2026, 3, 3, 12, 0, 0);
 
-/** Insert one active tryout for maintenance tests. */
+/** Insert one active tryout for integrity tests. */
 async function insertActiveTryout(ctx: MutationCtx, slug: string) {
   return await ctx.db.insert("tryouts", {
     catalogPosition: 1,
@@ -24,7 +24,7 @@ async function insertActiveTryout(ctx: MutationCtx, slug: string) {
   });
 }
 
-/** Insert one single-question exercise set for maintenance tests. */
+/** Insert one single-question exercise set for integrity tests. */
 async function insertExerciseSet(ctx: MutationCtx, slugSuffix: string) {
   return await ctx.db.insert("exerciseSets", {
     locale: "id",
@@ -40,7 +40,7 @@ async function insertExerciseSet(ctx: MutationCtx, slugSuffix: string) {
   });
 }
 
-/** Insert one lightweight user for maintenance tests. */
+/** Insert one lightweight user for integrity tests. */
 async function insertUser(ctx: MutationCtx, suffix: string) {
   return await ctx.db.insert("users", {
     email: `${suffix}@example.com`,
@@ -52,14 +52,14 @@ async function insertUser(ctx: MutationCtx, suffix: string) {
   });
 }
 
-/** Insert one completed standalone simulation set attempt for maintenance tests. */
+/** Insert one completed standalone simulation set attempt for integrity tests. */
 async function insertCompletedSimulationAttempt(
   ctx: MutationCtx,
   slugSuffix: string
 ) {
   const setId = await insertExerciseSet(ctx, slugSuffix);
   const set = await ctx.db.get("exerciseSets", setId);
-  const userId = await insertUser(ctx, `maintenance-${slugSuffix}`);
+  const userId = await insertUser(ctx, `integrity-${slugSuffix}`);
 
   if (!set) {
     throw new Error("Expected exercise set to exist");
@@ -91,7 +91,7 @@ async function insertCompletedSimulationAttempt(
   };
 }
 
-describe("irt/queries/internal/maintenance", () => {
+describe("irt/integrity/internal", () => {
   it("treats blocked tryouts with published provisional scales as startable", async () => {
     const t = convexTest(schema, convexModules);
 
@@ -119,7 +119,7 @@ describe("irt/queries/internal/maintenance", () => {
     });
 
     const result = await t.query(
-      internal.irt.queries.internal.maintenance.getScaleQualityIntegrity,
+      internal.irt.integrity.internal.getScaleQualityIntegrity,
       {
         paginationOpts: {
           cursor: null,
@@ -144,7 +144,7 @@ describe("irt/queries/internal/maintenance", () => {
     });
 
     const result = await t.query(
-      internal.irt.queries.internal.maintenance.getScaleQualityIntegrity,
+      internal.irt.integrity.internal.getScaleQualityIntegrity,
       {
         paginationOpts: {
           cursor: null,
@@ -178,8 +178,7 @@ describe("irt/queries/internal/maintenance", () => {
     });
 
     const result = await t.query(
-      internal.irt.queries.internal.maintenance
-        .getCalibrationQueueAttemptIntegrity,
+      internal.irt.integrity.internal.getCalibrationQueueAttemptIntegrity,
       {
         paginationOpts: {
           cursor: null,
@@ -244,8 +243,7 @@ describe("irt/queries/internal/maintenance", () => {
     });
 
     const result = await t.query(
-      internal.irt.queries.internal.maintenance
-        .getCalibrationQueueEntryIntegrity,
+      internal.irt.integrity.internal.getCalibrationQueueEntryIntegrity,
       {
         paginationOpts: {
           cursor: null,

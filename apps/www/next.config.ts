@@ -101,6 +101,11 @@ function createAppRewrites() {
 function createLocalizedRedirects() {
   const rootRedirects = [
     {
+      source: "/sitemap.txt",
+      destination: "/sitemap.xml",
+      permanent: true,
+    },
+    {
       source: "/about",
       destination: "/",
       permanent: true,

@@ -82,7 +82,7 @@ export class ContentAudioNotFoundError extends Schema.TaggedError<ContentAudioNo
   }
 ) {}
 
-/** Raised when duplicate content-audio rows exceed the repair limit. */
+/** Raised when duplicate content-audio rows exceed the cleanup limit. */
 export class ContentAudioDuplicateLimitExceededError extends Schema.TaggedError<ContentAudioDuplicateLimitExceededError>()(
   "ContentAudioDuplicateLimitExceededError",
   {
