@@ -1,5 +1,6 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { CONTENT_SEARCH_MAX_OFFSET } from "@repo/backend/convex/contents/helpers/search/constants";
+import { buildContentSearchExcerpt } from "@repo/backend/convex/contents/helpers/search/excerpt";
 import type { contentSearchInputValidator } from "@repo/backend/convex/contents/helpers/search/schema";
 import type { Infer } from "convex/values";
 
@@ -9,13 +10,15 @@ type ContentSearchDocument = Doc<"contentSearch">;
 /** Builds the stable paginated search response shape used by tools and UI. */
 export function buildContentSearchResult(
   args: ContentSearchInput,
-  ranked: readonly ContentSearchDocument[]
+  ranked: readonly ContentSearchDocument[],
+  queryTexts: readonly string[]
 ) {
   const items = ranked
     .slice(args.offset, args.offset + args.limit)
     .map((document) => ({
       content_id: document.content_id,
       description: document.description,
+      excerpt: buildContentSearchExcerpt(document, queryTexts),
       locale: document.locale,
       markdown_url: document.markdown_url,
       route: document.route,

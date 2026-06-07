@@ -2,7 +2,6 @@ import {
   getCurrentMaterial,
   getMaterials,
 } from "@repo/contents/_lib/exercises/material";
-import { getRenderableExercisesContent } from "@repo/contents/_lib/exercises/renderable";
 import { getMaterialPath } from "@repo/contents/_lib/exercises/route";
 import { ExercisesCategorySchema } from "@repo/contents/_types/exercises/category";
 import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
@@ -10,6 +9,7 @@ import { ExercisesTypeSchema } from "@repo/contents/_types/exercises/type";
 import { Effect, Option, Schema } from "effect";
 import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
+import { getRuntimeExerciseSetPage } from "@/lib/content/runtime";
 import { BASE_URL, NUMBER_SEGMENT } from "@/lib/llms/constants";
 import { buildHeader } from "@/lib/llms/format";
 
@@ -23,7 +23,7 @@ export async function getCachedLlmsExerciseText({
 }) {
   "use cache";
 
-  cacheLife("max");
+  cacheLife("seconds");
 
   return await Effect.runPromise(getLlmsExerciseText({ cleanSlug, locale }));
 }
@@ -125,7 +125,12 @@ const getExerciseRows = Effect.fn("www.llms.exercises.rows")(function* ({
   locale: Locale;
   path: string;
 }) {
-  return yield* getRenderableExercisesContent(locale, path);
+  const setPage = yield* getRuntimeExerciseSetPage({
+    locale,
+    slug: path,
+  });
+
+  return setPage?.exercises ?? [];
 });
 
 type ExerciseRows = Effect.Effect.Success<ReturnType<typeof getExerciseRows>>;

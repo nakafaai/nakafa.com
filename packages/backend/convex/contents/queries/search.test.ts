@@ -77,12 +77,19 @@ describe("contents/queries/search:search", () => {
       "Fungsi Rasional",
       "Domain, Kodomain, dan Range",
     ]);
+    expect(titleResult.items[0]).toEqual(
+      expect.objectContaining({
+        excerpt: expect.stringContaining("kelas 11"),
+      })
+    );
     expect(bodyResult.items).toEqual([
       expect.objectContaining({
         content_id:
           "id/subject/high-school/11/mathematics/function-modeling/domain-codomain-range",
+        excerpt: expect.stringContaining("batas input"),
       }),
     ]);
+    expect(bodyResult.items[0].excerpt).not.toContain("<mark>");
   });
 
   it("prioritizes exercise context over generic exercise titles", async () => {

@@ -7,7 +7,7 @@ const mockCacheLife = vi.hoisted(() => vi.fn());
 const mockGetCurrentMaterial = vi.hoisted(() => vi.fn());
 const mockGetMaterialPath = vi.hoisted(() => vi.fn());
 const mockGetMaterials = vi.hoisted(() => vi.fn());
-const mockGetRenderableExercisesContent = vi.hoisted(() => vi.fn());
+const mockGetRuntimeExerciseSetPage = vi.hoisted(() => vi.fn());
 
 vi.mock("next/cache", () => ({
   cacheLife: mockCacheLife,
@@ -22,8 +22,8 @@ vi.mock("@repo/contents/_lib/exercises/route", () => ({
   getMaterialPath: mockGetMaterialPath,
 }));
 
-vi.mock("@repo/contents/_lib/exercises/renderable", () => ({
-  getRenderableExercisesContent: mockGetRenderableExercisesContent,
+vi.mock("@/lib/content/runtime", () => ({
+  getRuntimeExerciseSetPage: mockGetRuntimeExerciseSetPage,
 }));
 
 const validSetPath =
@@ -66,7 +66,7 @@ beforeEach(() => {
   mockGetCurrentMaterial.mockReset();
   mockGetMaterialPath.mockReset();
   mockGetMaterials.mockReset();
-  mockGetRenderableExercisesContent.mockReset();
+  mockGetRuntimeExerciseSetPage.mockReset();
 
   mockGetMaterialPath.mockReturnValue(
     "/exercises/high-school/snbt/quantitative-knowledge"
@@ -83,8 +83,10 @@ beforeEach(() => {
       title: "Set 1",
     }),
   });
-  mockGetRenderableExercisesContent.mockReturnValue(
-    Effect.succeed([exerciseWithLocalizedChoices, exerciseWithoutChoices])
+  mockGetRuntimeExerciseSetPage.mockReturnValue(
+    Effect.succeed({
+      exercises: [exerciseWithLocalizedChoices, exerciseWithoutChoices],
+    })
   );
 });
 
@@ -97,11 +99,24 @@ describe("llms exercise markdown", () => {
       })
     ).resolves.toBeNull();
 
-    expect(mockCacheLife).toHaveBeenCalledWith("max");
+    expect(mockCacheLife).toHaveBeenCalledWith("seconds");
   });
 
   it("returns null when an exercise set has no renderable rows", async () => {
-    mockGetRenderableExercisesContent.mockReturnValue(Effect.succeed([]));
+    mockGetRuntimeExerciseSetPage.mockReturnValue(
+      Effect.succeed({ exercises: [] })
+    );
+
+    await expect(
+      getCachedLlmsExerciseText({
+        cleanSlug: validSetPath,
+        locale: "en",
+      })
+    ).resolves.toBeNull();
+  });
+
+  it("returns null when the runtime set page is missing", async () => {
+    mockGetRuntimeExerciseSetPage.mockReturnValue(Effect.succeed(null));
 
     await expect(
       getCachedLlmsExerciseText({
@@ -127,21 +142,23 @@ describe("llms exercise markdown", () => {
   });
 
   it("renders one exercise with English choices and title fallback", async () => {
-    mockGetRenderableExercisesContent.mockReturnValue(
-      Effect.succeed([
-        exerciseWithoutChoices,
-        {
-          ...exerciseWithLocalizedChoices,
-          choices: {
-            en: [{ label: "A. Fallback", value: true }],
+    mockGetRuntimeExerciseSetPage.mockReturnValue(
+      Effect.succeed({
+        exercises: [
+          exerciseWithoutChoices,
+          {
+            ...exerciseWithLocalizedChoices,
+            choices: {
+              en: [{ label: "A. Fallback", value: true }],
+            },
+            number: 3,
+            question: {
+              metadata: {},
+              raw: "Third question raw",
+            },
           },
-          number: 3,
-          question: {
-            metadata: {},
-            raw: "Third question raw",
-          },
-        },
-      ])
+        ],
+      })
     );
     mockGetCurrentMaterial.mockReturnValue({
       currentMaterial: Option.some({

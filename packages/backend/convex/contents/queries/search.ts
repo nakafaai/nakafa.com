@@ -29,6 +29,6 @@ export const search = query({
       scanLimit
     );
 
-    return buildContentSearchResult(args, documents);
+    return buildContentSearchResult(args, documents, queryTexts);
   },
 });

@@ -37,6 +37,7 @@ const syncedExerciseSetValidator = v.object({
   slug: v.string(),
   title: v.string(),
   type: exercisesTypeValidator,
+  year: v.optional(v.string()),
 });
 
 const syncedExerciseChoiceValidator = v.object({
@@ -139,6 +140,7 @@ export const bulkSyncExerciseSets = internalMutation({
         setName: set.setName,
         title: set.title,
         type: set.type,
+        year: set.year,
       };
 
       const existingSet = await ctx.db
@@ -157,7 +159,8 @@ export const bulkSyncExerciseSets = internalMutation({
         existingSet.questionCount === nextValues.questionCount &&
         existingSet.setName === nextValues.setName &&
         existingSet.title === nextValues.title &&
-        existingSet.type === nextValues.type
+        existingSet.type === nextValues.type &&
+        existingSet.year === nextValues.year
       ) {
         unchanged++;
         continue;

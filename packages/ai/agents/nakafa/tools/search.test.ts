@@ -48,6 +48,7 @@ describe("nakafa search tool", () => {
                   {
                     content_id: "en/quran/1",
                     description: "The Opening",
+                    excerpt: "The Opening",
                     locale: input.locale,
                     markdown_url: "https://nakafa.com/en/quran/1.md",
                     route: "quran/1",
@@ -172,6 +173,7 @@ describe("nakafa search tool", () => {
                   {
                     content_id: "en/articles/example",
                     description: "Example article.",
+                    excerpt: "Example article.",
                     locale: input.locale,
                     markdown_url: "https://nakafa.com/en/articles/example.md",
                     route: "articles/example",
@@ -225,6 +227,7 @@ describe("nakafa search tool", () => {
                     content_id:
                       "id/subject/high-school/11/mathematics/function-modeling/rational-function",
                     description: "Pelajari fungsi rasional.",
+                    excerpt: "Pelajari fungsi rasional.",
                     locale: input.locale,
                     markdown_url:
                       "https://nakafa.com/id/subject/high-school/11/mathematics/function-modeling/rational-function.md",
@@ -283,6 +286,7 @@ describe("nakafa search tool", () => {
                   {
                     content_id: "id/articles/politics/example",
                     description: "Analisis politik.",
+                    excerpt: "Analisis politik.",
                     locale: input.locale,
                     markdown_url:
                       "https://nakafa.com/id/articles/politics/example.md",
@@ -336,6 +340,7 @@ describe("nakafa search tool", () => {
                     content_id:
                       "id/subject/high-school/10/chemistry/basic-chemistry-laws/mass-conservation-law",
                     description: "Pelajari hukum kekekalan massa.",
+                    excerpt: "Pelajari hukum kekekalan massa.",
                     locale: input.locale,
                     markdown_url:
                       "https://nakafa.com/id/subject/high-school/10/chemistry/basic-chemistry-laws/mass-conservation-law.md",
@@ -407,6 +412,8 @@ describe("nakafa search tool", () => {
                     content_id:
                       "id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
                     description:
+                      "SMA SNBT Pengetahuan Kuantitatif Try Out 2026 Set 2 20 soal",
+                    excerpt:
                       "SMA SNBT Pengetahuan Kuantitatif Try Out 2026 Set 2 20 soal",
                     locale: input.locale,
                     markdown_url:
@@ -579,6 +586,8 @@ describe("nakafa search tool", () => {
                         "id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1",
                       description:
                         "SNBT Penalaran Matematika Try Out 2026 Set 1 pola bilangan",
+                      excerpt:
+                        "SNBT Penalaran Matematika Try Out 2026 Set 1 pola bilangan",
                       locale: input.locale,
                       markdown_url:
                         "https://nakafa.com/id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1.md",
@@ -604,6 +613,8 @@ describe("nakafa search tool", () => {
                     content_id:
                       "id/exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1",
                     description:
+                      "Soal Bahasa Indonesia yang menyebut pola bilangan.",
+                    excerpt:
                       "Soal Bahasa Indonesia yang menyebut pola bilangan.",
                     locale: input.locale,
                     markdown_url:
@@ -724,6 +735,7 @@ describe("nakafa search tool", () => {
                   {
                     content_id: `id/exercises/${input.queries?.at(0) ?? "empty"}`,
                     description: "",
+                    excerpt: "",
                     locale: input.locale,
                     markdown_url: "https://nakafa.com/id/exercises/item.md",
                     route: `exercises/${input.queries?.at(0) ?? "empty"}`,
@@ -773,6 +785,7 @@ describe("nakafa search tool", () => {
                       content_id:
                         "id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1",
                       description: "pola",
+                      excerpt: "pola",
                       locale: input.locale,
                       markdown_url:
                         "https://nakafa.com/id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1.md",
@@ -798,6 +811,7 @@ describe("nakafa search tool", () => {
                     content_id:
                       "id/exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1",
                     description: "pola",
+                    excerpt: "pola",
                     locale: input.locale,
                     markdown_url:
                       "https://nakafa.com/id/exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1.md",
@@ -887,6 +901,7 @@ describe("nakafa search tool", () => {
                     content_id:
                       "id/subject/high-school/10/mathematics/arithmetic-operators",
                     description: "Operasi aritmatika dasar.",
+                    excerpt: "Operasi aritmatika dasar.",
                     locale: input.locale,
                     markdown_url:
                       "https://nakafa.com/id/subject/high-school/10/mathematics/arithmetic-operators.md",
@@ -900,6 +915,7 @@ describe("nakafa search tool", () => {
                     content_id:
                       "id/subject/high-school/10/mathematics/sequence/arithmetic-sequence",
                     description: "Pola bilangan pada barisan aritmatika.",
+                    excerpt: "Pola bilangan pada barisan aritmatika.",
                     locale: input.locale,
                     markdown_url:
                       "https://nakafa.com/id/subject/high-school/10/mathematics/sequence/arithmetic-sequence.md",
@@ -951,6 +967,7 @@ describe("nakafa search tool", () => {
                     {
                       content_id: "en/articles/a",
                       description: "Duplicate article.",
+                      excerpt: "Duplicate article.",
                       locale: input.locale,
                       markdown_url: "https://nakafa.com/en/articles/a.md",
                       route: "articles/a",
@@ -986,6 +1003,7 @@ describe("nakafa search tool", () => {
                   {
                     content_id: "en/articles/a",
                     description: "First article.",
+                    excerpt: "First article.",
                     locale: input.locale,
                     markdown_url: "https://nakafa.com/en/articles/a.md",
                     route: "articles/a",
@@ -996,6 +1014,7 @@ describe("nakafa search tool", () => {
                   {
                     content_id: "en/articles/b",
                     description: "Second article.",
+                    excerpt: "Second article.",
                     locale: input.locale,
                     markdown_url: "https://nakafa.com/en/articles/b.md",
                     route: "articles/b",

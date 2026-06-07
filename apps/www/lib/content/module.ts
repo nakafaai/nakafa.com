@@ -11,6 +11,13 @@ interface ContentModuleImportError {
   source: string;
 }
 
+interface ContentModuleImportOptions {
+  context?: ContentModuleContext;
+  filePath: string;
+  locale: Locale;
+  source: string;
+}
+
 /**
  * Reports one content module import failure outside static prerender success.
  *
@@ -51,17 +58,12 @@ function reportContentModuleImportError({
  * Promise boundary here; the rejection branch reports analytics when possible
  * and returns `null` so callers can delegate to `notFound()`.
  */
-export function importContentModuleOrNull({
+function importContentModuleOrNull({
   context,
   filePath,
   locale,
   source,
-}: {
-  context?: ContentModuleContext;
-  filePath: string;
-  locale: Locale;
-  source: string;
-}) {
+}: ContentModuleImportOptions) {
   return importContentModule(filePath, locale).then(
     (content) => content,
     (cause) =>
@@ -75,5 +77,20 @@ export function importContentModuleOrNull({
         () => null,
         () => null
       )
+  );
+}
+
+/** Imports a compiled MDX module that must exist for a synced content route. */
+export async function importRequiredContentModule(
+  args: ContentModuleImportOptions
+) {
+  const content = await importContentModuleOrNull(args);
+
+  if (content?.default) {
+    return content;
+  }
+
+  throw new Error(
+    `Synced content module is missing from the deployment artifact: ${args.filePath} (${args.source}).`
   );
 }

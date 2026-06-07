@@ -1,13 +1,26 @@
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
+import { loadEnvConfig } from "@next/env";
 import { Effect } from "effect";
-import { getLlmsFullArtifacts } from "@/lib/llms/full/artifacts";
 
 const PUBLIC_DIR = "public";
 const GENERATED_SHARD_DIR = join(PUBLIC_DIR, "llms-full");
 
+/** Loads Next.js environment files for this standalone build script. */
+const loadNextEnvironment = Effect.sync(() => {
+  loadEnvConfig(process.cwd());
+});
+
+/** Imports llms artifact builders after Next env has been loaded. */
+const loadLlmsFullArtifacts = Effect.promise(
+  () => import("@/lib/llms/full/artifacts")
+);
+
 /** Writes public llms-full files before Next.js builds static assets. */
 const buildLlmsFullFiles = Effect.fn("scripts.llmsFull.build")(function* () {
+  yield* loadNextEnvironment;
+
+  const { getLlmsFullArtifacts } = yield* loadLlmsFullArtifacts;
   const artifacts = yield* getLlmsFullArtifacts();
   const files = [artifacts.root, artifacts.manifest, ...artifacts.shards];
 

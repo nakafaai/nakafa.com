@@ -10,7 +10,7 @@ import type { ContentRouteParamManifest } from "@repo/contents/_lib/manifest/sch
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 
-/** Returns the cached param and indexing manifest for one locale set. */
+/** Returns the cached route-param manifest for one locale set. */
 export function getContentRouteParamManifest(
   locales: readonly string[] = routing.locales
 ) {
@@ -36,13 +36,6 @@ export function getExerciseApiParamsForLocales(
       filterParamsByLocales(manifest.exerciseApiParams, locales)
     )
   );
-}
-
-/** Returns Pagefind source entries from the cached param manifest. */
-export function getContentIndexManifest(
-  locales: readonly string[] = routing.locales
-) {
-  return Effect.runPromise(getContentRouteParamManifestForParams(locales));
 }
 
 /** Shares route-param results with the narrower static-param cache. */

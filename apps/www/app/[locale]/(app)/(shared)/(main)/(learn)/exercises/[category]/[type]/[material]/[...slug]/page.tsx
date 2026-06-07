@@ -19,8 +19,6 @@ import { generateSEOMetadata } from "@/lib/utils/seo/generator";
 import type { SEOContext } from "@/lib/utils/seo/types";
 import { getStaticParams } from "@/lib/utils/system";
 
-const missingExerciseRouteData = { kind: "missing" } as const;
-
 /** Generates SEO metadata for one learn-exercises route. */
 export async function generateMetadata({
   params,
@@ -47,9 +45,6 @@ export async function generateMetadata({
     type,
     material,
     slug.join("/")
-  ).then(
-    (routeData) => routeData,
-    () => missingExerciseRouteData
   );
 
   if (data.kind === "missing") {

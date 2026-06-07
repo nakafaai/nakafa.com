@@ -18,6 +18,7 @@ describe("Nakafa formatter", () => {
         {
           ...buildNakafaContentRef("id", "subject/example", "subject"),
           description: "Pelajari contoh.",
+          excerpt: "Pelajari contoh.",
           title: "Contoh Materi",
         },
       ],

@@ -40,6 +40,7 @@ import { Effect } from "effect";
 import type { getTranslations } from "next-intl/server";
 import { persistAssistantFailure } from "@/app/api/chat/failure";
 import { search as nakafaSearch } from "@/app/api/chat/nakafa";
+import { nakafaContent } from "@/app/api/chat/nakafa-content";
 import { repairChatToolCall } from "@/app/api/chat/repair";
 import { getAssistantResponseFailure } from "@/app/api/chat/response";
 import {
@@ -279,13 +280,14 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                           },
                           toolCallId,
                           writer,
-                        }).pipe(Effect.provide(Nakafa.Default));
+                        }).pipe(Effect.provideService(Nakafa, nakafaContent));
                       }
 
                       const result = yield* runNakafaAgent({
                         context: { ...context, needsPageFetch },
                         locale: page.locale,
                         modelId: runtime.modelId,
+                        nakafa: nakafaContent,
                         task: formatSpecialistToolTask(input),
                         writer,
                       }).pipe(

@@ -57,6 +57,7 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
   modelId,
   locale,
   context,
+  nakafa,
 }: NakafaAgentParams) {
   const searchService = yield* NakafaSearch;
   let pendingExerciseRef = Option.none<string>();
@@ -108,9 +109,7 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
               hasPendingContentRead = false;
 
               return Effect.runPromise(
-                read({ input, toolCallId, writer }).pipe(
-                  Effect.provide(Nakafa.Default)
-                )
+                read({ input, toolCallId, writer }).pipe(provideNakafa(nakafa))
               );
             },
           }),
@@ -123,7 +122,7 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
 
               return Effect.runPromise(
                 exercise({ input, toolCallId, writer }).pipe(
-                  Effect.provide(Nakafa.Default)
+                  provideNakafa(nakafa)
                 )
               );
             },
@@ -135,7 +134,7 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
             execute: (input, { toolCallId }) =>
               Effect.runPromise(
                 quran({ input, locale, toolCallId, writer }).pipe(
-                  Effect.provide(Nakafa.Default)
+                  provideNakafa(nakafa)
                 )
               ),
           }),
@@ -146,7 +145,7 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
             execute: (input, { toolCallId }) =>
               Effect.runPromise(
                 taxonomy({ input, locale, toolCallId, writer }).pipe(
-                  Effect.provide(Nakafa.Default)
+                  provideNakafa(nakafa)
                 )
               ),
           }),
@@ -216,3 +215,12 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
     usage: result.totalUsage,
   };
 });
+
+/** Provides the app runtime Nakafa service when available, else the package default. */
+function provideNakafa(service?: Nakafa) {
+  if (service) {
+    return Effect.provideService(Nakafa, service);
+  }
+
+  return Effect.provide(Nakafa.Default);
+}

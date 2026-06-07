@@ -4,7 +4,7 @@ import type { Locale } from "next-intl";
 import { Suspense } from "react";
 import { QuestionAnalytics } from "@/components/exercise/item/analytics";
 import { ExerciseArticle } from "@/components/exercise/item/article";
-import { importContentModuleOrNull } from "@/lib/content/module";
+import { importRequiredContentModule } from "@/lib/content/module";
 
 type ExerciseEntryData = Pick<ExerciseWithoutDefaults, "choices" | "number">;
 
@@ -19,7 +19,7 @@ async function QuestionContent({
   setPath: string;
 }) {
   const questionPath = `${setPath}/${exerciseNumber}/_question`;
-  const question = await importContentModuleOrNull({
+  const question = await importRequiredContentModule({
     context: {
       exercise_number: exerciseNumber,
     },
@@ -27,9 +27,9 @@ async function QuestionContent({
     locale,
     source: "exercise-question-module",
   });
-  const Question = question?.default;
+  const Question = question.default;
 
-  return Question ? <Question /> : null;
+  return <Question />;
 }
 
 /** Loads the compiled answer module for one exercise entry. */
@@ -43,7 +43,7 @@ async function AnswerContent({
   setPath: string;
 }) {
   const answerPath = `${setPath}/${exerciseNumber}/_answer`;
-  const answer = await importContentModuleOrNull({
+  const answer = await importRequiredContentModule({
     context: {
       exercise_number: exerciseNumber,
     },
@@ -51,9 +51,9 @@ async function AnswerContent({
     locale,
     source: "exercise-answer-module",
   });
-  const Answer = answer?.default;
+  const Answer = answer.default;
 
-  return Answer ? <Answer /> : null;
+  return <Answer />;
 }
 
 /** Builds the shared exercise article body used by learn and try-out routes. */

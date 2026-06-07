@@ -11,19 +11,20 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
 import { Fragment, type ReactElement } from "react";
-import { PagefindExcerpt } from "@/components/shared/pagefind-excerpt";
-import {
-  getPagefindSectionResults,
-  hasPagefindExcerpt,
-} from "@/lib/utils/pagefind";
-import type { PagefindResult } from "@/types/pagefind";
+import { SearchExcerpt } from "@/components/shared/search-excerpt";
+import type { ContentSearchResultItem } from "@/lib/content/use-search-query";
 
 interface Props {
   error: string | ReactElement;
   isError: boolean;
   isLoading: boolean;
   query: string;
-  results: PagefindResult[];
+  results: ContentSearchResultItem[];
+}
+
+interface SearchResultGroup {
+  items: ContentSearchResultItem[];
+  title: string;
 }
 
 export function SearchResults({
@@ -34,6 +35,7 @@ export function SearchResults({
   error,
 }: Props) {
   const t = useTranslations("Utils");
+  const sectionLabels = useSearchSectionLabels();
 
   if (isError) {
     return (
@@ -74,52 +76,96 @@ export function SearchResults({
     );
   }
 
+  const groups = getSearchResultGroups(results, sectionLabels);
+
   return (
     <div className="flex flex-col gap-3 rounded-xl border py-4 shadow-sm">
-      {results.map((result, index) => (
-        <Fragment key={result.url}>
-          <ResultGroup result={result} />
-          {index !== results.length - 1 && <Separator />}
+      {groups.map((group, index) => (
+        <Fragment key={group.title}>
+          <ResultGroup group={group} query={query} />
+          {index !== groups.length - 1 && <Separator />}
         </Fragment>
       ))}
     </div>
   );
 }
 
-/** Renders one grouped Pagefind result with optional summary copy. */
-function ResultGroup({ result }: { result: PagefindResult }) {
-  const sectionResults = getPagefindSectionResults(result);
-
+/** Renders one grouped Convex search result section. */
+function ResultGroup({
+  group,
+  query,
+}: {
+  group: SearchResultGroup;
+  query: string;
+}) {
   return (
     <div className="space-y-2">
       <h2 className="px-4 font-medium text-muted-foreground text-sm">
-        {result.meta.title}
+        {group.title}
       </h2>
       <div className="flex flex-col gap-1">
-        {sectionResults.map((subResult, subIndex) => (
+        {group.items.map((result) => (
           <NavigationLink
             className={cn(
               "group flex flex-col gap-2 p-2 px-4 text-sm transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
             )}
-            href={subResult.url}
-            // biome-ignore lint/suspicious/noArrayIndexKey: URL+title may not be unique, need index for stability
-            key={`${subResult.url}-${subResult.title}-${subIndex}`}
+            href={`/${result.route}`}
+            key={result.content_id}
           >
             <div className="flex items-center gap-2">
               <HugeIcons
                 className="size-4 shrink-0 text-muted-foreground group-hover:text-accent-foreground"
                 icon={FileIcon}
               />
-              <span className="line-clamp-1">{subResult.title}</span>
+              <span className="line-clamp-1">{result.title}</span>
             </div>
-            <PagefindExcerpt
+            <SearchExcerpt
               className="line-clamp-3 text-muted-foreground text-sm group-hover:text-accent-foreground"
-              excerpt={subResult.excerpt}
-              hidden={!hasPagefindExcerpt(subResult.excerpt)}
+              excerpt={result.excerpt}
+              query={query}
             />
           </NavigationLink>
         ))}
       </div>
     </div>
   );
+}
+
+function useSearchSectionLabels(): Record<
+  ContentSearchResultItem["section"],
+  string
+> {
+  const tCommon = useTranslations("Common");
+  const tArticles = useTranslations("Articles");
+  const tExercises = useTranslations("Exercises");
+  const tHoly = useTranslations("Holy");
+
+  return {
+    articles: tArticles("articles"),
+    exercises: tExercises("exercises"),
+    quran: tHoly("quran"),
+    subject: tCommon("subject"),
+  };
+}
+
+function getSearchResultGroups(
+  results: ContentSearchResultItem[],
+  sectionLabels: Record<ContentSearchResultItem["section"], string>
+) {
+  const groups = new Map<
+    ContentSearchResultItem["section"],
+    SearchResultGroup
+  >();
+
+  for (const result of results) {
+    const group = groups.get(result.section) ?? {
+      items: [],
+      title: sectionLabels[result.section],
+    };
+
+    group.items.push(result);
+    groups.set(result.section, group);
+  }
+
+  return Array.from(groups.values());
 }

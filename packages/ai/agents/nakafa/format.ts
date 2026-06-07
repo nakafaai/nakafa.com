@@ -24,6 +24,7 @@ export function formatSearch(result: NakafaAgentSearchResult) {
     ## Result ${index + 1}
     - Title: ${item.title}
     - Description: ${item.description}
+    - Excerpt: ${item.excerpt}
     - Content ID: ${item.content_id}
     - Section: ${item.section}`
       )

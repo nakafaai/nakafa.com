@@ -9,6 +9,22 @@ vi.mock("convex/nextjs", () => ({
   fetchMutation: vi.fn(),
 }));
 
+vi.mock("@/lib/content/runtime", async () => {
+  const { Effect } = await import("effect");
+
+  return {
+    getRuntimeArticlePage: ({ slug }: { slug: string }) =>
+      Effect.succeed(slug.includes("missing") ? null : {}),
+    getRuntimeExerciseGroupPage: () => Effect.succeed(null),
+    getRuntimeExerciseQuestionPage: ({ slug }: { slug: string }) =>
+      Effect.succeed(slug.endsWith("/1") ? {} : null),
+    getRuntimeExerciseSetPage: ({ slug }: { slug: string }) =>
+      Effect.succeed(slug.includes("missing") ? null : {}),
+    getRuntimeSubjectPage: ({ slug }: { slug: string }) =>
+      Effect.succeed(slug.includes("missing") ? null : {}),
+  };
+});
+
 vi.mock("@repo/contents/_lib/agent/read/markdown", async () => {
   const { Effect, Option } = await import("effect");
 

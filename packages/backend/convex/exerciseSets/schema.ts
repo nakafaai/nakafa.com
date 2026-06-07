@@ -25,6 +25,8 @@ const tables = {
     exerciseType: v.string(),
     /** Set identifier: "set-1", "set-2" */
     setName: v.string(),
+    /** Optional 4-digit collection year for yearful routes such as try-out/2026. */
+    year: v.optional(v.string()),
     /** Display title: "Set 1" */
     title: v.string(),
     /** Optional description from parent exerciseType */
@@ -39,6 +41,14 @@ const tables = {
       "locale",
       "type",
       "exerciseType",
+    ])
+    .index("by_locale_and_group", [
+      "locale",
+      "category",
+      "type",
+      "material",
+      "exerciseType",
+      "year",
     ]),
 };
 

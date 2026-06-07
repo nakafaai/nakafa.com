@@ -130,6 +130,7 @@ import type * as contents_helpers_partitions from "../contents/helpers/partition
 import type * as contents_helpers_popularity from "../contents/helpers/popularity.js";
 import type * as contents_helpers_search_constants from "../contents/helpers/search/constants.js";
 import type * as contents_helpers_search_documents from "../contents/helpers/search/documents.js";
+import type * as contents_helpers_search_excerpt from "../contents/helpers/search/excerpt.js";
 import type * as contents_helpers_search_input from "../contents/helpers/search/input.js";
 import type * as contents_helpers_search_rank from "../contents/helpers/search/rank.js";
 import type * as contents_helpers_search_read from "../contents/helpers/search/read.js";
@@ -142,7 +143,14 @@ import type * as contents_mutations_search from "../contents/mutations/search.js
 import type * as contents_mutations_views from "../contents/mutations/views.js";
 import type * as contents_queries_audio from "../contents/queries/audio.js";
 import type * as contents_queries_recent from "../contents/queries/recent.js";
+import type * as contents_queries_runtime from "../contents/queries/runtime.js";
 import type * as contents_queries_search from "../contents/queries/search.js";
+import type * as contents_runtime_articles from "../contents/runtime/articles.js";
+import type * as contents_runtime_exerciseRows from "../contents/runtime/exerciseRows.js";
+import type * as contents_runtime_exercises from "../contents/runtime/exercises.js";
+import type * as contents_runtime_shared from "../contents/runtime/shared.js";
+import type * as contents_runtime_spec from "../contents/runtime/spec.js";
+import type * as contents_runtime_subjects from "../contents/runtime/subjects.js";
 import type * as contents_validators from "../contents/validators.js";
 import type * as contents_views_impl from "../contents/views/impl.js";
 import type * as contents_views_spec from "../contents/views/spec.js";
@@ -470,6 +478,7 @@ declare const fullApi: ApiFromModules<{
   "contents/helpers/popularity": typeof contents_helpers_popularity;
   "contents/helpers/search/constants": typeof contents_helpers_search_constants;
   "contents/helpers/search/documents": typeof contents_helpers_search_documents;
+  "contents/helpers/search/excerpt": typeof contents_helpers_search_excerpt;
   "contents/helpers/search/input": typeof contents_helpers_search_input;
   "contents/helpers/search/rank": typeof contents_helpers_search_rank;
   "contents/helpers/search/read": typeof contents_helpers_search_read;
@@ -482,7 +491,14 @@ declare const fullApi: ApiFromModules<{
   "contents/mutations/views": typeof contents_mutations_views;
   "contents/queries/audio": typeof contents_queries_audio;
   "contents/queries/recent": typeof contents_queries_recent;
+  "contents/queries/runtime": typeof contents_queries_runtime;
   "contents/queries/search": typeof contents_queries_search;
+  "contents/runtime/articles": typeof contents_runtime_articles;
+  "contents/runtime/exerciseRows": typeof contents_runtime_exerciseRows;
+  "contents/runtime/exercises": typeof contents_runtime_exercises;
+  "contents/runtime/shared": typeof contents_runtime_shared;
+  "contents/runtime/spec": typeof contents_runtime_spec;
+  "contents/runtime/subjects": typeof contents_runtime_subjects;
   "contents/validators": typeof contents_validators;
   "contents/views/impl": typeof contents_views_impl;
   "contents/views/spec": typeof contents_views_spec;

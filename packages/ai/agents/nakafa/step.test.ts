@@ -8,10 +8,7 @@ import {
   shouldReadAfterSearch,
 } from "@repo/ai/agents/nakafa/step";
 import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
-import type {
-  NakafaAgentContentSummary,
-  NakafaAgentSection,
-} from "@repo/contents/_lib/agent/schema/ref";
+import type { NakafaAgentSection } from "@repo/contents/_lib/agent/schema/ref";
 import type { NakafaAgentSearchResult } from "@repo/contents/_lib/agent/schema/search";
 import { Option } from "effect";
 import { describe, expect, it } from "vitest";
@@ -19,12 +16,14 @@ import { describe, expect, it } from "vitest";
 /** Builds a typed Nakafa content summary fixture from canonical route parts. */
 function contentSummary({
   description,
+  excerpt,
   locale,
   route,
   section,
   title,
 }: {
   description: string;
+  excerpt?: string;
   locale: "en" | "id";
   route: string;
   section: NakafaAgentSection;
@@ -33,8 +32,9 @@ function contentSummary({
   return {
     ...buildNakafaContentRef(locale, route, section),
     description,
+    excerpt: excerpt ?? description,
     title,
-  } satisfies NakafaAgentContentSummary;
+  } satisfies NakafaAgentSearchResult["items"][number];
 }
 
 const exerciseResult = {

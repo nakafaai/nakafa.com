@@ -184,6 +184,36 @@ describe("mapDBPartToUIMessagePart", () => {
       await ctx.db.insert("parts", {
         messageId,
         order: 5,
+        type: "data-nakafa",
+        dataNakafaId: "search-1",
+        dataNakafaData: {
+          kind: "search",
+          status: "done",
+          input: {
+            limit: 5,
+            locale: "en",
+            offset: 0,
+            queries: ["politics"],
+          },
+          result: {
+            count: 1,
+            has_more: false,
+            items: [
+              {
+                ...ref,
+                description: "Article summary",
+                excerpt: "Article summary",
+                title: "Dynastic Politics",
+              },
+            ],
+            limit: 5,
+            offset: 0,
+          },
+        },
+      });
+      await ctx.db.insert("parts", {
+        messageId,
+        order: 6,
         type: "data-scrape-url",
         dataScrapeUrlId: "scrape-1",
         dataScrapeUrlUrl: "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
@@ -238,6 +268,21 @@ describe("mapDBPartToUIMessagePart", () => {
         id: "taxonomy-1",
         data: expect.objectContaining({
           kind: "taxonomy",
+          status: "done",
+        }),
+      }),
+      expect.objectContaining({
+        type: "data-nakafa",
+        id: "search-1",
+        data: expect.objectContaining({
+          kind: "search",
+          result: expect.objectContaining({
+            items: [
+              expect.objectContaining({
+                excerpt: "Article summary",
+              }),
+            ],
+          }),
           status: "done",
         }),
       }),

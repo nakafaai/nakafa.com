@@ -13,7 +13,6 @@ import {
   useRouter,
 } from "@repo/internationalization/src/navigation";
 import { IconCircleFilled } from "@tabler/icons-react";
-import { useQueryClient } from "@tanstack/react-query";
 import GB from "country-flag-icons/react/3x2/GB";
 import ID from "country-flag-icons/react/3x2/ID";
 import { useParams } from "next/navigation";
@@ -32,8 +31,6 @@ export function LangMenuSwitcher() {
   const params = useParams();
   const currentLocale = useLocale();
 
-  const queryClient = useQueryClient();
-
   const isMobile = useMediaQuery("(max-width: 640px)");
 
   function handlePrefetch(locale: Locale) {
@@ -47,7 +44,7 @@ export function LangMenuSwitcher() {
   }
 
   function handleChangeLocale(locale: Locale) {
-    startTransition(async () => {
+    startTransition(() => {
       router.replace(
         // @ts-expect-error -- TypeScript will validate that only known `params`
         // are used in combination with a given `pathname`. Since the two will
@@ -55,13 +52,6 @@ export function LangMenuSwitcher() {
         { pathname, params },
         { locale }
       );
-
-      // reboot the pagefind because of the language change
-      if (window?.pagefind) {
-        await window.pagefind.destroy?.();
-
-        queryClient.invalidateQueries({ queryKey: ["search"] });
-      }
     });
   }
 

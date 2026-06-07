@@ -1,14 +1,12 @@
 import { parseArticleCategory } from "@repo/contents/_lib/articles/category";
-import { getArticleReferences } from "@repo/contents/_lib/articles/references";
 import { getSlugPath } from "@repo/contents/_lib/articles/slug";
 import { getHeadings } from "@repo/contents/_lib/toc";
 import { formatContentDateISO } from "@repo/contents/_shared/date";
 import type { ArticleCategory } from "@repo/contents/_types/articles/category";
-import { ContentMetadataSchema } from "@repo/contents/_types/content";
 import { ArticleJsonLd } from "@repo/seo/json-ld/article";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
-import { Effect, Option, Schema } from "effect";
+import { Option } from "effect";
 import type { Metadata } from "next";
 import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
@@ -26,11 +24,11 @@ import {
   LayoutMaterialMain,
   LayoutMaterialToc,
 } from "@/components/shared/layout-material";
-import { importContentModuleOrNull } from "@/lib/content/module";
+import { importRequiredContentModule } from "@/lib/content/module";
+import { fetchRuntimeArticlePage } from "@/lib/content/runtime";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
-import { fetchArticleMetadataContext } from "@/lib/utils/pages/article";
 import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 import { generateSEOMetadata } from "@/lib/utils/seo/generator";
@@ -127,21 +125,20 @@ async function getArticleMetadataData({
 }) {
   "use cache";
 
-  cacheLife("max");
+  cacheLife("seconds");
 
-  return Effect.runPromise(
-    Effect.match(fetchArticleMetadataContext({ locale, category, slug }), {
-      onFailure: () => ({
-        content: null,
-        filePath: getSlugPath(category, slug),
-      }),
-      onSuccess: ({ content, FilePath }) => ({
-        content,
-        filePath: FilePath,
-      }),
-    })
-  );
+  const filePath = getSlugPath(category, slug);
+  const content = await fetchRuntimeArticlePage({
+    locale,
+    slug: filePath.slice(1),
+  });
+
+  return { content, filePath };
 }
+
+type ArticleRuntimePage = NonNullable<
+  Awaited<ReturnType<typeof getArticleMetadataData>>["content"]
+>;
 
 // Generate bottom-up static params
 export function generateStaticParams() {
@@ -156,23 +153,22 @@ export default async function Page({
 }: PageProps<"/[locale]/articles/[category]/[slug]">) {
   const { locale, category, slug } = await getResolvedParams(params);
   const filePath = getSlugPath(category, slug);
-  const content = await importContentModuleOrNull({
+  const article = await fetchRuntimeArticlePage({
+    locale,
+    slug: filePath.slice(1),
+  });
+
+  if (!article) {
+    notFound();
+  }
+
+  const content = await importRequiredContentModule({
     filePath,
     locale,
     source: "article-content-module",
   });
-  const Content = content?.default;
-  if (!Content) {
-    notFound();
-  }
-
-  const parsedMetadata = Schema.decodeUnknownOption(ContentMetadataSchema)(
-    content?.metadata
-  );
-  if (Option.isNone(parsedMetadata)) {
-    notFound();
-  }
-  const contentMetadata = parsedMetadata.value;
+  const Content = content.default;
+  const contentMetadata = article.metadata;
 
   const [tCommon, tArticles] = await Promise.all([
     getTranslations("Common"),
@@ -213,14 +209,14 @@ export default async function Page({
         educationalLevel={tArticles(category)}
         name={contentMetadata.title}
       />
-      <CachedArticleShell
+      <ArticleShell
         category={category}
+        content={article}
         filePath={filePath}
         footer={
           <DeferredComments key={`comments:${filePath}`} slug={filePath} />
         }
         locale={locale}
-        slug={slug}
         toolbar={
           <DeferredAiSheetOpen
             audio={{
@@ -234,66 +230,34 @@ export default async function Page({
         }
       >
         <Content />
-      </CachedArticleShell>
+      </ArticleShell>
     </>
   );
 }
 
-async function CachedArticleShell({
+async function ArticleShell({
   locale,
   category,
-  slug,
   filePath,
+  content,
   children,
   footer,
   toolbar,
 }: {
   locale: Locale;
   category: ArticleCategory;
-  slug: string;
   filePath: string;
+  content: ArticleRuntimePage;
   children: ReactNode;
   footer: ReactNode;
   toolbar: ReactNode;
 }) {
-  "use cache";
-
-  cacheLife("max");
-
-  const [tCommon, tArticles, content, references] = await Promise.all([
+  const [tCommon, tArticles] = await Promise.all([
     getTranslations("Common"),
     getTranslations("Articles"),
-    Effect.runPromise(
-      Effect.match(fetchArticleMetadataContext({ locale, category, slug }), {
-        onFailure: () => ({ content: null, FilePath: filePath }),
-        onSuccess: (data) => data,
-      })
-    ),
-    Effect.runPromise(
-      Effect.match(getArticleReferences(filePath), {
-        onFailure: () => [],
-        onSuccess: (data) => data,
-      })
-    ),
   ]);
-
-  if (!content.content) {
-    notFound();
-  }
-
-  if (children === null) {
-    return (
-      <LayoutMaterial>
-        <LayoutMaterialContent>
-          <LayoutMaterialMain className="py-24">
-            <ComingSoon />
-          </LayoutMaterialMain>
-        </LayoutMaterialContent>
-      </LayoutMaterial>
-    );
-  }
-
-  const { metadata, raw } = content.content;
+  const metadata = content.metadata;
+  const raw = content.body;
 
   const headings = getHeadings(raw);
 
@@ -332,7 +296,7 @@ async function CachedArticleShell({
         }}
         references={{
           title: metadata.title,
-          data: references,
+          data: content.references,
         }}
         showComments
       />

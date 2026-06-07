@@ -61,6 +61,7 @@ interface ExerciseSetPayload {
   slug: string;
   title: string;
   type: string;
+  year?: string;
 }
 
 interface QuestionChoice {
@@ -191,6 +192,7 @@ export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
             setName: set.setName,
             title: set.title,
             description: set.description,
+            year: set.year === undefined ? undefined : String(set.year),
             questionCount,
             searchTitle,
             searchDescription,
@@ -203,6 +205,7 @@ export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
                 searchText,
                 searchTitle,
                 slug: set.slug,
+                year: set.year,
               })
             ),
           };

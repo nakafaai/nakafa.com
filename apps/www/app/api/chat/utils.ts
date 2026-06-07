@@ -1,7 +1,7 @@
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
-import { Nakafa } from "@repo/contents/_lib/agent/service";
 import { fetchMutation } from "convex/nextjs";
 import { Effect } from "effect";
+import { nakafaContent } from "@/app/api/chat/nakafa-content";
 
 /**
  * Checks whether the given URL corresponds to verified content by querying
@@ -12,7 +12,7 @@ import { Effect } from "effect";
 export const getVerified = Effect.fn("chat.getVerified")(function* (
   url: string
 ) {
-  return yield* Nakafa.verify(url).pipe(Effect.provide(Nakafa.Default));
+  return yield* nakafaContent.verify(url);
 });
 
 /**
