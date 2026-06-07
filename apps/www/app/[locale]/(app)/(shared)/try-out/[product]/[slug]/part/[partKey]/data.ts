@@ -6,7 +6,15 @@ import { Effect } from "effect";
 import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
 
-/** Loads the public tryout details for one part route inside a cacheable scope. */
+/**
+ * Loads the public tryout details for one part route from the Convex read model.
+ *
+ * Convex content sync can publish this read model after a web deployment, so the
+ * cache must stay short-lived instead of allowing a temporary miss to become a
+ * persistent prerendered 404.
+ *
+ * Docs: https://nextjs.org/docs/app/api-reference/functions/cacheLife#prerendering-behavior
+ */
 export async function getTryoutPartData(
   locale: Locale,
   product: TryoutProduct,
@@ -15,7 +23,7 @@ export async function getTryoutPartData(
 ) {
   "use cache";
 
-  cacheLife("max");
+  cacheLife("seconds");
 
   const details = await fetchQuery(
     api.tryouts.queries.tryouts.getTryoutDetails,
