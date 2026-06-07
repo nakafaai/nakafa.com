@@ -1,5 +1,7 @@
 import { getModelCreditCost, ModelIdSchema } from "@repo/ai/config/model";
 import { DEFAULT_TITLE } from "@repo/ai/features/constants";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   deleteMessageBatchFromPoint,
   getMessageByIdentifier,
@@ -9,6 +11,8 @@ import {
 import tables, {
   chatTypeValidator,
   chatVisibilityValidator,
+  messageGenerationErrorCodeValidator,
+  modelIdValueValidator,
 } from "@repo/backend/convex/chats/schema";
 import {
   getCreditResetGrantTransaction,
@@ -19,6 +23,32 @@ import { internalMutation, mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { ConvexError, v } from "convex/values";
+
+/** Deletes an existing assistant response marker before saving its replacement. */
+async function deleteExistingResponseByIdentifier(
+  ctx: MutationCtx,
+  chatId: Id<"chats">,
+  identifier: string
+) {
+  const existingMessage = await getMessageByIdentifier(ctx, chatId, identifier);
+
+  if (!existingMessage) {
+    return;
+  }
+
+  const deleteResult = await deleteMessageBatchFromPoint(
+    ctx,
+    chatId,
+    existingMessage._creationTime
+  );
+
+  if (deleteResult.hasMore) {
+    throw new ConvexError({
+      code: "CHAT_ASSISTANT_RESPONSE_REWRITE_EXCEEDED",
+      message: "Assistant response rewrite exceeded the supported batch size.",
+    });
+  }
+}
 
 /** Creates a new chat for the authenticated user. */
 export const createChat = mutation({
@@ -267,29 +297,11 @@ export const saveAssistantResponse = internalMutation({
 
     await verifyChatOwnership(ctx, message.chatId, appUser._id);
 
-    if (message.identifier) {
-      const existingMessage = await getMessageByIdentifier(
-        ctx,
-        message.chatId,
-        message.identifier
-      );
-
-      if (existingMessage) {
-        const deleteResult = await deleteMessageBatchFromPoint(
-          ctx,
-          message.chatId,
-          existingMessage._creationTime
-        );
-
-        if (deleteResult.hasMore) {
-          throw new ConvexError({
-            code: "CHAT_ASSISTANT_RESPONSE_REWRITE_EXCEEDED",
-            message:
-              "Assistant response rewrite exceeded the supported batch size.",
-          });
-        }
-      }
-    }
+    await deleteExistingResponseByIdentifier(
+      ctx,
+      message.chatId,
+      message.identifier
+    );
 
     let credits = 0;
     let newBalance = appUser.credits;
@@ -326,6 +338,7 @@ export const saveAssistantResponse = internalMutation({
       outputTokens: message.outputTokens,
       totalTokens: message.totalTokens,
       credits: modelId ? credits : undefined,
+      generationStatus: "complete",
     });
 
     const partIds = await insertParts(ctx, messageId, parts);
@@ -373,5 +386,54 @@ export const saveAssistantResponse = internalMutation({
     });
 
     return { messageId, partIds, credits, newBalance };
+  },
+});
+
+/**
+ * Persists one failed assistant response so refresh never hides stream failure.
+ *
+ * @see https://docs.convex.dev/functions/internal-functions
+ */
+export const saveAssistantFailure = internalMutation({
+  args: {
+    userId: vv.id("users"),
+    message: v.object({
+      chatId: vv.id("chats"),
+      identifier: v.string(),
+      modelId: modelIdValueValidator,
+      generationErrorCode: messageGenerationErrorCodeValidator,
+    }),
+  },
+  returns: v.object({
+    messageId: vv.id("messages"),
+  }),
+  handler: async (ctx, args) => {
+    const { userId, message } = args;
+
+    const appUser = await ctx.db.get("users", userId);
+    if (!appUser) {
+      throw new ConvexError({
+        code: "UNAUTHORIZED",
+        message: "User not found.",
+      });
+    }
+
+    await verifyChatOwnership(ctx, message.chatId, appUser._id);
+    await deleteExistingResponseByIdentifier(
+      ctx,
+      message.chatId,
+      message.identifier
+    );
+
+    const messageId = await ctx.db.insert("messages", {
+      chatId: message.chatId,
+      role: "assistant",
+      identifier: message.identifier,
+      modelId: message.modelId,
+      generationStatus: "failed",
+      generationErrorCode: message.generationErrorCode,
+    });
+
+    return { messageId };
   },
 });

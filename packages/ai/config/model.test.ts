@@ -11,7 +11,10 @@ import {
   ModelInfoSchema,
   modelRegistry,
 } from "@repo/ai/config/model";
-import { gatewayProviderOptions } from "@repo/ai/config/routing";
+import {
+  fallbackGatewayModelIds,
+  gatewayProviderOptions,
+} from "@repo/ai/config/routing";
 import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -75,6 +78,20 @@ describe("Nakafa model registry", () => {
         thinkingLevel: "low",
       },
     });
-    expect(gatewayProviderOptions).toEqual({ sort: "ttft" });
+    expect(fallbackGatewayModelIds).toEqual([
+      "alibaba/qwen3.7-max",
+      "minimax/minimax-m2.7",
+      "zai/glm-5.1",
+      "moonshotai/kimi-k2.6",
+    ]);
+    expect(gatewayProviderOptions).toEqual({
+      models: [
+        "alibaba/qwen3.7-max",
+        "minimax/minimax-m2.7",
+        "zai/glm-5.1",
+        "moonshotai/kimi-k2.6",
+      ],
+      sort: "ttft",
+    });
   });
 });

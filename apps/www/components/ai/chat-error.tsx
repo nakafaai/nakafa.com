@@ -23,6 +23,32 @@ import { Activity, useTransition } from "react";
 import { CHAT_ERRORS } from "@/app/api/chat/constants";
 import { useChat } from "@/components/ai/context/use-chat";
 
+interface AiChatErrorSurfaceProps {
+  children?: React.ReactNode;
+  message: string;
+}
+
+const AiChatErrorSurface = ({ children, message }: AiChatErrorSurfaceProps) => (
+  <Empty className="rounded-xl border bg-card text-card-foreground">
+    <EmptyHeader>
+      <EmptyMedia className="bg-destructive/5" variant="icon">
+        <HugeIcons className="text-destructive" icon={Alert02Icon} />
+      </EmptyMedia>
+      <EmptyDescription>{message}</EmptyDescription>
+    </EmptyHeader>
+    {children}
+  </Empty>
+);
+AiChatErrorSurface.displayName = "AiChatErrorSurface";
+
+/** Shows a persisted assistant generation failure after chat refresh. */
+export const AiChatPersistedError = () => {
+  const t = useTranslations("Ai");
+
+  return <AiChatErrorSurface message={t("error-message")} />;
+};
+AiChatPersistedError.displayName = "AiChatPersistedError";
+
 export const AiChatError = () => {
   const t = useTranslations("Ai");
 
@@ -42,15 +68,9 @@ export const AiChatError = () => {
   }
 
   return (
-    <Empty className="rounded-xl border bg-card text-card-foreground">
-      <EmptyHeader>
-        <EmptyMedia className="bg-destructive/5" variant="icon">
-          <HugeIcons className="text-destructive" icon={Alert02Icon} />
-        </EmptyMedia>
-        <EmptyDescription>{errorMessage}</EmptyDescription>
-      </EmptyHeader>
+    <AiChatErrorSurface message={errorMessage}>
       {isInsufficientCredits ? <ButtonCheckout /> : <ButtonRegenerate />}
-    </Empty>
+    </AiChatErrorSurface>
   );
 };
 AiChatError.displayName = "AiChatError";

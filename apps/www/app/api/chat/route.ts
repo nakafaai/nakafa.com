@@ -13,6 +13,7 @@ import { geolocation } from "@vercel/functions";
 import {
   convertToModelMessages,
   createUIMessageStreamResponse,
+  generateId,
   pruneMessages,
 } from "ai";
 import { Effect, Option, Schema } from "effect";
@@ -33,6 +34,15 @@ const possibleVerifiedUrls = [
   "/subject",
   "/exercises",
 ] as const;
+
+/**
+ * Keeps the streamed chat route aligned with the longest normal AI SDK chat
+ * timeout. Vercel uses this route segment config to set the function limit.
+ *
+ * @see https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config#maxduration
+ * @see https://vercel.com/docs/functions/configuring-functions/duration
+ */
+export const maxDuration = 300;
 
 /**
  * POST /api/chat
@@ -208,6 +218,7 @@ export function POST(req: Request) {
         id: chatId,
         isFirstMessage,
         messages: compressedMessages,
+        responseMessageId: generateId(),
         token,
       };
       const page = {

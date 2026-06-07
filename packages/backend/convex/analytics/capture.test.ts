@@ -1,4 +1,5 @@
 import posthogTest from "@posthog/convex/test";
+import { chatResponseFailureCode } from "@repo/ai/config/generation";
 import { getModelCreditCost, ModelIdSchema } from "@repo/ai/config/model";
 import { captureProductEvent } from "@repo/backend/convex/analytics/capture";
 import { productAnalyticsEventValidator } from "@repo/backend/convex/analytics/events";
@@ -114,6 +115,16 @@ describe("analytics/capture", () => {
           model_id: "nakafa-lite",
           output_tokens: 20,
           total_tokens: 30,
+        },
+      })
+    ).toBe(true);
+    expect(
+      validate(productAnalyticsEventValidator, {
+        name: "chat response failed",
+        properties: {
+          chat_type: "study",
+          error_code: chatResponseFailureCode,
+          model_id: "nakafa-lite",
         },
       })
     ).toBe(true);

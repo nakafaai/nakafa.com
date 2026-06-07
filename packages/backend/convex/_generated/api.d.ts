@@ -61,6 +61,7 @@ import type * as auth_username_request from "../auth/username/request.js";
 import type * as chats_actions from "../chats/actions.js";
 import type * as chats_constants from "../chats/constants.js";
 import type * as chats_helpers from "../chats/helpers.js";
+import type * as chats_maintenance from "../chats/maintenance.js";
 import type * as chats_messageParts_dbToUi from "../chats/messageParts/dbToUi.js";
 import type * as chats_messageParts_providerMetadata from "../chats/messageParts/providerMetadata.js";
 import type * as chats_messageParts_shared from "../chats/messageParts/shared.js";
@@ -392,6 +393,7 @@ declare const fullApi: ApiFromModules<{
   "chats/actions": typeof chats_actions;
   "chats/constants": typeof chats_constants;
   "chats/helpers": typeof chats_helpers;
+  "chats/maintenance": typeof chats_maintenance;
   "chats/messageParts/dbToUi": typeof chats_messageParts_dbToUi;
   "chats/messageParts/providerMetadata": typeof chats_messageParts_providerMetadata;
   "chats/messageParts/shared": typeof chats_messageParts_shared;

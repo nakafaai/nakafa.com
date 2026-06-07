@@ -50,10 +50,17 @@ describe("app/api/chat/step", () => {
     });
   });
 
-  it("requires grounding on the first non-page-fetch step", () => {
+  it("leaves low-risk first non-page-fetch prompts to the orchestrator prompt", () => {
+    const greetingMessages = [
+      {
+        content: "hi",
+        role: "user",
+      },
+    ] satisfies ModelMessage[];
+
     const step = Effect.runSync(
       prepareChatStep({
-        messages: emptyMessages,
+        messages: greetingMessages,
         needsPageFetch: false,
         system,
         stepNumber: 0,
@@ -61,9 +68,10 @@ describe("app/api/chat/step", () => {
     );
 
     expect(step).toEqual({
-      messages: [],
-      toolChoice: "required",
+      messages: greetingMessages,
     });
+    expect(step).not.toHaveProperty("activeTools");
+    expect(step).not.toHaveProperty("toolChoice");
   });
 
   it("reinforces final source policy after the first non-page-fetch step", () => {

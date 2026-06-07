@@ -1,3 +1,4 @@
+import { getGatewayErrorContext } from "@repo/ai/config/gateway-error";
 import { getModelGatewayId, type ModelId } from "@repo/ai/config/model";
 import { captureServerException } from "@repo/analytics/posthog/server";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
@@ -48,10 +49,12 @@ export function createChatErrorReporter({
 
   return (error: unknown, errorLocation: string) => {
     const normalizedError = toError(error);
+    const gatewayErrorContext = getGatewayErrorContext(normalizedError);
     const errorContext = {
       ...logContext,
       chatId,
       errorLocation,
+      ...gatewayErrorContext,
       gatewayModelId,
       modelId,
       source,

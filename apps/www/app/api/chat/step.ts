@@ -13,16 +13,14 @@ const researchStep = {
   activeTools: [TOOL_NAMES.deepResearch],
   toolChoice: { toolName: TOOL_NAMES.deepResearch, type: "tool" as const },
 };
-const groundingStep = {
-  toolChoice: "required" as const,
-};
 
 /**
  * Chooses the first-step AI SDK tool policy for grounded chat answers.
  *
  * Page fetches must read Nakafa content first. Explicit external URLs must go
- * through research. Other first-turn requests must choose one evidence tool so
- * factual educational answers cannot bypass grounding.
+ * through research. Other first-turn requests stay under the orchestrator
+ * prompt, so low-risk greetings can answer directly while factual, current, or
+ * mathematical requests still choose the required evidence path.
  *
  * @see https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#preparestep-callback
  * @see https://ai-sdk.dev/docs/reference/ai-sdk-core/stream-text
@@ -97,6 +95,6 @@ export const prepareChatStep = Effect.fn("chat.prepareChatStep")(
         return { ...researchStep, messages };
       }
 
-      return { ...groundingStep, messages };
+      return { messages };
     })
 );

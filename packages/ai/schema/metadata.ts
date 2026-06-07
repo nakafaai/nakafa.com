@@ -1,3 +1,4 @@
+import { CHAT_GENERATION_FAILURE_CODES } from "@repo/ai/config/generation";
 import { ModelIdSchema } from "@repo/ai/config/model";
 import { Schema } from "effect";
 
@@ -11,6 +12,10 @@ const ComponentUsageSchema = Schema.Struct({
  */
 export const MetadataSchema = Schema.Struct({
   credits: Schema.optional(Schema.Number),
+  generationErrorCode: Schema.optional(
+    Schema.Literal(...CHAT_GENERATION_FAILURE_CODES)
+  ),
+  generationStatus: Schema.optional(Schema.Literal("complete", "failed")),
   model: ModelIdSchema,
   tokens: Schema.optional(
     Schema.Struct({

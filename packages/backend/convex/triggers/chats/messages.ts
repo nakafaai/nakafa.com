@@ -40,6 +40,26 @@ export async function messagesHandler(
     return;
   }
 
+  if (message.generationStatus === "failed") {
+    if (!message.generationErrorCode) {
+      return;
+    }
+
+    await captureProductEvent(ctx, {
+      distinctId: chat.userId,
+      event: {
+        name: "chat response failed",
+        properties: {
+          chat_type: chat.type,
+          error_code: message.generationErrorCode,
+          model_id: message.modelId,
+        },
+      },
+      timestamp: new Date(message._creationTime),
+    });
+    return;
+  }
+
   await captureProductEvent(ctx, {
     distinctId: chat.userId,
     event: {
