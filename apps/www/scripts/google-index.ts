@@ -73,7 +73,7 @@ const GOOGLE_JWT_TOKEN_LIFETIME_SECONDS = 3600;
 
 const GoogleServiceAccountSchema = Schema.Struct({
   client_email: Schema.NonEmptyTrimmedString,
-  private_key: Schema.NonEmptyTrimmedString,
+  private_key: Schema.NonEmptyString,
 });
 const GoogleTokenResponseSchema = Schema.Struct({
   access_token: Schema.NonEmptyTrimmedString,
@@ -176,7 +176,16 @@ const loadGoogleServiceAccount = Effect.fn(
       }),
   });
 
-  return yield* decodeGoogleServiceAccount(keyFileContent);
+  return yield* decodeGoogleServiceAccount(keyFileContent).pipe(
+    Effect.mapError(
+      () =>
+        new GoogleAssertionSignError({
+          cause: "Invalid google-key.json shape.",
+          message:
+            "Google service-account credentials must include client_email and private_key.",
+        })
+    )
+  );
 });
 
 /** Signs a service-account assertion for Google's OAuth token endpoint. */
