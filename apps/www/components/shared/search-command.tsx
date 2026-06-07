@@ -283,6 +283,7 @@ function SearchListItem({
   );
 }
 
+/** Builds localized default navigation groups shown before content search runs. */
 function useDefaultSearchGroups(): SearchCommandGroup[] {
   const tSubject = useTranslations("Subject");
   const tArticles = useTranslations("Articles");

@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 
 const NOW = Date.parse("2026-01-02T00:00:00.000Z");
 
+/** Inserts the author fixture shared by runtime query tests. */
 async function insertAuthor(ctx: MutationCtx) {
   return await ctx.db.insert("authors", {
     name: "Nakafa Author",
@@ -13,6 +14,7 @@ async function insertAuthor(ctx: MutationCtx) {
   });
 }
 
+/** Links an author fixture to one synced content row. */
 async function linkAuthor(
   ctx: MutationCtx,
   args: {
