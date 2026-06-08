@@ -39,6 +39,7 @@ describe("nakafa search tool", () => {
         writer,
       }).pipe(
         Effect.provideService(NakafaSearch, {
+          /** Returns one Quran result for the basic loading/done UI flow. */
           search: (input) =>
             Effect.succeed(
               searchResult({
@@ -133,6 +134,7 @@ describe("nakafa search tool", () => {
         writer,
       }).pipe(
         Effect.provideService(NakafaSearch, {
+          /** Returns one article result for an unscoped empty-query search. */
           search: (input) =>
             Effect.succeed(
               searchResult({
@@ -164,6 +166,7 @@ describe("nakafa search tool", () => {
         writer,
       }).pipe(
         Effect.provideService(NakafaSearch, {
+          /** Returns one subject result using the normalized request locale. */
           search: (input) =>
             Effect.succeed(
               searchResult({
@@ -217,6 +220,7 @@ describe("nakafa search tool", () => {
         writer,
       }).pipe(
         Effect.provideService(NakafaSearch, {
+          /** Returns one article result for study-task search formatting. */
           search: (input) =>
             Effect.succeed(
               searchResult({
@@ -277,6 +281,7 @@ describe("nakafa search tool", () => {
         writer,
       }).pipe(
         Effect.provideService(NakafaSearch, {
+          /** Returns one subject result for multi-query token forwarding. */
           search: (input) =>
             Effect.succeed(
               searchResult({
@@ -330,6 +335,7 @@ describe("nakafa search tool", () => {
         writer,
       }).pipe(
         Effect.provideService(NakafaSearch, {
+          /** Returns empty-excerpt exercise rows for punctuation-only queries. */
           search: (input) =>
             Effect.succeed(
               searchResult({
@@ -400,6 +406,7 @@ describe("nakafa search tool", () => {
         writer,
       }).pipe(
         Effect.provideService(NakafaSearch, {
+          /** Captures the exact exercise-set query and returns the matching set row. */
           search: (input) => {
             capturedQueries.push(input.queries ?? []);
 
@@ -574,6 +581,7 @@ describe("nakafa search tool", () => {
         writer,
       }).pipe(
         Effect.provideService(NakafaSearch, {
+          /** Returns query-specific exercise rows to verify UI and aggregate ranking. */
           search: (input) => {
             if (input.queries?.at(0) === "Penalaran Matematika") {
               return Effect.succeed(
@@ -726,6 +734,7 @@ describe("nakafa search tool", () => {
         writer,
       }).pipe(
         Effect.provideService(NakafaSearch, {
+          /** Returns ranked subject rows for UI result ordering checks. */
           search: (input) =>
             Effect.succeed(
               searchResult({
@@ -774,6 +783,7 @@ describe("nakafa search tool", () => {
         writer,
       }).pipe(
         Effect.provideService(NakafaSearch, {
+          /** Returns set and question rows to verify set preference on ranking ties. */
           search: (input) => {
             if (input.queries?.at(0) === "bilangan") {
               return Effect.succeed(
@@ -957,6 +967,7 @@ describe("nakafa search tool", () => {
         writer,
       }).pipe(
         Effect.provideService(NakafaSearch, {
+          /** Returns duplicate, empty, and paginated rows for aggregation behavior. */
           search: (input) => {
             if (input.queries?.at(0) === "beta") {
               return Effect.succeed(
