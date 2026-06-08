@@ -121,6 +121,7 @@ const fetchNoStore: typeof fetch = (input, init) =>
 function fetchContentRuntimeQuery<T>(name: string, read: () => Promise<T>) {
   return Effect.tryPromise({
     try: read,
+    /** Converts Convex/runtime read failures into the agent data-read error. */
     catch: (error) =>
       new NakafaAgentDataReadError({
         cause: getUnknownErrorMessage(error),
