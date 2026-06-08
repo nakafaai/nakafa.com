@@ -98,6 +98,7 @@ describe("nakafa search tool", () => {
         writer,
       }).pipe(
         Effect.provideService(NakafaSearch, {
+          /** Fails the search adapter to verify error part emission. */
           search: () =>
             Effect.fail(
               new NakafaAgentDataReadError({
@@ -134,7 +135,7 @@ describe("nakafa search tool", () => {
         writer,
       }).pipe(
         Effect.provideService(NakafaSearch, {
-          /** Returns one article result for an unscoped empty-query search. */
+          /** Returns no results for the empty-state search flow. */
           search: (input) =>
             Effect.succeed(
               searchResult({
@@ -166,7 +167,7 @@ describe("nakafa search tool", () => {
         writer,
       }).pipe(
         Effect.provideService(NakafaSearch, {
-          /** Returns one subject result using the normalized request locale. */
+          /** Returns one article result for an unscoped empty-query search. */
           search: (input) =>
             Effect.succeed(
               searchResult({
@@ -220,7 +221,7 @@ describe("nakafa search tool", () => {
         writer,
       }).pipe(
         Effect.provideService(NakafaSearch, {
-          /** Returns one article result for study-task search formatting. */
+          /** Returns one subject result using the normalized request locale. */
           search: (input) =>
             Effect.succeed(
               searchResult({
@@ -281,7 +282,7 @@ describe("nakafa search tool", () => {
         writer,
       }).pipe(
         Effect.provideService(NakafaSearch, {
-          /** Returns one subject result for multi-query token forwarding. */
+          /** Returns one politics article result for study-task formatting. */
           search: (input) =>
             Effect.succeed(
               searchResult({
@@ -335,7 +336,7 @@ describe("nakafa search tool", () => {
         writer,
       }).pipe(
         Effect.provideService(NakafaSearch, {
-          /** Returns empty-excerpt exercise rows for punctuation-only queries. */
+          /** Returns one subject result for multi-query token forwarding. */
           search: (input) =>
             Effect.succeed(
               searchResult({
@@ -470,6 +471,7 @@ describe("nakafa search tool", () => {
         writer,
       }).pipe(
         Effect.provideService(NakafaSearch, {
+          /** Captures the anchored exercise query and returns an empty result. */
           search: (input) => {
             capturedQueries.push(input.queries ?? []);
 
@@ -508,6 +510,7 @@ describe("nakafa search tool", () => {
         writer,
       }).pipe(
         Effect.provideService(NakafaSearch, {
+          /** Captures the exercise query and returns an empty result. */
           search: (input) => {
             capturedQueries.push(input.queries ?? []);
 
@@ -545,6 +548,7 @@ describe("nakafa search tool", () => {
         writer,
       }).pipe(
         Effect.provideService(NakafaSearch, {
+          /** Captures the omitted exercise query list and returns no rows. */
           search: (input) => {
             capturedQueries.push(input.queries ?? []);
 
@@ -679,6 +683,7 @@ describe("nakafa search tool", () => {
         writer,
       }).pipe(
         Effect.provideService(NakafaSearch, {
+          /** Fails every scoped exercise query to verify per-query error parts. */
           search: () =>
             Effect.fail(
               new NakafaAgentDataReadError({
@@ -734,7 +739,7 @@ describe("nakafa search tool", () => {
         writer,
       }).pipe(
         Effect.provideService(NakafaSearch, {
-          /** Returns ranked subject rows for UI result ordering checks. */
+          /** Returns empty-excerpt exercise rows for punctuation-only queries. */
           search: (input) =>
             Effect.succeed(
               searchResult({
@@ -864,6 +869,7 @@ describe("nakafa search tool", () => {
         writer,
       }).pipe(
         Effect.provideService(NakafaSearch, {
+          /** Captures non-exercise queries and returns an empty result. */
           search: (input) => {
             capturedQueries.push(input.queries ?? []);
 
@@ -901,6 +907,7 @@ describe("nakafa search tool", () => {
         writer,
       }).pipe(
         Effect.provideService(NakafaSearch, {
+          /** Returns ranked subject rows for UI result ordering checks. */
           search: (input) =>
             Effect.succeed(
               searchResult({
