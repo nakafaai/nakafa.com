@@ -8,7 +8,7 @@ import {
 } from "@/lib/utils/system";
 
 const routeMocks = vi.hoisted(() => ({
-  getRuntimeContentRoutePage: vi.fn(),
+  listRuntimeLatestContentRoutes: vi.fn(),
 }));
 const cacheMocks = vi.hoisted(() => ({
   cacheLife: vi.fn(),
@@ -29,7 +29,7 @@ vi.mock("@repo/internationalization/src/routing", () => ({
 
 vi.mock("@/lib/content/runtime", () => ({
   getRuntimeContentRoute: runtimeMocks.getRuntimeContentRoute,
-  getRuntimeContentRoutePage: routeMocks.getRuntimeContentRoutePage,
+  listRuntimeLatestContentRoutes: routeMocks.listRuntimeLatestContentRoutes,
 }));
 
 vi.mock("next-intl/server", () => ({
@@ -41,21 +41,16 @@ vi.mock("next/cache", () => ({
 }));
 
 beforeEach(() => {
-  routeMocks.getRuntimeContentRoutePage.mockReset();
+  routeMocks.listRuntimeLatestContentRoutes.mockReset();
   cacheMocks.cacheLife.mockClear();
   runtimeMocks.getRuntimeContentRoute.mockReset();
   translationMocks.getTranslations.mockReset();
 
-  routeMocks.getRuntimeContentRoutePage.mockImplementation(
-    ({ locale, prefix, section }: RuntimeRouteArgs) =>
+  routeMocks.listRuntimeLatestContentRoutes.mockImplementation(
+    ({ locale, section }: RuntimeRouteArgs) =>
       Effect.succeed(
-        routePage(
-          routeRows.filter(
-            (route) =>
-              route.locale === locale &&
-              route.section === section &&
-              route.route.startsWith(prefix)
-          )
+        routeRows.filter(
+          (route) => route.locale === locale && route.section === section
         )
       )
   );
@@ -99,18 +94,14 @@ describe("route catalog static params", () => {
       grade: "10",
       material: "chemistry",
     });
-    expect(routeMocks.getRuntimeContentRoutePage).toHaveBeenCalledWith({
-      cursor: null,
+    expect(routeMocks.listRuntimeLatestContentRoutes).toHaveBeenCalledWith({
       limit: 100,
       locale: "en",
-      prefix: "articles/",
       section: "articles",
     });
-    expect(routeMocks.getRuntimeContentRoutePage).toHaveBeenCalledWith({
-      cursor: null,
+    expect(routeMocks.listRuntimeLatestContentRoutes).toHaveBeenCalledWith({
       limit: 100,
       locale: "id",
-      prefix: "subject/",
       section: "subject",
     });
   });
@@ -131,35 +122,49 @@ describe("route catalog static params", () => {
     });
   });
 
+  it("uses dated exercise question rows to prerender parent set routes", async () => {
+    await expect(
+      getStaticParams({
+        basePath: "exercises",
+        isDeep: true,
+        paramNames: ["category", "type", "material", "slug"],
+        slugParam: "slug",
+      })
+    ).resolves.toContainEqual({
+      category: "high-school",
+      material: "quantitative-knowledge",
+      slug: ["try-out", "2026", "set-1"],
+      type: "snbt",
+    });
+  });
+
   it("skips malformed or nonmatching static-param routes", async () => {
-    routeMocks.getRuntimeContentRoutePage.mockReturnValueOnce(
-      Effect.succeed(
-        routePage([
-          routeRow({
-            locale: "en",
-            route: "articles",
-            section: "articles",
-          }),
-          routeRow({
-            locale: "en",
-            route: "subject/high-school/10/chemistry",
-            section: "subject",
-          }),
-          routeRow({
-            locale: "en",
-            route: "articles/politics",
-            section: "articles",
-          }),
-          routeRow({
-            locale: "en",
-            route: "articles/politics/example",
-            section: "articles",
-          }),
-        ])
-      )
+    routeMocks.listRuntimeLatestContentRoutes.mockReturnValueOnce(
+      Effect.succeed([
+        routeRow({
+          locale: "en",
+          route: "articles",
+          section: "articles",
+        }),
+        routeRow({
+          locale: "en",
+          route: "subject/high-school/10/chemistry",
+          section: "subject",
+        }),
+        routeRow({
+          locale: "en",
+          route: "articles/politics",
+          section: "articles",
+        }),
+        routeRow({
+          locale: "en",
+          route: "articles/politics/example",
+          section: "articles",
+        }),
+      ])
     );
-    routeMocks.getRuntimeContentRoutePage.mockReturnValueOnce(
-      Effect.succeed(routePage([]))
+    routeMocks.listRuntimeLatestContentRoutes.mockReturnValueOnce(
+      Effect.succeed([])
     );
 
     await expect(
@@ -200,21 +205,25 @@ const routeRows = [
     section: "subject",
   }),
   routeRow({
+    kind: "exercise-question",
     locale: "en",
-    route:
+    parentRoute:
       "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1",
+    route:
+      "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1/1",
     section: "exercises",
   }),
 ];
 
 interface RuntimeRouteArgs {
   locale: "en" | "id";
-  prefix: string;
   section: "articles" | "subject" | "exercises" | "quran";
 }
 
 interface RuntimeRouteFixture {
+  kind?: string;
   locale: RuntimeRouteArgs["locale"];
+  parentRoute?: string;
   route: string;
   section: RuntimeRouteArgs["section"];
 }
@@ -224,22 +233,14 @@ function routeRow(args: RuntimeRouteFixture) {
   return {
     authors: [{ name: "Nakafa" }],
     content_id: `${args.locale}/${args.route}`,
-    kind: "article",
+    kind: args.kind ?? "article",
     locale: args.locale,
     markdown: true,
+    parentRoute: args.parentRoute,
     route: args.route,
     section: args.section,
     syncedAt: 1,
     title: "Title",
-  };
-}
-
-/** Builds one completed route-catalog page fixture. */
-function routePage(page: ReturnType<typeof routeRow>[]) {
-  return {
-    continueCursor: "",
-    isDone: true,
-    page,
   };
 }
 

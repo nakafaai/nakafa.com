@@ -1,18 +1,21 @@
 import type { api } from "@repo/backend/convex/_generated/api";
 import { routing } from "@repo/internationalization/src/routing";
-import type { FunctionArgs } from "convex/server";
+import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
 import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import {
   getRuntimeContentRoute,
-  getRuntimeContentRoutePage,
+  listRuntimeLatestContentRoutes,
 } from "@/lib/content/runtime";
 
 type RuntimeContentSection = FunctionArgs<
   typeof api.contents.queries.runtime.listContentRoutesByPrefix
 >["section"];
+type LatestContentRoute = FunctionReturnType<
+  typeof api.contents.queries.runtime.listLatestContentRoutes
+>[number];
 
 /** Expected failure raised when route metadata translations cannot be loaded. */
 class TranslationLoadError extends Schema.TaggedError<TranslationLoadError>()(
@@ -39,7 +42,7 @@ interface SystemMetadata {
 
 type StaticParam = Record<string, string | string[]>;
 
-const staticParamRoutePageLimit = 100;
+const staticParamCandidateLimit = 100;
 
 /** Generates static params from the Convex-backed public route catalog. */
 export function getStaticParams(config: ParamConfig): Promise<StaticParam[]> {
@@ -66,27 +69,42 @@ function getStaticParamsEffect(config: ParamConfig) {
   }).pipe(Effect.withSpan("www.system.getStaticParams"));
 }
 
-/** Reads a bounded route-catalog page for one static params generator. */
+/** Reads deliberate latest-content candidates for one static params generator. */
 function getStaticParamRoutes(config: ParamConfig) {
   return Effect.gen(function* () {
-    const routePages = yield* Effect.forEach(
+    const routeGroups = yield* Effect.forEach(
       routing.locales,
       (locale) =>
-        getRuntimeContentRoutePage({
-          cursor: null,
-          limit: staticParamRoutePageLimit,
+        listRuntimeLatestContentRoutes({
+          limit: staticParamCandidateLimit,
           locale,
-          prefix: `${config.basePath}/`,
           section: config.basePath,
         }),
       { concurrency: routing.locales.length }
     );
-    const routes = routePages.flatMap((page) =>
-      page.page.map((row) => `/${row.route}`)
-    );
+    const routes = routeGroups
+      .flat()
+      .map((route) => getStaticParamRoutePath(route, config));
 
     return new Set(routes);
   });
+}
+
+/** Selects the concrete URL path to prerender from one latest-content row. */
+function getStaticParamRoutePath(
+  route: LatestContentRoute,
+  config: ParamConfig
+) {
+  if (
+    config.basePath === "exercises" &&
+    config.isDeep &&
+    route.kind === "exercise-question" &&
+    route.parentRoute
+  ) {
+    return `/${route.parentRoute}`;
+  }
+
+  return `/${route.route}`;
 }
 
 /** Converts one public route into a route-level static params object. */
