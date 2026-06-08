@@ -511,6 +511,12 @@ export const syncFull = Effect.fn("sync.full")(function* (
       });
       if (cleanResult.hasStale && cleanResult.deleted) {
         log("\nStale content was found and deleted.");
+        log("Rebuilding route artifact pages after stale cleanup...");
+        const routePageResult = yield* syncContentRouteArtifactPages(
+          config,
+          options
+        );
+        log(`  Route Pages: ${formatSyncResult(routePageResult)}`);
       }
 
       log("\n");

@@ -11,6 +11,9 @@ import { getQuranSurahName } from "@/lib/utils/pages/quran";
 
 const baseUrl = "https://nakafa.com";
 const RSS_CONTENT_ROUTE_LIMIT = 100;
+const rssHeaders = {
+  "Content-Type": "application/rss+xml; charset=utf-8",
+};
 
 /** Serves the RSS feed from Convex content routes and Quran runtime rows. */
 export async function GET() {
@@ -89,7 +92,7 @@ export async function GET() {
     feed.addItem(item);
   }
 
-  return new NextResponse(feed.rss2());
+  return new NextResponse(feed.rss2(), { headers: rssHeaders });
 }
 
 /** Reads article and subject feed routes from the Convex route catalog. */
