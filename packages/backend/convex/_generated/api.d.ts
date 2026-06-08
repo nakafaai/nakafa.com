@@ -105,6 +105,7 @@ import type * as comments_queries from "../comments/queries.js";
 import type * as contentSync_constants from "../contentSync/constants.js";
 import type * as contentSync_lib_errors from "../contentSync/lib/errors.js";
 import type * as contentSync_lib_syncHelpers from "../contentSync/lib/syncHelpers.js";
+import type * as contentSync_lib_syncValues from "../contentSync/lib/syncValues.js";
 import type * as contentSync_lib_tryouts from "../contentSync/lib/tryouts.js";
 import type * as contentSync_mutations_articles from "../contentSync/mutations/articles.js";
 import type * as contentSync_mutations_authors from "../contentSync/mutations/authors.js";
@@ -453,6 +454,7 @@ declare const fullApi: ApiFromModules<{
   "contentSync/constants": typeof contentSync_constants;
   "contentSync/lib/errors": typeof contentSync_lib_errors;
   "contentSync/lib/syncHelpers": typeof contentSync_lib_syncHelpers;
+  "contentSync/lib/syncValues": typeof contentSync_lib_syncValues;
   "contentSync/lib/tryouts": typeof contentSync_lib_tryouts;
   "contentSync/mutations/articles": typeof contentSync_mutations_articles;
   "contentSync/mutations/authors": typeof contentSync_mutations_authors;
