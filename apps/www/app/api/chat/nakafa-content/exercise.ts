@@ -33,7 +33,9 @@ export function readExercise(
     }
 
     const exercises = Option.match(target.number, {
+      /** Keeps the whole set when no specific question is requested. */
       onNone: () => setPage.exercises,
+      /** Selects only the requested exercise number from the set rows. */
       onSome: (number) =>
         setPage.exercises.filter((exercise) => exercise.number === number),
     });
@@ -68,7 +70,9 @@ export function readExercise(
     };
     const result = yield* decodeNakafaAgentExerciseResult(
       Option.match(target.number, {
+        /** Returns set-level output when no specific question is requested. */
         onNone: () => resultInput,
+        /** Marks the result as a single-question exercise response. */
         onSome: (number) => ({
           ...resultInput,
           exercise_number: number,

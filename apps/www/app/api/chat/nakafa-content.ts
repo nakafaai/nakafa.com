@@ -13,6 +13,7 @@ import {
 
 /** Convex-backed Nakafa content adapter for Nina. */
 export const nakafaContent = Nakafa.make({
+  /** Reads markdown through the runtime model while preserving rich MDX imports. */
   read: (input) =>
     Effect.gen(function* () {
       const ref = parseNakafaContentRef(input);
@@ -31,6 +32,7 @@ export const nakafaContent = Nakafa.make({
 
       return yield* readMdxMarkdown(ref.value);
     }),
+  /** Reads structured exercise rows from the Convex runtime model. */
   exercise: (input, exerciseNumber) =>
     Effect.gen(function* () {
       const ref = parseNakafaContentRef(input);
@@ -41,9 +43,12 @@ export const nakafaContent = Nakafa.make({
 
       return yield* readExercise(ref.value, exerciseNumber);
     }),
+  /** Delegates Quran lookup to the package-level Nakafa service. */
   quran: (input) => Nakafa.quran(input).pipe(Effect.provide(Nakafa.Default)),
+  /** Delegates taxonomy lookup to the package-level Nakafa service. */
   taxonomy: (locale) =>
     Nakafa.taxonomy(locale).pipe(Effect.provide(Nakafa.Default)),
+  /** Verifies content existence against Quran, exercises, or runtime MDX rows. */
   verify: (input) =>
     Effect.gen(function* () {
       const ref = parseNakafaContentRef(input);

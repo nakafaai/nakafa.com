@@ -226,6 +226,7 @@ export function streamChat({ chat, page, runtime, user }: Params) {
         )
       );
     },
+    /** Runs the main AI stream and merges UI message chunks into the writer. */
     execute: ({ writer }) =>
       Effect.runPromise(
         Effect.gen(function* () {
@@ -262,6 +263,7 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                 description:
                   "Retrieve Nakafa educational evidence for lessons, study topics, current pages, articles, Quran references, examples, warmups, review tasks, tryout preparation, and structured exercises. Use this before math when content must be selected. Preserve requested deliverables in the structured input.",
                 inputSchema: nakafaToolInputSchema,
+                /** Runs the Nakafa specialist with one-time current-page fetch support. */
                 execute: (input, { toolCallId }) => {
                   const needsPageFetch = context.needsPageFetch && !fetchedPage;
 
@@ -319,6 +321,7 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                 description:
                   "Research external, official, current, latest, cited, or source-backed information with web search and source analysis.",
                 inputSchema: researchToolInputSchema,
+                /** Runs the external research specialist and records its token usage. */
                 execute: (input, { messages, toolCallId }) =>
                   Effect.runPromise(
                     Effect.gen(function* () {
@@ -358,6 +361,7 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                 description:
                   "Verify user-provided or retrieved math with deterministic evidence for arithmetic, algebra, equations, calculus, series, matrices, statistics, probability, geometry, and discrete math. Do not use this as the first or only source for educational practice content; use Nakafa first, then math verifies the selected content.",
                 inputSchema: mathToolInputSchema,
+                /** Runs the deterministic math specialist and records its token usage. */
                 execute: (input) =>
                   Effect.runPromise(
                     Effect.gen(function* () {
