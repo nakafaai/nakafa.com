@@ -3,9 +3,19 @@ import {
   StudentIcon,
   TeacherIcon,
 } from "@hugeicons/core-free-icons";
+import {
+  type SelfSelectableUserRole,
+  selfSelectableUserRoles,
+} from "@repo/backend/convex/users/roles";
 
-export const roles = [
-  { value: "teacher", icon: TeacherIcon },
-  { value: "student", icon: StudentIcon },
-  { value: "parent", icon: ChildIcon },
-] as const;
+const roleIcons: Record<SelfSelectableUserRole, typeof TeacherIcon> = {
+  parent: ChildIcon,
+  student: StudentIcon,
+  teacher: TeacherIcon,
+};
+
+/** Self-selectable user roles with UI-local icon metadata. */
+export const roles = selfSelectableUserRoles.map((value) => ({
+  icon: roleIcons[value],
+  value,
+}));

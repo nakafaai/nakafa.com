@@ -1,13 +1,13 @@
-/** User roles shared by Convex validators and AI prompt context. */
+/** Persisted user roles accepted by the users table and server mutations. */
 export const userRoles = [
   "teacher",
   "student",
   "parent",
   "administrator",
 ] as const;
-export type UserRole = (typeof userRoles)[number];
+export type PersistedUserRole = (typeof userRoles)[number];
 
-/** User roles that normal users may choose from onboarding and settings. */
+/** User roles that normal users may choose during onboarding and settings. */
 export const selfSelectableUserRoles = [
   "teacher",
   "student",

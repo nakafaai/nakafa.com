@@ -74,7 +74,7 @@ export async function getExerciseRouteData(
 ) {
   "use cache";
 
-  cacheLife("max");
+  cacheLife("seconds");
 
   const slug = slugKey === "" ? [] : slugKey.split("/");
   const pagePath = getSlugPath(category, type, material, slug);

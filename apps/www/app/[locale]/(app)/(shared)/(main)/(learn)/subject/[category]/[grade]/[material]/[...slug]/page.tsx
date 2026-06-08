@@ -47,7 +47,7 @@ import {
   LayoutMaterialPagination,
   LayoutMaterialToc,
 } from "@/components/shared/layout-material";
-import { importRequiredContentModule } from "@/lib/content/module";
+import { importContentModuleOrNull } from "@/lib/content/module";
 import { fetchRuntimeSubjectPage } from "@/lib/content/runtime";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
@@ -193,11 +193,16 @@ export default async function Page({
     notFound();
   }
 
-  const content = await importRequiredContentModule({
+  const content = await importContentModuleOrNull({
     filePath,
     locale,
     source: "subject-content-module",
   });
+
+  if (!content?.default) {
+    notFound();
+  }
+
   const Content = content.default;
   const contentMetadata = subject.metadata;
 

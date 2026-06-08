@@ -1,10 +1,11 @@
 import type { ExerciseWithoutDefaults } from "@repo/contents/_types/exercises/shared";
 import { slugify } from "@repo/design-system/lib/utils";
+import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { Suspense } from "react";
 import { QuestionAnalytics } from "@/components/exercise/item/analytics";
 import { ExerciseArticle } from "@/components/exercise/item/article";
-import { importRequiredContentModule } from "@/lib/content/module";
+import { importContentModuleOrNull } from "@/lib/content/module";
 
 type ExerciseEntryData = Pick<ExerciseWithoutDefaults, "choices" | "number">;
 
@@ -19,7 +20,7 @@ async function QuestionContent({
   setPath: string;
 }) {
   const questionPath = `${setPath}/${exerciseNumber}/_question`;
-  const question = await importRequiredContentModule({
+  const question = await importContentModuleOrNull({
     context: {
       exercise_number: exerciseNumber,
     },
@@ -27,6 +28,11 @@ async function QuestionContent({
     locale,
     source: "exercise-question-module",
   });
+
+  if (!question?.default) {
+    notFound();
+  }
+
   const Question = question.default;
 
   return <Question />;
@@ -43,7 +49,7 @@ async function AnswerContent({
   setPath: string;
 }) {
   const answerPath = `${setPath}/${exerciseNumber}/_answer`;
-  const answer = await importRequiredContentModule({
+  const answer = await importContentModuleOrNull({
     context: {
       exercise_number: exerciseNumber,
     },
@@ -51,6 +57,11 @@ async function AnswerContent({
     locale,
     source: "exercise-answer-module",
   });
+
+  if (!answer?.default) {
+    notFound();
+  }
+
   const Answer = answer.default;
 
   return <Answer />;

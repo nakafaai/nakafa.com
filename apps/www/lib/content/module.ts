@@ -33,20 +33,18 @@ interface ContentModuleImportOptions {
  */
 function reportContentModuleImportError({
   cause,
-  context = {},
+  context,
   filePath,
   locale,
   source,
 }: ContentModuleImportError) {
-  return import("@repo/analytics/posthog/server").then(
-    (analytics) =>
-      analytics.captureServerException(cause, undefined, {
-        ...context,
-        file_path: filePath,
-        locale,
-        source,
-      }),
-    () => undefined
+  return import("@repo/analytics/posthog/server").then((analytics) =>
+    analytics.captureServerException(cause, undefined, {
+      ...context,
+      file_path: filePath,
+      locale,
+      source,
+    })
   );
 }
 
@@ -58,7 +56,7 @@ function reportContentModuleImportError({
  * Promise boundary here; the rejection branch reports analytics when possible
  * and returns `null` so callers can delegate to `notFound()`.
  */
-function importContentModuleOrNull({
+export function importContentModuleOrNull({
   context,
   filePath,
   locale,
@@ -77,20 +75,5 @@ function importContentModuleOrNull({
         () => null,
         () => null
       )
-  );
-}
-
-/** Imports a compiled MDX module that must exist for a synced content route. */
-export async function importRequiredContentModule(
-  args: ContentModuleImportOptions
-) {
-  const content = await importContentModuleOrNull(args);
-
-  if (content?.default) {
-    return content;
-  }
-
-  throw new Error(
-    `Synced content module is missing from the deployment artifact: ${args.filePath} (${args.source}).`
   );
 }

@@ -1,4 +1,7 @@
-import { selfSelectableUserRoles, userRoles } from "@repo/utilities/roles";
+import {
+  selfSelectableUserRoles,
+  userRoles,
+} from "@repo/backend/convex/users/roles";
 import { defineTable } from "convex/server";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
