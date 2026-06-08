@@ -19,6 +19,7 @@ import {
 export const search = query({
   args: contentSearchInputValidator,
   returns: contentSearchResultValidator,
+  /** Runs a bounded section-aware search over the durable content read model. */
   handler: async (ctx, args) => {
     const queryTexts = validateContentSearchInput(args);
     const scanLimit = args.offset + args.limit + 1;

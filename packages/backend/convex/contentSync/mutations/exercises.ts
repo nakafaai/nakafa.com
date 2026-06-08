@@ -6,6 +6,7 @@ import {
   replaceExerciseChoices,
   syncContentAuthorsWithCache,
 } from "@repo/backend/convex/contentSync/lib/syncHelpers";
+import { hasSameSyncValues } from "@repo/backend/convex/contentSync/lib/syncValues";
 import { buildContentSearchRef } from "@repo/backend/convex/contents/helpers/search/documents";
 import {
   deleteContentSearch,
@@ -96,6 +97,7 @@ export const bulkSyncExerciseSets = internalMutation({
     sets: v.array(syncedExerciseSetValidator),
   },
   returns: syncSummaryValidator,
+  /** Applies one bounded exercise set sync batch and keeps set search rows current. */
   handler: async (ctx, args) => {
     assertContentSyncBatchSize({
       functionName: "bulkSyncExerciseSets",
@@ -150,18 +152,7 @@ export const bulkSyncExerciseSets = internalMutation({
         )
         .unique();
 
-      if (
-        existingSet &&
-        existingSet.category === nextValues.category &&
-        existingSet.description === nextValues.description &&
-        existingSet.exerciseType === nextValues.exerciseType &&
-        existingSet.material === nextValues.material &&
-        existingSet.questionCount === nextValues.questionCount &&
-        existingSet.setName === nextValues.setName &&
-        existingSet.title === nextValues.title &&
-        existingSet.type === nextValues.type &&
-        existingSet.year === nextValues.year
-      ) {
+      if (hasSameSyncValues(nextValues, existingSet)) {
         unchanged++;
         continue;
       }
@@ -194,6 +185,7 @@ export const bulkSyncExerciseQuestions = internalMutation({
     questions: v.array(syncedExerciseQuestionValidator),
   },
   returns: syncQuestionsResultValidator,
+  /** Applies one bounded exercise question sync batch to runtime, search, author, and choice rows. */
   handler: async (ctx, args) => {
     assertContentSyncBatchSize({
       functionName: "bulkSyncExerciseQuestions",
@@ -249,11 +241,6 @@ export const bulkSyncExerciseQuestions = internalMutation({
         title: question.searchTitle,
       });
 
-      if (existingQuestion?.contentHash === question.contentHash) {
-        unchanged++;
-        continue;
-      }
-
       const nextValues = {
         answerBody: question.answerBody,
         category: question.category,
@@ -269,6 +256,11 @@ export const bulkSyncExerciseQuestions = internalMutation({
         title: question.title,
         type: question.type,
       };
+
+      if (hasSameSyncValues(nextValues, existingQuestion)) {
+        unchanged++;
+        continue;
+      }
 
       if (existingQuestion) {
         await ctx.db.patch("exerciseQuestions", existingQuestion._id, {
@@ -334,6 +326,7 @@ export const deleteStaleExerciseSets = internalMutation({
     setIds: v.array(v.id("exerciseSets")),
   },
   returns: deleteResultValidator,
+  /** Removes one bounded stale exercise set batch after validating question counts. */
   handler: async (ctx, args) => {
     assertContentSyncBatchSize({
       functionName: "deleteStaleExerciseSets",
@@ -392,6 +385,7 @@ export const deleteStaleExerciseQuestions = internalMutation({
     questionIds: v.array(v.id("exerciseQuestions")),
   },
   returns: deleteResultValidator,
+  /** Removes one bounded stale exercise question batch and its sync-owned dependent rows. */
   handler: async (ctx, args) => {
     assertContentSyncBatchSize({
       functionName: "deleteStaleExerciseQuestions",

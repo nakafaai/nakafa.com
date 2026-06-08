@@ -12,6 +12,7 @@ import {
   replaceArticleReferences,
   syncContentAuthorsWithCache,
 } from "@repo/backend/convex/contentSync/lib/syncHelpers";
+import { hasSameSyncValues } from "@repo/backend/convex/contentSync/lib/syncValues";
 import { buildContentSearchRef } from "@repo/backend/convex/contents/helpers/search/documents";
 import {
   deleteContentSearch,
@@ -62,11 +63,13 @@ const deleteResultValidator = v.object({
   deleted: v.number(),
 });
 
+/** Upsert article rows, references, author links, search, and audio sources. */
 export const bulkSyncArticles = internalMutation({
   args: {
     articles: v.array(syncedArticleValidator),
   },
   returns: bulkSyncArticlesResultValidator,
+  /** Applies one bounded article sync batch to runtime, search, author, reference, and audio rows. */
   handler: async (ctx, args) => {
     assertContentSyncBatchSize({
       functionName: "bulkSyncArticles",
@@ -116,21 +119,25 @@ export const bulkSyncArticles = internalMutation({
         });
       }
 
-      if (existingArticle?.contentHash === article.contentHash) {
+      const nextValues = {
+        articleSlug: article.articleSlug,
+        body: article.body,
+        category: article.category,
+        contentHash: article.contentHash,
+        date: article.date,
+        description: article.description,
+        title: article.title,
+      };
+
+      if (hasSameSyncValues(nextValues, existingArticle)) {
         unchanged++;
         continue;
       }
 
       if (existingArticle) {
         await ctx.db.patch("articleContents", existingArticle._id, {
-          articleSlug: article.articleSlug,
-          body: article.body,
-          category: article.category,
-          contentHash: article.contentHash,
-          date: article.date,
-          description: article.description,
+          ...nextValues,
           syncedAt: now,
-          title: article.title,
         });
 
         await runConvexProgram(
@@ -158,16 +165,10 @@ export const bulkSyncArticles = internalMutation({
       }
 
       const articleId = await ctx.db.insert("articleContents", {
-        articleSlug: article.articleSlug,
-        body: article.body,
-        category: article.category,
-        contentHash: article.contentHash,
-        date: article.date,
-        description: article.description,
+        ...nextValues,
         locale: article.locale,
         slug: article.slug,
         syncedAt: now,
-        title: article.title,
       });
 
       await syncAudioContentSource(ctx, {
@@ -209,6 +210,7 @@ export const deleteStaleArticles = internalMutation({
     articleIds: v.array(v.id("articleContents")),
   },
   returns: deleteResultValidator,
+  /** Removes one bounded stale article batch and its sync-owned dependent rows. */
   handler: async (ctx, args) => {
     assertContentSyncBatchSize({
       functionName: "deleteStaleArticles",

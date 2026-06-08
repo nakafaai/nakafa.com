@@ -225,6 +225,25 @@ export const syncSubjectSections = Effect.fn("sync.subjectSections")(function* (
         const pathInfo = yield* parseSubjectPath(file);
         const { metadata, body } = yield* readMdxFile(file);
         const topicSlug = `subject/${pathInfo.category}/${pathInfo.grade}/${pathInfo.material}/${pathInfo.topic}`;
+        const date = yield* parseDateToEpoch(metadata.date);
+        const contentHash = computeHash(
+          JSON.stringify({
+            authors: metadata.authors,
+            body,
+            category: pathInfo.category,
+            date,
+            description: metadata.description,
+            grade: pathInfo.grade,
+            locale: pathInfo.locale,
+            material: pathInfo.material,
+            section: pathInfo.section,
+            slug: pathInfo.slug,
+            subject: metadata.subject,
+            title: metadata.title,
+            topic: pathInfo.topic,
+            topicSlug,
+          })
+        );
 
         return {
           locale: pathInfo.locale,
@@ -237,10 +256,10 @@ export const syncSubjectSections = Effect.fn("sync.subjectSections")(function* (
           section: pathInfo.section,
           title: metadata.title,
           description: metadata.description,
-          date: yield* parseDateToEpoch(metadata.date),
+          date,
           subject: metadata.subject,
           body,
-          contentHash: computeHash(body + JSON.stringify(metadata.authors)),
+          contentHash,
           authors: metadata.authors,
         };
       })

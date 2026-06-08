@@ -91,8 +91,20 @@ export const syncArticles = Effect.fn("sync.articles")(function* (
         const { metadata, body } = yield* readMdxFile(file);
         const articleDir = getArticleDir(file);
         const references = yield* readArticleReferences(articleDir);
+        const date = yield* parseDateToEpoch(metadata.date);
         const contentHash = computeHash(
-          body + JSON.stringify(references) + JSON.stringify(metadata.authors)
+          JSON.stringify({
+            articleSlug: pathInfo.articleSlug,
+            authors: metadata.authors,
+            body,
+            category: pathInfo.category,
+            date,
+            description: metadata.description,
+            locale: pathInfo.locale,
+            references,
+            slug: pathInfo.slug,
+            title: metadata.title,
+          })
         );
 
         return {
@@ -102,7 +114,7 @@ export const syncArticles = Effect.fn("sync.articles")(function* (
           articleSlug: pathInfo.articleSlug,
           title: metadata.title,
           description: metadata.description,
-          date: yield* parseDateToEpoch(metadata.date),
+          date,
           body,
           contentHash,
           authors: metadata.authors,

@@ -282,6 +282,7 @@ export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
   return { ...totals, durationMs, itemsPerSecond };
 });
 
+/** Parses one exercise question file into the Convex sync payload. */
 const parseQuestionFile = Effect.fn("sync.parseQuestionFile")(function* (
   questionFile: string,
   searchLabelsBySet: ReadonlyMap<string, ExerciseSearchLabels>
@@ -342,6 +343,10 @@ const parseQuestionFile = Effect.fn("sync.parseQuestionFile")(function* (
     questionBody: questionParsed.body,
     answerBody,
   };
+  const date = yield* parseDateToEpoch(questionParsed.metadata.date);
+  const searchDescription = getExerciseSearchDescription(searchSource);
+  const searchText = getExerciseSearchText(searchSource);
+  const searchTitle = getExerciseSearchTitle(searchSource);
 
   return {
     locale: pathInfo.locale,
@@ -355,17 +360,34 @@ const parseQuestionFile = Effect.fn("sync.parseQuestionFile")(function* (
     number: pathInfo.number,
     title: questionParsed.metadata.title,
     description: questionParsed.metadata.description,
-    date: yield* parseDateToEpoch(questionParsed.metadata.date),
+    date,
     questionBody: questionParsed.body,
     answerBody,
-    searchDescription: getExerciseSearchDescription(searchSource),
-    searchText: getExerciseSearchText(searchSource),
-    searchTitle: getExerciseSearchTitle(searchSource),
+    searchDescription,
+    searchText,
+    searchTitle,
     contentHash: computeHash(
-      questionParsed.body +
-        answerBody +
-        JSON.stringify(choices) +
-        JSON.stringify(questionParsed.metadata.authors)
+      JSON.stringify({
+        answerBody,
+        authors: questionParsed.metadata.authors,
+        category: pathInfo.category,
+        choices,
+        date,
+        description: questionParsed.metadata.description,
+        exerciseType: pathInfo.exerciseType,
+        locale: pathInfo.locale,
+        material: pathInfo.material,
+        number: pathInfo.number,
+        questionBody: questionParsed.body,
+        searchDescription,
+        searchText,
+        searchTitle,
+        setName: pathInfo.setName,
+        setSlug,
+        slug: pathInfo.slug,
+        title: questionParsed.metadata.title,
+        type: pathInfo.examType,
+      })
     ),
     authors: questionParsed.metadata.authors,
     choices,
