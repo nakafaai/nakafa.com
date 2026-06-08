@@ -1,4 +1,4 @@
-import type { Locale } from "@repo/backend/convex/lib/validators/contents";
+import type { internal } from "@repo/backend/convex/_generated/api";
 import { ScriptFailureError } from "@repo/backend/scripts/lib/errors";
 import {
   computeHash,
@@ -44,55 +44,16 @@ import {
   getExerciseSetSearchText,
   getExerciseSetSearchTitle,
 } from "@repo/contents/_lib/exercises/search";
+import type { FunctionArgs } from "convex/server";
 import { Effect } from "effect";
 
-interface ExerciseSetPayload {
-  category: string;
-  contentHash: string;
-  description?: string;
-  exerciseType: string;
-  locale: Locale;
-  material: string;
-  questionCount: number;
-  searchDescription: string;
-  searchText: string;
-  searchTitle: string;
-  setName: string;
-  slug: string;
-  title: string;
-  type: string;
-  year?: string;
-}
+type ExerciseSetPayload = FunctionArgs<
+  typeof internal.contentSync.mutations.exercises.bulkSyncExerciseSets
+>["sets"][number];
 
-interface QuestionChoice {
-  isCorrect: boolean;
-  label: string;
-  optionKey: string;
-  order: number;
-}
-
-interface ExerciseQuestionPayload {
-  answerBody: string;
-  authors: Array<{ name: string }>;
-  category: string;
-  choices: QuestionChoice[];
-  contentHash: string;
-  date: number;
-  description?: string;
-  exerciseType: string;
-  locale: Locale;
-  material: string;
-  number: number;
-  questionBody: string;
-  searchDescription: string;
-  searchText: string;
-  searchTitle: string;
-  setName: string;
-  setSlug: string;
-  slug: string;
-  title: string;
-  type: string;
-}
+type ExerciseQuestionPayload = FunctionArgs<
+  typeof internal.contentSync.mutations.exercises.bulkSyncExerciseQuestions
+>["questions"][number];
 
 interface ExerciseSearchLabels {
   exerciseTypeTitle: string;

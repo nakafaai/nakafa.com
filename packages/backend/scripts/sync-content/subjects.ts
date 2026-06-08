@@ -1,4 +1,4 @@
-import type { Locale } from "@repo/backend/convex/lib/validators/contents";
+import type { internal } from "@repo/backend/convex/_generated/api";
 import {
   computeHash,
   parseDateToEpoch,
@@ -30,37 +30,16 @@ import type {
   SyncOptions,
   SyncResult,
 } from "@repo/backend/scripts/sync-content/types";
+import type { FunctionArgs } from "convex/server";
 import { Effect } from "effect";
 
-interface SubjectTopicPayload {
-  category: string;
-  description?: string;
-  grade: string;
-  locale: Locale;
-  material: string;
-  sectionCount: number;
-  slug: string;
-  title: string;
-  topic: string;
-}
+type SubjectTopicPayload = FunctionArgs<
+  typeof internal.contentSync.mutations.subjects.bulkSyncSubjectTopics
+>["topics"][number];
 
-interface SubjectSectionPayload {
-  authors: Array<{ name: string }>;
-  body: string;
-  category: string;
-  contentHash: string;
-  date: number;
-  description?: string;
-  grade: string;
-  locale: Locale;
-  material: string;
-  section: string;
-  slug: string;
-  subject?: string;
-  title: string;
-  topic: string;
-  topicSlug: string;
-}
+type SubjectSectionPayload = FunctionArgs<
+  typeof internal.contentSync.mutations.subjects.bulkSyncSubjectSections
+>["sections"][number];
 
 /** Syncs subject topic metadata from material files into Convex. */
 export const syncSubjectTopics = Effect.fn("sync.subjectTopics")(function* (

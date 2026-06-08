@@ -1,4 +1,4 @@
-import type { Locale } from "@repo/backend/convex/lib/validators/contents";
+import type { internal } from "@repo/backend/convex/_generated/api";
 import {
   computeHash,
   parseDateToEpoch,
@@ -31,29 +31,12 @@ import type {
   SyncOptions,
   SyncResult,
 } from "@repo/backend/scripts/sync-content/types";
+import type { FunctionArgs } from "convex/server";
 import { Effect } from "effect";
 
-interface ArticlePayload {
-  articleSlug: string;
-  authors: Array<{ name: string }>;
-  body: string;
-  category: string;
-  contentHash: string;
-  date: number;
-  description?: string;
-  locale: Locale;
-  references: Array<{
-    authors: string;
-    citation?: string;
-    details?: string;
-    publication?: string;
-    title: string;
-    url?: string;
-    year: number;
-  }>;
-  slug: string;
-  title: string;
-}
+type ArticlePayload = FunctionArgs<
+  typeof internal.contentSync.mutations.articles.bulkSyncArticles
+>["articles"][number];
 
 /** Syncs article MDX files and their references into Convex. */
 export const syncArticles = Effect.fn("sync.articles")(function* (
