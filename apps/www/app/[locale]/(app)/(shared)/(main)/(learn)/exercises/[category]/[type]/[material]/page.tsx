@@ -9,9 +9,11 @@ import {
   parseExercisesType,
 } from "@repo/contents/_lib/exercises/route";
 import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
-import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
-import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material";
-import type { ExercisesType } from "@repo/contents/_types/exercises/type";
+import type {
+  ExercisesCategory,
+  ExercisesMaterial,
+  ExercisesType,
+} from "@repo/contents/_types/taxonomy";
 import type { ParsedHeading } from "@repo/contents/_types/toc";
 import { slugify } from "@repo/design-system/lib/utils";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";

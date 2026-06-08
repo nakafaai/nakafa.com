@@ -1,4 +1,4 @@
-import type { internal } from "@repo/backend/convex/_generated/api";
+import { internal } from "@repo/backend/convex/_generated/api";
 import {
   computeHash,
   parseDateToEpoch,
@@ -6,7 +6,7 @@ import {
 } from "@repo/backend/scripts/lib/mdx-parser/content";
 import { parseSubjectMaterialFile } from "@repo/backend/scripts/lib/mdx-parser/materials";
 import { parseSubjectPath } from "@repo/backend/scripts/lib/mdx-parser/paths";
-import { callConvex } from "@repo/backend/scripts/sync-content/convex";
+import { callConvexMutation } from "@repo/backend/scripts/sync-content/convex";
 import {
   formatDuration,
   log,
@@ -23,7 +23,8 @@ import {
   BATCH_SIZES,
   LOCALE_SUBJECT_MATERIAL_FILE_REGEX,
   parseLocale,
-  SyncResultSchema,
+  SubjectSectionSyncResultSchema,
+  SubjectTopicSyncResultSchema,
 } from "@repo/backend/scripts/sync-content/schemas";
 import type {
   ConvexConfig,
@@ -134,12 +135,11 @@ export const syncSubjectTopics = Effect.fn("sync.subjectTopics")(function* (
       log(formatBatchProgress(progress, batchNum, totalBatches, batch.length));
     }
 
-    const result = yield* callConvex(
+    const result = yield* callConvexMutation(
       config,
-      "mutation",
-      "contentSync/mutations/subjects:bulkSyncSubjectTopics",
+      internal.contentSync.mutations.subjects.bulkSyncSubjectTopics,
       { topics: batch },
-      SyncResultSchema
+      SubjectTopicSyncResultSchema
     );
 
     totals.created += result.created;
@@ -280,12 +280,11 @@ export const syncSubjectSections = Effect.fn("sync.subjectSections")(function* (
       log(formatBatchProgress(progress, batchNum, totalBatches, batch.length));
     }
 
-    const result = yield* callConvex(
+    const result = yield* callConvexMutation(
       config,
-      "mutation",
-      "contentSync/mutations/subjects:bulkSyncSubjectSections",
+      internal.contentSync.mutations.subjects.bulkSyncSubjectSections,
       { sections: batch },
-      SyncResultSchema
+      SubjectSectionSyncResultSchema
     );
 
     totals.created += result.created;

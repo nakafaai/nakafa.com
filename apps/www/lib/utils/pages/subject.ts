@@ -1,9 +1,11 @@
 import { getContentMetadataWithRaw } from "@repo/contents/_lib/metadata";
 import { getSlugPath } from "@repo/contents/_lib/subject/slug";
 import type { ContentWithMDX } from "@repo/contents/_types/content";
-import type { SubjectCategory } from "@repo/contents/_types/subject/category";
-import type { Grade } from "@repo/contents/_types/subject/grade";
-import type { Material } from "@repo/contents/_types/subject/material";
+import type {
+  Grade,
+  Material,
+  SubjectCategory,
+} from "@repo/contents/_types/taxonomy";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 

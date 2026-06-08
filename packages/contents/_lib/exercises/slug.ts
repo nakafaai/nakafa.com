@@ -1,10 +1,10 @@
 import type { ContentPagination } from "@repo/contents/_types/content";
-import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
+import type { ExercisesMaterialList } from "@repo/contents/_types/exercises/material";
 import type {
+  ExercisesCategory,
   ExercisesMaterial,
-  ExercisesMaterialList,
-} from "@repo/contents/_types/exercises/material";
-import type { ExercisesType } from "@repo/contents/_types/exercises/type";
+  ExercisesType,
+} from "@repo/contents/_types/taxonomy";
 import { cleanSlug } from "@repo/utilities/helper";
 import { Option } from "effect";
 

@@ -1,4 +1,4 @@
-import type { internal } from "@repo/backend/convex/_generated/api";
+import { internal } from "@repo/backend/convex/_generated/api";
 import { ScriptFailureError } from "@repo/backend/scripts/lib/errors";
 import {
   computeHash,
@@ -12,7 +12,7 @@ import {
   getExerciseDir,
   parseExercisePath,
 } from "@repo/backend/scripts/lib/mdx-parser/paths";
-import { callConvex } from "@repo/backend/scripts/sync-content/convex";
+import { callConvexMutation } from "@repo/backend/scripts/sync-content/convex";
 import {
   formatDuration,
   log,
@@ -27,9 +27,10 @@ import {
 import { globFiles } from "@repo/backend/scripts/sync-content/runtime";
 import {
   BATCH_SIZES,
+  ExerciseQuestionSyncResultSchema,
+  ExerciseSetSyncResultSchema,
   LOCALE_MATERIAL_FILE_REGEX,
   parseLocale,
-  SyncResultSchema,
 } from "@repo/backend/scripts/sync-content/schemas";
 import type {
   ConvexConfig,
@@ -207,12 +208,11 @@ export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
       log(formatBatchProgress(progress, batchNum, totalBatches, batch.length));
     }
 
-    const result = yield* callConvex(
+    const result = yield* callConvexMutation(
       config,
-      "mutation",
-      "contentSync/mutations/exercises:bulkSyncExerciseSets",
+      internal.contentSync.mutations.exercises.bulkSyncExerciseSets,
       { sets: batch },
-      SyncResultSchema
+      ExerciseSetSyncResultSchema
     );
 
     totals.created += result.created;
@@ -385,6 +385,7 @@ const readExerciseSearchLabels = Effect.fn("sync.readExerciseSearchLabels")(
   }
 );
 
+/** Sends exercise question batches to Convex and aggregates sync counts. */
 const processQuestionBatches = Effect.fn("sync.processQuestionBatches")(
   function* (
     config: ConvexConfig,
@@ -426,12 +427,11 @@ const processQuestionBatches = Effect.fn("sync.processQuestionBatches")(
         );
       }
 
-      const result = yield* callConvex(
+      const result = yield* callConvexMutation(
         config,
-        "mutation",
-        "contentSync/mutations/exercises:bulkSyncExerciseQuestions",
+        internal.contentSync.mutations.exercises.bulkSyncExerciseQuestions,
         { questions: batch },
-        SyncResultSchema
+        ExerciseQuestionSyncResultSchema
       );
 
       totals.created += result.created;

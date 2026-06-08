@@ -7,8 +7,7 @@ import {
 } from "@repo/contents/_lib/subject/grade";
 import { getCategoryIcon } from "@repo/contents/_lib/subject/icons";
 import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
-import type { SubjectCategory } from "@repo/contents/_types/subject/category";
-import type { Grade } from "@repo/contents/_types/subject/grade";
+import type { Grade, SubjectCategory } from "@repo/contents/_types/taxonomy";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { Effect, Option } from "effect";
 import type { Metadata } from "next";

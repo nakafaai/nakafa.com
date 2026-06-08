@@ -1,5 +1,5 @@
-import type { SubjectCategory } from "@repo/contents/_types/subject/category";
 import { SubjectCategorySchema } from "@repo/contents/_types/subject/category";
+import type { SubjectCategory } from "@repo/contents/_types/taxonomy";
 import { Schema } from "effect";
 
 /**

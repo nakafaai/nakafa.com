@@ -14,7 +14,7 @@ import {
   QuillWrite02Icon,
   SchoolIcon,
 } from "@hugeicons/core-free-icons";
-import type { Grade } from "@repo/contents/_types/subject/grade";
+import type { Grade } from "@repo/contents/_types/taxonomy";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 
 export function Grade7Icon() {

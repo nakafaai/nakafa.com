@@ -1,11 +1,13 @@
-import type { ArticleCategory } from "@repo/contents/_types/articles/category";
-import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
-import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material";
-import type { ExercisesType } from "@repo/contents/_types/exercises/type";
 import type { Surah } from "@repo/contents/_types/quran";
-import type { SubjectCategory } from "@repo/contents/_types/subject/category";
-import type { Grade } from "@repo/contents/_types/subject/grade";
-import type { Material } from "@repo/contents/_types/subject/material";
+import type {
+  ArticleCategory,
+  ExercisesCategory,
+  ExercisesMaterial,
+  ExercisesType,
+  Grade,
+  Material,
+  SubjectCategory,
+} from "@repo/contents/_types/taxonomy";
 
 /**
  * Base SEO data extracted from content metadata

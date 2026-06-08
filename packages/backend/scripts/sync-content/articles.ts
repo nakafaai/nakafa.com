@@ -1,4 +1,4 @@
-import type { internal } from "@repo/backend/convex/_generated/api";
+import { internal } from "@repo/backend/convex/_generated/api";
 import {
   computeHash,
   parseDateToEpoch,
@@ -9,7 +9,7 @@ import {
   getArticleDir,
   parseArticlePath,
 } from "@repo/backend/scripts/lib/mdx-parser/paths";
-import { callConvex } from "@repo/backend/scripts/sync-content/convex";
+import { callConvexMutation } from "@repo/backend/scripts/sync-content/convex";
 import {
   formatDuration,
   log,
@@ -23,8 +23,8 @@ import {
 } from "@repo/backend/scripts/sync-content/metrics";
 import { globFiles } from "@repo/backend/scripts/sync-content/runtime";
 import {
+  ArticleSyncResultSchema,
   BATCH_SIZES,
-  SyncResultSchema,
 } from "@repo/backend/scripts/sync-content/schemas";
 import type {
   ConvexConfig,
@@ -135,12 +135,11 @@ export const syncArticles = Effect.fn("sync.articles")(function* (
       log(formatBatchProgress(progress, batchNum, totalBatches, batch.length));
     }
 
-    const result = yield* callConvex(
+    const result = yield* callConvexMutation(
       config,
-      "mutation",
-      "contentSync/mutations/articles:bulkSyncArticles",
+      internal.contentSync.mutations.articles.bulkSyncArticles,
       { articles: batch },
-      SyncResultSchema
+      ArticleSyncResultSchema
     );
 
     totals.created += result.created;

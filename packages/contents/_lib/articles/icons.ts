@@ -1,5 +1,5 @@
 import { EvilIcon } from "@hugeicons/core-free-icons";
-import type { ArticleCategory } from "@repo/contents/_types/articles/category";
+import type { ArticleCategory } from "@repo/contents/_types/taxonomy";
 
 /**
  * Resolves the icon used for an article category.

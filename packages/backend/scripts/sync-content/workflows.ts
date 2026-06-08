@@ -1,3 +1,4 @@
+import { internal } from "@repo/backend/convex/_generated/api";
 import {
   getUnknownMessage,
   ScriptFailureError,
@@ -8,7 +9,7 @@ import {
   syncAuthors,
 } from "@repo/backend/scripts/sync-content/authors";
 import { clean } from "@repo/backend/scripts/sync-content/clean";
-import { callConvex } from "@repo/backend/scripts/sync-content/convex";
+import { callConvexMutation } from "@repo/backend/scripts/sync-content/convex";
 import {
   syncExerciseQuestions,
   syncExerciseSets,
@@ -351,10 +352,9 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
         index,
         index + BATCH_SIZES.authors
       );
-      const authorResult = yield* callConvex(
+      const authorResult = yield* callConvexMutation(
         config,
-        "mutation",
-        "contentSync/mutations/authors:bulkSyncAuthors",
+        internal.contentSync.mutations.authors.bulkSyncAuthors,
         { authorNames: batch },
         AuthorSyncResultSchema
       );

@@ -4,7 +4,7 @@ import {
 } from "@repo/contents/_lib/articles/category";
 import { getCategoryIcon } from "@repo/contents/_lib/articles/icons";
 import { getArticleSummaries } from "@repo/contents/_lib/articles/slug";
-import type { ArticleCategory } from "@repo/contents/_types/articles/category";
+import type { ArticleCategory } from "@repo/contents/_types/taxonomy";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
 import { Effect, Option } from "effect";

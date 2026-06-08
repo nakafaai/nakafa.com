@@ -1,6 +1,6 @@
-import type { Locale } from "@repo/backend/convex/lib/validators/contents";
+import { internal } from "@repo/backend/convex/_generated/api";
 import { computeHash } from "@repo/backend/scripts/lib/mdx-parser/content";
-import { callConvex } from "@repo/backend/scripts/sync-content/convex";
+import { callConvexMutation } from "@repo/backend/scripts/sync-content/convex";
 import {
   formatDuration,
   log,
@@ -13,7 +13,7 @@ import {
 } from "@repo/backend/scripts/sync-content/metrics";
 import {
   BATCH_SIZES,
-  SyncResultSchema,
+  QuranSearchSyncResultSchema,
 } from "@repo/backend/scripts/sync-content/schemas";
 import type {
   ConvexConfig,
@@ -21,16 +21,12 @@ import type {
 } from "@repo/backend/scripts/sync-content/types";
 import { getAllSurah, getSurah, getSurahName } from "@repo/contents/_lib/quran";
 import { locales } from "@repo/utilities/locales";
+import type { FunctionArgs } from "convex/server";
 import { Effect, Schema } from "effect";
 
-interface QuranSearchPayload {
-  contentHash: string;
-  description: string;
-  locale: Locale;
-  route: string;
-  text: string;
-  title: string;
-}
+type QuranSearchPayload = FunctionArgs<
+  typeof internal.contents.mutations.search.bulkSyncQuranSearch
+>["documents"][number];
 
 class QuranSearchSyncError extends Schema.TaggedError<QuranSearchSyncError>()(
   "QuranSearchSyncError",
@@ -75,12 +71,11 @@ export const syncQuranSearch = Effect.fn("sync.quranSearch")(function* (
       log(formatBatchProgress(progress, batchNum, totalBatches, batch.length));
     }
 
-    const result = yield* callConvex(
+    const result = yield* callConvexMutation(
       config,
-      "mutation",
-      "contents/mutations/search:bulkSyncQuranSearch",
+      internal.contents.mutations.search.bulkSyncQuranSearch,
       { documents: batch },
-      SyncResultSchema
+      QuranSearchSyncResultSchema
     ).pipe(
       Effect.mapError(
         (error) => new QuranSearchSyncError({ message: error.message })
@@ -122,7 +117,7 @@ export const syncQuranSearch = Effect.fn("sync.quranSearch")(function* (
  * - Convex full-text search:
  *   https://docs.convex.dev/search/text-search
  */
-function getQuranSearchDocuments(locale?: Locale) {
+function getQuranSearchDocuments(locale?: QuranSearchPayload["locale"]) {
   return Effect.gen(function* () {
     const activeLocales = locale ? [locale] : locales;
     const documents: QuranSearchPayload[] = [];

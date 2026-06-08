@@ -7,8 +7,8 @@ import type {
   MetadataParseError,
   ModuleLoadError,
 } from "@repo/contents/_shared/error";
-import type { ArticleCategory } from "@repo/contents/_types/articles/category";
 import type { ContentWithMDX } from "@repo/contents/_types/content";
+import type { ArticleCategory } from "@repo/contents/_types/taxonomy";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 

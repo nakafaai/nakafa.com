@@ -6,8 +6,10 @@ import {
 } from "@repo/contents/_lib/exercises/route";
 import { getSubjects } from "@repo/contents/_lib/exercises/type";
 import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
-import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
-import type { ExercisesType } from "@repo/contents/_types/exercises/type";
+import type {
+  ExercisesCategory,
+  ExercisesType,
+} from "@repo/contents/_types/taxonomy";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { Effect, Option } from "effect";
 import type { Metadata } from "next";

@@ -30,6 +30,13 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - Cross-package alias: `@repo/*`
 - Educational MDX content lives in `packages/contents/`
 
+## Package Ownership
+
+- `packages/utilities` is for generic cross-domain primitives only. Do not put Nakafa content-domain constants, taxonomy, schemas, MDX/content metadata, or content-specific helpers there.
+- Content taxonomy constants and domain types live in `packages/contents/_types/taxonomy.ts`; callers import taxonomy constants and types directly from that module.
+- Content schema modules may derive Effect schemas from taxonomy values, but they must not re-export taxonomy constants or domain types.
+- `packages/contents` is the source of truth for content-domain types, taxonomy, metadata schemas, and authoring contracts. Backend/Convex may import only narrow pure modules from `packages/contents/_types` when runtime validators must share the same taxonomy.
+
 ## Effect-Native Standard
 
 - This is an Effect-native TypeScript codebase. All new or changed effectful TypeScript work must use Effect natively end to end.
