@@ -5,6 +5,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getEntries, getSitemapEntries, getUrl } from "@/lib/sitemap/entries";
 
 const mockGetRuntimeContentRoute = vi.hoisted(() => vi.fn());
+const mockGetSitemapRoutes = vi.hoisted(() => vi.fn());
+const mockGetSitemapPageDescriptor = vi.hoisted(() => vi.fn());
 const mockGetPathname = vi.hoisted(() =>
   vi.fn<typeof getPathname>(({ href, locale }) => {
     const pathname = typeof href === "string" ? href : href.pathname;
@@ -40,18 +42,14 @@ vi.mock("@/lib/sitemap/routes", () => ({
     "/privacy-policy",
     "/security-policy",
   ],
-  getSitemapRoutes: () =>
-    Promise.resolve([
-      "/",
-      "/search",
-      "/articles/politics/dynastic-politics-asian-values",
-      "/quran/1",
-      "/subject/high-school/10",
-    ]),
+  getSitemapPageDescriptor: mockGetSitemapPageDescriptor,
+  getSitemapRoutes: mockGetSitemapRoutes,
 }));
 
 beforeEach(() => {
   mockGetRuntimeContentRoute.mockReset();
+  mockGetSitemapRoutes.mockReset();
+  mockGetSitemapPageDescriptor.mockReset();
   mockGetPathname.mockClear();
 
   mockGetRuntimeContentRoute.mockReturnValue(
@@ -59,6 +57,14 @@ beforeEach(() => {
       date: new Date(2024, 0, 2).getTime(),
     })
   );
+  mockGetSitemapPageDescriptor.mockReturnValue({ id: "base" });
+  mockGetSitemapRoutes.mockResolvedValue([
+    "/",
+    "/search",
+    "/articles/politics/dynastic-politics-asian-values",
+    "/quran/1",
+    "/subject/high-school/10",
+  ]);
 });
 
 describe("sitemap entries", () => {
@@ -225,5 +231,74 @@ describe("sitemap entries", () => {
     expect(urls).not.toContain("https://nakafa.com/en/about");
     expect(urls).not.toContain("https://nakafa.com/id/about");
     expect(urls).toContain("https://nakafa.com/id/subject/high-school/10");
+  });
+
+  it("keeps English content sitemap pages scoped to English URLs", async () => {
+    mockGetSitemapPageDescriptor.mockReturnValueOnce({
+      id: "content_en_articles_0",
+      locale: "en",
+      page: 0,
+      section: "articles",
+    });
+    mockGetSitemapRoutes.mockResolvedValueOnce([
+      "/articles/politics/dynastic-politics-asian-values",
+    ]);
+
+    const entries = await Effect.runPromise(
+      getSitemapEntries({ pageId: "content_en_articles_0" })
+    );
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.url).toBe(
+      "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values"
+    );
+    expect(entries[0]?.alternates?.languages).toEqual({
+      en: "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values",
+      "x-default":
+        "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values",
+    });
+  });
+
+  it("keeps Indonesian content sitemap pages scoped to Indonesian URLs", async () => {
+    mockGetSitemapPageDescriptor.mockReturnValueOnce({
+      id: "content_id_articles_0",
+      locale: "id",
+      page: 0,
+      section: "articles",
+    });
+    mockGetSitemapRoutes.mockResolvedValueOnce([
+      "/articles/politics/nepotism-in-political-governance",
+    ]);
+
+    const entries = await Effect.runPromise(
+      getSitemapEntries({ pageId: "content_id_articles_0" })
+    );
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.url).toBe(
+      "https://nakafa.com/id/articles/politics/nepotism-in-political-governance"
+    );
+    expect(entries[0]?.alternates?.languages).toEqual({
+      id: "https://nakafa.com/id/articles/politics/nepotism-in-political-governance",
+    });
+  });
+
+  it("keeps base sitemap pages localized across supported locales", async () => {
+    mockGetSitemapPageDescriptor.mockReturnValueOnce({ id: "base" });
+    mockGetSitemapRoutes.mockResolvedValueOnce(["/search"]);
+
+    const entries = await Effect.runPromise(
+      getSitemapEntries({ pageId: "base" })
+    );
+
+    expect(entries.map((entry) => entry.url)).toEqual([
+      "https://nakafa.com/en/search",
+      "https://nakafa.com/id/search",
+    ]);
+    expect(entries[0]?.alternates?.languages).toEqual({
+      en: "https://nakafa.com/en/search",
+      id: "https://nakafa.com/id/search",
+      "x-default": "https://nakafa.com/en/search",
+    });
   });
 });

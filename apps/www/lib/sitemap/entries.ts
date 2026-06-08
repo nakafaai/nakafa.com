@@ -4,7 +4,12 @@ import { MAIN_DOMAIN } from "@repo/next-config/domains";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { getRuntimeContentRoute } from "@/lib/content/runtime";
-import { baseRoutes, getSitemapRoutes } from "@/lib/sitemap/routes";
+import {
+  baseRoutes,
+  type ContentSitemapPage,
+  getSitemapPageDescriptor,
+  getSitemapRoutes,
+} from "@/lib/sitemap/routes";
 
 type Href = Parameters<typeof getPathname>[number]["href"];
 type SitemapErrorContext = Record<string, string>;
@@ -16,6 +21,7 @@ type SitemapErrorReporter = (
 /** Optional settings shared by the Next route and standalone indexing scripts. */
 interface SitemapEntryOptions {
   domain?: string;
+  locales?: readonly Locale[];
   pageId?: string;
   reportError?: SitemapErrorReporter;
 }
@@ -34,44 +40,87 @@ export const getEntries = Effect.fn("www.sitemap.entries")(function* (
   options: SitemapEntryOptions = {}
 ) {
   const routeString = typeof href === "string" ? href : href.pathname;
+  const locales = options.locales ?? routing.locales;
   const { changeFrequency, priority } = getContentSeoSettings(routeString);
-  let lastModified = new Date();
 
-  if (isContentRoute(routeString)) {
-    const contentPath = routeString.startsWith("/")
-      ? routeString.slice(1)
-      : routeString;
-    lastModified = yield* getContentLastModified(contentPath, options).pipe(
-      Effect.catchAll((error) =>
-        reportError(error, options, {
-          route: routeString,
-          source: "sitemap-route-entry",
-        }).pipe(Effect.as(getFallbackDate(MONTHS_IN_CONTENT_FALLBACK)))
-      )
-    );
-  } else if (routeString === "/") {
-    lastModified = new Date("2025-01-01");
-  } else if (routeString.startsWith("/quran")) {
-    lastModified = new Date("2025-01-01");
-  } else if (routeString.startsWith("/contributor")) {
-    lastModified = new Date("2025-01-01");
+  return yield* Effect.forEach(
+    locales,
+    (locale) =>
+      Effect.gen(function* () {
+        const lastModified = yield* getRouteLastModified(
+          routeString,
+          locale,
+          options
+        );
+
+        return {
+          url: getUrl(href, locale, options.domain),
+          alternates: {
+            languages: getAlternateLanguages(href, locales, options.domain),
+          },
+          changeFrequency,
+          lastModified,
+          priority,
+        };
+      }),
+    {
+      concurrency: "unbounded",
+    }
+  );
+});
+
+/** Resolves the sitemap last-modified value for one route and locale. */
+const getRouteLastModified = Effect.fn("www.sitemap.routeLastModified")(
+  function* (
+    routeString: string,
+    locale: Locale,
+    options: SitemapEntryOptions
+  ) {
+    if (isContentRoute(routeString)) {
+      const contentPath = routeString.startsWith("/")
+        ? routeString.slice(1)
+        : routeString;
+
+      return yield* getContentLastModified(contentPath, options, locale).pipe(
+        Effect.catchAll((error) =>
+          reportError(error, options, {
+            route: routeString,
+            source: "sitemap-route-entry",
+          }).pipe(Effect.as(getFallbackDate(MONTHS_IN_CONTENT_FALLBACK)))
+        )
+      );
+    }
+
+    if (
+      routeString === "/" ||
+      routeString.startsWith("/quran") ||
+      routeString.startsWith("/contributor")
+    ) {
+      return new Date("2025-01-01");
+    }
+
+    return new Date();
+  }
+);
+
+/** Builds hreflang alternates only for locales included in the current page. */
+function getAlternateLanguages(
+  href: Href,
+  locales: readonly Locale[],
+  domain: string | undefined
+) {
+  const languages: Record<string, string> = {};
+
+  for (const locale of locales) {
+    languages[locale] = getUrl(href, locale, domain);
   }
 
-  return routing.locales.map((locale) => ({
-    url: getUrl(href, locale, options.domain),
-    alternates: {
-      languages: {
-        ...Object.fromEntries(
-          routing.locales.map((cur) => [cur, getUrl(href, cur, options.domain)])
-        ),
-        "x-default": getUrl(href, "en", options.domain),
-      },
-    },
-    changeFrequency,
-    lastModified,
-    priority,
-  }));
-});
+  if (locales.includes(routing.defaultLocale)) {
+    languages["x-default"] = getUrl(href, routing.defaultLocale, domain);
+  }
+
+  return languages;
+}
 
 /** Converts an app href and locale into an absolute canonical URL. */
 export function getUrl(href: Href, locale: Locale, domain?: string): string {
@@ -87,9 +136,14 @@ export const getSitemapEntries = Effect.fn("www.sitemap.entries.all")(
     const routes = yield* Effect.promise(() =>
       getSitemapRoutes(options.pageId)
     );
+    const locales = getSitemapEntryLocales(options.pageId);
     const routeArrays = yield* Effect.forEach(
       routes,
-      (route) => getEntries(route, options),
+      (route) =>
+        getEntries(route, {
+          ...options,
+          locales,
+        }),
       {
         concurrency: "unbounded",
       }
@@ -99,6 +153,24 @@ export const getSitemapEntries = Effect.fn("www.sitemap.entries.all")(
   }
 );
 
+/** Selects all locales for base pages and one locale for content pages. */
+function getSitemapEntryLocales(pageId: string | undefined): readonly Locale[] {
+  const descriptor = getSitemapPageDescriptor(pageId);
+
+  if (isContentSitemapDescriptor(descriptor)) {
+    return [descriptor.locale];
+  }
+
+  return routing.locales;
+}
+
+/** Identifies parsed sitemap descriptors that are scoped to one locale. */
+function isContentSitemapDescriptor(
+  descriptor: ReturnType<typeof getSitemapPageDescriptor>
+): descriptor is ContentSitemapPage {
+  return Boolean(descriptor && "locale" in descriptor);
+}
+
 /**
  * Resolves the last-modified date for content from the Convex route catalog.
  * Falls back to a stable date when metadata is missing or invalid.
@@ -107,7 +179,7 @@ const getContentLastModified = Effect.fn("www.sitemap.contentLastModified")(
   function* (
     contentPath: string,
     options: SitemapEntryOptions,
-    locale: Locale = "en"
+    locale: Locale
   ) {
     const route = yield* getRuntimeContentRoute({
       locale,
