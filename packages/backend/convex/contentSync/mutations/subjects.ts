@@ -210,17 +210,7 @@ export const bulkSyncSubjectSections = internalMutation({
         route: section.slug,
         section: "subject",
         syncedAt: now,
-        text: [
-          section.category,
-          section.grade,
-          section.material,
-          section.topic,
-          section.section,
-          section.subject,
-          section.body,
-        ]
-          .filter(Boolean)
-          .join(" "),
+        text: section.body,
         title: section.title,
       });
       await syncContentRoute(ctx, {

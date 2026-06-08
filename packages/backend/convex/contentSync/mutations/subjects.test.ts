@@ -241,8 +241,11 @@ describe("contentSync/mutations/subjects", () => {
     expect(snapshot.search).toMatchObject({
       contentHash: "same-subject-hash",
       route: SECTION_SLUG,
+      text: "New Subject Title New subject description Subject body",
       title: "New Subject Title",
     });
+    expect(snapshot.search?.text).not.toContain("subject/high-school");
+    expect(snapshot.search?.text).not.toContain("metadata-topic");
     expect(snapshot.route).toMatchObject({
       contentHash: "same-subject-hash",
       kind: "subject-section",

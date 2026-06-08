@@ -6,6 +6,8 @@ import type {
 import { cleanSlug } from "@repo/utilities/helper";
 
 const WHITESPACE_PATTERN = /\s+/g;
+const MDX_MODULE_LINE_PATTERN = /^\s*(?:import|export)\s.+$/gm;
+const MARKDOWN_LINK_PATTERN = /(^|[^!])\[([^\]]+)\]\([^)]+\)/g;
 
 export interface ContentSearchSource {
   contentHash: string;
@@ -50,9 +52,22 @@ export function buildContentSearchRef({
  */
 export function getContentSearchText(parts: Array<string | undefined>) {
   return parts
-    .filter((part) => part && part.trim().length > 0)
+    .map(cleanContentSearchText)
+    .filter((part) => part.length > 0)
     .join(" ")
     .replace(WHITESPACE_PATTERN, " ")
+    .trim();
+}
+
+/** Removes MDX module syntax and link targets from displayable search text. */
+function cleanContentSearchText(part: string | undefined) {
+  if (!part) {
+    return "";
+  }
+
+  return part
+    .replace(MDX_MODULE_LINE_PATTERN, "")
+    .replace(MARKDOWN_LINK_PATTERN, "$1$2")
     .trim();
 }
 
@@ -60,12 +75,7 @@ export function getContentSearchText(parts: Array<string | undefined>) {
 export function buildContentSearchDocument(source: ContentSearchSource) {
   const ref = buildContentSearchRef(source);
   const description = source.description ?? "";
-  const text = getContentSearchText([
-    source.title,
-    description,
-    source.route,
-    source.text,
-  ]);
+  const text = getContentSearchText([source.title, description, source.text]);
 
   return {
     ...ref,

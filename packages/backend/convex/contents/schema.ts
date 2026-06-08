@@ -145,6 +145,10 @@ const tables = {
     .searchIndex("search_text", {
       searchField: "text",
       filterFields: ["locale", "section"],
+    })
+    .searchIndex("search_route", {
+      searchField: "route",
+      filterFields: ["locale", "section"],
     }),
 
   /** Concrete public routes synced from the durable content runtime model. */
