@@ -1,10 +1,9 @@
-import { getContentMetadata } from "@repo/contents/_lib/metadata";
-import { parseContentDate } from "@repo/contents/_shared/date";
 import { getPathname } from "@repo/internationalization/src/navigation";
 import { routing } from "@repo/internationalization/src/routing";
 import { MAIN_DOMAIN } from "@repo/next-config/domains";
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
 import type { Locale } from "next-intl";
+import { getRuntimeContentRoute } from "@/lib/content/runtime";
 import { baseRoutes, getSitemapRoutes } from "@/lib/sitemap/routes";
 
 type Href = Parameters<typeof getPathname>[number]["href"];
@@ -17,6 +16,7 @@ type SitemapErrorReporter = (
 /** Optional settings shared by the Next route and standalone indexing scripts. */
 interface SitemapEntryOptions {
   domain?: string;
+  pageId?: string;
   reportError?: SitemapErrorReporter;
 }
 
@@ -84,7 +84,9 @@ export function getUrl(href: Href, locale: Locale, domain?: string): string {
 /** Generates sitemap entries ready for Next metadata output or URL submission. */
 export const getSitemapEntries = Effect.fn("www.sitemap.entries.all")(
   function* (options: SitemapEntryOptions = {}) {
-    const routes = yield* Effect.promise(() => getSitemapRoutes());
+    const routes = yield* Effect.promise(() =>
+      getSitemapRoutes(options.pageId)
+    );
     const routeArrays = yield* Effect.forEach(
       routes,
       (route) => getEntries(route, options),
@@ -98,7 +100,7 @@ export const getSitemapEntries = Effect.fn("www.sitemap.entries.all")(
 );
 
 /**
- * Resolves the last-modified date for content from localized MDX metadata.
+ * Resolves the last-modified date for content from the Convex route catalog.
  * Falls back to a stable date when metadata is missing or invalid.
  */
 const getContentLastModified = Effect.fn("www.sitemap.contentLastModified")(
@@ -107,16 +109,10 @@ const getContentLastModified = Effect.fn("www.sitemap.contentLastModified")(
     options: SitemapEntryOptions,
     locale: Locale = "en"
   ) {
-    const metadata = yield* Effect.try({
-      try: () => getContentMetadata(contentPath, locale),
-      catch: (error) => error,
+    const route = yield* getRuntimeContentRoute({
+      locale,
+      route: contentPath,
     }).pipe(
-      Effect.flatMap((metadataEffect) =>
-        Effect.match(metadataEffect, {
-          onFailure: () => null,
-          onSuccess: (data) => data,
-        })
-      ),
       Effect.catchAll((error) =>
         reportError(error, options, {
           content_path: contentPath,
@@ -126,12 +122,8 @@ const getContentLastModified = Effect.fn("www.sitemap.contentLastModified")(
       )
     );
 
-    if (metadata?.date) {
-      const metadataDate = parseContentDate(metadata.date);
-
-      if (Option.isSome(metadataDate) && metadataDate.value.getTime() > 0) {
-        return metadataDate.value;
-      }
+    if (route?.date && route.date > 0) {
+      return new Date(route.date);
     }
 
     return getFallbackDate(MONTHS_IN_FALLBACK_PERIOD);

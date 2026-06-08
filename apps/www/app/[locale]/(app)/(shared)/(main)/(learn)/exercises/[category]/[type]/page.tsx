@@ -4,7 +4,6 @@ import {
   parseExercisesCategory,
   parseExercisesType,
 } from "@repo/contents/_lib/exercises/route";
-import { getSubjects } from "@repo/contents/_lib/exercises/type";
 import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import type {
   ExercisesCategory,
@@ -24,6 +23,7 @@ import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
 import { SubjectItem, SubjectList } from "@/components/shared/subject-list";
+import { getRuntimeExerciseSubjects } from "@/lib/content/navigation";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
@@ -109,12 +109,13 @@ export function generateStaticParams() {
 /** Reads exercise subjects inside a Next Cache Components boundary. */
 async function getCachedSubjects(
   category: ExercisesCategory,
-  type: ExercisesType
+  type: ExercisesType,
+  locale: Locale
 ) {
   "use cache";
-  cacheLife("max");
+  cacheLife("seconds");
 
-  return Effect.runPromise(getSubjects(category, type));
+  return Effect.runPromise(getRuntimeExerciseSubjects(category, type, locale));
 }
 
 export default function Page(
@@ -152,7 +153,7 @@ async function PageContent({
   const FilePath = getExercisesPath(category, type);
 
   const [subjects, t, tCommon] = await Promise.all([
-    getCachedSubjects(category, type),
+    getCachedSubjects(category, type, locale),
     getTranslations({ locale, namespace: "Exercises" }),
     getTranslations({ locale, namespace: "Common" }),
   ]);

@@ -1,6 +1,7 @@
 import { runMathAgent } from "@repo/ai/agents/math/agent";
 import { runNakafaAgent } from "@repo/ai/agents/nakafa/agent";
 import { NakafaSearch } from "@repo/ai/agents/nakafa/search";
+import { Nakafa } from "@repo/ai/agents/nakafa/service";
 import { read as readNakafa } from "@repo/ai/agents/nakafa/tools/read";
 import { TOOL_NAMES } from "@repo/ai/agents/orchestrator/names";
 import { nakafaPrompt } from "@repo/ai/agents/orchestrator/prompt";
@@ -23,7 +24,6 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { mapUIMessagePartsToDBParts } from "@repo/backend/convex/chats/messageParts/uiToDb";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
-import { Nakafa } from "@repo/contents/_lib/agent/service";
 import { cleanSlug } from "@repo/utilities/helper";
 import type { LogContext } from "@repo/utilities/logging/types";
 import { waitUntil } from "@vercel/functions";

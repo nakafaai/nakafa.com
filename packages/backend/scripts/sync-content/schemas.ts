@@ -1,9 +1,15 @@
 import type { Id, TableNames } from "@repo/backend/convex/_generated/dataModel";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
+import {
+  CONTENT_ROUTE_KINDS,
+  NAKAFA_CONTENT_SECTIONS,
+} from "@repo/backend/convex/contents/constants";
 import { locales } from "@repo/utilities/locales";
 import { Effect, Schema } from "effect";
 
 const SyncLocaleSchema = Schema.Literal(...locales);
+const SyncSectionSchema = Schema.Literal(...NAKAFA_CONTENT_SECTIONS);
+const ContentRouteKindSchema = Schema.Literal(...CONTENT_ROUTE_KINDS);
 
 /** Validates a Convex document ID while preserving its generated table brand. */
 export const ConvexIdSchema = <const TableName extends TableNames>(
@@ -32,6 +38,8 @@ export const BATCH_SIZES = {
   subjectSections: CONTENT_SYNC_BATCH_LIMITS.subjectSections,
   exerciseSets: CONTENT_SYNC_BATCH_LIMITS.exerciseSets,
   exerciseQuestions: CONTENT_SYNC_BATCH_LIMITS.exerciseQuestions,
+  quranSurahs: CONTENT_SYNC_BATCH_LIMITS.quranSurahs,
+  quranVerses: CONTENT_SYNC_BATCH_LIMITS.quranVerses,
   quranSearchDocuments: CONTENT_SYNC_BATCH_LIMITS.quranSearchDocuments,
   staleArticles: CONTENT_SYNC_BATCH_LIMITS.staleArticles,
   staleSubjectTopics: CONTENT_SYNC_BATCH_LIMITS.staleSubjectTopics,
@@ -122,6 +130,217 @@ export const ExerciseQuestionSyncResultSchema = Schema.mutable(
 
 export const QuranSearchSyncResultSchema = SyncSummarySchema;
 
+export const QuranSurahSyncResultSchema = SyncSummarySchema;
+
+export const QuranVerseSyncResultSchema = SyncSummarySchema;
+
+export const QuranStaleDeleteResultSchema = Schema.Struct({
+  routesDeleted: Schema.Number,
+  searchDeleted: Schema.Number,
+  surahsDeleted: Schema.Number,
+  versesDeleted: Schema.Number,
+});
+
+const ContentRouteAuthorSchema = Schema.Struct({
+  name: Schema.String,
+});
+
+export const RuntimeContentRouteRowSchema = Schema.mutable(
+  Schema.Struct({
+    authors: mutableArraySchema(ContentRouteAuthorSchema),
+    content_id: Schema.String,
+    date: Schema.UndefinedOr(Schema.Number),
+    depth: Schema.UndefinedOr(Schema.Number),
+    description: Schema.UndefinedOr(Schema.String),
+    kind: ContentRouteKindSchema,
+    locale: SyncLocaleSchema,
+    markdown: Schema.Boolean,
+    official: Schema.UndefinedOr(Schema.Boolean),
+    parentRoute: Schema.UndefinedOr(Schema.String),
+    route: Schema.String,
+    section: SyncSectionSchema,
+    syncedAt: Schema.Number,
+    title: Schema.String,
+  })
+);
+
+export const RuntimeContentRouteSchema = Schema.NullOr(
+  RuntimeContentRouteRowSchema
+);
+
+export const RuntimeContentRoutePageSchema = Schema.mutable(
+  Schema.Struct({
+    continueCursor: Schema.String,
+    isDone: Schema.Boolean,
+    page: mutableArraySchema(RuntimeContentRouteRowSchema),
+  })
+);
+
+const QuranLocalizedTextSchema = Schema.mutable(
+  Schema.Struct({
+    en: Schema.String,
+    id: Schema.String,
+  })
+);
+
+const QuranTextSchema = Schema.mutable(
+  Schema.Struct({
+    arab: Schema.String,
+    transliteration: Schema.mutable(
+      Schema.Struct({
+        en: Schema.String,
+      })
+    ),
+  })
+);
+
+const QuranAudioSchema = Schema.mutable(
+  Schema.Struct({
+    primary: Schema.String,
+    secondary: mutableArraySchema(Schema.String),
+  })
+);
+
+const QuranPreBismillahSchema = Schema.mutable(
+  Schema.Struct({
+    audio: QuranAudioSchema,
+    text: QuranTextSchema,
+    translation: QuranLocalizedTextSchema,
+  })
+);
+
+const quranSurahMetadataFields = {
+  name: Schema.mutable(
+    Schema.Struct({
+      long: Schema.String,
+      short: Schema.String,
+      translation: QuranLocalizedTextSchema,
+      transliteration: QuranLocalizedTextSchema,
+    })
+  ),
+  number: Schema.Number,
+  numberOfVerses: Schema.Number,
+  preBismillah: Schema.UndefinedOr(Schema.NullOr(QuranPreBismillahSchema)),
+  revelation: Schema.mutable(
+    Schema.Struct({
+      arab: Schema.String,
+      en: Schema.String,
+      id: Schema.String,
+    })
+  ),
+  sequence: Schema.Number,
+};
+
+const QuranSurahMetadataSchema = Schema.mutable(
+  Schema.Struct(quranSurahMetadataFields)
+);
+
+const QuranVerseSchema = Schema.mutable(
+  Schema.Struct({
+    audio: QuranAudioSchema,
+    meta: Schema.mutable(
+      Schema.Struct({
+        hizbQuarter: Schema.Number,
+        juz: Schema.Number,
+        manzil: Schema.Number,
+        page: Schema.Number,
+        ruku: Schema.Number,
+        sajda: Schema.mutable(
+          Schema.Struct({
+            obligatory: Schema.Boolean,
+            recommended: Schema.Boolean,
+          })
+        ),
+      })
+    ),
+    number: Schema.mutable(
+      Schema.Struct({
+        inQuran: Schema.Number,
+        inSurah: Schema.Number,
+      })
+    ),
+    tafsir: Schema.mutable(
+      Schema.Struct({
+        id: Schema.mutable(
+          Schema.Struct({
+            long: Schema.String,
+            short: Schema.String,
+          })
+        ),
+      })
+    ),
+    text: QuranTextSchema,
+    translation: QuranLocalizedTextSchema,
+  })
+);
+
+export const QuranSurahPageSchema = Schema.NullOr(
+  Schema.mutable(
+    Schema.Struct({
+      nextSurah: Schema.NullOr(QuranSurahMetadataSchema),
+      prevSurah: Schema.NullOr(QuranSurahMetadataSchema),
+      surahData: Schema.mutable(
+        Schema.Struct({
+          ...quranSurahMetadataFields,
+          verses: mutableArraySchema(QuranVerseSchema),
+        })
+      ),
+    })
+  )
+);
+
+export const QuranReferenceSchema = Schema.NullOr(
+  Schema.mutable(
+    Schema.Struct({
+      content_id: Schema.String,
+      locale: SyncLocaleSchema,
+      markdown_url: Schema.String,
+      name: Schema.String,
+      revelation: Schema.String,
+      route: Schema.String,
+      section: Schema.Literal("quran"),
+      translation: Schema.String,
+      url: Schema.String,
+      verses: mutableArraySchema(
+        Schema.mutable(
+          Schema.Struct({
+            arabic: Schema.String,
+            number: Schema.Number,
+            tafsir: Schema.optional(Schema.String),
+            translation: Schema.String,
+            transliteration: Schema.String,
+          })
+        )
+      ),
+    })
+  )
+);
+
+export const ContentSearchResultSchema = Schema.mutable(
+  Schema.Struct({
+    count: Schema.Number,
+    has_more: Schema.Boolean,
+    items: mutableArraySchema(
+      Schema.mutable(
+        Schema.Struct({
+          content_id: Schema.String,
+          description: Schema.String,
+          excerpt: Schema.String,
+          locale: SyncLocaleSchema,
+          markdown_url: Schema.String,
+          route: Schema.String,
+          section: SyncSectionSchema,
+          title: Schema.String,
+          url: Schema.String,
+        })
+      )
+    ),
+    limit: Schema.Number,
+    next_offset: Schema.optional(Schema.Number),
+    offset: Schema.Number,
+  })
+);
+
 export const TryoutSyncResultSchema = SyncSummarySchema;
 
 export const ExerciseSetSyncResultSchema = SyncSummarySchema;
@@ -141,6 +360,9 @@ export const ContentCountsSchema = Schema.Struct({
   authors: Schema.Number,
   contentAudios: Schema.Number,
   contentAuthors: Schema.Number,
+  contentRouteCounts: Schema.Number,
+  contentRoutePages: Schema.Number,
+  contentRoutes: Schema.Number,
   contentSearch: Schema.Number,
   exerciseAnswers: Schema.Number,
   exerciseAttempts: Schema.Number,
@@ -157,6 +379,8 @@ export const ContentCountsSchema = Schema.Struct({
   irtScaleQualityRefreshQueue: Schema.Number,
   irtScaleVersionItems: Schema.Number,
   irtScaleVersions: Schema.Number,
+  quranSurahs: Schema.Number,
+  quranVerses: Schema.Number,
   subjectSections: Schema.Number,
   subjectTopics: Schema.Number,
   tryoutAccessCampaignProducts: Schema.Number,

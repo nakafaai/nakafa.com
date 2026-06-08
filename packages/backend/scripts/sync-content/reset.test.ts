@@ -33,6 +33,9 @@ const emptyCounts = {
   authors: 0,
   contentAuthors: 0,
   contentAudios: 0,
+  contentRouteCounts: 0,
+  contentRoutePages: 0,
+  contentRoutes: 0,
   contentSearch: 0,
   exerciseAnswers: 0,
   exerciseAttempts: 0,
@@ -49,6 +52,8 @@ const emptyCounts = {
   irtScaleQualityRefreshQueue: 0,
   irtScaleVersionItems: 0,
   irtScaleVersions: 0,
+  quranSurahs: 0,
+  quranVerses: 0,
   subjectSections: 0,
   subjectTopics: 0,
   tryoutAccessCampaignProducts: 0,
@@ -83,12 +88,41 @@ describe("sync-content reset", () => {
     expect(logSuccess).not.toHaveBeenCalled();
   });
 
+  it("does not treat route and Quran runtime data as an empty database", async () => {
+    vi.mocked(getContentCounts).mockReturnValue(
+      Effect.succeed({
+        ...emptyCounts,
+        contentRouteCounts: 1,
+        contentRoutePages: 2,
+        contentRoutes: 1,
+        quranSurahs: 1,
+        quranVerses: 7,
+      })
+    );
+
+    await Effect.runPromise(reset(config, { force: false }));
+
+    expect(log).toHaveBeenCalledWith("  Content Routes:        1");
+    expect(log).toHaveBeenCalledWith("  Content Route Counts:  1");
+    expect(log).toHaveBeenCalledWith("  Content Route Pages:   2");
+    expect(log).toHaveBeenCalledWith("  Quran Surahs:          1");
+    expect(log).toHaveBeenCalledWith("  Quran Verses:          7");
+    expect(log).toHaveBeenCalledWith("  Total derived items:  12");
+    expect(log).toHaveBeenCalledWith("\nTo delete all content, run:");
+    expect(logSuccess).not.toHaveBeenCalled();
+  });
+
   it("keeps the empty shortcut when every reset-managed count is zero", async () => {
     vi.mocked(getContentCounts).mockReturnValue(Effect.succeed(emptyCounts));
 
     await Effect.runPromise(reset(config, { force: false }));
 
     expect(log).toHaveBeenCalledWith("  Content Search:        0");
+    expect(log).toHaveBeenCalledWith("  Content Routes:        0");
+    expect(log).toHaveBeenCalledWith("  Content Route Counts:  0");
+    expect(log).toHaveBeenCalledWith("  Content Route Pages:   0");
+    expect(log).toHaveBeenCalledWith("  Quran Surahs:          0");
+    expect(log).toHaveBeenCalledWith("  Quran Verses:          0");
     expect(log).toHaveBeenCalledWith("  Total derived items:  0");
     expect(logSuccess).toHaveBeenCalledWith(
       "\nDatabase is already empty. Nothing to delete."

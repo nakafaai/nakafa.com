@@ -225,4 +225,254 @@ describe("contents/queries/runtime", () => {
       }),
     ]);
   });
+
+  it("lists API content with exact-or-descendant segment matching", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const topicSlug = "subject/high-school/10/chemistry/structure-matter";
+    const exactSlug = `${topicSlug}/subatomic-particles`;
+    const siblingSlug = `${topicSlug}/subatomic-particles-properties`;
+
+    await t.mutation(async (ctx) => {
+      const topicId = await ctx.db.insert("subjectTopics", {
+        category: "high-school",
+        grade: "10",
+        locale: "id",
+        material: "chemistry",
+        sectionCount: 2,
+        slug: topicSlug,
+        syncedAt: NOW,
+        title: "Structure Matter",
+        topic: "structure-matter",
+      });
+
+      for (const slug of [exactSlug, siblingSlug]) {
+        await ctx.db.insert("subjectSections", {
+          body: `Body for ${slug}`,
+          category: "high-school",
+          contentHash: `${slug}:hash`,
+          date: NOW,
+          grade: "10",
+          locale: "id",
+          material: "chemistry",
+          section: slug.split("/").at(-1) ?? "",
+          slug,
+          syncedAt: NOW,
+          title: slug === exactSlug ? "Subatomic Particles" : "Properties",
+          topic: "structure-matter",
+          topicId,
+        });
+      }
+    });
+
+    const exactPage = await t.query(
+      api.contents.queries.runtime.listSubjectApiContentPage,
+      {
+        cursor: null,
+        limit: 100,
+        locale: "id",
+        prefix: exactSlug,
+      }
+    );
+    const topicPage = await t.query(
+      api.contents.queries.runtime.listSubjectApiContentPage,
+      {
+        cursor: null,
+        limit: 100,
+        locale: "id",
+        prefix: topicSlug,
+      }
+    );
+
+    expect(exactPage.page.map((item) => item.slug)).toEqual([exactSlug]);
+    expect(topicPage.page.map((item) => item.slug).sort()).toEqual([
+      exactSlug,
+      siblingSlug,
+    ]);
+  });
+
+  it("lists route catalog rows with exact-or-descendant segment matching", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const topicSlug = "subject/high-school/10/chemistry/structure-matter";
+    const exactSlug = `${topicSlug}/subatomic-particles`;
+    const childSlug = `${exactSlug}/lesson`;
+    const siblingSlug = `${topicSlug}/subatomic-particles-properties`;
+
+    await t.mutation(async (ctx) => {
+      for (const route of [exactSlug, childSlug, siblingSlug]) {
+        await ctx.db.insert("contentRoutes", {
+          authors: [{ name: "Nakafa Author" }],
+          contentHash: `${route}:hash`,
+          content_id: `id/${route}`,
+          kind: "subject-section",
+          locale: "id",
+          markdown: true,
+          route,
+          section: "subject",
+          syncedAt: NOW,
+          title: route,
+        });
+      }
+    });
+
+    const exactPage = await t.query(
+      api.contents.queries.runtime.listContentRoutesByPrefix,
+      {
+        cursor: null,
+        limit: 100,
+        locale: "id",
+        prefix: exactSlug,
+        section: "subject",
+      }
+    );
+    const topicPage = await t.query(
+      api.contents.queries.runtime.listContentRoutesByPrefix,
+      {
+        cursor: null,
+        limit: 100,
+        locale: "id",
+        prefix: topicSlug,
+        section: "subject",
+      }
+    );
+
+    expect(exactPage.page.map((item) => item.route)).toEqual([
+      exactSlug,
+      childSlug,
+    ]);
+    expect(new Set(topicPage.page.map((item) => item.route))).toEqual(
+      new Set([exactSlug, childSlug, siblingSlug])
+    );
+  });
+
+  it("lists parent-scoped route rows without descendant bleed", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const parentRoute = "subject/high-school/12/mathematics";
+    const topicRoute = `${parentRoute}/function-transformation`;
+
+    await t.mutation(async (ctx) => {
+      for (let index = 0; index < 150; index++) {
+        const route = `${parentRoute}/overflow-topic/lesson-${index}`;
+        await ctx.db.insert("contentRoutes", {
+          authors: [{ name: "Nakafa Author" }],
+          contentHash: `${route}:hash`,
+          content_id: `id/${route}`,
+          depth: route.split("/").length,
+          kind: "subject-section",
+          locale: "id",
+          markdown: true,
+          parentRoute: `${parentRoute}/overflow-topic`,
+          route,
+          section: "subject",
+          syncedAt: NOW,
+          title: route,
+        });
+      }
+
+      await ctx.db.insert("contentRoutes", {
+        authors: [{ name: "Nakafa Author" }],
+        contentHash: `${topicRoute}:hash`,
+        content_id: `id/${topicRoute}`,
+        depth: topicRoute.split("/").length,
+        kind: "subject-topic",
+        locale: "id",
+        markdown: false,
+        parentRoute,
+        route: topicRoute,
+        section: "subject",
+        syncedAt: NOW,
+        title: "Transformasi Fungsi",
+      });
+    });
+
+    const page = await t.query(
+      api.contents.queries.runtime.listContentRoutesByParent,
+      {
+        cursor: null,
+        kind: "subject-topic",
+        limit: 100,
+        locale: "id",
+        order: "route",
+        parentRoute,
+        section: "subject",
+      }
+    );
+
+    expect(page.isDone).toBe(true);
+    expect(page.page.map((item) => item.route)).toEqual([topicRoute]);
+  });
+
+  it("reads materialized route artifact pages and latest route pages from indexed rows", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const firstRoute = "articles/politics/first";
+    const secondRoute = "articles/politics/second";
+
+    await t.mutation(async (ctx) => {
+      for (const route of [firstRoute, secondRoute]) {
+        await ctx.db.insert("contentRoutes", {
+          authors: [{ name: "Nakafa Author" }],
+          contentHash: `${route}:hash`,
+          content_id: `id/${route}`,
+          date: route === firstRoute ? NOW : NOW + 1,
+          kind: "article",
+          locale: "id",
+          markdown: true,
+          route,
+          section: "articles",
+          syncedAt: NOW,
+          title: route,
+        });
+      }
+
+      await ctx.db.insert("contentRoutePages", {
+        locale: "id",
+        page: 0,
+        routeCount: 2,
+        routes: [
+          contentRoutePageItem(firstRoute),
+          contentRoutePageItem(secondRoute),
+        ],
+        section: "articles",
+        syncedAt: NOW,
+      });
+    });
+
+    const artifactPage = await t.query(
+      api.contents.queries.runtime.getContentRouteArtifactPage,
+      {
+        locale: "id",
+        page: 0,
+        section: "articles",
+      }
+    );
+    const latest = await t.query(
+      api.contents.queries.runtime.listLatestContentRoutes,
+      {
+        limit: 2,
+        locale: "id",
+        section: "articles",
+      }
+    );
+
+    expect(artifactPage?.routes.map((item) => item.route)).toEqual([
+      firstRoute,
+      secondRoute,
+    ]);
+    expect(latest.map((item) => item.route)).toEqual([secondRoute, firstRoute]);
+  });
 });
+
+/** Builds one materialized route artifact fixture item. */
+function contentRoutePageItem(route: string) {
+  return {
+    authors: [{ name: "Nakafa Author" }],
+    content_id: `id/${route}`,
+    date: route.endsWith("first") ? NOW : NOW + 1,
+    kind: "article" as const,
+    locale: "id" as const,
+    markdown: true,
+    route,
+    section: "articles" as const,
+    syncedAt: NOW,
+    title: route,
+  };
+}

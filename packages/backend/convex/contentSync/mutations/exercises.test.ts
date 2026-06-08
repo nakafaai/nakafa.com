@@ -10,6 +10,8 @@ interface SyncedExerciseSet {
   contentHash: string;
   description?: string;
   exerciseType: string;
+  exerciseTypeTitle: string;
+  groupContentHash: string;
   locale: Doc<"exerciseSets">["locale"];
   material: Doc<"exerciseSets">["material"];
   questionCount: number;
@@ -61,6 +63,8 @@ const BASE_SET: SyncedExerciseSet = {
   contentHash: "set-hash",
   description: "Old set description",
   exerciseType: "try-out",
+  exerciseTypeTitle: "Try Out",
+  groupContentHash: "group-hash",
   locale: "id",
   material: "quantitative-knowledge",
   questionCount: 1,
@@ -140,6 +144,23 @@ describe("contentSync/mutations/exercises", () => {
         ],
       }
     );
+    const syncedRoute = await t.query(async (ctx) => {
+      const route = await ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (q) => q.eq("content_id", `id/${SET_SLUG}`))
+        .unique();
+      const groupRoute = await ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (q) =>
+          q.eq(
+            "content_id",
+            "id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026"
+          )
+        )
+        .unique();
+
+      return { groupRoute, route };
+    });
     const searchRemoved = await t.mutation(
       internal.contentSync.mutations.exercises.bulkSyncExerciseSets,
       {
@@ -163,19 +184,46 @@ describe("contentSync/mutations/exercises", () => {
         .query("contentSearch")
         .withIndex("by_content_id", (q) => q.eq("content_id", `id/${SET_SLUG}`))
         .unique();
+      const route = await ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (q) => q.eq("content_id", `id/${SET_SLUG}`))
+        .unique();
+      const groupRoute = await ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (q) =>
+          q.eq(
+            "content_id",
+            "id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026"
+          )
+        )
+        .unique();
 
-      return { search, set };
+      return { groupRoute, route, search, set };
     });
 
     expect(created).toEqual({ created: 1, unchanged: 0, updated: 0 });
     expect(unchanged).toEqual({ created: 0, unchanged: 1, updated: 0 });
     expect(updated).toEqual({ created: 0, unchanged: 0, updated: 1 });
+    expect(syncedRoute.route).toMatchObject({
+      kind: "exercise-set",
+      route: SET_SLUG,
+      title: "New Set Title",
+    });
+    expect(syncedRoute.groupRoute).toMatchObject({
+      contentHash: "group-hash",
+      kind: "exercise-group",
+      markdown: false,
+      route: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026",
+      title: "Try Out",
+    });
     expect(searchRemoved).toEqual({ created: 0, unchanged: 0, updated: 1 });
     expect(snapshot.set).toMatchObject({
       description: "Empty set",
       questionCount: 0,
       title: "Empty Set",
     });
+    expect(snapshot.route).toBeNull();
+    expect(snapshot.groupRoute).toBeNull();
     expect(snapshot.search).toBeNull();
   });
 
@@ -255,8 +303,14 @@ describe("contentSync/mutations/exercises", () => {
           q.eq("content_id", `id/${QUESTION_SLUG}`)
         )
         .unique();
+      const route = await ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", `id/${QUESTION_SLUG}`)
+        )
+        .unique();
 
-      return { authorLinks, choices, question, search };
+      return { authorLinks, choices, question, route, search };
     });
 
     expect(created).toEqual({
@@ -287,6 +341,12 @@ describe("contentSync/mutations/exercises", () => {
     });
     expect(snapshot.search).toMatchObject({
       contentHash: "same-question-hash",
+      route: QUESTION_SLUG,
+      title: "New Question Title",
+    });
+    expect(snapshot.route).toMatchObject({
+      contentHash: "same-question-hash",
+      kind: "exercise-question",
       route: QUESTION_SLUG,
       title: "New Question Title",
     });
@@ -406,8 +466,14 @@ describe("contentSync/mutations/exercises", () => {
           q.eq("content_id", `id/${QUESTION_SLUG}`)
         )
         .unique();
+      const route = await ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", `id/${QUESTION_SLUG}`)
+        )
+        .unique();
 
-      return { authorLinks, choices, question, search };
+      return { authorLinks, choices, question, route, search };
     });
 
     expect(result).toEqual({ deleted: 1 });
@@ -415,6 +481,7 @@ describe("contentSync/mutations/exercises", () => {
       authorLinks: [],
       choices: [],
       question: null,
+      route: null,
       search: null,
     });
   });
@@ -515,15 +582,34 @@ describe("contentSync/mutations/exercises", () => {
           q.eq("content_id", `id/${QUESTION_SLUG}`)
         )
         .unique();
+      const setRoute = await ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (q) => q.eq("content_id", `id/${SET_SLUG}`))
+        .unique();
+      const questionRoute = await ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", `id/${QUESTION_SLUG}`)
+        )
+        .unique();
 
-      return { question, questionSearch, set, setSearch };
+      return {
+        question,
+        questionRoute,
+        questionSearch,
+        set,
+        setRoute,
+        setSearch,
+      };
     });
 
     expect(result).toEqual({ deleted: 1 });
     expect(snapshot).toEqual({
       question: null,
+      questionRoute: null,
       questionSearch: null,
       set: null,
+      setRoute: null,
       setSearch: null,
     });
   });

@@ -1,10 +1,31 @@
+import { CONTENT_ROUTE_KINDS } from "@repo/backend/convex/contents/constants";
 import { contentSearchDocumentValidator } from "@repo/backend/convex/contents/helpers/search/schema";
 import {
   contentRefValidator,
   localeValidator,
+  nakafaSectionValidator,
 } from "@repo/backend/convex/lib/validators/contents";
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
+import { literals } from "convex-helpers/validators";
+
+const contentRouteKindValidator = literals(...CONTENT_ROUTE_KINDS);
+const contentRoutePageItemValidator = v.object({
+  authors: v.array(v.object({ name: v.string() })),
+  content_id: v.string(),
+  date: v.optional(v.number()),
+  depth: v.optional(v.number()),
+  description: v.optional(v.string()),
+  kind: contentRouteKindValidator,
+  locale: localeValidator,
+  markdown: v.boolean(),
+  official: v.optional(v.boolean()),
+  parentRoute: v.optional(v.string()),
+  route: v.string(),
+  section: nakafaSectionValidator,
+  syncedAt: v.number(),
+  title: v.string(),
+});
 
 const tables = {
   /**
@@ -125,6 +146,77 @@ const tables = {
       searchField: "text",
       filterFields: ["locale", "section"],
     }),
+
+  /** Concrete public routes synced from the durable content runtime model. */
+  contentRoutes: defineTable({
+    authors: v.array(v.object({ name: v.string() })),
+    countedAt: v.optional(v.number()),
+    contentHash: v.string(),
+    content_id: v.string(),
+    date: v.optional(v.number()),
+    depth: v.optional(v.number()),
+    description: v.optional(v.string()),
+    kind: contentRouteKindValidator,
+    locale: localeValidator,
+    markdown: v.boolean(),
+    official: v.optional(v.boolean()),
+    parentRoute: v.optional(v.string()),
+    route: v.string(),
+    section: nakafaSectionValidator,
+    syncedAt: v.number(),
+    title: v.string(),
+  })
+    .index("by_content_id", ["content_id"])
+    .index("by_locale", ["locale"])
+    .index("by_locale_and_route", ["locale", "route"])
+    .index("by_locale_and_kind", ["locale", "kind"])
+    .index("by_locale_and_section", ["locale", "section"])
+    .index("by_locale_and_section_and_date", ["locale", "section", "date"])
+    .index("by_locale_and_section_and_route", ["locale", "section", "route"])
+    .index("by_locale_and_section_and_kind_and_route", [
+      "locale",
+      "section",
+      "kind",
+      "route",
+    ])
+    .index("by_locale_and_section_and_kind_and_parentRoute_and_route", [
+      "locale",
+      "section",
+      "kind",
+      "parentRoute",
+      "route",
+    ])
+    .index("by_locale_and_section_and_kind_and_parentRoute_and_date", [
+      "locale",
+      "section",
+      "kind",
+      "parentRoute",
+      "date",
+    ])
+    .index("by_kind", ["kind"])
+    .index("by_section", ["section"]),
+
+  /** Bounded route pages materialized by sync for sitemap and LLMS artifacts. */
+  contentRoutePages: defineTable({
+    locale: localeValidator,
+    page: v.number(),
+    routeCount: v.number(),
+    routes: v.array(contentRoutePageItemValidator),
+    section: nakafaSectionValidator,
+    syncedAt: v.number(),
+  })
+    .index("by_locale_and_section", ["locale", "section"])
+    .index("by_locale_and_section_and_page", ["locale", "section", "page"]),
+
+  /** Materialized route counts used by agent taxonomy without route scans. */
+  contentRouteCounts: defineTable({
+    count: v.number(),
+    locale: localeValidator,
+    section: nakafaSectionValidator,
+    syncedAt: v.number(),
+  })
+    .index("by_locale", ["locale"])
+    .index("by_locale_and_section", ["locale", "section"]),
 };
 
 export default tables;

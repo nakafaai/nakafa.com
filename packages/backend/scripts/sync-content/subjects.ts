@@ -85,6 +85,19 @@ export const syncSubjectTopics = Effect.fn("sync.subjectTopics")(function* (
           locale: topic.locale,
           slug: topic.slug,
           category: topic.category,
+          contentHash: computeHash(
+            JSON.stringify({
+              category: topic.category,
+              description: topic.description,
+              grade: topic.grade,
+              locale: topic.locale,
+              material: topic.material,
+              sectionCount: topic.sectionCount,
+              slug: topic.slug,
+              title: topic.title,
+              topic: topic.topic,
+            })
+          ),
           grade: topic.grade,
           material: topic.material,
           topic: topic.topic,

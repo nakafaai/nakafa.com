@@ -49,11 +49,11 @@ describe("llms markdown content resolver", () => {
     mockGetLlmsExerciseText.mockReturnValue(Effect.succeed(null));
     mockGetLlmsSectionIndexText.mockReturnValue(Effect.succeed(null));
     mockGetLlmsMdxText.mockReturnValue(Effect.succeed(null));
-    mockGetQuranLlmsText.mockReturnValue(null);
+    mockGetQuranLlmsText.mockReturnValue(Effect.succeed(null));
   });
 
   it("returns Quran markdown before checking other content sources", async () => {
-    mockGetQuranLlmsText.mockReturnValue("Quran markdown");
+    mockGetQuranLlmsText.mockReturnValue(Effect.succeed("Quran markdown"));
 
     await expect(
       Effect.runPromise(
@@ -178,7 +178,9 @@ describe("llms markdown content resolver", () => {
   });
 
   it("returns source Quran markdown before checking uncached builders", async () => {
-    mockGetQuranLlmsText.mockReturnValue("Source Quran markdown");
+    mockGetQuranLlmsText.mockReturnValue(
+      Effect.succeed("Source Quran markdown")
+    );
 
     await expect(
       Effect.runPromise(

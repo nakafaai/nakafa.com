@@ -1,12 +1,4 @@
-import {
-  getCurrentMaterial,
-  getMaterials,
-} from "@repo/contents/_lib/exercises/material";
-import { getMaterialPath } from "@repo/contents/_lib/exercises/route";
-import { ExercisesCategorySchema } from "@repo/contents/_types/exercises/category";
-import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
-import { ExercisesTypeSchema } from "@repo/contents/_types/exercises/type";
-import { Effect, Option, Schema } from "effect";
+import { Effect, Option } from "effect";
 import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
 import { getRuntimeExerciseSetPage } from "@/lib/content/runtime";
@@ -36,16 +28,19 @@ export const getLlmsExerciseText = Effect.fn("www.llms.exercises.text")(
     }
 
     const { exerciseNumber, path } = getExerciseMarkdownTarget(cleanSlug);
-    const exercises = yield* getExerciseRows({ locale, path });
+    const setPage = yield* getRuntimeExerciseSetPage({
+      locale,
+      slug: path,
+    });
 
-    if (exercises.length === 0) {
+    if (!setPage) {
       return null;
     }
 
-    let targetExercises = exercises;
+    let targetExercises = setPage.exercises;
 
     if (Option.isSome(exerciseNumber)) {
-      targetExercises = exercises.filter(
+      targetExercises = setPage.exercises.filter(
         (exercise) => exercise.number === exerciseNumber.value
       );
     }
@@ -54,10 +49,9 @@ export const getLlmsExerciseText = Effect.fn("www.llms.exercises.text")(
       return null;
     }
 
-    const description = yield* getExerciseDescription({
+    const description = getExerciseDescription({
       exerciseNumber,
-      locale,
-      path,
+      setPage,
       targetExercises,
     });
     const scanned = buildHeader({
@@ -117,95 +111,41 @@ function getExerciseMarkdownTarget(cleanSlug: string) {
   };
 }
 
-/** Loads exercise rows from the existing content package source. */
-const getExerciseRows = Effect.fn("www.llms.exercises.rows")(function* ({
-  locale,
-  path,
-}: {
-  locale: Locale;
-  path: string;
-}) {
-  const setPage = yield* getRuntimeExerciseSetPage({
-    locale,
-    slug: path,
-  });
-
-  return setPage?.exercises ?? [];
-});
-
-type ExerciseRows = Effect.Effect.Success<ReturnType<typeof getExerciseRows>>;
+type ExerciseSetPage = NonNullable<
+  Effect.Effect.Success<ReturnType<typeof getRuntimeExerciseSetPage>>
+>;
+type ExerciseRows = ExerciseSetPage["exercises"];
 
 /** Builds the markdown document description for an exercise page. */
-const getExerciseDescription = Effect.fn("www.llms.exercises.description")(
-  function* ({
-    exerciseNumber,
-    locale,
-    path,
-    targetExercises,
-  }: {
-    exerciseNumber: Option.Option<number>;
-    locale: Locale;
-    path: string;
-    targetExercises: ExerciseRows;
-  }) {
-    const description = yield* getExerciseSetDescription({ locale, path });
+function getExerciseDescription({
+  exerciseNumber,
+  setPage,
+  targetExercises,
+}: {
+  exerciseNumber: Option.Option<number>;
+  setPage: ExerciseSetPage;
+  targetExercises: ExerciseRows;
+}) {
+  const description = getExerciseSetDescription(setPage);
 
-    if (Option.isNone(exerciseNumber)) {
-      return description;
-    }
-
-    const exerciseTitle = targetExercises[0]?.question.metadata.title;
-
-    if (exerciseTitle) {
-      return `${description} - ${exerciseTitle}`;
-    }
-
-    return `${description} - Question ${exerciseNumber.value}`;
-  }
-);
-
-/** Resolves the existing material title and description for an exercise set. */
-const getExerciseSetDescription = Effect.fn(
-  "www.llms.exercises.setDescription"
-)(function* ({ locale, path }: { locale: Locale; path: string }) {
-  const pathParts = path.split("/");
-  const category = pathParts.at(1);
-  const type = pathParts.at(2);
-  const material = pathParts.at(3);
-  const parsedCategory = Schema.decodeUnknownOption(ExercisesCategorySchema)(
-    category
-  );
-  const parsedType = Schema.decodeUnknownOption(ExercisesTypeSchema)(type);
-  const parsedMaterial = Schema.decodeUnknownOption(ExercisesMaterialSchema)(
-    material
-  );
-
-  if (
-    Option.isNone(parsedCategory) ||
-    Option.isNone(parsedType) ||
-    Option.isNone(parsedMaterial)
-  ) {
-    return "Exercises Content";
+  if (Option.isNone(exerciseNumber)) {
+    return description;
   }
 
-  const materialPath = getMaterialPath(
-    parsedCategory.value,
-    parsedType.value,
-    parsedMaterial.value
-  );
-  const materialsList = yield* getMaterials(materialPath, locale);
-  const { currentMaterial, currentMaterialItem } = getCurrentMaterial(
-    `/${path}`,
-    materialsList
-  );
+  const exerciseTitle = targetExercises[0]?.question.metadata.title;
 
-  if (Option.isNone(currentMaterial) || Option.isNone(currentMaterialItem)) {
-    return "Exercises Content";
+  if (exerciseTitle) {
+    return `${description} - ${exerciseTitle}`;
   }
 
-  if (currentMaterial.value.description) {
-    return `Exercises: ${currentMaterial.value.title} - ${currentMaterialItem.value.title}: ${currentMaterial.value.description}`;
+  return `${description} - Question ${exerciseNumber.value}`;
+}
+
+/** Resolves the markdown description for an exercise set page. */
+function getExerciseSetDescription(setPage: ExerciseSetPage) {
+  if (setPage.description) {
+    return setPage.description;
   }
 
-  return `Exercises: ${currentMaterial.value.title} - ${currentMaterialItem.value.title}`;
-});
+  return setPage.title;
+}

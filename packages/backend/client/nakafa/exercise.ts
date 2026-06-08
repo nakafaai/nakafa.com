@@ -1,51 +1,67 @@
-import { decodeNakafaAgentExerciseResult } from "@repo/contents/_lib/agent/exercise/read";
+import {
+  decodeNakafaExerciseResult,
+  decodeNakafaMarkdown,
+} from "@repo/backend/client/nakafa/decode";
+import { fetchNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { api } from "@repo/backend/convex/_generated/api";
 import { formatNakafaRouteTitle } from "@repo/contents/_lib/agent/format";
-import { decodeNakafaAgentMarkdown } from "@repo/contents/_lib/agent/read/markdown";
-import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
+import {
+  buildNakafaContentRef,
+  parseNakafaContentRef,
+} from "@repo/contents/_lib/agent/refs";
+import type { NakafaAgentExerciseResult } from "@repo/contents/_lib/agent/schema/exercise";
+import type { NakafaAgentMarkdown } from "@repo/contents/_lib/agent/schema/read";
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
 import { ExercisesCategorySchema } from "@repo/contents/_types/exercises/category";
 import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
 import { ExercisesTypeSchema } from "@repo/contents/_types/exercises/type";
 import type { Locale } from "@repo/utilities/locales";
 import { Effect, Option, Schema } from "effect";
-import {
-  getRuntimeExerciseGroupPage,
-  getRuntimeExerciseQuestionPage,
-  getRuntimeExerciseSetPage,
-} from "@/lib/content/runtime";
 
 const YEAR_SEGMENT = /^\d{4}$/;
 
-/** Reads an exercise set or one question from the Convex runtime model. */
-export function readExercise(
-  ref: NakafaAgentContentRef,
+/** Reads structured exercise data from Convex runtime rows. */
+export function readNakafaExercise(
+  convexUrl: string,
+  input: string,
   exerciseNumber?: number
 ) {
   return Effect.gen(function* () {
-    const target = getExerciseTarget(ref.route, exerciseNumber);
-    const setPage = yield* getRuntimeExerciseSetPage({
-      locale: ref.locale,
-      slug: target.setRoute,
-    });
+    const ref = parseNakafaContentRef(input);
 
-    if (!setPage) {
-      return Option.none();
+    if (Option.isNone(ref) || ref.value.section !== "exercises") {
+      return Option.none<NakafaAgentExerciseResult>();
+    }
+
+    const target = getExerciseTarget(ref.value.route, exerciseNumber);
+    const page = yield* fetchNakafaRuntimeQuery(
+      convexUrl,
+      "getExerciseSetPage",
+      api.contents.queries.runtime.getExerciseSetPage,
+      {
+        locale: ref.value.locale,
+        slug: target.setRoute,
+      }
+    );
+
+    if (!page) {
+      return Option.none<NakafaAgentExerciseResult>();
     }
 
     const exercises = Option.match(target.number, {
       /** Keeps the whole set when no specific question is requested. */
-      onNone: () => setPage.exercises,
-      /** Selects only the requested exercise number from the set rows. */
+      onNone: () => page.exercises,
+      /** Selects one requested question from the set rows. */
       onSome: (number) =>
-        setPage.exercises.filter((exercise) => exercise.number === number),
+        page.exercises.filter((exercise) => exercise.number === number),
     });
 
     if (exercises.length === 0) {
-      return Option.none();
+      return Option.none<NakafaAgentExerciseResult>();
     }
 
     const setRef = buildNakafaContentRef(
-      ref.locale,
+      ref.value.locale,
       target.setRoute,
       "exercises"
     );
@@ -57,7 +73,7 @@ export function readExercise(
           raw: exercise.answer.raw,
           title: exercise.answer.metadata.title,
         },
-        choices: exercise.choices[ref.locale].map((choice) => ({
+        choices: exercise.choices[ref.value.locale].map((choice) => ({
           correct: choice.value,
           label: choice.label,
         })),
@@ -68,11 +84,11 @@ export function readExercise(
         },
       })),
     };
-    const result = yield* decodeNakafaAgentExerciseResult(
+    const result = yield* decodeNakafaExerciseResult(
       Option.match(target.number, {
         /** Returns set-level output when no specific question is requested. */
         onNone: () => resultInput,
-        /** Marks the result as a single-question exercise response. */
+        /** Marks the result as a single-question response. */
         onSome: (number) => ({
           ...resultInput,
           exercise_number: number,
@@ -84,17 +100,20 @@ export function readExercise(
   });
 }
 
-/** Renders Convex exercise rows as agent markdown. */
-export function readExerciseMarkdown(ref: NakafaAgentContentRef) {
+/** Renders an exercise set as full agent markdown. */
+export function readExerciseMarkdown(
+  convexUrl: string,
+  ref: NakafaAgentContentRef
+) {
   return Effect.gen(function* () {
-    const exercise = yield* readExercise(ref);
+    const exercise = yield* readNakafaExercise(convexUrl, ref.content_id);
 
     if (Option.isNone(exercise)) {
-      return Option.none();
+      return Option.none<NakafaAgentMarkdown>();
     }
 
     const routeTitle = formatNakafaRouteTitle(exercise.value.route, ref.locale);
-    const markdown = yield* decodeNakafaAgentMarkdown({
+    const markdown = yield* decodeNakafaMarkdown({
       ...ref,
       description: `${exercise.value.count} exercises`,
       text: [
@@ -126,40 +145,6 @@ export function readExerciseMarkdown(ref: NakafaAgentContentRef) {
   });
 }
 
-/** Verifies set, question, and group exercise routes against Convex. */
-export function verifyExercise(ref: NakafaAgentContentRef) {
-  return Effect.gen(function* () {
-    const questionNumber = getQuestionNumberFromRoute(ref.route);
-
-    if (Option.isSome(questionNumber)) {
-      const question = yield* getRuntimeExerciseQuestionPage({
-        locale: ref.locale,
-        slug: ref.route,
-      });
-
-      return question !== null;
-    }
-
-    const setPage = yield* getRuntimeExerciseSetPage({
-      locale: ref.locale,
-      slug: ref.route,
-    });
-
-    if (setPage) {
-      return true;
-    }
-
-    const groupArgs = getExerciseGroupArgs(ref.locale, ref.route);
-
-    if (Option.isNone(groupArgs)) {
-      return false;
-    }
-
-    const group = yield* getRuntimeExerciseGroupPage(groupArgs.value);
-    return group !== null;
-  });
-}
-
 /** Resolves a question route to its parent set and optional question number. */
 function getExerciseTarget(route: string, exerciseNumber?: number) {
   const routeNumber = getQuestionNumberFromRoute(route);
@@ -180,7 +165,7 @@ function getExerciseTarget(route: string, exerciseNumber?: number) {
   };
 }
 
-/** Reads a numeric question segment only when the parent segment is a set. */
+/** Reads a numeric exercise question segment only under a set segment. */
 function getQuestionNumberFromRoute(route: string) {
   const parts = route.split("/");
   const lastPart = parts.at(-1);
@@ -199,8 +184,8 @@ function getQuestionNumberFromRoute(route: string) {
   return Option.some(number);
 }
 
-/** Parses exercise group routes such as exercises/.../try-out/2026. */
-function getExerciseGroupArgs(locale: Locale, route: string) {
+/** Parses exercise group route segments into the Convex query args. */
+export function getExerciseGroupArgs(locale: Locale, route: string) {
   const parts = route.split("/");
 
   if (parts.length !== 5 && parts.length !== 6) {

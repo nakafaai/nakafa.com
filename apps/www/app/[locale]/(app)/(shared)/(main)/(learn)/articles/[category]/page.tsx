@@ -3,7 +3,6 @@ import {
   parseArticleCategory,
 } from "@repo/contents/_lib/articles/category";
 import { getCategoryIcon } from "@repo/contents/_lib/articles/icons";
-import { getArticleSummaries } from "@repo/contents/_lib/articles/slug";
 import type { ArticleCategory } from "@repo/contents/_types/taxonomy";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
@@ -20,6 +19,7 @@ import { FooterContent } from "@/components/shared/footer-content";
 import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
+import { getRuntimeArticleSummaries } from "@/lib/content/navigation";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
@@ -46,9 +46,9 @@ async function getResolvedParams(
 async function getCategoryArticles(category: ArticleCategory, locale: Locale) {
   "use cache";
 
-  cacheLife("max");
+  cacheLife("seconds");
 
-  return Effect.runPromise(getArticleSummaries(category, locale));
+  return Effect.runPromise(getRuntimeArticleSummaries(category, locale));
 }
 
 export async function generateMetadata({

@@ -1,10 +1,11 @@
+import { Nakafa } from "@repo/ai/agents/nakafa/service";
 import {
   NakafaAgentExerciseOptionsSchema,
   NakafaAgentExerciseResultSchema,
 } from "@repo/contents/_lib/agent/schema/exercise";
-import { Nakafa } from "@repo/contents/_lib/agent/service";
 import { Effect, Option } from "effect";
 import { decodeNakafaMcpToolInput } from "@/lib/mcp/effect";
+import { nakafaContent } from "@/lib/mcp/nakafa";
 import {
   succeedMcpReadModelError,
   toMcpStructuredResult,
@@ -27,7 +28,7 @@ export function getNakafaExerciseToolResult(args: unknown) {
     const exercise = yield* Nakafa.exercise(
       input.content_ref,
       input.exercise_number
-    ).pipe(Effect.provide(Nakafa.Default));
+    ).pipe(Effect.provideService(Nakafa, nakafaContent));
 
     return Option.match(exercise, {
       onNone: () =>

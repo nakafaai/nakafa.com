@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 
 interface SyncedSubjectTopic {
   category: Doc<"subjectTopics">["category"];
+  contentHash: string;
   description?: string;
   grade: Doc<"subjectTopics">["grade"];
   locale: Doc<"subjectTopics">["locale"];
@@ -39,6 +40,7 @@ const TOPIC_SLUG = "subject/high-school/10/mathematics/metadata-topic";
 const SECTION_SLUG = `${TOPIC_SLUG}/metadata-section`;
 const BASE_TOPIC: SyncedSubjectTopic = {
   category: "high-school",
+  contentHash: "same-topic-hash",
   description: "Old topic description",
   grade: "10",
   locale: "id",
@@ -97,6 +99,7 @@ describe("contentSync/mutations/subjects", () => {
       {
         topics: [
           buildTopic({
+            contentHash: "new-topic-hash",
             description: "New topic description",
             sectionCount: 2,
             title: "New Topic Title",
@@ -104,22 +107,36 @@ describe("contentSync/mutations/subjects", () => {
         ],
       }
     );
-    const topic = await t.query(
-      async (ctx) =>
-        await ctx.db
-          .query("subjectTopics")
-          .withIndex("by_locale_and_slug", (q) =>
-            q.eq("locale", "id").eq("slug", TOPIC_SLUG)
-          )
-          .unique()
-    );
+    const topic = await t.query(async (ctx) => {
+      const syncedTopic = await ctx.db
+        .query("subjectTopics")
+        .withIndex("by_locale_and_slug", (q) =>
+          q.eq("locale", "id").eq("slug", TOPIC_SLUG)
+        )
+        .unique();
+      const route = await ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", `id/${TOPIC_SLUG}`)
+        )
+        .unique();
+
+      return { route, topic: syncedTopic };
+    });
 
     expect(created).toEqual({ created: 1, unchanged: 0, updated: 0 });
     expect(unchanged).toEqual({ created: 0, unchanged: 1, updated: 0 });
     expect(updated).toEqual({ created: 0, unchanged: 0, updated: 1 });
-    expect(topic).toMatchObject({
+    expect(topic.topic).toMatchObject({
       description: "New topic description",
       sectionCount: 2,
+      title: "New Topic Title",
+    });
+    expect(topic.route).toMatchObject({
+      contentHash: "new-topic-hash",
+      kind: "subject-topic",
+      markdown: false,
+      route: TOPIC_SLUG,
       title: "New Topic Title",
     });
   });
@@ -185,6 +202,12 @@ describe("contentSync/mutations/subjects", () => {
           q.eq("content_id", `id/${SECTION_SLUG}`)
         )
         .unique();
+      const route = await ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", `id/${SECTION_SLUG}`)
+        )
+        .unique();
       const audioSource = await ctx.db
         .query("audioContentSources")
         .withIndex("by_contentRefType_and_slug_and_locale", (q) =>
@@ -195,7 +218,7 @@ describe("contentSync/mutations/subjects", () => {
         )
         .unique();
 
-      return { audioSource, authorLinks, search, section };
+      return { audioSource, authorLinks, route, search, section };
     });
 
     expect(created).toEqual({
@@ -217,6 +240,12 @@ describe("contentSync/mutations/subjects", () => {
     expect(snapshot.authorLinks).toHaveLength(1);
     expect(snapshot.search).toMatchObject({
       contentHash: "same-subject-hash",
+      route: SECTION_SLUG,
+      title: "New Subject Title",
+    });
+    expect(snapshot.route).toMatchObject({
+      contentHash: "same-subject-hash",
+      kind: "subject-section",
       route: SECTION_SLUG,
       title: "New Subject Title",
     });
@@ -329,6 +358,12 @@ describe("contentSync/mutations/subjects", () => {
           q.eq("content_id", `id/${SECTION_SLUG}`)
         )
         .unique();
+      const route = await ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", `id/${SECTION_SLUG}`)
+        )
+        .unique();
       const audioSource = await ctx.db
         .query("audioContentSources")
         .withIndex("by_contentRefType_and_slug_and_locale", (q) =>
@@ -339,13 +374,14 @@ describe("contentSync/mutations/subjects", () => {
         )
         .unique();
 
-      return { audioSource, authorLinks, search, section };
+      return { audioSource, authorLinks, route, search, section };
     });
 
     expect(result).toEqual({ deleted: 1 });
     expect(snapshot).toEqual({
       audioSource: null,
       authorLinks: [],
+      route: null,
       search: null,
       section: null,
     });
@@ -434,11 +470,35 @@ describe("contentSync/mutations/subjects", () => {
           q.eq("locale", "id").eq("slug", SECTION_SLUG)
         )
         .unique();
+      const route = await ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", `id/${SECTION_SLUG}`)
+        )
+        .unique();
+      const topicRoute = await ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", `id/${TOPIC_SLUG}`)
+        )
+        .unique();
+      const search = await ctx.db
+        .query("contentSearch")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", `id/${SECTION_SLUG}`)
+        )
+        .unique();
 
-      return { section, topic };
+      return { route, search, section, topic, topicRoute };
     });
 
     expect(result).toEqual({ deleted: 1 });
-    expect(snapshot).toEqual({ section: null, topic: null });
+    expect(snapshot).toEqual({
+      route: null,
+      search: null,
+      section: null,
+      topic: null,
+      topicRoute: null,
+    });
   });
 });

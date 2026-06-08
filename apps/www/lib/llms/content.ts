@@ -14,7 +14,7 @@ import { getQuranLlmsText } from "@/lib/llms/quran";
 /** Resolves markdown for one public content route or its sitemap-derived index. */
 export const getLlmsMarkdownText = Effect.fn("www.llms.markdown.cached")(
   function* ({ cleanSlug, locale }: { cleanSlug: string; locale: Locale }) {
-    const quranText = getQuranLlmsText({ cleanSlug, locale });
+    const quranText = yield* getQuranLlmsText({ cleanSlug, locale });
     if (quranText) {
       return quranText;
     }
@@ -48,7 +48,7 @@ export const getLlmsMarkdownText = Effect.fn("www.llms.markdown.cached")(
 /** Resolves uncached markdown for build-time public artifacts. */
 export const getLlmsSourceMarkdownText = Effect.fn("www.llms.markdown.source")(
   function* ({ cleanSlug, locale }: { cleanSlug: string; locale: Locale }) {
-    const quranText = getQuranLlmsText({ cleanSlug, locale });
+    const quranText = yield* getQuranLlmsText({ cleanSlug, locale });
     if (quranText) {
       return quranText;
     }

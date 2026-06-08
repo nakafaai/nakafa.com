@@ -25,6 +25,7 @@ describe("contentSync audio sources", () => {
           date: 1,
           description: "Article source",
           locale: "id",
+          official: false,
           references: [],
           slug: ARTICLE_SLUG,
           title: "Article Source",
@@ -92,6 +93,7 @@ describe("contentSync audio sources", () => {
         topics: [
           {
             category: "high-school",
+            contentHash: "subject-topic-source-hash",
             grade: "10",
             locale: "en",
             material: "mathematics",

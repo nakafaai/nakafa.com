@@ -1,6 +1,5 @@
 import fs from "node:fs";
 import path from "node:path";
-import { getMaterials } from "@repo/contents/_lib/exercises/material";
 import {
   getExercisesPath,
   getMaterialPath,
@@ -37,6 +36,7 @@ import {
   LayoutMaterialToc,
 } from "@/components/shared/layout-material";
 import { RefContent } from "@/components/shared/ref-content";
+import { getRuntimeExerciseMaterials } from "@/lib/content/navigation";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
@@ -180,7 +180,7 @@ async function PageContent({
 }) {
   "use cache";
 
-  cacheLife("max");
+  cacheLife("seconds");
 
   const typePath = getExercisesPath(category, type);
   const FilePath = getMaterialPath(category, type, material);
@@ -188,7 +188,7 @@ async function PageContent({
   const [t, tCommon, materials] = await Promise.all([
     getTranslations({ locale, namespace: "Exercises" }),
     getTranslations({ locale, namespace: "Common" }),
-    Effect.runPromise(getMaterials(FilePath, locale)),
+    Effect.runPromise(getRuntimeExerciseMaterials(FilePath, locale)),
   ]);
 
   const chapters: ParsedHeading[] = materials.map((mat) => ({

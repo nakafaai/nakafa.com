@@ -2,7 +2,6 @@ import { parseSubjectCategory } from "@repo/contents/_lib/subject/category";
 import {
   getGradeNonNumeric,
   getGradePath,
-  getGradeSubjects,
   parseGrade,
 } from "@repo/contents/_lib/subject/grade";
 import { getCategoryIcon } from "@repo/contents/_lib/subject/icons";
@@ -22,6 +21,7 @@ import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
 import { SubjectItem, SubjectList } from "@/components/shared/subject-list";
+import { getRuntimeGradeSubjects } from "@/lib/content/navigation";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
@@ -108,11 +108,15 @@ export function generateStaticParams() {
 }
 
 /** Reads grade subjects inside a Next Cache Components boundary. */
-async function getCachedGradeSubjects(category: SubjectCategory, grade: Grade) {
+async function getCachedGradeSubjects(
+  category: SubjectCategory,
+  grade: Grade,
+  locale: Locale
+) {
   "use cache";
-  cacheLife("max");
+  cacheLife("seconds");
 
-  return Effect.runPromise(getGradeSubjects(category, grade));
+  return Effect.runPromise(getRuntimeGradeSubjects(category, grade, locale));
 }
 
 export default function Page(
@@ -153,7 +157,7 @@ async function PageContent({
   const FilePath = getGradePath(category, grade);
 
   const [subjects, tCommon, tSubject] = await Promise.all([
-    getCachedGradeSubjects(category, grade),
+    getCachedGradeSubjects(category, grade, locale),
     getTranslations({ locale, namespace: "Common" }),
     getTranslations({ locale, namespace: "Subject" }),
   ]);

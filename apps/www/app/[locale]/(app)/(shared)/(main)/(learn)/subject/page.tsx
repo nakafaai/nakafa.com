@@ -1,8 +1,5 @@
 import { Books02Icon } from "@hugeicons/core-free-icons";
-import {
-  getAllGradesWithSubjects,
-  getGradeNonNumeric,
-} from "@repo/contents/_lib/subject/grade";
+import { getGradeNonNumeric } from "@repo/contents/_lib/subject/grade";
 import { getCategoryIcon } from "@repo/contents/_lib/subject/icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
@@ -16,6 +13,7 @@ import { use } from "react";
 import { getGradeIcon } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/subject/icons";
 import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
+import { getRuntimeSubjectGrades } from "@/lib/content/navigation";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
@@ -60,15 +58,15 @@ export default function Page(props: PageProps<"/[locale]/subject">) {
 }
 
 /** Reads subject grade listings inside a Next Cache Components boundary. */
-async function getCachedGradesWithSubjects() {
+async function getCachedSubjectGrades(locale: Locale) {
   "use cache";
-  cacheLife("max");
+  cacheLife("seconds");
 
-  return Effect.runPromise(getAllGradesWithSubjects());
+  return Effect.runPromise(getRuntimeSubjectGrades(locale));
 }
 
 async function PageContent({ locale }: { locale: Locale }) {
-  const allGrades = await getCachedGradesWithSubjects();
+  const allGrades = await getCachedSubjectGrades(locale);
   const categoryOrder = Array.from(
     new Set(allGrades.map((grade) => grade.category))
   );

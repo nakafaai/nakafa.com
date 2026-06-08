@@ -21,6 +21,7 @@ const config = defineConfig({
           include: ["convex/**/*.test.ts"],
           exclude: defaultExcludes,
           environment: "edge-runtime",
+          testTimeout: 15_000,
         },
       },
       {

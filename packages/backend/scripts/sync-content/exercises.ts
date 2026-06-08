@@ -143,6 +143,7 @@ export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
           const searchDescription =
             getExerciseSetSearchDescription(searchSource);
           const searchText = getExerciseSetSearchText(searchSource);
+          const groupRoute = getExerciseGroupRoute(set.slug);
 
           return {
             locale: set.locale,
@@ -151,6 +152,7 @@ export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
             type: set.type,
             material: set.material,
             exerciseType: set.exerciseType,
+            exerciseTypeTitle: set.exerciseTypeTitle,
             setName: set.setName,
             title: set.title,
             description: set.description,
@@ -159,6 +161,16 @@ export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
             searchTitle,
             searchDescription,
             searchText,
+            groupContentHash: computeHash(
+              JSON.stringify({
+                description: set.description,
+                exerciseType: set.exerciseType,
+                exerciseTypeTitle: set.exerciseTypeTitle,
+                groupRoute,
+                locale: set.locale,
+                year: set.year,
+              })
+            ),
             contentHash: computeHash(
               JSON.stringify({
                 description: set.description,
@@ -242,6 +254,11 @@ export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
 
   return { ...totals, durationMs, itemsPerSecond };
 });
+
+/** Returns the exercise group route above one concrete set route. */
+function getExerciseGroupRoute(setSlug: string) {
+  return setSlug.split("/").slice(0, -1).join("/");
+}
 
 /** Parses one exercise question file into the Convex sync payload. */
 const parseQuestionFile = Effect.fn("sync.parseQuestionFile")(function* (

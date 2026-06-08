@@ -29,6 +29,8 @@ import {
   finalizeMetrics,
   startPhase,
 } from "@repo/backend/scripts/sync-content/metrics";
+import { syncQuran } from "@repo/backend/scripts/sync-content/quran";
+import { syncContentRouteArtifactPages } from "@repo/backend/scripts/sync-content/routes";
 import {
   getChangedFilesSince,
   getCurrentGitCommit,
@@ -39,7 +41,6 @@ import {
   AuthorSyncResultSchema,
   BATCH_SIZES,
 } from "@repo/backend/scripts/sync-content/schemas";
-import { syncQuranSearch } from "@repo/backend/scripts/sync-content/search";
 import {
   syncSubjectSections,
   syncSubjectTopics,
@@ -53,6 +54,7 @@ import type {
 import { verify } from "@repo/backend/scripts/sync-content/verify";
 import { Effect } from "effect";
 
+/** Prints the combined sync summary, including Quran runtime/search rows. */
 const logSyncSummary = (
   authorResult: { created: number },
   articleResult: SyncResult,
@@ -60,8 +62,9 @@ const logSyncSummary = (
   subjectSectionResult: SyncResult,
   exerciseSetResult: SyncResult,
   exerciseQuestionResult: SyncResult,
-  quranSearchResult: SyncResult,
-  tryoutResult: SyncResult
+  quranResult: SyncResult,
+  tryoutResult: SyncResult,
+  routePageResult: SyncResult
 ): void => {
   const totalCreated =
     articleResult.created +
@@ -69,16 +72,18 @@ const logSyncSummary = (
     subjectSectionResult.created +
     exerciseSetResult.created +
     exerciseQuestionResult.created +
-    quranSearchResult.created +
-    tryoutResult.created;
+    quranResult.created +
+    tryoutResult.created +
+    routePageResult.created;
   const totalUpdated =
     articleResult.updated +
     subjectTopicResult.updated +
     subjectSectionResult.updated +
     exerciseSetResult.updated +
     exerciseQuestionResult.updated +
-    quranSearchResult.updated +
-    tryoutResult.updated;
+    quranResult.updated +
+    tryoutResult.updated +
+    routePageResult.updated;
   const total =
     totalCreated +
     totalUpdated +
@@ -87,8 +92,9 @@ const logSyncSummary = (
     subjectSectionResult.unchanged +
     exerciseSetResult.unchanged +
     exerciseQuestionResult.unchanged +
-    quranSearchResult.unchanged +
-    tryoutResult.unchanged;
+    quranResult.unchanged +
+    tryoutResult.unchanged +
+    routePageResult.unchanged;
   const totalAuthorLinksCreated =
     (articleResult.authorLinksCreated || 0) +
     (subjectSectionResult.authorLinksCreated || 0) +
@@ -112,10 +118,13 @@ const logSyncSummary = (
     `  Exercise Questions: ${exerciseQuestionResult.created + exerciseQuestionResult.updated + exerciseQuestionResult.unchanged} (${exerciseQuestionResult.created} new, ${exerciseQuestionResult.updated} updated)`
   );
   log(
-    `  Quran Search:       ${quranSearchResult.created + quranSearchResult.updated + quranSearchResult.unchanged} (${quranSearchResult.created} new, ${quranSearchResult.updated} updated)`
+    `  Quran:              ${quranResult.created + quranResult.updated + quranResult.unchanged} (${quranResult.created} new, ${quranResult.updated} updated)`
   );
   log(
     `  Tryouts:            ${tryoutResult.created + tryoutResult.updated + tryoutResult.unchanged} (${tryoutResult.created} new, ${tryoutResult.updated} updated)`
+  );
+  log(
+    `  Route Pages:         ${routePageResult.created + routePageResult.updated + routePageResult.unchanged} (${routePageResult.created} new, ${routePageResult.updated} updated)`
   );
 
   log("\nRelated Items:");
@@ -170,8 +179,9 @@ export const syncAll = Effect.fn("sync.all")(function* (
   let subjectSectionResult: SyncResult;
   let exerciseSetResult: SyncResult;
   let exerciseQuestionResult: SyncResult;
-  let quranSearchResult: SyncResult;
+  let quranResult: SyncResult;
   let tryoutResult: SyncResult;
+  let routePageResult: SyncResult;
 
   if (options.sequential) {
     const articlePhase = startPhase(metrics, "Articles");
@@ -217,13 +227,11 @@ export const syncAll = Effect.fn("sync.all")(function* (
         exerciseQuestionResult.unchanged
     );
 
-    const quranSearchPhase = startPhase(metrics, "Quran Search");
-    quranSearchResult = yield* syncQuranSearch(config, options);
+    const quranPhase = startPhase(metrics, "Quran");
+    quranResult = yield* syncQuran(config, options);
     endPhase(
-      quranSearchPhase,
-      quranSearchResult.created +
-        quranSearchResult.updated +
-        quranSearchResult.unchanged
+      quranPhase,
+      quranResult.created + quranResult.updated + quranResult.unchanged
     );
 
     const tryoutPhase = startPhase(metrics, "Tryouts");
@@ -231,6 +239,15 @@ export const syncAll = Effect.fn("sync.all")(function* (
     endPhase(
       tryoutPhase,
       tryoutResult.created + tryoutResult.updated + tryoutResult.unchanged
+    );
+
+    const routePagePhase = startPhase(metrics, "Route Pages");
+    routePageResult = yield* syncContentRouteArtifactPages(config, options);
+    endPhase(
+      routePagePhase,
+      routePageResult.created +
+        routePageResult.updated +
+        routePageResult.unchanged
     );
   } else {
     const quietOptions = { ...options, quiet: true };
@@ -257,10 +274,10 @@ export const syncAll = Effect.fn("sync.all")(function* (
     log(`  Exercise Questions: ${formatSyncResult(exerciseQuestionResult)}`);
     log(`  Duration: ${formatDuration(performance.now() - phase2Start)}`);
 
-    log("Phase 3: Syncing Quran search...");
+    log("Phase 3: Syncing Quran runtime data...");
     const phase3Start = performance.now();
-    quranSearchResult = yield* syncQuranSearch(config, quietOptions);
-    log(`  Quran Search:       ${formatSyncResult(quranSearchResult)}`);
+    quranResult = yield* syncQuran(config, quietOptions);
+    log(`  Quran:              ${formatSyncResult(quranResult)}`);
     log(`  Duration: ${formatDuration(performance.now() - phase3Start)}`);
 
     log("Phase 4: Syncing tryouts...");
@@ -269,13 +286,20 @@ export const syncAll = Effect.fn("sync.all")(function* (
     log(`  Tryouts:            ${formatSyncResult(tryoutResult)}`);
     log(`  Duration: ${formatDuration(performance.now() - phase4Start)}`);
 
+    log("Phase 5: Materializing route artifact pages...");
+    const phase5Start = performance.now();
+    routePageResult = yield* syncContentRouteArtifactPages(config, options);
+    log(`  Route Pages:         ${formatSyncResult(routePageResult)}`);
+    log(`  Duration: ${formatDuration(performance.now() - phase5Start)}`);
+
     addPhaseMetrics(metrics, "Articles", articleResult);
     addPhaseMetrics(metrics, "Subject Topics", subjectTopicResult);
     addPhaseMetrics(metrics, "Subject Sections", subjectSectionResult);
     addPhaseMetrics(metrics, "Exercise Sets", exerciseSetResult);
     addPhaseMetrics(metrics, "Exercise Questions", exerciseQuestionResult);
-    addPhaseMetrics(metrics, "Quran Search", quranSearchResult);
+    addPhaseMetrics(metrics, "Quran", quranResult);
     addPhaseMetrics(metrics, "Tryouts", tryoutResult);
+    addPhaseMetrics(metrics, "Route Pages", routePageResult);
   }
 
   finalizeMetrics(metrics);
@@ -286,8 +310,9 @@ export const syncAll = Effect.fn("sync.all")(function* (
     subjectSectionResult,
     exerciseSetResult,
     exerciseQuestionResult,
-    quranSearchResult,
-    tryoutResult
+    quranResult,
+    tryoutResult,
+    routePageResult
   );
   logSyncMetrics(metrics);
 });
@@ -389,7 +414,8 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
     updated: 0,
     unchanged: 0,
   };
-  let quranSearchResult: SyncResult = { created: 0, updated: 0, unchanged: 0 };
+  let quranResult: SyncResult = { created: 0, updated: 0, unchanged: 0 };
+  let routePageResult: SyncResult = { created: 0, updated: 0, unchanged: 0 };
 
   if (hasArticleChanges) {
     log("Articles changed - syncing...");
@@ -419,11 +445,14 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
     log("Exercises: no changes");
   }
 
-  quranSearchResult = yield* syncQuranSearch(config, {
+  quranResult = yield* syncQuran(config, {
     ...options,
     quiet: true,
   });
-  addPhaseMetrics(metrics, "Quran Search", quranSearchResult);
+  addPhaseMetrics(metrics, "Quran", quranResult);
+
+  routePageResult = yield* syncContentRouteArtifactPages(config, options);
+  addPhaseMetrics(metrics, "Route Pages", routePageResult);
 
   finalizeMetrics(metrics);
   log("\n=== SUMMARY ===\n");
@@ -434,14 +463,16 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
     subjectSectionResult.created +
     exerciseSetResult.created +
     exerciseQuestionResult.created +
-    quranSearchResult.created;
+    quranResult.created +
+    routePageResult.created;
   const totalUpdated =
     articleResult.updated +
     subjectTopicResult.updated +
     subjectSectionResult.updated +
     exerciseSetResult.updated +
     exerciseQuestionResult.updated +
-    quranSearchResult.updated;
+    quranResult.updated +
+    routePageResult.updated;
   if (totalCreated > 0 || totalUpdated > 0) {
     log(`Changes: ${totalCreated} created, ${totalUpdated} updated`);
   } else {

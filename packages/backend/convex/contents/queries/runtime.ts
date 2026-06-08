@@ -1,21 +1,60 @@
 import { query } from "@repo/backend/convex/_generated/server";
+import {
+  listArticleApiContentPageImpl,
+  listSubjectApiContentPageImpl,
+} from "@repo/backend/convex/contents/runtime/api";
 import { getArticlePageImpl } from "@repo/backend/convex/contents/runtime/articles";
+import {
+  getContentRouteArtifactPageImpl,
+  getContentRouteImpl,
+  listContentRouteCountsImpl,
+  listContentRoutesByKindPrefixImpl,
+  listContentRoutesByParentImpl,
+  listContentRoutesByPrefixImpl,
+  listLatestContentRoutesImpl,
+} from "@repo/backend/convex/contents/runtime/catalog";
 import {
   getExerciseGroupPageImpl,
   getExerciseQuestionPageImpl,
   getExerciseSetPageImpl,
 } from "@repo/backend/convex/contents/runtime/exercises";
 import {
+  getQuranReferenceImpl,
+  getQuranSurahPageImpl,
+  listQuranSurahsImpl,
+} from "@repo/backend/convex/contents/runtime/quran";
+import {
   getArticlePageArgsValidator,
   getArticlePageReturnValidator,
+  getContentRouteArgsValidator,
+  getContentRouteArtifactPageArgsValidator,
+  getContentRouteArtifactPageReturnValidator,
+  getContentRouteReturnValidator,
   getExerciseGroupPageArgsValidator,
   getExerciseGroupPageReturnValidator,
   getExerciseQuestionPageArgsValidator,
   getExerciseQuestionPageReturnValidator,
   getExerciseSetPageArgsValidator,
   getExerciseSetPageReturnValidator,
+  getQuranReferenceArgsValidator,
+  getQuranReferenceReturnValidator,
+  getQuranSurahPageArgsValidator,
+  getQuranSurahPageReturnValidator,
   getSubjectPageArgsValidator,
   getSubjectPageReturnValidator,
+  listArticleApiContentPageArgsValidator,
+  listArticleApiContentPageReturnValidator,
+  listContentRouteCountsArgsValidator,
+  listContentRouteCountsReturnValidator,
+  listContentRoutesByKindPrefixArgsValidator,
+  listContentRoutesByParentArgsValidator,
+  listContentRoutesByPrefixArgsValidator,
+  listContentRoutesPageReturnValidator,
+  listLatestContentRoutesArgsValidator,
+  listLatestContentRoutesReturnValidator,
+  listQuranSurahsReturnValidator,
+  listSubjectApiContentPageArgsValidator,
+  listSubjectApiContentPageReturnValidator,
 } from "@repo/backend/convex/contents/runtime/spec";
 import { getSubjectPageImpl } from "@repo/backend/convex/contents/runtime/subjects";
 
@@ -62,4 +101,93 @@ export const getExerciseGroupPage = query({
   args: getExerciseGroupPageArgsValidator,
   returns: getExerciseGroupPageReturnValidator,
   handler: getExerciseGroupPageImpl,
+});
+
+/** Lists concrete content routes matching one locale, section, and prefix. */
+export const listContentRoutesByPrefix = query({
+  args: listContentRoutesByPrefixArgsValidator,
+  returns: listContentRoutesPageReturnValidator,
+  /** Runs a bounded route-catalog page query with generated argument typing. */
+  handler: (ctx, args) => listContentRoutesByPrefixImpl(ctx, args),
+});
+
+/** Lists concrete content routes matching one locale, section, kind, and prefix. */
+export const listContentRoutesByKindPrefix = query({
+  args: listContentRoutesByKindPrefixArgsValidator,
+  returns: listContentRoutesPageReturnValidator,
+  /** Runs a bounded kind-scoped route-catalog page query. */
+  handler: (ctx, args) => listContentRoutesByKindPrefixImpl(ctx, args),
+});
+
+/** Lists concrete content routes matching one materialized navigation parent. */
+export const listContentRoutesByParent = query({
+  args: listContentRoutesByParentArgsValidator,
+  returns: listContentRoutesPageReturnValidator,
+  /** Runs a bounded parent-scoped route-catalog page query. */
+  handler: (ctx, args) => listContentRoutesByParentImpl(ctx, args),
+});
+
+/** Reads one materialized content route page for sitemap and agent artifacts. */
+export const getContentRouteArtifactPage = query({
+  args: getContentRouteArtifactPageArgsValidator,
+  returns: getContentRouteArtifactPageReturnValidator,
+  handler: (ctx, args) => getContentRouteArtifactPageImpl(ctx, args),
+});
+
+/** Lists newest dated content routes without scanning the full catalog. */
+export const listLatestContentRoutes = query({
+  args: listLatestContentRoutesArgsValidator,
+  returns: listLatestContentRoutesReturnValidator,
+  handler: (ctx, args) => listLatestContentRoutesImpl(ctx, args),
+});
+
+/** Lists materialized route counts for one locale. */
+export const listContentRouteCounts = query({
+  args: listContentRouteCountsArgsValidator,
+  returns: listContentRouteCountsReturnValidator,
+  handler: (ctx, args) => listContentRouteCountsImpl(ctx, args),
+});
+
+/** Loads one concrete content route from the durable route catalog. */
+export const getContentRoute = query({
+  args: getContentRouteArgsValidator,
+  returns: getContentRouteReturnValidator,
+  handler: getContentRouteImpl,
+});
+
+/** Lists article API rows matching one route prefix. */
+export const listArticleApiContentPage = query({
+  args: listArticleApiContentPageArgsValidator,
+  returns: listArticleApiContentPageReturnValidator,
+  /** Runs a bounded article API content page query with generated argument typing. */
+  handler: (ctx, args) => listArticleApiContentPageImpl(ctx, args),
+});
+
+/** Lists subject API rows matching one route prefix. */
+export const listSubjectApiContentPage = query({
+  args: listSubjectApiContentPageArgsValidator,
+  returns: listSubjectApiContentPageReturnValidator,
+  /** Runs a bounded subject API content page query with generated argument typing. */
+  handler: (ctx, args) => listSubjectApiContentPageImpl(ctx, args),
+});
+
+/** Lists synced Quran surah metadata rows. */
+export const listQuranSurahs = query({
+  args: {},
+  returns: listQuranSurahsReturnValidator,
+  handler: listQuranSurahsImpl,
+});
+
+/** Loads one Quran surah page from the durable Quran runtime rows. */
+export const getQuranSurahPage = query({
+  args: getQuranSurahPageArgsValidator,
+  returns: getQuranSurahPageReturnValidator,
+  handler: getQuranSurahPageImpl,
+});
+
+/** Loads a bounded Quran verse reference from the durable Quran runtime rows. */
+export const getQuranReference = query({
+  args: getQuranReferenceArgsValidator,
+  returns: getQuranReferenceReturnValidator,
+  handler: getQuranReferenceImpl,
 });

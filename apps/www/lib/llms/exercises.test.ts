@@ -1,25 +1,13 @@
 // @vitest-environment node
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getCachedLlmsExerciseText } from "@/lib/llms/exercises";
 
 const mockCacheLife = vi.hoisted(() => vi.fn());
-const mockGetCurrentMaterial = vi.hoisted(() => vi.fn());
-const mockGetMaterialPath = vi.hoisted(() => vi.fn());
-const mockGetMaterials = vi.hoisted(() => vi.fn());
 const mockGetRuntimeExerciseSetPage = vi.hoisted(() => vi.fn());
 
 vi.mock("next/cache", () => ({
   cacheLife: mockCacheLife,
-}));
-
-vi.mock("@repo/contents/_lib/exercises/material", () => ({
-  getCurrentMaterial: mockGetCurrentMaterial,
-  getMaterials: mockGetMaterials,
-}));
-
-vi.mock("@repo/contents/_lib/exercises/route", () => ({
-  getMaterialPath: mockGetMaterialPath,
 }));
 
 vi.mock("@/lib/content/runtime", () => ({
@@ -63,29 +51,13 @@ const exerciseWithoutChoices = {
 
 beforeEach(() => {
   mockCacheLife.mockClear();
-  mockGetCurrentMaterial.mockReset();
-  mockGetMaterialPath.mockReset();
-  mockGetMaterials.mockReset();
   mockGetRuntimeExerciseSetPage.mockReset();
 
-  mockGetMaterialPath.mockReturnValue(
-    "/exercises/high-school/snbt/quantitative-knowledge"
-  );
-  mockGetMaterials.mockReturnValue(Effect.succeed([]));
-  mockGetCurrentMaterial.mockReturnValue({
-    currentMaterial: Option.some({
-      description: "Practice with quantitative reasoning.",
-      items: [],
-      title: "Quantitative Knowledge",
-    }),
-    currentMaterialItem: Option.some({
-      href: `/${validSetPath}`,
-      title: "Set 1",
-    }),
-  });
   mockGetRuntimeExerciseSetPage.mockReturnValue(
     Effect.succeed({
+      description: "Practice with quantitative reasoning.",
       exercises: [exerciseWithLocalizedChoices, exerciseWithoutChoices],
+      title: "Quantitative Knowledge Set 1",
     })
   );
 });
@@ -104,7 +76,7 @@ describe("llms exercise markdown", () => {
 
   it("returns null when an exercise set has no renderable rows", async () => {
     mockGetRuntimeExerciseSetPage.mockReturnValue(
-      Effect.succeed({ exercises: [] })
+      Effect.succeed({ exercises: [], title: "Empty set" })
     );
 
     await expect(
@@ -126,15 +98,13 @@ describe("llms exercise markdown", () => {
     ).resolves.toBeNull();
   });
 
-  it("renders set markdown with localized choices and material descriptions", async () => {
+  it("renders set markdown with localized choices and set descriptions", async () => {
     const text = await getCachedLlmsExerciseText({
       cleanSlug: validSetPath,
       locale: "id",
     });
 
-    expect(text).toContain(
-      "Exercises: Quantitative Knowledge - Set 1: Practice with quantitative reasoning."
-    );
+    expect(text).toContain("Practice with quantitative reasoning.");
     expect(text).toContain("## Exercise 1");
     expect(text).toContain("- [x] A. Benar");
     expect(text).toContain("## Exercise 2");
@@ -158,25 +128,16 @@ describe("llms exercise markdown", () => {
             },
           },
         ],
+        title: "Quantitative Knowledge Set 1",
       })
     );
-    mockGetCurrentMaterial.mockReturnValue({
-      currentMaterial: Option.some({
-        items: [],
-        title: "Quantitative Knowledge",
-      }),
-      currentMaterialItem: Option.some({
-        href: `/${validSetPath}`,
-        title: "Set 1",
-      }),
-    });
 
     const text = await getCachedLlmsExerciseText({
       cleanSlug: `${validSetPath}/3`,
       locale: "id",
     });
 
-    expect(text).toContain("Exercises: Quantitative Knowledge - Set 1");
+    expect(text).toContain("Quantitative Knowledge Set 1");
     expect(text).toContain("Question 3");
     expect(text).toContain("- [x] A. Fallback");
     expect(text).not.toContain("## Exercise 2");
@@ -189,7 +150,7 @@ describe("llms exercise markdown", () => {
     });
 
     expect(text).toContain(
-      "Exercises: Quantitative Knowledge - Set 1: Practice with quantitative reasoning. - Question title"
+      "Practice with quantitative reasoning. - Question title"
     );
   });
 
@@ -202,24 +163,19 @@ describe("llms exercise markdown", () => {
     ).resolves.toBeNull();
   });
 
-  it("uses the generic description for invalid or unmatched material paths", async () => {
-    await expect(
-      getCachedLlmsExerciseText({
-        cleanSlug: "exercises/invalid/type/material/set-1",
-        locale: "en",
+  it("uses the set title when no description exists", async () => {
+    mockGetRuntimeExerciseSetPage.mockReturnValue(
+      Effect.succeed({
+        exercises: [exerciseWithLocalizedChoices],
+        title: "Quantitative Knowledge Set 1",
       })
-    ).resolves.toContain("Exercises Content");
-
-    mockGetCurrentMaterial.mockReturnValue({
-      currentMaterial: Option.none(),
-      currentMaterialItem: Option.none(),
-    });
+    );
 
     await expect(
       getCachedLlmsExerciseText({
         cleanSlug: validSetPath,
         locale: "en",
       })
-    ).resolves.toContain("Exercises Content");
+    ).resolves.toContain("Quantitative Knowledge Set 1");
   });
 });

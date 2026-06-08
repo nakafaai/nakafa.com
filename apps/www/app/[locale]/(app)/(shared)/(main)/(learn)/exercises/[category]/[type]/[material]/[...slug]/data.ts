@@ -1,8 +1,4 @@
 import {
-  getCurrentMaterial,
-  getMaterials,
-} from "@repo/contents/_lib/exercises/material";
-import {
   getMaterialPath,
   parseExercisesCategory,
   parseExercisesMaterial,
@@ -15,6 +11,10 @@ import {
 import { Effect, Option } from "effect";
 import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
+import {
+  getCurrentExerciseMaterial,
+  getRuntimeExerciseMaterials,
+} from "@/lib/content/navigation";
 import {
   fetchRuntimeExerciseGroupPage,
   fetchRuntimeExerciseQuestionPage,
@@ -91,7 +91,7 @@ export async function getExerciseRouteData(
     const runtimeSlug = getContentRuntimeSlug(pagePath);
 
     const [materials, questionPage] = await Promise.all([
-      Effect.runPromise(getMaterials(materialPath, locale)),
+      Effect.runPromise(getRuntimeExerciseMaterials(materialPath, locale)),
       fetchRuntimeExerciseQuestionPage({
         locale,
         slug: runtimeSlug,
@@ -106,7 +106,7 @@ export async function getExerciseRouteData(
       };
     }
 
-    const { currentMaterial, currentMaterialItem } = getCurrentMaterial(
+    const { currentMaterial, currentMaterialItem } = getCurrentExerciseMaterial(
       setPath,
       materials
     );
@@ -130,13 +130,15 @@ export async function getExerciseRouteData(
     };
   }
 
-  const materials = await Effect.runPromise(getMaterials(materialPath, locale));
+  const materials = await Effect.runPromise(
+    getRuntimeExerciseMaterials(materialPath, locale)
+  );
   const runtimeSlug = getContentRuntimeSlug(pagePath);
   const setPage = await fetchRuntimeExerciseSetPage({
     locale,
     slug: runtimeSlug,
   });
-  const { currentMaterial, currentMaterialItem } = getCurrentMaterial(
+  const { currentMaterial, currentMaterialItem } = getCurrentExerciseMaterial(
     pagePath,
     materials
   );

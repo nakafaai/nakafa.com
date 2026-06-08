@@ -1,17 +1,17 @@
 import { AllahIcon } from "@hugeicons/core-free-icons";
-import { getAllSurah, getSurahName } from "@repo/contents/_lib/quran";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import type { Metadata } from "next";
 import { type Locale, useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
-import { use } from "react";
 import { FooterContent } from "@/components/shared/footer-content";
 import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
+import { fetchRuntimeQuranSurahs } from "@/lib/content/runtime";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getSocialMetadata } from "@/lib/utils/metadata";
+import { getQuranSurahName, type QuranSurah } from "@/lib/utils/pages/quran";
 import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 
@@ -51,19 +51,23 @@ export async function generateMetadata({
   };
 }
 
-export default function Page(props: PageProps<"/[locale]/quran">) {
-  const { params } = props;
-  const { locale: rawLocale } = use(params);
+export default async function Page(props: PageProps<"/[locale]/quran">) {
+  const { locale: rawLocale } = await props.params;
   const locale = getLocaleOrThrow(rawLocale);
+  const surahs = await fetchRuntimeQuranSurahs();
 
-  return <PageContent locale={locale} />;
+  return <PageContent locale={locale} surahs={surahs} />;
 }
 
-function PageContent({ locale }: { locale: Locale }) {
+function PageContent({
+  locale,
+  surahs,
+}: {
+  locale: Locale;
+  surahs: Omit<QuranSurah, "verses">[];
+}) {
   const t = useTranslations("Holy");
   const tCommon = useTranslations("Common");
-
-  const surahs = getAllSurah();
 
   return (
     <>
@@ -81,7 +85,7 @@ function PageContent({ locale }: { locale: Locale }) {
       <LayoutContent>
         <div className="overflow-hidden rounded-xl border shadow-sm">
           {surahs.map((surah) => {
-            const title = getSurahName({ locale, name: surah.name });
+            const title = getQuranSurahName({ locale, name: surah.name });
             return (
               <NavigationLink
                 className="group flex w-full scroll-mt-28 items-center gap-2 border-t px-6 py-4 transition-colors ease-out first:border-t-0 first:pt-5 last:pb-5 hover:bg-accent hover:text-accent-foreground"

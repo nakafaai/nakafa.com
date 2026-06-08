@@ -1,3 +1,4 @@
+import { CONTENT_ROUTE_KINDS } from "@repo/backend/convex/contents/constants";
 import {
   articleCategoryValidator,
   exercisesCategoryValidator,
@@ -6,10 +7,11 @@ import {
   gradeValidator,
   localeValidator,
   materialValidator,
+  nakafaSectionValidator,
   subjectCategoryValidator,
 } from "@repo/backend/convex/lib/validators/contents";
 import { v } from "convex/values";
-import { nullable } from "convex-helpers/validators";
+import { literals, nullable } from "convex-helpers/validators";
 
 const contentAuthorValidator = v.object({
   name: v.string(),
@@ -49,6 +51,134 @@ const exerciseChoiceValidator = v.object({
 const exerciseChoicesValidator = v.object({
   en: v.array(exerciseChoiceValidator),
   id: v.array(exerciseChoiceValidator),
+});
+
+const localizedTextValidator = v.object({
+  en: v.string(),
+  id: v.string(),
+});
+
+const quranTextValidator = v.object({
+  arab: v.string(),
+  transliteration: v.object({
+    en: v.string(),
+  }),
+});
+
+const quranAudioValidator = v.object({
+  primary: v.string(),
+  secondary: v.array(v.string()),
+});
+
+const quranPreBismillahValidator = v.object({
+  audio: quranAudioValidator,
+  text: quranTextValidator,
+  translation: localizedTextValidator,
+});
+
+export const quranSurahMetadataValidator = v.object({
+  name: v.object({
+    long: v.string(),
+    short: v.string(),
+    transliteration: localizedTextValidator,
+    translation: localizedTextValidator,
+  }),
+  number: v.number(),
+  numberOfVerses: v.number(),
+  preBismillah: v.optional(v.union(v.null(), quranPreBismillahValidator)),
+  revelation: v.object({
+    arab: v.string(),
+    en: v.string(),
+    id: v.string(),
+  }),
+  sequence: v.number(),
+});
+
+const quranVerseValidator = v.object({
+  audio: quranAudioValidator,
+  meta: v.object({
+    hizbQuarter: v.number(),
+    juz: v.number(),
+    manzil: v.number(),
+    page: v.number(),
+    ruku: v.number(),
+    sajda: v.object({
+      obligatory: v.boolean(),
+      recommended: v.boolean(),
+    }),
+  }),
+  number: v.object({
+    inQuran: v.number(),
+    inSurah: v.number(),
+  }),
+  tafsir: v.object({
+    id: v.object({
+      long: v.string(),
+      short: v.string(),
+    }),
+  }),
+  text: quranTextValidator,
+  translation: localizedTextValidator,
+});
+
+const quranSurahValidator = v.object({
+  ...quranSurahMetadataValidator.fields,
+  verses: v.array(quranVerseValidator),
+});
+
+const contentRouteKindValidator = literals(...CONTENT_ROUTE_KINDS);
+
+const runtimeContentRouteValidator = v.object({
+  authors: v.array(contentAuthorValidator),
+  content_id: v.string(),
+  date: v.optional(v.number()),
+  depth: v.optional(v.number()),
+  description: v.optional(v.string()),
+  kind: contentRouteKindValidator,
+  locale: localeValidator,
+  markdown: v.boolean(),
+  official: v.optional(v.boolean()),
+  parentRoute: v.optional(v.string()),
+  route: v.string(),
+  section: nakafaSectionValidator,
+  syncedAt: v.number(),
+  title: v.string(),
+});
+
+const runtimeContentRouteCountValidator = v.object({
+  count: v.number(),
+  locale: localeValidator,
+  section: nakafaSectionValidator,
+  syncedAt: v.number(),
+});
+
+const paginatedContentRoutesValidator = v.object({
+  continueCursor: v.string(),
+  isDone: v.boolean(),
+  page: v.array(runtimeContentRouteValidator),
+});
+
+const runtimeContentRouteArtifactPageValidator = v.object({
+  locale: localeValidator,
+  page: v.number(),
+  routeCount: v.number(),
+  routes: v.array(runtimeContentRouteValidator),
+  section: nakafaSectionValidator,
+  syncedAt: v.number(),
+});
+
+const apiContentItemValidator = v.object({
+  locale: localeValidator,
+  metadata: contentMetadataValidator,
+  raw: v.string(),
+  slug: v.string(),
+  url: v.string(),
+});
+
+const paginatedApiContentValidator = v.object({
+  continueCursor: v.string(),
+  isDone: v.boolean(),
+  page: v.array(apiContentItemValidator),
 });
 
 export const runtimeExerciseValidator = v.object({
@@ -168,6 +298,136 @@ export const getExerciseGroupPageReturnValidator = nullable(
     ),
     type: exercisesTypeValidator,
     year: v.optional(v.string()),
+  })
+);
+
+export const listContentRoutesByPrefixArgsValidator = {
+  cursor: v.union(v.string(), v.null()),
+  limit: v.number(),
+  locale: localeValidator,
+  prefix: v.string(),
+  section: nakafaSectionValidator,
+};
+
+export const listContentRoutesByKindPrefixArgsValidator = {
+  ...listContentRoutesByPrefixArgsValidator,
+  kind: contentRouteKindValidator,
+};
+
+export const listContentRoutesByParentArgsValidator = {
+  cursor: v.union(v.string(), v.null()),
+  kind: contentRouteKindValidator,
+  limit: v.number(),
+  locale: localeValidator,
+  order: v.union(v.literal("date-desc"), v.literal("route")),
+  parentRoute: v.string(),
+  section: nakafaSectionValidator,
+};
+
+export const listContentRoutesPageReturnValidator =
+  paginatedContentRoutesValidator;
+
+export const getContentRouteArtifactPageArgsValidator = {
+  locale: localeValidator,
+  page: v.number(),
+  section: nakafaSectionValidator,
+};
+
+export const getContentRouteArtifactPageReturnValidator = nullable(
+  runtimeContentRouteArtifactPageValidator
+);
+
+export const listLatestContentRoutesArgsValidator = {
+  limit: v.number(),
+  locale: localeValidator,
+  section: nakafaSectionValidator,
+};
+
+export const listLatestContentRoutesReturnValidator = v.array(
+  runtimeContentRouteValidator
+);
+
+export const listContentRouteCountsArgsValidator = {
+  locale: localeValidator,
+};
+
+export const listContentRouteCountsReturnValidator = v.array(
+  runtimeContentRouteCountValidator
+);
+
+export const getContentRouteArgsValidator = {
+  locale: localeValidator,
+  route: v.string(),
+};
+
+export const getContentRouteReturnValidator = nullable(
+  runtimeContentRouteValidator
+);
+
+export const listArticleApiContentPageArgsValidator = {
+  cursor: v.union(v.string(), v.null()),
+  limit: v.number(),
+  locale: localeValidator,
+  prefix: v.string(),
+};
+
+export const listArticleApiContentPageReturnValidator =
+  paginatedApiContentValidator;
+
+export const listSubjectApiContentPageArgsValidator = {
+  cursor: v.union(v.string(), v.null()),
+  limit: v.number(),
+  locale: localeValidator,
+  prefix: v.string(),
+};
+
+export const listSubjectApiContentPageReturnValidator =
+  paginatedApiContentValidator;
+
+export const listQuranSurahsReturnValidator = v.array(
+  quranSurahMetadataValidator
+);
+
+export const getQuranSurahPageArgsValidator = {
+  surah: v.number(),
+};
+
+export const getQuranSurahPageReturnValidator = nullable(
+  v.object({
+    nextSurah: nullable(quranSurahMetadataValidator),
+    prevSurah: nullable(quranSurahMetadataValidator),
+    surahData: quranSurahValidator,
+  })
+);
+
+export const getQuranReferenceArgsValidator = {
+  fromVerse: v.number(),
+  includeTafsir: v.boolean(),
+  locale: localeValidator,
+  surah: v.number(),
+  toVerse: v.optional(v.number()),
+};
+
+export const getQuranReferenceReturnValidator = nullable(
+  v.object({
+    content_id: v.string(),
+    locale: localeValidator,
+    markdown_url: v.string(),
+    name: v.string(),
+    revelation: v.string(),
+    route: v.string(),
+    section: v.literal("quran"),
+    translation: v.string(),
+    url: v.string(),
+    verses: v.array(
+      v.object({
+        arabic: v.string(),
+        number: v.number(),
+        tafsir: v.optional(v.string()),
+        translation: v.string(),
+        transliteration: v.string(),
+      })
+    ),
   })
 );
 

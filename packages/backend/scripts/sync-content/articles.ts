@@ -31,6 +31,7 @@ import type {
   SyncOptions,
   SyncResult,
 } from "@repo/backend/scripts/sync-content/types";
+import { teams } from "@repo/contents/_data/team";
 import type { FunctionArgs } from "convex/server";
 import { Effect } from "effect";
 
@@ -101,6 +102,7 @@ export const syncArticles = Effect.fn("sync.articles")(function* (
           body,
           contentHash,
           authors: metadata.authors,
+          official: metadata.authors.some((author) => teams.has(author.name)),
           references,
         };
       })

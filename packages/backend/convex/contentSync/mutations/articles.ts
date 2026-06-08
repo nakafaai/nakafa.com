@@ -13,6 +13,10 @@ import {
   syncContentAuthorsWithCache,
 } from "@repo/backend/convex/contentSync/lib/syncHelpers";
 import { hasSameSyncValues } from "@repo/backend/convex/contentSync/lib/syncValues";
+import {
+  deleteContentRoute,
+  syncContentRoute,
+} from "@repo/backend/convex/contents/helpers/routes/write";
 import { buildContentSearchRef } from "@repo/backend/convex/contents/helpers/search/documents";
 import {
   deleteContentSearch,
@@ -46,6 +50,7 @@ const syncedArticleValidator = v.object({
   date: v.number(),
   description: v.optional(v.string()),
   locale: localeValidator,
+  official: v.boolean(),
   references: v.array(syncedArticleReferenceValidator),
   slug: v.string(),
   title: v.string(),
@@ -106,6 +111,20 @@ export const bulkSyncArticles = internalMutation({
         section: "articles",
         syncedAt: now,
         text: article.body,
+        title: article.title,
+      });
+      await syncContentRoute(ctx, {
+        authors: article.authors,
+        contentHash: article.contentHash,
+        date: article.date,
+        description: article.description,
+        kind: "article",
+        locale: article.locale,
+        markdown: true,
+        official: article.official,
+        route: article.slug,
+        section: "articles",
+        syncedAt: now,
         title: article.title,
       });
 
@@ -241,6 +260,7 @@ export const deleteStaleArticles = internalMutation({
       await deleteContentAuthorLinks(ctx, articleId, "article");
       await deleteArticleReferencesForArticle(ctx, articleId);
       await deleteContentSearch(ctx, searchRef.content_id);
+      await deleteContentRoute(ctx, searchRef.content_id);
       await deleteAudioContentSource(ctx, { id: articleId, type: "article" });
       await ctx.db.delete("articleContents", articleId);
       deleted++;

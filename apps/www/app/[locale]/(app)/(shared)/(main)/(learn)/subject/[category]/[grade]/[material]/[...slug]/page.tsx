@@ -4,11 +4,7 @@ import {
   getGradePath,
   parseGrade,
 } from "@repo/contents/_lib/subject/grade";
-import {
-  getCurrentMaterial,
-  getMaterialIcon,
-  getMaterials,
-} from "@repo/contents/_lib/subject/material";
+import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import {
   getMaterialPath,
   parseMaterial,
@@ -48,6 +44,10 @@ import {
   LayoutMaterialToc,
 } from "@/components/shared/layout-material";
 import { importContentModuleOrNull } from "@/lib/content/module";
+import {
+  getCurrentSubjectMaterial,
+  getRuntimeSubjectMaterials,
+} from "@/lib/content/navigation";
 import { fetchRuntimeSubjectPage } from "@/lib/content/runtime";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
@@ -311,14 +311,14 @@ async function getSubjectMetadataData({
       locale,
       slug: filePath.slice(1),
     }),
-    Effect.runPromise(getMaterials(materialPath, locale)),
+    Effect.runPromise(getRuntimeSubjectMaterials(materialPath, locale)),
   ]);
 
   const metadata = content?.metadata ?? null;
   const chapterPath = getSlugPath(category, grade, material, [
     slug.at(0) ?? "",
   ]);
-  const currentMaterial = getCurrentMaterial(chapterPath, materials);
+  const currentMaterial = getCurrentSubjectMaterial(chapterPath, materials);
   const chapter =
     slug.length > 0 && materials.length > 0
       ? Option.match(currentMaterial.currentChapter, {
@@ -368,7 +368,7 @@ async function SubjectShell({
 }) {
   const [tCommon, materials] = await Promise.all([
     getTranslations("Common"),
-    Effect.runPromise(getMaterials(materialPath, locale)),
+    Effect.runPromise(getRuntimeSubjectMaterials(materialPath, locale)),
   ]);
 
   const { metadata } = content;

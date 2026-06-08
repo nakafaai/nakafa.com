@@ -1,0 +1,206 @@
+import {
+  getExerciseGroupArgs,
+  readExerciseMarkdown,
+  readNakafaExercise,
+} from "@repo/backend/client/nakafa/exercise";
+import { api } from "@repo/backend/convex/_generated/api";
+import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
+import { type FunctionReference, getFunctionName } from "convex/server";
+import { Effect, Option, Schema } from "effect";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const runtimeMocks = vi.hoisted(() => ({
+  fetchConvexRuntimeQuery: vi.fn(),
+}));
+
+vi.mock("@repo/backend/client/runtime", () => ({
+  fetchConvexRuntimeQuery: runtimeMocks.fetchConvexRuntimeQuery,
+}));
+
+const ExerciseSetArgsSchema = Schema.Struct({
+  locale: Schema.Literal("en", "id"),
+  slug: Schema.String,
+});
+
+const convexUrl = "https://example.convex.cloud";
+const setRoute =
+  "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1";
+
+beforeEach(() => {
+  runtimeMocks.fetchConvexRuntimeQuery.mockReset();
+  runtimeMocks.fetchConvexRuntimeQuery.mockImplementation(readRuntimeFixture);
+});
+
+describe("readNakafaExercise", () => {
+  it("reads full exercise sets and specific questions from Convex rows", async () => {
+    const set = await Effect.runPromise(
+      readNakafaExercise(convexUrl, `id/${setRoute}`)
+    );
+    const explicitQuestion = await Effect.runPromise(
+      readNakafaExercise(convexUrl, `id/${setRoute}`, 2)
+    );
+    const routeQuestion = await Effect.runPromise(
+      readNakafaExercise(convexUrl, `id/${setRoute}/2`)
+    );
+    const markdown = await Effect.runPromise(
+      readExerciseMarkdown(
+        convexUrl,
+        buildNakafaContentRef("id", setRoute, "exercises")
+      )
+    );
+
+    expect(Option.getOrUndefined(set)?.count).toBe(2);
+    expect(Option.getOrUndefined(explicitQuestion)?.exercise_number).toBe(2);
+    expect(Option.getOrUndefined(routeQuestion)?.exercise_number).toBe(2);
+    expect(Option.getOrUndefined(markdown)?.text).toContain("- [x] A. Benar");
+  });
+
+  it("returns none for unsupported, missing, and malformed exercise refs", async () => {
+    const unsupported = await Effect.runPromise(
+      readNakafaExercise(convexUrl, "id/articles/example")
+    );
+    const missingSet = await Effect.runPromise(
+      readNakafaExercise(convexUrl, "id/exercises/high-school/snbt/missing")
+    );
+    const missingQuestion = await Effect.runPromise(
+      readNakafaExercise(convexUrl, `id/${setRoute}`, 99)
+    );
+    const malformedQuestion = await Effect.runPromise(
+      readNakafaExercise(convexUrl, `id/${setRoute}/two`)
+    );
+    const nonSetParent = await Effect.runPromise(
+      readNakafaExercise(
+        convexUrl,
+        "id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/2"
+      )
+    );
+    const missingMarkdown = await Effect.runPromise(
+      readExerciseMarkdown(
+        convexUrl,
+        buildNakafaContentRef(
+          "id",
+          "exercises/high-school/snbt/missing",
+          "exercises"
+        )
+      )
+    );
+
+    expect(Option.isNone(unsupported)).toBe(true);
+    expect(Option.isNone(missingSet)).toBe(true);
+    expect(Option.isNone(missingQuestion)).toBe(true);
+    expect(Option.isNone(malformedQuestion)).toBe(true);
+    expect(Option.isNone(nonSetParent)).toBe(true);
+    expect(Option.isNone(missingMarkdown)).toBe(true);
+  });
+
+  it("parses valid exercise group routes and rejects invalid route shapes", () => {
+    expect(
+      Option.getOrUndefined(
+        getExerciseGroupArgs(
+          "id",
+          "exercises/high-school/snbt/quantitative-knowledge/try-out/2026"
+        )
+      )
+    ).toMatchObject({
+      material: "quantitative-knowledge",
+      year: "2026",
+    });
+    expect(
+      Option.isNone(getExerciseGroupArgs("id", "exercises/high-school/snbt"))
+    ).toBe(true);
+    expect(
+      Option.isNone(
+        getExerciseGroupArgs(
+          "id",
+          "articles/high-school/snbt/quantitative-knowledge/try-out"
+        )
+      )
+    ).toBe(true);
+    expect(
+      Option.isNone(
+        getExerciseGroupArgs(
+          "id",
+          "exercises/high-school/snbt/not-a-material/try-out"
+        )
+      )
+    ).toBe(true);
+    expect(
+      Option.isNone(
+        getExerciseGroupArgs(
+          "id",
+          "exercises/high-school/snbt/quantitative-knowledge/try-out/not-year"
+        )
+      )
+    ).toBe(true);
+  });
+});
+
+/** Routes generated Convex query refs to exercise reader fixtures. */
+function readRuntimeFixture(
+  _convexUrl: string,
+  query: FunctionReference<"query">,
+  args: unknown
+) {
+  if (
+    getFunctionName(query) ===
+    getFunctionName(api.contents.queries.runtime.getExerciseSetPage)
+  ) {
+    return Promise.resolve(readExerciseSetPage(args));
+  }
+
+  return Promise.reject(new Error("Unhandled exercise query fixture."));
+}
+
+/** Builds one exercise set page fixture from generated query args. */
+function readExerciseSetPage(args: unknown) {
+  const input = Schema.decodeUnknownSync(ExerciseSetArgsSchema)(args);
+
+  if (input.slug !== setRoute) {
+    return null;
+  }
+
+  return {
+    category: "high-school",
+    description: "Exercise description",
+    exerciseType: "try-out",
+    exercises: [exerciseItem(1), exerciseItem(2)],
+    material: "quantitative-knowledge",
+    questionCount: 2,
+    setName: "set-1",
+    slug: setRoute,
+    syncedAt: 1,
+    title: "Exercise Set",
+    type: "snbt",
+    year: "2026",
+  };
+}
+
+/** Builds one localized exercise question fixture. */
+function exerciseItem(number: number) {
+  return {
+    answer: {
+      metadata: { authors: [], date: "2025-01-01", title: `Answer ${number}` },
+      raw: `Answer raw ${number}`,
+    },
+    choices: {
+      en: [
+        { label: "A. Correct", value: true },
+        { label: "B. Incorrect", value: false },
+      ],
+      id: [
+        { label: "A. Benar", value: true },
+        { label: "B. Salah", value: false },
+      ],
+    },
+    contentHash: `question-${number}`,
+    number,
+    question: {
+      metadata: {
+        authors: [],
+        date: "2025-01-01",
+        title: `Question ${number}`,
+      },
+      raw: `Question raw ${number}`,
+    },
+  };
+}

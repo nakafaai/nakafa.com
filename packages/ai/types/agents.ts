@@ -1,8 +1,8 @@
+import type { Nakafa } from "@repo/ai/agents/nakafa/service";
 import type { ModelId } from "@repo/ai/config/model";
 import type { SourceReference } from "@repo/ai/lib/source";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { PromptUserRole } from "@repo/ai/types/roles";
-import type { Nakafa } from "@repo/contents/_lib/agent/service";
 import type { Locale } from "@repo/utilities/locales";
 import type { UIMessageStreamWriter } from "ai";
 
@@ -34,7 +34,7 @@ export interface TaskAgentParams extends BaseAgentParams {
 
 /** Parameters for the Nakafa content retrieval subagent. */
 export interface NakafaAgentParams extends TaskAgentParams {
-  nakafa?: Nakafa;
+  nakafa: Nakafa;
 }
 
 /** Parameters for the external research subagent. */

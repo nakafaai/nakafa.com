@@ -7,6 +7,7 @@ import {
 } from "@repo/ai/agents/nakafa/descriptions";
 import { nakafaAgentPrompt } from "@repo/ai/agents/nakafa/prompt";
 import { NakafaSearch } from "@repo/ai/agents/nakafa/search";
+import { Nakafa } from "@repo/ai/agents/nakafa/service";
 import {
   prepareAnswerFromNakafaEvidenceStep,
   prepareExerciseStep,
@@ -32,7 +33,6 @@ import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agen
 import { NakafaAgentReadOptionsSchema } from "@repo/contents/_lib/agent/schema/read";
 import { NakafaAgentSearchOptionsSchema } from "@repo/contents/_lib/agent/schema/search";
 import { NakafaAgentTaxonomyOptionsSchema } from "@repo/contents/_lib/agent/schema/taxonomy";
-import { Nakafa } from "@repo/contents/_lib/agent/service";
 import { generateText, stepCountIs, tool } from "ai";
 import { Effect, Option } from "effect";
 
@@ -222,11 +222,7 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
   };
 });
 
-/** Provides the app runtime Nakafa service when available, else the package default. */
-function provideNakafa(service?: Nakafa) {
-  if (service) {
-    return Effect.provideService(Nakafa, service);
-  }
-
-  return Effect.provide(Nakafa.Default);
+/** Provides the app-owned Convex-backed Nakafa runtime service. */
+function provideNakafa(service: Nakafa) {
+  return Effect.provideService(Nakafa, service);
 }

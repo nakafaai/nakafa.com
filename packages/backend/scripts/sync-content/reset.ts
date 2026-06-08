@@ -36,6 +36,31 @@ const RESET_STEPS: ResetStep[] = [
     resultLabel: "content search rows",
   },
   {
+    label: "Deleting content route rows...",
+    mutation: internal.contentSync.reset.internal.deleteContentRoutesBatch,
+    resultLabel: "content route rows",
+  },
+  {
+    label: "Deleting content route count rows...",
+    mutation: internal.contentSync.reset.internal.deleteContentRouteCountsBatch,
+    resultLabel: "content route count rows",
+  },
+  {
+    label: "Deleting content route artifact pages...",
+    mutation: internal.contentSync.reset.internal.deleteContentRoutePagesBatch,
+    resultLabel: "content route artifact pages",
+  },
+  {
+    label: "Deleting Quran verses...",
+    mutation: internal.contentSync.reset.internal.deleteQuranVersesBatch,
+    resultLabel: "Quran verses",
+  },
+  {
+    label: "Deleting Quran surahs...",
+    mutation: internal.contentSync.reset.internal.deleteQuranSurahsBatch,
+    resultLabel: "Quran surahs",
+  },
+  {
     label: "Deleting content authors...",
     mutation: internal.contentSync.reset.internal.deleteContentAuthorsBatch,
     resultLabel: "content authors",
@@ -285,6 +310,11 @@ export const reset = Effect.fn("sync.reset")(function* (
   const counts = yield* getContentCounts(config);
 
   log(`  Content Search:        ${counts.contentSearch}`);
+  log(`  Content Routes:        ${counts.contentRoutes}`);
+  log(`  Content Route Counts:  ${counts.contentRouteCounts}`);
+  log(`  Content Route Pages:   ${counts.contentRoutePages}`);
+  log(`  Quran Surahs:          ${counts.quranSurahs}`);
+  log(`  Quran Verses:          ${counts.quranVerses}`);
   log(`  Content Authors:       ${counts.contentAuthors}`);
   log(`  Article References:    ${counts.articleReferences}`);
   log(`  Exercise Choices:      ${counts.exerciseChoices}`);
@@ -359,7 +389,14 @@ export const reset = Effect.fn("sync.reset")(function* (
     counts.irtScaleVersions +
     counts.irtScaleVersionItems;
   const totalDerived =
-    counts.contentSearch + counts.audioContentSources + counts.contentAudios;
+    counts.contentSearch +
+    counts.contentRoutes +
+    counts.contentRouteCounts +
+    counts.contentRoutePages +
+    counts.quranSurahs +
+    counts.quranVerses +
+    counts.audioContentSources +
+    counts.contentAudios;
 
   log(`\n  Total content items:  ${totalContent}`);
   log(`  Total related items:  ${totalRelated}`);

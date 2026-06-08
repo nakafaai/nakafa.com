@@ -8,6 +8,11 @@ import {
   syncContentAuthorsWithCache,
 } from "@repo/backend/convex/contentSync/lib/syncHelpers";
 import { hasSameSyncValues } from "@repo/backend/convex/contentSync/lib/syncValues";
+import {
+  deleteContentRoute,
+  syncContentRoute,
+} from "@repo/backend/convex/contents/helpers/routes/write";
+import { buildContentSearchRef } from "@repo/backend/convex/contents/helpers/search/documents";
 import { syncContentSearch } from "@repo/backend/convex/contents/helpers/search/write";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -23,6 +28,7 @@ import { getAll } from "convex-helpers/server/relationships";
 
 const syncedSubjectTopicValidator = v.object({
   category: subjectCategoryValidator,
+  contentHash: v.string(),
   description: v.optional(v.string()),
   grade: gradeValidator,
   locale: localeValidator,
@@ -100,6 +106,18 @@ export const bulkSyncSubjectTopics = internalMutation({
         title: topic.title,
         topic: topic.topic,
       };
+
+      await syncContentRoute(ctx, {
+        contentHash: topic.contentHash,
+        description: topic.description,
+        kind: "subject-topic",
+        locale: topic.locale,
+        markdown: false,
+        route: topic.slug,
+        section: "subject",
+        syncedAt: now,
+        title: topic.title,
+      });
 
       const existingTopic = await ctx.db
         .query("subjectTopics")
@@ -203,6 +221,19 @@ export const bulkSyncSubjectSections = internalMutation({
         ]
           .filter(Boolean)
           .join(" "),
+        title: section.title,
+      });
+      await syncContentRoute(ctx, {
+        authors: section.authors,
+        contentHash: section.contentHash,
+        date: section.date,
+        description: section.description ?? section.subject,
+        kind: "subject-section",
+        locale: section.locale,
+        markdown: true,
+        route: section.slug,
+        section: "subject",
+        syncedAt: now,
         title: section.title,
       });
 
@@ -342,6 +373,13 @@ export const deleteStaleSubjectTopics = internalMutation({
         await deleteSubjectSection(ctx, section._id);
       }
 
+      const routeRef = buildContentSearchRef({
+        locale: topic.locale,
+        route: topic.slug,
+        section: "subject",
+      });
+
+      await deleteContentRoute(ctx, routeRef.content_id);
       await ctx.db.delete("subjectTopics", topicId);
       deleted++;
     }

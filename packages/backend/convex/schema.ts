@@ -14,6 +14,7 @@ import exerciseSetsSchema from "@repo/backend/convex/exerciseSets/schema";
 import exercisesSchema from "@repo/backend/convex/exercises/schema";
 import irtSchema from "@repo/backend/convex/irt/schema";
 import notificationsSchema from "@repo/backend/convex/notifications/schema";
+import quranSchema from "@repo/backend/convex/quran/schema";
 import schoolsSchema from "@repo/backend/convex/schools/schema";
 import subjectSectionsSchema from "@repo/backend/convex/subjectSections/schema";
 import subjectTopicsSchema from "@repo/backend/convex/subjectTopics/schema";
@@ -36,6 +37,7 @@ export default defineSchema(
     ...notificationsSchema,
     ...bookmarksSchema,
     ...contentsSchema,
+    ...quranSchema,
     ...exercisesSchema,
     ...authorsSchema,
     ...articleContentsSchema,

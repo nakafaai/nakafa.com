@@ -14,6 +14,7 @@ interface SyncedArticle {
   date: number;
   description?: string;
   locale: Doc<"articleContents">["locale"];
+  official: boolean;
   references: SyncedArticleReference[];
   slug: string;
   title: string;
@@ -48,6 +49,7 @@ const BASE_ARTICLE: SyncedArticle = {
   date: 1,
   description: "Old article description",
   locale: "id",
+  official: true,
   references: [BASE_REFERENCE],
   slug: ARTICLE_SLUG,
   title: "Old Article Title",
@@ -138,6 +140,12 @@ describe("contentSync/mutations/articles", () => {
           q.eq("content_id", `id/${ARTICLE_SLUG}`)
         )
         .unique();
+      const route = await ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", `id/${ARTICLE_SLUG}`)
+        )
+        .unique();
       const audioSource = await ctx.db
         .query("audioContentSources")
         .withIndex("by_contentRefType_and_slug_and_locale", (q) =>
@@ -148,7 +156,7 @@ describe("contentSync/mutations/articles", () => {
         )
         .unique();
 
-      return { article, audioSource, authorLinks, references, search };
+      return { article, audioSource, authorLinks, references, route, search };
     });
 
     expect(created).toEqual({
@@ -182,6 +190,13 @@ describe("contentSync/mutations/articles", () => {
     expect(snapshot.authorLinks).toHaveLength(1);
     expect(snapshot.search).toMatchObject({
       contentHash: "updated-article-hash",
+      route: ARTICLE_SLUG,
+      title: "New Article Title",
+    });
+    expect(snapshot.route).toMatchObject({
+      contentHash: "updated-article-hash",
+      kind: "article",
+      official: true,
       route: ARTICLE_SLUG,
       title: "New Article Title",
     });
@@ -272,6 +287,12 @@ describe("contentSync/mutations/articles", () => {
           q.eq("content_id", `id/${ARTICLE_SLUG}`)
         )
         .unique();
+      const route = await ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", `id/${ARTICLE_SLUG}`)
+        )
+        .unique();
       const audioSource = await ctx.db
         .query("audioContentSources")
         .withIndex("by_contentRefType_and_slug_and_locale", (q) =>
@@ -282,7 +303,7 @@ describe("contentSync/mutations/articles", () => {
         )
         .unique();
 
-      return { article, audioSource, authorLinks, references, search };
+      return { article, audioSource, authorLinks, references, route, search };
     });
 
     expect(result).toEqual({ deleted: 1 });
@@ -291,6 +312,7 @@ describe("contentSync/mutations/articles", () => {
       audioSource: null,
       authorLinks: [],
       references: [],
+      route: null,
       search: null,
     });
   });

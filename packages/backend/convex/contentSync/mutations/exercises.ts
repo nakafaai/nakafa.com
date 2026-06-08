@@ -1,3 +1,5 @@
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
 import {
@@ -7,6 +9,10 @@ import {
   syncContentAuthorsWithCache,
 } from "@repo/backend/convex/contentSync/lib/syncHelpers";
 import { hasSameSyncValues } from "@repo/backend/convex/contentSync/lib/syncValues";
+import {
+  deleteContentRoute,
+  syncContentRoute,
+} from "@repo/backend/convex/contents/helpers/routes/write";
 import { buildContentSearchRef } from "@repo/backend/convex/contents/helpers/search/documents";
 import {
   deleteContentSearch,
@@ -28,6 +34,8 @@ const syncedExerciseSetValidator = v.object({
   contentHash: v.string(),
   description: v.optional(v.string()),
   exerciseType: v.string(),
+  exerciseTypeTitle: v.string(),
+  groupContentHash: v.string(),
   locale: localeValidator,
   material: exercisesMaterialValidator,
   questionCount: v.number(),
@@ -91,6 +99,51 @@ const deleteResultValidator = v.object({
   deleted: v.number(),
 });
 
+/** Returns the exercise group route above one concrete set route. */
+function getExerciseGroupRoute(setSlug: string) {
+  return setSlug.split("/").slice(0, -1).join("/");
+}
+
+/** Deletes an exercise group route when no published set remains in the group. */
+async function deleteExerciseGroupRouteIfEmpty(
+  ctx: MutationCtx,
+  source: {
+    category: Doc<"exerciseSets">["category"];
+    exerciseType: string;
+    locale: Doc<"exerciseSets">["locale"];
+    material: Doc<"exerciseSets">["material"];
+    slug: string;
+    type: Doc<"exerciseSets">["type"];
+    year?: string;
+  }
+) {
+  const sets = await ctx.db
+    .query("exerciseSets")
+    .withIndex("by_locale_and_group", (q) =>
+      q
+        .eq("locale", source.locale)
+        .eq("category", source.category)
+        .eq("type", source.type)
+        .eq("material", source.material)
+        .eq("exerciseType", source.exerciseType)
+        .eq("year", source.year)
+    )
+    .take(CONTENT_SYNC_BATCH_LIMITS.exerciseSets + 1);
+  const hasPublishedSet = sets.some((set) => set.questionCount > 0);
+
+  if (hasPublishedSet) {
+    return;
+  }
+
+  const routeRef = buildContentSearchRef({
+    locale: source.locale,
+    route: getExerciseGroupRoute(source.slug),
+    section: "exercises",
+  });
+
+  await deleteContentRoute(ctx, routeRef.content_id);
+}
+
 /** Upsert exercise sets from the filesystem sync source. */
 export const bulkSyncExerciseSets = internalMutation({
   args: {
@@ -129,8 +182,31 @@ export const bulkSyncExerciseSets = internalMutation({
           text: set.searchText,
           title: set.searchTitle,
         });
+        await syncContentRoute(ctx, {
+          contentHash: set.contentHash,
+          description: set.description,
+          kind: "exercise-set",
+          locale: set.locale,
+          markdown: true,
+          route: set.slug,
+          section: "exercises",
+          syncedAt: now,
+          title: set.title,
+        });
+        await syncContentRoute(ctx, {
+          contentHash: set.groupContentHash,
+          description: set.description,
+          kind: "exercise-group",
+          locale: set.locale,
+          markdown: false,
+          route: getExerciseGroupRoute(set.slug),
+          section: "exercises",
+          syncedAt: now,
+          title: set.exerciseTypeTitle,
+        });
       } else {
         await deleteContentSearch(ctx, searchRef.content_id);
+        await deleteContentRoute(ctx, searchRef.content_id);
       }
 
       const nextValues = {
@@ -153,6 +229,9 @@ export const bulkSyncExerciseSets = internalMutation({
         .unique();
 
       if (hasSameSyncValues(nextValues, existingSet)) {
+        if (set.questionCount === 0) {
+          await deleteExerciseGroupRouteIfEmpty(ctx, set);
+        }
         unchanged++;
         continue;
       }
@@ -162,6 +241,9 @@ export const bulkSyncExerciseSets = internalMutation({
           ...nextValues,
           syncedAt: now,
         });
+        if (set.questionCount === 0) {
+          await deleteExerciseGroupRouteIfEmpty(ctx, set);
+        }
         updated++;
         continue;
       }
@@ -172,6 +254,9 @@ export const bulkSyncExerciseSets = internalMutation({
         slug: set.slug,
         syncedAt: now,
       });
+      if (set.questionCount === 0) {
+        await deleteExerciseGroupRouteIfEmpty(ctx, set);
+      }
       created++;
     }
 
@@ -238,6 +323,19 @@ export const bulkSyncExerciseQuestions = internalMutation({
         section: "exercises",
         syncedAt: now,
         text: question.searchText,
+        title: question.searchTitle,
+      });
+      await syncContentRoute(ctx, {
+        authors: question.authors,
+        contentHash: question.contentHash,
+        date: question.date,
+        description: question.searchDescription,
+        kind: "exercise-question",
+        locale: question.locale,
+        markdown: true,
+        route: question.slug,
+        section: "exercises",
+        syncedAt: now,
         title: question.searchTitle,
       });
 
@@ -371,7 +469,9 @@ export const deleteStaleExerciseSets = internalMutation({
       });
 
       await deleteContentSearch(ctx, searchRef.content_id);
+      await deleteContentRoute(ctx, searchRef.content_id);
       await ctx.db.delete("exerciseSets", setId);
+      await deleteExerciseGroupRouteIfEmpty(ctx, exerciseSet);
       deleted++;
     }
 

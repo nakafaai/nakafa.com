@@ -1,5 +1,4 @@
 import { AllahIcon } from "@hugeicons/core-free-icons";
-import { getAllSurah, getSurahName } from "@repo/contents/_lib/quran";
 import { slugify } from "@repo/design-system/lib/utils";
 import { BookJsonLd } from "@repo/seo/json-ld/book";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
@@ -25,6 +24,7 @@ import { QuranText } from "@/components/shared/quran-text";
 import { QuranVerse } from "@/components/shared/quran-verse";
 import { RefContent } from "@/components/shared/ref-content";
 import { WindowVirtualized } from "@/components/shared/window-virtualized";
+import { fetchRuntimeQuranSurahs } from "@/lib/content/runtime";
 import { VirtualProvider } from "@/lib/context/use-virtual";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getSocialMetadata } from "@/lib/utils/metadata";
@@ -32,6 +32,7 @@ import {
   fetchSurahContext,
   fetchSurahMetadataContext,
   getQuranPagination,
+  getQuranSurahName,
 } from "@/lib/utils/pages/quran";
 import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
@@ -97,8 +98,10 @@ export async function generateMetadata({
   };
 }
 
-export function generateStaticParams() {
-  return getAllSurah().map((surah) => ({
+export async function generateStaticParams() {
+  const surahs = await fetchRuntimeQuranSurahs();
+
+  return surahs.map((surah) => ({
     surah: surah.number.toString(),
   }));
 }
@@ -131,7 +134,7 @@ async function ResolvedSurahPage({
   }
 
   const translation = surahData.name.translation[locale];
-  const title = getSurahName({ locale, name: surahData.name });
+  const title = getQuranSurahName({ locale, name: surahData.name });
 
   return (
     <>
@@ -165,7 +168,7 @@ async function ResolvedSurahPage({
 async function getSurahMetadataData({ surah }: { surah: number }) {
   "use cache";
 
-  cacheLife("max");
+  cacheLife("seconds");
 
   const surahMetadataContext = await Effect.runPromise(
     Effect.match(fetchSurahMetadataContext({ surah }), {
@@ -192,7 +195,7 @@ async function CachedSurahShell({
 }) {
   "use cache";
 
-  cacheLife("max");
+  cacheLife("seconds");
 
   const [t, result] = await Promise.all([
     getTranslations({ locale, namespace: "Holy" }),
@@ -218,7 +221,7 @@ async function CachedSurahShell({
 
   const preBismillah = surahData.preBismillah;
 
-  const title = getSurahName({ locale, name: surahData.name });
+  const title = getQuranSurahName({ locale, name: surahData.name });
 
   const headings = surahData.verses.map((verse, index) => {
     const label = t("verse-count", { count: verse.number.inSurah });
@@ -237,10 +240,10 @@ async function CachedSurahShell({
   });
 
   const prevTitle = prevSurah
-    ? getSurahName({ locale, name: prevSurah.name })
+    ? getQuranSurahName({ locale, name: prevSurah.name })
     : "";
   const nextTitle = nextSurah
-    ? getSurahName({ locale, name: nextSurah.name })
+    ? getQuranSurahName({ locale, name: nextSurah.name })
     : "";
 
   const paginationWithLocalizedTitles = {

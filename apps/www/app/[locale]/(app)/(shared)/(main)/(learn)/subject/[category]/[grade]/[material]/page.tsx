@@ -6,10 +6,7 @@ import {
   getGradePath,
   parseGrade,
 } from "@repo/contents/_lib/subject/grade";
-import {
-  getMaterialIcon,
-  getMaterials,
-} from "@repo/contents/_lib/subject/material";
+import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import {
   getMaterialPath,
   parseMaterial,
@@ -42,6 +39,7 @@ import {
   LayoutMaterialToc,
 } from "@/components/shared/layout-material";
 import { RefContent } from "@/components/shared/ref-content";
+import { getRuntimeSubjectMaterials } from "@/lib/content/navigation";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
@@ -186,7 +184,7 @@ async function PageContent({
 }) {
   "use cache";
 
-  cacheLife("max");
+  cacheLife("seconds");
 
   const gradePath = getGradePath(category, grade);
   const FilePath = getMaterialPath(category, grade, material);
@@ -194,7 +192,7 @@ async function PageContent({
   const [t, tCommon, materials] = await Promise.all([
     getTranslations({ locale, namespace: "Subject" }),
     getTranslations({ locale, namespace: "Common" }),
-    Effect.runPromise(getMaterials(FilePath, locale)),
+    Effect.runPromise(getRuntimeSubjectMaterials(FilePath, locale)),
   ]);
   const gradeLabel = t(
     Option.getOrElse(getGradeNonNumeric(grade), () => "grade"),

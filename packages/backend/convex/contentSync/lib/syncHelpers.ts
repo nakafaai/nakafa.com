@@ -4,6 +4,7 @@ import { deleteAudioContentSource } from "@repo/backend/convex/audioStudies/help
 import type { ContentAuthorContentId } from "@repo/backend/convex/authors/schema";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
+import { deleteContentRoute } from "@repo/backend/convex/contents/helpers/routes/write";
 import { buildContentSearchRef } from "@repo/backend/convex/contents/helpers/search/documents";
 import { deleteContentSearch } from "@repo/backend/convex/contents/helpers/search/write";
 import type {
@@ -276,6 +277,7 @@ export async function deleteExerciseQuestion(
       section: "exercises",
     });
     await deleteContentSearch(ctx, searchRef.content_id);
+    await deleteContentRoute(ctx, searchRef.content_id);
   }
 
   await deleteContentAuthorLinks(ctx, questionId, "exercise");
@@ -297,6 +299,7 @@ export async function deleteSubjectSection(
       section: "subject",
     });
     await deleteContentSearch(ctx, searchRef.content_id);
+    await deleteContentRoute(ctx, searchRef.content_id);
   }
 
   await deleteContentAuthorLinks(ctx, sectionId, "subject");

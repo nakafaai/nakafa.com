@@ -59,9 +59,6 @@ importers:
       '@repo/backend':
         specifier: workspace:*
         version: link:../../packages/backend
-      '@repo/contents':
-        specifier: workspace:*
-        version: link:../../packages/contents
       '@repo/design-system':
         specifier: workspace:*
         version: link:../../packages/design-system
@@ -77,6 +74,9 @@ importers:
       better-auth:
         specifier: ~1.6.12
         version: 1.6.12(@opentelemetry/api@1.9.1)(next@16.2.7(@opentelemetry/api@1.9.1)(@playwright/test@1.60.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vitest@4.1.8)
+      convex:
+        specifier: ^1.40.0
+        version: 1.40.0(react@19.2.7)
       effect:
         specifier: ^3.21.3
         version: 3.21.3
@@ -8533,7 +8533,7 @@ snapshots:
       '@parcel/watcher': 2.5.6
       effect: 3.21.3
       multipasta: 0.2.7
-      ws: 8.18.3
+      ws: 8.20.1
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
