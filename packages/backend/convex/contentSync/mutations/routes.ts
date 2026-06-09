@@ -40,6 +40,45 @@ const deleteResultValidator = v.object({
   deleted: v.number(),
 });
 
+/** Upserts one materialized route count from rebuilt artifact pages. */
+export const syncContentRouteArtifactCount = internalMutation({
+  args: {
+    count: v.number(),
+    locale: localeValidator,
+    section: nakafaSectionValidator,
+    syncedAt: v.number(),
+  },
+  returns: syncContentRouteArtifactPageResultValidator,
+  /** Stores the section route count produced by the artifact-page rebuild. */
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("contentRouteCounts")
+      .withIndex("by_locale_and_section", (q) =>
+        q.eq("locale", args.locale).eq("section", args.section)
+      )
+      .unique();
+
+    if (existing?.count === args.count) {
+      return { created: 0, unchanged: 1, updated: 0 };
+    }
+
+    const next = {
+      count: args.count,
+      locale: args.locale,
+      section: args.section,
+      syncedAt: args.syncedAt,
+    };
+
+    if (existing) {
+      await ctx.db.patch("contentRouteCounts", existing._id, next);
+      return { created: 0, unchanged: 0, updated: 1 };
+    }
+
+    await ctx.db.insert("contentRouteCounts", next);
+    return { created: 1, unchanged: 0, updated: 0 };
+  },
+});
+
 /** Upserts one bounded sitemap/LLMS route artifact page from sync. */
 export const syncContentRouteArtifactPage = internalMutation({
   args: {

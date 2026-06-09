@@ -64,6 +64,7 @@ function syncRouteArtifactPagesForSection(
     const totals: SyncResult = { created: 0, unchanged: 0, updated: 0 };
     let cursor: string | null = null;
     let pageNumber = 0;
+    let routeCount = 0;
 
     while (true) {
       const routePage: RuntimeContentRoutePage = yield* callConvexQuery(
@@ -78,6 +79,8 @@ function syncRouteArtifactPagesForSection(
         },
         RuntimeContentRoutePageSchema
       );
+      routeCount += routePage.page.length;
+
       if (routePage.page.length > 0) {
         const result = yield* callConvexMutation(
           config,
@@ -110,9 +113,33 @@ function syncRouteArtifactPagesForSection(
       locale: args.locale,
       section: args.section,
     });
+    yield* syncRouteArtifactCount(config, {
+      count: routeCount,
+      locale: args.locale,
+      section: args.section,
+      syncedAt: args.syncedAt,
+    });
 
     return totals;
   });
+}
+
+/** Stores the route count produced by one section's rebuilt artifact pages. */
+function syncRouteArtifactCount(
+  config: ConvexConfig,
+  args: {
+    count: number;
+    locale: (typeof locales)[number];
+    section: NakafaSection;
+    syncedAt: number;
+  }
+) {
+  return callConvexMutation(
+    config,
+    internal.contentSync.mutations.routes.syncContentRouteArtifactCount,
+    args,
+    SyncSummarySchema
+  );
 }
 
 /** Deletes stale route artifact pages through repeated bounded batches. */
