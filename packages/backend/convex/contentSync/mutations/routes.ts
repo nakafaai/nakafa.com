@@ -152,10 +152,6 @@ export const deleteStaleContentRouteArtifactPages = internalMutation({
     let deleted = 0;
 
     for (const page of pages) {
-      if (page.page < args.firstStalePage) {
-        continue;
-      }
-
       await ctx.db.delete(page._id);
       deleted++;
     }
