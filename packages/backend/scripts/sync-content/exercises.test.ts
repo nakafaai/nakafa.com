@@ -25,7 +25,7 @@ const loadExercisesScript = async ({
   } | null;
 }) => {
   const logErrors: string[] = [];
-  const mutationCalls: unknown[] = [];
+  const mutationCalls: Array<{ questions?: unknown[]; sets?: unknown[] }> = [];
 
   vi.doMock("@repo/backend/scripts/lib/mdx-parser/content", async () => {
     const actual = await vi.importActual<
@@ -108,14 +108,14 @@ const loadExercisesScript = async ({
     callConvexMutation: (
       _config: ConvexConfig,
       _functionRef: unknown,
-      args: { questions?: unknown[] }
+      args: { questions?: unknown[]; sets?: unknown[] }
     ) => {
       mutationCalls.push(args);
 
       return Effect.succeed({
         authorLinksCreated: 0,
         choicesCreated: args.questions?.length ? 4 : 0,
-        created: args.questions?.length ?? 0,
+        created: args.questions?.length ?? args.sets?.length ?? 0,
         skipped: 0,
         skippedSetSlugs: [],
         unchanged: 0,
@@ -159,6 +159,52 @@ afterEach(() => {
 });
 
 describe("sync-content exercises", () => {
+  it("syncs exercise set counts from valid question payloads", async () => {
+    const { logErrors, mutationCalls, script } = await loadExercisesScript({
+      choices: {
+        en: [
+          { label: "A", value: true },
+          { label: "B", value: false },
+        ],
+        id: [
+          { label: "A", value: true },
+          { label: "B", value: false },
+        ],
+      },
+    });
+
+    const result = await Effect.runPromise(
+      script.syncExerciseSets(config, { quiet: false })
+    );
+
+    expect(logErrors).toEqual([]);
+    expect(result.created).toBe(1);
+    expect(mutationCalls).toEqual([
+      {
+        sets: [
+          expect.objectContaining({
+            questionCount: 1,
+            slug: "exercises/high-school/tka/mathematics/try-out/2026/set-1",
+          }),
+        ],
+      },
+    ]);
+  });
+
+  it("fails exercise set sync before publishing invalid question counts", async () => {
+    const { mutationCalls, script } = await loadExercisesScript({
+      choices: { en: [], id: [{ label: "A", value: true }] },
+    });
+
+    await expect(
+      Effect.runPromise(script.syncExerciseSets(config, { quiet: true }))
+    ).rejects.toThrow(
+      "Cannot sync exercise sets with invalid exercise questions"
+    );
+
+    expect(mutationCalls).toHaveLength(0);
+  });
+
   it("syncs exercise questions with both locale choice arrays", async () => {
     const { logErrors, mutationCalls, script } = await loadExercisesScript({
       choices: {

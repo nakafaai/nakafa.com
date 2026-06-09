@@ -87,30 +87,11 @@ export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
   const sets: ExerciseSetPayload[] = [];
   const errors: string[] = [];
 
-  const questionFiles = yield* globFiles("exercises/**/_question/*.mdx");
-  const questionCountByLocaleSlug = new Map<string, number>();
-  for (const questionFile of questionFiles) {
-    const pathResult = yield* Effect.either(parseExercisePath(questionFile));
-
-    if (pathResult._tag === "Left") {
-      continue;
-    }
-
-    const pathInfo = pathResult.right;
-    const setSlug = buildExerciseSetSlug({
-      category: pathInfo.category,
-      examType: pathInfo.examType,
-      material: pathInfo.material,
-      exerciseType: pathInfo.exerciseType,
-      setName: pathInfo.setName,
-      year: pathInfo.year,
-    });
-    const countKey = `${pathInfo.locale}:${setSlug}`;
-    questionCountByLocaleSlug.set(
-      countKey,
-      (questionCountByLocaleSlug.get(countKey) || 0) + 1
-    );
-  }
+  const searchLabelsBySet = yield* readExerciseSearchLabels(options);
+  const questionCountByLocaleSlug = yield* readValidatedExerciseQuestionCounts(
+    options,
+    searchLabelsBySet
+  );
 
   for (const materialFile of materialFiles) {
     const result = yield* Effect.either(
@@ -297,6 +278,57 @@ const readRequiredExerciseChoices = Effect.fn(
     en: buildExerciseChoicePayload(choicesData.en),
     id: buildExerciseChoicePayload(choicesData.id),
   };
+});
+
+/** Returns the locale-scoped question glob shared by set and question sync. */
+function getExerciseQuestionPattern(options: SyncOptions) {
+  return options.locale
+    ? `exercises/**/_question/${options.locale}.mdx`
+    : "exercises/**/_question/*.mdx";
+}
+
+/** Builds set question counts from question payloads that can actually sync. */
+const readValidatedExerciseQuestionCounts = Effect.fn(
+  "sync.readValidatedExerciseQuestionCounts"
+)(function* (
+  options: SyncOptions,
+  searchLabelsBySet: ReadonlyMap<string, ExerciseSearchLabels>
+) {
+  const questionFiles = yield* globFiles(getExerciseQuestionPattern(options));
+  const questionCountByLocaleSlug = new Map<string, number>();
+  const errors: string[] = [];
+
+  for (const questionFile of questionFiles) {
+    const questionResult = yield* Effect.either(
+      parseQuestionFile(questionFile, searchLabelsBySet)
+    );
+
+    if (questionResult._tag === "Left") {
+      const message =
+        questionResult.left instanceof Error
+          ? questionResult.left.message
+          : String(questionResult.left);
+      errors.push(`${questionFile}: ${message}`);
+      continue;
+    }
+
+    const question = questionResult.right;
+    const countKey = `${question.locale}:${question.setSlug}`;
+    questionCountByLocaleSlug.set(
+      countKey,
+      (questionCountByLocaleSlug.get(countKey) || 0) + 1
+    );
+  }
+
+  if (errors.length > 0) {
+    return yield* Effect.fail(
+      new ScriptFailureError({
+        message: `Cannot sync exercise sets with invalid exercise questions:\n${errors.join("\n")}`,
+      })
+    );
+  }
+
+  return questionCountByLocaleSlug;
 });
 
 /** Parses one exercise question file into the Convex sync payload. */
@@ -561,10 +593,7 @@ export const syncExerciseQuestions = Effect.fn("sync.exerciseQuestions")(
       log("\n--- EXERCISE QUESTIONS ---\n");
     }
 
-    const pattern = options.locale
-      ? `exercises/**/_question/${options.locale}.mdx`
-      : "exercises/**/_question/*.mdx";
-    const questionFiles = yield* globFiles(pattern);
+    const questionFiles = yield* globFiles(getExerciseQuestionPattern(options));
 
     if (!options.quiet) {
       log(`Files found: ${questionFiles.length} (question files only)`);
