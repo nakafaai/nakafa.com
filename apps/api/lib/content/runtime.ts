@@ -32,6 +32,12 @@ type QuranSurahPageArgs = FunctionArgs<
   typeof api.contents.queries.runtime.getQuranSurahPage
 >;
 
+interface ApiContentPageEnvelope<Row> {
+  continueCursor: string;
+  isDone: boolean;
+  page: Row[];
+}
+
 const PAGE_SIZE = 100;
 const INITIAL_CURSOR: string | null = null;
 const API_PAGE_SIZE_MIN = 1;
@@ -80,6 +86,43 @@ export function parseApiPageParams(searchParams: URLSearchParams) {
   return {
     cursor,
     limit,
+  };
+}
+
+/** Detects whether a request opted into the paginated API response contract. */
+export function hasApiPaginationParams(searchParams: URLSearchParams) {
+  return searchParams.has("cursor") || searchParams.has("limit");
+}
+
+/** Preserves legacy array responses unless callers request pagination. */
+export function formatApiContentPageResponse<Row>({
+  page,
+  paginated,
+}: {
+  page: ApiContentPageEnvelope<Row>;
+  paginated: boolean;
+}) {
+  if (paginated) {
+    return {
+      data: page,
+      kind: "paginated" as const,
+    };
+  }
+
+  if (!page.isDone) {
+    return {
+      data: {
+        error:
+          "Content list exceeds the legacy response limit. Use cursor/limit pagination.",
+      },
+      kind: "tooLarge" as const,
+      status: 413,
+    };
+  }
+
+  return {
+    data: page.page,
+    kind: "legacy" as const,
   };
 }
 

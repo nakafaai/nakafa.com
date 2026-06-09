@@ -2,7 +2,9 @@ import { logError } from "@repo/utilities/logging/effect";
 import { Effect } from "effect";
 import { NextResponse } from "next/server";
 import {
+  formatApiContentPageResponse,
   getArticleApiContentPage,
+  hasApiPaginationParams,
   listApiStaticParams,
   parseApiLocale,
   parseApiPageParams,
@@ -26,7 +28,7 @@ export function generateStaticParams() {
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ locale: string; slug: string[] }> }
-) {
+): Promise<Response> {
   const { locale, slug } = await params;
   const validLocale = parseApiLocale(locale);
 
@@ -37,7 +39,8 @@ export async function GET(
     );
   }
 
-  const pageParams = parseApiPageParams(new URL(request.url).searchParams);
+  const searchParams = new URL(request.url).searchParams;
+  const pageParams = parseApiPageParams(searchParams);
 
   if (!pageParams) {
     return NextResponse.json(
@@ -47,6 +50,7 @@ export async function GET(
   }
 
   const prefix = `articles/${slug.join("/")}`;
+  const paginated = hasApiPaginationParams(searchParams);
 
   return Effect.runPromise(
     getArticleApiContentPage({
@@ -54,24 +58,34 @@ export async function GET(
       locale: validLocale,
       prefix,
     }).pipe(
-      Effect.matchEffect({
-        onFailure: (error) =>
-          Effect.gen(function* () {
-            yield* logError(error, {
-              service: "api-contents",
-              locale,
-              basePath: slug.join("/") || "/",
-              slugLength: slug.length,
-              message: "Failed to fetch contents.",
-            });
+      Effect.map((data): Response => {
+        const response = formatApiContentPageResponse({
+          page: data,
+          paginated,
+        });
 
-            return NextResponse.json(
-              { error: "Failed to fetch contents." },
-              { status: 500 }
-            );
-          }),
-        onSuccess: (data) => Effect.succeed(NextResponse.json(data)),
-      })
+        if (response.kind === "tooLarge") {
+          return NextResponse.json(response.data, { status: response.status });
+        }
+
+        return NextResponse.json(response.data);
+      }),
+      Effect.catchAll((error) =>
+        Effect.gen(function* () {
+          yield* logError(error, {
+            service: "api-contents",
+            locale,
+            basePath: slug.join("/") || "/",
+            slugLength: slug.length,
+            message: "Failed to fetch contents.",
+          });
+
+          return NextResponse.json(
+            { error: "Failed to fetch contents." },
+            { status: 500 }
+          );
+        })
+      )
     )
   );
 }
