@@ -1,9 +1,9 @@
+import { timingSafeEqual } from "@repo/utilities/security";
 import { Effect } from "effect";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { env } from "@/env";
 import { revalidateContentRuntimeCache } from "@/lib/content/cache";
-import { timingSafeEqual } from "@/lib/internal-auth";
 
 const BEARER_PREFIX = "Bearer ";
 
@@ -23,12 +23,9 @@ function getBearerToken(header: string | null) {
  */
 export const POST = async (request: NextRequest) =>
   await Effect.runPromise(
-    Effect.gen(function* () {
+    Effect.sync(() => {
       const token = getBearerToken(request.headers.get("Authorization"));
-      const isAuthorized = yield* timingSafeEqual(
-        token,
-        env.INTERNAL_CONTENT_API_KEY
-      );
+      const isAuthorized = timingSafeEqual(token, env.INTERNAL_CONTENT_API_KEY);
 
       if (!isAuthorized) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

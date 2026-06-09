@@ -6,8 +6,7 @@ import {
 import type { SyncOptions } from "@repo/backend/scripts/sync-content/types";
 import { Config, Effect, Schema } from "effect";
 
-const CONTENT_RUNTIME_CACHE_REVALIDATE_PATH =
-  "/api/internal/content-runtime-cache/revalidate";
+const CONTENT_RUNTIME_CACHE_REVALIDATE_PATH = "/api/internal/content/cache";
 const LOCAL_HOSTNAMES = new Set(["localhost", "127.0.0.1", "::1", "[::1]"]);
 
 class ContentRuntimeCacheConfigError extends Schema.TaggedError<ContentRuntimeCacheConfigError>()(

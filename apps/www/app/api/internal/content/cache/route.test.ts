@@ -25,13 +25,10 @@ function createRequestWithAuthorization(authorization: string | undefined) {
     headers.set("Authorization", authorization);
   }
 
-  return new NextRequest(
-    "https://nakafa.com/api/internal/content-runtime-cache/revalidate",
-    {
-      method: "POST",
-      headers,
-    }
-  );
+  return new NextRequest("https://nakafa.com/api/internal/content/cache", {
+    method: "POST",
+    headers,
+  });
 }
 
 /** Creates one authenticated Next-compatible POST request for the cache route. */
@@ -43,9 +40,7 @@ function createRequest(token: string | undefined) {
 
 describe("content runtime cache revalidation route", () => {
   it("rejects missing and invalid internal bearer tokens", async () => {
-    const { POST } = await import(
-      "@/app/api/internal/content-runtime-cache/revalidate/route"
-    );
+    const { POST } = await import("@/app/api/internal/content/cache/route");
 
     const missing = await POST(createRequest(undefined));
     const invalid = await POST(createRequest("wrong-key"));
@@ -58,9 +53,7 @@ describe("content runtime cache revalidation route", () => {
   });
 
   it("invalidates the content runtime cache for trusted sync scripts", async () => {
-    const { POST } = await import(
-      "@/app/api/internal/content-runtime-cache/revalidate/route"
-    );
+    const { POST } = await import("@/app/api/internal/content/cache/route");
 
     const response = await POST(createRequest("test-key"));
 

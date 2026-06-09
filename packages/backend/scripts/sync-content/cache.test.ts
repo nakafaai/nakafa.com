@@ -53,7 +53,7 @@ afterEach(() => {
 describe("content runtime cache sync invalidation", () => {
   it("builds the protected app invalidation endpoint", () => {
     expect(getContentRuntimeCacheRevalidationUrl("https://nakafa.com")).toBe(
-      "https://nakafa.com/api/internal/content-runtime-cache/revalidate"
+      "https://nakafa.com/api/internal/content/cache"
     );
     expect(getContentRuntimeCacheRevalidationUrl("not-a-url")).toBeUndefined();
   });
@@ -100,7 +100,7 @@ describe("content runtime cache sync invalidation", () => {
     await withConfig(invalidateContentRuntimeCache({ prod: true }));
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "https://nakafa.com/api/internal/content-runtime-cache/revalidate",
+      "https://nakafa.com/api/internal/content/cache",
       {
         method: "POST",
         headers: {
