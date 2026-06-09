@@ -145,6 +145,7 @@ export default function Page(
   );
 }
 
+/** Renders one subject grade page from Convex-backed material navigation. */
 async function PageContent({
   locale,
   category,

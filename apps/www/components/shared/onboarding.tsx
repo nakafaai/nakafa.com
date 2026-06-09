@@ -46,6 +46,7 @@ export function Onboarding() {
   return <OnboardingContent user={user} />;
 }
 
+/** Renders the first-run role picker and persists the selected user role. */
 function OnboardingContent({ user }: { user: CurrentUser }) {
   const t = useTranslations("Onboarding");
   const roleItems = roles.map((role) => ({

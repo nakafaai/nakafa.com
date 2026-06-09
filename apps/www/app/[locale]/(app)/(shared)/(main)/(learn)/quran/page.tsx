@@ -51,6 +51,7 @@ export async function generateMetadata({
   };
 }
 
+/** Loads the Quran surah catalog before rendering the localized index. */
 export default async function Page(props: PageProps<"/[locale]/quran">) {
   const { locale: rawLocale } = await props.params;
   const locale = getLocaleOrThrow(rawLocale);
@@ -59,6 +60,7 @@ export default async function Page(props: PageProps<"/[locale]/quran">) {
   return <PageContent locale={locale} surahs={surahs} />;
 }
 
+/** Renders the Quran index list and shared SEO breadcrumbs for one locale. */
 function PageContent({
   locale,
   surahs,

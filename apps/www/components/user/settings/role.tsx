@@ -28,6 +28,7 @@ const formSchema = Schema.standardSchemaV1(
   })
 );
 
+/** Renders the settings form that validates and saves the user's app role. */
 export function UserSettingsRole({ user }: { user: CurrentUser }) {
   const t = useTranslations("Auth");
   const roleItems = roles.map((role) => ({

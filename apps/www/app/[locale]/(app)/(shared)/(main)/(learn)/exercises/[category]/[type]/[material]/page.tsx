@@ -167,6 +167,7 @@ export default function Page(
   );
 }
 
+/** Renders an exercise material index from grouped Convex route rows. */
 async function PageContent({
   locale,
   category,

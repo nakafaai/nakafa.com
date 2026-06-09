@@ -98,6 +98,7 @@ export async function generateMetadata({
   };
 }
 
+/** Prebuilds Quran surah routes from the Convex Quran runtime catalog. */
 export async function generateStaticParams() {
   const surahs = await fetchRuntimeQuranSurahs();
 
@@ -110,6 +111,7 @@ export default function Page(props: PageProps<"/[locale]/quran/[surah]">) {
   return <ResolvedSurahPage params={props.params} />;
 }
 
+/** Resolves a localized surah route before rendering Quran SEO and page chrome. */
 async function ResolvedSurahPage({
   params,
 }: {
@@ -165,6 +167,7 @@ async function ResolvedSurahPage({
   );
 }
 
+/** Reads lightweight cached surah metadata for route metadata and JSON-LD. */
 async function getSurahMetadataData({ surah }: { surah: number }) {
   "use cache";
 
@@ -180,6 +183,7 @@ async function getSurahMetadataData({ surah }: { surah: number }) {
   return surahMetadataContext?.surahData ?? null;
 }
 
+/** Renders the cached Quran surah body, controls, pagination, and table of contents. */
 async function CachedSurahShell({
   locale,
   surah,

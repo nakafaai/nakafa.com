@@ -141,6 +141,7 @@ export default function Page(
   return <PageContent category={category} locale={locale} type={type} />;
 }
 
+/** Renders the exercise type landing page from Convex-backed subject navigation. */
 async function PageContent({
   locale,
   category,

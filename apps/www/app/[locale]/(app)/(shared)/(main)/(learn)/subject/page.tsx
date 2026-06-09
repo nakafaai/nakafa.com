@@ -65,6 +65,7 @@ async function getCachedSubjectGrades(locale: Locale) {
   return Effect.runPromise(getRuntimeSubjectGrades(locale));
 }
 
+/** Renders the subject root grouped by Convex-backed category and grade rows. */
 async function PageContent({ locale }: { locale: Locale }) {
   const allGrades = await getCachedSubjectGrades(locale);
   const categoryOrder = Array.from(

@@ -171,6 +171,7 @@ export default function Page(
   );
 }
 
+/** Renders a subject material index from Convex-backed topic navigation rows. */
 async function PageContent({
   locale,
   category,

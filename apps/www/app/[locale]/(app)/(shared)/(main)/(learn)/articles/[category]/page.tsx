@@ -43,6 +43,7 @@ async function getResolvedParams(
   return { category, locale };
 }
 
+/** Reads the cached Convex-backed article cards for one category page. */
 async function getCategoryArticles(category: ArticleCategory, locale: Locale) {
   "use cache";
 
