@@ -6,7 +6,6 @@ import type {
   FunctionArgs,
   FunctionReference,
   FunctionReturnType,
-  PaginationResult,
 } from "convex/server";
 import { Effect, Schema } from "effect";
 import { env } from "@/env";
@@ -81,43 +80,6 @@ export function parseApiPageParams(searchParams: URLSearchParams) {
   return {
     cursor,
     limit,
-  };
-}
-
-/** Detects whether a request opted into the paginated API response contract. */
-export function hasApiPaginationParams(searchParams: URLSearchParams) {
-  return searchParams.has("cursor") || searchParams.has("limit");
-}
-
-/** Preserves legacy array responses unless callers request pagination. */
-export function formatApiContentPageResponse<Row>({
-  page,
-  paginated,
-}: {
-  page: PaginationResult<Row>;
-  paginated: boolean;
-}) {
-  if (paginated) {
-    return {
-      data: page,
-      kind: "paginated" as const,
-    };
-  }
-
-  if (!page.isDone) {
-    return {
-      data: {
-        error:
-          "Content list exceeds the legacy response limit. Use cursor/limit pagination.",
-      },
-      kind: "tooLarge" as const,
-      status: 413,
-    };
-  }
-
-  return {
-    data: page.page,
-    kind: "legacy" as const,
   };
 }
 

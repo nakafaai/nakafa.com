@@ -12,9 +12,6 @@ export const dynamic = "force-dynamic";
 export const revalidate = false;
 
 const EXERCISE_PREFIX_LEN = 3;
-const EXERCISE_TYPE_INDEX = 0;
-const LEGACY_TRY_OUT_SUFFIX_INDEX = 1;
-const LEGACY_YEARLESS_TRY_OUT_REDIRECT_YEAR = "2026";
 const EXERCISES_ROUTE_ROOT = "exercises";
 const TRY_OUT_SEGMENT = "try-out";
 const EXERCISE_YEAR_SEGMENT_REGEX = /^\d{4}$/;
@@ -23,7 +20,7 @@ const EXERCISE_YEAR_SEGMENT_REGEX = /^\d{4}$/;
  * Returns exercise fragments or parsed exercise rows for `/contents/:locale/exercises/*`.
  */
 export async function GET(
-  request: Request,
+  _request: Request,
   { params }: { params: Promise<{ locale: string; slug: string[] }> }
 ) {
   const { locale, slug } = await params;
@@ -36,29 +33,7 @@ export async function GET(
     );
   }
 
-  const exerciseRoutePrefix = slug.slice(0, EXERCISE_PREFIX_LEN);
   const relativeExerciseSlug = slug.slice(EXERCISE_PREFIX_LEN);
-  const exerciseType = relativeExerciseSlug[EXERCISE_TYPE_INDEX];
-  const legacyTryOutSuffix = relativeExerciseSlug.slice(
-    LEGACY_TRY_OUT_SUFFIX_INDEX
-  );
-
-  if (
-    exerciseType !== undefined &&
-    hasInvalidTryOutYearSlug(relativeExerciseSlug) &&
-    legacyTryOutSuffix.length > 0
-  ) {
-    const redirectUrl = new URL(request.url);
-    const redirectedSlug = [
-      ...exerciseRoutePrefix,
-      exerciseType,
-      LEGACY_YEARLESS_TRY_OUT_REDIRECT_YEAR,
-      ...legacyTryOutSuffix,
-    ];
-
-    redirectUrl.pathname = `/contents/${validLocale}/exercises/${redirectedSlug.join("/")}`;
-    return NextResponse.redirect(redirectUrl, 308);
-  }
 
   if (isTryOutCollectionSlug(relativeExerciseSlug)) {
     return NextResponse.json(
@@ -124,7 +99,7 @@ function getExerciseApiTarget(slug: readonly string[]): ExerciseApiTarget {
   };
 }
 
-/** Reads the parsed exercise API target from Convex and formats the legacy JSON shape. */
+/** Reads the parsed exercise API target from Convex and formats the API JSON shape. */
 function readExerciseApiTarget({
   locale,
   target,
@@ -184,7 +159,7 @@ function readExerciseFragment({
   });
 }
 
-/** Reads one exercise question from Convex and returns the legacy array shape. */
+/** Reads one exercise question from Convex and returns the API array shape. */
 function readExerciseQuestion({
   locale,
   number,
@@ -239,16 +214,10 @@ function readExerciseSet({
 /** Returns true when a relative exercise slug points to a try-out collection page. */
 function isTryOutCollectionSlug(slug: readonly string[]) {
   return (
-    (slug.length === 1 && slug[0] === TRY_OUT_SEGMENT) ||
-    (slug.length === 2 &&
-      slug[0] === TRY_OUT_SEGMENT &&
-      isExerciseYearSegment(slug.at(1)))
+    slug.length === 2 &&
+    slug[0] === TRY_OUT_SEGMENT &&
+    isExerciseYearSegment(slug.at(1))
   );
-}
-
-/** Returns true for legacy try-out slugs that omitted the explicit year segment. */
-function hasInvalidTryOutYearSlug(slug: readonly string[]) {
-  return slug[0] === TRY_OUT_SEGMENT && !isExerciseYearSegment(slug.at(1));
 }
 
 /** Checks whether one route segment is a valid 4-digit exercise year. */

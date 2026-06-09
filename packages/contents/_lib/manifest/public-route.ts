@@ -9,6 +9,7 @@ import {
   parseExercisesMaterial,
   parseExercisesType,
 } from "@repo/contents/_lib/exercises/route";
+import { hasInvalidTryOutYearSlug } from "@repo/contents/_lib/exercises/slug";
 import { parseSubjectCategory } from "@repo/contents/_lib/subject/category";
 import { getGradePath, parseGrade } from "@repo/contents/_lib/subject/grade";
 import {
@@ -125,6 +126,10 @@ function getExerciseRouteCheck(
         material.value
       ).slice(1),
     };
+  }
+
+  if (hasInvalidTryOutYearSlug(slug)) {
+    return { mode: "missing" };
   }
 
   return { mode: "exact", route: parts.join("/") };

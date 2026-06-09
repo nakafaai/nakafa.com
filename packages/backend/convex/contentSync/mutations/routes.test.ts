@@ -22,7 +22,7 @@ describe("contentSync/mutations/routes", () => {
     const created = await syncCount(t, 2);
     const unchanged = await syncCount(t, 2);
     const updated = await syncCount(t, 1);
-    const legacyRows = await t.query(
+    const uncountedRows = await t.query(
       async (ctx) =>
         await ctx.db
           .query("contentRoutes")
@@ -39,7 +39,9 @@ describe("contentSync/mutations/routes", () => {
     expect(created).toEqual({ created: 1, unchanged: 0, updated: 0 });
     expect(unchanged).toEqual({ created: 0, unchanged: 1, updated: 0 });
     expect(updated).toEqual({ created: 0, unchanged: 0, updated: 1 });
-    expect(legacyRows.every((row) => row.countedAt === undefined)).toBe(true);
+    expect(uncountedRows.every((row) => row.countedAt === undefined)).toBe(
+      true
+    );
     expect(counts).toEqual([
       expect.objectContaining({
         count: 1,
@@ -174,7 +176,7 @@ function syncPage(
   );
 }
 
-/** Builds one legacy route row that predates countedAt backfills. */
+/** Builds one uncounted route row that predates count materialization. */
 function contentRoute(route: string) {
   return {
     authors: [{ name: "Nakafa Author" }],

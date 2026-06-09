@@ -88,7 +88,7 @@ function mockManifestSource() {
     "exercises/1/_question",
     "exercises/high-school/1/_question",
     "exercises/high-school/snbt/1/_question",
-    "exercises/high-school/snbt/quantitative-knowledge/try-out/set-legacy/1/_question",
+    "exercises/high-school/snbt/quantitative-knowledge/try-out/set-archived/1/_question",
     "exercises/bad-category/snbt/quantitative-knowledge/try-out/2026/set-1/1/_question",
     "exercises/high-school/bad-type/quantitative-knowledge/try-out/2026/set-1/1/_question",
     "exercises/high-school/snbt/bad-material/try-out/2026/set-1/1/_question",
@@ -165,7 +165,7 @@ describe("content route manifest", () => {
       "/subject/high-school/10/chemistry/green-chemistry"
     );
     expect(manifest.contentRoutes).not.toContain(
-      "/exercises/high-school/snbt/quantitative-knowledge/try-out/set-legacy"
+      "/exercises/high-school/snbt/quantitative-knowledge/try-out/set-archived"
     );
     expect(manifest.redirects).toContainEqual([
       "/subject/high-school/10/chemistry/green-chemistry",

@@ -2,9 +2,7 @@ import { logError } from "@repo/utilities/logging/effect";
 import { Effect } from "effect";
 import { NextResponse } from "next/server";
 import {
-  formatApiContentPageResponse,
   getSubjectApiContentPage,
-  hasApiPaginationParams,
   listApiStaticParams,
   parseApiLocale,
   parseApiPageParams,
@@ -50,7 +48,6 @@ export async function GET(
   }
 
   const prefix = `subject/${slug.join("/")}`;
-  const paginated = hasApiPaginationParams(searchParams);
 
   return Effect.runPromise(
     getSubjectApiContentPage({
@@ -58,18 +55,7 @@ export async function GET(
       locale: validLocale,
       prefix,
     }).pipe(
-      Effect.map((data): Response => {
-        const response = formatApiContentPageResponse({
-          page: data,
-          paginated,
-        });
-
-        if (response.kind === "tooLarge") {
-          return NextResponse.json(response.data, { status: response.status });
-        }
-
-        return NextResponse.json(response.data);
-      }),
+      Effect.map((data): Response => NextResponse.json(data)),
       Effect.catchAll((error) =>
         Effect.gen(function* () {
           yield* logError(error, {

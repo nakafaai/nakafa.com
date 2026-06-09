@@ -96,6 +96,13 @@ describe("public content route checks", () => {
     });
     expect(
       getPublicContentRouteCheck(
+        "exercises/high-school/snbt/general-reasoning/try-out/set-1"
+      )
+    ).toEqual({
+      mode: "missing",
+    });
+    expect(
+      getPublicContentRouteCheck(
         "exercises/high-school/snbt/general-reasoning/try-out/2026/set-1/1"
       )
     ).toEqual({

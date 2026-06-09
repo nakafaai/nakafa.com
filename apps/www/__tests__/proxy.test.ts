@@ -95,9 +95,6 @@ describe("proxy", () => {
       "/.well-known/llms-full.txt",
       "/.well-known/agent-skills/index.json",
       "/.well-known/agent-skills/nakafa/SKILL.md",
-      "/.well-known/skills/index.json",
-      "/.well-known/skills/nakafa/SKILL.md",
-      "/.well-known/skills/nakafa/skill.md",
     ];
 
     for (const path of paths) {
@@ -477,7 +474,7 @@ describe("proxy", () => {
     );
   });
 
-  it("redirects legacy yearless try-out routes before rendering", async () => {
+  it("returns a real 404 for yearless try-out set routes", async () => {
     const response = await proxy(
       new NextRequest(
         "http://localhost:3000/en/exercises/high-school/snbt/general-knowledge/try-out/set-1"
@@ -485,9 +482,9 @@ describe("proxy", () => {
     );
 
     expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
-    expect(response.status).toBe(308);
-    expect(response.headers.get("location")).toBe(
-      "http://localhost:3000/en/exercises/high-school/snbt/general-knowledge/try-out/2026/set-1"
+    expect(response.status).toBe(404);
+    expect(response.headers.get("x-middleware-rewrite")).toBe(
+      "http://localhost:3000/en/_not-found"
     );
   });
 });

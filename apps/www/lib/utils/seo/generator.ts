@@ -435,9 +435,7 @@ function getDisplayNameFromContext(context: SEOContext): string {
   return "";
 }
 
-/**
- * Fallback using legacy title/description builders.
- */
+/** Builds fallback metadata when localized translations are unavailable. */
 function generateFallbackMetadata(context: SEOContext): SEOMetadata {
   const displayName = getDisplayNameFromContext(context);
 

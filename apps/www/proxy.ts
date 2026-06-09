@@ -1,9 +1,5 @@
 import { isPostHogProxyPathname } from "@repo/analytics/posthog/config";
 import {
-  hasInvalidTryOutYearSlug,
-  LEGACY_YEARLESS_TRY_OUT_REDIRECT_YEAR,
-} from "@repo/contents/_lib/exercises/slug";
-import {
   getPublicContentRouteCheck,
   type PublicContentRouteCheck,
 } from "@repo/contents/_lib/manifest/public-route";
@@ -43,9 +39,6 @@ const LOCALE_BYPASS_PATHS = new Set([
   "/.well-known/llms-full.txt",
   "/.well-known/agent-skills/index.json",
   "/.well-known/agent-skills/nakafa/SKILL.md",
-  "/.well-known/skills/index.json",
-  "/.well-known/skills/nakafa/SKILL.md",
-  "/.well-known/skills/nakafa/skill.md",
 ]);
 
 /**
@@ -88,19 +81,6 @@ export async function proxy(request: NextRequest) {
       response.headers.set("X-Llms-Txt", LLMS_TEXT_PATH);
 
       return response;
-    }
-
-    const legacyRedirectPath = getLegacyTryOutRedirectPath(
-      localizedContentRoute.locale,
-      localizedContentRoute.route,
-      localizedContentRoute.markdownExtension
-    );
-
-    if (legacyRedirectPath) {
-      const redirectUrl = new URL(request.url);
-      redirectUrl.pathname = legacyRedirectPath;
-
-      return NextResponse.redirect(redirectUrl, 308);
     }
 
     if (shouldVerifyContentRoute(request)) {
@@ -305,39 +285,6 @@ function rewriteToContentNotFound(
     },
     status: 404,
   });
-}
-
-/** Builds the canonical redirect target for migrated yearless try-out routes. */
-function getLegacyTryOutRedirectPath(
-  locale: string,
-  route: string,
-  markdownExtension: string
-) {
-  const routeSegments = route.split("/").filter(Boolean);
-  const [routeBase, category, type, material, ...slug] = routeSegments;
-
-  if (routeBase !== "exercises" || !(category && type && material)) {
-    return null;
-  }
-
-  if (!hasInvalidTryOutYearSlug(slug)) {
-    return null;
-  }
-
-  const canonicalSlug = [
-    "try-out",
-    LEGACY_YEARLESS_TRY_OUT_REDIRECT_YEAR,
-    ...slug.slice(1),
-  ];
-  const canonicalRoute = [
-    routeBase,
-    category,
-    type,
-    material,
-    ...canonicalSlug,
-  ].join("/");
-
-  return `/${locale}/${canonicalRoute}${markdownExtension}`;
 }
 
 export const config: ProxyConfig = {

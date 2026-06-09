@@ -251,14 +251,14 @@ function addExerciseRoutes(routes: Set<string>, parts: string[]) {
   }
 }
 
-/** Builds non-legacy exercise nested routes from concrete set/question routes. */
+/** Builds canonical exercise nested routes from concrete set/question routes. */
 function getExerciseNestedRoutes(rest: string[]) {
   const routes: string[] = [];
 
   for (let index = 1; index <= rest.length; index++) {
     const nested = rest.slice(0, index);
 
-    if (isLegacyExerciseNestedRoute(nested)) {
+    if (isInvalidExerciseNestedRoute(nested)) {
       continue;
     }
 
@@ -268,8 +268,8 @@ function getExerciseNestedRoutes(rest: string[]) {
   return routes;
 }
 
-/** Checks whether an exercise route is a known legacy request-only path. */
-function isLegacyExerciseNestedRoute(parts: string[]) {
+/** Checks whether an exercise route is missing the required try-out year. */
+function isInvalidExerciseNestedRoute(parts: string[]) {
   if (parts[0] !== "try-out") {
     return false;
   }

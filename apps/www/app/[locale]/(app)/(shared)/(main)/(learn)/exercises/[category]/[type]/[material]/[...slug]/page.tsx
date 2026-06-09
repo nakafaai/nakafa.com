@@ -1,11 +1,5 @@
-import {
-  getSlugPath,
-  hasInvalidTryOutYearSlug,
-  isYearlessTryOutCollectionSlug,
-  LEGACY_YEARLESS_TRY_OUT_REDIRECT_YEAR,
-} from "@repo/contents/_lib/exercises/slug";
 import type { Metadata } from "next";
-import { notFound, permanentRedirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import {
   getExerciseRouteData,
   getResolvedParams,
@@ -27,18 +21,6 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale, category, type, material, slug } =
     await getResolvedParams(params);
-  const legacyTryOutRedirectPath = getLegacyTryOutRedirectPath({
-    category,
-    locale,
-    material,
-    slug,
-    type,
-  });
-
-  if (legacyTryOutRedirectPath) {
-    permanentRedirect(legacyTryOutRedirectPath);
-  }
-
   const data = await getExerciseRouteData(
     locale,
     category,
@@ -125,11 +107,7 @@ export async function generateStaticParams() {
 
   return staticParams.filter((params) => {
     const slug = params.slug;
-    return (
-      Array.isArray(slug) &&
-      slug.length <= 3 &&
-      !isYearlessTryOutCollectionSlug(slug)
-    );
+    return Array.isArray(slug) && slug.length <= 3;
   });
 }
 
@@ -139,18 +117,6 @@ export default async function Page({
 }: PageProps<"/[locale]/exercises/[category]/[type]/[material]/[...slug]">) {
   const { locale, category, type, material, slug } =
     await getResolvedParams(params);
-  const legacyTryOutRedirectPath = getLegacyTryOutRedirectPath({
-    category,
-    locale,
-    material,
-    slug,
-    type,
-  });
-
-  if (legacyTryOutRedirectPath) {
-    permanentRedirect(legacyTryOutRedirectPath);
-  }
-
   const data = await getExerciseRouteData(
     locale,
     category,
@@ -193,25 +159,4 @@ export default async function Page({
     default:
       notFound();
   }
-}
-
-/** Returns the canonical target for migrated yearless try-out URLs. */
-function getLegacyTryOutRedirectPath({
-  category,
-  locale,
-  material,
-  slug,
-  type,
-}: Awaited<ReturnType<typeof getResolvedParams>>) {
-  if (!hasInvalidTryOutYearSlug(slug)) {
-    return null;
-  }
-
-  const canonicalPath = getSlugPath(category, type, material, [
-    "try-out",
-    LEGACY_YEARLESS_TRY_OUT_REDIRECT_YEAR,
-    ...slug.slice(1),
-  ]);
-
-  return `/${locale}${canonicalPath}`;
 }

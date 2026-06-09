@@ -37,14 +37,6 @@ function createAppRewrites() {
       source: "/.well-known/agent-skills/nakafa/SKILL.md",
       destination: "/skill.md",
     },
-    {
-      source: "/.well-known/skills/nakafa/SKILL.md",
-      destination: "/skill.md",
-    },
-    {
-      source: "/.well-known/skills/nakafa/skill.md",
-      destination: "/skill.md",
-    },
   ];
   const llmSource = ["/:path*.md", "/:path*.mdx", "/:path*/llms.txt"];
   const llmDestination = "/llms.mdx/:path*";
