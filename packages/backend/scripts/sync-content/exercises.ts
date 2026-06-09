@@ -12,6 +12,7 @@ import {
   getExerciseDir,
   parseExercisePath,
 } from "@repo/backend/scripts/lib/mdx-parser/paths";
+import type { ExerciseChoicesByLocale } from "@repo/backend/scripts/lib/mdx-parser/types";
 import { callConvexMutation } from "@repo/backend/scripts/sync-content/convex";
 import {
   formatDuration,
@@ -55,6 +56,8 @@ type ExerciseSetPayload = FunctionArgs<
 type ExerciseQuestionPayload = FunctionArgs<
   typeof internal.contentSync.mutations.exercises.bulkSyncExerciseQuestions
 >["questions"][number];
+
+type ExerciseQuestionChoices = ExerciseQuestionPayload["choices"];
 
 interface ExerciseSearchLabels {
   exerciseTypeTitle: string;
@@ -260,6 +263,42 @@ function getExerciseGroupRoute(setSlug: string) {
   return setSlug.split("/").slice(0, -1).join("/");
 }
 
+/** Converts authored choices into the ordered Convex sync payload. */
+function buildExerciseChoicePayload(
+  choices: ExerciseChoicesByLocale["en"]
+): ExerciseQuestionChoices["en"] {
+  return choices.map((choice, index) => ({
+    optionKey: String.fromCharCode(65 + index),
+    label: choice.label,
+    isCorrect: choice.value,
+    order: index,
+  }));
+}
+
+/** Requires both choice locales before a question can be synced. */
+const readRequiredExerciseChoices = Effect.fn(
+  "sync.readRequiredExerciseChoices"
+)(function* (exerciseDir: string, questionFile: string) {
+  const choicesData = yield* readExerciseChoices(exerciseDir);
+
+  if (
+    !choicesData ||
+    choicesData.en.length === 0 ||
+    choicesData.id.length === 0
+  ) {
+    return yield* Effect.fail(
+      new ScriptFailureError({
+        message: `Missing exercise choices for ${questionFile}. Add non-empty en and id choices.ts arrays before syncing this question.`,
+      })
+    );
+  }
+
+  return {
+    en: buildExerciseChoicePayload(choicesData.en),
+    id: buildExerciseChoicePayload(choicesData.id),
+  };
+});
+
 /** Parses one exercise question file into the Convex sync payload. */
 const parseQuestionFile = Effect.fn("sync.parseQuestionFile")(function* (
   questionFile: string,
@@ -278,21 +317,7 @@ const parseQuestionFile = Effect.fn("sync.parseQuestionFile")(function* (
     answerBody = answerParsed.body;
   }
 
-  const choicesData = yield* readExerciseChoices(exerciseDir);
-  const choices = {
-    en: (choicesData?.en || []).map((choice, index) => ({
-      optionKey: String.fromCharCode(65 + index),
-      label: choice.label,
-      isCorrect: choice.value,
-      order: index,
-    })),
-    id: (choicesData?.id || []).map((choice, index) => ({
-      optionKey: String.fromCharCode(65 + index),
-      label: choice.label,
-      isCorrect: choice.value,
-      order: index,
-    })),
-  };
+  const choices = yield* readRequiredExerciseChoices(exerciseDir, questionFile);
 
   const setSlug = buildExerciseSetSlug({
     category: pathInfo.category,
