@@ -6,6 +6,7 @@ import type {
   FunctionArgs,
   FunctionReference,
   FunctionReturnType,
+  PaginationResult,
 } from "convex/server";
 import { Effect, Schema } from "effect";
 import { env } from "@/env";
@@ -31,12 +32,6 @@ type ExerciseQuestionPageArgs = FunctionArgs<
 type QuranSurahPageArgs = FunctionArgs<
   typeof api.contents.queries.runtime.getQuranSurahPage
 >;
-
-interface ApiContentPageEnvelope<Row> {
-  continueCursor: string;
-  isDone: boolean;
-  page: Row[];
-}
 
 const PAGE_SIZE = 100;
 const INITIAL_CURSOR: string | null = null;
@@ -99,7 +94,7 @@ export function formatApiContentPageResponse<Row>({
   page,
   paginated,
 }: {
-  page: ApiContentPageEnvelope<Row>;
+  page: PaginationResult<Row>;
   paginated: boolean;
 }) {
   if (paginated) {
