@@ -247,4 +247,25 @@ describe("sync-content workflows", () => {
       events.indexOf("syncRoutePages")
     );
   });
+
+  it("refreshes runtime read models before saving no-op incremental sync", async () => {
+    const { events, workflow } = await loadWorkflow(
+      {
+        deleted: 0,
+        hasStale: false,
+      },
+      {
+        changedFiles: [],
+        syncState: {
+          lastSyncCommit: "previous-commit",
+          lastSyncTimestamp: 1,
+        },
+      }
+    );
+    const options: SyncOptions = {};
+
+    await Effect.runPromise(workflow.syncIncremental(config, options));
+
+    expect(events).toEqual(["syncQuran", "syncRoutePages", "saveSyncState"]);
+  });
 });

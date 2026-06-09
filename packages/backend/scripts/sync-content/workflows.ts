@@ -350,7 +350,23 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
 
   const changedFiles = yield* getChangedFilesSince(syncState.lastSyncCommit);
   if (changedFiles.size === 0) {
-    logSuccess("No tracked or untracked content files changed. Nothing to do!");
+    logSuccess(
+      "No tracked or untracked content files changed. Refreshing runtime read models..."
+    );
+    const quranResult = yield* syncQuran(config, {
+      ...options,
+      quiet: true,
+    });
+    addPhaseMetrics(metrics, "Quran", quranResult);
+
+    const routePageResult = yield* syncContentRouteArtifactPages(
+      config,
+      options
+    );
+    addPhaseMetrics(metrics, "Route Pages", routePageResult);
+
+    finalizeMetrics(metrics);
+    logSyncMetrics(metrics);
     yield* saveSyncState(
       { lastSyncTimestamp: Date.now(), lastSyncCommit: currentCommit },
       options.prod ?? false
