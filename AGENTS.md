@@ -222,11 +222,13 @@ Before any Next.js work, find and read the relevant installed Next.js doc. With 
 - Vitest is the standard test runner.
 - Existing tests live in `__tests__/`, `__test__/`, and `*.test.ts(x)` files.
 - `packages/contents` uses colocated `{filename}.test.ts` files and architecture tests reject nested test folders.
+- Do not add final-code React component `.test.tsx` shell tests that mock child components just to render static markup. For app UI behavior, prefer route, data, or domain seams, or production-mode Browser/e2e checks. Existing historical `.test.tsx` files are not a mandate to delete unrelated tests outside the current PR scope.
 - Use `describe`, `it`/`test`, and focused assertions.
 - Keep tests readable and behavior-oriented.
 - Do not leave `.only` or `.skip` in committed code.
 - When changing business logic, add or update the nearest relevant test.
 - After risky changes, run the affected workspace suite, not just one file.
+- For React Doctor, use `pnpm run doctor --verbose --diff`. Do not invoke `pnpm run doctor -- --verbose --diff` or plain `npx react-doctor@latest`, since those paths use the wrong argument/runtime behavior in this repo.
 
 ## MDX And Content Rules
 

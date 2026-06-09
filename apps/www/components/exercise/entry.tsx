@@ -10,7 +10,7 @@ import { importContentModuleOrNull } from "@/lib/content/module";
 type ExerciseEntryData = Pick<ExerciseWithoutDefaults, "choices" | "number">;
 
 /** Loads the required compiled question module for one exercise entry. */
-export async function QuestionContent({
+async function QuestionContent({
   exerciseNumber,
   locale,
   setPath,
@@ -39,7 +39,7 @@ export async function QuestionContent({
 }
 
 /** Loads the optional compiled answer module for one exercise entry. */
-export async function AnswerContent({
+async function AnswerContent({
   exerciseNumber,
   locale,
   setPath,
