@@ -8,8 +8,8 @@ const routeDataSource = readFileSync(new URL("data.ts", import.meta.url), {
 });
 
 describe("getExerciseRouteData cache policy", () => {
-  it("keeps Convex runtime exercise reads on a short cache profile", () => {
-    expect(routeDataSource).toContain('cacheLife("seconds")');
+  it("uses the tagged content runtime cache policy", () => {
+    expect(routeDataSource).toContain("applyContentRuntimeCache()");
     expect(routeDataSource).not.toContain('cacheLife("max")');
   });
 });

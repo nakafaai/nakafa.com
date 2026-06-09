@@ -12,7 +12,6 @@ import type {
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { Effect, Option } from "effect";
 import type { Metadata } from "next";
-import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
@@ -23,6 +22,7 @@ import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
 import { SubjectItem, SubjectList } from "@/components/shared/subject-list";
+import { applyContentRuntimeCache } from "@/lib/content/cache";
 import { getRuntimeExerciseSubjects } from "@/lib/content/navigation";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
@@ -113,7 +113,7 @@ async function getCachedSubjects(
   locale: Locale
 ) {
   "use cache";
-  cacheLife("seconds");
+  applyContentRuntimeCache();
 
   return Effect.runPromise(getRuntimeExerciseSubjects(category, type, locale));
 }

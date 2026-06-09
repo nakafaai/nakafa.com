@@ -22,7 +22,6 @@ import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
 import { Effect, Option } from "effect";
 import type { Metadata } from "next";
-import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
@@ -39,6 +38,7 @@ import {
   LayoutMaterialToc,
 } from "@/components/shared/layout-material";
 import { RefContent } from "@/components/shared/ref-content";
+import { applyContentRuntimeCache } from "@/lib/content/cache";
 import { getRuntimeSubjectMaterials } from "@/lib/content/navigation";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
@@ -185,7 +185,7 @@ async function PageContent({
 }) {
   "use cache";
 
-  cacheLife("seconds");
+  applyContentRuntimeCache();
 
   const gradePath = getGradePath(category, grade);
   const FilePath = getMaterialPath(category, grade, material);

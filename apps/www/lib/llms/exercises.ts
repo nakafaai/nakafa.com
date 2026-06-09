@@ -1,6 +1,6 @@
 import { Effect, Option } from "effect";
-import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
+import { applyContentRuntimeCache } from "@/lib/content/cache";
 import { getRuntimeExerciseSetPage } from "@/lib/content/runtime";
 import { BASE_URL, NUMBER_SEGMENT } from "@/lib/llms/constants";
 import { buildHeader } from "@/lib/llms/format";
@@ -15,7 +15,7 @@ export async function getCachedLlmsExerciseText({
 }) {
   "use cache";
 
-  cacheLife("seconds");
+  applyContentRuntimeCache();
 
   return await Effect.runPromise(getLlmsExerciseText({ cleanSlug, locale }));
 }

@@ -4,7 +4,6 @@ import { BookJsonLd } from "@repo/seo/json-ld/book";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { Effect } from "effect";
 import type { Metadata } from "next";
-import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
@@ -24,6 +23,7 @@ import { QuranText } from "@/components/shared/quran-text";
 import { QuranVerse } from "@/components/shared/quran-verse";
 import { RefContent } from "@/components/shared/ref-content";
 import { WindowVirtualized } from "@/components/shared/window-virtualized";
+import { applyContentRuntimeCache } from "@/lib/content/cache";
 import { fetchRuntimeQuranSurahs } from "@/lib/content/runtime";
 import { VirtualProvider } from "@/lib/context/use-virtual";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
@@ -171,7 +171,7 @@ async function ResolvedSurahPage({
 async function getSurahMetadataData({ surah }: { surah: number }) {
   "use cache";
 
-  cacheLife("seconds");
+  applyContentRuntimeCache();
 
   const surahMetadataContext = await Effect.runPromise(
     Effect.match(fetchSurahMetadataContext({ surah }), {
@@ -199,7 +199,7 @@ async function CachedSurahShell({
 }) {
   "use cache";
 
-  cacheLife("seconds");
+  applyContentRuntimeCache();
 
   const [t, result] = await Promise.all([
     getTranslations({ locale, namespace: "Holy" }),

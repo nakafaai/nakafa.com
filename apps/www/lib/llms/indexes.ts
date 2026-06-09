@@ -1,8 +1,8 @@
 import { NAKAFA_MCP_RECOMMENDED_ENDPOINT } from "@repo/contents/_lib/agent/constants";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
-import { cacheLife } from "next/cache";
 import { hasLocale, type Locale } from "next-intl";
+import { applyContentRuntimeCache } from "@/lib/content/cache";
 import {
   BASE_URL,
   type LlmsSection,
@@ -49,7 +49,7 @@ export async function getCachedLlmsSectionIndexText({
 }) {
   "use cache";
 
-  cacheLife("seconds");
+  applyContentRuntimeCache();
 
   return await Effect.runPromise(getLlmsSectionIndexText(cleanSlug));
 }

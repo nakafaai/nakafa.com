@@ -182,6 +182,13 @@ function createAppHeaders() {
 const nextConfig = {
   ...config,
   cacheComponents: true,
+  cacheLife: {
+    contentRuntime: {
+      stale: 300,
+      revalidate: 86_400,
+      expire: 604_800,
+    },
+  },
   // PostHog's same-origin proxy endpoints include trailing slashes such as
   // `/i/v0/e/`, so Next.js slash normalization must be disabled.
   skipTrailingSlashRedirect: true,

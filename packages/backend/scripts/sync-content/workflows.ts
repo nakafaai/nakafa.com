@@ -8,6 +8,7 @@ import {
   collectAuthorNamesFromFiles,
   syncAuthors,
 } from "@repo/backend/scripts/sync-content/authors";
+import { invalidateContentRuntimeCache } from "@repo/backend/scripts/sync-content/cache";
 import { clean } from "@repo/backend/scripts/sync-content/clean";
 import { callConvexMutation } from "@repo/backend/scripts/sync-content/convex";
 import {
@@ -343,6 +344,7 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
   if (!syncState?.lastSyncCommit) {
     log("No previous sync state found. Running full sync...\n");
     yield* syncAll(config, options);
+    yield* invalidateContentRuntimeCache(options);
     yield* saveSyncState(
       { lastSyncTimestamp: Date.now(), lastSyncCommit: currentCommit },
       options.prod ?? false
@@ -353,6 +355,7 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
   if (!currentCommit) {
     log("Git not available. Running full sync...\n");
     yield* syncAll(config, options);
+    yield* invalidateContentRuntimeCache(options);
     return;
   }
 
@@ -379,6 +382,7 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
 
     finalizeMetrics(metrics);
     logSyncMetrics(metrics);
+    yield* invalidateContentRuntimeCache(options);
     yield* saveSyncState(
       { lastSyncTimestamp: Date.now(), lastSyncCommit: currentCommit },
       options.prod ?? false
@@ -527,6 +531,7 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
   }
 
   logSyncMetrics(metrics);
+  yield* invalidateContentRuntimeCache(options);
   yield* saveSyncState(
     { lastSyncTimestamp: Date.now(), lastSyncCommit: currentCommit },
     options.prod ?? false
@@ -572,6 +577,7 @@ export const syncFull = Effect.fn("sync.full")(function* (
 
       log("\n");
       yield* verify(config, options);
+      yield* invalidateContentRuntimeCache(options);
       yield* saveSyncState(
         { lastSyncTimestamp: Date.now(), lastSyncCommit: currentCommit },
         options.prod ?? false

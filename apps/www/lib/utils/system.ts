@@ -2,9 +2,9 @@ import type { api } from "@repo/backend/convex/_generated/api";
 import { routing } from "@repo/internationalization/src/routing";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
-import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
+import { applyContentRuntimeCache } from "@/lib/content/cache";
 import {
   getRuntimeContentRoute,
   listRuntimeLatestContentRoutes,
@@ -199,7 +199,7 @@ export async function getCachedMetadataFromSlug(
 ) {
   "use cache";
 
-  cacheLife("seconds");
+  applyContentRuntimeCache();
 
   return await Effect.runPromise(getMetadataFromSlug(locale, slug));
 }

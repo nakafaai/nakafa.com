@@ -6,13 +6,13 @@ import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { Effect, Option } from "effect";
 import type { Metadata } from "next";
-import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { use } from "react";
 import { getGradeIcon } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/subject/icons";
 import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
+import { applyContentRuntimeCache } from "@/lib/content/cache";
 import { getRuntimeSubjectGrades } from "@/lib/content/navigation";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
@@ -60,7 +60,7 @@ export default function Page(props: PageProps<"/[locale]/subject">) {
 /** Reads subject grade listings inside a Next Cache Components boundary. */
 async function getCachedSubjectGrades(locale: Locale) {
   "use cache";
-  cacheLife("seconds");
+  applyContentRuntimeCache();
 
   return Effect.runPromise(getRuntimeSubjectGrades(locale));
 }

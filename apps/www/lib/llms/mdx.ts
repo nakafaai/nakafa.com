@@ -1,6 +1,6 @@
 import { Effect } from "effect";
-import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
+import { applyContentRuntimeCache } from "@/lib/content/cache";
 import {
   getRuntimeArticlePage,
   getRuntimeSubjectPage,
@@ -19,7 +19,7 @@ export async function getCachedLlmsMdxText({
 }) {
   "use cache";
 
-  cacheLife("seconds");
+  applyContentRuntimeCache();
 
   return await Effect.runPromise(getLlmsMdxText({ cleanSlug, locale }));
 }

@@ -9,11 +9,13 @@ import {
 } from "@/lib/llms/indexes";
 
 const mockCacheLife = vi.hoisted(() => vi.fn());
+const mockCacheTag = vi.hoisted(() => vi.fn());
 const mockGetContentPageLlmsEntries = vi.hoisted(() => vi.fn());
 const mockGetSiteLlmsEntries = vi.hoisted(() => vi.fn());
 
 vi.mock("next/cache", () => ({
   cacheLife: mockCacheLife,
+  cacheTag: mockCacheTag,
 }));
 
 vi.mock("@/lib/llms/entries", async () => {
@@ -58,6 +60,7 @@ vi.mock("@/lib/sitemap/routes", () => ({
 
 beforeEach(() => {
   mockCacheLife.mockClear();
+  mockCacheTag.mockClear();
   mockGetContentPageLlmsEntries.mockReset();
   mockGetSiteLlmsEntries.mockReset();
   mockGetContentPageLlmsEntries.mockReturnValue(
@@ -187,7 +190,8 @@ describe("llms indexes", () => {
       getCachedLlmsSectionIndexText({ cleanSlug: "llms/en" })
     ).resolves.toContain("# Nakafa English Content");
 
-    expect(mockCacheLife).toHaveBeenCalledWith("seconds");
+    expect(mockCacheTag).toHaveBeenCalledWith("content-runtime");
+    expect(mockCacheLife).toHaveBeenCalledWith("contentRuntime");
   });
 });
 

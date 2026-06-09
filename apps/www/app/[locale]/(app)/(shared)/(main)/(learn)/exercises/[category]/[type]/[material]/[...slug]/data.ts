@@ -9,8 +9,8 @@ import {
   isTryOutCollectionSlug,
 } from "@repo/contents/_lib/exercises/slug";
 import { Effect, Option } from "effect";
-import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
+import { applyContentRuntimeCache } from "@/lib/content/cache";
 import {
   getCurrentExerciseMaterial,
   getRuntimeExerciseMaterials,
@@ -74,7 +74,7 @@ export async function getExerciseRouteData(
 ) {
   "use cache";
 
-  cacheLife("seconds");
+  applyContentRuntimeCache();
 
   const slug = slugKey === "" ? [] : slugKey.split("/");
   const pagePath = getSlugPath(category, type, material, slug);

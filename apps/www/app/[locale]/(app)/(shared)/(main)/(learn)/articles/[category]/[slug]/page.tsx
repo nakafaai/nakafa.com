@@ -8,7 +8,6 @@ import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
 import { Option } from "effect";
 import type { Metadata } from "next";
-import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
@@ -24,6 +23,7 @@ import {
   LayoutMaterialMain,
   LayoutMaterialToc,
 } from "@/components/shared/layout-material";
+import { applyContentRuntimeCache } from "@/lib/content/cache";
 import { importContentModuleOrNull } from "@/lib/content/module";
 import { fetchRuntimeArticlePage } from "@/lib/content/runtime";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
@@ -126,7 +126,7 @@ async function getArticleMetadataData({
 }) {
   "use cache";
 
-  cacheLife("seconds");
+  applyContentRuntimeCache();
 
   const filePath = getSlugPath(category, slug);
   const content = await fetchRuntimeArticlePage({

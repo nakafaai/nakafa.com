@@ -26,7 +26,6 @@ import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
 import { Effect, Option } from "effect";
 import type { Metadata } from "next";
-import { cacheLife } from "next/cache";
 import { notFound, redirect } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
@@ -43,6 +42,7 @@ import {
   LayoutMaterialPagination,
   LayoutMaterialToc,
 } from "@/components/shared/layout-material";
+import { applyContentRuntimeCache } from "@/lib/content/cache";
 import { importContentModuleOrNull } from "@/lib/content/module";
 import {
   getCurrentSubjectMaterial,
@@ -301,7 +301,7 @@ async function getSubjectMetadataData({
 }) {
   "use cache";
 
-  cacheLife("seconds");
+  applyContentRuntimeCache();
 
   const filePath = getSlugPath(category, grade, material, slug);
   const materialPath = getMaterialPath(category, grade, material);

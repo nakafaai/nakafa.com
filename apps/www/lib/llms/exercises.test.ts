@@ -4,10 +4,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getCachedLlmsExerciseText } from "@/lib/llms/exercises";
 
 const mockCacheLife = vi.hoisted(() => vi.fn());
+const mockCacheTag = vi.hoisted(() => vi.fn());
 const mockGetRuntimeExerciseSetPage = vi.hoisted(() => vi.fn());
 
 vi.mock("next/cache", () => ({
   cacheLife: mockCacheLife,
+  cacheTag: mockCacheTag,
 }));
 
 vi.mock("@/lib/content/runtime", () => ({
@@ -51,6 +53,7 @@ const exerciseWithoutChoices = {
 
 beforeEach(() => {
   mockCacheLife.mockClear();
+  mockCacheTag.mockClear();
   mockGetRuntimeExerciseSetPage.mockReset();
 
   mockGetRuntimeExerciseSetPage.mockReturnValue(
@@ -71,7 +74,8 @@ describe("llms exercise markdown", () => {
       })
     ).resolves.toBeNull();
 
-    expect(mockCacheLife).toHaveBeenCalledWith("seconds");
+    expect(mockCacheTag).toHaveBeenCalledWith("content-runtime");
+    expect(mockCacheLife).toHaveBeenCalledWith("contentRuntime");
   });
 
   it("returns null when an exercise set has no renderable rows", async () => {

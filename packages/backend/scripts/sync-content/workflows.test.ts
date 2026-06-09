@@ -23,6 +23,7 @@ interface WorkflowMockOptions {
     lastSyncCommit: string;
     lastSyncTimestamp: number;
   } | null;
+  verifyFails?: boolean;
 }
 
 /** Creates the neutral sync result used by workflow dependency mocks. */
@@ -66,6 +67,13 @@ const loadWorkflow = async (
     clean: () => {
       events.push("clean");
       return Effect.succeed(cleanResult);
+    },
+  }));
+  vi.doMock("@repo/backend/scripts/sync-content/cache", () => ({
+    /** Records cache invalidation calls made after runtime read models are refreshed. */
+    invalidateContentRuntimeCache: () => {
+      events.push("invalidateContentRuntimeCache");
+      return Effect.void;
     },
   }));
   vi.doMock("@repo/backend/scripts/sync-content/convex", () => ({
@@ -156,6 +164,10 @@ const loadWorkflow = async (
     /** Records verification calls. */
     verify: () => {
       events.push("verify");
+      if (options.verifyFails) {
+        return Effect.fail(new Error("verify failed"));
+      }
+
       return Effect.void;
     },
   }));
@@ -189,6 +201,7 @@ describe("sync-content workflows", () => {
         "syncRoutePages",
         "clean",
         "verify",
+        "invalidateContentRuntimeCache",
         "saveSyncState",
       ])
     );
@@ -200,6 +213,12 @@ describe("sync-content workflows", () => {
     );
     expect(events.lastIndexOf("syncRoutePages")).toBeLessThan(
       events.indexOf("verify")
+    );
+    expect(events.indexOf("verify")).toBeLessThan(
+      events.indexOf("invalidateContentRuntimeCache")
+    );
+    expect(events.indexOf("invalidateContentRuntimeCache")).toBeLessThan(
+      events.indexOf("saveSyncState")
     );
   });
 
@@ -242,6 +261,27 @@ describe("sync-content workflows", () => {
       events.indexOf("clean")
     );
     expect(events.indexOf("verify")).toBeGreaterThan(events.indexOf("clean"));
+    expect(events.indexOf("invalidateContentRuntimeCache")).toBeGreaterThan(
+      events.indexOf("verify")
+    );
+  });
+
+  it("does not invalidate content runtime cache when full verification fails", async () => {
+    const { events, workflow } = await loadWorkflow(
+      {
+        deleted: 0,
+        hasStale: false,
+      },
+      { verifyFails: true }
+    );
+
+    await expect(
+      Effect.runPromise(workflow.syncFull(config, {}))
+    ).rejects.toThrow("Full sync failed");
+
+    expect(events).toContain("verify");
+    expect(events).not.toContain("invalidateContentRuntimeCache");
+    expect(events).not.toContain("saveSyncState");
   });
 
   it("cleans stale incremental content before rebuilding route artifact pages", async () => {
@@ -268,6 +308,7 @@ describe("sync-content workflows", () => {
         "clean",
         "syncQuran",
         "syncRoutePages",
+        "invalidateContentRuntimeCache",
         "saveSyncState",
       ])
     );
@@ -298,7 +339,12 @@ describe("sync-content workflows", () => {
     await Effect.runPromise(workflow.syncIncremental(config, options));
 
     expect(events).toEqual(
-      expect.arrayContaining(["clean", "syncRoutePages", "saveSyncState"])
+      expect.arrayContaining([
+        "clean",
+        "syncRoutePages",
+        "invalidateContentRuntimeCache",
+        "saveSyncState",
+      ])
     );
     expect(routePageOptions).toHaveLength(1);
     expect(routePageOptions[0]?.locale).toBeUndefined();
@@ -322,6 +368,11 @@ describe("sync-content workflows", () => {
 
     await Effect.runPromise(workflow.syncIncremental(config, options));
 
-    expect(events).toEqual(["syncQuran", "syncRoutePages", "saveSyncState"]);
+    expect(events).toEqual([
+      "syncQuran",
+      "syncRoutePages",
+      "invalidateContentRuntimeCache",
+      "saveSyncState",
+    ]);
   });
 });

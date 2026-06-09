@@ -12,6 +12,7 @@ const routeMocks = vi.hoisted(() => ({
 }));
 const cacheMocks = vi.hoisted(() => ({
   cacheLife: vi.fn(),
+  cacheTag: vi.fn(),
 }));
 const runtimeMocks = vi.hoisted(() => ({
   getRuntimeContentRoute: vi.fn(),
@@ -38,11 +39,13 @@ vi.mock("next-intl/server", () => ({
 
 vi.mock("next/cache", () => ({
   cacheLife: cacheMocks.cacheLife,
+  cacheTag: cacheMocks.cacheTag,
 }));
 
 beforeEach(() => {
   routeMocks.listRuntimeLatestContentRoutes.mockReset();
   cacheMocks.cacheLife.mockClear();
+  cacheMocks.cacheTag.mockClear();
   runtimeMocks.getRuntimeContentRoute.mockReset();
   translationMocks.getTranslations.mockReset();
 
@@ -343,6 +346,7 @@ describe("route catalog metadata", () => {
       description: "Runtime description",
       title: "Runtime title",
     });
-    expect(cacheMocks.cacheLife).toHaveBeenCalledWith("seconds");
+    expect(cacheMocks.cacheTag).toHaveBeenCalledWith("content-runtime");
+    expect(cacheMocks.cacheLife).toHaveBeenCalledWith("contentRuntime");
   });
 });
