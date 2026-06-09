@@ -37,15 +37,18 @@ type QuranVersePayload = FunctionArgs<
 type QuranSearchPayload = FunctionArgs<
   typeof internal.contents.mutations.search.bulkSyncQuranSearch
 >["documents"][number];
+type QuranVerseKeyPayload = FunctionArgs<
+  typeof internal.contentSync.mutations.quran.deleteStaleQuranRuntime
+>["verseKeys"][number];
 
 const QURAN_STALE_CLEANUP_SURAH_BATCH_SIZE = 5;
 
 interface QuranPayloads {
   locales: QuranSearchPayload["locale"][];
-  quranNumbers: number[];
   searchDocuments: QuranSearchPayload[];
   surahNumbers: number[];
   surahs: QuranSurahPayload[];
+  verseKeys: QuranVerseKeyPayload[];
   verses: QuranVersePayload[];
 }
 
@@ -113,10 +116,10 @@ function getQuranPayloads(locale?: QuranSearchPayload["locale"]) {
     const activeLocales = locale ? [locale] : [...locales];
     const payloads: QuranPayloads = {
       locales: activeLocales,
-      quranNumbers: [],
       searchDocuments: [],
       surahNumbers: [],
       surahs: [],
+      verseKeys: [],
       verses: [],
     };
 
@@ -131,7 +134,10 @@ function getQuranPayloads(locale?: QuranSearchPayload["locale"]) {
       );
 
       for (const verse of surah.verses) {
-        payloads.quranNumbers.push(verse.number.inQuran);
+        payloads.verseKeys.push({
+          surahNumber: surah.number,
+          verseNumber: verse.number.inSurah,
+        });
         payloads.verses.push(buildQuranVersePayload(surah.number, verse));
       }
     }
@@ -165,8 +171,8 @@ function deleteStaleQuranRows(config: ConvexConfig, payloads: QuranPayloads) {
         {
           cleanupSurahNumbers,
           locales: payloads.locales,
-          quranNumbers: payloads.quranNumbers,
           surahNumbers: payloads.surahNumbers,
+          verseKeys: payloads.verseKeys,
         },
         QuranStaleDeleteResultSchema
       ).pipe(

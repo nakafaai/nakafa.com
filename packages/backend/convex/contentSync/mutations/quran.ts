@@ -91,6 +91,11 @@ const syncedQuranVerseValidator = v.object({
   verseNumber: v.number(),
 });
 
+const syncedQuranVerseKeyValidator = v.object({
+  surahNumber: v.number(),
+  verseNumber: v.number(),
+});
+
 const syncSummaryValidator = v.object({
   created: v.number(),
   unchanged: v.number(),
@@ -239,14 +244,14 @@ export const deleteStaleQuranRuntime = internalMutation({
   args: {
     cleanupSurahNumbers: v.optional(v.array(v.number())),
     locales: v.array(localeValidator),
-    quranNumbers: v.array(v.number()),
     surahNumbers: v.array(v.number()),
+    verseKeys: v.array(syncedQuranVerseKeyValidator),
   },
   returns: staleQuranRuntimeDeleteResultValidator,
   /** Removes bounded stale Quran rows, route rows, and search rows. */
   handler: async (ctx, args) => {
     const expectedSurahNumbers = new Set(args.surahNumbers);
-    const expectedQuranNumbers = new Set(args.quranNumbers);
+    const expectedVerseKeys = new Set(args.verseKeys.map(getQuranVerseKey));
     const activeLocales = new Set(args.locales);
     const cleanupSurahNumbers = new Set(
       args.cleanupSurahNumbers ?? args.surahNumbers
@@ -308,12 +313,7 @@ export const deleteStaleQuranRuntime = internalMutation({
       });
 
       for (const verse of verses) {
-        if (
-          !(
-            expectedSurahNumbers.has(verse.surahNumber) &&
-            expectedQuranNumbers.has(verse.quranNumber)
-          )
-        ) {
+        if (!expectedVerseKeys.has(getQuranVerseKey(verse))) {
           await ctx.db.delete(verse._id);
           versesDeleted++;
         }
@@ -354,6 +354,14 @@ export const deleteStaleQuranRuntime = internalMutation({
     return { routesDeleted, searchDeleted, surahsDeleted, versesDeleted };
   },
 });
+
+/** Builds the surah-local verse identity used for stale Quran cleanup. */
+function getQuranVerseKey(source: {
+  surahNumber: number;
+  verseNumber: number;
+}) {
+  return `${source.surahNumber}:${source.verseNumber}`;
+}
 
 /** Throws when a supposedly fixed-size Quran runtime table exceeds its bound. */
 function assertBoundedRuntimeRows({

@@ -51,8 +51,8 @@ describe("contentSync/mutations/quran", () => {
       internal.contentSync.mutations.quran.deleteStaleQuranRuntime,
       {
         locales: ["id"],
-        quranNumbers: [],
         surahNumbers: [1],
+        verseKeys: [],
       }
     );
     const routes = await t.query(
@@ -70,14 +70,14 @@ describe("contentSync/mutations/quran", () => {
     ]);
   });
 
-  it("cleans stale Quran verses only for the requested surah batch", async () => {
+  it("cleans stale Quran verses by surah-local identity", async () => {
     const t = convexTest(schema, convexModules);
 
     await t.mutation(async (ctx) => {
       await ctx.db.insert("quranVerses", quranVerse({ quranNumber: 1 }));
       await ctx.db.insert(
         "quranVerses",
-        quranVerse({ quranNumber: 999, surahNumber: 1, verseNumber: 2 })
+        quranVerse({ quranNumber: 1000, surahNumber: 1, verseNumber: 2 })
       );
       await ctx.db.insert(
         "quranVerses",
@@ -90,8 +90,11 @@ describe("contentSync/mutations/quran", () => {
       {
         cleanupSurahNumbers: [1],
         locales: ["id"],
-        quranNumbers: [1],
         surahNumbers: [1, 2],
+        verseKeys: [
+          { surahNumber: 1, verseNumber: 1 },
+          { surahNumber: 2, verseNumber: 1 },
+        ],
       }
     );
     const verses = await t.query(
@@ -99,7 +102,9 @@ describe("contentSync/mutations/quran", () => {
     );
 
     expect(deleted.versesDeleted).toBe(1);
-    expect(verses.map((verse) => verse.quranNumber).sort()).toEqual([1, 1000]);
+    expect(
+      verses.map((verse) => `${verse.surahNumber}:${verse.verseNumber}`).sort()
+    ).toEqual(["1:1", "2:1"]);
   });
 });
 
