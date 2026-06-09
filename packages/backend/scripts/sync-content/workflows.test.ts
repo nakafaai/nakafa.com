@@ -203,6 +203,29 @@ describe("sync-content workflows", () => {
     );
   });
 
+  it("rebuilds all route artifact pages after full cleanup deletes rows", async () => {
+    const { events, routePageOptions, workflow } = await loadWorkflow({
+      deleted: 3,
+      hasStale: true,
+    });
+    const options: SyncOptions = { locale: "id" };
+
+    await Effect.runPromise(workflow.syncFull(config, options));
+
+    expect(events.filter((event) => event === "syncRoutePages")).toHaveLength(
+      2
+    );
+    expect(events.lastIndexOf("syncRoutePages")).toBeGreaterThan(
+      events.indexOf("clean")
+    );
+    expect(events.lastIndexOf("syncRoutePages")).toBeLessThan(
+      events.indexOf("verify")
+    );
+    expect(routePageOptions).toHaveLength(2);
+    expect(routePageOptions[0]?.locale).toBe("id");
+    expect(routePageOptions[1]?.locale).toBeUndefined();
+  });
+
   it("keeps one route artifact page sync when cleanup finds no deleted rows", async () => {
     const { events, workflow } = await loadWorkflow({
       deleted: 0,

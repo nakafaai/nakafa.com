@@ -152,6 +152,18 @@ const logSyncSummary = (
   }
 };
 
+/** Clears the route-page locale filter after cleanup may have deleted all locales. */
+function getRoutePageOptionsAfterGlobalCleanup(
+  options: SyncOptions,
+  cleanResult: { deleted: number }
+): SyncOptions {
+  if (cleanResult.deleted > 0 && options.locale) {
+    return { ...options, locale: undefined };
+  }
+
+  return options;
+}
+
 /** Runs the complete content sync in dependency-safe phases. */
 export const syncAll = Effect.fn("sync.all")(function* (
   config: ConvexConfig,
@@ -471,9 +483,10 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
       ...options,
       force: true,
     });
-    if (cleanResult.deleted > 0 && options.locale) {
-      routePageOptions = { ...options, locale: undefined };
-    }
+    routePageOptions = getRoutePageOptionsAfterGlobalCleanup(
+      options,
+      cleanResult
+    );
   }
 
   quranResult = yield* syncQuran(config, {
@@ -546,9 +559,13 @@ export const syncFull = Effect.fn("sync.full")(function* (
       if (cleanResult.hasStale && cleanResult.deleted) {
         log("\nStale content was found and deleted.");
         log("Rebuilding route artifact pages after stale cleanup...");
+        const routePageOptions = getRoutePageOptionsAfterGlobalCleanup(
+          options,
+          cleanResult
+        );
         const routePageResult = yield* syncContentRouteArtifactPages(
           config,
-          options
+          routePageOptions
         );
         log(`  Route Pages: ${formatSyncResult(routePageResult)}`);
       }
