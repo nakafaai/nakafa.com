@@ -29,7 +29,10 @@ interface SyncedExerciseQuestion {
   answerBody: string;
   authors: Array<{ name: string }>;
   category: Doc<"exerciseQuestions">["category"];
-  choices: SyncedExerciseChoice[];
+  choices: {
+    en: SyncedExerciseChoice[];
+    id: SyncedExerciseChoice[];
+  };
   contentHash: string;
   date: number;
   description?: string;
@@ -81,14 +84,24 @@ const BASE_QUESTION: SyncedExerciseQuestion = {
   answerBody: "Answer body",
   authors: [{ name: "Ada" }],
   category: "high-school",
-  choices: [
-    {
-      isCorrect: true,
-      label: "A",
-      optionKey: "A",
-      order: 0,
-    },
-  ],
+  choices: {
+    en: [
+      {
+        isCorrect: true,
+        label: "A EN",
+        optionKey: "A",
+        order: 0,
+      },
+    ],
+    id: [
+      {
+        isCorrect: true,
+        label: "A ID",
+        optionKey: "A",
+        order: 0,
+      },
+    ],
+  },
   contentHash: "same-question-hash",
   date: 1,
   description: "Old question description",
@@ -256,14 +269,25 @@ describe("contentSync/mutations/exercises", () => {
       {
         questions: [
           buildQuestion({
-            choices: [
-              {
-                isCorrect: false,
-                label: "B",
-                optionKey: "B",
-                order: 1,
-              },
-            ],
+            choices: {
+              en: [
+                {
+                  isCorrect: false,
+                  label: "B EN",
+                  optionKey: "B",
+                  order: 1,
+                },
+              ],
+              id: [
+                {
+                  isCorrect: false,
+                  label: "B ID",
+                  optionKey: "B",
+                  order: 1,
+                },
+              ],
+            },
+            contentHash: "updated-question-hash",
             date: 2,
             description: "New question description",
             searchDescription: "New question description",
@@ -288,7 +312,7 @@ describe("contentSync/mutations/exercises", () => {
       const choices = await ctx.db
         .query("exerciseChoices")
         .withIndex("by_questionId_and_locale", (q) =>
-          q.eq("questionId", question._id).eq("locale", "id")
+          q.eq("questionId", question._id)
         )
         .collect();
       const authorLinks = await ctx.db
@@ -315,7 +339,7 @@ describe("contentSync/mutations/exercises", () => {
 
     expect(created).toEqual({
       authorLinksCreated: 1,
-      choicesCreated: 1,
+      choicesCreated: 2,
       created: 1,
       skipped: 1,
       skippedSetSlugs: [`${SET_SLUG}-missing`],
@@ -325,7 +349,7 @@ describe("contentSync/mutations/exercises", () => {
     expect(unchanged).toMatchObject({ unchanged: 1 });
     expect(updated).toMatchObject({
       authorLinksCreated: 1,
-      choicesCreated: 1,
+      choicesCreated: 2,
       updated: 1,
     });
     expect(snapshot.question).toMatchObject({
@@ -334,18 +358,31 @@ describe("contentSync/mutations/exercises", () => {
       title: "New Question Title",
     });
     expect(snapshot.authorLinks).toHaveLength(1);
-    expect(snapshot.choices).toHaveLength(1);
-    expect(snapshot.choices[0]).toMatchObject({
-      label: "B",
-      optionKey: "B",
-    });
+    expect(snapshot.choices.map((choice) => choice.locale).sort()).toEqual([
+      "en",
+      "id",
+    ]);
+    expect(snapshot.choices).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: "B EN",
+          locale: "en",
+          optionKey: "B",
+        }),
+        expect.objectContaining({
+          label: "B ID",
+          locale: "id",
+          optionKey: "B",
+        }),
+      ])
+    );
     expect(snapshot.search).toMatchObject({
-      contentHash: "same-question-hash",
+      contentHash: "updated-question-hash",
       route: QUESTION_SLUG,
       title: "New Question Title",
     });
     expect(snapshot.route).toMatchObject({
-      contentHash: "same-question-hash",
+      contentHash: "updated-question-hash",
       kind: "exercise-question",
       route: QUESTION_SLUG,
       title: "New Question Title",

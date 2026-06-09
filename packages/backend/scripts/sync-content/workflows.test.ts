@@ -17,6 +17,14 @@ interface CleanResult {
   hasStale: boolean;
 }
 
+interface WorkflowMockOptions {
+  changedFiles?: string[];
+  syncState?: {
+    lastSyncCommit: string;
+    lastSyncTimestamp: number;
+  } | null;
+}
+
 /** Creates the neutral sync result used by workflow dependency mocks. */
 const createSyncResult = (): SyncResult => ({
   created: 0,
@@ -25,8 +33,13 @@ const createSyncResult = (): SyncResult => ({
 });
 
 /** Registers workflow dependency mocks and returns the recorded call events. */
-const loadWorkflow = async (cleanResult: CleanResult) => {
+const loadWorkflow = async (
+  cleanResult: CleanResult,
+  options: WorkflowMockOptions = {}
+) => {
   const events: string[] = [];
+  const syncState = options.syncState ?? null;
+  const changedFiles = new Set(options.changedFiles ?? []);
 
   /** Records one workflow dependency event and returns a successful sync result. */
   const syncStep = (name: string) => {
@@ -105,12 +118,12 @@ const loadWorkflow = async (cleanResult: CleanResult) => {
     syncContentRouteArtifactPages: () => syncStep("syncRoutePages"),
   }));
   vi.doMock("@repo/backend/scripts/sync-content/runtime", () => ({
-    /** Prevents incremental changed-file discovery from running in full-sync tests. */
-    getChangedFilesSince: () => Effect.succeed(new Set<string>()),
+    /** Returns deterministic changed files for incremental workflow tests. */
+    getChangedFilesSince: () => Effect.succeed(changedFiles),
     /** Returns a deterministic commit for sync-state writes. */
     getCurrentGitCommit: () => Effect.succeed("test-commit"),
-    /** Prevents incremental state loading from touching disk. */
-    loadSyncState: () => Effect.succeed(null),
+    /** Returns deterministic sync state without touching disk. */
+    loadSyncState: () => Effect.succeed(syncState),
     /** Records sync-state writes. */
     saveSyncState: () => {
       events.push("saveSyncState");
@@ -198,5 +211,40 @@ describe("sync-content workflows", () => {
       events.indexOf("clean")
     );
     expect(events.indexOf("verify")).toBeGreaterThan(events.indexOf("clean"));
+  });
+
+  it("cleans stale incremental content before rebuilding route artifact pages", async () => {
+    const { events, workflow } = await loadWorkflow(
+      {
+        deleted: 3,
+        hasStale: true,
+      },
+      {
+        changedFiles: ["packages/contents/articles/politics/deleted.mdx"],
+        syncState: {
+          lastSyncCommit: "previous-commit",
+          lastSyncTimestamp: 1,
+        },
+      }
+    );
+    const options: SyncOptions = {};
+
+    await Effect.runPromise(workflow.syncIncremental(config, options));
+
+    expect(events).toEqual(
+      expect.arrayContaining([
+        "syncArticles",
+        "clean",
+        "syncQuran",
+        "syncRoutePages",
+        "saveSyncState",
+      ])
+    );
+    expect(events.indexOf("clean")).toBeGreaterThan(
+      events.indexOf("syncArticles")
+    );
+    expect(events.indexOf("clean")).toBeLessThan(
+      events.indexOf("syncRoutePages")
+    );
   });
 });

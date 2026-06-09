@@ -279,13 +279,20 @@ const parseQuestionFile = Effect.fn("sync.parseQuestionFile")(function* (
   }
 
   const choicesData = yield* readExerciseChoices(exerciseDir);
-  const localeChoices = choicesData?.[pathInfo.locale] || [];
-  const choices = localeChoices.map((choice, index) => ({
-    optionKey: String.fromCharCode(65 + index),
-    label: choice.label,
-    isCorrect: choice.value,
-    order: index,
-  }));
+  const choices = {
+    en: (choicesData?.en || []).map((choice, index) => ({
+      optionKey: String.fromCharCode(65 + index),
+      label: choice.label,
+      isCorrect: choice.value,
+      order: index,
+    })),
+    id: (choicesData?.id || []).map((choice, index) => ({
+      optionKey: String.fromCharCode(65 + index),
+      label: choice.label,
+      isCorrect: choice.value,
+      order: index,
+    })),
+  };
 
   const setSlug = buildExerciseSetSlug({
     category: pathInfo.category,

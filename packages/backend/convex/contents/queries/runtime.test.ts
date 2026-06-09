@@ -202,8 +202,16 @@ describe("contents/queries/runtime", () => {
       });
       await ctx.db.insert("exerciseChoices", {
         isCorrect: true,
-        label: "A. Correct",
+        label: "A. Benar",
         locale: "id",
+        optionKey: "A",
+        order: 0,
+        questionId,
+      });
+      await ctx.db.insert("exerciseChoices", {
+        isCorrect: true,
+        label: "A. Correct",
+        locale: "en",
         optionKey: "A",
         order: 0,
         questionId,
@@ -234,7 +242,10 @@ describe("contents/queries/runtime", () => {
 
     expect(setPage?.exercises).toEqual([
       expect.objectContaining({
-        choices: { en: [], id: [{ label: "A. Correct", value: true }] },
+        choices: {
+          en: [{ label: "A. Correct", value: true }],
+          id: [{ label: "A. Benar", value: true }],
+        },
         number: 1,
         question: expect.objectContaining({ raw: "Question body" }),
       }),

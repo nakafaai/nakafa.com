@@ -65,44 +65,54 @@ async function getExerciseChoices(
   ctx: QueryCtx,
   question: Doc<"exerciseQuestions">
 ) {
+  const choiceLimit = CONTENT_SYNC_BATCH_LIMITS.exerciseChoices * 2;
   const choices = await ctx.db
     .query("exerciseChoices")
     .withIndex("by_questionId_and_locale", (q) =>
-      q.eq("questionId", question._id).eq("locale", question.locale)
+      q.eq("questionId", question._id)
     )
-    .take(CONTENT_SYNC_BATCH_LIMITS.exerciseChoices + 1);
+    .take(choiceLimit + 1);
 
-  if (choices.length > CONTENT_SYNC_BATCH_LIMITS.exerciseChoices) {
+  if (choices.length > choiceLimit) {
     throwRuntimeIntegrityError("Exercise choice count exceeds the sync limit.");
   }
 
-  if (choices.length === 0) {
-    throwRuntimeIntegrityError("Exercise question is missing choices.");
+  const localeChoices = {
+    en: choices.filter((choice) => choice.locale === "en"),
+    id: choices.filter((choice) => choice.locale === "id"),
+  };
+
+  if (
+    localeChoices.en.length > CONTENT_SYNC_BATCH_LIMITS.exerciseChoices ||
+    localeChoices.id.length > CONTENT_SYNC_BATCH_LIMITS.exerciseChoices
+  ) {
+    throwRuntimeIntegrityError("Exercise choice count exceeds the sync limit.");
   }
 
-  return choices.sort((left, right) => left.order - right.order);
-}
-
-/** Builds the locale-keyed choices shape used by exercise UI and llms routes. */
-function buildExerciseChoices(
-  locale: Locale,
-  choices: Array<{ isCorrect: boolean; label: string }>
-) {
-  const renderableChoices = choices.map((choice) => ({
-    label: choice.label,
-    value: choice.isCorrect,
-  }));
-
-  if (locale === "id") {
-    return {
-      en: [],
-      id: renderableChoices,
-    };
+  if (localeChoices.en.length === 0 || localeChoices.id.length === 0) {
+    throwRuntimeIntegrityError("Exercise question is missing locale choices.");
   }
 
   return {
-    en: renderableChoices,
-    id: [],
+    en: localeChoices.en.sort((left, right) => left.order - right.order),
+    id: localeChoices.id.sort((left, right) => left.order - right.order),
+  };
+}
+
+/** Builds the locale-keyed choices shape used by exercise UI and llms routes. */
+function buildExerciseChoices(choices: {
+  en: Array<{ isCorrect: boolean; label: string }>;
+  id: Array<{ isCorrect: boolean; label: string }>;
+}) {
+  return {
+    en: choices.en.map((choice) => ({
+      label: choice.label,
+      value: choice.isCorrect,
+    })),
+    id: choices.id.map((choice) => ({
+      label: choice.label,
+      value: choice.isCorrect,
+    })),
   };
 }
 
@@ -132,7 +142,7 @@ export async function buildRuntimeExercise(
       },
       raw: question.answerBody,
     },
-    choices: buildExerciseChoices(question.locale, choices),
+    choices: buildExerciseChoices(choices),
     contentHash: question.contentHash,
     number: question.number,
     question: {

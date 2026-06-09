@@ -445,6 +445,17 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
     log("Exercises: no changes");
   }
 
+  const hasContentRouteChanges =
+    hasArticleChanges || hasSubjectChanges || hasExerciseChanges;
+
+  if (hasContentRouteChanges) {
+    log("Cleaning stale content before route artifact pages...");
+    yield* clean(config, {
+      ...options,
+      force: true,
+    });
+  }
+
   quranResult = yield* syncQuran(config, {
     ...options,
     quiet: true,

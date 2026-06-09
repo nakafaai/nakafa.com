@@ -119,7 +119,7 @@ const deleteStaleItems = Effect.fn("sync.deleteStaleItems")(function* <
   batchSize = items.length
 ) {
   if (items.length === 0) {
-    return false;
+    return 0;
   }
 
   let deleted = 0;
@@ -135,7 +135,7 @@ const deleteStaleItems = Effect.fn("sync.deleteStaleItems")(function* <
   }
 
   logSuccess(`Deleted ${deleted} ${successLabel}`);
-  return true;
+  return deleted;
 });
 
 /** Collects source slugs from the content files that should exist in Convex. */
@@ -305,7 +305,7 @@ export const clean = Effect.fn("sync.clean")(function* (
     stale.staleExerciseQuestions.length;
 
   let hasStale = false;
-  let deleted = false;
+  let deleted = 0;
 
   if (totalStale === 0) {
     logSuccess("No stale content found!");
@@ -319,10 +319,9 @@ export const clean = Effect.fn("sync.clean")(function* (
     logStaleItems("\nStale exercise questions", stale.staleExerciseQuestions);
 
     if (options.force) {
-      deleted = true;
       log("\nDeleting stale content...");
 
-      yield* deleteStaleItems(
+      deleted += yield* deleteStaleItems(
         config,
         internal.contentSync.mutations.articles.deleteStaleArticles,
         buildDeleteStaleArticleArgs,
@@ -330,7 +329,7 @@ export const clean = Effect.fn("sync.clean")(function* (
         "stale articles",
         BATCH_SIZES.staleArticles
       );
-      yield* deleteStaleItems(
+      deleted += yield* deleteStaleItems(
         config,
         internal.contentSync.mutations.subjects.deleteStaleSubjectTopics,
         buildDeleteStaleSubjectTopicArgs,
@@ -338,7 +337,7 @@ export const clean = Effect.fn("sync.clean")(function* (
         "stale subject topics (and their sections)",
         BATCH_SIZES.staleSubjectTopics
       );
-      yield* deleteStaleItems(
+      deleted += yield* deleteStaleItems(
         config,
         internal.contentSync.mutations.subjects.deleteStaleSubjectSections,
         buildDeleteStaleSubjectSectionArgs,
@@ -346,7 +345,7 @@ export const clean = Effect.fn("sync.clean")(function* (
         "stale subject sections",
         BATCH_SIZES.staleSubjectSections
       );
-      yield* deleteStaleItems(
+      deleted += yield* deleteStaleItems(
         config,
         internal.contentSync.mutations.exercises.deleteStaleExerciseQuestions,
         buildDeleteStaleExerciseQuestionArgs,
@@ -354,7 +353,7 @@ export const clean = Effect.fn("sync.clean")(function* (
         "stale exercise questions",
         BATCH_SIZES.staleExerciseQuestions
       );
-      yield* deleteStaleItems(
+      deleted += yield* deleteStaleItems(
         config,
         internal.contentSync.mutations.exercises.deleteStaleExerciseSets,
         buildDeleteStaleExerciseSetArgs,

@@ -7,10 +7,7 @@ import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib
 import { deleteContentRoute } from "@repo/backend/convex/contents/helpers/routes/write";
 import { buildContentSearchRef } from "@repo/backend/convex/contents/helpers/search/documents";
 import { deleteContentSearch } from "@repo/backend/convex/contents/helpers/search/write";
-import type {
-  ContentType,
-  Locale,
-} from "@repo/backend/convex/lib/validators/contents";
+import type { ContentType } from "@repo/backend/convex/lib/validators/contents";
 import { ConvexError } from "convex/values";
 
 export type AuthorCache = Map<string, Id<"authors">>;
@@ -34,6 +31,11 @@ export interface SyncedExerciseChoice {
   label: string;
   optionKey: string;
   order: number;
+}
+
+export interface SyncedExerciseChoices {
+  en: SyncedExerciseChoice[];
+  id: SyncedExerciseChoice[];
 }
 
 /** Load existing authors into a lookup map keyed by author name. */
@@ -160,32 +162,39 @@ export async function replaceArticleReferences(
 export async function replaceExerciseChoices(
   ctx: MutationCtx,
   args: {
-    choices: SyncedExerciseChoice[];
-    locale: Locale;
+    choices: SyncedExerciseChoices;
     questionId: Id<"exerciseQuestions">;
   }
 ): Promise<number> {
   assertContentSyncBatchSize({
     functionName: "replaceExerciseChoices",
     limit: CONTENT_SYNC_BATCH_LIMITS.exerciseChoices,
-    received: args.choices.length,
-    unit: "exercise choices",
+    received: args.choices.id.length,
+    unit: "Indonesian exercise choices",
+  });
+  assertContentSyncBatchSize({
+    functionName: "replaceExerciseChoices",
+    limit: CONTENT_SYNC_BATCH_LIMITS.exerciseChoices,
+    received: args.choices.en.length,
+    unit: "English exercise choices",
   });
 
   await deleteExerciseChoicesForQuestion(ctx, args.questionId);
 
   let created = 0;
 
-  for (const choice of args.choices) {
-    await ctx.db.insert("exerciseChoices", {
-      isCorrect: choice.isCorrect,
-      label: choice.label,
-      locale: args.locale,
-      optionKey: choice.optionKey,
-      order: choice.order,
-      questionId: args.questionId,
-    });
-    created++;
+  for (const locale of ["id", "en"] as const) {
+    for (const choice of args.choices[locale]) {
+      await ctx.db.insert("exerciseChoices", {
+        isCorrect: choice.isCorrect,
+        label: choice.label,
+        locale,
+        optionKey: choice.optionKey,
+        order: choice.order,
+        questionId: args.questionId,
+      });
+      created++;
+    }
   }
 
   return created;
@@ -244,14 +253,15 @@ export async function deleteExerciseChoicesForQuestion(
   ctx: MutationCtx,
   questionId: Id<"exerciseQuestions">
 ) {
+  const choiceLimit = CONTENT_SYNC_BATCH_LIMITS.exerciseChoices * 2;
   const existingChoices = await ctx.db
     .query("exerciseChoices")
     .withIndex("by_questionId_and_locale", (q) =>
       q.eq("questionId", questionId)
     )
-    .take(CONTENT_SYNC_BATCH_LIMITS.exerciseChoices + 1);
+    .take(choiceLimit + 1);
 
-  if (existingChoices.length > CONTENT_SYNC_BATCH_LIMITS.exerciseChoices) {
+  if (existingChoices.length > choiceLimit) {
     throw new ConvexError({
       code: "CONTENT_SYNC_CHOICE_COUNT_EXCEEDED",
       message: "Existing exercise choice count exceeds the safe sync limit.",

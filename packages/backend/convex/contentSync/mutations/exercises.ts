@@ -56,11 +56,16 @@ const syncedExerciseChoiceValidator = v.object({
   order: v.number(),
 });
 
+const syncedExerciseChoicesValidator = v.object({
+  en: v.array(syncedExerciseChoiceValidator),
+  id: v.array(syncedExerciseChoiceValidator),
+});
+
 const syncedExerciseQuestionValidator = v.object({
   answerBody: v.string(),
   authors: v.array(v.object({ name: v.string() })),
   category: exercisesCategoryValidator,
-  choices: v.array(syncedExerciseChoiceValidator),
+  choices: syncedExerciseChoicesValidator,
   contentHash: v.string(),
   date: v.number(),
   description: v.optional(v.string()),
@@ -375,7 +380,6 @@ export const bulkSyncExerciseQuestions = internalMutation({
         );
         choicesCreated += await replaceExerciseChoices(ctx, {
           choices: question.choices,
-          locale: question.locale,
           questionId: existingQuestion._id,
         });
 
@@ -399,7 +403,6 @@ export const bulkSyncExerciseQuestions = internalMutation({
       );
       choicesCreated += await replaceExerciseChoices(ctx, {
         choices: question.choices,
-        locale: question.locale,
         questionId,
       });
 
