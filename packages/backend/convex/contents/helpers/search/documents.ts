@@ -7,6 +7,8 @@ import { cleanSlug } from "@repo/utilities/helper";
 
 const WHITESPACE_PATTERN = /\s+/g;
 const MDX_MODULE_LINE_PATTERN = /^\s*(?:import|export)\s.+$/gm;
+const FENCE_START_PATTERN = /^\s*(?:```|~~~)/;
+const MARKDOWN_HEADING_PATTERN = /^\s{0,3}#{1,6}\s+(.+?)\s*#*\s*$/;
 const MARKDOWN_LINK_PATTERN = /(^|[^!])\[([^\]]+)\]\([^)]+\)/g;
 
 export interface ContentSearchSource {
@@ -59,16 +61,38 @@ export function getContentSearchText(parts: Array<string | undefined>) {
     .trim();
 }
 
-/** Removes MDX module syntax and link targets from displayable search text. */
+/** Removes MDX authoring syntax while preserving displayable prose text. */
 function cleanContentSearchText(part: string | undefined) {
   if (!part) {
     return "";
   }
 
-  return part
-    .replace(MDX_MODULE_LINE_PATTERN, "")
+  return cleanContentSearchLines(part)
     .replace(MARKDOWN_LINK_PATTERN, "$1$2")
     .trim();
+}
+
+/** Converts authoring-only Markdown/MDX lines outside fenced code blocks. */
+function cleanContentSearchLines(part: string) {
+  let isInFence = false;
+  const lines = part.split("\n");
+
+  return lines
+    .map((line) => {
+      if (FENCE_START_PATTERN.test(line)) {
+        isInFence = !isInFence;
+        return "";
+      }
+
+      if (isInFence) {
+        return line;
+      }
+
+      return line
+        .replace(MDX_MODULE_LINE_PATTERN, "")
+        .replace(MARKDOWN_HEADING_PATTERN, "$1");
+    })
+    .join("\n");
 }
 
 /** Converts source content into the derived content search document payload. */

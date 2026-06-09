@@ -13,8 +13,12 @@ describe("buildContentSearchDocument", () => {
       syncedAt: 1,
       text: [
         'import { getColor } from "@repo/design-system/lib/color";',
+        "## Pengertian Logaritma",
         "Logaritma menjawab pangkat yang dibutuhkan.",
         "Baca [sifat logaritma](/subject/high-school/10/mathematics/exponential-logarithm/logarithm-properties).",
+        "```sh",
+        "# source-visible comment",
+        "```",
       ].join("\n"),
       title: "Definisi Logaritma",
     });
@@ -24,9 +28,11 @@ describe("buildContentSearchDocument", () => {
         "id/subject/high-school/10/mathematics/exponential-logarithm/logarithm-definition",
       route:
         "subject/high-school/10/mathematics/exponential-logarithm/logarithm-definition",
-      text: "Definisi Logaritma Memahami bentuk dasar logaritma. Logaritma menjawab pangkat yang dibutuhkan. Baca sifat logaritma.",
+      text: "Definisi Logaritma Memahami bentuk dasar logaritma. Pengertian Logaritma Logaritma menjawab pangkat yang dibutuhkan. Baca sifat logaritma. # source-visible comment",
     });
     expect(document.text).not.toContain("subject/high-school");
     expect(document.text).not.toContain("import");
+    expect(document.text).not.toContain("##");
+    expect(document.text).not.toContain("```");
   });
 });
