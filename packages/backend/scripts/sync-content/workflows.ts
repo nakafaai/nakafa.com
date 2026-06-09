@@ -463,13 +463,17 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
 
   const hasContentRouteChanges =
     hasArticleChanges || hasSubjectChanges || hasExerciseChanges;
+  let routePageOptions = options;
 
   if (hasContentRouteChanges) {
     log("Cleaning stale content before route artifact pages...");
-    yield* clean(config, {
+    const cleanResult = yield* clean(config, {
       ...options,
       force: true,
     });
+    if (cleanResult.deleted > 0 && options.locale) {
+      routePageOptions = { ...options, locale: undefined };
+    }
   }
 
   quranResult = yield* syncQuran(config, {
@@ -478,7 +482,10 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
   });
   addPhaseMetrics(metrics, "Quran", quranResult);
 
-  routePageResult = yield* syncContentRouteArtifactPages(config, options);
+  routePageResult = yield* syncContentRouteArtifactPages(
+    config,
+    routePageOptions
+  );
   addPhaseMetrics(metrics, "Route Pages", routePageResult);
 
   finalizeMetrics(metrics);

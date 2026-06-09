@@ -38,6 +38,7 @@ const loadWorkflow = async (
   options: WorkflowMockOptions = {}
 ) => {
   const events: string[] = [];
+  const routePageOptions: SyncOptions[] = [];
   const syncState = options.syncState ?? null;
   const changedFiles = new Set(options.changedFiles ?? []);
 
@@ -115,7 +116,14 @@ const loadWorkflow = async (
   }));
   vi.doMock("@repo/backend/scripts/sync-content/routes", () => ({
     /** Records route artifact page sync calls. */
-    syncContentRouteArtifactPages: () => syncStep("syncRoutePages"),
+    syncContentRouteArtifactPages: (
+      _config: ConvexConfig,
+      syncOptions: SyncOptions
+    ) => {
+      routePageOptions.push(syncOptions);
+
+      return syncStep("syncRoutePages");
+    },
   }));
   vi.doMock("@repo/backend/scripts/sync-content/runtime", () => ({
     /** Returns deterministic changed files for incremental workflow tests. */
@@ -154,7 +162,7 @@ const loadWorkflow = async (
 
   const workflow = await import("@repo/backend/scripts/sync-content/workflows");
 
-  return { events, workflow };
+  return { events, routePageOptions, workflow };
 };
 
 afterEach(() => {
@@ -246,6 +254,31 @@ describe("sync-content workflows", () => {
     expect(events.indexOf("clean")).toBeLessThan(
       events.indexOf("syncRoutePages")
     );
+  });
+
+  it("rebuilds all route artifact pages after global incremental cleanup deletes rows", async () => {
+    const { events, routePageOptions, workflow } = await loadWorkflow(
+      {
+        deleted: 3,
+        hasStale: true,
+      },
+      {
+        changedFiles: ["packages/contents/articles/politics/deleted.mdx"],
+        syncState: {
+          lastSyncCommit: "previous-commit",
+          lastSyncTimestamp: 1,
+        },
+      }
+    );
+    const options: SyncOptions = { locale: "id" };
+
+    await Effect.runPromise(workflow.syncIncremental(config, options));
+
+    expect(events).toEqual(
+      expect.arrayContaining(["clean", "syncRoutePages", "saveSyncState"])
+    );
+    expect(routePageOptions).toHaveLength(1);
+    expect(routePageOptions[0]?.locale).toBeUndefined();
   });
 
   it("refreshes runtime read models before saving no-op incremental sync", async () => {
