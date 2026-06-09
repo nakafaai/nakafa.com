@@ -8,6 +8,7 @@ import {
 } from "@repo/backend/convex/contents/runtime/exerciseRows";
 import { throwRuntimeIntegrityError } from "@repo/backend/convex/contents/runtime/shared";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
+import { compareExerciseSetSlugs } from "@repo/contents/_lib/exercises/slug";
 
 /** Loads a full exercise set page from the durable content read model. */
 export async function getExerciseSetPageImpl(
@@ -120,7 +121,9 @@ export async function getExerciseGroupPageImpl(
 
   const publishedSets = sets
     .filter((set) => set.questionCount > 0)
-    .sort((left, right) => left.setName.localeCompare(right.setName));
+    .sort((left, right) =>
+      compareExerciseSetSlugs(left.setName, right.setName)
+    );
 
   if (publishedSets.length === 0) {
     return null;

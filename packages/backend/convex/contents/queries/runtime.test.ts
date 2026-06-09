@@ -150,6 +150,34 @@ describe("contents/queries/runtime", () => {
         type: "snbt",
         year: "2026",
       });
+      await ctx.db.insert("exerciseSets", {
+        category: "high-school",
+        description: "Try-out group",
+        exerciseType: "try-out",
+        locale: "id",
+        material: "quantitative-knowledge",
+        questionCount: 1,
+        setName: "set-10",
+        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-10",
+        syncedAt: NOW,
+        title: "Set 10",
+        type: "snbt",
+        year: "2026",
+      });
+      await ctx.db.insert("exerciseSets", {
+        category: "high-school",
+        description: "Try-out group",
+        exerciseType: "try-out",
+        locale: "id",
+        material: "quantitative-knowledge",
+        questionCount: 1,
+        setName: "set-2",
+        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
+        syncedAt: NOW,
+        title: "Set 2",
+        type: "snbt",
+        year: "2026",
+      });
       const questionId = await ctx.db.insert("exerciseQuestions", {
         answerBody: "Answer body",
         category: "high-school",
@@ -217,13 +245,18 @@ describe("contents/queries/runtime", () => {
         exercise: expect.objectContaining({ number: 1 }),
       })
     );
-    expect(groupPage?.sets).toEqual([
+    expect(groupPage?.sets.map((set) => set.setName)).toEqual([
+      "set-1",
+      "set-2",
+      "set-10",
+    ]);
+    expect(groupPage?.sets[0]).toEqual(
       expect.objectContaining({
         questionCount: 1,
         slug,
         year: "2026",
-      }),
-    ]);
+      })
+    );
   });
 
   it("lists API content with exact-or-descendant segment matching", async () => {

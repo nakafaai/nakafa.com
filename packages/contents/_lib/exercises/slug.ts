@@ -10,6 +10,10 @@ import { Option } from "effect";
 
 const TRY_OUT_SEGMENT = "try-out";
 const EXERCISE_YEAR_SEGMENT_REGEX = /^\d{4}$/;
+const EXERCISE_SET_COLLATOR = new Intl.Collator("en", {
+  numeric: true,
+  sensitivity: "base",
+});
 
 /**
  * Legacy yearless try-out URLs were migrated into the 2026 content tree.
@@ -18,6 +22,16 @@ const EXERCISE_YEAR_SEGMENT_REGEX = /^\d{4}$/;
  * added to the path. New try-out URLs must always include an explicit year.
  */
 export const LEGACY_YEARLESS_TRY_OUT_REDIRECT_YEAR = "2026";
+
+/**
+ * Compares exercise set slugs with numeric suffix awareness.
+ *
+ * This keeps authored progressions such as `set-2` before `set-10` while
+ * preserving a stable lexical fallback for non-standard set names.
+ */
+export function compareExerciseSetSlugs(left: string, right: string) {
+  return EXERCISE_SET_COLLATOR.compare(left, right);
+}
 
 /**
  * Builds the public path for a nested exercises content page.

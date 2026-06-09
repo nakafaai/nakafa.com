@@ -12,6 +12,9 @@ const mockLocaleRouting = vi.hoisted(() => ({
       })
   ),
 }));
+const mockFetchRuntimeContentRoute = vi.hoisted(() => vi.fn());
+const mockFetchRuntimeContentRoutesByKindPage = vi.hoisted(() => vi.fn());
+const mockFetchRuntimeContentRoutesByParentPage = vi.hoisted(() => vi.fn());
 
 vi.mock("@repo/internationalization/src/routing", () => ({
   routing: {
@@ -24,8 +27,29 @@ vi.mock("next-intl/middleware", () => ({
   default: vi.fn(() => mockLocaleRouting.localeMiddleware),
 }));
 
+vi.mock("@/lib/content/runtime", () => ({
+  fetchRuntimeContentRoute: mockFetchRuntimeContentRoute,
+  fetchRuntimeContentRoutesByKindPage: mockFetchRuntimeContentRoutesByKindPage,
+  fetchRuntimeContentRoutesByParentPage:
+    mockFetchRuntimeContentRoutesByParentPage,
+}));
+
 describe("proxy", () => {
   beforeEach(() => {
+    mockFetchRuntimeContentRoute.mockReset();
+    mockFetchRuntimeContentRoutesByKindPage.mockReset();
+    mockFetchRuntimeContentRoutesByParentPage.mockReset();
+    mockFetchRuntimeContentRoute.mockResolvedValue({ route: "fixture" });
+    mockFetchRuntimeContentRoutesByKindPage.mockResolvedValue({
+      continueCursor: null,
+      isDone: true,
+      page: [{ route: "fixture" }],
+    });
+    mockFetchRuntimeContentRoutesByParentPage.mockResolvedValue({
+      continueCursor: null,
+      isDone: true,
+      page: [{ route: "fixture" }],
+    });
     mockLocaleRouting.localeMiddleware.mockClear();
   });
 
@@ -126,6 +150,10 @@ describe("proxy", () => {
 
     expect(mockLocaleRouting.localeMiddleware).toHaveBeenCalledTimes(1);
     expect(response.headers.get("x-locale-proxy")).toBe("1");
+    expect(mockFetchRuntimeContentRoute).toHaveBeenCalledWith({
+      locale: "en",
+      route: "subject/high-school/10/chemistry/green-chemistry/definition",
+    });
   });
 
   it("delegates subject material listing routes to the locale middleware", async () => {
@@ -135,6 +163,33 @@ describe("proxy", () => {
 
     expect(mockLocaleRouting.localeMiddleware).toHaveBeenCalledTimes(1);
     expect(response.headers.get("x-locale-proxy")).toBe("1");
+    expect(mockFetchRuntimeContentRoute).not.toHaveBeenCalled();
+    expect(mockFetchRuntimeContentRoutesByParentPage).toHaveBeenCalledWith({
+      cursor: null,
+      kind: "subject-topic",
+      limit: 1,
+      locale: "id",
+      order: "route",
+      parentRoute: "subject/high-school/10/biology",
+      section: "subject",
+    });
+  });
+
+  it("delegates subject grade listing routes to the locale middleware", async () => {
+    const response = await proxy(
+      new NextRequest("http://localhost:3000/en/subject/high-school/10")
+    );
+
+    expect(mockLocaleRouting.localeMiddleware).toHaveBeenCalledTimes(1);
+    expect(response.headers.get("x-locale-proxy")).toBe("1");
+    expect(mockFetchRuntimeContentRoutesByKindPage).toHaveBeenCalledWith({
+      cursor: null,
+      kind: "subject-topic",
+      limit: 1,
+      locale: "en",
+      prefix: "subject/high-school/10",
+      section: "subject",
+    });
   });
 
   it("delegates exercises listing routes to the locale middleware", async () => {
@@ -154,6 +209,48 @@ describe("proxy", () => {
     expect(mockLocaleRouting.localeMiddleware).toHaveBeenCalledTimes(
       routes.length
     );
+    expect(mockFetchRuntimeContentRoutesByKindPage).toHaveBeenCalledWith({
+      cursor: null,
+      kind: "exercise-group",
+      limit: 1,
+      locale: "id",
+      prefix: "exercises/middle-school/grade-9/",
+      section: "exercises",
+    });
+    expect(mockFetchRuntimeContentRoutesByParentPage).toHaveBeenCalledWith({
+      cursor: null,
+      kind: "exercise-group",
+      limit: 1,
+      locale: "id",
+      order: "route",
+      parentRoute: "exercises/middle-school/grade-9/mathematics",
+      section: "exercises",
+    });
+  });
+
+  it("delegates non-read content requests without an exact route lookup", async () => {
+    const response = await proxy(
+      new NextRequest(
+        "http://localhost:3000/en/articles/politics/not-a-read-check",
+        {
+          method: "POST",
+        }
+      )
+    );
+
+    expect(mockFetchRuntimeContentRoute).not.toHaveBeenCalled();
+    expect(mockLocaleRouting.localeMiddleware).toHaveBeenCalledTimes(1);
+    expect(response.headers.get("x-locale-proxy")).toBe("1");
+  });
+
+  it("delegates defensive public content roots without an exact route shape", async () => {
+    const response = await proxy(
+      new NextRequest("http://localhost:3000/en/unknown-content-root/example")
+    );
+
+    expect(mockFetchRuntimeContentRoute).not.toHaveBeenCalled();
+    expect(mockLocaleRouting.localeMiddleware).toHaveBeenCalledTimes(1);
+    expect(response.headers.get("x-locale-proxy")).toBe("1");
   });
 
   it("rewrites real public content routes when markdown is requested", async () => {
@@ -185,7 +282,9 @@ describe("proxy", () => {
     expect(response.headers.get("x-locale-proxy")).toBe("1");
   });
 
-  it("rewrites missing markdown public content to the markdown route", async () => {
+  it("returns a real 404 for missing markdown public content routes", async () => {
+    mockFetchRuntimeContentRoute.mockResolvedValueOnce(null);
+
     const response = await proxy(
       new NextRequest(
         "http://localhost:3000/en/exercises/high-school/snbt/general-knowledge/try-out/2026/set-1/9-afdocs-nonexistent-8f3a",
@@ -198,16 +297,158 @@ describe("proxy", () => {
     );
 
     expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
+    expect(response.status).toBe(404);
     expect(response.headers.get("x-middleware-rewrite")).toBe(
-      "http://localhost:3000/llms.mdx/en/exercises/high-school/snbt/general-knowledge/try-out/2026/set-1/9-afdocs-nonexistent-8f3a"
+      "http://localhost:3000/en/_not-found"
     );
   });
 
-  it("delegates missing html public content so app routes can call notFound", async () => {
+  it("returns a real 404 for missing html public content routes", async () => {
+    mockFetchRuntimeContentRoute.mockResolvedValueOnce(null);
+
     const response = await proxy(
       new NextRequest(
         "http://localhost:3000/id/subject/high-school/10/history/history-introduction/human-space-time"
       )
+    );
+
+    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
+    expect(response.status).toBe(404);
+    expect(response.headers.get("x-middleware-rewrite")).toBe(
+      "http://localhost:3000/id/_not-found"
+    );
+    expect(response.headers.get("x-robots-tag")).toBe("noindex");
+  });
+
+  it("returns a real 404 for missing Quran content routes", async () => {
+    mockFetchRuntimeContentRoute.mockResolvedValueOnce(null);
+
+    const response = await proxy(
+      new NextRequest("http://localhost:3000/id/quran/999")
+    );
+
+    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
+    expect(response.status).toBe(404);
+    expect(response.headers.get("x-middleware-rewrite")).toBe(
+      "http://localhost:3000/id/_not-found"
+    );
+  });
+
+  it("returns a real 404 for missing html content HEAD requests", async () => {
+    mockFetchRuntimeContentRoute.mockResolvedValueOnce(null);
+
+    const response = await proxy(
+      new NextRequest(
+        "http://localhost:3000/en/articles/politics/nepotism-in-political-governance-afdocs-nonexistent-8f3a",
+        {
+          method: "HEAD",
+        }
+      )
+    );
+
+    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
+    expect(response.status).toBe(404);
+    expect(response.headers.get("x-middleware-rewrite")).toBe(
+      "http://localhost:3000/en/_not-found"
+    );
+  });
+
+  it("returns a real 404 for missing article listing routes", async () => {
+    mockFetchRuntimeContentRoutesByParentPage.mockResolvedValueOnce({
+      continueCursor: null,
+      isDone: true,
+      page: [],
+    });
+
+    const response = await proxy(
+      new NextRequest(
+        "http://localhost:3000/en/articles/politics-afdocs-nonexistent-8f3a"
+      )
+    );
+
+    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
+    expect(response.status).toBe(404);
+    expect(response.headers.get("x-middleware-rewrite")).toBe(
+      "http://localhost:3000/en/_not-found"
+    );
+  });
+
+  it("returns a real 404 for missing subject grade listing routes", async () => {
+    mockFetchRuntimeContentRoutesByKindPage.mockResolvedValueOnce({
+      continueCursor: null,
+      isDone: true,
+      page: [],
+    });
+
+    const response = await proxy(
+      new NextRequest(
+        "http://localhost:3000/en/subject/high-school/11-afdocs-nonexistent-8f3a"
+      )
+    );
+
+    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
+    expect(response.status).toBe(404);
+    expect(response.headers.get("x-middleware-rewrite")).toBe(
+      "http://localhost:3000/en/_not-found"
+    );
+  });
+
+  it("returns a real 404 for missing subject material listing routes", async () => {
+    mockFetchRuntimeContentRoutesByParentPage.mockResolvedValueOnce({
+      continueCursor: null,
+      isDone: true,
+      page: [],
+    });
+
+    const response = await proxy(
+      new NextRequest(
+        "http://localhost:3000/en/subject/high-school/10/mathematics-afdocs-nonexistent-8f3a"
+      )
+    );
+
+    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
+    expect(response.status).toBe(404);
+    expect(response.headers.get("x-middleware-rewrite")).toBe(
+      "http://localhost:3000/en/_not-found"
+    );
+  });
+
+  it("returns a real 404 for missing exercise listing routes", async () => {
+    const response = await proxy(
+      new NextRequest(
+        "http://localhost:3000/en/exercises/high-school/snbt/general-reasoning-afdocs-nonexistent-8f3a"
+      )
+    );
+
+    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
+    expect(response.status).toBe(404);
+    expect(response.headers.get("x-middleware-rewrite")).toBe(
+      "http://localhost:3000/en/_not-found"
+    );
+  });
+
+  it("fails open when the exact route lookup is temporarily unavailable", async () => {
+    mockFetchRuntimeContentRoute.mockRejectedValueOnce(
+      new Error("Convex unavailable")
+    );
+
+    const response = await proxy(
+      new NextRequest(
+        "http://localhost:3000/en/articles/politics/dynastic-politics-asian-values"
+      )
+    );
+
+    expect(mockLocaleRouting.localeMiddleware).toHaveBeenCalledTimes(1);
+    expect(response.headers.get("x-locale-proxy")).toBe("1");
+  });
+
+  it("fails open when a listing route probe is temporarily unavailable", async () => {
+    mockFetchRuntimeContentRoutesByParentPage.mockRejectedValueOnce(
+      new Error("Convex unavailable")
+    );
+
+    const response = await proxy(
+      new NextRequest("http://localhost:3000/en/articles/politics")
     );
 
     expect(mockLocaleRouting.localeMiddleware).toHaveBeenCalledTimes(1);

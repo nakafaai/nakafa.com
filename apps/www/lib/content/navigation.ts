@@ -1,3 +1,4 @@
+import { compareExerciseSetSlugs } from "@repo/contents/_lib/exercises/slug";
 import type { Article } from "@repo/contents/_types/content";
 import type { ExercisesMaterialList } from "@repo/contents/_types/exercises/material";
 import type { MaterialList } from "@repo/contents/_types/subject/material";
@@ -324,7 +325,7 @@ function buildExerciseMaterials(rows: readonly RuntimeContentRoute[]) {
     });
   }
 
-  for (const row of sortRouteRows(rows)) {
+  for (const row of sortExerciseSetRouteRows(rows)) {
     if (row.kind !== "exercise-set") {
       continue;
     }
@@ -458,6 +459,11 @@ function getParentRoute(route: string) {
 /** Sorts route rows by route for stable navigation output. */
 function sortRouteRows(rows: readonly RuntimeContentRoute[]) {
   return [...rows].sort((a, b) => a.route.localeCompare(b.route));
+}
+
+/** Sorts exercise set rows by authored numeric set progression. */
+function sortExerciseSetRouteRows(rows: readonly RuntimeContentRoute[]) {
+  return [...rows].sort((a, b) => compareExerciseSetSlugs(a.route, b.route));
 }
 
 /** Builds one subject grade route path without touching filesystem content. */

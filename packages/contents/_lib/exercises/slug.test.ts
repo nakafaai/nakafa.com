@@ -1,4 +1,5 @@
 import {
+  compareExerciseSetSlugs,
   getExerciseNumberPagination,
   getExerciseSetTarget,
   getExercisesPagination,
@@ -12,6 +13,25 @@ import { Option } from "effect";
 import { describe, expect, it } from "vitest";
 
 describe("exercise slug helpers", () => {
+  it("sorts exercise set slugs by numeric suffix", () => {
+    expect(["set-1", "set-10", "set-2"].sort(compareExerciseSetSlugs)).toEqual([
+      "set-1",
+      "set-2",
+      "set-10",
+    ]);
+    expect(
+      [
+        "exercises/high-school/snbt/general-reasoning/try-out/2026/set-1",
+        "exercises/high-school/snbt/general-reasoning/try-out/2026/set-10",
+        "exercises/high-school/snbt/general-reasoning/try-out/2026/set-2",
+      ].sort(compareExerciseSetSlugs)
+    ).toEqual([
+      "exercises/high-school/snbt/general-reasoning/try-out/2026/set-1",
+      "exercises/high-school/snbt/general-reasoning/try-out/2026/set-2",
+      "exercises/high-school/snbt/general-reasoning/try-out/2026/set-10",
+    ]);
+  });
+
   it("builds canonical exercise paths and classifies try-out collection slugs", () => {
     expect(
       getSlugPath("high-school", "snbt", "general-reasoning", [

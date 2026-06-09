@@ -110,6 +110,20 @@ const routes = [
     title: "Set 1",
   }),
   routeRow({
+    kind: "exercise-set",
+    route:
+      "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-10",
+    section: "exercises",
+    title: "Set 10",
+  }),
+  routeRow({
+    kind: "exercise-set",
+    route:
+      "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
+    section: "exercises",
+    title: "Set 2",
+  }),
+  routeRow({
     kind: "exercise-question",
     route:
       "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1/1",
@@ -298,6 +312,14 @@ describe("content navigation runtime catalog", () => {
           {
             href: "/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1",
             title: "Set 1",
+          },
+          {
+            href: "/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
+            title: "Set 2",
+          },
+          {
+            href: "/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-10",
+            title: "Set 10",
           },
         ],
         title: "Try Out UTBK 2026",
