@@ -146,18 +146,18 @@ const getRouteMetadata = Effect.fn("www.llms.routeMetadata")(function* ({
     return yield* getQuranRouteMetadata({ locale, route });
   }
 
-  if (section === "exercises") {
-    return getIndexRouteMetadata(route);
-  }
-
-  if (section === "articles" || section === "subject") {
-    const metadata = yield* getMdxRouteMetadata({ locale, route });
+  if (
+    section === "articles" ||
+    section === "exercises" ||
+    section === "subject"
+  ) {
+    const metadata = yield* getContentRouteMetadata({ locale, route });
 
     if (metadata) {
       return metadata;
     }
 
-    return getIndexRouteMetadata(route);
+    return getListingRouteMetadata(route);
   }
 
   return {
@@ -167,41 +167,37 @@ const getRouteMetadata = Effect.fn("www.llms.routeMetadata")(function* ({
   };
 });
 
-/** Builds fallback metadata for routes served as sitemap-derived indexes. */
-function getIndexRouteMetadata(route: string) {
+/** Builds fallback metadata for sitemap-derived listing routes without markdown. */
+function getListingRouteMetadata(route: string) {
   return {
     description: undefined,
-    hasMarkdown: true,
+    hasMarkdown: false,
     title: formatRouteTitle(route),
   };
 }
 
-/** Reads existing route metadata for article and subject routes. */
-const getMdxRouteMetadata = Effect.fn("www.llms.mdxRouteMetadata")(function* ({
-  locale,
-  route,
-}: {
-  locale: Locale;
-  route: string;
-}) {
-  const contentRoute = yield* Effect.match(
-    getRuntimeContentRoute({
-      locale,
-      route: route.slice(1),
-    }),
-    {
-      onFailure: () => null,
-      onSuccess: (data) => data,
+/** Reads exact runtime content route metadata when the route has markdown. */
+const getContentRouteMetadata = Effect.fn("www.llms.contentRouteMetadata")(
+  function* ({ locale, route }: { locale: Locale; route: string }) {
+    const contentRoute = yield* Effect.match(
+      getRuntimeContentRoute({
+        locale,
+        route: route.slice(1),
+      }),
+      {
+        onFailure: () => null,
+        onSuccess: (data) => data,
+      }
+    );
+
+    if (!contentRoute) {
+      return null;
     }
-  );
 
-  if (!contentRoute) {
-    return null;
+    return {
+      description: contentRoute.description,
+      hasMarkdown: contentRoute.markdown,
+      title: contentRoute.title,
+    };
   }
-
-  return {
-    description: contentRoute.description,
-    hasMarkdown: contentRoute.markdown,
-    title: contentRoute.title,
-  };
-});
+);

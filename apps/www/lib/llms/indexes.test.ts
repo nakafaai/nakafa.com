@@ -170,6 +170,9 @@ describe("llms indexes", () => {
       Effect.runPromise(getLlmsSectionIndexText("llms/en/unknown"))
     ).resolves.toBeNull();
     await expect(
+      Effect.runPromise(getLlmsSectionIndexText("llms/en/articles/politics"))
+    ).resolves.toBeNull();
+    await expect(
       Effect.runPromise(getLlmsSectionIndexText("llms/en/articles/shard/999"))
     ).resolves.toBeNull();
     await expect(

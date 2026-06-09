@@ -73,6 +73,17 @@ beforeEach(() => {
       });
     }
 
+    if (
+      route ===
+      "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1"
+    ) {
+      return Effect.succeed({
+        description: "Try-out set",
+        markdown: true,
+        title: "Try-out Set 1",
+      });
+    }
+
     return Effect.succeed(null);
   });
 });
@@ -142,7 +153,7 @@ describe("llms entries", () => {
     ]);
   });
 
-  it("builds page entries with markdown links and metadata subject fallback", async () => {
+  it("builds page entries with markdown links only for exact markdown routes", async () => {
     const entries = await Effect.runPromise(
       Effect.all([
         getContentPageLlmsEntries({
@@ -168,6 +179,7 @@ describe("llms entries", () => {
         getSiteLlmsEntries("en"),
       ]).pipe(Effect.map((groups) => groups.flat()))
     );
+    const hrefs = entries.map((entry) => entry.href);
 
     expect(entries).toContainEqual(
       expect.objectContaining({
@@ -182,7 +194,15 @@ describe("llms entries", () => {
     );
     expect(entries).toContainEqual(
       expect.objectContaining({
-        href: "https://nakafa.com/en/articles/politics/fail.md",
+        href: "https://nakafa.com/en/articles/politics",
+        route: "/articles/politics",
+        section: "articles",
+        title: "Politics",
+      })
+    );
+    expect(entries).toContainEqual(
+      expect.objectContaining({
+        href: "https://nakafa.com/en/articles/politics/fail",
         route: "/articles/politics/fail",
         section: "articles",
         title: "Fail",
@@ -199,7 +219,7 @@ describe("llms entries", () => {
     );
     expect(entries).toContainEqual(
       expect.objectContaining({
-        href: "https://nakafa.com/en/subject/high-school/10.md",
+        href: "https://nakafa.com/en/subject/high-school/10",
         route: "/subject/high-school/10",
         section: "subject",
         title: "10",
@@ -207,7 +227,17 @@ describe("llms entries", () => {
     );
     expect(entries).toContainEqual(
       expect.objectContaining({
-        href: "https://nakafa.com/en/exercises/high-school/snbt/quantitative-knowledge/try-out/2026.md",
+        description: "Try-out set",
+        href: "https://nakafa.com/en/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1.md",
+        route:
+          "/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1",
+        section: "exercises",
+        title: "Try-out Set 1",
+      })
+    );
+    expect(entries).toContainEqual(
+      expect.objectContaining({
+        href: "https://nakafa.com/en/exercises/high-school/snbt/quantitative-knowledge/try-out/2026",
         route:
           "/exercises/high-school/snbt/quantitative-knowledge/try-out/2026",
         section: "exercises",
@@ -230,6 +260,13 @@ describe("llms entries", () => {
         section: "site",
         title: "Home",
       })
+    );
+    expect(hrefs).not.toContain("https://nakafa.com/en/articles/politics.md");
+    expect(hrefs).not.toContain(
+      "https://nakafa.com/en/subject/high-school/10.md"
+    );
+    expect(hrefs).not.toContain(
+      "https://nakafa.com/en/exercises/high-school/snbt/quantitative-knowledge/try-out/2026.md"
     );
     expect(mockGetRuntimeContentRouteArtifactPage).toHaveBeenCalledWith({
       locale: "en",
