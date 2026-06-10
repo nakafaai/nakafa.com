@@ -1,0 +1,62 @@
+{
+  "$schema": "https://react.doctor/schema/config.json",
+  "ignore": {
+    "overrides": [
+      {
+        "files": [
+          "components/ai/context/use-current-chat.tsx",
+          "components/school/classes/forum/panel.tsx",
+          "components/school/classes/people/invite.tsx",
+          "apps/www/components/ai/context/use-current-chat.tsx",
+          "apps/www/components/school/classes/forum/panel.tsx",
+          "apps/www/components/school/classes/people/invite.tsx"
+        ],
+        "rules": ["react-doctor/query-destructure-result"]
+      },
+      {
+        "files": [
+          "components/contents/**/*.tsx",
+          "components/three/**/*.tsx",
+          "components/ui/orb.tsx",
+          "packages/design-system/components/contents/**/*.tsx",
+          "packages/design-system/components/three/**/*.tsx",
+          "packages/design-system/components/ui/orb.tsx"
+        ],
+        "rules": ["react-doctor/no-unknown-property"]
+      },
+      {
+        "files": [
+          "components/ai/mermaid.tsx",
+          "packages/design-system/components/ai/mermaid.tsx"
+        ],
+        "rules": ["react-doctor/no-danger", "react-doctor/prefer-tag-over-role"]
+      },
+      {
+        "files": [
+          "components/ai/code-block.tsx",
+          "components/code-block/index.tsx",
+          "components/code-block/server.tsx",
+          "components/markdown/code.tsx",
+          "json-ld/index.tsx",
+          "packages/design-system/components/ai/code-block.tsx",
+          "packages/design-system/components/code-block/index.tsx",
+          "packages/design-system/components/code-block/server.tsx",
+          "packages/design-system/components/markdown/code.tsx",
+          "packages/seo/json-ld/index.tsx"
+        ],
+        "rules": ["react-doctor/no-danger"]
+      }
+    ]
+  },
+  "surfaces": {
+    "ciFailure": {
+      "excludeRules": ["deslop/unused-file", "socket/low-supply-chain-score"]
+    },
+    "prComment": {
+      "excludeRules": ["deslop/unused-file", "socket/low-supply-chain-score"]
+    },
+    "score": {
+      "excludeRules": ["deslop/unused-file", "socket/low-supply-chain-score"]
+    }
+  }
+}
