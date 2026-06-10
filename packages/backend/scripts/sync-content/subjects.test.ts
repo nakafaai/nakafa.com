@@ -117,6 +117,30 @@ describe("sync-content subjects", () => {
     ]);
   });
 
+  it("fails before publishing topics when an authored subject section is missing material order", async () => {
+    const { subjects, topicCalls } = await loadSubjects({
+      materialFiles: [],
+      sectionFiles: [
+        getContentFile(
+          "subject",
+          "high-school",
+          "10",
+          "mathematics",
+          "exponential-logarithm",
+          "basic-concept",
+          "id.mdx"
+        ),
+      ],
+    });
+
+    await expect(
+      Effect.runPromise(
+        subjects.syncSubjectTopics(config, { locale: "id", quiet: true })
+      )
+    ).rejects.toThrow("Missing subject material order");
+    expect(topicCalls).toEqual([]);
+  });
+
   it("syncs subject section order from authored material data", async () => {
     const { sectionCalls, subjects } = await loadSubjects({
       materialFiles: [

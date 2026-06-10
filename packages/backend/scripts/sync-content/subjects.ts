@@ -71,7 +71,7 @@ export const syncSubjectTopics = Effect.fn("sync.subjectTopics")(function* (
   const topics: SubjectTopicPayload[] = [];
   const errors: string[] = [];
   const sectionCountByTopicSlug =
-    yield* readSyncedSubjectSectionCountByTopicSlug(options);
+    yield* readMaterialListedSubjectSectionCountByTopicSlug(options);
 
   for (const materialFile of materialFiles) {
     const result = yield* Effect.either(
@@ -442,10 +442,11 @@ const readSubjectSectionOrderBySlug = Effect.fn(
   return orderBySlug;
 });
 
-/** Counts synced subject MDX rows by locale and material-topic slug. */
-const readSyncedSubjectSectionCountByTopicSlug = Effect.fn(
-  "sync.readSyncedSubjectSectionCountByTopicSlug"
+/** Counts existing subject MDX files that are listed in authored material order. */
+const readMaterialListedSubjectSectionCountByTopicSlug = Effect.fn(
+  "sync.readMaterialListedSubjectSectionCountByTopicSlug"
 )(function* (options: SyncOptions) {
+  const sectionOrderBySlug = yield* readSubjectSectionOrderBySlug(options);
   const pattern = options.locale
     ? `subject/**/${options.locale}.mdx`
     : "subject/**/*.mdx";
@@ -467,9 +468,26 @@ const readSyncedSubjectSectionCountByTopicSlug = Effect.fn(
 
     const pathInfo = result.right;
     const topicSlug = `subject/${pathInfo.category}/${pathInfo.grade}/${pathInfo.material}/${pathInfo.topic}`;
-    const key = `${pathInfo.locale}:${topicSlug}`;
+    const sectionOrder = sectionOrderBySlug.get(
+      `${pathInfo.locale}:${pathInfo.slug}`
+    );
 
-    counts.set(key, (counts.get(key) ?? 0) + 1);
+    if (!sectionOrder) {
+      errors.push(
+        `${file}: Missing subject material order for ${pathInfo.locale}:${pathInfo.slug}. Add this lesson to the matching _data material file before syncing.`
+      );
+      continue;
+    }
+
+    if (sectionOrder.topicSlug !== topicSlug) {
+      errors.push(
+        `${file}: Subject material order for ${pathInfo.locale}:${pathInfo.slug} points at ${sectionOrder.topicSlug}, expected ${topicSlug}.`
+      );
+      continue;
+    }
+
+    const countKey = `${pathInfo.locale}:${topicSlug}`;
+    counts.set(countKey, (counts.get(countKey) ?? 0) + 1);
   }
 
   if (errors.length > 0) {
