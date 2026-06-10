@@ -70,6 +70,7 @@ describe("contents/queries/runtime", () => {
         grade: "10",
         locale: "id",
         material: "mathematics",
+        order: 0,
         sectionCount: 1,
         slug: "subject/high-school/10/mathematics/runtime-topic",
         syncedAt: NOW,
@@ -85,6 +86,7 @@ describe("contents/queries/runtime", () => {
         grade: "10",
         locale: "id",
         material: "mathematics",
+        order: 0,
         section: "runtime-section",
         slug: "subject/high-school/10/mathematics/runtime-topic/runtime-section",
         subject: "Runtime Topic",
@@ -282,6 +284,7 @@ describe("contents/queries/runtime", () => {
         grade: "10",
         locale: "id",
         material: "chemistry",
+        order: 0,
         sectionCount: 2,
         slug: topicSlug,
         syncedAt: NOW,
@@ -298,6 +301,7 @@ describe("contents/queries/runtime", () => {
           grade: "10",
           locale: "id",
           material: "chemistry",
+          order: slug === exactSlug ? 0 : 1,
           section: slug.split("/").at(-1) ?? "",
           slug,
           syncedAt: NOW,
@@ -443,6 +447,107 @@ describe("contents/queries/runtime", () => {
 
     expect(page.isDone).toBe(true);
     expect(page.page.map((item) => item.route)).toEqual([topicRoute]);
+  });
+
+  it("loads subject outlines in authored order instead of creation or slug order", async () => {
+    const t = createConvexTestWithBetterAuth();
+
+    await t.mutation(async (ctx) => {
+      const sequenceTopicId = await ctx.db.insert("subjectTopics", {
+        category: "high-school",
+        description: "Sequence topic",
+        grade: "10",
+        locale: "id",
+        material: "mathematics",
+        order: 1,
+        sectionCount: 1,
+        slug: "subject/high-school/10/mathematics/sequence-series",
+        syncedAt: NOW,
+        title: "Barisan dan Deret",
+        topic: "sequence-series",
+      });
+      const exponentialTopicId = await ctx.db.insert("subjectTopics", {
+        category: "high-school",
+        description: "Exponential topic",
+        grade: "10",
+        locale: "id",
+        material: "mathematics",
+        order: 0,
+        sectionCount: 2,
+        slug: "subject/high-school/10/mathematics/exponential-logarithm",
+        syncedAt: NOW,
+        title: "Eksponen dan Logaritma",
+        topic: "exponential-logarithm",
+      });
+
+      await ctx.db.insert("subjectSections", {
+        body: "Properties body",
+        category: "high-school",
+        contentHash: "properties-hash",
+        date: NOW,
+        grade: "10",
+        locale: "id",
+        material: "mathematics",
+        order: 1,
+        section: "properties",
+        slug: "subject/high-school/10/mathematics/exponential-logarithm/properties",
+        syncedAt: NOW,
+        title: "Sifat Eksponen",
+        topic: "exponential-logarithm",
+        topicId: exponentialTopicId,
+      });
+      await ctx.db.insert("subjectSections", {
+        body: "Basic body",
+        category: "high-school",
+        contentHash: "basic-hash",
+        date: NOW,
+        grade: "10",
+        locale: "id",
+        material: "mathematics",
+        order: 0,
+        section: "basic-concept",
+        slug: "subject/high-school/10/mathematics/exponential-logarithm/basic-concept",
+        syncedAt: NOW,
+        title: "Konsep Eksponen",
+        topic: "exponential-logarithm",
+        topicId: exponentialTopicId,
+      });
+      await ctx.db.insert("subjectSections", {
+        body: "Sequence body",
+        category: "high-school",
+        contentHash: "sequence-hash",
+        date: NOW,
+        grade: "10",
+        locale: "id",
+        material: "mathematics",
+        order: 0,
+        section: "sequence-concept",
+        slug: "subject/high-school/10/mathematics/sequence-series/sequence-concept",
+        syncedAt: NOW,
+        title: "Konsep Barisan",
+        topic: "sequence-series",
+        topicId: sequenceTopicId,
+      });
+    });
+
+    const outline = await t.query(
+      api.contents.queries.runtime.getSubjectOutline,
+      {
+        category: "high-school",
+        grade: "10",
+        locale: "id",
+        material: "mathematics",
+      }
+    );
+
+    expect(outline.map((topic) => topic.title)).toEqual([
+      "Eksponen dan Logaritma",
+      "Barisan dan Deret",
+    ]);
+    expect(outline[0]?.sections.map((section) => section.title)).toEqual([
+      "Konsep Eksponen",
+      "Sifat Eksponen",
+    ]);
   });
 
   it("reads materialized route artifact pages and latest route pages from indexed rows", async () => {

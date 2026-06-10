@@ -16,12 +16,14 @@ import {
 const runtimeMocks = vi.hoisted(() => ({
   getRuntimeContentRouteKindPage: vi.fn(),
   getRuntimeContentRouteParentPage: vi.fn(),
+  getRuntimeSubjectOutline: vi.fn(),
 }));
 
 vi.mock("@/lib/content/runtime", () => ({
   getRuntimeContentRouteKindPage: runtimeMocks.getRuntimeContentRouteKindPage,
   getRuntimeContentRouteParentPage:
     runtimeMocks.getRuntimeContentRouteParentPage,
+  getRuntimeSubjectOutline: runtimeMocks.getRuntimeSubjectOutline,
 }));
 
 interface NavigationRoute {
@@ -45,6 +47,13 @@ interface NavigationRoute {
   route: string;
   section: "articles" | "subject" | "exercises" | "quran";
   syncedAt: number;
+  title: string;
+}
+
+interface SubjectOutlineTopic {
+  description?: string;
+  route: string;
+  sections: Array<{ route: string; title: string }>;
   title: string;
 }
 
@@ -178,6 +187,7 @@ const routes = [
 beforeEach(() => {
   runtimeMocks.getRuntimeContentRouteKindPage.mockReset();
   runtimeMocks.getRuntimeContentRouteParentPage.mockReset();
+  runtimeMocks.getRuntimeSubjectOutline.mockReset();
   runtimeMocks.getRuntimeContentRouteKindPage.mockImplementation(
     (args: RuntimeKindListArgs) =>
       Effect.succeed(routePage(getMatchingKindRows(routes, args), args.limit))
@@ -185,6 +195,9 @@ beforeEach(() => {
   runtimeMocks.getRuntimeContentRouteParentPage.mockImplementation(
     (args: RuntimeListArgs) =>
       Effect.succeed(routePage(getMatchingRows(routes, args), args.limit))
+  );
+  runtimeMocks.getRuntimeSubjectOutline.mockImplementation(() =>
+    Effect.succeed(defaultSubjectOutline)
   );
 });
 
@@ -344,7 +357,7 @@ describe("content navigation runtime catalog", () => {
     });
   });
 
-  it("keeps localized subject topic labels from synced topic rows", async () => {
+  it("keeps localized subject topic labels from the authored outline", async () => {
     const materials = await Effect.runPromise(
       getRuntimeSubjectMaterials("subject/high-school/12/mathematics", "id")
     );
@@ -379,9 +392,118 @@ describe("content navigation runtime catalog", () => {
       currentChapter: { _tag: "None" },
       currentItem: { _tag: "None" },
     });
+    expect(runtimeMocks.getRuntimeSubjectOutline).toHaveBeenCalledWith({
+      category: "high-school",
+      grade: "12",
+      locale: "id",
+      material: "mathematics",
+    });
+    expect(
+      runtimeMocks.getRuntimeContentRouteParentPage
+    ).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        kind: "subject-topic",
+        parentRoute: "subject/high-school/12/mathematics",
+      })
+    );
+  });
+
+  it("orders subject topics by outline order instead of route order", async () => {
+    runtimeMocks.getRuntimeSubjectOutline.mockImplementation(() =>
+      Effect.succeed(nonLexicalSubjectOutline)
+    );
+
+    const materials = await Effect.runPromise(
+      getRuntimeSubjectMaterials("subject/high-school/10/mathematics", "id")
+    );
+
+    expect(materials.map((material) => material.title)).toEqual([
+      "Eksponen dan Logaritma",
+      "Barisan dan Deret",
+      "Vektor dan Operasinya",
+    ]);
+    expect(materials[0]?.items.map((item) => item.title)).toEqual([
+      "Konsep Eksponen",
+      "Sifat Eksponen",
+    ]);
+  });
+
+  it("does not query an outline for invalid subject material paths", async () => {
+    await expect(
+      Effect.runPromise(getRuntimeSubjectMaterials("articles/politics", "id"))
+    ).resolves.toEqual([]);
+    await expect(
+      Effect.runPromise(
+        getRuntimeSubjectMaterials(
+          "subject/high-school/12/mathematics/function-transformation",
+          "id"
+        )
+      )
+    ).resolves.toEqual([]);
+    await expect(
+      Effect.runPromise(
+        getRuntimeSubjectMaterials(
+          "subject/invalid-school/12/mathematics",
+          "id"
+        )
+      )
+    ).resolves.toEqual([]);
+    await expect(
+      Effect.runPromise(
+        getRuntimeSubjectMaterials(
+          "subject/high-school/invalid/mathematics",
+          "id"
+        )
+      )
+    ).resolves.toEqual([]);
+    await expect(
+      Effect.runPromise(
+        getRuntimeSubjectMaterials(
+          "subject/high-school/12/invalid-material",
+          "id"
+        )
+      )
+    ).resolves.toEqual([]);
+
+    expect(runtimeMocks.getRuntimeSubjectOutline).not.toHaveBeenCalled();
+  });
+
+  it("omits subject outline topics that have no synced sections", async () => {
+    runtimeMocks.getRuntimeSubjectOutline.mockImplementation(() =>
+      Effect.succeed([
+        {
+          description: "Description",
+          route: "subject/high-school/12/mathematics/empty-topic",
+          sections: [],
+          title: "Topik Kosong",
+        },
+        ...defaultSubjectOutline,
+      ] satisfies SubjectOutlineTopic[])
+    );
+
+    const materials = await Effect.runPromise(
+      getRuntimeSubjectMaterials("subject/high-school/12/mathematics", "id")
+    );
+
+    expect(materials).toEqual([
+      {
+        description: "Description",
+        href: "/subject/high-school/12/mathematics/function-transformation",
+        items: [
+          {
+            href: "/subject/high-school/12/mathematics/function-transformation/translation",
+            title: "Translasi Grafik",
+          },
+        ],
+        title: "Transformasi Fungsi",
+      },
+    ]);
   });
 
   it("does not expose item rows when their group rows are absent", async () => {
+    runtimeMocks.getRuntimeSubjectOutline.mockImplementation(() =>
+      Effect.succeed([])
+    );
     runtimeMocks.getRuntimeContentRouteParentPage.mockImplementation(
       (args: RuntimeListArgs) =>
         Effect.succeed(
@@ -425,24 +547,6 @@ describe("content navigation runtime catalog", () => {
           );
         }
 
-        if (args.kind === "subject-topic") {
-          return Effect.succeed(
-            routePage(
-              corruptSubjectRows.filter((row) => row.kind === args.kind),
-              args.limit
-            )
-          );
-        }
-
-        if (args.kind === "subject-section") {
-          return Effect.succeed(
-            routePage(
-              corruptSubjectRows.filter((row) => row.kind === args.kind),
-              args.limit
-            )
-          );
-        }
-
         return Effect.succeed(routePage([], args.limit));
       }
     );
@@ -455,11 +559,6 @@ describe("content navigation runtime catalog", () => {
         )
       )
     ).rejects.toThrow("Synced exercise set is missing group navigation row");
-    await expect(
-      Effect.runPromise(
-        getRuntimeSubjectMaterials("subject/high-school/12/mathematics", "id")
-      )
-    ).rejects.toThrow("Synced subject section is missing topic navigation row");
   });
 
   it("ignores malformed group rows outside the requested material scope", async () => {
@@ -696,21 +795,64 @@ const corruptExerciseRows = [
   }),
 ] satisfies NavigationRoute[];
 
-const corruptSubjectRows = [
-  routeRow({
-    kind: "subject-topic",
+const defaultSubjectOutline = [
+  {
+    description: "Description",
     route: "subject/high-school/12/mathematics/function-transformation",
-    section: "subject",
+    sections: [
+      {
+        route:
+          "subject/high-school/12/mathematics/function-transformation/translation",
+        title: "Translasi Grafik",
+      },
+    ],
     title: "Transformasi Fungsi",
-  }),
-  routeRow({
-    kind: "subject-section",
-    parentRoute: "subject/high-school/12/mathematics/missing-topic",
-    route: "subject/high-school/12/mathematics/missing-topic/lesson",
-    section: "subject",
-    title: "Missing Topic Lesson",
-  }),
-] satisfies NavigationRoute[];
+  },
+] satisfies SubjectOutlineTopic[];
+
+const nonLexicalSubjectOutline = [
+  {
+    description: "Description",
+    route: "subject/high-school/10/mathematics/exponential-logarithm",
+    sections: [
+      {
+        route:
+          "subject/high-school/10/mathematics/exponential-logarithm/basic-concept",
+        title: "Konsep Eksponen",
+      },
+      {
+        route:
+          "subject/high-school/10/mathematics/exponential-logarithm/properties",
+        title: "Sifat Eksponen",
+      },
+    ],
+    title: "Eksponen dan Logaritma",
+  },
+  {
+    description: "Description",
+    route: "subject/high-school/10/mathematics/sequence-series",
+    sections: [
+      {
+        route:
+          "subject/high-school/10/mathematics/sequence-series/sequence-concept",
+        title: "Konsep Barisan",
+      },
+    ],
+    title: "Barisan dan Deret",
+  },
+  {
+    description: "Description",
+    route: "subject/high-school/10/mathematics/vector-operations",
+    sections: [
+      {
+        route:
+          "subject/high-school/10/mathematics/vector-operations/vector-concept",
+        title: "Konsep Vektor",
+      },
+    ],
+    title: "Vektor dan Operasinya",
+  },
+] satisfies SubjectOutlineTopic[];
 
 /** Selects one bounded kind-scoped route page for navigation tests. */
 function getMatchingRows(

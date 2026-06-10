@@ -18,6 +18,7 @@ import {
   getExerciseQuestionPageImpl,
   getExerciseSetPageImpl,
 } from "@repo/backend/convex/contents/runtime/exercises";
+import { getSubjectOutlineImpl } from "@repo/backend/convex/contents/runtime/outline";
 import {
   getQuranReferenceImpl,
   getQuranSurahPageImpl,
@@ -40,6 +41,8 @@ import {
   getQuranReferenceReturnValidator,
   getQuranSurahPageArgsValidator,
   getQuranSurahPageReturnValidator,
+  getSubjectOutlineArgsValidator,
+  getSubjectOutlineReturnValidator,
   getSubjectPageArgsValidator,
   getSubjectPageReturnValidator,
   listArticleApiContentPageArgsValidator,
@@ -74,6 +77,16 @@ export const getSubjectPage = query({
   args: getSubjectPageArgsValidator,
   returns: getSubjectPageReturnValidator,
   handler: getSubjectPageImpl,
+});
+
+/**
+ * Loads one subject material outline in authored topic and section order.
+ */
+export const getSubjectOutline = query({
+  args: getSubjectOutlineArgsValidator,
+  returns: getSubjectOutlineReturnValidator,
+  /** Preserves generated argument typing for the subject outline query. */
+  handler: (ctx, args) => getSubjectOutlineImpl(ctx, args),
 });
 
 /**

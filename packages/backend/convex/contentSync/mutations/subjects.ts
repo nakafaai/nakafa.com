@@ -33,6 +33,7 @@ const syncedSubjectTopicValidator = v.object({
   grade: gradeValidator,
   locale: localeValidator,
   material: materialValidator,
+  order: v.number(),
   sectionCount: v.number(),
   slug: v.string(),
   title: v.string(),
@@ -49,6 +50,7 @@ const syncedSubjectSectionValidator = v.object({
   grade: gradeValidator,
   locale: localeValidator,
   material: materialValidator,
+  order: v.number(),
   section: v.string(),
   slug: v.string(),
   subject: v.optional(v.string()),
@@ -102,6 +104,7 @@ export const bulkSyncSubjectTopics = internalMutation({
         description: topic.description,
         grade: topic.grade,
         material: topic.material,
+        order: topic.order,
         sectionCount: topic.sectionCount,
         title: topic.title,
         topic: topic.topic,
@@ -245,6 +248,7 @@ export const bulkSyncSubjectSections = internalMutation({
         description: section.description,
         grade: section.grade,
         material: section.material,
+        order: section.order,
         section: section.section,
         subject: section.subject,
         title: section.title,
@@ -350,9 +354,12 @@ export const deleteStaleSubjectTopics = internalMutation({
       const sections = await ctx.db
         .query("subjectSections")
         .withIndex("by_topicId", (q) => q.eq("topicId", topicId))
-        .take(topic.sectionCount + 1);
+        .take(CONTENT_SYNC_BATCH_LIMITS.staleSubjectSections + 1);
 
-      if (sections.length > topic.sectionCount) {
+      if (
+        sections.length > topic.sectionCount ||
+        sections.length > CONTENT_SYNC_BATCH_LIMITS.staleSubjectSections
+      ) {
         throw new ConvexError({
           code: "CONTENT_SYNC_SECTION_COUNT_EXCEEDED",
           message: "Subject section count exceeds the topic section count.",

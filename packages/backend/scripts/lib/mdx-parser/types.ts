@@ -68,6 +68,13 @@ export interface ParsedExerciseSet {
   year?: number;
 }
 
+/** Parsed subject section order from a material file topic item. */
+export interface ParsedSubjectSection {
+  order: number;
+  section: string;
+  slug: string;
+}
+
 /** Parsed subject topic from material file. */
 export interface ParsedSubjectTopic {
   category: SubjectCategory;
@@ -75,7 +82,8 @@ export interface ParsedSubjectTopic {
   grade: Grade;
   locale: Locale;
   material: Material;
-  sectionCount: number;
+  order: number;
+  sections: ParsedSubjectSection[];
   slug: string;
   title: string;
   topic: string;

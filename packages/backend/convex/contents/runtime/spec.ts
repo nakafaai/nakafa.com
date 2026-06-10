@@ -167,6 +167,18 @@ const runtimeContentRouteArtifactPageValidator = v.object({
   syncedAt: v.number(),
 });
 
+const subjectOutlineSectionValidator = v.object({
+  route: v.string(),
+  title: v.string(),
+});
+
+const subjectOutlineTopicValidator = v.object({
+  description: v.optional(v.string()),
+  route: v.string(),
+  sections: v.array(subjectOutlineSectionValidator),
+  title: v.string(),
+});
+
 const apiContentItemValidator = v.object({
   locale: localeValidator,
   metadata: contentMetadataValidator,
@@ -223,6 +235,17 @@ export const getSubjectPageReturnValidator = nullable(
     section: v.string(),
     topic: v.string(),
   })
+);
+
+export const getSubjectOutlineArgsValidator = {
+  category: subjectCategoryValidator,
+  grade: gradeValidator,
+  locale: localeValidator,
+  material: materialValidator,
+};
+
+export const getSubjectOutlineReturnValidator = v.array(
+  subjectOutlineTopicValidator
 );
 
 export const getExerciseSetPageArgsValidator = {

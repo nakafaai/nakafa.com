@@ -12,6 +12,7 @@ interface SyncedSubjectTopic {
   grade: Doc<"subjectTopics">["grade"];
   locale: Doc<"subjectTopics">["locale"];
   material: Doc<"subjectTopics">["material"];
+  order: number;
   sectionCount: number;
   slug: string;
   title: string;
@@ -28,6 +29,7 @@ interface SyncedSubjectSection {
   grade: Doc<"subjectSections">["grade"];
   locale: Doc<"subjectSections">["locale"];
   material: Doc<"subjectSections">["material"];
+  order: number;
   section: string;
   slug: string;
   subject?: string;
@@ -45,6 +47,7 @@ const BASE_TOPIC: SyncedSubjectTopic = {
   grade: "10",
   locale: "id",
   material: "mathematics",
+  order: 1,
   sectionCount: 1,
   slug: TOPIC_SLUG,
   title: "Old Topic Title",
@@ -60,6 +63,7 @@ const BASE_SECTION: SyncedSubjectSection = {
   grade: "10",
   locale: "id",
   material: "mathematics",
+  order: 2,
   section: "metadata-section",
   slug: SECTION_SLUG,
   subject: "Old subject",
@@ -101,6 +105,7 @@ describe("contentSync/mutations/subjects", () => {
           buildTopic({
             contentHash: "new-topic-hash",
             description: "New topic description",
+            order: 3,
             sectionCount: 2,
             title: "New Topic Title",
           }),
@@ -129,6 +134,7 @@ describe("contentSync/mutations/subjects", () => {
     expect(updated).toEqual({ created: 0, unchanged: 0, updated: 1 });
     expect(topic.topic).toMatchObject({
       description: "New topic description",
+      order: 3,
       sectionCount: 2,
       title: "New Topic Title",
     });
@@ -172,6 +178,7 @@ describe("contentSync/mutations/subjects", () => {
           buildSection({
             date: 2,
             description: "New subject description",
+            order: 4,
             subject: undefined,
             title: "New Subject Title",
           }),
@@ -234,6 +241,7 @@ describe("contentSync/mutations/subjects", () => {
     expect(snapshot.section).toMatchObject({
       date: 2,
       description: "New subject description",
+      order: 4,
       title: "New Subject Title",
     });
     expect(snapshot.section.subject).toBeUndefined();
@@ -331,6 +339,7 @@ describe("contentSync/mutations/subjects", () => {
         grade: "10",
         locale: "id",
         material: "mathematics",
+        order: 9,
         section: "missing",
         slug: "subject/high-school/10/mathematics/metadata-topic/missing",
         syncedAt: 1,
@@ -422,6 +431,7 @@ describe("contentSync/mutations/subjects", () => {
         grade: "10",
         locale: "id",
         material: "mathematics",
+        order: 9,
         sectionCount: 0,
         slug: `${TOPIC_SLUG}-missing`,
         syncedAt: 1,
@@ -442,6 +452,7 @@ describe("contentSync/mutations/subjects", () => {
         grade: "10",
         locale: "id",
         material: "mathematics",
+        order: 9,
         section: "unsafe",
         slug: `${TOPIC_SLUG}-unsafe/unsafe`,
         syncedAt: 1,

@@ -27,6 +27,8 @@ const tables = {
     topic: v.string(),
     /** Section slug: "riemann-sum", "definite-integral" */
     section: v.string(),
+    /** Authored section position inside the parent topic items array */
+    order: v.number(),
     title: v.string(),
     description: v.optional(v.string()),
     /** Publication date as epoch milliseconds */
@@ -41,7 +43,8 @@ const tables = {
     syncedAt: v.number(),
   })
     .index("by_locale_and_slug", ["locale", "slug"])
-    .index("by_topicId", ["topicId"]),
+    .index("by_topicId", ["topicId"])
+    .index("by_topicId_and_order", ["topicId", "order"]),
 };
 
 export default tables;

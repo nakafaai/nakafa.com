@@ -22,11 +22,15 @@ import type { Locale } from "next-intl";
 import {
   getRuntimeContentRouteKindPage,
   getRuntimeContentRouteParentPage,
+  getRuntimeSubjectOutline,
 } from "@/lib/content/runtime";
 
 type RuntimeContentRoute = Effect.Effect.Success<
   ReturnType<typeof getRuntimeContentRouteParentPage>
 >["page"][number];
+type RuntimeSubjectOutlineTopic = Effect.Effect.Success<
+  ReturnType<typeof getRuntimeSubjectOutline>
+>[number];
 
 const articleSummaryPageLimit = 100;
 const navigationGroupPageLimit = 100;
@@ -221,39 +225,23 @@ export const getRuntimeExerciseMaterials = Effect.fn(
   return buildExerciseMaterials([...validGroups, ...sets.flat()]);
 });
 
-/** Reads subject material navigation groups from Convex route rows. */
+/** Reads subject material navigation groups from the authored Convex outline. */
 export const getRuntimeSubjectMaterials = Effect.fn(
   "www.contentNavigation.subjectMaterials"
 )(function* (materialPath: string, locale: Locale) {
   const basePath = cleanContentPath(materialPath);
-  const topics = yield* readNavigationRouteParentPage({
-    kind: "subject-topic",
-    limit: navigationGroupPageLimit,
-    locale,
-    order: "route",
-    parentRoute: basePath,
-    section: "subject",
-  });
-  const validTopics = uniqueRouteRows(
-    topics.filter(
-      (topic) => getRelativeRouteParts(topic.route, basePath).length === 1
-    )
-  );
-  const sections = yield* Effect.forEach(
-    validTopics,
-    (topic) =>
-      readNavigationRouteParentPage({
-        kind: "subject-section",
-        limit: navigationItemPageLimit,
-        locale,
-        order: "route",
-        parentRoute: topic.route,
-        section: "subject",
-      }),
-    { concurrency: navigationReadConcurrency }
-  );
+  const parsedPath = parseSubjectMaterialPath(basePath);
 
-  return buildSubjectMaterials([...validTopics, ...sections.flat()]);
+  if (!parsedPath) {
+    return [];
+  }
+
+  const outline = yield* getRuntimeSubjectOutline({
+    ...parsedPath,
+    locale,
+  });
+
+  return buildSubjectMaterials(outline);
 });
 
 /** Finds the active exercise group and optional set item for one path. */
@@ -348,44 +336,25 @@ function buildExerciseMaterials(rows: readonly RuntimeContentRoute[]) {
   return Array.from(groups.values()).filter((group) => group.items.length > 0);
 }
 
-/** Builds subject navigation groups from concrete lesson route rows. */
-function buildSubjectMaterials(rows: readonly RuntimeContentRoute[]) {
-  const groups = new Map<string, NavigationGroup>();
-
-  for (const row of sortRouteRows(rows)) {
-    if (row.kind !== "subject-topic") {
-      continue;
+/** Builds subject navigation groups from the authored subject outline. */
+function buildSubjectMaterials(outline: readonly RuntimeSubjectOutlineTopic[]) {
+  return outline.flatMap((topic) => {
+    if (topic.sections.length === 0) {
+      return [];
     }
 
-    groups.set(`/${row.route}`, {
-      description: row.description,
-      href: `/${row.route}`,
-      items: [],
-      title: row.title,
-    });
-  }
-
-  for (const row of sortRouteRows(rows)) {
-    if (row.kind !== "subject-section") {
-      continue;
-    }
-
-    const groupRoute = getParentRoute(row.route);
-    const group = groups.get(`/${groupRoute}`);
-
-    if (!group) {
-      throw new Error(
-        `Synced subject section is missing topic navigation row: ${row.route}`
-      );
-    }
-
-    group.items.push({
-      href: `/${row.route}`,
-      title: row.title,
-    });
-  }
-
-  return Array.from(groups.values()).filter((group) => group.items.length > 0);
+    return [
+      {
+        description: topic.description,
+        href: `/${topic.route}`,
+        items: topic.sections.map((section) => ({
+          href: `/${section.route}`,
+          title: section.title,
+        })),
+        title: topic.title,
+      },
+    ];
+  });
 }
 
 interface NavigationGroup {
@@ -478,6 +447,26 @@ function buildSubjectMaterialPath(
   material: Material
 ) {
   return `${buildSubjectGradePath(category, grade)}/${material}`;
+}
+
+/** Parses and validates one subject material route path for outline reads. */
+function parseSubjectMaterialPath(path: string) {
+  const [root, rawCategory, rawGrade, rawMaterial, ...rest] =
+    cleanContentPath(path).split("/");
+
+  if (root !== "subject" || rest.length > 0) {
+    return null;
+  }
+
+  const category = SUBJECT_CATEGORIES.find((item) => item === rawCategory);
+  const grade = GRADES.find((item) => item === rawGrade);
+  const material = SUBJECT_MATERIALS.find((item) => item === rawMaterial);
+
+  if (!(category && grade && material)) {
+    return null;
+  }
+
+  return { category, grade, material };
 }
 
 /** Keeps the first synced row for each route before reading children. */
