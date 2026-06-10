@@ -50,7 +50,7 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
       /*
        * generatedUsername() must run before Better Auth's username plugin so
        * Google-created users are normalized before username validation runs.
-       * Source: better-auth@1.6.12/dist/plugins/username/index.mjs
+       * Source: better-auth@1.6.16/dist/plugins/username/index.mjs
        */
       generatedUsername(),
       username(usernameOptions),

@@ -18,7 +18,7 @@ import { Effect } from "effect";
  * - Better Auth plugin hook docs:
  *   https://github.com/better-auth/better-auth/blob/main/docs/content/docs/guides/your-first-plugin.mdx
  * - Installed username plugin source:
- *   better-auth@1.6.12/dist/plugins/username/index.mjs
+ *   better-auth@1.6.16/dist/plugins/username/index.mjs
  */
 export function generatedUsername() {
   return {
@@ -35,7 +35,7 @@ export function generatedUsername() {
                 /**
                  * Replaces a generated Google username before Better Auth validates it.
                  *
-                 * Source: better-auth@1.6.12/dist/plugins/username/index.mjs
+                 * Source: better-auth@1.6.16/dist/plugins/username/index.mjs
                  */
                 async before(user, context) {
                   if (!isGoogleCallbackPath(context?.path)) {
@@ -107,10 +107,10 @@ export function generatedUsername() {
            * - Better Auth hook matcher docs:
            *   https://github.com/better-auth/better-auth/blob/main/docs/content/docs/guides/your-first-plugin.mdx
            * - Installed endpoint sources:
-           *   better-auth@1.6.12/dist/api/routes/sign-up.mjs
-           *   better-auth@1.6.12/dist/api/routes/update-user.mjs
+           *   better-auth@1.6.16/dist/api/routes/sign-up.mjs
+           *   better-auth@1.6.16/dist/api/routes/update-user.mjs
            * - Installed username plugin uses the same hook path list:
-           *   better-auth@1.6.12/dist/plugins/username/index.mjs
+           *   better-auth@1.6.16/dist/plugins/username/index.mjs
            */
           matcher(context) {
             return (
