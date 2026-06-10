@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.29.0",
+    "@repo/ai": "workspace:*",
     "@repo/backend": "workspace:*",
     "@repo/contents": "workspace:*",
     "@repo/internationalization": "workspace:*",
