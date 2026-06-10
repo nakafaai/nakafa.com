@@ -58,12 +58,12 @@
   "devEngines": {
     "runtime": {
       "name": "node",
-      "version": "^22.22.0",
+      "version": "^24.0.0",
       "onFail": "download"
     }
   },
   "engines": {
-    "node": ">=22"
+    "node": "^24.0.0"
   },
   "packageManager": "pnpm@10.34.1",
   "type": "module"
