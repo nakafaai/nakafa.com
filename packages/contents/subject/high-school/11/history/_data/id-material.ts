@@ -38,7 +38,7 @@ const idMaterials = [
       },
       {
         title: "Akhir Masa Negara Kolonial Belanda",
-        href: `${BASE_PATH}/colonialism-resistance/end-colonialism`,
+        href: `${BASE_PATH}/national-movement/end-colonialism`,
       },
     ],
   },

@@ -1,25 +1,25 @@
 import { NAKAFA_MCP_RECOMMENDED_ENDPOINT } from "@repo/contents/_lib/agent/constants";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
-import { cacheLife } from "next/cache";
 import { hasLocale, type Locale } from "next-intl";
+import { applyContentRuntimeCache } from "@/lib/content/cache";
 import {
   BASE_URL,
-  LLMS_INDEX_TARGET_MAX_CHARS,
   type LlmsSection,
   SECTION_LABELS,
 } from "@/lib/llms/constants";
 import {
+  getContentPageLlmsEntries,
   getLlmsSections,
-  getLocalizedLlmsEntries,
+  getSiteLlmsEntries,
   isLlmsSection,
   type LlmsEntry,
 } from "@/lib/llms/entries";
+import { getLocaleLabel, stripLlmsRouteExtension } from "@/lib/llms/format";
 import {
-  formatSegmentTitle,
-  getLocaleLabel,
-  stripLlmsRouteExtension,
-} from "@/lib/llms/format";
+  type ContentSitemapPage,
+  getSitemapPageDescriptorsEffect,
+} from "@/lib/sitemap/routes";
 
 /** Builds the small root llms index that points agents to section indexes. */
 export function buildRootLlmsIndexText() {
@@ -49,7 +49,7 @@ export async function getCachedLlmsSectionIndexText({
 }) {
   "use cache";
 
-  cacheLife("max");
+  applyContentRuntimeCache();
 
   return await Effect.runPromise(getLlmsSectionIndexText(cleanSlug));
 }
@@ -74,51 +74,35 @@ export const getLlmsSectionIndexText = Effect.fn("www.llms.index.text")(
       return null;
     }
 
-    const entries = yield* getLocalizedLlmsEntries(locale);
-    return buildLlmsSectionIndexTextFromEntries({ cleanSlug, entries });
+    if (section === "site") {
+      const entries = yield* getSiteLlmsEntries(locale);
+      return buildLlmsSiteIndexText({ entries, locale });
+    }
+
+    const page = parsePageIndex(prefixParts);
+    if (page !== null) {
+      const entries = yield* getContentPageLlmsEntries({
+        locale,
+        page,
+        section,
+      });
+
+      return buildLlmsPageIndexText({
+        entries,
+        locale,
+        page,
+        section,
+      });
+    }
+
+    if (prefixParts.length === 1) {
+      const pages = yield* getLlmsSectionPages({ locale, section });
+      return buildLlmsSectionPageMapText({ locale, pages, section });
+    }
+
+    return null;
   }
 );
-
-/** Builds a locale or section llms index from prebuilt entries. */
-export function buildLlmsSectionIndexTextFromEntries({
-  cleanSlug,
-  entries,
-}: {
-  cleanSlug: string;
-  entries: LlmsEntry[];
-}) {
-  const parsed = parseLlmsIndexSlug(cleanSlug);
-
-  if (!parsed) {
-    return null;
-  }
-
-  const { locale, prefixParts } = parsed;
-
-  if (prefixParts.length === 0) {
-    return buildLocaleLlmsIndexText(locale);
-  }
-
-  const section = prefixParts[0];
-  if (!isLlmsSection(section)) {
-    return null;
-  }
-
-  const scopedEntries = entries.filter((entry) =>
-    entryBelongsToPrefix(entry, prefixParts)
-  );
-
-  if (scopedEntries.length === 0) {
-    return null;
-  }
-
-  return buildScopedLlmsIndexText({
-    entries: scopedEntries,
-    locale,
-    prefixParts,
-    section,
-  });
-}
 
 /** Parses `/llms/:locale/...` index routes into locale and prefix parts. */
 function parseLlmsIndexSlug(cleanSlug: string) {
@@ -133,10 +117,32 @@ function parseLlmsIndexSlug(cleanSlug: string) {
     return null;
   }
 
+  const prefixParts = parts.slice(2);
+  if (prefixParts.at(-1) === "llms") {
+    prefixParts.pop();
+  }
+
   return {
     locale: rawLocale,
-    prefixParts: parts.slice(2),
+    prefixParts,
   };
+}
+
+/** Builds the bounded site index from static site routes only. */
+function buildLlmsSiteIndexText({
+  entries,
+  locale,
+}: {
+  entries: LlmsEntry[];
+  locale: Locale;
+}) {
+  const localeLabel = getLocaleLabel(locale);
+
+  return renderIndexText({
+    lines: entries.map(formatLlmsEntryLine),
+    summary: `For AI agents: static ${localeLabel} site pages that do not require content route catalog reads.`,
+    title: `Nakafa ${localeLabel} Site Pages`,
+  });
 }
 
 /** Builds the locale-level index that links to each content section. */
@@ -157,55 +163,93 @@ function buildLocaleLlmsIndexText(locale: Locale) {
   ].join("\n");
 }
 
-/** Builds a scoped section index, splitting large scopes into child indexes. */
-function buildScopedLlmsIndexText({
+/** Builds a bounded section index that links to materialized route pages. */
+function buildLlmsSectionPageMapText({
+  locale,
+  pages,
+  section,
+}: {
+  locale: Locale;
+  pages: ContentSitemapPage[];
+  section: Exclude<LlmsSection, "site">;
+}) {
+  const localeLabel = getLocaleLabel(locale);
+  const sectionLabel = SECTION_LABELS[section];
+  const lines = pages.map((page) => {
+    const href = `${BASE_URL}/llms/${locale}/${section}/page/${page.page}/llms.txt`;
+    return `- [${sectionLabel} page ${page.page}](${href}): bounded route-catalog artifact page for ${localeLabel} ${sectionLabel.toLowerCase()}.`;
+  });
+
+  return renderIndexText({
+    lines,
+    summary: `For AI agents: choose a bounded ${sectionLabel.toLowerCase()} route artifact page, then follow page-level \`.md\` links. This index reads materialized page descriptors, not section routes.`,
+    title: `Nakafa ${localeLabel} ${sectionLabel} Pages`,
+  });
+}
+
+/** Builds one bounded page index from materialized route entries. */
+function buildLlmsPageIndexText({
   entries,
   locale,
-  prefixParts,
+  page,
   section,
 }: {
   entries: LlmsEntry[];
   locale: Locale;
-  prefixParts: string[];
-  section: LlmsSection;
+  page: number;
+  section: Exclude<LlmsSection, "site">;
 }) {
   const localeLabel = getLocaleLabel(locale);
   const sectionLabel = SECTION_LABELS[section];
-  const titleSuffix = prefixParts.slice(1).map(formatSegmentTitle).join(" / ");
-  let title = `Nakafa ${localeLabel} ${sectionLabel} Index`;
 
-  if (titleSuffix) {
-    title = `Nakafa ${localeLabel} ${sectionLabel}: ${titleSuffix} Index`;
+  if (entries.length === 0) {
+    return renderIndexText({
+      lines: [],
+      summary: `This bounded ${sectionLabel.toLowerCase()} route-catalog page is currently empty.`,
+      title: `Nakafa ${localeLabel} ${sectionLabel} Page ${page}`,
+    });
   }
-
-  const summary = `For AI agents: use [llms.txt](${BASE_URL}/llms.txt). Sitemap-derived links for ${localeLabel} ${sectionLabel.toLowerCase()} pages. Use \`.md\` links when available for agent-friendly markdown.`;
-  const allPageLines = entries.map(formatLlmsEntryLine);
-  const fullPageIndex = renderIndexText({
-    lines: allPageLines,
-    summary,
-    title,
-  });
-
-  if (fullPageIndex.length <= LLMS_INDEX_TARGET_MAX_CHARS) {
-    return fullPageIndex;
-  }
-
-  const directEntries = entries.filter((entry) =>
-    entryMatchesExactPrefix(entry, prefixParts)
-  );
-  const childGroups = getChildGroups(entries, prefixParts);
-  const lines = [
-    ...childGroups.map(([segment, childEntries]) =>
-      formatChildIndexLine({ childEntries, locale, prefixParts, segment })
-    ),
-    ...directEntries.map(formatLlmsEntryLine),
-  ];
 
   return renderIndexText({
-    lines,
-    summary,
-    title,
+    lines: entries.map(formatLlmsEntryLine),
+    summary: `For AI agents: bounded sitemap-derived links for ${localeLabel} ${sectionLabel.toLowerCase()} page ${page}. Use \`.md\` links when available for agent-friendly markdown.`,
+    title: `Nakafa ${localeLabel} ${sectionLabel} Page ${page}`,
   });
+}
+
+/** Parses `/:section/page/:id` index routes into a materialized page id. */
+function parsePageIndex(prefixParts: readonly string[]) {
+  if (prefixParts.length !== 3 || prefixParts[1] !== "page") {
+    return null;
+  }
+
+  const pageSegment = prefixParts.slice(2).join("");
+  const page = Number.parseInt(pageSegment, 10);
+  if (!Number.isInteger(page) || page < 0) {
+    return null;
+  }
+
+  return page;
+}
+
+/** Reads page descriptors for one locale and content section. */
+function getLlmsSectionPages({
+  locale,
+  section,
+}: {
+  locale: Locale;
+  section: Exclude<LlmsSection, "site">;
+}) {
+  return getSitemapPageDescriptorsEffect().pipe(
+    Effect.map((pages) =>
+      pages.filter(
+        (page): page is ContentSitemapPage =>
+          "section" in page &&
+          page.locale === locale &&
+          page.section === section
+      )
+    )
+  );
 }
 
 /** Renders one llms index document with the standard title and summary shape. */
@@ -228,68 +272,6 @@ function renderIndexText({
     ...lines,
     "",
   ].join("\n");
-}
-
-/** Checks whether an entry is inside the current section prefix. */
-function entryBelongsToPrefix(entry: LlmsEntry, prefixParts: string[]) {
-  if (prefixParts[0] !== entry.section) {
-    return false;
-  }
-
-  if (prefixParts.length > entry.segments.length) {
-    return false;
-  }
-
-  for (const [index, part] of prefixParts.entries()) {
-    if (entry.segments[index] !== part) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-/** Checks whether an entry is exactly the current prefix page. */
-function entryMatchesExactPrefix(entry: LlmsEntry, prefixParts: string[]) {
-  return (
-    entryBelongsToPrefix(entry, prefixParts) &&
-    entry.segments.length === prefixParts.length
-  );
-}
-
-/** Groups entries by the next route segment below the current prefix. */
-function getChildGroups(entries: LlmsEntry[], prefixParts: string[]) {
-  const groups = new Map<string, LlmsEntry[]>();
-
-  for (const entry of entries) {
-    const childSegment = entry.segments[prefixParts.length];
-
-    if (!childSegment) {
-      continue;
-    }
-
-    const group = groups.get(childSegment) ?? [];
-    group.push(entry);
-    groups.set(childSegment, group);
-  }
-
-  return Array.from(groups.entries()).sort(([a], [b]) => a.localeCompare(b));
-}
-
-/** Formats one child index link for a split section index. */
-function formatChildIndexLine({
-  childEntries,
-  locale,
-  prefixParts,
-  segment,
-}: {
-  childEntries: LlmsEntry[];
-  locale: Locale;
-  prefixParts: string[];
-  segment: string;
-}) {
-  const href = `${BASE_URL}/llms/${locale}/${[...prefixParts, segment].join("/")}/llms.txt`;
-  return `- [${formatSegmentTitle(segment)}](${href}): Sitemap group with ${childEntries.length} pages.`;
 }
 
 /** Formats one page-level llms entry line. */

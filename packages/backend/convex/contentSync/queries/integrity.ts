@@ -1,3 +1,4 @@
+import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import { internalQuery } from "@repo/backend/convex/_generated/server";
 import { contentAuthorContentIdValidator } from "@repo/backend/convex/authors/schema";
 import {
@@ -41,6 +42,28 @@ const subjectSectionIntegrityItemValidator = v.object({
   slug: v.string(),
   topicId: v.optional(v.id("subjectTopics")),
 });
+
+interface SubjectSectionIntegrityItem {
+  locale: Doc<"subjectSections">["locale"];
+  slug: string;
+  topicId?: Id<"subjectTopics">;
+}
+
+/** Maps a subject section row into the optional diagnostic integrity shape. */
+function getSubjectSectionIntegrityItem(
+  section: Doc<"subjectSections">
+): SubjectSectionIntegrityItem {
+  const item: SubjectSectionIntegrityItem = {
+    locale: section.locale,
+    slug: section.slug,
+  };
+
+  if (section.topicId) {
+    item.topicId = section.topicId;
+  }
+
+  return item;
+}
 
 export const listIntegrityExerciseQuestionsPage = internalQuery({
   args: {
@@ -148,6 +171,7 @@ export const listIntegritySubjectSectionsPage = internalQuery({
     paginationOpts: paginationOptsValidator,
   },
   returns: paginationResultValidator(subjectSectionIntegrityItemValidator),
+  /** Returns subject section rows in the optional shape declared by the integrity validator. */
   handler: async (ctx, args) => {
     const page = await ctx.db
       .query("subjectSections")
@@ -155,11 +179,7 @@ export const listIntegritySubjectSectionsPage = internalQuery({
 
     return {
       ...page,
-      page: page.page.map((section) => ({
-        locale: section.locale,
-        slug: section.slug,
-        topicId: section.topicId,
-      })),
+      page: page.page.map(getSubjectSectionIntegrityItem),
     };
   },
 });

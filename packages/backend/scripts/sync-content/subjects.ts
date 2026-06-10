@@ -1,4 +1,5 @@
-import type { Locale } from "@repo/backend/convex/lib/validators/contents";
+import { internal } from "@repo/backend/convex/_generated/api";
+import { ScriptFailureError } from "@repo/backend/scripts/lib/errors";
 import {
   computeHash,
   parseDateToEpoch,
@@ -6,7 +7,7 @@ import {
 } from "@repo/backend/scripts/lib/mdx-parser/content";
 import { parseSubjectMaterialFile } from "@repo/backend/scripts/lib/mdx-parser/materials";
 import { parseSubjectPath } from "@repo/backend/scripts/lib/mdx-parser/paths";
-import { callConvex } from "@repo/backend/scripts/sync-content/convex";
+import { callConvexMutation } from "@repo/backend/scripts/sync-content/convex";
 import {
   formatDuration,
   log,
@@ -23,42 +24,27 @@ import {
   BATCH_SIZES,
   LOCALE_SUBJECT_MATERIAL_FILE_REGEX,
   parseLocale,
-  SyncResultSchema,
+  SubjectSectionSyncResultSchema,
+  SubjectTopicSyncResultSchema,
 } from "@repo/backend/scripts/sync-content/schemas";
 import type {
   ConvexConfig,
   SyncOptions,
   SyncResult,
 } from "@repo/backend/scripts/sync-content/types";
+import type { FunctionArgs } from "convex/server";
 import { Effect } from "effect";
 
-interface SubjectTopicPayload {
-  category: string;
-  description?: string;
-  grade: string;
-  locale: Locale;
-  material: string;
-  sectionCount: number;
-  slug: string;
-  title: string;
-  topic: string;
-}
+type SubjectTopicPayload = FunctionArgs<
+  typeof internal.contentSync.mutations.subjects.bulkSyncSubjectTopics
+>["topics"][number];
 
-interface SubjectSectionPayload {
-  authors: Array<{ name: string }>;
-  body: string;
-  category: string;
-  contentHash: string;
-  date: number;
-  description?: string;
-  grade: string;
-  locale: Locale;
-  material: string;
-  section: string;
-  slug: string;
-  subject?: string;
-  title: string;
-  topic: string;
+type SubjectSectionPayload = FunctionArgs<
+  typeof internal.contentSync.mutations.subjects.bulkSyncSubjectSections
+>["sections"][number];
+
+interface SubjectSectionOrder {
+  order: number;
   topicSlug: string;
 }
 
@@ -84,6 +70,8 @@ export const syncSubjectTopics = Effect.fn("sync.subjectTopics")(function* (
   const totals: SyncResult = { created: 0, updated: 0, unchanged: 0 };
   const topics: SubjectTopicPayload[] = [];
   const errors: string[] = [];
+  const sectionCountByTopicSlug =
+    yield* readMaterialListedSubjectSectionCountByTopicSlug(options);
 
   for (const materialFile of materialFiles) {
     const result = yield* Effect.either(
@@ -105,12 +93,30 @@ export const syncSubjectTopics = Effect.fn("sync.subjectTopics")(function* (
           locale: topic.locale,
           slug: topic.slug,
           category: topic.category,
+          contentHash: computeHash(
+            JSON.stringify({
+              category: topic.category,
+              description: topic.description,
+              grade: topic.grade,
+              locale: topic.locale,
+              material: topic.material,
+              order: topic.order,
+              sectionCount:
+                sectionCountByTopicSlug.get(`${topic.locale}:${topic.slug}`) ??
+                0,
+              slug: topic.slug,
+              title: topic.title,
+              topic: topic.topic,
+            })
+          ),
           grade: topic.grade,
           material: topic.material,
+          order: topic.order,
           topic: topic.topic,
           title: topic.title,
           description: topic.description,
-          sectionCount: topic.sectionCount,
+          sectionCount:
+            sectionCountByTopicSlug.get(`${topic.locale}:${topic.slug}`) ?? 0,
         }));
       })
     );
@@ -131,6 +137,10 @@ export const syncSubjectTopics = Effect.fn("sync.subjectTopics")(function* (
     for (const error of errors) {
       logError(error);
     }
+  }
+
+  if (errors.length > 0) {
+    return yield* failSubjectParseErrors("topics", errors);
   }
 
   if (!options.quiet) {
@@ -155,12 +165,11 @@ export const syncSubjectTopics = Effect.fn("sync.subjectTopics")(function* (
       log(formatBatchProgress(progress, batchNum, totalBatches, batch.length));
     }
 
-    const result = yield* callConvex(
+    const result = yield* callConvexMutation(
       config,
-      "mutation",
-      "contentSync/mutations/subjects:bulkSyncSubjectTopics",
+      internal.contentSync.mutations.subjects.bulkSyncSubjectTopics,
       { topics: batch },
-      SyncResultSchema
+      SubjectTopicSyncResultSchema
     );
 
     totals.created += result.created;
@@ -218,6 +227,7 @@ export const syncSubjectSections = Effect.fn("sync.subjectSections")(function* (
   };
   const sections: SubjectSectionPayload[] = [];
   const errors: string[] = [];
+  const sectionOrderBySlug = yield* readSubjectSectionOrderBySlug(options);
 
   for (const file of files) {
     const result = yield* Effect.either(
@@ -225,6 +235,46 @@ export const syncSubjectSections = Effect.fn("sync.subjectSections")(function* (
         const pathInfo = yield* parseSubjectPath(file);
         const { metadata, body } = yield* readMdxFile(file);
         const topicSlug = `subject/${pathInfo.category}/${pathInfo.grade}/${pathInfo.material}/${pathInfo.topic}`;
+        const sectionOrder = sectionOrderBySlug.get(
+          `${pathInfo.locale}:${pathInfo.slug}`
+        );
+
+        if (!sectionOrder) {
+          return yield* Effect.fail(
+            new ScriptFailureError({
+              message: `Missing subject material order for ${pathInfo.locale}:${pathInfo.slug}. Add this lesson to the matching _data material file before syncing.`,
+            })
+          );
+        }
+
+        if (sectionOrder.topicSlug !== topicSlug) {
+          return yield* Effect.fail(
+            new ScriptFailureError({
+              message: `Subject material order for ${pathInfo.locale}:${pathInfo.slug} points at ${sectionOrder.topicSlug}, expected ${topicSlug}.`,
+            })
+          );
+        }
+
+        const date = yield* parseDateToEpoch(metadata.date);
+        const contentHash = computeHash(
+          JSON.stringify({
+            authors: metadata.authors,
+            body,
+            category: pathInfo.category,
+            date,
+            description: metadata.description,
+            grade: pathInfo.grade,
+            locale: pathInfo.locale,
+            material: pathInfo.material,
+            order: sectionOrder.order,
+            section: pathInfo.section,
+            slug: pathInfo.slug,
+            subject: metadata.subject,
+            title: metadata.title,
+            topic: pathInfo.topic,
+            topicSlug,
+          })
+        );
 
         return {
           locale: pathInfo.locale,
@@ -233,14 +283,15 @@ export const syncSubjectSections = Effect.fn("sync.subjectSections")(function* (
           category: pathInfo.category,
           grade: pathInfo.grade,
           material: pathInfo.material,
+          order: sectionOrder.order,
           topic: pathInfo.topic,
           section: pathInfo.section,
           title: metadata.title,
           description: metadata.description,
-          date: yield* parseDateToEpoch(metadata.date),
+          date,
           subject: metadata.subject,
           body,
-          contentHash: computeHash(body + JSON.stringify(metadata.authors)),
+          contentHash,
           authors: metadata.authors,
         };
       })
@@ -264,6 +315,10 @@ export const syncSubjectSections = Effect.fn("sync.subjectSections")(function* (
     }
   }
 
+  if (errors.length > 0) {
+    return yield* failSubjectParseErrors("sections", errors);
+  }
+
   const totalBatches = Math.ceil(sections.length / BATCH_SIZES.subjectSections);
   const progress = createBatchProgress(
     sections.length,
@@ -282,12 +337,11 @@ export const syncSubjectSections = Effect.fn("sync.subjectSections")(function* (
       log(formatBatchProgress(progress, batchNum, totalBatches, batch.length));
     }
 
-    const result = yield* callConvex(
+    const result = yield* callConvexMutation(
       config,
-      "mutation",
-      "contentSync/mutations/subjects:bulkSyncSubjectSections",
+      internal.contentSync.mutations.subjects.bulkSyncSubjectSections,
       { sections: batch },
-      SyncResultSchema
+      SubjectSectionSyncResultSchema
     );
 
     totals.created += result.created;
@@ -327,3 +381,127 @@ export const syncSubjectSections = Effect.fn("sync.subjectSections")(function* (
 
   return { ...totals, durationMs, itemsPerSecond };
 });
+
+/** Reads authored subject section order from material modules for sync validation. */
+const readSubjectSectionOrderBySlug = Effect.fn(
+  "sync.readSubjectSectionOrderBySlug"
+)(function* (options: SyncOptions) {
+  const pattern = options.locale
+    ? `subject/**/_data/${options.locale}-material.ts`
+    : "subject/**/_data/*-material.ts";
+  const materialFiles = yield* globFiles(pattern);
+  const errors: string[] = [];
+  const orderBySlug = new Map<string, SubjectSectionOrder>();
+
+  for (const materialFile of materialFiles) {
+    const result = yield* Effect.either(
+      Effect.gen(function* () {
+        const localeMatch = materialFile.match(
+          LOCALE_SUBJECT_MATERIAL_FILE_REGEX
+        );
+        if (!localeMatch) {
+          return;
+        }
+
+        const locale = yield* parseLocale(localeMatch[1], materialFile);
+        const topics = yield* parseSubjectMaterialFile(materialFile, locale);
+
+        for (const topic of topics) {
+          for (const section of topic.sections) {
+            const key = `${topic.locale}:${section.slug}`;
+            if (orderBySlug.has(key)) {
+              return yield* Effect.fail(
+                new ScriptFailureError({
+                  message: `Duplicate subject section material order for ${key}.`,
+                })
+              );
+            }
+
+            orderBySlug.set(key, {
+              order: section.order,
+              topicSlug: topic.slug,
+            });
+          }
+        }
+      })
+    );
+
+    if (result._tag === "Left") {
+      const message =
+        result.left instanceof Error
+          ? result.left.message
+          : String(result.left);
+      errors.push(`${materialFile}: ${message}`);
+    }
+  }
+
+  if (errors.length > 0) {
+    return yield* failSubjectParseErrors("section order", errors);
+  }
+
+  return orderBySlug;
+});
+
+/** Counts existing subject MDX files that are listed in authored material order. */
+const readMaterialListedSubjectSectionCountByTopicSlug = Effect.fn(
+  "sync.readMaterialListedSubjectSectionCountByTopicSlug"
+)(function* (options: SyncOptions) {
+  const sectionOrderBySlug = yield* readSubjectSectionOrderBySlug(options);
+  const pattern = options.locale
+    ? `subject/**/${options.locale}.mdx`
+    : "subject/**/*.mdx";
+  const files = yield* globFiles(pattern);
+  const counts = new Map<string, number>();
+  const errors: string[] = [];
+
+  for (const file of files) {
+    const result = yield* Effect.either(parseSubjectPath(file));
+
+    if (result._tag === "Left") {
+      const message =
+        result.left instanceof Error
+          ? result.left.message
+          : String(result.left);
+      errors.push(`${file}: ${message}`);
+      continue;
+    }
+
+    const pathInfo = result.right;
+    const topicSlug = `subject/${pathInfo.category}/${pathInfo.grade}/${pathInfo.material}/${pathInfo.topic}`;
+    const sectionOrder = sectionOrderBySlug.get(
+      `${pathInfo.locale}:${pathInfo.slug}`
+    );
+
+    if (!sectionOrder) {
+      errors.push(
+        `${file}: Missing subject material order for ${pathInfo.locale}:${pathInfo.slug}. Add this lesson to the matching _data material file before syncing.`
+      );
+      continue;
+    }
+
+    if (sectionOrder.topicSlug !== topicSlug) {
+      errors.push(
+        `${file}: Subject material order for ${pathInfo.locale}:${pathInfo.slug} points at ${sectionOrder.topicSlug}, expected ${topicSlug}.`
+      );
+      continue;
+    }
+
+    const countKey = `${pathInfo.locale}:${topicSlug}`;
+    counts.set(countKey, (counts.get(countKey) ?? 0) + 1);
+  }
+
+  if (errors.length > 0) {
+    return yield* failSubjectParseErrors("topic section counts", errors);
+  }
+
+  return counts;
+});
+
+/** Fails subject sync before partial ordered navigation data can be published. */
+function failSubjectParseErrors(kind: string, errors: readonly string[]) {
+  return Effect.fail(
+    new ScriptFailureError({
+      message: `Cannot sync subject ${kind} with invalid subject material data:\n${errors.join("\n")}`,
+    })
+  );
+}

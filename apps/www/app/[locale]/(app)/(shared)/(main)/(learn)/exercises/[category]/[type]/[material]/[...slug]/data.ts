@@ -1,12 +1,3 @@
-import { getExerciseCount } from "@repo/contents/_lib/exercises/collection";
-import {
-  getCurrentMaterial,
-  getMaterials,
-} from "@repo/contents/_lib/exercises/material";
-import {
-  getRenderableExerciseByNumber,
-  getRenderableExercisesContent,
-} from "@repo/contents/_lib/exercises/renderable";
 import {
   getMaterialPath,
   parseExercisesCategory,
@@ -18,12 +9,24 @@ import {
   isTryOutCollectionSlug,
 } from "@repo/contents/_lib/exercises/slug";
 import { Effect, Option } from "effect";
-import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
+import { applyContentRuntimeCache } from "@/lib/content/cache";
+import {
+  getCurrentExerciseMaterial,
+  getRuntimeExerciseMaterials,
+} from "@/lib/content/navigation";
+import {
+  fetchRuntimeExerciseGroupPage,
+  fetchRuntimeExerciseQuestionPage,
+  fetchRuntimeExerciseSetPage,
+} from "@/lib/content/runtime";
+import { getContentRuntimeSlug } from "@/lib/content/slug";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { isNumber } from "@/lib/utils/number";
 
 type ResolvedParams = Awaited<ReturnType<typeof getResolvedParams>>;
+
+const YEAR_SEGMENT = /^\d{4}$/;
 
 /** Validates and normalizes one exercises route parameter object. */
 export async function getResolvedParams(
@@ -71,7 +74,7 @@ export async function getExerciseRouteData(
 ) {
   "use cache";
 
-  cacheLife("max");
+  applyContentRuntimeCache();
 
   const slug = slugKey === "" ? [] : slugKey.split("/");
   const pagePath = getSlugPath(category, type, material, slug);
@@ -83,33 +86,19 @@ export async function getExerciseRouteData(
     !isTryOutCollectionSlug(slug);
 
   if (isSpecificExercise) {
-    const exerciseNumber = Number.parseInt(lastSlug, 10);
     const baseSlug = slug.slice(0, -1);
     const setPath = getSlugPath(category, type, material, baseSlug);
+    const runtimeSlug = getContentRuntimeSlug(pagePath);
 
-    const [materials, exercise, exerciseCount] = await Promise.all([
-      Effect.runPromise(getMaterials(materialPath, locale)),
-      Effect.runPromise(
-        getRenderableExerciseByNumber(locale, setPath, exerciseNumber)
-      ),
-      Effect.runPromise(
-        Effect.match(getExerciseCount(setPath), {
-          onFailure: () => 0,
-          onSuccess: (count) => count,
-        })
-      ),
+    const [materials, questionPage] = await Promise.all([
+      Effect.runPromise(getRuntimeExerciseMaterials(materialPath, locale)),
+      fetchRuntimeExerciseQuestionPage({
+        locale,
+        slug: runtimeSlug,
+      }),
     ]);
 
-    const { currentMaterial, currentMaterialItem } = getCurrentMaterial(
-      setPath,
-      materials
-    );
-
-    if (
-      Option.isNone(exercise) ||
-      Option.isNone(currentMaterial) ||
-      Option.isNone(currentMaterialItem)
-    ) {
+    if (!questionPage) {
       return {
         kind: "missing" as const,
         materialPath,
@@ -117,12 +106,23 @@ export async function getExerciseRouteData(
       };
     }
 
+    const { currentMaterial, currentMaterialItem } = getCurrentExerciseMaterial(
+      setPath,
+      materials
+    );
+
+    if (Option.isNone(currentMaterial) || Option.isNone(currentMaterialItem)) {
+      throw new Error(
+        `Synced exercise question is missing material navigation: ${pagePath}`
+      );
+    }
+
     return {
       kind: "single" as const,
       currentMaterial: currentMaterial.value,
       currentMaterialItem: currentMaterialItem.value,
-      exercise: exercise.value,
-      exerciseCount,
+      exercise: questionPage.exercise,
+      exerciseCount: questionPage.exerciseCount,
       exerciseFilePath: pagePath,
       materialPath,
       pagePath,
@@ -130,13 +130,56 @@ export async function getExerciseRouteData(
     };
   }
 
-  const materials = await Effect.runPromise(getMaterials(materialPath, locale));
-  const { currentMaterial, currentMaterialItem } = getCurrentMaterial(
+  const materials = await Effect.runPromise(
+    getRuntimeExerciseMaterials(materialPath, locale)
+  );
+  const runtimeSlug = getContentRuntimeSlug(pagePath);
+  const setPage = await fetchRuntimeExerciseSetPage({
+    locale,
+    slug: runtimeSlug,
+  });
+  const { currentMaterial, currentMaterialItem } = getCurrentExerciseMaterial(
     pagePath,
     materials
   );
 
-  if (Option.isSome(currentMaterial) && Option.isNone(currentMaterialItem)) {
+  if (setPage) {
+    if (Option.isNone(currentMaterial) || Option.isNone(currentMaterialItem)) {
+      throw new Error(
+        `Synced exercise set is missing material navigation: ${pagePath}`
+      );
+    }
+
+    return {
+      kind: "set" as const,
+      currentMaterial: currentMaterial.value,
+      currentMaterialItem: currentMaterialItem.value,
+      exercises: setPage.exercises,
+      materialPath,
+      materials,
+      pagePath,
+    };
+  }
+
+  const groupParams = getExerciseGroupParams(slug);
+  const groupPage = groupParams
+    ? await fetchRuntimeExerciseGroupPage({
+        category,
+        exerciseType: groupParams.exerciseType,
+        locale,
+        material,
+        type,
+        year: groupParams.year,
+      })
+    : null;
+
+  if (groupPage) {
+    if (Option.isNone(currentMaterial) || Option.isSome(currentMaterialItem)) {
+      throw new Error(
+        `Synced exercise group is missing material navigation: ${pagePath}`
+      );
+    }
+
     return {
       kind: "year-group" as const,
       currentMaterial: currentMaterial.value,
@@ -153,25 +196,9 @@ export async function getExerciseRouteData(
     };
   }
 
-  const exercises = await Effect.runPromise(
-    getRenderableExercisesContent(locale, pagePath)
-  );
-
-  if (exercises.length === 0) {
-    return {
-      kind: "missing" as const,
-      materialPath,
-      pagePath,
-    };
-  }
-
   return {
-    kind: "set" as const,
-    currentMaterial: currentMaterial.value,
-    currentMaterialItem: currentMaterialItem.value,
-    exercises,
+    kind: "missing" as const,
     materialPath,
-    materials,
     pagePath,
   };
 }
@@ -179,3 +206,24 @@ export async function getExerciseRouteData(
 export type ExerciseRouteData = Awaited<
   ReturnType<typeof getExerciseRouteData>
 >;
+
+/** Parses exercise group route slugs such as `try-out` or `try-out/2026`. */
+function getExerciseGroupParams(slug: string[]) {
+  const exerciseType = slug.at(0);
+
+  if (!exerciseType || slug.length > 2) {
+    return null;
+  }
+
+  const year = slug.at(1);
+
+  if (!year) {
+    return { exerciseType };
+  }
+
+  if (!YEAR_SEGMENT.test(year)) {
+    return null;
+  }
+
+  return { exerciseType, year };
+}

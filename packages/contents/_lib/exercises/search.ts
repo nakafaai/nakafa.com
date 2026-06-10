@@ -6,9 +6,11 @@ import {
   getExerciseTypeLabel,
 } from "@repo/contents/_lib/exercises/label";
 import type { Locale } from "@repo/contents/_types/content";
-import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
-import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material";
-import type { ExercisesType } from "@repo/contents/_types/exercises/type";
+import type {
+  ExercisesCategory,
+  ExercisesMaterial,
+  ExercisesType,
+} from "@repo/contents/_types/taxonomy";
 import { Option } from "effect";
 
 const whitespacePattern = /\s+/g;

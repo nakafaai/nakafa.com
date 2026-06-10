@@ -1,5 +1,6 @@
+import { internal } from "@repo/backend/convex/_generated/api";
 import { readMdxFile } from "@repo/backend/scripts/lib/mdx-parser/content";
-import { callConvex } from "@repo/backend/scripts/sync-content/convex";
+import { callConvexMutation } from "@repo/backend/scripts/sync-content/convex";
 import {
   formatDuration,
   log,
@@ -100,10 +101,9 @@ export const syncAuthors = Effect.fn("sync.authors")(function* (
     index += BATCH_SIZES.authors
   ) {
     const batch = authorNames.slice(index, index + BATCH_SIZES.authors);
-    const result = yield* callConvex(
+    const result = yield* callConvexMutation(
       config,
-      "mutation",
-      "contentSync/mutations/authors:bulkSyncAuthors",
+      internal.contentSync.mutations.authors.bulkSyncAuthors,
       { authorNames: batch },
       AuthorSyncResultSchema
     );

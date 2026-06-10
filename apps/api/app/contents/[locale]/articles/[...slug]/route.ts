@@ -1,83 +1,77 @@
-import { getContentStaticParams } from "@repo/contents/_lib/manifest/cache/static-params";
-import { getScopedContents } from "@repo/contents/_lib/scoped";
-import {
-  FileReadError,
-  GitHubFetchError,
-  InvalidPathError,
-  MetadataParseError,
-} from "@repo/contents/_shared/error";
-import { LocaleSchema } from "@repo/contents/_types/content";
 import { logError } from "@repo/utilities/logging/effect";
-import { Effect, Option, Schema } from "effect";
+import { Effect } from "effect";
 import { NextResponse } from "next/server";
+import {
+  getArticleApiContentPage,
+  listApiStaticParams,
+  parseApiLocale,
+  parseApiPageParams,
+} from "@/lib/content/runtime";
 
 export const revalidate = false;
 
 /**
- * Generates all locale-aware article API paths under `/contents/:locale/articles/*`.
+ * Generates all locale-aware article API paths from the Convex route catalog.
  */
 export function generateStaticParams() {
-  return getContentStaticParams({
-    basePath: "articles",
+  return listApiStaticParams({
+    prefix: "articles/",
+    section: "articles",
   });
 }
 
 /**
- * Returns article content lists for the API content route under
- * `/contents/:locale/articles/*`.
+ * Returns article content lists for `/contents/:locale/articles/*`.
  */
 export async function GET(
-  _req: Request,
+  request: Request,
   { params }: { params: Promise<{ locale: string; slug: string[] }> }
-) {
+): Promise<Response> {
   const { locale, slug } = await params;
+  const validLocale = parseApiLocale(locale);
 
-  const validLocale = Schema.decodeUnknownOption(LocaleSchema)(locale);
-  if (Option.isNone(validLocale)) {
+  if (!validLocale) {
     return NextResponse.json(
       { error: "Invalid locale. Must be 'en' or 'id'." },
       { status: 400 }
     );
   }
 
-  const basePath = slug.join("/");
-  const cleanPath = `articles/${basePath}` as const;
+  const searchParams = new URL(request.url).searchParams;
+  const pageParams = parseApiPageParams(searchParams);
+
+  if (!pageParams) {
+    return NextResponse.json(
+      { error: "Invalid pagination. Limit must be between 1 and 100." },
+      { status: 400 }
+    );
+  }
+
+  const prefix = `articles/${slug.join("/")}`;
 
   return Effect.runPromise(
-    getScopedContents("articles", {
-      locale: validLocale.value,
-      basePath: cleanPath,
-      includeMDX: false,
+    getArticleApiContentPage({
+      ...pageParams,
+      locale: validLocale,
+      prefix,
     }).pipe(
-      Effect.matchEffect({
-        onFailure: (error: unknown) =>
-          Effect.gen(function* () {
-            const err =
-              error instanceof Error ? error : new Error(String(error));
+      Effect.map((data): Response => NextResponse.json(data)),
+      Effect.catchAll((error) =>
+        Effect.gen(function* () {
+          yield* logError(error, {
+            service: "api-contents",
+            locale,
+            basePath: slug.join("/") || "/",
+            slugLength: slug.length,
+            message: "Failed to fetch contents.",
+          });
 
-            yield* logError(err, {
-              service: "api-contents",
-              locale,
-              basePath: basePath || "/",
-              slugLength: slug.length,
-              message: "Failed to fetch contents.",
-            });
-
-            const statusCode =
-              error instanceof InvalidPathError ||
-              error instanceof FileReadError ||
-              error instanceof MetadataParseError ||
-              error instanceof GitHubFetchError
-                ? 404
-                : 500;
-
-            return NextResponse.json(
-              { error: "Failed to fetch contents." },
-              { status: statusCode }
-            );
-          }),
-        onSuccess: (data) => Effect.succeed(NextResponse.json(data)),
-      })
+          return NextResponse.json(
+            { error: "Failed to fetch contents." },
+            { status: 500 }
+          );
+        })
+      )
     )
   );
 }

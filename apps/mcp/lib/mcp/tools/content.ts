@@ -1,10 +1,11 @@
+import { Nakafa } from "@repo/ai/agents/nakafa/service";
 import {
   NakafaAgentMarkdownSchema,
   NakafaAgentReadOptionsSchema,
 } from "@repo/contents/_lib/agent/schema/read";
-import { Nakafa } from "@repo/contents/_lib/agent/service";
 import { Effect, Option } from "effect";
 import { decodeNakafaMcpToolInput } from "@/lib/mcp/effect";
+import { nakafaContent } from "@/lib/mcp/nakafa";
 import {
   succeedMcpReadModelError,
   toMcpStructuredResult,
@@ -23,7 +24,7 @@ export function getNakafaContentToolResult(args: unknown) {
       "Invalid Nakafa content read options."
     );
     const content = yield* Nakafa.read(input.content_ref).pipe(
-      Effect.provide(Nakafa.Default)
+      Effect.provideService(Nakafa, nakafaContent)
     );
 
     return Option.match(content, {

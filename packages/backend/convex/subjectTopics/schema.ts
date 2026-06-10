@@ -20,6 +20,8 @@ const tables = {
     category: subjectCategoryValidator,
     grade: gradeValidator,
     material: materialValidator,
+    /** Authored topic position inside the material _data array */
+    order: v.number(),
     /** Topic slug: "integral", "derivative-function" */
     topic: v.string(),
     /** Display title: "Integrals" */
@@ -30,7 +32,15 @@ const tables = {
     sectionCount: v.number(),
     /** Last sync timestamp (epoch ms) */
     syncedAt: v.number(),
-  }).index("by_locale_and_slug", ["locale", "slug"]),
+  })
+    .index("by_locale_and_slug", ["locale", "slug"])
+    .index("by_locale_and_category_and_grade_and_material_and_order", [
+      "locale",
+      "category",
+      "grade",
+      "material",
+      "order",
+    ]),
 };
 
 export default tables;

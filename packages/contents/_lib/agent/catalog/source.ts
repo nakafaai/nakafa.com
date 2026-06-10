@@ -5,10 +5,7 @@ import {
   getExerciseQuestionNumbers,
   getExerciseSetPathsFromSlugs,
 } from "@repo/contents/_lib/exercises/collection";
-import {
-  hasInvalidTryOutYearSlug,
-  isYearlessTryOutCollectionSlug,
-} from "@repo/contents/_lib/exercises/slug";
+import { hasInvalidTryOutYearSlug } from "@repo/contents/_lib/exercises/slug";
 import { getMdxSlugsForLocale } from "@repo/contents/_lib/mdx-slugs/cache";
 import {
   type ContentMetadataListItem,
@@ -128,7 +125,5 @@ function isCanonicalNakafaExerciseSetPath(route: string) {
     return false;
   }
 
-  return !(
-    isYearlessTryOutCollectionSlug(setSlug) || hasInvalidTryOutYearSlug(setSlug)
-  );
+  return !hasInvalidTryOutYearSlug(setSlug);
 }

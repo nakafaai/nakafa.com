@@ -3,13 +3,11 @@ import {
   parseArticleCategory,
 } from "@repo/contents/_lib/articles/category";
 import { getCategoryIcon } from "@repo/contents/_lib/articles/icons";
-import { getArticleSummaries } from "@repo/contents/_lib/articles/slug";
-import type { ArticleCategory } from "@repo/contents/_types/articles/category";
+import type { ArticleCategory } from "@repo/contents/_types/taxonomy";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
 import { Effect, Option } from "effect";
 import type { Metadata } from "next";
-import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
 import { type Locale, useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
@@ -20,6 +18,8 @@ import { FooterContent } from "@/components/shared/footer-content";
 import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
+import { applyContentRuntimeCache } from "@/lib/content/cache";
+import { getRuntimeArticleSummaries } from "@/lib/content/navigation";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
@@ -43,12 +43,13 @@ async function getResolvedParams(
   return { category, locale };
 }
 
+/** Reads the cached Convex-backed article cards for one category page. */
 async function getCategoryArticles(category: ArticleCategory, locale: Locale) {
   "use cache";
 
-  cacheLife("max");
+  applyContentRuntimeCache();
 
-  return Effect.runPromise(getArticleSummaries(category, locale));
+  return Effect.runPromise(getRuntimeArticleSummaries(category, locale));
 }
 
 export async function generateMetadata({

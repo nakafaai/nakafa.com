@@ -58,23 +58,23 @@ const idMaterials = [
       },
       {
         title: "Hambatan Ohmik dan Non Ohmik",
-        href: `${BASE_PATH}/static-electricity/ohmic-non-ohmic-resistance`,
+        href: `${BASE_PATH}/direct-current/ohmic-non-ohmic-resistance`,
       },
       {
         title: "Hambatan Jenis",
-        href: `${BASE_PATH}/static-electricity/resistivity`,
+        href: `${BASE_PATH}/direct-current/resistivity`,
       },
       {
         title: "Rangkaian Listrik",
-        href: `${BASE_PATH}/static-electricity/electric-circuit`,
+        href: `${BASE_PATH}/direct-current/electric-circuit`,
       },
       {
         title: "Rangkaian Majemuk",
-        href: `${BASE_PATH}/static-electricity/compound-circuit`,
+        href: `${BASE_PATH}/direct-current/compound-circuit`,
       },
       {
         title: "Daya Listrik",
-        href: `${BASE_PATH}/static-electricity/electric-power`,
+        href: `${BASE_PATH}/direct-current/electric-power`,
       },
     ],
   },
@@ -86,59 +86,59 @@ const idMaterials = [
     items: [
       {
         title: "Medan Magnet",
-        href: `${BASE_PATH}/static-electricity/magnetic-field`,
+        href: `${BASE_PATH}/magnetism/magnetic-field`,
       },
       {
         title: "Gaya pada Muatan Bergerak",
-        href: `${BASE_PATH}/static-electricity/force-moving-charge`,
+        href: `${BASE_PATH}/magnetism/force-moving-charge`,
       },
       {
         title: "Gaya Magnet pada Kawat Berarus Listrik",
-        href: `${BASE_PATH}/static-electricity/force-current-carrying-conductor`,
+        href: `${BASE_PATH}/magnetism/force-current-carrying-conductor`,
       },
       {
         title: "Motor Listrik",
-        href: `${BASE_PATH}/static-electricity/electric-motor`,
+        href: `${BASE_PATH}/magnetism/electric-motor`,
       },
       {
         title: "Medan Magnet Induksi",
-        href: `${BASE_PATH}/static-electricity/magnetic-induction`,
+        href: `${BASE_PATH}/magnetism/magnetic-induction`,
       },
       {
         title: "Medan Magnet di Sekitar Kawat Lurus",
-        href: `${BASE_PATH}/static-electricity/magnetic-field-straight-wire`,
+        href: `${BASE_PATH}/magnetism/magnetic-field-straight-wire`,
       },
       {
         title: "Kawat Melingkar Berarus Listrik",
-        href: `${BASE_PATH}/static-electricity/current-carrying-circular-wire`,
+        href: `${BASE_PATH}/magnetism/current-carrying-circular-wire`,
       },
       {
         title: "Solenoida",
-        href: `${BASE_PATH}/static-electricity/solenoid`,
+        href: `${BASE_PATH}/magnetism/solenoid`,
       },
       {
         title: "Gaya Gerak Listrik Induksi",
-        href: `${BASE_PATH}/static-electricity/induced-emf`,
+        href: `${BASE_PATH}/magnetism/induced-emf`,
       },
       {
         title: "Fluks Magnet",
-        href: `${BASE_PATH}/static-electricity/magnetic-flux`,
+        href: `${BASE_PATH}/magnetism/magnetic-flux`,
       },
       {
         title: "Besar Gaya Gerak Listrik Induksi",
-        href: `${BASE_PATH}/static-electricity/induced-emf-magnitude`,
+        href: `${BASE_PATH}/magnetism/induced-emf-magnitude`,
       },
       {
         title: "Generator",
-        href: `${BASE_PATH}/static-electricity/generator`,
+        href: `${BASE_PATH}/magnetism/generator`,
       },
       {
         title: "Induktansi",
-        href: `${BASE_PATH}/static-electricity/inductance`,
+        href: `${BASE_PATH}/magnetism/inductance`,
       },
       {
         title: "Transformator",
-        href: `${BASE_PATH}/static-electricity/transformer`,
+        href: `${BASE_PATH}/magnetism/transformer`,
       },
     ],
   },

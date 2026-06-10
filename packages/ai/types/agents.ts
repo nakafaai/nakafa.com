@@ -1,8 +1,9 @@
+import type { Nakafa } from "@repo/ai/agents/nakafa/service";
 import type { ModelId } from "@repo/ai/config/model";
 import type { SourceReference } from "@repo/ai/lib/source";
 import type { MyUIMessage } from "@repo/ai/types/message";
+import type { PromptUserRole } from "@repo/ai/types/roles";
 import type { Locale } from "@repo/utilities/locales";
-import type { UserRole } from "@repo/utilities/roles";
 import type { UIMessageStreamWriter } from "ai";
 
 export interface AgentContext {
@@ -10,7 +11,7 @@ export interface AgentContext {
   needsPageFetch: boolean;
   slug: string;
   url: string;
-  userRole?: UserRole;
+  userRole?: PromptUserRole;
   verified: boolean;
 }
 
@@ -32,7 +33,9 @@ export interface TaskAgentParams extends BaseAgentParams {
 }
 
 /** Parameters for the Nakafa content retrieval subagent. */
-export type NakafaAgentParams = TaskAgentParams;
+export interface NakafaAgentParams extends TaskAgentParams {
+  nakafa: Nakafa;
+}
 
 /** Parameters for the external research subagent. */
 export interface ResearchAgentParams extends BaseAgentParams {

@@ -7,6 +7,12 @@ import {
   deleteSubjectSection,
   syncContentAuthorsWithCache,
 } from "@repo/backend/convex/contentSync/lib/syncHelpers";
+import { hasSameSyncValues } from "@repo/backend/convex/contentSync/lib/syncValues";
+import {
+  deleteContentRoute,
+  syncContentRoute,
+} from "@repo/backend/convex/contents/helpers/routes/write";
+import { buildContentSearchRef } from "@repo/backend/convex/contents/helpers/search/documents";
 import { syncContentSearch } from "@repo/backend/convex/contents/helpers/search/write";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -22,10 +28,12 @@ import { getAll } from "convex-helpers/server/relationships";
 
 const syncedSubjectTopicValidator = v.object({
   category: subjectCategoryValidator,
+  contentHash: v.string(),
   description: v.optional(v.string()),
   grade: gradeValidator,
   locale: localeValidator,
   material: materialValidator,
+  order: v.number(),
   sectionCount: v.number(),
   slug: v.string(),
   title: v.string(),
@@ -42,6 +50,7 @@ const syncedSubjectSectionValidator = v.object({
   grade: gradeValidator,
   locale: localeValidator,
   material: materialValidator,
+  order: v.number(),
   section: v.string(),
   slug: v.string(),
   subject: v.optional(v.string()),
@@ -75,6 +84,7 @@ export const bulkSyncSubjectTopics = internalMutation({
     topics: v.array(syncedSubjectTopicValidator),
   },
   returns: syncSummaryValidator,
+  /** Applies one bounded subject topic sync batch. */
   handler: async (ctx, args) => {
     assertContentSyncBatchSize({
       functionName: "bulkSyncSubjectTopics",
@@ -94,10 +104,23 @@ export const bulkSyncSubjectTopics = internalMutation({
         description: topic.description,
         grade: topic.grade,
         material: topic.material,
+        order: topic.order,
         sectionCount: topic.sectionCount,
         title: topic.title,
         topic: topic.topic,
       };
+
+      await syncContentRoute(ctx, {
+        contentHash: topic.contentHash,
+        description: topic.description,
+        kind: "subject-topic",
+        locale: topic.locale,
+        markdown: false,
+        route: topic.slug,
+        section: "subject",
+        syncedAt: now,
+        title: topic.title,
+      });
 
       const existingTopic = await ctx.db
         .query("subjectTopics")
@@ -106,16 +129,7 @@ export const bulkSyncSubjectTopics = internalMutation({
         )
         .unique();
 
-      if (
-        existingTopic &&
-        existingTopic.category === nextValues.category &&
-        existingTopic.description === nextValues.description &&
-        existingTopic.grade === nextValues.grade &&
-        existingTopic.material === nextValues.material &&
-        existingTopic.sectionCount === nextValues.sectionCount &&
-        existingTopic.title === nextValues.title &&
-        existingTopic.topic === nextValues.topic
-      ) {
+      if (hasSameSyncValues(nextValues, existingTopic)) {
         unchanged++;
         continue;
       }
@@ -148,6 +162,7 @@ export const bulkSyncSubjectSections = internalMutation({
     sections: v.array(syncedSubjectSectionValidator),
   },
   returns: syncSectionSummaryValidator,
+  /** Applies one bounded subject section sync batch to runtime, search, author, and audio rows. */
   handler: async (ctx, args) => {
     assertContentSyncBatchSize({
       functionName: "bulkSyncSubjectSections",
@@ -198,17 +213,20 @@ export const bulkSyncSubjectSections = internalMutation({
         route: section.slug,
         section: "subject",
         syncedAt: now,
-        text: [
-          section.category,
-          section.grade,
-          section.material,
-          section.topic,
-          section.section,
-          section.subject,
-          section.body,
-        ]
-          .filter(Boolean)
-          .join(" "),
+        text: section.body,
+        title: section.title,
+      });
+      await syncContentRoute(ctx, {
+        authors: section.authors,
+        contentHash: section.contentHash,
+        date: section.date,
+        description: section.description ?? section.subject,
+        kind: "subject-section",
+        locale: section.locale,
+        markdown: true,
+        route: section.slug,
+        section: "subject",
+        syncedAt: now,
         title: section.title,
       });
 
@@ -222,11 +240,6 @@ export const bulkSyncSubjectSections = internalMutation({
         });
       }
 
-      if (existingSection?.contentHash === section.contentHash) {
-        unchanged++;
-        continue;
-      }
-
       const nextValues = {
         body: section.body,
         category: section.category,
@@ -235,12 +248,18 @@ export const bulkSyncSubjectSections = internalMutation({
         description: section.description,
         grade: section.grade,
         material: section.material,
+        order: section.order,
         section: section.section,
         subject: section.subject,
         title: section.title,
         topic: section.topic,
         topicId: topic._id,
       };
+
+      if (hasSameSyncValues(nextValues, existingSection)) {
+        unchanged++;
+        continue;
+      }
 
       if (existingSection) {
         await ctx.db.patch("subjectSections", existingSection._id, {
@@ -310,6 +329,7 @@ export const deleteStaleSubjectTopics = internalMutation({
     topicIds: v.array(v.id("subjectTopics")),
   },
   returns: deleteResultValidator,
+  /** Removes one bounded stale subject topic batch after validating section counts. */
   handler: async (ctx, args) => {
     assertContentSyncBatchSize({
       functionName: "deleteStaleSubjectTopics",
@@ -334,9 +354,12 @@ export const deleteStaleSubjectTopics = internalMutation({
       const sections = await ctx.db
         .query("subjectSections")
         .withIndex("by_topicId", (q) => q.eq("topicId", topicId))
-        .take(topic.sectionCount + 1);
+        .take(CONTENT_SYNC_BATCH_LIMITS.staleSubjectSections + 1);
 
-      if (sections.length > topic.sectionCount) {
+      if (
+        sections.length > topic.sectionCount ||
+        sections.length > CONTENT_SYNC_BATCH_LIMITS.staleSubjectSections
+      ) {
         throw new ConvexError({
           code: "CONTENT_SYNC_SECTION_COUNT_EXCEEDED",
           message: "Subject section count exceeds the topic section count.",
@@ -347,6 +370,13 @@ export const deleteStaleSubjectTopics = internalMutation({
         await deleteSubjectSection(ctx, section._id);
       }
 
+      const routeRef = buildContentSearchRef({
+        locale: topic.locale,
+        route: topic.slug,
+        section: "subject",
+      });
+
+      await deleteContentRoute(ctx, routeRef.content_id);
       await ctx.db.delete("subjectTopics", topicId);
       deleted++;
     }
@@ -361,6 +391,7 @@ export const deleteStaleSubjectSections = internalMutation({
     sectionIds: v.array(v.id("subjectSections")),
   },
   returns: deleteResultValidator,
+  /** Removes one bounded stale subject section batch and its sync-owned dependent rows. */
   handler: async (ctx, args) => {
     assertContentSyncBatchSize({
       functionName: "deleteStaleSubjectSections",

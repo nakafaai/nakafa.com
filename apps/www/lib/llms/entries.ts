@@ -1,6 +1,9 @@
-import { getContentMetadata } from "@repo/contents/_lib/metadata";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
+import {
+  getRuntimeContentRoute,
+  getRuntimeContentRouteArtifactPage,
+} from "@/lib/content/runtime";
 import {
   BASE_URL,
   type LlmsSection,
@@ -8,37 +11,12 @@ import {
 } from "@/lib/llms/constants";
 import { formatRouteTitle } from "@/lib/llms/format";
 import { getQuranRouteMetadata } from "@/lib/llms/quran";
-import { getSitemapRoutes } from "@/lib/sitemap/routes";
+import {
+  baseRoutes,
+  buildSitemapContentPageRoutes,
+} from "@/lib/sitemap/routes";
 
 const LLMS_ENTRY_BUILD_CONCURRENCY = 16;
-
-/** Builds sitemap-aligned llms entries for one locale. */
-const buildLocalizedLlmsEntries = Effect.fn("www.llms.entries")(function* (
-  locale: Locale
-) {
-  const routes = (yield* Effect.promise(() => getSitemapRoutes())).sort(
-    (a, b) => a.localeCompare(b)
-  );
-
-  return yield* Effect.forEach(
-    routes,
-    (route) => buildLocalizedLlmsEntry({ locale, route }),
-    {
-      concurrency: LLMS_ENTRY_BUILD_CONCURRENCY,
-    }
-  );
-});
-
-/**
- * Reuses deterministic sitemap-derived entries within one server/build process.
- * Effect's `cachedFunction` is intended for expensive deterministic effects.
- *
- * @see https://effect.website/docs/caching/caching-effects/
- */
-export const getLocalizedLlmsEntries = Effect.runSync(
-  Effect.cachedFunction(buildLocalizedLlmsEntries)
-);
-
 /** Classifies a sitemap route into the llms section that owns it. */
 export function getRouteSection(route: string): LlmsSection {
   const firstSegment = route.split("/").filter(Boolean)[0];
@@ -60,6 +38,62 @@ export function isLlmsSection(
 /** Returns the configured llms sections in display order. */
 export function getLlmsSections() {
   return Object.keys(SECTION_LABELS).filter(isLlmsSection);
+}
+
+/** Builds site-page entries without reading the content route catalog. */
+export const getSiteLlmsEntries = Effect.fn("www.llms.siteEntries")(function* (
+  locale: Locale
+) {
+  return yield* buildLocalizedLlmsEntriesFromRoutes({
+    locale,
+    routes: baseRoutes.filter((route) => getRouteSection(route) === "site"),
+  });
+});
+
+/** Builds entries for one materialized route-catalog page without global reads. */
+export const getContentPageLlmsEntries = Effect.fn(
+  "www.llms.contentPageEntries"
+)(function* ({
+  locale,
+  page,
+  section,
+}: {
+  locale: Locale;
+  page: number;
+  section: Exclude<LlmsSection, "site">;
+}) {
+  const artifactPage = yield* getRuntimeContentRouteArtifactPage({
+    locale,
+    page,
+    section,
+  });
+
+  if (!artifactPage) {
+    return [];
+  }
+
+  const routes = buildSitemapContentPageRoutes(artifactPage.routes).filter(
+    (route) => getRouteSection(route) === section
+  );
+
+  return yield* buildLocalizedLlmsEntriesFromRoutes({ locale, routes });
+});
+
+/** Builds locale-specific llms entries from already scoped route strings. */
+function buildLocalizedLlmsEntriesFromRoutes({
+  locale,
+  routes,
+}: {
+  locale: Locale;
+  routes: readonly string[];
+}) {
+  return Effect.forEach(
+    [...routes].sort((a, b) => a.localeCompare(b)),
+    (route) => buildLocalizedLlmsEntry({ locale, route }),
+    {
+      concurrency: LLMS_ENTRY_BUILD_CONCURRENCY,
+    }
+  );
 }
 
 /** Builds one locale-specific llms entry from a sitemap route. */
@@ -109,21 +143,21 @@ const getRouteMetadata = Effect.fn("www.llms.routeMetadata")(function* ({
   section: LlmsSection;
 }) {
   if (section === "quran") {
-    return getQuranRouteMetadata({ locale, route });
+    return yield* getQuranRouteMetadata({ locale, route });
   }
 
-  if (section === "exercises") {
-    return getIndexRouteMetadata(route);
-  }
-
-  if (section === "articles" || section === "subject") {
-    const metadata = yield* getMdxRouteMetadata({ locale, route });
+  if (
+    section === "articles" ||
+    section === "exercises" ||
+    section === "subject"
+  ) {
+    const metadata = yield* getContentRouteMetadata({ locale, route });
 
     if (metadata) {
       return metadata;
     }
 
-    return getIndexRouteMetadata(route);
+    return getListingRouteMetadata(route);
   }
 
   return {
@@ -133,38 +167,37 @@ const getRouteMetadata = Effect.fn("www.llms.routeMetadata")(function* ({
   };
 });
 
-/** Builds fallback metadata for routes served as sitemap-derived indexes. */
-function getIndexRouteMetadata(route: string) {
+/** Builds fallback metadata for sitemap-derived listing routes without markdown. */
+function getListingRouteMetadata(route: string) {
   return {
     description: undefined,
-    hasMarkdown: true,
+    hasMarkdown: false,
     title: formatRouteTitle(route),
   };
 }
 
-/** Reads existing MDX metadata for article and subject routes. */
-const getMdxRouteMetadata = Effect.fn("www.llms.mdxRouteMetadata")(function* ({
-  locale,
-  route,
-}: {
-  locale: Locale;
-  route: string;
-}) {
-  const metadata = yield* Effect.match(
-    getContentMetadata(route.slice(1), locale),
-    {
-      onFailure: () => null,
-      onSuccess: (data) => data,
+/** Reads exact runtime content route metadata when the route has markdown. */
+const getContentRouteMetadata = Effect.fn("www.llms.contentRouteMetadata")(
+  function* ({ locale, route }: { locale: Locale; route: string }) {
+    const contentRoute = yield* Effect.match(
+      getRuntimeContentRoute({
+        locale,
+        route: route.slice(1),
+      }),
+      {
+        onFailure: () => null,
+        onSuccess: (data) => data,
+      }
+    );
+
+    if (!contentRoute) {
+      return null;
     }
-  );
 
-  if (!metadata) {
-    return null;
+    return {
+      description: contentRoute.description,
+      hasMarkdown: contentRoute.markdown,
+      title: contentRoute.title,
+    };
   }
-
-  return {
-    description: metadata.description ?? metadata.subject,
-    hasMarkdown: true,
-    title: metadata.title,
-  };
-});
+);

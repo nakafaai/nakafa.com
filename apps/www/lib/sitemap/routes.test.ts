@@ -1,64 +1,32 @@
 // @vitest-environment node
 
+import type { api } from "@repo/backend/convex/_generated/api";
+import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  clearSitemapRouteCache,
-  getPublicContentRedirects,
-  getPublicContentRequestRoutes,
-  getPublicContentRouteRoots,
-  getQuranRoutes,
+  buildSitemapContentPageRoutes,
+  getSitemapPageDescriptor,
+  getSitemapPageDescriptors,
   getSitemapRoutes,
 } from "@/lib/sitemap/routes";
 
-const mockContentCache = vi.hoisted(() => ({
-  clearMdxSlugCache: vi.fn(),
-  getMdxSlugsForLocale: vi.fn(),
-  slugs: [
-    "articles/politics/dynastic-politics-asian-values",
-    "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1/1/_answer",
-    "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1/1/_question",
-    "subject/high-school/10/chemistry/green-chemistry/definition",
-    "unknown/folder",
-  ],
+type RuntimeContentRoute = NonNullable<
+  FunctionReturnType<
+    typeof api.contents.queries.runtime.getContentRouteArtifactPage
+  >
+>["routes"][number];
+
+const runtimeMocks = vi.hoisted(() => ({
+  getRuntimeContentRouteArtifactPage: vi.fn(),
+  getRuntimeContentRouteCounts: vi.fn(),
 }));
 
-const mockContentFolders = vi.hoisted(() => ({
-  clearFolderChildNamesCache: vi.fn(),
-  getFolderChildNames: vi.fn(),
-  getNestedSlugs: vi.fn(),
+vi.mock("@/lib/content/runtime", () => ({
+  getRuntimeContentRouteArtifactPage:
+    runtimeMocks.getRuntimeContentRouteArtifactPage,
+  getRuntimeContentRouteCounts: runtimeMocks.getRuntimeContentRouteCounts,
 }));
-
-vi.mock("@repo/contents/_lib/mdx-slugs/cache", () => ({
-  clearMdxSlugCache: () => {
-    mockContentCache.clearMdxSlugCache();
-    return Effect.void;
-  },
-  getMdxSlugsForLocale: (locale: string) =>
-    Effect.succeed(mockContentCache.getMdxSlugsForLocale(locale)),
-}));
-
-vi.mock("@repo/contents/_lib/fs/cache", async () => {
-  const { Effect: EffectModule } = await import("effect");
-
-  return {
-    clearFolderChildNamesCache: () => {
-      mockContentFolders.clearFolderChildNamesCache();
-      return EffectModule.void;
-    },
-    getFolderChildNames: mockContentFolders.getFolderChildNames,
-    getFolderChildNamesCacheVersion: vi.fn(() => EffectModule.succeed(0)),
-  };
-});
-
-vi.mock("@repo/contents/_lib/fs/nested-slugs", async () => {
-  const { Effect: EffectModule } = await import("effect");
-
-  return {
-    getNestedSlugs: (folder: string) =>
-      EffectModule.succeed(mockContentFolders.getNestedSlugs(folder)),
-  };
-});
 
 vi.mock("@repo/internationalization/src/routing", () => ({
   routing: {
@@ -67,179 +35,220 @@ vi.mock("@repo/internationalization/src/routing", () => ({
   },
 }));
 
-function mockContentFolderTree(tree: Record<string, string[]>) {
-  mockContentFolders.getFolderChildNames.mockImplementation((folder) =>
-    Effect.succeed(tree[folder] ?? [])
-  );
-}
-
 beforeEach(() => {
-  mockContentCache.clearMdxSlugCache.mockReset();
-  mockContentFolders.clearFolderChildNamesCache.mockReset();
-  clearSitemapRouteCache();
-  mockContentCache.clearMdxSlugCache.mockClear();
-  mockContentFolders.clearFolderChildNamesCache.mockClear();
-  mockContentCache.getMdxSlugsForLocale.mockReset();
-  mockContentCache.getMdxSlugsForLocale.mockReturnValue(mockContentCache.slugs);
-  mockContentFolders.getFolderChildNames.mockReset();
-  mockContentFolders.getNestedSlugs.mockReset();
-  mockContentFolders.getNestedSlugs.mockReturnValue([]);
-  mockContentFolderTree({
-    exercises: ["middle-school", "high-school"],
-    "exercises/high-school": ["snbt"],
-    "exercises/high-school/snbt": ["quantitative-knowledge"],
-    "exercises/middle-school": ["grade-9"],
-    "exercises/middle-school/grade-9": ["mathematics"],
-    subject: ["high-school"],
-    "subject/high-school": ["10"],
-    "subject/high-school/10": ["biology", "chemistry", "history"],
-  });
+  runtimeMocks.getRuntimeContentRouteArtifactPage.mockReset();
+  runtimeMocks.getRuntimeContentRouteCounts.mockReset();
+  runtimeMocks.getRuntimeContentRouteCounts.mockImplementation(({ locale }) =>
+    Effect.succeed(
+      locale === "en"
+        ? [countRow("en", "articles", 1), countRow("en", "subject", 2)]
+        : [countRow("id", "quran", 101)]
+    )
+  );
+  runtimeMocks.getRuntimeContentRouteArtifactPage.mockImplementation(
+    ({ locale, page, section }) =>
+      Effect.succeed({
+        locale,
+        page,
+        routeCount: routeRows.length,
+        routes: routeRows.filter(
+          (route) => route.locale === locale && route.section === section
+        ),
+        section,
+        syncedAt: 1,
+      })
+  );
 });
 
 describe("sitemap route discovery", () => {
-  it("clears folder scans when clearing sitemap route discovery", () => {
-    clearSitemapRouteCache();
-
+  it("builds stable page descriptors from materialized counts", async () => {
+    await expect(getSitemapPageDescriptors()).resolves.toEqual([
+      { id: "base" },
+      {
+        id: "content_en_articles_0",
+        locale: "en",
+        page: 0,
+        section: "articles",
+      },
+      { id: "content_en_subject_0", locale: "en", page: 0, section: "subject" },
+      { id: "content_id_quran_0", locale: "id", page: 0, section: "quran" },
+      { id: "content_id_quran_1", locale: "id", page: 1, section: "quran" },
+    ]);
     expect(
-      mockContentFolders.clearFolderChildNamesCache
-    ).toHaveBeenCalledOnce();
-    expect(mockContentCache.clearMdxSlugCache).toHaveBeenCalledOnce();
+      runtimeMocks.getRuntimeContentRouteArtifactPage
+    ).not.toHaveBeenCalled();
   });
 
-  it("builds sitemap routes from real content entries and quran routes", async () => {
-    expect(await getQuranRoutes()).toHaveLength(114);
-
-    const routes = await getSitemapRoutes();
-
-    expect(routes).not.toContain("/articles");
-    expect(routes).not.toContain("/exercises");
-    expect(routes).not.toContain("/exercises/high-school");
-    expect(routes).not.toContain("/subject/high-school");
-    expect(routes).not.toContain(
-      "/subject/high-school/10/chemistry/green-chemistry"
-    );
-    expect(routes).not.toContain("/unknown");
-    expect(routes).toContain("/");
-    expect(routes).not.toContain("/about");
-    expect(routes).toContain("/subject");
-    expect(routes).toContain("/quran/114");
-    expect(routes).toContain("/articles/politics");
-    expect(routes).toContain(
-      "/articles/politics/dynastic-politics-asian-values"
-    );
-    expect(routes).toContain("/exercises/middle-school/grade-9");
-    expect(routes).toContain("/exercises/middle-school/grade-9/mathematics");
-    expect(routes).toContain("/subject/high-school/10");
-    expect(routes).toContain("/subject/high-school/10/biology");
-    expect(routes).toContain("/subject/high-school/10/history");
-    expect(routes).toContain("/exercises/high-school/snbt");
-    expect(routes).toContain(
-      "/exercises/high-school/snbt/quantitative-knowledge"
-    );
-    expect(routes).toContain(
-      "/exercises/high-school/snbt/quantitative-knowledge/try-out/2026"
-    );
-    expect(routes).toContain(
-      "/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1"
-    );
-    expect(routes).toContain(
-      "/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1/1"
-    );
-    expect(routes).not.toContain(
-      "/exercises/high-school/snbt/quantitative-knowledge/try-out"
-    );
-    expect(routes).toContain(
-      "/subject/high-school/10/chemistry/green-chemistry/definition"
-    );
-    expect(await getPublicContentRouteRoots()).toEqual(
-      expect.arrayContaining(["/articles", "/subject", "/exercises", "/quran"])
-    );
-    expect(await getPublicContentRouteRoots()).toHaveLength(4);
-    expect(await getPublicContentRequestRoutes()).toContain(
-      "/subject/high-school/10/chemistry/green-chemistry"
-    );
-    expect(await getPublicContentRequestRoutes()).toContain("/subject");
-    expect(await getPublicContentRequestRoutes()).toContain("/quran");
-    expect(await getPublicContentRedirects()).toContainEqual([
-      "/subject/high-school/10/chemistry/green-chemistry",
-      "/subject/high-school/10/chemistry",
-    ]);
-    expect(mockContentCache.getMdxSlugsForLocale).toHaveBeenCalledTimes(2);
-  });
-
-  it("ignores malformed content entries instead of inventing sitemap pages", async () => {
-    mockContentCache.getMdxSlugsForLocale.mockReturnValue([
-      "articles",
-      "articles/not-a-category/draft",
-      "subject/high-school/10/chemistry",
-      "subject/high-school/10/chemistry/green-chemistry",
-      "subject/not-a-category/10/chemistry/green-chemistry/definition",
-      "subject/high-school/not-a-grade/chemistry/green-chemistry/definition",
-      "subject/high-school/10/not-a-material/green-chemistry/definition",
-      "training/high-school/snbt/quantitative-knowledge/try-out/2026/set-1/1/_question",
-      "exercises/1/_question",
-      "exercises/high-school/snbt/quantitative-knowledge/1/_question",
-      "exercises/not-a-category/snbt/quantitative-knowledge/try-out/2026/set-1/1/_question",
-      "exercises/high-school/not-a-type/quantitative-knowledge/try-out/2026/set-1/1/_question",
-      "exercises/high-school/snbt/not-a-material/try-out/2026/set-1/1/_question",
-      "exercises/high-school/snbt/quantitative-knowledge/try-out/set-1/1/_question",
-    ]);
-    mockContentFolderTree({
-      exercises: ["not-a-category", "middle-school"],
-      "exercises/not-a-category": ["not-a-type"],
-      "exercises/middle-school": ["not-a-type", "grade-9"],
-      "exercises/middle-school/grade-9": ["not-a-material"],
-      subject: ["not-a-category", "high-school"],
-      "subject/not-a-category": ["not-a-grade"],
-      "subject/high-school": ["not-a-grade", "10"],
-      "subject/high-school/10": ["not-a-material"],
+  it("parses valid content page ids and rejects malformed ids", () => {
+    expect(getSitemapPageDescriptor("content_en_articles_1")).toEqual({
+      id: "content_en_articles_1",
+      locale: "en",
+      page: 1,
+      section: "articles",
     });
-
-    const routes = await getSitemapRoutes();
-
-    expect(routes).toContain("/");
-    expect(routes).not.toContain("/about");
-    expect(routes).toContain("/subject");
-    expect(routes).toContain("/quran/114");
-    expect(routes).not.toContain("/articles/not-a-category");
-    expect(routes).not.toContain(
-      "/subject/high-school/10/chemistry/green-chemistry"
-    );
-    expect(await getPublicContentRequestRoutes()).toContain(
-      "/subject/high-school/10/chemistry/green-chemistry"
-    );
-    expect(await getPublicContentRedirects()).toContainEqual([
-      "/subject/high-school/10/chemistry/green-chemistry",
-      "/subject/high-school/10/chemistry",
-    ]);
-    expect(routes).not.toContain(
-      "/subject/high-school/10/not-a-material/green-chemistry/definition"
-    );
-    expect(routes).not.toContain("/subject/high-school/10/not-a-material");
-    expect(routes).not.toContain(
-      "/exercises/high-school/snbt/quantitative-knowledge"
-    );
-    expect(routes).not.toContain(
-      "/exercises/high-school/snbt/quantitative-knowledge/try-out"
-    );
-    expect(routes).not.toContain(
-      "/exercises/high-school/snbt/quantitative-knowledge/try-out/set-1"
-    );
-    expect(routes).not.toContain("/exercises/middle-school/not-a-type");
-    expect(routes).not.toContain(
-      "/exercises/middle-school/grade-9/not-a-material"
-    );
+    expect(getSitemapPageDescriptor(undefined)).toEqual({ id: "base" });
+    expect(getSitemapPageDescriptor("content_en_articles")).toBeNull();
+    expect(getSitemapPageDescriptor("pages_en_articles_1")).toBeNull();
+    expect(getSitemapPageDescriptor("content_fr_articles_1")).toBeNull();
+    expect(getSitemapPageDescriptor("content_en_unknown_1")).toBeNull();
+    expect(getSitemapPageDescriptor("content_en_articles_bad")).toBeNull();
   });
 
-  it("keeps sitemap discovery working when subject folders cannot be read", async () => {
-    mockContentFolders.getFolderChildNames.mockReturnValue(Effect.succeed([]));
+  it("builds base and content sitemap routes from one materialized page", async () => {
+    await expect(getSitemapRoutes()).resolves.toEqual([
+      "/",
+      "/contributor",
+      "/privacy-policy",
+      "/quran",
+      "/search",
+      "/security-policy",
+      "/subject",
+      "/terms-of-service",
+    ]);
 
-    const routes = await getSitemapRoutes();
+    const routes = await getSitemapRoutes("content_en_subject_0");
 
-    expect(routes).toContain("/");
-    expect(routes).not.toContain("/about");
-    expect(routes).toContain("/subject");
-    expect(routes).toContain("/articles/politics");
-    expect(routes).not.toContain("/subject/high-school/10/biology");
+    expect(routes).toEqual([
+      "/subject/high-school/10",
+      "/subject/high-school/10/chemistry",
+      "/subject/high-school/10/chemistry/atomic-structure/introduction",
+      "/subject/high-school/10/chemistry/green-chemistry/definition",
+    ]);
+    expect(
+      runtimeMocks.getRuntimeContentRouteArtifactPage
+    ).toHaveBeenCalledWith({
+      locale: "en",
+      page: 0,
+      section: "subject",
+    });
+  });
+
+  it("returns no sitemap routes for malformed ids and missing artifact pages", async () => {
+    await expect(getSitemapRoutes("malformed")).resolves.toEqual([]);
+
+    runtimeMocks.getRuntimeContentRouteArtifactPage.mockReturnValueOnce(
+      Effect.succeed(null)
+    );
+
+    await expect(getSitemapRoutes("content_en_subject_0")).resolves.toEqual([]);
+  });
+
+  it("derives parent routes from concrete route catalog rows", () => {
+    expect(buildSitemapContentPageRoutes(routeRows)).toEqual([
+      "/articles/politics",
+      "/articles/politics/dynastic-politics-asian-values",
+      "/exercises/high-school/snbt",
+      "/exercises/high-school/snbt/quantitative-knowledge",
+      "/exercises/high-school/snbt/quantitative-knowledge/practice",
+      "/exercises/high-school/snbt/quantitative-knowledge/practice/set-1",
+      "/exercises/high-school/snbt/quantitative-knowledge/try-out/2026",
+      "/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1",
+      "/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1/1",
+      "/quran/1",
+      "/subject/high-school/10",
+      "/subject/high-school/10/chemistry",
+      "/subject/high-school/10/chemistry/atomic-structure/introduction",
+      "/subject/high-school/10/chemistry/green-chemistry/definition",
+    ]);
+
+    expect(buildSitemapContentPageRoutes(incompleteRouteRows)).toEqual([]);
   });
 });
+
+const routeRows = [
+  routeRow({
+    locale: "en",
+    route: "articles/politics/dynastic-politics-asian-values",
+    section: "articles",
+  }),
+  routeRow({
+    locale: "en",
+    route: "subject/high-school/10/chemistry/green-chemistry/definition",
+    section: "subject",
+  }),
+  routeRow({
+    locale: "en",
+    route: "subject/high-school/10/chemistry/atomic-structure/introduction",
+    section: "subject",
+  }),
+  routeRow({
+    locale: "en",
+    route:
+      "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1",
+    section: "exercises",
+  }),
+  routeRow({
+    locale: "en",
+    route:
+      "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1/1",
+    section: "exercises",
+  }),
+  routeRow({
+    locale: "en",
+    route: "exercises/high-school/snbt/quantitative-knowledge/practice/set-1",
+    section: "exercises",
+  }),
+  routeRow({
+    locale: "en",
+    route: "quran/1",
+    section: "quran",
+  }),
+];
+
+const incompleteRouteRows = [
+  routeRow({
+    locale: "en",
+    route: "articles/politics",
+    section: "articles",
+  }),
+  routeRow({
+    locale: "en",
+    route: "subject/high-school/10/chemistry",
+    section: "subject",
+  }),
+  routeRow({
+    locale: "en",
+    route: "exercises/high-school/snbt/quantitative-knowledge",
+    section: "exercises",
+  }),
+  routeRow({
+    locale: "en",
+    route: "unknown/path",
+    section: "articles",
+  }),
+];
+
+/** Builds one route-count fixture row for sitemap descriptor tests. */
+function countRow(
+  locale: "en" | "id",
+  section: "articles" | "subject" | "exercises" | "quran",
+  count: number
+) {
+  return { count, locale, section, syncedAt: 1 };
+}
+
+/** Builds one route-catalog fixture row for sitemap tests. */
+function routeRow({
+  locale,
+  route,
+  section,
+}: {
+  locale: "en" | "id";
+  route: string;
+  section: "articles" | "subject" | "exercises" | "quran";
+}): RuntimeContentRoute {
+  return {
+    authors: [{ name: "Nakafa" }],
+    content_id: `${locale}/${route}`,
+    date: 1_735_689_600_000,
+    description: "Description",
+    kind: "article",
+    locale,
+    markdown: true,
+    official: false,
+    route,
+    section,
+    syncedAt: 1,
+    title: "Title",
+  };
+}

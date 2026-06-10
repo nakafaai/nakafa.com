@@ -1,6 +1,7 @@
 import { runMathAgent } from "@repo/ai/agents/math/agent";
 import { runNakafaAgent } from "@repo/ai/agents/nakafa/agent";
 import { NakafaSearch } from "@repo/ai/agents/nakafa/search";
+import { Nakafa } from "@repo/ai/agents/nakafa/service";
 import { read as readNakafa } from "@repo/ai/agents/nakafa/tools/read";
 import { TOOL_NAMES } from "@repo/ai/agents/orchestrator/names";
 import { nakafaPrompt } from "@repo/ai/agents/orchestrator/prompt";
@@ -23,7 +24,6 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { mapUIMessagePartsToDBParts } from "@repo/backend/convex/chats/messageParts/uiToDb";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
-import { Nakafa } from "@repo/contents/_lib/agent/service";
 import { cleanSlug } from "@repo/utilities/helper";
 import type { LogContext } from "@repo/utilities/logging/types";
 import { waitUntil } from "@vercel/functions";
@@ -40,6 +40,7 @@ import { Effect } from "effect";
 import type { getTranslations } from "next-intl/server";
 import { persistAssistantFailure } from "@/app/api/chat/failure";
 import { search as nakafaSearch } from "@/app/api/chat/nakafa";
+import { nakafaContent } from "@/app/api/chat/nakafa-content";
 import { repairChatToolCall } from "@/app/api/chat/repair";
 import { getAssistantResponseFailure } from "@/app/api/chat/response";
 import {
@@ -225,6 +226,7 @@ export function streamChat({ chat, page, runtime, user }: Params) {
         )
       );
     },
+    /** Runs the main AI stream and merges UI message chunks into the writer. */
     execute: ({ writer }) =>
       Effect.runPromise(
         Effect.gen(function* () {
@@ -261,6 +263,7 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                 description:
                   "Retrieve Nakafa educational evidence for lessons, study topics, current pages, articles, Quran references, examples, warmups, review tasks, tryout preparation, and structured exercises. Use this before math when content must be selected. Preserve requested deliverables in the structured input.",
                 inputSchema: nakafaToolInputSchema,
+                /** Runs the Nakafa specialist with one-time current-page fetch support. */
                 execute: (input, { toolCallId }) => {
                   const needsPageFetch = context.needsPageFetch && !fetchedPage;
 
@@ -279,13 +282,14 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                           },
                           toolCallId,
                           writer,
-                        }).pipe(Effect.provide(Nakafa.Default));
+                        }).pipe(Effect.provideService(Nakafa, nakafaContent));
                       }
 
                       const result = yield* runNakafaAgent({
                         context: { ...context, needsPageFetch },
                         locale: page.locale,
                         modelId: runtime.modelId,
+                        nakafa: nakafaContent,
                         task: formatSpecialistToolTask(input),
                         writer,
                       }).pipe(
@@ -317,6 +321,7 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                 description:
                   "Research external, official, current, latest, cited, or source-backed information with web search and source analysis.",
                 inputSchema: researchToolInputSchema,
+                /** Runs the external research specialist and records its token usage. */
                 execute: (input, { messages, toolCallId }) =>
                   Effect.runPromise(
                     Effect.gen(function* () {
@@ -356,6 +361,7 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                 description:
                   "Verify user-provided or retrieved math with deterministic evidence for arithmetic, algebra, equations, calculus, series, matrices, statistics, probability, geometry, and discrete math. Do not use this as the first or only source for educational practice content; use Nakafa first, then math verifies the selected content.",
                 inputSchema: mathToolInputSchema,
+                /** Runs the deterministic math specialist and records its token usage. */
                 execute: (input) =>
                   Effect.runPromise(
                     Effect.gen(function* () {

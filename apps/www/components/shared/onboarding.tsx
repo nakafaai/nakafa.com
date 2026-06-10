@@ -2,6 +2,10 @@
 
 import { PartyIcon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
+import {
+  type SelfSelectableUserRole,
+  userRoles,
+} from "@repo/backend/convex/users/roles";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Dialog,
@@ -30,7 +34,7 @@ import type { CurrentUser } from "@/lib/context/use-user";
 import { useUser } from "@/lib/context/use-user";
 import { roles } from "@/lib/data/roles";
 
-type Role = (typeof roles)[number]["value"];
+type Role = SelfSelectableUserRole;
 
 export function Onboarding() {
   const user = useUser((state) => state.user);
@@ -42,6 +46,7 @@ export function Onboarding() {
   return <OnboardingContent user={user} />;
 }
 
+/** Renders the first-run role picker and persists the selected user role. */
 function OnboardingContent({ user }: { user: CurrentUser }) {
   const t = useTranslations("Onboarding");
   const roleItems = roles.map((role) => ({
@@ -80,7 +85,7 @@ function OnboardingContent({ user }: { user: CurrentUser }) {
     });
   };
 
-  const open = !roles.some((role) => role.value === user.appUser.role);
+  const open = !userRoles.some((role) => role === user.appUser.role);
 
   return (
     <Dialog open={open}>

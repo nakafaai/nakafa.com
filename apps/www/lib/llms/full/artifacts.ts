@@ -1,10 +1,9 @@
 import { availableParallelism } from "node:os";
-import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
-import { NUMBER_SEGMENT } from "@/lib/llms/constants";
+import { type LlmsSection, NUMBER_SEGMENT } from "@/lib/llms/constants";
 import { getLlmsSourceMarkdownText } from "@/lib/llms/content";
-import { getLocalizedLlmsEntries, type LlmsEntry } from "@/lib/llms/entries";
+import { getContentPageLlmsEntries, type LlmsEntry } from "@/lib/llms/entries";
 import {
   LLMS_FULL_MANIFEST_PATH,
   LLMS_FULL_SHARD_TARGET_BYTES,
@@ -18,6 +17,10 @@ import {
   flattenShards,
 } from "@/lib/llms/full/shards";
 import type { LlmsFullDocument } from "@/lib/llms/full/types";
+import {
+  type ContentSitemapPage,
+  getSitemapPageDescriptorsEffect,
+} from "@/lib/sitemap/routes";
 
 const LLMS_FULL_CONCURRENCY = availableParallelism();
 
@@ -35,33 +38,19 @@ export const getLlmsFullText = Effect.fn("llms.getLlmsFullText")(function* () {
 /** Builds every generated llms-full artifact from existing markdown sources. */
 export const getLlmsFullArtifacts = Effect.fn("llms.getLlmsFullArtifacts")(
   function* (options: LlmsFullArtifactOptions = {}) {
-    const documents = yield* getLlmsFullDocuments();
     const shardTargetBytes =
       options.shardTargetBytes ?? LLMS_FULL_SHARD_TARGET_BYTES;
-    const locales = [...new Set(documents.map((document) => document.locale))];
-    const localeShards = locales.map((locale) => {
-      const scopedDocuments = documents.filter(
-        (document) => document.locale === locale
-      );
-
-      return buildShard({
-        documents: scopedDocuments,
-        locale,
-        prefixParts: [],
-        shardTargetBytes,
-      });
-    });
-    const shardArtifacts = flattenShards(localeShards).map((shard) =>
+    const shards = yield* buildLlmsFullShards(shardTargetBytes);
+    const shardArtifacts = flattenShards(shards).map((shard) =>
       buildTextArtifact(shard.path, shard.text)
     );
     const root = buildTextArtifact(
       LLMS_FULL_TEXT_PATH,
-      buildRootFullText({ documents, localeShards })
+      buildRootFullText({ shards })
     );
     const manifestData = buildFullManifest({
-      documents,
       root,
-      shards: localeShards,
+      shards,
     });
     const manifest = buildTextArtifact(
       LLMS_FULL_MANIFEST_PATH,
@@ -77,23 +66,56 @@ export const getLlmsFullArtifacts = Effect.fn("llms.getLlmsFullArtifacts")(
   }
 );
 
-/** Loads every page-level full-document chunk for every supported locale. */
-const getLlmsFullDocuments = Effect.fn("llms.getLlmsFullDocuments")(
-  function* () {
-    const localeDocumentSets = yield* Effect.forEach(
-      routing.locales,
-      (locale) =>
-        Effect.gen(function* () {
-          const entries = yield* getLocalizedLlmsEntries(locale);
+/** Builds non-empty full-content shards from materialized route pages. */
+const buildLlmsFullShards = Effect.fn("llms.buildLlmsFullShards")(function* (
+  shardTargetBytes: number
+) {
+  const descriptors = yield* getLlmsFullRoutePageDescriptors();
+  const shardSets = yield* Effect.forEach(
+    descriptors,
+    (descriptor) =>
+      Effect.gen(function* () {
+        const entries = yield* getContentPageLlmsEntries(descriptor);
+        const documents = yield* getLocaleDocuments({
+          entries,
+          locale: descriptor.locale,
+        });
 
-          return yield* getLocaleDocuments({ entries, locale });
-        }),
-      { concurrency: "unbounded" }
-    );
+        if (documents.length === 0) {
+          return null;
+        }
 
-    return localeDocumentSets.flat();
-  }
-);
+        return buildShard({
+          documents,
+          locale: descriptor.locale,
+          prefixParts: [descriptor.section, "page", String(descriptor.page)],
+          shardTargetBytes,
+        });
+      }),
+    { concurrency: LLMS_FULL_CONCURRENCY }
+  );
+
+  return shardSets.flatMap((shard) => (shard ? [shard] : []));
+});
+
+/** Lists materialized route pages that can own llms-full content documents. */
+function getLlmsFullRoutePageDescriptors() {
+  return getSitemapPageDescriptorsEffect().pipe(
+    Effect.map((descriptors) =>
+      descriptors.filter(
+        (descriptor): descriptor is ContentSitemapPage =>
+          "section" in descriptor && isContentSection(descriptor.section)
+      )
+    )
+  );
+}
+
+/** Checks whether one llms section can contain content markdown documents. */
+function isContentSection(
+  section: LlmsSection
+): section is Exclude<LlmsSection, "site"> {
+  return section !== "site";
+}
 
 /** Builds ordered full-document chunks for one locale. */
 function getLocaleDocuments({

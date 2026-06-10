@@ -117,6 +117,12 @@
       "skillPath": "skills/copywriting/SKILL.md",
       "computedHash": "d3191c3ad90610e0cacecf638d927418852264fabbd6e81c045094dad7d96f11"
     },
+    "effect-ts": {
+      "source": "effect-ts/skills",
+      "sourceType": "github",
+      "skillPath": "skills/effect-ts/SKILL.md",
+      "computedHash": "301521e167410dd42d834dd0e7cedbe9cfffa519f630a12241dbea7b1d932324"
+    },
     "emails": {
       "source": "coreyhaines31/marketingskills",
       "sourceType": "github",

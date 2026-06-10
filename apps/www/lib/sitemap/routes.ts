@@ -1,15 +1,42 @@
-import { clearContentRouteManifestCache } from "@repo/contents/_lib/manifest/cache/lifecycle";
-import { getContentPublicRouteManifest } from "@repo/contents/_lib/manifest/cache/public-routes";
-import type { ContentManifestRoute } from "@repo/contents/_lib/manifest/schema";
-import { CONTENT_ROOT_VALUES } from "@repo/contents/_types/content";
+import type { api } from "@repo/backend/convex/_generated/api";
+import { CONTENT_ROUTE_ARTIFACT_PAGE_SIZE } from "@repo/backend/convex/contents/constants";
+import { routing } from "@repo/internationalization/src/routing";
+import type { FunctionArgs, FunctionReturnType } from "convex/server";
+import { Effect } from "effect";
+import { hasLocale, type Locale } from "next-intl";
+import {
+  getRuntimeContentRouteArtifactPage,
+  getRuntimeContentRouteCounts,
+} from "@/lib/content/runtime";
 
+type RuntimeContentSection = FunctionArgs<
+  typeof api.contents.queries.runtime.listContentRoutesByPrefix
+>["section"];
+type RuntimeContentRoute = NonNullable<
+  FunctionReturnType<
+    typeof api.contents.queries.runtime.getContentRouteArtifactPage
+  >
+>["routes"][number];
+
+const contentSections: readonly RuntimeContentSection[] = [
+  "articles",
+  "subject",
+  "exercises",
+  "quran",
+];
+const sitemapBasePageId = "base";
 const quranRootRoute = "/quran";
-const subjectRootRoute = `/${CONTENT_ROOT_VALUES.subject}`;
+const subjectRootRoute = "/subject";
+const tryOutYearSegment = /^\d{4}$/;
 
-/** Clears memoized sitemap route scans for tests and long-lived tools. */
-export function clearSitemapRouteCache() {
-  clearContentRouteManifestCache();
+export interface ContentSitemapPage {
+  id: string;
+  locale: Locale;
+  page: number;
+  section: RuntimeContentSection;
 }
+
+type SitemapPage = { id: typeof sitemapBasePageId } | ContentSitemapPage;
 
 /** Static top-level routes that should always be present in the sitemap. */
 export const baseRoutes = [
@@ -23,46 +50,239 @@ export const baseRoutes = [
   "/security-policy",
 ];
 
-/** Converts a validated manifest route into an app-level HTTP path string. */
-function routeToPath(route: ContentManifestRoute) {
-  return String(route);
+/** Lists stable sitemap page ids from materialized route counts. */
+export function getSitemapPageDescriptors() {
+  return Effect.runPromise(getSitemapPageDescriptorsEffect());
 }
 
-/** Builds relative Quran routes from validated Quran data. */
-export async function getQuranRoutes() {
-  return (await getContentPublicRouteManifest()).quranRoutes.map(routeToPath);
+/** Reads sitemap page descriptors without loading route rows. */
+export const getSitemapPageDescriptorsEffect = Effect.fn(
+  "www.sitemap.pageDescriptors"
+)(function* () {
+  const descriptors: SitemapPage[] = [{ id: sitemapBasePageId }];
+
+  for (const locale of routing.locales) {
+    const counts = yield* getRuntimeContentRouteCounts({ locale });
+
+    for (const count of counts) {
+      const section = count.section;
+      const pageCount = Math.ceil(
+        count.count / CONTENT_ROUTE_ARTIFACT_PAGE_SIZE
+      );
+
+      for (let page = 0; page < pageCount; page++) {
+        descriptors.push({
+          id: formatContentSitemapPageId({ locale, section, page }),
+          locale,
+          page,
+          section,
+        });
+      }
+    }
+  }
+
+  return descriptors;
+});
+
+/** Resolves one sitemap page id into the route artifact page it represents. */
+export function getSitemapPageDescriptor(id: string | undefined) {
+  if (!id || id === sitemapBasePageId) {
+    return { id: sitemapBasePageId } satisfies SitemapPage;
+  }
+
+  const [prefix, locale, section, rawPage] = id.split("_");
+  if (prefix !== "content" || !hasLocale(routing.locales, locale)) {
+    return null;
+  }
+
+  if (!isRuntimeContentSection(section)) {
+    return null;
+  }
+
+  const page = Number.parseInt(rawPage ?? "", 10);
+  if (!Number.isInteger(page) || page < 0) {
+    return null;
+  }
+
+  return {
+    id,
+    locale,
+    page,
+    section,
+  } satisfies SitemapPage;
 }
 
-/** Builds public educational routes that are backed by content or Quran data. */
-export async function getPublicContentRoutes() {
-  return (await getContentPublicRouteManifest()).contentRoutes.map(routeToPath);
+/** Builds the deduplicated route list for one sitemap page. */
+export async function getSitemapRoutes(pageId?: string) {
+  const page = getSitemapPageDescriptor(pageId);
+
+  if (!page) {
+    return [];
+  }
+
+  if (!isContentSitemapPage(page)) {
+    return sortRoutes(baseRoutes);
+  }
+
+  const rows = await getRuntimeContentRoutePageRows(page);
+  return sortRoutes(buildSitemapContentPageRoutes(rows));
 }
 
-/** Builds public educational request routes, including redirect-only URLs. */
-export async function getPublicContentRequestRoutes() {
-  return (await getContentPublicRouteManifest()).publicRequestRoutes.map(
-    routeToPath
+/** Formats one materialized content route page id for Next.js sitemap generation. */
+function formatContentSitemapPageId({
+  locale,
+  page,
+  section,
+}: {
+  locale: Locale;
+  page: number;
+  section: RuntimeContentSection;
+}) {
+  return `content_${locale}_${section}_${page}`;
+}
+
+/** Checks whether a raw route page segment is a content section. */
+function isRuntimeContentSection(
+  section: string | undefined
+): section is RuntimeContentSection {
+  return contentSections.some((candidate) => candidate === section);
+}
+
+/** Checks whether one parsed sitemap page targets content route rows. */
+function isContentSitemapPage(page: SitemapPage): page is ContentSitemapPage {
+  return "section" in page && typeof page.section === "string";
+}
+
+/** Reads one materialized content route page through the Convex route catalog. */
+function getRuntimeContentRoutePageRows(page: ContentSitemapPage) {
+  return Effect.runPromise(
+    getRuntimeContentRouteArtifactPage({
+      locale: page.locale,
+      page: page.page,
+      section: page.section,
+    }).pipe(
+      Effect.map((artifactPage) => {
+        if (!artifactPage) {
+          return [];
+        }
+
+        return artifactPage.routes;
+      })
+    )
   );
 }
 
-/** Builds redirect-only public content routes with their canonical targets. */
-export async function getPublicContentRedirects() {
-  return (await getContentPublicRouteManifest()).redirects.map(
-    ([source, target]) => [routeToPath(source), routeToPath(target)] as const
-  );
+/** Builds sitemap page routes from concrete route catalog rows. */
+export function buildSitemapContentPageRoutes(
+  rows: readonly RuntimeContentRoute[]
+) {
+  const routes = new Set<string>();
+
+  for (const row of rows) {
+    addContentPageRoutes(routes, row.route);
+  }
+
+  return sortRoutes(routes);
 }
 
-/** Builds the deduplicated route list used by `/sitemap.xml` and indexing. */
-export async function getSitemapRoutes() {
-  const allRoutes = new Set([
-    ...baseRoutes,
-    ...(await getPublicContentRoutes()),
-  ]);
+/** Adds the concrete route and supported parent index routes. */
+function addContentPageRoutes(routes: Set<string>, route: string) {
+  const parts = route.split("/").filter(Boolean);
+  const [root] = parts;
 
-  return Array.from(allRoutes);
+  if (root === "articles") {
+    addArticleRoutes(routes, parts);
+    return;
+  }
+
+  if (root === "subject") {
+    addSubjectRoutes(routes, parts);
+    return;
+  }
+
+  if (root === "exercises") {
+    addExerciseRoutes(routes, parts);
+    return;
+  }
+
+  if (root === "quran") {
+    routes.add(routeToPath(route));
+  }
 }
 
-/** Returns route roots that are backed by educational content pages. */
-export async function getPublicContentRouteRoots() {
-  return (await getContentPublicRouteManifest()).routeRoots.map(routeToPath);
+/** Adds article category and detail routes. */
+function addArticleRoutes(routes: Set<string>, parts: string[]) {
+  const [, category, slug] = parts;
+
+  if (!(category && slug)) {
+    return;
+  }
+
+  routes.add(`/articles/${category}`);
+  routes.add(routeToPath(parts.join("/")));
+}
+
+/** Adds subject grade, material, and lesson routes. */
+function addSubjectRoutes(routes: Set<string>, parts: string[]) {
+  const [, category, grade, material, topic, section] = parts;
+
+  if (!(category && grade && material && topic && section)) {
+    return;
+  }
+
+  routes.add(`/subject/${category}/${grade}`);
+  routes.add(`/subject/${category}/${grade}/${material}`);
+  routes.add(routeToPath(parts.join("/")));
+}
+
+/** Adds exercise listing, group, set, and question routes. */
+function addExerciseRoutes(routes: Set<string>, parts: string[]) {
+  const [, category, type, material, ...rest] = parts;
+
+  if (!(category && type && material && rest.length > 0)) {
+    return;
+  }
+
+  routes.add(`/exercises/${category}/${type}`);
+  routes.add(`/exercises/${category}/${type}/${material}`);
+
+  for (const nestedRoute of getExerciseNestedRoutes(rest)) {
+    routes.add(`/exercises/${category}/${type}/${material}/${nestedRoute}`);
+  }
+}
+
+/** Builds canonical exercise nested routes from concrete set/question routes. */
+function getExerciseNestedRoutes(rest: string[]) {
+  const routes: string[] = [];
+
+  for (let index = 1; index <= rest.length; index++) {
+    const nested = rest.slice(0, index);
+
+    if (isInvalidExerciseNestedRoute(nested)) {
+      continue;
+    }
+
+    routes.push(nested.join("/"));
+  }
+
+  return routes;
+}
+
+/** Checks whether an exercise route is missing the required try-out year. */
+function isInvalidExerciseNestedRoute(parts: string[]) {
+  if (parts[0] !== "try-out") {
+    return false;
+  }
+
+  return !(parts[1] && tryOutYearSegment.test(parts[1]));
+}
+
+/** Converts one route string into an app-level HTTP path string. */
+function routeToPath(route: string) {
+  return `/${route}`;
+}
+
+/** Returns routes in stable lexical order for deterministic artifacts. */
+function sortRoutes(routes: Iterable<string>) {
+  return Array.from(new Set(routes)).sort((a, b) => a.localeCompare(b));
 }

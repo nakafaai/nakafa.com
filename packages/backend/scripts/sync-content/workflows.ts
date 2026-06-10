@@ -1,3 +1,4 @@
+import { internal } from "@repo/backend/convex/_generated/api";
 import {
   getUnknownMessage,
   ScriptFailureError,
@@ -7,8 +8,9 @@ import {
   collectAuthorNamesFromFiles,
   syncAuthors,
 } from "@repo/backend/scripts/sync-content/authors";
+import { invalidateContentRuntimeCache } from "@repo/backend/scripts/sync-content/cache";
 import { clean } from "@repo/backend/scripts/sync-content/clean";
-import { callConvex } from "@repo/backend/scripts/sync-content/convex";
+import { callConvexMutation } from "@repo/backend/scripts/sync-content/convex";
 import {
   syncExerciseQuestions,
   syncExerciseSets,
@@ -28,6 +30,8 @@ import {
   finalizeMetrics,
   startPhase,
 } from "@repo/backend/scripts/sync-content/metrics";
+import { syncQuran } from "@repo/backend/scripts/sync-content/quran";
+import { syncContentRouteArtifactPages } from "@repo/backend/scripts/sync-content/routes";
 import {
   getChangedFilesSince,
   getCurrentGitCommit,
@@ -38,7 +42,6 @@ import {
   AuthorSyncResultSchema,
   BATCH_SIZES,
 } from "@repo/backend/scripts/sync-content/schemas";
-import { syncQuranSearch } from "@repo/backend/scripts/sync-content/search";
 import {
   syncSubjectSections,
   syncSubjectTopics,
@@ -52,6 +55,7 @@ import type {
 import { verify } from "@repo/backend/scripts/sync-content/verify";
 import { Effect } from "effect";
 
+/** Prints the combined sync summary, including Quran runtime/search rows. */
 const logSyncSummary = (
   authorResult: { created: number },
   articleResult: SyncResult,
@@ -59,8 +63,9 @@ const logSyncSummary = (
   subjectSectionResult: SyncResult,
   exerciseSetResult: SyncResult,
   exerciseQuestionResult: SyncResult,
-  quranSearchResult: SyncResult,
-  tryoutResult: SyncResult
+  quranResult: SyncResult,
+  tryoutResult: SyncResult,
+  routePageResult: SyncResult
 ): void => {
   const totalCreated =
     articleResult.created +
@@ -68,16 +73,18 @@ const logSyncSummary = (
     subjectSectionResult.created +
     exerciseSetResult.created +
     exerciseQuestionResult.created +
-    quranSearchResult.created +
-    tryoutResult.created;
+    quranResult.created +
+    tryoutResult.created +
+    routePageResult.created;
   const totalUpdated =
     articleResult.updated +
     subjectTopicResult.updated +
     subjectSectionResult.updated +
     exerciseSetResult.updated +
     exerciseQuestionResult.updated +
-    quranSearchResult.updated +
-    tryoutResult.updated;
+    quranResult.updated +
+    tryoutResult.updated +
+    routePageResult.updated;
   const total =
     totalCreated +
     totalUpdated +
@@ -86,8 +93,9 @@ const logSyncSummary = (
     subjectSectionResult.unchanged +
     exerciseSetResult.unchanged +
     exerciseQuestionResult.unchanged +
-    quranSearchResult.unchanged +
-    tryoutResult.unchanged;
+    quranResult.unchanged +
+    tryoutResult.unchanged +
+    routePageResult.unchanged;
   const totalAuthorLinksCreated =
     (articleResult.authorLinksCreated || 0) +
     (subjectSectionResult.authorLinksCreated || 0) +
@@ -111,10 +119,13 @@ const logSyncSummary = (
     `  Exercise Questions: ${exerciseQuestionResult.created + exerciseQuestionResult.updated + exerciseQuestionResult.unchanged} (${exerciseQuestionResult.created} new, ${exerciseQuestionResult.updated} updated)`
   );
   log(
-    `  Quran Search:       ${quranSearchResult.created + quranSearchResult.updated + quranSearchResult.unchanged} (${quranSearchResult.created} new, ${quranSearchResult.updated} updated)`
+    `  Quran:              ${quranResult.created + quranResult.updated + quranResult.unchanged} (${quranResult.created} new, ${quranResult.updated} updated)`
   );
   log(
     `  Tryouts:            ${tryoutResult.created + tryoutResult.updated + tryoutResult.unchanged} (${tryoutResult.created} new, ${tryoutResult.updated} updated)`
+  );
+  log(
+    `  Route Pages:         ${routePageResult.created + routePageResult.updated + routePageResult.unchanged} (${routePageResult.created} new, ${routePageResult.updated} updated)`
   );
 
   log("\nRelated Items:");
@@ -141,6 +152,18 @@ const logSyncSummary = (
     log("  All content up to date");
   }
 };
+
+/** Clears the route-page locale filter after cleanup may have deleted all locales. */
+function getRoutePageOptionsAfterGlobalCleanup(
+  options: SyncOptions,
+  cleanResult: { deleted: number }
+): SyncOptions {
+  if (cleanResult.deleted > 0 && options.locale) {
+    return { ...options, locale: undefined };
+  }
+
+  return options;
+}
 
 /** Runs the complete content sync in dependency-safe phases. */
 export const syncAll = Effect.fn("sync.all")(function* (
@@ -169,8 +192,9 @@ export const syncAll = Effect.fn("sync.all")(function* (
   let subjectSectionResult: SyncResult;
   let exerciseSetResult: SyncResult;
   let exerciseQuestionResult: SyncResult;
-  let quranSearchResult: SyncResult;
+  let quranResult: SyncResult;
   let tryoutResult: SyncResult;
+  let routePageResult: SyncResult;
 
   if (options.sequential) {
     const articlePhase = startPhase(metrics, "Articles");
@@ -216,13 +240,11 @@ export const syncAll = Effect.fn("sync.all")(function* (
         exerciseQuestionResult.unchanged
     );
 
-    const quranSearchPhase = startPhase(metrics, "Quran Search");
-    quranSearchResult = yield* syncQuranSearch(config, options);
+    const quranPhase = startPhase(metrics, "Quran");
+    quranResult = yield* syncQuran(config, options);
     endPhase(
-      quranSearchPhase,
-      quranSearchResult.created +
-        quranSearchResult.updated +
-        quranSearchResult.unchanged
+      quranPhase,
+      quranResult.created + quranResult.updated + quranResult.unchanged
     );
 
     const tryoutPhase = startPhase(metrics, "Tryouts");
@@ -230,6 +252,15 @@ export const syncAll = Effect.fn("sync.all")(function* (
     endPhase(
       tryoutPhase,
       tryoutResult.created + tryoutResult.updated + tryoutResult.unchanged
+    );
+
+    const routePagePhase = startPhase(metrics, "Route Pages");
+    routePageResult = yield* syncContentRouteArtifactPages(config, options);
+    endPhase(
+      routePagePhase,
+      routePageResult.created +
+        routePageResult.updated +
+        routePageResult.unchanged
     );
   } else {
     const quietOptions = { ...options, quiet: true };
@@ -256,10 +287,10 @@ export const syncAll = Effect.fn("sync.all")(function* (
     log(`  Exercise Questions: ${formatSyncResult(exerciseQuestionResult)}`);
     log(`  Duration: ${formatDuration(performance.now() - phase2Start)}`);
 
-    log("Phase 3: Syncing Quran search...");
+    log("Phase 3: Syncing Quran runtime data...");
     const phase3Start = performance.now();
-    quranSearchResult = yield* syncQuranSearch(config, quietOptions);
-    log(`  Quran Search:       ${formatSyncResult(quranSearchResult)}`);
+    quranResult = yield* syncQuran(config, quietOptions);
+    log(`  Quran:              ${formatSyncResult(quranResult)}`);
     log(`  Duration: ${formatDuration(performance.now() - phase3Start)}`);
 
     log("Phase 4: Syncing tryouts...");
@@ -268,13 +299,20 @@ export const syncAll = Effect.fn("sync.all")(function* (
     log(`  Tryouts:            ${formatSyncResult(tryoutResult)}`);
     log(`  Duration: ${formatDuration(performance.now() - phase4Start)}`);
 
+    log("Phase 5: Materializing route artifact pages...");
+    const phase5Start = performance.now();
+    routePageResult = yield* syncContentRouteArtifactPages(config, options);
+    log(`  Route Pages:         ${formatSyncResult(routePageResult)}`);
+    log(`  Duration: ${formatDuration(performance.now() - phase5Start)}`);
+
     addPhaseMetrics(metrics, "Articles", articleResult);
     addPhaseMetrics(metrics, "Subject Topics", subjectTopicResult);
     addPhaseMetrics(metrics, "Subject Sections", subjectSectionResult);
     addPhaseMetrics(metrics, "Exercise Sets", exerciseSetResult);
     addPhaseMetrics(metrics, "Exercise Questions", exerciseQuestionResult);
-    addPhaseMetrics(metrics, "Quran Search", quranSearchResult);
+    addPhaseMetrics(metrics, "Quran", quranResult);
     addPhaseMetrics(metrics, "Tryouts", tryoutResult);
+    addPhaseMetrics(metrics, "Route Pages", routePageResult);
   }
 
   finalizeMetrics(metrics);
@@ -285,8 +323,9 @@ export const syncAll = Effect.fn("sync.all")(function* (
     subjectSectionResult,
     exerciseSetResult,
     exerciseQuestionResult,
-    quranSearchResult,
-    tryoutResult
+    quranResult,
+    tryoutResult,
+    routePageResult
   );
   logSyncMetrics(metrics);
 });
@@ -305,6 +344,7 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
   if (!syncState?.lastSyncCommit) {
     log("No previous sync state found. Running full sync...\n");
     yield* syncAll(config, options);
+    yield* invalidateContentRuntimeCache(options);
     yield* saveSyncState(
       { lastSyncTimestamp: Date.now(), lastSyncCommit: currentCommit },
       options.prod ?? false
@@ -315,6 +355,7 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
   if (!currentCommit) {
     log("Git not available. Running full sync...\n");
     yield* syncAll(config, options);
+    yield* invalidateContentRuntimeCache(options);
     return;
   }
 
@@ -324,7 +365,24 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
 
   const changedFiles = yield* getChangedFilesSince(syncState.lastSyncCommit);
   if (changedFiles.size === 0) {
-    logSuccess("No tracked or untracked content files changed. Nothing to do!");
+    logSuccess(
+      "No tracked or untracked content files changed. Refreshing runtime read models..."
+    );
+    const quranResult = yield* syncQuran(config, {
+      ...options,
+      quiet: true,
+    });
+    addPhaseMetrics(metrics, "Quran", quranResult);
+
+    const routePageResult = yield* syncContentRouteArtifactPages(
+      config,
+      options
+    );
+    addPhaseMetrics(metrics, "Route Pages", routePageResult);
+
+    finalizeMetrics(metrics);
+    logSyncMetrics(metrics);
+    yield* invalidateContentRuntimeCache(options);
     yield* saveSyncState(
       { lastSyncTimestamp: Date.now(), lastSyncCommit: currentCommit },
       options.prod ?? false
@@ -351,10 +409,9 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
         index,
         index + BATCH_SIZES.authors
       );
-      const authorResult = yield* callConvex(
+      const authorResult = yield* callConvexMutation(
         config,
-        "mutation",
-        "contentSync/mutations/authors:bulkSyncAuthors",
+        internal.contentSync.mutations.authors.bulkSyncAuthors,
         { authorNames: batch },
         AuthorSyncResultSchema
       );
@@ -389,7 +446,8 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
     updated: 0,
     unchanged: 0,
   };
-  let quranSearchResult: SyncResult = { created: 0, updated: 0, unchanged: 0 };
+  let quranResult: SyncResult = { created: 0, updated: 0, unchanged: 0 };
+  let routePageResult: SyncResult = { created: 0, updated: 0, unchanged: 0 };
 
   if (hasArticleChanges) {
     log("Articles changed - syncing...");
@@ -419,11 +477,33 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
     log("Exercises: no changes");
   }
 
-  quranSearchResult = yield* syncQuranSearch(config, {
+  const hasContentRouteChanges =
+    hasArticleChanges || hasSubjectChanges || hasExerciseChanges;
+  let routePageOptions = options;
+
+  if (hasContentRouteChanges) {
+    log("Cleaning stale content before route artifact pages...");
+    const cleanResult = yield* clean(config, {
+      ...options,
+      force: true,
+    });
+    routePageOptions = getRoutePageOptionsAfterGlobalCleanup(
+      options,
+      cleanResult
+    );
+  }
+
+  quranResult = yield* syncQuran(config, {
     ...options,
     quiet: true,
   });
-  addPhaseMetrics(metrics, "Quran Search", quranSearchResult);
+  addPhaseMetrics(metrics, "Quran", quranResult);
+
+  routePageResult = yield* syncContentRouteArtifactPages(
+    config,
+    routePageOptions
+  );
+  addPhaseMetrics(metrics, "Route Pages", routePageResult);
 
   finalizeMetrics(metrics);
   log("\n=== SUMMARY ===\n");
@@ -434,14 +514,16 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
     subjectSectionResult.created +
     exerciseSetResult.created +
     exerciseQuestionResult.created +
-    quranSearchResult.created;
+    quranResult.created +
+    routePageResult.created;
   const totalUpdated =
     articleResult.updated +
     subjectTopicResult.updated +
     subjectSectionResult.updated +
     exerciseSetResult.updated +
     exerciseQuestionResult.updated +
-    quranSearchResult.updated;
+    quranResult.updated +
+    routePageResult.updated;
   if (totalCreated > 0 || totalUpdated > 0) {
     log(`Changes: ${totalCreated} created, ${totalUpdated} updated`);
   } else {
@@ -449,6 +531,7 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
   }
 
   logSyncMetrics(metrics);
+  yield* invalidateContentRuntimeCache(options);
   yield* saveSyncState(
     { lastSyncTimestamp: Date.now(), lastSyncCommit: currentCommit },
     options.prod ?? false
@@ -480,10 +563,21 @@ export const syncFull = Effect.fn("sync.full")(function* (
       });
       if (cleanResult.hasStale && cleanResult.deleted) {
         log("\nStale content was found and deleted.");
+        log("Rebuilding route artifact pages after stale cleanup...");
+        const routePageOptions = getRoutePageOptionsAfterGlobalCleanup(
+          options,
+          cleanResult
+        );
+        const routePageResult = yield* syncContentRouteArtifactPages(
+          config,
+          routePageOptions
+        );
+        log(`  Route Pages: ${formatSyncResult(routePageResult)}`);
       }
 
       log("\n");
       yield* verify(config, options);
+      yield* invalidateContentRuntimeCache(options);
       yield* saveSyncState(
         { lastSyncTimestamp: Date.now(), lastSyncCommit: currentCommit },
         options.prod ?? false

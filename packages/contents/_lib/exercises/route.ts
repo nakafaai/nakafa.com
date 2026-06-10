@@ -1,9 +1,11 @@
-import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
 import { ExercisesCategorySchema } from "@repo/contents/_types/exercises/category";
-import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material";
 import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
-import type { ExercisesType } from "@repo/contents/_types/exercises/type";
 import { ExercisesTypeSchema } from "@repo/contents/_types/exercises/type";
+import type {
+  ExercisesCategory,
+  ExercisesMaterial,
+  ExercisesType,
+} from "@repo/contents/_types/taxonomy";
 import { Schema } from "effect";
 
 /**

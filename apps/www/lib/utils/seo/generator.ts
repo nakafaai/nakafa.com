@@ -1,9 +1,11 @@
 import { getGradeNonNumeric } from "@repo/contents/_lib/subject/grade";
-import type { ArticleCategory } from "@repo/contents/_types/articles/category";
-import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material";
-import type { ExercisesType } from "@repo/contents/_types/exercises/type";
-import type { Grade } from "@repo/contents/_types/subject/grade";
-import type { Material } from "@repo/contents/_types/subject/material";
+import type {
+  ArticleCategory,
+  ExercisesMaterial,
+  ExercisesType,
+  Grade,
+  Material,
+} from "@repo/contents/_types/taxonomy";
 import { Effect, Option, Schema } from "effect";
 import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
@@ -433,9 +435,7 @@ function getDisplayNameFromContext(context: SEOContext): string {
   return "";
 }
 
-/**
- * Fallback using legacy title/description builders.
- */
+/** Builds fallback metadata when localized translations are unavailable. */
 function generateFallbackMetadata(context: SEOContext): SEOMetadata {
   const displayName = getDisplayNameFromContext(context);
 

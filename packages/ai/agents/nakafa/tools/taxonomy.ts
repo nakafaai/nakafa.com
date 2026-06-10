@@ -1,8 +1,8 @@
 import { formatTaxonomy } from "@repo/ai/agents/nakafa/format";
 import { previewTaxonomy } from "@repo/ai/agents/nakafa/preview";
+import { Nakafa } from "@repo/ai/agents/nakafa/service";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { NakafaAgentTaxonomyOptions } from "@repo/contents/_lib/agent/schema/taxonomy";
-import { Nakafa } from "@repo/contents/_lib/agent/service";
 import type { Locale } from "@repo/contents/_types/content";
 import type { UIMessageStreamWriter } from "ai";
 import { Effect } from "effect";

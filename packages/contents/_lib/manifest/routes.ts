@@ -17,7 +17,6 @@ import {
 import {
   getSlugPath as getExerciseSlugPath,
   hasInvalidTryOutYearSlug,
-  isYearlessTryOutCollectionSlug,
 } from "@repo/contents/_lib/exercises/slug";
 import type { LocaleSlugEntry } from "@repo/contents/_lib/manifest/schema";
 import {
@@ -275,7 +274,7 @@ function addExerciseRoutes(routes: Set<string>, slugs: readonly string[]) {
       Option.isNone(category) ||
       Option.isNone(type) ||
       Option.isNone(material) ||
-      isLegacyExerciseSlug(setSlug)
+      isInvalidExerciseSlug(setSlug)
     ) {
       continue;
     }
@@ -286,7 +285,7 @@ function addExerciseRoutes(routes: Set<string>, slugs: readonly string[]) {
     );
 
     for (const parentSlug of getParentSlugs(setSlug)) {
-      if (!isLegacyExerciseSlug(parentSlug)) {
+      if (!isInvalidExerciseSlug(parentSlug)) {
         routes.add(
           getExerciseSlugPath(
             category.value,
@@ -323,7 +322,7 @@ function getParentSlugs(slug: string[]) {
   return slug.slice(0, -1).map((_, index) => slug.slice(0, index + 1));
 }
 
-/** Returns whether one exercise slug belongs to a legacy redirect path. */
-function isLegacyExerciseSlug(slug: string[]) {
-  return isYearlessTryOutCollectionSlug(slug) || hasInvalidTryOutYearSlug(slug);
+/** Returns whether one exercise slug is not a canonical content route. */
+function isInvalidExerciseSlug(slug: string[]) {
+  return hasInvalidTryOutYearSlug(slug);
 }

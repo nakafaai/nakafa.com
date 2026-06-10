@@ -4,7 +4,9 @@ import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getEntries, getSitemapEntries, getUrl } from "@/lib/sitemap/entries";
 
-const mockGetContentMetadata = vi.hoisted(() => vi.fn());
+const mockGetRuntimeContentRoute = vi.hoisted(() => vi.fn());
+const mockGetSitemapRoutes = vi.hoisted(() => vi.fn());
+const mockGetSitemapPageDescriptor = vi.hoisted(() => vi.fn());
 const mockGetPathname = vi.hoisted(() =>
   vi.fn<typeof getPathname>(({ href, locale }) => {
     const pathname = typeof href === "string" ? href : href.pathname;
@@ -14,8 +16,8 @@ const mockGetPathname = vi.hoisted(() =>
   })
 );
 
-vi.mock("@repo/contents/_lib/metadata", () => ({
-  getContentMetadata: mockGetContentMetadata,
+vi.mock("@/lib/content/runtime", () => ({
+  getRuntimeContentRoute: mockGetRuntimeContentRoute,
 }));
 
 vi.mock("@repo/internationalization/src/navigation", () => ({
@@ -40,25 +42,29 @@ vi.mock("@/lib/sitemap/routes", () => ({
     "/privacy-policy",
     "/security-policy",
   ],
-  getSitemapRoutes: () =>
-    Promise.resolve([
-      "/",
-      "/search",
-      "/articles/politics/dynastic-politics-asian-values",
-      "/quran/1",
-      "/subject/high-school/10",
-    ]),
+  getSitemapPageDescriptor: mockGetSitemapPageDescriptor,
+  getSitemapRoutes: mockGetSitemapRoutes,
 }));
 
 beforeEach(() => {
-  mockGetContentMetadata.mockReset();
+  mockGetRuntimeContentRoute.mockReset();
+  mockGetSitemapRoutes.mockReset();
+  mockGetSitemapPageDescriptor.mockReset();
   mockGetPathname.mockClear();
 
-  mockGetContentMetadata.mockReturnValue(
+  mockGetRuntimeContentRoute.mockReturnValue(
     Effect.succeed({
-      date: "01/02/2024",
+      date: new Date(2024, 0, 2).getTime(),
     })
   );
+  mockGetSitemapPageDescriptor.mockReturnValue({ id: "base" });
+  mockGetSitemapRoutes.mockResolvedValue([
+    "/",
+    "/search",
+    "/articles/politics/dynastic-politics-asian-values",
+    "/quran/1",
+    "/subject/high-school/10",
+  ]);
 });
 
 describe("sitemap entries", () => {
@@ -152,9 +158,9 @@ describe("sitemap entries", () => {
   });
 
   it("falls back when content metadata dates are invalid or unavailable", async () => {
-    mockGetContentMetadata.mockReturnValueOnce(
+    mockGetRuntimeContentRoute.mockReturnValueOnce(
       Effect.succeed({
-        date: "not-a-date",
+        date: undefined,
       })
     );
 
@@ -164,7 +170,7 @@ describe("sitemap entries", () => {
 
     expect(invalidDateEntries[0]?.lastModified).toBeInstanceOf(Date);
 
-    mockGetContentMetadata.mockReturnValueOnce(
+    mockGetRuntimeContentRoute.mockReturnValueOnce(
       Effect.fail(new Error("metadata unavailable"))
     );
 
@@ -173,10 +179,6 @@ describe("sitemap entries", () => {
         getEntries("/articles/politics/dynastic-politics-asian-values")
       )
     ).resolves.toHaveLength(2);
-
-    mockGetContentMetadata.mockImplementationOnce(() => {
-      throw new Error("metadata crashed");
-    });
 
     await expect(
       Effect.runPromise(
@@ -197,9 +199,9 @@ describe("sitemap entries", () => {
       return Promise.resolve();
     });
 
-    mockGetContentMetadata.mockImplementationOnce(() => {
-      throw new Error("metadata crashed");
-    });
+    mockGetRuntimeContentRoute.mockReturnValueOnce(
+      Effect.fail(new Error("metadata crashed"))
+    );
 
     const entries = await Effect.runPromise(
       getEntries("/articles/politics/dynastic-politics-asian-values", {
@@ -208,19 +210,15 @@ describe("sitemap entries", () => {
     );
 
     expect(entries).toHaveLength(2);
-    expect(reportError).toHaveBeenCalledWith(
-      expect.any(Error),
-      expect.objectContaining({
-        source: "sitemap-content-last-modified",
-      })
-    );
-    expect(reportError).toHaveBeenCalledWith(
-      expect.any(Error),
-      expect.objectContaining({
-        route: "/articles/politics/dynastic-politics-asian-values",
-        source: "sitemap-route-entry",
-      })
-    );
+    expect(reportError.mock.calls[0]?.[0]).toBeInstanceOf(Error);
+    expect(reportError.mock.calls[0]?.[1]).toMatchObject({
+      source: "sitemap-content-last-modified",
+    });
+    expect(reportError.mock.calls[1]?.[0]).toBeInstanceOf(Error);
+    expect(reportError.mock.calls[1]?.[1]).toMatchObject({
+      route: "/articles/politics/dynastic-politics-asian-values",
+      source: "sitemap-route-entry",
+    });
   });
 
   it("generates sitemap entries from route and locale inputs", async () => {
@@ -233,5 +231,74 @@ describe("sitemap entries", () => {
     expect(urls).not.toContain("https://nakafa.com/en/about");
     expect(urls).not.toContain("https://nakafa.com/id/about");
     expect(urls).toContain("https://nakafa.com/id/subject/high-school/10");
+  });
+
+  it("keeps English content sitemap pages scoped to English URLs", async () => {
+    mockGetSitemapPageDescriptor.mockReturnValueOnce({
+      id: "content_en_articles_0",
+      locale: "en",
+      page: 0,
+      section: "articles",
+    });
+    mockGetSitemapRoutes.mockResolvedValueOnce([
+      "/articles/politics/dynastic-politics-asian-values",
+    ]);
+
+    const entries = await Effect.runPromise(
+      getSitemapEntries({ pageId: "content_en_articles_0" })
+    );
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.url).toBe(
+      "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values"
+    );
+    expect(entries[0]?.alternates?.languages).toEqual({
+      en: "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values",
+      "x-default":
+        "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values",
+    });
+  });
+
+  it("keeps Indonesian content sitemap pages scoped to Indonesian URLs", async () => {
+    mockGetSitemapPageDescriptor.mockReturnValueOnce({
+      id: "content_id_articles_0",
+      locale: "id",
+      page: 0,
+      section: "articles",
+    });
+    mockGetSitemapRoutes.mockResolvedValueOnce([
+      "/articles/politics/nepotism-in-political-governance",
+    ]);
+
+    const entries = await Effect.runPromise(
+      getSitemapEntries({ pageId: "content_id_articles_0" })
+    );
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.url).toBe(
+      "https://nakafa.com/id/articles/politics/nepotism-in-political-governance"
+    );
+    expect(entries[0]?.alternates?.languages).toEqual({
+      id: "https://nakafa.com/id/articles/politics/nepotism-in-political-governance",
+    });
+  });
+
+  it("keeps base sitemap pages localized across supported locales", async () => {
+    mockGetSitemapPageDescriptor.mockReturnValueOnce({ id: "base" });
+    mockGetSitemapRoutes.mockResolvedValueOnce(["/search"]);
+
+    const entries = await Effect.runPromise(
+      getSitemapEntries({ pageId: "base" })
+    );
+
+    expect(entries.map((entry) => entry.url)).toEqual([
+      "https://nakafa.com/en/search",
+      "https://nakafa.com/id/search",
+    ]);
+    expect(entries[0]?.alternates?.languages).toEqual({
+      en: "https://nakafa.com/en/search",
+      id: "https://nakafa.com/id/search",
+      "x-default": "https://nakafa.com/en/search",
+    });
   });
 });

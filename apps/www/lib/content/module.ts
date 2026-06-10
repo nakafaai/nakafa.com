@@ -11,6 +11,13 @@ interface ContentModuleImportError {
   source: string;
 }
 
+interface ContentModuleImportOptions {
+  context?: ContentModuleContext;
+  filePath: string;
+  locale: Locale;
+  source: string;
+}
+
 /**
  * Reports one content module import failure outside static prerender success.
  *
@@ -26,20 +33,18 @@ interface ContentModuleImportError {
  */
 function reportContentModuleImportError({
   cause,
-  context = {},
+  context,
   filePath,
   locale,
   source,
 }: ContentModuleImportError) {
-  return import("@repo/analytics/posthog/server").then(
-    (analytics) =>
-      analytics.captureServerException(cause, undefined, {
-        ...context,
-        file_path: filePath,
-        locale,
-        source,
-      }),
-    () => undefined
+  return import("@repo/analytics/posthog/server").then((analytics) =>
+    analytics.captureServerException(cause, undefined, {
+      ...context,
+      file_path: filePath,
+      locale,
+      source,
+    })
   );
 }
 
@@ -56,12 +61,7 @@ export function importContentModuleOrNull({
   filePath,
   locale,
   source,
-}: {
-  context?: ContentModuleContext;
-  filePath: string;
-  locale: Locale;
-  source: string;
-}) {
+}: ContentModuleImportOptions) {
   return importContentModule(filePath, locale).then(
     (content) => content,
     (cause) =>

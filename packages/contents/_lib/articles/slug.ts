@@ -1,8 +1,8 @@
 import { teams } from "@repo/contents/_data/team";
 import { getContentsMetadata } from "@repo/contents/_lib/metadata";
 import { formatContentDateISO } from "@repo/contents/_shared/date";
-import type { ArticleCategory } from "@repo/contents/_types/articles/category";
 import type { Article, Locale } from "@repo/contents/_types/content";
+import type { ArticleCategory } from "@repo/contents/_types/taxonomy";
 import { Effect, Option } from "effect";
 
 /**

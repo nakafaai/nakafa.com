@@ -1,8 +1,11 @@
+import { Nakafa } from "@repo/ai/agents/nakafa/service";
 import { read } from "@repo/ai/agents/nakafa/tools/read";
-import { createWriter } from "@repo/ai/agents/nakafa/tools/test";
+import {
+  createNakafaTestService,
+  createWriter,
+} from "@repo/ai/agents/nakafa/tools/test";
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
-import { Nakafa } from "@repo/contents/_lib/agent/service";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -21,7 +24,7 @@ describe("nakafa read tool", () => {
         input: { content_ref: ARTICLE_CONTENT_ID },
         toolCallId: "read-1",
         writer,
-      }).pipe(Effect.provide(Nakafa.Default))
+      }).pipe(Effect.provideService(Nakafa, createNakafaTestService()))
     );
 
     expect(output).toContain("# Nakafa Content");
@@ -46,7 +49,7 @@ describe("nakafa read tool", () => {
         input: { content_ref: MISSING_CONTENT_ID },
         toolCallId: "read-2",
         writer,
-      }).pipe(Effect.provide(Nakafa.Default))
+      }).pipe(Effect.provideService(Nakafa, createNakafaTestService()))
     );
 
     expect(output).toBe("Nakafa content was not found.");

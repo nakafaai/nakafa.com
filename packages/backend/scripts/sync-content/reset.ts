@@ -1,4 +1,5 @@
-import { callConvex } from "@repo/backend/scripts/sync-content/convex";
+import { internal } from "@repo/backend/convex/_generated/api";
+import { callConvexMutation } from "@repo/backend/scripts/sync-content/convex";
 import { getContentCounts } from "@repo/backend/scripts/sync-content/counts";
 import {
   formatDuration,
@@ -12,200 +13,241 @@ import type {
   ConvexConfig,
   SyncOptions,
 } from "@repo/backend/scripts/sync-content/types";
+import type { DefaultFunctionArgs, FunctionReference } from "convex/server";
 import { Effect } from "effect";
+
+type BatchDeleteMutation = FunctionReference<
+  "mutation",
+  "internal",
+  DefaultFunctionArgs,
+  { deleted: number; hasMore: boolean }
+>;
 
 interface ResetStep {
   label: string;
-  mutationPath: string;
+  mutation: BatchDeleteMutation;
   resultLabel: string;
 }
 
 const RESET_STEPS: ResetStep[] = [
   {
     label: "Deleting content search rows...",
-    mutationPath: "contentSync/reset/internal:deleteContentSearchBatch",
+    mutation: internal.contentSync.reset.internal.deleteContentSearchBatch,
     resultLabel: "content search rows",
   },
   {
+    label: "Deleting content route rows...",
+    mutation: internal.contentSync.reset.internal.deleteContentRoutesBatch,
+    resultLabel: "content route rows",
+  },
+  {
+    label: "Deleting content route count rows...",
+    mutation: internal.contentSync.reset.internal.deleteContentRouteCountsBatch,
+    resultLabel: "content route count rows",
+  },
+  {
+    label: "Deleting content route artifact pages...",
+    mutation: internal.contentSync.reset.internal.deleteContentRoutePagesBatch,
+    resultLabel: "content route artifact pages",
+  },
+  {
+    label: "Deleting Quran verses...",
+    mutation: internal.contentSync.reset.internal.deleteQuranVersesBatch,
+    resultLabel: "Quran verses",
+  },
+  {
+    label: "Deleting Quran surahs...",
+    mutation: internal.contentSync.reset.internal.deleteQuranSurahsBatch,
+    resultLabel: "Quran surahs",
+  },
+  {
     label: "Deleting content authors...",
-    mutationPath: "contentSync/reset/internal:deleteContentAuthorsBatch",
+    mutation: internal.contentSync.reset.internal.deleteContentAuthorsBatch,
     resultLabel: "content authors",
   },
   {
     label: "Deleting article references...",
-    mutationPath: "contentSync/reset/internal:deleteArticleReferencesBatch",
+    mutation: internal.contentSync.reset.internal.deleteArticleReferencesBatch,
     resultLabel: "article references",
   },
   {
     label: "Deleting exercise choices...",
-    mutationPath: "contentSync/reset/internal:deleteExerciseChoicesBatch",
+    mutation: internal.contentSync.reset.internal.deleteExerciseChoicesBatch,
     resultLabel: "exercise choices",
   },
   {
     label: "Deleting exercise answers...",
-    mutationPath: "contentSync/reset/internal:deleteExerciseAnswersBatch",
+    mutation: internal.contentSync.reset.internal.deleteExerciseAnswersBatch,
     resultLabel: "exercise answers",
   },
   {
     label: "Deleting audio generation queue...",
-    mutationPath: "contentSync/reset/internal:deleteAudioGenerationQueueBatch",
+    mutation:
+      internal.contentSync.reset.internal.deleteAudioGenerationQueueBatch,
     resultLabel: "audio generation queue entries",
   },
   {
     label: "Deleting generated content audio...",
-    mutationPath: "contentSync/reset/internal:deleteContentAudiosBatch",
+    mutation: internal.contentSync.reset.internal.deleteContentAudiosBatch,
     resultLabel: "generated content audio rows",
   },
   {
     label: "Deleting audio content sources...",
-    mutationPath: "contentSync/reset/internal:deleteAudioContentSourcesBatch",
+    mutation:
+      internal.contentSync.reset.internal.deleteAudioContentSourcesBatch,
     resultLabel: "audio content sources",
   },
   {
     label: "Deleting tryout part attempts...",
-    mutationPath: "contentSync/reset/internal:deleteTryoutPartAttemptsBatch",
+    mutation: internal.contentSync.reset.internal.deleteTryoutPartAttemptsBatch,
     resultLabel: "tryout part attempts",
   },
   {
     label: "Deleting tryout leaderboard entries...",
-    mutationPath:
-      "contentSync/reset/internal:deleteTryoutLeaderboardEntriesBatch",
+    mutation:
+      internal.contentSync.reset.internal.deleteTryoutLeaderboardEntriesBatch,
     resultLabel: "tryout leaderboard entries",
   },
   {
     label: "Deleting user tryout stats...",
-    mutationPath: "contentSync/reset/internal:deleteUserTryoutStatsBatch",
+    mutation: internal.contentSync.reset.internal.deleteUserTryoutStatsBatch,
     resultLabel: "user tryout stats",
   },
   {
     label: "Deleting IRT scale publication queue...",
-    mutationPath:
-      "contentSync/reset/internal:deleteIrtScalePublicationQueueBatch",
+    mutation:
+      internal.contentSync.reset.internal.deleteIrtScalePublicationQueueBatch,
     resultLabel: "IRT scale publication queue entries",
   },
   {
     label: "Deleting IRT scale version items...",
-    mutationPath: "contentSync/reset/internal:deleteIrtScaleVersionItemsBatch",
+    mutation:
+      internal.contentSync.reset.internal.deleteIrtScaleVersionItemsBatch,
     resultLabel: "IRT scale version items",
   },
   {
     label: "Deleting exercise item parameters...",
-    mutationPath:
-      "contentSync/reset/internal:deleteExerciseItemParametersBatch",
+    mutation:
+      internal.contentSync.reset.internal.deleteExerciseItemParametersBatch,
     resultLabel: "exercise item parameters",
   },
   {
     label: "Deleting IRT scale quality checks...",
-    mutationPath: "contentSync/reset/internal:deleteIrtScaleQualityChecksBatch",
+    mutation:
+      internal.contentSync.reset.internal.deleteIrtScaleQualityChecksBatch,
     resultLabel: "IRT scale quality checks",
   },
   {
     label: "Deleting IRT scale quality refresh queue...",
-    mutationPath:
-      "contentSync/reset/internal:deleteIrtScaleQualityRefreshQueueBatch",
+    mutation:
+      internal.contentSync.reset.internal
+        .deleteIrtScaleQualityRefreshQueueBatch,
     resultLabel: "IRT scale quality refresh queue entries",
   },
   {
     label: "Deleting IRT calibration queue...",
-    mutationPath: "contentSync/reset/internal:deleteIrtCalibrationQueueBatch",
+    mutation:
+      internal.contentSync.reset.internal.deleteIrtCalibrationQueueBatch,
     resultLabel: "IRT calibration queue entries",
   },
   {
     label: "Deleting IRT calibration attempts...",
-    mutationPath:
-      "contentSync/reset/internal:deleteIrtCalibrationAttemptsBatch",
+    mutation:
+      internal.contentSync.reset.internal.deleteIrtCalibrationAttemptsBatch,
     resultLabel: "IRT calibration attempts",
   },
   {
     label: "Deleting IRT calibration cache stats...",
-    mutationPath:
-      "contentSync/reset/internal:deleteIrtCalibrationCacheStatsBatch",
+    mutation:
+      internal.contentSync.reset.internal.deleteIrtCalibrationCacheStatsBatch,
     resultLabel: "IRT calibration cache stats",
   },
   {
     label: "Deleting exercise attempts...",
-    mutationPath: "contentSync/reset/internal:deleteExerciseAttemptsBatch",
+    mutation: internal.contentSync.reset.internal.deleteExerciseAttemptsBatch,
     resultLabel: "exercise attempts",
   },
   {
     label: "Deleting tryout attempts...",
-    mutationPath: "contentSync/reset/internal:deleteTryoutAttemptsBatch",
+    mutation: internal.contentSync.reset.internal.deleteTryoutAttemptsBatch,
     resultLabel: "tryout attempts",
   },
   {
     label: "Deleting tryout entitlements...",
-    mutationPath: "contentSync/reset/internal:deleteTryoutEntitlementsBatch",
+    mutation: internal.contentSync.reset.internal.deleteTryoutEntitlementsBatch,
     resultLabel: "tryout entitlements",
   },
   {
     label: "Deleting tryout access grants...",
-    mutationPath: "contentSync/reset/internal:deleteTryoutAccessGrantsBatch",
+    mutation: internal.contentSync.reset.internal.deleteTryoutAccessGrantsBatch,
     resultLabel: "tryout access grants",
   },
   {
     label: "Deleting tryout access campaign products...",
-    mutationPath:
-      "contentSync/reset/internal:deleteTryoutAccessCampaignProductsBatch",
+    mutation:
+      internal.contentSync.reset.internal
+        .deleteTryoutAccessCampaignProductsBatch,
     resultLabel: "tryout access campaign products",
   },
   {
     label: "Deleting tryout access links...",
-    mutationPath: "contentSync/reset/internal:deleteTryoutAccessLinksBatch",
+    mutation: internal.contentSync.reset.internal.deleteTryoutAccessLinksBatch,
     resultLabel: "tryout access links",
   },
   {
     label: "Deleting tryout access campaigns...",
-    mutationPath: "contentSync/reset/internal:deleteTryoutAccessCampaignsBatch",
+    mutation:
+      internal.contentSync.reset.internal.deleteTryoutAccessCampaignsBatch,
     resultLabel: "tryout access campaigns",
   },
   {
     label: "Deleting tryout catalog meta...",
-    mutationPath: "contentSync/reset/internal:deleteTryoutCatalogMetaBatch",
+    mutation: internal.contentSync.reset.internal.deleteTryoutCatalogMetaBatch,
     resultLabel: "tryout catalog meta rows",
   },
   {
     label: "Deleting tryout part sets...",
-    mutationPath: "contentSync/reset/internal:deleteTryoutPartSetsBatch",
+    mutation: internal.contentSync.reset.internal.deleteTryoutPartSetsBatch,
     resultLabel: "tryout part sets",
   },
   {
     label: "Deleting IRT scale versions...",
-    mutationPath: "contentSync/reset/internal:deleteIrtScaleVersionsBatch",
+    mutation: internal.contentSync.reset.internal.deleteIrtScaleVersionsBatch,
     resultLabel: "IRT scale versions",
   },
   {
     label: "Deleting IRT calibration runs...",
-    mutationPath: "contentSync/reset/internal:deleteIrtCalibrationRunsBatch",
+    mutation: internal.contentSync.reset.internal.deleteIrtCalibrationRunsBatch,
     resultLabel: "IRT calibration runs",
   },
   {
     label: "Deleting tryouts...",
-    mutationPath: "contentSync/reset/internal:deleteTryoutsBatch",
+    mutation: internal.contentSync.reset.internal.deleteTryoutsBatch,
     resultLabel: "tryouts",
   },
   {
     label: "Deleting exercise questions...",
-    mutationPath: "contentSync/reset/internal:deleteExerciseQuestionsBatch",
+    mutation: internal.contentSync.reset.internal.deleteExerciseQuestionsBatch,
     resultLabel: "exercise questions",
   },
   {
     label: "Deleting subject sections...",
-    mutationPath: "contentSync/reset/internal:deleteSubjectSectionsBatch",
+    mutation: internal.contentSync.reset.internal.deleteSubjectSectionsBatch,
     resultLabel: "subject sections",
   },
   {
     label: "Deleting exercise sets...",
-    mutationPath: "contentSync/reset/internal:deleteExerciseSetsBatch",
+    mutation: internal.contentSync.reset.internal.deleteExerciseSetsBatch,
     resultLabel: "exercise sets",
   },
   {
     label: "Deleting subject topics...",
-    mutationPath: "contentSync/reset/internal:deleteSubjectTopicsBatch",
+    mutation: internal.contentSync.reset.internal.deleteSubjectTopicsBatch,
     resultLabel: "subject topics",
   },
   {
     label: "Deleting articles...",
-    mutationPath: "contentSync/reset/internal:deleteArticlesBatch",
+    mutation: internal.contentSync.reset.internal.deleteArticlesBatch,
     resultLabel: "articles",
   },
 ];
@@ -213,7 +255,7 @@ const RESET_STEPS: ResetStep[] = [
 /** Deletes every row exposed by one bounded reset mutation. */
 const deleteAllBatched = Effect.fn("sync.reset.deleteAllBatched")(function* (
   config: ConvexConfig,
-  mutationPath: string,
+  mutation: BatchDeleteMutation,
   label: string
 ) {
   let totalDeleted = 0;
@@ -221,10 +263,9 @@ const deleteAllBatched = Effect.fn("sync.reset.deleteAllBatched")(function* (
   let hasMore = true;
 
   while (hasMore) {
-    const result = yield* callConvex(
+    const result = yield* callConvexMutation(
       config,
-      "mutation",
-      mutationPath,
+      mutation,
       {},
       BatchDeleteResultSchema
     );
@@ -269,6 +310,11 @@ export const reset = Effect.fn("sync.reset")(function* (
   const counts = yield* getContentCounts(config);
 
   log(`  Content Search:        ${counts.contentSearch}`);
+  log(`  Content Routes:        ${counts.contentRoutes}`);
+  log(`  Content Route Counts:  ${counts.contentRouteCounts}`);
+  log(`  Content Route Pages:   ${counts.contentRoutePages}`);
+  log(`  Quran Surahs:          ${counts.quranSurahs}`);
+  log(`  Quran Verses:          ${counts.quranVerses}`);
   log(`  Content Authors:       ${counts.contentAuthors}`);
   log(`  Article References:    ${counts.articleReferences}`);
   log(`  Exercise Choices:      ${counts.exerciseChoices}`);
@@ -343,7 +389,14 @@ export const reset = Effect.fn("sync.reset")(function* (
     counts.irtScaleVersions +
     counts.irtScaleVersionItems;
   const totalDerived =
-    counts.contentSearch + counts.audioContentSources + counts.contentAudios;
+    counts.contentSearch +
+    counts.contentRoutes +
+    counts.contentRouteCounts +
+    counts.contentRoutePages +
+    counts.quranSurahs +
+    counts.quranVerses +
+    counts.audioContentSources +
+    counts.contentAudios;
 
   log(`\n  Total content items:  ${totalContent}`);
   log(`  Total related items:  ${totalRelated}`);
@@ -381,7 +434,7 @@ export const reset = Effect.fn("sync.reset")(function* (
     log(`${index + 1}/${RESET_STEPS.length} ${step.label}`);
     const deleted = yield* deleteAllBatched(
       config,
-      step.mutationPath,
+      step.mutation,
       step.resultLabel
     );
     logSuccess(`  Deleted ${deleted} ${step.resultLabel}`);
@@ -392,7 +445,7 @@ export const reset = Effect.fn("sync.reset")(function* (
     log("Deleting authors...");
     const authorsDeleted = yield* deleteAllBatched(
       config,
-      "contentSync/reset/internal:deleteAuthorsBatch",
+      internal.contentSync.reset.internal.deleteAuthorsBatch,
       "authors"
     );
     logSuccess(`  Deleted ${authorsDeleted} authors`);

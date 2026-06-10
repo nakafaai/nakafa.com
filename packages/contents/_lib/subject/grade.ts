@@ -1,19 +1,19 @@
 import { getFolderChildNames } from "@repo/contents/_lib/fs/cache";
 import { getCategoryPath } from "@repo/contents/_lib/subject/category";
 import { getMaterialPath } from "@repo/contents/_lib/subject/route";
-import type { SubjectCategory } from "@repo/contents/_types/subject/category";
-import { SUBJECT_CATEGORIES } from "@repo/contents/_types/subject/category";
-import type { Grade } from "@repo/contents/_types/subject/grade";
 import {
   GradeSchema,
-  NON_NUMERIC_GRADES,
   NonNumericGradeSchema,
-  NUMERIC_GRADES,
 } from "@repo/contents/_types/subject/grade";
 import {
   BACHELOR_MATERIALS,
+  type Grade,
   HIGH_SCHOOL_MATERIALS,
-} from "@repo/contents/_types/subject/material";
+  NON_NUMERIC_GRADES,
+  NUMERIC_GRADES,
+  SUBJECT_CATEGORIES,
+  type SubjectCategory,
+} from "@repo/contents/_types/taxonomy";
 import { Effect, Array as EffectArray, Option, Schema } from "effect";
 
 const orderedGrades = [...NUMERIC_GRADES, ...NON_NUMERIC_GRADES];

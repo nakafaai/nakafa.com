@@ -1,1114 +1,352 @@
 // @vitest-environment node
 import { Effect } from "effect";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   getCachedMetadataFromSlug,
   getMetadataFromSlug,
   getStaticParams,
 } from "@/lib/utils/system";
 
-const {
-  mockCacheLife,
-  mockGetFolderChildNames,
-  mockGetNestedSlugs,
-  mockGetContentMetadata,
-} = vi.hoisted(() => ({
-  mockCacheLife: vi.fn(),
-  mockGetFolderChildNames: vi.fn(),
-  mockGetNestedSlugs: vi.fn(),
-  mockGetContentMetadata: vi.fn(),
+const routeMocks = vi.hoisted(() => ({
+  listRuntimeLatestContentRoutes: vi.fn(),
+}));
+const cacheMocks = vi.hoisted(() => ({
+  cacheLife: vi.fn(),
+  cacheTag: vi.fn(),
+}));
+const runtimeMocks = vi.hoisted(() => ({
+  getRuntimeContentRoute: vi.fn(),
+}));
+const translationMocks = vi.hoisted(() => ({
+  getTranslations: vi.fn(),
 }));
 
-vi.mock("next/cache", () => ({
-  cacheLife: mockCacheLife,
+vi.mock("@repo/internationalization/src/routing", () => ({
+  routing: {
+    defaultLocale: "en",
+    locales: ["en", "id"],
+  },
 }));
 
-vi.mock("@repo/contents/_lib/fs/cache", () => ({
-  getFolderChildNames: mockGetFolderChildNames,
-}));
-
-vi.mock("@repo/contents/_lib/fs/nested-slugs", async () => {
-  const { Effect: EffectModule } = await import("effect");
-
-  return {
-    getNestedSlugs: (path: string) =>
-      EffectModule.succeed(mockGetNestedSlugs(path)),
-  };
-});
-
-vi.mock("@repo/contents/_lib/metadata", () => ({
-  getContentMetadata: mockGetContentMetadata,
+vi.mock("@/lib/content/runtime", () => ({
+  getRuntimeContentRoute: runtimeMocks.getRuntimeContentRoute,
+  listRuntimeLatestContentRoutes: routeMocks.listRuntimeLatestContentRoutes,
 }));
 
 vi.mock("next-intl/server", () => ({
-  getTranslations: vi.fn((params) => {
-    const createTranslator = (key: string) => key;
-    const translator = Object.assign(createTranslator, {
-      rich: createTranslator,
-      markup: createTranslator,
-      raw: createTranslator,
-      has: () => false,
-    });
+  getTranslations: translationMocks.getTranslations,
+}));
 
-    if (params.namespace === "Common") {
-      const commonTranslator = (key: string) => {
-        if (key === "made-with-love") {
-          return "Made with Love";
-        }
-        return key;
-      };
-      return Promise.resolve(
-        Object.assign(commonTranslator, {
-          rich: commonTranslator,
-          markup: commonTranslator,
-          raw: commonTranslator,
-          has: () => false,
-        })
-      );
-    }
-    if (params.namespace === "Metadata") {
-      const metadataTranslator = (key: string) => {
-        if (key === "short-description") {
-          return "Short description";
-        }
-        return key;
-      };
-      return Promise.resolve(
-        Object.assign(metadataTranslator, {
-          rich: metadataTranslator,
-          markup: metadataTranslator,
-          raw: metadataTranslator,
-          has: () => false,
-        })
-      );
-    }
-    return Promise.resolve(translator);
-  }),
+vi.mock("next/cache", () => ({
+  cacheLife: cacheMocks.cacheLife,
+  cacheTag: cacheMocks.cacheTag,
 }));
 
 beforeEach(() => {
-  mockGetFolderChildNames.mockReturnValue(Effect.succeed([]));
-  mockGetNestedSlugs.mockReturnValue([]);
-  mockGetContentMetadata.mockReturnValue(Effect.succeed(null));
-});
-
-afterEach(() => {
-  vi.clearAllMocks();
-  mockCacheLife.mockReset();
-  mockGetFolderChildNames.mockReset();
-  mockGetNestedSlugs.mockReset();
-  mockGetContentMetadata.mockReset();
-});
-
-describe("getStaticParams", () => {
-  describe("empty paramNames", () => {
-    it("returns empty array for no params", async () => {
-      const result = await getStaticParams({
-        basePath: "articles",
-        paramNames: [],
-      });
-      expect(result).toEqual([]);
-    });
-  });
-
-  describe("error handling", () => {
-    it("returns empty array when getFolderChildNames fails for basePath", async () => {
-      mockGetFolderChildNames.mockReturnValue(
-        Effect.fail(new Error("Failed to read"))
-      );
-
-      const result = await getStaticParams({
-        basePath: "articles",
-        paramNames: ["category"],
-      });
-
-      expect(result).toEqual([]);
-    });
-
-    it("returns empty array when getFolderChildNames fails for nested path", async () => {
-      mockGetFolderChildNames.mockImplementation((path: string) => {
-        if (path === "articles") {
-          return Effect.succeed(["politics"]);
-        }
-        return Effect.fail(new Error("Failed to read nested"));
-      });
-
-      const result = await getStaticParams({
-        basePath: "articles",
-        paramNames: ["category", "slug"],
-      });
-
-      expect(result).toEqual([]);
-    });
-  });
-
-  describe("production: articles structure", () => {
-    beforeEach(() => {
-      mockGetFolderChildNames.mockImplementation((path: string) => {
-        if (path === "articles") {
-          return Effect.succeed(["politics", "economy"]);
-        }
-        if (path === "articles/politics") {
-          return Effect.succeed([
-            "nepotism-in-political-governance",
-            "flawed-legal-geopolitics",
-            "kim-plus-empty-box",
-            "merah-putih-cabinet-analysis",
-          ]);
-        }
-        if (path === "articles/economy") {
-          return Effect.succeed(["inflation", "deflation"]);
-        }
-        return Effect.succeed([]);
-      });
-    });
-
-    it("generates article params matching production structure", async () => {
-      const result = await getStaticParams({
-        basePath: "articles",
-        paramNames: ["category", "slug"],
-      });
-
-      expect(result).toContainEqual({
-        category: "politics",
-        slug: "nepotism-in-political-governance",
-      });
-
-      expect(result).toContainEqual({
-        category: "politics",
-        slug: "flawed-legal-geopolitics",
-      });
-
-      expect(result).toContainEqual({
-        category: "politics",
-        slug: "kim-plus-empty-box",
-      });
-
-      expect(result).toContainEqual({
-        category: "politics",
-        slug: "merah-putih-cabinet-analysis",
-      });
-
-      expect(result).toContainEqual({
-        category: "economy",
-        slug: "inflation",
-      });
-
-      expect(result).toContainEqual({
-        category: "economy",
-        slug: "deflation",
-      });
-
-      expect(result.length).toBe(6);
-    });
-  });
-
-  describe("production: exercises structure (high-school/tka)", () => {
-    beforeEach(() => {
-      mockGetFolderChildNames.mockImplementation((path: string) => {
-        if (path === "exercises") {
-          return Effect.succeed(["high-school"]);
-        }
-        if (path === "exercises/high-school") {
-          return Effect.succeed(["tka"]);
-        }
-        if (path === "exercises/high-school/tka") {
-          return Effect.succeed(["mathematics"]);
-        }
-        if (path === "exercises/high-school/tka/mathematics") {
-          return Effect.succeed(["try-out"]);
-        }
-        return Effect.succeed([]);
-      });
-
-      mockGetNestedSlugs.mockImplementation((path: string) => {
-        if (path === "exercises/high-school/tka/mathematics/try-out") {
-          const paths: string[][] = [];
-          for (let set = 1; set <= 3; set++) {
-            paths.push(["2026", `set-${set}`]);
-            for (let item = 1; item <= 40; item++) {
-              paths.push(["2026", `set-${set}`, String(item)]);
-            }
-          }
-          return paths;
-        }
-        return [];
-      });
-    });
-
-    it("generates exercise params matching production structure", async () => {
-      const result = await getStaticParams({
-        basePath: "exercises",
-        paramNames: ["category", "type", "material", "slug"],
-        slugParam: "slug",
-        isDeep: true,
-      });
-
-      const tkaMathSet1 = result.filter(
-        (r) =>
-          r.category === "high-school" &&
-          r.type === "tka" &&
-          r.material === "mathematics" &&
-          r.slug[2] === "set-1"
-      );
-
-      expect(tkaMathSet1.length).toBeGreaterThan(0);
-
-      expect(result).toContainEqual({
-        category: "high-school",
-        type: "tka",
-        material: "mathematics",
-        slug: ["try-out", "2026", "set-1"],
-      });
-
-      expect(result).toContainEqual({
-        category: "high-school",
-        type: "tka",
-        material: "mathematics",
-        slug: ["try-out", "2026", "set-1", "1"],
-      });
-
-      expect(result).toContainEqual({
-        category: "high-school",
-        type: "tka",
-        material: "mathematics",
-        slug: ["try-out", "2026", "set-1", "40"],
-      });
-
-      expect(result).toContainEqual({
-        category: "high-school",
-        type: "tka",
-        material: "mathematics",
-        slug: ["try-out", "2026", "set-2"],
-      });
-
-      expect(result).toContainEqual({
-        category: "high-school",
-        type: "tka",
-        material: "mathematics",
-        slug: ["try-out", "2026", "set-3"],
-      });
-    });
-
-    it("generates all 120 exercise items across 3 sets", async () => {
-      const result = await getStaticParams({
-        basePath: "exercises",
-        paramNames: ["category", "type", "material", "slug"],
-        slugParam: "slug",
-        isDeep: true,
-      });
-
-      const tkaMathExercises = result.filter(
-        (r) =>
-          r.category === "high-school" &&
-          r.type === "tka" &&
-          r.material === "mathematics" &&
-          r.slug.length === 4
-      );
-
-      expect(tkaMathExercises.length).toBe(120);
-    });
-  });
-
-  describe("production: exercises structure (high-school/snbt)", () => {
-    beforeEach(() => {
-      mockGetFolderChildNames.mockImplementation((path: string) => {
-        if (path === "exercises") {
-          return Effect.succeed(["high-school"]);
-        }
-        if (path === "exercises/high-school") {
-          return Effect.succeed(["snbt"]);
-        }
-        if (path === "exercises/high-school/snbt") {
-          return Effect.succeed([
-            "english-language",
-            "general-knowledge",
-            "general-reasoning",
-            "indonesian-language",
-            "mathematical-reasoning",
-            "quantitative-knowledge",
-            "reading-and-writing-skills",
-          ]);
-        }
-        return Effect.succeed([]);
-      });
-    });
-
-    it("generates SNBT exercise params matching production structure", async () => {
-      const result = await getStaticParams({
-        basePath: "exercises",
-        paramNames: ["category", "type", "material"],
-      });
-
-      expect(result).toContainEqual({
-        category: "high-school",
-        type: "snbt",
-        material: "english-language",
-      });
-
-      expect(result).toContainEqual({
-        category: "high-school",
-        type: "snbt",
-        material: "general-knowledge",
-      });
-
-      expect(result).toContainEqual({
-        category: "high-school",
-        type: "snbt",
-        material: "general-reasoning",
-      });
-
-      expect(result).toContainEqual({
-        category: "high-school",
-        type: "snbt",
-        material: "indonesian-language",
-      });
-
-      expect(result).toContainEqual({
-        category: "high-school",
-        type: "snbt",
-        material: "mathematical-reasoning",
-      });
-
-      expect(result).toContainEqual({
-        category: "high-school",
-        type: "snbt",
-        material: "quantitative-knowledge",
-      });
-
-      expect(result).toContainEqual({
-        category: "high-school",
-        type: "snbt",
-        material: "reading-and-writing-skills",
-      });
-
-      expect(result.length).toBe(7);
-    });
-  });
-
-  describe("production: subject structure (high-school/10)", () => {
-    beforeEach(() => {
-      mockGetFolderChildNames.mockImplementation((path: string) => {
-        if (path === "subject") {
-          return Effect.succeed(["high-school"]);
-        }
-        if (path === "subject/high-school") {
-          return Effect.succeed(["10"]);
-        }
-        if (path === "subject/high-school/10") {
-          return Effect.succeed([
-            "biology",
-            "chemistry",
-            "history",
-            "mathematics",
-          ]);
-        }
-        if (path === "subject/high-school/10/mathematics") {
-          return Effect.succeed([
-            "exponential-logarithm",
-            "linear-equation-inequality",
-            "probability",
-            "quadratic-function",
-            "sequence-series",
-            "statistics",
-            "trigonometry",
-            "vector-operations",
-          ]);
-        }
-        if (path === "subject/high-school/10/biology") {
-          return Effect.succeed(["cell-biology", "genetics"]);
-        }
-        if (path === "subject/high-school/10/chemistry") {
-          return Effect.succeed(["atomic-structure", "chemical-bonding"]);
-        }
-        if (path === "subject/high-school/10/history") {
-          return Effect.succeed(["indonesian-history", "world-history"]);
-        }
-        return Effect.succeed([]);
-      });
-
-      mockGetNestedSlugs.mockImplementation((path: string) => {
-        if (
-          path === "subject/high-school/10/mathematics/exponential-logarithm"
-        ) {
-          return [
-            ["basic-concept"],
-            ["exponential-decay"],
-            ["exponential-growth"],
-            ["function-definition"],
-            ["function-exploration"],
-            ["logarithm-definition"],
-            ["logarithm-properties"],
-            ["proof-properties"],
-            ["properties"],
-            ["radical-form"],
-            ["rationalizing-radicals"],
-          ];
-        }
-        if (
-          path ===
-          "subject/high-school/10/mathematics/linear-equation-inequality"
-        ) {
-          return [["system-linear-equation"], ["system-linear-inequality"]];
-        }
-        if (path === "subject/high-school/10/mathematics/probability") {
-          return [
-            ["addition-rule"],
-            ["probability-distribution"],
-            ["two-events-mutually-exclusive"],
-            ["two-events-not-mutually-exclusive"],
-          ];
-        }
-        if (path === "subject/high-school/10/mathematics/quadratic-function") {
-          return [
-            ["quadratic-equation"],
-            ["quadratic-equation-factorization"],
-            ["quadratic-equation-formula"],
-            ["quadratic-equation-imaginary-root"],
-            ["quadratic-equation-perfect-square"],
-            ["quadratic-equation-types-of-root"],
-            ["quadratic-function-characteristics"],
-            ["quadratic-function-construction"],
-            ["quadratic-function-maximum-area"],
-            ["quadratic-function-minimum-area"],
-          ];
-        }
-        if (path === "subject/high-school/10/mathematics/sequence-series") {
-          return [
-            ["arithmetic-sequence"],
-            ["arithmetic-series"],
-            ["convergence-divergence"],
-            ["difference-sequence-series"],
-            ["geometric-sequence"],
-            ["geometric-series"],
-            ["infinite-geometric-series"],
-            ["sequence-concept"],
-            ["series-concept"],
-          ];
-        }
-        if (path === "subject/high-school/10/mathematics/statistics") {
-          return [
-            ["central-tendency-usage"],
-            ["histogram"],
-            ["interquartile-range"],
-            ["mean"],
-            ["mean-group-data"],
-            ["median-mode-group-data"],
-            ["mode-median"],
-            ["percentile-data-group"],
-            ["quartile-data-group"],
-            ["quartile-data-single"],
-            ["relative-frequency"],
-            ["variance-standard-deviation-data-group"],
-            ["variance-standard-deviation-data-single"],
-          ];
-        }
-        if (path === "subject/high-school/10/mathematics/trigonometry") {
-          return [
-            ["right-triangle-naming"],
-            ["trigonometric-comparison-sin-cos"],
-            ["trigonometric-comparison-special-angle"],
-            ["trigonometric-comparison-tan"],
-            ["trigonometric-comparison-tan-usage"],
-            ["trigonometric-comparison-three-primary"],
-            ["trigonometry-concept"],
-          ];
-        }
-        if (path === "subject/high-school/10/mathematics/vector-operations") {
-          return [
-            ["column-row-vector"],
-            ["equivalent-vector"],
-            ["opposite-vector"],
-            ["position-vector"],
-            ["scalar-multiplication"],
-            ["three-dimensional-vector"],
-            ["two-dimensional-vector"],
-            ["unit-vector"],
-            ["vector-addition"],
-            ["vector-components"],
-            ["vector-concept"],
-            ["vector-coordinate-system"],
-            ["vector-subtraction"],
-            ["vector-types"],
-            ["zero-vector"],
-          ];
-        }
-        if (path === "subject/high-school/10/biology/cell-biology") {
-          return [["cell-structure"], ["cell-division"]];
-        }
-        if (path === "subject/high-school/10/chemistry/atomic-structure") {
-          return [["atoms"], ["electrons"], ["protons"]];
-        }
-        return [];
-      });
-    });
-
-    it("generates subject params matching production structure", async () => {
-      const result = await getStaticParams({
-        basePath: "subject",
-        paramNames: ["category", "grade", "material", "slug"],
-        slugParam: "slug",
-        isDeep: true,
-      });
-
-      expect(result).toContainEqual({
-        category: "high-school",
-        grade: "10",
-        material: "mathematics",
-        slug: ["exponential-logarithm"],
-      });
-
-      expect(result).toContainEqual({
-        category: "high-school",
-        grade: "10",
-        material: "mathematics",
-        slug: ["exponential-logarithm", "basic-concept"],
-      });
-
-      expect(result).toContainEqual({
-        category: "high-school",
-        grade: "10",
-        material: "biology",
-        slug: ["cell-biology"],
-      });
-
-      expect(result).toContainEqual({
-        category: "high-school",
-        grade: "10",
-        material: "chemistry",
-        slug: ["atomic-structure"],
-      });
-
-      expect(result).toContainEqual({
-        category: "high-school",
-        grade: "10",
-        material: "history",
-        slug: ["indonesian-history"],
-      });
-    });
-
-    it("generates all mathematics topics for grade 10", async () => {
-      const result = await getStaticParams({
-        basePath: "subject",
-        paramNames: ["category", "grade", "material", "slug"],
-        slugParam: "slug",
-        isDeep: true,
-      });
-
-      const mathTopics = result.filter(
-        (r) =>
-          r.category === "high-school" &&
-          r.grade === "10" &&
-          r.material === "mathematics" &&
-          r.slug.length === 1
-      );
-
-      expect(mathTopics.length).toBe(8);
-    });
-
-    it("generates all exponential-logarithm subtopics", async () => {
-      const result = await getStaticParams({
-        basePath: "subject",
-        paramNames: ["category", "grade", "material", "slug"],
-        slugParam: "slug",
-        isDeep: true,
-      });
-
-      const expLogSubtopics = result.filter(
-        (r) =>
-          r.category === "high-school" &&
-          r.grade === "10" &&
-          r.material === "mathematics" &&
-          r.slug[0] === "exponential-logarithm" &&
-          r.slug.length === 2
-      );
-
-      expect(expLogSubtopics.length).toBe(11);
-    });
-  });
-
-  describe("production edge cases", () => {
-    it("handles exercises with deep nesting (5 levels)", async () => {
-      mockGetFolderChildNames.mockImplementation((path: string) => {
-        if (path === "exercises") {
-          return Effect.succeed(["high-school"]);
-        }
-        if (path === "exercises/high-school") {
-          return Effect.succeed(["tka"]);
-        }
-        if (path === "exercises/high-school/tka") {
-          return Effect.succeed(["mathematics"]);
-        }
-        if (path === "exercises/high-school/tka/mathematics") {
-          return Effect.succeed(["try-out"]);
-        }
-        return Effect.succeed([]);
-      });
-
-      mockGetNestedSlugs.mockReturnValue([
-        ["2026", "set-1", "advanced", "section-1", "chapter-1", "lesson-1"],
-      ]);
-
-      const result = await getStaticParams({
-        basePath: "exercises",
-        paramNames: ["category", "type", "material", "slug"],
-        slugParam: "slug",
-        isDeep: true,
-      });
-
-      const deepPath = result.find(
-        (r) => r.slug.length === 7 && r.slug[6] === "lesson-1"
-      );
-
-      expect(deepPath).toBeDefined();
-      expect(deepPath).toEqual({
-        category: "high-school",
-        type: "tka",
-        material: "mathematics",
-        slug: [
-          "try-out",
-          "2026",
-          "set-1",
-          "advanced",
-          "section-1",
-          "chapter-1",
-          "lesson-1",
-        ],
-      });
-    });
-
-    it("handles mixed empty and non-empty nested paths", async () => {
-      mockGetFolderChildNames.mockImplementation((path: string) => {
-        if (path === "exercises") {
-          return Effect.succeed(["high-school"]);
-        }
-        if (path === "exercises/high-school") {
-          return Effect.succeed(["tka"]);
-        }
-        if (path === "exercises/high-school/tka") {
-          return Effect.succeed(["mathematics", "physics"]);
-        }
-        if (path === "exercises/high-school/tka/mathematics") {
-          return Effect.succeed(["try-out"]);
-        }
-        if (path === "exercises/high-school/tka/physics") {
-          return Effect.succeed(["practice"]);
-        }
-        return Effect.succeed([]);
-      });
-
-      mockGetNestedSlugs.mockImplementation((path: string) => {
-        if (path === "exercises/high-school/tka/mathematics/try-out") {
-          return [
-            ["2026", "set-1"],
-            ["2026", "set-1", "1"],
-          ];
-        }
-        return [];
-      });
-
-      const result = await getStaticParams({
-        basePath: "exercises",
-        paramNames: ["category", "type", "material", "slug"],
-        slugParam: "slug",
-        isDeep: true,
-      });
-
-      expect(result).toContainEqual({
-        category: "high-school",
-        type: "tka",
-        material: "mathematics",
-        slug: ["try-out", "2026", "set-1"],
-      });
-
-      expect(result).toContainEqual({
-        category: "high-school",
-        type: "tka",
-        material: "mathematics",
-        slug: ["try-out", "2026", "set-1", "1"],
-      });
-
-      expect(result).toContainEqual({
-        category: "high-school",
-        type: "tka",
-        material: "physics",
-        slug: ["practice"],
-      });
-    });
-
-    it("handles very wide branching (many materials)", async () => {
-      mockGetFolderChildNames.mockImplementation((path: string) => {
-        if (path === "exercises") {
-          return Effect.succeed(["high-school"]);
-        }
-        if (path === "exercises/high-school") {
-          return Effect.succeed(["snbt"]);
-        }
-        if (path === "exercises/high-school/snbt") {
-          return Effect.succeed(
-            Array.from({ length: 20 }, (_, i) => `subject-${i}`)
-          );
-        }
-        return Effect.succeed([]);
-      });
-
-      const result = await getStaticParams({
-        basePath: "exercises",
-        paramNames: ["category", "type", "material"],
-      });
-
-      expect(result.length).toBe(20);
-      expect(result[0]).toEqual({
-        category: "high-school",
-        type: "snbt",
-        material: "subject-0",
-      });
-    });
-
-    it("handles large number of exercise items (50 items per set)", async () => {
-      mockGetFolderChildNames.mockImplementation((path: string) => {
-        if (path === "exercises") {
-          return Effect.succeed(["high-school"]);
-        }
-        if (path === "exercises/high-school") {
-          return Effect.succeed(["tka"]);
-        }
-        if (path === "exercises/high-school/tka") {
-          return Effect.succeed(["mathematics"]);
-        }
-        if (path === "exercises/high-school/tka/mathematics") {
-          return Effect.succeed(["practice"]);
-        }
-        return Effect.succeed([]);
-      });
-
-      const manyItems = Array.from({ length: 50 }, (_, i) => [
-        `set-${i}`,
-        String(i + 1),
-      ]);
-      mockGetNestedSlugs.mockReturnValue(manyItems);
-
-      const result = await getStaticParams({
-        basePath: "exercises",
-        paramNames: ["category", "type", "material", "slug"],
-        slugParam: "slug",
-        isDeep: true,
-      });
-
-      const practiceItems = result.filter(
-        (r) =>
-          r.category === "high-school" &&
-          r.type === "tka" &&
-          r.material === "mathematics" &&
-          r.slug.length === 3
-      );
-
-      expect(practiceItems.length).toBe(50);
-    });
-  });
-});
-
-describe("getMetadataFromSlug", () => {
-  describe("valid content with metadata", () => {
-    it("returns metadata from content", async () => {
-      mockGetContentMetadata.mockReturnValue(
-        Effect.succeed({
-          title: "Test Title",
-          description: "Test Description",
-          authors: [{ name: "Author" }],
-          date: "01/01/2024",
-        })
-      );
-
-      const result = await Effect.runPromise(
-        getMetadataFromSlug("en", ["articles", "politics", "test"])
-      );
-
-      expect(result).toEqual({
-        title: "Test Title",
-        description: "Test Description",
-        authors: [{ name: "Author" }],
-        date: "01/01/2024",
-      });
-    });
-
-    it("returns default metadata when content not found", async () => {
-      mockGetContentMetadata.mockReturnValue(Effect.succeed(null));
-
-      const result = await Effect.runPromise(
-        getMetadataFromSlug("en", ["articles", "politics", "test"])
-      );
-
-      expect(result).toEqual({
-        title: "Made with Love",
-        description: "Short description",
-        authors: [{ name: "Nakafa" }],
-        date: "",
-      });
-    });
-  });
-
-  describe("production: real MDX date formats", () => {
-    it("handles MM/DD/YYYY date format from production MDX", async () => {
-      mockGetContentMetadata.mockReturnValue(
-        Effect.succeed({
-          title: "Exponential and Logarithmic Functions",
-          description: "Learn about exponential and logarithmic functions",
-          authors: [{ name: "Nakafa Team" }],
-          date: "04/01/2025",
-        })
-      );
-
-      const result = await Effect.runPromise(
-        getMetadataFromSlug("en", [
-          "subject",
-          "high-school",
-          "10",
-          "mathematics",
-          "exponential-logarithm",
-          "basic-concept",
-        ])
-      );
-
-      expect(result.date).toBe("04/01/2025");
-    });
-
-    it("handles MM/DD/YYYY date format from exercises", async () => {
-      mockGetContentMetadata.mockReturnValue(
-        Effect.succeed({
-          title: "Try Out Set 1 - Question 1",
-          description: "Mathematics try out question",
-          authors: [{ name: "Nakafa Team" }],
-          date: "01/01/2026",
-        })
-      );
-
-      const result = await Effect.runPromise(
-        getMetadataFromSlug("en", [
-          "exercises",
-          "high-school",
-          "snbt",
-          "general-reasoning",
-          "try-out",
-          "2026",
-          "set-1",
-          "1",
-        ])
-      );
-
-      expect(result.date).toBe("01/01/2026");
-    });
-  });
-
-  describe("single parameter case", () => {
-    it("handles single parameter (no nesting)", async () => {
-      mockGetFolderChildNames.mockImplementation((path: string) => {
-        if (path === "categories") {
-          return Effect.succeed(["politics", "economy", "sports"]);
-        }
-        return Effect.succeed([]);
-      });
-
-      const result = await getStaticParams({
-        basePath: "categories",
-        paramNames: ["category"],
-      });
-
-      expect(result).toEqual([
-        { category: "politics" },
-        { category: "economy" },
-        { category: "sports" },
-      ]);
-    });
-  });
-
-  describe("metadata subject fallback", () => {
-    it("uses default description when both description and subject are missing", async () => {
-      mockGetContentMetadata.mockReturnValue(
-        Effect.succeed({
-          title: "Test Article",
-          authors: [{ name: "Nakafa Team" }],
-          date: "04/01/2025",
-        })
-      );
-
-      const result = await Effect.runPromise(
-        getMetadataFromSlug("en", ["articles", "politics", "test"])
-      );
-
-      expect(result.title).toBe("Test Article");
-      expect(result.description).toBe("Short description");
-      expect(result.authors).toEqual([{ name: "Nakafa Team" }]);
-      expect(result.date).toBe("04/01/2025");
-    });
-
-    it("uses subject field when description is missing", async () => {
-      mockGetContentMetadata.mockReturnValue(
-        Effect.succeed({
-          title: "Algebra Fundamentals",
-          subject: "Mathematics",
-          authors: [{ name: "Nakafa Team" }],
-          date: "04/01/2025",
-        })
-      );
-
-      const result = await Effect.runPromise(
-        getMetadataFromSlug("en", [
-          "subject",
-          "high-school",
-          "10",
-          "mathematics",
-          "algebra",
-        ])
-      );
-
-      expect(result.title).toBe("Algebra Fundamentals");
-      expect(result.description).toBe("Mathematics");
-      expect(result.authors).toEqual([{ name: "Nakafa Team" }]);
-      expect(result.date).toBe("04/01/2025");
-    });
-
-    it("uses subject field when title and description are missing", async () => {
-      mockGetContentMetadata.mockReturnValue(
-        Effect.succeed({
-          subject: "Mathematics",
-          authors: [{ name: "Nakafa Team" }],
-          date: "04/01/2025",
-        })
-      );
-
-      const result = await Effect.runPromise(
-        getMetadataFromSlug("en", [
-          "subject",
-          "high-school",
-          "10",
-          "mathematics",
-          "algebra",
-        ])
-      );
-
-      expect(result.title).toBe("Made with Love");
-      expect(result.description).toBe("Mathematics");
-      expect(result.authors).toEqual([{ name: "Nakafa Team" }]);
-      expect(result.date).toBe("04/01/2025");
-    });
-  });
-
-  describe("locale fallback", () => {
-    it("uses 'id' metadata when available", async () => {
-      mockGetContentMetadata.mockImplementation((_filePath, locale) => {
-        if (locale === "id") {
-          return Effect.succeed({
-            title: "Indonesian Title",
-            description: "Indonesian Description",
-            authors: [{ name: "Author" }],
-            date: "01/01/2024",
-          });
-        }
-        return Effect.succeed(null);
-      });
-
-      const result = await Effect.runPromise(
-        getMetadataFromSlug("id", ["articles", "politics", "test"])
-      );
-
-      expect(result.title).toBe("Indonesian Title");
-      expect(result.description).toBe("Indonesian Description");
-    });
-
-    it("returns default metadata when 'id' metadata not found", async () => {
-      mockGetContentMetadata.mockReturnValue(Effect.succeed(null));
-
-      const result = await Effect.runPromise(
-        getMetadataFromSlug("id", ["articles", "politics", "test"])
-      );
-
-      expect(result.title).toBe("Made with Love");
-      expect(result.description).toBe("Short description");
-    });
-  });
-
-  describe("error handling", () => {
-    it("fails when Common translation fails", async () => {
-      const { getTranslations } = await import("next-intl/server");
-      vi.mocked(getTranslations).mockRejectedValueOnce(
-        new Error("Translation error")
-      );
-
-      const result = await Effect.runPromiseExit(
-        getMetadataFromSlug("en", ["articles", "politics", "test"])
-      );
-
-      expect(result._tag).toBe("Failure");
-      if (result._tag === "Failure") {
-        expect(result.cause._tag).toBe("Fail");
-      }
-    });
-
-    it("fails when Metadata translation fails", async () => {
-      const { getTranslations } = await import("next-intl/server");
-      const commonTranslator = (key: string): string => {
-        if (key === "made-with-love") {
-          return "Made with Love";
-        }
-        return key;
-      };
-      vi.mocked(getTranslations)
-        .mockResolvedValueOnce(
-          Object.assign(commonTranslator, {
-            rich: commonTranslator,
-            markup: commonTranslator,
-            raw: commonTranslator,
-            has: () => false,
-          }) as never
+  routeMocks.listRuntimeLatestContentRoutes.mockReset();
+  cacheMocks.cacheLife.mockClear();
+  cacheMocks.cacheTag.mockClear();
+  runtimeMocks.getRuntimeContentRoute.mockReset();
+  translationMocks.getTranslations.mockReset();
+
+  routeMocks.listRuntimeLatestContentRoutes.mockImplementation(
+    ({ locale, section }: RuntimeRouteArgs) =>
+      Effect.succeed(
+        routeRows.filter(
+          (route) => route.locale === locale && route.section === section
         )
-        .mockRejectedValueOnce(new Error("Translation error"));
-
-      const result = await Effect.runPromiseExit(
-        getMetadataFromSlug("en", ["articles", "politics", "test"])
+      )
+  );
+  runtimeMocks.getRuntimeContentRoute.mockReturnValue(
+    Effect.succeed({
+      authors: [{ name: "Nakafa" }],
+      date: new Date("2025-01-02").getTime(),
+      description: "Runtime description",
+      title: "Runtime title",
+    })
+  );
+  translationMocks.getTranslations.mockImplementation(({ namespace }) => {
+    if (namespace === "Common") {
+      return Promise.resolve((key: string) =>
+        key === "made-with-love" ? "Made with love" : key
       );
+    }
 
-      expect(result._tag).toBe("Failure");
-    });
-
-    it("returns default metadata when getContentMetadata fails with error", async () => {
-      mockGetContentMetadata.mockReturnValue(
-        Effect.fail(new Error("File not found"))
-      );
-
-      const result = await Effect.runPromise(
-        getMetadataFromSlug("en", ["articles", "politics", "test"])
-      );
-
-      expect(result.title).toBe("Made with Love");
-      expect(result.description).toBe("Short description");
-    });
+    return Promise.resolve((key: string) =>
+      key === "short-description" ? "Short description" : key
+    );
   });
 });
 
-describe("getCachedMetadataFromSlug", () => {
-  it("sets the max cache profile and resolves metadata", async () => {
-    mockGetContentMetadata.mockReturnValue(
+describe("route catalog static params", () => {
+  it("builds shallow static params from Convex-backed public routes", async () => {
+    await expect(
+      getStaticParams({
+        basePath: "articles",
+        paramNames: ["category"],
+      })
+    ).resolves.toEqual([{ category: "politics" }]);
+
+    await expect(
+      getStaticParams({
+        basePath: "subject",
+        paramNames: ["category", "grade", "material"],
+      })
+    ).resolves.toContainEqual({
+      category: "high-school",
+      grade: "10",
+      material: "chemistry",
+    });
+    expect(routeMocks.listRuntimeLatestContentRoutes).toHaveBeenCalledWith({
+      limit: 100,
+      locale: "en",
+      section: "articles",
+    });
+    expect(routeMocks.listRuntimeLatestContentRoutes).toHaveBeenCalledWith({
+      limit: 100,
+      locale: "id",
+      section: "subject",
+    });
+  });
+
+  it("builds deep slug params from Convex-backed public routes", async () => {
+    await expect(
+      getStaticParams({
+        basePath: "subject",
+        isDeep: true,
+        paramNames: ["category", "grade", "material", "slug"],
+        slugParam: "slug",
+      })
+    ).resolves.toContainEqual({
+      category: "high-school",
+      grade: "10",
+      material: "chemistry",
+      slug: ["green-chemistry", "definition"],
+    });
+  });
+
+  it("uses dated exercise question rows to prerender parent set routes", async () => {
+    await expect(
+      getStaticParams({
+        basePath: "exercises",
+        isDeep: true,
+        paramNames: ["category", "type", "material", "slug"],
+        slugParam: "slug",
+      })
+    ).resolves.toContainEqual({
+      category: "high-school",
+      material: "quantitative-knowledge",
+      slug: ["try-out", "2026", "set-1"],
+      type: "snbt",
+    });
+  });
+
+  it("skips malformed or nonmatching static-param routes", async () => {
+    routeMocks.listRuntimeLatestContentRoutes.mockReturnValueOnce(
+      Effect.succeed([
+        routeRow({
+          locale: "en",
+          route: "articles",
+          section: "articles",
+        }),
+        routeRow({
+          locale: "en",
+          route: "subject/high-school/10/chemistry",
+          section: "subject",
+        }),
+        routeRow({
+          locale: "en",
+          route: "articles/politics",
+          section: "articles",
+        }),
+        routeRow({
+          locale: "en",
+          route: "articles/politics/example",
+          section: "articles",
+        }),
+      ])
+    );
+    routeMocks.listRuntimeLatestContentRoutes.mockReturnValueOnce(
+      Effect.succeed([])
+    );
+
+    await expect(
+      getStaticParams({
+        basePath: "articles",
+        isDeep: true,
+        paramNames: ["category", "slug"],
+        slugParam: "slug",
+      })
+    ).resolves.toEqual([
+      {
+        category: "politics",
+        slug: ["example"],
+      },
+    ]);
+  });
+});
+
+const routeRows = [
+  routeRow({
+    locale: "en",
+    route: "articles/politics/dynastic-politics-asian-values",
+    section: "articles",
+  }),
+  routeRow({
+    locale: "id",
+    route: "articles/politics/dynastic-politics-asian-values",
+    section: "articles",
+  }),
+  routeRow({
+    locale: "en",
+    route: "subject/high-school/10/chemistry/green-chemistry/definition",
+    section: "subject",
+  }),
+  routeRow({
+    locale: "id",
+    route: "subject/high-school/10/chemistry/green-chemistry/definition",
+    section: "subject",
+  }),
+  routeRow({
+    kind: "exercise-question",
+    locale: "en",
+    parentRoute:
+      "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1",
+    route:
+      "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1/1",
+    section: "exercises",
+  }),
+];
+
+interface RuntimeRouteArgs {
+  locale: "en" | "id";
+  section: "articles" | "subject" | "exercises" | "quran";
+}
+
+interface RuntimeRouteFixture {
+  kind?: string;
+  locale: RuntimeRouteArgs["locale"];
+  parentRoute?: string;
+  route: string;
+  section: RuntimeRouteArgs["section"];
+}
+
+/** Builds one route row with only the fields static-param tests read. */
+function routeRow(args: RuntimeRouteFixture) {
+  return {
+    authors: [{ name: "Nakafa" }],
+    content_id: `${args.locale}/${args.route}`,
+    kind: args.kind ?? "article",
+    locale: args.locale,
+    markdown: true,
+    parentRoute: args.parentRoute,
+    route: args.route,
+    section: args.section,
+    syncedAt: 1,
+    title: "Title",
+  };
+}
+
+describe("route catalog metadata", () => {
+  it("reads OG metadata from the Convex route catalog", async () => {
+    await expect(
+      Effect.runPromise(
+        getMetadataFromSlug("en", [
+          "articles",
+          "politics",
+          "dynastic-politics-asian-values",
+        ])
+      )
+    ).resolves.toEqual({
+      authors: [{ name: "Nakafa" }],
+      date: "2025-01-02T00:00:00.000Z",
+      description: "Runtime description",
+      title: "Runtime title",
+    });
+  });
+
+  it("falls back to translated defaults when no route metadata exists", async () => {
+    runtimeMocks.getRuntimeContentRoute.mockReturnValueOnce(
+      Effect.succeed(null)
+    );
+
+    await expect(
+      Effect.runPromise(getMetadataFromSlug("id", ["articles", "missing"]))
+    ).resolves.toEqual({
+      authors: [{ name: "Nakafa" }],
+      date: "",
+      description: "Short description",
+      title: "Made with love",
+    });
+  });
+
+  it("falls back to translated defaults when route metadata lookup fails", async () => {
+    runtimeMocks.getRuntimeContentRoute.mockReturnValueOnce(
+      Effect.fail(new Error("Route catalog unavailable."))
+    );
+
+    await expect(
+      Effect.runPromise(getMetadataFromSlug("id", ["articles", "failed"]))
+    ).resolves.toEqual({
+      authors: [{ name: "Nakafa" }],
+      date: "",
+      description: "Short description",
+      title: "Made with love",
+    });
+  });
+
+  it("uses translation fallbacks for sparse route metadata", async () => {
+    runtimeMocks.getRuntimeContentRoute.mockReturnValueOnce(
       Effect.succeed({
-        title: "Cached Title",
-        description: "Cached Description",
         authors: [{ name: "Nakafa" }],
-        date: "04/12/2026",
+        date: undefined,
+        description: undefined,
+        title: "",
       })
     );
 
-    const result = await getCachedMetadataFromSlug("en", [
-      "articles",
-      "politics",
-      "cached",
-    ]);
-
-    expect(mockCacheLife).toHaveBeenCalledWith("max");
-    expect(result).toEqual({
-      title: "Cached Title",
-      description: "Cached Description",
+    await expect(
+      Effect.runPromise(getMetadataFromSlug("en", ["articles", "sparse"]))
+    ).resolves.toEqual({
       authors: [{ name: "Nakafa" }],
-      date: "04/12/2026",
+      date: "",
+      description: "Short description",
+      title: "Made with love",
     });
+  });
+
+  it("fails with a typed error when metadata translations cannot load", async () => {
+    translationMocks.getTranslations.mockRejectedValueOnce(
+      new Error("Missing Common translations.")
+    );
+
+    await expect(
+      Effect.runPromise(getMetadataFromSlug("en", ["articles", "example"]))
+    ).rejects.toThrow('"namespace": "Common"');
+
+    translationMocks.getTranslations.mockImplementation(({ namespace }) => {
+      if (namespace === "Common") {
+        return Promise.resolve((key: string) =>
+          key === "made-with-love" ? "Made with love" : key
+        );
+      }
+
+      return Promise.reject(new Error("Missing Metadata translations."));
+    });
+
+    await expect(
+      Effect.runPromise(getMetadataFromSlug("en", ["articles", "example"]))
+    ).rejects.toThrow('"namespace": "Metadata"');
+  });
+
+  it("uses the cached metadata helper for route handlers", async () => {
+    await expect(
+      getCachedMetadataFromSlug("en", ["articles", "politics", "example"])
+    ).resolves.toMatchObject({
+      description: "Runtime description",
+      title: "Runtime title",
+    });
+    expect(cacheMocks.cacheTag).toHaveBeenCalledWith("content-runtime");
+    expect(cacheMocks.cacheLife).toHaveBeenCalledWith("contentRuntime");
   });
 });

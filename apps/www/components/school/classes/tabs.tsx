@@ -6,10 +6,13 @@ import {
   MessageMultiple02Icon,
   UserMultipleIcon,
 } from "@hugeicons/core-free-icons";
-import { Highlight } from "@repo/design-system/components/animate-ui/primitives/effects/highlight";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { usePathname } from "@repo/internationalization/src/navigation";
+import {
+  Tabs,
+  TabsList,
+  TabsTab,
+} from "@repo/design-system/components/ui/tabs";
+import { Link, usePathname } from "@repo/internationalization/src/navigation";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 
@@ -52,22 +55,24 @@ export function SchoolClassesTabs() {
     <div className="sticky top-0 z-10 -mt-2 flex h-12 w-full shrink-0 border-b bg-background">
       <div className="mx-auto flex w-full max-w-3xl items-center">
         <div className="scrollbar-hide flex w-full overflow-x-auto px-6">
-          <Highlight
-            className="inset-0 rounded-md bg-accent"
-            defaultValue={defaultValue}
-          >
-            {tabs.map((tab) => (
-              <NavigationLink
-                className="flex h-8 cursor-pointer items-center gap-2 rounded-lg px-3 text-muted-foreground text-sm transition-colors data-[active=true]:text-accent-foreground"
-                data-value={tab.href}
-                href={tab.href}
-                key={tab.href}
-              >
-                <HugeIcons className="size-4" icon={tab.icon} />
-                {tab.label}
-              </NavigationLink>
-            ))}
-          </Highlight>
+          <Tabs className="contents" defaultValue={defaultValue}>
+            <TabsList className="bg-transparent p-0 [&_[data-slot=tab-indicator]]:bg-accent">
+              {tabs.map((tab) => (
+                <TabsTab
+                  className="h-8 px-3 text-muted-foreground data-active:text-accent-foreground"
+                  key={tab.href}
+                  nativeButton={false}
+                  render={
+                    <Link href={tab.href} prefetch>
+                      <HugeIcons className="size-4" icon={tab.icon} />
+                      {tab.label}
+                    </Link>
+                  }
+                  value={tab.href}
+                />
+              ))}
+            </TabsList>
+          </Tabs>
         </div>
       </div>
     </div>

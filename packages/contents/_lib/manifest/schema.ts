@@ -31,11 +31,6 @@ const ContentManifestRouteArraySchema = Schema.Array(
   ContentManifestRouteSchema
 ).pipe(Schema.mutable);
 
-const ContentManifestRouteEntrySchema = Schema.Struct({
-  locale: Schema.String,
-  slug: Schema.String,
-}).pipe(Schema.mutable);
-
 const LocaleSlugEntrySchema = Schema.Struct({
   locale: Schema.String,
   slugs: mutableStringArray,
@@ -61,15 +56,6 @@ export const ContentRouteManifestSchema = Schema.Struct({
   exerciseApiParams: Schema.Array(ContentManifestStaticParamSchema).pipe(
     Schema.mutable
   ),
-  indexedArticleEntries: Schema.Array(ContentManifestRouteEntrySchema).pipe(
-    Schema.mutable
-  ),
-  indexedExerciseSetEntries: Schema.Array(ContentManifestRouteEntrySchema).pipe(
-    Schema.mutable
-  ),
-  indexedSubjectEntries: Schema.Array(ContentManifestRouteEntrySchema).pipe(
-    Schema.mutable
-  ),
   localeParams: Schema.Array(ContentManifestStaticParamSchema).pipe(
     Schema.mutable
   ),
@@ -93,15 +79,6 @@ export const ContentRouteManifestSchema = Schema.Struct({
 const ContentRouteParamManifestSchema = Schema.Struct({
   version: Schema.Number,
   exerciseApiParams: Schema.Array(ContentManifestStaticParamSchema).pipe(
-    Schema.mutable
-  ),
-  indexedArticleEntries: Schema.Array(ContentManifestRouteEntrySchema).pipe(
-    Schema.mutable
-  ),
-  indexedExerciseSetEntries: Schema.Array(ContentManifestRouteEntrySchema).pipe(
-    Schema.mutable
-  ),
-  indexedSubjectEntries: Schema.Array(ContentManifestRouteEntrySchema).pipe(
     Schema.mutable
   ),
   localeParams: Schema.Array(ContentManifestStaticParamSchema).pipe(
@@ -158,9 +135,6 @@ export class ContentRouteManifestDecodeError extends Schema.TaggedError<ContentR
 
 export type ContentManifestRoute = Schema.Schema.Type<
   typeof ContentManifestRouteSchema
->;
-export type ContentManifestRouteEntry = Schema.Schema.Type<
-  typeof ContentManifestRouteEntrySchema
 >;
 export type ContentManifestStaticParam = Schema.Schema.Type<
   typeof ContentManifestStaticParamSchema

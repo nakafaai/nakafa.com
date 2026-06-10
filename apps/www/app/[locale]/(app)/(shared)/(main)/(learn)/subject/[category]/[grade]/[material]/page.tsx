@@ -6,24 +6,22 @@ import {
   getGradePath,
   parseGrade,
 } from "@repo/contents/_lib/subject/grade";
-import {
-  getMaterialIcon,
-  getMaterials,
-} from "@repo/contents/_lib/subject/material";
+import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import {
   getMaterialPath,
   parseMaterial,
 } from "@repo/contents/_lib/subject/route";
-import type { SubjectCategory } from "@repo/contents/_types/subject/category";
-import type { Grade } from "@repo/contents/_types/subject/grade";
-import type { Material } from "@repo/contents/_types/subject/material";
+import type {
+  Grade,
+  Material,
+  SubjectCategory,
+} from "@repo/contents/_types/taxonomy";
 import type { ParsedHeading } from "@repo/contents/_types/toc";
 import { slugify } from "@repo/design-system/lib/utils";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
 import { Effect, Option } from "effect";
 import type { Metadata } from "next";
-import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
@@ -40,6 +38,8 @@ import {
   LayoutMaterialToc,
 } from "@/components/shared/layout-material";
 import { RefContent } from "@/components/shared/ref-content";
+import { applyContentRuntimeCache } from "@/lib/content/cache";
+import { getRuntimeSubjectMaterials } from "@/lib/content/navigation";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
@@ -171,6 +171,7 @@ export default function Page(
   );
 }
 
+/** Renders a subject material index from Convex-backed topic navigation rows. */
 async function PageContent({
   locale,
   category,
@@ -184,7 +185,7 @@ async function PageContent({
 }) {
   "use cache";
 
-  cacheLife("max");
+  applyContentRuntimeCache();
 
   const gradePath = getGradePath(category, grade);
   const FilePath = getMaterialPath(category, grade, material);
@@ -192,7 +193,7 @@ async function PageContent({
   const [t, tCommon, materials] = await Promise.all([
     getTranslations({ locale, namespace: "Subject" }),
     getTranslations({ locale, namespace: "Common" }),
-    Effect.runPromise(getMaterials(FilePath, locale)),
+    Effect.runPromise(getRuntimeSubjectMaterials(FilePath, locale)),
   ]);
   const gradeLabel = t(
     Option.getOrElse(getGradeNonNumeric(grade), () => "grade"),

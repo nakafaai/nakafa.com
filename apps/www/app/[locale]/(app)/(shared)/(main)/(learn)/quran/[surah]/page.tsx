@@ -1,11 +1,9 @@
 import { AllahIcon } from "@hugeicons/core-free-icons";
-import { getAllSurah, getSurahName } from "@repo/contents/_lib/quran";
 import { slugify } from "@repo/design-system/lib/utils";
 import { BookJsonLd } from "@repo/seo/json-ld/book";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { Effect } from "effect";
 import type { Metadata } from "next";
-import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
@@ -25,6 +23,8 @@ import { QuranText } from "@/components/shared/quran-text";
 import { QuranVerse } from "@/components/shared/quran-verse";
 import { RefContent } from "@/components/shared/ref-content";
 import { WindowVirtualized } from "@/components/shared/window-virtualized";
+import { applyContentRuntimeCache } from "@/lib/content/cache";
+import { fetchRuntimeQuranSurahs } from "@/lib/content/runtime";
 import { VirtualProvider } from "@/lib/context/use-virtual";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getSocialMetadata } from "@/lib/utils/metadata";
@@ -32,6 +32,7 @@ import {
   fetchSurahContext,
   fetchSurahMetadataContext,
   getQuranPagination,
+  getQuranSurahName,
 } from "@/lib/utils/pages/quran";
 import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
@@ -97,8 +98,11 @@ export async function generateMetadata({
   };
 }
 
-export function generateStaticParams() {
-  return getAllSurah().map((surah) => ({
+/** Prebuilds Quran surah routes from the Convex Quran runtime catalog. */
+export async function generateStaticParams() {
+  const surahs = await fetchRuntimeQuranSurahs();
+
+  return surahs.map((surah) => ({
     surah: surah.number.toString(),
   }));
 }
@@ -107,6 +111,7 @@ export default function Page(props: PageProps<"/[locale]/quran/[surah]">) {
   return <ResolvedSurahPage params={props.params} />;
 }
 
+/** Resolves a localized surah route before rendering Quran SEO and page chrome. */
 async function ResolvedSurahPage({
   params,
 }: {
@@ -131,7 +136,7 @@ async function ResolvedSurahPage({
   }
 
   const translation = surahData.name.translation[locale];
-  const title = getSurahName({ locale, name: surahData.name });
+  const title = getQuranSurahName({ locale, name: surahData.name });
 
   return (
     <>
@@ -162,10 +167,11 @@ async function ResolvedSurahPage({
   );
 }
 
+/** Reads lightweight cached surah metadata for route metadata and JSON-LD. */
 async function getSurahMetadataData({ surah }: { surah: number }) {
   "use cache";
 
-  cacheLife("max");
+  applyContentRuntimeCache();
 
   const surahMetadataContext = await Effect.runPromise(
     Effect.match(fetchSurahMetadataContext({ surah }), {
@@ -177,6 +183,7 @@ async function getSurahMetadataData({ surah }: { surah: number }) {
   return surahMetadataContext?.surahData ?? null;
 }
 
+/** Renders the cached Quran surah body, controls, pagination, and table of contents. */
 async function CachedSurahShell({
   locale,
   surah,
@@ -192,7 +199,7 @@ async function CachedSurahShell({
 }) {
   "use cache";
 
-  cacheLife("max");
+  applyContentRuntimeCache();
 
   const [t, result] = await Promise.all([
     getTranslations({ locale, namespace: "Holy" }),
@@ -218,7 +225,7 @@ async function CachedSurahShell({
 
   const preBismillah = surahData.preBismillah;
 
-  const title = getSurahName({ locale, name: surahData.name });
+  const title = getQuranSurahName({ locale, name: surahData.name });
 
   const headings = surahData.verses.map((verse, index) => {
     const label = t("verse-count", { count: verse.number.inSurah });
@@ -237,10 +244,10 @@ async function CachedSurahShell({
   });
 
   const prevTitle = prevSurah
-    ? getSurahName({ locale, name: prevSurah.name })
+    ? getQuranSurahName({ locale, name: prevSurah.name })
     : "";
   const nextTitle = nextSurah
-    ? getSurahName({ locale, name: nextSurah.name })
+    ? getQuranSurahName({ locale, name: nextSurah.name })
     : "";
 
   const paginationWithLocalizedTitles = {

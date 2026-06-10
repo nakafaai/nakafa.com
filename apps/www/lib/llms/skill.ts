@@ -69,16 +69,3 @@ export function getNakafaAgentSkillIndex() {
     ],
   };
 }
-
-/** Builds the legacy skills discovery manifest. */
-export function getNakafaLegacySkillIndex() {
-  return {
-    skills: [
-      {
-        name: NAKAFA_SKILL_NAME,
-        description: NAKAFA_SKILL_DESCRIPTION,
-        files: ["SKILL.md"],
-      },
-    ],
-  };
-}

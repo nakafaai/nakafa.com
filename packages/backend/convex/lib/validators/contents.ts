@@ -1,4 +1,13 @@
 import { NAKAFA_CONTENT_SECTIONS } from "@repo/backend/convex/contents/constants";
+import {
+  ARTICLE_CATEGORIES,
+  EXERCISES_CATEGORIES,
+  EXERCISES_MATERIALS,
+  EXERCISES_TYPES,
+  GRADES,
+  SUBJECT_CATEGORIES,
+  SUBJECT_MATERIALS,
+} from "@repo/contents/_types/taxonomy";
 import { locales } from "@repo/utilities/locales";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
@@ -58,74 +67,23 @@ export const contentViewRefValidator = v.union(
 
 export type ContentViewRef = Infer<typeof contentViewRefValidator>;
 
-export const articleCategoryValidator = literals("politics");
+export const articleCategoryValidator = literals(...ARTICLE_CATEGORIES);
 export type ArticleCategory = Infer<typeof articleCategoryValidator>;
 
-export const subjectCategoryValidator = literals(
-  "elementary-school",
-  "middle-school",
-  "high-school",
-  "university"
-);
+export const subjectCategoryValidator = literals(...SUBJECT_CATEGORIES);
 export type SubjectCategory = Infer<typeof subjectCategoryValidator>;
 
-export const gradeValidator = literals(
-  "1",
-  "2",
-  "3",
-  "4",
-  "5",
-  "6",
-  "7",
-  "8",
-  "9",
-  "10",
-  "11",
-  "12",
-  "bachelor",
-  "master",
-  "phd"
-);
+export const gradeValidator = literals(...GRADES);
 export type Grade = Infer<typeof gradeValidator>;
 
-export const materialValidator = literals(
-  "mathematics",
-  "physics",
-  "chemistry",
-  "biology",
-  "geography",
-  "economy",
-  "history",
-  "informatics",
-  "geospatial",
-  "sociology",
-  "ai-ds",
-  "game-engineering",
-  "computer-science",
-  "technology-electro-medical",
-  "political-science",
-  "informatics-engineering",
-  "international-relations"
-);
+export const materialValidator = literals(...SUBJECT_MATERIALS);
 export type Material = Infer<typeof materialValidator>;
 
-export const exercisesCategoryValidator = literals(
-  "high-school",
-  "middle-school"
-);
+export const exercisesCategoryValidator = literals(...EXERCISES_CATEGORIES);
 export type ExercisesCategory = Infer<typeof exercisesCategoryValidator>;
 
-export const exercisesTypeValidator = literals("grade-9", "tka", "snbt");
+export const exercisesTypeValidator = literals(...EXERCISES_TYPES);
 export type ExercisesType = Infer<typeof exercisesTypeValidator>;
 
-export const exercisesMaterialValidator = literals(
-  "mathematics",
-  "quantitative-knowledge",
-  "mathematical-reasoning",
-  "general-reasoning",
-  "indonesian-language",
-  "english-language",
-  "general-knowledge",
-  "reading-and-writing-skills"
-);
+export const exercisesMaterialValidator = literals(...EXERCISES_MATERIALS);
 export type ExercisesMaterial = Infer<typeof exercisesMaterialValidator>;

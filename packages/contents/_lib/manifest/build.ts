@@ -1,9 +1,5 @@
 import { PUBLIC_CONTENT_BASE_ROUTES } from "@repo/contents/_lib/manifest/constants";
 import {
-  getIndexedEntries,
-  getIndexedExerciseSetEntries,
-} from "@repo/contents/_lib/manifest/indexing";
-import {
   getContentPathCandidates,
   getExerciseApiParams,
   getLocaleParams,
@@ -19,7 +15,6 @@ import {
   ContentRouteManifestSchema,
 } from "@repo/contents/_lib/manifest/schema";
 import { ContentRouteSource } from "@repo/contents/_lib/manifest/source";
-import { CONTENT_ROOT_VALUES } from "@repo/contents/_types/content";
 import { Effect, Schema } from "effect";
 
 /** Builds the content route manifest as a native Effect program. */
@@ -49,15 +44,6 @@ export const buildContentRouteManifest = Effect.fn(
       version,
       contentRoutes,
       exerciseApiParams,
-      indexedArticleEntries: getIndexedEntries(
-        localeSlugs,
-        CONTENT_ROOT_VALUES.articles
-      ),
-      indexedExerciseSetEntries: getIndexedExerciseSetEntries(localeSlugs),
-      indexedSubjectEntries: getIndexedEntries(
-        localeSlugs,
-        CONTENT_ROOT_VALUES.subject
-      ),
       localeParams,
       publicRequestRoutes,
       quranRoutes,

@@ -36,8 +36,8 @@ importers:
         specifier: ^1.4.7
         version: 1.4.7
       node:
-        specifier: runtime:^22.22.0
-        version: runtime:22.22.3
+        specifier: runtime:^24.0.0
+        version: runtime:24.16.0
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(@swc/core@1.15.33(@swc/helpers@0.5.21))(jiti@2.7.0)(postcss@8.5.15)(tsx@4.22.4)(typescript@6.0.3)(yaml@2.9.0)
@@ -59,9 +59,6 @@ importers:
       '@repo/backend':
         specifier: workspace:*
         version: link:../../packages/backend
-      '@repo/contents':
-        specifier: workspace:*
-        version: link:../../packages/contents
       '@repo/design-system':
         specifier: workspace:*
         version: link:../../packages/design-system
@@ -77,6 +74,9 @@ importers:
       better-auth:
         specifier: ~1.6.12
         version: 1.6.12(@opentelemetry/api@1.9.1)(next@16.2.7(@opentelemetry/api@1.9.1)(@playwright/test@1.60.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vitest@4.1.8)
+      convex:
+        specifier: ^1.40.0
+        version: 1.40.0(react@19.2.7)
       effect:
         specifier: ^3.21.3
         version: 3.21.3
@@ -154,6 +154,9 @@ importers:
       '@modelcontextprotocol/sdk':
         specifier: 1.29.0
         version: 1.29.0(zod@4.4.3)
+      '@repo/ai':
+        specifier: workspace:*
+        version: link:../../packages/ai
       '@repo/backend':
         specifier: workspace:*
         version: link:../../packages/backend
@@ -239,6 +242,9 @@ importers:
       '@mantine/hooks':
         specifier: ^9.3.0
         version: 9.3.0(react@19.2.7)
+      '@next/env':
+        specifier: 16.2.7
+        version: 16.2.7
       '@paper-design/shaders-react':
         specifier: ^0.0.76
         version: 0.0.76(@types/react@19.2.17)(react@19.2.7)
@@ -402,9 +408,6 @@ importers:
       jsdom:
         specifier: ^29.1.1
         version: 29.1.1(@noble/hashes@2.2.0)
-      pagefind:
-        specifier: ^1.5.2
-        version: 1.5.2
       remark:
         specifier: ^15.0.1
         version: 15.0.1
@@ -569,6 +572,9 @@ importers:
       '@repo/ai':
         specifier: workspace:*
         version: link:../ai
+      '@repo/contents':
+        specifier: workspace:*
+        version: link:../contents
       '@repo/math':
         specifier: workspace:*
         version: link:../math
@@ -612,9 +618,6 @@ importers:
       '@edge-runtime/vm':
         specifier: ^5.0.0
         version: 5.0.0
-      '@repo/contents':
-        specifier: workspace:*
-        version: link:../contents
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
@@ -2900,41 +2903,6 @@ packages:
 
   '@oxc-project/types@0.133.0':
     resolution: {integrity: sha512-KzkdCd6Uxqnf6l3HOw1xfatAlUURA0g14cvBYFyJ5SaNOQbOUvBr9PKArcPcrNIeRsBdgcUzOGrhKveVpvOIGA==}
-
-  '@pagefind/darwin-arm64@1.5.2':
-    resolution: {integrity: sha512-MXpI+7HsAdPkvJ0gk9xj9g541BCqBZOBbdwj9g6lB5LCj6kSV6nqDSjzcAJwvOsfu0fjwvC8hQU+ecfhp+MpiQ==}
-    cpu: [arm64]
-    os: [darwin]
-
-  '@pagefind/darwin-x64@1.5.2':
-    resolution: {integrity: sha512-IojxFWMEJe0RQ7PQ3KXQsPIImNsbpPYpoZ+QUDrL8fAl/O27IX+LVLs74/UzEZy5uA2LD8Nz1AiwKr72vrkZQw==}
-    cpu: [x64]
-    os: [darwin]
-
-  '@pagefind/freebsd-x64@1.5.2':
-    resolution: {integrity: sha512-7EVzo9+0w+2cbe671BtMj10UlNo83I+HrLVLfRxO731svHRJKUfJ/mo05gU14pe9PCfpKNQT8FS3Xc/oDN6pOA==}
-    cpu: [x64]
-    os: [freebsd]
-
-  '@pagefind/linux-arm64@1.5.2':
-    resolution: {integrity: sha512-Ovt9+K35sqzn8H3ZMXGwls4TD/wMJuvRtShHIsmUQREmaxjrDEX7gHckRCrwYJ4XE1H1p6HkLz3wukrAnsfXQw==}
-    cpu: [arm64]
-    os: [linux]
-
-  '@pagefind/linux-x64@1.5.2':
-    resolution: {integrity: sha512-V+tFqHKXhQKq/WqPBD67AFy7scn1/aZID00ws4fSDd+1daSi5UHR9VVlRrOUYKxn3VuFQYRD7lYXdZK1WED1YA==}
-    cpu: [x64]
-    os: [linux]
-
-  '@pagefind/windows-arm64@1.5.2':
-    resolution: {integrity: sha512-hN9Nh90fNW61nNRCW9ZyQrAj/mD0eRvmJ8NlTUzkbuW8kIzGJUi3cxjFkEcMZ5h/8FsKWD/VcouZl4yo1F7B6g==}
-    cpu: [arm64]
-    os: [win32]
-
-  '@pagefind/windows-x64@1.5.2':
-    resolution: {integrity: sha512-Fa2Iyw7kaDRzGMfNYNUXNW2zbL5FQVDgSOcbDHdzBrDEdpqOqg8TcZ68F22ol6NJ9IGzvUdmeyZypLW5dyhqsg==}
-    cpu: [x64]
-    os: [win32]
 
   '@paper-design/shaders-react@0.0.76':
     resolution: {integrity: sha512-uPJWrYRf6cJdO2H+fuXlahaqz0QjYglNAyUTaRfIInpzCa/d6guxBIK003soAZQFuQ035yg9FhtfFzKNWm+a5A==}
@@ -6312,113 +6280,94 @@ packages:
   node-releases@2.0.44:
     resolution: {integrity: sha512-5WUyunoPMsvvEhS8AxHtRzP+oA8UCkJ7YRxatWKjngndhDGLiqEVAQKWjFAiAiuL8zMRGzGSJxFnLetoa43qGQ==}
 
-  node@runtime:22.22.3:
+  node@runtime:24.16.0:
     resolution:
       type: variations
       variants:
         - resolution:
             archive: tarball
             bin: bin/node
-            integrity: sha256-QAJqz3ioCOQ9IioLDg5xG5X/J5NGlreSW1Mpi8fIxgo=
+            integrity: sha256-MN/Y5EMiwnEoE/JeFjwlPK1TvkPgmJB7i1NIvxdKSWg=
             type: binary
-            url: https://nodejs.org/download/release/v22.22.3/node-v22.22.3-aix-ppc64.tar.gz
+            url: https://nodejs.org/download/release/v24.16.0/node-v24.16.0-aix-ppc64.tar.gz
           targets:
             - cpu: ppc64
               os: aix
         - resolution:
             archive: tarball
             bin: bin/node
-            integrity: sha256-Daf/dO+GETKMghLxeUM2hxOirZU/t9iajIoOrofCMgc=
+            integrity: sha256-ORidq07rFXBsQkrwrAijBEyeSPfbEqfXf2t6r8fdXfY=
             type: binary
-            url: https://nodejs.org/download/release/v22.22.3/node-v22.22.3-darwin-arm64.tar.gz
+            url: https://nodejs.org/download/release/v24.16.0/node-v24.16.0-darwin-arm64.tar.gz
           targets:
             - cpu: arm64
               os: darwin
         - resolution:
             archive: tarball
             bin: bin/node
-            integrity: sha256-RYMLp1L6DYksbc1kCUZmmAEpPKyCCjNZHe1ArAdRmOw=
+            integrity: sha256-KYtMezy4B2XIcD5CuQMkpOzjtmNJR7iedpw8mAq1UYU=
             type: binary
-            url: https://nodejs.org/download/release/v22.22.3/node-v22.22.3-darwin-x64.tar.gz
+            url: https://nodejs.org/download/release/v24.16.0/node-v24.16.0-darwin-x64.tar.gz
           targets:
             - cpu: x64
               os: darwin
         - resolution:
             archive: tarball
             bin: bin/node
-            integrity: sha256-zIvIKy3QtZXDuVpMPJyMNQkHz/ARr73uPRN56BLh4+M=
+            integrity: sha256-WJ9bbdT8/uTf2nMBOQPJZquqir2T28nUNlRORytPDnQ=
             type: binary
-            url: https://nodejs.org/download/release/v22.22.3/node-v22.22.3-linux-arm64.tar.gz
+            url: https://nodejs.org/download/release/v24.16.0/node-v24.16.0-linux-arm64.tar.gz
           targets:
             - cpu: arm64
               os: linux
         - resolution:
             archive: tarball
             bin: bin/node
-            integrity: sha256-GPvhv91CBFrxXwIlauPllJDRuf+T38J6IjrMLJJ0AlA=
+            integrity: sha256-JStYIFNNwDBKKFQcmkRDfPpyAufyAiXSjUk5MsWOl6o=
             type: binary
-            url: https://nodejs.org/download/release/v22.22.3/node-v22.22.3-linux-armv7l.tar.gz
-          targets:
-            - cpu: armv7l
-              os: linux
-        - resolution:
-            archive: tarball
-            bin: bin/node
-            integrity: sha256-qQ9SPPFk4cdhv0xZtcaqDZ1VKJJwGraUmeaD7h/Aa7w=
-            type: binary
-            url: https://nodejs.org/download/release/v22.22.3/node-v22.22.3-linux-ppc64le.tar.gz
+            url: https://nodejs.org/download/release/v24.16.0/node-v24.16.0-linux-ppc64le.tar.gz
           targets:
             - cpu: ppc64le
               os: linux
         - resolution:
             archive: tarball
             bin: bin/node
-            integrity: sha256-S4TkPCnZDk+QGBXDmRBqSa9O5zDRKTOvgsgtTcRQMIw=
+            integrity: sha256-Vnrwl1s0BVFrmx3cZEKaI+yMWi+mzwE5EmGkzHdOPt0=
             type: binary
-            url: https://nodejs.org/download/release/v22.22.3/node-v22.22.3-linux-s390x.tar.gz
+            url: https://nodejs.org/download/release/v24.16.0/node-v24.16.0-linux-s390x.tar.gz
           targets:
             - cpu: s390x
               os: linux
         - resolution:
             archive: tarball
             bin: bin/node
-            integrity: sha256-x6ENaBbajqqnU03XPHHG4rLDkdu/hF42SQLRVmFd0bg=
+            integrity: sha256-L69qOH6bYriI4hxU8BJJ+ydTf/7PGELyn0yRnQpZoP8=
             type: binary
-            url: https://nodejs.org/download/release/v22.22.3/node-v22.22.3-linux-x64.tar.gz
+            url: https://nodejs.org/download/release/v24.16.0/node-v24.16.0-linux-x64.tar.gz
           targets:
             - cpu: x64
               os: linux
         - resolution:
             archive: zip
             bin: node.exe
-            integrity: sha256-AL4SmgnohyzVLTu4u6EkEsVzPSIkEjpIKi3KSm+/JYY=
-            prefix: node-v22.22.3-win-arm64
+            integrity: sha256-FINGEdTGs8BgVOcAdzK5BHTBbgsy85XgW1Wlce9xxtI=
+            prefix: node-v24.16.0-win-arm64
             type: binary
-            url: https://nodejs.org/download/release/v22.22.3/node-v22.22.3-win-arm64.zip
+            url: https://nodejs.org/download/release/v24.16.0/node-v24.16.0-win-arm64.zip
           targets:
             - cpu: arm64
               os: win32
         - resolution:
             archive: zip
             bin: node.exe
-            integrity: sha256-bI1U9jX+/033bCyoD0UzLrL/V9JSJu3ONlkuUaF37jM=
-            prefix: node-v22.22.3-win-x64
+            integrity: sha256-7aypvVjsjpIDfaxOh31S9rj0MLgcGLV+JktOL7ERzVY=
+            prefix: node-v24.16.0-win-x64
             type: binary
-            url: https://nodejs.org/download/release/v22.22.3/node-v22.22.3-win-x64.zip
+            url: https://nodejs.org/download/release/v24.16.0/node-v24.16.0-win-x64.zip
           targets:
             - cpu: x64
               os: win32
-        - resolution:
-            archive: zip
-            bin: node.exe
-            integrity: sha256-e6QmD2nha6libQd8sRJPP7AfYEIa8qbHOWrrTi0Nja4=
-            prefix: node-v22.22.3-win-x86
-            type: binary
-            url: https://nodejs.org/download/release/v22.22.3/node-v22.22.3-win-x86.zip
-          targets:
-            - cpu: x86
-              os: win32
-    version: 22.22.3
+    version: 24.16.0
     hasBin: true
 
   normalize-path@3.0.0:
@@ -6522,10 +6471,6 @@ packages:
 
   package-manager-detector@1.6.0:
     resolution: {integrity: sha512-61A5ThoTiDG/C8s8UMZwSorAGwMJ0ERVGj2OjoW5pAalsNOg15+iQiPzrLJ4jhZ1HJzmC2PIHT2oEiH3R5fzNA==}
-
-  pagefind@1.5.2:
-    resolution: {integrity: sha512-XTUaK0hXMCu2jszWE584JGQT7y284TmMV9l/HX3rnG5uo3rHI/uHU56XTyyyPFjeWEBxECbAi0CaFDJOONtG0Q==}
-    hasBin: true
 
   parent-module@1.0.1:
     resolution: {integrity: sha512-GQ2EWRpQV8/o+Aw8YqtfZZPfNRWZYkbidE9k5rpl/hC3vtHHBfGm2Ifi6qWV+coDGkrUKZAxE3Lot5kcsRlh+g==}
@@ -8572,7 +8517,7 @@ snapshots:
       '@parcel/watcher': 2.5.6
       effect: 3.21.3
       multipasta: 0.2.7
-      ws: 8.18.3
+      ws: 8.20.1
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -9493,27 +9438,6 @@ snapshots:
   '@opentelemetry/semantic-conventions@1.41.1': {}
 
   '@oxc-project/types@0.133.0': {}
-
-  '@pagefind/darwin-arm64@1.5.2':
-    optional: true
-
-  '@pagefind/darwin-x64@1.5.2':
-    optional: true
-
-  '@pagefind/freebsd-x64@1.5.2':
-    optional: true
-
-  '@pagefind/linux-arm64@1.5.2':
-    optional: true
-
-  '@pagefind/linux-x64@1.5.2':
-    optional: true
-
-  '@pagefind/windows-arm64@1.5.2':
-    optional: true
-
-  '@pagefind/windows-x64@1.5.2':
-    optional: true
 
   '@paper-design/shaders-react@0.0.76(@types/react@19.2.17)(react@19.2.7)':
     dependencies:
@@ -13063,7 +12987,7 @@ snapshots:
 
   node-releases@2.0.44: {}
 
-  node@runtime:22.22.3: {}
+  node@runtime:24.16.0: {}
 
   normalize-path@3.0.0: {}
 
@@ -13141,16 +13065,6 @@ snapshots:
       quansync: 0.2.11
 
   package-manager-detector@1.6.0: {}
-
-  pagefind@1.5.2:
-    optionalDependencies:
-      '@pagefind/darwin-arm64': 1.5.2
-      '@pagefind/darwin-x64': 1.5.2
-      '@pagefind/freebsd-x64': 1.5.2
-      '@pagefind/linux-arm64': 1.5.2
-      '@pagefind/linux-x64': 1.5.2
-      '@pagefind/windows-arm64': 1.5.2
-      '@pagefind/windows-x64': 1.5.2
 
   parent-module@1.0.1:
     dependencies:

@@ -9,33 +9,20 @@ vi.mock("convex/nextjs", () => ({
   fetchMutation: vi.fn(),
 }));
 
-vi.mock("@repo/contents/_lib/agent/read/markdown", async () => {
-  const { Effect, Option } = await import("effect");
-
-  return {
-    getNakafaAgentMarkdown: (contentRef: string) => {
-      if (contentRef.includes("/missing")) {
-        return Effect.succeed(Option.none());
-      }
-
-      return Effect.succeed(Option.some({ contentRef }));
-    },
-  };
-});
-
-vi.mock("@repo/contents/_lib/quran", async () => {
+vi.mock("@/app/api/chat/nakafa-content", async () => {
   const { Effect } = await import("effect");
 
   return {
-    getSurah: (surah: number) => {
-      if (surah !== 1) {
-        return Effect.fail(new Error("Missing Surah."));
-      }
-
-      return Effect.succeed({
-        number: 1,
-        numberOfVerses: 1,
-      });
+    nakafaContent: {
+      /** Verifies chat content refs through deterministic URL fixtures. */
+      verify: (url: string) =>
+        Effect.succeed(
+          url === "/id/quran/1" ||
+            url === "/id/articles/politics/dynastic-politics-asian-values" ||
+            url ===
+              "/en/exercises/high-school/snbt/general-knowledge/try-out/2026/set-2/1" ||
+            url === "/quran/1"
+        ),
     },
   };
 });

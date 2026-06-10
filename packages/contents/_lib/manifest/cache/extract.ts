@@ -11,9 +11,6 @@ export function getParamManifestFromRouteManifest(
   return {
     version: manifest.version,
     exerciseApiParams: manifest.exerciseApiParams,
-    indexedArticleEntries: manifest.indexedArticleEntries,
-    indexedExerciseSetEntries: manifest.indexedExerciseSetEntries,
-    indexedSubjectEntries: manifest.indexedSubjectEntries,
     localeParams: manifest.localeParams,
     staticParams: manifest.staticParams,
   };
@@ -30,7 +27,7 @@ export function getStaticParamManifestFromRouteManifest(
   };
 }
 
-/** Extracts static-param fields from the param and indexing manifest. */
+/** Extracts static-param fields from the route-param manifest. */
 export function getStaticParamManifestFromParamManifest(
   manifest: ContentRouteParamManifest
 ) {

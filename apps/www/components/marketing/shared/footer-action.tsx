@@ -20,7 +20,6 @@ import {
   useRouter,
 } from "@repo/internationalization/src/navigation";
 import { IconCircleFilled } from "@tabler/icons-react";
-import { useQueryClient } from "@tanstack/react-query";
 import GB from "country-flag-icons/react/3x2/GB";
 import ID from "country-flag-icons/react/3x2/ID";
 import { useParams } from "next/navigation";
@@ -42,14 +41,13 @@ const flagMap = {
   id: ID,
 };
 
+/** Renders the footer language switcher. */
 function Language() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const pathname = usePathname();
   const params = useParams();
   const currentLocale = useLocale();
-
-  const queryClient = useQueryClient();
   const t = useTranslations("Common");
 
   function handlePrefetch(locale: Locale) {
@@ -62,8 +60,9 @@ function Language() {
     );
   }
 
+  /** Replaces the current route with the selected locale. */
   function handleChangeLocale(locale: Locale) {
-    startTransition(async () => {
+    startTransition(() => {
       router.replace(
         // @ts-expect-error -- TypeScript will validate that only known `params`
         // are used in combination with a given `pathname`. Since the two will
@@ -71,13 +70,6 @@ function Language() {
         { pathname, params },
         { locale }
       );
-
-      // reboot the pagefind because of the language change
-      if (window?.pagefind) {
-        await window.pagefind.destroy?.();
-
-        queryClient.invalidateQueries({ queryKey: ["search"] });
-      }
     });
   }
 

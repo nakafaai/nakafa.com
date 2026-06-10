@@ -1,7 +1,9 @@
-import type { SubjectCategory } from "@repo/contents/_types/subject/category";
-import type { Grade } from "@repo/contents/_types/subject/grade";
-import type { Material } from "@repo/contents/_types/subject/material";
 import { MaterialSchema } from "@repo/contents/_types/subject/material";
+import type {
+  Grade,
+  Material,
+  SubjectCategory,
+} from "@repo/contents/_types/taxonomy";
 import { Schema } from "effect";
 
 /**

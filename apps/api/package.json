@@ -15,12 +15,12 @@
   "dependencies": {
     "@convex-dev/better-auth": "^0.12.2",
     "@repo/backend": "workspace:*",
-    "@repo/contents": "workspace:*",
     "@repo/design-system": "workspace:*",
     "@repo/next-config": "workspace:*",
     "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
     "better-auth": "~1.6.12",
+    "convex": "^1.40.0",
     "effect": "^3.21.3",
     "next": "16.2.7",
     "react": "^19.2.7",

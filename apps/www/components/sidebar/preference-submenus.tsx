@@ -18,7 +18,6 @@ import {
   useRouter,
 } from "@repo/internationalization/src/navigation";
 import { IconCircleFilled } from "@tabler/icons-react";
-import { useQueryClient } from "@tanstack/react-query";
 import GB from "country-flag-icons/react/3x2/GB";
 import ID from "country-flag-icons/react/3x2/ID";
 import { useParams } from "next/navigation";
@@ -47,13 +46,13 @@ function ActiveBadge({ isActive }: { isActive: boolean }) {
   );
 }
 
+/** Renders the nested preferences language submenu. */
 function LanguageSubmenuContent({ side }: { side: SubmenuSide }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const pathname = usePathname();
   const params = useParams();
   const currentLocale = useLocale();
-  const queryClient = useQueryClient();
 
   function handlePrefetch(locale: Locale) {
     router.prefetch(
@@ -63,19 +62,14 @@ function LanguageSubmenuContent({ side }: { side: SubmenuSide }) {
     );
   }
 
+  /** Replaces the current route with the selected locale. */
   function handleChangeLocale(locale: Locale) {
-    startTransition(async () => {
+    startTransition(() => {
       router.replace(
         // @ts-expect-error -- The current route pathname and params are paired by Next.
         { pathname, params },
         { locale }
       );
-
-      if (window?.pagefind) {
-        await window.pagefind.destroy?.();
-
-        queryClient.invalidateQueries({ queryKey: ["search"] });
-      }
     });
   }
 

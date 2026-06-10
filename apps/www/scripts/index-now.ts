@@ -77,8 +77,6 @@ const decodeSubmissionHistoryJson = Schema.decodeUnknown(
   Schema.parseJson(Schema.Unknown)
 );
 const decodeSubmissionHistory = Schema.decodeUnknown(SubmissionHistorySchema);
-const decodeLegacyServiceHistory = Schema.decodeUnknown(ServiceHistorySchema);
-const decodeEmptyServiceHistory = Schema.decodeUnknown(ServiceHistorySchema);
 const decodeEmptySubmissionHistory = Schema.decodeUnknown(
   SubmissionHistorySchema
 );
@@ -127,7 +125,7 @@ const ensureSubmissionDataFolder = Effect.fn(
   });
 });
 
-/** Loads submission history and converts the older flat file format. */
+/** Loads the submission-history file used by IndexNow and Bing submissions. */
 const loadSubmissionHistory = Effect.fn(
   "scripts.indexNow.loadSubmissionHistory"
 )(function* () {
@@ -146,19 +144,7 @@ const loadSubmissionHistory = Effect.fn(
   });
   const parsed = yield* decodeSubmissionHistoryJson(data);
 
-  return yield* decodeSubmissionHistory(parsed).pipe(
-    Effect.catchAll(() =>
-      Effect.gen(function* () {
-        const bing = yield* decodeEmptyServiceHistory({});
-        const indexNow = yield* decodeLegacyServiceHistory(parsed);
-
-        return {
-          bing,
-          indexNow,
-        };
-      })
-    )
-  );
+  return yield* decodeSubmissionHistory(parsed);
 });
 
 /** Persists submission history without masking the rest of the script. */

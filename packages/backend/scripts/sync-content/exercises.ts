@@ -1,4 +1,4 @@
-import type { Locale } from "@repo/backend/convex/lib/validators/contents";
+import { internal } from "@repo/backend/convex/_generated/api";
 import { ScriptFailureError } from "@repo/backend/scripts/lib/errors";
 import {
   computeHash,
@@ -12,7 +12,8 @@ import {
   getExerciseDir,
   parseExercisePath,
 } from "@repo/backend/scripts/lib/mdx-parser/paths";
-import { callConvex } from "@repo/backend/scripts/sync-content/convex";
+import type { ExerciseChoicesByLocale } from "@repo/backend/scripts/lib/mdx-parser/types";
+import { callConvexMutation } from "@repo/backend/scripts/sync-content/convex";
 import {
   formatDuration,
   log,
@@ -27,9 +28,10 @@ import {
 import { globFiles } from "@repo/backend/scripts/sync-content/runtime";
 import {
   BATCH_SIZES,
+  ExerciseQuestionSyncResultSchema,
+  ExerciseSetSyncResultSchema,
   LOCALE_MATERIAL_FILE_REGEX,
   parseLocale,
-  SyncResultSchema,
 } from "@repo/backend/scripts/sync-content/schemas";
 import type {
   ConvexConfig,
@@ -44,54 +46,18 @@ import {
   getExerciseSetSearchText,
   getExerciseSetSearchTitle,
 } from "@repo/contents/_lib/exercises/search";
+import type { FunctionArgs } from "convex/server";
 import { Effect } from "effect";
 
-interface ExerciseSetPayload {
-  category: string;
-  contentHash: string;
-  description?: string;
-  exerciseType: string;
-  locale: Locale;
-  material: string;
-  questionCount: number;
-  searchDescription: string;
-  searchText: string;
-  searchTitle: string;
-  setName: string;
-  slug: string;
-  title: string;
-  type: string;
-}
+type ExerciseSetPayload = FunctionArgs<
+  typeof internal.contentSync.mutations.exercises.bulkSyncExerciseSets
+>["sets"][number];
 
-interface QuestionChoice {
-  isCorrect: boolean;
-  label: string;
-  optionKey: string;
-  order: number;
-}
+type ExerciseQuestionPayload = FunctionArgs<
+  typeof internal.contentSync.mutations.exercises.bulkSyncExerciseQuestions
+>["questions"][number];
 
-interface ExerciseQuestionPayload {
-  answerBody: string;
-  authors: Array<{ name: string }>;
-  category: string;
-  choices: QuestionChoice[];
-  contentHash: string;
-  date: number;
-  description?: string;
-  exerciseType: string;
-  locale: Locale;
-  material: string;
-  number: number;
-  questionBody: string;
-  searchDescription: string;
-  searchText: string;
-  searchTitle: string;
-  setName: string;
-  setSlug: string;
-  slug: string;
-  title: string;
-  type: string;
-}
+type ExerciseQuestionChoices = ExerciseQuestionPayload["choices"];
 
 interface ExerciseSearchLabels {
   exerciseTypeTitle: string;
@@ -121,30 +87,11 @@ export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
   const sets: ExerciseSetPayload[] = [];
   const errors: string[] = [];
 
-  const questionFiles = yield* globFiles("exercises/**/_question/*.mdx");
-  const questionCountByLocaleSlug = new Map<string, number>();
-  for (const questionFile of questionFiles) {
-    const pathResult = yield* Effect.either(parseExercisePath(questionFile));
-
-    if (pathResult._tag === "Left") {
-      continue;
-    }
-
-    const pathInfo = pathResult.right;
-    const setSlug = buildExerciseSetSlug({
-      category: pathInfo.category,
-      examType: pathInfo.examType,
-      material: pathInfo.material,
-      exerciseType: pathInfo.exerciseType,
-      setName: pathInfo.setName,
-      year: pathInfo.year,
-    });
-    const countKey = `${pathInfo.locale}:${setSlug}`;
-    questionCountByLocaleSlug.set(
-      countKey,
-      (questionCountByLocaleSlug.get(countKey) || 0) + 1
-    );
-  }
+  const searchLabelsBySet = yield* readExerciseSearchLabels(options);
+  const questionCountByLocaleSlug = yield* readValidatedExerciseQuestionCounts(
+    options,
+    searchLabelsBySet
+  );
 
   for (const materialFile of materialFiles) {
     const result = yield* Effect.either(
@@ -180,6 +127,7 @@ export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
           const searchDescription =
             getExerciseSetSearchDescription(searchSource);
           const searchText = getExerciseSetSearchText(searchSource);
+          const groupRoute = getExerciseGroupRoute(set.slug);
 
           return {
             locale: set.locale,
@@ -188,13 +136,25 @@ export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
             type: set.type,
             material: set.material,
             exerciseType: set.exerciseType,
+            exerciseTypeTitle: set.exerciseTypeTitle,
             setName: set.setName,
             title: set.title,
             description: set.description,
+            year: set.year === undefined ? undefined : String(set.year),
             questionCount,
             searchTitle,
             searchDescription,
             searchText,
+            groupContentHash: computeHash(
+              JSON.stringify({
+                description: set.description,
+                exerciseType: set.exerciseType,
+                exerciseTypeTitle: set.exerciseTypeTitle,
+                groupRoute,
+                locale: set.locale,
+                year: set.year,
+              })
+            ),
             contentHash: computeHash(
               JSON.stringify({
                 description: set.description,
@@ -203,6 +163,7 @@ export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
                 searchText,
                 searchTitle,
                 slug: set.slug,
+                year: set.year,
               })
             ),
           };
@@ -243,12 +204,11 @@ export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
       log(formatBatchProgress(progress, batchNum, totalBatches, batch.length));
     }
 
-    const result = yield* callConvex(
+    const result = yield* callConvexMutation(
       config,
-      "mutation",
-      "contentSync/mutations/exercises:bulkSyncExerciseSets",
+      internal.contentSync.mutations.exercises.bulkSyncExerciseSets,
       { sets: batch },
-      SyncResultSchema
+      ExerciseSetSyncResultSchema
     );
 
     totals.created += result.created;
@@ -279,6 +239,99 @@ export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
   return { ...totals, durationMs, itemsPerSecond };
 });
 
+/** Returns the exercise group route above one concrete set route. */
+function getExerciseGroupRoute(setSlug: string) {
+  return setSlug.split("/").slice(0, -1).join("/");
+}
+
+/** Converts authored choices into the ordered Convex sync payload. */
+function buildExerciseChoicePayload(
+  choices: ExerciseChoicesByLocale["en"]
+): ExerciseQuestionChoices["en"] {
+  return choices.map((choice, index) => ({
+    optionKey: String.fromCharCode(65 + index),
+    label: choice.label,
+    isCorrect: choice.value,
+    order: index,
+  }));
+}
+
+/** Requires both choice locales before a question can be synced. */
+const readRequiredExerciseChoices = Effect.fn(
+  "sync.readRequiredExerciseChoices"
+)(function* (exerciseDir: string, questionFile: string) {
+  const choicesData = yield* readExerciseChoices(exerciseDir);
+
+  if (
+    !choicesData ||
+    choicesData.en.length === 0 ||
+    choicesData.id.length === 0
+  ) {
+    return yield* Effect.fail(
+      new ScriptFailureError({
+        message: `Missing exercise choices for ${questionFile}. Add non-empty en and id choices.ts arrays before syncing this question.`,
+      })
+    );
+  }
+
+  return {
+    en: buildExerciseChoicePayload(choicesData.en),
+    id: buildExerciseChoicePayload(choicesData.id),
+  };
+});
+
+/** Returns the locale-scoped question glob shared by set and question sync. */
+function getExerciseQuestionPattern(options: SyncOptions) {
+  return options.locale
+    ? `exercises/**/_question/${options.locale}.mdx`
+    : "exercises/**/_question/*.mdx";
+}
+
+/** Builds set question counts from question payloads that can actually sync. */
+const readValidatedExerciseQuestionCounts = Effect.fn(
+  "sync.readValidatedExerciseQuestionCounts"
+)(function* (
+  options: SyncOptions,
+  searchLabelsBySet: ReadonlyMap<string, ExerciseSearchLabels>
+) {
+  const questionFiles = yield* globFiles(getExerciseQuestionPattern(options));
+  const questionCountByLocaleSlug = new Map<string, number>();
+  const errors: string[] = [];
+
+  for (const questionFile of questionFiles) {
+    const questionResult = yield* Effect.either(
+      parseQuestionFile(questionFile, searchLabelsBySet)
+    );
+
+    if (questionResult._tag === "Left") {
+      const message =
+        questionResult.left instanceof Error
+          ? questionResult.left.message
+          : String(questionResult.left);
+      errors.push(`${questionFile}: ${message}`);
+      continue;
+    }
+
+    const question = questionResult.right;
+    const countKey = `${question.locale}:${question.setSlug}`;
+    questionCountByLocaleSlug.set(
+      countKey,
+      (questionCountByLocaleSlug.get(countKey) || 0) + 1
+    );
+  }
+
+  if (errors.length > 0) {
+    return yield* Effect.fail(
+      new ScriptFailureError({
+        message: `Cannot sync exercise sets with invalid exercise questions:\n${errors.join("\n")}`,
+      })
+    );
+  }
+
+  return questionCountByLocaleSlug;
+});
+
+/** Parses one exercise question file into the Convex sync payload. */
 const parseQuestionFile = Effect.fn("sync.parseQuestionFile")(function* (
   questionFile: string,
   searchLabelsBySet: ReadonlyMap<string, ExerciseSearchLabels>
@@ -296,14 +349,7 @@ const parseQuestionFile = Effect.fn("sync.parseQuestionFile")(function* (
     answerBody = answerParsed.body;
   }
 
-  const choicesData = yield* readExerciseChoices(exerciseDir);
-  const localeChoices = choicesData?.[pathInfo.locale] || [];
-  const choices = localeChoices.map((choice, index) => ({
-    optionKey: String.fromCharCode(65 + index),
-    label: choice.label,
-    isCorrect: choice.value,
-    order: index,
-  }));
+  const choices = yield* readRequiredExerciseChoices(exerciseDir, questionFile);
 
   const setSlug = buildExerciseSetSlug({
     category: pathInfo.category,
@@ -339,6 +385,10 @@ const parseQuestionFile = Effect.fn("sync.parseQuestionFile")(function* (
     questionBody: questionParsed.body,
     answerBody,
   };
+  const date = yield* parseDateToEpoch(questionParsed.metadata.date);
+  const searchDescription = getExerciseSearchDescription(searchSource);
+  const searchText = getExerciseSearchText(searchSource);
+  const searchTitle = getExerciseSearchTitle(searchSource);
 
   return {
     locale: pathInfo.locale,
@@ -352,17 +402,34 @@ const parseQuestionFile = Effect.fn("sync.parseQuestionFile")(function* (
     number: pathInfo.number,
     title: questionParsed.metadata.title,
     description: questionParsed.metadata.description,
-    date: yield* parseDateToEpoch(questionParsed.metadata.date),
+    date,
     questionBody: questionParsed.body,
     answerBody,
-    searchDescription: getExerciseSearchDescription(searchSource),
-    searchText: getExerciseSearchText(searchSource),
-    searchTitle: getExerciseSearchTitle(searchSource),
+    searchDescription,
+    searchText,
+    searchTitle,
     contentHash: computeHash(
-      questionParsed.body +
-        answerBody +
-        JSON.stringify(choices) +
-        JSON.stringify(questionParsed.metadata.authors)
+      JSON.stringify({
+        answerBody,
+        authors: questionParsed.metadata.authors,
+        category: pathInfo.category,
+        choices,
+        date,
+        description: questionParsed.metadata.description,
+        exerciseType: pathInfo.exerciseType,
+        locale: pathInfo.locale,
+        material: pathInfo.material,
+        number: pathInfo.number,
+        questionBody: questionParsed.body,
+        searchDescription,
+        searchText,
+        searchTitle,
+        setName: pathInfo.setName,
+        setSlug,
+        slug: pathInfo.slug,
+        title: questionParsed.metadata.title,
+        type: pathInfo.examType,
+      })
     ),
     authors: questionParsed.metadata.authors,
     choices,
@@ -399,6 +466,7 @@ const readExerciseSearchLabels = Effect.fn("sync.readExerciseSearchLabels")(
   }
 );
 
+/** Sends exercise question batches to Convex and aggregates sync counts. */
 const processQuestionBatches = Effect.fn("sync.processQuestionBatches")(
   function* (
     config: ConvexConfig,
@@ -440,12 +508,11 @@ const processQuestionBatches = Effect.fn("sync.processQuestionBatches")(
         );
       }
 
-      const result = yield* callConvex(
+      const result = yield* callConvexMutation(
         config,
-        "mutation",
-        "contentSync/mutations/exercises:bulkSyncExerciseQuestions",
+        internal.contentSync.mutations.exercises.bulkSyncExerciseQuestions,
         { questions: batch },
-        SyncResultSchema
+        ExerciseQuestionSyncResultSchema
       );
 
       totals.created += result.created;
@@ -526,10 +593,7 @@ export const syncExerciseQuestions = Effect.fn("sync.exerciseQuestions")(
       log("\n--- EXERCISE QUESTIONS ---\n");
     }
 
-    const pattern = options.locale
-      ? `exercises/**/_question/${options.locale}.mdx`
-      : "exercises/**/_question/*.mdx";
-    const questionFiles = yield* globFiles(pattern);
+    const questionFiles = yield* globFiles(getExerciseQuestionPattern(options));
 
     if (!options.quiet) {
       log(`Files found: ${questionFiles.length} (question files only)`);
