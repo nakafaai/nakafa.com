@@ -6,6 +6,7 @@ import {
   CodeBlockDownloadButton,
 } from "@repo/design-system/components/ai/code-block";
 import { Mermaid } from "@repo/design-system/components/ai/mermaid";
+import { SimpleIcon } from "@repo/design-system/components/icons/simple";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Dialog,
@@ -37,7 +38,6 @@ export function MermaidMdx({
   description,
   title,
 }: Props) {
-  const Icon = languageIconMap.mermaid;
   const renderableChart = normalizeMermaidChart(chart);
 
   return (
@@ -51,7 +51,7 @@ export function MermaidMdx({
       >
         <div className="flex items-center justify-between gap-2 bg-muted/80 p-1 text-muted-foreground text-sm">
           <div className="flex min-w-0 items-center gap-2 px-4 py-1.5">
-            <Icon className="size-4" />
+            <SimpleIcon className="size-4" icon={languageIconMap.mermaid} />
             <span className="ml-1 truncate text-foreground">{title}</span>
           </div>
           <div className="flex items-center">

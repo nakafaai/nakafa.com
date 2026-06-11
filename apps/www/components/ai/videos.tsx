@@ -1,4 +1,5 @@
-import { SiYoutube } from "@icons-pack/react-simple-icons";
+import { YoutubeIcon } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import Image from "next/image";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -12,7 +13,7 @@ export function Videos() {
 
       <div className="mx-auto w-fit rounded-sm bg-card/80 px-3 py-2 backdrop-blur-sm">
         <div className="flex flex-wrap items-center gap-2">
-          <SiYoutube className="hidden size-4 sm:block" />
+          <HugeIcons className="hidden size-4 sm:block" icon={YoutubeIcon} />
           <span className="text-pretty text-xs">{t("discover")}</span>
         </div>
       </div>
