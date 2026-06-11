@@ -6,8 +6,15 @@ export const metadata = {
   subject: "Circle Arcs and Sectors",
 };
 
-import { getColor } from "@repo/design-system/lib/color";
+import {
+  createCircleArcLine,
+  createCircleChordPoints,
+  createCircleOutlinePoints,
+  createCircleRadiusPoints,
+  createCircleSegmentBoundaryLines,
+} from "@repo/design-system/components/contents/mathematics/circle";
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
+import { getColor } from "@repo/design-system/lib/color";
 
 ## Basic Concept of Segment
 
@@ -28,24 +35,18 @@ Start with the fundamental difference between an arc and a segment:
   showZAxis={false}
   data={[
     {
-      points: Array.from({ length: 121 }, (_, i) => {
-        const angle = (i * 2 * Math.PI) / 120;
-        return {
-          x: 4 * Math.cos(angle),
-          y: 4 * Math.sin(angle),
-          z: 0,
-        };
-      }),
+      points: createCircleOutlinePoints(4),
       color: getColor("INDIGO"),
       showPoints: false,
       smooth: true,
       lineWidth: 1,
     },
     {
-      points: [
-        { x: 4 * Math.cos(Math.PI / 6), y: 4 * Math.sin(Math.PI / 6), z: 0 },
-        { x: 4 * Math.cos(5 * Math.PI / 6), y: 4 * Math.sin(5 * Math.PI / 6), z: 0 },
-      ],
+      points: createCircleChordPoints({
+        radius: 4,
+        startDegrees: 30,
+        sweepDegrees: 120,
+      }),
       color: getColor("VIOLET"),
       showPoints: false,
       smooth: false,
@@ -58,29 +59,17 @@ Start with the fundamental difference between an arc and a segment:
         },
       ],
     },
-    {
-      points: Array.from({ length: 41 }, (_, i) => {
-        const startAngle = Math.PI / 6;
-        const endAngle = 5 * Math.PI / 6;
-        const angle = startAngle + (i * (endAngle - startAngle)) / 40;
-        return {
-          x: 4 * Math.cos(angle),
-          y: 4 * Math.sin(angle),
-          z: 0,
-        };
-      }),
+    createCircleArcLine({
       color: getColor("ORANGE"),
-      showPoints: false,
-      smooth: true,
       lineWidth: 4,
-      labels: [
-        {
-          text: "Arc (curved line)",
-          at: 20,
-          offset: [0, 0.8, 0],
-        },
-      ],
-    },
+      label: {
+        text: "Arc (curved line)",
+        offset: [0, 0.8, 0],
+      },
+      radius: 4,
+      startDegrees: 30,
+      sweepDegrees: 120,
+    }),
   ]}
 />
 
@@ -91,24 +80,18 @@ Start with the fundamental difference between an arc and a segment:
   showZAxis={false}
   data={[
     {
-      points: Array.from({ length: 121 }, (_, i) => {
-        const angle = (i * 2 * Math.PI) / 120;
-        return {
-          x: 4 * Math.cos(angle),
-          y: 4 * Math.sin(angle),
-          z: 0,
-        };
-      }),
+      points: createCircleOutlinePoints(4),
       color: getColor("INDIGO"),
       showPoints: false,
       smooth: true,
       lineWidth: 1,
     },
     {
-      points: [
-        { x: 4 * Math.cos(Math.PI / 6), y: 4 * Math.sin(Math.PI / 6), z: 0 },
-        { x: 4 * Math.cos(5 * Math.PI / 6), y: 4 * Math.sin(5 * Math.PI / 6), z: 0 },
-      ],
+      points: createCircleChordPoints({
+        radius: 4,
+        startDegrees: 30,
+        sweepDegrees: 120,
+      }),
       color: getColor("VIOLET"),
       showPoints: false,
       smooth: false,
@@ -121,57 +104,23 @@ Start with the fundamental difference between an arc and a segment:
         },
       ],
     },
-    {
-      points: Array.from({ length: 41 }, (_, i) => {
-        const startAngle = Math.PI / 6;
-        const endAngle = 5 * Math.PI / 6;
-        const angle = startAngle + (i * (endAngle - startAngle)) / 40;
-        return {
-          x: 4 * Math.cos(angle),
-          y: 4 * Math.sin(angle),
-          z: 0,
-        };
-      }),
+    createCircleArcLine({
       color: getColor("ORANGE"),
-      showPoints: false,
-      smooth: true,
       lineWidth: 2,
-    },
-    {
-      points: (() => {
-        const segmentPoints = [];
-        const startAngle = Math.PI / 6;
-        const endAngle = 5 * Math.PI / 6;
-        
-        for (let i = 0; i <= 40; i++) {
-          const angle = startAngle + (i * (endAngle - startAngle)) / 40;
-          segmentPoints.push({
-            x: 4 * Math.cos(angle),
-            y: 4 * Math.sin(angle),
-            z: 0,
-          });
-        }
-        
-        segmentPoints.push({
-          x: 4 * Math.cos(Math.PI / 6),
-          y: 4 * Math.sin(Math.PI / 6),
-          z: 0,
-        });
-        
-        return segmentPoints;
-      })(),
+      radius: 4,
+      startDegrees: 30,
+      sweepDegrees: 120,
+    }),
+    ...createCircleSegmentBoundaryLines({
       color: getColor("LIME"),
-      showPoints: false,
-      smooth: true,
-      lineWidth: 4,
-      labels: [
-        {
-          text: "Segment (area/region)",
-          at: 20,
-          offset: [0, 0.8, 0],
-        },
-      ],
-    },
+      radius: 4,
+      startDegrees: 30,
+      sweepDegrees: 120,
+      label: {
+        text: "Segment (area/region)",
+        offset: [0, 0.8, 0],
+      },
+    }),
   ]}
 />
 
@@ -195,14 +144,7 @@ Based on their size, segments can be divided into two types with different chara
   data={[
     // Main circle
     {
-      points: Array.from({ length: 121 }, (_, i) => {
-        const angle = (i * 2 * Math.PI) / 120;
-        return {
-          x: 4 * Math.cos(angle),
-          y: 4 * Math.sin(angle),
-          z: 0,
-        };
-      }),
+      points: createCircleOutlinePoints(4),
       color: getColor("INDIGO"),
       showPoints: false,
       smooth: true,
@@ -225,10 +167,7 @@ Based on their size, segments can be divided into two types with different chara
     },
     // Radius OA
     {
-      points: [
-        { x: 0, y: 0, z: 0 },
-        { x: 4 * Math.cos(Math.PI / 6), y: 4 * Math.sin(Math.PI / 6), z: 0 },
-      ],
+      points: createCircleRadiusPoints({ radius: 4, degrees: 30 }),
       color: getColor("CYAN"),
       showPoints: false,
       smooth: false,
@@ -243,10 +182,7 @@ Based on their size, segments can be divided into two types with different chara
     },
     // Radius OB
     {
-      points: [
-        { x: 0, y: 0, z: 0 },
-        { x: 4 * Math.cos(5 * Math.PI / 6), y: 4 * Math.sin(5 * Math.PI / 6), z: 0 },
-      ],
+      points: createCircleRadiusPoints({ radius: 4, degrees: 150 }),
       color: getColor("CYAN"),
       showPoints: false,
       smooth: false,
@@ -260,76 +196,40 @@ Based on their size, segments can be divided into two types with different chara
       ],
     },
     // Central angle arc to show 120°
-    {
-      points: Array.from({ length: 21 }, (_, i) => {
-        const startAngle = Math.PI / 6;
-        const endAngle = 5 * Math.PI / 6;
-        const angle = startAngle + (i * (endAngle - startAngle)) / 20;
-        return {
-          x: 1.5 * Math.cos(angle),
-          y: 1.5 * Math.sin(angle),
-          z: 0,
-        };
-      }),
+    createCircleArcLine({
       color: getColor("AMBER"),
-      showPoints: false,
-      smooth: true,
       lineWidth: 3,
-      labels: [
-        {
-          text: "120°",
-          at: 10,
-          offset: [0, -0.5, 0],
-        },
-      ],
-    },
+      label: {
+        text: "120°",
+        offset: [0, -0.5, 0],
+      },
+      radius: 1.5,
+      startDegrees: 30,
+      sweepDegrees: 120,
+    }),
     // Chord AB
     {
-      points: [
-        { x: 4 * Math.cos(Math.PI / 6), y: 4 * Math.sin(Math.PI / 6), z: 0 },
-        { x: 4 * Math.cos(5 * Math.PI / 6), y: 4 * Math.sin(5 * Math.PI / 6), z: 0 },
-      ],
+      points: createCircleChordPoints({
+        radius: 4,
+        startDegrees: 30,
+        sweepDegrees: 120,
+      }),
       color: getColor("PURPLE"),
       showPoints: false,
       smooth: false,
       lineWidth: 3,
     },
     // Segment (shaded area)
-    {
-      points: (() => {
-        const segmentPoints = [];
-        const startAngle = Math.PI / 6;
-        const endAngle = 5 * Math.PI / 6;
-        
-        for (let i = 0; i <= 40; i++) {
-          const angle = startAngle + (i * (endAngle - startAngle)) / 40;
-          segmentPoints.push({
-            x: 4 * Math.cos(angle),
-            y: 4 * Math.sin(angle),
-            z: 0,
-          });
-        }
-        
-        segmentPoints.push({
-          x: 4 * Math.cos(Math.PI / 6),
-          y: 4 * Math.sin(Math.PI / 6),
-          z: 0,
-        });
-        
-        return segmentPoints;
-      })(),
+    ...createCircleSegmentBoundaryLines({
       color: getColor("ORANGE"),
-      showPoints: false,
-      smooth: true,
-      lineWidth: 4,
-      labels: [
-        {
-          text: "Minor Segment",
-          at: 20,
-          offset: [0, 0.8, 0],
-        },
-      ],
-    },
+      radius: 4,
+      startDegrees: 30,
+      sweepDegrees: 120,
+      label: {
+        text: "Minor Segment",
+        offset: [0, 0.8, 0],
+      },
+    }),
   ]}
 />
 
@@ -341,14 +241,7 @@ Based on their size, segments can be divided into two types with different chara
   data={[
     // Main circle
     {
-      points: Array.from({ length: 121 }, (_, i) => {
-        const angle = (i * 2 * Math.PI) / 120;
-        return {
-          x: 4 * Math.cos(angle),
-          y: 4 * Math.sin(angle),
-          z: 0,
-        };
-      }),
+      points: createCircleOutlinePoints(4),
       color: getColor("INDIGO"),
       showPoints: false,
       smooth: true,
@@ -371,10 +264,7 @@ Based on their size, segments can be divided into two types with different chara
     },
     // Radius OA (using different angle for major)
     {
-      points: [
-        { x: 0, y: 0, z: 0 },
-        { x: 4 * Math.cos(Math.PI / 4), y: 4 * Math.sin(Math.PI / 4), z: 0 },
-      ],
+      points: createCircleRadiusPoints({ radius: 4, degrees: 45 }),
       color: getColor("CYAN"),
       showPoints: false,
       smooth: false,
@@ -389,10 +279,7 @@ Based on their size, segments can be divided into two types with different chara
     },
     // Radius OB
     {
-      points: [
-        { x: 0, y: 0, z: 0 },
-        { x: 4 * Math.cos(-75 * Math.PI / 180), y: 4 * Math.sin(-75 * Math.PI / 180), z: 0 },
-      ],
+      points: createCircleRadiusPoints({ radius: 4, degrees: 285 }),
       color: getColor("CYAN"),
       showPoints: false,
       smooth: false,
@@ -406,89 +293,42 @@ Based on their size, segments can be divided into two types with different chara
       ],
     },
     // Central angle arc to show 240° (using larger arc)
-    {
-      points: Array.from({ length: 41 }, (_, i) => {
-        const startAngle = Math.PI / 4;
-        const endAngle = startAngle + (240 * Math.PI / 180); // 240° in radians
-        const angle = startAngle + (i * (endAngle - startAngle)) / 40;
-        return {
-          x: 1.2 * Math.cos(angle),
-          y: 1.2 * Math.sin(angle),
-          z: 0,
-        };
-      }),
+    createCircleArcLine({
       color: getColor("AMBER"),
-      showPoints: false,
-      smooth: true,
       lineWidth: 3,
-      labels: [
-        {
-          text: "240°",
-          at: 35,
-          offset: [0.5, -0.5, 0],
-        },
-      ],
-    },
+      label: {
+        progress: 7 / 8,
+        text: "240°",
+        offset: [0.5, -0.5, 0],
+      },
+      radius: 1.2,
+      startDegrees: 45,
+      sweepDegrees: 240,
+    }),
     // Chord AB
     {
-      points: [
-        { x: 4 * Math.cos(Math.PI / 4), y: 4 * Math.sin(Math.PI / 4), z: 0 },
-        { x: 4 * Math.cos(-75 * Math.PI / 180), y: 4 * Math.sin(-75 * Math.PI / 180), z: 0 },
-      ],
+      points: createCircleChordPoints({
+        radius: 4,
+        startDegrees: 45,
+        sweepDegrees: 240,
+      }),
       color: getColor("CYAN"),
       showPoints: false,
       smooth: false,
       lineWidth: 3,
     },
     // Major segment (shaded area)
-    {
-      points: (() => {
-        const segmentPoints = [];
-        
-        // Following the correct central angle arc logic
-        const startAngle = Math.PI / 4; // 45°
-        const arcAngle = 240 * Math.PI / 180; // 240° in radians
-        
-        // Create arc with the exact same path as the central angle arc
-        const numPoints = 30;
-        for (let i = 0; i <= numPoints; i++) {
-          const progress = i / numPoints;
-          const angle = startAngle + progress * arcAngle;
-          segmentPoints.push({
-            x: 4 * Math.cos(angle),
-            y: 4 * Math.sin(angle),
-            z: 0,
-          });
-        }
-        
-        // Ensure endpoint exactly matches point B coordinates
-        segmentPoints[segmentPoints.length - 1] = {
-          x: 4 * Math.cos(-75 * Math.PI / 180),
-          y: 4 * Math.sin(-75 * Math.PI / 180),
-          z: 0,
-        };
-        
-        // Close segment by connecting back to starting point (point A)
-        segmentPoints.push({
-          x: 4 * Math.cos(startAngle),
-          y: 4 * Math.sin(startAngle),
-          z: 0,
-        });
-        
-        return segmentPoints;
-      })(),
+    ...createCircleSegmentBoundaryLines({
       color: getColor("LIME"),
-      showPoints: false,
-      smooth: true,
-      lineWidth: 4,
-      labels: [
-        {
-          text: "Major Segment",
-          at: 20,
-          offset: [0, -1.5, 0],
-        },
-      ],
-    },
+      radius: 4,
+      startDegrees: 45,
+      sweepDegrees: 240,
+      label: {
+        progress: 2 / 3,
+        text: "Major Segment",
+        offset: [0, -1.5, 0],
+      },
+    }),
   ]}
 />
 
@@ -542,24 +382,14 @@ Let's see how a segment is formed from its components:
   showZAxis={false}
   data={[
     {
-      points: Array.from({ length: 121 }, (_, i) => {
-        const angle = (i * 2 * Math.PI) / 120;
-        return {
-          x: 4 * Math.cos(angle),
-          y: 4 * Math.sin(angle),
-          z: 0,
-        };
-      }),
+      points: createCircleOutlinePoints(4),
       color: getColor("INDIGO"),
       showPoints: false,
       smooth: true,
       lineWidth: 1,
     },
     {
-      points: [
-        { x: 0, y: 0, z: 0 },
-        { x: 4, y: 0, z: 0 },
-      ],
+      points: createCircleRadiusPoints({ radius: 4, degrees: 0 }),
       color: getColor("VIOLET"),
       showPoints: false,
       smooth: false,
@@ -578,10 +408,7 @@ Let's see how a segment is formed from its components:
       ],
     },
     {
-      points: [
-        { x: 0, y: 0, z: 0 },
-        { x: 0, y: 4, z: 0 },
-      ],
+      points: createCircleRadiusPoints({ radius: 4, degrees: 90 }),
       color: getColor("VIOLET"),
       showPoints: false,
       smooth: false,
@@ -595,10 +422,11 @@ Let's see how a segment is formed from its components:
       ],
     },
     {
-      points: [
-        { x: 4, y: 0, z: 0 },
-        { x: 0, y: 4, z: 0 },
-      ],
+      points: createCircleChordPoints({
+        radius: 4,
+        startDegrees: 0,
+        sweepDegrees: 90,
+      }),
       color: getColor("LIME"),
       showPoints: false,
       smooth: false,
@@ -611,29 +439,17 @@ Let's see how a segment is formed from its components:
         },
       ],
     },
-    {
-      points: Array.from({ length: 46 }, (_, i) => {
-        const startAngle = 0;
-        const endAngle = Math.PI / 2;
-        const angle = startAngle + (i * (endAngle - startAngle)) / 45;
-        return {
-          x: 4 * Math.cos(angle),
-          y: 4 * Math.sin(angle),
-          z: 0,
-        };
-      }),
+    createCircleArcLine({
       color: getColor("FUCHSIA"),
-      showPoints: false,
-      smooth: true,
       lineWidth: 4,
-      labels: [
-        {
-          text: "Arc AB (90°)",
-          at: 23,
-          offset: [2, 0.5, 0],
-        },
-      ],
-    },
+      label: {
+        text: "Arc AB (90°)",
+        offset: [2, 0.5, 0],
+      },
+      radius: 4,
+      startDegrees: 0,
+      sweepDegrees: 90,
+    }),
   ]}
 />
 

@@ -6,8 +6,12 @@ export const metadata = {
   subject: "Busur dan Juring Lingkaran",
 };
 
-import { getColor } from "@repo/design-system/lib/color";
+import {
+  createCircleChordPoints,
+  createCircleOutlinePoints,
+} from "@repo/design-system/components/contents/mathematics/circle";
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
+import { getColor } from "@repo/design-system/lib/color";
 
 ## Pengertian Tali Busur
 
@@ -22,24 +26,18 @@ Tali busur memiliki karakteristik khusus dalam lingkaran. Semakin jauh tali busu
   showZAxis={false}
   data={[
     {
-      points: Array.from({ length: 37 }, (_, i) => {
-        const angle = (i * 2 * Math.PI) / 36;
-        return {
-          x: 4 * Math.cos(angle),
-          y: 4 * Math.sin(angle),
-          z: 0
-        };
-      }),
+      points: createCircleOutlinePoints(4),
       color: getColor("CYAN"),
       smooth: true,
       showPoints: false,
-      labels: [{ text: "Lingkaran", at: 9, offset: [1, 0.5, 0] }]
+      labels: [{ text: "Lingkaran", at: 25, offset: [1, 0.5, 0] }]
     },
     {
-      points: [
-        { x: 4 * Math.cos(Math.PI / 6), y: 4 * Math.sin(Math.PI / 6), z: 0 },
-        { x: 4 * Math.cos(5 * Math.PI / 6), y: 4 * Math.sin(5 * Math.PI / 6), z: 0 }
-      ],
+      points: createCircleChordPoints({
+        radius: 4,
+        startDegrees: 30,
+        sweepDegrees: 120,
+      }),
       color: getColor("ORANGE"),
       smooth: false,
       showPoints: true,
@@ -49,10 +47,11 @@ Tali busur memiliki karakteristik khusus dalam lingkaran. Semakin jauh tali busu
       ]
     },
     {
-      points: [
-        { x: 4 * Math.cos(Math.PI / 3), y: 4 * Math.sin(Math.PI / 3), z: 0 },
-        { x: 4 * Math.cos(4 * Math.PI / 3), y: 4 * Math.sin(4 * Math.PI / 3), z: 0 }
-      ],
+      points: createCircleChordPoints({
+        radius: 4,
+        startDegrees: 60,
+        sweepDegrees: 180,
+      }),
       color: getColor("PURPLE"),
       smooth: false,
       showPoints: true,
@@ -111,14 +110,7 @@ Rumus ini menunjukkan bahwa ketika <InlineMath math="d = 0" /> (tali busur melal
   showZAxis={false}
   data={[
     {
-      points: Array.from({ length: 37 }, (_, i) => {
-        const angle = (i * 2 * Math.PI) / 36;
-        return {
-          x: 3 * Math.cos(angle),
-          y: 3 * Math.sin(angle),
-          z: 0
-        };
-      }),
+      points: createCircleOutlinePoints(3),
       color: getColor("CYAN"),
       smooth: true,
       showPoints: false
