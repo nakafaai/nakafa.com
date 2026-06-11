@@ -1,60 +1,11 @@
-import { Effect } from "effect";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
-const { mockGetFolderChildNames, mockGetMDXSlugsForLocale } = vi.hoisted(
-  () => ({
-    mockGetFolderChildNames: vi.fn(),
-    mockGetMDXSlugsForLocale: vi.fn(),
-  })
-);
-
-vi.mock("@repo/contents/_lib/mdx-slugs/cache", () => ({
-  getMdxSlugsForLocale: (locale: string) =>
-    Effect.succeed(mockGetMDXSlugsForLocale(locale)),
-}));
-
-vi.mock("@repo/contents/_lib/fs/cache", () => ({
-  getFolderChildNames: mockGetFolderChildNames,
-}));
-
 import {
-  getExerciseCount,
   getExerciseQuestionNumbers,
   getExerciseSetPathsFromSlugs,
 } from "@repo/contents/_lib/exercises/collection";
+import { describe, expect, it } from "vitest";
 
 const exerciseBasePath =
   "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1";
-
-beforeEach(() => {
-  mockGetMDXSlugsForLocale.mockReturnValue([]);
-  mockGetFolderChildNames.mockReturnValue(Effect.succeed([]));
-});
-
-afterEach(() => {
-  vi.clearAllMocks();
-});
-
-describe("getExerciseCount", () => {
-  it("counts only numeric child directories", async () => {
-    mockGetFolderChildNames.mockReturnValue(
-      Effect.succeed(["1", "draft", "2", "03", "notes"])
-    );
-
-    const result = await Effect.runPromise(getExerciseCount(exerciseBasePath));
-
-    expect(result).toBe(3);
-    expect(mockGetFolderChildNames).toHaveBeenCalledWith(exerciseBasePath);
-  });
-
-  it("returns zero when child directory lookup fails", async () => {
-    mockGetFolderChildNames.mockReturnValue(Effect.fail(new Error("missing")));
-
-    const result = await Effect.runPromise(getExerciseCount(exerciseBasePath));
-
-    expect(result).toBe(0);
-  });
-});
 
 describe("getExerciseQuestionNumbers", () => {
   it("collects direct exercise numbers from a set path", () => {
@@ -127,6 +78,5 @@ describe("getExerciseSetPathsFromSlugs", () => {
     ]);
 
     expect(result).toStrictEqual([exerciseBasePath]);
-    expect(mockGetMDXSlugsForLocale).not.toHaveBeenCalled();
   });
 });

@@ -1,6 +1,5 @@
-import { getFolderChildNames } from "@repo/contents/_lib/fs/cache";
 import { cleanSlug } from "@repo/utilities/helper";
-import { Effect, Option } from "effect";
+import { Option } from "effect";
 
 const NUMBER_REGEX = /^\d+$/;
 const EXERCISE_CONTENT_SEGMENTS = new Set(["_question", "_answer"]);
@@ -13,23 +12,6 @@ const EXERCISE_CONTENT_SEGMENTS = new Set(["_question", "_answer"]);
  */
 function isExerciseContentSegment(value: string) {
   return EXERCISE_CONTENT_SEGMENTS.has(value);
-}
-
-/**
- * Counts the numbered exercise folders that exist under one exercise set path.
- *
- * @param filePath - Exercise set path relative to `packages/contents`
- * @returns Effect that resolves to the number of exercise folders in the set
- */
-export function getExerciseCount(filePath: string) {
-  return Effect.gen(function* () {
-    const cleanPath = cleanSlug(filePath);
-    const childNames = yield* getFolderChildNames(cleanPath).pipe(
-      Effect.orElse(() => Effect.succeed([]))
-    );
-
-    return childNames.filter((name) => NUMBER_REGEX.test(name)).length;
-  });
 }
 
 /**
