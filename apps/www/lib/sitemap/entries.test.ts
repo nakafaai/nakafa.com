@@ -7,6 +7,7 @@ import { getEntries, getSitemapEntries, getUrl } from "@/lib/sitemap/entries";
 const mockGetRuntimeContentRoute = vi.hoisted(() => vi.fn());
 const mockGetSitemapRoutes = vi.hoisted(() => vi.fn());
 const mockGetSitemapPageDescriptor = vi.hoisted(() => vi.fn());
+const mockGetSitemapPageDescriptorsEffect = vi.hoisted(() => vi.fn());
 const mockGetPathname = vi.hoisted(() =>
   vi.fn<typeof getPathname>(({ href, locale }) => {
     const pathname = typeof href === "string" ? href : href.pathname;
@@ -42,6 +43,7 @@ vi.mock("@/lib/sitemap/routes", () => ({
     "/privacy-policy",
     "/security-policy",
   ],
+  getSitemapPageDescriptorsEffect: mockGetSitemapPageDescriptorsEffect,
   getSitemapPageDescriptor: mockGetSitemapPageDescriptor,
   getSitemapRoutes: mockGetSitemapRoutes,
 }));
@@ -50,6 +52,7 @@ beforeEach(() => {
   mockGetRuntimeContentRoute.mockReset();
   mockGetSitemapRoutes.mockReset();
   mockGetSitemapPageDescriptor.mockReset();
+  mockGetSitemapPageDescriptorsEffect.mockReset();
   mockGetPathname.mockClear();
 
   mockGetRuntimeContentRoute.mockReturnValue(
@@ -58,6 +61,9 @@ beforeEach(() => {
     })
   );
   mockGetSitemapPageDescriptor.mockReturnValue({ id: "base" });
+  mockGetSitemapPageDescriptorsEffect.mockReturnValue(
+    Effect.succeed([{ id: "base" }])
+  );
   mockGetSitemapRoutes.mockResolvedValue([
     "/",
     "/search",
@@ -231,6 +237,49 @@ describe("sitemap entries", () => {
     expect(urls).not.toContain("https://nakafa.com/en/about");
     expect(urls).not.toContain("https://nakafa.com/id/about");
     expect(urls).toContain("https://nakafa.com/id/subject/high-school/10");
+  });
+
+  it("generates unbounded submission entries across every sitemap page", async () => {
+    mockGetSitemapPageDescriptorsEffect.mockReturnValueOnce(
+      Effect.succeed([
+        { id: "base" },
+        {
+          id: "content_id_subject_0",
+          locale: "id",
+          page: 0,
+          section: "subject",
+        },
+      ])
+    );
+    mockGetSitemapPageDescriptor.mockImplementation((pageId) => {
+      if (pageId === "content_id_subject_0") {
+        return {
+          id: "content_id_subject_0",
+          locale: "id",
+          page: 0,
+          section: "subject",
+        };
+      }
+
+      return { id: "base" };
+    });
+    mockGetSitemapRoutes.mockImplementation((pageId) => {
+      if (pageId === "content_id_subject_0") {
+        return Promise.resolve(["/subject/high-school/10"]);
+      }
+
+      return Promise.resolve(["/search"]);
+    });
+
+    const entries = await Effect.runPromise(getSitemapEntries());
+
+    expect(entries.map((entry) => entry.url)).toEqual([
+      "https://nakafa.com/en/search",
+      "https://nakafa.com/id/search",
+      "https://nakafa.com/id/subject/high-school/10",
+    ]);
+    expect(mockGetSitemapRoutes).toHaveBeenCalledWith("base");
+    expect(mockGetSitemapRoutes).toHaveBeenCalledWith("content_id_subject_0");
   });
 
   it("keeps English content sitemap pages scoped to English URLs", async () => {

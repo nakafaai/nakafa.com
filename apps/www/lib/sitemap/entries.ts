@@ -8,6 +8,7 @@ import {
   baseRoutes,
   type ContentSitemapPage,
   getSitemapPageDescriptor,
+  getSitemapPageDescriptorsEffect,
   getSitemapRoutes,
 } from "@/lib/sitemap/routes";
 
@@ -133,25 +134,48 @@ export function getUrl(href: Href, locale: Locale, domain?: string): string {
 /** Generates sitemap entries ready for Next metadata output or URL submission. */
 export const getSitemapEntries = Effect.fn("www.sitemap.entries.all")(
   function* (options: SitemapEntryOptions = {}) {
-    const routes = yield* Effect.promise(() =>
-      getSitemapRoutes(options.pageId)
-    );
-    const locales = getSitemapEntryLocales(options.pageId);
-    const routeArrays = yield* Effect.forEach(
-      routes,
-      (route) =>
-        getEntries(route, {
+    if (options.pageId !== undefined) {
+      return yield* getSitemapPageEntries(options);
+    }
+
+    const descriptors = yield* getSitemapPageDescriptorsEffect();
+    const pageEntries = yield* Effect.forEach(
+      descriptors,
+      (descriptor) =>
+        getSitemapPageEntries({
           ...options,
-          locales,
+          pageId: descriptor.id,
         }),
       {
         concurrency: "unbounded",
       }
     );
 
-    return routeArrays.flat();
+    return pageEntries.flat();
   }
 );
+
+/** Generates entries for one bounded sitemap page. */
+const getSitemapPageEntries = Effect.fn("www.sitemap.entries.page")(function* (
+  options: SitemapEntryOptions
+) {
+  const pageId = options.pageId;
+  const routes = yield* Effect.promise(() => getSitemapRoutes(pageId));
+  const locales = getSitemapEntryLocales(pageId);
+  const routeArrays = yield* Effect.forEach(
+    routes,
+    (route) =>
+      getEntries(route, {
+        ...options,
+        locales,
+      }),
+    {
+      concurrency: "unbounded",
+    }
+  );
+
+  return routeArrays.flat();
+});
 
 /** Selects all locales for base pages and one locale for content pages. */
 function getSitemapEntryLocales(pageId: string | undefined): readonly Locale[] {
