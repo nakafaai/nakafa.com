@@ -25,9 +25,12 @@ from shared import (
     SCREEN_TEMPLATES,
     TEMPLATES,
     TOKENS_FILE,
-    load_cross_template_allowlist,
 )
 from tokens import CSS_VAR, ROOT_BLOCK
+
+# Font-stack vars legitimately differ between a base template and its locale
+# variants (-en, -ko); every other :root var must match across the pair.
+CROSS_TEMPLATE_ALLOWED_VARS = {"--serif", "--sans", "--mono", "--latin-ui"}
 
 RGBA_BG_DIRECT = re.compile(r"background(?:-color)?\s*:\s*[^;]*rgba\s*\(", re.IGNORECASE)
 RGBA_VAR_DEF = re.compile(r"--([\w-]+)\s*:\s*[^;]*rgba\s*\(", re.IGNORECASE)
@@ -327,10 +330,6 @@ def _extract_root_vars(html_path: Path) -> dict[str, str]:
 
 
 def check_cross_template_consistency(verbose: bool = False) -> int:
-    allowlist = load_cross_template_allowlist()
-    always_allowed = set(allowlist.get("always_allowed", []))
-    per_pair = allowlist.get("per_pair_allowed", {}) or {}
-
     pairs = _pair_names()
     drift: list[tuple[str, str, str, str]] = []  # (pair, var, base_value, variant_value)
 
@@ -345,11 +344,10 @@ def check_cross_template_consistency(verbose: bool = False) -> int:
 
         base_vars = _extract_root_vars(base_path)
         variant_vars = _extract_root_vars(variant_path)
-        allowed_for_pair = always_allowed | set(per_pair.get(base_name, []) or [])
 
         shared_keys = set(base_vars) & set(variant_vars)
         for key in sorted(shared_keys):
-            if key in allowed_for_pair:
+            if key in CROSS_TEMPLATE_ALLOWED_VARS:
                 continue
             if base_vars[key].lower() != variant_vars[key].lower():
                 drift.append((base_name, key, base_vars[key], variant_vars[key]))

@@ -58,9 +58,10 @@ jobs:
         run: python3 -m pip install weasyprint pypdf Pygments
 
       - name: Verify strict page-count targets
-        # Only the four hard-invariant templates (resume == 2, one-pager == 1)
-        # run in CI. The long-doc / portfolio / slides ceilings are soft and
-        # rely on the stabilizer; the next step exercises that path.
+        # Only the six hard-invariant templates (resume == 2, one-pager == 1
+        # across CN/EN/KO) run in CI. The KO pair also exercises the Korean
+        # render path on Linux (fonts-noto-cjk supplies the glyphs). The
+        # long-doc / portfolio / slides ceilings are soft and checked visually.
         # KAMI_ALLOW_FALLBACK_ONLY=1: CI does not ship commercial fonts
         # (TsangerJinKai02, Charter). Treat fallback-only embedding as a
         # warning instead of a failure so CI can still gate page counts.
@@ -69,13 +70,7 @@ jobs:
         run: |
           python3 scripts/build.py --verify one-pager
           python3 scripts/build.py --verify one-pager-en
+          python3 scripts/build.py --verify one-pager-ko
           python3 scripts/build.py --verify resume
           python3 scripts/build.py --verify resume-en
-
-      - name: Stabilize end-to-end (smoke)
-        # Runs the solver across every stabilize_max > 0 target. Non-strict
-        # because CI uses Noto CJK fallback (not TsangerJinKai02) and Noto's
-        # different glyph widths can change page count by +/- 1, which the
-        # solver should handle but should not gate CI on. A solver crash
-        # still fails the build.
-        run: python3 scripts/stabilize.py all --report
+          python3 scripts/build.py --verify resume-ko

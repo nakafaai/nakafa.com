@@ -15,10 +15,8 @@ Kami is a document-generation skill and template system. It ships editorial HTML
 - `references/design.md`, `writing.md`, `production.md`, `diagrams.md` - full specs.
 - `references/resume-writing.md` - resume-specific bullet/project framing rules.
 - `references/anti-patterns.md` - six-category checklist for reviewing drafts.
-- `references/tokens.json` and `references/stabilizer_profiles.json` - canonical tokens and HTML stabilization profiles.
+- `references/tokens.json` - canonical color tokens (drift-checked by `scripts/tokens.py`).
 - `references/checks_thresholds.json` - rhythm / density / orphan check thresholds (loaded by `scripts/checks.py`).
-- `references/cool_gray_buckets.json` - luminance buckets and replacement colors used by `stabilize.py` cool-gray normalization.
-- `references/cross_template_diff_allowlist.json` - CSS variables that may legitimately differ between paired CN and EN templates (font stacks).
 - `references/brand-profile.md` and `references/brand.example.md` - optional brand profile behavior and public example.
 - `.claude-plugin/marketplace.json` - Claude Code plugin marketplace metadata.
 - `assets/templates/` - document templates including browser-only landing page variants.
@@ -37,12 +35,11 @@ Kami is a document-generation skill and template system. It ships editorial HTML
 - `scripts/tokens.py` - `tokens.json` drift check across HTML templates and PPTX slide scripts.
 - `scripts/checks.py` - PDF-side checks: placeholders, orphans, density, slide-deck rhythm.
 - `scripts/optional_deps.py` - centralized loader for weasyprint / pypdf / PyMuPDF with consistent install hints.
-- `scripts/shared.py` - shared constants and the canonical `HTML_TEMPLATES` registry used by build and stabilize scripts.
+- `scripts/shared.py` - shared constants and the canonical `HTML_TEMPLATES` registry used by the build scripts.
 - `scripts/ensure-fonts.sh` - verified font recovery helper (portable across bash 3.2+).
-- `scripts/stabilize.py` - deterministic HTML template normalization and overflow solving.
 - `scripts/package-skill.sh` - package builder for the release archive.
 - `scripts/draft-release-notes.py` - bilingual release notes scaffold from `git log`.
-- `scripts/tests/test_build.py` - zero-dependency test suite for build, stabilize, and shared helpers.
+- `scripts/tests/test_build.py` - zero-dependency test suite for build and shared helpers.
 - `.github/workflows/check.yml` - PR/push CI that runs `--check` and the test suite.
 - `.github/workflows/release.yml` - tag-triggered workflow that builds and attaches `dist/kami.zip` to the release.
 - `dist/kami.zip` - tracked release archive.
@@ -59,8 +56,6 @@ python3 scripts/build.py --check-placeholders path/to/filled.html
 python3 scripts/build.py --check-orphans path/to/doc.pdf
 python3 scripts/build.py --check-density path/to/doc.pdf
 python3 scripts/build.py --check-rhythm slides slides-en
-python3 scripts/stabilize.py all --report
-python3 scripts/stabilize.py one-pager --write --strict --report
 python3 scripts/tests/test_build.py
 python3 scripts/draft-release-notes.py V1.4.0..HEAD --version V1.4.1 --title "Steadier Hand"
 bash scripts/ensure-fonts.sh
@@ -70,25 +65,25 @@ bash scripts/package-skill.sh
 ## Working Rules
 
 - Style changes must update `references/design.md` and the matching template tokens.
+- Landing or documentation-site work follows `references/design.md` Section 11: «Documentation site» for the doc shell (sidebar rail, on-this-page TOC, borderless prev/next pager, build-time zero-JS code highlighting) and «Responsive screenshot verification» (screenshot at 375px / 1280px per locale, objective line-widow scan) before shipping.
 - Content changes should avoid CSS churn unless layout behavior is part of the task.
 - For document or template tasks, lock the output contract before editing: language, template, output format, page or length target, visual acceptance check, and verification command.
-- Prefer the nearest existing template and deterministic verifier. Do not add a template, stabilizer profile, shared CSS layer, dependency, script flag, or optional mode unless the current request cannot be satisfied without it.
+- Prefer the nearest existing template and deterministic verifier. Do not add a template, shared CSS layer, dependency, script flag, or optional mode unless the current request cannot be satisfied without it.
 - New templates should copy the nearest existing template, stay aligned with `references/design.md`, and add demo coverage.
-- Stabilizer changes should update `references/stabilizer_profiles.json` with deterministic, target-specific rules rather than hard-coded one-off behavior.
 - Do not use graphic emoticons in docs, template comments, or script output.
 - Use `OK:` and `ERROR:` for status text in scripts.
-- Use `scripts/ensure-fonts.sh` to recover required fonts with retry and size validation when local font files are missing or truncated. It downloads to the XDG user font dir (`${XDG_DATA_HOME:-~/.local/share}/fonts/kami`), never into the skill's `assets/fonts`, so an installed Claude Desktop skill stays small; inside a repo checkout it is a no-op because the committed TTFs already satisfy the templates' relative path.
-- Do not bundle large commercial font files into `dist/kami.zip`; package scripts should exclude them while templates keep stable local-preview paths. The skill ZIP uploaded to Claude Desktop must be the `scripts/package-skill.sh` output (~4.3MB); a hand-zipped checkout includes the tracked ~36MB TTFs and Claude Desktop rejects it.
+- Use `scripts/ensure-fonts.sh` to recover required fonts with retry and size validation when local font files are missing or truncated. It downloads to the XDG user font dir (`${XDG_DATA_HOME:-~/.local/share}/fonts/kami`), never into the skill's `assets/fonts`, so an installed Claude Desktop skill stays small; inside a repo checkout it is a no-op because the committed large fonts already satisfy the templates' relative path.
+- Do not bundle large CJK font files into `dist/kami.zip`; package scripts should exclude them while templates keep stable local-preview paths. The skill ZIP uploaded to Claude Desktop must be the `scripts/package-skill.sh` output under the 6MB package ceiling; a hand-zipped checkout includes the tracked large fonts and Claude Desktop rejects it.
 - Do not bundle README/public-site-only showcase screenshots into `dist/kami.zip`; keep them under `assets/showcase/` and exclude that directory in `scripts/package-skill.sh`.
 - Keep multilingual public pages, `llms.txt`, `robots.txt`, sitemap, JSON-LD, and FAQ content aligned when changing public positioning or install instructions.
 - Brand profile support is optional context. Keep public examples in `references/`; do not hard-code a maintainer's private local profile content.
 - Slides default to WeasyPrint HTML-to-PDF templates unless the user explicitly needs editable PPTX output.
 - Templates intentionally inline their CSS rather than share a `_kami.css` partial: each template must remain a single self-contained HTML file so users can copy-paste it without a build step. When fixing CSS drift, apply the same change across affected templates rather than introducing a build-time include.
-- The canonical `HTML_TEMPLATES` registry lives in `scripts/shared.py`; `build.py` and `stabilize.py` derive their target dicts from it. Update the registry, not the per-script dicts, when adding or removing templates.
+- The canonical `HTML_TEMPLATES` registry lives in `scripts/shared.py`; `build.py` derives its target dicts from it. Update the registry, not the per-script dicts, when adding or removing templates.
 
 ## Refactor And Packaging Hard Stops
 
-- When refactoring `scripts/build.py`, `scripts/stabilize.py`, or package helpers into new modules, confirm every new helper file is tracked by Git. `scripts/package-skill.sh` packages from `git ls-files`, so untracked modules pass local imports but disappear from `dist/kami.zip`.
+- When refactoring `scripts/build.py` or package helpers into new modules, confirm every new helper file is tracked by Git. `scripts/package-skill.sh` packages from `git ls-files`, so untracked modules pass local imports but disappear from `dist/kami.zip`.
 - Any source change that adds scripts, templates, reference JSON, workflows, or package inputs must refresh and inspect `dist/kami.zip`; package freshness is part of release readiness, not a later cleanup step.
 - Changes to `SKILL.md`, templates, scripts, references, or package inputs must decide explicitly whether `dist/kami.zip` needs refresh. If the behavior is shipped through the skill package, rebuild and inspect the ZIP before handoff.
 - If `python3 scripts/build.py --verify` fails only because the host Python lacks PPTX fallback dependencies such as `python-pptx`, verify `slides` and `slides-en` from a temporary venv instead of treating the environment miss as a source regression.
@@ -104,11 +99,10 @@ bash scripts/package-skill.sh
 
 - WeasyPrint rendering is sensitive to font availability, solid hex tag backgrounds, page breaks, CJK fallback, and synthetic bold. Verify visually for template changes.
 - Slide output has three paths: `slides-weasy*.html` for default PDF decks, `slides*.py` for editable PPTX fallback, and `assets/templates/marp/slides-marp*.{md,css}` for Markdown-first Marp decks.
-- Marp theme CSS (`assets/templates/marp/slides-marp.css` and `-en`) inlines a full copy of the design tokens (`--parchment`, `--brand`, `--serif`, rhythm modules) because Marp themes must be self-contained. `build.py --sync` / `--check` only scan `.html` templates and `*.py` slide scripts, not the `marp/` directory, so token changes in `references/design.md` / `tokens.json` must be hand-synced into the Marp themes or the decks silently drift.
+- Marp theme CSS (`assets/templates/marp/slides-marp.css` and `-en`) inlines a full copy of the design tokens (`--parchment`, `--brand`, `--serif`, rhythm modules) because Marp themes must be self-contained. `build.py --sync` / `--check` now token-sync the `marp/*.css` files (`tokens.py` globs them), so token-value drift from `references/design.md` / `tokens.json` is caught, not silent. The remaining gap: the CSS lint and off-palette guard still scan only `.html` templates, so non-token CSS in the Marp themes (new rules, off-palette colors) is not lint-checked, review those by hand.
 - AI/public visibility spans `index*.html`, `llms.txt`, `robots.txt`, `sitemap.xml`, FAQ JSON-LD, README install text, diagram counts, and release archive links.
-- `scripts/shared.py` centralizes constants used by build and stabilization scripts; keep paths and target names in sync before adding templates or diagrams.
+- `scripts/shared.py` centralizes constants used by the build scripts; keep paths and target names in sync before adding templates or diagrams.
 - `dist/kami.zip` is a tracked release archive. Packaging changes must update and inspect it deliberately.
-- `stabilize.py` only targets templates with `stabilize_max_pages > 0` in `HTML_TEMPLATES`. The `slides-weasy`, `equity-report`, `changelog`, and `landing-page` templates are intentionally excluded: the overflow solver is not appropriate for multi-page decks, paginated reports, or browser-only screen templates.
 
 ## High-Risk Pitfalls
 
@@ -154,7 +148,6 @@ magick /tmp/stacked.png -gravity Center -background '#f5f4ed' -extent 1241x1754 
 ## Verification
 
 - Template, CSS, or script changes: run `python3 scripts/build.py --check` (CSS lint + token sync + base/variant cross-template `:root` consistency, currently CN↔EN and CN↔KO) and `python3 scripts/build.py --verify`.
-- HTML stabilization changes: run `python3 scripts/stabilize.py all --report` and inspect generated files under `dist/stabilized/` or the requested output directory.
 - Demo changes: regenerate the affected demo outputs and confirm page counts stay in range.
 - Font issues: run `bash scripts/ensure-fonts.sh`, then rebuild the affected target.
 - Slide rhythm or deck changes: run `python3 scripts/build.py --check-rhythm slides slides-en` plus the affected render command.
@@ -168,15 +161,15 @@ For public releases, keep notes concise and bilingual when requested. Use one-to
 
 ## Release Flow
 
-- `bash scripts/package-skill.sh` writes the tracked `dist/kami.zip` release archive and excludes large TsangerJinKai font files plus README/public-site-only showcase screenshots.
+- `bash scripts/package-skill.sh` writes the tracked `dist/kami.zip` release archive and excludes large TsangerJinKai / Source Han Serif K font files plus README/public-site-only showcase screenshots.
 - `dist/kami.zip` should be committed with release changes and uploaded to the latest GitHub release asset when refreshing the Claude Desktop package.
 - README and public site download links use `https://github.com/tw93/kami/releases/latest/download/kami.zip`; prefer refreshing that asset for small packaging or documentation fixes instead of creating a new tag.
-- Create a new version tag only when the maintainer explicitly wants a versioned release.
+- Create a new version tag only when the maintainer explicitly wants a versioned release. Tag the commit that already contains the final refreshed `dist/kami.zip`; do not tag a source-only commit and refresh the archive afterward.
 
 ## Fonts
 
 - Chinese templates use TsangerJinKai02 W04/W05. Commercial use requires the appropriate font license.
 - If TsangerJinKai is unavailable, fall back through Source Han Serif SC, Noto Serif CJK SC, Songti SC, STSong, then Georgia.
 - English templates use Charter serif. Japanese output uses YuMincho first, then Hiragino Mincho ProN, Noto Serif CJK JP, Source Han Serif JP, TsangerJinKai02, and generic serif.
-- Korean templates use Source Han Serif K (Adobe, also distributed as Noto Serif KR by Google). Fallback chain: Source Han Serif K, Noto Serif KR, Apple SD Gothic Neo, AppleMyungjo, Charter, Georgia.
+- Korean templates use Source Han Serif K (Adobe, also distributed as Noto Serif KR by Google). Fallback chain: Source Han Serif K, Source Han Serif KR, Noto Serif KR, Apple SD Gothic Neo, AppleMyungjo, Charter, Georgia. `Source Han Serif KR` is the actual family name inside the bundled OTFs and must stay in the chain so fontconfig can resolve the `ensure-fonts.sh`-downloaded font by name on an offline Linux skill install.
 - Claude Desktop ZIPs do not bundle TsangerJinKai TTF or Source Han Serif K OTF files (the OTFs are OFL-licensed and git-tracked for the CDN `@font-face` fallback, but excluded from the package to keep it small). Run `bash scripts/ensure-fonts.sh` before building Chinese or Korean documents when fonts are missing; it drops them in the XDG user font dir (fontconfig-scanned, outside the skill), so the installed skill stays small and online renders still use the jsDelivr `@font-face` fallback.

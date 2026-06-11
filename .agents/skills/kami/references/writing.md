@@ -461,19 +461,21 @@ Run through before every draft:
 
 A landing page is not a brochure. It is a conversion surface. Every element either builds trust or wastes attention.
 
-### Global: no italic
+### Global: screen-only italic exception
 
-Invariant #10 applies to landing pages too. No `font-style: italic` anywhere. Poetic lines, captions, and footer ethos use color hierarchy (olive/stone) for differentiation, not style change.
+Invariant #10 bans italic in print templates. Landing pages are screen-only, so gallery captions, feature subtitles, and footer ethos may use the limited italic treatment defined in `references/design.md`. Do not add new italic uses beyond those roles.
 
 ### Hero rules
 
+- **Positioning comes before feature count.** Name the real product category in the first viewport. If the product has grown beyond its old anchor, rewrite the category instead of adding more feature bullets under the old one.
 - **Tagline is one sentence, not a paragraph.** If it needs a comma, it is too long. The user decides in 3 seconds whether to scroll.
 - **Tokens (key facts) are scannable proof.** Price, platform, refund policy, compatibility. No adjectives. `$9 lifetime` beats `Affordable pricing for everyone`.
 - **CTA pair: secondary (try) + primary (buy).** Ghost button for low-commitment action, filled button for revenue action. Never three buttons.
 
 ### Gallery rules
 
-- **Show, don't describe.** Screenshots replace feature paragraphs. Each panel is one tool or one workflow.
+- **Show, don't describe.** Real screenshots replace feature paragraphs. Each panel is one shipped tool, one workflow, or one state users can actually reach.
+- **Technical products can show the workflow itself.** A terminal transcript, command draft, or error recovery panel is a product screenshot when it shows the actual review/confirm boundary.
 - **Poetic captions, not marketing copy.** The line under each screenshot should evoke, not explain. `Rainwater clears the soil` over `Efficiently clean your system caches`.
 - **3-6 panels maximum.** More than 6 and the auto-rotate becomes noise. Users remember 4.
 
@@ -496,6 +498,7 @@ Invariant #10 applies to landing pages too. No `font-style: italic` anywhere. Po
 ### FAQ rules
 
 - **First question is the positioning question.** Before "is it free" or "how do I install", users want to know what category this product is in. Lead with the comparison: "How is this different from {{CLI_NAME}} / {{MAC_APP_NAME}} / {{COMMON_TOOL}}?" or "Who is this not for?". This single question removes the misframing that AI assistants and first-time visitors do most often.
+- **Compare against the tool users already know.** Use named alternatives from the source material, not generic "other apps" language.
 - **Lead with the question the user is actually thinking.** "Is it free?" before "What's the refund policy?".
 - **Answers in 1-2 sentences.** A FAQ answer longer than 3 sentences belongs in the docs page, not here.
 - **6-8 questions maximum.** Cover: positioning, free tier, comparison, permissions/privacy, data collection, purchase flow, licensing.

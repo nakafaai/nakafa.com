@@ -61,13 +61,18 @@ font-family: "TsangerJinKai02", "Source Han Serif SC",
 font-family: "YuMincho", "Yu Mincho", "Hiragino Mincho ProN",
              "Noto Serif CJK JP", "Source Han Serif JP",
              "TsangerJinKai02", Georgia, serif;
+
+/* Korean */
+font-family: "Source Han Serif K", "Source Han Serif KR",
+             "Noto Serif KR", "Apple SD Gothic Neo", AppleMyungjo,
+             Charter, Georgia, serif;
 ```
 
 **Font fallback affects page count**. Any font swap requires re-running the page-count check. If it overflows: lower `font-size` first, then tighten margins, then cut content.
 
-**Claude Desktop skill ZIPs do not bundle large Chinese font files**: `TsangerJinKai02-W04.ttf` and `TsangerJinKai02-W05.ttf` are close to 19MB each and can make Claude.ai / Desktop skill upload or execution time out. The ZIP you upload must be the `scripts/package-skill.sh` output (~4.3MB), never a hand-zipped checkout (the tracked TTFs make that ~40MB and Claude Desktop rejects it). `package-skill.sh` excludes both TTF files. Templates still keep local-first and jsDelivr fallback `@font-face` paths.
+**Claude Desktop skill ZIPs do not bundle large CJK font files**: `TsangerJinKai02-W04.ttf`, `TsangerJinKai02-W05.ttf`, `SourceHanSerifKR-Regular.otf`, and `SourceHanSerifKR-Medium.otf` can make Claude.ai / Desktop skill upload or execution time out. The ZIP you upload must be the `scripts/package-skill.sh` output under the 6MB package ceiling, never a hand-zipped checkout. `package-skill.sh` excludes those large font files. Templates still keep local-first and jsDelivr fallback `@font-face` paths.
 
-When Chinese fonts are missing (the skill case), `scripts/ensure-fonts.sh` downloads them to the XDG user font dir (`${XDG_DATA_HOME:-~/.local/share}/fonts/kami`, override with `KAMI_FONT_DIR`), **not** into the skill's `assets/fonts`. fontconfig scans that dir by default on macOS and Linux, so WeasyPrint resolves `TsangerJinKai02` from there while the installed skill stays small; online renders still use the jsDelivr `@font-face` URL.
+When Chinese or Korean fonts are missing (the skill case), `scripts/ensure-fonts.sh` downloads them to the XDG user font dir (`${XDG_DATA_HOME:-~/.local/share}/fonts/kami`, override with `KAMI_FONT_DIR`), **not** into the skill's `assets/fonts`. fontconfig scans that dir by default on macOS and Linux, so WeasyPrint resolves `TsangerJinKai02` and `Source Han Serif K` from there while the installed skill stays small; online renders still use the jsDelivr `@font-face` URL.
 
 **Standalone HTML export** (sending a filled HTML file to someone else): this is not guaranteed to work outside the project tree. If the recipient cannot set up the font environment, use the PDF output instead.
 
@@ -215,6 +220,10 @@ English stack on PowerPoint:
 8. **Quote**: parchment, minimal, centered serif quote + `- Source`
 9. **Closing**: parchment, centered "Thank you / Q&A / Contact"
 
+### Template-bound PPTX inventory
+
+Use this only when the user provides a real PPTX or brand template and explicitly asks to preserve its layout system. First inspect the template visually, identify the few reusable layout families, and map each planned section to one existing slide family. Then edit content while preserving the template's shape structure. Do not run this inventory step for Kami's default WeasyPrint or Marp paths; those already have fixed template contracts.
+
 ### Script skeleton
 
 Full working example in `assets/templates/slides-en.py`. Key bits:
@@ -280,7 +289,7 @@ Marp is the third rendering path, used only when the user explicitly asks for Ma
 
 ### Install
 
-Use the `npx @marp-team/marp-cli@latest ...` form below for zero-install. For repeat use, install via `npm i -g @marp-team/marp-cli` or `brew install marp-cli` (see [marp-cli docs](https://github.com/marp-team/marp-cli)). Kami's build pipeline (`build.py` / `stabilize.py` / `package-skill.sh`) does not call `marp`.
+Use the `npx @marp-team/marp-cli@latest ...` form below for zero-install. For repeat use, install via `npm i -g @marp-team/marp-cli` or `brew install marp-cli` (see [marp-cli docs](https://github.com/marp-team/marp-cli)). Kami's build pipeline (`build.py` / `package-skill.sh`) does not call `marp`.
 
 ### Files
 
@@ -380,18 +389,14 @@ python3 scripts/build.py --check       # scan for CSS rule violations
 python3 scripts/build.py --check-density       # warn on pages with >25% trailing whitespace
 ```
 
-### Layout stabilizer (HTML templates)
+### Page overflow (constrained templates)
 
-When a constrained template is near page overflow (one-pager, letter, resume, and English variants), run the stabilizer first, then verify:
+When a constrained template (one-pager, letter, resume, and their variants) runs over its page ceiling, fix it by editing content, not by shrinking type: cut or merge body copy until it fits, since tiny font / line-height / margin changes break the layout (see High-Risk Pitfalls). Then verify:
 
 ```bash
-python3 scripts/stabilize.py all --out-dir dist/stabilized --report
-python3 scripts/stabilize.py one-pager letter resume one-pager-en letter-en resume-en --strict --report
 python3 scripts/build.py --check
 python3 scripts/build.py --verify
 ```
-
-`scripts/stabilize.py` is intentionally independent from `scripts/build.py`. Thresholds and solver behavior are controlled by `references/stabilizer_profiles.json`.
 
 ### Hi-res visual inspection
 
@@ -414,6 +419,23 @@ A successful render is not enough. Scan these before delivery:
 | PDF readiness | Page count fits, placeholders are replaced, visual inspection shows no overflow, overlap, or broken page breaks |
 
 If any row fails, fix it before delivery.
+
+### Static product site pre-ship review
+
+Run this when the deliverable is a landing page, product site, or hosted showcase rather than a PDF:
+
+| Dimension | Pass standard |
+|---|---|
+| Runtime preview | Serve locally and inspect desktop plus 375px mobile. The first viewport shows the product category, real asset, CTA, and a hint of the next section. |
+| Generated output | If pages come from `template + i18n + content`, run the generator's check mode. It must fail on missing keys and committed output drift. |
+| Public metadata | Canonical, hreflang, `og:locale`, social image, JSON-LD, robots, sitemap, `llms.txt`, and `llms-full.txt` all reflect the shipped locale set. |
+| Copy sync | Product positioning, price, version, install path, support link, FAQ, `llms.txt`, and `llms-full.txt` carry the same factual claims in every locale. |
+| Asset reality | Screenshots are real product surfaces and every image path resolves from the repo or a public URL. No `/Users`, `file://`, or sibling-repo relative paths. |
+| Screenshot fit | Hero, gallery, feature, and social-image slots use stable ratios. UI text, numbers, prompts, and controls are not cropped away for aesthetics. |
+| Motion fallback | Gallery rotation, entrance animation, or custom transitions respect `prefers-reduced-motion`; a still page remains readable with motion disabled. |
+| Link surface | Primary CTA, download, releases, docs, help, social links, and internal locale links resolve. Any named release or download artifact exists. |
+
+If the site has only one or two locales, hand-maintained static pages are acceptable. For three or more locales, prefer a generator with a drift check over repeated manual edits.
 
 ---
 

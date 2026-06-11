@@ -28,7 +28,7 @@ Cryptographic signature proving email authenticity.
 Policy for handling SPF/DKIM failures + reporting.
 
 ```
-v=DMARC1; p=none; rua=mailto:dmarc@yourdomain.com
+v=DMARC1; p=none; rua=mailto:dmarc@example.com
 ```
 
 **Rollout:** `p=none` (monitor) → `p=quarantine; pct=25` → `p=reject`
@@ -41,13 +41,13 @@ Check DNS records directly:
 
 ```bash
 # SPF record
-dig TXT yourdomain.com +short
+dig TXT example.com +short
 
 # DKIM record (replace 'resend' with your selector)
-dig TXT resend._domainkey.yourdomain.com +short
+dig TXT resend._domainkey.example.com +short
 
 # DMARC record
-dig TXT _dmarc.yourdomain.com +short
+dig TXT _dmarc.example.com +short
 ```
 
 **Expected output:** Each command should return your configured record. No output = record missing.
@@ -97,7 +97,7 @@ Learn more: https://resend.com/docs/knowledge-base/warming-up
 
 ## Infrastructure
 
-**Dedicated sending domain:** Use different subdomains for different sending purposes (e.g., `t.yourdomain.com` for transactional emails and `m.yourdomain.com` for marketing emails). 
+**Dedicated sending domain:** Use different subdomains for different sending purposes (e.g., `t.example.com` for transactional emails and `m.example.com` for marketing emails). 
 
 **DNS TTL:** Low (300s) during setup, high (3600s+) after stable.
 
@@ -105,11 +105,15 @@ Learn more: https://resend.com/docs/knowledge-base/warming-up
 
 **Emails going to spam?** Check in order:
 1. Authentication (SPF, DKIM, DMARC)
-2. Sender reputation (blacklists, complaint rates)
-3. Content
-4. Sending patterns (sudden volume spikes)
+2. List-Unsubscribe header — required by Gmail/Yahoo since Feb 2024 (see [Compliance](./compliance.md))
+3. Sender reputation (blacklists, complaint rates)
+4. Content
+5. Sending patterns (sudden volume spikes)
 
-**Diagnostic tools:** [Google Postmaster Tools](https://postmaster.google.com)
+**Diagnostic tools:**
+- [Google Postmaster Tools](https://postmaster.google.com) - Domain reputation and spam rates
+- [mail-tester.com](https://www.mail-tester.com) - Send a test email, get deliverability score
+- [MXToolbox](https://mxtoolbox.com/blacklists.aspx) - Check blacklist status
 
 ## Related
 
