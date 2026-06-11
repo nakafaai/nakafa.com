@@ -9,13 +9,18 @@ import {
   SECTION_LABELS,
 } from "@/lib/llms/constants";
 import {
+  getContentListingLlmsEntries,
   getContentPageLlmsEntries,
   getLlmsSections,
   getSiteLlmsEntries,
   isLlmsSection,
   type LlmsEntry,
 } from "@/lib/llms/entries";
-import { getLocaleLabel, stripLlmsRouteExtension } from "@/lib/llms/format";
+import {
+  formatRouteTitle,
+  getLocaleLabel,
+  stripLlmsRouteExtension,
+} from "@/lib/llms/format";
 import {
   type ContentSitemapPage,
   getSitemapPageDescriptorsEffect,
@@ -93,6 +98,20 @@ export const getLlmsSectionIndexText = Effect.fn("www.llms.index.text")(
         page,
         section,
       });
+    }
+
+    if (prefixParts.length > 1) {
+      const route = prefixParts.join("/");
+      const entries = yield* getContentListingLlmsEntries({ locale, route });
+
+      if (entries !== null) {
+        return buildLlmsListingIndexText({
+          entries,
+          locale,
+          route: `/${route}`,
+          section,
+        });
+      }
     }
 
     if (prefixParts.length === 1) {
@@ -184,6 +203,42 @@ function buildLlmsSectionPageMapText({
     lines,
     summary: `For AI agents: choose a bounded ${sectionLabel.toLowerCase()} route artifact page, then follow page-level \`.md\` links. This index reads materialized page descriptors, not section routes.`,
     title: `Nakafa ${localeLabel} ${sectionLabel} Pages`,
+  });
+}
+
+/**
+ * Builds a markdown index for one content listing page.
+ *
+ * Empty listings render an explicit empty index, while null listing lookups are
+ * handled before this function and mean the route is unsupported.
+ */
+function buildLlmsListingIndexText({
+  entries,
+  locale,
+  route,
+  section,
+}: {
+  entries: LlmsEntry[];
+  locale: Locale;
+  route: string;
+  section: Exclude<LlmsSection, "site">;
+}) {
+  const localeLabel = getLocaleLabel(locale);
+  const sectionLabel = SECTION_LABELS[section];
+  const title = `${formatRouteTitle(route)} ${sectionLabel}`;
+
+  if (entries.length === 0) {
+    return renderIndexText({
+      lines: [],
+      summary: `This ${localeLabel} ${sectionLabel.toLowerCase()} listing currently has no markdown entries.`,
+      title,
+    });
+  }
+
+  return renderIndexText({
+    lines: entries.map(formatLlmsEntryLine),
+    summary: `For AI agents: source-backed ${localeLabel} ${sectionLabel.toLowerCase()} links for ${route}. Follow page-level \`.md\` links for clean markdown content.`,
+    title,
   });
 }
 

@@ -4,6 +4,7 @@ import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  getContentListingLlmsEntries,
   getContentPageLlmsEntries,
   getLlmsSections,
   getRouteSection,
@@ -19,6 +20,8 @@ type RuntimeContentRouteItem =
 
 const mockGetRuntimeContentRoute = vi.hoisted(() => vi.fn());
 const mockGetRuntimeContentRouteArtifactPage = vi.hoisted(() => vi.fn());
+const mockGetRuntimeContentRouteKindPage = vi.hoisted(() => vi.fn());
+const mockGetRuntimeContentRouteParentPage = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/llms/quran", () => ({
   getQuranRouteMetadata: () =>
@@ -32,11 +35,15 @@ vi.mock("@/lib/llms/quran", () => ({
 vi.mock("@/lib/content/runtime", () => ({
   getRuntimeContentRoute: mockGetRuntimeContentRoute,
   getRuntimeContentRouteArtifactPage: mockGetRuntimeContentRouteArtifactPage,
+  getRuntimeContentRouteKindPage: mockGetRuntimeContentRouteKindPage,
+  getRuntimeContentRouteParentPage: mockGetRuntimeContentRouteParentPage,
 }));
 
 beforeEach(() => {
   mockGetRuntimeContentRoute.mockReset();
   mockGetRuntimeContentRouteArtifactPage.mockReset();
+  mockGetRuntimeContentRouteKindPage.mockReset();
+  mockGetRuntimeContentRouteParentPage.mockReset();
   mockGetRuntimeContentRouteArtifactPage.mockImplementation(
     ({ locale, page, section }) =>
       Effect.succeed({
@@ -47,6 +54,20 @@ beforeEach(() => {
         section,
         syncedAt: 1,
       })
+  );
+  mockGetRuntimeContentRouteKindPage.mockImplementation(({ prefix }) =>
+    Effect.succeed({
+      continueCursor: null,
+      isDone: true,
+      page: routeRows.filter((row) => row.route.startsWith(prefix)),
+    })
+  );
+  mockGetRuntimeContentRouteParentPage.mockImplementation(({ parentRoute }) =>
+    Effect.succeed({
+      continueCursor: null,
+      isDone: true,
+      page: routeRows.filter((row) => row.route.startsWith(`${parentRoute}/`)),
+    })
   );
   mockGetRuntimeContentRoute.mockImplementation(({ route }) => {
     if (route === "articles/politics/dynastic-politics-asian-values") {
@@ -273,6 +294,137 @@ describe("llms entries", () => {
       page: 0,
       section: "articles",
     });
+  });
+
+  it("builds listing entries from parent-scoped route rows", async () => {
+    const entries = await Effect.runPromise(
+      getContentListingLlmsEntries({
+        locale: "en",
+        route: "articles/politics",
+      })
+    );
+
+    expect(entries).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          href: "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values.md",
+          route: "/articles/politics/dynastic-politics-asian-values",
+        }),
+      ])
+    );
+    expect(mockGetRuntimeContentRouteParentPage).toHaveBeenCalledWith({
+      cursor: null,
+      kind: "article",
+      limit: 100,
+      locale: "en",
+      order: "date-desc",
+      parentRoute: "articles/politics",
+      section: "articles",
+    });
+  });
+
+  it("builds listing entries from kind-scoped route rows", async () => {
+    const entries = await Effect.runPromise(
+      getContentListingLlmsEntries({
+        locale: "en",
+        route: "subject/high-school/10",
+      })
+    );
+
+    expect(entries).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          href: "https://nakafa.com/en/subject/high-school/10/chemistry/green-chemistry/definition.md",
+          route: "/subject/high-school/10/chemistry/green-chemistry/definition",
+        }),
+      ])
+    );
+    expect(mockGetRuntimeContentRouteKindPage).toHaveBeenCalledWith({
+      cursor: null,
+      kind: "subject-topic",
+      limit: 100,
+      locale: "en",
+      prefix: "subject/high-school/10",
+      section: "subject",
+    });
+  });
+
+  it("uses bounded catalog rows for exercise and material listings", async () => {
+    const cases = [
+      {
+        expectedHref:
+          "https://nakafa.com/en/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1.md",
+        route: "exercises/high-school/snbt",
+      },
+      {
+        expectedHref:
+          "https://nakafa.com/en/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1.md",
+        route: "exercises/high-school/snbt/quantitative-knowledge",
+      },
+      {
+        expectedHref:
+          "https://nakafa.com/en/subject/high-school/10/chemistry/green-chemistry/definition.md",
+        route: "subject/high-school/10/chemistry",
+      },
+    ];
+
+    for (const { expectedHref, route } of cases) {
+      const entries = await Effect.runPromise(
+        getContentListingLlmsEntries({
+          locale: "en",
+          route,
+        })
+      );
+
+      expect(entries).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            href: expectedHref,
+          }),
+        ])
+      );
+    }
+
+    expect(mockGetRuntimeContentRouteKindPage).toHaveBeenCalledWith({
+      cursor: null,
+      kind: "exercise-group",
+      limit: 100,
+      locale: "en",
+      prefix: "exercises/high-school/snbt/",
+      section: "exercises",
+    });
+    expect(mockGetRuntimeContentRouteParentPage).toHaveBeenCalledWith({
+      cursor: null,
+      kind: "exercise-group",
+      limit: 100,
+      locale: "en",
+      order: "route",
+      parentRoute: "exercises/high-school/snbt/quantitative-knowledge",
+      section: "exercises",
+    });
+    expect(mockGetRuntimeContentRouteParentPage).toHaveBeenCalledWith({
+      cursor: null,
+      kind: "subject-topic",
+      limit: 100,
+      locale: "en",
+      order: "route",
+      parentRoute: "subject/high-school/10/chemistry",
+      section: "subject",
+    });
+  });
+
+  it("returns null for routes without listing markdown support", async () => {
+    await expect(
+      Effect.runPromise(
+        getContentListingLlmsEntries({
+          locale: "en",
+          route: "articles",
+        })
+      )
+    ).resolves.toBeNull();
+
+    expect(mockGetRuntimeContentRouteKindPage).not.toHaveBeenCalled();
+    expect(mockGetRuntimeContentRouteParentPage).not.toHaveBeenCalled();
   });
 
   it("returns no entries when a materialized route page is missing", async () => {

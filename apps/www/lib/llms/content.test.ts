@@ -9,6 +9,7 @@ import {
 const mockGetCachedLlmsExerciseText = vi.hoisted(() => vi.fn());
 const mockGetCachedLlmsSectionIndexText = vi.hoisted(() => vi.fn());
 const mockGetCachedLlmsMdxText = vi.hoisted(() => vi.fn());
+const mockGetLlmsLegalPageText = vi.hoisted(() => vi.fn());
 const mockGetLlmsExerciseText = vi.hoisted(() => vi.fn());
 const mockGetLlmsSectionIndexText = vi.hoisted(() => vi.fn());
 const mockGetLlmsMdxText = vi.hoisted(() => vi.fn());
@@ -22,6 +23,10 @@ vi.mock("@/lib/llms/exercises", () => ({
 vi.mock("@/lib/llms/indexes", () => ({
   getCachedLlmsSectionIndexText: mockGetCachedLlmsSectionIndexText,
   getLlmsSectionIndexText: mockGetLlmsSectionIndexText,
+}));
+
+vi.mock("@/lib/llms/legal", () => ({
+  getLlmsLegalPageText: mockGetLlmsLegalPageText,
 }));
 
 vi.mock("@/lib/llms/mdx", () => ({
@@ -38,6 +43,7 @@ describe("llms markdown content resolver", () => {
     mockGetCachedLlmsExerciseText.mockReset();
     mockGetCachedLlmsSectionIndexText.mockReset();
     mockGetCachedLlmsMdxText.mockReset();
+    mockGetLlmsLegalPageText.mockReset();
     mockGetLlmsExerciseText.mockReset();
     mockGetLlmsSectionIndexText.mockReset();
     mockGetLlmsMdxText.mockReset();
@@ -46,6 +52,7 @@ describe("llms markdown content resolver", () => {
     mockGetCachedLlmsExerciseText.mockResolvedValue(null);
     mockGetCachedLlmsSectionIndexText.mockResolvedValue(null);
     mockGetCachedLlmsMdxText.mockResolvedValue(null);
+    mockGetLlmsLegalPageText.mockReturnValue(Effect.succeed(null));
     mockGetLlmsExerciseText.mockReturnValue(Effect.succeed(null));
     mockGetLlmsSectionIndexText.mockReturnValue(Effect.succeed(null));
     mockGetLlmsMdxText.mockReturnValue(Effect.succeed(null));
@@ -95,6 +102,21 @@ describe("llms markdown content resolver", () => {
         })
       )
     ).resolves.toBe("MDX markdown");
+
+    expect(mockGetCachedLlmsSectionIndexText).not.toHaveBeenCalled();
+  });
+
+  it("returns legal source markdown before route index fallbacks", async () => {
+    mockGetLlmsLegalPageText.mockReturnValue(Effect.succeed("Legal markdown"));
+
+    await expect(
+      Effect.runPromise(
+        getLlmsMarkdownText({
+          cleanSlug: "terms-of-service",
+          locale: "en",
+        })
+      )
+    ).resolves.toBe("Legal markdown");
 
     expect(mockGetCachedLlmsSectionIndexText).not.toHaveBeenCalled();
   });
@@ -224,6 +246,23 @@ describe("llms markdown content resolver", () => {
         })
       )
     ).resolves.toBe("Source MDX markdown");
+
+    expect(mockGetLlmsSectionIndexText).not.toHaveBeenCalled();
+  });
+
+  it("returns source legal markdown before source index fallbacks", async () => {
+    mockGetLlmsLegalPageText.mockReturnValue(
+      Effect.succeed("Source legal markdown")
+    );
+
+    await expect(
+      Effect.runPromise(
+        getLlmsSourceMarkdownText({
+          cleanSlug: "terms-of-service",
+          locale: "en",
+        })
+      )
+    ).resolves.toBe("Source legal markdown");
 
     expect(mockGetLlmsSectionIndexText).not.toHaveBeenCalled();
   });

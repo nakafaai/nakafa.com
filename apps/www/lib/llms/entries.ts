@@ -1,8 +1,14 @@
+import {
+  getPublicContentRouteCheck,
+  type PublicContentRouteCheck,
+} from "@repo/contents/_lib/manifest/public-route";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import {
   getRuntimeContentRoute,
   getRuntimeContentRouteArtifactPage,
+  getRuntimeContentRouteKindPage,
+  getRuntimeContentRouteParentPage,
 } from "@/lib/content/runtime";
 import {
   BASE_URL,
@@ -17,6 +23,23 @@ import {
 } from "@/lib/sitemap/routes";
 
 const LLMS_ENTRY_BUILD_CONCURRENCY = 16;
+const LLMS_LISTING_ENTRY_LIMIT = 100;
+
+interface ParentListingRowsArgs {
+  kind: "article" | "exercise-group" | "subject-topic";
+  locale: Locale;
+  order: "date-desc" | "route";
+  parentRoute: string;
+  section: "articles" | "exercises" | "subject";
+}
+
+interface KindListingRowsArgs {
+  kind: "exercise-group" | "subject-topic";
+  locale: Locale;
+  prefix: string;
+  section: "exercises" | "subject";
+}
+
 /** Classifies a sitemap route into the llms section that owns it. */
 export function getRouteSection(route: string): LlmsSection {
   const firstSegment = route.split("/").filter(Boolean)[0];
@@ -79,6 +102,28 @@ export const getContentPageLlmsEntries = Effect.fn(
   return yield* buildLocalizedLlmsEntriesFromRoutes({ locale, routes });
 });
 
+/**
+ * Builds entries for one public content listing route from route-catalog rows.
+ *
+ * Unsupported route shapes return null instead of fabricated entries. Supported
+ * shapes read one bounded catalog page and reuse the same entry formatter as
+ * normal llms indexes, so listing pages advertise only source-backed routes.
+ */
+export const getContentListingLlmsEntries = Effect.fn(
+  "www.llms.contentListingEntries"
+)(function* ({ locale, route }: { locale: Locale; route: string }) {
+  const cleanRoute = route.replace(/^\/+|\/+$/g, "");
+  const routeCheck = getPublicContentRouteCheck(cleanRoute);
+  const rows = yield* readContentListingRows({ locale, routeCheck });
+
+  if (rows === null) {
+    return null;
+  }
+
+  const routes = rows.map((row) => `/${row.route}`);
+  return yield* buildLocalizedLlmsEntriesFromRoutes({ locale, routes });
+});
+
 /** Builds locale-specific llms entries from already scoped route strings. */
 function buildLocalizedLlmsEntriesFromRoutes({
   locale,
@@ -94,6 +139,99 @@ function buildLocalizedLlmsEntriesFromRoutes({
       concurrency: LLMS_ENTRY_BUILD_CONCURRENCY,
     }
   );
+}
+
+/**
+ * Reads one bounded route-catalog page for supported listing route shapes.
+ *
+ * The interface returns null when the route is not a listing. Every supported
+ * branch delegates to an indexed kind or parent page read with a fixed limit.
+ */
+function readContentListingRows({
+  locale,
+  routeCheck,
+}: {
+  locale: Locale;
+  routeCheck: PublicContentRouteCheck;
+}) {
+  if (routeCheck.mode === "article-category") {
+    return readParentListingRows({
+      kind: "article",
+      locale,
+      order: "date-desc",
+      parentRoute: routeCheck.parentRoute,
+      section: "articles",
+    });
+  }
+
+  if (routeCheck.mode === "exercise-type") {
+    return readKindListingRows({
+      kind: "exercise-group",
+      locale,
+      prefix: routeCheck.prefix,
+      section: "exercises",
+    });
+  }
+
+  if (routeCheck.mode === "exercise-material") {
+    return readParentListingRows({
+      kind: "exercise-group",
+      locale,
+      order: "route",
+      parentRoute: routeCheck.parentRoute,
+      section: "exercises",
+    });
+  }
+
+  if (routeCheck.mode === "subject-grade") {
+    return readKindListingRows({
+      kind: "subject-topic",
+      locale,
+      prefix: routeCheck.prefix,
+      section: "subject",
+    });
+  }
+
+  if (routeCheck.mode === "subject-material") {
+    return readParentListingRows({
+      kind: "subject-topic",
+      locale,
+      order: "route",
+      parentRoute: routeCheck.parentRoute,
+      section: "subject",
+    });
+  }
+
+  return Effect.succeed(null);
+}
+
+/**
+ * Reads one parent-scoped route page for a listing markdown document.
+ *
+ * Callers provide the already-classified parent route, and the helper enforces
+ * the shared listing limit so listing indexes do not drift into full-table
+ * collection.
+ */
+function readParentListingRows(args: ParentListingRowsArgs) {
+  return getRuntimeContentRouteParentPage({
+    ...args,
+    cursor: null,
+    limit: LLMS_LISTING_ENTRY_LIMIT,
+  }).pipe(Effect.map((page) => page.page));
+}
+
+/**
+ * Reads one kind-scoped route page for a listing markdown document.
+ *
+ * Prefix and kind come from the content route classifier; this helper keeps the
+ * query bounded and returns only the rows the llms entry builder needs.
+ */
+function readKindListingRows(args: KindListingRowsArgs) {
+  return getRuntimeContentRouteKindPage({
+    ...args,
+    cursor: null,
+    limit: LLMS_LISTING_ENTRY_LIMIT,
+  }).pipe(Effect.map((page) => page.page));
 }
 
 /** Builds one locale-specific llms entry from a sitemap route. */

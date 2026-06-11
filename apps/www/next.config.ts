@@ -198,6 +198,11 @@ const nextConfig = {
   // `process.cwd()` resolves to the app directory (`apps/www`) during Next.js
   // config loading, so walking up two levels targets the monorepo root.
   outputFileTracingRoot: path.join(process.cwd(), "../.."),
+  outputFileTracingIncludes: {
+    "/llms.mdx/[...slug]": [
+      "./app/[locale]/(app)/(shared)/(site)/(legal)/**/*.mdx",
+    ],
+  },
   serverExternalPackages: [
     ...(config.serverExternalPackages ?? []),
     "@takumi-rs/core",
