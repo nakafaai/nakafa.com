@@ -3,10 +3,11 @@
 import {
   Copy01Icon,
   Download01Icon,
+  TerminalIcon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
-import { SiGnometerminal } from "@icons-pack/react-simple-icons";
 import { captureException } from "@repo/analytics/posthog";
+import { SimpleIcon } from "@repo/design-system/components/icons/simple";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { languageIconMap } from "@repo/design-system/lib/programming";
@@ -219,9 +220,7 @@ export const CodeBlock = ({
   const [lightTheme, darkTheme] = use(ShikiThemeContext);
   const codeContextValue = useMemo(() => ({ code }), [code]);
 
-  const Icon =
-    languageIconMap[language as keyof typeof languageIconMap] ??
-    SiGnometerminal;
+  const icon = languageIconMap[language as keyof typeof languageIconMap];
 
   useEffect(() => {
     let isCurrentRender = true;
@@ -266,7 +265,11 @@ export const CodeBlock = ({
           data-language={language}
         >
           <div className="flex items-center gap-2 px-4 py-1.5">
-            <Icon className="size-4" />
+            {icon ? (
+              <SimpleIcon className="size-4" icon={icon} />
+            ) : (
+              <HugeIcons className="size-4" icon={TerminalIcon} />
+            )}
             <span className="font-mono lowercase">{language || "txt"}</span>
           </div>
           <div className="flex items-center">{children}</div>

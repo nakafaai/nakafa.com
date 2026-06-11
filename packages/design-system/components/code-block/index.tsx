@@ -1,8 +1,15 @@
 "use client";
 
-import { Copy01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
-import { type IconType, SiGnometerminal } from "@icons-pack/react-simple-icons";
+import {
+  Copy01Icon,
+  TerminalIcon,
+  Tick01Icon,
+} from "@hugeicons/core-free-icons";
 import { captureException } from "@repo/analytics/posthog";
+import {
+  type ProgrammingIcon,
+  SimpleIcon,
+} from "@repo/design-system/components/icons/simple";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
@@ -199,7 +206,7 @@ export const CodeBlockFiles = ({
 };
 
 export type CodeBlockFilenameProps = HTMLAttributes<HTMLDivElement> & {
-  icon?: IconType;
+  icon?: ProgrammingIcon;
   value?: string;
 };
 
@@ -217,7 +224,7 @@ export const CodeBlockFilename = ({
     );
     return regex.test(children?.toString() ?? "");
   })?.[1];
-  const Icon = icon ?? defaultIcon ?? SiGnometerminal;
+  const iconValue = icon ?? defaultIcon;
 
   if (value !== activeValue) {
     return null;
@@ -228,7 +235,11 @@ export const CodeBlockFilename = ({
       className="flex min-w-0 items-center gap-2 px-4 py-1.5 text-muted-foreground text-sm"
       {...props}
     >
-      {!!Icon && <Icon className="size-4 shrink-0" />}
+      {iconValue ? (
+        <SimpleIcon className="size-4 shrink-0" icon={iconValue} />
+      ) : (
+        <HugeIcons className="size-4 shrink-0" icon={TerminalIcon} />
+      )}
       <span className="min-w-0 flex-1 truncate">{children}</span>
     </div>
   );
