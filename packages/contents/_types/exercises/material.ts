@@ -1,3 +1,4 @@
+import { EXERCISES_MATERIALS } from "@repo/contents/_types/taxonomy";
 import { Schema } from "effect";
 
 const ExercisesMaterialListItemSchema = Schema.Struct({
@@ -19,18 +20,4 @@ export type ExercisesMaterialList = Schema.Schema.Type<
   typeof ExercisesMaterialListSchema
 >;
 
-export const EXERCISES_MATERIALS = [
-  "mathematics",
-  "quantitative-knowledge",
-  "mathematical-reasoning",
-  "general-reasoning",
-  "indonesian-language",
-  "english-language",
-  "general-knowledge",
-  "reading-and-writing-skills",
-] as const;
-
 export const ExercisesMaterialSchema = Schema.Literal(...EXERCISES_MATERIALS);
-export type ExercisesMaterial = Schema.Schema.Type<
-  typeof ExercisesMaterialSchema
->;

@@ -1,10 +1,11 @@
+import { Nakafa } from "@repo/ai/agents/nakafa/service";
 import {
   NakafaAgentTaxonomyOptionsSchema,
   NakafaAgentTaxonomySchema,
 } from "@repo/contents/_lib/agent/schema/taxonomy";
-import { Nakafa } from "@repo/contents/_lib/agent/service";
 import { Effect } from "effect";
 import { decodeNakafaMcpToolInput } from "@/lib/mcp/effect";
+import { nakafaContent } from "@/lib/mcp/nakafa";
 import {
   succeedMcpReadModelError,
   toMcpStructuredResult,
@@ -23,7 +24,7 @@ export function getNakafaTaxonomyToolResult(args: unknown) {
       "Invalid Nakafa taxonomy options."
     );
     const taxonomy = yield* Nakafa.taxonomy(input.locale).pipe(
-      Effect.provide(Nakafa.Default)
+      Effect.provideService(Nakafa, nakafaContent)
     );
 
     return toMcpStructuredResult(taxonomy);

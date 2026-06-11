@@ -1,5 +1,5 @@
-import type { ArticleCategory } from "@repo/contents/_types/articles/category";
 import { ArticleCategorySchema } from "@repo/contents/_types/articles/category";
+import type { ArticleCategory } from "@repo/contents/_types/taxonomy";
 import { Schema } from "effect";
 
 /**

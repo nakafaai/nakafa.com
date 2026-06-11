@@ -1,6 +1,9 @@
+import { Nakafa } from "@repo/ai/agents/nakafa/service";
 import { quran } from "@repo/ai/agents/nakafa/tools/quran";
-import { createWriter } from "@repo/ai/agents/nakafa/tools/test";
-import { Nakafa } from "@repo/contents/_lib/agent/service";
+import {
+  createNakafaTestService,
+  createWriter,
+} from "@repo/ai/agents/nakafa/tools/test";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -19,7 +22,7 @@ describe("nakafa Quran tool", () => {
         locale: "en",
         toolCallId: "quran-1",
         writer,
-      }).pipe(Effect.provide(Nakafa.Default))
+      }).pipe(Effect.provideService(Nakafa, createNakafaTestService()))
     );
 
     expect(output).toContain("# Nakafa Quran Reference");
@@ -45,7 +48,7 @@ describe("nakafa Quran tool", () => {
         locale: "id",
         toolCallId: "quran-defaults",
         writer,
-      }).pipe(Effect.provide(Nakafa.Default))
+      }).pipe(Effect.provideService(Nakafa, createNakafaTestService()))
     );
 
     expect(output).toContain("- Tafsir:");
@@ -92,7 +95,7 @@ describe("nakafa Quran tool", () => {
         locale: "en",
         toolCallId: "quran-error",
         writer,
-      }).pipe(Effect.provide(Nakafa.Default))
+      }).pipe(Effect.provideService(Nakafa, createNakafaTestService()))
     );
 
     expect(output).toBe(message);

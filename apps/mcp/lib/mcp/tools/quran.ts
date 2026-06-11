@@ -1,11 +1,12 @@
+import { Nakafa } from "@repo/ai/agents/nakafa/service";
 import { NAKAFA_AGENT_MAX_QURAN_REFERENCE_VERSES } from "@repo/contents/_lib/agent/constants";
 import {
   NakafaAgentQuranReferenceOptionsSchema,
   NakafaAgentQuranReferenceSchema,
 } from "@repo/contents/_lib/agent/schema/quran";
-import { Nakafa } from "@repo/contents/_lib/agent/service";
 import { Effect, Option } from "effect";
 import { decodeNakafaMcpToolInput } from "@/lib/mcp/effect";
+import { nakafaContent } from "@/lib/mcp/nakafa";
 import {
   succeedMcpReadModelError,
   toMcpStructuredResult,
@@ -42,7 +43,7 @@ export function getNakafaQuranReferenceToolResult(args: unknown) {
     }
 
     const reference = yield* Nakafa.quran(input).pipe(
-      Effect.provide(Nakafa.Default)
+      Effect.provideService(Nakafa, nakafaContent)
     );
 
     return Option.match(reference, {

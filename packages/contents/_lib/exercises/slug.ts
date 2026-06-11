@@ -1,23 +1,29 @@
 import type { ContentPagination } from "@repo/contents/_types/content";
-import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
+import type { ExercisesMaterialList } from "@repo/contents/_types/exercises/material";
 import type {
+  ExercisesCategory,
   ExercisesMaterial,
-  ExercisesMaterialList,
-} from "@repo/contents/_types/exercises/material";
-import type { ExercisesType } from "@repo/contents/_types/exercises/type";
+  ExercisesType,
+} from "@repo/contents/_types/taxonomy";
 import { cleanSlug } from "@repo/utilities/helper";
 import { Option } from "effect";
 
 const TRY_OUT_SEGMENT = "try-out";
 const EXERCISE_YEAR_SEGMENT_REGEX = /^\d{4}$/;
+const EXERCISE_SET_COLLATOR = new Intl.Collator("en", {
+  numeric: true,
+  sensitivity: "base",
+});
 
 /**
- * Legacy yearless try-out URLs were migrated into the 2026 content tree.
+ * Compares exercise set slugs with numeric suffix awareness.
  *
- * This is only used to redirect old URLs that were indexed before the year was
- * added to the path. New try-out URLs must always include an explicit year.
+ * This keeps authored progressions such as `set-2` before `set-10` while
+ * preserving a stable lexical fallback for non-standard set names.
  */
-export const LEGACY_YEARLESS_TRY_OUT_REDIRECT_YEAR = "2026";
+export function compareExerciseSetSlugs(left: string, right: string) {
+  return EXERCISE_SET_COLLATOR.compare(left, right);
+}
 
 /**
  * Builds the public path for a nested exercises content page.
@@ -52,33 +58,17 @@ function isExerciseYearSegment(value: Option.Option<string>) {
 }
 
 /**
- * Returns true when a relative exercise slug points to the old yearless
- * try-out collection root.
- *
- * Expected input is relative to the material path, not a full URL path.
- * For example:
- * - `["try-out"]`
- * - `["try-out", "2026"]`
- * - `["semester-1", "set-1"]`
- */
-export function isYearlessTryOutCollectionSlug(slug: readonly string[]) {
-  return slug.length === 1 && slug[0] === TRY_OUT_SEGMENT;
-}
-
-/**
  * Returns true when a relative exercise slug points to a try-out collection
  * page instead of a concrete set page.
  *
- * Supported collection shapes are:
- * - `["try-out"]` for the legacy yearless root
- * - `["try-out", "2026"]` for the yearly root
+ * Supported collection routes must include an explicit year segment, such as
+ * `["try-out", "2026"]`.
  */
 export function isTryOutCollectionSlug(slug: readonly string[]) {
   return (
-    isYearlessTryOutCollectionSlug(slug) ||
-    (slug.length === 2 &&
-      slug[0] === TRY_OUT_SEGMENT &&
-      isExerciseYearSegment(Option.fromNullable(slug.at(1))))
+    slug.length === 2 &&
+    slug[0] === TRY_OUT_SEGMENT &&
+    isExerciseYearSegment(Option.fromNullable(slug.at(1)))
   );
 }
 

@@ -16,17 +16,15 @@ import {
   getExerciseTypeOptions,
 } from "@repo/contents/_lib/exercises/label";
 import { getAllSurah } from "@repo/contents/_lib/quran";
-import { ARTICLE_CATEGORIES } from "@repo/contents/_types/articles/category";
 import type { Locale } from "@repo/contents/_types/content";
-import { SUBJECT_CATEGORIES } from "@repo/contents/_types/subject/category";
 import {
-  NON_NUMERIC_GRADES,
-  NUMERIC_GRADES,
-} from "@repo/contents/_types/subject/grade";
-import {
+  ARTICLE_CATEGORIES,
   BACHELOR_MATERIALS,
   HIGH_SCHOOL_MATERIALS,
-} from "@repo/contents/_types/subject/material";
+  NON_NUMERIC_GRADES,
+  NUMERIC_GRADES,
+  SUBJECT_CATEGORIES,
+} from "@repo/contents/_types/taxonomy";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect, Schema } from "effect";
 

@@ -11,6 +11,8 @@
     "prefix": ""
   },
   "iconLibrary": "hugeicons",
+  "menuColor": "default",
+  "menuAccent": "subtle",
   "aliases": {
     "components": "@repo/design-system/components",
     "utils": "@repo/design-system/lib/utils",
@@ -18,11 +20,9 @@
     "lib": "@repo/design-system/lib",
     "hooks": "@repo/design-system/hooks"
   },
-  "menuColor": "default",
-  "menuAccent": "subtle",
   "registries": {
-    "@animate-ui": "https://animate-ui.com/r/{name}.json",
     "@evilcharts": "https://evilcharts.com/r/{name}.json",
-    "@platejs": "https://platejs.org/r/{name}.json"
+    "@platejs": "https://platejs.org/r/{name}.json",
+    "@coss": "https://coss.com/ui/r/{name}.json"
   }
 }

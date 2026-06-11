@@ -7,6 +7,7 @@ import {
 } from "@repo/ai/agents/nakafa/descriptions";
 import { nakafaAgentPrompt } from "@repo/ai/agents/nakafa/prompt";
 import { NakafaSearch } from "@repo/ai/agents/nakafa/search";
+import { Nakafa } from "@repo/ai/agents/nakafa/service";
 import {
   prepareAnswerFromNakafaEvidenceStep,
   prepareExerciseStep,
@@ -32,7 +33,6 @@ import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agen
 import { NakafaAgentReadOptionsSchema } from "@repo/contents/_lib/agent/schema/read";
 import { NakafaAgentSearchOptionsSchema } from "@repo/contents/_lib/agent/schema/search";
 import { NakafaAgentTaxonomyOptionsSchema } from "@repo/contents/_lib/agent/schema/taxonomy";
-import { Nakafa } from "@repo/contents/_lib/agent/service";
 import { generateText, stepCountIs, tool } from "ai";
 import { Effect, Option } from "effect";
 
@@ -57,11 +57,13 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
   modelId,
   locale,
   context,
+  nakafa,
 }: NakafaAgentParams) {
   const searchService = yield* NakafaSearch;
   let pendingExerciseRef = Option.none<string>();
   let hasPendingContentRead = false;
   const result = yield* Effect.tryPromise({
+    /** Runs the AI SDK Nakafa specialist loop with MCP-equivalent tools. */
     try: () =>
       generateText({
         model: provider.languageModel(modelId),
@@ -77,6 +79,7 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
             description: nakafaSearch,
             inputSchema: nakafaSearchInputSchema,
             outputSchema: textOutputSchema,
+            /** Runs content search and records whether the next step should read. */
             execute: (input, { toolCallId }) =>
               Effect.runPromise(
                 search({ input, locale, toolCallId, writer }).pipe(
@@ -104,13 +107,12 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
             description: nakafaRead,
             inputSchema: nakafaReadInputSchema,
             outputSchema: textOutputSchema,
+            /** Reads a selected content reference through the injected service. */
             execute: (input, { toolCallId }) => {
               hasPendingContentRead = false;
 
               return Effect.runPromise(
-                read({ input, toolCallId, writer }).pipe(
-                  Effect.provide(Nakafa.Default)
-                )
+                read({ input, toolCallId, writer }).pipe(provideNakafa(nakafa))
               );
             },
           }),
@@ -118,12 +120,13 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
             description: nakafaExercise,
             inputSchema: nakafaExerciseInputSchema,
             outputSchema: textOutputSchema,
+            /** Reads structured exercise data and clears pending exercise state. */
             execute: (input, { toolCallId }) => {
               pendingExerciseRef = Option.none();
 
               return Effect.runPromise(
                 exercise({ input, toolCallId, writer }).pipe(
-                  Effect.provide(Nakafa.Default)
+                  provideNakafa(nakafa)
                 )
               );
             },
@@ -132,10 +135,11 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
             description: nakafaQuran,
             inputSchema: nakafaQuranInputSchema,
             outputSchema: textOutputSchema,
+            /** Reads Quran references through the injected Nakafa service. */
             execute: (input, { toolCallId }) =>
               Effect.runPromise(
                 quran({ input, locale, toolCallId, writer }).pipe(
-                  Effect.provide(Nakafa.Default)
+                  provideNakafa(nakafa)
                 )
               ),
           }),
@@ -143,10 +147,11 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
             description: nakafaTaxonomy,
             inputSchema: nakafaTaxonomyInputSchema,
             outputSchema: textOutputSchema,
+            /** Lists content taxonomy through the injected Nakafa service. */
             execute: (input, { toolCallId }) =>
               Effect.runPromise(
                 taxonomy({ input, locale, toolCallId, writer }).pipe(
-                  Effect.provide(Nakafa.Default)
+                  provideNakafa(nakafa)
                 )
               ),
           }),
@@ -216,3 +221,8 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
     usage: result.totalUsage,
   };
 });
+
+/** Provides the app-owned Convex-backed Nakafa runtime service. */
+function provideNakafa(service: Nakafa) {
+  return Effect.provideService(Nakafa, service);
+}

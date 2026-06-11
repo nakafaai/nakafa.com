@@ -8,6 +8,7 @@ allowBuilds:
   core-js: true
   core-js-pure: true
   esbuild: true
+  msgpackr-extract: true
   msw: true
   protobufjs: true
   sharp: true

@@ -19,6 +19,11 @@ export const contentSearchSummaryValidator = v.object({
   title: v.string(),
 });
 
+export const contentSearchResultItemValidator = v.object({
+  ...contentSearchSummaryValidator.fields,
+  excerpt: v.string(),
+});
+
 export const contentSearchInputValidator = v.object({
   limit: v.number(),
   locale: localeValidator,
@@ -30,7 +35,7 @@ export const contentSearchInputValidator = v.object({
 export const contentSearchResultValidator = v.object({
   count: v.number(),
   has_more: v.boolean(),
-  items: v.array(contentSearchSummaryValidator),
+  items: v.array(contentSearchResultItemValidator),
   limit: v.number(),
   next_offset: v.optional(v.number()),
   offset: v.number(),

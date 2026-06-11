@@ -1,3 +1,4 @@
+import { internal } from "@repo/backend/convex/_generated/api";
 import {
   parseExerciseMaterialFile,
   parseSubjectMaterialFile,
@@ -7,7 +8,7 @@ import {
   parseExercisePath,
   parseSubjectPath,
 } from "@repo/backend/scripts/lib/mdx-parser/paths";
-import { callConvex } from "@repo/backend/scripts/sync-content/convex";
+import { callConvexMutation } from "@repo/backend/scripts/sync-content/convex";
 import {
   getStaleContent,
   getUnusedAuthors,
@@ -30,38 +31,114 @@ import type {
   StaleItem,
   SyncOptions,
 } from "@repo/backend/scripts/sync-content/types";
+import type {
+  DefaultFunctionArgs,
+  FunctionArgs,
+  FunctionReference,
+} from "convex/server";
 import { Effect } from "effect";
 
-const deleteStaleItems = Effect.fn("sync.deleteStaleItems")(function* (
+type DeleteStaleMutation = FunctionReference<
+  "mutation",
+  "internal" | "public",
+  DefaultFunctionArgs,
+  { deleted: number }
+>;
+
+type DeleteStaleArticleArgs = FunctionArgs<
+  typeof internal.contentSync.mutations.articles.deleteStaleArticles
+>;
+type DeleteStaleSubjectTopicArgs = FunctionArgs<
+  typeof internal.contentSync.mutations.subjects.deleteStaleSubjectTopics
+>;
+type DeleteStaleSubjectSectionArgs = FunctionArgs<
+  typeof internal.contentSync.mutations.subjects.deleteStaleSubjectSections
+>;
+type DeleteStaleExerciseQuestionArgs = FunctionArgs<
+  typeof internal.contentSync.mutations.exercises.deleteStaleExerciseQuestions
+>;
+type DeleteStaleExerciseSetArgs = FunctionArgs<
+  typeof internal.contentSync.mutations.exercises.deleteStaleExerciseSets
+>;
+
+/** Builds mutation args for deleting stale article rows. */
+const buildDeleteStaleArticleArgs = (
+  items: readonly (StaleItem & {
+    id: DeleteStaleArticleArgs["articleIds"][number];
+  })[]
+): DeleteStaleArticleArgs => ({
+  articleIds: items.map((item) => item.id),
+});
+
+/** Builds mutation args for deleting stale subject topic rows. */
+const buildDeleteStaleSubjectTopicArgs = (
+  items: readonly (StaleItem & {
+    id: DeleteStaleSubjectTopicArgs["topicIds"][number];
+  })[]
+): DeleteStaleSubjectTopicArgs => ({
+  topicIds: items.map((item) => item.id),
+});
+
+/** Builds mutation args for deleting stale subject section rows. */
+const buildDeleteStaleSubjectSectionArgs = (
+  items: readonly (StaleItem & {
+    id: DeleteStaleSubjectSectionArgs["sectionIds"][number];
+  })[]
+): DeleteStaleSubjectSectionArgs => ({
+  sectionIds: items.map((item) => item.id),
+});
+
+/** Builds mutation args for deleting stale exercise question rows. */
+const buildDeleteStaleExerciseQuestionArgs = (
+  items: readonly (StaleItem & {
+    id: DeleteStaleExerciseQuestionArgs["questionIds"][number];
+  })[]
+): DeleteStaleExerciseQuestionArgs => ({
+  questionIds: items.map((item) => item.id),
+});
+
+/** Builds mutation args for deleting stale exercise set rows. */
+const buildDeleteStaleExerciseSetArgs = (
+  items: readonly (StaleItem & {
+    id: DeleteStaleExerciseSetArgs["setIds"][number];
+  })[]
+): DeleteStaleExerciseSetArgs => ({
+  setIds: items.map((item) => item.id),
+});
+
+/** Deletes stale rows through one generated bounded delete mutation. */
+const deleteStaleItems = Effect.fn("sync.deleteStaleItems")(function* <
+  Item extends StaleItem,
+  TFunction extends DeleteStaleMutation,
+>(
   config: ConvexConfig,
-  mutationPath: string,
-  paramName: string,
-  items: readonly StaleItem[],
+  mutation: TFunction,
+  buildArgs: (items: readonly Item[]) => FunctionArgs<TFunction>,
+  items: readonly Item[],
   successLabel: string,
   batchSize = items.length
 ) {
   if (items.length === 0) {
-    return false;
+    return 0;
   }
 
   let deleted = 0;
   for (let index = 0; index < items.length; index += batchSize) {
     const batch = items.slice(index, index + batchSize);
-    const ids = batch.map((item) => item.id);
-    const result = yield* callConvex(
+    const result = yield* callConvexMutation(
       config,
-      "mutation",
-      mutationPath,
-      { [paramName]: ids },
+      mutation,
+      buildArgs(batch),
       DeleteResultSchema
     );
     deleted += result.deleted;
   }
 
   logSuccess(`Deleted ${deleted} ${successLabel}`);
-  return true;
+  return deleted;
 });
 
+/** Collects source slugs from the content files that should exist in Convex. */
 const collectFilesystemSlugs = Effect.fn("sync.collectFilesystemSlugs")(
   function* () {
     const [
@@ -142,6 +219,7 @@ const collectFilesystemSlugs = Effect.fn("sync.collectFilesystemSlugs")(
   }
 );
 
+/** Deletes authors that no longer have content links when clean is forced. */
 const cleanUnusedAuthors = Effect.fn("sync.cleanUnusedAuthors")(function* (
   config: ConvexConfig,
   options: SyncOptions
@@ -174,10 +252,9 @@ const cleanUnusedAuthors = Effect.fn("sync.cleanUnusedAuthors")(function* (
       index += BATCH_SIZES.unusedAuthors
     ) {
       const batch = authorIds.slice(index, index + BATCH_SIZES.unusedAuthors);
-      const result = yield* callConvex(
+      const result = yield* callConvexMutation(
         config,
-        "mutation",
-        "contentSync/mutations/authors:deleteUnusedAuthors",
+        internal.contentSync.mutations.authors.deleteUnusedAuthors,
         { authorIds: batch },
         DeleteResultSchema
       );
@@ -228,7 +305,7 @@ export const clean = Effect.fn("sync.clean")(function* (
     stale.staleExerciseQuestions.length;
 
   let hasStale = false;
-  let deleted = false;
+  let deleted = 0;
 
   if (totalStale === 0) {
     logSuccess("No stale content found!");
@@ -242,45 +319,44 @@ export const clean = Effect.fn("sync.clean")(function* (
     logStaleItems("\nStale exercise questions", stale.staleExerciseQuestions);
 
     if (options.force) {
-      deleted = true;
       log("\nDeleting stale content...");
 
-      yield* deleteStaleItems(
+      deleted += yield* deleteStaleItems(
         config,
-        "contentSync/mutations/articles:deleteStaleArticles",
-        "articleIds",
+        internal.contentSync.mutations.articles.deleteStaleArticles,
+        buildDeleteStaleArticleArgs,
         stale.staleArticles,
         "stale articles",
         BATCH_SIZES.staleArticles
       );
-      yield* deleteStaleItems(
+      deleted += yield* deleteStaleItems(
         config,
-        "contentSync/mutations/subjects:deleteStaleSubjectTopics",
-        "topicIds",
+        internal.contentSync.mutations.subjects.deleteStaleSubjectTopics,
+        buildDeleteStaleSubjectTopicArgs,
         stale.staleSubjectTopics,
         "stale subject topics (and their sections)",
         BATCH_SIZES.staleSubjectTopics
       );
-      yield* deleteStaleItems(
+      deleted += yield* deleteStaleItems(
         config,
-        "contentSync/mutations/subjects:deleteStaleSubjectSections",
-        "sectionIds",
+        internal.contentSync.mutations.subjects.deleteStaleSubjectSections,
+        buildDeleteStaleSubjectSectionArgs,
         stale.staleSubjectSections,
         "stale subject sections",
         BATCH_SIZES.staleSubjectSections
       );
-      yield* deleteStaleItems(
+      deleted += yield* deleteStaleItems(
         config,
-        "contentSync/mutations/exercises:deleteStaleExerciseQuestions",
-        "questionIds",
+        internal.contentSync.mutations.exercises.deleteStaleExerciseQuestions,
+        buildDeleteStaleExerciseQuestionArgs,
         stale.staleExerciseQuestions,
         "stale exercise questions",
         BATCH_SIZES.staleExerciseQuestions
       );
-      yield* deleteStaleItems(
+      deleted += yield* deleteStaleItems(
         config,
-        "contentSync/mutations/exercises:deleteStaleExerciseSets",
-        "setIds",
+        internal.contentSync.mutations.exercises.deleteStaleExerciseSets,
+        buildDeleteStaleExerciseSetArgs,
         stale.staleExerciseSets,
         "stale exercise sets",
         BATCH_SIZES.staleExerciseSets

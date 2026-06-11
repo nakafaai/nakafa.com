@@ -12,7 +12,7 @@
     "effect": "^3.21.3",
     "react": "19.2.7",
     "react-dom": "19.2.7",
-    "react-email": "6.5.0",
+    "react-email": "6.6.0",
     "resend": "^6.12.4"
   },
   "devDependencies": {

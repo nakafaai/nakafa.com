@@ -4,11 +4,7 @@ import {
   getGradePath,
   parseGrade,
 } from "@repo/contents/_lib/subject/grade";
-import {
-  getCurrentMaterial,
-  getMaterialIcon,
-  getMaterials,
-} from "@repo/contents/_lib/subject/material";
+import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import {
   getMaterialPath,
   parseMaterial,
@@ -19,17 +15,17 @@ import {
 } from "@repo/contents/_lib/subject/slug";
 import { getHeadings } from "@repo/contents/_lib/toc";
 import { formatContentDateISO } from "@repo/contents/_shared/date";
-import { ContentMetadataSchema } from "@repo/contents/_types/content";
-import type { SubjectCategory } from "@repo/contents/_types/subject/category";
-import type { Grade } from "@repo/contents/_types/subject/grade";
-import type { Material } from "@repo/contents/_types/subject/material";
+import type {
+  Grade,
+  Material,
+  SubjectCategory,
+} from "@repo/contents/_types/taxonomy";
 import { slugify } from "@repo/design-system/lib/utils";
 import { ArticleJsonLd } from "@repo/seo/json-ld/article";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
-import { Effect, Option, Schema } from "effect";
+import { Effect, Option } from "effect";
 import type { Metadata } from "next";
-import { cacheLife } from "next/cache";
 import { notFound, redirect } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
@@ -46,11 +42,16 @@ import {
   LayoutMaterialPagination,
   LayoutMaterialToc,
 } from "@/components/shared/layout-material";
+import { applyContentRuntimeCache } from "@/lib/content/cache";
 import { importContentModuleOrNull } from "@/lib/content/module";
+import {
+  getCurrentSubjectMaterial,
+  getRuntimeSubjectMaterials,
+} from "@/lib/content/navigation";
+import { fetchRuntimeSubjectPage } from "@/lib/content/runtime";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
-import { getContentMetadataContext } from "@/lib/utils/pages/subject";
 import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 import { generateSEOMetadata } from "@/lib/utils/seo/generator";
@@ -169,6 +170,7 @@ export function generateStaticParams() {
   });
 }
 
+/** Renders a subject lesson after Convex confirms the published route exists. */
 export default async function Page({
   params,
 }: {
@@ -182,23 +184,27 @@ export default async function Page({
   }
 
   const filePath = getSlugPath(category, grade, material, slug);
+  const subject = await fetchRuntimeSubjectPage({
+    locale,
+    slug: filePath.slice(1),
+  });
+
+  if (!subject) {
+    notFound();
+  }
+
   const content = await importContentModuleOrNull({
     filePath,
     locale,
     source: "subject-content-module",
   });
-  const Content = content?.default;
-  if (!Content) {
+
+  if (!content?.default) {
     notFound();
   }
 
-  const parsedMetadata = Schema.decodeUnknownOption(ContentMetadataSchema)(
-    content?.metadata
-  );
-  if (Option.isNone(parsedMetadata)) {
-    notFound();
-  }
-  const contentMetadata = parsedMetadata.value;
+  const Content = content.default;
+  const contentMetadata = subject.metadata;
 
   const [tCommon, tSubject] = await Promise.all([
     getTranslations("Common"),
@@ -252,17 +258,15 @@ export default async function Page({
         educationalLevel={gradeLabel}
         name={contentMetadata.title}
       />
-      <CachedSubjectShell
-        category={category}
+      <SubjectShell
+        content={subject}
         filePath={filePath}
         footer={
           <DeferredComments key={`comments:${filePath}`} slug={filePath} />
         }
-        grade={grade}
         locale={locale}
         material={material}
         materialPath={materialPath}
-        slug={slug}
         toolbar={
           <DeferredAiSheetOpen
             audio={{
@@ -276,11 +280,12 @@ export default async function Page({
         }
       >
         <Content />
-      </CachedSubjectShell>
+      </SubjectShell>
     </>
   );
 }
 
+/** Loads the cached Convex subject row and navigation data for metadata. */
 async function getSubjectMetadataData({
   locale,
   category,
@@ -296,29 +301,24 @@ async function getSubjectMetadataData({
 }) {
   "use cache";
 
-  cacheLife("max");
+  applyContentRuntimeCache();
 
   const filePath = getSlugPath(category, grade, material, slug);
   const materialPath = getMaterialPath(category, grade, material);
 
-  const [{ content }, materials] = await Promise.all([
-    Effect.runPromise(
-      Effect.match(
-        getContentMetadataContext({ locale, category, grade, material, slug }),
-        {
-          onFailure: () => ({ content: null, FilePath: filePath }),
-          onSuccess: (data) => data,
-        }
-      )
-    ),
-    Effect.runPromise(getMaterials(materialPath, locale)),
+  const [content, materials] = await Promise.all([
+    fetchRuntimeSubjectPage({
+      locale,
+      slug: filePath.slice(1),
+    }),
+    Effect.runPromise(getRuntimeSubjectMaterials(materialPath, locale)),
   ]);
 
   const metadata = content?.metadata ?? null;
   const chapterPath = getSlugPath(category, grade, material, [
     slug.at(0) ?? "",
   ]);
-  const currentMaterial = getCurrentMaterial(chapterPath, materials);
+  const currentMaterial = getCurrentSubjectMaterial(chapterPath, materials);
   const chapter =
     slug.length > 0 && materials.length > 0
       ? Option.match(currentMaterial.currentChapter, {
@@ -327,7 +327,14 @@ async function getSubjectMetadataData({
         })
       : undefined;
 
+  if (content && slug.length > 0 && !chapter) {
+    throw new Error(
+      `Synced subject lesson is missing material navigation: ${filePath}`
+    );
+  }
+
   return {
+    content,
     metadata,
     chapter,
     filePath,
@@ -335,64 +342,37 @@ async function getSubjectMetadataData({
   };
 }
 
-async function CachedSubjectShell({
+type SubjectRuntimePage = NonNullable<
+  Awaited<ReturnType<typeof getSubjectMetadataData>>["content"]
+>;
+
+/** Wraps the imported rich MDX subject body in the material layout. */
+async function SubjectShell({
   locale,
-  category,
-  grade,
   material,
-  slug,
   filePath,
   materialPath,
+  content,
   children,
   footer,
   toolbar,
 }: {
   locale: Locale;
-  category: SubjectCategory;
-  grade: Grade;
   material: Material;
-  slug: string[];
   filePath: string;
   materialPath: string;
+  content: SubjectRuntimePage;
   children: ReactNode;
   footer: ReactNode;
   toolbar: ReactNode;
 }) {
-  "use cache";
-
-  cacheLife("max");
-
-  const [tCommon, content, materials] = await Promise.all([
+  const [tCommon, materials] = await Promise.all([
     getTranslations("Common"),
-    Effect.runPromise(
-      Effect.match(
-        getContentMetadataContext({ locale, category, grade, material, slug }),
-        {
-          onFailure: () => ({ content: null, FilePath: filePath }),
-          onSuccess: (data) => data,
-        }
-      )
-    ),
-    Effect.runPromise(getMaterials(materialPath, locale)),
+    Effect.runPromise(getRuntimeSubjectMaterials(materialPath, locale)),
   ]);
 
-  if (!content.content) {
-    notFound();
-  }
-
-  if (!(materials && children !== null)) {
-    return (
-      <LayoutMaterial>
-        <LayoutMaterialContent>
-          <LayoutMaterialMain className="py-24">
-            <ComingSoon />
-          </LayoutMaterialMain>
-        </LayoutMaterialContent>
-      </LayoutMaterial>
-    );
-  }
-
-  const { metadata, raw } = content.content;
+  const { metadata } = content;
+  const raw = content.body;
 
   const pagination = getMaterialsPagination(filePath, materials);
 

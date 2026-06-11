@@ -4,14 +4,14 @@ import {
   parseExercisesCategory,
   parseExercisesType,
 } from "@repo/contents/_lib/exercises/route";
-import { getSubjects } from "@repo/contents/_lib/exercises/type";
 import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
-import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
-import type { ExercisesType } from "@repo/contents/_types/exercises/type";
+import type {
+  ExercisesCategory,
+  ExercisesType,
+} from "@repo/contents/_types/taxonomy";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { Effect, Option } from "effect";
 import type { Metadata } from "next";
-import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
@@ -22,6 +22,8 @@ import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
 import { SubjectItem, SubjectList } from "@/components/shared/subject-list";
+import { applyContentRuntimeCache } from "@/lib/content/cache";
+import { getRuntimeExerciseSubjects } from "@/lib/content/navigation";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
@@ -107,12 +109,13 @@ export function generateStaticParams() {
 /** Reads exercise subjects inside a Next Cache Components boundary. */
 async function getCachedSubjects(
   category: ExercisesCategory,
-  type: ExercisesType
+  type: ExercisesType,
+  locale: Locale
 ) {
   "use cache";
-  cacheLife("max");
+  applyContentRuntimeCache();
 
-  return Effect.runPromise(getSubjects(category, type));
+  return Effect.runPromise(getRuntimeExerciseSubjects(category, type, locale));
 }
 
 export default function Page(
@@ -138,6 +141,7 @@ export default function Page(
   return <PageContent category={category} locale={locale} type={type} />;
 }
 
+/** Renders the exercise type landing page from Convex-backed subject navigation. */
 async function PageContent({
   locale,
   category,
@@ -150,7 +154,7 @@ async function PageContent({
   const FilePath = getExercisesPath(category, type);
 
   const [subjects, t, tCommon] = await Promise.all([
-    getCachedSubjects(category, type),
+    getCachedSubjects(category, type, locale),
     getTranslations({ locale, namespace: "Exercises" }),
     getTranslations({ locale, namespace: "Common" }),
   ]);

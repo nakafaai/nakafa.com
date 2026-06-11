@@ -1,9 +1,11 @@
 import { getExercisesPath } from "@repo/contents/_lib/exercises/route";
 import { getExerciseNumberPagination } from "@repo/contents/_lib/exercises/slug";
 import { formatContentDateISO } from "@repo/contents/_shared/date";
-import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
-import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material";
-import type { ExercisesType } from "@repo/contents/_types/exercises/type";
+import type {
+  ExercisesCategory,
+  ExercisesMaterial,
+  ExercisesType,
+} from "@repo/contents/_types/taxonomy";
 import { slugify } from "@repo/design-system/lib/utils";
 import { ArticleJsonLd } from "@repo/seo/json-ld/article";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";

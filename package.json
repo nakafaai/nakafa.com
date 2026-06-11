@@ -37,7 +37,8 @@
     "clean:ts": "find . -name '*.tsbuildinfo' -type f -delete && find . -name 'tsconfig.tsbuildinfo' -type f -delete",
     "deps-check-www": "cd apps/www && depcheck --ignore-dirs=node_modules || true",
     "deps-check-api": "cd apps/api && depcheck --ignore-dirs=node_modules || true",
-    "deps-check-mcp": "cd apps/mcp && depcheck --ignore-dirs=node_modules || true"
+    "deps-check-mcp": "cd apps/mcp && depcheck --ignore-dirs=node_modules || true",
+    "doctor": "pnpm dlx react-doctor@latest"
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.16",
@@ -45,24 +46,24 @@
     "@changesets/cli": "^2.31.0",
     "@effect/language-service": "^0.86.2",
     "@repo/typescript-config": "workspace:*",
-    "@turbo/gen": "^2.9.16",
+    "@turbo/gen": "^2.9.17",
     "@types/node": "^25.9.2",
-    "@vercel/config": "^0.5.1",
+    "@vercel/config": "^0.5.2",
     "depcheck": "^1.4.7",
     "tsup": "^8.5.1",
-    "turbo": "^2.9.16",
+    "turbo": "^2.9.17",
     "typescript": "^6.0.3",
-    "ultracite": "^7.8.1"
+    "ultracite": "^7.8.3"
   },
   "devEngines": {
     "runtime": {
       "name": "node",
-      "version": "^22.22.0",
+      "version": "^24.0.0",
       "onFail": "download"
     }
   },
   "engines": {
-    "node": ">=22"
+    "node": "^24.0.0"
   },
   "packageManager": "pnpm@10.34.1",
   "type": "module"

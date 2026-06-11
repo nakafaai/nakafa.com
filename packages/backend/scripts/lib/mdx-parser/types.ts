@@ -1,12 +1,14 @@
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
-import type { ArticleCategory } from "@repo/contents/_types/articles/category";
 import type { ContentMetadata } from "@repo/contents/_types/content";
-import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
-import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material";
-import type { ExercisesType } from "@repo/contents/_types/exercises/type";
-import type { SubjectCategory } from "@repo/contents/_types/subject/category";
-import type { Grade } from "@repo/contents/_types/subject/grade";
-import type { Material } from "@repo/contents/_types/subject/material";
+import type {
+  ArticleCategory,
+  ExercisesCategory,
+  ExercisesMaterial,
+  ExercisesType,
+  Grade,
+  Material,
+  SubjectCategory,
+} from "@repo/contents/_types/taxonomy";
 
 /** Parsed MDX file with extracted metadata and content hash for change detection. */
 export interface ParsedMdx {
@@ -66,6 +68,13 @@ export interface ParsedExerciseSet {
   year?: number;
 }
 
+/** Parsed subject section order from a material file topic item. */
+export interface ParsedSubjectSection {
+  order: number;
+  section: string;
+  slug: string;
+}
+
 /** Parsed subject topic from material file. */
 export interface ParsedSubjectTopic {
   category: SubjectCategory;
@@ -73,7 +82,8 @@ export interface ParsedSubjectTopic {
   grade: Grade;
   locale: Locale;
   material: Material;
-  sectionCount: number;
+  order: number;
+  sections: ParsedSubjectSection[];
   slug: string;
   title: string;
   topic: string;

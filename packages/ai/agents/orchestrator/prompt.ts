@@ -1,6 +1,6 @@
 import { createPrompt } from "@repo/ai/prompt/utils";
+import type { PromptUserRole } from "@repo/ai/types/roles";
 import type { Locale } from "@repo/utilities/locales";
-import type { UserRole } from "@repo/utilities/roles";
 import dedent from "dedent";
 
 interface SystemPromptProps {
@@ -31,7 +31,7 @@ interface SystemPromptProps {
     countryRegion: string;
   };
   /** The role of the user. */
-  userRole?: UserRole;
+  userRole?: PromptUserRole;
 }
 
 /** Builds Nina's orchestrator prompt with routing rules for specialist agents. */

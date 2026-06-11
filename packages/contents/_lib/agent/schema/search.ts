@@ -12,6 +12,18 @@ import { LocaleSchema } from "@repo/contents/_types/content";
 import { routing } from "@repo/internationalization/src/routing";
 import { Schema } from "effect";
 
+/** Runtime schema for one Convex-backed search result item. */
+export const NakafaAgentSearchItemSchema = NakafaAgentContentSummarySchema.pipe(
+  Schema.extend(
+    Schema.Struct({
+      excerpt: Schema.String.annotations({
+        description: "Plain-text search excerpt with matched context.",
+      }),
+    })
+  ),
+  Schema.mutable
+).annotations({ description: "Searchable Nakafa content result item." });
+
 /** Runtime schema for content search input. */
 export const NakafaAgentSearchOptionsSchema = Schema.Struct({
   limit: Schema.optionalWith(
@@ -54,7 +66,7 @@ export const NakafaAgentSearchResultSchema = Schema.Struct({
   has_more: Schema.Boolean.annotations({
     description: "Whether another page is available.",
   }),
-  items: Schema.Array(NakafaAgentContentSummarySchema)
+  items: Schema.Array(NakafaAgentSearchItemSchema)
     .pipe(Schema.mutable)
     .annotations({ description: "Bounded search result page." }),
   limit: Schema.Number.pipe(Schema.int(), Schema.positive()).annotations({

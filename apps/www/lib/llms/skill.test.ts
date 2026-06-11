@@ -3,7 +3,6 @@ import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import {
   getNakafaAgentSkillIndex,
-  getNakafaLegacySkillIndex,
   getNakafaSkillText,
   NAKAFA_AGENT_SKILL_PATH,
   NAKAFA_SKILL_DESCRIPTION,
@@ -41,18 +40,6 @@ describe("Nakafa public agent skill", () => {
           description: NAKAFA_SKILL_DESCRIPTION,
           url: NAKAFA_AGENT_SKILL_PATH,
           digest: `sha256:${digest}`,
-        },
-      ],
-    });
-  });
-
-  it("builds the legacy skills discovery manifest", () => {
-    expect(getNakafaLegacySkillIndex()).toStrictEqual({
-      skills: [
-        {
-          name: NAKAFA_SKILL_NAME,
-          description: NAKAFA_SKILL_DESCRIPTION,
-          files: ["SKILL.md"],
         },
       ],
     });

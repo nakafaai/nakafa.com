@@ -1,83 +1,39 @@
-import { getExercisesContent } from "@repo/contents/_lib/exercises/set";
-import {
-  hasInvalidTryOutYearSlug,
-  isTryOutCollectionSlug,
-  LEGACY_YEARLESS_TRY_OUT_REDIRECT_YEAR,
-} from "@repo/contents/_lib/exercises/slug";
-import { getExerciseApiParamsForLocales } from "@repo/contents/_lib/manifest/cache/route-params";
-import { getScopedContent } from "@repo/contents/_lib/scoped";
-import {
-  FileReadError,
-  GitHubFetchError,
-  InvalidPathError,
-  MetadataParseError,
-} from "@repo/contents/_shared/error";
-import { LocaleSchema } from "@repo/contents/_types/content";
+import type { Locale } from "@repo/utilities/locales";
 import { logError } from "@repo/utilities/logging/effect";
-import { Effect, Option, Schema } from "effect";
+import { Effect, Option } from "effect";
 import { NextResponse } from "next/server";
+import {
+  getExerciseApiQuestionPage,
+  getExerciseApiSetPage,
+  parseApiLocale,
+} from "@/lib/content/runtime";
 
+export const dynamic = "force-dynamic";
 export const revalidate = false;
 
 const EXERCISE_PREFIX_LEN = 3;
-const EXERCISE_TYPE_INDEX = 0;
-const LEGACY_TRY_OUT_SUFFIX_INDEX = 1;
+const EXERCISES_ROUTE_ROOT = "exercises";
+const TRY_OUT_SEGMENT = "try-out";
+const EXERCISE_YEAR_SEGMENT_REGEX = /^\d{4}$/;
 
 /**
- * Only prerenders concrete exercise set and exercise number endpoints.
- * Folder-only prefixes under `exercises/` always 404 in this route and add a
- * large amount of pointless build work.
- */
-export function generateStaticParams() {
-  return getExerciseApiParamsForLocales();
-}
-
-/**
- * Returns exercise MDX fragments or parsed exercise sets for the API content
- * route under `/contents/:locale/exercises/*`.
+ * Returns exercise fragments or parsed exercise rows for `/contents/:locale/exercises/*`.
  */
 export async function GET(
-  request: Request,
+  _request: Request,
   { params }: { params: Promise<{ locale: string; slug: string[] }> }
 ) {
   const { locale, slug } = await params;
+  const validLocale = parseApiLocale(locale);
 
-  const validLocale = Schema.decodeUnknownOption(LocaleSchema)(locale);
-  if (Option.isNone(validLocale)) {
+  if (!validLocale) {
     return NextResponse.json(
       { error: "Invalid locale. Must be 'en' or 'id'." },
       { status: 400 }
     );
   }
 
-  // In this API route, `slug` is the catch-all part after
-  // `/contents/{locale}/exercises/`:
-  // [category, type, material, ...exerciseSlug]
-  const exerciseRoutePrefix = slug.slice(0, EXERCISE_PREFIX_LEN);
   const relativeExerciseSlug = slug.slice(EXERCISE_PREFIX_LEN);
-  const exerciseType = relativeExerciseSlug[EXERCISE_TYPE_INDEX];
-  const legacyTryOutSuffix = relativeExerciseSlug.slice(
-    LEGACY_TRY_OUT_SUFFIX_INDEX
-  );
-
-  if (
-    exerciseType !== undefined &&
-    hasInvalidTryOutYearSlug(relativeExerciseSlug) &&
-    legacyTryOutSuffix.length > 0
-  ) {
-    // The API only serves concrete set/question endpoints, so redirect legacy
-    // yearless try-out requests like `try-out/set-1` and `try-out/set-1/1`.
-    const redirectUrl = new URL(request.url);
-    const redirectedSlug = [
-      ...exerciseRoutePrefix,
-      exerciseType,
-      LEGACY_YEARLESS_TRY_OUT_REDIRECT_YEAR,
-      ...legacyTryOutSuffix,
-    ];
-
-    redirectUrl.pathname = `/contents/${validLocale.value}/exercises/${redirectedSlug.join("/")}`;
-    return NextResponse.redirect(redirectUrl, 308);
-  }
 
   if (isTryOutCollectionSlug(relativeExerciseSlug)) {
     return NextResponse.json(
@@ -86,144 +42,216 @@ export async function GET(
     );
   }
 
-  let exerciseNumber = Option.none<number>();
-  let rest = [...slug];
-  let isQuestionOrAnswer = false;
+  const target = getExerciseApiTarget(slug);
 
-  // Check if the last segment is _question or _answer
-  if (rest.length > 0) {
-    const lastSegment = rest.at(-1);
-    if (lastSegment === "_question" || lastSegment === "_answer") {
-      isQuestionOrAnswer = true;
-      rest = rest.slice(0, -1);
-    }
-  }
-
-  // Capture and remove trailing number if it exists (exercise number like 1, 2, 3)
-  if (rest.length > 0) {
-    const lastSegment = rest.at(-1);
-    if (lastSegment) {
-      const parsedNumber = Number.parseInt(lastSegment, 10);
-      const isNumber = !Number.isNaN(parsedNumber);
-      if (isNumber) {
-        exerciseNumber = Option.some(parsedNumber);
-        rest = rest.slice(0, -1);
-      }
-    }
-  }
-
-  const basePath = rest.join("/");
-
-  // If requesting _question or _answer MDX content directly
-  if (isQuestionOrAnswer && Option.isSome(exerciseNumber)) {
-    const mdxPath = `exercises/${basePath}/${exerciseNumber.value}/${slug.at(-1)}`;
-
-    const program = getScopedContent(
-      "exercises",
-      validLocale.value,
-      mdxPath
-    ).pipe(
-      Effect.matchEffect({
-        onFailure: (error: unknown) =>
-          Effect.gen(function* () {
-            const err =
-              error instanceof Error ? error : new Error(String(error));
-
-            yield* logError(err, {
-              service: "api-exercises",
-              locale: validLocale.value,
-              mdxPath,
-              message: "Failed to fetch MDX content.",
-            });
-
-            const statusCode =
-              error instanceof InvalidPathError ||
-              error instanceof FileReadError ||
-              error instanceof MetadataParseError ||
-              error instanceof GitHubFetchError
-                ? 404
-                : 500;
-
-            return yield* Effect.succeed<Response>(
-              NextResponse.json(
-                { error: "Failed to fetch MDX content." },
-                { status: statusCode }
-              )
-            );
-          }),
-        onSuccess: (data) => {
-          if (!data) {
-            return Effect.succeed<Response>(
-              NextResponse.json(
-                { error: "MDX content not found." },
-                { status: 404 }
-              )
-            );
-          }
-
-          return Effect.succeed<Response>(NextResponse.json([data]));
-        },
-      })
-    );
-
-    return Effect.runPromise(program);
-  }
-
-  // Otherwise, fetch exercises data using the original logic
-  const cleanPath = `exercises/${basePath}` as const;
-
-  const program = Effect.matchEffect(
-    getExercisesContent({
-      locale: validLocale.value,
-      filePath: cleanPath,
-      includeMDX: false,
-    }),
-    {
-      onFailure: (error: unknown) =>
+  return Effect.runPromise(
+    readExerciseApiTarget({ locale: validLocale, target }).pipe(
+      Effect.catchAll((error) =>
         Effect.gen(function* () {
-          const err = error instanceof Error ? error : new Error(String(error));
-
-          yield* logError(err, {
+          yield* logError(toError(error), {
             service: "api-exercises",
-            locale: validLocale.value,
-            basePath: basePath || "/",
+            locale: validLocale,
+            basePath: target.setSlug || "/",
             slugLength: slug.length,
-            message: "Failed to fetch content.",
+            message: "Failed to fetch exercises content.",
           });
 
-          return yield* Effect.succeed<Response>(
-            NextResponse.json(
-              { error: "Failed to fetch exercises content." },
-              { status: 500 }
-            )
+          return NextResponse.json(
+            { error: "Failed to fetch exercises content." },
+            { status: 500 }
           );
-        }),
-      onSuccess: (content) => {
-        if (content.length === 0) {
-          return Effect.succeed<Response>(
-            NextResponse.json(
-              { error: "Exercises content not found." },
-              { status: 404 }
-            )
-          );
-        }
-
-        const result = Option.isNone(exerciseNumber)
-          ? content
-          : content.filter(
-              (exercise) => exercise.number === exerciseNumber.value
-            );
-
-        if (Option.isSome(exerciseNumber) && result.length === 0) {
-          return Effect.succeed<Response>(
-            NextResponse.json({ error: "Exercise not found." }, { status: 404 })
-          );
-        }
-
-        return Effect.succeed<Response>(NextResponse.json(result));
-      },
-    }
+        })
+      )
+    )
   );
+}
 
-  return Effect.runPromise(program);
+interface ExerciseApiTarget {
+  fragment: "_answer" | "_question" | null;
+  number: Option.Option<number>;
+  setSlug: string;
+}
+
+/** Parses the exercise API catch-all slug into a set, number, and fragment target. */
+function getExerciseApiTarget(slug: readonly string[]): ExerciseApiTarget {
+  let rest = [...slug];
+  let fragment: ExerciseApiTarget["fragment"] = null;
+
+  const lastSegment = rest.at(-1);
+  if (lastSegment === "_question" || lastSegment === "_answer") {
+    fragment = lastSegment;
+    rest = rest.slice(0, -1);
+  }
+
+  const maybeNumber = rest.at(-1);
+  if (!(maybeNumber && isExerciseNumberSegment(maybeNumber))) {
+    return {
+      fragment,
+      number: Option.none(),
+      setSlug: rest.join("/"),
+    };
+  }
+
+  return {
+    fragment,
+    number: Option.some(Number.parseInt(maybeNumber, 10)),
+    setSlug: rest.slice(0, -1).join("/"),
+  };
+}
+
+/** Reads the parsed exercise API target from Convex and formats the API JSON shape. */
+function readExerciseApiTarget({
+  locale,
+  target,
+}: {
+  locale: Locale;
+  target: ExerciseApiTarget;
+}): Effect.Effect<Response, unknown> {
+  if (target.fragment && Option.isSome(target.number)) {
+    return readExerciseFragment({
+      fragment: target.fragment,
+      locale,
+      number: target.number.value,
+      setSlug: target.setSlug,
+    });
+  }
+
+  if (Option.isSome(target.number)) {
+    return readExerciseQuestion({
+      locale,
+      number: target.number.value,
+      setSlug: target.setSlug,
+    });
+  }
+
+  return readExerciseSet({ locale, setSlug: target.setSlug });
+}
+
+/** Reads one direct question or answer fragment from a Convex exercise question row. */
+function readExerciseFragment({
+  fragment,
+  locale,
+  number,
+  setSlug,
+}: {
+  fragment: "_answer" | "_question";
+  locale: Locale;
+  number: number;
+  setSlug: string;
+}): Effect.Effect<Response, unknown> {
+  return Effect.gen(function* () {
+    const page = yield* getExerciseApiQuestionPage({
+      locale,
+      slug: toExerciseRuntimeSlug(`${setSlug}/${number}`),
+    });
+
+    if (!page) {
+      return NextResponse.json(
+        { error: "MDX content not found." },
+        { status: 404 }
+      );
+    }
+
+    const fragmentContent =
+      fragment === "_answer" ? page.exercise.answer : page.exercise.question;
+
+    return NextResponse.json([fragmentContent]);
+  });
+}
+
+/** Reads one exercise question from Convex and returns the API array shape. */
+function readExerciseQuestion({
+  locale,
+  number,
+  setSlug,
+}: {
+  locale: Locale;
+  number: number;
+  setSlug: string;
+}): Effect.Effect<Response, unknown> {
+  return Effect.gen(function* () {
+    const page = yield* getExerciseApiQuestionPage({
+      locale,
+      slug: toExerciseRuntimeSlug(`${setSlug}/${number}`),
+    });
+
+    if (!page) {
+      return NextResponse.json(
+        { error: "Exercise not found." },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json([page.exercise]);
+  });
+}
+
+/** Reads one exercise set from Convex and returns its exercise array. */
+function readExerciseSet({
+  locale,
+  setSlug,
+}: {
+  locale: Locale;
+  setSlug: string;
+}): Effect.Effect<Response, unknown> {
+  return Effect.gen(function* () {
+    const page = yield* getExerciseApiSetPage({
+      locale,
+      slug: toExerciseRuntimeSlug(setSlug),
+    });
+
+    if (!page) {
+      return NextResponse.json(
+        { error: "Exercises content not found." },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(page.exercises);
+  });
+}
+
+/** Returns true when a relative exercise slug points to a try-out collection page. */
+function isTryOutCollectionSlug(slug: readonly string[]) {
+  return (
+    slug.length === 2 &&
+    slug[0] === TRY_OUT_SEGMENT &&
+    isExerciseYearSegment(slug.at(1))
+  );
+}
+
+/** Checks whether one route segment is a valid 4-digit exercise year. */
+function isExerciseYearSegment(value: string | undefined) {
+  return value !== undefined && EXERCISE_YEAR_SEGMENT_REGEX.test(value);
+}
+
+/** Checks whether one route segment is exactly a positive exercise number. */
+function isExerciseNumberSegment(value: string) {
+  const trimmedValue = value.trim();
+
+  if (trimmedValue === "") {
+    return false;
+  }
+
+  const number = Number.parseInt(trimmedValue, 10);
+
+  return number > 0 && number.toString() === trimmedValue;
+}
+
+/** Converts a public exercise API slug into the Convex route-catalog slug. */
+function toExerciseRuntimeSlug(slug: string) {
+  if (slug === "") {
+    return EXERCISES_ROUTE_ROOT;
+  }
+
+  return `${EXERCISES_ROUTE_ROOT}/${slug}`;
+}
+
+/** Converts unknown Effect failures into real Error values for structured logging. */
+function toError(error: unknown) {
+  if (error instanceof Error) {
+    return error;
+  }
+
+  return new Error(String(error));
 }

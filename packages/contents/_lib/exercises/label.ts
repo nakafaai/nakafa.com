@@ -1,10 +1,14 @@
 import type { Locale } from "@repo/contents/_types/content";
-import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
-import { EXERCISES_CATEGORIES } from "@repo/contents/_types/exercises/category";
-import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material";
-import { EXERCISES_MATERIALS } from "@repo/contents/_types/exercises/material";
-import type { ExercisesType } from "@repo/contents/_types/exercises/type";
-import { EXERCISES_TYPES } from "@repo/contents/_types/exercises/type";
+import type {
+  ExercisesCategory,
+  ExercisesMaterial,
+  ExercisesType,
+} from "@repo/contents/_types/taxonomy";
+import {
+  EXERCISES_CATEGORIES,
+  EXERCISES_MATERIALS,
+  EXERCISES_TYPES,
+} from "@repo/contents/_types/taxonomy";
 import enDictionary from "@repo/internationalization/dictionaries/en.json";
 import idDictionary from "@repo/internationalization/dictionaries/id.json";
 

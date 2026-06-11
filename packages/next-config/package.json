@@ -8,14 +8,14 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "devDependencies": {
-    "@next/mdx": "^16.2.7",
+    "@next/mdx": "^16.2.9",
     "@repo/typescript-config": "workspace:*",
     "@vitest/coverage-istanbul": "^4.1.8",
-    "next": "16.2.7",
+    "next": "16.2.9",
     "vitest": "^4.1.8"
   },
   "dependencies": {
-    "@next/bundle-analyzer": "16.2.7",
+    "@next/bundle-analyzer": "16.2.9",
     "@t3-oss/env-nextjs": "^0.13.11",
     "effect": "^3.21.3",
     "@mdx-js/loader": "^3.1.1",

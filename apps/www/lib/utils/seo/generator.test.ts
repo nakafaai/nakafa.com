@@ -429,7 +429,7 @@ describe("generateSEOMetadata", () => {
     expect(result.title).toBe("Surah 1.  -  | Nakafa");
   });
 
-  it("falls back to legacy metadata builders when translations fail", async () => {
+  it("falls back to local metadata builders when translations fail", async () => {
     mockGetTranslations.mockRejectedValueOnce("missing translations");
 
     const result = await generateSEOMetadata(

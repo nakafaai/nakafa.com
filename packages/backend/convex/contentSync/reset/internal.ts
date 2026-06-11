@@ -24,6 +24,14 @@ export const deleteContentAuthorsBatch =
   createBatchDeleteMutation("contentAuthors");
 export const deleteContentSearchBatch =
   createBatchDeleteMutation("contentSearch");
+export const deleteContentRoutesBatch =
+  createBatchDeleteMutation("contentRoutes");
+export const deleteContentRouteCountsBatch =
+  createBatchDeleteMutation("contentRouteCounts");
+export const deleteContentRoutePagesBatch =
+  createBatchDeleteMutation("contentRoutePages");
+export const deleteQuranVersesBatch = createBatchDeleteMutation("quranVerses");
+export const deleteQuranSurahsBatch = createBatchDeleteMutation("quranSurahs");
 export const deleteArticleReferencesBatch =
   createBatchDeleteMutation("articleReferences");
 export const deleteExerciseChoicesBatch =

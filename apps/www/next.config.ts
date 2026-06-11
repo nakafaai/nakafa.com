@@ -16,14 +16,6 @@ const withNextIntl = createNextIntlPlugin(
   "../../packages/internationalization/src/request.ts"
 );
 
-const CONTENT_TRACE_FILES = [
-  "../../packages/contents/{articles,exercises,subject}/**/*",
-] as const;
-const AGENT_CONTENT_TRACE_FILES = [
-  ...CONTENT_TRACE_FILES,
-  "../../packages/contents/_data/quran.ts",
-] as const;
-
 /**
  * Build the rewrite rules for agent discovery, SEO assets, and the PostHog proxy.
  *
@@ -43,14 +35,6 @@ function createAppRewrites() {
     },
     {
       source: "/.well-known/agent-skills/nakafa/SKILL.md",
-      destination: "/skill.md",
-    },
-    {
-      source: "/.well-known/skills/nakafa/SKILL.md",
-      destination: "/skill.md",
-    },
-    {
-      source: "/.well-known/skills/nakafa/skill.md",
       destination: "/skill.md",
     },
   ];
@@ -198,6 +182,13 @@ function createAppHeaders() {
 const nextConfig = {
   ...config,
   cacheComponents: true,
+  cacheLife: {
+    contentRuntime: {
+      stale: 300,
+      revalidate: 86_400,
+      expire: 604_800,
+    },
+  },
   // PostHog's same-origin proxy endpoints include trailing slashes such as
   // `/i/v0/e/`, so Next.js slash normalization must be disabled.
   skipTrailingSlashRedirect: true,
@@ -207,17 +198,6 @@ const nextConfig = {
   // `process.cwd()` resolves to the app directory (`apps/www`) during Next.js
   // config loading, so walking up two levels targets the monorepo root.
   outputFileTracingRoot: path.join(process.cwd(), "../.."),
-  outputFileTracingIncludes: {
-    "/api/chat": [...AGENT_CONTENT_TRACE_FILES],
-    "/llms.mdx/\\[\\.\\.\\.slug\\]": [...AGENT_CONTENT_TRACE_FILES],
-    "/og/\\[\\.\\.\\.slug\\]": [...CONTENT_TRACE_FILES],
-    "/\\[locale\\]/og/\\[\\.\\.\\.slug\\]": [...CONTENT_TRACE_FILES],
-    "/\\[locale\\]/exercises/\\[category\\]/\\[type\\]/\\[material\\]/\\[\\.\\.\\.slug\\]":
-      [...CONTENT_TRACE_FILES],
-    "/\\[locale\\]/try-out/\\[product\\]/\\[slug\\]/part/\\[partKey\\]": [
-      ...CONTENT_TRACE_FILES,
-    ],
-  },
   serverExternalPackages: [
     ...(config.serverExternalPackages ?? []),
     "@takumi-rs/core",

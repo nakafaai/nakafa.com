@@ -1,9 +1,9 @@
 import { formatQuran } from "@repo/ai/agents/nakafa/format";
 import { previewQuran } from "@repo/ai/agents/nakafa/preview";
+import { Nakafa } from "@repo/ai/agents/nakafa/service";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { NAKAFA_AGENT_MAX_QURAN_REFERENCE_VERSES } from "@repo/contents/_lib/agent/constants";
 import type { NakafaAgentQuranReferenceOptions } from "@repo/contents/_lib/agent/schema/quran";
-import { Nakafa } from "@repo/contents/_lib/agent/service";
 import type { Locale } from "@repo/contents/_types/content";
 import type { UIMessageStreamWriter } from "ai";
 import { Effect, Either, Option } from "effect";

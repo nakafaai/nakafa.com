@@ -3,9 +3,11 @@ import {
   getMaterialPath,
 } from "@repo/contents/_lib/exercises/route";
 import { getFolderChildNames } from "@repo/contents/_lib/fs/cache";
-import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
-import { EXERCISES_MATERIALS } from "@repo/contents/_types/exercises/material";
-import type { ExercisesType } from "@repo/contents/_types/exercises/type";
+import type {
+  ExercisesCategory,
+  ExercisesType,
+} from "@repo/contents/_types/taxonomy";
+import { EXERCISES_MATERIALS } from "@repo/contents/_types/taxonomy";
 import { Effect } from "effect";
 
 /**

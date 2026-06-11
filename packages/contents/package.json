@@ -10,10 +10,12 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@effect/cluster": "0.59.0",
     "@effect/platform": "0.96.1",
     "@effect/platform-node": "0.107.0",
+    "@effect/workflow": "0.18.2",
     "@hugeicons/core-free-icons": "^4.2.0",
-    "@mantine/hooks": "^9.3.0",
+    "@mantine/hooks": "^9.3.1",
     "@repo/design-system": "workspace:*",
     "@repo/internationalization": "workspace:*",
     "@repo/utilities": "workspace:*",

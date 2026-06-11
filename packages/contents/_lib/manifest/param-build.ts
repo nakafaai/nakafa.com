@@ -1,8 +1,4 @@
 import {
-  getIndexedEntries,
-  getIndexedExerciseSetEntries,
-} from "@repo/contents/_lib/manifest/indexing";
-import {
   getContentPathCandidates,
   getExerciseApiParams,
   getLocaleParams,
@@ -10,10 +6,9 @@ import {
   getStaticParams,
 } from "@repo/contents/_lib/manifest/params";
 import { ContentRouteSource } from "@repo/contents/_lib/manifest/source";
-import { CONTENT_ROOT_VALUES } from "@repo/contents/_types/content";
 import { Effect } from "effect";
 
-/** Builds the source-derived manifest used by params and search indexing. */
+/** Builds the source-derived manifest used by route params. */
 export const buildContentRouteParamManifest = Effect.fn(
   "contents.routeManifest.params.build"
 )(function* (locales: readonly string[]) {
@@ -27,15 +22,6 @@ export const buildContentRouteParamManifest = Effect.fn(
   return {
     version,
     exerciseApiParams: getExerciseApiParams(localeSlugs),
-    indexedArticleEntries: getIndexedEntries(
-      localeSlugs,
-      CONTENT_ROOT_VALUES.articles
-    ),
-    indexedExerciseSetEntries: getIndexedExerciseSetEntries(localeSlugs),
-    indexedSubjectEntries: getIndexedEntries(
-      localeSlugs,
-      CONTENT_ROOT_VALUES.subject
-    ),
     localeParams,
     staticParams,
   };

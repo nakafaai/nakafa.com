@@ -16,7 +16,7 @@ const REMOVED_ROOT_FACADE_MODULES = [
 const RELATIVE_IMPORT_PATTERN = /from\s+["']\.{1,2}\//g;
 const IMPLICIT_DATA_IMPORT_PATTERN =
   /from\s+["']@repo\/contents\/[^"']+\/_data["']/g;
-const LEGACY_ROOT_FACADE_IMPORT_PATTERN =
+const REMOVED_ROOT_FACADE_IMPORT_PATTERN =
   /from\s+["']@repo\/contents\/_lib\/(?:cache|params)["']/g;
 const INDEX_SOURCE_FILE_PATTERN = /^index\.tsx?$/;
 const TEST_FOLDER_PATTERNS = [
@@ -146,14 +146,14 @@ describe("contents architecture", () => {
   });
 
   it("uses direct modules instead of restored root facade imports", () => {
-    const legacyFacadeImports = productionSourceFiles.flatMap((filePath) => {
+    const removedFacadeImports = productionSourceFiles.flatMap((filePath) => {
       const source = readSourceFile(filePath);
-      const matches = source.matchAll(LEGACY_ROOT_FACADE_IMPORT_PATTERN);
+      const matches = source.matchAll(REMOVED_ROOT_FACADE_IMPORT_PATTERN);
 
       return Array.from(matches, () => toContentsPath(filePath));
     });
 
-    expect(legacyFacadeImports).toStrictEqual([]);
+    expect(removedFacadeImports).toStrictEqual([]);
   });
 
   it("does not use index source modules", () => {

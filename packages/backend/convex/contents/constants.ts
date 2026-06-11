@@ -23,3 +23,17 @@ export const NAKAFA_CONTENT_SECTIONS = [
   "exercises",
   "quran",
 ] as const;
+
+/** Concrete synced route families in the durable content catalog. */
+export const CONTENT_ROUTE_KINDS = [
+  "article",
+  "subject-topic",
+  "subject-section",
+  "exercise-group",
+  "exercise-set",
+  "exercise-question",
+  "quran-surah",
+] as const;
+
+/** Maximum route rows stored in one sitemap or LLMS route artifact page. */
+export const CONTENT_ROUTE_ARTIFACT_PAGE_SIZE = 100;

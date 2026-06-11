@@ -62,8 +62,7 @@ describe("llms full shards", () => {
       shardTargetBytes: 50,
     });
     const text = buildRootFullText({
-      documents,
-      localeShards: [localeShard],
+      shards: [localeShard],
     });
 
     expect(text.startsWith("# Nakafa Full Documentation\n\n> ")).toBe(true);
@@ -113,12 +112,10 @@ describe("llms full shards", () => {
     const root = buildTextArtifact(
       "llms-full.txt",
       buildRootFullText({
-        documents: documents.slice(0, 1),
-        localeShards: [shard],
+        shards: [shard],
       })
     );
     const manifest = buildFullManifest({
-      documents: documents.slice(0, 1),
       root,
       shards: [shard],
     });

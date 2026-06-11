@@ -7,7 +7,6 @@ import {
   BASE_PATH_TEMPLATE_REGEX,
   EXERCISE_MATERIAL_CONST_REGEX,
   EXERCISE_MATERIAL_PATH_REGEX,
-  LAST_PATH_SEGMENT_REGEX,
   LEADING_SLASH_REGEX,
   SUBJECT_MATERIAL_CONST_REGEX,
   SUBJECT_MATERIAL_PATH_REGEX,
@@ -16,7 +15,11 @@ import {
   buildExerciseSetSlug,
   getRelativeExercisePathSegments,
 } from "@repo/backend/scripts/lib/mdx-parser/paths";
-import type { ParsedExerciseSet } from "@repo/backend/scripts/lib/mdx-parser/types";
+import type {
+  ParsedExerciseSet,
+  ParsedSubjectSection,
+  ParsedSubjectTopic,
+} from "@repo/backend/scripts/lib/mdx-parser/types";
 import {
   parseExerciseYear,
   validateExercisesCategory,
@@ -39,6 +42,24 @@ class MaterialReadError extends Schema.TaggedError<MaterialReadError>()(
 
 const getUnknownMessage = (error: unknown) =>
   error instanceof Error ? error.message : String(error);
+
+/** Returns one material href as clean segments below its material base path. */
+const getRelativeSubjectPathSegments = Effect.fn(
+  "mdx.getRelativeSubjectPathSegments"
+)(function* (basePath: string, href: string, filePath: string) {
+  const normalizedBasePath = basePath.replace(LEADING_SLASH_REGEX, "");
+  const normalizedHref = href.replace(LEADING_SLASH_REGEX, "");
+
+  if (!normalizedHref.startsWith(`${normalizedBasePath}/`)) {
+    return yield* Effect.fail(
+      new MaterialReadError({
+        message: `Invalid subject material href "${href}" in ${filePath}.`,
+      })
+    );
+  }
+
+  return normalizedHref.slice(normalizedBasePath.length + 1).split("/");
+});
 
 const readBasePath = Effect.fn("mdx.readBasePath")(function* (
   materialFilePath: string,
@@ -269,20 +290,100 @@ export const parseSubjectMaterialFile = Effect.fn(
     materialFilePath,
     []
   );
+  const topics: ParsedSubjectTopic[] = [];
+  const seenTopics = new Set<string>();
 
-  return topicGroups.map((topicGroup) => {
-    const topic = topicGroup.href.match(LAST_PATH_SEGMENT_REGEX)?.[1] ?? "";
+  for (const [topicOrder, topicGroup] of topicGroups.entries()) {
+    const topicSegments = yield* getRelativeSubjectPathSegments(
+      basePath,
+      topicGroup.href,
+      materialFilePath
+    );
 
-    return {
+    if (topicSegments.length !== 1) {
+      return yield* Effect.fail(
+        new MaterialReadError({
+          message: `Invalid subject topic href "${topicGroup.href}" in ${materialFilePath}.`,
+        })
+      );
+    }
+
+    const [topic] = topicSegments;
+
+    if (!topic) {
+      return yield* Effect.fail(
+        new MaterialReadError({
+          message: `Invalid subject topic href "${topicGroup.href}" in ${materialFilePath}.`,
+        })
+      );
+    }
+
+    if (seenTopics.has(topic)) {
+      return yield* Effect.fail(
+        new MaterialReadError({
+          message: `Duplicate subject topic href "${topicGroup.href}" in ${materialFilePath}.`,
+        })
+      );
+    }
+
+    seenTopics.add(topic);
+    const sections: ParsedSubjectSection[] = [];
+    const seenSections = new Set<string>();
+
+    for (const [sectionOrder, item] of topicGroup.items.entries()) {
+      const sectionSegments = yield* getRelativeSubjectPathSegments(
+        basePath,
+        item.href,
+        materialFilePath
+      );
+
+      if (sectionSegments.length !== 2 || sectionSegments[0] !== topic) {
+        return yield* Effect.fail(
+          new MaterialReadError({
+            message: `Invalid subject section href "${item.href}" in ${materialFilePath}.`,
+          })
+        );
+      }
+
+      const section = sectionSegments[1];
+
+      if (!section) {
+        return yield* Effect.fail(
+          new MaterialReadError({
+            message: `Invalid subject section href "${item.href}" in ${materialFilePath}.`,
+          })
+        );
+      }
+
+      if (seenSections.has(section)) {
+        return yield* Effect.fail(
+          new MaterialReadError({
+            message: `Duplicate subject section href "${item.href}" in ${materialFilePath}.`,
+          })
+        );
+      }
+
+      seenSections.add(section);
+      sections.push({
+        order: sectionOrder,
+        section,
+        slug: `${basePath}/${topic}/${section}`,
+      });
+    }
+
+    topics.push({
       locale,
       slug: `${basePath}/${topic}`,
       category,
       grade,
       material,
+      order: topicOrder,
       topic,
       title: topicGroup.title,
       description: topicGroup.description,
-      sectionCount: topicGroup.items.length,
-    };
-  });
+      sections,
+    });
+  }
+
+  return topics;
 });

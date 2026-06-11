@@ -38,7 +38,7 @@ const enMaterials = [
       },
       {
         title: "End of Dutch Colonial State",
-        href: `${BASE_PATH}/colonialism-resistance/end-colonialism`,
+        href: `${BASE_PATH}/national-movement/end-colonialism`,
       },
     ],
   },

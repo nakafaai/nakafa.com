@@ -1,8 +1,8 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
 import { fetchQuery } from "convex/nextjs";
-import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
+import { applyContentRuntimeCache } from "@/lib/content/cache";
 
 /**
  * Loads the public tryout details for one part route from the Convex read model.
@@ -21,7 +21,7 @@ export async function getTryoutPartData(
 ) {
   "use cache";
 
-  cacheLife("seconds");
+  applyContentRuntimeCache();
 
   const details = await fetchQuery(
     api.tryouts.queries.tryouts.getTryoutDetails,
@@ -61,7 +61,7 @@ export async function getTryoutPartData(
 export async function getTryoutExercises(locale: Locale, setSlug: string) {
   "use cache";
 
-  cacheLife("seconds");
+  applyContentRuntimeCache();
 
   const exercises = await fetchQuery(
     api.exercises.queries.getRenderableRowsBySlug,

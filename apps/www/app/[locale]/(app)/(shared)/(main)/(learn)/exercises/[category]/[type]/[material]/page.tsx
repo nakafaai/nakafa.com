@@ -1,6 +1,5 @@
 import fs from "node:fs";
 import path from "node:path";
-import { getMaterials } from "@repo/contents/_lib/exercises/material";
 import {
   getExercisesPath,
   getMaterialPath,
@@ -9,16 +8,17 @@ import {
   parseExercisesType,
 } from "@repo/contents/_lib/exercises/route";
 import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
-import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
-import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material";
-import type { ExercisesType } from "@repo/contents/_types/exercises/type";
+import type {
+  ExercisesCategory,
+  ExercisesMaterial,
+  ExercisesType,
+} from "@repo/contents/_types/taxonomy";
 import type { ParsedHeading } from "@repo/contents/_types/toc";
 import { slugify } from "@repo/design-system/lib/utils";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
 import { Effect, Option } from "effect";
 import type { Metadata } from "next";
-import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
@@ -35,6 +35,8 @@ import {
   LayoutMaterialToc,
 } from "@/components/shared/layout-material";
 import { RefContent } from "@/components/shared/ref-content";
+import { applyContentRuntimeCache } from "@/lib/content/cache";
+import { getRuntimeExerciseMaterials } from "@/lib/content/navigation";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
@@ -165,6 +167,7 @@ export default function Page(
   );
 }
 
+/** Renders an exercise material index from grouped Convex route rows. */
 async function PageContent({
   locale,
   category,
@@ -178,7 +181,7 @@ async function PageContent({
 }) {
   "use cache";
 
-  cacheLife("max");
+  applyContentRuntimeCache();
 
   const typePath = getExercisesPath(category, type);
   const FilePath = getMaterialPath(category, type, material);
@@ -186,7 +189,7 @@ async function PageContent({
   const [t, tCommon, materials] = await Promise.all([
     getTranslations({ locale, namespace: "Exercises" }),
     getTranslations({ locale, namespace: "Common" }),
-    Effect.runPromise(getMaterials(FilePath, locale)),
+    Effect.runPromise(getRuntimeExerciseMaterials(FilePath, locale)),
   ]);
 
   const chapters: ParsedHeading[] = materials.map((mat) => ({

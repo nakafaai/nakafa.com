@@ -21,7 +21,7 @@ const USERNAME_EDGE_SEPARATOR_PATTERN = /^[_.]+|[_.]+$/g;
  * - Better Auth username docs:
  *   https://github.com/better-auth/better-auth/blob/main/docs/content/docs/plugins/username.mdx
  * - Installed username plugin defaults:
- *   better-auth@1.6.12/dist/plugins/username/index.mjs
+ *   better-auth@1.6.16/dist/plugins/username/index.mjs
  */
 export const usernameOptions = {
   minUsernameLength: USERNAME_MIN_LENGTH,
@@ -70,7 +70,7 @@ export function createCollisionUsername(
 /**
  * Returns true when a Better Auth request is completing Google OAuth.
  *
- * Source: better-auth@1.6.12/dist/api/routes/callback.mjs
+ * Source: better-auth@1.6.16/dist/api/routes/callback.mjs
  */
 export function isGoogleCallbackPath(path: string | undefined) {
   return path?.startsWith("/callback/") ?? false;

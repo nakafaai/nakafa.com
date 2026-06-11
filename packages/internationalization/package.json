@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "@repo/utilities": "workspace:*",
-    "next": "16.2.7",
+    "next": "16.2.9",
     "next-intl": "^4.13.0"
   },
   "devDependencies": {

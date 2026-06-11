@@ -1,7 +1,7 @@
 import { BookOpen02Icon } from "@hugeicons/core-free-icons";
 import { getCategoryPath } from "@repo/contents/_lib/articles/category";
 import { getCategoryIcon } from "@repo/contents/_lib/articles/icons";
-import { ARTICLE_CATEGORIES } from "@repo/contents/_types/articles/category";
+import { ARTICLE_CATEGORIES } from "@repo/contents/_types/taxonomy";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";

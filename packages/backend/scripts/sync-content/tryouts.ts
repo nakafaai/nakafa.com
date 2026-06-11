@@ -1,11 +1,12 @@
+import { internal } from "@repo/backend/convex/_generated/api";
 import { tryoutProducts } from "@repo/backend/convex/tryouts/products";
 import { ScriptFailureError } from "@repo/backend/scripts/lib/errors";
-import { callConvex } from "@repo/backend/scripts/sync-content/convex";
+import { callConvexMutation } from "@repo/backend/scripts/sync-content/convex";
 import {
   formatDuration,
   log,
 } from "@repo/backend/scripts/sync-content/logging";
-import { SyncResultSchema } from "@repo/backend/scripts/sync-content/schemas";
+import { TryoutSyncResultSchema } from "@repo/backend/scripts/sync-content/schemas";
 import type {
   ConvexConfig,
   SyncOptions,
@@ -61,16 +62,15 @@ export const syncTryouts = Effect.fn("sync.tryouts")(function* (
 
   for (const product of tryoutProducts) {
     for (const locale of selectedLocales) {
-      const result = yield* callConvex(
+      const result = yield* callConvexMutation(
         config,
-        "mutation",
-        "contentSync/mutations/tryouts:bulkSyncTryouts",
+        internal.contentSync.mutations.tryouts.bulkSyncTryouts,
         {
           product,
           locale,
           requiredPartKeys: yield* getTryoutPartKeys(product),
         },
-        SyncResultSchema
+        TryoutSyncResultSchema
       );
 
       totals.created += result.created;

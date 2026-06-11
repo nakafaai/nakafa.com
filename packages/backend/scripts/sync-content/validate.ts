@@ -132,7 +132,14 @@ const validateExercises = Effect.fn("sync.validateExercises")(function* () {
         yield* parseExercisePath(file);
         yield* readMdxFile(file);
         const exerciseDir = yield* getExerciseDir(file);
-        yield* readExerciseChoices(exerciseDir);
+        const choices = yield* readExerciseChoices(exerciseDir);
+        if (!choices || choices.en.length === 0 || choices.id.length === 0) {
+          return yield* Effect.fail(
+            new ScriptFailureError({
+              message: `Missing exercise choices for ${file}. Add non-empty en and id choices.ts arrays.`,
+            })
+          );
+        }
       })
     );
 

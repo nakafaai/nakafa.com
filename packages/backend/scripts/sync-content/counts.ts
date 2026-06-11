@@ -1,5 +1,6 @@
+import { internal } from "@repo/backend/convex/_generated/api";
 import { contentCountTables } from "@repo/backend/convex/contentSync/tables";
-import { callConvex } from "@repo/backend/scripts/sync-content/convex";
+import { callConvexQuery } from "@repo/backend/scripts/sync-content/convex";
 import {
   ContentCountsSchema,
   CountTablePageSchema,
@@ -22,10 +23,9 @@ const countTableDocuments = Effect.fn("sync.countTableDocuments")(function* (
   let pageSize = 0;
 
   while (!isDone) {
-    ({ continueCursor, isDone, pageSize } = yield* callConvex(
+    ({ continueCursor, isDone, pageSize } = yield* callConvexQuery(
       config,
-      "query",
-      "contentSync/queries/counts:countTablePage",
+      internal.contentSync.queries.counts.countTablePage,
       {
         tableName,
         paginationOpts: {

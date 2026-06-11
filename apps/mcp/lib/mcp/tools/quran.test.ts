@@ -1,7 +1,48 @@
+import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
 import { NakafaAgentQuranReferenceSchema } from "@repo/contents/_lib/agent/schema/quran";
 import { Effect, Schema } from "effect";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { getNakafaQuranReferenceToolResult } from "@/lib/mcp/tools/quran";
+
+vi.mock("@/lib/mcp/nakafa", async () => {
+  const { Effect, Option } = await import("effect");
+
+  return {
+    nakafaContent: {
+      /** Returns deterministic Quran references for MCP result shaping tests. */
+      quran: (input: { from_verse: number; include_tafsir: boolean }) => {
+        if (input.from_verse === 999) {
+          return Effect.succeed(Option.none());
+        }
+
+        return Effect.succeed(
+          Option.some({
+            ...buildNakafaContentRef("en", "quran/1", "quran"),
+            name: "Al-Faatiha",
+            revelation: "Mecca",
+            translation: "The Opening",
+            verses: [
+              {
+                arabic: "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ",
+                number: 1,
+                ...(input.include_tafsir ? { tafsir: "Tafsir" } : {}),
+                translation: "In the name of Allah.",
+                transliteration: "Bismillahirrahmanirrahim",
+              },
+              {
+                arabic: "الْحَمْدُ لِلّٰهِ رَبِّ الْعٰلَمِيْنَ",
+                number: 2,
+                ...(input.include_tafsir ? { tafsir: "Tafsir" } : {}),
+                translation: "All praise is for Allah.",
+                transliteration: "Alhamdulillahi rabbil alamin",
+              },
+            ],
+          })
+        );
+      },
+    },
+  };
+});
 
 const ToolErrorResultSchema = Schema.Struct({
   isError: Schema.Literal(true),

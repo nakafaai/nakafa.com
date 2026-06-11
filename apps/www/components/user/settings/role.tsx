@@ -1,6 +1,7 @@
 "use client";
 
 import { api } from "@repo/backend/convex/_generated/api";
+import { selfSelectableUserRoles } from "@repo/backend/convex/users/roles";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -20,13 +21,14 @@ import { FormBlock } from "@/components/shared/form-block";
 import type { CurrentUser } from "@/lib/context/use-user";
 import { roles } from "@/lib/data/roles";
 
-const roleSchema = Schema.Literal("teacher", "student", "parent");
+const roleSchema = Schema.Literal(...selfSelectableUserRoles);
 const formSchema = Schema.standardSchemaV1(
   Schema.Struct({
     role: roleSchema,
   })
 );
 
+/** Renders the settings form that validates and saves the user's app role. */
 export function UserSettingsRole({ user }: { user: CurrentUser }) {
   const t = useTranslations("Auth");
   const roleItems = roles.map((role) => ({
@@ -52,13 +54,13 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
       onChange: formSchema,
     },
     onSubmit: async ({ value }) => {
-      const { role } = value;
-      if (!(role === "teacher" || role === "student" || role === "parent")) {
+      const role = Schema.decodeUnknownOption(roleSchema)(value.role);
+      if (Option.isNone(role)) {
         return;
       }
 
       await updateUserRole({
-        role,
+        role: role.value,
       });
       form.reset(value);
     },

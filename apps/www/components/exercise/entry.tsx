@@ -1,5 +1,6 @@
 import type { ExerciseWithoutDefaults } from "@repo/contents/_types/exercises/shared";
 import { slugify } from "@repo/design-system/lib/utils";
+import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { Suspense } from "react";
 import { QuestionAnalytics } from "@/components/exercise/item/analytics";
@@ -8,7 +9,7 @@ import { importContentModuleOrNull } from "@/lib/content/module";
 
 type ExerciseEntryData = Pick<ExerciseWithoutDefaults, "choices" | "number">;
 
-/** Loads the compiled question module for one exercise entry. */
+/** Loads the required compiled question module for one exercise entry. */
 async function QuestionContent({
   exerciseNumber,
   locale,
@@ -27,12 +28,17 @@ async function QuestionContent({
     locale,
     source: "exercise-question-module",
   });
-  const Question = question?.default;
 
-  return Question ? <Question /> : null;
+  if (!question?.default) {
+    notFound();
+  }
+
+  const Question = question.default;
+
+  return <Question />;
 }
 
-/** Loads the compiled answer module for one exercise entry. */
+/** Loads the optional compiled answer module for one exercise entry. */
 async function AnswerContent({
   exerciseNumber,
   locale,
@@ -51,9 +57,14 @@ async function AnswerContent({
     locale,
     source: "exercise-answer-module",
   });
-  const Answer = answer?.default;
 
-  return Answer ? <Answer /> : null;
+  if (!answer?.default) {
+    return null;
+  }
+
+  const Answer = answer.default;
+
+  return <Answer />;
 }
 
 /** Builds the shared exercise article body used by learn and try-out routes. */

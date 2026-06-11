@@ -8,7 +8,6 @@ import { clearContentRouteManifestCache } from "@repo/contents/_lib/manifest/cac
 import { getContentPublicRouteManifest } from "@repo/contents/_lib/manifest/cache/public-routes";
 import { getContentRouteManifest } from "@repo/contents/_lib/manifest/cache/route";
 import {
-  getContentIndexManifest,
   getContentRouteParamManifest,
   getExerciseApiParamsForLocales,
 } from "@repo/contents/_lib/manifest/cache/route-params";
@@ -89,7 +88,7 @@ function mockManifestSource() {
     "exercises/1/_question",
     "exercises/high-school/1/_question",
     "exercises/high-school/snbt/1/_question",
-    "exercises/high-school/snbt/quantitative-knowledge/try-out/set-legacy/1/_question",
+    "exercises/high-school/snbt/quantitative-knowledge/try-out/set-archived/1/_question",
     "exercises/bad-category/snbt/quantitative-knowledge/try-out/2026/set-1/1/_question",
     "exercises/high-school/bad-type/quantitative-knowledge/try-out/2026/set-1/1/_question",
     "exercises/high-school/snbt/bad-material/try-out/2026/set-1/1/_question",
@@ -166,24 +165,12 @@ describe("content route manifest", () => {
       "/subject/high-school/10/chemistry/green-chemistry"
     );
     expect(manifest.contentRoutes).not.toContain(
-      "/exercises/high-school/snbt/quantitative-knowledge/try-out/set-legacy"
+      "/exercises/high-school/snbt/quantitative-knowledge/try-out/set-archived"
     );
     expect(manifest.redirects).toContainEqual([
       "/subject/high-school/10/chemistry/green-chemistry",
       "/subject/high-school/10/chemistry",
     ]);
-    expect(manifest.indexedArticleEntries).toContainEqual({
-      locale: "en",
-      slug: "articles/politics/article",
-    });
-    expect(manifest.indexedSubjectEntries).toContainEqual({
-      locale: "en",
-      slug: "subject/high-school/10/chemistry/green-chemistry/definition",
-    });
-    expect(manifest.indexedExerciseSetEntries).toContainEqual({
-      locale: "en",
-      slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1",
-    });
     expect(manifest.staticParams.articles).toContainEqual({
       locale: "en",
       slug: ["politics"],
@@ -288,28 +275,22 @@ describe("content route manifest", () => {
     expect(params).not.toContainEqual({ locale: "en", slug: ["politics"] });
   });
 
-  it("builds a separate index manifest for non-routing locale adapters", async () => {
-    expect(
-      (await getContentIndexManifest()).indexedArticleEntries
-    ).toContainEqual({
-      locale: "en",
-      slug: "articles/politics/article",
-    });
+  it("builds a separate route-param manifest for non-routing locales", async () => {
+    const manifest = await getContentRouteParamManifest(["de"]);
 
-    const manifest = await getContentIndexManifest(["de"]);
-
-    expect(manifest.indexedArticleEntries).toContainEqual({
+    expect(manifest.staticParams.articles).toContainEqual({
       locale: "de",
-      slug: "articles/politics/id-article",
+      slug: ["politics"],
     });
-    expect(manifest.indexedArticleEntries).not.toContainEqual({
+    expect(manifest.staticParams.articles).not.toContainEqual({
       locale: "en",
-      slug: "articles/politics/article",
+      slug: ["politics"],
     });
   });
 
   it("returns concrete exercise API params through the manifest adapter", async () => {
     const params = await getExerciseApiParamsForLocales(["en"]);
+    const nonRoutingParams = await getExerciseApiParamsForLocales(["de"]);
 
     expect(params).toContainEqual({
       locale: "en",
@@ -323,5 +304,6 @@ describe("content route manifest", () => {
         "/"
       ),
     });
+    expect(nonRoutingParams).toEqual([]);
   });
 });

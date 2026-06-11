@@ -77,12 +77,62 @@ describe("contents/queries/search:search", () => {
       "Fungsi Rasional",
       "Domain, Kodomain, dan Range",
     ]);
+    expect(titleResult.items[0]).toEqual(
+      expect.objectContaining({
+        excerpt: expect.stringContaining("kelas 11"),
+      })
+    );
     expect(bodyResult.items).toEqual([
       expect.objectContaining({
         content_id:
           "id/subject/high-school/11/mathematics/function-modeling/domain-codomain-range",
+        excerpt: expect.stringContaining("batas input"),
       }),
     ]);
+    expect(bodyResult.items[0].excerpt).not.toContain("<mark>");
+  });
+
+  it("searches route tokens without leaking route strings into excerpts", async () => {
+    const t = createConvexTestWithBetterAuth();
+
+    await t.mutation(async (ctx) => {
+      await ctx.db.insert("contentSearch", {
+        contentHash: "hash-logarithm",
+        content_id:
+          "id/subject/high-school/10/mathematics/exponential-logarithm/logarithm-definition",
+        description: "Memahami bentuk dasar logaritma.",
+        locale: "id",
+        markdown_url:
+          "https://nakafa.com/id/subject/high-school/10/mathematics/exponential-logarithm/logarithm-definition.md",
+        route:
+          "subject/high-school/10/mathematics/exponential-logarithm/logarithm-definition",
+        section: "subject",
+        syncedAt: 1,
+        text: "Definisi Logaritma menjelaskan pangkat yang dibutuhkan.",
+        title: "Definisi Logaritma",
+        url: "https://nakafa.com/id/subject/high-school/10/mathematics/exponential-logarithm/logarithm-definition",
+      });
+    });
+
+    const result = await t.query(api.contents.queries.search.search, {
+      limit: 5,
+      locale: "id",
+      offset: 0,
+      queries: [
+        "subject/high-school/10/mathematics/exponential-logarithm/logarithm-definition",
+      ],
+      section: "subject",
+    });
+
+    expect(result.items).toEqual([
+      expect.objectContaining({
+        content_id:
+          "id/subject/high-school/10/mathematics/exponential-logarithm/logarithm-definition",
+        excerpt: expect.stringContaining("Memahami bentuk dasar logaritma."),
+      }),
+    ]);
+    expect(result.items[0].excerpt).not.toContain("subject/high-school");
+    expect(result.items[0].excerpt).not.toContain("exponential-logarithm");
   });
 
   it("prioritizes exercise context over generic exercise titles", async () => {
@@ -152,6 +202,8 @@ describe("contents/queries/search:search", () => {
             contentHash: "hash-set",
             description: "Kumpulan latihan fungsi rasional.",
             exerciseType: "try-out",
+            exerciseTypeTitle: "Try Out",
+            groupContentHash: "hash-group",
             locale: "id",
             material: "quantitative-knowledge",
             questionCount: 20,
@@ -198,6 +250,8 @@ describe("contents/queries/search:search", () => {
             contentHash: "hash-empty-set",
             description: "Belum ada soal.",
             exerciseType: "semester-1",
+            exerciseTypeTitle: "Semester 1",
+            groupContentHash: "hash-empty-group",
             locale: "id",
             material: "mathematics",
             questionCount: 0,
@@ -376,6 +430,8 @@ describe("contents/queries/search:search", () => {
             contentHash: "hash-stale-set",
             description: "Kumpulan latihan fungsi kuadrat.",
             exerciseType: "try-out",
+            exerciseTypeTitle: "Try Out",
+            groupContentHash: "hash-stale-group",
             locale: "id",
             material: "quantitative-knowledge",
             questionCount: 0,
@@ -607,6 +663,7 @@ describe("contents/queries/search:search", () => {
           date: 1,
           description: "Searchable article",
           locale: "id",
+          official: false,
           references: [],
           slug: "articles/science/valid-article",
           title: "Valid Article",

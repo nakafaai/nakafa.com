@@ -2,17 +2,14 @@ import { parseSubjectCategory } from "@repo/contents/_lib/subject/category";
 import {
   getGradeNonNumeric,
   getGradePath,
-  getGradeSubjects,
   parseGrade,
 } from "@repo/contents/_lib/subject/grade";
 import { getCategoryIcon } from "@repo/contents/_lib/subject/icons";
 import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
-import type { SubjectCategory } from "@repo/contents/_types/subject/category";
-import type { Grade } from "@repo/contents/_types/subject/grade";
+import type { Grade, SubjectCategory } from "@repo/contents/_types/taxonomy";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { Effect, Option } from "effect";
 import type { Metadata } from "next";
-import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
@@ -23,6 +20,8 @@ import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
 import { SubjectItem, SubjectList } from "@/components/shared/subject-list";
+import { applyContentRuntimeCache } from "@/lib/content/cache";
+import { getRuntimeGradeSubjects } from "@/lib/content/navigation";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
@@ -109,11 +108,15 @@ export function generateStaticParams() {
 }
 
 /** Reads grade subjects inside a Next Cache Components boundary. */
-async function getCachedGradeSubjects(category: SubjectCategory, grade: Grade) {
+async function getCachedGradeSubjects(
+  category: SubjectCategory,
+  grade: Grade,
+  locale: Locale
+) {
   "use cache";
-  cacheLife("max");
+  applyContentRuntimeCache();
 
-  return Effect.runPromise(getGradeSubjects(category, grade));
+  return Effect.runPromise(getRuntimeGradeSubjects(category, grade, locale));
 }
 
 export default function Page(
@@ -142,6 +145,7 @@ export default function Page(
   );
 }
 
+/** Renders one subject grade page from Convex-backed material navigation. */
 async function PageContent({
   locale,
   category,
@@ -154,7 +158,7 @@ async function PageContent({
   const FilePath = getGradePath(category, grade);
 
   const [subjects, tCommon, tSubject] = await Promise.all([
-    getCachedGradeSubjects(category, grade),
+    getCachedGradeSubjects(category, grade, locale),
     getTranslations({ locale, namespace: "Common" }),
     getTranslations({ locale, namespace: "Subject" }),
   ]);

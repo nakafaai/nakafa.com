@@ -18,7 +18,7 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 ## Stack And Layout
 
 - Package manager: `pnpm@10.34.1`
-- Runtime: Node `22.x` through pnpm `devEngines.runtime`
+- Runtime: Node `24.x` through pnpm `devEngines.runtime`
 - Monorepo: Turborepo
 - Frontend: Next.js 16, React 19, TypeScript 6
 - Backend: Convex
@@ -29,6 +29,13 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - App-local alias: `@/*`
 - Cross-package alias: `@repo/*`
 - Educational MDX content lives in `packages/contents/`
+
+## Package Ownership
+
+- `packages/utilities` is for generic cross-domain primitives only. Do not put Nakafa content-domain constants, taxonomy, schemas, MDX/content metadata, or content-specific helpers there.
+- Content taxonomy constants and domain types live in `packages/contents/_types/taxonomy.ts`; callers import taxonomy constants and types directly from that module.
+- Content schema modules may derive Effect schemas from taxonomy values, but they must not re-export taxonomy constants or domain types.
+- `packages/contents` is the source of truth for content-domain types, taxonomy, metadata schemas, and authoring contracts. Backend/Convex may import only narrow pure modules from `packages/contents/_types` when runtime validators must share the same taxonomy.
 
 ## Effect-Native Standard
 
@@ -215,11 +222,13 @@ Before any Next.js work, find and read the relevant installed Next.js doc. With 
 - Vitest is the standard test runner.
 - Existing tests live in `__tests__/`, `__test__/`, and `*.test.ts(x)` files.
 - `packages/contents` uses colocated `{filename}.test.ts` files and architecture tests reject nested test folders.
+- Do not add final-code React component `.test.tsx` shell tests that mock child components just to render static markup. For app UI behavior, prefer route, data, or domain seams, or production-mode Browser/e2e checks. Existing historical `.test.tsx` files are not a mandate to delete unrelated tests outside the current PR scope.
 - Use `describe`, `it`/`test`, and focused assertions.
 - Keep tests readable and behavior-oriented.
 - Do not leave `.only` or `.skip` in committed code.
 - When changing business logic, add or update the nearest relevant test.
 - After risky changes, run the affected workspace suite, not just one file.
+- For React Doctor, use `pnpm run doctor --verbose --diff`. Do not invoke `pnpm run doctor -- --verbose --diff` or plain `npx react-doctor@latest`, since those paths use the wrong argument/runtime behavior in this repo.
 
 ## MDX And Content Rules
 

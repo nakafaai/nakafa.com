@@ -1,5 +1,7 @@
-import { callConvex } from "@repo/backend/scripts/sync-content/convex";
+import { internal } from "@repo/backend/convex/_generated/api";
+import { callConvexQuery } from "@repo/backend/scripts/sync-content/convex";
 import {
+  ArticleIntegrityPageSchema,
   ArticleReferenceIntegrityPageSchema,
   AuthorPageSchema,
   ContentAuthorIntegrityPageSchema,
@@ -16,39 +18,72 @@ import type {
   ConvexConfig,
   FilesystemSlugs,
 } from "@repo/backend/scripts/sync-content/types";
+import type {
+  DefaultFunctionArgs,
+  FunctionArgs,
+  FunctionReference,
+  FunctionReturnType,
+} from "convex/server";
 import { Effect, Schema } from "effect";
 
 const PAGE_SIZE = 1000;
 
-interface PageResult<T> {
+interface PageResult {
   continueCursor: string;
   isDone: boolean;
-  page: readonly T[];
+  page: unknown[];
 }
 
-const collectPages = Effect.fn("sync.collectPages")(function* <T>(
+type PageQuery = FunctionReference<
+  "query",
+  "internal" | "public",
+  DefaultFunctionArgs,
+  PageResult
+>;
+
+type PageRow<TFunction extends PageQuery> =
+  FunctionReturnType<TFunction>["page"][number];
+
+type StaleContentArgs = FunctionArgs<
+  typeof internal.contentSync.queries.stale.listStaleContentPage
+>;
+
+interface PaginationArgs {
+  cursor: string | null;
+  numItems: number;
+}
+
+/** Builds typed stale-content query args for one content table. */
+const buildStaleContentArgs =
+  (tableName: StaleContentArgs["tableName"]) =>
+  (paginationOpts: PaginationArgs): StaleContentArgs => ({
+    paginationOpts,
+    tableName,
+  });
+
+/** Reads every page from a generated paginated Convex query reference. */
+const collectPages = Effect.fn("sync.collectPages")(function* <
+  TFunction extends PageQuery,
+  Encoded,
+>(
   config: ConvexConfig,
-  functionPath: string,
-  args: Record<string, unknown>,
-  schema: Schema.Schema<PageResult<T>>
+  query: TFunction,
+  buildArgs: (paginationOpts: PaginationArgs) => FunctionArgs<TFunction>,
+  schema: Schema.Schema<FunctionReturnType<TFunction>, Encoded, never>
 ) {
-  const rows: T[] = [];
+  const rows: PageRow<TFunction>[] = [];
   let continueCursor: string | null = null;
   let isDone = false;
-  let page: readonly T[] = [];
+  let page: PageRow<TFunction>[] = [];
 
   while (!isDone) {
-    ({ continueCursor, isDone, page } = yield* callConvex(
+    ({ continueCursor, isDone, page } = yield* callConvexQuery(
       config,
-      "query",
-      functionPath,
-      {
-        ...args,
-        paginationOpts: {
-          cursor: continueCursor,
-          numItems: PAGE_SIZE,
-        },
-      },
+      query,
+      buildArgs({
+        cursor: continueCursor,
+        numItems: PAGE_SIZE,
+      }),
       schema
     ));
 
@@ -58,6 +93,7 @@ const collectPages = Effect.fn("sync.collectPages")(function* <T>(
   return rows;
 });
 
+/** Finds database content rows whose source slugs are no longer on disk. */
 export const getStaleContent = Effect.fn("sync.getStaleContent")(function* (
   config: ConvexConfig,
   filesystemSlugs: FilesystemSlugs
@@ -78,32 +114,32 @@ export const getStaleContent = Effect.fn("sync.getStaleContent")(function* (
   ] = yield* Effect.all([
     collectPages(
       config,
-      "contentSync/queries/stale:listStaleContentPage",
-      { tableName: "articleContents" },
+      internal.contentSync.queries.stale.listStaleContentPage,
+      buildStaleContentArgs("articleContents"),
       StaleContentPageSchema
     ),
     collectPages(
       config,
-      "contentSync/queries/stale:listStaleContentPage",
-      { tableName: "subjectTopics" },
+      internal.contentSync.queries.stale.listStaleContentPage,
+      buildStaleContentArgs("subjectTopics"),
       StaleContentPageSchema
     ),
     collectPages(
       config,
-      "contentSync/queries/stale:listStaleContentPage",
-      { tableName: "subjectSections" },
+      internal.contentSync.queries.stale.listStaleContentPage,
+      buildStaleContentArgs("subjectSections"),
       StaleContentPageSchema
     ),
     collectPages(
       config,
-      "contentSync/queries/stale:listStaleContentPage",
-      { tableName: "exerciseSets" },
+      internal.contentSync.queries.stale.listStaleContentPage,
+      buildStaleContentArgs("exerciseSets"),
       StaleContentPageSchema
     ),
     collectPages(
       config,
-      "contentSync/queries/stale:listStaleContentPage",
-      { tableName: "exerciseQuestions" },
+      internal.contentSync.queries.stale.listStaleContentPage,
+      buildStaleContentArgs("exerciseQuestions"),
       StaleContentPageSchema
     ),
   ]);
@@ -125,6 +161,7 @@ export const getStaleContent = Effect.fn("sync.getStaleContent")(function* (
   });
 });
 
+/** Summarizes missing content relationships for sync verification. */
 export const getDataIntegrity = Effect.fn("sync.getDataIntegrity")(function* (
   config: ConvexConfig
 ) {
@@ -139,44 +176,44 @@ export const getDataIntegrity = Effect.fn("sync.getDataIntegrity")(function* (
   ] = yield* Effect.all([
     collectPages(
       config,
-      "contentSync/queries/integrity:listIntegrityExerciseQuestionsPage",
-      {},
+      internal.contentSync.queries.integrity.listIntegrityExerciseQuestionsPage,
+      (paginationOpts) => ({ paginationOpts }),
       ExerciseQuestionIntegrityPageSchema
     ),
     collectPages(
       config,
-      "contentSync/queries/integrity:listIntegrityExerciseChoicesPage",
-      {},
+      internal.contentSync.queries.integrity.listIntegrityExerciseChoicesPage,
+      (paginationOpts) => ({ paginationOpts }),
       ExerciseChoiceIntegrityPageSchema
     ),
     collectPages(
       config,
-      "contentSync/queries/integrity:listIntegrityContentAuthorsPage",
-      {},
+      internal.contentSync.queries.integrity.listIntegrityContentAuthorsPage,
+      (paginationOpts) => ({ paginationOpts }),
       ContentAuthorIntegrityPageSchema
     ),
     collectPages(
       config,
-      "contentSync/queries/integrity:listIntegrityArticleReferencesPage",
-      {},
+      internal.contentSync.queries.integrity.listIntegrityArticleReferencesPage,
+      (paginationOpts) => ({ paginationOpts }),
       ArticleReferenceIntegrityPageSchema
     ),
     collectPages(
       config,
-      "contentSync/queries/integrity:listIntegrityArticlesPage",
-      {},
-      StaleContentPageSchema
+      internal.contentSync.queries.integrity.listIntegrityArticlesPage,
+      (paginationOpts) => ({ paginationOpts }),
+      ArticleIntegrityPageSchema
     ),
     collectPages(
       config,
-      "contentSync/queries/integrity:listIntegritySubjectSectionsPage",
-      {},
+      internal.contentSync.queries.integrity.listIntegritySubjectSectionsPage,
+      (paginationOpts) => ({ paginationOpts }),
       SubjectSectionIntegrityPageSchema
     ),
     collectPages(
       config,
-      "contentSync/queries/tryouts:getTryoutScaleIntegrity",
-      {},
+      internal.contentSync.queries.tryouts.getTryoutScaleIntegrity,
+      (paginationOpts) => ({ paginationOpts }),
       TryoutScaleIntegritySchema
     ),
   ]);
@@ -214,20 +251,21 @@ export const getDataIntegrity = Effect.fn("sync.getDataIntegrity")(function* (
   });
 });
 
+/** Returns authors that are not referenced by any content-author links. */
 export const getUnusedAuthors = Effect.fn("sync.getUnusedAuthors")(function* (
   config: ConvexConfig
 ) {
   const [authors, contentAuthors] = yield* Effect.all([
     collectPages(
       config,
-      "contentSync/queries/authors:listAuthorsPage",
-      {},
+      internal.contentSync.queries.authors.listAuthorsPage,
+      (paginationOpts) => ({ paginationOpts }),
       AuthorPageSchema
     ),
     collectPages(
       config,
-      "contentSync/queries/integrity:listIntegrityContentAuthorsPage",
-      {},
+      internal.contentSync.queries.integrity.listIntegrityContentAuthorsPage,
+      (paginationOpts) => ({ paginationOpts }),
       ContentAuthorIntegrityPageSchema
     ),
   ]);

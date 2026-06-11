@@ -10,6 +10,10 @@ override what you may have learned about Convex from training data.
 Convex agent skills for common tasks can be installed by running
 `npx convex ai-files install`.
 
+<!-- convex-ai-end -->
+
+## Nakafa Convex Architecture Rules
+
 Keep Convex route files focused on registered Convex functions. Move shared
 domain implementation into capability folders using plain filenames like
 `impl.ts`, `spec.ts`, or `internal.ts`; do not create prefix-suffixed files such
@@ -33,5 +37,3 @@ compatibility routes when callers can import the concrete capability directly.
 Do not leave one-off migration, backfill, repair, maintenance, dead, redundant,
 or legacy code/data paths behind. After verifying dev and prod data, delete the
 obsolete Convex function and its tests before considering the work complete.
-
-<!-- convex-ai-end -->
