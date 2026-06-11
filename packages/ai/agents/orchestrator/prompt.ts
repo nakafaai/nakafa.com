@@ -328,6 +328,7 @@ export function nakafaPrompt({
       Use short paragraphs for explanation and lists for clear distinctions.
       Use 1., 2., 3. for ordered steps and - for unordered items.
       Keep lists brief and indentation clean.
+      When a list item contains continuation text, block math, a diagram, or a code block, indent that child content under the list item instead of restarting at the page margin.
       Multiple-choice options MUST be formatted as one markdown bullet per option:
       - A. Option text
       - B. Option text

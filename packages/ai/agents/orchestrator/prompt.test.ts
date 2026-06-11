@@ -52,6 +52,9 @@ describe("nakafaPrompt", () => {
     expect(examplesSection).toContain("Bad specialist inputs:");
     expect(outputSection).toContain("## Mathematical format");
     expect(outputSection).toContain("## Links");
+    expect(outputSection).toContain(
+      "indent that child content under the list item"
+    );
   });
 
   it("keeps one stable Nina persona without conflicting harsh-advisor rules", () => {

@@ -159,6 +159,7 @@ export function mathPrompt({ locale, context }: MathPromptProps) {
       Say the calculation was checked in normal classroom language.
       Summarize the result and any limitation clearly.
       Use LaTeX for math with \\(...\\) or \\[...\\].
+      When block math belongs to a list item, indent the \\[...\\] block under that list item instead of restarting at the page margin.
       Do not use HTML or XML.
     `,
   });
