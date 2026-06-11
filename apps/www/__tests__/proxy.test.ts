@@ -1,3 +1,4 @@
+import { Effect } from "effect";
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { config, proxy } from "@/proxy";
@@ -12,9 +13,9 @@ const mockLocaleRouting = vi.hoisted(() => ({
       })
   ),
 }));
-const mockFetchRuntimeContentRoute = vi.hoisted(() => vi.fn());
-const mockFetchRuntimeContentRoutesByKindPage = vi.hoisted(() => vi.fn());
-const mockFetchRuntimeContentRoutesByParentPage = vi.hoisted(() => vi.fn());
+const mockGetRuntimeContentRoute = vi.hoisted(() => vi.fn());
+const mockGetRuntimeContentRouteKindPage = vi.hoisted(() => vi.fn());
+const mockGetRuntimeContentRouteParentPage = vi.hoisted(() => vi.fn());
 
 vi.mock("@repo/internationalization/src/routing", () => ({
   routing: {
@@ -28,28 +29,33 @@ vi.mock("next-intl/middleware", () => ({
 }));
 
 vi.mock("@/lib/content/runtime", () => ({
-  fetchRuntimeContentRoute: mockFetchRuntimeContentRoute,
-  fetchRuntimeContentRoutesByKindPage: mockFetchRuntimeContentRoutesByKindPage,
-  fetchRuntimeContentRoutesByParentPage:
-    mockFetchRuntimeContentRoutesByParentPage,
+  getRuntimeContentRoute: mockGetRuntimeContentRoute,
+  getRuntimeContentRouteKindPage: mockGetRuntimeContentRouteKindPage,
+  getRuntimeContentRouteParentPage: mockGetRuntimeContentRouteParentPage,
 }));
 
 describe("proxy", () => {
   beforeEach(() => {
-    mockFetchRuntimeContentRoute.mockReset();
-    mockFetchRuntimeContentRoutesByKindPage.mockReset();
-    mockFetchRuntimeContentRoutesByParentPage.mockReset();
-    mockFetchRuntimeContentRoute.mockResolvedValue({ route: "fixture" });
-    mockFetchRuntimeContentRoutesByKindPage.mockResolvedValue({
-      continueCursor: null,
-      isDone: true,
-      page: [{ route: "fixture" }],
-    });
-    mockFetchRuntimeContentRoutesByParentPage.mockResolvedValue({
-      continueCursor: null,
-      isDone: true,
-      page: [{ route: "fixture" }],
-    });
+    mockGetRuntimeContentRoute.mockReset();
+    mockGetRuntimeContentRouteKindPage.mockReset();
+    mockGetRuntimeContentRouteParentPage.mockReset();
+    mockGetRuntimeContentRoute.mockReturnValue(
+      Effect.succeed({ route: "fixture" })
+    );
+    mockGetRuntimeContentRouteKindPage.mockReturnValue(
+      Effect.succeed({
+        continueCursor: null,
+        isDone: true,
+        page: [{ route: "fixture" }],
+      })
+    );
+    mockGetRuntimeContentRouteParentPage.mockReturnValue(
+      Effect.succeed({
+        continueCursor: null,
+        isDone: true,
+        page: [{ route: "fixture" }],
+      })
+    );
     mockLocaleRouting.localeMiddleware.mockClear();
   });
 
@@ -147,7 +153,7 @@ describe("proxy", () => {
 
     expect(mockLocaleRouting.localeMiddleware).toHaveBeenCalledTimes(1);
     expect(response.headers.get("x-locale-proxy")).toBe("1");
-    expect(mockFetchRuntimeContentRoute).toHaveBeenCalledWith({
+    expect(mockGetRuntimeContentRoute).toHaveBeenCalledWith({
       locale: "en",
       route: "subject/high-school/10/chemistry/green-chemistry/definition",
     });
@@ -160,8 +166,8 @@ describe("proxy", () => {
 
     expect(mockLocaleRouting.localeMiddleware).toHaveBeenCalledTimes(1);
     expect(response.headers.get("x-locale-proxy")).toBe("1");
-    expect(mockFetchRuntimeContentRoute).not.toHaveBeenCalled();
-    expect(mockFetchRuntimeContentRoutesByParentPage).toHaveBeenCalledWith({
+    expect(mockGetRuntimeContentRoute).not.toHaveBeenCalled();
+    expect(mockGetRuntimeContentRouteParentPage).toHaveBeenCalledWith({
       cursor: null,
       kind: "subject-topic",
       limit: 1,
@@ -179,7 +185,7 @@ describe("proxy", () => {
 
     expect(mockLocaleRouting.localeMiddleware).toHaveBeenCalledTimes(1);
     expect(response.headers.get("x-locale-proxy")).toBe("1");
-    expect(mockFetchRuntimeContentRoutesByKindPage).toHaveBeenCalledWith({
+    expect(mockGetRuntimeContentRouteKindPage).toHaveBeenCalledWith({
       cursor: null,
       kind: "subject-topic",
       limit: 1,
@@ -206,7 +212,7 @@ describe("proxy", () => {
     expect(mockLocaleRouting.localeMiddleware).toHaveBeenCalledTimes(
       routes.length
     );
-    expect(mockFetchRuntimeContentRoutesByKindPage).toHaveBeenCalledWith({
+    expect(mockGetRuntimeContentRouteKindPage).toHaveBeenCalledWith({
       cursor: null,
       kind: "exercise-group",
       limit: 1,
@@ -214,7 +220,7 @@ describe("proxy", () => {
       prefix: "exercises/middle-school/grade-9/",
       section: "exercises",
     });
-    expect(mockFetchRuntimeContentRoutesByParentPage).toHaveBeenCalledWith({
+    expect(mockGetRuntimeContentRouteParentPage).toHaveBeenCalledWith({
       cursor: null,
       kind: "exercise-group",
       limit: 1,
@@ -235,7 +241,7 @@ describe("proxy", () => {
       )
     );
 
-    expect(mockFetchRuntimeContentRoute).not.toHaveBeenCalled();
+    expect(mockGetRuntimeContentRoute).not.toHaveBeenCalled();
     expect(mockLocaleRouting.localeMiddleware).toHaveBeenCalledTimes(1);
     expect(response.headers.get("x-locale-proxy")).toBe("1");
   });
@@ -245,7 +251,7 @@ describe("proxy", () => {
       new NextRequest("http://localhost:3000/en/unknown-content-root/example")
     );
 
-    expect(mockFetchRuntimeContentRoute).not.toHaveBeenCalled();
+    expect(mockGetRuntimeContentRoute).not.toHaveBeenCalled();
     expect(mockLocaleRouting.localeMiddleware).toHaveBeenCalledTimes(1);
     expect(response.headers.get("x-locale-proxy")).toBe("1");
   });
@@ -268,6 +274,47 @@ describe("proxy", () => {
     );
   });
 
+  it("rewrites source-backed legal routes when markdown is requested", async () => {
+    const response = await proxy(
+      new NextRequest("http://localhost:3000/en/terms-of-service", {
+        headers: {
+          accept: "text/markdown",
+        },
+      })
+    );
+
+    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
+    expect(response.headers.get("x-middleware-rewrite")).toBe(
+      "http://localhost:3000/llms.mdx/en/terms-of-service"
+    );
+  });
+
+  it("routes static markdown negotiation to the llms source resolver", async () => {
+    const response = await proxy(
+      new NextRequest("http://localhost:3000/en/search", {
+        headers: {
+          accept: "text/markdown",
+        },
+      })
+    );
+
+    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
+    expect(response.headers.get("x-middleware-rewrite")).toBe(
+      "http://localhost:3000/llms.mdx/en/search"
+    );
+  });
+
+  it("routes static .md URLs to the llms source resolver", async () => {
+    const response = await proxy(
+      new NextRequest("http://localhost:3000/en/contributor.md")
+    );
+
+    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
+    expect(response.headers.get("x-middleware-rewrite")).toBe(
+      "http://localhost:3000/llms.mdx/en/contributor"
+    );
+  });
+
   it("delegates subject chapter routes so app routes can redirect", async () => {
     const response = await proxy(
       new NextRequest(
@@ -280,7 +327,7 @@ describe("proxy", () => {
   });
 
   it("returns a real 404 for missing markdown public content routes", async () => {
-    mockFetchRuntimeContentRoute.mockResolvedValueOnce(null);
+    mockGetRuntimeContentRoute.mockReturnValueOnce(Effect.succeed(null));
 
     const response = await proxy(
       new NextRequest(
@@ -301,7 +348,7 @@ describe("proxy", () => {
   });
 
   it("returns a real 404 for missing html public content routes", async () => {
-    mockFetchRuntimeContentRoute.mockResolvedValueOnce(null);
+    mockGetRuntimeContentRoute.mockReturnValueOnce(Effect.succeed(null));
 
     const response = await proxy(
       new NextRequest(
@@ -318,7 +365,7 @@ describe("proxy", () => {
   });
 
   it("returns a real 404 for missing Quran content routes", async () => {
-    mockFetchRuntimeContentRoute.mockResolvedValueOnce(null);
+    mockGetRuntimeContentRoute.mockReturnValueOnce(Effect.succeed(null));
 
     const response = await proxy(
       new NextRequest("http://localhost:3000/id/quran/999")
@@ -332,7 +379,7 @@ describe("proxy", () => {
   });
 
   it("returns a real 404 for missing html content HEAD requests", async () => {
-    mockFetchRuntimeContentRoute.mockResolvedValueOnce(null);
+    mockGetRuntimeContentRoute.mockReturnValueOnce(Effect.succeed(null));
 
     const response = await proxy(
       new NextRequest(
@@ -351,11 +398,13 @@ describe("proxy", () => {
   });
 
   it("returns a real 404 for missing article listing routes", async () => {
-    mockFetchRuntimeContentRoutesByParentPage.mockResolvedValueOnce({
-      continueCursor: null,
-      isDone: true,
-      page: [],
-    });
+    mockGetRuntimeContentRouteParentPage.mockReturnValueOnce(
+      Effect.succeed({
+        continueCursor: null,
+        isDone: true,
+        page: [],
+      })
+    );
 
     const response = await proxy(
       new NextRequest(
@@ -371,11 +420,13 @@ describe("proxy", () => {
   });
 
   it("returns a real 404 for missing subject grade listing routes", async () => {
-    mockFetchRuntimeContentRoutesByKindPage.mockResolvedValueOnce({
-      continueCursor: null,
-      isDone: true,
-      page: [],
-    });
+    mockGetRuntimeContentRouteKindPage.mockReturnValueOnce(
+      Effect.succeed({
+        continueCursor: null,
+        isDone: true,
+        page: [],
+      })
+    );
 
     const response = await proxy(
       new NextRequest(
@@ -391,11 +442,13 @@ describe("proxy", () => {
   });
 
   it("returns a real 404 for missing subject material listing routes", async () => {
-    mockFetchRuntimeContentRoutesByParentPage.mockResolvedValueOnce({
-      continueCursor: null,
-      isDone: true,
-      page: [],
-    });
+    mockGetRuntimeContentRouteParentPage.mockReturnValueOnce(
+      Effect.succeed({
+        continueCursor: null,
+        isDone: true,
+        page: [],
+      })
+    );
 
     const response = await proxy(
       new NextRequest(
@@ -425,8 +478,8 @@ describe("proxy", () => {
   });
 
   it("fails open when the exact route lookup is temporarily unavailable", async () => {
-    mockFetchRuntimeContentRoute.mockRejectedValueOnce(
-      new Error("Convex unavailable")
+    mockGetRuntimeContentRoute.mockReturnValueOnce(
+      Effect.fail(new Error("Convex unavailable"))
     );
 
     const response = await proxy(
@@ -440,8 +493,8 @@ describe("proxy", () => {
   });
 
   it("fails open when a listing route probe is temporarily unavailable", async () => {
-    mockFetchRuntimeContentRoutesByParentPage.mockRejectedValueOnce(
-      new Error("Convex unavailable")
+    mockGetRuntimeContentRouteParentPage.mockReturnValueOnce(
+      Effect.fail(new Error("Convex unavailable"))
     );
 
     const response = await proxy(

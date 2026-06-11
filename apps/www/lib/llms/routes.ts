@@ -1,0 +1,297 @@
+import {
+  getPublicContentRouteCheck,
+  type PublicContentRouteCheck,
+} from "@repo/contents/_lib/manifest/public-route";
+import { routing } from "@repo/internationalization/src/routing";
+import { Effect } from "effect";
+import {
+  getRuntimeContentRoute,
+  getRuntimeContentRouteKindPage,
+  getRuntimeContentRouteParentPage,
+} from "@/lib/content/runtime";
+import { baseRoutes } from "@/lib/sitemap/routes";
+
+type SupportedLocale = (typeof routing.locales)[number];
+type VerifiedContentRouteCheck = Exclude<
+  PublicContentRouteCheck,
+  { mode: "outside" }
+>;
+
+export interface LocalizedLlmsRoute {
+  locale: SupportedLocale;
+  markdownExtension: string;
+  route: string;
+}
+
+export interface LlmsProxyRouteRequest {
+  acceptHeader: string | null;
+  method: string;
+  pathname: string;
+}
+
+export type LlmsProxyRouteDecision =
+  | { kind: "content-not-found"; locale: SupportedLocale }
+  | { kind: "delegate" }
+  | { kind: "rewrite-markdown"; localizedRoute: LocalizedLlmsRoute };
+
+const MARKDOWN_EXTENSION_PATTERN = /\.mdx?$/;
+const SITEMAP_BASE_ROUTES = new Set(baseRoutes);
+
+/**
+ * Classifies one localized HTTP request for the proxy adapter.
+ *
+ * The interface hides locale parsing, `.md` suffix handling, sitemap-backed
+ * static route discovery, and bounded content route probes. Catalog read
+ * failures fail open so transient Convex/runtime issues do not create false
+ * 404s, while confirmed missing content returns an explicit 404 decision.
+ */
+export const resolveLlmsProxyRoute = Effect.fn("www.llms.routes.resolveProxy")(
+  function* (request: LlmsProxyRouteRequest) {
+    const localizedRoute = getLocalizedLlmsRoute(request.pathname);
+
+    if (!localizedRoute) {
+      const decision: LlmsProxyRouteDecision = { kind: "delegate" };
+      return decision;
+    }
+
+    const wantsMarkdown = isLlmsMarkdownRequest({
+      acceptHeader: request.acceptHeader,
+      markdownExtension: localizedRoute.markdownExtension,
+    });
+    const routeCheck = getPublicContentRouteCheck(localizedRoute.route);
+
+    if (routeCheck.mode === "outside") {
+      if (wantsMarkdown && SITEMAP_BASE_ROUTES.has(localizedRoute.route)) {
+        const decision: LlmsProxyRouteDecision = {
+          kind: "rewrite-markdown",
+          localizedRoute,
+        };
+        return decision;
+      }
+
+      const decision: LlmsProxyRouteDecision = { kind: "delegate" };
+      return decision;
+    }
+
+    if (shouldVerifyContentRoute(request.method)) {
+      const exists = yield* contentRouteExists({
+        locale: localizedRoute.locale,
+        routeCheck,
+      });
+
+      if (!exists) {
+        const decision: LlmsProxyRouteDecision = {
+          kind: "content-not-found",
+          locale: localizedRoute.locale,
+        };
+        return decision;
+      }
+    }
+
+    if (wantsMarkdown) {
+      const decision: LlmsProxyRouteDecision = {
+        kind: "rewrite-markdown",
+        localizedRoute,
+      };
+      return decision;
+    }
+
+    const decision: LlmsProxyRouteDecision = { kind: "delegate" };
+    return decision;
+  }
+);
+
+/**
+ * Parses the locale-prefixed URL path into the route model used by llms.
+ *
+ * The returned route always starts with `/`, has any markdown extension
+ * removed, and carries the stripped extension separately so content negotiation
+ * and suffix requests share the same downstream source lookup.
+ */
+function getLocalizedLlmsRoute(pathname: string): LocalizedLlmsRoute | null {
+  const [rawLocale, ...routeSegments] = pathname.split("/").filter(Boolean);
+  const locale = getSupportedLocale(rawLocale);
+
+  if (!locale) {
+    return null;
+  }
+
+  const rawRoute = `/${routeSegments.join("/")}`;
+  const markdownExtension =
+    rawRoute.match(MARKDOWN_EXTENSION_PATTERN)?.[0] ?? "";
+  const route = rawRoute.replace(MARKDOWN_EXTENSION_PATTERN, "");
+
+  return {
+    locale,
+    markdownExtension,
+    route,
+  };
+}
+
+/**
+ * Narrows a raw URL segment to the configured locales without widening the type.
+ *
+ * Returning null keeps unknown locale prefixes in the normal Next/next-intl
+ * route flow instead of treating them as llms-capable pages.
+ */
+function getSupportedLocale(locale: string | undefined) {
+  for (const supportedLocale of routing.locales) {
+    if (supportedLocale === locale) {
+      return supportedLocale;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Detects the two markdown request forms AFDocs checks.
+ *
+ * `.md` and `.mdx` suffixes are explicit route variants; `Accept:
+ * text/markdown` is content negotiation for the HTML URL. Both forms map to
+ * the same source-backed markdown resolver.
+ */
+function isLlmsMarkdownRequest({
+  acceptHeader,
+  markdownExtension,
+}: {
+  acceptHeader: string | null;
+  markdownExtension: string;
+}) {
+  return (
+    Boolean(markdownExtension) ||
+    acceptHeader?.includes("text/markdown") === true
+  );
+}
+
+/**
+ * Limits content existence probes to safe read methods.
+ *
+ * Non-read methods keep normal application routing so proxy checks do not add
+ * side effects or method-specific behavior to content pages.
+ */
+function shouldVerifyContentRoute(method: string) {
+  return method === "GET" || method === "HEAD";
+}
+
+/**
+ * Verifies that a content route classified by the manifest has backing rows.
+ *
+ * Exact routes use one indexed route lookup. Listing routes use a single
+ * bounded page read scoped by kind, parent, or prefix. App shell routes are
+ * treated as present, known invalid taxonomy routes are treated as missing,
+ * and transient catalog failures fail open to preserve URL stability.
+ */
+const contentRouteExists = Effect.fn("www.llms.routes.contentExists")(
+  function* ({
+    locale,
+    routeCheck,
+  }: {
+    locale: SupportedLocale;
+    routeCheck: VerifiedContentRouteCheck;
+  }) {
+    if (routeCheck.mode === "app") {
+      return true;
+    }
+
+    if (routeCheck.mode === "missing") {
+      return false;
+    }
+
+    if (routeCheck.mode === "exact") {
+      return yield* getRuntimeContentRoute({
+        locale,
+        route: routeCheck.route,
+      }).pipe(
+        Effect.match({
+          onFailure: () => true,
+          onSuccess: (contentRoute) => contentRoute !== null,
+        })
+      );
+    }
+
+    if (routeCheck.mode === "article-category") {
+      return yield* contentRoutePageHasRows(
+        getRuntimeContentRouteParentPage({
+          cursor: null,
+          kind: "article",
+          limit: 1,
+          locale,
+          order: "date-desc",
+          parentRoute: routeCheck.parentRoute,
+          section: "articles",
+        })
+      );
+    }
+
+    if (routeCheck.mode === "exercise-type") {
+      return yield* contentRoutePageHasRows(
+        getRuntimeContentRouteKindPage({
+          cursor: null,
+          kind: "exercise-group",
+          limit: 1,
+          locale,
+          prefix: routeCheck.prefix,
+          section: "exercises",
+        })
+      );
+    }
+
+    if (routeCheck.mode === "exercise-material") {
+      return yield* contentRoutePageHasRows(
+        getRuntimeContentRouteParentPage({
+          cursor: null,
+          kind: "exercise-group",
+          limit: 1,
+          locale,
+          order: "route",
+          parentRoute: routeCheck.parentRoute,
+          section: "exercises",
+        })
+      );
+    }
+
+    if (routeCheck.mode === "subject-grade") {
+      return yield* contentRoutePageHasRows(
+        getRuntimeContentRouteKindPage({
+          cursor: null,
+          kind: "subject-topic",
+          limit: 1,
+          locale,
+          prefix: routeCheck.prefix,
+          section: "subject",
+        })
+      );
+    }
+
+    return yield* contentRoutePageHasRows(
+      getRuntimeContentRouteParentPage({
+        cursor: null,
+        kind: "subject-topic",
+        limit: 1,
+        locale,
+        order: "route",
+        parentRoute: routeCheck.parentRoute,
+        section: "subject",
+      })
+    );
+  }
+);
+
+/**
+ * Reads one already-scoped route catalog page and converts it to existence.
+ *
+ * The supplied Effect must already be bounded and indexed by the caller.
+ * Failures return true so transient catalog outages fail open instead of
+ * producing crawler-visible false 404s.
+ */
+function contentRoutePageHasRows(
+  pageEffect: Effect.Effect<{ page: readonly unknown[] }, unknown>
+) {
+  return pageEffect.pipe(
+    Effect.match({
+      onFailure: () => true,
+      onSuccess: (page) => page.page.length > 0,
+    })
+  );
+}
