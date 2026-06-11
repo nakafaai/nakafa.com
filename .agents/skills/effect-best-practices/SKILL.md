@@ -8,12 +8,54 @@ version: 1.0.0
 
 This skill enforces opinionated, consistent patterns for Effect-TS codebases. These patterns optimize for type safety, testability, observability, and maintainability.
 
+## Effect Language Server (Required)
+
+**The Effect Language Server is essential for Effect development.** It catches errors at edit-time that TypeScript alone cannot detect, provides Effect-specific refactors, and improves developer productivity.
+
+### Setup
+
+1. Install:
+```bash
+npm install @effect/language-service --save-dev
+```
+
+2. Add to `tsconfig.json`:
+```json
+{
+  "compilerOptions": {
+    "plugins": [{ "name": "@effect/language-service" }]
+  }
+}
+```
+
+3. Configure your editor to use workspace TypeScript:
+   - **VSCode**: F1 → "TypeScript: Select TypeScript Version" → "Use Workspace Version"
+   - **JetBrains**: Settings → Languages & Frameworks → TypeScript → Use workspace version
+
+### Features
+
+- **Diagnostics**: Detects 30+ Effect-specific issues (floating Effects, missing requirements, incorrect yield patterns)
+- **Quick Info**: Hover to see Effect type parameters (Success, Error, Requirements)
+- **Completions**: Auto-complete `Self`, Duration strings, Schema brands
+- **Refactors**: Convert async → Effect.gen, auto-compose Layers, transform to Schema
+
+### Build-Time Diagnostics
+
+For CI enforcement:
+```bash
+npx effect-language-service patch
+```
+
+See `references/language-server.md` for configuration options and CLI tools.
+
 ## Quick Reference: Critical Rules
 
 | Category | DO | DON'T |
 |----------|-----|-------|
 | Services | `Effect.Service` with `accessors: true` | `Context.Tag` for business logic |
 | Dependencies | `dependencies: [Dep.Default]` in service | Manual `Layer.provide` at usage sites |
+| Layers | `Layer.mergeAll` for flat composition | Deeply nested `Layer.provide` chains |
+| Layer Chaining | `Layer.provideMerge` for incremental composition | Multiple `Layer.provide` (creates nested types) |
 | Errors | `Schema.TaggedError` with `message` field | Plain classes or generic Error |
 | Error Specificity | `UserNotFoundError`, `SessionExpiredError` | Generic `NotFoundError`, `BadRequestError` |
 | Error Handling | `catchTag`/`catchTags` | `catchAll` or `mapError` |
@@ -269,7 +311,30 @@ const AppLive = Layer.mergeAll(
 )
 ```
 
-See `references/layer-patterns.md` for testing layers and config-dependent layers.
+**Layer composition patterns:**
+
+```typescript
+// Use Layer.mergeAll for flat composition of same-level layers
+const RepoLive = Layer.mergeAll(
+    UserRepo.Default,
+    OrderRepo.Default,
+    ProductRepo.Default,
+)
+
+// Use Layer.provideMerge for incremental chaining (flatter types than Layer.provide)
+const MainLive = DatabaseLive.pipe(
+    Layer.provideMerge(ConfigServiceLive),
+    Layer.provideMerge(LoggerLive),
+    Layer.provideMerge(CacheLive),
+)
+```
+
+**Why layers over `Effect.provide`:**
+- **Deduplication**: Layers memoize construction - same service instantiated once. `Effect.provide` creates new instances each call.
+- **TypeScript performance**: Deep `Layer.provide` nesting creates complex recursive types that slow the LSP. `Layer.mergeAll` and `Layer.provideMerge` produce flatter types.
+- **Resource management**: Scoped layers properly share and clean up resources.
+
+See `references/layer-patterns.md` for testing layers, config-dependent layers, and the `layerConfig` pattern.
 
 ## Option Handling
 
@@ -362,7 +427,20 @@ const scrollYAtom = Atom.make((get) => {
 }).pipe(Atom.keepAlive)
 ```
 
-See `references/effect-atom-patterns.md` for complete patterns including families, localStorage, and anti-patterns.
+### React Mutations
+
+For mutation atoms, derive loading state from `result.waiting` instead of `useState`:
+
+```typescript
+const [result, mutate] = useAtom(deleteMutation, { mode: "promise" })
+const isLoading = result.waiting // Updates automatically, no useState/finally needed
+```
+
+**Dialog ownership:** Move mutation logic into dialog components. Dialog owns the mutation hook, loading state, and toasts. Parent provides data props and an `onSuccess` callback.
+
+**Cache invalidation:** Use `reactivityKeys` on both mutation and query atoms to auto-invalidate queries after mutations — replaces manual `refresh()` calls.
+
+See `references/effect-atom-patterns.md` for complete patterns including families, localStorage, mutations, and anti-patterns.
 
 ## RPC & Cluster Patterns
 
@@ -410,7 +488,7 @@ yield* Metric.increment(orderCounter)
 // Config with validation
 const config = Config.all({
     port: Config.integer("PORT").pipe(Config.withDefault(3000)),
-    apiKey: Config.secret("API_KEY"),
+    apiKey: Config.redacted("API_KEY"),
     maxRetries: Config.integer("MAX_RETRIES").pipe(
         Config.validate({ message: "Must be positive", validation: (n) => n > 0 })
     ),
@@ -423,6 +501,7 @@ See `references/observability-patterns.md` for metrics and tracing patterns.
 
 For detailed patterns, consult these reference files in the `references/` directory:
 
+- `language-server.md` - Effect Language Service setup, diagnostics, refactors, CLI tools
 - `service-patterns.md` - Service definition, Effect.fn, Context.Tag exceptions
 - `error-patterns.md` - Schema.TaggedError, error remapping, retry patterns
 - `schema-patterns.md` - Branded types, transforms, Schema.Class

@@ -77,7 +77,7 @@ from verify import (
 )
 
 # name -> (source, max_pages). max_pages=0 means no hard check.
-# Sourced from shared.HTML_TEMPLATES so build.py and stabilize.py never drift.
+# Sourced from shared.HTML_TEMPLATES (single source of truth for targets).
 HTML_TARGETS: dict[str, tuple[str, int]] = build_targets()
 SCREEN_TARGETS: dict[str, str] = screen_targets()
 PPTX_TARGETS: dict[str, str] = {
@@ -352,7 +352,7 @@ def main(argv: list[str]) -> int:
         return check_orphans(args[1:])
     if args[0] == "--check-density":
         return check_density(args[1:])
-    if args[0] in ("--check-placeholders", "--verify-filled"):
+    if args[0] == "--check-placeholders":
         return check_placeholders(args[1:])
     if args[0] == "--check-rhythm":
         slide_targets = [a for a in args[1:] if not a.startswith("-")]

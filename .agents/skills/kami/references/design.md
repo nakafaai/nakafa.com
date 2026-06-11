@@ -17,7 +17,7 @@ This is not a UI framework. It is a constraint system for print, designed to kee
 7. Letter-spacing: Chinese body 0.3pt for comfortable reading; English body 0; tracking only for short labels and overlines
 8. Tag backgrounds must be solid hex, never rgba (WeasyPrint renders a double rectangle)
 9. Depth via ring shadow or whisper shadow, never hard drop shadows
-10. **No italic in print templates**. No `font-style: italic` in any PDF template or demo. Exception: landing page (screen-only) uses italic for poetic lines (gallery captions, feature subtitles, footer ethos) following the Mole pattern
+10. **No italic in print templates**. No `font-style: italic` in any PDF template or demo. Exception: landing page (screen-only) uses italic for poetic lines (gallery captions, feature subtitles, footer ethos)
 
 This system is a fusion of Anthropic's visual language and real Chinese / English resume iteration. Details below.
 
@@ -929,10 +929,16 @@ table.data td:first-child {
 |---|---|
 | No section divider slides | Use `.eyebrow` for section numbering instead; saves one slide per section |
 | No CJK parentheses | Replace `（...）` with `·` or `,` |
+| Ghost deck test | Read only slide titles in order. They must tell the argument; disconnected titles mean the structure is not ready |
+| One evidence shape | Each slide has one primary proof form: chart, table, screenshot, code, quote, or conclusion. Split mixed evidence |
 | One line per bullet | Trim until each item fits on one line; never let it wrap |
 | Empty space ≥50% | Draft defect. Order: merge with neighbor slide > pin `.co` callout > add a chart that earns the space. Shrinking page size is a last resort and must apply to the whole deck, not per slide. |
 | Empty space 25-50% | Acceptable if the slide has a pinned `.co` callout. Otherwise add one supporting bullet or a small inline figure. Never pad with filler prose. |
 | Cover | No horizontal rule; title centered `38pt`; subtitle on one line; bottom meta centered |
+
+Before drafting an image-heavy deck, sketch a short slot map: `page -> slide title -> evidence shape -> image slot -> visual brief`. Use broad types only: cover, assertion, comparison, metric, quote, image evidence, closing. This is a rhythm check, not a locked layout registry. The `visual brief` is internal working material for image selection, crop, or generation; it must not leak into slide titles, body copy, or captions. Keep Kami's default simple: use the existing `.c2`, `table.t2x2`, `.co`, data table, and inline figure patterns unless the source material clearly needs something else.
+
+If the user provides a real PPTX or brand template and explicitly asks to preserve it, do a template inventory before content editing: thumbnail the source deck, identify reusable layout families, then map each section to an existing layout. Do not do this for the default WeasyPrint or Marp paths; Kami templates are already the inventory.
 
 ### Troubleshooting
 
@@ -1049,7 +1055,7 @@ Key rules:
 
 ## 10. Image Aspect Ratios and Cropping
 
-Use this table when placing images in any Kami template. The ratios are defaults, not constraints; adjust by one step if the source image differs significantly.
+Use this table when placing images in any Kami template. Pick the content slot first, then decide whether the source should be preserved, padded, cropped, or regenerated. The ratios are defaults, not constraints; adjust by one step if the source image differs significantly.
 
 | Context | Preferred ratio | Notes |
 |---|---|---|
@@ -1060,7 +1066,13 @@ Use this table when placing images in any Kami template. The ratios are defaults
 | Square thumbnail (icon grid, avatar, logo) | 1:1 | Enforced with `aspect-ratio: 1/1` |
 | Slide image grid (26vh fixed-height row) | Fixed height, free width | Grid items share a row height; clip width to fit |
 
-**Cropping rule**: always `object-position: top center`. Crop from the bottom first, then from the sides. Never crop from the top; heads, titles, and focal points live there.
+**Slot-first rule**: do not generate an image and then hunt for a place to put it. Decide the image job first: proof screenshot, product surface, person/place photo, diagram, logo, or decorative texture. Proof screenshots and product UI keep fidelity; only diagrams and concept images may be redrawn for style.
+
+**Audience copy vs visual brief**: visible copy says what the reader should believe. A visual brief says what the image should contain, crop, preserve, or avoid. Keep the brief in the layout note, comments, or temporary slot map. Never paste prompt fragments such as "16:9 cinematic UI mockup" or crop instructions into captions, bullets, alt text, FAQ, or metadata.
+
+**Screenshot handling**: product screenshots default to `object-fit: contain` inside a stable frame, or to a programmatic canvas with quiet padding when the target ratio differs. Do not crop away UI text, numbers, window chrome, terminal prompts, or controls just to fill a frame. If the screenshot is too tall, too narrow, or too dense, split it into 2-3 panels before considering an AI redraw. When a redraw is unavoidable, label it as a schematic or concept image, not a real screenshot.
+
+**Cropping rule**: choose `object-position` by subject, not as a universal default. UI screenshots use `contain` or centered padding. Photos of people or products use `cover` with the subject in the safe center area (`center center` or `center 35%`). Document scans and pages often prefer `top center` because titles live at the top.
 
 ```css
 .frame-img,
@@ -1069,11 +1081,11 @@ figure img,
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: top center;
+  object-position: center center;
 }
 ```
 
-Apply this rule to any `<img>` placed inside a fixed-size container. For `object-fit: contain` (slides, logos), `object-position` has no visible effect; omit it.
+Apply this to fixed-size containers that intentionally crop photos or illustrations. For `object-fit: contain` (screenshots, slides, logos), `object-position` has little visible effect; use frame padding and alignment instead.
 
 ### Brand logo slot
 
@@ -1093,11 +1105,34 @@ Keep the base and `-en` `.brand-logo` rules identical; the cross-template lint p
 
 The landing-page template is the only kami template designed for browser delivery, not PDF. It inherits the full parchment design system but adds interactive and responsive patterns.
 
+### Product site system
+
+- Use `landing-page*.html` for a single ready-to-serve product page. Keep CSS and JS inline so the file can be copied without a build step.
+- If the deliverable needs docs, help, releases, changelog, roadmap, legal pages, or more than two locales, treat it as a production product site.
+- For a production product site, prefer one structural template, locale string files, and long-content files. The generator must have a check mode that fails on missing keys and generated-output drift.
+- Product positioning must be checked against current product surfaces before rewriting. Stale category language is worse than a missing feature detail.
+- Locale pages, FAQ, JSON-LD, `llms.txt`, `llms-full.txt`, screenshots, install copy, pricing, version, and support links are one public fact set. Keep the factual claims aligned across them.
+- Do not promote project-specific release artifacts, appcast rules, payment providers, or private local paths into the generic template.
+
+### Product screenshot slots
+
+Use a small slot matrix before filling a landing page or product site. This keeps the default beautiful without adding a new template system:
+
+| Slot | Preferred asset | Fit |
+|---|---|---|
+| Hero signal | real product surface, terminal state, or app window | 16:10 or 16:9, preserve recognition over full-bleed drama |
+| Gallery panel | one shipped workflow or reachable UI state | stable frame, real screenshot first, no unrelated filler |
+| Feature panel | focused crop or two-step before/after proof | preserve labels and controls; split dense screenshots |
+| Social image | product name + one recognizable surface | 1200x630 crop, repo path or public URL |
+
+Every screenshot path must resolve from the repo or a stable public URL. Never reference `/Users`, `file://`, or sibling checkouts. Missing visuals remain material gaps or omitted panels; they are not replaced with stock atmosphere.
+
 ### Layout
 
 - `max-width: 1120px` centered, padding `88px 64px 120px`
 - Sections numbered `00 · Label` through `04 · Label` with `section-num` / `section-title` / `section-lede` pattern
 - Two responsive breakpoints: `880px` (tablet) and `480px` (phone)
+- Section rhythm is a system, not per-gap. Run section spacing as one responsive ladder (e.g. desktop 96/72, tablet 72/54, phone 56/42). When a page reads too airy or too tight, scale the *whole* set by a single factor (about 0.75) across all breakpoints at once; nudging one gap leaves asymmetry, and asymmetry that survives tuning is structural. At the phone breakpoint step gutters down (64px to 16px) and shrink display sizes (hero title, price amount) in the same pass.
 
 ### Eyebrow
 
@@ -1110,13 +1145,18 @@ The landing-page template is the only kami template designed for browser deliver
 - Title: 96px (EN) / 88px (CN), weight 500, letter-spacing 0
 - Entrance animation: `translateY(10px) + blur(6px)` fading in over 900ms with 120ms delay
 - Tagline: 21px (EN) / 20px (CN), olive color, letter-spacing 0.2px (EN) / 0.4px (CN), max-width 820px
-- Tokens row: small key facts as `<span><b>value</b> label</span>`, 13px stone, `--latin-ui` font
+- Tokens row: a few small chips as `<span>quality</span>`, 13px stone, `--latin-ui` font
 - CTA: pill buttons (border-radius 999px), primary filled + ghost outlined, 15px, 13px 28px padding
+- Quality chips, not a facts list. The tokens row should carry product *qualities* (good-looking, lightweight, AI-friendly), not an inventory (license, package manager, OS version). Push every hard fact to the footer or docs where it is referenceable. Pick about three.
+- No chip may repeat the tagline. Read tagline and chips together and cut any concept stated twice. If trimming a chip leaves an orphaned separator, the row should collapse to one clean line, not a dangling dot.
+- Wrap-safe chip separator. Put the middot on `span:not(:last-child)::after`, never on `::before` of the following item, so a chip that wraps to the next line never carries a leading dot. Use `color-mix(... 58%, transparent)` so the dot stays quieter than the text.
+- Line-widow discipline (title + tagline). Eliminate 1-2 word last lines by trimming the copy so the block rebalances, not by adding a `max-width` cap (a cap narrower than its container wraps early and leaves empty space on the right, which reads as a premature break). `text-wrap: balance` on the title and `pretty` on the tagline help only as a backstop; do not rely on them. Leave inherently-two-line notes alone.
 
 ### Gallery
 
 - Grid: `minmax(0, 1fr) auto`, frame spans full width, caption and tabs on row 2
 - Frame: dark background `--shot-bg: #141318`, rounded 8px, 1px border
+- Screenshots are final product surfaces first. Use real app/site captures over mockups; if the asset is missing, record a material gap or omit that panel rather than substituting unrelated imagery.
 - Transition: direction-aware slide + scale(0.985), 620-880ms cubic-bezier(0.22, 1, 0.36, 1)
 - Sweep overlay: diagonal light gradient that slides across on switch (540-920ms)
 - Auto-rotate: 4500ms interval, pauses on hover/focus, respects prefers-reduced-motion
@@ -1136,6 +1176,8 @@ Two variants only:
 
 Both: pill shape (999px radius), 15px `--latin-ui`, weight 500, 1.5px border, min-width 158px.
 
+Mobile resting state: natural width, left-aligned to the hero text edge, height unchanged. Do not center them (reads as floating), do not stretch edge-to-edge with `flex: 1` (reads heavy), and never drop button height to relieve a "too full" feel; fullness is a width and spacing problem, not a height one. A left edge that does not line up with the text and chips reads as an accidental gap. Verify at 320px and 375px with no overflow.
+
 ### Pricing
 
 - Amount: 112px serif, letter-spacing 0
@@ -1151,8 +1193,21 @@ Both: pill shape (999px radius), 15px `--latin-ui`, weight 500, 1.5px border, mi
 ### Code Block
 
 - `pre.code`: ivory background, 1px border, 6px radius, 18px 22px padding
-- Font: `--mono` 13.5px, tabular-nums, line-height 1.55
-- Syntax: `.c` (comments) in stone, `.k` (keywords) in brand
+- Font: `--mono` 13.5px, tabular-nums, line-height 1.55; reduce to 11.5px at the phone breakpoint (480px) so wide lines stay legible without horizontal scroll. `code { min-width: max-content }` lets long lines scroll instead of wrapping.
+- Inline `code` is a distinct style, not the block palette: brand-tint background, brand text, 1px hairline, `0.9em`.
+
+Screen code blocks may use a dark surface (`--shot-bg: #141318`, the same frame as the gallery) instead of ivory. Highlight at build time with zero runtime JS: a script bakes static `<span class>` markup (e.g. Pygments) and is idempotent, so re-running it after any doc edit refreshes the output; merge adjacent same-class spans so the markup stays small. Plain code stays the source of truth; the spans are generated, never hand-authored. Keep the token palette restrained on the dark surface:
+
+| Token | Hex | Role |
+|---|---|---|
+| Comment | `#79756a` | faint, italic |
+| Keyword | `#84aad6` | soft blue |
+| String | `#8cbb91` | muted green |
+| Number | `#cbab86` | sand |
+| Function/Class | `#d6c78c` | sand-gold |
+| Builtin/Constant | `#b59ccd` | muted violet |
+
+Blocks without `class="language-*"` stay monochrome.
 
 ### Metrics
 
@@ -1171,6 +1226,7 @@ Both: pill shape (999px radius), 15px `--latin-ui`, weight 500, 1.5px border, mi
 - Feature name: 22px brand, weight 500
 - Poetic subtitle: `<small>` below name, 13px olive, italic. One short line evoking the feature's character
 - Description: 15px dark-warm, line-height 1.55
+- Tables stay editorial: no framed box, no tinted header bar, no vertical rules, no empty right gap. Content-sized columns, hairline row rules, a muted `--latin-ui` uppercase header. On phone, `display: block; overflow-x: auto` rather than cramming columns. A framed, tinted table adds weight without adding information.
 
 ### FAQ
 
@@ -1186,6 +1242,7 @@ Both: pill shape (999px radius), 15px `--latin-ui`, weight 500, 1.5px border, mi
 - Mark icon: 56px rounded 8px
 - Links: inline with middot (`&middot;`) separators between items, dark-warm color. Editorial pattern, not flex-gap
 - Ethos: closing italic serif line, olive color, max-width 360px. The italic voice signals a personal sign-off
+- Tech credit, once. If the product builds on an upstream project or framework, credit it exactly once as a quiet footer line, never as a repeated selling point and never in the hero tagline. Grep the whole site for the upstream name and collapse it to this single instance; rewrite the hero around the product's own positioning. Hard facts that are not the credit (license, version) belong here too.
 - Collapses to single column below 880px
 
 ### Cross-lang typography hardening
@@ -1214,6 +1271,28 @@ The landing-page template alone is one HTML file. To deploy a production multili
 - `landing-page-llms-full.txt.example`: long-form companion AI assistants pull for accurate feature-level answers. Has Overview, Pricing, Features, Comparison, FAQ.
 
 The optional Accept-Language redirect at the end of `landing-page-en.html` is commented out by default. Uncomment only after confirming `/zh/`, `/tw/`, `/ja/`, `/ko/` actually resolve on the host.
+
+When a site uses generated locale pages, add a local drift check next to the generator. It should compare generated HTML to committed output, report missing placeholders by key, and fail before package or release work continues.
+
+### Documentation site
+
+When the product site grows docs, help, or guide pages (see «Product site system»), they need a layout the single landing page does not provide. All of this is screen-only.
+
+- Two-column shell: a sticky sidebar nav plus a prose column. Sidebar around 178px, `position: sticky; top: 84px; max-height: calc(100svh - 108px); overflow: auto`. Constrain the prose column to a reading measure (about 720px) even though the page frame is wider; long doc lines hurt readability.
+- Sidebar active state is a rail, not a fill. `border-left: 2px solid transparent` that fills brand on `[aria-current="page"]`, with brand text. No full-width dark underline or background block; that reads as a heavy dark bar against the warm paper.
+- Multi-page topic structure: one file per topic, grouped under sidebar sections. Mark the current page with `aria-current="page"` so the rail and screen readers agree.
+- On-this-page TOC: a thin in-flow list under a hairline top border, with a `--latin-ui` uppercase 11px "On this page" heading and depth-3 entries indented about 12px. Hide it entirely below the tablet breakpoint; it is an aid, not content.
+- Prev/next pager: quiet borderless text links, not bordered cards. A 2-column grid with one thin top divider; each link is a `--latin-ui` uppercase "Previous"/"Next" eyebrow over a brand serif title, `border: 0; background: none`. The next link aligns right (resets left on phone). Press feedback via `:active { opacity: 0.6 }`. A bordered card here reads heavy on mobile.
+- Mobile (tablet breakpoint): the sidebar un-sticks (`position: static`) and collapses to a horizontal scroll strip (`display: flex; overflow-x: auto; scrollbar-width: none`) with the active rail moved to `border-bottom`; the TOC is hidden. Reuse the landing page's existing breakpoints; do not invent a new ladder.
+
+### Responsive screenshot verification
+
+Before declaring any screen change done, screenshot the real rendered surface; a type check or CSS-balance read is not enough. Several regressions (early wraps, orphaned separator dots, table overflow, missed pages) are invisible in source and only show in the render.
+
+- Capture at phone (375px, plus 320px for CTAs) and desktop (1280px), in every shipped locale.
+- Scan for line widows objectively: measure each text block's last-line width against its widest line and flag anything below about 13%. Eyeballing misses pages, and nested `<code>` hides widows from greps. Accept "0 widows" only after the check confirms it.
+- Confirm CTAs reach their natural-width left-aligned resting state with no overflow, code is legible at the reduced mobile font, the gallery and any multi-column grids collapse to a single column, and total page overflow is zero.
+- Long pages do not fit one viewport; use a capture helper that can scroll to a specific element (first code block, pager) before shooting.
 
 ## KO locale tuning
 
@@ -1255,7 +1334,7 @@ Canonical values (verified during the `one-pager-ko` pilot, 2026-05-28):
 Fallback chain (consistent across all KO templates):
 
 ```css
---serif: "Source Han Serif K", "Noto Serif KR", "Apple SD Gothic Neo",
+--serif: "Source Han Serif K", "Source Han Serif KR", "Noto Serif KR", "Apple SD Gothic Neo",
          "AppleMyungjo", Charter, Georgia, serif;
 --sans:  var(--serif);
 --mono:  "JetBrains Mono", "D2Coding", "SF Mono", "Fira Code",
@@ -1263,9 +1342,17 @@ Fallback chain (consistent across all KO templates):
 --latin-ui: "Inter", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
 ```
 
-`"Source Han Serif K"` is the Adobe distribution name; `"Noto Serif KR"` is
-the Google Fonts name for the same font. Listing both keeps the chain
-agnostic to which installer the user used.
+`"Source Han Serif K"` is the Adobe distribution name and the `@font-face`
+declared name (so file/CDN loads resolve in a repo checkout or online).
+`"Source Han Serif KR"` is the actual family name baked into the bundled OTFs
+(nameID 1/16 = `Source Han Serif KR`, Korean `본명조 KR`); it MUST stay in the
+chain so that on an offline Linux skill install -- where the relative
+`@font-face` file is stripped and jsDelivr is unreachable -- fontconfig can
+still resolve the `ensure-fonts.sh`-downloaded OTF by name (the bare
+`Source Han Serif K` matches nothing). `"Noto Serif KR"` is the Google Fonts
+name for the same Adobe source, covering boxes that installed it via
+`fonts-noto-cjk`. Listing all three keeps the chain agnostic to which
+installer the user used.
 
 Subsequent KO templates (letter-ko, long-doc-ko, etc.) should adopt the
 font variables and `font-synthesis` rule verbatim and leave all numeric

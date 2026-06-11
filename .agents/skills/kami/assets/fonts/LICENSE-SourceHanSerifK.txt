@@ -11,9 +11,13 @@ Source:
   https://fonts.google.com/noto/specimen/Noto+Serif+KR (Google Fonts mirror)
 
 The Adobe and Google distributions are the same font under two names.
-Kami's templates reference both names in the `--serif` chain
-("Source Han Serif K", "Noto Serif KR") so the font resolves whether
-the user installed it from Adobe Fonts or from Google Fonts.
+Kami's templates reference three names in the `--serif` chain
+("Source Han Serif K", "Source Han Serif KR", "Noto Serif KR"):
+"Source Han Serif K" is the `@font-face` declared alias (loads via the
+bundled file or CDN), "Source Han Serif KR" is the actual family name
+inside the OTFs (so fontconfig resolves the ensure-fonts.sh download by
+name on an offline Linux box), and "Noto Serif KR" covers the Google
+Fonts install. The font therefore resolves regardless of source.
 
 -----------------------------------------------------------
 SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007

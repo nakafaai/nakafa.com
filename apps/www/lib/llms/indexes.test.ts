@@ -10,6 +10,7 @@ import {
 
 const mockCacheLife = vi.hoisted(() => vi.fn());
 const mockCacheTag = vi.hoisted(() => vi.fn());
+const mockGetContentListingLlmsEntries = vi.hoisted(() => vi.fn());
 const mockGetContentPageLlmsEntries = vi.hoisted(() => vi.fn());
 const mockGetSiteLlmsEntries = vi.hoisted(() => vi.fn());
 
@@ -26,6 +27,7 @@ vi.mock("@/lib/llms/entries", async () => {
     Object.hasOwn(constants.SECTION_LABELS, section);
 
   return {
+    getContentListingLlmsEntries: mockGetContentListingLlmsEntries,
     getContentPageLlmsEntries: mockGetContentPageLlmsEntries,
     getLlmsSections: () => Object.keys(constants.SECTION_LABELS),
     getSiteLlmsEntries: mockGetSiteLlmsEntries,
@@ -61,8 +63,10 @@ vi.mock("@/lib/sitemap/routes", () => ({
 beforeEach(() => {
   mockCacheLife.mockClear();
   mockCacheTag.mockClear();
+  mockGetContentListingLlmsEntries.mockReset();
   mockGetContentPageLlmsEntries.mockReset();
   mockGetSiteLlmsEntries.mockReset();
+  mockGetContentListingLlmsEntries.mockReturnValue(Effect.succeed(null));
   mockGetContentPageLlmsEntries.mockReturnValue(
     Effect.succeed([
       createFixtureEntry({
@@ -138,6 +142,43 @@ describe("llms indexes", () => {
     });
   });
 
+  it("builds one content listing index from route-catalog entries", async () => {
+    mockGetContentListingLlmsEntries.mockReturnValueOnce(
+      Effect.succeed([
+        createFixtureEntry({
+          route: "/articles/politics/dynastic-politics",
+          title: "Dynastic Politics",
+        }),
+      ])
+    );
+
+    const text = await Effect.runPromise(
+      getLlmsSectionIndexText("llms/en/articles/politics")
+    );
+
+    expect(text).toContain("# Politics Articles");
+    expect(text).toContain(
+      "- [Dynastic Politics](https://nakafa.com/en/articles/politics/dynastic-politics.md)"
+    );
+    expect(mockGetContentListingLlmsEntries).toHaveBeenCalledWith({
+      locale: "en",
+      route: "articles/politics",
+    });
+  });
+
+  it("renders an explicit empty content listing index", async () => {
+    mockGetContentListingLlmsEntries.mockReturnValueOnce(Effect.succeed([]));
+
+    const text = await Effect.runPromise(
+      getLlmsSectionIndexText("llms/en/articles/politics")
+    );
+
+    expect(text).toContain("# Politics Articles");
+    expect(text).toContain(
+      "This English articles listing currently has no markdown entries."
+    );
+  });
+
   it("renders an explicit empty bounded content page index", async () => {
     mockGetContentPageLlmsEntries.mockReturnValueOnce(Effect.succeed([]));
 
@@ -157,7 +198,7 @@ describe("llms indexes", () => {
     );
 
     expect(text).toContain("# Nakafa English Site Pages");
-    expect(text).toContain("https://nakafa.com/en/search.md");
+    expect(text).toContain("https://nakafa.com/en/search");
     expect(mockGetSiteLlmsEntries).toHaveBeenCalledWith("en");
     expect(mockGetContentPageLlmsEntries).not.toHaveBeenCalled();
   });
@@ -171,9 +212,6 @@ describe("llms indexes", () => {
     ).resolves.toBeNull();
     await expect(
       Effect.runPromise(getLlmsSectionIndexText("llms/en/unknown"))
-    ).resolves.toBeNull();
-    await expect(
-      Effect.runPromise(getLlmsSectionIndexText("llms/en/articles/politics"))
     ).resolves.toBeNull();
     await expect(
       Effect.runPromise(getLlmsSectionIndexText("llms/en/articles/shard/999"))
@@ -210,10 +248,14 @@ function createFixtureEntry({
   const entrySection = section === "articles" ? "articles" : "site";
   const segments =
     entrySection === "site" ? ["site", ...routeSegments] : routeSegments;
+  const href =
+    entrySection === "site"
+      ? `https://nakafa.com/en${route === "/" ? "" : route}`
+      : `https://nakafa.com/en${route}.md`;
 
   return {
     description,
-    href: `https://nakafa.com/en${route}.md`,
+    href,
     route,
     section: entrySection,
     segments,

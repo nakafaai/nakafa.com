@@ -1,4 +1,4 @@
-"""Shared constants and helpers for kami build and stabilize scripts."""
+"""Shared constants and helpers for kami build scripts."""
 from __future__ import annotations
 
 import functools
@@ -13,14 +13,9 @@ class TemplateSpec(NamedTuple):
     """Per-template configuration.
 
     build_max_pages: hard ceiling enforced by `build.py --verify`. 0 = no limit.
-    stabilize_max_pages: target pages for the overflow solver in `stabilize.py`.
-        0 = solver disabled. The two values can differ because stabilize aims
-        to keep doc-style targets within an editorial range while build only
-        catches gross overflow.
     """
     source: str
     build_max_pages: int
-    stabilize_max_pages: int
 
 ROOT = Path(__file__).resolve().parent.parent
 TEMPLATES = ROOT / "assets" / "templates"
@@ -28,10 +23,8 @@ DIAGRAMS = ROOT / "assets" / "diagrams"
 EXAMPLES = ROOT / "assets" / "examples"
 TOKENS_FILE = ROOT / "references" / "tokens.json"
 CHECKS_THRESHOLDS_FILE = ROOT / "references" / "checks_thresholds.json"
-COOL_GRAY_BUCKETS_FILE = ROOT / "references" / "cool_gray_buckets.json"
-CROSS_TEMPLATE_ALLOWLIST_FILE = ROOT / "references" / "cross_template_diff_allowlist.json"
 
-# Canonical parchment background color, kept here so build/stabilize/density
+# Canonical parchment background color, kept here so build/density
 # checks share one source of truth instead of redefining the RGB triple.
 PARCHMENT_HEX = "#f5f4ed"
 PARCHMENT_RGB = (0xF5, 0xF4, 0xED)
@@ -95,39 +88,39 @@ COOL_GRAY_BLOCKLIST = {
 # ---------------------------------------------------------------------------
 # Template registry
 #
-# Single source of truth for HTML targets across build.py and stabilize.py.
+# Single source of truth for HTML targets used by build.py.
 # See TemplateSpec for field meanings.
 # ---------------------------------------------------------------------------
 HTML_TEMPLATES: dict[str, TemplateSpec] = {
     # Core six
-    "one-pager":    TemplateSpec("one-pager.html",    1, 1),
-    "letter":       TemplateSpec("letter.html",       1, 1),
-    "long-doc":     TemplateSpec("long-doc.html",     0, 9),
-    "portfolio":    TemplateSpec("portfolio.html",    0, 8),
-    "resume":       TemplateSpec("resume.html",       2, 2),
-    "one-pager-en": TemplateSpec("one-pager-en.html", 1, 1),
-    "letter-en":    TemplateSpec("letter-en.html",    1, 1),
-    "long-doc-en":  TemplateSpec("long-doc-en.html",  0, 9),
-    "portfolio-en": TemplateSpec("portfolio-en.html", 0, 8),
-    "resume-en":    TemplateSpec("resume-en.html",    2, 2),
+    "one-pager":    TemplateSpec("one-pager.html",    1),
+    "letter":       TemplateSpec("letter.html",       1),
+    "long-doc":     TemplateSpec("long-doc.html",     0),
+    "portfolio":    TemplateSpec("portfolio.html",    0),
+    "resume":       TemplateSpec("resume.html",       2),
+    "one-pager-en": TemplateSpec("one-pager-en.html", 1),
+    "letter-en":    TemplateSpec("letter-en.html",    1),
+    "long-doc-en":  TemplateSpec("long-doc-en.html",  0),
+    "portfolio-en": TemplateSpec("portfolio-en.html", 0),
+    "resume-en":    TemplateSpec("resume-en.html",    2),
     # Korean
-    "one-pager-ko":     TemplateSpec("one-pager-ko.html",     1, 1),
-    "letter-ko":        TemplateSpec("letter-ko.html",        1, 1),
-    "long-doc-ko":      TemplateSpec("long-doc-ko.html",      0, 9),
-    "portfolio-ko":     TemplateSpec("portfolio-ko.html",     0, 8),
-    "resume-ko":        TemplateSpec("resume-ko.html",        2, 2),
-    "equity-report-ko": TemplateSpec("equity-report-ko.html", 3, 0),
-    "changelog-ko":     TemplateSpec("changelog-ko.html",     2, 0),
-    "slides-weasy-ko":  TemplateSpec("slides-weasy-ko.html",  0, 0),
+    "one-pager-ko":     TemplateSpec("one-pager-ko.html",     1),
+    "letter-ko":        TemplateSpec("letter-ko.html",        1),
+    "long-doc-ko":      TemplateSpec("long-doc-ko.html",      0),
+    "portfolio-ko":     TemplateSpec("portfolio-ko.html",     0),
+    "resume-ko":        TemplateSpec("resume-ko.html",        2),
+    "equity-report-ko": TemplateSpec("equity-report-ko.html", 3),
+    "changelog-ko":     TemplateSpec("changelog-ko.html",     2),
+    "slides-weasy-ko":  TemplateSpec("slides-weasy-ko.html",  0),
     # Equity report
-    "equity-report":    TemplateSpec("equity-report.html",    3, 0),
-    "equity-report-en": TemplateSpec("equity-report-en.html", 3, 0),
+    "equity-report":    TemplateSpec("equity-report.html",    3),
+    "equity-report-en": TemplateSpec("equity-report-en.html", 3),
     # Changelog
-    "changelog":    TemplateSpec("changelog.html",    2, 0),
-    "changelog-en": TemplateSpec("changelog-en.html", 2, 0),
+    "changelog":    TemplateSpec("changelog.html",    2),
+    "changelog-en": TemplateSpec("changelog-en.html", 2),
     # Slides (WeasyPrint default)
-    "slides-weasy":    TemplateSpec("slides-weasy.html",    0, 0),
-    "slides-weasy-en": TemplateSpec("slides-weasy-en.html", 0, 0),
+    "slides-weasy":    TemplateSpec("slides-weasy.html",    0),
+    "slides-weasy-en": TemplateSpec("slides-weasy-en.html", 0),
 }
 
 SCREEN_TEMPLATES: dict[str, str] = {
@@ -160,37 +153,4 @@ def load_checks_thresholds() -> dict[str, Any]:
         "rhythm": {"max_content_run": 5, "divider_min_deck_size": 12},
         "density": {"warn_pct": 0.25, "sparse_pct": 0.50, "dpi": 36},
         "orphan": {"max_words": 2, "max_chars": 15},
-    }
-
-
-@functools.lru_cache(maxsize=1)
-def load_cross_template_allowlist() -> dict[str, Any]:
-    """Return the CN/EN drift allowlist. Missing file -> empty allowlist."""
-    if CROSS_TEMPLATE_ALLOWLIST_FILE.exists():
-        return json.loads(CROSS_TEMPLATE_ALLOWLIST_FILE.read_text(encoding="utf-8"))
-    return {"always_allowed": [], "per_pair_allowed": {}}
-
-
-@functools.lru_cache(maxsize=1)
-def load_cool_gray_buckets() -> list[dict[str, Any]]:
-    """Return luminance buckets used to remap cool-gray hex literals."""
-    if COOL_GRAY_BUCKETS_FILE.exists():
-        return json.loads(COOL_GRAY_BUCKETS_FILE.read_text(encoding="utf-8"))["buckets"]
-    return [
-        {"lum_max": 0.35, "replacement": "#4D4C48"},
-        {"lum_max": 0.72, "replacement": "#87867F"},
-        {"lum_max": 1.00, "replacement": "#E8E6DC"},
-    ]
-
-
-def stabilize_targets() -> dict[str, tuple[str, int]]:
-    """Return target -> (source, max_pages) mapping for stabilize.py.
-
-    Only includes templates with a non-zero stabilize ceiling (the ones the
-    overflow solver should constrain).
-    """
-    return {
-        name: (spec.source, spec.stabilize_max_pages)
-        for name, spec in HTML_TEMPLATES.items()
-        if spec.stabilize_max_pages > 0
     }

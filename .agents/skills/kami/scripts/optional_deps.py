@@ -1,15 +1,29 @@
 """Centralized loader for optional third-party deps (weasyprint, pypdf, PyMuPDF).
 
-build.py and stabilize.py previously each had inline `from weasyprint import HTML`
-try/except blocks with duplicated install hints; this module collapses those into
-one resolver each so the import error message stays consistent and the
-WeasyPrint runtime is configured once at the import call site.
+build.py previously had inline `from weasyprint import HTML` try/except blocks
+with duplicated install hints; this module collapses those into one resolver
+each so the import error message stays consistent and the WeasyPrint runtime
+is configured once at the import call site.
 """
 from __future__ import annotations
 
+import sys
+
 from shared import configure_weasyprint_runtime
 
+# On Linux, WeasyPrint links against cairo / pango / harfbuzz at runtime; a bare
+# `pip install weasyprint` succeeds but then fails to load with a cryptic
+# "cannot load library 'libgobject-2.0'" until the native libs are present. Spell
+# them out so the error message is actionable on a fresh Linux box.
+_LINUX_NATIVE_LIBS = (
+    "Linux also needs native libs: "
+    "sudo apt-get install -y libcairo2 libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz0b "
+    "(Debian/Ubuntu), or `sudo dnf install cairo pango harfbuzz` (Fedora/RHEL)"
+)
+
 WEASYPRINT_INSTALL_HINT = "pip install weasyprint pypdf --break-system-packages"
+if sys.platform.startswith("linux"):
+    WEASYPRINT_INSTALL_HINT = f"{WEASYPRINT_INSTALL_HINT}. {_LINUX_NATIVE_LIBS}"
 PYMUPDF_INSTALL_HINT = "pip install pymupdf --break-system-packages"
 
 

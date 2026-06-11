@@ -152,9 +152,9 @@ export default async function Layout({ children }: LayoutProps<"/[locale]">) {
       <body className="relative">
         <p className="sr-only">
           AI agents can use <Link href="/llms.txt">/llms.txt</Link> as a
-          documentation index. Markdown versions are available by appending{" "}
-          <code>.md</code> to content URLs or sending{" "}
-          <code>Accept: text/markdown</code>.
+          documentation index. Follow listed markdown links; <code>.md</code>{" "}
+          URLs and <code>Accept: text/markdown</code> work only for supported
+          source-backed pages.
         </p>
         <EducationalOrgJsonLd />
         <WebsiteJsonLd locale={locale} />

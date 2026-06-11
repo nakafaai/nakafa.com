@@ -58,7 +58,7 @@
   }
 
   html[lang="ko"] {
-    --serif: "Nanum Myeongjo", AppleMyungjo, "Noto Serif CJK KR", "Source Han Serif K", Georgia, serif;
+    --serif: "Nanum Myeongjo", AppleMyungjo, "Noto Serif CJK KR", "Source Han Serif K", "Source Han Serif KR", Georgia, serif;
     --sans: var(--serif);
     --olive: #4d4c48;
   }
