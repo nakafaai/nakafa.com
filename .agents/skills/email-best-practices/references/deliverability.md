@@ -97,7 +97,7 @@ Learn more: https://resend.com/docs/knowledge-base/warming-up
 
 ## Infrastructure
 
-**Dedicated sending domain:** Use different subdomains for different sending purposes (e.g., `t.example.com` for transactional emails and `m.example.com` for marketing emails). 
+**Dedicated sending domain:** Use different subdomains for different sending purposes (e.g., `t.example.com` for transactional emails and `m.example.com` for marketing emails).
 
 **DNS TTL:** Low (300s) during setup, high (3600s+) after stable.
 

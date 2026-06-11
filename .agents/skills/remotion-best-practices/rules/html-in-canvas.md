@@ -2,7 +2,7 @@
 
 Renders children into a `<canvas>` so you can post-process them with the Canvas 2D API or WebGL.
 
-Only works in Chrome 149+ with the `chrome://flags/#canvas-draw-element` flag enabled.  
+Only works in Chrome 149+ with the `chrome://flags/#canvas-draw-element` flag enabled.
 Give the user a notice.
 
 ## Nesting
