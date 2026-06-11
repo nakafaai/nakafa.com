@@ -6,8 +6,13 @@ export const metadata = {
   subject: "Circle Arcs and Sectors",
 };
 
-import { getColor } from "@repo/design-system/lib/color";
+import {
+  createCircleArcLine,
+  createCircleOutlinePoints,
+  createCircleRadiusPoints,
+} from "@repo/design-system/components/contents/mathematics/circle";
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
+import { getColor } from "@repo/design-system/lib/color";
 
 ## Understanding Circle Arcs
 
@@ -22,50 +27,29 @@ Each arc has two endpoints located on the circle, and the length of the arc depe
   showZAxis={false}
   data={[
     {
-      points: Array.from({ length: 37 }, (_, i) => {
-        const angle = (i * 2 * Math.PI) / 36;
-        return {
-          x: 4 * Math.cos(angle),
-          y: 4 * Math.sin(angle),
-          z: 0
-        };
-      }),
+      points: createCircleOutlinePoints(4),
       color: getColor("CYAN"),
       smooth: true,
       showPoints: false,
-      labels: [{ text: "Circle", at: 20, offset: [1.5, 0.5, 0] }]
+      labels: [{ text: "Circle", at: 56, offset: [1.5, 0.5, 0] }]
     },
-    {
-      points: Array.from({ length: 13 }, (_, i) => {
-        const startAngle = Math.PI / 6;
-        const endAngle = Math.PI / 6 + (2 * Math.PI / 3);
-        const angle = startAngle + (i * (endAngle - startAngle)) / 12;
-        return {
-          x: 4 * Math.cos(angle),
-          y: 4 * Math.sin(angle),
-          z: 0
-        };
-      }),
+    createCircleArcLine({
+      radius: 4,
+      startDegrees: 30,
+      sweepDegrees: 120,
+      segments: 12,
       color: getColor("ORANGE"),
-      smooth: true,
-      showPoints: false,
-      labels: [{ text: "Arc AB", at: 6, offset: [1.5, 0.5, 0] }]
-    },
+      label: { text: "Arc AB", offset: [1.5, 0.5, 0] }
+    }),
     {
-      points: [
-        { x: 0, y: 0, z: 0 },
-        { x: 4 * Math.cos(Math.PI / 6), y: 4 * Math.sin(Math.PI / 6), z: 0 }
-      ],
+      points: createCircleRadiusPoints({ radius: 4, degrees: 30 }),
       color: getColor("PURPLE"),
       smooth: false,
       showPoints: true,
       labels: [{ text: "A", at: 1, offset: [0.3, 0.3, 0] }]
     },
     {
-      points: [
-        { x: 0, y: 0, z: 0 },
-        { x: 4 * Math.cos(Math.PI / 6 + (2 * Math.PI / 3)), y: 4 * Math.sin(Math.PI / 6 + (2 * Math.PI / 3)), z: 0 }
-      ],
+      points: createCircleRadiusPoints({ radius: 4, degrees: 150 }),
       color: getColor("PURPLE"),
       smooth: false,
       showPoints: true,
@@ -107,50 +91,27 @@ where <InlineMath math="\alpha" /> is the central angle in radians.
   showZAxis={false}
   data={[
     {
-      points: Array.from({ length: 37 }, (_, i) => {
-        const angle = (i * 2 * Math.PI) / 36;
-        return {
-          x: 3 * Math.cos(angle),
-          y: 3 * Math.sin(angle),
-          z: 0
-        };
-      }),
+      points: createCircleOutlinePoints(3),
       color: getColor("CYAN"),
       smooth: true,
       showPoints: false
     },
-    {
-      points: Array.from({ length: 7 }, (_, i) => {
-        const startAngle = 0;
-        const endAngle = Math.PI / 3;
-        const angle = startAngle + (i * (endAngle - startAngle)) / 6;
-        return {
-          x: 3 * Math.cos(angle),
-          y: 3 * Math.sin(angle),
-          z: 0
-        };
-      }),
+    createCircleArcLine({
+      radius: 3,
+      startDegrees: 0,
+      sweepDegrees: 60,
+      segments: 6,
       color: getColor("ORANGE"),
-      smooth: true,
-      showPoints: false,
-      labels: [{ text: "60°", at: 3, offset: [0.8, 0.3, 0] }]
-    },
-    {
-      points: Array.from({ length: 13 }, (_, i) => {
-        const startAngle = Math.PI;
-        const endAngle = Math.PI + (2 * Math.PI / 3);
-        const angle = startAngle + (i * (endAngle - startAngle)) / 12;
-        return {
-          x: 3 * Math.cos(angle),
-          y: 3 * Math.sin(angle),
-          z: 0
-        };
-      }),
+      label: { text: "60°", offset: [0.8, 0.3, 0] }
+    }),
+    createCircleArcLine({
+      radius: 3,
+      startDegrees: 180,
+      sweepDegrees: 120,
+      segments: 12,
       color: getColor("PURPLE"),
-      smooth: true,
-      showPoints: false,
-      labels: [{ text: "120°", at: 6, offset: [-1.5, 0.3, 0] }]
-    }
+      label: { text: "120°", offset: [-1.5, 0.3, 0] }
+    })
   ]}
 />
 

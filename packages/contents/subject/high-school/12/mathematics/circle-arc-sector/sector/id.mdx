@@ -6,8 +6,13 @@ export const metadata = {
   subject: "Busur dan Juring Lingkaran",
 };
 
-import { getColor } from "@repo/design-system/lib/color";
+import {
+  createCircleArcLine,
+  createCircleOutlinePoints,
+  createCircleRadiusPoints,
+} from "@repo/design-system/components/contents/mathematics/circle";
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
+import { getColor } from "@repo/design-system/lib/color";
 
 ## Pengertian Juring
 
@@ -20,23 +25,13 @@ Setiap juring memiliki tiga komponen utama yang saling terkait. Pertama adalah d
   description="Juring ditunjukkan sebagai daerah berwarna yang dibatasi oleh dua jari-jari dan satu busur."
   data={[
     {
-      points: Array.from({ length: 101 }, (_, i) => {
-        const angle = (i / 100) * 2 * Math.PI;
-        return {
-          x: 3 * Math.cos(angle),
-          y: 3 * Math.sin(angle),
-          z: 0
-        };
-      }),
+      points: createCircleOutlinePoints(3),
       color: getColor("CYAN"),
       showPoints: false,
       smooth: true
     },
     {
-      points: [
-        { x: 0, y: 0, z: 0 },
-        { x: 3 * Math.cos(Math.PI / 4), y: 3 * Math.sin(Math.PI / 4), z: 0 }
-      ],
+      points: createCircleRadiusPoints({ radius: 3, degrees: 45 }),
       color: getColor("PURPLE"),
       showPoints: false,
       lineWidth: 3,
@@ -46,10 +41,7 @@ Setiap juring memiliki tiga komponen utama yang saling terkait. Pertama adalah d
       ]
     },
     {
-      points: [
-        { x: 0, y: 0, z: 0 },
-        { x: 3 * Math.cos(3 * Math.PI / 4), y: 3 * Math.sin(3 * Math.PI / 4), z: 0 }
-      ],
+      points: createCircleRadiusPoints({ radius: 3, degrees: 135 }),
       color: getColor("PURPLE"),
       showPoints: false,
       lineWidth: 3,
@@ -57,23 +49,15 @@ Setiap juring memiliki tiga komponen utama yang saling terkait. Pertama adalah d
         { text: "B", at: 1, offset: [-0.3, 0.3, 0] }
       ]
     },
-    {
-      points: Array.from({ length: 26 }, (_, i) => {
-        const angle = Math.PI / 4 + (i / 25) * (Math.PI / 2);
-        return {
-          x: 3 * Math.cos(angle),
-          y: 3 * Math.sin(angle),
-          z: 0
-        };
-      }),
+    createCircleArcLine({
+      radius: 3,
+      startDegrees: 45,
+      sweepDegrees: 90,
+      segments: 25,
       color: getColor("ORANGE"),
-      showPoints: false,
-      smooth: true,
       lineWidth: 4,
-      labels: [
-        { text: "Juring", at: 12, offset: [0.5, 0.5, 0] }
-      ]
-    }
+      label: { text: "Juring", offset: [0.5, 0.5, 0] }
+    })
   ]}
   cameraPosition={[0, 0, 10]}
   showZAxis={false}
@@ -98,14 +82,7 @@ Ketika sudut pusat bertambah besar, juring akan semakin melebar. Misalnya, jurin
   description={<>Juring dengan sudut pusat <InlineMath math="60^\circ" />, <InlineMath math="90^\circ" />, dan <InlineMath math="120^\circ" /> pada lingkaran yang sama.</>}
   data={[
     {
-      points: Array.from({ length: 101 }, (_, i) => {
-        const angle = (i / 100) * 2 * Math.PI;
-        return {
-          x: 4 * Math.cos(angle),
-          y: 4 * Math.sin(angle),
-          z: 0
-        };
-      }),
+      points: createCircleOutlinePoints(4),
       color: getColor("TEAL"),
       showPoints: false,
       smooth: true
@@ -123,31 +100,20 @@ Ketika sudut pusat bertambah besar, juring akan semakin melebar. Misalnya, jurin
       ]
     },
     {
-      points: [
-        { x: 0, y: 0, z: 0 },
-        { x: 4 * Math.cos(Math.PI / 3), y: 4 * Math.sin(Math.PI / 3), z: 0 }
-      ],
+      points: createCircleRadiusPoints({ radius: 4, degrees: 60 }),
       color: getColor("VIOLET"),
       showPoints: false,
       lineWidth: 2
     },
-    {
-      points: Array.from({ length: 21 }, (_, i) => {
-        const angle = (i / 20) * (Math.PI / 3);
-        return {
-          x: 4 * Math.cos(angle),
-          y: 4 * Math.sin(angle),
-          z: 0
-        };
-      }),
+    createCircleArcLine({
+      radius: 4,
+      startDegrees: 0,
+      sweepDegrees: 60,
+      segments: 20,
       color: getColor("AMBER"),
-      showPoints: false,
-      smooth: true,
       lineWidth: 3,
-      labels: [
-        { text: "60°", at: 10, offset: [0.5, 0.3, 0] }
-      ]
-    },
+      label: { text: "60°", offset: [0.5, 0.3, 0] }
+    }),
     {
       points: [
         { x: 0, y: 0, z: 2 },
