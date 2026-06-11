@@ -3,13 +3,13 @@
 import { StudentIcon, TeacherIcon } from "@hugeicons/core-free-icons";
 import { useDebouncedValue } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from "@repo/design-system/components/ui/avatar";
 import { Badge } from "@repo/design-system/components/ui/badge";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { usePaginatedQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
@@ -79,7 +79,9 @@ export function SchoolClassesPeopleList() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Badge variant={person.role === "teacher" ? "secondary" : "muted"}>
+            <Badge
+              variant={person.role === "teacher" ? "secondary" : "outline"}
+            >
               <HugeIcons
                 icon={person.role === "teacher" ? TeacherIcon : StudentIcon}
               />

@@ -1,8 +1,8 @@
 "use client";
 
 import { ArrowLeft02Icon } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";

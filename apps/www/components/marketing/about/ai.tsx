@@ -3,8 +3,8 @@ import {
   CodeIcon,
   StudentIcon,
 } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
 import { AiNeuroNoise } from "@/components/marketing/about/ai.client";
 
@@ -35,7 +35,6 @@ function AudienceCard({
       </div>
       <div className="mt-auto pt-2">
         <Button
-          nativeButton={false}
           render={
             <a href={ctaHref} rel="noopener noreferrer" target="_blank">
               {ctaText}

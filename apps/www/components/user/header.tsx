@@ -4,14 +4,14 @@ import { Settings01Icon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
+import NavigationLink from "@repo/design-system/components/navigation/link";
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from "@repo/design-system/components/ui/avatar";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
 import { useUser } from "@/lib/context/use-user";
@@ -78,7 +78,6 @@ export function UserHeader({ userId }: { userId: Id<"users"> }) {
 
       <Button
         className={cn("w-9 sm:w-auto", !isCurrentUser && "hidden")}
-        nativeButton={false}
         render={
           <NavigationLink href="/user/settings">
             <HugeIcons icon={Settings01Icon} />

@@ -10,12 +10,12 @@ import {
 } from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";
 import { AccelerationGraph } from "@repo/design-system/components/contents/physics/kinematics/acceleration/graph";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  Frame,
+  FrameDescription,
+  FrameHeader,
+  FramePanel,
+  FrameTitle,
+} from "@repo/design-system/components/ui/frame";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -46,20 +46,20 @@ export function AccelerationGraphCard({
   }
 
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
+    <Frame className="content-auto-card">
+      <FrameHeader>
+        <FrameTitle>{title}</FrameTitle>
+        <FrameDescription>{description}</FrameDescription>
+      </FrameHeader>
+      <FramePanel className="flex flex-col gap-4">
         <AccelerationCaseToggle
           caseId={caseId}
           labels={labels}
           onCaseChange={handleCaseChange}
         />
         <AccelerationGraph labels={labels} selectedCase={selectedCase} />
-      </CardContent>
-    </Card>
+      </FramePanel>
+    </Frame>
   );
 }
 

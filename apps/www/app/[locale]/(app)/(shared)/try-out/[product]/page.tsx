@@ -5,8 +5,8 @@ import {
   type TryoutProduct,
   tryoutProducts,
 } from "@repo/backend/convex/tryouts/products";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
+import NavigationLink from "@repo/design-system/components/navigation/link";
 import { fetchQuery } from "convex/nextjs";
 import { Clock, Effect } from "effect";
 import { notFound } from "next/navigation";

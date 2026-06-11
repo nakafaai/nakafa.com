@@ -19,6 +19,7 @@ import type {
   TooltipPayload,
   TooltipPayloadEntry,
 } from "recharts";
+import { Label, LabelList } from "recharts";
 
 const CHART_THEMES = [
   { name: "light", selector: "" },
@@ -66,12 +67,6 @@ const LazyCartesianGrid = lazy(async () => ({
 }));
 const LazyComposedChart = lazy(async () => ({
   default: (await import("recharts")).ComposedChart,
-}));
-const LazyLabel = lazy(async () => ({
-  default: (await import("recharts")).Label,
-}));
-const LazyLabelList = lazy(async () => ({
-  default: (await import("recharts")).LabelList,
 }));
 const LazyLegend = lazy(async () => ({
   default: (await import("recharts")).Legend,
@@ -186,6 +181,7 @@ function ChartContainer({
           <LazyResponsiveContainer
             className="min-h-0 w-full"
             initialDimension={CHART_INITIAL_DIMENSION}
+            minHeight={CHART_INITIAL_DIMENSION.height}
           >
             {children}
           </LazyResponsiveContainer>
@@ -420,12 +416,12 @@ function ChartComposedChart(
 
 /** Renders Recharts' label primitive behind the shared lazy chart runtime. */
 function ChartLabel(props: ComponentProps<RechartsModule["Label"]>) {
-  return <LazyLabel {...props} />;
+  return <Label {...props} />;
 }
 
 /** Renders Recharts' label list primitive behind the shared lazy chart runtime. */
 function ChartLabelList(props: ComponentProps<RechartsModule["LabelList"]>) {
-  return <LazyLabelList {...props} />;
+  return <LabelList {...props} />;
 }
 
 /** Renders Recharts' line primitive behind the shared lazy chart runtime. */

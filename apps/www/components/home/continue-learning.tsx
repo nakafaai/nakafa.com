@@ -4,10 +4,10 @@ import { Progress03Icon, Search02Icon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
+import NavigationLink from "@repo/design-system/components/navigation/link";
 import { Button } from "@repo/design-system/components/ui/button";
-import { GradientBlock } from "@repo/design-system/components/ui/gradient-block";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { GradientBlock } from "@repo/design-system/components/visual/gradient-block";
 import { cleanSlug } from "@repo/utilities/helper";
 import { useLocale, useTranslations } from "next-intl";
 
@@ -72,7 +72,6 @@ export function HomeContinueLearning() {
 
       <Button
         className="w-fit"
-        nativeButton={false}
         render={
           <NavigationLink href="/search">
             <HugeIcons className="size-4" icon={Search02Icon} />

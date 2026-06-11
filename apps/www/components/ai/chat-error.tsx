@@ -8,6 +8,7 @@ import {
 import { api } from "@repo/backend/convex/_generated/api";
 import { products } from "@repo/backend/convex/utils/polar/products";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Empty,
@@ -15,7 +16,6 @@ import {
   EmptyHeader,
   EmptyMedia,
 } from "@repo/design-system/components/ui/empty";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useAction } from "convex/react";
 import { useLocale, useTranslations } from "next-intl";

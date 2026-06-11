@@ -1,12 +1,12 @@
 "use client";
 
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  Frame,
+  FrameDescription,
+  FrameHeader,
+  FramePanel,
+  FrameTitle,
+} from "@repo/design-system/components/ui/frame";
 import { type ReactNode, useMemo } from "react";
 
 const SVG_PADDING = 20;
@@ -25,13 +25,13 @@ interface DiagramProps {
 
 export function Diagram({ title, description, children }: DiagramProps) {
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>{children}</CardContent>
-    </Card>
+    <Frame className="content-auto-card">
+      <FrameHeader>
+        <FrameTitle>{title}</FrameTitle>
+        <FrameDescription>{description}</FrameDescription>
+      </FrameHeader>
+      <FramePanel>{children}</FramePanel>
+    </Frame>
   );
 }
 

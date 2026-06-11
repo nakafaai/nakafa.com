@@ -1,7 +1,7 @@
 "use client";
 
 import { CHAT_MESSAGES_PAGE_SIZE } from "@repo/backend/convex/chats/constants";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
+import { Intersection } from "@repo/design-system/components/visibility-intersection";
 
 import { useCurrentChat } from "@/components/ai/context/use-current-chat";
 

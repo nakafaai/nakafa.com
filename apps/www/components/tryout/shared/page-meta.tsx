@@ -18,12 +18,12 @@ export function TryoutPageMeta({
 
   return (
     <div className="flex flex-wrap gap-2">
-      <Badge variant="muted">{productTitleByProduct[product]}</Badge>
-      <Badge variant="muted">
+      <Badge variant="outline">{productTitleByProduct[product]}</Badge>
+      <Badge variant="outline">
         {tTryouts("year-title", { year: cycleKey })}
       </Badge>
       {label ? (
-        <Badge className="capitalize" variant="muted">
+        <Badge className="capitalize" variant="outline">
           {label}
         </Badge>
       ) : null}

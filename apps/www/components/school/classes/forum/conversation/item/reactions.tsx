@@ -1,10 +1,11 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@repo/design-system/components/ui/hover-card";
+  PreviewCard,
+  PreviewCardPopup,
+  PreviewCardTrigger,
+} from "@repo/design-system/components/ui/preview-card";
+import { cn } from "@repo/design-system/lib/utils";
 import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
@@ -29,10 +30,14 @@ export const PostReactions = ({ post }: { post: ForumPost }) => {
         const moreCount = count - reactors.length;
 
         return (
-          <HoverCard key={emoji}>
-            <HoverCardTrigger
+          <PreviewCard key={emoji}>
+            <PreviewCardTrigger
               render={
                 <Button
+                  className={cn(
+                    isMyReaction &&
+                      "border-primary/40 bg-primary/8 text-primary hover:bg-primary/12"
+                  )}
                   disabled={isPending}
                   onClick={() => {
                     startTransition(async () => {
@@ -40,16 +45,14 @@ export const PostReactions = ({ post }: { post: ForumPost }) => {
                     });
                   }}
                   size="sm"
-                  variant={
-                    isMyReaction === true ? "default-outline" : "outline"
-                  }
+                  variant="outline"
                 />
               }
             >
               {emoji}
               <span className="tracking-tight">{count}</span>
-            </HoverCardTrigger>
-            <HoverCardContent
+            </PreviewCardTrigger>
+            <PreviewCardPopup
               align="center"
               className="w-auto max-w-64"
               side="top"
@@ -65,8 +68,8 @@ export const PostReactions = ({ post }: { post: ForumPost }) => {
                     : t("reacted-by", { names: reactors.join(", ") })}
                 </p>
               </div>
-            </HoverCardContent>
-          </HoverCard>
+            </PreviewCardPopup>
+          </PreviewCard>
         );
       })}
     </div>

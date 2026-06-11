@@ -6,21 +6,21 @@ import {
   MoreVerticalIcon,
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from "@repo/design-system/components/ui/avatar";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+  Menu,
+  MenuGroup,
+  MenuGroupLabel,
+  MenuItem,
+  MenuPopup,
+  MenuSeparator,
+  MenuTrigger,
+} from "@repo/design-system/components/ui/menu";
 import {
   SidebarMenuButton,
   SidebarMenuItem,
@@ -93,8 +93,8 @@ export function SchoolSidebarNavUser() {
 
   return (
     <SidebarMenuItem>
-      <DropdownMenu onOpenChange={set} open={open}>
-        <DropdownMenuTrigger
+      <Menu onOpenChange={set} open={open}>
+        <MenuTrigger
           render={
             <SidebarMenuButton
               className="data-popup-open:bg-sidebar-accent data-popup-open:text-sidebar-accent-foreground"
@@ -120,14 +120,14 @@ export function SchoolSidebarNavUser() {
             </SidebarMenuButton>
           }
         />
-        <DropdownMenuContent
+        <MenuPopup
           align="end"
           className="w-(--anchor-width) min-w-56 max-w-[calc(100vw-2rem)] rounded-lg"
           side={isMobile ? "bottom" : "right"}
           sideOffset={4}
         >
-          <DropdownMenuGroup>
-            <DropdownMenuLabel className="p-0 font-normal">
+          <MenuGroup>
+            <MenuGroupLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar>
                   <AvatarImage
@@ -148,22 +148,19 @@ export function SchoolSidebarNavUser() {
                   </span>
                 </div>
               </div>
-            </DropdownMenuLabel>
-          </DropdownMenuGroup>
-          <DropdownMenuSeparator />
+            </MenuGroupLabel>
+          </MenuGroup>
+          <MenuSeparator />
           <SidebarPreferenceSubmenus side={submenuSide} />
-          <DropdownMenuSeparator />
-          <DropdownMenuGroup>
-            <DropdownMenuItem
-              className="cursor-pointer"
-              onClick={handleSignOut}
-            >
+          <MenuSeparator />
+          <MenuGroup>
+            <MenuItem className="cursor-pointer" onClick={handleSignOut}>
               <HugeIcons icon={Logout01Icon} />
               {t("logout")}
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
+            </MenuItem>
+          </MenuGroup>
+        </MenuPopup>
+      </Menu>
     </SidebarMenuItem>
   );
 }

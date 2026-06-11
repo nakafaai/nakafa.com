@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
-import type { ChartConfig } from "@repo/design-system/components/ui/chart";
+import type { ChartConfig } from "@repo/design-system/components/charts/chart";
 import {
   ChartBar,
   ChartBarChart,
@@ -17,7 +10,14 @@ import {
   ChartTooltipContent,
   ChartXAxis,
   ChartYAxis,
-} from "@repo/design-system/components/ui/chart";
+} from "@repo/design-system/components/charts/chart";
+import {
+  Frame,
+  FrameDescription,
+  FrameHeader,
+  FramePanel,
+  FrameTitle,
+} from "@repo/design-system/components/ui/frame";
 
 interface Props {
   chartConfig: ChartConfig;
@@ -38,12 +38,12 @@ export function HistogramChart({
   yAxisLabel,
 }: Props) {
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <Frame>
+      <FrameHeader>
+        <FrameTitle>{title}</FrameTitle>
+        <FrameDescription>{description}</FrameDescription>
+      </FrameHeader>
+      <FramePanel>
         <ChartContainer className="aspect-square" config={chartConfig}>
           <ChartBarChart
             accessibilityLayer
@@ -78,8 +78,8 @@ export function HistogramChart({
             <ChartBar dataKey="value" radius={0} />
           </ChartBarChart>
         </ChartContainer>
-      </CardContent>
-    </Card>
+      </FramePanel>
+    </Frame>
   );
 }
 
@@ -91,12 +91,12 @@ export function BarChart({
   yAxisLabel,
 }: Props) {
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <Frame>
+      <FrameHeader>
+        <FrameTitle>{title}</FrameTitle>
+        <FrameDescription>{description}</FrameDescription>
+      </FrameHeader>
+      <FramePanel>
         <ChartContainer className="aspect-square" config={chartConfig}>
           <ChartBarChart accessibilityLayer data={data}>
             <ChartCartesianGrid vertical={false} />
@@ -125,7 +125,7 @@ export function BarChart({
             <ChartBar dataKey="value" radius={8} />
           </ChartBarChart>
         </ChartContainer>
-      </CardContent>
-    </Card>
+      </FramePanel>
+    </Frame>
   );
 }

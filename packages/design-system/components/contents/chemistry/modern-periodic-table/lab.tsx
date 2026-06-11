@@ -15,13 +15,13 @@ import {
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  Frame,
+  FrameDescription,
+  FrameFooter,
+  FrameHeader,
+  FramePanel,
+  FrameTitle,
+} from "@repo/design-system/components/ui/frame";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -60,13 +60,13 @@ export function ModernPeriodicTableLab({
   }
 
   return (
-    <Card className="overflow-hidden content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
+    <Frame className="overflow-hidden content-auto-card">
+      <FrameHeader>
+        <FrameTitle>{title}</FrameTitle>
+        <FrameDescription>{description}</FrameDescription>
+      </FrameHeader>
 
-      <CardContent className="flex flex-col gap-4">
+      <FramePanel className="flex flex-col gap-4">
         <ToggleGroup
           aria-label={labels.chooseFocus}
           gridColumns="3"
@@ -97,9 +97,9 @@ export function ModernPeriodicTableLab({
         </p>
 
         <Legend colors={colors} labels={labels} />
-      </CardContent>
+      </FramePanel>
 
-      <CardFooter className="border-t">
+      <FrameFooter className="border-t">
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
           <LabFact label={labels.focusLabel} value={selectedLabels.name} />
           <LabFact label={labels.group} value={<InlineMath math="1-18" />} />
@@ -109,8 +109,8 @@ export function ModernPeriodicTableLab({
             value={<InlineMath math="Z" />}
           />
         </dl>
-      </CardFooter>
-    </Card>
+      </FrameFooter>
+    </Frame>
   );
 }
 

@@ -1,5 +1,5 @@
 import type { IconSvgElement } from "@hugeicons/react";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import {
   Tabs,
   TabsList,
@@ -25,7 +25,6 @@ export function SharedTabs({ tabs, value }: Props) {
             <TabsTab
               className="h-8 px-3 text-muted-foreground data-active:text-accent-foreground"
               key={tab.href}
-              nativeButton={false}
               render={
                 <Link href={tab.href} prefetch>
                   <HugeIcons className="size-4 shrink-0" icon={tab.icon} />

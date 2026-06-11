@@ -2,9 +2,9 @@
 
 import { ArrowUpRight01Icon, Quran02Icon } from "@hugeicons/core-free-icons";
 import type { NakafaDataPart } from "@repo/ai/schema/data";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
 
 interface Props {
@@ -25,7 +25,7 @@ export const QuranPart = ({ message }: Props) => {
         <span className="text-muted-foreground text-sm">
           {t("nakafa-quran")}
         </span>
-        <Badge variant="muted">
+        <Badge variant="outline">
           {t("nakafa-quran-verse-count", {
             count: message.result.verse_count,
           })}
@@ -33,7 +33,6 @@ export const QuranPart = ({ message }: Props) => {
       </div>
       <Button
         className="max-w-full self-start"
-        nativeButton={false}
         render={
           <a
             className="min-w-0"

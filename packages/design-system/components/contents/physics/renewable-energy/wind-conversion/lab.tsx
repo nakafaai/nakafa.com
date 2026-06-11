@@ -7,13 +7,13 @@ import { CameraControls } from "@repo/design-system/components/three/camera-cont
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  Frame,
+  FrameDescription,
+  FrameFooter,
+  FrameHeader,
+  FramePanel,
+  FrameTitle,
+} from "@repo/design-system/components/ui/frame";
 import { Slider } from "@repo/design-system/components/ui/slider";
 import { getColor } from "@repo/design-system/lib/color";
 import { useTheme } from "next-themes";
@@ -64,12 +64,12 @@ export function WindEnergyConversionLab({
   }
 
   return (
-    <Card className="overflow-hidden content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
+    <Frame className="overflow-hidden content-auto-card">
+      <FrameHeader>
+        <FrameTitle>{title}</FrameTitle>
+        <FrameDescription>{description}</FrameDescription>
+      </FrameHeader>
+      <FramePanel className="flex flex-col gap-4">
         <section
           aria-label={labels.viewLabel}
           className={threeSceneFrameVariants()}
@@ -122,14 +122,14 @@ export function WindEnergyConversionLab({
             value={windSpeed}
           />
         </div>
-      </CardContent>
-      <CardFooter className="border-t">
+      </FramePanel>
+      <FrameFooter className="border-t">
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
           <WindFact label={labels.flowLabel} value={labels.flow} />
           <WindFact label={labels.meaningLabel} value={labels.meaning} />
         </dl>
-      </CardFooter>
-    </Card>
+      </FrameFooter>
+    </Frame>
   );
 }
 

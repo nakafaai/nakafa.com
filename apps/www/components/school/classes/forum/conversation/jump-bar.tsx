@@ -1,7 +1,7 @@
 import { ArrowDown02Icon } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Button } from "@repo/design-system/components/ui/button";
-import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Group } from "@repo/design-system/components/ui/group";
 import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
 
@@ -32,7 +32,7 @@ export const JumpBar = ({
             : "pointer-events-none opacity-0"
         )}
       >
-        <ButtonGroup>
+        <Group>
           {canGoBack ? (
             <Button disabled={!visible} onClick={onBack} variant="outline">
               {t("back")}
@@ -47,7 +47,7 @@ export const JumpBar = ({
           >
             <HugeIcons icon={ArrowDown02Icon} />
           </Button>
-        </ButtonGroup>
+        </Group>
       </div>
     </div>
   );

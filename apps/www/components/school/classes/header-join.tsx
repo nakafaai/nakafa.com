@@ -3,16 +3,13 @@
 import { InLoveIcon, Rocket01Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
+import { ResponsiveDialog } from "@repo/design-system/components/overlays/responsive-dialog";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-} from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { toastManager } from "@repo/design-system/components/ui/toast";
 import {
   usePathname,
   useRouter,
@@ -21,7 +18,6 @@ import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
 import { Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
-import { toast } from "sonner";
 import { reportClientException } from "@/lib/analytics/client";
 
 const form = Schema.Struct({
@@ -66,7 +62,10 @@ export function SchoolClassesHeaderJoin() {
             }).pipe(
               Effect.zipRight(
                 Effect.sync(() => {
-                  toast.error(t("join-class-failed"));
+                  toastManager.add({
+                    type: "error",
+                    title: t("join-class-failed"),
+                  });
                 })
               )
             )
@@ -108,7 +107,7 @@ export function SchoolClassesHeaderJoin() {
         setOpen={openHandlers.set}
         title={t("join-class")}
       >
-        <FieldGroup>
+        <div className="flex w-full flex-col gap-3">
           <form.Field name="code">
             {(field) => {
               const isInvalid =
@@ -132,7 +131,7 @@ export function SchoolClassesHeaderJoin() {
               );
             }}
           </form.Field>
-        </FieldGroup>
+        </div>
       </ResponsiveDialog>
     </form>
   );

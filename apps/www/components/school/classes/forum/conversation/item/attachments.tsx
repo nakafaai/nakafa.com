@@ -1,6 +1,6 @@
 import { FileIcon } from "@hugeicons/core-free-icons";
 import type { PostAttachment } from "@repo/backend/convex/classes/forums/utils/posts";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { formatFileSize } from "@repo/design-system/lib/utils";
 import Image from "next/image";
 

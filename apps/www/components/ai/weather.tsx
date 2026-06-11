@@ -13,7 +13,7 @@ import {
   SunCloudLittleRainIcon,
   SunCloudSlowWindIcon,
 } from "@hugeicons/core-free-icons";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 import { getCountryName } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";

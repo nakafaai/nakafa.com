@@ -7,8 +7,8 @@ import {
   SourceContent,
   SourceTrigger,
 } from "@repo/design-system/components/ai/source";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Badge } from "@repo/design-system/components/ui/badge";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useTranslations } from "next-intl";
 
@@ -60,7 +60,7 @@ export const WebSearchPart = ({ message }: Props) => {
           icon={Search01Icon}
         />
         <span className="text-muted-foreground text-sm">{t("web-search")}</span>
-        <Badge variant="muted">{results.length}</Badge>
+        <Badge variant="outline">{results.length}</Badge>
       </div>
       <WebSearchPartQueries queries={message.queries} />
       <WebSearchPartPreview

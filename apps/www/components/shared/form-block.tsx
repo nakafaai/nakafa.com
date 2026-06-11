@@ -1,11 +1,11 @@
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  Frame,
+  FrameDescription,
+  FrameFooter,
+  FrameHeader,
+  FramePanel,
+  FrameTitle,
+} from "@repo/design-system/components/ui/frame";
 import { cn } from "@repo/design-system/lib/utils";
 import type { ReactNode } from "react";
 
@@ -25,28 +25,31 @@ export function FormBlock({
   description,
 }: Props) {
   return (
-    <Card
+    <Frame
       className={cn(
         "overflow-hidden",
-        variant === "destructive" && "border-destructive",
-        !!footer && "pb-0"
+        variant === "destructive" && "bg-destructive/12"
       )}
     >
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>{children}</CardContent>
+      <FrameHeader>
+        <FrameTitle>{title}</FrameTitle>
+        <FrameDescription>{description}</FrameDescription>
+      </FrameHeader>
+      <FramePanel
+        className={cn(variant === "destructive" && "border-destructive")}
+      >
+        {children}
+      </FramePanel>
       {!!footer && (
-        <CardFooter
+        <FrameFooter
           className={cn(
             "border-t bg-muted/20 py-3 [.border-t]:pt-3",
             variant === "destructive" && "border-destructive bg-destructive/20"
           )}
         >
           {footer}
-        </CardFooter>
+        </FrameFooter>
       )}
-    </Card>
+    </Frame>
   );
 }

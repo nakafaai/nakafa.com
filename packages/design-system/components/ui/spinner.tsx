@@ -1,5 +1,5 @@
 import { Loading03Icon } from "@hugeicons/core-free-icons";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
 
 interface SpinnerProps
@@ -8,7 +8,16 @@ interface SpinnerProps
   isLoading?: boolean;
 }
 
-function Spinner({ className, isLoading, icon, ...props }: SpinnerProps) {
+/**
+ * Renders Nakafa's loading affordance with Hugeicons.
+ * Passing an icon keeps the same sizing contract while `isLoading` forces spin.
+ */
+export function Spinner({
+  className,
+  isLoading,
+  icon,
+  ...props
+}: SpinnerProps) {
   return (
     <HugeIcons
       className={cn(
@@ -22,5 +31,3 @@ function Spinner({ className, isLoading, icon, ...props }: SpinnerProps) {
     />
   );
 }
-
-export { Spinner };

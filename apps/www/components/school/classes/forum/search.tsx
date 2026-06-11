@@ -1,12 +1,12 @@
 "use client";
 
 import { Cancel01Icon, Search02Icon } from "@hugeicons/core-free-icons";
-import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
+import { Button } from "@repo/design-system/components/ui/button";
+import { Group } from "@repo/design-system/components/ui/group";
 import {
   InputGroup,
   InputGroupAddon,
-  InputGroupButton,
   InputGroupInput,
 } from "@repo/design-system/components/ui/input-group";
 import { cn } from "@repo/design-system/lib/utils";
@@ -20,7 +20,7 @@ export function SchoolClassesForumSearch() {
   const [{ q }, setSearch] = useQueryStates(searchParsers);
 
   return (
-    <ButtonGroup className="w-full">
+    <Group className="w-full">
       <InputGroup>
         <InputGroupInput
           onChange={(e) => setSearch({ q: e.target.value })}
@@ -37,12 +37,16 @@ export function SchoolClassesForumSearch() {
             !!q && "opacity-100"
           )}
         >
-          <InputGroupButton onClick={() => setSearch({ q: "" })} size="icon-xs">
+          <Button
+            onClick={() => setSearch({ q: "" })}
+            size="icon-xs"
+            variant="ghost"
+          >
             <HugeIcons icon={Cancel01Icon} />
             <span className="sr-only">Clear search</span>
-          </InputGroupButton>
+          </Button>
         </InputGroupAddon>
       </InputGroup>
-    </ButtonGroup>
+    </Group>
   );
 }

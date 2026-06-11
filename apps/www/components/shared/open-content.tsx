@@ -7,41 +7,28 @@ import {
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import { useClipboard, useDisclosure } from "@mantine/hooks";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import {
   BrandLogo,
   type BrandLogoName,
 } from "@repo/design-system/components/logos/brand";
 import { Button } from "@repo/design-system/components/ui/button";
+import { Group, GroupSeparator } from "@repo/design-system/components/ui/group";
 import {
-  ButtonGroup,
-  ButtonGroupSeparator,
-} from "@repo/design-system/components/ui/button-group";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+  Menu,
+  MenuGroup,
+  MenuItem,
+  MenuPopup,
+  MenuTrigger,
+} from "@repo/design-system/components/ui/menu";
+import { toastManager } from "@repo/design-system/components/ui/toast";
 import { cn } from "@repo/design-system/lib/utils";
 import { Link } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
-import { useLayoutEffect } from "react";
-import { toast } from "sonner";
 import { getGithubUrl } from "@/lib/utils/github";
 
 /**
  * Renders open/share actions for one content page.
- *
- * The dropdown is transient UI, so it resets closed when Next hides the page
- * through Cache Components state preservation.
- *
- * References:
- * - Next.js preserving UI state with Cache Components:
- *   `apps/www/node_modules/next/dist/docs/01-app/02-guides/preserving-ui-state.md`
- * - Mantine `useDisclosure`:
- *   https://mantine.dev/hooks/use-disclosure/
  */
 export function OpenContent({
   slug,
@@ -52,17 +39,15 @@ export function OpenContent({
 }) {
   const t = useTranslations("Common");
   const clipboard = useClipboard({ timeout: 500 });
-  const [open, { close, set }] = useDisclosure(false);
-
-  useLayoutEffect(() => close, [close]);
+  const [open, { set }] = useDisclosure(false);
 
   const handleCopy = () => {
     if (!content) {
-      toast.error(t("copy-error"), { position: "bottom-center" });
+      toastManager.add({ type: "error", title: t("copy-error") });
       return;
     }
     clipboard.copy(content);
-    toast.success(t("copy-success"), { position: "bottom-center" });
+    toastManager.add({ type: "success", title: t("copy-success") });
   };
 
   const locale = slug.split("/")[1];
@@ -102,16 +87,16 @@ export function OpenContent({
   }[];
 
   return (
-    <ButtonGroup>
+    <Group>
       <Button disabled={!content} onClick={handleCopy} variant="secondary">
         <HugeIcons icon={clipboard.copied ? Tick01Icon : Copy01Icon} />
         {t("copy-content")}
       </Button>
 
-      <ButtonGroupSeparator />
+      <GroupSeparator />
 
-      <DropdownMenu onOpenChange={set} open={open}>
-        <DropdownMenuTrigger
+      <Menu onOpenChange={set} open={open}>
+        <MenuTrigger
           render={
             <Button aria-label={t("open")} size="icon" variant="secondary" />
           }
@@ -121,12 +106,12 @@ export function OpenContent({
             className={cn("transition-transform", open && "rotate-180")}
             icon={ArrowDown01Icon}
           />
-        </DropdownMenuTrigger>
+        </MenuTrigger>
 
-        <DropdownMenuContent className="w-56">
-          <DropdownMenuGroup>
+        <MenuPopup className="w-56">
+          <MenuGroup>
             {links.map((item) => (
-              <DropdownMenuItem
+              <MenuItem
                 key={item.title}
                 render={
                   <Link
@@ -141,9 +126,9 @@ export function OpenContent({
                 }
               />
             ))}
-          </DropdownMenuGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </ButtonGroup>
+          </MenuGroup>
+        </MenuPopup>
+      </Menu>
+    </Group>
   );
 }

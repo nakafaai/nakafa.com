@@ -11,21 +11,21 @@ import {
   UserIcon,
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from "@repo/design-system/components/ui/avatar";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+  Menu,
+  MenuGroup,
+  MenuGroupLabel,
+  MenuItem,
+  MenuPopup,
+  MenuSeparator,
+  MenuTrigger,
+} from "@repo/design-system/components/ui/menu";
 import {
   SidebarMenuButton,
   SidebarMenuItem,
@@ -97,8 +97,8 @@ export function NavUser() {
 
   return (
     <SidebarMenuItem>
-      <DropdownMenu onOpenChange={set} open={open}>
-        <DropdownMenuTrigger
+      <Menu onOpenChange={set} open={open}>
+        <MenuTrigger
           render={
             <SidebarMenuButton
               className="data-popup-open:bg-sidebar-accent data-popup-open:text-sidebar-accent-foreground"
@@ -124,14 +124,14 @@ export function NavUser() {
             </SidebarMenuButton>
           }
         />
-        <DropdownMenuContent
+        <MenuPopup
           align="end"
           className="w-(--anchor-width) min-w-56 max-w-[calc(100vw-2rem)] rounded-lg"
           side={isMobile ? "bottom" : "right"}
           sideOffset={4}
         >
-          <DropdownMenuGroup>
-            <DropdownMenuLabel className="p-0 font-normal">
+          <MenuGroup>
+            <MenuGroupLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar>
                   <AvatarImage
@@ -152,61 +152,58 @@ export function NavUser() {
                   </span>
                 </div>
               </div>
-            </DropdownMenuLabel>
-          </DropdownMenuGroup>
-          <DropdownMenuSeparator />
-          <DropdownMenuGroup>
-            <DropdownMenuItem
+            </MenuGroupLabel>
+          </MenuGroup>
+          <MenuSeparator />
+          <MenuGroup>
+            <MenuItem
               className="cursor-pointer"
               onClick={() => router.push(`/user/${user.appUser._id}`)}
             >
               <HugeIcons icon={UserIcon} />
               {t("profile")}
-            </DropdownMenuItem>
-            <DropdownMenuItem
+            </MenuItem>
+            <MenuItem
               className="cursor-pointer"
               onClick={() => router.push(`/user/${user.appUser._id}/chat`)}
             >
               <HugeIcons icon={MessageMultiple02Icon} />
               {t("chat")}
-            </DropdownMenuItem>
-            <DropdownMenuItem
+            </MenuItem>
+            <MenuItem
               className="cursor-pointer"
               onClick={() => router.push("/user/settings")}
             >
               <HugeIcons icon={Settings01Icon} />
               {t("settings")}
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-          <DropdownMenuSeparator />
-          <DropdownMenuGroup>
-            <DropdownMenuItem
+            </MenuItem>
+          </MenuGroup>
+          <MenuSeparator />
+          <MenuGroup>
+            <MenuItem
               className="cursor-pointer"
               onClick={() => router.push("/terms-of-service")}
             >
               <HugeIcons icon={FileValidationIcon} />
               {tLegal("terms-of-service")}
-            </DropdownMenuItem>
-            <DropdownMenuItem
+            </MenuItem>
+            <MenuItem
               className="cursor-pointer"
               onClick={() => router.push("/privacy-policy")}
             >
               <HugeIcons icon={LockIcon} />
               {tLegal("privacy-policy")}
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-          <DropdownMenuSeparator />
-          <DropdownMenuGroup>
-            <DropdownMenuItem
-              className="cursor-pointer"
-              onClick={handleSignOut}
-            >
+            </MenuItem>
+          </MenuGroup>
+          <MenuSeparator />
+          <MenuGroup>
+            <MenuItem className="cursor-pointer" onClick={handleSignOut}>
               <HugeIcons icon={Logout01Icon} />
               {t("logout")}
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
+            </MenuItem>
+          </MenuGroup>
+        </MenuPopup>
+      </Menu>
     </SidebarMenuItem>
   );
 }

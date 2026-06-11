@@ -1,4 +1,4 @@
-import { Particles } from "@repo/design-system/components/ui/particles";
+import { Particles } from "@repo/design-system/components/visual/particles";
 import { ChatNew } from "@/components/ai/chat-new";
 import { HomeTitle } from "@/components/ai/title";
 import { Videos } from "@/components/ai/videos";

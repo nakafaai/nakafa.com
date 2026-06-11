@@ -7,22 +7,22 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useClipboard, useDisclosure } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
+import { ResponsiveDialog } from "@repo/design-system/components/overlays/responsive-dialog";
 import { Button } from "@repo/design-system/components/ui/button";
-import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
+import { Group } from "@repo/design-system/components/ui/group";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+  Menu,
+  MenuGroup,
+  MenuGroupLabel,
+  MenuItem,
+  MenuPopup,
+  MenuTrigger,
+} from "@repo/design-system/components/ui/menu";
+import { toastManager } from "@repo/design-system/components/ui/toast";
 import { useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { toast } from "sonner";
 import {
   type InviteRole,
   inviteRoleList,
@@ -50,9 +50,9 @@ export function SchoolClassesPeopleInvite() {
   const code = inviteCodesByRole.get(selectedRole)?.code ?? "";
 
   return (
-    <ButtonGroup>
-      <DropdownMenu>
-        <DropdownMenuTrigger
+    <Group>
+      <Menu>
+        <MenuTrigger
           render={
             <Button>
               <HugeIcons icon={UserAdd01Icon} />
@@ -60,11 +60,11 @@ export function SchoolClassesPeopleInvite() {
             </Button>
           }
         />
-        <DropdownMenuContent align="end">
-          <DropdownMenuGroup>
-            <DropdownMenuLabel>{t("role")}</DropdownMenuLabel>
+        <MenuPopup align="end">
+          <MenuGroup>
+            <MenuGroupLabel>{t("role")}</MenuGroupLabel>
             {inviteRoleList.map((role) => (
-              <DropdownMenuItem
+              <MenuItem
                 className="cursor-pointer"
                 key={role.value}
                 onClick={() => {
@@ -74,11 +74,11 @@ export function SchoolClassesPeopleInvite() {
               >
                 <HugeIcons icon={role.icon} />
                 {t(role.value)}
-              </DropdownMenuItem>
+              </MenuItem>
             ))}
-          </DropdownMenuGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
+          </MenuGroup>
+        </MenuPopup>
+      </Menu>
 
       <InviteCodeDialog
         code={code}
@@ -89,15 +89,13 @@ export function SchoolClassesPeopleInvite() {
           }
 
           clipboard.copy(code);
-          toast.success(t("invite-code-copied"), {
-            position: "bottom-center",
-          });
+          toastManager.add({ type: "success", title: t("invite-code-copied") });
         }}
         open={openInviteDialog}
         role={selectedRole}
         setOpenAction={inviteDialogHandlers.set}
       />
-    </ButtonGroup>
+    </Group>
   );
 }
 

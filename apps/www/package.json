@@ -62,7 +62,6 @@
     "nuqs": "^2.8.9",
     "react": "19.2.7",
     "react-dom": "19.2.7",
-    "sonner": "^2.0.7",
     "takumi-js": "^1.8.1",
     "use-context-selector": "^2.0.0",
     "virtua": "^0.49.1",

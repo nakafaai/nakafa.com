@@ -1,6 +1,6 @@
 import { BookOpen02Icon, PlayIcon, StopIcon } from "@hugeicons/core-free-icons";
 import type { Surah } from "@repo/contents/_types/quran";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "@repo/design-system/lib/utils";
 import type { Locale } from "next-intl";

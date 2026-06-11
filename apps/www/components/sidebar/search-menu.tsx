@@ -1,7 +1,7 @@
 "use client";
 
 import { CommandIcon, Search02Icon } from "@hugeicons/core-free-icons";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import {
   SidebarMenu,
   SidebarMenuButton,

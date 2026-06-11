@@ -1,4 +1,4 @@
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import NavigationLink from "@repo/design-system/components/navigation/link";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import SchoolCreateImage from "@/public/school-create.png";

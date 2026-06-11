@@ -1,9 +1,4 @@
-import {
-  type AccelerationCase,
-  type AccelerationLabels,
-  getMotionPoints,
-} from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";
-import type { ChartConfig } from "@repo/design-system/components/ui/chart";
+import type { ChartConfig } from "@repo/design-system/components/charts/chart";
 import {
   ChartCartesianGrid,
   ChartContainer,
@@ -14,7 +9,12 @@ import {
   ChartXAxis,
   ChartYAxis,
   getColorVariable,
-} from "@repo/design-system/components/ui/chart";
+} from "@repo/design-system/components/charts/chart";
+import {
+  type AccelerationCase,
+  type AccelerationLabels,
+  getMotionPoints,
+} from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";
 
 interface AccelerationGraphProps {
   labels: AccelerationLabels;

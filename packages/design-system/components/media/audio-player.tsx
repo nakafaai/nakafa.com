@@ -8,14 +8,14 @@ import {
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import { captureException } from "@repo/analytics/posthog";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+  Menu,
+  MenuItem,
+  MenuPopup,
+  MenuTrigger,
+} from "@repo/design-system/components/ui/menu";
 import { cn } from "@repo/design-system/lib/utils";
 import {
   createContext,
@@ -719,8 +719,8 @@ export function AudioPlayerSpeed({
   const currentSpeed = player.playbackRate;
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
+    <Menu>
+      <MenuTrigger
         render={
           <Button
             aria-label="Playback speed"
@@ -733,9 +733,9 @@ export function AudioPlayerSpeed({
           </Button>
         }
       />
-      <DropdownMenuContent align="end" className="min-w-30">
+      <MenuPopup align="end" className="min-w-30">
         {speeds.map((speed) => (
-          <DropdownMenuItem
+          <MenuItem
             className="flex cursor-pointer items-center justify-between"
             key={speed}
             onClick={() => player.setPlaybackRate(speed)}
@@ -746,10 +746,10 @@ export function AudioPlayerSpeed({
             {currentSpeed === speed && (
               <HugeIcons className="size-4" icon={Tick01Icon} />
             )}
-          </DropdownMenuItem>
+          </MenuItem>
         ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </MenuPopup>
+    </Menu>
   );
 }
 

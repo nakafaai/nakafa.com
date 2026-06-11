@@ -9,29 +9,26 @@ import {
   Time04Icon,
 } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
+import { ResponsiveDialog } from "@repo/design-system/components/overlays/responsive-dialog";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Calendar } from "@repo/design-system/components/ui/calendar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-} from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import {
+  Menu,
+  MenuItem,
+  MenuPopup,
+  MenuTrigger,
+} from "@repo/design-system/components/ui/menu";
+import {
   Popover,
-  PopoverContent,
+  PopoverPopup,
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
+import { toastManager } from "@repo/design-system/components/ui/toast";
 import { cn } from "@repo/design-system/lib/utils";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
@@ -39,7 +36,6 @@ import { startOfDay } from "date-fns";
 import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { Activity, useState } from "react";
-import { toast } from "sonner";
 import {
   assessmentModeList,
   getAssessmentMode,
@@ -129,7 +125,7 @@ export function CreateAssessmentDialog({
             scheduledAt:
               value.status === "scheduled" ? value.scheduledAt : undefined,
           });
-          toast.success(t("assessment-updated"));
+          toastManager.add({ type: "success", title: t("assessment-updated") });
         }}
         open={open}
         setOpenAction={setOpenAction}
@@ -219,7 +215,7 @@ function AssessmentDialogShell({
             }).pipe(
               Effect.zipRight(
                 Effect.sync(() => {
-                  toast.error(errorMessage);
+                  toastManager.add({ type: "error", title: errorMessage });
                 })
               )
             )
@@ -263,7 +259,7 @@ function AssessmentDialogShell({
             }}
             title={title}
           >
-            <FieldGroup>
+            <div className="flex w-full flex-col gap-3">
               <form.Field name="title">
                 {(field) => {
                   const isInvalid =
@@ -331,8 +327,8 @@ function AssessmentDialogShell({
                       <FieldLabel htmlFor={`${formId}-mode`}>
                         {t("assessment-mode-label")}
                       </FieldLabel>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
+                      <Menu>
+                        <MenuTrigger
                           render={
                             <Button
                               aria-invalid={isInvalid}
@@ -351,12 +347,9 @@ function AssessmentDialogShell({
                             </Button>
                           }
                         />
-                        <DropdownMenuContent
-                          align="start"
-                          className="w-(--anchor-width)"
-                        >
+                        <MenuPopup align="start" className="w-(--anchor-width)">
                           {assessmentModeList.map((option) => (
-                            <DropdownMenuItem
+                            <MenuItem
                               className="cursor-pointer"
                               key={option.value}
                               onClick={() => field.handleChange(option.value)}
@@ -371,10 +364,10 @@ function AssessmentDialogShell({
                                 )}
                                 icon={Tick01Icon}
                               />
-                            </DropdownMenuItem>
+                            </MenuItem>
                           ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                        </MenuPopup>
+                      </Menu>
                     </Field>
                   );
                 }}
@@ -392,8 +385,8 @@ function AssessmentDialogShell({
                       <FieldLabel htmlFor={`${formId}-status`}>
                         {t("assessment-status-label")}
                       </FieldLabel>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
+                      <Menu>
+                        <MenuTrigger
                           render={
                             <Button
                               aria-invalid={isInvalid}
@@ -412,12 +405,9 @@ function AssessmentDialogShell({
                             </Button>
                           }
                         />
-                        <DropdownMenuContent
-                          align="start"
-                          className="w-(--anchor-width)"
-                        >
+                        <MenuPopup align="start" className="w-(--anchor-width)">
                           {assessmentStatusList.map((option) => (
-                            <DropdownMenuItem
+                            <MenuItem
                               className="cursor-pointer"
                               key={option.value}
                               onClick={() => field.handleChange(option.value)}
@@ -432,10 +422,10 @@ function AssessmentDialogShell({
                                 )}
                                 icon={Tick01Icon}
                               />
-                            </DropdownMenuItem>
+                            </MenuItem>
                           ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                        </MenuPopup>
+                      </Menu>
                     </Field>
                   );
                 }}
@@ -475,7 +465,7 @@ function AssessmentDialogShell({
                               icon={ArrowDown01Icon}
                             />
                           </PopoverTrigger>
-                          <PopoverContent
+                          <PopoverPopup
                             align="start"
                             className="w-auto overflow-hidden p-0"
                           >
@@ -535,14 +525,14 @@ function AssessmentDialogShell({
                                 </div>
                               </div>
                             </div>
-                          </PopoverContent>
+                          </PopoverPopup>
                         </Popover>
                       </Field>
                     );
                   }}
                 </form.Field>
               </Activity>
-            </FieldGroup>
+            </div>
           </ResponsiveDialog>
         </form>
       )}

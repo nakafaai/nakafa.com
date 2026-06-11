@@ -10,6 +10,8 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
+import { ResponsiveDialog } from "@repo/design-system/components/overlays/responsive-dialog";
 import {
   Autocomplete,
   AutocompleteCollection,
@@ -20,27 +22,22 @@ import {
   AutocompleteList,
 } from "@repo/design-system/components/ui/autocomplete";
 import { Button } from "@repo/design-system/components/ui/button";
-import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-} from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
+import { Group } from "@repo/design-system/components/ui/group";
 import { Input } from "@repo/design-system/components/ui/input";
 import {
+  Menu,
+  MenuItem,
+  MenuPopup,
+  MenuTrigger,
+} from "@repo/design-system/components/ui/menu";
+import {
   Popover,
-  PopoverContent,
+  PopoverPopup,
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { toastManager } from "@repo/design-system/components/ui/toast";
 import { cn } from "@repo/design-system/lib/utils";
 import {
   usePathname,
@@ -50,7 +47,6 @@ import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
-import { toast } from "sonner";
 import { subjectList } from "@/components/school/classes/_data/subject";
 import {
   classCreateDefaultValues,
@@ -112,7 +108,10 @@ export function CreateSchoolClassDialog({
             }).pipe(
               Effect.zipRight(
                 Effect.sync(() => {
-                  toast.error(t("create-class-failed"));
+                  toastManager.add({
+                    type: "error",
+                    title: t("create-class-failed"),
+                  });
                 })
               )
             )
@@ -149,7 +148,7 @@ export function CreateSchoolClassDialog({
         setOpen={setOpenAction}
         title={t("create-class")}
       >
-        <FieldGroup>
+        <div className="flex w-full flex-col gap-3">
           <form.Field name="name">
             {(field) => {
               const isInvalid =
@@ -186,7 +185,7 @@ export function CreateSchoolClassDialog({
                   <FieldLabel htmlFor="school-classes-header-add-subject">
                     {t("subject-label")}
                   </FieldLabel>
-                  <ButtonGroup>
+                  <Group>
                     <Input
                       aria-invalid={isInvalid}
                       id="school-classes-header-add-subject"
@@ -221,7 +220,7 @@ export function CreateSchoolClassDialog({
                           icon={ArrowDown01Icon}
                         />
                       </PopoverTrigger>
-                      <PopoverContent align="end" className="p-0">
+                      <PopoverPopup align="end" className="p-0">
                         <Autocomplete
                           autoHighlight="always"
                           inline
@@ -279,9 +278,9 @@ export function CreateSchoolClassDialog({
                             )}
                           </AutocompleteList>
                         </Autocomplete>
-                      </PopoverContent>
+                      </PopoverPopup>
                     </Popover>
-                  </ButtonGroup>
+                  </Group>
                 </Field>
               );
             }}
@@ -298,8 +297,8 @@ export function CreateSchoolClassDialog({
                   <FieldLabel htmlFor="school-classes-header-add-year">
                     {t("year-label")}
                   </FieldLabel>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger
+                  <Menu>
+                    <MenuTrigger
                       render={
                         <Button
                           aria-invalid={isInvalid}
@@ -318,12 +317,9 @@ export function CreateSchoolClassDialog({
                         </Button>
                       }
                     />
-                    <DropdownMenuContent
-                      align="start"
-                      className="w-(--anchor-width)"
-                    >
+                    <MenuPopup align="start" className="w-(--anchor-width)">
                       {getAcademicYearList().map((year) => (
-                        <DropdownMenuItem
+                        <MenuItem
                           className="cursor-pointer"
                           key={year}
                           onClick={() => field.handleChange(year)}
@@ -336,10 +332,10 @@ export function CreateSchoolClassDialog({
                             )}
                             icon={Tick01Icon}
                           />
-                        </DropdownMenuItem>
+                        </MenuItem>
                       ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                    </MenuPopup>
+                  </Menu>
                 </Field>
               );
             }}
@@ -356,8 +352,8 @@ export function CreateSchoolClassDialog({
                   <FieldLabel htmlFor="school-classes-header-add-visibility">
                     {t("visibility-label")}
                   </FieldLabel>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger
+                  <Menu>
+                    <MenuTrigger
                       render={
                         <Button
                           aria-invalid={isInvalid}
@@ -376,12 +372,9 @@ export function CreateSchoolClassDialog({
                         </Button>
                       }
                     />
-                    <DropdownMenuContent
-                      align="start"
-                      className="w-(--anchor-width)"
-                    >
+                    <MenuPopup align="start" className="w-(--anchor-width)">
                       {classVisibilityList.map((visibility) => (
-                        <DropdownMenuItem
+                        <MenuItem
                           className="cursor-pointer"
                           key={visibility}
                           onClick={() => field.handleChange(visibility)}
@@ -394,15 +387,15 @@ export function CreateSchoolClassDialog({
                             )}
                             icon={Tick01Icon}
                           />
-                        </DropdownMenuItem>
+                        </MenuItem>
                       ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                    </MenuPopup>
+                  </Menu>
                 </Field>
               );
             }}
           </form.Field>
-        </FieldGroup>
+        </div>
       </ResponsiveDialog>
     </form>
   );

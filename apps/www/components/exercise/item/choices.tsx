@@ -6,6 +6,7 @@ import { Response } from "@repo/design-system/components/ai/response";
 import type { Button } from "@repo/design-system/components/ui/button";
 import { Checkbox } from "@repo/design-system/components/ui/checkbox";
 import { Label } from "@repo/design-system/components/ui/label";
+import { toastManager } from "@repo/design-system/components/ui/toast";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "@repo/design-system/lib/utils";
 import { useMutation } from "convex/react";
@@ -13,7 +14,6 @@ import { ConvexError } from "convex/values";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { type ComponentProps, useTransition } from "react";
-import { toast } from "sonner";
 import { reportClientException } from "@/lib/analytics/client";
 import { useAttempt } from "@/lib/context/use-attempt";
 import { useExercise } from "@/lib/context/use-exercise";
@@ -50,27 +50,26 @@ export function ExerciseChoices({
   /** Submits one selected option for the current exercise. */
   function handleSubmit(index: number) {
     if (!attemptId) {
-      toast.info(t("attempt-not-found"), { position: "bottom-center" });
+      toastManager.add({ type: "info", title: t("attempt-not-found") });
       return;
     }
 
     if (isInputLocked) {
-      toast.info(t("attempt-expiry-processing"), {
-        position: "bottom-center",
-      });
+      toastManager.add({ type: "info", title: t("attempt-expiry-processing") });
       return;
     }
 
     if (attemptStatus !== "in-progress") {
-      toast.info(t("attempt-not-in-progress"), { position: "bottom-center" });
+      toastManager.add({ type: "info", title: t("attempt-not-in-progress") });
       return;
     }
 
     const option = answerSheetEntry?.options[index];
 
     if (!(answerSheetEntry && option)) {
-      toast.error("Question metadata unavailable.", {
-        position: "bottom-center",
+      toastManager.add({
+        type: "error",
+        title: "Question metadata unavailable.",
       });
       return;
     }
@@ -95,8 +94,9 @@ export function ExerciseChoices({
               }).pipe(
                 Effect.zipRight(
                   Effect.sync(() => {
-                    toast.error(t("submit-answer-error"), {
-                      position: "bottom-center",
+                    toastManager.add({
+                      type: "error",
+                      title: t("submit-answer-error"),
                     });
                   })
                 )
@@ -111,8 +111,9 @@ export function ExerciseChoices({
               }).pipe(
                 Effect.zipRight(
                   Effect.sync(() => {
-                    toast.error(t("submit-answer-error"), {
-                      position: "bottom-center",
+                    toastManager.add({
+                      type: "error",
+                      title: t("submit-answer-error"),
                     });
                   })
                 )
@@ -126,16 +127,18 @@ export function ExerciseChoices({
               errorCode === "TRYOUT_EXPIRED"
             ) {
               return Effect.sync(() => {
-                toast.info(t("attempt-expiry-processing"), {
-                  position: "bottom-center",
+                toastManager.add({
+                  type: "info",
+                  title: t("attempt-expiry-processing"),
                 });
               });
             }
 
             if (errorCode === "INVALID_ATTEMPT_STATUS") {
               return Effect.sync(() => {
-                toast.info(t("attempt-not-in-progress"), {
-                  position: "bottom-center",
+                toastManager.add({
+                  type: "info",
+                  title: t("attempt-not-in-progress"),
                 });
               });
             }
@@ -148,8 +151,9 @@ export function ExerciseChoices({
             }).pipe(
               Effect.zipRight(
                 Effect.sync(() => {
-                  toast.error(t("submit-answer-error"), {
-                    position: "bottom-center",
+                  toastManager.add({
+                    type: "error",
+                    title: t("submit-answer-error"),
                   });
                 })
               )
@@ -164,6 +168,7 @@ export function ExerciseChoices({
     <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
       {choices.map((choice, index) => {
         let variant: ComponentProps<typeof Button>["variant"] = "outline";
+        let isPrimaryState = false;
         const optionKey = answerSheetEntry?.options[index]?.optionKey;
 
         const checked =
@@ -172,7 +177,7 @@ export function ExerciseChoices({
           currentAnswer?.textAnswer === choice.label;
 
         if (checked) {
-          variant = "default-outline";
+          isPrimaryState = true;
         }
 
         const shouldShowReviewState =
@@ -184,10 +189,11 @@ export function ExerciseChoices({
         if (shouldShowReviewState) {
           if (checked && currentAnswer && !currentAnswer.isCorrect) {
             variant = "destructive-outline";
+            isPrimaryState = false;
           }
 
           if (choice.value) {
-            variant = "default-outline";
+            isPrimaryState = true;
           }
         }
 
@@ -195,6 +201,8 @@ export function ExerciseChoices({
           <Label
             className={cn(
               buttonVariants({ variant }),
+              isPrimaryState &&
+                "border-primary/40 bg-primary/8 text-primary hover:bg-primary/12",
               "h-auto min-w-0 whitespace-normal text-left font-normal text-base"
             )}
             key={choice.label}

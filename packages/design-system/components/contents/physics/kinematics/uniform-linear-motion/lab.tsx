@@ -22,13 +22,13 @@ import { CameraControls } from "@repo/design-system/components/three/camera-cont
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  Frame,
+  FrameDescription,
+  FrameFooter,
+  FrameHeader,
+  FramePanel,
+  FrameTitle,
+} from "@repo/design-system/components/ui/frame";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -88,13 +88,13 @@ export function UniformLinearMotionLab({
   }
 
   return (
-    <Card className="overflow-hidden content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
+    <Frame className="overflow-hidden content-auto-card">
+      <FrameHeader>
+        <FrameTitle>{title}</FrameTitle>
+        <FrameDescription>{description}</FrameDescription>
+      </FrameHeader>
 
-      <CardContent className="flex flex-col gap-4">
+      <FramePanel className="flex flex-col gap-4">
         <ToggleGroup
           aria-label={labels.chooseSpeed}
           gridColumns="3"
@@ -151,9 +151,9 @@ export function UniformLinearMotionLab({
             </Suspense>
           </ThreeCanvas>
         </section>
-      </CardContent>
+      </FramePanel>
 
-      <CardFooter className="border-t">
+      <FrameFooter className="border-t">
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
           {facts.map((fact) => (
             <div className="flex min-w-0 flex-col gap-1" key={fact.id}>
@@ -173,8 +173,8 @@ export function UniformLinearMotionLab({
             </div>
           ))}
         </dl>
-      </CardFooter>
-    </Card>
+      </FrameFooter>
+    </Frame>
   );
 }
 

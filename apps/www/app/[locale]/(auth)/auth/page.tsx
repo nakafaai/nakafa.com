@@ -55,7 +55,6 @@ function PageFooter({ locale }: { locale: Locale }) {
           "terms-of-service": (chunks) => (
             <Button
               className="h-auto p-0"
-              nativeButton={false}
               render={
                 <a
                   href={`/${locale}/terms-of-service`}
@@ -72,7 +71,6 @@ function PageFooter({ locale }: { locale: Locale }) {
           "privacy-policy": (chunks) => (
             <Button
               className="h-auto p-0"
-              nativeButton={false}
               render={
                 <a
                   href={`/${locale}/privacy-policy`}

@@ -7,6 +7,7 @@ import {
   PlayIcon,
 } from "@hugeicons/core-free-icons";
 import { GizmoHelper, GizmoViewport, Grid } from "@react-three/drei";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Axes } from "@repo/design-system/components/three/axes";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
@@ -14,7 +15,6 @@ import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constant
 import { Origin } from "@repo/design-system/components/three/origin";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { COLORS, getColor } from "@repo/design-system/lib/color";
 import { cn } from "@repo/design-system/lib/utils";
 import { useTheme } from "next-themes";

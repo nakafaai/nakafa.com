@@ -4,7 +4,7 @@ import type { api } from "@repo/backend/convex/_generated/api";
 import {
   NumberFormat,
   NumberFormatGroup,
-} from "@repo/design-system/components/ui/number-flow";
+} from "@repo/design-system/components/number-flow";
 import type { FunctionReturnType } from "convex/server";
 import { useTranslations } from "next-intl";
 import {

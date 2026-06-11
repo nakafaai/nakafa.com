@@ -1,5 +1,5 @@
+import NavigationLink from "@repo/design-system/components/navigation/link";
 import { Button } from "@repo/design-system/components/ui/button";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { useTranslations } from "next-intl";
 import { HeaderContainer } from "@/components/marketing/shared/header-container";
 import { HeaderCta, LogoCta } from "@/components/marketing/shared/header-cta";
@@ -14,19 +14,16 @@ export function Header() {
 
         <nav className="hidden items-center gap-1 md:flex">
           <Button
-            nativeButton={false}
             render={<NavigationLink href="/">{t("about")}</NavigationLink>}
             variant="ghost"
           />
           <Button
-            nativeButton={false}
             render={
               <NavigationLink href="/#features">{t("features")}</NavigationLink>
             }
             variant="ghost"
           />
           <Button
-            nativeButton={false}
             render={
               <NavigationLink href="/#pricing">{t("pricing")}</NavigationLink>
             }

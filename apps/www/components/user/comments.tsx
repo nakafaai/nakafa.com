@@ -11,17 +11,17 @@ import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { Response } from "@repo/design-system/components/ai/response";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
+import { NumberFormat } from "@repo/design-system/components/number-flow";
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from "@repo/design-system/components/ui/avatar";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
 import {
   Tooltip,
-  TooltipContent,
+  TooltipPopup,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { buttonVariants } from "@repo/design-system/lib/button";
@@ -135,7 +135,7 @@ function CommentThread({ comment }: { comment: Doc<"comments"> }) {
                 </Button>
               }
             />
-            <TooltipContent side="bottom">{t("like")}</TooltipContent>
+            <TooltipPopup side="bottom">{t("like")}</TooltipPopup>
           </Tooltip>
 
           <Tooltip>
@@ -160,7 +160,7 @@ function CommentThread({ comment }: { comment: Doc<"comments"> }) {
                 </Button>
               }
             />
-            <TooltipContent side="bottom">{t("dislike")}</TooltipContent>
+            <TooltipPopup side="bottom">{t("dislike")}</TooltipPopup>
           </Tooltip>
 
           <Tooltip>
@@ -183,7 +183,7 @@ function CommentThread({ comment }: { comment: Doc<"comments"> }) {
                 </Button>
               }
             />
-            <TooltipContent side="bottom">{t("reply")}</TooltipContent>
+            <TooltipPopup side="bottom">{t("reply")}</TooltipPopup>
           </Tooltip>
 
           <Tooltip>
@@ -202,7 +202,7 @@ function CommentThread({ comment }: { comment: Doc<"comments"> }) {
                 </a>
               }
             />
-            <TooltipContent side="bottom">{t("see")}</TooltipContent>
+            <TooltipPopup side="bottom">{t("see")}</TooltipPopup>
           </Tooltip>
 
           <Tooltip>
@@ -222,7 +222,7 @@ function CommentThread({ comment }: { comment: Doc<"comments"> }) {
                 </Button>
               }
             />
-            <TooltipContent side="bottom">{t("delete")}</TooltipContent>
+            <TooltipPopup side="bottom">{t("delete")}</TooltipPopup>
           </Tooltip>
         </div>
       </div>

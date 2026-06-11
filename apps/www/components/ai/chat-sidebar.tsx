@@ -8,14 +8,14 @@ import {
 } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
+import NavigationLink from "@repo/design-system/components/navigation/link";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
 } from "@repo/design-system/components/ui/input-group";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   Sidebar,
   SidebarContent,
@@ -68,7 +68,6 @@ function AiChatSidebarContent({ ...props }: ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <Button
               className="w-full border border-sidebar-border shadow-none"
-              nativeButton={false}
               render={
                 <NavigationLink href="/chat" title={t("new-chat")}>
                   {t("new-chat")}

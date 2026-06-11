@@ -1,6 +1,6 @@
 "use client";
 
-import { TypingLoader } from "@repo/design-system/components/ui/typing-loader";
+import { TypingLoader } from "@repo/design-system/components/ai/typing-loader";
 
 import { useChat } from "@/components/ai/context/use-chat";
 import { useMessage } from "@/components/ai/context/use-message";

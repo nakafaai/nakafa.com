@@ -5,8 +5,8 @@ import {
   Flag03Icon,
   MoonsetIcon,
 } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Badge } from "@repo/design-system/components/ui/badge";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
 
 type TryoutStatusBadgeValue = "completed" | "expired" | "in-progress";
@@ -28,7 +28,7 @@ export function TryoutStatusBadge({
       );
     case "in-progress":
       return (
-        <Badge variant="muted">
+        <Badge variant="outline">
           <HugeIcons icon={Compass01Icon} />
           {tTryouts("part-status-in-progress")}
         </Badge>

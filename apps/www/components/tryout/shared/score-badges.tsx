@@ -8,8 +8,8 @@ import {
   MoonsetIcon,
 } from "@hugeicons/core-free-icons";
 import type { api } from "@repo/backend/convex/_generated/api";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Badge } from "@repo/design-system/components/ui/badge";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import type { FunctionReturnType } from "convex/server";
 import { useTranslations } from "next-intl";
 
@@ -43,7 +43,7 @@ export function TryoutAttemptStatusBadge({
   }
 
   return (
-    <Badge variant="muted">
+    <Badge variant="outline">
       <HugeIcons icon={Compass01Icon} />
       {tTryouts("part-status-in-progress")}
     </Badge>

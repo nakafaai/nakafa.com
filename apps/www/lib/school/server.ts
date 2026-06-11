@@ -1,11 +1,21 @@
 import { captureServerException } from "@repo/analytics/posthog/server";
 import { api } from "@repo/backend/convex/_generated/api";
+import type { FunctionReturnType } from "convex/server";
 import { ConvexError } from "convex/values";
 import { Effect } from "effect";
 import { cache } from "react";
 import { fetchAuthQuery, getToken } from "@/lib/auth/server";
+import { isAuthError } from "@/lib/auth/utils";
 
 const SCHOOL_SWITCHER_PAGE_SIZE = 20;
+
+type SchoolLandingState =
+  | FunctionReturnType<typeof api.schools.queries.getMySchoolLandingState>
+  | { kind: "unauthenticated" };
+
+const unauthenticatedSchoolLandingState = {
+  kind: "unauthenticated",
+} satisfies SchoolLandingState;
 
 const emptySchoolSwitcherPage = {
   continueCursor: "",
@@ -115,6 +125,39 @@ export async function getClassRouteSnapshot({ classId }: { classId: string }) {
         captureSchoolRouteError(error, {
           classId,
           source: "school-class-route-boundary",
+        })
+      )
+    )
+  );
+}
+
+/**
+ * Load the current request's school landing state for server-rendered routes.
+ *
+ * Returns `unauthenticated` when no valid Better Auth identity is available so
+ * Cache Components streaming cannot leak a protected Convex query failure into
+ * the response. Unexpected Convex or network failures are still captured and
+ * rethrown for the route error boundary.
+ */
+export async function getSchoolLandingRouteState(): Promise<SchoolLandingState> {
+  const token = await getToken();
+
+  if (!token) {
+    return unauthenticatedSchoolLandingState;
+  }
+
+  return Effect.runPromise(
+    Effect.tryPromise({
+      try: () =>
+        fetchAuthQuery(api.schools.queries.getMySchoolLandingState, {}),
+      catch: (error) => error,
+    }).pipe(
+      Effect.catchIf(isAuthError, () =>
+        Effect.succeed(unauthenticatedSchoolLandingState)
+      ),
+      Effect.catchAll((error) =>
+        captureSchoolRouteError(error, {
+          source: "school-landing-route-state",
         })
       )
     )

@@ -6,18 +6,18 @@ import {
   CodeBlockDownloadButton,
 } from "@repo/design-system/components/ai/code-block";
 import { Mermaid } from "@repo/design-system/components/ai/mermaid";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { SimpleIcon } from "@repo/design-system/components/icons/simple";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogHeader,
   DialogPanel,
+  DialogPopup,
   DialogTitle,
   DialogTrigger,
 } from "@repo/design-system/components/ui/dialog";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { normalizeMermaidChart } from "@repo/design-system/lib/mermaid";
 import { languageIconMap } from "@repo/design-system/lib/programming";
 import { cn } from "@repo/design-system/lib/utils";
@@ -79,7 +79,7 @@ export function MermaidMdx({
         />
       </div>
 
-      <DialogContent size="wide">
+      <DialogPopup size="wide">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
@@ -94,7 +94,7 @@ export function MermaidMdx({
             />
           </div>
         </DialogPanel>
-      </DialogContent>
+      </DialogPopup>
     </Dialog>
   );
 }

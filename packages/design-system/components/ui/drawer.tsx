@@ -11,8 +11,8 @@ import {
   Cancel01Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { cn } from "@repo/design-system/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
@@ -688,7 +688,6 @@ function DrawerMenuRadioItem({
 export {
   Drawer,
   DrawerBackdrop,
-  DrawerBackdrop as DrawerOverlay,
   DrawerBar,
   DrawerClose,
   DrawerContent,

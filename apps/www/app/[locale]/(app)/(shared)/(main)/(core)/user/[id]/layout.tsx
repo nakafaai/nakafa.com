@@ -1,5 +1,5 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
+import { ErrorBoundary } from "@repo/design-system/components/error-boundary";
 import { use } from "react";
 import { UserHeader } from "@/components/user/header";
 import { UserTabs } from "@/components/user/tabs";

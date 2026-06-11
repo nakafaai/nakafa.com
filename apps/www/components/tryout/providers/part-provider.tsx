@@ -2,6 +2,7 @@
 
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
+import { toastManager } from "@repo/design-system/components/ui/toast";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { preloadedQueryResult } from "convex/nextjs";
 import { type Preloaded, useConvexAuth, usePreloadedQuery } from "convex/react";
@@ -10,7 +11,6 @@ import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { useQueryState } from "nuqs";
 import { type PropsWithChildren, useTransition } from "react";
-import { toast } from "sonner";
 import { createContext, useContextSelector } from "use-context-selector";
 import {
   completeTryoutPart,
@@ -193,22 +193,22 @@ function useResolvedTryoutPartValue({
       });
 
       if (result.kind === "started") {
-        toast.success(tTryouts("start-part-success"), {
-          position: "bottom-center",
+        toastManager.add({
+          type: "success",
+          title: tTryouts("start-part-success"),
         });
         return;
       }
 
       if (result.kind === "tryout-expired" || result.kind === "part-expired") {
-        toast.info(tTryouts("part-head-processing-expiry"), {
-          position: "bottom-center",
+        toastManager.add({
+          type: "info",
+          title: tTryouts("part-head-processing-expiry"),
         });
         return;
       }
 
-      toast.error(tTryouts("start-part-error"), {
-        position: "bottom-center",
-      });
+      toastManager.add({ type: "error", title: tTryouts("start-part-error") });
     });
   };
 
@@ -230,21 +230,24 @@ function useResolvedTryoutPartValue({
 
       if (result.kind === "completed") {
         goToSet();
-        toast.success(tTryouts("complete-part-success"), {
-          position: "bottom-center",
+        toastManager.add({
+          type: "success",
+          title: tTryouts("complete-part-success"),
         });
         return;
       }
 
       if (result.kind === "tryout-expired") {
-        toast.info(tTryouts("part-head-processing-expiry"), {
-          position: "bottom-center",
+        toastManager.add({
+          type: "info",
+          title: tTryouts("part-head-processing-expiry"),
         });
         return;
       }
 
-      toast.error(tTryouts("complete-part-error"), {
-        position: "bottom-center",
+      toastManager.add({
+        type: "error",
+        title: tTryouts("complete-part-error"),
       });
     });
   };

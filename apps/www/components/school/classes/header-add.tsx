@@ -2,8 +2,8 @@
 
 import { Add01Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
 import { CreateSchoolClassDialog } from "@/components/school/classes/header-add-dialog";
 

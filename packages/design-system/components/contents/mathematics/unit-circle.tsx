@@ -1,18 +1,18 @@
 "use client";
 
 import { MinusSignIcon, PlusSignIcon } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { CoordinateSystem } from "@repo/design-system/components/three/coordinate-system";
 import { UnitCircle as UnitCircle3D } from "@repo/design-system/components/three/unit-circle";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+  Frame,
+  FrameDescription,
+  FrameFooter,
+  FrameHeader,
+  FramePanel,
+  FrameTitle,
+} from "@repo/design-system/components/ui/frame";
 import { Label as LabelUi } from "@repo/design-system/components/ui/label";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import {
@@ -52,13 +52,13 @@ export function UnitCircle({
   trigValues,
 }: Props) {
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
+    <Frame className="content-auto-card">
+      <FrameHeader>
+        <FrameTitle>{title}</FrameTitle>
+        <FrameDescription>{description}</FrameDescription>
+      </FrameHeader>
       <Content angle={angle} trigValues={trigValues} />
-    </Card>
+    </Frame>
   );
 }
 
@@ -79,7 +79,7 @@ function Content({
 
   return (
     <>
-      <CardContent>
+      <FramePanel>
         <CoordinateSystem
           cameraPosition={[0, 0, CAMERA_Z_POSITION]}
           showOrigin={false}
@@ -87,8 +87,8 @@ function Content({
         >
           <UnitCircle3D angle={angleValue} trigValues={trigValues} />
         </CoordinateSystem>
-      </CardContent>
-      <CardFooter className="border-t px-0">
+      </FramePanel>
+      <FrameFooter className="border-t px-0">
         <div className="flex w-full flex-col gap-4">
           <div className="flex flex-wrap items-center justify-center gap-2 px-6">
             <Badge className="font-mono" variant="outline">
@@ -156,7 +156,7 @@ function Content({
             </NumberField>
           </div>
         </div>
-      </CardFooter>
+      </FrameFooter>
     </>
   );
 }

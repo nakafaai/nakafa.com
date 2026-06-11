@@ -5,9 +5,9 @@ import {
   Linkedin02Icon,
   YoutubeIcon,
 } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
+import NavigationLink from "@repo/design-system/components/navigation/link";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { useTranslations } from "next-intl";
 import { FooterAction } from "@/components/marketing/shared/footer-action";
 import { FooterArt } from "@/components/marketing/shared/footer-art";
@@ -157,7 +157,6 @@ export function Footer() {
               {socialMedia.map((social) => (
                 <Button
                   key={social.label}
-                  nativeButton={false}
                   render={
                     <a
                       aria-label={social.label}

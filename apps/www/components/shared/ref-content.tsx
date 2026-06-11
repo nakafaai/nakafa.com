@@ -13,32 +13,31 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import type { Reference } from "@repo/contents/_types/content";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
+  Frame,
+  FrameDescription,
+  FrameHeader,
+  FramePanel,
+  FrameTitle,
+} from "@repo/design-system/components/ui/frame";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import {
   Sheet,
-  SheetContent,
   SheetDescription,
   SheetHeader,
+  SheetPanel,
+  SheetPopup,
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
 import {
   Tooltip,
-  TooltipContent,
+  TooltipPopup,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { cleanupUrl, cn, formatUrl } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
-import { useLayoutEffect } from "react";
 
 interface Props {
   /** The className of the references. */
@@ -53,23 +52,12 @@ interface Props {
 
 /**
  * Renders reference actions for learn pages.
- *
- * The bibliography sheet is transient UI, so it resets closed when Next hides
- * the page through Cache Components state preservation.
- *
- * References:
- * - Next.js preserving UI state with Cache Components:
- *   `apps/www/node_modules/next/dist/docs/01-app/02-guides/preserving-ui-state.md`
- * - Mantine `useDisclosure`:
- *   https://mantine.dev/hooks/use-disclosure/
  */
 export function RefContent({ title, references, githubUrl, className }: Props) {
   const t = useTranslations("Common");
-  const [open, { close, set, toggle }] = useDisclosure(false);
+  const [open, { set, toggle }] = useDisclosure(false);
   const referenceList = references ?? [];
   const showSheet = Boolean(referenceList.length && title);
-
-  useLayoutEffect(() => close, [close]);
 
   return (
     <>
@@ -103,9 +91,9 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
                   </Button>
                 }
               />
-              <TooltipContent side="bottom">
+              <TooltipPopup side="bottom">
                 <p>{t("bibliography")}</p>
-              </TooltipContent>
+              </TooltipPopup>
             </Tooltip>
           ) : null}
 
@@ -114,7 +102,6 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
               render={
                 <Button
                   aria-label={t("source-code")}
-                  nativeButton={false}
                   render={
                     <a
                       href={
@@ -133,16 +120,15 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
                 />
               }
             />
-            <TooltipContent side="bottom">
+            <TooltipPopup side="bottom">
               <p>{t("source-code")}</p>
-            </TooltipContent>
+            </TooltipPopup>
           </Tooltip>
 
           <Tooltip>
             <TooltipTrigger
               render={
                 <Button
-                  nativeButton={false}
                   render={
                     <a
                       href="https://www.youtube.com/@nakafaa"
@@ -159,16 +145,15 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
                 />
               }
             />
-            <TooltipContent side="bottom">
+            <TooltipPopup side="bottom">
               <p>{t("videos")}</p>
-            </TooltipContent>
+            </TooltipPopup>
           </Tooltip>
 
           <Tooltip>
             <TooltipTrigger
               render={
                 <Button
-                  nativeButton={false}
                   render={
                     <a
                       href="https://discord.gg/CPCSfKhvfQ"
@@ -185,16 +170,16 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
                 />
               }
             />
-            <TooltipContent side="bottom">
+            <TooltipPopup side="bottom">
               <p>{t("community")}</p>
-            </TooltipContent>
+            </TooltipPopup>
           </Tooltip>
         </nav>
       </section>
 
       {showSheet ? (
         <Sheet modal={false} onOpenChange={set} open={open}>
-          <SheetContent className="w-full sm:max-w-xl">
+          <SheetPopup className="w-full sm:max-w-xl">
             <div className="flex h-full flex-col">
               <SheetHeader>
                 <SheetTitle className="text-xl">
@@ -205,95 +190,93 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
 
               <Separator />
 
-              <div className="flex flex-1 flex-col overflow-hidden">
-                <ScrollArea className="h-full px-4">
-                  <div className="flex flex-col gap-4 py-4">
-                    {referenceList.map((reference) => {
-                      const url = reference.url
-                        ? formatUrl(reference.url)
-                        : t("no-website");
-                      const cleanUrl = cleanupUrl(url).split("/")[0];
+              <SheetPanel className="p-4">
+                <Frame>
+                  {referenceList.map((reference) => {
+                    const url = reference.url
+                      ? formatUrl(reference.url)
+                      : t("no-website");
+                    const cleanUrl = cleanupUrl(url).split("/")[0];
 
-                      return (
-                        <Card key={reference.title}>
-                          <CardHeader>
-                            <CardTitle
-                              className="line-clamp-1 capitalize"
-                              title={reference.title}
-                            >
-                              {reference.title.toLowerCase()}
-                            </CardTitle>
-                            <CardDescription className="flex items-center gap-1">
-                              <HugeIcons
-                                className="size-4 shrink-0"
-                                icon={Globe02Icon}
-                              />
-                              {reference.url ? (
-                                <a
-                                  className="underline-offset-4 hover:underline"
-                                  href={reference.url}
-                                  rel="noopener noreferrer"
-                                  target="_blank"
-                                >
-                                  {cleanUrl}
-                                </a>
-                              ) : (
-                                <span>{t("no-website")}</span>
-                              )}
-                            </CardDescription>
-                          </CardHeader>
+                    return (
+                      <FramePanel className="p-0" key={reference.title}>
+                        <FrameHeader>
+                          <FrameTitle
+                            className="line-clamp-1 capitalize"
+                            title={reference.title}
+                          >
+                            {reference.title.toLowerCase()}
+                          </FrameTitle>
+                          <FrameDescription className="flex items-center gap-1">
+                            <HugeIcons
+                              className="size-4 shrink-0"
+                              icon={Globe02Icon}
+                            />
+                            {reference.url ? (
+                              <a
+                                className="underline-offset-4 hover:underline"
+                                href={reference.url}
+                                rel="noopener noreferrer"
+                                target="_blank"
+                              >
+                                {cleanUrl}
+                              </a>
+                            ) : (
+                              <span>{t("no-website")}</span>
+                            )}
+                          </FrameDescription>
+                        </FrameHeader>
 
-                          <CardContent className="space-y-2">
+                        <div className="space-y-2 px-5 pb-5">
+                          <div className="flex items-center gap-1">
+                            <HugeIcons
+                              className="size-4 shrink-0"
+                              icon={QuillWrite01Icon}
+                            />
+                            <span className="line-clamp-1 text-sm">
+                              {reference.authors}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-1">
+                            <HugeIcons
+                              className="size-4 shrink-0"
+                              icon={Calendar03Icon}
+                            />
+                            <span className="text-sm">{reference.year}</span>
+                          </div>
+
+                          {!!reference.publication && (
                             <div className="flex items-center gap-1">
                               <HugeIcons
                                 className="size-4 shrink-0"
-                                icon={QuillWrite01Icon}
+                                icon={BookOpen02Icon}
                               />
                               <span className="line-clamp-1 text-sm">
-                                {reference.authors}
+                                {reference.publication}
                               </span>
                             </div>
+                          )}
 
+                          {!!reference.details && (
                             <div className="flex items-center gap-1">
                               <HugeIcons
                                 className="size-4 shrink-0"
-                                icon={Calendar03Icon}
+                                icon={Book03Icon}
                               />
-                              <span className="text-sm">{reference.year}</span>
+                              <span className="text-sm">
+                                {reference.details}
+                              </span>
                             </div>
-
-                            {!!reference.publication && (
-                              <div className="flex items-center gap-1">
-                                <HugeIcons
-                                  className="size-4 shrink-0"
-                                  icon={BookOpen02Icon}
-                                />
-                                <span className="line-clamp-1 text-sm">
-                                  {reference.publication}
-                                </span>
-                              </div>
-                            )}
-
-                            {!!reference.details && (
-                              <div className="flex items-center gap-1">
-                                <HugeIcons
-                                  className="size-4 shrink-0"
-                                  icon={Book03Icon}
-                                />
-                                <span className="text-sm">
-                                  {reference.details}
-                                </span>
-                              </div>
-                            )}
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                </ScrollArea>
-              </div>
+                          )}
+                        </div>
+                      </FramePanel>
+                    );
+                  })}
+                </Frame>
+              </SheetPanel>
             </div>
-          </SheetContent>
+          </SheetPopup>
         </Sheet>
       ) : null}
     </>

@@ -1,6 +1,6 @@
 import { LoveKoreanFingerIcon } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
 import { HeroCta } from "@/components/marketing/about/hero.client";
 import { HeroArt } from "@/components/marketing/about/hero-art";
@@ -20,7 +20,6 @@ export function Hero() {
         </p>
         <div className="flex w-full max-w-lg items-center gap-4">
           <Button
-            nativeButton={false}
             render={
               <a
                 href="https://github.com/nakafaai/nakafa.com"

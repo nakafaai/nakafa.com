@@ -7,7 +7,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useClipboard } from "@mantine/hooks";
 import { Action, Actions } from "@repo/design-system/components/ai/actions";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
 

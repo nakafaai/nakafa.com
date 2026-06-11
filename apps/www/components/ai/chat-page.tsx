@@ -3,6 +3,8 @@
 import { SquareLock01Icon } from "@hugeicons/core-free-icons";
 import { useDocumentTitle } from "@mantine/hooks";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { ErrorBoundary } from "@repo/design-system/components/error-boundary";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import {
   Empty,
   EmptyDescription,
@@ -10,8 +12,6 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@repo/design-system/components/ui/empty";
-import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Unauthenticated } from "convex/react";
 import { useTranslations } from "next-intl";
 import { AiChat } from "@/components/ai/chat";

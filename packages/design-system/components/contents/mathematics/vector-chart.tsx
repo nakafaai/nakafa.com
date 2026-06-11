@@ -1,13 +1,6 @@
 "use client";
 
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
-import {
   ChartCartesianGrid,
   type ChartConfig,
   ChartContainer,
@@ -19,7 +12,14 @@ import {
   ChartXAxis,
   ChartYAxis,
   getColorVariable,
-} from "@repo/design-system/components/ui/chart";
+} from "@repo/design-system/components/charts/chart";
+import {
+  Frame,
+  FrameDescription,
+  FrameHeader,
+  FramePanel,
+  FrameTitle,
+} from "@repo/design-system/components/ui/frame";
 import { Fragment, type ReactNode, useMemo } from "react";
 
 interface Vector {
@@ -194,12 +194,12 @@ export function VectorChart({
   }, [vectors]);
 
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <Frame>
+      <FrameHeader>
+        <FrameTitle>{title}</FrameTitle>
+        <FrameDescription>{description}</FrameDescription>
+      </FrameHeader>
+      <FramePanel>
         <ChartContainer config={chartConfig}>
           <ChartLineChart accessibilityLayer data={data}>
             <ChartCartesianGrid />
@@ -343,7 +343,7 @@ export function VectorChart({
             />
           </ChartLineChart>
         </ChartContainer>
-      </CardContent>
-    </Card>
+      </FramePanel>
+    </Frame>
   );
 }

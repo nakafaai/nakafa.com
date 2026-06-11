@@ -1,6 +1,6 @@
 import { Cancel01Icon, FileIcon } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import type { FileWithPreview } from "@repo/design-system/hooks/use-file-upload";
 import { cn, formatFileSize } from "@repo/design-system/lib/utils";
 import Image from "next/image";

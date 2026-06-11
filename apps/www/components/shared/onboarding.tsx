@@ -6,22 +6,22 @@ import {
   type SelfSelectableUserRole,
   userRoles,
 } from "@repo/backend/convex/users/roles";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogPanel,
+  DialogPopup,
   DialogTitle,
 } from "@repo/design-system/components/ui/dialog";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Select,
-  SelectContent,
   SelectGroup,
   SelectItem,
+  SelectPopup,
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
@@ -89,7 +89,7 @@ function OnboardingContent({ user }: { user: CurrentUser }) {
 
   return (
     <Dialog open={open}>
-      <DialogContent className="p-0" showCloseButton={false}>
+      <DialogPopup className="p-0" showCloseButton={false}>
         <div className="p-2">
           <Image
             alt="Nakafa"
@@ -116,7 +116,7 @@ function OnboardingContent({ user }: { user: CurrentUser }) {
             <SelectTrigger className="w-full">
               <SelectValue placeholder={t("select-role")} />
             </SelectTrigger>
-            <SelectContent>
+            <SelectPopup>
               <SelectGroup>
                 {roles.map((role) => (
                   <SelectItem key={role.value} value={role.value}>
@@ -125,7 +125,7 @@ function OnboardingContent({ user }: { user: CurrentUser }) {
                   </SelectItem>
                 ))}
               </SelectGroup>
-            </SelectContent>
+            </SelectPopup>
           </Select>
         </DialogPanel>
 
@@ -138,7 +138,7 @@ function OnboardingContent({ user }: { user: CurrentUser }) {
             {t("button")}
           </Button>
         </DialogFooter>
-      </DialogContent>
+      </DialogPopup>
     </Dialog>
   );
 }

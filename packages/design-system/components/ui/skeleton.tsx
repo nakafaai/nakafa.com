@@ -1,6 +1,17 @@
 import { cn } from "@repo/design-system/lib/utils";
+import type React from "react";
 
-function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
+/**
+ * Renders the COSS loading placeholder using Nakafa's muted token.
+ *
+ * This primitive is decorative and state-free; callers choose dimensions and
+ * placement through class names while the design system owns the shimmer
+ * animation and color invariant.
+ */
+export function Skeleton({
+  className,
+  ...props
+}: React.ComponentProps<"div">): React.ReactElement {
   return (
     <div
       className={cn(
@@ -12,5 +23,3 @@ function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
     />
   );
 }
-
-export { Skeleton };

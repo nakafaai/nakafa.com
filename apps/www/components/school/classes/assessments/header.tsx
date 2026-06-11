@@ -3,9 +3,9 @@
 import { Add01Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import { PERMISSIONS } from "@repo/backend/convex/lib/helpers/permissions";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Button } from "@repo/design-system/components/ui/button";
-import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Group } from "@repo/design-system/components/ui/group";
 import { useTranslations } from "next-intl";
 import { CreateAssessmentDialog } from "@/components/school/classes/assessments/create-dialog";
 import { SchoolClassesAssessmentsSearch } from "@/components/school/classes/assessments/search";
@@ -14,10 +14,10 @@ import { useClassPermissions } from "@/lib/hooks/use-class-permissions";
 /** Render the assessments page header actions. */
 export function SchoolClassesAssessmentsHeader() {
   return (
-    <ButtonGroup className="w-full">
+    <Group className="w-full">
       <SchoolClassesAssessmentsSearch />
       <SchoolClassesAssessmentsHeaderAction />
-    </ButtonGroup>
+    </Group>
   );
 }
 

@@ -2,14 +2,14 @@
 
 import { Slider as SliderPrimitive } from "@base-ui/react/slider";
 import { cn } from "@repo/design-system/lib/utils";
+import type { ComponentProps } from "react";
 
 /**
- * Renders a Base UI slider using the active shadcn base registry anatomy.
+ * Renders the COSS slider track, range, and thumbs on top of Base UI behavior.
  *
  * Base UI keeps pointer, keyboard, form, and multi-thumb behavior in the
  * primitive. The wrapper only owns Nakafa's visual treatment and cursor affordance.
  *
- * @see https://ui.shadcn.com/docs/components/base/slider
  * @see https://base-ui.com/react/components/slider
  */
 function Slider<Value extends number | readonly number[]>({
@@ -77,6 +77,25 @@ function Slider<Value extends number | readonly number[]>({
 }
 
 /**
+ * Displays the current slider value using Base UI's formatted output contract.
+ *
+ * Keep this as a primitive companion so callers can show live values without
+ * reimplementing range formatting or subscribing to controlled state manually.
+ */
+function SliderValue({
+  className,
+  ...props
+}: ComponentProps<typeof SliderPrimitive.Value>) {
+  return (
+    <SliderPrimitive.Value
+      className={cn("text-muted-foreground text-sm tabular-nums", className)}
+      data-slot="slider-value"
+      {...props}
+    />
+  );
+}
+
+/**
  * Creates stable thumb keys by slot so controlled value updates do not remount
  * the active thumb during pointer interaction.
  */
@@ -87,4 +106,4 @@ function createThumbKeys(thumbCount: number) {
   );
 }
 
-export { Slider };
+export { Slider, SliderValue };

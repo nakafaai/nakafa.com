@@ -1,7 +1,7 @@
 "use client";
 
+import NavigationLink from "@repo/design-system/components/navigation/link";
 import { Button } from "@repo/design-system/components/ui/button";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Link } from "@repo/internationalization/src/navigation";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
@@ -35,7 +35,6 @@ export function HeaderCta() {
   if (currentUser) {
     return (
       <Button
-        nativeButton={false}
         render={<NavigationLink href="/home">{t("try-nakafa")}</NavigationLink>}
       />
     );
@@ -44,11 +43,9 @@ export function HeaderCta() {
   return (
     <div className="flex gap-2">
       <Button
-        nativeButton={false}
         render={<NavigationLink href="/auth">{t("sign-in")}</NavigationLink>}
       />
       <Button
-        nativeButton={false}
         render={<NavigationLink href="/auth">{t("sign-up")}</NavigationLink>}
         variant="outline"
       />

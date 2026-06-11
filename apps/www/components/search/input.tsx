@@ -1,12 +1,12 @@
 "use client";
 
 import { Cancel01Icon, Search02Icon } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
+import { Button } from "@repo/design-system/components/ui/button";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   InputGroup,
   InputGroupAddon,
-  InputGroupButton,
   InputGroupInput,
 } from "@repo/design-system/components/ui/input-group";
 import { cn } from "@repo/design-system/lib/utils";
@@ -47,13 +47,14 @@ export function InputSearch() {
             align="inline-end"
             className={cn("opacity-0", q && "opacity-100")}
           >
-            <InputGroupButton
+            <Button
               aria-label={t("clear-search")}
               onClick={() => setValue("")}
               size="icon-xs"
+              variant="ghost"
             >
               <HugeIcons className="size-4" icon={Cancel01Icon} />
-            </InputGroupButton>
+            </Button>
           </InputGroupAddon>
         </InputGroup>
       </Field>

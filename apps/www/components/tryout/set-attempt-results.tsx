@@ -7,6 +7,7 @@ import {
   TransactionHistoryIcon,
 } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import {
   Autocomplete,
   AutocompleteCollection,
@@ -18,10 +19,9 @@ import {
   AutocompleteList,
 } from "@repo/design-system/components/ui/autocomplete";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Popover,
-  PopoverContent,
+  PopoverPopup,
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
@@ -183,7 +183,7 @@ function TryoutAttemptHistoryControls({
               icon={ArrowDown01Icon}
             />
           </PopoverTrigger>
-          <PopoverContent align="start" className="w-80 p-0">
+          <PopoverPopup align="start" className="w-80 p-0">
             <Autocomplete
               autoHighlight="always"
               inline
@@ -257,7 +257,7 @@ function TryoutAttemptHistoryControls({
                 )}
               </AutocompleteList>
             </Autocomplete>
-          </PopoverContent>
+          </PopoverPopup>
         </Popover>
       ) : null}
       {children}

@@ -10,24 +10,21 @@ import { useDisclosure } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import { MIN_FORUM_THREAD_TEXT_LENGTH } from "@repo/backend/convex/classes/forums/utils/constants";
 import { PERMISSIONS } from "@repo/backend/convex/lib/helpers/permissions";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
+import { ResponsiveDialog } from "@repo/design-system/components/overlays/responsive-dialog";
 import { Button } from "@repo/design-system/components/ui/button";
-import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-} from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
+import { Group } from "@repo/design-system/components/ui/group";
 import { Input } from "@repo/design-system/components/ui/input";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import {
+  Menu,
+  MenuItem,
+  MenuPopup,
+  MenuTrigger,
+} from "@repo/design-system/components/ui/menu";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
+import { toastManager } from "@repo/design-system/components/ui/toast";
 import { cn } from "@repo/design-system/lib/utils";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
@@ -36,7 +33,6 @@ import { Effect, Schema } from "effect";
 import { useParams, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Suspense } from "react";
-import { toast } from "sonner";
 import { getTag, getTagsByRole } from "@/components/school/classes/_data/tag";
 import { getSchoolClassesForumHref } from "@/components/school/classes/forum/helpers/routes";
 import { reportClientException } from "@/lib/analytics/client";
@@ -126,7 +122,10 @@ function SchoolClassesForumNewContent() {
             }).pipe(
               Effect.zipRight(
                 Effect.sync(() => {
-                  toast.error(t("create-forum-failed"));
+                  toastManager.add({
+                    type: "error",
+                    title: t("create-forum-failed"),
+                  });
                 })
               )
             )
@@ -138,7 +137,7 @@ function SchoolClassesForumNewContent() {
 
   return (
     <form action={() => form.handleSubmit()} id="school-classes-forum-new-form">
-      <ButtonGroup>
+      <Group>
         <Button onClick={dialog.open} type="button">
           <HugeIcons icon={ChatAdd01Icon} />
           {t("new-forum")}
@@ -173,7 +172,7 @@ function SchoolClassesForumNewContent() {
           }}
           title={t("new-forum-title")}
         >
-          <FieldGroup>
+          <div className="flex w-full flex-col gap-3">
             <form.Field name="title">
               {(field) => {
                 const isInvalid =
@@ -235,8 +234,8 @@ function SchoolClassesForumNewContent() {
                     <FieldLabel htmlFor="school-classes-forum-new-tag">
                       {t("tag-label")}
                     </FieldLabel>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger
+                    <Menu>
+                      <MenuTrigger
                         render={
                           <Button
                             aria-invalid={isInvalid}
@@ -254,12 +253,9 @@ function SchoolClassesForumNewContent() {
                           </Button>
                         }
                       />
-                      <DropdownMenuContent
-                        align="start"
-                        className="w-(--anchor-width)"
-                      >
+                      <MenuPopup align="start" className="w-(--anchor-width)">
                         {availableTags.map((tag) => (
-                          <DropdownMenuItem
+                          <MenuItem
                             className="cursor-pointer"
                             key={tag.value}
                             onClick={() => field.handleChange(tag.value)}
@@ -273,17 +269,17 @@ function SchoolClassesForumNewContent() {
                               )}
                               icon={Tick01Icon}
                             />
-                          </DropdownMenuItem>
+                          </MenuItem>
                         ))}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                      </MenuPopup>
+                    </Menu>
                   </Field>
                 );
               }}
             </form.Field>
-          </FieldGroup>
+          </div>
         </ResponsiveDialog>
-      </ButtonGroup>
+      </Group>
     </form>
   );
 }

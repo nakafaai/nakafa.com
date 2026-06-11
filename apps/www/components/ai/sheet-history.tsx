@@ -7,17 +7,17 @@ import {
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuShortcut,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+  Menu,
+  MenuGroup,
+  MenuGroupLabel,
+  MenuItem,
+  MenuPopup,
+  MenuShortcut,
+  MenuTrigger,
+} from "@repo/design-system/components/ui/menu";
 import { cn } from "@repo/design-system/lib/utils";
 import { Authenticated, usePaginatedQuery } from "convex/react";
 import { useTranslations } from "next-intl";
@@ -37,8 +37,8 @@ export const SheetHistory = () => {
   }
 
   return (
-    <DropdownMenu modal={false}>
-      <DropdownMenuTrigger
+    <Menu modal={false}>
+      <MenuTrigger
         render={
           <Button size="icon-sm" variant="ghost">
             <HugeIcons icon={ChatSearch01Icon} />
@@ -49,7 +49,7 @@ export const SheetHistory = () => {
       <Authenticated>
         <SheetHistoryContent />
       </Authenticated>
-    </DropdownMenu>
+    </Menu>
   );
 };
 
@@ -69,13 +69,13 @@ const SheetHistoryContent = () => {
   }
 
   return (
-    <DropdownMenuContent align="end" className="max-h-64 w-72">
-      <DropdownMenuGroup>
-        <DropdownMenuLabel>{t("recent-chats")}</DropdownMenuLabel>
+    <MenuPopup align="end" className="max-h-64 w-72">
+      <MenuGroup>
+        <MenuGroupLabel>{t("recent-chats")}</MenuGroupLabel>
         {results.map((chat) => {
           const isPrivate = chat.visibility === "private";
           return (
-            <DropdownMenuItem
+            <MenuItem
               className="cursor-pointer"
               key={chat._id}
               onClick={() => {
@@ -84,7 +84,7 @@ const SheetHistoryContent = () => {
             >
               <HugeIcons icon={isPrivate ? SquareLock01Icon : Globe02Icon} />
               <span className="max-w-62.5 truncate">{chat.title}</span>
-              <DropdownMenuShortcut>
+              <MenuShortcut>
                 <HugeIcons
                   className={cn(
                     "transition-opacity ease-out",
@@ -92,11 +92,11 @@ const SheetHistoryContent = () => {
                   )}
                   icon={Tick01Icon}
                 />
-              </DropdownMenuShortcut>
-            </DropdownMenuItem>
+              </MenuShortcut>
+            </MenuItem>
           );
         })}
-      </DropdownMenuGroup>
-    </DropdownMenuContent>
+      </MenuGroup>
+    </MenuPopup>
   );
 };

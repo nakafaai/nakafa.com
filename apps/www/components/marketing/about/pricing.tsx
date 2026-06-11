@@ -3,10 +3,10 @@ import {
   Rocket01Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
+import NavigationLink from "@repo/design-system/components/navigation/link";
+import { NumberFormat } from "@repo/design-system/components/number-flow";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
 import { headers } from "next/headers";
 import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
@@ -85,7 +85,6 @@ function PricingPlanCards({ pricingDisplay }: PricingPlanCardsProps) {
         <div className="mt-auto pt-4">
           <Button
             className="w-full"
-            nativeButton={false}
             render={
               <NavigationLink
                 href="/home"

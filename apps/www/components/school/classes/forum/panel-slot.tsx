@@ -4,7 +4,7 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import {
   ResizableHandle,
   ResizablePanel,
-} from "@repo/design-system/components/ui/resizable";
+} from "@repo/design-system/components/layout/resizable";
 import { Suspense } from "react";
 import { SchoolClassesForumPanel } from "@/components/school/classes/forum/panel";
 import {

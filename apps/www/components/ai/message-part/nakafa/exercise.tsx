@@ -8,9 +8,9 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import type { NakafaDataPart } from "@repo/ai/schema/data";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
 
 const MAX_SHOWN_EXERCISES = 5;
@@ -34,13 +34,12 @@ export const ExercisePart = ({ message }: Props) => {
         <span className="text-muted-foreground text-sm">
           {t("nakafa-exercise")}
         </span>
-        <Badge variant="muted">{message.result.count}</Badge>
+        <Badge variant="outline">{message.result.count}</Badge>
       </div>
       <div className="flex flex-wrap items-center gap-2">
         {numbers.map((number) => (
           <Button
             key={number}
-            nativeButton={false}
             render={
               <a
                 href={`${message.result.url}/${number}`}

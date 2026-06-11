@@ -11,12 +11,12 @@ import {
   threeSceneFrameVariants,
 } from "@repo/design-system/components/three/scene-frame";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  Frame,
+  FrameDescription,
+  FrameHeader,
+  FramePanel,
+  FrameTitle,
+} from "@repo/design-system/components/ui/frame";
 import { getColor } from "@repo/design-system/lib/color";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
@@ -142,13 +142,13 @@ export function MethaneCombustionEquationLab({
   const colors = getCombustionColors(resolvedTheme);
 
   return (
-    <Card className="overflow-hidden content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
+    <Frame className="overflow-hidden content-auto-card">
+      <FrameHeader>
+        <FrameTitle>{title}</FrameTitle>
+        <FrameDescription>{description}</FrameDescription>
+      </FrameHeader>
 
-      <CardContent className="flex flex-col gap-4">
+      <FramePanel className="flex flex-col gap-4">
         <section
           aria-label={labels.moleculeView}
           className={threeSceneFrameVariants()}
@@ -168,8 +168,8 @@ export function MethaneCombustionEquationLab({
         </section>
 
         <p className="text-muted-foreground text-sm">{labels.equation}</p>
-      </CardContent>
-    </Card>
+      </FramePanel>
+    </Frame>
   );
 }
 

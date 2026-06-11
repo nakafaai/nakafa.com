@@ -3,7 +3,7 @@ import {
   SourceContent,
   SourceTrigger,
 } from "@repo/design-system/components/ai/source";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import NavigationLink from "@repo/design-system/components/navigation/link";
 import { cn } from "@repo/design-system/lib/utils";
 import type { AnchorProps } from "@repo/design-system/types/markdown";
 

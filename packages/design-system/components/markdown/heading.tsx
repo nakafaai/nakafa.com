@@ -1,5 +1,5 @@
 import { Link05Icon } from "@hugeicons/core-free-icons";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { cn, createHeadingId } from "@repo/design-system/lib/utils";
 import type {
   HeadingProps,

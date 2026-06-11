@@ -1,9 +1,13 @@
-import { api } from "@repo/backend/convex/_generated/api";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
-import { fetchAuthQuery, getToken } from "@/lib/auth/server";
+import { getSchoolLandingRouteState } from "@/lib/school/server";
 
-/** Resolves the authenticated school landing redirects before rendering children. */
+/**
+ * Resolve school landing redirects before rendering the public auth fallback.
+ *
+ * Unauthenticated requests intentionally render `children`; authenticated
+ * landing states redirect into onboarding, a single school, or the switcher.
+ */
 export async function School({
   children,
   locale,
@@ -11,26 +15,19 @@ export async function School({
   children: ReactNode;
   locale: string;
 }) {
-  const token = await getToken();
+  const landingState = await getSchoolLandingRouteState();
 
-  if (token) {
-    const landingState = await fetchAuthQuery(
-      api.schools.queries.getMySchoolLandingState,
-      {}
-    );
-
-    if (landingState.kind === "none") {
-      redirect(`/${locale}/school/onboarding`);
-    }
-
-    if (landingState.kind === "single") {
-      redirect(`/${locale}/school/${landingState.slug}`);
-    }
-
-    if (landingState.kind === "multiple") {
-      redirect(`/${locale}/school/select`);
-    }
+  if (landingState.kind === "unauthenticated") {
+    return children;
   }
 
-  return children;
+  if (landingState.kind === "none") {
+    redirect(`/${locale}/school/onboarding`);
+  }
+
+  if (landingState.kind === "single") {
+    redirect(`/${locale}/school/${landingState.slug}`);
+  }
+
+  redirect(`/${locale}/school/select`);
 }

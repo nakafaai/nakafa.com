@@ -2,8 +2,8 @@ import {
   ArrowTurnBackwardIcon,
   Cancel01Icon,
 } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
 
 import { useForumSession } from "@/components/school/classes/forum/context/use-session";

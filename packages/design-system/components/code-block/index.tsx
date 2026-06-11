@@ -6,18 +6,18 @@ import {
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import { captureException } from "@repo/analytics/posthog";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import {
   type ProgrammingIcon,
   SimpleIcon,
 } from "@repo/design-system/components/icons/simple";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Select,
-  SelectContent,
   SelectGroup,
   SelectItem,
   SelectLabel,
+  SelectPopup,
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
@@ -295,7 +295,7 @@ export const CodeBlockSelectValue = (props: CodeBlockSelectValueProps) => (
 );
 
 export type CodeBlockSelectContentProps = Omit<
-  ComponentProps<typeof SelectContent>,
+  ComponentProps<typeof SelectPopup>,
   "children"
 > & {
   children: (item: CodeBlockData) => ReactNode;
@@ -309,12 +309,12 @@ export const CodeBlockSelectContent = ({
   const data = useCodeBlock((state) => state.data);
 
   return (
-    <SelectContent {...props}>
+    <SelectPopup {...props}>
       <SelectGroup>
         <SelectLabel>{t("language")}</SelectLabel>
         {data.map(children)}
       </SelectGroup>
-    </SelectContent>
+    </SelectPopup>
   );
 };
 

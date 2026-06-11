@@ -3,6 +3,7 @@
 import type { AutocompleteRootProps } from "@base-ui/react/autocomplete";
 import { Dialog as CommandDialogPrimitive } from "@base-ui/react/dialog";
 import { Search02Icon } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import {
   Autocomplete,
   AutocompleteCollection,
@@ -14,7 +15,6 @@ import {
   AutocompleteList,
   AutocompleteSeparator,
 } from "@repo/design-system/components/ui/autocomplete";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
 import type * as React from "react";
 

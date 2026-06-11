@@ -1,11 +1,11 @@
 import { useMediaQuery } from "@mantine/hooks";
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogPanel,
+  DialogPopup,
   DialogTitle,
 } from "@repo/design-system/components/ui/dialog";
 import {
@@ -43,7 +43,7 @@ export function ResponsiveDialog({
   if (isDesktop) {
     return (
       <Dialog onOpenChange={setOpen} open={open}>
-        <DialogContent>
+        <DialogPopup>
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
             {!!description && (
@@ -52,7 +52,7 @@ export function ResponsiveDialog({
           </DialogHeader>
           {!!children && <DialogPanel>{children}</DialogPanel>}
           {!!footer && <DialogFooter>{footer}</DialogFooter>}
-        </DialogContent>
+        </DialogPopup>
       </Dialog>
     );
   }

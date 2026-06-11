@@ -9,21 +9,21 @@ import {
 } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Response } from "@repo/design-system/components/ai/response";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
+import NavigationLink from "@repo/design-system/components/navigation/link";
+import { NumberFormat } from "@repo/design-system/components/number-flow";
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from "@repo/design-system/components/ui/avatar";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
 import {
   Tooltip,
-  TooltipContent,
+  TooltipPopup,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
+import { Intersection } from "@repo/design-system/components/visibility-intersection";
 import { cn } from "@repo/design-system/lib/utils";
 import { useMutation, usePaginatedQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
@@ -217,7 +217,7 @@ function CommentActions({
             </Button>
           }
         />
-        <TooltipContent side="bottom">{t("like")}</TooltipContent>
+        <TooltipPopup side="bottom">{t("like")}</TooltipPopup>
       </Tooltip>
 
       <Tooltip>
@@ -242,7 +242,7 @@ function CommentActions({
             </Button>
           }
         />
-        <TooltipContent side="bottom">{t("dislike")}</TooltipContent>
+        <TooltipPopup side="bottom">{t("dislike")}</TooltipPopup>
       </Tooltip>
 
       <Tooltip>
@@ -266,7 +266,7 @@ function CommentActions({
             </Button>
           }
         />
-        <TooltipContent side="bottom">{t("reply")}</TooltipContent>
+        <TooltipPopup side="bottom">{t("reply")}</TooltipPopup>
       </Tooltip>
 
       <Tooltip>
@@ -284,7 +284,7 @@ function CommentActions({
             </Button>
           }
         />
-        <TooltipContent side="bottom">{t("delete")}</TooltipContent>
+        <TooltipPopup side="bottom">{t("delete")}</TooltipPopup>
       </Tooltip>
     </div>
   );

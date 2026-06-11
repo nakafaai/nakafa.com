@@ -14,27 +14,23 @@ import {
   getClassImageUrl,
   getRandomClassImage,
 } from "@repo/backend/convex/lib/images";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
+import NavigationLink from "@repo/design-system/components/navigation/link";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
+import { FramePanel } from "@repo/design-system/components/ui/frame";
 import {
-  Card,
-  CardContent,
-  CardFooter,
-} from "@repo/design-system/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+  Menu,
+  MenuItem,
+  MenuPopup,
+  MenuTrigger,
+} from "@repo/design-system/components/ui/menu";
 import {
   Tooltip,
-  TooltipContent,
+  TooltipPopup,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
+import { Intersection } from "@repo/design-system/components/visibility-intersection";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { usePaginatedQuery } from "convex/react";
 import Image from "next/image";
@@ -101,7 +97,7 @@ function ClassItem({ cls }: { cls: Doc<"schoolClasses"> }) {
   const t = useTranslations("School.Classes");
 
   return (
-    <Card className="relative gap-0 overflow-hidden p-0 transition-colors ease-out hover:border-primary/50 hover:bg-[color-mix(in_oklch,var(--primary)_1%,var(--background))]">
+    <FramePanel className="relative flex flex-col gap-0 overflow-hidden p-0 transition-colors ease-out hover:border-primary/50 hover:bg-[color-mix(in_oklch,var(--primary)_1%,var(--background))]">
       <NavigationLink
         className="absolute inset-0 z-1"
         href={`${pathname}/${cls._id}`}
@@ -121,12 +117,12 @@ function ClassItem({ cls }: { cls: Doc<"schoolClasses"> }) {
           />
         </div>
       </div>
-      <CardContent className="px-6 pt-2 pb-4 leading-tight">
+      <div className="px-6 pt-2 pb-4 leading-tight">
         <h2 className="truncate font-medium">{cls.name}</h2>
         <p className="truncate text-muted-foreground text-sm">{cls.subject}</p>
-      </CardContent>
-      <CardFooter className="z-2 justify-between border-t px-4 pb-2 [.border-t]:pt-2">
-        <Badge className="min-w-0 shrink-0" variant="muted">
+      </div>
+      <div className="z-2 flex items-center justify-between border-t px-4 pt-2 pb-2">
+        <Badge className="min-w-0 shrink-0" variant="outline">
           <HugeIcons icon={Calendar03Icon} />
           <span className="truncate">{cls.year}</span>
         </Badge>
@@ -136,7 +132,6 @@ function ClassItem({ cls }: { cls: Doc<"schoolClasses"> }) {
             <TooltipTrigger
               render={
                 <Button
-                  nativeButton={false}
                   render={
                     <NavigationLink href={`${pathname}/${cls._id}/materials`}>
                       <HugeIcons icon={BookOpen02Icon} />
@@ -147,19 +142,19 @@ function ClassItem({ cls }: { cls: Doc<"schoolClasses"> }) {
                 />
               }
             />
-            <TooltipContent side="bottom">{t("materials")}</TooltipContent>
+            <TooltipPopup side="bottom">{t("materials")}</TooltipPopup>
           </Tooltip>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger
+          <Menu>
+            <MenuTrigger
               render={
                 <Button size="icon-sm" variant="ghost">
                   <HugeIcons icon={MoreHorizontalIcon} />
                 </Button>
               }
             />
-            <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem
+            <MenuPopup align="end" className="w-40">
+              <MenuItem
                 className="cursor-pointer"
                 render={
                   <NavigationLink href={`${pathname}/${cls._id}/forum`}>
@@ -168,7 +163,7 @@ function ClassItem({ cls }: { cls: Doc<"schoolClasses"> }) {
                   </NavigationLink>
                 }
               />
-              <DropdownMenuItem
+              <MenuItem
                 className="cursor-pointer"
                 render={
                   <NavigationLink href={`${pathname}/${cls._id}/people`}>
@@ -177,10 +172,10 @@ function ClassItem({ cls }: { cls: Doc<"schoolClasses"> }) {
                   </NavigationLink>
                 }
               />
-            </DropdownMenuContent>
-          </DropdownMenu>
+            </MenuPopup>
+          </Menu>
         </div>
-      </CardFooter>
-    </Card>
+      </div>
+    </FramePanel>
   );
 }

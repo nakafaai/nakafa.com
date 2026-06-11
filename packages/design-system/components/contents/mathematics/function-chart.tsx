@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
-import type { ChartConfig } from "@repo/design-system/components/ui/chart";
+import type { ChartConfig } from "@repo/design-system/components/charts/chart";
 import {
   ChartCartesianGrid,
   ChartContainer,
@@ -20,7 +13,14 @@ import {
   ChartXAxis,
   ChartYAxis,
   getColorVariable,
-} from "@repo/design-system/components/ui/chart";
+} from "@repo/design-system/components/charts/chart";
+import {
+  Frame,
+  FrameDescription,
+  FrameHeader,
+  FramePanel,
+  FrameTitle,
+} from "@repo/design-system/components/ui/frame";
 import type { ReactNode } from "react";
 import { useMemo } from "react";
 
@@ -58,12 +58,12 @@ export function FunctionChart({ p, a, title, description, n = 11 }: Props) {
   );
 
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <Frame>
+      <FrameHeader>
+        <FrameTitle>{title}</FrameTitle>
+        <FrameDescription>{description}</FrameDescription>
+      </FrameHeader>
+      <FramePanel>
         <ChartContainer config={FUNCTION_CHART_CONFIG}>
           <ChartLineChart accessibilityLayer data={data}>
             <ChartCartesianGrid />
@@ -128,7 +128,7 @@ export function FunctionChart({ p, a, title, description, n = 11 }: Props) {
             />
           </ChartLineChart>
         </ChartContainer>
-      </CardContent>
-    </Card>
+      </FramePanel>
+    </Frame>
   );
 }

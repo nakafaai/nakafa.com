@@ -1,6 +1,6 @@
 "use client";
 
-import { BlockArt } from "@repo/design-system/components/ui/block-art";
+import { BlockArt } from "@repo/design-system/components/visual/block-art";
 import { themes } from "@repo/design-system/lib/theme";
 import { useTheme } from "next-themes";
 

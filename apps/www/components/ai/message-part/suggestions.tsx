@@ -2,7 +2,7 @@
 
 import { Add01Icon, QuoteDownIcon } from "@hugeicons/core-free-icons";
 import type { DataPart } from "@repo/ai/schema/data";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { useTranslations } from "next-intl";
 
 import { useChat } from "@/components/ai/context/use-chat";

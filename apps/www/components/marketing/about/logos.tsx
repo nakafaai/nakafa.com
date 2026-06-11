@@ -1,5 +1,5 @@
 import { GraduationScrollIcon } from "@hugeicons/core-free-icons";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { schools } from "@/components/marketing/about/constants/logos";

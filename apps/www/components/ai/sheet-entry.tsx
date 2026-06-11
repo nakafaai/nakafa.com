@@ -1,8 +1,8 @@
 "use client";
 
 import { ArrowUpRight01Icon, StarsIcon } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { domAnimation, LazyMotion, m } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useAi } from "@/components/ai/context/use-ai";
@@ -44,7 +44,7 @@ export function SheetEntry() {
             className="w-full justify-between duration-200 hover:scale-105"
             onClick={handleOpen}
             size="lg"
-            variant="default-outline"
+            variant="default"
           >
             <div className="flex items-center gap-2">
               <HugeIcons icon={StarsIcon} />

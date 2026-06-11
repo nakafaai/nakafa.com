@@ -4,9 +4,9 @@ import {
   NewTwitterIcon,
 } from "@hugeicons/core-free-icons";
 import type { Contributor } from "@repo/contents/_types/contributor";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
-import { Character } from "@repo/design-system/components/ui/character";
 import {
   Drawer,
   DrawerDescription,
@@ -16,12 +16,12 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@repo/design-system/components/ui/drawer";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Tooltip,
-  TooltipContent,
+  TooltipPopup,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
+import { Character } from "@repo/design-system/components/visual/character";
 import { cva, type VariantProps } from "class-variance-authority";
 import { useTranslations } from "next-intl";
 
@@ -62,9 +62,9 @@ export function Avatar({ contributor, size }: AvatarProps) {
             </DrawerTrigger>
           }
         />
-        <TooltipContent>
+        <TooltipPopup>
           <p>{contributor.name}</p>
-        </TooltipContent>
+        </TooltipPopup>
       </Tooltip>
 
       <DrawerPopup className="mx-auto sm:max-w-xs" showBar>
@@ -83,7 +83,6 @@ export function Avatar({ contributor, size }: AvatarProps) {
             <div className="flex flex-wrap items-center justify-center gap-2">
               {!!contributor.social.twitter && (
                 <Button
-                  nativeButton={false}
                   render={
                     <a
                       href={contributor.social.twitter}
@@ -101,7 +100,6 @@ export function Avatar({ contributor, size }: AvatarProps) {
               )}
               {!!contributor.social.github && (
                 <Button
-                  nativeButton={false}
                   render={
                     <a
                       href={contributor.social.github}
@@ -119,7 +117,6 @@ export function Avatar({ contributor, size }: AvatarProps) {
               )}
               {!!contributor.social.linkedin && (
                 <Button
-                  nativeButton={false}
                   render={
                     <a
                       href={contributor.social.linkedin}

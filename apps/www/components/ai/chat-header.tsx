@@ -13,19 +13,20 @@ import {
 import { useClipboard } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
+import { ResponsiveDialog } from "@repo/design-system/components/overlays/responsive-dialog";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import {
+  Menu,
+  MenuGroup,
+  MenuItem,
+  MenuPopup,
+  MenuSeparator,
+  MenuTrigger,
+} from "@repo/design-system/components/ui/menu";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { toastManager } from "@repo/design-system/components/ui/toast";
 import { cn } from "@repo/design-system/lib/utils";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { getAppUrl } from "@repo/next-config/app";
@@ -39,7 +40,6 @@ import {
   useState,
   useTransition,
 } from "react";
-import { toast } from "sonner";
 import { useCurrentChat } from "@/components/ai/context/use-current-chat";
 import { useUser } from "@/lib/context/use-user";
 
@@ -186,8 +186,8 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
 
       <Activity mode={isOwner ? "visible" : "hidden"}>
         <HeaderGroup>
-          <DropdownMenu>
-            <DropdownMenuTrigger
+          <Menu>
+            <MenuTrigger
               render={
                 <Button
                   aria-label="More actions"
@@ -200,36 +200,33 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
                 </Button>
               }
             />
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuGroup>
-                <DropdownMenuItem
-                  className="cursor-pointer"
-                  onClick={handleEdit}
-                >
+            <MenuPopup align="end" className="w-56">
+              <MenuGroup>
+                <MenuItem className="cursor-pointer" onClick={handleEdit}>
                   <HugeIcons icon={Edit01Icon} />
                   {t("rename-chat")}
-                </DropdownMenuItem>
-                <DropdownMenuItem
+                </MenuItem>
+                <MenuItem
                   className="cursor-pointer"
                   onClick={() => setConfirmShare(true)}
                 >
                   <HugeIcons icon={LinkForwardIcon} />
                   {t("share-chat")}
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuItem
+                </MenuItem>
+              </MenuGroup>
+              <MenuSeparator />
+              <MenuGroup>
+                <MenuItem
                   className="cursor-pointer"
                   onClick={() => setConfirmDelete(true)}
                   variant="destructive"
                 >
                   <HugeIcons icon={Delete02Icon} />
                   {t("delete-chat")}
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                </MenuItem>
+              </MenuGroup>
+            </MenuPopup>
+          </Menu>
         </HeaderGroup>
       </Activity>
 
@@ -249,9 +246,7 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
               disabled={isPending}
               onClick={() => {
                 clipboard.copy(link);
-                toast.success(t("link-copied"), {
-                  position: "bottom-center",
-                });
+                toastManager.add({ type: "success", title: t("link-copied") });
               }}
             >
               <HugeIcons icon={clipboard.copied ? Tick01Icon : Copy01Icon} />

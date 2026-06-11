@@ -3,15 +3,16 @@ import {
   InLoveIcon,
   YoutubeIcon,
 } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { YoutubePlayer } from "@repo/design-system/components/markdown/youtube-player";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
-  Card,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+  Frame,
+  FrameFooter,
+  FrameHeader,
+  FramePanel,
+  FrameTitle,
+} from "@repo/design-system/components/ui/frame";
 import { useTranslations } from "next-intl";
 
 interface Props {
@@ -21,19 +22,18 @@ interface Props {
 export function Youtube({ videoId }: Props) {
   const t = useTranslations("Common");
   return (
-    <Card className="my-4 grid gap-0 overflow-hidden pb-0 content-auto-card">
-      <CardHeader className="gap-0 border-b">
-        <CardTitle className="flex items-center gap-2">
+    <Frame className="my-4 grid gap-0 overflow-hidden pb-0 content-auto-card">
+      <FrameHeader className="gap-0 border-b">
+        <FrameTitle className="flex items-center gap-2">
           <HugeIcons icon={YoutubeIcon} />
           YouTube
-        </CardTitle>
-      </CardHeader>
-      <div className="aspect-video">
+        </FrameTitle>
+      </FrameHeader>
+      <FramePanel className="overflow-hidden p-0">
         <YoutubePlayer videoId={videoId} />
-      </div>
-      <CardFooter className="flex-wrap gap-2 border-t pb-6">
+      </FramePanel>
+      <FrameFooter className="flex-wrap gap-2 border-t pb-6">
         <Button
-          nativeButton={false}
           render={
             <a
               href={`https://www.youtube.com/watch?v=${videoId}`}
@@ -47,7 +47,6 @@ export function Youtube({ videoId }: Props) {
           variant="outline"
         />
         <Button
-          nativeButton={false}
           render={
             <a
               href="https://www.youtube.com/@nakafaa?sub_confirmation=1"
@@ -59,7 +58,7 @@ export function Youtube({ videoId }: Props) {
             </a>
           }
         />
-      </CardFooter>
-    </Card>
+      </FrameFooter>
+    </Frame>
   );
 }

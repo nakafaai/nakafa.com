@@ -1,5 +1,5 @@
 import { Certificate02Icon, TaskDone02Icon } from "@hugeicons/core-free-icons";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 
 export function SnbtTryoutIcon() {
   return (

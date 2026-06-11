@@ -2,12 +2,12 @@
 
 import { ArrowDown01Icon, BookOpen02Icon } from "@hugeicons/core-free-icons";
 import type { NakafaDataPart } from "@repo/ai/schema/data";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import {
   Collapsible,
-  CollapsibleContent,
+  CollapsiblePanel,
   CollapsibleTrigger,
 } from "@repo/design-system/components/ui/collapsible";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -40,7 +40,7 @@ export const ContentPart = ({ message }: Props) => {
           icon={ArrowDown01Icon}
         />
       </CollapsibleTrigger>
-      <CollapsibleContent className="border-t bg-muted/40">
+      <CollapsiblePanel className="border-t bg-muted/40">
         <a
           className="grid gap-2 p-4"
           href={message.result.url}
@@ -53,7 +53,7 @@ export const ContentPart = ({ message }: Props) => {
             {message.result.description}
           </span>
         </a>
-      </CollapsibleContent>
+      </CollapsiblePanel>
     </Collapsible>
   );
 };

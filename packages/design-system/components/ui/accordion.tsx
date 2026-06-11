@@ -2,7 +2,7 @@
 
 import { Accordion as AccordionPrimitive } from "@base-ui/react/accordion";
 import { ArrowDown01Icon } from "@hugeicons/core-free-icons";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
 
 function Accordion({ className, ...props }: AccordionPrimitive.Root.Props) {
@@ -50,7 +50,8 @@ function AccordionTrigger({
   );
 }
 
-function AccordionContent({
+/** Renders the animated COSS accordion panel for one item. */
+function AccordionPanel({
   className,
   children,
   ...props
@@ -58,7 +59,7 @@ function AccordionContent({
   return (
     <AccordionPrimitive.Panel
       className="overflow-hidden text-sm data-closed:animate-accordion-up data-open:animate-accordion-down"
-      data-slot="accordion-content"
+      data-slot="accordion-panel"
       {...props}
     >
       <div
@@ -73,4 +74,4 @@ function AccordionContent({
   );
 }
 
-export { Accordion, AccordionContent, AccordionItem, AccordionTrigger };
+export { Accordion, AccordionItem, AccordionPanel, AccordionTrigger };

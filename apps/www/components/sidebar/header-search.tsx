@@ -1,8 +1,8 @@
 "use client";
 
 import { Search02Icon } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { IconCommand, IconLetterK } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";

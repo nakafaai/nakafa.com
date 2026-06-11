@@ -10,25 +10,19 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
+import { ResponsiveDialog } from "@repo/design-system/components/overlays/responsive-dialog";
 import { Button } from "@repo/design-system/components/ui/button";
+import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
+import { Group, GroupSeparator } from "@repo/design-system/components/ui/group";
 import {
-  ButtonGroup,
-  ButtonGroupSeparator,
-} from "@repo/design-system/components/ui/button-group";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-} from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+  Menu,
+  MenuItem,
+  MenuPopup,
+  MenuTrigger,
+} from "@repo/design-system/components/ui/menu";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { toastManager } from "@repo/design-system/components/ui/toast";
 import { cn } from "@repo/design-system/lib/utils";
 import {
   usePathname,
@@ -40,7 +34,6 @@ import { formatDuration } from "date-fns";
 import { Effect, Schema } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { Activity, useLayoutEffect } from "react";
-import { toast } from "sonner";
 import { reportClientException } from "@/lib/analytics/client";
 import { useAttempt } from "@/lib/context/use-attempt";
 import { useExercise } from "@/lib/context/use-exercise";
@@ -129,8 +122,9 @@ export function StartExerciseButton({
             close();
             resetTimeSpent();
             setShowStats(true);
-            toast.success(t("start-exercise-success"), {
-              position: "bottom-center",
+            toastManager.add({
+              type: "success",
+              title: t("start-exercise-success"),
             });
           },
           catch: (error) => error,
@@ -141,8 +135,9 @@ export function StartExerciseButton({
             }).pipe(
               Effect.zipRight(
                 Effect.sync(() => {
-                  toast.error(t("start-exercise-error"), {
-                    position: "bottom-center",
+                  toastManager.add({
+                    type: "error",
+                    title: t("start-exercise-error"),
                   });
                 })
               )
@@ -155,7 +150,7 @@ export function StartExerciseButton({
 
   return (
     <form action={() => form.handleSubmit()} id="exercise-attempt-form">
-      <ButtonGroup>
+      <Group>
         <Button onClick={openDialog} type="button">
           <HugeIcons icon={Rocket01Icon} />
           {t("start")}
@@ -163,7 +158,7 @@ export function StartExerciseButton({
 
         {attempt && (
           <>
-            <ButtonGroupSeparator />
+            <GroupSeparator />
             <Button
               aria-label="stats action"
               onClick={() => setShowStats(!showStats)}
@@ -180,7 +175,7 @@ export function StartExerciseButton({
             </Button>
           </>
         )}
-      </ButtonGroup>
+      </Group>
 
       <ResponsiveDialog
         description={t("start-exercise-description")}
@@ -204,7 +199,7 @@ export function StartExerciseButton({
         setOpen={set}
         title={t("start-exercise-title")}
       >
-        <FieldGroup>
+        <div className="flex w-full flex-col gap-3">
           <div className="flex flex-col divide-y overflow-hidden rounded-lg border">
             <form.Field name="mode">
               {(field) =>
@@ -259,8 +254,8 @@ export function StartExerciseButton({
                         <FieldLabel htmlFor="time-limit">
                           {t("time-limit-label")}
                         </FieldLabel>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger
+                        <Menu>
+                          <MenuTrigger
                             render={
                               <Button
                                 aria-invalid={isInvalid}
@@ -283,12 +278,12 @@ export function StartExerciseButton({
                               </Button>
                             }
                           />
-                          <DropdownMenuContent
+                          <MenuPopup
                             align="start"
                             className="max-h-64 w-(--anchor-width)"
                           >
                             {getTimeLimitList().map((time) => (
-                              <DropdownMenuItem
+                              <MenuItem
                                 className="cursor-pointer"
                                 key={time}
                                 onClick={() => field.handleChange(time)}
@@ -304,10 +299,10 @@ export function StartExerciseButton({
                                   )}
                                   icon={Tick01Icon}
                                 />
-                              </DropdownMenuItem>
+                              </MenuItem>
                             ))}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                          </MenuPopup>
+                        </Menu>
                       </Field>
                     );
                   }}
@@ -315,7 +310,7 @@ export function StartExerciseButton({
               </Activity>
             )}
           </form.Subscribe>
-        </FieldGroup>
+        </div>
       </ResponsiveDialog>
     </form>
   );

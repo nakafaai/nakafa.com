@@ -2,8 +2,8 @@
 
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { CancelIcon } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { cn } from "@repo/design-system/lib/utils";
 import type { ComponentProps } from "react";
@@ -26,7 +26,8 @@ function DialogClose(props: DialogPrimitive.Close.Props) {
   return <DialogPrimitive.Close data-slot="dialog-close" {...props} />;
 }
 
-function DialogOverlay({
+/** Renders the COSS dialog backdrop behind the active popup. */
+function DialogBackdrop({
   className,
   ...props
 }: DialogPrimitive.Backdrop.Props) {
@@ -36,7 +37,7 @@ function DialogOverlay({
         "data-closed:fade-out-0 data-open:fade-in-0 fixed inset-0 isolate z-50 bg-black/20 duration-150 data-closed:animate-out data-open:animate-in supports-backdrop-filter:backdrop-blur-sm",
         className
       )}
-      data-slot="dialog-overlay"
+      data-slot="dialog-backdrop"
       {...props}
     />
   );
@@ -58,7 +59,8 @@ function DialogViewport({
   );
 }
 
-function DialogContent({
+/** Renders the COSS dialog popup with portal, backdrop, viewport, and close affordance. */
+function DialogPopup({
   bottomStickOnMobile = true,
   className,
   children,
@@ -78,7 +80,7 @@ function DialogContent({
 
   return (
     <DialogPortal {...portalProps}>
-      <DialogOverlay />
+      <DialogBackdrop />
       <DialogViewport
         className={cn(
           !bottomStickOnMobile && "max-sm:grid-rows-[1fr_auto_3fr] max-sm:p-4"
@@ -93,7 +95,7 @@ function DialogContent({
               "max-sm:data-closed:slide-out-to-bottom-4 max-sm:data-open:slide-in-from-bottom-4 max-sm:max-w-none max-sm:origin-bottom max-sm:rounded-t-xl max-sm:rounded-b-none max-sm:border-x-0 max-sm:border-b-0",
             className
           )}
-          data-slot="dialog-content"
+          data-slot="dialog-popup"
           {...props}
         >
           {children}
@@ -208,16 +210,14 @@ function DialogDescription({
 
 export {
   Dialog,
+  DialogBackdrop,
   DialogClose,
-  DialogContent,
-  DialogContent as DialogPopup,
   DialogCreateHandle,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogOverlay as DialogBackdrop,
-  DialogOverlay,
   DialogPanel,
+  DialogPopup,
   DialogPortal,
   DialogTitle,
   DialogTrigger,

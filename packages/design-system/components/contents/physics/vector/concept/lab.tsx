@@ -22,13 +22,13 @@ import {
   threeSceneFrameVariants,
 } from "@repo/design-system/components/three/scene-frame";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  Frame,
+  FrameDescription,
+  FrameFooter,
+  FrameHeader,
+  FramePanel,
+  FrameTitle,
+} from "@repo/design-system/components/ui/frame";
 import { Slider } from "@repo/design-system/components/ui/slider";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
@@ -59,12 +59,12 @@ export function VectorConceptLab({
   }
 
   return (
-    <Card className="overflow-hidden content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
+    <Frame className="overflow-hidden content-auto-card">
+      <FrameHeader>
+        <FrameTitle>{title}</FrameTitle>
+        <FrameDescription>{description}</FrameDescription>
+      </FrameHeader>
+      <FramePanel className="flex flex-col gap-4">
         <section
           aria-label={labels.bridgeView}
           className={threeSceneFrameVariants()}
@@ -115,15 +115,15 @@ export function VectorConceptLab({
             value={loadX}
           />
         </div>
-      </CardContent>
-      <CardFooter className="border-t">
+      </FramePanel>
+      <FrameFooter className="border-t">
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
           <LabFact label={labels.magnitude} value={labels.magnitudeValue} />
           <LabFact label={labels.direction} value={labels.directionValue} />
           <LabFact label={labels.netIdea} value={labels.netIdeaValue} />
         </dl>
-      </CardFooter>
-    </Card>
+      </FrameFooter>
+    </Frame>
   );
 }
 

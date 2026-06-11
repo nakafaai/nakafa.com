@@ -3,12 +3,12 @@
 import { CoordinateSystem } from "@repo/design-system/components/three/coordinate-system";
 import { Vector } from "@repo/design-system/components/three/vector";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  Frame,
+  FrameDescription,
+  FrameHeader,
+  FramePanel,
+  FrameTitle,
+} from "@repo/design-system/components/ui/frame";
 import type { ComponentProps, ReactNode } from "react";
 
 const DEFAULT_CAMERA_POSITION_X = 10;
@@ -39,12 +39,12 @@ export function Vector3d({
   cameraTarget,
 }: Props) {
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <Frame className="content-auto-card">
+      <FrameHeader>
+        <FrameTitle>{title}</FrameTitle>
+        <FrameDescription>{description}</FrameDescription>
+      </FrameHeader>
+      <FramePanel>
         <CoordinateSystem
           cameraPosition={cameraPosition}
           cameraTarget={cameraTarget}
@@ -56,7 +56,7 @@ export function Vector3d({
             />
           ))}
         </CoordinateSystem>
-      </CardContent>
-    </Card>
+      </FramePanel>
+    </Frame>
   );
 }

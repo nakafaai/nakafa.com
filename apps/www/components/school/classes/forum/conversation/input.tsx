@@ -1,18 +1,19 @@
 import { ArrowUp01Icon } from "@hugeicons/core-free-icons";
-import { useDisclosure, useOs, useResizeObserver } from "@mantine/hooks";
+import { useDisclosure, useOs } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
   MAX_FORUM_ATTACHMENT_BYTES,
   MAX_FORUM_POST_ATTACHMENTS,
 } from "@repo/backend/convex/classes/forums/utils/constants";
+import { Button } from "@repo/design-system/components/ui/button";
 import {
   InputGroup,
   InputGroupAddon,
-  InputGroupButton,
   InputGroupTextarea,
 } from "@repo/design-system/components/ui/input-group";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { toastManager } from "@repo/design-system/components/ui/toast";
 import { useFileUpload } from "@repo/design-system/hooks/use-file-upload";
 import { cn } from "@repo/design-system/lib/utils";
 import { useForm } from "@tanstack/react-form";
@@ -20,7 +21,6 @@ import { useMutation } from "convex/react";
 import { Effect, Either, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { Activity, type ComponentRef, useEffect, useRef } from "react";
-import { toast } from "sonner";
 import { useForumSession } from "@/components/school/classes/forum/context/use-session";
 import { useControls } from "@/components/school/classes/forum/conversation/context/use-controls";
 import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
@@ -41,7 +41,6 @@ export const ForumPostInput = () => {
   const setForumReplyTarget = useForumSession(
     (state) => state.setForumReplyTarget
   );
-  const [composerRef] = useResizeObserver<HTMLFormElement>();
   const textareaRef = useRef<ComponentRef<typeof InputGroupTextarea>>(null);
   const generateUploadUrl = useMutation(
     api.classes.forums.mutations.uploads.generateUploadUrl
@@ -63,7 +62,7 @@ export const ForumPostInput = () => {
       maxFiles: MAX_FORUM_POST_ATTACHMENTS,
       onError: (errors) => {
         for (const error of errors) {
-          toast.error(error, { position: "bottom-center" });
+          toastManager.add({ type: "error", title: error });
         }
       },
     });
@@ -117,7 +116,7 @@ export const ForumPostInput = () => {
         captureException(result.left, {
           source: "forum-post-submit",
         });
-        toast.error(t("create-post-failed"));
+        toastManager.add({ type: "error", title: t("create-post-failed") });
 
         requestAnimationFrame(() => {
           textareaRef.current?.focus();
@@ -142,22 +141,7 @@ export const ForumPostInput = () => {
     <form
       action={() => form.handleSubmit()}
       className="grid shrink-0 px-2 pb-2"
-      ref={composerRef}
     >
-      {/*
-       * `react-textarea-autosize` remeasures on render and window resize, but
-       * the forum panel width can also change when the resizable class layout
-       * settles after mount. Observing the composer element forces the
-       * controlled textarea to rerender on those panel-size changes, so the
-       * initial height stays compact instead of preserving a stale oversized
-       * measurement.
-       *
-       * References:
-       * - react-textarea-autosize README:
-       *   https://www.npmjs.com/package/react-textarea-autosize
-       * - Mantine useResizeObserver:
-       *   https://mantine.dev/hooks/use-resize-observer/
-       */}
       <ReplyIndicator />
       <AttachmentPreviews
         files={files}
@@ -181,6 +165,7 @@ export const ForumPostInput = () => {
               return (
                 <InputGroup
                   className={cn(
+                    "**:[textarea]:scrollbar-hide **:[textarea]:max-h-36 **:[textarea]:min-h-9 **:[textarea]:overflow-y-auto **:[textarea]:py-2",
                     (!!replyTarget || files.length > 0) && "rounded-t-none"
                   )}
                 >
@@ -193,12 +178,6 @@ export const ForumPostInput = () => {
                   <InputGroupTextarea
                     aria-label={t("send-message-placeholder")}
                     autoFocus
-                    className="scrollbar-hide max-h-36 min-h-0 py-2"
-                    // `Textarea` wraps `react-textarea-autosize`, so explicit row
-                    // bounds keep the composer compact instead of inheriting the
-                    // base textarea's larger `min-h-16`.
-                    maxRows={6}
-                    minRows={1}
                     name={field.name}
                     onChange={(event) => field.handleChange(event.target.value)}
                     onKeyDown={(event) => {
@@ -219,6 +198,7 @@ export const ForumPostInput = () => {
                     placeholder={t("send-message-placeholder")}
                     readOnly={isSubmitting}
                     ref={textareaRef}
+                    rows={1}
                     value={field.state.value}
                   />
                   <InputGroupAddon align="inline-end">
@@ -242,7 +222,7 @@ export const ForumPostInput = () => {
                       }}
                     />
                     <Activity mode={isMobile ? "visible" : "hidden"}>
-                      <InputGroupButton
+                      <Button
                         disabled={submitDisabled}
                         size="icon"
                         type="submit"
@@ -253,7 +233,7 @@ export const ForumPostInput = () => {
                           isLoading={isSubmitting}
                         />
                         <span className="sr-only">{t("submit")}</span>
-                      </InputGroupButton>
+                      </Button>
                     </Activity>
                   </InputGroupAddon>
                 </InputGroup>

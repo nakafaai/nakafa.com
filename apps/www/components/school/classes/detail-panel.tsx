@@ -2,13 +2,13 @@
 
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { useMediaQuery } from "@mantine/hooks";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Sheet,
-  SheetContent,
   SheetDescription,
   SheetHeader,
+  SheetPopup,
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
 import type { ReactNode } from "react";
@@ -60,7 +60,7 @@ export function SchoolClassesDetailPanel({
       }}
       open
     >
-      <SheetContent
+      <SheetPopup
         className="max-w-none gap-0 border-l-0 sm:max-w-none"
         showCloseButton={false}
         style={{ width: "100%" }}
@@ -73,7 +73,7 @@ export function SchoolClassesDetailPanel({
           <SheetDescription className="sr-only">{description}</SheetDescription>
         </SheetHeader>
         {children}
-      </SheetContent>
+      </SheetPopup>
     </Sheet>
   );
 }

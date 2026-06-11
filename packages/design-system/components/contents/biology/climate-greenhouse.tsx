@@ -11,13 +11,13 @@ import { CameraControls } from "@repo/design-system/components/three/camera-cont
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  Frame,
+  FrameDescription,
+  FrameFooter,
+  FrameHeader,
+  FramePanel,
+  FrameTitle,
+} from "@repo/design-system/components/ui/frame";
 import { Slider } from "@repo/design-system/components/ui/slider";
 import { useTheme } from "next-themes";
 import type { ReactNode, RefObject } from "react";
@@ -52,12 +52,12 @@ export function GreenhouseEffectLab(props: GreenhouseEffectLabProps) {
   const colors = getBiologySceneColors(resolvedTheme);
 
   return (
-    <Card className="overflow-hidden content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
+    <Frame className="overflow-hidden content-auto-card">
+      <FrameHeader>
+        <FrameTitle>{title}</FrameTitle>
+        <FrameDescription>{description}</FrameDescription>
+      </FrameHeader>
+      <FramePanel className="flex flex-col gap-4">
         <section
           aria-label={labels.viewLabel}
           className={threeSceneFrameVariants()}
@@ -100,8 +100,8 @@ export function GreenhouseEffectLab(props: GreenhouseEffectLabProps) {
             value={gasLevel}
           />
         </div>
-      </CardContent>
-      <CardFooter className="border-t">
+      </FramePanel>
+      <FrameFooter className="border-t">
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
           <GreenhouseFact
             label={labels.heatFlowLabel}
@@ -109,8 +109,8 @@ export function GreenhouseEffectLab(props: GreenhouseEffectLabProps) {
           />
           <GreenhouseFact label={labels.meaningLabel} value={labels.meaning} />
         </dl>
-      </CardFooter>
-    </Card>
+      </FrameFooter>
+    </Frame>
   );
 }
 

@@ -2,16 +2,16 @@
 
 import { ArrowDown01Icon } from "@hugeicons/core-free-icons";
 import { isModelId, type ModelId } from "@repo/ai/config/model";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+  Menu,
+  MenuGroup,
+  MenuPopup,
+  MenuRadioGroup,
+  MenuRadioItem,
+  MenuTrigger,
+} from "@repo/design-system/components/ui/menu";
 import {
   usePathname,
   useRouter,
@@ -52,8 +52,8 @@ export function AiChatModel() {
   };
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
+    <Menu>
+      <MenuTrigger
         render={
           <Button variant="ghost">
             <HugeIcons icon={selectedModel.icon} />
@@ -62,14 +62,11 @@ export function AiChatModel() {
           </Button>
         }
       />
-      <DropdownMenuContent align="start" className="w-56">
-        <DropdownMenuGroup>
-          <DropdownMenuRadioGroup
-            onValueChange={handleValueChange}
-            value={model}
-          >
+      <MenuPopup align="start" className="w-56">
+        <MenuGroup>
+          <MenuRadioGroup onValueChange={handleValueChange} value={model}>
             {aiModels.map((item) => (
-              <DropdownMenuRadioItem key={item.value} value={item.value}>
+              <MenuRadioItem key={item.value} value={item.value}>
                 <HugeIcons icon={item.icon} />
                 <span className="grid gap-0.5">
                   <span>{item.label}</span>
@@ -77,11 +74,11 @@ export function AiChatModel() {
                     {t(item.subtitleKey)}
                   </span>
                 </span>
-              </DropdownMenuRadioItem>
+              </MenuRadioItem>
             ))}
-          </DropdownMenuRadioGroup>
-        </DropdownMenuGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          </MenuRadioGroup>
+        </MenuGroup>
+      </MenuPopup>
+    </Menu>
   );
 }

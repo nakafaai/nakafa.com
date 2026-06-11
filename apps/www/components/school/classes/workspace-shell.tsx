@@ -5,7 +5,7 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
   useResizableDefaultLayout,
-} from "@repo/design-system/components/ui/resizable";
+} from "@repo/design-system/components/layout/resizable";
 import type { ReactNode } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 import { SCHOOL_CLASSES_DETAIL_PANEL_BREAKPOINT } from "@/components/school/classes/detail-panel";

@@ -3,33 +3,34 @@ import { useDisclosure } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Response } from "@repo/design-system/components/ai/response";
 import {
+  EmojiPicker,
+  EmojiPickerContent,
+  EmojiPickerFooter,
+  EmojiPickerSearch,
+} from "@repo/design-system/components/emoji/picker";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
+import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from "@repo/design-system/components/ui/avatar";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
-  EmojiPicker,
-  EmojiPickerContent,
-  EmojiPickerFooter,
-  EmojiPickerSearch,
-} from "@repo/design-system/components/ui/emoji-picker";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@repo/design-system/components/ui/hover-card";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import {
   Popover,
-  PopoverContent,
+  PopoverPopup,
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
 import {
+  PreviewCard,
+  PreviewCardPopup,
+  PreviewCardTrigger,
+} from "@repo/design-system/components/ui/preview-card";
+import {
   Tooltip,
-  TooltipContent,
+  TooltipPopup,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
+import { cn } from "@repo/design-system/lib/utils";
 import { useMutation } from "convex/react";
 import { format } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
@@ -114,23 +115,25 @@ const ForumReactions = () => {
         const moreCount = count - reactors.length;
 
         return (
-          <HoverCard key={emoji}>
-            <HoverCardTrigger
+          <PreviewCard key={emoji}>
+            <PreviewCardTrigger
               render={
                 <Button
+                  className={cn(
+                    isMyReaction &&
+                      "border-primary/40 bg-primary/8 text-primary hover:bg-primary/12"
+                  )}
                   disabled={isPending}
                   onClick={() => handleToggleReaction(emoji)}
                   size="sm"
-                  variant={
-                    isMyReaction === true ? "default-outline" : "outline"
-                  }
+                  variant="outline"
                 />
               }
             >
               {emoji}
               <span className="tracking-tight">{count}</span>
-            </HoverCardTrigger>
-            <HoverCardContent
+            </PreviewCardTrigger>
+            <PreviewCardPopup
               align="center"
               className="w-auto max-w-64"
               side="top"
@@ -146,8 +149,8 @@ const ForumReactions = () => {
                     : t("reacted-by", { names: reactors.join(", ") })}
                 </p>
               </div>
-            </HoverCardContent>
-          </HoverCard>
+            </PreviewCardPopup>
+          </PreviewCard>
         );
       })}
     </div>
@@ -200,9 +203,9 @@ const ForumActions = () => {
             </PopoverTrigger>
           }
         />
-        <TooltipContent side="top">{t("reaction")}</TooltipContent>
+        <TooltipPopup side="top">{t("reaction")}</TooltipPopup>
       </Tooltip>
-      <PopoverContent className="w-fit p-0">
+      <PopoverPopup className="w-fit p-0">
         <EmojiPicker
           className="h-80"
           onEmojiSelect={({ emoji }) => {
@@ -214,7 +217,7 @@ const ForumActions = () => {
           <EmojiPickerContent />
           <EmojiPickerFooter />
         </EmojiPicker>
-      </PopoverContent>
+      </PopoverPopup>
     </Popover>
   );
 };

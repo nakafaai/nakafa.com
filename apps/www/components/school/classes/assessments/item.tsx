@@ -10,17 +10,18 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+  Menu,
+  MenuGroup,
+  MenuItem,
+  MenuPopup,
+  MenuSeparator,
+  MenuTrigger,
+} from "@repo/design-system/components/ui/menu";
+import { toastManager } from "@repo/design-system/components/ui/toast";
 import { cn } from "@repo/design-system/lib/utils";
 import { useMutation } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
@@ -28,7 +29,6 @@ import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 import { Activity, useTransition } from "react";
-import { toast } from "sonner";
 import { getAssessmentMode } from "@/components/school/classes/assessments/_data/mode";
 import { getAssessmentStatus } from "@/components/school/classes/assessments/_data/status";
 import { CreateAssessmentDialog } from "@/components/school/classes/assessments/create-dialog";
@@ -47,7 +47,7 @@ function getBadgeVariant(
     case "archived":
       return "destructive";
     default:
-      return "muted";
+      return "outline";
   }
 }
 
@@ -175,13 +175,19 @@ function AssessmentActions({
               schoolId: assessment.schoolId,
               assessmentId: assessment._id,
             });
-            toast.success(schoolT("assessment-deleted"));
+            toastManager.add({
+              type: "success",
+              title: schoolT("assessment-deleted"),
+            });
           },
           catch: (error) => error,
         }).pipe(
           Effect.catchAll(() =>
             Effect.sync(() => {
-              toast.error(schoolT("delete-assessment-failed"));
+              toastManager.add({
+                type: "error",
+                title: schoolT("delete-assessment-failed"),
+              });
             })
           )
         )
@@ -191,8 +197,8 @@ function AssessmentActions({
 
   return (
     <div className={className}>
-      <DropdownMenu>
-        <DropdownMenuTrigger
+      <Menu>
+        <MenuTrigger
           render={
             <Button
               className="z-1 opacity-50 transition-opacity ease-out group-hover:opacity-100"
@@ -205,36 +211,36 @@ function AssessmentActions({
             </Button>
           }
         />
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuGroup>
-            <DropdownMenuItem
+        <MenuPopup align="end" className="w-48">
+          <MenuGroup>
+            <MenuItem
               className="cursor-pointer"
               disabled={isPending}
               onClick={editHandlers.open}
             >
               <HugeIcons icon={Edit01Icon} />
               {t("edit")}
-            </DropdownMenuItem>
-            <DropdownMenuItem
+            </MenuItem>
+            <MenuItem
               className="cursor-pointer"
               disabled={isPending}
               onClick={handleMoveUp}
             >
               <HugeIcons icon={ArrowUp02Icon} />
               {t("move-up")}
-            </DropdownMenuItem>
-            <DropdownMenuItem
+            </MenuItem>
+            <MenuItem
               className="cursor-pointer"
               disabled={isPending}
               onClick={handleMoveDown}
             >
               <HugeIcons icon={ArrowDown02Icon} />
               {t("move-down")}
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-          <DropdownMenuSeparator />
-          <DropdownMenuGroup>
-            <DropdownMenuItem
+            </MenuItem>
+          </MenuGroup>
+          <MenuSeparator />
+          <MenuGroup>
+            <MenuItem
               className="cursor-pointer"
               disabled={isPending}
               onClick={confirmDeleteHandlers.open}
@@ -242,10 +248,10 @@ function AssessmentActions({
             >
               <HugeIcons icon={Delete02Icon} />
               {t("delete")}
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
+            </MenuItem>
+          </MenuGroup>
+        </MenuPopup>
+      </Menu>
 
       <CreateAssessmentDialog
         initialAssessment={assessment}

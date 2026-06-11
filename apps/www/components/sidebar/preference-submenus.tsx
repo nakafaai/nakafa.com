@@ -1,15 +1,15 @@
 "use client";
 
 import { PaintBoardIcon, TranslateIcon } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import {
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+  MenuGroup,
+  MenuItem,
+  MenuSeparator,
+  MenuSub,
+  MenuSubPopup,
+  MenuSubTrigger,
+} from "@repo/design-system/components/ui/menu";
 import { themes } from "@repo/design-system/lib/theme";
 import { cn } from "@repo/design-system/lib/utils";
 import { languages } from "@repo/internationalization/data/lang";
@@ -33,7 +33,7 @@ const flagMap = {
   id: ID,
 };
 
-type SubmenuSide = React.ComponentProps<typeof DropdownMenuSubContent>["side"];
+type SubmenuSide = React.ComponentProps<typeof MenuSubPopup>["side"];
 
 function ActiveBadge({ isActive }: { isActive: boolean }) {
   return (
@@ -74,16 +74,13 @@ function LanguageSubmenuContent({ side }: { side: SubmenuSide }) {
   }
 
   return (
-    <DropdownMenuSubContent
-      className="w-max max-w-[calc(100vw-2rem)]"
-      side={side}
-    >
-      <DropdownMenuGroup>
+    <MenuSubPopup className="w-max max-w-[calc(100vw-2rem)]" side={side}>
+      <MenuGroup>
         {languages.map((language) => {
           const Flag = flagMap[language.value];
 
           return (
-            <DropdownMenuItem
+            <MenuItem
               className="cursor-pointer"
               disabled={isPending}
               key={language.value}
@@ -94,11 +91,11 @@ function LanguageSubmenuContent({ side }: { side: SubmenuSide }) {
               <Flag className="size-4 shrink-0" />
               <span className="truncate">{language.label}</span>
               <ActiveBadge isActive={currentLocale === language.value} />
-            </DropdownMenuItem>
+            </MenuItem>
           );
         })}
-      </DropdownMenuGroup>
-    </DropdownMenuSubContent>
+      </MenuGroup>
+    </MenuSubPopup>
   );
 }
 
@@ -111,13 +108,13 @@ function ThemeSubmenuContent({ side }: { side: SubmenuSide }) {
   }
 
   return (
-    <DropdownMenuSubContent
+    <MenuSubPopup
       className="max-h-96 w-max max-w-[calc(100vw-2rem)]"
       side={side}
     >
-      <DropdownMenuGroup>
+      <MenuGroup>
         {themes.slice(0, BASE_THEMES_COUNT).map((theme) => (
-          <DropdownMenuItem
+          <MenuItem
             className="cursor-pointer"
             key={theme.value}
             onClick={() => setTheme(theme.value)}
@@ -125,15 +122,15 @@ function ThemeSubmenuContent({ side }: { side: SubmenuSide }) {
             <HugeIcons className="shrink-0" icon={theme.icon} />
             <span className="truncate">{t(theme.value)}</span>
             <ActiveBadge isActive={isActive(theme.value)} />
-          </DropdownMenuItem>
+          </MenuItem>
         ))}
-      </DropdownMenuGroup>
+      </MenuGroup>
 
-      <DropdownMenuSeparator />
+      <MenuSeparator />
 
-      <DropdownMenuGroup>
+      <MenuGroup>
         {themes.slice(BASE_THEMES_COUNT).map((theme) => (
-          <DropdownMenuItem
+          <MenuItem
             className="cursor-pointer"
             key={theme.value}
             onClick={() => setTheme(theme.value)}
@@ -141,10 +138,10 @@ function ThemeSubmenuContent({ side }: { side: SubmenuSide }) {
             <HugeIcons className="shrink-0" icon={theme.icon} />
             <span className="truncate">{t(theme.value)}</span>
             <ActiveBadge isActive={isActive(theme.value)} />
-          </DropdownMenuItem>
+          </MenuItem>
         ))}
-      </DropdownMenuGroup>
-    </DropdownMenuSubContent>
+      </MenuGroup>
+    </MenuSubPopup>
   );
 }
 
@@ -152,22 +149,22 @@ export function SidebarPreferenceSubmenus({ side }: { side: SubmenuSide }) {
   const t = useTranslations("Common");
 
   return (
-    <DropdownMenuGroup>
-      <DropdownMenuSub>
-        <DropdownMenuSubTrigger className="cursor-pointer">
+    <MenuGroup>
+      <MenuSub>
+        <MenuSubTrigger className="cursor-pointer">
           <HugeIcons icon={TranslateIcon} />
           <span className="truncate">{t("language")}</span>
-        </DropdownMenuSubTrigger>
+        </MenuSubTrigger>
         <LanguageSubmenuContent side={side} />
-      </DropdownMenuSub>
+      </MenuSub>
 
-      <DropdownMenuSub>
-        <DropdownMenuSubTrigger className="cursor-pointer">
+      <MenuSub>
+        <MenuSubTrigger className="cursor-pointer">
           <HugeIcons icon={PaintBoardIcon} />
           <span className="truncate">{t("theme")}</span>
-        </DropdownMenuSubTrigger>
+        </MenuSubTrigger>
         <ThemeSubmenuContent side={side} />
-      </DropdownMenuSub>
-    </DropdownMenuGroup>
+      </MenuSub>
+    </MenuGroup>
   );
 }

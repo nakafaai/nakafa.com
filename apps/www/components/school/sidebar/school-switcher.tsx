@@ -13,17 +13,17 @@ import {
 } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
+import NavigationLink from "@repo/design-system/components/navigation/link";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+  Menu,
+  MenuGroup,
+  MenuGroupLabel,
+  MenuItem,
+  MenuPopup,
+  MenuSeparator,
+  MenuTrigger,
+} from "@repo/design-system/components/ui/menu";
 import {
   SidebarMenu,
   SidebarMenuButton,
@@ -66,8 +66,8 @@ export function SchoolSwitcher({
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <DropdownMenu onOpenChange={setOpen} open={open}>
-          <DropdownMenuTrigger
+        <Menu onOpenChange={setOpen} open={open}>
+          <MenuTrigger
             render={
               <SidebarMenuButton size="lg">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-sm border bg-foreground text-background">
@@ -83,16 +83,16 @@ export function SchoolSwitcher({
               </SidebarMenuButton>
             }
           />
-          <DropdownMenuContent
+          <MenuPopup
             align="start"
             className="w-(--anchor-width) min-w-56 rounded-lg"
             side={isMobile ? "bottom" : "right"}
             sideOffset={4}
           >
-            <DropdownMenuGroup>
-              <DropdownMenuLabel className="text-muted-foreground text-xs">
+            <MenuGroup>
+              <MenuGroupLabel className="text-muted-foreground text-xs">
                 {t("schools")}
-              </DropdownMenuLabel>
+              </MenuGroupLabel>
               <div
                 className="max-h-64 overflow-y-auto"
                 onScroll={(event) => {
@@ -115,7 +115,7 @@ export function SchoolSwitcher({
                   const schoolIcon = getSchoolIcon(school.type);
 
                   return (
-                    <DropdownMenuItem
+                    <MenuItem
                       className="cursor-pointer"
                       key={school._id}
                       render={
@@ -135,10 +135,10 @@ export function SchoolSwitcher({
                   );
                 })}
               </div>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem
+            </MenuGroup>
+            <MenuSeparator />
+            <MenuGroup>
+              <MenuItem
                 className="cursor-pointer"
                 onClick={() => {
                   router.push("/school/onboarding");
@@ -147,10 +147,10 @@ export function SchoolSwitcher({
               >
                 <HugeIcons className="shrink-0" icon={Add01Icon} />
                 <span className="truncate">{t("add-school")}</span>
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              </MenuItem>
+            </MenuGroup>
+          </MenuPopup>
+        </Menu>
       </SidebarMenuItem>
     </SidebarMenu>
   );

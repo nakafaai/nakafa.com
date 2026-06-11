@@ -1,11 +1,11 @@
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  Frame,
+  FrameDescription,
+  FrameHeader,
+  FramePanel,
+  FrameTitle,
+} from "@repo/design-system/components/ui/frame";
 import { cn } from "@repo/design-system/lib/utils";
 import { cva } from "class-variance-authority";
 import type { ReactNode } from "react";
@@ -163,12 +163,12 @@ export function NumberLine({
   });
 
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <Frame className="content-auto-card">
+      <FrameHeader>
+        <FrameTitle>{title}</FrameTitle>
+        <FrameDescription>{description}</FrameDescription>
+      </FrameHeader>
+      <FramePanel>
         <div className="mx-auto">
           <div className="relative h-20 w-full">
             {processedSegments.map((segment) => (
@@ -263,7 +263,7 @@ export function NumberLine({
             ))}
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </FramePanel>
+    </Frame>
   );
 }

@@ -9,15 +9,15 @@ import {
 } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
+import NavigationLink from "@repo/design-system/components/navigation/link";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+  Menu,
+  MenuItem,
+  MenuPopup,
+  MenuTrigger,
+} from "@repo/design-system/components/ui/menu";
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 import {
   type PaginationStatus,
@@ -171,8 +171,8 @@ function UserChatsListActions({ chat }: { chat: Doc<"chats"> }) {
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
+    <Menu>
+      <MenuTrigger
         render={
           <Button
             className="z-2 hover:bg-background hover:text-foreground hover:[&_svg]:text-foreground"
@@ -185,8 +185,8 @@ function UserChatsListActions({ chat }: { chat: Doc<"chats"> }) {
           </Button>
         }
       />
-      <DropdownMenuContent align="end" className="w-40">
-        <DropdownMenuItem
+      <MenuPopup align="end" className="w-40">
+        <MenuItem
           className="cursor-pointer"
           disabled={isPending}
           onClick={handleDelete}
@@ -194,8 +194,8 @@ function UserChatsListActions({ chat }: { chat: Doc<"chats"> }) {
         >
           <HugeIcons icon={Delete02Icon} />
           {t("delete")}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+        </MenuItem>
+      </MenuPopup>
+    </Menu>
   );
 }

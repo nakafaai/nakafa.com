@@ -7,9 +7,9 @@ import {
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import { captureException } from "@repo/analytics/posthog";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { SimpleIcon } from "@repo/design-system/components/icons/simple";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { languageIconMap } from "@repo/design-system/lib/programming";
 import { cn, save } from "@repo/design-system/lib/utils";
 import {

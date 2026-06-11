@@ -3,19 +3,15 @@
 import { InLoveIcon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-} from "@repo/design-system/components/ui/field";
+import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { toastManager } from "@repo/design-system/components/ui/toast";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
-import { toast } from "sonner";
 import {
   schoolJoinDefaultValues,
   schoolJoinFormSchema,
@@ -49,7 +45,10 @@ export function SchoolOnboardingJoinForm() {
             }).pipe(
               Effect.zipRight(
                 Effect.sync(() => {
-                  toast.error(t("school-joining-failed"));
+                  toastManager.add({
+                    type: "error",
+                    title: t("school-joining-failed"),
+                  });
                 })
               )
             )
@@ -65,7 +64,7 @@ export function SchoolOnboardingJoinForm() {
       className="flex flex-col gap-6"
       id="school-onboarding-join-form"
     >
-      <FieldGroup>
+      <div className="flex w-full flex-col gap-3">
         <form.Field name="code">
           {(field) => {
             const isInvalid =
@@ -89,7 +88,7 @@ export function SchoolOnboardingJoinForm() {
             );
           }}
         </form.Field>
-      </FieldGroup>
+      </div>
 
       <form.Subscribe selector={(state) => [state.isValid, state.isSubmitting]}>
         {([isValid, isSubmitting]) => {

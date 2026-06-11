@@ -23,7 +23,7 @@ export const ConversationUnreadSeparator = ({
       />
       <Badge
         className="transition-colors ease-out motion-reduce:transition-none"
-        variant={isHistory ? "muted" : "destructive"}
+        variant={isHistory ? "outline" : "destructive"}
       >
         {isHistory ? t("left-off-here") : t("new-messages", { count })}
       </Badge>

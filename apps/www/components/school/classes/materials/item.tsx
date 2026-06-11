@@ -12,21 +12,22 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
+import NavigationLink from "@repo/design-system/components/navigation/link";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+  Menu,
+  MenuGroup,
+  MenuItem,
+  MenuPopup,
+  MenuSeparator,
+  MenuTrigger,
+} from "@repo/design-system/components/ui/menu";
+import { toastManager } from "@repo/design-system/components/ui/toast";
 import {
   Tooltip,
-  TooltipContent,
+  TooltipPopup,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { cn } from "@repo/design-system/lib/utils";
@@ -37,7 +38,6 @@ import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 import { Activity, useTransition } from "react";
-import { toast } from "sonner";
 import { getMaterialStatus } from "@/components/school/classes/_data/material-status";
 import { SchoolClassesDeleteDialog } from "@/components/school/classes/delete-dialog";
 import { EditMaterialGroupDialog } from "@/components/school/classes/materials/editor-dialog";
@@ -55,7 +55,7 @@ function getBadgeVariant(
     case "archived":
       return "destructive";
     default:
-      return "muted";
+      return "outline";
   }
 }
 
@@ -125,7 +125,7 @@ export function MaterialGroupCard({
                 <span className="tracking-tight">{group.materialCount}</span>
               </div>
             </TooltipTrigger>
-            <TooltipContent side="bottom">{t("material-items")}</TooltipContent>
+            <TooltipPopup side="bottom">{t("material-items")}</TooltipPopup>
           </Tooltip>
 
           <Tooltip>
@@ -135,9 +135,7 @@ export function MaterialGroupCard({
                 <span className="tracking-tight">{group.childGroupCount}</span>
               </div>
             </TooltipTrigger>
-            <TooltipContent side="bottom">
-              {t("material-groups")}
-            </TooltipContent>
+            <TooltipPopup side="bottom">{t("material-groups")}</TooltipPopup>
           </Tooltip>
 
           <time className="min-w-0 truncate tracking-tight">
@@ -192,13 +190,19 @@ function MaterialGroupActions({
         Effect.tryPromise({
           try: async () => {
             await deleteGroup({ groupId: group._id });
-            toast.success(schoolT("material-deleted"));
+            toastManager.add({
+              type: "success",
+              title: schoolT("material-deleted"),
+            });
           },
           catch: (error) => error,
         }).pipe(
           Effect.catchAll(() =>
             Effect.sync(() => {
-              toast.error(schoolT("delete-material-failed"));
+              toastManager.add({
+                type: "error",
+                title: schoolT("delete-material-failed"),
+              });
             })
           )
         )
@@ -208,8 +212,8 @@ function MaterialGroupActions({
 
   return (
     <div className={className}>
-      <DropdownMenu>
-        <DropdownMenuTrigger
+      <Menu>
+        <MenuTrigger
           render={
             <Button
               className="pointer-events-auto z-1 opacity-50 transition-opacity ease-out group-hover:opacity-100"
@@ -222,36 +226,36 @@ function MaterialGroupActions({
             </Button>
           }
         />
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuGroup>
-            <DropdownMenuItem
+        <MenuPopup align="end" className="w-48">
+          <MenuGroup>
+            <MenuItem
               className="cursor-pointer"
               disabled={isPending}
               onClick={editHandlers.open}
             >
               <HugeIcons icon={Edit01Icon} />
               {t("edit")}
-            </DropdownMenuItem>
-            <DropdownMenuItem
+            </MenuItem>
+            <MenuItem
               className="cursor-pointer"
               disabled={isPending}
               onClick={handleMoveUp}
             >
               <HugeIcons icon={ArrowUp02Icon} />
               {t("move-up")}
-            </DropdownMenuItem>
-            <DropdownMenuItem
+            </MenuItem>
+            <MenuItem
               className="cursor-pointer"
               disabled={isPending}
               onClick={handleMoveDown}
             >
               <HugeIcons icon={ArrowDown02Icon} />
               {t("move-down")}
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-          <DropdownMenuSeparator />
-          <DropdownMenuGroup>
-            <DropdownMenuItem
+            </MenuItem>
+          </MenuGroup>
+          <MenuSeparator />
+          <MenuGroup>
+            <MenuItem
               className="cursor-pointer"
               disabled={isPending}
               onClick={confirmDeleteHandlers.open}
@@ -259,10 +263,10 @@ function MaterialGroupActions({
             >
               <HugeIcons icon={Delete02Icon} />
               {t("delete")}
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
+            </MenuItem>
+          </MenuGroup>
+        </MenuPopup>
+      </Menu>
 
       <EditMaterialGroupDialog
         group={group}

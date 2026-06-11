@@ -1,13 +1,6 @@
 "use client";
 
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
-import {
   ChartBar,
   ChartCartesianGrid,
   ChartComposedChart,
@@ -18,7 +11,14 @@ import {
   ChartTooltipContent,
   ChartXAxis,
   ChartYAxis,
-} from "@repo/design-system/components/ui/chart";
+} from "@repo/design-system/components/charts/chart";
+import {
+  Frame,
+  FrameDescription,
+  FrameHeader,
+  FramePanel,
+  FrameTitle,
+} from "@repo/design-system/components/ui/frame";
 import { type ReactNode, useMemo } from "react";
 
 const chartData = [
@@ -50,12 +50,12 @@ export function GrowthChart({ description, title, yAxisLabel }: Props) {
   );
 
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <Frame>
+      <FrameHeader>
+        <FrameTitle>{title}</FrameTitle>
+        <FrameDescription>{description}</FrameDescription>
+      </FrameHeader>
+      <FramePanel>
         <ChartContainer className="aspect-video" config={chartConfig}>
           <ChartComposedChart accessibilityLayer data={chartData}>
             <ChartCartesianGrid vertical={false} />
@@ -103,7 +103,7 @@ export function GrowthChart({ description, title, yAxisLabel }: Props) {
             />
           </ChartComposedChart>
         </ChartContainer>
-      </CardContent>
-    </Card>
+      </FramePanel>
+    </Frame>
   );
 }

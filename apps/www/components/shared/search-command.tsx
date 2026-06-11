@@ -9,6 +9,7 @@ import {
   Sad02Icon,
 } from "@hugeicons/core-free-icons";
 import { useDebouncedValue, useHotkeys } from "@mantine/hooks";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import {
   Command,
   CommandCollection,
@@ -24,7 +25,6 @@ import {
   CommandPanel,
   CommandSeparator,
 } from "@repo/design-system/components/ui/command";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
 import { useRouter } from "@repo/internationalization/src/navigation";

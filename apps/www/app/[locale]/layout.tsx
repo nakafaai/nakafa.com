@@ -2,8 +2,11 @@ import "@/styles/globals.css";
 
 import { AnalyticsProvider } from "@repo/analytics/provider";
 import { DesignSystemProvider } from "@repo/design-system";
-import { Toaster } from "@repo/design-system/components/ui/sonner";
-import { TailwindIndicator } from "@repo/design-system/components/ui/tailwind-indicator";
+import { TailwindIndicator } from "@repo/design-system/components/dev/tailwind-indicator";
+import {
+  AnchoredToastProvider,
+  ToastProvider,
+} from "@repo/design-system/components/ui/toast";
 import { fonts } from "@repo/design-system/lib/fonts";
 import { routing } from "@repo/internationalization/src/routing";
 import { EducationalOrgJsonLd } from "@repo/seo/json-ld/educational-org";
@@ -160,11 +163,13 @@ export default async function Layout({ children }: LayoutProps<"/[locale]">) {
         <WebsiteJsonLd locale={locale} />
         <NextIntlClientProvider locale={locale} messages={messages}>
           <AnalyticsProvider>
-            <div className="isolate">
-              <DesignSystemProvider>{children}</DesignSystemProvider>
-            </div>
-
-            <Toaster />
+            <ToastProvider>
+              <AnchoredToastProvider>
+                <div className="isolate">
+                  <DesignSystemProvider>{children}</DesignSystemProvider>
+                </div>
+              </AnchoredToastProvider>
+            </ToastProvider>
           </AnalyticsProvider>
           <TailwindIndicator />
         </NextIntlClientProvider>

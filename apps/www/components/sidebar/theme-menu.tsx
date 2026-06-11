@@ -2,15 +2,15 @@
 
 import { ArrowRight01Icon, PaintBoardIcon } from "@hugeicons/core-free-icons";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+  Menu,
+  MenuGroup,
+  MenuItem,
+  MenuPopup,
+  MenuSeparator,
+  MenuTrigger,
+} from "@repo/design-system/components/ui/menu";
 import {
   SidebarMenuButton,
   SidebarMenuItem,
@@ -20,7 +20,6 @@ import { cn } from "@repo/design-system/lib/utils";
 import { IconCircleFilled } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
-import { useLayoutEffect } from "react";
 
 const BASE_THEMES_COUNT = 3;
 
@@ -40,18 +39,16 @@ export function ThemeMenu() {
   const t = useTranslations("Common");
 
   const isMobile = useMediaQuery("(max-width: 640px)");
-  const [open, { close, set }] = useDisclosure(false);
-
-  useLayoutEffect(() => close, [close]);
+  const [open, { set }] = useDisclosure(false);
 
   function isActive(value: string) {
     return currentTheme === value;
   }
 
   return (
-    <DropdownMenu onOpenChange={set} open={open}>
+    <Menu onOpenChange={set} open={open}>
       <SidebarMenuItem>
-        <DropdownMenuTrigger
+        <MenuTrigger
           render={
             <SidebarMenuButton tooltip={t("theme")}>
               <HugeIcons icon={PaintBoardIcon} />
@@ -62,14 +59,14 @@ export function ThemeMenu() {
           }
         />
 
-        <DropdownMenuContent
+        <MenuPopup
           align="end"
           className="max-h-96 w-max max-w-[calc(100vw-2rem)]"
           side={isMobile ? "top" : "right"}
         >
-          <DropdownMenuGroup>
+          <MenuGroup>
             {themes.slice(0, BASE_THEMES_COUNT).map((theme) => (
-              <DropdownMenuItem
+              <MenuItem
                 className="cursor-pointer"
                 key={theme.value}
                 onClick={() => setTheme(theme.value)}
@@ -77,15 +74,15 @@ export function ThemeMenu() {
                 <HugeIcons className="shrink-0" icon={theme.icon} />
                 <span className="truncate">{t(theme.value)}</span>
                 <CheckerBadge isActive={isActive(theme.value)} />
-              </DropdownMenuItem>
+              </MenuItem>
             ))}
-          </DropdownMenuGroup>
+          </MenuGroup>
 
-          <DropdownMenuSeparator />
+          <MenuSeparator />
 
-          <DropdownMenuGroup>
+          <MenuGroup>
             {themes.slice(BASE_THEMES_COUNT).map((theme) => (
-              <DropdownMenuItem
+              <MenuItem
                 className="cursor-pointer"
                 key={theme.value}
                 onClick={() => setTheme(theme.value)}
@@ -93,11 +90,11 @@ export function ThemeMenu() {
                 <HugeIcons className="shrink-0" icon={theme.icon} />
                 <span className="truncate">{t(theme.value)}</span>
                 <CheckerBadge isActive={isActive(theme.value)} />
-              </DropdownMenuItem>
+              </MenuItem>
             ))}
-          </DropdownMenuGroup>
-        </DropdownMenuContent>
+          </MenuGroup>
+        </MenuPopup>
       </SidebarMenuItem>
-    </DropdownMenu>
+    </Menu>
   );
 }

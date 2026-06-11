@@ -1,20 +1,74 @@
+"use client";
+
+import { Input as InputPrimitive } from "@base-ui/react/input";
 import { cn } from "@repo/design-system/lib/utils";
 import type * as React from "react";
 
-function Input({ className, type, ...props }: React.ComponentProps<"input">) {
+export type InputProps = Omit<
+  InputPrimitive.Props & React.RefAttributes<HTMLInputElement>,
+  "size"
+> & {
+  size?: "sm" | "default" | "lg" | number;
+  unstyled?: boolean;
+  nativeInput?: boolean;
+};
+
+/**
+ * Renders a COSS text input control with Nakafa's semantic token styling.
+ *
+ * The wrapper owns the focus, invalid, autofill, and sizing chrome while the
+ * inner control stays a Base UI input by default. Use `nativeInput` only where
+ * a browser-native input is required; this seam does not add masking or field
+ * validation behavior.
+ */
+export function Input({
+  className,
+  size = "default",
+  unstyled = false,
+  nativeInput = false,
+  style,
+  ...props
+}: InputProps): React.ReactElement {
+  const inputClassName = cn(
+    "h-8.5 w-full min-w-0 rounded-[inherit] px-[calc(--spacing(3)-1px)] leading-8.5 outline-none [transition:background-color_5000000s_ease-in-out_0s] placeholder:text-muted-foreground/72 sm:h-7.5 sm:leading-7.5",
+    size === "sm" &&
+      "h-7.5 px-[calc(--spacing(2.5)-1px)] leading-7.5 sm:h-6.5 sm:leading-6.5",
+    size === "lg" && "h-9.5 leading-9.5 sm:h-8.5 sm:leading-8.5",
+    props.type === "search" &&
+      "[&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none [&::-webkit-search-results-button]:appearance-none [&::-webkit-search-results-decoration]:appearance-none",
+    props.type === "file" &&
+      "text-muted-foreground file:me-3 file:bg-transparent file:font-medium file:text-foreground file:text-sm"
+  );
+
   return (
-    <input
-      className={cn(
-        "flex h-9 w-full min-w-0 rounded-md border border-[color-mix(in_oklch,var(--input)_5%,var(--border))] bg-transparent px-3 py-1 text-sm shadow-xs outline-none transition-[color,box-shadow] selection:bg-primary selection:text-primary-foreground file:inline-flex file:h-7 file:border-0 file:bg-transparent file:font-medium file:text-foreground file:text-sm placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-        "focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
-        "aria-invalid:border-destructive aria-invalid:ring-destructive/20",
-        className
+    <span
+      className={
+        cn(
+          !unstyled &&
+            "relative inline-flex w-full rounded-lg border border-input bg-background not-dark:bg-clip-padding text-base text-foreground shadow-xs/5 ring-ring/24 transition-shadow before:pointer-events-none before:absolute before:inset-0 before:rounded-[calc(var(--radius-lg)-1px)] not-has-disabled:not-has-focus-visible:not-has-aria-invalid:before:shadow-[0_1px_--theme(--color-black/4%)] has-focus-visible:has-aria-invalid:border-destructive/64 has-focus-visible:has-aria-invalid:ring-destructive/16 has-aria-invalid:border-destructive/36 has-focus-visible:border-ring has-autofill:bg-foreground/4 has-disabled:opacity-64 has-[:disabled,:focus-visible,[aria-invalid]]:shadow-none has-focus-visible:ring-[3px] sm:text-sm dark:bg-input/32 dark:has-autofill:bg-foreground/8 dark:has-aria-invalid:ring-destructive/24 dark:not-has-disabled:not-has-focus-visible:not-has-aria-invalid:before:shadow-[0_-1px_--theme(--color-white/6%)]",
+          className
+        ) || undefined
+      }
+      data-size={size}
+      data-slot="input-control"
+    >
+      {nativeInput ? (
+        <input
+          className={inputClassName}
+          data-slot="input"
+          size={typeof size === "number" ? size : undefined}
+          style={typeof style === "function" ? undefined : style}
+          {...props}
+        />
+      ) : (
+        <InputPrimitive
+          className={inputClassName}
+          data-slot="input"
+          size={typeof size === "number" ? size : undefined}
+          style={style}
+          {...props}
+        />
       )}
-      data-slot="input"
-      type={type}
-      {...props}
-    />
+    </span>
   );
 }
-
-export { Input };

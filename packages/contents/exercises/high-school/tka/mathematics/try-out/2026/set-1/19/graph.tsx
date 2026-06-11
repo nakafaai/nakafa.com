@@ -1,13 +1,6 @@
 "use client";
 
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
-import {
   ChartCartesianGrid,
   type ChartConfig,
   ChartContainer,
@@ -17,7 +10,14 @@ import {
   ChartReferenceLine,
   ChartXAxis,
   ChartYAxis,
-} from "@repo/design-system/components/ui/chart";
+} from "@repo/design-system/components/charts/chart";
+import {
+  Frame,
+  FrameDescription,
+  FrameHeader,
+  FramePanel,
+  FrameTitle,
+} from "@repo/design-system/components/ui/frame";
 import type { ReactNode } from "react";
 
 interface Props {
@@ -43,12 +43,12 @@ const graphData = Array.from({ length: 200 }, (_, i) => {
 
 export function Graph({ title, description }: Props) {
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <Frame>
+      <FrameHeader>
+        <FrameTitle>{title}</FrameTitle>
+        <FrameDescription>{description}</FrameDescription>
+      </FrameHeader>
+      <FramePanel>
         <ChartContainer config={chartConfig}>
           <ChartLineChart data={graphData}>
             <ChartCartesianGrid strokeDasharray="3 3" />
@@ -112,7 +112,7 @@ export function Graph({ title, description }: Props) {
             />
           </ChartLineChart>
         </ChartContainer>
-      </CardContent>
-    </Card>
+      </FramePanel>
+    </Frame>
   );
 }

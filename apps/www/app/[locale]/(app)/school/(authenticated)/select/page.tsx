@@ -1,10 +1,9 @@
-import { api } from "@repo/backend/convex/_generated/api";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import NavigationLink from "@repo/design-system/components/navigation/link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { SchoolSelectList } from "@/components/school/select-list";
-import { fetchAuthQuery } from "@/lib/auth/server";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { getSchoolLandingRouteState } from "@/lib/school/server";
 
 /** Render the school selection page for users who belong to many schools. */
 export default async function Page(
@@ -14,8 +13,13 @@ export default async function Page(
 
   const [t, landingState] = await Promise.all([
     getTranslations({ locale, namespace: "School.Onboarding" }),
-    fetchAuthQuery(api.schools.queries.getMySchoolLandingState, {}),
+    getSchoolLandingRouteState(),
   ]);
+
+  if (landingState.kind === "unauthenticated") {
+    const redirectPath = `/${locale}/school/select`;
+    redirect(`/${locale}/auth?redirect=${encodeURIComponent(redirectPath)}`);
+  }
 
   if (landingState.kind === "none") {
     redirect(`/${locale}/school/onboarding`);

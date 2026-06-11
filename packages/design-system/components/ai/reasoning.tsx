@@ -2,12 +2,12 @@
 
 import { ArrowDown01Icon, BrainIcon } from "@hugeicons/core-free-icons";
 import { Response } from "@repo/design-system/components/ai/response";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import {
   Collapsible,
-  CollapsibleContent,
+  CollapsiblePanel,
   CollapsibleTrigger,
 } from "@repo/design-system/components/ui/collapsible";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useControllableState } from "@repo/design-system/hooks/use-controllable-state";
 import { cn } from "@repo/design-system/lib/utils";
@@ -188,21 +188,19 @@ export const ReasoningTrigger = memo(
   }
 );
 
-export type ReasoningContentProps = ComponentProps<
-  typeof CollapsibleContent
-> & {
+export type ReasoningContentProps = ComponentProps<typeof CollapsiblePanel> & {
   children: string;
   id: string;
 };
 
 export const ReasoningContent = memo(
   ({ className, children, id, ...props }: ReasoningContentProps) => (
-    <CollapsibleContent
+    <CollapsiblePanel
       className={cn("text-sm", "text-muted-foreground outline-none", className)}
       {...props}
     >
       <Response id={id}>{children}</Response>
-    </CollapsibleContent>
+    </CollapsiblePanel>
   )
 );
 

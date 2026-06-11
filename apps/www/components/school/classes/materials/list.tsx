@@ -3,7 +3,7 @@
 import { useDebouncedValue } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import { PERMISSIONS } from "@repo/backend/convex/lib/helpers/permissions";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
+import { Intersection } from "@repo/design-system/components/visibility-intersection";
 import { usePaginatedQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";

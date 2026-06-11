@@ -1,14 +1,6 @@
 "use client";
 
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
-import {
   ChartCartesianGrid,
   type ChartConfig,
   ChartContainer,
@@ -20,7 +12,15 @@ import {
   ChartTooltipContent,
   ChartXAxis,
   ChartYAxis,
-} from "@repo/design-system/components/ui/chart";
+} from "@repo/design-system/components/charts/chart";
+import {
+  Frame,
+  FrameDescription,
+  FrameFooter,
+  FrameHeader,
+  FramePanel,
+  FrameTitle,
+} from "@repo/design-system/components/ui/frame";
 import { format } from "date-fns";
 import type { ReactNode } from "react";
 
@@ -147,12 +147,12 @@ export function ElectabilityChart({
   } satisfies ChartConfig;
 
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <Frame>
+      <FrameHeader>
+        <FrameTitle>{title}</FrameTitle>
+        <FrameDescription>{description}</FrameDescription>
+      </FrameHeader>
+      <FramePanel>
         <ChartContainer config={chartConfig}>
           <ChartLineChart accessibilityLayer data={electabilityChartData}>
             <ChartCartesianGrid vertical={false} />
@@ -211,10 +211,10 @@ export function ElectabilityChart({
             <ChartLegend content={<ChartLegendContent />} />
           </ChartLineChart>
         </ChartContainer>
-      </CardContent>
-      <CardFooter>
+      </FramePanel>
+      <FrameFooter>
         <p className="text-sm">{footnote}</p>
-      </CardFooter>
-    </Card>
+      </FrameFooter>
+    </Frame>
   );
 }

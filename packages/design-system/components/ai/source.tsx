@@ -1,10 +1,10 @@
 "use client";
 
 import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@repo/design-system/components/ui/hover-card";
+  PreviewCard,
+  PreviewCardPopup,
+  PreviewCardTrigger,
+} from "@repo/design-system/components/ui/preview-card";
 import { cn } from "@repo/design-system/lib/utils";
 import Image from "next/image";
 import { createContext, use, useMemo, useState } from "react";
@@ -61,7 +61,7 @@ export function Source({ href, children }: SourceProps) {
 
   return (
     <SourceContext.Provider value={contextValue}>
-      <HoverCard>{children}</HoverCard>
+      <PreviewCard>{children}</PreviewCard>
     </SourceContext.Provider>
   );
 }
@@ -90,7 +90,7 @@ export function SourceTrigger({
       : null;
 
   return (
-    <HoverCardTrigger
+    <PreviewCardTrigger
       className={cn(
         "inline-flex h-5 max-w-32 items-center gap-1 overflow-hidden rounded-full border border-transparent bg-muted py-0 text-muted-foreground text-xs leading-none no-underline transition-colors ease-out hover:border-primary hover:bg-[color-mix(in_oklch,var(--primary)_5%,var(--background))] hover:text-primary",
         visibleFaviconUrl ? "pr-2 pl-1" : "px-1",
@@ -113,7 +113,7 @@ export function SourceTrigger({
         />
       ) : null}
       <span className="truncate text-center font-normal">{labelToShow}</span>
-    </HoverCardTrigger>
+    </PreviewCardTrigger>
   );
 }
 
@@ -138,7 +138,7 @@ export function SourceContent({
   const shouldShowTitle = cleanTitle && cleanTitle !== domainLabel;
 
   return (
-    <HoverCardContent className={cn("w-80 p-0 shadow-xs", className)}>
+    <PreviewCardPopup className={cn("w-80 p-0 shadow-xs", className)}>
       <a
         className="flex flex-col gap-2 p-3"
         href={href}
@@ -166,7 +166,7 @@ export function SourceContent({
           </div>
         )}
       </a>
-    </HoverCardContent>
+    </PreviewCardPopup>
   );
 }
 

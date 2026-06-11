@@ -6,17 +6,17 @@ import {
   MinusSignIcon,
   PlusSignIcon,
 } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { Button as UiButton } from "@repo/design-system/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+  Frame,
+  FrameDescription,
+  FrameFooter,
+  FrameHeader,
+  FramePanel,
+  FrameTitle,
+} from "@repo/design-system/components/ui/frame";
 import { type ReactNode, useState } from "react";
 import {
   Button,
@@ -39,13 +39,13 @@ interface Props {
  */
 export function FunctionMachine({ title, description, inputLabel }: Props) {
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
+    <Frame className="content-auto-card">
+      <FrameHeader>
+        <FrameTitle>{title}</FrameTitle>
+        <FrameDescription>{description}</FrameDescription>
+      </FrameHeader>
       <Machine inputLabel={inputLabel} />
-    </Card>
+    </Frame>
   );
 }
 
@@ -64,7 +64,7 @@ function Machine({ inputLabel }: MachineProps) {
 
   return (
     <>
-      <CardContent>
+      <FramePanel>
         <div className="flex flex-col items-center justify-center gap-8 py-8 sm:flex-row">
           <UiButton className="pointer-events-none" variant="default">
             <InlineMath math={`x = ${input}`} />
@@ -96,8 +96,8 @@ function Machine({ inputLabel }: MachineProps) {
             <InlineMath math={`f(x) = ${output}`} />
           </UiButton>
         </div>
-      </CardContent>
-      <CardFooter className="justify-center border-t">
+      </FramePanel>
+      <FrameFooter className="justify-center border-t">
         <NumberField
           formatOptions={{
             localeMatcher: "best fit",
@@ -130,7 +130,7 @@ function Machine({ inputLabel }: MachineProps) {
             </Button>
           </Group>
         </NumberField>
-      </CardFooter>
+      </FrameFooter>
     </>
   );
 }

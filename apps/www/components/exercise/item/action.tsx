@@ -1,8 +1,8 @@
 "use client";
 
 import { ArrowDown01Icon } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn, slugify } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
 import { useAttempt } from "@/lib/context/use-attempt";

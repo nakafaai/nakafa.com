@@ -7,8 +7,8 @@ import {
   Cancel01Icon,
   StarsIcon,
 } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   SheetDescription,
   SheetHeader as SheetHeaderPrimitive,

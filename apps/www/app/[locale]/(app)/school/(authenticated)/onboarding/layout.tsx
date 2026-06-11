@@ -1,4 +1,4 @@
-import { Particles } from "@repo/design-system/components/ui/particles";
+import { Particles } from "@repo/design-system/components/visual/particles";
 export default function Layout({
   children,
 }: LayoutProps<"/[locale]/school/onboarding">) {

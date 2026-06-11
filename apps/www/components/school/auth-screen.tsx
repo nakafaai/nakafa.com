@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@repo/design-system/components/ui/button";
-import { Particles } from "@repo/design-system/components/ui/particles";
+import { Particles } from "@repo/design-system/components/visual/particles";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { AuthGoogle } from "@/components/auth/google";
@@ -50,7 +50,6 @@ function SchoolAuthScreenFooter() {
           "terms-of-service": (chunks) => (
             <Button
               className="h-auto p-0"
-              nativeButton={false}
               render={
                 <a
                   href={`/${locale}/terms-of-service`}
@@ -67,7 +66,6 @@ function SchoolAuthScreenFooter() {
           "privacy-policy": (chunks) => (
             <Button
               className="h-auto p-0"
-              nativeButton={false}
               render={
                 <a
                   href={`/${locale}/privacy-policy`}

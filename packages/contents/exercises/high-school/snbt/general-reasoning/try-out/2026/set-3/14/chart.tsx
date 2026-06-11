@@ -1,13 +1,6 @@
 "use client";
 
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
-import {
   ChartBar,
   ChartBarChart,
   ChartCartesianGrid,
@@ -19,7 +12,14 @@ import {
   ChartTooltipContent,
   ChartXAxis,
   ChartYAxis,
-} from "@repo/design-system/components/ui/chart";
+} from "@repo/design-system/components/charts/chart";
+import {
+  Frame,
+  FrameDescription,
+  FrameHeader,
+  FramePanel,
+  FrameTitle,
+} from "@repo/design-system/components/ui/frame";
 import { type ReactNode, useMemo } from "react";
 
 const chartData = [
@@ -81,12 +81,12 @@ export function SpiceSalesChart({
   );
 
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <Frame>
+      <FrameHeader>
+        <FrameTitle>{title}</FrameTitle>
+        <FrameDescription>{description}</FrameDescription>
+      </FrameHeader>
+      <FramePanel>
         <ChartContainer className="aspect-video" config={chartConfig}>
           <ChartBarChart accessibilityLayer data={data}>
             <ChartCartesianGrid vertical={false} />
@@ -118,7 +118,7 @@ export function SpiceSalesChart({
             ))}
           </ChartBarChart>
         </ChartContainer>
-      </CardContent>
-    </Card>
+      </FramePanel>
+    </Frame>
   );
 }

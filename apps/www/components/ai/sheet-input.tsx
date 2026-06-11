@@ -14,8 +14,8 @@ import {
   PromptInputToolbar,
   PromptInputTools,
 } from "@repo/design-system/components/ai/input";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import type { ChatStatus } from "ai";
 import { useTranslations } from "next-intl";
 

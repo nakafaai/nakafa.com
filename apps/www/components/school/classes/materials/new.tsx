@@ -2,8 +2,8 @@
 
 import { FolderAddIcon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
 import { CreateMaterialGroupDialog } from "@/components/school/classes/materials/editor-dialog";
 

@@ -1,8 +1,8 @@
 "use client";
 
 import { api } from "@repo/backend/convex/_generated/api";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import NavigationLink from "@repo/design-system/components/navigation/link";
+import { Intersection } from "@repo/design-system/components/visibility-intersection";
 import { useConvexAuth, usePaginatedQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 

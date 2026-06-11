@@ -2,16 +2,16 @@
 
 import { Clock04Icon, PauseIcon, PlayIcon } from "@hugeicons/core-free-icons";
 import { useIntersection } from "@mantine/hooks";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+  Frame,
+  FrameDescription,
+  FrameFooter,
+  FrameHeader,
+  FramePanel,
+  FrameTitle,
+} from "@repo/design-system/components/ui/frame";
 import {
   AnimatePresence,
   domMax,
@@ -229,15 +229,15 @@ export function BacterialGrowth({
   );
 
   return (
-    <Card className="content-auto-card" ref={ref}>
-      <CardHeader>
-        <CardTitle>{labels.title}</CardTitle>
-        <CardDescription>
+    <Frame className="content-auto-card" ref={ref}>
+      <FrameHeader>
+        <FrameTitle>{labels.title}</FrameTitle>
+        <FrameDescription>
           {Math.round(bacteriaCount)} {labels.bacterial}
-        </CardDescription>
-      </CardHeader>
+        </FrameDescription>
+      </FrameHeader>
 
-      <CardContent>
+      <FramePanel>
         <div className="relative aspect-square w-full overflow-hidden rounded-lg border bg-secondary/10 sm:aspect-video">
           <div
             className="relative grid h-full w-full gap-0.5 p-2 sm:px-0"
@@ -291,9 +291,9 @@ export function BacterialGrowth({
             </MotionConfig>
           </div>
         </div>
-      </CardContent>
+      </FramePanel>
 
-      <CardFooter className="flex flex-col gap-4 px-0">
+      <FrameFooter className="flex flex-col gap-4 px-0">
         <div className="flex w-full flex-col items-center justify-between gap-4 px-6 sm:flex-row">
           <div className="flex justify-between gap-2">
             <Button
@@ -337,7 +337,7 @@ export function BacterialGrowth({
             {timeButtons}
           </div>
         </div>
-      </CardFooter>
-    </Card>
+      </FrameFooter>
+    </Frame>
   );
 }

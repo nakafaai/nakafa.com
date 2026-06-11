@@ -2,14 +2,14 @@
 
 import { api } from "@repo/backend/convex/_generated/api";
 import { selfSelectableUserRoles } from "@repo/backend/convex/users/roles";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Select,
-  SelectContent,
   SelectGroup,
   SelectItem,
+  SelectPopup,
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
@@ -115,7 +115,7 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
                 >
                   <SelectValue placeholder={t("role-placeholder")} />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectPopup>
                   <SelectGroup>
                     {roles.map((role) => (
                       <SelectItem key={role.value} value={role.value}>
@@ -124,7 +124,7 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
                       </SelectItem>
                     ))}
                   </SelectGroup>
-                </SelectContent>
+                </SelectPopup>
               </Select>
             </Field>
           )}

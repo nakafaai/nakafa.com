@@ -1,7 +1,7 @@
 "use client";
 
 import { captureException } from "@repo/analytics/posthog";
-import { toast } from "sonner";
+import { toastManager } from "@repo/design-system/components/ui/toast";
 import { CHAT_ERRORS } from "@/app/api/chat/constants";
 
 interface ReportChatRuntimeErrorOptions {
@@ -19,7 +19,7 @@ export function reportChatRuntimeError({
   const errorCode = error.message.trim();
 
   if (errorCode === CHAT_ERRORS.INSUFFICIENT_CREDITS.code) {
-    toast.error(insufficientCreditsMessage, { position: "bottom-center" });
+    toastManager.add({ type: "error", title: insufficientCreditsMessage });
     return;
   }
 
@@ -27,5 +27,5 @@ export function reportChatRuntimeError({
     source: "chat-provider-send-message",
   });
 
-  toast.error(fallbackMessage, { position: "bottom-center" });
+  toastManager.add({ type: "error", title: fallbackMessage });
 }

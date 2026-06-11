@@ -4,17 +4,14 @@ import { ArrowLeft02Icon, InLoveIcon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { SchoolClassVisibility } from "@repo/backend/convex/classes/schema";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
+import NavigationLink from "@repo/design-system/components/navigation/link";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-} from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { Particles } from "@repo/design-system/components/ui/particles";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { toastManager } from "@repo/design-system/components/ui/toast";
+import { Particles } from "@repo/design-system/components/visual/particles";
 import {
   usePathname,
   useRouter,
@@ -24,7 +21,6 @@ import { useMutation } from "convex/react";
 import { Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { Activity, useTransition } from "react";
-import { toast } from "sonner";
 import { reportClientException } from "@/lib/analytics/client";
 import { useSchool } from "@/lib/context/use-school";
 
@@ -73,7 +69,10 @@ export function SchoolClassesJoinForm({ classId, visibility }: Props) {
             }).pipe(
               Effect.zipRight(
                 Effect.sync(() => {
-                  toast.error(t("join-class-failed"));
+                  toastManager.add({
+                    type: "error",
+                    title: t("join-class-failed"),
+                  });
                 })
               )
             )
@@ -104,7 +103,10 @@ export function SchoolClassesJoinForm({ classId, visibility }: Props) {
             }).pipe(
               Effect.zipRight(
                 Effect.sync(() => {
-                  toast.error(t("join-class-failed"));
+                  toastManager.add({
+                    type: "error",
+                    title: t("join-class-failed"),
+                  });
                 })
               )
             )
@@ -145,7 +147,7 @@ export function SchoolClassesJoinForm({ classId, visibility }: Props) {
               className="flex flex-col gap-6"
               id="school-classes-join-form"
             >
-              <FieldGroup>
+              <div className="flex w-full flex-col gap-3">
                 <form.Field name="code">
                   {(field) => {
                     const isInvalid =
@@ -169,7 +171,7 @@ export function SchoolClassesJoinForm({ classId, visibility }: Props) {
                     );
                   }}
                 </form.Field>
-              </FieldGroup>
+              </div>
 
               <form.Subscribe
                 selector={(state) => [state.isValid, state.isSubmitting]}

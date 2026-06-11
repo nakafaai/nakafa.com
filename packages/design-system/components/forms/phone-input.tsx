@@ -6,6 +6,7 @@ import {
   Search02Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import {
   Autocomplete,
   AutocompleteEmpty,
@@ -15,11 +16,10 @@ import {
   AutocompleteList,
 } from "@repo/design-system/components/ui/autocomplete";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import {
   Popover,
-  PopoverContent,
+  PopoverPopup,
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
 import { cn } from "@repo/design-system/lib/utils";
@@ -131,7 +131,7 @@ const CountrySelect = ({ value, onChange, options }: CountrySelectProps) => {
           />
         </span>
       </PopoverTrigger>
-      <PopoverContent
+      <PopoverPopup
         align="start"
         className="w-full border-[color-mix(in_oklch,var(--input)_5%,var(--border))] p-0"
       >
@@ -191,7 +191,7 @@ const CountrySelect = ({ value, onChange, options }: CountrySelectProps) => {
             </AutocompleteGroup>
           </AutocompleteList>
         </Autocomplete>
-      </PopoverContent>
+      </PopoverPopup>
     </Popover>
   );
 };

@@ -21,13 +21,13 @@ import { CameraControls } from "@repo/design-system/components/three/camera-cont
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  Frame,
+  FrameDescription,
+  FrameFooter,
+  FrameHeader,
+  FramePanel,
+  FrameTitle,
+} from "@repo/design-system/components/ui/frame";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -127,13 +127,13 @@ export function ParabolicMovementAnalysisLab({
   }
 
   return (
-    <Card className="overflow-hidden content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
+    <Frame className="overflow-hidden content-auto-card">
+      <FrameHeader>
+        <FrameTitle>{title}</FrameTitle>
+        <FrameDescription>{description}</FrameDescription>
+      </FrameHeader>
 
-      <CardContent className="flex flex-col gap-4">
+      <FramePanel className="flex flex-col gap-4">
         <ToggleGroup
           aria-label={labels.chooseScenario}
           gridColumns="3"
@@ -190,16 +190,16 @@ export function ParabolicMovementAnalysisLab({
             </Suspense>
           </ThreeCanvas>
         </section>
-      </CardContent>
+      </FramePanel>
 
-      <CardFooter className="border-t">
+      <FrameFooter className="border-t">
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
           {facts.map((fact) => (
             <LabFact key={fact.id} label={fact.label} value={fact.value} />
           ))}
         </dl>
-      </CardFooter>
-    </Card>
+      </FrameFooter>
+    </Frame>
   );
 }
 

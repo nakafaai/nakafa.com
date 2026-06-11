@@ -1,14 +1,6 @@
 "use client";
 
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
-import {
   ChartBar,
   ChartBarChart,
   ChartCartesianGrid,
@@ -21,7 +13,15 @@ import {
   ChartTooltipContent,
   ChartXAxis,
   ChartYAxis,
-} from "@repo/design-system/components/ui/chart";
+} from "@repo/design-system/components/charts/chart";
+import {
+  Frame,
+  FrameDescription,
+  FrameFooter,
+  FrameHeader,
+  FramePanel,
+  FrameTitle,
+} from "@repo/design-system/components/ui/frame";
 import type { ReactNode } from "react";
 
 const TICK_LABEL_CHAR_LIMIT = 3;
@@ -80,12 +80,12 @@ export function CabinetChart({
   } satisfies ChartConfig;
 
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <Frame>
+      <FrameHeader>
+        <FrameTitle>{title}</FrameTitle>
+        <FrameDescription>{description}</FrameDescription>
+      </FrameHeader>
+      <FramePanel>
         <ChartContainer config={chartConfig}>
           <ChartBarChart
             accessibilityLayer
@@ -133,11 +133,11 @@ export function CabinetChart({
             <ChartLegend content={<ChartLegendContent />} />
           </ChartBarChart>
         </ChartContainer>
-      </CardContent>
-      <CardFooter>
+      </FramePanel>
+      <FrameFooter>
         <p className="text-sm">{footnote}</p>
-      </CardFooter>
-    </Card>
+      </FrameFooter>
+    </Frame>
   );
 }
 
@@ -188,12 +188,12 @@ export function CompositionChart({
   } satisfies ChartConfig;
 
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <Frame>
+      <FrameHeader>
+        <FrameTitle>{title}</FrameTitle>
+        <FrameDescription>{description}</FrameDescription>
+      </FrameHeader>
+      <FramePanel>
         <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <ChartContainer
             className="aspect-square sm:aspect-square"
@@ -277,10 +277,10 @@ export function CompositionChart({
             </ChartBarChart>
           </ChartContainer>
         </div>
-      </CardContent>
-      <CardFooter>
+      </FramePanel>
+      <FrameFooter>
         <p className="text-sm">{footnote}</p>
-      </CardFooter>
-    </Card>
+      </FrameFooter>
+    </Frame>
   );
 }

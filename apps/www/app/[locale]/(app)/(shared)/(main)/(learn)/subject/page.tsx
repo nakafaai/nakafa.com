@@ -1,8 +1,8 @@
 import { Books02Icon } from "@hugeicons/core-free-icons";
 import { getGradeNonNumeric } from "@repo/contents/_lib/subject/grade";
 import { getCategoryIcon } from "@repo/contents/_lib/subject/icons";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
+import NavigationLink from "@repo/design-system/components/navigation/link";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { Effect, Option } from "effect";
 import type { Metadata } from "next";

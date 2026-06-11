@@ -9,29 +9,26 @@ import {
   Time04Icon,
 } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
+import { ResponsiveDialog } from "@repo/design-system/components/overlays/responsive-dialog";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Calendar } from "@repo/design-system/components/ui/calendar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-} from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import {
+  Menu,
+  MenuItem,
+  MenuPopup,
+  MenuTrigger,
+} from "@repo/design-system/components/ui/menu";
+import {
   Popover,
-  PopoverContent,
+  PopoverPopup,
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
+import { toastManager } from "@repo/design-system/components/ui/toast";
 import { cn } from "@repo/design-system/lib/utils";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
@@ -39,7 +36,6 @@ import { startOfDay } from "date-fns";
 import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { Activity, useState } from "react";
-import { toast } from "sonner";
 import {
   getMaterialStatus,
   materialStatusList,
@@ -203,7 +199,7 @@ function MaterialGroupDialogShell({
             reportClientException(error, errorContext).pipe(
               Effect.zipRight(
                 Effect.sync(() => {
-                  toast.error(errorMessage);
+                  toastManager.add({ type: "error", title: errorMessage });
                 })
               )
             )
@@ -237,7 +233,7 @@ function MaterialGroupDialogShell({
         setOpen={setOpenAction}
         title={title}
       >
-        <FieldGroup>
+        <div className="flex w-full flex-col gap-3">
           <form.Field name="name">
             {(field) => {
               const isInvalid =
@@ -301,8 +297,8 @@ function MaterialGroupDialogShell({
                   <FieldLabel htmlFor={`${formId}-status`}>
                     {t("material-status-label")}
                   </FieldLabel>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger
+                  <Menu>
+                    <MenuTrigger
                       render={
                         <Button
                           aria-invalid={isInvalid}
@@ -321,12 +317,9 @@ function MaterialGroupDialogShell({
                         </Button>
                       }
                     />
-                    <DropdownMenuContent
-                      align="start"
-                      className="w-(--anchor-width)"
-                    >
+                    <MenuPopup align="start" className="w-(--anchor-width)">
                       {materialStatusList.map((status) => (
-                        <DropdownMenuItem
+                        <MenuItem
                           className="cursor-pointer"
                           key={status.value}
                           onClick={() => field.handleChange(status.value)}
@@ -341,10 +334,10 @@ function MaterialGroupDialogShell({
                             )}
                             icon={Tick01Icon}
                           />
-                        </DropdownMenuItem>
+                        </MenuItem>
                       ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                    </MenuPopup>
+                  </Menu>
                 </Field>
               );
             }}
@@ -386,7 +379,7 @@ function MaterialGroupDialogShell({
                               icon={ArrowDown01Icon}
                             />
                           </PopoverTrigger>
-                          <PopoverContent
+                          <PopoverPopup
                             align="start"
                             className="w-auto overflow-hidden p-0"
                           >
@@ -446,7 +439,7 @@ function MaterialGroupDialogShell({
                                 </div>
                               </div>
                             </div>
-                          </PopoverContent>
+                          </PopoverPopup>
                         </Popover>
                       </Field>
                     );
@@ -455,7 +448,7 @@ function MaterialGroupDialogShell({
               </Activity>
             )}
           </form.Subscribe>
-        </FieldGroup>
+        </div>
       </ResponsiveDialog>
     </form>
   );

@@ -1,22 +1,22 @@
 "use client";
 
 import { Button } from "@repo/design-system/components/ui/button";
-import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
+import { Group } from "@repo/design-system/components/ui/group";
 import {
   Tooltip,
-  TooltipContent,
+  TooltipPopup,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { cn } from "@repo/design-system/lib/utils";
 import { type ComponentProps, memo } from "react";
 
-export type ActionsProps = ComponentProps<typeof ButtonGroup>;
+export type ActionsProps = ComponentProps<typeof Group>;
 
 export const Actions = memo(
   ({ className, children, ...props }: ActionsProps) => (
-    <ButtonGroup className={cn(className)} {...props}>
+    <Group className={cn(className)} {...props}>
       {children}
-    </ButtonGroup>
+    </Group>
   )
 );
 Actions.displayName = "Actions";
@@ -53,9 +53,9 @@ export const Action = memo(
       return (
         <Tooltip>
           <TooltipTrigger render={button} />
-          <TooltipContent side="bottom">
+          <TooltipPopup side="bottom">
             <p>{tooltip}</p>
-          </TooltipContent>
+          </TooltipPopup>
         </Tooltip>
       );
     }

@@ -21,7 +21,8 @@ function AlertDialogPortal({ ...props }: AlertDialogPrimitive.Portal.Props) {
   );
 }
 
-function AlertDialogOverlay({
+/** Renders the COSS alert dialog backdrop for blocking confirmation flows. */
+function AlertDialogBackdrop({
   className,
   ...props
 }: AlertDialogPrimitive.Backdrop.Props) {
@@ -31,25 +32,26 @@ function AlertDialogOverlay({
         "data-open:fade-in-0 data-closed:fade-out-0 fixed inset-0 z-50 bg-black/50 backdrop-blur-xs data-closed:animate-out data-open:animate-in",
         className
       )}
-      data-slot="alert-dialog-overlay"
+      data-slot="alert-dialog-backdrop"
       {...props}
     />
   );
 }
 
-function AlertDialogContent({
+/** Renders the COSS alert dialog popup with its portal and backdrop. */
+function AlertDialogPopup({
   className,
   ...props
 }: AlertDialogPrimitive.Popup.Props) {
   return (
     <AlertDialogPortal>
-      <AlertDialogOverlay />
+      <AlertDialogBackdrop />
       <AlertDialogPrimitive.Popup
         className={cn(
           "data-open:fade-in-0 data-open:zoom-in-95 data-closed:fade-out-0 data-closed:zoom-out-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border bg-background p-6 shadow-lg duration-200 data-closed:animate-out data-open:animate-in sm:max-w-lg",
           className
         )}
-        data-slot="alert-dialog-content"
+        data-slot="alert-dialog-popup"
         {...props}
       />
     </AlertDialogPortal>
@@ -111,7 +113,8 @@ function AlertDialogDescription({
   );
 }
 
-function AlertDialogAction({
+/** Renders a COSS alert dialog close/action button using the Button primitive. */
+function AlertDialogClose({
   className,
   size = "default",
   variant = "default",
@@ -121,24 +124,7 @@ function AlertDialogAction({
   return (
     <AlertDialogPrimitive.Close
       className={cn(className)}
-      data-slot="alert-dialog-action"
-      render={<Button size={size} variant={variant} />}
-      {...props}
-    />
-  );
-}
-
-function AlertDialogCancel({
-  className,
-  size = "default",
-  variant = "outline",
-  ...props
-}: AlertDialogPrimitive.Close.Props &
-  Pick<React.ComponentProps<typeof Button>, "size" | "variant">) {
-  return (
-    <AlertDialogPrimitive.Close
-      className={cn(className)}
-      data-slot="alert-dialog-cancel"
+      data-slot="alert-dialog-close"
       render={<Button size={size} variant={variant} />}
       {...props}
     />
@@ -147,13 +133,12 @@ function AlertDialogCancel({
 
 export {
   AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
+  AlertDialogBackdrop,
+  AlertDialogClose,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogOverlay,
+  AlertDialogPopup,
   AlertDialogPortal,
   AlertDialogTitle,
   AlertDialogTrigger,

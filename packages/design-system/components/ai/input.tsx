@@ -10,24 +10,23 @@ import {
   StopIcon,
 } from "@hugeicons/core-free-icons";
 import { captureException } from "@repo/analytics/posthog";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   InputGroup,
   InputGroupAddon,
-  InputGroupButton,
   InputGroupTextarea,
 } from "@repo/design-system/components/ui/input-group";
+import {
+  Menu,
+  MenuItem,
+  MenuPopup,
+  MenuTrigger,
+} from "@repo/design-system/components/ui/menu";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import {
   Tooltip,
-  TooltipContent,
+  TooltipPopup,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { cn } from "@repo/design-system/lib/utils";
@@ -339,14 +338,14 @@ export function PromptInputAttachment({
                 {data.filename || "Unknown file"}
               </h4>
             </TooltipTrigger>
-            <TooltipContent>
+            <TooltipPopup>
               <div className="text-muted-foreground text-xs">
                 <h4 className="wrap-break-word max-w-60 overflow-hidden whitespace-normal text-left font-semibold text-sm">
                   {data.filename || "Unknown file"}
                 </h4>
                 {!!data.mediaType && <div>{data.mediaType}</div>}
               </div>
-            </TooltipContent>
+            </TooltipPopup>
           </Tooltip>
         </div>
       )}
@@ -445,7 +444,7 @@ export function PromptInputAttachments({
 }
 
 export type PromptInputActionAddAttachmentsProps = ComponentProps<
-  typeof DropdownMenuItem
+  typeof MenuItem
 > & {
   label?: string;
 };
@@ -457,7 +456,7 @@ export const PromptInputActionAddAttachments = ({
   const attachments = usePromptInputAttachments();
 
   return (
-    <DropdownMenuItem
+    <MenuItem
       {...props}
       closeOnClick={false}
       onClick={(e) => {
@@ -467,7 +466,7 @@ export const PromptInputActionAddAttachments = ({
     >
       <HugeIcons className="mr size-4" icon={Image02Icon} />
       {label}
-    </DropdownMenuItem>
+    </MenuItem>
   );
 };
 
@@ -932,8 +931,15 @@ export const PromptInputTools = ({
   <div className={cn("flex items-center gap-1", className)} {...props} />
 );
 
-export type PromptInputButtonProps = ComponentProps<typeof InputGroupButton>;
+export type PromptInputButtonProps = ComponentProps<typeof Button>;
 
+/**
+ * Renders an action button inside the prompt input toolbar.
+ *
+ * The button now composes the COSS `Button` primitive directly so input groups
+ * do not expose a compatibility button seam. It supports only the native button
+ * variants and sizes; callers own any domain-specific selected styling.
+ */
 export const PromptInputButton = ({
   variant = "ghost",
   className,
@@ -944,7 +950,7 @@ export const PromptInputButton = ({
     size ?? (Children.count(props.children) > 1 ? "sm" : "icon-sm");
 
   return (
-    <InputGroupButton
+    <Button
       className={cn(className)}
       size={newSize}
       type="button"
@@ -954,9 +960,9 @@ export const PromptInputButton = ({
   );
 };
 
-export type PromptInputActionMenuProps = ComponentProps<typeof DropdownMenu>;
+export type PromptInputActionMenuProps = ComponentProps<typeof Menu>;
 export const PromptInputActionMenu = (props: PromptInputActionMenuProps) => (
-  <DropdownMenu {...props} />
+  <Menu {...props} />
 );
 
 export type PromptInputActionMenuTriggerProps = PromptInputButtonProps;
@@ -966,7 +972,7 @@ export const PromptInputActionMenuTrigger = ({
   children,
   ...props
 }: PromptInputActionMenuTriggerProps) => (
-  <DropdownMenuTrigger
+  <MenuTrigger
     render={
       <PromptInputButton className={className} {...props}>
         {children ?? <HugeIcons className="size-4" icon={Add01Icon} />}
@@ -976,33 +982,38 @@ export const PromptInputActionMenuTrigger = ({
 );
 
 export type PromptInputActionMenuContentProps = ComponentProps<
-  typeof DropdownMenuContent
+  typeof MenuPopup
 >;
 export const PromptInputActionMenuContent = ({
   className,
   ...props
 }: PromptInputActionMenuContentProps) => (
-  <DropdownMenuContent align="start" className={cn(className)} {...props} />
+  <MenuPopup align="start" className={cn(className)} {...props} />
 );
 
-export type PromptInputActionMenuItemProps = ComponentProps<
-  typeof DropdownMenuItem
->;
+export type PromptInputActionMenuItemProps = ComponentProps<typeof MenuItem>;
 export const PromptInputActionMenuItem = ({
   className,
   ...props
 }: PromptInputActionMenuItemProps) => (
-  <DropdownMenuItem className={cn(className)} {...props} />
+  <MenuItem className={cn(className)} {...props} />
 );
 
 // Note: Actions that perform side-effects (like opening a file dialog)
 // are provided in opt-in modules (e.g., prompt-input-attachments).
 
-export type PromptInputSubmitProps = ComponentProps<typeof InputGroupButton> & {
+export type PromptInputSubmitProps = ComponentProps<typeof Button> & {
   status?: ChatStatus;
   isPending?: boolean;
 };
 
+/**
+ * Renders the prompt submit control with status-aware iconography.
+ *
+ * Loading and streaming states stay local to this AI input Module while the
+ * underlying action surface remains the native COSS `Button`. The component
+ * does not submit on its own; it relies on the enclosing form.
+ */
 export const PromptInputSubmit = ({
   className,
   variant = "default",
@@ -1023,7 +1034,7 @@ export const PromptInputSubmit = ({
   }
 
   return (
-    <InputGroupButton
+    <Button
       aria-label="Submit"
       className={cn(className)}
       size={size}
@@ -1032,7 +1043,7 @@ export const PromptInputSubmit = ({
       {...props}
     >
       {children ?? Icon}
-    </InputGroupButton>
+    </Button>
   );
 };
 

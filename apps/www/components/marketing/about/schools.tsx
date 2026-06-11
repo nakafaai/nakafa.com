@@ -1,6 +1,6 @@
 import { Mail01Icon, School01Icon } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
 
 export function Schools() {
@@ -30,7 +30,6 @@ export function Schools() {
 
             <Button
               className="w-fit"
-              nativeButton={false}
               render={
                 <a
                   href="mailto:nakafaai@gmail.com"

@@ -1,17 +1,17 @@
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
-import {
   Stepper,
   StepperIndicator,
   StepperItem,
   StepperSeparator,
   StepperTitle,
   StepperTrigger,
-} from "@repo/design-system/components/ui/stepper";
+} from "@repo/design-system/components/progress/stepper";
+import {
+  Frame,
+  FrameHeader,
+  FramePanel,
+  FrameTitle,
+} from "@repo/design-system/components/ui/frame";
 import type { ReactNode } from "react";
 
 interface Props {
@@ -31,11 +31,11 @@ export function Stage({ title, labels }: Props) {
   ];
 
   return (
-    <Card className="mb-4 content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <Frame className="mb-4 content-auto-card">
+      <FrameHeader>
+        <FrameTitle>{title}</FrameTitle>
+      </FrameHeader>
+      <FramePanel>
         <Stepper defaultValue={2}>
           {stages.map((stage) => (
             <StepperItem
@@ -55,7 +55,7 @@ export function Stage({ title, labels }: Props) {
             </StepperItem>
           ))}
         </Stepper>
-      </CardContent>
-    </Card>
+      </FramePanel>
+    </Frame>
   );
 }

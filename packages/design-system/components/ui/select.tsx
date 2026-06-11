@@ -1,5 +1,5 @@
 /**
- * WARNING: If you want to use select in dialog, sheet, or any modal component, use DropdownMenu instead.
+ * WARNING: If you want to use select in dialog, sheet, or any modal component, use Menu instead.
  */
 
 "use client";
@@ -10,7 +10,7 @@ import {
   ArrowUp01Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
 import type * as React from "react";
 
@@ -66,7 +66,8 @@ function SelectTrigger({
   );
 }
 
-function SelectContent({
+/** Renders the positioned COSS select popup and its scroll controls. */
+function SelectPopup({
   className,
   children,
   side = "bottom",
@@ -96,7 +97,7 @@ function SelectContent({
             className
           )}
           data-align-trigger={alignItemWithTrigger}
-          data-slot="select-content"
+          data-slot="select-popup"
           {...props}
         >
           <SelectScrollUpButton />
@@ -200,10 +201,10 @@ function SelectScrollDownButton({
 
 export {
   Select,
-  SelectContent,
   SelectGroup,
   SelectItem,
   SelectLabel,
+  SelectPopup,
   SelectScrollDownButton,
   SelectScrollUpButton,
   SelectSeparator,

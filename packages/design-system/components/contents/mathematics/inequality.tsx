@@ -3,12 +3,12 @@
 import { CoordinateSystem } from "@repo/design-system/components/three/coordinate-system";
 import { Inequality as Inequality3D } from "@repo/design-system/components/three/inequality";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  Frame,
+  FrameDescription,
+  FrameHeader,
+  FramePanel,
+  FrameTitle,
+} from "@repo/design-system/components/ui/frame";
 import type { ComponentProps, ReactNode } from "react";
 
 interface Props {
@@ -22,12 +22,12 @@ interface Props {
  */
 export function Inequality({ title, description, data }: Props) {
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <Frame className="content-auto-card">
+      <FrameHeader>
+        <FrameTitle>{title}</FrameTitle>
+        <FrameDescription>{description}</FrameDescription>
+      </FrameHeader>
+      <FramePanel>
         <CoordinateSystem>
           {data.map((item, index) => (
             <Inequality3D
@@ -36,7 +36,7 @@ export function Inequality({ title, description, data }: Props) {
             />
           ))}
         </CoordinateSystem>
-      </CardContent>
-    </Card>
+      </FramePanel>
+    </Frame>
   );
 }

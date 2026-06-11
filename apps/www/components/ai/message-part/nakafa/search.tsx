@@ -8,9 +8,9 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import type { NakafaDataPart } from "@repo/ai/schema/data";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
 
 const MAX_SHOWN_RESULTS = 5;
@@ -38,7 +38,7 @@ export const SearchPart = ({ message }: Props) => {
         <span className="text-muted-foreground text-sm">
           {getSearchLabel(message, t)}
         </span>
-        <Badge variant="muted">{message.result.count}</Badge>
+        <Badge variant="outline">{message.result.count}</Badge>
       </div>
       <SearchPartQueries message={message} />
       {hasItems ? (
@@ -47,7 +47,6 @@ export const SearchPart = ({ message }: Props) => {
             <Button
               className="max-w-full"
               key={item.content_id}
-              nativeButton={false}
               render={
                 <a
                   className="min-w-0"

@@ -1,14 +1,6 @@
 "use client";
 
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
-import {
   ChartCartesianGrid,
   type ChartConfig,
   ChartContainer,
@@ -20,7 +12,15 @@ import {
   ChartTooltipContent,
   ChartXAxis,
   ChartYAxis,
-} from "@repo/design-system/components/ui/chart";
+} from "@repo/design-system/components/charts/chart";
+import {
+  Frame,
+  FrameDescription,
+  FrameFooter,
+  FrameHeader,
+  FramePanel,
+  FrameTitle,
+} from "@repo/design-system/components/ui/frame";
 import type { ReactNode } from "react";
 
 const EXPONENTIAL_BASE = 3;
@@ -69,12 +69,12 @@ export function VirusChart({ labels }: Props) {
   } satisfies ChartConfig;
 
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{labels.title}</CardTitle>
-        <CardDescription>{labels.description}</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <Frame>
+      <FrameHeader>
+        <FrameTitle>{labels.title}</FrameTitle>
+        <FrameDescription>{labels.description}</FrameDescription>
+      </FrameHeader>
+      <FramePanel>
         <ChartContainer config={chartConfig}>
           <ChartLineChart accessibilityLayer data={data}>
             <ChartCartesianGrid />
@@ -142,10 +142,10 @@ export function VirusChart({ labels }: Props) {
             />
           </ChartLineChart>
         </ChartContainer>
-      </CardContent>
-      <CardFooter>
+      </FramePanel>
+      <FrameFooter>
         <p className="text-sm">{labels.caption}</p>
-      </CardFooter>
-    </Card>
+      </FrameFooter>
+    </Frame>
   );
 }

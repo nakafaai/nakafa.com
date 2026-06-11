@@ -9,16 +9,16 @@ import {
   isIonSampleId,
   SODIUM_CATION_ID,
 } from "@repo/design-system/components/contents/chemistry/ion/data";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+  Frame,
+  FrameDescription,
+  FrameFooter,
+  FrameHeader,
+  FramePanel,
+  FrameTitle,
+} from "@repo/design-system/components/ui/frame";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -59,13 +59,13 @@ export function IonLab({ title, description, labels }: IonLabProps) {
   }
 
   return (
-    <Card className="overflow-hidden content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
+    <Frame className="overflow-hidden content-auto-card">
+      <FrameHeader>
+        <FrameTitle>{title}</FrameTitle>
+        <FrameDescription>{description}</FrameDescription>
+      </FrameHeader>
 
-      <CardContent className="flex flex-col gap-5">
+      <FramePanel className="flex flex-col gap-5">
         <ToggleGroup
           aria-label={labels.chooseIon}
           gridColumns="4"
@@ -136,9 +136,9 @@ export function IonLab({ title, description, labels }: IonLabProps) {
             value={<InlineMath math={`e^-: ${electronFlowMath}`} />}
           />
         </dl>
-      </CardContent>
+      </FramePanel>
 
-      <CardFooter className="border-t">
+      <FrameFooter className="border-t">
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
           <IonFact
             label={labels.protons}
@@ -161,8 +161,8 @@ export function IonLab({ title, description, labels }: IonLabProps) {
             }
           />
         </dl>
-      </CardFooter>
-    </Card>
+      </FrameFooter>
+    </Frame>
   );
 }
 

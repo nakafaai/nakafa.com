@@ -4,13 +4,13 @@ import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import type { api } from "@repo/backend/convex/_generated/api";
 import { parseExercisesMaterial } from "@repo/contents/_lib/exercises/route";
 import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
-import { GradientBlock } from "@repo/design-system/components/ui/gradient-block";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
+import NavigationLink from "@repo/design-system/components/navigation/link";
 import {
   NumberFormat,
   NumberFormatGroup,
-} from "@repo/design-system/components/ui/number-flow";
+} from "@repo/design-system/components/number-flow";
+import { GradientBlock } from "@repo/design-system/components/visual/gradient-block";
 import { cn } from "@repo/design-system/lib/utils";
 import type { FunctionReturnType } from "convex/server";
 import { Option } from "effect";

@@ -33,4 +33,4 @@ function Radio({ className, ...props }: RadioPrimitive.Root.Props) {
   );
 }
 
-export { Radio, Radio as RadioGroupItem, RadioGroup };
+export { Radio, RadioGroup };

@@ -1,23 +1,23 @@
 import { ArrowTurnBackwardIcon, WinkIcon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
-import { Button } from "@repo/design-system/components/ui/button";
-import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
   EmojiPicker,
   EmojiPickerContent,
   EmojiPickerFooter,
   EmojiPickerSearch,
-} from "@repo/design-system/components/ui/emoji-picker";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+} from "@repo/design-system/components/emoji/picker";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
+import { Button } from "@repo/design-system/components/ui/button";
+import { Group } from "@repo/design-system/components/ui/group";
 import {
   Popover,
-  PopoverContent,
+  PopoverPopup,
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
 import {
   Tooltip,
-  TooltipContent,
+  TooltipPopup,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { cn } from "@repo/design-system/lib/utils";
@@ -44,7 +44,7 @@ export const PostItemActions = ({ post }: { post: ForumPost }) => {
   const userName = post.user?.name ?? t("anonymous");
 
   return (
-    <ButtonGroup
+    <Group
       className={cn(
         "absolute -top-4 right-4 z-1 opacity-0 shadow-xs transition-opacity ease-out group-hover:opacity-100",
         isReactionPickerOpen && "opacity-100"
@@ -74,9 +74,9 @@ export const PostItemActions = ({ post }: { post: ForumPost }) => {
               </PopoverTrigger>
             }
           />
-          <TooltipContent side="top">{t("reaction")}</TooltipContent>
+          <TooltipPopup side="top">{t("reaction")}</TooltipPopup>
         </Tooltip>
-        <PopoverContent align="end" className="w-fit p-0">
+        <PopoverPopup align="end" className="w-fit p-0">
           <EmojiPicker
             className="h-80"
             onEmojiSelect={({ emoji }) => {
@@ -90,7 +90,7 @@ export const PostItemActions = ({ post }: { post: ForumPost }) => {
             <EmojiPickerContent />
             <EmojiPickerFooter />
           </EmojiPicker>
-        </PopoverContent>
+        </PopoverPopup>
       </Popover>
       <Tooltip>
         <TooltipTrigger
@@ -110,9 +110,9 @@ export const PostItemActions = ({ post }: { post: ForumPost }) => {
             </Button>
           }
         />
-        <TooltipContent side="top">{t("reply")}</TooltipContent>
+        <TooltipPopup side="top">{t("reply")}</TooltipPopup>
       </Tooltip>
-    </ButtonGroup>
+    </Group>
   );
 };
 PostItemActions.displayName = "PostItemActions";

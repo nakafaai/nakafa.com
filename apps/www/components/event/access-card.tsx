@@ -1,15 +1,15 @@
 import { ArrowLeft02Icon } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
+import NavigationLink from "@repo/design-system/components/navigation/link";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
-  Card,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { Particles } from "@repo/design-system/components/ui/particles";
+  Frame,
+  FrameDescription,
+  FrameFooter,
+  FrameHeader,
+  FrameTitle,
+} from "@repo/design-system/components/ui/frame";
+import { Particles } from "@repo/design-system/components/visual/particles";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
@@ -31,7 +31,6 @@ export function EventAccessLayout({ children }: EventAccessLayoutProps) {
       <Particles className="pointer-events-none absolute inset-0 opacity-80" />
       <div className="z-1 m-auto w-full max-w-xl space-y-3 px-6 py-12">
         <Button
-          nativeButton={false}
           render={
             <NavigationLink href="/home">
               <HugeIcons icon={ArrowLeft02Icon} />
@@ -53,12 +52,12 @@ export function EventAccessCard({
   title,
 }: EventAccessCardProps) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardFooter>{action}</CardFooter>
-    </Card>
+    <Frame>
+      <FrameHeader>
+        <FrameTitle>{title}</FrameTitle>
+        <FrameDescription>{description}</FrameDescription>
+      </FrameHeader>
+      <FrameFooter>{action}</FrameFooter>
+    </Frame>
   );
 }

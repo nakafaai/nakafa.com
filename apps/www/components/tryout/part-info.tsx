@@ -3,7 +3,7 @@
 import {
   NumberFormat,
   NumberFormatGroup,
-} from "@repo/design-system/components/ui/number-flow";
+} from "@repo/design-system/components/number-flow";
 import { useTranslations } from "next-intl";
 import { Fragment } from "react";
 import {

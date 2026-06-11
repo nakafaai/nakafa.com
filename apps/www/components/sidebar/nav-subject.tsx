@@ -2,13 +2,13 @@
 
 import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
+import NavigationLink from "@repo/design-system/components/navigation/link";
 import {
   Collapsible,
-  CollapsibleContent,
+  CollapsiblePanel,
   CollapsibleTrigger,
 } from "@repo/design-system/components/ui/collapsible";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -68,7 +68,7 @@ function SubjectMenuItem({ item }: { item: (typeof subjectMenu)[number] }) {
             </SidebarMenuButton>
           }
         />
-        <CollapsibleContent>
+        <CollapsiblePanel>
           <SidebarMenuSub>
             {item.items.map((subItem) => {
               const title =
@@ -90,7 +90,7 @@ function SubjectMenuItem({ item }: { item: (typeof subjectMenu)[number] }) {
               );
             })}
           </SidebarMenuSub>
-        </CollapsibleContent>
+        </CollapsiblePanel>
       </SidebarMenuItem>
     </Collapsible>
   );

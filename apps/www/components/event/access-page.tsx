@@ -9,10 +9,11 @@ import {
 } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
+import NavigationLink from "@repo/design-system/components/navigation/link";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { toastManager } from "@repo/design-system/components/ui/toast";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { useMutation } from "convex/react";
 import { format } from "date-fns";
@@ -20,7 +21,6 @@ import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { useLocale, useTranslations } from "next-intl";
 import { useTransition } from "react";
-import { toast } from "sonner";
 import {
   EventAccessCard,
   EventAccessLayout,
@@ -74,65 +74,63 @@ export function EventAccessPage({ code }: Props) {
             switch (result.kind) {
               case "active": {
                 return Effect.sync(() => {
-                  toast.success(
-                    tEvent("redeem-success", {
+                  toastManager.add({
+                    type: "success",
+                    title: tEvent("redeem-success", {
                       date: formatEventAccessDate(locale, result.endsAt),
                     }),
-                    {
-                      position: "bottom-center",
-                    }
-                  );
+                  });
                 });
               }
               case "already-active": {
                 return Effect.sync(() => {
-                  toast.info(
-                    tEvent("active-until", {
+                  toastManager.add({
+                    type: "info",
+                    title: tEvent("active-until", {
                       date: formatEventAccessDate(locale, result.endsAt),
                     }),
-                    {
-                      position: "bottom-center",
-                    }
-                  );
+                  });
                 });
               }
               case "used": {
                 return Effect.sync(() => {
-                  toast.info(
-                    tEvent("ended-at", {
+                  toastManager.add({
+                    type: "info",
+                    title: tEvent("ended-at", {
                       date: formatEventAccessDate(locale, result.endsAt),
                     }),
-                    {
-                      position: "bottom-center",
-                    }
-                  );
+                  });
                 });
               }
               case "disabled": {
                 return Effect.sync(() => {
-                  toast.error(tEvent("unavailable-disabled"), {
-                    position: "bottom-center",
+                  toastManager.add({
+                    type: "error",
+                    title: tEvent("unavailable-disabled"),
                   });
                 });
               }
               case "not-started": {
                 return Effect.sync(() => {
-                  toast.error(tEvent("unavailable-not-started"), {
-                    position: "bottom-center",
+                  toastManager.add({
+                    type: "error",
+                    title: tEvent("unavailable-not-started"),
                   });
                 });
               }
               case "ended": {
                 return Effect.sync(() => {
-                  toast.error(tEvent("unavailable-ended"), {
-                    position: "bottom-center",
+                  toastManager.add({
+                    type: "error",
+                    title: tEvent("unavailable-ended"),
                   });
                 });
               }
               case "not-found": {
                 return Effect.sync(() => {
-                  toast.error(tEvent("unavailable-invalid-code"), {
-                    position: "bottom-center",
+                  toastManager.add({
+                    type: "error",
+                    title: tEvent("unavailable-invalid-code"),
                   });
                 });
               }
@@ -148,8 +146,9 @@ export function EventAccessPage({ code }: Props) {
                 ).pipe(
                   Effect.zipRight(
                     Effect.sync(() => {
-                      toast.error(tEvent("redeem-error"), {
-                        position: "bottom-center",
+                      toastManager.add({
+                        type: "error",
+                        title: tEvent("redeem-error"),
                       });
                     })
                   )
@@ -163,8 +162,9 @@ export function EventAccessPage({ code }: Props) {
             }).pipe(
               Effect.zipRight(
                 Effect.sync(() => {
-                  toast.error(tEvent("redeem-error"), {
-                    position: "bottom-center",
+                  toastManager.add({
+                    type: "error",
+                    title: tEvent("redeem-error"),
                   });
                 })
               )
@@ -200,7 +200,6 @@ export function EventAccessPage({ code }: Props) {
           <EventAccessCard
             action={
               <Button
-                nativeButton={false}
                 render={
                   <NavigationLink href="/try-out">
                     <HugeIcons icon={UnavailableIcon} />
@@ -221,7 +220,6 @@ export function EventAccessPage({ code }: Props) {
           <EventAccessCard
             action={
               <Button
-                nativeButton={false}
                 render={
                   <NavigationLink href={authHref}>
                     <HugeIcons icon={Login01Icon} />
@@ -276,7 +274,6 @@ export function EventAccessPage({ code }: Props) {
           <EventAccessCard
             action={
               <Button
-                nativeButton={false}
                 render={
                   <NavigationLink href="/try-out">
                     <HugeIcons icon={EyeIcon} />

@@ -1,12 +1,12 @@
 import { Add01Icon, FileAttachmentIcon } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
+import { Button } from "@repo/design-system/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { InputGroupButton } from "@repo/design-system/components/ui/input-group";
+  Menu,
+  MenuItem,
+  MenuPopup,
+  MenuTrigger,
+} from "@repo/design-system/components/ui/menu";
 import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 
@@ -14,34 +14,29 @@ import type { ComponentProps } from "react";
 export const InputAttachments = ({
   onOpenFiles,
   ...props
-}: ComponentProps<typeof InputGroupButton> & {
+}: ComponentProps<typeof Button> & {
   onOpenFiles: () => void;
 }) => {
   const t = useTranslations("School.Classes");
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
+    <Menu>
+      <MenuTrigger
         render={
-          <InputGroupButton
-            size="icon"
-            type="button"
-            variant="ghost"
-            {...props}
-          >
+          <Button size="icon" type="button" variant="ghost" {...props}>
             <HugeIcons icon={Add01Icon} />
             <span className="sr-only">{t("attachments")}</span>
-          </InputGroupButton>
+          </Button>
         }
       />
 
-      <DropdownMenuContent align="start">
-        <DropdownMenuItem className="cursor-pointer" onClick={onOpenFiles}>
+      <MenuPopup align="start">
+        <MenuItem className="cursor-pointer" onClick={onOpenFiles}>
           <HugeIcons icon={FileAttachmentIcon} />
           {t("attachments")}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+        </MenuItem>
+      </MenuPopup>
+    </Menu>
   );
 };
 InputAttachments.displayName = "InputAttachments";

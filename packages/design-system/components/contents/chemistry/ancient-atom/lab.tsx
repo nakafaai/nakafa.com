@@ -7,13 +7,13 @@ import {
   WHOLE_MATTER_LEVEL_ID,
 } from "@repo/design-system/components/contents/chemistry/ancient-atom/data";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  Frame,
+  FrameDescription,
+  FrameFooter,
+  FrameHeader,
+  FramePanel,
+  FrameTitle,
+} from "@repo/design-system/components/ui/frame";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -80,13 +80,13 @@ export function AncientAtomLab({
   return (
     <MotionConfig reducedMotion="user">
       <LazyMotion features={domMax} strict>
-        <Card className="overflow-hidden content-auto-card">
-          <CardHeader>
-            <CardTitle>{title}</CardTitle>
-            <CardDescription>{description}</CardDescription>
-          </CardHeader>
+        <Frame className="overflow-hidden content-auto-card">
+          <FrameHeader>
+            <FrameTitle>{title}</FrameTitle>
+            <FrameDescription>{description}</FrameDescription>
+          </FrameHeader>
 
-          <CardContent className="flex flex-col gap-5">
+          <FramePanel className="flex flex-col gap-5">
             <ToggleGroup
               aria-label={labels.chooseLevel}
               gridColumns="4"
@@ -128,9 +128,9 @@ export function AncientAtomLab({
                 </AnimatePresence>
               </div>
             </div>
-          </CardContent>
+          </FramePanel>
 
-          <CardFooter className="border-t">
+          <FrameFooter className="border-t">
             <dl className="flex w-full flex-col gap-4 text-sm sm:flex-row">
               <Perspective
                 label={labels.aristotleLabel}
@@ -141,8 +141,8 @@ export function AncientAtomLab({
                 value={labels.democritusBody}
               />
             </dl>
-          </CardFooter>
-        </Card>
+          </FrameFooter>
+        </Frame>
       </LazyMotion>
     </MotionConfig>
   );

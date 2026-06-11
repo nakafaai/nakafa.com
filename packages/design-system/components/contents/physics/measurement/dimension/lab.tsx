@@ -23,13 +23,13 @@ import {
   threeSceneFrameVariants,
 } from "@repo/design-system/components/three/scene-frame";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  Frame,
+  FrameDescription,
+  FrameFooter,
+  FrameHeader,
+  FramePanel,
+  FrameTitle,
+} from "@repo/design-system/components/ui/frame";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -76,12 +76,12 @@ export function DimensionLab({
   }
 
   return (
-    <Card className="overflow-hidden content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
+    <Frame className="overflow-hidden content-auto-card">
+      <FrameHeader>
+        <FrameTitle>{title}</FrameTitle>
+        <FrameDescription>{description}</FrameDescription>
+      </FrameHeader>
+      <FramePanel className="flex flex-col gap-4">
         <ToggleGroup
           aria-label={labels.chooseMode}
           gridColumns="3"
@@ -131,8 +131,8 @@ export function DimensionLab({
             </Suspense>
           </ThreeCanvas>
         </div>
-      </CardContent>
-      <CardFooter className="border-t">
+      </FramePanel>
+      <FrameFooter className="border-t">
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
           <DimensionFact
             label={labels.formula}
@@ -147,8 +147,8 @@ export function DimensionLab({
             value={<InlineMath math={selectedMode.dimension} />}
           />
         </dl>
-      </CardFooter>
-    </Card>
+      </FrameFooter>
+    </Frame>
   );
 }
 

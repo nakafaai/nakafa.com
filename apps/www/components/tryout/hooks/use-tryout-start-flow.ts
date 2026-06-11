@@ -2,6 +2,7 @@
 
 import { useDisclosure } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
+import { toastManager } from "@repo/design-system/components/ui/toast";
 import {
   usePathname,
   useRouter,
@@ -10,7 +11,6 @@ import { useAction, useConvexAuth } from "convex/react";
 import type { FunctionArgs } from "convex/server";
 import { useTranslations } from "next-intl";
 import { useLayoutEffect, useTransition } from "react";
-import { toast } from "sonner";
 import { startTryout } from "@/components/tryout/actions/tryout";
 import { getTryoutPartHref } from "@/components/tryout/utils/routes";
 import { getSafeInternalRedirectPath } from "@/lib/auth/utils";
@@ -132,16 +132,15 @@ export function useTryoutStartFlow({
       if (result.kind === "started") {
         closeDialog();
         router.replace(pathname);
-        toast.success(tTryouts("start-success"), {
-          position: "bottom-center",
-        });
+        toastManager.add({ type: "success", title: tTryouts("start-success") });
         return;
       }
 
       if (result.kind === "competition-attempt-used") {
         closeDialog();
-        toast.info(tTryouts("competition-attempt-used-error"), {
-          position: "bottom-center",
+        toastManager.add({
+          type: "info",
+          title: tTryouts("competition-attempt-used-error"),
         });
         return;
       }
@@ -157,22 +156,22 @@ export function useTryoutStartFlow({
       }
 
       if (result.kind === "not-ready") {
-        toast.error(tTryouts("start-not-ready-error"), {
-          position: "bottom-center",
+        toastManager.add({
+          type: "error",
+          title: tTryouts("start-not-ready-error"),
         });
         return;
       }
 
       if (result.kind === "inactive" || result.kind === "not-found") {
-        toast.error(tTryouts("start-unavailable-error"), {
-          position: "bottom-center",
+        toastManager.add({
+          type: "error",
+          title: tTryouts("start-unavailable-error"),
         });
         return;
       }
 
-      toast.error(tTryouts("start-error"), {
-        position: "bottom-center",
-      });
+      toastManager.add({ type: "error", title: tTryouts("start-error") });
     });
   };
 

@@ -3,21 +3,21 @@
 import { useRender } from "@base-ui/react/use-render";
 import { PanelLeftIcon } from "@hugeicons/core-free-icons";
 import { useHotkeys, useMediaQuery } from "@mantine/hooks";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import {
   Sheet,
-  SheetContent,
   SheetDescription,
   SheetHeader,
+  SheetPopup,
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 import {
   Tooltip,
-  TooltipContent,
+  TooltipPopup,
   TooltipProvider,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
@@ -243,7 +243,7 @@ function Sidebar({
   return (
     <>
       <Sheet onOpenChange={setOpenMobile} open={openMobile}>
-        <SheetContent
+        <SheetPopup
           className="w-72 bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
           data-mobile="true"
           data-sidebar="sidebar"
@@ -255,7 +255,7 @@ function Sidebar({
             <SheetDescription>Displays the mobile sidebar.</SheetDescription>
           </SheetHeader>
           <div className="flex h-full w-full flex-col">{children}</div>
-        </SheetContent>
+        </SheetPopup>
       </Sheet>
 
       <div
@@ -589,7 +589,7 @@ function SidebarMenuButton({
   ...props
 }: useRender.ComponentProps<"button"> & {
   isActive?: boolean;
-  tooltip?: string | React.ComponentProps<typeof TooltipContent>;
+  tooltip?: string | React.ComponentProps<typeof TooltipPopup>;
 } & VariantProps<typeof sidebarMenuButtonVariants>) {
   const { isMobile, state } = useSidebar();
 
@@ -623,7 +623,7 @@ function SidebarMenuButton({
   return (
     <Tooltip>
       <TooltipTrigger render={button} />
-      <TooltipContent
+      <TooltipPopup
         align="center"
         hidden={state !== "collapsed" || isMobile}
         side="right"

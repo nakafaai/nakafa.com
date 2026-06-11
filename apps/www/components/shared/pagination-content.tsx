@@ -1,9 +1,9 @@
 import { ArrowLeft02Icon, ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
 import type { ContentPagination } from "@repo/contents/_types/content";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
+import NavigationLink from "@repo/design-system/components/navigation/link";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
 
@@ -34,7 +34,6 @@ function PaginationButton({
         !href && "pointer-events-none hidden opacity-50 sm:flex",
         className
       )}
-      nativeButton={false}
       render={
         <NavigationLink href={href} title={title}>
           <div className="flex items-center gap-2 font-normal text-muted-foreground text-sm transition-colors group-hover:text-accent-foreground">

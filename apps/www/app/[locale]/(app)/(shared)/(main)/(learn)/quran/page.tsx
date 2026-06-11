@@ -1,5 +1,5 @@
 import { AllahIcon } from "@hugeicons/core-free-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import NavigationLink from "@repo/design-system/components/navigation/link";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import type { Metadata } from "next";
 import { type Locale, useTranslations } from "next-intl";

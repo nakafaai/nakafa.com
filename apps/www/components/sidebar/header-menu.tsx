@@ -1,6 +1,6 @@
 "use client";
 
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import NavigationLink from "@repo/design-system/components/navigation/link";
 import {
   SidebarMenu,
   SidebarMenuButton,

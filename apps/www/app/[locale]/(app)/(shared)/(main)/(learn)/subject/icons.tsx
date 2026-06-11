@@ -15,7 +15,7 @@ import {
   SchoolIcon,
 } from "@hugeicons/core-free-icons";
 import type { Grade } from "@repo/contents/_types/taxonomy";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 
 export function Grade7Icon() {
   return (

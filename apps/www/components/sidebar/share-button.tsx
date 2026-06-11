@@ -2,15 +2,15 @@
 
 import { Share01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
 import { useClipboard } from "@mantine/hooks";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar";
+import { toastManager } from "@repo/design-system/components/ui/toast";
 import { getAppUrl } from "@repo/next-config/app";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { toast } from "sonner";
 
 export function ShareButton() {
   const t = useTranslations("Common");
@@ -23,9 +23,10 @@ export function ShareButton() {
   function handleShare() {
     const url = `${getAppUrl()}${pathname}`;
     clipboard.copy(url);
-    toast.success(t("share-copied"), {
+    toastManager.add({
+      type: "success",
+      title: t("share-copied"),
       description: url,
-      position: "bottom-center",
     });
   }
 

@@ -1,21 +1,64 @@
+"use client";
+
+import { Field as FieldPrimitive } from "@base-ui/react/field";
+import { mergeProps } from "@base-ui/react/merge-props";
 import { cn } from "@repo/design-system/lib/utils";
 import type * as React from "react";
-import TextareaAutosize from "react-textarea-autosize";
 
-function Textarea({
+export type TextareaProps = React.ComponentPropsWithoutRef<"textarea"> &
+  React.RefAttributes<HTMLTextAreaElement> & {
+    size?: "sm" | "default" | "lg" | number;
+    unstyled?: boolean;
+  };
+
+/**
+ * Renders a native COSS textarea that grows with CSS field sizing.
+ *
+ * The seam replaces the legacy autosize dependency, so callers should use
+ * standard textarea props and CSS sizing rather than `minRows` or `maxRows`.
+ * Field validation is delegated to Base UI Field when this appears inside a
+ * `Field` module.
+ */
+export function Textarea({
   className,
+  size = "default",
+  unstyled = false,
+  ref,
   ...props
-}: React.ComponentProps<typeof TextareaAutosize>) {
+}: TextareaProps): React.ReactElement {
   return (
-    <TextareaAutosize
-      className={cn(
-        "field-sizing-content flex min-h-16 w-full rounded-md border border-[color-mix(in_oklch,var(--input)_5%,var(--border))] bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 md:text-sm",
-        className
-      )}
-      data-slot="textarea"
-      {...props}
-    />
+    <span
+      className={
+        cn(
+          !unstyled &&
+            "relative inline-flex w-full rounded-lg border border-input bg-background not-dark:bg-clip-padding text-base text-foreground shadow-xs/5 ring-ring/24 transition-shadow before:pointer-events-none before:absolute before:inset-0 before:rounded-[calc(var(--radius-lg)-1px)] has-focus-visible:has-aria-invalid:border-destructive/64 has-focus-visible:has-aria-invalid:ring-destructive/16 has-aria-invalid:border-destructive/36 has-focus-visible:border-ring has-disabled:opacity-64 has-[:disabled,:focus-visible,[aria-invalid]]:shadow-none has-focus-visible:ring-[3px] not-has-disabled:has-not-focus-visible:not-has-aria-invalid:before:shadow-[0_1px_--theme(--color-black/4%)] sm:text-sm dark:bg-input/32 dark:has-aria-invalid:ring-destructive/24 dark:not-has-disabled:has-not-focus-visible:not-has-aria-invalid:before:shadow-[0_-1px_--theme(--color-white/6%)]",
+          className
+        ) || undefined
+      }
+      data-size={size}
+      data-slot="textarea-control"
+    >
+      <FieldPrimitive.Control
+        defaultValue={props.defaultValue}
+        disabled={props.disabled}
+        id={props.id}
+        name={props.name}
+        ref={ref}
+        render={(defaultProps: React.ComponentProps<"textarea">) => (
+          <textarea
+            className={cn(
+              "field-sizing-content min-h-17.5 w-full rounded-[inherit] px-[calc(--spacing(3)-1px)] py-[calc(--spacing(1.5)-1px)] outline-none max-sm:min-h-20.5",
+              size === "sm" &&
+                "min-h-16.5 px-[calc(--spacing(2.5)-1px)] py-[calc(--spacing(1)-1px)] max-sm:min-h-19.5",
+              size === "lg" &&
+                "min-h-18.5 py-[calc(--spacing(2)-1px)] max-sm:min-h-21.5"
+            )}
+            data-slot="textarea"
+            {...mergeProps(defaultProps, props)}
+          />
+        )}
+        value={props.value}
+      />
+    </span>
   );
 }
-
-export { Textarea };

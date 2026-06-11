@@ -9,12 +9,12 @@ import {
   CLASS_IMAGES,
   getClassImageUrl,
 } from "@repo/backend/convex/lib/images";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Sheet,
-  SheetContent,
   SheetHeader,
+  SheetPopup,
   SheetTitle,
   SheetTrigger,
 } from "@repo/design-system/components/ui/sheet";
@@ -114,7 +114,7 @@ function InfoCustomizeButton() {
           </Button>
         }
       />
-      <SheetContent className="gap-0" showCloseButton={false}>
+      <SheetPopup className="gap-0" showCloseButton={false}>
         <SheetHeader className="border-b p-3">
           <SheetTitle className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 px-2">
@@ -158,7 +158,7 @@ function InfoCustomizeButton() {
             ))}
           </div>
         </div>
-      </SheetContent>
+      </SheetPopup>
     </Sheet>
   );
 }

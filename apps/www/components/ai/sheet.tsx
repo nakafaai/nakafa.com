@@ -1,8 +1,8 @@
 "use client";
 
 import { useMediaQuery } from "@mantine/hooks";
-import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
-import { Sheet, SheetContent } from "@repo/design-system/components/ui/sheet";
+import { ErrorBoundary } from "@repo/design-system/components/error-boundary";
+import { Sheet, SheetPopup } from "@repo/design-system/components/ui/sheet";
 import { useResizable } from "@repo/design-system/hooks/use-resizable";
 import { cn } from "@repo/design-system/lib/utils";
 import { Authenticated, Unauthenticated } from "convex/react";
@@ -49,7 +49,7 @@ export function AiSheet() {
       onOpenChange={setOpen}
       open={open}
     >
-      <SheetContent
+      <SheetPopup
         className={cn(
           "max-w-none gap-0 border-l-0 sm:max-w-none sm:border-l",
           !!isResizing && "transition-none"
@@ -93,7 +93,7 @@ export function AiSheet() {
             </Unauthenticated>
           </ErrorBoundary>
         </Activity>
-      </SheetContent>
+      </SheetPopup>
     </Sheet>
   );
 }

@@ -2,8 +2,8 @@
 
 import { Menu02Icon } from "@hugeicons/core-free-icons";
 import type { ParsedHeading } from "@repo/contents/_types/toc";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
+import NavigationLink from "@repo/design-system/components/navigation/link";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -15,7 +15,7 @@ import {
 } from "@repo/design-system/components/ui/sidebar";
 import {
   Tooltip,
-  TooltipContent,
+  TooltipPopup,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { slugify } from "@repo/design-system/lib/utils";
@@ -76,13 +76,13 @@ function SidebarTreeItem({
             </SidebarMenuButton>
           }
         />
-        <TooltipContent
+        <TooltipPopup
           align="center"
           className="hidden max-w-xs sm:block"
           side="left"
         >
           {heading.label}
-        </TooltipContent>
+        </TooltipPopup>
       </Tooltip>
 
       {!!heading.children && heading.children.length > 0 && (

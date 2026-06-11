@@ -2,6 +2,7 @@
 
 import { StarsIcon } from "@hugeicons/core-free-icons";
 import type { api } from "@repo/backend/convex/_generated/api";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import {
   AudioPlayerButton,
   AudioPlayerDuration,
@@ -9,12 +10,11 @@ import {
   AudioPlayerProgress,
   AudioPlayerSpeed,
   AudioPlayerTime,
-} from "@repo/design-system/components/ui/audio-player";
+} from "@repo/design-system/components/media/audio-player";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Tooltip,
-  TooltipContent,
+  TooltipPopup,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import type { FunctionReturnType } from "convex/server";
@@ -64,9 +64,9 @@ export function SheetAudioToolbar({ data }: { data: AudioStudy }) {
                 <TooltipTrigger
                   render={<AudioPlayerSpeed size="icon" variant="ghost" />}
                 />
-                <TooltipContent>
+                <TooltipPopup>
                   <span>{t("speed")}</span>
-                </TooltipContent>
+                </TooltipPopup>
               </Tooltip>
 
               <AskNinaButton />
@@ -102,9 +102,9 @@ function AskNinaButton() {
           </Button>
         }
       />
-      <TooltipContent>
+      <TooltipPopup>
         <span>{t("ask-nina")}</span>
-      </TooltipContent>
+      </TooltipPopup>
     </Tooltip>
   );
 }

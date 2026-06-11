@@ -1,6 +1,6 @@
 "use client";
 
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 import { getTagIcon } from "@/components/school/classes/_data/tag";
 import type { Forum } from "@/components/school/classes/forum/conversation/data/entities";

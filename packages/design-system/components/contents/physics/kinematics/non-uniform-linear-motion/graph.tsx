@@ -1,10 +1,4 @@
-import {
-  GLBB_SCENARIOS,
-  type GlbbLabels,
-  type GlbbScenario,
-  getFinalVelocity,
-} from "@repo/design-system/components/contents/physics/kinematics/non-uniform-linear-motion/data";
-import type { ChartConfig } from "@repo/design-system/components/ui/chart";
+import type { ChartConfig } from "@repo/design-system/components/charts/chart";
 import {
   ChartArea,
   ChartAreaChart,
@@ -15,7 +9,13 @@ import {
   ChartXAxis,
   ChartYAxis,
   getColorVariable,
-} from "@repo/design-system/components/ui/chart";
+} from "@repo/design-system/components/charts/chart";
+import {
+  GLBB_SCENARIOS,
+  type GlbbLabels,
+  type GlbbScenario,
+  getFinalVelocity,
+} from "@repo/design-system/components/contents/physics/kinematics/non-uniform-linear-motion/data";
 
 const MAX_TIME = getAxisMaximum(
   Math.max(...GLBB_SCENARIOS.map((scenario) => scenario.duration)),

@@ -1,17 +1,17 @@
 "use client";
 
 import { PaintBoardIcon, TranslateIcon } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Button } from "@repo/design-system/components/ui/button";
-import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
+import { Group } from "@repo/design-system/components/ui/group";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+  Menu,
+  MenuGroup,
+  MenuItem,
+  MenuPopup,
+  MenuSeparator,
+  MenuTrigger,
+} from "@repo/design-system/components/ui/menu";
 import { themes } from "@repo/design-system/lib/theme";
 import { cn } from "@repo/design-system/lib/utils";
 import { languages } from "@repo/internationalization/data/lang";
@@ -29,10 +29,10 @@ import { type ComponentProps, useTransition } from "react";
 
 export function FooterAction() {
   return (
-    <ButtonGroup>
+    <Group>
       <Language />
       <Theme />
-    </ButtonGroup>
+    </Group>
   );
 }
 
@@ -74,8 +74,8 @@ function Language() {
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
+    <Menu>
+      <MenuTrigger
         render={
           <Button variant="outline">
             <HugeIcons icon={TranslateIcon} />
@@ -84,15 +84,12 @@ function Language() {
         }
       />
 
-      <DropdownMenuContent
-        align="end"
-        className="w-max max-w-[calc(100vw-2rem)]"
-      >
-        <DropdownMenuGroup>
+      <MenuPopup align="end" className="w-max max-w-[calc(100vw-2rem)]">
+        <MenuGroup>
           {languages.map((language) => {
             const Flag = flagMap[language.value];
             return (
-              <DropdownMenuItem
+              <MenuItem
                 className="cursor-pointer"
                 disabled={isPending}
                 key={language.value}
@@ -111,12 +108,12 @@ function Language() {
                     currentLocale === language.value && "opacity-100"
                   )}
                 />
-              </DropdownMenuItem>
+              </MenuItem>
             );
           })}
-        </DropdownMenuGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
+        </MenuGroup>
+      </MenuPopup>
+    </Menu>
   );
 }
 
@@ -135,8 +132,8 @@ export function Theme({
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
+    <Menu>
+      <MenuTrigger
         render={
           <Button variant={variant}>
             <HugeIcons icon={PaintBoardIcon} />
@@ -145,13 +142,13 @@ export function Theme({
         }
       />
 
-      <DropdownMenuContent
+      <MenuPopup
         align="end"
         className="max-h-96 w-max max-w-[calc(100vw-2rem)]"
       >
-        <DropdownMenuGroup>
+        <MenuGroup>
           {themes.slice(0, BASE_THEMES_COUNT).map((theme) => (
-            <DropdownMenuItem
+            <MenuItem
               className="cursor-pointer"
               key={theme.value}
               onClick={() => setTheme(theme.value)}
@@ -159,15 +156,15 @@ export function Theme({
               <HugeIcons className="shrink-0" icon={theme.icon} />
               <span className="truncate">{t(theme.value)}</span>
               <CheckerBadge isActive={isActive(theme.value)} />
-            </DropdownMenuItem>
+            </MenuItem>
           ))}
-        </DropdownMenuGroup>
+        </MenuGroup>
 
-        <DropdownMenuSeparator />
+        <MenuSeparator />
 
-        <DropdownMenuGroup>
+        <MenuGroup>
           {themes.slice(BASE_THEMES_COUNT).map((theme) => (
-            <DropdownMenuItem
+            <MenuItem
               className="cursor-pointer"
               key={theme.value}
               onClick={(event) => {
@@ -178,11 +175,11 @@ export function Theme({
               <HugeIcons className="shrink-0" icon={theme.icon} />
               <span className="truncate">{t(theme.value)}</span>
               <CheckerBadge isActive={isActive(theme.value)} />
-            </DropdownMenuItem>
+            </MenuItem>
           ))}
-        </DropdownMenuGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
+        </MenuGroup>
+      </MenuPopup>
+    </Menu>
   );
 }
 

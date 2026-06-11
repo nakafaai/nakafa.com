@@ -1,9 +1,9 @@
 import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
+import NavigationLink from "@repo/design-system/components/navigation/link";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { fetchQuery } from "convex/nextjs";
 import { Clock, Effect } from "effect";
 import type { Locale } from "next-intl";
@@ -54,7 +54,6 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
         <TryoutCatalogCard
           action={
             <Button
-              nativeButton={false}
               render={
                 <NavigationLink href={getTryoutProductHref(product)}>
                   {tTryouts("cta")}

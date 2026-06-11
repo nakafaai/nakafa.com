@@ -5,10 +5,10 @@ import { api } from "@repo/backend/convex/_generated/api";
 import { getTrendingTimeRange } from "@repo/backend/convex/subjectSections/utils";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
+import NavigationLink from "@repo/design-system/components/navigation/link";
 import { Badge } from "@repo/design-system/components/ui/badge";
-import { GradientBlock } from "@repo/design-system/components/ui/gradient-block";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { GradientBlock } from "@repo/design-system/components/visual/gradient-block";
 import { cleanSlug } from "@repo/utilities/helper";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
@@ -69,7 +69,7 @@ export function HomeTrending() {
                   <h3 className="pr-20">{subject.title}</h3>
                   <Badge
                     className="absolute top-0 right-0 mt-0.5"
-                    variant="muted"
+                    variant="outline"
                   >
                     <HugeIcons className="size-3" icon={ViewIcon} />
                     {subject.viewCount}

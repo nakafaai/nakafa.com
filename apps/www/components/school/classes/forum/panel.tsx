@@ -2,7 +2,7 @@
 
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
+import { ErrorBoundary } from "@repo/design-system/components/error-boundary";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useQuery } from "convex/react";
 import { useParams, useSearchParams } from "next/navigation";

@@ -4,12 +4,12 @@ import {
   EmojiPickerContent,
   EmojiPickerFooter,
   EmojiPickerSearch,
-} from "@repo/design-system/components/ui/emoji-picker";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { InputGroupButton } from "@repo/design-system/components/ui/input-group";
+} from "@repo/design-system/components/emoji/picker";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
+import { Button } from "@repo/design-system/components/ui/button";
 import {
   Popover,
-  PopoverContent,
+  PopoverPopup,
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
@@ -34,7 +34,7 @@ export const EmojiButton = ({
   <Popover onOpenChange={onOpenChange} open={isOpen}>
     <PopoverTrigger
       render={
-        <InputGroupButton
+        <Button
           aria-label={label}
           disabled={isSubmitting}
           size="icon"
@@ -51,7 +51,7 @@ export const EmojiButton = ({
       </Activity>
       <span className="sr-only">{label}</span>
     </PopoverTrigger>
-    <PopoverContent align="end" className="w-fit p-0">
+    <PopoverPopup align="end" className="w-fit p-0">
       <EmojiPicker
         className="h-80"
         onEmojiSelect={({ emoji }) => onAppendEmoji(emoji)}
@@ -60,7 +60,7 @@ export const EmojiButton = ({
         <EmojiPickerContent />
         <EmojiPickerFooter />
       </EmojiPicker>
-    </PopoverContent>
+    </PopoverPopup>
   </Popover>
 );
 EmojiButton.displayName = "EmojiButton";

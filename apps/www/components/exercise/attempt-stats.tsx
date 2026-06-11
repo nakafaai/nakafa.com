@@ -2,12 +2,12 @@
 
 import { BookOpen02Icon, Timer02Icon } from "@hugeicons/core-free-icons";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import { Badge } from "@repo/design-system/components/ui/badge";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import {
   NumberFormat,
   NumberFormatGroup,
-} from "@repo/design-system/components/ui/number-flow";
+} from "@repo/design-system/components/number-flow";
+import { Badge } from "@repo/design-system/components/ui/badge";
 import { Progress } from "@repo/design-system/components/ui/progress";
 import { cn } from "@repo/design-system/lib/utils";
 import { intervalToDuration } from "date-fns";
@@ -126,7 +126,7 @@ function StatsProgress({
   return (
     <div className="flex flex-col gap-4 rounded-lg border border-border/50 bg-muted/20 p-4">
       <div className="flex items-center justify-between text-sm">
-        <Badge variant="default-subtle">
+        <Badge variant="warning">
           <HugeIcons
             icon={attempt.mode === "simulation" ? Timer02Icon : BookOpen02Icon}
           />

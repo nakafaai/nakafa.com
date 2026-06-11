@@ -3,21 +3,18 @@
 import { ArrowDown01Icon, StopIcon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
+import { ResponsiveDialog } from "@repo/design-system/components/overlays/responsive-dialog";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  ButtonGroup,
-  ButtonGroupSeparator,
-} from "@repo/design-system/components/ui/button-group";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Group, GroupSeparator } from "@repo/design-system/components/ui/group";
 import { Progress } from "@repo/design-system/components/ui/progress";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { toastManager } from "@repo/design-system/components/ui/toast";
 import { cn } from "@repo/design-system/lib/utils";
 import { useMutation } from "convex/react";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { useLayoutEffect, useTransition } from "react";
-import { toast } from "sonner";
 import { reportClientException } from "@/lib/analytics/client";
 import { useAttempt } from "@/lib/context/use-attempt";
 import { useExercise } from "@/lib/context/use-exercise";
@@ -63,9 +60,7 @@ export function CompleteExerciseButton() {
     }
 
     if (!attempt) {
-      toast.error(t("complete-exercise-error"), {
-        position: "bottom-center",
-      });
+      toastManager.add({ type: "error", title: t("complete-exercise-error") });
       return;
     }
 
@@ -86,8 +81,9 @@ export function CompleteExerciseButton() {
             }).pipe(
               Effect.zipRight(
                 Effect.sync(() => {
-                  toast.error(t("complete-exercise-error"), {
-                    position: "bottom-center",
+                  toastManager.add({
+                    type: "error",
+                    title: t("complete-exercise-error"),
                   });
                 })
               )
@@ -99,7 +95,7 @@ export function CompleteExerciseButton() {
   };
 
   return (
-    <ButtonGroup>
+    <Group>
       <Button
         disabled={isPending}
         onClick={openDialog}
@@ -109,7 +105,7 @@ export function CompleteExerciseButton() {
         <HugeIcons icon={StopIcon} />
         {t("complete")}
       </Button>
-      <ButtonGroupSeparator />
+      <GroupSeparator />
       <Button
         aria-label="stats action"
         onClick={() => setShowStats(!showStats)}
@@ -154,6 +150,6 @@ export function CompleteExerciseButton() {
           <Progress value={progress} />
         </div>
       </ResponsiveDialog>
-    </ButtonGroup>
+    </Group>
   );
 }

@@ -10,13 +10,13 @@ import {
 } from "@repo/design-system/components/contents/chemistry/isotope/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  Frame,
+  FrameDescription,
+  FrameFooter,
+  FrameHeader,
+  FramePanel,
+  FrameTitle,
+} from "@repo/design-system/components/ui/frame";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -65,13 +65,13 @@ export function IsotopeLab({ title, description, labels }: IsotopeLabProps) {
   }
 
   return (
-    <Card className="overflow-hidden content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
+    <Frame className="overflow-hidden content-auto-card">
+      <FrameHeader>
+        <FrameTitle>{title}</FrameTitle>
+        <FrameDescription>{description}</FrameDescription>
+      </FrameHeader>
 
-      <CardContent className="flex flex-col gap-4">
+      <FramePanel className="flex flex-col gap-4">
         <ToggleGroup
           aria-label={labels.chooseIsotope}
           gridColumns="3"
@@ -137,9 +137,9 @@ export function IsotopeLab({ title, description, labels }: IsotopeLabProps) {
             />
           </dl>
         </div>
-      </CardContent>
+      </FramePanel>
 
-      <CardFooter className="border-t">
+      <FrameFooter className="border-t">
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
           <IsotopeCount
             label={labels.protons}
@@ -151,8 +151,8 @@ export function IsotopeLab({ title, description, labels }: IsotopeLabProps) {
           />
           <IsotopeCount label={labels.neutrons} value={selectedLabels.note} />
         </dl>
-      </CardFooter>
-    </Card>
+      </FrameFooter>
+    </Frame>
   );
 }
 

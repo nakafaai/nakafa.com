@@ -2,10 +2,10 @@
 
 import { useMediaQuery } from "@mantine/hooks";
 import {
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-} from "@repo/design-system/components/ui/dropdown-menu";
+  MenuGroup,
+  MenuItem,
+  MenuPopup,
+} from "@repo/design-system/components/ui/menu";
 import { cn } from "@repo/design-system/lib/utils";
 import { languages } from "@repo/internationalization/data/lang";
 import {
@@ -58,16 +58,16 @@ export function LangMenuSwitcher() {
   }
 
   return (
-    <DropdownMenuContent
+    <MenuPopup
       align="end"
       className="w-max max-w-[calc(100vw-2rem)]"
       side={isMobile ? "top" : "right"}
     >
-      <DropdownMenuGroup>
+      <MenuGroup>
         {languages.map((language) => {
           const Flag = flagMap[language.value];
           return (
-            <DropdownMenuItem
+            <MenuItem
               className="cursor-pointer"
               disabled={isPending}
               key={language.value}
@@ -83,10 +83,10 @@ export function LangMenuSwitcher() {
                   currentLocale === language.value && "opacity-100"
                 )}
               />
-            </DropdownMenuItem>
+            </MenuItem>
           );
         })}
-      </DropdownMenuGroup>
-    </DropdownMenuContent>
+      </MenuGroup>
+    </MenuPopup>
   );
 }

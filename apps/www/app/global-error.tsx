@@ -3,7 +3,7 @@
 import { captureException } from "@repo/analytics/posthog";
 import { DesignSystemProvider } from "@repo/design-system";
 import { Button } from "@repo/design-system/components/ui/button";
-import { Particles } from "@repo/design-system/components/ui/particles";
+import { Particles } from "@repo/design-system/components/visual/particles";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { fonts } from "@repo/design-system/lib/fonts";
 import { cn } from "@repo/design-system/lib/utils";

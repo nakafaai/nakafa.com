@@ -11,7 +11,8 @@ function PopoverTrigger({ ...props }: PopoverPrimitive.Trigger.Props) {
   return <PopoverPrimitive.Trigger data-slot="popover-trigger" {...props} />;
 }
 
-function PopoverContent({
+/** Renders the positioned COSS popover popup for contextual content. */
+function PopoverPopup({
   className,
   align = "center",
   alignOffset = 0,
@@ -37,7 +38,7 @@ function PopoverContent({
             "data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:fade-in-0 data-open:zoom-in-95 data-closed:fade-out-0 data-closed:zoom-out-95 z-50 w-72 origin-(--transform-origin) rounded-md border bg-popover p-4 text-popover-foreground shadow-md outline-hidden duration-100 data-closed:animate-out data-open:animate-in",
             className
           )}
-          data-slot="popover-content"
+          data-slot="popover-popup"
           {...props}
         />
       </PopoverPrimitive.Positioner>
@@ -80,9 +81,9 @@ function PopoverDescription({
 
 export {
   Popover,
-  PopoverContent,
   PopoverDescription,
   PopoverHeader,
+  PopoverPopup,
   PopoverTitle,
   PopoverTrigger,
 };

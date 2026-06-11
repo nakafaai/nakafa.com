@@ -8,11 +8,11 @@ import {
   Summation01Icon,
   TextAllCapsIcon,
 } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Popover,
-  PopoverContent,
+  PopoverPopup,
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
 import { useTranslations } from "next-intl";
@@ -48,7 +48,7 @@ export const AiChatMessageCredits = () => {
       >
         <HugeIcons icon={InformationCircleIcon} />
       </PopoverTrigger>
-      <PopoverContent align="end">
+      <PopoverPopup align="end">
         {/* Content */}
         <div className="space-y-3">
           {/* Model */}
@@ -127,7 +127,7 @@ export const AiChatMessageCredits = () => {
               </div>
             )}
         </div>
-      </PopoverContent>
+      </PopoverPopup>
     </Popover>
   );
 };

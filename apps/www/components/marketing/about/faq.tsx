@@ -1,12 +1,12 @@
 import { Mail01Icon, UserQuestion02Icon } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import {
   Accordion,
-  AccordionContent,
   AccordionItem,
+  AccordionPanel,
   AccordionTrigger,
 } from "@repo/design-system/components/ui/accordion";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
 
 export function Faq() {
@@ -47,7 +47,6 @@ export function Faq() {
 
               <Button
                 className="w-fit"
-                nativeButton={false}
                 render={
                   <a
                     href="mailto:nakafaai@gmail.com"
@@ -68,9 +67,9 @@ export function Faq() {
                     <AccordionTrigger className="text-base transition-colors ease-out hover:text-primary hover:no-underline">
                       {faq.question}
                     </AccordionTrigger>
-                    <AccordionContent className="text-base text-muted-foreground">
+                    <AccordionPanel className="text-base text-muted-foreground">
                       {faq.answer}
-                    </AccordionContent>
+                    </AccordionPanel>
                   </AccordionItem>
                 ))}
               </Accordion>

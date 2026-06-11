@@ -8,10 +8,10 @@ import { useDebouncedValue } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { UserData } from "@repo/backend/convex/lib/helpers/user";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
+import { Intersection } from "@repo/design-system/components/visibility-intersection";
 import { cn } from "@repo/design-system/lib/utils";
 import { Link } from "@repo/internationalization/src/navigation";
 import { useMutation, usePaginatedQuery } from "convex/react";
@@ -219,11 +219,15 @@ function TopReaction({ forum }: { forum: ForumListItem }) {
 
   return (
     <Button
-      className="pointer-events-auto relative z-1"
+      className={cn(
+        "pointer-events-auto relative z-1",
+        isMyReaction &&
+          "border-primary/40 bg-primary/8 text-primary hover:bg-primary/12"
+      )}
       disabled={isPending}
       onClick={handleToggle}
       size="sm"
-      variant={isMyReaction ? "default-outline" : "outline"}
+      variant="outline"
     >
       {topReaction.emoji}
       <span className="tracking-tight">{topReaction.count}</span>

@@ -7,19 +7,19 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import type { MaterialList } from "@repo/contents/_types/subject/material";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
-import {
   Collapsible,
-  CollapsibleContent,
+  CollapsiblePanel,
 } from "@repo/design-system/components/ui/collapsible";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  Frame,
+  FrameDescription,
+  FrameHeader,
+  FramePanel,
+  FrameTitle,
+} from "@repo/design-system/components/ui/frame";
 import { cn, slugify } from "@repo/design-system/lib/utils";
 import { Link } from "@repo/internationalization/src/navigation";
 import { useLayoutEffect, useState } from "react";
@@ -64,11 +64,11 @@ export function CardMaterial({ material }: Props) {
   const id = slugify(material.title);
 
   return (
-    <Card className="overflow-hidden pb-0">
-      <CardHeader className="gap-0">
+    <Frame className="overflow-hidden">
+      <FrameHeader className="gap-0">
         <div className="flex items-start justify-between gap-2">
           <div className="flex w-full flex-col gap-1.5">
-            <CardTitle className="group flex items-center font-medium">
+            <FrameTitle className="group flex items-center font-medium">
               <h2
                 className="inline-block scroll-mt-28"
                 id={id}
@@ -84,11 +84,11 @@ export function CardMaterial({ material }: Props) {
               >
                 <HugeIcons className="size-4" icon={Link04Icon} />
               </a>
-            </CardTitle>
+            </FrameTitle>
             {!!material.description && (
-              <CardDescription title={material.description}>
+              <FrameDescription title={material.description}>
                 {material.description}
-              </CardDescription>
+              </FrameDescription>
             )}
           </div>
           <Button
@@ -110,10 +110,10 @@ export function CardMaterial({ material }: Props) {
             />
           </Button>
         </div>
-      </CardHeader>
+      </FrameHeader>
       <Collapsible key={panelKey} onOpenChange={set} open={isOpen}>
-        <CollapsibleContent>
-          <CardContent className="border-t px-0">
+        <CollapsiblePanel>
+          <FramePanel className="px-0">
             <ul className="divide-y">
               {material.items.map((item) => (
                 <li className="group/list" key={item.href}>
@@ -132,9 +132,9 @@ export function CardMaterial({ material }: Props) {
                 </li>
               ))}
             </ul>
-          </CardContent>
-        </CollapsibleContent>
+          </FramePanel>
+        </CollapsiblePanel>
       </Collapsible>
-    </Card>
+    </Frame>
   );
 }

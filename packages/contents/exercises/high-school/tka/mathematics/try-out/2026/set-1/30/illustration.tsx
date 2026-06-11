@@ -1,7 +1,7 @@
 import { ArrowDown02Icon, ArrowRight02Icon } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { Card, CardContent } from "@repo/design-system/components/ui/card";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Frame, FramePanel } from "@repo/design-system/components/ui/frame";
 import { Separator } from "@repo/design-system/components/ui/separator";
 
 interface Props {
@@ -16,8 +16,8 @@ interface Props {
 
 export function Illustration({ labels }: Props) {
   return (
-    <Card className="content-auto-card">
-      <CardContent>
+    <Frame className="content-auto-card">
+      <FramePanel>
         <div className="grid grid-cols-1 items-center gap-4 sm:grid-cols-2">
           <div className="relative m-6 mr-18 flex flex-col items-center justify-center rounded-none border border-foreground">
             <div className="mx-auto w-full bg-muted p-4">
@@ -63,7 +63,7 @@ export function Illustration({ labels }: Props) {
             </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </FramePanel>
+    </Frame>
   );
 }

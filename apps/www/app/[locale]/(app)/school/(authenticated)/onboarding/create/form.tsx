@@ -2,29 +2,25 @@
 
 import { PartyIcon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
+import PhoneInput from "@repo/design-system/components/forms/phone-input";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-} from "@repo/design-system/components/ui/field";
+import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
-import PhoneInput from "@repo/design-system/components/ui/phone-input";
 import {
   Select,
-  SelectContent,
   SelectGroup,
   SelectItem,
+  SelectPopup,
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { toastManager } from "@repo/design-system/components/ui/toast";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
 import { Effect, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
-import { toast } from "sonner";
 import {
   schoolCreateDefaultValues,
   schoolCreateFormSchema,
@@ -64,7 +60,10 @@ export function SchoolOnboardingCreateForm() {
             }).pipe(
               Effect.zipRight(
                 Effect.sync(() => {
-                  toast.error(t("school-creation-failed"));
+                  toastManager.add({
+                    type: "error",
+                    title: t("school-creation-failed"),
+                  });
                 })
               )
             )
@@ -80,7 +79,7 @@ export function SchoolOnboardingCreateForm() {
       className="flex flex-col gap-6"
       id="school-onboarding-create-form"
     >
-      <FieldGroup>
+      <div className="flex w-full flex-col gap-3">
         <form.Field name="name">
           {(field) => {
             const isInvalid =
@@ -258,7 +257,7 @@ export function SchoolOnboardingCreateForm() {
                   >
                     <SelectValue placeholder={t("school-type-placeholder")} />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectPopup>
                     <SelectGroup>
                       {schoolTypeOptions.map((option) => (
                         <SelectItem key={option.value} value={option.value}>
@@ -266,13 +265,13 @@ export function SchoolOnboardingCreateForm() {
                         </SelectItem>
                       ))}
                     </SelectGroup>
-                  </SelectContent>
+                  </SelectPopup>
                 </Select>
               </Field>
             );
           }}
         </form.Field>
-      </FieldGroup>
+      </div>
 
       <form.Subscribe
         selector={(state) => [state.isValid, state.isDirty, state.isSubmitting]}
