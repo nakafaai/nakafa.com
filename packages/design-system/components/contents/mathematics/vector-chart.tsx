@@ -1,25 +1,22 @@
 "use client";
 
 import {
+  EvilLineChart,
+  Grid,
+  Legend,
+  Line,
+  XAxis,
+  YAxis,
+} from "@repo/design-system/components/evilcharts/charts/line-chart";
+import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
+import { ChartTooltip } from "@repo/design-system/components/evilcharts/ui/tooltip";
+import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import {
-  ChartCartesianGrid,
-  type ChartConfig,
-  ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
-  ChartLine,
-  ChartLineChart,
-  ChartTooltip,
-  ChartXAxis,
-  ChartYAxis,
-  getColorVariable,
-} from "@repo/design-system/components/ui/chart";
 import { Fragment, type ReactNode, useMemo } from "react";
 
 interface Vector {
@@ -89,18 +86,27 @@ export function VectorChart({
   vectors,
   labels = { xAxis: "x", yAxis: "y" },
 }: Props) {
+  const coloredVectors = useMemo(
+    () =>
+      vectors.map((vector, index) => ({
+        ...vector,
+        color: vector.color ?? `var(--chart-${index + 1})`,
+      })),
+    [vectors]
+  );
+
   // Transform the vectors data for the chart
   const data = useMemo(() => {
     // Find all unique x values from all vectors
     const allXValues = new Set<number>();
-    for (const vector of vectors) {
+    for (const vector of coloredVectors) {
       for (const point of vector.points) {
         allXValues.add(point.x);
       }
     }
 
     const sortedXValues = Array.from(allXValues).sort((a, b) => a - b);
-    const vectorPointMaps = vectors.map((vector) => ({
+    const vectorPointMaps = coloredVectors.map((vector) => ({
       id: vector.id,
       pointsByX: new Map(vector.points.map((point) => [point.x, point.y])),
     }));
@@ -115,27 +121,25 @@ export function VectorChart({
 
       return dataPoint;
     });
-  }, [vectors]);
+  }, [coloredVectors]);
 
   // Create chart config with colors for each vector
   const chartConfig = useMemo(() => {
     const config: ChartConfig = {};
 
-    vectors.forEach((vector, index) => {
-      const color = vector.color || `var(--chart-${index + 1})`;
-
+    for (const vector of coloredVectors) {
       config[vector.id] = {
         label: vector.name,
-        colors: { light: [color] },
+        colors: { light: [vector.color], dark: [vector.color] },
       };
-    });
+    }
 
     return config;
-  }, [vectors]);
+  }, [coloredVectors]);
 
   // Process vectors to determine which points need arrow markers
   const processedVectors = useMemo(() => {
-    return vectors.map((vector) => {
+    return coloredVectors.map((vector) => {
       // Need at least 2 points to determine direction
       if (vector.points.length < 2) {
         return {
@@ -191,7 +195,7 @@ export function VectorChart({
         arrowAtStart: true,
       };
     });
-  }, [vectors]);
+  }, [coloredVectors]);
 
   return (
     <Card className="content-auto-card">
@@ -200,149 +204,144 @@ export function VectorChart({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig}>
-          <ChartLineChart accessibilityLayer data={data}>
-            <ChartCartesianGrid />
-            <defs>
-              {/* Vector arrows for both directions */}
-              {processedVectors.map((vector) => {
-                const color = getColorVariable(vector.id, 0);
-                return (
-                  <Fragment key={`arrows-${vector.id}`}>
-                    {/* Forward arrow marker (end of line) */}
-                    <marker
-                      id={`arrow-end-${vector.id}`}
-                      markerHeight="8"
-                      markerWidth="8"
-                      orient="auto"
-                      refX="10"
-                      refY="5"
-                      viewBox="0 0 10 10"
-                    >
-                      <path d="M 0 0 L 10 5 L 0 10 Z" fill={color} />
-                    </marker>
-                    {/* Backward arrow marker (start of line) */}
-                    <marker
-                      id={`arrow-start-${vector.id}`}
-                      markerHeight="8"
-                      markerWidth="8"
-                      orient="auto-start-reverse"
-                      refX="10"
-                      refY="5"
-                      viewBox="0 0 10 10"
-                    >
-                      <path d="M 0 0 L 10 5 L 0 10 Z" fill={color} />
-                    </marker>
-                  </Fragment>
-                );
-              })}
-            </defs>
-            <ChartXAxis
-              dataKey="x"
-              tickFormatter={(value) => {
-                if (typeof value === "number") {
-                  return Number.isInteger(value)
-                    ? value.toString()
-                    : value.toFixed(2);
-                }
-                return value;
-              }}
-              tickMargin={8}
-            />
-            <ChartYAxis
-              label={{
-                value: labels.yAxis,
-                angle: -90,
-                position: "insideLeft",
-                style: { textAnchor: "middle" },
-              }}
-              tickFormatter={(value) => {
-                if (typeof value === "number") {
-                  return Number.isInteger(value)
-                    ? value.toString()
-                    : value.toFixed(2);
-                }
-                return value;
-              }}
-              tickMargin={8}
-            />
-
-            <ChartTooltip
-              content={({ active, payload }) => {
-                if (active && payload && payload.length > 0) {
-                  const xValue = payload[0]?.payload.x;
-
-                  return (
-                    <div className="grid min-w-32 items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-sm shadow-xl">
-                      {payload.map((entry) => {
-                        if (entry.value === null) {
-                          return null;
-                        }
-
-                        const vectorName = entry.name;
-                        const yValue = entry.value;
-                        const color = entry.color;
-
-                        return (
-                          <div
-                            className="flex items-center gap-2"
-                            key={`tooltip-${entry.name}-${entry.value}`}
-                          >
-                            <div
-                              className="h-2 w-2 shrink-0 rounded-xs"
-                              style={{ backgroundColor: color }}
-                            />
-                            <span className="font-medium">{vectorName}</span>
-                            <span className="ml-auto font-mono tracking-tight">
-                              ({xValue}, {yValue})
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
-                }
-                return null;
-              }}
-            />
-
+        <EvilLineChart config={chartConfig} data={data}>
+          <Grid />
+          <defs>
+            {/* Vector arrows for both directions */}
             {processedVectors.map((vector) => {
-              const color = getColorVariable(vector.id, 0);
-
-              // Set marker properties based on direction
-              const markerProps: Record<string, string> = {};
-
-              if (vector.arrowAtEnd) {
-                markerProps.markerEnd = `url(#arrow-end-${vector.id})`;
-              }
-
-              if (vector.arrowAtStart) {
-                markerProps.markerStart = `url(#arrow-start-${vector.id})`;
-              }
-
               return (
-                <ChartLine
-                  connectNulls
-                  dataKey={vector.id}
-                  dot
-                  key={vector.id}
-                  name={vector.name}
-                  stroke={color}
-                  strokeWidth={2}
-                  style={{
-                    stroke: color,
-                    ...markerProps,
-                  }}
-                  type={vector.type || "monotone"}
-                />
+                <Fragment key={`arrows-${vector.id}`}>
+                  {/* Forward arrow marker (end of line) */}
+                  <marker
+                    id={`arrow-end-${vector.id}`}
+                    markerHeight="8"
+                    markerWidth="8"
+                    orient="auto"
+                    refX="10"
+                    refY="5"
+                    viewBox="0 0 10 10"
+                  >
+                    <path d="M 0 0 L 10 5 L 0 10 Z" fill={vector.color} />
+                  </marker>
+                  {/* Backward arrow marker (start of line) */}
+                  <marker
+                    id={`arrow-start-${vector.id}`}
+                    markerHeight="8"
+                    markerWidth="8"
+                    orient="auto-start-reverse"
+                    refX="10"
+                    refY="5"
+                    viewBox="0 0 10 10"
+                  >
+                    <path d="M 0 0 L 10 5 L 0 10 Z" fill={vector.color} />
+                  </marker>
+                </Fragment>
               );
             })}
+          </defs>
+          <XAxis
+            dataKey="x"
+            tickFormatter={(value) => {
+              if (typeof value === "number") {
+                return Number.isInteger(value)
+                  ? value.toString()
+                  : value.toFixed(2);
+              }
+              return value;
+            }}
+            tickMargin={8}
+          />
+          <YAxis
+            label={{
+              value: labels.yAxis,
+              angle: -90,
+              position: "insideLeft",
+              style: { textAnchor: "middle" },
+            }}
+            tickFormatter={(value) => {
+              if (typeof value === "number") {
+                return Number.isInteger(value)
+                  ? value.toString()
+                  : value.toFixed(2);
+              }
+              return value;
+            }}
+            tickMargin={8}
+          />
 
-            <ChartLegend
-              content={<ChartLegendContent verticalAlign="bottom" />}
-            />
-          </ChartLineChart>
-        </ChartContainer>
+          <ChartTooltip
+            content={({ active, payload }) => {
+              if (active && payload && payload.length > 0) {
+                const xValue = payload[0]?.payload.x;
+
+                return (
+                  <div className="grid min-w-32 items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-sm shadow-xl">
+                    {payload.map((entry) => {
+                      if (entry.value === null) {
+                        return null;
+                      }
+
+                      const vectorName = entry.name;
+                      const yValue = entry.value;
+                      const color = entry.color;
+
+                      return (
+                        <div
+                          className="flex items-center gap-2"
+                          key={`tooltip-${entry.name}-${entry.value}`}
+                        >
+                          <div
+                            className="h-2 w-2 shrink-0 rounded-xs"
+                            style={{ backgroundColor: color }}
+                          />
+                          <span className="font-medium">{vectorName}</span>
+                          <span className="ml-auto font-mono tracking-tight">
+                            ({xValue}, {yValue})
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              }
+              return null;
+            }}
+          />
+
+          {processedVectors.map((vector) => {
+            // Set marker properties based on direction
+            const markerProps: Record<string, string> = {};
+
+            if (vector.arrowAtEnd) {
+              markerProps.markerEnd = `url(#arrow-end-${vector.id})`;
+            }
+
+            if (vector.arrowAtStart) {
+              markerProps.markerStart = `url(#arrow-start-${vector.id})`;
+            }
+
+            return (
+              <Line
+                connectNulls
+                curveType={vector.type || "monotone"}
+                dataKey={vector.id}
+                key={vector.id}
+                lineProps={{
+                  dot: true,
+                  name: vector.name,
+                  stroke: vector.color,
+                  strokeWidth: 2,
+                  style: {
+                    stroke: vector.color,
+                    ...markerProps,
+                  },
+                }}
+              />
+            );
+          })}
+
+          <Legend verticalAlign="bottom" />
+        </EvilLineChart>
       </CardContent>
     </Card>
   );

@@ -46,7 +46,7 @@ export function SchoolClassesTabs() {
     },
   ];
 
-  const defaultValue =
+  const value =
     tabs.find(
       (tab) => pathname === tab.href || pathname.startsWith(`${tab.href}/`)
     )?.href || tabs[0]?.href;
@@ -55,7 +55,7 @@ export function SchoolClassesTabs() {
     <div className="sticky top-0 z-10 -mt-2 flex h-12 w-full shrink-0 border-b bg-background">
       <div className="mx-auto flex w-full max-w-3xl items-center">
         <div className="scrollbar-hide flex w-full overflow-x-auto px-6">
-          <Tabs className="contents" defaultValue={defaultValue}>
+          <Tabs className="contents" value={value}>
             <TabsList className="bg-transparent p-0 [&_[data-slot=tab-indicator]]:bg-accent">
               {tabs.map((tab) => (
                 <TabsTab

@@ -8,18 +8,18 @@ import {
 import { Link } from "@repo/internationalization/src/navigation";
 
 interface Props {
-  defaultValue: string;
   tabs: {
     label: string;
     href: string;
     icon: IconSvgElement;
   }[];
+  value: string;
 }
 
-export function SharedTabs({ tabs, defaultValue }: Props) {
+export function SharedTabs({ tabs, value }: Props) {
   return (
     <nav className="scrollbar-hide sticky top-18 z-40 flex overflow-x-auto rounded-xl border bg-card p-1 shadow-xs lg:top-2">
-      <Tabs className="contents" defaultValue={defaultValue}>
+      <Tabs className="contents" value={value}>
         <TabsList className="bg-transparent p-0 [&_[data-slot=tab-indicator]]:bg-accent">
           {tabs.map((tab) => (
             <TabsTab

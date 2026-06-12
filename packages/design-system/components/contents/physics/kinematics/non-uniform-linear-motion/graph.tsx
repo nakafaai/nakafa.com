@@ -4,18 +4,18 @@ import {
   type GlbbScenario,
   getFinalVelocity,
 } from "@repo/design-system/components/contents/physics/kinematics/non-uniform-linear-motion/data";
-import type { ChartConfig } from "@repo/design-system/components/ui/chart";
 import {
-  ChartArea,
-  ChartAreaChart,
-  ChartCartesianGrid,
-  ChartContainer,
+  Area,
+  EvilAreaChart,
+  Grid,
+  XAxis,
+  YAxis,
+} from "@repo/design-system/components/evilcharts/charts/area-chart";
+import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
+import {
   ChartTooltip,
   ChartTooltipContent,
-  ChartXAxis,
-  ChartYAxis,
-  getColorVariable,
-} from "@repo/design-system/components/ui/chart";
+} from "@repo/design-system/components/evilcharts/ui/tooltip";
 
 const MAX_TIME = getAxisMaximum(
   Math.max(...GLBB_SCENARIOS.map((scenario) => scenario.duration)),
@@ -55,55 +55,55 @@ export function VelocityTimeGraph({
   ];
 
   return (
-    <ChartContainer
+    <EvilAreaChart
+      chartProps={{ margin: CHART_MARGIN }}
       className="aspect-[1.45] sm:aspect-video"
       config={chartConfig}
+      data={chartData}
     >
-      <ChartAreaChart accessibilityLayer data={chartData} margin={CHART_MARGIN}>
-        <ChartCartesianGrid />
-        <ChartXAxis
-          dataKey="time"
-          domain={[0, MAX_TIME]}
-          height={56}
-          label={{
-            value: labels.timeAxis,
-            position: "insideBottomRight",
-            offset: 8,
-          }}
-          tickMargin={8}
-          ticks={TIME_TICKS}
-          type="number"
-        />
-        <ChartYAxis
-          domain={[0, MAX_VELOCITY]}
-          label={{
-            value: labels.velocityAxis,
-            angle: -90,
-            position: "insideLeft",
-            style: { textAnchor: "middle" },
-          }}
-          tickMargin={8}
-          ticks={VELOCITY_TICKS}
-          type="number"
-        />
-        <ChartTooltip
-          content={<ChartTooltipContent labelFormatter={formatTooltipTime} />}
-        />
-        <ChartArea
-          activeDot={{ r: 4 }}
-          baseValue={0}
-          dataKey="velocity"
-          dot={{ r: 3.5 }}
-          fill={getColorVariable("velocity", 0)}
-          fillOpacity={0.22}
-          name={labels.velocityAxis}
-          stroke={getColorVariable("velocity", 0)}
-          strokeLinecap="round"
-          strokeWidth={2}
-          type="linear"
-        />
-      </ChartAreaChart>
-    </ChartContainer>
+      <Grid />
+      <XAxis
+        dataKey="time"
+        domain={[0, MAX_TIME]}
+        height={56}
+        label={{
+          value: labels.timeAxis,
+          position: "insideBottomRight",
+          offset: 8,
+        }}
+        tickMargin={8}
+        ticks={TIME_TICKS}
+        type="number"
+      />
+      <YAxis
+        domain={[0, MAX_VELOCITY]}
+        label={{
+          value: labels.velocityAxis,
+          angle: -90,
+          position: "insideLeft",
+          style: { textAnchor: "middle" },
+        }}
+        tickMargin={8}
+        ticks={VELOCITY_TICKS}
+        type="number"
+      />
+      <ChartTooltip
+        content={<ChartTooltipContent labelFormatter={formatTooltipTime} />}
+      />
+      <Area
+        areaProps={{
+          activeDot: { r: 4 },
+          baseValue: 0,
+          dot: { r: 3.5 },
+          fillOpacity: 0.22,
+          name: labels.velocityAxis,
+          strokeLinecap: "round",
+          strokeWidth: 2,
+        }}
+        dataKey="velocity"
+        variant="solid"
+      />
+    </EvilAreaChart>
   );
 }
 

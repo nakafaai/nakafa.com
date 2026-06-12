@@ -147,7 +147,7 @@ export function Theme({
 
       <DropdownMenuContent
         align="end"
-        className="max-h-96 w-max max-w-[calc(100vw-2rem)]"
+        className="max-h-[min(var(--available-height),24rem)] w-max max-w-[calc(100vw-2rem)]"
       >
         <DropdownMenuGroup>
           {themes.slice(0, BASE_THEMES_COUNT).map((theme) => (

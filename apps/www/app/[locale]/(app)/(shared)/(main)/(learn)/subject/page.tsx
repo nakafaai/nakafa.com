@@ -113,7 +113,7 @@ async function PageContent({ locale }: { locale: Locale }) {
                   <h2 className="font-medium text-lg">{tSubject(category)}</h2>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:gap-6">
                   {grades.map((grade) => {
                     const gradeLabel = tSubject(
                       Option.getOrElse(

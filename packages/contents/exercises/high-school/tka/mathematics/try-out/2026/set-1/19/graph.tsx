@@ -1,24 +1,29 @@
 "use client";
 
 import {
+  EvilLineChart,
+  Grid,
+  Line,
+  XAxis,
+  YAxis,
+} from "@repo/design-system/components/evilcharts/charts/line-chart";
+import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
+import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import {
-  ChartCartesianGrid,
-  type ChartConfig,
-  ChartContainer,
-  ChartLabel,
-  ChartLine,
-  ChartLineChart,
-  ChartReferenceLine,
-  ChartXAxis,
-  ChartYAxis,
-} from "@repo/design-system/components/ui/chart";
 import type { ReactNode } from "react";
+
+const SINE_REFERENCE_VALUE = Math.sqrt(3) / 2;
+const X_AXIS_DOMAIN = [0, 200] as const;
+const Y_AXIS_DOMAIN = [-1.2, 1.2] as const;
+const X_AXIS_TICKS = [0, 15, 60, 150, 195] as const;
+const Y_AXIS_TICKS = [-1, 0, SINE_REFERENCE_VALUE, 1] as const;
+const HORIZONTAL_GUIDES = [-1, 0, 1] as const;
+const VERTICAL_GUIDES = [0, 15, 195] as const;
 
 interface Props {
   description: ReactNode;
@@ -28,7 +33,7 @@ interface Props {
 const chartConfig = {
   y: {
     label: "y",
-    colors: { light: ["var(--chart-1)"] },
+    colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
   },
 } satisfies ChartConfig;
 
@@ -41,6 +46,22 @@ const graphData = Array.from({ length: 200 }, (_, i) => {
   return { x, y };
 });
 
+const horizontalGuideData = HORIZONTAL_GUIDES.map((guide) => ({
+  dataKey: `horizontal-${guide}`,
+  data: [
+    { x: X_AXIS_DOMAIN[0], guide },
+    { x: X_AXIS_DOMAIN[1], guide },
+  ],
+}));
+
+const verticalGuideData = VERTICAL_GUIDES.map((guide) => ({
+  dataKey: `vertical-${guide}`,
+  data: [
+    { x: guide, guide: Y_AXIS_DOMAIN[0] },
+    { x: guide, guide: Y_AXIS_DOMAIN[1] },
+  ],
+}));
+
 export function Graph({ title, description }: Props) {
   return (
     <Card className="content-auto-card">
@@ -49,69 +70,65 @@ export function Graph({ title, description }: Props) {
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig}>
-          <ChartLineChart data={graphData}>
-            <ChartCartesianGrid strokeDasharray="3 3" />
-            <ChartXAxis
-              dataKey="x"
-              domain={[0, 200]}
-              tickFormatter={(value) => `${value}°`}
-              ticks={[0, 15, 60, 150, 195]}
-              type="number"
-            />
-            <ChartYAxis
-              domain={[-1.2, 1.2]}
-              label={{
-                value: "y",
-                position: "insideLeft",
-                style: { textAnchor: "middle" },
+        <EvilLineChart config={chartConfig} data={graphData}>
+          <Grid strokeDasharray="3 3" />
+          <XAxis
+            dataKey="x"
+            domain={X_AXIS_DOMAIN}
+            tickFormatter={(value) => `${value}°`}
+            ticks={X_AXIS_TICKS}
+            type="number"
+          />
+          <YAxis
+            domain={Y_AXIS_DOMAIN}
+            label={{
+              value: "y",
+              position: "insideLeft",
+              style: { textAnchor: "middle" },
+            }}
+            tickFormatter={(value) =>
+              value === SINE_REFERENCE_VALUE ? "1/2√3" : String(value)
+            }
+            ticks={Y_AXIS_TICKS}
+            type="number"
+          />
+          {horizontalGuideData.map((guide) => (
+            <Line
+              dataKey="guide"
+              key={guide.dataKey}
+              lineProps={{
+                activeDot: false,
+                data: guide.data,
+                dot: false,
+                legendType: "none",
+                stroke: "var(--muted-foreground)",
+                strokeDasharray:
+                  guide.dataKey === "horizontal-0" ? undefined : "3 3",
+                tooltipType: "none",
               }}
-              ticks={[-1, 0, 1]}
-              type="number"
             />
-            <ChartReferenceLine stroke="transparent" y={0.866}>
-              <ChartLabel
-                offset={10}
-                position="left"
-                style={{ fill: "var(--muted-foreground)" }}
-                value="1/2√3"
-              />
-            </ChartReferenceLine>
-            <ChartReferenceLine
-              stroke="var(--muted-foreground)"
-              strokeDasharray="3 3"
-              y={1}
+          ))}
+          {verticalGuideData.map((guide) => (
+            <Line
+              dataKey="guide"
+              key={guide.dataKey}
+              lineProps={{
+                activeDot: false,
+                data: guide.data,
+                dot: false,
+                legendType: "none",
+                stroke: "var(--muted-foreground)",
+                strokeDasharray: "3 3",
+                tooltipType: "none",
+              }}
             />
-            <ChartReferenceLine stroke="var(--muted-foreground)" y={0} />
-            <ChartReferenceLine
-              stroke="var(--muted-foreground)"
-              strokeDasharray="3 3"
-              y={-1}
-            />
-            <ChartReferenceLine
-              stroke="var(--muted-foreground)"
-              strokeDasharray="3 3"
-              x={0}
-            />
-            <ChartReferenceLine
-              stroke="var(--muted-foreground)"
-              strokeDasharray="3 3"
-              x={15}
-            />
-            <ChartReferenceLine
-              stroke="var(--muted-foreground)"
-              strokeDasharray="3 3"
-              x={195}
-            />
-            <ChartLine
-              dataKey="y"
-              dot={false}
-              stroke="var(--color-y-0)"
-              strokeWidth={2}
-              type="monotone"
-            />
-          </ChartLineChart>
-        </ChartContainer>
+          ))}
+          <Line
+            curveType="monotone"
+            dataKey="y"
+            lineProps={{ dot: false, strokeWidth: 2 }}
+          />
+        </EvilLineChart>
       </CardContent>
     </Card>
   );

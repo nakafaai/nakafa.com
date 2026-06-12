@@ -1,25 +1,22 @@
 "use client";
 
 import {
+  EvilLineChart,
+  Grid,
+  Legend,
+  Line,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "@repo/design-system/components/evilcharts/charts/line-chart";
+import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
+import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import {
-  ChartCartesianGrid,
-  type ChartConfig,
-  ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
-  ChartLine,
-  ChartLineChart,
-  ChartTooltip,
-  ChartTooltipContent,
-  ChartXAxis,
-  ChartYAxis,
-} from "@repo/design-system/components/ui/chart";
 import { type ReactNode, useMemo } from "react";
 
 const chartData = [
@@ -65,11 +62,11 @@ export function VisitorChart({
       ({
         library: {
           label: seriesLabels.library,
-          colors: { light: ["var(--chart-1)"] },
+          colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
         },
         laboratory: {
           label: seriesLabels.laboratory,
-          colors: { light: ["var(--chart-2)"] },
+          colors: { light: ["var(--chart-2)"], dark: ["var(--chart-2)"] },
         },
       }) satisfies ChartConfig,
     [seriesLabels.laboratory, seriesLabels.library]
@@ -82,43 +79,41 @@ export function VisitorChart({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer className="aspect-video" config={chartConfig}>
-          <ChartLineChart accessibilityLayer data={data}>
-            <ChartCartesianGrid vertical={false} />
-            <ChartXAxis
-              axisLine={false}
-              dataKey="day"
-              tickLine={false}
-              tickMargin={10}
-            />
-            <ChartYAxis
-              axisLine={false}
-              label={{
-                value: yAxisLabel,
-                angle: -90,
-                position: "insideLeft",
-                offset: 10,
-                style: { textAnchor: "middle" },
-              }}
-              tickLine={false}
-              tickMargin={10}
-            />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <ChartLegend content={<ChartLegendContent />} />
-            <ChartLine
-              dataKey="library"
-              dot={{ r: 4 }}
-              stroke="var(--color-library-0)"
-              strokeWidth={2}
-            />
-            <ChartLine
-              dataKey="laboratory"
-              dot={{ r: 4 }}
-              stroke="var(--color-laboratory-0)"
-              strokeWidth={2}
-            />
-          </ChartLineChart>
-        </ChartContainer>
+        <EvilLineChart
+          className="aspect-video"
+          config={chartConfig}
+          data={data}
+        >
+          <Grid vertical={false} />
+          <XAxis
+            axisLine={false}
+            dataKey="day"
+            tickLine={false}
+            tickMargin={10}
+          />
+          <YAxis
+            axisLine={false}
+            label={{
+              value: yAxisLabel,
+              angle: -90,
+              position: "insideLeft",
+              offset: 10,
+              style: { textAnchor: "middle" },
+            }}
+            tickLine={false}
+            tickMargin={10}
+          />
+          <Tooltip />
+          <Legend />
+          <Line
+            dataKey="library"
+            lineProps={{ dot: { r: 4 }, strokeWidth: 2 }}
+          />
+          <Line
+            dataKey="laboratory"
+            lineProps={{ dot: { r: 4 }, strokeWidth: 2 }}
+          />
+        </EvilLineChart>
       </CardContent>
     </Card>
   );

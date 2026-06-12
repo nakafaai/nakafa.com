@@ -84,6 +84,9 @@ describe("mathPrompt", () => {
     expect(outputSection).toContain(
       "Return concise markdown in the user's locale"
     );
+    expect(outputSection).toContain(
+      "indent the \\[...\\] block under that list item"
+    );
   });
 
   it("requires deterministic evidence before answering", () => {

@@ -1,25 +1,22 @@
 "use client";
 
 import {
+  EvilLineChart,
+  Grid,
+  Legend,
+  Line,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "@repo/design-system/components/evilcharts/charts/line-chart";
+import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
+import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import {
-  ChartCartesianGrid,
-  type ChartConfig,
-  ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
-  ChartLine,
-  ChartLineChart,
-  ChartTooltip,
-  ChartTooltipContent,
-  ChartXAxis,
-  ChartYAxis,
-} from "@repo/design-system/components/ui/chart";
 import { type ReactNode, useMemo } from "react";
 
 const chartData = [
@@ -55,11 +52,11 @@ export function SalesChart({
       ({
         grainPrice: {
           label: seriesLabels.grainPrice,
-          colors: { light: ["var(--chart-1)"] },
+          colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
         },
         governmentPrice: {
           label: seriesLabels.governmentPrice,
-          colors: { light: ["var(--chart-2)"] },
+          colors: { light: ["var(--chart-2)"], dark: ["var(--chart-2)"] },
         },
       }) satisfies ChartConfig,
     [seriesLabels.governmentPrice, seriesLabels.grainPrice]
@@ -81,46 +78,44 @@ export function SalesChart({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer className="aspect-video" config={chartConfig}>
-          <ChartLineChart accessibilityLayer data={translatedData}>
-            <ChartCartesianGrid vertical={false} />
-            <ChartXAxis
-              axisLine={false}
-              dataKey="month"
-              tickLine={false}
-              tickMargin={10}
-            />
-            <ChartYAxis
-              axisLine={false}
-              domain={[3000, 6000]}
-              label={{
-                value: yAxisLabel,
-                angle: -90,
-                position: "insideLeft",
-                offset: 0,
-              }}
-              tickFormatter={(value) => `${value / 1000}k`}
-              tickLine={false}
-              tickMargin={10}
-            />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <ChartLegend content={<ChartLegendContent />} />
-            <ChartLine
-              dataKey="grainPrice"
-              dot={{ r: 4 }}
-              stroke="var(--color-grainPrice-0)"
-              strokeWidth={2}
-              type="monotone"
-            />
-            <ChartLine
-              dataKey="governmentPrice"
-              dot={{ r: 4 }}
-              stroke="var(--color-governmentPrice-0)"
-              strokeWidth={2}
-              type="monotone"
-            />
-          </ChartLineChart>
-        </ChartContainer>
+        <EvilLineChart
+          className="aspect-video"
+          config={chartConfig}
+          data={translatedData}
+        >
+          <Grid vertical={false} />
+          <XAxis
+            axisLine={false}
+            dataKey="month"
+            tickLine={false}
+            tickMargin={10}
+          />
+          <YAxis
+            axisLine={false}
+            domain={[3000, 6000]}
+            label={{
+              value: yAxisLabel,
+              angle: -90,
+              position: "insideLeft",
+              offset: 0,
+            }}
+            tickFormatter={(value) => `${value / 1000}k`}
+            tickLine={false}
+            tickMargin={10}
+          />
+          <Tooltip />
+          <Legend />
+          <Line
+            curveType="monotone"
+            dataKey="grainPrice"
+            lineProps={{ dot: { r: 4 }, strokeWidth: 2 }}
+          />
+          <Line
+            curveType="monotone"
+            dataKey="governmentPrice"
+            lineProps={{ dot: { r: 4 }, strokeWidth: 2 }}
+          />
+        </EvilLineChart>
       </CardContent>
     </Card>
   );

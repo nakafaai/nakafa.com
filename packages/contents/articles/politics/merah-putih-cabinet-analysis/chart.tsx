@@ -1,6 +1,16 @@
 "use client";
 
 import {
+  Bar,
+  EvilBarChart,
+  Grid,
+  Legend,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "@repo/design-system/components/evilcharts/charts/bar-chart";
+import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
+import {
   Card,
   CardContent,
   CardDescription,
@@ -8,23 +18,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import {
-  ChartBar,
-  ChartBarChart,
-  ChartCartesianGrid,
-  type ChartConfig,
-  ChartContainer,
-  ChartLabelList,
-  ChartLegend,
-  ChartLegendContent,
-  ChartTooltip,
-  ChartTooltipContent,
-  ChartXAxis,
-  ChartYAxis,
-} from "@repo/design-system/components/ui/chart";
 import type { ReactNode } from "react";
 
-const TICK_LABEL_CHAR_LIMIT = 3;
+const VALUE_AXIS_PADDING_RATIO = 0.12;
+const VALUE_LABEL_MARGIN = 16;
 
 interface SharedProps {
   description: ReactNode;
@@ -62,6 +59,12 @@ const CabinetChartData = [
   { name: "Indonesia Maju", cabinet: 34 },
   { name: "Merah Putih", cabinet: 48 },
 ];
+const maxCabinetSize = Math.max(
+  ...CabinetChartData.map(({ cabinet }) => cabinet)
+);
+const cabinetAxisMax = Math.ceil(
+  maxCabinetSize * (1 + VALUE_AXIS_PADDING_RATIO)
+);
 
 export function CabinetChart({
   title,
@@ -72,10 +75,7 @@ export function CabinetChart({
   const chartConfig = {
     cabinet: {
       label: labels.cabinet,
-      colors: { light: ["var(--chart-1)"] },
-    },
-    label: {
-      colors: { light: ["var(--foreground)"] },
+      colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
     },
   } satisfies ChartConfig;
 
@@ -86,53 +86,23 @@ export function CabinetChart({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig}>
-          <ChartBarChart
-            accessibilityLayer
-            data={CabinetChartData}
-            layout="vertical"
-            margin={{
-              right: 16,
-            }}
-          >
-            <ChartCartesianGrid horizontal={false} />
-            <ChartYAxis
-              axisLine={false}
-              dataKey="name"
-              hide
-              tickFormatter={(value) => value.slice(0, TICK_LABEL_CHAR_LIMIT)}
-              tickLine={false}
-              tickMargin={10}
-              type="category"
-            />
-            <ChartXAxis dataKey="cabinet" hide type="number" />
-            <ChartTooltip
-              content={<ChartTooltipContent indicator="line" />}
-              cursor={false}
-            />
-            <ChartBar
-              dataKey="cabinet"
-              fill="var(--color-cabinet-0)"
-              radius={8}
-            >
-              <ChartLabelList
-                className="fill-(--color-label)"
-                dataKey="name"
-                fontSize={12}
-                offset={8}
-                position="insideLeft"
-              />
-              <ChartLabelList
-                className="fill-foreground"
-                dataKey="cabinet"
-                fontSize={12}
-                offset={8}
-                position="right"
-              />
-            </ChartBar>
-            <ChartLegend content={<ChartLegendContent />} />
-          </ChartBarChart>
-        </ChartContainer>
+        <EvilBarChart
+          chartProps={{ margin: { right: VALUE_LABEL_MARGIN } }}
+          config={chartConfig}
+          data={CabinetChartData}
+          layout="horizontal"
+        >
+          <Grid horizontal={false} />
+          <YAxis dataKey="name" tickMargin={10} width={150} />
+          <XAxis dataKey="cabinet" domain={[0, cabinetAxisMax]} hide />
+          <Tooltip />
+          <Bar
+            barProps={{ label: { position: "right", fontSize: 12 } }}
+            dataKey="cabinet"
+            radius={8}
+          />
+          <Legend />
+        </EvilBarChart>
       </CardContent>
       <CardFooter>
         <p className="text-sm">{footnote}</p>
@@ -157,33 +127,36 @@ export function CompositionChart({
     },
   ];
 
-  const chartConfig = {
+  const ministerChartConfig = {
     new: {
       label: labels.new,
-      colors: { light: ["var(--chart-1)"] },
+      colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
     },
     incumbent: {
       label: labels.incumbent,
-      colors: { light: ["var(--chart-2)"] },
+      colors: { light: ["var(--chart-2)"], dark: ["var(--chart-2)"] },
     },
+  } satisfies ChartConfig;
+
+  const genderChartConfig = {
     male: {
       label: labels.male,
-      colors: { light: ["var(--chart-1)"] },
+      colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
     },
     female: {
       label: labels.female,
-      colors: { light: ["var(--chart-2)"] },
+      colors: { light: ["var(--chart-2)"], dark: ["var(--chart-2)"] },
     },
+  } satisfies ChartConfig;
+
+  const politicalStatusChartConfig = {
     politician: {
       label: labels.politicians,
-      colors: { light: ["var(--chart-1)"] },
+      colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
     },
     non_politician: {
       label: labels.nonPoliticians,
-      colors: { light: ["var(--chart-2)"] },
-    },
-    label: {
-      colors: { light: ["var(--foreground)"] },
+      colors: { light: ["var(--chart-2)"], dark: ["var(--chart-2)"] },
     },
   } satisfies ChartConfig;
 
@@ -195,87 +168,44 @@ export function CompositionChart({
       </CardHeader>
       <CardContent>
         <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <ChartContainer
-            className="aspect-square sm:aspect-square"
-            config={chartConfig}
+          <EvilBarChart
+            className="aspect-square"
+            config={ministerChartConfig}
+            data={MinisterChartData}
           >
-            <ChartBarChart accessibilityLayer data={MinisterChartData}>
-              <ChartCartesianGrid vertical={false} />
-              <ChartXAxis
-                axisLine={false}
-                dataKey="name"
-                tickLine={false}
-                tickMargin={10}
-              />
-              <ChartTooltip
-                content={<ChartTooltipContent indicator="line" />}
-                cursor={false}
-              />
-              <ChartBar dataKey="new" fill="var(--color-new-0)" radius={8} />
-              <ChartBar
-                dataKey="incumbent"
-                fill="var(--color-incumbent-0)"
-                radius={8}
-              />
-              <ChartLegend content={<ChartLegendContent />} />
-            </ChartBarChart>
-          </ChartContainer>
+            <Grid vertical={false} />
+            <XAxis dataKey="name" tickMargin={10} />
+            <Tooltip />
+            <Bar dataKey="new" radius={8} />
+            <Bar dataKey="incumbent" radius={8} />
+            <Legend />
+          </EvilBarChart>
 
-          <ChartContainer
-            className="aspect-square sm:aspect-square"
-            config={chartConfig}
+          <EvilBarChart
+            className="aspect-square"
+            config={genderChartConfig}
+            data={GenderChartData}
           >
-            <ChartBarChart data={GenderChartData}>
-              <ChartCartesianGrid vertical={false} />
-              <ChartXAxis
-                axisLine={false}
-                dataKey="name"
-                tickLine={false}
-                tickMargin={10}
-              />
-              <ChartTooltip
-                content={<ChartTooltipContent indicator="line" />}
-                cursor={false}
-              />
-              <ChartBar dataKey="male" fill="var(--color-male-0)" radius={8} />
-              <ChartBar
-                dataKey="female"
-                fill="var(--color-female-0)"
-                radius={8}
-              />
-              <ChartLegend content={<ChartLegendContent />} />
-            </ChartBarChart>
-          </ChartContainer>
+            <Grid vertical={false} />
+            <XAxis dataKey="name" tickMargin={10} />
+            <Tooltip />
+            <Bar dataKey="male" radius={8} />
+            <Bar dataKey="female" radius={8} />
+            <Legend />
+          </EvilBarChart>
 
-          <ChartContainer
-            className="aspect-square sm:aspect-square"
-            config={chartConfig}
+          <EvilBarChart
+            className="aspect-square"
+            config={politicalStatusChartConfig}
+            data={PoliticalStatusChartData}
           >
-            <ChartBarChart data={PoliticalStatusChartData}>
-              <ChartCartesianGrid vertical={false} />
-              <ChartXAxis
-                axisLine={false}
-                dataKey="name"
-                tickLine={false}
-                tickMargin={10}
-              />
-              <ChartTooltip
-                content={<ChartTooltipContent indicator="line" />}
-                cursor={false}
-              />
-              <ChartBar
-                dataKey="politician"
-                fill="var(--color-politician-0)"
-                radius={8}
-              />
-              <ChartBar
-                dataKey="non_politician"
-                fill="var(--color-non_politician-0)"
-                radius={8}
-              />
-              <ChartLegend content={<ChartLegendContent />} />
-            </ChartBarChart>
-          </ChartContainer>
+            <Grid vertical={false} />
+            <XAxis dataKey="name" tickMargin={10} />
+            <Tooltip />
+            <Bar dataKey="politician" radius={8} />
+            <Bar dataKey="non_politician" radius={8} />
+            <Legend />
+          </EvilBarChart>
         </div>
       </CardContent>
       <CardFooter>

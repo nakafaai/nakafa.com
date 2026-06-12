@@ -1,3 +1,5 @@
+"use client";
+
 import {
   AiChat02Icon,
   AiMagicIcon,
@@ -8,7 +10,26 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { cva } from "class-variance-authority";
 import { useTranslations } from "next-intl";
+import {
+  getAppNavigationViewer,
+  getForYouNavigationItems,
+} from "@/components/sidebar/_data/navigation";
+import { useUser } from "@/lib/context/use-user";
+
+const homeExploreCardVisualVariants = cva(
+  "flex aspect-[1/0.95] w-full items-center justify-center rounded-xl transition-all ease-out",
+  {
+    variants: {
+      tone: {
+        askNina: "bg-chart-3/15 group-hover:bg-chart-3/20",
+        subject: "bg-chart-1/10 group-hover:bg-chart-1/15",
+        tryOut: "bg-chart-2/10 group-hover:bg-chart-2/15",
+      },
+    },
+  }
+);
 
 function SubjectIcon() {
   return (
@@ -86,39 +107,55 @@ function NinaIcon() {
 export function HomeExplore() {
   const tAi = useTranslations("Ai");
   const tCommon = useTranslations("Common");
+  const { isPending, role } = useUser((state) => ({
+    isPending: state.isPending,
+    role: state.user?.appUser.role ?? null,
+  }));
+  const viewer = getAppNavigationViewer({ isPending, role });
+  const items = getForYouNavigationItems(viewer);
+  const visibleCardIds = new Set(items.map((item) => item.id));
+  const cards = [
+    {
+      href: "/subject",
+      id: "subject",
+      title: tCommon("subject"),
+      visual: <SubjectIcon />,
+    },
+    {
+      href: "/try-out",
+      id: "tryOut",
+      title: tCommon("try-out"),
+      visual: <TryoutIcon />,
+    },
+    {
+      href: "/chat",
+      id: "askNina",
+      title: tAi("ask-nina"),
+      visual: <NinaIcon />,
+    },
+  ] as const;
 
   return (
     <section className="flex flex-col gap-4">
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 md:gap-6">
-        <NavigationLink
-          className="group flex flex-col items-center gap-2"
-          href="/chat"
-        >
-          <div className="flex aspect-[1/0.95] w-full items-center justify-center rounded-xl bg-chart-3/15 transition-all ease-out group-hover:bg-chart-3/20">
-            <NinaIcon />
-          </div>
-          <h2>{tAi("ask-nina")}</h2>
-        </NavigationLink>
+        {cards.map((card) => {
+          if (!visibleCardIds.has(card.id)) {
+            return null;
+          }
 
-        <NavigationLink
-          className="group flex flex-col items-center gap-2"
-          href="/subject"
-        >
-          <div className="flex aspect-[1/0.95] w-full items-center justify-center rounded-xl bg-chart-1/10 transition-all ease-out group-hover:bg-chart-1/15">
-            <SubjectIcon />
-          </div>
-          <h2>{tCommon("explore-grades")}</h2>
-        </NavigationLink>
-
-        <NavigationLink
-          className="group flex flex-col items-center gap-2"
-          href="/try-out"
-        >
-          <div className="flex aspect-[1/0.95] w-full items-center justify-center rounded-xl bg-chart-2/10 transition-all ease-out group-hover:bg-chart-2/15">
-            <TryoutIcon />
-          </div>
-          <h2>{tCommon("try-out")}</h2>
-        </NavigationLink>
+          return (
+            <NavigationLink
+              className="group flex flex-col items-center gap-2"
+              href={card.href}
+              key={card.id}
+            >
+              <div className={homeExploreCardVisualVariants({ tone: card.id })}>
+                {card.visual}
+              </div>
+              <h2>{card.title}</h2>
+            </NavigationLink>
+          );
+        })}
       </div>
     </section>
   );

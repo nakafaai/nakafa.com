@@ -26,6 +26,13 @@
       },
       {
         "files": [
+          "components/evilcharts/**/*.tsx",
+          "packages/design-system/components/evilcharts/**/*.tsx"
+        ],
+        "rules": ["react-doctor/prefer-dynamic-import"]
+      },
+      {
+        "files": [
           "components/ai/mermaid.tsx",
           "packages/design-system/components/ai/mermaid.tsx"
         ],

@@ -184,7 +184,7 @@ async function PageContent({
         icon={getCategoryIcon(category)}
         link={{
           href: "/subject",
-          label: tCommon("explore-grades"),
+          label: tCommon("subject"),
         }}
         title={gradeLabel}
       />

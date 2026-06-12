@@ -24,8 +24,8 @@ export function UserSettingsTabs() {
     },
   ];
 
-  const defaultValue =
+  const value =
     tabs.find((tab) => pathname === tab.href)?.href || tabs[0]?.href;
 
-  return <SharedTabs defaultValue={defaultValue} tabs={tabs} />;
+  return <SharedTabs tabs={tabs} value={value} />;
 }

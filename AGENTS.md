@@ -131,6 +131,7 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - Formatting is owned by Biome through Ultracite. Run `pnpm format` instead of hand-formatting.
 - Use spaces for indentation.
 - Use double quotes for strings and JSX attributes.
+- Do not store Tailwind class strings in arbitrary data objects, maps, or variables outside a styling utility/component boundary. For reusable or variant-driven styles, use `cva` or existing variant helpers so Tailwind IntelliSense and class extraction stay reliable.
 - Prefer `import type` for type-only imports.
 - Within apps, prefer `@/` imports over long relative paths.
 - Across workspaces, use `@repo/*` imports.

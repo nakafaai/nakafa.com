@@ -1,25 +1,25 @@
 "use client";
 
 import {
+  Bar,
+  EvilBarChart,
+  Grid,
+  Legend,
+  XAxis,
+  YAxis,
+} from "@repo/design-system/components/evilcharts/charts/bar-chart";
+import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
+import {
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@repo/design-system/components/evilcharts/ui/tooltip";
+import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import {
-  ChartBar,
-  ChartBarChart,
-  ChartCartesianGrid,
-  type ChartConfig,
-  ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
-  ChartTooltip,
-  ChartTooltipContent,
-  ChartXAxis,
-  ChartYAxis,
-} from "@repo/design-system/components/ui/chart";
 import { type ReactNode, useMemo } from "react";
 
 const chartData = [
@@ -51,11 +51,11 @@ export function ProfitChart({
       ({
         capital: {
           label: capitalLabel,
-          colors: { light: ["var(--chart-1)"] },
+          colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
         },
         revenue: {
           label: revenueLabel,
-          colors: { light: ["var(--chart-2)"] },
+          colors: { light: ["var(--chart-2)"], dark: ["var(--chart-2)"] },
         },
       }) satisfies ChartConfig,
     [capitalLabel, revenueLabel]
@@ -70,37 +70,25 @@ export function ProfitChart({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer className="aspect-video" config={chartConfig}>
-          <ChartBarChart accessibilityLayer data={chartData}>
-            <ChartCartesianGrid vertical={false} />
-            <ChartXAxis
-              axisLine={false}
-              dataKey="year"
-              tickFormatter={formatYear}
-              tickLine={false}
-              tickMargin={10}
-            />
-            <ChartYAxis axisLine={false} tickLine={false} tickMargin={10} />
-            <ChartTooltip
-              content={
-                <ChartTooltipContent
-                  labelFormatter={(value) => formatYear(String(value))}
-                />
-              }
-            />
-            <ChartLegend content={<ChartLegendContent />} />
-            <ChartBar
-              dataKey="capital"
-              fill="var(--color-capital-0)"
-              radius={[4, 4, 0, 0]}
-            />
-            <ChartBar
-              dataKey="revenue"
-              fill="var(--color-revenue-0)"
-              radius={[4, 4, 0, 0]}
-            />
-          </ChartBarChart>
-        </ChartContainer>
+        <EvilBarChart
+          className="aspect-video"
+          config={chartConfig}
+          data={chartData}
+        >
+          <Grid vertical={false} />
+          <XAxis dataKey="year" tickFormatter={formatYear} tickMargin={10} />
+          <YAxis tickMargin={10} />
+          <ChartTooltip
+            content={
+              <ChartTooltipContent
+                labelFormatter={(value) => formatYear(String(value))}
+              />
+            }
+          />
+          <Legend />
+          <Bar dataKey="capital" radius={4} />
+          <Bar dataKey="revenue" radius={4} />
+        </EvilBarChart>
       </CardContent>
     </Card>
   );

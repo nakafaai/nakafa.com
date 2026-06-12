@@ -1,6 +1,16 @@
 "use client";
 
 import {
+  Bar,
+  EvilBarChart,
+  Grid,
+  Legend,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "@repo/design-system/components/evilcharts/charts/bar-chart";
+import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
+import {
   Card,
   CardContent,
   CardDescription,
@@ -8,21 +18,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import {
-  ChartBar,
-  ChartBarChart,
-  ChartCartesianGrid,
-  type ChartConfig,
-  ChartContainer,
-  ChartLabelList,
-  ChartLegend,
-  ChartLegendContent,
-  ChartTooltip,
-  ChartTooltipContent,
-  ChartXAxis,
-  ChartYAxis,
-} from "@repo/design-system/components/ui/chart";
 import type { ReactNode } from "react";
+
+const FUND_CHART_MARGIN = { right: 16 } as const;
 
 interface FundChartProps {
   description: ReactNode;
@@ -64,10 +62,7 @@ export function FundChart({
   const chartConfig = {
     fund: {
       label: labels.fund,
-      colors: { light: ["var(--chart-5)"] },
-    },
-    label: {
-      colors: { light: ["var(--foreground)"] },
+      colors: { light: ["var(--chart-5)"], dark: ["var(--chart-5)"] },
     },
   } satisfies ChartConfig;
 
@@ -78,47 +73,29 @@ export function FundChart({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig}>
-          <ChartBarChart
-            accessibilityLayer
-            data={fundChartData}
-            margin={{
-              right: 16,
+        <EvilBarChart
+          chartProps={{ margin: FUND_CHART_MARGIN }}
+          config={chartConfig}
+          data={fundChartData}
+        >
+          <Grid vertical={false} />
+          <XAxis dataKey="year" tickMargin={10} />
+          <YAxis
+            label={{
+              value: yLabel,
+              angle: -90,
+              position: "insideLeft",
+              style: { textAnchor: "middle" },
             }}
-          >
-            <ChartCartesianGrid vertical={false} />
-            <ChartXAxis
-              axisLine={false}
-              dataKey="year"
-              tickLine={false}
-              tickMargin={10}
-            />
-            <ChartYAxis
-              axisLine={false}
-              label={{
-                value: yLabel,
-                angle: -90,
-                position: "insideLeft",
-                style: { textAnchor: "middle" },
-              }}
-              tickLine={false}
-            />
-            <ChartTooltip
-              content={<ChartTooltipContent indicator="line" />}
-              cursor={false}
-            />
-            <ChartBar dataKey="fund" fill="var(--color-fund-0)" radius={8}>
-              <ChartLabelList
-                className="fill-foreground"
-                dataKey="fund"
-                fontSize={12}
-                offset={8}
-                position="top"
-              />
-            </ChartBar>
-            <ChartLegend content={<ChartLegendContent />} />
-          </ChartBarChart>
-        </ChartContainer>
+          />
+          <Tooltip />
+          <Bar
+            barProps={{ label: { position: "top", fontSize: 12 } }}
+            dataKey="fund"
+            radius={8}
+          />
+          <Legend />
+        </EvilBarChart>
       </CardContent>
       <CardFooter>
         <p className="text-sm">{footnote}</p>
