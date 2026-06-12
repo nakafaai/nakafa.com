@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  Login01Icon,
-  Logout01Icon,
-  MoreVerticalIcon,
-} from "@hugeicons/core-free-icons";
+import { Logout01Icon, MoreVerticalIcon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import {
   Avatar,
@@ -79,27 +75,7 @@ export function SchoolSidebarNavUser() {
   if (!user) {
     return (
       <SidebarMenuItem>
-        <DropdownMenu onOpenChange={set} open={open}>
-          <DropdownMenuTrigger render={<NavUserGuestButton />} />
-          <DropdownMenuContent
-            align="end"
-            className="w-(--anchor-width) min-w-56 max-w-[calc(100vw-2rem)] rounded-lg"
-            side={dropdownSide}
-            sideOffset={4}
-          >
-            <DropdownMenuGroup>
-              <DropdownMenuItem
-                className="cursor-pointer"
-                onClick={() => router.push(authHref)}
-              >
-                <HugeIcons icon={Login01Icon} />
-                {t("login")}
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <SidebarUtilityMenuItems side={submenuSide} />
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <NavUserGuestButton />
       </SidebarMenuItem>
     );
   }

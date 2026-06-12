@@ -3,7 +3,6 @@
 import {
   FileValidationIcon,
   LockIcon,
-  Login01Icon,
   Logout01Icon,
   MessageMultiple02Icon,
   MoreVerticalIcon,
@@ -85,27 +84,7 @@ export function NavUser() {
   if (!user) {
     return (
       <SidebarMenuItem>
-        <DropdownMenu onOpenChange={set} open={open}>
-          <DropdownMenuTrigger render={<NavUserGuestButton />} />
-          <DropdownMenuContent
-            align="end"
-            className="w-(--anchor-width) min-w-56 max-w-[calc(100vw-2rem)] rounded-lg"
-            side={dropdownSide}
-            sideOffset={4}
-          >
-            <DropdownMenuGroup>
-              <DropdownMenuItem
-                className="cursor-pointer"
-                onClick={() => router.push(authHref)}
-              >
-                <HugeIcons icon={Login01Icon} />
-                {t("login")}
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <SidebarUtilityMenuItems side={submenuSide} />
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <NavUserGuestButton />
       </SidebarMenuItem>
     );
   }
