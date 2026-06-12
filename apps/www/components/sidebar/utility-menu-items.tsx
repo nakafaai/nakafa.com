@@ -13,7 +13,6 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
 import type * as React from "react";
-
 import { SidebarPreferenceSubmenus } from "@/components/sidebar/preference-submenus";
 
 /**

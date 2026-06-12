@@ -21,7 +21,7 @@ export function NavUserGuestButton() {
 
   return (
     <SidebarMenuButton onClick={() => router.push(authHref)} size="lg">
-      <div className="flex aspect-square size-8 items-center justify-center rounded-md bg-foreground text-background">
+      <div className="flex aspect-square size-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
         <HugeIcons className="size-4" icon={Login01Icon} />
       </div>
       <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
