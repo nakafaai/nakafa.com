@@ -40,6 +40,7 @@ import { useLayoutEffect } from "react";
 import { authClient } from "@/lib/auth/client";
 import { useUser } from "@/lib/context/use-user";
 import { getInitialName } from "@/lib/utils/helper";
+import { NavUserSkeleton } from "./nav-user-skeleton";
 
 /**
  * Renders the signed-in user menu, plan indicator, and guest login shortcut in the sidebar.
@@ -51,7 +52,10 @@ export function NavUser() {
   const pathname = usePathname();
 
   const router = useRouter();
-  const user = useUser((state) => state.user);
+  const { isPending, user } = useUser((state) => ({
+    isPending: state.isPending,
+    user: state.user,
+  }));
   const [open, { close, set }] = useDisclosure(false);
 
   const { isMobile } = useSidebar();
@@ -68,6 +72,10 @@ export function NavUser() {
         },
       },
     });
+  }
+
+  if (isPending) {
+    return <NavUserSkeleton />;
   }
 
   if (!user) {

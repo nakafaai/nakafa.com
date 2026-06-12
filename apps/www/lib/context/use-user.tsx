@@ -3,8 +3,9 @@
 import { analytics } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
+import { useConvexAuth } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 
 export type CurrentUser = NonNullable<
@@ -31,10 +32,14 @@ export function UserContextProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const { data: user, isPending } = useQueryWithStatus(
-    api.auth.queries.getCurrentUser
+  const { isAuthenticated, isLoading } = useConvexAuth();
+  const shouldLoadUser = isAuthenticated && !isLoading;
+  const userQuery = useQueryWithStatus(
+    api.auth.queries.getCurrentUser,
+    shouldLoadUser ? {} : "skip"
   );
-  const currentUser = user ?? null;
+  const currentUser = userQuery.isSuccess ? userQuery.data : null;
+  const isPending = isLoading || (shouldLoadUser && userQuery.isPending);
   const appUser = currentUser?.appUser ?? null;
   const userId = currentUser?.appUser._id ?? null;
   const userEmail = currentUser?.authUser.email ?? null;
@@ -88,24 +93,13 @@ export function UserContextProvider({
     analytics.setPersonProperties(personProperties, setOnceProperties);
   }, [isPending, signedUpAt, userEmail, userId, userName, userPlan, userRole]);
 
-  const [contextValue, setContextValue] = useState({
+  const contextValue = {
     user: currentUser,
     isPending,
-  });
-  let currentContextValue = contextValue;
-
-  if (
-    contextValue.user !== currentUser ||
-    contextValue.isPending !== isPending
-  ) {
-    currentContextValue = { user: currentUser, isPending };
-    setContextValue(currentContextValue);
-  }
+  };
 
   return (
-    <UserContext.Provider value={currentContextValue}>
-      {children}
-    </UserContext.Provider>
+    <UserContext.Provider value={contextValue}>{children}</UserContext.Provider>
   );
 }
 

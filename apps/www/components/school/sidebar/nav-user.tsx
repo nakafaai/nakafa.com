@@ -32,6 +32,7 @@ import {
 } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
 import { useLayoutEffect } from "react";
+import { NavUserSkeleton } from "@/components/sidebar/nav-user-skeleton";
 import { SidebarPreferenceSubmenus } from "@/components/sidebar/preference-submenus";
 import { authClient } from "@/lib/auth/client";
 import { useUser } from "@/lib/context/use-user";
@@ -46,7 +47,10 @@ export function SchoolSidebarNavUser() {
   const pathname = usePathname();
 
   const router = useRouter();
-  const user = useUser((state) => state.user);
+  const { isPending, user } = useUser((state) => ({
+    isPending: state.isPending,
+    user: state.user,
+  }));
   const [open, { close, set }] = useDisclosure(false);
 
   const { isMobile } = useSidebar();
@@ -64,6 +68,10 @@ export function SchoolSidebarNavUser() {
         },
       },
     });
+  }
+
+  if (isPending) {
+    return <NavUserSkeleton />;
   }
 
   if (!user) {
