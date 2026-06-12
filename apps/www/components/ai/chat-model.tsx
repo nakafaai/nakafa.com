@@ -21,6 +21,12 @@ import { useAi } from "@/components/ai/context/use-ai";
 import { useUser } from "@/lib/context/use-user";
 import { aiModels, getAiModel } from "@/lib/data/models";
 
+/**
+ * Renders the COSS menu for choosing the active Nina model.
+ *
+ * The menu keeps Base UI radio semantics and COSS Menu row chrome. The caller
+ * only supplies the model icon/title/subtitle layout inside each native row.
+ */
 export function AiChatModel() {
   const t = useTranslations("Ai");
   const pathname = usePathname();
@@ -67,11 +73,13 @@ export function AiChatModel() {
           <MenuRadioGroup onValueChange={handleValueChange} value={model}>
             {aiModels.map((item) => (
               <MenuRadioItem key={item.value} value={item.value}>
-                <HugeIcons icon={item.icon} />
-                <span className="grid gap-0.5">
-                  <span>{item.label}</span>
-                  <span className="text-muted-foreground text-xs">
-                    {t(item.subtitleKey)}
+                <span className="flex min-w-0 items-start gap-2">
+                  <HugeIcons icon={item.icon} />
+                  <span className="grid min-w-0 gap-0.5">
+                    <span>{item.label}</span>
+                    <span className="text-muted-foreground text-xs">
+                      {t(item.subtitleKey)}
+                    </span>
                   </span>
                 </span>
               </MenuRadioItem>

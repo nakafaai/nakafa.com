@@ -155,7 +155,6 @@ function ClassItem({ cls }: { cls: Doc<"schoolClasses"> }) {
             />
             <MenuPopup align="end" className="w-40">
               <MenuItem
-                className="cursor-pointer"
                 render={
                   <NavigationLink href={`${pathname}/${cls._id}/forum`}>
                     <HugeIcons icon={MessageMultiple02Icon} />
@@ -164,7 +163,6 @@ function ClassItem({ cls }: { cls: Doc<"schoolClasses"> }) {
                 }
               />
               <MenuItem
-                className="cursor-pointer"
                 render={
                   <NavigationLink href={`${pathname}/${cls._id}/people`}>
                     <HugeIcons icon={UserMultipleIcon} />

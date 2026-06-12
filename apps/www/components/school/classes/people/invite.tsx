@@ -65,7 +65,6 @@ export function SchoolClassesPeopleInvite() {
             <MenuGroupLabel>{t("role")}</MenuGroupLabel>
             {inviteRoleList.map((role) => (
               <MenuItem
-                className="cursor-pointer"
                 key={role.value}
                 onClick={() => {
                   setSelectedRole(role.value);

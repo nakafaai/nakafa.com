@@ -131,7 +131,7 @@ export function StoppingDistanceLab({
         </section>
       </FramePanel>
 
-      <FrameFooter className="border-t">
+      <FrameFooter>
         <dl className="grid w-full grid-cols-2 gap-4 text-sm lg:grid-cols-4">
           <LabFact
             label={labels.speed}

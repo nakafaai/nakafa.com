@@ -90,7 +90,6 @@ function Language() {
             const Flag = flagMap[language.value];
             return (
               <MenuItem
-                className="cursor-pointer"
                 disabled={isPending}
                 key={language.value}
                 onClick={(event) => {
@@ -148,11 +147,7 @@ export function Theme({
       >
         <MenuGroup>
           {themes.slice(0, BASE_THEMES_COUNT).map((theme) => (
-            <MenuItem
-              className="cursor-pointer"
-              key={theme.value}
-              onClick={() => setTheme(theme.value)}
-            >
+            <MenuItem key={theme.value} onClick={() => setTheme(theme.value)}>
               <HugeIcons className="shrink-0" icon={theme.icon} />
               <span className="truncate">{t(theme.value)}</span>
               <CheckerBadge isActive={isActive(theme.value)} />
@@ -165,7 +160,6 @@ export function Theme({
         <MenuGroup>
           {themes.slice(BASE_THEMES_COUNT).map((theme) => (
             <MenuItem
-              className="cursor-pointer"
               key={theme.value}
               onClick={(event) => {
                 event.stopPropagation();

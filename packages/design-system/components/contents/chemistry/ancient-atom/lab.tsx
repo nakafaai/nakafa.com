@@ -130,7 +130,7 @@ export function AncientAtomLab({
             </div>
           </FramePanel>
 
-          <FrameFooter className="border-t">
+          <FrameFooter>
             <dl className="flex w-full flex-col gap-4 text-sm sm:flex-row">
               <Perspective
                 label={labels.aristotleLabel}

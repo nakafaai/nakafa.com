@@ -229,15 +229,9 @@ export function CreateSchoolClassDialog({
                           open
                         >
                           <AutocompleteInput
-                            className="h-9 rounded-none border-x-0 border-t-0 border-b shadow-none focus-visible:border-border focus-visible:ring-0"
                             placeholder={t("search-subjects-placeholder")}
                             showClear
-                            startAddon={
-                              <HugeIcons
-                                className="size-4"
-                                icon={Search02Icon}
-                              />
-                            }
+                            startAddon={<HugeIcons icon={Search02Icon} />}
                           />
                           <AutocompleteEmpty>
                             {t("no-subjects-found")}
@@ -254,7 +248,7 @@ export function CreateSchoolClassDialog({
                                 <AutocompleteCollection>
                                   {(subject) => (
                                     <AutocompleteItem
-                                      className="min-h-8 cursor-pointer py-1.5 text-sm sm:min-h-8"
+                                      className="justify-between gap-2"
                                       key={subject.value}
                                       onClick={() => {
                                         field.handleChange(subject.label);
@@ -265,7 +259,7 @@ export function CreateSchoolClassDialog({
                                       <span>{subject.label}</span>
                                       <HugeIcons
                                         className={cn(
-                                          "ml-auto size-4 opacity-0 transition-opacity ease-out",
+                                          "ml-auto opacity-0",
                                           field.state.value === subject.label &&
                                             "opacity-100"
                                         )}
@@ -320,14 +314,13 @@ export function CreateSchoolClassDialog({
                     <MenuPopup align="start" className="w-(--anchor-width)">
                       {getAcademicYearList().map((year) => (
                         <MenuItem
-                          className="cursor-pointer"
                           key={year}
                           onClick={() => field.handleChange(year)}
                         >
                           {year}
                           <HugeIcons
                             className={cn(
-                              "ml-auto size-4 opacity-0 transition-opacity ease-out",
+                              "ml-auto opacity-0",
                               field.state.value === year && "opacity-100"
                             )}
                             icon={Tick01Icon}
@@ -375,14 +368,13 @@ export function CreateSchoolClassDialog({
                     <MenuPopup align="start" className="w-(--anchor-width)">
                       {classVisibilityList.map((visibility) => (
                         <MenuItem
-                          className="cursor-pointer"
                           key={visibility}
                           onClick={() => field.handleChange(visibility)}
                         >
                           {t(visibility)}
                           <HugeIcons
                             className={cn(
-                              "ml-auto size-4 opacity-0 transition-opacity ease-out",
+                              "ml-auto opacity-0",
                               field.state.value === visibility && "opacity-100"
                             )}
                             icon={Tick01Icon}

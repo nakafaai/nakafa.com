@@ -228,27 +228,15 @@ function MaterialGroupActions({
         />
         <MenuPopup align="end" className="w-48">
           <MenuGroup>
-            <MenuItem
-              className="cursor-pointer"
-              disabled={isPending}
-              onClick={editHandlers.open}
-            >
+            <MenuItem disabled={isPending} onClick={editHandlers.open}>
               <HugeIcons icon={Edit01Icon} />
               {t("edit")}
             </MenuItem>
-            <MenuItem
-              className="cursor-pointer"
-              disabled={isPending}
-              onClick={handleMoveUp}
-            >
+            <MenuItem disabled={isPending} onClick={handleMoveUp}>
               <HugeIcons icon={ArrowUp02Icon} />
               {t("move-up")}
             </MenuItem>
-            <MenuItem
-              className="cursor-pointer"
-              disabled={isPending}
-              onClick={handleMoveDown}
-            >
+            <MenuItem disabled={isPending} onClick={handleMoveDown}>
               <HugeIcons icon={ArrowDown02Icon} />
               {t("move-down")}
             </MenuItem>
@@ -256,7 +244,6 @@ function MaterialGroupActions({
           <MenuSeparator />
           <MenuGroup>
             <MenuItem
-              className="cursor-pointer"
               disabled={isPending}
               onClick={confirmDeleteHandlers.open}
               variant="destructive"

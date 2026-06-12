@@ -52,7 +52,6 @@ export function Avatar({ contributor, size }: AvatarProps) {
           render={
             <DrawerTrigger
               aria-label={`${t("open")} ${contributor.name}`}
-              className="cursor-pointer"
               title={contributor.name}
             >
               <Character

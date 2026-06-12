@@ -22,8 +22,8 @@ interface Props {
 export function Youtube({ videoId }: Props) {
   const t = useTranslations("Common");
   return (
-    <Frame className="my-4 grid gap-0 overflow-hidden pb-0 content-auto-card">
-      <FrameHeader className="gap-0 border-b">
+    <Frame className="my-4 overflow-hidden content-auto-card">
+      <FrameHeader>
         <FrameTitle className="flex items-center gap-2">
           <HugeIcons icon={YoutubeIcon} />
           YouTube
@@ -32,7 +32,7 @@ export function Youtube({ videoId }: Props) {
       <FramePanel className="overflow-hidden p-0">
         <YoutubePlayer videoId={videoId} />
       </FramePanel>
-      <FrameFooter className="flex-wrap gap-2 border-t pb-6">
+      <FrameFooter className="flex flex-wrap gap-2">
         <Button
           render={
             <a

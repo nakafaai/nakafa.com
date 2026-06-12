@@ -1,8 +1,8 @@
 "use client";
 
 import {
-  ArrowDown01Icon,
   Call02Icon,
+  ChevronsDownUpIcon,
   Search02Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
@@ -16,6 +16,7 @@ import {
   AutocompleteList,
 } from "@repo/design-system/components/ui/autocomplete";
 import { Button } from "@repo/design-system/components/ui/button";
+import { groupVariants } from "@repo/design-system/components/ui/group";
 import { Input } from "@repo/design-system/components/ui/input";
 import {
   Popover,
@@ -30,7 +31,7 @@ import * as RpnInput from "react-phone-number-input";
 import flags from "react-phone-number-input/flags";
 import { VList } from "virtua";
 
-const countrySearchIcon = <HugeIcons className="size-4" icon={Search02Icon} />;
+const countrySearchIcon = <HugeIcons icon={Search02Icon} />;
 
 type PhoneInputProps = {
   className?: string;
@@ -40,7 +41,7 @@ export default function PhoneInput({ className, ...props }: PhoneInputProps) {
   return (
     <div className={cn("*:not-first:mt-2", className)} dir="ltr">
       <RpnInput.default
-        className="flex shadow-xs"
+        className={cn(groupVariants(), "w-full")}
         countrySelectComponent={CountrySelect}
         defaultCountry="ID"
         flagComponent={FlagComponent}
@@ -53,16 +54,7 @@ export default function PhoneInput({ className, ...props }: PhoneInputProps) {
 }
 
 function Phone({ className, ...props }: React.ComponentProps<"input">) {
-  return (
-    <Input
-      className={cn(
-        "-ms-px rounded-s-none shadow-none focus-visible:z-10",
-        className
-      )}
-      data-slot="phone-input"
-      {...props}
-    />
-  );
+  return <Input className={className} data-slot="phone-input" {...props} />;
 }
 
 interface CountrySelectProps {
@@ -114,27 +106,17 @@ const CountrySelect = ({ value, onChange, options }: CountrySelectProps) => {
 
   return (
     <Popover modal onOpenChange={setOpen} open={open}>
-      <PopoverTrigger
-        render={
-          <Button
-            className="inline-flex items-center rounded-r-none border px-3 hover:bg-accent hover:text-accent-foreground"
-            variant="ghost"
-          />
-        }
-      >
+      <PopoverTrigger render={<Button type="button" variant="outline" />}>
         <FlagComponent aria-hidden="true" country={value} countryName={value} />
         <span className="text-muted-foreground">
           <HugeIcons
             aria-hidden="true"
-            className="ml-auto h-4 w-4 shrink-0 opacity-50"
-            icon={ArrowDown01Icon}
+            className="ml-auto"
+            icon={ChevronsDownUpIcon}
           />
         </span>
       </PopoverTrigger>
-      <PopoverPopup
-        align="start"
-        className="w-full border-[color-mix(in_oklch,var(--input)_5%,var(--border))] p-0"
-      >
+      <PopoverPopup align="start" className="w-80 p-0">
         <Autocomplete
           autoHighlight="always"
           filter={null}
@@ -148,7 +130,6 @@ const CountrySelect = ({ value, onChange, options }: CountrySelectProps) => {
           value={searchQuery}
         >
           <AutocompleteInput
-            className="h-9 rounded-none border-x-0 border-t-0 border-b shadow-none focus-visible:border-border focus-visible:ring-0"
             placeholder={t("search-country-placeholder")}
             showClear
             startAddon={countrySearchIcon}
@@ -166,7 +147,7 @@ const CountrySelect = ({ value, onChange, options }: CountrySelectProps) => {
               >
                 {(c) => (
                   <AutocompleteItem
-                    className="flex min-h-8 cursor-pointer items-center justify-between gap-2 py-1.5 text-sm sm:min-h-8"
+                    className="justify-between gap-2"
                     key={c.value}
                     onClick={() => {
                       onChange(c.value);
@@ -180,7 +161,7 @@ const CountrySelect = ({ value, onChange, options }: CountrySelectProps) => {
                     <HugeIcons
                       aria-hidden="true"
                       className={cn(
-                        "ml-auto size-4 shrink-0 text-primary",
+                        "ml-auto text-primary",
                         c.value === value ? "opacity-100" : "opacity-0"
                       )}
                       icon={Tick01Icon}

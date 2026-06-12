@@ -132,7 +132,7 @@ export function DimensionLab({
           </ThreeCanvas>
         </div>
       </FramePanel>
-      <FrameFooter className="border-t">
+      <FrameFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
           <DimensionFact
             label={labels.formula}

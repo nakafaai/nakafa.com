@@ -68,7 +68,6 @@ export function LangMenuSwitcher() {
           const Flag = flagMap[language.value];
           return (
             <MenuItem
-              className="cursor-pointer"
               disabled={isPending}
               key={language.value}
               onClick={() => handleChangeLocale(language.value)}

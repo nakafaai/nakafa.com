@@ -116,7 +116,7 @@ export function VectorConceptLab({
           />
         </div>
       </FramePanel>
-      <FrameFooter className="border-t">
+      <FrameFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
           <LabFact label={labels.magnitude} value={labels.magnitudeValue} />
           <LabFact label={labels.direction} value={labels.directionValue} />

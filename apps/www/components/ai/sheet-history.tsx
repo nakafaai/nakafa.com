@@ -76,7 +76,6 @@ const SheetHistoryContent = () => {
           const isPrivate = chat.visibility === "private";
           return (
             <MenuItem
-              className="cursor-pointer"
               key={chat._id}
               onClick={() => {
                 setActiveChatId(chat._id);

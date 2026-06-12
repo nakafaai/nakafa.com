@@ -819,9 +819,7 @@ export const PromptInput = ({
         type="file"
       />
       <form className="w-full" onSubmit={handleSubmit} {...props}>
-        <InputGroup className={cn("border-border bg-card", className)}>
-          {children}
-        </InputGroup>
+        <InputGroup className={className}>{children}</InputGroup>
       </form>
     </>
   );
@@ -917,7 +915,7 @@ export const PromptInputToolbar = ({
 }: PromptInputToolbarProps) => (
   <InputGroupAddon
     align="block-end"
-    className={cn("justify-between gap-1 p-2", className)}
+    className={cn("justify-between gap-1", className)}
     {...props}
   />
 );
@@ -988,7 +986,7 @@ export const PromptInputActionMenuContent = ({
   className,
   ...props
 }: PromptInputActionMenuContentProps) => (
-  <MenuPopup align="start" className={cn(className)} {...props} />
+  <MenuPopup align="start" className={className} {...props} />
 );
 
 export type PromptInputActionMenuItemProps = ComponentProps<typeof MenuItem>;
@@ -996,7 +994,7 @@ export const PromptInputActionMenuItem = ({
   className,
   ...props
 }: PromptInputActionMenuItemProps) => (
-  <MenuItem className={cn(className)} {...props} />
+  <MenuItem className={className} {...props} />
 );
 
 // Note: Actions that perform side-effects (like opening a file dialog)

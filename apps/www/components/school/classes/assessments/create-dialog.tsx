@@ -350,7 +350,6 @@ function AssessmentDialogShell({
                         <MenuPopup align="start" className="w-(--anchor-width)">
                           {assessmentModeList.map((option) => (
                             <MenuItem
-                              className="cursor-pointer"
                               key={option.value}
                               onClick={() => field.handleChange(option.value)}
                             >
@@ -408,7 +407,6 @@ function AssessmentDialogShell({
                         <MenuPopup align="start" className="w-(--anchor-width)">
                           {assessmentStatusList.map((option) => (
                             <MenuItem
-                              className="cursor-pointer"
                               key={option.value}
                               onClick={() => field.handleChange(option.value)}
                             >

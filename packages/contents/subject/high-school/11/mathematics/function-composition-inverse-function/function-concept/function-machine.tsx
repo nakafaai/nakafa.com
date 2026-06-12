@@ -97,7 +97,7 @@ function Machine({ inputLabel }: MachineProps) {
           </UiButton>
         </div>
       </FramePanel>
-      <FrameFooter className="justify-center border-t">
+      <FrameFooter className="justify-center">
         <NumberField
           formatOptions={{
             localeMatcher: "best fit",

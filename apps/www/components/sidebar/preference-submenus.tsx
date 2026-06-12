@@ -81,7 +81,6 @@ function LanguageSubmenuContent({ side }: { side: SubmenuSide }) {
 
           return (
             <MenuItem
-              className="cursor-pointer"
               disabled={isPending}
               key={language.value}
               onClick={() => handleChangeLocale(language.value)}
@@ -114,11 +113,7 @@ function ThemeSubmenuContent({ side }: { side: SubmenuSide }) {
     >
       <MenuGroup>
         {themes.slice(0, BASE_THEMES_COUNT).map((theme) => (
-          <MenuItem
-            className="cursor-pointer"
-            key={theme.value}
-            onClick={() => setTheme(theme.value)}
-          >
+          <MenuItem key={theme.value} onClick={() => setTheme(theme.value)}>
             <HugeIcons className="shrink-0" icon={theme.icon} />
             <span className="truncate">{t(theme.value)}</span>
             <ActiveBadge isActive={isActive(theme.value)} />
@@ -130,11 +125,7 @@ function ThemeSubmenuContent({ side }: { side: SubmenuSide }) {
 
       <MenuGroup>
         {themes.slice(BASE_THEMES_COUNT).map((theme) => (
-          <MenuItem
-            className="cursor-pointer"
-            key={theme.value}
-            onClick={() => setTheme(theme.value)}
-          >
+          <MenuItem key={theme.value} onClick={() => setTheme(theme.value)}>
             <HugeIcons className="shrink-0" icon={theme.icon} />
             <span className="truncate">{t(theme.value)}</span>
             <ActiveBadge isActive={isActive(theme.value)} />
@@ -151,7 +142,7 @@ export function SidebarPreferenceSubmenus({ side }: { side: SubmenuSide }) {
   return (
     <MenuGroup>
       <MenuSub>
-        <MenuSubTrigger className="cursor-pointer">
+        <MenuSubTrigger>
           <HugeIcons icon={TranslateIcon} />
           <span className="truncate">{t("language")}</span>
         </MenuSubTrigger>
@@ -159,7 +150,7 @@ export function SidebarPreferenceSubmenus({ side }: { side: SubmenuSide }) {
       </MenuSub>
 
       <MenuSub>
-        <MenuSubTrigger className="cursor-pointer">
+        <MenuSubTrigger>
           <HugeIcons icon={PaintBoardIcon} />
           <span className="truncate">{t("theme")}</span>
         </MenuSubTrigger>

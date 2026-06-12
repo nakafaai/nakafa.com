@@ -284,7 +284,6 @@ export function StartExerciseButton({
                           >
                             {getTimeLimitList().map((time) => (
                               <MenuItem
-                                className="cursor-pointer"
                                 key={time}
                                 onClick={() => field.handleChange(time)}
                               >

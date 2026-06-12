@@ -136,7 +136,7 @@ export function SubatomicParticlesLab({
         </div>
       </FramePanel>
 
-      <FrameFooter className="border-t">
+      <FrameFooter>
         <dl className="grid w-full grid-cols-1 gap-4 sm:grid-cols-3">
           {selectedLabels.facts.map((fact) => (
             <LabFact fact={fact} key={fact.label} />

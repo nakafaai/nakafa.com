@@ -202,14 +202,11 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
             />
             <MenuPopup align="end" className="w-56">
               <MenuGroup>
-                <MenuItem className="cursor-pointer" onClick={handleEdit}>
+                <MenuItem onClick={handleEdit}>
                   <HugeIcons icon={Edit01Icon} />
                   {t("rename-chat")}
                 </MenuItem>
-                <MenuItem
-                  className="cursor-pointer"
-                  onClick={() => setConfirmShare(true)}
-                >
+                <MenuItem onClick={() => setConfirmShare(true)}>
                   <HugeIcons icon={LinkForwardIcon} />
                   {t("share-chat")}
                 </MenuItem>
@@ -217,7 +214,6 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
               <MenuSeparator />
               <MenuGroup>
                 <MenuItem
-                  className="cursor-pointer"
                   onClick={() => setConfirmDelete(true)}
                   variant="destructive"
                 >

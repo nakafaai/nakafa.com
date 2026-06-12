@@ -25,11 +25,11 @@ import {
   CommandPanel,
   CommandSeparator,
 } from "@repo/design-system/components/ui/command";
+import { Kbd, KbdGroup } from "@repo/design-system/components/ui/kbd";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { cn } from "@repo/design-system/lib/utils";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
-import type { ComponentProps, ReactElement, ReactNode } from "react";
+import type { ComponentProps, ReactElement } from "react";
 import { Fragment, useLayoutEffect, useTransition } from "react";
 import { SearchExcerpt } from "@/components/shared/search-excerpt";
 import { articlesMenu } from "@/components/sidebar/_data/articles";
@@ -179,10 +179,10 @@ function SearchEmpty({
   const t = useTranslations("Utils");
 
   return (
-    <CommandEmpty className="not-empty:flex not-empty:flex-col not-empty:items-center not-empty:justify-center not-empty:gap-1 not-empty:p-7.5 text-center text-muted-foreground text-sm empty:hidden">
+    <CommandEmpty>
       {!!error && (
         <>
-          <HugeIcons className="size-4" icon={InformationCircleIcon} />
+          <HugeIcons icon={InformationCircleIcon} />
           <div className="mt-1">{t("search-error")}</div>
           {typeof error === "string" || typeof error === "object" ? (
             <div className="wrap-break-word mt-2 max-w-xs text-xs">{error}</div>
@@ -197,7 +197,7 @@ function SearchEmpty({
       )}
       {!(error || isLoading) && !!search && (
         <>
-          <HugeIcons className="size-4" icon={Sad02Icon} />
+          <HugeIcons icon={Sad02Icon} />
           <p>{t("search-not-found")}</p>
         </>
       )}
@@ -234,7 +234,7 @@ function SearchList({ groups }: { groups: SearchCommandGroup[] }) {
               )}
             </CommandCollection>
           </CommandGroup>
-          {index !== groups.length - 1 && <CommandSeparator className="my-2" />}
+          {index !== groups.length - 1 && <CommandSeparator />}
         </Fragment>
       )}
     </CommandList>
@@ -254,7 +254,7 @@ function SearchListItem({
   if (item.type === "content") {
     return (
       <CommandItem
-        className="group cursor-pointer flex-col items-start"
+        className="flex-col items-start"
         disabled={isPending}
         onClick={onClick}
         value={item}
@@ -264,7 +264,7 @@ function SearchListItem({
           <span className="line-clamp-1">{item.label}</span>
         </div>
         <SearchExcerpt
-          className="line-clamp-3 text-muted-foreground text-xs group-data-highlighted:text-accent-foreground"
+          className="line-clamp-3 text-muted-foreground text-xs"
           excerpt={item.excerpt}
           query={item.query}
         />
@@ -273,12 +273,7 @@ function SearchListItem({
   }
 
   return (
-    <CommandItem
-      className="cursor-pointer"
-      disabled={isPending}
-      onClick={onClick}
-      value={item}
-    >
+    <CommandItem disabled={isPending} onClick={onClick} value={item}>
       <HugeIcons icon={item.icon} />
       <span className="line-clamp-1">{item.label}</span>
     </CommandItem>
@@ -409,46 +404,27 @@ function Footer() {
     <CommandFooter>
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
-          <div className="inline-flex items-center gap-1">
-            <FooterKbd>
-              <HugeIcons className="size-3" icon={ArrowUp02Icon} />
-            </FooterKbd>
-            <FooterKbd>
-              <HugeIcons className="size-3" icon={ArrowDown02Icon} />
-            </FooterKbd>
-          </div>
+          <KbdGroup>
+            <Kbd>
+              <HugeIcons icon={ArrowUp02Icon} />
+            </Kbd>
+            <Kbd>
+              <HugeIcons icon={ArrowDown02Icon} />
+            </Kbd>
+          </KbdGroup>
           <span>{t("navigate")}</span>
         </div>
         <div className="flex items-center gap-2">
-          <FooterKbd>
-            <HugeIcons className="size-3" icon={ArrowMoveDownLeftIcon} />
-          </FooterKbd>
+          <Kbd>
+            <HugeIcons icon={ArrowMoveDownLeftIcon} />
+          </Kbd>
           <span>{t("open")}</span>
         </div>
       </div>
       <div className="flex items-center gap-1">
-        <FooterKbd className="w-auto px-1">Esc</FooterKbd>
+        <Kbd>Esc</Kbd>
         <span>{t("close")}</span>
       </div>
     </CommandFooter>
-  );
-}
-
-function FooterKbd({
-  children,
-  className,
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
-  return (
-    <kbd
-      className={cn(
-        "pointer-events-none inline-flex h-5 min-w-5 select-none items-center justify-center gap-1 rounded bg-muted px-1 font-sans text-muted-foreground text-xs shadow-xs ring-1 ring-border [&_svg:not([class*='size-'])]:size-3",
-        className
-      )}
-    >
-      {children}
-    </kbd>
   );
 }

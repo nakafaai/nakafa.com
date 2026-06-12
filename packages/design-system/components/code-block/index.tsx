@@ -15,8 +15,8 @@ import { Button } from "@repo/design-system/components/ui/button";
 import {
   Select,
   SelectGroup,
+  SelectGroupLabel,
   SelectItem,
-  SelectLabel,
   SelectPopup,
   SelectTrigger,
   SelectValue,
@@ -278,14 +278,7 @@ export const CodeBlockSelectTrigger = ({
   className,
   ...props
 }: CodeBlockSelectTriggerProps) => (
-  <SelectTrigger
-    className={cn(
-      "w-fit border-none text-muted-foreground text-sm shadow-none",
-      className
-    )}
-    size="sm"
-    {...props}
-  />
+  <SelectTrigger className={cn("w-fit", className)} size="sm" {...props} />
 );
 
 export type CodeBlockSelectValueProps = ComponentProps<typeof SelectValue>;
@@ -311,7 +304,7 @@ export const CodeBlockSelectContent = ({
   return (
     <SelectPopup {...props}>
       <SelectGroup>
-        <SelectLabel>{t("language")}</SelectLabel>
+        <SelectGroupLabel>{t("language")}</SelectGroupLabel>
         {data.map(children)}
       </SelectGroup>
     </SelectPopup>
@@ -323,9 +316,7 @@ export type CodeBlockSelectItemProps = ComponentProps<typeof SelectItem>;
 export const CodeBlockSelectItem = ({
   className,
   ...props
-}: CodeBlockSelectItemProps) => (
-  <SelectItem className={cn("text-sm", className)} {...props} />
-);
+}: CodeBlockSelectItemProps) => <SelectItem className={className} {...props} />;
 
 export type CodeBlockCopyButtonProps = ComponentProps<typeof Button> & {
   onCopy?: () => void;

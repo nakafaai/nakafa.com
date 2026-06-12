@@ -156,48 +156,35 @@ export function NavUser() {
           </MenuGroup>
           <MenuSeparator />
           <MenuGroup>
-            <MenuItem
-              className="cursor-pointer"
-              onClick={() => router.push(`/user/${user.appUser._id}`)}
-            >
+            <MenuItem onClick={() => router.push(`/user/${user.appUser._id}`)}>
               <HugeIcons icon={UserIcon} />
               {t("profile")}
             </MenuItem>
             <MenuItem
-              className="cursor-pointer"
               onClick={() => router.push(`/user/${user.appUser._id}/chat`)}
             >
               <HugeIcons icon={MessageMultiple02Icon} />
               {t("chat")}
             </MenuItem>
-            <MenuItem
-              className="cursor-pointer"
-              onClick={() => router.push("/user/settings")}
-            >
+            <MenuItem onClick={() => router.push("/user/settings")}>
               <HugeIcons icon={Settings01Icon} />
               {t("settings")}
             </MenuItem>
           </MenuGroup>
           <MenuSeparator />
           <MenuGroup>
-            <MenuItem
-              className="cursor-pointer"
-              onClick={() => router.push("/terms-of-service")}
-            >
+            <MenuItem onClick={() => router.push("/terms-of-service")}>
               <HugeIcons icon={FileValidationIcon} />
               {tLegal("terms-of-service")}
             </MenuItem>
-            <MenuItem
-              className="cursor-pointer"
-              onClick={() => router.push("/privacy-policy")}
-            >
+            <MenuItem onClick={() => router.push("/privacy-policy")}>
               <HugeIcons icon={LockIcon} />
               {tLegal("privacy-policy")}
             </MenuItem>
           </MenuGroup>
           <MenuSeparator />
           <MenuGroup>
-            <MenuItem className="cursor-pointer" onClick={handleSignOut}>
+            <MenuItem onClick={handleSignOut}>
               <HugeIcons icon={Logout01Icon} />
               {t("logout")}
             </MenuItem>

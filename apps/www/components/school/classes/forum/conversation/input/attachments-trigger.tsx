@@ -31,7 +31,7 @@ export const InputAttachments = ({
       />
 
       <MenuPopup align="start">
-        <MenuItem className="cursor-pointer" onClick={onOpenFiles}>
+        <MenuItem onClick={onOpenFiles}>
           <HugeIcons icon={FileAttachmentIcon} />
           {t("attachments")}
         </MenuItem>

@@ -33,7 +33,7 @@ export function InputSearch() {
         <FieldLabel className="sr-only" htmlFor="search-input">
           Search
         </FieldLabel>
-        <InputGroup className="bg-background">
+        <InputGroup>
           <InputGroupInput
             id="search-input"
             onChange={(e) => setValue(e.target.value)}
@@ -41,7 +41,7 @@ export function InputSearch() {
             value={q}
           />
           <InputGroupAddon align="inline-start">
-            <HugeIcons className="size-4" icon={Search02Icon} />
+            <HugeIcons icon={Search02Icon} />
           </InputGroupAddon>
           <InputGroupAddon
             align="inline-end"
@@ -53,7 +53,7 @@ export function InputSearch() {
               size="icon-xs"
               variant="ghost"
             >
-              <HugeIcons className="size-4" icon={Cancel01Icon} />
+              <HugeIcons icon={Cancel01Icon} />
             </Button>
           </InputGroupAddon>
         </InputGroup>

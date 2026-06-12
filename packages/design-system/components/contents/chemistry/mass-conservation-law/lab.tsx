@@ -124,7 +124,7 @@ export function MassConservationLab({
         </p>
       </FramePanel>
 
-      <FrameFooter className="border-t">
+      <FrameFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
           <LabFact label={labels.systemLabel} value={selectedLabels.system} />
           <LabFact

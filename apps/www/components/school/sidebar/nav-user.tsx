@@ -154,7 +154,7 @@ export function SchoolSidebarNavUser() {
           <SidebarPreferenceSubmenus side={submenuSide} />
           <MenuSeparator />
           <MenuGroup>
-            <MenuItem className="cursor-pointer" onClick={handleSignOut}>
+            <MenuItem onClick={handleSignOut}>
               <HugeIcons icon={Logout01Icon} />
               {t("logout")}
             </MenuItem>

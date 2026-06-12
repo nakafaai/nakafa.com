@@ -116,7 +116,6 @@ export function SchoolSwitcher({
 
                   return (
                     <MenuItem
-                      className="cursor-pointer"
                       key={school._id}
                       render={
                         <NavigationLink href={`/school/${school.slug}`}>
@@ -139,7 +138,6 @@ export function SchoolSwitcher({
             <MenuSeparator />
             <MenuGroup>
               <MenuItem
-                className="cursor-pointer"
                 onClick={() => {
                   router.push("/school/onboarding");
                   setOpen(false);

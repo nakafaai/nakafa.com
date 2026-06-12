@@ -4,6 +4,11 @@ import type { ContentPagination } from "@repo/contents/_types/content";
 import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import NavigationLink from "@repo/design-system/components/navigation/link";
 import { Button } from "@repo/design-system/components/ui/button";
+import {
+  Pagination,
+  PaginationItem,
+  PaginationContent as PaginationList,
+} from "@repo/design-system/components/ui/pagination";
 import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
 
@@ -12,47 +17,49 @@ interface Props {
   pagination: ContentPagination;
 }
 
+/**
+ * Renders one content-navigation action as a native COSS Button.
+ *
+ * The title is kept in a single truncating row because Button owns fixed
+ * control height and whitespace. Card-like multi-line previews should use a
+ * separate Frame/Card composition, not override button chrome.
+ */
 function PaginationButton({
   href,
   title,
   label,
   icon,
-  className,
   iconPosition = "right",
 }: {
   href: string;
   title: string;
   label: string;
   icon: IconSvgElement;
-  className?: string;
   iconPosition?: "left" | "right";
 }) {
+  if (!href) {
+    return null;
+  }
+
+  const isNext = iconPosition === "right";
+
   return (
     <Button
       className={cn(
-        "group flex h-auto flex-col whitespace-normal py-3 shadow-xs",
-        !href && "pointer-events-none hidden opacity-50 sm:flex",
-        className
+        "w-full min-w-0",
+        isNext ? "justify-end text-right" : "justify-start"
       )}
       render={
-        <NavigationLink href={href} title={title}>
-          <div className="flex items-center gap-2 font-normal text-muted-foreground text-sm transition-colors group-hover:text-accent-foreground">
-            {iconPosition === "left" && (
-              <HugeIcons className="size-4 shrink-0" icon={icon} />
-            )}
-            {label}
-            {iconPosition === "right" && (
-              <HugeIcons className="size-4 shrink-0" icon={icon} />
-            )}
-          </div>
-          <p
-            className={cn(
-              "w-full text-foreground transition-colors group-hover:text-accent-foreground",
-              iconPosition === "right" ? "text-right" : ""
-            )}
-          >
-            {title}
-          </p>
+        <NavigationLink aria-label={`${label}: ${title}`} href={href}>
+          {iconPosition === "left" && <HugeIcons icon={icon} />}
+          <span className="min-w-0 flex-1 truncate">
+            <span className="text-muted-foreground">{label}</span>
+            <span className="hidden sm:inline">
+              <span aria-hidden>: </span>
+              <span>{title}</span>
+            </span>
+          </span>
+          {iconPosition === "right" && <HugeIcons icon={icon} />}
         </NavigationLink>
       }
       variant="outline"
@@ -64,29 +71,31 @@ export function PaginationContent({ pagination, className }: Props) {
   const t = useTranslations("Common");
 
   return (
-    <nav
+    <Pagination
       aria-label="Pagination navigation"
       className={cn("mt-10 pt-10", className)}
     >
-      <div className="mx-auto grid max-w-3xl gap-6 px-6 sm:grid-cols-2">
-        <PaginationButton
-          className="items-start"
-          href={pagination.prev.href}
-          icon={ArrowLeft02Icon}
-          iconPosition="left"
-          label={t("previous")}
-          title={pagination.prev.title}
-        />
+      <PaginationList className="w-full max-w-3xl justify-between gap-6 px-6">
+        <PaginationItem className="min-w-0 flex-1">
+          <PaginationButton
+            href={pagination.prev.href}
+            icon={ArrowLeft02Icon}
+            iconPosition="left"
+            label={t("previous")}
+            title={pagination.prev.title}
+          />
+        </PaginationItem>
 
-        <PaginationButton
-          className="items-end"
-          href={pagination.next.href}
-          icon={ArrowRight02Icon}
-          iconPosition="right"
-          label={t("next")}
-          title={pagination.next.title}
-        />
-      </div>
-    </nav>
+        <PaginationItem className="min-w-0 flex-1">
+          <PaginationButton
+            href={pagination.next.href}
+            icon={ArrowRight02Icon}
+            iconPosition="right"
+            label={t("next")}
+            title={pagination.next.title}
+          />
+        </PaginationItem>
+      </PaginationList>
+    </Pagination>
   );
 }

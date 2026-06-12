@@ -187,7 +187,6 @@ function UserChatsListActions({ chat }: { chat: Doc<"chats"> }) {
       />
       <MenuPopup align="end" className="w-40">
         <MenuItem
-          className="cursor-pointer"
           disabled={isPending}
           onClick={handleDelete}
           variant="destructive"

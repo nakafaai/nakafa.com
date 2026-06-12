@@ -332,7 +332,7 @@ export function BacterialGrowth({
           </div>
         </div>
 
-        <div className="w-full border-t px-6 pt-4">
+        <div className="w-full px-6 pt-4">
           <div className="flex flex-wrap justify-center gap-2">
             {timeButtons}
           </div>

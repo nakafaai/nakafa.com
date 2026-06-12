@@ -256,7 +256,6 @@ function SchoolClassesForumNewContent() {
                       <MenuPopup align="start" className="w-(--anchor-width)">
                         {availableTags.map((tag) => (
                           <MenuItem
-                            className="cursor-pointer"
                             key={tag.value}
                             onClick={() => field.handleChange(tag.value)}
                           >

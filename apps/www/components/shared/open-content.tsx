@@ -17,12 +17,11 @@ import { Group, GroupSeparator } from "@repo/design-system/components/ui/group";
 import {
   Menu,
   MenuGroup,
-  MenuItem,
+  MenuLinkItem,
   MenuPopup,
   MenuTrigger,
 } from "@repo/design-system/components/ui/menu";
 import { toastManager } from "@repo/design-system/components/ui/toast";
-import { cn } from "@repo/design-system/lib/utils";
 import { Link } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
 import { getGithubUrl } from "@/lib/utils/github";
@@ -102,16 +101,13 @@ export function OpenContent({
           }
         >
           <span className="sr-only">{t("open")}</span>
-          <HugeIcons
-            className={cn("transition-transform", open && "rotate-180")}
-            icon={ArrowDown01Icon}
-          />
+          <HugeIcons icon={ArrowDown01Icon} />
         </MenuTrigger>
 
         <MenuPopup className="w-56">
           <MenuGroup>
             {links.map((item) => (
-              <MenuItem
+              <MenuLinkItem
                 key={item.title}
                 render={
                   <Link

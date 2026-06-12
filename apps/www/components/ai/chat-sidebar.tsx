@@ -81,11 +81,11 @@ function AiChatSidebarContent({ ...props }: ComponentProps<typeof Sidebar>) {
 
         <SidebarMenu>
           <SidebarMenuItem>
-            <InputGroup className="h-8 border-sidebar-border bg-background shadow-none">
+            <InputGroup>
               <InputGroupInput
-                className="h-8"
                 onChange={(e) => setQ(e.target.value)}
                 placeholder={t("search-chats")}
+                size="sm"
                 value={q}
               />
               <InputGroupAddon>

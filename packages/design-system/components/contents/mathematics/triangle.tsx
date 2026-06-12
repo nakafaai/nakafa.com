@@ -88,7 +88,7 @@ function Content({
           <Triangle3D angle={angleValue} labels={labels} size={size} />
         </CoordinateSystem>
       </FramePanel>
-      <FrameFooter className="border-t px-0">
+      <FrameFooter className="px-0">
         <div className="flex w-full flex-col gap-4">
           <div className="flex flex-wrap items-center justify-center gap-2 px-6">
             <Badge className="font-mono" variant="outline">

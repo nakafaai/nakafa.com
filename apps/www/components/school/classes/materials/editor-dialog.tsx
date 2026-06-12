@@ -320,7 +320,6 @@ function MaterialGroupDialogShell({
                     <MenuPopup align="start" className="w-(--anchor-width)">
                       {materialStatusList.map((status) => (
                         <MenuItem
-                          className="cursor-pointer"
                           key={status.value}
                           onClick={() => field.handleChange(status.value)}
                         >

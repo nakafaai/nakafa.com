@@ -195,12 +195,9 @@ function TryoutAttemptHistoryControls({
               open
             >
               <AutocompleteInput
-                className="h-9 rounded-none border-x-0 border-t-0 border-b shadow-none focus-visible:border-border focus-visible:ring-0"
                 placeholder={tTryouts("attempt-menu-search-placeholder")}
                 showClear
-                startAddon={
-                  <HugeIcons className="size-4" icon={Search02Icon} />
-                }
+                startAddon={<HugeIcons icon={Search02Icon} />}
               />
               <AutocompleteEmpty>
                 {tTryouts("attempt-menu-empty")}
