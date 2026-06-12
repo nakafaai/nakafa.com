@@ -116,15 +116,9 @@ export function HomeExplore() {
   const visibleCardIds = new Set(items.map((item) => item.id));
   const cards = [
     {
-      href: "/chat",
-      id: "askNina",
-      title: tAi("ask-nina"),
-      visual: <NinaIcon />,
-    },
-    {
       href: "/subject",
       id: "subject",
-      title: tCommon("explore-grades"),
+      title: tCommon("subject"),
       visual: <SubjectIcon />,
     },
     {
@@ -132,6 +126,12 @@ export function HomeExplore() {
       id: "tryOut",
       title: tCommon("try-out"),
       visual: <TryoutIcon />,
+    },
+    {
+      href: "/chat",
+      id: "askNina",
+      title: tAi("ask-nina"),
+      visual: <NinaIcon />,
     },
   ] as const;
 
