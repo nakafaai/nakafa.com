@@ -32,8 +32,9 @@ import {
 } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
 import { useLayoutEffect } from "react";
+import { NavUserGuestButton } from "@/components/sidebar/nav-user-guest-button";
 import { NavUserSkeleton } from "@/components/sidebar/nav-user-skeleton";
-import { SidebarPreferenceSubmenus } from "@/components/sidebar/preference-submenus";
+import { SidebarUtilityMenuItems } from "@/components/sidebar/utility-menu-items";
 import { authClient } from "@/lib/auth/client";
 import { useUser } from "@/lib/context/use-user";
 import { getInitialName } from "@/lib/utils/helper";
@@ -55,6 +56,7 @@ export function SchoolSidebarNavUser() {
 
   const { isMobile } = useSidebar();
   const authHref = `/auth?redirect=${pathname}`;
+  const dropdownSide = isMobile ? "bottom" : "right";
   const submenuSide = isMobile ? "top" : "right";
 
   useLayoutEffect(() => close, [close]);
@@ -77,10 +79,27 @@ export function SchoolSidebarNavUser() {
   if (!user) {
     return (
       <SidebarMenuItem>
-        <SidebarMenuButton onClick={() => router.push(authHref)}>
-          <HugeIcons icon={Login01Icon} />
-          {t("login")}
-        </SidebarMenuButton>
+        <DropdownMenu onOpenChange={set} open={open}>
+          <DropdownMenuTrigger render={<NavUserGuestButton />} />
+          <DropdownMenuContent
+            align="end"
+            className="w-(--anchor-width) min-w-56 max-w-[calc(100vw-2rem)] rounded-lg"
+            side={dropdownSide}
+            sideOffset={4}
+          >
+            <DropdownMenuGroup>
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={() => router.push(authHref)}
+              >
+                <HugeIcons icon={Login01Icon} />
+                {t("login")}
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <SidebarUtilityMenuItems side={submenuSide} />
+          </DropdownMenuContent>
+        </DropdownMenu>
       </SidebarMenuItem>
     );
   }
@@ -123,7 +142,7 @@ export function SchoolSidebarNavUser() {
         <DropdownMenuContent
           align="end"
           className="w-(--anchor-width) min-w-56 max-w-[calc(100vw-2rem)] rounded-lg"
-          side={isMobile ? "bottom" : "right"}
+          side={dropdownSide}
           sideOffset={4}
         >
           <DropdownMenuGroup>
@@ -151,7 +170,7 @@ export function SchoolSidebarNavUser() {
             </DropdownMenuLabel>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
-          <SidebarPreferenceSubmenus side={submenuSide} />
+          <SidebarUtilityMenuItems side={submenuSide} />
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuItem
