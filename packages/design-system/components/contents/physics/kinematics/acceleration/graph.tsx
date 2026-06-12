@@ -3,18 +3,18 @@ import {
   type AccelerationLabels,
   getMotionPoints,
 } from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";
-import type { ChartConfig } from "@repo/design-system/components/ui/chart";
 import {
-  ChartCartesianGrid,
-  ChartContainer,
-  ChartLine,
-  ChartLineChart,
+  EvilLineChart,
+  Grid,
+  Line,
+  XAxis,
+  YAxis,
+} from "@repo/design-system/components/evilcharts/charts/line-chart";
+import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
+import {
   ChartTooltip,
   ChartTooltipContent,
-  ChartXAxis,
-  ChartYAxis,
-  getColorVariable,
-} from "@repo/design-system/components/ui/chart";
+} from "@repo/design-system/components/evilcharts/ui/tooltip";
 
 interface AccelerationGraphProps {
   labels: AccelerationLabels;
@@ -53,6 +53,7 @@ export function AccelerationGraph({
   const motionData = MOTION_POINTS.map((point) => ({
     time: point.time,
     motion: point.velocity,
+    selected: null,
   }));
   const selectedData = [
     { time: selectedCase.t0, selected: selectedCase.v0 },
@@ -60,72 +61,66 @@ export function AccelerationGraph({
   ];
 
   return (
-    <ChartContainer
+    <EvilLineChart
+      chartProps={{ margin: CHART_MARGIN }}
       className="aspect-[1.45] sm:aspect-video"
       config={chartConfig}
+      data={motionData}
     >
-      <ChartLineChart
-        accessibilityLayer
-        data={motionData}
-        margin={CHART_MARGIN}
-      >
-        <ChartCartesianGrid />
-        <ChartXAxis
-          dataKey="time"
-          domain={[0, MAX_TIME]}
-          height={56}
-          label={{
-            value: labels.timeAxis,
-            position: "insideBottomRight",
-            offset: 8,
-          }}
-          tickMargin={8}
-          ticks={TIME_TICKS}
-          type="number"
-        />
-        <ChartYAxis
-          domain={[0, MAX_VELOCITY]}
-          label={{
-            value: labels.velocityAxis,
-            angle: -90,
-            position: "insideLeft",
-            style: { textAnchor: "middle" },
-          }}
-          tickMargin={8}
-          ticks={VELOCITY_TICKS}
-          type="number"
-        />
-        <ChartTooltip
-          content={<ChartTooltipContent labelFormatter={formatTooltipTime} />}
-        />
-        <ChartLine
-          activeDot={false}
-          dataKey="motion"
-          dot={false}
-          isAnimationActive={false}
-          name={labels.contextLine}
-          stroke="var(--muted-foreground)"
-          strokeDasharray="6 6"
-          strokeLinecap="round"
-          strokeOpacity={0.5}
-          strokeWidth={1.5}
-          type="linear"
-        />
-        <ChartLine
-          animationDuration={360}
-          animationEasing="ease-out"
-          data={selectedData}
-          dataKey="selected"
-          dot={{ r: 3.5 }}
-          key={selectedCase.id}
-          name={labels.scenarioNames[selectedCase.id]}
-          stroke={getColorVariable("selected", 0)}
-          strokeLinecap="round"
-          strokeWidth={3}
-          type="linear"
-        />
-      </ChartLineChart>
-    </ChartContainer>
+      <Grid />
+      <XAxis
+        dataKey="time"
+        domain={[0, MAX_TIME]}
+        height={56}
+        label={{
+          value: labels.timeAxis,
+          position: "insideBottomRight",
+          offset: 8,
+        }}
+        tickMargin={8}
+        ticks={TIME_TICKS}
+        type="number"
+      />
+      <YAxis
+        domain={[0, MAX_VELOCITY]}
+        label={{
+          value: labels.velocityAxis,
+          angle: -90,
+          position: "insideLeft",
+          style: { textAnchor: "middle" },
+        }}
+        tickMargin={8}
+        ticks={VELOCITY_TICKS}
+        type="number"
+      />
+      <ChartTooltip
+        content={<ChartTooltipContent labelFormatter={formatTooltipTime} />}
+      />
+      <Line
+        dataKey="motion"
+        lineProps={{
+          activeDot: false,
+          dot: false,
+          name: labels.contextLine,
+          stroke: "var(--muted-foreground)",
+          strokeDasharray: "6 6",
+          strokeLinecap: "round",
+          strokeOpacity: 0.5,
+          strokeWidth: 1.5,
+        }}
+      />
+      <Line
+        dataKey="selected"
+        key={selectedCase.id}
+        lineProps={{
+          data: selectedData,
+          dot: { r: 3.5 },
+          name: labels.scenarioNames[selectedCase.id],
+          strokeLinecap: "round",
+          strokeWidth: 3,
+        }}
+      />
+    </EvilLineChart>
   );
 }
 

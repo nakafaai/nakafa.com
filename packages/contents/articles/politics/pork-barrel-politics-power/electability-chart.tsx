@@ -1,6 +1,19 @@
 "use client";
 
 import {
+  EvilLineChart,
+  Grid,
+  Legend,
+  Line,
+  XAxis,
+  YAxis,
+} from "@repo/design-system/components/evilcharts/charts/line-chart";
+import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
+import {
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@repo/design-system/components/evilcharts/ui/tooltip";
+import {
   Card,
   CardContent,
   CardDescription,
@@ -8,19 +21,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import {
-  ChartCartesianGrid,
-  type ChartConfig,
-  ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
-  ChartLine,
-  ChartLineChart,
-  ChartTooltip,
-  ChartTooltipContent,
-  ChartXAxis,
-  ChartYAxis,
-} from "@repo/design-system/components/ui/chart";
 import { format } from "date-fns";
 import type { ReactNode } from "react";
 
@@ -134,15 +134,15 @@ export function ElectabilityChart({
   const chartConfig = {
     anies_muhaimin: {
       label: labels.aniesMuhaimin,
-      colors: { light: ["var(--chart-1)"] },
+      colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
     },
     prabowo_gibran: {
       label: labels.prabowoGibran,
-      colors: { light: ["var(--chart-2)"] },
+      colors: { light: ["var(--chart-2)"], dark: ["var(--chart-2)"] },
     },
     ganjar_mahfud: {
       label: labels.ganjarMahfud,
-      colors: { light: ["var(--chart-3)"] },
+      colors: { light: ["var(--chart-3)"], dark: ["var(--chart-3)"] },
     },
   } satisfies ChartConfig;
 
@@ -153,64 +153,44 @@ export function ElectabilityChart({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig}>
-          <ChartLineChart accessibilityLayer data={electabilityChartData}>
-            <ChartCartesianGrid vertical={false} />
-            <ChartXAxis
-              axisLine={false}
-              dataKey="date"
-              tickFormatter={(value) => {
-                const date = new Date(value);
-                return format(date, "MMM yyyy");
-              }}
-              tickLine={false}
-              tickMargin={8}
-            />
-            <ChartYAxis
-              axisLine={false}
-              label={{
-                value: yLabel,
-                angle: -90,
-                position: "insideLeft",
-                style: { textAnchor: "middle" },
-              }}
-              tickLine={false}
-            />
-            <ChartTooltip
-              content={
-                <ChartTooltipContent
-                  indicator="line"
-                  labelFormatter={(value) =>
-                    format(new Date(String(value)), "MMMM yyyy")
-                  }
-                />
-              }
-              cursor={false}
-            />
-            <ChartLine
-              dataKey="anies_muhaimin"
-              dot={false}
-              stroke="var(--color-anies_muhaimin-0)"
-              strokeWidth={2}
-              type="natural"
-            />
-            <ChartLine
-              dataKey="prabowo_gibran"
-              dot={false}
-              stroke="var(--color-prabowo_gibran-0)"
-              strokeWidth={2}
-              type="natural"
-            />
-            <ChartLine
-              dataKey="ganjar_mahfud"
-              dot={false}
-              stroke="var(--color-ganjar_mahfud-0)"
-              strokeWidth={2}
-              type="natural"
-            />
-            <ChartLegend content={<ChartLegendContent />} />
-          </ChartLineChart>
-        </ChartContainer>
+        <EvilLineChart
+          config={chartConfig}
+          curveType="natural"
+          data={electabilityChartData}
+        >
+          <Grid vertical={false} />
+          <XAxis
+            dataKey="date"
+            tickFormatter={(value) => {
+              const date = new Date(value);
+              return format(date, "MMM yyyy");
+            }}
+            tickMargin={8}
+          />
+          <YAxis
+            label={{
+              value: yLabel,
+              angle: -90,
+              position: "insideLeft",
+              style: { textAnchor: "middle" },
+            }}
+          />
+          <ChartTooltip
+            content={
+              <ChartTooltipContent
+                indicator="line"
+                labelFormatter={(value) =>
+                  format(new Date(String(value)), "MMMM yyyy")
+                }
+              />
+            }
+            cursor={false}
+          />
+          <Line dataKey="anies_muhaimin" lineProps={{ strokeWidth: 2 }} />
+          <Line dataKey="prabowo_gibran" lineProps={{ strokeWidth: 2 }} />
+          <Line dataKey="ganjar_mahfud" lineProps={{ strokeWidth: 2 }} />
+          <Legend />
+        </EvilLineChart>
       </CardContent>
       <CardFooter>
         <p className="text-sm">{footnote}</p>

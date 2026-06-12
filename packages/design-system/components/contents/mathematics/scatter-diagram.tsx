@@ -1,27 +1,26 @@
 "use client";
 
 import {
+  ActiveDot,
+  Dot,
+  EvilComposedChart,
+  Grid,
+  Legend,
+  Line,
+  ReferenceLine,
+  Scatter,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "@repo/design-system/components/evilcharts/charts/composed-chart";
+import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
+import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import {
-  ChartCartesianGrid,
-  ChartComposedChart,
-  type ChartConfig,
-  ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
-  ChartLine,
-  ChartReferenceLine,
-  ChartScatter,
-  ChartTooltip,
-  ChartTooltipContent,
-  ChartXAxis,
-  ChartYAxis,
-} from "@repo/design-system/components/ui/chart";
 import type { ReactNode } from "react";
 
 interface Point {
@@ -39,6 +38,9 @@ interface RegressionLineStyle {
   color?: string;
   strokeDasharray?: string;
 }
+
+const REGRESSION_DATA_KEY = "regression";
+const DEFAULT_REGRESSION_COLOR = "var(--chart-5)";
 
 interface Props {
   calculateRegressionLine?: boolean;
@@ -63,18 +65,33 @@ export function ScatterDiagram({
   regressionLineStyle,
   showResiduals,
 }: Props) {
-  const chartConfig = datasets.reduce<ChartConfig>(
-    (acc, dataset) => {
-      acc[dataset.name] = {
+  const datasetConfig = Object.fromEntries(
+    datasets.map((dataset) => [
+      dataset.name,
+      {
         label: dataset.name,
-        colors: { light: [dataset.color] },
-      };
-      return acc;
+        colors: { light: [dataset.color], dark: [dataset.color] },
+      },
+    ])
+  );
+  const chartConfig = {
+    x: { label: xAxisLabel || "X" },
+    y: { label: yAxisLabel || "Y" },
+    [REGRESSION_DATA_KEY]: {
+      label: "Regresi",
+      colors: {
+        light: [regressionLineStyle?.color || DEFAULT_REGRESSION_COLOR],
+        dark: [regressionLineStyle?.color || DEFAULT_REGRESSION_COLOR],
+      },
     },
-    {
-      x: { label: xAxisLabel || "X" },
-      y: { label: yAxisLabel || "Y" },
-    }
+    ...datasetConfig,
+  } satisfies ChartConfig;
+  const chartData = datasets.flatMap((dataset) =>
+    dataset.points.map((point) => ({
+      x: point.x,
+      y: point.y,
+      [dataset.name]: point.y,
+    }))
   );
 
   let regressionLineData: { x: number; y: number }[] | undefined;
@@ -103,84 +120,85 @@ export function ScatterDiagram({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig}>
-          <ChartComposedChart accessibilityLayer>
-            <ChartCartesianGrid vertical={false} />
-            <ChartXAxis
-              dataKey="x"
-              domain={
-                xAxisDomain === "min-max" ? ["dataMin", "dataMax"] : undefined
-              }
-              label={{
-                value: xAxisLabel || "X",
-                position: "bottom",
-                offset: 10,
-                style: { textAnchor: "middle" },
+        <EvilComposedChart config={chartConfig} data={chartData}>
+          <Grid vertical={false} />
+          <XAxis
+            dataKey="x"
+            domain={
+              xAxisDomain === "min-max" ? ["dataMin", "dataMax"] : undefined
+            }
+            label={{
+              value: xAxisLabel || "X",
+              position: "bottom",
+              offset: 10,
+              style: { textAnchor: "middle" },
+            }}
+            tickFormatter={(value) => value.toString()}
+            tickMargin={8}
+            type="number"
+          />
+          <YAxis
+            dataKey="y"
+            label={{
+              value: yAxisLabel || "Y",
+              angle: -90,
+              position: "insideLeft",
+              style: { textAnchor: "middle" },
+            }}
+            tickMargin={8}
+            type="number"
+          />
+          <Tooltip hideContent />
+          {datasets.map((dataset) => (
+            <Scatter
+              data={dataset.points}
+              dataKey={dataset.name}
+              key={dataset.name}
+            >
+              <Dot variant="default" />
+              <ActiveDot variant="colored-border" />
+            </Scatter>
+          ))}
+          {!!regressionLineData && !!calculateRegressionLine && (
+            <Line
+              dataKey={REGRESSION_DATA_KEY}
+              lineProps={{
+                activeDot: false,
+                data: regressionLineData.map((point) => ({
+                  x: point.x,
+                  [REGRESSION_DATA_KEY]: point.y,
+                })),
+                dot: false,
+                legendType: "none",
+                strokeDasharray: regressionLineStyle?.strokeDasharray,
+                strokeWidth: 2,
+                tooltipType: "none",
               }}
-              tickFormatter={(value) => value.toString()}
-              tickMargin={8}
-              type="number"
             />
-            <ChartYAxis
-              dataKey="y"
-              label={{
-                value: yAxisLabel || "Y",
-                angle: -90,
-                position: "insideLeft",
-                style: { textAnchor: "middle" },
-              }}
-              tickMargin={8}
-              type="number"
-            />
-            <ChartTooltip
-              content={<ChartTooltipContent hideLabel={true} />}
-              wrapperStyle={{ visibility: "hidden" }}
-            />
-            {datasets.map((dataset) => (
-              <ChartScatter
-                data={dataset.points}
-                fill={dataset.color}
-                key={dataset.name}
-                name={dataset.name}
-              />
-            ))}
-            {!!regressionLineData && !!calculateRegressionLine && (
-              <ChartLine
-                activeDot={false}
-                data={regressionLineData}
-                dataKey="y"
-                dot={false}
-                stroke={regressionLineStyle?.color || "var(--chart-5)"}
-                strokeDasharray={regressionLineStyle?.strokeDasharray}
-                strokeWidth={2}
-                type="linear"
-              />
+          )}
+          {!!showResiduals &&
+            !!regressionParams &&
+            datasets.flatMap((dataset) =>
+              dataset.points.map((point) => {
+                const yPredicted =
+                  regressionParams.m * point.x + regressionParams.b;
+
+                return (
+                  <ReferenceLine
+                    ifOverflow="visible"
+                    key={`${dataset.name}-residual-${point.x}-${point.y}-${yPredicted}`}
+                    segment={[
+                      { x: point.x, y: point.y },
+                      { x: point.x, y: yPredicted },
+                    ]}
+                    stroke={dataset.color}
+                    strokeDasharray="2 2"
+                  />
+                );
+              })
             )}
-            {!!showResiduals &&
-              !!regressionParams &&
-              datasets.flatMap((dataset) =>
-                dataset.points.map((point) => {
-                  const yPredicted =
-                    regressionParams.m * point.x + regressionParams.b;
-                  return (
-                    <ChartReferenceLine
-                      ifOverflow="visible"
-                      key={`${dataset.name}-residual-${point.x}-${point.y}-${yPredicted}`}
-                      segment={[
-                        { x: point.x, y: point.y },
-                        { x: point.x, y: yPredicted },
-                      ]}
-                      stroke={dataset.color}
-                      strokeDasharray="2 2"
-                    />
-                  );
-                })
-              )}
-            <ChartLegend
-              content={<ChartLegendContent className="mt-6" variant="circle" />}
-            />
-          </ChartComposedChart>
-        </ChartContainer>
+          <Legend variant="circle" />
+        </EvilComposedChart>
       </CardContent>
     </Card>
   );

@@ -1,30 +1,28 @@
 "use client";
 
 import {
+  Bar,
+  EvilBarChart,
+  Grid,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "@repo/design-system/components/evilcharts/charts/bar-chart";
+import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
+import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import type { ChartConfig } from "@repo/design-system/components/ui/chart";
-import {
-  ChartBar,
-  ChartBarChart,
-  ChartCartesianGrid,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  ChartXAxis,
-  ChartYAxis,
-} from "@repo/design-system/components/ui/chart";
 
 interface Props {
   chartConfig: ChartConfig;
-  data: {
+  data: (Record<string, unknown> & {
     name: string;
     value: number;
-  }[];
+  })[];
   description: string;
   title: string;
   yAxisLabel: string;
@@ -44,40 +42,29 @@ export function HistogramChart({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer className="aspect-square" config={chartConfig}>
-          <ChartBarChart
-            accessibilityLayer
-            barCategoryGap={0}
-            barGap={0}
-            data={data}
-          >
-            <ChartCartesianGrid vertical={false} />
+        <EvilBarChart
+          barCategoryGap={0}
+          barGap={0}
+          className="aspect-square"
+          config={chartConfig}
+          data={data}
+        >
+          <Grid vertical={false} />
 
-            <ChartXAxis
-              axisLine={false}
-              dataKey="name"
-              tickLine={false}
-              tickMargin={10}
-            />
-            <ChartYAxis
-              axisLine={false}
-              dataKey="value"
-              label={{
-                value: yAxisLabel,
-                angle: -90,
-                position: "insideLeft",
-                style: { textAnchor: "middle" },
-              }}
-              tickLine={false}
-              tickMargin={10}
-            />
-            <ChartTooltip
-              content={<ChartTooltipContent indicator="line" />}
-              cursor={false}
-            />
-            <ChartBar dataKey="value" radius={0} />
-          </ChartBarChart>
-        </ChartContainer>
+          <XAxis dataKey="name" tickMargin={10} />
+          <YAxis
+            dataKey="value"
+            label={{
+              value: yAxisLabel,
+              angle: -90,
+              position: "insideLeft",
+              style: { textAnchor: "middle" },
+            }}
+            tickMargin={10}
+          />
+          <Tooltip />
+          <Bar dataKey="value" radius={0} />
+        </EvilBarChart>
       </CardContent>
     </Card>
   );
@@ -97,34 +84,26 @@ export function BarChart({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer className="aspect-square" config={chartConfig}>
-          <ChartBarChart accessibilityLayer data={data}>
-            <ChartCartesianGrid vertical={false} />
-            <ChartXAxis
-              axisLine={false}
-              dataKey="name"
-              tickLine={false}
-              tickMargin={10}
-            />
-            <ChartYAxis
-              axisLine={false}
-              dataKey="value"
-              label={{
-                value: yAxisLabel,
-                angle: -90,
-                position: "insideLeft",
-                style: { textAnchor: "middle" },
-              }}
-              tickLine={false}
-              tickMargin={10}
-            />
-            <ChartTooltip
-              content={<ChartTooltipContent indicator="line" />}
-              cursor={false}
-            />
-            <ChartBar dataKey="value" radius={8} />
-          </ChartBarChart>
-        </ChartContainer>
+        <EvilBarChart
+          className="aspect-square"
+          config={chartConfig}
+          data={data}
+        >
+          <Grid vertical={false} />
+          <XAxis dataKey="name" tickMargin={10} />
+          <YAxis
+            dataKey="value"
+            label={{
+              value: yAxisLabel,
+              angle: -90,
+              position: "insideLeft",
+              style: { textAnchor: "middle" },
+            }}
+            tickMargin={10}
+          />
+          <Tooltip />
+          <Bar dataKey="value" radius={8} />
+        </EvilBarChart>
       </CardContent>
     </Card>
   );

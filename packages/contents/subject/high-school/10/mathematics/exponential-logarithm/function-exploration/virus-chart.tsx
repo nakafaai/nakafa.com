@@ -1,6 +1,19 @@
 "use client";
 
 import {
+  EvilLineChart,
+  Grid,
+  Legend,
+  Line,
+  XAxis,
+  YAxis,
+} from "@repo/design-system/components/evilcharts/charts/line-chart";
+import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
+import {
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@repo/design-system/components/evilcharts/ui/tooltip";
+import {
   Card,
   CardContent,
   CardDescription,
@@ -8,19 +21,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import {
-  ChartCartesianGrid,
-  type ChartConfig,
-  ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
-  ChartLine,
-  ChartLineChart,
-  ChartTooltip,
-  ChartTooltipContent,
-  ChartXAxis,
-  ChartYAxis,
-} from "@repo/design-system/components/ui/chart";
 import type { ReactNode } from "react";
 
 const EXPONENTIAL_BASE = 3;
@@ -56,15 +56,15 @@ export function VirusChart({ labels }: Props) {
   const chartConfig = {
     exponential: {
       label: labels.exponential,
-      colors: { light: ["var(--chart-1)"] },
+      colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
     },
     linear: {
       label: labels.linear,
-      colors: { light: ["var(--chart-2)"] },
+      colors: { light: ["var(--chart-2)"], dark: ["var(--chart-2)"] },
     },
     logarithmic: {
       label: labels.logarithmic,
-      colors: { light: ["var(--chart-3)"] },
+      colors: { light: ["var(--chart-3)"], dark: ["var(--chart-3)"] },
     },
   } satisfies ChartConfig;
 
@@ -75,73 +75,56 @@ export function VirusChart({ labels }: Props) {
         <CardDescription>{labels.description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig}>
-          <ChartLineChart accessibilityLayer data={data}>
-            <ChartCartesianGrid />
-            <ChartXAxis
-              dataKey="phase"
-              tickFormatter={(value) => value.toString()}
-              tickMargin={8}
-            />
-            <ChartYAxis
-              label={{
-                value: labels.yLabel,
-                angle: -90,
-                position: "insideLeft",
-                style: { textAnchor: "middle" },
-              }}
-              tickFormatter={(value) =>
-                value >= THRESHOLD_VALUE
-                  ? `${(value / THRESHOLD_VALUE).toFixed(THRESHOLD_VALUE_DECIMAL_PLACES)}k`
-                  : String(value)
+        <EvilLineChart config={chartConfig} curveType="monotone" data={data}>
+          <Grid />
+          <XAxis
+            dataKey="phase"
+            tickFormatter={(value) => value.toString()}
+            tickMargin={8}
+          />
+          <YAxis
+            label={{
+              value: labels.yLabel,
+              angle: -90,
+              position: "insideLeft",
+              style: { textAnchor: "middle" },
+            }}
+            tickFormatter={(value) =>
+              value >= THRESHOLD_VALUE
+                ? `${(value / THRESHOLD_VALUE).toFixed(THRESHOLD_VALUE_DECIMAL_PLACES)}k`
+                : String(value)
+            }
+            tickMargin={8}
+          />
+          <ChartTooltip
+            content={({ active, payload }) => {
+              if (active && payload && payload.length > 0) {
+                const phaseValue = payload[0].payload.phase;
+                return (
+                  <ChartTooltipContent
+                    active={active}
+                    label={`${labels.phase} ${phaseValue}`}
+                    payload={payload}
+                  />
+                );
               }
-              tickMargin={8}
-            />
-            <ChartTooltip
-              content={({ active, payload }) => {
-                if (active && payload && payload.length > 0) {
-                  // Extract the phase value from the first payload item
-                  const phaseValue = payload[0].payload.phase;
-                  return (
-                    <ChartTooltipContent
-                      active={active}
-                      label={`${labels.phase} ${phaseValue}`}
-                      payload={payload}
-                    />
-                  );
-                }
-                return null;
-              }}
-            />
-            <ChartLine
-              dataKey="exponential"
-              dot
-              name="exponential"
-              stroke="var(--color-exponential-0)"
-              strokeWidth={2}
-              type="monotone"
-            />
-            <ChartLine
-              dataKey="linear"
-              dot
-              name="linear"
-              stroke="var(--color-linear-0)"
-              strokeWidth={2}
-              type="monotone"
-            />
-            <ChartLine
-              dataKey="logarithmic"
-              dot
-              name="logarithmic"
-              stroke="var(--color-logarithmic-0)"
-              strokeWidth={2}
-              type="monotone"
-            />
-            <ChartLegend
-              content={<ChartLegendContent verticalAlign="bottom" />}
-            />
-          </ChartLineChart>
-        </ChartContainer>
+              return null;
+            }}
+          />
+          <Line
+            dataKey="exponential"
+            lineProps={{ dot: true, name: "exponential", strokeWidth: 2 }}
+          />
+          <Line
+            dataKey="linear"
+            lineProps={{ dot: true, name: "linear", strokeWidth: 2 }}
+          />
+          <Line
+            dataKey="logarithmic"
+            lineProps={{ dot: true, name: "logarithmic", strokeWidth: 2 }}
+          />
+          <Legend verticalAlign="bottom" />
+        </EvilLineChart>
       </CardContent>
       <CardFooter>
         <p className="text-sm">{labels.caption}</p>

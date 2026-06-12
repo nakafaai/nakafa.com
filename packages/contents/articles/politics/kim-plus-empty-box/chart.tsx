@@ -1,6 +1,16 @@
 "use client";
 
 import {
+  Bar,
+  EvilBarChart,
+  Grid,
+  Legend,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "@repo/design-system/components/evilcharts/charts/bar-chart";
+import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
+import {
   Card,
   CardContent,
   CardDescription,
@@ -8,21 +18,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import {
-  ChartBar,
-  ChartBarChart,
-  ChartCartesianGrid,
-  type ChartConfig,
-  ChartContainer,
-  ChartLabelList,
-  ChartLegend,
-  ChartLegendContent,
-  ChartTooltip,
-  ChartTooltipContent,
-  ChartXAxis,
-  ChartYAxis,
-} from "@repo/design-system/components/ui/chart";
 import type { ReactNode } from "react";
+
+const VALUE_AXIS_PADDING_RATIO = 0.12;
+const VALUE_LABEL_MARGIN = 16;
 
 interface Props {
   description: ReactNode;
@@ -74,14 +73,13 @@ export function ElectabilityChart({
       value: 16,
     },
   ];
+  const maxValue = Math.max(...electabilityData.map(({ value }) => value));
+  const valueAxisMax = Math.ceil(maxValue * (1 + VALUE_AXIS_PADDING_RATIO));
 
   const chartConfig = {
     value: {
       label: labels.electability,
-      colors: { light: ["var(--chart-3)"] },
-    },
-    label: {
-      colors: { light: ["var(--background)"] },
+      colors: { light: ["var(--chart-3)"], dark: ["var(--chart-3)"] },
     },
   } satisfies ChartConfig;
 
@@ -92,50 +90,23 @@ export function ElectabilityChart({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig}>
-          <ChartBarChart
-            accessibilityLayer
-            data={electabilityData}
-            layout="vertical"
-            margin={{
-              right: 24,
-              left: 81,
-            }}
-          >
-            <ChartCartesianGrid horizontal={false} />
-            <ChartYAxis
-              axisLine={false}
-              dataKey="name"
-              hide
-              tickLine={false}
-              tickMargin={10}
-              type="category"
-            />
-            <ChartXAxis dataKey="value" hide type="number" />
-            <ChartTooltip
-              content={<ChartTooltipContent indicator="line" />}
-              cursor={false}
-            />
-            <ChartBar dataKey="value" fill="var(--color-value-0)" radius={8}>
-              <ChartLabelList
-                className="fill-foreground"
-                dataKey="name"
-                fontSize={12}
-                offset={10}
-                position="left"
-                width={75}
-              />
-              <ChartLabelList
-                className="fill-foreground"
-                dataKey="value"
-                fontSize={12}
-                offset={8}
-                position="right"
-              />
-            </ChartBar>
-            <ChartLegend content={<ChartLegendContent />} />
-          </ChartBarChart>
-        </ChartContainer>
+        <EvilBarChart
+          chartProps={{ margin: { right: VALUE_LABEL_MARGIN } }}
+          config={chartConfig}
+          data={electabilityData}
+          layout="horizontal"
+        >
+          <Grid horizontal={false} />
+          <YAxis dataKey="name" tickMargin={10} width={150} />
+          <XAxis dataKey="value" domain={[0, valueAxisMax]} hide />
+          <Tooltip />
+          <Bar
+            barProps={{ label: { position: "right", fontSize: 12 } }}
+            dataKey="value"
+            radius={8}
+          />
+          <Legend />
+        </EvilBarChart>
       </CardContent>
       <CardFooter>
         <p className="text-sm">{footnote}</p>

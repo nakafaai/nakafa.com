@@ -20,19 +20,20 @@ Bar charts are used for categorical data (such as phone brands or favorite sport
   title="Bar Chart of Phone Brands Used by High School Students"
   description="Shows the number of students per phone brand."
   data={[
-    { name: "Apple", value: 12, fill: "var(--chart-1)" },
-    { name: "Samsung", value: 10, fill: "var(--chart-2)" },
-    { name: "Xiaomi", value: 8, fill: "var(--chart-3)" },
-    { name: "Oppo", value: 5, fill: "var(--chart-4)" },
-    { name: "Lenovo", value: 5, fill: "var(--chart-5)" },
+    { name: "Apple", value: 12 },
+    { name: "Samsung", value: 10 },
+    { name: "Xiaomi", value: 8 },
+    { name: "Oppo", value: 5 },
+    { name: "Lenovo", value: 5 },
   ]}
   chartConfig={{
-    value: { label: "Number of Students" },
-    Apple: { label: "Apple", colors: { light: ["var(--chart-1)"] } },
-    Samsung: { label: "Samsung", colors: { light: ["var(--chart-2)"] } },
-    Xiaomi: { label: "Xiaomi", colors: { light: ["var(--chart-3)"] } },
-    Oppo: { label: "Oppo", colors: { light: ["var(--chart-4)"] } },
-    Lenovo: { label: "Lenovo", colors: { light: ["var(--chart-5)"] } },
+    value: {
+      label: "Number of Students",
+      colors: {
+        light: ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"],
+        dark: ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"],
+      },
+    },
   }}
   yAxisLabel="Number of Students"
 />
@@ -52,35 +53,19 @@ Histograms, on the other hand, are used for numerical data grouped into interval
   title="Histogram of Mobile Phone Usage by High School Students"
   description="Shows the distribution of time students spend on their phones daily."
   data={[
-    { name: "0-2", value: 10, fill: "var(--chart-1)" },
-    { name: "2-4", value: 12, fill: "var(--chart-2)" },
-    { name: "4-6", value: 32, fill: "var(--chart-3)" },
-    { name: "6-8", value: 28, fill: "var(--chart-4)" },
-    { name: "8-10", value: 8, fill: "var(--chart-5)" },
+    { name: "0-2", value: 10 },
+    { name: "2-4", value: 12 },
+    { name: "4-6", value: 32 },
+    { name: "6-8", value: 28 },
+    { name: "8-10", value: 8 },
   ]}
   chartConfig={{
     value: {
       label: "Frequency",
-    },
-    "0-2": {
-      label: "0-2 hours",
-      colors: { light: ["var(--chart-1)"] },
-    },
-    "2-4": {
-      label: "2-4 hours",
-      colors: { light: ["var(--chart-2)"] },
-    },
-    "4-6": {
-      label: "4-6 hours",
-      colors: { light: ["var(--chart-3)"] },
-    },
-    "6-8": {
-      label: "6-8 hours",
-      colors: { light: ["var(--chart-4)"] },
-    },
-    "8-10": {
-      label: "8-10 hours",
-      colors: { light: ["var(--chart-5)"] },
+      colors: {
+        light: ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"],
+        dark: ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"],
+      },
     },
   }}
   yAxisLabel="Frequency"

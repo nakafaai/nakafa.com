@@ -1,25 +1,22 @@
 "use client";
 
 import {
+  Bar,
+  EvilBarChart,
+  Grid,
+  Legend,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "@repo/design-system/components/evilcharts/charts/bar-chart";
+import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
+import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import {
-  ChartBar,
-  ChartBarChart,
-  ChartCartesianGrid,
-  type ChartConfig,
-  ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
-  ChartTooltip,
-  ChartTooltipContent,
-  ChartXAxis,
-  ChartYAxis,
-} from "@repo/design-system/components/ui/chart";
 import { type ReactNode, useMemo } from "react";
 
 const chartData = [
@@ -60,11 +57,11 @@ export function GraduationChart({
       ({
         passed: {
           label: passedLabel,
-          colors: { light: ["var(--chart-1)"] },
+          colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
         },
         failed: {
           label: failedLabel,
-          colors: { light: ["var(--chart-2)"] },
+          colors: { light: ["var(--chart-2)"], dark: ["var(--chart-2)"] },
         },
       }) satisfies ChartConfig,
     [failedLabel, passedLabel]
@@ -77,30 +74,20 @@ export function GraduationChart({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer className="aspect-video" config={chartConfig}>
-          <ChartBarChart accessibilityLayer data={data}>
-            <ChartCartesianGrid vertical={false} />
-            <ChartXAxis
-              axisLine={false}
-              dataKey="formattedClass"
-              tickLine={false}
-              tickMargin={10}
-            />
-            <ChartYAxis axisLine={false} tickLine={false} tickMargin={10} />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <ChartLegend content={<ChartLegendContent />} />
-            <ChartBar
-              dataKey="passed"
-              fill="var(--color-passed-0)"
-              radius={[4, 4, 0, 0]}
-            />
-            <ChartBar
-              dataKey="failed"
-              fill="var(--color-failed-0)"
-              radius={[4, 4, 0, 0]}
-            />
-          </ChartBarChart>
-        </ChartContainer>
+        <EvilBarChart className="aspect-video" config={chartConfig} data={data}>
+          <Grid vertical={false} />
+          <XAxis
+            axisLine={false}
+            dataKey="formattedClass"
+            tickLine={false}
+            tickMargin={10}
+          />
+          <YAxis axisLine={false} tickLine={false} tickMargin={10} />
+          <Tooltip />
+          <Legend />
+          <Bar dataKey="passed" radius={4} />
+          <Bar dataKey="failed" radius={4} />
+        </EvilBarChart>
       </CardContent>
     </Card>
   );

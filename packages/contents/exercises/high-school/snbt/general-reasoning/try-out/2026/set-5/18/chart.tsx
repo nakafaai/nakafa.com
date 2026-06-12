@@ -1,24 +1,25 @@
 "use client";
 
 import {
+  Bar,
+  EvilComposedChart,
+  Grid,
+  Line,
+  XAxis,
+  YAxis,
+} from "@repo/design-system/components/evilcharts/charts/composed-chart";
+import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
+import {
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@repo/design-system/components/evilcharts/ui/tooltip";
+import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import {
-  ChartBar,
-  ChartCartesianGrid,
-  ChartComposedChart,
-  type ChartConfig,
-  ChartContainer,
-  ChartLine,
-  ChartTooltip,
-  ChartTooltipContent,
-  ChartXAxis,
-  ChartYAxis,
-} from "@repo/design-system/components/ui/chart";
 import { type ReactNode, useMemo } from "react";
 
 const chartData = [
@@ -43,7 +44,11 @@ export function GrowthChart({ description, title, yAxisLabel }: Props) {
       ({
         growth: {
           label: yAxisLabel,
-          colors: { light: ["var(--chart-1)"] },
+          colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
+        },
+        barValue: {
+          label: yAxisLabel,
+          colors: { light: ["var(--chart-2)"], dark: ["var(--chart-2)"] },
         },
       }) satisfies ChartConfig,
     [yAxisLabel]
@@ -56,53 +61,34 @@ export function GrowthChart({ description, title, yAxisLabel }: Props) {
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer className="aspect-video" config={chartConfig}>
-          <ChartComposedChart accessibilityLayer data={chartData}>
-            <ChartCartesianGrid vertical={false} />
-            <ChartXAxis
-              axisLine={false}
-              dataKey="year"
-              tickLine={false}
-              tickMargin={10}
-            />
-            <ChartYAxis
-              axisLine={false}
-              domain={[4, 6]}
-              tickCount={6}
-              tickLine={false}
-              tickMargin={10}
-            />
-            <ChartTooltip
-              content={({ content, ...props }) => (
-                <ChartTooltipContent
-                  {...props}
-                  payload={props.payload?.filter(
-                    (item) => item.dataKey !== "barValue"
-                  )}
-                />
-              )}
-            />
-            <ChartBar
-              barSize={40}
-              dataKey="barValue"
-              fill="var(--chart-2)"
-              radius={[4, 4, 0, 0]}
-            />
-            <ChartLine
-              activeDot={{
-                r: 6,
-              }}
-              dataKey="growth"
-              dot={{
-                r: 4,
-                fill: "var(--chart-1)",
-              }}
-              stroke="var(--chart-1)"
-              strokeWidth={2}
-              type="linear"
-            />
-          </ChartComposedChart>
-        </ChartContainer>
+        <EvilComposedChart
+          className="aspect-video"
+          config={chartConfig}
+          data={chartData}
+        >
+          <Grid vertical={false} />
+          <XAxis dataKey="year" tickMargin={10} />
+          <YAxis domain={[4, 6]} tickCount={6} tickMargin={10} />
+          <ChartTooltip
+            content={({ content, ...props }) => (
+              <ChartTooltipContent
+                {...props}
+                payload={props.payload?.filter(
+                  (item) => item.dataKey !== "barValue"
+                )}
+              />
+            )}
+          />
+          <Bar barProps={{ barSize: 40 }} dataKey="barValue" radius={4} />
+          <Line
+            dataKey="growth"
+            lineProps={{
+              activeDot: { r: 6 },
+              dot: { r: 4 },
+              strokeWidth: 2,
+            }}
+          />
+        </EvilComposedChart>
       </CardContent>
     </Card>
   );

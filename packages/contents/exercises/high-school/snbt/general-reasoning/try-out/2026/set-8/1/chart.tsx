@@ -1,25 +1,25 @@
 "use client";
 
 import {
+  Bar,
+  EvilBarChart,
+  Grid,
+  Legend,
+  XAxis,
+  YAxis,
+} from "@repo/design-system/components/evilcharts/charts/bar-chart";
+import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
+import {
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@repo/design-system/components/evilcharts/ui/tooltip";
+import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import {
-  ChartBar,
-  ChartBarChart,
-  ChartCartesianGrid,
-  type ChartConfig,
-  ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
-  ChartTooltip,
-  ChartTooltipContent,
-  ChartXAxis,
-  ChartYAxis,
-} from "@repo/design-system/components/ui/chart";
 import { type ReactNode, useMemo } from "react";
 
 const chartData = [
@@ -55,15 +55,15 @@ export function SalesChart({
       ({
         A: {
           label: seriesLabels.A,
-          colors: { light: ["var(--chart-1)"] },
+          colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
         },
         B: {
           label: seriesLabels.B,
-          colors: { light: ["var(--chart-2)"] },
+          colors: { light: ["var(--chart-2)"], dark: ["var(--chart-2)"] },
         },
         C: {
           label: seriesLabels.C,
-          colors: { light: ["var(--chart-3)"] },
+          colors: { light: ["var(--chart-3)"], dark: ["var(--chart-3)"] },
         },
       }) satisfies ChartConfig,
     [seriesLabels.A, seriesLabels.B, seriesLabels.C]
@@ -78,46 +78,35 @@ export function SalesChart({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer className="aspect-video" config={chartConfig}>
-          <ChartBarChart accessibilityLayer data={chartData}>
-            <ChartCartesianGrid vertical={false} />
-            <ChartXAxis
-              axisLine={false}
-              dataKey="year"
-              tickFormatter={formatYear}
-              tickLine={false}
-              tickMargin={10}
-            />
-            <ChartYAxis
-              axisLine={false}
-              label={{
-                value: yAxisLabel,
-                angle: -90,
-                position: "insideLeft",
-                offset: 10,
-                style: { textAnchor: "middle" },
-              }}
-              tickLine={false}
-              tickMargin={10}
-            />
-            <ChartTooltip
-              content={
-                <ChartTooltipContent
-                  labelFormatter={(value) => formatYear(String(value))}
-                />
-              }
-            />
-            <ChartLegend content={<ChartLegendContent />} />
-            {Object.keys(chartConfig).map((key) => (
-              <ChartBar
-                dataKey={key}
-                fill={`var(--color-${key}-0)`}
-                key={key}
-                radius={[4, 4, 0, 0]}
+        <EvilBarChart
+          className="aspect-video"
+          config={chartConfig}
+          data={chartData}
+        >
+          <Grid vertical={false} />
+          <XAxis dataKey="year" tickFormatter={formatYear} tickMargin={10} />
+          <YAxis
+            label={{
+              value: yAxisLabel,
+              angle: -90,
+              position: "insideLeft",
+              offset: 10,
+              style: { textAnchor: "middle" },
+            }}
+            tickMargin={10}
+          />
+          <ChartTooltip
+            content={
+              <ChartTooltipContent
+                labelFormatter={(value) => formatYear(String(value))}
               />
-            ))}
-          </ChartBarChart>
-        </ChartContainer>
+            }
+          />
+          <Legend />
+          {Object.keys(chartConfig).map((key) => (
+            <Bar dataKey={key} key={key} radius={4} />
+          ))}
+        </EvilBarChart>
       </CardContent>
     </Card>
   );
