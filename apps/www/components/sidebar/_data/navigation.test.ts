@@ -6,14 +6,29 @@ import {
 
 describe("sidebar navigation", () => {
   it("keeps a persisted role when one is available", () => {
-    expect(getAppNavigationViewer("teacher")).toBe("teacher");
+    expect(getAppNavigationViewer({ isPending: false, role: "teacher" })).toBe(
+      "teacher"
+    );
+  });
+
+  it("uses a neutral viewer while the user query is pending", () => {
+    const viewer = getAppNavigationViewer({
+      isPending: true,
+      role: null,
+    });
+
+    expect(viewer).toBe("pending");
+    expect(getForYouNavigationItems(viewer).map((item) => item.id)).toEqual([
+      "subject",
+      "askNina",
+    ]);
   });
 
   it("shows try out to guests and students", () => {
     expect(
-      getForYouNavigationItems(getAppNavigationViewer(null)).map(
-        (item) => item.id
-      )
+      getForYouNavigationItems(
+        getAppNavigationViewer({ isPending: false, role: null })
+      ).map((item) => item.id)
     ).toEqual(["subject", "tryOut", "askNina"]);
 
     expect(getForYouNavigationItems("student").map((item) => item.id)).toEqual([

@@ -8,19 +8,33 @@ import {
   useRouter,
 } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
+import type * as React from "react";
 
 /**
  * Renders the signed-out sidebar footer login action with the same footprint as
  * the signed-in profile trigger so auth hydration never changes footer height.
  */
-export function NavUserGuestButton() {
+export function NavUserGuestButton({
+  onClick,
+  ...props
+}: React.ComponentProps<typeof SidebarMenuButton>) {
   const t = useTranslations("Auth");
   const pathname = usePathname();
   const router = useRouter();
   const authHref = `/auth?redirect=${pathname}`;
 
+  function handleClick(event: React.MouseEvent<HTMLButtonElement>) {
+    onClick?.(event);
+
+    if (event.defaultPrevented) {
+      return;
+    }
+
+    router.push(authHref);
+  }
+
   return (
-    <SidebarMenuButton onClick={() => router.push(authHref)} size="lg">
+    <SidebarMenuButton onClick={handleClick} size="lg" {...props}>
       <div className="flex aspect-square size-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
         <HugeIcons className="size-4" icon={Login01Icon} />
       </div>

@@ -2,8 +2,9 @@ import { useChart } from "@repo/design-system/components/evilcharts/ui/chart";
 import {
   getChartColorVariable,
   getColorsCount,
-  getPayloadConfigFromPayload,
+  getPayloadConfigEntry,
 } from "@repo/design-system/components/evilcharts/ui/chart-config";
+import { getChartPayloadStringValue } from "@repo/design-system/components/evilcharts/ui/chart-payload";
 import { cn } from "@repo/design-system/lib/utils";
 import type * as React from "react";
 import * as RechartsPrimitive from "recharts";
@@ -50,13 +51,12 @@ function ChartLegendContent({
     // For pie charts, item.value contains the sector name (e.g., "chrome")
     // For radial charts, the name is in item.payload[nameKey]
     // For other charts, item.dataKey contains the series name (e.g., "desktop")
-    const payloadName =
-      nameKey && item.payload
-        ? (item.payload as Record<string, unknown>)[nameKey]
-        : undefined;
+    const payloadName = getChartPayloadStringValue(item.payload, nameKey);
     const key = `${payloadName ?? item.value ?? item.dataKey ?? "value"}`;
-    const itemConfig = getPayloadConfigFromPayload(config, item, key);
-    const isSelected = selected === null || selected === key;
+    const configEntry = getPayloadConfigEntry(config, item, key);
+    const itemConfig = configEntry?.config;
+    const dataKey = configEntry?.dataKey ?? key;
+    const isSelected = selected === null || selected === dataKey;
     const colorsCount = itemConfig ? getColorsCount(itemConfig) : 1;
 
     const content = (
@@ -66,7 +66,7 @@ function ChartLegendContent({
         ) : (
           <LegendIndicator
             colorsCount={colorsCount}
-            dataKey={key}
+            dataKey={dataKey}
             variant={variant}
           />
         )}
@@ -85,7 +85,9 @@ function ChartLegendContent({
         <button
           className={itemClassName}
           key={key}
-          onClick={() => onSelectChange?.(selected === key ? null : key)}
+          onClick={() =>
+            onSelectChange?.(selected === dataKey ? null : dataKey)
+          }
           type="button"
         >
           {content}

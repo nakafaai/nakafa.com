@@ -25,8 +25,11 @@ export function NavForYou() {
   const pathname = usePathname();
   const tAi = useTranslations("Ai");
   const tCommon = useTranslations("Common");
-  const role = useUser((state) => state.user?.appUser.role ?? null);
-  const viewer = getAppNavigationViewer(role);
+  const { isPending, role } = useUser((state) => ({
+    isPending: state.isPending,
+    role: state.user?.appUser.role ?? null,
+  }));
+  const viewer = getAppNavigationViewer({ isPending, role });
   const items = getForYouNavigationItems(viewer);
 
   return (

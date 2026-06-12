@@ -1,3 +1,7 @@
+import {
+  getChartPayloadStringValue,
+  isChartPayloadRecord,
+} from "@repo/design-system/components/evilcharts/ui/chart-payload";
 import type * as React from "react";
 
 // Format: { THEME_NAME: CSS_SELECTOR }
@@ -16,7 +20,18 @@ type AtLeastOneThemeColor = {
     Partial<Omit<ThemeColorsBase, K>>;
 }[ThemeKey];
 
-const VALID_THEME_KEYS = Object.keys(THEMES) as ThemeKey[];
+type ChartConfigValidationInput = Record<
+  string,
+  {
+    colors?: object;
+  }
+>;
+
+function isThemeKey(key: string): key is ThemeKey {
+  return key in THEMES;
+}
+
+const VALID_THEME_KEYS = Object.keys(THEMES).filter(isThemeKey);
 const CHART_KEY_SAFE_CHAR_PATTERN = /^[A-Za-z0-9_-]$/;
 
 export type ChartConfig = Record<
@@ -29,11 +44,13 @@ export type ChartConfig = Record<
 >;
 
 // Validation for chart config colors at runtime
-function validateChartConfigColors(config: ChartConfig): void {
+function validateChartConfigColors(config: ChartConfigValidationInput): void {
   for (const [key, value] of Object.entries(config)) {
-    if (value.colors) {
+    const { colors } = value;
+
+    if (colors) {
       const hasValidThemeKey = VALID_THEME_KEYS.some(
-        (themeKey) => value.colors?.[themeKey] !== undefined
+        (themeKey) => themeKey in colors
       );
 
       if (!hasValidThemeKey) {
@@ -78,11 +95,7 @@ function getChartKeySuffix(key: string) {
       return character;
     }
 
-    const codePoint = character.codePointAt(0);
-    if (codePoint === undefined) {
-      return "";
-    }
-
+    const codePoint = Number(character.codePointAt(0));
     return `_${codePoint.toString(16)}_`;
   }).join("");
 }
@@ -126,41 +139,53 @@ function getChartSeriesPaint(
   return `url(#${getChartSeriesId(id, part, dataKey)})`;
 }
 
-// Helper to extract item config from a payload.
-function getPayloadConfigFromPayload(
+function getConfigEntry(config: ChartConfig, key: unknown) {
+  if (typeof key !== "string") {
+    return;
+  }
+
+  return key in config
+    ? {
+        config: config[key],
+        dataKey: key,
+      }
+    : undefined;
+}
+
+/**
+ * Resolves the chart config entry for one Recharts payload item.
+ */
+function getPayloadConfigEntry(
   config: ChartConfig,
   payload: unknown,
   key: string
 ) {
-  if (typeof payload !== "object" || payload === null) {
-    return;
+  if (!isChartPayloadRecord(payload)) {
+    return getConfigEntry(config, key);
   }
 
-  const payloadPayload =
-    "payload" in payload &&
-    typeof payload.payload === "object" &&
-    payload.payload !== null
-      ? payload.payload
-      : undefined;
-
-  let configLabelKey: string = key;
-
-  if (
-    key in payload &&
-    typeof payload[key as keyof typeof payload] === "string"
-  ) {
-    configLabelKey = payload[key as keyof typeof payload] as string;
-  } else if (
-    payloadPayload &&
-    key in payloadPayload &&
-    typeof payloadPayload[key as keyof typeof payloadPayload] === "string"
-  ) {
-    configLabelKey = payloadPayload[
-      key as keyof typeof payloadPayload
-    ] as string;
+  const payloadDataKeyEntry = getConfigEntry(config, payload.dataKey);
+  if (payloadDataKeyEntry) {
+    return payloadDataKeyEntry;
   }
 
-  return configLabelKey in config ? config[configLabelKey] : config[key];
+  const keyEntry = getConfigEntry(config, key);
+  if (keyEntry) {
+    return keyEntry;
+  }
+
+  const payloadValueEntry = getConfigEntry(
+    config,
+    getChartPayloadStringValue(payload, key)
+  );
+  if (payloadValueEntry) {
+    return payloadValueEntry;
+  }
+
+  return getConfigEntry(
+    config,
+    getChartPayloadStringValue(payload.payload, key)
+  );
 }
 
 // Format values to percent for expanded charts
@@ -170,12 +195,13 @@ function axisValueToPercentFormatter(value: number) {
 
 // Get max colors count across all themes for a config entry
 function getColorsCount(config: ChartConfig[string]): number {
-  if (!config.colors) {
+  const { colors } = config;
+
+  if (!colors) {
     return 1;
   }
-  const counts = VALID_THEME_KEYS.map(
-    (theme) => config.colors?.[theme]?.length ?? 0
-  );
+
+  const counts = VALID_THEME_KEYS.map((theme) => colors[theme]?.length ?? 0);
   return Math.max(...counts, 1);
 }
 
@@ -197,7 +223,7 @@ export {
   getChartSeriesPaint,
   getColorsCount,
   getLoadingData,
-  getPayloadConfigFromPayload,
+  getPayloadConfigEntry,
   THEMES,
   validateChartConfigColors,
 };

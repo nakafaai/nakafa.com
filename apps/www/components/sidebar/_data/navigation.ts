@@ -5,9 +5,10 @@ import {
 } from "@hugeicons/core-free-icons";
 import { userRoles } from "@repo/backend/convex/users/roles";
 
-export const appNavigationViewers = ["guest", ...userRoles] as const;
+export const appNavigationViewers = ["pending", "guest", ...userRoles] as const;
 
 export type AppNavigationViewer = (typeof appNavigationViewers)[number];
+export type AppNavigationRole = (typeof userRoles)[number];
 
 export const forYouNavigationItems = {
   subject: {
@@ -48,9 +49,19 @@ const generalNavigationItems = [
 ] as const;
 
 /**
- * Resolves the navigation audience from the persisted app role.
+ * Resolves the navigation audience from the auth query state and persisted app role.
  */
-export function getAppNavigationViewer(role: AppNavigationViewer | null) {
+export function getAppNavigationViewer({
+  isPending,
+  role,
+}: {
+  isPending: boolean;
+  role: AppNavigationRole | null;
+}) {
+  if (isPending) {
+    return "pending";
+  }
+
   if (role) {
     return role;
   }

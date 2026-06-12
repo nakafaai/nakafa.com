@@ -107,8 +107,11 @@ function NinaIcon() {
 export function HomeExplore() {
   const tAi = useTranslations("Ai");
   const tCommon = useTranslations("Common");
-  const role = useUser((state) => state.user?.appUser.role ?? null);
-  const viewer = getAppNavigationViewer(role);
+  const { isPending, role } = useUser((state) => ({
+    isPending: state.isPending,
+    role: state.user?.appUser.role ?? null,
+  }));
+  const viewer = getAppNavigationViewer({ isPending, role });
   const items = getForYouNavigationItems(viewer);
   const visibleCardIds = new Set(items.map((item) => item.id));
   const cards = [

@@ -3,8 +3,9 @@ import {
   type ChartConfig,
   getChartColorVariable,
   getColorsCount,
-  getPayloadConfigFromPayload,
+  getPayloadConfigEntry,
 } from "@repo/design-system/components/evilcharts/ui/chart-config";
+import { getChartPayloadStringValue } from "@repo/design-system/components/evilcharts/ui/chart-payload";
 import { cn } from "@repo/design-system/lib/utils";
 import type * as React from "react";
 import * as RechartsPrimitive from "recharts";
@@ -84,13 +85,12 @@ function ChartTooltipContent({
     // For pie charts, item.name contains the sector name (e.g., "chrome")
     // For radial charts, the name is in item.payload[nameKey]
     // For other charts, item.name or item.dataKey contains the series name
-    const payloadName =
-      nameKey && item.payload
-        ? (item.payload as Record<string, unknown>)[nameKey]
-        : undefined;
+    const payloadName = getChartPayloadStringValue(item.payload, nameKey);
     const key = `${payloadName ?? item.name ?? item.dataKey ?? "value"}`;
-    const itemConfig = getPayloadConfigFromPayload(config, item, key);
-    const payloadFill = getPayloadFill(item.payload);
+    const configEntry = getPayloadConfigEntry(config, item, key);
+    const itemConfig = configEntry?.config;
+    const dataKey = configEntry?.dataKey ?? key;
+    const payloadFill = getChartPayloadStringValue(item.payload, "fill");
     const colorsCount = itemConfig ? getColorsCount(itemConfig) : 1;
 
     return [
@@ -118,7 +118,11 @@ function ChartTooltipContent({
                       indicator === "dashed",
                     "my-0.5": nestLabel && indicator === "dashed",
                   })}
-                  style={getIndicatorColorStyle(key, colorsCount, payloadFill)}
+                  style={getIndicatorColorStyle(
+                    dataKey,
+                    colorsCount,
+                    payloadFill
+                  )}
                 />
               )
             )}
@@ -191,7 +195,8 @@ function getTooltipLabel({
 
   const [item] = payload;
   const key = `${labelKey ?? item?.dataKey ?? item?.name ?? "value"}`;
-  const itemConfig = getPayloadConfigFromPayload(config, item, key);
+  const configEntry = getPayloadConfigEntry(config, item, key);
+  const itemConfig = configEntry?.config;
   const value =
     !labelKey && typeof label === "string"
       ? (config[label]?.label ?? label)
@@ -232,15 +237,6 @@ function getIndicatorColorStyle(
   }).join(", ");
 
   return { background: `linear-gradient(to right, ${stops})` };
-}
-
-function getPayloadFill(payload: unknown) {
-  if (!payload || typeof payload !== "object" || !("fill" in payload)) {
-    return;
-  }
-
-  const { fill } = payload;
-  return typeof fill === "string" ? fill : undefined;
 }
 
 const ChartTooltip = ({
