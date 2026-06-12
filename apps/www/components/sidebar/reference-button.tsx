@@ -78,10 +78,7 @@ export function ReferenceButton({ references, title }: Props) {
                   return (
                     <FramePanel className="p-0" key={reference.title}>
                       <FrameHeader>
-                        <FrameTitle
-                          className="line-clamp-2 capitalize"
-                          title={reference.title}
-                        >
+                        <FrameTitle className="line-clamp-2 capitalize">
                           {reference.title.toLowerCase()}
                         </FrameTitle>
                         <FrameDescription className="flex items-center gap-1">

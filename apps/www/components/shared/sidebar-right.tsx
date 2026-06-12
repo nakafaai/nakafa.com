@@ -48,7 +48,9 @@ function SidebarRightHeader({
       <SidebarMenu>
         <SidebarMenuItem>
           <SidebarMenuButton
-            render={<NavigationLink href={header.href} title={header.title} />}
+            render={
+              <NavigationLink aria-label={header.title} href={header.href} />
+            }
             size="lg"
           >
             <div className="grid flex-1 text-left text-sm leading-tight">

@@ -130,7 +130,6 @@ function CommentContent({
                 href={`/user/${userId}`}
                 rel="noopener noreferrer"
                 target="_blank"
-                title={userName}
               >
                 {userName}
               </NavigationLink>

@@ -20,9 +20,9 @@ interface Props {
 /**
  * Renders one content-navigation action as a native COSS Button.
  *
- * The title is kept in a single truncating row because Button owns fixed
- * control height and whitespace. Card-like multi-line previews should use a
- * separate Frame/Card composition, not override button chrome.
+ * The link keeps COSS Button chrome and uses a small two-line domain label so
+ * adjacent lesson navigation remains readable without falling back to the old
+ * title-tooltip behavior.
  */
 function PaginationButton({
   href,
@@ -46,20 +46,21 @@ function PaginationButton({
   return (
     <Button
       className={cn(
-        "w-full min-w-0",
-        isNext ? "justify-end text-right" : "justify-start"
+        "h-auto w-full min-w-0 flex-col items-start whitespace-normal py-3 sm:h-auto",
+        isNext ? "items-end text-right" : "items-start text-left"
       )}
       render={
         <NavigationLink aria-label={`${label}: ${title}`} href={href}>
-          {iconPosition === "left" && <HugeIcons icon={icon} />}
-          <span className="min-w-0 flex-1 truncate">
-            <span className="text-muted-foreground">{label}</span>
-            <span className="hidden sm:inline">
-              <span aria-hidden>: </span>
-              <span>{title}</span>
-            </span>
+          <span className="flex items-center gap-2 text-muted-foreground text-sm">
+            {iconPosition === "left" && (
+              <HugeIcons className="size-4" icon={icon} />
+            )}
+            <span>{label}</span>
+            {iconPosition === "right" && (
+              <HugeIcons className="size-4" icon={icon} />
+            )}
           </span>
-          {iconPosition === "right" && <HugeIcons icon={icon} />}
+          <span className="line-clamp-2 min-w-0 text-foreground">{title}</span>
         </NavigationLink>
       }
       variant="outline"

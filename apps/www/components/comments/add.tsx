@@ -148,10 +148,7 @@ function UserAvatar() {
   }
 
   return (
-    <div
-      className="flex min-w-0 items-center gap-2 px-2"
-      title={user.authUser.name}
-    >
+    <div className="flex min-w-0 items-center gap-2 px-2">
       <Avatar className="size-8">
         <AvatarImage alt={user.authUser.name} src={user.authUser.image ?? ""} />
         <AvatarFallback className="text-xs">

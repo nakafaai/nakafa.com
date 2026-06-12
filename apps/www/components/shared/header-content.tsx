@@ -56,7 +56,6 @@ export function HeaderContent({
               className="w-fit font-medium text-primary text-sm underline-offset-4 hover:underline"
               href={link.href}
               prefetch
-              title={link.label}
             >
               {link.label}
             </NavigationLink>

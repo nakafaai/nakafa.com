@@ -28,13 +28,15 @@ export function SubjectList({
 
 export function SubjectItem({ icon, label, href }: Props) {
   return (
-    <NavigationLink className="group block min-w-0" href={href} title={label}>
+    <NavigationLink
+      aria-label={label}
+      className="group block min-w-0"
+      href={href}
+    >
       <div className="relative overflow-hidden p-6 transition-colors ease-out group-hover:bg-accent group-hover:text-accent-foreground">
         <div className="flex items-center gap-2">
           <HugeIcons className="size-5 shrink-0" icon={icon} />
-          <h2 className="flex-1 truncate" title={label}>
-            {label}
-          </h2>
+          <h2 className="flex-1 truncate">{label}</h2>
           <HugeIcons
             className="size-4 shrink-0 opacity-0 transition-opacity ease-out group-hover:opacity-100"
             icon={ArrowRight02Icon}

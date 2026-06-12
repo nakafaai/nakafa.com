@@ -79,7 +79,6 @@ export function Heading({
         aria-label={`Link to ${props.children}`}
         className="group/heading inline-flex items-center gap-4"
         href={`#${id}`}
-        title={props.children?.toString()}
       >
         <span className="text-pretty">{props.children}</span>
         <div className="rounded-sm border p-2 opacity-0 transition-opacity ease-out group-hover/heading:opacity-100">

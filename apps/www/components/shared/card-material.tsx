@@ -69,26 +69,19 @@ export function CardMaterial({ material }: Props) {
         <div className="flex items-start justify-between gap-2">
           <div className="flex w-full flex-col gap-1.5">
             <FrameTitle className="group flex items-center font-medium">
-              <h2
-                className="inline-block scroll-mt-28"
-                id={id}
-                title={material.title}
-              >
+              <h2 className="inline-block scroll-mt-28" id={id}>
                 {material.title}
               </h2>
               <a
                 aria-label={`Link to ${material.title}`}
                 className="ml-3 hidden shrink-0 text-muted-foreground group-hover:inline-block"
                 href={`#${id}`}
-                title={material.title}
               >
                 <HugeIcons className="size-4" icon={Link04Icon} />
               </a>
             </FrameTitle>
             {!!material.description && (
-              <FrameDescription title={material.description}>
-                {material.description}
-              </FrameDescription>
+              <FrameDescription>{material.description}</FrameDescription>
             )}
           </div>
           <Button
@@ -121,7 +114,6 @@ export function CardMaterial({ material }: Props) {
                     className="group flex w-full scroll-mt-28 items-center gap-2 px-6 py-3 transition-colors ease-out hover:bg-accent hover:text-accent-foreground group-last/list:pb-6"
                     href={item.href}
                     prefetch
-                    title={item.title}
                   >
                     <h3 className="flex-1">{item.title}</h3>
                     <HugeIcons

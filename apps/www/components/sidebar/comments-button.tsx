@@ -15,7 +15,7 @@ export function CommentsButton() {
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
-        render={<NavigationLink href="#comments" title={t("comments")} />}
+        render={<NavigationLink aria-label={t("comments")} href="#comments" />}
         tooltip={t("comments")}
       >
         <HugeIcons className="shrink-0" icon={MessageMultiple01Icon} />

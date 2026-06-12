@@ -17,7 +17,6 @@ export function CommunityButton() {
             href="https://discord.gg/CPCSfKhvfQ"
             rel="noopener noreferrer"
             target="_blank"
-            title={t("community")}
           >
             <HugeIcons className="size-4 shrink-0" icon={DiscordIcon} />
             <span className="truncate">{t("community")}</span>

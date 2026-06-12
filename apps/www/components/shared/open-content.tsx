@@ -6,7 +6,7 @@ import {
   LinkSquare02Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
-import { useClipboard, useDisclosure } from "@mantine/hooks";
+import { useClipboard } from "@mantine/hooks";
 import { HugeIcons } from "@repo/design-system/components/icons/huge-icons";
 import {
   BrandLogo,
@@ -38,7 +38,6 @@ export function OpenContent({
 }) {
   const t = useTranslations("Common");
   const clipboard = useClipboard({ timeout: 500 });
-  const [open, { set }] = useDisclosure(false);
 
   const handleCopy = () => {
     if (!content) {
@@ -94,15 +93,15 @@ export function OpenContent({
 
       <GroupSeparator />
 
-      <Menu onOpenChange={set} open={open}>
+      <Menu>
         <MenuTrigger
           render={
-            <Button aria-label={t("open")} size="icon" variant="secondary" />
+            <Button aria-label={t("open")} size="icon" variant="secondary">
+              <span className="sr-only">{t("open")}</span>
+              <HugeIcons icon={ArrowDown01Icon} />
+            </Button>
           }
-        >
-          <span className="sr-only">{t("open")}</span>
-          <HugeIcons icon={ArrowDown01Icon} />
-        </MenuTrigger>
+        />
 
         <MenuPopup className="w-56">
           <MenuGroup>

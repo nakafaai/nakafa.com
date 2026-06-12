@@ -13,7 +13,7 @@ export function AboutMenu() {
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
-        render={<NavigationLink href="/" title={t("about")} />}
+        render={<NavigationLink href="/" />}
         tooltip={t("about")}
       >
         <HugeIcons icon={FavouriteIcon} />

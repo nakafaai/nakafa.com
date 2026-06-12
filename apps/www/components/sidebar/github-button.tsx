@@ -21,7 +21,6 @@ export function GithubButton({ githubUrl }: Props) {
             href={githubUrl}
             rel="noopener noreferrer"
             target="_blank"
-            title={t("source-code")}
           >
             <HugeIcons className="size-4 shrink-0" icon={GithubIcon} />
             <span className="truncate">{t("source-code")}</span>

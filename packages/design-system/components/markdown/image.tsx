@@ -16,14 +16,7 @@ function getImageDimension(value: ComponentProps<"img">["width" | "height"]) {
 
 /** Renders one markdown image with a stable intrinsic size hint to reduce layout shift. */
 export const MarkdownImage = memo(
-  ({
-    alt = "",
-    className,
-    height,
-    src,
-    title,
-    width,
-  }: ComponentProps<"img">) => {
+  ({ alt = "", className, height, src, width }: ComponentProps<"img">) => {
     const resolvedWidth =
       getImageDimension(width) ?? DEFAULT_MARKDOWN_IMAGE_WIDTH;
     const resolvedHeight =
@@ -43,7 +36,6 @@ export const MarkdownImage = memo(
         height={resolvedHeight}
         loading="lazy"
         src={src}
-        title={title}
         unoptimized
         width={resolvedWidth}
       />

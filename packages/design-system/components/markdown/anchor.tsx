@@ -28,7 +28,6 @@ export function Anchor({
           className
         )}
         href={href}
-        title={href}
         {...props}
       >
         {children}
@@ -49,7 +48,6 @@ export function Anchor({
           className
         )}
         href={href}
-        title={href}
         {...(popover !== undefined && { popover })}
         {...props}
       >

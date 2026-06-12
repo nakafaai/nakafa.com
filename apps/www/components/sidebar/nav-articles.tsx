@@ -24,7 +24,7 @@ function MenuItem() {
         <SidebarMenuItem key={item.title}>
           <SidebarMenuButton
             isActive={pathname.includes(item.href)}
-            render={<NavigationLink href={item.href} title={t(item.title)} />}
+            render={<NavigationLink href={item.href} />}
             tooltip={t(item.title)}
           >
             {!!item.icon && <HugeIcons icon={item.icon} />}

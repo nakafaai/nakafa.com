@@ -109,7 +109,6 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
                       }
                       rel="noopener noreferrer"
                       target="_blank"
-                      title={t("source-code")}
                     >
                       <span className="sr-only">{t("source-code")}</span>
                       <HugeIcons className="size-4" icon={GithubIcon} />
@@ -134,7 +133,6 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
                       href="https://www.youtube.com/@nakafaa"
                       rel="noopener noreferrer"
                       target="_blank"
-                      title={t("videos")}
                     >
                       <span className="sr-only">{t("videos")}</span>
                       <HugeIcons className="size-4" icon={YoutubeIcon} />
@@ -159,7 +157,6 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
                       href="https://discord.gg/CPCSfKhvfQ"
                       rel="noopener noreferrer"
                       target="_blank"
-                      title={t("community")}
                     >
                       <span className="sr-only">{t("community")}</span>
                       <HugeIcons className="size-4" icon={DiscordIcon} />
@@ -201,10 +198,7 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
                     return (
                       <FramePanel className="p-0" key={reference.title}>
                         <FrameHeader>
-                          <FrameTitle
-                            className="line-clamp-1 capitalize"
-                            title={reference.title}
-                          >
+                          <FrameTitle className="line-clamp-1 capitalize">
                             {reference.title.toLowerCase()}
                           </FrameTitle>
                           <FrameDescription className="flex items-center gap-1">

@@ -62,9 +62,9 @@ export function AiChatModel() {
       <MenuTrigger
         render={
           <Button variant="ghost">
-            <HugeIcons icon={selectedModel.icon} />
+            <HugeIcons className="size-4" icon={selectedModel.icon} />
             {selectedModel.label}
-            <HugeIcons icon={ArrowDown01Icon} />
+            <HugeIcons className="size-4" icon={ArrowDown01Icon} />
           </Button>
         }
       />
@@ -73,9 +73,12 @@ export function AiChatModel() {
           <MenuRadioGroup onValueChange={handleValueChange} value={model}>
             {aiModels.map((item) => (
               <MenuRadioItem key={item.value} value={item.value}>
-                <span className="flex min-w-0 items-start gap-2">
-                  <HugeIcons icon={item.icon} />
-                  <span className="grid min-w-0 gap-0.5">
+                <span className="flex min-w-0 items-center gap-2">
+                  <HugeIcons
+                    className="size-4 text-muted-foreground"
+                    icon={item.icon}
+                  />
+                  <span className="grid min-w-0 gap-0.5 leading-tight">
                     <span>{item.label}</span>
                     <span className="text-muted-foreground text-xs">
                       {t(item.subtitleKey)}

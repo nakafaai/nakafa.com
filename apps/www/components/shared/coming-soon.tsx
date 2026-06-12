@@ -24,7 +24,6 @@ export function ComingSoon({ className }: { className?: string }) {
             href={getGithubUrl({ path: "" })}
             rel="noopener noreferrer"
             target="_blank"
-            title={t("contribute")}
           >
             <HugeIcons icon={LoveKoreanFingerIcon} />
             {t("contribute")}

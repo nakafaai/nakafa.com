@@ -98,7 +98,6 @@ function OnboardingContent({ user }: { user: CurrentUser }) {
             height={216}
             loading="eager"
             src="/og.png"
-            title="Nakafa"
             width={382}
           />
         </div>

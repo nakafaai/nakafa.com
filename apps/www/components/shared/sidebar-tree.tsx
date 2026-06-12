@@ -66,13 +66,14 @@ function SidebarTreeItem({
                     type="button"
                   />
                 ) : (
-                  <NavigationLink href={heading.href} title={heading.label} />
+                  <NavigationLink
+                    aria-label={heading.label}
+                    href={heading.href}
+                  />
                 )
               }
             >
-              <span className="truncate" title={heading.label}>
-                {heading.label}
-              </span>
+              <span className="truncate">{heading.label}</span>
             </SidebarMenuButton>
           }
         />

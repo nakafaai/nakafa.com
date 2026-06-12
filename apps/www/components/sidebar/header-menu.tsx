@@ -19,7 +19,10 @@ export function HeaderMenu() {
       <SidebarMenuItem>
         <SidebarMenuButton
           render={
-            <NavigationLink href={currentUser ? "/home" : "/"} title="Nakafa" />
+            <NavigationLink
+              aria-label="Nakafa"
+              href={currentUser ? "/home" : "/"}
+            />
           }
           size="lg"
         >
@@ -31,7 +34,6 @@ export function HeaderMenu() {
               preload
               sizes="32px"
               src="/logo.svg"
-              title="Nakafa"
             />
           </div>
           <div className="grid flex-1 text-left text-sm leading-tight">

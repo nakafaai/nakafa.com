@@ -25,6 +25,7 @@ import {
   CommandPanel,
   CommandSeparator,
 } from "@repo/design-system/components/ui/command";
+import { EmptyMedia } from "@repo/design-system/components/ui/empty";
 import { Kbd, KbdGroup } from "@repo/design-system/components/ui/kbd";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useRouter } from "@repo/internationalization/src/navigation";
@@ -179,27 +180,33 @@ function SearchEmpty({
   const t = useTranslations("Utils");
 
   return (
-    <CommandEmpty>
+    <CommandEmpty className="not-empty:py-12">
       {!!error && (
-        <>
-          <HugeIcons icon={InformationCircleIcon} />
-          <div className="mt-1">{t("search-error")}</div>
+        <div className="mx-auto flex max-w-sm flex-col items-center gap-2 px-6 text-center">
+          <EmptyMedia variant="icon">
+            <HugeIcons icon={InformationCircleIcon} />
+          </EmptyMedia>
+          <div className="font-medium">{t("search-error")}</div>
           {typeof error === "string" || typeof error === "object" ? (
-            <div className="wrap-break-word mt-2 max-w-xs text-xs">{error}</div>
+            <div className="wrap-break-word max-w-xs text-muted-foreground text-xs">
+              {error}
+            </div>
           ) : null}
-        </>
+        </div>
       )}
       {!error && isLoading && (
-        <>
+        <div className="flex flex-col items-center gap-2 px-6 text-center text-muted-foreground">
           <Spinner className="size-4" />
           <p>{t("search-loading")}</p>
-        </>
+        </div>
       )}
       {!(error || isLoading) && !!search && (
-        <>
-          <HugeIcons icon={Sad02Icon} />
-          <p>{t("search-not-found")}</p>
-        </>
+        <div className="mx-auto flex max-w-sm flex-col items-center gap-2 px-6 text-center">
+          <EmptyMedia variant="icon">
+            <HugeIcons icon={Sad02Icon} />
+          </EmptyMedia>
+          <p className="text-muted-foreground">{t("search-not-found")}</p>
+        </div>
       )}
     </CommandEmpty>
   );
@@ -254,28 +261,31 @@ function SearchListItem({
   if (item.type === "content") {
     return (
       <CommandItem
-        className="flex-col items-start"
+        className="items-start gap-3 py-2"
         disabled={isPending}
         onClick={onClick}
         value={item}
       >
-        <div className="flex items-center gap-2">
-          <HugeIcons icon={FileIcon} />
-          <span className="line-clamp-1">{item.label}</span>
-        </div>
-        <SearchExcerpt
-          className="line-clamp-3 text-muted-foreground text-xs"
-          excerpt={item.excerpt}
-          query={item.query}
+        <HugeIcons
+          className="mt-0.5 size-4 text-muted-foreground"
+          icon={FileIcon}
         />
+        <span className="min-w-0 flex-1">
+          <span className="block truncate">{item.label}</span>
+          <SearchExcerpt
+            className="mt-1 line-clamp-2 text-muted-foreground text-xs"
+            excerpt={item.excerpt}
+            query={item.query}
+          />
+        </span>
       </CommandItem>
     );
   }
 
   return (
     <CommandItem disabled={isPending} onClick={onClick} value={item}>
-      <HugeIcons icon={item.icon} />
-      <span className="line-clamp-1">{item.label}</span>
+      <HugeIcons className="size-4 text-muted-foreground" icon={item.icon} />
+      <span className="min-w-0 flex-1 truncate">{item.label}</span>
     </CommandItem>
   );
 }

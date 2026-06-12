@@ -31,13 +31,12 @@ export function CardArticle({ category, article }: Props) {
       className="group"
       href={`/articles/${category}/${article.slug}`}
       key={article.slug}
-      title={article.title}
     >
       <FramePanel className="relative h-full overflow-hidden p-0">
         <div className="absolute inset-0 h-0 bg-primary transition-[height] duration-500 ease-out group-hover:h-4" />
         <FrameHeader>
           <FrameTitle className="line-clamp-2 font-medium leading-snug">
-            <h2 className="scroll-mt-28" id={id} title={article.title}>
+            <h2 className="scroll-mt-28" id={id}>
               {article.title}
             </h2>
           </FrameTitle>
