@@ -52,6 +52,8 @@
     "language": "Bahasa",
     "articles": "Artikel",
     "subject": "Mata pelajaran",
+    "for-you": "Untukmu",
+    "explore": "Jelajahi",
     "explore-grades": "Jelajahi Kelas",
     "references": "Referensi",
     "show": "Tampilkan",
@@ -740,7 +742,7 @@
       "learning": "Belajar",
       "classes": "Kelas",
       "nakafa-materials": "Materi Nakafa",
-      "yours": "Kamu",
+      "yours": "Untukmu",
       "notifications": "Notifikasi",
       "preparing-school": "Menyiapkan sekolahmu",
       "preparing-school-description": "Tunggu sebentar ya, kami sedang menyiapkan semuanya untukmu."

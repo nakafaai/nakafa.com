@@ -1,3 +1,5 @@
+"use client";
+
 import {
   AiChat02Icon,
   AiMagicIcon,
@@ -8,7 +10,13 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
+import {
+  getAppNavigationViewer,
+  getForYouNavigationItems,
+} from "@/components/sidebar/_data/navigation";
+import { useUser } from "@/lib/context/use-user";
 
 function SubjectIcon() {
   return (
@@ -86,39 +94,54 @@ function NinaIcon() {
 export function HomeExplore() {
   const tAi = useTranslations("Ai");
   const tCommon = useTranslations("Common");
+  const role = useUser((state) => state.user?.appUser.role ?? null);
+  const viewer = getAppNavigationViewer(role);
+  const items = getForYouNavigationItems(viewer);
+  const cardByItemId = {
+    subject: {
+      backgroundClassName: "bg-chart-1/10 group-hover:bg-chart-1/15",
+      href: "/subject",
+      title: tCommon("explore-grades"),
+      visual: <SubjectIcon />,
+    },
+    tryOut: {
+      backgroundClassName: "bg-chart-2/10 group-hover:bg-chart-2/15",
+      href: "/try-out",
+      title: tCommon("try-out"),
+      visual: <TryoutIcon />,
+    },
+    askNina: {
+      backgroundClassName: "bg-chart-3/15 group-hover:bg-chart-3/20",
+      href: "/chat",
+      title: tAi("ask-nina"),
+      visual: <NinaIcon />,
+    },
+  };
 
   return (
     <section className="flex flex-col gap-4">
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 md:gap-6">
-        <NavigationLink
-          className="group flex flex-col items-center gap-2"
-          href="/chat"
-        >
-          <div className="flex aspect-[1/0.95] w-full items-center justify-center rounded-xl bg-chart-3/15 transition-all ease-out group-hover:bg-chart-3/20">
-            <NinaIcon />
-          </div>
-          <h2>{tAi("ask-nina")}</h2>
-        </NavigationLink>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:gap-6">
+        {items.map((item) => {
+          const card = cardByItemId[item.id];
 
-        <NavigationLink
-          className="group flex flex-col items-center gap-2"
-          href="/subject"
-        >
-          <div className="flex aspect-[1/0.95] w-full items-center justify-center rounded-xl bg-chart-1/10 transition-all ease-out group-hover:bg-chart-1/15">
-            <SubjectIcon />
-          </div>
-          <h2>{tCommon("explore-grades")}</h2>
-        </NavigationLink>
-
-        <NavigationLink
-          className="group flex flex-col items-center gap-2"
-          href="/try-out"
-        >
-          <div className="flex aspect-[1/0.95] w-full items-center justify-center rounded-xl bg-chart-2/10 transition-all ease-out group-hover:bg-chart-2/15">
-            <TryoutIcon />
-          </div>
-          <h2>{tCommon("try-out")}</h2>
-        </NavigationLink>
+          return (
+            <NavigationLink
+              className="group flex flex-col items-center gap-2"
+              href={card.href}
+              key={item.id}
+            >
+              <div
+                className={cn(
+                  "flex aspect-[1/0.95] w-full items-center justify-center rounded-xl transition-all ease-out",
+                  card.backgroundClassName
+                )}
+              >
+                {card.visual}
+              </div>
+              <h2>{card.title}</h2>
+            </NavigationLink>
+          );
+        })}
       </div>
     </section>
   );

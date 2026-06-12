@@ -52,6 +52,8 @@
     "language": "Language",
     "articles": "Articles",
     "subject": "Subject",
+    "for-you": "For you",
+    "explore": "Explore",
     "explore-grades": "Explore Grades",
     "references": "References",
     "show": "Show",
@@ -740,7 +742,7 @@
       "learning": "Learning",
       "classes": "Classes",
       "nakafa-materials": "Nakafa Materials",
-      "yours": "Yours",
+      "yours": "For you",
       "notifications": "Notifications",
       "preparing-school": "Preparing your school",
       "preparing-school-description": "Please wait while we set things up for you."
