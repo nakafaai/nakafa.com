@@ -112,7 +112,7 @@ function ThemeSubmenuContent({ side }: { side: SubmenuSide }) {
 
   return (
     <DropdownMenuSubContent
-      className="w-max max-w-[calc(100vw-2rem)]"
+      className="max-h-[min(var(--available-height),24rem)] w-max max-w-[calc(100vw-2rem)]"
       side={side}
     >
       <DropdownMenuGroup>
