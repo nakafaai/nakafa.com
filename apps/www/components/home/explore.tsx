@@ -10,13 +10,26 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { cn } from "@repo/design-system/lib/utils";
+import { cva } from "class-variance-authority";
 import { useTranslations } from "next-intl";
 import {
   getAppNavigationViewer,
   getForYouNavigationItems,
 } from "@/components/sidebar/_data/navigation";
 import { useUser } from "@/lib/context/use-user";
+
+const homeExploreCardVisualVariants = cva(
+  "flex aspect-[1/0.95] w-full items-center justify-center rounded-xl transition-all ease-out",
+  {
+    variants: {
+      tone: {
+        askNina: "bg-chart-3/15 group-hover:bg-chart-3/20",
+        subject: "bg-chart-1/10 group-hover:bg-chart-1/15",
+        tryOut: "bg-chart-2/10 group-hover:bg-chart-2/15",
+      },
+    },
+  }
+);
 
 function SubjectIcon() {
   return (
@@ -97,45 +110,43 @@ export function HomeExplore() {
   const role = useUser((state) => state.user?.appUser.role ?? null);
   const viewer = getAppNavigationViewer(role);
   const items = getForYouNavigationItems(viewer);
-  const cardByItemId = {
-    subject: {
-      backgroundClassName: "bg-chart-1/10 group-hover:bg-chart-1/15",
-      href: "/subject",
-      title: tCommon("explore-grades"),
-      visual: <SubjectIcon />,
-    },
-    tryOut: {
-      backgroundClassName: "bg-chart-2/10 group-hover:bg-chart-2/15",
-      href: "/try-out",
-      title: tCommon("try-out"),
-      visual: <TryoutIcon />,
-    },
-    askNina: {
-      backgroundClassName: "bg-chart-3/15 group-hover:bg-chart-3/20",
+  const visibleCardIds = new Set(items.map((item) => item.id));
+  const cards = [
+    {
       href: "/chat",
+      id: "askNina",
       title: tAi("ask-nina"),
       visual: <NinaIcon />,
     },
-  };
+    {
+      href: "/subject",
+      id: "subject",
+      title: tCommon("explore-grades"),
+      visual: <SubjectIcon />,
+    },
+    {
+      href: "/try-out",
+      id: "tryOut",
+      title: tCommon("try-out"),
+      visual: <TryoutIcon />,
+    },
+  ] as const;
 
   return (
     <section className="flex flex-col gap-4">
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:gap-6">
-        {items.map((item) => {
-          const card = cardByItemId[item.id];
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 md:gap-6">
+        {cards.map((card) => {
+          if (!visibleCardIds.has(card.id)) {
+            return null;
+          }
 
           return (
             <NavigationLink
               className="group flex flex-col items-center gap-2"
               href={card.href}
-              key={item.id}
+              key={card.id}
             >
-              <div
-                className={cn(
-                  "flex aspect-[1/0.95] w-full items-center justify-center rounded-xl transition-all ease-out",
-                  card.backgroundClassName
-                )}
-              >
+              <div className={homeExploreCardVisualVariants({ tone: card.id })}>
                 {card.visual}
               </div>
               <h2>{card.title}</h2>
