@@ -150,6 +150,36 @@ pnpm --filter @repo/backend sync:prod:reset
 pnpm --filter @repo/backend sync:prod:reset --force
 ```
 
+### Reset Content Analytics
+
+Use this when content view history and derived analytics read models must be
+discarded and restarted under graph identity, such as after analytics projection
+shape changes. It clears content views, analytics queue rows, partition leases,
+popularity counts, and trending buckets. New product traffic repopulates these
+tables after strict code is deployed.
+
+```bash
+# Preview deletion
+pnpm --filter @repo/backend sync:reset:analytics
+
+# Actually delete analytics rows
+pnpm --filter @repo/backend sync:reset:analytics --force
+```
+
+For production, run the reset only during an approved Convex write/deploy
+window. This command calls internal mutations from the deployed Convex bundle, so
+it is operational read-model reset tooling after those mutations are available.
+For a strict schema projection cutover where old production rows block deploying
+the current bundle, first use an approved deployment-compatible data cutover path
+to clear or migrate the analytics rows. Then deploy strict code, run this reset
+only if analytics rows still remain, and verify:
+
+```bash
+pnpm --filter @repo/backend deploy
+pnpm --filter @repo/backend sync:prod:reset:analytics --force
+pnpm --filter @repo/backend sync:prod:verify
+```
+
 ### Reset Audio Read Models
 
 Use this when derived audio read models must be discarded and rebuilt from the

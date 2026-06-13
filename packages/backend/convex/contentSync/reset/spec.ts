@@ -1,3 +1,4 @@
+import type { TableNames } from "@repo/backend/convex/_generated/dataModel";
 import { v } from "convex/values";
 
 export const resetBatchSize = 500;
@@ -8,44 +9,54 @@ export const batchDeleteResultValidator = v.object({
   hasMore: v.boolean(),
 });
 
-export type ResettableTableName =
-  | "articleContents"
-  | "articleReferences"
-  | "audioContentSources"
-  | "audioGenerationQueue"
-  | "authors"
-  | "contentAuthors"
-  | "contentRouteCounts"
-  | "contentRoutePages"
-  | "contentRoutes"
-  | "exerciseAnswers"
-  | "exerciseAttempts"
-  | "exerciseChoices"
-  | "exerciseItemParameters"
-  | "exerciseQuestions"
-  | "exerciseSets"
-  | "tryoutAccessCampaigns"
-  | "tryoutAccessCampaignProducts"
-  | "tryoutAccessGrants"
-  | "tryoutAccessLinks"
-  | "irtCalibrationAttempts"
-  | "irtCalibrationCacheStats"
-  | "irtCalibrationQueue"
-  | "irtCalibrationRuns"
-  | "irtScaleQualityChecks"
-  | "irtScaleQualityRefreshQueue"
-  | "irtScalePublicationQueue"
-  | "irtScaleVersionItems"
-  | "irtScaleVersions"
-  | "contentSearch"
-  | "quranSurahs"
-  | "quranVerses"
-  | "subjectSections"
-  | "subjectTopics"
-  | "tryoutAttempts"
-  | "tryoutCatalogMeta"
-  | "tryoutLeaderboardEntries"
-  | "tryoutPartAttempts"
-  | "tryoutPartSets"
-  | "tryouts"
-  | "userTryoutStats";
+export const resettableTableNames = [
+  "articleContents",
+  "articlePopularity",
+  "articleReferences",
+  "audioContentSources",
+  "audioGenerationQueue",
+  "authors",
+  "contentAnalyticsPartitions",
+  "contentAuthors",
+  "contentRouteCounts",
+  "contentRoutePages",
+  "contentRoutes",
+  "contentSearch",
+  "contentViewAnalyticsQueue",
+  "contentViews",
+  "exerciseAnswers",
+  "exerciseAttempts",
+  "exerciseChoices",
+  "exerciseItemParameters",
+  "exercisePopularity",
+  "exerciseQuestions",
+  "exerciseSets",
+  "irtCalibrationAttempts",
+  "irtCalibrationCacheStats",
+  "irtCalibrationQueue",
+  "irtCalibrationRuns",
+  "irtScalePublicationQueue",
+  "irtScaleQualityChecks",
+  "irtScaleQualityRefreshQueue",
+  "irtScaleVersionItems",
+  "irtScaleVersions",
+  "quranSurahs",
+  "quranVerses",
+  "subjectPopularity",
+  "subjectSections",
+  "subjectTopics",
+  "subjectTrendingBuckets",
+  "tryoutAccessCampaignProducts",
+  "tryoutAccessCampaigns",
+  "tryoutAccessGrants",
+  "tryoutAccessLinks",
+  "tryoutAttempts",
+  "tryoutCatalogMeta",
+  "tryoutLeaderboardEntries",
+  "tryoutPartAttempts",
+  "tryoutPartSets",
+  "tryouts",
+  "userTryoutStats",
+] as const satisfies readonly TableNames[];
+
+export type ResettableTableName = (typeof resettableTableNames)[number];

@@ -36,6 +36,44 @@ const RESET_STEPS: ResetStep[] = [
     resultLabel: "content search rows",
   },
   {
+    label: "Deleting content view analytics queue...",
+    mutation:
+      internal.contentSync.reset.internal.deleteContentViewAnalyticsQueueBatch,
+    resultLabel: "content view analytics queue rows",
+  },
+  {
+    label: "Deleting content analytics partition leases...",
+    mutation:
+      internal.contentSync.reset.internal.deleteContentAnalyticsPartitionsBatch,
+    resultLabel: "content analytics partition leases",
+  },
+  {
+    label: "Deleting content view rows...",
+    mutation: internal.contentSync.reset.internal.deleteContentViewsBatch,
+    resultLabel: "content view rows",
+  },
+  {
+    label: "Deleting article popularity rows...",
+    mutation: internal.contentSync.reset.internal.deleteArticlePopularityBatch,
+    resultLabel: "article popularity rows",
+  },
+  {
+    label: "Deleting subject popularity rows...",
+    mutation: internal.contentSync.reset.internal.deleteSubjectPopularityBatch,
+    resultLabel: "subject popularity rows",
+  },
+  {
+    label: "Deleting exercise popularity rows...",
+    mutation: internal.contentSync.reset.internal.deleteExercisePopularityBatch,
+    resultLabel: "exercise popularity rows",
+  },
+  {
+    label: "Deleting subject trending bucket rows...",
+    mutation:
+      internal.contentSync.reset.internal.deleteSubjectTrendingBucketsBatch,
+    resultLabel: "subject trending bucket rows",
+  },
+  {
     label: "Deleting content route rows...",
     mutation: internal.contentSync.reset.internal.deleteContentRoutesBatch,
     resultLabel: "content route rows",
@@ -310,6 +348,13 @@ export const reset = Effect.fn("sync.reset")(function* (
   const counts = yield* getContentCounts(config);
 
   log(`  Content Search:        ${counts.contentSearch}`);
+  log(`  Content Views:         ${counts.contentViews}`);
+  log(`  View Analytics Queue:  ${counts.contentViewAnalyticsQueue}`);
+  log(`  Analytics Partitions:  ${counts.contentAnalyticsPartitions}`);
+  log(`  Article Popularity:    ${counts.articlePopularity}`);
+  log(`  Subject Popularity:    ${counts.subjectPopularity}`);
+  log(`  Exercise Popularity:   ${counts.exercisePopularity}`);
+  log(`  Subject Trending:      ${counts.subjectTrendingBuckets}`);
   log(`  Content Routes:        ${counts.contentRoutes}`);
   log(`  Content Route Counts:  ${counts.contentRouteCounts}`);
   log(`  Content Route Pages:   ${counts.contentRoutePages}`);
@@ -390,6 +435,13 @@ export const reset = Effect.fn("sync.reset")(function* (
     counts.irtScaleVersionItems;
   const totalDerived =
     counts.contentSearch +
+    counts.contentViews +
+    counts.contentViewAnalyticsQueue +
+    counts.contentAnalyticsPartitions +
+    counts.articlePopularity +
+    counts.subjectPopularity +
+    counts.exercisePopularity +
+    counts.subjectTrendingBuckets +
     counts.contentRoutes +
     counts.contentRouteCounts +
     counts.contentRoutePages +

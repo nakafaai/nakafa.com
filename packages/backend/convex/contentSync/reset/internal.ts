@@ -24,6 +24,23 @@ export const deleteContentAuthorsBatch =
   createBatchDeleteMutation("contentAuthors");
 export const deleteContentSearchBatch =
   createBatchDeleteMutation("contentSearch");
+export const deleteContentViewsBatch =
+  createBatchDeleteMutation("contentViews");
+export const deleteContentViewAnalyticsQueueBatch = createBatchDeleteMutation(
+  "contentViewAnalyticsQueue"
+);
+export const deleteContentAnalyticsPartitionsBatch = createBatchDeleteMutation(
+  "contentAnalyticsPartitions"
+);
+export const deleteArticlePopularityBatch =
+  createBatchDeleteMutation("articlePopularity");
+export const deleteSubjectPopularityBatch =
+  createBatchDeleteMutation("subjectPopularity");
+export const deleteExercisePopularityBatch =
+  createBatchDeleteMutation("exercisePopularity");
+export const deleteSubjectTrendingBucketsBatch = createBatchDeleteMutation(
+  "subjectTrendingBuckets"
+);
 export const deleteContentRoutesBatch =
   createBatchDeleteMutation("contentRoutes");
 export const deleteContentRouteCountsBatch =

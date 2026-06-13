@@ -1,7 +1,7 @@
 import { callConvexMutation } from "@repo/backend/scripts/sync-content/convex";
 import { getContentCounts } from "@repo/backend/scripts/sync-content/counts";
 import { log, logSuccess } from "@repo/backend/scripts/sync-content/logging";
-import { resetAudio } from "@repo/backend/scripts/sync-content/resetAudio";
+import { resetAnalytics } from "@repo/backend/scripts/sync-content/resetAnalytics";
 import type { ContentCountsSchema } from "@repo/backend/scripts/sync-content/schemas";
 import { Effect, type Schema } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -19,10 +19,6 @@ vi.mock("@repo/backend/scripts/sync-content/logging", () => ({
   log: vi.fn(),
   logSuccess: vi.fn(),
   logWarning: vi.fn(),
-}));
-
-vi.mock("@repo/backend/scripts/sync-content/runtime", () => ({
-  clearSyncState: vi.fn(() => Effect.void),
 }));
 
 const config = {
@@ -64,10 +60,10 @@ const emptyCounts = {
   irtScaleVersions: 0,
   quranSurahs: 0,
   quranVerses: 0,
-  subjectSections: 0,
   subjectPopularity: 0,
-  subjectTrendingBuckets: 0,
+  subjectSections: 0,
   subjectTopics: 0,
+  subjectTrendingBuckets: 0,
   tryoutAccessCampaignProducts: 0,
   tryoutAccessCampaigns: 0,
   tryoutAccessGrants: 0,
@@ -82,55 +78,74 @@ const emptyCounts = {
   userTryoutStats: 0,
 } satisfies Schema.Schema.Type<typeof ContentCountsSchema>;
 
-describe("sync-content resetAudio", () => {
+describe("sync-content resetAnalytics", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("points production dry runs at the audio-only reset command", async () => {
+  it("points production dry runs at the analytics-only reset command", async () => {
     vi.mocked(getContentCounts).mockReturnValue(
-      Effect.succeed({ ...emptyCounts, audioContentSources: 780 })
+      Effect.succeed({ ...emptyCounts, contentViews: 20_000 })
     );
 
-    await Effect.runPromise(resetAudio(config, { prod: true }));
+    await Effect.runPromise(resetAnalytics(config, { prod: true }));
 
-    expect(log).toHaveBeenCalledWith("  Audio Content Sources: 780");
-    expect(log).toHaveBeenCalledWith("\nTo delete audio read models, run:");
+    expect(log).toHaveBeenCalledWith("  Content Views:        20000");
     expect(log).toHaveBeenCalledWith(
-      "  pnpm --filter @repo/backend sync:prod:reset:audio --force"
+      "\nTo delete content analytics rows, run:"
+    );
+    expect(log).toHaveBeenCalledWith(
+      "  pnpm --filter @repo/backend sync:prod:reset:analytics --force"
     );
     expect(callConvexMutation).not.toHaveBeenCalled();
   });
 
-  it("deletes only the bounded audio reset batches when forced", async () => {
+  it("deletes only the bounded analytics reset batches when forced", async () => {
     vi.mocked(getContentCounts).mockReturnValue(
       Effect.succeed({
         ...emptyCounts,
-        audioContentSources: 2,
-        audioGenerationQueue: 1,
-        contentAudios: 1,
+        articlePopularity: 1,
+        contentAnalyticsPartitions: 1,
+        contentViewAnalyticsQueue: 1,
+        contentViews: 2,
+        exercisePopularity: 1,
+        subjectPopularity: 1,
+        subjectTrendingBuckets: 1,
       })
     );
     vi.mocked(callConvexMutation)
       .mockReturnValueOnce(Effect.succeed({ deleted: 1, hasMore: false }))
       .mockReturnValueOnce(Effect.succeed({ deleted: 1, hasMore: false }))
-      .mockReturnValueOnce(Effect.succeed({ deleted: 2, hasMore: false }));
+      .mockReturnValueOnce(Effect.succeed({ deleted: 2, hasMore: false }))
+      .mockReturnValueOnce(Effect.succeed({ deleted: 1, hasMore: false }))
+      .mockReturnValueOnce(Effect.succeed({ deleted: 1, hasMore: false }))
+      .mockReturnValueOnce(Effect.succeed({ deleted: 1, hasMore: false }))
+      .mockReturnValueOnce(Effect.succeed({ deleted: 1, hasMore: false }));
 
-    await Effect.runPromise(resetAudio(config, { force: true }));
+    await Effect.runPromise(resetAnalytics(config, { force: true }));
 
-    expect(callConvexMutation).toHaveBeenCalledTimes(3);
+    expect(callConvexMutation).toHaveBeenCalledTimes(7);
     expect(logSuccess).toHaveBeenCalledWith(
-      "  Deleted 1 audio generation queue entries"
+      "  Deleted 1 content view analytics queue rows"
     );
     expect(logSuccess).toHaveBeenCalledWith(
-      "  Deleted 1 generated content audio rows"
+      "  Deleted 1 content analytics partition leases"
+    );
+    expect(logSuccess).toHaveBeenCalledWith("  Deleted 2 content view rows");
+    expect(logSuccess).toHaveBeenCalledWith(
+      "  Deleted 1 article popularity rows"
     );
     expect(logSuccess).toHaveBeenCalledWith(
-      "  Deleted 2 audio content sources"
+      "  Deleted 1 subject popularity rows"
     );
     expect(logSuccess).toHaveBeenCalledWith(
-      "Deleted 4 audio rows across sync-managed tables"
+      "  Deleted 1 exercise popularity rows"
     );
-    expect(log).toHaveBeenCalledWith("  pnpm --filter @repo/backend sync");
+    expect(logSuccess).toHaveBeenCalledWith(
+      "  Deleted 1 subject trending bucket rows"
+    );
+    expect(logSuccess).toHaveBeenCalledWith(
+      "Deleted 8 analytics rows across content tables"
+    );
   });
 });

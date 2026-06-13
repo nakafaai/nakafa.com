@@ -37,6 +37,7 @@ import type * as assessments_seed from "../assessments/seed.js";
 import type * as assessments_validators from "../assessments/validators.js";
 import type * as audioStudies_actions from "../audioStudies/actions.js";
 import type * as audioStudies_constants from "../audioStudies/constants.js";
+import type * as audioStudies_content_spec from "../audioStudies/content/spec.js";
 import type * as audioStudies_contentAudios_impl from "../audioStudies/contentAudios/impl.js";
 import type * as audioStudies_contentAudios_spec from "../audioStudies/contentAudios/spec.js";
 import type * as audioStudies_generation_impl from "../audioStudies/generation/impl.js";
@@ -395,6 +396,7 @@ declare const fullApi: ApiFromModules<{
   "assessments/validators": typeof assessments_validators;
   "audioStudies/actions": typeof audioStudies_actions;
   "audioStudies/constants": typeof audioStudies_constants;
+  "audioStudies/content/spec": typeof audioStudies_content_spec;
   "audioStudies/contentAudios/impl": typeof audioStudies_contentAudios_impl;
   "audioStudies/contentAudios/spec": typeof audioStudies_contentAudios_spec;
   "audioStudies/generation/impl": typeof audioStudies_generation_impl;

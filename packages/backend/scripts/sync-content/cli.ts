@@ -9,6 +9,7 @@ import {
 } from "@repo/backend/scripts/sync-content/exercises";
 import { log, logError } from "@repo/backend/scripts/sync-content/logging";
 import { reset } from "@repo/backend/scripts/sync-content/reset";
+import { resetAnalytics } from "@repo/backend/scripts/sync-content/resetAnalytics";
 import { resetAudio } from "@repo/backend/scripts/sync-content/resetAudio";
 import { resetTryouts } from "@repo/backend/scripts/sync-content/resetTryouts";
 import {
@@ -75,6 +76,9 @@ const printUsage = (): void => {
     "  sync:reset            - Delete synced content/runtime rows (authors optional, requires --force)"
   );
   log(
+    "  sync:reset:analytics  - Delete content view, popularity, trending, and analytics queue rows"
+  );
+  log(
     "  sync:reset:audio      - Delete audio source, generated audio, and audio queue rows"
   );
   log(
@@ -87,6 +91,9 @@ const printUsage = (): void => {
   log("  sync:prod:clean       - Clean stale content in production");
   log(
     "  sync:prod:reset       - Delete synced content/runtime rows in production (authors optional)"
+  );
+  log(
+    "  sync:prod:reset:analytics - Delete content analytics rows in production"
   );
   log("  sync:prod:reset:audio - Delete audio read models in production");
   log(
@@ -167,6 +174,9 @@ export const runCommand = Effect.fn("sync.runCommand")(function* (
       return;
     case "reset":
       yield* reset(config, options);
+      return;
+    case "reset-analytics":
+      yield* resetAnalytics(config, options);
       return;
     case "reset-audio":
       yield* resetAudio(config, options);
