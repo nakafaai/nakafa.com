@@ -1,5 +1,6 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import { buildContentSearchRef } from "@repo/backend/convex/contents/helpers/search/documents";
 import { getUnknownErrorMessage } from "@repo/backend/convex/lib/effect";
 import {
   type GetTrendingSubjectsArgs,
@@ -125,26 +126,55 @@ const buildTrendingSubjects = Effect.fn(
     catch: toTrendingSubjectIoError,
   });
 
-  return trendingEntries.flatMap(([, viewCount], index) => {
+  const candidates = trendingEntries.flatMap(([, viewCount], index) => {
     const subject = subjects[index];
 
     if (!subject) {
       return [];
     }
 
-    return [
-      {
-        id: subject._id,
-        title: subject.title,
-        description: subject.description,
-        slug: subject.slug,
-        viewCount,
-        grade: subject.grade,
-        material: subject.material,
-      },
-    ];
+    return [{ subject, viewCount }];
   });
+
+  const results = yield* Effect.forEach(candidates, ({ subject, viewCount }) =>
+    loadSubjectRoute(ctx, subject).pipe(
+      Effect.map((route) => {
+        if (!route) {
+          return [];
+        }
+
+        return [
+          {
+            ...buildContentSearchRef(route),
+            description: route.description ?? "",
+            grade: subject.grade,
+            material: subject.material,
+            title: route.title,
+            viewCount,
+          },
+        ];
+      })
+    )
+  );
+
+  return results.flat();
 });
+
+/** Loads the graph route projection for one trending subject section. */
+const loadSubjectRoute = Effect.fn("subjectSections.trending.loadSubjectRoute")(
+  function* (ctx: QueryCtx, subject: Doc<"subjectSections">) {
+    return yield* Effect.tryPromise({
+      try: () =>
+        ctx.db
+          .query("contentRoutes")
+          .withIndex("by_locale_and_route", (q) =>
+            q.eq("locale", subject.locale).eq("route", subject.slug)
+          )
+          .unique(),
+      catch: toTrendingSubjectIoError,
+    });
+  }
+);
 
 /**
  * Lists trending subjects from the bounded daily bucket read model.

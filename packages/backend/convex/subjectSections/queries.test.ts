@@ -1,6 +1,7 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import schema from "@repo/backend/convex/schema";
 import {
   invalidTrendingRangeCode,
@@ -8,6 +9,7 @@ import {
 } from "@repo/backend/convex/subjectSections/trending/spec";
 import { TRENDING_BUCKET_MS } from "@repo/backend/convex/subjectSections/utils";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
@@ -48,6 +50,37 @@ async function insertSubject(ctx: MutationCtx, suffix: string) {
   });
 }
 
+/** Inserts the graph route projection for one synced subject section. */
+async function insertSubjectRoute(ctx: MutationCtx, suffix: string) {
+  const route = `subject/high-school/10/mathematics/topic-${suffix}/section-${suffix}`;
+  const identity = createLearningGraphIdentityFromRoute({
+    locale: "en",
+    route,
+  });
+
+  if (!identity) {
+    throw new Error(`Expected subject graph identity for ${route}.`);
+  }
+
+  await ctx.db.insert("contentRoutes", {
+    ...identity,
+    authors: [{ name: "Nakafa Author" }],
+    contentHash: `subject-hash-${suffix}`,
+    content_id: identity.assetId,
+    date: NOW,
+    description: `Description ${suffix}`,
+    kind: "subject-section",
+    locale: "en",
+    markdown: true,
+    route,
+    section: "subject",
+    syncedAt: NOW,
+    title: `Subject ${suffix}`,
+  });
+
+  return identity;
+}
+
 /** Inserts one derived trending bucket row. */
 async function insertTrendingBucket(
   ctx: MutationCtx,
@@ -58,7 +91,7 @@ async function insertTrendingBucket(
     viewCount,
   }: {
     bucketStart: number;
-    locale?: "en" | "id";
+    locale?: Locale;
     viewCount: number;
   }
 ) {
@@ -82,10 +115,12 @@ function getConvexErrorData(error: unknown) {
 describe("subjectSections/queries", () => {
   it("returns sorted subjects aggregated across bounded daily buckets", async () => {
     const t = convexTest(schema, convexModules);
-    const { firstSubjectId, secondSubjectId } = await t.mutation(
+    const { firstRef, firstSubjectId, secondRef } = await t.mutation(
       async (ctx) => {
         const firstSubjectId = await insertSubject(ctx, "first");
         const secondSubjectId = await insertSubject(ctx, "second");
+        const firstRef = await insertSubjectRoute(ctx, "first");
+        const secondRef = await insertSubjectRoute(ctx, "second");
 
         await insertTrendingBucket(ctx, firstSubjectId, {
           bucketStart: NOW,
@@ -105,7 +140,7 @@ describe("subjectSections/queries", () => {
           viewCount: 100,
         });
 
-        return { firstSubjectId, secondSubjectId };
+        return { firstRef, firstSubjectId, secondRef };
       }
     );
 
@@ -122,16 +157,25 @@ describe("subjectSections/queries", () => {
 
     expect(results).toEqual([
       expect.objectContaining({
-        id: secondSubjectId,
+        assetId: secondRef.assetId,
+        content_id: secondRef.assetId,
+        route: "subject/high-school/10/mathematics/topic-second/section-second",
         title: "Subject second",
+        url: "https://nakafa.com/en/subject/high-school/10/mathematics/topic-second/section-second",
         viewCount: 10,
       }),
       expect.objectContaining({
-        id: firstSubjectId,
+        assetId: firstRef.assetId,
+        content_id: firstRef.assetId,
+        route: "subject/high-school/10/mathematics/topic-first/section-first",
         title: "Subject first",
+        url: "https://nakafa.com/en/subject/high-school/10/mathematics/topic-first/section-first",
         viewCount: 7,
       }),
     ]);
+    expect(results[0]).not.toHaveProperty("id");
+    expect(results[0]).not.toHaveProperty("slug");
+    expect(firstSubjectId).not.toBe(firstRef.assetId);
   });
 
   it("returns an empty list for empty or zero-limit ranges", async () => {
@@ -169,6 +213,29 @@ describe("subjectSections/queries", () => {
         viewCount: 10,
       });
       await ctx.db.delete("subjectSections", subjectId);
+    });
+
+    const results = await t.query(
+      api.subjectSections.queries.getTrendingSubjects,
+      {
+        locale: "en",
+        since: NOW,
+        until: NOW + TRENDING_BUCKET_MS,
+      }
+    );
+
+    expect(results).toEqual([]);
+  });
+
+  it("drops bucket rows whose subject lacks a graph route projection", async () => {
+    const t = convexTest(schema, convexModules);
+
+    await t.mutation(async (ctx) => {
+      const subjectId = await insertSubject(ctx, "missing-route");
+      await insertTrendingBucket(ctx, subjectId, {
+        bucketStart: NOW,
+        viewCount: 10,
+      });
     });
 
     const results = await t.query(

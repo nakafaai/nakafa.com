@@ -1,9 +1,13 @@
 import { query } from "@repo/backend/convex/_generated/server";
+import { buildContentSearchRef } from "@repo/backend/convex/contents/helpers/search/documents";
 import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { recentlyViewedSubjectValidator } from "@repo/backend/convex/lib/validators/trending";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
+import type { Infer } from "convex/values";
 import { getAll } from "convex-helpers/server/relationships";
+
+type RecentlyViewedSubject = Infer<typeof recentlyViewedSubjectValidator>;
 
 /** Returns the current user's recently viewed subjects for one locale. */
 export const getRecentlyViewed = query({
@@ -45,7 +49,6 @@ export const getRecentlyViewed = query({
       return [
         {
           lastViewedAt: view.lastViewedAt,
-          slug: view.slug,
           subjectId: view.contentRef.id,
         },
       ];
@@ -60,22 +63,36 @@ export const getRecentlyViewed = query({
       subjectViews.map((subjectView) => subjectView.subjectId)
     );
 
-    return subjectViews.flatMap((subjectView, index) => {
+    const results: RecentlyViewedSubject[] = [];
+
+    for (const [index, subjectView] of subjectViews.entries()) {
       const subject = subjects[index];
 
       if (!subject) {
-        return [];
+        continue;
       }
 
-      return {
-        id: subject._id,
-        title: subject.title,
-        description: subject.description,
-        slug: subjectView.slug,
+      const route = await ctx.db
+        .query("contentRoutes")
+        .withIndex("by_locale_and_route", (q) =>
+          q.eq("locale", subject.locale).eq("route", subject.slug)
+        )
+        .unique();
+
+      if (!route) {
+        continue;
+      }
+
+      results.push({
+        ...buildContentSearchRef(route),
+        description: route.description ?? "",
         grade: subject.grade,
-        material: subject.material,
         lastViewedAt: subjectView.lastViewedAt,
-      };
-    });
+        material: subject.material,
+        title: route.title,
+      });
+    }
+
+    return results;
   },
 });
