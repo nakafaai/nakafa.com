@@ -55,8 +55,14 @@ function isSameContentSearch(
   }
 
   return (
+    existing.alignmentId === next.alignmentId &&
+    existing.assetId === next.assetId &&
+    existing.conceptId === next.conceptId &&
     existing.contentHash === next.contentHash &&
+    existing.content_id === next.content_id &&
     existing.description === next.description &&
+    existing.learningObjectId === next.learningObjectId &&
+    existing.lensId === next.lensId &&
     existing.markdown_url === next.markdown_url &&
     existing.route === next.route &&
     existing.section === next.section &&

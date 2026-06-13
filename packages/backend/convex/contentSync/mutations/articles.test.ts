@@ -32,7 +32,8 @@ interface SyncedArticleReference {
 }
 
 const ARTICLE_SLUG = "articles/politics/metadata-only";
-const ARTICLE_CONTENT_ID = getGraphContentId(ARTICLE_SLUG);
+const ARTICLE_GRAPH = getGraphIdentity(ARTICLE_SLUG);
+const ARTICLE_CONTENT_ID = ARTICLE_GRAPH.assetId;
 const BASE_REFERENCE: SyncedArticleReference = {
   authors: "Ada",
   citation: "ada-2026",
@@ -62,8 +63,8 @@ function buildArticle(overrides: Partial<SyncedArticle> = {}): SyncedArticle {
   return { ...BASE_ARTICLE, ...overrides };
 }
 
-/** Returns the graph asset ID for an article route fixture. */
-function getGraphContentId(route: string) {
+/** Returns the graph identity for an article route fixture. */
+function getGraphIdentity(route: string) {
   const identity = createLearningGraphIdentityFromRoute({
     locale: "id",
     route,
@@ -73,7 +74,7 @@ function getGraphContentId(route: string) {
     throw new Error(`Expected graph identity for ${route}.`);
   }
 
-  return identity.assetId;
+  return identity;
 }
 
 describe("contentSync/mutations/articles", () => {
@@ -242,6 +243,61 @@ describe("contentSync/mutations/articles", () => {
       updated: 0,
     });
     expect(deleteResult).toEqual({ deleted: 0 });
+  });
+
+  it("patches stale graph fields on unchanged article search rows", async () => {
+    const t = convexTest(schema, convexModules);
+
+    await t.mutation(async (ctx) => {
+      await ctx.db.insert("authors", { name: "Ada", username: "ada" });
+    });
+    await t.mutation(internal.contentSync.mutations.articles.bulkSyncArticles, {
+      articles: [buildArticle()],
+    });
+    await t.mutation(async (ctx) => {
+      const search = await ctx.db
+        .query("contentSearch")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", ARTICLE_CONTENT_ID)
+        )
+        .unique();
+
+      if (!search) {
+        throw new Error("Expected article search row before stale patch.");
+      }
+
+      await ctx.db.patch("contentSearch", search._id, {
+        alignmentId: "stale-alignment-id",
+        assetId: "stale-asset-id",
+        conceptId: "stale-concept-id",
+        learningObjectId: "stale-learning-object-id",
+        lensId: "stale-lens-id",
+      });
+    });
+
+    await t.mutation(internal.contentSync.mutations.articles.bulkSyncArticles, {
+      articles: [buildArticle()],
+    });
+    const search = await t.query(async (ctx) =>
+      ctx.db
+        .query("contentSearch")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", ARTICLE_CONTENT_ID)
+        )
+        .unique()
+    );
+
+    expect(search).toMatchObject({
+      alignmentId: ARTICLE_GRAPH.alignmentId,
+      assetId: ARTICLE_GRAPH.assetId,
+      conceptId: ARTICLE_GRAPH.conceptId,
+      contentHash: BASE_ARTICLE.contentHash,
+      content_id: ARTICLE_GRAPH.assetId,
+      learningObjectId: ARTICLE_GRAPH.learningObjectId,
+      lensId: ARTICLE_GRAPH.lensId,
+      route: ARTICLE_SLUG,
+      title: BASE_ARTICLE.title,
+    });
   });
 
   it("deletes stale articles and skips IDs that already disappeared", async () => {
