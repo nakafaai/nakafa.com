@@ -5,9 +5,11 @@ import {
   deleteContentRoute,
   syncContentRoute,
 } from "@repo/backend/convex/contents/helpers/routes/write";
-import { buildContentSearchRef } from "@repo/backend/convex/contents/helpers/search/documents";
 import { internalMutation } from "@repo/backend/convex/functions";
-import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
+import {
+  type Locale,
+  localeValidator,
+} from "@repo/backend/convex/lib/validators/contents";
 import { ConvexError, v } from "convex/values";
 
 const MAX_QURAN_SURAH_ROWS = 114;
@@ -264,21 +266,9 @@ export const deleteStaleQuranRuntime = internalMutation({
     const cleanupSurahNumbers = new Set(
       args.cleanupSurahNumbers ?? args.surahNumbers
     );
-    const expectedContentIds = new Set(
+    const expectedRouteKeys = new Set(
       args.locales.flatMap((locale) =>
-        args.surahNumbers.map(
-          (surahNumber) =>
-            buildContentSearchRef({
-              ...getContentGraphIdentity({
-                kind: "quran-surah",
-                locale,
-                route: `quran/${surahNumber}`,
-              }),
-              locale,
-              route: `quran/${surahNumber}`,
-              section: "quran",
-            }).content_id
-        )
+        args.surahNumbers.map((surahNumber) => `${locale}:quran/${surahNumber}`)
       )
     );
 
@@ -336,7 +326,7 @@ export const deleteStaleQuranRuntime = internalMutation({
     for (const route of routes) {
       if (
         activeLocales.has(route.locale) &&
-        !expectedContentIds.has(route.content_id)
+        !expectedRouteKeys.has(getLocalizedQuranRouteKey(route))
       ) {
         await deleteContentRoute(ctx, route.content_id);
         routesDeleted++;
@@ -357,7 +347,7 @@ export const deleteStaleQuranRuntime = internalMutation({
       });
 
       for (const row of searchRows) {
-        if (!expectedContentIds.has(row.content_id)) {
+        if (!expectedRouteKeys.has(getLocalizedQuranRouteKey(row))) {
           await ctx.db.delete(row._id);
           searchDeleted++;
         }
@@ -367,6 +357,11 @@ export const deleteStaleQuranRuntime = internalMutation({
     return { routesDeleted, searchDeleted, surahsDeleted, versesDeleted };
   },
 });
+
+/** Builds the locale-scoped Quran route key used for stale projection cleanup. */
+function getLocalizedQuranRouteKey(source: { locale: Locale; route: string }) {
+  return `${source.locale}:${source.route}`;
+}
 
 /** Builds the surah-local verse identity used for stale Quran cleanup. */
 function getQuranVerseKey(source: {
