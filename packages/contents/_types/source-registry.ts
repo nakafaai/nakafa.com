@@ -35,13 +35,8 @@ export function createSourceRegistryRecord(
 ): SourceRegistryRecord | null {
   const publicRoute = normalizeGraphRoute(input.route);
   const kind = getLearningObjectKindForRoute(publicRoute);
-  const sourceRoot = getSourceRoot(publicRoute);
 
   if (!kind) {
-    return null;
-  }
-
-  if (!sourceRoot) {
     return null;
   }
 
@@ -55,7 +50,7 @@ export function createSourceRegistryRecord(
     locale: input.locale,
     publicRoute,
     sourcePath: normalizeSourcePath(input.sourcePath),
-    sourceRoot,
+    sourceRoot: getSourceRoot(kind),
   };
 }
 
@@ -64,17 +59,18 @@ export function normalizeSourcePath(sourcePath: string) {
   return cleanSlug(sourcePath).split("/").filter(Boolean).join("/");
 }
 
-function getSourceRoot(route: string): SourceRegistryRoot | null {
-  const [root] = route.split("/");
-
-  if (
-    root === "articles" ||
-    root === "exercises" ||
-    root === "quran" ||
-    root === "subject"
-  ) {
-    return root;
+function getSourceRoot(kind: LearningObjectKind): SourceRegistryRoot {
+  if (kind === "article") {
+    return "articles";
   }
 
-  return null;
+  if (kind === "quran-surah") {
+    return "quran";
+  }
+
+  if (kind.startsWith("exercise-")) {
+    return "exercises";
+  }
+
+  return "subject";
 }

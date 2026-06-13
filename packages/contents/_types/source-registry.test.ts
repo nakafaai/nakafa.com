@@ -40,6 +40,22 @@ describe("source registry adapter", () => {
     );
   });
 
+  it("derives registry roots from graph kind instead of source paths", () => {
+    const quran = createSourceRegistryRecord({
+      locale: "id",
+      route: "quran/1",
+      sourcePath: "_data/quran.ts",
+    });
+    const exercise = createSourceRegistryRecord({
+      locale: "en",
+      route: "exercises/high-school/snbt/general-reasoning/try-out/2026",
+      sourcePath: "subject/unrelated-shape/file.mdx",
+    });
+
+    expect(quran?.sourceRoot).toBe("quran");
+    expect(exercise?.sourceRoot).toBe("exercises");
+  });
+
   it("rejects unsupported route projections", () => {
     expect(
       createSourceRegistryRecord({

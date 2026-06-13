@@ -144,18 +144,29 @@ function cleanGraphSegment(segment: string) {
 function getExerciseObjectKind(
   parts: readonly string[]
 ): LearningObjectKind | null {
-  const lastPart = parts.at(-1);
-  const parentPart = parts.at(-2);
+  if (parts.length < 4) {
+    return null;
+  }
 
-  if (lastPart && parentPart?.startsWith("set-") && isNumberSegment(lastPart)) {
+  const lastPart = parts.slice(-1).join("");
+  const parentPart = parts.slice(-2, -1).join("");
+
+  if (
+    isAllowedRouteLength("exercise-question", parts.length) &&
+    parentPart.startsWith("set-") &&
+    isNumberSegment(lastPart)
+  ) {
     return "exercise-question";
   }
 
-  if (lastPart?.startsWith("set-")) {
+  if (
+    isAllowedRouteLength("exercise-set", parts.length) &&
+    lastPart.startsWith("set-")
+  ) {
     return "exercise-set";
   }
 
-  if (parts.length === 5 || parts.length === 6) {
+  if (isAllowedRouteLength("exercise-group", parts.length)) {
     return "exercise-group";
   }
 
@@ -175,7 +186,7 @@ function assertRouteShape(
 ) {
   const allowedLengths = KIND_ROUTE_LENGTHS[kind];
 
-  if (allowedLengths.some((length) => length === parts.length)) {
+  if (isAllowedRouteLength(kind, parts.length)) {
     return;
   }
 
@@ -184,9 +195,15 @@ function assertRouteShape(
   );
 }
 
+function isAllowedRouteLength(kind: LearningObjectKind, length: number) {
+  return KIND_ROUTE_LENGTHS[kind].some(
+    (allowedLength) => allowedLength === length
+  );
+}
+
 function getLensSegments(kind: LearningObjectKind, parts: readonly string[]) {
   if (kind === "article") {
-    return ["article", parts[1] ?? ""];
+    return ["article", ...parts.slice(1, 2)];
   }
 
   if (kind === "quran-surah") {
@@ -194,10 +211,10 @@ function getLensSegments(kind: LearningObjectKind, parts: readonly string[]) {
   }
 
   if (kind.startsWith("subject-")) {
-    return ["subject", parts[1] ?? "", parts[2] ?? "", parts[3] ?? ""];
+    return ["subject", ...parts.slice(1, 4)];
   }
 
-  return ["exercise", parts[1] ?? "", parts[2] ?? "", parts[3] ?? ""];
+  return ["exercise", ...parts.slice(1, 4)];
 }
 
 function getConceptSegments(
@@ -205,18 +222,18 @@ function getConceptSegments(
   parts: readonly string[]
 ) {
   if (kind === "article") {
-    return ["article", parts[1] ?? ""];
+    return ["article", ...parts.slice(1, 2)];
   }
 
   if (kind === "quran-surah") {
-    return ["quran", "surah", parts[1] ?? ""];
+    return ["quran", "surah", ...parts.slice(1, 2)];
   }
 
   if (kind.startsWith("subject-")) {
-    return ["subject", parts[3] ?? "", parts[4] ?? ""];
+    return ["subject", ...parts.slice(3, 5)];
   }
 
-  return ["exercise", parts[3] ?? "", parts[4] ?? ""];
+  return ["exercise", ...parts.slice(3, 5)];
 }
 
 function getLearningObjectSegments(
@@ -224,16 +241,16 @@ function getLearningObjectSegments(
   parts: readonly string[]
 ) {
   if (kind === "article") {
-    return ["article", parts[1] ?? "", parts[2] ?? ""];
+    return ["article", ...parts.slice(1, 3)];
   }
 
   if (kind === "quran-surah") {
-    return ["quran-surah", parts[1] ?? ""];
+    return ["quran-surah", ...parts.slice(1, 2)];
   }
 
   if (kind.startsWith("subject-")) {
-    return [kind, parts[3] ?? "", ...parts.slice(4)];
+    return [kind, ...parts.slice(3)];
   }
 
-  return [kind, parts[2] ?? "", parts[3] ?? "", ...parts.slice(4)];
+  return [kind, ...parts.slice(2)];
 }

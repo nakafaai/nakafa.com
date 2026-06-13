@@ -155,6 +155,10 @@ describe("sitemap route discovery", () => {
       "/subject/high-school/10/chemistry/green-chemistry/definition",
     ]);
   });
+
+  it("skips incomplete or unsupported route projections", () => {
+    expect(buildSitemapContentPageRoutes(incompleteRouteRows)).toEqual([]);
+  });
 });
 
 const routeRows = [
@@ -197,6 +201,42 @@ const routeRows = [
   }),
 ];
 
+const incompleteRouteRows = [
+  routeProjectionRow(
+    {
+      locale: "en",
+      route: "articles/politics/dynastic-politics-asian-values",
+      section: "articles",
+    },
+    "articles/politics"
+  ),
+  routeProjectionRow(
+    {
+      locale: "en",
+      route: "subject/high-school/10/chemistry/green-chemistry/definition",
+      section: "subject",
+    },
+    "subject/high-school/10/chemistry"
+  ),
+  routeProjectionRow(
+    {
+      locale: "en",
+      route:
+        "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1",
+      section: "exercises",
+    },
+    "exercises/high-school/snbt/quantitative-knowledge"
+  ),
+  routeProjectionRow(
+    {
+      locale: "en",
+      route: "articles/politics/dynastic-politics-asian-values",
+      section: "articles",
+    },
+    "unknown/path"
+  ),
+];
+
 /** Builds one route-count fixture row for sitemap descriptor tests. */
 function countRow(
   locale: "en" | "id",
@@ -236,6 +276,21 @@ function routeRow({
     section,
     syncedAt: 1,
     title: "Title",
+  };
+}
+
+/** Builds a graph-backed row with a custom route projection for edge cases. */
+function routeProjectionRow(
+  input: {
+    locale: "en" | "id";
+    route: string;
+    section: "articles" | "subject" | "exercises" | "quran";
+  },
+  route: string
+): RuntimeContentRoute {
+  return {
+    ...routeRow(input),
+    route,
   };
 }
 

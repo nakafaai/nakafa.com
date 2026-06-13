@@ -1,3 +1,4 @@
+import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
 import {
   NakafaAgentContentIdSchema,
   NakafaAgentContentRefSchema,
@@ -128,6 +129,12 @@ describe("NakafaAgentContentRefSchema", () => {
     ).toEqual(quranRef);
   });
 
+  it("rejects refs that cannot become graph identity", () => {
+    expect(() =>
+      buildNakafaContentRef("en", "articles/example", "articles")
+    ).toThrow("Cannot build Nakafa graph content ref");
+  });
+
   it("rejects invalid canonical URLs", () => {
     expect(() =>
       Schema.decodeUnknownSync(NakafaAgentContentRefSchema)({
@@ -135,6 +142,15 @@ describe("NakafaAgentContentRefSchema", () => {
         markdown_url: "not-a-url",
       })
     ).toThrow("Expected a valid URL.");
+  });
+
+  it("rejects unsafe graph IDs in content references", () => {
+    expect(() =>
+      Schema.decodeUnknownSync(NakafaAgentContentRefSchema)({
+        ...quranRef,
+        conceptId: "concept",
+      })
+    ).toThrow("Expected a safe Nakafa graph ID.");
   });
 });
 

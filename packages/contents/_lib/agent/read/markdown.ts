@@ -12,7 +12,6 @@ import { getContentMetadataWithRaw } from "@repo/contents/_lib/metadata";
 import { getSurah } from "@repo/contents/_lib/quran";
 import { Effect, Option, Schema } from "effect";
 
-const QURAN_ROUTE_SECTION = "quran";
 const QURAN_SURAH_PATTERN = /^\d+$/;
 
 interface NakafaMarkdownReaders {
@@ -191,18 +190,9 @@ export function decodeNakafaAgentMarkdown(markdown: unknown) {
   });
 }
 
-/** Parses only canonical `quran/{surah}` content routes. */
+/** Parses the surah segment from a validated `quran/{surah}` content route. */
 function parseQuranSurahRoute(route: string) {
-  const routeSegments = route.split("/");
-  const surahSegment = routeSegments.at(1);
-
-  if (
-    routeSegments.length !== 2 ||
-    routeSegments.at(0) !== QURAN_ROUTE_SECTION ||
-    !surahSegment
-  ) {
-    return Option.none();
-  }
+  const surahSegment = route.split("/").slice(1, 2).join("");
 
   if (!QURAN_SURAH_PATTERN.test(surahSegment)) {
     return Option.none();

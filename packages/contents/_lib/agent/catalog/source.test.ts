@@ -21,7 +21,7 @@ vi.mock("@repo/contents/_lib/metadata", () => ({
                 description: "Article description",
                 title: "Article",
               },
-              slug: "articles/article",
+              slug: "articles/politics/article",
             },
           ]
         : [
@@ -30,13 +30,13 @@ vi.mock("@repo/contents/_lib/metadata", () => ({
                 subject: "Subject fallback",
                 title: "Subject",
               },
-              slug: "subject/topic",
+              slug: "subject/high-school/10/mathematics/topic",
             },
             {
               metadata: {
                 title: "Empty",
               },
-              slug: "subject/empty",
+              slug: "subject/high-school/10/mathematics/empty",
             },
           ]
     ),
@@ -71,15 +71,15 @@ describe("Nakafa agent content index", () => {
       expect.arrayContaining([
         expect.objectContaining({
           description: "Article description",
-          route: "articles/article",
+          route: "articles/politics/article",
         }),
         expect.objectContaining({
           description: "Subject fallback",
-          route: "subject/topic",
+          route: "subject/high-school/10/mathematics/topic",
         }),
         expect.objectContaining({
           description: "",
-          route: "subject/empty",
+          route: "subject/high-school/10/mathematics/empty",
         }),
         expect.objectContaining({
           description: "Opening",

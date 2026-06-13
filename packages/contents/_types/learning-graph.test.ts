@@ -1,6 +1,8 @@
 import {
+  buildGraphId,
   createLearningGraphIdentity,
   createLearningGraphIdentityFromRoute,
+  getLearningGraphLensSegments,
   getLearningObjectKindForRoute,
   normalizeGraphRoute,
 } from "@repo/contents/_types/learning-graph";
@@ -111,6 +113,13 @@ describe("learning graph identity", () => {
     );
   });
 
+  it("builds clean graph IDs from normalized segments", () => {
+    expect(buildGraphId("concept", ["", "/math/", "functions"])).toBe(
+      "concept:math:functions"
+    );
+    expect(buildGraphId("lens", [])).toBe("lens");
+  });
+
   it("infers graph kind from route projections", () => {
     expect(getLearningObjectKindForRoute("articles/politics/example")).toBe(
       "article"
@@ -139,6 +148,13 @@ describe("learning graph identity", () => {
         "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1/7"
       )
     ).toBe("exercise-question");
+    expect(getLearningObjectKindForRoute("exercises/high-school")).toBeNull();
+    expect(getLearningObjectKindForRoute("exercises/set-1/7")).toBeNull();
+    expect(
+      getLearningObjectKindForRoute(
+        "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/not-a-set/extra"
+      )
+    ).toBeNull();
   });
 
   it("creates identity from route projections when kind is inferable", () => {
@@ -154,5 +170,33 @@ describe("learning graph identity", () => {
         route: "articles",
       })
     ).toBeNull();
+    expect(
+      createLearningGraphIdentityFromRoute({
+        locale: "en",
+        route: "exercises/set-1/7",
+      })
+    ).toBeNull();
+  });
+
+  it("exposes curriculum lens segments without route identity", () => {
+    expect(
+      getLearningGraphLensSegments({
+        kind: "subject-section",
+        locale: "id",
+        route: "subject/high-school/10/physics/waves/sound",
+      })
+    ).toEqual(["subject", "high-school", "10", "physics"]);
+  });
+
+  it("rejects graph identity when the declared kind does not match route shape", () => {
+    expect(() =>
+      createLearningGraphIdentity({
+        kind: "subject-section",
+        locale: "id",
+        route: "subject/high-school/10/physics/waves",
+      })
+    ).toThrow(
+      'Invalid subject-section graph route "subject/high-school/10/physics/waves".'
+    );
   });
 });
