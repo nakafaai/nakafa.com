@@ -29,7 +29,7 @@ import type {
 import { Effect, Schema } from "effect";
 
 const PAGE_SIZE = 1000;
-const GRAPH_IDENTITY_TARGETS = [
+export const GRAPH_IDENTITY_TARGETS = [
   "contentRoutes",
   "contentSearch",
   "contentRoutePages",
@@ -40,6 +40,9 @@ const GRAPH_IDENTITY_TARGETS = [
   "subjectPopularity",
   "exercisePopularity",
   "subjectTrendingBuckets",
+  "audioContentSources",
+  "audioGenerationQueue",
+  "contentAudios",
 ] as const;
 
 interface PageResult {

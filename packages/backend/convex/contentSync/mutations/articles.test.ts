@@ -394,8 +394,14 @@ describe("contentSync/mutations/articles", () => {
           q.eq("content_id", ARTICLE_CONTENT_ID)
         )
         .unique();
+      const audioSource = await ctx.db
+        .query("audioContentSources")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", ARTICLE_CONTENT_ID)
+        )
+        .unique();
 
-      if (!(search && route)) {
+      if (!(search && route && audioSource)) {
         throw new Error("Expected synced article projections.");
       }
 
@@ -404,6 +410,10 @@ describe("contentSync/mutations/articles", () => {
         content_id: detachedContentId,
       });
       await ctx.db.patch("contentRoutes", route._id, {
+        assetId: detachedContentId,
+        content_id: detachedContentId,
+      });
+      await ctx.db.patch("audioContentSources", audioSource._id, {
         assetId: detachedContentId,
         content_id: detachedContentId,
       });

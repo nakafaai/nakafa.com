@@ -1,6 +1,6 @@
 import { updateContentAudioHash } from "@repo/backend/convex/audioStudies/contentAudios/impl";
 import {
-  deleteAudioContentSource,
+  deleteAudioContentSourceByRoute,
   syncAudioContentSource,
 } from "@repo/backend/convex/audioStudies/helpers/sources";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
@@ -263,12 +263,11 @@ export const deleteStaleArticles = internalMutation({
         locale: article.locale,
         route: article.slug,
       });
-      const graph = getContentGraphIdentity({
-        kind: "article",
+      await deleteAudioContentSourceByRoute(ctx, {
+        contentType: "article",
         locale: article.locale,
         route: article.slug,
       });
-      await deleteAudioContentSource(ctx, graph.assetId);
       await ctx.db.delete("articleContents", articleId);
       deleted++;
     }

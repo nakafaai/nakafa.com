@@ -144,3 +144,25 @@ export async function deleteAudioContentSource(
 
   await ctx.db.delete(existing._id);
 }
+
+/** Removes compact audio metadata by its persisted source-route projection. */
+export async function deleteAudioContentSourceByRoute(
+  ctx: MutationCtx,
+  source: Pick<AudioContentLookup, "contentType" | "locale" | "route">
+) {
+  const existing = await ctx.db
+    .query("audioContentSources")
+    .withIndex("by_contentType_and_route_and_locale", (q) =>
+      q
+        .eq("contentType", source.contentType)
+        .eq("route", source.route)
+        .eq("locale", source.locale)
+    )
+    .unique();
+
+  if (!existing) {
+    return;
+  }
+
+  await ctx.db.delete(existing._id);
+}

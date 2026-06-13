@@ -315,6 +315,7 @@ describe("contentSync/mutations/subjects", () => {
 
   it("deletes stale subject sections and skips IDs that already disappeared", async () => {
     const t = convexTest(schema, convexModules);
+    const detachedSectionId = `${SECTION_CONTENT_ID}:catalog`;
 
     await t.mutation(async (ctx) => {
       await ctx.db.insert("authors", { name: "Ada", username: "ada" });
@@ -345,6 +346,17 @@ describe("contentSync/mutations/subjects", () => {
         throw new Error("Expected synced subject section before stale delete.");
       }
 
+      const audioSource = await ctx.db
+        .query("audioContentSources")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", SECTION_CONTENT_ID)
+        )
+        .unique();
+
+      if (!audioSource) {
+        throw new Error("Expected synced subject section audio source.");
+      }
+
       const missingId = await ctx.db.insert("subjectSections", {
         body: "Missing body",
         category: "high-school",
@@ -360,6 +372,10 @@ describe("contentSync/mutations/subjects", () => {
         title: "Missing",
         topic: "metadata-topic",
         topicId: topic._id,
+      });
+      await ctx.db.patch("audioContentSources", audioSource._id, {
+        assetId: detachedSectionId,
+        content_id: detachedSectionId,
       });
       await ctx.db.delete("subjectSections", missingId);
 
@@ -393,7 +409,7 @@ describe("contentSync/mutations/subjects", () => {
       const audioSource = await ctx.db
         .query("audioContentSources")
         .withIndex("by_content_id", (q) =>
-          q.eq("content_id", SECTION_CONTENT_ID)
+          q.eq("content_id", detachedSectionId)
         )
         .unique();
 
@@ -472,8 +488,14 @@ describe("contentSync/mutations/subjects", () => {
           q.eq("content_id", SECTION_CONTENT_ID)
         )
         .unique();
+      const sectionAudio = await ctx.db
+        .query("audioContentSources")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", SECTION_CONTENT_ID)
+        )
+        .unique();
 
-      if (!(topicRoute && sectionRoute && sectionSearch)) {
+      if (!(topicRoute && sectionRoute && sectionSearch && sectionAudio)) {
         throw new Error("Expected synced subject projections.");
       }
 
@@ -486,6 +508,10 @@ describe("contentSync/mutations/subjects", () => {
         content_id: detachedSectionId,
       });
       await ctx.db.patch("contentSearch", sectionSearch._id, {
+        assetId: detachedSectionId,
+        content_id: detachedSectionId,
+      });
+      await ctx.db.patch("audioContentSources", sectionAudio._id, {
         assetId: detachedSectionId,
         content_id: detachedSectionId,
       });
@@ -546,12 +572,19 @@ describe("contentSync/mutations/subjects", () => {
           q.eq("content_id", detachedSectionId)
         )
         .unique();
+      const audioSource = await ctx.db
+        .query("audioContentSources")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", detachedSectionId)
+        )
+        .unique();
 
-      return { route, search, section, topic, topicRoute };
+      return { audioSource, route, search, section, topic, topicRoute };
     });
 
     expect(result).toEqual({ deleted: 1 });
     expect(snapshot).toEqual({
+      audioSource: null,
       route: null,
       search: null,
       section: null,
