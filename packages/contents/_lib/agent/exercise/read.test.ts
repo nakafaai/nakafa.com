@@ -7,10 +7,9 @@ import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
 import { Effect, Option } from "effect";
 import { describe, expect, it, vi } from "vitest";
 
-const EXERCISE_CONTENT_ID =
-  "en/exercises/high-school/snbt/general-knowledge/try-out/2026/set-2";
 const EXERCISE_ROUTE =
   "exercises/high-school/snbt/general-knowledge/try-out/2026/set-2";
+const EXERCISE_CONTENT_REF = `https://nakafa.com/en/${EXERCISE_ROUTE}`;
 
 const mockExercises = vi.hoisted(() => [
   {
@@ -47,7 +46,7 @@ vi.mock("@repo/contents/_lib/exercises/renderable", async () => {
 describe("Nakafa agent exercises", () => {
   it("retrieves whole exercise sets, numbered exercises, and missing exercise paths", async () => {
     const exerciseSet = await Effect.runPromise(
-      getNakafaAgentExercise(EXERCISE_CONTENT_ID)
+      getNakafaAgentExercise(EXERCISE_CONTENT_REF)
     );
 
     if (Option.isNone(exerciseSet)) {
@@ -61,22 +60,22 @@ describe("Nakafa agent exercises", () => {
     }
 
     const numberedExercise = await Effect.runPromise(
-      getNakafaAgentExercise(`${EXERCISE_CONTENT_ID}/${firstExercise.number}`)
+      getNakafaAgentExercise(`${EXERCISE_CONTENT_REF}/${firstExercise.number}`)
     );
     const explicitExercise = await Effect.runPromise(
-      getNakafaAgentExercise(EXERCISE_CONTENT_ID, firstExercise.number)
+      getNakafaAgentExercise(EXERCISE_CONTENT_REF, firstExercise.number)
     );
     const explicitNumberedExercise = await Effect.runPromise(
       getNakafaAgentExercise(
-        `${EXERCISE_CONTENT_ID}/${firstExercise.number}`,
+        `${EXERCISE_CONTENT_REF}/${firstExercise.number}`,
         firstExercise.number
       )
     );
     const missingExercise = await Effect.runPromise(
-      getNakafaAgentExercise(EXERCISE_CONTENT_ID, 99_999)
+      getNakafaAgentExercise(EXERCISE_CONTENT_REF, 99_999)
     );
     const nonExercise = await Effect.runPromise(
-      getNakafaAgentExercise("en/quran/1")
+      getNakafaAgentExercise("https://nakafa.com/en/quran/1")
     );
 
     if (
@@ -100,7 +99,7 @@ describe("Nakafa agent exercises", () => {
   it("fails with a typed read error when renderable exercise loading fails", async () => {
     const error = await Effect.runPromise(
       Effect.match(
-        getNakafaAgentExercise(EXERCISE_CONTENT_ID, undefined, () =>
+        getNakafaAgentExercise(EXERCISE_CONTENT_REF, undefined, () =>
           Effect.fail(
             new NakafaAgentDataReadError({
               cause: "broken",

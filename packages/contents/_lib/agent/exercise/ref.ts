@@ -4,7 +4,7 @@ import {
 } from "@repo/contents/_lib/agent/refs";
 import { Option } from "effect";
 
-/** Resolves any exercise question reference to its parent set reference. */
+/** Resolves any exercise URL projection to its parent set reference. */
 export function getNakafaExerciseSetRef(input: string) {
   const ref = parseNakafaContentRef(input);
 

@@ -18,7 +18,9 @@ const exerciseQuestionRoute = `${exerciseSetRoute}/11`;
 
 describe("Nakafa exercise refs", () => {
   it("resolves question-level refs to the parent exercise set", () => {
-    const ref = getNakafaExerciseSetRef(`id/${exerciseQuestionRoute}`);
+    const ref = getNakafaExerciseSetRef(
+      `https://nakafa.com/id/${exerciseQuestionRoute}`
+    );
 
     if (Option.isNone(ref)) {
       throw new Error("Expected an exercise set ref.");
@@ -28,7 +30,9 @@ describe("Nakafa exercise refs", () => {
   });
 
   it("keeps set-level refs unchanged and rejects non-exercise refs", () => {
-    const exerciseSet = getNakafaExerciseSetRef(`id/${exerciseSetRoute}`);
+    const exerciseSet = getNakafaExerciseSetRef(
+      `https://nakafa.com/id/${exerciseSetRoute}`
+    );
     const invalidRef = getNakafaExerciseSetRef("not-a-content-ref");
     const quran = getNakafaExerciseSetRef("asset:id:quran:quran-surah:1");
 

@@ -70,7 +70,7 @@ function contentMessage({
     } satisfies MyUIMessage;
   }
 
-  const parsedRef = parseNakafaContentRef(url, "id");
+  const parsedRef = parseNakafaContentRef(contentRef);
 
   if (Option.isNone(parsedRef)) {
     throw new Error(`Expected a valid content URL fixture: ${url}`);

@@ -22,7 +22,7 @@ type NakafaRenderableExercisesLoader = (
   ...input: Parameters<typeof getRenderableExercisesContent>
 ) => Effect.Effect<NakafaRenderableExercises, NakafaAgentDataReadError>;
 
-/** Retrieves a structured exercise set or one exercise by content ID or URL. */
+/** Retrieves a structured exercise set or one exercise by canonical URL projection. */
 export const getNakafaAgentExercise = Effect.fn("NakafaAgent.getExercise")(
   function* (
     input: string,

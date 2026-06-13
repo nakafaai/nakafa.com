@@ -20,7 +20,6 @@ import {
   createLearningGraphIdentityFromRoute,
   type LearningGraphIdentity,
 } from "@repo/contents/_types/learning-graph";
-import { routing } from "@repo/internationalization/src/routing";
 import { cleanSlug } from "@repo/utilities/helper";
 import { Option, Schema } from "effect";
 
@@ -35,14 +34,16 @@ interface NakafaContentGraphProjection extends LearningGraphIdentity {
 }
 
 /**
- * Parses a route-like Nakafa reference into a canonical content reference.
+ * Parses a canonical Nakafa URL projection into a graph-backed content ref.
  *
  * Graph asset IDs need the backend route read model to resolve back to a route.
+ * Bare routes are not accepted as product identity.
  */
-export function parseNakafaContentRef(
-  input: string,
-  fallbackLocale: Locale = routing.defaultLocale
-) {
+export function parseNakafaContentRef(input: string) {
+  if (!isNakafaUrlProjectionInput(input)) {
+    return Option.none<NakafaAgentContentRef>();
+  }
+
   const normalized = normalizeNakafaContentInput(input);
   const cleanInput = cleanSlug(
     normalized.replace(MARKDOWN_EXTENSION_PATTERN, "")
@@ -56,10 +57,12 @@ export function parseNakafaContentRef(
 
   const parsedLeadingLocale =
     Schema.decodeUnknownOption(LocaleSchema)(firstSegment);
-  const locale = Option.getOrElse(parsedLeadingLocale, () => fallbackLocale);
-  const routeSegments = Option.isSome(parsedLeadingLocale)
-    ? segments.slice(1)
-    : segments;
+  if (Option.isNone(parsedLeadingLocale)) {
+    return Option.none<NakafaAgentContentRef>();
+  }
+
+  const locale = parsedLeadingLocale.value;
+  const routeSegments = segments.slice(1);
   const route = routeSegments.join("/");
   const parsedRoute = Schema.decodeUnknownOption(NakafaAgentContentRouteSchema)(
     route
@@ -83,6 +86,14 @@ export function parseNakafaContentRef(
 
   return Option.some(
     buildNakafaContentRef(locale, parsedRoute.value, parsedSection.value)
+  );
+}
+
+function isNakafaUrlProjectionInput(input: string) {
+  const trimmed = input.trim();
+
+  return (
+    URL.canParse(trimmed) && normalizeNakafaContentInput(trimmed) !== trimmed
   );
 }
 

@@ -9,18 +9,14 @@ import { Option } from "effect";
 import { describe, expect, it } from "vitest";
 
 describe("Nakafa agent references", () => {
-  it("normalizes route and URL projections into graph-backed references", () => {
-    const quranRef = parseNakafaContentRef("en/quran/1");
-    const fallbackRef = parseNakafaContentRef("quran/1", "id");
+  it("normalizes canonical URL projections into graph-backed references", () => {
+    const quranRef = parseNakafaContentRef("https://nakafa.com/en/quran/1");
     const urlRef = parseNakafaContentRef(
       "https://www.nakafa.com/en/quran/1.md"
     );
     const directRef = buildNakafaContentRef("en", "quran/1", "quran");
 
     expect(Option.getOrUndefined(quranRef)).toStrictEqual(directRef);
-    expect(Option.getOrUndefined(fallbackRef)?.content_id).toBe(
-      "asset:id:quran:quran-surah:1"
-    );
     expect(Option.getOrUndefined(urlRef)?.content_id).toBe(
       "asset:en:quran:quran-surah:1"
     );
@@ -81,11 +77,28 @@ describe("Nakafa agent references", () => {
 
   it("rejects empty, unsafe, unsupported, and external references", () => {
     expect(Option.isNone(parseNakafaContentRef(""))).toBe(true);
+    expect(Option.isNone(parseNakafaContentRef("en/quran/1"))).toBe(true);
+    expect(Option.isNone(parseNakafaContentRef("quran/1"))).toBe(true);
     expect(Option.isNone(parseNakafaContentRef("en"))).toBe(true);
+    expect(Option.isNone(parseNakafaContentRef("https://nakafa.com/"))).toBe(
+      true
+    );
+    expect(Option.isNone(parseNakafaContentRef("https://nakafa.com/en"))).toBe(
+      true
+    );
     expect(Option.isNone(parseNakafaContentRef("en/../quran/1"))).toBe(true);
     expect(Option.isNone(parseNakafaContentRef("en/unknown/1"))).toBe(true);
     expect(
+      Option.isNone(parseNakafaContentRef("https://nakafa.com/en/unknown/1"))
+    ).toBe(true);
+    expect(
+      Option.isNone(
+        parseNakafaContentRef("https://nakafa.com/en/articles/example")
+      )
+    ).toBe(true);
+    expect(
       Option.isNone(parseNakafaContentRef("https://example.com/en/quran/1"))
     ).toBe(true);
+    expect(normalizeNakafaContentInput(" quran/1 ")).toBe("quran/1");
   });
 });

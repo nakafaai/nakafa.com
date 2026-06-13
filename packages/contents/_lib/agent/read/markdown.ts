@@ -21,7 +21,7 @@ interface NakafaMarkdownReaders {
   readonly readQuran?: typeof getNakafaAgentQuranReference;
 }
 
-/** Retrieves full agent-readable markdown by content ID, resource URI, or URL. */
+/** Retrieves full agent-readable markdown by canonical Nakafa URL projection. */
 export const getNakafaAgentMarkdown = Effect.fn("NakafaAgent.getMarkdown")(
   function* (input: string, readers: NakafaMarkdownReaders = {}) {
     const ref = parseNakafaContentRef(input);

@@ -134,19 +134,19 @@ describe("Nakafa agent markdown", () => {
       )
     );
     const missingSurah = await Effect.runPromise(
-      getNakafaAgentMarkdown("en/quran/999")
+      getNakafaAgentMarkdown("https://nakafa.com/en/quran/999")
     );
     const malformedSurah = await Effect.runPromise(
-      getNakafaAgentMarkdown("en/quran")
+      getNakafaAgentMarkdown("https://nakafa.com/en/quran")
     );
     const partialSurah = await Effect.runPromise(
-      getNakafaAgentMarkdown("en/quran/1foo")
+      getNakafaAgentMarkdown("https://nakafa.com/en/quran/1foo")
     );
     const nestedSurah = await Effect.runPromise(
-      getNakafaAgentMarkdown("en/quran/1/extra")
+      getNakafaAgentMarkdown("https://nakafa.com/en/quran/1/extra")
     );
     const zeroPaddedSurah = await Effect.runPromise(
-      getNakafaAgentMarkdown("en/quran/01")
+      getNakafaAgentMarkdown("https://nakafa.com/en/quran/01")
     );
     const alphabeticSurah = await Effect.runPromise(
       getNakafaAgentMarkdown("https://nakafa.com/en/quran/abc")
@@ -176,7 +176,7 @@ describe("Nakafa agent markdown", () => {
   it("uses subject metadata when description metadata is absent", async () => {
     const content = await Effect.runPromise(
       getNakafaAgentMarkdown(
-        "en/subject/university/bachelor/ai-ds/ai-programming/variable",
+        "https://nakafa.com/en/subject/university/bachelor/ai-ds/ai-programming/variable",
         {
           loadContent: () =>
             Effect.succeed({
@@ -226,7 +226,7 @@ describe("Nakafa agent markdown", () => {
 
   it("returns none when a Quran reference cannot be built for an existing Surah", async () => {
     const content = await Effect.runPromise(
-      getNakafaAgentMarkdown("en/quran/1", {
+      getNakafaAgentMarkdown("https://nakafa.com/en/quran/1", {
         readQuran: () => Effect.succeed(Option.none()),
       })
     );

@@ -120,8 +120,12 @@ describe("Nakafa service", () => {
   it("rejects malformed Quran and external verification references", async () => {
     const result = await Effect.runPromise(
       Effect.gen(function* () {
-        const nestedQuran = yield* Nakafa.verify("en/quran/1/extra");
-        const paddedQuran = yield* Nakafa.verify("en/quran/01");
+        const nestedQuran = yield* Nakafa.verify(
+          "https://nakafa.com/en/quran/1/extra"
+        );
+        const paddedQuran = yield* Nakafa.verify(
+          "https://nakafa.com/en/quran/01"
+        );
         const alphabeticQuran = yield* Nakafa.verify(
           "https://nakafa.com/en/quran/abc"
         );
