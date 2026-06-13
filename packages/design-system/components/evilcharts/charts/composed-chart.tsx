@@ -1,5 +1,6 @@
 "use client";
 
+import { useReducedMotion } from "@mantine/hooks";
 import { ChartContainer } from "@repo/design-system/components/evilcharts/ui/chart";
 import {
   type ChartConfig,
@@ -25,12 +26,19 @@ import {
 } from "@repo/design-system/components/evilcharts/ui/legend";
 import { LoadingIndicator } from "@repo/design-system/components/evilcharts/ui/loading-indicator";
 import {
+  BAR_REVEAL_DURATION_MS,
+  BAR_REVEAL_STAGGER_MS,
+  getOrderedRevealStep,
+  type OrderedRevealAnimation,
+  useOrderedReveal,
+} from "@repo/design-system/components/evilcharts/ui/reveal-animation";
+import {
   ChartTooltip,
   ChartTooltipContent,
   type TooltipRoundness,
   type TooltipVariant,
 } from "@repo/design-system/components/evilcharts/ui/tooltip";
-import { m, useReducedMotion } from "motion/react";
+import { m } from "motion/react";
 import {
   Children,
   type ComponentProps,
@@ -66,12 +74,9 @@ const LOADING_ANIMATION_DURATION = 2000; // in milliseconds
 const REVEAL_DURATION = 1; // line intro wipe length, in seconds
 const REVEAL_EASE: [number, number, number, number] = [0, 0.7, 0.5, 1]; // intro easing
 const REVEAL_PROPS = {
-  initial: { scaleX: 0 },
-  animate: { scaleX: 1 },
+  animate: { scaleX: [0, 1] },
   transition: { duration: REVEAL_DURATION, ease: REVEAL_EASE },
 };
-const BAR_GROW_DURATION = 0.5; // per-bar grow-in length, in seconds
-const BAR_STAGGER = 0.05; // delay between consecutive bars, in seconds
 
 type CurveType = ComponentProps<typeof RechartsLine>["type"];
 type LineDotProp = ComponentProps<typeof RechartsLine>["dot"];
@@ -97,13 +102,8 @@ type BarVariant =
  * NOTE: the intro is a per-frame animation, heavier than a static chart.
  * `"none"` opts out — as does a device with the OS "reduce motion" preference.
  */
-type ComposedAnimationType =
-  | "none"
-  | "left-to-right"
-  | "right-to-left"
-  | "center-out"
-  | "edges-in";
-type RevealAnimationType = Exclude<ComposedAnimationType, "none">;
+type ComposedAnimationType = "none" | OrderedRevealAnimation;
+type RevealAnimationType = OrderedRevealAnimation;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared context
@@ -121,7 +121,6 @@ interface ComposedChartContextValue {
   curveType: CurveType; // default curve interpolation each <Line /> inherits
   dataLength: number; // number of rows currently rendered
   hoveredIndex: number | null; // data index currently hovered, or null when none
-  introStartedAt: number; // timestamp the chart mounted — anchors the one-shot intro
   isLoading: boolean; // whether the chart shows its loading skeleton
   selectDataKey: (dataKey: string | null) => void; // sets the selected series
   selectedDataKey: string | null; // currently selected series, or null when none
@@ -212,9 +211,6 @@ export function EvilComposedChart<
   onBrushChange,
 }: EvilComposedChartProps<TData, TConfig>) {
   const chartId = useId().replace(/:/g, ""); // colon-free id keeps CSS/SVG selectors valid
-  // Anchors the intro to a fixed moment so it plays exactly once — re-renders
-  // and Recharts remounts read elapsed time from here instead of replaying.
-  const [introStartedAt] = useState(() => Date.now());
   const [selectedDataKey, setSelectedDataKey] = useState<string | null>(
     defaultSelectedDataKey
   );
@@ -238,7 +234,6 @@ export function EvilComposedChart<
       config,
       curveType,
       animationType,
-      introStartedAt,
       dataLength: displayData.length,
       isLoading,
       hoveredIndex,
@@ -249,7 +244,6 @@ export function EvilComposedChart<
       config,
       curveType,
       animationType,
-      introStartedAt,
       displayData.length,
       isLoading,
       hoveredIndex,
@@ -343,7 +337,6 @@ export function Bar({
   const {
     config,
     animationType: defaultAnimation,
-    introStartedAt,
     dataLength,
     isLoading,
     hoveredIndex,
@@ -354,11 +347,6 @@ export function Bar({
   // Devices set to "reduce motion" skip the grow-in animation entirely
   const shouldReduceMotion = useReducedMotion();
 
-  // The root renders the skeleton bar while loading, so real bars step aside
-  if (isLoading) {
-    return null;
-  }
-
   const isSelected = selectedDataKey === null || selectedDataKey === dataKey;
   const filter = glow ? `url(#${id}-glow)` : undefined;
   const colorSlots = getColorsCount(config[dataKey] ?? {});
@@ -368,6 +356,15 @@ export function Bar({
   const revealType: ComposedAnimationType = shouldReduceMotion
     ? "none"
     : (animationType ?? defaultAnimation);
+  const isRevealActive = useOrderedReveal(
+    isLoading ? "none" : revealType,
+    dataLength
+  );
+
+  // The root renders the skeleton bar while loading, so real bars step aside
+  if (isLoading) {
+    return null;
+  }
 
   return (
     <>
@@ -402,8 +399,8 @@ export function Bar({
               })}
               filter={filter}
               id={id}
-              introStartedAt={introStartedAt}
               isClickable={isClickable}
+              isRevealActive={isRevealActive}
               onClick={
                 isClickable
                   ? () => {
@@ -997,7 +994,7 @@ type CustomBarProps = {
   enableHoverHighlight?: boolean; // whether hovering a column dims the others
   animationType?: ComposedAnimationType; // grow-in order for this bar
   dataLength?: number; // total bars in the series — drives the stagger
-  introStartedAt?: number; // chart-mount timestamp anchoring the one-shot grow-in
+  isRevealActive?: boolean; // whether the owning bar series is in its intro window
   onClick?: () => void; // fired when a clickable bar is clicked
 } & BarShapeProps;
 
@@ -1020,7 +1017,7 @@ const CustomBar = ({
   enableHoverHighlight,
   animationType = "none",
   dataLength = 0,
-  introStartedAt = 0,
+  isRevealActive = false,
   onClick,
 }: CustomBarProps) => {
   const cursorStyle =
@@ -1030,9 +1027,12 @@ const CustomBar = ({
   const hitAreaWidth = background?.width ?? width;
   const hitAreaHeight = background?.height ?? height;
 
-  // motion.dev grow-in props for this bar — an empty object once it has finished
-  const grow =
-    getBarGrowAnimation(animationType, index, dataLength, introStartedAt) ?? {};
+  const grow = getBarGrowAnimation(
+    animationType,
+    index,
+    dataLength,
+    isRevealActive
+  );
 
   const getFill = () => {
     switch (variant) {
@@ -1082,44 +1082,74 @@ const CustomBar = ({
     : {};
 
   if (variant === "stripped") {
+    const strippedBar = (
+      <>
+        <rect fill={getFill()} height={height} width={width} x={x} y={y} />
+        <rect
+          fill={`url(#${id}-bar-colors)`}
+          height={2}
+          width={width}
+          x={x}
+          y={y}
+        />
+      </>
+    );
+
     return (
       <g {...interactiveProps} style={cursorStyle}>
-        <m.g
-          {...grow}
-          className="transition-opacity duration-200"
-          filter={filter}
-          opacity={fillOpacity}
-        >
-          <rect fill={getFill()} height={height} width={width} x={x} y={y} />
-          <rect
-            fill={`url(#${id}-bar-colors)`}
-            height={2}
-            width={width}
-            x={x}
-            y={y}
-          />
-        </m.g>
+        {grow ? (
+          <m.g
+            animate={grow.animate}
+            className="transition-opacity duration-200"
+            filter={filter}
+            opacity={fillOpacity}
+            style={grow.style}
+            transition={grow.transition}
+          >
+            {strippedBar}
+          </m.g>
+        ) : (
+          <g
+            className="transition-opacity duration-200"
+            filter={filter}
+            opacity={fillOpacity}
+          >
+            {strippedBar}
+          </g>
+        )}
         {hitArea}
       </g>
     );
   }
 
+  const bar = (
+    <rect
+      className="transition-opacity duration-200"
+      fill={getFill()}
+      filter={filter}
+      height={height}
+      opacity={fillOpacity}
+      rx={barRadius}
+      ry={barRadius}
+      width={width}
+      x={x}
+      y={y}
+    />
+  );
+
   return (
     <g {...interactiveProps} style={cursorStyle}>
-      <m.g {...grow}>
-        <rect
-          className="transition-opacity duration-200"
-          fill={getFill()}
-          filter={filter}
-          height={height}
-          opacity={fillOpacity}
-          rx={barRadius}
-          ry={barRadius}
-          width={width}
-          x={x}
-          y={y}
-        />
-      </m.g>
+      {grow ? (
+        <m.g
+          animate={grow.animate}
+          style={grow.style}
+          transition={grow.transition}
+        >
+          {bar}
+        </m.g>
+      ) : (
+        bar
+      )}
       {hitArea}
     </g>
   );
@@ -1127,64 +1157,36 @@ const CustomBar = ({
 
 /**
  * Builds the motion.dev grow-in animation for a single bar, or returns `null`
- * when it should render statically (`"none"`, an unknown index, or — crucially —
- * once the bar has already finished growing).
+ * when it should render statically (`"none"`, an unknown index, empty data, or
+ * once the intro window is complete).
  *
- * The intro is anchored to `introStartedAt` (stamped once when the chart mounts)
- * rather than to component mount. Recharts remounts every bar whenever the chart
- * re-renders, so a mount-based animation would replay endlessly; reading elapsed
- * time instead makes it a true one-shot — a bar past its window renders static,
- * a bar caught mid-grow resumes from where it should already be.
+ * The owning <Bar /> series owns its reveal window. Once the window ends, every
+ * bar renders as plain SVG geometry, so long/offscreen content cannot leave
+ * bars hidden behind stale animation transforms.
  */
 const getBarGrowAnimation = (
   animationType: ComposedAnimationType,
   index: number,
   dataLength: number,
-  introStartedAt: number
+  isRevealActive: boolean
 ) => {
-  if (animationType === "none" || index < 0 || dataLength <= 0) {
+  if (
+    animationType === "none" ||
+    index < 0 ||
+    dataLength <= 0 ||
+    !isRevealActive
+  ) {
     return null;
   }
 
-  const lastIndex = dataLength - 1;
-  const center = lastIndex / 2;
-
-  // How many bars this one waits behind before it starts growing
-  let step: number;
-  switch (animationType) {
-    case "right-to-left":
-      step = lastIndex - index;
-      break;
-    case "center-out":
-      step = Math.abs(index - center);
-      break;
-    case "edges-in":
-      step = center - Math.abs(index - center);
-      break;
-    default: // left-to-right
-      step = index;
-  }
-
-  const startMs = step * BAR_STAGGER * 1000;
-  const durationMs = BAR_GROW_DURATION * 1000;
-  const endMs = startMs + durationMs;
-  const elapsed = Date.now() - introStartedAt;
-
-  // Already finished — render static so re-renders/remounts can't replay it
-  if (elapsed >= endMs) {
-    return null;
-  }
-
-  // Resume from wherever this bar should already be (0 before it starts)
-  const from = elapsed <= startMs ? 0 : (elapsed - startMs) / durationMs;
+  const step = getOrderedRevealStep(animationType, index, dataLength);
 
   return {
-    initial: { scaleY: from },
-    animate: { scaleY: 1 },
+    animate: { scaleY: [0, 1] },
     transition: {
-      duration: (endMs - Math.max(elapsed, startMs)) / 1000,
+      duration: BAR_REVEAL_DURATION_MS / 1000,
       ease: REVEAL_EASE,
-      delay: Math.max(0, startMs - elapsed) / 1000,
+      delay: (step * BAR_REVEAL_STAGGER_MS) / 1000,
     },
     style: { originY: 1 }, // grow upward from the baseline
   };
