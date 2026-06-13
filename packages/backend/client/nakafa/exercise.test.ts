@@ -101,6 +101,14 @@ describe("readNakafaExercise", () => {
     );
   });
 
+  it("rejects conflicting question refs and explicit exercise numbers", async () => {
+    const conflict = await Effect.runPromise(
+      readNakafaExercise(convexUrl, detachedQuestionRef.content_id, 1)
+    );
+
+    expect(Option.isNone(conflict)).toBe(true);
+  });
+
   it("returns none for unsupported, missing, and malformed exercise refs", async () => {
     const articleRef = buildNakafaContentRef(
       "id",

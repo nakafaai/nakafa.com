@@ -31,13 +31,18 @@ export function readNakafaExercise(
     }
 
     const target = getExerciseTarget(ref.value.route, exerciseNumber);
+
+    if (Option.isNone(target)) {
+      return Option.none<NakafaAgentExerciseResult>();
+    }
+
     const page = yield* fetchNakafaRuntimeQuery(
       convexUrl,
       "getExerciseSetPage",
       api.contents.queries.runtime.getExerciseSetPage,
       {
         locale: ref.value.locale,
-        slug: target.setRoute,
+        slug: target.value.setRoute,
       }
     );
 
@@ -45,7 +50,7 @@ export function readNakafaExercise(
       return Option.none<NakafaAgentExerciseResult>();
     }
 
-    const exercises = Option.match(target.number, {
+    const exercises = Option.match(target.value.number, {
       /** Keeps the whole set when no specific question is requested. */
       onNone: () => page.exercises,
       /** Selects one requested question from the set rows. */
@@ -77,7 +82,7 @@ export function readNakafaExercise(
       })),
     };
     const result = yield* decodeNakafaExerciseResult(
-      Option.match(target.number, {
+      Option.match(target.value.number, {
         /** Returns set-level output when no specific question is requested. */
         onNone: () => resultInput,
         /** Marks the result as a single-question response. */
@@ -145,16 +150,20 @@ function getExerciseTarget(route: string, exerciseNumber?: number) {
     : route;
 
   if (typeof exerciseNumber === "number") {
-    return {
+    if (Option.isSome(routeNumber) && routeNumber.value !== exerciseNumber) {
+      return Option.none();
+    }
+
+    return Option.some({
       number: Option.some(exerciseNumber),
       setRoute,
-    };
+    });
   }
 
-  return {
+  return Option.some({
     number: routeNumber,
     setRoute,
-  };
+  });
 }
 
 /** Reads a numeric exercise question segment only under a set segment. */
