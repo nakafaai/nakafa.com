@@ -52,11 +52,15 @@ class ApiContentRuntimeReadError extends Schema.TaggedError<ApiContentRuntimeRea
 
 /** Validates and narrows a locale segment from an API route. */
 export function parseApiLocale(locale: string): Locale | null {
-  if (locale === "en" || locale === "id") {
+  if (isApiLocale(locale)) {
     return locale;
   }
 
   return null;
+}
+
+function isApiLocale(locale: string): locale is Locale {
+  return locales.some((supportedLocale) => supportedLocale === locale);
 }
 
 /** Parses API pagination params without allowing unbounded list responses. */

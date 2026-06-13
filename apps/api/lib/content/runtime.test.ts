@@ -1,3 +1,4 @@
+import { locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
@@ -27,8 +28,10 @@ describe("API content runtime", () => {
   });
 
   it("narrows supported route locales", () => {
-    expect(parseApiLocale("en")).toBe("en");
-    expect(parseApiLocale("id")).toBe("id");
+    for (const locale of locales) {
+      expect(parseApiLocale(locale)).toBe(locale);
+    }
+
     expect(parseApiLocale("fr")).toBeNull();
   });
 
