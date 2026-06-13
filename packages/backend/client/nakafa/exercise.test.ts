@@ -21,10 +21,15 @@ const ExerciseSetArgsSchema = Schema.Struct({
   locale: Schema.Literal("en", "id"),
   slug: Schema.String,
 });
+const ContentIdArgsSchema = Schema.Struct({
+  contentId: Schema.String,
+});
 
 const convexUrl = "https://example.convex.cloud";
 const setRoute =
   "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1";
+const missingSetRoute =
+  "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-missing";
 
 beforeEach(() => {
   runtimeMocks.fetchConvexRuntimeQuery.mockReset();
@@ -33,8 +38,9 @@ beforeEach(() => {
 
 describe("readNakafaExercise", () => {
   it("reads full exercise sets and specific questions from Convex rows", async () => {
+    const setRef = buildNakafaContentRef("id", setRoute, "exercises");
     const set = await Effect.runPromise(
-      readNakafaExercise(convexUrl, `id/${setRoute}`)
+      readNakafaExercise(convexUrl, setRef.content_id)
     );
     const explicitQuestion = await Effect.runPromise(
       readNakafaExercise(convexUrl, `id/${setRoute}`, 2)
@@ -60,7 +66,7 @@ describe("readNakafaExercise", () => {
       readNakafaExercise(convexUrl, "id/articles/example")
     );
     const missingSet = await Effect.runPromise(
-      readNakafaExercise(convexUrl, "id/exercises/high-school/snbt/missing")
+      readNakafaExercise(convexUrl, `id/${missingSetRoute}`)
     );
     const missingQuestion = await Effect.runPromise(
       readNakafaExercise(convexUrl, `id/${setRoute}`, 99)
@@ -77,11 +83,7 @@ describe("readNakafaExercise", () => {
     const missingMarkdown = await Effect.runPromise(
       readExerciseMarkdown(
         convexUrl,
-        buildNakafaContentRef(
-          "id",
-          "exercises/high-school/snbt/missing",
-          "exercises"
-        )
+        buildNakafaContentRef("id", missingSetRoute, "exercises")
       )
     );
 
@@ -143,12 +145,34 @@ function readRuntimeFixture(
 ) {
   if (
     getFunctionName(query) ===
+    getFunctionName(api.contents.queries.runtime.getContentRouteByContentId)
+  ) {
+    return Promise.resolve(readContentRouteByContentId(args));
+  }
+
+  if (
+    getFunctionName(query) ===
     getFunctionName(api.contents.queries.runtime.getExerciseSetPage)
   ) {
     return Promise.resolve(readExerciseSetPage(args));
   }
 
   return Promise.reject(new Error("Unhandled exercise query fixture."));
+}
+
+/** Builds one route lookup fixture from a graph asset ID. */
+function readContentRouteByContentId(args: unknown) {
+  const input = Schema.decodeUnknownSync(ContentIdArgsSchema)(args);
+  const setRef = buildNakafaContentRef("id", setRoute, "exercises");
+
+  if (input.contentId !== setRef.content_id) {
+    return null;
+  }
+
+  return {
+    ...setRef,
+    title: "Exercise Set",
+  };
 }
 
 /** Builds one exercise set page fixture from generated query args. */

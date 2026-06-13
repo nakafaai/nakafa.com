@@ -1,6 +1,7 @@
 import { createPrompt } from "@repo/ai/prompt/utils";
 import { NAKAFA_AGENT_MAX_QUERIES } from "@repo/contents/_lib/agent/constants";
-import { getNakafaExerciseSetRef } from "@repo/contents/_lib/agent/exercise/ref";
+import { getNakafaExerciseSetRoute } from "@repo/contents/_lib/agent/exercise/ref";
+import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
 import type {
   NakafaAgentSearchInput,
   NakafaAgentSearchResult,
@@ -38,8 +39,12 @@ export function selectExerciseRef(
     return Option.none();
   }
 
-  return getNakafaExerciseSetRef(firstItem.content_id).pipe(
-    Option.map((ref) => ref.content_id)
+  return Option.some(
+    buildNakafaContentRef(
+      firstItem.locale,
+      getNakafaExerciseSetRoute(firstItem.route),
+      "exercises"
+    ).content_id
   );
 }
 

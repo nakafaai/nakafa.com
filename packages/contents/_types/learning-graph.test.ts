@@ -1,5 +1,7 @@
 import {
   createLearningGraphIdentity,
+  createLearningGraphIdentityFromRoute,
+  getLearningObjectKindForRoute,
   normalizeGraphRoute,
 } from "@repo/contents/_types/learning-graph";
 import { describe, expect, it } from "vitest";
@@ -15,7 +17,7 @@ describe("learning graph identity", () => {
     expect(identity).toEqual({
       alignmentId:
         "alignment:article:politics:article:politics:makna-demokrasi",
-      assetId: "asset:id:article:politics:makna-demokrasi",
+      assetId: "asset:id:article:politics:article:politics:makna-demokrasi",
       conceptId: "concept:article:politics",
       learningObjectId: "lo:article:politics:makna-demokrasi",
       lensId: "lens:article:politics",
@@ -44,12 +46,27 @@ describe("learning graph identity", () => {
     );
   });
 
+  it("keeps locale assets unique across curriculum lenses", () => {
+    const grade10 = createLearningGraphIdentity({
+      kind: "subject-topic",
+      locale: "id",
+      route: "subject/high-school/10/mathematics/functions",
+    });
+    const grade11 = createLearningGraphIdentity({
+      kind: "subject-topic",
+      locale: "id",
+      route: "subject/high-school/11/mathematics/functions",
+    });
+
+    expect(grade10.conceptId).toBe(grade11.conceptId);
+    expect(grade10.assetId).not.toBe(grade11.assetId);
+  });
+
   it("keeps exam alignment separate from concrete exercise objects", () => {
     const group = createLearningGraphIdentity({
       kind: "exercise-group",
       locale: "en",
-      route:
-        "exercises/high-school/snbt/quantitative-knowledge/try-out/2026",
+      route: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026",
     });
     const set = createLearningGraphIdentity({
       kind: "exercise-set",
@@ -70,7 +87,7 @@ describe("learning graph identity", () => {
     expect(set.lensId).toBe(group.lensId);
     expect(question.lensId).toBe(group.lensId);
     expect(question.assetId).toBe(
-      "asset:en:exercise-question:snbt:quantitative-knowledge:try-out:2026:set-1:7"
+      "asset:en:exercise:high-school:snbt:quantitative-knowledge:exercise-question:snbt:quantitative-knowledge:try-out:2026:set-1:7"
     );
   });
 
@@ -92,5 +109,50 @@ describe("learning graph identity", () => {
     expect(normalizeGraphRoute("//articles//politics/example/")).toBe(
       "articles/politics/example"
     );
+  });
+
+  it("infers graph kind from route projections", () => {
+    expect(getLearningObjectKindForRoute("articles/politics/example")).toBe(
+      "article"
+    );
+    expect(getLearningObjectKindForRoute("quran/1")).toBe("quran-surah");
+    expect(
+      getLearningObjectKindForRoute("subject/high-school/10/physics/waves")
+    ).toBe("subject-topic");
+    expect(
+      getLearningObjectKindForRoute(
+        "subject/high-school/10/physics/waves/sound"
+      )
+    ).toBe("subject-section");
+    expect(
+      getLearningObjectKindForRoute(
+        "exercises/high-school/snbt/quantitative-knowledge/try-out/2026"
+      )
+    ).toBe("exercise-group");
+    expect(
+      getLearningObjectKindForRoute(
+        "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1"
+      )
+    ).toBe("exercise-set");
+    expect(
+      getLearningObjectKindForRoute(
+        "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1/7"
+      )
+    ).toBe("exercise-question");
+  });
+
+  it("creates identity from route projections when kind is inferable", () => {
+    expect(
+      createLearningGraphIdentityFromRoute({
+        locale: "id",
+        route: "articles/politics/example",
+      })?.assetId
+    ).toBe("asset:id:article:politics:article:politics:example");
+    expect(
+      createLearningGraphIdentityFromRoute({
+        locale: "id",
+        route: "articles",
+      })
+    ).toBeNull();
   });
 });

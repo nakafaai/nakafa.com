@@ -1,4 +1,5 @@
 import { CONTENT_ROUTE_KINDS } from "@repo/backend/convex/contents/constants";
+import { learningGraphIdentityValidator } from "@repo/backend/convex/contents/graph";
 import {
   articleCategoryValidator,
   exercisesCategoryValidator,
@@ -129,6 +130,7 @@ const quranSurahValidator = v.object({
 const contentRouteKindValidator = literals(...CONTENT_ROUTE_KINDS);
 
 const runtimeContentRouteValidator = v.object({
+  ...learningGraphIdentityValidator.fields,
   authors: v.array(contentAuthorValidator),
   content_id: v.string(),
   date: v.optional(v.number()),
@@ -180,6 +182,7 @@ const subjectOutlineTopicValidator = v.object({
 });
 
 const apiContentItemValidator = v.object({
+  ...learningGraphIdentityValidator.fields,
   locale: localeValidator,
   metadata: contentMetadataValidator,
   raw: v.string(),
@@ -387,6 +390,14 @@ export const getContentRouteReturnValidator = nullable(
   runtimeContentRouteValidator
 );
 
+export const getContentRouteByContentIdArgsValidator = {
+  contentId: v.string(),
+};
+
+export const getContentRouteByContentIdReturnValidator = nullable(
+  runtimeContentRouteValidator
+);
+
 export const listArticleApiContentPageArgsValidator = {
   cursor: v.union(v.string(), v.null()),
   limit: v.number(),
@@ -433,6 +444,7 @@ export const getQuranReferenceArgsValidator = {
 
 export const getQuranReferenceReturnValidator = nullable(
   v.object({
+    ...learningGraphIdentityValidator.fields,
     content_id: v.string(),
     locale: localeValidator,
     markdown_url: v.string(),

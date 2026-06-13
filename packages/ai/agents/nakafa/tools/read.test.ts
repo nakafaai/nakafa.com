@@ -5,6 +5,7 @@ import {
   createWriter,
 } from "@repo/ai/agents/nakafa/tools/test";
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
+import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
@@ -13,8 +14,13 @@ const ARTICLE_CONTENT_ID = NakafaAgentContentRefInputSchema.make(
   "en/articles/politics/dynastic-politics-asian-values"
 );
 const MISSING_CONTENT_ID = NakafaAgentContentRefInputSchema.make(
-  "en/articles/missing"
+  "en/articles/politics/missing"
 );
+const ARTICLE_ASSET_ID = buildNakafaContentRef(
+  "en",
+  "articles/politics/dynastic-politics-asian-values",
+  "articles"
+).content_id;
 
 describe("nakafa read tool", () => {
   it("writes loading and done parts for content reads", async () => {
@@ -35,7 +41,7 @@ describe("nakafa read tool", () => {
           kind: "content",
           status: "done",
           result: expect.objectContaining({
-            content_id: ARTICLE_CONTENT_ID,
+            content_id: ARTICLE_ASSET_ID,
           }),
         }),
       })

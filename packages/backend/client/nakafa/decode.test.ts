@@ -91,7 +91,7 @@ async function expectDecodeError(
 /** Builds a minimal valid markdown payload for schema decoding. */
 function markdown() {
   return {
-    ...buildNakafaContentRef("en", "articles/example", "articles"),
+    ...buildNakafaContentRef("en", "articles/politics/example", "articles"),
     description: "Description",
     text: "Body",
     title: "Title",

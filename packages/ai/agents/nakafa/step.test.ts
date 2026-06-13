@@ -164,8 +164,11 @@ describe("Nakafa agent step state", () => {
       section: "exercises",
       title: "SNBT Penalaran Matematika Try Out 2026 Set 2 Soal 11",
     });
-    const mathematicalReasoningSet =
-      "id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-2";
+    const mathematicalReasoningSet = buildNakafaContentRef(
+      "id",
+      "exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-2",
+      "exercises"
+    ).content_id;
     const quantitativeKnowledge = {
       ...exerciseResult.items[0],
       description:

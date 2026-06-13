@@ -1,5 +1,6 @@
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { NAKAFA_CONTENT_BASE_URL } from "@repo/backend/convex/contents/constants";
+import { getContentGraphIdentity } from "@repo/backend/convex/contents/graph";
 import {
   formatContentDate,
   getContentAuthors,
@@ -42,6 +43,11 @@ export async function listArticleApiContentPageImpl(
     isDone: page.isDone,
     page: await Promise.all(
       items.map(async (article) => ({
+        ...getContentGraphIdentity({
+          kind: "article",
+          locale: article.locale,
+          route: article.slug,
+        }),
         locale: article.locale,
         metadata: {
           authors: await getContentAuthors(ctx, {
@@ -86,6 +92,11 @@ export async function listSubjectApiContentPageImpl(
     isDone: page.isDone,
     page: await Promise.all(
       items.map(async (section) => ({
+        ...getContentGraphIdentity({
+          kind: "subject-section",
+          locale: section.locale,
+          route: section.slug,
+        }),
         locale: section.locale,
         metadata: {
           authors: await getContentAuthors(ctx, {

@@ -8,6 +8,7 @@ import {
   syncContentAuthorsWithCache,
 } from "@repo/backend/convex/contentSync/lib/syncHelpers";
 import { hasSameSyncValues } from "@repo/backend/convex/contentSync/lib/syncValues";
+import { getContentGraphIdentity } from "@repo/backend/convex/contents/graph";
 import {
   deleteContentRoute,
   syncContentRoute,
@@ -99,6 +100,11 @@ export const bulkSyncSubjectTopics = internalMutation({
     let updated = 0;
 
     for (const topic of args.topics) {
+      const graph = getContentGraphIdentity({
+        kind: "subject-topic",
+        locale: topic.locale,
+        route: topic.slug,
+      });
       const nextValues = {
         category: topic.category,
         description: topic.description,
@@ -111,6 +117,7 @@ export const bulkSyncSubjectTopics = internalMutation({
       };
 
       await syncContentRoute(ctx, {
+        ...graph,
         contentHash: topic.contentHash,
         description: topic.description,
         kind: "subject-topic",
@@ -185,6 +192,11 @@ export const bulkSyncSubjectSections = internalMutation({
     const authorCache = await buildAuthorCache(ctx, allAuthorNames);
 
     for (const section of args.sections) {
+      const graph = getContentGraphIdentity({
+        kind: "subject-section",
+        locale: section.locale,
+        route: section.slug,
+      });
       const topic = await ctx.db
         .query("subjectTopics")
         .withIndex("by_locale_and_slug", (q) =>
@@ -207,6 +219,7 @@ export const bulkSyncSubjectSections = internalMutation({
         .unique();
 
       await syncContentSearch(ctx, {
+        ...graph,
         contentHash: section.contentHash,
         description: section.description,
         locale: section.locale,
@@ -217,6 +230,7 @@ export const bulkSyncSubjectSections = internalMutation({
         title: section.title,
       });
       await syncContentRoute(ctx, {
+        ...graph,
         authors: section.authors,
         contentHash: section.contentHash,
         date: section.date,
@@ -371,6 +385,11 @@ export const deleteStaleSubjectTopics = internalMutation({
       }
 
       const routeRef = buildContentSearchRef({
+        ...getContentGraphIdentity({
+          kind: "subject-topic",
+          locale: topic.locale,
+          route: topic.slug,
+        }),
         locale: topic.locale,
         route: topic.slug,
         section: "subject",

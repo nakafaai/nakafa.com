@@ -1,14 +1,14 @@
 import { getExerciseGroupArgs } from "@repo/backend/client/nakafa/exercise";
 import { fetchNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { resolveNakafaContentRef } from "@repo/backend/client/nakafa/ref";
 import { api } from "@repo/backend/convex/_generated/api";
-import { parseNakafaContentRef } from "@repo/contents/_lib/agent/refs";
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
 import { Effect, Option } from "effect";
 
 /** Verifies a normalized content reference through Convex runtime queries. */
 export function verifyNakafaContent(convexUrl: string, input: string) {
   return Effect.gen(function* () {
-    const ref = parseNakafaContentRef(input);
+    const ref = yield* resolveNakafaContentRef(convexUrl, input);
 
     if (Option.isNone(ref)) {
       return false;

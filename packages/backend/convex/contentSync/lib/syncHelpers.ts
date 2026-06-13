@@ -4,6 +4,7 @@ import { deleteAudioContentSource } from "@repo/backend/convex/audioStudies/help
 import type { ContentAuthorContentId } from "@repo/backend/convex/authors/schema";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
+import { getContentGraphIdentity } from "@repo/backend/convex/contents/graph";
 import { deleteContentRoute } from "@repo/backend/convex/contents/helpers/routes/write";
 import { buildContentSearchRef } from "@repo/backend/convex/contents/helpers/search/documents";
 import { deleteContentSearch } from "@repo/backend/convex/contents/helpers/search/write";
@@ -282,6 +283,11 @@ export async function deleteExerciseQuestion(
 
   if (question) {
     const searchRef = buildContentSearchRef({
+      ...getContentGraphIdentity({
+        kind: "exercise-question",
+        locale: question.locale,
+        route: question.slug,
+      }),
       locale: question.locale,
       route: question.slug,
       section: "exercises",
@@ -304,6 +310,11 @@ export async function deleteSubjectSection(
 
   if (section) {
     const searchRef = buildContentSearchRef({
+      ...getContentGraphIdentity({
+        kind: "subject-section",
+        locale: section.locale,
+        route: section.slug,
+      }),
       locale: section.locale,
       route: section.slug,
       section: "subject",

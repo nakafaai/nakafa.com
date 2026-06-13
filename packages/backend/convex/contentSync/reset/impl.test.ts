@@ -4,6 +4,7 @@ import type {
 } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { createLearningGraphIdentity } from "@repo/contents/_types/learning-graph";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { deleteBatchFromTable } from "./impl";
@@ -29,9 +30,9 @@ describe("contentSync/reset/impl", () => {
 /** Seeds the content-derived runtime rows newly managed by reset. */
 async function seedDerivedRuntimeRows(ctx: MutationCtx) {
   await ctx.db.insert("contentRoutes", {
+    ...quranRouteGraph(),
     authors: [],
     contentHash: "route-hash",
-    content_id: "id/quran/1",
     kind: "quran-surah",
     locale: "id",
     markdown: true,
@@ -73,6 +74,20 @@ async function seedDerivedRuntimeRows(ctx: MutationCtx) {
     translation: { en: "In the name of Allah", id: "Dengan nama Allah" },
     verseNumber: 1,
   });
+}
+
+/** Builds graph identity fields for the reset Quran route fixture. */
+function quranRouteGraph() {
+  const identity = createLearningGraphIdentity({
+    kind: "quran-surah",
+    locale: "id",
+    route: "quran/1",
+  });
+
+  return {
+    ...identity,
+    content_id: identity.assetId,
+  };
 }
 
 /** Deletes one content route reset batch through the shared reset helper. */

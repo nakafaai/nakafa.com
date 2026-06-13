@@ -13,6 +13,7 @@ import {
   syncContentAuthorsWithCache,
 } from "@repo/backend/convex/contentSync/lib/syncHelpers";
 import { hasSameSyncValues } from "@repo/backend/convex/contentSync/lib/syncValues";
+import { getContentGraphIdentity } from "@repo/backend/convex/contents/graph";
 import {
   deleteContentRoute,
   syncContentRoute,
@@ -96,6 +97,11 @@ export const bulkSyncArticles = internalMutation({
     const authorCache = await buildAuthorCache(ctx, allAuthorNames);
 
     for (const article of args.articles) {
+      const graph = getContentGraphIdentity({
+        kind: "article",
+        locale: article.locale,
+        route: article.slug,
+      });
       const existingArticle = await ctx.db
         .query("articleContents")
         .withIndex("by_locale_and_slug", (q) =>
@@ -104,6 +110,7 @@ export const bulkSyncArticles = internalMutation({
         .unique();
 
       await syncContentSearch(ctx, {
+        ...graph,
         contentHash: article.contentHash,
         description: article.description,
         locale: article.locale,
@@ -114,6 +121,7 @@ export const bulkSyncArticles = internalMutation({
         title: article.title,
       });
       await syncContentRoute(ctx, {
+        ...graph,
         authors: article.authors,
         contentHash: article.contentHash,
         date: article.date,
@@ -252,6 +260,11 @@ export const deleteStaleArticles = internalMutation({
 
       const articleId = args.articleIds[index];
       const searchRef = buildContentSearchRef({
+        ...getContentGraphIdentity({
+          kind: "article",
+          locale: article.locale,
+          route: article.slug,
+        }),
         locale: article.locale,
         route: article.slug,
         section: "articles",

@@ -54,11 +54,29 @@ export function createLearningGraphIdentity(
 
   return {
     alignmentId: buildGraphId("alignment", [...lens, ...learningObject]),
-    assetId: buildGraphId("asset", [source.locale, ...learningObject]),
+    assetId: buildGraphId("asset", [source.locale, ...lens, ...learningObject]),
     conceptId: buildGraphId("concept", concept),
     learningObjectId: buildGraphId("lo", learningObject),
     lensId: buildGraphId("lens", lens),
   };
+}
+
+/** Creates graph identity from a public route projection when the kind is inferable. */
+export function createLearningGraphIdentityFromRoute(
+  source: Omit<LearningGraphSource, "kind">
+) {
+  const route = normalizeGraphRoute(source.route);
+  const kind = getLearningObjectKindForRoute(route);
+
+  if (!kind) {
+    return null;
+  }
+
+  return createLearningGraphIdentity({
+    kind,
+    locale: source.locale,
+    route,
+  });
 }
 
 /** Normalizes one public route before graph identity derivation. */
@@ -77,8 +95,65 @@ export function buildGraphId(prefix: string, segments: readonly string[]) {
   return `${prefix}:${cleanSegments.join(":")}`;
 }
 
+/** Infers the graph object kind represented by one canonical public route. */
+export function getLearningObjectKindForRoute(
+  route: string
+): LearningObjectKind | null {
+  const parts = normalizeGraphRoute(route).split("/");
+  const [root] = parts;
+
+  if (root === "articles" && parts.length === 3) {
+    return "article";
+  }
+
+  if (root === "quran" && parts.length === 2) {
+    return "quran-surah";
+  }
+
+  if (root === "subject" && parts.length === 5) {
+    return "subject-topic";
+  }
+
+  if (root === "subject" && parts.length === 6) {
+    return "subject-section";
+  }
+
+  if (root === "exercises") {
+    return getExerciseObjectKind(parts);
+  }
+
+  return null;
+}
+
 function cleanGraphSegment(segment: string) {
   return cleanSlug(segment).replaceAll("/", "-");
+}
+
+function getExerciseObjectKind(
+  parts: readonly string[]
+): LearningObjectKind | null {
+  const lastPart = parts.at(-1);
+  const parentPart = parts.at(-2);
+
+  if (lastPart && parentPart?.startsWith("set-") && isNumberSegment(lastPart)) {
+    return "exercise-question";
+  }
+
+  if (lastPart?.startsWith("set-")) {
+    return "exercise-set";
+  }
+
+  if (parts.length === 5 || parts.length === 6) {
+    return "exercise-group";
+  }
+
+  return null;
+}
+
+function isNumberSegment(segment: string) {
+  const value = Number.parseInt(segment, 10);
+
+  return Number.isSafeInteger(value) && String(value) === segment;
 }
 
 function assertRouteShape(
@@ -113,7 +188,10 @@ function getLensSegments(kind: LearningObjectKind, parts: readonly string[]) {
   return ["exercise", parts[1] ?? "", parts[2] ?? "", parts[3] ?? ""];
 }
 
-function getConceptSegments(kind: LearningObjectKind, parts: readonly string[]) {
+function getConceptSegments(
+  kind: LearningObjectKind,
+  parts: readonly string[]
+) {
   if (kind === "article") {
     return ["article", parts[1] ?? ""];
   }

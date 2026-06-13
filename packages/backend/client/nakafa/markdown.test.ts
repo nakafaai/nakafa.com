@@ -21,6 +21,9 @@ const PageArgsSchema = Schema.Struct({
   locale: LocaleSchema,
   slug: Schema.String,
 });
+const ContentIdArgsSchema = Schema.Struct({
+  contentId: Schema.String,
+});
 const SurahArgsSchema = Schema.Struct({
   surah: Schema.Number,
 });
@@ -38,14 +41,16 @@ beforeEach(() => {
 
 describe("readNakafaMarkdown", () => {
   it("reads markdown for article, subject, exercise, and Quran refs", async () => {
+    const articleRef = buildNakafaContentRef("en", articleRoute, "articles");
+    const exerciseRef = buildNakafaContentRef("id", exerciseRoute, "exercises");
     const article = await Effect.runPromise(
-      readNakafaMarkdown(convexUrl, `en/${articleRoute}`)
+      readNakafaMarkdown(convexUrl, articleRef.content_id)
     );
     const subject = await Effect.runPromise(
       readNakafaMarkdown(convexUrl, `id/${subjectRoute}`)
     );
     const exercise = await Effect.runPromise(
-      readNakafaMarkdown(convexUrl, `id/${exerciseRoute}`)
+      readNakafaMarkdown(convexUrl, exerciseRef.content_id)
     );
     const quran = await Effect.runPromise(
       readNakafaMarkdown(convexUrl, "id/quran/1")
@@ -60,13 +65,16 @@ describe("readNakafaMarkdown", () => {
   it("returns none for invalid, missing, and unsupported markdown refs", async () => {
     const invalid = await Effect.runPromise(readNakafaMarkdown(convexUrl, ""));
     const missing = await Effect.runPromise(
-      readNakafaMarkdown(convexUrl, "en/articles/missing")
+      readNakafaMarkdown(convexUrl, "en/articles/politics/missing")
     );
     const articleWithoutDescription = await Effect.runPromise(
-      readNakafaMarkdown(convexUrl, "en/articles/no-description")
+      readNakafaMarkdown(convexUrl, "en/articles/politics/no-description")
     );
     const subjectWithoutLabel = await Effect.runPromise(
-      readNakafaMarkdown(convexUrl, "id/subject/no-subject")
+      readNakafaMarkdown(
+        convexUrl,
+        "id/subject/high-school/10/mathematics/topic/no-subject"
+      )
     );
     const unsupported = await Effect.runPromise(
       readMdxMarkdown(
@@ -91,6 +99,15 @@ function readRuntimeFixture(
   query: FunctionReference<"query">,
   args: unknown
 ) {
+  if (
+    isRuntimeQuery(
+      query,
+      api.contents.queries.runtime.getContentRouteByContentId
+    )
+  ) {
+    return Promise.resolve(readContentRouteByContentId(args));
+  }
+
   if (isRuntimeQuery(query, api.contents.queries.runtime.getArticlePage)) {
     return Promise.resolve(readArticlePage(args));
   }
@@ -108,6 +125,27 @@ function readRuntimeFixture(
   }
 
   return Promise.reject(new Error("Unhandled markdown query fixture."));
+}
+
+/** Builds one route lookup fixture from a graph asset ID. */
+function readContentRouteByContentId(args: unknown) {
+  const input = Schema.decodeUnknownSync(ContentIdArgsSchema)(args);
+  const refs = [
+    buildNakafaContentRef("en", articleRoute, "articles"),
+    buildNakafaContentRef("id", subjectRoute, "subject"),
+    buildNakafaContentRef("id", exerciseRoute, "exercises"),
+    buildNakafaContentRef("id", "quran/1", "quran"),
+  ];
+  const ref = refs.find((item) => item.content_id === input.contentId);
+
+  if (!ref) {
+    return null;
+  }
+
+  return {
+    ...ref,
+    title: ref.route,
+  };
 }
 
 /** Compares generated function references by their Convex function name. */

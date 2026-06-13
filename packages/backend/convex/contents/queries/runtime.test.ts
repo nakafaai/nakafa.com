@@ -2,6 +2,11 @@ import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
+import type { Locale } from "@repo/contents/_types/content";
+import {
+  createLearningGraphIdentityFromRoute,
+  getLearningObjectKindForRoute,
+} from "@repo/contents/_types/learning-graph";
 import { describe, expect, it } from "vitest";
 
 const NOW = Date.parse("2026-01-02T00:00:00.000Z");
@@ -32,6 +37,20 @@ async function linkAuthor(
     contentType: args.contentType,
     order: 0,
   });
+}
+
+/** Builds graph identity fields for one route fixture. */
+function contentRouteGraph(locale: Locale, route: string) {
+  const identity = createLearningGraphIdentityFromRoute({ locale, route });
+
+  if (!identity) {
+    throw new Error(`Expected graph identity for ${route}.`);
+  }
+
+  return {
+    ...identity,
+    content_id: identity.assetId,
+  };
 }
 
 describe("contents/queries/runtime", () => {
@@ -341,17 +360,23 @@ describe("contents/queries/runtime", () => {
   it("lists route catalog rows with exact-or-descendant segment matching", async () => {
     const t = createConvexTestWithBetterAuth();
     const topicSlug = "subject/high-school/10/chemistry/structure-matter";
-    const exactSlug = `${topicSlug}/subatomic-particles`;
-    const childSlug = `${exactSlug}/lesson`;
+    const exactSlug = topicSlug;
+    const childSlug = `${topicSlug}/subatomic-particles`;
     const siblingSlug = `${topicSlug}/subatomic-particles-properties`;
 
     await t.mutation(async (ctx) => {
       for (const route of [exactSlug, childSlug, siblingSlug]) {
+        const kind = getLearningObjectKindForRoute(route);
+
+        if (!(kind === "subject-topic" || kind === "subject-section")) {
+          throw new Error(`Expected subject route kind for ${route}.`);
+        }
+
         await ctx.db.insert("contentRoutes", {
+          ...contentRouteGraph("id", route),
           authors: [{ name: "Nakafa Author" }],
           contentHash: `${route}:hash`,
-          content_id: `id/${route}`,
-          kind: "subject-section",
+          kind,
           locale: "id",
           markdown: true,
           route,
@@ -386,6 +411,7 @@ describe("contents/queries/runtime", () => {
     expect(exactPage.page.map((item) => item.route)).toEqual([
       exactSlug,
       childSlug,
+      siblingSlug,
     ]);
     expect(new Set(topicPage.page.map((item) => item.route))).toEqual(
       new Set([exactSlug, childSlug, siblingSlug])
@@ -401,9 +427,9 @@ describe("contents/queries/runtime", () => {
       for (let index = 0; index < 150; index++) {
         const route = `${parentRoute}/overflow-topic/lesson-${index}`;
         await ctx.db.insert("contentRoutes", {
+          ...contentRouteGraph("id", route),
           authors: [{ name: "Nakafa Author" }],
           contentHash: `${route}:hash`,
-          content_id: `id/${route}`,
           depth: route.split("/").length,
           kind: "subject-section",
           locale: "id",
@@ -417,9 +443,9 @@ describe("contents/queries/runtime", () => {
       }
 
       await ctx.db.insert("contentRoutes", {
+        ...contentRouteGraph("id", topicRoute),
         authors: [{ name: "Nakafa Author" }],
         contentHash: `${topicRoute}:hash`,
-        content_id: `id/${topicRoute}`,
         depth: topicRoute.split("/").length,
         kind: "subject-topic",
         locale: "id",
@@ -558,9 +584,9 @@ describe("contents/queries/runtime", () => {
     await t.mutation(async (ctx) => {
       for (const route of [firstRoute, secondRoute]) {
         await ctx.db.insert("contentRoutes", {
+          ...contentRouteGraph("id", route),
           authors: [{ name: "Nakafa Author" }],
           contentHash: `${route}:hash`,
-          content_id: `id/${route}`,
           date: route === firstRoute ? NOW : NOW + 1,
           kind: "article",
           locale: "id",
@@ -612,9 +638,11 @@ describe("contents/queries/runtime", () => {
 
 /** Builds one materialized route artifact fixture item. */
 function contentRoutePageItem(route: string) {
+  const graph = contentRouteGraph("id", route);
+
   return {
+    ...graph,
     authors: [{ name: "Nakafa Author" }],
-    content_id: `id/${route}`,
     date: route.endsWith("first") ? NOW : NOW + 1,
     kind: "article" as const,
     locale: "id" as const,

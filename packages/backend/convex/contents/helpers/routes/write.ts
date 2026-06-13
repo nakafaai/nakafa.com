@@ -5,8 +5,9 @@ import type {
   Locale,
   NakafaSection,
 } from "@repo/backend/convex/lib/validators/contents";
+import type { LearningGraphIdentity } from "@repo/contents/_types/learning-graph";
 
-interface ContentRouteSource {
+interface ContentRouteSource extends LearningGraphIdentity {
   authors?: { name: string }[];
   contentHash: string;
   date?: number;
@@ -29,14 +30,19 @@ export async function syncContentRoute(
   const searchRef = buildContentSearchRef(source);
   const routeParts = source.route.split("/").filter(Boolean);
   const nextValues = {
+    alignmentId: source.alignmentId,
     authors: source.authors ?? [],
+    assetId: source.assetId,
+    conceptId: source.conceptId,
     contentHash: source.contentHash,
     content_id: searchRef.content_id,
     date: source.date,
     depth: routeParts.length,
     description: source.description,
     kind: source.kind,
+    learningObjectId: source.learningObjectId,
     locale: source.locale,
+    lensId: source.lensId,
     markdown: source.markdown,
     official: source.official,
     parentRoute: getContentRouteParentRoute(source.kind, routeParts),
@@ -186,6 +192,11 @@ function isSameContentRoute(
     existing.depth === next.depth &&
     existing.description === next.description &&
     existing.kind === next.kind &&
+    existing.alignmentId === next.alignmentId &&
+    existing.assetId === next.assetId &&
+    existing.conceptId === next.conceptId &&
+    existing.learningObjectId === next.learningObjectId &&
+    existing.lensId === next.lensId &&
     existing.markdown === next.markdown &&
     existing.official === next.official &&
     existing.parentRoute === next.parentRoute &&

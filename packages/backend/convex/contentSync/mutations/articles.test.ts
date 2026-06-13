@@ -2,6 +2,7 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
@@ -31,6 +32,7 @@ interface SyncedArticleReference {
 }
 
 const ARTICLE_SLUG = "articles/politics/metadata-only";
+const ARTICLE_CONTENT_ID = getGraphContentId(ARTICLE_SLUG);
 const BASE_REFERENCE: SyncedArticleReference = {
   authors: "Ada",
   citation: "ada-2026",
@@ -58,6 +60,20 @@ const BASE_ARTICLE: SyncedArticle = {
 /** Builds a complete article sync payload with focused field overrides. */
 function buildArticle(overrides: Partial<SyncedArticle> = {}): SyncedArticle {
   return { ...BASE_ARTICLE, ...overrides };
+}
+
+/** Returns the graph asset ID for an article route fixture. */
+function getGraphContentId(route: string) {
+  const identity = createLearningGraphIdentityFromRoute({
+    locale: "id",
+    route,
+  });
+
+  if (!identity) {
+    throw new Error(`Expected graph identity for ${route}.`);
+  }
+
+  return identity.assetId;
 }
 
 describe("contentSync/mutations/articles", () => {
@@ -137,13 +153,13 @@ describe("contentSync/mutations/articles", () => {
       const search = await ctx.db
         .query("contentSearch")
         .withIndex("by_content_id", (q) =>
-          q.eq("content_id", `id/${ARTICLE_SLUG}`)
+          q.eq("content_id", ARTICLE_CONTENT_ID)
         )
         .unique();
       const route = await ctx.db
         .query("contentRoutes")
         .withIndex("by_content_id", (q) =>
-          q.eq("content_id", `id/${ARTICLE_SLUG}`)
+          q.eq("content_id", ARTICLE_CONTENT_ID)
         )
         .unique();
       const audioSource = await ctx.db
@@ -284,13 +300,13 @@ describe("contentSync/mutations/articles", () => {
       const search = await ctx.db
         .query("contentSearch")
         .withIndex("by_content_id", (q) =>
-          q.eq("content_id", `id/${ARTICLE_SLUG}`)
+          q.eq("content_id", ARTICLE_CONTENT_ID)
         )
         .unique();
       const route = await ctx.db
         .query("contentRoutes")
         .withIndex("by_content_id", (q) =>
-          q.eq("content_id", `id/${ARTICLE_SLUG}`)
+          q.eq("content_id", ARTICLE_CONTENT_ID)
         )
         .unique();
       const audioSource = await ctx.db

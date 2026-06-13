@@ -26,7 +26,11 @@ vi.mock("@repo/contents/_lib/agent/catalog/source", () => ({
 /** Builds small valid content summaries for fast taxonomy count tests. */
 function buildContentSummaries(locale: Locale, count: number) {
   return Array.from({ length: count }, (_, index) => ({
-    ...buildNakafaContentRef(locale, `articles/mock-${index + 1}`, "articles"),
+    ...buildNakafaContentRef(
+      locale,
+      `articles/general/mock-${index + 1}`,
+      "articles"
+    ),
     description: `Mock content ${index + 1}`,
     title: `Mock Content ${index + 1}`,
   }));

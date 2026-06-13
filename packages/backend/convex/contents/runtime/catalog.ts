@@ -272,16 +272,40 @@ export async function getContentRouteImpl(
   return toRuntimeContentRoute(route);
 }
 
+/** Loads one concrete content route by graph-backed content ID. */
+export async function getContentRouteByContentIdImpl(
+  ctx: QueryCtx,
+  args: {
+    contentId: string;
+  }
+) {
+  const route = await ctx.db
+    .query("contentRoutes")
+    .withIndex("by_content_id", (q) => q.eq("content_id", args.contentId))
+    .unique();
+
+  if (!route) {
+    return null;
+  }
+
+  return toRuntimeContentRoute(route);
+}
+
 /** Removes Convex system fields from route catalog rows before returning them. */
 function toRuntimeContentRoute(route: Doc<"contentRoutes">) {
   return {
+    alignmentId: route.alignmentId,
     authors: route.authors,
+    assetId: route.assetId,
+    conceptId: route.conceptId,
     content_id: route.content_id,
     date: route.date,
     depth: route.depth,
     description: route.description,
     kind: route.kind,
+    learningObjectId: route.learningObjectId,
     locale: route.locale,
+    lensId: route.lensId,
     markdown: route.markdown,
     official: route.official,
     parentRoute: route.parentRoute,

@@ -3,6 +3,7 @@ import type {
   Locale,
   NakafaSection,
 } from "@repo/backend/convex/lib/validators/contents";
+import type { LearningGraphIdentity } from "@repo/contents/_types/learning-graph";
 import { cleanSlug } from "@repo/utilities/helper";
 
 const WHITESPACE_PATTERN = /\s+/g;
@@ -11,7 +12,7 @@ const FENCE_START_PATTERN = /^\s*(?:```|~~~)/;
 const MARKDOWN_HEADING_PATTERN = /^\s{0,3}#{1,6}\s+(.+?)\s*#*\s*$/;
 const MARKDOWN_LINK_PATTERN = /(^|[^!])\[([^\]]+)\]\([^)]+\)/g;
 
-export interface ContentSearchSource {
+export interface ContentSearchSource extends LearningGraphIdentity {
   contentHash: string;
   description?: string;
   locale: Locale;
@@ -29,20 +30,40 @@ export interface ContentSearchSource {
  * https://docs.convex.dev/search/text-search
  */
 export function buildContentSearchRef({
+  alignmentId,
+  assetId,
+  conceptId,
+  learningObjectId,
+  lensId,
   locale,
   route,
   section,
-}: Pick<ContentSearchSource, "locale" | "route" | "section">) {
+}: Pick<
+  ContentSearchSource,
+  | "alignmentId"
+  | "assetId"
+  | "conceptId"
+  | "learningObjectId"
+  | "lensId"
+  | "locale"
+  | "route"
+  | "section"
+>) {
   const cleanRoute = cleanSlug(route);
-  const contentId = `${locale}/${cleanRoute}`;
+  const publicPath = `${locale}/${cleanRoute}`;
 
   return {
-    content_id: contentId,
+    alignmentId,
+    assetId,
+    conceptId,
+    content_id: assetId,
+    learningObjectId,
+    lensId,
     locale,
-    markdown_url: `${NAKAFA_CONTENT_BASE_URL}/${contentId}.md`,
+    markdown_url: `${NAKAFA_CONTENT_BASE_URL}/${publicPath}.md`,
     route: cleanRoute,
     section,
-    url: `${NAKAFA_CONTENT_BASE_URL}/${contentId}`,
+    url: `${NAKAFA_CONTENT_BASE_URL}/${publicPath}`,
   };
 }
 

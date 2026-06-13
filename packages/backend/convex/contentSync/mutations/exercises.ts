@@ -9,6 +9,7 @@ import {
   syncContentAuthorsWithCache,
 } from "@repo/backend/convex/contentSync/lib/syncHelpers";
 import { hasSameSyncValues } from "@repo/backend/convex/contentSync/lib/syncValues";
+import { getContentGraphIdentity } from "@repo/backend/convex/contents/graph";
 import {
   deleteContentRoute,
   syncContentRoute,
@@ -122,6 +123,11 @@ async function deleteExerciseGroupRouteIfEmpty(
     year?: string;
   }
 ) {
+  const graph = getContentGraphIdentity({
+    kind: "exercise-group",
+    locale: source.locale,
+    route: getExerciseGroupRoute(source.slug),
+  });
   const sets = await ctx.db
     .query("exerciseSets")
     .withIndex("by_locale_and_group", (q) =>
@@ -141,6 +147,7 @@ async function deleteExerciseGroupRouteIfEmpty(
   }
 
   const routeRef = buildContentSearchRef({
+    ...graph,
     locale: source.locale,
     route: getExerciseGroupRoute(source.slug),
     section: "exercises",
@@ -170,7 +177,18 @@ export const bulkSyncExerciseSets = internalMutation({
     let updated = 0;
 
     for (const set of args.sets) {
+      const setGraph = getContentGraphIdentity({
+        kind: "exercise-set",
+        locale: set.locale,
+        route: set.slug,
+      });
+      const groupGraph = getContentGraphIdentity({
+        kind: "exercise-group",
+        locale: set.locale,
+        route: getExerciseGroupRoute(set.slug),
+      });
       const searchRef = buildContentSearchRef({
+        ...setGraph,
         locale: set.locale,
         route: set.slug,
         section: "exercises",
@@ -178,6 +196,7 @@ export const bulkSyncExerciseSets = internalMutation({
 
       if (set.questionCount > 0) {
         await syncContentSearch(ctx, {
+          ...setGraph,
           contentHash: set.contentHash,
           description: set.searchDescription,
           locale: set.locale,
@@ -188,6 +207,7 @@ export const bulkSyncExerciseSets = internalMutation({
           title: set.searchTitle,
         });
         await syncContentRoute(ctx, {
+          ...setGraph,
           contentHash: set.contentHash,
           description: set.description,
           kind: "exercise-set",
@@ -199,6 +219,7 @@ export const bulkSyncExerciseSets = internalMutation({
           title: set.title,
         });
         await syncContentRoute(ctx, {
+          ...groupGraph,
           contentHash: set.groupContentHash,
           description: set.description,
           kind: "exercise-group",
@@ -299,6 +320,11 @@ export const bulkSyncExerciseQuestions = internalMutation({
     const authorCache = await buildAuthorCache(ctx, allAuthorNames);
 
     for (const question of args.questions) {
+      const graph = getContentGraphIdentity({
+        kind: "exercise-question",
+        locale: question.locale,
+        route: question.slug,
+      });
       const exerciseSet = await ctx.db
         .query("exerciseSets")
         .withIndex("by_locale_and_slug", (q) =>
@@ -321,6 +347,7 @@ export const bulkSyncExerciseQuestions = internalMutation({
         .unique();
 
       await syncContentSearch(ctx, {
+        ...graph,
         contentHash: question.contentHash,
         description: question.searchDescription,
         locale: question.locale,
@@ -331,6 +358,7 @@ export const bulkSyncExerciseQuestions = internalMutation({
         title: question.searchTitle,
       });
       await syncContentRoute(ctx, {
+        ...graph,
         authors: question.authors,
         contentHash: question.contentHash,
         date: question.date,
@@ -466,6 +494,11 @@ export const deleteStaleExerciseSets = internalMutation({
       }
 
       const searchRef = buildContentSearchRef({
+        ...getContentGraphIdentity({
+          kind: "exercise-set",
+          locale: exerciseSet.locale,
+          route: exerciseSet.slug,
+        }),
         locale: exerciseSet.locale,
         route: exerciseSet.slug,
         section: "exercises",

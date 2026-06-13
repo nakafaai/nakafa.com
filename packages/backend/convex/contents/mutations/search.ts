@@ -1,5 +1,6 @@
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
+import { getContentGraphIdentity } from "@repo/backend/convex/contents/graph";
 import { syncContentSearch } from "@repo/backend/convex/contents/helpers/search/write";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
@@ -40,7 +41,13 @@ export const bulkSyncQuranSearch = internalMutation({
     let updated = 0;
 
     for (const document of args.documents) {
+      const graph = getContentGraphIdentity({
+        kind: "quran-surah",
+        locale: document.locale,
+        route: document.route,
+      });
       const result = await syncContentSearch(ctx, {
+        ...graph,
         ...document,
         section: "quran",
         syncedAt: now,

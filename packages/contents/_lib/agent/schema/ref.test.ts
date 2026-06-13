@@ -6,42 +6,54 @@ import {
   NakafaAgentContentUrlSchema,
   NakafaAgentMarkdownUrlSchema,
 } from "@repo/contents/_lib/agent/schema/ref";
+import { createLearningGraphIdentity } from "@repo/contents/_types/learning-graph";
 import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
+const quranIdentity = createLearningGraphIdentity({
+  kind: "quran-surah",
+  locale: "en",
+  route: "quran/1",
+});
+const quranRef = {
+  ...quranIdentity,
+  content_id: quranIdentity.assetId,
+  locale: "en",
+  markdown_url: "https://nakafa.com/en/quran/1.md",
+  route: "quran/1",
+  section: "quran",
+  url: "https://nakafa.com/en/quran/1",
+};
+
 describe("NakafaAgentContentIdSchema", () => {
-  it("accepts locale-prefixed content IDs with a safe route", () => {
+  it("accepts graph-backed asset content IDs", () => {
     expect(
-      Schema.decodeUnknownSync(NakafaAgentContentIdSchema)("en/quran/1")
-    ).toBe("en/quran/1");
+      Schema.decodeUnknownSync(NakafaAgentContentIdSchema)(
+        quranIdentity.assetId
+      )
+    ).toBe(quranIdentity.assetId);
   });
 
-  it("rejects content IDs without a supported locale or safe route", () => {
+  it("rejects non-asset and unsafe content IDs", () => {
     expect(() =>
-      Schema.decodeUnknownSync(NakafaAgentContentIdSchema)("xx/quran/1")
-    ).toThrow(
-      "Expected a locale-prefixed Nakafa content ID with a safe route."
-    );
+      Schema.decodeUnknownSync(NakafaAgentContentIdSchema)("en/quran/1")
+    ).toThrow("Expected a graph-backed Nakafa asset content ID.");
 
     expect(() =>
-      Schema.decodeUnknownSync(NakafaAgentContentIdSchema)("quran/1")
-    ).toThrow("Expected a locale-prefixed Nakafa content ID");
+      Schema.decodeUnknownSync(NakafaAgentContentIdSchema)("asset:id")
+    ).toThrow("Expected a graph-backed Nakafa asset content ID.");
 
     expect(() =>
-      Schema.decodeUnknownSync(NakafaAgentContentIdSchema)("en")
-    ).toThrow("Expected a locale-prefixed Nakafa content ID");
+      Schema.decodeUnknownSync(NakafaAgentContentIdSchema)(
+        "route:id:quran-surah:1"
+      )
+    ).toThrow("Expected a graph-backed Nakafa asset content ID.");
 
     expect(() =>
-      Schema.decodeUnknownSync(NakafaAgentContentIdSchema)("en/quran/../1")
-    ).toThrow(
-      "Expected a locale-prefixed Nakafa content ID with a safe route."
-    );
-
-    expect(() =>
-      Schema.decodeUnknownSync(NakafaAgentContentIdSchema)("en")
-    ).toThrow(
-      "Expected a locale-prefixed Nakafa content ID with a safe route."
-    );
+      Schema.decodeUnknownSync(NakafaAgentContentIdSchema)(
+        "asset:id:quran/../1"
+      )
+    ).toThrow("Expected a graph-backed Nakafa asset content ID.");
   });
 });
 
@@ -111,29 +123,16 @@ describe("NakafaAgentMarkdownUrlSchema", () => {
 
 describe("NakafaAgentContentRefSchema", () => {
   it("accepts canonical content references", () => {
-    const ref = {
-      content_id: "en/quran/1",
-      locale: "en",
-      markdown_url: "https://nakafa.com/en/quran/1.md",
-      route: "quran/1",
-      section: "quran",
-      url: "https://nakafa.com/en/quran/1",
-    };
-
-    expect(Schema.decodeUnknownSync(NakafaAgentContentRefSchema)(ref)).toEqual(
-      ref
-    );
+    expect(
+      Schema.decodeUnknownSync(NakafaAgentContentRefSchema)(quranRef)
+    ).toEqual(quranRef);
   });
 
   it("rejects invalid canonical URLs", () => {
     expect(() =>
       Schema.decodeUnknownSync(NakafaAgentContentRefSchema)({
-        content_id: "en/quran/1",
-        locale: "en",
+        ...quranRef,
         markdown_url: "not-a-url",
-        route: "quran/1",
-        section: "quran",
-        url: "https://nakafa.com/en/quran/1",
       })
     ).toThrow("Expected a valid URL.");
   });
@@ -142,14 +141,9 @@ describe("NakafaAgentContentRefSchema", () => {
 describe("NakafaAgentContentSummarySchema", () => {
   it("accepts searchable content summaries", () => {
     const summary = {
-      content_id: "en/quran/1",
+      ...quranRef,
       description: "Al-Fatihah",
-      locale: "en",
-      markdown_url: "https://nakafa.com/en/quran/1.md",
-      route: "quran/1",
-      section: "quran",
       title: "Al-Fatihah",
-      url: "https://nakafa.com/en/quran/1",
     };
 
     expect(
@@ -160,12 +154,8 @@ describe("NakafaAgentContentSummarySchema", () => {
   it("rejects invalid canonical URLs", () => {
     expect(() =>
       Schema.decodeUnknownSync(NakafaAgentContentSummarySchema)({
-        content_id: "en/quran/1",
+        ...quranRef,
         description: "Al-Fatihah",
-        locale: "en",
-        markdown_url: "https://nakafa.com/en/quran/1.md",
-        route: "quran/1",
-        section: "quran",
         title: "Al-Fatihah",
         url: "not-a-url",
       })

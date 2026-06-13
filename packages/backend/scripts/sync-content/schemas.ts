@@ -147,13 +147,18 @@ const ContentRouteAuthorSchema = Schema.Struct({
 
 export const RuntimeContentRouteRowSchema = Schema.mutable(
   Schema.Struct({
+    alignmentId: Schema.String,
     authors: mutableArraySchema(ContentRouteAuthorSchema),
+    assetId: Schema.String,
+    conceptId: Schema.String,
     content_id: Schema.String,
     date: Schema.UndefinedOr(Schema.Number),
     depth: Schema.UndefinedOr(Schema.Number),
     description: Schema.UndefinedOr(Schema.String),
     kind: ContentRouteKindSchema,
+    learningObjectId: Schema.String,
     locale: SyncLocaleSchema,
+    lensId: Schema.String,
     markdown: Schema.Boolean,
     official: Schema.UndefinedOr(Schema.Boolean),
     parentRoute: Schema.UndefinedOr(Schema.String),
@@ -292,7 +297,12 @@ export const QuranSurahPageSchema = Schema.NullOr(
 export const QuranReferenceSchema = Schema.NullOr(
   Schema.mutable(
     Schema.Struct({
+      alignmentId: Schema.String,
+      assetId: Schema.String,
+      conceptId: Schema.String,
       content_id: Schema.String,
+      learningObjectId: Schema.String,
+      lensId: Schema.String,
       locale: SyncLocaleSchema,
       markdown_url: Schema.String,
       name: Schema.String,
@@ -323,9 +333,14 @@ export const ContentSearchResultSchema = Schema.mutable(
     items: mutableArraySchema(
       Schema.mutable(
         Schema.Struct({
+          alignmentId: Schema.String,
+          assetId: Schema.String,
+          conceptId: Schema.String,
           content_id: Schema.String,
           description: Schema.String,
           excerpt: Schema.String,
+          learningObjectId: Schema.String,
+          lensId: Schema.String,
           locale: SyncLocaleSchema,
           markdown_url: Schema.String,
           route: Schema.String,

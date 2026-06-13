@@ -16,6 +16,7 @@ import {
 } from "@repo/contents/_lib/agent/schema/ref";
 import type { Locale } from "@repo/contents/_types/content";
 import { LocaleSchema } from "@repo/contents/_types/content";
+import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { routing } from "@repo/internationalization/src/routing";
 import { cleanSlug } from "@repo/utilities/helper";
 import { Option, Schema } from "effect";
@@ -23,7 +24,11 @@ import { Option, Schema } from "effect";
 const CONTENT_RESOURCE_PREFIX = "nakafa://content/";
 const MARKDOWN_EXTENSION_PATTERN = /\.mdx?$/;
 
-/** Parses a content ID, Nakafa URL, or resource URI into a canonical reference. */
+/**
+ * Parses a route-like Nakafa reference into a canonical content reference.
+ *
+ * Graph asset IDs need the backend route read model to resolve back to a route.
+ */
 export function parseNakafaContentRef(
   input: string,
   fallbackLocale: Locale = routing.defaultLocale
@@ -52,12 +57,17 @@ export function parseNakafaContentRef(
   const parsedSection = Schema.decodeUnknownOption(NakafaAgentSectionSchema)(
     routeSegments.at(0)
   );
+  const identity = createLearningGraphIdentityFromRoute({ locale, route });
 
   if (Option.isNone(parsedRoute)) {
     return Option.none<NakafaAgentContentRef>();
   }
 
   if (Option.isNone(parsedSection)) {
+    return Option.none<NakafaAgentContentRef>();
+  }
+
+  if (!identity) {
     return Option.none<NakafaAgentContentRef>();
   }
 
@@ -73,18 +83,30 @@ export function buildNakafaContentRef(
   section: NakafaAgentSection
 ) {
   const contentRoute = NakafaAgentContentRouteSchema.make(route);
-  const contentId = NakafaAgentContentIdSchema.make(
-    `${locale}/${contentRoute}`
-  );
+  const identity = createLearningGraphIdentityFromRoute({
+    locale,
+    route: contentRoute,
+  });
+
+  if (!identity) {
+    throw new Error(
+      `Cannot build Nakafa graph content ref for ${contentRoute}.`
+    );
+  }
+
+  const contentId = NakafaAgentContentIdSchema.make(identity.assetId);
   const contentRef = {
+    ...identity,
     content_id: contentId,
     locale,
     markdown_url: NakafaAgentMarkdownUrlSchema.make(
-      `${NAKAFA_BASE_URL}/${contentId}.md`
+      `${NAKAFA_BASE_URL}/${locale}/${contentRoute}.md`
     ),
     route: contentRoute,
     section,
-    url: NakafaAgentContentUrlSchema.make(`${NAKAFA_BASE_URL}/${contentId}`),
+    url: NakafaAgentContentUrlSchema.make(
+      `${NAKAFA_BASE_URL}/${locale}/${contentRoute}`
+    ),
   };
 
   return contentRef;
@@ -95,8 +117,8 @@ export function getNakafaContentResourceUri(contentId: NakafaAgentContentId) {
   return `${CONTENT_RESOURCE_PREFIX}${contentId.replaceAll("/", "%2F")}`;
 }
 
-/** Normalizes Nakafa URLs and custom resource URIs into content IDs. */
-function normalizeNakafaContentInput(input: string) {
+/** Normalizes Nakafa URLs and custom resource URIs into lookup strings. */
+export function normalizeNakafaContentInput(input: string) {
   const trimmed = input.trim();
 
   if (trimmed.startsWith(CONTENT_RESOURCE_PREFIX)) {

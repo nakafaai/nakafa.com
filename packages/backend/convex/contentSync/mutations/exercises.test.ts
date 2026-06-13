@@ -2,6 +2,7 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
@@ -61,6 +62,11 @@ interface SyncedExerciseChoice {
 const SET_SLUG =
   "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1";
 const QUESTION_SLUG = `${SET_SLUG}/1`;
+const GROUP_SLUG =
+  "exercises/high-school/snbt/quantitative-knowledge/try-out/2026";
+const SET_CONTENT_ID = getGraphContentId(SET_SLUG);
+const QUESTION_CONTENT_ID = getGraphContentId(QUESTION_SLUG);
+const GROUP_CONTENT_ID = getGraphContentId(GROUP_SLUG);
 const BASE_SET: SyncedExerciseSet = {
   category: "high-school",
   contentHash: "set-hash",
@@ -134,6 +140,20 @@ function buildQuestion(
   return { ...BASE_QUESTION, ...overrides };
 }
 
+/** Returns the graph asset ID for an exercise route fixture. */
+function getGraphContentId(route: string) {
+  const identity = createLearningGraphIdentityFromRoute({
+    locale: "id",
+    route,
+  });
+
+  if (!identity) {
+    throw new Error(`Expected graph identity for ${route}.`);
+  }
+
+  return identity.assetId;
+}
+
 describe("contentSync/mutations/exercises", () => {
   it("syncs exercise sets through create, unchanged, update, and search removal", async () => {
     const t = convexTest(schema, convexModules);
@@ -160,16 +180,11 @@ describe("contentSync/mutations/exercises", () => {
     const syncedRoute = await t.query(async (ctx) => {
       const route = await ctx.db
         .query("contentRoutes")
-        .withIndex("by_content_id", (q) => q.eq("content_id", `id/${SET_SLUG}`))
+        .withIndex("by_content_id", (q) => q.eq("content_id", SET_CONTENT_ID))
         .unique();
       const groupRoute = await ctx.db
         .query("contentRoutes")
-        .withIndex("by_content_id", (q) =>
-          q.eq(
-            "content_id",
-            "id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026"
-          )
-        )
+        .withIndex("by_content_id", (q) => q.eq("content_id", GROUP_CONTENT_ID))
         .unique();
 
       return { groupRoute, route };
@@ -195,20 +210,15 @@ describe("contentSync/mutations/exercises", () => {
         .unique();
       const search = await ctx.db
         .query("contentSearch")
-        .withIndex("by_content_id", (q) => q.eq("content_id", `id/${SET_SLUG}`))
+        .withIndex("by_content_id", (q) => q.eq("content_id", SET_CONTENT_ID))
         .unique();
       const route = await ctx.db
         .query("contentRoutes")
-        .withIndex("by_content_id", (q) => q.eq("content_id", `id/${SET_SLUG}`))
+        .withIndex("by_content_id", (q) => q.eq("content_id", SET_CONTENT_ID))
         .unique();
       const groupRoute = await ctx.db
         .query("contentRoutes")
-        .withIndex("by_content_id", (q) =>
-          q.eq(
-            "content_id",
-            "id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026"
-          )
-        )
+        .withIndex("by_content_id", (q) => q.eq("content_id", GROUP_CONTENT_ID))
         .unique();
 
       return { groupRoute, route, search, set };
@@ -324,13 +334,13 @@ describe("contentSync/mutations/exercises", () => {
       const search = await ctx.db
         .query("contentSearch")
         .withIndex("by_content_id", (q) =>
-          q.eq("content_id", `id/${QUESTION_SLUG}`)
+          q.eq("content_id", QUESTION_CONTENT_ID)
         )
         .unique();
       const route = await ctx.db
         .query("contentRoutes")
         .withIndex("by_content_id", (q) =>
-          q.eq("content_id", `id/${QUESTION_SLUG}`)
+          q.eq("content_id", QUESTION_CONTENT_ID)
         )
         .unique();
 
@@ -500,13 +510,13 @@ describe("contentSync/mutations/exercises", () => {
       const search = await ctx.db
         .query("contentSearch")
         .withIndex("by_content_id", (q) =>
-          q.eq("content_id", `id/${QUESTION_SLUG}`)
+          q.eq("content_id", QUESTION_CONTENT_ID)
         )
         .unique();
       const route = await ctx.db
         .query("contentRoutes")
         .withIndex("by_content_id", (q) =>
-          q.eq("content_id", `id/${QUESTION_SLUG}`)
+          q.eq("content_id", QUESTION_CONTENT_ID)
         )
         .unique();
 
@@ -611,22 +621,22 @@ describe("contentSync/mutations/exercises", () => {
         .unique();
       const setSearch = await ctx.db
         .query("contentSearch")
-        .withIndex("by_content_id", (q) => q.eq("content_id", `id/${SET_SLUG}`))
+        .withIndex("by_content_id", (q) => q.eq("content_id", SET_CONTENT_ID))
         .unique();
       const questionSearch = await ctx.db
         .query("contentSearch")
         .withIndex("by_content_id", (q) =>
-          q.eq("content_id", `id/${QUESTION_SLUG}`)
+          q.eq("content_id", QUESTION_CONTENT_ID)
         )
         .unique();
       const setRoute = await ctx.db
         .query("contentRoutes")
-        .withIndex("by_content_id", (q) => q.eq("content_id", `id/${SET_SLUG}`))
+        .withIndex("by_content_id", (q) => q.eq("content_id", SET_CONTENT_ID))
         .unique();
       const questionRoute = await ctx.db
         .query("contentRoutes")
         .withIndex("by_content_id", (q) =>
-          q.eq("content_id", `id/${QUESTION_SLUG}`)
+          q.eq("content_id", QUESTION_CONTENT_ID)
         )
         .unique();
 

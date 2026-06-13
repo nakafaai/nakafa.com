@@ -3,12 +3,10 @@ import {
   decodeNakafaMarkdown,
 } from "@repo/backend/client/nakafa/decode";
 import { fetchNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { resolveNakafaContentRef } from "@repo/backend/client/nakafa/ref";
 import { api } from "@repo/backend/convex/_generated/api";
 import { formatNakafaRouteTitle } from "@repo/contents/_lib/agent/format";
-import {
-  buildNakafaContentRef,
-  parseNakafaContentRef,
-} from "@repo/contents/_lib/agent/refs";
+import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
 import type { NakafaAgentExerciseResult } from "@repo/contents/_lib/agent/schema/exercise";
 import type { NakafaAgentMarkdown } from "@repo/contents/_lib/agent/schema/read";
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
@@ -27,7 +25,7 @@ export function readNakafaExercise(
   exerciseNumber?: number
 ) {
   return Effect.gen(function* () {
-    const ref = parseNakafaContentRef(input);
+    const ref = yield* resolveNakafaContentRef(convexUrl, input);
 
     if (Option.isNone(ref) || ref.value.section !== "exercises") {
       return Option.none<NakafaAgentExerciseResult>();
@@ -106,7 +104,10 @@ export function readExerciseMarkdown(
   ref: NakafaAgentContentRef
 ) {
   return Effect.gen(function* () {
-    const exercise = yield* readNakafaExercise(convexUrl, ref.content_id);
+    const exercise = yield* readNakafaExercise(
+      convexUrl,
+      `${ref.locale}/${ref.route}`
+    );
 
     if (Option.isNone(exercise)) {
       return Option.none<NakafaAgentMarkdown>();

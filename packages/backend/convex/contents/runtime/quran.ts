@@ -1,5 +1,6 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import { getContentGraphIdentity } from "@repo/backend/convex/contents/graph";
 import { buildContentSearchRef } from "@repo/backend/convex/contents/helpers/search/documents";
 import type {
   Locale,
@@ -105,22 +106,24 @@ export async function getQuranReferenceImpl(
   }
 
   const route = `quran/${surah.number}`;
+  const graph = getContentGraphIdentity({
+    kind: "quran-surah",
+    locale: args.locale,
+    route,
+  });
   const ref = buildContentSearchRef({
+    ...graph,
     locale: args.locale,
     route,
     section: QURAN_SECTION,
   });
 
   return {
-    content_id: ref.content_id,
-    locale: ref.locale,
-    markdown_url: ref.markdown_url,
+    ...ref,
     name: getSurahName({ locale: args.locale, name: surah.name }),
     revelation: surah.revelation[args.locale],
-    route: ref.route,
     section: QURAN_SECTION,
     translation: surah.name.translation[args.locale],
-    url: ref.url,
     verses: verses
       .sort((left, right) => left.verseNumber - right.verseNumber)
       .map((verse) => ({

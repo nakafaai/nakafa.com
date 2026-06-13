@@ -1,17 +1,63 @@
 import { api, internal } from "@repo/backend/convex/_generated/api";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { CONTENT_SEARCH_MAX_OFFSET } from "@repo/backend/convex/contents/helpers/search/constants";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
+import type { Locale } from "@repo/contents/_types/content";
+import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { describe, expect, it } from "vitest";
+
+interface ContentSearchFixture {
+  contentHash: string;
+  description: string;
+  locale: Locale;
+  markdown_url: string;
+  route: string;
+  section: "articles" | "subject" | "exercises" | "quran";
+  syncedAt: number;
+  text: string;
+  title: string;
+  url: string;
+}
+
+/** Inserts a content search fixture with graph identity as product identity. */
+async function insertContentSearch(
+  ctx: MutationCtx,
+  fixture: ContentSearchFixture
+) {
+  const identity = createLearningGraphIdentityFromRoute({
+    locale: fixture.locale,
+    route: fixture.route,
+  });
+
+  if (!identity) {
+    throw new Error(`Expected graph identity for ${fixture.route}.`);
+  }
+
+  await ctx.db.insert("contentSearch", {
+    ...fixture,
+    ...identity,
+    content_id: identity.assetId,
+  });
+}
+
+/** Returns the graph asset ID for a search route fixture. */
+function searchContentId(locale: Locale, route: string) {
+  const identity = createLearningGraphIdentityFromRoute({ locale, route });
+
+  if (!identity) {
+    throw new Error(`Expected graph identity for ${route}.`);
+  }
+
+  return identity.assetId;
+}
 
 describe("contents/queries/search:search", () => {
   it("searches title and body text with locale and section filters", async () => {
     const t = createConvexTestWithBetterAuth();
 
     await t.mutation(async (ctx) => {
-      await ctx.db.insert("contentSearch", {
+      await insertContentSearch(ctx, {
         contentHash: "hash-rational",
-        content_id:
-          "id/subject/high-school/11/mathematics/function-modeling/rational-function",
         description: "Pelajari fungsi rasional.",
         locale: "id",
         markdown_url:
@@ -24,10 +70,8 @@ describe("contents/queries/search:search", () => {
         title: "Fungsi Rasional",
         url: "https://nakafa.com/id/subject/high-school/11/mathematics/function-modeling/rational-function",
       });
-      await ctx.db.insert("contentSearch", {
+      await insertContentSearch(ctx, {
         contentHash: "hash-domain",
-        content_id:
-          "id/subject/high-school/11/mathematics/function-modeling/domain-codomain-range",
         description: "Pelajari domain dan range.",
         locale: "id",
         markdown_url:
@@ -40,10 +84,8 @@ describe("contents/queries/search:search", () => {
         title: "Domain, Kodomain, dan Range",
         url: "https://nakafa.com/id/subject/high-school/11/mathematics/function-modeling/domain-codomain-range",
       });
-      await ctx.db.insert("contentSearch", {
+      await insertContentSearch(ctx, {
         contentHash: "hash-en",
-        content_id:
-          "en/subject/high-school/11/mathematics/function-modeling/rational-function",
         description: "Learn rational functions.",
         locale: "en",
         markdown_url:
@@ -84,8 +126,10 @@ describe("contents/queries/search:search", () => {
     );
     expect(bodyResult.items).toEqual([
       expect.objectContaining({
-        content_id:
-          "id/subject/high-school/11/mathematics/function-modeling/domain-codomain-range",
+        content_id: searchContentId(
+          "id",
+          "subject/high-school/11/mathematics/function-modeling/domain-codomain-range"
+        ),
         excerpt: expect.stringContaining("batas input"),
       }),
     ]);
@@ -96,10 +140,8 @@ describe("contents/queries/search:search", () => {
     const t = createConvexTestWithBetterAuth();
 
     await t.mutation(async (ctx) => {
-      await ctx.db.insert("contentSearch", {
+      await insertContentSearch(ctx, {
         contentHash: "hash-logarithm",
-        content_id:
-          "id/subject/high-school/10/mathematics/exponential-logarithm/logarithm-definition",
         description: "Memahami bentuk dasar logaritma.",
         locale: "id",
         markdown_url:
@@ -126,8 +168,10 @@ describe("contents/queries/search:search", () => {
 
     expect(result.items).toEqual([
       expect.objectContaining({
-        content_id:
-          "id/subject/high-school/10/mathematics/exponential-logarithm/logarithm-definition",
+        content_id: searchContentId(
+          "id",
+          "subject/high-school/10/mathematics/exponential-logarithm/logarithm-definition"
+        ),
         excerpt: expect.stringContaining("Memahami bentuk dasar logaritma."),
       }),
     ]);
@@ -139,10 +183,8 @@ describe("contents/queries/search:search", () => {
     const t = createConvexTestWithBetterAuth();
 
     await t.mutation(async (ctx) => {
-      await ctx.db.insert("contentSearch", {
+      await insertContentSearch(ctx, {
         contentHash: "hash-english-11",
-        content_id:
-          "id/exercises/high-school/snbt/english-language/try-out/2026/set-2/11",
         description: "",
         locale: "id",
         markdown_url:
@@ -155,10 +197,8 @@ describe("contents/queries/search:search", () => {
         title: "Soal 11",
         url: "https://nakafa.com/id/exercises/high-school/snbt/english-language/try-out/2026/set-2/11",
       });
-      await ctx.db.insert("contentSearch", {
+      await insertContentSearch(ctx, {
         contentHash: "hash-quantitative-11",
-        content_id:
-          "id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/11",
         description:
           "SMA SNBT Pengetahuan Kuantitatif try out 2026 set 2 Nomor 11",
         locale: "id",
@@ -184,8 +224,10 @@ describe("contents/queries/search:search", () => {
 
     expect(result.items[0]).toEqual(
       expect.objectContaining({
-        content_id:
-          "id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/11",
+        content_id: searchContentId(
+          "id",
+          "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/11"
+        ),
       })
     );
   });
@@ -231,8 +273,10 @@ describe("contents/queries/search:search", () => {
 
     expect(result.items[0]).toEqual(
       expect.objectContaining({
-        content_id:
-          "id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
+        content_id: searchContentId(
+          "id",
+          "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2"
+        ),
         title: "SNBT Pengetahuan Kuantitatif Try Out 2026 Set 2",
       })
     );
@@ -282,10 +326,8 @@ describe("contents/queries/search:search", () => {
     const t = createConvexTestWithBetterAuth();
 
     await t.mutation(async (ctx) => {
-      await ctx.db.insert("contentSearch", {
+      await insertContentSearch(ctx, {
         contentHash: "hash-language-question",
-        content_id:
-          "id/exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1",
         description: "",
         locale: "id",
         markdown_url:
@@ -298,10 +340,8 @@ describe("contents/queries/search:search", () => {
         title: "Soal 1",
         url: "https://nakafa.com/id/exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1",
       });
-      await ctx.db.insert("contentSearch", {
+      await insertContentSearch(ctx, {
         contentHash: "hash-math-set",
-        content_id:
-          "id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1",
         description: "SNBT Penalaran Matematika Try Out 2026 Set 1 20 soal",
         locale: "id",
         markdown_url:
@@ -326,8 +366,10 @@ describe("contents/queries/search:search", () => {
 
     expect(result.items[0]).toEqual(
       expect.objectContaining({
-        content_id:
-          "id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1",
+        content_id: searchContentId(
+          "id",
+          "exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1"
+        ),
       })
     );
   });
@@ -336,10 +378,8 @@ describe("contents/queries/search:search", () => {
     const t = createConvexTestWithBetterAuth();
 
     await t.mutation(async (ctx) => {
-      await ctx.db.insert("contentSearch", {
+      await insertContentSearch(ctx, {
         contentHash: "hash-question-11",
-        content_id:
-          "id/exercises/high-school/snbt/general-reasoning/try-out/2026/set-3/11",
         description: "SMA SNBT Penalaran Umum Try Out 2026 Set 3 Nomor 11",
         locale: "id",
         markdown_url:
@@ -352,10 +392,8 @@ describe("contents/queries/search:search", () => {
         title: "SNBT Penalaran Umum Try Out 2026 Set 3 Soal 11",
         url: "https://nakafa.com/id/exercises/high-school/snbt/general-reasoning/try-out/2026/set-3/11",
       });
-      await ctx.db.insert("contentSearch", {
+      await insertContentSearch(ctx, {
         contentHash: "hash-rational-set",
-        content_id:
-          "id/exercises/high-school/tka/mathematics/try-out/2026/set-1",
         description: "SMA TKA Matematika Try Out 2026 Set 1 20 soal",
         locale: "id",
         markdown_url:
@@ -379,8 +417,10 @@ describe("contents/queries/search:search", () => {
 
     expect(result.items[0]).toEqual(
       expect.objectContaining({
-        content_id:
-          "id/exercises/high-school/tka/mathematics/try-out/2026/set-1",
+        content_id: searchContentId(
+          "id",
+          "exercises/high-school/tka/mathematics/try-out/2026/set-1"
+        ),
       })
     );
   });
@@ -389,10 +429,8 @@ describe("contents/queries/search:search", () => {
     const t = createConvexTestWithBetterAuth();
 
     await t.mutation(async (ctx) => {
-      await ctx.db.insert("contentSearch", {
+      await insertContentSearch(ctx, {
         contentHash: "hash-class-question",
-        content_id:
-          "id/exercises/high-school/snbt/general-reasoning/try-out/2026/set-3/11",
         description: "SMA SNBT Penalaran Umum Try Out 2026 Set 3 Nomor 11",
         locale: "id",
         markdown_url:
@@ -491,10 +529,8 @@ describe("contents/queries/search:search", () => {
     const t = createConvexTestWithBetterAuth();
 
     await t.mutation(async (ctx) => {
-      await ctx.db.insert("contentSearch", {
+      await insertContentSearch(ctx, {
         contentHash: "hash-mass",
-        content_id:
-          "id/subject/high-school/10/chemistry/basic-chemistry-laws/mass-conservation-law",
         description: "Pelajari hukum kekekalan massa.",
         locale: "id",
         markdown_url:
@@ -507,10 +543,8 @@ describe("contents/queries/search:search", () => {
         title: "Hukum Kekekalan Massa",
         url: "https://nakafa.com/id/subject/high-school/10/chemistry/basic-chemistry-laws/mass-conservation-law",
       });
-      await ctx.db.insert("contentSearch", {
+      await insertContentSearch(ctx, {
         contentHash: "hash-stoichiometry",
-        content_id:
-          "id/subject/high-school/10/chemistry/stoichiometry/introduction",
         description: "Pelajari stoikiometri.",
         locale: "id",
         markdown_url:
@@ -522,10 +556,8 @@ describe("contents/queries/search:search", () => {
         title: "Stoikiometri",
         url: "https://nakafa.com/id/subject/high-school/10/chemistry/stoichiometry/introduction",
       });
-      await ctx.db.insert("contentSearch", {
+      await insertContentSearch(ctx, {
         contentHash: "hash-mass-application",
-        content_id:
-          "id/subject/high-school/10/chemistry/basic-chemistry-laws/mass-application",
         description: "Latihan tambahan hukum kekekalan massa.",
         locale: "id",
         markdown_url:
@@ -558,9 +590,8 @@ describe("contents/queries/search:search", () => {
     const t = createConvexTestWithBetterAuth();
 
     await t.mutation(async (ctx) => {
-      await ctx.db.insert("contentSearch", {
+      await insertContentSearch(ctx, {
         contentHash: "hash-b",
-        content_id: "id/articles/science/b",
         description: "",
         locale: "id",
         markdown_url: "https://nakafa.com/id/articles/science/b.md",
@@ -571,9 +602,8 @@ describe("contents/queries/search:search", () => {
         title: "Beta",
         url: "https://nakafa.com/id/articles/science/b",
       });
-      await ctx.db.insert("contentSearch", {
+      await insertContentSearch(ctx, {
         contentHash: "hash-a",
-        content_id: "id/articles/science/a",
         description: "",
         locale: "id",
         markdown_url: "https://nakafa.com/id/articles/science/a.md",
@@ -608,9 +638,8 @@ describe("contents/queries/search:search", () => {
       for (let index = 0; index <= CONTENT_SEARCH_MAX_OFFSET + 10; index += 1) {
         const title = `Search Cap ${index.toString().padStart(4, "0")}`;
 
-        await ctx.db.insert("contentSearch", {
+        await insertContentSearch(ctx, {
           contentHash: `hash-search-cap-${index}`,
-          content_id: `id/articles/search-cap/${index}`,
           description: "",
           locale: "id",
           markdown_url: `https://nakafa.com/id/articles/search-cap/${index}.md`,
@@ -729,7 +758,7 @@ describe("contents/queries/search:search", () => {
 
     expect(result.items).toEqual([
       expect.objectContaining({
-        content_id: "id/quran/1",
+        content_id: searchContentId("id", "quran/1"),
         section: "quran",
         title: "1. Al-Fatihah",
       }),

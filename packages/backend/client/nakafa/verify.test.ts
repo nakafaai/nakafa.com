@@ -1,5 +1,6 @@
 import { verifyNakafaContent } from "@repo/backend/client/nakafa/verify";
 import { api } from "@repo/backend/convex/_generated/api";
+import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
 import { type FunctionReference, getFunctionName } from "convex/server";
 import { Effect, Schema } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -114,8 +115,10 @@ function readContentRoute(args: unknown) {
   }
 
   if (input.route === articleRoute) {
+    const ref = buildNakafaContentRef(input.locale, input.route, "articles");
+
     return {
-      content_id: `${input.locale}/${input.route}`,
+      ...ref,
       locale: input.locale,
       route: input.route,
       section: "articles",

@@ -3,6 +3,7 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { CONTENT_ROUTE_ARTIFACT_PAGE_SIZE } from "@repo/backend/convex/contents/constants";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
@@ -178,10 +179,12 @@ function syncPage(
 
 /** Builds one uncounted route row that predates count materialization. */
 function contentRoute(route: string) {
+  const graph = articleRouteGraph(route);
+
   return {
+    ...graph,
     authors: [{ name: "Nakafa Author" }],
     contentHash: `${route}:hash`,
-    content_id: `id/${route}`,
     date: NOW,
     kind: "article" as const,
     locale: "id" as const,
@@ -197,9 +200,11 @@ function contentRoute(route: string) {
 function contentRoutePageItem(
   route: string
 ): Doc<"contentRoutePages">["routes"][number] {
+  const graph = articleRouteGraph(route);
+
   return {
+    ...graph,
     authors: [{ name: "Nakafa Author" }],
-    content_id: `id/${route}`,
     date: NOW,
     kind: "article",
     locale: "id",
@@ -208,5 +213,22 @@ function contentRoutePageItem(
     section: "articles",
     syncedAt: NOW,
     title: route,
+  };
+}
+
+/** Builds graph identity fields for an article route fixture. */
+function articleRouteGraph(route: string) {
+  const identity = createLearningGraphIdentityFromRoute({
+    locale: "id",
+    route,
+  });
+
+  if (!identity) {
+    throw new Error(`Expected article graph identity for ${route}.`);
+  }
+
+  return {
+    ...identity,
+    content_id: identity.assetId,
   };
 }

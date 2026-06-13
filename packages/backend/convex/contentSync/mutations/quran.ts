@@ -1,5 +1,6 @@
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
+import { getContentGraphIdentity } from "@repo/backend/convex/contents/graph";
 import {
   deleteContentRoute,
   syncContentRoute,
@@ -136,7 +137,14 @@ export const bulkSyncQuranSurahs = internalMutation({
         .unique();
 
       for (const route of surah.routes) {
+        const graph = getContentGraphIdentity({
+          kind: "quran-surah",
+          locale: route.locale,
+          route: `quran/${surah.number}`,
+        });
+
         await syncContentRoute(ctx, {
+          ...graph,
           contentHash: route.contentHash,
           description: route.description,
           kind: "quran-surah",
@@ -261,6 +269,11 @@ export const deleteStaleQuranRuntime = internalMutation({
         args.surahNumbers.map(
           (surahNumber) =>
             buildContentSearchRef({
+              ...getContentGraphIdentity({
+                kind: "quran-surah",
+                locale,
+                route: `quran/${surahNumber}`,
+              }),
               locale,
               route: `quran/${surahNumber}`,
               section: "quran",

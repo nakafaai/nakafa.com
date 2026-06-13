@@ -1,6 +1,8 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import type { Locale } from "@repo/contents/_types/content";
+import { createLearningGraphIdentity } from "@repo/contents/_types/learning-graph";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
@@ -10,9 +12,9 @@ describe("contentSync/mutations/quran", () => {
 
     await t.mutation(async (ctx) => {
       await ctx.db.insert("contentRoutes", {
+        ...quranRouteGraph("id", "quran/1"),
         authors: [],
         contentHash: "id-current",
-        content_id: "id/quran/1",
         kind: "quran-surah",
         locale: "id",
         markdown: true,
@@ -22,9 +24,9 @@ describe("contentSync/mutations/quran", () => {
         title: "Al-Fatihah",
       });
       await ctx.db.insert("contentRoutes", {
+        ...quranRouteGraph("id", "quran/999"),
         authors: [],
         contentHash: "id-stale",
-        content_id: "id/quran/999",
         kind: "quran-surah",
         locale: "id",
         markdown: true,
@@ -34,9 +36,9 @@ describe("contentSync/mutations/quran", () => {
         title: "Stale",
       });
       await ctx.db.insert("contentRoutes", {
+        ...quranRouteGraph("en", "quran/1"),
         authors: [],
         contentHash: "en-current",
-        content_id: "en/quran/1",
         kind: "quran-surah",
         locale: "en",
         markdown: true,
@@ -65,8 +67,8 @@ describe("contentSync/mutations/quran", () => {
 
     expect(deleted.routesDeleted).toBe(1);
     expect(routes.map((route) => route.content_id).sort()).toEqual([
-      "en/quran/1",
-      "id/quran/1",
+      "asset:en:quran:quran-surah:1",
+      "asset:id:quran:quran-surah:1",
     ]);
   });
 
@@ -107,6 +109,20 @@ describe("contentSync/mutations/quran", () => {
     ).toEqual(["1:1", "2:1"]);
   });
 });
+
+/** Builds graph IDs for one Quran route fixture. */
+function quranRouteGraph(locale: Locale, route: string) {
+  const identity = createLearningGraphIdentity({
+    kind: "quran-surah",
+    locale,
+    route,
+  });
+
+  return {
+    ...identity,
+    content_id: identity.assetId,
+  };
+}
 
 /** Builds one Quran verse row for stale cleanup tests. */
 function quranVerse({

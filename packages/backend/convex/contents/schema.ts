@@ -1,4 +1,5 @@
 import { CONTENT_ROUTE_KINDS } from "@repo/backend/convex/contents/constants";
+import { learningGraphIdentityValidator } from "@repo/backend/convex/contents/graph";
 import { contentSearchDocumentValidator } from "@repo/backend/convex/contents/helpers/search/schema";
 import {
   contentRefValidator,
@@ -11,6 +12,7 @@ import { literals } from "convex-helpers/validators";
 
 const contentRouteKindValidator = literals(...CONTENT_ROUTE_KINDS);
 const contentRoutePageItemValidator = v.object({
+  ...learningGraphIdentityValidator.fields,
   authors: v.array(v.object({ name: v.string() })),
   content_id: v.string(),
   date: v.optional(v.number()),
@@ -153,6 +155,7 @@ const tables = {
 
   /** Concrete public routes synced from the durable content runtime model. */
   contentRoutes: defineTable({
+    ...learningGraphIdentityValidator.fields,
     authors: v.array(v.object({ name: v.string() })),
     countedAt: v.optional(v.number()),
     contentHash: v.string(),
