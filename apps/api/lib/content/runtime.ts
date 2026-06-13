@@ -1,5 +1,6 @@
 import { fetchConvexRuntimeQuery } from "@repo/backend/client/runtime";
 import { api } from "@repo/backend/convex/_generated/api";
+import { NakafaAgentContentIdSchema } from "@repo/contents/_lib/agent/schema/ref";
 import type { Locale } from "@repo/utilities/locales";
 import { locales } from "@repo/utilities/locales";
 import type {
@@ -7,7 +8,7 @@ import type {
   FunctionReference,
   FunctionReturnType,
 } from "convex/server";
-import { Effect, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 import { env } from "@/env";
 
 type RuntimeContentRoutePage = FunctionReturnType<
@@ -30,6 +31,9 @@ type ExerciseQuestionPageArgs = FunctionArgs<
 >;
 type QuranSurahPageArgs = FunctionArgs<
   typeof api.contents.queries.runtime.getQuranSurahPage
+>;
+type ContentRouteByContentIdArgs = FunctionArgs<
+  typeof api.contents.queries.runtime.getContentRouteByContentId
 >;
 
 const PAGE_SIZE = 100;
@@ -83,6 +87,15 @@ export function parseApiPageParams(searchParams: URLSearchParams) {
   };
 }
 
+/** Parses a graph-backed content ID accepted by partner graph lookup routes. */
+export function parseApiContentId(contentId: string) {
+  const parsed = Schema.decodeUnknownOption(NakafaAgentContentIdSchema)(
+    contentId
+  );
+
+  return Option.getOrNull(parsed);
+}
+
 /** Reads one page of article content rows from Convex. */
 export function getArticleApiContentPage(args: ArticleApiPageArgs) {
   return fetchApiRuntimeQuery(
@@ -115,6 +128,17 @@ export function getExerciseApiQuestionPage(args: ExerciseQuestionPageArgs) {
   return fetchApiRuntimeQuery(
     "getExerciseQuestionPage",
     api.contents.queries.runtime.getExerciseQuestionPage,
+    args
+  );
+}
+
+/** Reads one route-catalog row by stable graph content ID. */
+export function getApiContentRouteByContentId(
+  args: ContentRouteByContentIdArgs
+) {
+  return fetchApiRuntimeQuery(
+    "getContentRouteByContentId",
+    api.contents.queries.runtime.getContentRouteByContentId,
     args
   );
 }
