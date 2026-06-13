@@ -106,6 +106,25 @@ export async function syncAudioContentSource(
   };
 
   if (!existing) {
+    const existingRouteSource = await ctx.db
+      .query("audioContentSources")
+      .withIndex("by_contentType_and_route_and_locale", (q) =>
+        q
+          .eq("contentType", source.contentType)
+          .eq("route", source.route)
+          .eq("locale", source.locale)
+      )
+      .unique();
+
+    if (existingRouteSource) {
+      await ctx.db.patch(
+        "audioContentSources",
+        existingRouteSource._id,
+        nextValues
+      );
+      return;
+    }
+
     await ctx.db.insert("audioContentSources", nextValues);
     return;
   }

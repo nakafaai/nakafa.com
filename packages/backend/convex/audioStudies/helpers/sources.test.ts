@@ -125,4 +125,71 @@ describe("audioStudies/helpers/sources", () => {
     });
     expect(deleted).toBeNull();
   });
+
+  it("updates a route-indexed source when graph content ID changes", async () => {
+    const t = convexTest(schema, convexModules);
+    const detachedArticleSource = {
+      ...articleSource,
+      alignmentId: `${articleSource.alignmentId}:catalog`,
+      assetId: `${articleSource.assetId}:catalog`,
+      conceptId: `${articleSource.conceptId}:catalog`,
+      contentHash: "detached-hash",
+      content_id: `${articleSource.content_id}:catalog`,
+      learningObjectId: `${articleSource.learningObjectId}:catalog`,
+      lensId: `${articleSource.lensId}:catalog`,
+    };
+
+    await t.mutation(async (ctx) => {
+      await syncAudioContentSource(ctx, {
+        ...detachedArticleSource,
+        syncedAt: 1,
+      });
+      await syncAudioContentSource(ctx, {
+        ...articleSource,
+        syncedAt: 2,
+      });
+    });
+
+    const snapshot = await t.query(async (ctx) => {
+      const canonical = await getAudioContentSourceByContentId(
+        ctx,
+        articleSource.content_id
+      );
+      const detached = await getAudioContentSourceByContentId(
+        ctx,
+        detachedArticleSource.content_id
+      );
+      const routeRows = await ctx.db
+        .query("audioContentSources")
+        .withIndex("by_contentType_and_route_and_locale", (q) =>
+          q
+            .eq("contentType", articleSource.contentType)
+            .eq("route", articleSource.route)
+            .eq("locale", articleSource.locale)
+        )
+        .take(2);
+
+      return { canonical, detached, routeRows };
+    });
+
+    expect(snapshot.canonical).toEqual({
+      alignmentId: articleSource.alignmentId,
+      assetId: articleSource.assetId,
+      conceptId: articleSource.conceptId,
+      contentHash: articleSource.contentHash,
+      content_id: articleSource.content_id,
+      contentType: articleSource.contentType,
+      learningObjectId: articleSource.learningObjectId,
+      lensId: articleSource.lensId,
+      locale: articleSource.locale,
+      route: articleSource.route,
+    });
+    expect(snapshot.detached).toBeNull();
+    expect(snapshot.routeRows).toHaveLength(1);
+    expect(snapshot.routeRows[0]).toMatchObject({
+      contentHash: articleSource.contentHash,
+      content_id: articleSource.content_id,
+      route: articleSource.route,
+    });
+  });
 });
