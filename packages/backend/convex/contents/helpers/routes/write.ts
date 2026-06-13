@@ -8,7 +8,7 @@ import type {
 import type { LearningGraphIdentity } from "@repo/contents/_types/learning-graph";
 import { ConvexError } from "convex/values";
 
-const duplicateRouteProjectionRepairLimit = 6;
+const duplicateRouteRepairLimit = 6;
 
 interface ContentRouteSource extends LearningGraphIdentity {
   authors?: { name: string }[];
@@ -65,7 +65,7 @@ export async function syncContentRoute(
     .withIndex("by_locale_and_route", (q) =>
       q.eq("locale", nextValues.locale).eq("route", nextValues.route)
     )
-    .take(duplicateRouteProjectionRepairLimit);
+    .take(duplicateRouteRepairLimit);
   const routeExisting = existing ?? routeRows[0] ?? null;
   const deletedDuplicates = await deleteDuplicateContentRoutes(ctx, {
     primary: routeExisting,
@@ -105,14 +105,11 @@ export async function syncContentRoute(
   return "created";
 }
 
-/** Deletes the route catalog row attached to one graph content ID. */
-export async function deleteContentRouteByGraphContentId(
-  ctx: MutationCtx,
-  graphContentId: string
-) {
+/** Deletes the route catalog row attached to one canonical content ID. */
+export async function deleteContentRoute(ctx: MutationCtx, contentId: string) {
   const existing = await ctx.db
     .query("contentRoutes")
-    .withIndex("by_content_id", (q) => q.eq("content_id", graphContentId))
+    .withIndex("by_content_id", (q) => q.eq("content_id", contentId))
     .unique();
 
   if (!existing) {
@@ -161,7 +158,7 @@ async function deleteDuplicateContentRoutes(
     rows: Doc<"contentRoutes">[];
   }
 ) {
-  if (source.rows.length >= duplicateRouteProjectionRepairLimit) {
+  if (source.rows.length >= duplicateRouteRepairLimit) {
     throw new ConvexError({
       code: "CONTENT_ROUTE_DUPLICATE_LIMIT_EXCEEDED",
       message: "Content route has too many duplicate route projections.",

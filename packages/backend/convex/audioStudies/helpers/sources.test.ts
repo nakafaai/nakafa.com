@@ -1,6 +1,6 @@
 import {
-  deleteAudioContentSourceByGraphContentId,
-  getAudioContentSourceByGraphContentId,
+  deleteAudioContentSource,
+  getAudioContentSourceByContentId,
   getAudioContentSourceByLocale,
   syncAudioContentSource,
 } from "@repo/backend/convex/audioStudies/helpers/sources";
@@ -38,7 +38,7 @@ describe("audioStudies/helpers/sources", () => {
     });
 
     const result = await t.query(async (ctx) => {
-      const english = await getAudioContentSourceByGraphContentId(
+      const english = await getAudioContentSourceByContentId(
         ctx,
         articleSource.content_id
       );
@@ -98,26 +98,17 @@ describe("audioStudies/helpers/sources", () => {
 
     const updated = await t.query(
       async (ctx) =>
-        await getAudioContentSourceByGraphContentId(
-          ctx,
-          articleSource.content_id
-        )
+        await getAudioContentSourceByContentId(ctx, articleSource.content_id)
     );
 
     await t.mutation(
       async (ctx) =>
-        await deleteAudioContentSourceByGraphContentId(
-          ctx,
-          articleSource.content_id
-        )
+        await deleteAudioContentSource(ctx, articleSource.content_id)
     );
 
     const deleted = await t.query(
       async (ctx) =>
-        await getAudioContentSourceByGraphContentId(
-          ctx,
-          articleSource.content_id
-        )
+        await getAudioContentSourceByContentId(ctx, articleSource.content_id)
     );
 
     expect(updated).toEqual({
@@ -160,11 +151,11 @@ describe("audioStudies/helpers/sources", () => {
     });
 
     const snapshot = await t.query(async (ctx) => {
-      const canonical = await getAudioContentSourceByGraphContentId(
+      const canonical = await getAudioContentSourceByContentId(
         ctx,
         articleSource.content_id
       );
-      const detached = await getAudioContentSourceByGraphContentId(
+      const detached = await getAudioContentSourceByContentId(
         ctx,
         detachedArticleSource.content_id
       );

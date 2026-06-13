@@ -14,8 +14,8 @@ function getPartitionFromKey(value: string) {
 }
 
 /** Returns the stable analytics partition for a graph content ID. */
-export function getContentAnalyticsPartition(graphContentId: string) {
-  return getPartitionFromKey(graphContentId);
+export function getContentAnalyticsPartition(contentId: string) {
+  return getPartitionFromKey(contentId);
 }
 
 /** Returns whether a numeric partition belongs to the configured partition set. */
