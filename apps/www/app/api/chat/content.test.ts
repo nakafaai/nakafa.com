@@ -7,6 +7,7 @@ import { Effect, Option } from "effect";
 import { describe, expect, it } from "vitest";
 import {
   determinePageFetchNeed,
+  getCanonicalCurrentPageContentUrl,
   getCanonicalNakafaContentUrl,
   hasFetchedCurrentPageContent,
 } from "@/app/api/chat/content";
@@ -106,6 +107,15 @@ describe("app/api/chat/content", () => {
     );
   });
 
+  it("canonicalizes current-page chat route projections", () => {
+    expect(
+      getCanonicalCurrentPageContentUrl({
+        locale: "id",
+        slug: "/quran/1",
+      })
+    ).toBe("https://nakafa.com/id/quran/1");
+  });
+
   it.each([
     [
       "same absolute URL",
@@ -196,6 +206,22 @@ describe("app/api/chat/content", () => {
       determinePageFetchNeed({
         messages: [],
         url: currentContentUrl,
+        verified: true,
+      })
+    );
+
+    expect(needsPageFetch).toBe(true);
+  });
+
+  it("needs a page fetch for a verified canonical current-page URL", () => {
+    const url = getCanonicalCurrentPageContentUrl({
+      locale: "id",
+      slug: "/quran/1",
+    });
+    const needsPageFetch = Effect.runSync(
+      determinePageFetchNeed({
+        messages: [],
+        url,
         verified: true,
       })
     );

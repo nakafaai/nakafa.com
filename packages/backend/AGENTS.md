@@ -37,3 +37,19 @@ compatibility routes when callers can import the concrete capability directly.
 Do not leave one-off migration, backfill, repair, maintenance, dead, redundant,
 or legacy code/data paths behind. After verifying dev and prod data, delete the
 obsolete Convex function and its tests before considering the work complete.
+
+## Type And Convex Source Of Truth
+
+Convex is the typed transactional source for app state and graph read models.
+`packages/contents` is the authoring and source-registry input that feeds those
+read models; do not make path/corpus layout the app-state identity.
+
+Domain validators and schema modules own backend value sets. Derive types from
+Convex `Infer<typeof validator>`, generated `Doc<>` and `Id<>` types, or
+generated function argument/return types; do not duplicate unions for locales,
+route kinds, content kinds, or graph identity fields.
+
+Every Convex function needs validators and the narrowest public/internal
+visibility that fits. Use indexed, paginated, or `.take()` bounded reads for
+production paths, keep writes transactional in mutations, reserve actions for
+external side effects, and never rely on client-side auth-only filtering.

@@ -150,6 +150,14 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - Keep public function inputs and outputs obvious.
 - Use meaningful names instead of magic values or anonymous tuple-like objects.
 
+## Type Source Of Truth
+
+- Domain value sets have one source module. Schemas, validators, constants, and UI option lists derive from that source instead of duplicating unions.
+- Public domain types derive from their runtime contract: use `Schema.Schema.Type<typeof Schema>` for Effect schemas, Convex `Infer<typeof validator>` for validators, and generated `Doc<>`, `Id<>`, `FunctionArgs<>`, or `FunctionReturnType<>` where Convex owns the shape.
+- Do not duplicate unions such as locale, taxonomy, route-kind, content-kind, or graph identity strings when a schema, validator, generated type, or constant already owns them.
+- Do not add manual type annotations where inference is clear. If inference is unclear, improve the Module Interface or schema source instead of adding workaround casts.
+- Test fixtures may use literal values as concrete samples, but helper signatures must derive from the same source types as production code.
+
 ## Effect Rules
 
 - Use Effect for effectful TypeScript business logic across the repo, especially in `packages/ai`, `packages/contents`, MCP/agent tooling, IO/cache/schema boundaries, and scripts.
