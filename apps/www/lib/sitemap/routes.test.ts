@@ -34,12 +34,13 @@ vi.mock("@/lib/content/runtime", () => ({
   getRuntimeContentRouteCounts: runtimeMocks.getRuntimeContentRouteCounts,
 }));
 
-vi.mock("@repo/internationalization/src/routing", () => ({
-  routing: {
-    defaultLocale: "en",
-    locales: ["en", "id"],
-  },
-}));
+vi.mock("@repo/internationalization/src/routing", async () => {
+  const { defaultLocale, locales } = await import("@repo/utilities/locales");
+
+  return {
+    routing: { defaultLocale, locales },
+  };
+});
 
 beforeEach(() => {
   runtimeMocks.getRuntimeContentRouteArtifactPage.mockReset();

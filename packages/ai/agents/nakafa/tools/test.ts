@@ -10,6 +10,7 @@ import {
   parseNakafaContentRef,
 } from "@repo/contents/_lib/agent/refs";
 import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agent/schema/quran";
+import { defaultLocale, locales } from "@repo/utilities/locales";
 import type { UIMessageStreamWriter } from "ai";
 import { Effect, Option, Schema } from "effect";
 
@@ -132,11 +133,11 @@ const nakafaTestRuntime = {
     );
   },
   /** Returns deterministic taxonomy for service-injection tests. */
-  taxonomy: (locale = "en") =>
+  taxonomy: (locale = defaultLocale) =>
     Effect.succeed({
       articles: { categories: ["politics"] },
       content_counts: [{ count: 1, locale }],
-      default_locale: "en",
+      default_locale: defaultLocale,
       endpoints: {
         direct: "https://mcp.nakafa.com/mcp",
         recommended: "https://nakafa.com/mcp",
@@ -148,7 +149,7 @@ const nakafaTestRuntime = {
         types: [{ id: "snbt", label: "SNBT" }],
       },
       locale,
-      locales: ["en", "id"],
+      locales: Array.from(locales),
       quran: { surah_count: 114 },
       sections: ["articles", "subject", "exercises", "quran"],
       subject: {

@@ -1,4 +1,7 @@
-import type { NakafaSection } from "@repo/backend/convex/lib/validators/contents";
+import {
+  type NakafaSection,
+  SUPPORTED_CONTENT_LOCALES,
+} from "@repo/backend/convex/lib/validators/contents";
 import type { ConvexConfig } from "@repo/backend/scripts/sync-content/types";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { Effect } from "effect";
@@ -127,7 +130,7 @@ describe("sync-content routes", () => {
 
     expect(countCalls).toHaveLength(8);
     expect(new Set(countCalls.map((call) => call.locale))).toEqual(
-      new Set(["en", "id"])
+      new Set(SUPPORTED_CONTENT_LOCALES)
     );
     expect(new Set(countCalls.map((call) => call.section))).toEqual(
       new Set(["articles", "exercises", "quran", "subject"])

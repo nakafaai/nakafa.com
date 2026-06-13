@@ -10,6 +10,7 @@ import {
   NakafaAgentInputError,
 } from "@repo/contents/_lib/agent/errors";
 import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
+import { defaultLocale, locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -152,7 +153,7 @@ function taxonomy() {
         locale: "en",
       },
     ],
-    default_locale: "en",
+    default_locale: defaultLocale,
     endpoints: {
       direct: "https://mcp.nakafa.com/mcp",
       recommended: "https://nakafa.com/mcp",
@@ -164,7 +165,7 @@ function taxonomy() {
       types: [{ id: "snbt", label: "SNBT" }],
     },
     locale: "en",
-    locales: ["en", "id"],
+    locales: Array.from(locales),
     quran: { surah_count: 114 },
     sections: ["articles", "subject", "exercises", "quran"],
     subject: {

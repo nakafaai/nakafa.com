@@ -7,6 +7,7 @@ import {
 } from "@repo/ai/agents/nakafa/format";
 import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
 import type { NakafaAgentExerciseResult } from "@repo/contents/_lib/agent/schema/exercise";
+import { defaultLocale, locales } from "@repo/utilities/locales";
 import { describe, expect, it } from "vitest";
 
 const subjectRoute =
@@ -119,7 +120,7 @@ describe("Nakafa formatter", () => {
         categories: ["science"],
       },
       content_counts: [{ count: 12, locale: "id" }],
-      default_locale: "en",
+      default_locale: defaultLocale,
       endpoints: {
         direct: "https://mcp.nakafa.com/mcp",
         recommended: "https://nakafa.com/mcp",
@@ -133,7 +134,7 @@ describe("Nakafa formatter", () => {
         types: [{ id: "snbt", label: "SNBT" }],
       },
       locale: "id",
-      locales: ["id", "en"],
+      locales: Array.from(locales),
       quran: {
         surah_count: 114,
       },

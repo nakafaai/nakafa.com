@@ -24,12 +24,13 @@ const translationMocks = vi.hoisted(() => ({
   getTranslations: vi.fn(),
 }));
 
-vi.mock("@repo/internationalization/src/routing", () => ({
-  routing: {
-    defaultLocale: "en",
-    locales: ["en", "id"],
-  },
-}));
+vi.mock("@repo/internationalization/src/routing", async () => {
+  const { defaultLocale, locales } = await import("@repo/utilities/locales");
+
+  return {
+    routing: { defaultLocale, locales },
+  };
+});
 
 vi.mock("@/lib/content/runtime", () => ({
   getRuntimeContentRoute: runtimeMocks.getRuntimeContentRoute,
