@@ -197,25 +197,15 @@ describe("audioStudies/generation/impl", () => {
       storeAudio: () => unexpectedCall("storeAudio"),
     };
 
-    let thrown: unknown;
+    const program = generateAudioScript(store, providers, {
+      contentAudioId: ids.contentAudioId,
+    });
 
-    try {
-      await runConvexProgram(
-        generateAudioScript(store, providers, {
-          contentAudioId: ids.contentAudioId,
-        })
-      );
-    } catch (error) {
-      thrown = error;
-    }
-
-    if (typeof thrown !== "object" || thrown === null || !("data" in thrown)) {
-      throw new Error("Expected script generation to fail with ConvexError.");
-    }
-
-    expect(thrown.data).toMatchObject({
-      code: "CONTENT_CHANGED",
-      message: "Content changed during generation, aborting to save costs",
+    await expect(runConvexProgram(program)).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_CHANGED",
+        message: "Content changed during generation, aborting to save costs",
+      },
     });
     expect(failedMessages).toEqual([
       "Content changed during generation, aborting to save costs",
