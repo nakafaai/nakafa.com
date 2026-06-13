@@ -1,5 +1,4 @@
 import { api } from "@repo/backend/convex/_generated/api";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import schema from "@repo/backend/convex/schema";
@@ -84,7 +83,7 @@ async function insertSubjectRoute(ctx: MutationCtx, suffix: string) {
 /** Inserts one derived trending bucket row. */
 async function insertTrendingBucket(
   ctx: MutationCtx,
-  contentId: Id<"subjectSections">,
+  graph: Awaited<ReturnType<typeof insertSubjectRoute>>,
   {
     bucketStart,
     locale = "en",
@@ -96,20 +95,13 @@ async function insertTrendingBucket(
   }
 ) {
   await ctx.db.insert("subjectTrendingBuckets", {
+    ...graph,
     bucketStart,
-    contentId,
+    content_id: graph.assetId,
     locale,
     updatedAt: NOW,
     viewCount,
   });
-}
-
-function getConvexErrorData(error: unknown) {
-  if (typeof error !== "object" || error === null || !("data" in error)) {
-    throw new Error("Expected a ConvexError with data.");
-  }
-
-  return error.data;
 }
 
 describe("subjectSections/queries", () => {
@@ -118,23 +110,23 @@ describe("subjectSections/queries", () => {
     const { firstRef, firstSubjectId, secondRef } = await t.mutation(
       async (ctx) => {
         const firstSubjectId = await insertSubject(ctx, "first");
-        const secondSubjectId = await insertSubject(ctx, "second");
+        await insertSubject(ctx, "second");
         const firstRef = await insertSubjectRoute(ctx, "first");
         const secondRef = await insertSubjectRoute(ctx, "second");
 
-        await insertTrendingBucket(ctx, firstSubjectId, {
+        await insertTrendingBucket(ctx, firstRef, {
           bucketStart: NOW,
           viewCount: 3,
         });
-        await insertTrendingBucket(ctx, firstSubjectId, {
+        await insertTrendingBucket(ctx, firstRef, {
           bucketStart: NOW + TRENDING_BUCKET_MS,
           viewCount: 4,
         });
-        await insertTrendingBucket(ctx, secondSubjectId, {
+        await insertTrendingBucket(ctx, secondRef, {
           bucketStart: NOW,
           viewCount: 10,
         });
-        await insertTrendingBucket(ctx, secondSubjectId, {
+        await insertTrendingBucket(ctx, secondRef, {
           bucketStart: NOW,
           locale: "id",
           viewCount: 100,
@@ -208,7 +200,8 @@ describe("subjectSections/queries", () => {
 
     await t.mutation(async (ctx) => {
       const subjectId = await insertSubject(ctx, "deleted");
-      await insertTrendingBucket(ctx, subjectId, {
+      const ref = await insertSubjectRoute(ctx, "deleted");
+      await insertTrendingBucket(ctx, ref, {
         bucketStart: NOW,
         viewCount: 10,
       });
@@ -231,8 +224,19 @@ describe("subjectSections/queries", () => {
     const t = convexTest(schema, convexModules);
 
     await t.mutation(async (ctx) => {
-      const subjectId = await insertSubject(ctx, "missing-route");
-      await insertTrendingBucket(ctx, subjectId, {
+      await insertSubject(ctx, "missing-route");
+      const route =
+        "subject/high-school/10/mathematics/topic-missing-route/section-missing-route";
+      const ref = createLearningGraphIdentityFromRoute({
+        locale: "en",
+        route,
+      });
+
+      if (!ref) {
+        throw new Error(`Expected subject graph identity for ${route}.`);
+      }
+
+      await insertTrendingBucket(ctx, ref, {
         bucketStart: NOW,
         viewCount: 10,
       });
@@ -253,17 +257,17 @@ describe("subjectSections/queries", () => {
   it("rejects ranges wider than the supported trending window", async () => {
     const t = convexTest(schema, convexModules);
 
-    const error = await t
-      .query(api.subjectSections.queries.getTrendingSubjects, {
+    await expect(
+      t.query(api.subjectSections.queries.getTrendingSubjects, {
         locale: "en",
         since: NOW,
         until: NOW + (maxTrendingRangeDays + 1) * TRENDING_BUCKET_MS,
       })
-      .catch((error: unknown) => error);
-
-    expect(getConvexErrorData(error)).toEqual({
-      code: invalidTrendingRangeCode,
-      message: `Trending range cannot exceed ${maxTrendingRangeDays} days.`,
+    ).rejects.toMatchObject({
+      data: {
+        code: invalidTrendingRangeCode,
+        message: `Trending range cannot exceed ${maxTrendingRangeDays} days.`,
+      },
     });
   });
 });

@@ -207,79 +207,109 @@ describe("contentSync/queries/integrity", () => {
     });
   });
 
-  it("reports durable analytics rows that still store source-row identity", async () => {
+  it("accepts durable analytics rows that store graph identity", async () => {
     const t = convexTest(schema, convexModules);
-    const ids = await t.mutation(insertAnalyticsSourceRows);
+    const graph = articleGraphWithContentId(articleGraph().assetId);
 
     await t.mutation(async (ctx) => {
       await ctx.db.insert("contentViews", {
-        contentRef: { id: ids.articleId, type: "article" },
+        ...graph,
         deviceId: "integrity-device",
         firstViewedAt: NOW,
         lastViewedAt: NOW,
         locale: "id",
-        slug: ARTICLE_ROUTE,
+        route: ARTICLE_ROUTE,
+        section: "articles",
       });
       await ctx.db.insert("contentViewAnalyticsQueue", {
-        contentRef: { id: ids.subjectId, type: "subject" },
+        ...graph,
         locale: "id",
         partition: 0,
+        route: ARTICLE_ROUTE,
+        section: "articles",
         viewedAt: NOW,
       });
       await ctx.db.insert("articlePopularity", {
-        contentId: ids.articleId,
+        ...graph,
         updatedAt: NOW,
         viewCount: 1,
       });
       await ctx.db.insert("subjectPopularity", {
-        contentId: ids.subjectId,
+        ...graph,
         updatedAt: NOW,
         viewCount: 1,
       });
       await ctx.db.insert("exercisePopularity", {
-        contentId: ids.exerciseSetId,
+        ...graph,
         updatedAt: NOW,
         viewCount: 1,
       });
       await ctx.db.insert("subjectTrendingBuckets", {
+        ...graph,
         bucketStart: NOW,
-        contentId: ids.subjectId,
         locale: "id",
         updatedAt: NOW,
         viewCount: 1,
       });
     });
 
-    await expectLegacyAnalyticsIntegrity(t, "contentViews", {
-      content_id: ids.articleId,
+    for (const target of GRAPH_INTEGRITY_TARGETS.slice(4)) {
+      await expectCleanGraphAnalyticsIntegrity(t, target);
+    }
+  });
+
+  it("reports durable analytics rows whose graph content_id differs from assetId", async () => {
+    const t = convexTest(schema, convexModules);
+    const graph = articleGraphWithContentId(`${articleGraph().assetId}:stale`);
+
+    await t.mutation(async (ctx) => {
+      await ctx.db.insert("contentViews", {
+        ...graph,
+        deviceId: "integrity-device",
+        firstViewedAt: NOW,
+        lastViewedAt: NOW,
+        locale: "id",
+        route: ARTICLE_ROUTE,
+        section: "articles",
+      });
+      await ctx.db.insert("contentViewAnalyticsQueue", {
+        ...graph,
+        locale: "id",
+        partition: 0,
+        route: ARTICLE_ROUTE,
+        section: "articles",
+        viewedAt: NOW,
+      });
+      await ctx.db.insert("articlePopularity", {
+        ...graph,
+        updatedAt: NOW,
+        viewCount: 1,
+      });
+    });
+
+    await expectMismatchedGraphAnalyticsIntegrity(t, "contentViews", {
+      assetId: graph.assetId,
+      content_id: graph.content_id,
       kind: "contentViews",
       route: ARTICLE_ROUTE,
       section: "articles",
     });
-    await expectLegacyAnalyticsIntegrity(t, "contentViewAnalyticsQueue", {
-      content_id: ids.subjectId,
-      kind: "contentViewAnalyticsQueue",
-      section: "subject",
-    });
-    await expectLegacyAnalyticsIntegrity(t, "articlePopularity", {
-      content_id: ids.articleId,
+    await expectMismatchedGraphAnalyticsIntegrity(
+      t,
+      "contentViewAnalyticsQueue",
+      {
+        assetId: graph.assetId,
+        content_id: graph.content_id,
+        kind: "contentViewAnalyticsQueue",
+        route: ARTICLE_ROUTE,
+        section: "articles",
+      }
+    );
+    await expectMismatchedGraphAnalyticsIntegrity(t, "articlePopularity", {
+      assetId: graph.assetId,
+      content_id: graph.content_id,
       kind: "articlePopularity",
       section: "articles",
-    });
-    await expectLegacyAnalyticsIntegrity(t, "subjectPopularity", {
-      content_id: ids.subjectId,
-      kind: "subjectPopularity",
-      section: "subject",
-    });
-    await expectLegacyAnalyticsIntegrity(t, "exercisePopularity", {
-      content_id: ids.exerciseSetId,
-      kind: "exercisePopularity",
-      section: "exercises",
-    });
-    await expectLegacyAnalyticsIntegrity(t, "subjectTrendingBuckets", {
-      content_id: ids.subjectId,
-      kind: "subjectTrendingBuckets",
-      section: "subject",
     });
   });
 });
@@ -303,11 +333,28 @@ function getGraphIntegrity(
   );
 }
 
-/** Asserts one durable analytics table is reported as source-ID backed. */
-async function expectLegacyAnalyticsIntegrity(
+/** Asserts one durable analytics table has clean graph refs. */
+async function expectCleanGraphAnalyticsIntegrity(
+  t: ReturnType<typeof convexTest>,
+  target: GraphIntegrityTarget
+) {
+  const result = await getGraphIntegrity(t, target);
+
+  expect(result).toMatchObject({
+    checkedRefs: 1,
+    missingGraphRows: 0,
+    mismatchedContentIds: 0,
+    routeShapedContentIds: 0,
+    scannedRows: 1,
+  });
+}
+
+/** Asserts one durable analytics table reports mismatched graph identity. */
+async function expectMismatchedGraphAnalyticsIntegrity(
   t: ReturnType<typeof convexTest>,
   target: GraphIntegrityTarget,
   issue: {
+    readonly assetId: string;
     readonly content_id: string;
     readonly kind: string;
     readonly route?: string;
@@ -317,11 +364,10 @@ async function expectLegacyAnalyticsIntegrity(
   const result = await getGraphIntegrity(t, target);
 
   expect(result).toMatchObject({
-    checkedRefs: 0,
-    firstLegacyAnalyticsRef: issue,
-    legacyAnalyticsRows: 1,
+    checkedRefs: 1,
+    firstMismatchedContentId: issue,
     missingGraphRows: 0,
-    mismatchedContentIds: 0,
+    mismatchedContentIds: 1,
     routeShapedContentIds: 0,
     scannedRows: 1,
   });
@@ -349,66 +395,6 @@ async function insertAssistantMessage(ctx: MutationCtx) {
     identifier: "integrity-message",
     role: "assistant",
   });
-}
-
-/** Inserts source rows used by the legacy analytics storage verifier. */
-async function insertAnalyticsSourceRows(ctx: MutationCtx) {
-  const articleId = await ctx.db.insert("articleContents", {
-    articleSlug: "integrity-article",
-    body: "Article body",
-    category: "politics",
-    contentHash: "article-hash",
-    date: NOW,
-    description: "Article description",
-    locale: "id",
-    slug: ARTICLE_ROUTE,
-    syncedAt: NOW,
-    title: "Integrity Article",
-  });
-  const topicId = await ctx.db.insert("subjectTopics", {
-    category: "high-school",
-    grade: "10",
-    locale: "id",
-    material: "mathematics",
-    order: 0,
-    sectionCount: 1,
-    slug: "subject/high-school/10/mathematics/integrity",
-    syncedAt: NOW,
-    title: "Integrity Topic",
-    topic: "integrity",
-  });
-  const subjectId = await ctx.db.insert("subjectSections", {
-    body: "Subject body",
-    category: "high-school",
-    contentHash: "subject-hash",
-    date: NOW,
-    description: "Subject description",
-    grade: "10",
-    locale: "id",
-    material: "mathematics",
-    order: 0,
-    section: "section",
-    slug: "subject/high-school/10/mathematics/integrity/section",
-    subject: "Integrity",
-    syncedAt: NOW,
-    title: "Integrity Section",
-    topic: "integrity",
-    topicId,
-  });
-  const exerciseSetId = await ctx.db.insert("exerciseSets", {
-    category: "high-school",
-    exerciseType: "try-out",
-    locale: "id",
-    material: "quantitative-knowledge",
-    questionCount: 1,
-    setName: "set-1",
-    slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1",
-    syncedAt: NOW,
-    title: "Integrity Set",
-    type: "snbt",
-  });
-
-  return { articleId, exerciseSetId, subjectId };
 }
 
 /** Builds graph identity fields for the shared article route fixture. */

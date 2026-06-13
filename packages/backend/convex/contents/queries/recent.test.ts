@@ -22,9 +22,9 @@ describe("contents/queries/recent", () => {
       const ref = await insertSubjectRoute(ctx, "viewed");
 
       await insertSubjectView(ctx, {
+        ref,
         lastViewedAt: NOW,
         suffix: "viewed",
-        subjectId,
         userId: identity.userId,
       });
 
@@ -63,12 +63,13 @@ describe("contents/queries/recent", () => {
         now: NOW,
         suffix: "recent-missing-route",
       });
-      const subjectId = await insertSubject(ctx, "missing-route");
+      await insertSubject(ctx, "missing-route");
+      const ref = getSubjectGraph("missing-route");
 
       await insertSubjectView(ctx, {
+        ref,
         lastViewedAt: NOW,
         suffix: "missing-route",
-        subjectId,
         userId: identity.userId,
       });
 
@@ -128,14 +129,7 @@ async function insertSubject(ctx: MutationCtx, suffix: string) {
 /** Inserts the route catalog graph projection for one subject section. */
 async function insertSubjectRoute(ctx: MutationCtx, suffix: string) {
   const route = getSubjectRoute(suffix);
-  const identity = createLearningGraphIdentityFromRoute({
-    locale: "en",
-    route,
-  });
-
-  if (!identity) {
-    throw new Error(`Expected subject graph identity for ${route}.`);
-  }
+  const identity = getSubjectGraph(suffix);
 
   await ctx.db.insert("contentRoutes", {
     ...identity,
@@ -160,26 +154,43 @@ async function insertSubjectRoute(ctx: MutationCtx, suffix: string) {
 async function insertSubjectView(
   ctx: MutationCtx,
   {
+    ref,
     lastViewedAt,
     suffix,
-    subjectId,
     userId,
   }: {
+    ref: ReturnType<typeof getSubjectGraph>;
     lastViewedAt: number;
     suffix: string;
-    subjectId: Id<"subjectSections">;
     userId: Id<"users">;
   }
 ) {
   await ctx.db.insert("contentViews", {
-    contentRef: { id: subjectId, type: "subject" },
+    ...ref,
+    content_id: ref.assetId,
     deviceId: "device-recent",
     firstViewedAt: NOW,
     lastViewedAt,
     locale: "en",
-    slug: getSubjectRoute(suffix),
+    route: getSubjectRoute(suffix),
+    section: "subject",
     userId,
   });
+}
+
+/** Builds the route-catalog graph identity for one subject fixture. */
+function getSubjectGraph(suffix: string) {
+  const route = getSubjectRoute(suffix);
+  const identity = createLearningGraphIdentityFromRoute({
+    locale: "en",
+    route,
+  });
+
+  if (!identity) {
+    throw new Error(`Expected subject graph identity for ${route}.`);
+  }
+
+  return identity;
 }
 
 /** Builds the canonical subject route used by recent-query fixtures. */

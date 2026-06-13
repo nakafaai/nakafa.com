@@ -1,5 +1,4 @@
 import { CONTENT_ANALYTICS_PARTITION_COUNT } from "@repo/backend/convex/contents/constants";
-import type { ContentRef } from "@repo/backend/convex/lib/validators/contents";
 
 /** Maps a stable string key to one configured analytics partition. */
 function getPartitionFromKey(value: string) {
@@ -14,9 +13,9 @@ function getPartitionFromKey(value: string) {
   return partition;
 }
 
-/** Returns the stable analytics partition for a content reference. */
-export function getContentAnalyticsPartition(contentRef: ContentRef) {
-  return getPartitionFromKey(`${contentRef.type}:${contentRef.id}`);
+/** Returns the stable analytics partition for a graph content ID. */
+export function getContentAnalyticsPartition(contentId: string) {
+  return getPartitionFromKey(contentId);
 }
 
 /** Returns whether a numeric partition belongs to the configured partition set. */

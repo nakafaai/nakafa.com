@@ -224,20 +224,6 @@ function logGraphIdentityIntegrity(graphIdentity: GraphIdentityIntegrity) {
     allMatch = false;
   }
 
-  if (graphIdentity.legacyAnalyticsRows === 0) {
-    logSuccess("No durable content analytics rows store source-row identity");
-  } else {
-    logError(
-      `${graphIdentity.legacyAnalyticsRows} durable content analytics rows still store source-row identity`
-    );
-    if (graphIdentity.firstLegacyAnalyticsRef) {
-      log(
-        `  First legacy analytics ref: ${JSON.stringify(graphIdentity.firstLegacyAnalyticsRef)}`
-      );
-    }
-    allMatch = false;
-  }
-
   return allMatch;
 }
 

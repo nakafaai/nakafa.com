@@ -13,7 +13,6 @@ import {
 } from "@repo/backend/convex/contents/views/spec";
 import { getUnknownErrorMessage } from "@repo/backend/convex/lib/effect";
 import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
-import type { ContentRef } from "@repo/backend/convex/lib/validators/contents";
 import type { FunctionReference } from "convex/server";
 import { Clock, Effect } from "effect";
 
@@ -34,7 +33,7 @@ function toContentViewIoError(error: unknown) {
   });
 }
 
-/** Resolves the durable content reference for a graph content ID. */
+/** Resolves the route-catalog projection for a graph content ID. */
 const loadContentTarget = Effect.fn("contents.views.loadContentTarget")(
   function* (db: MutationCtx["db"], args: RecordContentViewArgs) {
     const route = yield* Effect.tryPromise({
@@ -54,76 +53,15 @@ const loadContentTarget = Effect.fn("contents.views.loadContentTarget")(
       return null;
     }
 
-    if (route.kind === "article") {
-      const article = yield* Effect.tryPromise({
-        try: () =>
-          db
-            .query("articleContents")
-            .withIndex("by_locale_and_slug", (q) =>
-              q.eq("locale", route.locale).eq("slug", route.route)
-            )
-            .first(),
-        catch: toContentViewIoError,
-      });
-
-      return article
-        ? {
-            contentRef: {
-              id: article._id,
-              type: "article",
-            } satisfies ContentRef,
-            route,
-          }
-        : null;
+    if (
+      route.kind === "article" ||
+      route.kind === "subject-section" ||
+      route.kind === "exercise-set"
+    ) {
+      return route;
     }
 
-    if (route.kind === "subject-section") {
-      const section = yield* Effect.tryPromise({
-        try: () =>
-          db
-            .query("subjectSections")
-            .withIndex("by_locale_and_slug", (q) =>
-              q.eq("locale", route.locale).eq("slug", route.route)
-            )
-            .first(),
-        catch: toContentViewIoError,
-      });
-
-      return section
-        ? {
-            contentRef: {
-              id: section._id,
-              type: "subject",
-            } satisfies ContentRef,
-            route,
-          }
-        : null;
-    }
-
-    if (route.kind !== "exercise-set") {
-      return null;
-    }
-
-    const exerciseSet = yield* Effect.tryPromise({
-      try: () =>
-        db
-          .query("exerciseSets")
-          .withIndex("by_locale_and_slug", (q) =>
-            q.eq("locale", route.locale).eq("slug", route.route)
-          )
-          .first(),
-      catch: toContentViewIoError,
-    });
-
-    return exerciseSet
-      ? {
-          contentRef: {
-            id: exerciseSet._id,
-            type: "exercise",
-          } satisfies ContentRef,
-          route,
-        }
-      : null;
+    return null;
   }
 );
 
@@ -131,7 +69,7 @@ const loadContentTarget = Effect.fn("contents.views.loadContentTarget")(
 const loadExistingView = Effect.fn("contents.views.loadExistingView")(
   function* (
     db: MutationCtx["db"],
-    contentRef: ContentRef,
+    contentId: Doc<"contentRoutes">["content_id"],
     input: {
       readonly deviceId: string;
       readonly userId?: Doc<"users">["_id"];
@@ -141,8 +79,8 @@ const loadExistingView = Effect.fn("contents.views.loadExistingView")(
       try: () =>
         db
           .query("contentViews")
-          .withIndex("by_deviceId_and_contentRefId", (q) =>
-            q.eq("deviceId", input.deviceId).eq("contentRef.id", contentRef.id)
+          .withIndex("by_deviceId_and_content_id", (q) =>
+            q.eq("deviceId", input.deviceId).eq("content_id", contentId)
           )
           .first(),
       catch: toContentViewIoError,
@@ -156,8 +94,8 @@ const loadExistingView = Effect.fn("contents.views.loadExistingView")(
       try: () =>
         db
           .query("contentViews")
-          .withIndex("by_userId_and_contentRefId", (q) =>
-            q.eq("userId", input.userId).eq("contentRef.id", contentRef.id)
+          .withIndex("by_userId_and_content_id", (q) =>
+            q.eq("userId", input.userId).eq("content_id", contentId)
           )
           .first(),
       catch: toContentViewIoError,
@@ -170,7 +108,6 @@ const loadExistingView = Effect.fn("contents.views.loadExistingView")(
 /** Writes a new view row and its append-only analytics queue row. */
 const insertNewView = Effect.fn("contents.views.insertNewView")(function* (
   db: MutationCtx["db"],
-  contentRef: ContentRef,
   route: Doc<"contentRoutes">,
   args: RecordContentViewArgs,
   input: {
@@ -178,17 +115,23 @@ const insertNewView = Effect.fn("contents.views.insertNewView")(function* (
     readonly userId?: Doc<"users">["_id"];
   }
 ) {
-  const partition = getContentAnalyticsPartition(contentRef);
+  const partition = getContentAnalyticsPartition(route.content_id);
 
   yield* Effect.tryPromise({
     try: () =>
       db.insert("contentViews", {
-        contentRef,
+        alignmentId: route.alignmentId,
+        assetId: route.assetId,
+        conceptId: route.conceptId,
+        content_id: route.content_id,
         deviceId: args.deviceId,
         firstViewedAt: input.now,
         lastViewedAt: input.now,
+        learningObjectId: route.learningObjectId,
+        lensId: route.lensId,
         locale: args.locale,
-        slug: route.route,
+        route: route.route,
+        section: route.section,
         ...(input.userId ? { userId: input.userId } : {}),
       }),
     catch: toContentViewIoError,
@@ -197,9 +140,16 @@ const insertNewView = Effect.fn("contents.views.insertNewView")(function* (
   yield* Effect.tryPromise({
     try: () =>
       db.insert("contentViewAnalyticsQueue", {
-        contentRef,
+        alignmentId: route.alignmentId,
+        assetId: route.assetId,
+        conceptId: route.conceptId,
+        content_id: route.content_id,
+        learningObjectId: route.learningObjectId,
+        lensId: route.lensId,
         locale: args.locale,
         partition,
+        route: route.route,
+        section: route.section,
         viewedAt: input.now,
       }),
     catch: toContentViewIoError,
@@ -268,10 +218,9 @@ export const recordUniqueContentView: (
     return { alreadyViewed: false, isNewView: false, success: false };
   }
 
-  const { contentRef, route } = target;
   const now = yield* Clock.currentTimeMillis;
   const userId = authContext?.appUser._id;
-  const existingView = yield* loadExistingView(ctx.db, contentRef, {
+  const existingView = yield* loadExistingView(ctx.db, target.content_id, {
     deviceId: args.deviceId,
     userId,
   });
@@ -281,7 +230,7 @@ export const recordUniqueContentView: (
     return { alreadyViewed: true, isNewView: false, success: true };
   }
 
-  const partition = yield* insertNewView(ctx.db, contentRef, route, args, {
+  const partition = yield* insertNewView(ctx.db, target, args, {
     now,
     userId,
   });

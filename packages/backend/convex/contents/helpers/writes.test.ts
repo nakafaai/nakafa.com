@@ -1,93 +1,49 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { applyContentAnalyticsBatch } from "@repo/backend/convex/contents/helpers/writes";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { getTrendingBucketStart } from "@repo/backend/convex/subjectSections/utils";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
 const NOW = Date.parse("2026-01-01T00:00:00.000Z");
+const ARTICLE_ROUTE = "articles/politics/analytics-writes";
+const SUBJECT_ROUTE = "subject/high-school/10/mathematics/vector/addition";
+const EXISTING_EXERCISE_ROUTE =
+  "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1";
+const NEW_EXERCISE_ROUTE =
+  "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2";
 
-/** Inserts one article content row for popularity write tests. */
-function insertArticle(ctx: MutationCtx) {
-  return ctx.db.insert("articleContents", {
-    articleSlug: "analytics-writes",
-    body: "Article body",
-    category: "politics",
-    contentHash: "article-hash",
-    date: NOW,
-    description: "Article description",
+function getGraph(route: string) {
+  const graph = createLearningGraphIdentityFromRoute({
     locale: "en",
-    slug: "articles/politics/analytics-writes",
-    syncedAt: NOW,
-    title: "Analytics Writes",
+    route,
   });
+
+  if (!graph) {
+    throw new Error(`Expected graph identity for ${route}.`);
+  }
+
+  return {
+    ...graph,
+    content_id: graph.assetId,
+  };
 }
 
-/** Inserts one subject section row for popularity write tests. */
-async function insertSubject(ctx: MutationCtx) {
-  const topicId = await ctx.db.insert("subjectTopics", {
-    category: "high-school",
-    grade: "10",
-    locale: "en",
-    material: "mathematics",
-    order: 0,
-    sectionCount: 1,
-    slug: "subject/high-school/10/mathematics/vector",
-    syncedAt: NOW,
-    title: "Vector",
-    topic: "vector",
-  });
-
-  return ctx.db.insert("subjectSections", {
-    body: "Subject body",
-    category: "high-school",
-    contentHash: "subject-hash",
-    date: NOW,
-    description: "Subject description",
-    grade: "10",
-    locale: "en",
-    material: "mathematics",
-    order: 0,
-    section: "addition",
-    slug: "subject/high-school/10/mathematics/vector/addition",
-    subject: "Vector",
-    syncedAt: NOW,
-    title: "Vector Addition",
-    topic: "vector",
-    topicId,
-  });
-}
-
-/** Inserts one exercise set row for popularity write tests. */
-function insertExerciseSet(ctx: MutationCtx, suffix: string) {
-  return ctx.db.insert("exerciseSets", {
-    locale: "en",
-    slug: `exercises/high-school/snbt/quantitative-knowledge/try-out/2026/${suffix}`,
-    category: "high-school",
-    type: "snbt",
-    material: "quantitative-knowledge",
-    exerciseType: "try-out",
-    setName: suffix,
-    title: `Set ${suffix}`,
-    questionCount: 20,
-    syncedAt: NOW,
-  });
-}
-
-/** Enqueues one analytics row for the supplied content reference. */
+/** Enqueues one analytics row for the supplied graph content reference. */
 async function enqueueView(
   ctx: MutationCtx,
-  contentRef:
-    | { id: Id<"articleContents">; type: "article" }
-    | { id: Id<"subjectSections">; type: "subject" }
-    | { id: Id<"exerciseSets">; type: "exercise" },
+  input: ReturnType<typeof getGraph> & {
+    readonly route: string;
+    readonly section: Doc<"contentViewAnalyticsQueue">["section"];
+  },
   offsetMs = 0
 ) {
   await ctx.db.insert("contentViewAnalyticsQueue", {
-    contentRef,
+    ...input,
     locale: "en",
     partition: 0,
     viewedAt: NOW + offsetMs,
@@ -99,40 +55,64 @@ describe("contents/helpers/writes", () => {
     const t = convexTest(schema, convexModules);
 
     const ids = await t.mutation(async (ctx) => {
-      const articleId = await insertArticle(ctx);
-      const subjectId = await insertSubject(ctx);
-      const existingExerciseId = await insertExerciseSet(ctx, "existing");
-      const newExerciseId = await insertExerciseSet(ctx, "new");
+      const article = getGraph(ARTICLE_ROUTE);
+      const subject = getGraph(SUBJECT_ROUTE);
+      const existingExercise = getGraph(EXISTING_EXERCISE_ROUTE);
+      const newExercise = getGraph(NEW_EXERCISE_ROUTE);
       const bucketStart = getTrendingBucketStart(NOW);
 
       await ctx.db.insert("articlePopularity", {
-        contentId: articleId,
+        ...article,
         updatedAt: NOW - 1,
         viewCount: 3,
       });
       await ctx.db.insert("subjectPopularity", {
-        contentId: subjectId,
+        ...subject,
         updatedAt: NOW - 1,
         viewCount: 4,
       });
       await ctx.db.insert("subjectTrendingBuckets", {
+        ...subject,
         bucketStart,
-        contentId: subjectId,
         locale: "en",
         updatedAt: NOW - 1,
         viewCount: 5,
       });
       await ctx.db.insert("exercisePopularity", {
-        contentId: existingExerciseId,
+        ...existingExercise,
         updatedAt: NOW - 1,
         viewCount: 6,
       });
 
-      await enqueueView(ctx, { id: articleId, type: "article" });
-      await enqueueView(ctx, { id: subjectId, type: "subject" });
-      await enqueueView(ctx, { id: existingExerciseId, type: "exercise" });
-      await enqueueView(ctx, { id: existingExerciseId, type: "exercise" }, 1);
-      await enqueueView(ctx, { id: newExerciseId, type: "exercise" });
+      await enqueueView(ctx, {
+        ...article,
+        route: ARTICLE_ROUTE,
+        section: "articles",
+      });
+      await enqueueView(ctx, {
+        ...subject,
+        route: SUBJECT_ROUTE,
+        section: "subject",
+      });
+      await enqueueView(ctx, {
+        ...existingExercise,
+        route: EXISTING_EXERCISE_ROUTE,
+        section: "exercises",
+      });
+      await enqueueView(
+        ctx,
+        {
+          ...existingExercise,
+          route: EXISTING_EXERCISE_ROUTE,
+          section: "exercises",
+        },
+        1
+      );
+      await enqueueView(ctx, {
+        ...newExercise,
+        route: NEW_EXERCISE_ROUTE,
+        section: "exercises",
+      });
 
       const queueItems = await ctx.db
         .query("contentViewAnalyticsQueue")
@@ -142,35 +122,41 @@ describe("contents/helpers/writes", () => {
         applyContentAnalyticsBatch(ctx, { queueItems, updatedAt: NOW })
       );
 
-      return { articleId, existingExerciseId, newExerciseId, subjectId };
+      return { article, existingExercise, newExercise, subject };
     });
 
     const state = await t.query(async (ctx) => ({
       articlePopularity: await ctx.db
         .query("articlePopularity")
-        .withIndex("by_contentId", (q) => q.eq("contentId", ids.articleId))
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", ids.article.content_id)
+        )
         .unique(),
       existingExercisePopularity: await ctx.db
         .query("exercisePopularity")
-        .withIndex("by_contentId", (q) =>
-          q.eq("contentId", ids.existingExerciseId)
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", ids.existingExercise.content_id)
         )
         .unique(),
       newExercisePopularity: await ctx.db
         .query("exercisePopularity")
-        .withIndex("by_contentId", (q) => q.eq("contentId", ids.newExerciseId))
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", ids.newExercise.content_id)
+        )
         .unique(),
       subjectPopularity: await ctx.db
         .query("subjectPopularity")
-        .withIndex("by_contentId", (q) => q.eq("contentId", ids.subjectId))
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", ids.subject.content_id)
+        )
         .unique(),
       subjectTrendingBucket: await ctx.db
         .query("subjectTrendingBuckets")
-        .withIndex("by_locale_and_bucketStart_and_contentId", (q) =>
+        .withIndex("by_locale_and_bucketStart_and_content_id", (q) =>
           q
             .eq("locale", "en")
             .eq("bucketStart", getTrendingBucketStart(NOW))
-            .eq("contentId", ids.subjectId)
+            .eq("content_id", ids.subject.content_id)
         )
         .unique(),
     }));

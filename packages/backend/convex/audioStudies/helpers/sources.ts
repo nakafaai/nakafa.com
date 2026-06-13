@@ -59,6 +59,29 @@ export async function getAudioContentSourceByLocale(
   return source ? toAudioContentLookup(source) : null;
 }
 
+/** Reads compact audio metadata through a graph route projection. */
+export async function getAudioContentSourceByRoute(
+  ctx: AudioSourceReaderCtx,
+  route: Doc<"contentRoutes">
+) {
+  if (route.kind !== "article" && route.kind !== "subject-section") {
+    return null;
+  }
+
+  const contentType = route.kind === "article" ? "article" : "subject";
+  const source = await ctx.db
+    .query("audioContentSources")
+    .withIndex("by_contentRefType_and_slug_and_locale", (q) =>
+      q
+        .eq("contentRef.type", contentType)
+        .eq("slug", route.route)
+        .eq("locale", route.locale)
+    )
+    .unique();
+
+  return source ? toAudioContentLookup(source) : null;
+}
+
 /** Upserts compact audio metadata from the content sync source of truth. */
 export async function syncAudioContentSource(
   ctx: MutationCtx,

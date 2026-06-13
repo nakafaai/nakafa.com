@@ -3,7 +3,7 @@ import {
   MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE,
   MIN_VIEW_THRESHOLD,
 } from "@repo/backend/convex/audioStudies/constants";
-import { getAudioContentSourceByRef } from "@repo/backend/convex/audioStudies/helpers/sources";
+import { getAudioContentSourceByRoute } from "@repo/backend/convex/audioStudies/helpers/sources";
 import { mergePopularAudioContentItems } from "@repo/backend/convex/contents/helpers/popularity";
 import {
   type PopularAudioContentItem,
@@ -24,14 +24,14 @@ export const getPopularContentForAudioQueue = internalQuery({
     const [articleRows, subjectRows] = await Promise.all([
       ctx.db
         .query("articlePopularity")
-        .withIndex("by_viewCount_and_contentId", (q) =>
+        .withIndex("by_viewCount_and_content_id", (q) =>
           q.gte("viewCount", MIN_VIEW_THRESHOLD)
         )
         .order("desc")
         .take(MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE),
       ctx.db
         .query("subjectPopularity")
-        .withIndex("by_viewCount_and_contentId", (q) =>
+        .withIndex("by_viewCount_and_content_id", (q) =>
           q.gte("viewCount", MIN_VIEW_THRESHOLD)
         )
         .order("desc")
@@ -40,10 +40,16 @@ export const getPopularContentForAudioQueue = internalQuery({
     const sourceItems: PopularAudioContentItem[] = [];
 
     for (const row of articleRows) {
-      const sourceContent = await getAudioContentSourceByRef(ctx, {
-        type: "article",
-        id: row.contentId,
-      });
+      const route = await ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (q) => q.eq("content_id", row.content_id))
+        .unique();
+
+      if (route?.kind !== "article" || route.content_id !== route.assetId) {
+        continue;
+      }
+
+      const sourceContent = await getAudioContentSourceByRoute(ctx, route);
 
       if (!sourceContent) {
         continue;
@@ -57,10 +63,19 @@ export const getPopularContentForAudioQueue = internalQuery({
     }
 
     for (const row of subjectRows) {
-      const sourceContent = await getAudioContentSourceByRef(ctx, {
-        type: "subject",
-        id: row.contentId,
-      });
+      const route = await ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (q) => q.eq("content_id", row.content_id))
+        .unique();
+
+      if (
+        route?.kind !== "subject-section" ||
+        route.content_id !== route.assetId
+      ) {
+        continue;
+      }
+
+      const sourceContent = await getAudioContentSourceByRoute(ctx, route);
 
       if (!sourceContent) {
         continue;

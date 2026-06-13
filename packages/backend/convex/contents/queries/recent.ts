@@ -5,7 +5,6 @@ import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { recentlyViewedSubjectValidator } from "@repo/backend/convex/lib/validators/trending";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import type { Infer } from "convex/values";
-import { getAll } from "convex-helpers/server/relationships";
 
 type RecentlyViewedSubject = Infer<typeof recentlyViewedSubjectValidator>;
 
@@ -26,13 +25,11 @@ export const getRecentlyViewed = query({
 
     const recentViews = await ctx.db
       .query("contentViews")
-      .withIndex(
-        "by_userId_and_contentRefType_and_locale_and_lastViewedAt",
-        (q) =>
-          q
-            .eq("userId", user.appUser._id)
-            .eq("contentRef.type", "subject")
-            .eq("locale", args.locale)
+      .withIndex("by_userId_and_section_and_locale_and_lastViewedAt", (q) =>
+        q
+          .eq("userId", user.appUser._id)
+          .eq("section", "subject")
+          .eq("locale", args.locale)
       )
       .order("desc")
       .take(limit);
@@ -41,45 +38,26 @@ export const getRecentlyViewed = query({
       return [];
     }
 
-    const subjectViews = recentViews.flatMap((view) => {
-      if (view.contentRef.type !== "subject") {
-        return [];
-      }
-
-      return [
-        {
-          lastViewedAt: view.lastViewedAt,
-          subjectId: view.contentRef.id,
-        },
-      ];
-    });
-
-    if (subjectViews.length === 0) {
-      return [];
-    }
-
-    const subjects = await getAll(
-      ctx.db,
-      subjectViews.map((subjectView) => subjectView.subjectId)
-    );
-
     const results: RecentlyViewedSubject[] = [];
 
-    for (const [index, subjectView] of subjectViews.entries()) {
-      const subject = subjects[index];
+    for (const view of recentViews) {
+      const route = await ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (q) => q.eq("content_id", view.content_id))
+        .unique();
 
-      if (!subject) {
+      if (route?.kind !== "subject-section") {
         continue;
       }
 
-      const route = await ctx.db
-        .query("contentRoutes")
-        .withIndex("by_locale_and_route", (q) =>
-          q.eq("locale", subject.locale).eq("route", subject.slug)
+      const subject = await ctx.db
+        .query("subjectSections")
+        .withIndex("by_locale_and_slug", (q) =>
+          q.eq("locale", route.locale).eq("slug", route.route)
         )
         .unique();
 
-      if (!route) {
+      if (!subject) {
         continue;
       }
 
@@ -87,7 +65,7 @@ export const getRecentlyViewed = query({
         ...buildContentSearchRef(route),
         description: route.description ?? "",
         grade: subject.grade,
-        lastViewedAt: subjectView.lastViewedAt,
+        lastViewedAt: view.lastViewedAt,
         material: subject.material,
         title: route.title,
       });

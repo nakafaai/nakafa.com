@@ -2,7 +2,6 @@ import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { getContentAnalyticsPartition } from "@repo/backend/convex/contents/helpers/partitions";
-import type { ContentRef } from "@repo/backend/convex/lib/validators/contents";
 import schema from "@repo/backend/convex/schema";
 import {
   createConvexTestWithBetterAuth,
@@ -202,11 +201,6 @@ describe("contents/mutations/views", () => {
     );
 
     const state = await readViewState(t);
-    const contentRef = {
-      id: article.id,
-      type: "article",
-    } satisfies ContentRef;
-
     expect(result).toEqual({
       alreadyViewed: false,
       isNewView: true,
@@ -214,24 +208,29 @@ describe("contents/mutations/views", () => {
     });
     expect(state.views).toMatchObject([
       {
-        contentRef,
+        assetId: article.contentId,
+        content_id: article.contentId,
         deviceId: "device-1",
         firstViewedAt: NOW,
         lastViewedAt: NOW,
         locale: "id",
-        slug: ARTICLE_ROUTE,
+        route: ARTICLE_ROUTE,
+        section: "articles",
       },
     ]);
     expect(state.analyticsQueue).toMatchObject([
       {
-        contentRef,
+        assetId: article.contentId,
+        content_id: article.contentId,
         locale: "id",
-        partition: getContentAnalyticsPartition(contentRef),
+        partition: getContentAnalyticsPartition(article.contentId),
+        route: ARTICLE_ROUTE,
+        section: "articles",
         viewedAt: NOW,
       },
     ]);
     expect(state.scheduledJobs.map((job) => job.args[0])).toEqual([
-      { partition: getContentAnalyticsPartition(contentRef) },
+      { partition: getContentAnalyticsPartition(article.contentId) },
     ]);
   });
 
@@ -525,12 +524,12 @@ describe("contents/mutations/views", () => {
     });
 
     const state = await readViewState(t);
-    const refs = state.views.map((view) => view.contentRef);
+    const refs = state.views.map((view) => view.content_id);
 
     expect(refs).toEqual(
       expect.arrayContaining([
-        { id: fixtures.subject.id, type: "subject" },
-        { id: fixtures.exercise.id, type: "exercise" },
+        fixtures.subject.contentId,
+        fixtures.exercise.contentId,
       ])
     );
     expect(state.analyticsQueue).toHaveLength(2);

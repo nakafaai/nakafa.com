@@ -1,8 +1,10 @@
 import { CONTENT_ROUTE_KINDS } from "@repo/backend/convex/contents/constants";
-import { learningGraphIdentityValidator } from "@repo/backend/convex/contents/graph";
+import {
+  graphContentIdValidator,
+  learningGraphIdentityValidator,
+} from "@repo/backend/convex/contents/graph";
 import { contentSearchDocumentValidator } from "@repo/backend/convex/contents/helpers/search/schema";
 import {
-  contentRefValidator,
   localeValidator,
   nakafaSectionValidator,
 } from "@repo/backend/convex/lib/validators/contents";
@@ -36,25 +38,27 @@ const tables = {
    * Tracks first and last view timestamps for engagement analytics.
    */
   contentViews: defineTable({
-    contentRef: contentRefValidator,
-    locale: localeValidator,
-    slug: v.string(),
+    ...learningGraphIdentityValidator.fields,
+    content_id: graphContentIdValidator,
     deviceId: v.string(),
-    userId: v.optional(v.id("users")),
     firstViewedAt: v.number(),
     lastViewedAt: v.number(),
+    locale: localeValidator,
+    route: v.string(),
+    section: nakafaSectionValidator,
+    userId: v.optional(v.id("users")),
   })
-    .index("by_userId_and_contentRefId", ["userId", "contentRef.id"])
-    .index("by_userId_and_contentRefType_and_locale_and_lastViewedAt", [
+    .index("by_userId_and_content_id", ["userId", "content_id"])
+    .index("by_userId_and_section_and_locale_and_lastViewedAt", [
       "userId",
-      "contentRef.type",
+      "section",
       "locale",
       "lastViewedAt",
     ])
-    .index("by_deviceId_and_contentRefId", ["deviceId", "contentRef.id"])
-    .index("by_locale_and_contentRefType_and_lastViewedAt", [
+    .index("by_deviceId_and_content_id", ["deviceId", "content_id"])
+    .index("by_locale_and_section_and_lastViewedAt", [
       "locale",
-      "contentRef.type",
+      "section",
       "lastViewedAt",
     ]),
 
@@ -63,9 +67,12 @@ const tables = {
    * Queue rows are partitioned so background processors can drain them in parallel.
    */
   contentViewAnalyticsQueue: defineTable({
-    contentRef: contentRefValidator,
+    ...learningGraphIdentityValidator.fields,
+    content_id: graphContentIdValidator,
     locale: localeValidator,
     partition: v.number(),
+    route: v.string(),
+    section: nakafaSectionValidator,
     viewedAt: v.number(),
   }).index("by_partition", ["partition"]),
 
@@ -85,24 +92,26 @@ const tables = {
    * Updated asynchronously from the content analytics queue.
    */
   articlePopularity: defineTable({
-    contentId: v.id("articleContents"),
+    ...learningGraphIdentityValidator.fields,
+    content_id: graphContentIdValidator,
     viewCount: v.number(),
     updatedAt: v.number(),
   })
-    .index("by_contentId", ["contentId"])
-    .index("by_viewCount_and_contentId", ["viewCount", "contentId"]),
+    .index("by_content_id", ["content_id"])
+    .index("by_viewCount_and_content_id", ["viewCount", "content_id"]),
 
   /**
    * Subject popularity counts.
    * Updated asynchronously from the content analytics queue.
    */
   subjectPopularity: defineTable({
-    contentId: v.id("subjectSections"),
+    ...learningGraphIdentityValidator.fields,
+    content_id: graphContentIdValidator,
     viewCount: v.number(),
     updatedAt: v.number(),
   })
-    .index("by_contentId", ["contentId"])
-    .index("by_viewCount_and_contentId", ["viewCount", "contentId"]),
+    .index("by_content_id", ["content_id"])
+    .index("by_viewCount_and_content_id", ["viewCount", "content_id"]),
 
   /**
    * Daily subject view counts used to serve bounded trending queries.
@@ -110,14 +119,15 @@ const tables = {
    */
   subjectTrendingBuckets: defineTable({
     bucketStart: v.number(),
-    contentId: v.id("subjectSections"),
+    ...learningGraphIdentityValidator.fields,
+    content_id: graphContentIdValidator,
     locale: localeValidator,
     updatedAt: v.number(),
     viewCount: v.number(),
-  }).index("by_locale_and_bucketStart_and_contentId", [
+  }).index("by_locale_and_bucketStart_and_content_id", [
     "locale",
     "bucketStart",
-    "contentId",
+    "content_id",
   ]),
 
   /**
@@ -125,12 +135,13 @@ const tables = {
    * Updated asynchronously from the content analytics queue.
    */
   exercisePopularity: defineTable({
-    contentId: v.id("exerciseSets"),
+    ...learningGraphIdentityValidator.fields,
+    content_id: graphContentIdValidator,
     viewCount: v.number(),
     updatedAt: v.number(),
   })
-    .index("by_contentId", ["contentId"])
-    .index("by_viewCount_and_contentId", ["viewCount", "contentId"]),
+    .index("by_content_id", ["content_id"])
+    .index("by_viewCount_and_content_id", ["viewCount", "content_id"]),
 
   /**
    * Derived content search read model for Nina and MCP.

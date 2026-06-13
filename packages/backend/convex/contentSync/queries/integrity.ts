@@ -2,7 +2,6 @@ import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import { internalQuery } from "@repo/backend/convex/_generated/server";
 import { contentAuthorContentIdValidator } from "@repo/backend/convex/authors/schema";
 import {
-  type ContentRef,
   contentTypeValidator,
   localeValidator,
   type NakafaSection,
@@ -79,12 +78,10 @@ const graphIdentityIntegrityPageValidator = v.object({
   checkedRefInputs: v.number(),
   continueCursor: v.string(),
   firstInvalidRefInput: v.union(graphIdentityIssueValidator, v.null()),
-  firstLegacyAnalyticsRef: v.union(graphIdentityIssueValidator, v.null()),
   firstMissingGraph: v.union(graphIdentityIssueValidator, v.null()),
   firstMismatchedContentId: v.union(graphIdentityIssueValidator, v.null()),
   firstRouteShapedContentId: v.union(graphIdentityIssueValidator, v.null()),
   invalidRefInputs: v.number(),
-  legacyAnalyticsRows: v.number(),
   isDone: v.boolean(),
   missingGraphRows: v.number(),
   mismatchedContentIds: v.number(),
@@ -147,12 +144,10 @@ function createGraphIdentitySummary(): GraphIdentitySummary {
     checkedRefInputs: 0,
     checkedRefs: 0,
     firstInvalidRefInput: null,
-    firstLegacyAnalyticsRef: null,
     firstMissingGraph: null,
     firstMismatchedContentId: null,
     firstRouteShapedContentId: null,
     invalidRefInputs: 0,
-    legacyAnalyticsRows: 0,
     missingGraphRows: 0,
     mismatchedContentIds: 0,
     routeShapedContentIds: 0,
@@ -250,56 +245,6 @@ function checkNakafaContentRefInput(
     content_ref: contentRef,
     kind: data.kind,
     status: data.status,
-  };
-}
-
-function getSectionForContentRefType(type: ContentRef["type"]): NakafaSection {
-  if (type === "article") {
-    return "articles";
-  }
-
-  if (type === "subject") {
-    return "subject";
-  }
-
-  return "exercises";
-}
-
-function checkLegacyAnalyticsContentRef(
-  summary: GraphIdentitySummary,
-  input: {
-    readonly contentRef: ContentRef;
-    readonly kind: string;
-    readonly route?: string;
-  }
-) {
-  summary.legacyAnalyticsRows += 1;
-  const issue: GraphIdentityIssue = {
-    content_id: input.contentRef.id,
-    kind: input.kind,
-    section: getSectionForContentRefType(input.contentRef.type),
-  };
-
-  if (input.route) {
-    issue.route = input.route;
-  }
-
-  summary.firstLegacyAnalyticsRef ??= issue;
-}
-
-function checkLegacyAnalyticsContentId(
-  summary: GraphIdentitySummary,
-  input: {
-    readonly contentId: string;
-    readonly kind: string;
-    readonly section: NakafaSection;
-  }
-) {
-  summary.legacyAnalyticsRows += 1;
-  summary.firstLegacyAnalyticsRef ??= {
-    content_id: input.contentId,
-    kind: input.kind,
-    section: input.section,
   };
 }
 
@@ -530,11 +475,7 @@ export const getGraphIdentityIntegrityPage = internalQuery({
         .paginate(args.paginationOpts);
 
       for (const row of page.page) {
-        checkLegacyAnalyticsContentRef(summary, {
-          contentRef: row.contentRef,
-          kind: args.target,
-          route: row.slug,
-        });
+        checkGraphIdentityRef(summary, row, args.target);
       }
 
       return getGraphIdentityPageResult(summary, page);
@@ -546,10 +487,7 @@ export const getGraphIdentityIntegrityPage = internalQuery({
         .paginate(args.paginationOpts);
 
       for (const row of page.page) {
-        checkLegacyAnalyticsContentRef(summary, {
-          contentRef: row.contentRef,
-          kind: args.target,
-        });
+        checkGraphIdentityRef(summary, row, args.target);
       }
 
       return getGraphIdentityPageResult(summary, page);
@@ -561,11 +499,11 @@ export const getGraphIdentityIntegrityPage = internalQuery({
         .paginate(args.paginationOpts);
 
       for (const row of page.page) {
-        checkLegacyAnalyticsContentId(summary, {
-          contentId: row.contentId,
-          kind: args.target,
-          section: "articles",
-        });
+        checkGraphIdentityRef(
+          summary,
+          { ...row, section: "articles" },
+          args.target
+        );
       }
 
       return getGraphIdentityPageResult(summary, page);
@@ -577,11 +515,11 @@ export const getGraphIdentityIntegrityPage = internalQuery({
         .paginate(args.paginationOpts);
 
       for (const row of page.page) {
-        checkLegacyAnalyticsContentId(summary, {
-          contentId: row.contentId,
-          kind: args.target,
-          section: "subject",
-        });
+        checkGraphIdentityRef(
+          summary,
+          { ...row, section: "subject" },
+          args.target
+        );
       }
 
       return getGraphIdentityPageResult(summary, page);
@@ -593,11 +531,11 @@ export const getGraphIdentityIntegrityPage = internalQuery({
         .paginate(args.paginationOpts);
 
       for (const row of page.page) {
-        checkLegacyAnalyticsContentId(summary, {
-          contentId: row.contentId,
-          kind: args.target,
-          section: "exercises",
-        });
+        checkGraphIdentityRef(
+          summary,
+          { ...row, section: "exercises" },
+          args.target
+        );
       }
 
       return getGraphIdentityPageResult(summary, page);
@@ -609,11 +547,11 @@ export const getGraphIdentityIntegrityPage = internalQuery({
         .paginate(args.paginationOpts);
 
       for (const row of page.page) {
-        checkLegacyAnalyticsContentId(summary, {
-          contentId: row.contentId,
-          kind: args.target,
-          section: "subject",
-        });
+        checkGraphIdentityRef(
+          summary,
+          { ...row, section: "subject" },
+          args.target
+        );
       }
 
       return getGraphIdentityPageResult(summary, page);

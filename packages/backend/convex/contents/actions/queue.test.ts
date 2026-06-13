@@ -10,11 +10,13 @@ import type { PopularAudioContentItem } from "@repo/backend/convex/contents/vali
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { logger } from "@repo/backend/convex/utils/logger";
+import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const NOW = Date.parse("2026-01-01T00:00:00.000Z");
+const ARTICLE_ROUTE = "articles/politics/dynastic-politics-asian-values";
 
 describe("contents/actions/queue", () => {
   beforeEach(() => {
@@ -147,13 +149,36 @@ describe("contents/actions/queue", () => {
         date: NOW,
         description: "Article description",
         locale: "en",
-        slug: "articles/politics/dynastic-politics-asian-values",
+        slug: ARTICLE_ROUTE,
+        syncedAt: NOW,
+        title: "Dynastic Politics",
+      });
+      const graph = createLearningGraphIdentityFromRoute({
+        locale: "en",
+        route: ARTICLE_ROUTE,
+      });
+
+      if (!graph) {
+        throw new Error(`Expected graph identity for ${ARTICLE_ROUTE}.`);
+      }
+
+      await ctx.db.insert("contentRoutes", {
+        ...graph,
+        authors: [],
+        contentHash: "route-hash",
+        content_id: graph.assetId,
+        kind: "article",
+        locale: "en",
+        markdown: true,
+        route: ARTICLE_ROUTE,
+        section: "articles",
         syncedAt: NOW,
         title: "Dynastic Politics",
       });
 
       await ctx.db.insert("articlePopularity", {
-        contentId: articleId,
+        ...graph,
+        content_id: graph.assetId,
         updatedAt: NOW,
         viewCount: MIN_VIEW_THRESHOLD,
       });
@@ -161,7 +186,7 @@ describe("contents/actions/queue", () => {
         contentHash: "article-hash",
         contentRef: { type: "article", id: articleId },
         locale: "en",
-        slug: "articles/politics/dynastic-politics-asian-values",
+        slug: ARTICLE_ROUTE,
         syncedAt: NOW,
       });
 

@@ -1,5 +1,6 @@
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import { captureProductEvent } from "@repo/backend/convex/analytics/capture";
+import type { ProductAnalyticsEvent } from "@repo/backend/convex/analytics/events";
 import {
   getUnknownErrorMessage,
   runConvexProgram,
@@ -26,6 +27,23 @@ function toContentViewEventError(error: unknown) {
   });
 }
 
+function getContentViewEventType(
+  section: NonNullable<Change<DataModel, "contentViews">["newDoc"]>["section"]
+): Extract<
+  ProductAnalyticsEvent,
+  { name: "content viewed" }
+>["properties"]["content_type"] {
+  if (section === "articles") {
+    return "article";
+  }
+
+  if (section === "subject") {
+    return "subject";
+  }
+
+  return "exercise";
+}
+
 const captureContentViewEvent = Effect.fn(
   "triggers.contents.captureContentViewEvent"
 )(function* (
@@ -39,20 +57,6 @@ const captureContentViewEvent = Effect.fn(
   }
 
   const userId = view.userId;
-  const route = yield* Effect.tryPromise({
-    try: () =>
-      ctx.db
-        .query("contentRoutes")
-        .withIndex("by_locale_and_route", (q) =>
-          q.eq("locale", view.locale).eq("route", view.slug)
-        )
-        .unique(),
-    catch: toContentViewEventError,
-  });
-
-  if (!route) {
-    return;
-  }
 
   yield* Effect.tryPromise({
     try: () =>
@@ -61,15 +65,15 @@ const captureContentViewEvent = Effect.fn(
         event: {
           name: "content viewed",
           properties: {
-            alignment_id: route.alignmentId,
-            concept_id: route.conceptId,
-            content_id: route.content_id,
-            content_type: view.contentRef.type,
+            alignment_id: view.alignmentId,
+            concept_id: view.conceptId,
+            content_id: view.content_id,
+            content_type: getContentViewEventType(view.section),
             is_new_view: change.operation === "insert",
-            learning_object_id: route.learningObjectId,
-            lens_id: route.lensId,
+            learning_object_id: view.learningObjectId,
+            lens_id: view.lensId,
             locale: view.locale,
-            route: route.route,
+            route: view.route,
           },
         },
         timestamp: new Date(view.lastViewedAt),
