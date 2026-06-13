@@ -1,5 +1,6 @@
 import {
   buildNakafaContentRef,
+  createNakafaContentRefFromGraphProjection,
   getNakafaContentResourceUri,
   normalizeNakafaContentInput,
   parseNakafaContentRef,
@@ -32,6 +33,50 @@ describe("Nakafa agent references", () => {
     expect(resourceUri).toBe("nakafa://content/asset:en:quran:quran-surah:1");
     expect(normalizeNakafaContentInput(resourceUri)).toBe(directRef.content_id);
     expect(Option.isNone(parseNakafaContentRef(resourceUri))).toBe(true);
+  });
+
+  it("builds refs from persisted graph projections without route-derived IDs", () => {
+    const ref = createNakafaContentRefFromGraphProjection({
+      alignmentId: "alignment:catalog:article:example",
+      assetId: "asset:en:catalog:article:example",
+      conceptId: "concept:catalog:article:example",
+      content_id: "asset:en:catalog:article:example",
+      learningObjectId: "lo:catalog:article:example",
+      lensId: "lens:catalog:article:example",
+      locale: "en",
+      route: "articles/politics/example",
+      section: "articles",
+    });
+
+    expect(Option.getOrUndefined(ref)).toStrictEqual({
+      alignmentId: "alignment:catalog:article:example",
+      assetId: "asset:en:catalog:article:example",
+      conceptId: "concept:catalog:article:example",
+      content_id: "asset:en:catalog:article:example",
+      learningObjectId: "lo:catalog:article:example",
+      lensId: "lens:catalog:article:example",
+      locale: "en",
+      markdown_url: "https://nakafa.com/en/articles/politics/example.md",
+      route: "articles/politics/example",
+      section: "articles",
+      url: "https://nakafa.com/en/articles/politics/example",
+    });
+  });
+
+  it("rejects graph projections whose content ID does not match the asset ID", () => {
+    const ref = createNakafaContentRefFromGraphProjection({
+      alignmentId: "alignment:catalog:article:example",
+      assetId: "asset:en:catalog:article:example",
+      conceptId: "concept:catalog:article:example",
+      content_id: "asset:en:catalog:article:other",
+      learningObjectId: "lo:catalog:article:example",
+      lensId: "lens:catalog:article:example",
+      locale: "en",
+      route: "articles/politics/example",
+      section: "articles",
+    });
+
+    expect(Option.isNone(ref)).toBe(true);
   });
 
   it("rejects empty, unsafe, unsupported, and external references", () => {

@@ -1,7 +1,7 @@
 import { fetchNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
-  buildNakafaContentRef,
+  createNakafaContentRefFromGraphProjection,
   normalizeNakafaContentInput,
   parseNakafaContentRef,
 } from "@repo/contents/_lib/agent/refs";
@@ -42,9 +42,7 @@ function resolveNakafaContentId(convexUrl: string, contentId: string) {
       return Option.none<NakafaAgentContentRef>();
     }
 
-    return Option.some(
-      buildNakafaContentRef(route.locale, route.route, route.section)
-    );
+    return createNakafaContentRefFromGraphProjection(route);
   });
 }
 

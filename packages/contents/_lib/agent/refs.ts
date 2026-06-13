@@ -8,7 +8,7 @@ import type {
   NakafaAgentSection,
 } from "@repo/contents/_lib/agent/schema/ref";
 import {
-  NakafaAgentContentIdSchema,
+  NakafaAgentContentRefSchema,
   NakafaAgentContentRouteSchema,
   NakafaAgentContentUrlSchema,
   NakafaAgentMarkdownUrlSchema,
@@ -16,13 +16,23 @@ import {
 } from "@repo/contents/_lib/agent/schema/ref";
 import type { Locale } from "@repo/contents/_types/content";
 import { LocaleSchema } from "@repo/contents/_types/content";
-import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
+import {
+  createLearningGraphIdentityFromRoute,
+  type LearningGraphIdentity,
+} from "@repo/contents/_types/learning-graph";
 import { routing } from "@repo/internationalization/src/routing";
 import { cleanSlug } from "@repo/utilities/helper";
 import { Option, Schema } from "effect";
 
 const CONTENT_RESOURCE_PREFIX = "nakafa://content/";
 const MARKDOWN_EXTENSION_PATTERN = /\.mdx?$/;
+
+interface NakafaContentGraphProjection extends LearningGraphIdentity {
+  content_id: string;
+  locale: Locale;
+  route: string;
+  section: NakafaAgentSection;
+}
 
 /**
  * Parses a route-like Nakafa reference into a canonical content reference.
@@ -94,22 +104,50 @@ export function buildNakafaContentRef(
     );
   }
 
-  const contentId = NakafaAgentContentIdSchema.make(identity.assetId);
-  const contentRef = {
-    ...identity,
-    content_id: contentId,
-    locale,
+  return Schema.decodeUnknownSync(NakafaAgentContentRefSchema)(
+    createNakafaContentRefInput({
+      ...identity,
+      content_id: identity.assetId,
+      locale,
+      route: contentRoute,
+      section,
+    })
+  );
+}
+
+/**
+ * Builds a canonical content reference from persisted graph route-catalog fields.
+ */
+export function createNakafaContentRefFromGraphProjection(
+  input: NakafaContentGraphProjection
+) {
+  if (input.content_id !== input.assetId) {
+    return Option.none<NakafaAgentContentRef>();
+  }
+
+  return Schema.decodeUnknownOption(NakafaAgentContentRefSchema)(
+    createNakafaContentRefInput(input)
+  );
+}
+
+function createNakafaContentRefInput(input: NakafaContentGraphProjection) {
+  return {
+    alignmentId: input.alignmentId,
+    assetId: input.assetId,
+    conceptId: input.conceptId,
+    content_id: input.content_id,
+    learningObjectId: input.learningObjectId,
+    lensId: input.lensId,
+    locale: input.locale,
     markdown_url: NakafaAgentMarkdownUrlSchema.make(
-      `${NAKAFA_BASE_URL}/${locale}/${contentRoute}.md`
+      `${NAKAFA_BASE_URL}/${input.locale}/${input.route}.md`
     ),
-    route: contentRoute,
-    section,
+    route: input.route,
+    section: input.section,
     url: NakafaAgentContentUrlSchema.make(
-      `${NAKAFA_BASE_URL}/${locale}/${contentRoute}`
+      `${NAKAFA_BASE_URL}/${input.locale}/${input.route}`
     ),
   };
-
-  return contentRef;
 }
 
 /** Builds the MCP resource URI for a canonical Nakafa content reference. */
