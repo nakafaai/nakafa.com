@@ -300,6 +300,56 @@ describe("contentSync/mutations/articles", () => {
     });
   });
 
+  it("patches stale route catalog fields on unchanged article rows", async () => {
+    const t = convexTest(schema, convexModules);
+
+    await t.mutation(async (ctx) => {
+      await ctx.db.insert("authors", { name: "Ada", username: "ada" });
+    });
+    await t.mutation(internal.contentSync.mutations.articles.bulkSyncArticles, {
+      articles: [buildArticle()],
+    });
+    await t.mutation(async (ctx) => {
+      const route = await ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", ARTICLE_CONTENT_ID)
+        )
+        .unique();
+
+      if (!route) {
+        throw new Error("Expected article route row before stale patch.");
+      }
+
+      await ctx.db.patch("contentRoutes", route._id, { locale: "en" });
+    });
+
+    await t.mutation(internal.contentSync.mutations.articles.bulkSyncArticles, {
+      articles: [buildArticle()],
+    });
+    const route = await t.query(async (ctx) =>
+      ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", ARTICLE_CONTENT_ID)
+        )
+        .unique()
+    );
+
+    expect(route).toMatchObject({
+      alignmentId: ARTICLE_GRAPH.alignmentId,
+      assetId: ARTICLE_GRAPH.assetId,
+      conceptId: ARTICLE_GRAPH.conceptId,
+      contentHash: BASE_ARTICLE.contentHash,
+      content_id: ARTICLE_GRAPH.assetId,
+      learningObjectId: ARTICLE_GRAPH.learningObjectId,
+      lensId: ARTICLE_GRAPH.lensId,
+      locale: "id",
+      route: ARTICLE_SLUG,
+      title: BASE_ARTICLE.title,
+    });
+  });
+
   it("deletes stale articles and skips IDs that already disappeared", async () => {
     const t = convexTest(schema, convexModules);
 

@@ -187,6 +187,7 @@ function isSameContentRoute(
     existing.authors.every(
       (author, index) => author.name === next.authors[index]?.name
     ) &&
+    existing.content_id === next.content_id &&
     existing.contentHash === next.contentHash &&
     existing.date === next.date &&
     existing.depth === next.depth &&
@@ -197,6 +198,7 @@ function isSameContentRoute(
     existing.conceptId === next.conceptId &&
     existing.learningObjectId === next.learningObjectId &&
     existing.lensId === next.lensId &&
+    existing.locale === next.locale &&
     existing.markdown === next.markdown &&
     existing.official === next.official &&
     existing.parentRoute === next.parentRoute &&
