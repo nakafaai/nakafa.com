@@ -6,7 +6,7 @@ import {
 } from "@repo/backend/convex/contents/helpers/search/documents";
 import { ConvexError } from "convex/values";
 
-const duplicateSearchRepairLimit = 6;
+const duplicateSearchProjectionRepairLimit = 6;
 
 /** Upserts one search row derived from canonical synced content. */
 export async function syncContentSearch(
@@ -25,7 +25,7 @@ export async function syncContentSearch(
     .withIndex("by_locale_and_route", (q) =>
       q.eq("locale", nextValues.locale).eq("route", nextValues.route)
     )
-    .take(duplicateSearchRepairLimit);
+    .take(duplicateSearchProjectionRepairLimit);
   const routeExisting = existing ?? routeRows[0] ?? null;
   const deletedDuplicates = await deleteDuplicateContentSearchRows(ctx, {
     primary: routeExisting,
@@ -45,11 +45,14 @@ export async function syncContentSearch(
   return "created";
 }
 
-/** Deletes the search row attached to one canonical content ID. */
-export async function deleteContentSearch(ctx: MutationCtx, contentId: string) {
+/** Deletes the search row attached to one graph content ID. */
+export async function deleteContentSearchByGraphContentId(
+  ctx: MutationCtx,
+  graphContentId: string
+) {
   const existing = await ctx.db
     .query("contentSearch")
-    .withIndex("by_content_id", (q) => q.eq("content_id", contentId))
+    .withIndex("by_content_id", (q) => q.eq("content_id", graphContentId))
     .unique();
 
   if (!existing) {
@@ -67,7 +70,7 @@ async function deleteDuplicateContentSearchRows(
     rows: Doc<"contentSearch">[];
   }
 ) {
-  if (source.rows.length >= duplicateSearchRepairLimit) {
+  if (source.rows.length >= duplicateSearchProjectionRepairLimit) {
     throw new ConvexError({
       code: "CONTENT_SEARCH_DUPLICATE_LIMIT_EXCEEDED",
       message: "Content search route has too many duplicate projections.",

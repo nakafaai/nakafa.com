@@ -2,7 +2,7 @@ import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/cons
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
 import { getContentGraphIdentity } from "@repo/backend/convex/contents/graph";
 import {
-  deleteContentRoute,
+  deleteContentRouteByGraphContentId,
   syncContentRoute,
 } from "@repo/backend/convex/contents/helpers/routes/write";
 import { internalMutation } from "@repo/backend/convex/functions";
@@ -328,7 +328,7 @@ export const deleteStaleQuranRuntime = internalMutation({
         activeLocales.has(route.locale) &&
         !expectedRouteKeys.has(getLocalizedQuranRouteKey(route))
       ) {
-        await deleteContentRoute(ctx, route.content_id);
+        await deleteContentRouteByGraphContentId(ctx, route.content_id);
         routesDeleted++;
       }
     }

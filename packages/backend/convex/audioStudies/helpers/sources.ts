@@ -25,13 +25,13 @@ function toAudioContentLookup(
 }
 
 /** Reads compact audio metadata by graph content ID. */
-export async function getAudioContentSourceByContentId(
+export async function getAudioContentSourceByGraphContentId(
   ctx: AudioSourceReaderCtx,
-  contentId: AudioContentLookup["content_id"]
+  graphContentId: AudioContentLookup["content_id"]
 ) {
   const source = await ctx.db
     .query("audioContentSources")
-    .withIndex("by_content_id", (q) => q.eq("content_id", contentId))
+    .withIndex("by_content_id", (q) => q.eq("content_id", graphContentId))
     .unique();
 
   return source ? toAudioContentLookup(source) : null;
@@ -147,14 +147,14 @@ export async function syncAudioContentSource(
   await ctx.db.patch("audioContentSources", existing._id, nextValues);
 }
 
-/** Removes compact audio metadata for deleted source content. */
-export async function deleteAudioContentSource(
+/** Removes compact audio metadata for one deleted graph content ID. */
+export async function deleteAudioContentSourceByGraphContentId(
   ctx: MutationCtx,
-  contentId: AudioContentLookup["content_id"]
+  graphContentId: AudioContentLookup["content_id"]
 ) {
   const existing = await ctx.db
     .query("audioContentSources")
-    .withIndex("by_content_id", (q) => q.eq("content_id", contentId))
+    .withIndex("by_content_id", (q) => q.eq("content_id", graphContentId))
     .unique();
 
   if (!existing) {

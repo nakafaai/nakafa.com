@@ -4,8 +4,8 @@ import { deleteAudioContentSourceByRoute } from "@repo/backend/convex/audioStudi
 import type { ContentAuthorContentId } from "@repo/backend/convex/authors/schema";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
-import { deleteContentRoute } from "@repo/backend/convex/contents/helpers/routes/write";
-import { deleteContentSearch } from "@repo/backend/convex/contents/helpers/search/write";
+import { deleteContentRouteByGraphContentId } from "@repo/backend/convex/contents/helpers/routes/write";
+import { deleteContentSearchByGraphContentId } from "@repo/backend/convex/contents/helpers/search/write";
 import {
   type ContentType,
   type Locale,
@@ -288,11 +288,11 @@ export async function deleteContentProjectionsByRoute(
     .unique();
 
   if (search) {
-    await deleteContentSearch(ctx, search.content_id);
+    await deleteContentSearchByGraphContentId(ctx, search.content_id);
   }
 
   if (route) {
-    await deleteContentRoute(ctx, route.content_id);
+    await deleteContentRouteByGraphContentId(ctx, route.content_id);
   }
 }
 
