@@ -17,6 +17,9 @@ const RouteArgsSchema = Schema.Struct({
   locale: Schema.Literal("en", "id"),
   route: Schema.String,
 });
+const ContentIdArgsSchema = Schema.Struct({
+  contentId: Schema.String,
+});
 const ExerciseGroupArgsSchema = Schema.Struct({
   category: Schema.Literal("high-school", "middle-school"),
   exerciseType: Schema.String,
@@ -37,11 +40,13 @@ beforeEach(() => {
 
 describe("verifyNakafaContent", () => {
   it("verifies exact catalog routes and exercise group fallback routes", async () => {
+    const articleRef = buildNakafaContentRef("en", articleRoute, "articles");
+
     await expect(
       Effect.runPromise(
         verifyNakafaContent(
           "https://example.convex.cloud",
-          `en/${articleRoute}`
+          articleRef.content_id
         )
       )
     ).resolves.toBe(true);
@@ -49,7 +54,7 @@ describe("verifyNakafaContent", () => {
       Effect.runPromise(
         verifyNakafaContent(
           "https://example.convex.cloud",
-          `id/${exerciseGroupRoute}`
+          `https://nakafa.com/id/${exerciseGroupRoute}`
         )
       )
     ).resolves.toBe(true);
@@ -63,7 +68,7 @@ describe("verifyNakafaContent", () => {
       Effect.runPromise(
         verifyNakafaContent(
           "https://example.convex.cloud",
-          "en/subject/missing"
+          "https://nakafa.com/en/subject/high-school/10/mathematics/topic/missing"
         )
       )
     ).resolves.toBe(false);
@@ -71,13 +76,16 @@ describe("verifyNakafaContent", () => {
       Effect.runPromise(
         verifyNakafaContent(
           "https://example.convex.cloud",
-          "id/exercises/high-school/snbt/quantitative-knowledge/try-out/not-year"
+          "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/not-year"
         )
       )
     ).resolves.toBe(false);
     await expect(
       Effect.runPromise(
-        verifyNakafaContent("https://example.convex.cloud", "en/articles/fail")
+        verifyNakafaContent(
+          "https://example.convex.cloud",
+          "https://nakafa.com/en/articles/politics/fail"
+        )
       )
     ).resolves.toBe(false);
   });
@@ -89,6 +97,13 @@ function readRuntimeFixture(
   query: FunctionReference<"query">,
   args: unknown
 ) {
+  if (
+    getFunctionName(query) ===
+    getFunctionName(api.contents.queries.runtime.getContentRouteByContentId)
+  ) {
+    return Promise.resolve(readContentRouteByContentId(args));
+  }
+
   if (
     getFunctionName(query) ===
     getFunctionName(api.contents.queries.runtime.getContentRoute)
@@ -106,11 +121,26 @@ function readRuntimeFixture(
   return Promise.reject(new Error("Unhandled verify query fixture."));
 }
 
+/** Builds one route lookup fixture from a graph asset ID. */
+function readContentRouteByContentId(args: unknown) {
+  const input = Schema.decodeUnknownSync(ContentIdArgsSchema)(args);
+  const articleRef = buildNakafaContentRef("en", articleRoute, "articles");
+
+  if (input.contentId !== articleRef.content_id) {
+    return null;
+  }
+
+  return {
+    ...articleRef,
+    title: "Article",
+  };
+}
+
 /** Builds one exact route lookup fixture from generated query args. */
 function readContentRoute(args: unknown) {
   const input = Schema.decodeUnknownSync(RouteArgsSchema)(args);
 
-  if (input.route === "articles/fail") {
+  if (input.route === "articles/politics/fail") {
     return Promise.reject(new Error("route failure"));
   }
 

@@ -43,10 +43,15 @@ describe("readNakafaExercise", () => {
       readNakafaExercise(convexUrl, setRef.content_id)
     );
     const explicitQuestion = await Effect.runPromise(
-      readNakafaExercise(convexUrl, `id/${setRoute}`, 2)
+      readNakafaExercise(convexUrl, setRef.content_id, 2)
     );
-    const routeQuestion = await Effect.runPromise(
-      readNakafaExercise(convexUrl, `id/${setRoute}/2`)
+    const questionRef = buildNakafaContentRef(
+      "id",
+      `${setRoute}/2`,
+      "exercises"
+    );
+    const graphQuestion = await Effect.runPromise(
+      readNakafaExercise(convexUrl, questionRef.content_id)
     );
     const markdown = await Effect.runPromise(
       readExerciseMarkdown(
@@ -57,27 +62,38 @@ describe("readNakafaExercise", () => {
 
     expect(Option.getOrUndefined(set)?.count).toBe(2);
     expect(Option.getOrUndefined(explicitQuestion)?.exercise_number).toBe(2);
-    expect(Option.getOrUndefined(routeQuestion)?.exercise_number).toBe(2);
+    expect(Option.getOrUndefined(graphQuestion)?.exercise_number).toBe(2);
     expect(Option.getOrUndefined(markdown)?.text).toContain("- [x] A. Benar");
   });
 
   it("returns none for unsupported, missing, and malformed exercise refs", async () => {
+    const articleRef = buildNakafaContentRef(
+      "id",
+      "articles/politics/example",
+      "articles"
+    );
+    const missingSetRef = buildNakafaContentRef(
+      "id",
+      missingSetRoute,
+      "exercises"
+    );
     const unsupported = await Effect.runPromise(
-      readNakafaExercise(convexUrl, "id/articles/example")
+      readNakafaExercise(convexUrl, articleRef.content_id)
     );
     const missingSet = await Effect.runPromise(
-      readNakafaExercise(convexUrl, `id/${missingSetRoute}`)
+      readNakafaExercise(convexUrl, missingSetRef.content_id)
     );
+    const setRef = buildNakafaContentRef("id", setRoute, "exercises");
     const missingQuestion = await Effect.runPromise(
-      readNakafaExercise(convexUrl, `id/${setRoute}`, 99)
+      readNakafaExercise(convexUrl, setRef.content_id, 99)
     );
     const malformedQuestion = await Effect.runPromise(
-      readNakafaExercise(convexUrl, `id/${setRoute}/two`)
+      readNakafaExercise(convexUrl, `https://nakafa.com/id/${setRoute}/two`)
     );
     const nonSetParent = await Effect.runPromise(
       readNakafaExercise(
         convexUrl,
-        "id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/2"
+        "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/2"
       )
     );
     const missingMarkdown = await Effect.runPromise(
@@ -164,14 +180,27 @@ function readRuntimeFixture(
 function readContentRouteByContentId(args: unknown) {
   const input = Schema.decodeUnknownSync(ContentIdArgsSchema)(args);
   const setRef = buildNakafaContentRef("id", setRoute, "exercises");
+  const questionRef = buildNakafaContentRef("id", `${setRoute}/2`, "exercises");
+  const articleRef = buildNakafaContentRef(
+    "id",
+    "articles/politics/example",
+    "articles"
+  );
+  const missingSetRef = buildNakafaContentRef(
+    "id",
+    missingSetRoute,
+    "exercises"
+  );
+  const refs = [setRef, questionRef, articleRef, missingSetRef];
+  const ref = refs.find((item) => item.content_id === input.contentId);
 
-  if (input.contentId !== setRef.content_id) {
+  if (!ref) {
     return null;
   }
 
   return {
-    ...setRef,
-    title: "Exercise Set",
+    ...ref,
+    title: ref.route,
   };
 }
 

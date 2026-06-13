@@ -104,10 +104,7 @@ export function readExerciseMarkdown(
   ref: NakafaAgentContentRef
 ) {
   return Effect.gen(function* () {
-    const exercise = yield* readNakafaExercise(
-      convexUrl,
-      `${ref.locale}/${ref.route}`
-    );
+    const exercise = yield* readNakafaExercise(convexUrl, ref.content_id);
 
     if (Option.isNone(exercise)) {
       return Option.none<NakafaAgentMarkdown>();

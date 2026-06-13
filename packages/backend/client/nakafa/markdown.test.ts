@@ -46,14 +46,15 @@ describe("readNakafaMarkdown", () => {
     const article = await Effect.runPromise(
       readNakafaMarkdown(convexUrl, articleRef.content_id)
     );
+    const subjectRef = buildNakafaContentRef("id", subjectRoute, "subject");
     const subject = await Effect.runPromise(
-      readNakafaMarkdown(convexUrl, `id/${subjectRoute}`)
+      readNakafaMarkdown(convexUrl, subjectRef.content_id)
     );
     const exercise = await Effect.runPromise(
       readNakafaMarkdown(convexUrl, exerciseRef.content_id)
     );
     const quran = await Effect.runPromise(
-      readNakafaMarkdown(convexUrl, "id/quran/1")
+      readNakafaMarkdown(convexUrl, "https://nakafa.com/id/quran/1")
     );
 
     expect(Option.getOrUndefined(article)?.description).toBe("Article intro");
@@ -64,16 +65,25 @@ describe("readNakafaMarkdown", () => {
 
   it("returns none for invalid, missing, and unsupported markdown refs", async () => {
     const invalid = await Effect.runPromise(readNakafaMarkdown(convexUrl, ""));
+    const bareRoute = await Effect.runPromise(
+      readNakafaMarkdown(convexUrl, "en/articles/politics/example")
+    );
     const missing = await Effect.runPromise(
-      readNakafaMarkdown(convexUrl, "en/articles/politics/missing")
+      readNakafaMarkdown(
+        convexUrl,
+        "https://nakafa.com/en/articles/politics/missing"
+      )
     );
     const articleWithoutDescription = await Effect.runPromise(
-      readNakafaMarkdown(convexUrl, "en/articles/politics/no-description")
+      readNakafaMarkdown(
+        convexUrl,
+        "https://nakafa.com/en/articles/politics/no-description"
+      )
     );
     const subjectWithoutLabel = await Effect.runPromise(
       readNakafaMarkdown(
         convexUrl,
-        "id/subject/high-school/10/mathematics/topic/no-subject"
+        "https://nakafa.com/id/subject/high-school/10/mathematics/topic/no-subject"
       )
     );
     const unsupported = await Effect.runPromise(
@@ -84,6 +94,7 @@ describe("readNakafaMarkdown", () => {
     );
 
     expect(Option.isNone(invalid)).toBe(true);
+    expect(Option.isNone(bareRoute)).toBe(true);
     expect(Option.isNone(missing)).toBe(true);
     expect(Option.getOrUndefined(articleWithoutDescription)?.description).toBe(
       ""
