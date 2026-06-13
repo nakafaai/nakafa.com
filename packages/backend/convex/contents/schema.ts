@@ -138,6 +138,7 @@ const tables = {
    */
   contentSearch: defineTable(contentSearchDocumentValidator)
     .index("by_content_id", ["content_id"])
+    .index("by_locale_and_route", ["locale", "route"])
     .index("by_locale_and_title", ["locale", "title"])
     .index("by_locale_and_section_and_title", ["locale", "section", "title"])
     .searchIndex("search_title", {

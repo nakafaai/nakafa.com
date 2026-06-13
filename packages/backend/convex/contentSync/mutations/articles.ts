@@ -9,20 +9,14 @@ import {
   buildAuthorCache,
   deleteArticleReferencesForArticle,
   deleteContentAuthorLinks,
+  deleteContentProjectionsByRoute,
   replaceArticleReferences,
   syncContentAuthorsWithCache,
 } from "@repo/backend/convex/contentSync/lib/syncHelpers";
 import { hasSameSyncValues } from "@repo/backend/convex/contentSync/lib/syncValues";
 import { getContentGraphIdentity } from "@repo/backend/convex/contents/graph";
-import {
-  deleteContentRoute,
-  syncContentRoute,
-} from "@repo/backend/convex/contents/helpers/routes/write";
-import { buildContentSearchRef } from "@repo/backend/convex/contents/helpers/search/documents";
-import {
-  deleteContentSearch,
-  syncContentSearch,
-} from "@repo/backend/convex/contents/helpers/search/write";
+import { syncContentRoute } from "@repo/backend/convex/contents/helpers/routes/write";
+import { syncContentSearch } from "@repo/backend/convex/contents/helpers/search/write";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import {
@@ -259,21 +253,12 @@ export const deleteStaleArticles = internalMutation({
       }
 
       const articleId = args.articleIds[index];
-      const searchRef = buildContentSearchRef({
-        ...getContentGraphIdentity({
-          kind: "article",
-          locale: article.locale,
-          route: article.slug,
-        }),
-        locale: article.locale,
-        route: article.slug,
-        section: "articles",
-      });
-
       await deleteContentAuthorLinks(ctx, articleId, "article");
       await deleteArticleReferencesForArticle(ctx, articleId);
-      await deleteContentSearch(ctx, searchRef.content_id);
-      await deleteContentRoute(ctx, searchRef.content_id);
+      await deleteContentProjectionsByRoute(ctx, {
+        locale: article.locale,
+        route: article.slug,
+      });
       await deleteAudioContentSource(ctx, { id: articleId, type: "article" });
       await ctx.db.delete("articleContents", articleId);
       deleted++;

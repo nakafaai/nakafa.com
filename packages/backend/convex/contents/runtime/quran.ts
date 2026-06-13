@@ -1,6 +1,5 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { getContentGraphIdentity } from "@repo/backend/convex/contents/graph";
 import { buildContentSearchRef } from "@repo/backend/convex/contents/helpers/search/documents";
 import type {
   Locale,
@@ -106,17 +105,16 @@ export async function getQuranReferenceImpl(
   }
 
   const route = `quran/${surah.number}`;
-  const graph = getContentGraphIdentity({
-    kind: "quran-surah",
+  const routeProjection = await getQuranRouteProjection(ctx, {
     locale: args.locale,
     route,
   });
-  const ref = buildContentSearchRef({
-    ...graph,
-    locale: args.locale,
-    route,
-    section: QURAN_SECTION,
-  });
+
+  if (!routeProjection) {
+    return null;
+  }
+
+  const ref = buildContentSearchRef(routeProjection);
 
   return {
     ...ref,
@@ -134,6 +132,25 @@ export async function getQuranReferenceImpl(
         transliteration: verse.text.transliteration.en,
       })),
   };
+}
+
+/** Loads the synced Quran route projection that owns graph identity. */
+async function getQuranRouteProjection(
+  ctx: QueryCtx,
+  args: { locale: Locale; route: string }
+) {
+  const route = await ctx.db
+    .query("contentRoutes")
+    .withIndex("by_locale_and_route", (q) =>
+      q.eq("locale", args.locale).eq("route", args.route)
+    )
+    .unique();
+
+  if (!route || route.section !== QURAN_SECTION) {
+    return null;
+  }
+
+  return route;
 }
 
 /** Loads one Quran surah metadata row by its canonical number. */

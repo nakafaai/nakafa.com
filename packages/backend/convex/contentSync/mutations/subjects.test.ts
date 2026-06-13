@@ -416,6 +416,8 @@ describe("contentSync/mutations/subjects", () => {
 
   it("deletes stale subject topics with their sections and rejects unsafe section counts", async () => {
     const t = convexTest(schema, convexModules);
+    const detachedTopicId = `${TOPIC_CONTENT_ID}:catalog`;
+    const detachedSectionId = `${SECTION_CONTENT_ID}:catalog`;
 
     await t.mutation(async (ctx) => {
       await ctx.db.insert("authors", { name: "Ada", username: "ada" });
@@ -458,6 +460,39 @@ describe("contentSync/mutations/subjects", () => {
         throw new Error("Expected synced subject topics before stale delete.");
       }
 
+      const topicRoute = await ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (q) => q.eq("content_id", TOPIC_CONTENT_ID))
+        .unique();
+      const sectionRoute = await ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", SECTION_CONTENT_ID)
+        )
+        .unique();
+      const sectionSearch = await ctx.db
+        .query("contentSearch")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", SECTION_CONTENT_ID)
+        )
+        .unique();
+
+      if (!(topicRoute && sectionRoute && sectionSearch)) {
+        throw new Error("Expected synced subject projections.");
+      }
+
+      await ctx.db.patch("contentRoutes", topicRoute._id, {
+        assetId: detachedTopicId,
+        content_id: detachedTopicId,
+      });
+      await ctx.db.patch("contentRoutes", sectionRoute._id, {
+        assetId: detachedSectionId,
+        content_id: detachedSectionId,
+      });
+      await ctx.db.patch("contentSearch", sectionSearch._id, {
+        assetId: detachedSectionId,
+        content_id: detachedSectionId,
+      });
       await ctx.db.patch("subjectTopics", unsafeTopic._id, { sectionCount: 0 });
       await ctx.db.insert("subjectSections", {
         body: "Unsafe body",
@@ -502,17 +537,17 @@ describe("contentSync/mutations/subjects", () => {
       const route = await ctx.db
         .query("contentRoutes")
         .withIndex("by_content_id", (q) =>
-          q.eq("content_id", SECTION_CONTENT_ID)
+          q.eq("content_id", detachedSectionId)
         )
         .unique();
       const topicRoute = await ctx.db
         .query("contentRoutes")
-        .withIndex("by_content_id", (q) => q.eq("content_id", TOPIC_CONTENT_ID))
+        .withIndex("by_content_id", (q) => q.eq("content_id", detachedTopicId))
         .unique();
       const search = await ctx.db
         .query("contentSearch")
         .withIndex("by_content_id", (q) =>
-          q.eq("content_id", SECTION_CONTENT_ID)
+          q.eq("content_id", detachedSectionId)
         )
         .unique();
 

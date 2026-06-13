@@ -54,6 +54,104 @@ function contentRouteGraph(locale: Locale, route: string) {
 }
 
 describe("contents/queries/runtime", () => {
+  it("returns Quran references with synced route catalog graph identity", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const route = "quran/1";
+    const graph = contentRouteGraph("id", route);
+    const catalogAssetId = `${graph.assetId}:catalog`;
+
+    await t.mutation(async (ctx) => {
+      await ctx.db.insert("contentRoutes", {
+        ...graph,
+        assetId: catalogAssetId,
+        authors: [],
+        contentHash: "quran-route-hash",
+        content_id: catalogAssetId,
+        kind: "quran-surah",
+        locale: "id",
+        markdown: true,
+        route,
+        section: "quran",
+        syncedAt: NOW,
+        title: "Al-Fatihah",
+      });
+      await ctx.db.insert("quranSurahs", {
+        contentHash: "quran-surah-hash",
+        name: {
+          long: "Al-Fatihah",
+          short: "Al-Fatihah",
+          translation: {
+            en: "The Opening",
+            id: "Pembukaan",
+          },
+          transliteration: {
+            en: "Al-Fatihah",
+            id: "Al-Fatihah",
+          },
+        },
+        number: 1,
+        numberOfVerses: 1,
+        revelation: {
+          arab: "Makkiyah",
+          en: "Meccan",
+          id: "Makkiyah",
+        },
+        sequence: 5,
+        syncedAt: NOW,
+      });
+      await ctx.db.insert("quranVerses", {
+        audio: { primary: "primary.mp3", secondary: [] },
+        contentHash: "quran-verse-hash",
+        hizbQuarter: 1,
+        juz: 1,
+        manzil: 1,
+        page: 1,
+        quranNumber: 1,
+        ruku: 1,
+        sajdaObligatory: false,
+        sajdaRecommended: false,
+        surahNumber: 1,
+        syncedAt: NOW,
+        tafsir: {
+          id: {
+            long: "Tafsir panjang",
+            short: "Tafsir pendek",
+          },
+        },
+        text: {
+          arab: "بسم الله",
+          transliteration: {
+            en: "Bismillah",
+          },
+        },
+        translation: {
+          en: "In the name of Allah",
+          id: "Dengan nama Allah",
+        },
+        verseNumber: 1,
+      });
+    });
+
+    const result = await t.query(
+      api.contents.queries.runtime.getQuranReference,
+      {
+        fromVerse: 1,
+        includeTafsir: false,
+        locale: "id",
+        surah: 1,
+      }
+    );
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        assetId: catalogAssetId,
+        content_id: catalogAssetId,
+        route,
+        section: "quran",
+      })
+    );
+  });
+
   it("loads article and subject pages from synced runtime rows", async () => {
     const t = createConvexTestWithBetterAuth();
 

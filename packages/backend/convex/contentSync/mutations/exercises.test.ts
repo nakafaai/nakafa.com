@@ -535,6 +535,8 @@ describe("contentSync/mutations/exercises", () => {
 
   it("deletes stale exercise sets with questions and rejects unsafe question counts", async () => {
     const t = convexTest(schema, convexModules);
+    const detachedSetId = `${SET_CONTENT_ID}:catalog`;
+    const detachedQuestionId = `${QUESTION_CONTENT_ID}:catalog`;
 
     await t.mutation(async (ctx) => {
       await ctx.db.insert("authors", { name: "Ada", username: "ada" });
@@ -577,6 +579,36 @@ describe("contentSync/mutations/exercises", () => {
         throw new Error("Expected synced exercise sets before stale delete.");
       }
 
+      for (const projection of [
+        { nextId: detachedSetId, oldId: SET_CONTENT_ID },
+        { nextId: detachedQuestionId, oldId: QUESTION_CONTENT_ID },
+      ]) {
+        const search = await ctx.db
+          .query("contentSearch")
+          .withIndex("by_content_id", (q) =>
+            q.eq("content_id", projection.oldId)
+          )
+          .unique();
+        const route = await ctx.db
+          .query("contentRoutes")
+          .withIndex("by_content_id", (q) =>
+            q.eq("content_id", projection.oldId)
+          )
+          .unique();
+
+        if (!(search && route)) {
+          throw new Error("Expected synced exercise projections.");
+        }
+
+        await ctx.db.patch("contentSearch", search._id, {
+          assetId: projection.nextId,
+          content_id: projection.nextId,
+        });
+        await ctx.db.patch("contentRoutes", route._id, {
+          assetId: projection.nextId,
+          content_id: projection.nextId,
+        });
+      }
       await ctx.db.patch("exerciseSets", unsafeSet._id, { questionCount: 0 });
       await ctx.db.insert("exerciseQuestions", {
         answerBody: "Unsafe answer",
@@ -621,22 +653,22 @@ describe("contentSync/mutations/exercises", () => {
         .unique();
       const setSearch = await ctx.db
         .query("contentSearch")
-        .withIndex("by_content_id", (q) => q.eq("content_id", SET_CONTENT_ID))
+        .withIndex("by_content_id", (q) => q.eq("content_id", detachedSetId))
         .unique();
       const questionSearch = await ctx.db
         .query("contentSearch")
         .withIndex("by_content_id", (q) =>
-          q.eq("content_id", QUESTION_CONTENT_ID)
+          q.eq("content_id", detachedQuestionId)
         )
         .unique();
       const setRoute = await ctx.db
         .query("contentRoutes")
-        .withIndex("by_content_id", (q) => q.eq("content_id", SET_CONTENT_ID))
+        .withIndex("by_content_id", (q) => q.eq("content_id", detachedSetId))
         .unique();
       const questionRoute = await ctx.db
         .query("contentRoutes")
         .withIndex("by_content_id", (q) =>
-          q.eq("content_id", QUESTION_CONTENT_ID)
+          q.eq("content_id", detachedQuestionId)
         )
         .unique();
 

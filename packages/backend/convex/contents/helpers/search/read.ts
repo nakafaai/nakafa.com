@@ -1,6 +1,5 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { getContentGraphIdentityFromRoute } from "@repo/backend/convex/contents/graph";
 import { rankContentSearchDocuments } from "@repo/backend/convex/contents/helpers/search/rank";
 import type { contentSearchInputValidator } from "@repo/backend/convex/contents/helpers/search/schema";
 import { cleanSlug } from "@repo/utilities/helper";
@@ -140,18 +139,26 @@ async function readExactRouteContent(
     return null;
   }
 
-  const graph = getContentGraphIdentityFromRoute({
-    locale: args.locale,
-    route,
-  });
+  const routeProjection = await ctx.db
+    .query("contentRoutes")
+    .withIndex("by_locale_and_route", (q) =>
+      q.eq("locale", args.locale).eq("route", route)
+    )
+    .unique();
 
-  if (!graph) {
+  if (!routeProjection) {
+    return null;
+  }
+
+  if (args.section && routeProjection.section !== args.section) {
     return null;
   }
 
   const document = await ctx.db
     .query("contentSearch")
-    .withIndex("by_content_id", (q) => q.eq("content_id", graph.assetId))
+    .withIndex("by_content_id", (q) =>
+      q.eq("content_id", routeProjection.content_id)
+    )
     .unique();
 
   if (!document) {

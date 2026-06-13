@@ -4,16 +4,13 @@ import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/cons
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
 import {
   buildAuthorCache,
+  deleteContentProjectionsByRoute,
   deleteSubjectSection,
   syncContentAuthorsWithCache,
 } from "@repo/backend/convex/contentSync/lib/syncHelpers";
 import { hasSameSyncValues } from "@repo/backend/convex/contentSync/lib/syncValues";
 import { getContentGraphIdentity } from "@repo/backend/convex/contents/graph";
-import {
-  deleteContentRoute,
-  syncContentRoute,
-} from "@repo/backend/convex/contents/helpers/routes/write";
-import { buildContentSearchRef } from "@repo/backend/convex/contents/helpers/search/documents";
+import { syncContentRoute } from "@repo/backend/convex/contents/helpers/routes/write";
 import { syncContentSearch } from "@repo/backend/convex/contents/helpers/search/write";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -384,18 +381,11 @@ export const deleteStaleSubjectTopics = internalMutation({
         await deleteSubjectSection(ctx, section._id);
       }
 
-      const routeRef = buildContentSearchRef({
-        ...getContentGraphIdentity({
-          kind: "subject-topic",
-          locale: topic.locale,
-          route: topic.slug,
-        }),
+      await deleteContentProjectionsByRoute(ctx, {
         locale: topic.locale,
         route: topic.slug,
-        section: "subject",
       });
 
-      await deleteContentRoute(ctx, routeRef.content_id);
       await ctx.db.delete("subjectTopics", topicId);
       deleted++;
     }

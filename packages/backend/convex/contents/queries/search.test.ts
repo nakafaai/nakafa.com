@@ -1,6 +1,7 @@
 import { api, internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { CONTENT_SEARCH_MAX_OFFSET } from "@repo/backend/convex/contents/helpers/search/constants";
+import { readContentSearchDocuments } from "@repo/backend/convex/contents/helpers/search/read";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import type { Locale } from "@repo/contents/_types/content";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
@@ -177,6 +178,76 @@ describe("contents/queries/search:search", () => {
     ]);
     expect(result.items[0].excerpt).not.toContain("subject/high-school");
     expect(result.items[0].excerpt).not.toContain("exponential-logarithm");
+  });
+
+  it("resolves exact routes through persisted route catalog content IDs", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const route =
+      "subject/high-school/10/mathematics/exponential-logarithm/logarithm-definition";
+    const identity = createLearningGraphIdentityFromRoute({
+      locale: "id",
+      route,
+    });
+
+    if (!identity) {
+      throw new Error(`Expected graph identity for ${route}.`);
+    }
+
+    const catalogAssetId = `${identity.assetId}:catalog`;
+    const catalogGraph = {
+      ...identity,
+      assetId: catalogAssetId,
+    };
+
+    await t.mutation(async (ctx) => {
+      await ctx.db.insert("contentRoutes", {
+        ...catalogGraph,
+        authors: [],
+        contentHash: "hash-logarithm",
+        content_id: catalogAssetId,
+        kind: "subject-section",
+        locale: "id",
+        markdown: true,
+        route,
+        section: "subject",
+        syncedAt: 1,
+        title: "Definisi Logaritma",
+      });
+      await ctx.db.insert("contentSearch", {
+        ...catalogGraph,
+        contentHash: "hash-logarithm",
+        content_id: catalogAssetId,
+        description: "Memahami bentuk dasar logaritma.",
+        locale: "id",
+        markdown_url: `https://nakafa.com/id/${route}.md`,
+        route,
+        section: "subject",
+        syncedAt: 1,
+        text: "Definisi Logaritma menjelaskan pangkat yang dibutuhkan.",
+        title: "Definisi Logaritma",
+        url: `https://nakafa.com/id/${route}`,
+      });
+    });
+
+    const documents = await t.query(
+      async (ctx) =>
+        await readContentSearchDocuments(
+          ctx,
+          {
+            limit: 1,
+            locale: "id",
+            offset: 0,
+            queries: [route],
+            section: "subject",
+          },
+          [route],
+          0
+        )
+    );
+
+    expect(documents.map((document) => document.content_id)).toEqual([
+      catalogAssetId,
+    ]);
   });
 
   it("prioritizes exercise context over generic exercise titles", async () => {

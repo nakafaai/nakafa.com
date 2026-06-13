@@ -352,6 +352,7 @@ describe("contentSync/mutations/articles", () => {
 
   it("deletes stale articles and skips IDs that already disappeared", async () => {
     const t = convexTest(schema, convexModules);
+    const detachedContentId = `${ARTICLE_CONTENT_ID}:catalog`;
 
     await t.mutation(async (ctx) => {
       await ctx.db.insert("authors", { name: "Ada", username: "ada" });
@@ -382,6 +383,31 @@ describe("contentSync/mutations/articles", () => {
         throw new Error("Expected synced article before stale delete.");
       }
 
+      const search = await ctx.db
+        .query("contentSearch")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", ARTICLE_CONTENT_ID)
+        )
+        .unique();
+      const route = await ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", ARTICLE_CONTENT_ID)
+        )
+        .unique();
+
+      if (!(search && route)) {
+        throw new Error("Expected synced article projections.");
+      }
+
+      await ctx.db.patch("contentSearch", search._id, {
+        assetId: detachedContentId,
+        content_id: detachedContentId,
+      });
+      await ctx.db.patch("contentRoutes", route._id, {
+        assetId: detachedContentId,
+        content_id: detachedContentId,
+      });
       await ctx.db.delete("articleContents", missingId);
 
       return { articleId: article._id, missingId };
@@ -406,13 +432,13 @@ describe("contentSync/mutations/articles", () => {
       const search = await ctx.db
         .query("contentSearch")
         .withIndex("by_content_id", (q) =>
-          q.eq("content_id", ARTICLE_CONTENT_ID)
+          q.eq("content_id", detachedContentId)
         )
         .unique();
       const route = await ctx.db
         .query("contentRoutes")
         .withIndex("by_content_id", (q) =>
-          q.eq("content_id", ARTICLE_CONTENT_ID)
+          q.eq("content_id", detachedContentId)
         )
         .unique();
       const audioSource = await ctx.db
