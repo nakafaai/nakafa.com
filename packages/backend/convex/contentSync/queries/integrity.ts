@@ -7,11 +7,14 @@ import {
   type NakafaSection,
   nakafaSectionValidator,
 } from "@repo/backend/convex/lib/validators/contents";
+import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
 import {
   paginationOptsValidator,
   paginationResultValidator,
 } from "convex/server";
+import type { Infer } from "convex/values";
 import { v } from "convex/values";
+import { Schema } from "effect";
 
 const staleContentItemValidator = v.object({
   id: v.id("articleContents"),
@@ -54,18 +57,23 @@ const graphIdentityTargetValidator = v.union(
 
 const graphIdentityIssueValidator = v.object({
   assetId: v.optional(v.string()),
+  content_ref: v.optional(v.string()),
   content_id: v.optional(v.string()),
   kind: v.optional(v.string()),
   route: v.optional(v.string()),
   section: v.optional(nakafaSectionValidator),
+  status: v.optional(v.string()),
 });
 
 const graphIdentityIntegrityPageValidator = v.object({
   checkedRefs: v.number(),
+  checkedRefInputs: v.number(),
   continueCursor: v.string(),
+  firstInvalidRefInput: v.union(graphIdentityIssueValidator, v.null()),
   firstMissingGraph: v.union(graphIdentityIssueValidator, v.null()),
   firstMismatchedContentId: v.union(graphIdentityIssueValidator, v.null()),
   firstRouteShapedContentId: v.union(graphIdentityIssueValidator, v.null()),
+  invalidRefInputs: v.number(),
   isDone: v.boolean(),
   missingGraphRows: v.number(),
   mismatchedContentIds: v.number(),
@@ -93,23 +101,19 @@ interface GraphIdentityRef extends GraphIdentityFields {
   section?: NakafaSection;
 }
 
-interface GraphIdentitySummary {
-  checkedRefs: number;
-  firstMismatchedContentId: GraphIdentityIssue | null;
-  firstMissingGraph: GraphIdentityIssue | null;
-  firstRouteShapedContentId: GraphIdentityIssue | null;
-  mismatchedContentIds: number;
-  missingGraphRows: number;
-  routeShapedContentIds: number;
-}
-
-interface GraphIdentityIssue {
-  assetId?: string;
-  content_id?: string;
-  kind?: string;
-  route?: string;
-  section?: NakafaSection;
-}
+type GraphIdentityIssue = Infer<typeof graphIdentityIssueValidator>;
+type GraphIdentityIntegrityPage = Infer<
+  typeof graphIdentityIntegrityPageValidator
+>;
+type GraphIdentitySummary = Omit<
+  GraphIdentityIntegrityPage,
+  "continueCursor" | "isDone" | "scannedRows"
+>;
+type NakafaDataPart = NonNullable<Doc<"parts">["dataNakafaData"]>;
+type NakafaContentRefInputPart = Extract<
+  NakafaDataPart,
+  { input: { content_ref: string } }
+>;
 
 /** Maps a subject section row into the optional diagnostic integrity shape. */
 function getSubjectSectionIntegrityItem(
@@ -129,10 +133,13 @@ function getSubjectSectionIntegrityItem(
 
 function createGraphIdentitySummary(): GraphIdentitySummary {
   return {
+    checkedRefInputs: 0,
     checkedRefs: 0,
+    firstInvalidRefInput: null,
     firstMissingGraph: null,
     firstMismatchedContentId: null,
     firstRouteShapedContentId: null,
+    invalidRefInputs: 0,
     missingGraphRows: 0,
     mismatchedContentIds: 0,
     routeShapedContentIds: 0,
@@ -213,25 +220,59 @@ function checkGraphIdentityRef(
   }
 }
 
+function checkNakafaContentRefInput(
+  summary: GraphIdentitySummary,
+  data: NakafaContentRefInputPart
+) {
+  const contentRef = data.input.content_ref;
+
+  summary.checkedRefInputs += 1;
+
+  if (Schema.is(NakafaAgentContentRefInputSchema)(contentRef)) {
+    return;
+  }
+
+  summary.invalidRefInputs += 1;
+  summary.firstInvalidRefInput ??= {
+    content_ref: contentRef,
+    kind: data.kind,
+    status: data.status,
+  };
+}
+
 function checkNakafaDataPart(
   summary: GraphIdentitySummary,
   part: Doc<"parts">
 ) {
   const data = part.dataNakafaData;
 
-  if (data?.status !== "done") {
+  if (!data) {
     return;
   }
 
   switch (data.kind) {
     case "search":
+      if (data.status !== "done") {
+        return;
+      }
       for (const item of data.result.items) {
         checkGraphIdentityRef(summary, item, data.kind);
       }
       return;
     case "content":
     case "exercise":
+      checkNakafaContentRefInput(summary, data);
+
+      if (data.status !== "done") {
+        return;
+      }
+
+      checkGraphIdentityRef(summary, data.result, data.kind);
+      return;
     case "quran":
+      if (data.status !== "done") {
+        return;
+      }
       checkGraphIdentityRef(summary, data.result, data.kind);
       return;
     case "taxonomy":

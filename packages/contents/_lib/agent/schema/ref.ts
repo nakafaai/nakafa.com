@@ -3,13 +3,26 @@ import { LocaleSchema } from "@repo/contents/_types/content";
 import { Schema } from "effect";
 
 const MARKDOWN_EXTENSION = ".md";
-const NAKAFA_CONTENT_URL_HOSTNAMES = ["nakafa.com", "www.nakafa.com"] as const;
+const ABSOLUTE_URL_PATTERN =
+  /^[a-z][a-z\d+.-]*:\/\/[^\s/?#]+(?:[/?#][^\s]*)?$/i;
+const NAKAFA_CONTENT_URL_PATTERN =
+  /^https:\/\/(?:www\.)?nakafa\.com(\/[^\s?#]*)?(?:[?#][^\s]*)?$/;
 
 const UrlStringSchema = Schema.String.pipe(
-  Schema.filter((value) => URL.canParse(value), {
+  Schema.filter((value) => ABSOLUTE_URL_PATTERN.test(value), {
     message: () => "Expected a valid URL.",
   })
 );
+
+function getNakafaContentUrlPathname(value: string) {
+  const match = NAKAFA_CONTENT_URL_PATTERN.exec(value);
+
+  if (!match) {
+    return null;
+  }
+
+  return match[1] ?? "/";
+}
 
 /**
  * Checks whether a string is a safe locale-free content route.
@@ -53,12 +66,7 @@ function isSafeGraphIdSegment(segment: string) {
  * Checks whether a URL points at Nakafa's public content origin.
  */
 function isNakafaContentUrl(value: string) {
-  const url = new URL(value);
-
-  return (
-    url.protocol === "https:" &&
-    NAKAFA_CONTENT_URL_HOSTNAMES.some((hostname) => hostname === url.hostname)
-  );
+  return getNakafaContentUrlPathname(value) !== null;
 }
 
 /**
@@ -116,9 +124,15 @@ export const NakafaAgentContentUrlSchema = UrlStringSchema.pipe(
 /** Runtime schema for canonical public Nakafa markdown URLs. */
 export const NakafaAgentMarkdownUrlSchema = UrlStringSchema.pipe(
   Schema.filter(
-    (value) =>
-      isNakafaContentUrl(value) &&
-      new URL(value).pathname.endsWith(MARKDOWN_EXTENSION),
+    (value) => {
+      const pathname = getNakafaContentUrlPathname(value);
+
+      if (!pathname) {
+        return false;
+      }
+
+      return pathname.endsWith(MARKDOWN_EXTENSION);
+    },
     {
       message: () => "Expected a canonical Nakafa markdown URL.",
     }

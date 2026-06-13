@@ -87,6 +87,12 @@ describe("NakafaAgentContentUrlSchema", () => {
         "https://www.nakafa.com/en/quran/1"
       )
     ).toBe("https://www.nakafa.com/en/quran/1");
+
+    expect(
+      Schema.decodeUnknownSync(NakafaAgentContentUrlSchema)(
+        "https://nakafa.com"
+      )
+    ).toBe("https://nakafa.com");
   });
 
   it("rejects non-canonical content URLs", () => {
@@ -117,6 +123,12 @@ describe("NakafaAgentMarkdownUrlSchema", () => {
     expect(() =>
       Schema.decodeUnknownSync(NakafaAgentMarkdownUrlSchema)(
         "https://nakafa.com/en/quran/1"
+      )
+    ).toThrow("Expected a canonical Nakafa markdown URL.");
+
+    expect(() =>
+      Schema.decodeUnknownSync(NakafaAgentMarkdownUrlSchema)(
+        "https://example.com/en/quran/1.md"
       )
     ).toThrow("Expected a canonical Nakafa markdown URL.");
   });

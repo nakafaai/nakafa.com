@@ -120,6 +120,7 @@ describe("contentSync/queries/integrity", () => {
     const result = await getGraphIntegrity(t, "parts");
 
     expect(result).toMatchObject({
+      checkedRefInputs: 1,
       checkedRefs: 1,
       firstMismatchedContentId: {
         assetId: graph.assetId,
@@ -128,10 +129,69 @@ describe("contentSync/queries/integrity", () => {
         route: ARTICLE_ROUTE,
         section: "articles",
       },
+      invalidRefInputs: 0,
       missingGraphRows: 0,
       mismatchedContentIds: 1,
       routeShapedContentIds: 0,
       scannedRows: 1,
+    });
+  });
+
+  it("reports route-shaped Nakafa input refs across loading and done parts", async () => {
+    const t = convexTest(schema, convexModules);
+    const graph = articleGraphWithContentId(articleGraph().assetId);
+
+    await t.mutation(async (ctx) => {
+      const messageId = await insertAssistantMessage(ctx);
+      await ctx.db.insert("parts", {
+        dataNakafaData: {
+          input: { content_ref: `id/${ARTICLE_ROUTE}` },
+          kind: "content",
+          status: "loading",
+        },
+        dataNakafaId: "preview-loading",
+        messageId,
+        order: 0,
+        type: "data-nakafa",
+      });
+      await ctx.db.insert("parts", {
+        dataNakafaData: {
+          input: {
+            content_ref: `id/${ARTICLE_ROUTE}`,
+            exercise_number: 1,
+          },
+          kind: "exercise",
+          result: {
+            ...contentSearchRef(graph),
+            count: 1,
+            exercise_number: 1,
+            numbers: [1],
+            title: "Preview exercise",
+          },
+          status: "done",
+        },
+        dataNakafaId: "preview-done",
+        messageId,
+        order: 1,
+        type: "data-nakafa",
+      });
+    });
+
+    const result = await getGraphIntegrity(t, "parts");
+
+    expect(result).toMatchObject({
+      checkedRefInputs: 2,
+      checkedRefs: 1,
+      firstInvalidRefInput: {
+        content_ref: `id/${ARTICLE_ROUTE}`,
+        kind: "content",
+        status: "loading",
+      },
+      invalidRefInputs: 2,
+      missingGraphRows: 0,
+      mismatchedContentIds: 0,
+      routeShapedContentIds: 0,
+      scannedRows: 2,
     });
   });
 });

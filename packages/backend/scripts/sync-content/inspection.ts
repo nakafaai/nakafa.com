@@ -61,31 +61,13 @@ interface PaginationArgs {
   numItems: number;
 }
 
-interface GraphIdentityIntegrityPage {
-  checkedRefs: number;
-  continueCursor: string;
-  firstMismatchedContentId: GraphIdentityIssue | null;
-  firstMissingGraph: GraphIdentityIssue | null;
-  firstRouteShapedContentId: GraphIdentityIssue | null;
-  isDone: boolean;
-  mismatchedContentIds: number;
-  missingGraphRows: number;
-  routeShapedContentIds: number;
-  scannedRows: number;
-}
-
-interface GraphIdentityIssue {
-  assetId?: string;
-  content_id?: string;
-  kind?: string;
-  route?: string;
-  section?: string;
-}
-
 type GraphIdentityTarget = (typeof GRAPH_IDENTITY_TARGETS)[number];
-type GraphIdentityIntegrityTotal = Omit<
-  GraphIdentityIntegrityPage,
-  "continueCursor" | "isDone"
+type Mutable<T> = { -readonly [K in keyof T]: T[K] };
+type GraphIdentityIntegrityPage = Schema.Schema.Type<
+  typeof GraphIdentityIntegrityPageSchema
+>;
+type GraphIdentityIntegrityTotal = Mutable<
+  Omit<GraphIdentityIntegrityPage, "continueCursor" | "isDone">
 >;
 
 /** Builds typed stale-content query args for one content table. */
@@ -142,9 +124,12 @@ function getGraphIdentityPageSize(target: GraphIdentityTarget) {
 
 const emptyGraphIdentityIntegrity = (): GraphIdentityIntegrityTotal => ({
   checkedRefs: 0,
+  checkedRefInputs: 0,
+  firstInvalidRefInput: null,
   firstMissingGraph: null,
   firstMismatchedContentId: null,
   firstRouteShapedContentId: null,
+  invalidRefInputs: 0,
   missingGraphRows: 0,
   mismatchedContentIds: 0,
   routeShapedContentIds: 0,
@@ -156,10 +141,13 @@ function addGraphIdentityPage(
   page: GraphIdentityIntegrityTotal
 ) {
   total.checkedRefs += page.checkedRefs;
+  total.checkedRefInputs += page.checkedRefInputs;
   total.missingGraphRows += page.missingGraphRows;
   total.mismatchedContentIds += page.mismatchedContentIds;
+  total.invalidRefInputs += page.invalidRefInputs;
   total.routeShapedContentIds += page.routeShapedContentIds;
   total.scannedRows += page.scannedRows;
+  total.firstInvalidRefInput ??= page.firstInvalidRefInput;
   total.firstMissingGraph ??= page.firstMissingGraph;
   total.firstMismatchedContentId ??= page.firstMismatchedContentId;
   total.firstRouteShapedContentId ??= page.firstRouteShapedContentId;

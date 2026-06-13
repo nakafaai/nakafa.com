@@ -381,7 +381,7 @@ export const verify = Effect.fn("sync.verify")(function* (
 
   const graphIdentity = graphIdentityResult.right;
   log(
-    `Checked ${graphIdentity.checkedRefs} graph refs across ${graphIdentity.scannedRows} persisted rows`
+    `Checked ${graphIdentity.checkedRefs} graph refs and ${graphIdentity.checkedRefInputs} Nakafa content_ref inputs across ${graphIdentity.scannedRows} persisted rows`
   );
 
   if (graphIdentity.missingGraphRows === 0) {
@@ -407,6 +407,22 @@ export const verify = Effect.fn("sync.verify")(function* (
     if (graphIdentity.firstRouteShapedContentId) {
       log(
         `  First route-shaped content_id: ${JSON.stringify(graphIdentity.firstRouteShapedContentId)}`
+      );
+    }
+    allMatch = false;
+  }
+
+  if (graphIdentity.invalidRefInputs === 0) {
+    logSuccess(
+      "All persisted Nakafa content_ref inputs use graph IDs, resource URIs, or canonical URLs"
+    );
+  } else {
+    logError(
+      `${graphIdentity.invalidRefInputs} persisted Nakafa content_ref inputs are invalid`
+    );
+    if (graphIdentity.firstInvalidRefInput) {
+      log(
+        `  First invalid content_ref input: ${JSON.stringify(graphIdentity.firstInvalidRefInput)}`
       );
     }
     allMatch = false;

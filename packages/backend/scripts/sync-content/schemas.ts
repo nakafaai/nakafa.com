@@ -425,18 +425,23 @@ export const DataIntegritySchema = Schema.Struct({
 
 const GraphIdentityIssueSchema = Schema.Struct({
   assetId: Schema.optional(Schema.String),
+  content_ref: Schema.optional(Schema.String),
   content_id: Schema.optional(Schema.String),
   kind: Schema.optional(Schema.String),
   route: Schema.optional(Schema.String),
   section: Schema.optional(SyncSectionSchema),
+  status: Schema.optional(Schema.String),
 });
 
 export const GraphIdentityIntegrityPageSchema = Schema.Struct({
   checkedRefs: Schema.Number,
+  checkedRefInputs: Schema.Number,
   continueCursor: Schema.String,
+  firstInvalidRefInput: Schema.NullOr(GraphIdentityIssueSchema),
   firstMissingGraph: Schema.NullOr(GraphIdentityIssueSchema),
   firstMismatchedContentId: Schema.NullOr(GraphIdentityIssueSchema),
   firstRouteShapedContentId: Schema.NullOr(GraphIdentityIssueSchema),
+  invalidRefInputs: Schema.Number,
   isDone: Schema.Boolean,
   missingGraphRows: Schema.Number,
   mismatchedContentIds: Schema.Number,
@@ -446,9 +451,12 @@ export const GraphIdentityIntegrityPageSchema = Schema.Struct({
 
 export const GraphIdentityIntegritySchema = Schema.Struct({
   checkedRefs: Schema.Number,
+  checkedRefInputs: Schema.Number,
+  firstInvalidRefInput: Schema.NullOr(GraphIdentityIssueSchema),
   firstMissingGraph: Schema.NullOr(GraphIdentityIssueSchema),
   firstMismatchedContentId: Schema.NullOr(GraphIdentityIssueSchema),
   firstRouteShapedContentId: Schema.NullOr(GraphIdentityIssueSchema),
+  invalidRefInputs: Schema.Number,
   missingGraphRows: Schema.Number,
   mismatchedContentIds: Schema.Number,
   routeShapedContentIds: Schema.Number,

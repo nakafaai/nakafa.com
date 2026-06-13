@@ -129,6 +129,7 @@ import type * as contents_analytics_spec from "../contents/analytics/spec.js";
 import type * as contents_audioQueue_impl from "../contents/audioQueue/impl.js";
 import type * as contents_audioQueue_spec from "../contents/audioQueue/spec.js";
 import type * as contents_constants from "../contents/constants.js";
+import type * as contents_graph from "../contents/graph.js";
 import type * as contents_helpers_partitions from "../contents/helpers/partitions.js";
 import type * as contents_helpers_popularity from "../contents/helpers/popularity.js";
 import type * as contents_helpers_routes_write from "../contents/helpers/routes/write.js";
@@ -486,6 +487,7 @@ declare const fullApi: ApiFromModules<{
   "contents/audioQueue/impl": typeof contents_audioQueue_impl;
   "contents/audioQueue/spec": typeof contents_audioQueue_spec;
   "contents/constants": typeof contents_constants;
+  "contents/graph": typeof contents_graph;
   "contents/helpers/partitions": typeof contents_helpers_partitions;
   "contents/helpers/popularity": typeof contents_helpers_popularity;
   "contents/helpers/routes/write": typeof contents_helpers_routes_write;
