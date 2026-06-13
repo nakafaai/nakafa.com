@@ -79,6 +79,18 @@ export function createLearningGraphIdentityFromRoute(
   });
 }
 
+/** Returns the stable lens hierarchy used by graph identity generation. */
+export function getLearningGraphLensSegments(
+  source: LearningGraphSource
+): readonly string[] {
+  const route = normalizeGraphRoute(source.route);
+  const parts = route.split("/");
+
+  assertRouteShape(source.kind, route, parts);
+
+  return getLensSegments(source.kind, parts);
+}
+
 /** Normalizes one public route before graph identity derivation. */
 export function normalizeGraphRoute(route: string) {
   return cleanSlug(route).split("/").filter(Boolean).join("/");
