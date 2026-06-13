@@ -1,6 +1,7 @@
 import { api, internal } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { CONTENT_ROUTE_ARTIFACT_PAGE_SIZE } from "@repo/backend/convex/contents/constants";
+import { syncContentRoute } from "@repo/backend/convex/contents/helpers/routes/write";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
@@ -10,6 +11,57 @@ import { describe, expect, it } from "vitest";
 const NOW = Date.parse("2026-01-02T00:00:00.000Z");
 
 describe("contentSync/mutations/routes", () => {
+  it("updates a detached route-indexed row instead of inserting a duplicate", async () => {
+    const t = convexTest(schema, convexModules);
+    const route = "articles/politics/detached";
+    const source = contentRoute(route);
+
+    await t.mutation(async (ctx) => {
+      await ctx.db.insert("contentRoutes", {
+        ...detachedContentRoute(route),
+        countedAt: NOW,
+      });
+      await ctx.db.insert("contentRouteCounts", {
+        count: 1,
+        locale: "id",
+        section: "articles",
+        syncedAt: NOW,
+      });
+    });
+
+    const result = await t.mutation(
+      async (ctx) => await syncContentRoute(ctx, source)
+    );
+    const rows = await t.query(
+      async (ctx) =>
+        await ctx.db
+          .query("contentRoutes")
+          .withIndex("by_locale_and_route", (q) =>
+            q.eq("locale", "id").eq("route", route)
+          )
+          .collect()
+    );
+    const counts = await t.query(
+      api.contents.queries.runtime.listContentRouteCounts,
+      { locale: "id" }
+    );
+
+    expect(result).toBe("updated");
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      assetId: source.assetId,
+      content_id: source.assetId,
+      route,
+    });
+    expect(counts).toEqual([
+      expect.objectContaining({
+        count: 1,
+        locale: "id",
+        section: "articles",
+      }),
+    ]);
+  });
+
   it("creates, updates, and preserves materialized route count rows", async () => {
     const t = convexTest(schema, convexModules);
     const firstRoute = "articles/politics/first";
@@ -193,6 +245,19 @@ function contentRoute(route: string) {
     section: "articles" as const,
     syncedAt: NOW,
     title: route,
+  };
+}
+
+/** Builds an already-counted route row with catalog-owned graph identity. */
+function detachedContentRoute(route: string) {
+  return {
+    ...contentRoute(route),
+    alignmentId: `alignment:detached:${route}`,
+    assetId: `asset:detached:${route}`,
+    conceptId: `concept:detached:${route}`,
+    content_id: `asset:detached:${route}`,
+    learningObjectId: `lo:detached:${route}`,
+    lensId: `lens:detached:${route}`,
   };
 }
 

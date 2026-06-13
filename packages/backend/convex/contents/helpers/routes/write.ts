@@ -6,6 +6,9 @@ import type {
   NakafaSection,
 } from "@repo/backend/convex/lib/validators/contents";
 import type { LearningGraphIdentity } from "@repo/contents/_types/learning-graph";
+import { ConvexError } from "convex/values";
+
+const duplicateRouteRepairLimit = 6;
 
 interface ContentRouteSource extends LearningGraphIdentity {
   authors?: { name: string }[];
@@ -57,26 +60,37 @@ export async function syncContentRoute(
       q.eq("content_id", nextValues.content_id)
     )
     .unique();
+  const routeRows = await ctx.db
+    .query("contentRoutes")
+    .withIndex("by_locale_and_route", (q) =>
+      q.eq("locale", nextValues.locale).eq("route", nextValues.route)
+    )
+    .take(duplicateRouteRepairLimit);
+  const routeExisting = existing ?? routeRows[0] ?? null;
+  const deletedDuplicates = await deleteDuplicateContentRoutes(ctx, {
+    primary: routeExisting,
+    rows: routeRows,
+  });
 
-  if (isSameContentRoute(existing, nextValues)) {
-    if (existing && existing.countedAt === undefined) {
-      await incrementContentRouteCount(ctx, existing, source.syncedAt);
-      await ctx.db.patch("contentRoutes", existing._id, {
+  if (isSameContentRoute(routeExisting, nextValues)) {
+    if (routeExisting && routeExisting.countedAt === undefined) {
+      await incrementContentRouteCount(ctx, routeExisting, source.syncedAt);
+      await ctx.db.patch("contentRoutes", routeExisting._id, {
         countedAt: source.syncedAt,
       });
     }
 
-    return "unchanged";
+    return deletedDuplicates > 0 ? "updated" : "unchanged";
   }
 
-  if (existing) {
-    const countedAt = existing.countedAt ?? source.syncedAt;
+  if (routeExisting) {
+    const countedAt = routeExisting.countedAt ?? source.syncedAt;
 
-    if (existing.countedAt === undefined) {
-      await incrementContentRouteCount(ctx, existing, source.syncedAt);
+    if (routeExisting.countedAt === undefined) {
+      await incrementContentRouteCount(ctx, routeExisting, source.syncedAt);
     }
 
-    await ctx.db.patch("contentRoutes", existing._id, {
+    await ctx.db.patch("contentRoutes", routeExisting._id, {
       ...nextValues,
       countedAt,
     });
@@ -134,6 +148,39 @@ async function decrementContentRouteCount(
     section: route.section,
     syncedAt: route.syncedAt,
   });
+}
+
+/** Removes duplicate route projections before one route is inserted or patched. */
+async function deleteDuplicateContentRoutes(
+  ctx: MutationCtx,
+  source: {
+    primary: Doc<"contentRoutes"> | null;
+    rows: Doc<"contentRoutes">[];
+  }
+) {
+  if (source.rows.length >= duplicateRouteRepairLimit) {
+    throw new ConvexError({
+      code: "CONTENT_ROUTE_DUPLICATE_LIMIT_EXCEEDED",
+      message: "Content route has too many duplicate route projections.",
+    });
+  }
+
+  let deleted = 0;
+
+  for (const row of source.rows) {
+    if (row._id === source.primary?._id) {
+      continue;
+    }
+
+    if (row.countedAt !== undefined) {
+      await decrementContentRouteCount(ctx, row);
+    }
+
+    await ctx.db.delete(row._id);
+    deleted += 1;
+  }
+
+  return deleted;
 }
 
 /** Applies one idempotent count delta to the route-count read model. */
