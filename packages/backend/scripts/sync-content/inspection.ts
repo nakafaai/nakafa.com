@@ -34,6 +34,12 @@ const GRAPH_IDENTITY_TARGETS = [
   "contentSearch",
   "contentRoutePages",
   "parts",
+  "contentViews",
+  "contentViewAnalyticsQueue",
+  "articlePopularity",
+  "subjectPopularity",
+  "exercisePopularity",
+  "subjectTrendingBuckets",
 ] as const;
 
 interface PageResult {
@@ -126,10 +132,12 @@ const emptyGraphIdentityIntegrity = (): GraphIdentityIntegrityTotal => ({
   checkedRefs: 0,
   checkedRefInputs: 0,
   firstInvalidRefInput: null,
+  firstLegacyAnalyticsRef: null,
   firstMissingGraph: null,
   firstMismatchedContentId: null,
   firstRouteShapedContentId: null,
   invalidRefInputs: 0,
+  legacyAnalyticsRows: 0,
   missingGraphRows: 0,
   mismatchedContentIds: 0,
   routeShapedContentIds: 0,
@@ -145,9 +153,11 @@ function addGraphIdentityPage(
   total.missingGraphRows += page.missingGraphRows;
   total.mismatchedContentIds += page.mismatchedContentIds;
   total.invalidRefInputs += page.invalidRefInputs;
+  total.legacyAnalyticsRows += page.legacyAnalyticsRows;
   total.routeShapedContentIds += page.routeShapedContentIds;
   total.scannedRows += page.scannedRows;
   total.firstInvalidRefInput ??= page.firstInvalidRefInput;
+  total.firstLegacyAnalyticsRef ??= page.firstLegacyAnalyticsRef;
   total.firstMissingGraph ??= page.firstMissingGraph;
   total.firstMismatchedContentId ??= page.firstMismatchedContentId;
   total.firstRouteShapedContentId ??= page.firstRouteShapedContentId;

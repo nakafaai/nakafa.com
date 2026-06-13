@@ -2,6 +2,7 @@ import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import { internalQuery } from "@repo/backend/convex/_generated/server";
 import { contentAuthorContentIdValidator } from "@repo/backend/convex/authors/schema";
 import {
+  type ContentRef,
   contentTypeValidator,
   localeValidator,
   type NakafaSection,
@@ -14,6 +15,7 @@ import {
 } from "convex/server";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
+import { literals } from "convex-helpers/validators";
 import { Schema } from "effect";
 
 const staleContentItemValidator = v.object({
@@ -48,12 +50,19 @@ const subjectSectionIntegrityItemValidator = v.object({
   topicId: v.optional(v.id("subjectTopics")),
 });
 
-const graphIdentityTargetValidator = v.union(
-  v.literal("contentRoutes"),
-  v.literal("contentSearch"),
-  v.literal("contentRoutePages"),
-  v.literal("parts")
-);
+const graphIdentityTargets = [
+  "contentRoutes",
+  "contentSearch",
+  "contentRoutePages",
+  "parts",
+  "contentViews",
+  "contentViewAnalyticsQueue",
+  "articlePopularity",
+  "subjectPopularity",
+  "exercisePopularity",
+  "subjectTrendingBuckets",
+] as const;
+const graphIdentityTargetValidator = literals(...graphIdentityTargets);
 
 const graphIdentityIssueValidator = v.object({
   assetId: v.optional(v.string()),
@@ -70,10 +79,12 @@ const graphIdentityIntegrityPageValidator = v.object({
   checkedRefInputs: v.number(),
   continueCursor: v.string(),
   firstInvalidRefInput: v.union(graphIdentityIssueValidator, v.null()),
+  firstLegacyAnalyticsRef: v.union(graphIdentityIssueValidator, v.null()),
   firstMissingGraph: v.union(graphIdentityIssueValidator, v.null()),
   firstMismatchedContentId: v.union(graphIdentityIssueValidator, v.null()),
   firstRouteShapedContentId: v.union(graphIdentityIssueValidator, v.null()),
   invalidRefInputs: v.number(),
+  legacyAnalyticsRows: v.number(),
   isDone: v.boolean(),
   missingGraphRows: v.number(),
   mismatchedContentIds: v.number(),
@@ -136,10 +147,12 @@ function createGraphIdentitySummary(): GraphIdentitySummary {
     checkedRefInputs: 0,
     checkedRefs: 0,
     firstInvalidRefInput: null,
+    firstLegacyAnalyticsRef: null,
     firstMissingGraph: null,
     firstMismatchedContentId: null,
     firstRouteShapedContentId: null,
     invalidRefInputs: 0,
+    legacyAnalyticsRows: 0,
     missingGraphRows: 0,
     mismatchedContentIds: 0,
     routeShapedContentIds: 0,
@@ -237,6 +250,56 @@ function checkNakafaContentRefInput(
     content_ref: contentRef,
     kind: data.kind,
     status: data.status,
+  };
+}
+
+function getSectionForContentRefType(type: ContentRef["type"]): NakafaSection {
+  if (type === "article") {
+    return "articles";
+  }
+
+  if (type === "subject") {
+    return "subject";
+  }
+
+  return "exercises";
+}
+
+function checkLegacyAnalyticsContentRef(
+  summary: GraphIdentitySummary,
+  input: {
+    readonly contentRef: ContentRef;
+    readonly kind: string;
+    readonly route?: string;
+  }
+) {
+  summary.legacyAnalyticsRows += 1;
+  const issue: GraphIdentityIssue = {
+    content_id: input.contentRef.id,
+    kind: input.kind,
+    section: getSectionForContentRefType(input.contentRef.type),
+  };
+
+  if (input.route) {
+    issue.route = input.route;
+  }
+
+  summary.firstLegacyAnalyticsRef ??= issue;
+}
+
+function checkLegacyAnalyticsContentId(
+  summary: GraphIdentitySummary,
+  input: {
+    readonly contentId: string;
+    readonly kind: string;
+    readonly section: NakafaSection;
+  }
+) {
+  summary.legacyAnalyticsRows += 1;
+  summary.firstLegacyAnalyticsRef ??= {
+    content_id: input.contentId,
+    kind: input.kind,
+    section: input.section,
   };
 }
 
@@ -456,6 +519,101 @@ export const getGraphIdentityIntegrityPage = internalQuery({
         for (const route of row.routes) {
           checkGraphIdentityRef(summary, route);
         }
+      }
+
+      return getGraphIdentityPageResult(summary, page);
+    }
+
+    if (args.target === "contentViews") {
+      const page = await ctx.db
+        .query("contentViews")
+        .paginate(args.paginationOpts);
+
+      for (const row of page.page) {
+        checkLegacyAnalyticsContentRef(summary, {
+          contentRef: row.contentRef,
+          kind: args.target,
+          route: row.slug,
+        });
+      }
+
+      return getGraphIdentityPageResult(summary, page);
+    }
+
+    if (args.target === "contentViewAnalyticsQueue") {
+      const page = await ctx.db
+        .query("contentViewAnalyticsQueue")
+        .paginate(args.paginationOpts);
+
+      for (const row of page.page) {
+        checkLegacyAnalyticsContentRef(summary, {
+          contentRef: row.contentRef,
+          kind: args.target,
+        });
+      }
+
+      return getGraphIdentityPageResult(summary, page);
+    }
+
+    if (args.target === "articlePopularity") {
+      const page = await ctx.db
+        .query("articlePopularity")
+        .paginate(args.paginationOpts);
+
+      for (const row of page.page) {
+        checkLegacyAnalyticsContentId(summary, {
+          contentId: row.contentId,
+          kind: args.target,
+          section: "articles",
+        });
+      }
+
+      return getGraphIdentityPageResult(summary, page);
+    }
+
+    if (args.target === "subjectPopularity") {
+      const page = await ctx.db
+        .query("subjectPopularity")
+        .paginate(args.paginationOpts);
+
+      for (const row of page.page) {
+        checkLegacyAnalyticsContentId(summary, {
+          contentId: row.contentId,
+          kind: args.target,
+          section: "subject",
+        });
+      }
+
+      return getGraphIdentityPageResult(summary, page);
+    }
+
+    if (args.target === "exercisePopularity") {
+      const page = await ctx.db
+        .query("exercisePopularity")
+        .paginate(args.paginationOpts);
+
+      for (const row of page.page) {
+        checkLegacyAnalyticsContentId(summary, {
+          contentId: row.contentId,
+          kind: args.target,
+          section: "exercises",
+        });
+      }
+
+      return getGraphIdentityPageResult(summary, page);
+    }
+
+    if (args.target === "subjectTrendingBuckets") {
+      const page = await ctx.db
+        .query("subjectTrendingBuckets")
+        .paginate(args.paginationOpts);
+
+      for (const row of page.page) {
+        checkLegacyAnalyticsContentId(summary, {
+          contentId: row.contentId,
+          kind: args.target,
+          section: "subject",
+        });
       }
 
       return getGraphIdentityPageResult(summary, page);
