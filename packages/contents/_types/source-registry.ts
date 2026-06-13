@@ -1,9 +1,10 @@
-import type { Locale } from "@repo/contents/_types/content";
+import { LocaleSchema } from "@repo/contents/_types/content";
 import {
   createLearningGraphIdentity,
   getLearningObjectKindForRoute,
-  type LearningGraphIdentity,
+  LearningGraphIdentitySchema,
   type LearningObjectKind,
+  LearningObjectKindSchema,
   normalizeGraphRoute,
 } from "@repo/contents/_types/learning-graph";
 import { cleanSlug } from "@repo/utilities/helper";
@@ -27,19 +28,35 @@ export type SourceRegistryRoot = Schema.Schema.Type<
   typeof SourceRegistryRootSchema
 >;
 
-export interface SourceRegistryInput {
-  locale: Locale;
-  route: string;
-  sourcePath: string;
-}
+/** Runtime schema for current corpus source records before graph projection. */
+export const SourceRegistryInputSchema = Schema.Struct({
+  locale: LocaleSchema,
+  route: Schema.String,
+  sourcePath: Schema.String,
+});
 
-export interface SourceRegistryRecord extends LearningGraphIdentity {
-  kind: LearningObjectKind;
-  locale: Locale;
-  publicRoute: string;
-  sourcePath: string;
-  sourceRoot: SourceRegistryRoot;
-}
+/** Source registry input derived from the runtime schema. */
+export type SourceRegistryInput = Schema.Schema.Type<
+  typeof SourceRegistryInputSchema
+>;
+
+/** Runtime schema for graph-backed source registry records. */
+export const SourceRegistryRecordSchema = LearningGraphIdentitySchema.pipe(
+  Schema.extend(
+    Schema.Struct({
+      kind: LearningObjectKindSchema,
+      locale: LocaleSchema,
+      publicRoute: Schema.String,
+      sourcePath: Schema.String,
+      sourceRoot: SourceRegistryRootSchema,
+    })
+  )
+);
+
+/** Source registry record derived from the runtime schema. */
+export type SourceRegistryRecord = Schema.Schema.Type<
+  typeof SourceRegistryRecordSchema
+>;
 
 /**
  * Adapts one current corpus route into a graph-backed source registry record.

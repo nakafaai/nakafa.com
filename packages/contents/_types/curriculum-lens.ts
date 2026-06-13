@@ -5,19 +5,38 @@ import {
   type LearningObjectKind,
   normalizeGraphRoute,
 } from "@repo/contents/_types/learning-graph";
+import { Schema } from "effect";
 
-export type CurriculumLensScope =
-  | "article-domain"
-  | "curriculum"
-  | "exam"
-  | "scripture";
+/** Stable product scopes used to classify graph curriculum lenses. */
+export const CURRICULUM_LENS_SCOPE_VALUES = [
+  "article-domain",
+  "curriculum",
+  "exam",
+  "scripture",
+] as const;
 
-export interface CurriculumLensDescriptor {
-  lensId: string;
-  scope: CurriculumLensScope;
-  segments: readonly string[];
-  sourceRoute: string;
-}
+/** Runtime schema for broad graph lens scopes. */
+export const CurriculumLensScopeSchema = Schema.Literal(
+  ...CURRICULUM_LENS_SCOPE_VALUES
+);
+
+/** Curriculum lens scope derived from the runtime schema. */
+export type CurriculumLensScope = Schema.Schema.Type<
+  typeof CurriculumLensScopeSchema
+>;
+
+/** Runtime schema for graph lens descriptors. */
+export const CurriculumLensDescriptorSchema = Schema.Struct({
+  lensId: Schema.String,
+  scope: CurriculumLensScopeSchema,
+  segments: Schema.Array(Schema.String),
+  sourceRoute: Schema.String,
+});
+
+/** Curriculum lens descriptor derived from the runtime schema. */
+export type CurriculumLensDescriptor = Schema.Schema.Type<
+  typeof CurriculumLensDescriptorSchema
+>;
 
 /**
  * Projects a source record into its graph lens.

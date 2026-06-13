@@ -1,4 +1,4 @@
-import type { Locale } from "@repo/contents/_types/content";
+import { LocaleSchema } from "@repo/contents/_types/content";
 import { cleanSlug } from "@repo/utilities/helper";
 import { Schema } from "effect";
 
@@ -23,19 +23,31 @@ export type LearningObjectKind = Schema.Schema.Type<
   typeof LearningObjectKindSchema
 >;
 
-export interface LearningGraphIdentity {
-  alignmentId: string;
-  assetId: string;
-  conceptId: string;
-  learningObjectId: string;
-  lensId: string;
-}
+/** Runtime schema for graph identity persisted as product identity. */
+export const LearningGraphIdentitySchema = Schema.Struct({
+  alignmentId: Schema.String,
+  assetId: Schema.String,
+  conceptId: Schema.String,
+  learningObjectId: Schema.String,
+  lensId: Schema.String,
+});
 
-export interface LearningGraphSource {
-  kind: LearningObjectKind;
-  locale: Locale;
-  route: string;
-}
+/** Graph identity derived from the runtime schema. */
+export type LearningGraphIdentity = Schema.Schema.Type<
+  typeof LearningGraphIdentitySchema
+>;
+
+/** Runtime schema for source records that can be projected into graph identity. */
+export const LearningGraphSourceSchema = Schema.Struct({
+  kind: LearningObjectKindSchema,
+  locale: LocaleSchema,
+  route: Schema.String,
+});
+
+/** Learning graph source derived from the runtime schema. */
+export type LearningGraphSource = Schema.Schema.Type<
+  typeof LearningGraphSourceSchema
+>;
 
 const KIND_ROUTE_LENGTHS = {
   article: [3],
