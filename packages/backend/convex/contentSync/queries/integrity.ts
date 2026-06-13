@@ -60,6 +60,9 @@ const graphIdentityTargets = [
   "subjectPopularity",
   "exercisePopularity",
   "subjectTrendingBuckets",
+  "audioContentSources",
+  "audioGenerationQueue",
+  "contentAudios",
 ] as const;
 const graphIdentityTargetValidator = literals(...graphIdentityTargets);
 
@@ -552,6 +555,42 @@ export const getGraphIdentityIntegrityPage = internalQuery({
           { ...row, section: "subject" },
           args.target
         );
+      }
+
+      return getGraphIdentityPageResult(summary, page);
+    }
+
+    if (args.target === "audioContentSources") {
+      const page = await ctx.db
+        .query("audioContentSources")
+        .paginate(args.paginationOpts);
+
+      for (const row of page.page) {
+        checkGraphIdentityRef(summary, row, args.target);
+      }
+
+      return getGraphIdentityPageResult(summary, page);
+    }
+
+    if (args.target === "audioGenerationQueue") {
+      const page = await ctx.db
+        .query("audioGenerationQueue")
+        .paginate(args.paginationOpts);
+
+      for (const row of page.page) {
+        checkGraphIdentityRef(summary, row, args.target);
+      }
+
+      return getGraphIdentityPageResult(summary, page);
+    }
+
+    if (args.target === "contentAudios") {
+      const page = await ctx.db
+        .query("contentAudios")
+        .paginate(args.paginationOpts);
+
+      for (const row of page.page) {
+        checkGraphIdentityRef(summary, row, args.target);
       }
 
       return getGraphIdentityPageResult(summary, page);

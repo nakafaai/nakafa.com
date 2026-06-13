@@ -1,6 +1,10 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import {
+  audioModelElevenV3,
+  audioStatusPending,
+} from "@repo/backend/convex/lib/validators/audio";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
@@ -9,17 +13,26 @@ import { describe, expect, it } from "vitest";
 
 const NOW = Date.parse("2026-01-02T00:00:00.000Z");
 const ARTICLE_ROUTE = "articles/politics/integrity-article";
-const GRAPH_INTEGRITY_TARGETS = [
-  "contentRoutes",
-  "contentSearch",
-  "contentRoutePages",
-  "parts",
+const GRAPH_ANALYTICS_INTEGRITY_TARGETS = [
   "contentViews",
   "contentViewAnalyticsQueue",
   "articlePopularity",
   "subjectPopularity",
   "exercisePopularity",
   "subjectTrendingBuckets",
+] as const;
+const GRAPH_AUDIO_INTEGRITY_TARGETS = [
+  "audioContentSources",
+  "audioGenerationQueue",
+  "contentAudios",
+] as const;
+const GRAPH_INTEGRITY_TARGETS = [
+  "contentRoutes",
+  "contentSearch",
+  "contentRoutePages",
+  "parts",
+  ...GRAPH_ANALYTICS_INTEGRITY_TARGETS,
+  ...GRAPH_AUDIO_INTEGRITY_TARGETS,
 ] as const;
 
 describe("contentSync/queries/integrity", () => {
@@ -253,8 +266,8 @@ describe("contentSync/queries/integrity", () => {
       });
     });
 
-    for (const target of GRAPH_INTEGRITY_TARGETS.slice(4)) {
-      await expectCleanGraphAnalyticsIntegrity(t, target);
+    for (const target of GRAPH_ANALYTICS_INTEGRITY_TARGETS) {
+      await expectCleanGraphIdentityIntegrity(t, target);
     }
   });
 
@@ -287,14 +300,14 @@ describe("contentSync/queries/integrity", () => {
       });
     });
 
-    await expectMismatchedGraphAnalyticsIntegrity(t, "contentViews", {
+    await expectMismatchedGraphIdentityIntegrity(t, "contentViews", {
       assetId: graph.assetId,
       content_id: graph.content_id,
       kind: "contentViews",
       route: ARTICLE_ROUTE,
       section: "articles",
     });
-    await expectMismatchedGraphAnalyticsIntegrity(
+    await expectMismatchedGraphIdentityIntegrity(
       t,
       "contentViewAnalyticsQueue",
       {
@@ -305,12 +318,43 @@ describe("contentSync/queries/integrity", () => {
         section: "articles",
       }
     );
-    await expectMismatchedGraphAnalyticsIntegrity(t, "articlePopularity", {
+    await expectMismatchedGraphIdentityIntegrity(t, "articlePopularity", {
       assetId: graph.assetId,
       content_id: graph.content_id,
       kind: "articlePopularity",
       section: "articles",
     });
+  });
+
+  it("accepts audio rows that store graph identity", async () => {
+    const t = convexTest(schema, convexModules);
+    const graph = articleGraphWithContentId(articleGraph().assetId);
+
+    await t.mutation(async (ctx) => {
+      await insertAudioRows(ctx, graph);
+    });
+
+    for (const target of GRAPH_AUDIO_INTEGRITY_TARGETS) {
+      await expectCleanGraphIdentityIntegrity(t, target);
+    }
+  });
+
+  it("reports audio rows whose graph content_id differs from assetId", async () => {
+    const t = convexTest(schema, convexModules);
+    const graph = articleGraphWithContentId(`${articleGraph().assetId}:stale`);
+
+    await t.mutation(async (ctx) => {
+      await insertAudioRows(ctx, graph);
+    });
+
+    for (const target of GRAPH_AUDIO_INTEGRITY_TARGETS) {
+      await expectMismatchedGraphIdentityIntegrity(t, target, {
+        assetId: graph.assetId,
+        content_id: graph.content_id,
+        kind: target,
+        route: ARTICLE_ROUTE,
+      });
+    }
   });
 });
 
@@ -333,8 +377,8 @@ function getGraphIntegrity(
   );
 }
 
-/** Asserts one durable analytics table has clean graph refs. */
-async function expectCleanGraphAnalyticsIntegrity(
+/** Asserts one graph-backed table has clean graph refs. */
+async function expectCleanGraphIdentityIntegrity(
   t: ReturnType<typeof convexTest>,
   target: GraphIntegrityTarget
 ) {
@@ -349,8 +393,8 @@ async function expectCleanGraphAnalyticsIntegrity(
   });
 }
 
-/** Asserts one durable analytics table reports mismatched graph identity. */
-async function expectMismatchedGraphAnalyticsIntegrity(
+/** Asserts one graph-backed table reports mismatched graph identity. */
+async function expectMismatchedGraphIdentityIntegrity(
   t: ReturnType<typeof convexTest>,
   target: GraphIntegrityTarget,
   issue: {
@@ -358,7 +402,7 @@ async function expectMismatchedGraphAnalyticsIntegrity(
     readonly content_id: string;
     readonly kind: string;
     readonly route?: string;
-    readonly section: Doc<"contentRoutes">["section"];
+    readonly section?: Doc<"contentRoutes">["section"];
   }
 ) {
   const result = await getGraphIntegrity(t, target);
@@ -370,6 +414,38 @@ async function expectMismatchedGraphAnalyticsIntegrity(
     mismatchedContentIds: 1,
     routeShapedContentIds: 0,
     scannedRows: 1,
+  });
+}
+
+/** Inserts one row in each graph-backed audio table. */
+async function insertAudioRows(
+  ctx: MutationCtx,
+  graph: ReturnType<typeof articleGraphWithContentId>
+) {
+  const identity = audioIdentity(graph);
+
+  await ctx.db.insert("audioContentSources", {
+    ...identity,
+    contentHash: "audio-source-hash",
+    syncedAt: NOW,
+  });
+  await ctx.db.insert("audioGenerationQueue", {
+    ...identity,
+    maxRetries: 3,
+    priorityScore: 10,
+    requestedAt: NOW,
+    retryCount: 0,
+    status: "pending",
+    updatedAt: NOW,
+  });
+  await ctx.db.insert("contentAudios", {
+    ...identity,
+    contentHash: "audio-content-hash",
+    generationAttempts: 0,
+    model: audioModelElevenV3,
+    status: audioStatusPending,
+    updatedAt: NOW,
+    voiceId: "voice-integrity",
   });
 }
 
@@ -416,6 +492,16 @@ function articleGraphWithContentId(contentId: string) {
   return {
     ...articleGraph(),
     content_id: contentId,
+  };
+}
+
+/** Builds graph identity fields for article audio table fixtures. */
+function audioIdentity(graph: ReturnType<typeof articleGraphWithContentId>) {
+  return {
+    ...graph,
+    contentType: "article" as const,
+    locale: "id" as const,
+    route: ARTICLE_ROUTE,
   };
 }
 
