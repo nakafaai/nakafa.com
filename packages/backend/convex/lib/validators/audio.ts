@@ -1,22 +1,9 @@
 import { type Infer, v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
-/**
- * Discriminated union validator for audio content references.
- * Supports articles and subject sections only (exercises excluded).
- */
-export const audioContentRefValidator = v.union(
-  v.object({
-    type: v.literal("article"),
-    id: v.id("articleContents"),
-  }),
-  v.object({
-    type: v.literal("subject"),
-    id: v.id("subjectSections"),
-  })
-);
-
-export type AudioContentRef = Infer<typeof audioContentRefValidator>;
+export const AUDIO_CONTENT_TYPES = ["article", "subject"] as const;
+export const audioContentTypeValidator = literals(...AUDIO_CONTENT_TYPES);
+export type AudioContentType = Infer<typeof audioContentTypeValidator>;
 
 export const audioStatusPending = "pending";
 export const audioStatusGeneratingScript = "generating-script";

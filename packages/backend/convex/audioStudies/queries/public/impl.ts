@@ -30,10 +30,10 @@ export const getAudioPlaybackBySlug = Effect.fn(
     try: () =>
       ctx.db
         .query("audioContentSources")
-        .withIndex("by_contentRefType_and_slug_and_locale", (q) =>
+        .withIndex("by_contentType_and_route_and_locale", (q) =>
           q
-            .eq("contentRef.type", args.contentType)
-            .eq("slug", args.slug)
+            .eq("contentType", args.contentType)
+            .eq("route", args.slug)
             .eq("locale", args.locale)
         )
         .unique(),
@@ -48,11 +48,8 @@ export const getAudioPlaybackBySlug = Effect.fn(
     try: () =>
       ctx.db
         .query("contentAudios")
-        .withIndex("by_contentRefType_and_contentRefId_and_locale", (q) =>
-          q
-            .eq("contentRef.type", source.contentRef.type)
-            .eq("contentRef.id", source.contentRef.id)
-            .eq("locale", args.locale)
+        .withIndex("by_content_id_and_locale", (q) =>
+          q.eq("content_id", source.content_id).eq("locale", args.locale)
         )
         .first(),
     catch: toAudioPlaybackIoError,

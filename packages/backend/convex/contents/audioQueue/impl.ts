@@ -7,10 +7,7 @@ import {
   MIN_VIEW_THRESHOLD,
   RETRY_CONFIG,
 } from "@repo/backend/convex/audioStudies/constants";
-import {
-  getAudioContentSourceByLocale,
-  getAudioContentSourceByRef,
-} from "@repo/backend/convex/audioStudies/helpers/sources";
+import { getAudioContentSourceByLocale } from "@repo/backend/convex/audioStudies/helpers/sources";
 import {
   AudioQueuePopulationError,
   audioQueuePopulationFailedCode,
@@ -104,22 +101,7 @@ export const enqueuePopularAudioContent: (
       break;
     }
 
-    const sourceContent =
-      item.sourceContent ??
-      (yield* Effect.tryPromise({
-        try: () => getAudioContentSourceByRef(ctx, item.ref),
-        catch: toAudioQueuePopulationError,
-      }));
-
-    if (!sourceContent) {
-      yield* Effect.sync(() =>
-        logger.warn("Content slug not found", {
-          contentId: item.ref.id,
-          contentType: item.ref.type,
-        })
-      );
-      continue;
-    }
+    const sourceContent = item.sourceContent;
 
     for (const locale of SUPPORTED_CONTENT_LOCALES) {
       const localizedContent = yield* Effect.tryPromise({
@@ -130,8 +112,8 @@ export const enqueuePopularAudioContent: (
       if (!localizedContent) {
         yield* Effect.sync(() =>
           logger.debug("Locale content not found", {
-            contentId: item.ref.id,
-            contentType: item.ref.type,
+            contentId: sourceContent.content_id,
+            contentType: sourceContent.contentType,
             locale,
           })
         );
@@ -142,10 +124,9 @@ export const enqueuePopularAudioContent: (
         try: () =>
           ctx.db
             .query("audioGenerationQueue")
-            .withIndex("by_contentRefType_and_contentRefId_and_locale", (q) =>
+            .withIndex("by_content_id_and_locale", (q) =>
               q
-                .eq("contentRef.type", localizedContent.ref.type)
-                .eq("contentRef.id", localizedContent.ref.id)
+                .eq("content_id", localizedContent.content_id)
                 .eq("locale", locale)
             )
             .first(),
@@ -156,8 +137,8 @@ export const enqueuePopularAudioContent: (
         if (isActiveAudioQueueStatus(existingQueueItem.status)) {
           yield* Effect.sync(() =>
             logger.debug("Already in queue", {
-              contentId: localizedContent.ref.id,
-              contentType: localizedContent.ref.type,
+              contentId: localizedContent.content_id,
+              contentType: localizedContent.contentType,
               locale,
               status: existingQueueItem.status,
             })
@@ -167,8 +148,8 @@ export const enqueuePopularAudioContent: (
 
         yield* Effect.sync(() =>
           logger.info("Replacing completed queue item", {
-            contentId: localizedContent.ref.id,
-            contentType: localizedContent.ref.type,
+            contentId: localizedContent.content_id,
+            contentType: localizedContent.contentType,
             locale,
           })
         );
@@ -183,10 +164,9 @@ export const enqueuePopularAudioContent: (
         try: () =>
           ctx.db
             .query("contentAudios")
-            .withIndex("by_contentRefType_and_contentRefId_and_locale", (q) =>
+            .withIndex("by_content_id_and_locale", (q) =>
               q
-                .eq("contentRef.type", localizedContent.ref.type)
-                .eq("contentRef.id", localizedContent.ref.id)
+                .eq("content_id", localizedContent.content_id)
                 .eq("locale", locale)
             )
             .first(),
@@ -199,8 +179,8 @@ export const enqueuePopularAudioContent: (
       ) {
         yield* Effect.sync(() =>
           logger.debug("Audio already completed for hash", {
-            contentId: localizedContent.ref.id,
-            contentType: localizedContent.ref.type,
+            contentId: localizedContent.content_id,
+            contentType: localizedContent.contentType,
             locale,
           })
         );
@@ -210,13 +190,19 @@ export const enqueuePopularAudioContent: (
       yield* Effect.tryPromise({
         try: () =>
           ctx.db.insert("audioGenerationQueue", {
-            contentRef: localizedContent.ref,
+            alignmentId: localizedContent.alignmentId,
+            assetId: localizedContent.assetId,
+            conceptId: localizedContent.conceptId,
+            content_id: localizedContent.content_id,
+            contentType: localizedContent.contentType,
+            learningObjectId: localizedContent.learningObjectId,
+            lensId: localizedContent.lensId,
             locale,
             maxRetries: RETRY_CONFIG.maxRetries,
             priorityScore: item.viewCount * 10,
             requestedAt: now,
             retryCount: 0,
-            slug: sourceContent.slug,
+            route: sourceContent.route,
             status: "pending",
             updatedAt: now,
           }),
@@ -225,8 +211,8 @@ export const enqueuePopularAudioContent: (
 
       yield* Effect.sync(() =>
         logger.info("Added to queue", {
-          contentId: localizedContent.ref.id,
-          contentType: localizedContent.ref.type,
+          contentId: localizedContent.content_id,
+          contentType: localizedContent.contentType,
           locale,
           priorityScore: item.viewCount * 10,
         })

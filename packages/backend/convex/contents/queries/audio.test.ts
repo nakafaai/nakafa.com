@@ -7,6 +7,7 @@ import {
 } from "@repo/backend/convex/audioStudies/constants";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import schema from "@repo/backend/convex/schema";
+import { getTestAudioContent } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { convexTest } from "convex-test";
@@ -74,7 +75,7 @@ describe("contents/queries/audio", () => {
     const t = convexTest(schema, convexModules);
 
     await t.mutation(async (ctx) => {
-      const articleId = await ctx.db.insert("articleContents", {
+      await ctx.db.insert("articleContents", {
         locale: "en",
         slug: REAL_DYNASTIC_ARTICLE_SLUG,
         category: "politics",
@@ -89,7 +90,7 @@ describe("contents/queries/audio", () => {
         syncedAt: 1,
       });
 
-      const englishSubjectId = await ctx.db.insert("subjectSections", {
+      await ctx.db.insert("subjectSections", {
         topicId: await ctx.db.insert("subjectTopics", {
           category: "high-school",
           grade: "10",
@@ -119,7 +120,7 @@ describe("contents/queries/audio", () => {
         syncedAt: 1,
       });
 
-      const indonesianSubjectId = await ctx.db.insert("subjectSections", {
+      await ctx.db.insert("subjectSections", {
         topicId: await ctx.db.insert("subjectTopics", {
           category: "high-school",
           grade: "10",
@@ -150,24 +151,27 @@ describe("contents/queries/audio", () => {
       });
 
       await ctx.db.insert("audioContentSources", {
-        contentHash: "source-article-en-hash",
-        contentRef: { type: "article", id: articleId },
-        locale: "en",
-        slug: REAL_DYNASTIC_ARTICLE_SLUG,
+        ...getTestAudioContent({
+          contentHash: "source-article-en-hash",
+          locale: "en",
+          route: REAL_DYNASTIC_ARTICLE_SLUG,
+        }),
         syncedAt: 2,
       });
       await ctx.db.insert("audioContentSources", {
-        contentHash: "source-subject-en-hash",
-        contentRef: { type: "subject", id: englishSubjectId },
-        locale: "en",
-        slug: REAL_VECTOR_SECTION_SLUG,
+        ...getTestAudioContent({
+          contentHash: "source-subject-en-hash",
+          locale: "en",
+          route: REAL_VECTOR_SECTION_SLUG,
+        }),
         syncedAt: 2,
       });
       await ctx.db.insert("audioContentSources", {
-        contentHash: "source-subject-id-hash",
-        contentRef: { type: "subject", id: indonesianSubjectId },
-        locale: "id",
-        slug: REAL_VECTOR_SECTION_SLUG,
+        ...getTestAudioContent({
+          contentHash: "source-subject-id-hash",
+          locale: "id",
+          route: REAL_VECTOR_SECTION_SLUG,
+        }),
         syncedAt: 2,
       });
 
@@ -214,33 +218,33 @@ describe("contents/queries/audio", () => {
 
     expect(result).toEqual([
       {
-        ref: expect.objectContaining({ type: "article" }),
-        sourceContent: {
+        sourceContent: expect.objectContaining({
           contentHash: "source-article-en-hash",
+          content_id: getGraph("en", REAL_DYNASTIC_ARTICLE_SLUG).content_id,
+          contentType: "article",
           locale: "en",
-          ref: expect.objectContaining({ type: "article" }),
-          slug: REAL_DYNASTIC_ARTICLE_SLUG,
-        },
+          route: REAL_DYNASTIC_ARTICLE_SLUG,
+        }),
         viewCount: 80,
       },
       {
-        ref: expect.objectContaining({ type: "subject" }),
-        sourceContent: {
+        sourceContent: expect.objectContaining({
           contentHash: "source-subject-en-hash",
+          content_id: getGraph("en", REAL_VECTOR_SECTION_SLUG).content_id,
+          contentType: "subject",
           locale: "en",
-          ref: expect.objectContaining({ type: "subject" }),
-          slug: REAL_VECTOR_SECTION_SLUG,
-        },
+          route: REAL_VECTOR_SECTION_SLUG,
+        }),
         viewCount: 40,
       },
     ]);
   });
 
-  it("skips popularity rows whose source content no longer exists", async () => {
+  it("skips popularity rows whose route catalog projection is missing", async () => {
     const t = convexTest(schema, convexModules);
 
     await t.mutation(async (ctx) => {
-      const articleId = await ctx.db.insert("articleContents", {
+      await ctx.db.insert("articleContents", {
         locale: "en",
         slug: REAL_DYNASTIC_ARTICLE_SLUG,
         category: "politics",
@@ -261,7 +265,7 @@ describe("contents/queries/audio", () => {
         updatedAt: 1,
         viewCount: 80,
       });
-      const subjectId = await ctx.db.insert("subjectSections", {
+      await ctx.db.insert("subjectSections", {
         topicId: await ctx.db.insert("subjectTopics", {
           category: "high-school",
           grade: "10",
@@ -297,8 +301,6 @@ describe("contents/queries/audio", () => {
         updatedAt: 1,
         viewCount: 40,
       });
-      await ctx.db.delete("articleContents", articleId);
-      await ctx.db.delete("subjectSections", subjectId);
     });
 
     const result = await t.query(
@@ -313,7 +315,7 @@ describe("contents/queries/audio", () => {
     const t = convexTest(schema, convexModules);
 
     await t.mutation(async (ctx) => {
-      const articleId = await ctx.db.insert("articleContents", {
+      await ctx.db.insert("articleContents", {
         locale: "en",
         slug: REAL_DYNASTIC_ARTICLE_SLUG,
         category: "politics",
@@ -329,10 +331,11 @@ describe("contents/queries/audio", () => {
       });
 
       await ctx.db.insert("audioContentSources", {
-        contentHash: "source-article-en-hash",
-        contentRef: { type: "article", id: articleId },
-        locale: "en",
-        slug: REAL_DYNASTIC_ARTICLE_SLUG,
+        ...getTestAudioContent({
+          contentHash: "source-article-en-hash",
+          locale: "en",
+          route: REAL_DYNASTIC_ARTICLE_SLUG,
+        }),
         syncedAt: 2,
       });
       await ctx.db.insert("articlePopularity", {
@@ -360,7 +363,7 @@ describe("contents/queries/audio", () => {
         index++
       ) {
         const slug = `articles/politics/audio-candidate-${index}`;
-        const articleId = await ctx.db.insert("articleContents", {
+        await ctx.db.insert("articleContents", {
           locale: "en",
           slug,
           category: "politics",
@@ -374,10 +377,11 @@ describe("contents/queries/audio", () => {
         });
 
         await ctx.db.insert("audioContentSources", {
-          contentHash: `source-article-${index}-hash`,
-          contentRef: { type: "article", id: articleId },
-          locale: "en",
-          slug,
+          ...getTestAudioContent({
+            contentHash: `source-article-${index}-hash`,
+            locale: "en",
+            route: slug,
+          }),
           syncedAt: 2,
         });
         const graph = await insertContentRoute(ctx, {

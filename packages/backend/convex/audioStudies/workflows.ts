@@ -41,8 +41,8 @@ export const generateAudioForQueueItem = workflow.define({
 
     logger.info("Queue item locked", {
       queueItemId: args.queueItemId,
-      contentType: queueItem.contentRef.type,
-      contentId: queueItem.contentRef.id,
+      contentId: queueItem.content_id,
+      contentType: queueItem.contentType,
       locale: queueItem.locale,
     });
 
@@ -50,7 +50,7 @@ export const generateAudioForQueueItem = workflow.define({
     const contentHash = await step.runQuery(
       internal.audioStudies.queries.internal.getContentHash,
       {
-        contentRef: queueItem.contentRef,
+        content_id: queueItem.content_id,
       }
     );
 
@@ -58,8 +58,8 @@ export const generateAudioForQueueItem = workflow.define({
     if (!contentHash) {
       logger.warn("Content not found for queue item", {
         queueItemId: args.queueItemId,
-        contentType: queueItem.contentRef.type,
-        contentId: queueItem.contentRef.id,
+        contentId: queueItem.content_id,
+        contentType: queueItem.contentType,
       });
       await step.runMutation(
         internal.audioStudies.mutations.queue.markQueueFailed,
@@ -75,8 +75,15 @@ export const generateAudioForQueueItem = workflow.define({
     const audioRecordId = await step.runMutation(
       internal.audioStudies.mutations.contentAudios.createOrGetAudioRecord,
       {
-        contentRef: queueItem.contentRef,
+        alignmentId: queueItem.alignmentId,
+        assetId: queueItem.assetId,
+        conceptId: queueItem.conceptId,
+        content_id: queueItem.content_id,
+        contentType: queueItem.contentType,
         locale: queueItem.locale,
+        learningObjectId: queueItem.learningObjectId,
+        lensId: queueItem.lensId,
+        route: queueItem.route,
         contentHash,
       }
     );

@@ -243,10 +243,12 @@ export const bulkSyncSubjectSections = internalMutation({
 
       if (existingSection) {
         await syncAudioContentSource(ctx, {
+          ...graph,
+          content_id: graph.assetId,
+          contentType: "subject",
           contentHash: section.contentHash,
           locale: section.locale,
-          ref: { id: existingSection._id, type: "subject" },
-          slug: section.slug,
+          route: section.slug,
           syncedAt: now,
         });
       }
@@ -280,7 +282,7 @@ export const bulkSyncSubjectSections = internalMutation({
 
         await runConvexProgram(
           updateContentAudioHash(ctx, {
-            contentRef: { id: existingSection._id, type: "subject" },
+            content_id: graph.assetId,
             newHash: section.contentHash,
           })
         );
@@ -305,10 +307,12 @@ export const bulkSyncSubjectSections = internalMutation({
       });
 
       await syncAudioContentSource(ctx, {
+        ...graph,
+        content_id: graph.assetId,
+        contentType: "subject",
         contentHash: section.contentHash,
         locale: section.locale,
-        ref: { id: sectionId, type: "subject" },
-        slug: section.slug,
+        route: section.slug,
         syncedAt: now,
       });
 

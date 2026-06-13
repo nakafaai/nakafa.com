@@ -4,7 +4,6 @@ import type {
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
 import type { AudioContentLookup } from "@repo/backend/convex/contents/validators";
-import type { AudioContentRef } from "@repo/backend/convex/lib/validators/audio";
 
 type AudioSourceReaderCtx = Pick<QueryCtx, "db">;
 
@@ -12,31 +11,33 @@ function toAudioContentLookup(
   source: Doc<"audioContentSources">
 ): AudioContentLookup {
   return {
+    alignmentId: source.alignmentId,
+    assetId: source.assetId,
+    conceptId: source.conceptId,
     contentHash: source.contentHash,
+    content_id: source.content_id,
+    contentType: source.contentType,
+    learningObjectId: source.learningObjectId,
+    lensId: source.lensId,
     locale: source.locale,
-    ref: source.contentRef,
-    slug: source.slug,
+    route: source.route,
   };
 }
 
-/** Reads compact audio metadata by content reference. */
-export async function getAudioContentSourceByRef(
+/** Reads compact audio metadata by graph content ID. */
+export async function getAudioContentSourceByContentId(
   ctx: AudioSourceReaderCtx,
-  contentRef: AudioContentRef
+  contentId: AudioContentLookup["content_id"]
 ) {
   const source = await ctx.db
     .query("audioContentSources")
-    .withIndex("by_contentRefType_and_contentRefId", (q) =>
-      q
-        .eq("contentRef.type", contentRef.type)
-        .eq("contentRef.id", contentRef.id)
-    )
+    .withIndex("by_content_id", (q) => q.eq("content_id", contentId))
     .unique();
 
   return source ? toAudioContentLookup(source) : null;
 }
 
-/** Reads compact audio metadata for a locale version of the same source slug. */
+/** Reads compact audio metadata for a locale version of the same source route. */
 export async function getAudioContentSourceByLocale(
   ctx: AudioSourceReaderCtx,
   sourceContent: AudioContentLookup,
@@ -48,10 +49,10 @@ export async function getAudioContentSourceByLocale(
 
   const source = await ctx.db
     .query("audioContentSources")
-    .withIndex("by_contentRefType_and_slug_and_locale", (q) =>
+    .withIndex("by_contentType_and_route_and_locale", (q) =>
       q
-        .eq("contentRef.type", sourceContent.ref.type)
-        .eq("slug", sourceContent.slug)
+        .eq("contentType", sourceContent.contentType)
+        .eq("route", sourceContent.route)
         .eq("locale", locale)
     )
     .unique();
@@ -68,15 +69,13 @@ export async function getAudioContentSourceByRoute(
     return null;
   }
 
-  const contentType = route.kind === "article" ? "article" : "subject";
+  if (route.content_id !== route.assetId) {
+    return null;
+  }
+
   const source = await ctx.db
     .query("audioContentSources")
-    .withIndex("by_contentRefType_and_slug_and_locale", (q) =>
-      q
-        .eq("contentRef.type", contentType)
-        .eq("slug", route.route)
-        .eq("locale", route.locale)
-    )
+    .withIndex("by_content_id", (q) => q.eq("content_id", route.content_id))
     .unique();
 
   return source ? toAudioContentLookup(source) : null;
@@ -89,18 +88,20 @@ export async function syncAudioContentSource(
 ) {
   const existing = await ctx.db
     .query("audioContentSources")
-    .withIndex("by_contentRefType_and_contentRefId", (q) =>
-      q
-        .eq("contentRef.type", source.ref.type)
-        .eq("contentRef.id", source.ref.id)
-    )
+    .withIndex("by_content_id", (q) => q.eq("content_id", source.content_id))
     .unique();
 
   const nextValues = {
+    alignmentId: source.alignmentId,
+    assetId: source.assetId,
+    conceptId: source.conceptId,
     contentHash: source.contentHash,
-    contentRef: source.ref,
+    content_id: source.content_id,
+    contentType: source.contentType,
+    learningObjectId: source.learningObjectId,
+    lensId: source.lensId,
     locale: source.locale,
-    slug: source.slug,
+    route: source.route,
     syncedAt: source.syncedAt,
   };
 
@@ -110,9 +111,16 @@ export async function syncAudioContentSource(
   }
 
   if (
+    existing.alignmentId === nextValues.alignmentId &&
+    existing.assetId === nextValues.assetId &&
+    existing.conceptId === nextValues.conceptId &&
     existing.contentHash === nextValues.contentHash &&
+    existing.content_id === nextValues.content_id &&
+    existing.contentType === nextValues.contentType &&
+    existing.learningObjectId === nextValues.learningObjectId &&
+    existing.lensId === nextValues.lensId &&
     existing.locale === nextValues.locale &&
-    existing.slug === nextValues.slug
+    existing.route === nextValues.route
   ) {
     return;
   }
@@ -123,15 +131,11 @@ export async function syncAudioContentSource(
 /** Removes compact audio metadata for deleted source content. */
 export async function deleteAudioContentSource(
   ctx: MutationCtx,
-  contentRef: AudioContentRef
+  contentId: AudioContentLookup["content_id"]
 ) {
   const existing = await ctx.db
     .query("audioContentSources")
-    .withIndex("by_contentRefType_and_contentRefId", (q) =>
-      q
-        .eq("contentRef.type", contentRef.type)
-        .eq("contentRef.id", contentRef.id)
-    )
+    .withIndex("by_content_id", (q) => q.eq("content_id", contentId))
     .unique();
 
   if (!existing) {

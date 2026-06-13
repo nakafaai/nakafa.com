@@ -1,6 +1,12 @@
 import { internal } from "@repo/backend/convex/_generated/api";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { syncAudioContentSource } from "@repo/backend/convex/audioStudies/helpers/sources";
 import schema from "@repo/backend/convex/schema";
+import {
+  getTestAudioContent,
+  getTestAudioIdentity,
+} from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
@@ -30,50 +36,77 @@ const REAL_VECTOR_ADDITION_EN = {
   topicTitle: "Vector and Operations",
 };
 
+const subjectAudioIdentity = getTestAudioIdentity({
+  locale: REAL_VECTOR_ADDITION_EN.locale,
+  route: REAL_VECTOR_SECTION_SLUG,
+});
+const subjectAudioSource = getTestAudioContent({
+  contentHash: REAL_VECTOR_ADDITION_EN.hash,
+  locale: REAL_VECTOR_ADDITION_EN.locale,
+  route: REAL_VECTOR_SECTION_SLUG,
+});
+
+async function insertVectorSubject(ctx: MutationCtx) {
+  return await ctx.db.insert("subjectSections", {
+    topicId: await ctx.db.insert("subjectTopics", {
+      category: "high-school",
+      grade: "10",
+      material: "mathematics",
+      order: 0,
+      topic: REAL_VECTOR_ADDITION_EN.topic,
+      title: REAL_VECTOR_ADDITION_EN.topicTitle,
+      locale: REAL_VECTOR_ADDITION_EN.locale,
+      slug: REAL_VECTOR_TOPIC_SLUG,
+      sectionCount: REAL_VECTOR_TOPIC_SECTION_COUNT,
+      syncedAt: 1,
+    }),
+    locale: REAL_VECTOR_ADDITION_EN.locale,
+    slug: REAL_VECTOR_SECTION_SLUG,
+    category: "high-school",
+    grade: "10",
+    material: "mathematics",
+    order: 0,
+    topic: REAL_VECTOR_ADDITION_EN.topic,
+    section: REAL_VECTOR_ADDITION_EN.section,
+    title: REAL_VECTOR_ADDITION_EN.title,
+    description: REAL_VECTOR_ADDITION_EN.description,
+    date: REAL_VECTOR_PUBLISHED_AT,
+    subject: REAL_VECTOR_ADDITION_EN.subject,
+    body: REAL_VECTOR_ADDITION_EN.body,
+    contentHash: REAL_VECTOR_ADDITION_EN.hash,
+    syncedAt: 1,
+  });
+}
+
+async function insertSubjectAudio(
+  ctx: MutationCtx,
+  input: {
+    generationAttempts?: Doc<"contentAudios">["generationAttempts"];
+    script?: Doc<"contentAudios">["script"];
+    status?: Doc<"contentAudios">["status"];
+    voiceSettings?: Doc<"contentAudios">["voiceSettings"];
+  } = {}
+) {
+  return await ctx.db.insert("contentAudios", {
+    ...subjectAudioIdentity,
+    contentHash: REAL_VECTOR_ADDITION_EN.hash,
+    generationAttempts: input.generationAttempts ?? 0,
+    model: "eleven_v3",
+    ...(input.script ? { script: input.script } : {}),
+    status: input.status ?? "pending",
+    updatedAt: 1,
+    voiceId: "voice-1",
+    ...(input.voiceSettings ? { voiceSettings: input.voiceSettings } : {}),
+  });
+}
+
 describe("audioStudies/queries/internal", () => {
   it("returns null when script generation audio does not exist", async () => {
     const t = convexTest(schema, convexModules);
 
     const missingId = await t.mutation(async (ctx) => {
-      const subjectId = await ctx.db.insert("subjectSections", {
-        topicId: await ctx.db.insert("subjectTopics", {
-          category: "high-school",
-          grade: "10",
-          material: "mathematics",
-          order: 0,
-          topic: REAL_VECTOR_ADDITION_EN.topic,
-          title: REAL_VECTOR_ADDITION_EN.topicTitle,
-          locale: REAL_VECTOR_ADDITION_EN.locale,
-          slug: REAL_VECTOR_TOPIC_SLUG,
-          sectionCount: REAL_VECTOR_TOPIC_SECTION_COUNT,
-          syncedAt: 1,
-        }),
-        locale: REAL_VECTOR_ADDITION_EN.locale,
-        slug: REAL_VECTOR_SECTION_SLUG,
-        category: "high-school",
-        grade: "10",
-        material: "mathematics",
-        order: 0,
-        topic: REAL_VECTOR_ADDITION_EN.topic,
-        section: REAL_VECTOR_ADDITION_EN.section,
-        title: REAL_VECTOR_ADDITION_EN.title,
-        description: REAL_VECTOR_ADDITION_EN.description,
-        date: REAL_VECTOR_PUBLISHED_AT,
-        subject: REAL_VECTOR_ADDITION_EN.subject,
-        body: REAL_VECTOR_ADDITION_EN.body,
-        contentHash: REAL_VECTOR_ADDITION_EN.hash,
-        syncedAt: 1,
-      });
-      const missingId = await ctx.db.insert("contentAudios", {
-        contentRef: { type: "subject", id: subjectId },
-        locale: REAL_VECTOR_ADDITION_EN.locale,
-        contentHash: REAL_VECTOR_ADDITION_EN.hash,
-        voiceId: "voice-1",
-        model: "eleven_v3",
-        status: "pending",
-        generationAttempts: 0,
-        updatedAt: 1,
-      });
+      await insertVectorSubject(ctx);
+      const missingId = await insertSubjectAudio(ctx);
 
       await ctx.db.delete("contentAudios", missingId);
 
@@ -93,45 +126,8 @@ describe("audioStudies/queries/internal", () => {
     const t = convexTest(schema, convexModules);
 
     const audioId = await t.mutation(async (ctx) => {
-      const subjectId = await ctx.db.insert("subjectSections", {
-        topicId: await ctx.db.insert("subjectTopics", {
-          category: "high-school",
-          grade: "10",
-          material: "mathematics",
-          order: 0,
-          topic: REAL_VECTOR_ADDITION_EN.topic,
-          title: REAL_VECTOR_ADDITION_EN.topicTitle,
-          locale: REAL_VECTOR_ADDITION_EN.locale,
-          slug: REAL_VECTOR_TOPIC_SLUG,
-          sectionCount: REAL_VECTOR_TOPIC_SECTION_COUNT,
-          syncedAt: 1,
-        }),
-        locale: REAL_VECTOR_ADDITION_EN.locale,
-        slug: REAL_VECTOR_SECTION_SLUG,
-        category: "high-school",
-        grade: "10",
-        material: "mathematics",
-        order: 0,
-        topic: REAL_VECTOR_ADDITION_EN.topic,
-        section: REAL_VECTOR_ADDITION_EN.section,
-        title: REAL_VECTOR_ADDITION_EN.title,
-        description: REAL_VECTOR_ADDITION_EN.description,
-        date: REAL_VECTOR_PUBLISHED_AT,
-        subject: REAL_VECTOR_ADDITION_EN.subject,
-        body: REAL_VECTOR_ADDITION_EN.body,
-        contentHash: REAL_VECTOR_ADDITION_EN.hash,
-        syncedAt: 1,
-      });
-      const audioId = await ctx.db.insert("contentAudios", {
-        contentRef: { type: "subject", id: subjectId },
-        locale: REAL_VECTOR_ADDITION_EN.locale,
-        contentHash: REAL_VECTOR_ADDITION_EN.hash,
-        voiceId: "voice-1",
-        model: "eleven_v3",
-        status: "pending",
-        generationAttempts: 0,
-        updatedAt: 1,
-      });
+      const subjectId = await insertVectorSubject(ctx);
+      const audioId = await insertSubjectAudio(ctx);
 
       await ctx.db.delete("subjectSections", subjectId);
 
@@ -151,46 +147,10 @@ describe("audioStudies/queries/internal", () => {
     const t = convexTest(schema, convexModules);
 
     const audioId = await t.mutation(async (ctx) => {
-      const subjectId = await ctx.db.insert("subjectSections", {
-        topicId: await ctx.db.insert("subjectTopics", {
-          category: "high-school",
-          grade: "10",
-          material: "mathematics",
-          order: 0,
-          topic: REAL_VECTOR_ADDITION_EN.topic,
-          title: REAL_VECTOR_ADDITION_EN.topicTitle,
-          locale: REAL_VECTOR_ADDITION_EN.locale,
-          slug: REAL_VECTOR_TOPIC_SLUG,
-          sectionCount: REAL_VECTOR_TOPIC_SECTION_COUNT,
-          syncedAt: 1,
-        }),
-        locale: REAL_VECTOR_ADDITION_EN.locale,
-        slug: REAL_VECTOR_SECTION_SLUG,
-        category: "high-school",
-        grade: "10",
-        material: "mathematics",
-        order: 0,
-        topic: REAL_VECTOR_ADDITION_EN.topic,
-        section: REAL_VECTOR_ADDITION_EN.section,
-        title: REAL_VECTOR_ADDITION_EN.title,
-        description: REAL_VECTOR_ADDITION_EN.description,
-        date: REAL_VECTOR_PUBLISHED_AT,
-        subject: REAL_VECTOR_ADDITION_EN.subject,
-        body: REAL_VECTOR_ADDITION_EN.body,
-        contentHash: REAL_VECTOR_ADDITION_EN.hash,
-        syncedAt: 1,
-      });
+      await insertVectorSubject(ctx);
 
-      return await ctx.db.insert("contentAudios", {
-        contentRef: { type: "subject", id: subjectId },
-        locale: REAL_VECTOR_ADDITION_EN.locale,
-        contentHash: REAL_VECTOR_ADDITION_EN.hash,
-        voiceId: "voice-1",
+      return await insertSubjectAudio(ctx, {
         voiceSettings: { stability: 0.4 },
-        model: "eleven_v3",
-        status: "pending",
-        generationAttempts: 0,
-        updatedAt: 1,
       });
     });
 
@@ -200,9 +160,9 @@ describe("audioStudies/queries/internal", () => {
       { contentAudioId: audioId }
     );
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       contentAudio: {
-        contentRef: { type: "subject", id: expect.any(String) },
+        ...subjectAudioIdentity,
         contentHash: REAL_VECTOR_ADDITION_EN.hash,
         voiceId: "voice-1",
         voiceSettings: { stability: 0.4 },
@@ -221,45 +181,10 @@ describe("audioStudies/queries/internal", () => {
     const t = convexTest(schema, convexModules);
 
     const audioId = await t.mutation(async (ctx) => {
-      const subjectId = await ctx.db.insert("subjectSections", {
-        topicId: await ctx.db.insert("subjectTopics", {
-          category: "high-school",
-          grade: "10",
-          material: "mathematics",
-          order: 0,
-          topic: REAL_VECTOR_ADDITION_EN.topic,
-          title: REAL_VECTOR_ADDITION_EN.topicTitle,
-          locale: REAL_VECTOR_ADDITION_EN.locale,
-          slug: REAL_VECTOR_TOPIC_SLUG,
-          sectionCount: REAL_VECTOR_TOPIC_SECTION_COUNT,
-          syncedAt: 1,
-        }),
-        locale: REAL_VECTOR_ADDITION_EN.locale,
-        slug: REAL_VECTOR_SECTION_SLUG,
-        category: "high-school",
-        grade: "10",
-        material: "mathematics",
-        order: 0,
-        topic: REAL_VECTOR_ADDITION_EN.topic,
-        section: REAL_VECTOR_ADDITION_EN.section,
-        title: REAL_VECTOR_ADDITION_EN.title,
-        description: REAL_VECTOR_ADDITION_EN.description,
-        date: REAL_VECTOR_PUBLISHED_AT,
-        subject: REAL_VECTOR_ADDITION_EN.subject,
-        body: REAL_VECTOR_ADDITION_EN.body,
-        contentHash: REAL_VECTOR_ADDITION_EN.hash,
-        syncedAt: 1,
-      });
+      await insertVectorSubject(ctx);
 
-      return await ctx.db.insert("contentAudios", {
-        contentRef: { type: "subject", id: subjectId },
-        locale: REAL_VECTOR_ADDITION_EN.locale,
-        contentHash: REAL_VECTOR_ADDITION_EN.hash,
-        voiceId: "voice-1",
-        model: "eleven_v3",
+      return await insertSubjectAudio(ctx, {
         status: "script-generated",
-        generationAttempts: 0,
-        updatedAt: 1,
       });
     });
 
@@ -275,47 +200,13 @@ describe("audioStudies/queries/internal", () => {
     const t = convexTest(schema, convexModules);
 
     const audioId = await t.mutation(async (ctx) => {
-      const subjectId = await ctx.db.insert("subjectSections", {
-        topicId: await ctx.db.insert("subjectTopics", {
-          category: "high-school",
-          grade: "10",
-          material: "mathematics",
-          order: 0,
-          topic: REAL_VECTOR_ADDITION_EN.topic,
-          title: REAL_VECTOR_ADDITION_EN.topicTitle,
-          locale: REAL_VECTOR_ADDITION_EN.locale,
-          slug: REAL_VECTOR_TOPIC_SLUG,
-          sectionCount: REAL_VECTOR_TOPIC_SECTION_COUNT,
-          syncedAt: 1,
-        }),
-        locale: REAL_VECTOR_ADDITION_EN.locale,
-        slug: REAL_VECTOR_SECTION_SLUG,
-        category: "high-school",
-        grade: "10",
-        material: "mathematics",
-        order: 0,
-        topic: REAL_VECTOR_ADDITION_EN.topic,
-        section: REAL_VECTOR_ADDITION_EN.section,
-        title: REAL_VECTOR_ADDITION_EN.title,
-        description: REAL_VECTOR_ADDITION_EN.description,
-        date: REAL_VECTOR_PUBLISHED_AT,
-        subject: REAL_VECTOR_ADDITION_EN.subject,
-        body: REAL_VECTOR_ADDITION_EN.body,
-        contentHash: REAL_VECTOR_ADDITION_EN.hash,
-        syncedAt: 1,
-      });
+      await insertVectorSubject(ctx);
 
-      return await ctx.db.insert("contentAudios", {
-        contentRef: { type: "subject", id: subjectId },
-        locale: REAL_VECTOR_ADDITION_EN.locale,
-        contentHash: REAL_VECTOR_ADDITION_EN.hash,
-        voiceId: "voice-1",
-        voiceSettings: { style: 0.2 },
-        model: "eleven_v3",
-        status: "script-generated",
-        script: "Narration script",
+      return await insertSubjectAudio(ctx, {
         generationAttempts: 1,
-        updatedAt: 1,
+        script: "Narration script",
+        status: "script-generated",
+        voiceSettings: { style: 0.2 },
       });
     });
 
@@ -337,55 +228,9 @@ describe("audioStudies/queries/internal", () => {
     const t = convexTest(schema, convexModules);
 
     const { audioId, missingId } = await t.mutation(async (ctx) => {
-      const subjectId = await ctx.db.insert("subjectSections", {
-        topicId: await ctx.db.insert("subjectTopics", {
-          category: "high-school",
-          grade: "10",
-          material: "mathematics",
-          order: 0,
-          topic: REAL_VECTOR_ADDITION_EN.topic,
-          title: REAL_VECTOR_ADDITION_EN.topicTitle,
-          locale: REAL_VECTOR_ADDITION_EN.locale,
-          slug: REAL_VECTOR_TOPIC_SLUG,
-          sectionCount: REAL_VECTOR_TOPIC_SECTION_COUNT,
-          syncedAt: 1,
-        }),
-        locale: REAL_VECTOR_ADDITION_EN.locale,
-        slug: REAL_VECTOR_SECTION_SLUG,
-        category: "high-school",
-        grade: "10",
-        material: "mathematics",
-        order: 0,
-        topic: REAL_VECTOR_ADDITION_EN.topic,
-        section: REAL_VECTOR_ADDITION_EN.section,
-        title: REAL_VECTOR_ADDITION_EN.title,
-        description: REAL_VECTOR_ADDITION_EN.description,
-        date: REAL_VECTOR_PUBLISHED_AT,
-        subject: REAL_VECTOR_ADDITION_EN.subject,
-        body: REAL_VECTOR_ADDITION_EN.body,
-        contentHash: REAL_VECTOR_ADDITION_EN.hash,
-        syncedAt: 1,
-      });
-      const audioId = await ctx.db.insert("contentAudios", {
-        contentRef: { type: "subject", id: subjectId },
-        locale: REAL_VECTOR_ADDITION_EN.locale,
-        contentHash: REAL_VECTOR_ADDITION_EN.hash,
-        voiceId: "voice-1",
-        model: "eleven_v3",
-        status: "pending",
-        generationAttempts: 0,
-        updatedAt: 1,
-      });
-      const missingId = await ctx.db.insert("contentAudios", {
-        contentRef: { type: "subject", id: subjectId },
-        locale: "id",
-        contentHash: REAL_VECTOR_ADDITION_EN.hash,
-        voiceId: "voice-2",
-        model: "eleven_v3",
-        status: "pending",
-        generationAttempts: 0,
-        updatedAt: 1,
-      });
+      await insertVectorSubject(ctx);
+      const audioId = await insertSubjectAudio(ctx);
+      const missingId = await insertSubjectAudio(ctx);
 
       await ctx.db.delete("contentAudios", missingId);
 
@@ -412,88 +257,28 @@ describe("audioStudies/queries/internal", () => {
     expect(match).toBe(true);
   });
 
-  it("returns the current content hash or null for missing content refs", async () => {
+  it("returns the current content hash or null for missing graph content IDs", async () => {
     const t = convexTest(schema, convexModules);
-
-    const { existingId, missingId } = await t.mutation(async (ctx) => {
-      const existingId = await ctx.db.insert("subjectSections", {
-        topicId: await ctx.db.insert("subjectTopics", {
-          category: "high-school",
-          grade: "10",
-          material: "mathematics",
-          order: 0,
-          topic: REAL_VECTOR_ADDITION_EN.topic,
-          title: REAL_VECTOR_ADDITION_EN.topicTitle,
-          locale: REAL_VECTOR_ADDITION_EN.locale,
-          slug: REAL_VECTOR_TOPIC_SLUG,
-          sectionCount: REAL_VECTOR_TOPIC_SECTION_COUNT,
-          syncedAt: 1,
-        }),
-        locale: REAL_VECTOR_ADDITION_EN.locale,
-        slug: REAL_VECTOR_SECTION_SLUG,
-        category: "high-school",
-        grade: "10",
-        material: "mathematics",
-        order: 0,
-        topic: REAL_VECTOR_ADDITION_EN.topic,
-        section: REAL_VECTOR_ADDITION_EN.section,
-        title: REAL_VECTOR_ADDITION_EN.title,
-        description: REAL_VECTOR_ADDITION_EN.description,
-        date: REAL_VECTOR_PUBLISHED_AT,
-        subject: REAL_VECTOR_ADDITION_EN.subject,
-        body: REAL_VECTOR_ADDITION_EN.body,
-        contentHash: REAL_VECTOR_ADDITION_EN.hash,
-        syncedAt: 1,
-      });
-      const missingId = await ctx.db.insert("subjectSections", {
-        topicId: await ctx.db.insert("subjectTopics", {
-          category: "high-school",
-          grade: "10",
-          material: "mathematics",
-          order: 0,
-          topic: REAL_VECTOR_ADDITION_EN.topic,
-          title: REAL_VECTOR_ADDITION_EN.topicTitle,
-          locale: REAL_VECTOR_ADDITION_EN.locale,
-          slug: `${REAL_VECTOR_TOPIC_SLUG}-missing`,
-          sectionCount: 1,
-          syncedAt: 1,
-        }),
-        locale: REAL_VECTOR_ADDITION_EN.locale,
-        slug: `${REAL_VECTOR_SECTION_SLUG}-missing`,
-        category: "high-school",
-        grade: "10",
-        material: "mathematics",
-        order: 0,
-        topic: REAL_VECTOR_ADDITION_EN.topic,
-        section: REAL_VECTOR_ADDITION_EN.section,
-        title: REAL_VECTOR_ADDITION_EN.title,
-        description: REAL_VECTOR_ADDITION_EN.description,
-        date: REAL_VECTOR_PUBLISHED_AT,
-        subject: REAL_VECTOR_ADDITION_EN.subject,
-        body: REAL_VECTOR_ADDITION_EN.body,
-        contentHash: REAL_VECTOR_ADDITION_EN.hash,
-        syncedAt: 1,
-      });
-
-      await syncAudioContentSource(ctx, {
-        contentHash: REAL_VECTOR_ADDITION_EN.hash,
-        locale: REAL_VECTOR_ADDITION_EN.locale,
-        ref: { type: "subject", id: existingId },
-        slug: REAL_VECTOR_SECTION_SLUG,
-        syncedAt: 1,
-      });
-
-      await ctx.db.delete("subjectSections", missingId);
-
-      return { existingId, missingId };
+    const missingAudioSource = getTestAudioContent({
+      locale: REAL_VECTOR_ADDITION_EN.locale,
+      route:
+        "subject/high-school/10/mathematics/vector-operations/vector-subtraction",
     });
+
+    await t.mutation(
+      async (ctx) =>
+        await syncAudioContentSource(ctx, {
+          ...subjectAudioSource,
+          syncedAt: 1,
+        })
+    );
 
     const [existingHash, missingHash] = await Promise.all([
       t.query(internal.audioStudies.queries.internal.getContentHash, {
-        contentRef: { type: "subject", id: existingId },
+        content_id: subjectAudioSource.content_id,
       }),
       t.query(internal.audioStudies.queries.internal.getContentHash, {
-        contentRef: { type: "subject", id: missingId },
+        content_id: missingAudioSource.content_id,
       }),
     ]);
 

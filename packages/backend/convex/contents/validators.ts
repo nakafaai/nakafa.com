@@ -1,20 +1,16 @@
-import { audioContentRefValidator } from "@repo/backend/convex/lib/validators/audio";
-import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
+import { audioContentIdentityFields } from "@repo/backend/convex/audioStudies/content/spec";
 import { type Infer, v } from "convex/values";
 
-const audioContentLookupValidator = v.object({
+export const audioContentLookupValidator = v.object({
+  ...audioContentIdentityFields,
   contentHash: v.string(),
-  locale: localeValidator,
-  ref: audioContentRefValidator,
-  slug: v.string(),
 });
 
 export type AudioContentLookup = Infer<typeof audioContentLookupValidator>;
 
 /** Ranked content candidate used when filling the audio generation queue. */
 export const popularAudioContentItemValidator = v.object({
-  ref: audioContentRefValidator,
-  sourceContent: v.optional(audioContentLookupValidator),
+  sourceContent: audioContentLookupValidator,
   viewCount: v.number(),
 });
 

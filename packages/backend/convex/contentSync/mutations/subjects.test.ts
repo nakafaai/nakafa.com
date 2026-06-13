@@ -232,11 +232,8 @@ describe("contentSync/mutations/subjects", () => {
         .unique();
       const audioSource = await ctx.db
         .query("audioContentSources")
-        .withIndex("by_contentRefType_and_slug_and_locale", (q) =>
-          q
-            .eq("contentRef.type", "subject")
-            .eq("slug", SECTION_SLUG)
-            .eq("locale", "id")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", SECTION_CONTENT_ID)
         )
         .unique();
 
@@ -277,7 +274,9 @@ describe("contentSync/mutations/subjects", () => {
     });
     expect(snapshot.audioSource).toMatchObject({
       contentHash: "same-subject-hash",
-      slug: SECTION_SLUG,
+      content_id: SECTION_CONTENT_ID,
+      contentType: "subject",
+      route: SECTION_SLUG,
     });
   });
 
@@ -393,11 +392,8 @@ describe("contentSync/mutations/subjects", () => {
         .unique();
       const audioSource = await ctx.db
         .query("audioContentSources")
-        .withIndex("by_contentRefType_and_slug_and_locale", (q) =>
-          q
-            .eq("contentRef.type", "subject")
-            .eq("slug", SECTION_SLUG)
-            .eq("locale", "id")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", SECTION_CONTENT_ID)
         )
         .unique();
 

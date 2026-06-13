@@ -4,6 +4,7 @@ import { deleteAudioContentSource } from "@repo/backend/convex/audioStudies/help
 import type { ContentAuthorContentId } from "@repo/backend/convex/authors/schema";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
+import { getContentGraphIdentity } from "@repo/backend/convex/contents/graph";
 import { deleteContentRoute } from "@repo/backend/convex/contents/helpers/routes/write";
 import { deleteContentSearch } from "@repo/backend/convex/contents/helpers/search/write";
 import {
@@ -330,6 +331,13 @@ export async function deleteSubjectSection(
   }
 
   await deleteContentAuthorLinks(ctx, sectionId, "subject");
-  await deleteAudioContentSource(ctx, { id: sectionId, type: "subject" });
+  if (section) {
+    const graph = getContentGraphIdentity({
+      kind: "subject-section",
+      locale: section.locale,
+      route: section.slug,
+    });
+    await deleteAudioContentSource(ctx, graph.assetId);
+  }
   await ctx.db.delete("subjectSections", sectionId);
 }

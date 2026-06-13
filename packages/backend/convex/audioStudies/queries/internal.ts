@@ -3,8 +3,8 @@ import {
   scriptGenerationDataValidator,
   speechGenerationDataValidator,
 } from "@repo/backend/convex/audioStudies/generation/spec";
-import { getAudioContentSourceByRef } from "@repo/backend/convex/audioStudies/helpers/sources";
-import { audioContentRefValidator } from "@repo/backend/convex/lib/validators/audio";
+import { getAudioContentSourceByContentId } from "@repo/backend/convex/audioStudies/helpers/sources";
+import { graphContentIdValidator } from "@repo/backend/convex/contents/graph";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
@@ -26,15 +26,28 @@ export const getAudioAndContentForScriptGeneration = internalQuery({
     }
 
     const contentAudio = {
-      contentRef: audio.contentRef,
+      alignmentId: audio.alignmentId,
+      assetId: audio.assetId,
+      conceptId: audio.conceptId,
       contentHash: audio.contentHash,
+      content_id: audio.content_id,
+      contentType: audio.contentType,
+      learningObjectId: audio.learningObjectId,
+      lensId: audio.lensId,
+      locale: audio.locale,
+      route: audio.route,
       voiceId: audio.voiceId,
       voiceSettings: audio.voiceSettings,
       status: audio.status,
     };
 
-    if (audio.contentRef.type === "article") {
-      const article = await ctx.db.get("articleContents", audio.contentRef.id);
+    if (audio.contentType === "article") {
+      const article = await ctx.db
+        .query("articleContents")
+        .withIndex("by_locale_and_slug", (q) =>
+          q.eq("locale", audio.locale).eq("slug", audio.route)
+        )
+        .unique();
 
       if (!article) {
         return null;
@@ -51,7 +64,12 @@ export const getAudioAndContentForScriptGeneration = internalQuery({
       };
     }
 
-    const section = await ctx.db.get("subjectSections", audio.contentRef.id);
+    const section = await ctx.db
+      .query("subjectSections")
+      .withIndex("by_locale_and_slug", (q) =>
+        q.eq("locale", audio.locale).eq("slug", audio.route)
+      )
+      .unique();
 
     if (!section) {
       return null;
@@ -116,10 +134,10 @@ export const verifyContentHash = internalQuery({
 /** Get content hash for a content item by type and ID. */
 export const getContentHash = internalQuery({
   args: {
-    contentRef: audioContentRefValidator,
+    content_id: graphContentIdValidator,
   },
   returns: nullable(v.string()),
   handler: async (ctx, args) =>
-    (await getAudioContentSourceByRef(ctx, args.contentRef))?.contentHash ??
-    null,
+    (await getAudioContentSourceByContentId(ctx, args.content_id))
+      ?.contentHash ?? null,
 });

@@ -9,6 +9,7 @@ import type {
 } from "@repo/backend/convex/audioStudies/generation/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
+import { getTestAudioIdentity } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { convexTest } from "convex-test";
@@ -18,6 +19,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 function unexpectedCall(name: string): never {
   throw new Error(`Unexpected audio generation test call: ${name}`);
 }
+
+const articleRoute = "articles/politics/article";
+const articleAudioIdentity = getTestAudioIdentity({
+  locale: "en",
+  route: articleRoute,
+});
 
 describe("audioStudies/generation/impl", () => {
   beforeEach(() => {
@@ -40,7 +47,7 @@ describe("audioStudies/generation/impl", () => {
   it("generates and saves a script after claiming the audio row", async () => {
     const t = convexTest(schema, convexModules);
     const ids = await t.mutation(async (ctx) => {
-      const articleId = await ctx.db.insert("articleContents", {
+      await ctx.db.insert("articleContents", {
         articleSlug: "article",
         body: "Article body",
         category: "politics",
@@ -48,23 +55,22 @@ describe("audioStudies/generation/impl", () => {
         date: 1,
         description: "Description",
         locale: "en",
-        slug: "articles/politics/article",
+        slug: articleRoute,
         syncedAt: 1,
         title: "Article",
       });
 
       const contentAudioId = await ctx.db.insert("contentAudios", {
+        ...articleAudioIdentity,
         contentHash: "hash",
-        contentRef: { id: articleId, type: "article" },
         generationAttempts: 0,
-        locale: "en",
         model: "eleven_v3",
         status: "generating-script",
         updatedAt: 1,
         voiceId: "voice",
       });
 
-      return { articleId, contentAudioId };
+      return { contentAudioId };
     });
     const calls: string[] = [];
     const store: AudioGenerationStore = {
@@ -84,8 +90,8 @@ describe("audioStudies/generation/impl", () => {
             title: "Article",
           },
           contentAudio: {
+            ...articleAudioIdentity,
             contentHash: "hash",
-            contentRef: { id: ids.articleId, type: "article" },
             status: "generating-script",
             voiceId: "voice",
           },
@@ -133,32 +139,28 @@ describe("audioStudies/generation/impl", () => {
   it("marks a claimed script row failed when content changes", async () => {
     const t = convexTest(schema, convexModules);
     const ids = await t.mutation(async (ctx) => {
-      const articleId = await ctx.db.insert("articleContents", {
+      await ctx.db.insert("articleContents", {
         articleSlug: "article",
         body: "Article body",
         category: "politics",
         contentHash: "hash",
         date: 1,
         locale: "en",
-        slug: "articles/politics/article",
+        slug: articleRoute,
         syncedAt: 1,
         title: "Article",
       });
       const contentAudioId = await ctx.db.insert("contentAudios", {
+        ...articleAudioIdentity,
         contentHash: "hash",
-        contentRef: {
-          id: articleId,
-          type: "article",
-        },
         generationAttempts: 0,
-        locale: "en",
         model: "eleven_v3",
         status: "generating-script",
         updatedAt: 1,
         voiceId: "voice",
       });
 
-      return { articleId, contentAudioId };
+      return { contentAudioId };
     });
     const failedMessages: string[] = [];
     const store: AudioGenerationStore = {
@@ -176,8 +178,8 @@ describe("audioStudies/generation/impl", () => {
             title: "Article",
           },
           contentAudio: {
+            ...articleAudioIdentity,
             contentHash: "hash",
-            contentRef: { id: ids.articleId, type: "article" },
             status: "generating-script",
             voiceId: "voice",
           },
@@ -223,14 +225,14 @@ describe("audioStudies/generation/impl", () => {
   it("generates speech chunks and saves WAV metadata", async () => {
     const t = convexTest(schema, convexModules);
     const ids = await t.run(async (ctx) => {
-      const articleId = await ctx.db.insert("articleContents", {
+      await ctx.db.insert("articleContents", {
         articleSlug: "article",
         body: "Article body",
         category: "politics",
         contentHash: "hash",
         date: 1,
         locale: "en",
-        slug: "articles/politics/article",
+        slug: articleRoute,
         syncedAt: 1,
         title: "Article",
       });
@@ -238,10 +240,9 @@ describe("audioStudies/generation/impl", () => {
         new Blob(["generated audio"], { type: "audio/wav" })
       );
       const contentAudioId = await ctx.db.insert("contentAudios", {
+        ...articleAudioIdentity,
         contentHash: "hash",
-        contentRef: { id: articleId, type: "article" },
         generationAttempts: 0,
-        locale: "en",
         model: "eleven_v3",
         script: "Hello world.",
         status: "generating-speech",

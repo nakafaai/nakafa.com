@@ -1,7 +1,7 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import { audioContentIdentityFields } from "@repo/backend/convex/audioStudies/content/spec";
 import tables from "@repo/backend/convex/audioStudies/schema";
-import { audioContentRefValidator } from "@repo/backend/convex/lib/validators/audio";
-import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
+import { graphContentIdValidator } from "@repo/backend/convex/contents/graph";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { type Infer, v } from "convex/values";
 import { Schema } from "effect";
@@ -41,7 +41,7 @@ export const markContentAudioFailedArgsValidator = v.object(
 );
 
 export const updateContentAudioHashArgs = {
-  contentRef: audioContentRefValidator,
+  content_id: graphContentIdValidator,
   newHash: v.string(),
 };
 export const updateContentAudioHashArgsValidator = v.object(
@@ -49,8 +49,7 @@ export const updateContentAudioHashArgsValidator = v.object(
 );
 
 export const createOrGetContentAudioArgs = {
-  contentRef: audioContentRefValidator,
-  locale: localeValidator,
+  ...audioContentIdentityFields,
   contentHash: v.string(),
 };
 export const createOrGetContentAudioArgsValidator = v.object(

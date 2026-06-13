@@ -99,11 +99,8 @@ const loadContentAudioRecords = Effect.fn(
     try: () =>
       ctx.db
         .query("contentAudios")
-        .withIndex("by_contentRefType_and_contentRefId_and_locale", (q) =>
-          q
-            .eq("contentRef.type", args.contentRef.type)
-            .eq("contentRef.id", args.contentRef.id)
-            .eq("locale", args.locale)
+        .withIndex("by_content_id_and_locale", (q) =>
+          q.eq("content_id", args.content_id).eq("locale", args.locale)
         )
         .take(contentAudioDuplicateLimit),
     catch: toContentAudioIoError,
@@ -317,11 +314,7 @@ export const updateContentAudioHash = Effect.fn(
     try: () =>
       ctx.db
         .query("contentAudios")
-        .withIndex("by_contentRefType_and_contentRefId_and_locale", (q) =>
-          q
-            .eq("contentRef.type", args.contentRef.type)
-            .eq("contentRef.id", args.contentRef.id)
-        )
+        .withIndex("by_content_id", (q) => q.eq("content_id", args.content_id))
         .take(10),
     catch: toContentAudioIoError,
   });
@@ -387,8 +380,15 @@ export const createOrGetContentAudio = Effect.fn(
   yield* Effect.tryPromise({
     try: () =>
       ctx.db.insert("contentAudios", {
-        contentRef: args.contentRef,
+        alignmentId: args.alignmentId,
+        assetId: args.assetId,
+        conceptId: args.conceptId,
+        content_id: args.content_id,
+        contentType: args.contentType,
+        learningObjectId: args.learningObjectId,
+        lensId: args.lensId,
         locale: args.locale,
+        route: args.route,
         contentHash: args.contentHash,
         voiceId: voiceConfig.id,
         voiceSettings: voiceConfig.settings,

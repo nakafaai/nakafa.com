@@ -1,75 +1,47 @@
 import {
   deleteAudioContentSource,
+  getAudioContentSourceByContentId,
   getAudioContentSourceByLocale,
-  getAudioContentSourceByRef,
   syncAudioContentSource,
 } from "@repo/backend/convex/audioStudies/helpers/sources";
 import schema from "@repo/backend/convex/schema";
+import { getTestAudioContent } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
-const articleSource = {
+const articleSource = getTestAudioContent({
   contentHash: "article-hash",
-  locale: "en" as const,
-  slug: "articles/politics/dynastic-politics-asian-values",
-  syncedAt: 1,
-};
+  locale: "en",
+  route: "articles/politics/dynastic-politics-asian-values",
+});
 
-const localizedArticleSource = {
+const localizedArticleSource = getTestAudioContent({
   contentHash: "artikel-hash",
-  locale: "id" as const,
-  slug: articleSource.slug,
-  syncedAt: 1,
-};
+  locale: "id",
+  route: articleSource.route,
+});
 
 describe("audioStudies/helpers/sources", () => {
-  it("syncs and reads compact audio metadata by ref and locale", async () => {
+  it("syncs and reads compact audio metadata by graph content ID and locale", async () => {
     const t = convexTest(schema, convexModules);
 
-    const { englishId, indonesianId } = await t.mutation(async (ctx) => {
-      const englishId = await ctx.db.insert("articleContents", {
-        articleSlug: "dynastic-politics-asian-values",
-        body: "English body",
-        category: "politics",
-        contentHash: articleSource.contentHash,
-        date: 1,
-        description: "English description",
-        locale: articleSource.locale,
-        slug: articleSource.slug,
-        syncedAt: 1,
-        title: "English title",
-      });
-      const indonesianId = await ctx.db.insert("articleContents", {
-        articleSlug: "dynastic-politics-asian-values",
-        body: "Indonesian body",
-        category: "politics",
-        contentHash: localizedArticleSource.contentHash,
-        date: 1,
-        description: "Indonesian description",
-        locale: localizedArticleSource.locale,
-        slug: localizedArticleSource.slug,
-        syncedAt: 1,
-        title: "Indonesian title",
-      });
-
+    await t.mutation(async (ctx) => {
       await syncAudioContentSource(ctx, {
         ...articleSource,
-        ref: { type: "article", id: englishId },
+        syncedAt: 1,
       });
       await syncAudioContentSource(ctx, {
         ...localizedArticleSource,
-        ref: { type: "article", id: indonesianId },
+        syncedAt: 1,
       });
-
-      return { englishId, indonesianId };
     });
 
     const result = await t.query(async (ctx) => {
-      const english = await getAudioContentSourceByRef(ctx, {
-        type: "article",
-        id: englishId,
-      });
+      const english = await getAudioContentSourceByContentId(
+        ctx,
+        articleSource.content_id
+      );
 
       if (!english) {
         return null;
@@ -83,16 +55,28 @@ describe("audioStudies/helpers/sources", () => {
 
     expect(result).toEqual({
       english: {
+        alignmentId: articleSource.alignmentId,
+        assetId: articleSource.assetId,
+        conceptId: articleSource.conceptId,
         contentHash: articleSource.contentHash,
+        content_id: articleSource.content_id,
+        contentType: articleSource.contentType,
+        learningObjectId: articleSource.learningObjectId,
+        lensId: articleSource.lensId,
         locale: articleSource.locale,
-        ref: { type: "article", id: englishId },
-        slug: articleSource.slug,
+        route: articleSource.route,
       },
       indonesian: {
+        alignmentId: localizedArticleSource.alignmentId,
+        assetId: localizedArticleSource.assetId,
+        conceptId: localizedArticleSource.conceptId,
         contentHash: localizedArticleSource.contentHash,
+        content_id: localizedArticleSource.content_id,
+        contentType: localizedArticleSource.contentType,
+        learningObjectId: localizedArticleSource.learningObjectId,
+        lensId: localizedArticleSource.lensId,
         locale: localizedArticleSource.locale,
-        ref: { type: "article", id: indonesianId },
-        slug: localizedArticleSource.slug,
+        route: localizedArticleSource.route,
       },
     });
   });
@@ -100,63 +84,44 @@ describe("audioStudies/helpers/sources", () => {
   it("updates and deletes compact audio metadata", async () => {
     const t = convexTest(schema, convexModules);
 
-    const articleId = await t.mutation(async (ctx) => {
-      const articleId = await ctx.db.insert("articleContents", {
-        articleSlug: "dynastic-politics-asian-values",
-        body: "English body",
-        category: "politics",
-        contentHash: articleSource.contentHash,
-        date: 1,
-        description: "English description",
-        locale: articleSource.locale,
-        slug: articleSource.slug,
-        syncedAt: 1,
-        title: "English title",
-      });
-
+    await t.mutation(async (ctx) => {
       await syncAudioContentSource(ctx, {
         ...articleSource,
-        ref: { type: "article", id: articleId },
+        syncedAt: 1,
       });
       await syncAudioContentSource(ctx, {
         ...articleSource,
         contentHash: "next-hash",
-        ref: { type: "article", id: articleId },
         syncedAt: 2,
       });
-
-      return articleId;
     });
 
     const updated = await t.query(
       async (ctx) =>
-        await getAudioContentSourceByRef(ctx, {
-          type: "article",
-          id: articleId,
-        })
+        await getAudioContentSourceByContentId(ctx, articleSource.content_id)
     );
 
     await t.mutation(
       async (ctx) =>
-        await deleteAudioContentSource(ctx, {
-          type: "article",
-          id: articleId,
-        })
+        await deleteAudioContentSource(ctx, articleSource.content_id)
     );
 
     const deleted = await t.query(
       async (ctx) =>
-        await getAudioContentSourceByRef(ctx, {
-          type: "article",
-          id: articleId,
-        })
+        await getAudioContentSourceByContentId(ctx, articleSource.content_id)
     );
 
     expect(updated).toEqual({
+      alignmentId: articleSource.alignmentId,
+      assetId: articleSource.assetId,
+      conceptId: articleSource.conceptId,
       contentHash: "next-hash",
+      content_id: articleSource.content_id,
+      contentType: articleSource.contentType,
+      learningObjectId: articleSource.learningObjectId,
+      lensId: articleSource.lensId,
       locale: articleSource.locale,
-      ref: { type: "article", id: articleId },
-      slug: articleSource.slug,
+      route: articleSource.route,
     });
     expect(deleted).toBeNull();
   });

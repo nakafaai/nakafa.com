@@ -8,6 +8,7 @@ import {
 import { audioQueuePopulationFailedCode } from "@repo/backend/convex/contents/audioQueue/spec";
 import type { PopularAudioContentItem } from "@repo/backend/convex/contents/validators";
 import schema from "@repo/backend/convex/schema";
+import { getTestAudioContent } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
@@ -17,6 +18,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const NOW = Date.parse("2026-01-01T00:00:00.000Z");
 const ARTICLE_ROUTE = "articles/politics/dynastic-politics-asian-values";
+const articleSource = getTestAudioContent({
+  contentHash: "article-hash",
+  locale: "en",
+  route: ARTICLE_ROUTE,
+});
 
 describe("contents/actions/queue", () => {
   beforeEach(() => {
@@ -34,33 +40,19 @@ describe("contents/actions/queue", () => {
     vi.restoreAllMocks();
   });
 
-  it("chunks popular audio candidates into bounded mutation batches", async () => {
-    const t = convexTest(schema, convexModules);
-    const items = await t.mutation(async (ctx) => {
-      const rows: PopularAudioContentItem[] = [];
+  it("chunks popular audio candidates into bounded mutation batches", () => {
+    const items: PopularAudioContentItem[] = [];
 
-      for (let index = 0; index < 25; index++) {
-        const articleId = await ctx.db.insert("articleContents", {
-          articleSlug: `article-${index}`,
-          body: "Body",
-          category: "politics",
+    for (let index = 0; index < 25; index++) {
+      items.push({
+        sourceContent: getTestAudioContent({
           contentHash: `hash-${index}`,
-          date: index,
-          description: "Description",
           locale: "en",
-          slug: `articles/politics/article-${index}`,
-          syncedAt: index,
-          title: `Article ${index}`,
-        });
-
-        rows.push({
-          ref: { type: "article", id: articleId },
-          viewCount: 25 - index,
-        });
-      }
-
-      return rows;
-    });
+          route: `articles/politics/article-${index}`,
+        }),
+        viewCount: 25 - index,
+      });
+    }
 
     const chunks = chunkPopularAudioItems(items);
 
@@ -140,8 +132,8 @@ describe("contents/actions/queue", () => {
   it("reads popular content and enqueues bounded audio work", async () => {
     const t = convexTest(schema, convexModules);
 
-    const articleId = await t.mutation(async (ctx) => {
-      const articleId = await ctx.db.insert("articleContents", {
+    await t.mutation(async (ctx) => {
+      await ctx.db.insert("articleContents", {
         articleSlug: "dynastic-politics-asian-values",
         body: "Article body",
         category: "politics",
@@ -183,14 +175,9 @@ describe("contents/actions/queue", () => {
         viewCount: MIN_VIEW_THRESHOLD,
       });
       await ctx.db.insert("audioContentSources", {
-        contentHash: "article-hash",
-        contentRef: { type: "article", id: articleId },
-        locale: "en",
-        slug: ARTICLE_ROUTE,
+        ...articleSource,
         syncedAt: NOW,
       });
-
-      return articleId;
     });
 
     const result = await t.action(
@@ -203,11 +190,13 @@ describe("contents/actions/queue", () => {
     expect(result).toBeNull();
     expect(queuedItems).toEqual([
       expect.objectContaining({
-        contentRef: { id: articleId, type: "article" },
+        content_id: articleSource.content_id,
+        contentType: articleSource.contentType,
         locale: "en",
         priorityScore: MIN_VIEW_THRESHOLD * 10,
         requestedAt: NOW,
         retryCount: 0,
+        route: ARTICLE_ROUTE,
         status: "pending",
         updatedAt: NOW,
       }),

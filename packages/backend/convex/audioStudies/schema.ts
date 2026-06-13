@@ -1,10 +1,9 @@
+import { audioContentIdentityFields } from "@repo/backend/convex/audioStudies/content/spec";
 import {
-  audioContentRefValidator,
   audioModelValidator,
   audioStatusValidator,
   voiceSettingsValidator,
 } from "@repo/backend/convex/lib/validators/audio";
-import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
@@ -15,26 +14,20 @@ const tables = {
    * Avoids reading large article/subject body documents in cron queries.
    */
   audioContentSources: defineTable({
-    contentRef: audioContentRefValidator,
-    locale: localeValidator,
-    slug: v.string(),
+    ...audioContentIdentityFields,
     contentHash: v.string(),
     syncedAt: v.number(),
   })
-    .index("by_contentRefType_and_contentRefId", [
-      "contentRef.type",
-      "contentRef.id",
-    ])
-    .index("by_contentRefType_and_slug_and_locale", [
-      "contentRef.type",
-      "slug",
+    .index("by_content_id", ["content_id"])
+    .index("by_contentType_and_route_and_locale", [
+      "contentType",
+      "route",
       "locale",
     ]),
 
-  /** Audio files for articles and subjects (exercises excluded). */
+  /** Audio files keyed by graph content identity for articles and subjects. */
   contentAudios: defineTable({
-    contentRef: audioContentRefValidator,
-    locale: localeValidator,
+    ...audioContentIdentityFields,
     /** SHA-256 hash of content body for cache invalidation */
     contentHash: v.string(),
     /** ElevenLabs voice ID */
@@ -62,28 +55,18 @@ const tables = {
     updatedAt: v.number(),
   })
     /**
-     * Primary lookup by content reference and locale.
+     * Primary lookup by graph content ID and locale.
      * Used to check if audio already exists for specific content.
      * Also covers cross-locale queries via prefix (per Convex best practices).
      */
-    .index("by_contentRefType_and_contentRefId_and_locale", [
-      "contentRef.type",
-      "contentRef.id",
-      "locale",
-    ])
+    .index("by_content_id", ["content_id"])
+    .index("by_content_id_and_locale", ["content_id", "locale"])
     /** Bounded cleanup for incomplete audio records. */
     .index("by_status_and_updatedAt", ["status", "updatedAt"]),
 
-  /** Queue for audio generation jobs. */
+  /** Queue for audio generation jobs keyed by graph content identity. */
   audioGenerationQueue: defineTable({
-    contentRef: audioContentRefValidator,
-    locale: localeValidator,
-    /**
-     * Content slug (cross-locale identifier).
-     * Used to find all locale versions of the same content.
-     * Same slug across all locales enables per-content processing.
-     */
-    slug: v.string(),
+    ...audioContentIdentityFields,
     /**
      * Priority score for queue ordering.
      * Calculated from: viewCount × 10 + ageBoost
@@ -109,18 +92,15 @@ const tables = {
      * Deduplication check.
      * Ensures content isn't queued multiple times per locale.
      */
-    .index("by_contentRefType_and_contentRefId_and_locale", [
-      "contentRef.type",
-      "contentRef.id",
-      "locale",
-    ])
+    .index("by_content_id", ["content_id"])
+    .index("by_content_id_and_locale", ["content_id", "locale"])
     /**
-     * Content + status queries by slug (cross-locale).
+     * Content + status queries by route (cross-locale).
      * Finds all pending items for a content across ALL locales.
      * This enables processing all translations together as one content piece.
      * Per Convex best practices: use specific index ranges for O(log n) performance.
      */
-    .index("by_slug_and_status", ["slug", "status"])
+    .index("by_route_and_status", ["route", "status"])
     /**
      * Cleanup queries.
      * Removes old completed/failed items.

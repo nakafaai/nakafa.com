@@ -56,7 +56,6 @@ export const getPopularContentForAudioQueue = internalQuery({
       }
 
       sourceItems.push({
-        ref: sourceContent.ref,
         sourceContent,
         viewCount: row.viewCount,
       });
@@ -82,7 +81,6 @@ export const getPopularContentForAudioQueue = internalQuery({
       }
 
       sourceItems.push({
-        ref: sourceContent.ref,
         sourceContent,
         viewCount: row.viewCount,
       });

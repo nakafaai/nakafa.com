@@ -132,10 +132,12 @@ export const bulkSyncArticles = internalMutation({
 
       if (existingArticle) {
         await syncAudioContentSource(ctx, {
+          ...graph,
+          content_id: graph.assetId,
+          contentType: "article",
           contentHash: article.contentHash,
           locale: article.locale,
-          ref: { id: existingArticle._id, type: "article" },
-          slug: article.slug,
+          route: article.slug,
           syncedAt: now,
         });
       }
@@ -163,7 +165,7 @@ export const bulkSyncArticles = internalMutation({
 
         await runConvexProgram(
           updateContentAudioHash(ctx, {
-            contentRef: { id: existingArticle._id, type: "article" },
+            content_id: graph.assetId,
             newHash: article.contentHash,
           })
         );
@@ -193,10 +195,12 @@ export const bulkSyncArticles = internalMutation({
       });
 
       await syncAudioContentSource(ctx, {
+        ...graph,
+        content_id: graph.assetId,
+        contentType: "article",
         contentHash: article.contentHash,
         locale: article.locale,
-        ref: { id: articleId, type: "article" },
-        slug: article.slug,
+        route: article.slug,
         syncedAt: now,
       });
 
@@ -259,7 +263,12 @@ export const deleteStaleArticles = internalMutation({
         locale: article.locale,
         route: article.slug,
       });
-      await deleteAudioContentSource(ctx, { id: articleId, type: "article" });
+      const graph = getContentGraphIdentity({
+        kind: "article",
+        locale: article.locale,
+        route: article.slug,
+      });
+      await deleteAudioContentSource(ctx, graph.assetId);
       await ctx.db.delete("articleContents", articleId);
       deleted++;
     }

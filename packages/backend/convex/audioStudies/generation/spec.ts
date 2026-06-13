@@ -1,6 +1,6 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { audioContentIdentityFields } from "@repo/backend/convex/audioStudies/content/spec";
 import {
-  audioContentRefValidator,
   audioModelValidator,
   audioStatusValidator,
   type VoiceSettings,
@@ -29,7 +29,7 @@ export type AudioGenerationArgs = Infer<typeof audioGenerationArgsValidator>;
 export const scriptGenerationDataValidator = nullable(
   v.object({
     contentAudio: v.object({
-      contentRef: audioContentRefValidator,
+      ...audioContentIdentityFields,
       contentHash: v.string(),
       voiceId: v.string(),
       voiceSettings: v.optional(voiceSettingsValidator),
