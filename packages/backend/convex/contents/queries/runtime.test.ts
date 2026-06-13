@@ -53,6 +53,132 @@ function contentRouteGraph(locale: Locale, route: string) {
   };
 }
 
+type RuntimeRouteKind = NonNullable<
+  ReturnType<typeof getLearningObjectKindForRoute>
+>;
+
+type ContentRouteGraphFixture = ReturnType<typeof contentRouteGraph>;
+
+/** Inserts one published exercise set fixture in the shared SNBT group. */
+async function insertExerciseSetFixture(
+  ctx: MutationCtx,
+  args: {
+    setName: string;
+    slug: string;
+    title: string;
+    year: string;
+  }
+) {
+  return await ctx.db.insert("exerciseSets", {
+    category: "high-school",
+    description: "Try-out group",
+    exerciseType: "try-out",
+    locale: "id",
+    material: "quantitative-knowledge",
+    questionCount: 1,
+    setName: args.setName,
+    slug: args.slug,
+    syncedAt: NOW,
+    title: args.title,
+    type: "snbt",
+    year: args.year,
+  });
+}
+
+/** Inserts one exercise question fixture with both required choice locales. */
+async function insertExerciseQuestionFixture(
+  ctx: MutationCtx,
+  args: {
+    setId: Id<"exerciseSets">;
+    setName: string;
+    slug: string;
+  }
+) {
+  const questionId = await ctx.db.insert("exerciseQuestions", {
+    answerBody: "Answer body",
+    category: "high-school",
+    contentHash: "question-hash",
+    date: NOW,
+    exerciseType: "try-out",
+    locale: "id",
+    material: "quantitative-knowledge",
+    number: 1,
+    questionBody: "Question body",
+    setId: args.setId,
+    setName: args.setName,
+    slug: args.slug,
+    syncedAt: NOW,
+    title: "Soal 1",
+    type: "snbt",
+  });
+
+  await ctx.db.insert("exerciseChoices", {
+    isCorrect: true,
+    label: "A. Benar",
+    locale: "id",
+    optionKey: "A",
+    order: 0,
+    questionId,
+  });
+  await ctx.db.insert("exerciseChoices", {
+    isCorrect: true,
+    label: "A. Correct",
+    locale: "en",
+    optionKey: "A",
+    order: 0,
+    questionId,
+  });
+
+  return questionId;
+}
+
+/** Inserts one exercise content-route projection fixture. */
+async function insertExerciseRouteFixture(
+  ctx: MutationCtx,
+  args: {
+    contentHash: string;
+    graph?: ContentRouteGraphFixture;
+    kind: RuntimeRouteKind;
+    route: string;
+    title: string;
+  }
+) {
+  await ctx.db.insert("contentRoutes", {
+    ...(args.graph ?? contentRouteGraph("id", args.route)),
+    authors: [],
+    contentHash: args.contentHash,
+    kind: args.kind,
+    locale: "id",
+    markdown: true,
+    route: args.route,
+    section: "exercises",
+    syncedAt: NOW,
+    title: args.title,
+  });
+}
+
+/** Deletes one content-route projection fixture by its indexed route key. */
+async function deleteContentRouteFixture(
+  ctx: MutationCtx,
+  args: {
+    locale: Locale;
+    route: string;
+  }
+) {
+  const route = await ctx.db
+    .query("contentRoutes")
+    .withIndex("by_locale_and_route", (q) =>
+      q.eq("locale", args.locale).eq("route", args.route)
+    )
+    .unique();
+
+  if (!route) {
+    throw new Error(`Expected content route fixture for ${args.route}.`);
+  }
+
+  await ctx.db.delete(route._id);
+}
+
 describe("contents/queries/runtime", () => {
   it("returns Quran references with synced route catalog graph identity", async () => {
     const t = createConvexTestWithBetterAuth();
@@ -250,95 +376,78 @@ describe("contents/queries/runtime", () => {
     );
   });
 
-  it("loads exercise set, question, and group pages from indexed rows", async () => {
+  it("loads exercise runtime pages and rejects missing graph projection", async () => {
     const t = createConvexTestWithBetterAuth();
+    const slug =
+      "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1";
+    const secondSlug =
+      "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2";
+    const tenthSlug =
+      "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-10";
+    const setGraph = detachedContentRouteGraph(slug, "exercise-set");
+    const questionGraph = detachedContentRouteGraph(
+      `${slug}/1`,
+      "exercise-question"
+    );
 
     await t.mutation(async (ctx) => {
       const authorId = await insertAuthor(ctx);
-      const setId = await ctx.db.insert("exerciseSets", {
-        category: "high-school",
-        description: "Try-out group",
-        exerciseType: "try-out",
-        locale: "id",
-        material: "quantitative-knowledge",
-        questionCount: 1,
+      const setId = await insertExerciseSetFixture(ctx, {
         setName: "set-1",
-        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1",
-        syncedAt: NOW,
+        slug,
         title: "Set 1",
-        type: "snbt",
         year: "2026",
       });
-      await ctx.db.insert("exerciseSets", {
-        category: "high-school",
-        description: "Try-out group",
-        exerciseType: "try-out",
-        locale: "id",
-        material: "quantitative-knowledge",
-        questionCount: 1,
+      await insertExerciseSetFixture(ctx, {
         setName: "set-10",
-        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-10",
-        syncedAt: NOW,
+        slug: tenthSlug,
         title: "Set 10",
-        type: "snbt",
         year: "2026",
       });
-      await ctx.db.insert("exerciseSets", {
-        category: "high-school",
-        description: "Try-out group",
-        exerciseType: "try-out",
-        locale: "id",
-        material: "quantitative-knowledge",
-        questionCount: 1,
+      await insertExerciseSetFixture(ctx, {
         setName: "set-2",
-        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
-        syncedAt: NOW,
+        slug: secondSlug,
         title: "Set 2",
-        type: "snbt",
         year: "2026",
       });
-      const questionId = await ctx.db.insert("exerciseQuestions", {
-        answerBody: "Answer body",
-        category: "high-school",
-        contentHash: "question-hash",
-        date: NOW,
-        exerciseType: "try-out",
-        locale: "id",
-        material: "quantitative-knowledge",
-        number: 1,
-        questionBody: "Question body",
+      const questionId = await insertExerciseQuestionFixture(ctx, {
         setId,
         setName: "set-1",
-        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1/1",
-        syncedAt: NOW,
-        title: "Soal 1",
-        type: "snbt",
+        slug: `${slug}/1`,
       });
       await linkAuthor(ctx, {
         authorId,
         contentId: questionId,
         contentType: "exercise",
       });
-      await ctx.db.insert("exerciseChoices", {
-        isCorrect: true,
-        label: "A. Benar",
-        locale: "id",
-        optionKey: "A",
-        order: 0,
-        questionId,
+      await insertExerciseRouteFixture(ctx, {
+        contentHash: "set-route-hash",
+        graph: setGraph,
+        kind: "exercise-set",
+        route: slug,
+        title: "Set 1",
       });
-      await ctx.db.insert("exerciseChoices", {
-        isCorrect: true,
-        label: "A. Correct",
-        locale: "en",
-        optionKey: "A",
-        order: 0,
-        questionId,
+      await insertExerciseRouteFixture(ctx, {
+        contentHash: "question-route-hash",
+        graph: questionGraph,
+        kind: "exercise-question",
+        route: `${slug}/1`,
+        title: "Soal 1",
+      });
+      await insertExerciseRouteFixture(ctx, {
+        contentHash: "set-2-route-hash",
+        kind: "exercise-set",
+        route: secondSlug,
+        title: "Set 2",
+      });
+      await insertExerciseRouteFixture(ctx, {
+        contentHash: "set-10-route-hash",
+        kind: "exercise-set",
+        route: tenthSlug,
+        title: "Set 10",
       });
     });
 
-    const slug =
-      "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1";
     const setPage = await t.query(
       api.contents.queries.runtime.getExerciseSetPage,
       { locale: "id", slug }
@@ -347,32 +456,51 @@ describe("contents/queries/runtime", () => {
       api.contents.queries.runtime.getExerciseQuestionPage,
       { locale: "id", slug: `${slug}/1` }
     );
+    const groupArgs = {
+      category: "high-school",
+      exerciseType: "try-out",
+      locale: "id",
+      material: "quantitative-knowledge",
+      type: "snbt",
+      year: "2026",
+    } as const;
     const groupPage = await t.query(
       api.contents.queries.runtime.getExerciseGroupPage,
-      {
-        category: "high-school",
-        exerciseType: "try-out",
-        locale: "id",
-        material: "quantitative-knowledge",
-        type: "snbt",
-        year: "2026",
-      }
+      groupArgs
     );
 
     expect(setPage?.exercises).toEqual([
       expect.objectContaining({
+        assetId: questionGraph.assetId,
+        content_id: questionGraph.content_id,
         choices: {
           en: [{ label: "A. Correct", value: true }],
           id: [{ label: "A. Benar", value: true }],
         },
         number: 1,
         question: expect.objectContaining({ raw: "Question body" }),
+        route: `${slug}/1`,
       }),
     ]);
+    expect(setPage).toEqual(
+      expect.objectContaining({
+        assetId: setGraph.assetId,
+        content_id: setGraph.content_id,
+        route: slug,
+      })
+    );
     expect(questionPage).toEqual(
       expect.objectContaining({
         exerciseCount: 1,
-        exercise: expect.objectContaining({ number: 1 }),
+        exercise: expect.objectContaining({
+          assetId: questionGraph.assetId,
+          number: 1,
+          route: `${slug}/1`,
+        }),
+        set: expect.objectContaining({
+          assetId: setGraph.assetId,
+          route: slug,
+        }),
       })
     );
     expect(groupPage?.sets.map((set) => set.setName)).toEqual([
@@ -382,11 +510,42 @@ describe("contents/queries/runtime", () => {
     ]);
     expect(groupPage?.sets[0]).toEqual(
       expect.objectContaining({
+        assetId: setGraph.assetId,
+        content_id: setGraph.content_id,
         questionCount: 1,
+        route: slug,
         slug,
         year: "2026",
       })
     );
+
+    await t.mutation(async (ctx) => {
+      await deleteContentRouteFixture(ctx, {
+        locale: "id",
+        route: `${slug}/1`,
+      });
+    });
+
+    await expect(
+      t.query(api.contents.queries.runtime.getExerciseSetPage, {
+        locale: "id",
+        slug,
+      })
+    ).resolves.toBeNull();
+    await expect(
+      t.query(api.contents.queries.runtime.getExerciseQuestionPage, {
+        locale: "id",
+        slug: `${slug}/1`,
+      })
+    ).resolves.toBeNull();
+
+    await t.mutation(async (ctx) => {
+      await deleteContentRouteFixture(ctx, { locale: "id", route: secondSlug });
+    });
+
+    await expect(
+      t.query(api.contents.queries.runtime.getExerciseGroupPage, groupArgs)
+    ).resolves.toBeNull();
   });
 
   it("lists API content with segment matching and catalog graph IDs", async () => {

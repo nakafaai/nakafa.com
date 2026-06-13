@@ -1,5 +1,8 @@
 import { CONTENT_ROUTE_KINDS } from "@repo/backend/convex/contents/constants";
-import { learningGraphIdentityValidator } from "@repo/backend/convex/contents/graph";
+import {
+  graphContentIdValidator,
+  learningGraphIdentityValidator,
+} from "@repo/backend/convex/contents/graph";
 import {
   articleCategoryValidator,
   exercisesCategoryValidator,
@@ -196,7 +199,16 @@ const paginatedApiContentValidator = v.object({
   page: v.array(apiContentItemValidator),
 });
 
+const runtimeExerciseGraphProjectionValidator = v.object({
+  ...learningGraphIdentityValidator.fields,
+  content_id: graphContentIdValidator,
+  locale: localeValidator,
+  route: v.string(),
+  url: v.string(),
+});
+
 export const runtimeExerciseValidator = v.object({
+  ...runtimeExerciseGraphProjectionValidator.fields,
   answer: v.object({
     metadata: contentMetadataValidator,
     raw: v.string(),
@@ -257,6 +269,7 @@ export const getExerciseSetPageArgsValidator = {
 };
 
 const runtimeExerciseSetValidator = v.object({
+  ...runtimeExerciseGraphProjectionValidator.fields,
   category: exercisesCategoryValidator,
   description: v.optional(v.string()),
   exerciseType: v.string(),
@@ -285,6 +298,7 @@ export const getExerciseQuestionPageReturnValidator = nullable(
     exercise: runtimeExerciseValidator,
     exerciseCount: v.number(),
     set: v.object({
+      ...runtimeExerciseGraphProjectionValidator.fields,
       category: exercisesCategoryValidator,
       description: v.optional(v.string()),
       exerciseType: v.string(),
@@ -315,6 +329,7 @@ export const getExerciseGroupPageReturnValidator = nullable(
     material: exercisesMaterialValidator,
     sets: v.array(
       v.object({
+        ...runtimeExerciseGraphProjectionValidator.fields,
         questionCount: v.number(),
         setName: v.string(),
         slug: v.string(),
