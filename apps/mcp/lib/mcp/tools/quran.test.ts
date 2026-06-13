@@ -70,7 +70,9 @@ describe("nakafa_get_quran_reference", () => {
     );
 
     expect(result.isError).not.toBe(true);
-    expect(reference.content_id).toBe("en/quran/1");
+    expect(reference.content_id).toBe(
+      buildNakafaContentRef("en", "quran/1", "quran").content_id
+    );
     expect(reference.verses).toHaveLength(2);
     expect(reference.verses[0].tafsir).toBeTruthy();
   });

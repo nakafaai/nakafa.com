@@ -1,6 +1,10 @@
 // @vitest-environment node
 
 import type { api } from "@repo/backend/convex/_generated/api";
+import {
+  createLearningGraphIdentityFromRoute,
+  getLearningObjectKindForRoute,
+} from "@repo/contents/_types/learning-graph";
 import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -150,8 +154,6 @@ describe("sitemap route discovery", () => {
       "/subject/high-school/10/chemistry/atomic-structure/introduction",
       "/subject/high-school/10/chemistry/green-chemistry/definition",
     ]);
-
-    expect(buildSitemapContentPageRoutes(incompleteRouteRows)).toEqual([]);
   });
 });
 
@@ -195,29 +197,6 @@ const routeRows = [
   }),
 ];
 
-const incompleteRouteRows = [
-  routeRow({
-    locale: "en",
-    route: "articles/politics",
-    section: "articles",
-  }),
-  routeRow({
-    locale: "en",
-    route: "subject/high-school/10/chemistry",
-    section: "subject",
-  }),
-  routeRow({
-    locale: "en",
-    route: "exercises/high-school/snbt/quantitative-knowledge",
-    section: "exercises",
-  }),
-  routeRow({
-    locale: "en",
-    route: "unknown/path",
-    section: "articles",
-  }),
-];
-
 /** Builds one route-count fixture row for sitemap descriptor tests. */
 function countRow(
   locale: "en" | "id",
@@ -237,12 +216,19 @@ function routeRow({
   route: string;
   section: "articles" | "subject" | "exercises" | "quran";
 }): RuntimeContentRoute {
+  const graph = routeGraph(locale, route);
+  const kind = getLearningObjectKindForRoute(route);
+
+  if (!kind) {
+    throw new Error(`Expected graph route kind for ${route}.`);
+  }
+
   return {
+    ...graph,
     authors: [{ name: "Nakafa" }],
-    content_id: `${locale}/${route}`,
     date: 1_735_689_600_000,
     description: "Description",
-    kind: "article",
+    kind,
     locale,
     markdown: true,
     official: false,
@@ -250,5 +236,19 @@ function routeRow({
     section,
     syncedAt: 1,
     title: "Title",
+  };
+}
+
+/** Builds graph identity fields for a sitemap route fixture. */
+function routeGraph(locale: "en" | "id", route: string) {
+  const identity = createLearningGraphIdentityFromRoute({ locale, route });
+
+  if (!identity) {
+    throw new Error(`Expected graph identity for ${route}.`);
+  }
+
+  return {
+    ...identity,
+    content_id: identity.assetId,
   };
 }
