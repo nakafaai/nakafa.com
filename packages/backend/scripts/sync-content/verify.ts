@@ -5,7 +5,10 @@ import {
 } from "@repo/backend/scripts/lib/errors";
 import { callConvexQuery } from "@repo/backend/scripts/sync-content/convex";
 import { getContentCounts } from "@repo/backend/scripts/sync-content/counts";
-import { getDataIntegrity } from "@repo/backend/scripts/sync-content/inspection";
+import {
+  getDataIntegrity,
+  getGraphIdentityIntegrity,
+} from "@repo/backend/scripts/sync-content/inspection";
 import {
   log,
   logError,
@@ -363,6 +366,51 @@ export const verify = Effect.fn("sync.verify")(function* (
   log(
     `Articles with references: ${articlesWithRefs}/${integrity.totalArticles}`
   );
+
+  log("\n=== GRAPH IDENTITY ===\n");
+  const graphIdentityResult = yield* Effect.either(
+    getGraphIdentityIntegrity(config)
+  );
+  if (graphIdentityResult._tag === "Left") {
+    return yield* Effect.fail(
+      new ScriptFailureError({
+        message: `Failed to verify graph identity: ${getUnknownMessage(graphIdentityResult.left)}`,
+      })
+    );
+  }
+
+  const graphIdentity = graphIdentityResult.right;
+  log(
+    `Checked ${graphIdentity.checkedRefs} graph refs across ${graphIdentity.scannedRows} persisted rows`
+  );
+
+  if (graphIdentity.missingGraphRows === 0) {
+    logSuccess("All persisted content refs include graph identity fields");
+  } else {
+    logError(
+      `${graphIdentity.missingGraphRows} persisted content refs are missing graph identity fields`
+    );
+    if (graphIdentity.firstMissingGraph) {
+      log(
+        `  First missing graph ref: ${JSON.stringify(graphIdentity.firstMissingGraph)}`
+      );
+    }
+    allMatch = false;
+  }
+
+  if (graphIdentity.routeShapedContentIds === 0) {
+    logSuccess("No persisted content refs use route-shaped content_id values");
+  } else {
+    logError(
+      `${graphIdentity.routeShapedContentIds} persisted content refs still use route-shaped content_id values`
+    );
+    if (graphIdentity.firstRouteShapedContentId) {
+      log(
+        `  First route-shaped content_id: ${JSON.stringify(graphIdentity.firstRouteShapedContentId)}`
+      );
+    }
+    allMatch = false;
+  }
 
   log("\n=== QURAN RUNTIME ===\n");
   const quranRuntimeResult = yield* Effect.either(

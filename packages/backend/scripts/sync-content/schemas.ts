@@ -423,6 +423,33 @@ export const DataIntegritySchema = Schema.Struct({
   totalSections: Schema.Number,
 });
 
+const GraphIdentityIssueSchema = Schema.Struct({
+  content_id: Schema.optional(Schema.String),
+  kind: Schema.optional(Schema.String),
+  route: Schema.optional(Schema.String),
+  section: Schema.optional(SyncSectionSchema),
+});
+
+export const GraphIdentityIntegrityPageSchema = Schema.Struct({
+  checkedRefs: Schema.Number,
+  continueCursor: Schema.String,
+  firstMissingGraph: Schema.NullOr(GraphIdentityIssueSchema),
+  firstRouteShapedContentId: Schema.NullOr(GraphIdentityIssueSchema),
+  isDone: Schema.Boolean,
+  missingGraphRows: Schema.Number,
+  routeShapedContentIds: Schema.Number,
+  scannedRows: Schema.Number,
+});
+
+export const GraphIdentityIntegritySchema = Schema.Struct({
+  checkedRefs: Schema.Number,
+  firstMissingGraph: Schema.NullOr(GraphIdentityIssueSchema),
+  firstRouteShapedContentId: Schema.NullOr(GraphIdentityIssueSchema),
+  missingGraphRows: Schema.Number,
+  routeShapedContentIds: Schema.Number,
+  scannedRows: Schema.Number,
+});
+
 export const TryoutScaleIntegritySchema = Schema.mutable(
   Schema.Struct({
     continueCursor: Schema.String,

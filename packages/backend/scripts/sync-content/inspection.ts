@@ -8,6 +8,8 @@ import {
   DataIntegritySchema,
   ExerciseChoiceIntegrityPageSchema,
   ExerciseQuestionIntegrityPageSchema,
+  GraphIdentityIntegrityPageSchema,
+  GraphIdentityIntegritySchema,
   StaleContentPageSchema,
   StaleContentSchema,
   SubjectSectionIntegrityPageSchema,
@@ -27,6 +29,12 @@ import type {
 import { Effect, Schema } from "effect";
 
 const PAGE_SIZE = 1000;
+const GRAPH_IDENTITY_TARGETS = [
+  "contentRoutes",
+  "contentSearch",
+  "contentRoutePages",
+  "parts",
+] as const;
 
 interface PageResult {
   continueCursor: string;
@@ -52,6 +60,30 @@ interface PaginationArgs {
   cursor: string | null;
   numItems: number;
 }
+
+interface GraphIdentityIntegrityPage {
+  checkedRefs: number;
+  continueCursor: string;
+  firstMissingGraph: GraphIdentityIssue | null;
+  firstRouteShapedContentId: GraphIdentityIssue | null;
+  isDone: boolean;
+  missingGraphRows: number;
+  routeShapedContentIds: number;
+  scannedRows: number;
+}
+
+interface GraphIdentityIssue {
+  content_id?: string;
+  kind?: string;
+  route?: string;
+  section?: string;
+}
+
+type GraphIdentityTarget = (typeof GRAPH_IDENTITY_TARGETS)[number];
+type GraphIdentityIntegrityTotal = Omit<
+  GraphIdentityIntegrityPage,
+  "continueCursor" | "isDone"
+>;
 
 /** Builds typed stale-content query args for one content table. */
 const buildStaleContentArgs =
@@ -91,6 +123,68 @@ const collectPages = Effect.fn("sync.collectPages")(function* <
   }
 
   return rows;
+});
+
+function getGraphIdentityPageSize(target: GraphIdentityTarget) {
+  if (target === "contentSearch") {
+    return 500;
+  }
+
+  if (target === "parts") {
+    return 100;
+  }
+
+  return PAGE_SIZE;
+}
+
+const emptyGraphIdentityIntegrity = (): GraphIdentityIntegrityTotal => ({
+  checkedRefs: 0,
+  firstMissingGraph: null,
+  firstRouteShapedContentId: null,
+  missingGraphRows: 0,
+  routeShapedContentIds: 0,
+  scannedRows: 0,
+});
+
+function addGraphIdentityPage(
+  total: GraphIdentityIntegrityTotal,
+  page: GraphIdentityIntegrityTotal
+) {
+  total.checkedRefs += page.checkedRefs;
+  total.missingGraphRows += page.missingGraphRows;
+  total.routeShapedContentIds += page.routeShapedContentIds;
+  total.scannedRows += page.scannedRows;
+  total.firstMissingGraph ??= page.firstMissingGraph;
+  total.firstRouteShapedContentId ??= page.firstRouteShapedContentId;
+}
+
+const getGraphIdentityIntegrityForTarget = Effect.fn(
+  "sync.getGraphIdentityIntegrityForTarget"
+)(function* (config: ConvexConfig, target: GraphIdentityTarget) {
+  const total = emptyGraphIdentityIntegrity();
+  let continueCursor: string | null = null;
+  let isDone = false;
+
+  while (!isDone) {
+    const page: GraphIdentityIntegrityPage = yield* callConvexQuery(
+      config,
+      internal.contentSync.queries.integrity.getGraphIdentityIntegrityPage,
+      {
+        paginationOpts: {
+          cursor: continueCursor,
+          numItems: getGraphIdentityPageSize(target),
+        },
+        target,
+      },
+      GraphIdentityIntegrityPageSchema
+    );
+
+    addGraphIdentityPage(total, page);
+    continueCursor = page.continueCursor;
+    isDone = page.isDone;
+  }
+
+  return total;
 });
 
 /** Finds database content rows whose source slugs are no longer on disk. */
@@ -249,6 +343,22 @@ export const getDataIntegrity = Effect.fn("sync.getDataIntegrity")(function* (
     totalArticles: articles.length,
     totalSections: sections.length,
   });
+});
+
+/** Summarizes graph identity violations across persisted read models and chat previews. */
+export const getGraphIdentityIntegrity = Effect.fn(
+  "sync.getGraphIdentityIntegrity"
+)(function* (config: ConvexConfig) {
+  const total = emptyGraphIdentityIntegrity();
+
+  for (const target of GRAPH_IDENTITY_TARGETS) {
+    addGraphIdentityPage(
+      total,
+      yield* getGraphIdentityIntegrityForTarget(config, target)
+    );
+  }
+
+  return Schema.decodeUnknownSync(GraphIdentityIntegritySchema)(total);
 });
 
 /** Returns authors that are not referenced by any content-author links. */
