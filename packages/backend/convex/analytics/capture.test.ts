@@ -3,6 +3,7 @@ import { chatResponseFailureCode } from "@repo/ai/config/generation";
 import { getModelCreditCost, ModelIdSchema } from "@repo/ai/config/model";
 import { captureProductEvent } from "@repo/backend/convex/analytics/capture";
 import { productAnalyticsEventValidator } from "@repo/backend/convex/analytics/events";
+import { posthog } from "@repo/backend/convex/posthog";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { validate } from "convex-helpers/validators";
@@ -10,6 +11,17 @@ import { convexTest } from "convex-test";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 3, 2, 12, 0, 0);
+const contentViewProperties = {
+  alignment_id: "alignment:id:articles:example",
+  concept_id: "concept:id:articles:example",
+  content_id: "asset:id:articles:example",
+  content_type: "article",
+  is_new_view: true,
+  learning_object_id: "lo:id:articles:example",
+  lens_id: "lens:id:articles:example",
+  locale: "id",
+  route: "articles/example",
+} as const;
 
 describe("analytics/capture", () => {
   const liteModel = ModelIdSchema.make("nakafa-lite");
@@ -32,6 +44,12 @@ describe("analytics/capture", () => {
     expect(
       validate(productAnalyticsEventValidator, {
         name: "content viewed",
+        properties: contentViewProperties,
+      })
+    ).toBe(true);
+    expect(
+      validate(productAnalyticsEventValidator, {
+        name: "content viewed",
         properties: {
           content_type: "article",
           is_new_view: true,
@@ -39,7 +57,7 @@ describe("analytics/capture", () => {
           slug: "articles/example",
         },
       })
-    ).toBe(true);
+    ).toBe(false);
     expect(
       validate(productAnalyticsEventValidator, {
         name: "exercise attempt started",
@@ -196,12 +214,7 @@ describe("analytics/capture", () => {
         distinctId: userId,
         event: {
           name: "content viewed",
-          properties: {
-            content_type: "article",
-            is_new_view: true,
-            locale: "id",
-            slug: "articles/example",
-          },
+          properties: contentViewProperties,
         },
         timestamp: new Date(NOW),
       });
@@ -215,13 +228,67 @@ describe("analytics/capture", () => {
           expect.objectContaining({
             disableGeoip: true,
             event: "content viewed",
-            properties: JSON.stringify({
-              content_type: "article",
-              is_new_view: true,
-              locale: "id",
-              slug: "articles/example",
-            }),
+            properties: JSON.stringify(contentViewProperties),
             timestamp: NOW,
+          }),
+        ],
+        name: expect.stringContaining("capture"),
+      }),
+    ]);
+  });
+
+  it("keeps already scheduled component captures independent from the product event validator", async () => {
+    const t = convexTest(schema, convexModules);
+    posthogTest.register(t);
+
+    const scheduledJobs = await t.mutation(async (ctx) => {
+      const userId = await ctx.db.insert("users", {
+        authId: "legacy-analytics-user-auth",
+        credits: 10,
+        creditsResetAt: NOW,
+        email: "legacy-analytics@example.com",
+        name: "Legacy Analytics User",
+        plan: "free",
+      });
+
+      await posthog.capture(ctx, {
+        distinctId: userId,
+        disableGeoip: true,
+        event: "content viewed",
+        properties: {
+          content_type: "subject",
+          is_new_view: false,
+          locale: "id",
+          slug: "subject/high-school/10/mathematics/example",
+        },
+        timestamp: new Date(NOW),
+      });
+
+      return await ctx.db.system.query("_scheduled_functions").collect();
+    });
+
+    expect(
+      validate(productAnalyticsEventValidator, {
+        name: "content viewed",
+        properties: {
+          content_type: "subject",
+          is_new_view: false,
+          locale: "id",
+          slug: "subject/high-school/10/mathematics/example",
+        },
+      })
+    ).toBe(false);
+    expect(scheduledJobs).toEqual([
+      expect.objectContaining({
+        args: [
+          expect.objectContaining({
+            event: "content viewed",
+            properties: JSON.stringify({
+              content_type: "subject",
+              is_new_view: false,
+              locale: "id",
+              slug: "subject/high-school/10/mathematics/example",
+            }),
           }),
         ],
         name: expect.stringContaining("capture"),

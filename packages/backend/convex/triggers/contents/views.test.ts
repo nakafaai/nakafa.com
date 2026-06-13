@@ -37,6 +37,7 @@ describe("triggers/contents/views", () => {
 
   it("captures signed-in content views after the engaged view write", async () => {
     const t = createConvexTestWithBetterAuth();
+    const graph = getArticleGraphFixture();
     const identity = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, { now: NOW });
 
@@ -52,7 +53,7 @@ describe("triggers/contents/views", () => {
         title: "Analytics",
       });
       await ctx.db.insert("contentRoutes", {
-        ...getArticleGraphFixture(),
+        ...graph,
         assetId: ARTICLE_CONTENT_ID,
         authors: [],
         contentHash: "route-hash",
@@ -92,10 +93,15 @@ describe("triggers/contents/views", () => {
               distinctId: identity.userId,
               event: "content viewed",
               properties: JSON.stringify({
+                alignment_id: graph.alignmentId,
+                concept_id: graph.conceptId,
+                content_id: ARTICLE_CONTENT_ID,
                 content_type: "article",
                 is_new_view: true,
+                learning_object_id: graph.learningObjectId,
+                lens_id: graph.lensId,
                 locale: "id",
-                slug: ARTICLE_ROUTE,
+                route: ARTICLE_ROUTE,
               }),
             }),
           ],

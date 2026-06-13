@@ -4,6 +4,10 @@ import {
   modelIdValidator,
 } from "@repo/backend/convex/chats/schema";
 import {
+  graphContentIdValidator,
+  learningGraphIdentityValidator,
+} from "@repo/backend/convex/contents/graph";
+import {
   checkoutLocaleValidator,
   polarCheckoutLocaleValidator,
 } from "@repo/backend/convex/customers/checkout/localization";
@@ -37,10 +41,16 @@ export const productAnalyticsEventValidator = v.union(
   v.object({
     name: v.literal("content viewed"),
     properties: v.object({
+      alignment_id: learningGraphIdentityValidator.fields.alignmentId,
+      concept_id: learningGraphIdentityValidator.fields.conceptId,
+      content_id: graphContentIdValidator,
       content_type: contentTypeValidator,
       is_new_view: v.boolean(),
+      learning_object_id:
+        learningGraphIdentityValidator.fields.learningObjectId,
+      lens_id: learningGraphIdentityValidator.fields.lensId,
       locale: localeValidator,
-      slug: v.string(),
+      route: v.string(),
     }),
   }),
   v.object({
