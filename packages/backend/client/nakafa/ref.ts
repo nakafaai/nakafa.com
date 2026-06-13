@@ -25,7 +25,7 @@ export function resolveNakafaContentRef(convexUrl: string, input: string) {
     return Effect.succeed(Option.none<NakafaAgentContentRef>());
   }
 
-  return Effect.succeed(parseNakafaContentRef(input));
+  return resolveNakafaContentUrlProjection(convexUrl, input);
 }
 
 /** Resolves one graph asset ID through the backend route catalog. */
@@ -36,6 +36,33 @@ function resolveNakafaContentId(convexUrl: string, contentId: string) {
       "getContentRouteByContentId",
       api.contents.queries.runtime.getContentRouteByContentId,
       { contentId }
+    );
+
+    if (!route) {
+      return Option.none<NakafaAgentContentRef>();
+    }
+
+    return createNakafaContentRefFromGraphProjection(route);
+  });
+}
+
+/** Resolves one canonical public URL through the backend route catalog. */
+function resolveNakafaContentUrlProjection(convexUrl: string, input: string) {
+  return Effect.gen(function* () {
+    const parsed = parseNakafaContentRef(input);
+
+    if (Option.isNone(parsed)) {
+      return Option.none<NakafaAgentContentRef>();
+    }
+
+    const route = yield* fetchNakafaRuntimeQuery(
+      convexUrl,
+      "getContentRoute",
+      api.contents.queries.runtime.getContentRoute,
+      {
+        locale: parsed.value.locale,
+        route: parsed.value.route,
+      }
     );
 
     if (!route) {

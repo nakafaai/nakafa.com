@@ -5,6 +5,7 @@ import {
   createNakafaContentRefFromGraphProjection,
   getNakafaContentResourceUri,
 } from "@repo/contents/_lib/agent/refs";
+import { LocaleSchema } from "@repo/contents/_types/content";
 import { type FunctionReference, getFunctionName } from "convex/server";
 import { Effect, Option, Schema } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -19,6 +20,10 @@ vi.mock("@repo/backend/client/runtime", () => ({
 
 const ContentIdArgsSchema = Schema.Struct({
   contentId: Schema.String,
+});
+const RouteArgsSchema = Schema.Struct({
+  locale: LocaleSchema,
+  route: Schema.String,
 });
 
 const convexUrl = "https://example.convex.cloud";
@@ -56,7 +61,7 @@ describe("resolveNakafaContentRef", () => {
     expect(Option.getOrUndefined(ref)).toStrictEqual(detachedArticleRef);
   });
 
-  it("accepts canonical public URLs only as route projections", async () => {
+  it("resolves canonical public URLs through the route catalog", async () => {
     const ref = await Effect.runPromise(
       resolveNakafaContentRef(
         convexUrl,
@@ -64,8 +69,15 @@ describe("resolveNakafaContentRef", () => {
       )
     );
 
-    expect(Option.getOrUndefined(ref)).toStrictEqual(articleRef);
-    expect(runtimeMocks.fetchConvexRuntimeQuery).not.toHaveBeenCalled();
+    expect(Option.getOrUndefined(ref)).toStrictEqual(detachedArticleRef);
+    expect(runtimeMocks.fetchConvexRuntimeQuery).toHaveBeenCalledWith(
+      convexUrl,
+      api.contents.queries.runtime.getContentRoute,
+      {
+        locale: "en",
+        route: articleRoute,
+      }
+    );
   });
 
   it("rejects bare route refs at the Convex-backed runtime seam", async () => {
@@ -95,6 +107,13 @@ function readRuntimeFixture(
     return Promise.resolve(readContentRouteByContentId(args));
   }
 
+  if (
+    getFunctionName(query) ===
+    getFunctionName(api.contents.queries.runtime.getContentRoute)
+  ) {
+    return Promise.resolve(readContentRoute(args));
+  }
+
   return Promise.reject(new Error("Unhandled content-ref query fixture."));
 }
 
@@ -110,6 +129,22 @@ function readContentRouteByContentId(args: unknown) {
   }
 
   if (input.contentId === detachedArticleRef.content_id) {
+    return {
+      ...detachedArticleRef,
+      title: "Detached article",
+    };
+  }
+
+  return null;
+}
+
+function readContentRoute(args: unknown) {
+  const input = Schema.decodeUnknownSync(RouteArgsSchema)(args);
+
+  if (
+    input.locale === detachedArticleRef.locale &&
+    input.route === articleRoute
+  ) {
     return {
       ...detachedArticleRef,
       title: "Detached article",

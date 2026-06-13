@@ -4,6 +4,7 @@ import {
 } from "@repo/backend/client/nakafa/markdown";
 import { api } from "@repo/backend/convex/_generated/api";
 import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
+import { LocaleSchema } from "@repo/contents/_types/content";
 import { type FunctionReference, getFunctionName } from "convex/server";
 import { Effect, Option, Schema } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -16,10 +17,13 @@ vi.mock("@repo/backend/client/runtime", () => ({
   fetchConvexRuntimeQuery: runtimeMocks.fetchConvexRuntimeQuery,
 }));
 
-const LocaleSchema = Schema.Literal("en", "id");
 const PageArgsSchema = Schema.Struct({
   locale: LocaleSchema,
   slug: Schema.String,
+});
+const RouteArgsSchema = Schema.Struct({
+  locale: LocaleSchema,
+  route: Schema.String,
 });
 const ContentIdArgsSchema = Schema.Struct({
   contentId: Schema.String,
@@ -119,6 +123,10 @@ function readRuntimeFixture(
     return Promise.resolve(readContentRouteByContentId(args));
   }
 
+  if (isRuntimeQuery(query, api.contents.queries.runtime.getContentRoute)) {
+    return Promise.resolve(readContentRoute(args));
+  }
+
   if (isRuntimeQuery(query, api.contents.queries.runtime.getArticlePage)) {
     return Promise.resolve(readArticlePage(args));
   }
@@ -157,6 +165,39 @@ function readContentRouteByContentId(args: unknown) {
     ...ref,
     title: ref.route,
   };
+}
+
+function readContentRoute(args: unknown) {
+  const input = Schema.decodeUnknownSync(RouteArgsSchema)(args);
+
+  if (input.route.includes("missing")) {
+    return null;
+  }
+
+  return {
+    ...buildNakafaContentRef(
+      input.locale,
+      input.route,
+      getSection(input.route)
+    ),
+    title: input.route,
+  };
+}
+
+function getSection(route: string) {
+  if (route.startsWith("articles/")) {
+    return "articles";
+  }
+
+  if (route.startsWith("subject/")) {
+    return "subject";
+  }
+
+  if (route.startsWith("exercises/")) {
+    return "exercises";
+  }
+
+  return "quran";
 }
 
 /** Compares generated function references by their Convex function name. */

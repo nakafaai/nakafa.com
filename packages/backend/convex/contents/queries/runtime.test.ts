@@ -291,13 +291,41 @@ describe("contents/queries/runtime", () => {
     );
   });
 
-  it("lists API content with exact-or-descendant segment matching", async () => {
+  it("lists API content with segment matching and catalog graph IDs", async () => {
     const t = createConvexTestWithBetterAuth();
+    const articleRoute = "articles/politics/api-detached";
     const topicSlug = "subject/high-school/10/chemistry/structure-matter";
     const exactSlug = `${topicSlug}/subatomic-particles`;
     const siblingSlug = `${topicSlug}/subatomic-particles-properties`;
+    const articleGraph = detachedContentRouteGraph(articleRoute, "article");
+    const exactGraph = detachedContentRouteGraph(exactSlug, "subject");
 
     await t.mutation(async (ctx) => {
+      await ctx.db.insert("articleContents", {
+        articleSlug: "api-detached",
+        body: "## Article body",
+        category: "politics",
+        contentHash: "api-article-hash",
+        date: NOW,
+        description: "Article description",
+        locale: "id",
+        slug: articleRoute,
+        syncedAt: NOW,
+        title: "API Article",
+      });
+      await ctx.db.insert("contentRoutes", {
+        ...articleGraph,
+        authors: [],
+        contentHash: "api-article-hash",
+        kind: "article",
+        locale: "id",
+        markdown: true,
+        route: articleRoute,
+        section: "articles",
+        syncedAt: NOW,
+        title: "API Article",
+      });
+
       const topicId = await ctx.db.insert("subjectTopics", {
         category: "high-school",
         grade: "10",
@@ -328,9 +356,33 @@ describe("contents/queries/runtime", () => {
           topic: "structure-matter",
           topicId,
         });
+        const graph =
+          slug === exactSlug ? exactGraph : contentRouteGraph("id", slug);
+
+        await ctx.db.insert("contentRoutes", {
+          ...graph,
+          authors: [],
+          contentHash: `${slug}:hash`,
+          kind: "subject-section",
+          locale: "id",
+          markdown: true,
+          route: slug,
+          section: "subject",
+          syncedAt: NOW,
+          title: slug === exactSlug ? "Subatomic Particles" : "Properties",
+        });
       }
     });
 
+    const articlePage = await t.query(
+      api.contents.queries.runtime.listArticleApiContentPage,
+      {
+        cursor: null,
+        limit: 100,
+        locale: "id",
+        prefix: articleRoute,
+      }
+    );
     const exactPage = await t.query(
       api.contents.queries.runtime.listSubjectApiContentPage,
       {
@@ -355,6 +407,20 @@ describe("contents/queries/runtime", () => {
       exactSlug,
       siblingSlug,
     ]);
+    expect(articlePage.page[0]).toEqual(
+      expect.objectContaining({
+        alignmentId: articleGraph.alignmentId,
+        assetId: articleGraph.assetId,
+        slug: articleRoute,
+      })
+    );
+    expect(exactPage.page[0]).toEqual(
+      expect.objectContaining({
+        alignmentId: exactGraph.alignmentId,
+        assetId: exactGraph.assetId,
+        slug: exactSlug,
+      })
+    );
   });
 
   it("lists route catalog rows with exact-or-descendant segment matching", async () => {
@@ -651,5 +717,20 @@ function contentRoutePageItem(route: string) {
     section: "articles" as const,
     syncedAt: NOW,
     title: route,
+  };
+}
+
+function detachedContentRouteGraph(route: string, token: string) {
+  const graph = contentRouteGraph("id", route);
+  const assetId = `asset:id:catalog:${token}`;
+
+  return {
+    ...graph,
+    alignmentId: `alignment:id:catalog:${token}`,
+    assetId,
+    conceptId: `concept:id:catalog:${token}`,
+    content_id: assetId,
+    learningObjectId: `lo:id:catalog:${token}`,
+    lensId: `lens:id:catalog:${token}`,
   };
 }
