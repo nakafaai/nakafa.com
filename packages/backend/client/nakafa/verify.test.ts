@@ -21,17 +21,15 @@ const ContentIdArgsSchema = Schema.Struct({
   contentId: Schema.String,
 });
 const ExerciseGroupArgsSchema = Schema.Struct({
-  category: Schema.Literal("high-school", "middle-school"),
-  exerciseType: Schema.String,
   locale: Schema.Literal("en", "id"),
-  material: Schema.String,
-  type: Schema.String,
-  year: Schema.optional(Schema.String),
+  slug: Schema.String,
 });
 
 const articleRoute = "articles/politics/example";
 const exerciseGroupRoute =
   "exercises/high-school/snbt/quantitative-knowledge/try-out/2026";
+const exerciseSetRoute = `${exerciseGroupRoute}/set-1`;
+const exerciseQuestionRoute = `${exerciseSetRoute}/2`;
 
 beforeEach(() => {
   runtimeMocks.fetchConvexRuntimeQuery.mockReset();
@@ -39,7 +37,7 @@ beforeEach(() => {
 });
 
 describe("verifyNakafaContent", () => {
-  it("verifies exact catalog routes and exercise group fallback routes", async () => {
+  it("verifies exact catalog routes and readable exercise set routes", async () => {
     const articleRef = buildNakafaContentRef("en", articleRoute, "articles");
 
     await expect(
@@ -54,13 +52,21 @@ describe("verifyNakafaContent", () => {
       Effect.runPromise(
         verifyNakafaContent(
           "https://example.convex.cloud",
-          `https://nakafa.com/id/${exerciseGroupRoute}`
+          `https://nakafa.com/id/${exerciseSetRoute}`
+        )
+      )
+    ).resolves.toBe(true);
+    await expect(
+      Effect.runPromise(
+        verifyNakafaContent(
+          "https://example.convex.cloud",
+          `https://nakafa.com/id/${exerciseQuestionRoute}`
         )
       )
     ).resolves.toBe(true);
   });
 
-  it("returns false for invalid refs, missing rows, invalid groups, and query failures", async () => {
+  it("returns false for invalid refs, missing rows, unreadable exercise routes, and query failures", async () => {
     await expect(
       Effect.runPromise(verifyNakafaContent("https://example.convex.cloud", ""))
     ).resolves.toBe(false);
@@ -76,7 +82,15 @@ describe("verifyNakafaContent", () => {
       Effect.runPromise(
         verifyNakafaContent(
           "https://example.convex.cloud",
-          "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/not-year"
+          `https://nakafa.com/id/${exerciseGroupRoute}`
+        )
+      )
+    ).resolves.toBe(false);
+    await expect(
+      Effect.runPromise(
+        verifyNakafaContent(
+          "https://example.convex.cloud",
+          `https://nakafa.com/id/${exerciseSetRoute}/99`
         )
       )
     ).resolves.toBe(false);
@@ -113,9 +127,9 @@ function readRuntimeFixture(
 
   if (
     getFunctionName(query) ===
-    getFunctionName(api.contents.queries.runtime.getExerciseGroupPage)
+    getFunctionName(api.contents.queries.runtime.getExerciseSetPage)
   ) {
-    return Promise.resolve(readExerciseGroupPage(args));
+    return Promise.resolve(readExerciseSetPage(args));
   }
 
   return Promise.reject(new Error("Unhandled verify query fixture."));
@@ -156,23 +170,35 @@ function readContentRoute(args: unknown) {
     };
   }
 
+  if (
+    input.route === exerciseGroupRoute ||
+    input.route === exerciseSetRoute ||
+    input.route === exerciseQuestionRoute ||
+    input.route === `${exerciseSetRoute}/99`
+  ) {
+    const ref = buildNakafaContentRef(input.locale, input.route, "exercises");
+
+    return {
+      ...ref,
+      locale: input.locale,
+      route: input.route,
+      section: "exercises",
+      title: "Exercise",
+    };
+  }
+
   return null;
 }
 
-/** Builds one exercise group page fixture from generated query args. */
-function readExerciseGroupPage(args: unknown) {
+/** Builds one exercise set page fixture from generated query args. */
+function readExerciseSetPage(args: unknown) {
   const input = Schema.decodeUnknownSync(ExerciseGroupArgsSchema)(args);
 
-  if (input.year !== "2026") {
+  if (input.slug !== exerciseSetRoute) {
     return null;
   }
 
   return {
-    category: input.category,
-    exerciseType: input.exerciseType,
-    material: input.material,
-    sets: [{ questionCount: 1, setName: "set-1", slug: "set-1" }],
-    type: input.type,
-    year: input.year,
+    exercises: [{ number: 1 }, { number: 2 }],
   };
 }

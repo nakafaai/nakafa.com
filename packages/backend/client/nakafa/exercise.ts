@@ -30,7 +30,11 @@ export function readNakafaExercise(
       return Option.none<NakafaAgentExerciseResult>();
     }
 
-    const target = getExerciseTarget(ref.value.route, exerciseNumber);
+    const target = getExerciseTarget(
+      ref.value.locale,
+      ref.value.route,
+      exerciseNumber
+    );
 
     if (Option.isNone(target)) {
       return Option.none<NakafaAgentExerciseResult>();
@@ -143,11 +147,19 @@ export function readExerciseMarkdown(
 }
 
 /** Resolves a question route to its parent set and optional question number. */
-function getExerciseTarget(route: string, exerciseNumber?: number) {
+export function getExerciseTarget(
+  locale: Locale,
+  route: string,
+  exerciseNumber?: number
+) {
   const routeNumber = getQuestionNumberFromRoute(route);
   const setRoute = Option.isSome(routeNumber)
     ? route.split("/").slice(0, -1).join("/")
     : route;
+
+  if (!isExerciseSetRoute(locale, setRoute)) {
+    return Option.none();
+  }
 
   if (typeof exerciseNumber === "number") {
     if (Option.isSome(routeNumber) && routeNumber.value !== exerciseNumber) {
@@ -164,6 +176,19 @@ function getExerciseTarget(route: string, exerciseNumber?: number) {
     number: routeNumber,
     setRoute,
   });
+}
+
+/** Returns whether a route points to a concrete exercise set. */
+function isExerciseSetRoute(locale: Locale, route: string) {
+  const parts = route.split("/");
+  const setSegment = parts.at(-1);
+
+  if (!setSegment?.startsWith("set-")) {
+    return false;
+  }
+
+  const groupRoute = parts.slice(0, -1).join("/");
+  return Option.isSome(getExerciseGroupArgs(locale, groupRoute));
 }
 
 /** Reads a numeric exercise question segment only under a set segment. */
