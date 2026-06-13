@@ -10,6 +10,7 @@ import {
 import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
 import type { NakafaAgentSection } from "@repo/contents/_lib/agent/schema/ref";
 import type { NakafaAgentSearchResult } from "@repo/contents/_lib/agent/schema/search";
+import type { Locale } from "@repo/contents/_types/content";
 import { Option } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -24,7 +25,7 @@ function contentSummary({
 }: {
   description: string;
   excerpt?: string;
-  locale: "en" | "id";
+  locale: Locale;
   route: string;
   section: NakafaAgentSection;
   title: string;

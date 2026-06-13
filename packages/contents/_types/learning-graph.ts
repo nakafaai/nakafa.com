@@ -1,14 +1,27 @@
 import type { Locale } from "@repo/contents/_types/content";
 import { cleanSlug } from "@repo/utilities/helper";
+import { Schema } from "effect";
 
-export type LearningObjectKind =
-  | "article"
-  | "subject-topic"
-  | "subject-section"
-  | "exercise-group"
-  | "exercise-set"
-  | "exercise-question"
-  | "quran-surah";
+/** Stable learning object kinds supported by graph identity generation. */
+export const LEARNING_OBJECT_KIND_VALUES = [
+  "article",
+  "subject-topic",
+  "subject-section",
+  "exercise-group",
+  "exercise-set",
+  "exercise-question",
+  "quran-surah",
+] as const;
+
+/** Runtime schema for graph learning object kinds. */
+export const LearningObjectKindSchema = Schema.Literal(
+  ...LEARNING_OBJECT_KIND_VALUES
+);
+
+/** Graph learning object kind derived from the runtime schema. */
+export type LearningObjectKind = Schema.Schema.Type<
+  typeof LearningObjectKindSchema
+>;
 
 export interface LearningGraphIdentity {
   alignmentId: string;

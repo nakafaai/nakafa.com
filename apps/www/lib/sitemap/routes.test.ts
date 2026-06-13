@@ -1,10 +1,12 @@
 // @vitest-environment node
 
 import type { api } from "@repo/backend/convex/_generated/api";
+import type { Locale } from "@repo/contents/_types/content";
 import {
   createLearningGraphIdentityFromRoute,
   getLearningObjectKindForRoute,
 } from "@repo/contents/_types/learning-graph";
+import type { SourceRegistryRoot } from "@repo/contents/_types/source-registry";
 import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -238,11 +240,7 @@ const incompleteRouteRows = [
 ];
 
 /** Builds one route-count fixture row for sitemap descriptor tests. */
-function countRow(
-  locale: "en" | "id",
-  section: "articles" | "subject" | "exercises" | "quran",
-  count: number
-) {
+function countRow(locale: Locale, section: SourceRegistryRoot, count: number) {
   return { count, locale, section, syncedAt: 1 };
 }
 
@@ -252,9 +250,9 @@ function routeRow({
   route,
   section,
 }: {
-  locale: "en" | "id";
+  locale: Locale;
   route: string;
-  section: "articles" | "subject" | "exercises" | "quran";
+  section: SourceRegistryRoot;
 }): RuntimeContentRoute {
   const graph = routeGraph(locale, route);
   const kind = getLearningObjectKindForRoute(route);
@@ -282,9 +280,9 @@ function routeRow({
 /** Builds a graph-backed row with a custom route projection for edge cases. */
 function routeProjectionRow(
   input: {
-    locale: "en" | "id";
+    locale: Locale;
     route: string;
-    section: "articles" | "subject" | "exercises" | "quran";
+    section: SourceRegistryRoot;
   },
   route: string
 ): RuntimeContentRoute {
@@ -295,7 +293,7 @@ function routeProjectionRow(
 }
 
 /** Builds graph identity fields for a sitemap route fixture. */
-function routeGraph(locale: "en" | "id", route: string) {
+function routeGraph(locale: Locale, route: string) {
   const identity = createLearningGraphIdentityFromRoute({ locale, route });
 
   if (!identity) {

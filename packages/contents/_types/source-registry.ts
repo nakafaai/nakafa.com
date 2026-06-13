@@ -7,8 +7,25 @@ import {
   normalizeGraphRoute,
 } from "@repo/contents/_types/learning-graph";
 import { cleanSlug } from "@repo/utilities/helper";
+import { Schema } from "effect";
 
-export type SourceRegistryRoot = "articles" | "exercises" | "quran" | "subject";
+/** Stable source roots accepted by the graph source registry adapter. */
+export const SOURCE_REGISTRY_ROOT_VALUES = [
+  "articles",
+  "exercises",
+  "quran",
+  "subject",
+] as const;
+
+/** Runtime schema for graph source registry roots. */
+export const SourceRegistryRootSchema = Schema.Literal(
+  ...SOURCE_REGISTRY_ROOT_VALUES
+);
+
+/** Source registry root derived from the runtime schema. */
+export type SourceRegistryRoot = Schema.Schema.Type<
+  typeof SourceRegistryRootSchema
+>;
 
 export interface SourceRegistryInput {
   locale: Locale;
