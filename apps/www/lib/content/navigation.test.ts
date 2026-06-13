@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -890,7 +891,7 @@ function routeRow(overrides: Partial<NavigationRoute>): NavigationRoute {
 
   return {
     authors: [{ name: "Contributor" }],
-    content_id: `${locale}/${route}`,
+    content_id: getFixtureContentId(locale, route),
     date: 1_735_689_600_000,
     depth: route.split("/").filter(Boolean).length,
     description: "Description",
@@ -904,6 +905,17 @@ function routeRow(overrides: Partial<NavigationRoute>): NavigationRoute {
     title: "Title",
     ...overrides,
   };
+}
+
+/** Builds the graph asset ID used by synced route rows in fixture data. */
+function getFixtureContentId(locale: "en" | "id", route: string) {
+  const identity = createLearningGraphIdentityFromRoute({ locale, route });
+
+  if (identity) {
+    return identity.assetId;
+  }
+
+  return `asset:${locale}:fixture:${route.split("/").filter(Boolean).join(":")}`;
 }
 
 /** Derives the same navigation parent route used by synced route rows. */

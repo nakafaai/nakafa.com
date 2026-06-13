@@ -1,4 +1,5 @@
 // @vitest-environment node
+import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -235,7 +236,7 @@ interface RuntimeRouteFixture {
 function routeRow(args: RuntimeRouteFixture) {
   return {
     authors: [{ name: "Nakafa" }],
-    content_id: `${args.locale}/${args.route}`,
+    content_id: getFixtureContentId(args.locale, args.route),
     kind: args.kind ?? "article",
     locale: args.locale,
     markdown: true,
@@ -245,6 +246,17 @@ function routeRow(args: RuntimeRouteFixture) {
     syncedAt: 1,
     title: "Title",
   };
+}
+
+/** Builds the graph asset ID used by synced route rows in fixture data. */
+function getFixtureContentId(locale: "en" | "id", route: string) {
+  const identity = createLearningGraphIdentityFromRoute({ locale, route });
+
+  if (identity) {
+    return identity.assetId;
+  }
+
+  return `asset:${locale}:fixture:${route.split("/").filter(Boolean).join(":")}`;
 }
 
 describe("route catalog metadata", () => {
