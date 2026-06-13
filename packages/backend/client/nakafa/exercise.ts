@@ -6,7 +6,6 @@ import { fetchNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
 import { resolveNakafaContentRef } from "@repo/backend/client/nakafa/ref";
 import { api } from "@repo/backend/convex/_generated/api";
 import { formatNakafaRouteTitle } from "@repo/contents/_lib/agent/format";
-import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
 import type { NakafaAgentExerciseResult } from "@repo/contents/_lib/agent/schema/exercise";
 import type { NakafaAgentMarkdown } from "@repo/contents/_lib/agent/schema/read";
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
@@ -58,13 +57,8 @@ export function readNakafaExercise(
       return Option.none<NakafaAgentExerciseResult>();
     }
 
-    const setRef = buildNakafaContentRef(
-      ref.value.locale,
-      target.setRoute,
-      "exercises"
-    );
     const resultInput = {
-      ...setRef,
+      ...ref.value,
       count: exercises.length,
       exercises: exercises.map((exercise) => ({
         answer: {

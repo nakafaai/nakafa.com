@@ -4,7 +4,10 @@ import {
   readNakafaExercise,
 } from "@repo/backend/client/nakafa/exercise";
 import { api } from "@repo/backend/convex/_generated/api";
-import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
+import {
+  buildNakafaContentRef,
+  createNakafaContentRefFromGraphProjection,
+} from "@repo/contents/_lib/agent/refs";
 import { type FunctionReference, getFunctionName } from "convex/server";
 import { Effect, Option, Schema } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -30,6 +33,14 @@ const setRoute =
   "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1";
 const missingSetRoute =
   "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-missing";
+const detachedSetRef = detachedExerciseRef(
+  "asset:id:catalog:exercise:set-1",
+  setRoute
+);
+const detachedQuestionRef = detachedExerciseRef(
+  "asset:id:catalog:exercise:set-1:q2",
+  `${setRoute}/2`
+);
 
 beforeEach(() => {
   runtimeMocks.fetchConvexRuntimeQuery.mockReset();
@@ -64,6 +75,30 @@ describe("readNakafaExercise", () => {
     expect(Option.getOrUndefined(explicitQuestion)?.exercise_number).toBe(2);
     expect(Option.getOrUndefined(graphQuestion)?.exercise_number).toBe(2);
     expect(Option.getOrUndefined(markdown)?.text).toContain("- [x] A. Benar");
+  });
+
+  it("preserves catalog graph identity in exercise results", async () => {
+    const set = await Effect.runPromise(
+      readNakafaExercise(convexUrl, detachedSetRef.content_id)
+    );
+    const question = await Effect.runPromise(
+      readNakafaExercise(convexUrl, detachedQuestionRef.content_id)
+    );
+    const routeDerivedSet = buildNakafaContentRef("id", setRoute, "exercises");
+
+    expect(Option.getOrUndefined(set)?.content_id).toBe(
+      detachedSetRef.content_id
+    );
+    expect(Option.getOrUndefined(question)?.content_id).toBe(
+      detachedQuestionRef.content_id
+    );
+    expect(Option.getOrUndefined(question)?.exercise_number).toBe(2);
+    expect(Option.getOrUndefined(set)?.content_id).not.toBe(
+      routeDerivedSet.content_id
+    );
+    expect(Option.getOrUndefined(question)?.content_id).not.toBe(
+      routeDerivedSet.content_id
+    );
   });
 
   it("returns none for unsupported, missing, and malformed exercise refs", async () => {
@@ -191,7 +226,14 @@ function readContentRouteByContentId(args: unknown) {
     missingSetRoute,
     "exercises"
   );
-  const refs = [setRef, questionRef, articleRef, missingSetRef];
+  const refs = [
+    setRef,
+    questionRef,
+    articleRef,
+    missingSetRef,
+    detachedSetRef,
+    detachedQuestionRef,
+  ];
   const ref = refs.find((item) => item.content_id === input.contentId);
 
   if (!ref) {
@@ -202,6 +244,27 @@ function readContentRouteByContentId(args: unknown) {
     ...ref,
     title: ref.route,
   };
+}
+
+/** Creates a graph ref whose IDs intentionally do not derive from its route. */
+function detachedExerciseRef(contentId: string, route: string) {
+  const ref = createNakafaContentRefFromGraphProjection({
+    alignmentId: contentId.replace("asset:", "alignment:"),
+    assetId: contentId,
+    conceptId: contentId.replace("asset:", "concept:"),
+    content_id: contentId,
+    learningObjectId: contentId.replace("asset:", "lo:"),
+    lensId: contentId.replace("asset:", "lens:"),
+    locale: "id",
+    route,
+    section: "exercises",
+  });
+
+  if (Option.isNone(ref)) {
+    throw new Error("Expected a valid detached exercise graph ref.");
+  }
+
+  return ref.value;
 }
 
 /** Builds one exercise set page fixture from generated query args. */
