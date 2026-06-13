@@ -63,8 +63,7 @@ const STACK_ID = "evil-stacked";
 const REVEAL_DURATION = 1; // intro wipe length, in seconds
 const REVEAL_EASE: [number, number, number, number] = [0, 0.7, 0.5, 1]; // intro wipe easing
 const REVEAL_PROPS = {
-  initial: { scaleX: 0 },
-  animate: { scaleX: 1 },
+  animate: { scaleX: [0, 1] },
   transition: { duration: REVEAL_DURATION, ease: REVEAL_EASE },
 };
 

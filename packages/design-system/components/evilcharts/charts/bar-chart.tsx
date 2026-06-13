@@ -1,5 +1,6 @@
 "use client";
 
+import { useReducedMotion } from "@mantine/hooks";
 import {
   type BackgroundVariant,
   ChartBackground,
@@ -24,12 +25,19 @@ import {
 } from "@repo/design-system/components/evilcharts/ui/legend";
 import { LoadingIndicator } from "@repo/design-system/components/evilcharts/ui/loading-indicator";
 import {
+  BAR_REVEAL_DURATION_MS,
+  BAR_REVEAL_STAGGER_MS,
+  getOrderedRevealStep,
+  type OrderedRevealAnimation,
+  useOrderedReveal,
+} from "@repo/design-system/components/evilcharts/ui/reveal-animation";
+import {
   ChartTooltip,
   ChartTooltipContent,
   type TooltipRoundness,
   type TooltipVariant,
 } from "@repo/design-system/components/evilcharts/ui/tooltip";
-import { m, useReducedMotion } from "motion/react";
+import { m } from "motion/react";
 import {
   type ComponentProps,
   createContext,
@@ -58,8 +66,6 @@ const DEFAULT_BAR_RADIUS = 2;
 const LOADING_BAR_DATA_KEY = "loading";
 const LOADING_ANIMATION_DURATION = 2000; // in milliseconds
 const STACK_ID = "evil-stacked";
-const BAR_GROW_DURATION = 0.5; // per-bar grow-in length, in seconds
-const BAR_STAGGER = 0.05; // delay between consecutive bars, in seconds
 const REVEAL_EASE: [number, number, number, number] = [0, 0.7, 0.5, 1]; // grow-in easing
 
 type BarVariant =
@@ -81,12 +87,7 @@ type BarLayout = "vertical" | "horizontal";
  * chart. `"none"` opts out entirely; it is also what a device with the OS
  * "reduce motion" preference falls back to automatically.
  */
-type BarAnimationType =
-  | "none"
-  | "left-to-right"
-  | "right-to-left"
-  | "center-out"
-  | "edges-in";
+type BarAnimationType = "none" | OrderedRevealAnimation;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared context
@@ -102,7 +103,6 @@ interface BarChartContextValue {
   barRadius: number; // default corner radius each <Bar /> inherits
   config: ChartConfig; // colors + labels for every series
   dataLength: number; // number of rows currently rendered
-  introStartedAt: number; // timestamp the chart mounted — anchors the one-shot grow-in
   isHorizontal: boolean; // whether bars are laid out horizontally
   isLoading: boolean; // whether the chart shows its loading skeleton
   isMouseInChart: boolean; // whether the pointer is currently over the chart
@@ -200,10 +200,6 @@ export function EvilBarChart<
   onBrushChange,
 }: EvilBarChartProps<TData, TConfig>) {
   const chartId = useId().replace(/:/g, ""); // colon-free id keeps CSS/SVG selectors valid
-  // Anchors the grow-in to a fixed moment so it plays exactly once — re-renders
-  // and Recharts' bar remounts read elapsed time from here instead of replaying.
-  // Lazy useState stamps the time once, on the initial render only.
-  const [introStartedAt] = useState(() => Date.now());
   const [selectedDataKey, setSelectedDataKey] = useState<string | null>(
     defaultSelectedDataKey
   );
@@ -232,7 +228,6 @@ export function EvilBarChart<
       isLoading,
       barRadius,
       animationType,
-      introStartedAt,
       dataLength: displayData.length,
       selectedDataKey,
       selectDataKey,
@@ -245,7 +240,6 @@ export function EvilBarChart<
       isLoading,
       barRadius,
       animationType,
-      introStartedAt,
       displayData.length,
       selectedDataKey,
       selectDataKey,
@@ -346,7 +340,6 @@ export function Bar({
     isLoading,
     barRadius: defaultRadius,
     animationType: defaultAnimation,
-    introStartedAt,
     dataLength,
     selectedDataKey,
     selectDataKey,
@@ -355,11 +348,6 @@ export function Bar({
   const id = useId().replace(/:/g, ""); // unique id scopes this bar's style defs
   // Devices set to "reduce motion" skip the grow-in animation entirely
   const shouldReduceMotion = useReducedMotion();
-
-  // The root renders the skeleton bar while loading, so real bars step aside
-  if (isLoading) {
-    return null;
-  }
 
   const resolvedRadius = radius ?? defaultRadius;
   const isSelected = selectedDataKey === dataKey;
@@ -370,6 +358,15 @@ export function Bar({
   const revealType: BarAnimationType = shouldReduceMotion
     ? "none"
     : (animationType ?? defaultAnimation);
+  const isRevealActive = useOrderedReveal(
+    isLoading ? "none" : revealType,
+    dataLength
+  );
+
+  // The root renders the skeleton bar while loading, so real bars step aside
+  if (isLoading) {
+    return null;
+  }
 
   const customBarProps = {
     id,
@@ -382,7 +379,7 @@ export function Bar({
     enableHoverHighlight,
     isMouseInChart,
     isHorizontal,
-    introStartedAt,
+    isRevealActive,
     selectedDataKey,
     dataLength,
     colorSlots,
@@ -639,8 +636,8 @@ type CustomBarProps = {
   enableHoverHighlight?: boolean;
   isMouseInChart?: boolean;
   isHorizontal?: boolean;
+  isRevealActive?: boolean;
   animationType?: BarAnimationType;
-  introStartedAt?: number;
   selectedDataKey?: string | null;
   isActive?: boolean;
   dataLength?: number;
@@ -669,8 +666,8 @@ const CustomBar = (props: CustomBarProps) => {
     enableHoverHighlight,
     isMouseInChart,
     isHorizontal = false,
+    isRevealActive = false,
     animationType = "none",
-    introStartedAt = 0,
     selectedDataKey,
     isActive,
     dataLength = 0,
@@ -686,7 +683,7 @@ const CustomBar = (props: CustomBarProps) => {
     index,
     dataLength,
     isHorizontal,
-    introStartedAt
+    isRevealActive
   );
 
   const fill = isLastBar
@@ -767,7 +764,6 @@ const CustomBar = (props: CustomBarProps) => {
       {grow ? (
         <m.g
           animate={grow.animate}
-          initial={grow.initial}
           style={grow.style}
           transition={grow.transition}
         >
@@ -783,79 +779,48 @@ const CustomBar = (props: CustomBarProps) => {
 /**
  * Builds the motion.dev grow-in animation for a single bar, or returns `null`
  * when the bar should render statically (`"none"`, reduced motion, an unknown
- * index, or — crucially — once the bar has already finished growing).
+ * index, empty data, or once the intro window is complete).
  *
  * Every bar grows from its baseline — `scaleY` from the bottom for vertical
  * layout, `scaleX` from the left for horizontal — and `animationType` decides
  * the stagger order, so the chart fills in one bar at a time.
  *
- * The intro is anchored to `introStartedAt` (stamped once when the chart
- * mounts) rather than to component mount. Recharts remounts every bar whenever
- * the chart re-renders — e.g. on hover-highlight — so a mount-based animation
- * would replay endlessly. Reading elapsed time instead makes it a true
- * one-shot: a bar past its window renders static, and a bar caught mid-grow
- * resumes from the progress it should already be at.
+ * The owning <Bar /> series owns its reveal window. Once the window ends, every
+ * bar renders as plain SVG geometry, so long/offscreen content cannot leave
+ * bars hidden behind stale animation transforms.
  */
 const getBarGrowAnimation = (
   animationType: BarAnimationType,
   index: number,
   dataLength: number,
   isHorizontal: boolean,
-  introStartedAt: number
+  isRevealActive: boolean
 ) => {
-  if (animationType === "none" || index < 0 || dataLength <= 0) {
+  if (
+    animationType === "none" ||
+    index < 0 ||
+    dataLength <= 0 ||
+    !isRevealActive
+  ) {
     return null;
   }
 
-  const lastIndex = dataLength - 1;
-  const center = lastIndex / 2;
-
-  // How many bars this one waits behind before it starts growing
-  let step: number;
-  switch (animationType) {
-    case "right-to-left":
-      step = lastIndex - index;
-      break;
-    case "center-out":
-      step = Math.abs(index - center);
-      break;
-    case "edges-in":
-      step = center - Math.abs(index - center);
-      break;
-    default: // left-to-right
-      step = index;
-  }
-
-  const startMs = step * BAR_STAGGER * 1000;
-  const durationMs = BAR_GROW_DURATION * 1000;
-  const endMs = startMs + durationMs;
-  const elapsed = Date.now() - introStartedAt;
-
-  // Already finished — render static so re-renders/remounts can't replay it
-  if (elapsed >= endMs) {
-    return null;
-  }
-
-  // Resume from wherever this bar should already be: 0 before it starts,
-  // partway through if a remount caught it mid-grow.
-  const from = elapsed <= startMs ? 0 : (elapsed - startMs) / durationMs;
+  const step = getOrderedRevealStep(animationType, index, dataLength);
   const transition = {
-    duration: (endMs - Math.max(elapsed, startMs)) / 1000,
+    duration: BAR_REVEAL_DURATION_MS / 1000,
     ease: REVEAL_EASE,
-    delay: Math.max(0, startMs - elapsed) / 1000,
+    delay: (step * BAR_REVEAL_STAGGER_MS) / 1000,
   };
 
   // Horizontal bars grow rightward from the left edge, vertical from the bottom
   return isHorizontal
     ? {
-        initial: { scaleX: from },
-        animate: { scaleX: 1 },
+        animate: { scaleX: [0, 1] },
         transition,
         style: { originX: 0 },
       }
     : {
-        initial: { scaleY: from },
-        animate: { scaleY: 1 },
+        animate: { scaleY: [0, 1] },
         transition,
         style: { originY: 1 },
       };

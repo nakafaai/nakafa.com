@@ -322,6 +322,11 @@
   content-visibility: auto;
 }
 
+.content-auto-card:has([data-slot="chart"]) {
+  contain-intrinsic-size: none;
+  content-visibility: visible;
+}
+
 @utility content-auto-quran-verse {
   contain-intrinsic-size: auto none auto 32rem;
   content-visibility: auto;
