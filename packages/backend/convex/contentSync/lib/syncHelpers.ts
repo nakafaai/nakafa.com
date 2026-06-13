@@ -8,7 +8,11 @@ import { getContentGraphIdentity } from "@repo/backend/convex/contents/graph";
 import { deleteContentRoute } from "@repo/backend/convex/contents/helpers/routes/write";
 import { buildContentSearchRef } from "@repo/backend/convex/contents/helpers/search/documents";
 import { deleteContentSearch } from "@repo/backend/convex/contents/helpers/search/write";
-import type { ContentType } from "@repo/backend/convex/lib/validators/contents";
+import {
+  type ContentType,
+  type Locale,
+  SUPPORTED_CONTENT_LOCALES,
+} from "@repo/backend/convex/lib/validators/contents";
 import { ConvexError } from "convex/values";
 
 export type AuthorCache = Map<string, Id<"authors">>;
@@ -34,10 +38,7 @@ export interface SyncedExerciseChoice {
   order: number;
 }
 
-export interface SyncedExerciseChoices {
-  en: SyncedExerciseChoice[];
-  id: SyncedExerciseChoice[];
-}
+export type SyncedExerciseChoices = Record<Locale, SyncedExerciseChoice[]>;
 
 /** Load existing authors into a lookup map keyed by author name. */
 export async function buildAuthorCache(
@@ -167,24 +168,20 @@ export async function replaceExerciseChoices(
     questionId: Id<"exerciseQuestions">;
   }
 ): Promise<number> {
-  assertContentSyncBatchSize({
-    functionName: "replaceExerciseChoices",
-    limit: CONTENT_SYNC_BATCH_LIMITS.exerciseChoices,
-    received: args.choices.id.length,
-    unit: "Indonesian exercise choices",
-  });
-  assertContentSyncBatchSize({
-    functionName: "replaceExerciseChoices",
-    limit: CONTENT_SYNC_BATCH_LIMITS.exerciseChoices,
-    received: args.choices.en.length,
-    unit: "English exercise choices",
-  });
+  for (const locale of SUPPORTED_CONTENT_LOCALES) {
+    assertContentSyncBatchSize({
+      functionName: "replaceExerciseChoices",
+      limit: CONTENT_SYNC_BATCH_LIMITS.exerciseChoices,
+      received: args.choices[locale].length,
+      unit: `${locale} exercise choices`,
+    });
+  }
 
   await deleteExerciseChoicesForQuestion(ctx, args.questionId);
 
   let created = 0;
 
-  for (const locale of ["id", "en"] as const) {
+  for (const locale of SUPPORTED_CONTENT_LOCALES) {
     for (const choice of args.choices[locale]) {
       await ctx.db.insert("exerciseChoices", {
         isCorrect: choice.isCorrect,
