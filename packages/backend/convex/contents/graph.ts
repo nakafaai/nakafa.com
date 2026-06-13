@@ -14,6 +14,10 @@ export const learningGraphIdentityValidator = v.object({
   lensId: v.string(),
 });
 
+/** Convex validator for persisted graph content IDs. */
+export const graphContentIdValidator =
+  learningGraphIdentityValidator.fields.assetId;
+
 /** Builds canonical graph identity for one synced content route projection. */
 export function getContentGraphIdentity(source: LearningGraphSource) {
   return createLearningGraphIdentity(source);

@@ -3,10 +3,7 @@
 import { useDocumentVisibility, useLocalStorage } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
-import type {
-  ContentViewRef,
-  Locale,
-} from "@repo/backend/convex/lib/validators/contents";
+import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { generateNanoId } from "@repo/design-system/lib/utils";
 import { useMutation } from "convex/react";
 import { Effect } from "effect";
@@ -14,7 +11,7 @@ import { useEffect, useState } from "react";
 import { useContentViews } from "@/lib/context/use-content-views";
 
 interface UseRecordContentViewOptions {
-  contentView: ContentViewRef;
+  contentId: string;
   delay?: number;
   locale: Locale;
 }
@@ -29,7 +26,7 @@ interface UseRecordContentViewOptions {
  * @param delay - Minimum engagement time before recording (default: 3000ms)
  */
 export function useRecordContentView({
-  contentView,
+  contentId,
   locale,
   delay = 3000,
 }: UseRecordContentViewOptions) {
@@ -42,7 +39,7 @@ export function useRecordContentView({
 
   const documentState = useDocumentVisibility();
   const isVisible = documentState === "visible";
-  const viewKey = `${contentView.type}:${locale}:${contentView.slug}`;
+  const viewKey = `${locale}:${contentId}`;
   const [defaultDeviceId] = useState(
     () => `${Date.now()}-${generateNanoId(9)}`
   );
@@ -65,7 +62,7 @@ export function useRecordContentView({
         Effect.tryPromise({
           try: () =>
             recordView({
-              contentRef: { type: contentView.type, slug: contentView.slug },
+              contentId,
               locale,
               deviceId,
             }),
@@ -75,10 +72,9 @@ export function useRecordContentView({
           Effect.catchAll((error) =>
             Effect.sync(() =>
               captureException(error, {
+                contentId,
                 locale,
-                slug: contentView.slug,
                 source: "record-content-view",
-                type: contentView.type,
               })
             )
           )
@@ -90,8 +86,7 @@ export function useRecordContentView({
       window.clearTimeout(timeoutId);
     };
   }, [
-    contentView.slug,
-    contentView.type,
+    contentId,
     delay,
     deviceId,
     isViewed,

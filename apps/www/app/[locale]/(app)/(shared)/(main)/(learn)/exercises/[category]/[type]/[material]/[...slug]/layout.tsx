@@ -8,14 +8,14 @@ import { cleanSlug } from "@repo/utilities/helper";
 import { Option } from "effect";
 import { notFound } from "next/navigation";
 
-import { use } from "react";
 import { ContentViewTracker } from "@/components/tracking/content-view-tracker";
+import { getRuntimeContentViewId } from "@/lib/content/views";
 import { AttemptContextProvider } from "@/lib/context/use-attempt";
 import { ExerciseContextProvider } from "@/lib/context/use-exercise";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { isNumber } from "@/lib/utils/number";
 
-export default function Layout(
+export default async function Layout(
   props: LayoutProps<"/[locale]/exercises/[category]/[type]/[material]/[...slug]">
 ) {
   const { children, params } = props;
@@ -25,7 +25,7 @@ export default function Layout(
     type: rawType,
     material: rawMaterial,
     slug,
-  } = use(params);
+  } = await params;
   const locale = getLocaleOrThrow(rawLocale);
   const parsedCategory = parseExercisesCategory(rawCategory);
   const parsedType = parseExercisesType(rawType);
@@ -49,17 +49,25 @@ export default function Layout(
   const filePath = getSlugPath(category, type, material, baseSlug);
 
   const cleanedSlug = cleanSlug(filePath);
+  const contentId = await getRuntimeContentViewId({
+    locale,
+    route: cleanedSlug,
+  });
+  const content = (
+    <ExerciseContextProvider key={cleanedSlug} slug={cleanedSlug}>
+      <AttemptContextProvider locale={locale} slug={cleanedSlug}>
+        {children}
+      </AttemptContextProvider>
+    </ExerciseContextProvider>
+  );
+
+  if (!contentId) {
+    return content;
+  }
 
   return (
-    <ContentViewTracker
-      contentView={{ type: "exercise", slug: cleanedSlug }}
-      locale={locale}
-    >
-      <ExerciseContextProvider key={cleanedSlug} slug={cleanedSlug}>
-        <AttemptContextProvider locale={locale} slug={cleanedSlug}>
-          {children}
-        </AttemptContextProvider>
-      </ExerciseContextProvider>
+    <ContentViewTracker contentId={contentId} locale={locale}>
+      {content}
     </ContentViewTracker>
   );
 }

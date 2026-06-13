@@ -3,9 +3,28 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
+import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 3, 2, 12, 0, 0);
+const ARTICLE_ROUTE = "articles/politics/analytics";
+const ARTICLE_CONTENT_ID = "asset:id:catalog:article:analytics";
+
+/** Builds the article graph fixture used by the content-view trigger test. */
+function getArticleGraphFixture() {
+  const graph = createLearningGraphIdentityFromRoute({
+    locale: "id",
+    route: ARTICLE_ROUTE,
+  });
+
+  if (!graph) {
+    throw new Error(
+      `Unable to build graph fixture for route "${ARTICLE_ROUTE}".`
+    );
+  }
+
+  return graph;
+}
 
 describe("triggers/contents/views", () => {
   beforeEach(() => {
@@ -28,7 +47,21 @@ describe("triggers/contents/views", () => {
         contentHash: "hash",
         date: NOW,
         locale: "id",
-        slug: "articles/politics/analytics",
+        slug: ARTICLE_ROUTE,
+        syncedAt: NOW,
+        title: "Analytics",
+      });
+      await ctx.db.insert("contentRoutes", {
+        ...getArticleGraphFixture(),
+        assetId: ARTICLE_CONTENT_ID,
+        authors: [],
+        contentHash: "route-hash",
+        content_id: ARTICLE_CONTENT_ID,
+        kind: "article",
+        locale: "id",
+        markdown: true,
+        route: ARTICLE_ROUTE,
+        section: "articles",
         syncedAt: NOW,
         title: "Analytics",
       });
@@ -42,10 +75,7 @@ describe("triggers/contents/views", () => {
         sessionId: identity.sessionId,
       })
       .mutation(api.contents.mutations.views.recordContentView, {
-        contentRef: {
-          slug: "articles/politics/analytics",
-          type: "article",
-        },
+        contentId: ARTICLE_CONTENT_ID,
         deviceId: "device-1",
         locale: "id",
       });
@@ -65,7 +95,7 @@ describe("triggers/contents/views", () => {
                 content_type: "article",
                 is_new_view: true,
                 locale: "id",
-                slug: "articles/politics/analytics",
+                slug: ARTICLE_ROUTE,
               }),
             }),
           ],

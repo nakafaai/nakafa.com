@@ -47,26 +47,6 @@ export const contentRefValidator = v.union(
 
 export type ContentRef = Infer<typeof contentRefValidator>;
 
-/**
- * Content reference with slug for view tracking.
- */
-export const contentViewRefValidator = v.union(
-  v.object({
-    type: v.literal("article"),
-    slug: v.string(),
-  }),
-  v.object({
-    type: v.literal("subject"),
-    slug: v.string(),
-  }),
-  v.object({
-    type: v.literal("exercise"),
-    slug: v.string(),
-  })
-);
-
-export type ContentViewRef = Infer<typeof contentViewRefValidator>;
-
 export const articleCategoryValidator = literals(...ARTICLE_CATEGORIES);
 export type ArticleCategory = Infer<typeof articleCategoryValidator>;
 

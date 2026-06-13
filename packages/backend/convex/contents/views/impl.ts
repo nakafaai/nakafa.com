@@ -34,60 +34,98 @@ function toContentViewIoError(error: unknown) {
   });
 }
 
-/** Resolves the durable content reference for the public localized slug. */
-const loadContentRef = Effect.fn("contents.views.loadContentRef")(function* (
-  db: MutationCtx["db"],
-  args: RecordContentViewArgs
-) {
-  if (args.contentRef.type === "article") {
-    const article = yield* Effect.tryPromise({
+/** Resolves the durable content reference for a graph content ID. */
+const loadContentTarget = Effect.fn("contents.views.loadContentTarget")(
+  function* (db: MutationCtx["db"], args: RecordContentViewArgs) {
+    const route = yield* Effect.tryPromise({
       try: () =>
         db
-          .query("articleContents")
+          .query("contentRoutes")
+          .withIndex("by_content_id", (q) => q.eq("content_id", args.contentId))
+          .unique(),
+      catch: toContentViewIoError,
+    });
+
+    if (!route) {
+      return null;
+    }
+
+    if (route.locale !== args.locale || route.content_id !== route.assetId) {
+      return null;
+    }
+
+    if (route.kind === "article") {
+      const article = yield* Effect.tryPromise({
+        try: () =>
+          db
+            .query("articleContents")
+            .withIndex("by_locale_and_slug", (q) =>
+              q.eq("locale", route.locale).eq("slug", route.route)
+            )
+            .first(),
+        catch: toContentViewIoError,
+      });
+
+      return article
+        ? {
+            contentRef: {
+              id: article._id,
+              type: "article",
+            } satisfies ContentRef,
+            route,
+          }
+        : null;
+    }
+
+    if (route.kind === "subject-section") {
+      const section = yield* Effect.tryPromise({
+        try: () =>
+          db
+            .query("subjectSections")
+            .withIndex("by_locale_and_slug", (q) =>
+              q.eq("locale", route.locale).eq("slug", route.route)
+            )
+            .first(),
+        catch: toContentViewIoError,
+      });
+
+      return section
+        ? {
+            contentRef: {
+              id: section._id,
+              type: "subject",
+            } satisfies ContentRef,
+            route,
+          }
+        : null;
+    }
+
+    if (route.kind !== "exercise-set") {
+      return null;
+    }
+
+    const exerciseSet = yield* Effect.tryPromise({
+      try: () =>
+        db
+          .query("exerciseSets")
           .withIndex("by_locale_and_slug", (q) =>
-            q.eq("locale", args.locale).eq("slug", args.contentRef.slug)
+            q.eq("locale", route.locale).eq("slug", route.route)
           )
           .first(),
       catch: toContentViewIoError,
     });
 
-    return article
-      ? ({ id: article._id, type: "article" } satisfies ContentRef)
+    return exerciseSet
+      ? {
+          contentRef: {
+            id: exerciseSet._id,
+            type: "exercise",
+          } satisfies ContentRef,
+          route,
+        }
       : null;
   }
-
-  if (args.contentRef.type === "subject") {
-    const section = yield* Effect.tryPromise({
-      try: () =>
-        db
-          .query("subjectSections")
-          .withIndex("by_locale_and_slug", (q) =>
-            q.eq("locale", args.locale).eq("slug", args.contentRef.slug)
-          )
-          .first(),
-      catch: toContentViewIoError,
-    });
-
-    return section
-      ? ({ id: section._id, type: "subject" } satisfies ContentRef)
-      : null;
-  }
-
-  const exerciseSet = yield* Effect.tryPromise({
-    try: () =>
-      db
-        .query("exerciseSets")
-        .withIndex("by_locale_and_slug", (q) =>
-          q.eq("locale", args.locale).eq("slug", args.contentRef.slug)
-        )
-        .first(),
-    catch: toContentViewIoError,
-  });
-
-  return exerciseSet
-    ? ({ id: exerciseSet._id, type: "exercise" } satisfies ContentRef)
-    : null;
-});
+);
 
 /** Loads an existing view for either the device or authenticated user. */
 const loadExistingView = Effect.fn("contents.views.loadExistingView")(
@@ -133,6 +171,7 @@ const loadExistingView = Effect.fn("contents.views.loadExistingView")(
 const insertNewView = Effect.fn("contents.views.insertNewView")(function* (
   db: MutationCtx["db"],
   contentRef: ContentRef,
+  route: Doc<"contentRoutes">,
   args: RecordContentViewArgs,
   input: {
     readonly now: number;
@@ -149,7 +188,7 @@ const insertNewView = Effect.fn("contents.views.insertNewView")(function* (
         firstViewedAt: input.now,
         lastViewedAt: input.now,
         locale: args.locale,
-        slug: args.contentRef.slug,
+        slug: route.route,
         ...(input.userId ? { userId: input.userId } : {}),
       }),
     catch: toContentViewIoError,
@@ -223,12 +262,13 @@ export const recordUniqueContentView: (
     try: () => getOptionalAppUser(ctx),
     catch: toContentViewIoError,
   });
-  const contentRef = yield* loadContentRef(ctx.db, args);
+  const target = yield* loadContentTarget(ctx.db, args);
 
-  if (!contentRef) {
+  if (!target) {
     return { alreadyViewed: false, isNewView: false, success: false };
   }
 
+  const { contentRef, route } = target;
   const now = yield* Clock.currentTimeMillis;
   const userId = authContext?.appUser._id;
   const existingView = yield* loadExistingView(ctx.db, contentRef, {
@@ -241,7 +281,7 @@ export const recordUniqueContentView: (
     return { alreadyViewed: true, isNewView: false, success: true };
   }
 
-  const partition = yield* insertNewView(ctx.db, contentRef, args, {
+  const partition = yield* insertNewView(ctx.db, contentRef, route, args, {
     now,
     userId,
   });

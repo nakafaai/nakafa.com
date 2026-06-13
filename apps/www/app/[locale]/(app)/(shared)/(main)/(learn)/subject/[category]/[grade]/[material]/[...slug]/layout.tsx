@@ -6,11 +6,11 @@ import { cleanSlug } from "@repo/utilities/helper";
 import { Option } from "effect";
 import { notFound } from "next/navigation";
 
-import { use } from "react";
 import { ContentViewTracker } from "@/components/tracking/content-view-tracker";
+import { getRuntimeContentViewId } from "@/lib/content/views";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
-export default function Layout(
+export default async function Layout(
   props: LayoutProps<"/[locale]/subject/[category]/[grade]/[material]/[...slug]">
 ) {
   const { children, params } = props;
@@ -20,7 +20,7 @@ export default function Layout(
     grade: rawGrade,
     material: rawMaterial,
     slug,
-  } = use(params);
+  } = await params;
   const locale = getLocaleOrThrow(rawLocale);
   const category = parseSubjectCategory(rawCategory);
   const grade = parseGrade(rawGrade);
@@ -41,12 +41,17 @@ export default function Layout(
     slug
   );
   const cleanedSlug = cleanSlug(filePath);
+  const contentId = await getRuntimeContentViewId({
+    locale,
+    route: cleanedSlug,
+  });
+
+  if (!contentId) {
+    return children;
+  }
 
   return (
-    <ContentViewTracker
-      contentView={{ type: "subject", slug: cleanedSlug }}
-      locale={locale}
-    >
+    <ContentViewTracker contentId={contentId} locale={locale}>
       {children}
     </ContentViewTracker>
   );

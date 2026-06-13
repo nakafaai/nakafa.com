@@ -1,4 +1,5 @@
 import { api } from "@repo/backend/convex/_generated/api";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { getContentAnalyticsPartition } from "@repo/backend/convex/contents/helpers/partitions";
 import type { ContentRef } from "@repo/backend/convex/lib/validators/contents";
@@ -8,14 +9,71 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { convexTest } from "convex-test";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 4, 29, 10, 0, 0);
+const ARTICLE_ROUTE = "articles/politics/views";
+const ARTICLE_CONTENT_ID = "asset:id:catalog:article:views";
+const SUBJECT_ROUTE = "subject/high-school/10/mathematics/vector/addition";
+const SUBJECT_CONTENT_ID = "asset:id:catalog:subject:views";
+const EXERCISE_ROUTE =
+  "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1";
+const EXERCISE_CONTENT_ID = "asset:id:catalog:exercise:views";
+
+/** Builds one route-catalog graph fixture from the route shape under test. */
+function getGraphFixture(route: string) {
+  const graph = createLearningGraphIdentityFromRoute({
+    locale: "id",
+    route,
+  });
+
+  if (!graph) {
+    throw new Error(`Unable to build graph fixture for route "${route}".`);
+  }
+
+  return graph;
+}
+
+/** Inserts one graph route-catalog row for content-view mutation tests. */
+async function insertContentRoute(
+  ctx: MutationCtx,
+  source: {
+    readonly contentId: string;
+    readonly kind: Doc<"contentRoutes">["kind"];
+    readonly route: string;
+    readonly section: Doc<"contentRoutes">["section"];
+    readonly title: string;
+  }
+) {
+  const graph = getGraphFixture(source.route);
+
+  await ctx.db.insert("contentRoutes", {
+    ...graph,
+    assetId: source.contentId,
+    authors: [],
+    contentHash: `route-hash-${source.contentId}`,
+    content_id: source.contentId,
+    kind: source.kind,
+    locale: "id",
+    markdown: true,
+    route: source.route,
+    section: source.section,
+    syncedAt: NOW,
+    title: source.title,
+  });
+
+  return source.contentId;
+}
 
 /** Inserts one article content row for content-view mutation tests. */
-function insertArticle(ctx: MutationCtx, slug = "articles/politics/views") {
-  return ctx.db.insert("articleContents", {
+async function insertArticle(
+  ctx: MutationCtx,
+  slug = ARTICLE_ROUTE,
+  contentId = ARTICLE_CONTENT_ID
+) {
+  const id = await ctx.db.insert("articleContents", {
     articleSlug: slug.split("/").at(-1) ?? "views",
     body: "Article body",
     category: "politics",
@@ -27,6 +85,16 @@ function insertArticle(ctx: MutationCtx, slug = "articles/politics/views") {
     syncedAt: NOW,
     title: "Views",
   });
+
+  await insertContentRoute(ctx, {
+    contentId,
+    kind: "article",
+    route: slug,
+    section: "articles",
+    title: "Views",
+  });
+
+  return { contentId, id };
 }
 
 /** Inserts one subject section row for content-view mutation tests. */
@@ -44,7 +112,7 @@ async function insertSubject(ctx: MutationCtx) {
     topic: "vector",
   });
 
-  return await ctx.db.insert("subjectSections", {
+  const id = await ctx.db.insert("subjectSections", {
     body: "Subject body",
     category: "high-school",
     contentHash: "subject-hash",
@@ -62,22 +130,42 @@ async function insertSubject(ctx: MutationCtx) {
     topic: "vector",
     topicId,
   });
+
+  await insertContentRoute(ctx, {
+    contentId: SUBJECT_CONTENT_ID,
+    kind: "subject-section",
+    route: SUBJECT_ROUTE,
+    section: "subject",
+    title: "Vector Addition",
+  });
+
+  return { contentId: SUBJECT_CONTENT_ID, id };
 }
 
 /** Inserts one exercise set row for content-view mutation tests. */
-function insertExerciseSet(ctx: MutationCtx) {
-  return ctx.db.insert("exerciseSets", {
+async function insertExerciseSet(ctx: MutationCtx) {
+  const id = await ctx.db.insert("exerciseSets", {
     category: "high-school",
     exerciseType: "try-out",
     locale: "id",
     material: "quantitative-knowledge",
     questionCount: 20,
-    setName: "views",
-    slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/views",
+    setName: "set-1",
+    slug: EXERCISE_ROUTE,
     syncedAt: NOW,
     title: "Views",
     type: "snbt",
   });
+
+  await insertContentRoute(ctx, {
+    contentId: EXERCISE_CONTENT_ID,
+    kind: "exercise-set",
+    route: EXERCISE_ROUTE,
+    section: "exercises",
+    title: "Views",
+  });
+
+  return { contentId: EXERCISE_CONTENT_ID, id };
 }
 
 /** Reads content-view state that should remain small in each test fixture. */
@@ -102,12 +190,12 @@ describe("contents/mutations/views", () => {
 
   it("records a first anonymous article view and schedules analytics", async () => {
     const t = createConvexTestWithBetterAuth();
-    const articleId = await t.mutation((ctx) => insertArticle(ctx));
+    const article = await t.mutation((ctx) => insertArticle(ctx));
 
     const result = await t.mutation(
       api.contents.mutations.views.recordContentView,
       {
-        contentRef: { slug: "articles/politics/views", type: "article" },
+        contentId: article.contentId,
         deviceId: "device-1",
         locale: "id",
       }
@@ -115,7 +203,7 @@ describe("contents/mutations/views", () => {
 
     const state = await readViewState(t);
     const contentRef = {
-      id: articleId,
+      id: article.id,
       type: "article",
     } satisfies ContentRef;
 
@@ -131,7 +219,7 @@ describe("contents/mutations/views", () => {
         firstViewedAt: NOW,
         lastViewedAt: NOW,
         locale: "id",
-        slug: "articles/politics/views",
+        slug: ARTICLE_ROUTE,
       },
     ]);
     expect(state.analyticsQueue).toMatchObject([
@@ -149,9 +237,9 @@ describe("contents/mutations/views", () => {
 
   it("updates an existing device view without queuing duplicate analytics", async () => {
     const t = createConvexTestWithBetterAuth();
-    await t.mutation((ctx) => insertArticle(ctx));
+    const article = await t.mutation((ctx) => insertArticle(ctx));
     await t.mutation(api.contents.mutations.views.recordContentView, {
-      contentRef: { slug: "articles/politics/views", type: "article" },
+      contentId: article.contentId,
       deviceId: "device-1",
       locale: "id",
     });
@@ -161,7 +249,7 @@ describe("contents/mutations/views", () => {
     const result = await t.mutation(
       api.contents.mutations.views.recordContentView,
       {
-        contentRef: { slug: "articles/politics/views", type: "article" },
+        contentId: article.contentId,
         deviceId: "device-1",
         locale: "id",
       }
@@ -186,11 +274,16 @@ describe("contents/mutations/views", () => {
   it("links an existing anonymous device view to a signed-in user", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(async (ctx) => {
-      await insertArticle(ctx);
-      return await seedAuthenticatedUser(ctx, { now: NOW, suffix: "viewer" });
+      const article = await insertArticle(ctx);
+      const user = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "viewer",
+      });
+
+      return { ...user, contentId: article.contentId };
     });
     await t.mutation(api.contents.mutations.views.recordContentView, {
-      contentRef: { slug: "articles/politics/views", type: "article" },
+      contentId: identity.contentId,
       deviceId: "device-1",
       locale: "id",
     });
@@ -203,7 +296,7 @@ describe("contents/mutations/views", () => {
         subject: identity.authUserId,
       })
       .mutation(api.contents.mutations.views.recordContentView, {
-        contentRef: { slug: "articles/politics/views", type: "article" },
+        contentId: identity.contentId,
         deviceId: "device-1",
         locale: "id",
       });
@@ -226,11 +319,13 @@ describe("contents/mutations/views", () => {
   it("deduplicates signed-in user views across devices", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(async (ctx) => {
-      await insertArticle(ctx);
-      return await seedAuthenticatedUser(ctx, {
+      const article = await insertArticle(ctx);
+      const user = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "cross-device-viewer",
       });
+
+      return { ...user, contentId: article.contentId };
     });
     const signedIn = t.withIdentity({
       sessionId: identity.sessionId,
@@ -238,7 +333,7 @@ describe("contents/mutations/views", () => {
     });
 
     await signedIn.mutation(api.contents.mutations.views.recordContentView, {
-      contentRef: { slug: "articles/politics/views", type: "article" },
+      contentId: identity.contentId,
       deviceId: "device-1",
       locale: "id",
     });
@@ -248,7 +343,7 @@ describe("contents/mutations/views", () => {
     const result = await signedIn.mutation(
       api.contents.mutations.views.recordContentView,
       {
-        contentRef: { slug: "articles/politics/views", type: "article" },
+        contentId: identity.contentId,
         deviceId: "device-2",
         locale: "id",
       }
@@ -270,13 +365,13 @@ describe("contents/mutations/views", () => {
     expect(state.analyticsQueue).toHaveLength(1);
   });
 
-  it("returns a best-effort miss when the public slug has no content row", async () => {
+  it("returns a best-effort miss when the graph content ID has no route row", async () => {
     const t = createConvexTestWithBetterAuth();
 
     const result = await t.mutation(
       api.contents.mutations.views.recordContentView,
       {
-        contentRef: { slug: "articles/politics/missing", type: "article" },
+        contentId: "asset:id:missing",
         deviceId: "device-1",
         locale: "id",
       }
@@ -294,16 +389,31 @@ describe("contents/mutations/views", () => {
     expect(state.scheduledJobs).toEqual([]);
   });
 
-  it("returns best-effort misses for non-article content refs", async () => {
+  it("returns best-effort misses for route kinds without tracked source rows", async () => {
     const t = createConvexTestWithBetterAuth();
+    const subjectTopicContentId = await t.mutation((ctx) =>
+      insertContentRoute(ctx, {
+        contentId: "asset:id:catalog:subject-topic:views",
+        kind: "subject-topic",
+        route: "subject/high-school/10/mathematics/vector",
+        section: "subject",
+        title: "Vector",
+      })
+    );
+    const quranContentId = await t.mutation((ctx) =>
+      insertContentRoute(ctx, {
+        contentId: "asset:id:catalog:quran:1",
+        kind: "quran-surah",
+        route: "quran/1",
+        section: "quran",
+        title: "Al-Fatihah",
+      })
+    );
 
     const subjectResult = await t.mutation(
       api.contents.mutations.views.recordContentView,
       {
-        contentRef: {
-          slug: "subject/high-school/10/mathematics/missing/addition",
-          type: "subject",
-        },
+        contentId: subjectTopicContentId,
         deviceId: "device-subject",
         locale: "id",
       }
@@ -311,10 +421,7 @@ describe("contents/mutations/views", () => {
     const exerciseResult = await t.mutation(
       api.contents.mutations.views.recordContentView,
       {
-        contentRef: {
-          slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/missing",
-          type: "exercise",
-        },
+        contentId: quranContentId,
         deviceId: "device-exercise",
         locale: "id",
       }
@@ -337,6 +444,47 @@ describe("contents/mutations/views", () => {
     expect(state.scheduledJobs).toEqual([]);
   });
 
+  it("returns a best-effort miss for mismatched route catalog graph IDs", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const staleContentId = `${ARTICLE_CONTENT_ID}:stale`;
+
+    await t.mutation(async (ctx) => {
+      await insertArticle(ctx);
+      const route = await ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", ARTICLE_CONTENT_ID)
+        )
+        .unique();
+
+      if (!route) {
+        throw new Error("Expected article route fixture.");
+      }
+
+      await ctx.db.patch(route._id, { content_id: staleContentId });
+    });
+
+    const result = await t.mutation(
+      api.contents.mutations.views.recordContentView,
+      {
+        contentId: staleContentId,
+        deviceId: "device-1",
+        locale: "id",
+      }
+    );
+
+    const state = await readViewState(t);
+
+    expect(result).toEqual({
+      alreadyViewed: false,
+      isNewView: false,
+      success: false,
+    });
+    expect(state.views).toEqual([]);
+    expect(state.analyticsQueue).toEqual([]);
+    expect(state.scheduledJobs).toEqual([]);
+  });
+
   it("reports auth component IO failures through the typed boundary", async () => {
     const t = convexTest(schema, convexModules);
 
@@ -347,7 +495,7 @@ describe("contents/mutations/views", () => {
           subject: "missing-auth-user",
         })
         .mutation(api.contents.mutations.views.recordContentView, {
-          contentRef: { slug: "articles/politics/views", type: "article" },
+          contentId: ARTICLE_CONTENT_ID,
           deviceId: "device-1",
           locale: "id",
         })
@@ -358,26 +506,20 @@ describe("contents/mutations/views", () => {
     });
   });
 
-  it("resolves subject and exercise refs through their localized slug indexes", async () => {
+  it("resolves subject and exercise graph IDs through the route catalog", async () => {
     const t = createConvexTestWithBetterAuth();
-    const ids = await t.mutation(async (ctx) => ({
-      exerciseId: await insertExerciseSet(ctx),
-      subjectId: await insertSubject(ctx),
+    const fixtures = await t.mutation(async (ctx) => ({
+      exercise: await insertExerciseSet(ctx),
+      subject: await insertSubject(ctx),
     }));
 
     await t.mutation(api.contents.mutations.views.recordContentView, {
-      contentRef: {
-        slug: "subject/high-school/10/mathematics/vector/addition",
-        type: "subject",
-      },
+      contentId: fixtures.subject.contentId,
       deviceId: "device-subject",
       locale: "id",
     });
     await t.mutation(api.contents.mutations.views.recordContentView, {
-      contentRef: {
-        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/views",
-        type: "exercise",
-      },
+      contentId: fixtures.exercise.contentId,
       deviceId: "device-exercise",
       locale: "id",
     });
@@ -387,8 +529,8 @@ describe("contents/mutations/views", () => {
 
     expect(refs).toEqual(
       expect.arrayContaining([
-        { id: ids.subjectId, type: "subject" },
-        { id: ids.exerciseId, type: "exercise" },
+        { id: fixtures.subject.id, type: "subject" },
+        { id: fixtures.exercise.id, type: "exercise" },
       ])
     );
     expect(state.analyticsQueue).toHaveLength(2);
