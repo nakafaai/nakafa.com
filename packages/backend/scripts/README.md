@@ -168,9 +168,13 @@ pnpm --filter @repo/backend sync:reset:audio --force
 pnpm --filter @repo/backend sync
 ```
 
-For production, run the reset only during an approved Convex write/deploy window.
-When the reset is part of a schema projection change, run it before deploying the
-strict schema that requires the new projection, then deploy and verify:
+For production, run the reset only during an approved Convex write/deploy
+window. This command calls internal mutations from the deployed Convex bundle, so
+it is operational read-model reset tooling after those mutations are available.
+For a strict schema projection cutover where old production rows block deploying
+the current bundle, first use an approved deployment-compatible data cutover path
+to clear or migrate the audio read-model rows, then deploy strict code, rebuild,
+and verify:
 
 ```bash
 pnpm --filter @repo/backend sync:prod:reset:audio --force
