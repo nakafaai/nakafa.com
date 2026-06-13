@@ -80,7 +80,7 @@ function renderNakafaExerciseMarkdown(
 ) {
   return Effect.gen(function* () {
     const readExercise = readers.readExercise ?? getNakafaAgentExercise;
-    const exercise = yield* readExercise(ref.content_id);
+    const exercise = yield* readExercise(ref.url);
 
     if (Option.isNone(exercise)) {
       return Option.none();

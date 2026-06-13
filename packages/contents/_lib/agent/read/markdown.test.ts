@@ -39,6 +39,10 @@ vi.mock("@repo/contents/_lib/agent/exercise/read", async () => {
 
   return {
     getNakafaAgentExercise: (contentId: string) => {
+      if (!contentId.startsWith("https://nakafa.com/")) {
+        return Effect.succeed(Option.none());
+      }
+
       if (contentId.includes("set-404")) {
         return Effect.succeed(Option.none());
       }
