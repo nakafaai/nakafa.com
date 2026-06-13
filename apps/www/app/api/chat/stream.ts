@@ -38,6 +38,7 @@ import {
 import { fetchAction, fetchMutation } from "convex/nextjs";
 import { Effect } from "effect";
 import type { getTranslations } from "next-intl/server";
+import { getCanonicalNakafaContentUrl } from "@/app/api/chat/content";
 import { persistAssistantFailure } from "@/app/api/chat/failure";
 import { search as nakafaSearch } from "@/app/api/chat/nakafa";
 import { nakafaContent } from "@/app/api/chat/nakafa-content";
@@ -277,7 +278,7 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                         return yield* readNakafa({
                           input: {
                             content_ref: NakafaAgentContentRefInputSchema.make(
-                              context.url
+                              getCanonicalNakafaContentUrl(context.url)
                             ),
                           },
                           toolCallId,

@@ -7,6 +7,7 @@ import { Effect, Option } from "effect";
 import { describe, expect, it } from "vitest";
 import {
   determinePageFetchNeed,
+  getCanonicalNakafaContentUrl,
   hasFetchedCurrentPageContent,
 } from "@/app/api/chat/content";
 
@@ -25,6 +26,8 @@ function contentMessage({
   url: string;
   status: ContentStatus;
 }) {
+  const contentRef = getCanonicalNakafaContentUrl(url);
+
   if (status === "loading") {
     return {
       id: `message-${status}`,
@@ -35,7 +38,9 @@ function contentMessage({
           type: "data-nakafa",
           data: {
             kind: "content",
-            input: { content_ref: NakafaAgentContentRefInputSchema.make(url) },
+            input: {
+              content_ref: NakafaAgentContentRefInputSchema.make(contentRef),
+            },
             status,
           },
         },
@@ -53,7 +58,9 @@ function contentMessage({
           type: "data-nakafa",
           data: {
             kind: "content",
-            input: { content_ref: NakafaAgentContentRefInputSchema.make(url) },
+            input: {
+              content_ref: NakafaAgentContentRefInputSchema.make(contentRef),
+            },
             status,
             error: "Not found",
           },
@@ -77,7 +84,9 @@ function contentMessage({
         type: "data-nakafa",
         data: {
           kind: "content",
-          input: { content_ref: NakafaAgentContentRefInputSchema.make(url) },
+          input: {
+            content_ref: NakafaAgentContentRefInputSchema.make(contentRef),
+          },
           status,
           result: {
             ...parsedRef.value,
@@ -91,6 +100,12 @@ function contentMessage({
 }
 
 describe("app/api/chat/content", () => {
+  it("canonicalizes relative page URLs for content_ref inputs", () => {
+    expect(getCanonicalNakafaContentUrl(currentContentUrl)).toBe(
+      "https://nakafa.com/id/subject/high-school/11/mathematics/function-modeling/rational-function"
+    );
+  });
+
   it.each([
     [
       "same absolute URL",

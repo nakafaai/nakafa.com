@@ -424,6 +424,7 @@ export const DataIntegritySchema = Schema.Struct({
 });
 
 const GraphIdentityIssueSchema = Schema.Struct({
+  assetId: Schema.optional(Schema.String),
   content_id: Schema.optional(Schema.String),
   kind: Schema.optional(Schema.String),
   route: Schema.optional(Schema.String),
@@ -434,9 +435,11 @@ export const GraphIdentityIntegrityPageSchema = Schema.Struct({
   checkedRefs: Schema.Number,
   continueCursor: Schema.String,
   firstMissingGraph: Schema.NullOr(GraphIdentityIssueSchema),
+  firstMismatchedContentId: Schema.NullOr(GraphIdentityIssueSchema),
   firstRouteShapedContentId: Schema.NullOr(GraphIdentityIssueSchema),
   isDone: Schema.Boolean,
   missingGraphRows: Schema.Number,
+  mismatchedContentIds: Schema.Number,
   routeShapedContentIds: Schema.Number,
   scannedRows: Schema.Number,
 });
@@ -444,8 +447,10 @@ export const GraphIdentityIntegrityPageSchema = Schema.Struct({
 export const GraphIdentityIntegritySchema = Schema.Struct({
   checkedRefs: Schema.Number,
   firstMissingGraph: Schema.NullOr(GraphIdentityIssueSchema),
+  firstMismatchedContentId: Schema.NullOr(GraphIdentityIssueSchema),
   firstRouteShapedContentId: Schema.NullOr(GraphIdentityIssueSchema),
   missingGraphRows: Schema.Number,
+  mismatchedContentIds: Schema.Number,
   routeShapedContentIds: Schema.Number,
   scannedRows: Schema.Number,
 });

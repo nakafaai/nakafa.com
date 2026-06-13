@@ -6,6 +6,7 @@ import {
 } from "@repo/contents/_lib/agent/errors";
 import {
   buildNakafaContentRef,
+  normalizeNakafaContentInput,
   parseNakafaContentRef,
 } from "@repo/contents/_lib/agent/refs";
 import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agent/schema/quran";
@@ -39,7 +40,7 @@ export function createNakafaTestService(
 const nakafaTestRuntime = {
   /** Returns deterministic structured exercises for service-injection tests. */
   exercise: (input, exerciseNumber) => {
-    const ref = parseNakafaContentRef(input);
+    const ref = resolveNakafaTestContentRef(input);
 
     if (Option.isNone(ref) || exerciseNumber === 99_999) {
       return Effect.succeed(Option.none());
@@ -115,9 +116,9 @@ const nakafaTestRuntime = {
   },
   /** Returns deterministic markdown for service-injection tests. */
   read: (input) => {
-    const ref = parseNakafaContentRef(input);
+    const ref = resolveNakafaTestContentRef(input);
 
-    if (Option.isNone(ref) || input.includes("missing")) {
+    if (Option.isNone(ref) || ref.value.route.includes("missing")) {
       return Effect.succeed(Option.none());
     }
 
@@ -165,5 +166,37 @@ const nakafaTestRuntime = {
     }),
   /** Returns whether the test adapter can parse one content reference. */
   verify: (input) =>
-    Effect.succeed(Option.isSome(parseNakafaContentRef(input))),
+    Effect.succeed(Option.isSome(resolveNakafaTestContentRef(input))),
 } satisfies NakafaRuntime;
+
+const nakafaTestRefs = [
+  buildNakafaContentRef(
+    "en",
+    "articles/politics/dynastic-politics-asian-values",
+    "articles"
+  ),
+  buildNakafaContentRef("en", "articles/politics/missing", "articles"),
+  buildNakafaContentRef(
+    "en",
+    "exercises/high-school/snbt/general-knowledge/try-out/2026/set-2",
+    "exercises"
+  ),
+] as const;
+
+/** Resolves graph content IDs and public URL projections for injected tests. */
+function resolveNakafaTestContentRef(input: string) {
+  const parsed = parseNakafaContentRef(input);
+
+  if (Option.isSome(parsed)) {
+    return parsed;
+  }
+
+  const normalized = normalizeNakafaContentInput(input);
+  const ref = nakafaTestRefs.find((item) => item.content_id === normalized);
+
+  if (!ref) {
+    return Option.none();
+  }
+
+  return Option.some(ref);
+}

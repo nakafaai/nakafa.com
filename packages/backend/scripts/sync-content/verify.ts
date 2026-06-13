@@ -412,6 +412,20 @@ export const verify = Effect.fn("sync.verify")(function* (
     allMatch = false;
   }
 
+  if (graphIdentity.mismatchedContentIds === 0) {
+    logSuccess("All persisted content refs use assetId as content_id");
+  } else {
+    logError(
+      `${graphIdentity.mismatchedContentIds} persisted content refs have content_id values that differ from assetId`
+    );
+    if (graphIdentity.firstMismatchedContentId) {
+      log(
+        `  First mismatched content_id: ${JSON.stringify(graphIdentity.firstMismatchedContentId)}`
+      );
+    }
+    allMatch = false;
+  }
+
   log("\n=== QURAN RUNTIME ===\n");
   const quranRuntimeResult = yield* Effect.either(
     verifyQuranRuntime(config, options)

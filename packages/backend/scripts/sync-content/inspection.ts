@@ -64,15 +64,18 @@ interface PaginationArgs {
 interface GraphIdentityIntegrityPage {
   checkedRefs: number;
   continueCursor: string;
+  firstMismatchedContentId: GraphIdentityIssue | null;
   firstMissingGraph: GraphIdentityIssue | null;
   firstRouteShapedContentId: GraphIdentityIssue | null;
   isDone: boolean;
+  mismatchedContentIds: number;
   missingGraphRows: number;
   routeShapedContentIds: number;
   scannedRows: number;
 }
 
 interface GraphIdentityIssue {
+  assetId?: string;
   content_id?: string;
   kind?: string;
   route?: string;
@@ -140,8 +143,10 @@ function getGraphIdentityPageSize(target: GraphIdentityTarget) {
 const emptyGraphIdentityIntegrity = (): GraphIdentityIntegrityTotal => ({
   checkedRefs: 0,
   firstMissingGraph: null,
+  firstMismatchedContentId: null,
   firstRouteShapedContentId: null,
   missingGraphRows: 0,
+  mismatchedContentIds: 0,
   routeShapedContentIds: 0,
   scannedRows: 0,
 });
@@ -152,9 +157,11 @@ function addGraphIdentityPage(
 ) {
   total.checkedRefs += page.checkedRefs;
   total.missingGraphRows += page.missingGraphRows;
+  total.mismatchedContentIds += page.mismatchedContentIds;
   total.routeShapedContentIds += page.routeShapedContentIds;
   total.scannedRows += page.scannedRows;
   total.firstMissingGraph ??= page.firstMissingGraph;
+  total.firstMismatchedContentId ??= page.firstMismatchedContentId;
   total.firstRouteShapedContentId ??= page.firstRouteShapedContentId;
 }
 

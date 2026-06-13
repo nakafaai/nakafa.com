@@ -53,6 +53,7 @@ const graphIdentityTargetValidator = v.union(
 );
 
 const graphIdentityIssueValidator = v.object({
+  assetId: v.optional(v.string()),
   content_id: v.optional(v.string()),
   kind: v.optional(v.string()),
   route: v.optional(v.string()),
@@ -63,9 +64,11 @@ const graphIdentityIntegrityPageValidator = v.object({
   checkedRefs: v.number(),
   continueCursor: v.string(),
   firstMissingGraph: v.union(graphIdentityIssueValidator, v.null()),
+  firstMismatchedContentId: v.union(graphIdentityIssueValidator, v.null()),
   firstRouteShapedContentId: v.union(graphIdentityIssueValidator, v.null()),
   isDone: v.boolean(),
   missingGraphRows: v.number(),
+  mismatchedContentIds: v.number(),
   routeShapedContentIds: v.number(),
   scannedRows: v.number(),
 });
@@ -92,13 +95,16 @@ interface GraphIdentityRef extends GraphIdentityFields {
 
 interface GraphIdentitySummary {
   checkedRefs: number;
+  firstMismatchedContentId: GraphIdentityIssue | null;
   firstMissingGraph: GraphIdentityIssue | null;
   firstRouteShapedContentId: GraphIdentityIssue | null;
+  mismatchedContentIds: number;
   missingGraphRows: number;
   routeShapedContentIds: number;
 }
 
 interface GraphIdentityIssue {
+  assetId?: string;
   content_id?: string;
   kind?: string;
   route?: string;
@@ -125,13 +131,15 @@ function createGraphIdentitySummary(): GraphIdentitySummary {
   return {
     checkedRefs: 0,
     firstMissingGraph: null,
+    firstMismatchedContentId: null,
     firstRouteShapedContentId: null,
     missingGraphRows: 0,
+    mismatchedContentIds: 0,
     routeShapedContentIds: 0,
   };
 }
 
-function hasGraphIdentity(ref: GraphIdentityFields) {
+function hasGraphIdentityFields(ref: GraphIdentityFields) {
   return (
     isFilled(ref.alignmentId) &&
     isFilled(ref.assetId) &&
@@ -149,12 +157,23 @@ function hasRouteShapedContentId(ref: GraphIdentityRef) {
   return typeof ref.content_id === "string" && ref.content_id.includes("/");
 }
 
+function hasMismatchedContentId(ref: GraphIdentityRef) {
+  if (!(isFilled(ref.content_id) && isFilled(ref.assetId))) {
+    return false;
+  }
+
+  return ref.content_id !== ref.assetId;
+}
+
 function getGraphIdentityIssue(
   ref: GraphIdentityRef,
   kind?: string
 ): GraphIdentityIssue {
   const issue: GraphIdentityIssue = {};
 
+  if (ref.assetId) {
+    issue.assetId = ref.assetId;
+  }
   if (ref.content_id) {
     issue.content_id = ref.content_id;
   }
@@ -178,7 +197,7 @@ function checkGraphIdentityRef(
 ) {
   summary.checkedRefs += 1;
 
-  if (!hasGraphIdentity(ref)) {
+  if (!hasGraphIdentityFields(ref)) {
     summary.missingGraphRows += 1;
     summary.firstMissingGraph ??= getGraphIdentityIssue(ref, kind);
   }
@@ -186,6 +205,11 @@ function checkGraphIdentityRef(
   if (hasRouteShapedContentId(ref)) {
     summary.routeShapedContentIds += 1;
     summary.firstRouteShapedContentId ??= getGraphIdentityIssue(ref, kind);
+  }
+
+  if (hasMismatchedContentId(ref)) {
+    summary.mismatchedContentIds += 1;
+    summary.firstMismatchedContentId ??= getGraphIdentityIssue(ref, kind);
   }
 }
 
