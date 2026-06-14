@@ -39,6 +39,16 @@ export function getSourceRouteProjection(source: SourceRouteInput) {
   return projection;
 }
 
+/** Returns the graph-owned exercise group route for a valid exercise set route. */
+export function getExerciseSetGroupRoute(route: string) {
+  return (
+    getSourceRouteProjection({
+      kind: "exercise-set",
+      route,
+    })?.parentRoute ?? null
+  );
+}
+
 /** Decodes and parses a declared route projection with the graph domain error. */
 export const parseSourceRouteProjection = Effect.fn(
   "contents.graph.parseSourceRouteProjection"

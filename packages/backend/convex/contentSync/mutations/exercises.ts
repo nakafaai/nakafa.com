@@ -21,6 +21,7 @@ import {
   localeValidator,
 } from "@repo/backend/convex/lib/validators/contents";
 import { logger } from "@repo/backend/convex/utils/logger";
+import { getExerciseSetGroupRoute } from "@repo/contents/_types/graph/projection";
 import { ConvexError, v } from "convex/values";
 import { getAll } from "convex-helpers/server/relationships";
 
@@ -99,9 +100,19 @@ const deleteResultValidator = v.object({
   deleted: v.number(),
 });
 
-/** Returns the exercise group route above one concrete set route. */
-function getExerciseGroupRoute(setSlug: string) {
-  return setSlug.split("/").slice(0, -1).join("/");
+/** Requires the graph projection selector for an exercise set's group route. */
+function requireExerciseSetGroupRoute(setSlug: string) {
+  const route = getExerciseSetGroupRoute(setSlug);
+
+  if (route) {
+    return route;
+  }
+
+  throw new ConvexError({
+    code: "CONTENT_SYNC_INVALID_EXERCISE_SET_ROUTE",
+    message: "Exercise set route cannot be projected into a graph group route.",
+    route: setSlug,
+  });
 }
 
 /** Deletes an exercise group route when no published set remains in the group. */
@@ -117,7 +128,7 @@ async function deleteExerciseGroupRouteIfEmpty(
     year?: string;
   }
 ) {
-  const route = getExerciseGroupRoute(source.slug);
+  const route = requireExerciseSetGroupRoute(source.slug);
   const sets = await ctx.db
     .query("exerciseSets")
     .withIndex("by_locale_and_group", (q) =>
@@ -163,6 +174,7 @@ export const bulkSyncExerciseSets = internalMutation({
     let updated = 0;
 
     for (const set of args.sets) {
+      const groupRoute = requireExerciseSetGroupRoute(set.slug);
       const setGraph = getContentGraphIdentity({
         kind: "exercise-set",
         locale: set.locale,
@@ -171,7 +183,7 @@ export const bulkSyncExerciseSets = internalMutation({
       const groupGraph = getContentGraphIdentity({
         kind: "exercise-group",
         locale: set.locale,
-        route: getExerciseGroupRoute(set.slug),
+        route: groupRoute,
       });
       if (set.questionCount > 0) {
         await syncContentSearch(ctx, {
@@ -204,7 +216,7 @@ export const bulkSyncExerciseSets = internalMutation({
           kind: "exercise-group",
           locale: set.locale,
           markdown: false,
-          route: getExerciseGroupRoute(set.slug),
+          route: groupRoute,
           section: "exercises",
           syncedAt: now,
           title: set.exerciseTypeTitle,

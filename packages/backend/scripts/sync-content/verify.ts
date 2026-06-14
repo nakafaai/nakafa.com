@@ -29,6 +29,7 @@ import { getAllSurah } from "@repo/contents/_lib/quran";
 import { locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
 
+/** Logs a bounded integrity sample and reports whether the verifier found issues. */
 const logIntegrityList = (
   title: string,
   items: readonly string[],

@@ -14,15 +14,20 @@ const exerciseDir =
   "exercises/high-school/tka/mathematics/try-out/2026/set-1/8";
 const materialFile =
   "exercises/high-school/tka/mathematics/_data/id-material.ts";
+const validSetSlug = "exercises/high-school/tka/mathematics/try-out/2026/set-1";
 
 /** Loads the exercise sync script with deterministic parser and Convex mocks. */
 const loadExercisesScript = async ({
   choices,
+  materialSlug = validSetSlug,
+  questionFiles = [questionFile],
 }: {
   choices: {
     en: Array<{ label: string; value: boolean }>;
     id: Array<{ label: string; value: boolean }>;
   } | null;
+  materialSlug?: string;
+  questionFiles?: string[];
 }) => {
   const logErrors: string[] = [];
   const mutationCalls: Array<{ questions?: unknown[]; sets?: unknown[] }> = [];
@@ -68,7 +73,7 @@ const loadExercisesScript = async ({
           locale: "id",
           material: "mathematics",
           setName: "set-1",
-          slug: "exercises/high-school/tka/mathematics/try-out/2026/set-1",
+          slug: materialSlug,
           title: "Set 1",
           type: "tka",
           year: 2026,
@@ -142,7 +147,7 @@ const loadExercisesScript = async ({
         return Effect.succeed([materialFile]);
       }
 
-      return Effect.succeed([questionFile]);
+      return Effect.succeed(questionFiles);
     },
   }));
 
@@ -184,7 +189,7 @@ describe("sync-content exercises", () => {
         sets: [
           expect.objectContaining({
             questionCount: 1,
-            slug: "exercises/high-school/tka/mathematics/try-out/2026/set-1",
+            slug: validSetSlug,
           }),
         ],
       },
@@ -200,6 +205,25 @@ describe("sync-content exercises", () => {
       Effect.runPromise(script.syncExerciseSets(config, { quiet: true }))
     ).rejects.toThrow(
       "Cannot sync exercise sets with invalid exercise questions"
+    );
+
+    expect(mutationCalls).toHaveLength(0);
+  });
+
+  it("rejects material set routes that graph projection cannot classify", async () => {
+    const { mutationCalls, script } = await loadExercisesScript({
+      choices: {
+        en: [{ label: "A", value: true }],
+        id: [{ label: "A", value: true }],
+      },
+      materialSlug: "exercises/high-school/tka/mathematics/set-1",
+      questionFiles: [],
+    });
+
+    await expect(
+      Effect.runPromise(script.syncExerciseSets(config, { quiet: true }))
+    ).rejects.toThrow(
+      "Exercise set route cannot be projected into a graph group route"
     );
 
     expect(mutationCalls).toHaveLength(0);

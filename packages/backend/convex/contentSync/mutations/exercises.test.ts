@@ -64,9 +64,13 @@ const SET_SLUG =
 const QUESTION_SLUG = `${SET_SLUG}/1`;
 const GROUP_SLUG =
   "exercises/high-school/snbt/quantitative-knowledge/try-out/2026";
+const SINGLE_GROUP_SLUG =
+  "exercises/high-school/snbt/quantitative-knowledge/practice";
+const SINGLE_SET_SLUG = `${SINGLE_GROUP_SLUG}/set-1`;
 const SET_CONTENT_ID = getGraphContentId(SET_SLUG);
 const QUESTION_CONTENT_ID = getGraphContentId(QUESTION_SLUG);
 const GROUP_CONTENT_ID = getGraphContentId(GROUP_SLUG);
+const SINGLE_GROUP_CONTENT_ID = getGraphContentId(SINGLE_GROUP_SLUG);
 const BASE_SET: SyncedExerciseSet = {
   category: "high-school",
   contentHash: "set-hash",
@@ -155,6 +159,92 @@ function getGraphContentId(route: string) {
 }
 
 describe("contentSync/mutations/exercises", () => {
+  it("syncs graph-owned group routes for single and nested exercise groups", async () => {
+    const t = convexTest(schema, convexModules);
+
+    await t.mutation(
+      internal.contentSync.mutations.exercises.bulkSyncExerciseSets,
+      {
+        sets: [
+          buildSet(),
+          buildSet({
+            exerciseType: "practice",
+            exerciseTypeTitle: "Practice",
+            groupContentHash: "practice-group-hash",
+            searchTitle: "Practice Set",
+            setName: "set-1",
+            slug: SINGLE_SET_SLUG,
+            title: "Practice Set",
+            year: undefined,
+          }),
+        ],
+      }
+    );
+
+    const snapshot = await t.query(async (ctx) => {
+      const nestedGroupRoute = await ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (q) => q.eq("content_id", GROUP_CONTENT_ID))
+        .unique();
+      const singleGroupRoute = await ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", SINGLE_GROUP_CONTENT_ID)
+        )
+        .unique();
+
+      return { nestedGroupRoute, singleGroupRoute };
+    });
+
+    expect(snapshot.nestedGroupRoute).toMatchObject({
+      kind: "exercise-group",
+      parentRoute: "exercises/high-school/snbt/quantitative-knowledge",
+      route: GROUP_SLUG,
+    });
+    expect(snapshot.singleGroupRoute).toMatchObject({
+      contentHash: "practice-group-hash",
+      kind: "exercise-group",
+      parentRoute: "exercises/high-school/snbt/quantitative-knowledge",
+      route: SINGLE_GROUP_SLUG,
+      title: "Practice",
+    });
+  });
+
+  it("rejects malformed set routes instead of deriving a parent route by slicing", async () => {
+    const t = convexTest(schema, convexModules);
+    const malformedSetSlug =
+      "exercises/high-school/snbt/quantitative-knowledge/set-1";
+
+    await expect(
+      t.mutation(
+        internal.contentSync.mutations.exercises.bulkSyncExerciseSets,
+        {
+          sets: [
+            buildSet({
+              exerciseType: "set-1",
+              slug: malformedSetSlug,
+              year: undefined,
+            }),
+          ],
+        }
+      )
+    ).rejects.toThrow("CONTENT_SYNC_INVALID_EXERCISE_SET_ROUTE");
+
+    const staleParentRows = await t.query(
+      async (ctx) =>
+        await ctx.db
+          .query("contentRoutes")
+          .withIndex("by_locale_and_route", (q) =>
+            q
+              .eq("locale", "id")
+              .eq("route", "exercises/high-school/snbt/quantitative-knowledge")
+          )
+          .collect()
+    );
+
+    expect(staleParentRows).toEqual([]);
+  });
+
   it("syncs exercise sets through create, unchanged, update, and search removal", async () => {
     const t = convexTest(schema, convexModules);
 

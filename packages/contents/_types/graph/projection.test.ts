@@ -1,4 +1,5 @@
 import {
+  getExerciseSetGroupRoute,
   getQuranSurahNumberForRoute,
   getSourceRouteProjection,
   getSourceRouteProjectionForRoute,
@@ -118,6 +119,8 @@ describe("source route projection", () => {
       kind: "exercise-question",
       parentRoute: shortSetRoute,
     });
+    expect(getExerciseSetGroupRoute(setRoute)).toBe(groupRoute);
+    expect(getExerciseSetGroupRoute(shortSetRoute)).toBe(shortGroupRoute);
   });
 
   it("rejects malformed projections instead of inferring partial route identity", () => {
@@ -141,6 +144,9 @@ describe("source route projection", () => {
       getSourceRouteProjectionForRoute(
         "exercises/high-school/snbt/quantitative-knowledge/practice/set-1/7/extra"
       )
+    ).toBeNull();
+    expect(
+      getExerciseSetGroupRoute("exercises/high-school/snbt/set-1/7")
     ).toBeNull();
   });
 
