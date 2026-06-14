@@ -1,5 +1,9 @@
 import { CONTENT_ROUTE_KINDS } from "@repo/backend/convex/contents/constants";
 import {
+  graphContentIdValidator,
+  learningGraphIdentityValidator,
+} from "@repo/backend/convex/contents/graph";
+import {
   articleCategoryValidator,
   exercisesCategoryValidator,
   exercisesMaterialValidator,
@@ -129,6 +133,7 @@ const quranSurahValidator = v.object({
 const contentRouteKindValidator = literals(...CONTENT_ROUTE_KINDS);
 
 const runtimeContentRouteValidator = v.object({
+  ...learningGraphIdentityValidator.fields,
   authors: v.array(contentAuthorValidator),
   content_id: v.string(),
   date: v.optional(v.number()),
@@ -180,6 +185,7 @@ const subjectOutlineTopicValidator = v.object({
 });
 
 const apiContentItemValidator = v.object({
+  ...learningGraphIdentityValidator.fields,
   locale: localeValidator,
   metadata: contentMetadataValidator,
   raw: v.string(),
@@ -193,7 +199,16 @@ const paginatedApiContentValidator = v.object({
   page: v.array(apiContentItemValidator),
 });
 
+const runtimeExerciseGraphProjectionValidator = v.object({
+  ...learningGraphIdentityValidator.fields,
+  content_id: graphContentIdValidator,
+  locale: localeValidator,
+  route: v.string(),
+  url: v.string(),
+});
+
 export const runtimeExerciseValidator = v.object({
+  ...runtimeExerciseGraphProjectionValidator.fields,
   answer: v.object({
     metadata: contentMetadataValidator,
     raw: v.string(),
@@ -254,6 +269,7 @@ export const getExerciseSetPageArgsValidator = {
 };
 
 const runtimeExerciseSetValidator = v.object({
+  ...runtimeExerciseGraphProjectionValidator.fields,
   category: exercisesCategoryValidator,
   description: v.optional(v.string()),
   exerciseType: v.string(),
@@ -282,6 +298,7 @@ export const getExerciseQuestionPageReturnValidator = nullable(
     exercise: runtimeExerciseValidator,
     exerciseCount: v.number(),
     set: v.object({
+      ...runtimeExerciseGraphProjectionValidator.fields,
       category: exercisesCategoryValidator,
       description: v.optional(v.string()),
       exerciseType: v.string(),
@@ -312,6 +329,7 @@ export const getExerciseGroupPageReturnValidator = nullable(
     material: exercisesMaterialValidator,
     sets: v.array(
       v.object({
+        ...runtimeExerciseGraphProjectionValidator.fields,
         questionCount: v.number(),
         setName: v.string(),
         slug: v.string(),
@@ -387,6 +405,14 @@ export const getContentRouteReturnValidator = nullable(
   runtimeContentRouteValidator
 );
 
+export const getContentRouteByContentIdArgsValidator = {
+  contentId: v.string(),
+};
+
+export const getContentRouteByContentIdReturnValidator = nullable(
+  runtimeContentRouteValidator
+);
+
 export const listArticleApiContentPageArgsValidator = {
   cursor: v.union(v.string(), v.null()),
   limit: v.number(),
@@ -433,6 +459,7 @@ export const getQuranReferenceArgsValidator = {
 
 export const getQuranReferenceReturnValidator = nullable(
   v.object({
+    ...learningGraphIdentityValidator.fields,
     content_id: v.string(),
     locale: localeValidator,
     markdown_url: v.string(),

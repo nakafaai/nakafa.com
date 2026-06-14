@@ -11,6 +11,7 @@ import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { cleanSlug } from "@repo/utilities/helper";
 import { useLocale, useTranslations } from "next-intl";
 
+/** Renders graph-backed recently viewed learning objects on the home screen. */
 export function HomeContinueLearning() {
   const t = useTranslations("Home");
   const locale = useLocale();
@@ -41,8 +42,8 @@ export function HomeContinueLearning() {
         {data.map((subject) => (
           <NavigationLink
             className="group grid gap-3 p-4 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
-            href={`/${cleanSlug(subject.slug)}`}
-            key={subject.id}
+            href={`/${cleanSlug(subject.route)}`}
+            key={subject.content_id}
           >
             <div className="flex items-start gap-3">
               <div className="relative size-10 shrink-0 overflow-hidden rounded-md">
@@ -50,7 +51,7 @@ export function HomeContinueLearning() {
                   className="absolute inset-0"
                   colorScheme="vibrant"
                   intensity="medium"
-                  keyString={subject.id}
+                  keyString={subject.content_id}
                 />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <HugeIcons

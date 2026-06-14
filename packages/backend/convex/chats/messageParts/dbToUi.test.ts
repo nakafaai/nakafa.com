@@ -1,13 +1,13 @@
 import { mapDBPartToUIMessagePart } from "@repo/backend/convex/chats/messageParts/dbToUi";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
+import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
 const now = Date.UTC(2026, 4, 8, 0, 0, 0);
-const ref = buildNakafaContentRef(
+const ref = readNakafaContentRefFixture(
   "en",
   "articles/politics/dynastic-politics-asian-values",
   "articles"

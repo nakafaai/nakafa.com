@@ -1,87 +1,119 @@
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import {
-  type ContentAnalyticsIoError,
-  toContentAnalyticsIoError,
-} from "@repo/backend/convex/contents/analytics/spec";
+import { toContentAnalyticsIoError } from "@repo/backend/convex/contents/analytics/spec";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { getTrendingBucketStart } from "@repo/backend/convex/subjectSections/utils";
 import { Effect } from "effect";
 
+type QueuedContentView = Doc<"contentViewAnalyticsQueue">;
+type AnalyticsGraphRef = Pick<
+  QueuedContentView,
+  | "alignmentId"
+  | "assetId"
+  | "conceptId"
+  | "content_id"
+  | "learningObjectId"
+  | "lensId"
+>;
+
+/** Aggregated graph-view delta for one content asset and locale. */
+interface AnalyticsCount {
+  readonly locale: Locale;
+  readonly ref: AnalyticsGraphRef;
+  readonly section: QueuedContentView["section"];
+  viewCount: number;
+}
+
+/** Extracts persisted graph identity fields from one queued content view. */
+function getAnalyticsGraphRef(item: QueuedContentView): AnalyticsGraphRef {
+  return {
+    alignmentId: item.alignmentId,
+    assetId: item.assetId,
+    conceptId: item.conceptId,
+    content_id: item.content_id,
+    learningObjectId: item.learningObjectId,
+    lensId: item.lensId,
+  };
+}
+
 /** Increments one aggregated counter inside a mutable batch map. */
-function incrementCount<TKey extends string>(
-  map: Map<TKey, number>,
-  key: TKey
+function incrementCount(
+  map: Map<string, AnalyticsCount>,
+  item: QueuedContentView
 ) {
-  map.set(key, (map.get(key) ?? 0) + 1);
+  const existing = map.get(item.content_id);
+
+  if (existing) {
+    existing.viewCount += 1;
+    return;
+  }
+
+  map.set(item.content_id, {
+    locale: item.locale,
+    ref: getAnalyticsGraphRef(item),
+    section: item.section,
+    viewCount: 1,
+  });
 }
 
 /** Builds one analytics batch from append-only queued unique views. */
-function buildContentAnalyticsBatch(
-  queueItems: readonly Doc<"contentViewAnalyticsQueue">[]
-) {
-  const articleViewCounts = new Map<Id<"articleContents">, number>();
-  const exerciseViewCounts = new Map<Id<"exerciseSets">, number>();
-  const subjectViewCounts = new Map<Id<"subjectSections">, number>();
-  const subjectTrendingBuckets = new Map<
+function buildContentAnalyticsBatch(queueItems: readonly QueuedContentView[]) {
+  const learningPopularity = new Map<string, AnalyticsCount>();
+  const learningTrendingBuckets = new Map<
     string,
     {
+      ref: AnalyticsGraphRef;
       bucketStart: number;
-      contentId: Id<"subjectSections">;
       locale: Locale;
+      section: QueuedContentView["section"];
       viewCount: number;
     }
   >();
 
   for (const queueItem of queueItems) {
-    if (queueItem.contentRef.type === "article") {
-      incrementCount(articleViewCounts, queueItem.contentRef.id);
-      continue;
-    }
+    incrementCount(learningPopularity, queueItem);
 
-    if (queueItem.contentRef.type === "subject") {
-      incrementCount(subjectViewCounts, queueItem.contentRef.id);
-
+    if (queueItem.section === "subject") {
       const bucketStart = getTrendingBucketStart(queueItem.viewedAt);
-      const bucketKey = `${queueItem.locale}:${bucketStart}:${queueItem.contentRef.id}`;
-      const existingBucket = subjectTrendingBuckets.get(bucketKey);
+      const bucketKey = `${queueItem.locale}:${bucketStart}:${queueItem.content_id}`;
+      const existingBucket = learningTrendingBuckets.get(bucketKey);
 
       if (existingBucket) {
         existingBucket.viewCount += 1;
         continue;
       }
 
-      subjectTrendingBuckets.set(bucketKey, {
+      learningTrendingBuckets.set(bucketKey, {
+        ref: getAnalyticsGraphRef(queueItem),
         bucketStart,
-        contentId: queueItem.contentRef.id,
         locale: queueItem.locale,
+        section: queueItem.section,
         viewCount: 1,
       });
-      continue;
     }
-
-    incrementCount(exerciseViewCounts, queueItem.contentRef.id);
   }
 
   return {
-    articleViewCounts,
-    exerciseViewCounts,
-    subjectViewCounts,
-    subjectTrendingBuckets,
+    learningPopularity,
+    learningTrendingBuckets,
   };
 }
 
-/** Applies one article popularity delta to the derived table. */
-const applyArticlePopularityDelta = Effect.fn(
-  "contents.analytics.applyArticlePopularityDelta"
+/** Applies one graph-backed popularity delta to the learning read model. */
+const applyLearningPopularityDelta = Effect.fn(
+  "contents.analytics.applyLearningPopularityDelta"
 )(function* (
   ctx: MutationCtx,
   {
-    contentId,
+    locale,
+    ref,
+    section,
     updatedAt,
     viewCount,
   }: {
-    contentId: Id<"articleContents">;
+    locale: Locale;
+    ref: AnalyticsGraphRef;
+    section: QueuedContentView["section"];
     updatedAt: number;
     viewCount: number;
   }
@@ -89,8 +121,8 @@ const applyArticlePopularityDelta = Effect.fn(
   const currentRow = yield* Effect.tryPromise({
     try: () =>
       ctx.db
-        .query("articlePopularity")
-        .withIndex("by_contentId", (q) => q.eq("contentId", contentId))
+        .query("learningPopularity")
+        .withIndex("by_content_id", (q) => q.eq("content_id", ref.content_id))
         .unique(),
     catch: toContentAnalyticsIoError,
   });
@@ -98,8 +130,10 @@ const applyArticlePopularityDelta = Effect.fn(
   if (!currentRow) {
     yield* Effect.tryPromise({
       try: () =>
-        ctx.db.insert("articlePopularity", {
-          contentId,
+        ctx.db.insert("learningPopularity", {
+          ...ref,
+          locale,
+          section,
           updatedAt,
           viewCount,
         }),
@@ -110,7 +144,10 @@ const applyArticlePopularityDelta = Effect.fn(
 
   yield* Effect.tryPromise({
     try: () =>
-      ctx.db.patch("articlePopularity", currentRow._id, {
+      ctx.db.patch("learningPopularity", currentRow._id, {
+        ...ref,
+        locale,
+        section,
         updatedAt,
         viewCount: currentRow.viewCount + viewCount,
       }),
@@ -118,115 +155,23 @@ const applyArticlePopularityDelta = Effect.fn(
   });
 });
 
-/** Applies one subject popularity delta to the derived table. */
-const applySubjectPopularityDelta = Effect.fn(
-  "contents.analytics.applySubjectPopularityDelta"
-)(function* (
-  ctx: MutationCtx,
-  {
-    contentId,
-    updatedAt,
-    viewCount,
-  }: {
-    contentId: Id<"subjectSections">;
-    updatedAt: number;
-    viewCount: number;
-  }
-) {
-  const currentRow = yield* Effect.tryPromise({
-    try: () =>
-      ctx.db
-        .query("subjectPopularity")
-        .withIndex("by_contentId", (q) => q.eq("contentId", contentId))
-        .unique(),
-    catch: toContentAnalyticsIoError,
-  });
-
-  if (!currentRow) {
-    yield* Effect.tryPromise({
-      try: () =>
-        ctx.db.insert("subjectPopularity", {
-          contentId,
-          updatedAt,
-          viewCount,
-        }),
-      catch: toContentAnalyticsIoError,
-    });
-    return;
-  }
-
-  yield* Effect.tryPromise({
-    try: () =>
-      ctx.db.patch("subjectPopularity", currentRow._id, {
-        updatedAt,
-        viewCount: currentRow.viewCount + viewCount,
-      }),
-    catch: toContentAnalyticsIoError,
-  });
-});
-
-/** Applies one exercise popularity delta to the derived table. */
-const applyExercisePopularityDelta = Effect.fn(
-  "contents.analytics.applyExercisePopularityDelta"
-)(function* (
-  ctx: MutationCtx,
-  {
-    contentId,
-    updatedAt,
-    viewCount,
-  }: {
-    contentId: Id<"exerciseSets">;
-    updatedAt: number;
-    viewCount: number;
-  }
-) {
-  const currentRow = yield* Effect.tryPromise({
-    try: () =>
-      ctx.db
-        .query("exercisePopularity")
-        .withIndex("by_contentId", (q) => q.eq("contentId", contentId))
-        .unique(),
-    catch: toContentAnalyticsIoError,
-  });
-
-  if (!currentRow) {
-    yield* Effect.tryPromise({
-      try: () =>
-        ctx.db.insert("exercisePopularity", {
-          contentId,
-          updatedAt,
-          viewCount,
-        }),
-      catch: toContentAnalyticsIoError,
-    });
-    return;
-  }
-
-  yield* Effect.tryPromise({
-    try: () =>
-      ctx.db.patch("exercisePopularity", currentRow._id, {
-        updatedAt,
-        viewCount: currentRow.viewCount + viewCount,
-      }),
-    catch: toContentAnalyticsIoError,
-  });
-});
-
-/** Applies one locale/day subject trending delta to the derived table. */
-const applySubjectTrendingBucketDelta = Effect.fn(
-  "contents.analytics.applySubjectTrendingBucketDelta"
+/** Applies one locale/day learning trend delta to the derived table. */
+const applyLearningTrendingBucketDelta = Effect.fn(
+  "contents.analytics.applyLearningTrendingBucketDelta"
 )(function* (
   ctx: MutationCtx,
   {
     bucketStart,
-    contentId,
     locale,
+    ref,
+    section,
     updatedAt,
     viewCount,
   }: {
     bucketStart: number;
-    contentId: Id<"subjectSections">;
     locale: Locale;
+    ref: AnalyticsGraphRef;
+    section: QueuedContentView["section"];
     updatedAt: number;
     viewCount: number;
   }
@@ -234,12 +179,15 @@ const applySubjectTrendingBucketDelta = Effect.fn(
   const currentRow = yield* Effect.tryPromise({
     try: () =>
       ctx.db
-        .query("subjectTrendingBuckets")
-        .withIndex("by_locale_and_bucketStart_and_contentId", (q) =>
-          q
-            .eq("locale", locale)
-            .eq("bucketStart", bucketStart)
-            .eq("contentId", contentId)
+        .query("learningTrendingBuckets")
+        .withIndex(
+          "by_section_and_locale_and_bucketStart_and_content_id",
+          (q) =>
+            q
+              .eq("section", section)
+              .eq("locale", locale)
+              .eq("bucketStart", bucketStart)
+              .eq("content_id", ref.content_id)
         )
         .unique(),
     catch: toContentAnalyticsIoError,
@@ -248,10 +196,11 @@ const applySubjectTrendingBucketDelta = Effect.fn(
   if (!currentRow) {
     yield* Effect.tryPromise({
       try: () =>
-        ctx.db.insert("subjectTrendingBuckets", {
+        ctx.db.insert("learningTrendingBuckets", {
+          ...ref,
           bucketStart,
-          contentId,
           locale,
+          section,
           updatedAt,
           viewCount,
         }),
@@ -262,7 +211,11 @@ const applySubjectTrendingBucketDelta = Effect.fn(
 
   yield* Effect.tryPromise({
     try: () =>
-      ctx.db.patch("subjectTrendingBuckets", currentRow._id, {
+      ctx.db.patch("learningTrendingBuckets", currentRow._id, {
+        ...ref,
+        bucketStart,
+        locale,
+        section,
         updatedAt,
         viewCount: currentRow.viewCount + viewCount,
       }),
@@ -271,13 +224,7 @@ const applySubjectTrendingBucketDelta = Effect.fn(
 });
 
 /** Folds queued unique views into derived popularity tables. */
-export const applyContentAnalyticsBatch: (
-  ctx: MutationCtx,
-  input: {
-    readonly queueItems: readonly Doc<"contentViewAnalyticsQueue">[];
-    readonly updatedAt: number;
-  }
-) => Effect.Effect<void, ContentAnalyticsIoError> = Effect.fn(
+export const applyContentAnalyticsBatch = Effect.fn(
   "contents.analytics.applyContentAnalyticsBatch"
 )(function* (
   ctx: MutationCtx,
@@ -291,32 +238,15 @@ export const applyContentAnalyticsBatch: (
 ) {
   const analyticsBatch = buildContentAnalyticsBatch(queueItems);
 
-  for (const [contentId, viewCount] of analyticsBatch.articleViewCounts) {
-    yield* applyArticlePopularityDelta(ctx, {
-      contentId,
+  for (const popularityDelta of analyticsBatch.learningPopularity.values()) {
+    yield* applyLearningPopularityDelta(ctx, {
+      ...popularityDelta,
       updatedAt,
-      viewCount,
     });
   }
 
-  for (const [contentId, viewCount] of analyticsBatch.subjectViewCounts) {
-    yield* applySubjectPopularityDelta(ctx, {
-      contentId,
-      updatedAt,
-      viewCount,
-    });
-  }
-
-  for (const [contentId, viewCount] of analyticsBatch.exerciseViewCounts) {
-    yield* applyExercisePopularityDelta(ctx, {
-      contentId,
-      updatedAt,
-      viewCount,
-    });
-  }
-
-  for (const bucketDelta of analyticsBatch.subjectTrendingBuckets.values()) {
-    yield* applySubjectTrendingBucketDelta(ctx, {
+  for (const bucketDelta of analyticsBatch.learningTrendingBuckets.values()) {
+    yield* applyLearningTrendingBucketDelta(ctx, {
       ...bucketDelta,
       updatedAt,
     });

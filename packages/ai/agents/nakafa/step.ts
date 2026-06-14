@@ -1,6 +1,6 @@
 import { createPrompt } from "@repo/ai/prompt/utils";
 import { NAKAFA_AGENT_MAX_QUERIES } from "@repo/contents/_lib/agent/constants";
-import { getNakafaExerciseSetRef } from "@repo/contents/_lib/agent/exercise/ref";
+import { getNakafaExerciseSetRoute } from "@repo/contents/_lib/agent/exercise/ref";
 import type {
   NakafaAgentSearchInput,
   NakafaAgentSearchResult,
@@ -8,6 +8,7 @@ import type {
 import type { ModelMessage } from "ai";
 import { Option } from "effect";
 
+/** Minimal AI SDK tool-call shape needed to detect a specific Nakafa tool step. */
 interface ToolStep<ToolName extends string> {
   toolCalls: readonly {
     toolName: ToolName;
@@ -15,9 +16,9 @@ interface ToolStep<ToolName extends string> {
 }
 
 /**
- * Selects the exercise reference to read after an exercise-scoped search.
- * Exact question numbers stay the model's responsibility through the
- * `exercise_number` tool input; this state machine only resolves the set ref.
+ * Selects the graph exercise reference to read after an exercise-scoped search.
+ * Set-level search rows are preferred when present; otherwise the first
+ * exercise hit keeps its returned graph ID and resolves through the route catalog.
  */
 export function selectExerciseRef(
   input: NakafaAgentSearchInput,
@@ -38,9 +39,10 @@ export function selectExerciseRef(
     return Option.none();
   }
 
-  return getNakafaExerciseSetRef(firstItem.content_id).pipe(
-    Option.map((ref) => ref.content_id)
-  );
+  const setRoute = getNakafaExerciseSetRoute(firstItem.route);
+  const setItem = items.find((item) => item.route === setRoute);
+
+  return Option.some(setItem?.content_id ?? firstItem.content_id);
 }
 
 /**

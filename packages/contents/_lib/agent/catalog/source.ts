@@ -1,5 +1,5 @@
 import { formatNakafaRouteTitle } from "@repo/contents/_lib/agent/format";
-import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
+import { createNakafaContentRef } from "@repo/contents/_lib/agent/refs";
 import type { NakafaAgentContentSummary } from "@repo/contents/_lib/agent/schema/ref";
 import {
   getExerciseQuestionNumbers,
@@ -13,8 +13,9 @@ import {
 } from "@repo/contents/_lib/metadata";
 import { getAllSurah, getSurahName } from "@repo/contents/_lib/quran";
 import type { Locale } from "@repo/contents/_types/content";
+import { getSourceRouteProjectionForRoute } from "@repo/contents/_types/graph/projection";
 import { routing } from "@repo/internationalization/src/routing";
-import { Cache, Duration, Effect } from "effect";
+import { Cache, Duration, Effect, Option } from "effect";
 
 /** Builds the full public Nakafa content index for one locale. */
 export const getNakafaAgentContentIndex = Effect.fn(
@@ -64,10 +65,10 @@ function getNakafaMdxContentSummaries(locale: Locale) {
     { concurrency: "unbounded" }
   ).pipe(
     Effect.map(([articles, subjects]) => [
-      ...articles.map((entry) =>
+      ...articles.flatMap((entry) =>
         buildNakafaMdxContentSummary(locale, entry, "articles")
       ),
-      ...subjects.map((entry) =>
+      ...subjects.flatMap((entry) =>
         buildNakafaMdxContentSummary(locale, entry, "subject")
       ),
     ])
@@ -80,11 +81,19 @@ function buildNakafaMdxContentSummary(
   entry: ContentMetadataListItem,
   section: "articles" | "subject"
 ) {
-  return {
-    ...buildNakafaContentRef(locale, entry.slug, section),
-    description: entry.metadata.description ?? entry.metadata.subject ?? "",
-    title: entry.metadata.title,
-  };
+  const ref = createNakafaContentRef(locale, entry.slug, section);
+
+  if (Option.isNone(ref)) {
+    return [];
+  }
+
+  return [
+    {
+      ...ref.value,
+      description: entry.metadata.description ?? entry.metadata.subject ?? "",
+      title: entry.metadata.title,
+    },
+  ];
 }
 
 /** Builds searchable summaries for canonical exercise sets. */
@@ -97,9 +106,15 @@ function getNakafaExerciseSummaries(locale: Locale) {
         return [];
       }
 
+      const ref = createNakafaContentRef(locale, route, "exercises");
+
+      if (Option.isNone(ref)) {
+        return [];
+      }
+
       return [
         {
-          ...buildNakafaContentRef(locale, route, "exercises"),
+          ...ref.value,
           description: `${getExerciseQuestionNumbers(slugs, route).length} exercises`,
           title: formatNakafaRouteTitle(route, locale),
         },
@@ -110,20 +125,41 @@ function getNakafaExerciseSummaries(locale: Locale) {
 
 /** Builds searchable summaries for Quran surahs. */
 function getNakafaQuranSummaries(locale: Locale) {
-  return getAllSurah().map((surah) => ({
-    ...buildNakafaContentRef(locale, `quran/${surah.number}`, "quran"),
-    description: surah.name.translation[locale],
-    title: `${surah.number}. ${getSurahName({ locale, name: surah.name })}`,
-  }));
+  return getAllSurah().flatMap((surah) => {
+    const ref = createNakafaContentRef(
+      locale,
+      `quran/${surah.number}`,
+      "quran"
+    );
+
+    if (Option.isNone(ref)) {
+      return [];
+    }
+
+    return [
+      {
+        ...ref.value,
+        description: surah.name.translation[locale],
+        title: `${surah.number}. ${getSurahName({ locale, name: surah.name })}`,
+      },
+    ];
+  });
 }
 
 /** Keeps exercise search results on real set routes, not collection aliases. */
 function isCanonicalNakafaExerciseSetPath(route: string) {
-  const [, category, type, material, ...setSlug] = route.split("/");
+  const projection = getSourceRouteProjectionForRoute(route);
 
-  if (!(category && type && material && setSlug.length > 0)) {
+  if (projection?.kind !== "exercise-set" || !projection.exercise) {
     return false;
   }
 
-  return !hasInvalidTryOutYearSlug(setSlug);
+  if (!projection.exercise.setSegment) {
+    return false;
+  }
+
+  return !hasInvalidTryOutYearSlug([
+    ...projection.exercise.groupSegments,
+    projection.exercise.setSegment,
+  ]);
 }

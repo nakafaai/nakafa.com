@@ -1,12 +1,15 @@
+import { locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  getApiContentRouteByContentId,
   getArticleApiContentPage,
   getExerciseApiQuestionPage,
   getExerciseApiSetPage,
   getQuranApiSurahPage,
   getSubjectApiContentPage,
   listApiStaticParams,
+  parseApiContentId,
   parseApiLocale,
   parseApiPageParams,
 } from "@/lib/content/runtime";
@@ -25,8 +28,10 @@ describe("API content runtime", () => {
   });
 
   it("narrows supported route locales", () => {
-    expect(parseApiLocale("en")).toBe("en");
-    expect(parseApiLocale("id")).toBe("id");
+    for (const locale of locales) {
+      expect(parseApiLocale(locale)).toBe(locale);
+    }
+
     expect(parseApiLocale("fr")).toBeNull();
   });
 
@@ -46,19 +51,28 @@ describe("API content runtime", () => {
     expect(parseApiPageParams(new URLSearchParams("limit=abc"))).toBeNull();
   });
 
+  it("narrows graph-backed content IDs", () => {
+    expect(parseApiContentId("asset:en:article:politics:article:a")).toBe(
+      "asset:en:article:politics:article:a"
+    );
+    expect(parseApiContentId("en/articles/a")).toBeNull();
+  });
+
   it("reads one page for each API runtime content query", async () => {
     const articlePage = { continueCursor: "", isDone: true, page: [] };
     const subjectPage = { continueCursor: "", isDone: true, page: [] };
     const exerciseSetPage = { exercises: [] };
     const exerciseQuestionPage = { exercise: { number: 1 } };
     const quranSurahPage = { surah: { number: 1 }, verses: [] };
+    const routeRow = { content_id: "asset:en:article:politics:article:a" };
 
     runtimeClientMocks.fetchConvexRuntimeQuery
       .mockResolvedValueOnce(articlePage)
       .mockResolvedValueOnce(subjectPage)
       .mockResolvedValueOnce(exerciseSetPage)
       .mockResolvedValueOnce(exerciseQuestionPage)
-      .mockResolvedValueOnce(quranSurahPage);
+      .mockResolvedValueOnce(quranSurahPage)
+      .mockResolvedValueOnce(routeRow);
 
     await expect(
       Effect.runPromise(
@@ -148,6 +162,21 @@ describe("API content runtime", () => {
       expect.anything(),
       {
         surah: 1,
+      }
+    );
+
+    await expect(
+      Effect.runPromise(
+        getApiContentRouteByContentId({
+          contentId: "asset:en:article:politics:article:a",
+        })
+      )
+    ).resolves.toEqual(routeRow);
+    expect(runtimeClientMocks.fetchConvexRuntimeQuery).toHaveBeenLastCalledWith(
+      "https://test.convex.cloud",
+      expect.anything(),
+      {
+        contentId: "asset:en:article:politics:article:a",
       }
     );
   });

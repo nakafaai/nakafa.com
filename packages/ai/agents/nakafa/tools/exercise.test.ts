@@ -5,12 +5,17 @@ import {
   createWriter,
 } from "@repo/ai/agents/nakafa/tools/test";
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
+import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
 const EXERCISE_CONTENT_ID = NakafaAgentContentRefInputSchema.make(
-  "en/exercises/high-school/snbt/general-knowledge/try-out/2026/set-2"
+  readNakafaContentRefFixture(
+    "en",
+    "exercises/high-school/snbt/general-knowledge/try-out/2026/set-2",
+    "exercises"
+  ).content_id
 );
 
 describe("nakafa exercise tool", () => {

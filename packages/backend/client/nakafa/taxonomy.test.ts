@@ -1,5 +1,7 @@
 import { readNakafaTaxonomy } from "@repo/backend/client/nakafa/taxonomy";
 import { api } from "@repo/backend/convex/_generated/api";
+import { type Locale, LocaleSchema } from "@repo/contents/_types/content";
+import type { SourceRegistryRoot } from "@repo/contents/_types/graph/schema";
 import { type FunctionReference, getFunctionName } from "convex/server";
 import { Effect, Schema } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -13,7 +15,7 @@ vi.mock("@repo/backend/client/runtime", () => ({
 }));
 
 const CountArgsSchema = Schema.Struct({
-  locale: Schema.Literal("en", "id"),
+  locale: LocaleSchema,
 });
 
 beforeEach(() => {
@@ -84,11 +86,7 @@ function readContentRouteCounts(args: unknown) {
 }
 
 /** Builds one materialized route-count fixture row. */
-function countRow(
-  locale: "en" | "id",
-  section: "articles" | "subject" | "exercises" | "quran",
-  count: number
-) {
+function countRow(locale: Locale, section: SourceRegistryRoot, count: number) {
   return {
     count,
     locale,

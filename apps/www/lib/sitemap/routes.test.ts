@@ -1,6 +1,12 @@
 // @vitest-environment node
 
 import type { api } from "@repo/backend/convex/_generated/api";
+import type { Locale } from "@repo/contents/_types/content";
+import {
+  createLearningGraphIdentityFromRoute,
+  getLearningObjectKindForRoute,
+} from "@repo/contents/_types/learning-graph";
+import type { SourceRegistryRoot } from "@repo/contents/_types/source-registry";
 import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -28,12 +34,13 @@ vi.mock("@/lib/content/runtime", () => ({
   getRuntimeContentRouteCounts: runtimeMocks.getRuntimeContentRouteCounts,
 }));
 
-vi.mock("@repo/internationalization/src/routing", () => ({
-  routing: {
-    defaultLocale: "en",
-    locales: ["en", "id"],
-  },
-}));
+vi.mock("@repo/internationalization/src/routing", async () => {
+  const { defaultLocale, locales } = await import("@repo/utilities/locales");
+
+  return {
+    routing: { defaultLocale, locales },
+  };
+});
 
 beforeEach(() => {
   runtimeMocks.getRuntimeContentRouteArtifactPage.mockReset();
@@ -150,7 +157,9 @@ describe("sitemap route discovery", () => {
       "/subject/high-school/10/chemistry/atomic-structure/introduction",
       "/subject/high-school/10/chemistry/green-chemistry/definition",
     ]);
+  });
 
+  it("skips incomplete or unsupported route projections", () => {
     expect(buildSitemapContentPageRoutes(incompleteRouteRows)).toEqual([]);
   });
 });
@@ -185,6 +194,11 @@ const routeRows = [
   }),
   routeRow({
     locale: "en",
+    route: "exercises/high-school/snbt/quantitative-knowledge/practice",
+    section: "exercises",
+  }),
+  routeRow({
+    locale: "en",
     route: "exercises/high-school/snbt/quantitative-knowledge/practice/set-1",
     section: "exercises",
   }),
@@ -196,34 +210,43 @@ const routeRows = [
 ];
 
 const incompleteRouteRows = [
-  routeRow({
-    locale: "en",
-    route: "articles/politics",
-    section: "articles",
-  }),
-  routeRow({
-    locale: "en",
-    route: "subject/high-school/10/chemistry",
-    section: "subject",
-  }),
-  routeRow({
-    locale: "en",
-    route: "exercises/high-school/snbt/quantitative-knowledge",
-    section: "exercises",
-  }),
-  routeRow({
-    locale: "en",
-    route: "unknown/path",
-    section: "articles",
-  }),
+  routeProjectionRow(
+    {
+      locale: "en",
+      route: "articles/politics/dynastic-politics-asian-values",
+      section: "articles",
+    },
+    "articles/politics"
+  ),
+  routeProjectionRow(
+    {
+      locale: "en",
+      route: "subject/high-school/10/chemistry/green-chemistry/definition",
+      section: "subject",
+    },
+    "subject/high-school/10/chemistry"
+  ),
+  routeProjectionRow(
+    {
+      locale: "en",
+      route:
+        "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1",
+      section: "exercises",
+    },
+    "exercises/high-school/snbt/quantitative-knowledge"
+  ),
+  routeProjectionRow(
+    {
+      locale: "en",
+      route: "articles/politics/dynastic-politics-asian-values",
+      section: "articles",
+    },
+    "unknown/path"
+  ),
 ];
 
 /** Builds one route-count fixture row for sitemap descriptor tests. */
-function countRow(
-  locale: "en" | "id",
-  section: "articles" | "subject" | "exercises" | "quran",
-  count: number
-) {
+function countRow(locale: Locale, section: SourceRegistryRoot, count: number) {
   return { count, locale, section, syncedAt: 1 };
 }
 
@@ -233,16 +256,23 @@ function routeRow({
   route,
   section,
 }: {
-  locale: "en" | "id";
+  locale: Locale;
   route: string;
-  section: "articles" | "subject" | "exercises" | "quran";
+  section: SourceRegistryRoot;
 }): RuntimeContentRoute {
+  const graph = routeGraph(locale, route);
+  const kind = getLearningObjectKindForRoute(route);
+
+  if (!kind) {
+    throw new Error(`Expected graph route kind for ${route}.`);
+  }
+
   return {
+    ...graph,
     authors: [{ name: "Nakafa" }],
-    content_id: `${locale}/${route}`,
     date: 1_735_689_600_000,
     description: "Description",
-    kind: "article",
+    kind,
     locale,
     markdown: true,
     official: false,
@@ -250,5 +280,34 @@ function routeRow({
     section,
     syncedAt: 1,
     title: "Title",
+  };
+}
+
+/** Builds a graph-backed row with a custom route projection for edge cases. */
+function routeProjectionRow(
+  input: {
+    locale: Locale;
+    route: string;
+    section: SourceRegistryRoot;
+  },
+  route: string
+): RuntimeContentRoute {
+  return {
+    ...routeRow(input),
+    route,
+  };
+}
+
+/** Builds graph identity fields for a sitemap route fixture. */
+function routeGraph(locale: Locale, route: string) {
+  const identity = createLearningGraphIdentityFromRoute({ locale, route });
+
+  if (!identity) {
+    throw new Error(`Expected graph identity for ${route}.`);
+  }
+
+  return {
+    ...identity,
+    content_id: identity.assetId,
   };
 }

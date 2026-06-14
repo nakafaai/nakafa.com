@@ -2,6 +2,7 @@ import {
   CONTENT_ROUTE_ARTIFACT_PAGE_SIZE,
   CONTENT_ROUTE_KINDS,
 } from "@repo/backend/convex/contents/constants";
+import { learningGraphIdentityValidator } from "@repo/backend/convex/contents/graph";
 import { internalMutation } from "@repo/backend/convex/functions";
 import {
   localeValidator,
@@ -14,6 +15,7 @@ const routeKindValidator = literals(...CONTENT_ROUTE_KINDS);
 const staleRoutePageDeleteBatchSize = 500;
 
 const contentRoutePageItemValidator = v.object({
+  ...learningGraphIdentityValidator.fields,
   authors: v.array(v.object({ name: v.string() })),
   content_id: v.string(),
   date: v.optional(v.number()),

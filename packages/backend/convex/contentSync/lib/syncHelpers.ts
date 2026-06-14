@@ -1,42 +1,66 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { deleteAudioContentSource } from "@repo/backend/convex/audioStudies/helpers/sources";
+import { deleteAudioContentSourceByRoute } from "@repo/backend/convex/audioStudies/helpers/sources";
 import type { ContentAuthorContentId } from "@repo/backend/convex/authors/schema";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
-import { deleteContentRoute } from "@repo/backend/convex/contents/helpers/routes/write";
-import { buildContentSearchRef } from "@repo/backend/convex/contents/helpers/search/documents";
-import { deleteContentSearch } from "@repo/backend/convex/contents/helpers/search/write";
-import type { ContentType } from "@repo/backend/convex/lib/validators/contents";
-import { ConvexError } from "convex/values";
+import { deleteContentRoutesByRoute } from "@repo/backend/convex/contents/helpers/routes/write";
+import { deleteContentSearchByRoute } from "@repo/backend/convex/contents/helpers/search/write";
+import {
+  type ContentType,
+  type Locale,
+  localeValidator,
+  SUPPORTED_CONTENT_LOCALES,
+} from "@repo/backend/convex/lib/validators/contents";
+import { ConvexError, type Infer, v } from "convex/values";
 
 export type AuthorCache = Map<string, Id<"authors">>;
 
-export interface SyncedAuthor {
-  name: string;
-}
+/** Convex validator for author names imported from source metadata. */
+export const syncedAuthorValidator = v.object({
+  name: v.string(),
+});
 
-export interface SyncedArticleReference {
-  authors: string;
-  citation?: string;
-  details?: string;
-  publication?: string;
-  title: string;
-  url?: string;
-  year: number;
-}
+/** Author name imported from source content metadata. */
+export type SyncedAuthor = Infer<typeof syncedAuthorValidator>;
 
-export interface SyncedExerciseChoice {
-  isCorrect: boolean;
-  label: string;
-  optionKey: string;
-  order: number;
-}
+/** Convex validator for article references imported from source metadata. */
+export const syncedArticleReferenceValidator = v.object({
+  authors: v.string(),
+  citation: v.optional(v.string()),
+  details: v.optional(v.string()),
+  publication: v.optional(v.string()),
+  title: v.string(),
+  url: v.optional(v.string()),
+  year: v.number(),
+});
 
-export interface SyncedExerciseChoices {
-  en: SyncedExerciseChoice[];
-  id: SyncedExerciseChoice[];
-}
+/** Article reference imported from source content metadata. */
+export type SyncedArticleReference = Infer<
+  typeof syncedArticleReferenceValidator
+>;
+
+/** Convex validator for localized exercise choices from source metadata. */
+export const syncedExerciseChoiceValidator = v.object({
+  isCorrect: v.boolean(),
+  label: v.string(),
+  optionKey: v.string(),
+  order: v.number(),
+});
+
+/** Localized exercise choice imported from source content metadata. */
+export type SyncedExerciseChoice = Infer<typeof syncedExerciseChoiceValidator>;
+
+/** Convex validator for locale-keyed exercise choice groups. */
+export const syncedExerciseChoicesValidator = v.record(
+  localeValidator,
+  v.array(syncedExerciseChoiceValidator)
+);
+
+/** Locale-keyed exercise choices derived from the Convex validator. */
+export type SyncedExerciseChoices = Infer<
+  typeof syncedExerciseChoicesValidator
+>;
 
 /** Load existing authors into a lookup map keyed by author name. */
 export async function buildAuthorCache(
@@ -166,24 +190,20 @@ export async function replaceExerciseChoices(
     questionId: Id<"exerciseQuestions">;
   }
 ): Promise<number> {
-  assertContentSyncBatchSize({
-    functionName: "replaceExerciseChoices",
-    limit: CONTENT_SYNC_BATCH_LIMITS.exerciseChoices,
-    received: args.choices.id.length,
-    unit: "Indonesian exercise choices",
-  });
-  assertContentSyncBatchSize({
-    functionName: "replaceExerciseChoices",
-    limit: CONTENT_SYNC_BATCH_LIMITS.exerciseChoices,
-    received: args.choices.en.length,
-    unit: "English exercise choices",
-  });
+  for (const locale of SUPPORTED_CONTENT_LOCALES) {
+    assertContentSyncBatchSize({
+      functionName: "replaceExerciseChoices",
+      limit: CONTENT_SYNC_BATCH_LIMITS.exerciseChoices,
+      received: args.choices[locale].length,
+      unit: `${locale} exercise choices`,
+    });
+  }
 
   await deleteExerciseChoicesForQuestion(ctx, args.questionId);
 
   let created = 0;
 
-  for (const locale of ["id", "en"] as const) {
+  for (const locale of SUPPORTED_CONTENT_LOCALES) {
     for (const choice of args.choices[locale]) {
       await ctx.db.insert("exerciseChoices", {
         isCorrect: choice.isCorrect,
@@ -273,6 +293,15 @@ export async function deleteExerciseChoicesForQuestion(
   }
 }
 
+/** Delete synced search and route projections by their persisted route identity. */
+export async function deleteContentProjectionsByRoute(
+  ctx: MutationCtx,
+  args: { locale: Locale; route: string }
+) {
+  await deleteContentSearchByRoute(ctx, args);
+  await deleteContentRoutesByRoute(ctx, args);
+}
+
 /** Delete one exercise question together with its sync-managed dependent rows. */
 export async function deleteExerciseQuestion(
   ctx: MutationCtx,
@@ -281,13 +310,10 @@ export async function deleteExerciseQuestion(
   const question = await ctx.db.get(questionId);
 
   if (question) {
-    const searchRef = buildContentSearchRef({
+    await deleteContentProjectionsByRoute(ctx, {
       locale: question.locale,
       route: question.slug,
-      section: "exercises",
     });
-    await deleteContentSearch(ctx, searchRef.content_id);
-    await deleteContentRoute(ctx, searchRef.content_id);
   }
 
   await deleteContentAuthorLinks(ctx, questionId, "exercise");
@@ -303,16 +329,19 @@ export async function deleteSubjectSection(
   const section = await ctx.db.get(sectionId);
 
   if (section) {
-    const searchRef = buildContentSearchRef({
+    await deleteContentProjectionsByRoute(ctx, {
       locale: section.locale,
       route: section.slug,
-      section: "subject",
     });
-    await deleteContentSearch(ctx, searchRef.content_id);
-    await deleteContentRoute(ctx, searchRef.content_id);
   }
 
   await deleteContentAuthorLinks(ctx, sectionId, "subject");
-  await deleteAudioContentSource(ctx, { id: sectionId, type: "subject" });
+  if (section) {
+    await deleteAudioContentSourceByRoute(ctx, {
+      contentType: "subject",
+      locale: section.locale,
+      route: section.slug,
+    });
+  }
   await ctx.db.delete("subjectSections", sectionId);
 }

@@ -1,12 +1,12 @@
 import { previewQuran } from "@repo/ai/agents/nakafa/preview";
-import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
+import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import type { NakafaAgentQuranReference } from "@repo/contents/_lib/agent/schema/quran";
 import { describe, expect, it } from "vitest";
 
 describe("nakafa previews", () => {
   it("keeps Quran preview stable when a malformed result has no verses", () => {
     const result = {
-      ...buildNakafaContentRef("en", "quran/1", "quran"),
+      ...readNakafaContentRefFixture("en", "quran/1", "quran"),
       name: "Al-Fatihah",
       revelation: "Mecca",
       translation: "The Opening",

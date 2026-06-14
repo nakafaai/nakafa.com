@@ -1,9 +1,12 @@
 import { query } from "@repo/backend/convex/_generated/server";
+import { buildContentSearchRef } from "@repo/backend/convex/contents/helpers/search/documents";
 import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { recentlyViewedSubjectValidator } from "@repo/backend/convex/lib/validators/trending";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import { getAll } from "convex-helpers/server/relationships";
+import type { Infer } from "convex/values";
+
+type RecentlyViewedSubject = Infer<typeof recentlyViewedSubjectValidator>;
 
 /** Returns the current user's recently viewed subjects for one locale. */
 export const getRecentlyViewed = query({
@@ -22,13 +25,11 @@ export const getRecentlyViewed = query({
 
     const recentViews = await ctx.db
       .query("contentViews")
-      .withIndex(
-        "by_userId_and_contentRefType_and_locale_and_lastViewedAt",
-        (q) =>
-          q
-            .eq("userId", user.appUser._id)
-            .eq("contentRef.type", "subject")
-            .eq("locale", args.locale)
+      .withIndex("by_userId_and_section_and_locale_and_lastViewedAt", (q) =>
+        q
+          .eq("userId", user.appUser._id)
+          .eq("section", "subject")
+          .eq("locale", args.locale)
       )
       .order("desc")
       .take(limit);
@@ -37,45 +38,39 @@ export const getRecentlyViewed = query({
       return [];
     }
 
-    const subjectViews = recentViews.flatMap((view) => {
-      if (view.contentRef.type !== "subject") {
-        return [];
+    const results: RecentlyViewedSubject[] = [];
+
+    for (const view of recentViews) {
+      const route = await ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (q) => q.eq("content_id", view.content_id))
+        .unique();
+
+      if (route?.kind !== "subject-section") {
+        continue;
       }
 
-      return [
-        {
-          lastViewedAt: view.lastViewedAt,
-          slug: view.slug,
-          subjectId: view.contentRef.id,
-        },
-      ];
-    });
-
-    if (subjectViews.length === 0) {
-      return [];
-    }
-
-    const subjects = await getAll(
-      ctx.db,
-      subjectViews.map((subjectView) => subjectView.subjectId)
-    );
-
-    return subjectViews.flatMap((subjectView, index) => {
-      const subject = subjects[index];
+      const subject = await ctx.db
+        .query("subjectSections")
+        .withIndex("by_locale_and_slug", (q) =>
+          q.eq("locale", route.locale).eq("slug", route.route)
+        )
+        .unique();
 
       if (!subject) {
-        return [];
+        continue;
       }
 
-      return {
-        id: subject._id,
-        title: subject.title,
-        description: subject.description,
-        slug: subjectView.slug,
+      results.push({
+        ...buildContentSearchRef(route),
+        description: route.description ?? "",
         grade: subject.grade,
+        lastViewedAt: view.lastViewedAt,
         material: subject.material,
-        lastViewedAt: subjectView.lastViewedAt,
-      };
-    });
+        title: route.title,
+      });
+    }
+
+    return results;
   },
 });

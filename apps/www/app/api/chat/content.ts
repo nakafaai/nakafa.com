@@ -1,6 +1,30 @@
 import type { MyUIMessage } from "@repo/ai/types/message";
+import type { Locale } from "@repo/contents/_types/content";
 import { cleanSlug } from "@repo/utilities/helper";
 import { Effect } from "effect";
+
+/**
+ * Converts an absolute or relative content URL into Nakafa's canonical origin.
+ */
+export function getCanonicalNakafaContentUrl(url: string) {
+  const parsedUrl = new URL(url, "https://nakafa.com");
+  const slug = cleanSlug(parsedUrl.pathname);
+
+  return `https://nakafa.com/${slug}`;
+}
+
+/**
+ * Builds the canonical public Nakafa URL for the current chat page projection.
+ */
+export function getCanonicalCurrentPageContentUrl({
+  locale,
+  slug,
+}: {
+  locale: Locale;
+  slug: string;
+}) {
+  return getCanonicalNakafaContentUrl(`/${locale}/${cleanSlug(slug)}`);
+}
 
 /**
  * Normalizes absolute and relative content URLs to a comparable slug.

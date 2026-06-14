@@ -2,6 +2,7 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
@@ -31,6 +32,8 @@ interface SyncedArticleReference {
 }
 
 const ARTICLE_SLUG = "articles/politics/metadata-only";
+const ARTICLE_GRAPH = getGraphIdentity(ARTICLE_SLUG);
+const ARTICLE_CONTENT_ID = ARTICLE_GRAPH.assetId;
 const BASE_REFERENCE: SyncedArticleReference = {
   authors: "Ada",
   citation: "ada-2026",
@@ -58,6 +61,20 @@ const BASE_ARTICLE: SyncedArticle = {
 /** Builds a complete article sync payload with focused field overrides. */
 function buildArticle(overrides: Partial<SyncedArticle> = {}): SyncedArticle {
   return { ...BASE_ARTICLE, ...overrides };
+}
+
+/** Returns the graph identity for an article route fixture. */
+function getGraphIdentity(route: string) {
+  const identity = createLearningGraphIdentityFromRoute({
+    locale: "id",
+    route,
+  });
+
+  if (!identity) {
+    throw new Error(`Expected graph identity for ${route}.`);
+  }
+
+  return identity;
 }
 
 describe("contentSync/mutations/articles", () => {
@@ -137,22 +154,19 @@ describe("contentSync/mutations/articles", () => {
       const search = await ctx.db
         .query("contentSearch")
         .withIndex("by_content_id", (q) =>
-          q.eq("content_id", `id/${ARTICLE_SLUG}`)
+          q.eq("content_id", ARTICLE_CONTENT_ID)
         )
         .unique();
       const route = await ctx.db
         .query("contentRoutes")
         .withIndex("by_content_id", (q) =>
-          q.eq("content_id", `id/${ARTICLE_SLUG}`)
+          q.eq("content_id", ARTICLE_CONTENT_ID)
         )
         .unique();
       const audioSource = await ctx.db
         .query("audioContentSources")
-        .withIndex("by_contentRefType_and_slug_and_locale", (q) =>
-          q
-            .eq("contentRef.type", "article")
-            .eq("slug", ARTICLE_SLUG)
-            .eq("locale", "id")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", ARTICLE_CONTENT_ID)
         )
         .unique();
 
@@ -202,7 +216,9 @@ describe("contentSync/mutations/articles", () => {
     });
     expect(snapshot.audioSource).toMatchObject({
       contentHash: "updated-article-hash",
-      slug: ARTICLE_SLUG,
+      content_id: ARTICLE_CONTENT_ID,
+      contentType: "article",
+      route: ARTICLE_SLUG,
     });
   });
 
@@ -228,8 +244,114 @@ describe("contentSync/mutations/articles", () => {
     expect(deleteResult).toEqual({ deleted: 0 });
   });
 
+  it("patches stale graph fields on unchanged article search rows", async () => {
+    const t = convexTest(schema, convexModules);
+
+    await t.mutation(async (ctx) => {
+      await ctx.db.insert("authors", { name: "Ada", username: "ada" });
+    });
+    await t.mutation(internal.contentSync.mutations.articles.bulkSyncArticles, {
+      articles: [buildArticle()],
+    });
+    await t.mutation(async (ctx) => {
+      const search = await ctx.db
+        .query("contentSearch")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", ARTICLE_CONTENT_ID)
+        )
+        .unique();
+
+      if (!search) {
+        throw new Error("Expected article search row before stale patch.");
+      }
+
+      await ctx.db.patch("contentSearch", search._id, {
+        alignmentId: "stale-alignment-id",
+        assetId: "stale-asset-id",
+        conceptId: "stale-concept-id",
+        learningObjectId: "stale-learning-object-id",
+        lensId: "stale-lens-id",
+      });
+    });
+
+    await t.mutation(internal.contentSync.mutations.articles.bulkSyncArticles, {
+      articles: [buildArticle()],
+    });
+    const search = await t.query(async (ctx) =>
+      ctx.db
+        .query("contentSearch")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", ARTICLE_CONTENT_ID)
+        )
+        .unique()
+    );
+
+    expect(search).toMatchObject({
+      alignmentId: ARTICLE_GRAPH.alignmentId,
+      assetId: ARTICLE_GRAPH.assetId,
+      conceptId: ARTICLE_GRAPH.conceptId,
+      contentHash: BASE_ARTICLE.contentHash,
+      content_id: ARTICLE_GRAPH.assetId,
+      learningObjectId: ARTICLE_GRAPH.learningObjectId,
+      lensId: ARTICLE_GRAPH.lensId,
+      route: ARTICLE_SLUG,
+      title: BASE_ARTICLE.title,
+    });
+  });
+
+  it("patches stale route catalog fields on unchanged article rows", async () => {
+    const t = convexTest(schema, convexModules);
+
+    await t.mutation(async (ctx) => {
+      await ctx.db.insert("authors", { name: "Ada", username: "ada" });
+    });
+    await t.mutation(internal.contentSync.mutations.articles.bulkSyncArticles, {
+      articles: [buildArticle()],
+    });
+    await t.mutation(async (ctx) => {
+      const route = await ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", ARTICLE_CONTENT_ID)
+        )
+        .unique();
+
+      if (!route) {
+        throw new Error("Expected article route row before stale patch.");
+      }
+
+      await ctx.db.patch("contentRoutes", route._id, { locale: "en" });
+    });
+
+    await t.mutation(internal.contentSync.mutations.articles.bulkSyncArticles, {
+      articles: [buildArticle()],
+    });
+    const route = await t.query(async (ctx) =>
+      ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", ARTICLE_CONTENT_ID)
+        )
+        .unique()
+    );
+
+    expect(route).toMatchObject({
+      alignmentId: ARTICLE_GRAPH.alignmentId,
+      assetId: ARTICLE_GRAPH.assetId,
+      conceptId: ARTICLE_GRAPH.conceptId,
+      contentHash: BASE_ARTICLE.contentHash,
+      content_id: ARTICLE_GRAPH.assetId,
+      learningObjectId: ARTICLE_GRAPH.learningObjectId,
+      lensId: ARTICLE_GRAPH.lensId,
+      locale: "id",
+      route: ARTICLE_SLUG,
+      title: BASE_ARTICLE.title,
+    });
+  });
+
   it("deletes stale articles and skips IDs that already disappeared", async () => {
     const t = convexTest(schema, convexModules);
+    const detachedContentId = `${ARTICLE_CONTENT_ID}:catalog`;
 
     await t.mutation(async (ctx) => {
       await ctx.db.insert("authors", { name: "Ada", username: "ada" });
@@ -260,6 +382,41 @@ describe("contentSync/mutations/articles", () => {
         throw new Error("Expected synced article before stale delete.");
       }
 
+      const search = await ctx.db
+        .query("contentSearch")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", ARTICLE_CONTENT_ID)
+        )
+        .unique();
+      const route = await ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", ARTICLE_CONTENT_ID)
+        )
+        .unique();
+      const audioSource = await ctx.db
+        .query("audioContentSources")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", ARTICLE_CONTENT_ID)
+        )
+        .unique();
+
+      if (!(search && route && audioSource)) {
+        throw new Error("Expected synced article projections.");
+      }
+
+      await ctx.db.patch("contentSearch", search._id, {
+        assetId: detachedContentId,
+        content_id: detachedContentId,
+      });
+      await ctx.db.patch("contentRoutes", route._id, {
+        assetId: detachedContentId,
+        content_id: detachedContentId,
+      });
+      await ctx.db.patch("audioContentSources", audioSource._id, {
+        assetId: detachedContentId,
+        content_id: detachedContentId,
+      });
       await ctx.db.delete("articleContents", missingId);
 
       return { articleId: article._id, missingId };
@@ -284,22 +441,19 @@ describe("contentSync/mutations/articles", () => {
       const search = await ctx.db
         .query("contentSearch")
         .withIndex("by_content_id", (q) =>
-          q.eq("content_id", `id/${ARTICLE_SLUG}`)
+          q.eq("content_id", detachedContentId)
         )
         .unique();
       const route = await ctx.db
         .query("contentRoutes")
         .withIndex("by_content_id", (q) =>
-          q.eq("content_id", `id/${ARTICLE_SLUG}`)
+          q.eq("content_id", detachedContentId)
         )
         .unique();
       const audioSource = await ctx.db
         .query("audioContentSources")
-        .withIndex("by_contentRefType_and_slug_and_locale", (q) =>
-          q
-            .eq("contentRef.type", "article")
-            .eq("slug", ARTICLE_SLUG)
-            .eq("locale", "id")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", detachedContentId)
         )
         .unique();
 

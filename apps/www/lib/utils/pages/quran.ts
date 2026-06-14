@@ -1,4 +1,5 @@
 import type { api } from "@repo/backend/convex/_generated/api";
+import type { Locale } from "@repo/utilities/locales";
 import type { FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
 import { getRuntimeQuranSurahPage } from "@/lib/content/runtime";
@@ -104,7 +105,7 @@ export function getQuranSurahName({
   locale,
   name,
 }: {
-  locale: "en" | "id";
+  locale: Locale;
   name: QuranSurah["name"];
 }) {
   return name.transliteration[locale];

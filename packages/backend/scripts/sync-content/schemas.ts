@@ -4,12 +4,14 @@ import {
   CONTENT_ROUTE_KINDS,
   NAKAFA_CONTENT_SECTIONS,
 } from "@repo/backend/convex/contents/constants";
+import { CONTENT_TYPE_VALUES } from "@repo/backend/convex/lib/validators/contents";
 import { locales } from "@repo/utilities/locales";
 import { Effect, Schema } from "effect";
 
 const SyncLocaleSchema = Schema.Literal(...locales);
 const SyncSectionSchema = Schema.Literal(...NAKAFA_CONTENT_SECTIONS);
 const ContentRouteKindSchema = Schema.Literal(...CONTENT_ROUTE_KINDS);
+const ContentTypeSchema = Schema.Literal(...CONTENT_TYPE_VALUES);
 
 /** Validates a Convex document ID while preserving its generated table brand. */
 export const ConvexIdSchema = <const TableName extends TableNames>(
@@ -147,13 +149,18 @@ const ContentRouteAuthorSchema = Schema.Struct({
 
 export const RuntimeContentRouteRowSchema = Schema.mutable(
   Schema.Struct({
+    alignmentId: Schema.String,
     authors: mutableArraySchema(ContentRouteAuthorSchema),
+    assetId: Schema.String,
+    conceptId: Schema.String,
     content_id: Schema.String,
     date: Schema.UndefinedOr(Schema.Number),
     depth: Schema.UndefinedOr(Schema.Number),
     description: Schema.UndefinedOr(Schema.String),
     kind: ContentRouteKindSchema,
+    learningObjectId: Schema.String,
     locale: SyncLocaleSchema,
+    lensId: Schema.String,
     markdown: Schema.Boolean,
     official: Schema.UndefinedOr(Schema.Boolean),
     parentRoute: Schema.UndefinedOr(Schema.String),
@@ -292,7 +299,12 @@ export const QuranSurahPageSchema = Schema.NullOr(
 export const QuranReferenceSchema = Schema.NullOr(
   Schema.mutable(
     Schema.Struct({
+      alignmentId: Schema.String,
+      assetId: Schema.String,
+      conceptId: Schema.String,
       content_id: Schema.String,
+      learningObjectId: Schema.String,
+      lensId: Schema.String,
       locale: SyncLocaleSchema,
       markdown_url: Schema.String,
       name: Schema.String,
@@ -323,9 +335,14 @@ export const ContentSearchResultSchema = Schema.mutable(
     items: mutableArraySchema(
       Schema.mutable(
         Schema.Struct({
+          alignmentId: Schema.String,
+          assetId: Schema.String,
+          conceptId: Schema.String,
           content_id: Schema.String,
           description: Schema.String,
           excerpt: Schema.String,
+          learningObjectId: Schema.String,
+          lensId: Schema.String,
           locale: SyncLocaleSchema,
           markdown_url: Schema.String,
           route: Schema.String,
@@ -358,12 +375,15 @@ export const ContentCountsSchema = Schema.Struct({
   audioContentSources: Schema.Number,
   audioGenerationQueue: Schema.Number,
   authors: Schema.Number,
+  contentAnalyticsPartitions: Schema.Number,
   contentAudios: Schema.Number,
   contentAuthors: Schema.Number,
   contentRouteCounts: Schema.Number,
   contentRoutePages: Schema.Number,
   contentRoutes: Schema.Number,
   contentSearch: Schema.Number,
+  contentViewAnalyticsQueue: Schema.Number,
+  contentViews: Schema.Number,
   exerciseAnswers: Schema.Number,
   exerciseAttempts: Schema.Number,
   exerciseChoices: Schema.Number,
@@ -379,9 +399,11 @@ export const ContentCountsSchema = Schema.Struct({
   irtScaleQualityRefreshQueue: Schema.Number,
   irtScaleVersionItems: Schema.Number,
   irtScaleVersions: Schema.Number,
+  learningPopularity: Schema.Number,
   quranSurahs: Schema.Number,
   quranVerses: Schema.Number,
   subjectSections: Schema.Number,
+  learningTrendingBuckets: Schema.Number,
   subjectTopics: Schema.Number,
   tryoutAccessCampaignProducts: Schema.Number,
   tryoutAccessCampaigns: Schema.Number,
@@ -406,6 +428,46 @@ export const DataIntegritySchema = Schema.Struct({
   totalQuestions: Schema.Number,
   totalArticles: Schema.Number,
   totalSections: Schema.Number,
+});
+
+const GraphIdentityIssueSchema = Schema.Struct({
+  assetId: Schema.optional(Schema.String),
+  content_ref: Schema.optional(Schema.String),
+  content_id: Schema.optional(Schema.String),
+  kind: Schema.optional(Schema.String),
+  route: Schema.optional(Schema.String),
+  section: Schema.optional(SyncSectionSchema),
+  status: Schema.optional(Schema.String),
+});
+
+export const GraphIdentityIntegrityPageSchema = Schema.Struct({
+  checkedRefs: Schema.Number,
+  checkedRefInputs: Schema.Number,
+  continueCursor: Schema.String,
+  firstInvalidRefInput: Schema.NullOr(GraphIdentityIssueSchema),
+  firstMissingGraph: Schema.NullOr(GraphIdentityIssueSchema),
+  firstMismatchedContentId: Schema.NullOr(GraphIdentityIssueSchema),
+  firstRouteShapedContentId: Schema.NullOr(GraphIdentityIssueSchema),
+  invalidRefInputs: Schema.Number,
+  isDone: Schema.Boolean,
+  missingGraphRows: Schema.Number,
+  mismatchedContentIds: Schema.Number,
+  routeShapedContentIds: Schema.Number,
+  scannedRows: Schema.Number,
+});
+
+export const GraphIdentityIntegritySchema = Schema.Struct({
+  checkedRefs: Schema.Number,
+  checkedRefInputs: Schema.Number,
+  firstInvalidRefInput: Schema.NullOr(GraphIdentityIssueSchema),
+  firstMissingGraph: Schema.NullOr(GraphIdentityIssueSchema),
+  firstMismatchedContentId: Schema.NullOr(GraphIdentityIssueSchema),
+  firstRouteShapedContentId: Schema.NullOr(GraphIdentityIssueSchema),
+  invalidRefInputs: Schema.Number,
+  missingGraphRows: Schema.Number,
+  mismatchedContentIds: Schema.Number,
+  routeShapedContentIds: Schema.Number,
+  scannedRows: Schema.Number,
 });
 
 export const TryoutScaleIntegritySchema = Schema.mutable(
@@ -532,7 +594,7 @@ export const ContentAuthorIntegrityPageSchema = Schema.mutable(
         Schema.Struct({
           authorId: ConvexIdSchema("authors"),
           contentId: ContentIdSchema,
-          contentType: Schema.Literal("article", "subject", "exercise"),
+          contentType: ContentTypeSchema,
         })
       ),
     })

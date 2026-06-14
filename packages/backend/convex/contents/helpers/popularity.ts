@@ -11,14 +11,11 @@ export function mergePopularAudioContentItems(
   const mergedItems = new Map<string, PopularAudioContentItem>();
 
   for (const item of items) {
-    const key = item.sourceContent
-      ? `${item.sourceContent.ref.type}:${item.sourceContent.slug}`
-      : `${item.ref.type}:${item.ref.id}`;
+    const key = item.sourceContent.learningObjectId;
     const existingItem = mergedItems.get(key);
 
     if (!existingItem || item.viewCount > existingItem.viewCount) {
       mergedItems.set(key, {
-        ref: item.ref,
         sourceContent: item.sourceContent,
         viewCount: item.viewCount,
       });

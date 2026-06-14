@@ -139,10 +139,25 @@ async function readExactRouteContent(
     return null;
   }
 
+  const routeProjection = await ctx.db
+    .query("contentRoutes")
+    .withIndex("by_locale_and_route", (q) =>
+      q.eq("locale", args.locale).eq("route", route)
+    )
+    .unique();
+
+  if (!routeProjection) {
+    return null;
+  }
+
+  if (args.section && routeProjection.section !== args.section) {
+    return null;
+  }
+
   const document = await ctx.db
     .query("contentSearch")
     .withIndex("by_content_id", (q) =>
-      q.eq("content_id", `${args.locale}/${route}`)
+      q.eq("content_id", routeProjection.content_id)
     )
     .unique();
 

@@ -1,15 +1,29 @@
 import { NAKAFA_AGENT_SECTIONS } from "@repo/contents/_lib/agent/constants";
 import { LocaleSchema } from "@repo/contents/_types/content";
-import { Option, Schema } from "effect";
+import { Schema } from "effect";
 
 const MARKDOWN_EXTENSION = ".md";
-const NAKAFA_CONTENT_URL_HOSTNAMES = ["nakafa.com", "www.nakafa.com"] as const;
+const ABSOLUTE_URL_PATTERN =
+  /^[a-z][a-z\d+.-]*:\/\/[^\s/?#]+(?:[/?#][^\s]*)?$/i;
+const NAKAFA_CONTENT_URL_PATTERN =
+  /^https:\/\/(?:www\.)?nakafa\.com(\/[^\s?#]*)?(?:[?#][^\s]*)?$/;
 
 const UrlStringSchema = Schema.String.pipe(
-  Schema.filter((value) => URL.canParse(value), {
+  Schema.filter((value) => ABSOLUTE_URL_PATTERN.test(value), {
     message: () => "Expected a valid URL.",
   })
 );
+
+/** Extracts a canonical Nakafa URL pathname for schema transformation. */
+function getNakafaContentUrlPathname(value: string) {
+  const match = NAKAFA_CONTENT_URL_PATTERN.exec(value);
+
+  if (!match) {
+    return null;
+  }
+
+  return match[1] ?? "/";
+}
 
 /**
  * Checks whether a string is a safe locale-free content route.
@@ -27,29 +41,33 @@ function isSafeNakafaContentRoute(value: string) {
 }
 
 /**
- * Checks whether a string is a safe locale-prefixed content ID.
+ * Checks whether a string is a safe graph-backed content asset ID.
  */
 function isSafeNakafaContentId(value: string) {
-  const [locale, ...routeSegments] = value.split("/");
-  const parsedLocale = Schema.decodeUnknownOption(LocaleSchema)(locale);
+  const [prefix, ...segments] = value.split(":");
 
-  if (Option.isNone(parsedLocale)) {
+  if (prefix !== "asset" || segments.length < 3) {
     return false;
   }
 
-  return isSafeNakafaContentRoute(routeSegments.join("/"));
+  return segments.every(isSafeGraphIdSegment);
+}
+
+/** Checks one graph ID segment for path-safe, delimiter-safe text. */
+function isSafeGraphIdSegment(segment: string) {
+  return (
+    segment.length > 0 &&
+    !segment.includes("/") &&
+    segment !== "." &&
+    segment !== ".."
+  );
 }
 
 /**
  * Checks whether a URL points at Nakafa's public content origin.
  */
 function isNakafaContentUrl(value: string) {
-  const url = new URL(value);
-
-  return (
-    url.protocol === "https:" &&
-    NAKAFA_CONTENT_URL_HOSTNAMES.some((hostname) => hostname === url.hostname)
-  );
+  return getNakafaContentUrlPathname(value) !== null;
 }
 
 /**
@@ -59,12 +77,29 @@ function isNakafaContentUrl(value: string) {
  */
 export const NakafaAgentContentIdSchema = Schema.String.pipe(
   Schema.filter(isSafeNakafaContentId, {
-    message: () =>
-      "Expected a locale-prefixed Nakafa content ID with a safe route.",
+    message: () => "Expected a graph-backed Nakafa asset content ID.",
   }),
   Schema.brand("@Nakafa/AgentContentId")
 ).annotations({
-  description: "Stable locale-prefixed content identifier returned by Nakafa.",
+  description: "Stable graph-backed content identifier returned by Nakafa.",
+});
+
+/** Runtime schema for stable graph IDs included in content references. */
+const NakafaAgentGraphIdSchema = Schema.String.pipe(
+  Schema.filter(
+    (value) => {
+      const [prefix, ...segments] = value.split(":");
+
+      return (
+        isSafeGraphIdSegment(prefix) &&
+        segments.length > 0 &&
+        segments.every(isSafeGraphIdSegment)
+      );
+    },
+    { message: () => "Expected a safe Nakafa graph ID." }
+  )
+).annotations({
+  description: "Stable Nakafa learning graph identifier.",
 });
 
 /** Runtime schema for locale-free Nakafa content routes. */
@@ -90,9 +125,15 @@ export const NakafaAgentContentUrlSchema = UrlStringSchema.pipe(
 /** Runtime schema for canonical public Nakafa markdown URLs. */
 export const NakafaAgentMarkdownUrlSchema = UrlStringSchema.pipe(
   Schema.filter(
-    (value) =>
-      isNakafaContentUrl(value) &&
-      new URL(value).pathname.endsWith(MARKDOWN_EXTENSION),
+    (value) => {
+      const pathname = getNakafaContentUrlPathname(value);
+
+      if (!pathname) {
+        return false;
+      }
+
+      return pathname.endsWith(MARKDOWN_EXTENSION);
+    },
     {
       message: () => "Expected a canonical Nakafa markdown URL.",
     }
@@ -112,9 +153,14 @@ export const NakafaAgentSectionSchema = Schema.Literal(
 
 /** Runtime schema for a canonical content reference used across agent tools. */
 export const NakafaAgentContentRefSchema = Schema.Struct({
+  alignmentId: NakafaAgentGraphIdSchema,
+  assetId: NakafaAgentGraphIdSchema,
+  conceptId: NakafaAgentGraphIdSchema,
   content_id: NakafaAgentContentIdSchema.annotations({
     description: "Stable content identifier returned by Nakafa MCP search.",
   }),
+  learningObjectId: NakafaAgentGraphIdSchema,
+  lensId: NakafaAgentGraphIdSchema,
   locale: LocaleSchema.annotations({
     description: "Locale of the referenced content.",
   }),

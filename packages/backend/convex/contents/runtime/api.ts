@@ -9,6 +9,7 @@ import { ConvexError } from "convex/values";
 
 const MAX_API_CONTENT_PAGE_SIZE = 100;
 
+/** Bounded route-prefix page args for partner API content reads. */
 interface ApiContentPrefixArgs {
   cursor: string | null;
   limit: number;
@@ -40,23 +41,37 @@ export async function listArticleApiContentPageImpl(
   return {
     continueCursor: page.continueCursor,
     isDone: page.isDone,
-    page: await Promise.all(
-      items.map(async (article) => ({
-        locale: article.locale,
-        metadata: {
-          authors: await getContentAuthors(ctx, {
-            contentId: article._id,
-            contentType: "article",
-          }),
-          date: formatContentDate(article.date),
-          description: article.description,
-          title: article.title,
-        },
-        raw: article.body,
-        slug: article.slug,
-        url: `${NAKAFA_CONTENT_BASE_URL}/${article.locale}/${article.slug}`,
-      }))
-    ),
+    page: (
+      await Promise.all(
+        items.map(async (article) => {
+          const graph = await getApiContentGraphProjection(ctx, {
+            locale: article.locale,
+            route: article.slug,
+          });
+
+          if (!graph) {
+            return null;
+          }
+
+          return {
+            ...graph,
+            locale: article.locale,
+            metadata: {
+              authors: await getContentAuthors(ctx, {
+                contentId: article._id,
+                contentType: "article",
+              }),
+              date: formatContentDate(article.date),
+              description: article.description,
+              title: article.title,
+            },
+            raw: article.body,
+            slug: article.slug,
+            url: `${NAKAFA_CONTENT_BASE_URL}/${article.locale}/${article.slug}`,
+          };
+        })
+      )
+    ).filter((item) => item !== null),
   };
 }
 
@@ -84,24 +99,66 @@ export async function listSubjectApiContentPageImpl(
   return {
     continueCursor: page.continueCursor,
     isDone: page.isDone,
-    page: await Promise.all(
-      items.map(async (section) => ({
-        locale: section.locale,
-        metadata: {
-          authors: await getContentAuthors(ctx, {
-            contentId: section._id,
-            contentType: "subject",
-          }),
-          date: formatContentDate(section.date),
-          description: section.description,
-          subject: section.subject,
-          title: section.title,
-        },
-        raw: section.body,
-        slug: section.slug,
-        url: `${NAKAFA_CONTENT_BASE_URL}/${section.locale}/${section.slug}`,
-      }))
-    ),
+    page: (
+      await Promise.all(
+        items.map(async (section) => {
+          const graph = await getApiContentGraphProjection(ctx, {
+            locale: section.locale,
+            route: section.slug,
+          });
+
+          if (!graph) {
+            return null;
+          }
+
+          return {
+            ...graph,
+            locale: section.locale,
+            metadata: {
+              authors: await getContentAuthors(ctx, {
+                contentId: section._id,
+                contentType: "subject",
+              }),
+              date: formatContentDate(section.date),
+              description: section.description,
+              subject: section.subject,
+              title: section.title,
+            },
+            raw: section.body,
+            slug: section.slug,
+            url: `${NAKAFA_CONTENT_BASE_URL}/${section.locale}/${section.slug}`,
+          };
+        })
+      )
+    ).filter((item) => item !== null),
+  };
+}
+
+/** Loads graph identity from the durable route catalog instead of the slug. */
+async function getApiContentGraphProjection(
+  ctx: QueryCtx,
+  args: {
+    locale: Locale;
+    route: string;
+  }
+) {
+  const route = await ctx.db
+    .query("contentRoutes")
+    .withIndex("by_locale_and_route", (q) =>
+      q.eq("locale", args.locale).eq("route", args.route)
+    )
+    .unique();
+
+  if (!route) {
+    return null;
+  }
+
+  return {
+    alignmentId: route.alignmentId,
+    assetId: route.assetId,
+    conceptId: route.conceptId,
+    learningObjectId: route.learningObjectId,
+    lensId: route.lensId,
   };
 }
 

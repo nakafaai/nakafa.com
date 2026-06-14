@@ -4,6 +4,9 @@ import {
   buildContentSearchDocument,
   type ContentSearchSource,
 } from "@repo/backend/convex/contents/helpers/search/documents";
+import { ConvexError } from "convex/values";
+
+const duplicateSearchRepairLimit = 6;
 
 /** Upserts one search row derived from canonical synced content. */
 export async function syncContentSearch(
@@ -17,13 +20,24 @@ export async function syncContentSearch(
       q.eq("content_id", nextValues.content_id)
     )
     .unique();
+  const routeRows = await ctx.db
+    .query("contentSearch")
+    .withIndex("by_locale_and_route", (q) =>
+      q.eq("locale", nextValues.locale).eq("route", nextValues.route)
+    )
+    .take(duplicateSearchRepairLimit);
+  const routeExisting = existing ?? routeRows[0] ?? null;
+  const deletedDuplicates = await deleteDuplicateContentSearchRows(ctx, {
+    primary: routeExisting,
+    rows: routeRows,
+  });
 
-  if (isSameContentSearch(existing, nextValues)) {
-    return "unchanged";
+  if (isSameContentSearch(routeExisting, nextValues)) {
+    return deletedDuplicates > 0 ? "updated" : "unchanged";
   }
 
-  if (existing) {
-    await ctx.db.patch("contentSearch", existing._id, nextValues);
+  if (routeExisting) {
+    await ctx.db.patch("contentSearch", routeExisting._id, nextValues);
     return "updated";
   }
 
@@ -45,6 +59,60 @@ export async function deleteContentSearch(ctx: MutationCtx, contentId: string) {
   await ctx.db.delete(existing._id);
 }
 
+/** Deletes every search row attached to one public route projection. */
+export async function deleteContentSearchByRoute(
+  ctx: MutationCtx,
+  args: { locale: Doc<"contentSearch">["locale"]; route: string }
+) {
+  const rows = await ctx.db
+    .query("contentSearch")
+    .withIndex("by_locale_and_route", (q) =>
+      q.eq("locale", args.locale).eq("route", args.route)
+    )
+    .take(duplicateSearchRepairLimit);
+
+  if (rows.length >= duplicateSearchRepairLimit) {
+    throw new ConvexError({
+      code: "CONTENT_SEARCH_DELETE_LIMIT_EXCEEDED",
+      message:
+        "Content search route has too many projections to delete safely.",
+    });
+  }
+
+  for (const row of rows) {
+    await ctx.db.delete(row._id);
+  }
+}
+
+/** Removes duplicate search rows before one route projection is inserted. */
+async function deleteDuplicateContentSearchRows(
+  ctx: MutationCtx,
+  source: {
+    primary: Doc<"contentSearch"> | null;
+    rows: Doc<"contentSearch">[];
+  }
+) {
+  if (source.rows.length >= duplicateSearchRepairLimit) {
+    throw new ConvexError({
+      code: "CONTENT_SEARCH_DUPLICATE_LIMIT_EXCEEDED",
+      message: "Content search route has too many duplicate projections.",
+    });
+  }
+
+  let deleted = 0;
+
+  for (const row of source.rows) {
+    if (row._id === source.primary?._id) {
+      continue;
+    }
+
+    await ctx.db.delete(row._id);
+    deleted += 1;
+  }
+
+  return deleted;
+}
+
 /** Checks whether an existing read-model row already matches the next payload. */
 function isSameContentSearch(
   existing: Doc<"contentSearch"> | null,
@@ -55,8 +123,14 @@ function isSameContentSearch(
   }
 
   return (
+    existing.alignmentId === next.alignmentId &&
+    existing.assetId === next.assetId &&
+    existing.conceptId === next.conceptId &&
     existing.contentHash === next.contentHash &&
+    existing.content_id === next.content_id &&
     existing.description === next.description &&
+    existing.learningObjectId === next.learningObjectId &&
+    existing.lensId === next.lensId &&
     existing.markdown_url === next.markdown_url &&
     existing.route === next.route &&
     existing.section === next.section &&

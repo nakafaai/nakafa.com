@@ -1,5 +1,6 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
+import { getTestAudioContent } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
@@ -9,6 +10,16 @@ const SUBJECT_TOPIC_SLUG =
   "subject/high-school/10/mathematics/audio-source-topic";
 const SUBJECT_SECTION_SLUG =
   "subject/high-school/10/mathematics/audio-source-topic/audio-source-section";
+const articleSource = getTestAudioContent({
+  contentHash: "article-source-hash",
+  locale: "id",
+  route: ARTICLE_SLUG,
+});
+const subjectSource = getTestAudioContent({
+  contentHash: "subject-source-hash",
+  locale: "en",
+  route: SUBJECT_SECTION_SLUG,
+});
 
 describe("contentSync audio sources", () => {
   it("maintains compact article audio metadata through sync and stale delete", async () => {
@@ -36,29 +47,33 @@ describe("contentSync audio sources", () => {
     const sourceBefore = await t.query(async (ctx) => {
       const source = await ctx.db
         .query("audioContentSources")
-        .withIndex("by_contentRefType_and_slug_and_locale", (q) =>
-          q
-            .eq("contentRef.type", "article")
-            .eq("slug", ARTICLE_SLUG)
-            .eq("locale", "id")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", articleSource.content_id)
+        )
+        .unique();
+      const article = await ctx.db
+        .query("articleContents")
+        .withIndex("by_locale_and_slug", (q) =>
+          q.eq("locale", "id").eq("slug", ARTICLE_SLUG)
         )
         .unique();
 
-      if (source?.contentRef.type !== "article") {
+      if (!(source && article)) {
         throw new Error("Expected synced article audio source.");
       }
 
       return {
-        articleId: source.contentRef.id,
+        articleId: article._id,
         source,
       };
     });
 
     expect(sourceBefore.source).toMatchObject({
-      contentHash: "article-source-hash",
-      contentRef: { type: "article" },
+      contentHash: articleSource.contentHash,
+      content_id: articleSource.content_id,
+      contentType: articleSource.contentType,
       locale: "id",
-      slug: ARTICLE_SLUG,
+      route: ARTICLE_SLUG,
     });
 
     await t.mutation(
@@ -72,11 +87,8 @@ describe("contentSync audio sources", () => {
       async (ctx) =>
         await ctx.db
           .query("audioContentSources")
-          .withIndex("by_contentRefType_and_slug_and_locale", (q) =>
-            q
-              .eq("contentRef.type", "article")
-              .eq("slug", ARTICLE_SLUG)
-              .eq("locale", "id")
+          .withIndex("by_content_id", (q) =>
+            q.eq("content_id", articleSource.content_id)
           )
           .unique()
     );
@@ -135,29 +147,33 @@ describe("contentSync audio sources", () => {
     const sourceBefore = await t.query(async (ctx) => {
       const source = await ctx.db
         .query("audioContentSources")
-        .withIndex("by_contentRefType_and_slug_and_locale", (q) =>
-          q
-            .eq("contentRef.type", "subject")
-            .eq("slug", SUBJECT_SECTION_SLUG)
-            .eq("locale", "en")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", subjectSource.content_id)
+        )
+        .unique();
+      const section = await ctx.db
+        .query("subjectSections")
+        .withIndex("by_locale_and_slug", (q) =>
+          q.eq("locale", "en").eq("slug", SUBJECT_SECTION_SLUG)
         )
         .unique();
 
-      if (source?.contentRef.type !== "subject") {
+      if (!(source && section)) {
         throw new Error("Expected synced subject audio source.");
       }
 
       return {
-        sectionId: source.contentRef.id,
+        sectionId: section._id,
         source,
       };
     });
 
     expect(sourceBefore.source).toMatchObject({
-      contentHash: "subject-source-hash",
-      contentRef: { type: "subject" },
+      contentHash: subjectSource.contentHash,
+      content_id: subjectSource.content_id,
+      contentType: subjectSource.contentType,
       locale: "en",
-      slug: SUBJECT_SECTION_SLUG,
+      route: SUBJECT_SECTION_SLUG,
     });
 
     await t.mutation(
@@ -171,11 +187,8 @@ describe("contentSync audio sources", () => {
       async (ctx) =>
         await ctx.db
           .query("audioContentSources")
-          .withIndex("by_contentRefType_and_slug_and_locale", (q) =>
-            q
-              .eq("contentRef.type", "subject")
-              .eq("slug", SUBJECT_SECTION_SLUG)
-              .eq("locale", "en")
+          .withIndex("by_content_id", (q) =>
+            q.eq("content_id", subjectSource.content_id)
           )
           .unique()
     );

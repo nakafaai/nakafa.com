@@ -4,6 +4,7 @@ import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/cons
 import {
   buildRuntimeExercise,
   getExerciseQuestions,
+  getExerciseRouteProjection,
   getExerciseSet,
 } from "@repo/backend/convex/contents/runtime/exerciseRows";
 import { throwRuntimeIntegrityError } from "@repo/backend/convex/contents/runtime/shared";
@@ -24,12 +25,29 @@ export async function getExerciseSetPageImpl(
     return null;
   }
 
+  const graph = await getExerciseRouteProjection(ctx, {
+    kind: "exercise-set",
+    locale: set.locale,
+    route: set.slug,
+  });
+
+  if (!graph) {
+    return null;
+  }
+
   const questions = await getExerciseQuestions(ctx, set);
-  const exercises = await Promise.all(
-    questions.map((question) => buildRuntimeExercise(ctx, question))
-  );
+  const exercises = (
+    await Promise.all(
+      questions.map((question) => buildRuntimeExercise(ctx, question))
+    )
+  ).filter((exercise) => exercise !== null);
+
+  if (exercises.length !== questions.length) {
+    return null;
+  }
 
   return {
+    ...graph,
     category: set.category,
     description: set.description,
     exerciseType: set.exerciseType,
@@ -70,10 +88,24 @@ export async function getExerciseQuestionPageImpl(
     throwRuntimeIntegrityError("Exercise question points to a missing set.");
   }
 
+  const [exercise, setGraph] = await Promise.all([
+    buildRuntimeExercise(ctx, question),
+    getExerciseRouteProjection(ctx, {
+      kind: "exercise-set",
+      locale: set.locale,
+      route: set.slug,
+    }),
+  ]);
+
+  if (!(exercise && setGraph)) {
+    return null;
+  }
+
   return {
-    exercise: await buildRuntimeExercise(ctx, question),
+    exercise,
     exerciseCount: set.questionCount,
     set: {
+      ...setGraph,
       category: set.category,
       description: set.description,
       exerciseType: set.exerciseType,
@@ -125,7 +157,30 @@ export async function getExerciseGroupPageImpl(
       compareExerciseSetSlugs(left.setName, right.setName)
     );
 
-  if (publishedSets.length === 0) {
+  const graphSets = (
+    await Promise.all(
+      publishedSets.map(async (set) => {
+        const graph = await getExerciseRouteProjection(ctx, {
+          kind: "exercise-set",
+          locale: set.locale,
+          route: set.slug,
+        });
+
+        return graph
+          ? {
+              ...graph,
+              questionCount: set.questionCount,
+              setName: set.setName,
+              slug: set.slug,
+              title: set.title,
+              year: set.year,
+            }
+          : null;
+      })
+    )
+  ).filter((set) => set !== null);
+
+  if (publishedSets.length === 0 || graphSets.length !== publishedSets.length) {
     return null;
   }
 
@@ -133,13 +188,7 @@ export async function getExerciseGroupPageImpl(
     category: args.category,
     exerciseType: args.exerciseType,
     material: args.material,
-    sets: publishedSets.map((set) => ({
-      questionCount: set.questionCount,
-      setName: set.setName,
-      slug: set.slug,
-      title: set.title,
-      year: set.year,
-    })),
+    sets: graphSets,
     type: args.type,
     year: args.year,
   };

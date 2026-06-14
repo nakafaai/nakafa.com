@@ -6,6 +6,7 @@ import {
 import { getArticlePageImpl } from "@repo/backend/convex/contents/runtime/articles";
 import {
   getContentRouteArtifactPageImpl,
+  getContentRouteByContentIdImpl,
   getContentRouteImpl,
   listContentRouteCountsImpl,
   listContentRoutesByKindPrefixImpl,
@@ -30,6 +31,8 @@ import {
   getContentRouteArgsValidator,
   getContentRouteArtifactPageArgsValidator,
   getContentRouteArtifactPageReturnValidator,
+  getContentRouteByContentIdArgsValidator,
+  getContentRouteByContentIdReturnValidator,
   getContentRouteReturnValidator,
   getExerciseGroupPageArgsValidator,
   getExerciseGroupPageReturnValidator,
@@ -166,6 +169,13 @@ export const getContentRoute = query({
   args: getContentRouteArgsValidator,
   returns: getContentRouteReturnValidator,
   handler: getContentRouteImpl,
+});
+
+/** Loads one concrete content route by graph-backed content ID. */
+export const getContentRouteByContentId = query({
+  args: getContentRouteByContentIdArgsValidator,
+  returns: getContentRouteByContentIdReturnValidator,
+  handler: getContentRouteByContentIdImpl,
 });
 
 /** Lists article API rows matching one route prefix. */

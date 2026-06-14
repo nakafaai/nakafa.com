@@ -1,9 +1,11 @@
 import { NAKAFA_CONTENT_BASE_URL } from "@repo/backend/convex/contents/constants";
-import type {
-  Locale,
-  NakafaSection,
+import { learningGraphIdentityValidator } from "@repo/backend/convex/contents/graph";
+import {
+  localeValidator,
+  nakafaSectionValidator,
 } from "@repo/backend/convex/lib/validators/contents";
 import { cleanSlug } from "@repo/utilities/helper";
+import { type Infer, v } from "convex/values";
 
 const WHITESPACE_PATTERN = /\s+/g;
 const MDX_MODULE_LINE_PATTERN = /^\s*(?:import|export)\s.+$/gm;
@@ -11,16 +13,21 @@ const FENCE_START_PATTERN = /^\s*(?:```|~~~)/;
 const MARKDOWN_HEADING_PATTERN = /^\s{0,3}#{1,6}\s+(.+?)\s*#*\s*$/;
 const MARKDOWN_LINK_PATTERN = /(^|[^!])\[([^\]]+)\]\([^)]+\)/g;
 
-export interface ContentSearchSource {
-  contentHash: string;
-  description?: string;
-  locale: Locale;
-  route: string;
-  section: NakafaSection;
-  syncedAt: number;
-  text: string;
-  title: string;
-}
+/** Convex validator for source rows used to build search documents. */
+export const contentSearchSourceValidator = v.object({
+  ...learningGraphIdentityValidator.fields,
+  contentHash: v.string(),
+  description: v.optional(v.string()),
+  locale: localeValidator,
+  route: v.string(),
+  section: nakafaSectionValidator,
+  syncedAt: v.number(),
+  text: v.string(),
+  title: v.string(),
+});
+
+/** Search source row derived from the Convex validator. */
+export type ContentSearchSource = Infer<typeof contentSearchSourceValidator>;
 
 /**
  * Creates the stable public content reference stored in the search read model.
@@ -29,20 +36,40 @@ export interface ContentSearchSource {
  * https://docs.convex.dev/search/text-search
  */
 export function buildContentSearchRef({
+  alignmentId,
+  assetId,
+  conceptId,
+  learningObjectId,
+  lensId,
   locale,
   route,
   section,
-}: Pick<ContentSearchSource, "locale" | "route" | "section">) {
+}: Pick<
+  ContentSearchSource,
+  | "alignmentId"
+  | "assetId"
+  | "conceptId"
+  | "learningObjectId"
+  | "lensId"
+  | "locale"
+  | "route"
+  | "section"
+>) {
   const cleanRoute = cleanSlug(route);
-  const contentId = `${locale}/${cleanRoute}`;
+  const publicPath = `${locale}/${cleanRoute}`;
 
   return {
-    content_id: contentId,
+    alignmentId,
+    assetId,
+    conceptId,
+    content_id: assetId,
+    learningObjectId,
+    lensId,
     locale,
-    markdown_url: `${NAKAFA_CONTENT_BASE_URL}/${contentId}.md`,
+    markdown_url: `${NAKAFA_CONTENT_BASE_URL}/${publicPath}.md`,
     route: cleanRoute,
     section,
-    url: `${NAKAFA_CONTENT_BASE_URL}/${contentId}`,
+    url: `${NAKAFA_CONTENT_BASE_URL}/${publicPath}`,
   };
 }
 

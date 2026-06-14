@@ -4,15 +4,13 @@ import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/cons
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
 import {
   buildAuthorCache,
+  deleteContentProjectionsByRoute,
   deleteSubjectSection,
   syncContentAuthorsWithCache,
 } from "@repo/backend/convex/contentSync/lib/syncHelpers";
 import { hasSameSyncValues } from "@repo/backend/convex/contentSync/lib/syncValues";
-import {
-  deleteContentRoute,
-  syncContentRoute,
-} from "@repo/backend/convex/contents/helpers/routes/write";
-import { buildContentSearchRef } from "@repo/backend/convex/contents/helpers/search/documents";
+import { getContentGraphIdentity } from "@repo/backend/convex/contents/graph";
+import { syncContentRoute } from "@repo/backend/convex/contents/helpers/routes/write";
 import { syncContentSearch } from "@repo/backend/convex/contents/helpers/search/write";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -99,6 +97,11 @@ export const bulkSyncSubjectTopics = internalMutation({
     let updated = 0;
 
     for (const topic of args.topics) {
+      const graph = getContentGraphIdentity({
+        kind: "subject-topic",
+        locale: topic.locale,
+        route: topic.slug,
+      });
       const nextValues = {
         category: topic.category,
         description: topic.description,
@@ -111,6 +114,7 @@ export const bulkSyncSubjectTopics = internalMutation({
       };
 
       await syncContentRoute(ctx, {
+        ...graph,
         contentHash: topic.contentHash,
         description: topic.description,
         kind: "subject-topic",
@@ -185,6 +189,11 @@ export const bulkSyncSubjectSections = internalMutation({
     const authorCache = await buildAuthorCache(ctx, allAuthorNames);
 
     for (const section of args.sections) {
+      const graph = getContentGraphIdentity({
+        kind: "subject-section",
+        locale: section.locale,
+        route: section.slug,
+      });
       const topic = await ctx.db
         .query("subjectTopics")
         .withIndex("by_locale_and_slug", (q) =>
@@ -207,6 +216,7 @@ export const bulkSyncSubjectSections = internalMutation({
         .unique();
 
       await syncContentSearch(ctx, {
+        ...graph,
         contentHash: section.contentHash,
         description: section.description,
         locale: section.locale,
@@ -217,6 +227,7 @@ export const bulkSyncSubjectSections = internalMutation({
         title: section.title,
       });
       await syncContentRoute(ctx, {
+        ...graph,
         authors: section.authors,
         contentHash: section.contentHash,
         date: section.date,
@@ -232,10 +243,12 @@ export const bulkSyncSubjectSections = internalMutation({
 
       if (existingSection) {
         await syncAudioContentSource(ctx, {
+          ...graph,
+          content_id: graph.assetId,
+          contentType: "subject",
           contentHash: section.contentHash,
           locale: section.locale,
-          ref: { id: existingSection._id, type: "subject" },
-          slug: section.slug,
+          route: section.slug,
           syncedAt: now,
         });
       }
@@ -269,7 +282,7 @@ export const bulkSyncSubjectSections = internalMutation({
 
         await runConvexProgram(
           updateContentAudioHash(ctx, {
-            contentRef: { id: existingSection._id, type: "subject" },
+            content_id: graph.assetId,
             newHash: section.contentHash,
           })
         );
@@ -294,10 +307,12 @@ export const bulkSyncSubjectSections = internalMutation({
       });
 
       await syncAudioContentSource(ctx, {
+        ...graph,
+        content_id: graph.assetId,
+        contentType: "subject",
         contentHash: section.contentHash,
         locale: section.locale,
-        ref: { id: sectionId, type: "subject" },
-        slug: section.slug,
+        route: section.slug,
         syncedAt: now,
       });
 
@@ -370,13 +385,11 @@ export const deleteStaleSubjectTopics = internalMutation({
         await deleteSubjectSection(ctx, section._id);
       }
 
-      const routeRef = buildContentSearchRef({
+      await deleteContentProjectionsByRoute(ctx, {
         locale: topic.locale,
         route: topic.slug,
-        section: "subject",
       });
 
-      await deleteContentRoute(ctx, routeRef.content_id);
       await ctx.db.delete("subjectTopics", topicId);
       deleted++;
     }

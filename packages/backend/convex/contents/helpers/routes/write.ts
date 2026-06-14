@@ -1,25 +1,38 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { CONTENT_ROUTE_KINDS } from "@repo/backend/convex/contents/constants";
+import { learningGraphIdentityValidator } from "@repo/backend/convex/contents/graph";
 import { buildContentSearchRef } from "@repo/backend/convex/contents/helpers/search/documents";
-import type {
-  Locale,
-  NakafaSection,
+import type { Locale } from "@repo/backend/convex/lib/validators/contents";
+import {
+  localeValidator,
+  nakafaSectionValidator,
 } from "@repo/backend/convex/lib/validators/contents";
+import { getSourceRouteProjection } from "@repo/contents/_types/graph/projection";
+import { ConvexError, type Infer, v } from "convex/values";
+import { literals } from "convex-helpers/validators";
 
-interface ContentRouteSource {
-  authors?: { name: string }[];
-  contentHash: string;
-  date?: number;
-  description?: string;
-  kind: Doc<"contentRoutes">["kind"];
-  locale: Locale;
-  markdown: boolean;
-  official?: boolean;
-  route: string;
-  section: NakafaSection;
-  syncedAt: number;
-  title: string;
-}
+const duplicateRouteRepairLimit = 6;
+
+/** Convex validator for source rows used to upsert route projections. */
+const contentRouteSourceValidator = v.object({
+  ...learningGraphIdentityValidator.fields,
+  authors: v.optional(v.array(v.object({ name: v.string() }))),
+  contentHash: v.string(),
+  date: v.optional(v.number()),
+  description: v.optional(v.string()),
+  kind: literals(...CONTENT_ROUTE_KINDS),
+  locale: localeValidator,
+  markdown: v.boolean(),
+  official: v.optional(v.boolean()),
+  route: v.string(),
+  section: nakafaSectionValidator,
+  syncedAt: v.number(),
+  title: v.string(),
+});
+
+/** Route source row derived from the Convex validator. */
+type ContentRouteSource = Infer<typeof contentRouteSourceValidator>;
 
 /** Upserts one concrete public content route into the durable route catalog. */
 export async function syncContentRoute(
@@ -27,19 +40,35 @@ export async function syncContentRoute(
   source: ContentRouteSource
 ) {
   const searchRef = buildContentSearchRef(source);
-  const routeParts = source.route.split("/").filter(Boolean);
+  const routeProjection = getSourceRouteProjection({
+    kind: source.kind,
+    route: source.route,
+  });
+
+  if (!routeProjection) {
+    throw new ConvexError({
+      code: "CONTENT_ROUTE_GRAPH_PROJECTION_INVALID",
+      message: "Content route cannot be projected into graph identity.",
+    });
+  }
+
   const nextValues = {
+    alignmentId: source.alignmentId,
     authors: source.authors ?? [],
+    assetId: source.assetId,
+    conceptId: source.conceptId,
     contentHash: source.contentHash,
     content_id: searchRef.content_id,
     date: source.date,
-    depth: routeParts.length,
+    depth: routeProjection.depth,
     description: source.description,
     kind: source.kind,
+    learningObjectId: source.learningObjectId,
     locale: source.locale,
+    lensId: source.lensId,
     markdown: source.markdown,
     official: source.official,
-    parentRoute: getContentRouteParentRoute(source.kind, routeParts),
+    parentRoute: routeProjection.parentRoute,
     route: source.route,
     section: source.section,
     syncedAt: source.syncedAt,
@@ -51,26 +80,37 @@ export async function syncContentRoute(
       q.eq("content_id", nextValues.content_id)
     )
     .unique();
+  const routeRows = await ctx.db
+    .query("contentRoutes")
+    .withIndex("by_locale_and_route", (q) =>
+      q.eq("locale", nextValues.locale).eq("route", nextValues.route)
+    )
+    .take(duplicateRouteRepairLimit);
+  const routeExisting = existing ?? routeRows[0] ?? null;
+  const deletedDuplicates = await deleteDuplicateContentRoutes(ctx, {
+    primary: routeExisting,
+    rows: routeRows,
+  });
 
-  if (isSameContentRoute(existing, nextValues)) {
-    if (existing && existing.countedAt === undefined) {
-      await incrementContentRouteCount(ctx, existing, source.syncedAt);
-      await ctx.db.patch("contentRoutes", existing._id, {
+  if (isSameContentRoute(routeExisting, nextValues)) {
+    if (routeExisting && routeExisting.countedAt === undefined) {
+      await incrementContentRouteCount(ctx, routeExisting, source.syncedAt);
+      await ctx.db.patch("contentRoutes", routeExisting._id, {
         countedAt: source.syncedAt,
       });
     }
 
-    return "unchanged";
+    return deletedDuplicates > 0 ? "updated" : "unchanged";
   }
 
-  if (existing) {
-    const countedAt = existing.countedAt ?? source.syncedAt;
+  if (routeExisting) {
+    const countedAt = routeExisting.countedAt ?? source.syncedAt;
 
-    if (existing.countedAt === undefined) {
-      await incrementContentRouteCount(ctx, existing, source.syncedAt);
+    if (routeExisting.countedAt === undefined) {
+      await incrementContentRouteCount(ctx, routeExisting, source.syncedAt);
     }
 
-    await ctx.db.patch("contentRoutes", existing._id, {
+    await ctx.db.patch("contentRoutes", routeExisting._id, {
       ...nextValues,
       countedAt,
     });
@@ -103,6 +143,34 @@ export async function deleteContentRoute(ctx: MutationCtx, contentId: string) {
   await ctx.db.delete(existing._id);
 }
 
+/** Deletes every route catalog row attached to one public route projection. */
+export async function deleteContentRoutesByRoute(
+  ctx: MutationCtx,
+  args: { locale: Locale; route: string }
+) {
+  const rows = await ctx.db
+    .query("contentRoutes")
+    .withIndex("by_locale_and_route", (q) =>
+      q.eq("locale", args.locale).eq("route", args.route)
+    )
+    .take(duplicateRouteRepairLimit);
+
+  if (rows.length >= duplicateRouteRepairLimit) {
+    throw new ConvexError({
+      code: "CONTENT_ROUTE_DELETE_LIMIT_EXCEEDED",
+      message: "Content route has too many route projections to delete safely.",
+    });
+  }
+
+  for (const row of rows) {
+    if (row.countedAt !== undefined) {
+      await decrementContentRouteCount(ctx, row);
+    }
+
+    await ctx.db.delete(row._id);
+  }
+}
+
 /** Increments the materialized route count for one synced catalog row. */
 async function incrementContentRouteCount(
   ctx: MutationCtx,
@@ -130,13 +198,46 @@ async function decrementContentRouteCount(
   });
 }
 
+/** Removes duplicate route projections before one route is inserted or patched. */
+async function deleteDuplicateContentRoutes(
+  ctx: MutationCtx,
+  source: {
+    primary: Doc<"contentRoutes"> | null;
+    rows: Doc<"contentRoutes">[];
+  }
+) {
+  if (source.rows.length >= duplicateRouteRepairLimit) {
+    throw new ConvexError({
+      code: "CONTENT_ROUTE_DUPLICATE_LIMIT_EXCEEDED",
+      message: "Content route has too many duplicate route projections.",
+    });
+  }
+
+  let deleted = 0;
+
+  for (const row of source.rows) {
+    if (row._id === source.primary?._id) {
+      continue;
+    }
+
+    if (row.countedAt !== undefined) {
+      await decrementContentRouteCount(ctx, row);
+    }
+
+    await ctx.db.delete(row._id);
+    deleted += 1;
+  }
+
+  return deleted;
+}
+
 /** Applies one idempotent count delta to the route-count read model. */
 async function adjustContentRouteCount(
   ctx: MutationCtx,
   source: {
     delta: 1 | -1;
     locale: Locale;
-    section: NakafaSection;
+    section: ContentRouteSource["section"];
     syncedAt: number;
   }
 ) {
@@ -181,11 +282,18 @@ function isSameContentRoute(
     existing.authors.every(
       (author, index) => author.name === next.authors[index]?.name
     ) &&
+    existing.content_id === next.content_id &&
     existing.contentHash === next.contentHash &&
     existing.date === next.date &&
     existing.depth === next.depth &&
     existing.description === next.description &&
     existing.kind === next.kind &&
+    existing.alignmentId === next.alignmentId &&
+    existing.assetId === next.assetId &&
+    existing.conceptId === next.conceptId &&
+    existing.learningObjectId === next.learningObjectId &&
+    existing.lensId === next.lensId &&
+    existing.locale === next.locale &&
     existing.markdown === next.markdown &&
     existing.official === next.official &&
     existing.parentRoute === next.parentRoute &&
@@ -193,28 +301,4 @@ function isSameContentRoute(
     existing.section === next.section &&
     existing.title === next.title
   );
-}
-
-/** Derives the navigation parent route for one synced public route. */
-function getContentRouteParentRoute(
-  kind: Doc<"contentRoutes">["kind"],
-  parts: readonly string[]
-) {
-  if (kind === "article") {
-    return parts.slice(0, 2).join("/");
-  }
-
-  if (kind === "exercise-group") {
-    return parts.slice(0, 4).join("/");
-  }
-
-  if (kind === "subject-topic") {
-    return parts.slice(0, 4).join("/");
-  }
-
-  if (kind === "quran-surah") {
-    return "quran";
-  }
-
-  return parts.slice(0, -1).join("/");
 }

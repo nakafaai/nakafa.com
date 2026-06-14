@@ -46,6 +46,7 @@ import {
   getExerciseSetSearchText,
   getExerciseSetSearchTitle,
 } from "@repo/contents/_lib/exercises/search";
+import { getExerciseSetGroupRoute } from "@repo/contents/_types/graph/projection";
 import type { FunctionArgs } from "convex/server";
 import { Effect } from "effect";
 
@@ -107,67 +108,69 @@ export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
           locale
         );
 
-        return parsedSets.map((set) => {
-          const countKey = `${set.locale}:${set.slug}`;
-          const questionCount = questionCountByLocaleSlug.get(countKey) || 0;
-          const searchSource = {
-            locale: set.locale,
-            category: set.category,
-            type: set.type,
-            material: set.material,
-            exerciseType: set.exerciseType,
-            exerciseTypeTitle: set.exerciseTypeTitle,
-            setName: set.setName,
-            setTitle: set.title,
-            year: set.year,
-            questionCount,
-            description: set.description,
-          };
-          const searchTitle = getExerciseSetSearchTitle(searchSource);
-          const searchDescription =
-            getExerciseSetSearchDescription(searchSource);
-          const searchText = getExerciseSetSearchText(searchSource);
-          const groupRoute = getExerciseGroupRoute(set.slug);
+        return yield* Effect.forEach(parsedSets, (set) =>
+          Effect.gen(function* () {
+            const countKey = `${set.locale}:${set.slug}`;
+            const questionCount = questionCountByLocaleSlug.get(countKey) || 0;
+            const searchSource = {
+              locale: set.locale,
+              category: set.category,
+              type: set.type,
+              material: set.material,
+              exerciseType: set.exerciseType,
+              exerciseTypeTitle: set.exerciseTypeTitle,
+              setName: set.setName,
+              setTitle: set.title,
+              year: set.year,
+              questionCount,
+              description: set.description,
+            };
+            const searchTitle = getExerciseSetSearchTitle(searchSource);
+            const searchDescription =
+              getExerciseSetSearchDescription(searchSource);
+            const searchText = getExerciseSetSearchText(searchSource);
+            const groupRoute = yield* readExerciseSetGroupRoute(set.slug);
 
-          return {
-            locale: set.locale,
-            slug: set.slug,
-            category: set.category,
-            type: set.type,
-            material: set.material,
-            exerciseType: set.exerciseType,
-            exerciseTypeTitle: set.exerciseTypeTitle,
-            setName: set.setName,
-            title: set.title,
-            description: set.description,
-            year: set.year === undefined ? undefined : String(set.year),
-            questionCount,
-            searchTitle,
-            searchDescription,
-            searchText,
-            groupContentHash: computeHash(
-              JSON.stringify({
-                description: set.description,
-                exerciseType: set.exerciseType,
-                exerciseTypeTitle: set.exerciseTypeTitle,
-                groupRoute,
-                locale: set.locale,
-                year: set.year,
-              })
-            ),
-            contentHash: computeHash(
-              JSON.stringify({
-                description: set.description,
-                questionCount,
-                searchDescription,
-                searchText,
-                searchTitle,
-                slug: set.slug,
-                year: set.year,
-              })
-            ),
-          };
-        });
+            return {
+              locale: set.locale,
+              slug: set.slug,
+              category: set.category,
+              type: set.type,
+              material: set.material,
+              exerciseType: set.exerciseType,
+              exerciseTypeTitle: set.exerciseTypeTitle,
+              setName: set.setName,
+              title: set.title,
+              description: set.description,
+              year: set.year === undefined ? undefined : String(set.year),
+              questionCount,
+              searchTitle,
+              searchDescription,
+              searchText,
+              groupContentHash: computeHash(
+                JSON.stringify({
+                  description: set.description,
+                  exerciseType: set.exerciseType,
+                  exerciseTypeTitle: set.exerciseTypeTitle,
+                  groupRoute,
+                  locale: set.locale,
+                  year: set.year,
+                })
+              ),
+              contentHash: computeHash(
+                JSON.stringify({
+                  description: set.description,
+                  questionCount,
+                  searchDescription,
+                  searchText,
+                  searchTitle,
+                  slug: set.slug,
+                  year: set.year,
+                })
+              ),
+            };
+          })
+        );
       })
     );
 
@@ -187,6 +190,14 @@ export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
     for (const error of errors) {
       logError(error);
     }
+  }
+
+  if (errors.length > 0) {
+    return yield* Effect.fail(
+      new ScriptFailureError({
+        message: `Cannot sync exercise sets with invalid exercise materials:\n${errors.join("\n")}`,
+      })
+    );
   }
 
   if (!options.quiet) {
@@ -239,10 +250,22 @@ export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
   return { ...totals, durationMs, itemsPerSecond };
 });
 
-/** Returns the exercise group route above one concrete set route. */
-function getExerciseGroupRoute(setSlug: string) {
-  return setSlug.split("/").slice(0, -1).join("/");
-}
+/** Reads the graph-owned parent group route for one authored exercise set. */
+const readExerciseSetGroupRoute = Effect.fn("sync.readExerciseSetGroupRoute")(
+  function* (setSlug: string) {
+    const groupRoute = getExerciseSetGroupRoute(setSlug);
+
+    if (groupRoute) {
+      return groupRoute;
+    }
+
+    return yield* Effect.fail(
+      new ScriptFailureError({
+        message: `Exercise set route cannot be projected into a graph group route: ${setSlug}`,
+      })
+    );
+  }
+);
 
 /** Converts authored choices into the ordered Convex sync payload. */
 function buildExerciseChoicePayload(

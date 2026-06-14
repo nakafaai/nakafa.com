@@ -1,6 +1,6 @@
 import { updateContentAudioHash } from "@repo/backend/convex/audioStudies/contentAudios/impl";
 import {
-  deleteAudioContentSource,
+  deleteAudioContentSourceByRoute,
   syncAudioContentSource,
 } from "@repo/backend/convex/audioStudies/helpers/sources";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
@@ -9,19 +9,14 @@ import {
   buildAuthorCache,
   deleteArticleReferencesForArticle,
   deleteContentAuthorLinks,
+  deleteContentProjectionsByRoute,
   replaceArticleReferences,
   syncContentAuthorsWithCache,
 } from "@repo/backend/convex/contentSync/lib/syncHelpers";
 import { hasSameSyncValues } from "@repo/backend/convex/contentSync/lib/syncValues";
-import {
-  deleteContentRoute,
-  syncContentRoute,
-} from "@repo/backend/convex/contents/helpers/routes/write";
-import { buildContentSearchRef } from "@repo/backend/convex/contents/helpers/search/documents";
-import {
-  deleteContentSearch,
-  syncContentSearch,
-} from "@repo/backend/convex/contents/helpers/search/write";
+import { getContentGraphIdentity } from "@repo/backend/convex/contents/graph";
+import { syncContentRoute } from "@repo/backend/convex/contents/helpers/routes/write";
+import { syncContentSearch } from "@repo/backend/convex/contents/helpers/search/write";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import {
@@ -96,6 +91,11 @@ export const bulkSyncArticles = internalMutation({
     const authorCache = await buildAuthorCache(ctx, allAuthorNames);
 
     for (const article of args.articles) {
+      const graph = getContentGraphIdentity({
+        kind: "article",
+        locale: article.locale,
+        route: article.slug,
+      });
       const existingArticle = await ctx.db
         .query("articleContents")
         .withIndex("by_locale_and_slug", (q) =>
@@ -104,6 +104,7 @@ export const bulkSyncArticles = internalMutation({
         .unique();
 
       await syncContentSearch(ctx, {
+        ...graph,
         contentHash: article.contentHash,
         description: article.description,
         locale: article.locale,
@@ -114,6 +115,7 @@ export const bulkSyncArticles = internalMutation({
         title: article.title,
       });
       await syncContentRoute(ctx, {
+        ...graph,
         authors: article.authors,
         contentHash: article.contentHash,
         date: article.date,
@@ -130,10 +132,12 @@ export const bulkSyncArticles = internalMutation({
 
       if (existingArticle) {
         await syncAudioContentSource(ctx, {
+          ...graph,
+          content_id: graph.assetId,
+          contentType: "article",
           contentHash: article.contentHash,
           locale: article.locale,
-          ref: { id: existingArticle._id, type: "article" },
-          slug: article.slug,
+          route: article.slug,
           syncedAt: now,
         });
       }
@@ -161,7 +165,7 @@ export const bulkSyncArticles = internalMutation({
 
         await runConvexProgram(
           updateContentAudioHash(ctx, {
-            contentRef: { id: existingArticle._id, type: "article" },
+            content_id: graph.assetId,
             newHash: article.contentHash,
           })
         );
@@ -191,10 +195,12 @@ export const bulkSyncArticles = internalMutation({
       });
 
       await syncAudioContentSource(ctx, {
+        ...graph,
+        content_id: graph.assetId,
+        contentType: "article",
         contentHash: article.contentHash,
         locale: article.locale,
-        ref: { id: articleId, type: "article" },
-        slug: article.slug,
+        route: article.slug,
         syncedAt: now,
       });
 
@@ -251,17 +257,17 @@ export const deleteStaleArticles = internalMutation({
       }
 
       const articleId = args.articleIds[index];
-      const searchRef = buildContentSearchRef({
-        locale: article.locale,
-        route: article.slug,
-        section: "articles",
-      });
-
       await deleteContentAuthorLinks(ctx, articleId, "article");
       await deleteArticleReferencesForArticle(ctx, articleId);
-      await deleteContentSearch(ctx, searchRef.content_id);
-      await deleteContentRoute(ctx, searchRef.content_id);
-      await deleteAudioContentSource(ctx, { id: articleId, type: "article" });
+      await deleteContentProjectionsByRoute(ctx, {
+        locale: article.locale,
+        route: article.slug,
+      });
+      await deleteAudioContentSourceByRoute(ctx, {
+        contentType: "article",
+        locale: article.locale,
+        route: article.slug,
+      });
       await ctx.db.delete("articleContents", articleId);
       deleted++;
     }

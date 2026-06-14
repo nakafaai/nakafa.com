@@ -9,14 +9,13 @@ import {
   ContentViewIoError,
   contentViewIoFailedCode,
   type RecordContentViewArgs,
-  type RecordContentViewResult,
 } from "@repo/backend/convex/contents/views/spec";
 import { getUnknownErrorMessage } from "@repo/backend/convex/lib/effect";
 import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
-import type { ContentRef } from "@repo/backend/convex/lib/validators/contents";
 import type { FunctionReference } from "convex/server";
 import { Clock, Effect } from "effect";
 
+/** Internal scheduler functions used after a content view is recorded. */
 export interface ContentViewSchedulerTargets {
   readonly scheduleAnalyticsPartition: FunctionReference<
     "mutation",
@@ -34,66 +33,43 @@ function toContentViewIoError(error: unknown) {
   });
 }
 
-/** Resolves the durable content reference for the public localized slug. */
-const loadContentRef = Effect.fn("contents.views.loadContentRef")(function* (
-  db: MutationCtx["db"],
-  args: RecordContentViewArgs
-) {
-  if (args.contentRef.type === "article") {
-    const article = yield* Effect.tryPromise({
+/** Resolves the route-catalog projection for a graph content ID. */
+const loadContentTarget = Effect.fn("contents.views.loadContentTarget")(
+  function* (db: MutationCtx["db"], args: RecordContentViewArgs) {
+    const route = yield* Effect.tryPromise({
       try: () =>
         db
-          .query("articleContents")
-          .withIndex("by_locale_and_slug", (q) =>
-            q.eq("locale", args.locale).eq("slug", args.contentRef.slug)
-          )
-          .first(),
+          .query("contentRoutes")
+          .withIndex("by_content_id", (q) => q.eq("content_id", args.contentId))
+          .unique(),
       catch: toContentViewIoError,
     });
 
-    return article
-      ? ({ id: article._id, type: "article" } satisfies ContentRef)
-      : null;
+    if (!route) {
+      return null;
+    }
+
+    if (route.locale !== args.locale || route.content_id !== route.assetId) {
+      return null;
+    }
+
+    if (
+      route.kind === "article" ||
+      route.kind === "subject-section" ||
+      route.kind === "exercise-set"
+    ) {
+      return route;
+    }
+
+    return null;
   }
-
-  if (args.contentRef.type === "subject") {
-    const section = yield* Effect.tryPromise({
-      try: () =>
-        db
-          .query("subjectSections")
-          .withIndex("by_locale_and_slug", (q) =>
-            q.eq("locale", args.locale).eq("slug", args.contentRef.slug)
-          )
-          .first(),
-      catch: toContentViewIoError,
-    });
-
-    return section
-      ? ({ id: section._id, type: "subject" } satisfies ContentRef)
-      : null;
-  }
-
-  const exerciseSet = yield* Effect.tryPromise({
-    try: () =>
-      db
-        .query("exerciseSets")
-        .withIndex("by_locale_and_slug", (q) =>
-          q.eq("locale", args.locale).eq("slug", args.contentRef.slug)
-        )
-        .first(),
-    catch: toContentViewIoError,
-  });
-
-  return exerciseSet
-    ? ({ id: exerciseSet._id, type: "exercise" } satisfies ContentRef)
-    : null;
-});
+);
 
 /** Loads an existing view for either the device or authenticated user. */
 const loadExistingView = Effect.fn("contents.views.loadExistingView")(
   function* (
     db: MutationCtx["db"],
-    contentRef: ContentRef,
+    contentId: Doc<"contentRoutes">["content_id"],
     input: {
       readonly deviceId: string;
       readonly userId?: Doc<"users">["_id"];
@@ -103,8 +79,8 @@ const loadExistingView = Effect.fn("contents.views.loadExistingView")(
       try: () =>
         db
           .query("contentViews")
-          .withIndex("by_deviceId_and_contentRefId", (q) =>
-            q.eq("deviceId", input.deviceId).eq("contentRef.id", contentRef.id)
+          .withIndex("by_deviceId_and_content_id", (q) =>
+            q.eq("deviceId", input.deviceId).eq("content_id", contentId)
           )
           .first(),
       catch: toContentViewIoError,
@@ -118,8 +94,8 @@ const loadExistingView = Effect.fn("contents.views.loadExistingView")(
       try: () =>
         db
           .query("contentViews")
-          .withIndex("by_userId_and_contentRefId", (q) =>
-            q.eq("userId", input.userId).eq("contentRef.id", contentRef.id)
+          .withIndex("by_userId_and_content_id", (q) =>
+            q.eq("userId", input.userId).eq("content_id", contentId)
           )
           .first(),
       catch: toContentViewIoError,
@@ -132,24 +108,30 @@ const loadExistingView = Effect.fn("contents.views.loadExistingView")(
 /** Writes a new view row and its append-only analytics queue row. */
 const insertNewView = Effect.fn("contents.views.insertNewView")(function* (
   db: MutationCtx["db"],
-  contentRef: ContentRef,
+  route: Doc<"contentRoutes">,
   args: RecordContentViewArgs,
   input: {
     readonly now: number;
     readonly userId?: Doc<"users">["_id"];
   }
 ) {
-  const partition = getContentAnalyticsPartition(contentRef);
+  const partition = getContentAnalyticsPartition(route.content_id);
 
   yield* Effect.tryPromise({
     try: () =>
       db.insert("contentViews", {
-        contentRef,
+        alignmentId: route.alignmentId,
+        assetId: route.assetId,
+        conceptId: route.conceptId,
+        content_id: route.content_id,
         deviceId: args.deviceId,
         firstViewedAt: input.now,
         lastViewedAt: input.now,
+        learningObjectId: route.learningObjectId,
+        lensId: route.lensId,
         locale: args.locale,
-        slug: args.contentRef.slug,
+        route: route.route,
+        section: route.section,
         ...(input.userId ? { userId: input.userId } : {}),
       }),
     catch: toContentViewIoError,
@@ -158,9 +140,16 @@ const insertNewView = Effect.fn("contents.views.insertNewView")(function* (
   yield* Effect.tryPromise({
     try: () =>
       db.insert("contentViewAnalyticsQueue", {
-        contentRef,
+        alignmentId: route.alignmentId,
+        assetId: route.assetId,
+        conceptId: route.conceptId,
+        content_id: route.content_id,
+        learningObjectId: route.learningObjectId,
+        lensId: route.lensId,
         locale: args.locale,
         partition,
+        route: route.route,
+        section: route.section,
         viewedAt: input.now,
       }),
     catch: toContentViewIoError,
@@ -208,11 +197,7 @@ const updateExistingView = Effect.fn("contents.views.updateExistingView")(
  * scheduled mutation to keep the hot user-facing mutation bounded.
  * @see https://docs.convex.dev/understanding/best-practices/
  */
-export const recordUniqueContentView: (
-  ctx: MutationCtx,
-  args: RecordContentViewArgs,
-  targets: ContentViewSchedulerTargets
-) => Effect.Effect<RecordContentViewResult, ContentViewIoError> = Effect.fn(
+export const recordUniqueContentView = Effect.fn(
   "contents.views.recordUniqueContentView"
 )(function* (
   ctx: MutationCtx,
@@ -223,15 +208,15 @@ export const recordUniqueContentView: (
     try: () => getOptionalAppUser(ctx),
     catch: toContentViewIoError,
   });
-  const contentRef = yield* loadContentRef(ctx.db, args);
+  const target = yield* loadContentTarget(ctx.db, args);
 
-  if (!contentRef) {
+  if (!target) {
     return { alreadyViewed: false, isNewView: false, success: false };
   }
 
   const now = yield* Clock.currentTimeMillis;
   const userId = authContext?.appUser._id;
-  const existingView = yield* loadExistingView(ctx.db, contentRef, {
+  const existingView = yield* loadExistingView(ctx.db, target.content_id, {
     deviceId: args.deviceId,
     userId,
   });
@@ -241,7 +226,7 @@ export const recordUniqueContentView: (
     return { alreadyViewed: true, isNewView: false, success: true };
   }
 
-  const partition = yield* insertNewView(ctx.db, contentRef, args, {
+  const partition = yield* insertNewView(ctx.db, target, args, {
     now,
     userId,
   });

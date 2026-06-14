@@ -5,15 +5,24 @@ import {
   createWriter,
 } from "@repo/ai/agents/nakafa/tools/test";
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
+import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
 const ARTICLE_CONTENT_ID = NakafaAgentContentRefInputSchema.make(
-  "en/articles/politics/dynastic-politics-asian-values"
+  readNakafaContentRefFixture(
+    "en",
+    "articles/politics/dynastic-politics-asian-values",
+    "articles"
+  ).content_id
+);
+const ARTICLE_URL = NakafaAgentContentRefInputSchema.make(
+  "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values"
 );
 const MISSING_CONTENT_ID = NakafaAgentContentRefInputSchema.make(
-  "en/articles/missing"
+  readNakafaContentRefFixture("en", "articles/politics/missing", "articles")
+    .content_id
 );
 
 describe("nakafa read tool", () => {
@@ -37,6 +46,27 @@ describe("nakafa read tool", () => {
           result: expect.objectContaining({
             content_id: ARTICLE_CONTENT_ID,
           }),
+        }),
+      })
+    );
+  });
+
+  it("accepts canonical URL projections for current-page reads", async () => {
+    const { parts, writer } = createWriter();
+    const output = await Effect.runPromise(
+      read({
+        input: { content_ref: ARTICLE_URL },
+        toolCallId: "read-url",
+        writer,
+      }).pipe(Effect.provideService(Nakafa, createNakafaTestService()))
+    );
+
+    expect(output).toContain("# Nakafa Content");
+    expect(parts.at(-1)).toEqual(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          kind: "content",
+          status: "done",
         }),
       })
     );

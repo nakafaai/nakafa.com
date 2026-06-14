@@ -1,14 +1,14 @@
-import { getExerciseGroupArgs } from "@repo/backend/client/nakafa/exercise";
+import { getExerciseTarget } from "@repo/backend/client/nakafa/exercise";
 import { fetchNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { resolveNakafaContentRef } from "@repo/backend/client/nakafa/ref";
 import { api } from "@repo/backend/convex/_generated/api";
-import { parseNakafaContentRef } from "@repo/contents/_lib/agent/refs";
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
 import { Effect, Option } from "effect";
 
 /** Verifies a normalized content reference through Convex runtime queries. */
 export function verifyNakafaContent(convexUrl: string, input: string) {
   return Effect.gen(function* () {
-    const ref = parseNakafaContentRef(input);
+    const ref = yield* resolveNakafaContentRef(convexUrl, input);
 
     if (Option.isNone(ref)) {
       return false;
@@ -24,37 +24,48 @@ export function verifyNakafaContent(convexUrl: string, input: string) {
       }
     );
 
-    if (route) {
-      return true;
-    }
-
-    if (ref.value.section !== "exercises") {
+    if (!route) {
       return false;
     }
 
-    return yield* verifyExerciseGroupRoute(convexUrl, ref.value);
+    if (ref.value.section !== "exercises") {
+      return true;
+    }
+
+    return yield* verifyReadableExerciseRoute(convexUrl, ref.value);
   }).pipe(Effect.catchAll(() => Effect.succeed(false)));
 }
 
-/** Verifies exercise group routes that are not concrete synced rows. */
-function verifyExerciseGroupRoute(
+/** Verifies only exercise set/question routes that the exercise reader can load. */
+function verifyReadableExerciseRoute(
   convexUrl: string,
   ref: NakafaAgentContentRef
 ) {
-  const groupArgs = getExerciseGroupArgs(ref.locale, ref.route);
+  const target = getExerciseTarget(ref.locale, ref.route);
 
-  if (Option.isNone(groupArgs)) {
+  if (Option.isNone(target)) {
     return Effect.succeed(false);
   }
 
   return Effect.gen(function* () {
-    const group = yield* fetchNakafaRuntimeQuery(
+    const page = yield* fetchNakafaRuntimeQuery(
       convexUrl,
-      "getExerciseGroupPage",
-      api.contents.queries.runtime.getExerciseGroupPage,
-      groupArgs.value
+      "getExerciseSetPage",
+      api.contents.queries.runtime.getExerciseSetPage,
+      {
+        locale: ref.locale,
+        slug: target.value.setRoute,
+      }
     );
 
-    return group !== null;
+    if (!page) {
+      return false;
+    }
+
+    return Option.match(target.value.number, {
+      onNone: () => true,
+      onSome: (number) =>
+        page.exercises.some((exercise) => exercise.number === number),
+    });
   });
 }
