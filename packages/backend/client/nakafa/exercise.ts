@@ -12,7 +12,7 @@ import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref
 import { ExercisesCategorySchema } from "@repo/contents/_types/exercises/category";
 import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
 import { ExercisesTypeSchema } from "@repo/contents/_types/exercises/type";
-import { getSourceRouteProjectionForRoute } from "@repo/contents/_types/graph/spec";
+import { getSourceRouteProjectionForRoute } from "@repo/contents/_types/graph/projection";
 import type { Locale } from "@repo/utilities/locales";
 import { Effect, Option, Schema } from "effect";
 

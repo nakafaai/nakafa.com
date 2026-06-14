@@ -3,7 +3,7 @@ import {
   readNakafaMarkdown,
 } from "@repo/backend/client/nakafa/markdown";
 import { api } from "@repo/backend/convex/_generated/api";
-import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
+import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { type FunctionReference, getFunctionName } from "convex/server";
 import { Effect, Option, Schema } from "effect";
@@ -45,12 +45,24 @@ beforeEach(() => {
 
 describe("readNakafaMarkdown", () => {
   it("reads markdown for article, subject, exercise, and Quran refs", async () => {
-    const articleRef = buildNakafaContentRef("en", articleRoute, "articles");
-    const exerciseRef = buildNakafaContentRef("id", exerciseRoute, "exercises");
+    const articleRef = readNakafaContentRefFixture(
+      "en",
+      articleRoute,
+      "articles"
+    );
+    const exerciseRef = readNakafaContentRefFixture(
+      "id",
+      exerciseRoute,
+      "exercises"
+    );
     const article = await Effect.runPromise(
       readNakafaMarkdown(convexUrl, articleRef.content_id)
     );
-    const subjectRef = buildNakafaContentRef("id", subjectRoute, "subject");
+    const subjectRef = readNakafaContentRefFixture(
+      "id",
+      subjectRoute,
+      "subject"
+    );
     const subject = await Effect.runPromise(
       readNakafaMarkdown(convexUrl, subjectRef.content_id)
     );
@@ -93,7 +105,7 @@ describe("readNakafaMarkdown", () => {
     const unsupported = await Effect.runPromise(
       readMdxMarkdown(
         convexUrl,
-        buildNakafaContentRef("en", "quran/1", "quran")
+        readNakafaContentRefFixture("en", "quran/1", "quran")
       )
     );
 
@@ -150,10 +162,10 @@ function readRuntimeFixture(
 function readContentRouteByContentId(args: unknown) {
   const input = Schema.decodeUnknownSync(ContentIdArgsSchema)(args);
   const refs = [
-    buildNakafaContentRef("en", articleRoute, "articles"),
-    buildNakafaContentRef("id", subjectRoute, "subject"),
-    buildNakafaContentRef("id", exerciseRoute, "exercises"),
-    buildNakafaContentRef("id", "quran/1", "quran"),
+    readNakafaContentRefFixture("en", articleRoute, "articles"),
+    readNakafaContentRefFixture("id", subjectRoute, "subject"),
+    readNakafaContentRefFixture("id", exerciseRoute, "exercises"),
+    readNakafaContentRefFixture("id", "quran/1", "quran"),
   ];
   const ref = refs.find((item) => item.content_id === input.contentId);
 
@@ -175,7 +187,7 @@ function readContentRoute(args: unknown) {
   }
 
   return {
-    ...buildNakafaContentRef(
+    ...readNakafaContentRefFixture(
       input.locale,
       input.route,
       getSection(input.route)

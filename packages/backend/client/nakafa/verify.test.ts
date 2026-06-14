@@ -1,6 +1,6 @@
 import { verifyNakafaContent } from "@repo/backend/client/nakafa/verify";
 import { api } from "@repo/backend/convex/_generated/api";
-import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
+import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { type FunctionReference, getFunctionName } from "convex/server";
 import { Effect, Schema } from "effect";
@@ -39,7 +39,11 @@ beforeEach(() => {
 
 describe("verifyNakafaContent", () => {
   it("verifies exact catalog routes and readable exercise set routes", async () => {
-    const articleRef = buildNakafaContentRef("en", articleRoute, "articles");
+    const articleRef = readNakafaContentRefFixture(
+      "en",
+      articleRoute,
+      "articles"
+    );
 
     await expect(
       Effect.runPromise(
@@ -139,7 +143,11 @@ function readRuntimeFixture(
 /** Builds one route lookup fixture from a graph asset ID. */
 function readContentRouteByContentId(args: unknown) {
   const input = Schema.decodeUnknownSync(ContentIdArgsSchema)(args);
-  const articleRef = buildNakafaContentRef("en", articleRoute, "articles");
+  const articleRef = readNakafaContentRefFixture(
+    "en",
+    articleRoute,
+    "articles"
+  );
 
   if (input.contentId !== articleRef.content_id) {
     return null;
@@ -160,7 +168,11 @@ function readContentRoute(args: unknown) {
   }
 
   if (input.route === articleRoute) {
-    const ref = buildNakafaContentRef(input.locale, input.route, "articles");
+    const ref = readNakafaContentRefFixture(
+      input.locale,
+      input.route,
+      "articles"
+    );
 
     return {
       ...ref,
@@ -177,7 +189,11 @@ function readContentRoute(args: unknown) {
     input.route === exerciseQuestionRoute ||
     input.route === `${exerciseSetRoute}/99`
   ) {
-    const ref = buildNakafaContentRef(input.locale, input.route, "exercises");
+    const ref = readNakafaContentRefFixture(
+      input.locale,
+      input.route,
+      "exercises"
+    );
 
     return {
       ...ref,

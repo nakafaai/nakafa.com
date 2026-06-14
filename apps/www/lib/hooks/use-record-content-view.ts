@@ -10,6 +10,7 @@ import { Effect } from "effect";
 import { useEffect, useState } from "react";
 import { useContentViews } from "@/lib/context/use-content-views";
 
+/** Client-side graph content-view recording configuration. */
 interface UseRecordContentViewOptions {
   contentId: string;
   delay?: number;

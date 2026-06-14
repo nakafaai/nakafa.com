@@ -9,11 +9,8 @@ import {
 } from "@repo/backend/convex/contents/helpers/search/documents";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { getSourceRouteProjectionForRoute } from "@repo/contents/_types/graph/spec";
-import {
-  createLearningGraphIdentity,
-  createLearningGraphIdentityFromRoute,
-} from "@repo/contents/_types/learning-graph";
+import { getSourceRouteProjectionForRoute } from "@repo/contents/_types/graph/projection";
+import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
@@ -397,11 +394,14 @@ function contentRouteFromProjection(route: string) {
     throw new Error(`Expected graph source-route projection for ${route}.`);
   }
 
-  const graph = createLearningGraphIdentity({
-    kind: projection.kind,
+  const graph = createLearningGraphIdentityFromRoute({
     locale: "id",
     route,
   });
+
+  if (!graph) {
+    throw new Error(`Expected graph identity fixture for ${route}.`);
+  }
 
   return {
     ...graph,

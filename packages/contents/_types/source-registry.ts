@@ -1,12 +1,11 @@
 import { LocaleSchema } from "@repo/contents/_types/content";
+import { getSourceRouteProjectionForRoute } from "@repo/contents/_types/graph/projection";
 import {
-  getSourceRegistryRootForKind,
   LearningObjectKindSchema,
   SourceRegistryRootSchema,
-} from "@repo/contents/_types/graph/spec";
+} from "@repo/contents/_types/graph/schema";
 import {
-  createLearningGraphIdentity,
-  getLearningObjectKindForRoute,
+  createLearningGraphIdentityFromProjection,
   LearningGraphIdentitySchema,
   normalizeGraphRoute,
 } from "@repo/contents/_types/learning-graph";
@@ -58,23 +57,22 @@ export function createSourceRegistryRecord(
   input: SourceRegistryInput
 ): SourceRegistryRecord | null {
   const publicRoute = normalizeGraphRoute(input.route);
-  const kind = getLearningObjectKindForRoute(publicRoute);
+  const projection = getSourceRouteProjectionForRoute(publicRoute);
 
-  if (!kind) {
+  if (!projection) {
     return null;
   }
 
   return {
-    ...createLearningGraphIdentity({
-      kind,
+    ...createLearningGraphIdentityFromProjection({
       locale: input.locale,
-      route: publicRoute,
+      projection,
     }),
-    kind,
+    kind: projection.kind,
     locale: input.locale,
     publicRoute,
     sourcePath: normalizeSourcePath(input.sourcePath),
-    sourceRoot: getSourceRegistryRootForKind(kind),
+    sourceRoot: projection.sourceRoot,
   };
 }
 

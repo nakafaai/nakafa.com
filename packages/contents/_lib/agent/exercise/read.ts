@@ -7,8 +7,8 @@ import {
   getNakafaExerciseSetRoute,
 } from "@repo/contents/_lib/agent/exercise/ref";
 import {
-  buildNakafaContentRef,
   parseNakafaContentRef,
+  parseNakafaContentRefFields,
 } from "@repo/contents/_lib/agent/refs";
 import { NakafaAgentExerciseResultSchema } from "@repo/contents/_lib/agent/schema/exercise";
 import { getRenderableExercisesContent } from "@repo/contents/_lib/exercises/renderable";
@@ -47,7 +47,7 @@ export const getNakafaAgentExercise = Effect.fn("NakafaAgent.getExercise")(
       return Option.none();
     }
 
-    const setRef = buildNakafaContentRef(
+    const setRef = yield* parseNakafaContentRefFields(
       ref.value.locale,
       target.setRoute,
       "exercises"

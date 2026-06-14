@@ -4,7 +4,7 @@ import type {
 } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { createLearningGraphIdentity } from "@repo/contents/_types/learning-graph";
+import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { deleteBatchFromTable } from "./impl";
@@ -140,11 +140,14 @@ async function seedDerivedRuntimeRows(ctx: MutationCtx) {
 
 /** Builds graph identity fields for the reset Quran route fixture. */
 function quranRouteGraph() {
-  const identity = createLearningGraphIdentity({
-    kind: "quran-surah",
+  const identity = createLearningGraphIdentityFromRoute({
     locale: "id",
     route: "quran/1",
   });
+
+  if (!identity) {
+    throw new Error("Expected Quran route graph fixture.");
+  }
 
   return {
     ...identity,

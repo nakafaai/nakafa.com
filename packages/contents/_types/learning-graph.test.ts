@@ -1,17 +1,20 @@
-import { InvalidLearningGraphRouteError } from "@repo/contents/_types/graph/spec";
 import {
   buildGraphId,
-  createLearningGraphIdentity,
   createLearningGraphIdentityFromRoute,
+  getLearningGraphIdentity,
   getLearningGraphLensSegments,
   getLearningObjectKindForRoute,
+  type LearningGraphIdentity,
+  type LearningGraphSource,
   normalizeGraphRoute,
+  parseLearningGraphIdentity,
 } from "@repo/contents/_types/learning-graph";
+import { Effect, Exit } from "effect";
 import { describe, expect, it } from "vitest";
 
 describe("learning graph identity", () => {
   it("maps article sources into locale asset identity and route-free graph IDs", () => {
-    const identity = createLearningGraphIdentity({
+    const identity = readGraphIdentityFixture({
       kind: "article",
       locale: "id",
       route: "/articles/politics/makna-demokrasi",
@@ -28,12 +31,12 @@ describe("learning graph identity", () => {
   });
 
   it("separates subject concepts from curriculum lenses", () => {
-    const topic = createLearningGraphIdentity({
+    const topic = readGraphIdentityFixture({
       kind: "subject-topic",
       locale: "id",
       route: "subject/high-school/10/chemistry/atomic-structure",
     });
-    const section = createLearningGraphIdentity({
+    const section = readGraphIdentityFixture({
       kind: "subject-section",
       locale: "id",
       route:
@@ -50,12 +53,12 @@ describe("learning graph identity", () => {
   });
 
   it("keeps locale assets unique across curriculum lenses", () => {
-    const grade10 = createLearningGraphIdentity({
+    const grade10 = readGraphIdentityFixture({
       kind: "subject-topic",
       locale: "id",
       route: "subject/high-school/10/mathematics/functions",
     });
-    const grade11 = createLearningGraphIdentity({
+    const grade11 = readGraphIdentityFixture({
       kind: "subject-topic",
       locale: "id",
       route: "subject/high-school/11/mathematics/functions",
@@ -66,18 +69,18 @@ describe("learning graph identity", () => {
   });
 
   it("keeps exam alignment separate from concrete exercise objects", () => {
-    const group = createLearningGraphIdentity({
+    const group = readGraphIdentityFixture({
       kind: "exercise-group",
       locale: "en",
       route: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026",
     });
-    const set = createLearningGraphIdentity({
+    const set = readGraphIdentityFixture({
       kind: "exercise-set",
       locale: "en",
       route:
         "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1",
     });
-    const question = createLearningGraphIdentity({
+    const question = readGraphIdentityFixture({
       kind: "exercise-question",
       locale: "en",
       route:
@@ -96,7 +99,7 @@ describe("learning graph identity", () => {
 
   it("supports non-route Quran graph identity", () => {
     expect(
-      createLearningGraphIdentity({
+      readGraphIdentityFixture({
         kind: "quran-surah",
         locale: "id",
         route: "quran/1",
@@ -180,6 +183,33 @@ describe("learning graph identity", () => {
     ).toBeNull();
   });
 
+  it("exposes nonthrowing and Effect-native declared source parsers", async () => {
+    const source = {
+      kind: "subject-topic",
+      locale: "id",
+      route: "subject/high-school/10/physics/waves",
+    } as const;
+    const invalidSource = {
+      ...source,
+      kind: "subject-section",
+    } as const;
+
+    expect(getLearningGraphIdentity(source)?.lensId).toBe(
+      "lens:subject:high-school:10:physics"
+    );
+    expect(getLearningGraphIdentity(invalidSource)).toBeNull();
+
+    const parsed = await Effect.runPromiseExit(
+      parseLearningGraphIdentity(source)
+    );
+    const invalidParsed = await Effect.runPromiseExit(
+      parseLearningGraphIdentity(invalidSource)
+    );
+
+    expect(Exit.isSuccess(parsed)).toBe(true);
+    expect(Exit.isFailure(invalidParsed)).toBe(true);
+  });
+
   it("exposes curriculum lens segments without route identity", () => {
     expect(
       getLearningGraphLensSegments({
@@ -190,13 +220,56 @@ describe("learning graph identity", () => {
     ).toEqual(["subject", "high-school", "10", "physics"]);
   });
 
-  it("rejects graph identity when the declared kind does not match route shape", () => {
-    expect(() =>
-      createLearningGraphIdentity({
-        kind: "subject-section",
-        locale: "id",
-        route: "subject/high-school/10/physics/waves",
+  it("rejects graph identity without throwing when kind does not match route shape", async () => {
+    const source = {
+      kind: "subject-section",
+      locale: "id",
+      route: "subject/high-school/10/physics/waves",
+    } as const;
+
+    expect(getLearningGraphIdentity(source)).toBeNull();
+    expect(
+      Exit.isFailure(
+        await Effect.runPromiseExit(parseLearningGraphIdentity(source))
+      )
+    ).toBe(true);
+  });
+
+  it("decodes unknown graph source inputs before identity parsing", async () => {
+    const missingLocale = await Effect.runPromiseExit(
+      parseLearningGraphIdentity({
+        kind: "quran-surah",
+        route: "quran/1",
       })
-    ).toThrow(InvalidLearningGraphRouteError);
+    );
+    const missingRoute = await Effect.runPromiseExit(
+      parseLearningGraphIdentity({
+        kind: "quran-surah",
+        locale: "id",
+      })
+    );
+    const nonStringRoute = await Effect.runPromiseExit(
+      parseLearningGraphIdentity({
+        kind: "quran-surah",
+        locale: "id",
+        route: 1,
+      })
+    );
+
+    expect(Exit.isFailure(missingLocale)).toBe(true);
+    expect(Exit.isFailure(missingRoute)).toBe(true);
+    expect(Exit.isFailure(nonStringRoute)).toBe(true);
   });
 });
+
+function readGraphIdentityFixture(
+  source: LearningGraphSource
+): LearningGraphIdentity {
+  const identity = getLearningGraphIdentity(source);
+
+  if (!identity) {
+    throw new Error(`Expected graph identity fixture for ${source.route}.`);
+  }
+
+  return identity;
+}

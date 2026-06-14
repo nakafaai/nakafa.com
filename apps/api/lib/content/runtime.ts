@@ -59,6 +59,7 @@ export function parseApiLocale(locale: string): Locale | null {
   return null;
 }
 
+/** Checks whether an API path locale is one of the repo-owned locale values. */
 function isApiLocale(locale: string): locale is Locale {
   return locales.some((supportedLocale) => supportedLocale === locale);
 }

@@ -1,9 +1,9 @@
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
+import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import {
   decodeNakafaAgentMarkdown,
   getNakafaAgentMarkdown,
 } from "@repo/contents/_lib/agent/read/markdown";
-import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
 import { Effect, Option } from "effect";
 import { describe, expect, it, vi } from "vitest";
 
@@ -242,7 +242,7 @@ describe("Nakafa agent markdown", () => {
     const error = await Effect.runPromise(
       Effect.match(
         decodeNakafaAgentMarkdown({
-          ...buildNakafaContentRef(
+          ...readNakafaContentRefFixture(
             "en",
             "articles/politics/dynastic-politics-asian-values",
             "articles"

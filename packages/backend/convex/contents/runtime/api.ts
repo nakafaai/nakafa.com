@@ -9,6 +9,7 @@ import { ConvexError } from "convex/values";
 
 const MAX_API_CONTENT_PAGE_SIZE = 100;
 
+/** Bounded route-prefix page args for partner API content reads. */
 interface ApiContentPrefixArgs {
   cursor: string | null;
   limit: number;

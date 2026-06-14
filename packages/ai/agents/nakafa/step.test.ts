@@ -7,10 +7,8 @@ import {
   shouldAnswerFromNakafaEvidence,
   shouldReadAfterSearch,
 } from "@repo/ai/agents/nakafa/step";
-import {
-  buildNakafaContentRef,
-  createNakafaContentRefFromGraphProjection,
-} from "@repo/contents/_lib/agent/refs";
+import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
+import { createNakafaContentRefFromGraphProjection } from "@repo/contents/_lib/agent/refs";
 import type { NakafaAgentSection } from "@repo/contents/_lib/agent/schema/ref";
 import type { NakafaAgentSearchResult } from "@repo/contents/_lib/agent/schema/search";
 import type { Locale } from "@repo/contents/_types/content";
@@ -34,7 +32,7 @@ function contentSummary({
   title: string;
 }) {
   return {
-    ...buildNakafaContentRef(locale, route, section),
+    ...readNakafaContentRefFixture(locale, route, section),
     description,
     excerpt: excerpt ?? description,
     title,
@@ -210,7 +208,7 @@ describe("Nakafa agent step state", () => {
         "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
       title: "Detached Set 2",
     });
-    const sourceProjectionSet = buildNakafaContentRef(
+    const sourceProjectionSet = readNakafaContentRefFixture(
       "id",
       set.route,
       "exercises"
@@ -247,7 +245,7 @@ describe("Nakafa agent step state", () => {
         "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/11",
       title: "Detached Question 11",
     });
-    const sourceProjectionSet = buildNakafaContentRef(
+    const sourceProjectionSet = readNakafaContentRefFixture(
       "id",
       "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
       "exercises"

@@ -4,10 +4,8 @@ import {
   readNakafaExercise,
 } from "@repo/backend/client/nakafa/exercise";
 import { api } from "@repo/backend/convex/_generated/api";
-import {
-  buildNakafaContentRef,
-  createNakafaContentRefFromGraphProjection,
-} from "@repo/contents/_lib/agent/refs";
+import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
+import { createNakafaContentRefFromGraphProjection } from "@repo/contents/_lib/agent/refs";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { type FunctionReference, getFunctionName } from "convex/server";
 import { Effect, Option, Schema } from "effect";
@@ -50,14 +48,14 @@ beforeEach(() => {
 
 describe("readNakafaExercise", () => {
   it("reads full exercise sets and specific questions from Convex rows", async () => {
-    const setRef = buildNakafaContentRef("id", setRoute, "exercises");
+    const setRef = readNakafaContentRefFixture("id", setRoute, "exercises");
     const set = await Effect.runPromise(
       readNakafaExercise(convexUrl, setRef.content_id)
     );
     const explicitQuestion = await Effect.runPromise(
       readNakafaExercise(convexUrl, setRef.content_id, 2)
     );
-    const questionRef = buildNakafaContentRef(
+    const questionRef = readNakafaContentRefFixture(
       "id",
       `${setRoute}/2`,
       "exercises"
@@ -68,7 +66,7 @@ describe("readNakafaExercise", () => {
     const markdown = await Effect.runPromise(
       readExerciseMarkdown(
         convexUrl,
-        buildNakafaContentRef("id", setRoute, "exercises")
+        readNakafaContentRefFixture("id", setRoute, "exercises")
       )
     );
 
@@ -85,7 +83,7 @@ describe("readNakafaExercise", () => {
     const question = await Effect.runPromise(
       readNakafaExercise(convexUrl, detachedQuestionRef.content_id)
     );
-    const sourceProjectionSet = buildNakafaContentRef(
+    const sourceProjectionSet = readNakafaContentRefFixture(
       "id",
       setRoute,
       "exercises"
@@ -115,12 +113,12 @@ describe("readNakafaExercise", () => {
   });
 
   it("returns none for unsupported, missing, and malformed exercise refs", async () => {
-    const articleRef = buildNakafaContentRef(
+    const articleRef = readNakafaContentRefFixture(
       "id",
       "articles/politics/example",
       "articles"
     );
-    const missingSetRef = buildNakafaContentRef(
+    const missingSetRef = readNakafaContentRefFixture(
       "id",
       missingSetRoute,
       "exercises"
@@ -131,7 +129,7 @@ describe("readNakafaExercise", () => {
     const missingSet = await Effect.runPromise(
       readNakafaExercise(convexUrl, missingSetRef.content_id)
     );
-    const setRef = buildNakafaContentRef("id", setRoute, "exercises");
+    const setRef = readNakafaContentRefFixture("id", setRoute, "exercises");
     const missingQuestion = await Effect.runPromise(
       readNakafaExercise(convexUrl, setRef.content_id, 99)
     );
@@ -147,7 +145,7 @@ describe("readNakafaExercise", () => {
     const missingMarkdown = await Effect.runPromise(
       readExerciseMarkdown(
         convexUrl,
-        buildNakafaContentRef("id", missingSetRoute, "exercises")
+        readNakafaContentRefFixture("id", missingSetRoute, "exercises")
       )
     );
 
@@ -227,14 +225,18 @@ function readRuntimeFixture(
 /** Builds one route lookup fixture from a graph asset ID. */
 function readContentRouteByContentId(args: unknown) {
   const input = Schema.decodeUnknownSync(ContentIdArgsSchema)(args);
-  const setRef = buildNakafaContentRef("id", setRoute, "exercises");
-  const questionRef = buildNakafaContentRef("id", `${setRoute}/2`, "exercises");
-  const articleRef = buildNakafaContentRef(
+  const setRef = readNakafaContentRefFixture("id", setRoute, "exercises");
+  const questionRef = readNakafaContentRefFixture(
+    "id",
+    `${setRoute}/2`,
+    "exercises"
+  );
+  const articleRef = readNakafaContentRefFixture(
     "id",
     "articles/politics/example",
     "articles"
   );
-  const missingSetRef = buildNakafaContentRef(
+  const missingSetRef = readNakafaContentRefFixture(
     "id",
     missingSetRoute,
     "exercises"

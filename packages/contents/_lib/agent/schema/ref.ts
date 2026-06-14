@@ -14,6 +14,7 @@ const UrlStringSchema = Schema.String.pipe(
   })
 );
 
+/** Extracts a canonical Nakafa URL pathname for schema transformation. */
 function getNakafaContentUrlPathname(value: string) {
   const match = NAKAFA_CONTENT_URL_PATTERN.exec(value);
 

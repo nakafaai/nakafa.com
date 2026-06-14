@@ -43,6 +43,7 @@ export const GRAPH_IDENTITY_TARGETS = [
   "contentAudios",
 ] as const;
 
+/** One page returned by the bounded Convex inspection queries. */
 interface PageResult {
   continueCursor: string;
   isDone: boolean;
@@ -63,6 +64,7 @@ type StaleContentArgs = FunctionArgs<
   typeof internal.contentSync.queries.stale.listStaleContentPage
 >;
 
+/** Pagination cursor passed to each bounded Convex inspection query. */
 interface PaginationArgs {
   cursor: string | null;
   numItems: number;
@@ -117,6 +119,7 @@ const collectPages = Effect.fn("sync.collectPages")(function* <
   return rows;
 });
 
+/** Chooses a bounded page size for each verifier target by row payload weight. */
 function getGraphIdentityPageSize(target: GraphIdentityTarget) {
   if (target === "contentSearch") {
     return 500;
@@ -129,6 +132,7 @@ function getGraphIdentityPageSize(target: GraphIdentityTarget) {
   return PAGE_SIZE;
 }
 
+/** Creates a zeroed verifier accumulator for graph identity integrity pages. */
 const emptyGraphIdentityIntegrity = (): GraphIdentityIntegrityTotal => ({
   checkedRefs: 0,
   checkedRefInputs: 0,
@@ -143,6 +147,7 @@ const emptyGraphIdentityIntegrity = (): GraphIdentityIntegrityTotal => ({
   scannedRows: 0,
 });
 
+/** Adds one target page into the aggregate graph identity verifier totals. */
 function addGraphIdentityPage(
   total: GraphIdentityIntegrityTotal,
   page: GraphIdentityIntegrityTotal
@@ -160,6 +165,7 @@ function addGraphIdentityPage(
   total.firstRouteShapedContentId ??= page.firstRouteShapedContentId;
 }
 
+/** Reads all integrity pages for one graph identity target and totals them. */
 const getGraphIdentityIntegrityForTarget = Effect.fn(
   "sync.getGraphIdentityIntegrityForTarget"
 )(function* (config: ConvexConfig, target: GraphIdentityTarget) {

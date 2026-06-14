@@ -1,9 +1,9 @@
 import {
-  createLearningGraphIdentity,
   createLearningGraphIdentityFromRoute,
+  getLearningGraphIdentity,
   type LearningGraphSource,
 } from "@repo/contents/_types/learning-graph";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 
 /** Convex validator for graph identity persisted on content read models. */
 export const learningGraphIdentityValidator = v.object({
@@ -20,7 +20,16 @@ export const graphContentIdValidator =
 
 /** Builds canonical graph identity for one synced content route projection. */
 export function getContentGraphIdentity(source: LearningGraphSource) {
-  return createLearningGraphIdentity(source);
+  const identity = getLearningGraphIdentity(source);
+
+  if (identity) {
+    return identity;
+  }
+
+  throw new ConvexError({
+    code: "CONTENT_GRAPH_IDENTITY_INVALID_SOURCE",
+    message: "Content source cannot be projected into graph identity.",
+  });
 }
 
 /** Builds graph identity from a public route projection when supported. */

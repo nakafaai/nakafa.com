@@ -14,6 +14,7 @@ type AudioSourceRoute = Pick<
 
 const duplicateAudioSourceRepairLimit = 6;
 
+/** Projects an audio source document into the compact graph lookup contract. */
 function toAudioContentLookup(
   source: Doc<"audioContentSources">
 ): AudioContentLookup {

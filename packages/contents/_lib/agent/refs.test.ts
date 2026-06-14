@@ -1,11 +1,13 @@
+import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import {
-  buildNakafaContentRef,
+  createNakafaContentRef,
   createNakafaContentRefFromGraphProjection,
   getNakafaContentResourceUri,
   normalizeNakafaContentInput,
   parseNakafaContentRef,
+  parseNakafaContentRefFields,
 } from "@repo/contents/_lib/agent/refs";
-import { Option } from "effect";
+import { Effect, Exit, Option } from "effect";
 import { describe, expect, it } from "vitest";
 
 describe("Nakafa agent references", () => {
@@ -14,7 +16,7 @@ describe("Nakafa agent references", () => {
     const urlRef = parseNakafaContentRef(
       "https://www.nakafa.com/en/quran/1.md"
     );
-    const directRef = buildNakafaContentRef("en", "quran/1", "quran");
+    const directRef = readNakafaContentRefFixture("en", "quran/1", "quran");
 
     expect(Option.getOrUndefined(quranRef)).toStrictEqual(directRef);
     expect(Option.getOrUndefined(urlRef)?.content_id).toBe(
@@ -23,7 +25,7 @@ describe("Nakafa agent references", () => {
   });
 
   it("builds resource URIs whose asset IDs are resolved by the backend", () => {
-    const directRef = buildNakafaContentRef("en", "quran/1", "quran");
+    const directRef = readNakafaContentRefFixture("en", "quran/1", "quran");
     const resourceUri = getNakafaContentResourceUri(directRef.content_id);
 
     expect(resourceUri).toBe("nakafa://content/asset:en:quran:quran-surah:1");
@@ -75,13 +77,63 @@ describe("Nakafa agent references", () => {
     expect(Option.isNone(ref)).toBe(true);
   });
 
-  it("rejects route and section mismatches before creating graph refs", () => {
+  it("rejects malformed persisted graph projection input before decoding refs", () => {
+    expect(
+      Option.isNone(
+        createNakafaContentRefFromGraphProjection({
+          alignmentId: "alignment:catalog:article:example",
+          assetId: "asset:en:catalog:article:example",
+          conceptId: "concept:catalog:article:example",
+          content_id: "asset:en:catalog:article:example",
+          learningObjectId: "lo:catalog:article:example",
+          lensId: "lens:catalog:article:example",
+          locale: "fr",
+          route: "articles/politics/example",
+          section: "articles",
+        })
+      )
+    ).toBe(true);
+    expect(
+      Option.isNone(
+        createNakafaContentRefFromGraphProjection({
+          alignmentId: "alignment:catalog:article:example",
+          assetId: "asset:en:catalog:article:example",
+          conceptId: "concept:catalog:article:example",
+          content_id: "asset:en:catalog:article:example",
+          learningObjectId: "lo:catalog:article:example",
+          lensId: "lens:catalog:article:example",
+          locale: "en",
+          route: "../unsafe",
+          section: "articles",
+        })
+      )
+    ).toBe(true);
+  });
+
+  it("rejects route and section mismatches before creating graph refs", async () => {
+    expect(Option.isNone(createNakafaContentRef("en", "", "quran"))).toBe(true);
+    expect(
+      Option.isNone(
+        createNakafaContentRef("en", "articles/politics/example", "subject")
+      )
+    ).toBe(true);
+    expect(
+      Option.isNone(createNakafaContentRef("en", "unknown/example", "articles"))
+    ).toBe(true);
+    expect(
+      Exit.isFailure(
+        await Effect.runPromiseExit(
+          parseNakafaContentRefFields(
+            "en",
+            "articles/politics/example",
+            "subject"
+          )
+        )
+      )
+    ).toBe(true);
     expect(() =>
-      buildNakafaContentRef("en", "articles/politics/example", "subject")
-    ).toThrow("does not match graph route");
-    expect(() =>
-      buildNakafaContentRef("en", "unknown/example", "articles")
-    ).toThrow("Cannot build Nakafa graph content ref");
+      readNakafaContentRefFixture("en", "unknown/example", "articles")
+    ).toThrow("Expected Nakafa content ref fixture");
   });
 
   it("rejects empty, unsafe, unsupported, and external references", () => {

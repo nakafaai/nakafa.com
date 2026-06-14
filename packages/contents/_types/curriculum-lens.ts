@@ -2,9 +2,9 @@ import {
   CurriculumLensScopeSchema,
   getCurriculumLensScopeForKind,
   type LearningObjectKind,
-} from "@repo/contents/_types/graph/spec";
+} from "@repo/contents/_types/graph/schema";
 import {
-  createLearningGraphIdentity,
+  getLearningGraphIdentity,
   getLearningGraphLensSegments,
   type LearningGraphSource,
   normalizeGraphRoute,
@@ -37,11 +37,18 @@ export type CurriculumLensDescriptor = Schema.Schema.Type<
  */
 export function createCurriculumLensDescriptor(
   source: LearningGraphSource
-): CurriculumLensDescriptor {
+): CurriculumLensDescriptor | null {
+  const identity = getLearningGraphIdentity(source);
+  const segments = getLearningGraphLensSegments(source);
+
+  if (!(identity && segments)) {
+    return null;
+  }
+
   return {
-    lensId: createLearningGraphIdentity(source).lensId,
+    lensId: identity.lensId,
     scope: getCurriculumLensScope(source.kind),
-    segments: getLearningGraphLensSegments(source),
+    segments,
     sourceRoute: normalizeGraphRoute(source.route),
   };
 }

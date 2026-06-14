@@ -1,8 +1,8 @@
 import {
-  buildNakafaContentRef,
+  createNakafaContentRef,
   parseNakafaContentRef,
 } from "@repo/contents/_lib/agent/refs";
-import { getSourceRouteProjectionForRoute } from "@repo/contents/_types/graph/spec";
+import { getSourceRouteProjectionForRoute } from "@repo/contents/_types/graph/projection";
 import { Option } from "effect";
 
 /** Resolves any exercise URL projection to its parent set reference. */
@@ -13,12 +13,10 @@ export function getNakafaExerciseSetRef(input: string) {
     return Option.none();
   }
 
-  return Option.some(
-    buildNakafaContentRef(
-      ref.value.locale,
-      getNakafaExerciseSetRoute(ref.value.route),
-      "exercises"
-    )
+  return createNakafaContentRef(
+    ref.value.locale,
+    getNakafaExerciseSetRoute(ref.value.route),
+    "exercises"
   );
 }
 

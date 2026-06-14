@@ -5,13 +5,13 @@ import {
   createWriter,
 } from "@repo/ai/agents/nakafa/tools/test";
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
-import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
+import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
 const ARTICLE_CONTENT_ID = NakafaAgentContentRefInputSchema.make(
-  buildNakafaContentRef(
+  readNakafaContentRefFixture(
     "en",
     "articles/politics/dynastic-politics-asian-values",
     "articles"
@@ -21,7 +21,7 @@ const ARTICLE_URL = NakafaAgentContentRefInputSchema.make(
   "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values"
 );
 const MISSING_CONTENT_ID = NakafaAgentContentRefInputSchema.make(
-  buildNakafaContentRef("en", "articles/politics/missing", "articles")
+  readNakafaContentRefFixture("en", "articles/politics/missing", "articles")
     .content_id
 );
 

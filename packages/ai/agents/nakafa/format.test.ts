@@ -5,7 +5,7 @@ import {
   formatSearch,
   formatTaxonomy,
 } from "@repo/ai/agents/nakafa/format";
-import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
+import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import type { NakafaAgentExerciseResult } from "@repo/contents/_lib/agent/schema/exercise";
 import { defaultLocale, locales } from "@repo/utilities/locales";
 import { describe, expect, it } from "vitest";
@@ -22,7 +22,7 @@ describe("Nakafa formatter", () => {
       has_more: false,
       items: [
         {
-          ...buildNakafaContentRef("id", subjectRoute, "subject"),
+          ...readNakafaContentRefFixture("id", subjectRoute, "subject"),
           description: "Pelajari contoh.",
           excerpt: "Pelajari contoh.",
           title: "Contoh Materi",
@@ -42,7 +42,7 @@ describe("Nakafa formatter", () => {
 
   it("formats full content reads", () => {
     const text = formatRead({
-      ...buildNakafaContentRef("id", subjectRoute, "subject"),
+      ...readNakafaContentRefFixture("id", subjectRoute, "subject"),
       description: "Pelajari contoh.",
       text: "Isi materi lengkap.",
       title: "Contoh Materi",
@@ -57,7 +57,7 @@ describe("Nakafa formatter", () => {
 
   it("formats structured exercises", () => {
     const result = {
-      ...buildNakafaContentRef("id", exerciseRoute, "exercises"),
+      ...readNakafaContentRefFixture("id", exerciseRoute, "exercises"),
       count: 1,
       exercise_number: 2,
       exercises: [
@@ -86,7 +86,7 @@ describe("Nakafa formatter", () => {
 
   it("formats Quran references with and without tafsir", () => {
     const text = formatQuran({
-      ...buildNakafaContentRef("id", "quran/1", "quran"),
+      ...readNakafaContentRefFixture("id", "quran/1", "quran"),
       name: "Al-Fatihah",
       revelation: "Makkiyah",
       translation: "Pembukaan",

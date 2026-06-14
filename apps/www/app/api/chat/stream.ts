@@ -60,6 +60,7 @@ type Location = Parameters<typeof nakafaPrompt>[0]["userLocation"];
 type Translator = Awaited<ReturnType<typeof getTranslations>>;
 type UserInfo = Effect.Effect.Success<ReturnType<typeof getUserInfo>>;
 
+/** Fully prepared inputs needed to stream and persist one chat response. */
 interface Params {
   chat: {
     finalMessages: ModelMessage[];

@@ -23,6 +23,7 @@ type BatchDeleteMutation = FunctionReference<
   { deleted: number; hasMore: boolean }
 >;
 
+/** One bounded Convex table reset step in the audio reset sequence. */
 interface ResetAudioStep {
   label: string;
   mutation: BatchDeleteMutation;

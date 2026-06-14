@@ -1,7 +1,7 @@
 import {
   LEARNING_OBJECT_KIND_VALUES,
   SOURCE_REGISTRY_ROOT_VALUES,
-} from "@repo/contents/_types/graph/spec";
+} from "@repo/contents/_types/graph/schema";
 
 /** Number of queued analytics rows processed in one mutation. */
 export const CONTENT_ANALYTICS_BATCH_SIZE = 250;

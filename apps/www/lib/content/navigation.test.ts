@@ -1,10 +1,8 @@
 // @vitest-environment node
 
 import type { Locale } from "@repo/contents/_types/content";
-import {
-  getSourceRouteProjection,
-  type LearningObjectKind,
-} from "@repo/contents/_types/graph/spec";
+import { getSourceRouteProjection } from "@repo/contents/_types/graph/projection";
+import type { LearningObjectKind } from "@repo/contents/_types/graph/schema";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import type { SourceRegistryRoot } from "@repo/contents/_types/source-registry";
 import { Effect } from "effect";

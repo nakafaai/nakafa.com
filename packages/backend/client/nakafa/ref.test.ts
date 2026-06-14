@@ -1,7 +1,7 @@
 import { resolveNakafaContentRef } from "@repo/backend/client/nakafa/ref";
 import { api } from "@repo/backend/convex/_generated/api";
+import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import {
-  buildNakafaContentRef,
   createNakafaContentRefFromGraphProjection,
   getNakafaContentResourceUri,
 } from "@repo/contents/_lib/agent/refs";
@@ -28,7 +28,7 @@ const RouteArgsSchema = Schema.Struct({
 
 const convexUrl = "https://example.convex.cloud";
 const articleRoute = "articles/politics/example";
-const articleRef = buildNakafaContentRef("en", articleRoute, "articles");
+const articleRef = readNakafaContentRefFixture("en", articleRoute, "articles");
 const detachedArticleRef = createDetachedArticleRef();
 
 beforeEach(() => {

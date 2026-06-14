@@ -1,16 +1,16 @@
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { mapUIMessagePartsToDBParts } from "@repo/backend/convex/chats/messageParts/uiToDb";
-import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
+import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
 import type { ProviderMetadata } from "ai";
 import { describe, expect, it } from "vitest";
 
-const ref = buildNakafaContentRef(
+const ref = readNakafaContentRefFixture(
   "en",
   "articles/politics/dynastic-politics-asian-values",
   "articles"
 );
-const quranRef = buildNakafaContentRef("en", "quran/1", "quran");
+const quranRef = readNakafaContentRefFixture("en", "quran/1", "quran");
 
 const toolCallProviderMetadata = {
   google: { thoughtSignature: "call-signature" },

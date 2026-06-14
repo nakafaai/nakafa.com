@@ -1,10 +1,9 @@
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { internalQuery } from "@repo/backend/convex/_generated/server";
 import { contentAuthorContentIdValidator } from "@repo/backend/convex/authors/schema";
 import {
   contentTypeValidator,
   localeValidator,
-  type NakafaSection,
   nakafaSectionValidator,
 } from "@repo/backend/convex/lib/validators/contents";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
@@ -74,6 +73,21 @@ const graphIdentityIssueValidator = v.object({
   status: v.optional(v.string()),
 });
 
+const graphIdentityFieldsValidator = v.object({
+  alignmentId: v.optional(v.string()),
+  assetId: v.optional(v.string()),
+  conceptId: v.optional(v.string()),
+  learningObjectId: v.optional(v.string()),
+  lensId: v.optional(v.string()),
+});
+
+const graphIdentityRefValidator = v.object({
+  ...graphIdentityFieldsValidator.fields,
+  content_id: v.optional(v.string()),
+  route: v.optional(v.string()),
+  section: v.optional(nakafaSectionValidator),
+});
+
 const graphIdentityIntegrityPageValidator = v.object({
   checkedRefs: v.number(),
   checkedRefInputs: v.number(),
@@ -90,26 +104,11 @@ const graphIdentityIntegrityPageValidator = v.object({
   scannedRows: v.number(),
 });
 
-interface SubjectSectionIntegrityItem {
-  locale: Doc<"subjectSections">["locale"];
-  slug: string;
-  topicId?: Id<"subjectTopics">;
-}
-
-interface GraphIdentityFields {
-  alignmentId?: string;
-  assetId?: string;
-  conceptId?: string;
-  learningObjectId?: string;
-  lensId?: string;
-}
-
-interface GraphIdentityRef extends GraphIdentityFields {
-  content_id?: string;
-  route?: string;
-  section?: NakafaSection;
-}
-
+type SubjectSectionIntegrityItem = Infer<
+  typeof subjectSectionIntegrityItemValidator
+>;
+type GraphIdentityFields = Infer<typeof graphIdentityFieldsValidator>;
+type GraphIdentityRef = Infer<typeof graphIdentityRefValidator>;
 type GraphIdentityIssue = Infer<typeof graphIdentityIssueValidator>;
 type GraphIdentityIntegrityPage = Infer<
   typeof graphIdentityIntegrityPageValidator
@@ -140,6 +139,7 @@ function getSubjectSectionIntegrityItem(
   return item;
 }
 
+/** Creates an empty graph identity verifier accumulator. */
 function createGraphIdentitySummary(): GraphIdentitySummary {
   return {
     checkedRefInputs: 0,
@@ -155,6 +155,7 @@ function createGraphIdentitySummary(): GraphIdentitySummary {
   };
 }
 
+/** Returns whether every required graph identity field is present and filled. */
 function hasGraphIdentityFields(ref: GraphIdentityFields) {
   return (
     isFilled(ref.alignmentId) &&
@@ -165,14 +166,17 @@ function hasGraphIdentityFields(ref: GraphIdentityFields) {
   );
 }
 
+/** Checks whether a persisted optional string is present and non-empty. */
 function isFilled(value: string | undefined) {
   return typeof value === "string" && value.length > 0;
 }
 
+/** Detects stale route-shaped content IDs that violate graph identity storage. */
 function hasRouteShapedContentId(ref: GraphIdentityRef) {
   return typeof ref.content_id === "string" && ref.content_id.includes("/");
 }
 
+/** Detects graph rows where the persisted content ID is not the graph asset ID. */
 function hasMismatchedContentId(ref: GraphIdentityRef) {
   if (!(isFilled(ref.content_id) && isFilled(ref.assetId))) {
     return false;
@@ -181,6 +185,7 @@ function hasMismatchedContentId(ref: GraphIdentityRef) {
   return ref.content_id !== ref.assetId;
 }
 
+/** Builds the first-invalid-row payload returned by integrity pages. */
 function getGraphIdentityIssue(
   ref: GraphIdentityRef,
   kind?: string
@@ -206,6 +211,7 @@ function getGraphIdentityIssue(
   return issue;
 }
 
+/** Adds one graph identity reference to the verifier accumulator. */
 function checkGraphIdentityRef(
   summary: GraphIdentitySummary,
   ref: GraphIdentityRef,
@@ -229,6 +235,7 @@ function checkGraphIdentityRef(
   }
 }
 
+/** Verifies a persisted Nakafa input ref uses the current graph ref schema. */
 function checkNakafaContentRefInput(
   summary: GraphIdentitySummary,
   data: NakafaContentRefInputPart
@@ -249,6 +256,7 @@ function checkNakafaContentRefInput(
   };
 }
 
+/** Adds one chat part preview payload to the graph identity verifier. */
 function checkNakafaDataPart(
   summary: GraphIdentitySummary,
   part: Doc<"parts">
@@ -291,6 +299,7 @@ function checkNakafaDataPart(
   }
 }
 
+/** Combines verifier counters with Convex pagination state. */
 function getGraphIdentityPageResult(
   summary: GraphIdentitySummary,
   page: { continueCursor: string; isDone: boolean; page: unknown[] }

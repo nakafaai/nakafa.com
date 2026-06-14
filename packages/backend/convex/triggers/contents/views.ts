@@ -20,6 +20,7 @@ class ContentViewEventError extends Schema.TaggedError<ContentViewEventError>()(
   }
 ) {}
 
+/** Maps thrown analytics trigger failures into a typed Effect error. */
 function toContentViewEventError(error: unknown) {
   return new ContentViewEventError({
     code: contentViewEventFailedCode,
@@ -27,6 +28,7 @@ function toContentViewEventError(error: unknown) {
   });
 }
 
+/** Converts a graph route section into the product analytics event taxonomy. */
 function getContentViewEventType(
   section: NonNullable<Change<DataModel, "contentViews">["newDoc"]>["section"]
 ): Extract<
@@ -44,6 +46,7 @@ function getContentViewEventType(
   return "exercise";
 }
 
+/** Emits one product analytics event after a graph content view is persisted. */
 const captureContentViewEvent = Effect.fn(
   "triggers.contents.captureContentViewEvent"
 )(function* (

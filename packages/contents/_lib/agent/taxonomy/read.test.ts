@@ -5,7 +5,7 @@ import {
   NAKAFA_MCP_RECOMMENDED_ENDPOINT,
 } from "@repo/contents/_lib/agent/constants";
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
-import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
+import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import {
   buildNakafaAgentTaxonomy,
   decodeNakafaAgentTaxonomy,
@@ -26,7 +26,7 @@ vi.mock("@repo/contents/_lib/agent/catalog/source", () => ({
 /** Builds small valid content summaries for fast taxonomy count tests. */
 function buildContentSummaries(locale: Locale, count: number) {
   return Array.from({ length: count }, (_, index) => ({
-    ...buildNakafaContentRef(
+    ...readNakafaContentRefFixture(
       locale,
       `articles/general/mock-${index + 1}`,
       "articles"

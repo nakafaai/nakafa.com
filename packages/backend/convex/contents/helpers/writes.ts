@@ -1,9 +1,6 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import {
-  type ContentAnalyticsIoError,
-  toContentAnalyticsIoError,
-} from "@repo/backend/convex/contents/analytics/spec";
+import { toContentAnalyticsIoError } from "@repo/backend/convex/contents/analytics/spec";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { getTrendingBucketStart } from "@repo/backend/convex/subjectSections/utils";
 import { Effect } from "effect";
@@ -19,6 +16,7 @@ type AnalyticsGraphRef = Pick<
   | "lensId"
 >;
 
+/** Aggregated graph-view delta for one content asset and locale. */
 interface AnalyticsCount {
   readonly locale: Locale;
   readonly ref: AnalyticsGraphRef;
@@ -26,6 +24,7 @@ interface AnalyticsCount {
   viewCount: number;
 }
 
+/** Extracts persisted graph identity fields from one queued content view. */
 function getAnalyticsGraphRef(item: QueuedContentView): AnalyticsGraphRef {
   return {
     alignmentId: item.alignmentId,
@@ -225,13 +224,7 @@ const applyLearningTrendingBucketDelta = Effect.fn(
 });
 
 /** Folds queued unique views into derived popularity tables. */
-export const applyContentAnalyticsBatch: (
-  ctx: MutationCtx,
-  input: {
-    readonly queueItems: readonly Doc<"contentViewAnalyticsQueue">[];
-    readonly updatedAt: number;
-  }
-) => Effect.Effect<void, ContentAnalyticsIoError> = Effect.fn(
+export const applyContentAnalyticsBatch = Effect.fn(
   "contents.analytics.applyContentAnalyticsBatch"
 )(function* (
   ctx: MutationCtx,

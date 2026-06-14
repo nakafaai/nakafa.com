@@ -1,6 +1,6 @@
 import type { api } from "@repo/backend/convex/_generated/api";
 import { CONTENT_ROUTE_ARTIFACT_PAGE_SIZE } from "@repo/backend/convex/contents/constants";
-import { getSourceRouteProjectionForRoute } from "@repo/contents/_types/graph/spec";
+import { getSourceRouteProjectionForRoute } from "@repo/contents/_types/graph/projection";
 import { routing } from "@repo/internationalization/src/routing";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
@@ -34,6 +34,7 @@ const quranRootRoute = "/quran";
 const subjectRootRoute = "/subject";
 const tryOutYearSegment = /^\d{4}$/;
 
+/** Descriptor for one graph-backed sitemap artifact page. */
 export interface ContentSitemapPage {
   id: string;
   locale: Locale;

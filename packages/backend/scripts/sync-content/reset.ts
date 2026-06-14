@@ -23,6 +23,7 @@ type BatchDeleteMutation = FunctionReference<
   { deleted: number; hasMore: boolean }
 >;
 
+/** One bounded Convex table reset step in the full content reset sequence. */
 interface ResetStep {
   label: string;
   mutation: BatchDeleteMutation;

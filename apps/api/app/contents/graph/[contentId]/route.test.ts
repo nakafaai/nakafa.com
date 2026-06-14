@@ -1,4 +1,4 @@
-import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
+import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import { Effect } from "effect";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./route";
@@ -30,7 +30,7 @@ vi.mock("@/lib/content/runtime", async (importOriginal) => {
   };
 });
 
-const articleRef = buildNakafaContentRef(
+const articleRef = readNakafaContentRefFixture(
   "en",
   "articles/politics/example",
   "articles"

@@ -8,7 +8,7 @@ import type { RuntimeQuranSurah } from "@repo/backend/client/nakafa/types";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { NakafaAgentMarkdown } from "@repo/contents/_lib/agent/schema/read";
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
-import { getSourceRouteProjectionForRoute } from "@repo/contents/_types/graph/spec";
+import { getSourceRouteProjectionForRoute } from "@repo/contents/_types/graph/projection";
 import type { Locale } from "@repo/utilities/locales";
 import { Effect, Option } from "effect";
 

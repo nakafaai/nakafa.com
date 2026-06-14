@@ -10,6 +10,7 @@ import { PageTitleProvider } from "@/components/ai/context/use-page-title";
 import { SheetAudioToolbar } from "@/components/ai/sheet-audio-toolbar";
 import { SheetEntry } from "@/components/ai/sheet-entry";
 
+/** Nina sheet launch context derived from the current graph-backed page. */
 interface Props {
   audio?: {
     contentType: AudioContentType;

@@ -62,6 +62,7 @@ export type SpeechGenerationData = NonNullable<
   Infer<typeof speechGenerationDataValidator>
 >;
 
+/** Storage operations required by the audio generation workflow implementation. */
 export interface AudioGenerationStore {
   readonly claimScriptGeneration: (
     contentAudioId: AudioGenerationArgs["contentAudioId"]
@@ -95,6 +96,7 @@ export interface AudioGenerationStore {
   }) => Promise<boolean>;
 }
 
+/** Provider operations required to turn content into generated audio assets. */
 export interface AudioGenerationProviders {
   readonly defaultVoiceSettings: VoiceSettings;
   readonly generateScriptText: (

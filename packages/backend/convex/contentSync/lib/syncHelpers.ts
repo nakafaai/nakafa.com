@@ -9,34 +9,58 @@ import { deleteContentSearchByRoute } from "@repo/backend/convex/contents/helper
 import {
   type ContentType,
   type Locale,
+  localeValidator,
   SUPPORTED_CONTENT_LOCALES,
 } from "@repo/backend/convex/lib/validators/contents";
-import { ConvexError } from "convex/values";
+import { ConvexError, type Infer, v } from "convex/values";
 
 export type AuthorCache = Map<string, Id<"authors">>;
 
-export interface SyncedAuthor {
-  name: string;
-}
+/** Convex validator for author names imported from source metadata. */
+export const syncedAuthorValidator = v.object({
+  name: v.string(),
+});
 
-export interface SyncedArticleReference {
-  authors: string;
-  citation?: string;
-  details?: string;
-  publication?: string;
-  title: string;
-  url?: string;
-  year: number;
-}
+/** Author name imported from source content metadata. */
+export type SyncedAuthor = Infer<typeof syncedAuthorValidator>;
 
-export interface SyncedExerciseChoice {
-  isCorrect: boolean;
-  label: string;
-  optionKey: string;
-  order: number;
-}
+/** Convex validator for article references imported from source metadata. */
+export const syncedArticleReferenceValidator = v.object({
+  authors: v.string(),
+  citation: v.optional(v.string()),
+  details: v.optional(v.string()),
+  publication: v.optional(v.string()),
+  title: v.string(),
+  url: v.optional(v.string()),
+  year: v.number(),
+});
 
-export type SyncedExerciseChoices = Record<Locale, SyncedExerciseChoice[]>;
+/** Article reference imported from source content metadata. */
+export type SyncedArticleReference = Infer<
+  typeof syncedArticleReferenceValidator
+>;
+
+/** Convex validator for localized exercise choices from source metadata. */
+export const syncedExerciseChoiceValidator = v.object({
+  isCorrect: v.boolean(),
+  label: v.string(),
+  optionKey: v.string(),
+  order: v.number(),
+});
+
+/** Localized exercise choice imported from source content metadata. */
+export type SyncedExerciseChoice = Infer<typeof syncedExerciseChoiceValidator>;
+
+/** Convex validator for locale-keyed exercise choice groups. */
+export const syncedExerciseChoicesValidator = v.record(
+  localeValidator,
+  v.array(syncedExerciseChoiceValidator)
+);
+
+/** Locale-keyed exercise choices derived from the Convex validator. */
+export type SyncedExerciseChoices = Infer<
+  typeof syncedExerciseChoicesValidator
+>;
 
 /** Load existing authors into a lookup map keyed by author name. */
 export async function buildAuthorCache(

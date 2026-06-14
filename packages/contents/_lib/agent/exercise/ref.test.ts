@@ -3,13 +3,13 @@ import {
   getNakafaExerciseSetRef,
   getNakafaExerciseSetRoute,
 } from "@repo/contents/_lib/agent/exercise/ref";
-import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
+import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import { Option } from "effect";
 import { describe, expect, it } from "vitest";
 
 const exerciseSetRoute =
   "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2";
-const exerciseSetContentId = buildNakafaContentRef(
+const exerciseSetContentId = readNakafaContentRefFixture(
   "id",
   exerciseSetRoute,
   "exercises"

@@ -9,6 +9,7 @@ import { ConvexError } from "convex/values";
 
 const MAX_CONTENT_ROUTE_PAGE_SIZE = 100;
 
+/** Bounded route-prefix catalog query args. */
 interface ContentRoutePrefixArgs {
   cursor: string | null;
   limit: number;
@@ -17,10 +18,12 @@ interface ContentRoutePrefixArgs {
   section: NakafaSection;
 }
 
+/** Bounded route-prefix catalog query args constrained by graph object kind. */
 interface ContentRouteKindPrefixArgs extends ContentRoutePrefixArgs {
   kind: Doc<"contentRoutes">["kind"];
 }
 
+/** Bounded parent-route catalog query args for route projection navigation. */
 interface ContentRouteParentArgs {
   cursor: string | null;
   kind: Doc<"contentRoutes">["kind"];
@@ -31,18 +34,21 @@ interface ContentRouteParentArgs {
   section: NakafaSection;
 }
 
+/** Route artifact page coordinates for sitemap and LLMS outputs. */
 interface ContentRouteArtifactPageArgs {
   locale: Locale;
   page: number;
   section: NakafaSection;
 }
 
+/** Args for newest route rows in one locale and section. */
 interface LatestContentRoutesArgs {
   limit: number;
   locale: Locale;
   section: NakafaSection;
 }
 
+/** Args for materialized route-count rows in one locale. */
 interface ContentRouteCountsArgs {
   locale: Locale;
 }

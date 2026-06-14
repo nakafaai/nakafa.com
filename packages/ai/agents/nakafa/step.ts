@@ -8,6 +8,7 @@ import type {
 import type { ModelMessage } from "ai";
 import { Option } from "effect";
 
+/** Minimal AI SDK tool-call shape needed to detect a specific Nakafa tool step. */
 interface ToolStep<ToolName extends string> {
   toolCalls: readonly {
     toolName: ToolName;

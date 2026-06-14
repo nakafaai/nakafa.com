@@ -4,8 +4,8 @@ import {
   getUnknownErrorMessage,
   NakafaAgentInputError,
 } from "@repo/contents/_lib/agent/errors";
+import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import {
-  buildNakafaContentRef,
   normalizeNakafaContentInput,
   parseNakafaContentRef,
 } from "@repo/contents/_lib/agent/refs";
@@ -90,7 +90,7 @@ const nakafaTestRuntime = {
       return Effect.succeed(Option.none());
     }
 
-    const ref = buildNakafaContentRef(
+    const ref = readNakafaContentRefFixture(
       parsed.value.locale,
       `quran/${parsed.value.surah}`,
       "quran"
@@ -171,13 +171,13 @@ const nakafaTestRuntime = {
 } satisfies NakafaRuntime;
 
 const nakafaTestRefs = [
-  buildNakafaContentRef(
+  readNakafaContentRefFixture(
     "en",
     "articles/politics/dynastic-politics-asian-values",
     "articles"
   ),
-  buildNakafaContentRef("en", "articles/politics/missing", "articles"),
-  buildNakafaContentRef(
+  readNakafaContentRefFixture("en", "articles/politics/missing", "articles"),
+  readNakafaContentRefFixture(
     "en",
     "exercises/high-school/snbt/general-knowledge/try-out/2026/set-2",
     "exercises"

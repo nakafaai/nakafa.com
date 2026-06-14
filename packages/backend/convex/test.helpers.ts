@@ -111,6 +111,7 @@ export async function seedAuthenticatedUser(
   };
 }
 
+/** Infers the audio content type for graph-backed test route fixtures. */
 function getAudioContentTypeForTestRoute(route: string): AudioContentType {
   if (route.startsWith("articles/")) {
     return "article";

@@ -1,30 +1,38 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { CONTENT_ROUTE_KINDS } from "@repo/backend/convex/contents/constants";
+import { learningGraphIdentityValidator } from "@repo/backend/convex/contents/graph";
 import { buildContentSearchRef } from "@repo/backend/convex/contents/helpers/search/documents";
-import type {
-  Locale,
-  NakafaSection,
+import type { Locale } from "@repo/backend/convex/lib/validators/contents";
+import {
+  localeValidator,
+  nakafaSectionValidator,
 } from "@repo/backend/convex/lib/validators/contents";
-import { requireSourceRouteProjection } from "@repo/contents/_types/graph/spec";
-import type { LearningGraphIdentity } from "@repo/contents/_types/learning-graph";
-import { ConvexError } from "convex/values";
+import { getSourceRouteProjection } from "@repo/contents/_types/graph/projection";
+import { ConvexError, type Infer, v } from "convex/values";
+import { literals } from "convex-helpers/validators";
 
 const duplicateRouteRepairLimit = 6;
 
-interface ContentRouteSource extends LearningGraphIdentity {
-  authors?: { name: string }[];
-  contentHash: string;
-  date?: number;
-  description?: string;
-  kind: Doc<"contentRoutes">["kind"];
-  locale: Locale;
-  markdown: boolean;
-  official?: boolean;
-  route: string;
-  section: NakafaSection;
-  syncedAt: number;
-  title: string;
-}
+/** Convex validator for source rows used to upsert route projections. */
+const contentRouteSourceValidator = v.object({
+  ...learningGraphIdentityValidator.fields,
+  authors: v.optional(v.array(v.object({ name: v.string() }))),
+  contentHash: v.string(),
+  date: v.optional(v.number()),
+  description: v.optional(v.string()),
+  kind: literals(...CONTENT_ROUTE_KINDS),
+  locale: localeValidator,
+  markdown: v.boolean(),
+  official: v.optional(v.boolean()),
+  route: v.string(),
+  section: nakafaSectionValidator,
+  syncedAt: v.number(),
+  title: v.string(),
+});
+
+/** Route source row derived from the Convex validator. */
+type ContentRouteSource = Infer<typeof contentRouteSourceValidator>;
 
 /** Upserts one concrete public content route into the durable route catalog. */
 export async function syncContentRoute(
@@ -32,10 +40,18 @@ export async function syncContentRoute(
   source: ContentRouteSource
 ) {
   const searchRef = buildContentSearchRef(source);
-  const routeProjection = requireSourceRouteProjection({
+  const routeProjection = getSourceRouteProjection({
     kind: source.kind,
     route: source.route,
   });
+
+  if (!routeProjection) {
+    throw new ConvexError({
+      code: "CONTENT_ROUTE_GRAPH_PROJECTION_INVALID",
+      message: "Content route cannot be projected into graph identity.",
+    });
+  }
+
   const nextValues = {
     alignmentId: source.alignmentId,
     authors: source.authors ?? [],
@@ -221,7 +237,7 @@ async function adjustContentRouteCount(
   source: {
     delta: 1 | -1;
     locale: Locale;
-    section: NakafaSection;
+    section: ContentRouteSource["section"];
     syncedAt: number;
   }
 ) {

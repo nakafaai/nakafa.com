@@ -15,6 +15,7 @@ import { ExerciseContextProvider } from "@/lib/context/use-exercise";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { isNumber } from "@/lib/utils/number";
 
+/** Wraps exercise pages with graph view tracking while preserving attempt context. */
 export default async function Layout(
   props: LayoutProps<"/[locale]/exercises/[category]/[type]/[material]/[...slug]">
 ) {

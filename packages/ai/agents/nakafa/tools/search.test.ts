@@ -2,7 +2,7 @@ import { NakafaSearch } from "@repo/ai/agents/nakafa/search";
 import { search } from "@repo/ai/agents/nakafa/tools/search";
 import { createWriter } from "@repo/ai/agents/nakafa/tools/test";
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
-import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
+import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import type { NakafaAgentSection } from "@repo/contents/_lib/agent/schema/ref";
 import { NakafaAgentSearchResultSchema } from "@repo/contents/_lib/agent/schema/search";
 import type { Locale } from "@repo/contents/_types/content";
@@ -44,7 +44,7 @@ function searchItem({
   title,
 }: SearchItemFixture) {
   return {
-    ...buildNakafaContentRef(locale, route, section),
+    ...readNakafaContentRefFixture(locale, route, section),
     description,
     excerpt: excerpt ?? description,
     title,

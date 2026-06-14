@@ -1,7 +1,7 @@
 import { readNakafaTaxonomy } from "@repo/backend/client/nakafa/taxonomy";
 import { api } from "@repo/backend/convex/_generated/api";
 import { type Locale, LocaleSchema } from "@repo/contents/_types/content";
-import type { SourceRegistryRoot } from "@repo/contents/_types/graph/spec";
+import type { SourceRegistryRoot } from "@repo/contents/_types/graph/schema";
 import { type FunctionReference, getFunctionName } from "convex/server";
 import { Effect, Schema } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";

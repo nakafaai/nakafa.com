@@ -10,6 +10,7 @@ import { ContentViewTracker } from "@/components/tracking/tracker";
 import { getRuntimeContentViewId } from "@/lib/content/views";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
+/** Wraps subject pages with graph content-view tracking when the route resolves. */
 export default async function Layout(
   props: LayoutProps<"/[locale]/subject/[category]/[grade]/[material]/[...slug]">
 ) {

@@ -2,7 +2,7 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import type { Locale } from "@repo/contents/_types/content";
-import { createLearningGraphIdentity } from "@repo/contents/_types/learning-graph";
+import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
@@ -185,11 +185,14 @@ describe("contentSync/mutations/quran", () => {
 
 /** Builds graph IDs for one Quran route fixture. */
 function quranRouteGraph(locale: Locale, route: string) {
-  const identity = createLearningGraphIdentity({
-    kind: "quran-surah",
+  const identity = createLearningGraphIdentityFromRoute({
     locale,
     route,
   });
+
+  if (!identity) {
+    throw new Error(`Expected Quran route graph fixture for ${route}.`);
+  }
 
   return {
     ...identity,

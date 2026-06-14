@@ -4,7 +4,7 @@ import { getNakafaAgentMarkdown } from "@repo/contents/_lib/agent/read/markdown"
 import { parseNakafaContentRef } from "@repo/contents/_lib/agent/refs";
 import { getNakafaAgentTaxonomy } from "@repo/contents/_lib/agent/taxonomy/read";
 import { getSurah } from "@repo/contents/_lib/quran";
-import { requireQuranSurahNumberForRoute } from "@repo/contents/_types/graph/spec";
+import { parseQuranSurahNumberForRoute } from "@repo/contents/_types/graph/projection";
 import { Effect, Either, Option } from "effect";
 
 /** Verifies whether a Nakafa content reference resolves to readable content. */
@@ -33,7 +33,8 @@ export const verifyNakafaContent = Effect.fn("Nakafa.verify")(function* (
 
 /** Verifies canonical Quran content routes without loading non-Quran content. */
 function verifyNakafaQuranRoute(route: string, loadSurah: typeof getSurah) {
-  return loadSurah(requireQuranSurahNumberForRoute(route)).pipe(
+  return parseQuranSurahNumberForRoute(route).pipe(
+    Effect.flatMap(loadSurah),
     Effect.either,
     Effect.map(Either.isRight)
   );

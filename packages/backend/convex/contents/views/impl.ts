@@ -9,13 +9,13 @@ import {
   ContentViewIoError,
   contentViewIoFailedCode,
   type RecordContentViewArgs,
-  type RecordContentViewResult,
 } from "@repo/backend/convex/contents/views/spec";
 import { getUnknownErrorMessage } from "@repo/backend/convex/lib/effect";
 import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
 import type { FunctionReference } from "convex/server";
 import { Clock, Effect } from "effect";
 
+/** Internal scheduler functions used after a content view is recorded. */
 export interface ContentViewSchedulerTargets {
   readonly scheduleAnalyticsPartition: FunctionReference<
     "mutation",
@@ -197,11 +197,7 @@ const updateExistingView = Effect.fn("contents.views.updateExistingView")(
  * scheduled mutation to keep the hot user-facing mutation bounded.
  * @see https://docs.convex.dev/understanding/best-practices/
  */
-export const recordUniqueContentView: (
-  ctx: MutationCtx,
-  args: RecordContentViewArgs,
-  targets: ContentViewSchedulerTargets
-) => Effect.Effect<RecordContentViewResult, ContentViewIoError> = Effect.fn(
+export const recordUniqueContentView = Effect.fn(
   "contents.views.recordUniqueContentView"
 )(function* (
   ctx: MutationCtx,

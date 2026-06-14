@@ -1,4 +1,4 @@
-import { getSourceRegistryRootForKind } from "@repo/contents/_types/graph/spec";
+import { getSourceRegistryRootForKind } from "@repo/contents/_types/graph/schema";
 import {
   createSourceRegistryRecord,
   normalizeSourcePath,

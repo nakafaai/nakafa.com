@@ -3,7 +3,7 @@ import {
   decodeNakafaAgentExerciseResult,
   getNakafaAgentExercise,
 } from "@repo/contents/_lib/agent/exercise/read";
-import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
+import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import { Effect, Option } from "effect";
 import { describe, expect, it, vi } from "vitest";
 
@@ -121,7 +121,7 @@ describe("Nakafa agent exercises", () => {
     const error = await Effect.runPromise(
       Effect.match(
         decodeNakafaAgentExerciseResult({
-          ...buildNakafaContentRef("en", EXERCISE_ROUTE, "exercises"),
+          ...readNakafaContentRefFixture("en", EXERCISE_ROUTE, "exercises"),
           count: 1,
           exercises: [
             {

@@ -1,10 +1,11 @@
 import { NAKAFA_CONTENT_BASE_URL } from "@repo/backend/convex/contents/constants";
-import type {
-  Locale,
-  NakafaSection,
+import { learningGraphIdentityValidator } from "@repo/backend/convex/contents/graph";
+import {
+  localeValidator,
+  nakafaSectionValidator,
 } from "@repo/backend/convex/lib/validators/contents";
-import type { LearningGraphIdentity } from "@repo/contents/_types/learning-graph";
 import { cleanSlug } from "@repo/utilities/helper";
+import { type Infer, v } from "convex/values";
 
 const WHITESPACE_PATTERN = /\s+/g;
 const MDX_MODULE_LINE_PATTERN = /^\s*(?:import|export)\s.+$/gm;
@@ -12,16 +13,21 @@ const FENCE_START_PATTERN = /^\s*(?:```|~~~)/;
 const MARKDOWN_HEADING_PATTERN = /^\s{0,3}#{1,6}\s+(.+?)\s*#*\s*$/;
 const MARKDOWN_LINK_PATTERN = /(^|[^!])\[([^\]]+)\]\([^)]+\)/g;
 
-export interface ContentSearchSource extends LearningGraphIdentity {
-  contentHash: string;
-  description?: string;
-  locale: Locale;
-  route: string;
-  section: NakafaSection;
-  syncedAt: number;
-  text: string;
-  title: string;
-}
+/** Convex validator for source rows used to build search documents. */
+export const contentSearchSourceValidator = v.object({
+  ...learningGraphIdentityValidator.fields,
+  contentHash: v.string(),
+  description: v.optional(v.string()),
+  locale: localeValidator,
+  route: v.string(),
+  section: nakafaSectionValidator,
+  syncedAt: v.number(),
+  text: v.string(),
+  title: v.string(),
+});
+
+/** Search source row derived from the Convex validator. */
+export type ContentSearchSource = Infer<typeof contentSearchSourceValidator>;
 
 /**
  * Creates the stable public content reference stored in the search read model.

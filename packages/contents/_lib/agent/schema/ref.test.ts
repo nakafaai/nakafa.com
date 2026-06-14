@@ -1,4 +1,4 @@
-import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
+import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import {
   NakafaAgentContentIdSchema,
   NakafaAgentContentRefSchema,
@@ -7,15 +7,18 @@ import {
   NakafaAgentContentUrlSchema,
   NakafaAgentMarkdownUrlSchema,
 } from "@repo/contents/_lib/agent/schema/ref";
-import { createLearningGraphIdentity } from "@repo/contents/_types/learning-graph";
+import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
-const quranIdentity = createLearningGraphIdentity({
-  kind: "quran-surah",
+const quranIdentity = createLearningGraphIdentityFromRoute({
   locale: "en",
   route: "quran/1",
 });
+
+if (!quranIdentity) {
+  throw new Error("Expected Quran graph identity fixture.");
+}
 const quranRef = {
   ...quranIdentity,
   content_id: quranIdentity.assetId,
@@ -143,8 +146,8 @@ describe("NakafaAgentContentRefSchema", () => {
 
   it("rejects refs that cannot become graph identity", () => {
     expect(() =>
-      buildNakafaContentRef("en", "articles/example", "articles")
-    ).toThrow("Cannot build Nakafa graph content ref");
+      readNakafaContentRefFixture("en", "articles/example", "articles")
+    ).toThrow("Expected Nakafa content ref fixture");
   });
 
   it("rejects invalid canonical URLs", () => {

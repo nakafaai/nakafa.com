@@ -10,9 +10,10 @@ import { NakafaAgentMarkdownSchema } from "@repo/contents/_lib/agent/schema/read
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
 import { getContentMetadataWithRaw } from "@repo/contents/_lib/metadata";
 import { getSurah } from "@repo/contents/_lib/quran";
-import { requireQuranSurahNumberForRoute } from "@repo/contents/_types/graph/spec";
+import { parseQuranSurahNumberForRoute } from "@repo/contents/_types/graph/projection";
 import { Effect, Option, Schema } from "effect";
 
+/** Runtime readers needed to resolve a graph content ref into markdown output. */
 interface NakafaMarkdownReaders {
   readonly loadContent?: typeof getContentMetadataWithRaw;
   readonly loadSurah?: typeof getSurah;
@@ -125,7 +126,7 @@ function renderNakafaQuranMarkdown(
   return Effect.gen(function* () {
     const loadSurah = readers.loadSurah ?? getSurah;
     const readQuran = readers.readQuran ?? getNakafaAgentQuranReference;
-    const surahNumber = requireQuranSurahNumberForRoute(ref.route);
+    const surahNumber = yield* parseQuranSurahNumberForRoute(ref.route);
 
     const surah = yield* Effect.option(loadSurah(surahNumber));
 

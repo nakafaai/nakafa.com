@@ -30,6 +30,7 @@ import { Clock, Effect } from "effect";
 
 const contentAudioDuplicateLimit = 3;
 
+/** Fields that reset a generated audio row back to a retryable pending state. */
 interface ResetGeneratedAudioFields {
   readonly audioDuration: undefined;
   readonly audioSize: undefined;
