@@ -1,5 +1,6 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
+import { getTestAudioIdentity } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { convexTest } from "convex-test";
@@ -7,6 +8,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const NOW = Date.parse("2026-01-01T00:00:00.000Z");
 const OLD_ENOUGH_FOR_CLEANUP = NOW - 31 * 24 * 60 * 60 * 1000;
+const articleRoute = "articles/politics/audio-cleanup";
+const englishArticleIdentity = getTestAudioIdentity({
+  locale: "en",
+  route: articleRoute,
+});
+const indonesianArticleIdentity = getTestAudioIdentity({
+  locale: "id",
+  route: articleRoute,
+});
 
 describe("audioStudies/mutations/queue", () => {
   beforeEach(() => {
@@ -26,7 +36,7 @@ describe("audioStudies/mutations/queue", () => {
     const t = convexTest(schema, convexModules);
 
     await t.mutation(async (ctx) => {
-      const articleId = await ctx.db.insert("articleContents", {
+      await ctx.db.insert("articleContents", {
         articleSlug: "audio-cleanup",
         body: "Body",
         category: "politics",
@@ -34,76 +44,65 @@ describe("audioStudies/mutations/queue", () => {
         date: NOW,
         description: "Description",
         locale: "en",
-        slug: "articles/politics/audio-cleanup",
+        slug: articleRoute,
         syncedAt: NOW,
         title: "Audio cleanup",
       });
-      const contentRef = { id: articleId, type: "article" } as const;
 
       await ctx.db.insert("audioGenerationQueue", {
-        contentRef,
-        locale: "en",
+        ...englishArticleIdentity,
         maxRetries: 3,
         priorityScore: 100,
         requestedAt: NOW,
         retryCount: 0,
-        slug: "articles/politics/audio-cleanup",
         status: "pending",
         updatedAt: NOW,
       });
       await ctx.db.insert("audioGenerationQueue", {
-        contentRef,
-        locale: "id",
+        ...indonesianArticleIdentity,
         maxRetries: 3,
         priorityScore: 90,
         processingStartedAt: NOW,
         requestedAt: NOW,
         retryCount: 0,
-        slug: "articles/politics/audio-cleanup",
         status: "processing",
         updatedAt: NOW,
       });
       await ctx.db.insert("audioGenerationQueue", {
-        contentRef,
+        ...englishArticleIdentity,
         errorMessage: "provider disabled",
         lastErrorAt: NOW,
-        locale: "en",
         maxRetries: 3,
         priorityScore: 80,
         requestedAt: NOW,
         retryCount: 1,
-        slug: "articles/politics/audio-cleanup",
         status: "failed",
         updatedAt: NOW,
       });
       await ctx.db.insert("audioGenerationQueue", {
+        ...englishArticleIdentity,
         completedAt: OLD_ENOUGH_FOR_CLEANUP,
-        contentRef,
-        locale: "en",
         maxRetries: 3,
         priorityScore: 70,
         requestedAt: OLD_ENOUGH_FOR_CLEANUP,
         retryCount: 0,
-        slug: "articles/politics/audio-cleanup",
         status: "completed",
         updatedAt: OLD_ENOUGH_FOR_CLEANUP,
       });
 
       await ctx.db.insert("contentAudios", {
+        ...englishArticleIdentity,
         contentHash: "hash",
-        contentRef,
         generationAttempts: 0,
-        locale: "en",
         model: "eleven_v3",
         status: "pending",
         updatedAt: NOW,
         voiceId: "voice",
       });
       await ctx.db.insert("contentAudios", {
+        ...indonesianArticleIdentity,
         contentHash: "hash",
-        contentRef,
         generationAttempts: 1,
-        locale: "id",
         model: "eleven_v3",
         status: "completed",
         updatedAt: NOW,

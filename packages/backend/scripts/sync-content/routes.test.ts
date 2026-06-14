@@ -1,5 +1,9 @@
-import type { NakafaSection } from "@repo/backend/convex/lib/validators/contents";
+import {
+  type NakafaSection,
+  SUPPORTED_CONTENT_LOCALES,
+} from "@repo/backend/convex/lib/validators/contents";
 import type { ConvexConfig } from "@repo/backend/scripts/sync-content/types";
+import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { Effect } from "effect";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -126,7 +130,7 @@ describe("sync-content routes", () => {
 
     expect(countCalls).toHaveLength(8);
     expect(new Set(countCalls.map((call) => call.locale))).toEqual(
-      new Set(["en", "id"])
+      new Set(SUPPORTED_CONTENT_LOCALES)
     );
     expect(new Set(countCalls.map((call) => call.section))).toEqual(
       new Set(["articles", "exercises", "quran", "subject"])
@@ -178,9 +182,19 @@ function isPageMutationCall(args: unknown): args is {
 
 /** Builds one route row returned by the runtime route catalog query. */
 function contentRoute(route: string) {
+  const identity = createLearningGraphIdentityFromRoute({
+    locale: "id",
+    route,
+  });
+
+  if (!identity) {
+    throw new Error(`Invalid route fixture: ${route}`);
+  }
+
   return {
+    ...identity,
     authors: [{ name: "Nakafa Author" }],
-    content_id: `id/${route}`,
+    content_id: identity.assetId,
     date: 1,
     depth: route.split("/").length,
     description: undefined,

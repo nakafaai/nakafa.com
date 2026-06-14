@@ -2,6 +2,7 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
@@ -40,6 +41,8 @@ interface SyncedSubjectSection {
 
 const TOPIC_SLUG = "subject/high-school/10/mathematics/metadata-topic";
 const SECTION_SLUG = `${TOPIC_SLUG}/metadata-section`;
+const TOPIC_CONTENT_ID = getGraphContentId(TOPIC_SLUG);
+const SECTION_CONTENT_ID = getGraphContentId(SECTION_SLUG);
 const BASE_TOPIC: SyncedSubjectTopic = {
   category: "high-school",
   contentHash: "same-topic-hash",
@@ -86,6 +89,20 @@ function buildSection(
   return { ...BASE_SECTION, ...overrides };
 }
 
+/** Returns the graph asset ID for a subject route fixture. */
+function getGraphContentId(route: string) {
+  const identity = createLearningGraphIdentityFromRoute({
+    locale: "id",
+    route,
+  });
+
+  if (!identity) {
+    throw new Error(`Expected graph identity for ${route}.`);
+  }
+
+  return identity.assetId;
+}
+
 describe("contentSync/mutations/subjects", () => {
   it("syncs subject topics through create, unchanged, and update paths", async () => {
     const t = convexTest(schema, convexModules);
@@ -121,9 +138,7 @@ describe("contentSync/mutations/subjects", () => {
         .unique();
       const route = await ctx.db
         .query("contentRoutes")
-        .withIndex("by_content_id", (q) =>
-          q.eq("content_id", `id/${TOPIC_SLUG}`)
-        )
+        .withIndex("by_content_id", (q) => q.eq("content_id", TOPIC_CONTENT_ID))
         .unique();
 
       return { route, topic: syncedTopic };
@@ -206,22 +221,19 @@ describe("contentSync/mutations/subjects", () => {
       const search = await ctx.db
         .query("contentSearch")
         .withIndex("by_content_id", (q) =>
-          q.eq("content_id", `id/${SECTION_SLUG}`)
+          q.eq("content_id", SECTION_CONTENT_ID)
         )
         .unique();
       const route = await ctx.db
         .query("contentRoutes")
         .withIndex("by_content_id", (q) =>
-          q.eq("content_id", `id/${SECTION_SLUG}`)
+          q.eq("content_id", SECTION_CONTENT_ID)
         )
         .unique();
       const audioSource = await ctx.db
         .query("audioContentSources")
-        .withIndex("by_contentRefType_and_slug_and_locale", (q) =>
-          q
-            .eq("contentRef.type", "subject")
-            .eq("slug", SECTION_SLUG)
-            .eq("locale", "id")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", SECTION_CONTENT_ID)
         )
         .unique();
 
@@ -262,7 +274,9 @@ describe("contentSync/mutations/subjects", () => {
     });
     expect(snapshot.audioSource).toMatchObject({
       contentHash: "same-subject-hash",
-      slug: SECTION_SLUG,
+      content_id: SECTION_CONTENT_ID,
+      contentType: "subject",
+      route: SECTION_SLUG,
     });
   });
 
@@ -301,6 +315,7 @@ describe("contentSync/mutations/subjects", () => {
 
   it("deletes stale subject sections and skips IDs that already disappeared", async () => {
     const t = convexTest(schema, convexModules);
+    const detachedSectionId = `${SECTION_CONTENT_ID}:catalog`;
 
     await t.mutation(async (ctx) => {
       await ctx.db.insert("authors", { name: "Ada", username: "ada" });
@@ -331,6 +346,17 @@ describe("contentSync/mutations/subjects", () => {
         throw new Error("Expected synced subject section before stale delete.");
       }
 
+      const audioSource = await ctx.db
+        .query("audioContentSources")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", SECTION_CONTENT_ID)
+        )
+        .unique();
+
+      if (!audioSource) {
+        throw new Error("Expected synced subject section audio source.");
+      }
+
       const missingId = await ctx.db.insert("subjectSections", {
         body: "Missing body",
         category: "high-school",
@@ -346,6 +372,10 @@ describe("contentSync/mutations/subjects", () => {
         title: "Missing",
         topic: "metadata-topic",
         topicId: topic._id,
+      });
+      await ctx.db.patch("audioContentSources", audioSource._id, {
+        assetId: detachedSectionId,
+        content_id: detachedSectionId,
       });
       await ctx.db.delete("subjectSections", missingId);
 
@@ -367,22 +397,19 @@ describe("contentSync/mutations/subjects", () => {
       const search = await ctx.db
         .query("contentSearch")
         .withIndex("by_content_id", (q) =>
-          q.eq("content_id", `id/${SECTION_SLUG}`)
+          q.eq("content_id", SECTION_CONTENT_ID)
         )
         .unique();
       const route = await ctx.db
         .query("contentRoutes")
         .withIndex("by_content_id", (q) =>
-          q.eq("content_id", `id/${SECTION_SLUG}`)
+          q.eq("content_id", SECTION_CONTENT_ID)
         )
         .unique();
       const audioSource = await ctx.db
         .query("audioContentSources")
-        .withIndex("by_contentRefType_and_slug_and_locale", (q) =>
-          q
-            .eq("contentRef.type", "subject")
-            .eq("slug", SECTION_SLUG)
-            .eq("locale", "id")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", detachedSectionId)
         )
         .unique();
 
@@ -401,6 +428,8 @@ describe("contentSync/mutations/subjects", () => {
 
   it("deletes stale subject topics with their sections and rejects unsafe section counts", async () => {
     const t = convexTest(schema, convexModules);
+    const detachedTopicId = `${TOPIC_CONTENT_ID}:catalog`;
+    const detachedSectionId = `${SECTION_CONTENT_ID}:catalog`;
 
     await t.mutation(async (ctx) => {
       await ctx.db.insert("authors", { name: "Ada", username: "ada" });
@@ -443,6 +472,49 @@ describe("contentSync/mutations/subjects", () => {
         throw new Error("Expected synced subject topics before stale delete.");
       }
 
+      const topicRoute = await ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (q) => q.eq("content_id", TOPIC_CONTENT_ID))
+        .unique();
+      const sectionRoute = await ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", SECTION_CONTENT_ID)
+        )
+        .unique();
+      const sectionSearch = await ctx.db
+        .query("contentSearch")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", SECTION_CONTENT_ID)
+        )
+        .unique();
+      const sectionAudio = await ctx.db
+        .query("audioContentSources")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", SECTION_CONTENT_ID)
+        )
+        .unique();
+
+      if (!(topicRoute && sectionRoute && sectionSearch && sectionAudio)) {
+        throw new Error("Expected synced subject projections.");
+      }
+
+      await ctx.db.patch("contentRoutes", topicRoute._id, {
+        assetId: detachedTopicId,
+        content_id: detachedTopicId,
+      });
+      await ctx.db.patch("contentRoutes", sectionRoute._id, {
+        assetId: detachedSectionId,
+        content_id: detachedSectionId,
+      });
+      await ctx.db.patch("contentSearch", sectionSearch._id, {
+        assetId: detachedSectionId,
+        content_id: detachedSectionId,
+      });
+      await ctx.db.patch("audioContentSources", sectionAudio._id, {
+        assetId: detachedSectionId,
+        content_id: detachedSectionId,
+      });
       await ctx.db.patch("subjectTopics", unsafeTopic._id, { sectionCount: 0 });
       await ctx.db.insert("subjectSections", {
         body: "Unsafe body",
@@ -487,27 +559,32 @@ describe("contentSync/mutations/subjects", () => {
       const route = await ctx.db
         .query("contentRoutes")
         .withIndex("by_content_id", (q) =>
-          q.eq("content_id", `id/${SECTION_SLUG}`)
+          q.eq("content_id", detachedSectionId)
         )
         .unique();
       const topicRoute = await ctx.db
         .query("contentRoutes")
-        .withIndex("by_content_id", (q) =>
-          q.eq("content_id", `id/${TOPIC_SLUG}`)
-        )
+        .withIndex("by_content_id", (q) => q.eq("content_id", detachedTopicId))
         .unique();
       const search = await ctx.db
         .query("contentSearch")
         .withIndex("by_content_id", (q) =>
-          q.eq("content_id", `id/${SECTION_SLUG}`)
+          q.eq("content_id", detachedSectionId)
+        )
+        .unique();
+      const audioSource = await ctx.db
+        .query("audioContentSources")
+        .withIndex("by_content_id", (q) =>
+          q.eq("content_id", detachedSectionId)
         )
         .unique();
 
-      return { route, search, section, topic, topicRoute };
+      return { audioSource, route, search, section, topic, topicRoute };
     });
 
     expect(result).toEqual({ deleted: 1 });
     expect(snapshot).toEqual({
+      audioSource: null,
       route: null,
       search: null,
       section: null,

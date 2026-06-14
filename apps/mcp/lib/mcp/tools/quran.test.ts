@@ -1,4 +1,4 @@
-import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
+import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import { NakafaAgentQuranReferenceSchema } from "@repo/contents/_lib/agent/schema/quran";
 import { Effect, Schema } from "effect";
 import { describe, expect, it, vi } from "vitest";
@@ -17,7 +17,7 @@ vi.mock("@/lib/mcp/nakafa", async () => {
 
         return Effect.succeed(
           Option.some({
-            ...buildNakafaContentRef("en", "quran/1", "quran"),
+            ...readNakafaContentRefFixture("en", "quran/1", "quran"),
             name: "Al-Faatiha",
             revelation: "Mecca",
             translation: "The Opening",
@@ -70,7 +70,9 @@ describe("nakafa_get_quran_reference", () => {
     );
 
     expect(result.isError).not.toBe(true);
-    expect(reference.content_id).toBe("en/quran/1");
+    expect(reference.content_id).toBe(
+      readNakafaContentRefFixture("en", "quran/1", "quran").content_id
+    );
     expect(reference.verses).toHaveLength(2);
     expect(reference.verses[0].tafsir).toBeTruthy();
   });

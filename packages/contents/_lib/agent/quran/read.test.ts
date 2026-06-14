@@ -2,11 +2,11 @@ import {
   NakafaAgentDataReadError,
   NakafaAgentInputError,
 } from "@repo/contents/_lib/agent/errors";
+import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import {
   decodeNakafaAgentQuranReference,
   getNakafaAgentQuranReference,
 } from "@repo/contents/_lib/agent/quran/read";
-import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
 import { SurahNotFoundError } from "@repo/contents/_shared/error";
 import { Effect, Option } from "effect";
 import { describe, expect, it } from "vitest";
@@ -146,7 +146,7 @@ describe("Nakafa agent Quran references", () => {
     const error = await Effect.runPromise(
       Effect.match(
         decodeNakafaAgentQuranReference({
-          ...buildNakafaContentRef("en", "quran/1", "quran"),
+          ...readNakafaContentRefFixture("en", "quran/1", "quran"),
           name: "Al-Fatihah",
           revelation: "Meccan",
           translation: "The Opener",

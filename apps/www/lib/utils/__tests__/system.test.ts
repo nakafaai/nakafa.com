@@ -1,4 +1,7 @@
 // @vitest-environment node
+import type { Locale } from "@repo/contents/_types/content";
+import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
+import type { SourceRegistryRoot } from "@repo/contents/_types/source-registry";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -21,12 +24,13 @@ const translationMocks = vi.hoisted(() => ({
   getTranslations: vi.fn(),
 }));
 
-vi.mock("@repo/internationalization/src/routing", () => ({
-  routing: {
-    defaultLocale: "en",
-    locales: ["en", "id"],
-  },
-}));
+vi.mock("@repo/internationalization/src/routing", async () => {
+  const { defaultLocale, locales } = await import("@repo/utilities/locales");
+
+  return {
+    routing: { defaultLocale, locales },
+  };
+});
 
 vi.mock("@/lib/content/runtime", () => ({
   getRuntimeContentRoute: runtimeMocks.getRuntimeContentRoute,
@@ -219,8 +223,8 @@ const routeRows = [
 ];
 
 interface RuntimeRouteArgs {
-  locale: "en" | "id";
-  section: "articles" | "subject" | "exercises" | "quran";
+  locale: Locale;
+  section: SourceRegistryRoot;
 }
 
 interface RuntimeRouteFixture {
@@ -235,7 +239,7 @@ interface RuntimeRouteFixture {
 function routeRow(args: RuntimeRouteFixture) {
   return {
     authors: [{ name: "Nakafa" }],
-    content_id: `${args.locale}/${args.route}`,
+    content_id: getFixtureContentId(args.locale, args.route),
     kind: args.kind ?? "article",
     locale: args.locale,
     markdown: true,
@@ -245,6 +249,17 @@ function routeRow(args: RuntimeRouteFixture) {
     syncedAt: 1,
     title: "Title",
   };
+}
+
+/** Builds the graph asset ID used by synced route rows in fixture data. */
+function getFixtureContentId(locale: Locale, route: string) {
+  const identity = createLearningGraphIdentityFromRoute({ locale, route });
+
+  if (identity) {
+    return identity.assetId;
+  }
+
+  return `asset:${locale}:fixture:${route.split("/").filter(Boolean).join(":")}`;
 }
 
 describe("route catalog metadata", () => {

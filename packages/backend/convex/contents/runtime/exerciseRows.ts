@@ -1,12 +1,20 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
+import { NAKAFA_CONTENT_BASE_URL } from "@repo/backend/convex/contents/constants";
 import {
   formatContentDate,
   getContentAuthors,
   throwRuntimeIntegrityError,
 } from "@repo/backend/convex/contents/runtime/shared";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
+
+const exerciseRouteKinds = [
+  "exercise-question",
+  "exercise-set",
+] satisfies readonly Doc<"contentRoutes">["kind"][];
+
+type ExerciseRouteKind = (typeof exerciseRouteKinds)[number];
 
 /** Loads one synced exercise set by public slug. */
 export async function getExerciseSet(
@@ -22,6 +30,43 @@ export async function getExerciseSet(
       q.eq("locale", args.locale).eq("slug", args.slug)
     )
     .unique();
+}
+
+/** Loads the route-catalog graph projection for one exercise runtime row. */
+export async function getExerciseRouteProjection(
+  ctx: QueryCtx,
+  args: {
+    kind: ExerciseRouteKind;
+    locale: Locale;
+    route: string;
+  }
+) {
+  const route = await ctx.db
+    .query("contentRoutes")
+    .withIndex("by_locale_and_route", (q) =>
+      q.eq("locale", args.locale).eq("route", args.route)
+    )
+    .unique();
+
+  if (
+    !route ||
+    route.kind !== args.kind ||
+    route.content_id !== route.assetId
+  ) {
+    return null;
+  }
+
+  return {
+    alignmentId: route.alignmentId,
+    assetId: route.assetId,
+    conceptId: route.conceptId,
+    content_id: route.content_id,
+    learningObjectId: route.learningObjectId,
+    lensId: route.lensId,
+    locale: route.locale,
+    route: route.route,
+    url: `${NAKAFA_CONTENT_BASE_URL}/${route.locale}/${route.route}`,
+  };
 }
 
 /** Loads, sorts, and validates question rows for one synced set. */
@@ -121,16 +166,27 @@ export async function buildRuntimeExercise(
   ctx: QueryCtx,
   question: Doc<"exerciseQuestions">
 ) {
-  const [authors, choices] = await Promise.all([
+  const [authors, choices, graph] = await Promise.all([
     getContentAuthors(ctx, {
       contentId: question._id,
       contentType: "exercise",
     }),
     getExerciseChoices(ctx, question),
+    getExerciseRouteProjection(ctx, {
+      kind: "exercise-question",
+      locale: question.locale,
+      route: question.slug,
+    }),
   ]);
+
+  if (!graph) {
+    return null;
+  }
+
   const date = formatContentDate(question.date);
 
   return {
+    ...graph,
     answer: {
       metadata: {
         authors,

@@ -1,3 +1,4 @@
+import { learningGraphIdentityValidator } from "@repo/backend/convex/contents/graph";
 import {
   localeValidator,
   nakafaSectionValidator,
@@ -5,6 +6,7 @@ import {
 import { v } from "convex/values";
 
 export const contentSearchRefValidator = v.object({
+  ...learningGraphIdentityValidator.fields,
   content_id: v.string(),
   locale: localeValidator,
   markdown_url: v.string(),

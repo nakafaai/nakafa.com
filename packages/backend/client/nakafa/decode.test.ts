@@ -9,7 +9,8 @@ import {
   NakafaAgentDataReadError,
   NakafaAgentInputError,
 } from "@repo/contents/_lib/agent/errors";
-import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
+import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
+import { defaultLocale, locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -91,7 +92,11 @@ async function expectDecodeError(
 /** Builds a minimal valid markdown payload for schema decoding. */
 function markdown() {
   return {
-    ...buildNakafaContentRef("en", "articles/example", "articles"),
+    ...readNakafaContentRefFixture(
+      "en",
+      "articles/politics/example",
+      "articles"
+    ),
     description: "Description",
     text: "Body",
     title: "Title",
@@ -101,7 +106,7 @@ function markdown() {
 /** Builds a minimal valid exercise payload for schema decoding. */
 function exerciseResult() {
   return {
-    ...buildNakafaContentRef(
+    ...readNakafaContentRefFixture(
       "id",
       "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1",
       "exercises"
@@ -127,7 +132,7 @@ function exerciseResult() {
 /** Builds a minimal valid Quran reference payload for schema decoding. */
 function quranReference() {
   return {
-    ...buildNakafaContentRef("en", "quran/1", "quran"),
+    ...readNakafaContentRefFixture("en", "quran/1", "quran"),
     name: "Al-Faatiha",
     revelation: "Mecca",
     translation: "The Opening",
@@ -152,7 +157,7 @@ function taxonomy() {
         locale: "en",
       },
     ],
-    default_locale: "en",
+    default_locale: defaultLocale,
     endpoints: {
       direct: "https://mcp.nakafa.com/mcp",
       recommended: "https://nakafa.com/mcp",
@@ -164,7 +169,7 @@ function taxonomy() {
       types: [{ id: "snbt", label: "SNBT" }],
     },
     locale: "en",
-    locales: ["en", "id"],
+    locales: Array.from(locales),
     quran: { surah_count: 114 },
     sections: ["articles", "subject", "exercises", "quran"],
     subject: {

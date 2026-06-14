@@ -9,6 +9,7 @@ import { ConvexError } from "convex/values";
 
 const MAX_CONTENT_ROUTE_PAGE_SIZE = 100;
 
+/** Bounded route-prefix catalog query args. */
 interface ContentRoutePrefixArgs {
   cursor: string | null;
   limit: number;
@@ -17,10 +18,12 @@ interface ContentRoutePrefixArgs {
   section: NakafaSection;
 }
 
+/** Bounded route-prefix catalog query args constrained by graph object kind. */
 interface ContentRouteKindPrefixArgs extends ContentRoutePrefixArgs {
   kind: Doc<"contentRoutes">["kind"];
 }
 
+/** Bounded parent-route catalog query args for route projection navigation. */
 interface ContentRouteParentArgs {
   cursor: string | null;
   kind: Doc<"contentRoutes">["kind"];
@@ -31,18 +34,21 @@ interface ContentRouteParentArgs {
   section: NakafaSection;
 }
 
+/** Route artifact page coordinates for sitemap and LLMS outputs. */
 interface ContentRouteArtifactPageArgs {
   locale: Locale;
   page: number;
   section: NakafaSection;
 }
 
+/** Args for newest route rows in one locale and section. */
 interface LatestContentRoutesArgs {
   limit: number;
   locale: Locale;
   section: NakafaSection;
 }
 
+/** Args for materialized route-count rows in one locale. */
 interface ContentRouteCountsArgs {
   locale: Locale;
 }
@@ -272,16 +278,40 @@ export async function getContentRouteImpl(
   return toRuntimeContentRoute(route);
 }
 
+/** Loads one concrete content route by graph-backed content ID. */
+export async function getContentRouteByContentIdImpl(
+  ctx: QueryCtx,
+  args: {
+    contentId: string;
+  }
+) {
+  const route = await ctx.db
+    .query("contentRoutes")
+    .withIndex("by_content_id", (q) => q.eq("content_id", args.contentId))
+    .unique();
+
+  if (!route) {
+    return null;
+  }
+
+  return toRuntimeContentRoute(route);
+}
+
 /** Removes Convex system fields from route catalog rows before returning them. */
 function toRuntimeContentRoute(route: Doc<"contentRoutes">) {
   return {
+    alignmentId: route.alignmentId,
     authors: route.authors,
+    assetId: route.assetId,
+    conceptId: route.conceptId,
     content_id: route.content_id,
     date: route.date,
     depth: route.depth,
     description: route.description,
     kind: route.kind,
+    learningObjectId: route.learningObjectId,
     locale: route.locale,
+    lensId: route.lensId,
     markdown: route.markdown,
     official: route.official,
     parentRoute: route.parentRoute,

@@ -2,9 +2,9 @@ import { decodeNakafaMarkdown } from "@repo/backend/client/nakafa/decode";
 import { readExerciseMarkdown } from "@repo/backend/client/nakafa/exercise";
 import { fetchNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
 import { readQuranMarkdown } from "@repo/backend/client/nakafa/quran";
+import { resolveNakafaContentRef } from "@repo/backend/client/nakafa/ref";
 import type { RuntimeMdxPage } from "@repo/backend/client/nakafa/types";
 import { api } from "@repo/backend/convex/_generated/api";
-import { parseNakafaContentRef } from "@repo/contents/_lib/agent/refs";
 import type { NakafaAgentMarkdown } from "@repo/contents/_lib/agent/schema/read";
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
 import { Effect, Option } from "effect";
@@ -12,7 +12,7 @@ import { Effect, Option } from "effect";
 /** Reads full markdown for one normalized Nakafa content reference. */
 export function readNakafaMarkdown(convexUrl: string, input: string) {
   return Effect.gen(function* () {
-    const ref = parseNakafaContentRef(input);
+    const ref = yield* resolveNakafaContentRef(convexUrl, input);
 
     if (Option.isNone(ref)) {
       return Option.none<NakafaAgentMarkdown>();

@@ -1,6 +1,6 @@
 import { api } from "@repo/backend/convex/_generated/api";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import schema from "@repo/backend/convex/schema";
 import {
   invalidTrendingRangeCode,
@@ -8,6 +8,7 @@ import {
 } from "@repo/backend/convex/subjectSections/trending/spec";
 import { TRENDING_BUCKET_MS } from "@repo/backend/convex/subjectSections/utils";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
@@ -48,64 +49,91 @@ async function insertSubject(ctx: MutationCtx, suffix: string) {
   });
 }
 
+/** Inserts the graph route projection for one synced subject section. */
+async function insertSubjectRoute(ctx: MutationCtx, suffix: string) {
+  const route = `subject/high-school/10/mathematics/topic-${suffix}/section-${suffix}`;
+  const identity = createLearningGraphIdentityFromRoute({
+    locale: "en",
+    route,
+  });
+
+  if (!identity) {
+    throw new Error(`Expected subject graph identity for ${route}.`);
+  }
+
+  await ctx.db.insert("contentRoutes", {
+    ...identity,
+    authors: [{ name: "Nakafa Author" }],
+    contentHash: `subject-hash-${suffix}`,
+    content_id: identity.assetId,
+    date: NOW,
+    description: `Description ${suffix}`,
+    kind: "subject-section",
+    locale: "en",
+    markdown: true,
+    route,
+    section: "subject",
+    syncedAt: NOW,
+    title: `Subject ${suffix}`,
+  });
+
+  return identity;
+}
+
 /** Inserts one derived trending bucket row. */
 async function insertTrendingBucket(
   ctx: MutationCtx,
-  contentId: Id<"subjectSections">,
+  graph: Awaited<ReturnType<typeof insertSubjectRoute>>,
   {
     bucketStart,
     locale = "en",
     viewCount,
   }: {
     bucketStart: number;
-    locale?: "en" | "id";
+    locale?: Locale;
     viewCount: number;
   }
 ) {
-  await ctx.db.insert("subjectTrendingBuckets", {
+  await ctx.db.insert("learningTrendingBuckets", {
+    ...graph,
     bucketStart,
-    contentId,
+    content_id: graph.assetId,
     locale,
+    section: "subject",
     updatedAt: NOW,
     viewCount,
   });
 }
 
-function getConvexErrorData(error: unknown) {
-  if (typeof error !== "object" || error === null || !("data" in error)) {
-    throw new Error("Expected a ConvexError with data.");
-  }
-
-  return error.data;
-}
-
 describe("subjectSections/queries", () => {
   it("returns sorted subjects aggregated across bounded daily buckets", async () => {
     const t = convexTest(schema, convexModules);
-    const { firstSubjectId, secondSubjectId } = await t.mutation(
+    const { firstRef, firstSubjectId, secondRef } = await t.mutation(
       async (ctx) => {
         const firstSubjectId = await insertSubject(ctx, "first");
-        const secondSubjectId = await insertSubject(ctx, "second");
+        await insertSubject(ctx, "second");
+        const firstRef = await insertSubjectRoute(ctx, "first");
+        const secondRef = await insertSubjectRoute(ctx, "second");
 
-        await insertTrendingBucket(ctx, firstSubjectId, {
+        await insertTrendingBucket(ctx, firstRef, {
           bucketStart: NOW,
           viewCount: 3,
         });
-        await insertTrendingBucket(ctx, firstSubjectId, {
+        await insertTrendingBucket(ctx, firstRef, {
           bucketStart: NOW + TRENDING_BUCKET_MS,
           viewCount: 4,
         });
-        await insertTrendingBucket(ctx, secondSubjectId, {
+        await insertTrendingBucket(ctx, secondRef, {
           bucketStart: NOW,
           viewCount: 10,
         });
-        await insertTrendingBucket(ctx, secondSubjectId, {
+        await insertTrendingBucket(ctx, secondRef, {
           bucketStart: NOW,
           locale: "id",
           viewCount: 100,
         });
 
-        return { firstSubjectId, secondSubjectId };
+        return { firstRef, firstSubjectId, secondRef };
       }
     );
 
@@ -122,16 +150,25 @@ describe("subjectSections/queries", () => {
 
     expect(results).toEqual([
       expect.objectContaining({
-        id: secondSubjectId,
+        assetId: secondRef.assetId,
+        content_id: secondRef.assetId,
+        route: "subject/high-school/10/mathematics/topic-second/section-second",
         title: "Subject second",
+        url: "https://nakafa.com/en/subject/high-school/10/mathematics/topic-second/section-second",
         viewCount: 10,
       }),
       expect.objectContaining({
-        id: firstSubjectId,
+        assetId: firstRef.assetId,
+        content_id: firstRef.assetId,
+        route: "subject/high-school/10/mathematics/topic-first/section-first",
         title: "Subject first",
+        url: "https://nakafa.com/en/subject/high-school/10/mathematics/topic-first/section-first",
         viewCount: 7,
       }),
     ]);
+    expect(results[0]).not.toHaveProperty("id");
+    expect(results[0]).not.toHaveProperty("slug");
+    expect(firstSubjectId).not.toBe(firstRef.assetId);
   });
 
   it("returns an empty list for empty or zero-limit ranges", async () => {
@@ -164,7 +201,8 @@ describe("subjectSections/queries", () => {
 
     await t.mutation(async (ctx) => {
       const subjectId = await insertSubject(ctx, "deleted");
-      await insertTrendingBucket(ctx, subjectId, {
+      const ref = await insertSubjectRoute(ctx, "deleted");
+      await insertTrendingBucket(ctx, ref, {
         bucketStart: NOW,
         viewCount: 10,
       });
@@ -183,20 +221,54 @@ describe("subjectSections/queries", () => {
     expect(results).toEqual([]);
   });
 
+  it("drops bucket rows whose subject lacks a graph route projection", async () => {
+    const t = convexTest(schema, convexModules);
+
+    await t.mutation(async (ctx) => {
+      await insertSubject(ctx, "missing-route");
+      const route =
+        "subject/high-school/10/mathematics/topic-missing-route/section-missing-route";
+      const ref = createLearningGraphIdentityFromRoute({
+        locale: "en",
+        route,
+      });
+
+      if (!ref) {
+        throw new Error(`Expected subject graph identity for ${route}.`);
+      }
+
+      await insertTrendingBucket(ctx, ref, {
+        bucketStart: NOW,
+        viewCount: 10,
+      });
+    });
+
+    const results = await t.query(
+      api.subjectSections.queries.getTrendingSubjects,
+      {
+        locale: "en",
+        since: NOW,
+        until: NOW + TRENDING_BUCKET_MS,
+      }
+    );
+
+    expect(results).toEqual([]);
+  });
+
   it("rejects ranges wider than the supported trending window", async () => {
     const t = convexTest(schema, convexModules);
 
-    const error = await t
-      .query(api.subjectSections.queries.getTrendingSubjects, {
+    await expect(
+      t.query(api.subjectSections.queries.getTrendingSubjects, {
         locale: "en",
         since: NOW,
         until: NOW + (maxTrendingRangeDays + 1) * TRENDING_BUCKET_MS,
       })
-      .catch((error: unknown) => error);
-
-    expect(getConvexErrorData(error)).toEqual({
-      code: invalidTrendingRangeCode,
-      message: `Trending range cannot exceed ${maxTrendingRangeDays} days.`,
+    ).rejects.toMatchObject({
+      data: {
+        code: invalidTrendingRangeCode,
+        message: `Trending range cannot exceed ${maxTrendingRangeDays} days.`,
+      },
     });
   });
 });

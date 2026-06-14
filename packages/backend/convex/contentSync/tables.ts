@@ -45,6 +45,17 @@ export const contentCountTables = [
   { field: "irtScaleVersions", tableName: "irtScaleVersions" },
   { field: "irtScaleVersionItems", tableName: "irtScaleVersionItems" },
   { field: "contentSearch", tableName: "contentSearch" },
+  { field: "contentViews", tableName: "contentViews" },
+  {
+    field: "contentViewAnalyticsQueue",
+    tableName: "contentViewAnalyticsQueue",
+  },
+  {
+    field: "contentAnalyticsPartitions",
+    tableName: "contentAnalyticsPartitions",
+  },
+  { field: "learningPopularity", tableName: "learningPopularity" },
+  { field: "learningTrendingBuckets", tableName: "learningTrendingBuckets" },
   { field: "contentRoutes", tableName: "contentRoutes" },
   { field: "contentRouteCounts", tableName: "contentRouteCounts" },
   { field: "contentRoutePages", tableName: "contentRoutePages" },

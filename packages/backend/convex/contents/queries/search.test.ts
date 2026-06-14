@@ -1,17 +1,65 @@
 import { api, internal } from "@repo/backend/convex/_generated/api";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { CONTENT_SEARCH_MAX_OFFSET } from "@repo/backend/convex/contents/helpers/search/constants";
+import { readContentSearchDocuments } from "@repo/backend/convex/contents/helpers/search/read";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
+import type { Locale } from "@repo/contents/_types/content";
+import type { SourceRegistryRoot } from "@repo/contents/_types/graph/schema";
+import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { describe, expect, it } from "vitest";
+
+interface ContentSearchFixture {
+  contentHash: string;
+  description: string;
+  locale: Locale;
+  markdown_url: string;
+  route: string;
+  section: SourceRegistryRoot;
+  syncedAt: number;
+  text: string;
+  title: string;
+  url: string;
+}
+
+/** Inserts a content search fixture with graph identity as product identity. */
+async function insertContentSearch(
+  ctx: MutationCtx,
+  fixture: ContentSearchFixture
+) {
+  const identity = createLearningGraphIdentityFromRoute({
+    locale: fixture.locale,
+    route: fixture.route,
+  });
+
+  if (!identity) {
+    throw new Error(`Expected graph identity for ${fixture.route}.`);
+  }
+
+  await ctx.db.insert("contentSearch", {
+    ...fixture,
+    ...identity,
+    content_id: identity.assetId,
+  });
+}
+
+/** Returns the graph asset ID for a search route fixture. */
+function searchContentId(locale: Locale, route: string) {
+  const identity = createLearningGraphIdentityFromRoute({ locale, route });
+
+  if (!identity) {
+    throw new Error(`Expected graph identity for ${route}.`);
+  }
+
+  return identity.assetId;
+}
 
 describe("contents/queries/search:search", () => {
   it("searches title and body text with locale and section filters", async () => {
     const t = createConvexTestWithBetterAuth();
 
     await t.mutation(async (ctx) => {
-      await ctx.db.insert("contentSearch", {
+      await insertContentSearch(ctx, {
         contentHash: "hash-rational",
-        content_id:
-          "id/subject/high-school/11/mathematics/function-modeling/rational-function",
         description: "Pelajari fungsi rasional.",
         locale: "id",
         markdown_url:
@@ -24,10 +72,8 @@ describe("contents/queries/search:search", () => {
         title: "Fungsi Rasional",
         url: "https://nakafa.com/id/subject/high-school/11/mathematics/function-modeling/rational-function",
       });
-      await ctx.db.insert("contentSearch", {
+      await insertContentSearch(ctx, {
         contentHash: "hash-domain",
-        content_id:
-          "id/subject/high-school/11/mathematics/function-modeling/domain-codomain-range",
         description: "Pelajari domain dan range.",
         locale: "id",
         markdown_url:
@@ -40,10 +86,8 @@ describe("contents/queries/search:search", () => {
         title: "Domain, Kodomain, dan Range",
         url: "https://nakafa.com/id/subject/high-school/11/mathematics/function-modeling/domain-codomain-range",
       });
-      await ctx.db.insert("contentSearch", {
+      await insertContentSearch(ctx, {
         contentHash: "hash-en",
-        content_id:
-          "en/subject/high-school/11/mathematics/function-modeling/rational-function",
         description: "Learn rational functions.",
         locale: "en",
         markdown_url:
@@ -84,8 +128,10 @@ describe("contents/queries/search:search", () => {
     );
     expect(bodyResult.items).toEqual([
       expect.objectContaining({
-        content_id:
-          "id/subject/high-school/11/mathematics/function-modeling/domain-codomain-range",
+        content_id: searchContentId(
+          "id",
+          "subject/high-school/11/mathematics/function-modeling/domain-codomain-range"
+        ),
         excerpt: expect.stringContaining("batas input"),
       }),
     ]);
@@ -96,10 +142,8 @@ describe("contents/queries/search:search", () => {
     const t = createConvexTestWithBetterAuth();
 
     await t.mutation(async (ctx) => {
-      await ctx.db.insert("contentSearch", {
+      await insertContentSearch(ctx, {
         contentHash: "hash-logarithm",
-        content_id:
-          "id/subject/high-school/10/mathematics/exponential-logarithm/logarithm-definition",
         description: "Memahami bentuk dasar logaritma.",
         locale: "id",
         markdown_url:
@@ -126,8 +170,10 @@ describe("contents/queries/search:search", () => {
 
     expect(result.items).toEqual([
       expect.objectContaining({
-        content_id:
-          "id/subject/high-school/10/mathematics/exponential-logarithm/logarithm-definition",
+        content_id: searchContentId(
+          "id",
+          "subject/high-school/10/mathematics/exponential-logarithm/logarithm-definition"
+        ),
         excerpt: expect.stringContaining("Memahami bentuk dasar logaritma."),
       }),
     ]);
@@ -135,14 +181,82 @@ describe("contents/queries/search:search", () => {
     expect(result.items[0].excerpt).not.toContain("exponential-logarithm");
   });
 
+  it("resolves exact routes through persisted route catalog content IDs", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const route =
+      "subject/high-school/10/mathematics/exponential-logarithm/logarithm-definition";
+    const identity = createLearningGraphIdentityFromRoute({
+      locale: "id",
+      route,
+    });
+
+    if (!identity) {
+      throw new Error(`Expected graph identity for ${route}.`);
+    }
+
+    const catalogAssetId = `${identity.assetId}:catalog`;
+    const catalogGraph = {
+      ...identity,
+      assetId: catalogAssetId,
+    };
+
+    await t.mutation(async (ctx) => {
+      await ctx.db.insert("contentRoutes", {
+        ...catalogGraph,
+        authors: [],
+        contentHash: "hash-logarithm",
+        content_id: catalogAssetId,
+        kind: "subject-section",
+        locale: "id",
+        markdown: true,
+        route,
+        section: "subject",
+        syncedAt: 1,
+        title: "Definisi Logaritma",
+      });
+      await ctx.db.insert("contentSearch", {
+        ...catalogGraph,
+        contentHash: "hash-logarithm",
+        content_id: catalogAssetId,
+        description: "Memahami bentuk dasar logaritma.",
+        locale: "id",
+        markdown_url: `https://nakafa.com/id/${route}.md`,
+        route,
+        section: "subject",
+        syncedAt: 1,
+        text: "Definisi Logaritma menjelaskan pangkat yang dibutuhkan.",
+        title: "Definisi Logaritma",
+        url: `https://nakafa.com/id/${route}`,
+      });
+    });
+
+    const documents = await t.query(
+      async (ctx) =>
+        await readContentSearchDocuments(
+          ctx,
+          {
+            limit: 1,
+            locale: "id",
+            offset: 0,
+            queries: [route],
+            section: "subject",
+          },
+          [route],
+          0
+        )
+    );
+
+    expect(documents.map((document) => document.content_id)).toEqual([
+      catalogAssetId,
+    ]);
+  });
+
   it("prioritizes exercise context over generic exercise titles", async () => {
     const t = createConvexTestWithBetterAuth();
 
     await t.mutation(async (ctx) => {
-      await ctx.db.insert("contentSearch", {
+      await insertContentSearch(ctx, {
         contentHash: "hash-english-11",
-        content_id:
-          "id/exercises/high-school/snbt/english-language/try-out/2026/set-2/11",
         description: "",
         locale: "id",
         markdown_url:
@@ -155,10 +269,8 @@ describe("contents/queries/search:search", () => {
         title: "Soal 11",
         url: "https://nakafa.com/id/exercises/high-school/snbt/english-language/try-out/2026/set-2/11",
       });
-      await ctx.db.insert("contentSearch", {
+      await insertContentSearch(ctx, {
         contentHash: "hash-quantitative-11",
-        content_id:
-          "id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/11",
         description:
           "SMA SNBT Pengetahuan Kuantitatif try out 2026 set 2 Nomor 11",
         locale: "id",
@@ -184,8 +296,10 @@ describe("contents/queries/search:search", () => {
 
     expect(result.items[0]).toEqual(
       expect.objectContaining({
-        content_id:
-          "id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/11",
+        content_id: searchContentId(
+          "id",
+          "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/11"
+        ),
       })
     );
   });
@@ -231,8 +345,10 @@ describe("contents/queries/search:search", () => {
 
     expect(result.items[0]).toEqual(
       expect.objectContaining({
-        content_id:
-          "id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
+        content_id: searchContentId(
+          "id",
+          "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2"
+        ),
         title: "SNBT Pengetahuan Kuantitatif Try Out 2026 Set 2",
       })
     );
@@ -282,10 +398,8 @@ describe("contents/queries/search:search", () => {
     const t = createConvexTestWithBetterAuth();
 
     await t.mutation(async (ctx) => {
-      await ctx.db.insert("contentSearch", {
+      await insertContentSearch(ctx, {
         contentHash: "hash-language-question",
-        content_id:
-          "id/exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1",
         description: "",
         locale: "id",
         markdown_url:
@@ -298,10 +412,8 @@ describe("contents/queries/search:search", () => {
         title: "Soal 1",
         url: "https://nakafa.com/id/exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1",
       });
-      await ctx.db.insert("contentSearch", {
+      await insertContentSearch(ctx, {
         contentHash: "hash-math-set",
-        content_id:
-          "id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1",
         description: "SNBT Penalaran Matematika Try Out 2026 Set 1 20 soal",
         locale: "id",
         markdown_url:
@@ -326,8 +438,10 @@ describe("contents/queries/search:search", () => {
 
     expect(result.items[0]).toEqual(
       expect.objectContaining({
-        content_id:
-          "id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1",
+        content_id: searchContentId(
+          "id",
+          "exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1"
+        ),
       })
     );
   });
@@ -336,10 +450,8 @@ describe("contents/queries/search:search", () => {
     const t = createConvexTestWithBetterAuth();
 
     await t.mutation(async (ctx) => {
-      await ctx.db.insert("contentSearch", {
+      await insertContentSearch(ctx, {
         contentHash: "hash-question-11",
-        content_id:
-          "id/exercises/high-school/snbt/general-reasoning/try-out/2026/set-3/11",
         description: "SMA SNBT Penalaran Umum Try Out 2026 Set 3 Nomor 11",
         locale: "id",
         markdown_url:
@@ -352,10 +464,8 @@ describe("contents/queries/search:search", () => {
         title: "SNBT Penalaran Umum Try Out 2026 Set 3 Soal 11",
         url: "https://nakafa.com/id/exercises/high-school/snbt/general-reasoning/try-out/2026/set-3/11",
       });
-      await ctx.db.insert("contentSearch", {
+      await insertContentSearch(ctx, {
         contentHash: "hash-rational-set",
-        content_id:
-          "id/exercises/high-school/tka/mathematics/try-out/2026/set-1",
         description: "SMA TKA Matematika Try Out 2026 Set 1 20 soal",
         locale: "id",
         markdown_url:
@@ -379,8 +489,10 @@ describe("contents/queries/search:search", () => {
 
     expect(result.items[0]).toEqual(
       expect.objectContaining({
-        content_id:
-          "id/exercises/high-school/tka/mathematics/try-out/2026/set-1",
+        content_id: searchContentId(
+          "id",
+          "exercises/high-school/tka/mathematics/try-out/2026/set-1"
+        ),
       })
     );
   });
@@ -389,10 +501,8 @@ describe("contents/queries/search:search", () => {
     const t = createConvexTestWithBetterAuth();
 
     await t.mutation(async (ctx) => {
-      await ctx.db.insert("contentSearch", {
+      await insertContentSearch(ctx, {
         contentHash: "hash-class-question",
-        content_id:
-          "id/exercises/high-school/snbt/general-reasoning/try-out/2026/set-3/11",
         description: "SMA SNBT Penalaran Umum Try Out 2026 Set 3 Nomor 11",
         locale: "id",
         markdown_url:
@@ -491,10 +601,8 @@ describe("contents/queries/search:search", () => {
     const t = createConvexTestWithBetterAuth();
 
     await t.mutation(async (ctx) => {
-      await ctx.db.insert("contentSearch", {
+      await insertContentSearch(ctx, {
         contentHash: "hash-mass",
-        content_id:
-          "id/subject/high-school/10/chemistry/basic-chemistry-laws/mass-conservation-law",
         description: "Pelajari hukum kekekalan massa.",
         locale: "id",
         markdown_url:
@@ -507,10 +615,8 @@ describe("contents/queries/search:search", () => {
         title: "Hukum Kekekalan Massa",
         url: "https://nakafa.com/id/subject/high-school/10/chemistry/basic-chemistry-laws/mass-conservation-law",
       });
-      await ctx.db.insert("contentSearch", {
+      await insertContentSearch(ctx, {
         contentHash: "hash-stoichiometry",
-        content_id:
-          "id/subject/high-school/10/chemistry/stoichiometry/introduction",
         description: "Pelajari stoikiometri.",
         locale: "id",
         markdown_url:
@@ -522,10 +628,8 @@ describe("contents/queries/search:search", () => {
         title: "Stoikiometri",
         url: "https://nakafa.com/id/subject/high-school/10/chemistry/stoichiometry/introduction",
       });
-      await ctx.db.insert("contentSearch", {
+      await insertContentSearch(ctx, {
         contentHash: "hash-mass-application",
-        content_id:
-          "id/subject/high-school/10/chemistry/basic-chemistry-laws/mass-application",
         description: "Latihan tambahan hukum kekekalan massa.",
         locale: "id",
         markdown_url:
@@ -558,9 +662,8 @@ describe("contents/queries/search:search", () => {
     const t = createConvexTestWithBetterAuth();
 
     await t.mutation(async (ctx) => {
-      await ctx.db.insert("contentSearch", {
+      await insertContentSearch(ctx, {
         contentHash: "hash-b",
-        content_id: "id/articles/science/b",
         description: "",
         locale: "id",
         markdown_url: "https://nakafa.com/id/articles/science/b.md",
@@ -571,9 +674,8 @@ describe("contents/queries/search:search", () => {
         title: "Beta",
         url: "https://nakafa.com/id/articles/science/b",
       });
-      await ctx.db.insert("contentSearch", {
+      await insertContentSearch(ctx, {
         contentHash: "hash-a",
-        content_id: "id/articles/science/a",
         description: "",
         locale: "id",
         markdown_url: "https://nakafa.com/id/articles/science/a.md",
@@ -608,9 +710,8 @@ describe("contents/queries/search:search", () => {
       for (let index = 0; index <= CONTENT_SEARCH_MAX_OFFSET + 10; index += 1) {
         const title = `Search Cap ${index.toString().padStart(4, "0")}`;
 
-        await ctx.db.insert("contentSearch", {
+        await insertContentSearch(ctx, {
           contentHash: `hash-search-cap-${index}`,
-          content_id: `id/articles/search-cap/${index}`,
           description: "",
           locale: "id",
           markdown_url: `https://nakafa.com/id/articles/search-cap/${index}.md`,
@@ -705,19 +806,69 @@ describe("contents/queries/search:search", () => {
 
   it("returns Quran rows written by the Quran search sync mutation", async () => {
     const t = createConvexTestWithBetterAuth();
-
-    await t.mutation(internal.contents.mutations.search.bulkSyncQuranSearch, {
-      documents: [
-        {
-          contentHash: "hash-fatihah",
-          description: "Pembukaan",
-          locale: "id",
-          route: "quran/1",
-          text: "Al-Fatihah pembukaan rahmat petunjuk",
-          title: "1. Al-Fatihah",
-        },
-      ],
+    const route = "quran/1";
+    const identity = createLearningGraphIdentityFromRoute({
+      locale: "id",
+      route,
     });
+
+    if (!identity) {
+      throw new Error(`Expected graph identity for ${route}.`);
+    }
+
+    const catalogGraph = {
+      alignmentId: `${identity.alignmentId}:catalog`,
+      assetId: `${identity.assetId}:catalog`,
+      conceptId: `${identity.conceptId}:catalog`,
+      learningObjectId: `${identity.learningObjectId}:catalog`,
+      lensId: `${identity.lensId}:catalog`,
+    };
+
+    await t.mutation(async (ctx) => {
+      await ctx.db.insert("contentRoutes", {
+        ...catalogGraph,
+        authors: [],
+        contentHash: "route-hash-fatihah",
+        content_id: catalogGraph.assetId,
+        kind: "quran-surah",
+        locale: "id",
+        markdown: true,
+        route,
+        section: "quran",
+        syncedAt: 1,
+        title: "1. Al-Fatihah",
+      });
+      await ctx.db.insert("contentSearch", {
+        ...identity,
+        contentHash: "old-hash-fatihah",
+        content_id: identity.assetId,
+        description: "Old Pembukaan",
+        locale: "id",
+        markdown_url: `https://nakafa.com/id/${route}.md`,
+        route,
+        section: "quran",
+        syncedAt: 1,
+        text: "old stale search row",
+        title: "Old Al-Fatihah",
+        url: `https://nakafa.com/id/${route}`,
+      });
+    });
+
+    const summary = await t.mutation(
+      internal.contents.mutations.search.bulkSyncQuranSearch,
+      {
+        documents: [
+          {
+            contentHash: "hash-fatihah",
+            description: "Pembukaan",
+            locale: "id",
+            route,
+            text: "Al-Fatihah pembukaan rahmat petunjuk",
+            title: "1. Al-Fatihah",
+          },
+        ],
+      }
+    );
 
     const result = await t.query(api.contents.queries.search.search, {
       limit: 10,
@@ -726,13 +877,49 @@ describe("contents/queries/search:search", () => {
       queries: ["petunjuk"],
       section: "quran",
     });
+    const rows = await t.query(
+      async (ctx) =>
+        await ctx.db
+          .query("contentSearch")
+          .withIndex("by_locale_and_route", (q) =>
+            q.eq("locale", "id").eq("route", route)
+          )
+          .take(10)
+    );
 
+    expect(summary).toEqual({ created: 1, unchanged: 0, updated: 0 });
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toEqual(
+      expect.objectContaining({
+        ...catalogGraph,
+        content_id: catalogGraph.assetId,
+      })
+    );
     expect(result.items).toEqual([
       expect.objectContaining({
-        content_id: "id/quran/1",
+        content_id: catalogGraph.assetId,
         section: "quran",
         title: "1. Al-Fatihah",
       }),
     ]);
+  });
+
+  it("rejects Quran search sync without a route graph projection", async () => {
+    const t = createConvexTestWithBetterAuth();
+
+    await expect(
+      t.mutation(internal.contents.mutations.search.bulkSyncQuranSearch, {
+        documents: [
+          {
+            contentHash: "hash-fatihah",
+            description: "Pembukaan",
+            locale: "id",
+            route: "quran/1",
+            text: "Al-Fatihah pembukaan rahmat petunjuk",
+            title: "1. Al-Fatihah",
+          },
+        ],
+      })
+    ).rejects.toThrow("requires a persisted route graph projection");
   });
 });

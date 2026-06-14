@@ -23,6 +23,7 @@ type BatchDeleteMutation = FunctionReference<
   { deleted: number; hasMore: boolean }
 >;
 
+/** One bounded Convex table reset step in the full content reset sequence. */
 interface ResetStep {
   label: string;
   mutation: BatchDeleteMutation;
@@ -34,6 +35,34 @@ const RESET_STEPS: ResetStep[] = [
     label: "Deleting content search rows...",
     mutation: internal.contentSync.reset.internal.deleteContentSearchBatch,
     resultLabel: "content search rows",
+  },
+  {
+    label: "Deleting content view analytics queue...",
+    mutation:
+      internal.contentSync.reset.internal.deleteContentViewAnalyticsQueueBatch,
+    resultLabel: "content view analytics queue rows",
+  },
+  {
+    label: "Deleting content analytics partition leases...",
+    mutation:
+      internal.contentSync.reset.internal.deleteContentAnalyticsPartitionsBatch,
+    resultLabel: "content analytics partition leases",
+  },
+  {
+    label: "Deleting content view rows...",
+    mutation: internal.contentSync.reset.internal.deleteContentViewsBatch,
+    resultLabel: "content view rows",
+  },
+  {
+    label: "Deleting learning popularity rows...",
+    mutation: internal.contentSync.reset.internal.deleteLearningPopularityBatch,
+    resultLabel: "learning popularity rows",
+  },
+  {
+    label: "Deleting learning trending bucket rows...",
+    mutation:
+      internal.contentSync.reset.internal.deleteLearningTrendingBucketsBatch,
+    resultLabel: "learning trending bucket rows",
   },
   {
     label: "Deleting content route rows...",
@@ -310,6 +339,11 @@ export const reset = Effect.fn("sync.reset")(function* (
   const counts = yield* getContentCounts(config);
 
   log(`  Content Search:        ${counts.contentSearch}`);
+  log(`  Content Views:         ${counts.contentViews}`);
+  log(`  View Analytics Queue:  ${counts.contentViewAnalyticsQueue}`);
+  log(`  Analytics Partitions:  ${counts.contentAnalyticsPartitions}`);
+  log(`  Learning Popularity:   ${counts.learningPopularity}`);
+  log(`  Learning Trending:     ${counts.learningTrendingBuckets}`);
   log(`  Content Routes:        ${counts.contentRoutes}`);
   log(`  Content Route Counts:  ${counts.contentRouteCounts}`);
   log(`  Content Route Pages:   ${counts.contentRoutePages}`);
@@ -390,6 +424,11 @@ export const reset = Effect.fn("sync.reset")(function* (
     counts.irtScaleVersionItems;
   const totalDerived =
     counts.contentSearch +
+    counts.contentViews +
+    counts.contentViewAnalyticsQueue +
+    counts.contentAnalyticsPartitions +
+    counts.learningPopularity +
+    counts.learningTrendingBuckets +
     counts.contentRoutes +
     counts.contentRouteCounts +
     counts.contentRoutePages +

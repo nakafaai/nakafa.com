@@ -27,7 +27,8 @@ describe("nakafa_get_exercise", () => {
   it("returns structured not-found errors", async () => {
     const result = await Effect.runPromise(
       getNakafaExerciseToolResult({
-        content_ref: "en/exercises/high-school/snbt/general-reasoning/missing",
+        content_ref:
+          "https://nakafa.com/en/exercises/high-school/snbt/general-reasoning/try-out/2026/set-1",
       })
     );
 

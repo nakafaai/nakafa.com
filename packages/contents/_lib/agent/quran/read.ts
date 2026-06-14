@@ -3,7 +3,7 @@ import {
   NakafaAgentDataReadError,
   NakafaAgentInputError,
 } from "@repo/contents/_lib/agent/errors";
-import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
+import { parseNakafaContentRefFields } from "@repo/contents/_lib/agent/refs";
 import {
   NakafaAgentQuranReferenceOptionsSchema,
   NakafaAgentQuranReferenceSchema,
@@ -37,11 +37,12 @@ export const getNakafaAgentQuranReference = Effect.fn(
     return Option.none();
   }
 
-  const ref = buildNakafaContentRef(
+  const ref = yield* parseNakafaContentRefFields(
     parsedOptions.locale,
     `quran/${surah.value.number}`,
     "quran"
   );
+
   const verses = surah.value.verses.flatMap((verse) => {
     const isInRange =
       verse.number.inSurah >= firstVerse && verse.number.inSurah <= lastVerse;

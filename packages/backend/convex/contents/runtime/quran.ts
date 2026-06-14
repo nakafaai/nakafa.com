@@ -105,22 +105,23 @@ export async function getQuranReferenceImpl(
   }
 
   const route = `quran/${surah.number}`;
-  const ref = buildContentSearchRef({
+  const routeProjection = await getQuranRouteProjection(ctx, {
     locale: args.locale,
     route,
-    section: QURAN_SECTION,
   });
 
+  if (!routeProjection) {
+    return null;
+  }
+
+  const ref = buildContentSearchRef(routeProjection);
+
   return {
-    content_id: ref.content_id,
-    locale: ref.locale,
-    markdown_url: ref.markdown_url,
+    ...ref,
     name: getSurahName({ locale: args.locale, name: surah.name }),
     revelation: surah.revelation[args.locale],
-    route: ref.route,
     section: QURAN_SECTION,
     translation: surah.name.translation[args.locale],
-    url: ref.url,
     verses: verses
       .sort((left, right) => left.verseNumber - right.verseNumber)
       .map((verse) => ({
@@ -131,6 +132,25 @@ export async function getQuranReferenceImpl(
         transliteration: verse.text.transliteration.en,
       })),
   };
+}
+
+/** Loads the synced Quran route projection that owns graph identity. */
+async function getQuranRouteProjection(
+  ctx: QueryCtx,
+  args: { locale: Locale; route: string }
+) {
+  const route = await ctx.db
+    .query("contentRoutes")
+    .withIndex("by_locale_and_route", (q) =>
+      q.eq("locale", args.locale).eq("route", args.route)
+    )
+    .unique();
+
+  if (!route || route.section !== QURAN_SECTION) {
+    return null;
+  }
+
+  return route;
 }
 
 /** Loads one Quran surah metadata row by its canonical number. */

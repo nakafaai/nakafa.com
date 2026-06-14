@@ -17,11 +17,13 @@ vi.mock("@/app/api/chat/nakafa-content", async () => {
       /** Verifies chat content refs through deterministic URL fixtures. */
       verify: (url: string) =>
         Effect.succeed(
-          url === "/id/quran/1" ||
-            url === "/id/articles/politics/dynastic-politics-asian-values" ||
+          url === "https://nakafa.com/id/quran/1" ||
             url ===
-              "/en/exercises/high-school/snbt/general-knowledge/try-out/2026/set-2/1" ||
-            url === "/quran/1"
+              "https://nakafa.com/id/articles/politics/dynastic-politics-asian-values" ||
+            url ===
+              "https://nakafa.com/en/exercises/high-school/snbt/general-knowledge/try-out/2026/set-2/1" ||
+            url === "asset:id:quran:quran-surah:1" ||
+            url === "nakafa://content/asset:id:quran:quran-surah:1"
         ),
     },
   };
@@ -33,15 +35,21 @@ describe("app/api/chat/utils", () => {
   });
 
   it.each([
-    ["/id/quran/1", true],
-    ["/id/articles/politics/dynastic-politics-asian-values", true],
+    ["https://nakafa.com/id/quran/1", true],
     [
-      "/en/exercises/high-school/snbt/general-knowledge/try-out/2026/set-2/1",
+      "https://nakafa.com/id/articles/politics/dynastic-politics-asian-values",
       true,
     ],
-    ["/quran/1", true],
-    ["/id/quran/1/al-fatihah", false],
-    ["/id/articles/missing", false],
+    [
+      "https://nakafa.com/en/exercises/high-school/snbt/general-knowledge/try-out/2026/set-2/1",
+      true,
+    ],
+    ["asset:id:quran:quran-surah:1", true],
+    ["nakafa://content/asset:id:quran:quran-surah:1", true],
+    ["/id/quran/1", false],
+    ["quran/1", false],
+    ["https://nakafa.com/id/quran/1/al-fatihah", false],
+    ["https://nakafa.com/id/articles/missing", false],
   ] as const)("verifies %s", async (url, expected) => {
     const isVerified = await Effect.runPromise(getVerified(url));
 

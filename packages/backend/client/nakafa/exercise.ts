@@ -3,18 +3,20 @@ import {
   decodeNakafaMarkdown,
 } from "@repo/backend/client/nakafa/decode";
 import { fetchNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { resolveNakafaContentRef } from "@repo/backend/client/nakafa/ref";
 import { api } from "@repo/backend/convex/_generated/api";
 import { formatNakafaRouteTitle } from "@repo/contents/_lib/agent/format";
-import {
-  buildNakafaContentRef,
-  parseNakafaContentRef,
-} from "@repo/contents/_lib/agent/refs";
+import { createNakafaContentRefFromGraphProjection } from "@repo/contents/_lib/agent/refs";
 import type { NakafaAgentExerciseResult } from "@repo/contents/_lib/agent/schema/exercise";
 import type { NakafaAgentMarkdown } from "@repo/contents/_lib/agent/schema/read";
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
 import { ExercisesCategorySchema } from "@repo/contents/_types/exercises/category";
 import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
 import { ExercisesTypeSchema } from "@repo/contents/_types/exercises/type";
+import {
+  getExerciseQuestionRouteForNumber,
+  getSourceRouteProjectionForRoute,
+} from "@repo/contents/_types/graph/projection";
 import type { Locale } from "@repo/utilities/locales";
 import { Effect, Option, Schema } from "effect";
 
@@ -27,20 +29,29 @@ export function readNakafaExercise(
   exerciseNumber?: number
 ) {
   return Effect.gen(function* () {
-    const ref = parseNakafaContentRef(input);
+    const ref = yield* resolveNakafaContentRef(convexUrl, input);
 
     if (Option.isNone(ref) || ref.value.section !== "exercises") {
       return Option.none<NakafaAgentExerciseResult>();
     }
 
-    const target = getExerciseTarget(ref.value.route, exerciseNumber);
+    const target = getExerciseTarget(
+      ref.value.locale,
+      ref.value.route,
+      exerciseNumber
+    );
+
+    if (Option.isNone(target)) {
+      return Option.none<NakafaAgentExerciseResult>();
+    }
+
     const page = yield* fetchNakafaRuntimeQuery(
       convexUrl,
       "getExerciseSetPage",
       api.contents.queries.runtime.getExerciseSetPage,
       {
         locale: ref.value.locale,
-        slug: target.setRoute,
+        slug: target.value.setRoute,
       }
     );
 
@@ -48,7 +59,7 @@ export function readNakafaExercise(
       return Option.none<NakafaAgentExerciseResult>();
     }
 
-    const exercises = Option.match(target.number, {
+    const exercises = Option.match(target.value.number, {
       /** Keeps the whole set when no specific question is requested. */
       onNone: () => page.exercises,
       /** Selects one requested question from the set rows. */
@@ -60,20 +71,33 @@ export function readNakafaExercise(
       return Option.none<NakafaAgentExerciseResult>();
     }
 
-    const setRef = buildNakafaContentRef(
-      ref.value.locale,
-      target.setRoute,
-      "exercises"
-    );
+    const resultRef = yield* Option.match(target.value.questionRoute, {
+      /** Keeps the already-resolved ref when returning the whole set. */
+      onNone: () => Effect.succeed(Option.some(ref.value)),
+      /** Resolves selected questions through the persisted route catalog. */
+      onSome: (questionRoute) =>
+        ref.value.route === questionRoute
+          ? Effect.succeed(Option.some(ref.value))
+          : resolveExerciseQuestionRoute(
+              convexUrl,
+              ref.value.locale,
+              questionRoute
+            ),
+    });
+
+    if (Option.isNone(resultRef)) {
+      return Option.none<NakafaAgentExerciseResult>();
+    }
+
     const resultInput = {
-      ...setRef,
+      ...resultRef.value,
       count: exercises.length,
       exercises: exercises.map((exercise) => ({
         answer: {
           raw: exercise.answer.raw,
           title: exercise.answer.metadata.title,
         },
-        choices: exercise.choices[ref.value.locale].map((choice) => ({
+        choices: exercise.choices[resultRef.value.locale].map((choice) => ({
           correct: choice.value,
           label: choice.label,
         })),
@@ -85,7 +109,7 @@ export function readNakafaExercise(
       })),
     };
     const result = yield* decodeNakafaExerciseResult(
-      Option.match(target.number, {
+      Option.match(target.value.number, {
         /** Returns set-level output when no specific question is requested. */
         onNone: () => resultInput,
         /** Marks the result as a single-question response. */
@@ -146,38 +170,97 @@ export function readExerciseMarkdown(
 }
 
 /** Resolves a question route to its parent set and optional question number. */
-function getExerciseTarget(route: string, exerciseNumber?: number) {
-  const routeNumber = getQuestionNumberFromRoute(route);
-  const setRoute = Option.isSome(routeNumber)
-    ? route.split("/").slice(0, -1).join("/")
-    : route;
+export function getExerciseTarget(
+  locale: Locale,
+  route: string,
+  exerciseNumber?: number
+) {
+  const projection = getSourceRouteProjectionForRoute(route);
 
-  if (typeof exerciseNumber === "number") {
-    return {
-      number: Option.some(exerciseNumber),
-      setRoute,
-    };
+  if (
+    !projection?.exercise ||
+    (projection.kind !== "exercise-set" &&
+      projection.kind !== "exercise-question")
+  ) {
+    return Option.none();
   }
 
-  return {
+  const routeNumber = getQuestionNumberFromProjection(projection);
+  const setRoute = projection.exercise.setRoute ?? projection.route;
+
+  if (
+    Option.isNone(getExerciseGroupArgs(locale, projection.exercise.groupRoute))
+  ) {
+    return Option.none();
+  }
+
+  if (typeof exerciseNumber === "number") {
+    const questionRoute = getExerciseQuestionRouteForNumber(
+      route,
+      exerciseNumber
+    );
+
+    if (!questionRoute) {
+      return Option.none();
+    }
+
+    return Option.some({
+      number: Option.some(exerciseNumber),
+      questionRoute: Option.some(questionRoute),
+      setRoute,
+    });
+  }
+
+  if (Option.isSome(routeNumber)) {
+    return Option.some({
+      number: routeNumber,
+      questionRoute: Option.some(projection.route),
+      setRoute,
+    });
+  }
+
+  return Option.some({
     number: routeNumber,
+    questionRoute: Option.none<string>(),
     setRoute,
-  };
+  });
+}
+
+/** Resolves one selected exercise question through the persisted route catalog. */
+function resolveExerciseQuestionRoute(
+  convexUrl: string,
+  locale: Locale,
+  route: string
+) {
+  return Effect.gen(function* () {
+    const projection = yield* fetchNakafaRuntimeQuery(
+      convexUrl,
+      "getContentRoute",
+      api.contents.queries.runtime.getContentRoute,
+      { locale, route }
+    );
+
+    if (!projection) {
+      return Option.none<NakafaAgentContentRef>();
+    }
+
+    return createNakafaContentRefFromGraphProjection(projection);
+  });
 }
 
 /** Reads a numeric exercise question segment only under a set segment. */
-function getQuestionNumberFromRoute(route: string) {
-  const parts = route.split("/");
-  const lastPart = parts.at(-1);
-  const parentPart = parts.at(-2);
+function getQuestionNumberFromProjection(
+  projection: NonNullable<ReturnType<typeof getSourceRouteProjectionForRoute>>
+) {
+  const questionSegment = projection.exercise?.questionSegment;
 
-  if (!(lastPart && parentPart?.startsWith("set-"))) {
+  if (!questionSegment) {
     return Option.none<number>();
   }
 
-  const number = Number.parseInt(lastPart, 10);
+  const number = Number.parseInt(questionSegment, 10);
 
-  if (!(Number.isSafeInteger(number) && `${number}` === lastPart)) {
+  if (!(Number.isSafeInteger(number) && `${number}` === questionSegment)) {
     return Option.none<number>();
   }
 
@@ -186,24 +269,27 @@ function getQuestionNumberFromRoute(route: string) {
 
 /** Parses exercise group route segments into the Convex query args. */
 export function getExerciseGroupArgs(locale: Locale, route: string) {
-  const parts = route.split("/");
+  const projection = getSourceRouteProjectionForRoute(route);
 
-  if (parts.length !== 5 && parts.length !== 6) {
+  if (projection?.kind !== "exercise-group" || !projection.exercise) {
     return Option.none();
   }
 
-  const [root, category, type, material, exerciseType, year] = parts;
+  const { categorySegment, groupSegments, materialSegment, typeSegment } =
+    projection.exercise;
+  const [exerciseType, year] = groupSegments;
 
-  if (root !== "exercises" || !exerciseType) {
+  if (!exerciseType) {
     return Option.none();
   }
 
   const parsedCategory = Schema.decodeUnknownOption(ExercisesCategorySchema)(
-    category
+    categorySegment
   );
-  const parsedType = Schema.decodeUnknownOption(ExercisesTypeSchema)(type);
+  const parsedType =
+    Schema.decodeUnknownOption(ExercisesTypeSchema)(typeSegment);
   const parsedMaterial = Schema.decodeUnknownOption(ExercisesMaterialSchema)(
-    material
+    materialSegment
   );
 
   if (

@@ -1,3 +1,4 @@
+import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import {
   NakafaAgentContentIdSchema,
   NakafaAgentContentRefSchema,
@@ -6,42 +7,57 @@ import {
   NakafaAgentContentUrlSchema,
   NakafaAgentMarkdownUrlSchema,
 } from "@repo/contents/_lib/agent/schema/ref";
+import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
+const quranIdentity = createLearningGraphIdentityFromRoute({
+  locale: "en",
+  route: "quran/1",
+});
+
+if (!quranIdentity) {
+  throw new Error("Expected Quran graph identity fixture.");
+}
+const quranRef = {
+  ...quranIdentity,
+  content_id: quranIdentity.assetId,
+  locale: "en",
+  markdown_url: "https://nakafa.com/en/quran/1.md",
+  route: "quran/1",
+  section: "quran",
+  url: "https://nakafa.com/en/quran/1",
+};
+
 describe("NakafaAgentContentIdSchema", () => {
-  it("accepts locale-prefixed content IDs with a safe route", () => {
+  it("accepts graph-backed asset content IDs", () => {
     expect(
-      Schema.decodeUnknownSync(NakafaAgentContentIdSchema)("en/quran/1")
-    ).toBe("en/quran/1");
+      Schema.decodeUnknownSync(NakafaAgentContentIdSchema)(
+        quranIdentity.assetId
+      )
+    ).toBe(quranIdentity.assetId);
   });
 
-  it("rejects content IDs without a supported locale or safe route", () => {
+  it("rejects non-asset and unsafe content IDs", () => {
     expect(() =>
-      Schema.decodeUnknownSync(NakafaAgentContentIdSchema)("xx/quran/1")
-    ).toThrow(
-      "Expected a locale-prefixed Nakafa content ID with a safe route."
-    );
+      Schema.decodeUnknownSync(NakafaAgentContentIdSchema)("en/quran/1")
+    ).toThrow("Expected a graph-backed Nakafa asset content ID.");
 
     expect(() =>
-      Schema.decodeUnknownSync(NakafaAgentContentIdSchema)("quran/1")
-    ).toThrow("Expected a locale-prefixed Nakafa content ID");
+      Schema.decodeUnknownSync(NakafaAgentContentIdSchema)("asset:id")
+    ).toThrow("Expected a graph-backed Nakafa asset content ID.");
 
     expect(() =>
-      Schema.decodeUnknownSync(NakafaAgentContentIdSchema)("en")
-    ).toThrow("Expected a locale-prefixed Nakafa content ID");
+      Schema.decodeUnknownSync(NakafaAgentContentIdSchema)(
+        "route:id:quran-surah:1"
+      )
+    ).toThrow("Expected a graph-backed Nakafa asset content ID.");
 
     expect(() =>
-      Schema.decodeUnknownSync(NakafaAgentContentIdSchema)("en/quran/../1")
-    ).toThrow(
-      "Expected a locale-prefixed Nakafa content ID with a safe route."
-    );
-
-    expect(() =>
-      Schema.decodeUnknownSync(NakafaAgentContentIdSchema)("en")
-    ).toThrow(
-      "Expected a locale-prefixed Nakafa content ID with a safe route."
-    );
+      Schema.decodeUnknownSync(NakafaAgentContentIdSchema)(
+        "asset:id:quran/../1"
+      )
+    ).toThrow("Expected a graph-backed Nakafa asset content ID.");
   });
 });
 
@@ -74,6 +90,12 @@ describe("NakafaAgentContentUrlSchema", () => {
         "https://www.nakafa.com/en/quran/1"
       )
     ).toBe("https://www.nakafa.com/en/quran/1");
+
+    expect(
+      Schema.decodeUnknownSync(NakafaAgentContentUrlSchema)(
+        "https://nakafa.com"
+      )
+    ).toBe("https://nakafa.com");
   });
 
   it("rejects non-canonical content URLs", () => {
@@ -106,50 +128,53 @@ describe("NakafaAgentMarkdownUrlSchema", () => {
         "https://nakafa.com/en/quran/1"
       )
     ).toThrow("Expected a canonical Nakafa markdown URL.");
+
+    expect(() =>
+      Schema.decodeUnknownSync(NakafaAgentMarkdownUrlSchema)(
+        "https://example.com/en/quran/1.md"
+      )
+    ).toThrow("Expected a canonical Nakafa markdown URL.");
   });
 });
 
 describe("NakafaAgentContentRefSchema", () => {
   it("accepts canonical content references", () => {
-    const ref = {
-      content_id: "en/quran/1",
-      locale: "en",
-      markdown_url: "https://nakafa.com/en/quran/1.md",
-      route: "quran/1",
-      section: "quran",
-      url: "https://nakafa.com/en/quran/1",
-    };
+    expect(
+      Schema.decodeUnknownSync(NakafaAgentContentRefSchema)(quranRef)
+    ).toEqual(quranRef);
+  });
 
-    expect(Schema.decodeUnknownSync(NakafaAgentContentRefSchema)(ref)).toEqual(
-      ref
-    );
+  it("rejects refs that cannot become graph identity", () => {
+    expect(() =>
+      readNakafaContentRefFixture("en", "articles/example", "articles")
+    ).toThrow("Expected Nakafa content ref fixture");
   });
 
   it("rejects invalid canonical URLs", () => {
     expect(() =>
       Schema.decodeUnknownSync(NakafaAgentContentRefSchema)({
-        content_id: "en/quran/1",
-        locale: "en",
+        ...quranRef,
         markdown_url: "not-a-url",
-        route: "quran/1",
-        section: "quran",
-        url: "https://nakafa.com/en/quran/1",
       })
     ).toThrow("Expected a valid URL.");
+  });
+
+  it("rejects unsafe graph IDs in content references", () => {
+    expect(() =>
+      Schema.decodeUnknownSync(NakafaAgentContentRefSchema)({
+        ...quranRef,
+        conceptId: "concept",
+      })
+    ).toThrow("Expected a safe Nakafa graph ID.");
   });
 });
 
 describe("NakafaAgentContentSummarySchema", () => {
   it("accepts searchable content summaries", () => {
     const summary = {
-      content_id: "en/quran/1",
+      ...quranRef,
       description: "Al-Fatihah",
-      locale: "en",
-      markdown_url: "https://nakafa.com/en/quran/1.md",
-      route: "quran/1",
-      section: "quran",
       title: "Al-Fatihah",
-      url: "https://nakafa.com/en/quran/1",
     };
 
     expect(
@@ -160,12 +185,8 @@ describe("NakafaAgentContentSummarySchema", () => {
   it("rejects invalid canonical URLs", () => {
     expect(() =>
       Schema.decodeUnknownSync(NakafaAgentContentSummarySchema)({
-        content_id: "en/quran/1",
+        ...quranRef,
         description: "Al-Fatihah",
-        locale: "en",
-        markdown_url: "https://nakafa.com/en/quran/1.md",
-        route: "quran/1",
-        section: "quran",
         title: "Al-Fatihah",
         url: "not-a-url",
       })

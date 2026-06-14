@@ -1,5 +1,10 @@
 // @vitest-environment node
 
+import type { Locale } from "@repo/contents/_types/content";
+import { getSourceRouteProjection } from "@repo/contents/_types/graph/projection";
+import type { LearningObjectKind } from "@repo/contents/_types/graph/schema";
+import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
+import type { SourceRegistryRoot } from "@repo/contents/_types/source-registry";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -32,20 +37,13 @@ interface NavigationRoute {
   date?: number;
   depth?: number;
   description?: string;
-  kind:
-    | "article"
-    | "subject-topic"
-    | "subject-section"
-    | "exercise-group"
-    | "exercise-set"
-    | "exercise-question"
-    | "quran-surah";
-  locale: "en" | "id";
+  kind: LearningObjectKind;
+  locale: Locale;
   markdown: boolean;
   official?: boolean;
   parentRoute?: string;
   route: string;
-  section: "articles" | "subject" | "exercises" | "quran";
+  section: SourceRegistryRoot;
   syncedAt: number;
   title: string;
 }
@@ -638,18 +636,18 @@ describe("content navigation runtime catalog", () => {
 interface RuntimeListArgs {
   kind: NavigationRoute["kind"];
   limit: number;
-  locale: "en" | "id";
+  locale: Locale;
   order: "date-desc" | "route";
   parentRoute: string;
-  section: "articles" | "subject" | "exercises" | "quran";
+  section: SourceRegistryRoot;
 }
 
 interface RuntimeKindListArgs {
   kind: NavigationRoute["kind"];
   limit: number;
-  locale: "en" | "id";
+  locale: Locale;
   prefix: string;
-  section: "articles" | "subject" | "exercises" | "quran";
+  section: SourceRegistryRoot;
 }
 
 const overflowRoutes = [
@@ -890,7 +888,7 @@ function routeRow(overrides: Partial<NavigationRoute>): NavigationRoute {
 
   return {
     authors: [{ name: "Contributor" }],
-    content_id: `${locale}/${route}`,
+    content_id: getFixtureContentId(locale, route),
     date: 1_735_689_600_000,
     depth: route.split("/").filter(Boolean).length,
     description: "Description",
@@ -906,21 +904,24 @@ function routeRow(overrides: Partial<NavigationRoute>): NavigationRoute {
   };
 }
 
+/** Builds the graph asset ID used by synced route rows in fixture data. */
+function getFixtureContentId(locale: Locale, route: string) {
+  const identity = createLearningGraphIdentityFromRoute({ locale, route });
+
+  if (identity) {
+    return identity.assetId;
+  }
+
+  return `asset:${locale}:fixture:${route.split("/").filter(Boolean).join(":")}`;
+}
+
 /** Derives the same navigation parent route used by synced route rows. */
 function getFixtureParentRoute(kind: NavigationRoute["kind"], route: string) {
-  const parts = route.split("/").filter(Boolean);
+  const projection = getSourceRouteProjection({ kind, route });
 
-  if (kind === "article") {
-    return parts.slice(0, 2).join("/");
+  if (projection) {
+    return projection.parentRoute;
   }
 
-  if (kind === "exercise-group" || kind === "subject-topic") {
-    return parts.slice(0, 4).join("/");
-  }
-
-  if (kind === "quran-surah") {
-    return "quran";
-  }
-
-  return parts.slice(0, -1).join("/");
+  return "fixture-parent";
 }

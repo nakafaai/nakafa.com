@@ -1,13 +1,16 @@
-import { audioStatusValidator } from "@repo/backend/convex/lib/validators/audio";
+import {
+  audioContentTypeValidator,
+  audioStatusValidator,
+} from "@repo/backend/convex/lib/validators/audio";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { type Infer, v } from "convex/values";
-import { literals, nullable } from "convex-helpers/validators";
+import { nullable } from "convex-helpers/validators";
 import { Schema } from "effect";
 
 export const audioPlaybackIoFailedCode = "AUDIO_PLAYBACK_IO_FAILED";
 
 export const audioPlaybackArgs = {
-  contentType: literals("article", "subject"),
+  contentType: audioContentTypeValidator,
   locale: localeValidator,
   slug: v.string(),
 };
@@ -17,7 +20,7 @@ export const audioPlaybackArgsValidator = v.object(audioPlaybackArgs);
 export const audioPlaybackResultValidator = nullable(
   v.object({
     audioUrl: v.string(),
-    contentType: literals("article", "subject"),
+    contentType: audioContentTypeValidator,
     duration: v.number(),
     script: v.optional(v.string()),
     status: audioStatusValidator,

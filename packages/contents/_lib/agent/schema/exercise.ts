@@ -1,31 +1,10 @@
-import { parseNakafaContentRef } from "@repo/contents/_lib/agent/refs";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
 import { NakafaAgentContentRefSchema } from "@repo/contents/_lib/agent/schema/ref";
-import { Option, Schema } from "effect";
-
-/** Content reference input accepted by the structured exercise reader. */
-const NakafaAgentExerciseContentRefInputSchema =
-  NakafaAgentContentRefInputSchema.pipe(
-    Schema.filter(
-      (value) => {
-        const ref = parseNakafaContentRef(value);
-
-        if (Option.isNone(ref)) {
-          return false;
-        }
-
-        return ref.value.section === "exercises";
-      },
-      {
-        message: () =>
-          'Expected a Nakafa exercise content reference with section "exercises".',
-      }
-    )
-  );
+import { Schema } from "effect";
 
 /** Runtime schema for exercise read input. */
 export const NakafaAgentExerciseOptionsSchema = Schema.Struct({
-  content_ref: NakafaAgentExerciseContentRefInputSchema,
+  content_ref: NakafaAgentContentRefInputSchema,
   exercise_number: Schema.optional(
     Schema.Number.pipe(Schema.int(), Schema.positive()).annotations({
       description: "Optional exercise number inside the set.",

@@ -27,7 +27,7 @@ describe("nakafa_get_content", () => {
   it("returns structured not-found errors", async () => {
     const result = await Effect.runPromise(
       getNakafaContentToolResult({
-        content_ref: "en/articles/missing",
+        content_ref: "https://nakafa.com/en/articles/politics/missing",
       })
     );
 

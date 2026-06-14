@@ -19,7 +19,10 @@ import {
 import { Effect, Option, Schema } from "effect";
 import { getTranslations } from "next-intl/server";
 import { CHAT_ERRORS } from "@/app/api/chat/constants";
-import { determinePageFetchNeed } from "@/app/api/chat/content";
+import {
+  determinePageFetchNeed,
+  getCanonicalCurrentPageContentUrl,
+} from "@/app/api/chat/content";
 import { createChatErrorReporter } from "@/app/api/chat/observability";
 import { loadMessages, saveOrCreateChat } from "@/app/api/chat/persistence";
 import { streamChat } from "@/app/api/chat/stream";
@@ -108,7 +111,7 @@ export function POST(req: Request) {
         });
       }
 
-      const url = `/${locale}/${cleanSlug(slug)}`;
+      const url = getCanonicalCurrentPageContentUrl({ locale, slug });
       const shouldVerify = possibleVerifiedUrls.some((segment) =>
         url.includes(segment)
       );

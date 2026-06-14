@@ -6,7 +6,9 @@ import {
 } from "@repo/backend/client/nakafa/quran";
 import { api } from "@repo/backend/convex/_generated/api";
 import { NakafaAgentInputError } from "@repo/contents/_lib/agent/errors";
-import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
+import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
+import { LocaleSchema } from "@repo/contents/_types/content";
+import { InvalidLearningGraphRouteError } from "@repo/contents/_types/graph/schema";
 import { type FunctionReference, getFunctionName } from "convex/server";
 import { Effect, Option, Schema } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -22,7 +24,7 @@ vi.mock("@repo/backend/client/runtime", () => ({
 const QuranReferenceArgsSchema = Schema.Struct({
   fromVerse: Schema.Number,
   includeTafsir: Schema.Boolean,
-  locale: Schema.Literal("en", "id"),
+  locale: LocaleSchema,
   surah: Schema.Number,
   toVerse: Schema.optional(Schema.Number),
 });
@@ -80,7 +82,7 @@ describe("Quran Nakafa reader", () => {
     const markdown = await Effect.runPromise(
       readQuranMarkdown(
         convexUrl,
-        buildNakafaContentRef("id", "quran/1", "quran")
+        readNakafaContentRefFixture("id", "quran/1", "quran")
       )
     );
 
@@ -97,13 +99,7 @@ describe("Quran Nakafa reader", () => {
     const missing = await Effect.runPromise(
       readQuranMarkdown(
         convexUrl,
-        buildNakafaContentRef("en", "quran/2", "quran")
-      )
-    );
-    const malformedMarkdown = await Effect.runPromise(
-      readQuranMarkdown(
-        convexUrl,
-        buildNakafaContentRef("en", "quran/01", "quran")
+        readNakafaContentRefFixture("en", "quran/2", "quran")
       )
     );
 
@@ -111,8 +107,10 @@ describe("Quran Nakafa reader", () => {
     expect(Option.isNone(parseQuranSurahRoute("quran/01"))).toBe(true);
     expect(Option.isNone(parseQuranSurahRoute("quran/1/extra"))).toBe(true);
     expect(Option.isNone(parseQuranSurahRoute("quran/not-number"))).toBe(true);
+    expect(() =>
+      readNakafaContentRefFixture("en", "quran/01", "quran")
+    ).toThrow(InvalidLearningGraphRouteError);
     expect(Option.isNone(missing)).toBe(true);
-    expect(Option.isNone(malformedMarkdown)).toBe(true);
     expect(
       getSurahName({
         locale: "en",
@@ -154,7 +152,11 @@ function readQuranReference(args: unknown) {
   }
 
   return {
-    ...buildNakafaContentRef(input.locale, `quran/${input.surah}`, "quran"),
+    ...readNakafaContentRefFixture(
+      input.locale,
+      `quran/${input.surah}`,
+      "quran"
+    ),
     name: input.locale === "id" ? "Al-Fatihah" : "Al-Faatiha",
     revelation: input.locale === "id" ? "Makkah" : "Mecca",
     translation: input.locale === "id" ? "Pembukaan" : "The Opening",

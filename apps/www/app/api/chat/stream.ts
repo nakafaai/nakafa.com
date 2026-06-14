@@ -38,6 +38,7 @@ import {
 import { fetchAction, fetchMutation } from "convex/nextjs";
 import { Effect } from "effect";
 import type { getTranslations } from "next-intl/server";
+import { getCanonicalNakafaContentUrl } from "@/app/api/chat/content";
 import { persistAssistantFailure } from "@/app/api/chat/failure";
 import { search as nakafaSearch } from "@/app/api/chat/nakafa";
 import { nakafaContent } from "@/app/api/chat/nakafa-content";
@@ -59,6 +60,7 @@ type Location = Parameters<typeof nakafaPrompt>[0]["userLocation"];
 type Translator = Awaited<ReturnType<typeof getTranslations>>;
 type UserInfo = Effect.Effect.Success<ReturnType<typeof getUserInfo>>;
 
+/** Fully prepared inputs needed to stream and persist one chat response. */
 interface Params {
   chat: {
     finalMessages: ModelMessage[];
@@ -277,7 +279,7 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                         return yield* readNakafa({
                           input: {
                             content_ref: NakafaAgentContentRefInputSchema.make(
-                              context.url
+                              getCanonicalNakafaContentUrl(context.url)
                             ),
                           },
                           toolCallId,

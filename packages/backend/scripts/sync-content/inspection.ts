@@ -8,6 +8,8 @@ import {
   DataIntegritySchema,
   ExerciseChoiceIntegrityPageSchema,
   ExerciseQuestionIntegrityPageSchema,
+  GraphIdentityIntegrityPageSchema,
+  GraphIdentityIntegritySchema,
   StaleContentPageSchema,
   StaleContentSchema,
   SubjectSectionIntegrityPageSchema,
@@ -27,7 +29,21 @@ import type {
 import { Effect, Schema } from "effect";
 
 const PAGE_SIZE = 1000;
+export const GRAPH_IDENTITY_TARGETS = [
+  "contentRoutes",
+  "contentSearch",
+  "contentRoutePages",
+  "parts",
+  "contentViews",
+  "contentViewAnalyticsQueue",
+  "learningPopularity",
+  "learningTrendingBuckets",
+  "audioContentSources",
+  "audioGenerationQueue",
+  "contentAudios",
+] as const;
 
+/** One page returned by the bounded Convex inspection queries. */
 interface PageResult {
   continueCursor: string;
   isDone: boolean;
@@ -48,10 +64,20 @@ type StaleContentArgs = FunctionArgs<
   typeof internal.contentSync.queries.stale.listStaleContentPage
 >;
 
+/** Pagination cursor passed to each bounded Convex inspection query. */
 interface PaginationArgs {
   cursor: string | null;
   numItems: number;
 }
+
+type GraphIdentityTarget = (typeof GRAPH_IDENTITY_TARGETS)[number];
+type Mutable<T> = { -readonly [K in keyof T]: T[K] };
+type GraphIdentityIntegrityPage = Schema.Schema.Type<
+  typeof GraphIdentityIntegrityPageSchema
+>;
+type GraphIdentityIntegrityTotal = Mutable<
+  Omit<GraphIdentityIntegrityPage, "continueCursor" | "isDone">
+>;
 
 /** Builds typed stale-content query args for one content table. */
 const buildStaleContentArgs =
@@ -91,6 +117,82 @@ const collectPages = Effect.fn("sync.collectPages")(function* <
   }
 
   return rows;
+});
+
+/** Chooses a bounded page size for each verifier target by row payload weight. */
+function getGraphIdentityPageSize(target: GraphIdentityTarget) {
+  if (target === "contentSearch") {
+    return 500;
+  }
+
+  if (target === "parts") {
+    return 100;
+  }
+
+  return PAGE_SIZE;
+}
+
+/** Creates a zeroed verifier accumulator for graph identity integrity pages. */
+const emptyGraphIdentityIntegrity = (): GraphIdentityIntegrityTotal => ({
+  checkedRefs: 0,
+  checkedRefInputs: 0,
+  firstInvalidRefInput: null,
+  firstMissingGraph: null,
+  firstMismatchedContentId: null,
+  firstRouteShapedContentId: null,
+  invalidRefInputs: 0,
+  missingGraphRows: 0,
+  mismatchedContentIds: 0,
+  routeShapedContentIds: 0,
+  scannedRows: 0,
+});
+
+/** Adds one target page into the aggregate graph identity verifier totals. */
+function addGraphIdentityPage(
+  total: GraphIdentityIntegrityTotal,
+  page: GraphIdentityIntegrityTotal
+) {
+  total.checkedRefs += page.checkedRefs;
+  total.checkedRefInputs += page.checkedRefInputs;
+  total.missingGraphRows += page.missingGraphRows;
+  total.mismatchedContentIds += page.mismatchedContentIds;
+  total.invalidRefInputs += page.invalidRefInputs;
+  total.routeShapedContentIds += page.routeShapedContentIds;
+  total.scannedRows += page.scannedRows;
+  total.firstInvalidRefInput ??= page.firstInvalidRefInput;
+  total.firstMissingGraph ??= page.firstMissingGraph;
+  total.firstMismatchedContentId ??= page.firstMismatchedContentId;
+  total.firstRouteShapedContentId ??= page.firstRouteShapedContentId;
+}
+
+/** Reads all integrity pages for one graph identity target and totals them. */
+const getGraphIdentityIntegrityForTarget = Effect.fn(
+  "sync.getGraphIdentityIntegrityForTarget"
+)(function* (config: ConvexConfig, target: GraphIdentityTarget) {
+  const total = emptyGraphIdentityIntegrity();
+  let continueCursor: string | null = null;
+  let isDone = false;
+
+  while (!isDone) {
+    const page: GraphIdentityIntegrityPage = yield* callConvexQuery(
+      config,
+      internal.contentSync.queries.integrity.getGraphIdentityIntegrityPage,
+      {
+        paginationOpts: {
+          cursor: continueCursor,
+          numItems: getGraphIdentityPageSize(target),
+        },
+        target,
+      },
+      GraphIdentityIntegrityPageSchema
+    );
+
+    addGraphIdentityPage(total, page);
+    continueCursor = page.continueCursor;
+    isDone = page.isDone;
+  }
+
+  return total;
 });
 
 /** Finds database content rows whose source slugs are no longer on disk. */
@@ -249,6 +351,22 @@ export const getDataIntegrity = Effect.fn("sync.getDataIntegrity")(function* (
     totalArticles: articles.length,
     totalSections: sections.length,
   });
+});
+
+/** Summarizes graph identity violations across persisted read models and chat previews. */
+export const getGraphIdentityIntegrity = Effect.fn(
+  "sync.getGraphIdentityIntegrity"
+)(function* (config: ConvexConfig) {
+  const total = emptyGraphIdentityIntegrity();
+
+  for (const target of GRAPH_IDENTITY_TARGETS) {
+    addGraphIdentityPage(
+      total,
+      yield* getGraphIdentityIntegrityForTarget(config, target)
+    );
+  }
+
+  return Schema.decodeUnknownSync(GraphIdentityIntegritySchema)(total);
 });
 
 /** Returns authors that are not referenced by any content-author links. */

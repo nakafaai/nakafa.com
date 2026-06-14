@@ -1,8 +1,15 @@
 import { internal } from "@repo/backend/convex/_generated/api";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import type {
+  MutationCtx,
+  QueryCtx,
+} from "@repo/backend/convex/_generated/server";
 import { syncAudioContentSource } from "@repo/backend/convex/audioStudies/helpers/sources";
+import type { AudioContentLookup } from "@repo/backend/convex/contents/validators";
 import schema from "@repo/backend/convex/schema";
+import {
+  getTestAudioContent,
+  getTestAudioIdentity,
+} from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { convexTest } from "convex-test";
@@ -18,46 +25,91 @@ const englishSubject = {
   body: "Vector addition differs from scalar addition.",
   contentHash: "subject-en-hash",
   description: "Master vector addition.",
-  locale: "en",
+  locale: "en" as const,
   section: "vector-addition",
   subject: "Vector and Operations",
   title: "Vector Addition",
   topicTitle: "Vector and Operations",
-} as const;
+};
 
 const indonesianSubject = {
   body: "Penjumlahan vektor berbeda dengan penjumlahan skalar.",
   contentHash: "subject-id-hash",
   description: "Kuasai penjumlahan vektor.",
-  locale: "id",
+  locale: "id" as const,
   section: englishSubject.section,
   subject: "Vektor dan Operasinya",
   title: "Penjumlahan Vektor",
   topicTitle: "Vektor dan Operasinya",
-} as const;
+};
 
 const englishArticle = {
   body: "The legitimacy of dynastic politics is increasing.",
   contentHash: "article-en-hash",
   description: "Power is passed down under the guise of values.",
-  locale: "en",
+  locale: "en" as const,
   title: "Framing Dynastic Politics in Local Elections",
-} as const;
+};
 
 const indonesianArticle = {
   body: "Legitimasi politik dinasti semakin meningkat.",
   contentHash: "article-id-hash",
   description: "Kekuasaan diwariskan dengan dalih nilai.",
-  locale: "id",
+  locale: "id" as const,
   title: "Membingkai Politik Dinasti dalam Pemilihan Lokal",
-} as const;
+};
 
-/** Inserts one subject section and its compact audio source row. */
+const englishSubjectSource = getTestAudioContent({
+  contentHash: englishSubject.contentHash,
+  locale: englishSubject.locale,
+  route: subjectSectionSlug,
+});
+const indonesianSubjectSource = getTestAudioContent({
+  contentHash: indonesianSubject.contentHash,
+  locale: indonesianSubject.locale,
+  route: subjectSectionSlug,
+});
+const englishArticleSource = getTestAudioContent({
+  contentHash: englishArticle.contentHash,
+  locale: englishArticle.locale,
+  route: articleSlug,
+});
+const indonesianArticleSource = getTestAudioContent({
+  contentHash: indonesianArticle.contentHash,
+  locale: indonesianArticle.locale,
+  route: articleSlug,
+});
+
+function getAudioIdentityFields(sourceContent: AudioContentLookup) {
+  return getTestAudioIdentity({
+    locale: sourceContent.locale,
+    route: sourceContent.route,
+  });
+}
+
+function getSubjectSource(
+  source: typeof englishSubject | typeof indonesianSubject
+) {
+  return source.locale === englishSubject.locale
+    ? englishSubjectSource
+    : indonesianSubjectSource;
+}
+
+function getArticleSource(
+  source: typeof englishArticle | typeof indonesianArticle
+) {
+  return source.locale === englishArticle.locale
+    ? englishArticleSource
+    : indonesianArticleSource;
+}
+
+/** Inserts one subject section and optionally its compact graph audio source. */
 async function insertSubject(
   ctx: MutationCtx,
   source: typeof englishSubject | typeof indonesianSubject,
   syncSource = true
 ) {
+  const sourceContent = getSubjectSource(source);
   const topicId = await ctx.db.insert("subjectTopics", {
     category: "high-school",
     grade: "10",
@@ -70,7 +122,8 @@ async function insertSubject(
     title: source.topicTitle,
     topic: "vector-operations",
   });
-  const sectionId = await ctx.db.insert("subjectSections", {
+
+  await ctx.db.insert("subjectSections", {
     body: source.body,
     category: "high-school",
     contentHash: source.contentHash,
@@ -91,31 +144,29 @@ async function insertSubject(
 
   if (syncSource) {
     await syncAudioContentSource(ctx, {
-      contentHash: source.contentHash,
-      locale: source.locale,
-      ref: { type: "subject", id: sectionId },
-      slug: subjectSectionSlug,
+      ...sourceContent,
       syncedAt: 1,
     });
   }
 
-  return sectionId;
+  return sourceContent;
 }
 
-/** Inserts both locales for the subject audio queue scenarios. */
 async function insertSubjectPair(ctx: MutationCtx) {
   return {
-    englishId: await insertSubject(ctx, englishSubject),
-    indonesianId: await insertSubject(ctx, indonesianSubject),
+    english: await insertSubject(ctx, englishSubject),
+    indonesian: await insertSubject(ctx, indonesianSubject),
   };
 }
 
-/** Inserts one article and its compact audio source row. */
+/** Inserts one article and its compact graph audio source. */
 async function insertArticle(
   ctx: MutationCtx,
   source: typeof englishArticle | typeof indonesianArticle
 ) {
-  const articleId = await ctx.db.insert("articleContents", {
+  const sourceContent = getArticleSource(source);
+
+  await ctx.db.insert("articleContents", {
     articleSlug: "dynastic-politics-asian-values",
     body: source.body,
     category: "politics",
@@ -129,38 +180,32 @@ async function insertArticle(
   });
 
   await syncAudioContentSource(ctx, {
-    contentHash: source.contentHash,
-    locale: source.locale,
-    ref: { type: "article", id: articleId },
-    slug: articleSlug,
+    ...sourceContent,
     syncedAt: 1,
   });
 
-  return articleId;
+  return sourceContent;
 }
 
-/** Inserts both locales for the article audio queue scenarios. */
 async function insertArticlePair(ctx: MutationCtx) {
   return {
-    englishId: await insertArticle(ctx, englishArticle),
-    indonesianId: await insertArticle(ctx, indonesianArticle),
+    english: await insertArticle(ctx, englishArticle),
+    indonesian: await insertArticle(ctx, indonesianArticle),
   };
 }
 
-/** Inserts a subject queue item in the English locale. */
+/** Inserts a subject queue item in the source locale. */
 async function insertSubjectQueueItem(
   ctx: MutationCtx,
-  contentId: Id<"subjectSections">,
+  sourceContent: AudioContentLookup,
   status: "pending" | "completed"
 ) {
   const queueItem = {
-    contentRef: { type: "subject" as const, id: contentId },
-    locale: "en" as const,
+    ...getAudioIdentityFields(sourceContent),
     maxRetries: 3,
     priorityScore: 100,
     requestedAt: 1,
     retryCount: 0,
-    slug: subjectSectionSlug,
     status,
     updatedAt: 1,
   };
@@ -175,21 +220,28 @@ async function insertSubjectQueueItem(
   return await ctx.db.insert("audioGenerationQueue", queueItem);
 }
 
-/** Inserts a completed Indonesian audio row for the current subject hash. */
-async function insertCompletedIndonesianAudio(
+async function insertCompletedAudio(
   ctx: MutationCtx,
-  contentId: Id<"subjectSections">
+  sourceContent: AudioContentLookup
 ) {
   await ctx.db.insert("contentAudios", {
-    contentHash: indonesianSubject.contentHash,
-    contentRef: { type: "subject", id: contentId },
+    ...getAudioIdentityFields(sourceContent),
+    contentHash: sourceContent.contentHash,
     generationAttempts: 1,
-    locale: indonesianSubject.locale,
     model: "eleven_v3",
     status: "completed",
     updatedAt: 1,
     voiceId: "voice-1",
   });
+}
+
+async function readPendingQueueItems(ctx: Pick<QueryCtx, "db">, route: string) {
+  return await ctx.db
+    .query("audioGenerationQueue")
+    .withIndex("by_route_and_status", (q) =>
+      q.eq("route", route).eq("status", "pending")
+    )
+    .collect();
 }
 
 describe("contents/mutations/audio", () => {
@@ -216,14 +268,13 @@ describe("contents/mutations/audio", () => {
 
   it("skips items below the minimum view threshold", async () => {
     const t = convexTest(schema, convexModules);
-    const sourceId = await t.mutation(
-      async (ctx) => await insertSubject(ctx, englishSubject)
-    );
+
+    await t.mutation(async (ctx) => await insertSubject(ctx, englishSubject));
 
     const result = await t.mutation(
       internal.contents.mutations.audio.enqueuePopularContentForAudio,
       {
-        items: [{ ref: { type: "subject", id: sourceId }, viewCount: 9 }],
+        items: [{ sourceContent: englishSubjectSource, viewCount: 9 }],
       }
     );
     const queuedItems = await t.query(
@@ -236,22 +287,17 @@ describe("contents/mutations/audio", () => {
 
   it("queues one item per supported locale for a subject candidate", async () => {
     const t = convexTest(schema, convexModules);
-    const { englishId } = await t.mutation(insertSubjectPair);
+
+    await t.mutation(insertSubjectPair);
 
     const result = await t.mutation(
       internal.contents.mutations.audio.enqueuePopularContentForAudio,
       {
-        items: [{ ref: { type: "subject", id: englishId }, viewCount: 25 }],
+        items: [{ sourceContent: englishSubjectSource, viewCount: 25 }],
       }
     );
     const queuedItems = await t.query(
-      async (ctx) =>
-        await ctx.db
-          .query("audioGenerationQueue")
-          .withIndex("by_slug_and_status", (q) =>
-            q.eq("slug", subjectSectionSlug).eq("status", "pending")
-          )
-          .collect()
+      async (ctx) => await readPendingQueueItems(ctx, subjectSectionSlug)
     );
 
     expect(result).toEqual({ processed: 1, queued: 2 });
@@ -259,67 +305,37 @@ describe("contents/mutations/audio", () => {
     expect(queuedItems.map((item) => item.locale).sort()).toEqual(["en", "id"]);
   });
 
-  it("uses provided source lookup metadata when queueing a subject candidate", async () => {
+  it("uses provided graph metadata for the source locale", async () => {
     const t = convexTest(schema, convexModules);
-    const { englishId } = await t.mutation(insertSubjectPair);
 
-    const result = await t.mutation(
-      internal.contents.mutations.audio.enqueuePopularContentForAudio,
-      {
-        items: [
-          {
-            ref: { type: "subject", id: englishId },
-            sourceContent: {
-              contentHash: englishSubject.contentHash,
-              locale: englishSubject.locale,
-              ref: { type: "subject", id: englishId },
-              slug: subjectSectionSlug,
-            },
-            viewCount: 25,
-          },
-        ],
-      }
-    );
-    const queuedItems = await t.query(
-      async (ctx) =>
-        await ctx.db
-          .query("audioGenerationQueue")
-          .withIndex("by_slug_and_status", (q) =>
-            q.eq("slug", subjectSectionSlug).eq("status", "pending")
-          )
-          .collect()
-    );
-
-    expect(result).toEqual({ processed: 1, queued: 2 });
-    expect(queuedItems).toHaveLength(2);
-  });
-
-  it("skips content without compact audio source metadata", async () => {
-    const t = convexTest(schema, convexModules);
-    const sourceId = await t.mutation(
+    await t.mutation(
       async (ctx) => await insertSubject(ctx, englishSubject, false)
     );
 
     const result = await t.mutation(
       internal.contents.mutations.audio.enqueuePopularContentForAudio,
       {
-        items: [{ ref: { type: "subject", id: sourceId }, viewCount: 25 }],
+        items: [{ sourceContent: englishSubjectSource, viewCount: 25 }],
       }
     );
+    const queuedItems = await t.query(
+      async (ctx) => await readPendingQueueItems(ctx, subjectSectionSlug)
+    );
 
-    expect(result).toEqual({ processed: 1, queued: 0 });
+    expect(result).toEqual({ processed: 1, queued: 1 });
+    expect(queuedItems).toHaveLength(1);
+    expect(queuedItems[0]?.content_id).toBe(englishSubjectSource.content_id);
   });
 
-  it("queues only locales that exist for the content slug", async () => {
+  it("queues only locales that have source projections", async () => {
     const t = convexTest(schema, convexModules);
-    const sourceId = await t.mutation(
-      async (ctx) => await insertSubject(ctx, englishSubject)
-    );
+
+    await t.mutation(async (ctx) => await insertSubject(ctx, englishSubject));
 
     const result = await t.mutation(
       internal.contents.mutations.audio.enqueuePopularContentForAudio,
       {
-        items: [{ ref: { type: "subject", id: sourceId }, viewCount: 25 }],
+        items: [{ sourceContent: englishSubjectSource, viewCount: 25 }],
       }
     );
     const queuedItems = await t.query(
@@ -333,26 +349,20 @@ describe("contents/mutations/audio", () => {
 
   it("does not duplicate locale queue items that are already pending", async () => {
     const t = convexTest(schema, convexModules);
-    const { englishId } = await t.mutation(async (ctx) => {
-      const subjectIds = await insertSubjectPair(ctx);
-      await insertSubjectQueueItem(ctx, subjectIds.englishId, "pending");
-      return subjectIds;
+
+    await t.mutation(async (ctx) => {
+      const subjectSources = await insertSubjectPair(ctx);
+      await insertSubjectQueueItem(ctx, subjectSources.english, "pending");
     });
 
     const result = await t.mutation(
       internal.contents.mutations.audio.enqueuePopularContentForAudio,
       {
-        items: [{ ref: { type: "subject", id: englishId }, viewCount: 25 }],
+        items: [{ sourceContent: englishSubjectSource, viewCount: 25 }],
       }
     );
     const queuedItems = await t.query(
-      async (ctx) =>
-        await ctx.db
-          .query("audioGenerationQueue")
-          .withIndex("by_slug_and_status", (q) =>
-            q.eq("slug", subjectSectionSlug).eq("status", "pending")
-          )
-          .collect()
+      async (ctx) => await readPendingQueueItems(ctx, subjectSectionSlug)
     );
 
     expect(result).toEqual({ processed: 1, queued: 1 });
@@ -362,28 +372,23 @@ describe("contents/mutations/audio", () => {
 
   it("sorts popularity items before applying the threshold cutoff", async () => {
     const t = convexTest(schema, convexModules);
-    const { articleId, subjectId } = await t.mutation(async (ctx) => ({
-      articleId: (await insertArticlePair(ctx)).englishId,
-      subjectId: await insertSubject(ctx, englishSubject),
-    }));
+
+    await t.mutation(async (ctx) => {
+      await insertArticlePair(ctx);
+      await insertSubject(ctx, englishSubject);
+    });
 
     const result = await t.mutation(
       internal.contents.mutations.audio.enqueuePopularContentForAudio,
       {
         items: [
-          { ref: { type: "subject", id: subjectId }, viewCount: 9 },
-          { ref: { type: "article", id: articleId }, viewCount: 25 },
+          { sourceContent: englishSubjectSource, viewCount: 9 },
+          { sourceContent: englishArticleSource, viewCount: 25 },
         ],
       }
     );
     const queuedItems = await t.query(
-      async (ctx) =>
-        await ctx.db
-          .query("audioGenerationQueue")
-          .withIndex("by_slug_and_status", (q) =>
-            q.eq("slug", articleSlug).eq("status", "pending")
-          )
-          .collect()
+      async (ctx) => await readPendingQueueItems(ctx, articleSlug)
     );
 
     expect(result).toEqual({ processed: 2, queued: 2 });
@@ -393,22 +398,21 @@ describe("contents/mutations/audio", () => {
 
   it("replaces completed queue items before re-enqueuing", async () => {
     const t = convexTest(schema, convexModules);
-    const { completedQueueId, englishId } = await t.mutation(async (ctx) => {
-      const subjectIds = await insertSubjectPair(ctx);
-      return {
-        completedQueueId: await insertSubjectQueueItem(
-          ctx,
-          subjectIds.englishId,
-          "completed"
-        ),
-        englishId: subjectIds.englishId,
-      };
+
+    const completedQueueId = await t.mutation(async (ctx) => {
+      const subjectSources = await insertSubjectPair(ctx);
+
+      return await insertSubjectQueueItem(
+        ctx,
+        subjectSources.english,
+        "completed"
+      );
     });
 
     const result = await t.mutation(
       internal.contents.mutations.audio.enqueuePopularContentForAudio,
       {
-        items: [{ ref: { type: "subject", id: englishId }, viewCount: 25 }],
+        items: [{ sourceContent: englishSubjectSource, viewCount: 25 }],
       }
     );
     const { completedQueueItem, queuedItems } = await t.query(async (ctx) => ({
@@ -416,12 +420,7 @@ describe("contents/mutations/audio", () => {
         "audioGenerationQueue",
         completedQueueId
       ),
-      queuedItems: await ctx.db
-        .query("audioGenerationQueue")
-        .withIndex("by_slug_and_status", (q) =>
-          q.eq("slug", subjectSectionSlug).eq("status", "pending")
-        )
-        .collect(),
+      queuedItems: await readPendingQueueItems(ctx, subjectSectionSlug),
     }));
 
     expect(result).toEqual({ processed: 1, queued: 2 });
@@ -431,16 +430,16 @@ describe("contents/mutations/audio", () => {
 
   it("skips locales that already have completed audio for the current hash", async () => {
     const t = convexTest(schema, convexModules);
-    const { englishId } = await t.mutation(async (ctx) => {
-      const subjectIds = await insertSubjectPair(ctx);
-      await insertCompletedIndonesianAudio(ctx, subjectIds.indonesianId);
-      return subjectIds;
+
+    await t.mutation(async (ctx) => {
+      const subjectSources = await insertSubjectPair(ctx);
+      await insertCompletedAudio(ctx, subjectSources.indonesian);
     });
 
     const result = await t.mutation(
       internal.contents.mutations.audio.enqueuePopularContentForAudio,
       {
-        items: [{ ref: { type: "subject", id: englishId }, viewCount: 25 }],
+        items: [{ sourceContent: englishSubjectSource, viewCount: 25 }],
       }
     );
     const queuedItems = await t.query(
@@ -449,32 +448,24 @@ describe("contents/mutations/audio", () => {
 
     expect(result).toEqual({ processed: 1, queued: 1 });
     expect(queuedItems).toHaveLength(1);
-    expect(queuedItems[0]?.contentRef).toEqual({
-      type: "subject",
-      id: englishId,
-    });
+    expect(queuedItems[0]?.content_id).toBe(englishSubjectSource.content_id);
     expect(queuedItems[0]?.locale).toBe(englishSubject.locale);
-    expect(queuedItems[0]?.slug).toBe(subjectSectionSlug);
+    expect(queuedItems[0]?.route).toBe(subjectSectionSlug);
   });
 
   it("queues one item per supported locale for an article candidate", async () => {
     const t = convexTest(schema, convexModules);
-    const { englishId } = await t.mutation(insertArticlePair);
+
+    await t.mutation(insertArticlePair);
 
     const result = await t.mutation(
       internal.contents.mutations.audio.enqueuePopularContentForAudio,
       {
-        items: [{ ref: { type: "article", id: englishId }, viewCount: 25 }],
+        items: [{ sourceContent: englishArticleSource, viewCount: 25 }],
       }
     );
     const queuedItems = await t.query(
-      async (ctx) =>
-        await ctx.db
-          .query("audioGenerationQueue")
-          .withIndex("by_slug_and_status", (q) =>
-            q.eq("slug", articleSlug).eq("status", "pending")
-          )
-          .collect()
+      async (ctx) => await readPendingQueueItems(ctx, articleSlug)
     );
 
     expect(result).toEqual({ processed: 1, queued: 2 });

@@ -1,5 +1,6 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import { buildContentSearchRef } from "@repo/backend/convex/contents/helpers/search/documents";
 import { getUnknownErrorMessage } from "@repo/backend/convex/lib/effect";
 import {
   type GetTrendingSubjectsArgs,
@@ -14,7 +15,6 @@ import {
   getTrendingBucketStart,
   TRENDING_BUCKET_MS,
 } from "@repo/backend/convex/subjectSections/utils";
-import { getAll } from "convex-helpers/server/relationships";
 import { Effect } from "effect";
 
 const defaultTrendingSubjectsLimit = 6;
@@ -75,20 +75,26 @@ const loadSubjectViewCounts = Effect.fn(
   return yield* Effect.tryPromise({
     try: async () => {
       const bucketsInRange = ctx.db
-        .query("subjectTrendingBuckets")
-        .withIndex("by_locale_and_bucketStart_and_contentId", (q) =>
-          q
-            .eq("locale", args.locale)
-            .gte("bucketStart", window.since)
-            .lt("bucketStart", window.until)
+        .query("learningTrendingBuckets")
+        .withIndex(
+          "by_section_and_locale_and_bucketStart_and_content_id",
+          (q) =>
+            q
+              .eq("section", "subject")
+              .eq("locale", args.locale)
+              .gte("bucketStart", window.since)
+              .lt("bucketStart", window.until)
         );
 
-      const countBySubject = new Map<Id<"subjectSections">, number>();
+      const countBySubject = new Map<
+        Doc<"contentRoutes">["content_id"],
+        number
+      >();
 
       for await (const bucket of bucketsInRange) {
         countBySubject.set(
-          bucket.contentId,
-          (countBySubject.get(bucket.contentId) ?? 0) + bucket.viewCount
+          bucket.content_id,
+          (countBySubject.get(bucket.content_id) ?? 0) + bucket.viewCount
         );
       }
 
@@ -100,7 +106,7 @@ const loadSubjectViewCounts = Effect.fn(
 
 /** Builds the sorted top-subject entries from aggregated daily bucket counts. */
 function getTopTrendingEntries(
-  countBySubject: ReadonlyMap<Id<"subjectSections">, number>,
+  countBySubject: ReadonlyMap<Doc<"contentRoutes">["content_id"], number>,
   settings: {
     readonly limit: number;
     readonly minViews: number;
@@ -117,32 +123,81 @@ const buildTrendingSubjects = Effect.fn(
   "subjectSections.trending.buildTrendingSubjects"
 )(function* (
   ctx: QueryCtx,
-  trendingEntries: readonly (readonly [Id<"subjectSections">, number])[]
+  trendingEntries: readonly (readonly [
+    Doc<"contentRoutes">["content_id"],
+    number,
+  ])[]
 ) {
-  const subjectIds = trendingEntries.map(([id]) => id);
-  const subjects = yield* Effect.tryPromise({
-    try: () => getAll(ctx.db, subjectIds),
-    catch: toTrendingSubjectIoError,
-  });
+  const results = yield* Effect.forEach(
+    trendingEntries,
+    ([contentId, viewCount]) =>
+      loadSubjectRoute(ctx, contentId).pipe(
+        Effect.flatMap((route) => {
+          if (!route) {
+            return Effect.succeed([]);
+          }
 
-  return trendingEntries.flatMap(([, viewCount], index) => {
-    const subject = subjects[index];
+          return loadSubjectSection(ctx, route).pipe(
+            Effect.map((subject) => {
+              if (!subject) {
+                return [];
+              }
 
-    if (!subject) {
-      return [];
+              return [
+                {
+                  ...buildContentSearchRef(route),
+                  description: route.description ?? "",
+                  grade: subject.grade,
+                  material: subject.material,
+                  title: route.title,
+                  viewCount,
+                },
+              ];
+            })
+          );
+        })
+      )
+  );
+
+  return results.flat();
+});
+
+/** Loads the graph route projection for one trending subject section. */
+const loadSubjectRoute = Effect.fn("subjectSections.trending.loadSubjectRoute")(
+  function* (ctx: QueryCtx, contentId: Doc<"contentRoutes">["content_id"]) {
+    const route = yield* Effect.tryPromise({
+      try: () =>
+        ctx.db
+          .query("contentRoutes")
+          .withIndex("by_content_id", (q) => q.eq("content_id", contentId))
+          .unique(),
+      catch: toTrendingSubjectIoError,
+    });
+
+    if (
+      route?.kind !== "subject-section" ||
+      route.content_id !== route.assetId
+    ) {
+      return null;
     }
 
-    return [
-      {
-        id: subject._id,
-        title: subject.title,
-        description: subject.description,
-        slug: subject.slug,
-        viewCount,
-        grade: subject.grade,
-        material: subject.material,
-      },
-    ];
+    return route;
+  }
+);
+
+/** Loads subject metadata for one verified graph route projection. */
+const loadSubjectSection = Effect.fn(
+  "subjectSections.trending.loadSubjectSection"
+)(function* (ctx: QueryCtx, route: Doc<"contentRoutes">) {
+  return yield* Effect.tryPromise({
+    try: () =>
+      ctx.db
+        .query("subjectSections")
+        .withIndex("by_locale_and_slug", (q) =>
+          q.eq("locale", route.locale).eq("slug", route.route)
+        )
+        .unique(),
+    catch: toTrendingSubjectIoError,
   });
 });
 

@@ -7,8 +7,8 @@ import {
   getNakafaExerciseSetRoute,
 } from "@repo/contents/_lib/agent/exercise/ref";
 import {
-  buildNakafaContentRef,
   parseNakafaContentRef,
+  parseNakafaContentRefFields,
 } from "@repo/contents/_lib/agent/refs";
 import { NakafaAgentExerciseResultSchema } from "@repo/contents/_lib/agent/schema/exercise";
 import { getRenderableExercisesContent } from "@repo/contents/_lib/exercises/renderable";
@@ -22,7 +22,7 @@ type NakafaRenderableExercisesLoader = (
   ...input: Parameters<typeof getRenderableExercisesContent>
 ) => Effect.Effect<NakafaRenderableExercises, NakafaAgentDataReadError>;
 
-/** Retrieves a structured exercise set or one exercise by content ID or URL. */
+/** Retrieves a structured exercise set or one exercise by canonical URL projection. */
 export const getNakafaAgentExercise = Effect.fn("NakafaAgent.getExercise")(
   function* (
     input: string,
@@ -47,7 +47,7 @@ export const getNakafaAgentExercise = Effect.fn("NakafaAgent.getExercise")(
       return Option.none();
     }
 
-    const setRef = buildNakafaContentRef(
+    const setRef = yield* parseNakafaContentRefFields(
       ref.value.locale,
       target.setRoute,
       "exercises"

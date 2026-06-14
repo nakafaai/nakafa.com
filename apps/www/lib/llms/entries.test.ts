@@ -1,5 +1,11 @@
 // @vitest-environment node
 import type { api } from "@repo/backend/convex/_generated/api";
+import type { Locale } from "@repo/contents/_types/content";
+import {
+  createLearningGraphIdentityFromRoute,
+  getLearningObjectKindForRoute,
+} from "@repo/contents/_types/learning-graph";
+import type { SourceRegistryRoot } from "@repo/contents/_types/source-registry";
 import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -139,14 +145,21 @@ function routeRow({
   section,
 }: {
   route: string;
-  section: "articles" | "subject" | "exercises" | "quran";
+  section: SourceRegistryRoot;
 }): RuntimeContentRouteItem {
+  const graph = routeGraph("en", route);
+  const kind = getLearningObjectKindForRoute(route);
+
+  if (!kind) {
+    throw new Error(`Expected graph route kind for ${route}.`);
+  }
+
   return {
+    ...graph,
     authors: [{ name: "Nakafa" }],
-    content_id: `en/${route}`,
     date: 1_735_689_600_000,
     description: "Description",
-    kind: "article",
+    kind,
     locale: "en",
     markdown: true,
     official: false,
@@ -154,6 +167,20 @@ function routeRow({
     section,
     syncedAt: 1,
     title: "Title",
+  };
+}
+
+/** Builds graph identity fields for a content-route fixture. */
+function routeGraph(locale: Locale, route: string) {
+  const identity = createLearningGraphIdentityFromRoute({ locale, route });
+
+  if (!identity) {
+    throw new Error(`Expected graph identity for ${route}.`);
+  }
+
+  return {
+    ...identity,
+    content_id: identity.assetId,
   };
 }
 

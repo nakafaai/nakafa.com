@@ -16,9 +16,14 @@ export function buildContentSearchResult(
   const items = ranked
     .slice(args.offset, args.offset + args.limit)
     .map((document) => ({
+      alignmentId: document.alignmentId,
+      assetId: document.assetId,
+      conceptId: document.conceptId,
       content_id: document.content_id,
       description: document.description,
       excerpt: buildContentSearchExcerpt(document, queryTexts),
+      learningObjectId: document.learningObjectId,
+      lensId: document.lensId,
       locale: document.locale,
       markdown_url: document.markdown_url,
       route: document.route,

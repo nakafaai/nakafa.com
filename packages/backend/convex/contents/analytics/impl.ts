@@ -34,23 +34,39 @@ export interface ContentAnalyticsSchedulerTargets {
   >;
 }
 
-/** Schedules one worker attempt per analytics partition. */
+/** Schedules worker attempts only for partitions that currently have queued views. */
 export const scheduleAllContentAnalyticsPartitions = Effect.fn(
   "contents.analytics.scheduleAllContentAnalyticsPartitions"
 )(function* (ctx: MutationCtx, targets: ContentAnalyticsSchedulerTargets) {
-  yield* Effect.tryPromise({
-    try: async () => {
-      for (const partition of CONTENT_ANALYTICS_PARTITIONS) {
-        await ctx.scheduler.runAfter(0, targets.schedulePartition, {
+  let enqueuedPartitions = 0;
+
+  for (const partition of CONTENT_ANALYTICS_PARTITIONS) {
+    const queuedItem = yield* Effect.tryPromise({
+      try: () =>
+        ctx.db
+          .query("contentViewAnalyticsQueue")
+          .withIndex("by_partition", (q) => q.eq("partition", partition))
+          .first(),
+      catch: toContentAnalyticsIoError,
+    });
+
+    if (!queuedItem) {
+      continue;
+    }
+
+    yield* Effect.tryPromise({
+      try: () =>
+        ctx.scheduler.runAfter(0, targets.schedulePartition, {
           partition,
-        });
-      }
-    },
-    catch: toContentAnalyticsIoError,
-  });
+        }),
+      catch: toContentAnalyticsIoError,
+    });
+
+    enqueuedPartitions += 1;
+  }
 
   return {
-    enqueuedPartitions: CONTENT_ANALYTICS_PARTITIONS.length,
+    enqueuedPartitions,
   };
 });
 
