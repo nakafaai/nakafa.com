@@ -1,0 +1,176 @@
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { internalMutation } from "@repo/backend/convex/functions";
+import {
+  learningProgramCoverageInputValidator,
+  learningProgramInputValidator,
+  type programSourceInputValidator,
+} from "@repo/backend/convex/learningPrograms/schema";
+import { ConvexError, type Infer, v } from "convex/values";
+
+const SOURCE_LIMIT = 20;
+type ProgramSourceInput = Infer<typeof programSourceInputValidator>;
+
+const syncResultValidator = v.object({
+  created: v.number(),
+  skipped: v.number(),
+  updated: v.number(),
+});
+
+/** Upserts the program catalog and its source references from contents contracts. */
+export const syncLearningPrograms = internalMutation({
+  args: {
+    programs: v.array(learningProgramInputValidator),
+    syncedAt: v.number(),
+  },
+  returns: syncResultValidator,
+  handler: async (ctx, args) => {
+    let created = 0;
+    let updated = 0;
+
+    for (const program of args.programs) {
+      const existing = await ctx.db
+        .query("learningPrograms")
+        .withIndex("by_key", (q) => q.eq("key", program.key))
+        .unique();
+      const row = {
+        defaultCoverageStatus: program.defaultCoverageStatus,
+        description: program.description,
+        displayOrder: program.displayOrder,
+        key: program.key,
+        kind: program.kind,
+        locale: program.locale,
+        providerCountry: program.provider.country,
+        providerKind: program.provider.kind,
+        providerName: program.provider.name,
+        recommendedCountry: program.recommendedCountry,
+        syncedAt: args.syncedAt,
+        title: program.title,
+        updatedAt: args.syncedAt,
+        versionEndsAt: program.version.endsAt,
+        versionLabel: program.version.label,
+        versionStartsAt: program.version.startsAt,
+      };
+
+      const programId = existing
+        ? existing._id
+        : await ctx.db.insert("learningPrograms", row);
+
+      if (existing) {
+        await ctx.db.patch(existing._id, row);
+        updated++;
+      } else {
+        created++;
+      }
+
+      await syncProgramSources(ctx, {
+        programId,
+        sources: program.sources,
+        syncedAt: args.syncedAt,
+      });
+    }
+
+    return { created, skipped: 0, updated };
+  },
+});
+
+/** Upserts graph-backed program coverage rows from the content sync projection. */
+export const syncLearningProgramCoverage = internalMutation({
+  args: {
+    coverageRows: v.array(learningProgramCoverageInputValidator),
+  },
+  returns: syncResultValidator,
+  handler: async (ctx, args) => {
+    let created = 0;
+    let skipped = 0;
+    let updated = 0;
+
+    for (const row of args.coverageRows) {
+      const program = await ctx.db
+        .query("learningPrograms")
+        .withIndex("by_key", (q) => q.eq("key", row.programKey))
+        .unique();
+
+      if (!program) {
+        skipped++;
+        continue;
+      }
+
+      const existing = await ctx.db
+        .query("learningProgramCoverage")
+        .withIndex("by_programId_and_locale_and_lensId", (q) =>
+          q
+            .eq("programId", program._id)
+            .eq("locale", row.locale)
+            .eq("lensId", row.lensId)
+        )
+        .unique();
+      const patch = {
+        contentCount: row.contentCount,
+        coverageStatus: row.coverageStatus,
+        lensId: row.lensId,
+        lensScope: row.lensScope,
+        locale: row.locale,
+        programId: program._id,
+        sampleContentId: row.sampleContentId,
+        syncedAt: row.syncedAt,
+      };
+
+      if (!existing) {
+        await ctx.db.insert("learningProgramCoverage", patch);
+        created++;
+        continue;
+      }
+
+      await ctx.db.patch(existing._id, patch);
+      updated++;
+    }
+
+    return { created, skipped, updated };
+  },
+});
+
+/** Replaces bounded program source rows for one catalog program. */
+async function syncProgramSources(
+  ctx: MutationCtx,
+  {
+    programId,
+    sources,
+    syncedAt,
+  }: {
+    programId: Id<"learningPrograms">;
+    sources: ProgramSourceInput[];
+    syncedAt: number;
+  }
+) {
+  if (sources.length > SOURCE_LIMIT) {
+    throw new ConvexError({
+      code: "LEARNING_PROGRAM_SOURCE_LIMIT_EXCEEDED",
+      message: "Learning program source count exceeds the sync limit.",
+    });
+  }
+
+  const existingSources = await ctx.db
+    .query("learningProgramSources")
+    .withIndex("by_programId", (q) => q.eq("programId", programId))
+    .take(SOURCE_LIMIT + 1);
+
+  if (existingSources.length > SOURCE_LIMIT) {
+    throw new ConvexError({
+      code: "LEARNING_PROGRAM_SOURCE_LIMIT_EXCEEDED",
+      message: "Existing learning program sources exceed the sync limit.",
+    });
+  }
+
+  for (const row of existingSources) {
+    await ctx.db.delete(row._id);
+  }
+
+  for (const source of sources) {
+    await ctx.db.insert("learningProgramSources", {
+      ...source,
+      programId,
+      syncedAt,
+    });
+  }
+}

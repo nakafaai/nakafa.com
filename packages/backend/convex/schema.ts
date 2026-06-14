@@ -13,6 +13,7 @@ import exerciseQuestionsSchema from "@repo/backend/convex/exerciseQuestions/sche
 import exerciseSetsSchema from "@repo/backend/convex/exerciseSets/schema";
 import exercisesSchema from "@repo/backend/convex/exercises/schema";
 import irtSchema from "@repo/backend/convex/irt/schema";
+import learningProgramsSchema from "@repo/backend/convex/learningPrograms/schema";
 import notificationsSchema from "@repo/backend/convex/notifications/schema";
 import quranSchema from "@repo/backend/convex/quran/schema";
 import schoolsSchema from "@repo/backend/convex/schools/schema";
@@ -48,6 +49,7 @@ export default defineSchema(
     ...audioStudiesSchema,
     ...creditsSchema,
     ...irtSchema,
+    ...learningProgramsSchema,
     ...tryoutAccessSchema,
     ...tryoutsSchema,
   },

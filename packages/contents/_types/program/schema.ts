@@ -29,6 +29,21 @@ export const LearningObjectiveSchema = Schema.Literal(
   ...LEARNING_OBJECTIVE_VALUES
 );
 
+export const PROGRAM_PROVIDER_KIND_VALUES = [
+  "official",
+  "nakafa",
+  "institution",
+  "learner",
+] as const;
+
+export const PROGRAM_SOURCE_TYPE_VALUES = [
+  "official-policy",
+  "official-blueprint",
+  "official-portal",
+  "nakafa-editorial",
+  "institution-document",
+] as const;
+
 export const COVERAGE_STATUS_VALUES = [
   "hidden",
   "planned",
@@ -40,6 +55,17 @@ export const COVERAGE_STATUS_VALUES = [
 export const CoverageStatusSchema = Schema.Literal(...COVERAGE_STATUS_VALUES);
 
 export type CoverageStatus = SchemaType<typeof CoverageStatusSchema>;
+
+export const LEARNING_PLAN_ITEM_REASON_VALUES = [
+  "program-alignment",
+  "next-topic",
+] as const;
+
+export const LEARNING_PLAN_ITEM_STATUS_VALUES = [
+  "ready",
+  "done",
+  "skipped",
+] as const;
 
 const CoverageRouteKindSchema = Schema.Literal(
   "exercise-group",
@@ -67,7 +93,7 @@ export type LearningProgramCoverageRoute = SchemaType<
 
 export const ProgramProviderSchema = Schema.Struct({
   country: Schema.optional(Schema.String),
-  kind: Schema.Literal("official", "nakafa", "institution", "learner"),
+  kind: Schema.Literal(...PROGRAM_PROVIDER_KIND_VALUES),
   name: Schema.String,
 });
 
@@ -81,13 +107,7 @@ export const ProgramSourceSchema = Schema.Struct({
   label: Schema.String,
   retrievedAt: Schema.String,
   reviewAfter: Schema.optional(Schema.String),
-  type: Schema.Literal(
-    "official-policy",
-    "official-blueprint",
-    "official-portal",
-    "nakafa-editorial",
-    "institution-document"
-  ),
+  type: Schema.Literal(...PROGRAM_SOURCE_TYPE_VALUES),
   url: Schema.String,
 });
 
