@@ -7,6 +7,7 @@ import {
   syncExerciseQuestions,
   syncExerciseSets,
 } from "@repo/backend/scripts/sync-content/exercises";
+import { syncLearningPrograms } from "@repo/backend/scripts/sync-content/learningPrograms";
 import { log, logError } from "@repo/backend/scripts/sync-content/logging";
 import { reset } from "@repo/backend/scripts/sync-content/reset";
 import { resetAnalytics } from "@repo/backend/scripts/sync-content/resetAnalytics";
@@ -71,6 +72,9 @@ const printUsage = (): void => {
   );
   log("  sync:validate         - Validate content without syncing (for CI)");
   log("  sync:verify           - Verify database matches filesystem");
+  log(
+    "  learning-programs     - Sync program catalog and graph-backed coverage"
+  );
   log("  sync:clean            - Find and remove stale content");
   log(
     "  sync:reset            - Delete synced content/runtime rows (authors optional, requires --force)"
@@ -156,6 +160,9 @@ export const runCommand = Effect.fn("sync.runCommand")(function* (
       yield* syncAuthors(config, options);
       yield* syncExerciseSets(config, options);
       yield* syncExerciseQuestions(config, options);
+      return;
+    case "learning-programs":
+      yield* syncLearningPrograms(config, options);
       return;
     case "all":
       yield* syncAll(config, options);

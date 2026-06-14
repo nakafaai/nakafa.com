@@ -1,14 +1,10 @@
+import { api, internal } from "@repo/backend/convex/_generated/api";
+import { getLearningProgramCatalogInputs } from "@repo/backend/convex/learningPrograms/catalog";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
-import { LEARNING_PROGRAM_CATALOG } from "@repo/contents/_types/program/catalog";
-import type {
-  LearningProgram,
-  LearningProgramCoverageInput,
-} from "@repo/contents/_types/program/schema";
-import { makeFunctionReference } from "convex/server";
 import { ConvexError } from "convex/values";
 import { describe, expect, it } from "vitest";
 
@@ -16,43 +12,21 @@ const NOW = 1_798_752_000_000;
 const subjectGraph = getGraphIdentity(
   "subject/high-school/10/chemistry/atomic-structure"
 );
-const syncLearningProgramsRef = makeFunctionReference<
-  "mutation",
-  { programs: LearningProgram[]; syncedAt: number },
-  { created: number; skipped: number; updated: number }
->("learningPrograms/sync:syncLearningPrograms");
-const syncLearningProgramCoverageRef = makeFunctionReference<
-  "mutation",
-  { coverageRows: LearningProgramCoverageInput[] },
-  { created: number; skipped: number; updated: number }
->("learningPrograms/sync:syncLearningProgramCoverage");
-const listSelectableProgramsRef = makeFunctionReference<
-  "query",
-  { locale?: "en" | "id" },
-  Array<{ key: string; kind: string; title: string }>
->("learningPrograms/queries:listSelectablePrograms");
-const selectLearningProgramRef = makeFunctionReference<
-  "mutation",
-  {
-    locale: "en" | "id";
-    objective: "school-curriculum";
-    programKey: string;
-    stage?: string;
-  },
-  {
-    planItems: Array<{ content_id: string; route?: string }>;
-    program: { key: string };
-  } | null
->("learningPrograms/mutations:selectLearningProgram");
 
 describe("learningPrograms", () => {
   it("syncs selectable catalog rows and bounded source rows", async () => {
     const t = createConvexTestWithBetterAuth();
-    const result = await t.mutation(syncLearningProgramsRef, {
-      programs: [...LEARNING_PROGRAM_CATALOG],
-      syncedAt: NOW,
-    });
-    const programs = await t.query(listSelectableProgramsRef, { locale: "id" });
+    const result = await t.mutation(
+      internal.learningPrograms.sync.syncLearningPrograms,
+      {
+        programs: getLearningProgramCatalogInputs(),
+        syncedAt: NOW,
+      }
+    );
+    const programs = await t.query(
+      api.learningPrograms.queries.listSelectablePrograms,
+      { locale: "id" }
+    );
     const sourceCount = await t.query(async (ctx) => {
       const program = await ctx.db
         .query("learningPrograms")
@@ -81,18 +55,88 @@ describe("learningPrograms", () => {
     expect(sourceCount).toBe(2);
   });
 
+  it("deletes stale coverage rows in bounded batches", async () => {
+    const t = createConvexTestWithBetterAuth();
+
+    await t.mutation(internal.learningPrograms.sync.syncLearningPrograms, {
+      programs: getLearningProgramCatalogInputs(),
+      syncedAt: NOW,
+    });
+    await t.mutation(
+      internal.learningPrograms.sync.syncLearningProgramCoverage,
+      {
+        coverageRows: [
+          {
+            contentCount: 1,
+            coverageStatus: "partial",
+            lensId: "lens:subject:high-school:10:chemistry:old",
+            lensScope: "curriculum",
+            locale: "id",
+            programKey: "id-kurikulum-merdeka",
+            sampleContentId: subjectGraph.assetId,
+            syncedAt: NOW - 1,
+          },
+          {
+            contentCount: 1,
+            coverageStatus: "partial",
+            lensId: subjectGraph.lensId,
+            lensScope: "curriculum",
+            locale: "id",
+            programKey: "id-kurikulum-merdeka",
+            sampleContentId: subjectGraph.assetId,
+            syncedAt: NOW,
+          },
+        ],
+      }
+    );
+
+    const result = await t.mutation(
+      internal.learningPrograms.sync.deleteStaleLearningProgramCoverage,
+      {
+        limit: 10,
+        locale: "id",
+        syncedAt: NOW,
+      }
+    );
+    const remainingCoverage = await t.query(async (ctx) => {
+      const program = await ctx.db
+        .query("learningPrograms")
+        .withIndex("by_key", (q) => q.eq("key", "id-kurikulum-merdeka"))
+        .unique();
+
+      if (!program) {
+        throw new Error("Expected synced Kurikulum Merdeka program.");
+      }
+
+      return await ctx.db
+        .query("learningProgramCoverage")
+        .withIndex("by_programId_and_locale_and_coverageStatus", (q) =>
+          q
+            .eq("programId", program._id)
+            .eq("locale", "id")
+            .eq("coverageStatus", "partial")
+        )
+        .take(10);
+    });
+
+    expect(result).toEqual({ deleted: 1 });
+    expect(remainingCoverage.map((row) => row.lensId)).toEqual([
+      subjectGraph.lensId,
+    ]);
+  });
+
   it("rejects source lists beyond the bounded replacement contract", async () => {
     const t = createConvexTestWithBetterAuth();
-    const [program] = LEARNING_PROGRAM_CATALOG;
+    const [program] = getLearningProgramCatalogInputs();
     const sources = Array.from({ length: 21 }, (_, index) => ({
       label: `Source ${index}`,
       retrievedAt: "2026-06-14",
-      type: "nakafa-editorial" as const,
+      type: "nakafa-editorial",
       url: `https://nakafa.com/source-${index}`,
-    }));
+    })) satisfies typeof program.sources;
 
     await expect(
-      t.mutation(syncLearningProgramsRef, {
+      t.mutation(internal.learningPrograms.sync.syncLearningPrograms, {
         programs: [{ ...program, sources }],
         syncedAt: NOW,
       })
@@ -105,32 +149,35 @@ describe("learningPrograms", () => {
       seedAuthenticatedUser(ctx, { now: NOW })
     );
 
-    await t.mutation(syncLearningProgramsRef, {
-      programs: [...LEARNING_PROGRAM_CATALOG],
+    await t.mutation(internal.learningPrograms.sync.syncLearningPrograms, {
+      programs: getLearningProgramCatalogInputs(),
       syncedAt: NOW,
     });
     await seedContentRoute(t);
-    await t.mutation(syncLearningProgramCoverageRef, {
-      coverageRows: [
-        {
-          contentCount: 1,
-          coverageStatus: "partial",
-          lensId: subjectGraph.lensId,
-          lensScope: "curriculum",
-          locale: "id",
-          programKey: "id-kurikulum-merdeka",
-          sampleContentId: subjectGraph.assetId,
-          syncedAt: NOW,
-        },
-      ],
-    });
+    await t.mutation(
+      internal.learningPrograms.sync.syncLearningProgramCoverage,
+      {
+        coverageRows: [
+          {
+            contentCount: 1,
+            coverageStatus: "partial",
+            lensId: subjectGraph.lensId,
+            lensScope: "curriculum",
+            locale: "id",
+            programKey: "id-kurikulum-merdeka",
+            sampleContentId: subjectGraph.assetId,
+            syncedAt: NOW,
+          },
+        ],
+      }
+    );
 
     const result = await t
       .withIdentity({
         sessionId: identity.sessionId,
         subject: identity.authUserId,
       })
-      .mutation(selectLearningProgramRef, {
+      .mutation(api.learningPrograms.mutations.selectLearningProgram, {
         locale: "id",
         objective: "school-curriculum",
         programKey: "id-kurikulum-merdeka",

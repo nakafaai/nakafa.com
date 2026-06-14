@@ -41,6 +41,11 @@ export const deleteLearningPopularityBatch =
 export const deleteLearningTrendingBucketsBatch = createBatchDeleteMutation(
   "learningTrendingBuckets"
 );
+
+/** Delete one bounded batch of graph-backed learning program coverage rows. */
+export const deleteLearningProgramCoverageBatch = createBatchDeleteMutation(
+  "learningProgramCoverage"
+);
 export const deleteContentRoutesBatch =
   createBatchDeleteMutation("contentRoutes");
 export const deleteContentRouteCountsBatch =

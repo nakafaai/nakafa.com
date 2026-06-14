@@ -9,12 +9,16 @@ import {
 import { ConvexError, type Infer, v } from "convex/values";
 
 const SOURCE_LIMIT = 20;
+const STALE_COVERAGE_DELETE_LIMIT = 200;
 type ProgramSourceInput = Infer<typeof programSourceInputValidator>;
 
 const syncResultValidator = v.object({
   created: v.number(),
   skipped: v.number(),
   updated: v.number(),
+});
+const deleteResultValidator = v.object({
+  deleted: v.number(),
 });
 
 /** Upserts the program catalog and its source references from contents contracts. */
@@ -127,6 +131,37 @@ export const syncLearningProgramCoverage = internalMutation({
     }
 
     return { created, skipped, updated };
+  },
+});
+
+/** Deletes older derived coverage rows for one locale through bounded batches. */
+export const deleteStaleLearningProgramCoverage = internalMutation({
+  args: {
+    limit: v.number(),
+    locale: learningProgramCoverageInputValidator.fields.locale,
+    syncedAt: v.number(),
+  },
+  returns: deleteResultValidator,
+  handler: async (ctx, args) => {
+    if (args.limit < 1 || args.limit > STALE_COVERAGE_DELETE_LIMIT) {
+      throw new ConvexError({
+        code: "LEARNING_PROGRAM_COVERAGE_DELETE_LIMIT_INVALID",
+        message: `Learning program coverage delete limit must be between 1 and ${STALE_COVERAGE_DELETE_LIMIT}.`,
+      });
+    }
+
+    const staleRows = await ctx.db
+      .query("learningProgramCoverage")
+      .withIndex("by_locale_and_syncedAt", (q) =>
+        q.eq("locale", args.locale).lt("syncedAt", args.syncedAt)
+      )
+      .take(args.limit);
+
+    for (const row of staleRows) {
+      await ctx.db.delete(row._id);
+    }
+
+    return { deleted: staleRows.length };
   },
 });
 

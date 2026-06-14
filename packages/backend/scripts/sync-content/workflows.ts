@@ -15,6 +15,7 @@ import {
   syncExerciseQuestions,
   syncExerciseSets,
 } from "@repo/backend/scripts/sync-content/exercises";
+import { syncLearningPrograms } from "@repo/backend/scripts/sync-content/learningPrograms";
 import {
   formatDuration,
   formatSyncResult,
@@ -65,7 +66,8 @@ const logSyncSummary = (
   exerciseQuestionResult: SyncResult,
   quranResult: SyncResult,
   tryoutResult: SyncResult,
-  routePageResult: SyncResult
+  routePageResult: SyncResult,
+  learningProgramResult: SyncResult
 ): void => {
   const totalCreated =
     articleResult.created +
@@ -75,7 +77,8 @@ const logSyncSummary = (
     exerciseQuestionResult.created +
     quranResult.created +
     tryoutResult.created +
-    routePageResult.created;
+    routePageResult.created +
+    learningProgramResult.created;
   const totalUpdated =
     articleResult.updated +
     subjectTopicResult.updated +
@@ -84,7 +87,8 @@ const logSyncSummary = (
     exerciseQuestionResult.updated +
     quranResult.updated +
     tryoutResult.updated +
-    routePageResult.updated;
+    routePageResult.updated +
+    learningProgramResult.updated;
   const total =
     totalCreated +
     totalUpdated +
@@ -95,7 +99,8 @@ const logSyncSummary = (
     exerciseQuestionResult.unchanged +
     quranResult.unchanged +
     tryoutResult.unchanged +
-    routePageResult.unchanged;
+    routePageResult.unchanged +
+    learningProgramResult.unchanged;
   const totalAuthorLinksCreated =
     (articleResult.authorLinksCreated || 0) +
     (subjectSectionResult.authorLinksCreated || 0) +
@@ -126,6 +131,9 @@ const logSyncSummary = (
   );
   log(
     `  Route Pages:         ${routePageResult.created + routePageResult.updated + routePageResult.unchanged} (${routePageResult.created} new, ${routePageResult.updated} updated)`
+  );
+  log(
+    `  Learning Programs:   ${learningProgramResult.created + learningProgramResult.updated + learningProgramResult.unchanged} (${learningProgramResult.created} new, ${learningProgramResult.updated} updated)`
   );
 
   log("\nRelated Items:");
@@ -195,6 +203,7 @@ export const syncAll = Effect.fn("sync.all")(function* (
   let quranResult: SyncResult;
   let tryoutResult: SyncResult;
   let routePageResult: SyncResult;
+  let learningProgramResult: SyncResult;
 
   if (options.sequential) {
     const articlePhase = startPhase(metrics, "Articles");
@@ -262,6 +271,15 @@ export const syncAll = Effect.fn("sync.all")(function* (
         routePageResult.updated +
         routePageResult.unchanged
     );
+
+    const learningProgramPhase = startPhase(metrics, "Learning Programs");
+    learningProgramResult = yield* syncLearningPrograms(config, options);
+    endPhase(
+      learningProgramPhase,
+      learningProgramResult.created +
+        learningProgramResult.updated +
+        learningProgramResult.unchanged
+    );
   } else {
     const quietOptions = { ...options, quiet: true };
 
@@ -305,6 +323,12 @@ export const syncAll = Effect.fn("sync.all")(function* (
     log(`  Route Pages:         ${formatSyncResult(routePageResult)}`);
     log(`  Duration: ${formatDuration(performance.now() - phase5Start)}`);
 
+    log("Phase 6: Syncing learning programs and coverage...");
+    const phase6Start = performance.now();
+    learningProgramResult = yield* syncLearningPrograms(config, options);
+    log(`  Learning Programs:   ${formatSyncResult(learningProgramResult)}`);
+    log(`  Duration: ${formatDuration(performance.now() - phase6Start)}`);
+
     addPhaseMetrics(metrics, "Articles", articleResult);
     addPhaseMetrics(metrics, "Subject Topics", subjectTopicResult);
     addPhaseMetrics(metrics, "Subject Sections", subjectSectionResult);
@@ -313,6 +337,7 @@ export const syncAll = Effect.fn("sync.all")(function* (
     addPhaseMetrics(metrics, "Quran", quranResult);
     addPhaseMetrics(metrics, "Tryouts", tryoutResult);
     addPhaseMetrics(metrics, "Route Pages", routePageResult);
+    addPhaseMetrics(metrics, "Learning Programs", learningProgramResult);
   }
 
   finalizeMetrics(metrics);
@@ -325,7 +350,8 @@ export const syncAll = Effect.fn("sync.all")(function* (
     exerciseQuestionResult,
     quranResult,
     tryoutResult,
-    routePageResult
+    routePageResult,
+    learningProgramResult
   );
   logSyncMetrics(metrics);
 });
@@ -379,6 +405,9 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
       options
     );
     addPhaseMetrics(metrics, "Route Pages", routePageResult);
+
+    const learningProgramResult = yield* syncLearningPrograms(config, options);
+    addPhaseMetrics(metrics, "Learning Programs", learningProgramResult);
 
     finalizeMetrics(metrics);
     logSyncMetrics(metrics);
@@ -448,6 +477,11 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
   };
   let quranResult: SyncResult = { created: 0, updated: 0, unchanged: 0 };
   let routePageResult: SyncResult = { created: 0, updated: 0, unchanged: 0 };
+  let learningProgramResult: SyncResult = {
+    created: 0,
+    unchanged: 0,
+    updated: 0,
+  };
 
   if (hasArticleChanges) {
     log("Articles changed - syncing...");
@@ -505,6 +539,9 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
   );
   addPhaseMetrics(metrics, "Route Pages", routePageResult);
 
+  learningProgramResult = yield* syncLearningPrograms(config, routePageOptions);
+  addPhaseMetrics(metrics, "Learning Programs", learningProgramResult);
+
   finalizeMetrics(metrics);
   log("\n=== SUMMARY ===\n");
 
@@ -515,7 +552,8 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
     exerciseSetResult.created +
     exerciseQuestionResult.created +
     quranResult.created +
-    routePageResult.created;
+    routePageResult.created +
+    learningProgramResult.created;
   const totalUpdated =
     articleResult.updated +
     subjectTopicResult.updated +
@@ -523,7 +561,8 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
     exerciseSetResult.updated +
     exerciseQuestionResult.updated +
     quranResult.updated +
-    routePageResult.updated;
+    routePageResult.updated +
+    learningProgramResult.updated;
   if (totalCreated > 0 || totalUpdated > 0) {
     log(`Changes: ${totalCreated} created, ${totalUpdated} updated`);
   } else {
@@ -573,6 +612,11 @@ export const syncFull = Effect.fn("sync.full")(function* (
           routePageOptions
         );
         log(`  Route Pages: ${formatSyncResult(routePageResult)}`);
+        const learningProgramResult = yield* syncLearningPrograms(
+          config,
+          routePageOptions
+        );
+        log(`  Learning Programs: ${formatSyncResult(learningProgramResult)}`);
       }
 
       log("\n");

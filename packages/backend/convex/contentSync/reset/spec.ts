@@ -39,6 +39,7 @@ export const resettableTableNames = [
   "irtScaleVersionItems",
   "irtScaleVersions",
   "learningPopularity",
+  "learningProgramCoverage",
   "quranSurahs",
   "quranVerses",
   "subjectSections",

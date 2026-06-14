@@ -40,6 +40,9 @@ const emptyCounts = {
   contentSearch: 0,
   contentViewAnalyticsQueue: 0,
   contentViews: 0,
+  learningProgramCoverage: 0,
+  learningProgramSources: 0,
+  learningPrograms: 0,
   learningPopularity: 0,
   exerciseAnswers: 0,
   exerciseAttempts: 0,
@@ -113,6 +116,19 @@ describe("sync-content reset", () => {
     expect(log).toHaveBeenCalledWith("  Quran Surahs:          1");
     expect(log).toHaveBeenCalledWith("  Quran Verses:          7");
     expect(log).toHaveBeenCalledWith("  Total derived items:  12");
+    expect(log).toHaveBeenCalledWith("\nTo delete all content, run:");
+    expect(logSuccess).not.toHaveBeenCalled();
+  });
+
+  it("does not treat program coverage rows as an empty database", async () => {
+    vi.mocked(getContentCounts).mockReturnValue(
+      Effect.succeed({ ...emptyCounts, learningProgramCoverage: 2 })
+    );
+
+    await Effect.runPromise(reset(config, { force: false }));
+
+    expect(log).toHaveBeenCalledWith("  Learning Program Cov:  2");
+    expect(log).toHaveBeenCalledWith("  Total derived items:  2");
     expect(log).toHaveBeenCalledWith("\nTo delete all content, run:");
     expect(logSuccess).not.toHaveBeenCalled();
   });

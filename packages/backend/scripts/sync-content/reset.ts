@@ -65,6 +65,12 @@ const RESET_STEPS: ResetStep[] = [
     resultLabel: "learning trending bucket rows",
   },
   {
+    label: "Deleting learning program coverage rows...",
+    mutation:
+      internal.contentSync.reset.internal.deleteLearningProgramCoverageBatch,
+    resultLabel: "learning program coverage rows",
+  },
+  {
     label: "Deleting content route rows...",
     mutation: internal.contentSync.reset.internal.deleteContentRoutesBatch,
     resultLabel: "content route rows",
@@ -344,6 +350,9 @@ export const reset = Effect.fn("sync.reset")(function* (
   log(`  Analytics Partitions:  ${counts.contentAnalyticsPartitions}`);
   log(`  Learning Popularity:   ${counts.learningPopularity}`);
   log(`  Learning Trending:     ${counts.learningTrendingBuckets}`);
+  log(`  Learning Programs:     ${counts.learningPrograms}`);
+  log(`  Learning Program Srcs: ${counts.learningProgramSources}`);
+  log(`  Learning Program Cov:  ${counts.learningProgramCoverage}`);
   log(`  Content Routes:        ${counts.contentRoutes}`);
   log(`  Content Route Counts:  ${counts.contentRouteCounts}`);
   log(`  Content Route Pages:   ${counts.contentRoutePages}`);
@@ -429,6 +438,7 @@ export const reset = Effect.fn("sync.reset")(function* (
     counts.contentAnalyticsPartitions +
     counts.learningPopularity +
     counts.learningTrendingBuckets +
+    counts.learningProgramCoverage +
     counts.contentRoutes +
     counts.contentRouteCounts +
     counts.contentRoutePages +
@@ -441,6 +451,9 @@ export const reset = Effect.fn("sync.reset")(function* (
   log(`  Total related items:  ${totalRelated}`);
   log(`  Total runtime items:  ${totalRuntime}`);
   log(`  Total derived items:  ${totalDerived}`);
+  log(
+    `  Program catalog rows: ${counts.learningPrograms + counts.learningProgramSources}`
+  );
 
   if (
     totalContent === 0 &&

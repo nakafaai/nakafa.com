@@ -218,6 +218,7 @@ import type * as irt_scales_snapshot from "../irt/scales/snapshot.js";
 import type * as irt_validators from "../irt/validators.js";
 import type * as irt_workflows from "../irt/workflows.js";
 import type * as irt_workpool from "../irt/workpool.js";
+import type * as learningPrograms_catalog from "../learningPrograms/catalog.js";
 import type * as learningPrograms_impl from "../learningPrograms/impl.js";
 import type * as learningPrograms_mutations from "../learningPrograms/mutations.js";
 import type * as learningPrograms_queries from "../learningPrograms/queries.js";
@@ -581,6 +582,7 @@ declare const fullApi: ApiFromModules<{
   "irt/validators": typeof irt_validators;
   "irt/workflows": typeof irt_workflows;
   "irt/workpool": typeof irt_workpool;
+  "learningPrograms/catalog": typeof learningPrograms_catalog;
   "learningPrograms/impl": typeof learningPrograms_impl;
   "learningPrograms/mutations": typeof learningPrograms_mutations;
   "learningPrograms/queries": typeof learningPrograms_queries;

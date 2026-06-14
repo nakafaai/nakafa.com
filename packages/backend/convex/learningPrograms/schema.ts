@@ -163,7 +163,8 @@ const tables = {
       "programId",
       "locale",
       "coverageStatus",
-    ]),
+    ])
+    .index("by_locale_and_syncedAt", ["locale", "syncedAt"]),
 
   learningProfiles: defineTable({
     activePlanId: v.optional(v.id("learningPlans")),
