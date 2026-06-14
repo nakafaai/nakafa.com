@@ -49,6 +49,34 @@ export function getExerciseSetGroupRoute(route: string) {
   );
 }
 
+/** Returns the graph-owned question route below a valid exercise set route. */
+export function getExerciseQuestionRouteForNumber(
+  route: string,
+  exerciseNumber: number
+) {
+  if (!(Number.isSafeInteger(exerciseNumber) && exerciseNumber > 0)) {
+    return null;
+  }
+
+  const projection = getSourceRouteProjectionForRoute(route);
+
+  if (!projection?.exercise) {
+    return null;
+  }
+
+  if (projection.kind === "exercise-question") {
+    return projection.exercise.questionSegment === `${exerciseNumber}`
+      ? projection.route
+      : null;
+  }
+
+  if (projection.kind !== "exercise-set") {
+    return null;
+  }
+
+  return joinRoute(projection.route, `${exerciseNumber}`);
+}
+
 /** Decodes and parses a declared route projection with the graph domain error. */
 export const parseSourceRouteProjection = Effect.fn(
   "contents.graph.parseSourceRouteProjection"

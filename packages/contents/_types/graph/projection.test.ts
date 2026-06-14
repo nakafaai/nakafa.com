@@ -1,4 +1,5 @@
 import {
+  getExerciseQuestionRouteForNumber,
   getExerciseSetGroupRoute,
   getQuranSurahNumberForRoute,
   getSourceRouteProjection,
@@ -121,9 +122,17 @@ describe("source route projection", () => {
     });
     expect(getExerciseSetGroupRoute(setRoute)).toBe(groupRoute);
     expect(getExerciseSetGroupRoute(shortSetRoute)).toBe(shortGroupRoute);
+    expect(getExerciseQuestionRouteForNumber(setRoute, 7)).toBe(questionRoute);
+    expect(getExerciseQuestionRouteForNumber(questionRoute, 7)).toBe(
+      questionRoute
+    );
   });
 
   it("rejects malformed projections instead of inferring partial route identity", () => {
+    const setRoute =
+      "exercises/high-school/snbt/quantitative-knowledge/practice/set-1";
+    const questionRoute = `${setRoute}/7`;
+
     expect(getSourceRouteProjectionForRoute("quran")).toBeNull();
     expect(
       getSourceRouteProjectionForRoute("exercises/high-school")
@@ -148,6 +157,18 @@ describe("source route projection", () => {
     expect(
       getExerciseSetGroupRoute("exercises/high-school/snbt/set-1/7")
     ).toBeNull();
+    expect(
+      getExerciseQuestionRouteForNumber(
+        "exercises/high-school/snbt/quantitative-knowledge/practice",
+        7
+      )
+    ).toBeNull();
+    expect(
+      getExerciseQuestionRouteForNumber("articles/politics/example", 7)
+    ).toBeNull();
+    expect(getExerciseQuestionRouteForNumber("quran/1", 7)).toBeNull();
+    expect(getExerciseQuestionRouteForNumber(setRoute, 0)).toBeNull();
+    expect(getExerciseQuestionRouteForNumber(questionRoute, 8)).toBeNull();
   });
 
   it("keeps declared kind validation next to the projection spec", () => {

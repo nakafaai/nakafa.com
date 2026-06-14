@@ -23,6 +23,10 @@ const ExerciseSetArgsSchema = Schema.Struct({
   locale: LocaleSchema,
   slug: Schema.String,
 });
+const ContentRouteArgsSchema = Schema.Struct({
+  locale: LocaleSchema,
+  route: Schema.String,
+});
 const ContentIdArgsSchema = Schema.Struct({
   contentId: Schema.String,
 });
@@ -72,6 +76,15 @@ describe("readNakafaExercise", () => {
 
     expect(Option.getOrUndefined(set)?.count).toBe(2);
     expect(Option.getOrUndefined(explicitQuestion)?.exercise_number).toBe(2);
+    expect(Option.getOrUndefined(explicitQuestion)?.content_id).toBe(
+      detachedQuestionRef.content_id
+    );
+    expect(Option.getOrUndefined(explicitQuestion)?.route).toBe(
+      detachedQuestionRef.route
+    );
+    expect(Option.getOrUndefined(explicitQuestion)?.url).toBe(
+      detachedQuestionRef.url
+    );
     expect(Option.getOrUndefined(graphQuestion)?.exercise_number).toBe(2);
     expect(Option.getOrUndefined(markdown)?.text).toContain("- [x] A. Benar");
   });
@@ -80,8 +93,14 @@ describe("readNakafaExercise", () => {
     const set = await Effect.runPromise(
       readNakafaExercise(convexUrl, detachedSetRef.content_id)
     );
+    const selectedQuestion = await Effect.runPromise(
+      readNakafaExercise(convexUrl, detachedSetRef.content_id, 2)
+    );
     const question = await Effect.runPromise(
       readNakafaExercise(convexUrl, detachedQuestionRef.content_id)
+    );
+    const matchingQuestion = await Effect.runPromise(
+      readNakafaExercise(convexUrl, detachedQuestionRef.content_id, 2)
     );
     const sourceProjectionSet = readNakafaContentRefFixture(
       "id",
@@ -95,7 +114,20 @@ describe("readNakafaExercise", () => {
     expect(Option.getOrUndefined(question)?.content_id).toBe(
       detachedQuestionRef.content_id
     );
+    expect(Option.getOrUndefined(selectedQuestion)?.content_id).toBe(
+      detachedQuestionRef.content_id
+    );
+    expect(Option.getOrUndefined(selectedQuestion)?.route).toBe(
+      detachedQuestionRef.route
+    );
+    expect(Option.getOrUndefined(selectedQuestion)?.url).toBe(
+      detachedQuestionRef.url
+    );
     expect(Option.getOrUndefined(question)?.exercise_number).toBe(2);
+    expect(Option.getOrUndefined(matchingQuestion)?.content_id).toBe(
+      detachedQuestionRef.content_id
+    );
+    expect(Option.getOrUndefined(matchingQuestion)?.exercise_number).toBe(2);
     expect(Option.getOrUndefined(set)?.content_id).not.toBe(
       sourceProjectionSet.content_id
     );
@@ -214,12 +246,41 @@ function readRuntimeFixture(
 
   if (
     getFunctionName(query) ===
+    getFunctionName(api.contents.queries.runtime.getContentRoute)
+  ) {
+    return Promise.resolve(readContentRoute(args));
+  }
+
+  if (
+    getFunctionName(query) ===
     getFunctionName(api.contents.queries.runtime.getExerciseSetPage)
   ) {
     return Promise.resolve(readExerciseSetPage(args));
   }
 
   return Promise.reject(new Error("Unhandled exercise query fixture."));
+}
+
+/** Builds one route lookup fixture from the persisted route catalog. */
+function readContentRoute(args: unknown) {
+  const input = Schema.decodeUnknownSync(ContentRouteArgsSchema)(args);
+  const refs = [
+    detachedSetRef,
+    detachedQuestionRef,
+    readNakafaContentRefFixture("id", "articles/politics/example", "articles"),
+  ];
+  const ref = refs.find(
+    (item) => item.locale === input.locale && item.route === input.route
+  );
+
+  if (!ref) {
+    return null;
+  }
+
+  return {
+    ...ref,
+    title: ref.route,
+  };
 }
 
 /** Builds one route lookup fixture from a graph asset ID. */

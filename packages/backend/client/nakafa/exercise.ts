@@ -6,13 +6,17 @@ import { fetchNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
 import { resolveNakafaContentRef } from "@repo/backend/client/nakafa/ref";
 import { api } from "@repo/backend/convex/_generated/api";
 import { formatNakafaRouteTitle } from "@repo/contents/_lib/agent/format";
+import { createNakafaContentRefFromGraphProjection } from "@repo/contents/_lib/agent/refs";
 import type { NakafaAgentExerciseResult } from "@repo/contents/_lib/agent/schema/exercise";
 import type { NakafaAgentMarkdown } from "@repo/contents/_lib/agent/schema/read";
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
 import { ExercisesCategorySchema } from "@repo/contents/_types/exercises/category";
 import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
 import { ExercisesTypeSchema } from "@repo/contents/_types/exercises/type";
-import { getSourceRouteProjectionForRoute } from "@repo/contents/_types/graph/projection";
+import {
+  getExerciseQuestionRouteForNumber,
+  getSourceRouteProjectionForRoute,
+} from "@repo/contents/_types/graph/projection";
 import type { Locale } from "@repo/utilities/locales";
 import { Effect, Option, Schema } from "effect";
 
@@ -67,15 +71,33 @@ export function readNakafaExercise(
       return Option.none<NakafaAgentExerciseResult>();
     }
 
+    const resultRef = yield* Option.match(target.value.questionRoute, {
+      /** Keeps the already-resolved ref when returning the whole set. */
+      onNone: () => Effect.succeed(Option.some(ref.value)),
+      /** Resolves selected questions through the persisted route catalog. */
+      onSome: (questionRoute) =>
+        ref.value.route === questionRoute
+          ? Effect.succeed(Option.some(ref.value))
+          : resolveExerciseQuestionRoute(
+              convexUrl,
+              ref.value.locale,
+              questionRoute
+            ),
+    });
+
+    if (Option.isNone(resultRef)) {
+      return Option.none<NakafaAgentExerciseResult>();
+    }
+
     const resultInput = {
-      ...ref.value,
+      ...resultRef.value,
       count: exercises.length,
       exercises: exercises.map((exercise) => ({
         answer: {
           raw: exercise.answer.raw,
           title: exercise.answer.metadata.title,
         },
-        choices: exercise.choices[ref.value.locale].map((choice) => ({
+        choices: exercise.choices[resultRef.value.locale].map((choice) => ({
           correct: choice.value,
           label: choice.label,
         })),
@@ -164,7 +186,7 @@ export function getExerciseTarget(
   }
 
   const routeNumber = getQuestionNumberFromProjection(projection);
-  const setRoute = projection.exercise.setRoute ?? route;
+  const setRoute = projection.exercise.setRoute ?? projection.route;
 
   if (
     Option.isNone(getExerciseGroupArgs(locale, projection.exercise.groupRoute))
@@ -173,19 +195,56 @@ export function getExerciseTarget(
   }
 
   if (typeof exerciseNumber === "number") {
-    if (Option.isSome(routeNumber) && routeNumber.value !== exerciseNumber) {
+    const questionRoute = getExerciseQuestionRouteForNumber(
+      route,
+      exerciseNumber
+    );
+
+    if (!questionRoute) {
       return Option.none();
     }
 
     return Option.some({
       number: Option.some(exerciseNumber),
+      questionRoute: Option.some(questionRoute),
+      setRoute,
+    });
+  }
+
+  if (Option.isSome(routeNumber)) {
+    return Option.some({
+      number: routeNumber,
+      questionRoute: Option.some(projection.route),
       setRoute,
     });
   }
 
   return Option.some({
     number: routeNumber,
+    questionRoute: Option.none<string>(),
     setRoute,
+  });
+}
+
+/** Resolves one selected exercise question through the persisted route catalog. */
+function resolveExerciseQuestionRoute(
+  convexUrl: string,
+  locale: Locale,
+  route: string
+) {
+  return Effect.gen(function* () {
+    const projection = yield* fetchNakafaRuntimeQuery(
+      convexUrl,
+      "getContentRoute",
+      api.contents.queries.runtime.getContentRoute,
+      { locale, route }
+    );
+
+    if (!projection) {
+      return Option.none<NakafaAgentContentRef>();
+    }
+
+    return createNakafaContentRefFromGraphProjection(projection);
   });
 }
 
