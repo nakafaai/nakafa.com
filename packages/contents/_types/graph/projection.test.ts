@@ -1,6 +1,7 @@
 import {
   getExerciseQuestionRouteForNumber,
   getExerciseSetGroupRoute,
+  getExerciseSetRoute,
   getQuranSurahNumberForRoute,
   getSourceRouteProjection,
   getSourceRouteProjectionForRoute,
@@ -122,6 +123,10 @@ describe("source route projection", () => {
     });
     expect(getExerciseSetGroupRoute(setRoute)).toBe(groupRoute);
     expect(getExerciseSetGroupRoute(shortSetRoute)).toBe(shortGroupRoute);
+    expect(getExerciseSetRoute(setRoute)).toBe(setRoute);
+    expect(getExerciseSetRoute(questionRoute)).toBe(setRoute);
+    expect(getExerciseSetRoute(shortSetRoute)).toBe(shortSetRoute);
+    expect(getExerciseSetRoute(shortQuestionRoute)).toBe(shortSetRoute);
     expect(getExerciseQuestionRouteForNumber(setRoute, 7)).toBe(questionRoute);
     expect(getExerciseQuestionRouteForNumber(questionRoute, 7)).toBe(
       questionRoute
@@ -156,6 +161,16 @@ describe("source route projection", () => {
     ).toBeNull();
     expect(
       getExerciseSetGroupRoute("exercises/high-school/snbt/set-1/7")
+    ).toBeNull();
+    expect(
+      getExerciseSetRoute(
+        "exercises/high-school/snbt/quantitative-knowledge/practice"
+      )
+    ).toBeNull();
+    expect(
+      getExerciseSetRoute(
+        "exercises/high-school/snbt/quantitative-knowledge/practice/not-a-set"
+      )
     ).toBeNull();
     expect(
       getExerciseQuestionRouteForNumber(

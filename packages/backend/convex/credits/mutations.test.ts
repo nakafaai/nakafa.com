@@ -57,4 +57,31 @@ describe("credits/mutations", () => {
       ])
     );
   });
+
+  it("keeps repeated all-plan reconciliation idempotent", async () => {
+    vi.setSystemTime(new Date(Date.UTC(2026, 3, 18, 10, 0, 0)));
+
+    const t = convexTest(schema, convexModules);
+
+    await t.mutation(internal.credits.mutations.syncAllCreditResetPeriods, {});
+    await t.mutation(internal.credits.mutations.syncAllCreditResetPeriods, {});
+
+    const storedPeriods = await t.query(
+      async (ctx) => await ctx.db.query("creditResetPeriods").collect()
+    );
+
+    expect(storedPeriods).toHaveLength(2);
+    expect(storedPeriods).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          plan: "free",
+          resetAt: Date.UTC(2026, 3, 18, 0, 0, 0),
+        }),
+        expect.objectContaining({
+          plan: "pro",
+          resetAt: Date.UTC(2026, 3, 1, 0, 0, 0),
+        }),
+      ])
+    );
+  });
 });

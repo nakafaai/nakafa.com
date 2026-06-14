@@ -49,6 +49,21 @@ export function getExerciseSetGroupRoute(route: string) {
   );
 }
 
+/** Returns the set-level route for valid exercise set or question projections. */
+export function getExerciseSetRoute(route: string) {
+  const projection = getSourceRouteProjectionForRoute(route);
+
+  if (projection?.kind === "exercise-set") {
+    return projection.route;
+  }
+
+  if (projection?.kind === "exercise-question") {
+    return projection.parentRoute;
+  }
+
+  return null;
+}
+
 /** Returns the graph-owned question route below a valid exercise set route. */
 export function getExerciseQuestionRouteForNumber(
   route: string,

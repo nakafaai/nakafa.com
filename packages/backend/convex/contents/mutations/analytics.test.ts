@@ -130,7 +130,7 @@ describe("contents/mutations/analytics", () => {
     vi.restoreAllMocks();
   });
 
-  it("schedules one worker attempt per analytics partition", async () => {
+  it("does not schedule partition work when every queue is empty", async () => {
     const t = convexTest(schema, convexModules);
 
     const result = await t.mutation(
@@ -142,12 +142,48 @@ describe("contents/mutations/analytics", () => {
     );
 
     expect(result).toEqual({
-      enqueuedPartitions: CONTENT_ANALYTICS_PARTITIONS.length,
+      enqueuedPartitions: 0,
     });
-    expect(scheduledJobs).toHaveLength(CONTENT_ANALYTICS_PARTITIONS.length);
-    expect(scheduledJobs.map((job) => job.args[0])).toEqual(
-      CONTENT_ANALYTICS_PARTITIONS.map((partition) => ({ partition }))
+    expect(scheduledJobs).toEqual([]);
+  });
+
+  it("schedules one worker attempt per non-empty analytics partition", async () => {
+    const t = convexTest(schema, convexModules);
+
+    await t.mutation(async (ctx) => {
+      const { article, subject } = await insertAnalyticsContent(ctx);
+      await ctx.db.insert("contentViewAnalyticsQueue", {
+        ...article,
+        locale: "en",
+        partition: 0,
+        route: ARTICLE_ROUTE,
+        section: "articles",
+        viewedAt: NOW,
+      });
+      await ctx.db.insert("contentViewAnalyticsQueue", {
+        ...subject,
+        locale: "en",
+        partition: 3,
+        route: SUBJECT_ROUTE,
+        section: "subject",
+        viewedAt: NOW,
+      });
+    });
+
+    const result = await t.mutation(
+      internal.contents.mutations.analytics.scheduleContentAnalyticsPartitions
     );
+    const scheduledJobs = await t.query(
+      async (ctx) => await ctx.db.system.query("_scheduled_functions").collect()
+    );
+
+    expect(result).toEqual({
+      enqueuedPartitions: 2,
+    });
+    expect(scheduledJobs.map((job) => job.args[0])).toEqual([
+      { partition: 0 },
+      { partition: 3 },
+    ]);
   });
 
   it("creates and leases a partition once while the lease is active", async () => {
