@@ -1,4 +1,5 @@
 import { createCurriculumLensDescriptor } from "@repo/contents/_types/curriculum-lens";
+import { getCurriculumLensScopeForKind } from "@repo/contents/_types/graph/spec";
 import { describe, expect, it } from "vitest";
 
 describe("curriculum lens", () => {
@@ -38,7 +39,7 @@ describe("curriculum lens", () => {
 
     expect(group).toMatchObject({
       lensId: "lens:exercise:high-school:snbt:quantitative-knowledge",
-      scope: "exam",
+      scope: getCurriculumLensScopeForKind("exercise-question"),
     });
     expect(question.lensId).toBe(group.lensId);
   });

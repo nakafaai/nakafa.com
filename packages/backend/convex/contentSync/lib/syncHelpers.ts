@@ -4,8 +4,8 @@ import { deleteAudioContentSourceByRoute } from "@repo/backend/convex/audioStudi
 import type { ContentAuthorContentId } from "@repo/backend/convex/authors/schema";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
-import { deleteContentRoute } from "@repo/backend/convex/contents/helpers/routes/write";
-import { deleteContentSearch } from "@repo/backend/convex/contents/helpers/search/write";
+import { deleteContentRoutesByRoute } from "@repo/backend/convex/contents/helpers/routes/write";
+import { deleteContentSearchByRoute } from "@repo/backend/convex/contents/helpers/search/write";
 import {
   type ContentType,
   type Locale,
@@ -274,26 +274,8 @@ export async function deleteContentProjectionsByRoute(
   ctx: MutationCtx,
   args: { locale: Locale; route: string }
 ) {
-  const search = await ctx.db
-    .query("contentSearch")
-    .withIndex("by_locale_and_route", (q) =>
-      q.eq("locale", args.locale).eq("route", args.route)
-    )
-    .unique();
-  const route = await ctx.db
-    .query("contentRoutes")
-    .withIndex("by_locale_and_route", (q) =>
-      q.eq("locale", args.locale).eq("route", args.route)
-    )
-    .unique();
-
-  if (search) {
-    await deleteContentSearch(ctx, search.content_id);
-  }
-
-  if (route) {
-    await deleteContentRoute(ctx, route.content_id);
-  }
+  await deleteContentSearchByRoute(ctx, args);
+  await deleteContentRoutesByRoute(ctx, args);
 }
 
 /** Delete one exercise question together with its sync-managed dependent rows. */

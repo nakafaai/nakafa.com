@@ -168,9 +168,11 @@ describe("contents/actions/queue", () => {
         title: "Dynastic Politics",
       });
 
-      await ctx.db.insert("articlePopularity", {
+      await ctx.db.insert("learningPopularity", {
         ...graph,
         content_id: graph.assetId,
+        locale: "en",
+        section: "articles",
         updatedAt: NOW,
         viewCount: MIN_VIEW_THRESHOLD,
       });

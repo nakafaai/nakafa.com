@@ -1,6 +1,7 @@
 import { verifyNakafaContent } from "@repo/backend/client/nakafa/verify";
 import { api } from "@repo/backend/convex/_generated/api";
 import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
+import { LocaleSchema } from "@repo/contents/_types/content";
 import { type FunctionReference, getFunctionName } from "convex/server";
 import { Effect, Schema } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -14,14 +15,14 @@ vi.mock("@repo/backend/client/runtime", () => ({
 }));
 
 const RouteArgsSchema = Schema.Struct({
-  locale: Schema.Literal("en", "id"),
+  locale: LocaleSchema,
   route: Schema.String,
 });
 const ContentIdArgsSchema = Schema.Struct({
   contentId: Schema.String,
 });
 const ExerciseGroupArgsSchema = Schema.Struct({
-  locale: Schema.Literal("en", "id"),
+  locale: LocaleSchema,
   slug: Schema.String,
 });
 

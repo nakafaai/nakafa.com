@@ -56,10 +56,8 @@ const graphIdentityTargets = [
   "parts",
   "contentViews",
   "contentViewAnalyticsQueue",
-  "articlePopularity",
-  "subjectPopularity",
-  "exercisePopularity",
-  "subjectTrendingBuckets",
+  "learningPopularity",
+  "learningTrendingBuckets",
   "audioContentSources",
   "audioGenerationQueue",
   "contentAudios",
@@ -496,57 +494,21 @@ export const getGraphIdentityIntegrityPage = internalQuery({
       return getGraphIdentityPageResult(summary, page);
     }
 
-    if (args.target === "articlePopularity") {
+    if (args.target === "learningPopularity") {
       const page = await ctx.db
-        .query("articlePopularity")
+        .query("learningPopularity")
         .paginate(args.paginationOpts);
 
       for (const row of page.page) {
-        checkGraphIdentityRef(
-          summary,
-          { ...row, section: "articles" },
-          args.target
-        );
+        checkGraphIdentityRef(summary, row, args.target);
       }
 
       return getGraphIdentityPageResult(summary, page);
     }
 
-    if (args.target === "subjectPopularity") {
+    if (args.target === "learningTrendingBuckets") {
       const page = await ctx.db
-        .query("subjectPopularity")
-        .paginate(args.paginationOpts);
-
-      for (const row of page.page) {
-        checkGraphIdentityRef(
-          summary,
-          { ...row, section: "subject" },
-          args.target
-        );
-      }
-
-      return getGraphIdentityPageResult(summary, page);
-    }
-
-    if (args.target === "exercisePopularity") {
-      const page = await ctx.db
-        .query("exercisePopularity")
-        .paginate(args.paginationOpts);
-
-      for (const row of page.page) {
-        checkGraphIdentityRef(
-          summary,
-          { ...row, section: "exercises" },
-          args.target
-        );
-      }
-
-      return getGraphIdentityPageResult(summary, page);
-    }
-
-    if (args.target === "subjectTrendingBuckets") {
-      const page = await ctx.db
-        .query("subjectTrendingBuckets")
+        .query("learningTrendingBuckets")
         .paginate(args.paginationOpts);
 
       for (const row of page.page) {

@@ -11,6 +11,7 @@ import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { cleanSlug } from "@repo/utilities/helper";
 import { useLocale, useTranslations } from "next-intl";
 
+/** Renders graph-backed recently viewed learning objects on the home screen. */
 export function HomeContinueLearning() {
   const t = useTranslations("Home");
   const locale = useLocale();

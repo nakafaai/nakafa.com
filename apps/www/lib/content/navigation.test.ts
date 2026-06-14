@@ -1,7 +1,10 @@
 // @vitest-environment node
 
 import type { Locale } from "@repo/contents/_types/content";
-import type { LearningObjectKind } from "@repo/contents/_types/learning-graph";
+import {
+  getSourceRouteProjection,
+  type LearningObjectKind,
+} from "@repo/contents/_types/graph/spec";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import type { SourceRegistryRoot } from "@repo/contents/_types/source-registry";
 import { Effect } from "effect";
@@ -916,19 +919,11 @@ function getFixtureContentId(locale: Locale, route: string) {
 
 /** Derives the same navigation parent route used by synced route rows. */
 function getFixtureParentRoute(kind: NavigationRoute["kind"], route: string) {
-  const parts = route.split("/").filter(Boolean);
+  const projection = getSourceRouteProjection({ kind, route });
 
-  if (kind === "article") {
-    return parts.slice(0, 2).join("/");
+  if (projection) {
+    return projection.parentRoute;
   }
 
-  if (kind === "exercise-group" || kind === "subject-topic") {
-    return parts.slice(0, 4).join("/");
-  }
-
-  if (kind === "quran-surah") {
-    return "quran";
-  }
-
-  return parts.slice(0, -1).join("/");
+  return "fixture-parent";
 }

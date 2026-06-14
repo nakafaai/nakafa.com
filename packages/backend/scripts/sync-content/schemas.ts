@@ -4,12 +4,14 @@ import {
   CONTENT_ROUTE_KINDS,
   NAKAFA_CONTENT_SECTIONS,
 } from "@repo/backend/convex/contents/constants";
+import { CONTENT_TYPE_VALUES } from "@repo/backend/convex/lib/validators/contents";
 import { locales } from "@repo/utilities/locales";
 import { Effect, Schema } from "effect";
 
 const SyncLocaleSchema = Schema.Literal(...locales);
 const SyncSectionSchema = Schema.Literal(...NAKAFA_CONTENT_SECTIONS);
 const ContentRouteKindSchema = Schema.Literal(...CONTENT_ROUTE_KINDS);
+const ContentTypeSchema = Schema.Literal(...CONTENT_TYPE_VALUES);
 
 /** Validates a Convex document ID while preserving its generated table brand. */
 export const ConvexIdSchema = <const TableName extends TableNames>(
@@ -369,7 +371,6 @@ export const AuthorSyncResultSchema = Schema.Struct({
 
 export const ContentCountsSchema = Schema.Struct({
   articleReferences: Schema.Number,
-  articlePopularity: Schema.Number,
   articles: Schema.Number,
   audioContentSources: Schema.Number,
   audioGenerationQueue: Schema.Number,
@@ -387,7 +388,6 @@ export const ContentCountsSchema = Schema.Struct({
   exerciseAttempts: Schema.Number,
   exerciseChoices: Schema.Number,
   exerciseItemParameters: Schema.Number,
-  exercisePopularity: Schema.Number,
   exerciseQuestions: Schema.Number,
   exerciseSets: Schema.Number,
   irtCalibrationAttempts: Schema.Number,
@@ -399,11 +399,11 @@ export const ContentCountsSchema = Schema.Struct({
   irtScaleQualityRefreshQueue: Schema.Number,
   irtScaleVersionItems: Schema.Number,
   irtScaleVersions: Schema.Number,
+  learningPopularity: Schema.Number,
   quranSurahs: Schema.Number,
   quranVerses: Schema.Number,
   subjectSections: Schema.Number,
-  subjectPopularity: Schema.Number,
-  subjectTrendingBuckets: Schema.Number,
+  learningTrendingBuckets: Schema.Number,
   subjectTopics: Schema.Number,
   tryoutAccessCampaignProducts: Schema.Number,
   tryoutAccessCampaigns: Schema.Number,
@@ -594,7 +594,7 @@ export const ContentAuthorIntegrityPageSchema = Schema.mutable(
         Schema.Struct({
           authorId: ConvexIdSchema("authors"),
           contentId: ContentIdSchema,
-          contentType: Schema.Literal("article", "subject", "exercise"),
+          contentType: ContentTypeSchema,
         })
       ),
     })

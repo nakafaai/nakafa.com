@@ -1,3 +1,4 @@
+import { InvalidLearningGraphRouteError } from "@repo/contents/_types/graph/spec";
 import {
   buildGraphId,
   createLearningGraphIdentity,
@@ -125,6 +126,7 @@ describe("learning graph identity", () => {
       "article"
     );
     expect(getLearningObjectKindForRoute("quran/1")).toBe("quran-surah");
+    expect(getLearningObjectKindForRoute("quran/not-number")).toBeNull();
     expect(
       getLearningObjectKindForRoute("subject/high-school/10/physics/waves")
     ).toBe("subject-topic");
@@ -195,8 +197,6 @@ describe("learning graph identity", () => {
         locale: "id",
         route: "subject/high-school/10/physics/waves",
       })
-    ).toThrow(
-      'Invalid subject-section graph route "subject/high-school/10/physics/waves".'
-    );
+    ).toThrow(InvalidLearningGraphRouteError);
   });
 });

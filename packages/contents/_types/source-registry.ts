@@ -1,27 +1,17 @@
 import { LocaleSchema } from "@repo/contents/_types/content";
 import {
+  getSourceRegistryRootForKind,
+  LearningObjectKindSchema,
+  SourceRegistryRootSchema,
+} from "@repo/contents/_types/graph/spec";
+import {
   createLearningGraphIdentity,
   getLearningObjectKindForRoute,
   LearningGraphIdentitySchema,
-  type LearningObjectKind,
-  LearningObjectKindSchema,
   normalizeGraphRoute,
 } from "@repo/contents/_types/learning-graph";
 import { cleanSlug } from "@repo/utilities/helper";
 import { Schema } from "effect";
-
-/** Stable source roots accepted by the graph source registry adapter. */
-export const SOURCE_REGISTRY_ROOT_VALUES = [
-  "articles",
-  "exercises",
-  "quran",
-  "subject",
-] as const;
-
-/** Runtime schema for graph source registry roots. */
-export const SourceRegistryRootSchema = Schema.Literal(
-  ...SOURCE_REGISTRY_ROOT_VALUES
-);
 
 /** Source registry root derived from the runtime schema. */
 export type SourceRegistryRoot = Schema.Schema.Type<
@@ -84,27 +74,11 @@ export function createSourceRegistryRecord(
     locale: input.locale,
     publicRoute,
     sourcePath: normalizeSourcePath(input.sourcePath),
-    sourceRoot: getSourceRoot(kind),
+    sourceRoot: getSourceRegistryRootForKind(kind),
   };
 }
 
 /** Normalizes a source-path provenance string without turning it into identity. */
 export function normalizeSourcePath(sourcePath: string) {
   return cleanSlug(sourcePath).split("/").filter(Boolean).join("/");
-}
-
-function getSourceRoot(kind: LearningObjectKind): SourceRegistryRoot {
-  if (kind === "article") {
-    return "articles";
-  }
-
-  if (kind === "quran-surah") {
-    return "quran";
-  }
-
-  if (kind.startsWith("exercise-")) {
-    return "exercises";
-  }
-
-  return "subject";
 }

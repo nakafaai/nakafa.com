@@ -10,6 +10,7 @@ interface Props {
   locale: Locale;
 }
 
+/** Records a delayed graph content view while rendering children unchanged. */
 export function ContentViewTracker({
   contentId,
   locale,

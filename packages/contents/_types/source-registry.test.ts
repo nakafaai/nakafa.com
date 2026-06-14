@@ -1,3 +1,4 @@
+import { getSourceRegistryRootForKind } from "@repo/contents/_types/graph/spec";
 import {
   createSourceRegistryRecord,
   normalizeSourcePath,
@@ -54,6 +55,9 @@ describe("source registry adapter", () => {
 
     expect(quran?.sourceRoot).toBe("quran");
     expect(exercise?.sourceRoot).toBe("exercises");
+    expect(exercise?.sourceRoot).toBe(
+      getSourceRegistryRootForKind("exercise-group")
+    );
   });
 
   it("rejects unsupported route projections", () => {

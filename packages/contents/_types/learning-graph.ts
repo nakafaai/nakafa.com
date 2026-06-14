@@ -1,27 +1,12 @@
 import { LocaleSchema } from "@repo/contents/_types/content";
+import {
+  getSourceRouteProjectionForRoute,
+  LearningObjectKindSchema,
+  normalizeSourceRouteProjection,
+  requireSourceRouteProjection,
+} from "@repo/contents/_types/graph/spec";
 import { cleanSlug } from "@repo/utilities/helper";
 import { Schema } from "effect";
-
-/** Stable learning object kinds supported by graph identity generation. */
-export const LEARNING_OBJECT_KIND_VALUES = [
-  "article",
-  "subject-topic",
-  "subject-section",
-  "exercise-group",
-  "exercise-set",
-  "exercise-question",
-  "quran-surah",
-] as const;
-
-/** Runtime schema for graph learning object kinds. */
-export const LearningObjectKindSchema = Schema.Literal(
-  ...LEARNING_OBJECT_KIND_VALUES
-);
-
-/** Graph learning object kind derived from the runtime schema. */
-export type LearningObjectKind = Schema.Schema.Type<
-  typeof LearningObjectKindSchema
->;
 
 /** Runtime schema for graph identity persisted as product identity. */
 export const LearningGraphIdentitySchema = Schema.Struct({
@@ -49,16 +34,6 @@ export type LearningGraphSource = Schema.Schema.Type<
   typeof LearningGraphSourceSchema
 >;
 
-const KIND_ROUTE_LENGTHS = {
-  article: [3],
-  "exercise-group": [5, 6],
-  "exercise-question": [7, 8],
-  "exercise-set": [6, 7],
-  "quran-surah": [2],
-  "subject-section": [6],
-  "subject-topic": [5],
-} as const satisfies Record<LearningObjectKind, readonly number[]>;
-
 /**
  * Creates graph identity for one source-registry record.
  *
@@ -68,39 +43,27 @@ const KIND_ROUTE_LENGTHS = {
 export function createLearningGraphIdentity(
   source: LearningGraphSource
 ): LearningGraphIdentity {
-  const route = normalizeGraphRoute(source.route);
-  const parts = route.split("/");
+  const projection = requireSourceRouteProjection(source);
 
-  assertRouteShape(source.kind, route, parts);
-
-  const lens = getLensSegments(source.kind, parts);
-  const concept = getConceptSegments(source.kind, parts);
-  const learningObject = getLearningObjectSegments(source.kind, parts);
-
-  return {
-    alignmentId: buildGraphId("alignment", [...lens, ...learningObject]),
-    assetId: buildGraphId("asset", [source.locale, ...lens, ...learningObject]),
-    conceptId: buildGraphId("concept", concept),
-    learningObjectId: buildGraphId("lo", learningObject),
-    lensId: buildGraphId("lens", lens),
-  };
+  return createLearningGraphIdentityFromProjection({
+    locale: source.locale,
+    projection,
+  });
 }
 
 /** Creates graph identity from a public route projection when the kind is inferable. */
 export function createLearningGraphIdentityFromRoute(
   source: Omit<LearningGraphSource, "kind">
 ) {
-  const route = normalizeGraphRoute(source.route);
-  const kind = getLearningObjectKindForRoute(route);
+  const projection = getSourceRouteProjectionForRoute(source.route);
 
-  if (!kind) {
+  if (!projection) {
     return null;
   }
 
-  return createLearningGraphIdentity({
-    kind,
+  return createLearningGraphIdentityFromProjection({
     locale: source.locale,
-    route,
+    projection,
   });
 }
 
@@ -108,17 +71,12 @@ export function createLearningGraphIdentityFromRoute(
 export function getLearningGraphLensSegments(
   source: LearningGraphSource
 ): readonly string[] {
-  const route = normalizeGraphRoute(source.route);
-  const parts = route.split("/");
-
-  assertRouteShape(source.kind, route, parts);
-
-  return getLensSegments(source.kind, parts);
+  return requireSourceRouteProjection(source).lensSegments;
 }
 
 /** Normalizes one public route before graph identity derivation. */
 export function normalizeGraphRoute(route: string) {
-  return cleanSlug(route).split("/").filter(Boolean).join("/");
+  return normalizeSourceRouteProjection(route);
 }
 
 /** Builds a stable graph ID from clean hierarchy segments. */
@@ -133,149 +91,35 @@ export function buildGraphId(prefix: string, segments: readonly string[]) {
 }
 
 /** Infers the graph object kind represented by one canonical public route. */
-export function getLearningObjectKindForRoute(
-  route: string
-): LearningObjectKind | null {
-  const parts = normalizeGraphRoute(route).split("/");
-  const [root] = parts;
+export function getLearningObjectKindForRoute(route: string) {
+  return getSourceRouteProjectionForRoute(route)?.kind ?? null;
+}
 
-  if (root === "articles" && parts.length === 3) {
-    return "article";
-  }
-
-  if (root === "quran" && parts.length === 2) {
-    return "quran-surah";
-  }
-
-  if (root === "subject" && parts.length === 5) {
-    return "subject-topic";
-  }
-
-  if (root === "subject" && parts.length === 6) {
-    return "subject-section";
-  }
-
-  if (root === "exercises") {
-    return getExerciseObjectKind(parts);
-  }
-
-  return null;
+function createLearningGraphIdentityFromProjection({
+  locale,
+  projection,
+}: {
+  readonly locale: LearningGraphSource["locale"];
+  readonly projection: NonNullable<
+    ReturnType<typeof getSourceRouteProjectionForRoute>
+  >;
+}) {
+  return {
+    alignmentId: buildGraphId("alignment", [
+      ...projection.lensSegments,
+      ...projection.learningObjectSegments,
+    ]),
+    assetId: buildGraphId("asset", [
+      locale,
+      ...projection.lensSegments,
+      ...projection.learningObjectSegments,
+    ]),
+    conceptId: buildGraphId("concept", projection.conceptSegments),
+    learningObjectId: buildGraphId("lo", projection.learningObjectSegments),
+    lensId: buildGraphId("lens", projection.lensSegments),
+  };
 }
 
 function cleanGraphSegment(segment: string) {
   return cleanSlug(segment).replaceAll("/", "-");
-}
-
-function getExerciseObjectKind(
-  parts: readonly string[]
-): LearningObjectKind | null {
-  if (parts.length < 4) {
-    return null;
-  }
-
-  const lastPart = parts.slice(-1).join("");
-  const parentPart = parts.slice(-2, -1).join("");
-
-  if (
-    isAllowedRouteLength("exercise-question", parts.length) &&
-    parentPart.startsWith("set-") &&
-    isNumberSegment(lastPart)
-  ) {
-    return "exercise-question";
-  }
-
-  if (
-    isAllowedRouteLength("exercise-set", parts.length) &&
-    lastPart.startsWith("set-")
-  ) {
-    return "exercise-set";
-  }
-
-  if (isAllowedRouteLength("exercise-group", parts.length)) {
-    return "exercise-group";
-  }
-
-  return null;
-}
-
-function isNumberSegment(segment: string) {
-  const value = Number.parseInt(segment, 10);
-
-  return Number.isSafeInteger(value) && String(value) === segment;
-}
-
-function assertRouteShape(
-  kind: LearningObjectKind,
-  route: string,
-  parts: readonly string[]
-) {
-  const allowedLengths = KIND_ROUTE_LENGTHS[kind];
-
-  if (isAllowedRouteLength(kind, parts.length)) {
-    return;
-  }
-
-  throw new Error(
-    `Invalid ${kind} graph route "${route}". Expected ${allowedLengths.join(" or ")} segments.`
-  );
-}
-
-function isAllowedRouteLength(kind: LearningObjectKind, length: number) {
-  return KIND_ROUTE_LENGTHS[kind].some(
-    (allowedLength) => allowedLength === length
-  );
-}
-
-function getLensSegments(kind: LearningObjectKind, parts: readonly string[]) {
-  if (kind === "article") {
-    return ["article", ...parts.slice(1, 2)];
-  }
-
-  if (kind === "quran-surah") {
-    return ["quran"];
-  }
-
-  if (kind.startsWith("subject-")) {
-    return ["subject", ...parts.slice(1, 4)];
-  }
-
-  return ["exercise", ...parts.slice(1, 4)];
-}
-
-function getConceptSegments(
-  kind: LearningObjectKind,
-  parts: readonly string[]
-) {
-  if (kind === "article") {
-    return ["article", ...parts.slice(1, 2)];
-  }
-
-  if (kind === "quran-surah") {
-    return ["quran", "surah", ...parts.slice(1, 2)];
-  }
-
-  if (kind.startsWith("subject-")) {
-    return ["subject", ...parts.slice(3, 5)];
-  }
-
-  return ["exercise", ...parts.slice(3, 5)];
-}
-
-function getLearningObjectSegments(
-  kind: LearningObjectKind,
-  parts: readonly string[]
-) {
-  if (kind === "article") {
-    return ["article", ...parts.slice(1, 3)];
-  }
-
-  if (kind === "quran-surah") {
-    return ["quran-surah", ...parts.slice(1, 2)];
-  }
-
-  if (kind.startsWith("subject-")) {
-    return [kind, ...parts.slice(3)];
-  }
-
-  return [kind, ...parts.slice(2)];
 }

@@ -53,25 +53,15 @@ const RESET_STEPS: ResetStep[] = [
     resultLabel: "content view rows",
   },
   {
-    label: "Deleting article popularity rows...",
-    mutation: internal.contentSync.reset.internal.deleteArticlePopularityBatch,
-    resultLabel: "article popularity rows",
+    label: "Deleting learning popularity rows...",
+    mutation: internal.contentSync.reset.internal.deleteLearningPopularityBatch,
+    resultLabel: "learning popularity rows",
   },
   {
-    label: "Deleting subject popularity rows...",
-    mutation: internal.contentSync.reset.internal.deleteSubjectPopularityBatch,
-    resultLabel: "subject popularity rows",
-  },
-  {
-    label: "Deleting exercise popularity rows...",
-    mutation: internal.contentSync.reset.internal.deleteExercisePopularityBatch,
-    resultLabel: "exercise popularity rows",
-  },
-  {
-    label: "Deleting subject trending bucket rows...",
+    label: "Deleting learning trending bucket rows...",
     mutation:
-      internal.contentSync.reset.internal.deleteSubjectTrendingBucketsBatch,
-    resultLabel: "subject trending bucket rows",
+      internal.contentSync.reset.internal.deleteLearningTrendingBucketsBatch,
+    resultLabel: "learning trending bucket rows",
   },
   {
     label: "Deleting content route rows...",
@@ -351,10 +341,8 @@ export const reset = Effect.fn("sync.reset")(function* (
   log(`  Content Views:         ${counts.contentViews}`);
   log(`  View Analytics Queue:  ${counts.contentViewAnalyticsQueue}`);
   log(`  Analytics Partitions:  ${counts.contentAnalyticsPartitions}`);
-  log(`  Article Popularity:    ${counts.articlePopularity}`);
-  log(`  Subject Popularity:    ${counts.subjectPopularity}`);
-  log(`  Exercise Popularity:   ${counts.exercisePopularity}`);
-  log(`  Subject Trending:      ${counts.subjectTrendingBuckets}`);
+  log(`  Learning Popularity:   ${counts.learningPopularity}`);
+  log(`  Learning Trending:     ${counts.learningTrendingBuckets}`);
   log(`  Content Routes:        ${counts.contentRoutes}`);
   log(`  Content Route Counts:  ${counts.contentRouteCounts}`);
   log(`  Content Route Pages:   ${counts.contentRoutePages}`);
@@ -438,10 +426,8 @@ export const reset = Effect.fn("sync.reset")(function* (
     counts.contentViews +
     counts.contentViewAnalyticsQueue +
     counts.contentAnalyticsPartitions +
-    counts.articlePopularity +
-    counts.subjectPopularity +
-    counts.exercisePopularity +
-    counts.subjectTrendingBuckets +
+    counts.learningPopularity +
+    counts.learningTrendingBuckets +
     counts.contentRoutes +
     counts.contentRouteCounts +
     counts.contentRoutePages +

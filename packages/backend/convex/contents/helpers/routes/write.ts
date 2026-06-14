@@ -5,6 +5,7 @@ import type {
   Locale,
   NakafaSection,
 } from "@repo/backend/convex/lib/validators/contents";
+import { requireSourceRouteProjection } from "@repo/contents/_types/graph/spec";
 import type { LearningGraphIdentity } from "@repo/contents/_types/learning-graph";
 import { ConvexError } from "convex/values";
 
@@ -31,7 +32,10 @@ export async function syncContentRoute(
   source: ContentRouteSource
 ) {
   const searchRef = buildContentSearchRef(source);
-  const routeParts = source.route.split("/").filter(Boolean);
+  const routeProjection = requireSourceRouteProjection({
+    kind: source.kind,
+    route: source.route,
+  });
   const nextValues = {
     alignmentId: source.alignmentId,
     authors: source.authors ?? [],
@@ -40,7 +44,7 @@ export async function syncContentRoute(
     contentHash: source.contentHash,
     content_id: searchRef.content_id,
     date: source.date,
-    depth: routeParts.length,
+    depth: routeProjection.depth,
     description: source.description,
     kind: source.kind,
     learningObjectId: source.learningObjectId,
@@ -48,7 +52,7 @@ export async function syncContentRoute(
     lensId: source.lensId,
     markdown: source.markdown,
     official: source.official,
-    parentRoute: getContentRouteParentRoute(source.kind, routeParts),
+    parentRoute: routeProjection.parentRoute,
     route: source.route,
     section: source.section,
     syncedAt: source.syncedAt,
@@ -121,6 +125,34 @@ export async function deleteContentRoute(ctx: MutationCtx, contentId: string) {
   }
 
   await ctx.db.delete(existing._id);
+}
+
+/** Deletes every route catalog row attached to one public route projection. */
+export async function deleteContentRoutesByRoute(
+  ctx: MutationCtx,
+  args: { locale: Locale; route: string }
+) {
+  const rows = await ctx.db
+    .query("contentRoutes")
+    .withIndex("by_locale_and_route", (q) =>
+      q.eq("locale", args.locale).eq("route", args.route)
+    )
+    .take(duplicateRouteRepairLimit);
+
+  if (rows.length >= duplicateRouteRepairLimit) {
+    throw new ConvexError({
+      code: "CONTENT_ROUTE_DELETE_LIMIT_EXCEEDED",
+      message: "Content route has too many route projections to delete safely.",
+    });
+  }
+
+  for (const row of rows) {
+    if (row.countedAt !== undefined) {
+      await decrementContentRouteCount(ctx, row);
+    }
+
+    await ctx.db.delete(row._id);
+  }
 }
 
 /** Increments the materialized route count for one synced catalog row. */
@@ -253,28 +285,4 @@ function isSameContentRoute(
     existing.section === next.section &&
     existing.title === next.title
   );
-}
-
-/** Derives the navigation parent route for one synced public route. */
-function getContentRouteParentRoute(
-  kind: Doc<"contentRoutes">["kind"],
-  parts: readonly string[]
-) {
-  if (kind === "article") {
-    return parts.slice(0, 2).join("/");
-  }
-
-  if (kind === "exercise-group") {
-    return parts.slice(0, 4).join("/");
-  }
-
-  if (kind === "subject-topic") {
-    return parts.slice(0, 4).join("/");
-  }
-
-  if (kind === "quran-surah") {
-    return "quran";
-  }
-
-  return parts.slice(0, -1).join("/");
 }

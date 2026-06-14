@@ -12,6 +12,7 @@ import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref
 import { ExercisesCategorySchema } from "@repo/contents/_types/exercises/category";
 import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
 import { ExercisesTypeSchema } from "@repo/contents/_types/exercises/type";
+import { getSourceRouteProjectionForRoute } from "@repo/contents/_types/graph/spec";
 import type { Locale } from "@repo/utilities/locales";
 import { Effect, Option, Schema } from "effect";
 
@@ -152,12 +153,22 @@ export function getExerciseTarget(
   route: string,
   exerciseNumber?: number
 ) {
-  const routeNumber = getQuestionNumberFromRoute(route);
-  const setRoute = Option.isSome(routeNumber)
-    ? route.split("/").slice(0, -1).join("/")
-    : route;
+  const projection = getSourceRouteProjectionForRoute(route);
 
-  if (!isExerciseSetRoute(locale, setRoute)) {
+  if (
+    !projection?.exercise ||
+    (projection.kind !== "exercise-set" &&
+      projection.kind !== "exercise-question")
+  ) {
+    return Option.none();
+  }
+
+  const routeNumber = getQuestionNumberFromProjection(projection);
+  const setRoute = projection.exercise.setRoute ?? route;
+
+  if (
+    Option.isNone(getExerciseGroupArgs(locale, projection.exercise.groupRoute))
+  ) {
     return Option.none();
   }
 
@@ -178,32 +189,19 @@ export function getExerciseTarget(
   });
 }
 
-/** Returns whether a route points to a concrete exercise set. */
-function isExerciseSetRoute(locale: Locale, route: string) {
-  const parts = route.split("/");
-  const setSegment = parts.at(-1);
-
-  if (!setSegment?.startsWith("set-")) {
-    return false;
-  }
-
-  const groupRoute = parts.slice(0, -1).join("/");
-  return Option.isSome(getExerciseGroupArgs(locale, groupRoute));
-}
-
 /** Reads a numeric exercise question segment only under a set segment. */
-function getQuestionNumberFromRoute(route: string) {
-  const parts = route.split("/");
-  const lastPart = parts.at(-1);
-  const parentPart = parts.at(-2);
+function getQuestionNumberFromProjection(
+  projection: NonNullable<ReturnType<typeof getSourceRouteProjectionForRoute>>
+) {
+  const questionSegment = projection.exercise?.questionSegment;
 
-  if (!(lastPart && parentPart?.startsWith("set-"))) {
+  if (!questionSegment) {
     return Option.none<number>();
   }
 
-  const number = Number.parseInt(lastPart, 10);
+  const number = Number.parseInt(questionSegment, 10);
 
-  if (!(Number.isSafeInteger(number) && `${number}` === lastPart)) {
+  if (!(Number.isSafeInteger(number) && `${number}` === questionSegment)) {
     return Option.none<number>();
   }
 
@@ -212,24 +210,27 @@ function getQuestionNumberFromRoute(route: string) {
 
 /** Parses exercise group route segments into the Convex query args. */
 export function getExerciseGroupArgs(locale: Locale, route: string) {
-  const parts = route.split("/");
+  const projection = getSourceRouteProjectionForRoute(route);
 
-  if (parts.length !== 5 && parts.length !== 6) {
+  if (projection?.kind !== "exercise-group" || !projection.exercise) {
     return Option.none();
   }
 
-  const [root, category, type, material, exerciseType, year] = parts;
+  const { categorySegment, groupSegments, materialSegment, typeSegment } =
+    projection.exercise;
+  const [exerciseType, year] = groupSegments;
 
-  if (root !== "exercises" || !exerciseType) {
+  if (!exerciseType) {
     return Option.none();
   }
 
   const parsedCategory = Schema.decodeUnknownOption(ExercisesCategorySchema)(
-    category
+    categorySegment
   );
-  const parsedType = Schema.decodeUnknownOption(ExercisesTypeSchema)(type);
+  const parsedType =
+    Schema.decodeUnknownOption(ExercisesTypeSchema)(typeSegment);
   const parsedMaterial = Schema.decodeUnknownOption(ExercisesMaterialSchema)(
-    material
+    materialSegment
   );
 
   if (

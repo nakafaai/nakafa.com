@@ -23,16 +23,16 @@ export const getPopularContentForAudioQueue = internalQuery({
   handler: async (ctx) => {
     const [articleRows, subjectRows] = await Promise.all([
       ctx.db
-        .query("articlePopularity")
-        .withIndex("by_viewCount_and_content_id", (q) =>
-          q.gte("viewCount", MIN_VIEW_THRESHOLD)
+        .query("learningPopularity")
+        .withIndex("by_section_and_viewCount_and_content_id", (q) =>
+          q.eq("section", "articles").gte("viewCount", MIN_VIEW_THRESHOLD)
         )
         .order("desc")
         .take(MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE),
       ctx.db
-        .query("subjectPopularity")
-        .withIndex("by_viewCount_and_content_id", (q) =>
-          q.gte("viewCount", MIN_VIEW_THRESHOLD)
+        .query("learningPopularity")
+        .withIndex("by_section_and_viewCount_and_content_id", (q) =>
+          q.eq("section", "subject").gte("viewCount", MIN_VIEW_THRESHOLD)
         )
         .order("desc")
         .take(MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE),

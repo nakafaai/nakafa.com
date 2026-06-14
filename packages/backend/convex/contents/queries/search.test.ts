@@ -4,6 +4,7 @@ import { CONTENT_SEARCH_MAX_OFFSET } from "@repo/backend/convex/contents/helpers
 import { readContentSearchDocuments } from "@repo/backend/convex/contents/helpers/search/read";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import type { Locale } from "@repo/contents/_types/content";
+import type { SourceRegistryRoot } from "@repo/contents/_types/graph/spec";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { describe, expect, it } from "vitest";
 
@@ -13,7 +14,7 @@ interface ContentSearchFixture {
   locale: Locale;
   markdown_url: string;
   route: string;
-  section: "articles" | "subject" | "exercises" | "quran";
+  section: SourceRegistryRoot;
   syncedAt: number;
   text: string;
   title: string;

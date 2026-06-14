@@ -75,12 +75,15 @@ const loadSubjectViewCounts = Effect.fn(
   return yield* Effect.tryPromise({
     try: async () => {
       const bucketsInRange = ctx.db
-        .query("subjectTrendingBuckets")
-        .withIndex("by_locale_and_bucketStart_and_content_id", (q) =>
-          q
-            .eq("locale", args.locale)
-            .gte("bucketStart", window.since)
-            .lt("bucketStart", window.until)
+        .query("learningTrendingBuckets")
+        .withIndex(
+          "by_section_and_locale_and_bucketStart_and_content_id",
+          (q) =>
+            q
+              .eq("section", "subject")
+              .eq("locale", args.locale)
+              .gte("bucketStart", window.since)
+              .lt("bucketStart", window.until)
         );
 
       const countBySubject = new Map<

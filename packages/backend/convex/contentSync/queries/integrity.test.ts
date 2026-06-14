@@ -16,10 +16,8 @@ const ARTICLE_ROUTE = "articles/politics/integrity-article";
 const GRAPH_ANALYTICS_INTEGRITY_TARGETS = [
   "contentViews",
   "contentViewAnalyticsQueue",
-  "articlePopularity",
-  "subjectPopularity",
-  "exercisePopularity",
-  "subjectTrendingBuckets",
+  "learningPopularity",
+  "learningTrendingBuckets",
 ] as const;
 const GRAPH_AUDIO_INTEGRITY_TARGETS = [
   "audioContentSources",
@@ -242,25 +240,18 @@ describe("contentSync/queries/integrity", () => {
         section: "articles",
         viewedAt: NOW,
       });
-      await ctx.db.insert("articlePopularity", {
+      await ctx.db.insert("learningPopularity", {
         ...graph,
+        locale: "id",
+        section: "articles",
         updatedAt: NOW,
         viewCount: 1,
       });
-      await ctx.db.insert("subjectPopularity", {
-        ...graph,
-        updatedAt: NOW,
-        viewCount: 1,
-      });
-      await ctx.db.insert("exercisePopularity", {
-        ...graph,
-        updatedAt: NOW,
-        viewCount: 1,
-      });
-      await ctx.db.insert("subjectTrendingBuckets", {
+      await ctx.db.insert("learningTrendingBuckets", {
         ...graph,
         bucketStart: NOW,
         locale: "id",
+        section: "articles",
         updatedAt: NOW,
         viewCount: 1,
       });
@@ -293,8 +284,10 @@ describe("contentSync/queries/integrity", () => {
         section: "articles",
         viewedAt: NOW,
       });
-      await ctx.db.insert("articlePopularity", {
+      await ctx.db.insert("learningPopularity", {
         ...graph,
+        locale: "id",
+        section: "articles",
         updatedAt: NOW,
         viewCount: 1,
       });
@@ -318,10 +311,10 @@ describe("contentSync/queries/integrity", () => {
         section: "articles",
       }
     );
-    await expectMismatchedGraphIdentityIntegrity(t, "articlePopularity", {
+    await expectMismatchedGraphIdentityIntegrity(t, "learningPopularity", {
       assetId: graph.assetId,
       content_id: graph.content_id,
-      kind: "articlePopularity",
+      kind: "learningPopularity",
       section: "articles",
     });
   });

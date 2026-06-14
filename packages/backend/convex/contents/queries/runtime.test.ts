@@ -1,6 +1,7 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import type { ContentType } from "@repo/backend/convex/lib/validators/contents";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import type { Locale } from "@repo/contents/_types/content";
 import {
@@ -28,7 +29,7 @@ async function linkAuthor(
       | Id<"articleContents">
       | Id<"subjectSections">
       | Id<"exerciseQuestions">;
-    contentType: "article" | "subject" | "exercise";
+    contentType: ContentType;
   }
 ) {
   await ctx.db.insert("contentAuthors", {

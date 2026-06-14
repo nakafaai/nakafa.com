@@ -28,7 +28,6 @@ const config = {
 
 const emptyCounts = {
   articleReferences: 0,
-  articlePopularity: 0,
   articles: 0,
   audioContentSources: 0,
   audioGenerationQueue: 0,
@@ -42,11 +41,11 @@ const emptyCounts = {
   contentSearch: 0,
   contentViewAnalyticsQueue: 0,
   contentViews: 0,
+  learningPopularity: 0,
   exerciseAnswers: 0,
   exerciseAttempts: 0,
   exerciseChoices: 0,
   exerciseItemParameters: 0,
-  exercisePopularity: 0,
   exerciseQuestions: 0,
   exerciseSets: 0,
   irtCalibrationAttempts: 0,
@@ -60,10 +59,9 @@ const emptyCounts = {
   irtScaleVersions: 0,
   quranSurahs: 0,
   quranVerses: 0,
-  subjectPopularity: 0,
   subjectSections: 0,
   subjectTopics: 0,
-  subjectTrendingBuckets: 0,
+  learningTrendingBuckets: 0,
   tryoutAccessCampaignProducts: 0,
   tryoutAccessCampaigns: 0,
   tryoutAccessGrants: 0,
@@ -104,13 +102,11 @@ describe("sync-content resetAnalytics", () => {
     vi.mocked(getContentCounts).mockReturnValue(
       Effect.succeed({
         ...emptyCounts,
-        articlePopularity: 1,
+        learningPopularity: 1,
         contentAnalyticsPartitions: 1,
         contentViewAnalyticsQueue: 1,
         contentViews: 2,
-        exercisePopularity: 1,
-        subjectPopularity: 1,
-        subjectTrendingBuckets: 1,
+        learningTrendingBuckets: 1,
       })
     );
     vi.mocked(callConvexMutation)
@@ -118,13 +114,11 @@ describe("sync-content resetAnalytics", () => {
       .mockReturnValueOnce(Effect.succeed({ deleted: 1, hasMore: false }))
       .mockReturnValueOnce(Effect.succeed({ deleted: 2, hasMore: false }))
       .mockReturnValueOnce(Effect.succeed({ deleted: 1, hasMore: false }))
-      .mockReturnValueOnce(Effect.succeed({ deleted: 1, hasMore: false }))
-      .mockReturnValueOnce(Effect.succeed({ deleted: 1, hasMore: false }))
       .mockReturnValueOnce(Effect.succeed({ deleted: 1, hasMore: false }));
 
     await Effect.runPromise(resetAnalytics(config, { force: true }));
 
-    expect(callConvexMutation).toHaveBeenCalledTimes(7);
+    expect(callConvexMutation).toHaveBeenCalledTimes(5);
     expect(logSuccess).toHaveBeenCalledWith(
       "  Deleted 1 content view analytics queue rows"
     );
@@ -133,19 +127,13 @@ describe("sync-content resetAnalytics", () => {
     );
     expect(logSuccess).toHaveBeenCalledWith("  Deleted 2 content view rows");
     expect(logSuccess).toHaveBeenCalledWith(
-      "  Deleted 1 article popularity rows"
+      "  Deleted 1 learning popularity rows"
     );
     expect(logSuccess).toHaveBeenCalledWith(
-      "  Deleted 1 subject popularity rows"
+      "  Deleted 1 learning trending bucket rows"
     );
     expect(logSuccess).toHaveBeenCalledWith(
-      "  Deleted 1 exercise popularity rows"
-    );
-    expect(logSuccess).toHaveBeenCalledWith(
-      "  Deleted 1 subject trending bucket rows"
-    );
-    expect(logSuccess).toHaveBeenCalledWith(
-      "Deleted 8 analytics rows across content tables"
+      "Deleted 6 analytics rows across content tables"
     );
   });
 });

@@ -10,8 +10,9 @@ import { literals } from "convex-helpers/validators";
 
 const tables = {
   /**
-   * Compact audio source metadata for queue population.
+   * Graph-backed compact audio source metadata for queue population.
    * Avoids reading large article/subject body documents in cron queries.
+   * `route` is a locale/source projection; `content_id` is the graph asset ID.
    */
   audioContentSources: defineTable({
     ...audioContentIdentityFields,
@@ -25,7 +26,7 @@ const tables = {
       "locale",
     ]),
 
-  /** Audio files keyed by graph content identity for articles and subjects. */
+  /** Audio files keyed by graph asset identity for articles and subjects. */
   contentAudios: defineTable({
     ...audioContentIdentityFields,
     /** SHA-256 hash of content body for cache invalidation */
@@ -64,7 +65,7 @@ const tables = {
     /** Bounded cleanup for incomplete audio records. */
     .index("by_status_and_updatedAt", ["status", "updatedAt"]),
 
-  /** Queue for audio generation jobs keyed by graph content identity. */
+  /** Queue for audio generation jobs keyed by graph asset identity. */
   audioGenerationQueue: defineTable({
     ...audioContentIdentityFields,
     /**

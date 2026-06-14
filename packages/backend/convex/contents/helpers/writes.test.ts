@@ -61,25 +61,32 @@ describe("contents/helpers/writes", () => {
       const newExercise = getGraph(NEW_EXERCISE_ROUTE);
       const bucketStart = getTrendingBucketStart(NOW);
 
-      await ctx.db.insert("articlePopularity", {
+      await ctx.db.insert("learningPopularity", {
         ...article,
+        locale: "en",
+        section: "articles",
         updatedAt: NOW - 1,
         viewCount: 3,
       });
-      await ctx.db.insert("subjectPopularity", {
+      await ctx.db.insert("learningPopularity", {
         ...subject,
+        locale: "en",
+        section: "subject",
         updatedAt: NOW - 1,
         viewCount: 4,
       });
-      await ctx.db.insert("subjectTrendingBuckets", {
+      await ctx.db.insert("learningTrendingBuckets", {
         ...subject,
         bucketStart,
         locale: "en",
+        section: "subject",
         updatedAt: NOW - 1,
         viewCount: 5,
       });
-      await ctx.db.insert("exercisePopularity", {
+      await ctx.db.insert("learningPopularity", {
         ...existingExercise,
+        locale: "en",
+        section: "exercises",
         updatedAt: NOW - 1,
         viewCount: 6,
       });
@@ -126,46 +133,53 @@ describe("contents/helpers/writes", () => {
     });
 
     const state = await t.query(async (ctx) => ({
-      articlePopularity: await ctx.db
-        .query("articlePopularity")
+      articleLearningPopularity: await ctx.db
+        .query("learningPopularity")
         .withIndex("by_content_id", (q) =>
           q.eq("content_id", ids.article.content_id)
         )
         .unique(),
       existingExercisePopularity: await ctx.db
-        .query("exercisePopularity")
+        .query("learningPopularity")
         .withIndex("by_content_id", (q) =>
           q.eq("content_id", ids.existingExercise.content_id)
         )
         .unique(),
       newExercisePopularity: await ctx.db
-        .query("exercisePopularity")
+        .query("learningPopularity")
         .withIndex("by_content_id", (q) =>
           q.eq("content_id", ids.newExercise.content_id)
         )
         .unique(),
-      subjectPopularity: await ctx.db
-        .query("subjectPopularity")
+      subjectLearningPopularity: await ctx.db
+        .query("learningPopularity")
         .withIndex("by_content_id", (q) =>
           q.eq("content_id", ids.subject.content_id)
         )
         .unique(),
       subjectTrendingBucket: await ctx.db
-        .query("subjectTrendingBuckets")
-        .withIndex("by_locale_and_bucketStart_and_content_id", (q) =>
-          q
-            .eq("locale", "en")
-            .eq("bucketStart", getTrendingBucketStart(NOW))
-            .eq("content_id", ids.subject.content_id)
+        .query("learningTrendingBuckets")
+        .withIndex(
+          "by_section_and_locale_and_bucketStart_and_content_id",
+          (q) =>
+            q
+              .eq("section", "subject")
+              .eq("locale", "en")
+              .eq("bucketStart", getTrendingBucketStart(NOW))
+              .eq("content_id", ids.subject.content_id)
         )
         .unique(),
     }));
 
-    expect(state.articlePopularity).toMatchObject({
+    expect(state.articleLearningPopularity).toMatchObject({
+      locale: "en",
+      section: "articles",
       updatedAt: NOW,
       viewCount: 4,
     });
-    expect(state.subjectPopularity).toMatchObject({
+    expect(state.subjectLearningPopularity).toMatchObject({
+      locale: "en",
+      section: "subject",
       updatedAt: NOW,
       viewCount: 5,
     });
@@ -174,10 +188,14 @@ describe("contents/helpers/writes", () => {
       viewCount: 6,
     });
     expect(state.existingExercisePopularity).toMatchObject({
+      locale: "en",
+      section: "exercises",
       updatedAt: NOW,
       viewCount: 8,
     });
     expect(state.newExercisePopularity).toMatchObject({
+      locale: "en",
+      section: "exercises",
       updatedAt: NOW,
       viewCount: 1,
     });

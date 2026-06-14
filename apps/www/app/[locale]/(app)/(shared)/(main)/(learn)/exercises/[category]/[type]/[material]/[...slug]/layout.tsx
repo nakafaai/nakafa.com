@@ -8,7 +8,7 @@ import { cleanSlug } from "@repo/utilities/helper";
 import { Option } from "effect";
 import { notFound } from "next/navigation";
 
-import { ContentViewTracker } from "@/components/tracking/content-view-tracker";
+import { ContentViewTracker } from "@/components/tracking/tracker";
 import { getRuntimeContentViewId } from "@/lib/content/views";
 import { AttemptContextProvider } from "@/lib/context/use-attempt";
 import { ExerciseContextProvider } from "@/lib/context/use-exercise";

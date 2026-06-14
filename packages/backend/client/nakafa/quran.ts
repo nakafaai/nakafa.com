@@ -8,6 +8,7 @@ import type { RuntimeQuranSurah } from "@repo/backend/client/nakafa/types";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { NakafaAgentMarkdown } from "@repo/contents/_lib/agent/schema/read";
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
+import { getSourceRouteProjectionForRoute } from "@repo/contents/_types/graph/spec";
 import type { Locale } from "@repo/utilities/locales";
 import { Effect, Option } from "effect";
 
@@ -96,14 +97,10 @@ export function readQuranMarkdown(
 
 /** Parses only canonical `quran/{surah}` content routes. */
 export function parseQuranSurahRoute(route: string) {
-  const routeSegments = route.split("/");
-  const surahSegment = routeSegments.at(1);
+  const projection = getSourceRouteProjectionForRoute(route);
+  const surahSegment = projection?.quran?.surahSegment;
 
-  if (
-    routeSegments.length !== 2 ||
-    routeSegments.at(0) !== "quran" ||
-    !surahSegment
-  ) {
+  if (projection?.kind !== "quran-surah" || !surahSegment) {
     return Option.none<number>();
   }
 

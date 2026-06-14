@@ -111,6 +111,7 @@ export interface AudioGenerationProviders {
   }) => Promise<Id<"_storage">>;
 }
 
+/** Signals that the source content changed before audio generation completed. */
 export class AudioContentChangedError extends Schema.TaggedError<AudioContentChangedError>()(
   "AudioContentChangedError",
   {
@@ -119,6 +120,7 @@ export class AudioContentChangedError extends Schema.TaggedError<AudioContentCha
   }
 ) {}
 
+/** Wraps Convex storage or provider IO failures during audio generation. */
 export class AudioGenerationIoError extends Schema.TaggedError<AudioGenerationIoError>()(
   "AudioGenerationIoError",
   {
@@ -127,6 +129,7 @@ export class AudioGenerationIoError extends Schema.TaggedError<AudioGenerationIo
   }
 ) {}
 
+/** Captures speech or script provider failures with a stable error code. */
 export class AudioProviderError extends Schema.TaggedError<AudioProviderError>()(
   "AudioProviderError",
   {
@@ -135,6 +138,7 @@ export class AudioProviderError extends Schema.TaggedError<AudioProviderError>()
   }
 ) {}
 
+/** Signals that script generation returned no usable narration text. */
 export class AudioScriptEmptyError extends Schema.TaggedError<AudioScriptEmptyError>()(
   "AudioScriptEmptyError",
   {
@@ -143,6 +147,7 @@ export class AudioScriptEmptyError extends Schema.TaggedError<AudioScriptEmptyEr
   }
 ) {}
 
+/** Signals that the graph-backed audio source row no longer exists. */
 export class AudioSourceNotFoundError extends Schema.TaggedError<AudioSourceNotFoundError>()(
   "AudioSourceNotFoundError",
   {

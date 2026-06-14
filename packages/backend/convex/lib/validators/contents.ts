@@ -10,7 +10,6 @@ import {
 } from "@repo/contents/_types/taxonomy";
 import { locales } from "@repo/utilities/locales";
 import type { Infer } from "convex/values";
-import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
 /** Supported content languages for Convex validators. */
@@ -22,30 +21,10 @@ export type Locale = Infer<typeof localeValidator>;
 export const nakafaSectionValidator = literals(...NAKAFA_CONTENT_SECTIONS);
 export type NakafaSection = Infer<typeof nakafaSectionValidator>;
 
-/** Content types for view tracking and popularity */
-export const contentTypeValidator = literals("article", "subject", "exercise");
+/** Content families used by source-shaped runtime tables and analytics events. */
+export const CONTENT_TYPE_VALUES = ["article", "subject", "exercise"] as const;
+export const contentTypeValidator = literals(...CONTENT_TYPE_VALUES);
 export type ContentType = Infer<typeof contentTypeValidator>;
-
-/**
- * Discriminated union for content references.
- * Used in views and popularity tables.
- */
-export const contentRefValidator = v.union(
-  v.object({
-    type: v.literal("article"),
-    id: v.id("articleContents"),
-  }),
-  v.object({
-    type: v.literal("subject"),
-    id: v.id("subjectSections"),
-  }),
-  v.object({
-    type: v.literal("exercise"),
-    id: v.id("exerciseSets"),
-  })
-);
-
-export type ContentRef = Infer<typeof contentRefValidator>;
 
 export const articleCategoryValidator = literals(...ARTICLE_CATEGORIES);
 export type ArticleCategory = Infer<typeof articleCategoryValidator>;

@@ -6,7 +6,7 @@ import { cleanSlug } from "@repo/utilities/helper";
 import { Option } from "effect";
 import { notFound } from "next/navigation";
 
-import { ContentViewTracker } from "@/components/tracking/content-view-tracker";
+import { ContentViewTracker } from "@/components/tracking/tracker";
 import { getRuntimeContentViewId } from "@/lib/content/views";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 

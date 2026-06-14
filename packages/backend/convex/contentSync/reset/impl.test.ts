@@ -21,16 +21,10 @@ describe("contentSync/reset/impl", () => {
     const partitionDelete = await t.mutation(
       deleteContentAnalyticsPartitionsBatch
     );
-    const articlePopularityDelete = await t.mutation(
-      deleteArticlePopularityBatch
+    const learningPopularityDelete = await t.mutation(
+      deleteLearningPopularityBatch
     );
-    const subjectPopularityDelete = await t.mutation(
-      deleteSubjectPopularityBatch
-    );
-    const exercisePopularityDelete = await t.mutation(
-      deleteExercisePopularityBatch
-    );
-    const trendingDelete = await t.mutation(deleteSubjectTrendingBucketsBatch);
+    const trendingDelete = await t.mutation(deleteLearningTrendingBucketsBatch);
     const verseDelete = await t.mutation(deleteQuranVersesBatch);
     const surahDelete = await t.mutation(deleteQuranSurahsBatch);
     const counts = await t.query(getDerivedRuntimeRows);
@@ -39,21 +33,17 @@ describe("contentSync/reset/impl", () => {
     expect(viewDelete).toEqual({ deleted: 1, hasMore: false });
     expect(queueDelete).toEqual({ deleted: 1, hasMore: false });
     expect(partitionDelete).toEqual({ deleted: 1, hasMore: false });
-    expect(articlePopularityDelete).toEqual({ deleted: 1, hasMore: false });
-    expect(subjectPopularityDelete).toEqual({ deleted: 1, hasMore: false });
-    expect(exercisePopularityDelete).toEqual({ deleted: 1, hasMore: false });
+    expect(learningPopularityDelete).toEqual({ deleted: 1, hasMore: false });
     expect(trendingDelete).toEqual({ deleted: 1, hasMore: false });
     expect(verseDelete).toEqual({ deleted: 1, hasMore: false });
     expect(surahDelete).toEqual({ deleted: 1, hasMore: false });
     expect(counts).toEqual({
-      articlePopularity: [],
+      learningPopularity: [],
       contentAnalyticsPartitions: [],
       contentViewAnalyticsQueue: [],
       contentViews: [],
-      exercisePopularity: [],
       routes: [],
-      subjectPopularity: [],
-      subjectTrendingBuckets: [],
+      learningTrendingBuckets: [],
       surahs: [],
       verses: [],
     });
@@ -98,25 +88,18 @@ async function seedDerivedRuntimeRows(ctx: MutationCtx) {
     leaseVersion: 1,
     partition: 0,
   });
-  await ctx.db.insert("articlePopularity", {
+  await ctx.db.insert("learningPopularity", {
     ...graph,
+    locale: "id",
+    section: "quran",
     updatedAt: 2,
     viewCount: 1,
   });
-  await ctx.db.insert("subjectPopularity", {
-    ...graph,
-    updatedAt: 2,
-    viewCount: 1,
-  });
-  await ctx.db.insert("exercisePopularity", {
-    ...graph,
-    updatedAt: 2,
-    viewCount: 1,
-  });
-  await ctx.db.insert("subjectTrendingBuckets", {
+  await ctx.db.insert("learningTrendingBuckets", {
     ...graph,
     bucketStart: 0,
     locale: "id",
+    section: "quran",
     updatedAt: 2,
     viewCount: 1,
   });
@@ -189,24 +172,14 @@ async function deleteContentAnalyticsPartitionsBatch(ctx: MutationCtx) {
   return await deleteBatchFromTable(ctx, "contentAnalyticsPartitions");
 }
 
-/** Deletes one article popularity reset batch. */
-async function deleteArticlePopularityBatch(ctx: MutationCtx) {
-  return await deleteBatchFromTable(ctx, "articlePopularity");
+/** Deletes one learning popularity reset batch. */
+async function deleteLearningPopularityBatch(ctx: MutationCtx) {
+  return await deleteBatchFromTable(ctx, "learningPopularity");
 }
 
-/** Deletes one subject popularity reset batch. */
-async function deleteSubjectPopularityBatch(ctx: MutationCtx) {
-  return await deleteBatchFromTable(ctx, "subjectPopularity");
-}
-
-/** Deletes one exercise popularity reset batch. */
-async function deleteExercisePopularityBatch(ctx: MutationCtx) {
-  return await deleteBatchFromTable(ctx, "exercisePopularity");
-}
-
-/** Deletes one subject trending bucket reset batch. */
-async function deleteSubjectTrendingBucketsBatch(ctx: MutationCtx) {
-  return await deleteBatchFromTable(ctx, "subjectTrendingBuckets");
+/** Deletes one learning trending bucket reset batch. */
+async function deleteLearningTrendingBucketsBatch(ctx: MutationCtx) {
+  return await deleteBatchFromTable(ctx, "learningTrendingBuckets");
 }
 
 /** Deletes one Quran verse reset batch through the shared reset helper. */
@@ -222,7 +195,7 @@ async function deleteQuranSurahsBatch(ctx: MutationCtx) {
 /** Reads the derived runtime tables after reset has run. */
 async function getDerivedRuntimeRows(ctx: QueryCtx) {
   return {
-    articlePopularity: await ctx.db.query("articlePopularity").collect(),
+    learningPopularity: await ctx.db.query("learningPopularity").collect(),
     contentAnalyticsPartitions: await ctx.db
       .query("contentAnalyticsPartitions")
       .collect(),
@@ -230,11 +203,9 @@ async function getDerivedRuntimeRows(ctx: QueryCtx) {
       .query("contentViewAnalyticsQueue")
       .collect(),
     contentViews: await ctx.db.query("contentViews").collect(),
-    exercisePopularity: await ctx.db.query("exercisePopularity").collect(),
     routes: await ctx.db.query("contentRoutes").collect(),
-    subjectPopularity: await ctx.db.query("subjectPopularity").collect(),
-    subjectTrendingBuckets: await ctx.db
-      .query("subjectTrendingBuckets")
+    learningTrendingBuckets: await ctx.db
+      .query("learningTrendingBuckets")
       .collect(),
     surahs: await ctx.db.query("quranSurahs").collect(),
     verses: await ctx.db.query("quranVerses").collect(),

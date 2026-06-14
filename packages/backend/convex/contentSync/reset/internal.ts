@@ -32,14 +32,14 @@ export const deleteContentViewAnalyticsQueueBatch = createBatchDeleteMutation(
 export const deleteContentAnalyticsPartitionsBatch = createBatchDeleteMutation(
   "contentAnalyticsPartitions"
 );
-export const deleteArticlePopularityBatch =
-  createBatchDeleteMutation("articlePopularity");
-export const deleteSubjectPopularityBatch =
-  createBatchDeleteMutation("subjectPopularity");
-export const deleteExercisePopularityBatch =
-  createBatchDeleteMutation("exercisePopularity");
-export const deleteSubjectTrendingBucketsBatch = createBatchDeleteMutation(
-  "subjectTrendingBuckets"
+
+/** Delete one bounded batch of graph-backed learning popularity rows. */
+export const deleteLearningPopularityBatch =
+  createBatchDeleteMutation("learningPopularity");
+
+/** Delete one bounded batch of graph-backed learning trend bucket rows. */
+export const deleteLearningTrendingBucketsBatch = createBatchDeleteMutation(
+  "learningTrendingBuckets"
 );
 export const deleteContentRoutesBatch =
   createBatchDeleteMutation("contentRoutes");

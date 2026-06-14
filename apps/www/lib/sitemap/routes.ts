@@ -1,5 +1,6 @@
 import type { api } from "@repo/backend/convex/_generated/api";
 import { CONTENT_ROUTE_ARTIFACT_PAGE_SIZE } from "@repo/backend/convex/contents/constants";
+import { getSourceRouteProjectionForRoute } from "@repo/contents/_types/graph/spec";
 import { routing } from "@repo/internationalization/src/routing";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
@@ -17,6 +18,10 @@ type RuntimeContentRoute = NonNullable<
     typeof api.contents.queries.runtime.getContentRouteArtifactPage
   >
 >["routes"][number];
+type SourceRouteProjection = NonNullable<
+  ReturnType<typeof getSourceRouteProjectionForRoute>
+>;
+type ExerciseRouteProjection = NonNullable<SourceRouteProjection["exercise"]>;
 
 const contentSections: readonly RuntimeContentSection[] = [
   "articles",
@@ -187,66 +192,80 @@ export function buildSitemapContentPageRoutes(
 
 /** Adds the concrete route and supported parent index routes. */
 function addContentPageRoutes(routes: Set<string>, route: string) {
-  const parts = route.split("/").filter(Boolean);
-  const [root] = parts;
+  const projection = getSourceRouteProjectionForRoute(route);
 
-  if (root === "articles") {
-    addArticleRoutes(routes, parts);
+  if (!projection) {
     return;
   }
 
-  if (root === "subject") {
-    addSubjectRoutes(routes, parts);
+  if (projection.kind === "article") {
+    addArticleRoutes(routes, projection);
     return;
   }
 
-  if (root === "exercises") {
-    addExerciseRoutes(routes, parts);
+  if (projection.kind === "subject-section") {
+    addSubjectRoutes(routes, projection);
     return;
   }
 
-  if (root === "quran") {
-    routes.add(routeToPath(route));
+  const { exercise } = projection;
+  if (exercise) {
+    addExerciseRoutes(routes, exercise);
+    return;
   }
+
+  routes.add(routeToPath(projection.route));
 }
 
 /** Adds article category and detail routes. */
-function addArticleRoutes(routes: Set<string>, parts: string[]) {
-  const [, category, slug] = parts;
-
-  if (!(category && slug)) {
-    return;
-  }
+function addArticleRoutes(
+  routes: Set<string>,
+  projection: SourceRouteProjection
+) {
+  const [, category] = projection.lensSegments;
 
   routes.add(`/articles/${category}`);
-  routes.add(routeToPath(parts.join("/")));
+  routes.add(routeToPath(projection.route));
 }
 
 /** Adds subject grade, material, and lesson routes. */
-function addSubjectRoutes(routes: Set<string>, parts: string[]) {
-  const [, category, grade, material, topic, section] = parts;
-
-  if (!(category && grade && material && topic && section)) {
-    return;
-  }
+function addSubjectRoutes(
+  routes: Set<string>,
+  projection: SourceRouteProjection
+) {
+  const [, category, grade, material] = projection.lensSegments;
 
   routes.add(`/subject/${category}/${grade}`);
   routes.add(`/subject/${category}/${grade}/${material}`);
-  routes.add(routeToPath(parts.join("/")));
+  routes.add(routeToPath(projection.route));
 }
 
 /** Adds exercise listing, group, set, and question routes. */
-function addExerciseRoutes(routes: Set<string>, parts: string[]) {
-  const [, category, type, material, ...rest] = parts;
-
-  if (!(category && type && material && rest.length > 0)) {
-    return;
-  }
-
+function addExerciseRoutes(
+  routes: Set<string>,
+  exercise: ExerciseRouteProjection
+) {
+  const {
+    categorySegment: category,
+    groupSegments,
+    materialSegment: material,
+    questionSegment,
+    setSegment,
+    typeSegment: type,
+  } = exercise;
   routes.add(`/exercises/${category}/${type}`);
   routes.add(`/exercises/${category}/${type}/${material}`);
 
-  for (const nestedRoute of getExerciseNestedRoutes(rest)) {
+  const nestedSegments = [...groupSegments];
+
+  if (setSegment) {
+    nestedSegments.push(setSegment);
+  }
+  if (questionSegment) {
+    nestedSegments.push(questionSegment);
+  }
+
+  for (const nestedRoute of getExerciseNestedRoutes(nestedSegments)) {
     routes.add(`/exercises/${category}/${type}/${material}/${nestedRoute}`);
   }
 }
@@ -254,9 +273,10 @@ function addExerciseRoutes(routes: Set<string>, parts: string[]) {
 /** Builds canonical exercise nested routes from concrete set/question routes. */
 function getExerciseNestedRoutes(rest: string[]) {
   const routes: string[] = [];
+  const nested: string[] = [];
 
-  for (let index = 1; index <= rest.length; index++) {
-    const nested = rest.slice(0, index);
+  for (const segment of rest) {
+    nested.push(segment);
 
     if (isInvalidExerciseNestedRoute(nested)) {
       continue;

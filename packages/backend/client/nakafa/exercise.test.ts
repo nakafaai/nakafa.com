@@ -8,6 +8,7 @@ import {
   buildNakafaContentRef,
   createNakafaContentRefFromGraphProjection,
 } from "@repo/contents/_lib/agent/refs";
+import { LocaleSchema } from "@repo/contents/_types/content";
 import { type FunctionReference, getFunctionName } from "convex/server";
 import { Effect, Option, Schema } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -21,7 +22,7 @@ vi.mock("@repo/backend/client/runtime", () => ({
 }));
 
 const ExerciseSetArgsSchema = Schema.Struct({
-  locale: Schema.Literal("en", "id"),
+  locale: LocaleSchema,
   slug: Schema.String,
 });
 const ContentIdArgsSchema = Schema.Struct({
@@ -84,7 +85,11 @@ describe("readNakafaExercise", () => {
     const question = await Effect.runPromise(
       readNakafaExercise(convexUrl, detachedQuestionRef.content_id)
     );
-    const routeDerivedSet = buildNakafaContentRef("id", setRoute, "exercises");
+    const sourceProjectionSet = buildNakafaContentRef(
+      "id",
+      setRoute,
+      "exercises"
+    );
 
     expect(Option.getOrUndefined(set)?.content_id).toBe(
       detachedSetRef.content_id
@@ -94,10 +99,10 @@ describe("readNakafaExercise", () => {
     );
     expect(Option.getOrUndefined(question)?.exercise_number).toBe(2);
     expect(Option.getOrUndefined(set)?.content_id).not.toBe(
-      routeDerivedSet.content_id
+      sourceProjectionSet.content_id
     );
     expect(Option.getOrUndefined(question)?.content_id).not.toBe(
-      routeDerivedSet.content_id
+      sourceProjectionSet.content_id
     );
   });
 

@@ -47,25 +47,15 @@ const RESET_ANALYTICS_STEPS: ResetAnalyticsStep[] = [
     resultLabel: "content view rows",
   },
   {
-    label: "Deleting article popularity rows...",
-    mutation: internal.contentSync.reset.internal.deleteArticlePopularityBatch,
-    resultLabel: "article popularity rows",
+    label: "Deleting learning popularity rows...",
+    mutation: internal.contentSync.reset.internal.deleteLearningPopularityBatch,
+    resultLabel: "learning popularity rows",
   },
   {
-    label: "Deleting subject popularity rows...",
-    mutation: internal.contentSync.reset.internal.deleteSubjectPopularityBatch,
-    resultLabel: "subject popularity rows",
-  },
-  {
-    label: "Deleting exercise popularity rows...",
-    mutation: internal.contentSync.reset.internal.deleteExercisePopularityBatch,
-    resultLabel: "exercise popularity rows",
-  },
-  {
-    label: "Deleting subject trending bucket rows...",
+    label: "Deleting learning trending bucket rows...",
     mutation:
-      internal.contentSync.reset.internal.deleteSubjectTrendingBucketsBatch,
-    resultLabel: "subject trending bucket rows",
+      internal.contentSync.reset.internal.deleteLearningTrendingBucketsBatch,
+    resultLabel: "learning trending bucket rows",
   },
 ];
 
@@ -139,19 +129,15 @@ export const resetAnalytics = Effect.fn("sync.resetAnalytics")(function* (
     counts.contentViews +
     counts.contentViewAnalyticsQueue +
     counts.contentAnalyticsPartitions +
-    counts.articlePopularity +
-    counts.subjectPopularity +
-    counts.exercisePopularity +
-    counts.subjectTrendingBuckets;
+    counts.learningPopularity +
+    counts.learningTrendingBuckets;
 
   log("Current content analytics database contents:\n");
   log(`  Content Views:        ${counts.contentViews}`);
   log(`  Analytics Queue:      ${counts.contentViewAnalyticsQueue}`);
   log(`  Analytics Partitions: ${counts.contentAnalyticsPartitions}`);
-  log(`  Article Popularity:   ${counts.articlePopularity}`);
-  log(`  Subject Popularity:   ${counts.subjectPopularity}`);
-  log(`  Exercise Popularity:  ${counts.exercisePopularity}`);
-  log(`  Subject Trending:     ${counts.subjectTrendingBuckets}`);
+  log(`  Learning Popularity:  ${counts.learningPopularity}`);
+  log(`  Learning Trending:    ${counts.learningTrendingBuckets}`);
   log(`\n  Total analytics rows: ${totalAnalyticsRows}`);
 
   if (totalAnalyticsRows === 0) {

@@ -12,12 +12,15 @@ import {
   NakafaAgentContentRouteSchema,
   NakafaAgentContentUrlSchema,
   NakafaAgentMarkdownUrlSchema,
-  NakafaAgentSectionSchema,
 } from "@repo/contents/_lib/agent/schema/ref";
 import type { Locale } from "@repo/contents/_types/content";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import {
-  createLearningGraphIdentityFromRoute,
+  getSourceRouteProjectionForRoute,
+  InvalidLearningGraphRouteError,
+} from "@repo/contents/_types/graph/spec";
+import {
+  createLearningGraphIdentity,
   type LearningGraphIdentity,
 } from "@repo/contents/_types/learning-graph";
 import { cleanSlug } from "@repo/utilities/helper";
@@ -67,25 +70,19 @@ export function parseNakafaContentRef(input: string) {
   const parsedRoute = Schema.decodeUnknownOption(NakafaAgentContentRouteSchema)(
     route
   );
-  const parsedSection = Schema.decodeUnknownOption(NakafaAgentSectionSchema)(
-    routeSegments.at(0)
-  );
-  const identity = createLearningGraphIdentityFromRoute({ locale, route });
 
   if (Option.isNone(parsedRoute)) {
     return Option.none<NakafaAgentContentRef>();
   }
 
-  if (Option.isNone(parsedSection)) {
-    return Option.none<NakafaAgentContentRef>();
-  }
+  const projection = getSourceRouteProjectionForRoute(parsedRoute.value);
 
-  if (!identity) {
+  if (!projection) {
     return Option.none<NakafaAgentContentRef>();
   }
 
   return Option.some(
-    buildNakafaContentRef(locale, parsedRoute.value, parsedSection.value)
+    buildNakafaContentRef(locale, parsedRoute.value, projection.sourceRoot)
   );
 }
 
@@ -104,16 +101,28 @@ export function buildNakafaContentRef(
   section: NakafaAgentSection
 ) {
   const contentRoute = NakafaAgentContentRouteSchema.make(route);
-  const identity = createLearningGraphIdentityFromRoute({
+  const projection = getSourceRouteProjectionForRoute(contentRoute);
+
+  if (!projection) {
+    throw new InvalidLearningGraphRouteError({
+      message: `Cannot build Nakafa graph content ref for ${contentRoute}.`,
+      route: contentRoute,
+    });
+  }
+
+  if (section !== projection.sourceRoot) {
+    throw new InvalidLearningGraphRouteError({
+      kind: projection.kind,
+      message: `Nakafa section "${section}" does not match graph route "${contentRoute}".`,
+      route: contentRoute,
+    });
+  }
+
+  const identity = createLearningGraphIdentity({
+    kind: projection.kind,
     locale,
     route: contentRoute,
   });
-
-  if (!identity) {
-    throw new Error(
-      `Cannot build Nakafa graph content ref for ${contentRoute}.`
-    );
-  }
 
   return Schema.decodeUnknownSync(NakafaAgentContentRefSchema)(
     createNakafaContentRefInput({

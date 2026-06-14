@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { Effect } from "effect";
+import type { Locale } from "next-intl";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { LlmsEntry } from "@/lib/llms/entries";
 import {
@@ -203,9 +204,9 @@ function createEntry({
   section,
   title,
 }: {
-  locale?: "en" | "id";
+  locale?: Locale;
   route: string;
-  section: "articles" | "exercises" | "quran";
+  section: LlmsEntry["section"];
   title: string;
 }): LlmsEntry {
   const segments = route.split("/").filter(Boolean);

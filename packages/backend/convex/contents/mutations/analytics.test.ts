@@ -244,8 +244,8 @@ describe("contents/mutations/analytics", () => {
     );
 
     const state = await t.query(async (ctx) => ({
-      articlePopularity: await ctx.db
-        .query("articlePopularity")
+      articleLearningPopularity: await ctx.db
+        .query("learningPopularity")
         .withIndex("by_content_id", (q) =>
           q.eq("content_id", ids.article.content_id)
         )
@@ -255,19 +255,22 @@ describe("contents/mutations/analytics", () => {
         .withIndex("by_partition", (q) => q.eq("partition", 0))
         .unique(),
       queueItems: await ctx.db.query("contentViewAnalyticsQueue").collect(),
-      subjectPopularity: await ctx.db
-        .query("subjectPopularity")
+      subjectLearningPopularity: await ctx.db
+        .query("learningPopularity")
         .withIndex("by_content_id", (q) =>
           q.eq("content_id", ids.subject.content_id)
         )
         .unique(),
       subjectTrendingBucket: await ctx.db
-        .query("subjectTrendingBuckets")
-        .withIndex("by_locale_and_bucketStart_and_content_id", (q) =>
-          q
-            .eq("locale", "en")
-            .eq("bucketStart", getTrendingBucketStart(NOW))
-            .eq("content_id", ids.subject.content_id)
+        .query("learningTrendingBuckets")
+        .withIndex(
+          "by_section_and_locale_and_bucketStart_and_content_id",
+          (q) =>
+            q
+              .eq("section", "subject")
+              .eq("locale", "en")
+              .eq("bucketStart", getTrendingBucketStart(NOW))
+              .eq("content_id", ids.subject.content_id)
         )
         .unique(),
     }));
@@ -278,13 +281,17 @@ describe("contents/mutations/analytics", () => {
       processed: 3,
       skipped: false,
     });
-    expect(state.articlePopularity).toMatchObject({
+    expect(state.articleLearningPopularity).toMatchObject({
       content_id: ids.article.content_id,
+      locale: "en",
+      section: "articles",
       updatedAt: NOW,
       viewCount: 1,
     });
-    expect(state.subjectPopularity).toMatchObject({
+    expect(state.subjectLearningPopularity).toMatchObject({
       content_id: ids.subject.content_id,
+      locale: "en",
+      section: "subject",
       updatedAt: NOW,
       viewCount: 2,
     });
@@ -400,8 +407,8 @@ describe("contents/mutations/analytics", () => {
       scheduledJobs: await ctx.db.system
         .query("_scheduled_functions")
         .collect(),
-      subjectPopularity: await ctx.db
-        .query("subjectPopularity")
+      subjectLearningPopularity: await ctx.db
+        .query("learningPopularity")
         .withIndex("by_content_id", (q) =>
           q.eq("content_id", subject.content_id)
         )
@@ -423,8 +430,10 @@ describe("contents/mutations/analytics", () => {
     expect(state.scheduledJobs.map((job) => job.args[0])).toEqual([
       { leaseVersion: 1, partition: 0 },
     ]);
-    expect(state.subjectPopularity).toMatchObject({
+    expect(state.subjectLearningPopularity).toMatchObject({
       content_id: subject.content_id,
+      locale: "en",
+      section: "subject",
       viewCount: CONTENT_ANALYTICS_BATCH_SIZE,
     });
   });

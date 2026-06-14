@@ -75,6 +75,15 @@ describe("Nakafa agent references", () => {
     expect(Option.isNone(ref)).toBe(true);
   });
 
+  it("rejects route and section mismatches before creating graph refs", () => {
+    expect(() =>
+      buildNakafaContentRef("en", "articles/politics/example", "subject")
+    ).toThrow("does not match graph route");
+    expect(() =>
+      buildNakafaContentRef("en", "unknown/example", "articles")
+    ).toThrow("Cannot build Nakafa graph content ref");
+  });
+
   it("rejects empty, unsafe, unsupported, and external references", () => {
     expect(Option.isNone(parseNakafaContentRef(""))).toBe(true);
     expect(Option.isNone(parseNakafaContentRef("en/quran/1"))).toBe(true);

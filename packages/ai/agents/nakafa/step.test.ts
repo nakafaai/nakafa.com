@@ -210,7 +210,11 @@ describe("Nakafa agent step state", () => {
         "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
       title: "Detached Set 2",
     });
-    const routeDerivedSet = buildNakafaContentRef("id", set.route, "exercises");
+    const sourceProjectionSet = buildNakafaContentRef(
+      "id",
+      set.route,
+      "exercises"
+    );
     const ref = selectExerciseRef(
       {
         limit: 20,
@@ -232,7 +236,7 @@ describe("Nakafa agent step state", () => {
     }
 
     expect(ref.value).toBe(set.content_id);
-    expect(ref.value).not.toBe(routeDerivedSet.content_id);
+    expect(ref.value).not.toBe(sourceProjectionSet.content_id);
   });
 
   it("falls back to the returned question graph ID without a set-level hit", () => {
@@ -243,7 +247,7 @@ describe("Nakafa agent step state", () => {
         "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/11",
       title: "Detached Question 11",
     });
-    const routeDerivedSet = buildNakafaContentRef(
+    const sourceProjectionSet = buildNakafaContentRef(
       "id",
       "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
       "exercises"
@@ -269,7 +273,7 @@ describe("Nakafa agent step state", () => {
     }
 
     expect(ref.value).toBe(question.content_id);
-    expect(ref.value).not.toBe(routeDerivedSet.content_id);
+    expect(ref.value).not.toBe(sourceProjectionSet.content_id);
   });
 
   it("keeps search ordering instead of parsing the user request locally", () => {

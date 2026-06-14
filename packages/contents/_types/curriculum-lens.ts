@@ -1,24 +1,15 @@
 import {
+  CurriculumLensScopeSchema,
+  getCurriculumLensScopeForKind,
+  type LearningObjectKind,
+} from "@repo/contents/_types/graph/spec";
+import {
   createLearningGraphIdentity,
   getLearningGraphLensSegments,
   type LearningGraphSource,
-  type LearningObjectKind,
   normalizeGraphRoute,
 } from "@repo/contents/_types/learning-graph";
 import { Schema } from "effect";
-
-/** Stable product scopes used to classify graph curriculum lenses. */
-export const CURRICULUM_LENS_SCOPE_VALUES = [
-  "article-domain",
-  "curriculum",
-  "exam",
-  "scripture",
-] as const;
-
-/** Runtime schema for broad graph lens scopes. */
-export const CurriculumLensScopeSchema = Schema.Literal(
-  ...CURRICULUM_LENS_SCOPE_VALUES
-);
 
 /** Curriculum lens scope derived from the runtime schema. */
 export type CurriculumLensScope = Schema.Schema.Type<
@@ -59,17 +50,5 @@ export function createCurriculumLensDescriptor(
 export function getCurriculumLensScope(
   kind: LearningObjectKind
 ): CurriculumLensScope {
-  if (kind === "article") {
-    return "article-domain";
-  }
-
-  if (kind === "quran-surah") {
-    return "scripture";
-  }
-
-  if (kind.startsWith("exercise-")) {
-    return "exam";
-  }
-
-  return "curriculum";
+  return getCurriculumLensScopeForKind(kind);
 }

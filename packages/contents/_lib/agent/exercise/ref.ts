@@ -2,6 +2,7 @@ import {
   buildNakafaContentRef,
   parseNakafaContentRef,
 } from "@repo/contents/_lib/agent/refs";
+import { getSourceRouteProjectionForRoute } from "@repo/contents/_types/graph/spec";
 import { Option } from "effect";
 
 /** Resolves any exercise URL projection to its parent set reference. */
@@ -23,28 +24,23 @@ export function getNakafaExerciseSetRef(input: string) {
 
 /** Resolves any exercise question route to its parent set route. */
 export function getNakafaExerciseSetRoute(route: string) {
-  const parts = route.split("/");
+  const projection = getSourceRouteProjectionForRoute(route);
 
-  if (Option.isNone(getNakafaExerciseRouteNumber(route))) {
+  if (projection?.kind !== "exercise-question") {
     return route;
   }
 
-  return parts.slice(0, -1).join("/");
+  return projection.parentRoute;
 }
 
 /** Reads the question number encoded in a question-level exercise route. */
 export function getNakafaExerciseRouteNumber(route: string) {
-  const lastPart = route.split("/").at(-1);
+  const projection = getSourceRouteProjectionForRoute(route);
+  const questionSegment = projection?.exercise?.questionSegment;
 
-  if (!lastPart) {
+  if (projection?.kind !== "exercise-question" || !questionSegment) {
     return Option.none();
   }
 
-  const number = Number.parseInt(lastPart, 10);
-
-  if (!(Number.isSafeInteger(number) && `${number}` === lastPart)) {
-    return Option.none();
-  }
-
-  return Option.some(number);
+  return Option.some(Number.parseInt(questionSegment, 10));
 }

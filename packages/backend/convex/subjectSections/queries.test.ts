@@ -94,11 +94,12 @@ async function insertTrendingBucket(
     viewCount: number;
   }
 ) {
-  await ctx.db.insert("subjectTrendingBuckets", {
+  await ctx.db.insert("learningTrendingBuckets", {
     ...graph,
     bucketStart,
     content_id: graph.assetId,
     locale,
+    section: "subject",
     updatedAt: NOW,
     viewCount,
   });

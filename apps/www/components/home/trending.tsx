@@ -13,6 +13,7 @@ import { cleanSlug } from "@repo/utilities/helper";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 
+/** Renders the home-screen trending learning objects for the current locale. */
 export function HomeTrending() {
   const t = useTranslations("Home");
   const locale = useLocale();

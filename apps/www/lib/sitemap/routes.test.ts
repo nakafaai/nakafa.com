@@ -194,6 +194,11 @@ const routeRows = [
   }),
   routeRow({
     locale: "en",
+    route: "exercises/high-school/snbt/quantitative-knowledge/practice",
+    section: "exercises",
+  }),
+  routeRow({
+    locale: "en",
     route: "exercises/high-school/snbt/quantitative-knowledge/practice/set-1",
     section: "exercises",
   }),

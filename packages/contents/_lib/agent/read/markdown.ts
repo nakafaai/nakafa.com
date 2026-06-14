@@ -10,9 +10,8 @@ import { NakafaAgentMarkdownSchema } from "@repo/contents/_lib/agent/schema/read
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
 import { getContentMetadataWithRaw } from "@repo/contents/_lib/metadata";
 import { getSurah } from "@repo/contents/_lib/quran";
+import { requireQuranSurahNumberForRoute } from "@repo/contents/_types/graph/spec";
 import { Effect, Option, Schema } from "effect";
-
-const QURAN_SURAH_PATTERN = /^\d+$/;
 
 interface NakafaMarkdownReaders {
   readonly loadContent?: typeof getContentMetadataWithRaw;
@@ -126,13 +125,9 @@ function renderNakafaQuranMarkdown(
   return Effect.gen(function* () {
     const loadSurah = readers.loadSurah ?? getSurah;
     const readQuran = readers.readQuran ?? getNakafaAgentQuranReference;
-    const surahNumber = parseQuranSurahRoute(ref.route);
+    const surahNumber = requireQuranSurahNumberForRoute(ref.route);
 
-    if (Option.isNone(surahNumber)) {
-      return Option.none();
-    }
-
-    const surah = yield* Effect.option(loadSurah(surahNumber.value));
+    const surah = yield* Effect.option(loadSurah(surahNumber));
 
     if (Option.isNone(surah)) {
       return Option.none();
@@ -188,21 +183,4 @@ export function decodeNakafaAgentMarkdown(markdown: unknown) {
         message: "Unable to build Nakafa agent markdown.",
       }),
   });
-}
-
-/** Parses the surah segment from a validated `quran/{surah}` content route. */
-function parseQuranSurahRoute(route: string) {
-  const surahSegment = route.split("/").slice(1, 2).join("");
-
-  if (!QURAN_SURAH_PATTERN.test(surahSegment)) {
-    return Option.none();
-  }
-
-  const surahNumber = Number(surahSegment);
-
-  if (surahNumber.toString() !== surahSegment) {
-    return Option.none();
-  }
-
-  return Option.some(surahNumber);
 }

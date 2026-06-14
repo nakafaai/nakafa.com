@@ -194,18 +194,24 @@ describe("contents/queries/audio", () => {
         title: "Penjumlahan Vektor",
       });
 
-      await ctx.db.insert("articlePopularity", {
+      await ctx.db.insert("learningPopularity", {
         ...articleGraph,
+        locale: "en",
+        section: "articles",
         updatedAt: 1,
         viewCount: 80,
       });
-      await ctx.db.insert("subjectPopularity", {
+      await ctx.db.insert("learningPopularity", {
         ...englishSubjectGraph,
+        locale: "en",
+        section: "subject",
         updatedAt: 1,
         viewCount: 40,
       });
-      await ctx.db.insert("subjectPopularity", {
+      await ctx.db.insert("learningPopularity", {
         ...indonesianSubjectGraph,
+        locale: "id",
+        section: "subject",
         updatedAt: 1,
         viewCount: 25,
       });
@@ -260,8 +266,10 @@ describe("contents/queries/audio", () => {
       });
 
       const articleGraph = getGraph("en", REAL_DYNASTIC_ARTICLE_SLUG);
-      await ctx.db.insert("articlePopularity", {
+      await ctx.db.insert("learningPopularity", {
         ...articleGraph,
+        locale: "en",
+        section: "articles",
         updatedAt: 1,
         viewCount: 80,
       });
@@ -296,8 +304,10 @@ describe("contents/queries/audio", () => {
       });
 
       const subjectGraph = getGraph("en", REAL_VECTOR_SECTION_SLUG);
-      await ctx.db.insert("subjectPopularity", {
+      await ctx.db.insert("learningPopularity", {
         ...subjectGraph,
+        locale: "en",
+        section: "subject",
         updatedAt: 1,
         viewCount: 40,
       });
@@ -338,8 +348,10 @@ describe("contents/queries/audio", () => {
         }),
         syncedAt: 2,
       });
-      await ctx.db.insert("articlePopularity", {
+      await ctx.db.insert("learningPopularity", {
         ...getGraph("en", REAL_DYNASTIC_ARTICLE_SLUG),
+        locale: "en",
+        section: "articles",
         updatedAt: 1,
         viewCount: MIN_VIEW_THRESHOLD - 1,
       });
@@ -390,8 +402,10 @@ describe("contents/queries/audio", () => {
           route: slug,
           title: `Audio Candidate ${index}`,
         });
-        await ctx.db.insert("articlePopularity", {
+        await ctx.db.insert("learningPopularity", {
           ...graph,
+          locale: "en",
+          section: "articles",
           updatedAt: 1,
           viewCount: 1000 - index,
         });
