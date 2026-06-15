@@ -1,20 +1,14 @@
-import {
-  type Concept,
-  ConceptSchema,
-} from "@repo/contents/_types/concept/schema";
-import conceptSource from "@repo/contents/_types/concept/source.json";
-import { Schema } from "effect";
+import type { Concept } from "@repo/contents/_types/concept/schema";
+import { CONCEPT_SOURCE } from "@repo/contents/_types/concept/source";
 
 /**
  * Decoded source registry of Nakafa canonical concepts used by outcome mappings.
  *
- * The authoring surface is `source.json`, which can be hand-reviewed or
- * generated from an importer. This module owns the Effect Schema decode and
- * lookup/reference checks, not a giant implementation array.
+ * The authoring surface is typed TS source data that can be hand-reviewed or
+ * generated from an importer. This module owns lookup/reference checks so
+ * curriculum imports do not turn into per-MDX membership tags.
  */
-export const CONCEPT_REGISTRY = Schema.decodeUnknownSync(
-  Schema.Array(ConceptSchema)
-)(conceptSource);
+export const CONCEPT_REGISTRY = CONCEPT_SOURCE;
 
 /** Finds one canonical concept row by key. */
 export function findConceptByKey(

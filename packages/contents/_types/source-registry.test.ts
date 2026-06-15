@@ -1,9 +1,33 @@
+import { readdirSync } from "node:fs";
+import { join } from "node:path";
 import { getSourceRegistryRootForKind } from "@repo/contents/_types/graph/schema";
 import {
   createSourceRegistryRecord,
   normalizeSourcePath,
 } from "@repo/contents/_types/source-registry";
 import { describe, expect, it } from "vitest";
+
+const TYPES_ROOT = join(process.cwd(), "_types");
+const BLOCKED_SOURCE_BASENAME = ["source", "json"].join(".");
+
+function findSourceJsonFiles(directory: string): string[] {
+  const matches: string[] = [];
+
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    const entryPath = join(directory, entry.name);
+
+    if (entry.isDirectory()) {
+      matches.push(...findSourceJsonFiles(entryPath));
+      continue;
+    }
+
+    if (entry.name === BLOCKED_SOURCE_BASENAME) {
+      matches.push(entryPath);
+    }
+  }
+
+  return matches;
+}
 
 describe("source registry adapter", () => {
   it("adapts current subject source routes into graph records", () => {
@@ -74,5 +98,9 @@ describe("source registry adapter", () => {
     expect(normalizeSourcePath("//subject//high-school/10//id.mdx/")).toBe(
       "subject/high-school/10/id.mdx"
     );
+  });
+
+  it("blocks JSON source registries under contents type modules", () => {
+    expect(findSourceJsonFiles(TYPES_ROOT)).toEqual([]);
   });
 });

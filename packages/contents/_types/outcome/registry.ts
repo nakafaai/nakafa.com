@@ -1,35 +1,22 @@
-import {
-  type LearningOutcome,
-  LearningOutcomeSchema,
-  OutcomeConceptAlignmentSchema,
-  type ProgramOutlineNode,
-  ProgramOutlineNodeSchema,
+import type {
+  LearningOutcome,
+  ProgramOutlineNode,
 } from "@repo/contents/_types/outcome/schema";
-import outcomeSource from "@repo/contents/_types/outcome/source.json";
-import { Schema } from "effect";
-
-const OutcomeSourceSchema = Schema.Struct({
-  conceptAlignments: Schema.Array(OutcomeConceptAlignmentSchema),
-  outcomes: Schema.Array(LearningOutcomeSchema),
-  outlineNodes: Schema.Array(ProgramOutlineNodeSchema),
-});
-
-const decodedSource =
-  Schema.decodeUnknownSync(OutcomeSourceSchema)(outcomeSource);
+import { OUTCOME_SOURCE } from "@repo/contents/_types/outcome/source";
 
 /**
  * Source-controlled program outline nodes keyed by canonical program identity.
  *
- * The authoring surface is `source.json`, which can be generated from an
- * official import job. This module validates and exposes decoded rows only.
+ * The authoring surface is typed TS source data that can be generated from an
+ * official import job. This module exposes decoded rows only.
  */
-export const PROGRAM_OUTLINE_NODES = decodedSource.outlineNodes;
+export const PROGRAM_OUTLINE_NODES = OUTCOME_SOURCE.outlineNodes;
 
 /** Source-cited official and Nakafa-authored outcome rows decoded from source data. */
-export const LEARNING_OUTCOMES = decodedSource.outcomes;
+export const LEARNING_OUTCOMES = OUTCOME_SOURCE.outcomes;
 
 /** Concept alignment rows that connect outcomes to Nakafa graph concepts. */
-export const OUTCOME_CONCEPT_ALIGNMENTS = decodedSource.conceptAlignments;
+export const OUTCOME_CONCEPT_ALIGNMENTS = OUTCOME_SOURCE.conceptAlignments;
 
 /** Finds one source-registry outcome by key. */
 export function findLearningOutcomeByKey(
