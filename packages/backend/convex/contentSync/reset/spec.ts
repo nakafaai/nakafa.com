@@ -59,3 +59,17 @@ export const resettableTableNames = [
 ] as const satisfies readonly TableNames[];
 
 export type ResettableTableName = (typeof resettableTableNames)[number];
+
+/**
+ * Program catalog rows are sync-managed but intentionally preserved by the broad
+ * content reset because learning profiles, plans, and plan items store generated
+ * program document IDs. Coverage rows are derived from content routes and remain
+ * reset-managed because they can be rebuilt without orphaning user state.
+ */
+export const preservedProgramCatalogTableNames = [
+  "learningPrograms",
+  "learningProgramSources",
+] as const satisfies readonly TableNames[];
+
+export type PreservedProgramCatalogTableName =
+  (typeof preservedProgramCatalogTableNames)[number];

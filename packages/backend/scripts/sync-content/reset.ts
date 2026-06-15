@@ -446,14 +446,14 @@ export const reset = Effect.fn("sync.reset")(function* (
     counts.quranVerses +
     counts.audioContentSources +
     counts.contentAudios;
+  const preservedProgramCatalog =
+    counts.learningPrograms + counts.learningProgramSources;
 
   log(`\n  Total content items:  ${totalContent}`);
   log(`  Total related items:  ${totalRelated}`);
   log(`  Total runtime items:  ${totalRuntime}`);
   log(`  Total derived items:  ${totalDerived}`);
-  log(
-    `  Program catalog rows: ${counts.learningPrograms + counts.learningProgramSources}`
-  );
+  log(`  Preserved program catalog rows: ${preservedProgramCatalog}`);
 
   if (
     totalContent === 0 &&
@@ -461,7 +461,7 @@ export const reset = Effect.fn("sync.reset")(function* (
     totalRuntime === 0 &&
     totalDerived === 0
   ) {
-    logSuccess("\nDatabase is already empty. Nothing to delete.");
+    logSuccess("\nReset-managed content is already empty. Nothing to delete.");
     return;
   }
 

@@ -146,7 +146,27 @@ describe("sync-content reset", () => {
     expect(log).toHaveBeenCalledWith("  Quran Verses:          0");
     expect(log).toHaveBeenCalledWith("  Total derived items:  0");
     expect(logSuccess).toHaveBeenCalledWith(
-      "\nDatabase is already empty. Nothing to delete."
+      "\nReset-managed content is already empty. Nothing to delete."
+    );
+    expect(log).not.toHaveBeenCalledWith("\nTo delete all content, run:");
+  });
+
+  it("preserves program catalog rows without treating them as reset-managed content", async () => {
+    vi.mocked(getContentCounts).mockReturnValue(
+      Effect.succeed({
+        ...emptyCounts,
+        learningProgramSources: 5,
+        learningPrograms: 4,
+      })
+    );
+
+    await Effect.runPromise(reset(config, { force: false }));
+
+    expect(log).toHaveBeenCalledWith("  Learning Programs:     4");
+    expect(log).toHaveBeenCalledWith("  Learning Program Srcs: 5");
+    expect(log).toHaveBeenCalledWith("  Preserved program catalog rows: 9");
+    expect(logSuccess).toHaveBeenCalledWith(
+      "\nReset-managed content is already empty. Nothing to delete."
     );
     expect(log).not.toHaveBeenCalledWith("\nTo delete all content, run:");
   });

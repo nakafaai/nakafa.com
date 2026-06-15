@@ -3,12 +3,12 @@ import "server-only";
 import { api } from "@repo/backend/convex/_generated/api";
 import { fetchQuery } from "convex/nextjs";
 import { Effect, Schema } from "effect";
-import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
 import type {
   ActiveLearningProfile,
   LearningProgramCatalog,
 } from "@/components/programs/contract";
+import { applyContentRuntimeCache } from "@/lib/content/cache";
 
 /** Expected failure while reading the current user's learning profile. */
 class ActiveLearningProfileReadError extends Schema.TaggedError<ActiveLearningProfileReadError>()(
@@ -47,7 +47,7 @@ export async function getLearningProgramCatalog(
   locale: Locale
 ): Promise<LearningProgramCatalog> {
   "use cache";
-  cacheLife("contentRuntime");
+  applyContentRuntimeCache();
 
   return await fetchQuery(api.learningPrograms.queries.listSelectablePrograms, {
     locale,
