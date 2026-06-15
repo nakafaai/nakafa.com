@@ -1,9 +1,5 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import {
-  parseExerciseMaterialFile,
-  parseSubjectMaterialFile,
-} from "@repo/backend/scripts/lib/mdx-parser/materials";
-import {
   parseArticlePath,
   parseExercisePath,
   parseSubjectPath,
@@ -22,15 +18,16 @@ import { globFiles } from "@repo/backend/scripts/sync-content/runtime";
 import {
   BATCH_SIZES,
   DeleteResultSchema,
-  LOCALE_MATERIAL_FILE_REGEX,
-  LOCALE_SUBJECT_MATERIAL_FILE_REGEX,
-  parseLocale,
 } from "@repo/backend/scripts/sync-content/schemas";
 import type {
   ConvexConfig,
   StaleItem,
   SyncOptions,
 } from "@repo/backend/scripts/sync-content/types";
+import {
+  listExerciseSets,
+  listSubjectTopics,
+} from "@repo/contents/_types/plan/registry";
 import type {
   DefaultFunctionArgs,
   FunctionArgs,
@@ -141,17 +138,9 @@ const deleteStaleItems = Effect.fn("sync.deleteStaleItems")(function* <
 /** Collects source slugs from the content files that should exist in Convex. */
 const collectFilesystemSlugs = Effect.fn("sync.collectFilesystemSlugs")(
   function* () {
-    const [
-      articleFiles,
-      subjectFiles,
-      subjectMaterialFiles,
-      exerciseMaterialFiles,
-      questionFiles,
-    ] = yield* Effect.all([
+    const [articleFiles, subjectFiles, questionFiles] = yield* Effect.all([
       globFiles("articles/**/*.mdx"),
       globFiles("subject/**/*.mdx"),
-      globFiles("subject/**/_data/*-material.ts"),
-      globFiles("exercises/**/_data/*-material.ts"),
       globFiles("exercises/**/_question/*.mdx"),
     ]);
 
@@ -173,41 +162,8 @@ const collectFilesystemSlugs = Effect.fn("sync.collectFilesystemSlugs")(
       exerciseQuestionSlugs.push(pathInfo.slug);
     }
 
-    const subjectTopicSlugs: string[] = [];
-    for (const materialFile of subjectMaterialFiles) {
-      const localeMatch = materialFile.match(
-        LOCALE_SUBJECT_MATERIAL_FILE_REGEX
-      );
-      if (!localeMatch) {
-        continue;
-      }
-      const locale = yield* parseLocale(localeMatch[1], materialFile);
-      const result = yield* Effect.either(
-        parseSubjectMaterialFile(materialFile, locale)
-      );
-
-      if (result._tag === "Right") {
-        const topics = result.right;
-        subjectTopicSlugs.push(...topics.map((topic) => topic.slug));
-      }
-    }
-
-    const exerciseSetSlugs: string[] = [];
-    for (const materialFile of exerciseMaterialFiles) {
-      const localeMatch = materialFile.match(LOCALE_MATERIAL_FILE_REGEX);
-      if (!localeMatch) {
-        continue;
-      }
-      const locale = yield* parseLocale(localeMatch[1], materialFile);
-      const result = yield* Effect.either(
-        parseExerciseMaterialFile(materialFile, locale)
-      );
-
-      if (result._tag === "Right") {
-        const sets = result.right;
-        exerciseSetSlugs.push(...sets.map((set) => set.slug));
-      }
-    }
+    const subjectTopicSlugs = listSubjectTopics().map((topic) => topic.slug);
+    const exerciseSetSlugs = listExerciseSets().map((set) => set.slug);
 
     return {
       articleSlugs,

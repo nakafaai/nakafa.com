@@ -1,4 +1,4 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { syncLearningProgramOutcomeRows } from "@repo/backend/convex/learningPrograms/projection";
@@ -17,6 +17,7 @@ import { Either, Schema } from "effect";
 const SOURCE_LIMIT = 20;
 const PROGRAM_RECONCILE_LIMIT = 100;
 const STALE_COVERAGE_DELETE_LIMIT = 200;
+const ACTIVE_PLAN_ITEM_REPAIR_LIMIT = 500;
 type ProgramSourceInput = Infer<typeof programSourceInputValidator>;
 const LearningProgramSyncInputSchema = Schema.Array(LearningProgramSchema);
 
@@ -213,12 +214,46 @@ export const deleteStaleLearningProgramCoverage = internalMutation({
       .take(args.limit);
 
     for (const row of staleRows) {
+      await deleteActivePlanItemsForStaleCoverage(ctx, row);
       await ctx.db.delete(row._id);
     }
 
     return { deleted: staleRows.length };
   },
 });
+
+/** Removes generated active-plan items before their source coverage row disappears. */
+async function deleteActivePlanItemsForStaleCoverage(
+  ctx: MutationCtx,
+  coverage: Doc<"learningProgramCoverage">
+) {
+  const planItems = await ctx.db
+    .query("learningPlanItems")
+    .withIndex("by_programId_and_lensId_and_content_id", (q) =>
+      q
+        .eq("programId", coverage.programId)
+        .eq("lensId", coverage.lensId)
+        .eq("content_id", coverage.sampleContentId)
+    )
+    .take(ACTIVE_PLAN_ITEM_REPAIR_LIMIT + 1);
+
+  if (planItems.length > ACTIVE_PLAN_ITEM_REPAIR_LIMIT) {
+    throw new ConvexError({
+      code: "LEARNING_PLAN_ITEM_REPAIR_LIMIT_EXCEEDED",
+      message: `Learning plan item repair is limited to ${ACTIVE_PLAN_ITEM_REPAIR_LIMIT} rows per stale coverage row.`,
+    });
+  }
+
+  for (const item of planItems) {
+    const plan = await ctx.db.get(item.planId);
+
+    if (plan && plan.status !== "active") {
+      continue;
+    }
+
+    await ctx.db.delete(item._id);
+  }
+}
 
 /** Replaces bounded program source rows for one catalog program. */
 async function syncProgramSources(

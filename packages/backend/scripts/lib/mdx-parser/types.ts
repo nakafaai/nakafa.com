@@ -53,42 +53,6 @@ export interface ExerciseParsedPath {
   year?: number;
 }
 
-/** Parsed exercise set from material file. */
-export interface ParsedExerciseSet {
-  category: ExercisesCategory;
-  description?: string;
-  exerciseType: string;
-  exerciseTypeTitle: string;
-  locale: Locale;
-  material: ExercisesMaterial;
-  setName: string;
-  slug: string;
-  title: string;
-  type: ExercisesType;
-  year?: number;
-}
-
-/** Parsed subject section order from a material file topic item. */
-export interface ParsedSubjectSection {
-  order: number;
-  section: string;
-  slug: string;
-}
-
-/** Parsed subject topic from material file. */
-export interface ParsedSubjectTopic {
-  category: SubjectCategory;
-  description?: string;
-  grade: Grade;
-  locale: Locale;
-  material: Material;
-  order: number;
-  sections: ParsedSubjectSection[];
-  slug: string;
-  title: string;
-  topic: string;
-}
-
 export interface ExerciseChoicesByLocale {
   en: Array<{ label: string; value: boolean }>;
   id: Array<{ label: string; value: boolean }>;

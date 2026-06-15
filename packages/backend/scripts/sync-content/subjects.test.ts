@@ -24,10 +24,52 @@ function getContentFile(...segments: string[]) {
 
 /** Loads the subject sync module with mocked Convex IO. */
 async function loadSubjects({
-  materialFiles,
+  planTopics = [
+    {
+      category: "high-school",
+      grade: "10",
+      locale: "id",
+      material: "mathematics",
+      order: 0,
+      sections: [
+        {
+          order: 0,
+          section: "basic-concept",
+          slug: "subject/high-school/10/mathematics/exponential-logarithm/basic-concept",
+        },
+      ],
+      slug: "subject/high-school/10/mathematics/exponential-logarithm",
+      title: "Eksponen dan Logaritma",
+      topic: "exponential-logarithm",
+    },
+    {
+      category: "high-school",
+      grade: "10",
+      locale: "id",
+      material: "mathematics",
+      order: 1,
+      sections: [],
+      slug: "subject/high-school/10/mathematics/sequence-series",
+      title: "Barisan dan Deret",
+      topic: "sequence-series",
+    },
+    {
+      category: "high-school",
+      grade: "10",
+      locale: "id",
+      material: "mathematics",
+      order: 2,
+      sections: [],
+      slug: "subject/high-school/10/mathematics/vector-operations",
+      title: "Vektor dan Operasinya",
+      topic: "vector-operations",
+    },
+  ],
   sectionFiles,
 }: {
-  materialFiles: string[];
+  planTopics?: ReturnType<
+    typeof import("@repo/contents/_types/plan/registry").listSubjectTopics
+  >;
   sectionFiles: string[];
 }) {
   const sectionCalls: SectionArgs[] = [];
@@ -60,9 +102,12 @@ async function loadSubjects({
     },
   }));
   vi.doMock("@repo/backend/scripts/sync-content/runtime", () => ({
-    /** Returns material or MDX files based on the requested subject glob. */
-    globFiles: (pattern: string) =>
-      Effect.succeed(pattern.includes("_data") ? materialFiles : sectionFiles),
+    /** Returns MDX fixture files for the requested subject glob. */
+    globFiles: () => Effect.succeed(sectionFiles),
+  }));
+  vi.doMock("@repo/contents/_types/plan/registry", () => ({
+    /** Returns typed Plan topic fixtures for subject sync. */
+    listSubjectTopics: () => planTopics,
   }));
 
   const subjects = await import("@repo/backend/scripts/sync-content/subjects");
@@ -76,18 +121,8 @@ afterEach(() => {
 });
 
 describe("sync-content subjects", () => {
-  it("syncs subject topic order from authored material data", async () => {
+  it("syncs subject topic order from typed Plan data", async () => {
     const { subjects, topicCalls } = await loadSubjects({
-      materialFiles: [
-        getContentFile(
-          "subject",
-          "high-school",
-          "10",
-          "mathematics",
-          "_data",
-          "id-material.ts"
-        ),
-      ],
       sectionFiles: [
         getContentFile(
           "subject",
@@ -117,9 +152,9 @@ describe("sync-content subjects", () => {
     ]);
   });
 
-  it("fails before publishing topics when an authored subject section is missing material order", async () => {
+  it("fails before publishing topics when an authored subject section is missing plan order", async () => {
     const { subjects, topicCalls } = await loadSubjects({
-      materialFiles: [],
+      planTopics: [],
       sectionFiles: [
         getContentFile(
           "subject",
@@ -137,22 +172,12 @@ describe("sync-content subjects", () => {
       Effect.runPromise(
         subjects.syncSubjectTopics(config, { locale: "id", quiet: true })
       )
-    ).rejects.toThrow("Missing subject material order");
+    ).rejects.toThrow("Missing subject plan order");
     expect(topicCalls).toEqual([]);
   });
 
-  it("syncs subject section order from authored material data", async () => {
+  it("syncs subject section order from typed Plan data", async () => {
     const { sectionCalls, subjects } = await loadSubjects({
-      materialFiles: [
-        getContentFile(
-          "subject",
-          "high-school",
-          "10",
-          "mathematics",
-          "_data",
-          "id-material.ts"
-        ),
-      ],
       sectionFiles: [
         getContentFile(
           "subject",
@@ -181,7 +206,7 @@ describe("sync-content subjects", () => {
 
   it("fails before publishing sections when authored section order is missing", async () => {
     const { sectionCalls, subjects } = await loadSubjects({
-      materialFiles: [],
+      planTopics: [],
       sectionFiles: [
         getContentFile(
           "subject",
@@ -199,7 +224,7 @@ describe("sync-content subjects", () => {
       Effect.runPromise(
         subjects.syncSubjectSections(config, { locale: "id", quiet: true })
       )
-    ).rejects.toThrow("Missing subject material order");
+    ).rejects.toThrow("Missing subject plan order");
     expect(sectionCalls).toEqual([]);
   });
 });

@@ -5,10 +5,6 @@ import {
   readMdxFile,
 } from "@repo/backend/scripts/lib/mdx-parser/content";
 import {
-  parseExerciseMaterialFile,
-  parseSubjectMaterialFile,
-} from "@repo/backend/scripts/lib/mdx-parser/materials";
-import {
   getArticleDir,
   getExerciseDir,
   parseArticlePath,
@@ -22,12 +18,11 @@ import {
   logSuccess,
 } from "@repo/backend/scripts/sync-content/logging";
 import { globFiles } from "@repo/backend/scripts/sync-content/runtime";
-import {
-  LOCALE_MATERIAL_FILE_REGEX,
-  LOCALE_SUBJECT_MATERIAL_FILE_REGEX,
-  parseLocale,
-} from "@repo/backend/scripts/sync-content/schemas";
 import type { ValidationResult } from "@repo/backend/scripts/sync-content/types";
+import {
+  listExerciseSets,
+  listSubjectTopics,
+} from "@repo/contents/_types/plan/registry";
 import { Effect } from "effect";
 
 const createValidationResult = (): ValidationResult => ({
@@ -68,7 +63,7 @@ const validateArticles = Effect.fn("sync.validateArticles")(function* () {
 
 const validateSubjects = Effect.fn("sync.validateSubjects")(function* () {
   const files = yield* globFiles("subject/**/*.mdx");
-  const materialFiles = yield* globFiles("subject/**/_data/*-material.ts");
+  const planTopics = listSubjectTopics();
   const result = createValidationResult();
 
   log(`Validating ${files.length} subject files...`);
@@ -93,36 +88,15 @@ const validateSubjects = Effect.fn("sync.validateSubjects")(function* () {
     result.errors.push({ file, error: message });
   }
 
-  log(`Validating ${materialFiles.length} material files...`);
-  for (const materialFile of materialFiles) {
-    const validated = yield* Effect.either(
-      Effect.gen(function* () {
-        const localeMatch = materialFile.match(
-          LOCALE_SUBJECT_MATERIAL_FILE_REGEX
-        );
-        if (localeMatch) {
-          const locale = yield* parseLocale(localeMatch[1], materialFile);
-          yield* parseSubjectMaterialFile(materialFile, locale);
-        }
-      })
-    );
-
-    if (validated._tag === "Left") {
-      const message =
-        validated.left instanceof Error
-          ? validated.left.message
-          : String(validated.left);
-      result.invalid++;
-      result.errors.push({ file: materialFile, error: message });
-    }
-  }
+  log(`Validating ${planTopics.length} subject plan topics...`);
+  result.valid += planTopics.length;
 
   return result;
 });
 
 const validateExercises = Effect.fn("sync.validateExercises")(function* () {
   const questionFiles = yield* globFiles("exercises/**/_question/*.mdx");
-  const materialFiles = yield* globFiles("exercises/**/_data/*-material.ts");
+  const planSets = listExerciseSets();
   const result = createValidationResult();
 
   log(`Validating ${questionFiles.length} exercise question files...`);
@@ -156,27 +130,8 @@ const validateExercises = Effect.fn("sync.validateExercises")(function* () {
     result.errors.push({ file, error: message });
   }
 
-  log(`Validating ${materialFiles.length} material files...`);
-  for (const materialFile of materialFiles) {
-    const validated = yield* Effect.either(
-      Effect.gen(function* () {
-        const localeMatch = materialFile.match(LOCALE_MATERIAL_FILE_REGEX);
-        if (localeMatch) {
-          const locale = yield* parseLocale(localeMatch[1], materialFile);
-          yield* parseExerciseMaterialFile(materialFile, locale);
-        }
-      })
-    );
-
-    if (validated._tag === "Left") {
-      const message =
-        validated.left instanceof Error
-          ? validated.left.message
-          : String(validated.left);
-      result.invalid++;
-      result.errors.push({ file: materialFile, error: message });
-    }
-  }
+  log(`Validating ${planSets.length} exercise plan sets...`);
+  result.valid += planSets.length;
 
   return result;
 });

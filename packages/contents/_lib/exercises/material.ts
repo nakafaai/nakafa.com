@@ -1,55 +1,23 @@
-import {
-  MetadataParseError,
-  ModuleLoadError,
-} from "@repo/contents/_shared/error";
 import type { ExercisesMaterialList } from "@repo/contents/_types/exercises/material";
-import { ExercisesMaterialListSchema } from "@repo/contents/_types/exercises/material";
+import { getExerciseMaterialList } from "@repo/contents/_types/plan/registry";
 import { cleanSlug } from "@repo/utilities/helper";
-import { Effect, Option, Schema } from "effect";
+import { Effect, Option } from "effect";
 import type { Locale } from "next-intl";
 
 /**
  * Loads the localized material list for an exercises section.
  *
  * @param path - Exercises material path, with or without a leading slash
- * @param locale - Locale used to select the `_data/*-material.ts` file
+ * @param locale - Locale used to select localized plan labels
  * @returns Parsed material list, or an empty list when unavailable
  */
 export const getMaterials = Effect.fn("Contents.Exercises.getMaterials")(
-  function* (path: string, locale: Locale) {
-    const cleanPath = cleanSlug(path.startsWith("/") ? path.slice(1) : path);
-    const modulePath = `@repo/contents/${cleanPath}/_data/${locale}-material.ts`;
+  (path: string, locale: Locale) =>
+    Effect.sync(() => {
+      const cleanPath = cleanSlug(path.startsWith("/") ? path.slice(1) : path);
 
-    return yield* Effect.gen(function* () {
-      const content = yield* Effect.tryPromise({
-        try: () => import(modulePath),
-        catch: (cause) =>
-          new ModuleLoadError({
-            cause,
-            message: "Unable to import exercises material list.",
-            path: modulePath,
-          }),
-      });
-
-      return yield* Effect.try({
-        try: () =>
-          Schema.decodeUnknownSync(ExercisesMaterialListSchema)(
-            content.default
-          ),
-        catch: (cause) =>
-          new MetadataParseError({
-            message: "Unable to parse exercises material list.",
-            path: modulePath,
-            reason: String(cause),
-          }),
-      });
-    }).pipe(
-      Effect.catchTags({
-        MetadataParseError: () => Effect.succeed([]),
-        ModuleLoadError: () => Effect.succeed([]),
-      })
-    );
-  }
+      return getExerciseMaterialList(cleanPath, locale);
+    })
 );
 
 /**

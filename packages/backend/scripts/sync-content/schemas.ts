@@ -51,9 +51,6 @@ export const BATCH_SIZES = {
   unusedAuthors: CONTENT_SYNC_BATCH_LIMITS.unusedAuthors,
 } as const;
 
-export const LOCALE_MATERIAL_FILE_REGEX = /\/([a-z]{2})-material\.ts$/;
-export const LOCALE_SUBJECT_MATERIAL_FILE_REGEX = /\/([a-z]{2})-material\.ts$/;
-
 /** Identifies an unsupported locale segment while parsing script inputs. */
 export class SyncLocaleParseError extends Schema.TaggedError<SyncLocaleParseError>()(
   "SyncLocaleParseError",

@@ -26,6 +26,10 @@ import type {
   SyncOptions,
 } from "@repo/backend/scripts/sync-content/types";
 import { getAllSurah } from "@repo/contents/_lib/quran";
+import {
+  listExercisePlans,
+  listSubjectPlans,
+} from "@repo/contents/_types/plan/registry";
 import { locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
 
@@ -238,8 +242,6 @@ export const verify = Effect.fn("sync.verify")(function* (
   const [
     articleFiles,
     subjectFiles,
-    subjectMaterialFiles,
-    exerciseMaterialFiles,
     questionFiles,
     answerFiles,
     choicesFiles,
@@ -247,8 +249,6 @@ export const verify = Effect.fn("sync.verify")(function* (
   ] = yield* Effect.all([
     globFiles("articles/**/*.mdx"),
     globFiles("subject/**/*.mdx"),
-    globFiles("subject/**/_data/*-material.ts"),
-    globFiles("exercises/**/_data/*-material.ts"),
     globFiles("exercises/**/_question/*.mdx"),
     globFiles("exercises/**/_answer/*.mdx"),
     globFiles("exercises/**/choices.ts"),
@@ -273,6 +273,8 @@ export const verify = Effect.fn("sync.verify")(function* (
   const questionFilesId = questionFiles.filter((file) =>
     file.endsWith("/id.mdx")
   );
+  const subjectPlanCount = listSubjectPlans().length;
+  const exercisePlanCount = listExercisePlans().length;
 
   log("=== FILESYSTEM ===\n");
   log("Articles:");
@@ -282,13 +284,13 @@ export const verify = Effect.fn("sync.verify")(function* (
   log(`  Reference files:     ${refFiles.length} (ref.ts)`);
 
   log("\nSubjects:");
-  log(`  Material files:      ${subjectMaterialFiles.length} (*-material.ts)`);
+  log(`  Plan sources:        ${subjectPlanCount}`);
   log(`  Total MDX files:     ${subjectFiles.length}`);
   log(`    - English (en):    ${subjectFilesEn.length}`);
   log(`    - Indonesian (id): ${subjectFilesId.length}`);
 
   log("\nExercises:");
-  log(`  Material files:      ${exerciseMaterialFiles.length} (*-material.ts)`);
+  log(`  Plan sources:        ${exercisePlanCount}`);
   log(`  Question files:      ${questionFiles.length} (_question/*.mdx)`);
   log(`    - English (en):    ${questionFilesEn.length}`);
   log(`    - Indonesian (id): ${questionFilesId.length}`);

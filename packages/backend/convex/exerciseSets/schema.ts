@@ -11,7 +11,7 @@ const tables = {
   /**
    * Exercise set storage (e.g., "Set 1", "Set 2").
    * Groups related questions together.
-   * Synced from _data/*-material.ts files.
+   * Synced from typed Plan sources in packages/contents.
    */
   exerciseSets: defineTable({
     locale: localeValidator,

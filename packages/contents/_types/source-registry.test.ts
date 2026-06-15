@@ -8,7 +8,13 @@ import {
 import { describe, expect, it } from "vitest";
 
 const TYPES_ROOT = join(process.cwd(), "_types");
+const CONTENTS_ROOT = process.cwd();
 const BLOCKED_SOURCE_BASENAME = ["source", "json"].join(".");
+const BLOCKED_MATERIAL_BASENAMES = new Set([
+  "en-material.ts",
+  "id-material.ts",
+  "path.ts",
+]);
 
 function findSourceJsonFiles(directory: string): string[] {
   const matches: string[] = [];
@@ -22,6 +28,28 @@ function findSourceJsonFiles(directory: string): string[] {
     }
 
     if (entry.name === BLOCKED_SOURCE_BASENAME) {
+      matches.push(entryPath);
+    }
+  }
+
+  return matches;
+}
+
+function findRouteLocalMaterialFiles(directory: string): string[] {
+  const matches: string[] = [];
+
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    const entryPath = join(directory, entry.name);
+
+    if (entry.isDirectory()) {
+      matches.push(...findRouteLocalMaterialFiles(entryPath));
+      continue;
+    }
+
+    if (
+      entryPath.includes("/_data/") &&
+      BLOCKED_MATERIAL_BASENAMES.has(entry.name)
+    ) {
       matches.push(entryPath);
     }
   }
@@ -102,5 +130,14 @@ describe("source registry adapter", () => {
 
   it("blocks JSON source registries under contents type modules", () => {
     expect(findSourceJsonFiles(TYPES_ROOT)).toEqual([]);
+  });
+
+  it("blocks route-local subject and exercise material source files", () => {
+    expect(findRouteLocalMaterialFiles(join(CONTENTS_ROOT, "subject"))).toEqual(
+      []
+    );
+    expect(
+      findRouteLocalMaterialFiles(join(CONTENTS_ROOT, "exercises"))
+    ).toEqual([]);
   });
 });

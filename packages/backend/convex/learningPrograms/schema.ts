@@ -330,7 +330,13 @@ const tables = {
     title: v.optional(v.string()),
     updatedAt: v.number(),
     userId: v.id("users"),
-  }).index("by_planId_and_position", ["planId", "position"]),
+  })
+    .index("by_planId_and_position", ["planId", "position"])
+    .index("by_programId_and_lensId_and_content_id", [
+      "programId",
+      "lensId",
+      "content_id",
+    ]),
 };
 
 export default tables;

@@ -25,57 +25,27 @@ import {
   TestTubeIcon,
   UserGroupIcon,
 } from "@hugeicons/core-free-icons";
-import {
-  MetadataParseError,
-  ModuleLoadError,
-} from "@repo/contents/_shared/error";
+import { getSubjectMaterialList } from "@repo/contents/_types/plan/registry";
 import type { MaterialList } from "@repo/contents/_types/subject/material";
-import { MaterialListSchema } from "@repo/contents/_types/subject/material";
 import { cleanSlug } from "@repo/utilities/helper";
-import { Effect, Option, Schema } from "effect";
+import { Effect, Option } from "effect";
 import type { Locale } from "next-intl";
 
 /**
  * Loads the localized material list for a subject section.
  *
  * @param path - Subject material path, with or without a leading slash
- * @param locale - Locale used to select the `_data/*-material.ts` file
+ * @param locale - Locale used to select localized plan labels
  * @returns Parsed material list, or an empty list when unavailable
  */
 export const getMaterials = Effect.fn("Contents.Subject.getMaterials")(
-  function* (path: string, locale: Locale) {
-    const cleanPath = path.startsWith("/") ? path.slice(1) : path;
-    const normalizedPath = cleanSlug(cleanPath);
-    const modulePath = `@repo/contents/${normalizedPath}/_data/${locale}-material.ts`;
+  (path: string, locale: Locale) =>
+    Effect.sync(() => {
+      const cleanPath = path.startsWith("/") ? path.slice(1) : path;
+      const normalizedPath = cleanSlug(cleanPath);
 
-    return yield* Effect.gen(function* () {
-      const content = yield* Effect.tryPromise({
-        try: () => import(modulePath),
-        catch: (cause) =>
-          new ModuleLoadError({
-            cause,
-            message: "Unable to import subject material list.",
-            path: modulePath,
-          }),
-      });
-
-      return yield* Effect.try({
-        try: () =>
-          Schema.decodeUnknownSync(MaterialListSchema)(content.default),
-        catch: (cause) =>
-          new MetadataParseError({
-            message: "Unable to parse subject material list.",
-            path: modulePath,
-            reason: String(cause),
-          }),
-      });
-    }).pipe(
-      Effect.catchTags({
-        MetadataParseError: () => Effect.succeed([]),
-        ModuleLoadError: () => Effect.succeed([]),
-      })
-    );
-  }
+      return getSubjectMaterialList(normalizedPath, locale);
+    })
 );
 
 /**

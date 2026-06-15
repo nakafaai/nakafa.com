@@ -12,8 +12,6 @@ const answerFile =
   "exercises/high-school/tka/mathematics/try-out/2026/set-1/8/_answer/id.mdx";
 const exerciseDir =
   "exercises/high-school/tka/mathematics/try-out/2026/set-1/8";
-const materialFile =
-  "exercises/high-school/tka/mathematics/_data/id-material.ts";
 const validSetSlug = "exercises/high-school/tka/mathematics/try-out/2026/set-1";
 
 /** Loads the exercise sync script with deterministic parser and Convex mocks. */
@@ -61,24 +59,23 @@ const loadExercisesScript = async ({
     };
   });
 
-  vi.doMock("@repo/backend/scripts/lib/mdx-parser/materials", () => ({
-    /** Returns the material row that owns the test set route. */
-    parseExerciseMaterialFile: () =>
-      Effect.succeed([
-        {
-          category: "high-school",
-          description: "Try-out set",
-          exerciseType: "try-out",
-          exerciseTypeTitle: "Try Out 2026",
-          locale: "id",
-          material: "mathematics",
-          setName: "set-1",
-          slug: materialSlug,
-          title: "Set 1",
-          type: "tka",
-          year: 2026,
-        },
-      ]),
+  vi.doMock("@repo/contents/_types/plan/registry", () => ({
+    /** Returns the typed Plan set that owns the test question route. */
+    listExerciseSets: () => [
+      {
+        category: "high-school",
+        description: "Try-out set",
+        exerciseType: "try-out",
+        exerciseTypeTitle: "Try Out 2026",
+        locale: "id",
+        material: "mathematics",
+        setName: "set-1",
+        slug: materialSlug,
+        title: "Set 1",
+        type: "tka",
+        year: 2026,
+      },
+    ],
   }));
 
   vi.doMock("@repo/backend/scripts/lib/mdx-parser/paths", async () => {
@@ -141,14 +138,8 @@ const loadExercisesScript = async ({
   }));
 
   vi.doMock("@repo/backend/scripts/sync-content/runtime", () => ({
-    /** Returns material and question fixture files for the requested glob. */
-    globFiles: (pattern: string) => {
-      if (pattern.includes("_data")) {
-        return Effect.succeed([materialFile]);
-      }
-
-      return Effect.succeed(questionFiles);
-    },
+    /** Returns question fixture files for the requested glob. */
+    globFiles: () => Effect.succeed(questionFiles),
   }));
 
   return {

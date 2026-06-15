@@ -20,6 +20,9 @@ const NOW = 1_798_752_000_000;
 const subjectGraph = getGraphIdentity(
   "subject/high-school/10/chemistry/atomic-structure"
 );
+const staleSubjectGraph = getGraphIdentity(
+  "subject/high-school/10/biology/deleted-topic"
+);
 
 describe("learningPrograms", () => {
   it("syncs selectable catalog rows and bounded source rows", async () => {
@@ -320,6 +323,103 @@ describe("learningPrograms", () => {
     ]);
   });
 
+  it("removes active plan items before deleting stale coverage rows", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const identity = await t.mutation((ctx) =>
+      seedAuthenticatedUser(ctx, { now: NOW })
+    );
+
+    await t.mutation(internal.learningPrograms.sync.syncLearningPrograms, {
+      programs: getLearningProgramCatalogInputs(),
+      syncedAt: NOW,
+    });
+    await seedContentRoute(t, {
+      graph: staleSubjectGraph,
+      route: "subject/high-school/10/biology/deleted-topic",
+      title: "Deleted Topic",
+    });
+    await seedContentRoute(t, {
+      graph: subjectGraph,
+      route: "subject/high-school/10/chemistry/atomic-structure",
+      title: "Atomic Structure",
+    });
+    await t.mutation(
+      internal.learningPrograms.sync.syncLearningProgramCoverage,
+      {
+        coverageRows: [
+          {
+            contentCount: 1,
+            coverageStatus: "partial",
+            lensId: staleSubjectGraph.lensId,
+            lensScope: "curriculum",
+            locale: "id",
+            programKey: "id-kurikulum-merdeka",
+            sampleContentId: staleSubjectGraph.assetId,
+            syncedAt: NOW - 1,
+          },
+          {
+            contentCount: 1,
+            coverageStatus: "partial",
+            lensId: subjectGraph.lensId,
+            lensScope: "curriculum",
+            locale: "id",
+            programKey: "id-kurikulum-merdeka",
+            sampleContentId: subjectGraph.assetId,
+            syncedAt: NOW,
+          },
+        ],
+      }
+    );
+
+    const authed = t.withIdentity({
+      sessionId: identity.sessionId,
+      subject: identity.authUserId,
+    });
+    const createdProfile = await authed.mutation(
+      api.learningPrograms.mutations.selectLearningProgram,
+      {
+        interests: ["school-curriculum"],
+        locale: "id",
+        primaryProgramKey: "id-kurikulum-merdeka",
+      }
+    );
+
+    expect(createdProfile.planItems.map((item) => item.content_id)).toContain(
+      staleSubjectGraph.assetId
+    );
+
+    await t.mutation(
+      internal.learningPrograms.sync.deleteStaleLearningProgramCoverage,
+      {
+        limit: 10,
+        locale: "id",
+        syncedAt: NOW,
+      }
+    );
+
+    const activeProfile = await authed.query(
+      api.learningPrograms.queries.getActiveProfile,
+      { locale: "id" }
+    );
+
+    expect(activeProfile?.planItems).toEqual([
+      expect.objectContaining({
+        content_id: subjectGraph.assetId,
+        route: "subject/high-school/10/chemistry/atomic-structure",
+        title: "Atomic Structure",
+      }),
+    ]);
+    expect(activeProfile?.planItems).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          content_id: staleSubjectGraph.assetId,
+          route: "subject/high-school/10/biology/deleted-topic",
+          title: "Deleted Topic",
+        }),
+      ])
+    );
+  });
+
   it("hides omitted catalog rows without orphaning existing profiles", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation((ctx) =>
@@ -467,4 +567,34 @@ function getGraphIdentity(route: string, locale: "en" | "id" = "id") {
   }
 
   return identity;
+}
+
+/** Seeds one content route projection so generated plan items can carry route copy. */
+async function seedContentRoute(
+  t: ReturnType<typeof createConvexTestWithBetterAuth>,
+  {
+    graph,
+    route,
+    title,
+  }: {
+    graph: ReturnType<typeof getGraphIdentity>;
+    route: string;
+    title: string;
+  }
+) {
+  await t.mutation(async (ctx) => {
+    await ctx.db.insert("contentRoutes", {
+      ...graph,
+      authors: [],
+      contentHash: `${graph.assetId}-hash`,
+      content_id: graph.assetId,
+      kind: "subject-topic",
+      locale: "id",
+      markdown: true,
+      route,
+      section: "subject",
+      syncedAt: NOW,
+      title,
+    });
+  });
 }

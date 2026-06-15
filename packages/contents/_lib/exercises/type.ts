@@ -1,8 +1,5 @@
-import {
-  getCategoryPath,
-  getMaterialPath,
-} from "@repo/contents/_lib/exercises/route";
-import { getFolderChildNames } from "@repo/contents/_lib/fs/cache";
+import { getMaterialPath } from "@repo/contents/_lib/exercises/route";
+import { listExercisePlans } from "@repo/contents/_types/plan/registry";
 import type {
   ExercisesCategory,
   ExercisesType,
@@ -24,26 +21,25 @@ import { Effect } from "effect";
  * ```
  */
 export const getSubjects = Effect.fn("contents.exercises.getSubjects")(
-  function* (category: ExercisesCategory, type: ExercisesType) {
-    const categoryPath = getCategoryPath(category);
-    const typePath = `${categoryPath.slice(1)}/${type}`;
-    const materialFolders = new Set(
-      yield* getFolderChildNames(typePath).pipe(
-        Effect.orElse(() => Effect.succeed([]))
-      )
-    );
+  (category: ExercisesCategory, type: ExercisesType) =>
+    Effect.sync(() => {
+      const planMaterials = new Set(
+        listExercisePlans()
+          .filter((plan) => plan.category === category && plan.type === type)
+          .map((plan) => plan.material)
+      );
 
-    return EXERCISES_MATERIALS.flatMap((material) => {
-      if (!materialFolders.has(material)) {
-        return [];
-      }
+      return EXERCISES_MATERIALS.flatMap((material) => {
+        if (!planMaterials.has(material)) {
+          return [];
+        }
 
-      return [
-        {
-          label: material,
-          href: getMaterialPath(category, type, material),
-        },
-      ];
-    });
-  }
+        return [
+          {
+            label: material,
+            href: getMaterialPath(category, type, material),
+          },
+        ];
+      });
+    })
 );

@@ -6,7 +6,6 @@ import {
   readExerciseChoices,
   readMdxFile,
 } from "@repo/backend/scripts/lib/mdx-parser/content";
-import { parseExerciseMaterialFile } from "@repo/backend/scripts/lib/mdx-parser/materials";
 import {
   buildExerciseSetSlug,
   getExerciseDir,
@@ -30,8 +29,6 @@ import {
   BATCH_SIZES,
   ExerciseQuestionSyncResultSchema,
   ExerciseSetSyncResultSchema,
-  LOCALE_MATERIAL_FILE_REGEX,
-  parseLocale,
 } from "@repo/backend/scripts/sync-content/schemas";
 import type {
   ConvexConfig,
@@ -47,12 +44,9 @@ import {
   getExerciseSetSearchTitle,
 } from "@repo/contents/_lib/exercises/search";
 import { getExerciseSetGroupRoute } from "@repo/contents/_types/graph/projection";
+import { listExerciseSets } from "@repo/contents/_types/plan/registry";
 import type { FunctionArgs } from "convex/server";
 import { Effect } from "effect";
-
-type ExerciseSetPayload = FunctionArgs<
-  typeof internal.contentSync.mutations.exercises.bulkSyncExerciseSets
->["sets"][number];
 
 type ExerciseQuestionPayload = FunctionArgs<
   typeof internal.contentSync.mutations.exercises.bulkSyncExerciseQuestions
@@ -65,7 +59,7 @@ interface ExerciseSearchLabels {
   setTitle: string;
 }
 
-/** Syncs exercise set metadata from material files into Convex. */
+/** Syncs exercise set metadata from typed Plan sources into Convex. */
 export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
   config: ConvexConfig,
   options: SyncOptions
@@ -75,130 +69,80 @@ export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
     log("\n--- EXERCISE SETS ---\n");
   }
 
-  const pattern = options.locale
-    ? `exercises/**/_data/${options.locale}-material.ts`
-    : "exercises/**/_data/*-material.ts";
-  const materialFiles = yield* globFiles(pattern);
+  const planSets = listExerciseSets(options.locale);
 
   if (!options.quiet) {
-    log(`Material files found: ${materialFiles.length}`);
+    log(`Plan sets found: ${planSets.length}`);
   }
 
   const totals: SyncResult = { created: 0, updated: 0, unchanged: 0 };
-  const sets: ExerciseSetPayload[] = [];
-  const errors: string[] = [];
-
   const searchLabelsBySet = yield* readExerciseSearchLabels(options);
   const questionCountByLocaleSlug = yield* readValidatedExerciseQuestionCounts(
     options,
     searchLabelsBySet
   );
+  const sets = yield* Effect.forEach(planSets, (set) =>
+    Effect.gen(function* () {
+      const countKey = `${set.locale}:${set.slug}`;
+      const questionCount = questionCountByLocaleSlug.get(countKey) || 0;
+      const searchSource = {
+        locale: set.locale,
+        category: set.category,
+        type: set.type,
+        material: set.material,
+        exerciseType: set.exerciseType,
+        exerciseTypeTitle: set.exerciseTypeTitle,
+        setName: set.setName,
+        setTitle: set.title,
+        year: set.year,
+        questionCount,
+        description: set.description,
+      };
+      const searchTitle = getExerciseSetSearchTitle(searchSource);
+      const searchDescription = getExerciseSetSearchDescription(searchSource);
+      const searchText = getExerciseSetSearchText(searchSource);
+      const groupRoute = yield* readExerciseSetGroupRoute(set.slug);
 
-  for (const materialFile of materialFiles) {
-    const result = yield* Effect.either(
-      Effect.gen(function* () {
-        const localeMatch = materialFile.match(LOCALE_MATERIAL_FILE_REGEX);
-        if (!localeMatch) {
-          return [];
-        }
-
-        const locale = yield* parseLocale(localeMatch[1], materialFile);
-        const parsedSets = yield* parseExerciseMaterialFile(
-          materialFile,
-          locale
-        );
-
-        return yield* Effect.forEach(parsedSets, (set) =>
-          Effect.gen(function* () {
-            const countKey = `${set.locale}:${set.slug}`;
-            const questionCount = questionCountByLocaleSlug.get(countKey) || 0;
-            const searchSource = {
-              locale: set.locale,
-              category: set.category,
-              type: set.type,
-              material: set.material,
-              exerciseType: set.exerciseType,
-              exerciseTypeTitle: set.exerciseTypeTitle,
-              setName: set.setName,
-              setTitle: set.title,
-              year: set.year,
-              questionCount,
-              description: set.description,
-            };
-            const searchTitle = getExerciseSetSearchTitle(searchSource);
-            const searchDescription =
-              getExerciseSetSearchDescription(searchSource);
-            const searchText = getExerciseSetSearchText(searchSource);
-            const groupRoute = yield* readExerciseSetGroupRoute(set.slug);
-
-            return {
-              locale: set.locale,
-              slug: set.slug,
-              category: set.category,
-              type: set.type,
-              material: set.material,
-              exerciseType: set.exerciseType,
-              exerciseTypeTitle: set.exerciseTypeTitle,
-              setName: set.setName,
-              title: set.title,
-              description: set.description,
-              year: set.year === undefined ? undefined : String(set.year),
-              questionCount,
-              searchTitle,
-              searchDescription,
-              searchText,
-              groupContentHash: computeHash(
-                JSON.stringify({
-                  description: set.description,
-                  exerciseType: set.exerciseType,
-                  exerciseTypeTitle: set.exerciseTypeTitle,
-                  groupRoute,
-                  locale: set.locale,
-                  year: set.year,
-                })
-              ),
-              contentHash: computeHash(
-                JSON.stringify({
-                  description: set.description,
-                  questionCount,
-                  searchDescription,
-                  searchText,
-                  searchTitle,
-                  slug: set.slug,
-                  year: set.year,
-                })
-              ),
-            };
+      return {
+        locale: set.locale,
+        slug: set.slug,
+        category: set.category,
+        type: set.type,
+        material: set.material,
+        exerciseType: set.exerciseType,
+        exerciseTypeTitle: set.exerciseTypeTitle,
+        setName: set.setName,
+        title: set.title,
+        description: set.description,
+        year: set.year === undefined ? undefined : String(set.year),
+        questionCount,
+        searchTitle,
+        searchDescription,
+        searchText,
+        groupContentHash: computeHash(
+          JSON.stringify({
+            description: set.description,
+            exerciseType: set.exerciseType,
+            exerciseTypeTitle: set.exerciseTypeTitle,
+            groupRoute,
+            locale: set.locale,
+            year: set.year,
           })
-        );
-      })
-    );
-
-    if (result._tag === "Left") {
-      const message =
-        result.left instanceof Error
-          ? result.left.message
-          : String(result.left);
-      errors.push(`${materialFile}: ${message}`);
-    } else {
-      sets.push(...result.right);
-    }
-  }
-
-  if (errors.length > 0 && !options.quiet) {
-    log(`Parse errors: ${errors.length}`);
-    for (const error of errors) {
-      logError(error);
-    }
-  }
-
-  if (errors.length > 0) {
-    return yield* Effect.fail(
-      new ScriptFailureError({
-        message: `Cannot sync exercise sets with invalid exercise materials:\n${errors.join("\n")}`,
-      })
-    );
-  }
+        ),
+        contentHash: computeHash(
+          JSON.stringify({
+            description: set.description,
+            questionCount,
+            searchDescription,
+            searchText,
+            searchTitle,
+            slug: set.slug,
+            year: set.year,
+          })
+        ),
+      };
+    })
+  );
 
   if (!options.quiet) {
     log(`Sets parsed: ${sets.length}`);
@@ -387,7 +331,7 @@ const parseQuestionFile = Effect.fn("sync.parseQuestionFile")(function* (
   if (!searchLabels) {
     return yield* Effect.fail(
       new ScriptFailureError({
-        message: `Missing exercise search labels for ${pathInfo.locale}:${setSlug}. Add this set to the matching _data material file.`,
+        message: `Missing exercise search labels for ${pathInfo.locale}:${setSlug}. Add this set to the typed Plan source before syncing.`,
       })
     );
   }
@@ -459,35 +403,19 @@ const parseQuestionFile = Effect.fn("sync.parseQuestionFile")(function* (
   };
 });
 
-const readExerciseSearchLabels = Effect.fn("sync.readExerciseSearchLabels")(
-  function* (options: SyncOptions) {
-    const pattern = options.locale
-      ? `exercises/**/_data/${options.locale}-material.ts`
-      : "exercises/**/_data/*-material.ts";
-    const materialFiles = yield* globFiles(pattern);
+const readExerciseSearchLabels = (options: SyncOptions) =>
+  Effect.sync(() => {
     const labels = new Map<string, ExerciseSearchLabels>();
 
-    for (const materialFile of materialFiles) {
-      const localeMatch = materialFile.match(LOCALE_MATERIAL_FILE_REGEX);
-
-      if (!localeMatch) {
-        continue;
-      }
-
-      const locale = yield* parseLocale(localeMatch[1], materialFile);
-      const sets = yield* parseExerciseMaterialFile(materialFile, locale);
-
-      for (const set of sets) {
-        labels.set(`${set.locale}:${set.slug}`, {
-          exerciseTypeTitle: set.exerciseTypeTitle,
-          setTitle: set.title,
-        });
-      }
+    for (const set of listExerciseSets(options.locale)) {
+      labels.set(`${set.locale}:${set.slug}`, {
+        exerciseTypeTitle: set.exerciseTypeTitle,
+        setTitle: set.title,
+      });
     }
 
     return labels;
-  }
-);
+  });
 
 /** Sends exercise question batches to Convex and aggregates sync counts. */
 const processQuestionBatches = Effect.fn("sync.processQuestionBatches")(
@@ -583,7 +511,7 @@ const reportQuestionSyncResults = (
     logError(
       `Missing sets: ${uniqueSets.map((slug) => slug.replace("exercises/", "")).join(", ")}`
     );
-    logError("Add these sets to your material files in _data/*-material.ts");
+    logError("Add these sets to the typed Plan source before syncing.");
   }
 
   if (totals.choicesCreated || totals.authorLinksCreated) {

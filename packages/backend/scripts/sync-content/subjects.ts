@@ -5,7 +5,6 @@ import {
   parseDateToEpoch,
   readMdxFile,
 } from "@repo/backend/scripts/lib/mdx-parser/content";
-import { parseSubjectMaterialFile } from "@repo/backend/scripts/lib/mdx-parser/materials";
 import { parseSubjectPath } from "@repo/backend/scripts/lib/mdx-parser/paths";
 import { callConvexMutation } from "@repo/backend/scripts/sync-content/convex";
 import {
@@ -22,8 +21,6 @@ import {
 import { globFiles } from "@repo/backend/scripts/sync-content/runtime";
 import {
   BATCH_SIZES,
-  LOCALE_SUBJECT_MATERIAL_FILE_REGEX,
-  parseLocale,
   SubjectSectionSyncResultSchema,
   SubjectTopicSyncResultSchema,
 } from "@repo/backend/scripts/sync-content/schemas";
@@ -32,6 +29,7 @@ import type {
   SyncOptions,
   SyncResult,
 } from "@repo/backend/scripts/sync-content/types";
+import { listSubjectTopics } from "@repo/contents/_types/plan/registry";
 import type { FunctionArgs } from "convex/server";
 import { Effect } from "effect";
 
@@ -48,7 +46,7 @@ interface SubjectSectionOrder {
   topicSlug: string;
 }
 
-/** Syncs subject topic metadata from material files into Convex. */
+/** Syncs subject topic metadata from typed Plan sources into Convex. */
 export const syncSubjectTopics = Effect.fn("sync.subjectTopics")(function* (
   config: ConvexConfig,
   options: SyncOptions
@@ -58,90 +56,43 @@ export const syncSubjectTopics = Effect.fn("sync.subjectTopics")(function* (
     log("\n--- SUBJECT TOPICS ---\n");
   }
 
-  const pattern = options.locale
-    ? `subject/**/_data/${options.locale}-material.ts`
-    : "subject/**/_data/*-material.ts";
-  const materialFiles = yield* globFiles(pattern);
+  const planTopics = listSubjectTopics(options.locale);
 
   if (!options.quiet) {
-    log(`Material files found: ${materialFiles.length}`);
+    log(`Plan topics found: ${planTopics.length}`);
   }
 
   const totals: SyncResult = { created: 0, updated: 0, unchanged: 0 };
-  const topics: SubjectTopicPayload[] = [];
-  const errors: string[] = [];
   const sectionCountByTopicSlug =
     yield* readMaterialListedSubjectSectionCountByTopicSlug(options);
-
-  for (const materialFile of materialFiles) {
-    const result = yield* Effect.either(
-      Effect.gen(function* () {
-        const localeMatch = materialFile.match(
-          LOCALE_SUBJECT_MATERIAL_FILE_REGEX
-        );
-        if (!localeMatch) {
-          return [];
-        }
-
-        const locale = yield* parseLocale(localeMatch[1], materialFile);
-        const parsedTopics = yield* parseSubjectMaterialFile(
-          materialFile,
-          locale
-        );
-
-        return parsedTopics.map((topic) => ({
-          locale: topic.locale,
-          slug: topic.slug,
-          category: topic.category,
-          contentHash: computeHash(
-            JSON.stringify({
-              category: topic.category,
-              description: topic.description,
-              grade: topic.grade,
-              locale: topic.locale,
-              material: topic.material,
-              order: topic.order,
-              sectionCount:
-                sectionCountByTopicSlug.get(`${topic.locale}:${topic.slug}`) ??
-                0,
-              slug: topic.slug,
-              title: topic.title,
-              topic: topic.topic,
-            })
-          ),
-          grade: topic.grade,
-          material: topic.material,
-          order: topic.order,
-          topic: topic.topic,
-          title: topic.title,
-          description: topic.description,
-          sectionCount:
-            sectionCountByTopicSlug.get(`${topic.locale}:${topic.slug}`) ?? 0,
-        }));
+  const topics: SubjectTopicPayload[] = planTopics.map((topic) => ({
+    locale: topic.locale,
+    slug: topic.slug,
+    category: topic.category,
+    contentHash: computeHash(
+      JSON.stringify({
+        category: topic.category,
+        description: topic.description,
+        grade: topic.grade,
+        locale: topic.locale,
+        material: topic.material,
+        order: topic.order,
+        sectionCount:
+          sectionCountByTopicSlug.get(`${topic.locale}:${topic.slug}`) ?? 0,
+        slug: topic.slug,
+        title: topic.title,
+        topic: topic.topic,
       })
-    );
-
-    if (result._tag === "Left") {
-      const message =
-        result.left instanceof Error
-          ? result.left.message
-          : String(result.left);
-      errors.push(`${materialFile}: ${message}`);
-    } else {
-      topics.push(...result.right);
-    }
-  }
-
-  if (errors.length > 0 && !options.quiet) {
-    log(`Parse errors: ${errors.length}`);
-    for (const error of errors) {
-      logError(error);
-    }
-  }
-
-  if (errors.length > 0) {
-    return yield* failSubjectParseErrors("topics", errors);
-  }
+    ),
+    grade: topic.grade,
+    material: topic.material,
+    order: topic.order,
+    topic: topic.topic,
+    title: topic.title,
+    description: topic.description,
+    sectionCount:
+      sectionCountByTopicSlug.get(`${topic.locale}:${topic.slug}`) ?? 0,
+  }));
 
   if (!options.quiet) {
     log(`Topics parsed: ${topics.length}`);
@@ -242,7 +193,7 @@ export const syncSubjectSections = Effect.fn("sync.subjectSections")(function* (
         if (!sectionOrder) {
           return yield* Effect.fail(
             new ScriptFailureError({
-              message: `Missing subject material order for ${pathInfo.locale}:${pathInfo.slug}. Add this lesson to the matching _data material file before syncing.`,
+              message: `Missing subject plan order for ${pathInfo.locale}:${pathInfo.slug}. Add this lesson to the typed Plan source before syncing.`,
             })
           );
         }
@@ -250,7 +201,7 @@ export const syncSubjectSections = Effect.fn("sync.subjectSections")(function* (
         if (sectionOrder.topicSlug !== topicSlug) {
           return yield* Effect.fail(
             new ScriptFailureError({
-              message: `Subject material order for ${pathInfo.locale}:${pathInfo.slug} points at ${sectionOrder.topicSlug}, expected ${topicSlug}.`,
+              message: `Subject plan order for ${pathInfo.locale}:${pathInfo.slug} points at ${sectionOrder.topicSlug}, expected ${topicSlug}.`,
             })
           );
         }
@@ -386,57 +337,25 @@ export const syncSubjectSections = Effect.fn("sync.subjectSections")(function* (
 const readSubjectSectionOrderBySlug = Effect.fn(
   "sync.readSubjectSectionOrderBySlug"
 )(function* (options: SyncOptions) {
-  const pattern = options.locale
-    ? `subject/**/_data/${options.locale}-material.ts`
-    : "subject/**/_data/*-material.ts";
-  const materialFiles = yield* globFiles(pattern);
-  const errors: string[] = [];
   const orderBySlug = new Map<string, SubjectSectionOrder>();
 
-  for (const materialFile of materialFiles) {
-    const result = yield* Effect.either(
-      Effect.gen(function* () {
-        const localeMatch = materialFile.match(
-          LOCALE_SUBJECT_MATERIAL_FILE_REGEX
+  for (const topic of listSubjectTopics(options.locale)) {
+    for (const section of topic.sections) {
+      const key = `${topic.locale}:${section.slug}`;
+
+      if (orderBySlug.has(key)) {
+        return yield* Effect.fail(
+          new ScriptFailureError({
+            message: `Duplicate subject section plan order for ${key}.`,
+          })
         );
-        if (!localeMatch) {
-          return;
-        }
+      }
 
-        const locale = yield* parseLocale(localeMatch[1], materialFile);
-        const topics = yield* parseSubjectMaterialFile(materialFile, locale);
-
-        for (const topic of topics) {
-          for (const section of topic.sections) {
-            const key = `${topic.locale}:${section.slug}`;
-            if (orderBySlug.has(key)) {
-              return yield* Effect.fail(
-                new ScriptFailureError({
-                  message: `Duplicate subject section material order for ${key}.`,
-                })
-              );
-            }
-
-            orderBySlug.set(key, {
-              order: section.order,
-              topicSlug: topic.slug,
-            });
-          }
-        }
-      })
-    );
-
-    if (result._tag === "Left") {
-      const message =
-        result.left instanceof Error
-          ? result.left.message
-          : String(result.left);
-      errors.push(`${materialFile}: ${message}`);
+      orderBySlug.set(key, {
+        order: section.order,
+        topicSlug: topic.slug,
+      });
     }
-  }
-
-  if (errors.length > 0) {
-    return yield* failSubjectParseErrors("section order", errors);
   }
 
   return orderBySlug;
@@ -474,14 +393,14 @@ const readMaterialListedSubjectSectionCountByTopicSlug = Effect.fn(
 
     if (!sectionOrder) {
       errors.push(
-        `${file}: Missing subject material order for ${pathInfo.locale}:${pathInfo.slug}. Add this lesson to the matching _data material file before syncing.`
+        `${file}: Missing subject plan order for ${pathInfo.locale}:${pathInfo.slug}. Add this lesson to the typed Plan source before syncing.`
       );
       continue;
     }
 
     if (sectionOrder.topicSlug !== topicSlug) {
       errors.push(
-        `${file}: Subject material order for ${pathInfo.locale}:${pathInfo.slug} points at ${sectionOrder.topicSlug}, expected ${topicSlug}.`
+        `${file}: Subject plan order for ${pathInfo.locale}:${pathInfo.slug} points at ${sectionOrder.topicSlug}, expected ${topicSlug}.`
       );
       continue;
     }
