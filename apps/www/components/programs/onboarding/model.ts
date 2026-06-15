@@ -47,6 +47,23 @@ export function getProgramsForInterests(
   );
 }
 
+/** Decides whether the current choice step has enough information to continue. */
+export function canContinueOnboardingStep({
+  interests,
+  program,
+  step,
+}: {
+  interests: readonly LearningInterest[];
+  program: ProgramOption | null;
+  step: Exclude<OnboardingStep, "confirm">;
+}) {
+  if (step === "interests") {
+    return interests.length > 0;
+  }
+
+  return program !== null;
+}
+
 /** Lists learner-facing focuses that have at least one usable program route. */
 export function getSelectableInterests(
   programs: readonly ProgramOption[],

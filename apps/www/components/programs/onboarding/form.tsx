@@ -23,6 +23,7 @@ import type {
 import { ChoiceControls } from "./controls";
 import { SubmitControls } from "./finish";
 import {
+  canContinueOnboardingStep,
   getDefaultProgram,
   getInterestsForProgram,
   getProgramsForInterests,
@@ -144,6 +145,18 @@ export function LearningProgramOnboardingForm({
     goToStep("interests");
   }
 
+  /** Advances from the current choice step after its required choice is present. */
+  function continueFromChoiceStep(
+    currentStep: Exclude<OnboardingStep, "confirm">
+  ) {
+    if (currentStep === "program") {
+      goToStep("confirm");
+      return;
+    }
+
+    goToStep("program");
+  }
+
   return (
     <form
       action={() => form.handleSubmit()}
@@ -234,10 +247,14 @@ export function LearningProgramOnboardingForm({
                 </>
               ) : (
                 <ChoiceControls
-                  canContinue={selectedInterests.length > 0}
+                  canContinue={canContinueOnboardingStep({
+                    interests: selectedInterests,
+                    program: selectedProgram,
+                    step,
+                  })}
                   canSkip={Boolean(defaultProgram)}
                   onBack={() => goBackFrom(step)}
-                  onContinue={() => goToStep("program")}
+                  onContinue={() => continueFromChoiceStep(step)}
                   onSkip={selectDefaultPath}
                   step={step}
                   t={t}

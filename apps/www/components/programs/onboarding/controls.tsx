@@ -22,6 +22,8 @@ export function ChoiceControls({
   step: Exclude<OnboardingStep, "confirm">;
   t: Translator;
 }) {
+  const showContinue = step === "interests" || canContinue;
+
   return (
     <div className="flex items-center gap-4">
       {step === "interests" ? null : (
@@ -29,7 +31,7 @@ export function ChoiceControls({
           {t("onboarding.back")}
         </Button>
       )}
-      {step === "interests" ? (
+      {showContinue ? (
         <Button
           className="h-11"
           disabled={!canContinue}

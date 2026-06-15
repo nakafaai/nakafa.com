@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { LearningProgramCatalog } from "@/components/programs/contract";
 import {
+  canContinueOnboardingStep,
   getDefaultProgram,
   getInterestsForProgram,
   getProgramsForInterests,
@@ -90,5 +91,40 @@ describe("components/programs/onboarding/model", () => {
         ["exam-prep", "nakafa-path"]
       )
     ).toEqual(["exam-prep"]);
+  });
+
+  it("allows returning learners to continue from a preselected program", () => {
+    const selectedProgram =
+      programs.find((program) => program.key === "id-kurikulum-merdeka") ??
+      null;
+
+    expect(
+      canContinueOnboardingStep({
+        interests: ["school-curriculum"],
+        program: null,
+        step: "interests",
+      })
+    ).toBe(true);
+    expect(
+      canContinueOnboardingStep({
+        interests: [],
+        program: selectedProgram,
+        step: "interests",
+      })
+    ).toBe(false);
+    expect(
+      canContinueOnboardingStep({
+        interests: ["school-curriculum"],
+        program: selectedProgram,
+        step: "program",
+      })
+    ).toBe(true);
+    expect(
+      canContinueOnboardingStep({
+        interests: ["school-curriculum"],
+        program: null,
+        step: "program",
+      })
+    ).toBe(false);
   });
 });
