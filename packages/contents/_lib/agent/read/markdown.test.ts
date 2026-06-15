@@ -4,13 +4,15 @@ import {
   decodeNakafaAgentMarkdown,
   getNakafaAgentMarkdown,
 } from "@repo/contents/_lib/agent/read/markdown";
-import { Effect, Option } from "effect";
+import { DateOnlySchema } from "@repo/contents/_shared/date";
+import { Effect, Option, Schema } from "effect";
 import { describe, expect, it, vi } from "vitest";
 
 const ARTICLE_CONTENT_REF =
   "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values";
 const EXERCISE_CONTENT_REF =
   "https://nakafa.com/en/exercises/high-school/snbt/general-knowledge/try-out/2026/set-2";
+const FIXTURE_DATE = Schema.decodeSync(DateOnlySchema)("2026-01-01");
 
 vi.mock("@repo/contents/_lib/metadata", async () => {
   const { Effect } = await import("effect");
@@ -24,7 +26,7 @@ vi.mock("@repo/contents/_lib/metadata", async () => {
       return Effect.succeed({
         metadata: {
           authors: [{ name: "Nakafa" }],
-          date: "01/01/2026",
+          date: "2026-01-01",
           description: "Article description",
           title: "Article",
         },
@@ -186,7 +188,7 @@ describe("Nakafa agent markdown", () => {
             Effect.succeed({
               metadata: {
                 authors: [{ name: "Nakafa" }],
-                date: "01/01/2026",
+                date: FIXTURE_DATE,
                 subject: "Fallback Subject",
                 title: "Subject Fallback",
               },
@@ -212,7 +214,7 @@ describe("Nakafa agent markdown", () => {
             Effect.succeed({
               metadata: {
                 authors: [{ name: "Nakafa" }],
-                date: "01/01/2026",
+                date: FIXTURE_DATE,
                 title: "No Description",
               },
               raw: "## Body",

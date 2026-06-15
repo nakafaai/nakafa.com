@@ -38,7 +38,7 @@ export const parseDateToEpoch = Effect.fn("mdx.parseDateToEpoch")(function* (
   if (Option.isNone(date)) {
     return yield* Effect.fail(
       new MdxReadError({
-        message: `Invalid date format: ${dateStr}. Expected MM/DD/YYYY`,
+        message: `Invalid date format: ${dateStr}. Expected YYYY-MM-DD`,
       })
     );
   }

@@ -1,5 +1,6 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import {
+  hasLearningProgramCoverageForLocale,
   isLearningProgramSelectable,
   toLearningProgramSummary,
 } from "@repo/backend/convex/learningPrograms/impl";
@@ -21,35 +22,44 @@ export const listSelectablePrograms = query({
   },
   returns: v.array(learningProgramSummaryValidator),
   handler: async (ctx, args) => {
-    const locale = args.locale;
-
-    if (locale) {
-      const programs = await ctx.db
-        .query("learningPrograms")
-        .withIndex("by_locale_and_displayOrder", (q) => q.eq("locale", locale))
-        .take(PROGRAM_LIMIT);
-
-      return programs
-        .filter(isLearningProgramSelectable)
-        .map(toLearningProgramSummary);
-    }
-
     const programs = await ctx.db
       .query("learningPrograms")
       .withIndex("by_displayOrder")
       .take(PROGRAM_LIMIT);
+    const selectablePrograms = programs.filter(isLearningProgramSelectable);
 
-    return programs
-      .filter(isLearningProgramSelectable)
-      .map(toLearningProgramSummary);
+    if (!args.locale) {
+      return selectablePrograms.map((program) =>
+        toLearningProgramSummary(program)
+      );
+    }
+
+    const programsWithCoverage: typeof selectablePrograms = [];
+
+    for (const program of selectablePrograms) {
+      if (
+        await hasLearningProgramCoverageForLocale(ctx, {
+          locale: args.locale,
+          programId: program._id,
+        })
+      ) {
+        programsWithCoverage.push(program);
+      }
+    }
+
+    return programsWithCoverage.map((program) =>
+      toLearningProgramSummary(program, args.locale)
+    );
   },
 });
 
 /** Returns the current user's active profile and first learning plan items. */
 export const getActiveProfile = query({
-  args: {},
+  args: {
+    locale: v.optional(localeValidator),
+  },
   returns: activeLearningProfileValidator,
-  handler: async (ctx) => {
+  handler: async (ctx, args) => {
     const user = await getOptionalAppUser(ctx);
 
     if (!user) {
@@ -92,7 +102,7 @@ export const getActiveProfile = query({
         status: item.status,
         title: item.title,
       })),
-      program: toLearningProgramSummary(program),
+      program: toLearningProgramSummary(program, args.locale),
       stage: profile.stage,
     };
   },

@@ -23,10 +23,14 @@ class ActiveLearningProfileReadError extends Schema.TaggedError<ActiveLearningPr
 /** Effect program that reads the authenticated user's learning profile. */
 const getActiveLearningProfileEffect = Effect.fn(
   "www.learningPrograms.activeProfile"
-)(function* (token: string) {
+)(function* (token: string, locale?: Locale) {
+  const args = locale === undefined ? {} : { locale };
+
   return yield* Effect.tryPromise({
     try: () =>
-      fetchQuery(api.learningPrograms.queries.getActiveProfile, {}, { token }),
+      fetchQuery(api.learningPrograms.queries.getActiveProfile, args, {
+        token,
+      }),
     catch: (cause) =>
       new ActiveLearningProfileReadError({
         cause,
@@ -66,7 +70,8 @@ export async function getLearningProgramOnboardingCatalog(
 
 /** Reads the active learning profile for the authenticated request token. */
 export async function getActiveLearningProfile(
-  token: string
+  token: string,
+  locale?: Locale
 ): Promise<ActiveLearningProfile> {
-  return await Effect.runPromise(getActiveLearningProfileEffect(token));
+  return await Effect.runPromise(getActiveLearningProfileEffect(token, locale));
 }

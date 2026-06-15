@@ -1,18 +1,27 @@
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import type {
+  MutationCtx,
+  QueryCtx,
+} from "@repo/backend/convex/_generated/server";
+import { defaultLocale, type Locale } from "@repo/utilities/locales";
 
 const PLAN_COVERAGE_LIMIT = 12;
 
 /** Returns the stable public summary for one persisted learning program. */
-export function toLearningProgramSummary(program: Doc<"learningPrograms">) {
+export function toLearningProgramSummary(
+  program: Doc<"learningPrograms">,
+  locale: Locale = defaultLocale
+) {
+  const translation = getProgramTranslation(program, locale);
+
   return {
     coverageStatus: program.defaultCoverageStatus,
-    description: program.description,
+    description: translation.description,
     displayOrder: program.displayOrder,
     key: program.key,
     kind: program.kind,
-    locale: program.locale,
-    title: program.title,
+    navigation: program.navigation,
+    title: translation.title,
     versionLabel: program.versionLabel,
   };
 }
@@ -34,6 +43,44 @@ export async function getLearningProgramByKey(
     .query("learningPrograms")
     .withIndex("by_key", (q) => q.eq("key", key))
     .unique();
+}
+
+/** Checks whether a selectable program has content coverage for one display language. */
+export async function hasLearningProgramCoverageForLocale(
+  ctx: MutationCtx | QueryCtx,
+  {
+    locale,
+    programId,
+  }: {
+    locale: Locale;
+    programId: Id<"learningPrograms">;
+  }
+) {
+  const available = await ctx.db
+    .query("learningProgramCoverage")
+    .withIndex("by_programId_and_locale_and_coverageStatus", (q) =>
+      q
+        .eq("programId", programId)
+        .eq("locale", locale)
+        .eq("coverageStatus", "available")
+    )
+    .take(1);
+
+  if (available.length > 0) {
+    return true;
+  }
+
+  const partial = await ctx.db
+    .query("learningProgramCoverage")
+    .withIndex("by_programId_and_locale_and_coverageStatus", (q) =>
+      q
+        .eq("programId", programId)
+        .eq("locale", locale)
+        .eq("coverageStatus", "partial")
+    )
+    .take(1);
+
+  return partial.length > 0;
 }
 
 /** Marks all active plans for a user as superseded before creating a new plan. */
@@ -154,4 +201,33 @@ async function getContentRouteByContentId(
     .take(5);
 
   return routes.find((route) => route.locale === locale) ?? null;
+}
+
+/** Returns localized program copy, falling back to the app default language. */
+function getProgramTranslation(
+  program: Doc<"learningPrograms">,
+  locale: Locale
+) {
+  const requested = program.translations[locale];
+
+  if (requested) {
+    return requested;
+  }
+
+  const fallback = program.translations[defaultLocale];
+
+  if (fallback) {
+    return fallback;
+  }
+
+  const [firstTranslation] = Object.values(program.translations);
+
+  if (!firstTranslation) {
+    return {
+      description: program.key,
+      title: program.key,
+    };
+  }
+
+  return firstTranslation;
 }

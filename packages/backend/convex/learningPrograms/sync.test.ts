@@ -28,7 +28,7 @@ describe("learningPrograms", () => {
     );
     const programs = await t.query(
       api.learningPrograms.queries.listSelectablePrograms,
-      { locale: "id" }
+      {}
     );
     const sourceCount = await t.query(async (ctx) => {
       const program = await ctx.db
@@ -54,7 +54,83 @@ describe("learningPrograms", () => {
       "id-kurikulum-merdeka",
       "snbt-2026",
     ]);
+    expect(
+      programs.find((program) => program.key === "id-kurikulum-merdeka")
+    ).toMatchObject({
+      navigation: {
+        levels: ["class", "subject", "topic"],
+        model: "class-subject-topic",
+      },
+    });
     expect(sourceCount).toBe(2);
+  });
+
+  it("lists canonical programs in each content language only after coverage exists", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const englishSubjectGraph = getGraphIdentity(
+      "subject/high-school/10/chemistry/atomic-structure",
+      "en"
+    );
+
+    await t.mutation(internal.learningPrograms.sync.syncLearningPrograms, {
+      programs: getLearningProgramCatalogInputs(),
+      syncedAt: NOW,
+    });
+
+    await expect(
+      t.query(api.learningPrograms.queries.listSelectablePrograms, {
+        locale: "en",
+      })
+    ).resolves.toEqual([]);
+
+    await t.mutation(
+      internal.learningPrograms.sync.syncLearningProgramCoverage,
+      {
+        coverageRows: [
+          {
+            contentCount: 1,
+            coverageStatus: "partial",
+            lensId: subjectGraph.lensId,
+            lensScope: "curriculum",
+            locale: "id",
+            programKey: "id-kurikulum-merdeka",
+            sampleContentId: subjectGraph.assetId,
+            syncedAt: NOW,
+          },
+          {
+            contentCount: 1,
+            coverageStatus: "partial",
+            lensId: englishSubjectGraph.lensId,
+            lensScope: "curriculum",
+            locale: "en",
+            programKey: "id-kurikulum-merdeka",
+            sampleContentId: englishSubjectGraph.assetId,
+            syncedAt: NOW,
+          },
+        ],
+      }
+    );
+
+    await expect(
+      t.query(api.learningPrograms.queries.listSelectablePrograms, {
+        locale: "id",
+      })
+    ).resolves.toMatchObject([
+      {
+        key: "id-kurikulum-merdeka",
+        title: "Kurikulum Merdeka",
+      },
+    ]);
+    await expect(
+      t.query(api.learningPrograms.queries.listSelectablePrograms, {
+        locale: "en",
+      })
+    ).resolves.toMatchObject([
+      {
+        description: "Follow Indonesia's school curriculum by class topic.",
+        key: "id-kurikulum-merdeka",
+      },
+    ]);
   });
 
   it("deletes stale coverage rows in bounded batches", async () => {
@@ -137,13 +213,39 @@ describe("learningPrograms", () => {
       ...catalog[0],
       displayOrder: 50,
       key: "retired-nakafa-path",
-      title: "Retired Nakafa Path",
+      translations: {
+        en: {
+          description: "Retired path.",
+          title: "Retired Nakafa Path",
+        },
+        id: {
+          description: "Jalur yang sudah dihentikan.",
+          title: "Jalur Nakafa Lama",
+        },
+      },
     } satisfies LearningProgramSyncInput;
 
     await t.mutation(internal.learningPrograms.sync.syncLearningPrograms, {
       programs: [...catalog, retiredProgram],
       syncedAt: NOW,
     });
+    await t.mutation(
+      internal.learningPrograms.sync.syncLearningProgramCoverage,
+      {
+        coverageRows: [
+          {
+            contentCount: 1,
+            coverageStatus: "partial",
+            lensId: subjectGraph.lensId,
+            lensScope: "curriculum",
+            locale: "id",
+            programKey: retiredProgram.key,
+            sampleContentId: subjectGraph.assetId,
+            syncedAt: NOW,
+          },
+        ],
+      }
+    );
 
     const authed = t.withIdentity({
       sessionId: identity.sessionId,
@@ -212,12 +314,34 @@ describe("learningPrograms", () => {
       })
     ).rejects.toThrow(ConvexError);
   });
+
+  it("rejects invalid registry date strings before writes", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const [program] = getLearningProgramCatalogInputs();
+
+    await expect(
+      t.mutation(internal.learningPrograms.sync.syncLearningPrograms, {
+        programs: [
+          {
+            ...program,
+            sources: [
+              {
+                ...program.sources[0],
+                retrievedAt: "not-a-date",
+              },
+            ],
+          },
+        ],
+        syncedAt: NOW,
+      })
+    ).rejects.toThrow("LEARNING_PROGRAM_CATALOG_INVALID");
+  });
 });
 
 /** Returns graph identity for a route fixture and fails fast on invalid fixtures. */
-function getGraphIdentity(route: string) {
+function getGraphIdentity(route: string, locale: "en" | "id" = "id") {
   const identity = createLearningGraphIdentityFromRoute({
-    locale: "id",
+    locale,
     route,
   });
 

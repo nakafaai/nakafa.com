@@ -1,6 +1,7 @@
 import {
   getDefaultLearningProgramKey,
   LEARNING_PROGRAM_CATALOG,
+  LEARNING_PROGRAM_KEYS,
 } from "@repo/contents/_types/program/catalog";
 import {
   type LearningProgram,
@@ -9,7 +10,13 @@ import {
 } from "@repo/contents/_types/program/schema";
 import { Schema } from "effect";
 
-/** Central source-registry ownership rules for projecting graph routes to programs. */
+/**
+ * Broad coverage projection rules from graph-owned route facts to program keys.
+ *
+ * Rules should match graph route kind, lens segments, route segments, taxonomy,
+ * or explicit fallback ownership. They must stay small and should not enumerate
+ * every subject, topic, or content route covered by a program.
+ */
 export const LEARNING_PROGRAM_COVERAGE_ALIGNMENTS = Schema.decodeUnknownSync(
   Schema.Array(LearningProgramCoverageAlignmentSchema)
 )([
@@ -17,7 +24,7 @@ export const LEARNING_PROGRAM_COVERAGE_ALIGNMENTS = Schema.decodeUnknownSync(
     match: {
       routeKinds: ["subject-section", "subject-topic"],
     },
-    programKey: "id-kurikulum-merdeka",
+    programKey: LEARNING_PROGRAM_KEYS.idKurikulumMerdeka,
   },
   {
     match: {
@@ -30,14 +37,14 @@ export const LEARNING_PROGRAM_COVERAGE_ALIGNMENTS = Schema.decodeUnknownSync(
       lensSegments: ["tka"],
       routeSegments: ["tka"],
     },
-    programKey: "tka-2026",
+    programKey: LEARNING_PROGRAM_KEYS.tka2026,
   },
   {
     match: {
       lensSegments: ["snbt"],
       routeSegments: ["snbt"],
     },
-    programKey: "snbt-2026",
+    programKey: LEARNING_PROGRAM_KEYS.snbt2026,
   },
   {
     match: {
@@ -47,7 +54,7 @@ export const LEARNING_PROGRAM_COVERAGE_ALIGNMENTS = Schema.decodeUnknownSync(
   },
 ] as const);
 
-/** Returns catalog problems that would make coverage sync point at unknown programs. */
+/** Returns registry problems that would make coverage sync point at unknown programs. */
 export function getLearningProgramCoverageAlignmentIssues({
   alignments = LEARNING_PROGRAM_COVERAGE_ALIGNMENTS,
   programs = LEARNING_PROGRAM_CATALOG,

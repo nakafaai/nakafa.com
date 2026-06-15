@@ -2,6 +2,7 @@ import { mutation } from "@repo/backend/convex/functions";
 import {
   createInitialLearningPlanItems,
   getLearningProgramByKey,
+  hasLearningProgramCoverageForLocale,
   isLearningProgramSelectable,
   supersedeActivePlans,
   toLearningProgramSummary,
@@ -48,13 +49,6 @@ export const selectLearningProgram = mutation({
       });
     }
 
-    if (program.locale !== args.locale) {
-      throw new ConvexError({
-        code: "LEARNING_PROGRAM_LOCALE_MISMATCH",
-        message: "Learning program is not available for this locale.",
-      });
-    }
-
     if (!isLearningProgramSelectable(program)) {
       throw new ConvexError({
         code: "LEARNING_PROGRAM_NOT_SELECTABLE",
@@ -69,6 +63,19 @@ export const selectLearningProgram = mutation({
       });
     }
 
+    if (
+      !(await hasLearningProgramCoverageForLocale(ctx, {
+        locale: args.locale,
+        programId: program._id,
+      }))
+    ) {
+      throw new ConvexError({
+        code: "LEARNING_PROGRAM_CONTENT_LOCALE_UNAVAILABLE",
+        message:
+          "Learning program has no ready content coverage for this language.",
+      });
+    }
+
     const now = Date.now();
     const existingProfile = await ctx.db
       .query("learningProfiles")
@@ -78,7 +85,6 @@ export const selectLearningProgram = mutation({
       existingProfile?._id ??
       (await ctx.db.insert("learningProfiles", {
         interests,
-        locale: args.locale,
         programId: program._id,
         stage: args.stage,
         updatedAt: now,
@@ -88,13 +94,12 @@ export const selectLearningProgram = mutation({
     await supersedeActivePlans(ctx, user.appUser._id);
 
     if (existingProfile) {
-      await ctx.db.patch(existingProfile._id, {
-        activePlanId: undefined,
+      await ctx.db.replace(existingProfile._id, {
         interests,
-        locale: args.locale,
         programId: program._id,
         stage: args.stage,
         updatedAt: now,
+        userId: user.appUser._id,
       });
     }
 
@@ -132,7 +137,7 @@ export const selectLearningProgram = mutation({
         status: item.status,
         title: item.title,
       })),
-      program: toLearningProgramSummary(program),
+      program: toLearningProgramSummary(program, args.locale),
       stage: args.stage,
     };
   },

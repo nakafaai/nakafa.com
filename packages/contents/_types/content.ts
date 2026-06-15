@@ -1,4 +1,4 @@
-import { isContentDateString } from "@repo/contents/_shared/date";
+import { DateOnlySchema } from "@repo/contents/_shared/date";
 import { locales } from "@repo/utilities/locales";
 import { Schema } from "effect";
 import type React from "react";
@@ -44,11 +44,7 @@ export const ContentMetadataSchema = Schema.Struct({
       name: Schema.String,
     }).pipe(Schema.mutable)
   ).pipe(Schema.mutable),
-  date: Schema.String.pipe(
-    Schema.filter(isContentDateString, {
-      message: () => "Invalid content date. Expected MM/DD/YYYY.",
-    })
-  ),
+  date: DateOnlySchema,
   subject: Schema.optional(Schema.String),
 }).pipe(Schema.mutable);
 export type ContentMetadata = Schema.Schema.Type<typeof ContentMetadataSchema>;

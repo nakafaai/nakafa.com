@@ -45,7 +45,7 @@ describe("getArticleSummaries", () => {
             title: "Older Article",
             description: "Older description",
             authors: [{ name: "Guest Author" }],
-            date: "01/02/2024",
+            date: "2024-01-02",
           },
         },
         {
@@ -56,7 +56,7 @@ describe("getArticleSummaries", () => {
             title: "Newer Article",
             description: "Newer description",
             authors: [{ name: "Official Author" }],
-            date: "02/02/2024",
+            date: "2024-02-02",
           },
         },
       ])
@@ -71,11 +71,11 @@ describe("getArticleSummaries", () => {
       basePath: "articles/politics/",
     });
     const newerDate = Option.getOrElse(
-      formatContentDateISO("02/02/2024"),
+      formatContentDateISO("2024-02-02"),
       () => ""
     );
     const olderDate = Option.getOrElse(
-      formatContentDateISO("01/02/2024"),
+      formatContentDateISO("2024-01-02"),
       () => ""
     );
     expect(articles).toStrictEqual([
@@ -107,7 +107,7 @@ describe("getArticleSummaries", () => {
             title: "Nested Root",
             description: "Root description",
             authors: [{ name: "Guest Author" }],
-            date: "03/01/2024",
+            date: "2024-03-01",
           },
         },
         {
@@ -118,7 +118,7 @@ describe("getArticleSummaries", () => {
             title: "Nested Appendix",
             description: "Appendix description",
             authors: [{ name: "Official Author" }],
-            date: "03/02/2024",
+            date: "2024-03-02",
           },
         },
       ])
@@ -167,7 +167,7 @@ describe("getArticleSummaries", () => {
             title: "Valid Article",
             description: "Valid description",
             authors: [{ name: "Guest Author" }],
-            date: "04/01/2024",
+            date: "2024-04-01",
           },
         },
         {
@@ -178,7 +178,7 @@ describe("getArticleSummaries", () => {
             title: "Wrong Category",
             description: "Wrong description",
             authors: [{ name: "Official Author" }],
-            date: "04/02/2024",
+            date: "2024-04-02",
           },
         },
       ])
@@ -203,7 +203,7 @@ describe("getArticleSummaries", () => {
             title: "Valid Article",
             description: "Valid description",
             authors: [{ name: "Official Author" }],
-            date: "04/01/2024",
+            date: "2024-04-01",
           },
         },
         {
@@ -239,7 +239,7 @@ describe("getArticleSummaries", () => {
           metadata: {
             title: "No Description",
             authors: [{ name: "Guest Author" }],
-            date: "05/01/2024",
+            date: "2024-05-01",
           },
         },
       ])

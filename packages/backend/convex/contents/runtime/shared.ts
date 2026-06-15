@@ -13,14 +13,14 @@ export function throwRuntimeIntegrityError(message: string): never {
   });
 }
 
-/** Formats a synced epoch timestamp back to the repository MM/DD/YYYY date. */
+/** Formats a synced epoch timestamp back to the repository ISO date-only value. */
 export function formatContentDate(epochMs: number) {
   const date = new Date(epochMs);
   const month = String(date.getUTCMonth() + 1).padStart(2, "0");
   const day = String(date.getUTCDate()).padStart(2, "0");
   const year = date.getUTCFullYear();
 
-  return `${month}/${day}/${year}`;
+  return `${year}-${month}-${day}`;
 }
 
 /** Loads ordered authors for one content row within the sync author limit. */

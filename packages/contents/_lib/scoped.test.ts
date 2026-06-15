@@ -63,7 +63,7 @@ export const metadata = {
   title: "Raw Title",
   description: "Raw Description",
   authors: [{ name: "Author" }],
-  date: "01/01/2024"
+  date: "2024-01-01"
 };
 `;
 
@@ -179,7 +179,7 @@ describe("scoped content helpers", () => {
         title: "Scoped Title",
         description: "Scoped Description",
         authors: [{ name: "Author" }],
-        date: "01/01/2024",
+        date: "2024-01-01",
       },
       default: () => "Scoped MDX",
     });
@@ -208,7 +208,7 @@ describe("scoped content helpers", () => {
           title: cleanPath,
           description: "Scoped Description",
           authors: [{ name: "Author" }],
-          date: "01/01/2024",
+          date: "2024-01-01",
         },
         default: () => "Scoped MDX",
       })
@@ -248,7 +248,7 @@ describe("scoped content helpers", () => {
           title: cleanPath,
           description: "Scoped Description",
           authors: [{ name: "Author" }],
-          date: "01/01/2024",
+          date: "2024-01-01",
         },
         default: () => "Scoped MDX",
       });
@@ -275,7 +275,7 @@ describe("scoped content helpers", () => {
         title: "Scoped Title",
         description: "Scoped Description",
         authors: [{ name: "Author" }],
-        date: "01/01/2024",
+        date: "2024-01-01",
       },
       default: () => "Scoped MDX",
     });
@@ -453,7 +453,7 @@ describe("scoped exported primitives", () => {
           title: "Imported Article",
           description: "Imported Description",
           authors: [{ name: "Author" }],
-          date: "01/01/2024",
+          date: "2024-01-01",
           subject: "Politics",
         },
       })
@@ -463,7 +463,7 @@ describe("scoped exported primitives", () => {
       title: "Imported Article",
       description: "Imported Description",
       authors: [{ name: "Author" }],
-      date: "01/01/2024",
+      date: "2024-01-01",
       subject: "Politics",
     });
   });

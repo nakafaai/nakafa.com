@@ -81,7 +81,13 @@ describe("sync-content learningPrograms", () => {
     expect(result).toMatchObject({ created: 6, skipped: 0, updated: 0 });
     expect(mutationCalls[0]?.[2]).toMatchObject({
       programs: expect.arrayContaining([
-        expect.objectContaining({ key: "id-kurikulum-merdeka" }),
+        expect.objectContaining({
+          key: "id-kurikulum-merdeka",
+          navigation: {
+            levels: ["class", "subject", "topic"],
+            model: "class-subject-topic",
+          },
+        }),
       ]),
     });
     expect(mutationCalls[1]?.[2]).toMatchObject({

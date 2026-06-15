@@ -51,7 +51,7 @@ const loadExercisesScript = async ({
           filePath,
           metadata: {
             authors: [{ name: "Nabil Akbarazzima Fatih" }],
-            date: "12/15/2024",
+            date: "2024-12-15",
             description: "Question description",
             title: "Question title",
           },

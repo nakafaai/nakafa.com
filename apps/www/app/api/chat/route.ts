@@ -142,7 +142,7 @@ export function POST(req: Request) {
       const [verified, userInfo, learningProfile] = yield* Effect.all([
         shouldVerify ? getVerified(url) : Effect.succeed(false),
         getUserInfo(token),
-        getLearningProfile(token),
+        getLearningProfile(token, locale),
       ]);
 
       if (!hasEnoughCredits(userInfo.credits, selectedModel)) {

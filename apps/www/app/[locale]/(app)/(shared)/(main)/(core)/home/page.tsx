@@ -2,9 +2,7 @@ import { redirect } from "@repo/internationalization/src/navigation";
 import { HomeContinueLearning } from "@/components/home/continue-learning";
 import { HomeExplore } from "@/components/home/explore";
 import { HomeHeader } from "@/components/home/header";
-import { HomeLearningProgram } from "@/components/home/learning-program";
 import { HomeTrending } from "@/components/home/trending";
-import type { ActiveLearningProfile } from "@/components/programs/contract";
 import { getToken } from "@/lib/auth/server";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { shouldRequireLearningProgramOnboarding } from "@/lib/programs/catalog";
@@ -26,37 +24,29 @@ export default async function Page(props: PageProps<"/[locale]/home">) {
     return null;
   }
 
-  const learningProfile = await getActiveLearningProfile(token);
+  const learningProfile = await getActiveLearningProfile(token, locale);
   if (!learningProfile) {
     const programs = await getLearningProgramOnboardingCatalog(locale);
 
     if (shouldRequireLearningProgramOnboarding(learningProfile, programs)) {
-      redirect({ href: "/onboarding", locale });
+      redirect({ href: "/onboarding/role", locale });
       return null;
     }
   }
 
   return (
     <div className="relative min-h-[calc(100svh-4rem)] lg:min-h-svh">
-      <Main learningProfile={learningProfile} />
+      <Main />
     </div>
   );
 }
 
-/** Renders the authenticated home feed around the selected learning program. */
-function Main({
-  learningProfile,
-}: {
-  learningProfile: NonNullable<ActiveLearningProfile> | null;
-}) {
+/** Renders the authenticated home feed in the existing Nakafa home order. */
+function Main() {
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-24">
       <div className="relative flex flex-col gap-12">
         <HomeHeader />
-
-        {learningProfile ? (
-          <HomeLearningProgram profile={learningProfile} />
-        ) : null}
 
         <HomeExplore />
 

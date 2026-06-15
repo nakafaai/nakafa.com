@@ -8,14 +8,14 @@ describe("content schemas", () => {
       title: "Broken Date",
       description: "Broken Date Description",
       authors: [{ name: "Author" }],
-      date: "2024-01-01",
+      date: "not-a-date",
     });
 
     expect(Either.isLeft(result)).toBe(true);
 
     if (Either.isLeft(result)) {
       expect(result.left.message).toContain(
-        "Invalid content date. Expected MM/DD/YYYY."
+        "Invalid date. Expected YYYY-MM-DD."
       );
     }
   });

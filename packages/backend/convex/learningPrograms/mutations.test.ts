@@ -11,6 +11,13 @@ const NOW = 1_798_752_000_000;
 const subjectGraph = getGraphIdentity(
   "subject/high-school/10/chemistry/atomic-structure"
 );
+const englishSubjectGraph = getGraphIdentity(
+  "subject/high-school/10/chemistry/atomic-structure",
+  "en"
+);
+const snbtGraph = getGraphIdentity(
+  "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1"
+);
 
 describe("learningPrograms/mutations", () => {
   it("creates an authenticated profile and graph-backed first plan", async () => {
@@ -77,6 +84,12 @@ describe("learningPrograms/mutations", () => {
       programs: getLearningProgramCatalogInputs(),
       syncedAt: NOW,
     });
+    await syncProgramCoverage(t, {
+      graph: snbtGraph,
+      lensScope: "exam",
+      locale: "id",
+      programKey: "snbt-2026",
+    });
 
     const authed = t.withIdentity({
       sessionId: identity.sessionId,
@@ -101,7 +114,68 @@ describe("learningPrograms/mutations", () => {
     ).rejects.toThrow("LEARNING_PROGRAM_INTEREST_MISMATCH");
   });
 
-  it("rejects cross-locale program selections before profile writes", async () => {
+  it("selects the same canonical program from Indonesian and English UI", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const identity = await t.mutation((ctx) =>
+      seedAuthenticatedUser(ctx, { now: NOW })
+    );
+
+    await t.mutation(internal.learningPrograms.sync.syncLearningPrograms, {
+      programs: getLearningProgramCatalogInputs(),
+      syncedAt: NOW,
+    });
+    await syncProgramCoverage(t, {
+      graph: subjectGraph,
+      lensScope: "curriculum",
+      locale: "id",
+      programKey: "id-kurikulum-merdeka",
+    });
+    await syncProgramCoverage(t, {
+      graph: englishSubjectGraph,
+      lensScope: "curriculum",
+      locale: "en",
+      programKey: "id-kurikulum-merdeka",
+    });
+
+    const authed = t.withIdentity({
+      sessionId: identity.sessionId,
+      subject: identity.authUserId,
+    });
+    const englishSelection = await authed.mutation(
+      api.learningPrograms.mutations.selectLearningProgram,
+      {
+        interests: ["school-curriculum"],
+        locale: "en",
+        primaryProgramKey: "id-kurikulum-merdeka",
+      }
+    );
+    const englishProfile = await authed.query(
+      api.learningPrograms.queries.getActiveProfile,
+      { locale: "en" }
+    );
+
+    expect(englishSelection.program).toMatchObject({
+      key: "id-kurikulum-merdeka",
+      title: "Kurikulum Merdeka",
+    });
+    expect(englishProfile?.program).toMatchObject({
+      key: "id-kurikulum-merdeka",
+      title: "Kurikulum Merdeka",
+    });
+
+    const indonesianSelection = await authed.mutation(
+      api.learningPrograms.mutations.selectLearningProgram,
+      {
+        interests: ["school-curriculum"],
+        locale: "id",
+        primaryProgramKey: "id-kurikulum-merdeka",
+      }
+    );
+
+    expect(indonesianSelection.program.key).toBe(englishSelection.program.key);
+  });
+
+  it("rejects selections without content-language coverage before profile writes", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, { now: NOW })
@@ -123,7 +197,7 @@ describe("learningPrograms/mutations", () => {
         locale: "en",
         primaryProgramKey: "id-kurikulum-merdeka",
       })
-    ).rejects.toThrow("LEARNING_PROGRAM_LOCALE_MISMATCH");
+    ).rejects.toThrow("LEARNING_PROGRAM_CONTENT_LOCALE_UNAVAILABLE");
 
     await expect(
       authed.query(api.learningPrograms.queries.getActiveProfile, {})
@@ -161,9 +235,9 @@ describe("learningPrograms/mutations", () => {
 });
 
 /** Returns graph identity for a route fixture and fails fast on invalid fixtures. */
-function getGraphIdentity(route: string) {
+function getGraphIdentity(route: string, locale: "en" | "id" = "id") {
   const identity = createLearningGraphIdentityFromRoute({
-    locale: "id",
+    locale,
     route,
   });
 
@@ -172,6 +246,37 @@ function getGraphIdentity(route: string) {
   }
 
   return identity;
+}
+
+/** Seeds one program coverage row so locale-specific selection can proceed. */
+async function syncProgramCoverage(
+  t: ReturnType<typeof createConvexTestWithBetterAuth>,
+  {
+    graph,
+    lensScope,
+    locale,
+    programKey,
+  }: {
+    graph: ReturnType<typeof getGraphIdentity>;
+    lensScope: "curriculum" | "exam";
+    locale: "en" | "id";
+    programKey: string;
+  }
+) {
+  await t.mutation(internal.learningPrograms.sync.syncLearningProgramCoverage, {
+    coverageRows: [
+      {
+        contentCount: 1,
+        coverageStatus: "partial",
+        lensId: graph.lensId,
+        lensScope,
+        locale,
+        programKey,
+        sampleContentId: graph.assetId,
+        syncedAt: NOW,
+      },
+    ],
+  });
 }
 
 /** Seeds the content route used to decorate generated learning plan items. */

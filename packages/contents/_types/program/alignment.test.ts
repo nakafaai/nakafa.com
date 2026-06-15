@@ -1,5 +1,6 @@
 import { getLearningProgramCoverageAlignmentIssues } from "@repo/contents/_types/program/alignment";
 import { LEARNING_PROGRAM_CATALOG } from "@repo/contents/_types/program/catalog";
+import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
 import { describe, expect, it } from "vitest";
 
 describe("program/alignment", () => {
@@ -13,7 +14,7 @@ describe("program/alignment", () => {
         alignments: [
           {
             match: { fallback: true },
-            programKey: "missing-program",
+            programKey: LearningProgramKeySchema.make("missing-program"),
           },
         ],
         programs: LEARNING_PROGRAM_CATALOG,

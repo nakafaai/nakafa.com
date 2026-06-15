@@ -44,7 +44,7 @@ export const metadata = {
   title: "${title}",
   description: "${title} Description",
   authors: [{ name: "${title} Author" }],
-  date: "01/01/2024",
+  date: "2024-01-01",
   subject: "Mathematics"
 };
 
@@ -103,7 +103,7 @@ describe("extractMetadata", () => {
       title: "Valid",
       description: "Valid Description",
       authors: [{ name: "Valid Author" }],
-      date: "01/01/2024",
+      date: "2024-01-01",
       subject: "Mathematics",
     });
   });
@@ -119,7 +119,7 @@ describe("extractMetadata", () => {
 export const metadata = {
   title: "Broken",
   authors: [{ name: "Author" }],
-  date: "01/01/2024",
+  date: "2024-01-01",
 `);
 
     expect(Option.isNone(result)).toBe(true);
@@ -130,7 +130,7 @@ export const metadata = {
 export const metadata = {
   title: Broken,
   authors: [{ name: "Author" }],
-  date: "01/01/2024"
+  date: "2024-01-01"
 };
 `);
 
@@ -142,19 +142,19 @@ export const metadata = {
 export const metadata = {
   title: "Broken",
   authors: "Author",
-  date: "01/01/2024"
+  date: "2024-01-01"
 };
 `);
 
     expect(Option.isNone(result)).toBe(true);
   });
 
-  it("returns none when metadata date is not MM/DD/YYYY", () => {
+  it("returns none when metadata date is not ISO date-only", () => {
     const result = extractMetadata(`
 export const metadata = {
   title: "Broken",
   authors: [{ name: "Author" }],
-  date: "2024-01-01"
+  date: "not-a-date"
 };
 `);
 
@@ -231,7 +231,7 @@ describe("getContentMetadataWithRaw", () => {
         title: "Algebra",
         description: "Algebra Description",
         authors: [{ name: "Algebra Author" }],
-        date: "01/01/2024",
+        date: "2024-01-01",
         subject: "Mathematics",
       },
       raw,
@@ -356,7 +356,7 @@ describe("getContentsMetadata", () => {
           title: "Valid Entry",
           description: "Valid Entry Description",
           authors: [{ name: "Valid Entry Author" }],
-          date: "01/01/2024",
+          date: "2024-01-01",
           subject: "Mathematics",
         },
         slug: "articles/politics/valid-entry",
@@ -368,7 +368,7 @@ describe("getContentsMetadata", () => {
           title: "Algebra",
           description: "Algebra Description",
           authors: [{ name: "Algebra Author" }],
-          date: "01/01/2024",
+          date: "2024-01-01",
           subject: "Mathematics",
         },
         slug: "subject/high-school/10/algebra",
@@ -406,7 +406,7 @@ describe("getContentsMetadata", () => {
           title: "Politik Dinasti",
           description: "Politik Dinasti Description",
           authors: [{ name: "Politik Dinasti Author" }],
-          date: "01/01/2024",
+          date: "2024-01-01",
           subject: "Mathematics",
         },
         slug: "articles/politics/dynastic-politics",

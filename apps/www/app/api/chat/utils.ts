@@ -1,4 +1,5 @@
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
+import type { Locale } from "@repo/utilities/locales";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { Effect } from "effect";
 import { nakafaContent } from "@/app/api/chat/nakafa-content";
@@ -40,11 +41,11 @@ export const getUserInfo = Effect.fn("chat.getUserInfo")(function* (
  * the selected program and first plan items without route or folder heuristics.
  */
 export const getLearningProfile = Effect.fn("chat.getLearningProfile")(
-  function* (token: string) {
+  function* (token: string, locale: Locale) {
     return yield* Effect.tryPromise(() =>
       fetchQuery(
         convexApi.learningPrograms.queries.getActiveProfile,
-        {},
+        { locale },
         {
           token,
         }

@@ -360,7 +360,7 @@ describe("contents/queries/runtime", () => {
         body: "## Article body",
         metadata: expect.objectContaining({
           authors: [{ name: "Nakafa Author" }],
-          date: "01/02/2026",
+          date: "2026-01-02",
           title: "Runtime Article",
         }),
         references: [expect.objectContaining({ title: "Reference" })],

@@ -105,19 +105,24 @@ describe("app/api/chat/utils", () => {
         displayOrder: 40,
         key: "snbt-2026",
         kind: "admission-exam",
-        locale: "id",
+        navigation: {
+          levels: ["section", "domain", "practice-set"],
+          model: "exam-domain-practice-set",
+        },
         title: "SNBT 2026",
         versionLabel: "2026",
       },
     };
     vi.mocked(fetchQuery).mockResolvedValue(learningProfile);
 
-    const result = await Effect.runPromise(getLearningProfile("test-token"));
+    const result = await Effect.runPromise(
+      getLearningProfile("test-token", "en")
+    );
 
     expect(result).toEqual(learningProfile);
     expect(fetchQuery).toHaveBeenCalledWith(
       convexApi.learningPrograms.queries.getActiveProfile,
-      {},
+      { locale: "en" },
       {
         token: "test-token",
       }

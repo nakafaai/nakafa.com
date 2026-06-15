@@ -54,7 +54,7 @@ export const metadata = {
   title: "Raw Title",
   description: "Raw Description",
   authors: [{ name: "Raw Author" }],
-  date: "01/01/2024"
+  date: "2024-01-01"
 };
 
 # Raw Content
@@ -65,7 +65,7 @@ const moduleContent = {
     title: "Module Title",
     description: "Module Description",
     authors: [{ name: "Module Author" }],
-    date: "01/01/2024",
+    date: "2024-01-01",
   },
   default: () => "Module MDX",
 };
@@ -98,7 +98,7 @@ describe("getContent", () => {
         title: "Raw Title",
         description: "Raw Description",
         authors: [{ name: "Raw Author" }],
-        date: "01/01/2024",
+        date: "2024-01-01",
       },
       raw: rawMetadataSource,
     });
@@ -231,7 +231,7 @@ describe("getContents", () => {
         title: "Raw Title",
         description: "Raw Description",
         authors: [{ name: "Raw Author" }],
-        date: "01/01/2024",
+        date: "2024-01-01",
       },
       raw: rawMetadataSource,
       url: "https://nakafa.com/en/articles/politics/valid-entry",

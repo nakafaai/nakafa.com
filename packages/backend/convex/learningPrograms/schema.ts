@@ -8,6 +8,8 @@ import {
   LEARNING_PLAN_ITEM_STATUS_VALUES,
   LEARNING_PROGRAM_KIND_VALUES,
   LEARNING_STAGE_VALUES,
+  PROGRAM_NAVIGATION_LEVEL_VALUES,
+  PROGRAM_NAVIGATION_MODEL_VALUES,
   PROGRAM_PROVIDER_KIND_VALUES,
   PROGRAM_SOURCE_TYPE_VALUES,
 } from "@repo/contents/_types/program/schema";
@@ -27,6 +29,12 @@ export const curriculumLensScopeValidator = literals(
 export const programProviderKindValidator = literals(
   ...PROGRAM_PROVIDER_KIND_VALUES
 );
+export const programNavigationModelValidator = literals(
+  ...PROGRAM_NAVIGATION_MODEL_VALUES
+);
+export const programNavigationLevelValidator = literals(
+  ...PROGRAM_NAVIGATION_LEVEL_VALUES
+);
 export const programSourceTypeValidator = literals(
   ...PROGRAM_SOURCE_TYPE_VALUES
 );
@@ -45,13 +53,23 @@ export const programSourceInputValidator = v.object({
   url: v.string(),
 });
 
+/** Localized learner-facing labels for one canonical program row. */
+export const programTranslationInputValidator = v.object({
+  description: v.string(),
+  title: v.string(),
+});
+
+export const programNavigationInputValidator = v.object({
+  levels: v.array(programNavigationLevelValidator),
+  model: programNavigationModelValidator,
+});
+
 export const learningProgramInputValidator = v.object({
   defaultCoverageStatus: coverageStatusValidator,
-  description: v.string(),
   displayOrder: v.number(),
   key: v.string(),
   kind: learningProgramKindValidator,
-  locale: localeValidator,
+  navigation: programNavigationInputValidator,
   provider: v.object({
     country: v.optional(v.string()),
     kind: programProviderKindValidator,
@@ -59,7 +77,10 @@ export const learningProgramInputValidator = v.object({
   }),
   recommendedCountry: v.optional(v.string()),
   sources: v.array(programSourceInputValidator),
-  title: v.string(),
+  translations: v.object({
+    en: programTranslationInputValidator,
+    id: programTranslationInputValidator,
+  }),
   version: v.object({
     label: v.string(),
     startsAt: v.optional(v.string()),
@@ -84,7 +105,7 @@ export const learningProgramSummaryValidator = v.object({
   displayOrder: v.number(),
   key: v.string(),
   kind: learningProgramKindValidator,
-  locale: localeValidator,
+  navigation: programNavigationInputValidator,
   title: v.string(),
   versionLabel: v.string(),
 });
@@ -112,25 +133,26 @@ export const activeLearningProfileValidator = v.union(
 const tables = {
   learningPrograms: defineTable({
     defaultCoverageStatus: coverageStatusValidator,
-    description: v.string(),
     displayOrder: v.number(),
     key: v.string(),
     kind: learningProgramKindValidator,
-    locale: localeValidator,
+    navigation: programNavigationInputValidator,
     providerCountry: v.optional(v.string()),
     providerKind: programProviderKindValidator,
     providerName: v.string(),
     recommendedCountry: v.optional(v.string()),
     syncedAt: v.number(),
-    title: v.string(),
+    translations: v.object({
+      en: programTranslationInputValidator,
+      id: programTranslationInputValidator,
+    }),
     updatedAt: v.number(),
     versionEndsAt: v.optional(v.string()),
     versionLabel: v.string(),
     versionStartsAt: v.optional(v.string()),
   })
     .index("by_key", ["key"])
-    .index("by_displayOrder", ["displayOrder"])
-    .index("by_locale_and_displayOrder", ["locale", "displayOrder"]),
+    .index("by_displayOrder", ["displayOrder"]),
 
   learningProgramSources: defineTable({
     label: v.string(),
@@ -169,7 +191,6 @@ const tables = {
   learningProfiles: defineTable({
     activePlanId: v.optional(v.id("learningPlans")),
     interests: v.array(learningInterestValidator),
-    locale: localeValidator,
     programId: v.id("learningPrograms"),
     stage: v.optional(learningStageValidator),
     updatedAt: v.number(),

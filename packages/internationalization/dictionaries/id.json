@@ -126,10 +126,6 @@
     "metadata-description": "Pilih bantuan belajar dan mulai dari satu langkah pertama.",
     "current-title": "Profil belajar saat ini",
     "current-description": "Saat ini: {program} untuk {interests}.",
-    "home-plan-title": "Rencana belajarmu",
-    "home-plan-description": "Dimulai dari {program} untuk {interests}.",
-    "home-plan-empty": "Langkah pertama akan muncul setelah kamu mulai belajar.",
-    "home-plan-cta": "Ubah rencana",
     "plan-item-untitled": "Langkah belajar",
     "tryout-context-title": "Rencana aktif",
     "tryout-context-description": "{program} aktif untuk {interests}. Pilihan try out mengikuti rencanamu.",
@@ -141,35 +137,84 @@
       "archived": "Diarsipkan"
     },
     "onboarding": {
-      "progress": "Langkah {current} dari {total}",
-      "goal-title": "Apa yang ingin kamu capai?",
-      "goal-helper": "Pilih satu atau beberapa.",
-      "program-title": "Mulai dari mana?",
-      "program-helper": "Pilih satu langkah pertama.",
-      "confirm-title": "Siap mulai?",
-      "confirm-helper": "Nakafa akan menyiapkan rencana pertamamu.",
-      "summary-interests": "Yang kamu butuhkan",
-      "summary-path": "Mulai dengan",
+      "role-title": "Kamu pakai Nakafa sebagai siapa?",
+      "role": {
+        "student": {
+          "title": "Siswa",
+          "description": "Belajar materi, latihan soal, dan tanya Nina."
+        },
+        "teacher": {
+          "title": "Guru",
+          "description": "Siapkan materi dan latihan untuk kelas."
+        },
+        "parent": {
+          "title": "Orang tua",
+          "description": "Bantu anak belajar dengan penjelasan sederhana."
+        }
+      },
+      "focus": {
+        "student": {
+          "title": "Kamu mau fokus ke apa?",
+          "school": {
+            "title": "Pelajaran sekolah",
+            "description": "Ikuti materi sesuai kelasmu."
+          },
+          "exam": {
+            "title": "Ujian masuk kampus",
+            "description": "Siapkan SNBT dan seleksi kampus."
+          },
+          "basics": {
+            "title": "Belajar dari dasar",
+            "description": "Mulai dari matematika dan sains dasar."
+          }
+        },
+        "teacher": {
+          "title": "Kamu mau menyiapkan apa?",
+          "materials": {
+            "title": "Materi mengajar",
+            "description": "Cari penjelasan sesuai topik."
+          },
+          "practice": {
+            "title": "Latihan siswa",
+            "description": "Siapkan soal untuk latihan."
+          },
+          "nina": {
+            "title": "Bantuan Nina",
+            "description": "Buat penjelasan yang mudah dipahami."
+          }
+        },
+        "parent": {
+          "title": "Anakmu butuh dibantu apa?",
+          "understand": {
+            "title": "Pahami materi",
+            "description": "Cari penjelasan yang mudah diikuti."
+          },
+          "practice": {
+            "title": "Latihan soal",
+            "description": "Siapkan latihan sebelum ujian."
+          },
+          "nina": {
+            "title": "Tanya Nina",
+            "description": "Bantu jelaskan PR atau topik."
+          }
+        }
+      },
       "back": "Kembali",
       "continue": "Lanjut",
-      "skip": "Lewati",
       "save-cta": "Mulai belajar",
-      "invalid-selection": "Pilih bantuan belajar dan satu langkah pertama.",
+      "invalid-selection": "Pilih peran dan satu fokus belajar.",
       "save-error": "Pilihanmu belum bisa disimpan. Coba lagi.",
       "unavailable-title": "Pilih bantuan lain dulu",
       "unavailable-helper": "Pilihan ini belum siap dipakai.",
-      "unavailable-catalog-title": "Belum siap di bahasa ini",
-      "unavailable-catalog-helper": "Gunakan bahasa Indonesia dulu, atau kembali lagi nanti.",
-      "unavailable-catalog-cta": "Ke beranda",
       "auth-title": "Masuk untuk mulai",
       "auth-helper": "Simpan rencana pertamamu dan lanjutkan di semua perangkat.",
       "auth-cta": "Masuk ke Nakafa"
     },
     "kind": {
       "school-curriculum": "Kurikulum sekolah",
-      "assessment": "Asesmen",
+      "assessment": "Latihan soal",
       "admission-exam": "Ujian masuk",
-      "nakafa-path": "Jalur Nakafa",
+      "nakafa-path": "Belajar dari dasar",
       "custom-program": "Program khusus",
       "institution-program": "Program institusi"
     },
@@ -187,7 +232,7 @@
         "description": "Ukur kesiapan sebelum ujian."
       },
       "nakafa-path": {
-        "title": "STEM dari dasar",
+        "title": "Belajar dari dasar",
         "description": "Bangun fondasi sains dan matematika bertahap."
       },
       "custom-plan": {

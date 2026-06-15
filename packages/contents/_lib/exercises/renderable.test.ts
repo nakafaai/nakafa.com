@@ -79,25 +79,25 @@ describe("getRenderableExercisesContent", () => {
     mockReadFile.mockImplementation((filePath: string) => {
       if (filePath.endsWith("1/_question/id.mdx")) {
         return Promise.resolve(
-          'export const metadata = { title: "Question 1", description: "Q1", authors: [{ name: "Author" }], date: "01/01/2024" };\n\n## Question 1'
+          'export const metadata = { title: "Question 1", description: "Q1", authors: [{ name: "Author" }], date: "2024-01-01" };\n\n## Question 1'
         );
       }
 
       if (filePath.endsWith("1/_answer/id.mdx")) {
         return Promise.resolve(
-          'export const metadata = { title: "Answer 1", description: "A1", authors: [{ name: "Author" }], date: "01/01/2024" };\n\n## Answer 1'
+          'export const metadata = { title: "Answer 1", description: "A1", authors: [{ name: "Author" }], date: "2024-01-01" };\n\n## Answer 1'
         );
       }
 
       if (filePath.endsWith("2/_question/id.mdx")) {
         return Promise.resolve(
-          'export const metadata = { title: "Question 2", description: "Q2", authors: [{ name: "Author" }], date: "01/01/2024" };\n\n## Question 2'
+          'export const metadata = { title: "Question 2", description: "Q2", authors: [{ name: "Author" }], date: "2024-01-01" };\n\n## Question 2'
         );
       }
 
       if (filePath.endsWith("2/_answer/id.mdx")) {
         return Promise.resolve(
-          'export const metadata = { title: "Answer 2", description: "A2", authors: [{ name: "Author" }], date: "01/01/2024" };\n\n## Answer 2'
+          'export const metadata = { title: "Answer 2", description: "A2", authors: [{ name: "Author" }], date: "2024-01-01" };\n\n## Answer 2'
         );
       }
 
@@ -130,12 +130,12 @@ describe("getRenderableExercisesContent", () => {
 
       if (filePath.endsWith("_question/id.mdx")) {
         return Promise.resolve(
-          'export const metadata = { title: "Question 1", description: "Q1", authors: [{ name: "Author" }], date: "01/01/2024" };\n\n## Question 1'
+          'export const metadata = { title: "Question 1", description: "Q1", authors: [{ name: "Author" }], date: "2024-01-01" };\n\n## Question 1'
         );
       }
 
       return Promise.resolve(
-        'export const metadata = { title: "Answer 1", description: "A1", authors: [{ name: "Author" }], date: "01/01/2024" };\n\n## Answer 1'
+        'export const metadata = { title: "Answer 1", description: "A1", authors: [{ name: "Author" }], date: "2024-01-01" };\n\n## Answer 1'
       );
     });
     mockFetchText.mockResolvedValue(createChoicesSource("Remote"));
@@ -161,12 +161,12 @@ describe("getRenderableExercisesContent", () => {
 
       if (filePath.endsWith("_question/id.mdx")) {
         return Promise.resolve(
-          'export const metadata = { title: "Question 1", description: "Q1", authors: [{ name: "Author" }], date: "01/01/2024" };\n\n## Question 1'
+          'export const metadata = { title: "Question 1", description: "Q1", authors: [{ name: "Author" }], date: "2024-01-01" };\n\n## Question 1'
         );
       }
 
       return Promise.resolve(
-        'export const metadata = { title: "Answer 1", description: "A1", authors: [{ name: "Author" }], date: "01/01/2024" };\n\n## Answer 1'
+        'export const metadata = { title: "Answer 1", description: "A1", authors: [{ name: "Author" }], date: "2024-01-01" };\n\n## Answer 1'
       );
     });
     mockFetchText.mockRejectedValue(new Error("remote choices unavailable"));
@@ -189,13 +189,13 @@ describe("getRenderableExercisesContent", () => {
     mockReadFile.mockImplementation((filePath: string) => {
       if (filePath.endsWith("1/_question/id.mdx")) {
         return Promise.resolve(
-          'export const metadata = { title: "Question 1", description: "Q1", authors: [{ name: "Author" }], date: "01/01/2024" };\n\n## Question 1'
+          'export const metadata = { title: "Question 1", description: "Q1", authors: [{ name: "Author" }], date: "2024-01-01" };\n\n## Question 1'
         );
       }
 
       if (filePath.endsWith("1/_answer/id.mdx")) {
         return Promise.resolve(
-          'export const metadata = { title: "Answer 1", description: "A1", authors: [{ name: "Author" }], date: "01/01/2024" };\n\n## Answer 1'
+          'export const metadata = { title: "Answer 1", description: "A1", authors: [{ name: "Author" }], date: "2024-01-01" };\n\n## Answer 1'
         );
       }
 
@@ -228,13 +228,13 @@ describe("getRenderableExerciseByNumber", () => {
     mockReadFile.mockImplementation((filePath: string) => {
       if (filePath.endsWith("03/_question/id.mdx")) {
         return Promise.resolve(
-          'export const metadata = { title: "Question 03", description: "Q3", authors: [{ name: "Author" }], date: "01/01/2024" };\n\n## Question 03'
+          'export const metadata = { title: "Question 03", description: "Q3", authors: [{ name: "Author" }], date: "2024-01-01" };\n\n## Question 03'
         );
       }
 
       if (filePath.endsWith("03/_answer/id.mdx")) {
         return Promise.resolve(
-          'export const metadata = { title: "Answer 03", description: "A3", authors: [{ name: "Author" }], date: "01/01/2024" };\n\n## Answer 03'
+          'export const metadata = { title: "Answer 03", description: "A3", authors: [{ name: "Author" }], date: "2024-01-01" };\n\n## Answer 03'
         );
       }
 
@@ -273,13 +273,13 @@ describe("getRenderableExerciseByNumber", () => {
     mockReadFile.mockImplementation((filePath: string) => {
       if (filePath.endsWith("1/_question/id.mdx")) {
         return Promise.resolve(
-          'export const metadata = { title: "Question 1", description: "Q1", authors: [{ name: "Author" }], date: "01/01/2024" };\n\n## Question 1'
+          'export const metadata = { title: "Question 1", description: "Q1", authors: [{ name: "Author" }], date: "2024-01-01" };\n\n## Question 1'
         );
       }
 
       if (filePath.endsWith("1/_answer/id.mdx")) {
         return Promise.resolve(
-          'export const metadata = { title: "Answer 1", description: "A1", authors: [{ name: "Author" }], date: "01/01/2024" };\n\n## Answer 1'
+          'export const metadata = { title: "Answer 1", description: "A1", authors: [{ name: "Author" }], date: "2024-01-01" };\n\n## Answer 1'
         );
       }
 
@@ -301,13 +301,13 @@ describe("getRenderableExerciseByNumber", () => {
     mockReadFile.mockImplementation((filePath: string) => {
       if (filePath.endsWith("1/_question/id.mdx")) {
         return Promise.resolve(
-          'export const metadata = { title: "Question 1", description: "Q1", authors: [{ name: "Author" }], date: "01/01/2024" };\n\n## Question 1'
+          'export const metadata = { title: "Question 1", description: "Q1", authors: [{ name: "Author" }], date: "2024-01-01" };\n\n## Question 1'
         );
       }
 
       if (filePath.endsWith("1/_answer/id.mdx")) {
         return Promise.resolve(
-          'export const metadata = { title: "Answer 1", description: "A1", authors: [{ name: "Author" }], date: "01/01/2024" };\n\n## Answer 1'
+          'export const metadata = { title: "Answer 1", description: "A1", authors: [{ name: "Author" }], date: "2024-01-01" };\n\n## Answer 1'
         );
       }
 
@@ -329,13 +329,13 @@ describe("getRenderableExerciseByNumber", () => {
     mockReadFile.mockImplementation((filePath: string) => {
       if (filePath.endsWith("1/_question/id.mdx")) {
         return Promise.resolve(
-          'export const metadata = { title: "Question 1", description: "Q1", authors: [{ name: "Author" }], date: "01/01/2024" };\n\n## Question 1'
+          'export const metadata = { title: "Question 1", description: "Q1", authors: [{ name: "Author" }], date: "2024-01-01" };\n\n## Question 1'
         );
       }
 
       if (filePath.endsWith("1/_answer/id.mdx")) {
         return Promise.resolve(
-          'export const metadata = { title: "Answer 1", description: "A1", authors: [{ name: "Author" }], date: "01/01/2024" };\n\n## Answer 1'
+          'export const metadata = { title: "Answer 1", description: "A1", authors: [{ name: "Author" }], date: "2024-01-01" };\n\n## Answer 1'
         );
       }
 
@@ -372,7 +372,7 @@ describe("getRenderableExerciseByNumber", () => {
     mockReadFile.mockImplementation((filePath: string) => {
       if (filePath.endsWith("1/_question/id.mdx")) {
         return Promise.resolve(
-          'export const metadata = { title: "Question 1", description: "Q1", authors: [{ name: "Author" }], date: "01/01/2024" };\n\n## Question 1'
+          'export const metadata = { title: "Question 1", description: "Q1", authors: [{ name: "Author" }], date: "2024-01-01" };\n\n## Question 1'
         );
       }
 

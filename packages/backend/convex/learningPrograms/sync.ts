@@ -6,12 +6,15 @@ import {
   learningProgramInputValidator,
   type programSourceInputValidator,
 } from "@repo/backend/convex/learningPrograms/schema";
+import { LearningProgramSchema } from "@repo/contents/_types/program/schema";
 import { ConvexError, type Infer, v } from "convex/values";
+import { Either, Schema } from "effect";
 
 const SOURCE_LIMIT = 20;
 const PROGRAM_RECONCILE_LIMIT = 100;
 const STALE_COVERAGE_DELETE_LIMIT = 200;
 type ProgramSourceInput = Infer<typeof programSourceInputValidator>;
+const LearningProgramSyncInputSchema = Schema.Array(LearningProgramSchema);
 
 const syncResultValidator = v.object({
   created: v.number(),
@@ -30,7 +33,9 @@ export const syncLearningPrograms = internalMutation({
   },
   returns: syncResultValidator,
   handler: async (ctx, args) => {
-    if (args.programs.length === 0) {
+    const programs = decodeLearningProgramsForSync(args.programs);
+
+    if (programs.length === 0) {
       throw new ConvexError({
         code: "LEARNING_PROGRAM_CATALOG_EMPTY",
         message: "Learning program catalog sync requires at least one row.",
@@ -40,24 +45,26 @@ export const syncLearningPrograms = internalMutation({
     let created = 0;
     let updated = 0;
 
-    for (const program of args.programs) {
+    for (const program of programs) {
       const existing = await ctx.db
         .query("learningPrograms")
         .withIndex("by_key", (q) => q.eq("key", program.key))
         .unique();
       const row = {
         defaultCoverageStatus: program.defaultCoverageStatus,
-        description: program.description,
         displayOrder: program.displayOrder,
         key: program.key,
         kind: program.kind,
-        locale: program.locale,
+        navigation: {
+          levels: [...program.navigation.levels],
+          model: program.navigation.model,
+        },
         providerCountry: program.provider.country,
         providerKind: program.provider.kind,
         providerName: program.provider.name,
         recommendedCountry: program.recommendedCountry,
         syncedAt: args.syncedAt,
-        title: program.title,
+        translations: program.translations,
         updatedAt: args.syncedAt,
         versionEndsAt: program.version.endsAt,
         versionLabel: program.version.label,
@@ -69,7 +76,7 @@ export const syncLearningPrograms = internalMutation({
         : await ctx.db.insert("learningPrograms", row);
 
       if (existing) {
-        await ctx.db.patch(existing._id, row);
+        await ctx.db.replace(existing._id, row);
         updated++;
       } else {
         created++;
@@ -83,13 +90,32 @@ export const syncLearningPrograms = internalMutation({
     }
 
     updated += await hideOmittedCatalogPrograms(ctx, {
-      incomingKeys: new Set(args.programs.map((program) => program.key)),
+      incomingKeys: new Set(programs.map((program) => program.key)),
       syncedAt: args.syncedAt,
     });
 
     return { created, skipped: 0, updated };
   },
 });
+
+/** Decodes sync rows through the Effect-owned program registry contract before writes. */
+function decodeLearningProgramsForSync(
+  programs: Infer<typeof learningProgramInputValidator>[]
+) {
+  const decoded = Schema.decodeUnknownEither(LearningProgramSyncInputSchema)(
+    programs
+  );
+
+  if (Either.isLeft(decoded)) {
+    throw new ConvexError({
+      code: "LEARNING_PROGRAM_CATALOG_INVALID",
+      message:
+        "Learning program catalog sync received rows outside the contents registry contract.",
+    });
+  }
+
+  return decoded.right;
+}
 
 /** Upserts graph-backed program coverage rows from the content sync projection. */
 export const syncLearningProgramCoverage = internalMutation({
@@ -187,7 +213,7 @@ async function syncProgramSources(
     syncedAt,
   }: {
     programId: Id<"learningPrograms">;
-    sources: ProgramSourceInput[];
+    sources: readonly ProgramSourceInput[];
     syncedAt: number;
   }
 ) {

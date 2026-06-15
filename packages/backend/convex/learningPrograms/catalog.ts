@@ -13,15 +13,17 @@ export function getLearningProgramCatalogInputs(
 ): LearningProgramSyncInput[] {
   return programs.map((program) => ({
     defaultCoverageStatus: program.defaultCoverageStatus,
-    description: program.description,
     displayOrder: program.displayOrder,
     key: program.key,
     kind: program.kind,
-    locale: program.locale,
+    navigation: {
+      levels: [...program.navigation.levels],
+      model: program.navigation.model,
+    },
     provider: { ...program.provider },
     recommendedCountry: program.recommendedCountry,
     sources: program.sources.map((source) => ({ ...source })),
-    title: program.title,
+    translations: { ...program.translations },
     version: { ...program.version },
   }));
 }

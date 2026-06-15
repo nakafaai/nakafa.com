@@ -51,7 +51,7 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
             ? Effect.tryPromise(() =>
                 fetchQuery(
                   api.learningPrograms.queries.getActiveProfile,
-                  {},
+                  { locale },
                   { token }
                 )
               )

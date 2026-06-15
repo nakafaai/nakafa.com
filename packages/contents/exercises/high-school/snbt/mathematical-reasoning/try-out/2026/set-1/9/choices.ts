@@ -1,6 +1,6 @@
 import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
 
-// Date: 11/23/2025
+// Date: 2025-11-23
 const choices: ExercisesChoices = {
   id: [
     {

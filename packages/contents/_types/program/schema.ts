@@ -1,8 +1,40 @@
+import { type DateOnly, DateOnlySchema } from "@repo/contents/_shared/date";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { CurriculumLensScopeSchema } from "@repo/contents/_types/graph/schema";
 import { Schema } from "effect";
 
 type SchemaType<T extends Schema.Schema.Any> = Schema.Schema.Type<T>;
+
+const LEARNING_PROGRAM_KEY_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+/**
+ * Machine-readable date-only value for source-controlled program registry data.
+ *
+ * This aliases the repository-wide date-only contract so program/source
+ * registry dates and MDX content metadata share one canonical machine format.
+ */
+export const ProgramDateOnlySchema = DateOnlySchema;
+
+export type ProgramDateOnly = DateOnly;
+
+/**
+ * Canonical language-neutral learning program key.
+ *
+ * Program keys identify curricula, assessments, Nakafa paths, and future
+ * institution/custom programs. Display language belongs in translations and
+ * content coverage, not in the key.
+ */
+export const LearningProgramKeySchema = Schema.String.pipe(
+  Schema.pattern(LEARNING_PROGRAM_KEY_PATTERN, {
+    identifier: "LearningProgramKey",
+    description: "Lowercase kebab-case canonical learning program key.",
+    message: () =>
+      "Invalid learning program key. Expected lowercase kebab-case.",
+  }),
+  Schema.brand("@Nakafa/LearningProgramKey")
+);
+
+export type LearningProgramKey = SchemaType<typeof LearningProgramKeySchema>;
 
 export const LEARNING_PROGRAM_KIND_VALUES = [
   "school-curriculum",
@@ -18,6 +50,55 @@ export const LearningProgramKindSchema = Schema.Literal(
 );
 
 export type LearningProgramKind = SchemaType<typeof LearningProgramKindSchema>;
+
+export const PROGRAM_NAVIGATION_MODEL_VALUES = [
+  "class-subject-topic",
+  "course-unit-lesson",
+  "exam-domain-practice-set",
+  "track-topic",
+] as const;
+
+export const ProgramNavigationModelSchema = Schema.Literal(
+  ...PROGRAM_NAVIGATION_MODEL_VALUES
+);
+
+export type ProgramNavigationModel = SchemaType<
+  typeof ProgramNavigationModelSchema
+>;
+
+export const PROGRAM_NAVIGATION_LEVEL_VALUES = [
+  "class",
+  "course",
+  "domain",
+  "lesson",
+  "phase",
+  "practice-set",
+  "section",
+  "subject",
+  "topic",
+  "track",
+  "unit",
+] as const;
+
+export const ProgramNavigationLevelSchema = Schema.Literal(
+  ...PROGRAM_NAVIGATION_LEVEL_VALUES
+);
+
+export type ProgramNavigationLevel = SchemaType<
+  typeof ProgramNavigationLevelSchema
+>;
+
+/**
+ * Source-registry hierarchy contract for rendering a program without assuming
+ * one country's curriculum structure. This names the navigation model only;
+ * coverage rows are still derived from graph routes during sync.
+ */
+export const ProgramNavigationSchema = Schema.Struct({
+  levels: Schema.Array(ProgramNavigationLevelSchema),
+  model: ProgramNavigationModelSchema,
+});
+
+export type ProgramNavigation = SchemaType<typeof ProgramNavigationSchema>;
 
 export const LEARNING_INTEREST_VALUES = [
   "school-curriculum",
@@ -129,29 +210,40 @@ export const ProgramProviderSchema = Schema.Struct({
 
 export const ProgramVersionSchema = Schema.Struct({
   label: Schema.String,
-  startsAt: Schema.optional(Schema.String),
-  endsAt: Schema.optional(Schema.String),
+  startsAt: Schema.optional(ProgramDateOnlySchema),
+  endsAt: Schema.optional(ProgramDateOnlySchema),
 });
 
 export const ProgramSourceSchema = Schema.Struct({
   label: Schema.String,
-  retrievedAt: Schema.String,
-  reviewAfter: Schema.optional(Schema.String),
+  retrievedAt: ProgramDateOnlySchema,
+  reviewAfter: Schema.optional(ProgramDateOnlySchema),
   type: Schema.Literal(...PROGRAM_SOURCE_TYPE_VALUES),
   url: Schema.String,
 });
 
+/** Localized learner-facing labels for one canonical learning program. */
+export const ProgramTranslationSchema = Schema.Struct({
+  description: Schema.String,
+  title: Schema.String,
+});
+
+/** Display copy keyed by supported content/app locale. */
+export const ProgramTranslationsSchema = Schema.Struct({
+  en: ProgramTranslationSchema,
+  id: ProgramTranslationSchema,
+});
+
 export const LearningProgramSchema = Schema.Struct({
   defaultCoverageStatus: CoverageStatusSchema,
-  description: Schema.String,
   displayOrder: Schema.Number,
   kind: LearningProgramKindSchema,
-  key: Schema.String,
-  locale: LocaleSchema,
+  key: LearningProgramKeySchema,
   provider: ProgramProviderSchema,
+  navigation: ProgramNavigationSchema,
   recommendedCountry: Schema.optional(Schema.String),
   sources: Schema.Array(ProgramSourceSchema),
-  title: Schema.String,
+  translations: ProgramTranslationsSchema,
   version: ProgramVersionSchema,
 });
 
@@ -163,7 +255,7 @@ export const LearningProgramCoverageInputSchema = Schema.Struct({
   lensId: LearningProgramCoverageRouteSchemaFields.lensId,
   lensScope: CurriculumLensScopeSchema,
   locale: LearningProgramCoverageRouteSchemaFields.locale,
-  programKey: Schema.String,
+  programKey: LearningProgramKeySchema,
   sampleContentId: LearningProgramCoverageRouteSchemaFields.assetId,
   syncedAt: Schema.Number,
 });
@@ -180,7 +272,7 @@ export const LearningProgramCoverageAlignmentSchema = Schema.Struct({
     routeKinds: Schema.optional(Schema.Array(CoverageRouteKindSchema)),
     routeSegments: Schema.optional(Schema.Array(Schema.String)),
   }),
-  programKey: Schema.String,
+  programKey: LearningProgramKeySchema,
 });
 
 /** Coverage alignment derived from the runtime schema. */
