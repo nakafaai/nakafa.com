@@ -3,11 +3,39 @@ import type { ModelId } from "@repo/ai/config/model";
 import type { SourceReference } from "@repo/ai/lib/source";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { PromptUserRole } from "@repo/ai/types/roles";
+import type {
+  CoverageStatus,
+  LearningInterest,
+  LearningPlanItemStatus,
+  LearningProgramKind,
+} from "@repo/contents/_types/program/schema";
 import type { Locale } from "@repo/utilities/locales";
 import type { UIMessageStreamWriter } from "ai";
 
+/** Program and plan context agents can use without Convex document coupling. */
+export interface AgentLearningProfile {
+  interests: readonly LearningInterest[];
+  planItems: readonly {
+    content_id: string;
+    lensId: string;
+    position: number;
+    route?: string;
+    status: LearningPlanItemStatus;
+    title?: string;
+  }[];
+  program: {
+    coverageStatus: CoverageStatus;
+    key: string;
+    kind: LearningProgramKind;
+    title: string;
+    versionLabel: string;
+  };
+  stage?: string;
+}
+
 export interface AgentContext {
   currentDate: string;
+  learningProfile?: AgentLearningProfile;
   needsPageFetch: boolean;
   slug: string;
   url: string;

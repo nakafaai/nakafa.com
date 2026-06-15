@@ -9,8 +9,7 @@ const SOURCE_RETRIEVED_AT = "2026-06-14";
 const learningProgramCatalogInput = [
   {
     defaultCoverageStatus: "available",
-    description:
-      "Graph-native STEM path for learners without one official curriculum.",
+    description: "Mulai belajar STEM dari dasar sampai siap latihan.",
     displayOrder: 10,
     key: "nakafa-stem-path",
     kind: "nakafa-path",
@@ -27,13 +26,13 @@ const learningProgramCatalogInput = [
         url: "https://nakafa.com",
       },
     ],
-    title: "Nakafa STEM Path",
+    title: "STEM dari dasar",
     version: { label: "2026", startsAt: "2026-01-01" },
   },
   {
     defaultCoverageStatus: "partial",
     description:
-      "Indonesia school curriculum alignment backed by graph coverage.",
+      "Materi sekolah Indonesia untuk mengikuti kelas dan topik inti.",
     displayOrder: 20,
     key: "id-kurikulum-merdeka",
     kind: "school-curriculum",
@@ -54,7 +53,7 @@ const learningProgramCatalogInput = [
   },
   {
     defaultCoverageStatus: "planned",
-    description: "Tes Kemampuan Akademik preparation as an assessment program.",
+    description: "Persiapan TKA untuk mengukur kesiapan akademik.",
     displayOrder: 30,
     key: "tka-2026",
     kind: "assessment",
@@ -86,7 +85,7 @@ const learningProgramCatalogInput = [
   },
   {
     defaultCoverageStatus: "partial",
-    description: "UTBK-SNBT preparation for the 2026 admission cycle.",
+    description: "Persiapan UTBK-SNBT untuk seleksi masuk perguruan tinggi.",
     displayOrder: 40,
     key: "snbt-2026",
     kind: "admission-exam",

@@ -17,7 +17,9 @@ export const LearningProgramKindSchema = Schema.Literal(
   ...LEARNING_PROGRAM_KIND_VALUES
 );
 
-export const LEARNING_OBJECTIVE_VALUES = [
+export type LearningProgramKind = SchemaType<typeof LearningProgramKindSchema>;
+
+export const LEARNING_INTEREST_VALUES = [
   "school-curriculum",
   "exam-prep",
   "assessment-prep",
@@ -25,9 +27,19 @@ export const LEARNING_OBJECTIVE_VALUES = [
   "custom-plan",
 ] as const;
 
-export const LearningObjectiveSchema = Schema.Literal(
-  ...LEARNING_OBJECTIVE_VALUES
+export const LearningInterestSchema = Schema.Literal(
+  ...LEARNING_INTEREST_VALUES
 );
+
+export type LearningInterest = SchemaType<typeof LearningInterestSchema>;
+
+export const LEARNING_INTEREST_PROGRAM_KIND_MATCHES = {
+  "assessment-prep": ["assessment", "admission-exam"],
+  "custom-plan": ["custom-program", "institution-program"],
+  "exam-prep": ["admission-exam"],
+  "nakafa-path": ["nakafa-path"],
+  "school-curriculum": ["school-curriculum"],
+} as const satisfies Record<LearningInterest, readonly LearningProgramKind[]>;
 
 export const PROGRAM_PROVIDER_KIND_VALUES = [
   "official",
@@ -66,6 +78,14 @@ export const LEARNING_PLAN_ITEM_STATUS_VALUES = [
   "done",
   "skipped",
 ] as const;
+
+export const LearningPlanItemStatusSchema = Schema.Literal(
+  ...LEARNING_PLAN_ITEM_STATUS_VALUES
+);
+
+export type LearningPlanItemStatus = SchemaType<
+  typeof LearningPlanItemStatusSchema
+>;
 
 const CoverageRouteKindSchema = Schema.Literal(
   "exercise-group",

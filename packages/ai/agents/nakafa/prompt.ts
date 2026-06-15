@@ -1,3 +1,4 @@
+import { formatLearningProfilePromptContext } from "@repo/ai/prompt/learning-profile";
 import { createPrompt } from "@repo/ai/prompt/utils";
 import type { AgentContext } from "@repo/ai/types/agents";
 import type { Locale } from "@repo/utilities/locales";
@@ -25,6 +26,7 @@ export function nakafaAgentPrompt({ locale, context }: Props) {
       - current slug: ${context.slug}
       - verified current page: ${context.verified ? "yes" : "no"}
       - user role: ${context.userRole ?? "unknown"}
+      ${formatLearningProfilePromptContext(context.learningProfile)}
     `,
     toolUsageGuidelines: `
       # Tool Usage Guidelines

@@ -81,7 +81,7 @@ export const getActiveProfile = query({
       : [];
 
     return {
-      objective: profile.objective,
+      interests: profile.interests,
       planItems: planItems.map((item) => ({
         content_id: item.content_id,
         lensId: item.lensId,

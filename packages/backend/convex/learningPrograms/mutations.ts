@@ -7,24 +7,37 @@ import {
 } from "@repo/backend/convex/learningPrograms/impl";
 import {
   activeLearningProfileValidator,
-  learningObjectiveValidator,
+  learningInterestValidator,
 } from "@repo/backend/convex/learningPrograms/schema";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
+import {
+  LEARNING_INTEREST_PROGRAM_KIND_MATCHES,
+  type LearningInterest,
+  type LearningProgramKind,
+} from "@repo/contents/_types/program/schema";
 import { ConvexError, v } from "convex/values";
 
-/** Selects the user's active learning program and creates a first graph-backed plan. */
+/** Selects the user's active learning interests and creates a first graph-backed plan. */
 export const selectLearningProgram = mutation({
   args: {
+    interests: v.array(learningInterestValidator),
     locale: localeValidator,
-    objective: learningObjectiveValidator,
-    programKey: v.string(),
+    primaryProgramKey: v.string(),
     stage: v.optional(v.string()),
   },
   returns: activeLearningProfileValidator,
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
-    const program = await getLearningProgramByKey(ctx, args.programKey);
+    const interests = getUniqueInterests(args.interests);
+    const program = await getLearningProgramByKey(ctx, args.primaryProgramKey);
+
+    if (interests.length === 0) {
+      throw new ConvexError({
+        code: "LEARNING_INTERESTS_REQUIRED",
+        message: "Select at least one learning interest.",
+      });
+    }
 
     if (!program) {
       throw new ConvexError({
@@ -43,6 +56,13 @@ export const selectLearningProgram = mutation({
       });
     }
 
+    if (!programMatchesInterests(program.kind, interests)) {
+      throw new ConvexError({
+        code: "LEARNING_PROGRAM_INTEREST_MISMATCH",
+        message: "Selected program does not match the selected interests.",
+      });
+    }
+
     const now = Date.now();
     const existingProfile = await ctx.db
       .query("learningProfiles")
@@ -51,8 +71,8 @@ export const selectLearningProgram = mutation({
     const profileId =
       existingProfile?._id ??
       (await ctx.db.insert("learningProfiles", {
+        interests,
         locale: args.locale,
-        objective: args.objective,
         programId: program._id,
         stage: args.stage,
         updatedAt: now,
@@ -64,8 +84,8 @@ export const selectLearningProgram = mutation({
     if (existingProfile) {
       await ctx.db.patch(existingProfile._id, {
         activePlanId: undefined,
+        interests,
         locale: args.locale,
-        objective: args.objective,
         programId: program._id,
         stage: args.stage,
         updatedAt: now,
@@ -96,7 +116,7 @@ export const selectLearningProgram = mutation({
       .take(20);
 
     return {
-      objective: args.objective,
+      interests,
       planItems: planItems.map((item) => ({
         content_id: item.content_id,
         lensId: item.lensId,
@@ -111,3 +131,20 @@ export const selectLearningProgram = mutation({
     };
   },
 });
+
+/** Removes duplicate interests before they are stored on the learning profile. */
+function getUniqueInterests(interests: readonly LearningInterest[]) {
+  return Array.from(new Set(interests));
+}
+
+/** Checks that the selected primary program belongs to at least one interest. */
+function programMatchesInterests(
+  programKind: LearningProgramKind,
+  interests: readonly LearningInterest[]
+) {
+  return interests.some((interest) =>
+    LEARNING_INTEREST_PROGRAM_KIND_MATCHES[interest].some(
+      (kind) => kind === programKind
+    )
+  );
+}

@@ -52,12 +52,15 @@ import {
 import { prepareChatStep } from "@/app/api/chat/step";
 import { writeSuggestions } from "@/app/api/chat/suggestions";
 import { trackUsage } from "@/app/api/chat/usage";
-import type { getUserInfo } from "@/app/api/chat/utils";
+import type { getLearningProfile, getUserInfo } from "@/app/api/chat/utils";
 
 const MAX_ORCHESTRATOR_STEPS = 20;
 
 type Location = Parameters<typeof nakafaPrompt>[0]["userLocation"];
 type Translator = Awaited<ReturnType<typeof getTranslations>>;
+type LearningProfile = Effect.Effect.Success<
+  ReturnType<typeof getLearningProfile>
+>;
 type UserInfo = Effect.Effect.Success<ReturnType<typeof getUserInfo>>;
 
 /** Fully prepared inputs needed to stream and persist one chat response. */
@@ -86,6 +89,7 @@ interface Params {
   };
   user: {
     info: UserInfo;
+    learningProfile: LearningProfile;
     location: Location;
   };
 }
@@ -235,6 +239,7 @@ export function streamChat({ chat, page, runtime, user }: Params) {
           const usage = yield* trackUsage();
           const context = {
             currentDate: runtime.currentDate,
+            learningProfile: user.learningProfile ?? undefined,
             url: page.url,
             slug: cleanSlug(page.slug),
             verified: page.verified,
@@ -251,6 +256,7 @@ export function streamChat({ chat, page, runtime, user }: Params) {
               verified: page.verified,
             },
             currentDate: runtime.currentDate,
+            learningProfile: user.learningProfile ?? undefined,
             userLocation: user.location,
             userRole: user.info.role ?? undefined,
           });

@@ -39,6 +39,7 @@ const loadWorkflow = async (
   options: WorkflowMockOptions = {}
 ) => {
   const events: string[] = [];
+  const learningProgramOptions: SyncOptions[] = [];
   const routePageOptions: SyncOptions[] = [];
   const syncState = options.syncState ?? null;
   const changedFiles = new Set(options.changedFiles ?? []);
@@ -77,7 +78,7 @@ const loadWorkflow = async (
     },
   }));
   vi.doMock("@repo/backend/scripts/sync-content/convex", () => ({
-    /** Fails if incremental-only mutation calls are reached by this workflow test. */
+    /** Fails if direct incremental-only mutation calls are reached by this workflow test. */
     callConvexMutation: () =>
       Effect.fail(new Error("Unexpected Convex mutation call.")),
   }));
@@ -133,6 +134,14 @@ const loadWorkflow = async (
       return syncStep("syncRoutePages");
     },
   }));
+  vi.doMock("@repo/backend/scripts/sync-content/learningPrograms", () => ({
+    /** Records learning program catalog and coverage refresh calls. */
+    syncLearningPrograms: (_config: ConvexConfig, syncOptions: SyncOptions) => {
+      learningProgramOptions.push(syncOptions);
+
+      return syncStep("syncLearningPrograms");
+    },
+  }));
   vi.doMock("@repo/backend/scripts/sync-content/runtime", () => ({
     /** Returns deterministic changed files for incremental workflow tests. */
     getChangedFilesSince: () => Effect.succeed(changedFiles),
@@ -174,7 +183,7 @@ const loadWorkflow = async (
 
   const workflow = await import("@repo/backend/scripts/sync-content/workflows");
 
-  return { events, routePageOptions, workflow };
+  return { events, learningProgramOptions, routePageOptions, workflow };
 };
 
 afterEach(() => {
@@ -195,10 +204,14 @@ describe("sync-content workflows", () => {
     expect(events.filter((event) => event === "syncRoutePages")).toHaveLength(
       2
     );
+    expect(
+      events.filter((event) => event === "syncLearningPrograms")
+    ).toHaveLength(2);
     expect(events).toEqual(
       expect.arrayContaining([
         "syncAuthors",
         "syncRoutePages",
+        "syncLearningPrograms",
         "clean",
         "verify",
         "invalidateContentRuntimeCache",
@@ -212,6 +225,9 @@ describe("sync-content workflows", () => {
       events.indexOf("clean")
     );
     expect(events.lastIndexOf("syncRoutePages")).toBeLessThan(
+      events.lastIndexOf("syncLearningPrograms")
+    );
+    expect(events.lastIndexOf("syncLearningPrograms")).toBeLessThan(
       events.indexOf("verify")
     );
     expect(events.indexOf("verify")).toBeLessThan(
@@ -223,10 +239,11 @@ describe("sync-content workflows", () => {
   });
 
   it("rebuilds all route artifact pages after full cleanup deletes rows", async () => {
-    const { events, routePageOptions, workflow } = await loadWorkflow({
-      deleted: 3,
-      hasStale: true,
-    });
+    const { events, learningProgramOptions, routePageOptions, workflow } =
+      await loadWorkflow({
+        deleted: 3,
+        hasStale: true,
+      });
     const options: SyncOptions = { locale: "id" };
 
     await Effect.runPromise(workflow.syncFull(config, options));
@@ -241,8 +258,10 @@ describe("sync-content workflows", () => {
       events.indexOf("verify")
     );
     expect(routePageOptions).toHaveLength(2);
+    expect(learningProgramOptions).toHaveLength(2);
     expect(routePageOptions[0]?.locale).toBe("id");
     expect(routePageOptions[1]?.locale).toBeUndefined();
+    expect(learningProgramOptions[1]?.locale).toBeUndefined();
   });
 
   it("keeps one route artifact page sync when cleanup finds no deleted rows", async () => {
@@ -257,7 +276,13 @@ describe("sync-content workflows", () => {
     expect(events.filter((event) => event === "syncRoutePages")).toHaveLength(
       1
     );
+    expect(
+      events.filter((event) => event === "syncLearningPrograms")
+    ).toHaveLength(1);
     expect(events.indexOf("syncRoutePages")).toBeLessThan(
+      events.indexOf("syncLearningPrograms")
+    );
+    expect(events.indexOf("syncLearningPrograms")).toBeLessThan(
       events.indexOf("clean")
     );
     expect(events.indexOf("verify")).toBeGreaterThan(events.indexOf("clean"));
@@ -308,6 +333,7 @@ describe("sync-content workflows", () => {
         "clean",
         "syncQuran",
         "syncRoutePages",
+        "syncLearningPrograms",
         "invalidateContentRuntimeCache",
         "saveSyncState",
       ])
@@ -318,22 +344,26 @@ describe("sync-content workflows", () => {
     expect(events.indexOf("clean")).toBeLessThan(
       events.indexOf("syncRoutePages")
     );
+    expect(events.indexOf("syncRoutePages")).toBeLessThan(
+      events.indexOf("syncLearningPrograms")
+    );
   });
 
   it("rebuilds all route artifact pages after global incremental cleanup deletes rows", async () => {
-    const { events, routePageOptions, workflow } = await loadWorkflow(
-      {
-        deleted: 3,
-        hasStale: true,
-      },
-      {
-        changedFiles: ["packages/contents/articles/politics/deleted.mdx"],
-        syncState: {
-          lastSyncCommit: "previous-commit",
-          lastSyncTimestamp: 1,
+    const { events, learningProgramOptions, routePageOptions, workflow } =
+      await loadWorkflow(
+        {
+          deleted: 3,
+          hasStale: true,
         },
-      }
-    );
+        {
+          changedFiles: ["packages/contents/articles/politics/deleted.mdx"],
+          syncState: {
+            lastSyncCommit: "previous-commit",
+            lastSyncTimestamp: 1,
+          },
+        }
+      );
     const options: SyncOptions = { locale: "id" };
 
     await Effect.runPromise(workflow.syncIncremental(config, options));
@@ -342,12 +372,15 @@ describe("sync-content workflows", () => {
       expect.arrayContaining([
         "clean",
         "syncRoutePages",
+        "syncLearningPrograms",
         "invalidateContentRuntimeCache",
         "saveSyncState",
       ])
     );
     expect(routePageOptions).toHaveLength(1);
+    expect(learningProgramOptions).toHaveLength(1);
     expect(routePageOptions[0]?.locale).toBeUndefined();
+    expect(learningProgramOptions[0]?.locale).toBeUndefined();
   });
 
   it("refreshes runtime read models before saving no-op incremental sync", async () => {
@@ -371,6 +404,7 @@ describe("sync-content workflows", () => {
     expect(events).toEqual([
       "syncQuran",
       "syncRoutePages",
+      "syncLearningPrograms",
       "invalidateContentRuntimeCache",
       "saveSyncState",
     ]);

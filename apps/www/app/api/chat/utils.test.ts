@@ -1,12 +1,17 @@
 // @vitest-environment node
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
-import { fetchMutation } from "convex/nextjs";
+import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getUserInfo, getVerified } from "@/app/api/chat/utils";
+import {
+  getLearningProfile,
+  getUserInfo,
+  getVerified,
+} from "@/app/api/chat/utils";
 
 vi.mock("convex/nextjs", () => ({
   fetchMutation: vi.fn(),
+  fetchQuery: vi.fn(),
 }));
 
 vi.mock("@/app/api/chat/nakafa-content", async () => {
@@ -72,6 +77,46 @@ describe("app/api/chat/utils", () => {
     });
     expect(fetchMutation).toHaveBeenCalledWith(
       convexApi.users.mutations.syncUserInfoForChat,
+      {},
+      {
+        token: "test-token",
+      }
+    );
+  });
+
+  it("fetches active learning profile through the shared Convex query", async () => {
+    const learningProfile = {
+      interests: ["exam-prep", "nakafa-path"],
+      planItems: [
+        {
+          content_id: "asset:id:exercise:snbt:2026:set-2:1",
+          lensId: "lens:snbt",
+          position: 1,
+          reason: "program-alignment",
+          route:
+            "/exercises/high-school/snbt/general-knowledge/try-out/2026/set-2/1",
+          status: "ready",
+          title: "SNBT Set 2",
+        },
+      ],
+      program: {
+        coverageStatus: "partial",
+        description: "UTBK-SNBT preparation for the 2026 admission cycle.",
+        displayOrder: 40,
+        key: "snbt-2026",
+        kind: "admission-exam",
+        locale: "id",
+        title: "SNBT 2026",
+        versionLabel: "2026",
+      },
+    };
+    vi.mocked(fetchQuery).mockResolvedValue(learningProfile);
+
+    const result = await Effect.runPromise(getLearningProfile("test-token"));
+
+    expect(result).toEqual(learningProfile);
+    expect(fetchQuery).toHaveBeenCalledWith(
+      convexApi.learningPrograms.queries.getActiveProfile,
       {},
       {
         token: "test-token",

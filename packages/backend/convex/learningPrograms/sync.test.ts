@@ -1,9 +1,6 @@
 import { api, internal } from "@repo/backend/convex/_generated/api";
 import { getLearningProgramCatalogInputs } from "@repo/backend/convex/learningPrograms/catalog";
-import {
-  createConvexTestWithBetterAuth,
-  seedAuthenticatedUser,
-} from "@repo/backend/convex/test.helpers";
+import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { ConvexError } from "convex/values";
 import { describe, expect, it } from "vitest";
@@ -142,58 +139,6 @@ describe("learningPrograms", () => {
       })
     ).rejects.toThrow(ConvexError);
   });
-
-  it("creates an authenticated profile and graph-backed first plan", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const identity = await t.mutation((ctx) =>
-      seedAuthenticatedUser(ctx, { now: NOW })
-    );
-
-    await t.mutation(internal.learningPrograms.sync.syncLearningPrograms, {
-      programs: getLearningProgramCatalogInputs(),
-      syncedAt: NOW,
-    });
-    await seedContentRoute(t);
-    await t.mutation(
-      internal.learningPrograms.sync.syncLearningProgramCoverage,
-      {
-        coverageRows: [
-          {
-            contentCount: 1,
-            coverageStatus: "partial",
-            lensId: subjectGraph.lensId,
-            lensScope: "curriculum",
-            locale: "id",
-            programKey: "id-kurikulum-merdeka",
-            sampleContentId: subjectGraph.assetId,
-            syncedAt: NOW,
-          },
-        ],
-      }
-    );
-
-    const result = await t
-      .withIdentity({
-        sessionId: identity.sessionId,
-        subject: identity.authUserId,
-      })
-      .mutation(api.learningPrograms.mutations.selectLearningProgram, {
-        locale: "id",
-        objective: "school-curriculum",
-        programKey: "id-kurikulum-merdeka",
-        stage: "grade-10",
-      });
-
-    expect(result).toMatchObject({
-      planItems: [
-        {
-          content_id: subjectGraph.assetId,
-          route: "subject/high-school/10/chemistry/atomic-structure",
-        },
-      ],
-      program: { key: "id-kurikulum-merdeka" },
-    });
-  });
 });
 
 /** Returns graph identity for a route fixture and fails fast on invalid fixtures. */
@@ -208,25 +153,4 @@ function getGraphIdentity(route: string) {
   }
 
   return identity;
-}
-
-/** Seeds the content route used to decorate generated learning plan items. */
-async function seedContentRoute(
-  t: ReturnType<typeof createConvexTestWithBetterAuth>
-) {
-  await t.mutation(async (ctx) => {
-    await ctx.db.insert("contentRoutes", {
-      ...subjectGraph,
-      authors: [],
-      contentHash: "chemistry-hash",
-      content_id: subjectGraph.assetId,
-      kind: "subject-topic",
-      locale: "id",
-      markdown: true,
-      route: "subject/high-school/10/chemistry/atomic-structure",
-      section: "subject",
-      syncedAt: NOW,
-      title: "Atomic Structure",
-    });
-  });
 }

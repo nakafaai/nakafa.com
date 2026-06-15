@@ -212,6 +212,7 @@ Before any Next.js work, find and read the relevant installed Next.js doc. With 
 ## Convex Rules
 
 - Follow official Convex docs and the generated AI guidelines exactly.
+- Prefer Convex-first app-data mutations and queries. Do not add Next Server Actions or Route Handlers that only wrap Convex functions; use them only for real Next/framework boundaries such as cookies, headers, cache invalidation, or non-Convex integrations, and document that reason at the seam.
 - Use shared helpers and validators in `packages/backend/convex/lib/`.
 - Use auth helpers from `packages/backend/convex/lib/helpers/auth.ts`; do not reach for raw `ctx.auth` patterns first.
 - Add validators for every Convex function.

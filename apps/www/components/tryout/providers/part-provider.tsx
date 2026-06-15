@@ -176,7 +176,7 @@ function useResolvedTryoutPartValue({
       }) !== "in-progress"
   );
 
-  /** Starts or resumes the current part through the server action contract. */
+  /** Starts or resumes the current part through the tryout cache seam. */
   const startPartAction = () => {
     if (!runtime) {
       return;

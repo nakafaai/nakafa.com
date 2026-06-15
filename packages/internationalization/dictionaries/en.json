@@ -121,15 +121,85 @@
     "back-to-latest": "Back to latest",
     "back": "Back"
   },
-  "Onboarding": {
-    "title": "Welcome to Nakafa!",
-    "description": "We're excited to have you here. Let's personalize your learning experience by getting to know you better.",
-    "teacher": "Teacher",
-    "student": "Student",
-    "parent": "Parent",
-    "administrator": "Administrator",
-    "select-role": "Select your role",
-    "button": "Start learning"
+  "LearningPrograms": {
+    "metadata-title": "Start learning with Nakafa",
+    "metadata-description": "Choose what you need help with and one first step.",
+    "current-title": "Current learning profile",
+    "current-description": "Current: {program} for {interests}.",
+    "home-plan-title": "Your learning plan",
+    "home-plan-description": "Starts from {program} for {interests}.",
+    "home-plan-empty": "Your first steps will appear after you start learning.",
+    "home-plan-cta": "Update plan",
+    "plan-item-untitled": "Learning step",
+    "tryout-context-title": "Active plan",
+    "tryout-context-description": "{program} is active for {interests}. Try-out choices will follow your plan.",
+    "program-status": {
+      "hidden": "Hidden",
+      "planned": "Soon",
+      "partial": "Partly ready",
+      "available": "Ready",
+      "archived": "Archived"
+    },
+    "onboarding": {
+      "progress": "Step {current} of {total}",
+      "goal-title": "What do you want to achieve?",
+      "goal-helper": "Choose one or more.",
+      "program-title": "Where do you want to start?",
+      "program-helper": "Choose one first step.",
+      "confirm-title": "Ready to start?",
+      "confirm-helper": "Nakafa will prepare your first plan.",
+      "summary-interests": "What you need help with",
+      "summary-path": "Start with",
+      "back": "Back",
+      "continue": "Continue",
+      "skip": "Skip",
+      "save-cta": "Start learning",
+      "invalid-selection": "Choose what you need help with and one first step.",
+      "save-error": "We could not save your choice. Try again.",
+      "unavailable-title": "Choose another option for now",
+      "unavailable-helper": "This choice is not ready yet.",
+      "unavailable-catalog-title": "Not ready in English yet",
+      "unavailable-catalog-helper": "Use Indonesian for now, or come back soon.",
+      "unavailable-catalog-cta": "Go to home",
+      "auth-title": "Sign in to start",
+      "auth-helper": "Save your first plan and continue on any device.",
+      "auth-cta": "Sign in to Nakafa"
+    },
+    "kind": {
+      "school-curriculum": "School curriculum",
+      "assessment": "Assessment",
+      "admission-exam": "Admission exam",
+      "nakafa-path": "Nakafa path",
+      "custom-program": "Custom program",
+      "institution-program": "Institution program"
+    },
+    "interest": {
+      "school-curriculum": {
+        "title": "School lessons",
+        "description": "Follow subjects for your class and curriculum."
+      },
+      "exam-prep": {
+        "title": "University entrance",
+        "description": "Practice for SNBT and campus selection."
+      },
+      "assessment-prep": {
+        "title": "Practice questions",
+        "description": "Measure readiness before an exam."
+      },
+      "nakafa-path": {
+        "title": "STEM from the beginning",
+        "description": "Build science and math foundations step by step."
+      },
+      "custom-plan": {
+        "title": "Personal target",
+        "description": "Create a plan for your own goal."
+      }
+    },
+    "plan-item-status": {
+      "ready": "Ready",
+      "done": "Done",
+      "skipped": "Skipped"
+    }
   },
   "Comments": {
     "add-comment-placeholder": "Add a comment...",

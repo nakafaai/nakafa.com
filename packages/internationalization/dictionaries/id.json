@@ -121,15 +121,85 @@
     "back-to-latest": "Kembali ke terbaru",
     "back": "Kembali"
   },
-  "Onboarding": {
-    "title": "Selamat datang di Nakafa!",
-    "description": "Senang kamu ada di sini. Yuk, sesuaikan pengalaman belajar kamu biar lebih pas.",
-    "teacher": "Guru",
-    "student": "Siswa",
-    "parent": "Orang tua",
-    "administrator": "Administrator",
-    "select-role": "Pilih peran kamu",
-    "button": "Mulai belajar"
+  "LearningPrograms": {
+    "metadata-title": "Mulai belajar di Nakafa",
+    "metadata-description": "Pilih bantuan belajar dan mulai dari satu langkah pertama.",
+    "current-title": "Profil belajar saat ini",
+    "current-description": "Saat ini: {program} untuk {interests}.",
+    "home-plan-title": "Rencana belajarmu",
+    "home-plan-description": "Dimulai dari {program} untuk {interests}.",
+    "home-plan-empty": "Langkah pertama akan muncul setelah kamu mulai belajar.",
+    "home-plan-cta": "Ubah rencana",
+    "plan-item-untitled": "Langkah belajar",
+    "tryout-context-title": "Rencana aktif",
+    "tryout-context-description": "{program} aktif untuk {interests}. Pilihan try out mengikuti rencanamu.",
+    "program-status": {
+      "hidden": "Tidak ditampilkan",
+      "planned": "Segera",
+      "partial": "Siap sebagian",
+      "available": "Siap",
+      "archived": "Diarsipkan"
+    },
+    "onboarding": {
+      "progress": "Langkah {current} dari {total}",
+      "goal-title": "Apa yang ingin kamu capai?",
+      "goal-helper": "Pilih satu atau beberapa.",
+      "program-title": "Mulai dari mana?",
+      "program-helper": "Pilih satu langkah pertama.",
+      "confirm-title": "Siap mulai?",
+      "confirm-helper": "Nakafa akan menyiapkan rencana pertamamu.",
+      "summary-interests": "Yang kamu butuhkan",
+      "summary-path": "Mulai dengan",
+      "back": "Kembali",
+      "continue": "Lanjut",
+      "skip": "Lewati",
+      "save-cta": "Mulai belajar",
+      "invalid-selection": "Pilih bantuan belajar dan satu langkah pertama.",
+      "save-error": "Pilihanmu belum bisa disimpan. Coba lagi.",
+      "unavailable-title": "Pilih bantuan lain dulu",
+      "unavailable-helper": "Pilihan ini belum siap dipakai.",
+      "unavailable-catalog-title": "Belum siap di bahasa ini",
+      "unavailable-catalog-helper": "Gunakan bahasa Indonesia dulu, atau kembali lagi nanti.",
+      "unavailable-catalog-cta": "Ke beranda",
+      "auth-title": "Masuk untuk mulai",
+      "auth-helper": "Simpan rencana pertamamu dan lanjutkan di semua perangkat.",
+      "auth-cta": "Masuk ke Nakafa"
+    },
+    "kind": {
+      "school-curriculum": "Kurikulum sekolah",
+      "assessment": "Asesmen",
+      "admission-exam": "Ujian masuk",
+      "nakafa-path": "Jalur Nakafa",
+      "custom-program": "Program khusus",
+      "institution-program": "Program institusi"
+    },
+    "interest": {
+      "school-curriculum": {
+        "title": "Pelajaran sekolah",
+        "description": "Ikuti materi sesuai kelas dan kurikulummu."
+      },
+      "exam-prep": {
+        "title": "Ujian masuk kampus",
+        "description": "Latihan untuk SNBT dan seleksi kampus."
+      },
+      "assessment-prep": {
+        "title": "Latihan soal",
+        "description": "Ukur kesiapan sebelum ujian."
+      },
+      "nakafa-path": {
+        "title": "STEM dari dasar",
+        "description": "Bangun fondasi sains dan matematika bertahap."
+      },
+      "custom-plan": {
+        "title": "Target pribadi",
+        "description": "Buat rencana untuk tujuan khususmu."
+      }
+    },
+    "plan-item-status": {
+      "ready": "Siap",
+      "done": "Selesai",
+      "skipped": "Dilewati"
+    }
   },
   "Comments": {
     "add-comment-placeholder": "Tambahkan komentar...",

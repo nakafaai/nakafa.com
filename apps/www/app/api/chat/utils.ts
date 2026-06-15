@@ -1,5 +1,5 @@
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
-import { fetchMutation } from "convex/nextjs";
+import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { Effect } from "effect";
 import { nakafaContent } from "@/app/api/chat/nakafa-content";
 
@@ -32,3 +32,23 @@ export const getUserInfo = Effect.fn("chat.getUserInfo")(function* (
     )
   );
 });
+
+/**
+ * Fetches the authenticated user's active learning profile for AI context.
+ *
+ * This uses the same Convex read interface as the app surfaces, so Nina sees
+ * the selected program and first plan items without route or folder heuristics.
+ */
+export const getLearningProfile = Effect.fn("chat.getLearningProfile")(
+  function* (token: string) {
+    return yield* Effect.tryPromise(() =>
+      fetchQuery(
+        convexApi.learningPrograms.queries.getActiveProfile,
+        {},
+        {
+          token,
+        }
+      )
+    );
+  }
+);

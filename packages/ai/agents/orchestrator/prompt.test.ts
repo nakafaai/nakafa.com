@@ -207,6 +207,45 @@ describe("nakafaPrompt", () => {
     ).toContain("User is");
   });
 
+  it("includes selected learning program context without table-shaped prose", () => {
+    const prompt = nakafaPrompt({
+      ...base,
+      learningProfile: {
+        interests: ["exam-prep", "nakafa-path"],
+        planItems: [
+          {
+            content_id: "asset:id:exercise:snbt:2026:set-2:1",
+            lensId: "lens:snbt",
+            position: 1,
+            route:
+              "/exercises/high-school/snbt/general-knowledge/try-out/2026/set-2/1",
+            status: "ready",
+            title: "SNBT Set 2",
+          },
+        ],
+        program: {
+          coverageStatus: "partial",
+          key: "snbt-2026",
+          kind: "admission-exam",
+          title: "SNBT 2026",
+          versionLabel: "2026",
+        },
+      },
+    });
+
+    expect(prompt).toContain("- active learning profile: selected");
+    expect(prompt).toContain("- program: SNBT 2026");
+    expect(prompt).toContain("- interests: exam-prep, nakafa-path");
+    expect(prompt).toContain(
+      "1. SNBT Set 2; route: /exercises/high-school/snbt/general-knowledge/try-out/2026/set-2/1; status: ready"
+    );
+    const runtimeContext = prompt.slice(
+      prompt.indexOf("# Runtime Context"),
+      prompt.indexOf("# Tool Usage Guidelines")
+    );
+    expect(runtimeContext).not.toContain("content_id");
+  });
+
   it("includes default role guidance and unverified page context", () => {
     const prompt = nakafaPrompt({
       ...base,

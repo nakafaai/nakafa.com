@@ -12,7 +12,7 @@ const authServer = convexBetterAuthNextJs({
   },
 });
 
-/** Error thrown when a server action is called without an authenticated request. */
+/** Error thrown when a Next server function lacks an authenticated request. */
 export class AuthenticationRequiredError extends Error {
   constructor() {
     super("Authentication required");
@@ -30,11 +30,11 @@ export const {
 } = authServer;
 
 /**
- * Ensures server actions check auth before running mutations or actions.
+ * Ensures public Next server functions check auth before privileged work.
  *
- * React Doctor's server-action rule expects an auth guard at the top of every
- * exported server action, and Convex Better Auth exposes `isAuthenticated()` for
- * the current Next.js request.
+ * React Doctor expects an auth guard at the top of every exported public server
+ * function, and Convex Better Auth exposes `isAuthenticated()` for the current
+ * Next.js request.
  *
  * @see https://www.react.doctor/docs/getting-started/how-to-fix-issues
  * @see https://labs.convex.dev/better-auth/framework-guides/next#ssr-with-server-components

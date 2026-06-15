@@ -26,7 +26,11 @@ import {
 import { createChatErrorReporter } from "@/app/api/chat/observability";
 import { loadMessages, saveOrCreateChat } from "@/app/api/chat/persistence";
 import { streamChat } from "@/app/api/chat/stream";
-import { getUserInfo, getVerified } from "@/app/api/chat/utils";
+import {
+  getLearningProfile,
+  getUserInfo,
+  getVerified,
+} from "@/app/api/chat/utils";
 import { getToken } from "@/lib/auth/server";
 
 const corsValidator = new CorsValidator();
@@ -135,9 +139,10 @@ export function POST(req: Request) {
         country: geo.country ?? "Unknown",
       };
 
-      const [verified, userInfo] = yield* Effect.all([
+      const [verified, userInfo, learningProfile] = yield* Effect.all([
         shouldVerify ? getVerified(url) : Effect.succeed(false),
         getUserInfo(token),
+        getLearningProfile(token),
       ]);
 
       if (!hasEnoughCredits(userInfo.credits, selectedModel)) {
@@ -240,6 +245,7 @@ export function POST(req: Request) {
       };
       const user = {
         info: userInfo,
+        learningProfile,
         location: userLocation,
       };
       const stream = streamChat({ chat, page, runtime, user });

@@ -1,4 +1,6 @@
+import { formatLearningProfilePromptContext } from "@repo/ai/prompt/learning-profile";
 import { createPrompt } from "@repo/ai/prompt/utils";
+import type { AgentLearningProfile } from "@repo/ai/types/agents";
 import type { PromptUserRole } from "@repo/ai/types/roles";
 import type { Locale } from "@repo/utilities/locales";
 import dedent from "dedent";
@@ -15,6 +17,8 @@ interface SystemPromptProps {
     /** Whether the slug has been verified to exist in the content system. */
     verified: boolean;
   };
+  /** The active learning profile and first plan items selected by the user. */
+  learningProfile?: AgentLearningProfile;
   /** The URL of the current page. */
   url: string;
   /** The current time. */
@@ -39,6 +43,7 @@ export function nakafaPrompt({
   url,
   currentPage,
   currentDate,
+  learningProfile,
   userLocation,
   userRole,
 }: SystemPromptProps) {
@@ -81,6 +86,8 @@ export function nakafaPrompt({
       - country region: ${userLocation.countryRegion}
       - latitude: ${userLocation.latitude}
       - longitude: ${userLocation.longitude}
+
+      ${formatLearningProfilePromptContext(learningProfile)}
     `,
 
     toolUsageGuidelines: `

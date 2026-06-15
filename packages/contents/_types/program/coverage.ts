@@ -20,10 +20,12 @@ interface CoverageAccumulator {
 
 /** Projects graph-backed route rows into bounded program coverage rows. */
 export function createLearningProgramCoverageInputs({
+  alignments = LEARNING_PROGRAM_COVERAGE_ALIGNMENTS,
   programs,
   routes,
   syncedAt,
 }: {
+  alignments?: readonly LearningProgramCoverageAlignment[];
   programs: readonly LearningProgram[];
   routes: readonly LearningProgramCoverageRoute[];
   syncedAt: number;
@@ -31,7 +33,7 @@ export function createLearningProgramCoverageInputs({
   const rowsByKey = new Map<string, CoverageAccumulator>();
 
   for (const route of routes) {
-    const programKeys = getProgramKeysForCoverageRoute(route);
+    const programKeys = getProgramKeysForCoverageRoute(route, alignments);
 
     for (const programKey of programKeys) {
       const key = `${programKey}|${route.locale}|${route.lensId}`;
@@ -58,10 +60,7 @@ export function createLearningProgramCoverageInputs({
 
       return Schema.decodeUnknownSync(LearningProgramCoverageInputSchema)({
         contentCount: row.contentCount,
-        coverageStatus: getCoverageStatusForCount(
-          fallbackStatus,
-          row.contentCount
-        ),
+        coverageStatus: getCoverageStatus(fallbackStatus),
         lensId: row.route.lensId,
         lensScope: getCurriculumLensScopeForKind(row.route.kind),
         locale: row.route.locale,
@@ -92,16 +91,9 @@ export function getProgramKeysForCoverageRoute(
 }
 
 /** Keeps planned/hidden catalog states honest while surfacing real graph coverage. */
-function getCoverageStatusForCount(
-  defaultStatus: CoverageStatus,
-  contentCount: number
-): CoverageStatus {
+function getCoverageStatus(defaultStatus: CoverageStatus): CoverageStatus {
   if (defaultStatus === "hidden" || defaultStatus === "archived") {
     return defaultStatus;
-  }
-
-  if (contentCount === 0) {
-    return defaultStatus === "available" ? "planned" : defaultStatus;
   }
 
   if (defaultStatus === "available") {

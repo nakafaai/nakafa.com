@@ -3,7 +3,7 @@ import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { CURRICULUM_LENS_SCOPE_VALUES } from "@repo/contents/_types/graph/schema";
 import {
   COVERAGE_STATUS_VALUES,
-  LEARNING_OBJECTIVE_VALUES,
+  LEARNING_INTEREST_VALUES,
   LEARNING_PLAN_ITEM_REASON_VALUES,
   LEARNING_PLAN_ITEM_STATUS_VALUES,
   LEARNING_PROGRAM_KIND_VALUES,
@@ -17,9 +17,7 @@ import { literals } from "convex-helpers/validators";
 export const learningProgramKindValidator = literals(
   ...LEARNING_PROGRAM_KIND_VALUES
 );
-export const learningObjectiveValidator = literals(
-  ...LEARNING_OBJECTIVE_VALUES
-);
+export const learningInterestValidator = literals(...LEARNING_INTEREST_VALUES);
 export const coverageStatusValidator = literals(...COVERAGE_STATUS_VALUES);
 export const curriculumLensScopeValidator = literals(
   ...CURRICULUM_LENS_SCOPE_VALUES
@@ -92,7 +90,7 @@ export const learningProgramSummaryValidator = v.object({
 export const activeLearningProfileValidator = v.union(
   v.null(),
   v.object({
-    objective: learningObjectiveValidator,
+    interests: v.array(learningInterestValidator),
     planItems: v.array(
       v.object({
         content_id: graphContentIdValidator,
@@ -168,8 +166,8 @@ const tables = {
 
   learningProfiles: defineTable({
     activePlanId: v.optional(v.id("learningPlans")),
+    interests: v.array(learningInterestValidator),
     locale: localeValidator,
-    objective: learningObjectiveValidator,
     programId: v.id("learningPrograms"),
     stage: v.optional(v.string()),
     updatedAt: v.number(),
