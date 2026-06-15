@@ -9,6 +9,7 @@ import type {
   LearningProgramCatalog,
 } from "@/components/programs/contract";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
+import { filterOnboardingPrograms } from "@/lib/programs/catalog";
 
 /** Expected failure while reading the current user's learning profile. */
 class ActiveLearningProfileReadError extends Schema.TaggedError<ActiveLearningProfileReadError>()(
@@ -60,7 +61,7 @@ export async function getLearningProgramOnboardingCatalog(
 ): Promise<LearningProgramCatalog> {
   const catalog = await getLearningProgramCatalog(locale);
 
-  return catalog.filter(isProgramReadyForOnboarding);
+  return filterOnboardingPrograms(catalog);
 }
 
 /** Reads the active learning profile for the authenticated request token. */
@@ -68,12 +69,4 @@ export async function getActiveLearningProfile(
   token: string
 ): Promise<ActiveLearningProfile> {
   return await Effect.runPromise(getActiveLearningProfileEffect(token));
-}
-
-/** Keeps first-run choices limited to programs that can produce a useful plan. */
-function isProgramReadyForOnboarding(program: LearningProgramCatalog[number]) {
-  return (
-    program.coverageStatus === "available" ||
-    program.coverageStatus === "partial"
-  );
 }

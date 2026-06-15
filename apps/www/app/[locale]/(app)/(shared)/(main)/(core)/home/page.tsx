@@ -7,7 +7,11 @@ import { HomeTrending } from "@/components/home/trending";
 import type { ActiveLearningProfile } from "@/components/programs/contract";
 import { getToken } from "@/lib/auth/server";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
-import { getActiveLearningProfile } from "@/lib/programs/server";
+import { shouldRequireLearningProgramOnboarding } from "@/lib/programs/catalog";
+import {
+  getActiveLearningProfile,
+  getLearningProgramOnboardingCatalog,
+} from "@/lib/programs/server";
 
 /** Routes authenticated users into their active learning plan. */
 export default async function Page(props: PageProps<"/[locale]/home">) {
@@ -24,8 +28,12 @@ export default async function Page(props: PageProps<"/[locale]/home">) {
 
   const learningProfile = await getActiveLearningProfile(token);
   if (!learningProfile) {
-    redirect({ href: "/onboarding", locale });
-    return null;
+    const programs = await getLearningProgramOnboardingCatalog(locale);
+
+    if (shouldRequireLearningProgramOnboarding(learningProfile, programs)) {
+      redirect({ href: "/onboarding", locale });
+      return null;
+    }
   }
 
   return (
@@ -39,14 +47,16 @@ export default async function Page(props: PageProps<"/[locale]/home">) {
 function Main({
   learningProfile,
 }: {
-  learningProfile: NonNullable<ActiveLearningProfile>;
+  learningProfile: NonNullable<ActiveLearningProfile> | null;
 }) {
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-24">
       <div className="relative flex flex-col gap-12">
         <HomeHeader />
 
-        <HomeLearningProgram profile={learningProfile} />
+        {learningProfile ? (
+          <HomeLearningProgram profile={learningProfile} />
+        ) : null}
 
         <HomeExplore />
 
