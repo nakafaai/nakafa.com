@@ -2,6 +2,7 @@ import { mutation } from "@repo/backend/convex/functions";
 import {
   createInitialLearningPlanItems,
   getLearningProgramByKey,
+  isLearningProgramSelectable,
   supersedeActivePlans,
   toLearningProgramSummary,
 } from "@repo/backend/convex/learningPrograms/impl";
@@ -53,10 +54,7 @@ export const selectLearningProgram = mutation({
       });
     }
 
-    if (
-      program.defaultCoverageStatus === "hidden" ||
-      program.defaultCoverageStatus === "archived"
-    ) {
+    if (!isLearningProgramSelectable(program)) {
       throw new ConvexError({
         code: "LEARNING_PROGRAM_NOT_SELECTABLE",
         message: "Learning program is not selectable.",

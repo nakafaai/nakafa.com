@@ -1,5 +1,8 @@
 import { query } from "@repo/backend/convex/_generated/server";
-import { toLearningProgramSummary } from "@repo/backend/convex/learningPrograms/impl";
+import {
+  isLearningProgramSelectable,
+  toLearningProgramSummary,
+} from "@repo/backend/convex/learningPrograms/impl";
 import {
   activeLearningProfileValidator,
   learningProgramSummaryValidator,
@@ -27,8 +30,7 @@ export const listSelectablePrograms = query({
         .take(PROGRAM_LIMIT);
 
       return programs
-        .filter((program) => program.defaultCoverageStatus !== "hidden")
-        .filter((program) => program.defaultCoverageStatus !== "archived")
+        .filter(isLearningProgramSelectable)
         .map(toLearningProgramSummary);
     }
 
@@ -38,8 +40,7 @@ export const listSelectablePrograms = query({
       .take(PROGRAM_LIMIT);
 
     return programs
-      .filter((program) => program.defaultCoverageStatus !== "hidden")
-      .filter((program) => program.defaultCoverageStatus !== "archived")
+      .filter(isLearningProgramSelectable)
       .map(toLearningProgramSummary);
   },
 });

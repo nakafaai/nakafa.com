@@ -52,7 +52,6 @@ describe("learningPrograms", () => {
     expect(programs.map((program) => program.key)).toEqual([
       "nakafa-stem-path",
       "id-kurikulum-merdeka",
-      "tka-2026",
       "snbt-2026",
     ]);
     expect(sourceCount).toBe(2);

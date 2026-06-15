@@ -128,6 +128,35 @@ describe("learningPrograms/mutations", () => {
       authed.query(api.learningPrograms.queries.getActiveProfile, {})
     ).resolves.toBeNull();
   });
+
+  it("rejects planned program selections before profile writes", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const identity = await t.mutation((ctx) =>
+      seedAuthenticatedUser(ctx, { now: NOW })
+    );
+
+    await t.mutation(internal.learningPrograms.sync.syncLearningPrograms, {
+      programs: getLearningProgramCatalogInputs(),
+      syncedAt: NOW,
+    });
+
+    const authed = t.withIdentity({
+      sessionId: identity.sessionId,
+      subject: identity.authUserId,
+    });
+
+    await expect(
+      authed.mutation(api.learningPrograms.mutations.selectLearningProgram, {
+        interests: ["assessment-prep"],
+        locale: "id",
+        primaryProgramKey: "tka-2026",
+      })
+    ).rejects.toThrow("LEARNING_PROGRAM_NOT_SELECTABLE");
+
+    await expect(
+      authed.query(api.learningPrograms.queries.getActiveProfile, {})
+    ).resolves.toBeNull();
+  });
 });
 
 /** Returns graph identity for a route fixture and fails fast on invalid fixtures. */

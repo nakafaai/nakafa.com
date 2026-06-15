@@ -17,6 +17,14 @@ export function toLearningProgramSummary(program: Doc<"learningPrograms">) {
   };
 }
 
+/** Checks whether a catalog row can be selected for a learner's first plan. */
+export function isLearningProgramSelectable(program: Doc<"learningPrograms">) {
+  return (
+    program.defaultCoverageStatus === "available" ||
+    program.defaultCoverageStatus === "partial"
+  );
+}
+
 /** Loads one learning program by its stable program key. */
 export async function getLearningProgramByKey(
   ctx: MutationCtx,
