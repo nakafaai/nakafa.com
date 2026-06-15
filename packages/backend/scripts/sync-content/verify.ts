@@ -319,6 +319,9 @@ export const verify = Effect.fn("sync.verify")(function* (
   log(`  contentRoutes:       ${counts.contentRoutes}`);
   log(`  learningPrograms:    ${counts.learningPrograms}`);
   log(`  learningProgramSrcs: ${counts.learningProgramSources}`);
+  log(`  programOutlines:     ${counts.learningProgramOutlineNodes}`);
+  log(`  programOutcomes:     ${counts.learningProgramOutcomes}`);
+  log(`  outcomeConcepts:     ${counts.learningProgramOutcomeConcepts}`);
   log(`  learningProgramCov:  ${counts.learningProgramCoverage}`);
   log(`  quranSurahs:         ${counts.quranSurahs}`);
   log(`  quranVerses:         ${counts.quranVerses}`);

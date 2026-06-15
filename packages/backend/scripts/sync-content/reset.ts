@@ -352,6 +352,9 @@ export const reset = Effect.fn("sync.reset")(function* (
   log(`  Learning Trending:     ${counts.learningTrendingBuckets}`);
   log(`  Learning Programs:     ${counts.learningPrograms}`);
   log(`  Learning Program Srcs: ${counts.learningProgramSources}`);
+  log(`  Program Outlines:      ${counts.learningProgramOutlineNodes}`);
+  log(`  Program Outcomes:      ${counts.learningProgramOutcomes}`);
+  log(`  Outcome Concepts:      ${counts.learningProgramOutcomeConcepts}`);
   log(`  Learning Program Cov:  ${counts.learningProgramCoverage}`);
   log(`  Content Routes:        ${counts.contentRoutes}`);
   log(`  Content Route Counts:  ${counts.contentRouteCounts}`);
@@ -447,7 +450,11 @@ export const reset = Effect.fn("sync.reset")(function* (
     counts.audioContentSources +
     counts.contentAudios;
   const preservedProgramCatalog =
-    counts.learningPrograms + counts.learningProgramSources;
+    counts.learningPrograms +
+    counts.learningProgramSources +
+    counts.learningProgramOutlineNodes +
+    counts.learningProgramOutcomes +
+    counts.learningProgramOutcomeConcepts;
 
   log(`\n  Total content items:  ${totalContent}`);
   log(`  Total related items:  ${totalRelated}`);

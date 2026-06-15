@@ -1,9 +1,13 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/functions";
+import { syncLearningProgramOutcomeRows } from "@repo/backend/convex/learningPrograms/projection";
 import {
+  learningOutcomeInputValidator,
   learningProgramCoverageInputValidator,
   learningProgramInputValidator,
+  outcomeConceptAlignmentInputValidator,
+  programOutlineNodeInputValidator,
   type programSourceInputValidator,
 } from "@repo/backend/convex/learningPrograms/schema";
 import { LearningProgramSchema } from "@repo/contents/_types/program/schema";
@@ -116,6 +120,18 @@ function decodeLearningProgramsForSync(
 
   return decoded.right;
 }
+
+/** Upserts generated program outline, outcome, and concept-alignment rows. */
+export const syncLearningProgramOutcomes = internalMutation({
+  args: {
+    conceptAlignments: v.array(outcomeConceptAlignmentInputValidator),
+    outcomes: v.array(learningOutcomeInputValidator),
+    outlineNodes: v.array(programOutlineNodeInputValidator),
+    syncedAt: v.number(),
+  },
+  returns: syncResultValidator,
+  handler: syncLearningProgramOutcomeRows,
+});
 
 /** Upserts graph-backed program coverage rows from the content sync projection. */
 export const syncLearningProgramCoverage = internalMutation({

@@ -4,6 +4,11 @@ import {
   type LearningProgramSyncInput,
 } from "@repo/backend/convex/learningPrograms/catalog";
 import {
+  getLearningOutcomeInputs,
+  getOutcomeConceptAlignmentInputs,
+  getProgramOutlineNodeInputs,
+} from "@repo/backend/convex/learningPrograms/outcomes";
+import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
@@ -23,6 +28,15 @@ describe("learningPrograms", () => {
       internal.learningPrograms.sync.syncLearningPrograms,
       {
         programs: getLearningProgramCatalogInputs(),
+        syncedAt: NOW,
+      }
+    );
+    const outcomeResult = await t.mutation(
+      internal.learningPrograms.sync.syncLearningProgramOutcomes,
+      {
+        conceptAlignments: getOutcomeConceptAlignmentInputs(),
+        outcomes: getLearningOutcomeInputs(),
+        outlineNodes: getProgramOutlineNodeInputs(),
         syncedAt: NOW,
       }
     );
@@ -47,8 +61,48 @@ describe("learningPrograms", () => {
 
       return sources.length;
     });
+    const outcomeCounts = await t.query(async (ctx) => {
+      const program = await ctx.db
+        .query("learningPrograms")
+        .withIndex("by_key", (q) => q.eq("key", "id-kurikulum-merdeka"))
+        .unique();
+
+      if (!program) {
+        throw new Error("Expected synced Kurikulum Merdeka program.");
+      }
+
+      const outlineNodes = await ctx.db
+        .query("learningProgramOutlineNodes")
+        .withIndex("by_programId_and_parentKey_and_displayOrder", (q) =>
+          q.eq("programId", program._id).eq("parentKey", undefined)
+        )
+        .take(10);
+      const outcomes = await ctx.db
+        .query("learningProgramOutcomes")
+        .withIndex("by_programId_and_key", (q) =>
+          q
+            .eq("programId", program._id)
+            .eq("key", "id.km.fase-e.math.statistics")
+        )
+        .take(10);
+      const concepts = await ctx.db
+        .query("learningProgramOutcomeConcepts")
+        .withIndex("by_programId_and_outcomeKey", (q) =>
+          q
+            .eq("programId", program._id)
+            .eq("outcomeKey", "id.km.fase-e.math.statistics")
+        )
+        .take(10);
+
+      return {
+        concepts: concepts.length,
+        outcomes: outcomes.length,
+        rootNodes: outlineNodes.length,
+      };
+    });
 
     expect(result).toEqual({ created: 4, skipped: 0, updated: 0 });
+    expect(outcomeResult).toEqual({ created: 15, skipped: 0, updated: 0 });
     expect(programs.map((program) => program.key)).toEqual([
       "nakafa-stem-path",
       "id-kurikulum-merdeka",
@@ -63,6 +117,69 @@ describe("learningPrograms", () => {
       },
     });
     expect(sourceCount).toBe(2);
+    expect(outcomeCounts).toEqual({
+      concepts: 1,
+      outcomes: 1,
+      rootNodes: 1,
+    });
+  });
+
+  it("prunes omitted generated outcome rows without deleting program catalog rows", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const outlineNodes = getProgramOutlineNodeInputs();
+    const outcomes = getLearningOutcomeInputs();
+    const conceptAlignments = getOutcomeConceptAlignmentInputs();
+
+    await t.mutation(internal.learningPrograms.sync.syncLearningPrograms, {
+      programs: getLearningProgramCatalogInputs(),
+      syncedAt: NOW,
+    });
+    await t.mutation(
+      internal.learningPrograms.sync.syncLearningProgramOutcomes,
+      {
+        conceptAlignments,
+        outcomes,
+        outlineNodes,
+        syncedAt: NOW,
+      }
+    );
+
+    const result = await t.mutation(
+      internal.learningPrograms.sync.syncLearningProgramOutcomes,
+      {
+        conceptAlignments: conceptAlignments.slice(0, 4),
+        outcomes: outcomes.slice(0, 3),
+        outlineNodes,
+        syncedAt: NOW + 1,
+      }
+    );
+    const remaining = await t.query(async (ctx) => {
+      const tka = await ctx.db
+        .query("learningPrograms")
+        .withIndex("by_key", (q) => q.eq("key", "tka-2026"))
+        .unique();
+      const outcome = await ctx.db
+        .query("learningProgramOutcomes")
+        .withIndex("by_syncedAt", (q) => q.eq("syncedAt", NOW))
+        .take(10);
+      const concepts = await ctx.db
+        .query("learningProgramOutcomeConcepts")
+        .withIndex("by_syncedAt", (q) => q.eq("syncedAt", NOW))
+        .take(10);
+
+      return {
+        oldConceptRows: concepts.length,
+        oldOutcomeRows: outcome.length,
+        tkaExists: Boolean(tka),
+      };
+    });
+
+    expect(result).toEqual({ created: 0, skipped: 0, updated: 15 });
+    expect(remaining).toEqual({
+      oldConceptRows: 0,
+      oldOutcomeRows: 0,
+      tkaExists: true,
+    });
   });
 
   it("lists canonical programs in each content language only after coverage exists", async () => {

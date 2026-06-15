@@ -41,6 +41,9 @@ const emptyCounts = {
   contentViewAnalyticsQueue: 0,
   contentViews: 0,
   learningProgramCoverage: 0,
+  learningProgramOutcomeConcepts: 0,
+  learningProgramOutcomes: 0,
+  learningProgramOutlineNodes: 0,
   learningProgramSources: 0,
   learningPrograms: 0,
   learningPopularity: 0,
@@ -156,6 +159,9 @@ describe("sync-content reset", () => {
       Effect.succeed({
         ...emptyCounts,
         learningProgramSources: 5,
+        learningProgramOutcomeConcepts: 5,
+        learningProgramOutcomes: 4,
+        learningProgramOutlineNodes: 6,
         learningPrograms: 4,
       })
     );
@@ -164,7 +170,10 @@ describe("sync-content reset", () => {
 
     expect(log).toHaveBeenCalledWith("  Learning Programs:     4");
     expect(log).toHaveBeenCalledWith("  Learning Program Srcs: 5");
-    expect(log).toHaveBeenCalledWith("  Preserved program catalog rows: 9");
+    expect(log).toHaveBeenCalledWith("  Program Outlines:      6");
+    expect(log).toHaveBeenCalledWith("  Program Outcomes:      4");
+    expect(log).toHaveBeenCalledWith("  Outcome Concepts:      5");
+    expect(log).toHaveBeenCalledWith("  Preserved program catalog rows: 24");
     expect(logSuccess).toHaveBeenCalledWith(
       "\nReset-managed content is already empty. Nothing to delete."
     );

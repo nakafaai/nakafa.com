@@ -58,6 +58,18 @@ export const contentCountTables = [
   { field: "learningTrendingBuckets", tableName: "learningTrendingBuckets" },
   { field: "learningPrograms", tableName: "learningPrograms" },
   { field: "learningProgramSources", tableName: "learningProgramSources" },
+  {
+    field: "learningProgramOutlineNodes",
+    tableName: "learningProgramOutlineNodes",
+  },
+  {
+    field: "learningProgramOutcomes",
+    tableName: "learningProgramOutcomes",
+  },
+  {
+    field: "learningProgramOutcomeConcepts",
+    tableName: "learningProgramOutcomeConcepts",
+  },
   { field: "learningProgramCoverage", tableName: "learningProgramCoverage" },
   { field: "contentRoutes", tableName: "contentRoutes" },
   { field: "contentRouteCounts", tableName: "contentRouteCounts" },
