@@ -20,7 +20,8 @@ import type {
   ActiveLearningProfile,
   LearningProgramCatalog,
 } from "@/components/programs/contract";
-import { ChoiceControls, ProgressDots, SubmitControls } from "./controls";
+import { ChoiceControls } from "./controls";
+import { SubmitControls } from "./finish";
 import {
   getDefaultProgram,
   getInterestsForProgram,
@@ -30,6 +31,7 @@ import {
   type OnboardingStep,
   parseInterests,
 } from "./model";
+import { ProgressDots } from "./progress";
 import {
   initialOnboardingState,
   type OnboardingState,
