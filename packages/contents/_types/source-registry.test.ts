@@ -1,4 +1,4 @@
-import { readdirSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { getSourceRegistryRootForKind } from "@repo/contents/_types/graph/schema";
 import {
@@ -9,6 +9,11 @@ import { describe, expect, it } from "vitest";
 
 const TYPES_ROOT = join(process.cwd(), "_types");
 const CONTENTS_ROOT = process.cwd();
+const BLOCKED_CONCEPT_ROWS_FILE = join(
+  TYPES_ROOT,
+  "concept",
+  ["source", "ts"].join(".")
+);
 const BLOCKED_SOURCE_BASENAME = ["source", "json"].join(".");
 const BLOCKED_MATERIAL_BASENAMES = new Set([
   "en-material.ts",
@@ -130,6 +135,10 @@ describe("source registry adapter", () => {
 
   it("blocks JSON source registries under contents type modules", () => {
     expect(findSourceJsonFiles(TYPES_ROOT)).toEqual([]);
+  });
+
+  it("blocks standalone concept source rows", () => {
+    expect(existsSync(BLOCKED_CONCEPT_ROWS_FILE)).toBe(false);
   });
 
   it("blocks route-local subject and exercise material source files", () => {

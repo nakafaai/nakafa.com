@@ -12,10 +12,10 @@ const OutcomeSourceSchema = Schema.Struct({
 });
 
 /**
- * Typed bootstrap source for program outlines, official outcomes, and concept alignments.
+ * Typed source Module for program outlines, official outcomes, and concept alignments.
  *
- * Large curriculum imports should generate or review TS source modules that
- * satisfy this Interface; JSON source registries are intentionally blocked.
+ * Curriculum imports generate or review TS source modules that satisfy this
+ * Interface; JSON source registries are intentionally blocked.
  */
 export const OUTCOME_SOURCE = Schema.decodeUnknownSync(OutcomeSourceSchema)({
   outlineNodes: [

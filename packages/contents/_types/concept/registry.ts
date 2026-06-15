@@ -1,14 +1,54 @@
 import type { Concept } from "@repo/contents/_types/concept/schema";
-import { CONCEPT_SOURCE } from "@repo/contents/_types/concept/source";
+import { ConceptSchema } from "@repo/contents/_types/concept/schema";
+import { OUTCOME_CONCEPT_ALIGNMENTS } from "@repo/contents/_types/outcome/registry";
+import type { OutcomeConceptAlignment } from "@repo/contents/_types/outcome/schema";
+import { Schema } from "effect";
+
+interface ConceptReferenceInput {
+  evidence: string;
+  outcomeKey: string;
+  reviewedAt: OutcomeConceptAlignment["reviewedAt"];
+}
 
 /**
- * Decoded source registry of Nakafa canonical concepts used by outcome mappings.
+ * Derived registry of canonical concepts used by outcome mappings.
  *
- * The authoring surface is typed TS source data that can be hand-reviewed or
- * generated from an importer. This module owns lookup/reference checks so
- * curriculum imports do not turn into per-MDX membership tags.
+ * The curriculum source of truth is the program/outcome/outline source Module.
+ * This Module derives concept rows from reviewed outcome alignments so concept
+ * keys do not become arbitrary hand-seeded curriculum facts.
  */
-export const CONCEPT_REGISTRY = CONCEPT_SOURCE;
+export const CONCEPT_REGISTRY = createConceptRegistryFromOutcomeAlignments(
+  OUTCOME_CONCEPT_ALIGNMENTS
+);
+
+/** Derives locale-neutral concept rows from reviewed outcome-to-concept alignments. */
+export function createConceptRegistryFromOutcomeAlignments(
+  alignments: readonly OutcomeConceptAlignment[]
+) {
+  const referencesByConcept = new Map<string, ConceptReferenceInput[]>();
+
+  for (const alignment of alignments) {
+    const references = referencesByConcept.get(alignment.conceptKey) ?? [];
+
+    references.push({
+      evidence: alignment.evidence,
+      outcomeKey: alignment.outcomeKey,
+      reviewedAt: alignment.reviewedAt,
+    });
+    referencesByConcept.set(alignment.conceptKey, references);
+  }
+
+  const rows = [...referencesByConcept.entries()].map(([key, references]) => ({
+    key,
+    references: [...references].sort((left, right) =>
+      left.outcomeKey.localeCompare(right.outcomeKey)
+    ),
+  }));
+
+  return Schema.decodeUnknownSync(Schema.Array(ConceptSchema))(
+    rows.sort((left, right) => left.key.localeCompare(right.key))
+  );
+}
 
 /** Finds one canonical concept row by key. */
 export function findConceptByKey(
@@ -18,20 +58,24 @@ export function findConceptByKey(
   return concepts.find((concept) => concept.key === key) ?? null;
 }
 
-/** Reports concept registry references that cannot be resolved locally. */
+/** Reports duplicate derived concept references that would blur alignment provenance. */
 export function getConceptRegistryIssues(
   concepts: readonly Concept[] = CONCEPT_REGISTRY
 ) {
-  const keys = new Set(concepts.map((concept) => concept.key));
   const issues: string[] = [];
 
   for (const concept of concepts) {
-    for (const prerequisite of concept.prerequisites) {
-      if (!keys.has(prerequisite)) {
+    const referencedOutcomes = new Set<string>();
+
+    for (const reference of concept.references) {
+      if (referencedOutcomes.has(reference.outcomeKey)) {
         issues.push(
-          `Unknown prerequisite concept key: ${prerequisite} for ${concept.key}`
+          `Duplicate outcome reference: ${reference.outcomeKey} for concept ${concept.key}`
         );
+        continue;
       }
+
+      referencedOutcomes.add(reference.outcomeKey);
     }
   }
 

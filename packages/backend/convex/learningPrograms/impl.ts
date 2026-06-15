@@ -185,7 +185,7 @@ async function loadPlanCoverageRows(
 }
 
 /** Finds the matching content route for one graph asset ID and locale. */
-async function getContentRouteByContentId(
+export async function getContentRouteByContentId(
   ctx: MutationCtx,
   {
     contentId,

@@ -1,6 +1,7 @@
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/functions";
+import { getContentRouteByContentId } from "@repo/backend/convex/learningPrograms/impl";
 import { syncLearningProgramOutcomeRows } from "@repo/backend/convex/learningPrograms/projection";
 import {
   learningOutcomeInputValidator,
@@ -182,6 +183,14 @@ export const syncLearningProgramCoverage = internalMutation({
         continue;
       }
 
+      if (existing.sampleContentId !== row.sampleContentId) {
+        await repairActivePlanItemsForCoverageSampleChange(ctx, {
+          coverage: existing,
+          nextCoverageStatus: row.coverageStatus,
+          nextSampleContentId: row.sampleContentId,
+        });
+      }
+
       await ctx.db.patch(existing._id, patch);
       updated++;
     }
@@ -221,6 +230,69 @@ export const deleteStaleLearningProgramCoverage = internalMutation({
     return { deleted: staleRows.length };
   },
 });
+
+/** Refreshes generated active-plan items when coverage keeps its key but points at new content. */
+async function repairActivePlanItemsForCoverageSampleChange(
+  ctx: MutationCtx,
+  {
+    coverage,
+    nextCoverageStatus,
+    nextSampleContentId,
+  }: {
+    coverage: Doc<"learningProgramCoverage">;
+    nextCoverageStatus: Doc<"learningProgramCoverage">["coverageStatus"];
+    nextSampleContentId: Doc<"learningProgramCoverage">["sampleContentId"];
+  }
+) {
+  const planItems = await ctx.db
+    .query("learningPlanItems")
+    .withIndex("by_programId_and_lensId_and_content_id", (q) =>
+      q
+        .eq("programId", coverage.programId)
+        .eq("lensId", coverage.lensId)
+        .eq("content_id", coverage.sampleContentId)
+    )
+    .take(ACTIVE_PLAN_ITEM_REPAIR_LIMIT + 1);
+
+  if (planItems.length > ACTIVE_PLAN_ITEM_REPAIR_LIMIT) {
+    throw new ConvexError({
+      code: "LEARNING_PLAN_ITEM_REPAIR_LIMIT_EXCEEDED",
+      message: `Learning plan item repair is limited to ${ACTIVE_PLAN_ITEM_REPAIR_LIMIT} rows per updated coverage row.`,
+    });
+  }
+
+  const route = await getContentRouteByContentId(ctx, {
+    contentId: nextSampleContentId,
+    locale: coverage.locale,
+  });
+  const updatedAt = Date.now();
+
+  for (const item of planItems) {
+    const plan = await ctx.db.get(item.planId);
+
+    if (!plan) {
+      await ctx.db.delete(item._id);
+      continue;
+    }
+
+    if (plan.status !== "active") {
+      continue;
+    }
+
+    if (!route) {
+      await ctx.db.delete(item._id);
+      continue;
+    }
+
+    await ctx.db.patch(item._id, {
+      content_id: nextSampleContentId,
+      coverageStatus: nextCoverageStatus,
+      route: route.route,
+      title: route.title,
+      updatedAt,
+    });
+  }
+}
 
 /** Removes generated active-plan items before their source coverage row disappears. */
 async function deleteActivePlanItemsForStaleCoverage(

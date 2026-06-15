@@ -1,22 +1,27 @@
+import { DateOnlySchema } from "@repo/contents/_shared/date";
 import {
   CONCEPT_REGISTRY,
+  createConceptRegistryFromOutcomeAlignments,
   findConceptByKey,
   getConceptRegistryIssues,
 } from "@repo/contents/_types/concept/registry";
 import {
   ConceptKeySchema,
   ConceptSchema,
-  ConceptSkillKeySchema,
 } from "@repo/contents/_types/concept/schema";
+import { OutcomeKeySchema } from "@repo/contents/_types/outcome/schema";
 import { Either, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 describe("concept/schema", () => {
-  it("keeps canonical concepts language-neutral and schema-owned", () => {
+  it("derives canonical concepts from reviewed outcome alignments", () => {
     expect(CONCEPT_REGISTRY.every(Schema.is(ConceptSchema))).toBe(true);
     expect(CONCEPT_REGISTRY.map((concept) => concept.key)).toContain(
       "math.statistics.mean"
     );
+    expect(
+      CONCEPT_REGISTRY.every((concept) => concept.references.length > 0)
+    ).toBe(true);
     expect(JSON.stringify(CONCEPT_REGISTRY)).not.toContain(
       "subject/high-school"
     );
@@ -25,12 +30,14 @@ describe("concept/schema", () => {
 
   it("finds concepts by canonical key", () => {
     expect(
-      findConceptByKey("math.statistics.mean")?.translations.en.title
-    ).toBe("Mean");
+      findConceptByKey("math.statistics.mean")?.references.map(
+        (reference) => reference.outcomeKey
+      )
+    ).toEqual(["id.km.fase-e.math.statistics"]);
     expect(findConceptByKey("math.missing")).toBeNull();
   });
 
-  it("rejects malformed concept and skill keys", () => {
+  it("rejects malformed concept keys", () => {
     expect(Schema.is(ConceptKeySchema)("math.statistics.mean")).toBe(true);
     expect(Schema.is(ConceptKeySchema)("subject/high-school/10/math")).toBe(
       false
@@ -39,37 +46,60 @@ describe("concept/schema", () => {
     const invalidConcept = Schema.decodeUnknownEither(ConceptKeySchema)(
       "subject/high-school/10/math"
     );
-    const invalidSkill = Schema.decodeUnknownEither(ConceptSkillKeySchema)(
-      "Solve Linear Equation"
-    );
 
     expect(Either.isLeft(invalidConcept)).toBe(true);
-    expect(Either.isLeft(invalidSkill)).toBe(true);
 
     if (Either.isLeft(invalidConcept)) {
       expect(invalidConcept.left.message).toContain(
         "Invalid concept key. Expected lowercase dot/kebab segments."
       );
     }
-    if (Either.isLeft(invalidSkill)) {
-      expect(invalidSkill.left.message).toContain(
-        "Invalid concept skill key. Expected lowercase kebab-case."
-      );
-    }
   });
 
-  it("reports unknown prerequisite concepts", () => {
-    const [concept] = CONCEPT_REGISTRY;
+  it("reports duplicate outcome references in derived concept rows", () => {
+    expect(
+      createConceptRegistryFromOutcomeAlignments([
+        {
+          conceptKey: ConceptKeySchema.make("math.statistics.mean"),
+          evidence: "First reviewed alignment.",
+          outcomeKey: OutcomeKeySchema.make("id.km.fase-e.math.statistics"),
+          relation: "covers",
+          reviewedAt: Schema.decodeSync(DateOnlySchema)("2026-06-15"),
+        },
+      ])
+    ).toEqual([
+      {
+        key: "math.statistics.mean",
+        references: [
+          {
+            evidence: "First reviewed alignment.",
+            outcomeKey: "id.km.fase-e.math.statistics",
+            reviewedAt: "2026-06-15",
+          },
+        ],
+      },
+    ]);
 
     expect(
       getConceptRegistryIssues([
         {
-          ...concept,
-          prerequisites: [ConceptKeySchema.make("math.missing")],
+          key: ConceptKeySchema.make("math.statistics.mean"),
+          references: [
+            {
+              evidence: "First reviewed alignment.",
+              outcomeKey: "id.km.fase-e.math.statistics",
+              reviewedAt: Schema.decodeSync(DateOnlySchema)("2026-06-15"),
+            },
+            {
+              evidence: "Second reviewed alignment.",
+              outcomeKey: "id.km.fase-e.math.statistics",
+              reviewedAt: Schema.decodeSync(DateOnlySchema)("2026-06-15"),
+            },
+          ],
         },
       ])
     ).toEqual([
-      `Unknown prerequisite concept key: math.missing for ${concept.key}`,
+      "Duplicate outcome reference: id.km.fase-e.math.statistics for concept math.statistics.mean",
     ]);
   });
 });
