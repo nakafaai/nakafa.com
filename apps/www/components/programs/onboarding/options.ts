@@ -9,9 +9,7 @@ import type {
 
 export type ChoiceTone = "guide" | "nina" | "practice" | "school" | "target";
 export type PreviewAsset =
-  | "basics"
   | "exam"
-  | "nina"
   | "parent"
   | "practice"
   | "student"
@@ -31,24 +29,18 @@ export interface RoleOption {
 
 const studentSchoolFocusKey = "student-school";
 const studentExamFocusKey = "student-exam";
-const studentBasicsFocusKey = "student-basics";
 const teacherMaterialsFocusKey = "teacher-materials";
 const teacherPracticeFocusKey = "teacher-practice";
-const teacherNinaFocusKey = "teacher-nina";
 const parentUnderstandFocusKey = "parent-understand";
 const parentPracticeFocusKey = "parent-practice";
-const parentNinaFocusKey = "parent-nina";
 
 export const onboardingFocusKeys = [
   studentSchoolFocusKey,
   studentExamFocusKey,
-  studentBasicsFocusKey,
   teacherMaterialsFocusKey,
   teacherPracticeFocusKey,
-  teacherNinaFocusKey,
   parentUnderstandFocusKey,
   parentPracticeFocusKey,
-  parentNinaFocusKey,
 ] as const;
 
 export type OnboardingFocusKey = (typeof onboardingFocusKeys)[number];
@@ -72,15 +64,6 @@ const studentFocusOptions = [
     titleKey: "onboarding.focus.student.exam.title",
     tone: "target",
   },
-  {
-    descriptionKey: "onboarding.focus.student.basics.description",
-    image: "basics",
-    interest: "nakafa-path",
-    key: studentBasicsFocusKey,
-    preferredKinds: ["nakafa-path"],
-    titleKey: "onboarding.focus.student.basics.title",
-    tone: "guide",
-  },
 ] as const;
 
 const teacherFocusOptions = [
@@ -102,15 +85,6 @@ const teacherFocusOptions = [
     titleKey: "onboarding.focus.teacher.practice.title",
     tone: "practice",
   },
-  {
-    descriptionKey: "onboarding.focus.teacher.nina.description",
-    image: "nina",
-    interest: "nakafa-path",
-    key: teacherNinaFocusKey,
-    preferredKinds: ["nakafa-path"],
-    titleKey: "onboarding.focus.teacher.nina.title",
-    tone: "nina",
-  },
 ] as const;
 
 const parentFocusOptions = [
@@ -131,15 +105,6 @@ const parentFocusOptions = [
     preferredKinds: ["assessment", "admission-exam"],
     titleKey: "onboarding.focus.parent.practice.title",
     tone: "practice",
-  },
-  {
-    descriptionKey: "onboarding.focus.parent.nina.description",
-    image: "nina",
-    interest: "nakafa-path",
-    key: parentNinaFocusKey,
-    preferredKinds: ["nakafa-path"],
-    titleKey: "onboarding.focus.parent.nina.title",
-    tone: "nina",
   },
 ] as const;
 

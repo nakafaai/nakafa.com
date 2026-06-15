@@ -10,7 +10,7 @@ const { mockGetContentsMetadata } = vi.hoisted(() => ({
   mockGetContentsMetadata: vi.fn(),
 }));
 
-vi.mock("@repo/contents/_data/team", () => ({
+vi.mock("@repo/contents/team/source", () => ({
   teams: new Set(["Official Author"]),
 }));
 

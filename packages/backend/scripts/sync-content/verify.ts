@@ -27,9 +27,9 @@ import type {
 } from "@repo/backend/scripts/sync-content/types";
 import { getAllSurah } from "@repo/contents/_lib/quran";
 import {
-  listExercisePlans,
-  listSubjectPlans,
-} from "@repo/contents/_types/plan/registry";
+  listExerciseMaterials,
+  listSubjectMaterials,
+} from "@repo/contents/_types/material/registry";
 import { locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
 
@@ -273,8 +273,8 @@ export const verify = Effect.fn("sync.verify")(function* (
   const questionFilesId = questionFiles.filter((file) =>
     file.endsWith("/id.mdx")
   );
-  const subjectPlanCount = listSubjectPlans().length;
-  const exercisePlanCount = listExercisePlans().length;
+  const subjectPlanCount = listSubjectMaterials().length;
+  const exercisePlanCount = listExerciseMaterials().length;
 
   log("=== FILESYSTEM ===\n");
   log("Articles:");
@@ -284,13 +284,13 @@ export const verify = Effect.fn("sync.verify")(function* (
   log(`  Reference files:     ${refFiles.length} (ref.ts)`);
 
   log("\nSubjects:");
-  log(`  Plan sources:        ${subjectPlanCount}`);
+  log(`  Material sources:        ${subjectPlanCount}`);
   log(`  Total MDX files:     ${subjectFiles.length}`);
   log(`    - English (en):    ${subjectFilesEn.length}`);
   log(`    - Indonesian (id): ${subjectFilesId.length}`);
 
   log("\nExercises:");
-  log(`  Plan sources:        ${exercisePlanCount}`);
+  log(`  Material sources:        ${exercisePlanCount}`);
   log(`  Question files:      ${questionFiles.length} (_question/*.mdx)`);
   log(`    - English (en):    ${questionFilesEn.length}`);
   log(`    - Indonesian (id): ${questionFilesId.length}`);

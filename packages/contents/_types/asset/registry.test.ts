@@ -50,7 +50,7 @@ describe("asset registry", () => {
     expect(
       Schema.decodeUnknownEither(AssetRecordSchema)({
         ...row,
-        locales: [{ ...row?.locales[0], date: "06/15/2026" }],
+        locales: [{ ...row?.locales[0], date: "2026/06/15" }],
       })._tag
     ).toBe("Left");
   });

@@ -14,12 +14,15 @@ const activeProfile = {
   planItems: [],
   program: {
     coverageStatus: "available",
-    description: "Ready default path.",
+    description: "Ready school curriculum.",
     displayOrder: 10,
-    key: "ready-path",
-    kind: "nakafa-path",
-    navigation: { levels: ["track", "topic"], model: "track-topic" },
-    title: "Ready path",
+    key: "ready-curriculum",
+    kind: "school-curriculum",
+    navigation: {
+      levels: ["class", "subject", "topic"],
+      model: "class-subject-topic",
+    },
+    title: "Ready curriculum",
     versionLabel: "2026",
   },
   stage: undefined,
@@ -28,12 +31,15 @@ const activeProfile = {
 const catalog = [
   {
     coverageStatus: "available",
-    description: "Ready default path.",
+    description: "Ready school curriculum.",
     displayOrder: 10,
-    key: "ready-path",
-    kind: "nakafa-path",
-    navigation: { levels: ["track", "topic"], model: "track-topic" },
-    title: "Ready path",
+    key: "ready-curriculum",
+    kind: "school-curriculum",
+    navigation: {
+      levels: ["class", "subject", "topic"],
+      model: "class-subject-topic",
+    },
+    title: "Ready curriculum",
     versionLabel: "2026",
   },
   {
@@ -68,7 +74,7 @@ describe("programs/catalog", () => {
   it("treats available and partial programs as onboarding-ready", () => {
     expect(
       filterOnboardingPrograms(catalog).map((program) => program.key)
-    ).toEqual(["ready-path", "partial-path"]);
+    ).toEqual(["ready-curriculum", "partial-path"]);
     expect(hasOnboardingPrograms(catalog)).toBe(true);
   });
 

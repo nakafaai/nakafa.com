@@ -29,7 +29,6 @@ describe("program/schema", () => {
       "id-kurikulum-merdeka": "school-curriculum",
       "snbt-2026": "admission-exam",
       "tka-2026": "assessment",
-      "nakafa-stem-path": "nakafa-path",
     });
   });
 
@@ -60,9 +59,7 @@ describe("program/schema", () => {
   it("centralizes interest to program-kind matching", () => {
     expect(LEARNING_INTEREST_PROGRAM_KIND_MATCHES).toMatchObject({
       "assessment-prep": ["assessment", "admission-exam"],
-      "custom-plan": ["custom-program", "institution-program"],
       "exam-prep": ["admission-exam"],
-      "nakafa-path": ["nakafa-path"],
       "school-curriculum": ["school-curriculum"],
     });
   });

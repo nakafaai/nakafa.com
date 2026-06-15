@@ -1,4 +1,5 @@
 import { api, internal } from "@repo/backend/convex/_generated/api";
+import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import {
   getLearningProgramCatalogInputs,
   type LearningProgramSyncInput,
@@ -7,6 +8,9 @@ import {
   getLearningOutcomeInputs,
   getOutcomeConceptAlignmentInputs,
   getProgramOutlineNodeInputs,
+  type LearningOutcomeSyncInput,
+  type OutcomeConceptAlignmentSyncInput,
+  type ProgramOutlineNodeSyncInput,
 } from "@repo/backend/convex/learningPrograms/outcomes";
 import {
   createConvexTestWithBetterAuth,
@@ -26,6 +30,20 @@ const replacementSubjectGraph = getGraphIdentity(
 const staleSubjectGraph = getGraphIdentity(
   "subject/high-school/10/biology/deleted-topic"
 );
+const POPULAR_PLAN_ITEM_COUNT = 501;
+interface CoverageSampleRepairArgs {
+  lensId: string;
+  locale: Doc<"learningProgramCoverage">["locale"];
+  nextCoverageStatus: Doc<"learningProgramCoverage">["coverageStatus"];
+  nextSampleContentId: Doc<"learningProgramCoverage">["sampleContentId"];
+  previousSampleContentId: Doc<"learningProgramCoverage">["sampleContentId"];
+  programId: Id<"learningPrograms">;
+}
+interface StaleCoveragePlanItemDeleteArgs {
+  lensId: string;
+  programId: Id<"learningPrograms">;
+  sampleContentId: Doc<"learningProgramCoverage">["sampleContentId"];
+}
 
 describe("learningPrograms", () => {
   it("syncs selectable catalog rows and bounded source rows", async () => {
@@ -68,36 +86,17 @@ describe("learningPrograms", () => {
       return sources.length;
     });
     const outcomeCounts = await t.query(async (ctx) => {
-      const program = await ctx.db
-        .query("learningPrograms")
-        .withIndex("by_key", (q) => q.eq("key", "id-kurikulum-merdeka"))
-        .unique();
-
-      if (!program) {
-        throw new Error("Expected synced Kurikulum Merdeka program.");
-      }
-
       const outlineNodes = await ctx.db
         .query("learningProgramOutlineNodes")
-        .withIndex("by_programId_and_parentKey_and_displayOrder", (q) =>
-          q.eq("programId", program._id).eq("parentKey", undefined)
-        )
+        .withIndex("by_syncedAt", (q) => q.eq("syncedAt", NOW))
         .take(10);
       const outcomes = await ctx.db
         .query("learningProgramOutcomes")
-        .withIndex("by_programId_and_key", (q) =>
-          q
-            .eq("programId", program._id)
-            .eq("key", "id.km.fase-e.math.statistics")
-        )
+        .withIndex("by_syncedAt", (q) => q.eq("syncedAt", NOW))
         .take(10);
       const concepts = await ctx.db
         .query("learningProgramOutcomeConcepts")
-        .withIndex("by_programId_and_outcomeKey", (q) =>
-          q
-            .eq("programId", program._id)
-            .eq("outcomeKey", "id.km.fase-e.math.statistics")
-        )
+        .withIndex("by_syncedAt", (q) => q.eq("syncedAt", NOW))
         .take(10);
 
       return {
@@ -107,10 +106,9 @@ describe("learningPrograms", () => {
       };
     });
 
-    expect(result).toEqual({ created: 4, skipped: 0, updated: 0 });
-    expect(outcomeResult).toEqual({ created: 15, skipped: 0, updated: 0 });
+    expect(result).toEqual({ created: 3, skipped: 0, updated: 0 });
+    expect(outcomeResult).toEqual({ created: 0, skipped: 0, updated: 0 });
     expect(programs.map((program) => program.key)).toEqual([
-      "nakafa-stem-path",
       "id-kurikulum-merdeka",
       "snbt-2026",
     ]);
@@ -124,17 +122,15 @@ describe("learningPrograms", () => {
     });
     expect(sourceCount).toBe(2);
     expect(outcomeCounts).toEqual({
-      concepts: 1,
-      outcomes: 1,
-      rootNodes: 1,
+      concepts: 0,
+      outcomes: 0,
+      rootNodes: 0,
     });
   });
 
   it("prunes omitted generated outcome rows without deleting program catalog rows", async () => {
     const t = createConvexTestWithBetterAuth();
-    const outlineNodes = getProgramOutlineNodeInputs();
-    const outcomes = getLearningOutcomeInputs();
-    const conceptAlignments = getOutcomeConceptAlignmentInputs();
+    const fixture = createOutcomeReadModelFixture();
 
     await t.mutation(internal.learningPrograms.sync.syncLearningPrograms, {
       programs: getLearningProgramCatalogInputs(),
@@ -143,9 +139,9 @@ describe("learningPrograms", () => {
     await t.mutation(
       internal.learningPrograms.sync.syncLearningProgramOutcomes,
       {
-        conceptAlignments,
-        outcomes,
-        outlineNodes,
+        conceptAlignments: fixture.conceptAlignments,
+        outcomes: fixture.outcomes,
+        outlineNodes: fixture.outlineNodes,
         syncedAt: NOW,
       }
     );
@@ -153,9 +149,9 @@ describe("learningPrograms", () => {
     const result = await t.mutation(
       internal.learningPrograms.sync.syncLearningProgramOutcomes,
       {
-        conceptAlignments: conceptAlignments.slice(0, 4),
-        outcomes: outcomes.slice(0, 3),
-        outlineNodes,
+        conceptAlignments: getOutcomeConceptAlignmentInputs(),
+        outcomes: getLearningOutcomeInputs(),
+        outlineNodes: getProgramOutlineNodeInputs(),
         syncedAt: NOW + 1,
       }
     );
@@ -172,17 +168,23 @@ describe("learningPrograms", () => {
         .query("learningProgramOutcomeConcepts")
         .withIndex("by_syncedAt", (q) => q.eq("syncedAt", NOW))
         .take(10);
+      const nodes = await ctx.db
+        .query("learningProgramOutlineNodes")
+        .withIndex("by_syncedAt", (q) => q.eq("syncedAt", NOW))
+        .take(10);
 
       return {
         oldConceptRows: concepts.length,
+        oldNodeRows: nodes.length,
         oldOutcomeRows: outcome.length,
         tkaExists: Boolean(tka),
       };
     });
 
-    expect(result).toEqual({ created: 0, skipped: 0, updated: 15 });
+    expect(result).toEqual({ created: 0, skipped: 0, updated: 3 });
     expect(remaining).toEqual({
       oldConceptRows: 0,
+      oldNodeRows: 0,
       oldOutcomeRows: 0,
       tkaExists: true,
     });
@@ -524,6 +526,184 @@ describe("learningPrograms", () => {
     );
   });
 
+  it("repairs popular generated plan items in bounded batches when sample content changes", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const identity = await t.mutation((ctx) =>
+      seedAuthenticatedUser(ctx, { now: NOW })
+    );
+
+    await t.mutation(internal.learningPrograms.sync.syncLearningPrograms, {
+      programs: getLearningProgramCatalogInputs(),
+      syncedAt: NOW,
+    });
+    await seedContentRoute(t, {
+      graph: replacementSubjectGraph,
+      route:
+        "subject/high-school/10/chemistry/atomic-structure/electron-configuration",
+      title: "Electron Configuration",
+    });
+    await t.mutation(
+      internal.learningPrograms.sync.syncLearningProgramCoverage,
+      {
+        coverageRows: [
+          {
+            contentCount: 1,
+            coverageStatus: "partial",
+            lensId: subjectGraph.lensId,
+            lensScope: "curriculum",
+            locale: "id",
+            programKey: "id-kurikulum-merdeka",
+            sampleContentId: subjectGraph.assetId,
+            syncedAt: NOW,
+          },
+        ],
+      }
+    );
+    const plan = await seedGeneratedPlanItems(t, {
+      contentId: subjectGraph.assetId,
+      count: POPULAR_PLAN_ITEM_COUNT,
+      identity,
+      lensId: subjectGraph.lensId,
+      lensScope: "curriculum",
+      programKey: "id-kurikulum-merdeka",
+    });
+
+    await t.mutation(
+      internal.learningPrograms.sync.syncLearningProgramCoverage,
+      {
+        coverageRows: [
+          {
+            contentCount: 1,
+            coverageStatus: "partial",
+            lensId: subjectGraph.lensId,
+            lensScope: "curriculum",
+            locale: "id",
+            programKey: "id-kurikulum-merdeka",
+            sampleContentId: replacementSubjectGraph.assetId,
+            syncedAt: NOW + 1,
+          },
+        ],
+      }
+    );
+    await drainCoverageSampleRepair(t, {
+      lensId: subjectGraph.lensId,
+      locale: "id",
+      nextCoverageStatus: "partial",
+      nextSampleContentId: replacementSubjectGraph.assetId,
+      previousSampleContentId: subjectGraph.assetId,
+      programId: plan.programId,
+    });
+
+    const counts = await countPlanItemsByContent(t, {
+      lensId: subjectGraph.lensId,
+      nextContentId: replacementSubjectGraph.assetId,
+      oldContentId: subjectGraph.assetId,
+      programId: plan.programId,
+    });
+    const authed = t.withIdentity({
+      sessionId: identity.sessionId,
+      subject: identity.authUserId,
+    });
+    const activeProfile = await authed.query(
+      api.learningPrograms.queries.getActiveProfile,
+      { locale: "id" }
+    );
+
+    expect(counts).toEqual({
+      next: POPULAR_PLAN_ITEM_COUNT,
+      old: 0,
+    });
+    expect(activeProfile?.planItems).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          content_id: replacementSubjectGraph.assetId,
+          route:
+            "subject/high-school/10/chemistry/atomic-structure/electron-configuration",
+          title: "Electron Configuration",
+        }),
+      ])
+    );
+    expect(activeProfile?.planItems).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          content_id: subjectGraph.assetId,
+        }),
+      ])
+    );
+  });
+
+  it("deletes popular generated plan items in bounded batches when coverage is stale", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const identity = await t.mutation((ctx) =>
+      seedAuthenticatedUser(ctx, { now: NOW })
+    );
+
+    await t.mutation(internal.learningPrograms.sync.syncLearningPrograms, {
+      programs: getLearningProgramCatalogInputs(),
+      syncedAt: NOW,
+    });
+    await t.mutation(
+      internal.learningPrograms.sync.syncLearningProgramCoverage,
+      {
+        coverageRows: [
+          {
+            contentCount: 1,
+            coverageStatus: "partial",
+            lensId: staleSubjectGraph.lensId,
+            lensScope: "curriculum",
+            locale: "id",
+            programKey: "id-kurikulum-merdeka",
+            sampleContentId: staleSubjectGraph.assetId,
+            syncedAt: NOW - 1,
+          },
+        ],
+      }
+    );
+    const plan = await seedGeneratedPlanItems(t, {
+      contentId: staleSubjectGraph.assetId,
+      count: POPULAR_PLAN_ITEM_COUNT,
+      identity,
+      lensId: staleSubjectGraph.lensId,
+      lensScope: "curriculum",
+      programKey: "id-kurikulum-merdeka",
+    });
+
+    await t.mutation(
+      internal.learningPrograms.sync.deleteStaleLearningProgramCoverage,
+      {
+        limit: 10,
+        locale: "id",
+        syncedAt: NOW,
+      }
+    );
+    await drainStaleCoveragePlanItemDelete(t, {
+      lensId: staleSubjectGraph.lensId,
+      programId: plan.programId,
+      sampleContentId: staleSubjectGraph.assetId,
+    });
+
+    const remaining = await countPlanItemsForContent(t, {
+      contentId: staleSubjectGraph.assetId,
+      lensId: staleSubjectGraph.lensId,
+      programId: plan.programId,
+    });
+    const coverageRows = await t.query(
+      async (ctx) =>
+        await ctx.db
+          .query("learningProgramCoverage")
+          .withIndex("by_programId_and_locale_and_lensId", (q) =>
+            q
+              .eq("programId", plan.programId)
+              .eq("locale", "id")
+              .eq("lensId", staleSubjectGraph.lensId)
+          )
+          .take(10)
+    );
+
+    expect(remaining).toBe(0);
+    expect(coverageRows).toEqual([]);
+  });
+
   it("hides omitted catalog rows without orphaning existing profiles", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation((ctx) =>
@@ -533,15 +713,15 @@ describe("learningPrograms", () => {
     const retiredProgram = {
       ...catalog[0],
       displayOrder: 50,
-      key: "retired-nakafa-path",
+      key: "retired-school-curriculum",
       translations: {
         en: {
-          description: "Retired path.",
-          title: "Retired Nakafa Path",
+          description: "Retired school curriculum.",
+          title: "Retired School Curriculum",
         },
         id: {
-          description: "Jalur yang sudah dihentikan.",
-          title: "Jalur Nakafa Lama",
+          description: "Kurikulum sekolah yang sudah dihentikan.",
+          title: "Kurikulum Sekolah Lama",
         },
       },
     } satisfies LearningProgramSyncInput;
@@ -575,7 +755,7 @@ describe("learningPrograms", () => {
     await authed.mutation(
       api.learningPrograms.mutations.selectLearningProgram,
       {
-        interests: ["nakafa-path"],
+        interests: ["school-curriculum"],
         locale: "id",
         primaryProgramKey: retiredProgram.key,
       }
@@ -597,7 +777,7 @@ describe("learningPrograms", () => {
       {}
     );
 
-    expect(result).toEqual({ created: 0, skipped: 0, updated: 5 });
+    expect(result).toEqual({ created: 0, skipped: 0, updated: 4 });
     expect(selectablePrograms.map((program) => program.key)).not.toContain(
       retiredProgram.key
     );
@@ -657,6 +837,30 @@ describe("learningPrograms", () => {
       })
     ).rejects.toThrow("LEARNING_PROGRAM_CATALOG_INVALID");
   });
+
+  it("rejects dotted concept keys before generated outcome writes", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const fixture = createOutcomeReadModelFixture();
+    const [alignment] = fixture.conceptAlignments;
+
+    if (!alignment) {
+      throw new Error("Expected one fixture alignment.");
+    }
+
+    await expect(
+      t.mutation(internal.learningPrograms.sync.syncLearningProgramOutcomes, {
+        conceptAlignments: [
+          {
+            ...alignment,
+            conceptKey: "fixture.target",
+          },
+        ],
+        outcomes: fixture.outcomes,
+        outlineNodes: fixture.outlineNodes,
+        syncedAt: NOW,
+      })
+    ).rejects.toThrow("LEARNING_PROGRAM_OUTCOME_REGISTRY_INVALID");
+  });
 });
 
 /** Returns graph identity for a route fixture and fails fast on invalid fixtures. */
@@ -702,4 +906,246 @@ async function seedContentRoute(
         title,
       })
   );
+}
+
+/** Seeds generated learning-plan rows directly for sync repair regression tests. */
+async function seedGeneratedPlanItems(
+  t: ReturnType<typeof createConvexTestWithBetterAuth>,
+  {
+    contentId,
+    count,
+    identity,
+    lensId,
+    lensScope,
+    programKey,
+  }: {
+    contentId: string;
+    count: number;
+    identity: Awaited<ReturnType<typeof seedAuthenticatedUser>>;
+    lensId: string;
+    lensScope: Doc<"learningProgramCoverage">["lensScope"];
+    programKey: string;
+  }
+) {
+  return await t.mutation(async (ctx) => {
+    const program = await ctx.db
+      .query("learningPrograms")
+      .withIndex("by_key", (q) => q.eq("key", programKey))
+      .unique();
+
+    if (!program) {
+      throw new Error(`Expected synced program ${programKey}.`);
+    }
+
+    const profileId = await ctx.db.insert("learningProfiles", {
+      interests: ["school-curriculum"],
+      programId: program._id,
+      updatedAt: NOW,
+      userId: identity.userId,
+    });
+    const planId = await ctx.db.insert("learningPlans", {
+      createdAt: NOW,
+      profileId,
+      programId: program._id,
+      status: "active",
+      updatedAt: NOW,
+      userId: identity.userId,
+      version: 1,
+    });
+
+    await ctx.db.patch(profileId, {
+      activePlanId: planId,
+    });
+
+    for (let index = 0; index < count; index++) {
+      await ctx.db.insert("learningPlanItems", {
+        content_id: contentId,
+        coverageStatus: "partial",
+        createdAt: NOW,
+        lensId,
+        lensScope,
+        planId,
+        position: index + 1,
+        programId: program._id,
+        reason: "program-alignment",
+        route: `fixture/old-${index + 1}`,
+        status: "ready",
+        title: `Old Item ${index + 1}`,
+        updatedAt: NOW,
+        userId: identity.userId,
+      });
+    }
+
+    return { planId, programId: program._id, profileId };
+  });
+}
+
+/** Continues sample-change repair until no rows point at the old sample. */
+async function drainCoverageSampleRepair(
+  t: ReturnType<typeof createConvexTestWithBetterAuth>,
+  args: CoverageSampleRepairArgs
+) {
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const remaining = await countPlanItemsForContent(t, {
+      contentId: args.previousSampleContentId,
+      lensId: args.lensId,
+      programId: args.programId,
+    });
+
+    if (remaining === 0) {
+      return;
+    }
+
+    await t.mutation(
+      internal.learningPrograms.sync.continueCoverageSamplePlanItemRepair,
+      args
+    );
+  }
+
+  throw new Error("Expected generated plan item sample repair to drain.");
+}
+
+/** Continues stale-coverage deletion until no rows point at the removed sample. */
+async function drainStaleCoveragePlanItemDelete(
+  t: ReturnType<typeof createConvexTestWithBetterAuth>,
+  args: StaleCoveragePlanItemDeleteArgs
+) {
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const remaining = await countPlanItemsForContent(t, {
+      contentId: args.sampleContentId,
+      lensId: args.lensId,
+      programId: args.programId,
+    });
+
+    if (remaining === 0) {
+      return;
+    }
+
+    await t.mutation(
+      internal.learningPrograms.sync.continueStaleCoveragePlanItemDelete,
+      args
+    );
+  }
+
+  throw new Error("Expected generated plan item stale delete to drain.");
+}
+
+/** Counts generated plan rows for one content sample. */
+async function countPlanItemsForContent(
+  t: ReturnType<typeof createConvexTestWithBetterAuth>,
+  {
+    contentId,
+    lensId,
+    programId,
+  }: {
+    contentId: string;
+    lensId: string;
+    programId: Awaited<ReturnType<typeof seedGeneratedPlanItems>>["programId"];
+  }
+) {
+  return await t.query(async (ctx) => {
+    const rows = await ctx.db
+      .query("learningPlanItems")
+      .withIndex("by_programId_and_lensId_and_content_id", (q) =>
+        q
+          .eq("programId", programId)
+          .eq("lensId", lensId)
+          .eq("content_id", contentId)
+      )
+      .take(POPULAR_PLAN_ITEM_COUNT + 1);
+
+    return rows.length;
+  });
+}
+
+/** Counts old and replacement generated plan rows for one repair assertion. */
+async function countPlanItemsByContent(
+  t: ReturnType<typeof createConvexTestWithBetterAuth>,
+  {
+    lensId,
+    nextContentId,
+    oldContentId,
+    programId,
+  }: {
+    lensId: string;
+    nextContentId: string;
+    oldContentId: string;
+    programId: Awaited<ReturnType<typeof seedGeneratedPlanItems>>["programId"];
+  }
+) {
+  const old = await countPlanItemsForContent(t, {
+    contentId: oldContentId,
+    lensId,
+    programId,
+  });
+  const next = await countPlanItemsForContent(t, {
+    contentId: nextContentId,
+    lensId,
+    programId,
+  });
+
+  return { next, old };
+}
+
+/** Creates test-only generated outcome rows without adding product curriculum source data. */
+function createOutcomeReadModelFixture(): {
+  conceptAlignments: OutcomeConceptAlignmentSyncInput[];
+  outcomes: LearningOutcomeSyncInput[];
+  outlineNodes: ProgramOutlineNodeSyncInput[];
+} {
+  const outlineNodes: ProgramOutlineNodeSyncInput[] = [
+    {
+      displayOrder: 1,
+      key: "fixture.unit",
+      level: "unit",
+      programKey: "id-kurikulum-merdeka",
+      translations: {
+        en: {
+          description: "Fixture unit.",
+          title: "Fixture Unit",
+        },
+        id: {
+          description: "Unit fixture.",
+          title: "Unit Fixture",
+        },
+      },
+    },
+  ];
+  const outcomes: LearningOutcomeSyncInput[] = [
+    {
+      code: "FIXTURE-1",
+      key: "fixture.outcome",
+      outlineKey: "fixture.unit",
+      programKey: "id-kurikulum-merdeka",
+      source: {
+        label: "Nakafa test fixture",
+        retrievedAt: "2026-06-15",
+        type: "nakafa-editorial",
+        url: "https://nakafa.com/test/outcomes/fixture",
+      },
+      status: "active",
+      translations: {
+        en: {
+          description: "Fixture outcome.",
+          title: "Fixture Outcome",
+        },
+        id: {
+          description: "Outcome fixture.",
+          title: "Outcome Fixture",
+        },
+      },
+      versionLabel: "test",
+    },
+  ];
+  const conceptAlignments: OutcomeConceptAlignmentSyncInput[] = [
+    {
+      conceptKey: "concept:fixture:algebra",
+      evidence: "Test fixture alignment.",
+      outcomeKey: "fixture.outcome",
+      relation: "covers",
+      reviewedAt: "2026-06-15",
+    },
+  ];
+
+  return { conceptAlignments, outcomes, outlineNodes };
 }

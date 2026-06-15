@@ -265,11 +265,11 @@ packages/contents/exercises/{category}/{type}/{material}/
     choices.ts
 ```
 
-**⚠️ IMPORTANT**: When adding new exercise questions, you MUST define the set in the typed Plan source:
+**⚠️ IMPORTANT**: When adding new exercise questions, you MUST define the set in the typed Material source:
 
 1. Create question directories: `{category}/{type}/{material}/{exerciseType}/{year?}/{set}/{number}/`
 2. Add MDX files and choices
-3. **Add set definition** to `packages/contents/_types/plan/source/exercises/{category}/{type}/{material}.ts`:
+3. **Add set definition** to `packages/contents/_types/material/source/exercises/{category}/{type}/{material}.ts`:
 
 ```typescript
 {
@@ -285,7 +285,7 @@ If you forget step 3, the sync will report:
 ```
 ERROR: X questions SKIPPED (missing exercise sets)
 ERROR: Missing sets: category/type/material/exerciseType/set-name
-ERROR: Add these sets to the typed Plan source before syncing.
+ERROR: Add these sets to the typed Material source before syncing.
 ```
 
 ## Performance

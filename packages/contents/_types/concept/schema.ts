@@ -3,15 +3,15 @@ import { Schema } from "effect";
 
 type SchemaType<T extends Schema.Schema.Any> = Schema.Schema.Type<T>;
 
-const CONCEPT_KEY_PATTERN = /^[a-z0-9]+(?:[.-][a-z0-9]+)*$/;
+const CONCEPT_KEY_PATTERN = /^concept:[a-z0-9]+(?::[a-z0-9]+(?:-[a-z0-9]+)*)+$/;
 
-/** Canonical language-neutral Nakafa concept key. */
+/** Canonical language-neutral concept key derived from graph-owned content identity. */
 export const ConceptKeySchema = Schema.String.pipe(
   Schema.pattern(CONCEPT_KEY_PATTERN, {
     identifier: "ConceptKey",
-    description: "Lowercase dot/kebab canonical Nakafa concept key.",
-    message: () =>
-      "Invalid concept key. Expected lowercase dot/kebab segments.",
+    description:
+      "Colon-delimited graph concept ID with lowercase kebab segments.",
+    message: () => "Invalid concept key. Expected a graph concept ID.",
   }),
   Schema.brand("@Nakafa/ConceptKey")
 );

@@ -3,6 +3,7 @@ import type { Concept } from "@repo/contents/_types/concept/schema";
 import {
   LEARNING_OUTCOMES,
   OUTCOME_CONCEPT_ALIGNMENTS,
+  OUTCOME_REGISTRY,
   PROGRAM_OUTLINE_NODES,
 } from "@repo/contents/_types/outcome/registry";
 import type {
@@ -36,7 +37,7 @@ export function getOutcomeRegistryIssues({
   const outcomeKeys = new Set(outcomes.map((outcome) => outcome.key));
   const outlineKeys = new Set(outlineNodes.map((node) => node.key));
   const programKeys = new Set(programs.map((program) => program.key));
-  const issues: string[] = [];
+  const issues = [...OUTCOME_REGISTRY.issues];
 
   for (const node of outlineNodes) {
     if (!programKeys.has(node.programKey)) {

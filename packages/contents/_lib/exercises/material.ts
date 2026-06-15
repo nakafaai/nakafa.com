@@ -1,5 +1,5 @@
 import type { ExercisesMaterialList } from "@repo/contents/_types/exercises/material";
-import { getExerciseMaterialList } from "@repo/contents/_types/plan/registry";
+import { getExerciseMaterialList } from "@repo/contents/_types/material/registry";
 import { cleanSlug } from "@repo/utilities/helper";
 import { Effect, Option } from "effect";
 import type { Locale } from "next-intl";
@@ -8,7 +8,7 @@ import type { Locale } from "next-intl";
  * Loads the localized material list for an exercises section.
  *
  * @param path - Exercises material path, with or without a leading slash
- * @param locale - Locale used to select localized plan labels
+ * @param locale - Locale used to select localized material labels
  * @returns Parsed material list, or an empty list when unavailable
  */
 export const getMaterials = Effect.fn("Contents.Exercises.getMaterials")(

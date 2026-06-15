@@ -1,5 +1,5 @@
 import { getMaterialPath } from "@repo/contents/_lib/exercises/route";
-import { listExercisePlans } from "@repo/contents/_types/plan/registry";
+import { listExerciseMaterials } from "@repo/contents/_types/material/registry";
 import type {
   ExercisesCategory,
   ExercisesType,
@@ -23,14 +23,17 @@ import { Effect } from "effect";
 export const getSubjects = Effect.fn("contents.exercises.getSubjects")(
   (category: ExercisesCategory, type: ExercisesType) =>
     Effect.sync(() => {
-      const planMaterials = new Set(
-        listExercisePlans()
-          .filter((plan) => plan.category === category && plan.type === type)
-          .map((plan) => plan.material)
+      const availableMaterials = new Set(
+        listExerciseMaterials()
+          .filter(
+            (material) =>
+              material.category === category && material.type === type
+          )
+          .map((material) => material.material)
       );
 
       return EXERCISES_MATERIALS.flatMap((material) => {
-        if (!planMaterials.has(material)) {
+        if (!availableMaterials.has(material)) {
           return [];
         }
 

@@ -1,0 +1,19 @@
+import type { CurriculumSource } from "@repo/contents/_types/curriculum/schema";
+import { CurriculumSourceSchema } from "@repo/contents/_types/curriculum/schema";
+import { indonesiaMerdekaCurriculum } from "@repo/contents/_types/curriculum/source/indonesia/merdeka";
+import { Schema } from "effect";
+
+const curriculumSourceInput = [
+  indonesiaMerdekaCurriculum,
+] satisfies readonly CurriculumSource[];
+
+/**
+ * Source-controlled curriculum registry.
+ *
+ * Curriculum rows own learner-facing structure and map that structure to
+ * reusable material keys. Material source files own localized content assets;
+ * they do not decide which curriculum includes a material.
+ */
+export const CURRICULUM_SOURCES = Schema.decodeUnknownSync(
+  Schema.Array(CurriculumSourceSchema)
+)(curriculumSourceInput);

@@ -3,7 +3,7 @@ import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
 describe("getSubjects", () => {
-  it("derives SNBT materials from typed Plan sources", async () => {
+  it("derives SNBT materials from typed Material sources", async () => {
     expect(await Effect.runPromise(getSubjects("high-school", "snbt"))).toEqual(
       [
         {
@@ -38,7 +38,7 @@ describe("getSubjects", () => {
     );
   });
 
-  it("derives middle-school materials from typed Plan sources", async () => {
+  it("derives middle-school materials from typed Material sources", async () => {
     expect(
       await Effect.runPromise(getSubjects("middle-school", "grade-9"))
     ).toEqual([
@@ -49,7 +49,7 @@ describe("getSubjects", () => {
     ]);
   });
 
-  it("returns no subjects when a type has no typed Plan sources", async () => {
+  it("returns no subjects when a type has no typed Material sources", async () => {
     expect(
       await Effect.runPromise(getSubjects("middle-school", "snbt"))
     ).toEqual([]);

@@ -1,4 +1,5 @@
 import { type DateOnly, DateOnlySchema } from "@repo/contents/_shared/date";
+import { ConceptKeySchema } from "@repo/contents/_types/concept/schema";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { CurriculumLensScopeSchema } from "@repo/contents/_types/graph/schema";
 import { Schema } from "effect";
@@ -40,7 +41,6 @@ export const LEARNING_PROGRAM_KIND_VALUES = [
   "school-curriculum",
   "assessment",
   "admission-exam",
-  "nakafa-path",
   "custom-program",
   "institution-program",
 ] as const;
@@ -104,8 +104,6 @@ export const LEARNING_INTEREST_VALUES = [
   "school-curriculum",
   "exam-prep",
   "assessment-prep",
-  "nakafa-path",
-  "custom-plan",
 ] as const;
 
 export const LearningInterestSchema = Schema.Literal(
@@ -116,9 +114,7 @@ export type LearningInterest = SchemaType<typeof LearningInterestSchema>;
 
 export const LEARNING_INTEREST_PROGRAM_KIND_MATCHES = {
   "assessment-prep": ["assessment", "admission-exam"],
-  "custom-plan": ["custom-program", "institution-program"],
   "exam-prep": ["admission-exam"],
-  "nakafa-path": ["nakafa-path"],
   "school-curriculum": ["school-curriculum"],
 } as const satisfies Record<LearningInterest, readonly LearningProgramKind[]>;
 
@@ -188,6 +184,7 @@ const CoverageRouteKindSchema = Schema.Literal(
 
 const LearningProgramCoverageRouteSchemaFields = {
   assetId: Schema.String,
+  conceptId: ConceptKeySchema,
   kind: CoverageRouteKindSchema,
   lensId: Schema.String,
   locale: LocaleSchema,

@@ -29,7 +29,7 @@ import type {
   SyncOptions,
   SyncResult,
 } from "@repo/backend/scripts/sync-content/types";
-import { listSubjectTopics } from "@repo/contents/_types/plan/registry";
+import { listSubjectTopics } from "@repo/contents/_types/material/registry";
 import type { FunctionArgs } from "convex/server";
 import { Effect } from "effect";
 
@@ -46,7 +46,7 @@ interface SubjectSectionOrder {
   topicSlug: string;
 }
 
-/** Syncs subject topic metadata from typed Plan sources into Convex. */
+/** Syncs subject topic metadata from typed Material sources into Convex. */
 export const syncSubjectTopics = Effect.fn("sync.subjectTopics")(function* (
   config: ConvexConfig,
   options: SyncOptions
@@ -56,16 +56,16 @@ export const syncSubjectTopics = Effect.fn("sync.subjectTopics")(function* (
     log("\n--- SUBJECT TOPICS ---\n");
   }
 
-  const planTopics = listSubjectTopics(options.locale);
+  const materialTopics = listSubjectTopics(options.locale);
 
   if (!options.quiet) {
-    log(`Plan topics found: ${planTopics.length}`);
+    log(`Material topics found: ${materialTopics.length}`);
   }
 
   const totals: SyncResult = { created: 0, updated: 0, unchanged: 0 };
   const sectionCountByTopicSlug =
     yield* readMaterialListedSubjectSectionCountByTopicSlug(options);
-  const topics: SubjectTopicPayload[] = planTopics.map((topic) => ({
+  const topics: SubjectTopicPayload[] = materialTopics.map((topic) => ({
     locale: topic.locale,
     slug: topic.slug,
     category: topic.category,
@@ -193,7 +193,7 @@ export const syncSubjectSections = Effect.fn("sync.subjectSections")(function* (
         if (!sectionOrder) {
           return yield* Effect.fail(
             new ScriptFailureError({
-              message: `Missing subject plan order for ${pathInfo.locale}:${pathInfo.slug}. Add this lesson to the typed Plan source before syncing.`,
+              message: `Missing subject material order for ${pathInfo.locale}:${pathInfo.slug}. Add this lesson to the typed Material source before syncing.`,
             })
           );
         }
@@ -201,7 +201,7 @@ export const syncSubjectSections = Effect.fn("sync.subjectSections")(function* (
         if (sectionOrder.topicSlug !== topicSlug) {
           return yield* Effect.fail(
             new ScriptFailureError({
-              message: `Subject plan order for ${pathInfo.locale}:${pathInfo.slug} points at ${sectionOrder.topicSlug}, expected ${topicSlug}.`,
+              message: `Subject material order for ${pathInfo.locale}:${pathInfo.slug} points at ${sectionOrder.topicSlug}, expected ${topicSlug}.`,
             })
           );
         }
@@ -346,7 +346,7 @@ const readSubjectSectionOrderBySlug = Effect.fn(
       if (orderBySlug.has(key)) {
         return yield* Effect.fail(
           new ScriptFailureError({
-            message: `Duplicate subject section plan order for ${key}.`,
+            message: `Duplicate subject section material order for ${key}.`,
           })
         );
       }
@@ -393,14 +393,14 @@ const readMaterialListedSubjectSectionCountByTopicSlug = Effect.fn(
 
     if (!sectionOrder) {
       errors.push(
-        `${file}: Missing subject plan order for ${pathInfo.locale}:${pathInfo.slug}. Add this lesson to the typed Plan source before syncing.`
+        `${file}: Missing subject material order for ${pathInfo.locale}:${pathInfo.slug}. Add this lesson to the typed Material source before syncing.`
       );
       continue;
     }
 
     if (sectionOrder.topicSlug !== topicSlug) {
       errors.push(
-        `${file}: Subject plan order for ${pathInfo.locale}:${pathInfo.slug} points at ${sectionOrder.topicSlug}, expected ${topicSlug}.`
+        `${file}: Subject material order for ${pathInfo.locale}:${pathInfo.slug} points at ${sectionOrder.topicSlug}, expected ${topicSlug}.`
       );
       continue;
     }

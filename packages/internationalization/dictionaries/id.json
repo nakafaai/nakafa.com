@@ -162,10 +162,6 @@
           "exam": {
             "title": "Ujian masuk kampus",
             "description": "Siapkan SNBT dan seleksi kampus."
-          },
-          "basics": {
-            "title": "Belajar dari dasar",
-            "description": "Mulai dari matematika dan sains dasar."
           }
         },
         "teacher": {
@@ -177,10 +173,6 @@
           "practice": {
             "title": "Latihan siswa",
             "description": "Siapkan soal untuk latihan."
-          },
-          "nina": {
-            "title": "Bantuan Nina",
-            "description": "Buat penjelasan yang mudah dipahami."
           }
         },
         "parent": {
@@ -192,10 +184,6 @@
           "practice": {
             "title": "Latihan soal",
             "description": "Siapkan latihan sebelum ujian."
-          },
-          "nina": {
-            "title": "Tanya Nina",
-            "description": "Bantu jelaskan PR atau topik."
           }
         }
       },
@@ -214,7 +202,6 @@
       "school-curriculum": "Kurikulum sekolah",
       "assessment": "Latihan soal",
       "admission-exam": "Ujian masuk",
-      "nakafa-path": "Belajar dari dasar",
       "custom-program": "Program khusus",
       "institution-program": "Program institusi"
     },
@@ -230,14 +217,6 @@
       "assessment-prep": {
         "title": "Latihan soal",
         "description": "Ukur kesiapan sebelum ujian."
-      },
-      "nakafa-path": {
-        "title": "Belajar dari dasar",
-        "description": "Bangun fondasi sains dan matematika bertahap."
-      },
-      "custom-plan": {
-        "title": "Target pribadi",
-        "description": "Buat rencana untuk tujuan khususmu."
       }
     },
     "plan-item-status": {

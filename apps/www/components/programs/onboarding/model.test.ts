@@ -16,19 +16,9 @@ import {
 
 const programs = [
   {
-    coverageStatus: "available",
-    description: "Default learning path.",
-    displayOrder: 10,
-    key: "nakafa-stem-path",
-    kind: "nakafa-path",
-    navigation: { levels: ["track", "topic"], model: "track-topic" },
-    title: "Belajar dari dasar",
-    versionLabel: "2026",
-  },
-  {
     coverageStatus: "partial",
     description: "School curriculum.",
-    displayOrder: 20,
+    displayOrder: 10,
     key: "id-kurikulum-merdeka",
     kind: "school-curriculum",
     navigation: {
@@ -41,7 +31,7 @@ const programs = [
   {
     coverageStatus: "partial",
     description: "Admission exam.",
-    displayOrder: 30,
+    displayOrder: 20,
     key: "snbt-2026",
     kind: "admission-exam",
     navigation: {
@@ -68,10 +58,10 @@ describe("components/programs/onboarding/model", () => {
       )
     ).toEqual(["id-kurikulum-merdeka"]);
     expect(
-      getProgramsForInterests(programs, ["exam-prep", "nakafa-path"]).map(
+      getProgramsForInterests(programs, ["exam-prep", "assessment-prep"]).map(
         (program) => program.key
       )
-    ).toEqual(["nakafa-stem-path", "snbt-2026"]);
+    ).toEqual(["snbt-2026"]);
   });
 
   it("does not show interests that have no usable program", () => {
@@ -86,15 +76,8 @@ describe("components/programs/onboarding/model", () => {
         "school-curriculum",
         "assessment-prep",
         "exam-prep",
-        "nakafa-path",
-        "custom-plan",
       ])
-    ).toEqual([
-      "school-curriculum",
-      "assessment-prep",
-      "exam-prep",
-      "nakafa-path",
-    ]);
+    ).toEqual(["school-curriculum", "assessment-prep", "exam-prep"]);
   });
 
   it("keeps interest parsing deterministic", () => {
@@ -106,23 +89,19 @@ describe("components/programs/onboarding/model", () => {
     const studentFocus = getFocusOptionsForRole("student", programs);
     const schoolFocus = getFocusOptionForKey("student", "student-school");
     const examFocus = getFocusOptionForKey("student", "student-exam");
-    const basicsFocus = getFocusOptionForKey("student", "student-basics");
 
     expect(studentFocus.map((focus) => focus.key)).toEqual([
       "student-school",
       "student-exam",
-      "student-basics",
     ]);
     expect(schoolFocus).not.toBeNull();
     expect(examFocus).not.toBeNull();
-    expect(basicsFocus).not.toBeNull();
-    if (!(schoolFocus && examFocus && basicsFocus)) {
+    if (!(schoolFocus && examFocus)) {
       return;
     }
 
     const schoolSelection = resolveFocusSelection(programs, schoolFocus);
     const examSelection = resolveFocusSelection(programs, examFocus);
-    const basicsSelection = resolveFocusSelection(programs, basicsFocus);
 
     expect(schoolSelection).toMatchObject({
       interests: ["school-curriculum"],
@@ -131,10 +110,6 @@ describe("components/programs/onboarding/model", () => {
     expect(examSelection).toMatchObject({
       interests: ["exam-prep"],
       program: { key: "snbt-2026" },
-    });
-    expect(basicsSelection).toMatchObject({
-      interests: ["nakafa-path"],
-      program: { key: "nakafa-stem-path" },
     });
   });
 
@@ -148,9 +123,7 @@ describe("components/programs/onboarding/model", () => {
         (focus) => focus.key
       )
     ).toEqual(["teacher-materials"]);
-    expect(getFocusOptionForKey("teacher", "teacher-nina")).toMatchObject({
-      interest: "nakafa-path",
-    });
+    expect(getFocusOptionForKey("teacher", "teacher-unsupported")).toBeNull();
     expect(getFocusOptionForKey("teacher", "student-school")).toBeNull();
     expect(hasOnboardingChoices(schoolOnlyCatalog)).toBe(true);
     expect(hasOnboardingChoices([])).toBe(false);
@@ -177,7 +150,7 @@ describe("components/programs/onboarding/model", () => {
         activeProfile: {
           interests: ["exam-prep"],
           planItems: [],
-          program: programs[2],
+          program: programs[1],
           stage: undefined,
         },
         programs,
@@ -187,26 +160,11 @@ describe("components/programs/onboarding/model", () => {
     expect(
       getInitialFocusKey({
         activeProfile: {
-          interests: ["nakafa-path"],
+          interests: ["exam-prep"],
           planItems: [],
           program: {
             ...programs[0],
-            key: "retired-nakafa-path",
-          },
-          stage: undefined,
-        },
-        programs,
-        role: "teacher",
-      })
-    ).toBe("teacher-nina");
-    expect(
-      getInitialFocusKey({
-        activeProfile: {
-          interests: ["custom-plan"],
-          planItems: [],
-          program: {
-            ...programs[0],
-            key: "retired-custom-path",
+            key: "retired-learning-path",
           },
           stage: undefined,
         },

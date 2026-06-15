@@ -27,7 +27,7 @@ import type {
 import {
   listExerciseSets,
   listSubjectTopics,
-} from "@repo/contents/_types/plan/registry";
+} from "@repo/contents/_types/material/registry";
 import type {
   DefaultFunctionArgs,
   FunctionArgs,

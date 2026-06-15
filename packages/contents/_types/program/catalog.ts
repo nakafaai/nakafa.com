@@ -13,50 +13,18 @@ const PROGRAM_2027_REVIEW = ProgramDateOnlySchema.make("2027-01-01");
 
 /** Canonical program keys owned by the source-controlled program registry. */
 export const LEARNING_PROGRAM_KEYS = {
-  idKurikulumMerdeka: LearningProgramKeySchema.make("id-kurikulum-merdeka"),
-  nakafaStemPath: LearningProgramKeySchema.make("nakafa-stem-path"),
+  indonesiaMerdekaCurriculum: LearningProgramKeySchema.make(
+    "id-kurikulum-merdeka"
+  ),
   snbt2026: LearningProgramKeySchema.make("snbt-2026"),
   tka2026: LearningProgramKeySchema.make("tka-2026"),
 } as const;
 
 const learningProgramCatalogInput = [
   {
-    defaultCoverageStatus: "available",
-    displayOrder: 10,
-    key: LEARNING_PROGRAM_KEYS.nakafaStemPath,
-    kind: "nakafa-path",
-    navigation: {
-      levels: ["track", "topic"],
-      model: "track-topic",
-    },
-    provider: {
-      kind: "nakafa",
-      name: "Nakafa",
-    },
-    sources: [
-      {
-        label: "Nakafa Learning Graph",
-        retrievedAt: SOURCE_RETRIEVED_AT,
-        type: "nakafa-editorial",
-        url: "https://nakafa.com",
-      },
-    ],
-    translations: {
-      en: {
-        description: "Start with core math and science foundations.",
-        title: "Learn from basics",
-      },
-      id: {
-        description: "Mulai dari matematika dan sains dasar.",
-        title: "Belajar dari dasar",
-      },
-    },
-    version: { label: "2026", startsAt: PROGRAM_2026_START },
-  },
-  {
     defaultCoverageStatus: "partial",
-    displayOrder: 20,
-    key: LEARNING_PROGRAM_KEYS.idKurikulumMerdeka,
+    displayOrder: 10,
+    key: LEARNING_PROGRAM_KEYS.indonesiaMerdekaCurriculum,
     kind: "school-curriculum",
     navigation: {
       levels: ["class", "subject", "topic"],
@@ -87,7 +55,7 @@ const learningProgramCatalogInput = [
   },
   {
     defaultCoverageStatus: "planned",
-    displayOrder: 30,
+    displayOrder: 20,
     key: LEARNING_PROGRAM_KEYS.tka2026,
     kind: "assessment",
     navigation: {
@@ -130,7 +98,7 @@ const learningProgramCatalogInput = [
   },
   {
     defaultCoverageStatus: "partial",
-    displayOrder: 40,
+    displayOrder: 30,
     key: LEARNING_PROGRAM_KEYS.snbt2026,
     kind: "admission-exam",
     navigation: {
@@ -173,7 +141,7 @@ const learningProgramCatalogInput = [
  * official sources, version window, default availability, localized display
  * copy, and the program's navigation structure. They must not enumerate
  * subjects, topics, routes, or content rows; coverage sync derives that read
- * model from graph routes and alignment rules.
+ * model from curriculum material mappings and bounded assessment rules.
  */
 export const LEARNING_PROGRAM_CATALOG = Schema.decodeUnknownSync(
   Schema.Array(LearningProgramSchema)
@@ -186,11 +154,6 @@ export function listDiscoverableLearningPrograms(
   return programs.filter(
     (program) => program.defaultCoverageStatus !== "hidden"
   );
-}
-
-/** Returns the selectable fallback program key for learners without a profile. */
-export function getDefaultLearningProgramKey() {
-  return LEARNING_PROGRAM_KEYS.nakafaStemPath;
 }
 
 /** Finds one catalog program by its stable program key. */

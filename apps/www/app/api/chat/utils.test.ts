@@ -86,7 +86,7 @@ describe("app/api/chat/utils", () => {
 
   it("fetches active learning profile through the shared Convex query", async () => {
     const learningProfile = {
-      interests: ["exam-prep", "nakafa-path"],
+      interests: ["exam-prep", "assessment-prep"],
       planItems: [
         {
           content_id: "asset:id:exercise:snbt:2026:set-2:1",

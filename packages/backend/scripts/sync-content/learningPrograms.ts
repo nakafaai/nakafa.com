@@ -207,6 +207,7 @@ function toLearningProgramCoverageRoute(
 ) {
   const candidate = {
     assetId: route.assetId,
+    conceptId: route.conceptId,
     kind: route.kind,
     lensId: route.lensId,
     locale: route.locale,

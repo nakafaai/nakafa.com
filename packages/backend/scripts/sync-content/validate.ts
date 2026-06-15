@@ -22,7 +22,7 @@ import type { ValidationResult } from "@repo/backend/scripts/sync-content/types"
 import {
   listExerciseSets,
   listSubjectTopics,
-} from "@repo/contents/_types/plan/registry";
+} from "@repo/contents/_types/material/registry";
 import { Effect } from "effect";
 
 const createValidationResult = (): ValidationResult => ({
@@ -63,7 +63,7 @@ const validateArticles = Effect.fn("sync.validateArticles")(function* () {
 
 const validateSubjects = Effect.fn("sync.validateSubjects")(function* () {
   const files = yield* globFiles("subject/**/*.mdx");
-  const planTopics = listSubjectTopics();
+  const materialTopics = listSubjectTopics();
   const result = createValidationResult();
 
   log(`Validating ${files.length} subject files...`);
@@ -88,15 +88,15 @@ const validateSubjects = Effect.fn("sync.validateSubjects")(function* () {
     result.errors.push({ file, error: message });
   }
 
-  log(`Validating ${planTopics.length} subject plan topics...`);
-  result.valid += planTopics.length;
+  log(`Validating ${materialTopics.length} subject material topics...`);
+  result.valid += materialTopics.length;
 
   return result;
 });
 
 const validateExercises = Effect.fn("sync.validateExercises")(function* () {
   const questionFiles = yield* globFiles("exercises/**/_question/*.mdx");
-  const planSets = listExerciseSets();
+  const materialSets = listExerciseSets();
   const result = createValidationResult();
 
   log(`Validating ${questionFiles.length} exercise question files...`);
@@ -130,8 +130,8 @@ const validateExercises = Effect.fn("sync.validateExercises")(function* () {
     result.errors.push({ file, error: message });
   }
 
-  log(`Validating ${planSets.length} exercise plan sets...`);
-  result.valid += planSets.length;
+  log(`Validating ${materialSets.length} exercise material sets...`);
+  result.valid += materialSets.length;
 
   return result;
 });

@@ -59,8 +59,8 @@ const loadExercisesScript = async ({
     };
   });
 
-  vi.doMock("@repo/contents/_types/plan/registry", () => ({
-    /** Returns the typed Plan set that owns the test question route. */
+  vi.doMock("@repo/contents/_types/material/registry", () => ({
+    /** Returns the typed Material set that owns the test question route. */
     listExerciseSets: () => [
       {
         category: "high-school",

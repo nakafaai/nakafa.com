@@ -162,10 +162,6 @@
           "exam": {
             "title": "University entrance",
             "description": "Prepare for SNBT and campus selection."
-          },
-          "basics": {
-            "title": "Learn from basics",
-            "description": "Start with basic math and science."
           }
         },
         "teacher": {
@@ -177,10 +173,6 @@
           "practice": {
             "title": "Student practice",
             "description": "Prepare questions for practice."
-          },
-          "nina": {
-            "title": "Nina help",
-            "description": "Create explanations that are easy to understand."
           }
         },
         "parent": {
@@ -192,10 +184,6 @@
           "practice": {
             "title": "Practice questions",
             "description": "Prepare practice before an exam."
-          },
-          "nina": {
-            "title": "Ask Nina",
-            "description": "Help explain homework or a topic."
           }
         }
       },
@@ -214,7 +202,6 @@
       "school-curriculum": "School curriculum",
       "assessment": "Practice questions",
       "admission-exam": "Admission exam",
-      "nakafa-path": "Learn from basics",
       "custom-program": "Custom program",
       "institution-program": "Institution program"
     },
@@ -230,14 +217,6 @@
       "assessment-prep": {
         "title": "Practice questions",
         "description": "Measure readiness before an exam."
-      },
-      "nakafa-path": {
-        "title": "Learn from basics",
-        "description": "Build science and math foundations step by step."
-      },
-      "custom-plan": {
-        "title": "Personal target",
-        "description": "Create a plan for your own goal."
       }
     },
     "plan-item-status": {

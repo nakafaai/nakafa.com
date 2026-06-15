@@ -14,6 +14,18 @@ const BLOCKED_CONCEPT_ROWS_FILE = join(
   "concept",
   ["source", "ts"].join(".")
 );
+const BLOCKED_OUTCOME_ROWS_FILE = join(
+  TYPES_ROOT,
+  "outcome",
+  ["source", "ts"].join(".")
+);
+const BLOCKED_PLAN_SOURCE_DIRECTORY = join(TYPES_ROOT, "plan");
+const MATERIAL_SUBJECT_SOURCE_ROOT = join(
+  TYPES_ROOT,
+  "material",
+  "source",
+  "subject"
+);
 const BLOCKED_SOURCE_BASENAME = ["source", "json"].join(".");
 const BLOCKED_MATERIAL_BASENAMES = new Set([
   "en-material.ts",
@@ -102,7 +114,7 @@ describe("source registry adapter", () => {
     const quran = createSourceRegistryRecord({
       locale: "id",
       route: "quran/1",
-      sourcePath: "_data/quran.ts",
+      sourcePath: "quran/source.ts",
     });
     const exercise = createSourceRegistryRecord({
       locale: "en",
@@ -139,6 +151,26 @@ describe("source registry adapter", () => {
 
   it("blocks standalone concept source rows", () => {
     expect(existsSync(BLOCKED_CONCEPT_ROWS_FILE)).toBe(false);
+  });
+
+  it("blocks mixed outcome source rows", () => {
+    expect(existsSync(BLOCKED_OUTCOME_ROWS_FILE)).toBe(false);
+  });
+
+  it("blocks the old plan source tree from returning as curriculum truth", () => {
+    expect(existsSync(BLOCKED_PLAN_SOURCE_DIRECTORY)).toBe(false);
+  });
+
+  it("blocks route-shaped subject material source folders from returning", () => {
+    expect(existsSync(join(MATERIAL_SUBJECT_SOURCE_ROOT, "high-school"))).toBe(
+      false
+    );
+    expect(
+      existsSync(join(MATERIAL_SUBJECT_SOURCE_ROOT, "middle-school"))
+    ).toBe(false);
+    expect(existsSync(join(MATERIAL_SUBJECT_SOURCE_ROOT, "university"))).toBe(
+      false
+    );
   });
 
   it("blocks route-local subject and exercise material source files", () => {

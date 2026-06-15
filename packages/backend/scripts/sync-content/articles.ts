@@ -31,7 +31,7 @@ import type {
   SyncOptions,
   SyncResult,
 } from "@repo/backend/scripts/sync-content/types";
-import { teams } from "@repo/contents/_data/team";
+import { teams } from "@repo/contents/team/source";
 import type { FunctionArgs } from "convex/server";
 import { Effect } from "effect";
 

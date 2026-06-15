@@ -49,13 +49,13 @@ describe("sync-content learningPrograms", () => {
     vi.clearAllMocks();
     vi.mocked(callConvexMutation)
       .mockReturnValueOnce(
-        Effect.succeed({ created: 4, skipped: 0, updated: 0 })
+        Effect.succeed({ created: 3, skipped: 0, updated: 0 })
       )
       .mockReturnValueOnce(
-        Effect.succeed({ created: 15, skipped: 0, updated: 0 })
+        Effect.succeed({ created: 0, skipped: 0, updated: 0 })
       )
       .mockReturnValueOnce(
-        Effect.succeed({ created: 2, skipped: 0, updated: 0 })
+        Effect.succeed({ created: 1, skipped: 0, updated: 0 })
       )
       .mockReturnValueOnce(Effect.succeed({ deleted: 0 }));
     vi.mocked(callConvexQuery)
@@ -81,7 +81,7 @@ describe("sync-content learningPrograms", () => {
     );
     const mutationCalls = vi.mocked(callConvexMutation).mock.calls;
 
-    expect(result).toMatchObject({ created: 21, skipped: 0, updated: 0 });
+    expect(result).toMatchObject({ created: 4, skipped: 0, updated: 0 });
     expect(mutationCalls[0]?.[2]).toMatchObject({
       programs: expect.arrayContaining([
         expect.objectContaining({
@@ -94,24 +94,9 @@ describe("sync-content learningPrograms", () => {
       ]),
     });
     expect(mutationCalls[1]?.[2]).toMatchObject({
-      conceptAlignments: expect.arrayContaining([
-        expect.objectContaining({
-          conceptKey: "math.statistics.mean",
-          outcomeKey: "id.km.fase-e.math.statistics",
-        }),
-      ]),
-      outcomes: expect.arrayContaining([
-        expect.objectContaining({
-          key: "id.km.fase-e.math.statistics",
-          programKey: "id-kurikulum-merdeka",
-        }),
-      ]),
-      outlineNodes: expect.arrayContaining([
-        expect.objectContaining({
-          key: "id.km.class-10.mathematics.statistics",
-          programKey: "id-kurikulum-merdeka",
-        }),
-      ]),
+      conceptAlignments: [],
+      outcomes: [],
+      outlineNodes: [],
     });
     expect(mutationCalls[2]?.[2]).toMatchObject({
       coverageRows: expect.arrayContaining([
@@ -119,12 +104,6 @@ describe("sync-content learningPrograms", () => {
           coverageStatus: "partial",
           lensId: subjectGraph.lensId,
           programKey: "id-kurikulum-merdeka",
-          sampleContentId: subjectGraph.assetId,
-        }),
-        expect.objectContaining({
-          coverageStatus: "available",
-          lensId: subjectGraph.lensId,
-          programKey: "nakafa-stem-path",
           sampleContentId: subjectGraph.assetId,
         }),
       ]),
@@ -140,10 +119,10 @@ describe("sync-content learningPrograms", () => {
       locale: "id",
     });
     expect(log).toHaveBeenCalledWith(
-      expect.stringContaining("Outcomes: 15 new, 0 updated")
+      expect.stringContaining("Outcomes: 0 new, 0 updated")
     );
     expect(log).toHaveBeenCalledWith(
-      expect.stringContaining("Coverage: 2 rows from 1 graph routes")
+      expect.stringContaining("Coverage: 1 rows from 1 graph routes")
     );
   });
 });

@@ -1,6 +1,5 @@
 import {
   findLearningProgramByKey,
-  getDefaultLearningProgramKey,
   LEARNING_PROGRAM_CATALOG,
   listDiscoverableLearningPrograms,
 } from "@repo/contents/_types/program/catalog";
@@ -51,12 +50,16 @@ describe("program/catalog", () => {
     expect(visibleKeys).not.toContain("hidden-program");
   });
 
-  it("uses catalog defaults for discovery and direct program lookup", () => {
+  it("uses direct program lookup without inventing a default curriculum", () => {
     const visibleKeys = listDiscoverableLearningPrograms().map(
       (program) => program.key
     );
 
-    expect(visibleKeys).toContain(getDefaultLearningProgramKey());
+    expect(visibleKeys).toEqual([
+      "id-kurikulum-merdeka",
+      "tka-2026",
+      "snbt-2026",
+    ]);
     expect(findLearningProgramByKey("snbt-2026")).toMatchObject({
       kind: "admission-exam",
     });

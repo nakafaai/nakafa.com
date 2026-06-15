@@ -211,7 +211,7 @@ describe("nakafaPrompt", () => {
     const prompt = nakafaPrompt({
       ...base,
       learningProfile: {
-        interests: ["exam-prep", "nakafa-path"],
+        interests: ["exam-prep", "assessment-prep"],
         planItems: [
           {
             content_id: "asset:id:exercise:snbt:2026:set-2:1",
@@ -235,7 +235,7 @@ describe("nakafaPrompt", () => {
 
     expect(prompt).toContain("- active learning profile: selected");
     expect(prompt).toContain("- program: SNBT 2026");
-    expect(prompt).toContain("- interests: exam-prep, nakafa-path");
+    expect(prompt).toContain("- interests: exam-prep, assessment-prep");
     expect(prompt).toContain(
       "1. SNBT Set 2; route: /exercises/high-school/snbt/general-knowledge/try-out/2026/set-2/1; status: ready"
     );

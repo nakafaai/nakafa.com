@@ -11,7 +11,7 @@ describe("components/programs/onboarding/state", () => {
     const result = Effect.runSync(
       decodeOnboardingValue({
         focusKey: "student-exam",
-        interests: ["exam-prep", "nakafa-path"],
+        interests: ["exam-prep", "assessment-prep"],
         primaryProgramKey: "snbt-2026",
         role: "student",
       }).pipe(Effect.either)
@@ -24,7 +24,7 @@ describe("components/programs/onboarding/state", () => {
 
     expect(result.right).toEqual({
       focusKey: "student-exam",
-      interests: ["exam-prep", "nakafa-path"],
+      interests: ["exam-prep", "assessment-prep"],
       primaryProgramKey: "snbt-2026",
       role: "student",
     });
@@ -45,7 +45,7 @@ describe("components/programs/onboarding/state", () => {
       decodeOnboardingRoleValue({ role: "teacher" }).pipe(Effect.either)
     );
     const focus = Effect.runSync(
-      decodeOnboardingFocusValue({ focusKey: "teacher-nina" }).pipe(
+      decodeOnboardingFocusValue({ focusKey: "teacher-practice" }).pipe(
         Effect.either
       )
     );

@@ -25,7 +25,7 @@ import {
   TestTubeIcon,
   UserGroupIcon,
 } from "@hugeicons/core-free-icons";
-import { getSubjectMaterialList } from "@repo/contents/_types/plan/registry";
+import { getSubjectMaterialList } from "@repo/contents/_types/material/registry";
 import type { MaterialList } from "@repo/contents/_types/subject/material";
 import { cleanSlug } from "@repo/utilities/helper";
 import { Effect, Option } from "effect";
@@ -35,7 +35,7 @@ import type { Locale } from "next-intl";
  * Loads the localized material list for a subject section.
  *
  * @param path - Subject material path, with or without a leading slash
- * @param locale - Locale used to select localized plan labels
+ * @param locale - Locale used to select localized material labels
  * @returns Parsed material list, or an empty list when unavailable
  */
 export const getMaterials = Effect.fn("Contents.Subject.getMaterials")(

@@ -13,6 +13,7 @@ const REMOVED_ROOT_FACADE_MODULES = [
   "_lib/cache.ts",
   "_lib/params.ts",
 ] as const;
+const REMOVED_ROOT_DATA_DIRECTORY = "_data";
 const RELATIVE_IMPORT_PATTERN = /from\s+["']\.{1,2}\//g;
 const IMPLICIT_DATA_IMPORT_PATTERN =
   /from\s+["']@repo\/contents\/[^"']+\/_data["']/g;
@@ -143,6 +144,12 @@ describe("contents architecture", () => {
     );
 
     expect(existingRootFacades).toStrictEqual([]);
+  });
+
+  it("does not keep the old root data source bucket", () => {
+    expect(
+      fs.existsSync(path.join(contentsDirectory, REMOVED_ROOT_DATA_DIRECTORY))
+    ).toBe(false);
   });
 
   it("uses direct modules instead of restored root facade imports", () => {

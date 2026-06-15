@@ -3,7 +3,7 @@ import type { AgentLearningProfile } from "@repo/ai/types/agents";
 import { describe, expect, it } from "vitest";
 
 const baseLearningProfile: AgentLearningProfile = {
-  interests: ["exam-prep", "nakafa-path"],
+  interests: ["exam-prep", "assessment-prep"],
   planItems: [],
   program: {
     coverageStatus: "partial",

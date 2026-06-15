@@ -44,7 +44,7 @@ import {
   getExerciseSetSearchTitle,
 } from "@repo/contents/_lib/exercises/search";
 import { getExerciseSetGroupRoute } from "@repo/contents/_types/graph/projection";
-import { listExerciseSets } from "@repo/contents/_types/plan/registry";
+import { listExerciseSets } from "@repo/contents/_types/material/registry";
 import type { FunctionArgs } from "convex/server";
 import { Effect } from "effect";
 
@@ -59,7 +59,7 @@ interface ExerciseSearchLabels {
   setTitle: string;
 }
 
-/** Syncs exercise set metadata from typed Plan sources into Convex. */
+/** Syncs exercise set metadata from typed Material sources into Convex. */
 export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
   config: ConvexConfig,
   options: SyncOptions
@@ -69,10 +69,10 @@ export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
     log("\n--- EXERCISE SETS ---\n");
   }
 
-  const planSets = listExerciseSets(options.locale);
+  const materialSets = listExerciseSets(options.locale);
 
   if (!options.quiet) {
-    log(`Plan sets found: ${planSets.length}`);
+    log(`Material sets found: ${materialSets.length}`);
   }
 
   const totals: SyncResult = { created: 0, updated: 0, unchanged: 0 };
@@ -81,7 +81,7 @@ export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
     options,
     searchLabelsBySet
   );
-  const sets = yield* Effect.forEach(planSets, (set) =>
+  const sets = yield* Effect.forEach(materialSets, (set) =>
     Effect.gen(function* () {
       const countKey = `${set.locale}:${set.slug}`;
       const questionCount = questionCountByLocaleSlug.get(countKey) || 0;
@@ -331,7 +331,7 @@ const parseQuestionFile = Effect.fn("sync.parseQuestionFile")(function* (
   if (!searchLabels) {
     return yield* Effect.fail(
       new ScriptFailureError({
-        message: `Missing exercise search labels for ${pathInfo.locale}:${setSlug}. Add this set to the typed Plan source before syncing.`,
+        message: `Missing exercise search labels for ${pathInfo.locale}:${setSlug}. Add this set to the typed Material source before syncing.`,
       })
     );
   }
@@ -511,7 +511,7 @@ const reportQuestionSyncResults = (
     logError(
       `Missing sets: ${uniqueSets.map((slug) => slug.replace("exercises/", "")).join(", ")}`
     );
-    logError("Add these sets to the typed Plan source before syncing.");
+    logError("Add these sets to the typed Material source before syncing.");
   }
 
   if (totals.choicesCreated || totals.authorLinksCreated) {

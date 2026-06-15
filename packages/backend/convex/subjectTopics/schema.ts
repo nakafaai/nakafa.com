@@ -11,7 +11,7 @@ const tables = {
   /**
    * Subject topic storage (e.g., "Integrals", "Derivatives").
    * Groups related sections together.
-   * Synced from typed Plan sources in packages/contents.
+   * Synced from typed Material sources in packages/contents.
    */
   subjectTopics: defineTable({
     locale: localeValidator,
@@ -20,7 +20,7 @@ const tables = {
     category: subjectCategoryValidator,
     grade: gradeValidator,
     material: materialValidator,
-    /** Authored topic position inside the typed Plan source */
+    /** Authored topic position inside the typed Material source */
     order: v.number(),
     /** Topic slug: "integral", "derivative-function" */
     topic: v.string(),

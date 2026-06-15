@@ -1,3 +1,4 @@
+import { internal } from "@repo/backend/convex/_generated/api";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/functions";
@@ -18,7 +19,7 @@ import { Either, Schema } from "effect";
 const SOURCE_LIMIT = 20;
 const PROGRAM_RECONCILE_LIMIT = 100;
 const STALE_COVERAGE_DELETE_LIMIT = 200;
-const ACTIVE_PLAN_ITEM_REPAIR_LIMIT = 500;
+const ACTIVE_PLAN_ITEM_REPAIR_BATCH_SIZE = 100;
 type ProgramSourceInput = Infer<typeof programSourceInputValidator>;
 const LearningProgramSyncInputSchema = Schema.Array(LearningProgramSchema);
 
@@ -29,6 +30,10 @@ const syncResultValidator = v.object({
 });
 const deleteResultValidator = v.object({
   deleted: v.number(),
+});
+const planItemRepairResultValidator = v.object({
+  repaired: v.number(),
+  scheduled: v.boolean(),
 });
 
 /** Upserts the program catalog and its source references from contents contracts. */
@@ -231,6 +236,37 @@ export const deleteStaleLearningProgramCoverage = internalMutation({
   },
 });
 
+/** Continues a generated plan-item repair after a coverage sample changes. */
+export const continueCoverageSamplePlanItemRepair = internalMutation({
+  args: {
+    lensId: v.string(),
+    locale: learningProgramCoverageInputValidator.fields.locale,
+    nextCoverageStatus:
+      learningProgramCoverageInputValidator.fields.coverageStatus,
+    nextSampleContentId:
+      learningProgramCoverageInputValidator.fields.sampleContentId,
+    previousSampleContentId:
+      learningProgramCoverageInputValidator.fields.sampleContentId,
+    programId: v.id("learningPrograms"),
+  },
+  returns: planItemRepairResultValidator,
+  handler: async (ctx, args) =>
+    await repairCoverageSamplePlanItemBatch(ctx, args),
+});
+
+/** Continues generated plan-item deletion after a stale coverage row disappears. */
+export const continueStaleCoveragePlanItemDelete = internalMutation({
+  args: {
+    lensId: v.string(),
+    sampleContentId:
+      learningProgramCoverageInputValidator.fields.sampleContentId,
+    programId: v.id("learningPrograms"),
+  },
+  returns: planItemRepairResultValidator,
+  handler: async (ctx, args) =>
+    await deleteStaleCoveragePlanItemBatch(ctx, args),
+});
+
 /** Refreshes generated active-plan items when coverage keeps its key but points at new content. */
 async function repairActivePlanItemsForCoverageSampleChange(
   ctx: MutationCtx,
@@ -244,28 +280,51 @@ async function repairActivePlanItemsForCoverageSampleChange(
     nextSampleContentId: Doc<"learningProgramCoverage">["sampleContentId"];
   }
 ) {
+  await repairCoverageSamplePlanItemBatch(ctx, {
+    lensId: coverage.lensId,
+    locale: coverage.locale,
+    nextCoverageStatus,
+    nextSampleContentId,
+    previousSampleContentId: coverage.sampleContentId,
+    programId: coverage.programId,
+  });
+}
+
+/** Repairs one bounded page of generated plan items for a changed coverage sample. */
+async function repairCoverageSamplePlanItemBatch(
+  ctx: MutationCtx,
+  {
+    lensId,
+    locale,
+    nextCoverageStatus,
+    nextSampleContentId,
+    previousSampleContentId,
+    programId,
+  }: {
+    lensId: string;
+    locale: Doc<"learningProgramCoverage">["locale"];
+    nextCoverageStatus: Doc<"learningProgramCoverage">["coverageStatus"];
+    nextSampleContentId: Doc<"learningProgramCoverage">["sampleContentId"];
+    previousSampleContentId: Doc<"learningProgramCoverage">["sampleContentId"];
+    programId: Id<"learningPrograms">;
+  }
+) {
   const planItems = await ctx.db
     .query("learningPlanItems")
     .withIndex("by_programId_and_lensId_and_content_id", (q) =>
       q
-        .eq("programId", coverage.programId)
-        .eq("lensId", coverage.lensId)
-        .eq("content_id", coverage.sampleContentId)
+        .eq("programId", programId)
+        .eq("lensId", lensId)
+        .eq("content_id", previousSampleContentId)
     )
-    .take(ACTIVE_PLAN_ITEM_REPAIR_LIMIT + 1);
-
-  if (planItems.length > ACTIVE_PLAN_ITEM_REPAIR_LIMIT) {
-    throw new ConvexError({
-      code: "LEARNING_PLAN_ITEM_REPAIR_LIMIT_EXCEEDED",
-      message: `Learning plan item repair is limited to ${ACTIVE_PLAN_ITEM_REPAIR_LIMIT} rows per updated coverage row.`,
-    });
-  }
+    .take(ACTIVE_PLAN_ITEM_REPAIR_BATCH_SIZE);
 
   const route = await getContentRouteByContentId(ctx, {
     contentId: nextSampleContentId,
-    locale: coverage.locale,
+    locale,
   });
   const updatedAt = Date.now();
+  let repaired = 0;
 
   for (const item of planItems) {
     const plan = await ctx.db.get(item.planId);
@@ -275,12 +334,9 @@ async function repairActivePlanItemsForCoverageSampleChange(
       continue;
     }
 
-    if (plan.status !== "active") {
-      continue;
-    }
-
     if (!route) {
       await ctx.db.delete(item._id);
+      repaired++;
       continue;
     }
 
@@ -291,7 +347,27 @@ async function repairActivePlanItemsForCoverageSampleChange(
       title: route.title,
       updatedAt,
     });
+    repaired++;
   }
+
+  const scheduled = planItems.length === ACTIVE_PLAN_ITEM_REPAIR_BATCH_SIZE;
+
+  if (scheduled) {
+    await ctx.scheduler.runAfter(
+      0,
+      internal.learningPrograms.sync.continueCoverageSamplePlanItemRepair,
+      {
+        lensId,
+        locale,
+        nextCoverageStatus,
+        nextSampleContentId,
+        previousSampleContentId,
+        programId,
+      }
+    );
+  }
+
+  return { repaired, scheduled };
 }
 
 /** Removes generated active-plan items before their source coverage row disappears. */
@@ -299,32 +375,57 @@ async function deleteActivePlanItemsForStaleCoverage(
   ctx: MutationCtx,
   coverage: Doc<"learningProgramCoverage">
 ) {
+  await deleteStaleCoveragePlanItemBatch(ctx, {
+    lensId: coverage.lensId,
+    programId: coverage.programId,
+    sampleContentId: coverage.sampleContentId,
+  });
+}
+
+/** Deletes one bounded page of generated plan items for removed coverage. */
+async function deleteStaleCoveragePlanItemBatch(
+  ctx: MutationCtx,
+  {
+    lensId,
+    programId,
+    sampleContentId,
+  }: {
+    lensId: string;
+    programId: Id<"learningPrograms">;
+    sampleContentId: Doc<"learningProgramCoverage">["sampleContentId"];
+  }
+) {
   const planItems = await ctx.db
     .query("learningPlanItems")
     .withIndex("by_programId_and_lensId_and_content_id", (q) =>
       q
-        .eq("programId", coverage.programId)
-        .eq("lensId", coverage.lensId)
-        .eq("content_id", coverage.sampleContentId)
+        .eq("programId", programId)
+        .eq("lensId", lensId)
+        .eq("content_id", sampleContentId)
     )
-    .take(ACTIVE_PLAN_ITEM_REPAIR_LIMIT + 1);
-
-  if (planItems.length > ACTIVE_PLAN_ITEM_REPAIR_LIMIT) {
-    throw new ConvexError({
-      code: "LEARNING_PLAN_ITEM_REPAIR_LIMIT_EXCEEDED",
-      message: `Learning plan item repair is limited to ${ACTIVE_PLAN_ITEM_REPAIR_LIMIT} rows per stale coverage row.`,
-    });
-  }
+    .take(ACTIVE_PLAN_ITEM_REPAIR_BATCH_SIZE);
+  let repaired = 0;
 
   for (const item of planItems) {
-    const plan = await ctx.db.get(item.planId);
-
-    if (plan && plan.status !== "active") {
-      continue;
-    }
-
     await ctx.db.delete(item._id);
+    repaired++;
   }
+
+  const scheduled = planItems.length === ACTIVE_PLAN_ITEM_REPAIR_BATCH_SIZE;
+
+  if (scheduled) {
+    await ctx.scheduler.runAfter(
+      0,
+      internal.learningPrograms.sync.continueStaleCoveragePlanItemDelete,
+      {
+        lensId,
+        programId,
+        sampleContentId,
+      }
+    );
+  }
+
+  return { repaired, scheduled };
 }
 
 /** Replaces bounded program source rows for one catalog program. */

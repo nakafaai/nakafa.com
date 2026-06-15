@@ -15,7 +15,7 @@ interface ConceptReferenceInput {
  *
  * The curriculum source of truth is the program/outcome/outline source Module.
  * This Module derives concept rows from reviewed outcome alignments so concept
- * keys do not become arbitrary hand-seeded curriculum facts.
+ * keys do not become arbitrary handwritten curriculum facts.
  */
 export const CONCEPT_REGISTRY = createConceptRegistryFromOutcomeAlignments(
   OUTCOME_CONCEPT_ALIGNMENTS

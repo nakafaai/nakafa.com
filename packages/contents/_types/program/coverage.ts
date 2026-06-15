@@ -1,5 +1,13 @@
 import { getCurriculumLensScopeForKind } from "@repo/contents/_types/graph/schema";
 import { normalizeGraphRoute } from "@repo/contents/_types/learning-graph";
+import {
+  LEARNING_OUTCOMES,
+  OUTCOME_CONCEPT_ALIGNMENTS,
+} from "@repo/contents/_types/outcome/registry";
+import type {
+  LearningOutcome,
+  OutcomeConceptAlignment,
+} from "@repo/contents/_types/outcome/schema";
 import { LEARNING_PROGRAM_COVERAGE_ALIGNMENTS } from "@repo/contents/_types/program/alignment";
 import { findLearningProgramByKey } from "@repo/contents/_types/program/catalog";
 import {
@@ -21,6 +29,73 @@ interface CoverageAccumulator {
 /** Projects graph-backed route rows into bounded program coverage rows. */
 export function createLearningProgramCoverageInputs({
   alignments = LEARNING_PROGRAM_COVERAGE_ALIGNMENTS,
+  outcomeAlignments = OUTCOME_CONCEPT_ALIGNMENTS,
+  outcomes = LEARNING_OUTCOMES,
+  programs,
+  routes,
+  syncedAt,
+}: {
+  alignments?: readonly LearningProgramCoverageAlignment[];
+  outcomeAlignments?: readonly OutcomeConceptAlignment[];
+  outcomes?: readonly LearningOutcome[];
+  programs: readonly LearningProgram[];
+  routes: readonly LearningProgramCoverageRoute[];
+  syncedAt: number;
+}) {
+  const outcomeRows = createOutcomeDerivedCoverageInputs({
+    alignments: outcomeAlignments,
+    outcomes,
+    programs,
+    routes,
+    syncedAt,
+  });
+  const outcomeRowKeys = new Set(outcomeRows.map(getCoverageRowKey));
+  const curriculumRows = createCurriculumCoverageInputs({
+    programs,
+    routes,
+    syncedAt,
+  }).filter((row) => !outcomeRowKeys.has(getCoverageRowKey(row)));
+  const coveredRouteKeys = new Set(
+    [...outcomeRows, ...curriculumRows].map(getCoverageRowKey)
+  );
+  const fallbackRows = createFallbackCoverageInputs({
+    alignments,
+    programs,
+    routes,
+    syncedAt,
+  }).filter((row) => !coveredRouteKeys.has(getCoverageRowKey(row)));
+
+  return [...outcomeRows, ...curriculumRows, ...fallbackRows].sort(
+    compareCoverageRows
+  );
+}
+
+/** Projects asset concept coverage through reviewed outcome alignments. */
+export function createOutcomeDerivedCoverageInputs({
+  alignments = OUTCOME_CONCEPT_ALIGNMENTS,
+  outcomes = LEARNING_OUTCOMES,
+  programs,
+  routes,
+  syncedAt,
+}: {
+  alignments?: readonly OutcomeConceptAlignment[];
+  outcomes?: readonly LearningOutcome[];
+  programs: readonly LearningProgram[];
+  routes: readonly LearningProgramCoverageRoute[];
+  syncedAt: number;
+}) {
+  return createCoverageInputsFromProgramKeys({
+    programs,
+    resolveProgramKeys: (route) =>
+      getProgramKeysForCoverageConcept(route, { alignments, outcomes }),
+    routes,
+    syncedAt,
+  });
+}
+
+/** Projects routes through the bounded route/lens fallback adapter. */
+export function createFallbackCoverageInputs({
+  alignments = LEARNING_PROGRAM_COVERAGE_ALIGNMENTS,
   programs,
   routes,
   syncedAt,
@@ -30,10 +105,86 @@ export function createLearningProgramCoverageInputs({
   routes: readonly LearningProgramCoverageRoute[];
   syncedAt: number;
 }) {
+  return createCoverageInputsFromProgramKeys({
+    programs,
+    resolveProgramKeys: (route) =>
+      getProgramKeysForCoverageRoute(route, alignments),
+    routes,
+    syncedAt,
+  });
+}
+
+/** Projects routes through curriculum-owned material mappings. */
+export function createCurriculumCoverageInputs({
+  programs,
+  routes,
+  syncedAt,
+}: {
+  programs: readonly LearningProgram[];
+  routes: readonly LearningProgramCoverageRoute[];
+  syncedAt: number;
+}) {
+  return createCoverageInputsFromProgramKeys({
+    programs,
+    resolveProgramKeys: (route) =>
+      getProgramKeysForMaterialRoute({ route: route.route }),
+    routes,
+    syncedAt,
+  });
+}
+
+/** Selects program keys whose reviewed outcomes align to the route's concept. */
+export function getProgramKeysForCoverageConcept(
+  route: Pick<LearningProgramCoverageRoute, "conceptId">,
+  {
+    alignments = OUTCOME_CONCEPT_ALIGNMENTS,
+    outcomes = LEARNING_OUTCOMES,
+  }: {
+    alignments?: readonly OutcomeConceptAlignment[];
+    outcomes?: readonly LearningOutcome[];
+  } = {}
+) {
+  const activeOutcomesByKey = new Map(
+    outcomes
+      .filter((outcome) => outcome.status !== "retired")
+      .map((outcome) => [outcome.key, outcome])
+  );
+  const programKeys: string[] = [];
+
+  for (const alignment of alignments) {
+    if (alignment.conceptKey !== route.conceptId) {
+      continue;
+    }
+
+    const outcome = activeOutcomesByKey.get(alignment.outcomeKey);
+
+    if (!outcome) {
+      continue;
+    }
+
+    programKeys.push(outcome.programKey);
+  }
+
+  return [...new Set(programKeys)].sort();
+}
+
+function createCoverageInputsFromProgramKeys({
+  programs,
+  resolveProgramKeys,
+  routes,
+  syncedAt,
+}: {
+  programs: readonly LearningProgram[];
+  resolveProgramKeys: (
+    route: LearningProgramCoverageRoute
+  ) => readonly string[];
+  routes: readonly LearningProgramCoverageRoute[];
+  syncedAt: number;
+}) {
   const rowsByKey = new Map<string, CoverageAccumulator>();
 
   for (const route of routes) {
-    const programKeys = getProgramKeysForCoverageRoute(route, alignments);
+    const programKeys = resolveProgramKeys(route);
 
     for (const programKey of programKeys) {
       const key = `${programKey}|${route.locale}|${route.lensId}`;
@@ -146,3 +297,20 @@ function matchesCoverageAlignment(
 
   return true;
 }
+
+function getCoverageRowKey(row: {
+  lensId: string;
+  locale: string;
+  programKey: string;
+}) {
+  return `${row.programKey}|${row.locale}|${row.lensId}`;
+}
+
+function compareCoverageRows(
+  left: { lensId: string; locale: string; programKey: string },
+  right: { lensId: string; locale: string; programKey: string }
+) {
+  return getCoverageRowKey(left).localeCompare(getCoverageRowKey(right));
+}
+
+import { getProgramKeysForMaterialRoute } from "@repo/contents/_types/curriculum/projection";

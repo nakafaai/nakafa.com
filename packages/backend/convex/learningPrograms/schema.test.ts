@@ -35,49 +35,49 @@ describe("learningPrograms/schema", () => {
     expect(
       validate(programOutlineNodeInputValidator, {
         displayOrder: 10,
-        key: "ccss.algebra-1.statistics",
+        key: "fixture.course.unit",
         level: "unit",
-        programKey: "us-common-core-math",
+        programKey: "fixture-program",
         translations: {
-          en: { description: "Statistics standards.", title: "Statistics" },
-          id: { description: "Standar statistika.", title: "Statistika" },
+          en: { description: "Reviewed unit.", title: "Unit" },
+          id: { description: "Unit tertinjau.", title: "Unit" },
         },
       })
     ).toBe(true);
     expect(
       validate(learningOutcomeInputValidator, {
-        code: "HSS-ID.A.2",
-        key: "ccss.math.hss-id.a.2",
-        outlineKey: "ccss.algebra-1.statistics",
-        programKey: "us-common-core-math",
+        code: "TARGET-1",
+        key: "fixture.target",
+        outlineKey: "fixture.course.unit",
+        programKey: "fixture-program",
         source: {
-          label: "Common Core",
+          label: "Fixture source",
           retrievedAt: "2026-06-15",
-          type: "official-policy",
-          url: "https://www.thecorestandards.org/Math/",
+          type: "nakafa-editorial",
+          url: "https://nakafa.com/test/outcomes/fixture",
         },
-        status: "planned",
+        status: "active",
         translations: {
-          en: { description: "Summarize data.", title: "Summarize data" },
-          id: { description: "Merangkum data.", title: "Merangkum data" },
+          en: { description: "Reviewed target.", title: "Target" },
+          id: { description: "Target tertinjau.", title: "Target" },
         },
-        versionLabel: "2010",
+        versionLabel: "fixture",
       })
     ).toBe(true);
     expect(
       validate(outcomeConceptAlignmentInputValidator, {
-        conceptKey: "math.statistics.mean",
-        evidence: "Official statistics standard.",
-        outcomeKey: "ccss.math.hss-id.a.2",
+        conceptKey: "concept:fixture:target",
+        evidence: "Reviewed fixture alignment.",
+        outcomeKey: "fixture.target",
         relation: "covers",
         reviewedAt: "2026-06-15",
       })
     ).toBe(true);
     expect(
       validate(outcomeConceptAlignmentInputValidator, {
-        conceptKey: "math.statistics.mean",
+        conceptKey: "concept:fixture:target",
         evidence: "Bad relation.",
-        outcomeKey: "ccss.math.hss-id.a.2",
+        outcomeKey: "fixture.target",
         relation: "overlaps",
         reviewedAt: "2026-06-15",
       })

@@ -1,5 +1,4 @@
 import {
-  getDefaultLearningProgramKey,
   LEARNING_PROGRAM_CATALOG,
   LEARNING_PROGRAM_KEYS,
 } from "@repo/contents/_types/program/catalog";
@@ -11,27 +10,15 @@ import {
 import { Schema } from "effect";
 
 /**
- * Broad coverage projection rules from graph-owned route facts to program keys.
+ * Bounded assessment route rules from graph-owned route facts to program keys.
  *
- * Rules should match graph route kind, lens segments, route segments, taxonomy,
- * or explicit fallback ownership. They must stay small and should not enumerate
- * every subject, topic, or content route covered by a program.
+ * School curriculum coverage is owned by curriculum-to-material mappings in the
+ * curriculum module. These rules cover assessment routes until assessment
+ * mapping source modules are split out with the same material-key contract.
  */
 export const LEARNING_PROGRAM_COVERAGE_ALIGNMENTS = Schema.decodeUnknownSync(
   Schema.Array(LearningProgramCoverageAlignmentSchema)
 )([
-  {
-    match: {
-      routeKinds: ["subject-section", "subject-topic"],
-    },
-    programKey: LEARNING_PROGRAM_KEYS.idKurikulumMerdeka,
-  },
-  {
-    match: {
-      routeKinds: ["subject-section", "subject-topic"],
-    },
-    programKey: getDefaultLearningProgramKey(),
-  },
   {
     match: {
       lensSegments: ["tka"],
@@ -45,12 +32,6 @@ export const LEARNING_PROGRAM_COVERAGE_ALIGNMENTS = Schema.decodeUnknownSync(
       routeSegments: ["snbt"],
     },
     programKey: LEARNING_PROGRAM_KEYS.snbt2026,
-  },
-  {
-    match: {
-      fallback: true,
-    },
-    programKey: getDefaultLearningProgramKey(),
   },
 ] as const);
 

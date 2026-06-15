@@ -115,3 +115,21 @@ export const OutcomeConceptAlignmentSchema = Schema.Struct({
 export type OutcomeConceptAlignment = SchemaType<
   typeof OutcomeConceptAlignmentSchema
 >;
+
+/**
+ * Program-owned outcome authoring module.
+ *
+ * Each source module belongs to one curriculum, exam, or Nakafa path. This
+ * keeps official outcomes discoverable by program instead of hiding mixed rows
+ * in one global source file.
+ */
+export const ProgramOutcomeSourceSchema = Schema.Struct({
+  conceptAlignments: Schema.Array(OutcomeConceptAlignmentSchema),
+  outcomes: Schema.Array(LearningOutcomeSchema),
+  outlineNodes: Schema.Array(ProgramOutlineNodeSchema),
+  programKey: LearningProgramKeySchema,
+});
+
+export type ProgramOutcomeSource = SchemaType<
+  typeof ProgramOutcomeSourceSchema
+>;
