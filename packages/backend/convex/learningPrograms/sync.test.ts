@@ -1,6 +1,12 @@
 import { api, internal } from "@repo/backend/convex/_generated/api";
-import { getLearningProgramCatalogInputs } from "@repo/backend/convex/learningPrograms/catalog";
-import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
+import {
+  getLearningProgramCatalogInputs,
+  type LearningProgramSyncInput,
+} from "@repo/backend/convex/learningPrograms/catalog";
+import {
+  createConvexTestWithBetterAuth,
+  seedAuthenticatedUser,
+} from "@repo/backend/convex/test.helpers";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { ConvexError } from "convex/values";
 import { describe, expect, it } from "vitest";
@@ -120,6 +126,74 @@ describe("learningPrograms", () => {
     expect(remainingCoverage.map((row) => row.lensId)).toEqual([
       subjectGraph.lensId,
     ]);
+  });
+
+  it("hides omitted catalog rows without orphaning existing profiles", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const identity = await t.mutation((ctx) =>
+      seedAuthenticatedUser(ctx, { now: NOW })
+    );
+    const catalog = getLearningProgramCatalogInputs();
+    const retiredProgram = {
+      ...catalog[0],
+      displayOrder: 50,
+      key: "retired-nakafa-path",
+      title: "Retired Nakafa Path",
+    } satisfies LearningProgramSyncInput;
+
+    await t.mutation(internal.learningPrograms.sync.syncLearningPrograms, {
+      programs: [...catalog, retiredProgram],
+      syncedAt: NOW,
+    });
+
+    const authed = t.withIdentity({
+      sessionId: identity.sessionId,
+      subject: identity.authUserId,
+    });
+    await authed.mutation(
+      api.learningPrograms.mutations.selectLearningProgram,
+      {
+        interests: ["nakafa-path"],
+        locale: "id",
+        primaryProgramKey: retiredProgram.key,
+      }
+    );
+
+    const result = await t.mutation(
+      internal.learningPrograms.sync.syncLearningPrograms,
+      {
+        programs: catalog,
+        syncedAt: NOW + 1,
+      }
+    );
+    const selectablePrograms = await t.query(
+      api.learningPrograms.queries.listSelectablePrograms,
+      { locale: "id" }
+    );
+    const activeProfile = await authed.query(
+      api.learningPrograms.queries.getActiveProfile,
+      {}
+    );
+
+    expect(result).toEqual({ created: 0, skipped: 0, updated: 5 });
+    expect(selectablePrograms.map((program) => program.key)).not.toContain(
+      retiredProgram.key
+    );
+    expect(activeProfile?.program).toMatchObject({
+      coverageStatus: "hidden",
+      key: retiredProgram.key,
+    });
+  });
+
+  it("rejects empty catalog batches before reconciliation", async () => {
+    const t = createConvexTestWithBetterAuth();
+
+    await expect(
+      t.mutation(internal.learningPrograms.sync.syncLearningPrograms, {
+        programs: [],
+        syncedAt: NOW,
+      })
+    ).rejects.toThrow("LEARNING_PROGRAM_CATALOG_EMPTY");
   });
 
   it("rejects source lists beyond the bounded replacement contract", async () => {

@@ -99,6 +99,35 @@ describe("learningPrograms/mutations", () => {
       })
     ).rejects.toThrow("LEARNING_PROGRAM_INTEREST_MISMATCH");
   });
+
+  it("rejects cross-locale program selections before profile writes", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const identity = await t.mutation((ctx) =>
+      seedAuthenticatedUser(ctx, { now: NOW })
+    );
+
+    await t.mutation(internal.learningPrograms.sync.syncLearningPrograms, {
+      programs: getLearningProgramCatalogInputs(),
+      syncedAt: NOW,
+    });
+
+    const authed = t.withIdentity({
+      sessionId: identity.sessionId,
+      subject: identity.authUserId,
+    });
+
+    await expect(
+      authed.mutation(api.learningPrograms.mutations.selectLearningProgram, {
+        interests: ["school-curriculum"],
+        locale: "en",
+        primaryProgramKey: "id-kurikulum-merdeka",
+      })
+    ).rejects.toThrow("LEARNING_PROGRAM_LOCALE_MISMATCH");
+
+    await expect(
+      authed.query(api.learningPrograms.queries.getActiveProfile, {})
+    ).resolves.toBeNull();
+  });
 });
 
 /** Returns graph identity for a route fixture and fails fast on invalid fixtures. */

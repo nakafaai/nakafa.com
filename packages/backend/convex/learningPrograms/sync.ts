@@ -9,6 +9,7 @@ import {
 import { ConvexError, type Infer, v } from "convex/values";
 
 const SOURCE_LIMIT = 20;
+const PROGRAM_RECONCILE_LIMIT = 100;
 const STALE_COVERAGE_DELETE_LIMIT = 200;
 type ProgramSourceInput = Infer<typeof programSourceInputValidator>;
 
@@ -29,6 +30,13 @@ export const syncLearningPrograms = internalMutation({
   },
   returns: syncResultValidator,
   handler: async (ctx, args) => {
+    if (args.programs.length === 0) {
+      throw new ConvexError({
+        code: "LEARNING_PROGRAM_CATALOG_EMPTY",
+        message: "Learning program catalog sync requires at least one row.",
+      });
+    }
+
     let created = 0;
     let updated = 0;
 
@@ -73,6 +81,11 @@ export const syncLearningPrograms = internalMutation({
         syncedAt: args.syncedAt,
       });
     }
+
+    updated += await hideOmittedCatalogPrograms(ctx, {
+      incomingKeys: new Set(args.programs.map((program) => program.key)),
+      syncedAt: args.syncedAt,
+    });
 
     return { created, skipped: 0, updated };
   },
@@ -208,4 +221,59 @@ async function syncProgramSources(
       syncedAt,
     });
   }
+}
+
+/** Hides rows omitted from the latest full content-catalog sync without deleting referenced program IDs. */
+async function hideOmittedCatalogPrograms(
+  ctx: MutationCtx,
+  {
+    incomingKeys,
+    syncedAt,
+  }: {
+    incomingKeys: ReadonlySet<string>;
+    syncedAt: number;
+  }
+) {
+  const existingPrograms = await ctx.db
+    .query("learningPrograms")
+    .withIndex("by_displayOrder")
+    .take(PROGRAM_RECONCILE_LIMIT + 1);
+
+  if (existingPrograms.length > PROGRAM_RECONCILE_LIMIT) {
+    throw new ConvexError({
+      code: "LEARNING_PROGRAM_RECONCILE_LIMIT_EXCEEDED",
+      message: `Learning program catalog reconciliation is limited to ${PROGRAM_RECONCILE_LIMIT} rows.`,
+    });
+  }
+
+  let hidden = 0;
+
+  for (const program of existingPrograms) {
+    if (
+      program.providerKind !== "official" &&
+      program.providerKind !== "nakafa"
+    ) {
+      continue;
+    }
+
+    if (incomingKeys.has(program.key)) {
+      continue;
+    }
+
+    if (
+      program.defaultCoverageStatus === "hidden" ||
+      program.defaultCoverageStatus === "archived"
+    ) {
+      continue;
+    }
+
+    await ctx.db.patch(program._id, {
+      defaultCoverageStatus: "hidden",
+      syncedAt,
+      updatedAt: syncedAt,
+    });
+    hidden++;
+  }
+
+  return hidden;
 }

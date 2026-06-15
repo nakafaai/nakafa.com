@@ -46,6 +46,13 @@ export const selectLearningProgram = mutation({
       });
     }
 
+    if (program.locale !== args.locale) {
+      throw new ConvexError({
+        code: "LEARNING_PROGRAM_LOCALE_MISMATCH",
+        message: "Learning program is not available for this locale.",
+      });
+    }
+
     if (
       program.defaultCoverageStatus === "hidden" ||
       program.defaultCoverageStatus === "archived"
