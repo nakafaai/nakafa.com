@@ -43,10 +43,10 @@ describe("formatLearningProfilePromptContext", () => {
           status: "skipped",
         },
       ],
-      stage: "kelas-12",
+      stage: "grade-12",
     });
 
-    expect(promptContext).toContain("- stage: kelas-12");
+    expect(promptContext).toContain("- stage: Grade 12");
     expect(promptContext).toContain(
       "1. SNBT Set 1; route: /exercises/high-school/snbt/2026/set-1; status: ready"
     );
@@ -54,5 +54,20 @@ describe("formatLearningProfilePromptContext", () => {
       "2. Untitled graph item; graph asset reference: asset:id:subject:mathematics:rational-function; status: skipped"
     );
     expect(promptContext).not.toContain("content_id");
+  });
+
+  it("formats controlled stage values as fixed labels", () => {
+    expect(
+      formatLearningProfilePromptContext({
+        ...baseLearningProfile,
+        stage: "grade-10",
+      })
+    ).toContain("- stage: Grade 10");
+    expect(
+      formatLearningProfilePromptContext({
+        ...baseLearningProfile,
+        stage: "grade-11",
+      })
+    ).toContain("- stage: Grade 11");
   });
 });

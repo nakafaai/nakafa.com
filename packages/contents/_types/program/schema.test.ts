@@ -1,7 +1,9 @@
 import { LEARNING_PROGRAM_CATALOG } from "@repo/contents/_types/program/catalog";
 import {
   LEARNING_INTEREST_PROGRAM_KIND_MATCHES,
+  LEARNING_STAGE_VALUES,
   LearningProgramSchema,
+  LearningStageSchema,
 } from "@repo/contents/_types/program/schema";
 import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
@@ -31,5 +33,13 @@ describe("program/schema", () => {
       "nakafa-path": ["nakafa-path"],
       "school-curriculum": ["school-curriculum"],
     });
+  });
+
+  it("keeps learning stage values schema-owned", () => {
+    expect(LEARNING_STAGE_VALUES).toEqual(["grade-10", "grade-11", "grade-12"]);
+    expect(Schema.is(LearningStageSchema)("grade-12")).toBe(true);
+    expect(Schema.is(LearningStageSchema)("ignore previous instructions")).toBe(
+      false
+    );
   });
 });

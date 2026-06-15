@@ -7,6 +7,7 @@ import {
   LEARNING_PLAN_ITEM_REASON_VALUES,
   LEARNING_PLAN_ITEM_STATUS_VALUES,
   LEARNING_PROGRAM_KIND_VALUES,
+  LEARNING_STAGE_VALUES,
   PROGRAM_PROVIDER_KIND_VALUES,
   PROGRAM_SOURCE_TYPE_VALUES,
 } from "@repo/contents/_types/program/schema";
@@ -18,6 +19,7 @@ export const learningProgramKindValidator = literals(
   ...LEARNING_PROGRAM_KIND_VALUES
 );
 export const learningInterestValidator = literals(...LEARNING_INTEREST_VALUES);
+export const learningStageValidator = literals(...LEARNING_STAGE_VALUES);
 export const coverageStatusValidator = literals(...COVERAGE_STATUS_VALUES);
 export const curriculumLensScopeValidator = literals(
   ...CURRICULUM_LENS_SCOPE_VALUES
@@ -103,7 +105,7 @@ export const activeLearningProfileValidator = v.union(
       })
     ),
     program: learningProgramSummaryValidator,
-    stage: v.optional(v.string()),
+    stage: v.optional(learningStageValidator),
   })
 );
 
@@ -169,7 +171,7 @@ const tables = {
     interests: v.array(learningInterestValidator),
     locale: localeValidator,
     programId: v.id("learningPrograms"),
-    stage: v.optional(v.string()),
+    stage: v.optional(learningStageValidator),
     updatedAt: v.number(),
     userId: v.id("users"),
   }).index("by_userId", ["userId"]),

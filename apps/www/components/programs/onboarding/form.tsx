@@ -87,7 +87,6 @@ export function LearningProgramOnboardingForm({
               interests: formValue.interests,
               locale,
               primaryProgramKey: formValue.primaryProgramKey,
-              ...(formValue.stage ? { stage: formValue.stage } : {}),
             }),
           value,
         })

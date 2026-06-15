@@ -8,7 +8,6 @@ describe("components/programs/onboarding/state", () => {
       decodeOnboardingValue({
         interests: ["exam-prep", "nakafa-path"],
         primaryProgramKey: "snbt-2026",
-        stage: "kelas-12",
       }).pipe(Effect.either)
     );
 
@@ -20,7 +19,6 @@ describe("components/programs/onboarding/state", () => {
     expect(result.right).toEqual({
       interests: ["exam-prep", "nakafa-path"],
       primaryProgramKey: "snbt-2026",
-      stage: "kelas-12",
     });
   });
 

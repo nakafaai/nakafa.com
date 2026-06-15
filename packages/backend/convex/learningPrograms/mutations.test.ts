@@ -63,6 +63,7 @@ describe("learningPrograms/mutations", () => {
         },
       ],
       program: { key: "id-kurikulum-merdeka" },
+      stage: "grade-10",
     });
   });
 

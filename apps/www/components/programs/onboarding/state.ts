@@ -7,7 +7,6 @@ const onboardingValueSchema = Schema.Struct({
     Schema.mutable
   ),
   primaryProgramKey: Schema.Trim.pipe(Schema.minLength(1)),
-  stage: Schema.optional(Schema.Trim.pipe(Schema.minLength(1))),
 });
 
 /** TanStack Form validator for the program onboarding flow. */

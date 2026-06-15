@@ -9,6 +9,7 @@ import {
 import {
   activeLearningProfileValidator,
   learningInterestValidator,
+  learningStageValidator,
 } from "@repo/backend/convex/learningPrograms/schema";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
@@ -25,7 +26,7 @@ export const selectLearningProgram = mutation({
     interests: v.array(learningInterestValidator),
     locale: localeValidator,
     primaryProgramKey: v.string(),
-    stage: v.optional(v.string()),
+    stage: v.optional(learningStageValidator),
   },
   returns: activeLearningProfileValidator,
   handler: async (ctx, args) => {

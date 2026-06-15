@@ -22,7 +22,7 @@ const activeProfile = {
     title: "Ready path",
     versionLabel: "2026",
   },
-  stage: "onboarding",
+  stage: undefined,
 } satisfies NonNullable<ActiveLearningProfile>;
 
 const catalog = [

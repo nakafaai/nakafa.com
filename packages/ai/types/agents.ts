@@ -8,6 +8,7 @@ import type {
   LearningInterest,
   LearningPlanItemStatus,
   LearningProgramKind,
+  LearningStage,
 } from "@repo/contents/_types/program/schema";
 import type { Locale } from "@repo/utilities/locales";
 import type { UIMessageStreamWriter } from "ai";
@@ -30,7 +31,7 @@ export interface AgentLearningProfile {
     title: string;
     versionLabel: string;
   };
-  stage?: string;
+  stage?: LearningStage;
 }
 
 export interface AgentContext {

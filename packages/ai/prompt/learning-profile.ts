@@ -1,6 +1,12 @@
 import type { AgentLearningProfile } from "@repo/ai/types/agents";
+import type { LearningStage } from "@repo/contents/_types/program/schema";
 
 const PLAN_ITEM_LIMIT = 5;
+const LEARNING_STAGE_LABELS = {
+  "grade-10": "Grade 10",
+  "grade-11": "Grade 11",
+  "grade-12": "Grade 12",
+} satisfies Record<LearningStage, string>;
 
 /** Formats selected learning program context for AI system prompts. */
 export function formatLearningProfilePromptContext(
@@ -18,9 +24,18 @@ export function formatLearningProfilePromptContext(
     `- program kind: ${learningProfile.program.kind}`,
     `- program version: ${learningProfile.program.versionLabel}`,
     `- coverage: ${learningProfile.program.coverageStatus}`,
-    `- stage: ${learningProfile.stage ?? "not specified"}`,
+    `- stage: ${formatLearningStage(learningProfile.stage)}`,
     formatPlanItems(learningProfile.planItems),
   ].join("\n");
+}
+
+/** Formats the controlled learning-stage enum without echoing user-provided text. */
+function formatLearningStage(stage: LearningStage | undefined): string {
+  if (!stage) {
+    return "not specified";
+  }
+
+  return LEARNING_STAGE_LABELS[stage];
 }
 
 /**

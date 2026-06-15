@@ -41,6 +41,16 @@ export const LEARNING_INTEREST_PROGRAM_KIND_MATCHES = {
   "school-curriculum": ["school-curriculum"],
 } as const satisfies Record<LearningInterest, readonly LearningProgramKind[]>;
 
+export const LEARNING_STAGE_VALUES = [
+  "grade-10",
+  "grade-11",
+  "grade-12",
+] as const;
+
+export const LearningStageSchema = Schema.Literal(...LEARNING_STAGE_VALUES);
+
+export type LearningStage = SchemaType<typeof LearningStageSchema>;
+
 export const PROGRAM_PROVIDER_KIND_VALUES = [
   "official",
   "nakafa",
