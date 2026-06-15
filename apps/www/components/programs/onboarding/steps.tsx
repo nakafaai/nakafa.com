@@ -8,11 +8,7 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@repo/design-system/components/ui/empty";
-import {
-  Field,
-  FieldDescription,
-  FieldLabel,
-} from "@repo/design-system/components/ui/field";
+import { Field } from "@repo/design-system/components/ui/field";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { ToggleGroup } from "@repo/design-system/components/ui/toggle-group";
 import type { useTranslations } from "next-intl";
@@ -117,14 +113,14 @@ export function ConfirmStep({
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-8">
-      <Field className="gap-3">
-        <FieldLabel className="text-3xl sm:text-4xl">
+      <div className="flex flex-col gap-3">
+        <h1 className="font-medium text-3xl leading-tight tracking-tight sm:text-4xl">
           {t("onboarding.confirm-title")}
-        </FieldLabel>
-        <FieldDescription className="max-w-xl text-base">
+        </h1>
+        <p className="max-w-xl text-base text-muted-foreground">
           {t("onboarding.confirm-helper")}
-        </FieldDescription>
-      </Field>
+        </p>
+      </div>
 
       <div className="grid gap-8 sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.3fr)] sm:items-center">
         <div className="flex flex-col gap-3">
@@ -183,10 +179,10 @@ export function UnavailableCatalogStep({ t }: { t: Translator }) {
 function StepHeading({ helper, title }: { helper: string; title: string }) {
   return (
     <div className="flex flex-col gap-3">
-      <FieldLabel className="text-3xl sm:text-4xl">{title}</FieldLabel>
-      <FieldDescription className="max-w-xl text-base">
-        {helper}
-      </FieldDescription>
+      <h1 className="font-medium text-3xl leading-tight tracking-tight sm:text-4xl">
+        {title}
+      </h1>
+      <p className="max-w-xl text-base text-muted-foreground">{helper}</p>
     </div>
   );
 }
