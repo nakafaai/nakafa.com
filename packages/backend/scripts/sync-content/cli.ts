@@ -1,6 +1,7 @@
 import { ScriptFailureError } from "@repo/backend/scripts/lib/errors";
 import { syncArticles } from "@repo/backend/scripts/sync-content/articles";
 import { syncAuthors } from "@repo/backend/scripts/sync-content/authors";
+import { invalidateContentRuntimeCache } from "@repo/backend/scripts/sync-content/cache";
 import { clean } from "@repo/backend/scripts/sync-content/clean";
 import { getConvexConfig } from "@repo/backend/scripts/sync-content/convex";
 import {
@@ -163,6 +164,7 @@ export const runCommand = Effect.fn("sync.runCommand")(function* (
       return;
     case "learning-programs":
       yield* syncLearningPrograms(config, options);
+      yield* invalidateContentRuntimeCache(options);
       return;
     case "all":
       yield* syncAll(config, options);
