@@ -19,11 +19,6 @@ import {
   roleOptions,
 } from "@/components/programs/onboarding/options";
 
-export const ONBOARDING_STEPS = ["role", "focus"] as const;
-
-/** Step identifiers for the learner-facing program onboarding flow. */
-export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
-
 /** One selectable program summary returned by the Convex program catalog. */
 export type ProgramOption = LearningProgramCatalog[number];
 

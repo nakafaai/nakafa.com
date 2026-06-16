@@ -48,7 +48,7 @@ const getActiveLearningProfileEffect = Effect.fn(
  * there because it reads current time:
  * https://nextjs.org/docs/messages/next-prerender-current-time.
  */
-export async function getLearningProgramCatalog(
+async function getLearningProgramCatalog(
   locale: Locale
 ): Promise<LearningProgramCatalog> {
   "use cache";

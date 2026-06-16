@@ -5,7 +5,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { userRoles } from "@repo/backend/convex/users/roles";
 
-export const appNavigationViewers = ["pending", "guest", ...userRoles] as const;
+const appNavigationViewers = ["pending", "guest", ...userRoles] as const;
 
 export type AppNavigationViewer = (typeof appNavigationViewers)[number];
 export type AppNavigationRole = (typeof userRoles)[number];

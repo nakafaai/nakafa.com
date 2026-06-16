@@ -68,8 +68,3 @@ export interface OnboardingState {
   messageKey?: "onboarding.invalid-selection" | "onboarding.save-error";
   status: "error" | "idle" | "success";
 }
-
-/** Default submission state for the program onboarding form. */
-export const initialOnboardingState: OnboardingState = {
-  status: "idle",
-};

@@ -1,38 +1,12 @@
 "use client";
 
-import {
-  Add01Icon,
-  ArrowDown01Icon,
-  Calendar03Icon,
-  Edit01Icon,
-  Tick01Icon,
-  Time04Icon,
-} from "@hugeicons/core-free-icons";
+import { Add01Icon, Edit01Icon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
-import { Calendar } from "@repo/design-system/components/ui/calendar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-} from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Input } from "@repo/design-system/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@repo/design-system/components/ui/popover";
+import { FieldGroup } from "@repo/design-system/components/ui/field";
+import type { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { Textarea } from "@repo/design-system/components/ui/textarea";
-import { cn } from "@repo/design-system/lib/utils";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
 import { startOfDay } from "date-fns";
@@ -40,27 +14,17 @@ import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { Activity, useState } from "react";
 import { toast } from "sonner";
-import {
-  assessmentModeList,
-  getAssessmentMode,
-} from "@/components/school/classes/assessments/data/mode";
-import {
-  assessmentStatusList,
-  getAssessmentStatus,
-} from "@/components/school/classes/assessments/data/status";
+import { AssessmentDescriptionField } from "@/components/school/classes/assessments/description-field";
+import { AssessmentModeField } from "@/components/school/classes/assessments/mode-field";
+import { AssessmentScheduledAtField } from "@/components/school/classes/assessments/scheduled-at-field";
 import {
   type CreateAssessmentFormValues,
   createAssessmentFormSchema,
 } from "@/components/school/classes/assessments/schema";
+import { AssessmentStatusField } from "@/components/school/classes/assessments/status-field";
+import { AssessmentTitleField } from "@/components/school/classes/assessments/title-field";
 import type { Assessment } from "@/components/school/classes/assessments/types";
-import {
-  formatScheduledAt,
-  getDefaultScheduledAt,
-  getMinTime,
-  getTimeString,
-  updateDate,
-  updateTime,
-} from "@/components/school/classes/assessments/utils";
+import { getDefaultScheduledAt } from "@/components/school/classes/assessments/utils";
 import { reportClientException } from "@/lib/analytics/client";
 import { useClass } from "@/lib/context/use-class";
 
@@ -195,7 +159,6 @@ function AssessmentDialogShell({
   title,
 }: AssessmentDialogShellProps) {
   const [minimumDate] = useState(() => startOfDay(new Date()));
-  const t = useTranslations("School.Classes");
   const locale = useLocale();
 
   const form = useForm({
@@ -271,22 +234,14 @@ function AssessmentDialogShell({
                     Boolean(!field.state.meta.isValid);
 
                   return (
-                    <Field data-invalid={isInvalid}>
-                      <FieldLabel htmlFor={`${formId}-title`}>
-                        {t("assessment-title-label")}
-                      </FieldLabel>
-                      <Input
-                        aria-invalid={isInvalid}
-                        id={`${formId}-title`}
-                        name={field.name}
-                        onBlur={field.handleBlur}
-                        onChange={(event) =>
-                          field.handleChange(event.target.value)
-                        }
-                        placeholder={t("assessment-title-placeholder")}
-                        value={field.state.value}
-                      />
-                    </Field>
+                    <AssessmentTitleField
+                      formId={formId}
+                      isInvalid={isInvalid}
+                      name={field.name}
+                      onBlur={field.handleBlur}
+                      onValueChange={field.handleChange}
+                      value={field.state.value}
+                    />
                   );
                 }}
               </form.Field>
@@ -298,145 +253,50 @@ function AssessmentDialogShell({
                     Boolean(!field.state.meta.isValid);
 
                   return (
-                    <Field data-invalid={isInvalid}>
-                      <FieldLabel htmlFor={`${formId}-description`}>
-                        {t("assessment-description-label")}
-                      </FieldLabel>
-                      <Textarea
-                        aria-invalid={isInvalid}
-                        className="min-h-24"
-                        id={`${formId}-description`}
-                        name={field.name}
-                        onBlur={field.handleBlur}
-                        onChange={(event) =>
-                          field.handleChange(event.target.value)
-                        }
-                        placeholder={t("assessment-description-placeholder")}
-                        value={field.state.value}
-                      />
-                    </Field>
+                    <AssessmentDescriptionField
+                      formId={formId}
+                      isInvalid={isInvalid}
+                      name={field.name}
+                      onBlur={field.handleBlur}
+                      onValueChange={field.handleChange}
+                      value={field.state.value}
+                    />
                   );
                 }}
               </form.Field>
 
               <form.Field name="mode">
                 {(field) => {
-                  const currentMode = getAssessmentMode(field.state.value);
                   const isInvalid =
                     Boolean(field.state.meta.isTouched) &&
                     Boolean(!field.state.meta.isValid);
 
                   return (
-                    <Field data-invalid={isInvalid}>
-                      <FieldLabel htmlFor={`${formId}-mode`}>
-                        {t("assessment-mode-label")}
-                      </FieldLabel>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
-                          render={
-                            <Button
-                              aria-invalid={isInvalid}
-                              className="w-full font-normal"
-                              id={`${formId}-mode`}
-                              name={field.name}
-                              type="button"
-                              variant="outline"
-                            >
-                              <HugeIcons icon={currentMode.icon} />
-                              {t(currentMode.labelKey)}
-                              <HugeIcons
-                                className="ml-auto"
-                                icon={ArrowDown01Icon}
-                              />
-                            </Button>
-                          }
-                        />
-                        <DropdownMenuContent
-                          align="start"
-                          className="w-(--anchor-width)"
-                        >
-                          {assessmentModeList.map((option) => (
-                            <DropdownMenuItem
-                              className="cursor-pointer"
-                              key={option.value}
-                              onClick={() => field.handleChange(option.value)}
-                            >
-                              <HugeIcons icon={option.icon} />
-                              {t(option.labelKey)}
-                              <HugeIcons
-                                className={cn(
-                                  "ml-auto size-4 opacity-0 transition-opacity ease-out",
-                                  field.state.value === option.value &&
-                                    "opacity-100"
-                                )}
-                                icon={Tick01Icon}
-                              />
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </Field>
+                    <AssessmentModeField
+                      formId={formId}
+                      isInvalid={isInvalid}
+                      name={field.name}
+                      onValueChange={field.handleChange}
+                      value={field.state.value}
+                    />
                   );
                 }}
               </form.Field>
 
               <form.Field name="status">
                 {(field) => {
-                  const currentStatus = getAssessmentStatus(field.state.value);
                   const isInvalid =
                     Boolean(field.state.meta.isTouched) &&
                     Boolean(!field.state.meta.isValid);
 
                   return (
-                    <Field data-invalid={isInvalid}>
-                      <FieldLabel htmlFor={`${formId}-status`}>
-                        {t("assessment-status-label")}
-                      </FieldLabel>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
-                          render={
-                            <Button
-                              aria-invalid={isInvalid}
-                              className="w-full font-normal"
-                              id={`${formId}-status`}
-                              name={field.name}
-                              type="button"
-                              variant="outline"
-                            >
-                              <HugeIcons icon={currentStatus.icon} />
-                              {t(currentStatus.labelKey)}
-                              <HugeIcons
-                                className="ml-auto"
-                                icon={ArrowDown01Icon}
-                              />
-                            </Button>
-                          }
-                        />
-                        <DropdownMenuContent
-                          align="start"
-                          className="w-(--anchor-width)"
-                        >
-                          {assessmentStatusList.map((option) => (
-                            <DropdownMenuItem
-                              className="cursor-pointer"
-                              key={option.value}
-                              onClick={() => field.handleChange(option.value)}
-                            >
-                              <HugeIcons icon={option.icon} />
-                              {t(option.labelKey)}
-                              <HugeIcons
-                                className={cn(
-                                  "ml-auto size-4 opacity-0 transition-opacity ease-out",
-                                  field.state.value === option.value &&
-                                    "opacity-100"
-                                )}
-                                icon={Tick01Icon}
-                              />
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </Field>
+                    <AssessmentStatusField
+                      formId={formId}
+                      isInvalid={isInvalid}
+                      name={field.name}
+                      onValueChange={field.handleChange}
+                      value={field.state.value}
+                    />
                   );
                 }}
               </form.Field>
@@ -449,95 +309,15 @@ function AssessmentDialogShell({
                       Boolean(!field.state.meta.isValid);
 
                     return (
-                      <Field data-invalid={isInvalid}>
-                        <FieldLabel htmlFor={`${formId}-scheduled-at`}>
-                          {t("assessment-scheduled-at-label")}
-                        </FieldLabel>
-                        <Popover>
-                          <PopoverTrigger
-                            render={
-                              <Button
-                                aria-invalid={isInvalid}
-                                className="w-full font-normal"
-                                id={`${formId}-scheduled-at`}
-                                name={field.name}
-                                type="button"
-                                variant="outline"
-                              />
-                            }
-                          >
-                            <HugeIcons icon={Calendar03Icon} />
-                            {field.state.value
-                              ? formatScheduledAt(field.state.value, locale)
-                              : t("assessment-scheduled-at-placeholder")}
-                            <HugeIcons
-                              className="ml-auto"
-                              icon={ArrowDown01Icon}
-                            />
-                          </PopoverTrigger>
-                          <PopoverContent
-                            align="start"
-                            className="w-auto overflow-hidden p-0"
-                          >
-                            <Calendar
-                              disabled={{ before: minimumDate }}
-                              mode="single"
-                              onSelect={(date) => {
-                                if (!date) {
-                                  return;
-                                }
-
-                                field.handleChange(
-                                  updateDate(field.state.value, date)
-                                );
-                              }}
-                              selected={
-                                field.state.value
-                                  ? new Date(field.state.value)
-                                  : undefined
-                              }
-                            />
-                            <div className="border-t p-3">
-                              <div className="flex flex-col gap-2">
-                                <FieldLabel
-                                  htmlFor={`${formId}-scheduled-time`}
-                                >
-                                  {t("assessment-scheduled-time-label")}
-                                </FieldLabel>
-                                <div className="relative flex w-full items-center">
-                                  <HugeIcons
-                                    className="pointer-events-none absolute left-3 size-4 select-none text-muted-foreground"
-                                    icon={Time04Icon}
-                                  />
-                                  <Input
-                                    className="cursor-text appearance-none pl-9 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
-                                    id={`${formId}-scheduled-time`}
-                                    min={getMinTime(field.state.value)}
-                                    onChange={(event) => {
-                                      if (!field.state.value) {
-                                        return;
-                                      }
-
-                                      field.handleChange(
-                                        updateTime(
-                                          field.state.value,
-                                          event.target.value
-                                        )
-                                      );
-                                    }}
-                                    type="time"
-                                    value={
-                                      field.state.value
-                                        ? getTimeString(field.state.value)
-                                        : ""
-                                    }
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          </PopoverContent>
-                        </Popover>
-                      </Field>
+                      <AssessmentScheduledAtField
+                        formId={formId}
+                        isInvalid={isInvalid}
+                        locale={locale}
+                        minimumDate={minimumDate}
+                        name={field.name}
+                        onValueChange={field.handleChange}
+                        value={field.state.value}
+                      />
                     );
                   }}
                 </form.Field>

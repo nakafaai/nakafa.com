@@ -23,30 +23,18 @@ import {
 export default async function Page(
   props: PageProps<"/[locale]/onboarding/focus">
 ) {
-  const [params, searchParams] = await Promise.all([
-    props.params,
-    props.searchParams,
-  ]);
+  const params = await props.params;
   const locale = getLocaleOrThrow(params.locale);
 
   return (
     <Suspense fallback={null}>
-      <FocusStepRuntime
-        locale={locale}
-        roleSearchParam={getSingleSearchParam(searchParams.role)}
-      />
+      <FocusStepRuntime locale={locale} />
     </Suspense>
   );
 }
 
 /** Reads route data for the focus step while keeping form state local. */
-async function FocusStepRuntime({
-  locale,
-  roleSearchParam,
-}: {
-  locale: Locale;
-  roleSearchParam: string | undefined;
-}) {
+async function FocusStepRuntime({ locale }: { locale: Locale }) {
   const [programs, token] = await Promise.all([
     getLearningProgramOnboardingCatalog(locale),
     getToken(),
@@ -68,8 +56,7 @@ async function FocusStepRuntime({
   const roleOptions = getSelectableRoleOptions(programs);
   const selectedRole = getRoleOptionForKey(
     roleOptions,
-    parseOnboardingRole(roleSearchParam) ??
-      parseOnboardingRole(currentUser?.appUser.role)
+    parseOnboardingRole(currentUser?.appUser.role)
   )?.key;
 
   if (!selectedRole) {
@@ -88,13 +75,4 @@ async function FocusStepRuntime({
       role={selectedRole}
     />
   );
-}
-
-/** Narrows Next search params to a single route value. */
-function getSingleSearchParam(value: string | string[] | undefined) {
-  if (Array.isArray(value)) {
-    return value.at(0);
-  }
-
-  return value;
 }

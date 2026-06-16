@@ -12,14 +12,12 @@ import { getTranslations } from "next-intl/server";
 import type { ExerciseRouteData } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/assessment/[category]/[type]/[material]/[...slug]/data";
 import { CardMaterial } from "@/components/shared/card-material";
 import { ContainerList } from "@/components/shared/container-list";
-import {
-  LayoutMaterial,
-  LayoutMaterialContent,
-  LayoutMaterialFooter,
-  LayoutMaterialHeader,
-  LayoutMaterialMain,
-  LayoutMaterialToc,
-} from "@/components/shared/layout-material";
+import { LayoutMaterialContent } from "@/components/shared/material/content";
+import { LayoutMaterialFooter } from "@/components/shared/material/footer";
+import { LayoutMaterialHeader } from "@/components/shared/material/header";
+import { LayoutMaterial } from "@/components/shared/material/layout";
+import { LayoutMaterialMain } from "@/components/shared/material/main";
+import { LayoutMaterialToc } from "@/components/shared/material/toc";
 import { RefContent } from "@/components/shared/ref-content";
 import { getGithubUrl } from "@/lib/utils/github";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";

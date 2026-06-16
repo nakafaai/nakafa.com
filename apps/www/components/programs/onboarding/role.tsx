@@ -65,7 +65,7 @@ export function RoleStepForm({ initialRole, options }: RoleStepFormProps) {
       }
 
       form.reset({ role });
-      router.push(`/onboarding/focus?role=${role}`);
+      router.push("/onboarding/focus");
     },
   });
 

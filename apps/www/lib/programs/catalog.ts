@@ -4,9 +4,7 @@ import type {
 } from "@/components/programs/contract";
 
 /** Keeps first-run choices limited to programs that can produce a useful plan. */
-export function isProgramReadyForOnboarding(
-  program: LearningProgramCatalog[number]
-) {
+function isProgramReadyForOnboarding(program: LearningProgramCatalog[number]) {
   return (
     program.coverageStatus === "available" ||
     program.coverageStatus === "partial"

@@ -19,7 +19,7 @@ const rssHeaders = {
 export async function GET() {
   const locales = routing.locales;
 
-  const [t, tCommon] = await Promise.all([
+  const [t, tCommon, routes, surahs] = await Promise.all([
     getTranslations({
       namespace: "Metadata",
       locale: routing.defaultLocale,
@@ -28,9 +28,6 @@ export async function GET() {
       namespace: "Common",
       locale: routing.defaultLocale,
     }),
-  ]);
-
-  const [routes, surahs] = await Promise.all([
     getFeedContentRoutes(),
     fetchRuntimeQuranSurahs(),
   ]);

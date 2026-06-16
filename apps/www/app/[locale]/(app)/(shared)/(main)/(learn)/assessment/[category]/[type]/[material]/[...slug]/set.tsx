@@ -20,15 +20,13 @@ import type { ExerciseRouteData } from "@/app/[locale]/(app)/(shared)/(main)/(le
 import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
 import { DeferredComments } from "@/components/comments/deferred";
 import { ExerciseTrackedEntry } from "@/components/exercise/entry";
-import {
-  LayoutMaterial,
-  LayoutMaterialContent,
-  LayoutMaterialFooter,
-  LayoutMaterialHeader,
-  LayoutMaterialMain,
-  LayoutMaterialPagination,
-  LayoutMaterialToc,
-} from "@/components/shared/layout-material";
+import { LayoutMaterialContent } from "@/components/shared/material/content";
+import { LayoutMaterialFooter } from "@/components/shared/material/footer";
+import { LayoutMaterialHeader } from "@/components/shared/material/header";
+import { LayoutMaterial } from "@/components/shared/material/layout";
+import { LayoutMaterialMain } from "@/components/shared/material/main";
+import { LayoutMaterialPagination } from "@/components/shared/material/pagination";
+import { LayoutMaterialToc } from "@/components/shared/material/toc";
 import { getOgUrl } from "@/lib/utils/metadata";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 

@@ -15,14 +15,12 @@ import type { ReactNode } from "react";
 import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
 import { DeferredComments } from "@/components/comments/deferred";
 import { ComingSoon } from "@/components/shared/coming-soon";
-import {
-  LayoutMaterial,
-  LayoutMaterialContent,
-  LayoutMaterialFooter,
-  LayoutMaterialHeader,
-  LayoutMaterialMain,
-  LayoutMaterialToc,
-} from "@/components/shared/layout-material";
+import { LayoutMaterialContent } from "@/components/shared/material/content";
+import { LayoutMaterialFooter } from "@/components/shared/material/footer";
+import { LayoutMaterialHeader } from "@/components/shared/material/header";
+import { LayoutMaterial } from "@/components/shared/material/layout";
+import { LayoutMaterialMain } from "@/components/shared/material/main";
+import { LayoutMaterialToc } from "@/components/shared/material/toc";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
 import { importContentModuleOrNull } from "@/lib/content/module";
 import { fetchRuntimeArticlePage } from "@/lib/content/runtime";
