@@ -49,7 +49,7 @@ describe("sync-content learningPrograms", () => {
     vi.clearAllMocks();
     vi.mocked(callConvexMutation)
       .mockReturnValueOnce(
-        Effect.succeed({ created: 3, skipped: 0, updated: 0 })
+        Effect.succeed({ created: 5, skipped: 0, updated: 0 })
       )
       .mockReturnValueOnce(
         Effect.succeed({ created: 0, skipped: 0, updated: 0 })
@@ -81,7 +81,7 @@ describe("sync-content learningPrograms", () => {
     );
     const mutationCalls = vi.mocked(callConvexMutation).mock.calls;
 
-    expect(result).toMatchObject({ created: 3, skipped: 0, updated: 0 });
+    expect(result).toMatchObject({ created: 5, skipped: 0, updated: 0 });
     expect(mutationCalls[0]?.[2]).toMatchObject({
       programs: expect.arrayContaining([
         expect.objectContaining({

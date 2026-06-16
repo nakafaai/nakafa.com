@@ -51,5 +51,26 @@ export type CurriculumSourceInput = SchemaEncoded<
 
 /** Decodes one authored curriculum source at module load time. */
 export function defineCurriculum(input: CurriculumSourceInput) {
-  return Schema.decodeUnknownSync(CurriculumSourceSchema)(input);
+  const curriculum = Schema.decodeUnknownSync(CurriculumSourceSchema)(input);
+  const nodeKeys = new Set<string>();
+
+  for (const node of curriculum.nodes) {
+    if (nodeKeys.has(node.key)) {
+      throw new Error(
+        `Duplicate curriculum node ${node.key} in ${curriculum.programKey}.`
+      );
+    }
+
+    nodeKeys.add(node.key);
+  }
+
+  for (const node of curriculum.nodes) {
+    if (node.parentKey && !nodeKeys.has(node.parentKey)) {
+      throw new Error(
+        `Unknown parent node ${node.parentKey} in ${curriculum.programKey}:${node.key}.`
+      );
+    }
+  }
+
+  return curriculum;
 }

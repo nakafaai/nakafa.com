@@ -12,7 +12,7 @@ import {
 import { Either, ParseResult, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
-const CURRICULUM_SOURCE_ROOT = join(process.cwd(), "_types", "curriculum");
+const CURRICULUM_SOURCE_ROOT = join(process.cwd(), "curriculum");
 const PUBLIC_ROUTE_FOLDER_PATTERN = /subject\/|exercises\//;
 
 function readCurriculumSourceFiles(directory: string): string[] {
@@ -35,13 +35,13 @@ function readCurriculumSourceFiles(directory: string): string[] {
 }
 
 describe("curriculum registry", () => {
-  it("maps Indonesia curriculum nodes to existing reusable material keys", () => {
+  it("maps curriculum nodes to existing reusable material keys", () => {
     expect(getCurriculumSourceIssues()).toEqual([]);
     expect(
       getProgramKeysForMaterialRoute({
         route: "material/lesson/mathematics/statistics-foundations",
       })
-    ).toEqual(["id-kurikulum-merdeka"]);
+    ).toEqual(["cambridge-igcse", "id-kurikulum-merdeka"]);
   });
 
   it("keeps material identity independent from source folder shape", () => {
@@ -64,6 +64,36 @@ describe("curriculum registry", () => {
     ).filter((source) => PUBLIC_ROUTE_FOLDER_PATTERN.test(source));
 
     expect(routePathSources).toEqual([]);
+  });
+
+  it("keeps each real curriculum behind a folder-owned interface", () => {
+    const curricula = listCurricula();
+
+    expect(curricula.map((curriculum) => curriculum.programKey)).toEqual([
+      "id-kurikulum-merdeka",
+      "cambridge-igcse",
+      "us-common-core-ngss",
+    ]);
+    expect(
+      getProgramKeysForMaterialRoute({
+        route: "material/lesson/mathematics/quadratic-function",
+      })
+    ).toEqual(["cambridge-igcse", "id-kurikulum-merdeka"]);
+  });
+
+  it("keeps planned US standards visible without inventing material coverage", () => {
+    const curricula = listCurricula();
+    const usStandards = curricula.find(
+      (curriculum) => curriculum.programKey === "us-common-core-ngss"
+    );
+
+    expect(usStandards?.nodes.length).toBeGreaterThan(0);
+    expect(usStandards?.nodes.flatMap((node) => node.materialKeys)).toEqual([]);
+    expect(
+      getProgramKeysForMaterialRoute({
+        route: "material/lesson/physics/kinematics",
+      })
+    ).not.toContain("us-common-core-ngss");
   });
 
   it("returns no programs for routes outside the material registry", () => {
@@ -99,16 +129,26 @@ describe("curriculum registry", () => {
     ).toEqual([]);
   });
 
-  it("reports unknown parent and material references", () => {
+  it("reports unknown material references", () => {
     const invalid = defineCurriculum({
       programKey: "fixture-program",
       nodes: [
         {
+          key: "parent",
+          level: "unit",
+          materialKeys: [],
+          order: 1,
+          translations: {
+            en: { title: "Parent" },
+            id: { title: "Parent" },
+          },
+        },
+        {
           key: "target",
           level: "topic",
           materialKeys: ["missing.material"],
-          order: 1,
-          parentKey: "missing-parent",
+          order: 2,
+          parentKey: "parent",
           translations: {
             en: { title: "Target" },
             id: { title: "Target" },
@@ -118,9 +158,94 @@ describe("curriculum registry", () => {
     });
 
     expect(getCurriculumSourceIssues({ curricula: [invalid] })).toEqual([
-      "Unknown parent node missing-parent in fixture-program:target",
       "Unknown material key missing.material in fixture-program:target",
     ]);
+  });
+
+  it("reports defensive duplicate and parent issues for decoded source data", () => {
+    const decodeCurriculumSource = Schema.decodeUnknownSync(
+      CurriculumSourceSchema
+    );
+    const invalid = decodeCurriculumSource({
+      programKey: "fixture-program",
+      nodes: [
+        {
+          key: "target",
+          level: "topic",
+          materialKeys: [],
+          order: 1,
+          translations: {
+            en: { title: "Target" },
+            id: { title: "Target" },
+          },
+        },
+        {
+          key: "target",
+          level: "topic",
+          materialKeys: [],
+          order: 2,
+          parentKey: "missing-parent",
+          translations: {
+            en: { title: "Target Again" },
+            id: { title: "Target Again" },
+          },
+        },
+      ],
+    });
+
+    expect(getCurriculumSourceIssues({ curricula: [invalid] })).toEqual([
+      "Duplicate curriculum node target in fixture-program",
+      "Unknown parent node missing-parent in fixture-program:target",
+    ]);
+  });
+
+  it("fails fast for duplicate node keys and broken parent links", () => {
+    expect(() =>
+      defineCurriculum({
+        programKey: "fixture-program",
+        nodes: [
+          {
+            key: "target",
+            level: "topic",
+            materialKeys: [],
+            order: 1,
+            translations: {
+              en: { title: "Target" },
+              id: { title: "Target" },
+            },
+          },
+          {
+            key: "target",
+            level: "topic",
+            materialKeys: [],
+            order: 2,
+            translations: {
+              en: { title: "Target Again" },
+              id: { title: "Target Again" },
+            },
+          },
+        ],
+      })
+    ).toThrow("Duplicate curriculum node target in fixture-program.");
+
+    expect(() =>
+      defineCurriculum({
+        programKey: "fixture-program",
+        nodes: [
+          {
+            key: "target",
+            level: "topic",
+            materialKeys: [],
+            order: 1,
+            parentKey: "missing-parent",
+            translations: {
+              en: { title: "Target" },
+              id: { title: "Target" },
+            },
+          },
+        ],
+      })
+    ).toThrow("Unknown parent node missing-parent in fixture-program:target.");
   });
 
   it("rejects invalid curriculum node keys through the Effect Schema contract", () => {

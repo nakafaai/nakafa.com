@@ -69,7 +69,7 @@ describe("learningPrograms", () => {
       return sources.length;
     });
 
-    expect(result).toEqual({ created: 3, skipped: 0, updated: 0 });
+    expect(result).toEqual({ created: 5, skipped: 0, updated: 0 });
     expect(programs.map((program) => program.key)).toEqual([
       "id-kurikulum-merdeka",
       "snbt-2026",
@@ -672,7 +672,7 @@ describe("learningPrograms", () => {
       {}
     );
 
-    expect(result).toEqual({ created: 0, skipped: 0, updated: 4 });
+    expect(result).toEqual({ created: 0, skipped: 0, updated: 6 });
     expect(selectablePrograms.map((program) => program.key)).not.toContain(
       retiredProgram.key
     );

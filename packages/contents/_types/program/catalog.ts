@@ -7,17 +7,23 @@ import {
 import { Schema } from "effect";
 
 const SOURCE_RETRIEVED_AT = ProgramDateOnlySchema.make("2026-06-14");
+const SOURCE_RETRIEVED_AT_2026_06_16 = ProgramDateOnlySchema.make("2026-06-16");
+const PROGRAM_2025_START = ProgramDateOnlySchema.make("2025-01-01");
 const PROGRAM_2026_START = ProgramDateOnlySchema.make("2026-01-01");
 const PROGRAM_2026_END = ProgramDateOnlySchema.make("2026-12-31");
 const PROGRAM_2027_REVIEW = ProgramDateOnlySchema.make("2027-01-01");
+const PROGRAM_2027_END = ProgramDateOnlySchema.make("2027-12-31");
+const PROGRAM_2028_REVIEW = ProgramDateOnlySchema.make("2028-01-01");
 
 /** Canonical program keys owned by the source-controlled program registry. */
 export const LEARNING_PROGRAM_KEYS = {
+  cambridgeIgcse: LearningProgramKeySchema.make("cambridge-igcse"),
   indonesiaMerdekaCurriculum: LearningProgramKeySchema.make(
     "id-kurikulum-merdeka"
   ),
   snbt2026: LearningProgramKeySchema.make("snbt-2026"),
   tka2026: LearningProgramKeySchema.make("tka-2026"),
+  usCommonCoreNgss: LearningProgramKeySchema.make("us-common-core-ngss"),
 } as const;
 
 const learningProgramCatalogInput = [
@@ -56,6 +62,98 @@ const learningProgramCatalogInput = [
   {
     defaultCoverageStatus: "planned",
     displayOrder: 20,
+    key: LEARNING_PROGRAM_KEYS.cambridgeIgcse,
+    kind: "school-curriculum",
+    navigation: {
+      levels: ["course", "unit", "lesson"],
+      model: "course-unit-lesson",
+    },
+    provider: {
+      country: "GB",
+      kind: "official",
+      name: "Cambridge International Education",
+    },
+    sources: [
+      {
+        label: "Cambridge IGCSE Mathematics 0580",
+        retrievedAt: SOURCE_RETRIEVED_AT_2026_06_16,
+        reviewAfter: PROGRAM_2027_END,
+        type: "official-portal",
+        url: "https://www.cambridgeinternational.org/programmes-and-qualifications/cambridge-igcse-mathematics-0580/",
+      },
+      {
+        label: "Cambridge IGCSE Mathematics 0580 syllabus 2025-2027",
+        retrievedAt: SOURCE_RETRIEVED_AT_2026_06_16,
+        reviewAfter: PROGRAM_2027_END,
+        type: "official-blueprint",
+        url: "https://www.cambridgeinternational.org/Images/662466-2025-2027-syllabus.pdf",
+      },
+    ],
+    translations: {
+      en: {
+        description:
+          "Map Cambridge IGCSE subjects as Nakafa coverage is verified.",
+        title: "Cambridge IGCSE",
+      },
+      id: {
+        description:
+          "Petakan Cambridge IGCSE saat cakupan Nakafa terverifikasi.",
+        title: "Cambridge IGCSE",
+      },
+    },
+    version: {
+      label: "2025-2027",
+      startsAt: PROGRAM_2025_START,
+      endsAt: PROGRAM_2027_END,
+    },
+  },
+  {
+    defaultCoverageStatus: "planned",
+    displayOrder: 30,
+    key: LEARNING_PROGRAM_KEYS.usCommonCoreNgss,
+    kind: "school-curriculum",
+    navigation: {
+      levels: ["course", "unit", "lesson"],
+      model: "course-unit-lesson",
+    },
+    provider: {
+      country: "US",
+      kind: "official",
+      name: "CCSSO / NGSS Lead States",
+    },
+    sources: [
+      {
+        label: "Common Core State Standards for Mathematics",
+        retrievedAt: SOURCE_RETRIEVED_AT_2026_06_16,
+        reviewAfter: PROGRAM_2028_REVIEW,
+        type: "official-blueprint",
+        url: "https://learning.ccsso.org/wp-content/uploads/2022/11/ADA-Compliant-Math-Standards.pdf",
+      },
+      {
+        label: "Next Generation Science Standards",
+        retrievedAt: SOURCE_RETRIEVED_AT_2026_06_16,
+        reviewAfter: PROGRAM_2028_REVIEW,
+        type: "official-portal",
+        url: "https://www.nextgenscience.org/",
+      },
+    ],
+    translations: {
+      en: {
+        description:
+          "Align Common Core Math and NGSS as verified material coverage grows.",
+        title: "Common Core Math + NGSS",
+      },
+      id: {
+        description:
+          "Selaraskan Common Core Math dan NGSS saat cakupan materi terverifikasi.",
+        title: "Common Core Math + NGSS",
+      },
+    },
+    version: { label: "High school standards" },
+  },
+  {
+    defaultCoverageStatus: "planned",
+    displayOrder: 40,
     key: LEARNING_PROGRAM_KEYS.tka2026,
     kind: "assessment",
     navigation: {
@@ -98,7 +196,7 @@ const learningProgramCatalogInput = [
   },
   {
     defaultCoverageStatus: "partial",
-    displayOrder: 30,
+    displayOrder: 50,
     key: LEARNING_PROGRAM_KEYS.snbt2026,
     kind: "admission-exam",
     navigation: {

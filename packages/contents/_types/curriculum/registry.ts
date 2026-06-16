@@ -22,7 +22,17 @@ export function getCurriculumSourceIssues({
   const issues: string[] = [];
 
   for (const curriculum of curricula) {
-    const nodeKeys = new Set(curriculum.nodes.map((node) => node.key));
+    const nodeKeys = new Set<string>();
+
+    for (const node of curriculum.nodes) {
+      if (nodeKeys.has(node.key)) {
+        issues.push(
+          `Duplicate curriculum node ${node.key} in ${curriculum.programKey}`
+        );
+      }
+
+      nodeKeys.add(node.key);
+    }
 
     for (const node of curriculum.nodes) {
       if (node.parentKey && !nodeKeys.has(node.parentKey)) {

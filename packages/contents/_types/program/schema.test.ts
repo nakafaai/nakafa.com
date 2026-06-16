@@ -27,9 +27,11 @@ describe("program/schema", () => {
       )
     ).toBe(true);
     expect(kindsByKey).toMatchObject({
+      "cambridge-igcse": "school-curriculum",
       "id-kurikulum-merdeka": "school-curriculum",
       "snbt-2026": "admission-exam",
       "tka-2026": "assessment",
+      "us-common-core-ngss": "school-curriculum",
     });
   });
 
@@ -54,6 +56,14 @@ describe("program/schema", () => {
     expect(navigationByKey["snbt-2026"]).toEqual({
       levels: ["section", "domain", "practice-set"],
       model: "exam-domain-practice-set",
+    });
+    expect(navigationByKey["cambridge-igcse"]).toEqual({
+      levels: ["course", "unit", "lesson"],
+      model: "course-unit-lesson",
+    });
+    expect(navigationByKey["us-common-core-ngss"]).toEqual({
+      levels: ["course", "unit", "lesson"],
+      model: "course-unit-lesson",
     });
   });
 
