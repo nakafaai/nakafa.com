@@ -9,11 +9,15 @@ import type {
 
 export type ChoiceTone = "guide" | "nina" | "practice" | "school" | "target";
 export type PreviewAsset =
-  | "exam"
-  | "parent"
-  | "practice"
-  | "student"
-  | "teacher";
+  | "/classes/ball.png"
+  | "/classes/lamp.png"
+  | "/classes/music.png"
+  | "/classes/puzzle.png"
+  | "/classes/rocket.png"
+  | "/classes/sakura.png"
+  | "/classes/sky.png"
+  | "/classes/stars.png"
+  | "/classes/writer.png";
 
 /** Normal Nakafa roles accepted by the learner-facing onboarding flow. */
 export type OnboardingRole = SelfSelectableUserRole;
@@ -48,7 +52,7 @@ export type OnboardingFocusKey = (typeof onboardingFocusKeys)[number];
 const studentFocusOptions = [
   {
     descriptionKey: "onboarding.focus.student.school.description",
-    image: "student",
+    image: "/classes/writer.png",
     interest: "school-curriculum",
     key: studentSchoolFocusKey,
     preferredKinds: ["school-curriculum"],
@@ -57,7 +61,7 @@ const studentFocusOptions = [
   },
   {
     descriptionKey: "onboarding.focus.student.exam.description",
-    image: "exam",
+    image: "/classes/rocket.png",
     interest: "exam-prep",
     key: studentExamFocusKey,
     preferredKinds: ["admission-exam"],
@@ -69,7 +73,7 @@ const studentFocusOptions = [
 const teacherFocusOptions = [
   {
     descriptionKey: "onboarding.focus.teacher.materials.description",
-    image: "teacher",
+    image: "/classes/puzzle.png",
     interest: "school-curriculum",
     key: teacherMaterialsFocusKey,
     preferredKinds: ["school-curriculum"],
@@ -78,7 +82,7 @@ const teacherFocusOptions = [
   },
   {
     descriptionKey: "onboarding.focus.teacher.practice.description",
-    image: "practice",
+    image: "/classes/ball.png",
     interest: "assessment-prep",
     key: teacherPracticeFocusKey,
     preferredKinds: ["assessment", "admission-exam"],
@@ -90,7 +94,7 @@ const teacherFocusOptions = [
 const parentFocusOptions = [
   {
     descriptionKey: "onboarding.focus.parent.understand.description",
-    image: "parent",
+    image: "/classes/stars.png",
     interest: "school-curriculum",
     key: parentUnderstandFocusKey,
     preferredKinds: ["school-curriculum"],
@@ -99,7 +103,7 @@ const parentFocusOptions = [
   },
   {
     descriptionKey: "onboarding.focus.parent.practice.description",
-    image: "practice",
+    image: "/classes/music.png",
     interest: "assessment-prep",
     key: parentPracticeFocusKey,
     preferredKinds: ["assessment", "admission-exam"],
@@ -111,21 +115,21 @@ const parentFocusOptions = [
 export const roleOptions = [
   {
     descriptionKey: "onboarding.role.student.description",
-    image: "student",
+    image: "/classes/sakura.png",
     key: "student",
     titleKey: "onboarding.role.student.title",
     tone: "school",
   },
   {
     descriptionKey: "onboarding.role.teacher.description",
-    image: "teacher",
+    image: "/classes/lamp.png",
     key: "teacher",
     titleKey: "onboarding.role.teacher.title",
     tone: "guide",
   },
   {
     descriptionKey: "onboarding.role.parent.description",
-    image: "parent",
+    image: "/classes/sky.png",
     key: "parent",
     titleKey: "onboarding.role.parent.title",
     tone: "nina",

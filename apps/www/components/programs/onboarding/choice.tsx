@@ -78,7 +78,7 @@ function ChoicePreview({
         colorSteps={3}
         fit="contain"
         height="100%"
-        image={`/onboarding/${image}.png`}
+        image={image}
         minPixelRatio={1}
         originalColors
         size={3}
