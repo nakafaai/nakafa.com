@@ -1,3 +1,9 @@
+import {
+  getProgramKeysForMaterialRoute,
+  getProgramKeysForMaterialRouteFromNodes,
+  listCurriculumNodesEffect,
+  type ProjectedCurriculumNode,
+} from "@repo/contents/_types/curriculum/projection";
 import { getCurriculumLensScopeForKind } from "@repo/contents/_types/graph/schema";
 import { normalizeGraphRoute } from "@repo/contents/_types/learning-graph";
 import { LEARNING_PROGRAM_COVERAGE_ALIGNMENTS } from "@repo/contents/_types/program/alignment";
@@ -9,7 +15,7 @@ import {
   LearningProgramCoverageInputSchema,
   type LearningProgramCoverageRoute,
 } from "@repo/contents/_types/program/schema";
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
 
 interface CoverageAccumulator {
   contentCount: number;
@@ -18,19 +24,37 @@ interface CoverageAccumulator {
   sampleContentId: string;
 }
 
-/** Projects graph-backed route rows into bounded program coverage rows. */
-export function createLearningProgramCoverageInputs({
-  alignments = LEARNING_PROGRAM_COVERAGE_ALIGNMENTS,
-  programs,
-  routes,
-  syncedAt,
-}: {
+interface LearningProgramCoverageInputsArgs {
   alignments?: readonly LearningProgramCoverageAlignment[];
+  curriculumNodes?: readonly ProjectedCurriculumNode[];
   programs: readonly LearningProgram[];
   routes: readonly LearningProgramCoverageRoute[];
   syncedAt: number;
-}) {
+}
+
+/** Effect-native coverage projection entrypoint for sync boundaries. */
+export const createLearningProgramCoverageInputsEffect = Effect.fn(
+  "contents.program.createLearningProgramCoverageInputs"
+)(function* (args: LearningProgramCoverageInputsArgs) {
+  const curriculumNodes =
+    args.curriculumNodes ?? (yield* listCurriculumNodesEffect());
+
+  return createLearningProgramCoverageInputs({
+    ...args,
+    curriculumNodes,
+  });
+});
+
+/** Projects graph-backed route rows into bounded program coverage rows. */
+export function createLearningProgramCoverageInputs({
+  alignments = LEARNING_PROGRAM_COVERAGE_ALIGNMENTS,
+  curriculumNodes,
+  programs,
+  routes,
+  syncedAt,
+}: LearningProgramCoverageInputsArgs) {
   const curriculumRows = createCurriculumCoverageInputs({
+    curriculumNodes,
     programs,
     routes,
     syncedAt,
@@ -69,18 +93,28 @@ export function createFallbackCoverageInputs({
 
 /** Projects routes through curriculum-owned material mappings. */
 export function createCurriculumCoverageInputs({
+  curriculumNodes,
   programs,
   routes,
   syncedAt,
 }: {
+  curriculumNodes?: readonly ProjectedCurriculumNode[];
   programs: readonly LearningProgram[];
   routes: readonly LearningProgramCoverageRoute[];
   syncedAt: number;
 }) {
   return createCoverageInputsFromProgramKeys({
     programs,
-    resolveProgramKeys: (route) =>
-      getProgramKeysForMaterialRoute({ route: route.route }),
+    resolveProgramKeys: (route) => {
+      if (curriculumNodes) {
+        return getProgramKeysForMaterialRouteFromNodes({
+          curriculumNodes,
+          route: route.route,
+        });
+      }
+
+      return getProgramKeysForMaterialRoute({ route: route.route });
+    },
     routes,
     syncedAt,
   });
@@ -230,5 +264,3 @@ function compareCoverageRows(
 ) {
   return getCoverageRowKey(left).localeCompare(getCoverageRowKey(right));
 }
-
-import { getProgramKeysForMaterialRoute } from "@repo/contents/_types/curriculum/projection";

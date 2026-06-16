@@ -1,3 +1,4 @@
+import { getCurriculumProjectionIssues } from "@repo/contents/_types/curriculum/projection";
 import type { CurriculumSource } from "@repo/contents/_types/curriculum/schema";
 import { CURRICULUM_SOURCES } from "@repo/contents/_types/curriculum/source";
 import type { MaterialSource } from "@repo/contents/_types/material/schema";
@@ -18,38 +19,5 @@ export function getCurriculumSourceIssues({
   curricula?: readonly CurriculumSource[];
   materials?: readonly MaterialSource[];
 } = {}) {
-  const materialKeys = new Set(materials.map((material) => material.key));
-  const issues: string[] = [];
-
-  for (const curriculum of curricula) {
-    const nodeKeys = new Set<string>();
-
-    for (const node of curriculum.nodes) {
-      if (nodeKeys.has(node.key)) {
-        issues.push(
-          `Duplicate curriculum node ${node.key} in ${curriculum.programKey}`
-        );
-      }
-
-      nodeKeys.add(node.key);
-    }
-
-    for (const node of curriculum.nodes) {
-      if (node.parentKey && !nodeKeys.has(node.parentKey)) {
-        issues.push(
-          `Unknown parent node ${node.parentKey} in ${curriculum.programKey}:${node.key}`
-        );
-      }
-
-      for (const materialKey of node.materialKeys) {
-        if (!materialKeys.has(materialKey)) {
-          issues.push(
-            `Unknown material key ${materialKey} in ${curriculum.programKey}:${node.key}`
-          );
-        }
-      }
-    }
-  }
-
-  return issues;
+  return getCurriculumProjectionIssues({ curricula, materials });
 }

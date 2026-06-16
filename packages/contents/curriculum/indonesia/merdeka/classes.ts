@@ -1,10 +1,13 @@
-import type { CurriculumNodeInput } from "@repo/contents/_types/curriculum/schema";
+import { classNode } from "@repo/contents/_types/curriculum/schema";
+import {
+  merdekaClass10SubjectNodes,
+  merdekaClass11SubjectNodes,
+  merdekaClass12SubjectNodes,
+} from "@repo/contents/curriculum/indonesia/merdeka/subjects";
 
 export const merdekaClassNodes = [
-  {
+  classNode({
     key: "class-10",
-    level: "class",
-    materialKeys: [],
     order: 100,
     translations: {
       en: {
@@ -14,11 +17,10 @@ export const merdekaClassNodes = [
         title: "Kelas 10",
       },
     },
-  },
-  {
+    children: merdekaClass10SubjectNodes,
+  }),
+  classNode({
     key: "class-11",
-    level: "class",
-    materialKeys: [],
     order: 110,
     translations: {
       en: {
@@ -28,11 +30,10 @@ export const merdekaClassNodes = [
         title: "Kelas 11",
       },
     },
-  },
-  {
+    children: merdekaClass11SubjectNodes,
+  }),
+  classNode({
     key: "class-12",
-    level: "class",
-    materialKeys: [],
     order: 120,
     translations: {
       en: {
@@ -42,5 +43,6 @@ export const merdekaClassNodes = [
         title: "Kelas 12",
       },
     },
-  },
-] satisfies readonly CurriculumNodeInput[];
+    children: merdekaClass12SubjectNodes,
+  }),
+];

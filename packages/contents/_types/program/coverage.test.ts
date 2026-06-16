@@ -3,13 +3,14 @@ import {
   createCurriculumCoverageInputs,
   createFallbackCoverageInputs,
   createLearningProgramCoverageInputs,
+  createLearningProgramCoverageInputsEffect,
   getProgramKeysForCoverageRoute,
 } from "@repo/contents/_types/program/coverage";
 import {
   LearningProgramCoverageRouteSchema,
   LearningProgramKeySchema,
 } from "@repo/contents/_types/program/schema";
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 const decodeRoute = Schema.decodeUnknownSync(
@@ -141,6 +142,24 @@ describe("program/coverage", () => {
     });
     expect(rowsByProgram["snbt-2026"]).toMatchObject({ lensScope: "exam" });
     expect(JSON.stringify(rows)).not.toContain("assessment/high-school/snbt");
+  });
+
+  it("projects program coverage through the Effect sync entrypoint", async () => {
+    const rows = await Effect.runPromise(
+      createLearningProgramCoverageInputsEffect({
+        programs: LEARNING_PROGRAM_CATALOG,
+        routes: [subjectRoute, snbtRoute],
+        syncedAt: 1,
+      })
+    );
+    const rowsByProgram = Object.fromEntries(
+      rows.map((row) => [row.programKey, row])
+    );
+
+    expect(rowsByProgram["id-kurikulum-merdeka"]).toMatchObject({
+      lensScope: "curriculum",
+    });
+    expect(rowsByProgram["snbt-2026"]).toMatchObject({ lensScope: "exam" });
   });
 
   it("preserves explicit available catalog status for real program coverage", () => {

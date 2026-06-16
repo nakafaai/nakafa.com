@@ -28,6 +28,7 @@ import type {
   SyncResult,
 } from "@repo/backend/scripts/sync-content/types";
 import { listAssessments } from "@repo/contents/_types/assessment/registry";
+import { listCurriculumNodesEffect } from "@repo/contents/_types/curriculum/projection";
 import { listCurricula } from "@repo/contents/_types/curriculum/registry";
 import {
   listLessonMaterialSources,
@@ -182,30 +183,27 @@ const syncCurricula = Effect.fn("sync.generatedCurricula")(function* (
   options: SyncOptions
 ) {
   const curricula = listCurricula();
+  const curriculumNodes = yield* listCurriculumNodesEffect({ curricula });
   const curriculumRows = curricula.flatMap((curriculum) => {
     const program = findLearningProgramByKey(curriculum.programKey);
     return program ? [toGeneratedProgramRow(program)] : [];
   });
-  const nodeRows: CurriculumNodePayload[] = curricula.flatMap((curriculum) =>
-    curriculum.nodes.map((node) => ({
-      curriculumKey: curriculum.programKey,
-      displayOrder: node.order,
-      key: node.key,
-      level: node.level,
-      parentKey: node.parentKey,
-      translations: node.translations,
-    }))
-  );
-  const materialRows: CurriculumMaterialPayload[] = curricula.flatMap(
-    (curriculum) =>
-      curriculum.nodes.flatMap((node) =>
-        node.materialKeys.map((materialKey, index) => ({
-          curriculumKey: curriculum.programKey,
-          materialKey,
-          nodeKey: node.key,
-          order: index,
-        }))
-      )
+  const nodeRows: CurriculumNodePayload[] = curriculumNodes.map((node) => ({
+    curriculumKey: node.curriculumKey,
+    displayOrder: node.order,
+    key: node.key,
+    level: node.level,
+    parentKey: node.parentKey,
+    translations: node.translations,
+  }));
+  const materialRows: CurriculumMaterialPayload[] = curriculumNodes.flatMap(
+    (node) =>
+      node.materialKeys.map((materialKey, index) => ({
+        curriculumKey: node.curriculumKey,
+        materialKey,
+        nodeKey: node.key,
+        order: index,
+      }))
   );
 
   return yield* Effect.gen(function* () {

@@ -26,7 +26,7 @@ import type {
   SyncOptions,
 } from "@repo/backend/scripts/sync-content/types";
 import { getAllSurah } from "@repo/contents/_lib/quran";
-import { listCurricula } from "@repo/contents/_types/curriculum/registry";
+import { listCurriculumNodesEffect } from "@repo/contents/_types/curriculum/projection";
 import {
   listLessonMaterialSources,
   listLessonRows,
@@ -85,36 +85,38 @@ function getExpectedQuranCounts() {
 }
 
 /** Builds final read-model count targets from typed material and curriculum sources. */
-function getExpectedGeneratedCounts(options: SyncOptions) {
-  const curriculumLessons = listCurriculumLessonRows(options);
+const getExpectedGeneratedCounts = Effect.fn("sync.expectedGeneratedCounts")(
+  function* (options: SyncOptions) {
+    const curriculumLessons = yield* listCurriculumLessonRows(options);
 
-  return {
-    curriculumLessons: curriculumLessons.reduce(
-      (total, topic) => total + topic.sections.length,
-      0
-    ),
-    curriculumTopics: curriculumLessons.length,
-    materialLocales:
-      getExpectedLessonMaterialLocales(options) +
-      getExpectedPracticeMaterialLocales(options),
-  };
-}
+    return {
+      curriculumLessons: curriculumLessons.reduce(
+        (total, topic) => total + topic.sections.length,
+        0
+      ),
+      curriculumTopics: curriculumLessons.length,
+      materialLocales:
+        getExpectedLessonMaterialLocales(options) +
+        getExpectedPracticeMaterialLocales(options),
+    };
+  }
+);
 
-function listCurriculumLessonRows(options: SyncOptions) {
-  const curriculumMaterialKeys = new Set<string>();
+const listCurriculumLessonRows = Effect.fn("sync.expectedCurriculumLessons")(
+  function* (options: SyncOptions) {
+    const curriculumMaterialKeys = new Set<string>();
 
-  for (const curriculum of listCurricula()) {
-    for (const node of curriculum.nodes) {
+    for (const node of yield* listCurriculumNodesEffect()) {
       for (const materialKey of node.materialKeys) {
         curriculumMaterialKeys.add(materialKey);
       }
     }
-  }
 
-  return listLessonRows(options.locale).filter((topic) =>
-    curriculumMaterialKeys.has(topic.key)
-  );
-}
+    return listLessonRows(options.locale).filter((topic) =>
+      curriculumMaterialKeys.has(topic.key)
+    );
+  }
+);
 
 function getExpectedLessonMaterialLocales(options: SyncOptions) {
   const localeCount = getExpectedLocaleCount(options);
@@ -332,7 +334,7 @@ export const verify = Effect.fn("sync.verify")(function* (
   );
   const lessonSourceCount = listLessonMaterialSources().length;
   const exercisePlanCount = listPracticeMaterialSources().length;
-  const expectedGeneratedCounts = getExpectedGeneratedCounts(options);
+  const expectedGeneratedCounts = yield* getExpectedGeneratedCounts(options);
 
   log("=== FILESYSTEM ===\n");
   log("Articles:");

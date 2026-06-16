@@ -1,22 +1,21 @@
-import type { CurriculumNodeInput } from "@repo/contents/_types/curriculum/schema";
+import { courseNode } from "@repo/contents/_types/curriculum/schema";
+import { igcseMathematicsUnitNodes } from "@repo/contents/curriculum/cambridge/igcse/units/mathematics";
 
-export const igcseSubjectNodes = [
-  {
+export const igcseCourseNodes = [
+  courseNode({
     key: "mathematics-0580",
-    level: "course",
-    materialKeys: [],
     order: 10,
     translations: {
       en: {
         title: "Mathematics 0580",
         description:
-          "Cambridge IGCSE Mathematics 0580 mapped only where Nakafa material is verified.",
+          "Build number, algebra, geometry, and data skills for IGCSE Mathematics.",
       },
       id: {
         title: "Mathematics 0580",
-        description:
-          "Cambridge IGCSE Mathematics 0580 dipetakan hanya pada materi Nakafa yang sudah terverifikasi.",
+        description: "Bangun kemampuan bilangan, aljabar, geometri, dan data.",
       },
     },
-  },
-] satisfies readonly CurriculumNodeInput[];
+    children: igcseMathematicsUnitNodes,
+  }),
+];

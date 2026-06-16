@@ -4,5 +4,5 @@ import { commonCoreNgssStandardNodes } from "@repo/contents/curriculum/united-st
 
 export const unitedStatesCommonCoreNgssCurriculum = defineCurriculum({
   programKey: LEARNING_PROGRAM_KEYS.usCommonCoreNgss,
-  nodes: commonCoreNgssStandardNodes,
+  tree: commonCoreNgssStandardNodes,
 });

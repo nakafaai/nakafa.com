@@ -29,7 +29,10 @@ import type {
   SyncOptions,
   SyncResult,
 } from "@repo/backend/scripts/sync-content/types";
-import { listCurricula } from "@repo/contents/_types/curriculum/registry";
+import {
+  listCurriculumNodesEffect,
+  type ProjectedCurriculumNode,
+} from "@repo/contents/_types/curriculum/projection";
 import { listLessonRows } from "@repo/contents/_types/material/registry";
 import type { FunctionArgs } from "convex/server";
 import { Effect } from "effect";
@@ -54,30 +57,35 @@ interface CurriculumLessonOrder {
 }
 
 /** Projects curriculum-owned placement data into the curriculum read model. */
-function listSyncCurriculumTopics(locale?: SyncOptions["locale"]) {
-  const placementByMaterialKey = createCurriculumPlacementByMaterialKey();
+const listSyncCurriculumTopics = Effect.fn("sync.listCurriculumTopics")(
+  function* (locale?: SyncOptions["locale"]) {
+    const placementByMaterialKey =
+      yield* createCurriculumPlacementByMaterialKey();
 
-  return listLessonRows(locale).flatMap((topic) => {
-    const placement = placementByMaterialKey.get(topic.key);
+    return listLessonRows(locale).flatMap((topic) => {
+      const placement = placementByMaterialKey.get(topic.key);
 
-    if (!placement) {
-      return [];
-    }
+      if (!placement) {
+        return [];
+      }
 
-    return [
-      {
-        ...topic,
-        category: placement.category,
-        grade: placement.grade,
-        material: topic.domain,
-        order: placement.order,
-      },
-    ];
-  });
-}
+      return [
+        {
+          ...topic,
+          category: placement.category,
+          grade: placement.grade,
+          material: topic.domain,
+          order: placement.order,
+        },
+      ];
+    });
+  }
+);
 
 /** Indexes curriculum topic nodes by material key for sync projections. */
-function createCurriculumPlacementByMaterialKey() {
+const createCurriculumPlacementByMaterialKey = Effect.fn(
+  "sync.createCurriculumPlacementByMaterialKey"
+)(function* () {
   const placementByMaterialKey = new Map<
     string,
     {
@@ -87,58 +95,58 @@ function createCurriculumPlacementByMaterialKey() {
     }
   >();
 
-  for (const curriculum of listCurricula()) {
-    const nodeByKey = new Map(curriculum.nodes.map((node) => [node.key, node]));
+  const curriculumNodes = yield* listCurriculumNodesEffect();
+  const nodeByKey = new Map(
+    curriculumNodes.map((node) => [getProjectedNodeMapKey(node), node])
+  );
 
-    for (const node of curriculum.nodes) {
-      if (node.materialKeys.length === 0) {
-        continue;
-      }
+  for (const node of curriculumNodes) {
+    if (node.materialKeys.length === 0) {
+      continue;
+    }
 
-      const classNode = findAncestorNode(nodeByKey, node.key, "class");
-      const classNumber = classNode?.key.match(CURRICULUM_CLASS_KEY_REGEX)?.[1];
+    const classNode = findAncestorNode(nodeByKey, node, "class");
+    const classNumber = classNode?.key.match(CURRICULUM_CLASS_KEY_REGEX)?.[1];
 
-      if (
-        classNumber !== "10" &&
-        classNumber !== "11" &&
-        classNumber !== "12"
-      ) {
-        continue;
-      }
+    if (classNumber !== "10" && classNumber !== "11" && classNumber !== "12") {
+      continue;
+    }
 
-      for (const materialKey of node.materialKeys) {
-        placementByMaterialKey.set(materialKey, {
-          category: "high-school",
-          grade: classNumber,
-          order: node.order,
-        });
-      }
+    for (const materialKey of node.materialKeys) {
+      placementByMaterialKey.set(materialKey, {
+        category: "high-school",
+        grade: classNumber,
+        order: node.order,
+      });
     }
   }
 
   return placementByMaterialKey;
-}
+});
 
 /** Walks a curriculum node chain until the requested outline level is found. */
 function findAncestorNode(
-  nodeByKey: ReadonlyMap<
-    string,
-    ReturnType<typeof listCurricula>[number]["nodes"][number]
-  >,
-  nodeKey: string,
-  level: ReturnType<typeof listCurricula>[number]["nodes"][number]["level"]
+  nodeByKey: ReadonlyMap<string, ProjectedCurriculumNode>,
+  node: ProjectedCurriculumNode,
+  level: ProjectedCurriculumNode["level"]
 ) {
-  let current = nodeByKey.get(nodeKey);
+  let current: ProjectedCurriculumNode | undefined = node;
 
   while (current) {
     if (current.level === level) {
       return current;
     }
 
-    current = current.parentKey ? nodeByKey.get(current.parentKey) : undefined;
+    current = current.parentKey
+      ? nodeByKey.get(`${current.curriculumKey}:${current.parentKey}`)
+      : undefined;
   }
 
   return null;
+}
+
+function getProjectedNodeMapKey(node: ProjectedCurriculumNode) {
+  return `${node.curriculumKey}:${node.key}`;
 }
 
 /** Syncs curriculum topic metadata from typed Material sources into Convex. */
@@ -149,7 +157,7 @@ export const syncCurriculumTopics = Effect.fn("sync.curriculumTopics")(
       log("\n--- CURRICULUM TOPICS ---\n");
     }
 
-    const materialTopics = listSyncCurriculumTopics(options.locale);
+    const materialTopics = yield* listSyncCurriculumTopics(options.locale);
 
     if (!options.quiet) {
       log(`Material topics found: ${materialTopics.length}`);
@@ -456,8 +464,9 @@ const readCurriculumLessonPlacementIndex = Effect.fn(
 )(function* (options: SyncOptions) {
   const orderBySlug = new Map<string, CurriculumLessonOrder>();
   const mappedTopicBySlug = new Set<string>();
+  const topics = yield* listSyncCurriculumTopics(options.locale);
 
-  for (const topic of listSyncCurriculumTopics(options.locale)) {
+  for (const topic of topics) {
     mappedTopicBySlug.add(`${topic.locale}:${topic.slug}`);
 
     for (const section of topic.sections) {

@@ -111,48 +111,51 @@ async function loadSubjects({
     /** Returns MDX fixture files for the requested subject glob. */
     globFiles: () => Effect.succeed(sectionFiles),
   }));
-  vi.doMock("@repo/contents/_types/curriculum/registry", () => ({
-    /** Returns typed curriculum placements for curriculum sync. */
-    listCurricula: () => [
+  vi.doMock("@repo/contents/_types/curriculum/projection", () => {
+    const curriculumNodes = [
       {
-        programKey: "id-kurikulum-merdeka",
-        nodes: [
-          {
-            key: "class-10",
-            level: "class",
-            materialKeys: [],
-            order: 1,
-            translations: {
-              en: { title: "Class 10" },
-              id: { title: "Kelas 10" },
-            },
-          },
-          {
-            key: "class-10-mathematics",
-            level: "subject",
-            materialKeys: [],
-            order: 1,
-            parentKey: "class-10",
-            translations: {
-              en: { title: "Mathematics" },
-              id: { title: "Matematika" },
-            },
-          },
-          ...materialTopics.map((topic) => ({
-            key: `class-10-mathematics-${topic.topic}`,
-            level: "topic",
-            materialKeys: [topic.key],
-            order: topic.order,
-            parentKey: "class-10-mathematics",
-            translations: {
-              en: { title: topic.title },
-              id: { title: topic.title },
-            },
-          })),
-        ],
+        curriculumKey: "id-kurikulum-merdeka",
+        key: "class-10",
+        level: "class",
+        materialKeys: [],
+        order: 1,
+        translations: {
+          en: { title: "Class 10" },
+          id: { title: "Kelas 10" },
+        },
       },
-    ],
-  }));
+      {
+        curriculumKey: "id-kurikulum-merdeka",
+        key: "class-10-mathematics",
+        level: "subject",
+        materialKeys: [],
+        order: 1,
+        parentKey: "class-10",
+        translations: {
+          en: { title: "Mathematics" },
+          id: { title: "Matematika" },
+        },
+      },
+      ...materialTopics.map((topic) => ({
+        curriculumKey: "id-kurikulum-merdeka",
+        key: `class-10-mathematics-${topic.topic}`,
+        level: "topic",
+        materialKeys: [topic.key],
+        order: topic.order,
+        parentKey: "class-10-mathematics",
+        translations: {
+          en: { title: topic.title },
+          id: { title: topic.title },
+        },
+      })),
+    ];
+
+    return {
+      /** Returns typed curriculum placements for curriculum sync. */
+      listCurriculumNodes: () => curriculumNodes,
+      listCurriculumNodesEffect: () => Effect.succeed(curriculumNodes),
+    };
+  });
   vi.doMock("@repo/contents/_types/material/registry", () => ({
     /** Returns typed Material topic fixtures for curriculum sync. */
     listLessonRows: () => materialTopics,

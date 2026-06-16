@@ -23,7 +23,7 @@ import {
   LEARNING_PROGRAM_COVERAGE_ALIGNMENTS,
 } from "@repo/contents/_types/program/alignment";
 import { LEARNING_PROGRAM_CATALOG } from "@repo/contents/_types/program/catalog";
-import { createLearningProgramCoverageInputs } from "@repo/contents/_types/program/coverage";
+import { createLearningProgramCoverageInputsEffect } from "@repo/contents/_types/program/coverage";
 import {
   type LearningProgramCoverageRoute,
   LearningProgramCoverageRouteSchema,
@@ -64,7 +64,7 @@ export const syncLearningPrograms = Effect.fn("sync.learningPrograms")(
       LearningProgramSyncResultSchema
     );
     const routes = yield* collectLearningProgramCoverageRoutes(config, options);
-    const coverageRows = createLearningProgramCoverageInputs({
+    const coverageRows = yield* createLearningProgramCoverageInputsEffect({
       programs: LEARNING_PROGRAM_CATALOG,
       routes,
       syncedAt,
