@@ -15,14 +15,14 @@ import { useMutation } from "convex/react";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { HeaderAddNameField } from "@/components/school/classes/header-add-name-field";
+import { HeaderAddNameField } from "@/components/school/classes/add/name";
 import {
   classCreateDefaultValues,
   classCreateFormSchema,
-} from "@/components/school/classes/header-add-schema";
-import { HeaderAddSubjectField } from "@/components/school/classes/header-add-subject-field";
-import { HeaderAddVisibilityField } from "@/components/school/classes/header-add-visibility-field";
-import { HeaderAddYearField } from "@/components/school/classes/header-add-year-field";
+} from "@/components/school/classes/add/schema";
+import { HeaderAddSubjectField } from "@/components/school/classes/add/subject";
+import { HeaderAddVisibilityField } from "@/components/school/classes/add/visibility";
+import { HeaderAddYearField } from "@/components/school/classes/add/year";
 import { reportClientException } from "@/lib/analytics/client";
 import { useSchool } from "@/lib/context/use-school";
 

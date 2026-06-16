@@ -1,5 +1,5 @@
 import { Schema } from "effect";
-import { getCurrentAcademicYear } from "@/components/school/classes/header-add-utils";
+import { getCurrentAcademicYear } from "@/components/school/classes/add/utils";
 
 const MIN_NAME_LENGTH = 3;
 

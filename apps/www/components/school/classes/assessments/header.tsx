@@ -7,7 +7,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
-import { CreateAssessmentDialog } from "@/components/school/classes/assessments/create-dialog";
+import { CreateAssessmentDialog } from "@/components/school/classes/assessments/dialog/create";
 import { SchoolClassesAssessmentsSearch } from "@/components/school/classes/assessments/search";
 import { useClassPermissions } from "@/lib/hooks/use-class-permissions";
 

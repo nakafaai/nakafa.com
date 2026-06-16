@@ -5,7 +5,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
-import { CreateSchoolClassDialog } from "@/components/school/classes/header-add-dialog";
+import { CreateSchoolClassDialog } from "@/components/school/classes/add/dialog";
 
 /** Render the class-creation entry point inside the school classes header. */
 export function SchoolClassesHeaderAdd() {

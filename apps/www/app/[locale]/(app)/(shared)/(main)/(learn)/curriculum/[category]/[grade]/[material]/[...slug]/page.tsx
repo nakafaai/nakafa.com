@@ -33,13 +33,13 @@ import type { ReactNode } from "react";
 import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
 import { DeferredComments } from "@/components/comments/deferred";
 import { ComingSoon } from "@/components/shared/coming-soon";
+import { FooterContent } from "@/components/shared/footer-content";
+import { HeaderContent } from "@/components/shared/header-content";
+import { LayoutContent } from "@/components/shared/layout-content";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
-import { LayoutMaterialFooter } from "@/components/shared/material/footer";
-import { LayoutMaterialHeader } from "@/components/shared/material/header";
 import { LayoutMaterial } from "@/components/shared/material/layout";
-import { LayoutMaterialMain } from "@/components/shared/material/main";
-import { LayoutMaterialPagination } from "@/components/shared/material/pagination";
 import { LayoutMaterialToc } from "@/components/shared/material/toc";
+import { PaginationContent } from "@/components/shared/pagination-content";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
 import { importContentModuleOrNull } from "@/lib/content/module";
 import {
@@ -379,7 +379,7 @@ async function SubjectShell({
   return (
     <LayoutMaterial>
       <LayoutMaterialContent>
-        <LayoutMaterialHeader
+        <HeaderContent
           content={raw}
           icon={getMaterialIcon(material)}
           link={{
@@ -389,12 +389,12 @@ async function SubjectShell({
           slug={`/${locale}${filePath}`}
           title={metadata.title}
         />
-        <LayoutMaterialMain>
+        <LayoutContent>
           {headings.length === 0 && <ComingSoon />}
           {headings.length > 0 ? children : null}
-        </LayoutMaterialMain>
-        <LayoutMaterialPagination pagination={pagination} />
-        <LayoutMaterialFooter>{footer}</LayoutMaterialFooter>
+        </LayoutContent>
+        <PaginationContent pagination={pagination} />
+        <FooterContent>{footer}</FooterContent>
         {toolbar}
       </LayoutMaterialContent>
       <LayoutMaterialToc

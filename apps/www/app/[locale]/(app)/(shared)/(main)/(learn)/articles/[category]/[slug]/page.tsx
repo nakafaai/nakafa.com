@@ -15,11 +15,11 @@ import type { ReactNode } from "react";
 import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
 import { DeferredComments } from "@/components/comments/deferred";
 import { ComingSoon } from "@/components/shared/coming-soon";
+import { FooterContent } from "@/components/shared/footer-content";
+import { HeaderContent } from "@/components/shared/header-content";
+import { LayoutContent } from "@/components/shared/layout-content";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
-import { LayoutMaterialFooter } from "@/components/shared/material/footer";
-import { LayoutMaterialHeader } from "@/components/shared/material/header";
 import { LayoutMaterial } from "@/components/shared/material/layout";
-import { LayoutMaterialMain } from "@/components/shared/material/main";
 import { LayoutMaterialToc } from "@/components/shared/material/toc";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
 import { importContentModuleOrNull } from "@/lib/content/module";
@@ -270,7 +270,7 @@ async function ArticleShell({
   return (
     <LayoutMaterial>
       <LayoutMaterialContent>
-        <LayoutMaterialHeader
+        <HeaderContent
           content={raw}
           description={metadata.description}
           link={{
@@ -280,11 +280,11 @@ async function ArticleShell({
           slug={`/${locale}${filePath}`}
           title={metadata.title}
         />
-        <LayoutMaterialMain>
+        <LayoutContent>
           {headings.length === 0 && <ComingSoon />}
           {headings.length > 0 ? children : null}
-        </LayoutMaterialMain>
-        <LayoutMaterialFooter>{footer}</LayoutMaterialFooter>
+        </LayoutContent>
+        <FooterContent>{footer}</FooterContent>
         {toolbar}
       </LayoutMaterialContent>
       <LayoutMaterialToc

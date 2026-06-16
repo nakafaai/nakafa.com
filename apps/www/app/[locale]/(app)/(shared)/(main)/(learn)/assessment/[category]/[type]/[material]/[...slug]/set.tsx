@@ -20,13 +20,13 @@ import type { ExerciseRouteData } from "@/app/[locale]/(app)/(shared)/(main)/(le
 import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
 import { DeferredComments } from "@/components/comments/deferred";
 import { ExerciseTrackedEntry } from "@/components/exercise/entry";
+import { FooterContent } from "@/components/shared/footer-content";
+import { HeaderContent } from "@/components/shared/header-content";
+import { LayoutContent } from "@/components/shared/layout-content";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
-import { LayoutMaterialFooter } from "@/components/shared/material/footer";
-import { LayoutMaterialHeader } from "@/components/shared/material/header";
 import { LayoutMaterial } from "@/components/shared/material/layout";
-import { LayoutMaterialMain } from "@/components/shared/material/main";
-import { LayoutMaterialPagination } from "@/components/shared/material/pagination";
 import { LayoutMaterialToc } from "@/components/shared/material/toc";
+import { PaginationContent } from "@/components/shared/pagination-content";
 import { getOgUrl } from "@/lib/utils/metadata";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 
@@ -90,14 +90,14 @@ export async function ExerciseSetPage({
       />
       <LayoutMaterial>
         <LayoutMaterialContent>
-          <LayoutMaterialHeader
+          <HeaderContent
             link={{
               href: data.materialPath,
               label: data.currentMaterial.title,
             }}
             title={data.currentMaterialItem.title}
           />
-          <LayoutMaterialMain as="section" className="space-y-12">
+          <LayoutContent as="section" className="space-y-12">
             <ExerciseAttempt totalExercises={data.exercises.length} />
 
             {data.exercises.map((exercise) => (
@@ -109,11 +109,11 @@ export async function ExerciseSetPage({
                 srLabel={t("number-count", { count: exercise.number })}
               />
             ))}
-          </LayoutMaterialMain>
-          <LayoutMaterialPagination pagination={pagination} />
-          <LayoutMaterialFooter>
+          </LayoutContent>
+          <PaginationContent pagination={pagination} />
+          <FooterContent>
             <DeferredComments slug={data.pagePath} />
-          </LayoutMaterialFooter>
+          </FooterContent>
           <DeferredAiSheetOpen contextTitle={data.currentMaterialItem.title} />
         </LayoutMaterialContent>
         <LayoutMaterialToc

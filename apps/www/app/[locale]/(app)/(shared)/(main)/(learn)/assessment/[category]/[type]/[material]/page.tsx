@@ -26,11 +26,11 @@ import { use } from "react";
 import { CardMaterial } from "@/components/shared/card-material";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { ContainerList } from "@/components/shared/container-list";
+import { FooterContent } from "@/components/shared/footer-content";
+import { HeaderContent } from "@/components/shared/header-content";
+import { LayoutContent } from "@/components/shared/layout-content";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
-import { LayoutMaterialFooter } from "@/components/shared/material/footer";
-import { LayoutMaterialHeader } from "@/components/shared/material/header";
 import { LayoutMaterial } from "@/components/shared/material/layout";
-import { LayoutMaterialMain } from "@/components/shared/material/main";
 import { LayoutMaterialToc } from "@/components/shared/material/toc";
 import { RefContent } from "@/components/shared/ref-content";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
@@ -217,7 +217,7 @@ async function PageContent({
       />
       <LayoutMaterial>
         <LayoutMaterialContent>
-          <LayoutMaterialHeader
+          <HeaderContent
             icon={getMaterialIcon(material)}
             link={{
               href: typePath,
@@ -225,7 +225,7 @@ async function PageContent({
             }}
             title={t(material)}
           />
-          <LayoutMaterialMain>
+          <LayoutContent>
             {materials.length === 0 ? (
               <ComingSoon />
             ) : (
@@ -235,14 +235,14 @@ async function PageContent({
                 ))}
               </ContainerList>
             )}
-          </LayoutMaterialMain>
-          <LayoutMaterialFooter>
+          </LayoutContent>
+          <FooterContent>
             <RefContent
               githubUrl={getGithubUrl({
                 path: `/packages/contents${FilePath}`,
               })}
             />
-          </LayoutMaterialFooter>
+          </FooterContent>
         </LayoutMaterialContent>
         <LayoutMaterialToc
           chapters={{

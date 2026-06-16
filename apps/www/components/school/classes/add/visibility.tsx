@@ -2,8 +2,8 @@
 
 import {
   ArrowDown01Icon,
-  Calendar03Icon,
   Tick01Icon,
+  ViewIcon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -16,28 +16,28 @@ import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
-import { getAcademicYearList } from "@/components/school/classes/header-add-utils";
+import { classVisibilityList } from "@/components/school/classes/add/schema";
 
-interface HeaderAddYearFieldProps {
+interface HeaderAddVisibilityFieldProps {
   isInvalid: boolean;
   name: string;
-  onValueChange: (value: string) => void;
-  value: string;
+  onValueChange: (value: (typeof classVisibilityList)[number]) => void;
+  value: (typeof classVisibilityList)[number];
 }
 
-/** Renders the academic year picker for the school class create dialog. */
-export function HeaderAddYearField({
+/** Renders the class visibility picker for the school class create dialog. */
+export function HeaderAddVisibilityField({
   isInvalid,
   name,
   onValueChange,
   value,
-}: HeaderAddYearFieldProps) {
+}: HeaderAddVisibilityFieldProps) {
   const t = useTranslations("School.Classes");
 
   return (
     <Field data-invalid={isInvalid}>
-      <FieldLabel htmlFor="school-classes-header-add-year">
-        {t("year-label")}
+      <FieldLabel htmlFor="school-classes-header-add-visibility">
+        {t("visibility-label")}
       </FieldLabel>
       <DropdownMenu>
         <DropdownMenuTrigger
@@ -45,29 +45,29 @@ export function HeaderAddYearField({
             <Button
               aria-invalid={isInvalid}
               className="w-full font-normal"
-              id="school-classes-header-add-year"
+              id="school-classes-header-add-visibility"
               name={name}
               type="button"
               variant="outline"
             >
-              <HugeIcons icon={Calendar03Icon} />
-              {value || t("year-placeholder")}
+              <HugeIcons icon={ViewIcon} />
+              {t(value)}
               <HugeIcons className="ml-auto" icon={ArrowDown01Icon} />
             </Button>
           }
         />
         <DropdownMenuContent align="start" className="w-(--anchor-width)">
-          {getAcademicYearList().map((year) => (
+          {classVisibilityList.map((visibility) => (
             <DropdownMenuItem
               className="cursor-pointer"
-              key={year}
-              onClick={() => onValueChange(year)}
+              key={visibility}
+              onClick={() => onValueChange(visibility)}
             >
-              {year}
+              {t(visibility)}
               <HugeIcons
                 className={cn(
                   "ml-auto size-4 opacity-0 transition-opacity ease-out",
-                  value === year && "opacity-100"
+                  value === visibility && "opacity-100"
                 )}
                 icon={Tick01Icon}
               />

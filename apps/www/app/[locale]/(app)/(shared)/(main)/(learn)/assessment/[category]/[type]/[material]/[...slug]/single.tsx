@@ -19,13 +19,13 @@ import type { ExerciseRouteData } from "@/app/[locale]/(app)/(shared)/(main)/(le
 import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
 import { DeferredComments } from "@/components/comments/deferred";
 import { ExerciseEntry } from "@/components/exercise/entry";
+import { FooterContent } from "@/components/shared/footer-content";
+import { HeaderContent } from "@/components/shared/header-content";
+import { LayoutContent } from "@/components/shared/layout-content";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
-import { LayoutMaterialFooter } from "@/components/shared/material/footer";
-import { LayoutMaterialHeader } from "@/components/shared/material/header";
 import { LayoutMaterial } from "@/components/shared/material/layout";
-import { LayoutMaterialMain } from "@/components/shared/material/main";
-import { LayoutMaterialPagination } from "@/components/shared/material/pagination";
 import { LayoutMaterialToc } from "@/components/shared/material/toc";
+import { PaginationContent } from "@/components/shared/pagination-content";
 import { getOgUrl } from "@/lib/utils/metadata";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 
@@ -95,14 +95,14 @@ export async function SingleExercisePage({
       />
       <LayoutMaterial>
         <LayoutMaterialContent>
-          <LayoutMaterialHeader
+          <HeaderContent
             link={{
               href: data.setPath,
               label: data.currentMaterialItem.title,
             }}
             title={data.exercise.question.metadata.title}
           />
-          <LayoutMaterialMain>
+          <LayoutContent>
             <ExerciseAttempt totalExercises={data.exerciseCount} />
             <ExerciseEntry
               exercise={data.exercise}
@@ -110,11 +110,11 @@ export async function SingleExercisePage({
               setPath={data.setPath}
               srLabel={exerciseLabel}
             />
-          </LayoutMaterialMain>
-          <LayoutMaterialPagination pagination={pagination} />
-          <LayoutMaterialFooter>
+          </LayoutContent>
+          <PaginationContent pagination={pagination} />
+          <FooterContent>
             <DeferredComments slug={data.exerciseFilePath} />
-          </LayoutMaterialFooter>
+          </FooterContent>
           <DeferredAiSheetOpen
             contextTitle={data.exercise.question.metadata.title}
           />

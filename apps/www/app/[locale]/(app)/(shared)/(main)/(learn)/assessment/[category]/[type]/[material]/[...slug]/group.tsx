@@ -12,11 +12,11 @@ import { getTranslations } from "next-intl/server";
 import type { ExerciseRouteData } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/assessment/[category]/[type]/[material]/[...slug]/data";
 import { CardMaterial } from "@/components/shared/card-material";
 import { ContainerList } from "@/components/shared/container-list";
+import { FooterContent } from "@/components/shared/footer-content";
+import { HeaderContent } from "@/components/shared/header-content";
+import { LayoutContent } from "@/components/shared/layout-content";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
-import { LayoutMaterialFooter } from "@/components/shared/material/footer";
-import { LayoutMaterialHeader } from "@/components/shared/material/header";
 import { LayoutMaterial } from "@/components/shared/material/layout";
-import { LayoutMaterialMain } from "@/components/shared/material/main";
 import { LayoutMaterialToc } from "@/components/shared/material/toc";
 import { RefContent } from "@/components/shared/ref-content";
 import { getGithubUrl } from "@/lib/utils/github";
@@ -64,25 +64,25 @@ export async function YearGroupPage({
       />
       <LayoutMaterial>
         <LayoutMaterialContent>
-          <LayoutMaterialHeader
+          <HeaderContent
             link={{
               href: data.materialPath,
               label: t(material),
             }}
             title={data.currentMaterial.title}
           />
-          <LayoutMaterialMain>
+          <LayoutContent>
             <ContainerList className="sm:grid-cols-1">
               <CardMaterial material={data.currentMaterial} />
             </ContainerList>
-          </LayoutMaterialMain>
-          <LayoutMaterialFooter>
+          </LayoutContent>
+          <FooterContent>
             <RefContent
               githubUrl={getGithubUrl({
                 path: `/packages/contents${data.pagePath}`,
               })}
             />
-          </LayoutMaterialFooter>
+          </FooterContent>
         </LayoutMaterialContent>
         <LayoutMaterialToc
           chapters={{

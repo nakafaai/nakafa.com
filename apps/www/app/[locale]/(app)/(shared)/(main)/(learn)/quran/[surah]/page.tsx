@@ -9,13 +9,13 @@ import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
+import { FooterContent } from "@/components/shared/footer-content";
+import { HeaderContent } from "@/components/shared/header-content";
+import { LayoutContent } from "@/components/shared/layout-content";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
-import { LayoutMaterialFooter } from "@/components/shared/material/footer";
-import { LayoutMaterialHeader } from "@/components/shared/material/header";
 import { LayoutMaterial } from "@/components/shared/material/layout";
-import { LayoutMaterialMain } from "@/components/shared/material/main";
-import { LayoutMaterialPagination } from "@/components/shared/material/pagination";
 import { LayoutMaterialToc } from "@/components/shared/material/toc";
+import { PaginationContent } from "@/components/shared/pagination-content";
 import { QuranPageControls } from "@/components/shared/quran-controls";
 import { QuranText } from "@/components/shared/quran-text";
 import { QuranVerse } from "@/components/shared/quran-verse";
@@ -279,7 +279,7 @@ async function CachedSurahShell({
     <VirtualProvider>
       <LayoutMaterial>
         <LayoutMaterialContent>
-          <LayoutMaterialHeader
+          <HeaderContent
             description={translation}
             icon={AllahIcon}
             link={{
@@ -288,7 +288,7 @@ async function CachedSurahShell({
             }}
             title={title}
           />
-          <LayoutMaterialMain>
+          <LayoutContent>
             {!!preBismillah && (
               <div className="mb-20 flex flex-col items-center gap-4 rounded-xl border bg-card p-6 text-center shadow-sm">
                 <QuranText>{preBismillah.text.arab}</QuranText>
@@ -319,11 +319,9 @@ async function CachedSurahShell({
                 );
               })}
             </WindowVirtualized>
-          </LayoutMaterialMain>
-          <LayoutMaterialPagination
-            pagination={paginationWithLocalizedTitles}
-          />
-          <LayoutMaterialFooter>{footer}</LayoutMaterialFooter>
+          </LayoutContent>
+          <PaginationContent pagination={paginationWithLocalizedTitles} />
+          <FooterContent>{footer}</FooterContent>
           <QuranPageControls
             audioSources={audioSources}
             interpretations={interpretations}

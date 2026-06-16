@@ -14,15 +14,15 @@ import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { Activity, useState } from "react";
 import { toast } from "sonner";
-import { AssessmentDescriptionField } from "@/components/school/classes/assessments/description-field";
-import { AssessmentModeField } from "@/components/school/classes/assessments/mode-field";
-import { AssessmentScheduledAtField } from "@/components/school/classes/assessments/scheduled-at-field";
+import { AssessmentDescriptionField } from "@/components/school/classes/assessments/dialog/description";
+import { AssessmentModeField } from "@/components/school/classes/assessments/dialog/mode";
+import { AssessmentScheduledAtField } from "@/components/school/classes/assessments/dialog/schedule";
+import { AssessmentStatusField } from "@/components/school/classes/assessments/dialog/status";
+import { AssessmentTitleField } from "@/components/school/classes/assessments/dialog/title";
 import {
   type CreateAssessmentFormValues,
   createAssessmentFormSchema,
 } from "@/components/school/classes/assessments/schema";
-import { AssessmentStatusField } from "@/components/school/classes/assessments/status-field";
-import { AssessmentTitleField } from "@/components/school/classes/assessments/title-field";
 import type { Assessment } from "@/components/school/classes/assessments/types";
 import { getDefaultScheduledAt } from "@/components/school/classes/assessments/utils";
 import { reportClientException } from "@/lib/analytics/client";
