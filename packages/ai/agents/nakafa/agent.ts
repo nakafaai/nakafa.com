@@ -86,7 +86,7 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
                   Effect.provideService(NakafaSearch, searchService),
                   Effect.tap((output) =>
                     Effect.sync(() => {
-                      if (input.section !== "exercises") {
+                      if (input.section !== "material") {
                         hasPendingContentRead =
                           hasPendingContentRead ||
                           shouldReadAfterSearch(input, output.result);

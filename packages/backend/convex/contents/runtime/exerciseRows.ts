@@ -169,7 +169,7 @@ export async function buildRuntimeExercise(
   const [authors, choices, graph] = await Promise.all([
     getContentAuthors(ctx, {
       contentId: question._id,
-      contentType: "exercise",
+      contentType: "material",
     }),
     getExerciseChoices(ctx, question),
     getExerciseRouteProjection(ctx, {

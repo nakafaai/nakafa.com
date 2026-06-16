@@ -65,10 +65,62 @@ const RESET_STEPS: ResetStep[] = [
     resultLabel: "learning trending bucket rows",
   },
   {
+    label: "Deleting generated assessment nodes...",
+    mutation: internal.contentSync.reset.internal.deleteAssessmentNodesBatch,
+    resultLabel: "generated assessment nodes",
+  },
+  {
+    label: "Deleting generated assessments...",
+    mutation: internal.contentSync.reset.internal.deleteAssessmentsBatch,
+    resultLabel: "generated assessments",
+  },
+  {
+    label: "Deleting generated curriculum material links...",
+    mutation:
+      internal.contentSync.reset.internal.deleteCurriculumMaterialsBatch,
+    resultLabel: "generated curriculum material links",
+  },
+  {
+    label: "Deleting generated curriculum nodes...",
+    mutation: internal.contentSync.reset.internal.deleteCurriculumNodesBatch,
+    resultLabel: "generated curriculum nodes",
+  },
+  {
+    label: "Deleting generated curricula...",
+    mutation: internal.contentSync.reset.internal.deleteCurriculaBatch,
+    resultLabel: "generated curricula",
+  },
+  {
+    label: "Deleting generated material locale rows...",
+    mutation: internal.contentSync.reset.internal.deleteMaterialLocalesBatch,
+    resultLabel: "generated material locale rows",
+  },
+  {
+    label: "Deleting generated material rows...",
+    mutation: internal.contentSync.reset.internal.deleteMaterialsBatch,
+    resultLabel: "generated material rows",
+  },
+  {
+    label: "Deleting generated learning plan items...",
+    mutation: internal.contentSync.reset.internal.deleteLearningPlanItemsBatch,
+    resultLabel: "generated learning plan items",
+  },
+  {
     label: "Deleting learning program coverage rows...",
     mutation:
       internal.contentSync.reset.internal.deleteLearningProgramCoverageBatch,
     resultLabel: "learning program coverage rows",
+  },
+  {
+    label: "Deleting learning program sources...",
+    mutation:
+      internal.contentSync.reset.internal.deleteLearningProgramSourcesBatch,
+    resultLabel: "learning program source rows",
+  },
+  {
+    label: "Deleting learning programs...",
+    mutation: internal.contentSync.reset.internal.deleteLearningProgramsBatch,
+    resultLabel: "learning program rows",
   },
   {
     label: "Deleting content route rows...",
@@ -266,9 +318,9 @@ const RESET_STEPS: ResetStep[] = [
     resultLabel: "exercise questions",
   },
   {
-    label: "Deleting subject sections...",
-    mutation: internal.contentSync.reset.internal.deleteSubjectSectionsBatch,
-    resultLabel: "subject sections",
+    label: "Deleting curriculum lessons...",
+    mutation: internal.contentSync.reset.internal.deleteCurriculumLessonsBatch,
+    resultLabel: "curriculum lessons",
   },
   {
     label: "Deleting exercise sets...",
@@ -276,9 +328,9 @@ const RESET_STEPS: ResetStep[] = [
     resultLabel: "exercise sets",
   },
   {
-    label: "Deleting subject topics...",
-    mutation: internal.contentSync.reset.internal.deleteSubjectTopicsBatch,
-    resultLabel: "subject topics",
+    label: "Deleting curriculum topics...",
+    mutation: internal.contentSync.reset.internal.deleteCurriculumTopicsBatch,
+    resultLabel: "curriculum topics",
   },
   {
     label: "Deleting articles...",
@@ -350,11 +402,16 @@ export const reset = Effect.fn("sync.reset")(function* (
   log(`  Analytics Partitions:  ${counts.contentAnalyticsPartitions}`);
   log(`  Learning Popularity:   ${counts.learningPopularity}`);
   log(`  Learning Trending:     ${counts.learningTrendingBuckets}`);
+  log(`  Materials:             ${counts.materials}`);
+  log(`  Material Locales:      ${counts.materialLocales}`);
+  log(`  Curricula:             ${counts.curricula}`);
+  log(`  Curriculum Nodes:      ${counts.curriculumNodes}`);
+  log(`  Curriculum Materials:  ${counts.curriculumMaterials}`);
+  log(`  Assessments:           ${counts.assessments}`);
+  log(`  Assessment Nodes:      ${counts.assessmentNodes}`);
   log(`  Learning Programs:     ${counts.learningPrograms}`);
   log(`  Learning Program Srcs: ${counts.learningProgramSources}`);
-  log(`  Program Outlines:      ${counts.learningProgramOutlineNodes}`);
-  log(`  Program Outcomes:      ${counts.learningProgramOutcomes}`);
-  log(`  Outcome Concepts:      ${counts.learningProgramOutcomeConcepts}`);
+  log(`  Learning Plan Items:   ${counts.learningPlanItems}`);
   log(`  Learning Program Cov:  ${counts.learningProgramCoverage}`);
   log(`  Content Routes:        ${counts.contentRoutes}`);
   log(`  Content Route Counts:  ${counts.contentRouteCounts}`);
@@ -393,15 +450,15 @@ export const reset = Effect.fn("sync.reset")(function* (
   log(`  IRT Scale Queue:       ${counts.irtScalePublicationQueue}`);
   log(`  IRT Scale Versions:    ${counts.irtScaleVersions}`);
   log(`  IRT Scale Items:       ${counts.irtScaleVersionItems}`);
-  log(`  Subject Sections:      ${counts.subjectSections}`);
-  log(`  Subject Topics:        ${counts.subjectTopics}`);
+  log(`  Curriculum Lessons:    ${counts.curriculumLessons}`);
+  log(`  Curriculum Topics:     ${counts.curriculumTopics}`);
   log(`  Articles:              ${counts.articles}`);
   log(`  Authors:               ${counts.authors}`);
 
   const totalContent =
     counts.articles +
-    counts.subjectTopics +
-    counts.subjectSections +
+    counts.curriculumTopics +
+    counts.curriculumLessons +
     counts.exerciseSets +
     counts.exerciseQuestions;
   const totalRelated =
@@ -441,7 +498,17 @@ export const reset = Effect.fn("sync.reset")(function* (
     counts.contentAnalyticsPartitions +
     counts.learningPopularity +
     counts.learningTrendingBuckets +
+    counts.materials +
+    counts.materialLocales +
+    counts.curricula +
+    counts.curriculumNodes +
+    counts.curriculumMaterials +
+    counts.assessments +
+    counts.assessmentNodes +
+    counts.learningPlanItems +
     counts.learningProgramCoverage +
+    counts.learningProgramSources +
+    counts.learningPrograms +
     counts.contentRoutes +
     counts.contentRouteCounts +
     counts.contentRoutePages +
@@ -449,18 +516,10 @@ export const reset = Effect.fn("sync.reset")(function* (
     counts.quranVerses +
     counts.audioContentSources +
     counts.contentAudios;
-  const preservedProgramCatalog =
-    counts.learningPrograms +
-    counts.learningProgramSources +
-    counts.learningProgramOutlineNodes +
-    counts.learningProgramOutcomes +
-    counts.learningProgramOutcomeConcepts;
-
   log(`\n  Total content items:  ${totalContent}`);
   log(`  Total related items:  ${totalRelated}`);
   log(`  Total runtime items:  ${totalRuntime}`);
   log(`  Total derived items:  ${totalDerived}`);
-  log(`  Preserved program catalog rows: ${preservedProgramCatalog}`);
 
   if (
     totalContent === 0 &&

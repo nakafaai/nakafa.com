@@ -2,7 +2,7 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { IRT_OPERATIONAL_MODEL } from "@repo/backend/convex/irt/policy";
-import { buildBootstrapScaleItems } from "@repo/backend/convex/irt/scales/bootstrap";
+import { buildProvisionalScaleItems } from "@repo/backend/convex/irt/scales/provisional";
 import { evaluateTryoutScaleQuality } from "@repo/backend/convex/irt/scales/quality";
 import {
   getLatestScaleVersionForTryout,
@@ -90,7 +90,7 @@ async function publishScaleVersion(
 }
 
 /** Publishes an initial frozen scale version before enough calibration data exists. */
-async function publishBootstrapScaleVersion(
+async function publishProvisionalScaleVersion(
   db: IrtDbWriter,
   {
     now,
@@ -100,7 +100,7 @@ async function publishBootstrapScaleVersion(
     tryoutId: Id<"tryouts">;
   }
 ) {
-  const items = await buildBootstrapScaleItems(db, { now, tryoutId });
+  const items = await buildProvisionalScaleItems(db, { now, tryoutId });
 
   if (!items) {
     return null;
@@ -240,7 +240,7 @@ export async function getOrPublishScaleVersionForTryout(
       return latestScaleVersion;
     }
 
-    return publishBootstrapScaleVersion(db, { now, tryoutId });
+    return publishProvisionalScaleVersion(db, { now, tryoutId });
   }
 
   const officialScaleDecision = await resolveOfficialScaleDecision(db, {
@@ -254,7 +254,7 @@ export async function getOrPublishScaleVersionForTryout(
       return latestScaleVersion;
     }
 
-    return publishBootstrapScaleVersion(db, { now, tryoutId });
+    return publishProvisionalScaleVersion(db, { now, tryoutId });
   }
 
   return officialScaleDecision.scaleVersion;

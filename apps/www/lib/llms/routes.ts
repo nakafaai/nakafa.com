@@ -6,7 +6,6 @@ import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import {
   getRuntimeContentRoute,
-  getRuntimeContentRouteKindPage,
   getRuntimeContentRouteParentPage,
 } from "@/lib/content/runtime";
 import { baseRoutes } from "@/lib/sitemap/routes";
@@ -210,69 +209,15 @@ const contentRouteExists = Effect.fn("www.llms.routes.contentExists")(
       );
     }
 
-    if (routeCheck.mode === "article-category") {
-      return yield* contentRoutePageHasRows(
-        getRuntimeContentRouteParentPage({
-          cursor: null,
-          kind: "article",
-          limit: 1,
-          locale,
-          order: "date-desc",
-          parentRoute: routeCheck.parentRoute,
-          section: "articles",
-        })
-      );
-    }
-
-    if (routeCheck.mode === "exercise-type") {
-      return yield* contentRoutePageHasRows(
-        getRuntimeContentRouteKindPage({
-          cursor: null,
-          kind: "exercise-group",
-          limit: 1,
-          locale,
-          prefix: routeCheck.prefix,
-          section: "exercises",
-        })
-      );
-    }
-
-    if (routeCheck.mode === "exercise-material") {
-      return yield* contentRoutePageHasRows(
-        getRuntimeContentRouteParentPage({
-          cursor: null,
-          kind: "exercise-group",
-          limit: 1,
-          locale,
-          order: "route",
-          parentRoute: routeCheck.parentRoute,
-          section: "exercises",
-        })
-      );
-    }
-
-    if (routeCheck.mode === "subject-grade") {
-      return yield* contentRoutePageHasRows(
-        getRuntimeContentRouteKindPage({
-          cursor: null,
-          kind: "subject-topic",
-          limit: 1,
-          locale,
-          prefix: routeCheck.prefix,
-          section: "subject",
-        })
-      );
-    }
-
     return yield* contentRoutePageHasRows(
       getRuntimeContentRouteParentPage({
         cursor: null,
-        kind: "subject-topic",
+        kind: "article",
         limit: 1,
         locale,
-        order: "route",
+        order: "date-desc",
         parentRoute: routeCheck.parentRoute,
-        section: "subject",
+        section: "articles",
       })
     );
   }

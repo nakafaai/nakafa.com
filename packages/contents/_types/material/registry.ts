@@ -1,15 +1,15 @@
 import {
   findMaterialSourceByRoute,
-  listExerciseMaterialSets,
-  listSubjectMaterialTopics,
-  toExerciseMaterialList,
-  toSubjectMaterialList,
+  listLessonMaterials,
+  listPracticeMaterialSets,
+  toLessonMaterialList,
+  toPracticeMaterialList,
 } from "@repo/contents/_types/material/projection";
 import type {
-  ExerciseMaterialSource,
+  LessonMaterialSource,
   MaterialLocale,
   MaterialSource,
-  SubjectMaterialSource,
+  PracticeMaterialSource,
 } from "@repo/contents/_types/material/schema";
 import { MATERIAL_SOURCES } from "@repo/contents/_types/material/source";
 
@@ -20,76 +20,76 @@ export function listMaterials(
   return materials;
 }
 
-/** Finds the subject material that owns one public route. */
-export function findSubjectMaterial(
+/** Finds the lesson material that owns one public route. */
+export function findLessonMaterial(
   route: string,
   materials: readonly MaterialSource[] = MATERIAL_SOURCES
 ) {
-  const material = findMaterialSourceByRoute(materials, "subject", route);
+  const material = findMaterialSourceByRoute(materials, "lesson", route);
 
-  return material?.kind === "subject" ? material : null;
+  return material?.kind === "lesson" ? material : null;
 }
 
-/** Finds the exercise material that owns one public route. */
-export function findExerciseMaterial(
+/** Finds the practice material that owns one public route. */
+export function findPracticeMaterial(
   route: string,
   materials: readonly MaterialSource[] = MATERIAL_SOURCES
 ) {
-  const material = findMaterialSourceByRoute(materials, "exercise", route);
+  const material = findMaterialSourceByRoute(materials, "practice", route);
 
-  return material?.kind === "exercise" ? material : null;
+  return material?.kind === "practice" ? material : null;
 }
 
-/** Projects one route-owned subject material into localized navigation rows. */
-export function getSubjectMaterialList(
+/** Projects one route-owned lesson material into localized navigation rows. */
+export function getLessonMaterialList(
   route: string,
   locale: MaterialLocale,
   materials: readonly MaterialSource[] = MATERIAL_SOURCES
 ) {
-  const material = findSubjectMaterial(route, materials);
+  const material = findLessonMaterial(route, materials);
 
   if (!material) {
     return [];
   }
 
-  return toSubjectMaterialList(material, locale);
+  return toLessonMaterialList(material, locale);
 }
 
-/** Projects one route-owned exercise material into localized navigation rows. */
-export function getExerciseMaterialList(
+/** Projects one route-owned practice material into localized navigation rows. */
+export function getPracticeMaterialList(
   route: string,
   locale: MaterialLocale,
   materials: readonly MaterialSource[] = MATERIAL_SOURCES
 ) {
-  const material = findExerciseMaterial(route, materials);
+  const material = findPracticeMaterial(route, materials);
 
   if (!material) {
     return [];
   }
 
-  return toExerciseMaterialList(material, locale);
+  return toPracticeMaterialList(material, locale);
 }
 
-/** Lists subject materials without exposing unrelated exercise materials to callers. */
-export function listSubjectMaterials(
+/** Lists lesson materials without exposing unrelated practice materials to callers. */
+export function listLessonMaterialSources(
   materials: readonly MaterialSource[] = MATERIAL_SOURCES
-): SubjectMaterialSource[] {
-  return materials.filter((material) => material.kind === "subject");
+): LessonMaterialSource[] {
+  return materials.filter((material) => material.kind === "lesson");
 }
 
-/** Lists exercise materials without exposing unrelated subject materials to callers. */
-export function listExerciseMaterials(
+/** Lists practice materials without exposing unrelated lesson materials to callers. */
+export function listPracticeMaterialSources(
   materials: readonly MaterialSource[] = MATERIAL_SOURCES
-): ExerciseMaterialSource[] {
-  return materials.filter((material) => material.kind === "exercise");
+): PracticeMaterialSource[] {
+  return materials.filter((material) => material.kind === "practice");
 }
 
-/** Lists sync-ready subject topic projections for the requested content locale. */
-export function listSubjectTopics(locale?: MaterialLocale) {
-  return listSubjectMaterialTopics(MATERIAL_SOURCES, locale);
+/** Lists sync-ready lesson projections for the requested content locale. */
+export function listLessonRows(locale?: MaterialLocale) {
+  return listLessonMaterials(MATERIAL_SOURCES, locale);
 }
 
-/** Lists sync-ready exercise set projections for the requested content locale. */
-export function listExerciseSets(locale?: MaterialLocale) {
-  return listExerciseMaterialSets(MATERIAL_SOURCES, locale);
+/** Lists sync-ready practice set projections for the requested content locale. */
+export function listPracticeSets(locale?: MaterialLocale) {
+  return listPracticeMaterialSets(MATERIAL_SOURCES, locale);
 }

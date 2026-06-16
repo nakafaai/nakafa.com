@@ -2,6 +2,7 @@ import { LEARNING_PROGRAM_CATALOG } from "@repo/contents/_types/program/catalog"
 import {
   LEARNING_INTEREST_PROGRAM_KIND_MATCHES,
   LEARNING_STAGE_VALUES,
+  LearningProgramCoverageRouteSchema,
   LearningProgramKeySchema,
   LearningProgramSchema,
   LearningStageSchema,
@@ -41,14 +42,14 @@ describe("program/schema", () => {
     );
 
     expect(PROGRAM_NAVIGATION_MODEL_VALUES).toEqual([
-      "class-subject-topic",
+      "class-curriculum-topic",
       "course-unit-lesson",
       "exam-domain-practice-set",
       "track-topic",
     ]);
     expect(navigationByKey["id-kurikulum-merdeka"]).toEqual({
       levels: ["class", "subject", "topic"],
-      model: "class-subject-topic",
+      model: "class-curriculum-topic",
     });
     expect(navigationByKey["snbt-2026"]).toEqual({
       levels: ["section", "domain", "practice-set"],
@@ -62,6 +63,37 @@ describe("program/schema", () => {
       "exam-prep": ["admission-exam"],
       "school-curriculum": ["school-curriculum"],
     });
+  });
+
+  it("validates generated coverage concept IDs", () => {
+    expect(
+      Schema.is(LearningProgramCoverageRouteSchema)({
+        assetId: "material:lesson:function",
+        conceptId: "concept:material:function",
+        kind: "curriculum-lesson",
+        lensId: "curriculum:id-kurikulum-merdeka",
+        locale: "id",
+        route: "/id/learn/curriculum/id-kurikulum-merdeka",
+      })
+    ).toBe(true);
+
+    const invalidConcept = Schema.decodeUnknownEither(
+      LearningProgramCoverageRouteSchema
+    )({
+      assetId: "material:lesson:function",
+      conceptId: "fixture.invalid.key",
+      kind: "curriculum-lesson",
+      lensId: "curriculum:id-kurikulum-merdeka",
+      locale: "id",
+      route: "/id/learn/curriculum/id-kurikulum-merdeka",
+    });
+
+    expect(Either.isLeft(invalidConcept)).toBe(true);
+    if (Either.isLeft(invalidConcept)) {
+      expect(invalidConcept.left.message).toContain(
+        "Invalid coverage concept ID. Expected graph concept ID."
+      );
+    }
   });
 
   it("keeps learning stage values schema-owned", () => {

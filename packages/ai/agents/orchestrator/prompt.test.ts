@@ -5,10 +5,10 @@ const base = {
   currentDate: "May 9, 2026",
   currentPage: {
     locale: "id",
-    slug: "subject/high-school/11/mathematics/function-modeling/rational-function",
+    slug: "material/lesson/mathematics/function-modeling/rational-function",
     verified: true,
   },
-  url: "https://nakafa.com/id/subject/high-school/11/mathematics/function-modeling/rational-function",
+  url: "https://nakafa.com/id/material/lesson/mathematics/function-modeling/rational-function",
   userLocation: {
     city: "Berlin",
     country: "Germany",
@@ -218,7 +218,7 @@ describe("nakafaPrompt", () => {
             lensId: "lens:snbt",
             position: 1,
             route:
-              "/exercises/high-school/snbt/general-knowledge/try-out/2026/set-2/1",
+              "/material/practice/assessment/snbt/general-knowledge/try-out-2026/set-2/question-1",
             status: "ready",
             title: "SNBT Set 2",
           },
@@ -237,7 +237,7 @@ describe("nakafaPrompt", () => {
     expect(prompt).toContain("- program: SNBT 2026");
     expect(prompt).toContain("- interests: exam-prep, assessment-prep");
     expect(prompt).toContain(
-      "1. SNBT Set 2; route: /exercises/high-school/snbt/general-knowledge/try-out/2026/set-2/1; status: ready"
+      "1. SNBT Set 2; route: /material/practice/assessment/snbt/general-knowledge/try-out-2026/set-2/question-1; status: ready"
     );
     const runtimeContext = prompt.slice(
       prompt.indexOf("# Runtime Context"),

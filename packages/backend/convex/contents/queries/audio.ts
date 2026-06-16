@@ -32,7 +32,7 @@ export const getPopularContentForAudioQueue = internalQuery({
       ctx.db
         .query("learningPopularity")
         .withIndex("by_section_and_viewCount_and_content_id", (q) =>
-          q.eq("section", "subject").gte("viewCount", MIN_VIEW_THRESHOLD)
+          q.eq("section", "material").gte("viewCount", MIN_VIEW_THRESHOLD)
         )
         .order("desc")
         .take(MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE),
@@ -68,7 +68,7 @@ export const getPopularContentForAudioQueue = internalQuery({
         .unique();
 
       if (
-        route?.kind !== "subject-section" ||
+        route?.kind !== "curriculum-lesson" ||
         route.content_id !== route.assetId
       ) {
         continue;

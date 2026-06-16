@@ -3,7 +3,7 @@ import {
   isTryoutProduct,
   type TryoutProduct,
 } from "@repo/backend/convex/tryouts/products";
-import { parseExercisesMaterial } from "@repo/contents/_lib/exercises/route";
+import { parseExercisesMaterial } from "@repo/contents/_lib/assessment/route";
 import { fetchQuery, preloadQuery } from "convex/nextjs";
 import { Clock, Effect, Option } from "effect";
 import { notFound } from "next/navigation";

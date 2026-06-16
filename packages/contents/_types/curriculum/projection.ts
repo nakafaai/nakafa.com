@@ -19,8 +19,8 @@ export function getProgramKeysForMaterialRoute({
 }) {
   const normalizedRoute = normalizeMaterialRoute(route);
   const material =
-    findMaterialSourceByRoute(materials, "subject", normalizedRoute) ??
-    findMaterialSourceByRoute(materials, "exercise", normalizedRoute);
+    findMaterialSourceByRoute(materials, "lesson", normalizedRoute) ??
+    findMaterialSourceByRoute(materials, "practice", normalizedRoute);
 
   if (!material) {
     return [];

@@ -5,6 +5,7 @@ import {
   ArticleReferenceIntegrityPageSchema,
   AuthorPageSchema,
   ContentAuthorIntegrityPageSchema,
+  CurriculumLessonIntegrityPageSchema,
   DataIntegritySchema,
   ExerciseChoiceIntegrityPageSchema,
   ExerciseQuestionIntegrityPageSchema,
@@ -12,7 +13,6 @@ import {
   GraphIdentityIntegritySchema,
   StaleContentPageSchema,
   StaleContentSchema,
-  SubjectSectionIntegrityPageSchema,
   TryoutScaleIntegritySchema,
   UnusedAuthorsSchema,
 } from "@repo/backend/scripts/sync-content/schemas";
@@ -201,16 +201,18 @@ export const getStaleContent = Effect.fn("sync.getStaleContent")(function* (
   filesystemSlugs: FilesystemSlugs
 ) {
   const articleSlugSet = new Set(filesystemSlugs.articleSlugs);
-  const subjectTopicSlugSet = new Set(filesystemSlugs.subjectTopicSlugs);
-  const subjectSectionSlugSet = new Set(filesystemSlugs.subjectSectionSlugs);
+  const curriculumTopicSlugSet = new Set(filesystemSlugs.curriculumTopicSlugs);
+  const curriculumLessonSlugSet = new Set(
+    filesystemSlugs.curriculumLessonSlugs
+  );
   const exerciseSetSlugSet = new Set(filesystemSlugs.exerciseSetSlugs);
   const exerciseQuestionSlugSet = new Set(
     filesystemSlugs.exerciseQuestionSlugs
   );
   const [
     articles,
-    subjectTopics,
-    subjectSections,
+    curriculumTopics,
+    curriculumLessons,
     exerciseSets,
     exerciseQuestions,
   ] = yield* Effect.all([
@@ -223,13 +225,13 @@ export const getStaleContent = Effect.fn("sync.getStaleContent")(function* (
     collectPages(
       config,
       internal.contentSync.queries.stale.listStaleContentPage,
-      buildStaleContentArgs("subjectTopics"),
+      buildStaleContentArgs("curriculumTopics"),
       StaleContentPageSchema
     ),
     collectPages(
       config,
       internal.contentSync.queries.stale.listStaleContentPage,
-      buildStaleContentArgs("subjectSections"),
+      buildStaleContentArgs("curriculumLessons"),
       StaleContentPageSchema
     ),
     collectPages(
@@ -248,11 +250,11 @@ export const getStaleContent = Effect.fn("sync.getStaleContent")(function* (
 
   return Schema.decodeUnknownSync(StaleContentSchema)({
     staleArticles: articles.filter((item) => !articleSlugSet.has(item.slug)),
-    staleSubjectTopics: subjectTopics.filter(
-      (item) => !subjectTopicSlugSet.has(item.slug)
+    staleCurriculumTopics: curriculumTopics.filter(
+      (item) => !curriculumTopicSlugSet.has(item.slug)
     ),
-    staleSubjectSections: subjectSections.filter(
-      (item) => !subjectSectionSlugSet.has(item.slug)
+    staleCurriculumLessons: curriculumLessons.filter(
+      (item) => !curriculumLessonSlugSet.has(item.slug)
     ),
     staleExerciseSets: exerciseSets.filter(
       (item) => !exerciseSetSlugSet.has(item.slug)
@@ -308,9 +310,9 @@ export const getDataIntegrity = Effect.fn("sync.getDataIntegrity")(function* (
     ),
     collectPages(
       config,
-      internal.contentSync.queries.integrity.listIntegritySubjectSectionsPage,
+      internal.contentSync.queries.integrity.listIntegrityCurriculumLessonsPage,
       (paginationOpts) => ({ paginationOpts }),
-      SubjectSectionIntegrityPageSchema
+      CurriculumLessonIntegrityPageSchema
     ),
     collectPages(
       config,
@@ -324,7 +326,7 @@ export const getDataIntegrity = Effect.fn("sync.getDataIntegrity")(function* (
   );
   const questionIdsWithAuthors = new Set(
     contentAuthors
-      .filter((authorLink) => authorLink.contentType === "exercise")
+      .filter((authorLink) => authorLink.contentType === "material")
       .map((authorLink) => authorLink.contentId)
   );
   const articleIdsWithReferences = new Set(

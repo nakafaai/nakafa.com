@@ -1,69 +1,68 @@
-import type { ExercisesMaterialList } from "@repo/contents/_types/exercises/material";
+import type { ExercisesMaterialList } from "@repo/contents/_types/assessment/material";
+import type { MaterialList } from "@repo/contents/_types/curriculum/material";
 import type {
-  ExerciseMaterialGroup,
-  ExerciseMaterialSource,
+  LessonMaterialSource,
   MaterialLocale,
   MaterialSource,
-  SubjectMaterialSource,
-  SubjectMaterialTopic,
+  PracticeMaterialGroup,
+  PracticeMaterialSource,
 } from "@repo/contents/_types/material/schema";
-import type { MaterialList } from "@repo/contents/_types/subject/material";
 import { cleanSlug } from "@repo/utilities/helper";
 
-/** Sync-ready subject topic projected from the typed Material source. */
-export interface SubjectMaterialTopicProjection {
-  category: SubjectMaterialSource["category"];
+/** Sync-ready lesson projected from the typed material source. */
+export interface LessonMaterialProjection {
   description?: string;
-  grade: SubjectMaterialSource["grade"];
+  domain: LessonMaterialSource["domain"];
+  key: LessonMaterialSource["key"];
   locale: MaterialLocale;
-  material: SubjectMaterialSource["material"];
   order: number;
-  sections: SubjectMaterialSectionProjection[];
+  sections: LessonMaterialSectionProjection[];
   slug: string;
   title: string;
   topic: string;
 }
 
-/** Sync-ready subject section order projected from the typed Material source. */
-export interface SubjectMaterialSectionProjection {
+/** Sync-ready lesson section order projected from the typed material source. */
+export interface LessonMaterialSectionProjection {
   order: number;
   section: string;
   slug: string;
 }
 
-/** Sync-ready exercise set projected from the typed Material source. */
-export interface ExerciseMaterialSetProjection {
-  category: ExerciseMaterialSource["category"];
+/** Sync-ready practice set projected from the typed material source. */
+export interface PracticeMaterialSetProjection {
+  assessment: PracticeMaterialSource["assessment"];
   description?: string;
+  domain: PracticeMaterialSource["domain"];
   exerciseType: string;
   exerciseTypeTitle: string;
   locale: MaterialLocale;
-  material: ExerciseMaterialSource["material"];
   setName: string;
   slug: string;
   title: string;
-  type: ExerciseMaterialSource["type"];
   year?: number;
 }
 
-/** Returns the localized subject navigation list expected by lesson pages. */
-export function toSubjectMaterialList(
-  material: SubjectMaterialSource,
+/** Returns the localized lesson navigation list expected by material pages. */
+export function toLessonMaterialList(
+  material: LessonMaterialSource,
   locale: MaterialLocale
 ): MaterialList {
-  return material.topics.map((topic) => ({
-    ...readDescriptionTranslation(topic, locale),
-    href: `/${material.baseRoute}/${topic.slug}`,
-    items: topic.sections.map((section) => ({
-      href: `/${material.baseRoute}/${topic.slug}/${section.slug}`,
-      title: section.translations[locale].title,
-    })),
-  }));
+  return [
+    {
+      ...readDescriptionTranslation(material, locale),
+      href: `/${material.assetRoot}`,
+      items: material.sections.map((section) => ({
+        href: `/${material.assetRoot}/${section.slug}`,
+        title: section.translations[locale].title,
+      })),
+    },
+  ];
 }
 
-/** Returns the localized exercise navigation list expected by exercise pages. */
-export function toExerciseMaterialList(
-  material: ExerciseMaterialSource,
+/** Returns the localized practice navigation list expected by assessment pages. */
+export function toPracticeMaterialList(
+  material: PracticeMaterialSource,
   locale: MaterialLocale
 ): ExercisesMaterialList {
   return material.groups.map((group) => {
@@ -80,34 +79,32 @@ export function toExerciseMaterialList(
   });
 }
 
-/** Projects all subject material sources into sync-ready topic rows. */
-export function listSubjectMaterialTopics(
+/** Projects all lesson material sources into sync-ready rows. */
+export function listLessonMaterials(
   materials: readonly MaterialSource[],
   locale?: MaterialLocale
 ) {
   return materials.flatMap((material) => {
-    if (material.kind !== "subject") {
+    if (material.kind !== "lesson") {
       return [];
     }
 
     const locales: MaterialLocale[] =
       locale === undefined ? ["en", "id"] : [locale];
 
-    return locales.flatMap((materialLocale) =>
-      material.topics.map((topic, order) =>
-        toSubjectMaterialTopicProjection(material, topic, materialLocale, order)
-      )
+    return locales.map((materialLocale) =>
+      toLessonMaterialProjection(material, materialLocale)
     );
   });
 }
 
-/** Projects all exercise material sources into sync-ready set rows. */
-export function listExerciseMaterialSets(
+/** Projects all practice material sources into sync-ready set rows. */
+export function listPracticeMaterialSets(
   materials: readonly MaterialSource[],
   locale?: MaterialLocale
 ) {
   return materials.flatMap((material) => {
-    if (material.kind !== "exercise") {
+    if (material.kind !== "practice") {
       return [];
     }
 
@@ -120,16 +117,15 @@ export function listExerciseMaterialSets(
           const groupRoute = getExerciseGroupRoute(material, group);
 
           return {
-            category: material.category,
+            assessment: material.assessment,
             description: group.translations[materialLocale].description,
+            domain: material.domain,
             exerciseType: group.exerciseType,
             exerciseTypeTitle: group.translations[materialLocale].title,
             locale: materialLocale,
-            material: material.material,
             setName: set.slug,
             slug: `${groupRoute}/${set.slug}`,
             title: set.translations[materialLocale].title,
-            type: material.type,
             ...(group.year === undefined ? {} : { year: group.year }),
           };
         })
@@ -138,7 +134,7 @@ export function listExerciseMaterialSets(
   });
 }
 
-/** Finds one material whose base route matches the requested public route. */
+/** Finds one material whose asset root matches the requested public route. */
 export function findMaterialSourceByRoute(
   materials: readonly MaterialSource[],
   kind: MaterialSource["kind"],
@@ -153,8 +149,8 @@ export function findMaterialSourceByRoute(
       }
 
       return (
-        normalizedRoute === material.baseRoute ||
-        normalizedRoute.startsWith(`${material.baseRoute}/`)
+        normalizedRoute === material.assetRoot ||
+        normalizedRoute.startsWith(`${material.assetRoot}/`)
       );
     }) ?? null
   );
@@ -165,45 +161,42 @@ export function normalizeMaterialRoute(route: string) {
   return cleanSlug(route).split("/").filter(Boolean).join("/");
 }
 
-function toSubjectMaterialTopicProjection(
-  material: SubjectMaterialSource,
-  topic: SubjectMaterialTopic,
-  locale: MaterialLocale,
-  order: number
-): SubjectMaterialTopicProjection {
+function toLessonMaterialProjection(
+  material: LessonMaterialSource,
+  locale: MaterialLocale
+): LessonMaterialProjection {
   return {
-    category: material.category,
-    description: topic.translations[locale].description,
-    grade: material.grade,
+    description: material.translations[locale].description,
+    domain: material.domain,
+    key: material.key,
     locale,
-    material: material.material,
-    order,
-    sections: topic.sections.map((section, sectionOrder) => ({
+    order: 0,
+    sections: material.sections.map((section, sectionOrder) => ({
       order: sectionOrder,
       section: section.slug,
-      slug: `${material.baseRoute}/${topic.slug}/${section.slug}`,
+      slug: `${material.assetRoot}/${section.slug}`,
     })),
-    slug: `${material.baseRoute}/${topic.slug}`,
-    title: topic.translations[locale].title,
-    topic: topic.slug,
+    slug: material.assetRoot,
+    title: material.translations[locale].title,
+    topic: material.slug,
   };
 }
 
 function getExerciseGroupRoute(
-  material: ExerciseMaterialSource,
-  group: ExerciseMaterialGroup
+  material: PracticeMaterialSource,
+  group: PracticeMaterialGroup
 ) {
-  const segments = [material.baseRoute, group.exerciseType];
-
-  if (group.year !== undefined) {
-    segments.push(String(group.year));
-  }
+  const exerciseType =
+    group.year === undefined
+      ? group.exerciseType
+      : `${group.exerciseType}-${group.year}`;
+  const segments = [material.assetRoot, exerciseType];
 
   return segments.join("/");
 }
 
 function readDescriptionTranslation(
-  item: Pick<SubjectMaterialTopic | ExerciseMaterialGroup, "translations">,
+  item: Pick<LessonMaterialSource | PracticeMaterialGroup, "translations">,
   locale: MaterialLocale
 ) {
   const translation = item.translations[locale];

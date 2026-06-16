@@ -1,6 +1,6 @@
 import {
+  getExerciseQuestionNumberSegment,
   isExerciseSetSegment,
-  isNumberSegment,
   joinRoute,
 } from "@repo/contents/_types/graph/route";
 import type { SourceRouteProjectionDraft } from "@repo/contents/_types/graph/schema";
@@ -12,7 +12,7 @@ export function createExerciseProjection(
   segments: readonly string[]
 ): SourceRouteProjectionDraft | null {
   const [
-    categorySegment,
+    assessmentSegment,
     typeSegment,
     materialSegment,
     groupSegment,
@@ -23,24 +23,29 @@ export function createExerciseProjection(
   ] = segments;
 
   if (
-    !(categorySegment && typeSegment && materialSegment && groupSegment) ||
+    assessmentSegment !== "assessment" ||
+    !(typeSegment && materialSegment && groupSegment) ||
     extraSegments.length > 0
   ) {
     return null;
   }
 
+  const categorySegment = getPracticeCategorySegment(typeSegment);
+  const baseRouteSegments = [
+    "material",
+    "practice",
+    "assessment",
+    typeSegment,
+    materialSegment,
+  ] as const;
   const base = {
+    baseRouteSegments,
     categorySegment,
     materialSegment,
     route,
     typeSegment,
   };
-  const baseRoute = joinRoute(
-    "exercises",
-    categorySegment,
-    typeSegment,
-    materialSegment
-  );
+  const baseRoute = joinRoute(...baseRouteSegments);
 
   if (!secondGroupOrSet) {
     return createExerciseGroupProjection({
@@ -78,6 +83,14 @@ export function createExerciseProjection(
     questionSegment: finalSegment,
     setSegment: questionOrSet,
   });
+}
+
+function getPracticeCategorySegment(typeSegment: string) {
+  if (typeSegment === "grade-9") {
+    return "middle-school";
+  }
+
+  return "high-school";
 }
 
 /** Builds an exercise group projection with its catalog parent route. */
@@ -125,7 +138,11 @@ function createExerciseItemProjection(input: ExerciseItemInput) {
     } satisfies SourceRouteProjectionDraft;
   }
 
-  if (!isNumberSegment(input.questionSegment)) {
+  const questionNumber = getExerciseQuestionNumberSegment(
+    input.questionSegment
+  );
+
+  if (!questionNumber) {
     return null;
   }
 
@@ -138,7 +155,7 @@ function createExerciseItemProjection(input: ExerciseItemInput) {
       input.materialSegment,
       ...input.groupSegments,
       input.setSegment,
-      input.questionSegment,
+      questionNumber,
     ],
     parentRoute: setRoute,
     route: input.route,
@@ -175,22 +192,13 @@ function createExerciseProjectionBase(input: ExerciseInput) {
 }
 
 /** Returns the fixed exercise source route prefix used before group segments. */
-function getExerciseRouteBase(
-  input: Pick<
-    ExerciseInput,
-    "categorySegment" | "materialSegment" | "typeSegment"
-  >
-) {
-  return [
-    "exercises",
-    input.categorySegment,
-    input.typeSegment,
-    input.materialSegment,
-  ];
+function getExerciseRouteBase(input: Pick<ExerciseInput, "baseRouteSegments">) {
+  return input.baseRouteSegments;
 }
 
 /** Schema-owned local parser branch input before output assembly. */
 const ExerciseInputSchema = Schema.Struct({
+  baseRouteSegments: Schema.NonEmptyArray(Schema.String),
   categorySegment: Schema.String,
   groupRoute: Schema.optional(Schema.String),
   groupSegments: Schema.NonEmptyArray(Schema.String),
@@ -219,6 +227,7 @@ type ExerciseGroupInput = Schema.Schema.Type<typeof ExerciseGroupInputSchema>;
 
 /** Schema-owned exercise set/question branch input with a required set. */
 const ExerciseItemInputSchema = Schema.Struct({
+  baseRouteSegments: Schema.NonEmptyArray(Schema.String),
   categorySegment: Schema.String,
   extraSegment: Schema.optional(Schema.String),
   groupRoute: Schema.optional(Schema.String),

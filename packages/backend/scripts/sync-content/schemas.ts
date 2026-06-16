@@ -25,7 +25,7 @@ export const ConvexIdSchema = <const TableName extends TableNames>(
 
 const ContentIdSchema = Schema.Union(
   ConvexIdSchema("articleContents"),
-  ConvexIdSchema("subjectSections"),
+  ConvexIdSchema("curriculumLessons"),
   ConvexIdSchema("exerciseQuestions")
 );
 
@@ -36,16 +36,24 @@ export const mutableArraySchema = <A, I>(schema: Schema.Schema<A, I, never>) =>
 export const BATCH_SIZES = {
   articles: CONTENT_SYNC_BATCH_LIMITS.articles,
   authors: CONTENT_SYNC_BATCH_LIMITS.authors,
-  subjectTopics: CONTENT_SYNC_BATCH_LIMITS.subjectTopics,
-  subjectSections: CONTENT_SYNC_BATCH_LIMITS.subjectSections,
+  curriculumTopics: CONTENT_SYNC_BATCH_LIMITS.curriculumTopics,
+  curriculumLessons: CONTENT_SYNC_BATCH_LIMITS.curriculumLessons,
   exerciseSets: CONTENT_SYNC_BATCH_LIMITS.exerciseSets,
   exerciseQuestions: CONTENT_SYNC_BATCH_LIMITS.exerciseQuestions,
+  generatedAssessmentNodes: CONTENT_SYNC_BATCH_LIMITS.generatedAssessmentNodes,
+  generatedAssessments: CONTENT_SYNC_BATCH_LIMITS.generatedAssessments,
+  generatedCurricula: CONTENT_SYNC_BATCH_LIMITS.generatedCurricula,
+  generatedCurriculumMaterials:
+    CONTENT_SYNC_BATCH_LIMITS.generatedCurriculumMaterials,
+  generatedCurriculumNodes: CONTENT_SYNC_BATCH_LIMITS.generatedCurriculumNodes,
+  generatedMaterialLocales: CONTENT_SYNC_BATCH_LIMITS.generatedMaterialLocales,
+  generatedMaterials: CONTENT_SYNC_BATCH_LIMITS.generatedMaterials,
   quranSurahs: CONTENT_SYNC_BATCH_LIMITS.quranSurahs,
   quranVerses: CONTENT_SYNC_BATCH_LIMITS.quranVerses,
   quranSearchDocuments: CONTENT_SYNC_BATCH_LIMITS.quranSearchDocuments,
   staleArticles: CONTENT_SYNC_BATCH_LIMITS.staleArticles,
-  staleSubjectTopics: CONTENT_SYNC_BATCH_LIMITS.staleSubjectTopics,
-  staleSubjectSections: CONTENT_SYNC_BATCH_LIMITS.staleSubjectSections,
+  staleCurriculumTopics: CONTENT_SYNC_BATCH_LIMITS.staleCurriculumTopics,
+  staleCurriculumLessons: CONTENT_SYNC_BATCH_LIMITS.staleCurriculumLessons,
   staleExerciseSets: CONTENT_SYNC_BATCH_LIMITS.staleExerciseSets,
   staleExerciseQuestions: CONTENT_SYNC_BATCH_LIMITS.staleExerciseQuestions,
   unusedAuthors: CONTENT_SYNC_BATCH_LIMITS.unusedAuthors,
@@ -104,7 +112,7 @@ export const ArticleSyncResultSchema = Schema.Struct({
   updated: Schema.Number,
 });
 
-export const SubjectSectionSyncResultSchema = Schema.mutable(
+export const CurriculumLessonSyncResultSchema = Schema.mutable(
   Schema.Struct({
     authorLinksCreated: Schema.Number,
     created: Schema.Number,
@@ -359,7 +367,13 @@ export const TryoutSyncResultSchema = SyncSummarySchema;
 
 export const ExerciseSetSyncResultSchema = SyncSummarySchema;
 
-export const SubjectTopicSyncResultSchema = SyncSummarySchema;
+export const CurriculumTopicSyncResultSchema = SyncSummarySchema;
+
+export const GeneratedReadModelSyncResultSchema = SyncSummarySchema;
+
+export const GeneratedReadModelDeleteResultSchema = Schema.Struct({
+  deleted: Schema.Number,
+});
 
 export const AuthorSyncResultSchema = Schema.Struct({
   created: Schema.Number,
@@ -396,18 +410,23 @@ export const ContentCountsSchema = Schema.Struct({
   irtScaleQualityRefreshQueue: Schema.Number,
   irtScaleVersionItems: Schema.Number,
   irtScaleVersions: Schema.Number,
+  assessmentNodes: Schema.Number,
+  assessments: Schema.Number,
+  curricula: Schema.Number,
+  curriculumMaterials: Schema.Number,
+  curriculumNodes: Schema.Number,
   learningProgramCoverage: Schema.Number,
-  learningProgramOutcomeConcepts: Schema.Number,
-  learningProgramOutcomes: Schema.Number,
-  learningProgramOutlineNodes: Schema.Number,
+  learningPlanItems: Schema.Number,
   learningProgramSources: Schema.Number,
   learningPrograms: Schema.Number,
   learningPopularity: Schema.Number,
+  materialLocales: Schema.Number,
+  materials: Schema.Number,
   quranSurahs: Schema.Number,
   quranVerses: Schema.Number,
-  subjectSections: Schema.Number,
+  curriculumLessons: Schema.Number,
   learningTrendingBuckets: Schema.Number,
-  subjectTopics: Schema.Number,
+  curriculumTopics: Schema.Number,
   tryoutAccessCampaignProducts: Schema.Number,
   tryoutAccessCampaigns: Schema.Number,
   tryoutAccessGrants: Schema.Number,
@@ -491,8 +510,8 @@ export const TryoutScaleIntegritySchema = Schema.mutable(
 const StaleItemSchema = Schema.Struct({
   id: Schema.Union(
     ConvexIdSchema("articleContents"),
-    ConvexIdSchema("subjectTopics"),
-    ConvexIdSchema("subjectSections"),
+    ConvexIdSchema("curriculumTopics"),
+    ConvexIdSchema("curriculumLessons"),
     ConvexIdSchema("exerciseSets"),
     ConvexIdSchema("exerciseQuestions")
   ),
@@ -506,14 +525,14 @@ const StaleArticleSchema = Schema.Struct({
   locale: SyncLocaleSchema,
 });
 
-const StaleSubjectTopicSchema = Schema.Struct({
-  id: ConvexIdSchema("subjectTopics"),
+const StaleCurriculumTopicSchema = Schema.Struct({
+  id: ConvexIdSchema("curriculumTopics"),
   slug: Schema.String,
   locale: SyncLocaleSchema,
 });
 
-const StaleSubjectSectionSchema = Schema.Struct({
-  id: ConvexIdSchema("subjectSections"),
+const StaleCurriculumLessonSchema = Schema.Struct({
+  id: ConvexIdSchema("curriculumLessons"),
   slug: Schema.String,
   locale: SyncLocaleSchema,
 });
@@ -537,8 +556,8 @@ const PaginationPageSchema = Schema.Struct({
 
 export const StaleContentSchema = Schema.Struct({
   staleArticles: Schema.Array(StaleArticleSchema),
-  staleSubjectTopics: Schema.Array(StaleSubjectTopicSchema),
-  staleSubjectSections: Schema.Array(StaleSubjectSectionSchema),
+  staleCurriculumTopics: Schema.Array(StaleCurriculumTopicSchema),
+  staleCurriculumLessons: Schema.Array(StaleCurriculumLessonSchema),
   staleExerciseSets: Schema.Array(StaleExerciseSetSchema),
   staleExerciseQuestions: Schema.Array(StaleExerciseQuestionSchema),
 });
@@ -617,7 +636,7 @@ export const ArticleReferenceIntegrityPageSchema = Schema.mutable(
   )
 );
 
-export const SubjectSectionIntegrityPageSchema = Schema.mutable(
+export const CurriculumLessonIntegrityPageSchema = Schema.mutable(
   Schema.extend(
     PaginationPageSchema,
     Schema.Struct({
@@ -625,7 +644,7 @@ export const SubjectSectionIntegrityPageSchema = Schema.mutable(
         Schema.Struct({
           locale: SyncLocaleSchema,
           slug: Schema.String,
-          topicId: Schema.optional(ConvexIdSchema("subjectTopics")),
+          topicId: Schema.optional(ConvexIdSchema("curriculumTopics")),
         })
       ),
     })

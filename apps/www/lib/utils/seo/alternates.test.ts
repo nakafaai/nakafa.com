@@ -25,15 +25,15 @@ describe("createLocalizedAlternates", () => {
 
   it("normalizes paths without a leading slash", () => {
     const result = createLocalizedAlternates(
-      "en/subject/high-school/11/mathematics"
+      "en/curriculum/high-school/11/mathematics"
     );
 
     expect(result).toEqual({
-      canonical: "/en/subject/high-school/11/mathematics",
+      canonical: "/en/curriculum/high-school/11/mathematics",
       languages: {
-        en: "/en/subject/high-school/11/mathematics",
-        id: "/id/subject/high-school/11/mathematics",
-        "x-default": "/en/subject/high-school/11/mathematics",
+        en: "/en/curriculum/high-school/11/mathematics",
+        id: "/id/curriculum/high-school/11/mathematics",
+        "x-default": "/en/curriculum/high-school/11/mathematics",
       },
     });
   });

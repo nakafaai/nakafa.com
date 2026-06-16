@@ -118,17 +118,16 @@ describe("readMdxSlugManifest", () => {
     expect(getMdxSlugsFromManifest(manifest, "en")).toStrictEqual([]);
   });
 
-  it("keeps exercise question and answer MDX slugs under hidden folders", async () => {
+  it("keeps practice question and answer MDX slugs under material", async () => {
     mockReadContentDirectoryPaths.mockImplementation(
       (directoryPath: string) => {
-        if (directoryPath === "/virtual/contents/exercises") {
+        if (directoryPath === "/virtual/contents/material") {
           return Effect.succeed([
-            "high-school/snbt/set-1/_question/en.mdx",
-            "high-school/snbt/set-1/_question/id.mdx",
-            "high-school/snbt/set-1/_question/asset",
-            "high-school/snbt/set-1/_answer/en.mdx",
-            "high-school/snbt/set-1/_answer/id.mdx",
-            "high-school/snbt/set-1/_draft/en.mdx",
+            "practice/assessment/snbt/set-1/question-1/question.en.mdx",
+            "practice/assessment/snbt/set-1/question-1/question.id.mdx",
+            "practice/assessment/snbt/set-1/question-1/asset",
+            "practice/assessment/snbt/set-1/question-1/answer.en.mdx",
+            "practice/assessment/snbt/set-1/question-1/answer.id.mdx",
           ]);
         }
 
@@ -139,8 +138,29 @@ describe("readMdxSlugManifest", () => {
     const manifest = await Effect.runPromise(readMdxSlugManifest());
 
     expect(getMdxSlugsFromManifest(manifest, "en")).toStrictEqual([
-      "exercises/high-school/snbt/set-1/_answer",
-      "exercises/high-school/snbt/set-1/_question",
+      "material/practice/assessment/snbt/set-1/question-1/answer",
+      "material/practice/assessment/snbt/set-1/question-1/question",
+    ]);
+  });
+
+  it("keeps typed localized file-stem assets at the root", async () => {
+    mockReadContentDirectoryPaths.mockImplementation(
+      (directoryPath: string) => {
+        if (directoryPath === "/virtual/contents/material") {
+          return Effect.succeed(["question.en.mdx", "answer.id.mdx"]);
+        }
+
+        return Effect.succeed([]);
+      }
+    );
+
+    const manifest = await Effect.runPromise(readMdxSlugManifest());
+
+    expect(getMdxSlugsFromManifest(manifest, "en")).toStrictEqual([
+      "material/question",
+    ]);
+    expect(getMdxSlugsFromManifest(manifest, "id")).toStrictEqual([
+      "material/answer",
     ]);
   });
 });

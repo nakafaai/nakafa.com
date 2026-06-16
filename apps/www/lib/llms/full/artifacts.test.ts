@@ -32,7 +32,7 @@ vi.mock("@/lib/sitemap/routes", () => ({
         id: "content_en_exercises_0",
         locale: "en",
         page: 0,
-        section: "exercises",
+        section: "material",
       },
       {
         id: "content_id_quran_1",
@@ -71,20 +71,42 @@ describe("llms full document", () => {
         ]);
       }
 
-      if (section === "exercises") {
+      if (section === "material") {
         return Effect.succeed([
           createEntry({
             route:
-              "/exercises/high-school/snbt/general-knowledge/try-out/2026/set-1",
-            section: "exercises",
+              "/material/practice/assessment/snbt/general-knowledge/try-out-2026/set-1",
+            section: "material",
             title: "Set 1",
           }),
           createEntry({
             route:
-              "/exercises/high-school/snbt/general-knowledge/try-out/2026/set-1/9",
-            section: "exercises",
+              "/material/practice/assessment/snbt/general-knowledge/try-out-2026/set-1/question-9",
+            section: "material",
             title: "Exercise 9",
           }),
+          createEntry({
+            route: "/material/lesson/chemistry/blank",
+            section: "material",
+            title: "Blank Lesson",
+          }),
+          {
+            ...createEntry({
+              route: "/material/practice/blank",
+              section: "material",
+              title: "Blank",
+            }),
+            segments: ["practice", ""],
+          },
+          {
+            ...createEntry({
+              route:
+                "/material/practice/assessment/snbt/general-knowledge/try-out-2026/set-1/notes",
+              section: "material",
+              title: "Notes",
+            }),
+            href: "https://nakafa.com/en/material/practice/assessment/snbt/general-knowledge/try-out-2026/set-1/notes",
+          },
         ]);
       }
 
@@ -99,10 +121,13 @@ describe("llms full document", () => {
     });
     mockGetLlmsSourceMarkdownText.mockImplementation(
       ({ cleanSlug, locale }) => {
-        if (cleanSlug === "articles/story/missing") {
+        if (
+          cleanSlug === "articles/story/missing" ||
+          cleanSlug === "material/lesson/chemistry/blank" ||
+          cleanSlug === "material/practice/blank"
+        ) {
           return Effect.succeed(null);
         }
-
         return Effect.succeed(`${locale}:${cleanSlug}: full markdown`);
       }
     );
@@ -142,7 +167,7 @@ describe("llms full document", () => {
     expect(artifacts.root.path).toBe("llms-full.txt");
     expect(artifacts.manifest.path).toBe("llms-full/index.json");
     expect(shardPaths).toContain("llms-full/en/articles/page/0.txt");
-    expect(shardPaths).toContain("llms-full/en/exercises/page/0.txt");
+    expect(shardPaths).toContain("llms-full/en/material/page/0.txt");
     expect(shardPaths).toContain("llms-full/id/quran/page/1.txt");
     expect(
       artifacts.shards.find(
@@ -151,9 +176,14 @@ describe("llms full document", () => {
     ).toContain("en:articles/story/example");
     expect(
       artifacts.shards.find(
-        (artifact) => artifact.path === "llms-full/en/exercises/page/0.txt"
+        (artifact) => artifact.path === "llms-full/en/material/page/0.txt"
       )?.text
-    ).not.toContain("set-1/9: full markdown");
+    ).not.toContain("question-9: full markdown");
+    expect(
+      artifacts.shards.find(
+        (artifact) => artifact.path === "llms-full/en/material/page/0.txt"
+      )?.text
+    ).not.toContain("notes: full markdown");
     expect(manifestData.entrypoint).toBe("https://nakafa.com/llms-full.txt");
     expect(manifestData.manifest).toBe(
       "https://nakafa.com/llms-full/index.json"
@@ -169,7 +199,7 @@ describe("llms full document", () => {
       id: "content_en_exercises_0",
       locale: "en",
       page: 0,
-      section: "exercises",
+      section: "material",
     });
     expect(mockGetContentPageLlmsEntries).toHaveBeenCalledWith({
       id: "content_id_quran_1",

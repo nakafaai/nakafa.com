@@ -59,49 +59,49 @@ describe("getLocale", () => {
     });
 
     it("defaults to enUS for 'ja'", () => {
-      const locale = getLocale("ja" as "en");
+      const locale = getLocale("ja");
       expect(locale.code).toBe("en-US");
     });
 
     it("defaults to enUS for 'ko'", () => {
-      const locale = getLocale("ko" as "en");
+      const locale = getLocale("ko");
       expect(locale.code).toBe("en-US");
     });
 
     it("defaults to enUS for 'ru'", () => {
-      const locale = getLocale("ru" as "en");
+      const locale = getLocale("ru");
       expect(locale.code).toBe("en-US");
     });
 
     it("defaults to enUS for 'ar'", () => {
-      const locale = getLocale("ar" as "en");
+      const locale = getLocale("ar");
       expect(locale.code).toBe("en-US");
     });
 
     it("defaults to enUS for 'hi'", () => {
-      const locale = getLocale("hi" as "en");
+      const locale = getLocale("hi");
       expect(locale.code).toBe("en-US");
     });
 
     it("defaults to enUS for 'pt'", () => {
-      const locale = getLocale("pt" as "en");
+      const locale = getLocale("pt");
       expect(locale.code).toBe("en-US");
     });
   });
 
   describe("empty and undefined values", () => {
     it("defaults to enUS for undefined", () => {
-      const locale = getLocale(undefined as unknown as "en");
+      const locale = getLocale(undefined);
       expect(locale.code).toBe("en-US");
     });
 
     it("defaults to enUS for null", () => {
-      const locale = getLocale(null as unknown as "en");
+      const locale = getLocale(null);
       expect(locale.code).toBe("en-US");
     });
 
     it("defaults to enUS for empty string", () => {
-      const locale = getLocale("" as "en");
+      const locale = getLocale("");
       expect(locale.code).toBe("en-US");
     });
   });
@@ -157,7 +157,7 @@ describe("getLocale", () => {
     });
   });
 
-  describe("locale object compatibility", () => {
+  describe("locale object handling", () => {
     it("handles locale as string type", () => {
       const locale = getLocale("en");
       expect(locale).toBeDefined();

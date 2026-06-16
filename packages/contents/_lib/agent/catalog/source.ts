@@ -4,8 +4,8 @@ import type { NakafaAgentContentSummary } from "@repo/contents/_lib/agent/schema
 import {
   getExerciseQuestionNumbers,
   getExerciseSetPathsFromSlugs,
-} from "@repo/contents/_lib/exercises/collection";
-import { hasInvalidTryOutYearSlug } from "@repo/contents/_lib/exercises/slug";
+} from "@repo/contents/_lib/assessment/collection";
+import { hasInvalidTryOutYearSlug } from "@repo/contents/_lib/assessment/slug";
 import { getMdxSlugsForLocale } from "@repo/contents/_lib/mdx-slugs/cache";
 import {
   type ContentMetadataListItem,
@@ -55,31 +55,31 @@ function compareNakafaContentSummaries(
   );
 }
 
-/** Builds searchable summaries for articles and subject content. */
+/** Builds searchable summaries for articles and lesson material. */
 function getNakafaMdxContentSummaries(locale: Locale) {
   return Effect.all(
     [
       getContentsMetadata({ basePath: "articles", locale }),
-      getContentsMetadata({ basePath: "subject", locale }),
+      getContentsMetadata({ basePath: "material/lesson", locale }),
     ],
     { concurrency: "unbounded" }
   ).pipe(
-    Effect.map(([articles, subjects]) => [
+    Effect.map(([articles, materials]) => [
       ...articles.flatMap((entry) =>
         buildNakafaMdxContentSummary(locale, entry, "articles")
       ),
-      ...subjects.flatMap((entry) =>
-        buildNakafaMdxContentSummary(locale, entry, "subject")
+      ...materials.flatMap((entry) =>
+        buildNakafaMdxContentSummary(locale, entry, "material")
       ),
     ])
   );
 }
 
-/** Builds one article or subject summary from trusted scoped metadata. */
+/** Builds one article or material summary from trusted scoped metadata. */
 function buildNakafaMdxContentSummary(
   locale: Locale,
   entry: ContentMetadataListItem,
-  section: "articles" | "subject"
+  section: "articles" | "material"
 ) {
   const ref = createNakafaContentRef(locale, entry.slug, section);
 
@@ -106,7 +106,7 @@ function getNakafaExerciseSummaries(locale: Locale) {
         return [];
       }
 
-      const ref = createNakafaContentRef(locale, route, "exercises");
+      const ref = createNakafaContentRef(locale, route, "material");
 
       if (Option.isNone(ref)) {
         return [];

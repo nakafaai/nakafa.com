@@ -52,7 +52,7 @@ export const metadata = {
 `;
 
 const localeFileNames = new Set(["en.mdx", "id.mdx"]);
-const seoContentRoots = ["articles", "subject"] as const;
+const seoContentRoots = ["articles", "material"] as const;
 
 /** Returns the package root whether Vitest runs from the workspace or repo root. */
 function getContentsRoot() {
@@ -222,7 +222,7 @@ describe("getContentMetadataWithRaw", () => {
     mockReadFile.mockResolvedValue(raw);
 
     const result = await Effect.runPromise(
-      getContentMetadataWithRaw("en", "subject/high-school/10/mathematics")
+      getContentMetadataWithRaw("en", "curriculum/high-school/10/mathematics")
     );
 
     expect(mockReadFile).toHaveBeenCalledTimes(1);
@@ -267,7 +267,7 @@ describe("getContentMetadataWithRaw", () => {
     mockReadFile.mockRejectedValue(new Error("missing file"));
 
     const result = await Effect.runPromise(
-      Effect.match(getContentMetadataWithRaw("en", "subject/missing"), {
+      Effect.match(getContentMetadataWithRaw("en", "curriculum/missing"), {
         onSuccess: () => null,
         onFailure: (error) => error,
       })
@@ -280,7 +280,7 @@ describe("getContentMetadataWithRaw", () => {
     mockReadFile.mockResolvedValue("# Metadata is missing");
 
     const result = await Effect.runPromise(
-      Effect.match(getContentMetadataWithRaw("en", "subject/no-metadata"), {
+      Effect.match(getContentMetadataWithRaw("en", "curriculum/no-metadata"), {
         onSuccess: () => null,
         onFailure: (error) => error,
       })
@@ -317,7 +317,7 @@ describe("getContentMetadata", () => {
     mockReadFile.mockResolvedValue("# Metadata is missing");
 
     const result = await Effect.runPromise(
-      Effect.match(getContentMetadata("subject/no-metadata", "en"), {
+      Effect.match(getContentMetadata("curriculum/no-metadata", "en"), {
         onSuccess: () => null,
         onFailure: (error) => error,
       })
@@ -332,7 +332,7 @@ describe("getContentsMetadata", () => {
     mockGetMDXSlugsForLocale.mockReturnValue([
       "articles/politics/valid-entry",
       "articles/politics/missing-entry",
-      "subject/high-school/10/algebra",
+      "curriculum/high-school/10/algebra",
     ]);
     mockReadFile.mockImplementation((filePath: string) => {
       if (filePath.includes("valid-entry/en.mdx")) {
@@ -371,8 +371,8 @@ describe("getContentsMetadata", () => {
           date: "2024-01-01",
           subject: "Mathematics",
         },
-        slug: "subject/high-school/10/algebra",
-        url: "https://nakafa.com/en/subject/high-school/10/algebra",
+        slug: "curriculum/high-school/10/algebra",
+        url: "https://nakafa.com/en/curriculum/high-school/10/algebra",
       },
     ]);
   });
@@ -380,7 +380,7 @@ describe("getContentsMetadata", () => {
   it("filters metadata by basePath and locale", async () => {
     mockGetMDXSlugsForLocale.mockReturnValue([
       "articles/politics/dynastic-politics",
-      "subject/high-school/10/mathematics",
+      "curriculum/high-school/10/mathematics",
     ]);
     mockReadFile.mockImplementation((filePath: string) => {
       if (filePath.includes("dynastic-politics/id.mdx")) {

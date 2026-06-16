@@ -5,11 +5,6 @@ import {
 } from "@repo/backend/convex/contents/constants";
 import { getLearningProgramCatalogInputs } from "@repo/backend/convex/learningPrograms/catalog";
 import {
-  getLearningOutcomeInputs,
-  getOutcomeConceptAlignmentInputs,
-  getProgramOutlineNodeInputs,
-} from "@repo/backend/convex/learningPrograms/outcomes";
-import {
   callConvexMutation,
   callConvexQuery,
 } from "@repo/backend/scripts/sync-content/convex";
@@ -23,7 +18,6 @@ import type {
   SyncOptions,
   SyncResult,
 } from "@repo/backend/scripts/sync-content/types";
-import { getOutcomeRegistryIssues } from "@repo/contents/_types/outcome/map";
 import {
   getLearningProgramCoverageAlignmentIssues,
   LEARNING_PROGRAM_COVERAGE_ALIGNMENTS,
@@ -49,12 +43,6 @@ class LearningProgramCoverageAlignmentError extends Schema.TaggedError<LearningP
     message: Schema.String,
   }
 ) {}
-class LearningProgramOutcomeRegistryError extends Schema.TaggedError<LearningProgramOutcomeRegistryError>()(
-  "LearningProgramOutcomeRegistryError",
-  {
-    message: Schema.String,
-  }
-) {}
 type RuntimeContentRoutePage = Schema.Schema.Type<
   typeof RuntimeContentRoutePageSchema
 >;
@@ -66,7 +54,6 @@ type LearningProgramSyncResult = Schema.Schema.Type<
 export const syncLearningPrograms = Effect.fn("sync.learningPrograms")(
   function* (config: ConvexConfig, options: SyncOptions) {
     yield* assertCoverageAlignments();
-    yield* assertOutcomeRegistry();
 
     const syncedAt = Date.now();
     const syncLocales = options.locale ? [options.locale] : locales;
@@ -74,17 +61,6 @@ export const syncLearningPrograms = Effect.fn("sync.learningPrograms")(
       config,
       internal.learningPrograms.sync.syncLearningPrograms,
       { programs: getLearningProgramCatalogInputs(), syncedAt },
-      LearningProgramSyncResultSchema
-    );
-    const outcomeResult = yield* callConvexMutation(
-      config,
-      internal.learningPrograms.sync.syncLearningProgramOutcomes,
-      {
-        conceptAlignments: getOutcomeConceptAlignmentInputs(),
-        outcomes: getLearningOutcomeInputs(),
-        outlineNodes: getProgramOutlineNodeInputs(),
-        syncedAt,
-      },
       LearningProgramSyncResultSchema
     );
     const routes = yield* collectLearningProgramCoverageRoutes(config, options);
@@ -110,12 +86,11 @@ export const syncLearningPrograms = Effect.fn("sync.learningPrograms")(
         coverageResult,
         coverageRows: coverageRows.length,
         deletedCoverageRows,
-        outcomeResult,
         routes: routes.length,
       });
     }
 
-    return toSyncResult(catalogResult, outcomeResult, coverageResult);
+    return toSyncResult(catalogResult, coverageResult);
   }
 );
 
@@ -241,37 +216,16 @@ function assertCoverageAlignments() {
   });
 }
 
-/** Fails fast when outcome registry rows point at missing programs, outlines, or concepts. */
-function assertOutcomeRegistry() {
-  return Effect.gen(function* () {
-    const issues = getOutcomeRegistryIssues();
-
-    if (issues.length === 0) {
-      return;
-    }
-
-    return yield* Effect.fail(
-      new LearningProgramOutcomeRegistryError({
-        message: `Invalid learning program outcome registry: ${issues[0]}`,
-      })
-    );
-  });
-}
-
 /** Converts catalog and coverage mutation results into workflow metrics. */
 function toSyncResult(
   catalogResult: LearningProgramSyncResult,
-  outcomeResult: LearningProgramSyncResult,
   coverageResult: LearningProgramSyncResult
 ): SyncResult {
   return {
-    created:
-      catalogResult.created + outcomeResult.created + coverageResult.created,
-    skipped:
-      catalogResult.skipped + outcomeResult.skipped + coverageResult.skipped,
+    created: catalogResult.created + coverageResult.created,
+    skipped: catalogResult.skipped + coverageResult.skipped,
     unchanged: 0,
-    updated:
-      catalogResult.updated + outcomeResult.updated + coverageResult.updated,
+    updated: catalogResult.updated + coverageResult.updated,
   };
 }
 
@@ -281,21 +235,16 @@ function logLearningProgramSync({
   coverageResult,
   coverageRows,
   deletedCoverageRows,
-  outcomeResult,
   routes,
 }: {
   catalogResult: LearningProgramSyncResult;
   coverageResult: LearningProgramSyncResult;
   coverageRows: number;
   deletedCoverageRows: number;
-  outcomeResult: LearningProgramSyncResult;
   routes: number;
 }) {
   log(
     `  Catalog: ${catalogResult.created} new, ${catalogResult.updated} updated`
-  );
-  log(
-    `  Outcomes: ${outcomeResult.created} new, ${outcomeResult.updated} updated`
   );
   log(
     `  Coverage: ${coverageRows} rows from ${routes} graph routes (${coverageResult.created} new, ${coverageResult.updated} updated, ${coverageResult.skipped} skipped)`

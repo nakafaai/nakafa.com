@@ -75,7 +75,7 @@ function formatSitemapEntry(entry: SitemapEntry) {
   return lines.join("\n");
 }
 
-/** Converts sitemap date values into XML-compatible timestamp text. */
+/** Converts sitemap date values into XML timestamp text. */
 function formatLastModified(value: Date | string | undefined) {
   if (!value) {
     return null;

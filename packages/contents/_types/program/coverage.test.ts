@@ -1,15 +1,8 @@
-import { DateOnlySchema } from "@repo/contents/_shared/date";
-import {
-  OutcomeKeySchema,
-  ProgramOutlineNodeKeySchema,
-} from "@repo/contents/_types/outcome/schema";
 import { LEARNING_PROGRAM_CATALOG } from "@repo/contents/_types/program/catalog";
 import {
   createCurriculumCoverageInputs,
   createFallbackCoverageInputs,
   createLearningProgramCoverageInputs,
-  createOutcomeDerivedCoverageInputs,
-  getProgramKeysForCoverageConcept,
   getProgramKeysForCoverageRoute,
 } from "@repo/contents/_types/program/coverage";
 import {
@@ -22,16 +15,15 @@ import { describe, expect, it } from "vitest";
 const decodeRoute = Schema.decodeUnknownSync(
   LearningProgramCoverageRouteSchema
 );
-const fixtureDate = Schema.decodeSync(DateOnlySchema)("2026-06-15");
 
 const subjectRoute = decodeRoute({
   assetId:
-    "asset:id:subject:high-school:10:mathematics:subject-topic:mathematics:statistics",
-  conceptId: "concept:subject:mathematics:statistics",
-  kind: "subject-topic",
-  lensId: "lens:subject:high-school:10:mathematics",
+    "asset:id:material:lesson:mathematics:material-topic:mathematics:exponential-logarithm",
+  conceptId: "concept:material:lesson:mathematics:exponential-logarithm",
+  kind: "curriculum-topic",
+  lensId: "lens:material:lesson:mathematics",
   locale: "id",
-  route: "subject/high-school/10/mathematics/statistics",
+  route: "material/lesson/mathematics/exponential-logarithm",
 });
 
 const snbtRoute = decodeRoute({
@@ -40,42 +32,16 @@ const snbtRoute = decodeRoute({
   kind: "exercise-set",
   lensId: "lens:exercise:high-school:snbt:quantitative-knowledge",
   locale: "id",
-  route: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1",
+  route:
+    "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
 });
 
 const englishSubjectRoute = decodeRoute({
   ...subjectRoute,
   assetId:
-    "asset:en:subject:high-school:10:mathematics:subject-topic:mathematics:statistics",
+    "asset:en:material:lesson:mathematics:material-topic:mathematics:exponential-logarithm",
   locale: "en",
 });
-
-const fixtureOutcome = {
-  code: "FIXTURE-1",
-  key: OutcomeKeySchema.make("fixture.outcome"),
-  outlineKey: ProgramOutlineNodeKeySchema.make("fixture.outline"),
-  programKey: LearningProgramKeySchema.make("id-kurikulum-merdeka"),
-  source: {
-    label: "Fixture source",
-    retrievedAt: fixtureDate,
-    type: "nakafa-editorial",
-    url: "https://nakafa.com",
-  },
-  status: "active",
-  translations: {
-    en: { description: "Reviewed target.", title: "Target" },
-    id: { description: "Target tertinjau.", title: "Target" },
-  },
-  versionLabel: "fixture",
-} as const;
-
-const fixtureOutcomeAlignment = {
-  conceptKey: subjectRoute.conceptId,
-  evidence: "Reviewed fixture alignment.",
-  outcomeKey: fixtureOutcome.key,
-  relation: "covers",
-  reviewedAt: fixtureDate,
-} as const;
 
 describe("program/coverage", () => {
   it("keeps assessment route rules separate from curriculum mappings", () => {
@@ -83,20 +49,21 @@ describe("program/coverage", () => {
     expect(getProgramKeysForCoverageRoute(snbtRoute)).toEqual(["snbt-2026"]);
   });
 
-  it("maps subject topics through curriculum-owned material references", () => {
-    const newTopicRoute = decodeRoute({
-      assetId: "asset:id:subject:high-school:10:biology:subject-topic:cells",
-      conceptId: "concept:subject:biology:cell-structure",
-      kind: "subject-topic",
-      lensId: "lens:subject:high-school:10:biology",
+  it("maps curriculum topics through curriculum-owned material references", () => {
+    const mappedTopicRoute = decodeRoute({
+      assetId:
+        "asset:id:material:lesson:biology:material-topic:biology:biodiversity",
+      conceptId: "concept:material:lesson:biology:biodiversity",
+      kind: "curriculum-topic",
+      lensId: "lens:material:lesson:biology",
       locale: "id",
-      route: "subject/high-school/10/biology/cell-structure",
+      route: "material/lesson/biology/biodiversity",
     });
 
     expect(
       createCurriculumCoverageInputs({
         programs: LEARNING_PROGRAM_CATALOG,
-        routes: [newTopicRoute],
+        routes: [mappedTopicRoute],
         syncedAt: 1,
       })
     ).toEqual([
@@ -127,7 +94,7 @@ describe("program/coverage", () => {
     expect(
       getProgramKeysForCoverageRoute(unmatchedRoute, [
         {
-          match: { routeKinds: ["subject-topic"] },
+          match: { routeKinds: ["curriculum-topic"] },
           programKey: LearningProgramKeySchema.make("id-kurikulum-merdeka"),
         },
       ])
@@ -173,7 +140,7 @@ describe("program/coverage", () => {
       lensScope: "curriculum",
     });
     expect(rowsByProgram["snbt-2026"]).toMatchObject({ lensScope: "exam" });
-    expect(JSON.stringify(rows)).not.toContain("exercises/high-school/snbt");
+    expect(JSON.stringify(rows)).not.toContain("assessment/high-school/snbt");
   });
 
   it("preserves explicit available catalog status for real program coverage", () => {
@@ -200,32 +167,41 @@ describe("program/coverage", () => {
     ]);
   });
 
-  it("derives coverage from asset concepts and outcome alignments before route fallback", () => {
-    const rows = createLearningProgramCoverageInputs({
-      alignments: [],
-      outcomeAlignments: [fixtureOutcomeAlignment],
-      outcomes: [fixtureOutcome],
+  it("counts multiple materials under the same program language and lens", () => {
+    const duplicateSubjectRoute = decodeRoute({
+      ...subjectRoute,
+      assetId:
+        "asset:id:material:lesson:mathematics:material-topic:mathematics:second-topic",
+      conceptId: "concept:material:lesson:mathematics:second-topic",
+      route: "material/lesson/mathematics/second-topic",
+    });
+
+    const rows = createFallbackCoverageInputs({
+      alignments: [
+        {
+          match: { routeSegments: ["exponential-logarithm"] },
+          programKey: LearningProgramKeySchema.make("id-kurikulum-merdeka"),
+        },
+        {
+          match: { routeSegments: ["second-topic"] },
+          programKey: LearningProgramKeySchema.make("id-kurikulum-merdeka"),
+        },
+      ],
       programs: LEARNING_PROGRAM_CATALOG,
-      routes: [subjectRoute, snbtRoute],
+      routes: [subjectRoute, duplicateSubjectRoute],
       syncedAt: 1,
     });
-    const keys = rows
-      .map((row) => `${row.programKey}:${row.locale}:${row.lensId}`)
-      .sort();
 
-    expect(keys).toEqual([
-      "id-kurikulum-merdeka:id:lens:subject:high-school:10:mathematics",
+    expect(rows).toEqual([
+      expect.objectContaining({
+        contentCount: 2,
+        programKey: "id-kurikulum-merdeka",
+        sampleContentId: subjectRoute.assetId,
+      }),
     ]);
   });
 
-  it("exposes direct outcome, curriculum, and fallback projection seams", () => {
-    const outcomeRows = createOutcomeDerivedCoverageInputs({
-      alignments: [fixtureOutcomeAlignment],
-      outcomes: [fixtureOutcome],
-      programs: LEARNING_PROGRAM_CATALOG,
-      routes: [subjectRoute],
-      syncedAt: 1,
-    });
+  it("exposes curriculum and fallback projection seams", () => {
     const curriculumRows = createCurriculumCoverageInputs({
       programs: LEARNING_PROGRAM_CATALOG,
       routes: [subjectRoute],
@@ -237,51 +213,10 @@ describe("program/coverage", () => {
       syncedAt: 1,
     });
 
-    expect(outcomeRows).toHaveLength(1);
-    expect(outcomeRows[0]).toMatchObject({
-      programKey: "id-kurikulum-merdeka",
-    });
     expect(curriculumRows.map((row) => row.programKey).sort()).toEqual([
       "id-kurikulum-merdeka",
     ]);
     expect(fallbackRows).toEqual([]);
-    expect(getProgramKeysForCoverageConcept(subjectRoute)).toEqual([]);
-  });
-
-  it("uses the empty production outcome registry by default", () => {
-    expect(
-      createOutcomeDerivedCoverageInputs({
-        programs: LEARNING_PROGRAM_CATALOG,
-        routes: [subjectRoute],
-        syncedAt: 1,
-      })
-    ).toEqual([]);
-  });
-
-  it("deduplicates outcome-derived program keys and skips retired outcomes", () => {
-    const activeOutcome = fixtureOutcome;
-    const retiredOutcome = {
-      ...fixtureOutcome,
-      key: OutcomeKeySchema.make("fixture.retired"),
-      status: "retired" as const,
-    };
-    const keys = getProgramKeysForCoverageConcept(subjectRoute, {
-      alignments: [
-        fixtureOutcomeAlignment,
-        { ...fixtureOutcomeAlignment },
-        {
-          ...fixtureOutcomeAlignment,
-          outcomeKey: retiredOutcome.key,
-        },
-        {
-          ...fixtureOutcomeAlignment,
-          conceptKey: snbtRoute.conceptId,
-        },
-      ],
-      outcomes: [activeOutcome, retiredOutcome],
-    });
-
-    expect(keys).toEqual(["id-kurikulum-merdeka"]);
   });
 
   it("does not invent curriculum coverage for material outside a curriculum mapping", () => {
@@ -291,34 +226,14 @@ describe("program/coverage", () => {
       routes: [
         decodeRoute({
           assetId:
-            "asset:id:subject:university:bachelor:ai-ds:subject-topic:nlp",
-          conceptId: "concept:subject:ai-ds:nlp",
-          kind: "subject-topic",
-          lensId: "lens:subject:university:bachelor:ai-ds",
+            "asset:id:material:lesson:ai-programming:material-topic:ai-programming:nlp",
+          conceptId: "concept:material:lesson:ai-programming:nlp",
+          kind: "curriculum-topic",
+          lensId: "lens:material:lesson:ai-programming",
           locale: "id",
-          route: "subject/university/bachelor/ai-ds/nlp",
+          route: "material/lesson/ai-programming/nlp",
         }),
       ],
-      syncedAt: 1,
-    });
-
-    expect(rows).toEqual([]);
-  });
-
-  it("ignores concept alignments when the reviewed outcome row is absent", () => {
-    const rows = createOutcomeDerivedCoverageInputs({
-      alignments: [
-        {
-          conceptKey: subjectRoute.conceptId,
-          evidence: "Reviewed fixture alignment.",
-          outcomeKey: OutcomeKeySchema.make("missing.outcome"),
-          relation: "covers",
-          reviewedAt: fixtureDate,
-        },
-      ],
-      outcomes: [],
-      programs: LEARNING_PROGRAM_CATALOG,
-      routes: [subjectRoute],
       syncedAt: 1,
     });
 
@@ -347,8 +262,8 @@ describe("program/coverage", () => {
     const duplicateSubjectRoute = decodeRoute({
       ...subjectRoute,
       assetId:
-        "asset:id:subject:high-school:10:mathematics:subject-topic:mathematics:statistics-practice",
-      route: "subject/high-school/10/mathematics/statistics-practice",
+        "asset:id:material:lesson:mathematics:material-topic:mathematics:exponential-logarithm-practice",
+      route: "material/lesson/mathematics/exponential-logarithm-practice",
     });
     const programs = LEARNING_PROGRAM_CATALOG.map((program) => {
       if (program.key !== "id-kurikulum-merdeka") {

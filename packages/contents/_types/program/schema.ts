@@ -1,5 +1,4 @@
 import { type DateOnly, DateOnlySchema } from "@repo/contents/_shared/date";
-import { ConceptKeySchema } from "@repo/contents/_types/concept/schema";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { CurriculumLensScopeSchema } from "@repo/contents/_types/graph/schema";
 import { Schema } from "effect";
@@ -7,6 +6,8 @@ import { Schema } from "effect";
 type SchemaType<T extends Schema.Schema.Any> = Schema.Schema.Type<T>;
 
 const LEARNING_PROGRAM_KEY_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const COVERAGE_CONCEPT_ID_PATTERN =
+  /^concept:[a-z0-9]+(?::[a-z0-9]+(?:-[a-z0-9]+)*)+$/;
 
 /**
  * Machine-readable date-only value for source-controlled program registry data.
@@ -52,7 +53,7 @@ export const LearningProgramKindSchema = Schema.Literal(
 export type LearningProgramKind = SchemaType<typeof LearningProgramKindSchema>;
 
 export const PROGRAM_NAVIGATION_MODEL_VALUES = [
-  "class-subject-topic",
+  "class-curriculum-topic",
   "course-unit-lesson",
   "exam-domain-practice-set",
   "track-topic",
@@ -178,13 +179,19 @@ const CoverageRouteKindSchema = Schema.Literal(
   "exercise-group",
   "exercise-question",
   "exercise-set",
-  "subject-section",
-  "subject-topic"
+  "curriculum-lesson",
+  "curriculum-topic"
 );
 
 const LearningProgramCoverageRouteSchemaFields = {
   assetId: Schema.String,
-  conceptId: ConceptKeySchema,
+  conceptId: Schema.String.pipe(
+    Schema.pattern(COVERAGE_CONCEPT_ID_PATTERN, {
+      identifier: "LearningProgramCoverageConceptId",
+      description: "Graph concept ID attached to one generated route row.",
+      message: () => "Invalid coverage concept ID. Expected graph concept ID.",
+    })
+  ),
   kind: CoverageRouteKindSchema,
   lensId: Schema.String,
   locale: LocaleSchema,

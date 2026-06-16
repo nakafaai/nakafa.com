@@ -51,7 +51,7 @@ import { useMutation } from "convex/react";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { subjectList } from "@/components/school/classes/_data/subject";
+import { subjectList } from "@/components/school/classes/data/subject";
 import {
   classCreateDefaultValues,
   classCreateFormSchema,

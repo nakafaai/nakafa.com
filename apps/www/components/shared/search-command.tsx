@@ -32,9 +32,9 @@ import { useTranslations } from "next-intl";
 import type { ComponentProps, ReactElement, ReactNode } from "react";
 import { Fragment, useLayoutEffect, useTransition } from "react";
 import { SearchExcerpt } from "@/components/shared/search-excerpt";
-import { articlesMenu } from "@/components/sidebar/_data/articles";
-import { holyMenu } from "@/components/sidebar/_data/holy";
-import { subjectMenu } from "@/components/sidebar/_data/subject";
+import { articlesMenu } from "@/components/sidebar/data/articles";
+import { holyMenu } from "@/components/sidebar/data/holy";
+import { subjectMenu } from "@/components/sidebar/data/subject";
 import {
   type ContentSearchResultItem,
   useSearchQuery,
@@ -356,14 +356,12 @@ function useSearchSectionLabels(): Record<
 > {
   const tCommon = useTranslations("Common");
   const tArticles = useTranslations("Articles");
-  const tExercises = useTranslations("Exercises");
   const tHoly = useTranslations("Holy");
 
   return {
     articles: tArticles("articles"),
-    exercises: tExercises("exercises"),
+    material: tCommon("material"),
     quran: tHoly("quran"),
-    subject: tCommon("subject"),
   };
 }
 

@@ -5,14 +5,14 @@ import { describe, expect, it } from "vitest";
 describe("buildContentSearchDocument", () => {
   it("keeps route identity separate from display search text", () => {
     const route =
-      "subject/high-school/10/mathematics/exponential-logarithm/logarithm-definition";
+      "material/lesson/mathematics/exponential-logarithm/logarithm-definition";
     const identity = createLearningGraphIdentityFromRoute({
       locale: "id",
       route,
     });
 
     if (!identity) {
-      throw new Error("Expected subject section graph identity.");
+      throw new Error("Expected curriculum lesson graph identity.");
     }
 
     const document = buildContentSearchDocument({
@@ -21,13 +21,13 @@ describe("buildContentSearchDocument", () => {
       description: "Memahami bentuk dasar logaritma.",
       locale: "id",
       route,
-      section: "subject",
+      section: "material",
       syncedAt: 1,
       text: [
         'import { getColor } from "@repo/design-system/lib/color";',
         "## Pengertian Logaritma",
         "Logaritma menjawab pangkat yang dibutuhkan.",
-        "Baca [sifat logaritma](/subject/high-school/10/mathematics/exponential-logarithm/logarithm-properties).",
+        "Baca [sifat logaritma](/material/lesson/mathematics/exponential-logarithm/logarithm-properties).",
         "```sh",
         "# source-visible comment",
         "```",
@@ -40,7 +40,7 @@ describe("buildContentSearchDocument", () => {
       route,
       text: "Definisi Logaritma Memahami bentuk dasar logaritma. Pengertian Logaritma Logaritma menjawab pangkat yang dibutuhkan. Baca sifat logaritma. # source-visible comment",
     });
-    expect(document.text).not.toContain("subject/high-school");
+    expect(document.text).not.toContain("material/lesson");
     expect(document.text).not.toContain("import");
     expect(document.text).not.toContain("##");
     expect(document.text).not.toContain("```");

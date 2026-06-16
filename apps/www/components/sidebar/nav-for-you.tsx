@@ -15,7 +15,7 @@ import { useTranslations } from "next-intl";
 import {
   getAppNavigationViewer,
   getForYouNavigationItems,
-} from "@/components/sidebar/_data/navigation";
+} from "@/components/sidebar/data/navigation";
 import { useUser } from "@/lib/context/use-user";
 
 /**

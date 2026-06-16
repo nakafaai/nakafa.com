@@ -75,8 +75,8 @@ export async function listArticleApiContentPageImpl(
   };
 }
 
-/** Reads subject API content rows by route prefix from the runtime table. */
-export async function listSubjectApiContentPageImpl(
+/** Reads material API content rows by route prefix from the runtime table. */
+export async function listMaterialApiContentPageImpl(
   ctx: QueryCtx,
   args: ApiContentPrefixArgs
 ) {
@@ -84,7 +84,7 @@ export async function listSubjectApiContentPageImpl(
   const prefix = cleanApiContentPrefix(args.prefix);
 
   const page = await ctx.db
-    .query("subjectSections")
+    .query("curriculumLessons")
     .withIndex("by_locale_and_slug", (q) =>
       q
         .eq("locale", args.locale)
@@ -117,7 +117,7 @@ export async function listSubjectApiContentPageImpl(
             metadata: {
               authors: await getContentAuthors(ctx, {
                 contentId: section._id,
-                contentType: "subject",
+                contentType: "material",
               }),
               date: formatContentDate(section.date),
               description: section.description,

@@ -13,7 +13,7 @@ import {
 } from "@/app/api/chat/content";
 
 const currentContentUrl =
-  "/id/subject/high-school/11/mathematics/function-modeling/rational-function";
+  "/id/material/lesson/mathematics/function-modeling/rational-function";
 
 type ContentStatus = Extract<NakafaDataPart, { kind: "content" }>["status"];
 
@@ -103,7 +103,7 @@ function contentMessage({
 describe("app/api/chat/content", () => {
   it("canonicalizes relative page URLs for content_ref inputs", () => {
     expect(getCanonicalNakafaContentUrl(currentContentUrl)).toBe(
-      "https://nakafa.com/id/subject/high-school/11/mathematics/function-modeling/rational-function"
+      "https://nakafa.com/id/material/lesson/mathematics/function-modeling/rational-function"
     );
   });
 
@@ -126,7 +126,7 @@ describe("app/api/chat/content", () => {
     ["same relative URL", currentContentUrl, "done", true],
     [
       "different URL",
-      "/id/subject/high-school/11/mathematics/function-modeling/function-domain",
+      "/id/material/lesson/mathematics/function-modeling/function-domain",
       "done",
       false,
     ],

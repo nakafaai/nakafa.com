@@ -249,14 +249,14 @@ packages/contents/articles/{category}/{slug}/
 
 ### Subjects
 ```
-packages/contents/subject/{category}/{grade}/{material}/{topic}/{section}/
+packages/contents/curriculum/{category}/{grade}/{material}/{topic}/{section}/
   en.mdx
   id.mdx
 ```
 
 ### Exercises
 ```
-packages/contents/exercises/{category}/{type}/{material}/
+packages/contents/assessment/{category}/{type}/{material}/
   {exerciseType}/{year?}/{set}/{number}/
     _question/en.mdx
     _question/id.mdx
@@ -269,7 +269,7 @@ packages/contents/exercises/{category}/{type}/{material}/
 
 1. Create question directories: `{category}/{type}/{material}/{exerciseType}/{year?}/{set}/{number}/`
 2. Add MDX files and choices
-3. **Add set definition** to `packages/contents/_types/material/source/exercises/{category}/{type}/{material}.ts`:
+3. **Add set definition** to `packages/contents/_types/material/source/assessment/{category}/{type}/{material}.ts`:
 
 ```typescript
 {

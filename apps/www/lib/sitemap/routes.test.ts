@@ -48,7 +48,7 @@ beforeEach(() => {
   runtimeMocks.getRuntimeContentRouteCounts.mockImplementation(({ locale }) =>
     Effect.succeed(
       locale === "en"
-        ? [countRow("en", "articles", 1), countRow("en", "subject", 2)]
+        ? [countRow("en", "articles", 1), countRow("en", "material", 2)]
         : [countRow("id", "quran", 101)]
     )
   );
@@ -77,7 +77,12 @@ describe("sitemap route discovery", () => {
         page: 0,
         section: "articles",
       },
-      { id: "content_en_subject_0", locale: "en", page: 0, section: "subject" },
+      {
+        id: "content_en_material_0",
+        locale: "en",
+        page: 0,
+        section: "material",
+      },
       { id: "content_id_quran_0", locale: "id", page: 0, section: "quran" },
       { id: "content_id_quran_1", locale: "id", page: 1, section: "quran" },
     ]);
@@ -104,29 +109,39 @@ describe("sitemap route discovery", () => {
   it("builds base and content sitemap routes from one materialized page", async () => {
     await expect(getSitemapRoutes()).resolves.toEqual([
       "/",
+      "/assessment",
       "/contributor",
+      "/curriculum",
       "/privacy-policy",
       "/quran",
       "/search",
       "/security-policy",
-      "/subject",
       "/terms-of-service",
     ]);
 
-    const routes = await getSitemapRoutes("content_en_subject_0");
+    const routes = await getSitemapRoutes("content_en_material_0");
 
     expect(routes).toEqual([
-      "/subject/high-school/10",
-      "/subject/high-school/10/chemistry",
-      "/subject/high-school/10/chemistry/atomic-structure/introduction",
-      "/subject/high-school/10/chemistry/green-chemistry/definition",
+      "/assessment/high-school/snbt",
+      "/assessment/high-school/snbt/quantitative-knowledge",
+      "/assessment/high-school/snbt/quantitative-knowledge/practice",
+      "/assessment/high-school/snbt/quantitative-knowledge/practice/set-1",
+      "/assessment/high-school/snbt/quantitative-knowledge/try-out-2026",
+      "/assessment/high-school/snbt/quantitative-knowledge/try-out-2026/set-1",
+      "/assessment/high-school/snbt/quantitative-knowledge/try-out-2026/set-1/question-1",
+      "/material/lesson/chemistry/atomic-structure/introduction",
+      "/material/lesson/chemistry/green-chemistry/definition",
+      "/material/practice/assessment/snbt/quantitative-knowledge/practice",
+      "/material/practice/assessment/snbt/quantitative-knowledge/practice/set-1",
+      "/material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
+      "/material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-1",
     ]);
     expect(
       runtimeMocks.getRuntimeContentRouteArtifactPage
     ).toHaveBeenCalledWith({
       locale: "en",
       page: 0,
-      section: "subject",
+      section: "material",
     });
   });
 
@@ -137,25 +152,46 @@ describe("sitemap route discovery", () => {
       Effect.succeed(null)
     );
 
-    await expect(getSitemapRoutes("content_en_subject_0")).resolves.toEqual([]);
+    await expect(getSitemapRoutes("content_en_material_0")).resolves.toEqual(
+      []
+    );
   });
 
   it("derives parent routes from concrete route catalog rows", () => {
     expect(buildSitemapContentPageRoutes(routeRows)).toEqual([
       "/articles/politics",
       "/articles/politics/dynastic-politics-asian-values",
-      "/exercises/high-school/snbt",
-      "/exercises/high-school/snbt/quantitative-knowledge",
-      "/exercises/high-school/snbt/quantitative-knowledge/practice",
-      "/exercises/high-school/snbt/quantitative-knowledge/practice/set-1",
-      "/exercises/high-school/snbt/quantitative-knowledge/try-out/2026",
-      "/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1",
-      "/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1/1",
+      "/assessment/high-school/snbt",
+      "/assessment/high-school/snbt/quantitative-knowledge",
+      "/assessment/high-school/snbt/quantitative-knowledge/practice",
+      "/assessment/high-school/snbt/quantitative-knowledge/practice/set-1",
+      "/assessment/high-school/snbt/quantitative-knowledge/try-out-2026",
+      "/assessment/high-school/snbt/quantitative-knowledge/try-out-2026/set-1",
+      "/assessment/high-school/snbt/quantitative-knowledge/try-out-2026/set-1/question-1",
+      "/material/lesson/chemistry/atomic-structure/introduction",
+      "/material/lesson/chemistry/green-chemistry/definition",
+      "/material/practice/assessment/snbt/quantitative-knowledge/practice",
+      "/material/practice/assessment/snbt/quantitative-knowledge/practice/set-1",
+      "/material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
+      "/material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-1",
       "/quran/1",
-      "/subject/high-school/10",
-      "/subject/high-school/10/chemistry",
-      "/subject/high-school/10/chemistry/atomic-structure/introduction",
-      "/subject/high-school/10/chemistry/green-chemistry/definition",
+    ]);
+  });
+
+  it("does not create assessment try-out parents without a year segment", () => {
+    expect(
+      buildSitemapContentPageRoutes([
+        routeRow({
+          locale: "en",
+          route:
+            "material/practice/assessment/snbt/quantitative-knowledge/try-out/set-1",
+          section: "material",
+        }),
+      ])
+    ).toEqual([
+      "/assessment/high-school/snbt",
+      "/assessment/high-school/snbt/quantitative-knowledge",
+      "/material/practice/assessment/snbt/quantitative-knowledge/try-out/set-1",
     ]);
   });
 
@@ -172,35 +208,36 @@ const routeRows = [
   }),
   routeRow({
     locale: "en",
-    route: "subject/high-school/10/chemistry/green-chemistry/definition",
-    section: "subject",
+    route: "material/lesson/chemistry/green-chemistry/definition",
+    section: "material",
   }),
   routeRow({
     locale: "en",
-    route: "subject/high-school/10/chemistry/atomic-structure/introduction",
-    section: "subject",
-  }),
-  routeRow({
-    locale: "en",
-    route:
-      "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1",
-    section: "exercises",
+    route: "material/lesson/chemistry/atomic-structure/introduction",
+    section: "material",
   }),
   routeRow({
     locale: "en",
     route:
-      "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1/1",
-    section: "exercises",
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
+    section: "material",
   }),
   routeRow({
     locale: "en",
-    route: "exercises/high-school/snbt/quantitative-knowledge/practice",
-    section: "exercises",
+    route:
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-1",
+    section: "material",
   }),
   routeRow({
     locale: "en",
-    route: "exercises/high-school/snbt/quantitative-knowledge/practice/set-1",
-    section: "exercises",
+    route: "material/practice/assessment/snbt/quantitative-knowledge/practice",
+    section: "material",
+  }),
+  routeRow({
+    locale: "en",
+    route:
+      "material/practice/assessment/snbt/quantitative-knowledge/practice/set-1",
+    section: "material",
   }),
   routeRow({
     locale: "en",
@@ -221,19 +258,19 @@ const incompleteRouteRows = [
   routeProjectionRow(
     {
       locale: "en",
-      route: "subject/high-school/10/chemistry/green-chemistry/definition",
-      section: "subject",
+      route: "material/lesson/chemistry/green-chemistry/definition",
+      section: "material",
     },
-    "subject/high-school/10/chemistry"
+    "curriculum/high-school/10/chemistry"
   ),
   routeProjectionRow(
     {
       locale: "en",
       route:
-        "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1",
-      section: "exercises",
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
+      section: "material",
     },
-    "exercises/high-school/snbt/quantitative-knowledge"
+    "assessment/high-school/snbt/quantitative-knowledge"
   ),
   routeProjectionRow(
     {

@@ -1,7 +1,7 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import {
   listArticleApiContentPageImpl,
-  listSubjectApiContentPageImpl,
+  listMaterialApiContentPageImpl,
 } from "@repo/backend/convex/contents/runtime/api";
 import { getArticlePageImpl } from "@repo/backend/convex/contents/runtime/articles";
 import {
@@ -14,12 +14,13 @@ import {
   listContentRoutesByPrefixImpl,
   listLatestContentRoutesImpl,
 } from "@repo/backend/convex/contents/runtime/catalog";
+import { getCurriculumPageImpl } from "@repo/backend/convex/contents/runtime/curriculum";
 import {
   getExerciseGroupPageImpl,
   getExerciseQuestionPageImpl,
   getExerciseSetPageImpl,
 } from "@repo/backend/convex/contents/runtime/exercises";
-import { getSubjectOutlineImpl } from "@repo/backend/convex/contents/runtime/outline";
+import { getCurriculumOutlineImpl } from "@repo/backend/convex/contents/runtime/outline";
 import {
   getQuranReferenceImpl,
   getQuranSurahPageImpl,
@@ -34,6 +35,10 @@ import {
   getContentRouteByContentIdArgsValidator,
   getContentRouteByContentIdReturnValidator,
   getContentRouteReturnValidator,
+  getCurriculumOutlineArgsValidator,
+  getCurriculumOutlineReturnValidator,
+  getCurriculumPageArgsValidator,
+  getCurriculumPageReturnValidator,
   getExerciseGroupPageArgsValidator,
   getExerciseGroupPageReturnValidator,
   getExerciseQuestionPageArgsValidator,
@@ -44,10 +49,6 @@ import {
   getQuranReferenceReturnValidator,
   getQuranSurahPageArgsValidator,
   getQuranSurahPageReturnValidator,
-  getSubjectOutlineArgsValidator,
-  getSubjectOutlineReturnValidator,
-  getSubjectPageArgsValidator,
-  getSubjectPageReturnValidator,
   listArticleApiContentPageArgsValidator,
   listArticleApiContentPageReturnValidator,
   listContentRouteCountsArgsValidator,
@@ -58,11 +59,10 @@ import {
   listContentRoutesPageReturnValidator,
   listLatestContentRoutesArgsValidator,
   listLatestContentRoutesReturnValidator,
+  listMaterialApiContentPageArgsValidator,
+  listMaterialApiContentPageReturnValidator,
   listQuranSurahsReturnValidator,
-  listSubjectApiContentPageArgsValidator,
-  listSubjectApiContentPageReturnValidator,
 } from "@repo/backend/convex/contents/runtime/spec";
-import { getSubjectPageImpl } from "@repo/backend/convex/contents/runtime/subjects";
 
 /**
  * Loads one published article page from the durable content read model.
@@ -74,22 +74,22 @@ export const getArticlePage = query({
 });
 
 /**
- * Loads one published subject lesson from the durable content read model.
+ * Loads one published curriculum lesson from the durable content read model.
  */
-export const getSubjectPage = query({
-  args: getSubjectPageArgsValidator,
-  returns: getSubjectPageReturnValidator,
-  handler: getSubjectPageImpl,
+export const getCurriculumPage = query({
+  args: getCurriculumPageArgsValidator,
+  returns: getCurriculumPageReturnValidator,
+  handler: getCurriculumPageImpl,
 });
 
 /**
- * Loads one subject material outline in authored topic and section order.
+ * Loads one material lesson outline in authored topic and section order.
  */
-export const getSubjectOutline = query({
-  args: getSubjectOutlineArgsValidator,
-  returns: getSubjectOutlineReturnValidator,
-  /** Preserves generated argument typing for the subject outline query. */
-  handler: (ctx, args) => getSubjectOutlineImpl(ctx, args),
+export const getCurriculumOutline = query({
+  args: getCurriculumOutlineArgsValidator,
+  returns: getCurriculumOutlineReturnValidator,
+  /** Preserves generated argument typing for the curriculum outline query. */
+  handler: (ctx, args) => getCurriculumOutlineImpl(ctx, args),
 });
 
 /**
@@ -186,12 +186,12 @@ export const listArticleApiContentPage = query({
   handler: (ctx, args) => listArticleApiContentPageImpl(ctx, args),
 });
 
-/** Lists subject API rows matching one route prefix. */
-export const listSubjectApiContentPage = query({
-  args: listSubjectApiContentPageArgsValidator,
-  returns: listSubjectApiContentPageReturnValidator,
-  /** Runs a bounded subject API content page query with generated argument typing. */
-  handler: (ctx, args) => listSubjectApiContentPageImpl(ctx, args),
+/** Lists material API rows matching one route prefix. */
+export const listMaterialApiContentPage = query({
+  args: listMaterialApiContentPageArgsValidator,
+  returns: listMaterialApiContentPageReturnValidator,
+  /** Runs a bounded material API content page query with generated argument typing. */
+  handler: (ctx, args) => listMaterialApiContentPageImpl(ctx, args),
 });
 
 /** Lists synced Quran surah metadata rows. */

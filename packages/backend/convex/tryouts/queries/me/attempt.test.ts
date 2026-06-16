@@ -535,7 +535,7 @@ describe("tryouts/queries/me/attempt", () => {
       });
       const firstSetId = await ctx.db.insert("exerciseSets", {
         locale: "id",
-        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/ordered-part-key-reorder-qk",
+        slug: "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/ordered-part-key-reorder-qk",
         category: "high-school",
         type: "snbt",
         material: "quantitative-knowledge",
@@ -547,7 +547,7 @@ describe("tryouts/queries/me/attempt", () => {
       });
       const secondSetId = await ctx.db.insert("exerciseSets", {
         locale: "id",
-        slug: "exercises/high-school/snbt/mathematical-reasoning/try-out/2026/ordered-part-key-reorder-mr",
+        slug: "material/practice/assessment/snbt/mathematical-reasoning/try-out-2026/ordered-part-key-reorder-mr",
         category: "high-school",
         type: "snbt",
         material: "mathematical-reasoning",
@@ -666,7 +666,7 @@ describe("tryouts/queries/me/attempt", () => {
       });
       const firstSetId = await ctx.db.insert("exerciseSets", {
         locale: "id",
-        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/ordered-part-key-collision-qk",
+        slug: "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/ordered-part-key-collision-qk",
         category: "high-school",
         type: "snbt",
         material: "quantitative-knowledge",
@@ -678,7 +678,7 @@ describe("tryouts/queries/me/attempt", () => {
       });
       const secondSetId = await ctx.db.insert("exerciseSets", {
         locale: "id",
-        slug: "exercises/high-school/snbt/mathematical-reasoning/try-out/2026/ordered-part-key-collision-mr",
+        slug: "material/practice/assessment/snbt/mathematical-reasoning/try-out-2026/ordered-part-key-collision-mr",
         category: "high-school",
         type: "snbt",
         material: "mathematical-reasoning",
@@ -825,7 +825,7 @@ describe("tryouts/queries/me/attempt", () => {
         status: "expired",
       });
       const setAttemptId = await ctx.db.insert("exerciseAttempts", {
-        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/final-event-status",
+        slug: "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/final-event-status",
         userId: identity.userId,
         origin: "tryout",
         mode: "simulation",
@@ -911,7 +911,7 @@ describe("tryouts/queries/me/attempt", () => {
       });
       const firstSetId = await ctx.db.insert("exerciseSets", {
         locale: "id",
-        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/in-progress-partcount-shrink-qk",
+        slug: "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/in-progress-partcount-shrink-qk",
         category: "high-school",
         type: "snbt",
         material: "quantitative-knowledge",
@@ -923,7 +923,7 @@ describe("tryouts/queries/me/attempt", () => {
       });
       const secondSetId = await ctx.db.insert("exerciseSets", {
         locale: "id",
-        slug: "exercises/high-school/snbt/mathematical-reasoning/try-out/2026/in-progress-partcount-shrink-mr",
+        slug: "material/practice/assessment/snbt/mathematical-reasoning/try-out-2026/in-progress-partcount-shrink-mr",
         category: "high-school",
         type: "snbt",
         material: "mathematical-reasoning",
@@ -968,7 +968,7 @@ describe("tryouts/queries/me/attempt", () => {
       });
 
       const firstSetAttemptId = await ctx.db.insert("exerciseAttempts", {
-        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/in-progress-partcount-shrink-qk",
+        slug: "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/in-progress-partcount-shrink-qk",
         userId: identity.userId,
         origin: "tryout",
         mode: "simulation",
@@ -987,7 +987,7 @@ describe("tryouts/queries/me/attempt", () => {
         scorePercentage: 0,
       });
       const secondSetAttemptId = await ctx.db.insert("exerciseAttempts", {
-        slug: "exercises/high-school/snbt/mathematical-reasoning/try-out/2026/in-progress-partcount-shrink-mr",
+        slug: "material/practice/assessment/snbt/mathematical-reasoning/try-out-2026/in-progress-partcount-shrink-mr",
         userId: identity.userId,
         origin: "tryout",
         mode: "simulation",

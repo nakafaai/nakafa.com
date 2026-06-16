@@ -28,7 +28,7 @@ const learningProgramCatalogInput = [
     kind: "school-curriculum",
     navigation: {
       levels: ["class", "subject", "topic"],
-      model: "class-subject-topic",
+      model: "class-curriculum-topic",
     },
     provider: { country: "ID", kind: "official", name: "Kemendikdasmen" },
     recommendedCountry: "ID",

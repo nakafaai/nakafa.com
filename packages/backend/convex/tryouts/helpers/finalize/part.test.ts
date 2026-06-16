@@ -46,7 +46,7 @@ describe("tryouts/helpers/finalize/part", () => {
       });
 
       const setAttemptId = await ctx.db.insert("exerciseAttempts", {
-        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/finalize-part",
+        slug: "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/finalize-part",
         userId: identity.userId,
         origin: "tryout",
         mode: "simulation",

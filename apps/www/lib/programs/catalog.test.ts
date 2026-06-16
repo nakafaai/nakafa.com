@@ -20,7 +20,7 @@ const activeProfile = {
     kind: "school-curriculum",
     navigation: {
       levels: ["class", "subject", "topic"],
-      model: "class-subject-topic",
+      model: "class-curriculum-topic",
     },
     title: "Ready curriculum",
     versionLabel: "2026",
@@ -37,7 +37,7 @@ const catalog = [
     kind: "school-curriculum",
     navigation: {
       levels: ["class", "subject", "topic"],
-      model: "class-subject-topic",
+      model: "class-curriculum-topic",
     },
     title: "Ready curriculum",
     versionLabel: "2026",
@@ -50,7 +50,7 @@ const catalog = [
     kind: "school-curriculum",
     navigation: {
       levels: ["class", "subject", "topic"],
-      model: "class-subject-topic",
+      model: "class-curriculum-topic",
     },
     title: "Planned path",
     versionLabel: "2026",
@@ -63,7 +63,7 @@ const catalog = [
     kind: "school-curriculum",
     navigation: {
       levels: ["class", "subject", "topic"],
-      model: "class-subject-topic",
+      model: "class-curriculum-topic",
     },
     title: "Partial path",
     versionLabel: "2026",

@@ -44,7 +44,7 @@ export const getWeather = Effect.fn("weather.getWeather")(function* ({
   };
 
   return yield* timeOperation(
-    "fetch_weather_data",
+    "fetch_weather",
     Effect.gen(function* () {
       yield* Effect.logInfo("Fetching weather data").pipe(
         Effect.annotateLogs(context)

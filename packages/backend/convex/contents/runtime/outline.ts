@@ -10,20 +10,20 @@ import { ConvexError } from "convex/values";
 const MAX_SUBJECT_OUTLINE_TOPICS = 100;
 const MAX_SUBJECT_OUTLINE_SECTIONS_PER_TOPIC = 100;
 
-interface SubjectOutlineArgs {
+interface CurriculumOutlineArgs {
   category: SubjectCategory;
   grade: Grade;
   locale: Locale;
   material: Material;
 }
 
-/** Reads one subject material outline in authored topic and section order. */
-export async function getSubjectOutlineImpl(
+/** Reads one material lesson outline in authored topic and section order. */
+export async function getCurriculumOutlineImpl(
   ctx: QueryCtx,
-  args: SubjectOutlineArgs
+  args: CurriculumOutlineArgs
 ) {
   const topics = await ctx.db
-    .query("subjectTopics")
+    .query("curriculumTopics")
     .withIndex("by_locale_and_category_and_grade_and_material_and_order", (q) =>
       q
         .eq("locale", args.locale)
@@ -37,7 +37,7 @@ export async function getSubjectOutlineImpl(
   if (topics.length > MAX_SUBJECT_OUTLINE_TOPICS) {
     throw new ConvexError({
       code: "SUBJECT_OUTLINE_TOPIC_LIMIT_EXCEEDED",
-      message: "Subject material outline exceeds the supported topic limit.",
+      message: "Material lesson outline exceeds the supported topic limit.",
     });
   }
 
@@ -47,12 +47,12 @@ export async function getSubjectOutlineImpl(
         throw new ConvexError({
           code: "SUBJECT_OUTLINE_SECTION_LIMIT_EXCEEDED",
           message:
-            "Subject material outline exceeds the supported sections-per-topic limit.",
+            "Material lesson outline exceeds the supported sections-per-topic limit.",
         });
       }
 
       const sections = await ctx.db
-        .query("subjectSections")
+        .query("curriculumLessons")
         .withIndex("by_topicId_and_order", (q) => q.eq("topicId", topic._id))
         .order("asc")
         .take(MAX_SUBJECT_OUTLINE_SECTIONS_PER_TOPIC + 1);
@@ -61,14 +61,14 @@ export async function getSubjectOutlineImpl(
         throw new ConvexError({
           code: "SUBJECT_OUTLINE_SECTION_LIMIT_EXCEEDED",
           message:
-            "Subject material outline exceeds the supported sections-per-topic limit.",
+            "Material lesson outline exceeds the supported sections-per-topic limit.",
         });
       }
 
       if (sections.length !== topic.sectionCount) {
         throw new ConvexError({
           code: "SUBJECT_OUTLINE_SECTION_COUNT_MISMATCH",
-          message: "Subject material outline section count does not match.",
+          message: "Material lesson outline section count does not match.",
         });
       }
 

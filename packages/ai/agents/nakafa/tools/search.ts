@@ -13,7 +13,7 @@ type Writer = Pick<UIMessageStreamWriter<MyUIMessage>, "write">;
 type SearchInput = ReturnType<typeof getSearchInput>;
 
 const searchTokenPattern = /[\p{L}\p{N}]+/gu;
-const exerciseQuestionRoutePattern = /\/\d+$/u;
+const exerciseQuestionRoutePattern = /\/(?:question-)?\d+$/u;
 const routeSeparatorPattern = /[/_-]+/gu;
 
 interface Params {
@@ -256,7 +256,7 @@ function rankSearchItems(
       return scoreDelta;
     }
 
-    if (input.section !== "exercises") {
+    if (input.section !== "material") {
       return 0;
     }
 

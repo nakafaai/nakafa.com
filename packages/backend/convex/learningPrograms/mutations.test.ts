@@ -9,14 +9,14 @@ import { describe, expect, it } from "vitest";
 
 const NOW = 1_798_752_000_000;
 const subjectGraph = getGraphIdentity(
-  "subject/high-school/10/chemistry/atomic-structure"
+  "material/lesson/chemistry/atomic-structure"
 );
 const englishSubjectGraph = getGraphIdentity(
-  "subject/high-school/10/chemistry/atomic-structure",
+  "material/lesson/chemistry/atomic-structure",
   "en"
 );
 const snbtGraph = getGraphIdentity(
-  "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1"
+  "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1"
 );
 
 describe("learningPrograms/mutations", () => {
@@ -66,7 +66,7 @@ describe("learningPrograms/mutations", () => {
       planItems: [
         {
           content_id: subjectGraph.assetId,
-          route: "subject/high-school/10/chemistry/atomic-structure",
+          route: "material/lesson/chemistry/atomic-structure",
         },
       ],
       program: { key: "id-kurikulum-merdeka" },
@@ -289,11 +289,11 @@ async function seedContentRoute(
       authors: [],
       contentHash: "chemistry-hash",
       content_id: subjectGraph.assetId,
-      kind: "subject-topic",
+      kind: "curriculum-topic",
       locale: "id",
       markdown: true,
-      route: "subject/high-school/10/chemistry/atomic-structure",
-      section: "subject",
+      route: "material/lesson/chemistry/atomic-structure",
+      section: "material",
       syncedAt: NOW,
       title: "Atomic Structure",
     });

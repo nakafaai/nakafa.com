@@ -20,8 +20,8 @@ type RuntimeContentSection = FunctionArgs<
 type ArticleApiPageArgs = FunctionArgs<
   typeof api.contents.queries.runtime.listArticleApiContentPage
 >;
-type SubjectApiPageArgs = FunctionArgs<
-  typeof api.contents.queries.runtime.listSubjectApiContentPage
+type MaterialApiPageArgs = FunctionArgs<
+  typeof api.contents.queries.runtime.listMaterialApiContentPage
 >;
 type ExerciseSetPageArgs = FunctionArgs<
   typeof api.contents.queries.runtime.getExerciseSetPage
@@ -110,11 +110,11 @@ export function getArticleApiContentPage(args: ArticleApiPageArgs) {
   );
 }
 
-/** Reads one page of subject content rows from Convex. */
-export function getSubjectApiContentPage(args: SubjectApiPageArgs) {
+/** Reads one page of material content rows from Convex. */
+export function getMaterialApiContentPage(args: MaterialApiPageArgs) {
   return fetchApiRuntimeQuery(
-    "listSubjectApiContentPage",
-    api.contents.queries.runtime.listSubjectApiContentPage,
+    "listMaterialApiContentPage",
+    api.contents.queries.runtime.listMaterialApiContentPage,
     args
   );
 }

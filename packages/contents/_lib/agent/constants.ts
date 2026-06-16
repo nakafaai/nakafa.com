@@ -29,9 +29,4 @@ export const NAKAFA_AGENT_MAX_QUERIES = 4;
 export const NAKAFA_AGENT_MAX_QURAN_REFERENCE_VERSES = 20;
 
 /** Public content sections exposed to agents. */
-export const NAKAFA_AGENT_SECTIONS = [
-  "articles",
-  "subject",
-  "exercises",
-  "quran",
-] as const;
+export const NAKAFA_AGENT_SECTIONS = ["articles", "material", "quran"] as const;

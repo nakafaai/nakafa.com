@@ -3,7 +3,7 @@ import type { Locale } from "next-intl";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
 import {
   getRuntimeArticlePage,
-  getRuntimeSubjectPage,
+  getRuntimeCurriculumPage,
 } from "@/lib/content/runtime";
 import { BASE_URL } from "@/lib/llms/constants";
 import { buildHeader } from "@/lib/llms/format";
@@ -65,8 +65,8 @@ const getMdxRuntimePage = Effect.fn("www.llms.mdx.runtimePage")(function* ({
     });
   }
 
-  if (cleanSlug.startsWith("subject/")) {
-    return yield* getRuntimeSubjectPage({
+  if (cleanSlug.startsWith("curriculum/")) {
+    return yield* getRuntimeCurriculumPage({
       locale,
       slug: cleanSlug,
     });
@@ -79,7 +79,7 @@ type RuntimeMdxPage = NonNullable<
   Effect.Effect.Success<ReturnType<typeof getMdxRuntimePage>>
 >;
 
-/** Returns a markdown description with subject fallback for subject lessons. */
+/** Returns a markdown description with curriculum fallback for curriculum lessons. */
 function getPageDescription(content: RuntimeMdxPage) {
   if (content.metadata.description) {
     return content.metadata.description;

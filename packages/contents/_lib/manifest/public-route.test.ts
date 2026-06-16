@@ -19,96 +19,59 @@ describe("public content route checks", () => {
     });
   });
 
-  it("classifies subject listing, chapter, and lesson routes", () => {
-    expect(getPublicContentRouteCheck("subject")).toEqual({ mode: "app" });
-    expect(getPublicContentRouteCheck("subject/high-school")).toEqual({
-      mode: "missing",
+  it("classifies material and curriculum routes", () => {
+    expect(getPublicContentRouteCheck("subject")).toEqual({
+      mode: "outside",
     });
-    expect(getPublicContentRouteCheck("subject/high-school/missing")).toEqual({
-      mode: "missing",
-    });
-    expect(getPublicContentRouteCheck("subject/high-school/10")).toEqual({
-      mode: "subject-grade",
-      prefix: "subject/high-school/10",
-    });
-    expect(
-      getPublicContentRouteCheck("subject/high-school/10/missing")
-    ).toEqual({
-      mode: "missing",
-    });
-    expect(
-      getPublicContentRouteCheck("subject/high-school/10/mathematics")
-    ).toEqual({
-      mode: "subject-material",
-      parentRoute: "subject/high-school/10/mathematics",
-    });
+    expect(getPublicContentRouteCheck("curriculum")).toEqual({ mode: "app" });
+    expect(getPublicContentRouteCheck("material")).toEqual({ mode: "app" });
     expect(
       getPublicContentRouteCheck(
-        "subject/high-school/10/mathematics/exponential-logarithm"
+        "material/lesson/mathematics/exponential-logarithm"
       )
     ).toEqual({
       mode: "exact",
-      route: "subject/high-school/10/mathematics/exponential-logarithm",
+      route: "material/lesson/mathematics/exponential-logarithm",
     });
     expect(
       getPublicContentRouteCheck(
-        "subject/high-school/10/mathematics/exponential-logarithm/logarithm-definition"
+        "material/lesson/mathematics/exponential-logarithm/logarithm-definition"
       )
     ).toEqual({
       mode: "exact",
       route:
-        "subject/high-school/10/mathematics/exponential-logarithm/logarithm-definition",
+        "material/lesson/mathematics/exponential-logarithm/logarithm-definition",
     });
   });
 
-  it("classifies exercise listing, group, set, and question routes", () => {
-    expect(getPublicContentRouteCheck("exercises")).toEqual({ mode: "app" });
-    expect(getPublicContentRouteCheck("exercises/high-school")).toEqual({
-      mode: "missing",
+  it("classifies assessment material routes", () => {
+    expect(getPublicContentRouteCheck("exercises")).toEqual({
+      mode: "outside",
     });
-    expect(getPublicContentRouteCheck("exercises/high-school/missing")).toEqual(
-      {
-        mode: "missing",
-      }
-    );
-    expect(getPublicContentRouteCheck("exercises/high-school/snbt")).toEqual({
-      mode: "exercise-type",
-      prefix: "exercises/high-school/snbt/",
-    });
-    expect(
-      getPublicContentRouteCheck("exercises/high-school/snbt/missing")
-    ).toEqual({
-      mode: "missing",
-    });
-    expect(
-      getPublicContentRouteCheck("exercises/high-school/snbt/general-reasoning")
-    ).toEqual({
-      mode: "exercise-material",
-      parentRoute: "exercises/high-school/snbt/general-reasoning",
-    });
+    expect(getPublicContentRouteCheck("assessment")).toEqual({ mode: "app" });
     expect(
       getPublicContentRouteCheck(
-        "exercises/high-school/snbt/general-reasoning/try-out/2026"
+        "material/practice/assessment/snbt/general-reasoning/try-out-2026"
       )
     ).toEqual({
       mode: "exact",
-      route: "exercises/high-school/snbt/general-reasoning/try-out/2026",
+      route: "material/practice/assessment/snbt/general-reasoning/try-out-2026",
     });
     expect(
       getPublicContentRouteCheck(
-        "exercises/high-school/snbt/general-reasoning/try-out/set-1"
+        "assessment/high-school/snbt/general-reasoning/try-out/set-1"
       )
     ).toEqual({
-      mode: "missing",
+      mode: "app",
     });
     expect(
       getPublicContentRouteCheck(
-        "exercises/high-school/snbt/general-reasoning/try-out/2026/set-1/1"
+        "material/practice/assessment/snbt/general-reasoning/try-out-2026/set-1/question-1"
       )
     ).toEqual({
       mode: "exact",
       route:
-        "exercises/high-school/snbt/general-reasoning/try-out/2026/set-1/1",
+        "material/practice/assessment/snbt/general-reasoning/try-out-2026/set-1/question-1",
     });
   });
 

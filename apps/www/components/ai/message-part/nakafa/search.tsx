@@ -118,15 +118,18 @@ function getSearchLabel(
   message: Props["message"],
   t: ReturnType<typeof useTranslations>
 ) {
-  const section = message.input.section ?? message.result.items.at(0)?.section;
+  const firstItem = message.result.items.at(0);
+  const section = message.input.section ?? firstItem?.section;
 
   switch (section) {
     case "articles":
       return t("nakafa-search-articles");
-    case "subject":
+    case "material":
+      if (firstItem?.route.startsWith("material/practice/")) {
+        return t("nakafa-search-exercises");
+      }
+
       return t("nakafa-search-subject");
-    case "exercises":
-      return t("nakafa-search-exercises");
     case "quran":
       return t("nakafa-search-quran");
     default:

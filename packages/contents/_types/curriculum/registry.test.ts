@@ -1,3 +1,5 @@
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { getProgramKeysForMaterialRoute } from "@repo/contents/_types/curriculum/projection";
 import {
   getCurriculumSourceIssues,
@@ -10,12 +12,34 @@ import {
 import { Either, ParseResult, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
+const CURRICULUM_SOURCE_ROOT = join(process.cwd(), "_types", "curriculum");
+const PUBLIC_ROUTE_FOLDER_PATTERN = /subject\/|exercises\//;
+
+function readCurriculumSourceFiles(directory: string): string[] {
+  const sources: string[] = [];
+
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    const entryPath = join(directory, entry.name);
+
+    if (entry.isDirectory()) {
+      sources.push(...readCurriculumSourceFiles(entryPath));
+      continue;
+    }
+
+    if (entry.name.endsWith(".ts") && !entry.name.endsWith(".test.ts")) {
+      sources.push(readFileSync(entryPath, "utf8"));
+    }
+  }
+
+  return sources;
+}
+
 describe("curriculum registry", () => {
   it("maps Indonesia curriculum nodes to existing reusable material keys", () => {
     expect(getCurriculumSourceIssues()).toEqual([]);
     expect(
       getProgramKeysForMaterialRoute({
-        route: "subject/high-school/10/mathematics/statistics",
+        route: "material/lesson/mathematics/statistics-foundations",
       })
     ).toEqual(["id-kurikulum-merdeka"]);
   });
@@ -29,15 +53,23 @@ describe("curriculum registry", () => {
     expect(merdeka?.nodes.some((node) => node.key === "class-10")).toBe(true);
     expect(
       JSON.stringify(merdeka?.nodes).includes(
-        "subject/high-school/10/mathematics"
+        "curriculum/high-school/10/mathematics"
       )
     ).toBe(false);
+  });
+
+  it("keeps curriculum sources free of public route folder paths", () => {
+    const routePathSources = readCurriculumSourceFiles(
+      CURRICULUM_SOURCE_ROOT
+    ).filter((source) => PUBLIC_ROUTE_FOLDER_PATTERN.test(source));
+
+    expect(routePathSources).toEqual([]);
   });
 
   it("returns no programs for routes outside the material registry", () => {
     expect(
       getProgramKeysForMaterialRoute({
-        route: "subject/not-found",
+        route: "curriculum/not-found",
       })
     ).toEqual([]);
   });
@@ -49,7 +81,7 @@ describe("curriculum registry", () => {
         {
           key: "target",
           level: "topic",
-          materialKeys: ["subject.high-school.10.biology"],
+          materialKeys: ["lesson.biology.biodiversity"],
           order: 1,
           translations: {
             en: { title: "Target" },
@@ -62,7 +94,7 @@ describe("curriculum registry", () => {
     expect(
       getProgramKeysForMaterialRoute({
         curricula: [unrelated],
-        route: "subject/high-school/10/mathematics/statistics",
+        route: "material/lesson/mathematics/statistics-foundations",
       })
     ).toEqual([]);
   });

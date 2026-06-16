@@ -36,7 +36,7 @@ function shouldBypassInternalHrefNormalization(href: string) {
  * Normalize one internal href for locale-aware Next.js navigation.
  *
  * `next-intl` navigation helpers already prepend the active locale. When a
- * localized internal href like `/id/subject/...` is pushed directly, the locale
+ * localized internal href like `/id/curriculum/...` is pushed directly, the locale
  * can be duplicated. This helper strips the leading locale segment and keeps the
  * remaining pathname, query, and hash intact.
  */

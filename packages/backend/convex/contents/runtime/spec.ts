@@ -172,15 +172,15 @@ const runtimeContentRouteArtifactPageValidator = v.object({
   syncedAt: v.number(),
 });
 
-const subjectOutlineSectionValidator = v.object({
+const curriculumOutlineSectionValidator = v.object({
   route: v.string(),
   title: v.string(),
 });
 
-const subjectOutlineTopicValidator = v.object({
+const curriculumOutlineTopicValidator = v.object({
   description: v.optional(v.string()),
   route: v.string(),
-  sections: v.array(subjectOutlineSectionValidator),
+  sections: v.array(curriculumOutlineSectionValidator),
   title: v.string(),
 });
 
@@ -236,12 +236,12 @@ export const getArticlePageReturnValidator = nullable(
   })
 );
 
-export const getSubjectPageArgsValidator = {
+export const getCurriculumPageArgsValidator = {
   locale: localeValidator,
   slug: v.string(),
 };
 
-export const getSubjectPageReturnValidator = nullable(
+export const getCurriculumPageReturnValidator = nullable(
   v.object({
     ...runtimeContentBaseValidator.fields,
     category: subjectCategoryValidator,
@@ -252,15 +252,15 @@ export const getSubjectPageReturnValidator = nullable(
   })
 );
 
-export const getSubjectOutlineArgsValidator = {
+export const getCurriculumOutlineArgsValidator = {
   category: subjectCategoryValidator,
   grade: gradeValidator,
   locale: localeValidator,
   material: materialValidator,
 };
 
-export const getSubjectOutlineReturnValidator = v.array(
-  subjectOutlineTopicValidator
+export const getCurriculumOutlineReturnValidator = v.array(
+  curriculumOutlineTopicValidator
 );
 
 export const getExerciseSetPageArgsValidator = {
@@ -423,14 +423,14 @@ export const listArticleApiContentPageArgsValidator = {
 export const listArticleApiContentPageReturnValidator =
   paginatedApiContentValidator;
 
-export const listSubjectApiContentPageArgsValidator = {
+export const listMaterialApiContentPageArgsValidator = {
   cursor: v.union(v.string(), v.null()),
   limit: v.number(),
   locale: localeValidator,
   prefix: v.string(),
 };
 
-export const listSubjectApiContentPageReturnValidator =
+export const listMaterialApiContentPageReturnValidator =
   paginatedApiContentValidator;
 
 export const listQuranSurahsReturnValidator = v.array(

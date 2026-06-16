@@ -30,61 +30,64 @@ describe("learning graph identity", () => {
     });
   });
 
-  it("separates subject concepts from curriculum lenses", () => {
+  it("separates material concepts from material lenses", () => {
     const topic = readGraphIdentityFixture({
-      kind: "subject-topic",
+      kind: "curriculum-topic",
       locale: "id",
-      route: "subject/high-school/10/chemistry/atomic-structure",
+      route: "material/lesson/chemistry/atomic-structure",
     });
     const section = readGraphIdentityFixture({
-      kind: "subject-section",
+      kind: "curriculum-lesson",
       locale: "id",
       route:
-        "subject/high-school/10/chemistry/atomic-structure/electron-configuration",
+        "material/lesson/chemistry/atomic-structure/electron-configuration",
     });
 
-    expect(topic.lensId).toBe("lens:subject:high-school:10:chemistry");
+    expect(topic.lensId).toBe("lens:material:lesson:chemistry");
     expect(section.lensId).toBe(topic.lensId);
-    expect(topic.conceptId).toBe("concept:subject:chemistry:atomic-structure");
+    expect(topic.conceptId).toBe(
+      "concept:material:lesson:chemistry:atomic-structure"
+    );
     expect(section.conceptId).toBe(topic.conceptId);
     expect(section.learningObjectId).toBe(
-      "lo:subject-section:chemistry:atomic-structure:electron-configuration"
+      "lo:material-section:chemistry:atomic-structure:electron-configuration"
     );
   });
 
-  it("keeps locale assets unique across curriculum lenses", () => {
-    const grade10 = readGraphIdentityFixture({
-      kind: "subject-topic",
+  it("keeps reusable material assets stable outside curriculum structure", () => {
+    const first = readGraphIdentityFixture({
+      kind: "curriculum-topic",
       locale: "id",
-      route: "subject/high-school/10/mathematics/functions",
+      route: "material/lesson/mathematics/functions",
     });
-    const grade11 = readGraphIdentityFixture({
-      kind: "subject-topic",
+    const second = readGraphIdentityFixture({
+      kind: "curriculum-topic",
       locale: "id",
-      route: "subject/high-school/11/mathematics/functions",
+      route: "material/lesson/mathematics/functions",
     });
 
-    expect(grade10.conceptId).toBe(grade11.conceptId);
-    expect(grade10.assetId).not.toBe(grade11.assetId);
+    expect(first.conceptId).toBe(second.conceptId);
+    expect(first.assetId).toBe(second.assetId);
   });
 
   it("keeps exam alignment separate from concrete exercise objects", () => {
     const group = readGraphIdentityFixture({
       kind: "exercise-group",
       locale: "en",
-      route: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026",
+      route:
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026",
     });
     const set = readGraphIdentityFixture({
       kind: "exercise-set",
       locale: "en",
       route:
-        "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1",
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
     });
     const question = readGraphIdentityFixture({
       kind: "exercise-question",
       locale: "en",
       route:
-        "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1/7",
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-7",
     });
 
     expect(group.lensId).toBe(
@@ -93,7 +96,7 @@ describe("learning graph identity", () => {
     expect(set.lensId).toBe(group.lensId);
     expect(question.lensId).toBe(group.lensId);
     expect(question.assetId).toBe(
-      "asset:en:exercise:high-school:snbt:quantitative-knowledge:exercise-question:snbt:quantitative-knowledge:try-out:2026:set-1:7"
+      "asset:en:exercise:high-school:snbt:quantitative-knowledge:exercise-question:snbt:quantitative-knowledge:try-out-2026:set-1:7"
     );
   });
 
@@ -130,34 +133,32 @@ describe("learning graph identity", () => {
     );
     expect(getLearningObjectKindForRoute("quran/1")).toBe("quran-surah");
     expect(getLearningObjectKindForRoute("quran/not-number")).toBeNull();
+    expect(getLearningObjectKindForRoute("material/lesson/physics/waves")).toBe(
+      "curriculum-topic"
+    );
     expect(
-      getLearningObjectKindForRoute("subject/high-school/10/physics/waves")
-    ).toBe("subject-topic");
-    expect(
-      getLearningObjectKindForRoute(
-        "subject/high-school/10/physics/waves/sound"
-      )
-    ).toBe("subject-section");
+      getLearningObjectKindForRoute("material/lesson/physics/waves/sound")
+    ).toBe("curriculum-lesson");
     expect(
       getLearningObjectKindForRoute(
-        "exercises/high-school/snbt/quantitative-knowledge/try-out/2026"
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026"
       )
     ).toBe("exercise-group");
     expect(
       getLearningObjectKindForRoute(
-        "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1"
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1"
       )
     ).toBe("exercise-set");
     expect(
       getLearningObjectKindForRoute(
-        "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1/7"
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-7"
       )
     ).toBe("exercise-question");
-    expect(getLearningObjectKindForRoute("exercises/high-school")).toBeNull();
-    expect(getLearningObjectKindForRoute("exercises/set-1/7")).toBeNull();
+    expect(getLearningObjectKindForRoute("assessment/high-school")).toBeNull();
+    expect(getLearningObjectKindForRoute("assessment/set-1/7")).toBeNull();
     expect(
       getLearningObjectKindForRoute(
-        "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/not-a-set/extra"
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/not-a-set/extra"
       )
     ).toBeNull();
   });
@@ -178,24 +179,24 @@ describe("learning graph identity", () => {
     expect(
       createLearningGraphIdentityFromRoute({
         locale: "en",
-        route: "exercises/set-1/7",
+        route: "assessment/set-1/7",
       })
     ).toBeNull();
   });
 
   it("exposes nonthrowing and Effect-native declared source parsers", async () => {
     const source = {
-      kind: "subject-topic",
+      kind: "curriculum-topic",
       locale: "id",
-      route: "subject/high-school/10/physics/waves",
+      route: "material/lesson/physics/waves",
     } as const;
     const invalidSource = {
       ...source,
-      kind: "subject-section",
+      kind: "curriculum-lesson",
     } as const;
 
     expect(getLearningGraphIdentity(source)?.lensId).toBe(
-      "lens:subject:high-school:10:physics"
+      "lens:material:lesson:physics"
     );
     expect(getLearningGraphIdentity(invalidSource)).toBeNull();
 
@@ -213,18 +214,18 @@ describe("learning graph identity", () => {
   it("exposes curriculum lens segments without route identity", () => {
     expect(
       getLearningGraphLensSegments({
-        kind: "subject-section",
+        kind: "curriculum-lesson",
         locale: "id",
-        route: "subject/high-school/10/physics/waves/sound",
+        route: "material/lesson/physics/waves/sound",
       })
-    ).toEqual(["subject", "high-school", "10", "physics"]);
+    ).toEqual(["material", "lesson", "physics"]);
   });
 
   it("rejects graph identity without throwing when kind does not match route shape", async () => {
     const source = {
-      kind: "subject-section",
+      kind: "curriculum-lesson",
       locale: "id",
-      route: "subject/high-school/10/physics/waves",
+      route: "material/lesson/physics/waves",
     } as const;
 
     expect(getLearningGraphIdentity(source)).toBeNull();

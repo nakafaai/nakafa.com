@@ -76,7 +76,7 @@ describe("importContentModuleOrNull", () => {
 
     await expect(
       importContentModuleOrNull({
-        filePath: "/subject/high-school/10/math/functions",
+        filePath: "/material/lesson/math/functions",
         locale: "id",
         source: "subject-content-module",
       })
@@ -86,7 +86,7 @@ describe("importContentModuleOrNull", () => {
       cause,
       undefined,
       expect.objectContaining({
-        file_path: "/subject/high-school/10/math/functions",
+        file_path: "/material/lesson/math/functions",
         locale: "id",
         source: "subject-content-module",
       })

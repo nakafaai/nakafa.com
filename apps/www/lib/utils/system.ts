@@ -96,7 +96,7 @@ function getStaticParamRoutePath(
   config: ParamConfig
 ) {
   if (
-    config.basePath === "exercises" &&
+    config.basePath === "material" &&
     config.isDeep &&
     route.kind === "exercise-question" &&
     route.parentRoute

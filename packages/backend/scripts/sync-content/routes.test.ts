@@ -115,8 +115,7 @@ describe("sync-content routes", () => {
     expect(deleteCalls.filter(isDeleteStalePageArgs)).toEqual([
       expect.objectContaining({ firstStalePage: 2, section: "articles" }),
       expect.objectContaining({ firstStalePage: 2, section: "articles" }),
-      expect.objectContaining({ firstStalePage: 0, section: "subject" }),
-      expect.objectContaining({ firstStalePage: 0, section: "exercises" }),
+      expect.objectContaining({ firstStalePage: 0, section: "material" }),
       expect.objectContaining({ firstStalePage: 0, section: "quran" }),
     ]);
   });
@@ -128,12 +127,12 @@ describe("sync-content routes", () => {
 
     const countCalls = mutationCalls.filter(isCountMutationCall);
 
-    expect(countCalls).toHaveLength(8);
+    expect(countCalls).toHaveLength(6);
     expect(new Set(countCalls.map((call) => call.locale))).toEqual(
       new Set(SUPPORTED_CONTENT_LOCALES)
     );
     expect(new Set(countCalls.map((call) => call.section))).toEqual(
-      new Set(["articles", "exercises", "quran", "subject"])
+      new Set(["articles", "material", "quran"])
     );
   });
 });

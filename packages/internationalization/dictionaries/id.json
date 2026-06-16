@@ -51,6 +51,7 @@
     "source-code": "Kode sumber",
     "language": "Bahasa",
     "articles": "Artikel",
+    "material": "Materi",
     "subject": "Mata pelajaran",
     "for-you": "Untukmu",
     "explore": "Jelajahi",
@@ -141,15 +142,15 @@
       "role": {
         "student": {
           "title": "Siswa",
-          "description": "Belajar materi, latihan soal, dan tanya Nina."
+          "description": "Belajar, latihan, dan tanya Nina."
         },
         "teacher": {
           "title": "Guru",
-          "description": "Siapkan materi dan latihan untuk kelas."
+          "description": "Siapkan bahan ajar kelas."
         },
         "parent": {
           "title": "Orang tua",
-          "description": "Bantu anak belajar dengan penjelasan sederhana."
+          "description": "Bantu anak belajar mudah."
         }
       },
       "focus": {

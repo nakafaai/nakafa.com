@@ -28,11 +28,14 @@ export function selectExerciseRef(
     return Option.none();
   }
 
-  if (input.section !== "exercises") {
+  if (input.section !== "material") {
     return Option.none();
   }
 
-  const items = result.items.filter((item) => item.section === "exercises");
+  const items = result.items.filter(
+    (item) =>
+      item.section === "material" && item.route.startsWith("material/practice/")
+  );
   const firstItem = items.at(0);
 
   if (!firstItem) {
@@ -104,12 +107,15 @@ export function shouldReadAfterSearch(
     return false;
   }
 
-  if (input.section === "exercises" || input.section === "quran") {
+  if (input.section === "quran") {
     return false;
   }
 
   return result.items.some(
-    (item) => item.section === "articles" || item.section === "subject"
+    (item) =>
+      item.section === "articles" ||
+      (item.section === "material" &&
+        !item.route.startsWith("material/practice/"))
   );
 }
 

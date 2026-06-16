@@ -42,10 +42,10 @@ const articleReferenceIntegrityItemValidator = v.object({
   articleId: v.id("articleContents"),
 });
 
-const subjectSectionIntegrityItemValidator = v.object({
+const curriculumLessonIntegrityItemValidator = v.object({
   locale: localeValidator,
   slug: v.string(),
-  topicId: v.optional(v.id("subjectTopics")),
+  topicId: v.optional(v.id("curriculumTopics")),
 });
 
 const graphIdentityTargets = [
@@ -104,8 +104,8 @@ const graphIdentityIntegrityPageValidator = v.object({
   scannedRows: v.number(),
 });
 
-type SubjectSectionIntegrityItem = Infer<
-  typeof subjectSectionIntegrityItemValidator
+type CurriculumLessonIntegrityItem = Infer<
+  typeof curriculumLessonIntegrityItemValidator
 >;
 type GraphIdentityFields = Infer<typeof graphIdentityFieldsValidator>;
 type GraphIdentityRef = Infer<typeof graphIdentityRefValidator>;
@@ -123,11 +123,11 @@ type NakafaContentRefInputPart = Extract<
   { input: { content_ref: string } }
 >;
 
-/** Maps a subject section row into the optional diagnostic integrity shape. */
-function getSubjectSectionIntegrityItem(
-  section: Doc<"subjectSections">
-): SubjectSectionIntegrityItem {
-  const item: SubjectSectionIntegrityItem = {
+/** Maps a curriculum lesson row into the optional diagnostic integrity shape. */
+function getCurriculumLessonIntegrityItem(
+  section: Doc<"curriculumLessons">
+): CurriculumLessonIntegrityItem {
+  const item: CurriculumLessonIntegrityItem = {
     locale: section.locale,
     slug: section.slug,
   };
@@ -413,20 +413,20 @@ export const listIntegrityArticlesPage = internalQuery({
   },
 });
 
-export const listIntegritySubjectSectionsPage = internalQuery({
+export const listIntegrityCurriculumLessonsPage = internalQuery({
   args: {
     paginationOpts: paginationOptsValidator,
   },
-  returns: paginationResultValidator(subjectSectionIntegrityItemValidator),
-  /** Returns subject section rows in the optional shape declared by the integrity validator. */
+  returns: paginationResultValidator(curriculumLessonIntegrityItemValidator),
+  /** Returns curriculum lesson rows in the optional shape declared by the integrity validator. */
   handler: async (ctx, args) => {
     const page = await ctx.db
-      .query("subjectSections")
+      .query("curriculumLessons")
       .paginate(args.paginationOpts);
 
     return {
       ...page,
-      page: page.page.map(getSubjectSectionIntegrityItem),
+      page: page.page.map(getCurriculumLessonIntegrityItem),
     };
   },
 });
@@ -523,7 +523,7 @@ export const getGraphIdentityIntegrityPage = internalQuery({
       for (const row of page.page) {
         checkGraphIdentityRef(
           summary,
-          { ...row, section: "subject" },
+          { ...row, section: "material" },
           args.target
         );
       }

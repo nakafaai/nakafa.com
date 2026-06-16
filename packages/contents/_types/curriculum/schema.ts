@@ -20,6 +20,7 @@ export const CurriculumNodeKeySchema = Schema.String.pipe(
 );
 
 export const CurriculumNodeTranslationSchema = Schema.Struct({
+  description: Schema.optional(Schema.String),
   title: Schema.String,
 });
 

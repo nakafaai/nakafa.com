@@ -27,7 +27,7 @@ describe("tryouts/helpers/finalize/aggregates", () => {
         slug: "2026-reporting-aggregate",
       });
       const setAttemptId = await ctx.db.insert("exerciseAttempts", {
-        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/2026-reporting-aggregate",
+        slug: "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/2026-reporting-aggregate",
         userId: identity.userId,
         origin: "tryout",
         mode: "simulation",

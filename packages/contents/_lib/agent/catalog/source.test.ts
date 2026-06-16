@@ -5,10 +5,10 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("@repo/contents/_lib/mdx-slugs/cache", () => ({
   getMdxSlugsForLocale: () =>
     Effect.succeed([
-      "broken-root/high-school/snbt/general-reasoning/set-1/1/_question",
-      "broken/1/_question",
-      "exercises/high-school/snbt/general-reasoning/try-out/1/_question",
-      "exercises/high-school/snbt/general-reasoning/try-out/2026/set-1/1/_question",
+      "broken-root/high-school/snbt/general-reasoning/set-1/question-1/question",
+      "broken/question-1/question",
+      "material/practice/assessment/snbt/general-reasoning/try-out/question-1/question",
+      "material/practice/assessment/snbt/general-reasoning/try-out-2026/set-1/question-1/question",
     ]),
 }));
 
@@ -38,13 +38,13 @@ vi.mock("@repo/contents/_lib/metadata", () => ({
                 subject: "Subject fallback",
                 title: "Subject",
               },
-              slug: "subject/high-school/10/mathematics/topic",
+              slug: "material/lesson/mathematics/topic",
             },
             {
               metadata: {
                 title: "Empty",
               },
-              slug: "subject/high-school/10/mathematics/empty",
+              slug: "material/lesson/mathematics/empty",
             },
           ]
     ),
@@ -78,11 +78,11 @@ describe("Nakafa agent content index", () => {
   it("builds summaries and keeps exercises on canonical set routes", async () => {
     const index = await Effect.runPromise(getNakafaAgentContentIndex());
     const exerciseRoutes = index
-      .filter((item) => item.section === "exercises")
+      .filter((item) => item.route.startsWith("material/practice/"))
       .map((item) => item.route);
 
     expect(exerciseRoutes).toStrictEqual([
-      "exercises/high-school/snbt/general-reasoning/try-out/2026/set-1",
+      "material/practice/assessment/snbt/general-reasoning/try-out-2026/set-1",
     ]);
     expect(index).toEqual(
       expect.arrayContaining([
@@ -92,11 +92,11 @@ describe("Nakafa agent content index", () => {
         }),
         expect.objectContaining({
           description: "Subject fallback",
-          route: "subject/high-school/10/mathematics/topic",
+          route: "material/lesson/mathematics/topic",
         }),
         expect.objectContaining({
           description: "",
-          route: "subject/high-school/10/mathematics/empty",
+          route: "material/lesson/mathematics/empty",
         }),
         expect.objectContaining({
           description: "Opening",
@@ -113,8 +113,8 @@ describe("Nakafa agent content index", () => {
     vi.doMock("@repo/contents/_lib/mdx-slugs/cache", () => ({
       getMdxSlugsForLocale: () =>
         Effect.succeed([
-          "exercises/high-school/snbt/general-reasoning/missing-set/1/_question",
-          "exercises/high-school/snbt/general-reasoning/set-1/1/_question",
+          "material/practice/assessment/snbt/general-reasoning/missing-set/question-1/question",
+          "material/practice/assessment/snbt/general-reasoning/set-1/question-1/question",
         ]),
     }));
     vi.doMock("@repo/contents/_lib/metadata", () => ({

@@ -39,59 +39,84 @@ let folderCacheVersion = 0;
 /** Configures manifest source mocks for one test case. */
 function mockManifestSource() {
   const folderTree = new Map([
-    [".", ["articles", "subject", "exercises"]],
+    [".", ["articles", "material"]],
     ["articles", ["politics"]],
-    ["exercises", ["bad-category", "high-school"]],
-    ["exercises/high-school", ["bad-type", "snbt"]],
-    ["exercises/high-school/snbt", ["bad-material", "quantitative-knowledge"]],
-    ["subject", ["bad-category", "high-school"]],
-    ["subject/high-school", ["bad-grade", "10"]],
-    ["subject/high-school/10", ["bad-material", "chemistry"]],
+    ["material", ["lesson", "practice"]],
+    ["material/lesson", ["chemistry"]],
+    ["material/lesson/chemistry", ["green-chemistry"]],
+    ["material/lesson/chemistry/green-chemistry", ["definition"]],
+    ["material/practice", ["assessment"]],
+    ["material/practice/assessment", ["snbt"]],
+    ["material/practice/assessment/snbt", ["quantitative-knowledge"]],
+    [
+      "material/practice/assessment/snbt/quantitative-knowledge",
+      ["try-out-2026"],
+    ],
+    [
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026",
+      ["set-1"],
+    ],
+    [
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
+      ["question-1", "question-2"],
+    ],
   ]);
   const nestedTree = new Map<string, string[][]>([
     ["articles", [["politics"]]],
     ["articles/politics", []],
     [
-      "exercises",
+      "material",
       [
-        ["high-school"],
-        ["high-school", "snbt"],
-        ["high-school", "snbt", "quantitative-knowledge"],
+        ["lesson"],
+        ["lesson", "chemistry"],
+        ["lesson", "chemistry", "green-chemistry"],
+        ["lesson", "chemistry", "green-chemistry", "definition"],
+        ["practice"],
+        ["practice", "assessment"],
+        ["practice", "assessment", "snbt"],
+        ["practice", "assessment", "snbt", "quantitative-knowledge"],
+        [
+          "practice",
+          "assessment",
+          "snbt",
+          "quantitative-knowledge",
+          "try-out-2026",
+        ],
+        [
+          "practice",
+          "assessment",
+          "snbt",
+          "quantitative-knowledge",
+          "try-out-2026",
+          "set-1",
+        ],
+        [
+          "practice",
+          "assessment",
+          "snbt",
+          "quantitative-knowledge",
+          "try-out-2026",
+          "set-1",
+          "question-1",
+        ],
+        [
+          "practice",
+          "assessment",
+          "snbt",
+          "quantitative-knowledge",
+          "try-out-2026",
+          "set-1",
+          "question-2",
+        ],
       ],
     ],
-    ["exercises/bad-category", []],
-    ["exercises/high-school", [["snbt"], ["snbt", "quantitative-knowledge"]]],
-    [
-      "subject",
-      [
-        ["high-school"],
-        ["high-school", "10"],
-        ["high-school", "10", "chemistry"],
-      ],
-    ],
-    ["subject/bad-category", []],
-    ["subject/high-school", [["10"], ["10", "chemistry"]]],
   ]);
   const slugs = [
     "articles/politics/article",
     "articles/not-a-category/draft",
-    "subject",
-    "subject/high-school/10/chemistry/green-chemistry",
-    "subject/high-school/10/chemistry",
-    "subject/high-school/10/chemistry/green-chemistry/definition",
-    "subject/bad-category/10/chemistry/ignored",
-    "subject/high-school/bad-grade/chemistry/ignored",
-    "subject/high-school/10/bad-material/ignored",
-    "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1/1/_answer",
-    "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1/1/_question",
-    "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1/2/_question",
-    "exercises/1/_question",
-    "exercises/high-school/1/_question",
-    "exercises/high-school/snbt/1/_question",
-    "exercises/high-school/snbt/quantitative-knowledge/try-out/set-archived/1/_question",
-    "exercises/bad-category/snbt/quantitative-knowledge/try-out/2026/set-1/1/_question",
-    "exercises/high-school/bad-type/quantitative-knowledge/try-out/2026/set-1/1/_question",
-    "exercises/high-school/snbt/bad-material/try-out/2026/set-1/1/_question",
+    "material/lesson/chemistry/green-chemistry/definition",
+    "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-1",
+    "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-2",
   ];
 
   vi.mocked(getFolderChildNames).mockImplementation((folder) =>
@@ -143,45 +168,41 @@ describe("content route manifest", () => {
 
     expect(manifest.quranRoutes).toEqual(["/quran/1"]);
     expect(manifest.routeRoots).toEqual(
-      expect.arrayContaining(["/articles", "/subject", "/exercises", "/quran"])
+      expect.arrayContaining(["/articles", "/material", "/quran"])
     );
     expect(manifest.contentRoutes).toEqual(
       expect.arrayContaining([
         "/articles/politics",
         "/articles/politics/article",
-        "/subject/high-school/10",
-        "/subject/high-school/10/chemistry",
-        "/subject/high-school/10/chemistry/green-chemistry/definition",
-        "/exercises/high-school/snbt",
-        "/exercises/high-school/snbt/quantitative-knowledge",
-        "/exercises/high-school/snbt/quantitative-knowledge/try-out/2026",
-        "/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1",
-        "/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1/1",
-        "/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1/2",
+        "/material/lesson/chemistry/green-chemistry/definition",
+        "/material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-1",
+        "/material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-2",
         "/quran/1",
       ])
     );
     expect(manifest.contentRoutes).not.toContain(
-      "/subject/high-school/10/chemistry/green-chemistry"
+      "/material/lesson/chemistry/green-chemistry"
     );
-    expect(manifest.contentRoutes).not.toContain(
-      "/exercises/high-school/snbt/quantitative-knowledge/try-out/set-archived"
-    );
-    expect(manifest.redirects).toContainEqual([
-      "/subject/high-school/10/chemistry/green-chemistry",
-      "/subject/high-school/10/chemistry",
-    ]);
+    expect(manifest.redirects).toEqual([]);
     expect(manifest.staticParams.articles).toContainEqual({
       locale: "en",
       slug: ["politics"],
     });
-    expect(manifest.staticParams.exercises).toContainEqual({
+    expect(manifest.staticParams.material).toContainEqual({
       locale: "en",
-      slug: "high-school/snbt/quantitative-knowledge".split("/"),
+      slug: "practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1".split(
+        "/"
+      ),
     });
     expect(manifest.localeParams).toContainEqual({
       locale: "en",
-      slug: ["subject", "high-school", "10", "chemistry"],
+      slug: [
+        "material",
+        "lesson",
+        "chemistry",
+        "green-chemistry",
+        "definition",
+      ],
     });
   });
 
@@ -216,13 +237,10 @@ describe("content route manifest", () => {
     expect(manifest.contentRoutes).toContain("/articles/politics/article");
     expect(manifest.publicRequestRoutes).toContain("/articles");
     expect(manifest.publicRequestRoutes).toContain(
-      "/subject/high-school/10/chemistry/green-chemistry"
+      "/material/lesson/chemistry/green-chemistry/definition"
     );
-    expect(manifest.redirects).toContainEqual([
-      "/subject/high-school/10/chemistry/green-chemistry",
-      "/subject/high-school/10/chemistry",
-    ]);
-    expect(manifest.routeRoots).toContain("/subject");
+    expect(manifest.redirects).toEqual([]);
+    expect(manifest.routeRoots).toContain("/material");
   });
 
   it("caches route-only adapter scans", async () => {
@@ -253,13 +271,14 @@ describe("content route manifest", () => {
       locale: "en",
       slug: ["politics"],
     });
+    expect(await getContentStaticParams({ basePath: "quran" })).toEqual([]);
     expect(await getContentLocaleParams()).toContainEqual({
       locale: "id",
       slug: ["articles", "politics"],
     });
     expect(await getExerciseApiParamsForLocales()).toContainEqual({
       locale: "en",
-      slug: "high-school/snbt/quantitative-knowledge/try-out/2026/set-1".split(
+      slug: "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1".split(
         "/"
       ),
     });
@@ -294,13 +313,13 @@ describe("content route manifest", () => {
 
     expect(params).toContainEqual({
       locale: "en",
-      slug: "high-school/snbt/quantitative-knowledge/try-out/2026/set-1".split(
+      slug: "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1".split(
         "/"
       ),
     });
     expect(params).toContainEqual({
       locale: "en",
-      slug: "high-school/snbt/quantitative-knowledge/try-out/2026/set-1/1".split(
+      slug: "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-1".split(
         "/"
       ),
     });

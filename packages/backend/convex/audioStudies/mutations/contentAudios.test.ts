@@ -7,27 +7,27 @@ import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
 const contentHash = "audio-hash";
-const subjectRoute = "subject/high-school/10/mathematics/audio/intro";
+const subjectRoute = "material/lesson/mathematics/audio/intro";
 const subjectAudioIdentity = getTestAudioIdentity({
   locale: "en",
   route: subjectRoute,
 });
 
 async function seedSubject(ctx: MutationCtx) {
-  const topicId = await ctx.db.insert("subjectTopics", {
+  const topicId = await ctx.db.insert("curriculumTopics", {
     category: "high-school",
     grade: "10",
     locale: "en",
     material: "mathematics",
     order: 0,
     sectionCount: 1,
-    slug: "subject/high-school/10/mathematics/audio",
+    slug: "material/lesson/mathematics/audio",
     syncedAt: 1,
     title: "Audio Topic",
     topic: "audio",
   });
 
-  return await ctx.db.insert("subjectSections", {
+  return await ctx.db.insert("curriculumLessons", {
     body: "Audio body",
     category: "high-school",
     contentHash,

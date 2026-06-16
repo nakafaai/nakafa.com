@@ -13,8 +13,8 @@ import { describe, expect, it } from "vitest";
 const EXERCISE_CONTENT_ID = NakafaAgentContentRefInputSchema.make(
   readNakafaContentRefFixture(
     "en",
-    "exercises/high-school/snbt/general-knowledge/try-out/2026/set-2",
-    "exercises"
+    "material/practice/assessment/snbt/general-knowledge/try-out-2026/set-2",
+    "material"
   ).content_id
 );
 

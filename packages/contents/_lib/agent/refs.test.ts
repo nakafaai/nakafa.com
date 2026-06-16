@@ -114,7 +114,7 @@ describe("Nakafa agent references", () => {
     expect(Option.isNone(createNakafaContentRef("en", "", "quran"))).toBe(true);
     expect(
       Option.isNone(
-        createNakafaContentRef("en", "articles/politics/example", "subject")
+        createNakafaContentRef("en", "articles/politics/example", "material")
       )
     ).toBe(true);
     expect(
@@ -126,7 +126,7 @@ describe("Nakafa agent references", () => {
           parseNakafaContentRefFields(
             "en",
             "articles/politics/example",
-            "subject"
+            "material"
           )
         )
       )

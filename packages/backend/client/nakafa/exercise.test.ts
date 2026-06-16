@@ -33,16 +33,16 @@ const ContentIdArgsSchema = Schema.Struct({
 
 const convexUrl = "https://example.convex.cloud";
 const setRoute =
-  "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1";
+  "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1";
 const missingSetRoute =
-  "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-missing";
+  "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-missing";
 const detachedSetRef = detachedExerciseRef(
   "asset:id:catalog:exercise:set-1",
   setRoute
 );
 const detachedQuestionRef = detachedExerciseRef(
   "asset:id:catalog:exercise:set-1:q2",
-  `${setRoute}/2`
+  `${setRoute}/question-2`
 );
 
 beforeEach(() => {
@@ -52,7 +52,7 @@ beforeEach(() => {
 
 describe("readNakafaExercise", () => {
   it("reads full exercise sets and specific questions from Convex rows", async () => {
-    const setRef = readNakafaContentRefFixture("id", setRoute, "exercises");
+    const setRef = readNakafaContentRefFixture("id", setRoute, "material");
     const set = await Effect.runPromise(
       readNakafaExercise(convexUrl, setRef.content_id)
     );
@@ -61,8 +61,8 @@ describe("readNakafaExercise", () => {
     );
     const questionRef = readNakafaContentRefFixture(
       "id",
-      `${setRoute}/2`,
-      "exercises"
+      `${setRoute}/question-2`,
+      "material"
     );
     const graphQuestion = await Effect.runPromise(
       readNakafaExercise(convexUrl, questionRef.content_id)
@@ -70,7 +70,7 @@ describe("readNakafaExercise", () => {
     const markdown = await Effect.runPromise(
       readExerciseMarkdown(
         convexUrl,
-        readNakafaContentRefFixture("id", setRoute, "exercises")
+        readNakafaContentRefFixture("id", setRoute, "material")
       )
     );
 
@@ -105,7 +105,7 @@ describe("readNakafaExercise", () => {
     const sourceProjectionSet = readNakafaContentRefFixture(
       "id",
       setRoute,
-      "exercises"
+      "material"
     );
 
     expect(Option.getOrUndefined(set)?.content_id).toBe(
@@ -153,7 +153,7 @@ describe("readNakafaExercise", () => {
     const missingSetRef = readNakafaContentRefFixture(
       "id",
       missingSetRoute,
-      "exercises"
+      "material"
     );
     const unsupported = await Effect.runPromise(
       readNakafaExercise(convexUrl, articleRef.content_id)
@@ -161,23 +161,26 @@ describe("readNakafaExercise", () => {
     const missingSet = await Effect.runPromise(
       readNakafaExercise(convexUrl, missingSetRef.content_id)
     );
-    const setRef = readNakafaContentRefFixture("id", setRoute, "exercises");
+    const setRef = readNakafaContentRefFixture("id", setRoute, "material");
     const missingQuestion = await Effect.runPromise(
       readNakafaExercise(convexUrl, setRef.content_id, 99)
     );
     const malformedQuestion = await Effect.runPromise(
-      readNakafaExercise(convexUrl, `https://nakafa.com/id/${setRoute}/two`)
+      readNakafaExercise(
+        convexUrl,
+        `https://nakafa.com/id/${setRoute}/question-two`
+      )
     );
     const nonSetParent = await Effect.runPromise(
       readNakafaExercise(
         convexUrl,
-        "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/2"
+        "https://nakafa.com/id/material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/question-2"
       )
     );
     const missingMarkdown = await Effect.runPromise(
       readExerciseMarkdown(
         convexUrl,
-        readNakafaContentRefFixture("id", missingSetRoute, "exercises")
+        readNakafaContentRefFixture("id", missingSetRoute, "material")
       )
     );
 
@@ -194,7 +197,7 @@ describe("readNakafaExercise", () => {
       Option.getOrUndefined(
         getExerciseGroupArgs(
           "id",
-          "exercises/high-school/snbt/quantitative-knowledge/try-out/2026"
+          "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026"
         )
       )
     ).toMatchObject({
@@ -202,7 +205,9 @@ describe("readNakafaExercise", () => {
       year: "2026",
     });
     expect(
-      Option.isNone(getExerciseGroupArgs("id", "exercises/high-school/snbt"))
+      Option.isNone(
+        getExerciseGroupArgs("id", "material/practice/assessment/snbt")
+      )
     ).toBe(true);
     expect(
       Option.isNone(
@@ -216,7 +221,7 @@ describe("readNakafaExercise", () => {
       Option.isNone(
         getExerciseGroupArgs(
           "id",
-          "exercises/high-school/snbt/not-a-material/try-out"
+          "material/practice/assessment/snbt/not-a-material/try-out"
         )
       )
     ).toBe(true);
@@ -224,7 +229,7 @@ describe("readNakafaExercise", () => {
       Option.isNone(
         getExerciseGroupArgs(
           "id",
-          "exercises/high-school/snbt/quantitative-knowledge/try-out/not-year"
+          "material/practice/assessment/snbt/quantitative-knowledge/try-out/not-year"
         )
       )
     ).toBe(true);
@@ -286,11 +291,11 @@ function readContentRoute(args: unknown) {
 /** Builds one route lookup fixture from a graph asset ID. */
 function readContentRouteByContentId(args: unknown) {
   const input = Schema.decodeUnknownSync(ContentIdArgsSchema)(args);
-  const setRef = readNakafaContentRefFixture("id", setRoute, "exercises");
+  const setRef = readNakafaContentRefFixture("id", setRoute, "material");
   const questionRef = readNakafaContentRefFixture(
     "id",
-    `${setRoute}/2`,
-    "exercises"
+    `${setRoute}/question-2`,
+    "material"
   );
   const articleRef = readNakafaContentRefFixture(
     "id",
@@ -300,7 +305,7 @@ function readContentRouteByContentId(args: unknown) {
   const missingSetRef = readNakafaContentRefFixture(
     "id",
     missingSetRoute,
-    "exercises"
+    "material"
   );
   const refs = [
     setRef,
@@ -333,7 +338,7 @@ function detachedExerciseRef(contentId: string, route: string) {
     lensId: contentId.replace("asset:", "lens:"),
     locale: "id",
     route,
-    section: "exercises",
+    section: "material",
   });
 
   if (Option.isNone(ref)) {

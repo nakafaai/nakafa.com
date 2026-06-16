@@ -1,138 +1,127 @@
 import {
-  findExerciseMaterial,
-  findSubjectMaterial,
-  getExerciseMaterialList,
-  getSubjectMaterialList,
-  listExerciseMaterials,
-  listExerciseSets,
+  listPracticeMaterialSets,
+  normalizeMaterialRoute,
+  toPracticeMaterialList,
+} from "@repo/contents/_types/material/projection";
+import {
+  findLessonMaterial,
+  findPracticeMaterial,
+  getLessonMaterialList,
+  getPracticeMaterialList,
+  listLessonMaterialSources,
+  listLessonRows,
   listMaterials,
-  listSubjectMaterials,
-  listSubjectTopics,
+  listPracticeMaterialSources,
+  listPracticeSets,
 } from "@repo/contents/_types/material/registry";
 import {
-  defineExerciseMaterial,
-  defineSubjectMaterial,
-  defineSubjectMaterialTopic,
-  SubjectMaterialSourceSchema,
-  SubjectMaterialTopicSchema,
+  defineLessonMaterial,
+  definePracticeMaterial,
+  LessonMaterialSourceSchema,
 } from "@repo/contents/_types/material/schema";
 import { Either, ParseResult, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 describe("material registry", () => {
-  it("projects subject materials into localized navigation without route-local data files", () => {
-    const idMaterials = getSubjectMaterialList(
-      "subject/high-school/10/mathematics",
+  it("projects lesson materials into localized navigation", () => {
+    const idMaterials = getLessonMaterialList(
+      "material/lesson/mathematics/exponential-logarithm",
       "id"
     );
-    const enMaterials = getSubjectMaterialList(
-      "/subject/high-school/10/mathematics",
+    const enMaterials = getLessonMaterialList(
+      "/material/lesson/mathematics/exponential-logarithm",
       "en"
     );
 
     expect(idMaterials[0]).toMatchObject({
-      href: "/subject/high-school/10/mathematics/exponential-logarithm",
+      href: "/material/lesson/mathematics/exponential-logarithm",
       title: "Eksponen dan Logaritma",
     });
     expect(enMaterials[0]).toMatchObject({
-      href: "/subject/high-school/10/mathematics/exponential-logarithm",
+      href: "/material/lesson/mathematics/exponential-logarithm",
       title: "Exponents and Logarithms",
     });
     expect(idMaterials[0]?.items[0]).toEqual({
-      href: "/subject/high-school/10/mathematics/exponential-logarithm/basic-concept",
+      href: "/material/lesson/mathematics/exponential-logarithm/basic-concept",
       title: "Konsep Eksponen",
     });
   });
 
-  it("projects exercise materials into localized set navigation", () => {
-    const materials = getExerciseMaterialList(
-      "exercises/high-school/snbt/quantitative-knowledge",
+  it("projects practice materials into localized set navigation", () => {
+    const materials = getPracticeMaterialList(
+      "material/practice/assessment/snbt/quantitative-knowledge",
       "en"
     );
 
     expect(materials).toHaveLength(1);
     expect(materials[0]).toMatchObject({
-      href: "/exercises/high-school/snbt/quantitative-knowledge/try-out/2026",
+      href: "/material/practice/assessment/snbt/quantitative-knowledge/try-out-2026",
       title: "Try Out 2026",
     });
     expect(materials[0]?.items).toHaveLength(10);
     expect(materials[0]?.items[0]).toEqual({
-      href: "/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1",
-      title: "Set 1",
-    });
-  });
-
-  it("projects exercise groups without a year segment", () => {
-    const materials = getExerciseMaterialList(
-      "exercises/middle-school/grade-9/mathematics",
-      "id"
-    );
-
-    expect(materials[0]).toMatchObject({
-      href: "/exercises/middle-school/grade-9/mathematics/semester-1",
-      title: "Semester 1",
-    });
-    expect(materials[0]?.items[0]).toEqual({
-      href: "/exercises/middle-school/grade-9/mathematics/semester-1/set-1",
+      href: "/material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
       title: "Set 1",
     });
   });
 
   it("projects sync-ready rows for both supported content languages", () => {
-    const subjectTopics = listSubjectTopics();
-    const exerciseSets = listExerciseSets();
+    const lessonRows = listLessonRows();
+    const practiceSets = listPracticeSets();
 
-    expect(subjectTopics.some((topic) => topic.locale === "id")).toBe(true);
-    expect(subjectTopics.some((topic) => topic.locale === "en")).toBe(true);
+    expect(lessonRows.some((lesson) => lesson.locale === "id")).toBe(true);
+    expect(lessonRows.some((lesson) => lesson.locale === "en")).toBe(true);
     expect(
-      exerciseSets.some(
+      practiceSets.some(
         (set) =>
           set.locale === "en" &&
           set.slug ===
-            "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1"
+            "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1"
       )
     ).toBe(true);
 
-    expect(
-      listSubjectTopics("id").every((topic) => topic.locale === "id")
-    ).toBe(true);
-    expect(listExerciseSets("id").every((set) => set.locale === "id")).toBe(
+    expect(listLessonRows("id").every((lesson) => lesson.locale === "id")).toBe(
+      true
+    );
+    expect(listPracticeSets("id").every((set) => set.locale === "id")).toBe(
       true
     );
   });
 
-  it("keeps material keys and base routes unique", () => {
+  it("keeps material keys and asset roots unique", () => {
     const materials = listMaterials();
     const keys = new Set(materials.map((material) => material.key));
-    const baseRoutes = new Set(materials.map((material) => material.baseRoute));
+    const assetRoots = new Set(materials.map((material) => material.assetRoot));
 
     expect(keys.size).toBe(materials.length);
-    expect(baseRoutes.size).toBe(materials.length);
-    expect(listSubjectMaterials()).not.toHaveLength(0);
-    expect(listExerciseMaterials()).not.toHaveLength(0);
+    expect(assetRoots.size).toBe(materials.length);
+    expect(listLessonMaterialSources()).not.toHaveLength(0);
+    expect(listPracticeMaterialSources()).not.toHaveLength(0);
   });
 
   it("finds concrete materials by route without exposing the wrong material kind", () => {
     expect(
-      findSubjectMaterial(
-        "subject/high-school/10/mathematics/exponential-logarithm/basic-concept"
+      findLessonMaterial(
+        "material/lesson/mathematics/exponential-logarithm/basic-concept"
       )?.key
-    ).toBe("subject.high-school.10.mathematics");
+    ).toBe("lesson.mathematics.exponential-logarithm");
     expect(
-      findExerciseMaterial(
-        "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1"
+      findPracticeMaterial(
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1"
       )?.key
-    ).toBe("exercises.high-school.snbt.quantitative-knowledge");
-    expect(findSubjectMaterial("exercises/high-school/snbt")).toBeNull();
-    expect(
-      findExerciseMaterial("subject/high-school/10/mathematics")
-    ).toBeNull();
-    expect(getSubjectMaterialList("subject/not-found", "id")).toEqual([]);
-    expect(getExerciseMaterialList("exercises/not-found", "en")).toEqual([]);
+    ).toBe("practice.assessment.snbt.quantitative-knowledge");
+    expect(findLessonMaterial("material/practice/assessment/snbt")).toBeNull();
+    expect(findPracticeMaterial("material/lesson/mathematics")).toBeNull();
+    expect(getLessonMaterialList("material/not-found", "id")).toEqual([]);
+    expect(getPracticeMaterialList("material/not-found", "en")).toEqual([]);
   });
 
   it("projects custom typed source chunks without optional descriptions", () => {
-    const topic = defineSubjectMaterialTopic({
+    const lesson = defineLessonMaterial({
+      assetRoot: "material/lesson/biology/custom-topic",
+      domain: "biology",
+      kind: "lesson",
+      key: "lesson.biology.custom-topic",
       sections: [],
       slug: "custom-topic",
       translations: {
@@ -140,18 +129,10 @@ describe("material registry", () => {
         id: { title: "Topik Khusus" },
       },
     });
-    const material = defineSubjectMaterial({
-      baseRoute: "subject/high-school/10/biology",
-      category: "high-school",
-      grade: "10",
-      kind: "subject",
-      key: "subject.high-school.10.biology.custom",
-      material: "biology",
-      topics: [topic],
-    });
-    const exercise = defineExerciseMaterial({
-      baseRoute: "exercises/middle-school/grade-9/mathematics",
-      category: "middle-school",
+    const practice = definePracticeMaterial({
+      assessment: "snbt",
+      assetRoot: "material/practice/assessment/snbt/fixture-domain",
+      domain: "general-reasoning",
       groups: [
         {
           exerciseType: "practice",
@@ -170,50 +151,62 @@ describe("material registry", () => {
           },
         },
       ],
-      kind: "exercise",
-      key: "exercises.middle-school.grade-9.mathematics.custom",
-      material: "mathematics",
-      type: "grade-9",
+      kind: "practice",
+      key: "practice.assessment.snbt.fixture-domain",
     });
 
     expect(
-      getSubjectMaterialList("subject/high-school/10/biology", "en", [material])
+      getLessonMaterialList("material/lesson/biology/custom-topic", "en", [
+        lesson,
+      ])
     ).toEqual([
       {
-        href: "/subject/high-school/10/biology/custom-topic",
+        href: "/material/lesson/biology/custom-topic",
         items: [],
         title: "Custom Topic",
       },
     ]);
     expect(
-      getExerciseMaterialList(
-        "exercises/middle-school/grade-9/mathematics",
+      getPracticeMaterialList(
+        "material/practice/assessment/snbt/fixture-domain",
         "id",
-        [exercise]
+        [practice]
       )
     ).toEqual([
       {
-        href: "/exercises/middle-school/grade-9/mathematics/practice",
+        href: "/material/practice/assessment/snbt/fixture-domain/practice",
         items: [
           {
-            href: "/exercises/middle-school/grade-9/mathematics/practice/set-1",
+            href: "/material/practice/assessment/snbt/fixture-domain/practice/set-1",
             title: "Set 1",
           },
         ],
         title: "Latihan",
       },
     ]);
+    expect(
+      toPracticeMaterialList(practice, "en")[0]?.description
+    ).toBeUndefined();
+    expect(listPracticeMaterialSets([practice], "id")).toEqual([
+      expect.not.objectContaining({ year: expect.any(Number) }),
+    ]);
+    expect(
+      normalizeMaterialRoute("//material/lesson/biology/custom-topic/")
+    ).toBe("material/lesson/biology/custom-topic");
   });
 
   it("rejects invalid authored material routes through the Effect Schema contract", () => {
-    const result = Schema.decodeUnknownEither(SubjectMaterialSourceSchema)({
-      baseRoute: "/subject/high-school/10/mathematics",
-      category: "high-school",
-      grade: "10",
-      kind: "subject",
-      key: "subject.high-school.10.mathematics",
-      material: "mathematics",
-      topics: [],
+    const result = Schema.decodeUnknownEither(LessonMaterialSourceSchema)({
+      assetRoot: "/material/lesson/mathematics/exponents",
+      domain: "mathematics",
+      kind: "lesson",
+      key: "lesson.mathematics.exponents",
+      sections: [],
+      slug: "exponents",
+      translations: {
+        en: { title: "Exponents" },
+        id: { title: "Eksponen" },
+      },
     });
 
     expect(Either.isLeft(result)).toBe(true);
@@ -226,16 +219,23 @@ describe("material registry", () => {
   });
 
   it("rejects invalid authored material keys and slugs through the Effect Schema contract", () => {
-    const invalidKey = Schema.decodeUnknownEither(SubjectMaterialSourceSchema)({
-      baseRoute: "subject/high-school/10/mathematics",
-      category: "high-school",
-      grade: "10",
-      kind: "subject",
-      key: "Subject High School",
-      material: "mathematics",
-      topics: [],
+    const invalidKey = Schema.decodeUnknownEither(LessonMaterialSourceSchema)({
+      assetRoot: "material/lesson/mathematics/exponents",
+      domain: "mathematics",
+      kind: "lesson",
+      key: "Lesson Mathematics",
+      sections: [],
+      slug: "exponents",
+      translations: {
+        en: { title: "Exponents" },
+        id: { title: "Eksponen" },
+      },
     });
-    const invalidSlug = Schema.decodeUnknownEither(SubjectMaterialTopicSchema)({
+    const invalidSlug = Schema.decodeUnknownEither(LessonMaterialSourceSchema)({
+      assetRoot: "material/lesson/mathematics/exponents",
+      domain: "mathematics",
+      kind: "lesson",
+      key: "lesson.mathematics.exponents",
       sections: [],
       slug: "Invalid Slug",
       translations: {

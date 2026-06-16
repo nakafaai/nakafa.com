@@ -1,7 +1,7 @@
-import { compareExerciseSetSlugs } from "@repo/contents/_lib/exercises/slug";
+import { compareExerciseSetSlugs } from "@repo/contents/_lib/assessment/slug";
+import type { ExercisesMaterialList } from "@repo/contents/_types/assessment/material";
 import type { Article } from "@repo/contents/_types/content";
-import type { ExercisesMaterialList } from "@repo/contents/_types/exercises/material";
-import type { MaterialList } from "@repo/contents/_types/subject/material";
+import type { MaterialList } from "@repo/contents/_types/curriculum/material";
 import type {
   ArticleCategory,
   ExercisesCategory,
@@ -20,16 +20,15 @@ import { cleanSlug } from "@repo/utilities/helper";
 import { Effect, Option } from "effect";
 import type { Locale } from "next-intl";
 import {
-  getRuntimeContentRouteKindPage,
   getRuntimeContentRouteParentPage,
-  getRuntimeSubjectOutline,
+  getRuntimeCurriculumOutline,
 } from "@/lib/content/runtime";
 
 type RuntimeContentRoute = Effect.Effect.Success<
   ReturnType<typeof getRuntimeContentRouteParentPage>
 >["page"][number];
-type RuntimeSubjectOutlineTopic = Effect.Effect.Success<
-  ReturnType<typeof getRuntimeSubjectOutline>
+type RuntimeCurriculumOutlineTopic = Effect.Effect.Success<
+  ReturnType<typeof getRuntimeCurriculumOutline>
 >[number];
 
 const articleSummaryPageLimit = 100;
@@ -39,13 +38,13 @@ const navigationProbePageLimit = 1;
 const navigationReadConcurrency = 8;
 const trailingSlashPattern = /\/$/;
 
-interface SubjectGradeNavigationItem {
+interface CurriculumGradeNavigationItem {
   category: SubjectCategory;
   grade: Grade;
   href: string;
 }
 
-interface SubjectMaterialNavigationItem {
+interface CurriculumSubjectNavigationItem {
   href: string;
   label: Material;
 }
@@ -89,7 +88,8 @@ export const getRuntimeArticleSummaries = Effect.fn(
 export const getRuntimeExerciseSubjects = Effect.fn(
   "www.contentNavigation.exerciseSubjects"
 )(function* (category: ExercisesCategory, type: ExercisesType, locale: Locale) {
-  const prefix = `exercises/${category}/${type}/`;
+  const appPrefix = `assessment/${category}/${type}/`;
+  const materialPrefix = `material/practice/assessment/${type}/`;
   const materialRows = yield* Effect.forEach(
     EXERCISES_MATERIALS,
     (material) =>
@@ -98,8 +98,8 @@ export const getRuntimeExerciseSubjects = Effect.fn(
         limit: navigationProbePageLimit,
         locale,
         order: "route",
-        parentRoute: `${prefix}${material}`,
-        section: "exercises",
+        parentRoute: `${materialPrefix}${material}`,
+        section: "material",
       }).pipe(Effect.map((rows) => ({ material, rows }))),
     { concurrency: navigationReadConcurrency }
   );
@@ -113,7 +113,7 @@ export const getRuntimeExerciseSubjects = Effect.fn(
     materialRoutes.has(material)
       ? [
           {
-            href: `/${prefix}${material}`,
+            href: `/${appPrefix}${material}`,
             label: material,
           },
         ]
@@ -121,57 +121,50 @@ export const getRuntimeExerciseSubjects = Effect.fn(
   );
 });
 
-/** Reads subject grade cards from Convex route catalog rows. */
-export const getRuntimeSubjectGrades = Effect.fn(
-  "www.contentNavigation.subjectGrades"
+/** Reads curriculum grade cards from the generated curriculum outline. */
+export const getRuntimeCurriculumGrades = Effect.fn(
+  "www.contentNavigation.curriculumGrades"
 )(function* (locale: Locale) {
   const categoryGradeRows = yield* Effect.forEach(
     SUBJECT_CATEGORIES,
     (category) =>
       Effect.forEach(
         GRADES,
-        (grade) =>
-          readNavigationRouteKindPage({
-            kind: "subject-topic",
-            limit: navigationProbePageLimit,
-            locale,
-            prefix: buildSubjectGradePath(category, grade),
-            section: "subject",
-          }).pipe(Effect.map((rows) => ({ category, grade, rows }))),
+        (grade) => hasCurriculumGrade(category, grade, locale),
         { concurrency: navigationReadConcurrency }
       ),
     { concurrency: 1 }
   );
 
-  return categoryGradeRows.flat().flatMap(({ category, grade, rows }) => {
-    if (rows.length === 0) {
-      return [];
-    }
+  return categoryGradeRows
+    .flat()
+    .flatMap(({ category, grade, hasMaterials }) => {
+      if (!hasMaterials) {
+        return [];
+      }
 
-    return [
-      {
-        category,
-        grade,
-        href: `/${buildSubjectGradePath(category, grade)}`,
-      } satisfies SubjectGradeNavigationItem,
-    ];
-  });
+      return [
+        {
+          category,
+          grade,
+          href: `/${buildCurriculumGradePath(category, grade)}`,
+        } satisfies CurriculumGradeNavigationItem,
+      ];
+    });
 });
 
-/** Reads available subject material links from Convex route catalog rows. */
+/** Reads available material lesson links from the generated curriculum outline. */
 export const getRuntimeGradeSubjects = Effect.fn(
-  "www.contentNavigation.gradeSubjects"
+  "www.contentNavigation.curriculumSubjects"
 )(function* (category: SubjectCategory, grade: Grade, locale: Locale) {
   const materialRows = yield* Effect.forEach(
     SUBJECT_MATERIALS,
     (material) =>
-      readNavigationRouteParentPage({
-        kind: "subject-topic",
-        limit: navigationProbePageLimit,
+      getRuntimeCurriculumOutline({
+        category,
+        grade,
         locale,
-        order: "route",
-        parentRoute: buildSubjectMaterialPath(category, grade, material),
-        section: "subject",
+        material,
       }).pipe(Effect.map((rows) => ({ material, rows }))),
     { concurrency: navigationReadConcurrency }
   );
@@ -183,9 +176,9 @@ export const getRuntimeGradeSubjects = Effect.fn(
 
     return [
       {
-        href: `/${buildSubjectMaterialPath(category, grade, material)}`,
+        href: `/${buildCurriculumSubjectPath(category, grade, material)}`,
         label: material,
-      } satisfies SubjectMaterialNavigationItem,
+      } satisfies CurriculumSubjectNavigationItem,
     ];
   });
 });
@@ -194,14 +187,14 @@ export const getRuntimeGradeSubjects = Effect.fn(
 export const getRuntimeExerciseMaterials = Effect.fn(
   "www.contentNavigation.exerciseMaterials"
 )(function* (materialPath: string, locale: Locale) {
-  const basePath = cleanContentPath(materialPath);
+  const basePath = getAssessmentMaterialSourcePath(materialPath);
   const groups = yield* readNavigationRouteParentPage({
     kind: "exercise-group",
     limit: navigationGroupPageLimit,
     locale,
     order: "route",
     parentRoute: basePath,
-    section: "exercises",
+    section: "material",
   });
   const validGroups = uniqueRouteRows(
     groups.filter(
@@ -217,7 +210,7 @@ export const getRuntimeExerciseMaterials = Effect.fn(
         locale,
         order: "route",
         parentRoute: group.route,
-        section: "exercises",
+        section: "material",
       }),
     { concurrency: navigationReadConcurrency }
   );
@@ -225,23 +218,23 @@ export const getRuntimeExerciseMaterials = Effect.fn(
   return buildExerciseMaterials([...validGroups, ...sets.flat()]);
 });
 
-/** Reads subject material navigation groups from the authored Convex outline. */
-export const getRuntimeSubjectMaterials = Effect.fn(
-  "www.contentNavigation.subjectMaterials"
+/** Reads material lesson navigation groups from the authored Convex outline. */
+export const getRuntimeCurriculumMaterials = Effect.fn(
+  "www.contentNavigation.curriculumMaterials"
 )(function* (materialPath: string, locale: Locale) {
   const basePath = cleanContentPath(materialPath);
-  const parsedPath = parseSubjectMaterialPath(basePath);
+  const parsedPath = parseCurriculumSubjectPath(basePath);
 
   if (!parsedPath) {
     return [];
   }
 
-  const outline = yield* getRuntimeSubjectOutline({
+  const outline = yield* getRuntimeCurriculumOutline({
     ...parsedPath,
     locale,
   });
 
-  return buildSubjectMaterials(outline);
+  return buildCurriculumMaterials(outline);
 });
 
 /** Finds the active exercise group and optional set item for one path. */
@@ -257,7 +250,7 @@ export function getCurrentExerciseMaterial(
   };
 }
 
-/** Finds the active subject chapter and optional lesson item for one path. */
+/** Finds the active curriculum topic and optional lesson item for one path. */
 export function getCurrentSubjectMaterial(
   path: string,
   materials: MaterialList
@@ -283,17 +276,31 @@ function readNavigationRouteParentPage(
   }).pipe(Effect.map((page) => page.page));
 }
 
-/** Reads one bounded kind-prefix route page for finite taxonomy probes. */
-function readNavigationRouteKindPage(
-  args: Omit<
-    Parameters<typeof getRuntimeContentRouteKindPage>[0],
-    "cursor" | "limit"
-  > & { limit: number }
+/** Checks whether one curriculum grade has any mapped material in Convex. */
+function hasCurriculumGrade(
+  category: SubjectCategory,
+  grade: Grade,
+  locale: Locale
 ) {
-  return getRuntimeContentRouteKindPage({
-    ...args,
-    cursor: null,
-  }).pipe(Effect.map((page) => page.page));
+  return Effect.gen(function* () {
+    const materialRows = yield* Effect.forEach(
+      SUBJECT_MATERIALS,
+      (material) =>
+        getRuntimeCurriculumOutline({
+          category,
+          grade,
+          locale,
+          material,
+        }),
+      { concurrency: navigationReadConcurrency }
+    );
+
+    return {
+      category,
+      grade,
+      hasMaterials: materialRows.some((rows) => rows.length > 0),
+    };
+  });
 }
 
 /** Builds exercise navigation groups from concrete set route rows. */
@@ -336,8 +343,10 @@ function buildExerciseMaterials(rows: readonly RuntimeContentRoute[]) {
   return Array.from(groups.values()).filter((group) => group.items.length > 0);
 }
 
-/** Builds subject navigation groups from the authored subject outline. */
-function buildSubjectMaterials(outline: readonly RuntimeSubjectOutlineTopic[]) {
+/** Builds curriculum navigation groups from the authored curriculum outline. */
+function buildCurriculumMaterials(
+  outline: readonly RuntimeCurriculumOutlineTopic[]
+) {
   return outline.flatMap((topic) => {
     if (topic.sections.length === 0) {
       return [];
@@ -420,6 +429,18 @@ function cleanContentPath(path: string) {
   return cleanSlug(path.startsWith("/") ? path.slice(1) : path);
 }
 
+/** Translates public assessment routes into reusable practice material routes. */
+function getAssessmentMaterialSourcePath(path: string) {
+  const normalizedPath = cleanContentPath(path);
+  const [root, , type, material, ...rest] = normalizedPath.split("/");
+
+  if (root === "assessment" && type && material && rest.length === 0) {
+    return `material/practice/assessment/${type}/${material}`;
+  }
+
+  return normalizedPath;
+}
+
 /** Returns the route above one concrete child route. */
 function getParentRoute(route: string) {
   return cleanContentPath(route).split("/").slice(0, -1).join("/");
@@ -435,26 +456,26 @@ function sortExerciseSetRouteRows(rows: readonly RuntimeContentRoute[]) {
   return [...rows].sort((a, b) => compareExerciseSetSlugs(a.route, b.route));
 }
 
-/** Builds one subject grade route path without touching filesystem content. */
-function buildSubjectGradePath(category: SubjectCategory, grade: Grade) {
-  return `subject/${category}/${grade}`;
+/** Builds one curriculum grade route path without touching filesystem content. */
+function buildCurriculumGradePath(category: SubjectCategory, grade: Grade) {
+  return `curriculum/${category}/${grade}`;
 }
 
-/** Builds one subject material route path without touching filesystem content. */
-function buildSubjectMaterialPath(
+/** Builds one material lesson route path without touching filesystem content. */
+function buildCurriculumSubjectPath(
   category: SubjectCategory,
   grade: Grade,
   material: Material
 ) {
-  return `${buildSubjectGradePath(category, grade)}/${material}`;
+  return `${buildCurriculumGradePath(category, grade)}/${material}`;
 }
 
-/** Parses and validates one subject material route path for outline reads. */
-function parseSubjectMaterialPath(path: string) {
+/** Parses and validates one material lesson route path for outline reads. */
+function parseCurriculumSubjectPath(path: string) {
   const [root, rawCategory, rawGrade, rawMaterial, ...rest] =
     cleanContentPath(path).split("/");
 
-  if (root !== "subject" || rest.length > 0) {
+  if (root !== "curriculum" || rest.length > 0) {
     return null;
   }
 

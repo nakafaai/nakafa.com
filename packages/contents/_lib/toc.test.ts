@@ -367,7 +367,7 @@ const str = "\`not a heading\`";
       expect(headings[0].children?.[0]?.children?.[0]?.label).toBe("Duplicate");
     });
 
-    it("should handle backwards navigation (h6 -> h1)", () => {
+    it("should handle heading level jumps from h6 to h1", () => {
       const content = `# H1
 ## H2
 ### H3

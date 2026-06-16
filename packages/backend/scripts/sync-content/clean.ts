@@ -2,7 +2,7 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import {
   parseArticlePath,
   parseExercisePath,
-  parseSubjectPath,
+  parseMaterialLessonPath,
 } from "@repo/backend/scripts/lib/mdx-parser/paths";
 import { callConvexMutation } from "@repo/backend/scripts/sync-content/convex";
 import {
@@ -25,8 +25,8 @@ import type {
   SyncOptions,
 } from "@repo/backend/scripts/sync-content/types";
 import {
-  listExerciseSets,
-  listSubjectTopics,
+  listLessonRows,
+  listPracticeSets,
 } from "@repo/contents/_types/material/registry";
 import type {
   DefaultFunctionArgs,
@@ -45,11 +45,11 @@ type DeleteStaleMutation = FunctionReference<
 type DeleteStaleArticleArgs = FunctionArgs<
   typeof internal.contentSync.mutations.articles.deleteStaleArticles
 >;
-type DeleteStaleSubjectTopicArgs = FunctionArgs<
-  typeof internal.contentSync.mutations.subjects.deleteStaleSubjectTopics
+type DeleteStaleCurriculumTopicArgs = FunctionArgs<
+  typeof internal.contentSync.mutations.curriculum.deleteStaleCurriculumTopics
 >;
-type DeleteStaleSubjectSectionArgs = FunctionArgs<
-  typeof internal.contentSync.mutations.subjects.deleteStaleSubjectSections
+type DeleteStaleCurriculumLessonArgs = FunctionArgs<
+  typeof internal.contentSync.mutations.curriculum.deleteStaleCurriculumLessons
 >;
 type DeleteStaleExerciseQuestionArgs = FunctionArgs<
   typeof internal.contentSync.mutations.exercises.deleteStaleExerciseQuestions
@@ -67,21 +67,21 @@ const buildDeleteStaleArticleArgs = (
   articleIds: items.map((item) => item.id),
 });
 
-/** Builds mutation args for deleting stale subject topic rows. */
-const buildDeleteStaleSubjectTopicArgs = (
+/** Builds mutation args for deleting stale curriculum topic rows. */
+const buildDeleteStaleCurriculumTopicArgs = (
   items: readonly (StaleItem & {
-    id: DeleteStaleSubjectTopicArgs["topicIds"][number];
+    id: DeleteStaleCurriculumTopicArgs["topicIds"][number];
   })[]
-): DeleteStaleSubjectTopicArgs => ({
+): DeleteStaleCurriculumTopicArgs => ({
   topicIds: items.map((item) => item.id),
 });
 
-/** Builds mutation args for deleting stale subject section rows. */
-const buildDeleteStaleSubjectSectionArgs = (
+/** Builds mutation args for deleting stale curriculum lesson rows. */
+const buildDeleteStaleCurriculumLessonArgs = (
   items: readonly (StaleItem & {
-    id: DeleteStaleSubjectSectionArgs["sectionIds"][number];
+    id: DeleteStaleCurriculumLessonArgs["sectionIds"][number];
   })[]
-): DeleteStaleSubjectSectionArgs => ({
+): DeleteStaleCurriculumLessonArgs => ({
   sectionIds: items.map((item) => item.id),
 });
 
@@ -138,10 +138,10 @@ const deleteStaleItems = Effect.fn("sync.deleteStaleItems")(function* <
 /** Collects source slugs from the content files that should exist in Convex. */
 const collectFilesystemSlugs = Effect.fn("sync.collectFilesystemSlugs")(
   function* () {
-    const [articleFiles, subjectFiles, questionFiles] = yield* Effect.all([
+    const [articleFiles, lessonFiles, questionFiles] = yield* Effect.all([
       globFiles("articles/**/*.mdx"),
-      globFiles("subject/**/*.mdx"),
-      globFiles("exercises/**/_question/*.mdx"),
+      globFiles("material/lesson/**/*.mdx"),
+      globFiles("material/practice/**/question.*.mdx"),
     ]);
 
     const articleSlugs: string[] = [];
@@ -150,10 +150,10 @@ const collectFilesystemSlugs = Effect.fn("sync.collectFilesystemSlugs")(
       articleSlugs.push(pathInfo.slug);
     }
 
-    const subjectSectionSlugs: string[] = [];
-    for (const file of subjectFiles) {
-      const pathInfo = yield* parseSubjectPath(file);
-      subjectSectionSlugs.push(pathInfo.slug);
+    const curriculumLessonSlugs: string[] = [];
+    for (const file of lessonFiles) {
+      const pathInfo = yield* parseMaterialLessonPath(file);
+      curriculumLessonSlugs.push(pathInfo.slug);
     }
 
     const exerciseQuestionSlugs: string[] = [];
@@ -162,13 +162,13 @@ const collectFilesystemSlugs = Effect.fn("sync.collectFilesystemSlugs")(
       exerciseQuestionSlugs.push(pathInfo.slug);
     }
 
-    const subjectTopicSlugs = listSubjectTopics().map((topic) => topic.slug);
-    const exerciseSetSlugs = listExerciseSets().map((set) => set.slug);
+    const curriculumTopicSlugs = listLessonRows().map((topic) => topic.slug);
+    const exerciseSetSlugs = listPracticeSets().map((set) => set.slug);
 
     return {
       articleSlugs,
-      subjectTopicSlugs,
-      subjectSectionSlugs,
+      curriculumTopicSlugs,
+      curriculumLessonSlugs,
       exerciseSetSlugs,
       exerciseQuestionSlugs,
     };
@@ -245,8 +245,8 @@ export const clean = Effect.fn("sync.clean")(function* (
   log("Scanning filesystem...");
   const slugs = yield* collectFilesystemSlugs();
   log(`  Articles on disk: ${slugs.articleSlugs.length}`);
-  log(`  Subject topics on disk: ${slugs.subjectTopicSlugs.length}`);
-  log(`  Subject sections on disk: ${slugs.subjectSectionSlugs.length}`);
+  log(`  Curriculum topics on disk: ${slugs.curriculumTopicSlugs.length}`);
+  log(`  Curriculum lessons on disk: ${slugs.curriculumLessonSlugs.length}`);
   log(`  Exercise sets on disk: ${slugs.exerciseSetSlugs.length}`);
   log(`  Exercise questions on disk: ${slugs.exerciseQuestionSlugs.length}`);
 
@@ -255,8 +255,8 @@ export const clean = Effect.fn("sync.clean")(function* (
 
   const totalStale =
     stale.staleArticles.length +
-    stale.staleSubjectTopics.length +
-    stale.staleSubjectSections.length +
+    stale.staleCurriculumTopics.length +
+    stale.staleCurriculumLessons.length +
     stale.staleExerciseSets.length +
     stale.staleExerciseQuestions.length;
 
@@ -269,8 +269,8 @@ export const clean = Effect.fn("sync.clean")(function* (
     hasStale = true;
     log(`\nFound ${totalStale} stale items:\n`);
     logStaleItems("Stale articles", stale.staleArticles);
-    logStaleItems("\nStale subject topics", stale.staleSubjectTopics);
-    logStaleItems("\nStale subject sections", stale.staleSubjectSections);
+    logStaleItems("\nStale curriculum topics", stale.staleCurriculumTopics);
+    logStaleItems("\nStale curriculum lessons", stale.staleCurriculumLessons);
     logStaleItems("\nStale exercise sets", stale.staleExerciseSets);
     logStaleItems("\nStale exercise questions", stale.staleExerciseQuestions);
 
@@ -287,19 +287,19 @@ export const clean = Effect.fn("sync.clean")(function* (
       );
       deleted += yield* deleteStaleItems(
         config,
-        internal.contentSync.mutations.subjects.deleteStaleSubjectTopics,
-        buildDeleteStaleSubjectTopicArgs,
-        stale.staleSubjectTopics,
-        "stale subject topics (and their sections)",
-        BATCH_SIZES.staleSubjectTopics
+        internal.contentSync.mutations.curriculum.deleteStaleCurriculumTopics,
+        buildDeleteStaleCurriculumTopicArgs,
+        stale.staleCurriculumTopics,
+        "stale curriculum topics (and their sections)",
+        BATCH_SIZES.staleCurriculumTopics
       );
       deleted += yield* deleteStaleItems(
         config,
-        internal.contentSync.mutations.subjects.deleteStaleSubjectSections,
-        buildDeleteStaleSubjectSectionArgs,
-        stale.staleSubjectSections,
-        "stale subject sections",
-        BATCH_SIZES.staleSubjectSections
+        internal.contentSync.mutations.curriculum.deleteStaleCurriculumLessons,
+        buildDeleteStaleCurriculumLessonArgs,
+        stale.staleCurriculumLessons,
+        "stale curriculum lessons",
+        BATCH_SIZES.staleCurriculumLessons
       );
       deleted += yield* deleteStaleItems(
         config,

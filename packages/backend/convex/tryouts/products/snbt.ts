@@ -13,7 +13,7 @@ const SNBT_REPORT_SCORE_MAX = 1000;
 const SNBT_REPORT_THETA_MIN = -4;
 const SNBT_REPORT_THETA_MAX = 4;
 const YEARFUL_TRYOUT_SET_SLUG_REGEX =
-  /^exercises\/[^/]+\/[^/]+\/[^/]+\/try-out\/(\d{4})\/[^/]+$/;
+  /^material\/practice\/assessment\/snbt\/[^/]+\/try-out-(\d{4})\/[^/]+$/;
 
 const SNBT_ATTEMPT_WINDOW_MS =
   SNBT_ATTEMPT_WINDOW_DAYS *

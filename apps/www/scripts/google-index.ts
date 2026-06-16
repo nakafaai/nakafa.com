@@ -55,10 +55,13 @@ const SUCCESS_RATE_THRESHOLD = 50;
 // Configuration
 const host = "https://nakafa.com";
 
-// Data folder and file paths
+// Local script state folder and file paths
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DATA_FOLDER = path.join(__dirname, "_data");
-const GOOGLE_INDEX_HISTORY_FILE = path.join(DATA_FOLDER, "google-index.json");
+const SCRIPT_STATE_FOLDER = path.join(__dirname, "state");
+const GOOGLE_INDEX_HISTORY_FILE = path.join(
+  SCRIPT_STATE_FOLDER,
+  "google-index.json"
+);
 const GOOGLE_KEY_FILE = path.join(__dirname, "google-key.json");
 
 // Google API configuration
@@ -133,16 +136,16 @@ const decodeEmptyGoogleIndexHistory = Schema.decodeUnknown(
   GoogleIndexHistorySchema
 );
 
-/** Ensures the Google indexing data folder exists before reading history. */
+/** Ensures the Google indexing state folder exists before reading history. */
 const ensureGoogleIndexDataFolder = Effect.fn(
   "scripts.googleIndex.ensureDataFolder"
 )(function* () {
   const exists = yield* Effect.try({
-    try: () => fs.existsSync(DATA_FOLDER),
+    try: () => fs.existsSync(SCRIPT_STATE_FOLDER),
     catch: (cause) =>
       new GoogleIndexDataFolderError({
         cause,
-        message: `Failed to inspect ${DATA_FOLDER}.`,
+        message: `Failed to inspect ${SCRIPT_STATE_FOLDER}.`,
       }),
   });
 
@@ -152,13 +155,13 @@ const ensureGoogleIndexDataFolder = Effect.fn(
 
   yield* Effect.try({
     try: () => {
-      fs.mkdirSync(DATA_FOLDER, { recursive: true });
-      logger.info(`Created data folder at: ${DATA_FOLDER}`);
+      fs.mkdirSync(SCRIPT_STATE_FOLDER, { recursive: true });
+      logger.info(`Created script state folder at: ${SCRIPT_STATE_FOLDER}`);
     },
     catch: (cause) =>
       new GoogleIndexDataFolderError({
         cause,
-        message: `Failed to create ${DATA_FOLDER}.`,
+        message: `Failed to create ${SCRIPT_STATE_FOLDER}.`,
       }),
   });
 });

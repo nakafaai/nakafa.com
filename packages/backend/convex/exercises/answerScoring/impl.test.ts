@@ -23,7 +23,7 @@ async function insertUser(ctx: MutationCtx, suffix: string) {
 
 /** Inserts one exercise set and question for answer-scoring fixtures. */
 async function insertQuestion(ctx: MutationCtx, suffix: string, number = 1) {
-  const slug = `exercises/high-school/snbt/quantitative-knowledge/try-out/2026/${suffix}`;
+  const slug = `material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/${suffix}`;
   const setId = await ctx.db.insert("exerciseSets", {
     category: "high-school",
     exerciseType: "try-out",
@@ -135,7 +135,7 @@ async function expectConvexCode(promise: Promise<unknown>, code: string) {
   });
 }
 
-describe("exercises/answerScoring/impl", () => {
+describe("assessment/answerScoring/impl", () => {
   it("derives canonical answer text and correctness from stored choices", async () => {
     const t = convexTest(schema, convexModules);
     const scoredAnswer = await t.mutation(async (ctx) => {

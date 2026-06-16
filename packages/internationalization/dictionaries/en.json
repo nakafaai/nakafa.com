@@ -51,6 +51,7 @@
     "source-code": "Source code",
     "language": "Language",
     "articles": "Articles",
+    "material": "Material",
     "subject": "Subjects",
     "for-you": "For you",
     "explore": "Explore",
@@ -141,15 +142,15 @@
       "role": {
         "student": {
           "title": "Student",
-          "description": "Learn lessons, practice questions, and ask Nina."
+          "description": "Learn, practice, and ask Nina."
         },
         "teacher": {
           "title": "Teacher",
-          "description": "Prepare lessons and practice for class."
+          "description": "Prepare lessons for class."
         },
         "parent": {
           "title": "Parent",
-          "description": "Help your child learn with simple explanations."
+          "description": "Help your child learn simply."
         }
       },
       "focus": {

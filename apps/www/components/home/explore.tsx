@@ -15,7 +15,7 @@ import { useTranslations } from "next-intl";
 import {
   getAppNavigationViewer,
   getForYouNavigationItems,
-} from "@/components/sidebar/_data/navigation";
+} from "@/components/sidebar/data/navigation";
 import { useUser } from "@/lib/context/use-user";
 
 const homeExploreCardVisualVariants = cva(
@@ -116,7 +116,7 @@ export function HomeExplore() {
   const visibleCardIds = new Set(items.map((item) => item.id));
   const cards = [
     {
-      href: "/subject",
+      href: "/curriculum",
       id: "subject",
       title: tCommon("subject"),
       visual: <SubjectIcon />,

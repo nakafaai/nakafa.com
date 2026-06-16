@@ -93,13 +93,13 @@ describe("route catalog static params", () => {
 
     await expect(
       getStaticParams({
-        basePath: "subject",
+        basePath: "material",
         paramNames: ["category", "grade", "material"],
       })
     ).resolves.toContainEqual({
-      category: "high-school",
-      grade: "10",
-      material: "chemistry",
+      category: "lesson",
+      grade: "chemistry",
+      material: "green-chemistry",
     });
     expect(routeMocks.listRuntimeLatestContentRoutes).toHaveBeenCalledWith({
       limit: 100,
@@ -109,39 +109,39 @@ describe("route catalog static params", () => {
     expect(routeMocks.listRuntimeLatestContentRoutes).toHaveBeenCalledWith({
       limit: 100,
       locale: "id",
-      section: "subject",
+      section: "material",
     });
   });
 
   it("builds deep slug params from Convex-backed public routes", async () => {
     await expect(
       getStaticParams({
-        basePath: "subject",
+        basePath: "material",
         isDeep: true,
         paramNames: ["category", "grade", "material", "slug"],
         slugParam: "slug",
       })
     ).resolves.toContainEqual({
-      category: "high-school",
-      grade: "10",
-      material: "chemistry",
-      slug: ["green-chemistry", "definition"],
+      category: "lesson",
+      grade: "chemistry",
+      material: "green-chemistry",
+      slug: ["definition"],
     });
   });
 
   it("uses dated exercise question rows to prerender parent set routes", async () => {
     await expect(
       getStaticParams({
-        basePath: "exercises",
+        basePath: "material",
         isDeep: true,
         paramNames: ["category", "type", "material", "slug"],
         slugParam: "slug",
       })
     ).resolves.toContainEqual({
-      category: "high-school",
-      material: "quantitative-knowledge",
-      slug: ["try-out", "2026", "set-1"],
-      type: "snbt",
+      category: "practice",
+      material: "snbt",
+      slug: ["quantitative-knowledge", "try-out-2026", "set-1"],
+      type: "assessment",
     });
   });
 
@@ -155,8 +155,8 @@ describe("route catalog static params", () => {
         }),
         routeRow({
           locale: "en",
-          route: "subject/high-school/10/chemistry",
-          section: "subject",
+          route: "curriculum/high-school/10/chemistry",
+          section: "material",
         }),
         routeRow({
           locale: "en",
@@ -203,22 +203,22 @@ const routeRows = [
   }),
   routeRow({
     locale: "en",
-    route: "subject/high-school/10/chemistry/green-chemistry/definition",
-    section: "subject",
+    route: "material/lesson/chemistry/green-chemistry/definition",
+    section: "material",
   }),
   routeRow({
     locale: "id",
-    route: "subject/high-school/10/chemistry/green-chemistry/definition",
-    section: "subject",
+    route: "material/lesson/chemistry/green-chemistry/definition",
+    section: "material",
   }),
   routeRow({
     kind: "exercise-question",
     locale: "en",
     parentRoute:
-      "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1",
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
     route:
-      "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1/1",
-    section: "exercises",
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-1",
+    section: "material",
   }),
 ];
 

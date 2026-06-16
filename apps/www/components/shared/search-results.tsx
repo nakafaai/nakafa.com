@@ -139,14 +139,12 @@ function useSearchSectionLabels(): Record<
 > {
   const tCommon = useTranslations("Common");
   const tArticles = useTranslations("Articles");
-  const tExercises = useTranslations("Exercises");
   const tHoly = useTranslations("Holy");
 
   return {
     articles: tArticles("articles"),
-    exercises: tExercises("exercises"),
+    material: tCommon("material"),
     quran: tHoly("quran"),
-    subject: tCommon("subject"),
   };
 }
 

@@ -134,6 +134,10 @@ const loadWorkflow = async (
       return syncStep("syncRoutePages");
     },
   }));
+  vi.doMock("@repo/backend/scripts/sync-content/readModels", () => ({
+    /** Records generated material/curriculum/assessment read-model refresh calls. */
+    syncGeneratedReadModels: () => syncStep("syncGeneratedReadModels"),
+  }));
   vi.doMock("@repo/backend/scripts/sync-content/learningPrograms", () => ({
     /** Records learning program catalog and coverage refresh calls. */
     syncLearningPrograms: (_config: ConvexConfig, syncOptions: SyncOptions) => {
@@ -159,11 +163,11 @@ const loadWorkflow = async (
     /** Provides batch sizes for workflow imports not exercised here. */
     BATCH_SIZES: { authors: 100 },
   }));
-  vi.doMock("@repo/backend/scripts/sync-content/subjects", () => ({
-    /** Records subject section sync calls. */
-    syncSubjectSections: () => syncStep("syncSubjectSections"),
-    /** Records subject topic sync calls. */
-    syncSubjectTopics: () => syncStep("syncSubjectTopics"),
+  vi.doMock("@repo/backend/scripts/sync-content/curriculum", () => ({
+    /** Records curriculum lesson sync calls. */
+    syncCurriculumLessons: () => syncStep("syncCurriculumLessons"),
+    /** Records curriculum topic sync calls. */
+    syncCurriculumTopics: () => syncStep("syncCurriculumTopics"),
   }));
   vi.doMock("@repo/backend/scripts/sync-content/tryouts", () => ({
     /** Records tryout sync calls. */
@@ -211,6 +215,7 @@ describe("sync-content workflows", () => {
       expect.arrayContaining([
         "syncAuthors",
         "syncRoutePages",
+        "syncGeneratedReadModels",
         "syncLearningPrograms",
         "clean",
         "verify",
@@ -225,6 +230,9 @@ describe("sync-content workflows", () => {
       events.indexOf("clean")
     );
     expect(events.lastIndexOf("syncRoutePages")).toBeLessThan(
+      events.lastIndexOf("syncGeneratedReadModels")
+    );
+    expect(events.lastIndexOf("syncGeneratedReadModels")).toBeLessThan(
       events.lastIndexOf("syncLearningPrograms")
     );
     expect(events.lastIndexOf("syncLearningPrograms")).toBeLessThan(
@@ -255,6 +263,9 @@ describe("sync-content workflows", () => {
       events.indexOf("clean")
     );
     expect(events.lastIndexOf("syncRoutePages")).toBeLessThan(
+      events.lastIndexOf("syncGeneratedReadModels")
+    );
+    expect(events.lastIndexOf("syncGeneratedReadModels")).toBeLessThan(
       events.indexOf("verify")
     );
     expect(routePageOptions).toHaveLength(2);
@@ -280,6 +291,9 @@ describe("sync-content workflows", () => {
       events.filter((event) => event === "syncLearningPrograms")
     ).toHaveLength(1);
     expect(events.indexOf("syncRoutePages")).toBeLessThan(
+      events.indexOf("syncGeneratedReadModels")
+    );
+    expect(events.indexOf("syncGeneratedReadModels")).toBeLessThan(
       events.indexOf("syncLearningPrograms")
     );
     expect(events.indexOf("syncLearningPrograms")).toBeLessThan(
@@ -404,6 +418,7 @@ describe("sync-content workflows", () => {
     expect(events).toEqual([
       "syncQuran",
       "syncRoutePages",
+      "syncGeneratedReadModels",
       "syncLearningPrograms",
       "invalidateContentRuntimeCache",
       "saveSyncState",

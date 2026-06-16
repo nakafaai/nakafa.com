@@ -46,6 +46,13 @@ vi.mock("@repo/contents/_lib/mdx-slugs/cache", () => ({
 }));
 
 vi.mock("@repo/contents/_lib/module", () => ({
+  getLocalizedContentPath: (cleanPath: string, locale: string) => {
+    if (cleanPath.endsWith("/answer") || cleanPath.endsWith("/question")) {
+      return `${cleanPath}.${locale}.mdx`;
+    }
+
+    return `${cleanPath}/${locale}.mdx`;
+  },
   importContentModule: mockImportContentModule,
 }));
 
@@ -207,7 +214,7 @@ describe("getContents", () => {
     mockGetMDXSlugsForLocale.mockReturnValue([
       "articles/politics/valid-entry",
       "articles/politics/broken-entry",
-      "subject/high-school/10/mathematics",
+      "curriculum/high-school/10/mathematics",
     ]);
     mockReadFile.mockImplementation((filePath: string) => {
       if (filePath.includes("broken-entry/en.mdx")) {
@@ -259,7 +266,7 @@ describe("getContents", () => {
 
   it("returns an empty list when no cached slugs match the base path", async () => {
     mockGetMDXSlugsForLocale.mockReturnValue([
-      "subject/high-school/10/mathematics",
+      "curriculum/high-school/10/mathematics",
     ]);
 
     const result = await Effect.runPromise(

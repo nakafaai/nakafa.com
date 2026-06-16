@@ -316,15 +316,15 @@ export async function deleteExerciseQuestion(
     });
   }
 
-  await deleteContentAuthorLinks(ctx, questionId, "exercise");
+  await deleteContentAuthorLinks(ctx, questionId, "material");
   await deleteExerciseChoicesForQuestion(ctx, questionId);
   await ctx.db.delete("exerciseQuestions", questionId);
 }
 
-/** Delete one subject section together with its sync-managed author links. */
-export async function deleteSubjectSection(
+/** Delete one curriculum lesson together with its sync-managed author links. */
+export async function deleteCurriculumLesson(
   ctx: MutationCtx,
-  sectionId: Id<"subjectSections">
+  sectionId: Id<"curriculumLessons">
 ) {
   const section = await ctx.db.get(sectionId);
 
@@ -335,13 +335,13 @@ export async function deleteSubjectSection(
     });
   }
 
-  await deleteContentAuthorLinks(ctx, sectionId, "subject");
+  await deleteContentAuthorLinks(ctx, sectionId, "material");
   if (section) {
     await deleteAudioContentSourceByRoute(ctx, {
-      contentType: "subject",
+      contentType: "material",
       locale: section.locale,
       route: section.slug,
     });
   }
-  await ctx.db.delete("subjectSections", sectionId);
+  await ctx.db.delete("curriculumLessons", sectionId);
 }

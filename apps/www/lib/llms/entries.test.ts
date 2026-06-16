@@ -90,9 +90,7 @@ beforeEach(() => {
       return Effect.fail(new Error("Runtime metadata unavailable."));
     }
 
-    if (
-      route === "subject/high-school/10/chemistry/green-chemistry/definition"
-    ) {
+    if (route === "material/lesson/chemistry/green-chemistry/definition") {
       return Effect.succeed({
         description: "Green Chemistry",
         markdown: true,
@@ -102,7 +100,7 @@ beforeEach(() => {
 
     if (
       route ===
-      "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1"
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1"
     ) {
       return Effect.succeed({
         description: "Try-out set",
@@ -126,16 +124,16 @@ const routeRows = [
   }),
   routeRow({
     route:
-      "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1",
-    section: "exercises",
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
+    section: "material",
   }),
   routeRow({
     route: "quran/1",
     section: "quran",
   }),
   routeRow({
-    route: "subject/high-school/10/chemistry/green-chemistry/definition",
-    section: "subject",
+    route: "material/lesson/chemistry/green-chemistry/definition",
+    section: "material",
   }),
 ];
 
@@ -194,10 +192,9 @@ describe("llms entries", () => {
     expect(isLlmsSection(undefined)).toBe(false);
     expect(getLlmsSections()).toEqual([
       "articles",
-      "exercises",
+      "material",
       "quran",
       "site",
-      "subject",
     ]);
   });
 
@@ -212,12 +209,12 @@ describe("llms entries", () => {
         getContentPageLlmsEntries({
           locale: "en",
           page: 0,
-          section: "subject",
+          section: "material",
         }),
         getContentPageLlmsEntries({
           locale: "en",
           page: 0,
-          section: "exercises",
+          section: "material",
         }),
         getContentPageLlmsEntries({
           locale: "en",
@@ -259,37 +256,10 @@ describe("llms entries", () => {
     expect(entries).toContainEqual(
       expect.objectContaining({
         description: "Green Chemistry",
-        href: "https://nakafa.com/en/subject/high-school/10/chemistry/green-chemistry/definition.md",
-        route: "/subject/high-school/10/chemistry/green-chemistry/definition",
-        section: "subject",
+        href: "https://nakafa.com/en/material/lesson/chemistry/green-chemistry/definition.md",
+        route: "/material/lesson/chemistry/green-chemistry/definition",
+        section: "material",
         title: "Definition of Green Chemistry",
-      })
-    );
-    expect(entries).toContainEqual(
-      expect.objectContaining({
-        href: "https://nakafa.com/en/subject/high-school/10",
-        route: "/subject/high-school/10",
-        section: "subject",
-        title: "10",
-      })
-    );
-    expect(entries).toContainEqual(
-      expect.objectContaining({
-        description: "Try-out set",
-        href: "https://nakafa.com/en/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1.md",
-        route:
-          "/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1",
-        section: "exercises",
-        title: "Try-out Set 1",
-      })
-    );
-    expect(entries).toContainEqual(
-      expect.objectContaining({
-        href: "https://nakafa.com/en/exercises/high-school/snbt/quantitative-knowledge/try-out/2026",
-        route:
-          "/exercises/high-school/snbt/quantitative-knowledge/try-out/2026",
-        section: "exercises",
-        title: "2026",
       })
     );
     expect(entries).toContainEqual(
@@ -311,10 +281,7 @@ describe("llms entries", () => {
     );
     expect(hrefs).not.toContain("https://nakafa.com/en/articles/politics.md");
     expect(hrefs).not.toContain(
-      "https://nakafa.com/en/subject/high-school/10.md"
-    );
-    expect(hrefs).not.toContain(
-      "https://nakafa.com/en/exercises/high-school/snbt/quantitative-knowledge/try-out/2026.md"
+      "https://nakafa.com/en/material/practice/assessment/snbt/quantitative-knowledge/try-out-2026.md"
     );
     expect(mockGetRuntimeContentRouteArtifactPage).toHaveBeenCalledWith({
       locale: "en",
@@ -350,94 +317,26 @@ describe("llms entries", () => {
     });
   });
 
-  it("builds listing entries from kind-scoped route rows", async () => {
-    const entries = await Effect.runPromise(
-      getContentListingLlmsEntries({
-        locale: "en",
-        route: "subject/high-school/10",
-      })
-    );
-
-    expect(entries).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          href: "https://nakafa.com/en/subject/high-school/10/chemistry/green-chemistry/definition.md",
-          route: "/subject/high-school/10/chemistry/green-chemistry/definition",
-        }),
-      ])
-    );
-    expect(mockGetRuntimeContentRouteKindPage).toHaveBeenCalledWith({
-      cursor: null,
-      kind: "subject-topic",
-      limit: 100,
-      locale: "en",
-      prefix: "subject/high-school/10",
-      section: "subject",
-    });
-  });
-
-  it("uses bounded catalog rows for exercise and material listings", async () => {
-    const cases = [
-      {
-        expectedHref:
-          "https://nakafa.com/en/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1.md",
-        route: "exercises/high-school/snbt",
-      },
-      {
-        expectedHref:
-          "https://nakafa.com/en/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1.md",
-        route: "exercises/high-school/snbt/quantitative-knowledge",
-      },
-      {
-        expectedHref:
-          "https://nakafa.com/en/subject/high-school/10/chemistry/green-chemistry/definition.md",
-        route: "subject/high-school/10/chemistry",
-      },
-    ];
-
-    for (const { expectedHref, route } of cases) {
-      const entries = await Effect.runPromise(
+  it("returns null for curriculum and assessment app route listings", async () => {
+    await expect(
+      Effect.runPromise(
         getContentListingLlmsEntries({
           locale: "en",
-          route,
+          route: "curriculum/high-school/10",
         })
-      );
+      )
+    ).resolves.toBeNull();
+    await expect(
+      Effect.runPromise(
+        getContentListingLlmsEntries({
+          locale: "en",
+          route: "assessment/high-school/snbt",
+        })
+      )
+    ).resolves.toBeNull();
 
-      expect(entries).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            href: expectedHref,
-          }),
-        ])
-      );
-    }
-
-    expect(mockGetRuntimeContentRouteKindPage).toHaveBeenCalledWith({
-      cursor: null,
-      kind: "exercise-group",
-      limit: 100,
-      locale: "en",
-      prefix: "exercises/high-school/snbt/",
-      section: "exercises",
-    });
-    expect(mockGetRuntimeContentRouteParentPage).toHaveBeenCalledWith({
-      cursor: null,
-      kind: "exercise-group",
-      limit: 100,
-      locale: "en",
-      order: "route",
-      parentRoute: "exercises/high-school/snbt/quantitative-knowledge",
-      section: "exercises",
-    });
-    expect(mockGetRuntimeContentRouteParentPage).toHaveBeenCalledWith({
-      cursor: null,
-      kind: "subject-topic",
-      limit: 100,
-      locale: "en",
-      order: "route",
-      parentRoute: "subject/high-school/10/chemistry",
-      section: "subject",
-    });
+    expect(mockGetRuntimeContentRouteKindPage).not.toHaveBeenCalled();
+    expect(mockGetRuntimeContentRouteParentPage).not.toHaveBeenCalled();
   });
 
   it("returns null for routes without listing markdown support", async () => {

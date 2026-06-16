@@ -1,8 +1,9 @@
+import { getExerciseQuestionNumberSegment } from "@repo/contents/_types/graph/route";
 import { Effect, Option } from "effect";
 import type { Locale } from "next-intl";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
 import { getRuntimeExerciseSetPage } from "@/lib/content/runtime";
-import { BASE_URL, NUMBER_SEGMENT } from "@/lib/llms/constants";
+import { BASE_URL } from "@/lib/llms/constants";
 import { buildHeader } from "@/lib/llms/format";
 
 /** Runs the cached exercise markdown Effect at the Next cache boundary. */
@@ -23,7 +24,7 @@ export async function getCachedLlmsExerciseText({
 /** Builds uncached exercise markdown from source content. */
 export const getLlmsExerciseText = Effect.fn("www.llms.exercises.text")(
   function* ({ cleanSlug, locale }: { cleanSlug: string; locale: Locale }) {
-    if (!cleanSlug.startsWith("exercises")) {
+    if (!cleanSlug.startsWith("material/practice")) {
       return null;
     }
 
@@ -98,7 +99,16 @@ function getExerciseMarkdownTarget(cleanSlug: string) {
   const parts = cleanSlug.split("/");
   const lastPart = parts.at(-1);
 
-  if (!(lastPart && NUMBER_SEGMENT.test(lastPart))) {
+  if (!lastPart) {
+    return {
+      exerciseNumber: Option.none(),
+      path: cleanSlug,
+    };
+  }
+
+  const exerciseNumber = getExerciseQuestionNumberSegment(lastPart);
+
+  if (!exerciseNumber) {
     return {
       exerciseNumber: Option.none(),
       path: cleanSlug,
@@ -106,7 +116,7 @@ function getExerciseMarkdownTarget(cleanSlug: string) {
   }
 
   return {
-    exerciseNumber: Option.some(Number.parseInt(lastPart, 10)),
+    exerciseNumber: Option.some(Number.parseInt(exerciseNumber, 10)),
     path: parts.slice(0, -1).join("/"),
   };
 }

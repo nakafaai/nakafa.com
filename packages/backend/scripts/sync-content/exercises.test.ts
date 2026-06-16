@@ -7,12 +7,13 @@ const config: ConvexConfig = {
   url: "https://example.convex.cloud",
 };
 const questionFile =
-  "exercises/high-school/tka/mathematics/try-out/2026/set-1/8/_question/id.mdx";
+  "material/practice/assessment/tka/mathematics/try-out-2026/set-1/question-8/question.id.mdx";
 const answerFile =
-  "exercises/high-school/tka/mathematics/try-out/2026/set-1/8/_answer/id.mdx";
+  "material/practice/assessment/tka/mathematics/try-out-2026/set-1/question-8/answer.id.mdx";
 const exerciseDir =
-  "exercises/high-school/tka/mathematics/try-out/2026/set-1/8";
-const validSetSlug = "exercises/high-school/tka/mathematics/try-out/2026/set-1";
+  "material/practice/assessment/tka/mathematics/try-out-2026/set-1/question-8";
+const validSetSlug =
+  "material/practice/assessment/tka/mathematics/try-out-2026/set-1";
 
 /** Loads the exercise sync script with deterministic parser and Convex mocks. */
 const loadExercisesScript = async ({
@@ -61,18 +62,17 @@ const loadExercisesScript = async ({
 
   vi.doMock("@repo/contents/_types/material/registry", () => ({
     /** Returns the typed Material set that owns the test question route. */
-    listExerciseSets: () => [
+    listPracticeSets: () => [
       {
-        category: "high-school",
+        assessment: "tka",
         description: "Try-out set",
+        domain: "mathematics",
         exerciseType: "try-out",
         exerciseTypeTitle: "Try Out 2026",
         locale: "id",
-        material: "mathematics",
         setName: "set-1",
         slug: materialSlug,
         title: "Set 1",
-        type: "tka",
         year: 2026,
       },
     ],
@@ -98,7 +98,7 @@ const loadExercisesScript = async ({
           material: "mathematics",
           number: 8,
           setName: "set-1",
-          slug: "exercises/high-school/tka/mathematics/try-out/2026/set-1/8",
+          slug: "material/practice/assessment/tka/mathematics/try-out-2026/set-1/question-8",
           type: "exercise",
           year: 2026,
         }),
@@ -207,7 +207,7 @@ describe("sync-content exercises", () => {
         en: [{ label: "A", value: true }],
         id: [{ label: "A", value: true }],
       },
-      materialSlug: "exercises/high-school/tka/mathematics/set-1",
+      materialSlug: "invalid/practice/tka/mathematics/set-1",
       questionFiles: [],
     });
 
@@ -254,7 +254,7 @@ describe("sync-content exercises", () => {
               { isCorrect: false, label: "B", optionKey: "B", order: 1 },
             ],
           },
-          slug: "exercises/high-school/tka/mathematics/try-out/2026/set-1/8",
+          slug: "material/practice/assessment/tka/mathematics/try-out-2026/set-1/question-8",
         }),
       ],
     });

@@ -1,0 +1,139 @@
+export const metadata = {
+   title: "Permutation of All Objects",
+   description: "Learn permutation of all objects using factorial formulas. Arrange all objects with worked examples and practical exercises.",
+   authors: [{ name: "Nabil Akbarazzima Fatih" }],
+   date: "2025-05-26",
+   subject: "Combinatorics",
+};
+
+## Understanding Permutation of All Objects
+
+**Permutation of all objects** is an arrangement of all available objects, namely <InlineMath math="n" /> items from <InlineMath math="n" /> objects, where each object is used exactly once and **the order of arrangement is very important**. In this case, we use all available objects without any remaining.
+
+Imagine arranging a photo line for <InlineMath math="5 \text{ students}" />. All five students are placed in one line. Each student gets one position, none sits on the backup bench, and Andi's position in front or back gives different results.
+
+## Complete Permutation Formula
+
+For permutation of <InlineMath math="n" /> items from <InlineMath math="n" /> objects, **the formula used** is:
+
+<MathContainer>
+<BlockMath math="nP_n = \frac{n!}{(n-n)!} = \frac{n!}{0!}" />
+</MathContainer>
+
+**Explanation of why this formula becomes simple:**
+- <InlineMath math="(n-n) = 0" />, so the denominator becomes <InlineMath math="0!" />
+- Based on mathematical definition, <InlineMath math="0! = 1" />
+- Therefore: <InlineMath math="\frac{n!}{0!} = \frac{n!}{1} = n!" />
+
+So, the formula is:
+
+<MathContainer>
+<BlockMath math="nP_n = n!" />
+</MathContainer>
+
+## Factorial Concept
+
+**Factorial** is the consecutive multiplication of positive integers. The factorial of a number <InlineMath math="n" /> is written as <InlineMath math="n!" /> and defined as:
+
+<MathContainer>
+<BlockMath math="n! = n \times (n-1) \times (n-2) \times \cdots \times 2 \times 1" />
+</MathContainer>
+
+**Special rules** for factorial:
+- <InlineMath math="0! = 1" /> (based on mathematical definition)
+- <InlineMath math="1! = 1" />
+
+## Application in Daily Life
+
+### School Organization
+
+Suppose there are <InlineMath math="4 \text{ students}" /> who will fill <InlineMath math="4" /> positions in a student committee: president, vice president, secretary, and treasurer. Each student can only hold one position.
+
+The number of ways to arrange the leadership is:
+
+<MathContainer>
+<BlockMath math="4P_4 = 4! = 4 \times 3 \times 2 \times 1 = 24 \text{ ways}" />
+</MathContainer>
+
+### Seating Arrangement
+
+A family consisting of <InlineMath math="6" /> members will sit in a row on a sofa for a family photo. The number of ways they can be arranged is:
+
+<MathContainer>
+<BlockMath math="6P_6 = 6! = 6 \times 5 \times 4 \times 3 \times 2 \times 1 = 720 \text{ ways}" />
+</MathContainer>
+
+## Systematic Calculation Steps
+
+To calculate permutation of <InlineMath math="n" /> items from <InlineMath math="n" /> objects, follow these steps:
+
+1. **Identify the number of objects**: Ensure all objects will be used
+2. **Apply the formula**: Use <InlineMath math="n!" />
+3. **Calculate factorial**: Multiply consecutively from <InlineMath math="n" /> to <InlineMath math="1" />
+4. **Verify the result**: Ensure the calculation is correct
+
+### Detailed Calculation
+
+Calculating <InlineMath math="5!" /> with clear steps:
+
+<MathContainer>
+<BlockMath math="5! = 5 \times 4 \times 3 \times 2 \times 1" />
+<BlockMath math="= 20 \times 3 \times 2 \times 1" />
+<BlockMath math="= 60 \times 2 \times 1" />
+<BlockMath math="= 120 \times 1 = 120" />
+</MathContainer>
+
+## Difference from Partial Permutation
+
+**Complete permutation (<InlineMath math="n" /> from <InlineMath math="n" /> objects)**: Uses all available objects.
+**Partial permutation (<InlineMath math="r" /> from <InlineMath math="n" /> objects)**: Only uses some objects.
+
+**Concrete example**:
+- Complete permutation: Arranging <InlineMath math="5 \text{ books}" /> in <InlineMath math="5 \text{ positions}" /> on a shelf is <InlineMath math="5! = 120 \text{ ways}" />
+- Partial permutation: Selecting and arranging <InlineMath math="3 \text{ books}" /> from <InlineMath math="5 \text{ available books}" /> is <InlineMath math="5P_3 = 60 \text{ ways}" />
+
+**Detailed calculation for partial permutation**:
+
+<MathContainer>
+<BlockMath math="5P_3 = \frac{5!}{(5-3)!} = \frac{5!}{2!}" />
+<BlockMath math="= \frac{5 \times 4 \times 3 \times 2 \times 1}{2 \times 1}" />
+<BlockMath math="= \frac{120}{2} = 60 \text{ ways}" />
+</MathContainer>
+
+In permutation of <InlineMath math="n" /> items from <InlineMath math="n" /> objects, **no objects are left over** and **all positions must be filled**.
+
+## Exercises
+
+1. A photography team wants to arrange <InlineMath math="7 \text{ models}" /> for a photo session in one line. How many different ways can they arrange the seven models?
+
+2. In a running competition, there are <InlineMath math="5 \text{ participants}" /> who must all finish. How many different finishing order possibilities are there?
+
+3. A chef wants to arrange <InlineMath math="6 \text{ different types of food}" /> on a table in one straight line. How many different ways can he arrange the food?
+
+4. A library has <InlineMath math="8 \text{ different books}" /> that will be arranged on one shelf. If all books must be placed on that shelf, how many possible arrangements are there?
+
+### Answer Key
+
+1. Given: <InlineMath math="7 \text{ models}" /> will be arranged in one line (all models used)
+
+   <MathContainer>
+   <BlockMath math="7P_7 = 7! = 7 \times 6 \times 5 \times 4 \times 3 \times 2 \times 1 = 5040 \text{ ways}" />
+   </MathContainer>
+
+2. Given: <InlineMath math="5 \text{ running participants}" /> with different finishing order (all participants finish)
+
+   <MathContainer>
+   <BlockMath math="5P_5 = 5! = 5 \times 4 \times 3 \times 2 \times 1 = 120 \text{ possible orders}" />
+   </MathContainer>
+
+3. Given: <InlineMath math="6 \text{ types of food}" /> will be arranged in one straight line (all food arranged)
+
+   <MathContainer>
+   <BlockMath math="6P_6 = 6! = 6 \times 5 \times 4 \times 3 \times 2 \times 1 = 720 \text{ ways}" />
+   </MathContainer>
+
+4. Given: <InlineMath math="8 \text{ different books}" /> will be arranged on one shelf (all books arranged)
+
+   <MathContainer>
+   <BlockMath math="8P_8 = 8! = 8 \times 7 \times 6 \times 5 \times 4 \times 3 \times 2 \times 1 = 40320 \text{ ways}" />
+   </MathContainer>

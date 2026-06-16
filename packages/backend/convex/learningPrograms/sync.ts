@@ -3,13 +3,9 @@ import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { getContentRouteByContentId } from "@repo/backend/convex/learningPrograms/impl";
-import { syncLearningProgramOutcomeRows } from "@repo/backend/convex/learningPrograms/projection";
 import {
-  learningOutcomeInputValidator,
   learningProgramCoverageInputValidator,
   learningProgramInputValidator,
-  outcomeConceptAlignmentInputValidator,
-  programOutlineNodeInputValidator,
   type programSourceInputValidator,
 } from "@repo/backend/convex/learningPrograms/schema";
 import { LearningProgramSchema } from "@repo/contents/_types/program/schema";
@@ -19,7 +15,7 @@ import { Either, Schema } from "effect";
 const SOURCE_LIMIT = 20;
 const PROGRAM_RECONCILE_LIMIT = 100;
 const STALE_COVERAGE_DELETE_LIMIT = 200;
-const ACTIVE_PLAN_ITEM_REPAIR_BATCH_SIZE = 100;
+const ACTIVE_PLAN_ITEM_RECONCILE_BATCH_SIZE = 100;
 type ProgramSourceInput = Infer<typeof programSourceInputValidator>;
 const LearningProgramSyncInputSchema = Schema.Array(LearningProgramSchema);
 
@@ -31,8 +27,8 @@ const syncResultValidator = v.object({
 const deleteResultValidator = v.object({
   deleted: v.number(),
 });
-const planItemRepairResultValidator = v.object({
-  repaired: v.number(),
+const planItemReconcileResultValidator = v.object({
+  reconciled: v.number(),
   scheduled: v.boolean(),
 });
 
@@ -128,18 +124,6 @@ function decodeLearningProgramsForSync(
   return decoded.right;
 }
 
-/** Upserts generated program outline, outcome, and concept-alignment rows. */
-export const syncLearningProgramOutcomes = internalMutation({
-  args: {
-    conceptAlignments: v.array(outcomeConceptAlignmentInputValidator),
-    outcomes: v.array(learningOutcomeInputValidator),
-    outlineNodes: v.array(programOutlineNodeInputValidator),
-    syncedAt: v.number(),
-  },
-  returns: syncResultValidator,
-  handler: syncLearningProgramOutcomeRows,
-});
-
 /** Upserts graph-backed program coverage rows from the content sync projection. */
 export const syncLearningProgramCoverage = internalMutation({
   args: {
@@ -189,7 +173,7 @@ export const syncLearningProgramCoverage = internalMutation({
       }
 
       if (existing.sampleContentId !== row.sampleContentId) {
-        await repairActivePlanItemsForCoverageSampleChange(ctx, {
+        await reconcileActivePlanItemsForCoverageSampleChange(ctx, {
           coverage: existing,
           nextCoverageStatus: row.coverageStatus,
           nextSampleContentId: row.sampleContentId,
@@ -236,8 +220,8 @@ export const deleteStaleLearningProgramCoverage = internalMutation({
   },
 });
 
-/** Continues a generated plan-item repair after a coverage sample changes. */
-export const continueCoverageSamplePlanItemRepair = internalMutation({
+/** Continues a generated plan-item reconcile after a coverage sample changes. */
+export const continueCoverageSamplePlanItemReconcile = internalMutation({
   args: {
     lensId: v.string(),
     locale: learningProgramCoverageInputValidator.fields.locale,
@@ -249,9 +233,9 @@ export const continueCoverageSamplePlanItemRepair = internalMutation({
       learningProgramCoverageInputValidator.fields.sampleContentId,
     programId: v.id("learningPrograms"),
   },
-  returns: planItemRepairResultValidator,
+  returns: planItemReconcileResultValidator,
   handler: async (ctx, args) =>
-    await repairCoverageSamplePlanItemBatch(ctx, args),
+    await reconcileCoverageSamplePlanItemBatch(ctx, args),
 });
 
 /** Continues generated plan-item deletion after a stale coverage row disappears. */
@@ -262,13 +246,13 @@ export const continueStaleCoveragePlanItemDelete = internalMutation({
       learningProgramCoverageInputValidator.fields.sampleContentId,
     programId: v.id("learningPrograms"),
   },
-  returns: planItemRepairResultValidator,
+  returns: planItemReconcileResultValidator,
   handler: async (ctx, args) =>
     await deleteStaleCoveragePlanItemBatch(ctx, args),
 });
 
 /** Refreshes generated active-plan items when coverage keeps its key but points at new content. */
-async function repairActivePlanItemsForCoverageSampleChange(
+async function reconcileActivePlanItemsForCoverageSampleChange(
   ctx: MutationCtx,
   {
     coverage,
@@ -280,7 +264,7 @@ async function repairActivePlanItemsForCoverageSampleChange(
     nextSampleContentId: Doc<"learningProgramCoverage">["sampleContentId"];
   }
 ) {
-  await repairCoverageSamplePlanItemBatch(ctx, {
+  await reconcileCoverageSamplePlanItemBatch(ctx, {
     lensId: coverage.lensId,
     locale: coverage.locale,
     nextCoverageStatus,
@@ -290,8 +274,8 @@ async function repairActivePlanItemsForCoverageSampleChange(
   });
 }
 
-/** Repairs one bounded page of generated plan items for a changed coverage sample. */
-async function repairCoverageSamplePlanItemBatch(
+/** Reconciles one bounded page of generated plan items for a changed coverage sample. */
+async function reconcileCoverageSamplePlanItemBatch(
   ctx: MutationCtx,
   {
     lensId,
@@ -317,14 +301,14 @@ async function repairCoverageSamplePlanItemBatch(
         .eq("lensId", lensId)
         .eq("content_id", previousSampleContentId)
     )
-    .take(ACTIVE_PLAN_ITEM_REPAIR_BATCH_SIZE);
+    .take(ACTIVE_PLAN_ITEM_RECONCILE_BATCH_SIZE);
 
   const route = await getContentRouteByContentId(ctx, {
     contentId: nextSampleContentId,
     locale,
   });
   const updatedAt = Date.now();
-  let repaired = 0;
+  let reconciled = 0;
 
   for (const item of planItems) {
     const plan = await ctx.db.get(item.planId);
@@ -336,7 +320,7 @@ async function repairCoverageSamplePlanItemBatch(
 
     if (!route) {
       await ctx.db.delete(item._id);
-      repaired++;
+      reconciled++;
       continue;
     }
 
@@ -347,15 +331,15 @@ async function repairCoverageSamplePlanItemBatch(
       title: route.title,
       updatedAt,
     });
-    repaired++;
+    reconciled++;
   }
 
-  const scheduled = planItems.length === ACTIVE_PLAN_ITEM_REPAIR_BATCH_SIZE;
+  const scheduled = planItems.length === ACTIVE_PLAN_ITEM_RECONCILE_BATCH_SIZE;
 
   if (scheduled) {
     await ctx.scheduler.runAfter(
       0,
-      internal.learningPrograms.sync.continueCoverageSamplePlanItemRepair,
+      internal.learningPrograms.sync.continueCoverageSamplePlanItemReconcile,
       {
         lensId,
         locale,
@@ -367,7 +351,7 @@ async function repairCoverageSamplePlanItemBatch(
     );
   }
 
-  return { repaired, scheduled };
+  return { reconciled, scheduled };
 }
 
 /** Removes generated active-plan items before their source coverage row disappears. */
@@ -403,15 +387,15 @@ async function deleteStaleCoveragePlanItemBatch(
         .eq("lensId", lensId)
         .eq("content_id", sampleContentId)
     )
-    .take(ACTIVE_PLAN_ITEM_REPAIR_BATCH_SIZE);
-  let repaired = 0;
+    .take(ACTIVE_PLAN_ITEM_RECONCILE_BATCH_SIZE);
+  let reconciled = 0;
 
   for (const item of planItems) {
     await ctx.db.delete(item._id);
-    repaired++;
+    reconciled++;
   }
 
-  const scheduled = planItems.length === ACTIVE_PLAN_ITEM_REPAIR_BATCH_SIZE;
+  const scheduled = planItems.length === ACTIVE_PLAN_ITEM_RECONCILE_BATCH_SIZE;
 
   if (scheduled) {
     await ctx.scheduler.runAfter(
@@ -425,7 +409,7 @@ async function deleteStaleCoveragePlanItemBatch(
     );
   }
 
-  return { repaired, scheduled };
+  return { reconciled, scheduled };
 }
 
 /** Replaces bounded program source rows for one catalog program. */

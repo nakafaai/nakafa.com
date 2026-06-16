@@ -1,6 +1,9 @@
 import { getMdxSlugsForLocale } from "@repo/contents/_lib/mdx-slugs/cache";
 import { extractMetadata } from "@repo/contents/_lib/metadata";
-import { importContentModule } from "@repo/contents/_lib/module";
+import {
+  getLocalizedContentPath,
+  importContentModule,
+} from "@repo/contents/_lib/module";
 import { resolveContentsDir } from "@repo/contents/_lib/root";
 import {
   getRawContent,
@@ -41,7 +44,7 @@ function loadRenderableContentModule(
   locale: Locale
 ): Effect.Effect<RenderableContent, MetadataParseError | ModuleLoadError> {
   return Effect.gen(function* () {
-    const modulePath = `@repo/contents/${cleanPath}/${locale}.mdx`;
+    const modulePath = `@repo/contents/${getLocalizedContentPath(cleanPath, locale)}`;
 
     const contentModule = yield* Effect.tryPromise({
       try: () => importContentModule(cleanPath, locale),
@@ -109,7 +112,7 @@ export function getContent(
 > {
   const { includeMDX = true } = options;
   const cleanPath = cleanSlug(filePath);
-  const contentPath = `${cleanPath}/${locale}.mdx`;
+  const contentPath = getLocalizedContentPath(cleanPath, locale);
 
   if (includeMDX) {
     return Effect.gen(function* () {

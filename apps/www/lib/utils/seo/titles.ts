@@ -31,7 +31,7 @@
  * @returns Optimized title string (max 55 characters), clean without ellipsis
  */
 export function createSEOTitle(
-  parts: (string | null | undefined)[],
+  parts: readonly unknown[],
   siteName = "Nakafa"
 ): string {
   // MAX_LENGTH calculation:

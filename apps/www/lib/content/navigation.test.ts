@@ -11,24 +11,22 @@ import {
   getCurrentExerciseMaterial,
   getCurrentSubjectMaterial,
   getRuntimeArticleSummaries,
+  getRuntimeCurriculumGrades,
+  getRuntimeCurriculumMaterials,
   getRuntimeExerciseMaterials,
   getRuntimeExerciseSubjects,
   getRuntimeGradeSubjects,
-  getRuntimeSubjectGrades,
-  getRuntimeSubjectMaterials,
 } from "@/lib/content/navigation";
 
 const runtimeMocks = vi.hoisted(() => ({
-  getRuntimeContentRouteKindPage: vi.fn(),
   getRuntimeContentRouteParentPage: vi.fn(),
-  getRuntimeSubjectOutline: vi.fn(),
+  getRuntimeCurriculumOutline: vi.fn(),
 }));
 
 vi.mock("@/lib/content/runtime", () => ({
-  getRuntimeContentRouteKindPage: runtimeMocks.getRuntimeContentRouteKindPage,
   getRuntimeContentRouteParentPage:
     runtimeMocks.getRuntimeContentRouteParentPage,
-  getRuntimeSubjectOutline: runtimeMocks.getRuntimeSubjectOutline,
+  getRuntimeCurriculumOutline: runtimeMocks.getRuntimeCurriculumOutline,
 }));
 
 interface NavigationRoute {
@@ -48,7 +46,7 @@ interface NavigationRoute {
   title: string;
 }
 
-interface SubjectOutlineTopic {
+interface CurriculumOutlineTopic {
   description?: string;
   route: string;
   sections: Array<{ route: string; title: string }>;
@@ -87,115 +85,112 @@ const routes = [
   }),
   routeRow({
     kind: "exercise-group",
-    route: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026",
-    section: "exercises",
+    route:
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026",
+    section: "material",
     title: "Try Out UTBK 2026",
   }),
   routeRow({
     kind: "exercise-group",
-    route: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026",
-    section: "exercises",
+    route:
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026",
+    section: "material",
     title: "Duplicate Try Out UTBK 2026",
   }),
   routeRow({
     kind: "exercise-group",
-    route: "exercises/high-school/snbt/quantitative-knowledge",
-    section: "exercises",
+    route: "assessment/high-school/snbt/quantitative-knowledge",
+    section: "material",
     title: "Invalid Base Exercise Group",
   }),
   routeRow({
     kind: "exercise-group",
-    route: "exercises/high-school/snbt/quantitative-knowledge/empty-group",
-    section: "exercises",
+    route: "assessment/high-school/snbt/quantitative-knowledge/empty-group",
+    section: "material",
     title: "Empty Group",
   }),
   routeRow({
     kind: "exercise-set",
     route:
-      "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1",
-    section: "exercises",
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
+    section: "material",
     title: "Set 1",
   }),
   routeRow({
     kind: "exercise-set",
     route:
-      "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-10",
-    section: "exercises",
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-10",
+    section: "material",
     title: "Set 10",
   }),
   routeRow({
     kind: "exercise-set",
     route:
-      "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
-    section: "exercises",
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-2",
+    section: "material",
     title: "Set 2",
   }),
   routeRow({
     kind: "exercise-question",
     route:
-      "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1/1",
-    section: "exercises",
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-1",
+    section: "material",
     title: "Question 1",
   }),
   routeRow({
     kind: "exercise-group",
-    route: "exercises/high-school/snbt/mathematics/practice",
-    section: "exercises",
+    route: "material/practice/assessment/snbt/mathematics/practice",
+    section: "material",
     title: "Practice",
   }),
   routeRow({
     kind: "exercise-group",
-    route: "exercises/high-school/snbt/unsupported-material/practice",
-    section: "exercises",
+    route: "material/practice/assessment/snbt/unsupported-material/practice",
+    section: "material",
     title: "Unsupported Material",
   }),
   routeRow({
-    kind: "subject-topic",
-    route: "subject/high-school/12/mathematics/function-transformation",
-    section: "subject",
+    kind: "curriculum-topic",
+    route: "material/lesson/mathematics/function-transformation",
+    section: "material",
     title: "Transformasi Fungsi",
   }),
   routeRow({
-    kind: "subject-topic",
-    route: "subject/high-school/12/mathematics",
-    section: "subject",
+    kind: "curriculum-topic",
+    route: "curriculum/high-school/12/mathematics",
+    section: "material",
     title: "Invalid Base Subject Topic",
   }),
   routeRow({
-    kind: "subject-topic",
-    route: "subject/high-school/12/mathematics/function-transformation",
-    section: "subject",
+    kind: "curriculum-topic",
+    route: "material/lesson/mathematics/function-transformation",
+    section: "material",
     title: "Duplicate Transformasi Fungsi",
   }),
   routeRow({
-    kind: "subject-topic",
-    route: "subject/high-school/12/mathematics/empty-topic",
-    section: "subject",
+    kind: "curriculum-topic",
+    route: "material/lesson/mathematics/empty-topic",
+    section: "material",
     title: "Topik Kosong",
   }),
   routeRow({
-    kind: "subject-section",
-    route:
-      "subject/high-school/12/mathematics/function-transformation/translation",
-    section: "subject",
+    kind: "curriculum-lesson",
+    route: "material/lesson/mathematics/function-transformation/translation",
+    section: "material",
     title: "Translasi Grafik",
   }),
 ] satisfies NavigationRoute[];
 
 beforeEach(() => {
-  runtimeMocks.getRuntimeContentRouteKindPage.mockReset();
   runtimeMocks.getRuntimeContentRouteParentPage.mockReset();
-  runtimeMocks.getRuntimeSubjectOutline.mockReset();
-  runtimeMocks.getRuntimeContentRouteKindPage.mockImplementation(
-    (args: RuntimeKindListArgs) =>
-      Effect.succeed(routePage(getMatchingKindRows(routes, args), args.limit))
-  );
+  runtimeMocks.getRuntimeCurriculumOutline.mockReset();
   runtimeMocks.getRuntimeContentRouteParentPage.mockImplementation(
     (args: RuntimeListArgs) =>
       Effect.succeed(routePage(getMatchingRows(routes, args), args.limit))
   );
-  runtimeMocks.getRuntimeSubjectOutline.mockImplementation(() =>
-    Effect.succeed(defaultSubjectOutline)
+  runtimeMocks.getRuntimeCurriculumOutline.mockImplementation(
+    (args: RuntimeCurriculumOutlineArgs) =>
+      Effect.succeed(getCurriculumOutlineFixture(args))
   );
 });
 
@@ -255,62 +250,57 @@ describe("content navigation runtime catalog", () => {
 
     expect(subjects).toEqual([
       {
-        href: "/exercises/high-school/snbt/mathematics",
+        href: "/assessment/high-school/snbt/mathematics",
         label: "mathematics",
       },
       {
-        href: "/exercises/high-school/snbt/quantitative-knowledge",
+        href: "/assessment/high-school/snbt/quantitative-knowledge",
         label: "quantitative-knowledge",
       },
     ]);
   });
 
-  it("lists subject grades from bounded Convex route probes", async () => {
-    const grades = await Effect.runPromise(getRuntimeSubjectGrades("id"));
+  it("lists curriculum grades from generated curriculum outlines", async () => {
+    const grades = await Effect.runPromise(getRuntimeCurriculumGrades("id"));
 
     expect(grades).toEqual([
       {
         category: "high-school",
         grade: "12",
-        href: "/subject/high-school/12",
+        href: "/curriculum/high-school/12",
       },
     ]);
-    expect(runtimeMocks.getRuntimeContentRouteKindPage).toHaveBeenCalledWith({
-      cursor: null,
-      kind: "subject-topic",
-      limit: 1,
+    expect(runtimeMocks.getRuntimeCurriculumOutline).toHaveBeenCalledWith({
+      category: "high-school",
+      grade: "12",
       locale: "id",
-      prefix: "subject/high-school/12",
-      section: "subject",
+      material: "mathematics",
     });
   });
 
-  it("lists subject material links from bounded parent route probes", async () => {
+  it("lists material lesson links from generated curriculum outlines", async () => {
     const subjects = await Effect.runPromise(
       getRuntimeGradeSubjects("high-school", "12", "id")
     );
 
     expect(subjects).toEqual([
       {
-        href: "/subject/high-school/12/mathematics",
+        href: "/curriculum/high-school/12/mathematics",
         label: "mathematics",
       },
     ]);
-    expect(runtimeMocks.getRuntimeContentRouteParentPage).toHaveBeenCalledWith({
-      cursor: null,
-      kind: "subject-topic",
-      limit: 1,
+    expect(runtimeMocks.getRuntimeCurriculumOutline).toHaveBeenCalledWith({
+      category: "high-school",
+      grade: "12",
       locale: "id",
-      order: "route",
-      parentRoute: "subject/high-school/12/mathematics",
-      section: "subject",
+      material: "mathematics",
     });
   });
 
   it("keeps localized exercise group labels from synced group rows", async () => {
     const materials = await Effect.runPromise(
       getRuntimeExerciseMaterials(
-        "/exercises/high-school/snbt/quantitative-knowledge",
+        "/assessment/high-school/snbt/quantitative-knowledge",
         "id"
       )
     );
@@ -318,18 +308,18 @@ describe("content navigation runtime catalog", () => {
     expect(materials).toEqual([
       {
         description: "Description",
-        href: "/exercises/high-school/snbt/quantitative-knowledge/try-out/2026",
+        href: "/material/practice/assessment/snbt/quantitative-knowledge/try-out-2026",
         items: [
           {
-            href: "/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1",
+            href: "/material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
             title: "Set 1",
           },
           {
-            href: "/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
+            href: "/material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-2",
             title: "Set 2",
           },
           {
-            href: "/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-10",
+            href: "/material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-10",
             title: "Set 10",
           },
         ],
@@ -355,18 +345,34 @@ describe("content navigation runtime catalog", () => {
     });
   });
 
-  it("keeps localized subject topic labels from the authored outline", async () => {
+  it("reads exercise navigation from canonical material source paths", async () => {
     const materials = await Effect.runPromise(
-      getRuntimeSubjectMaterials("subject/high-school/12/mathematics", "id")
+      getRuntimeExerciseMaterials(
+        "material/practice/assessment/snbt/quantitative-knowledge",
+        "id"
+      )
+    );
+
+    expect(materials.map((material) => material.href)).toEqual([
+      "/material/practice/assessment/snbt/quantitative-knowledge/try-out-2026",
+    ]);
+  });
+
+  it("keeps localized curriculum topic labels from the authored outline", async () => {
+    const materials = await Effect.runPromise(
+      getRuntimeCurriculumMaterials(
+        "curriculum/high-school/12/mathematics",
+        "id"
+      )
     );
 
     expect(materials).toEqual([
       {
         description: "Description",
-        href: "/subject/high-school/12/mathematics/function-transformation",
+        href: "/material/lesson/mathematics/function-transformation",
         items: [
           {
-            href: "/subject/high-school/12/mathematics/function-transformation/translation",
+            href: "/material/lesson/mathematics/function-transformation/translation",
             title: "Translasi Grafik",
           },
         ],
@@ -390,7 +396,7 @@ describe("content navigation runtime catalog", () => {
       currentChapter: { _tag: "None" },
       currentItem: { _tag: "None" },
     });
-    expect(runtimeMocks.getRuntimeSubjectOutline).toHaveBeenCalledWith({
+    expect(runtimeMocks.getRuntimeCurriculumOutline).toHaveBeenCalledWith({
       category: "high-school",
       grade: "12",
       locale: "id",
@@ -400,19 +406,29 @@ describe("content navigation runtime catalog", () => {
       runtimeMocks.getRuntimeContentRouteParentPage
     ).not.toHaveBeenCalledWith(
       expect.objectContaining({
-        kind: "subject-topic",
-        parentRoute: "subject/high-school/12/mathematics",
+        kind: "curriculum-topic",
+        parentRoute: "curriculum/high-school/12/mathematics",
       })
     );
   });
 
-  it("orders subject topics by outline order instead of route order", async () => {
-    runtimeMocks.getRuntimeSubjectOutline.mockImplementation(() =>
-      Effect.succeed(nonLexicalSubjectOutline)
+  it("orders curriculum topics by outline order instead of route order", async () => {
+    runtimeMocks.getRuntimeCurriculumOutline.mockImplementation(
+      (args: RuntimeCurriculumOutlineArgs) =>
+        Effect.succeed(
+          args.category === "high-school" &&
+            args.grade === "10" &&
+            args.material === "mathematics"
+            ? nonLexicalCurriculumOutline
+            : []
+        )
     );
 
     const materials = await Effect.runPromise(
-      getRuntimeSubjectMaterials("subject/high-school/10/mathematics", "id")
+      getRuntimeCurriculumMaterials(
+        "curriculum/high-school/10/mathematics",
+        "id"
+      )
     );
 
     expect(materials.map((material) => material.title)).toEqual([
@@ -426,70 +442,82 @@ describe("content navigation runtime catalog", () => {
     ]);
   });
 
-  it("does not query an outline for invalid subject material paths", async () => {
+  it("does not query an outline for invalid material lesson paths", async () => {
     await expect(
-      Effect.runPromise(getRuntimeSubjectMaterials("articles/politics", "id"))
+      Effect.runPromise(
+        getRuntimeCurriculumMaterials("articles/politics", "id")
+      )
     ).resolves.toEqual([]);
     await expect(
       Effect.runPromise(
-        getRuntimeSubjectMaterials(
-          "subject/high-school/12/mathematics/function-transformation",
+        getRuntimeCurriculumMaterials(
+          "material/lesson/mathematics/function-transformation",
           "id"
         )
       )
     ).resolves.toEqual([]);
     await expect(
       Effect.runPromise(
-        getRuntimeSubjectMaterials(
-          "subject/invalid-school/12/mathematics",
+        getRuntimeCurriculumMaterials(
+          "curriculum/invalid-school/12/mathematics",
           "id"
         )
       )
     ).resolves.toEqual([]);
     await expect(
       Effect.runPromise(
-        getRuntimeSubjectMaterials(
-          "subject/high-school/invalid/mathematics",
+        getRuntimeCurriculumMaterials(
+          "curriculum/high-school/invalid/mathematics",
           "id"
         )
       )
     ).resolves.toEqual([]);
     await expect(
       Effect.runPromise(
-        getRuntimeSubjectMaterials(
-          "subject/high-school/12/invalid-material",
+        getRuntimeCurriculumMaterials(
+          "curriculum/high-school/12/invalid-material",
           "id"
         )
       )
     ).resolves.toEqual([]);
 
-    expect(runtimeMocks.getRuntimeSubjectOutline).not.toHaveBeenCalled();
+    expect(runtimeMocks.getRuntimeCurriculumOutline).not.toHaveBeenCalled();
   });
 
-  it("omits subject outline topics that have no synced sections", async () => {
-    runtimeMocks.getRuntimeSubjectOutline.mockImplementation(() =>
-      Effect.succeed([
-        {
-          description: "Description",
-          route: "subject/high-school/12/mathematics/empty-topic",
-          sections: [],
-          title: "Topik Kosong",
-        },
-        ...defaultSubjectOutline,
-      ] satisfies SubjectOutlineTopic[])
+  it("omits curriculum outline topics that have no synced sections", async () => {
+    runtimeMocks.getRuntimeCurriculumOutline.mockImplementation(
+      (args: RuntimeCurriculumOutlineArgs) =>
+        Effect.succeed(
+          args.category === "high-school" &&
+            args.grade === "12" &&
+            args.material === "mathematics"
+            ? ([
+                {
+                  description: "Description",
+                  route: "material/lesson/mathematics/empty-topic",
+                  sections: [],
+                  title: "Topik Kosong",
+                },
+                ...defaultCurriculumOutline,
+              ] satisfies CurriculumOutlineTopic[])
+            : []
+        )
     );
 
     const materials = await Effect.runPromise(
-      getRuntimeSubjectMaterials("subject/high-school/12/mathematics", "id")
+      getRuntimeCurriculumMaterials(
+        "curriculum/high-school/12/mathematics",
+        "id"
+      )
     );
 
     expect(materials).toEqual([
       {
         description: "Description",
-        href: "/subject/high-school/12/mathematics/function-transformation",
+        href: "/material/lesson/mathematics/function-transformation",
         items: [
           {
-            href: "/subject/high-school/12/mathematics/function-transformation/translation",
+            href: "/material/lesson/mathematics/function-transformation/translation",
             title: "Translasi Grafik",
           },
         ],
@@ -499,7 +527,7 @@ describe("content navigation runtime catalog", () => {
   });
 
   it("does not expose item rows when their group rows are absent", async () => {
-    runtimeMocks.getRuntimeSubjectOutline.mockImplementation(() =>
+    runtimeMocks.getRuntimeCurriculumOutline.mockImplementation(() =>
       Effect.succeed([])
     );
     runtimeMocks.getRuntimeContentRouteParentPage.mockImplementation(
@@ -511,13 +539,16 @@ describe("content navigation runtime catalog", () => {
 
     await expect(
       Effect.runPromise(
-        getRuntimeSubjectMaterials("subject/high-school/12/mathematics", "id")
+        getRuntimeCurriculumMaterials(
+          "curriculum/high-school/12/mathematics",
+          "id"
+        )
       )
     ).resolves.toEqual([]);
     await expect(
       Effect.runPromise(
         getRuntimeExerciseMaterials(
-          "exercises/high-school/snbt/quantitative-knowledge",
+          "assessment/high-school/snbt/quantitative-knowledge",
           "id"
         )
       )
@@ -552,7 +583,7 @@ describe("content navigation runtime catalog", () => {
     await expect(
       Effect.runPromise(
         getRuntimeExerciseMaterials(
-          "exercises/high-school/snbt/quantitative-knowledge",
+          "assessment/high-school/snbt/quantitative-knowledge",
           "id"
         )
       )
@@ -569,13 +600,16 @@ describe("content navigation runtime catalog", () => {
 
     await expect(
       Effect.runPromise(
-        getRuntimeSubjectMaterials("subject/high-school/12/mathematics", "id")
+        getRuntimeCurriculumMaterials(
+          "curriculum/high-school/12/mathematics",
+          "id"
+        )
       )
     ).resolves.toHaveLength(1);
     await expect(
       Effect.runPromise(
         getRuntimeExerciseMaterials(
-          "exercises/high-school/snbt/quantitative-knowledge",
+          "assessment/high-school/snbt/quantitative-knowledge",
           "id"
         )
       )
@@ -596,17 +630,17 @@ describe("content navigation runtime catalog", () => {
     await expect(
       Effect.runPromise(
         getRuntimeExerciseMaterials(
-          "exercises/high-school/snbt/quantitative-knowledge",
+          "assessment/high-school/snbt/quantitative-knowledge",
           "id"
         )
       )
     ).resolves.toEqual([
       {
         description: "Description",
-        href: "/exercises/high-school/snbt/quantitative-knowledge/try-out/2026",
+        href: "/material/practice/assessment/snbt/quantitative-knowledge/try-out-2026",
         items: [
           {
-            href: "/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1",
+            href: "/material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
             title: "Set 1",
           },
         ],
@@ -615,15 +649,18 @@ describe("content navigation runtime catalog", () => {
     ]);
     await expect(
       Effect.runPromise(
-        getRuntimeSubjectMaterials("subject/high-school/12/mathematics", "id")
+        getRuntimeCurriculumMaterials(
+          "curriculum/high-school/12/mathematics",
+          "id"
+        )
       )
     ).resolves.toEqual([
       {
         description: "Description",
-        href: "/subject/high-school/12/mathematics/function-transformation",
+        href: "/material/lesson/mathematics/function-transformation",
         items: [
           {
-            href: "/subject/high-school/12/mathematics/function-transformation/translation",
+            href: "/material/lesson/mathematics/function-transformation/translation",
             title: "Translasi Grafik",
           },
         ],
@@ -642,12 +679,11 @@ interface RuntimeListArgs {
   section: SourceRegistryRoot;
 }
 
-interface RuntimeKindListArgs {
-  kind: NavigationRoute["kind"];
-  limit: number;
+interface RuntimeCurriculumOutlineArgs {
+  category: string;
+  grade: string;
   locale: Locale;
-  prefix: string;
-  section: SourceRegistryRoot;
+  material: string;
 }
 
 const overflowRoutes = [
@@ -661,116 +697,116 @@ const overflowRoutes = [
   ...Array.from({ length: 150 }, (_, index) =>
     routeRow({
       kind: "exercise-question",
-      route: `exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1/${index + 1}`,
+      route: `material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/${index + 1}`,
       parentRoute:
-        "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1",
-      section: "exercises",
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
+      section: "material",
       title: `Question ${index + 1}`,
     })
   ),
   routeRow({
     kind: "exercise-group",
-    route: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026",
-    section: "exercises",
+    route:
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026",
+    section: "material",
     title: "Try Out UTBK 2026",
   }),
   routeRow({
     kind: "exercise-set",
     route:
-      "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1",
-    section: "exercises",
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
+    section: "material",
     title: "Set 1",
   }),
   ...Array.from({ length: 150 }, (_, index) =>
     routeRow({
-      kind: "subject-section",
-      route: `subject/high-school/12/mathematics/overflow-topic/lesson-${index}`,
-      parentRoute: "subject/high-school/12/mathematics/overflow-topic",
-      section: "subject",
+      kind: "curriculum-lesson",
+      route: `material/lesson/mathematics/overflow-topic/lesson-${index}`,
+      parentRoute: "material/lesson/mathematics/overflow-topic",
+      section: "material",
       title: `Overflow Lesson ${index}`,
     })
   ),
   routeRow({
-    kind: "subject-topic",
-    route: "subject/high-school/12/mathematics/function-transformation",
-    section: "subject",
+    kind: "curriculum-topic",
+    route: "material/lesson/mathematics/function-transformation",
+    section: "material",
     title: "Transformasi Fungsi",
   }),
   routeRow({
-    kind: "subject-section",
-    route:
-      "subject/high-school/12/mathematics/function-transformation/translation",
-    section: "subject",
+    kind: "curriculum-lesson",
+    route: "material/lesson/mathematics/function-transformation/translation",
+    section: "material",
     title: "Translasi Grafik",
   }),
 ] satisfies NavigationRoute[];
 
 const missingGroupRows = [
   routeRow({
-    kind: "subject-section",
-    route: "subject/high-school/12/mathematics/missing/lesson",
-    section: "subject",
+    kind: "curriculum-lesson",
+    route: "material/lesson/mathematics/missing/lesson",
+    section: "material",
     title: "Missing Topic Lesson",
   }),
   routeRow({
     kind: "exercise-set",
-    route: "exercises/high-school/snbt/quantitative-knowledge/missing/set-1",
-    section: "exercises",
+    route: "assessment/high-school/snbt/quantitative-knowledge/missing/set-1",
+    section: "material",
     title: "Missing Group Set",
   }),
 ] satisfies NavigationRoute[];
 
 const malformedGroupRows = [
   routeRow({
-    kind: "subject-topic",
-    parentRoute: "subject/high-school/12/mathematics",
-    route: "subject/high-school/12/physics/waves",
-    section: "subject",
+    kind: "curriculum-topic",
+    parentRoute: "curriculum/high-school/12/mathematics",
+    route: "material/lesson/physics/waves",
+    section: "material",
     title: "Wrong Subject Parent",
   }),
   routeRow({
-    kind: "subject-topic",
-    route: "subject/high-school/12/mathematics",
-    section: "subject",
+    kind: "curriculum-topic",
+    route: "curriculum/high-school/12/mathematics",
+    section: "material",
     title: "Invalid Subject Base",
   }),
   routeRow({
-    kind: "subject-topic",
-    route: "subject/high-school/12/mathematics/function-transformation",
-    section: "subject",
+    kind: "curriculum-topic",
+    route: "material/lesson/mathematics/function-transformation",
+    section: "material",
     title: "Transformasi Fungsi",
   }),
   routeRow({
-    kind: "subject-section",
-    route:
-      "subject/high-school/12/mathematics/function-transformation/translation",
-    section: "subject",
+    kind: "curriculum-lesson",
+    route: "material/lesson/mathematics/function-transformation/translation",
+    section: "material",
     title: "Translasi Grafik",
   }),
   routeRow({
     kind: "exercise-group",
-    route: "exercises/high-school/snbt/quantitative-knowledge",
-    section: "exercises",
+    route: "assessment/high-school/snbt/quantitative-knowledge",
+    section: "material",
     title: "Invalid Exercise Base",
   }),
   routeRow({
     kind: "exercise-group",
-    parentRoute: "exercises/high-school/snbt/quantitative-knowledge",
-    route: "exercises/high-school/snbt/mathematics/practice",
-    section: "exercises",
+    parentRoute: "material/practice/assessment/snbt/quantitative-knowledge",
+    route: "material/practice/assessment/snbt/mathematics/practice",
+    section: "material",
     title: "Wrong Exercise Parent",
   }),
   routeRow({
     kind: "exercise-group",
-    route: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026",
-    section: "exercises",
+    route:
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026",
+    section: "material",
     title: "Try Out UTBK 2026",
   }),
   routeRow({
     kind: "exercise-set",
     route:
-      "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1",
-    section: "exercises",
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
+    section: "material",
     title: "Set 1",
   }),
 ] satisfies NavigationRoute[];
@@ -778,49 +814,49 @@ const malformedGroupRows = [
 const corruptExerciseRows = [
   routeRow({
     kind: "exercise-group",
-    route: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026",
-    section: "exercises",
+    route:
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026",
+    section: "material",
     title: "Try Out UTBK 2026",
   }),
   routeRow({
     kind: "exercise-set",
     parentRoute:
-      "exercises/high-school/snbt/quantitative-knowledge/missing-group",
+      "assessment/high-school/snbt/quantitative-knowledge/missing-group",
     route:
-      "exercises/high-school/snbt/quantitative-knowledge/missing-group/set-1",
-    section: "exercises",
+      "assessment/high-school/snbt/quantitative-knowledge/missing-group/set-1",
+    section: "material",
     title: "Missing Group Set",
   }),
 ] satisfies NavigationRoute[];
 
-const defaultSubjectOutline = [
+const defaultCurriculumOutline = [
   {
     description: "Description",
-    route: "subject/high-school/12/mathematics/function-transformation",
+    route: "material/lesson/mathematics/function-transformation",
     sections: [
       {
         route:
-          "subject/high-school/12/mathematics/function-transformation/translation",
+          "material/lesson/mathematics/function-transformation/translation",
         title: "Translasi Grafik",
       },
     ],
     title: "Transformasi Fungsi",
   },
-] satisfies SubjectOutlineTopic[];
+] satisfies CurriculumOutlineTopic[];
 
-const nonLexicalSubjectOutline = [
+const nonLexicalCurriculumOutline = [
   {
     description: "Description",
-    route: "subject/high-school/10/mathematics/exponential-logarithm",
+    route: "material/lesson/mathematics/exponential-logarithm",
     sections: [
       {
         route:
-          "subject/high-school/10/mathematics/exponential-logarithm/basic-concept",
+          "material/lesson/mathematics/exponential-logarithm/basic-concept",
         title: "Konsep Eksponen",
       },
       {
-        route:
-          "subject/high-school/10/mathematics/exponential-logarithm/properties",
+        route: "material/lesson/mathematics/exponential-logarithm/properties",
         title: "Sifat Eksponen",
       },
     ],
@@ -828,11 +864,10 @@ const nonLexicalSubjectOutline = [
   },
   {
     description: "Description",
-    route: "subject/high-school/10/mathematics/sequence-series",
+    route: "material/lesson/mathematics/sequence-series",
     sections: [
       {
-        route:
-          "subject/high-school/10/mathematics/sequence-series/sequence-concept",
+        route: "material/lesson/mathematics/sequence-series/sequence-concept",
         title: "Konsep Barisan",
       },
     ],
@@ -840,17 +875,16 @@ const nonLexicalSubjectOutline = [
   },
   {
     description: "Description",
-    route: "subject/high-school/10/mathematics/vector-operations",
+    route: "material/lesson/mathematics/vector-operations",
     sections: [
       {
-        route:
-          "subject/high-school/10/mathematics/vector-operations/vector-concept",
+        route: "material/lesson/mathematics/vector-operations/vector-concept",
         title: "Konsep Vektor",
       },
     ],
     title: "Vektor dan Operasinya",
   },
-] satisfies SubjectOutlineTopic[];
+] satisfies CurriculumOutlineTopic[];
 
 /** Selects one bounded kind-scoped route page for navigation tests. */
 function getMatchingRows(
@@ -864,20 +898,6 @@ function getMatchingRows(
       route.parentRoute === args.parentRoute &&
       route.section === args.section &&
       route.route !== args.parentRoute
-  );
-}
-
-/** Selects one bounded kind-prefix route page for navigation tests. */
-function getMatchingKindRows(
-  rows: readonly NavigationRoute[],
-  args: RuntimeKindListArgs
-) {
-  return rows.filter(
-    (route) =>
-      route.kind === args.kind &&
-      route.locale === args.locale &&
-      route.section === args.section &&
-      route.route.startsWith(`${args.prefix}/`)
   );
 }
 
@@ -902,6 +922,19 @@ function routeRow(overrides: Partial<NavigationRoute>): NavigationRoute {
     title: "Title",
     ...overrides,
   };
+}
+
+/** Returns the generated curriculum outline rows for one test fixture subject. */
+function getCurriculumOutlineFixture(args: RuntimeCurriculumOutlineArgs) {
+  if (
+    args.category === "high-school" &&
+    args.grade === "12" &&
+    args.material === "mathematics"
+  ) {
+    return defaultCurriculumOutline;
+  }
+
+  return [];
 }
 
 /** Builds the graph asset ID used by synced route rows in fixture data. */

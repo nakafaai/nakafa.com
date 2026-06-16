@@ -25,14 +25,14 @@ describe("program/catalog", () => {
 
     expect(schoolProgram?.navigation).toEqual({
       levels: ["class", "subject", "topic"],
-      model: "class-subject-topic",
+      model: "class-curriculum-topic",
     });
     expect(examProgram?.navigation).toEqual({
       levels: ["section", "domain", "practice-set"],
       model: "exam-domain-practice-set",
     });
     expect(JSON.stringify(LEARNING_PROGRAM_CATALOG)).not.toContain(
-      "subject/high-school"
+      "curriculum/high-school"
     );
   });
 

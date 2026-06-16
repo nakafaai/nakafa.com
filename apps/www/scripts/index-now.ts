@@ -22,11 +22,11 @@ const keyFileName = "e22d548f7fd2482a9022e3b84e944901.txt";
 const keyLocation = `${host}/${keyFileName}`;
 const hardcodedKey = "e22d548f7fd2482a9022e3b84e944901";
 
-// Data folder and file paths
+// Local script state folder and file paths
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DATA_FOLDER = path.join(__dirname, "_data");
+const SCRIPT_STATE_FOLDER = path.join(__dirname, "state");
 const SUBMISSION_HISTORY_FILE = path.join(
-  DATA_FOLDER,
+  SCRIPT_STATE_FOLDER,
   "submission-history.json"
 );
 
@@ -95,16 +95,16 @@ function emptySubmissionHistory() {
   };
 }
 
-/** Ensures the local submission-history data folder exists. */
+/** Ensures the local submission-history state folder exists. */
 const ensureSubmissionDataFolder = Effect.fn(
   "scripts.indexNow.ensureDataFolder"
 )(function* () {
   const exists = yield* Effect.try({
-    try: () => fs.existsSync(DATA_FOLDER),
+    try: () => fs.existsSync(SCRIPT_STATE_FOLDER),
     catch: (cause) =>
       new SubmissionDataFolderError({
         cause,
-        message: `Failed to inspect ${DATA_FOLDER}.`,
+        message: `Failed to inspect ${SCRIPT_STATE_FOLDER}.`,
       }),
   });
 
@@ -114,13 +114,13 @@ const ensureSubmissionDataFolder = Effect.fn(
 
   yield* Effect.try({
     try: () => {
-      fs.mkdirSync(DATA_FOLDER, { recursive: true });
-      logger.info(`Created data folder at: ${DATA_FOLDER}`);
+      fs.mkdirSync(SCRIPT_STATE_FOLDER, { recursive: true });
+      logger.info(`Created script state folder at: ${SCRIPT_STATE_FOLDER}`);
     },
     catch: (cause) =>
       new SubmissionDataFolderError({
         cause,
-        message: `Failed to create ${DATA_FOLDER}.`,
+        message: `Failed to create ${SCRIPT_STATE_FOLDER}.`,
       }),
   });
 });

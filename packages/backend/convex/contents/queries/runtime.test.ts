@@ -27,7 +27,7 @@ async function linkAuthor(
     authorId: Id<"authors">;
     contentId:
       | Id<"articleContents">
-      | Id<"subjectSections">
+      | Id<"curriculumLessons">
       | Id<"exerciseQuestions">;
     contentType: ContentType;
   }
@@ -152,7 +152,7 @@ async function insertExerciseRouteFixture(
     locale: "id",
     markdown: true,
     route: args.route,
-    section: "exercises",
+    section: "material",
     syncedAt: NOW,
     title: args.title,
   });
@@ -279,7 +279,7 @@ describe("contents/queries/runtime", () => {
     );
   });
 
-  it("loads article and subject pages from synced runtime rows", async () => {
+  it("loads article and curriculum pages from synced runtime rows", async () => {
     const t = createConvexTestWithBetterAuth();
 
     await t.mutation(async (ctx) => {
@@ -309,19 +309,19 @@ describe("contents/queries/runtime", () => {
         year: 2026,
       });
 
-      const topicId = await ctx.db.insert("subjectTopics", {
+      const topicId = await ctx.db.insert("curriculumTopics", {
         category: "high-school",
         grade: "10",
         locale: "id",
         material: "mathematics",
         order: 0,
         sectionCount: 1,
-        slug: "subject/high-school/10/mathematics/runtime-topic",
+        slug: "material/lesson/mathematics/runtime-topic",
         syncedAt: NOW,
         title: "Runtime Topic",
         topic: "runtime-topic",
       });
-      const sectionId = await ctx.db.insert("subjectSections", {
+      const sectionId = await ctx.db.insert("curriculumLessons", {
         body: "## Subject body",
         category: "high-school",
         contentHash: "subject-hash",
@@ -332,7 +332,7 @@ describe("contents/queries/runtime", () => {
         material: "mathematics",
         order: 0,
         section: "runtime-section",
-        slug: "subject/high-school/10/mathematics/runtime-topic/runtime-section",
+        slug: "material/lesson/mathematics/runtime-topic/runtime-section",
         subject: "Runtime Topic",
         syncedAt: NOW,
         title: "Runtime Subject",
@@ -342,7 +342,7 @@ describe("contents/queries/runtime", () => {
       await linkAuthor(ctx, {
         authorId,
         contentId: sectionId,
-        contentType: "subject",
+        contentType: "material",
       });
     });
 
@@ -350,10 +350,13 @@ describe("contents/queries/runtime", () => {
       locale: "id",
       slug: "articles/politics/runtime-article",
     });
-    const subject = await t.query(api.contents.queries.runtime.getSubjectPage, {
-      locale: "id",
-      slug: "subject/high-school/10/mathematics/runtime-topic/runtime-section",
-    });
+    const subject = await t.query(
+      api.contents.queries.runtime.getCurriculumPage,
+      {
+        locale: "id",
+        slug: "material/lesson/mathematics/runtime-topic/runtime-section",
+      }
+    );
 
     expect(article).toEqual(
       expect.objectContaining({
@@ -380,11 +383,11 @@ describe("contents/queries/runtime", () => {
   it("loads exercise runtime pages and rejects missing graph projection", async () => {
     const t = createConvexTestWithBetterAuth();
     const slug =
-      "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1";
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1";
     const secondSlug =
-      "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2";
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-2";
     const tenthSlug =
-      "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-10";
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-10";
     const setGraph = detachedContentRouteGraph(slug, "exercise-set");
     const questionGraph = detachedContentRouteGraph(
       `${slug}/1`,
@@ -419,7 +422,7 @@ describe("contents/queries/runtime", () => {
       await linkAuthor(ctx, {
         authorId,
         contentId: questionId,
-        contentType: "exercise",
+        contentType: "material",
       });
       await insertExerciseRouteFixture(ctx, {
         contentHash: "set-route-hash",
@@ -552,11 +555,11 @@ describe("contents/queries/runtime", () => {
   it("lists API content with segment matching and catalog graph IDs", async () => {
     const t = createConvexTestWithBetterAuth();
     const articleRoute = "articles/politics/api-detached";
-    const topicSlug = "subject/high-school/10/chemistry/structure-matter";
+    const topicSlug = "material/lesson/chemistry/structure-matter";
     const exactSlug = `${topicSlug}/subatomic-particles`;
     const siblingSlug = `${topicSlug}/subatomic-particles-properties`;
     const articleGraph = detachedContentRouteGraph(articleRoute, "article");
-    const exactGraph = detachedContentRouteGraph(exactSlug, "subject");
+    const exactGraph = detachedContentRouteGraph(exactSlug, "material");
 
     await t.mutation(async (ctx) => {
       await ctx.db.insert("articleContents", {
@@ -584,7 +587,7 @@ describe("contents/queries/runtime", () => {
         title: "API Article",
       });
 
-      const topicId = await ctx.db.insert("subjectTopics", {
+      const topicId = await ctx.db.insert("curriculumTopics", {
         category: "high-school",
         grade: "10",
         locale: "id",
@@ -598,7 +601,7 @@ describe("contents/queries/runtime", () => {
       });
 
       for (const slug of [exactSlug, siblingSlug]) {
-        await ctx.db.insert("subjectSections", {
+        await ctx.db.insert("curriculumLessons", {
           body: `Body for ${slug}`,
           category: "high-school",
           contentHash: `${slug}:hash`,
@@ -621,11 +624,11 @@ describe("contents/queries/runtime", () => {
           ...graph,
           authors: [],
           contentHash: `${slug}:hash`,
-          kind: "subject-section",
+          kind: "curriculum-lesson",
           locale: "id",
           markdown: true,
           route: slug,
-          section: "subject",
+          section: "material",
           syncedAt: NOW,
           title: slug === exactSlug ? "Subatomic Particles" : "Properties",
         });
@@ -642,7 +645,7 @@ describe("contents/queries/runtime", () => {
       }
     );
     const exactPage = await t.query(
-      api.contents.queries.runtime.listSubjectApiContentPage,
+      api.contents.queries.runtime.listMaterialApiContentPage,
       {
         cursor: null,
         limit: 100,
@@ -651,7 +654,7 @@ describe("contents/queries/runtime", () => {
       }
     );
     const topicPage = await t.query(
-      api.contents.queries.runtime.listSubjectApiContentPage,
+      api.contents.queries.runtime.listMaterialApiContentPage,
       {
         cursor: null,
         limit: 100,
@@ -683,7 +686,7 @@ describe("contents/queries/runtime", () => {
 
   it("lists route catalog rows with exact-or-descendant segment matching", async () => {
     const t = createConvexTestWithBetterAuth();
-    const topicSlug = "subject/high-school/10/chemistry/structure-matter";
+    const topicSlug = "material/lesson/chemistry/structure-matter";
     const exactSlug = topicSlug;
     const childSlug = `${topicSlug}/subatomic-particles`;
     const siblingSlug = `${topicSlug}/subatomic-particles-properties`;
@@ -692,8 +695,8 @@ describe("contents/queries/runtime", () => {
       for (const route of [exactSlug, childSlug, siblingSlug]) {
         const kind = getLearningObjectKindForRoute(route);
 
-        if (!(kind === "subject-topic" || kind === "subject-section")) {
-          throw new Error(`Expected subject route kind for ${route}.`);
+        if (!(kind === "curriculum-topic" || kind === "curriculum-lesson")) {
+          throw new Error(`Expected curriculum route kind for ${route}.`);
         }
 
         await ctx.db.insert("contentRoutes", {
@@ -704,7 +707,7 @@ describe("contents/queries/runtime", () => {
           locale: "id",
           markdown: true,
           route,
-          section: "subject",
+          section: "material",
           syncedAt: NOW,
           title: route,
         });
@@ -718,7 +721,7 @@ describe("contents/queries/runtime", () => {
         limit: 100,
         locale: "id",
         prefix: exactSlug,
-        section: "subject",
+        section: "material",
       }
     );
     const topicPage = await t.query(
@@ -728,7 +731,7 @@ describe("contents/queries/runtime", () => {
         limit: 100,
         locale: "id",
         prefix: topicSlug,
-        section: "subject",
+        section: "material",
       }
     );
 
@@ -744,7 +747,7 @@ describe("contents/queries/runtime", () => {
 
   it("lists parent-scoped route rows without descendant bleed", async () => {
     const t = createConvexTestWithBetterAuth();
-    const parentRoute = "subject/high-school/12/mathematics";
+    const parentRoute = "material/lesson/mathematics";
     const topicRoute = `${parentRoute}/function-transformation`;
 
     await t.mutation(async (ctx) => {
@@ -755,12 +758,12 @@ describe("contents/queries/runtime", () => {
           authors: [{ name: "Nakafa Author" }],
           contentHash: `${route}:hash`,
           depth: route.split("/").length,
-          kind: "subject-section",
+          kind: "curriculum-lesson",
           locale: "id",
           markdown: true,
           parentRoute: `${parentRoute}/overflow-topic`,
           route,
-          section: "subject",
+          section: "material",
           syncedAt: NOW,
           title: route,
         });
@@ -771,12 +774,12 @@ describe("contents/queries/runtime", () => {
         authors: [{ name: "Nakafa Author" }],
         contentHash: `${topicRoute}:hash`,
         depth: topicRoute.split("/").length,
-        kind: "subject-topic",
+        kind: "curriculum-topic",
         locale: "id",
         markdown: false,
         parentRoute,
         route: topicRoute,
-        section: "subject",
+        section: "material",
         syncedAt: NOW,
         title: "Transformasi Fungsi",
       });
@@ -786,12 +789,12 @@ describe("contents/queries/runtime", () => {
       api.contents.queries.runtime.listContentRoutesByParent,
       {
         cursor: null,
-        kind: "subject-topic",
+        kind: "curriculum-topic",
         limit: 100,
         locale: "id",
         order: "route",
         parentRoute,
-        section: "subject",
+        section: "material",
       }
     );
 
@@ -799,11 +802,11 @@ describe("contents/queries/runtime", () => {
     expect(page.page.map((item) => item.route)).toEqual([topicRoute]);
   });
 
-  it("loads subject outlines in authored order instead of creation or slug order", async () => {
+  it("loads curriculum outlines in authored order instead of creation or slug order", async () => {
     const t = createConvexTestWithBetterAuth();
 
     await t.mutation(async (ctx) => {
-      const sequenceTopicId = await ctx.db.insert("subjectTopics", {
+      const sequenceTopicId = await ctx.db.insert("curriculumTopics", {
         category: "high-school",
         description: "Sequence topic",
         grade: "10",
@@ -811,12 +814,12 @@ describe("contents/queries/runtime", () => {
         material: "mathematics",
         order: 1,
         sectionCount: 1,
-        slug: "subject/high-school/10/mathematics/sequence-series",
+        slug: "material/lesson/mathematics/sequence-series",
         syncedAt: NOW,
         title: "Barisan dan Deret",
         topic: "sequence-series",
       });
-      const exponentialTopicId = await ctx.db.insert("subjectTopics", {
+      const exponentialTopicId = await ctx.db.insert("curriculumTopics", {
         category: "high-school",
         description: "Exponential topic",
         grade: "10",
@@ -824,13 +827,13 @@ describe("contents/queries/runtime", () => {
         material: "mathematics",
         order: 0,
         sectionCount: 2,
-        slug: "subject/high-school/10/mathematics/exponential-logarithm",
+        slug: "material/lesson/mathematics/exponential-logarithm",
         syncedAt: NOW,
         title: "Eksponen dan Logaritma",
         topic: "exponential-logarithm",
       });
 
-      await ctx.db.insert("subjectSections", {
+      await ctx.db.insert("curriculumLessons", {
         body: "Properties body",
         category: "high-school",
         contentHash: "properties-hash",
@@ -840,13 +843,13 @@ describe("contents/queries/runtime", () => {
         material: "mathematics",
         order: 1,
         section: "properties",
-        slug: "subject/high-school/10/mathematics/exponential-logarithm/properties",
+        slug: "material/lesson/mathematics/exponential-logarithm/properties",
         syncedAt: NOW,
         title: "Sifat Eksponen",
         topic: "exponential-logarithm",
         topicId: exponentialTopicId,
       });
-      await ctx.db.insert("subjectSections", {
+      await ctx.db.insert("curriculumLessons", {
         body: "Basic body",
         category: "high-school",
         contentHash: "basic-hash",
@@ -856,13 +859,13 @@ describe("contents/queries/runtime", () => {
         material: "mathematics",
         order: 0,
         section: "basic-concept",
-        slug: "subject/high-school/10/mathematics/exponential-logarithm/basic-concept",
+        slug: "material/lesson/mathematics/exponential-logarithm/basic-concept",
         syncedAt: NOW,
         title: "Konsep Eksponen",
         topic: "exponential-logarithm",
         topicId: exponentialTopicId,
       });
-      await ctx.db.insert("subjectSections", {
+      await ctx.db.insert("curriculumLessons", {
         body: "Sequence body",
         category: "high-school",
         contentHash: "sequence-hash",
@@ -872,7 +875,7 @@ describe("contents/queries/runtime", () => {
         material: "mathematics",
         order: 0,
         section: "sequence-concept",
-        slug: "subject/high-school/10/mathematics/sequence-series/sequence-concept",
+        slug: "material/lesson/mathematics/sequence-series/sequence-concept",
         syncedAt: NOW,
         title: "Konsep Barisan",
         topic: "sequence-series",
@@ -881,7 +884,7 @@ describe("contents/queries/runtime", () => {
     });
 
     const outline = await t.query(
-      api.contents.queries.runtime.getSubjectOutline,
+      api.contents.queries.runtime.getCurriculumOutline,
       {
         category: "high-school",
         grade: "10",

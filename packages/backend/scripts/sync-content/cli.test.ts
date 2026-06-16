@@ -92,11 +92,11 @@ const loadCli = async (options: { learningProgramFails?: boolean } = {}) => {
     /** Records tryout reset calls if a test accidentally reaches them. */
     resetTryouts: unusedCommand,
   }));
-  vi.doMock("@repo/backend/scripts/sync-content/subjects", () => ({
-    /** Records subject section sync calls if a test accidentally reaches them. */
-    syncSubjectSections: unusedCommand,
-    /** Records subject topic sync calls if a test accidentally reaches them. */
-    syncSubjectTopics: unusedCommand,
+  vi.doMock("@repo/backend/scripts/sync-content/curriculum", () => ({
+    /** Records curriculum lesson sync calls if a test accidentally reaches them. */
+    syncCurriculumLessons: unusedCommand,
+    /** Records curriculum topic sync calls if a test accidentally reaches them. */
+    syncCurriculumTopics: unusedCommand,
   }));
   vi.doMock("@repo/backend/scripts/sync-content/validate", () => ({
     /** Records validation calls if a test accidentally reaches them. */

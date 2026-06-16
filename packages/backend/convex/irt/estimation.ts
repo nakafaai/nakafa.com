@@ -126,7 +126,7 @@ export function getProvisionalParams(): ItemParameters {
 /**
  * Seed difficulty from the observed correct rate for uncalibrated items.
  *
- * This is only a bootstrap heuristic. Full calibration later replaces this
+ * This is only an initial heuristic. Full calibration later replaces this
  * value with the alternating 2PL estimate.
  */
 export function estimateDifficultyFromCorrectRate(correctRate: number): number {

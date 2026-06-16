@@ -63,42 +63,42 @@ describe("contents/queries/search:search", () => {
         description: "Pelajari fungsi rasional.",
         locale: "id",
         markdown_url:
-          "https://nakafa.com/id/subject/high-school/11/mathematics/function-modeling/rational-function.md",
+          "https://nakafa.com/id/material/lesson/mathematics/function-modeling/rational-function.md",
         route:
-          "subject/high-school/11/mathematics/function-modeling/rational-function",
-        section: "subject",
+          "material/lesson/mathematics/function-modeling/rational-function",
+        section: "material",
         syncedAt: 1,
         text: "kelas 11 matematika pemodelan fungsi penyebut domain asimtot",
         title: "Fungsi Rasional",
-        url: "https://nakafa.com/id/subject/high-school/11/mathematics/function-modeling/rational-function",
+        url: "https://nakafa.com/id/material/lesson/mathematics/function-modeling/rational-function",
       });
       await insertContentSearch(ctx, {
         contentHash: "hash-domain",
         description: "Pelajari domain dan range.",
         locale: "id",
         markdown_url:
-          "https://nakafa.com/id/subject/high-school/11/mathematics/function-modeling/domain-codomain-range.md",
+          "https://nakafa.com/id/material/lesson/mathematics/function-modeling/domain-codomain-range.md",
         route:
-          "subject/high-school/11/mathematics/function-modeling/domain-codomain-range",
-        section: "subject",
+          "material/lesson/mathematics/function-modeling/domain-codomain-range",
+        section: "material",
         syncedAt: 1,
         text: "fungsi rasional muncul dalam contoh batas input dan output",
         title: "Domain, Kodomain, dan Range",
-        url: "https://nakafa.com/id/subject/high-school/11/mathematics/function-modeling/domain-codomain-range",
+        url: "https://nakafa.com/id/material/lesson/mathematics/function-modeling/domain-codomain-range",
       });
       await insertContentSearch(ctx, {
         contentHash: "hash-en",
         description: "Learn rational functions.",
         locale: "en",
         markdown_url:
-          "https://nakafa.com/en/subject/high-school/11/mathematics/function-modeling/rational-function.md",
+          "https://nakafa.com/en/material/lesson/mathematics/function-modeling/rational-function.md",
         route:
-          "subject/high-school/11/mathematics/function-modeling/rational-function",
-        section: "subject",
+          "material/lesson/mathematics/function-modeling/rational-function",
+        section: "material",
         syncedAt: 1,
         text: "grade 11 mathematics rational function",
         title: "Rational Function",
-        url: "https://nakafa.com/en/subject/high-school/11/mathematics/function-modeling/rational-function",
+        url: "https://nakafa.com/en/material/lesson/mathematics/function-modeling/rational-function",
       });
     });
 
@@ -107,14 +107,14 @@ describe("contents/queries/search:search", () => {
       locale: "id",
       offset: 0,
       queries: ["fungsi rasional kelas 11"],
-      section: "subject",
+      section: "material",
     });
     const bodyResult = await t.query(api.contents.queries.search.search, {
       limit: 10,
       locale: "id",
       offset: 0,
       queries: ["batas input output"],
-      section: "subject",
+      section: "material",
     });
 
     expect(titleResult.items.map((item) => item.title)).toEqual([
@@ -130,7 +130,7 @@ describe("contents/queries/search:search", () => {
       expect.objectContaining({
         content_id: searchContentId(
           "id",
-          "subject/high-school/11/mathematics/function-modeling/domain-codomain-range"
+          "material/lesson/mathematics/function-modeling/domain-codomain-range"
         ),
         excerpt: expect.stringContaining("batas input"),
       }),
@@ -147,14 +147,14 @@ describe("contents/queries/search:search", () => {
         description: "Memahami bentuk dasar logaritma.",
         locale: "id",
         markdown_url:
-          "https://nakafa.com/id/subject/high-school/10/mathematics/exponential-logarithm/logarithm-definition.md",
+          "https://nakafa.com/id/material/lesson/mathematics/exponential-logarithm/logarithm-definition.md",
         route:
-          "subject/high-school/10/mathematics/exponential-logarithm/logarithm-definition",
-        section: "subject",
+          "material/lesson/mathematics/exponential-logarithm/logarithm-definition",
+        section: "material",
         syncedAt: 1,
         text: "Definisi Logaritma menjelaskan pangkat yang dibutuhkan.",
         title: "Definisi Logaritma",
-        url: "https://nakafa.com/id/subject/high-school/10/mathematics/exponential-logarithm/logarithm-definition",
+        url: "https://nakafa.com/id/material/lesson/mathematics/exponential-logarithm/logarithm-definition",
       });
     });
 
@@ -163,28 +163,28 @@ describe("contents/queries/search:search", () => {
       locale: "id",
       offset: 0,
       queries: [
-        "subject/high-school/10/mathematics/exponential-logarithm/logarithm-definition",
+        "material/lesson/mathematics/exponential-logarithm/logarithm-definition",
       ],
-      section: "subject",
+      section: "material",
     });
 
     expect(result.items).toEqual([
       expect.objectContaining({
         content_id: searchContentId(
           "id",
-          "subject/high-school/10/mathematics/exponential-logarithm/logarithm-definition"
+          "material/lesson/mathematics/exponential-logarithm/logarithm-definition"
         ),
         excerpt: expect.stringContaining("Memahami bentuk dasar logaritma."),
       }),
     ]);
-    expect(result.items[0].excerpt).not.toContain("subject/high-school");
+    expect(result.items[0].excerpt).not.toContain("material/lesson");
     expect(result.items[0].excerpt).not.toContain("exponential-logarithm");
   });
 
   it("resolves exact routes through persisted route catalog content IDs", async () => {
     const t = createConvexTestWithBetterAuth();
     const route =
-      "subject/high-school/10/mathematics/exponential-logarithm/logarithm-definition";
+      "material/lesson/mathematics/exponential-logarithm/logarithm-definition";
     const identity = createLearningGraphIdentityFromRoute({
       locale: "id",
       route,
@@ -206,11 +206,11 @@ describe("contents/queries/search:search", () => {
         authors: [],
         contentHash: "hash-logarithm",
         content_id: catalogAssetId,
-        kind: "subject-section",
+        kind: "curriculum-lesson",
         locale: "id",
         markdown: true,
         route,
-        section: "subject",
+        section: "material",
         syncedAt: 1,
         title: "Definisi Logaritma",
       });
@@ -222,7 +222,7 @@ describe("contents/queries/search:search", () => {
         locale: "id",
         markdown_url: `https://nakafa.com/id/${route}.md`,
         route,
-        section: "subject",
+        section: "material",
         syncedAt: 1,
         text: "Definisi Logaritma menjelaskan pangkat yang dibutuhkan.",
         title: "Definisi Logaritma",
@@ -239,7 +239,7 @@ describe("contents/queries/search:search", () => {
             locale: "id",
             offset: 0,
             queries: [route],
-            section: "subject",
+            section: "material",
           },
           [route],
           0
@@ -260,14 +260,14 @@ describe("contents/queries/search:search", () => {
         description: "",
         locale: "id",
         markdown_url:
-          "https://nakafa.com/id/exercises/high-school/snbt/english-language/try-out/2026/set-2/11.md",
+          "https://nakafa.com/id/material/practice/assessment/snbt/english-language/try-out-2026/set-2/question-11.md",
         route:
-          "exercises/high-school/snbt/english-language/try-out/2026/set-2/11",
-        section: "exercises",
+          "material/practice/assessment/snbt/english-language/try-out-2026/set-2/question-11",
+        section: "material",
         syncedAt: 1,
         text: "Soal 11 english-language try-out set-2 reading passage",
         title: "Soal 11",
-        url: "https://nakafa.com/id/exercises/high-school/snbt/english-language/try-out/2026/set-2/11",
+        url: "https://nakafa.com/id/material/practice/assessment/snbt/english-language/try-out-2026/set-2/question-11",
       });
       await insertContentSearch(ctx, {
         contentHash: "hash-quantitative-11",
@@ -275,14 +275,14 @@ describe("contents/queries/search:search", () => {
           "SMA SNBT Pengetahuan Kuantitatif try out 2026 set 2 Nomor 11",
         locale: "id",
         markdown_url:
-          "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/11.md",
+          "https://nakafa.com/id/material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-2/question-11.md",
         route:
-          "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/11",
-        section: "exercises",
+          "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-2/question-11",
+        section: "material",
         syncedAt: 1,
         text: "Soal 11 Nomor 11 quantitative-knowledge Pengetahuan Kuantitatif try-out try out 2026 set-2 set 2 fungsi tangga",
         title: "Soal 11",
-        url: "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/11",
+        url: "https://nakafa.com/id/material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-2/question-11",
       });
     });
 
@@ -291,14 +291,14 @@ describe("contents/queries/search:search", () => {
       locale: "id",
       offset: 0,
       queries: ["SNBT Pengetahuan Kuantitatif try out 2026 set 2 nomor 11"],
-      section: "exercises",
+      section: "material",
     });
 
     expect(result.items[0]).toEqual(
       expect.objectContaining({
         content_id: searchContentId(
           "id",
-          "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/11"
+          "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-2/question-11"
         ),
       })
     );
@@ -327,7 +327,7 @@ describe("contents/queries/search:search", () => {
               "SNBT Pengetahuan Kuantitatif try-out try out 2026 set-2 set 2 fungsi rasional 20 soal",
             searchTitle: "SNBT Pengetahuan Kuantitatif Try Out 2026 Set 2",
             setName: "set-2",
-            slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
+            slug: "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-2",
             title: "Set 2",
             type: "snbt",
           },
@@ -340,14 +340,14 @@ describe("contents/queries/search:search", () => {
       locale: "id",
       offset: 0,
       queries: ["latihan fungsi rasional"],
-      section: "exercises",
+      section: "material",
     });
 
     expect(result.items[0]).toEqual(
       expect.objectContaining({
         content_id: searchContentId(
           "id",
-          "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2"
+          "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-2"
         ),
         title: "SNBT Pengetahuan Kuantitatif Try Out 2026 Set 2",
       })
@@ -375,7 +375,7 @@ describe("contents/queries/search:search", () => {
             searchText: "kelas 9 matematika semester 1 0 soal",
             searchTitle: "Kelas 9 Matematika Semester 1 Set 1",
             setName: "set-1",
-            slug: "exercises/middle-school/grade-9/mathematics/semester-1/set-1",
+            slug: "material/practice/assessment/grade-9/mathematics/semester-1/set-1",
             title: "Set 1",
             type: "grade-9",
           },
@@ -388,7 +388,7 @@ describe("contents/queries/search:search", () => {
       locale: "id",
       offset: 0,
       queries: ["kelas 9 matematika"],
-      section: "exercises",
+      section: "material",
     });
 
     expect(result.items).toEqual([]);
@@ -403,28 +403,28 @@ describe("contents/queries/search:search", () => {
         description: "",
         locale: "id",
         markdown_url:
-          "https://nakafa.com/id/exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1.md",
+          "https://nakafa.com/id/material/practice/assessment/snbt/indonesian-language/try-out-2026/set-1/question-1.md",
         route:
-          "exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1",
-        section: "exercises",
+          "material/practice/assessment/snbt/indonesian-language/try-out-2026/set-1/question-1",
+        section: "material",
         syncedAt: 1,
         text: "Soal bacaan yang menyebut pola bilangan sebagai contoh.",
         title: "Soal 1",
-        url: "https://nakafa.com/id/exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1",
+        url: "https://nakafa.com/id/material/practice/assessment/snbt/indonesian-language/try-out-2026/set-1/question-1",
       });
       await insertContentSearch(ctx, {
         contentHash: "hash-math-set",
         description: "SNBT Penalaran Matematika Try Out 2026 Set 1 20 soal",
         locale: "id",
         markdown_url:
-          "https://nakafa.com/id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1.md",
+          "https://nakafa.com/id/material/practice/assessment/snbt/mathematical-reasoning/try-out-2026/set-1.md",
         route:
-          "exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1",
-        section: "exercises",
+          "material/practice/assessment/snbt/mathematical-reasoning/try-out-2026/set-1",
+        section: "material",
         syncedAt: 1,
         text: "Latihan pola bilangan untuk penalaran matematika.",
         title: "SNBT Penalaran Matematika Try Out 2026 Set 1",
-        url: "https://nakafa.com/id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1",
+        url: "https://nakafa.com/id/material/practice/assessment/snbt/mathematical-reasoning/try-out-2026/set-1",
       });
     });
 
@@ -433,14 +433,14 @@ describe("contents/queries/search:search", () => {
       locale: "id",
       offset: 0,
       queries: ["pola bilangan"],
-      section: "exercises",
+      section: "material",
     });
 
     expect(result.items[0]).toEqual(
       expect.objectContaining({
         content_id: searchContentId(
           "id",
-          "exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1"
+          "material/practice/assessment/snbt/mathematical-reasoning/try-out-2026/set-1"
         ),
       })
     );
@@ -455,27 +455,28 @@ describe("contents/queries/search:search", () => {
         description: "SMA SNBT Penalaran Umum Try Out 2026 Set 3 Nomor 11",
         locale: "id",
         markdown_url:
-          "https://nakafa.com/id/exercises/high-school/snbt/general-reasoning/try-out/2026/set-3/11.md",
+          "https://nakafa.com/id/material/practice/assessment/snbt/general-reasoning/try-out-2026/set-3/question-11.md",
         route:
-          "exercises/high-school/snbt/general-reasoning/try-out/2026/set-3/11",
-        section: "exercises",
+          "material/practice/assessment/snbt/general-reasoning/try-out-2026/set-3/question-11",
+        section: "material",
         syncedAt: 1,
         text: "Soal umum nomor 11.",
         title: "SNBT Penalaran Umum Try Out 2026 Set 3 Soal 11",
-        url: "https://nakafa.com/id/exercises/high-school/snbt/general-reasoning/try-out/2026/set-3/11",
+        url: "https://nakafa.com/id/material/practice/assessment/snbt/general-reasoning/try-out-2026/set-3/question-11",
       });
       await insertContentSearch(ctx, {
         contentHash: "hash-rational-set",
         description: "SMA TKA Matematika Try Out 2026 Set 1 20 soal",
         locale: "id",
         markdown_url:
-          "https://nakafa.com/id/exercises/high-school/tka/mathematics/try-out/2026/set-1.md",
-        route: "exercises/high-school/tka/mathematics/try-out/2026/set-1",
-        section: "exercises",
+          "https://nakafa.com/id/material/practice/assessment/tka/mathematics/try-out-2026/set-1.md",
+        route:
+          "material/practice/assessment/tka/mathematics/try-out-2026/set-1",
+        section: "material",
         syncedAt: 1,
         text: "Latihan fungsi rasional kelas 11.",
         title: "TKA Matematika Try Out 2026 Set 1",
-        url: "https://nakafa.com/id/exercises/high-school/tka/mathematics/try-out/2026/set-1",
+        url: "https://nakafa.com/id/material/practice/assessment/tka/mathematics/try-out-2026/set-1",
       });
     });
 
@@ -484,14 +485,14 @@ describe("contents/queries/search:search", () => {
       locale: "id",
       offset: 0,
       queries: ["fungsi rasional kelas 11"],
-      section: "exercises",
+      section: "material",
     });
 
     expect(result.items[0]).toEqual(
       expect.objectContaining({
         content_id: searchContentId(
           "id",
-          "exercises/high-school/tka/mathematics/try-out/2026/set-1"
+          "material/practice/assessment/tka/mathematics/try-out-2026/set-1"
         ),
       })
     );
@@ -506,14 +507,14 @@ describe("contents/queries/search:search", () => {
         description: "SMA SNBT Penalaran Umum Try Out 2026 Set 3 Nomor 11",
         locale: "id",
         markdown_url:
-          "https://nakafa.com/id/exercises/high-school/snbt/general-reasoning/try-out/2026/set-3/11.md",
+          "https://nakafa.com/id/material/practice/assessment/snbt/general-reasoning/try-out-2026/set-3/question-11.md",
         route:
-          "exercises/high-school/snbt/general-reasoning/try-out/2026/set-3/11",
-        section: "exercises",
+          "material/practice/assessment/snbt/general-reasoning/try-out-2026/set-3/question-11",
+        section: "material",
         syncedAt: 1,
         text: "Semua siswa kelas 9 mengikuti ujian sekolah.",
         title: "SNBT Penalaran Umum Try Out 2026 Set 3 Soal 11",
-        url: "https://nakafa.com/id/exercises/high-school/snbt/general-reasoning/try-out/2026/set-3/11",
+        url: "https://nakafa.com/id/material/practice/assessment/snbt/general-reasoning/try-out-2026/set-3/question-11",
       });
     });
 
@@ -522,7 +523,7 @@ describe("contents/queries/search:search", () => {
       locale: "id",
       offset: 0,
       queries: ["fungsi rasional kelas 11"],
-      section: "exercises",
+      section: "material",
     });
 
     expect(result.items).toEqual([]);
@@ -551,7 +552,7 @@ describe("contents/queries/search:search", () => {
               "SNBT Pengetahuan Kuantitatif try-out try out 2026 set-3 set 3 fungsi kuadrat 0 soal",
             searchTitle: "SNBT Pengetahuan Kuantitatif Try Out 2026 Set 3",
             setName: "set-3",
-            slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-3",
+            slug: "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-3",
             title: "Set 3",
             type: "snbt",
           },
@@ -567,7 +568,7 @@ describe("contents/queries/search:search", () => {
             .eq("locale", "id")
             .eq(
               "slug",
-              "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-3"
+              "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-3"
             )
         )
         .unique();
@@ -591,7 +592,7 @@ describe("contents/queries/search:search", () => {
       locale: "id",
       offset: 0,
       queries: ["fungsi kuadrat"],
-      section: "exercises",
+      section: "material",
     });
 
     expect(result.items).toEqual([]);
@@ -606,41 +607,41 @@ describe("contents/queries/search:search", () => {
         description: "Pelajari hukum kekekalan massa.",
         locale: "id",
         markdown_url:
-          "https://nakafa.com/id/subject/high-school/10/chemistry/basic-chemistry-laws/mass-conservation-law.md",
+          "https://nakafa.com/id/material/lesson/chemistry/basic-chemistry-laws/mass-conservation-law.md",
         route:
-          "subject/high-school/10/chemistry/basic-chemistry-laws/mass-conservation-law",
-        section: "subject",
+          "material/lesson/chemistry/basic-chemistry-laws/mass-conservation-law",
+        section: "material",
         syncedAt: 1,
         text: "kimia kelas 10 reaksi tertutup massa zat tetap",
         title: "Hukum Kekekalan Massa",
-        url: "https://nakafa.com/id/subject/high-school/10/chemistry/basic-chemistry-laws/mass-conservation-law",
+        url: "https://nakafa.com/id/material/lesson/chemistry/basic-chemistry-laws/mass-conservation-law",
       });
       await insertContentSearch(ctx, {
         contentHash: "hash-stoichiometry",
         description: "Pelajari stoikiometri.",
         locale: "id",
         markdown_url:
-          "https://nakafa.com/id/subject/high-school/10/chemistry/stoichiometry/introduction.md",
-        route: "subject/high-school/10/chemistry/stoichiometry/introduction",
-        section: "subject",
+          "https://nakafa.com/id/material/lesson/chemistry/stoichiometry/introduction.md",
+        route: "material/lesson/chemistry/stoichiometry/introduction",
+        section: "material",
         syncedAt: 1,
         text: "perhitungan kimia mol massa reaksi",
         title: "Stoikiometri",
-        url: "https://nakafa.com/id/subject/high-school/10/chemistry/stoichiometry/introduction",
+        url: "https://nakafa.com/id/material/lesson/chemistry/stoichiometry/introduction",
       });
       await insertContentSearch(ctx, {
         contentHash: "hash-mass-application",
         description: "Latihan tambahan hukum kekekalan massa.",
         locale: "id",
         markdown_url:
-          "https://nakafa.com/id/subject/high-school/10/chemistry/basic-chemistry-laws/mass-application.md",
+          "https://nakafa.com/id/material/lesson/chemistry/basic-chemistry-laws/mass-application.md",
         route:
-          "subject/high-school/10/chemistry/basic-chemistry-laws/mass-application",
-        section: "subject",
+          "material/lesson/chemistry/basic-chemistry-laws/mass-application",
+        section: "material",
         syncedAt: 1,
         text: "hukum kekekalan massa contoh lanjutan",
         title: "Aplikasi Massa",
-        url: "https://nakafa.com/id/subject/high-school/10/chemistry/basic-chemistry-laws/mass-application",
+        url: "https://nakafa.com/id/material/lesson/chemistry/basic-chemistry-laws/mass-application",
       });
     });
 
@@ -649,7 +650,7 @@ describe("contents/queries/search:search", () => {
       locale: "id",
       offset: 0,
       queries: ["hukum kekekalan massa", "stoikiometri"],
-      section: "subject",
+      section: "material",
     });
 
     expect(result.items.map((item) => item.title)).toEqual([

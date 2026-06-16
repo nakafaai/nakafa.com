@@ -23,7 +23,7 @@ const programs = [
     kind: "school-curriculum",
     navigation: {
       levels: ["class", "subject", "topic"],
-      model: "class-subject-topic",
+      model: "class-curriculum-topic",
     },
     title: "Kurikulum Merdeka",
     versionLabel: "Indonesia",

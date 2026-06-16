@@ -3,7 +3,7 @@
 import { Progress03Icon, Search02Icon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
-import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
+import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 import { Button } from "@repo/design-system/components/ui/button";
 import { GradientBlock } from "@repo/design-system/components/ui/gradient-block";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";

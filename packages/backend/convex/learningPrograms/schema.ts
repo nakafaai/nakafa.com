@@ -2,10 +2,6 @@ import { graphContentIdValidator } from "@repo/backend/convex/contents/graph";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { CURRICULUM_LENS_SCOPE_VALUES } from "@repo/contents/_types/graph/schema";
 import {
-  OUTCOME_CONCEPT_RELATION_VALUES,
-  OUTCOME_STATUS_VALUES,
-} from "@repo/contents/_types/outcome/schema";
-import {
   COVERAGE_STATUS_VALUES,
   LEARNING_INTEREST_VALUES,
   LEARNING_PLAN_ITEM_REASON_VALUES,
@@ -42,10 +38,6 @@ export const programNavigationLevelValidator = literals(
 export const programSourceTypeValidator = literals(
   ...PROGRAM_SOURCE_TYPE_VALUES
 );
-export const outcomeConceptRelationValidator = literals(
-  ...OUTCOME_CONCEPT_RELATION_VALUES
-);
-export const outcomeStatusValidator = literals(...OUTCOME_STATUS_VALUES);
 export const learningPlanItemReasonValidator = literals(
   ...LEARNING_PLAN_ITEM_REASON_VALUES
 );
@@ -70,40 +62,6 @@ export const programTranslationInputValidator = v.object({
 export const programNavigationInputValidator = v.object({
   levels: v.array(programNavigationLevelValidator),
   model: programNavigationModelValidator,
-});
-
-export const programOutlineNodeInputValidator = v.object({
-  displayOrder: v.number(),
-  key: v.string(),
-  level: programNavigationLevelValidator,
-  parentKey: v.optional(v.string()),
-  programKey: v.string(),
-  translations: v.object({
-    en: programTranslationInputValidator,
-    id: programTranslationInputValidator,
-  }),
-});
-
-export const learningOutcomeInputValidator = v.object({
-  code: v.string(),
-  key: v.string(),
-  outlineKey: v.string(),
-  programKey: v.string(),
-  source: programSourceInputValidator,
-  status: outcomeStatusValidator,
-  translations: v.object({
-    en: programTranslationInputValidator,
-    id: programTranslationInputValidator,
-  }),
-  versionLabel: v.string(),
-});
-
-export const outcomeConceptAlignmentInputValidator = v.object({
-  conceptKey: v.string(),
-  evidence: v.string(),
-  outcomeKey: v.string(),
-  relation: outcomeConceptRelationValidator,
-  reviewedAt: v.string(),
 });
 
 export const learningProgramInputValidator = v.object({
@@ -207,70 +165,6 @@ const tables = {
   })
     .index("by_programId", ["programId"])
     .index("by_programId_and_url", ["programId", "url"]),
-
-  learningProgramOutlineNodes: defineTable({
-    displayOrder: v.number(),
-    key: v.string(),
-    level: programNavigationLevelValidator,
-    parentKey: v.optional(v.string()),
-    programId: v.id("learningPrograms"),
-    programKey: v.string(),
-    syncedAt: v.number(),
-    translations: v.object({
-      en: programTranslationInputValidator,
-      id: programTranslationInputValidator,
-    }),
-    updatedAt: v.number(),
-  })
-    .index("by_programId_and_key", ["programId", "key"])
-    .index("by_programId_and_parentKey_and_displayOrder", [
-      "programId",
-      "parentKey",
-      "displayOrder",
-    ])
-    .index("by_syncedAt", ["syncedAt"]),
-
-  learningProgramOutcomes: defineTable({
-    code: v.string(),
-    key: v.string(),
-    outlineKey: v.string(),
-    programId: v.id("learningPrograms"),
-    programKey: v.string(),
-    sourceLabel: v.string(),
-    sourceRetrievedAt: v.string(),
-    sourceReviewAfter: v.optional(v.string()),
-    sourceType: programSourceTypeValidator,
-    sourceUrl: v.string(),
-    status: outcomeStatusValidator,
-    syncedAt: v.number(),
-    translations: v.object({
-      en: programTranslationInputValidator,
-      id: programTranslationInputValidator,
-    }),
-    updatedAt: v.number(),
-    versionLabel: v.string(),
-  })
-    .index("by_programId_and_key", ["programId", "key"])
-    .index("by_programId_and_outlineKey", ["programId", "outlineKey"])
-    .index("by_syncedAt", ["syncedAt"]),
-
-  learningProgramOutcomeConcepts: defineTable({
-    conceptKey: v.string(),
-    evidence: v.string(),
-    outcomeKey: v.string(),
-    programId: v.id("learningPrograms"),
-    relation: outcomeConceptRelationValidator,
-    reviewedAt: v.string(),
-    syncedAt: v.number(),
-  })
-    .index("by_programId_and_outcomeKey", ["programId", "outcomeKey"])
-    .index("by_programId_and_outcomeKey_and_conceptKey", [
-      "programId",
-      "outcomeKey",
-      "conceptKey",
-    ])
-    .index("by_conceptKey", ["conceptKey"])
-    .index("by_syncedAt", ["syncedAt"]),
 
   learningProgramCoverage: defineTable({
     contentCount: v.number(),

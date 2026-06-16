@@ -25,6 +25,18 @@ describe("contentSync/reset/impl", () => {
       deleteLearningPopularityBatch
     );
     const trendingDelete = await t.mutation(deleteLearningTrendingBucketsBatch);
+    const materialLocaleDelete = await t.mutation(deleteMaterialLocalesBatch);
+    const materialDelete = await t.mutation(deleteMaterialsBatch);
+    const curriculumMaterialDelete = await t.mutation(
+      deleteCurriculumMaterialsBatch
+    );
+    const curriculumNodeDelete = await t.mutation(deleteCurriculumNodesBatch);
+    const curriculaDelete = await t.mutation(deleteCurriculaBatch);
+    const assessmentNodeDelete = await t.mutation(deleteAssessmentNodesBatch);
+    const assessmentDelete = await t.mutation(deleteAssessmentsBatch);
+    const planItemDelete = await t.mutation(deleteLearningPlanItemsBatch);
+    const sourceDelete = await t.mutation(deleteLearningProgramSourcesBatch);
+    const programDelete = await t.mutation(deleteLearningProgramsBatch);
     const verseDelete = await t.mutation(deleteQuranVersesBatch);
     const surahDelete = await t.mutation(deleteQuranSurahsBatch);
     const counts = await t.query(getDerivedRuntimeRows);
@@ -35,6 +47,16 @@ describe("contentSync/reset/impl", () => {
     expect(partitionDelete).toEqual({ deleted: 1, hasMore: false });
     expect(learningPopularityDelete).toEqual({ deleted: 1, hasMore: false });
     expect(trendingDelete).toEqual({ deleted: 1, hasMore: false });
+    expect(materialLocaleDelete).toEqual({ deleted: 1, hasMore: false });
+    expect(materialDelete).toEqual({ deleted: 1, hasMore: false });
+    expect(curriculumMaterialDelete).toEqual({ deleted: 1, hasMore: false });
+    expect(curriculumNodeDelete).toEqual({ deleted: 1, hasMore: false });
+    expect(curriculaDelete).toEqual({ deleted: 1, hasMore: false });
+    expect(assessmentNodeDelete).toEqual({ deleted: 1, hasMore: false });
+    expect(assessmentDelete).toEqual({ deleted: 1, hasMore: false });
+    expect(planItemDelete).toEqual({ deleted: 1, hasMore: false });
+    expect(sourceDelete).toEqual({ deleted: 1, hasMore: false });
+    expect(programDelete).toEqual({ deleted: 1, hasMore: false });
     expect(verseDelete).toEqual({ deleted: 1, hasMore: false });
     expect(surahDelete).toEqual({ deleted: 1, hasMore: false });
     expect(counts).toEqual({
@@ -42,6 +64,16 @@ describe("contentSync/reset/impl", () => {
       contentAnalyticsPartitions: [],
       contentViewAnalyticsQueue: [],
       contentViews: [],
+      learningPlanItems: [],
+      assessmentNodes: [],
+      assessments: [],
+      curricula: [],
+      curriculumMaterials: [],
+      curriculumNodes: [],
+      learningProgramSources: [],
+      learningPrograms: [],
+      materialLocales: [],
+      materials: [],
       routes: [],
       learningTrendingBuckets: [],
       surahs: [],
@@ -102,6 +134,164 @@ async function seedDerivedRuntimeRows(ctx: MutationCtx) {
     section: "quran",
     updatedAt: 2,
     viewCount: 1,
+  });
+  await ctx.db.insert("materials", {
+    concepts: [],
+    domain: "fixture",
+    key: "fixture.material",
+    kind: "lesson",
+    route: "material/lesson/fixture",
+    syncedAt: 1,
+    updatedAt: 1,
+  });
+  await ctx.db.insert("materialLocales", {
+    locale: "id",
+    materialKey: "fixture.material",
+    metadata: {
+      title: "Fixture Material",
+    },
+    route: "material/lesson/fixture",
+    syncedAt: 1,
+    updatedAt: 1,
+  });
+  await ctx.db.insert("curricula", {
+    defaultCoverageStatus: "available",
+    displayOrder: 1,
+    key: "fixture-curriculum",
+    kind: "school-curriculum",
+    navigation: {
+      levels: ["class", "subject", "topic"],
+      model: "class-curriculum-topic",
+    },
+    providerKind: "nakafa",
+    providerName: "Fixture Provider",
+    sources: [],
+    syncedAt: 1,
+    translations: {
+      en: { description: "Fixture curriculum.", title: "Fixture Curriculum" },
+      id: { description: "Kurikulum fixture.", title: "Kurikulum Fixture" },
+    },
+    updatedAt: 1,
+    versionLabel: "Fixture",
+  });
+  await ctx.db.insert("curriculumNodes", {
+    curriculumKey: "fixture-curriculum",
+    displayOrder: 1,
+    key: "fixture-node",
+    level: "topic",
+    syncedAt: 1,
+    translations: {
+      en: { title: "Fixture Node" },
+      id: { title: "Node Fixture" },
+    },
+    updatedAt: 1,
+  });
+  await ctx.db.insert("curriculumMaterials", {
+    curriculumKey: "fixture-curriculum",
+    materialKey: "fixture.material",
+    nodeKey: "fixture-node",
+    order: 1,
+    syncedAt: 1,
+  });
+  await ctx.db.insert("assessments", {
+    defaultCoverageStatus: "available",
+    displayOrder: 1,
+    key: "fixture-assessment",
+    kind: "assessment",
+    navigation: {
+      levels: ["section", "domain", "practice-set"],
+      model: "exam-domain-practice-set",
+    },
+    providerKind: "nakafa",
+    providerName: "Fixture Provider",
+    sources: [],
+    syncedAt: 1,
+    translations: {
+      en: { description: "Fixture assessment.", title: "Fixture Assessment" },
+      id: { description: "Asesmen fixture.", title: "Asesmen Fixture" },
+    },
+    updatedAt: 1,
+    versionLabel: "Fixture",
+  });
+  await ctx.db.insert("assessmentNodes", {
+    assessmentKey: "fixture-assessment",
+    displayOrder: 1,
+    key: "fixture-domain",
+    level: "domain",
+    materialKeys: ["fixture.material"],
+    syncedAt: 1,
+    translations: {
+      en: { title: "Fixture Domain" },
+      id: { title: "Domain Fixture" },
+    },
+    updatedAt: 1,
+  });
+  const userId = await ctx.db.insert("users", {
+    authId: "reset-user-auth",
+    credits: 0,
+    creditsResetAt: 1,
+    email: "reset-user@example.test",
+    name: "Reset User",
+    plan: "free",
+  });
+  const programId = await ctx.db.insert("learningPrograms", {
+    defaultCoverageStatus: "available",
+    displayOrder: 1,
+    key: "fixture.program",
+    kind: "school-curriculum",
+    navigation: { levels: ["track"], model: "track-topic" },
+    providerCountry: "ID",
+    providerKind: "nakafa",
+    providerName: "Fixture Provider",
+    recommendedCountry: "ID",
+    syncedAt: 1,
+    translations: {
+      en: { description: "Fixture program.", title: "Fixture Program" },
+      id: { description: "Program fixture.", title: "Program Fixture" },
+    },
+    updatedAt: 1,
+    versionEndsAt: "2026-12-31",
+    versionLabel: "Fixture",
+    versionStartsAt: "2026-01-01",
+  });
+  await ctx.db.insert("learningProgramSources", {
+    label: "Fixture Source",
+    programId,
+    retrievedAt: "2026-01-01",
+    syncedAt: 1,
+    type: "nakafa-editorial",
+    url: "https://example.test/program",
+  });
+  const profileId = await ctx.db.insert("learningProfiles", {
+    interests: ["school-curriculum"],
+    programId,
+    updatedAt: 1,
+    userId,
+  });
+  const planId = await ctx.db.insert("learningPlans", {
+    createdAt: 1,
+    profileId,
+    programId,
+    status: "active",
+    updatedAt: 1,
+    userId,
+    version: 1,
+  });
+  await ctx.db.insert("learningPlanItems", {
+    content_id: graph.content_id,
+    coverageStatus: "available",
+    createdAt: 1,
+    lensId: "fixture.lens",
+    lensScope: "curriculum",
+    planId,
+    position: 1,
+    programId,
+    reason: "program-alignment",
+    route: "quran/1",
+    status: "ready",
+    title: "Generated Fixture",
+    updatedAt: 1,
+    userId,
   });
   await ctx.db.insert("quranSurahs", {
     contentHash: "surah-hash",
@@ -185,6 +375,56 @@ async function deleteLearningTrendingBucketsBatch(ctx: MutationCtx) {
   return await deleteBatchFromTable(ctx, "learningTrendingBuckets");
 }
 
+/** Deletes one material locale reset batch. */
+async function deleteMaterialLocalesBatch(ctx: MutationCtx) {
+  return await deleteBatchFromTable(ctx, "materialLocales");
+}
+
+/** Deletes one material reset batch. */
+async function deleteMaterialsBatch(ctx: MutationCtx) {
+  return await deleteBatchFromTable(ctx, "materials");
+}
+
+/** Deletes one curriculum material link reset batch. */
+async function deleteCurriculumMaterialsBatch(ctx: MutationCtx) {
+  return await deleteBatchFromTable(ctx, "curriculumMaterials");
+}
+
+/** Deletes one curriculum node reset batch. */
+async function deleteCurriculumNodesBatch(ctx: MutationCtx) {
+  return await deleteBatchFromTable(ctx, "curriculumNodes");
+}
+
+/** Deletes one curriculum reset batch. */
+async function deleteCurriculaBatch(ctx: MutationCtx) {
+  return await deleteBatchFromTable(ctx, "curricula");
+}
+
+/** Deletes one assessment node reset batch. */
+async function deleteAssessmentNodesBatch(ctx: MutationCtx) {
+  return await deleteBatchFromTable(ctx, "assessmentNodes");
+}
+
+/** Deletes one assessment reset batch. */
+async function deleteAssessmentsBatch(ctx: MutationCtx) {
+  return await deleteBatchFromTable(ctx, "assessments");
+}
+
+/** Deletes one generated learning plan item reset batch. */
+async function deleteLearningPlanItemsBatch(ctx: MutationCtx) {
+  return await deleteBatchFromTable(ctx, "learningPlanItems");
+}
+
+/** Deletes one generated learning program source reset batch. */
+async function deleteLearningProgramSourcesBatch(ctx: MutationCtx) {
+  return await deleteBatchFromTable(ctx, "learningProgramSources");
+}
+
+/** Deletes one generated learning program reset batch. */
+async function deleteLearningProgramsBatch(ctx: MutationCtx) {
+  return await deleteBatchFromTable(ctx, "learningPrograms");
+}
+
 /** Deletes one Quran verse reset batch through the shared reset helper. */
 async function deleteQuranVersesBatch(ctx: MutationCtx) {
   return await deleteBatchFromTable(ctx, "quranVerses");
@@ -206,6 +446,18 @@ async function getDerivedRuntimeRows(ctx: QueryCtx) {
       .query("contentViewAnalyticsQueue")
       .collect(),
     contentViews: await ctx.db.query("contentViews").collect(),
+    learningPlanItems: await ctx.db.query("learningPlanItems").collect(),
+    assessmentNodes: await ctx.db.query("assessmentNodes").collect(),
+    assessments: await ctx.db.query("assessments").collect(),
+    curricula: await ctx.db.query("curricula").collect(),
+    curriculumMaterials: await ctx.db.query("curriculumMaterials").collect(),
+    curriculumNodes: await ctx.db.query("curriculumNodes").collect(),
+    learningProgramSources: await ctx.db
+      .query("learningProgramSources")
+      .collect(),
+    learningPrograms: await ctx.db.query("learningPrograms").collect(),
+    materialLocales: await ctx.db.query("materialLocales").collect(),
+    materials: await ctx.db.query("materials").collect(),
     routes: await ctx.db.query("contentRoutes").collect(),
     learningTrendingBuckets: await ctx.db
       .query("learningTrendingBuckets")

@@ -8,7 +8,7 @@ export const LocaleSchema = Schema.Literal(...locales);
 export type Locale = Schema.Schema.Type<typeof LocaleSchema>;
 
 /** Supported top-level content roots under `packages/contents/`. */
-const CONTENT_ROOTS = ["articles", "exercises", "subject"] as const;
+const CONTENT_ROOTS = ["articles", "material", "quran"] as const;
 
 /** Runtime validation schema for supported top-level content roots. */
 const ContentRootSchema = Schema.Literal(...CONTENT_ROOTS);
@@ -77,8 +77,8 @@ export const ReferenceListSchema = Schema.Array(ReferenceSchema).pipe(
 
 export const CONTENT_ROOT_VALUES = {
   articles: "articles",
-  exercises: "exercises",
-  subject: "subject",
+  material: "material",
+  quran: "quran",
 } as const;
 
 export type ContentWithMDX = Omit<Content, "url" | "locale" | "slug"> & {

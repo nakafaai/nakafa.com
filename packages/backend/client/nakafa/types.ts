@@ -4,10 +4,10 @@ import type { FunctionArgs, FunctionReturnType } from "convex/server";
 export type RuntimeArticlePage = NonNullable<
   FunctionReturnType<typeof api.contents.queries.runtime.getArticlePage>
 >;
-export type RuntimeSubjectPage = NonNullable<
-  FunctionReturnType<typeof api.contents.queries.runtime.getSubjectPage>
+export type RuntimeCurriculumPage = NonNullable<
+  FunctionReturnType<typeof api.contents.queries.runtime.getCurriculumPage>
 >;
-export type RuntimeMdxPage = RuntimeArticlePage | RuntimeSubjectPage;
+export type RuntimeMdxPage = RuntimeArticlePage | RuntimeCurriculumPage;
 export type RuntimeContentRoutePage = FunctionReturnType<
   typeof api.contents.queries.runtime.listContentRoutesByPrefix
 >;

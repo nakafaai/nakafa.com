@@ -30,7 +30,9 @@ describe("llms.mdx route", () => {
     );
 
     const response = await GET(
-      new NextRequest("https://nakafa.com/llms.mdx/en/subject/high-school/12"),
+      new NextRequest(
+        "https://nakafa.com/llms.mdx/en/curriculum/high-school/12"
+      ),
       {
         params: Promise.resolve({
           slug: ["en", "subject", "high-school", "12"],

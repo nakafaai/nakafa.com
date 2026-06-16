@@ -370,7 +370,7 @@ function PreloadedTryoutPartProvider({
    *
    * These part routes are allowed to survive external navigation through Next's
    * preserved UI model. We therefore keep the server snapshot visible while the
-   * Convex auth client is still bootstrapping and only mount the live protected
+   * Convex auth client is still initializing and only mount the live protected
    * query after auth is definitely ready.
    */
   if (isLoading) {

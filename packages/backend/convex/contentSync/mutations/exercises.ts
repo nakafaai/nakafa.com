@@ -128,7 +128,12 @@ async function deleteExerciseGroupRouteIfEmpty(
     year?: string;
   }
 ) {
-  const route = requireExerciseSetGroupRoute(source.slug);
+  const route = getExerciseSetGroupRoute(source.slug);
+
+  if (!route) {
+    return;
+  }
+
   const sets = await ctx.db
     .query("exerciseSets")
     .withIndex("by_locale_and_group", (q) =>
@@ -192,7 +197,7 @@ export const bulkSyncExerciseSets = internalMutation({
           description: set.searchDescription,
           locale: set.locale,
           route: set.slug,
-          section: "exercises",
+          section: "material",
           syncedAt: now,
           text: set.searchText,
           title: set.searchTitle,
@@ -205,7 +210,7 @@ export const bulkSyncExerciseSets = internalMutation({
           locale: set.locale,
           markdown: true,
           route: set.slug,
-          section: "exercises",
+          section: "material",
           syncedAt: now,
           title: set.title,
         });
@@ -217,7 +222,7 @@ export const bulkSyncExerciseSets = internalMutation({
           locale: set.locale,
           markdown: false,
           route: groupRoute,
-          section: "exercises",
+          section: "material",
           syncedAt: now,
           title: set.exerciseTypeTitle,
         });
@@ -345,7 +350,7 @@ export const bulkSyncExerciseQuestions = internalMutation({
         description: question.searchDescription,
         locale: question.locale,
         route: question.slug,
-        section: "exercises",
+        section: "material",
         syncedAt: now,
         text: question.searchText,
         title: question.searchTitle,
@@ -360,7 +365,7 @@ export const bulkSyncExerciseQuestions = internalMutation({
         locale: question.locale,
         markdown: true,
         route: question.slug,
-        section: "exercises",
+        section: "material",
         syncedAt: now,
         title: question.searchTitle,
       });
@@ -395,7 +400,7 @@ export const bulkSyncExerciseQuestions = internalMutation({
         authorLinksCreated += await syncContentAuthorsWithCache(
           ctx,
           existingQuestion._id,
-          "exercise",
+          "material",
           question.authors,
           authorCache
         );
@@ -418,7 +423,7 @@ export const bulkSyncExerciseQuestions = internalMutation({
       authorLinksCreated += await syncContentAuthorsWithCache(
         ctx,
         questionId,
-        "exercise",
+        "material",
         question.authors,
         authorCache
       );

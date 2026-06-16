@@ -6,7 +6,7 @@ import {
   Link04Icon,
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import type { MaterialList } from "@repo/contents/_types/subject/material";
+import type { MaterialList } from "@repo/contents/_types/curriculum/material";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Card,
@@ -29,7 +29,7 @@ interface Props {
 }
 
 /**
- * Renders one expandable material card on the subject material index page.
+ * Renders one expandable material card on the material lesson index page.
  *
  * The card defaults to open, and resets back to open when Next.js hides the
  * page through Cache Components state preservation. This keeps the material list

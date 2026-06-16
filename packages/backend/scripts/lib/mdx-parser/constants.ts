@@ -10,5 +10,5 @@ export const METADATA_REGEX = /export\s+const\s+metadata\s*=\s*(\{[\s\S]*?\});/;
 export const MULTIPLE_NEWLINES_REGEX = /\n{3,}/g;
 export const REFERENCES_REGEX =
   /export\s+const\s+references[^=]*=\s*(\[[\s\S]*?\]);?\s*$/;
-export const SUBJECT_PATH_REGEX =
-  /subject\/([^/]+)\/([^/]+)\/([^/]+)\/([^/]+)\/([^/]+)\/([^/]+)\.mdx$/;
+export const MATERIAL_LESSON_PATH_REGEX =
+  /material\/lesson\/([^/]+)\/([^/]+)\/([^/]+)\/([^/]+)\.mdx$/;

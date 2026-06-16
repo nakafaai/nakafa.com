@@ -82,8 +82,8 @@ export interface ValidationResult {
 
 export interface FilesystemSlugs {
   articleSlugs: string[];
+  curriculumLessonSlugs: string[];
+  curriculumTopicSlugs: string[];
   exerciseQuestionSlugs: string[];
   exerciseSetSlugs: string[];
-  subjectSectionSlugs: string[];
-  subjectTopicSlugs: string[];
 }

@@ -10,17 +10,19 @@ import { createNakafaContentRefFromGraphProjection } from "@repo/contents/_lib/a
 import type { NakafaAgentExerciseResult } from "@repo/contents/_lib/agent/schema/exercise";
 import type { NakafaAgentMarkdown } from "@repo/contents/_lib/agent/schema/read";
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
-import { ExercisesCategorySchema } from "@repo/contents/_types/exercises/category";
-import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
-import { ExercisesTypeSchema } from "@repo/contents/_types/exercises/type";
+import { ExercisesCategorySchema } from "@repo/contents/_types/assessment/category";
+import { ExercisesMaterialSchema } from "@repo/contents/_types/assessment/material";
+import { ExercisesTypeSchema } from "@repo/contents/_types/assessment/type";
 import {
   getExerciseQuestionRouteForNumber,
   getSourceRouteProjectionForRoute,
 } from "@repo/contents/_types/graph/projection";
+import { getExerciseQuestionNumberSegment } from "@repo/contents/_types/graph/route";
 import type { Locale } from "@repo/utilities/locales";
 import { Effect, Option, Schema } from "effect";
 
 const YEAR_SEGMENT = /^\d{4}$/;
+const practiceMaterialRoutePrefix = "material/practice/";
 
 /** Reads structured exercise data from Convex runtime rows. */
 export function readNakafaExercise(
@@ -31,7 +33,11 @@ export function readNakafaExercise(
   return Effect.gen(function* () {
     const ref = yield* resolveNakafaContentRef(convexUrl, input);
 
-    if (Option.isNone(ref) || ref.value.section !== "exercises") {
+    if (
+      Option.isNone(ref) ||
+      ref.value.section !== "material" ||
+      !ref.value.route.startsWith(practiceMaterialRoutePrefix)
+    ) {
       return Option.none<NakafaAgentExerciseResult>();
     }
 
@@ -258,11 +264,13 @@ function getQuestionNumberFromProjection(
     return Option.none<number>();
   }
 
-  const number = Number.parseInt(questionSegment, 10);
+  const numberSegment = getExerciseQuestionNumberSegment(questionSegment);
 
-  if (!(Number.isSafeInteger(number) && `${number}` === questionSegment)) {
+  if (!numberSegment) {
     return Option.none<number>();
   }
+
+  const number = Number.parseInt(numberSegment, 10);
 
   return Option.some(number);
 }
@@ -277,7 +285,7 @@ export function getExerciseGroupArgs(locale: Locale, route: string) {
 
   const { categorySegment, groupSegments, materialSegment, typeSegment } =
     projection.exercise;
-  const [exerciseType, year] = groupSegments;
+  const { exerciseType, year } = parseExerciseGroupSegments(groupSegments);
 
   if (!exerciseType) {
     return Option.none();
@@ -312,4 +320,27 @@ export function getExerciseGroupArgs(locale: Locale, route: string) {
     type: parsedType.value,
     year,
   });
+}
+
+/** Parses final assessment group routes such as try-out-2026. */
+function parseExerciseGroupSegments(groupSegments: readonly string[]) {
+  const [first, second] = groupSegments;
+
+  if (!first) {
+    return {};
+  }
+
+  if (second) {
+    return { exerciseType: first, year: second };
+  }
+
+  const maybeYear = first.slice(first.lastIndexOf("-") + 1);
+
+  if (!YEAR_SEGMENT.test(maybeYear)) {
+    return { exerciseType: first };
+  }
+
+  const type = first.slice(0, -(maybeYear.length + 1));
+
+  return type ? { exerciseType: type, year: maybeYear } : {};
 }

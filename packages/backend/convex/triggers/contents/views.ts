@@ -39,11 +39,11 @@ function getContentViewEventType(
     return "article";
   }
 
-  if (section === "subject") {
-    return "subject";
+  if (section === "material") {
+    return "material";
   }
 
-  return "exercise";
+  return "material";
 }
 
 /** Emits one product analytics event after a graph content view is persisted. */

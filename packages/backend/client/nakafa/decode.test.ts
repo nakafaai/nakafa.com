@@ -108,8 +108,8 @@ function exerciseResult() {
   return {
     ...readNakafaContentRefFixture(
       "id",
-      "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1",
-      "exercises"
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
+      "material"
     ),
     count: 1,
     exercises: [
@@ -171,7 +171,7 @@ function taxonomy() {
     locale: "en",
     locales: Array.from(locales),
     quran: { surah_count: 114 },
-    sections: ["articles", "subject", "exercises", "quran"],
+    sections: ["articles", "material", "quran"],
     subject: {
       categories: ["high-school"],
       grades: ["10"],

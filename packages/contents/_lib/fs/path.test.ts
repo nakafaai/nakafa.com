@@ -11,17 +11,17 @@ import { describe, expect, it } from "vitest";
 
 describe("content fs path helpers", () => {
   it("round-trips child-folder cache keys with and without exclusions", () => {
-    const simpleKey = getFolderChildNamesCacheKey("subject/high-school");
-    const excludedKey = getFolderChildNamesCacheKey("subject/high-school", [
+    const simpleKey = getFolderChildNamesCacheKey("curriculum/high-school");
+    const excludedKey = getFolderChildNamesCacheKey("curriculum/high-school", [
       "drafts",
       "tmp",
     ]);
 
     expect(getFolderChildNamesCacheParts(simpleKey)).toStrictEqual({
-      folder: "subject/high-school",
+      folder: "curriculum/high-school",
     });
     expect(getFolderChildNamesCacheParts(excludedKey)).toStrictEqual({
-      folder: "subject/high-school",
+      folder: "curriculum/high-school",
       exclude: ["drafts", "tmp"],
     });
   });
@@ -56,7 +56,9 @@ describe("content fs path helpers", () => {
   });
 
   it("rejects unsafe folder paths before filesystem access", async () => {
-    await Effect.runPromise(validateContentFolderPath("subject/high-school"));
+    await Effect.runPromise(
+      validateContentFolderPath("curriculum/high-school")
+    );
 
     const traversal = await Effect.runPromise(
       Effect.flip(validateContentFolderPath("../secret"))

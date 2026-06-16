@@ -20,6 +20,7 @@ const BLOCKED_OUTCOME_ROWS_FILE = join(
   ["source", "ts"].join(".")
 );
 const BLOCKED_PLAN_SOURCE_DIRECTORY = join(TYPES_ROOT, "plan");
+const REMOVED_DATA_DIRECTORY_NAME = ["_", "data"].join("");
 const MATERIAL_SUBJECT_SOURCE_ROOT = join(
   TYPES_ROOT,
   "material",
@@ -55,6 +56,10 @@ function findSourceJsonFiles(directory: string): string[] {
 function findRouteLocalMaterialFiles(directory: string): string[] {
   const matches: string[] = [];
 
+  if (!existsSync(directory)) {
+    return matches;
+  }
+
   for (const entry of readdirSync(directory, { withFileTypes: true })) {
     const entryPath = join(directory, entry.name);
 
@@ -64,7 +69,7 @@ function findRouteLocalMaterialFiles(directory: string): string[] {
     }
 
     if (
-      entryPath.includes("/_data/") &&
+      entryPath.includes(`/${REMOVED_DATA_DIRECTORY_NAME}/`) &&
       BLOCKED_MATERIAL_BASENAMES.has(entry.name)
     ) {
       matches.push(entryPath);
@@ -75,25 +80,25 @@ function findRouteLocalMaterialFiles(directory: string): string[] {
 }
 
 describe("source registry adapter", () => {
-  it("adapts current subject source routes into graph records", () => {
+  it("adapts current material source routes into graph records", () => {
     const record = createSourceRegistryRecord({
       locale: "id",
       route:
-        "/subject/high-school/10/chemistry/atomic-structure/electron-configuration/",
+        "/material/lesson/chemistry/atomic-structure/electron-configuration/",
       sourcePath:
-        "subject/high-school/10/chemistry/atomic-structure/electron-configuration/id.mdx",
+        "material/lesson/chemistry/atomic-structure/electron-configuration/id.mdx",
     });
 
     expect(record).toMatchObject({
       assetId:
-        "asset:id:subject:high-school:10:chemistry:subject-section:chemistry:atomic-structure:electron-configuration",
-      kind: "subject-section",
-      lensId: "lens:subject:high-school:10:chemistry",
+        "asset:id:material:lesson:chemistry:material-section:chemistry:atomic-structure:electron-configuration",
+      kind: "curriculum-lesson",
+      lensId: "lens:material:lesson:chemistry",
       publicRoute:
-        "subject/high-school/10/chemistry/atomic-structure/electron-configuration",
+        "material/lesson/chemistry/atomic-structure/electron-configuration",
       sourcePath:
-        "subject/high-school/10/chemistry/atomic-structure/electron-configuration/id.mdx",
-      sourceRoot: "subject",
+        "material/lesson/chemistry/atomic-structure/electron-configuration/id.mdx",
+      sourceRoot: "material",
     });
   });
 
@@ -118,12 +123,12 @@ describe("source registry adapter", () => {
     });
     const exercise = createSourceRegistryRecord({
       locale: "en",
-      route: "exercises/high-school/snbt/general-reasoning/try-out/2026",
-      sourcePath: "subject/unrelated-shape/file.mdx",
+      route: "material/practice/assessment/snbt/general-reasoning/try-out-2026",
+      sourcePath: "curriculum/unrelated-shape/file.mdx",
     });
 
     expect(quran?.sourceRoot).toBe("quran");
-    expect(exercise?.sourceRoot).toBe("exercises");
+    expect(exercise?.sourceRoot).toBe("material");
     expect(exercise?.sourceRoot).toBe(
       getSourceRegistryRootForKind("exercise-group")
     );
@@ -140,8 +145,8 @@ describe("source registry adapter", () => {
   });
 
   it("normalizes noisy source path provenance", () => {
-    expect(normalizeSourcePath("//subject//high-school/10//id.mdx/")).toBe(
-      "subject/high-school/10/id.mdx"
+    expect(normalizeSourcePath("//curriculum//high-school/10//id.mdx/")).toBe(
+      "curriculum/high-school/10/id.mdx"
     );
   });
 
@@ -161,7 +166,7 @@ describe("source registry adapter", () => {
     expect(existsSync(BLOCKED_PLAN_SOURCE_DIRECTORY)).toBe(false);
   });
 
-  it("blocks route-shaped subject material source folders from returning", () => {
+  it("blocks route-shaped material lesson source folders from returning", () => {
     expect(existsSync(join(MATERIAL_SUBJECT_SOURCE_ROOT, "high-school"))).toBe(
       false
     );

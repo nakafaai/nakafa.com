@@ -102,21 +102,6 @@ function createLocalizedRedirects() {
   ];
   const redirects = [
     {
-      source: "/subject/junior-high-school/:path*",
-      destination: "/subject/middle-school/:path*",
-      permanent: true,
-    },
-    {
-      source: "/subject/senior-high-school/:path*",
-      destination: "/subject/high-school/:path*",
-      permanent: true,
-    },
-    {
-      source: "/exercises/high-school/snbt/quantitative-reasoning/:path*",
-      destination: "/exercises/high-school/snbt/quantitative-knowledge/:path*",
-      permanent: true,
-    },
-    {
       source: "/discord",
       destination: "https://discord.gg/CPCSfKhvfQ",
       permanent: false,

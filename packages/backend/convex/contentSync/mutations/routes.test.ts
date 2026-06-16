@@ -21,11 +21,11 @@ describe("contentSync/mutations/routes", () => {
     const t = convexTest(schema, convexModules);
     const routes = [
       "quran/1",
-      "subject/high-school/10/chemistry/atomic-structure",
-      "subject/high-school/10/chemistry/atomic-structure/electron-configuration",
-      "exercises/high-school/snbt/quantitative-knowledge/try-out/2026",
-      "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1",
-      "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1/7",
+      "material/lesson/chemistry/atomic-structure",
+      "material/lesson/chemistry/atomic-structure/electron-configuration",
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026",
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/7",
     ];
 
     await t.mutation(async (ctx) => {
@@ -54,29 +54,30 @@ describe("contentSync/mutations/routes", () => {
     expect(rows).toEqual([
       expect.objectContaining({ parentRoute: "quran", route: "quran/1" }),
       expect.objectContaining({
-        parentRoute: "subject/high-school/10/chemistry",
-        route: "subject/high-school/10/chemistry/atomic-structure",
+        parentRoute: "material/lesson/chemistry",
+        route: "material/lesson/chemistry/atomic-structure",
       }),
       expect.objectContaining({
-        parentRoute: "subject/high-school/10/chemistry/atomic-structure",
+        parentRoute: "material/lesson/chemistry/atomic-structure",
         route:
-          "subject/high-school/10/chemistry/atomic-structure/electron-configuration",
+          "material/lesson/chemistry/atomic-structure/electron-configuration",
       }),
       expect.objectContaining({
-        parentRoute: "exercises/high-school/snbt/quantitative-knowledge",
-        route: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026",
+        parentRoute: "material/practice/assessment/snbt/quantitative-knowledge",
+        route:
+          "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026",
       }),
       expect.objectContaining({
         parentRoute:
-          "exercises/high-school/snbt/quantitative-knowledge/try-out/2026",
+          "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026",
         route:
-          "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1",
+          "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
       }),
       expect.objectContaining({
         parentRoute:
-          "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1",
+          "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
         route:
-          "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1/7",
+          "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/7",
       }),
     ]);
   });

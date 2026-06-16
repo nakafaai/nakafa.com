@@ -13,14 +13,11 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { themes } from "@repo/design-system/lib/theme";
 import { cn } from "@repo/design-system/lib/utils";
 import { languages } from "@repo/internationalization/data/lang";
-import {
-  usePathname,
-  useRouter,
-} from "@repo/internationalization/src/navigation";
+import { normalizeLocalizedInternalHref } from "@repo/internationalization/src/href";
+import { useRouter } from "@repo/internationalization/src/navigation";
 import { IconCircleFilled } from "@tabler/icons-react";
 import GB from "country-flag-icons/react/3x2/GB";
 import ID from "country-flag-icons/react/3x2/ID";
-import { useParams } from "next/navigation";
 import { type Locale, useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import type * as React from "react";
@@ -34,6 +31,12 @@ const flagMap = {
 };
 
 type SubmenuSide = React.ComponentProps<typeof DropdownMenuSubContent>["side"];
+
+function getCurrentHref() {
+  return normalizeLocalizedInternalHref(
+    `${window.location.pathname}${window.location.search}${window.location.hash}`
+  );
+}
 
 function ActiveBadge({ isActive }: { isActive: boolean }) {
   return (
@@ -50,26 +53,16 @@ function ActiveBadge({ isActive }: { isActive: boolean }) {
 function LanguageSubmenuContent({ side }: { side: SubmenuSide }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const pathname = usePathname();
-  const params = useParams();
   const currentLocale = useLocale();
 
   function handlePrefetch(locale: Locale) {
-    router.prefetch(
-      // @ts-expect-error -- The current route pathname and params are paired by Next.
-      { pathname, params },
-      { locale }
-    );
+    router.prefetch(getCurrentHref(), { locale });
   }
 
   /** Replaces the current route with the selected locale. */
   function handleChangeLocale(locale: Locale) {
     startTransition(() => {
-      router.replace(
-        // @ts-expect-error -- The current route pathname and params are paired by Next.
-        { pathname, params },
-        { locale }
-      );
+      router.replace(getCurrentHref(), { locale });
     });
   }
 

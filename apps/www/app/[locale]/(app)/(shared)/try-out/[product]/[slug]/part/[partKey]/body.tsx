@@ -3,8 +3,8 @@ import {
   type TryoutProduct,
   tryoutProductPolicies,
 } from "@repo/backend/convex/tryouts/products";
-import { parseExercisesMaterial } from "@repo/contents/_lib/exercises/route";
-import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
+import { parseExercisesMaterial } from "@repo/contents/_lib/assessment/route";
+import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 import { preloadedQueryResult, preloadQuery } from "convex/nextjs";
 import { Clock, Effect, Option } from "effect";
 import { notFound, redirect } from "next/navigation";

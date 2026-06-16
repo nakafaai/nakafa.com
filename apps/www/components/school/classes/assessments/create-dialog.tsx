@@ -43,11 +43,11 @@ import { toast } from "sonner";
 import {
   assessmentModeList,
   getAssessmentMode,
-} from "@/components/school/classes/assessments/_data/mode";
+} from "@/components/school/classes/assessments/data/mode";
 import {
   assessmentStatusList,
   getAssessmentStatus,
-} from "@/components/school/classes/assessments/_data/status";
+} from "@/components/school/classes/assessments/data/status";
 import {
   type CreateAssessmentFormValues,
   createAssessmentFormSchema,

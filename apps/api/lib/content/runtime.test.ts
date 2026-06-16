@@ -6,8 +6,8 @@ import {
   getArticleApiContentPage,
   getExerciseApiQuestionPage,
   getExerciseApiSetPage,
+  getMaterialApiContentPage,
   getQuranApiSurahPage,
-  getSubjectApiContentPage,
   listApiStaticParams,
   parseApiContentId,
   parseApiLocale,
@@ -97,11 +97,11 @@ describe("API content runtime", () => {
 
     await expect(
       Effect.runPromise(
-        getSubjectApiContentPage({
+        getMaterialApiContentPage({
           cursor: "next",
           limit: 5,
           locale: "id",
-          prefix: "subject/high-school/10/mathematics",
+          prefix: "curriculum/high-school/10/mathematics",
         })
       )
     ).resolves.toEqual(subjectPage);
@@ -112,7 +112,7 @@ describe("API content runtime", () => {
         cursor: "next",
         limit: 5,
         locale: "id",
-        prefix: "subject/high-school/10/mathematics",
+        prefix: "curriculum/high-school/10/mathematics",
       }
     );
 
@@ -120,7 +120,7 @@ describe("API content runtime", () => {
       Effect.runPromise(
         getExerciseApiSetPage({
           locale: "en",
-          slug: "exercises/high-school/snbt/general-reasoning/set-1",
+          slug: "material/practice/assessment/snbt/general-reasoning/set-1",
         })
       )
     ).resolves.toEqual(exerciseSetPage);
@@ -129,7 +129,7 @@ describe("API content runtime", () => {
       expect.anything(),
       {
         locale: "en",
-        slug: "exercises/high-school/snbt/general-reasoning/set-1",
+        slug: "material/practice/assessment/snbt/general-reasoning/set-1",
       }
     );
 
@@ -137,7 +137,7 @@ describe("API content runtime", () => {
       Effect.runPromise(
         getExerciseApiQuestionPage({
           locale: "id",
-          slug: "exercises/high-school/snbt/general-reasoning/set-1/1",
+          slug: "material/practice/assessment/snbt/general-reasoning/set-1/1",
         })
       )
     ).resolves.toEqual(exerciseQuestionPage);
@@ -146,7 +146,7 @@ describe("API content runtime", () => {
       expect.anything(),
       {
         locale: "id",
-        slug: "exercises/high-school/snbt/general-reasoning/set-1/1",
+        slug: "material/practice/assessment/snbt/general-reasoning/set-1/1",
       }
     );
 

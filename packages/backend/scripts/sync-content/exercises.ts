@@ -42,9 +42,10 @@ import {
   getExerciseSetSearchDescription,
   getExerciseSetSearchText,
   getExerciseSetSearchTitle,
-} from "@repo/contents/_lib/exercises/search";
+} from "@repo/contents/_lib/assessment/search";
 import { getExerciseSetGroupRoute } from "@repo/contents/_types/graph/projection";
-import { listExerciseSets } from "@repo/contents/_types/material/registry";
+import type { PracticeMaterialSetProjection } from "@repo/contents/_types/material/projection";
+import { listPracticeSets } from "@repo/contents/_types/material/registry";
 import type { FunctionArgs } from "convex/server";
 import { Effect } from "effect";
 
@@ -69,7 +70,7 @@ export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
     log("\n--- EXERCISE SETS ---\n");
   }
 
-  const materialSets = listExerciseSets(options.locale);
+  const materialSets = listPracticeSets(options.locale);
 
   if (!options.quiet) {
     log(`Material sets found: ${materialSets.length}`);
@@ -83,13 +84,14 @@ export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
   );
   const sets = yield* Effect.forEach(materialSets, (set) =>
     Effect.gen(function* () {
+      const category = getPracticeCategory(set.assessment);
       const countKey = `${set.locale}:${set.slug}`;
       const questionCount = questionCountByLocaleSlug.get(countKey) || 0;
       const searchSource = {
         locale: set.locale,
-        category: set.category,
-        type: set.type,
-        material: set.material,
+        category,
+        type: set.assessment,
+        material: set.domain,
         exerciseType: set.exerciseType,
         exerciseTypeTitle: set.exerciseTypeTitle,
         setName: set.setName,
@@ -106,9 +108,9 @@ export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
       return {
         locale: set.locale,
         slug: set.slug,
-        category: set.category,
-        type: set.type,
-        material: set.material,
+        category,
+        type: set.assessment,
+        material: set.domain,
         exerciseType: set.exerciseType,
         exerciseTypeTitle: set.exerciseTypeTitle,
         setName: set.setName,
@@ -194,6 +196,16 @@ export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
   return { ...totals, durationMs, itemsPerSecond };
 });
 
+function getPracticeCategory(
+  assessment: PracticeMaterialSetProjection["assessment"]
+): ExerciseQuestionPayload["category"] {
+  if (assessment === "grade-9") {
+    return "middle-school";
+  }
+
+  return "high-school";
+}
+
 /** Reads the graph-owned parent group route for one authored exercise set. */
 const readExerciseSetGroupRoute = Effect.fn("sync.readExerciseSetGroupRoute")(
   function* (setSlug: string) {
@@ -250,8 +262,8 @@ const readRequiredExerciseChoices = Effect.fn(
 /** Returns the locale-scoped question glob shared by set and question sync. */
 function getExerciseQuestionPattern(options: SyncOptions) {
   return options.locale
-    ? `exercises/**/_question/${options.locale}.mdx`
-    : "exercises/**/_question/*.mdx";
+    ? `material/practice/**/question.${options.locale}.mdx`
+    : "material/practice/**/question.*.mdx";
 }
 
 /** Builds set question counts from question payloads that can actually sync. */
@@ -305,7 +317,7 @@ const parseQuestionFile = Effect.fn("sync.parseQuestionFile")(function* (
 ) {
   const pathInfo = yield* parseExercisePath(questionFile);
   const exerciseDir = yield* getExerciseDir(questionFile);
-  const answerFile = questionFile.replace("_question", "_answer");
+  const answerFile = questionFile.replace("/question.", "/answer.");
   const questionParsed = yield* readMdxFile(questionFile);
 
   let answerBody = "";
@@ -319,7 +331,6 @@ const parseQuestionFile = Effect.fn("sync.parseQuestionFile")(function* (
   const choices = yield* readRequiredExerciseChoices(exerciseDir, questionFile);
 
   const setSlug = buildExerciseSetSlug({
-    category: pathInfo.category,
     examType: pathInfo.examType,
     material: pathInfo.material,
     exerciseType: pathInfo.exerciseType,
@@ -407,7 +418,7 @@ const readExerciseSearchLabels = (options: SyncOptions) =>
   Effect.sync(() => {
     const labels = new Map<string, ExerciseSearchLabels>();
 
-    for (const set of listExerciseSets(options.locale)) {
+    for (const set of listPracticeSets(options.locale)) {
       labels.set(`${set.locale}:${set.slug}`, {
         exerciseTypeTitle: set.exerciseTypeTitle,
         setTitle: set.title,
@@ -509,7 +520,7 @@ const reportQuestionSyncResults = (
     logError(`${totals.skipped} questions SKIPPED (missing exercise sets)`);
     const uniqueSets = [...new Set(totals.skippedSetSlugs || [])];
     logError(
-      `Missing sets: ${uniqueSets.map((slug) => slug.replace("exercises/", "")).join(", ")}`
+      `Missing sets: ${uniqueSets.map((slug) => slug.replace("material/practice/", "")).join(", ")}`
     );
     logError("Add these sets to the typed Material source before syncing.");
   }

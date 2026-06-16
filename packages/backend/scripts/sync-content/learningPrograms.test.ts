@@ -24,7 +24,7 @@ const config = {
 
 const subjectGraph = createLearningGraphIdentityFromRoute({
   locale: "id",
-  route: "subject/high-school/10/chemistry/atomic-structure",
+  route: "material/lesson/biology/biodiversity",
 });
 
 if (!subjectGraph) {
@@ -35,13 +35,13 @@ const subjectRoute = {
   ...subjectGraph,
   authors: [],
   content_id: subjectGraph.assetId,
-  kind: "subject-topic",
+  kind: "curriculum-topic",
   locale: "id",
   markdown: true,
-  route: "subject/high-school/10/chemistry/atomic-structure",
-  section: "subject",
+  route: "material/lesson/biology/biodiversity",
+  section: "material",
   syncedAt: 1,
-  title: "Atomic Structure",
+  title: "Biodiversity",
 } as const;
 
 describe("sync-content learningPrograms", () => {
@@ -81,24 +81,19 @@ describe("sync-content learningPrograms", () => {
     );
     const mutationCalls = vi.mocked(callConvexMutation).mock.calls;
 
-    expect(result).toMatchObject({ created: 4, skipped: 0, updated: 0 });
+    expect(result).toMatchObject({ created: 3, skipped: 0, updated: 0 });
     expect(mutationCalls[0]?.[2]).toMatchObject({
       programs: expect.arrayContaining([
         expect.objectContaining({
           key: "id-kurikulum-merdeka",
           navigation: {
             levels: ["class", "subject", "topic"],
-            model: "class-subject-topic",
+            model: "class-curriculum-topic",
           },
         }),
       ]),
     });
     expect(mutationCalls[1]?.[2]).toMatchObject({
-      conceptAlignments: [],
-      outcomes: [],
-      outlineNodes: [],
-    });
-    expect(mutationCalls[2]?.[2]).toMatchObject({
       coverageRows: expect.arrayContaining([
         expect.objectContaining({
           coverageStatus: "partial",
@@ -109,18 +104,12 @@ describe("sync-content learningPrograms", () => {
       ]),
     });
     expect(JSON.stringify(mutationCalls[1]?.[2])).not.toContain(
-      "subject/high-school/10/chemistry"
+      "curriculum/high-school/10/chemistry"
     );
-    expect(JSON.stringify(mutationCalls[2]?.[2])).not.toContain(
-      "subject/high-school/10/chemistry"
-    );
-    expect(mutationCalls[3]?.[2]).toMatchObject({
+    expect(mutationCalls[2]?.[2]).toMatchObject({
       limit: 200,
       locale: "id",
     });
-    expect(log).toHaveBeenCalledWith(
-      expect.stringContaining("Outcomes: 0 new, 0 updated")
-    );
     expect(log).toHaveBeenCalledWith(
       expect.stringContaining("Coverage: 1 rows from 1 graph routes")
     );

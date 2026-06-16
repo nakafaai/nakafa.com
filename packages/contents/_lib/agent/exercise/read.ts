@@ -11,7 +11,7 @@ import {
   parseNakafaContentRefFields,
 } from "@repo/contents/_lib/agent/refs";
 import { NakafaAgentExerciseResultSchema } from "@repo/contents/_lib/agent/schema/exercise";
-import { getRenderableExercisesContent } from "@repo/contents/_lib/exercises/renderable";
+import { getRenderableExercisesContent } from "@repo/contents/_lib/assessment/renderable";
 import { Effect, Option, Schema } from "effect";
 
 type NakafaRenderableExercises = Effect.Effect.Success<
@@ -22,6 +22,8 @@ type NakafaRenderableExercisesLoader = (
   ...input: Parameters<typeof getRenderableExercisesContent>
 ) => Effect.Effect<NakafaRenderableExercises, NakafaAgentDataReadError>;
 
+const practiceMaterialRoutePrefix = "material/practice/";
+
 /** Retrieves a structured exercise set or one exercise by canonical URL projection. */
 export const getNakafaAgentExercise = Effect.fn("NakafaAgent.getExercise")(
   function* (
@@ -31,7 +33,11 @@ export const getNakafaAgentExercise = Effect.fn("NakafaAgent.getExercise")(
   ) {
     const ref = parseNakafaContentRef(input);
 
-    if (Option.isNone(ref) || ref.value.section !== "exercises") {
+    if (
+      Option.isNone(ref) ||
+      ref.value.section !== "material" ||
+      !ref.value.route.startsWith(practiceMaterialRoutePrefix)
+    ) {
       return Option.none();
     }
 
@@ -50,7 +56,7 @@ export const getNakafaAgentExercise = Effect.fn("NakafaAgent.getExercise")(
     const setRef = yield* parseNakafaContentRefFields(
       ref.value.locale,
       target.setRoute,
-      "exercises"
+      "material"
     );
 
     const exerciseResultInput = {

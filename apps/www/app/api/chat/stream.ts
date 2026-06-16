@@ -42,7 +42,7 @@ import { getCanonicalNakafaContentUrl } from "@/app/api/chat/content";
 import { persistAssistantFailure } from "@/app/api/chat/failure";
 import { search as nakafaSearch } from "@/app/api/chat/nakafa";
 import { nakafaContent } from "@/app/api/chat/nakafa-content";
-import { repairChatToolCall } from "@/app/api/chat/repair";
+import { recoverChatToolCall } from "@/app/api/chat/recovery";
 import { getAssistantResponseFailure } from "@/app/api/chat/response";
 import {
   recordSpecialistUsage,
@@ -414,7 +414,7 @@ export function streamChat({ chat, page, runtime, user }: Params) {
               ),
             experimental_repairToolCall: (options) =>
               Effect.runPromise(
-                repairChatToolCall({
+                recoverChatToolCall({
                   ...options,
                   needsPageFetch: context.needsPageFetch && !fetchedPage,
                   sessionLogger: runtime.logContext,

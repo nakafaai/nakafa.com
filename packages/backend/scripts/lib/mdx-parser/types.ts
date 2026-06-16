@@ -5,9 +5,7 @@ import type {
   ExercisesCategory,
   ExercisesMaterial,
   ExercisesType,
-  Grade,
   Material,
-  SubjectCategory,
 } from "@repo/contents/_types/taxonomy";
 
 /** Parsed MDX file with extracted metadata and content hash for change detection. */
@@ -26,16 +24,14 @@ export interface ArticleParsedPath {
   type: "article";
 }
 
-/** Parsed path info for subject files: subject/{category}/{grade}/{material}/{topic}/{section}/{locale}.mdx. */
-export interface SubjectParsedPath {
-  category: SubjectCategory;
-  grade: Grade;
+/** Parsed path info for lesson material files. */
+export interface MaterialLessonParsedPath {
   locale: Locale;
   material: Material;
   section: string;
   slug: string;
   topic: string;
-  type: "subject";
+  type: "material-lesson";
 }
 
 /** Parsed path info for exercise files. */

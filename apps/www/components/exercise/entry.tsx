@@ -1,4 +1,4 @@
-import type { ExerciseWithoutDefaults } from "@repo/contents/_types/exercises/shared";
+import type { ExerciseWithoutDefaults } from "@repo/contents/_types/assessment/shared";
 import { slugify } from "@repo/design-system/lib/utils";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";

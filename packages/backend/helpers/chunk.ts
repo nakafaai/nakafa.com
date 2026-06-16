@@ -170,7 +170,7 @@ function processParagraphs(
 }
 
 /**
- * Splits a script into ElevenLabs-compatible chunks.
+ * Splits a script into ElevenLabs-ready chunks.
  *
  * V3 does NOT support previous_text/next_text context, so this function
  * simply splits at natural boundaries (paragraphs → sentences → words).

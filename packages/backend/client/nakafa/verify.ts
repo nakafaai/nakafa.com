@@ -5,6 +5,8 @@ import { api } from "@repo/backend/convex/_generated/api";
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
 import { Effect, Option } from "effect";
 
+const practiceMaterialRoutePrefix = "material/practice/";
+
 /** Verifies a normalized content reference through Convex runtime queries. */
 export function verifyNakafaContent(convexUrl: string, input: string) {
   return Effect.gen(function* () {
@@ -28,7 +30,10 @@ export function verifyNakafaContent(convexUrl: string, input: string) {
       return false;
     }
 
-    if (ref.value.section !== "exercises") {
+    if (
+      ref.value.section !== "material" ||
+      !ref.value.route.startsWith(practiceMaterialRoutePrefix)
+    ) {
       return true;
     }
 

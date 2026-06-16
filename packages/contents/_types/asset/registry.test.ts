@@ -25,11 +25,11 @@ describe("asset registry", () => {
 
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({
-      conceptIds: ["concept:subject:chemistry:atomic-structure"],
-      key: "asset:subject:high-school:10:chemistry:subject-section:chemistry:atomic-structure:electron-configuration",
-      kind: "subject-section",
-      lensId: "lens:subject:high-school:10:chemistry",
-      sourceRoot: "subject",
+      conceptIds: ["concept:material:lesson:chemistry:atomic-structure"],
+      key: "asset:material:lesson:chemistry:material-section:chemistry:atomic-structure:electron-configuration",
+      kind: "curriculum-lesson",
+      lensId: "lens:material:lesson:chemistry",
+      sourceRoot: "material",
     });
     expect(rows[0]?.locales.map((source) => source.locale)).toEqual([
       "en",
@@ -73,8 +73,8 @@ describe("asset registry", () => {
     ]);
 
     expect(rows.map((row) => row.key)).toEqual([
-      "asset:subject:high-school:10:chemistry:subject-section:chemistry:atomic-structure:electron-configuration",
-      "asset:subject:high-school:10:physics:subject-section:physics:mechanics:newton-law",
+      "asset:material:lesson:chemistry:material-section:chemistry:atomic-structure:electron-configuration",
+      "asset:material:lesson:physics:material-section:physics:mechanics:newton-law",
     ]);
   });
 
@@ -105,7 +105,7 @@ describe("asset registry", () => {
     const row = AssetRegistry.createRecord(subjectSource("id"));
 
     expect(row?.key).toBe(
-      "asset:subject:high-school:10:chemistry:subject-section:chemistry:atomic-structure:electron-configuration"
+      "asset:material:lesson:chemistry:material-section:chemistry:atomic-structure:electron-configuration"
     );
     expect(AssetRegistry.createRegistry([subjectSource("id")])).toHaveLength(1);
   });
@@ -120,26 +120,25 @@ describe("asset registry", () => {
     expect(formatError(LocalizedAssetIdSchema, "concept:math")).toContain(
       "Invalid localized asset ID."
     );
-    expect(formatError(AssetSourcePathSchema, "../subject/id.mdx")).toContain(
-      "Invalid asset source path."
-    );
+    expect(
+      formatError(AssetSourcePathSchema, "../curriculum/id.mdx")
+    ).toContain("Invalid asset source path.");
   });
 });
 
 function subjectSource(locale: "en" | "id"): AssetSourceInput {
   return {
     locale,
-    route:
-      "subject/high-school/10/chemistry/atomic-structure/electron-configuration",
-    sourcePath: `subject/high-school/10/chemistry/atomic-structure/electron-configuration/${locale}.mdx`,
+    route: "material/lesson/chemistry/atomic-structure/electron-configuration",
+    sourcePath: `material/lesson/chemistry/atomic-structure/electron-configuration/${locale}.mdx`,
   };
 }
 
 function mechanicsSource(locale: "en" | "id"): AssetSourceInput {
   return {
     locale,
-    route: "subject/high-school/10/physics/mechanics/newton-law",
-    sourcePath: `subject/high-school/10/physics/mechanics/newton-law/${locale}.mdx`,
+    route: "material/lesson/physics/mechanics/newton-law",
+    sourcePath: `material/lesson/physics/mechanics/newton-law/${locale}.mdx`,
   };
 }
 

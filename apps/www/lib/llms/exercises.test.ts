@@ -17,7 +17,7 @@ vi.mock("@/lib/content/runtime", () => ({
 }));
 
 const validSetPath =
-  "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1";
+  "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1";
 
 const exerciseWithLocalizedChoices = {
   answer: {
@@ -115,6 +115,16 @@ describe("llms exercise markdown", () => {
     expect(text).toContain("Second answer raw");
   });
 
+  it("treats a trailing slash as the whole exercise set", async () => {
+    const text = await getCachedLlmsExerciseText({
+      cleanSlug: `${validSetPath}/`,
+      locale: "en",
+    });
+
+    expect(text).toContain("## Exercise 1");
+    expect(text).toContain("## Exercise 2");
+  });
+
   it("renders one exercise with English choices and title fallback", async () => {
     mockGetRuntimeExerciseSetPage.mockReturnValue(
       Effect.succeed({
@@ -137,7 +147,7 @@ describe("llms exercise markdown", () => {
     );
 
     const text = await getCachedLlmsExerciseText({
-      cleanSlug: `${validSetPath}/3`,
+      cleanSlug: `${validSetPath}/question-3`,
       locale: "id",
     });
 
@@ -149,7 +159,7 @@ describe("llms exercise markdown", () => {
 
   it("uses the exercise title when rendering one titled exercise", async () => {
     const text = await getCachedLlmsExerciseText({
-      cleanSlug: `${validSetPath}/1`,
+      cleanSlug: `${validSetPath}/question-1`,
       locale: "en",
     });
 
@@ -161,7 +171,7 @@ describe("llms exercise markdown", () => {
   it("returns null when the requested exercise number is missing", async () => {
     await expect(
       getCachedLlmsExerciseText({
-        cleanSlug: `${validSetPath}/99`,
+        cleanSlug: `${validSetPath}/question-99`,
         locale: "en",
       })
     ).resolves.toBeNull();

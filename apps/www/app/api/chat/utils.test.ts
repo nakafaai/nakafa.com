@@ -26,7 +26,7 @@ vi.mock("@/app/api/chat/nakafa-content", async () => {
             url ===
               "https://nakafa.com/id/articles/politics/dynastic-politics-asian-values" ||
             url ===
-              "https://nakafa.com/en/exercises/high-school/snbt/general-knowledge/try-out/2026/set-2/1" ||
+              "https://nakafa.com/en/material/practice/assessment/snbt/general-knowledge/try-out-2026/set-2/question-1" ||
             url === "asset:id:quran:quran-surah:1" ||
             url === "nakafa://content/asset:id:quran:quran-surah:1"
         ),
@@ -46,7 +46,7 @@ describe("app/api/chat/utils", () => {
       true,
     ],
     [
-      "https://nakafa.com/en/exercises/high-school/snbt/general-knowledge/try-out/2026/set-2/1",
+      "https://nakafa.com/en/material/practice/assessment/snbt/general-knowledge/try-out-2026/set-2/question-1",
       true,
     ],
     ["asset:id:quran:quran-surah:1", true],
@@ -94,7 +94,7 @@ describe("app/api/chat/utils", () => {
           position: 1,
           reason: "program-alignment",
           route:
-            "/exercises/high-school/snbt/general-knowledge/try-out/2026/set-2/1",
+            "/material/practice/assessment/snbt/general-knowledge/try-out-2026/set-2/question-1",
           status: "ready",
           title: "SNBT Set 2",
         },

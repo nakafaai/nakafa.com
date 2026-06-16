@@ -20,7 +20,7 @@ import { useParams, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
 import { Activity, Suspense, useTransition } from "react";
-import { getTagIcon } from "@/components/school/classes/_data/tag";
+import { getTagIcon } from "@/components/school/classes/data/tag";
 import { getSchoolClassesForumHref } from "@/components/school/classes/forum/helpers/routes";
 import { useClass } from "@/lib/context/use-class";
 import { searchParsers } from "@/lib/nuqs/search";

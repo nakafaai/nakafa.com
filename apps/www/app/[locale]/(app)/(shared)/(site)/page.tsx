@@ -12,8 +12,8 @@ import { Hero } from "@/components/marketing/about/hero";
 import { Logos } from "@/components/marketing/about/logos";
 import { Pricing } from "@/components/marketing/about/pricing";
 import { Schools } from "@/components/marketing/about/schools";
-import { exercisesMenu } from "@/components/sidebar/_data/exercises";
-import { subjectMenu } from "@/components/sidebar/_data/subject";
+import { exercisesMenu } from "@/components/sidebar/data/exercises";
+import { subjectMenu } from "@/components/sidebar/data/subject";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 

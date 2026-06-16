@@ -21,3 +21,29 @@ export function isNumberSegment(segment: string) {
 export function isExerciseSetSegment(segment: string) {
   return segment.startsWith("set-");
 }
+
+/** Returns the canonical question number for a material practice question segment. */
+export function getExerciseQuestionNumberSegment(segment: string) {
+  if (isNumberSegment(segment)) {
+    return segment;
+  }
+
+  const questionPrefix = "question-";
+
+  if (!segment.startsWith(questionPrefix)) {
+    return null;
+  }
+
+  const questionNumber = segment.slice(questionPrefix.length);
+
+  return isNumberSegment(questionNumber) ? questionNumber : null;
+}
+
+/** Returns the material practice question segment for a one-based exercise number. */
+export function getExerciseQuestionSegment(exerciseNumber: number) {
+  if (!(Number.isSafeInteger(exerciseNumber) && exerciseNumber > 0)) {
+    return null;
+  }
+
+  return `question-${exerciseNumber}`;
+}

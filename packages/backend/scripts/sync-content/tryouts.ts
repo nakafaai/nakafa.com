@@ -12,7 +12,7 @@ import type {
   SyncOptions,
   SyncResult,
 } from "@repo/backend/scripts/sync-content/types";
-import { getSubjects } from "@repo/contents/_lib/exercises/type";
+import { getSubjects } from "@repo/contents/_lib/assessment/type";
 import { locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
 

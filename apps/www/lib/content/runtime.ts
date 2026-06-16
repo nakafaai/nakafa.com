@@ -15,11 +15,11 @@ import { env } from "@/env";
 type ArticlePageArgs = FunctionArgs<
   typeof api.contents.queries.runtime.getArticlePage
 >;
-type SubjectPageArgs = FunctionArgs<
-  typeof api.contents.queries.runtime.getSubjectPage
+type CurriculumPageArgs = FunctionArgs<
+  typeof api.contents.queries.runtime.getCurriculumPage
 >;
-type SubjectOutlineArgs = FunctionArgs<
-  typeof api.contents.queries.runtime.getSubjectOutline
+type CurriculumOutlineArgs = FunctionArgs<
+  typeof api.contents.queries.runtime.getCurriculumOutline
 >;
 type ExerciseSetPageArgs = FunctionArgs<
   typeof api.contents.queries.runtime.getExerciseSetPage
@@ -57,8 +57,8 @@ type ContentRouteArgs = FunctionArgs<
 type ArticleApiContentPageArgs = FunctionArgs<
   typeof api.contents.queries.runtime.listArticleApiContentPage
 >;
-type SubjectApiContentPageArgs = FunctionArgs<
-  typeof api.contents.queries.runtime.listSubjectApiContentPage
+type MaterialApiContentPageArgs = FunctionArgs<
+  typeof api.contents.queries.runtime.listMaterialApiContentPage
 >;
 type LatestContentRoutes = FunctionReturnType<
   typeof api.contents.queries.runtime.listLatestContentRoutes
@@ -75,24 +75,27 @@ export function fetchRuntimeArticlePage(args: ArticlePageArgs) {
 }
 
 /**
- * Reads a subject lesson from Convex through a Promise boundary for static RSCs.
+ * Reads a curriculum lesson from Convex through a Promise boundary for static RSCs.
  *
  * This avoids starting Effect's runtime before Next.js observes uncached data
  * during prerender. See https://nextjs.org/docs/messages/next-prerender-current-time.
  */
-export function fetchRuntimeSubjectPage(args: SubjectPageArgs) {
-  return fetchRuntimeQuery(api.contents.queries.runtime.getSubjectPage, args);
+export function fetchRuntimeCurriculumPage(args: CurriculumPageArgs) {
+  return fetchRuntimeQuery(
+    api.contents.queries.runtime.getCurriculumPage,
+    args
+  );
 }
 
 /**
- * Reads a subject outline from Convex through a Promise boundary for static RSCs.
+ * Reads a curriculum outline from Convex through a Promise boundary for static RSCs.
  *
  * This avoids starting Effect's runtime before Next.js observes uncached data
  * during prerender. See https://nextjs.org/docs/messages/next-prerender-current-time.
  */
-export function fetchRuntimeSubjectOutline(args: SubjectOutlineArgs) {
+export function fetchRuntimeCurriculumOutline(args: CurriculumOutlineArgs) {
   return fetchRuntimeQuery(
-    api.contents.queries.runtime.getSubjectOutline,
+    api.contents.queries.runtime.getCurriculumOutline,
     args
   );
 }
@@ -230,12 +233,12 @@ export function fetchRuntimeArticleApiContentPage(
   );
 }
 
-/** Reads one subject API content page from the Convex content runtime model. */
-export function fetchRuntimeSubjectApiContentPage(
-  args: SubjectApiContentPageArgs
+/** Reads one material API content page from the Convex content runtime model. */
+export function fetchRuntimeMaterialApiContentPage(
+  args: MaterialApiContentPageArgs
 ) {
   return fetchRuntimeQuery(
-    api.contents.queries.runtime.listSubjectApiContentPage,
+    api.contents.queries.runtime.listMaterialApiContentPage,
     args
   );
 }
@@ -278,21 +281,21 @@ export const getRuntimeArticlePage = Effect.fn("www.contentRuntime.article")(
   }
 );
 
-/** Reads a subject lesson from the Convex content runtime model. */
-export const getRuntimeSubjectPage = Effect.fn("www.contentRuntime.subject")(
-  function* (args: SubjectPageArgs) {
-    return yield* fetchContentRuntimeQuery("getSubjectPage", () =>
-      fetchRuntimeSubjectPage(args)
-    );
-  }
-);
+/** Reads a curriculum lesson from the Convex content runtime model. */
+export const getRuntimeCurriculumPage = Effect.fn(
+  "www.contentRuntime.curriculumLesson"
+)(function* (args: CurriculumPageArgs) {
+  return yield* fetchContentRuntimeQuery("getCurriculumPage", () =>
+    fetchRuntimeCurriculumPage(args)
+  );
+});
 
-/** Reads a subject material outline from the Convex content runtime model. */
-export const getRuntimeSubjectOutline = Effect.fn(
-  "www.contentRuntime.subjectOutline"
-)(function* (args: SubjectOutlineArgs) {
-  return yield* fetchContentRuntimeQuery("getSubjectOutline", () =>
-    fetchRuntimeSubjectOutline(args)
+/** Reads a material lesson outline from the Convex content runtime model. */
+export const getRuntimeCurriculumOutline = Effect.fn(
+  "www.contentRuntime.curriculumOutline"
+)(function* (args: CurriculumOutlineArgs) {
+  return yield* fetchContentRuntimeQuery("getCurriculumOutline", () =>
+    fetchRuntimeCurriculumOutline(args)
   );
 });
 
@@ -416,11 +419,11 @@ export const getRuntimeArticleApiContentPage = Effect.fn(
   );
 });
 
-/** Reads one bounded subject API content page from the Convex runtime model. */
-export const getRuntimeSubjectApiContentPage = Effect.fn(
-  "www.contentRuntime.subjectApiContentPage"
-)(function* (args: SubjectApiContentPageArgs) {
-  return yield* fetchContentRuntimeQuery("listSubjectApiContentPage", () =>
-    fetchRuntimeSubjectApiContentPage(args)
+/** Reads one bounded material API content page from the Convex runtime model. */
+export const getRuntimeMaterialApiContentPage = Effect.fn(
+  "www.contentRuntime.materialApiContentPage"
+)(function* (args: MaterialApiContentPageArgs) {
+  return yield* fetchContentRuntimeQuery("listMaterialApiContentPage", () =>
+    fetchRuntimeMaterialApiContentPage(args)
   );
 });

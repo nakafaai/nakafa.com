@@ -14,10 +14,9 @@ import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
 const REAL_VECTOR_PUBLISHED_AT = 1_744_416_000_000;
-const REAL_VECTOR_TOPIC_SLUG =
-  "subject/high-school/10/mathematics/vector-operations";
+const REAL_VECTOR_TOPIC_SLUG = "material/lesson/mathematics/vector-operations";
 const REAL_VECTOR_SECTION_SLUG =
-  "subject/high-school/10/mathematics/vector-operations/vector-addition";
+  "material/lesson/mathematics/vector-operations/vector-addition";
 const REAL_VECTOR_TOPIC_SECTION_COUNT = 15;
 const REAL_DYNASTIC_ARTICLE_PUBLISHED_AT = 1_723_075_200_000;
 const REAL_DYNASTIC_ARTICLE_SLUG =
@@ -25,7 +24,7 @@ const REAL_DYNASTIC_ARTICLE_SLUG =
 const REAL_DYNASTIC_ARTICLE_ID = "dynastic-politics-asian-values";
 const audioRouteKinds = [
   "article",
-  "subject-section",
+  "curriculum-lesson",
 ] as const satisfies readonly Doc<"contentRoutes">["kind"][];
 
 type AudioRouteKind = (typeof audioRouteKinds)[number];
@@ -62,7 +61,7 @@ async function insertContentRoute(
     locale: input.locale,
     markdown: true,
     route: input.route,
-    section: input.kind === "article" ? "articles" : "subject",
+    section: input.kind === "article" ? "articles" : "material",
     syncedAt: 1,
     title: input.title,
   });
@@ -90,8 +89,8 @@ describe("contents/queries/audio", () => {
         syncedAt: 1,
       });
 
-      await ctx.db.insert("subjectSections", {
-        topicId: await ctx.db.insert("subjectTopics", {
+      await ctx.db.insert("curriculumLessons", {
+        topicId: await ctx.db.insert("curriculumTopics", {
           category: "high-school",
           grade: "10",
           material: "mathematics",
@@ -120,8 +119,8 @@ describe("contents/queries/audio", () => {
         syncedAt: 1,
       });
 
-      await ctx.db.insert("subjectSections", {
-        topicId: await ctx.db.insert("subjectTopics", {
+      await ctx.db.insert("curriculumLessons", {
+        topicId: await ctx.db.insert("curriculumTopics", {
           category: "high-school",
           grade: "10",
           material: "mathematics",
@@ -182,13 +181,13 @@ describe("contents/queries/audio", () => {
         title: "Dynastic Politics",
       });
       const englishSubjectGraph = await insertContentRoute(ctx, {
-        kind: "subject-section",
+        kind: "curriculum-lesson",
         locale: "en",
         route: REAL_VECTOR_SECTION_SLUG,
         title: "Vector Addition",
       });
       const indonesianSubjectGraph = await insertContentRoute(ctx, {
-        kind: "subject-section",
+        kind: "curriculum-lesson",
         locale: "id",
         route: REAL_VECTOR_SECTION_SLUG,
         title: "Penjumlahan Vektor",
@@ -204,14 +203,14 @@ describe("contents/queries/audio", () => {
       await ctx.db.insert("learningPopularity", {
         ...englishSubjectGraph,
         locale: "en",
-        section: "subject",
+        section: "material",
         updatedAt: 1,
         viewCount: 40,
       });
       await ctx.db.insert("learningPopularity", {
         ...indonesianSubjectGraph,
         locale: "id",
-        section: "subject",
+        section: "material",
         updatedAt: 1,
         viewCount: 25,
       });
@@ -237,7 +236,7 @@ describe("contents/queries/audio", () => {
         sourceContent: expect.objectContaining({
           contentHash: "source-subject-en-hash",
           content_id: getGraph("en", REAL_VECTOR_SECTION_SLUG).content_id,
-          contentType: "subject",
+          contentType: "material",
           locale: "en",
           route: REAL_VECTOR_SECTION_SLUG,
         }),
@@ -273,8 +272,8 @@ describe("contents/queries/audio", () => {
         updatedAt: 1,
         viewCount: 80,
       });
-      await ctx.db.insert("subjectSections", {
-        topicId: await ctx.db.insert("subjectTopics", {
+      await ctx.db.insert("curriculumLessons", {
+        topicId: await ctx.db.insert("curriculumTopics", {
           category: "high-school",
           grade: "10",
           material: "mathematics",
@@ -307,7 +306,7 @@ describe("contents/queries/audio", () => {
       await ctx.db.insert("learningPopularity", {
         ...subjectGraph,
         locale: "en",
-        section: "subject",
+        section: "material",
         updatedAt: 1,
         viewCount: 40,
       });

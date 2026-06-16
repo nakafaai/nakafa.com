@@ -6,11 +6,11 @@ describe("createBreadcrumbItems", () => {
   it("builds localized BreadcrumbList items from page hierarchy entries", () => {
     const result = createBreadcrumbItems("id", [
       { name: "Beranda", path: "" },
-      { name: "Mata pelajaran", path: "/subject" },
-      { name: "SMA", path: "/subject/high-school/11" },
+      { name: "Kurikulum", path: "/curriculum" },
+      { name: "SMA", path: "/curriculum/high-school/11" },
       {
         name: "Grafik Fungsi Trigonometri",
-        path: "/subject/high-school/11/mathematics/function-modeling/trigonometric-function-graph",
+        path: "/material/lesson/mathematics/function-modeling/trigonometric-function-graph",
       },
     ]);
 
@@ -24,20 +24,20 @@ describe("createBreadcrumbItems", () => {
       {
         "@type": "ListItem",
         position: 2,
-        name: "Mata pelajaran",
-        item: "https://nakafa.com/id/subject",
+        name: "Kurikulum",
+        item: "https://nakafa.com/id/curriculum",
       },
       {
         "@type": "ListItem",
         position: 3,
         name: "SMA",
-        item: "https://nakafa.com/id/subject/high-school/11",
+        item: "https://nakafa.com/id/curriculum/high-school/11",
       },
       {
         "@type": "ListItem",
         position: 4,
         name: "Grafik Fungsi Trigonometri",
-        item: "https://nakafa.com/id/subject/high-school/11/mathematics/function-modeling/trigonometric-function-graph",
+        item: "https://nakafa.com/id/material/lesson/mathematics/function-modeling/trigonometric-function-graph",
       },
     ]);
   });

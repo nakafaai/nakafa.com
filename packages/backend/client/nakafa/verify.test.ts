@@ -28,7 +28,7 @@ const ExerciseGroupArgsSchema = Schema.Struct({
 
 const articleRoute = "articles/politics/example";
 const exerciseGroupRoute =
-  "exercises/high-school/snbt/quantitative-knowledge/try-out/2026";
+  "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026";
 const exerciseSetRoute = `${exerciseGroupRoute}/set-1`;
 const exerciseQuestionRoute = `${exerciseSetRoute}/2`;
 
@@ -79,7 +79,7 @@ describe("verifyNakafaContent", () => {
       Effect.runPromise(
         verifyNakafaContent(
           "https://example.convex.cloud",
-          "https://nakafa.com/en/subject/high-school/10/mathematics/topic/missing"
+          "https://nakafa.com/en/material/lesson/mathematics/topic/missing"
         )
       )
     ).resolves.toBe(false);
@@ -192,14 +192,14 @@ function readContentRoute(args: unknown) {
     const ref = readNakafaContentRefFixture(
       input.locale,
       input.route,
-      "exercises"
+      "material"
     );
 
     return {
       ...ref,
       locale: input.locale,
       route: input.route,
-      section: "exercises",
+      section: "material",
       title: "Exercise",
     };
   }

@@ -32,7 +32,7 @@ describe("formatLearningProfilePromptContext", () => {
           content_id: "asset:id:exercise:snbt:2026:set-1",
           lensId: "lens:snbt",
           position: 1,
-          route: "/exercises/high-school/snbt/2026/set-1",
+          route: "/material/practice/assessment/snbt/2026/set-1",
           status: "ready",
           title: "SNBT Set 1",
         },
@@ -48,7 +48,7 @@ describe("formatLearningProfilePromptContext", () => {
 
     expect(promptContext).toContain("- stage: Grade 12");
     expect(promptContext).toContain(
-      "1. SNBT Set 1; route: /exercises/high-school/snbt/2026/set-1; status: ready"
+      "1. SNBT Set 1; route: /material/practice/assessment/snbt/2026/set-1; status: ready"
     );
     expect(promptContext).toContain(
       "2. Untitled graph item; graph asset reference: asset:id:subject:mathematics:rational-function; status: skipped"

@@ -9,7 +9,7 @@ import {
   getExerciseDir,
   parseArticlePath,
   parseExercisePath,
-  parseSubjectPath,
+  parseMaterialLessonPath,
 } from "@repo/backend/scripts/lib/mdx-parser/paths";
 import {
   formatDuration,
@@ -20,8 +20,8 @@ import {
 import { globFiles } from "@repo/backend/scripts/sync-content/runtime";
 import type { ValidationResult } from "@repo/backend/scripts/sync-content/types";
 import {
-  listExerciseSets,
-  listSubjectTopics,
+  listLessonRows,
+  listPracticeSets,
 } from "@repo/contents/_types/material/registry";
 import { Effect } from "effect";
 
@@ -62,15 +62,15 @@ const validateArticles = Effect.fn("sync.validateArticles")(function* () {
 });
 
 const validateSubjects = Effect.fn("sync.validateSubjects")(function* () {
-  const files = yield* globFiles("subject/**/*.mdx");
-  const materialTopics = listSubjectTopics();
+  const files = yield* globFiles("material/lesson/**/*.mdx");
+  const materialTopics = listLessonRows();
   const result = createValidationResult();
 
   log(`Validating ${files.length} subject files...`);
   for (const file of files) {
     const validated = yield* Effect.either(
       Effect.gen(function* () {
-        yield* parseSubjectPath(file);
+        yield* parseMaterialLessonPath(file);
         yield* readMdxFile(file);
       })
     );
@@ -88,15 +88,15 @@ const validateSubjects = Effect.fn("sync.validateSubjects")(function* () {
     result.errors.push({ file, error: message });
   }
 
-  log(`Validating ${materialTopics.length} subject material topics...`);
+  log(`Validating ${materialTopics.length} material lesson topics...`);
   result.valid += materialTopics.length;
 
   return result;
 });
 
 const validateExercises = Effect.fn("sync.validateExercises")(function* () {
-  const questionFiles = yield* globFiles("exercises/**/_question/*.mdx");
-  const materialSets = listExerciseSets();
+  const questionFiles = yield* globFiles("material/practice/**/question.*.mdx");
+  const materialSets = listPracticeSets();
   const result = createValidationResult();
 
   log(`Validating ${questionFiles.length} exercise question files...`);
@@ -161,7 +161,7 @@ export const validate = Effect.fn("sync.validate")(function* () {
     `Articles:  ${articleResult.valid} valid, ${articleResult.invalid} invalid`
   );
   log(
-    `Subjects:  ${subjectResult.valid} valid, ${subjectResult.invalid} invalid`
+    `Curriculum:  ${subjectResult.valid} valid, ${subjectResult.invalid} invalid`
   );
   log(
     `Exercises: ${exerciseResult.valid} valid, ${exerciseResult.invalid} invalid`

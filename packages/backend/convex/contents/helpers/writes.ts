@@ -1,8 +1,8 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { toContentAnalyticsIoError } from "@repo/backend/convex/contents/analytics/spec";
+import { getTrendingBucketStart } from "@repo/backend/convex/curriculumLessons/utils";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
-import { getTrendingBucketStart } from "@repo/backend/convex/subjectSections/utils";
 import { Effect } from "effect";
 
 type QueuedContentView = Doc<"contentViewAnalyticsQueue">;
@@ -73,7 +73,7 @@ function buildContentAnalyticsBatch(queueItems: readonly QueuedContentView[]) {
   for (const queueItem of queueItems) {
     incrementCount(learningPopularity, queueItem);
 
-    if (queueItem.section === "subject") {
+    if (queueItem.section === "material") {
       const bucketStart = getTrendingBucketStart(queueItem.viewedAt);
       const bucketKey = `${queueItem.locale}:${bucketStart}:${queueItem.content_id}`;
       const existingBucket = learningTrendingBuckets.get(bucketKey);

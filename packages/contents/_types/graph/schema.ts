@@ -3,8 +3,8 @@ import { Schema } from "effect";
 /** Stable learning object kinds supported by graph identity generation. */
 export const LEARNING_OBJECT_KIND_VALUES = [
   "article",
-  "subject-topic",
-  "subject-section",
+  "curriculum-topic",
+  "curriculum-lesson",
   "exercise-group",
   "exercise-set",
   "exercise-question",
@@ -24,8 +24,7 @@ export type LearningObjectKind = Schema.Schema.Type<
 /** Stable source roots accepted by the graph source registry adapter. */
 export const SOURCE_REGISTRY_ROOT_VALUES = [
   "articles",
-  "subject",
-  "exercises",
+  "material",
   "quran",
 ] as const;
 
@@ -141,12 +140,12 @@ export type SourceRouteInput = Schema.Schema.Type<
 
 const ROOT_BY_KIND = {
   article: "articles",
-  "exercise-group": "exercises",
-  "exercise-question": "exercises",
-  "exercise-set": "exercises",
+  "exercise-group": "material",
+  "exercise-question": "material",
+  "exercise-set": "material",
   "quran-surah": "quran",
-  "subject-section": "subject",
-  "subject-topic": "subject",
+  "curriculum-lesson": "material",
+  "curriculum-topic": "material",
 } as const satisfies Record<LearningObjectKind, SourceRegistryRoot>;
 
 const LENS_SCOPE_BY_KIND = {
@@ -155,8 +154,8 @@ const LENS_SCOPE_BY_KIND = {
   "exercise-question": "exam",
   "exercise-set": "exam",
   "quran-surah": "scripture",
-  "subject-section": "curriculum",
-  "subject-topic": "curriculum",
+  "curriculum-lesson": "curriculum",
+  "curriculum-topic": "curriculum",
 } as const satisfies Record<LearningObjectKind, CurriculumLensScope>;
 
 /** Returns the source-registry root owned by one graph object kind. */

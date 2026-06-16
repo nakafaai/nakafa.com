@@ -80,7 +80,7 @@ describe("llms markdown content resolver", () => {
       Effect.runPromise(
         getLlmsMarkdownText({
           cleanSlug:
-            "exercises/high-school/snbt/general-knowledge/try-out/2026/set-1/9",
+            "material/practice/assessment/snbt/general-knowledge/try-out-2026/set-1/question-9",
           locale: "en",
         })
       )
@@ -96,8 +96,7 @@ describe("llms markdown content resolver", () => {
     await expect(
       Effect.runPromise(
         getLlmsMarkdownText({
-          cleanSlug:
-            "subject/high-school/10/chemistry/green-chemistry/definition",
+          cleanSlug: "material/lesson/chemistry/green-chemistry/definition",
           locale: "id",
         })
       )
@@ -127,14 +126,14 @@ describe("llms markdown content resolver", () => {
     await expect(
       Effect.runPromise(
         getLlmsMarkdownText({
-          cleanSlug: "subject/high-school/10/chemistry",
+          cleanSlug: "curriculum/high-school/10/chemistry",
           locale: "en",
         })
       )
     ).resolves.toBe("Index markdown");
 
     expect(mockGetCachedLlmsSectionIndexText).toHaveBeenCalledWith({
-      cleanSlug: "llms/en/subject/high-school/10/chemistry",
+      cleanSlug: "llms/en/curriculum/high-school/10/chemistry",
     });
   });
 
@@ -152,7 +151,7 @@ describe("llms markdown content resolver", () => {
 
     await expect(
       Effect.runPromise(
-        getLlmsMarkdownText({ cleanSlug: "exercises/missing", locale: "en" })
+        getLlmsMarkdownText({ cleanSlug: "assessment/missing", locale: "en" })
       )
     ).rejects.toThrow(error.message);
   });
@@ -174,7 +173,7 @@ describe("llms markdown content resolver", () => {
 
     await expect(
       Effect.runPromise(
-        getLlmsMarkdownText({ cleanSlug: "subject/missing", locale: "en" })
+        getLlmsMarkdownText({ cleanSlug: "curriculum/missing", locale: "en" })
       )
     ).rejects.toThrow(error.message);
   });
@@ -187,14 +186,14 @@ describe("llms markdown content resolver", () => {
     await expect(
       Effect.runPromise(
         getLlmsSourceMarkdownText({
-          cleanSlug: "subject/high-school/10/chemistry",
+          cleanSlug: "curriculum/high-school/10/chemistry",
           locale: "en",
         })
       )
     ).resolves.toBe("Source index markdown");
 
     expect(mockGetLlmsSectionIndexText).toHaveBeenCalledWith(
-      "llms/en/subject/high-school/10/chemistry"
+      "llms/en/curriculum/high-school/10/chemistry"
     );
     expect(mockGetCachedLlmsSectionIndexText).not.toHaveBeenCalled();
   });
@@ -224,7 +223,7 @@ describe("llms markdown content resolver", () => {
       Effect.runPromise(
         getLlmsSourceMarkdownText({
           cleanSlug:
-            "exercises/high-school/snbt/general-knowledge/try-out/2026/set-1",
+            "material/practice/assessment/snbt/general-knowledge/try-out-2026/set-1",
           locale: "en",
         })
       )
@@ -240,8 +239,7 @@ describe("llms markdown content resolver", () => {
     await expect(
       Effect.runPromise(
         getLlmsSourceMarkdownText({
-          cleanSlug:
-            "subject/high-school/10/chemistry/green-chemistry/definition",
+          cleanSlug: "material/lesson/chemistry/green-chemistry/definition",
           locale: "id",
         })
       )

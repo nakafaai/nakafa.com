@@ -132,7 +132,7 @@ describe("generateSEOMetadata", () => {
   it("uses subject MDX description before generated fallback copy", async () => {
     const result = await generateSEOMetadata(
       {
-        type: "subject",
+        type: "material-lesson",
         category: "high-school",
         grade: "11",
         material: "mathematics",
@@ -160,7 +160,7 @@ describe("generateSEOMetadata", () => {
   it("uses generated subject description when MDX description is missing", async () => {
     const result = await generateSEOMetadata(
       {
-        type: "subject",
+        type: "material-lesson",
         category: "university",
         grade: "bachelor",
         material: "mathematics",
@@ -180,7 +180,7 @@ describe("generateSEOMetadata", () => {
   it("uses subject metadata when title is missing", async () => {
     const result = await generateSEOMetadata(
       {
-        type: "subject",
+        type: "material-lesson",
         category: "high-school",
         grade: "11",
         material: "mathematics",
@@ -200,7 +200,7 @@ describe("generateSEOMetadata", () => {
   it("uses the site title when content title and subject are missing", async () => {
     const result = await generateSEOMetadata(
       {
-        type: "subject",
+        type: "material-lesson",
         category: "high-school",
         grade: "11",
         material: "mathematics",
@@ -215,7 +215,7 @@ describe("generateSEOMetadata", () => {
   it("keeps long subject titles intact in the localized title template", async () => {
     const result = await generateSEOMetadata(
       {
-        type: "subject",
+        type: "material-lesson",
         category: "university",
         grade: "bachelor",
         material: "ai-ds",
@@ -434,7 +434,7 @@ describe("generateSEOMetadata", () => {
 
     const result = await generateSEOMetadata(
       {
-        type: "subject",
+        type: "material-lesson",
         category: "high-school",
         grade: "11",
         material: "mathematics",
@@ -464,7 +464,7 @@ describe("generateSEOMetadata", () => {
 
     const result = await generateSEOMetadata(
       {
-        type: "subject",
+        type: "material-lesson",
         category: "high-school",
         grade: "11",
         material: "mathematics",
@@ -491,7 +491,7 @@ describe("generateSEOMetadata", () => {
 
     const result = await generateSEOMetadata(
       {
-        type: "subject",
+        type: "material-lesson",
         category: "high-school",
         grade: "11",
         material: "mathematics",

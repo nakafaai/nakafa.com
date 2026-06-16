@@ -5,19 +5,20 @@ import { invalidateContentRuntimeCache } from "@repo/backend/scripts/sync-conten
 import { clean } from "@repo/backend/scripts/sync-content/clean";
 import { getConvexConfig } from "@repo/backend/scripts/sync-content/convex";
 import {
+  syncCurriculumLessons,
+  syncCurriculumTopics,
+} from "@repo/backend/scripts/sync-content/curriculum";
+import {
   syncExerciseQuestions,
   syncExerciseSets,
 } from "@repo/backend/scripts/sync-content/exercises";
 import { syncLearningPrograms } from "@repo/backend/scripts/sync-content/learningPrograms";
 import { log, logError } from "@repo/backend/scripts/sync-content/logging";
+import { syncGeneratedReadModels } from "@repo/backend/scripts/sync-content/readModels";
 import { reset } from "@repo/backend/scripts/sync-content/reset";
 import { resetAnalytics } from "@repo/backend/scripts/sync-content/resetAnalytics";
 import { resetAudio } from "@repo/backend/scripts/sync-content/resetAudio";
 import { resetTryouts } from "@repo/backend/scripts/sync-content/resetTryouts";
-import {
-  syncSubjectSections,
-  syncSubjectTopics,
-} from "@repo/backend/scripts/sync-content/subjects";
 import type { SyncOptions } from "@repo/backend/scripts/sync-content/types";
 import { validate } from "@repo/backend/scripts/sync-content/validate";
 import { verify } from "@repo/backend/scripts/sync-content/verify";
@@ -75,6 +76,9 @@ const printUsage = (): void => {
   log("  sync:verify           - Verify database matches filesystem");
   log(
     "  learning-programs     - Sync program catalog and graph-backed coverage"
+  );
+  log(
+    "  read-models           - Sync generated material/curriculum/assessment read models"
   );
   log("  sync:clean            - Find and remove stale content");
   log(
@@ -138,29 +142,38 @@ export const runCommand = Effect.fn("sync.runCommand")(function* (
       return;
     case "subjects":
       yield* syncAuthors(config, options);
-      yield* syncSubjectTopics(config, options);
-      yield* syncSubjectSections(config, options);
+      yield* syncCurriculumTopics(config, options);
+      yield* syncCurriculumLessons(config, options);
+      yield* syncGeneratedReadModels(config, options);
       return;
-    case "subject-topics":
+    case "curriculum-topics":
       yield* syncAuthors(config, options);
-      yield* syncSubjectTopics(config, options);
+      yield* syncCurriculumTopics(config, options);
+      yield* syncGeneratedReadModels(config, options);
       return;
-    case "subject-sections":
+    case "curriculum-lessons":
       yield* syncAuthors(config, options);
-      yield* syncSubjectSections(config, options);
+      yield* syncCurriculumLessons(config, options);
+      yield* syncGeneratedReadModels(config, options);
       return;
     case "exercise-sets":
       yield* syncAuthors(config, options);
       yield* syncExerciseSets(config, options);
+      yield* syncGeneratedReadModels(config, options);
       return;
     case "exercise-questions":
       yield* syncAuthors(config, options);
       yield* syncExerciseQuestions(config, options);
+      yield* syncGeneratedReadModels(config, options);
       return;
     case "exercises":
       yield* syncAuthors(config, options);
       yield* syncExerciseSets(config, options);
       yield* syncExerciseQuestions(config, options);
+      yield* syncGeneratedReadModels(config, options);
+      return;
+    case "read-models":
+      yield* syncGeneratedReadModels(config, options);
       return;
     case "learning-programs":
       yield* syncLearningPrograms(config, options);

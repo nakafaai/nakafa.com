@@ -4,7 +4,8 @@ type ContentSearchDocument = Doc<"contentSearch">;
 
 const searchTokenPattern = /[\p{L}\p{N}]+/gu;
 const numericTokenPattern = /^\p{N}+$/u;
-const exerciseQuestionRoutePattern = /\/\d+$/u;
+const exerciseQuestionRoutePattern = /\/question-\d+$/u;
+const practiceRoutePrefix = "material/practice/";
 const routeSeparatorPattern = /[/_-]+/g;
 
 /** Re-ranks bounded search candidates by direct query-token evidence. */
@@ -95,7 +96,10 @@ function getDocumentMetadataSearchText(document: ContentSearchDocument) {
 
 /** Prefers set/material exercise rows over question rows for semantic searches. */
 function getExerciseSetPriority(document: ContentSearchDocument) {
-  if (document.section !== "exercises") {
+  if (
+    document.section !== "material" ||
+    !document.route.startsWith(practiceRoutePrefix)
+  ) {
     return 0;
   }
 

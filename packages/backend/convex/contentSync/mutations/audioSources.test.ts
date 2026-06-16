@@ -6,10 +6,9 @@ import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
 const ARTICLE_SLUG = "articles/science/audio-source";
-const SUBJECT_TOPIC_SLUG =
-  "subject/high-school/10/mathematics/audio-source-topic";
+const SUBJECT_TOPIC_SLUG = "material/lesson/mathematics/audio-source-topic";
 const SUBJECT_SECTION_SLUG =
-  "subject/high-school/10/mathematics/audio-source-topic/audio-source-section";
+  "material/lesson/mathematics/audio-source-topic/audio-source-section";
 const articleSource = getTestAudioContent({
   contentHash: "article-source-hash",
   locale: "id",
@@ -100,12 +99,12 @@ describe("contentSync audio sources", () => {
     const t = convexTest(schema, convexModules);
 
     await t.mutation(
-      internal.contentSync.mutations.subjects.bulkSyncSubjectTopics,
+      internal.contentSync.mutations.curriculum.bulkSyncCurriculumTopics,
       {
         topics: [
           {
             category: "high-school",
-            contentHash: "subject-topic-source-hash",
+            contentHash: "curriculum-topic-source-hash",
             grade: "10",
             locale: "en",
             material: "mathematics",
@@ -119,7 +118,7 @@ describe("contentSync audio sources", () => {
       }
     );
     await t.mutation(
-      internal.contentSync.mutations.subjects.bulkSyncSubjectSections,
+      internal.contentSync.mutations.curriculum.bulkSyncCurriculumLessons,
       {
         sections: [
           {
@@ -152,7 +151,7 @@ describe("contentSync audio sources", () => {
         )
         .unique();
       const section = await ctx.db
-        .query("subjectSections")
+        .query("curriculumLessons")
         .withIndex("by_locale_and_slug", (q) =>
           q.eq("locale", "en").eq("slug", SUBJECT_SECTION_SLUG)
         )
@@ -177,7 +176,7 @@ describe("contentSync audio sources", () => {
     });
 
     await t.mutation(
-      internal.contentSync.mutations.subjects.deleteStaleSubjectSections,
+      internal.contentSync.mutations.curriculum.deleteStaleCurriculumLessons,
       {
         sectionIds: [sourceBefore.sectionId],
       }

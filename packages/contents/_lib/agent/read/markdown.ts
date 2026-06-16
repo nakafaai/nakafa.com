@@ -21,6 +21,8 @@ interface NakafaMarkdownReaders {
   readonly readQuran?: typeof getNakafaAgentQuranReference;
 }
 
+const practiceMaterialRoutePrefix = "material/practice/";
+
 /** Retrieves full agent-readable markdown by canonical Nakafa URL projection. */
 export const getNakafaAgentMarkdown = Effect.fn("NakafaAgent.getMarkdown")(
   function* (input: string, readers: NakafaMarkdownReaders = {}) {
@@ -34,7 +36,10 @@ export const getNakafaAgentMarkdown = Effect.fn("NakafaAgent.getMarkdown")(
       return yield* renderNakafaQuranMarkdown(ref.value, readers);
     }
 
-    if (ref.value.section === "exercises") {
+    if (
+      ref.value.section === "material" &&
+      ref.value.route.startsWith(practiceMaterialRoutePrefix)
+    ) {
       return yield* renderNakafaExerciseMarkdown(ref.value, readers);
     }
 
@@ -42,7 +47,7 @@ export const getNakafaAgentMarkdown = Effect.fn("NakafaAgent.getMarkdown")(
   }
 );
 
-/** Renders article and subject MDX source as agent markdown. */
+/** Renders article and lesson material MDX source as agent markdown. */
 function renderNakafaMdxMarkdown(
   ref: NakafaAgentContentRef,
   readers: NakafaMarkdownReaders

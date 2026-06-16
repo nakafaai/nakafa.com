@@ -26,9 +26,11 @@ import type {
   SyncOptions,
 } from "@repo/backend/scripts/sync-content/types";
 import { getAllSurah } from "@repo/contents/_lib/quran";
+import { listCurricula } from "@repo/contents/_types/curriculum/registry";
 import {
-  listExerciseMaterials,
-  listSubjectMaterials,
+  listLessonMaterialSources,
+  listLessonRows,
+  listPracticeMaterialSources,
 } from "@repo/contents/_types/material/registry";
 import { locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
@@ -80,6 +82,65 @@ function getExpectedQuranCounts() {
     surahs: surahs.length,
     verses: surahs.reduce((total, surah) => total + surah.numberOfVerses, 0),
   };
+}
+
+/** Builds final read-model count targets from typed material and curriculum sources. */
+function getExpectedGeneratedCounts(options: SyncOptions) {
+  const curriculumLessons = listCurriculumLessonRows(options);
+
+  return {
+    curriculumLessons: curriculumLessons.reduce(
+      (total, topic) => total + topic.sections.length,
+      0
+    ),
+    curriculumTopics: curriculumLessons.length,
+    materialLocales:
+      getExpectedLessonMaterialLocales(options) +
+      getExpectedPracticeMaterialLocales(options),
+  };
+}
+
+function listCurriculumLessonRows(options: SyncOptions) {
+  const curriculumMaterialKeys = new Set<string>();
+
+  for (const curriculum of listCurricula()) {
+    for (const node of curriculum.nodes) {
+      for (const materialKey of node.materialKeys) {
+        curriculumMaterialKeys.add(materialKey);
+      }
+    }
+  }
+
+  return listLessonRows(options.locale).filter((topic) =>
+    curriculumMaterialKeys.has(topic.key)
+  );
+}
+
+function getExpectedLessonMaterialLocales(options: SyncOptions) {
+  const localeCount = getExpectedLocaleCount(options);
+
+  return listLessonMaterialSources().reduce(
+    (total, material) => total + material.sections.length * localeCount,
+    0
+  );
+}
+
+function getExpectedPracticeMaterialLocales(options: SyncOptions) {
+  const localeCount = getExpectedLocaleCount(options);
+
+  return listPracticeMaterialSources().reduce(
+    (total, material) =>
+      total +
+      material.groups.reduce(
+        (groupTotal, group) => groupTotal + group.sets.length * localeCount,
+        0
+      ),
+    0
+  );
+}
+
+function getExpectedLocaleCount(options: SyncOptions) {
+  return options.locale ? 1 : locales.length;
 }
 
 /** Verifies representative Quran routes, runtime reads, and search rows. */
@@ -241,17 +302,17 @@ export const verify = Effect.fn("sync.verify")(function* (
 
   const [
     articleFiles,
-    subjectFiles,
+    lessonFiles,
     questionFiles,
     answerFiles,
     choicesFiles,
     refFiles,
   ] = yield* Effect.all([
     globFiles("articles/**/*.mdx"),
-    globFiles("subject/**/*.mdx"),
-    globFiles("exercises/**/_question/*.mdx"),
-    globFiles("exercises/**/_answer/*.mdx"),
-    globFiles("exercises/**/choices.ts"),
+    globFiles("material/lesson/**/*.mdx"),
+    globFiles("material/practice/**/question.*.mdx"),
+    globFiles("material/practice/**/answer.*.mdx"),
+    globFiles("material/practice/**/choices.ts"),
     globFiles("articles/**/ref.ts"),
   ]);
 
@@ -261,20 +322,17 @@ export const verify = Effect.fn("sync.verify")(function* (
   const articleFilesId = articleFiles.filter((file) =>
     file.endsWith("/id.mdx")
   );
-  const subjectFilesEn = subjectFiles.filter((file) =>
-    file.endsWith("/en.mdx")
-  );
-  const subjectFilesId = subjectFiles.filter((file) =>
-    file.endsWith("/id.mdx")
-  );
+  const lessonFilesEn = lessonFiles.filter((file) => file.endsWith("/en.mdx"));
+  const lessonFilesId = lessonFiles.filter((file) => file.endsWith("/id.mdx"));
   const questionFilesEn = questionFiles.filter((file) =>
     file.endsWith("/en.mdx")
   );
   const questionFilesId = questionFiles.filter((file) =>
     file.endsWith("/id.mdx")
   );
-  const subjectPlanCount = listSubjectMaterials().length;
-  const exercisePlanCount = listExerciseMaterials().length;
+  const lessonSourceCount = listLessonMaterialSources().length;
+  const exercisePlanCount = listPracticeMaterialSources().length;
+  const expectedGeneratedCounts = getExpectedGeneratedCounts(options);
 
   log("=== FILESYSTEM ===\n");
   log("Articles:");
@@ -283,11 +341,11 @@ export const verify = Effect.fn("sync.verify")(function* (
   log(`    - Indonesian (id): ${articleFilesId.length}`);
   log(`  Reference files:     ${refFiles.length} (ref.ts)`);
 
-  log("\nSubjects:");
-  log(`  Material sources:        ${subjectPlanCount}`);
-  log(`  Total MDX files:     ${subjectFiles.length}`);
-  log(`    - English (en):    ${subjectFilesEn.length}`);
-  log(`    - Indonesian (id): ${subjectFilesId.length}`);
+  log("\nCurriculum:");
+  log(`  Material sources:        ${lessonSourceCount}`);
+  log(`  Total MDX files:     ${lessonFiles.length}`);
+  log(`    - English (en):    ${lessonFilesEn.length}`);
+  log(`    - Indonesian (id): ${lessonFilesId.length}`);
 
   log("\nExercises:");
   log(`  Material sources:        ${exercisePlanCount}`);
@@ -313,17 +371,21 @@ export const verify = Effect.fn("sync.verify")(function* (
 
   log("Content tables:");
   log(`  articleContents:     ${counts.articles}`);
-  log(`  subjectTopics:       ${counts.subjectTopics}`);
-  log(`  subjectSections:     ${counts.subjectSections}`);
+  log(`  materials:           ${counts.materials}`);
+  log(`  materialLocales:     ${counts.materialLocales}`);
+  log(`  curricula:           ${counts.curricula}`);
+  log(`  curriculumNodes:     ${counts.curriculumNodes}`);
+  log(`  curriculumMaterials: ${counts.curriculumMaterials}`);
+  log(`  assessments:         ${counts.assessments}`);
+  log(`  assessmentNodes:     ${counts.assessmentNodes}`);
+  log(`  curriculumTopics:       ${counts.curriculumTopics}`);
+  log(`  curriculumLessons:     ${counts.curriculumLessons}`);
   log(`  exerciseSets:        ${counts.exerciseSets}`);
   log(`  exerciseQuestions:   ${counts.exerciseQuestions}`);
   log(`  contentSearch:       ${counts.contentSearch}`);
   log(`  contentRoutes:       ${counts.contentRoutes}`);
   log(`  learningPrograms:    ${counts.learningPrograms}`);
   log(`  learningProgramSrcs: ${counts.learningProgramSources}`);
-  log(`  programOutlines:     ${counts.learningProgramOutlineNodes}`);
-  log(`  programOutcomes:     ${counts.learningProgramOutcomes}`);
-  log(`  outcomeConcepts:     ${counts.learningProgramOutcomeConcepts}`);
   log(`  learningProgramCov:  ${counts.learningProgramCoverage}`);
   log(`  quranSurahs:         ${counts.quranSurahs}`);
   log(`  quranVerses:         ${counts.quranVerses}`);
@@ -351,16 +413,24 @@ export const verify = Effect.fn("sync.verify")(function* (
     allMatch = false;
   }
 
-  if (counts.subjectSections === subjectFiles.length) {
-    logSuccess(
-      `Subject Sections: ${counts.subjectSections} in DB = ${subjectFiles.length} files`
-    );
-  } else {
-    logError(
-      `Subject Sections: ${counts.subjectSections} in DB != ${subjectFiles.length} files`
-    );
-    allMatch = false;
-  }
+  allMatch =
+    logCountMatch({
+      actual: counts.materialLocales,
+      expected: expectedGeneratedCounts.materialLocales,
+      label: "Material Locales",
+    }) && allMatch;
+  allMatch =
+    logCountMatch({
+      actual: counts.curriculumTopics,
+      expected: expectedGeneratedCounts.curriculumTopics,
+      label: "Curriculum Topics",
+    }) && allMatch;
+  allMatch =
+    logCountMatch({
+      actual: counts.curriculumLessons,
+      expected: expectedGeneratedCounts.curriculumLessons,
+      label: "Curriculum Lessons",
+    }) && allMatch;
 
   if (counts.exerciseQuestions === questionFiles.length) {
     logSuccess(
@@ -480,8 +550,8 @@ export const verify = Effect.fn("sync.verify")(function* (
   if (allMatch) {
     logSuccess("All primary content synced correctly!");
     log(`  - ${counts.articles} articles`);
-    log(`  - ${counts.subjectTopics} subject topics`);
-    log(`  - ${counts.subjectSections} subject sections`);
+    log(`  - ${counts.curriculumTopics} curriculum topics`);
+    log(`  - ${counts.curriculumLessons} curriculum lessons`);
     log(`  - ${counts.exerciseSets} exercise sets`);
     log(`  - ${counts.exerciseQuestions} exercise questions`);
     log(`  - ${counts.contentSearch} content search rows`);

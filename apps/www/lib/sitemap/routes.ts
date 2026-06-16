@@ -1,6 +1,7 @@
 import type { api } from "@repo/backend/convex/_generated/api";
 import { CONTENT_ROUTE_ARTIFACT_PAGE_SIZE } from "@repo/backend/convex/contents/constants";
 import { getSourceRouteProjectionForRoute } from "@repo/contents/_types/graph/projection";
+import type { SourceRouteProjection } from "@repo/contents/_types/graph/schema";
 import { routing } from "@repo/internationalization/src/routing";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
@@ -18,20 +19,15 @@ type RuntimeContentRoute = NonNullable<
     typeof api.contents.queries.runtime.getContentRouteArtifactPage
   >
 >["routes"][number];
-type SourceRouteProjection = NonNullable<
-  ReturnType<typeof getSourceRouteProjectionForRoute>
->;
-type ExerciseRouteProjection = NonNullable<SourceRouteProjection["exercise"]>;
-
 const contentSections: readonly RuntimeContentSection[] = [
   "articles",
-  "subject",
-  "exercises",
+  "material",
   "quran",
 ];
 const sitemapBasePageId = "base";
 const quranRootRoute = "/quran";
-const subjectRootRoute = "/subject";
+const curriculumRootRoute = "/curriculum";
+const assessmentRootRoute = "/assessment";
 const tryOutYearSegment = /^\d{4}$/;
 
 /** Descriptor for one graph-backed sitemap artifact page. */
@@ -50,7 +46,8 @@ export const baseRoutes = [
   "/search",
   "/contributor",
   quranRootRoute,
-  subjectRootRoute,
+  curriculumRootRoute,
+  assessmentRootRoute,
   "/terms-of-service",
   "/privacy-policy",
   "/security-policy",
@@ -204,14 +201,14 @@ function addContentPageRoutes(routes: Set<string>, route: string) {
     return;
   }
 
-  if (projection.kind === "subject-section") {
-    addSubjectRoutes(routes, projection);
+  if (projection.kind === "curriculum-lesson") {
+    addMaterialLessonRoutes(routes, projection);
     return;
   }
 
   const { exercise } = projection;
   if (exercise) {
-    addExerciseRoutes(routes, exercise);
+    addExerciseRoutes(routes, projection.route, exercise);
     return;
   }
 
@@ -229,22 +226,19 @@ function addArticleRoutes(
   routes.add(routeToPath(projection.route));
 }
 
-/** Adds subject grade, material, and lesson routes. */
-function addSubjectRoutes(
+/** Adds exact reusable material lesson routes without deriving curriculum structure. */
+function addMaterialLessonRoutes(
   routes: Set<string>,
   projection: SourceRouteProjection
 ) {
-  const [, category, grade, material] = projection.lensSegments;
-
-  routes.add(`/subject/${category}/${grade}`);
-  routes.add(`/subject/${category}/${grade}/${material}`);
   routes.add(routeToPath(projection.route));
 }
 
 /** Adds exercise listing, group, set, and question routes. */
 function addExerciseRoutes(
   routes: Set<string>,
-  exercise: ExerciseRouteProjection
+  route: string,
+  exercise: NonNullable<SourceRouteProjection["exercise"]>
 ) {
   const {
     categorySegment: category,
@@ -254,8 +248,9 @@ function addExerciseRoutes(
     setSegment,
     typeSegment: type,
   } = exercise;
-  routes.add(`/exercises/${category}/${type}`);
-  routes.add(`/exercises/${category}/${type}/${material}`);
+  routes.add(routeToPath(route));
+  routes.add(`/assessment/${category}/${type}`);
+  routes.add(`/assessment/${category}/${type}/${material}`);
 
   const nestedSegments = [...groupSegments];
 
@@ -267,7 +262,7 @@ function addExerciseRoutes(
   }
 
   for (const nestedRoute of getExerciseNestedRoutes(nestedSegments)) {
-    routes.add(`/exercises/${category}/${type}/${material}/${nestedRoute}`);
+    routes.add(`/assessment/${category}/${type}/${material}/${nestedRoute}`);
   }
 }
 

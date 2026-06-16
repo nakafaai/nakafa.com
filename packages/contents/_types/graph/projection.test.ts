@@ -8,7 +8,11 @@ import {
   parseQuranSurahNumberForRoute,
   parseSourceRouteProjection,
 } from "@repo/contents/_types/graph/projection";
-import { normalizeSourceRouteProjection } from "@repo/contents/_types/graph/route";
+import {
+  getExerciseQuestionNumberSegment,
+  getExerciseQuestionSegment,
+  normalizeSourceRouteProjection,
+} from "@repo/contents/_types/graph/route";
 import {
   getCurriculumLensScopeForKind,
   getSourceRegistryRootForKind,
@@ -45,35 +49,31 @@ describe("source route projection", () => {
 
     expect(
       getSourceRouteProjectionForRoute(
-        "subject/high-school/10/chemistry/atomic-structure/electron-configuration"
+        "material/lesson/chemistry/atomic-structure/electron-configuration"
       )
     ).toMatchObject({
-      conceptSegments: ["subject", "chemistry", "atomic-structure"],
-      kind: "subject-section",
+      conceptSegments: ["material", "lesson", "chemistry", "atomic-structure"],
+      kind: "curriculum-lesson",
       lensScope: "curriculum",
-      lensSegments: ["subject", "high-school", "10", "chemistry"],
-      parentRoute: "subject/high-school/10/chemistry/atomic-structure",
-      sourceRoot: "subject",
+      lensSegments: ["material", "lesson", "chemistry"],
+      parentRoute: "material/lesson/chemistry/atomic-structure",
+      sourceRoot: "material",
     });
   });
 
   it("projects exercise groups, sets, and questions with named parent routes", () => {
     const groupRoute =
-      "exercises/high-school/snbt/quantitative-knowledge/try-out/2026";
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026";
     const setRoute = `${groupRoute}/set-1`;
-    const questionRoute = `${setRoute}/7`;
-    const shortGroupRoute =
-      "exercises/high-school/snbt/quantitative-knowledge/practice";
-    const shortSetRoute = `${shortGroupRoute}/set-1`;
-    const shortQuestionRoute = `${shortSetRoute}/7`;
+    const questionRoute = `${setRoute}/question-7`;
 
     expect(getSourceRouteProjectionForRoute(groupRoute)).toMatchObject({
       exercise: {
         groupRoute,
-        groupSegments: ["try-out", "2026"],
+        groupSegments: ["try-out-2026"],
       },
       kind: "exercise-group",
-      parentRoute: "exercises/high-school/snbt/quantitative-knowledge",
+      parentRoute: "material/practice/assessment/snbt/quantitative-knowledge",
     });
     expect(getSourceRouteProjectionForRoute(setRoute)).toMatchObject({
       exercise: {
@@ -87,46 +87,16 @@ describe("source route projection", () => {
     expect(getSourceRouteProjectionForRoute(questionRoute)).toMatchObject({
       exercise: {
         groupRoute,
-        questionSegment: "7",
+        questionSegment: "question-7",
         setRoute,
         setSegment: "set-1",
       },
       kind: "exercise-question",
       parentRoute: setRoute,
     });
-    expect(getSourceRouteProjectionForRoute(shortGroupRoute)).toMatchObject({
-      exercise: {
-        groupRoute: shortGroupRoute,
-        groupSegments: ["practice"],
-      },
-      kind: "exercise-group",
-      parentRoute: "exercises/high-school/snbt/quantitative-knowledge",
-    });
-    expect(getSourceRouteProjectionForRoute(shortSetRoute)).toMatchObject({
-      exercise: {
-        groupRoute: shortGroupRoute,
-        setRoute: shortSetRoute,
-        setSegment: "set-1",
-      },
-      kind: "exercise-set",
-      parentRoute: shortGroupRoute,
-    });
-    expect(getSourceRouteProjectionForRoute(shortQuestionRoute)).toMatchObject({
-      exercise: {
-        groupRoute: shortGroupRoute,
-        questionSegment: "7",
-        setRoute: shortSetRoute,
-        setSegment: "set-1",
-      },
-      kind: "exercise-question",
-      parentRoute: shortSetRoute,
-    });
     expect(getExerciseSetGroupRoute(setRoute)).toBe(groupRoute);
-    expect(getExerciseSetGroupRoute(shortSetRoute)).toBe(shortGroupRoute);
     expect(getExerciseSetRoute(setRoute)).toBe(setRoute);
     expect(getExerciseSetRoute(questionRoute)).toBe(setRoute);
-    expect(getExerciseSetRoute(shortSetRoute)).toBe(shortSetRoute);
-    expect(getExerciseSetRoute(shortQuestionRoute)).toBe(shortSetRoute);
     expect(getExerciseQuestionRouteForNumber(setRoute, 7)).toBe(questionRoute);
     expect(getExerciseQuestionRouteForNumber(questionRoute, 7)).toBe(
       questionRoute
@@ -135,46 +105,72 @@ describe("source route projection", () => {
 
   it("rejects malformed projections instead of inferring partial route identity", () => {
     const setRoute =
-      "exercises/high-school/snbt/quantitative-knowledge/practice/set-1";
-    const questionRoute = `${setRoute}/7`;
+      "material/practice/assessment/snbt/quantitative-knowledge/practice/set-1";
+    const questionRoute = `${setRoute}/question-7`;
 
     expect(getSourceRouteProjectionForRoute("quran")).toBeNull();
     expect(
-      getSourceRouteProjectionForRoute("exercises/high-school")
+      getSourceRouteProjectionForRoute("material/practice/assessment")
     ).toBeNull();
-    expect(getSourceRouteProjectionForRoute("exercises/set-1/7")).toBeNull();
     expect(
-      getSourceRouteProjectionForRoute(
-        "subject/high-school/10/math/topic/one/extra"
-      )
+      getSourceRouteProjectionForRoute("material/practice/set-1/question-7")
+    ).toBeNull();
+    expect(
+      getSourceRouteProjectionForRoute("material/lesson/math/topic/one/extra")
     ).toBeNull();
     expect(getSourceRouteProjectionForRoute("quran/not-number")).toBeNull();
     expect(
       getSourceRouteProjectionForRoute(
-        "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/not-a-set/extra"
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/not-a-set/extra"
       )
     ).toBeNull();
     expect(
       getSourceRouteProjectionForRoute(
-        "exercises/high-school/snbt/quantitative-knowledge/practice/set-1/7/extra"
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/not-a-set"
+      )
+    ).toMatchObject({
+      kind: "exercise-group",
+    });
+    expect(
+      getSourceRouteProjectionForRoute(
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/practice/set-1"
+      )
+    ).toMatchObject({
+      kind: "exercise-set",
+    });
+    expect(
+      getSourceRouteProjectionForRoute(
+        "material/practice/assessment/snbt/quantitative-knowledge/practice/set-1/question-7/extra"
       )
     ).toBeNull();
     expect(
-      getExerciseSetGroupRoute("exercises/high-school/snbt/set-1/7")
-    ).toBeNull();
+      getSourceRouteProjectionForRoute(
+        "material/practice/assessment/grade-9/numeracy/practice/set-1"
+      )
+    ).toMatchObject({
+      exercise: {
+        categorySegment: "middle-school",
+      },
+    });
+    expect(getSourceRouteProjectionForRoute("material/video/topic")).toBeNull();
     expect(
-      getExerciseSetRoute(
-        "exercises/high-school/snbt/quantitative-knowledge/practice"
+      getExerciseSetGroupRoute(
+        "material/practice/assessment/snbt/set-1/question-7"
       )
     ).toBeNull();
     expect(
       getExerciseSetRoute(
-        "exercises/high-school/snbt/quantitative-knowledge/practice/not-a-set"
+        "material/practice/assessment/snbt/quantitative-knowledge/practice"
+      )
+    ).toBeNull();
+    expect(
+      getExerciseSetRoute(
+        "material/practice/assessment/snbt/quantitative-knowledge/practice/not-a-set"
       )
     ).toBeNull();
     expect(
       getExerciseQuestionRouteForNumber(
-        "exercises/high-school/snbt/quantitative-knowledge/practice",
+        "material/practice/assessment/snbt/quantitative-knowledge/practice",
         7
       )
     ).toBeNull();
@@ -184,20 +180,24 @@ describe("source route projection", () => {
     expect(getExerciseQuestionRouteForNumber("quran/1", 7)).toBeNull();
     expect(getExerciseQuestionRouteForNumber(setRoute, 0)).toBeNull();
     expect(getExerciseQuestionRouteForNumber(questionRoute, 8)).toBeNull();
+    expect(getExerciseQuestionNumberSegment("question-x")).toBeNull();
+    expect(getExerciseQuestionNumberSegment("7")).toBe("7");
+    expect(getExerciseQuestionSegment(0)).toBeNull();
+    expect(getExerciseQuestionSegment(7)).toBe("question-7");
   });
 
   it("keeps declared kind validation next to the projection spec", () => {
-    const topicRoute = "subject/high-school/10/physics/waves";
+    const topicRoute = "material/lesson/physics/waves";
 
     expect(
       getSourceRouteProjection({
-        kind: "subject-topic",
+        kind: "curriculum-topic",
         route: topicRoute,
       })?.kind
-    ).toBe("subject-topic");
+    ).toBe("curriculum-topic");
     expect(
       getSourceRouteProjection({
-        kind: "subject-section",
+        kind: "curriculum-lesson",
         route: topicRoute,
       })
     ).toBeNull();
@@ -268,9 +268,11 @@ describe("source route projection", () => {
 
   it("owns registry roots and lens scopes for graph kinds", () => {
     expect(getSourceRegistryRootForKind("article")).toBe("articles");
-    expect(getSourceRegistryRootForKind("exercise-question")).toBe("exercises");
+    expect(getSourceRegistryRootForKind("exercise-question")).toBe("material");
     expect(getSourceRegistryRootForKind("quran-surah")).toBe("quran");
-    expect(getCurriculumLensScopeForKind("subject-section")).toBe("curriculum");
+    expect(getCurriculumLensScopeForKind("curriculum-lesson")).toBe(
+      "curriculum"
+    );
     expect(getCurriculumLensScopeForKind("exercise-set")).toBe("exam");
   });
 

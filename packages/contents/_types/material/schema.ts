@@ -1,10 +1,7 @@
+import { ExercisesMaterialSchema } from "@repo/contents/_types/assessment/material";
+import { ExercisesTypeSchema } from "@repo/contents/_types/assessment/type";
 import { LocaleSchema } from "@repo/contents/_types/content";
-import { ExercisesCategorySchema } from "@repo/contents/_types/exercises/category";
-import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
-import { ExercisesTypeSchema } from "@repo/contents/_types/exercises/type";
-import { SubjectCategorySchema } from "@repo/contents/_types/subject/category";
-import { GradeSchema } from "@repo/contents/_types/subject/grade";
-import { MaterialSchema } from "@repo/contents/_types/subject/material";
+import { MaterialSchema } from "@repo/contents/_types/curriculum/material";
 import { Schema } from "effect";
 
 type SchemaType<T extends Schema.Schema.Any> = Schema.Schema.Type<T>;
@@ -60,83 +57,69 @@ const LocaleDescriptionMapSchema = Schema.Struct({
   id: LocalizedDescriptionSchema,
 });
 
-export const SubjectMaterialSectionSchema = Schema.Struct({
+export const LessonMaterialSectionSchema = Schema.Struct({
   slug: MaterialSlugSchema,
   translations: LocaleTitleMapSchema,
 });
 
-export type SubjectMaterialSection = SchemaType<
-  typeof SubjectMaterialSectionSchema
+export type LessonMaterialSection = SchemaType<
+  typeof LessonMaterialSectionSchema
 >;
 
-export const SubjectMaterialTopicSchema = Schema.Struct({
-  sections: Schema.Array(SubjectMaterialSectionSchema),
+export const LessonMaterialSourceSchema = Schema.Struct({
+  assetRoot: MaterialRouteSchema,
+  domain: MaterialSchema,
+  key: MaterialKeySchema,
+  kind: Schema.Literal("lesson"),
+  sections: Schema.Array(LessonMaterialSectionSchema),
   slug: MaterialSlugSchema,
   translations: LocaleDescriptionMapSchema,
 });
 
-export type SubjectMaterialTopic = SchemaType<
-  typeof SubjectMaterialTopicSchema
+export type LessonMaterialSource = SchemaType<
+  typeof LessonMaterialSourceSchema
 >;
-export type SubjectMaterialTopicInput = SchemaEncoded<
-  typeof SubjectMaterialTopicSchema
->;
-
-export const SubjectMaterialSourceSchema = Schema.Struct({
-  baseRoute: MaterialRouteSchema,
-  category: SubjectCategorySchema,
-  grade: GradeSchema,
-  kind: Schema.Literal("subject"),
-  key: MaterialKeySchema,
-  material: MaterialSchema,
-  topics: Schema.Array(SubjectMaterialTopicSchema),
-});
-
-export type SubjectMaterialSource = SchemaType<
-  typeof SubjectMaterialSourceSchema
->;
-export type SubjectMaterialSourceInput = SchemaEncoded<
-  typeof SubjectMaterialSourceSchema
+export type LessonMaterialSourceInput = SchemaEncoded<
+  typeof LessonMaterialSourceSchema
 >;
 
-export const ExerciseMaterialSetSchema = Schema.Struct({
+export const PracticeMaterialSetSchema = Schema.Struct({
   slug: MaterialSlugSchema,
   translations: LocaleTitleMapSchema,
 });
 
-export type ExerciseMaterialSet = SchemaType<typeof ExerciseMaterialSetSchema>;
+export type PracticeMaterialSet = SchemaType<typeof PracticeMaterialSetSchema>;
 
-export const ExerciseMaterialGroupSchema = Schema.Struct({
+export const PracticeMaterialGroupSchema = Schema.Struct({
   exerciseType: MaterialSlugSchema,
-  sets: Schema.Array(ExerciseMaterialSetSchema),
+  sets: Schema.Array(PracticeMaterialSetSchema),
   translations: LocaleDescriptionMapSchema,
   year: Schema.optional(Schema.Int.pipe(Schema.between(2000, 2100))),
 });
 
-export type ExerciseMaterialGroup = SchemaType<
-  typeof ExerciseMaterialGroupSchema
+export type PracticeMaterialGroup = SchemaType<
+  typeof PracticeMaterialGroupSchema
 >;
 
-export const ExerciseMaterialSourceSchema = Schema.Struct({
-  baseRoute: MaterialRouteSchema,
-  category: ExercisesCategorySchema,
-  kind: Schema.Literal("exercise"),
+export const PracticeMaterialSourceSchema = Schema.Struct({
+  assessment: ExercisesTypeSchema,
+  assetRoot: MaterialRouteSchema,
+  domain: ExercisesMaterialSchema,
+  groups: Schema.Array(PracticeMaterialGroupSchema),
   key: MaterialKeySchema,
-  material: ExercisesMaterialSchema,
-  groups: Schema.Array(ExerciseMaterialGroupSchema),
-  type: ExercisesTypeSchema,
+  kind: Schema.Literal("practice"),
 });
 
-export type ExerciseMaterialSource = SchemaType<
-  typeof ExerciseMaterialSourceSchema
+export type PracticeMaterialSource = SchemaType<
+  typeof PracticeMaterialSourceSchema
 >;
-export type ExerciseMaterialSourceInput = SchemaEncoded<
-  typeof ExerciseMaterialSourceSchema
+export type PracticeMaterialSourceInput = SchemaEncoded<
+  typeof PracticeMaterialSourceSchema
 >;
 
 export const MaterialSourceSchema = Schema.Union(
-  SubjectMaterialSourceSchema,
-  ExerciseMaterialSourceSchema
+  LessonMaterialSourceSchema,
+  PracticeMaterialSourceSchema
 );
 
 export type MaterialSource = SchemaType<typeof MaterialSourceSchema>;
@@ -144,17 +127,12 @@ export type MaterialSource = SchemaType<typeof MaterialSourceSchema>;
 export const MaterialLocaleSchema = LocaleSchema;
 export type MaterialLocale = SchemaType<typeof MaterialLocaleSchema>;
 
-/** Decodes one authored subject material source at module load time. */
-export function defineSubjectMaterial(input: SubjectMaterialSourceInput) {
-  return Schema.decodeUnknownSync(SubjectMaterialSourceSchema)(input);
-}
-
-/** Decodes one authored subject topic source chunk at module load time. */
-export function defineSubjectMaterialTopic(input: SubjectMaterialTopicInput) {
-  return Schema.decodeUnknownSync(SubjectMaterialTopicSchema)(input);
+/** Decodes one authored material lesson source at module load time. */
+export function defineLessonMaterial(input: LessonMaterialSourceInput) {
+  return Schema.decodeUnknownSync(LessonMaterialSourceSchema)(input);
 }
 
 /** Decodes one authored exercise material source at module load time. */
-export function defineExerciseMaterial(input: ExerciseMaterialSourceInput) {
-  return Schema.decodeUnknownSync(ExerciseMaterialSourceSchema)(input);
+export function definePracticeMaterial(input: PracticeMaterialSourceInput) {
+  return Schema.decodeUnknownSync(PracticeMaterialSourceSchema)(input);
 }

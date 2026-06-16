@@ -1,12 +1,10 @@
 "use client";
 
+import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import {
-  ToggleGroup,
-  ToggleGroupItem,
-} from "@repo/design-system/components/ui/toggle-group";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
@@ -33,6 +31,10 @@ export function RoleStepForm({ initialRole, options }: RoleStepFormProps) {
   const t = useTranslations("LearningPrograms");
   const router = useRouter();
   const updateRole = useMutation(api.users.mutations.updateUserRole);
+  const gridClassName =
+    options.length >= 3
+      ? "grid w-full grid-cols-1 items-stretch gap-4 sm:grid-cols-3"
+      : "grid w-full max-w-xl grid-cols-1 items-stretch gap-4 sm:grid-cols-2";
   const form = useForm({
     defaultValues: {
       role: initialRole ?? "",
@@ -77,31 +79,21 @@ export function RoleStepForm({ initialRole, options }: RoleStepFormProps) {
 
       <form.Field name="role">
         {(field) => (
-          <ToggleGroup
-            className="grid w-full grid-cols-1 items-stretch gap-4 sm:grid-cols-3"
-            onValueChange={(value) => {
-              const role = parseOnboardingRole(value);
-
-              if (!role) {
-                return;
-              }
-
-              field.handleChange(role);
-            }}
-            type="single"
-            value={field.state.value}
-          >
+          <section className={gridClassName}>
             {options.map((option) => (
-              <ToggleGroupItem
+              <button
                 aria-label={t(option.titleKey)}
-                className="h-auto min-h-0 w-full rounded-xl border bg-card p-0 text-left shadow-sm transition-colors ease-out hover:border-primary/50 hover:bg-[color-mix(in_oklch,var(--primary)_1%,var(--background))] data-pressed:border-primary/60 data-pressed:bg-[color-mix(in_oklch,var(--primary)_2%,var(--background))] data-pressed:ring-1 data-pressed:ring-primary/20"
+                aria-pressed={field.state.value === option.key}
+                className="flex h-full w-full flex-col justify-between rounded-xl border bg-card text-left shadow-sm transition-colors ease-out hover:border-primary/50 hover:bg-[color-mix(in_oklch,var(--primary)_1%,var(--background))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 data-[selected=true]:border-primary/60 data-[selected=true]:bg-[color-mix(in_oklch,var(--primary)_2%,var(--background))] data-[selected=true]:ring-1 data-[selected=true]:ring-primary/20"
+                data-selected={field.state.value === option.key}
                 key={option.key}
-                value={option.key}
+                onClick={() => field.handleChange(option.key)}
+                type="button"
               >
                 <RoleChoice option={option} />
-              </ToggleGroupItem>
+              </button>
             ))}
-          </ToggleGroup>
+          </section>
         )}
       </form.Field>
 
@@ -119,6 +111,9 @@ export function RoleStepForm({ initialRole, options }: RoleStepFormProps) {
               <Spinner data-icon="inline-start" isLoading={isSubmitting} />
             ) : null}
             {t("onboarding.continue")}
+            {isSubmitting ? null : (
+              <HugeIcons data-icon="inline-end" icon={ArrowRight02Icon} />
+            )}
           </Button>
         )}
       </form.Subscribe>

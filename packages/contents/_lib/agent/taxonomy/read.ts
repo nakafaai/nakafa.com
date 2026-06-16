@@ -14,7 +14,7 @@ import {
   getExerciseCategoryOptions,
   getExerciseMaterialOptions,
   getExerciseTypeOptions,
-} from "@repo/contents/_lib/exercises/label";
+} from "@repo/contents/_lib/assessment/label";
 import { getAllSurah } from "@repo/contents/_lib/quran";
 import type { Locale } from "@repo/contents/_types/content";
 import {

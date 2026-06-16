@@ -11,24 +11,24 @@ import { describe, expect, it } from "vitest";
 const NOW = Date.parse("2026-01-01T00:00:00.000Z");
 
 describe("contents/queries/recent", () => {
-  it("returns recently viewed subjects through graph route projections", async () => {
+  it("returns recently viewed materials through graph route projections", async () => {
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "recent-viewer",
       });
-      const subjectId = await insertSubject(ctx, "viewed");
-      const ref = await insertSubjectRoute(ctx, "viewed");
+      const lessonId = await insertCurriculumLesson(ctx, "viewed");
+      const ref = await insertMaterialRoute(ctx, "viewed");
 
-      await insertSubjectView(ctx, {
+      await insertMaterialView(ctx, {
         ref,
         lastViewedAt: NOW,
         suffix: "viewed",
         userId: identity.userId,
       });
 
-      return { ...identity, ref, subjectId };
+      return { ...identity, lessonId, ref };
     });
 
     const results = await t
@@ -46,27 +46,27 @@ describe("contents/queries/recent", () => {
         assetId: seeded.ref.assetId,
         content_id: seeded.ref.assetId,
         lastViewedAt: NOW,
-        route: "subject/high-school/10/mathematics/topic-viewed/section-viewed",
-        title: "Subject viewed",
-        url: "https://nakafa.com/en/subject/high-school/10/mathematics/topic-viewed/section-viewed",
+        route: "material/lesson/mathematics/topic-viewed/section-viewed",
+        title: "Material viewed",
+        url: "https://nakafa.com/en/material/lesson/mathematics/topic-viewed/section-viewed",
       }),
     ]);
     expect(results[0]).not.toHaveProperty("id");
     expect(results[0]).not.toHaveProperty("slug");
-    expect(seeded.subjectId).not.toBe(seeded.ref.assetId);
+    expect(seeded.lessonId).not.toBe(seeded.ref.assetId);
   });
 
-  it("drops recently viewed subjects without graph route projections", async () => {
+  it("drops recently viewed materials without graph route projections", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "recent-missing-route",
       });
-      await insertSubject(ctx, "missing-route");
-      const ref = getSubjectGraph("missing-route");
+      await insertCurriculumLesson(ctx, "missing-route");
+      const ref = getMaterialGraph("missing-route");
 
-      await insertSubjectView(ctx, {
+      await insertMaterialView(ctx, {
         ref,
         lastViewedAt: NOW,
         suffix: "missing-route",
@@ -90,26 +90,26 @@ describe("contents/queries/recent", () => {
   });
 });
 
-/** Inserts one subject section row for recently viewed query tests. */
-async function insertSubject(ctx: MutationCtx, suffix: string) {
-  const route = getSubjectRoute(suffix);
-  const topicId = await ctx.db.insert("subjectTopics", {
+/** Inserts one curriculum lesson row for recently viewed query tests. */
+async function insertCurriculumLesson(ctx: MutationCtx, suffix: string) {
+  const route = getMaterialLessonRoute(suffix);
+  const topicId = await ctx.db.insert("curriculumTopics", {
     category: "high-school",
     grade: "10",
     locale: "en",
     material: "mathematics",
     order: 0,
     sectionCount: 1,
-    slug: `subject/high-school/10/mathematics/topic-${suffix}`,
+    slug: `material/lesson/mathematics/topic-${suffix}`,
     syncedAt: NOW,
     title: `Topic ${suffix}`,
     topic: `topic-${suffix}`,
   });
 
-  return await ctx.db.insert("subjectSections", {
-    body: "Subject body",
+  return await ctx.db.insert("curriculumLessons", {
+    body: "Material body",
     category: "high-school",
-    contentHash: `subject-hash-${suffix}`,
+    contentHash: `material-hash-${suffix}`,
     date: NOW,
     description: `Description ${suffix}`,
     grade: "10",
@@ -120,38 +120,38 @@ async function insertSubject(ctx: MutationCtx, suffix: string) {
     slug: route,
     subject: `Topic ${suffix}`,
     syncedAt: NOW,
-    title: `Subject ${suffix}`,
+    title: `Material ${suffix}`,
     topic: `topic-${suffix}`,
     topicId,
   });
 }
 
-/** Inserts the route catalog graph projection for one subject section. */
-async function insertSubjectRoute(ctx: MutationCtx, suffix: string) {
-  const route = getSubjectRoute(suffix);
-  const identity = getSubjectGraph(suffix);
+/** Inserts the route catalog graph projection for one curriculum lesson. */
+async function insertMaterialRoute(ctx: MutationCtx, suffix: string) {
+  const route = getMaterialLessonRoute(suffix);
+  const identity = getMaterialGraph(suffix);
 
   await ctx.db.insert("contentRoutes", {
     ...identity,
     authors: [{ name: "Nakafa Author" }],
-    contentHash: `subject-hash-${suffix}`,
+    contentHash: `material-hash-${suffix}`,
     content_id: identity.assetId,
     date: NOW,
     description: `Description ${suffix}`,
-    kind: "subject-section",
+    kind: "curriculum-lesson",
     locale: "en",
     markdown: true,
     route,
-    section: "subject",
+    section: "material",
     syncedAt: NOW,
-    title: `Subject ${suffix}`,
+    title: `Material ${suffix}`,
   });
 
   return identity;
 }
 
-/** Inserts one subject content-view row for the signed-in user. */
-async function insertSubjectView(
+/** Inserts one material content-view row for the signed-in user. */
+async function insertMaterialView(
   ctx: MutationCtx,
   {
     ref,
@@ -159,7 +159,7 @@ async function insertSubjectView(
     suffix,
     userId,
   }: {
-    ref: ReturnType<typeof getSubjectGraph>;
+    ref: ReturnType<typeof getMaterialGraph>;
     lastViewedAt: number;
     suffix: string;
     userId: Id<"users">;
@@ -172,28 +172,28 @@ async function insertSubjectView(
     firstViewedAt: NOW,
     lastViewedAt,
     locale: "en",
-    route: getSubjectRoute(suffix),
-    section: "subject",
+    route: getMaterialLessonRoute(suffix),
+    section: "material",
     userId,
   });
 }
 
-/** Builds the route-catalog graph identity for one subject fixture. */
-function getSubjectGraph(suffix: string) {
-  const route = getSubjectRoute(suffix);
+/** Builds the route-catalog graph identity for one material fixture. */
+function getMaterialGraph(suffix: string) {
+  const route = getMaterialLessonRoute(suffix);
   const identity = createLearningGraphIdentityFromRoute({
     locale: "en",
     route,
   });
 
   if (!identity) {
-    throw new Error(`Expected subject graph identity for ${route}.`);
+    throw new Error(`Expected material graph identity for ${route}.`);
   }
 
   return identity;
 }
 
-/** Builds the canonical subject route used by recent-query fixtures. */
-function getSubjectRoute(suffix: string) {
-  return `subject/high-school/10/mathematics/topic-${suffix}/section-${suffix}`;
+/** Builds the canonical material route used by recent-query fixtures. */
+function getMaterialLessonRoute(suffix: string) {
+  return `material/lesson/mathematics/topic-${suffix}/section-${suffix}`;
 }

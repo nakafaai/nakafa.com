@@ -111,7 +111,7 @@ function getFeedContentRoutes() {
             listRuntimeLatestContentRoutes({
               limit: RSS_CONTENT_ROUTE_LIMIT,
               locale,
-              section: "subject",
+              section: "material",
             }),
           ]),
         { concurrency: routing.locales.length }

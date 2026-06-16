@@ -71,8 +71,8 @@ describe("nakafaAgentPrompt", () => {
       context: {
         currentDate: "May 15, 2026",
         needsPageFetch: true,
-        slug: "subject/high-school/10/chemistry",
-        url: "/id/subject/high-school/10/chemistry",
+        slug: "curriculum/high-school/10/chemistry",
+        url: "/id/curriculum/high-school/10/chemistry",
         verified: true,
       },
       locale: "id",

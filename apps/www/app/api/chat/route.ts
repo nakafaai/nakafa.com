@@ -38,8 +38,9 @@ const corsValidator = new CorsValidator();
 const possibleVerifiedUrls = [
   "/articles",
   "/quran",
-  "/subject",
-  "/exercises",
+  "/curriculum",
+  "/assessment",
+  "/material",
 ] as const;
 
 /**

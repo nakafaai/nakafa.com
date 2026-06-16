@@ -60,7 +60,7 @@ function detachedExerciseSummary({
     lensId: contentId.replace("asset:", "lens:"),
     locale: "id",
     route,
-    section: "exercises",
+    section: "material",
   });
 
   if (Option.isNone(ref)) {
@@ -83,8 +83,8 @@ const exerciseResult = {
       description: "Latihan fungsi rasional.",
       locale: "id",
       route:
-        "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/11",
-      section: "exercises",
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-2/question-11",
+      section: "material",
       title: "Soal 11",
     }),
   ],
@@ -95,8 +95,9 @@ const exerciseResult = {
 const exerciseSetResult = contentSummary({
   description: "SNBT Pengetahuan Kuantitatif Try Out 2026 Set 2.",
   locale: "id",
-  route: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
-  section: "exercises",
+  route:
+    "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-2",
+  section: "material",
   title: "SNBT Pengetahuan Kuantitatif Try Out 2026 Set 2",
 });
 
@@ -107,9 +108,8 @@ const subjectResult = {
     contentSummary({
       description: "Pelajari fungsi rasional.",
       locale: "id",
-      route:
-        "subject/high-school/11/mathematics/function-modeling/rational-function",
-      section: "subject",
+      route: "material/lesson/mathematics/function-modeling/rational-function",
+      section: "material",
       title: "Fungsi Rasional",
     }),
   ],
@@ -125,7 +125,7 @@ describe("Nakafa agent step state", () => {
         locale: "id",
         offset: 0,
         queries: ["fungsi rasional"],
-        section: "exercises",
+        section: "material",
       },
       exerciseResult
     );
@@ -142,8 +142,8 @@ describe("Nakafa agent step state", () => {
       description: "Latihan fungsi rasional.",
       locale: "id",
       route:
-        "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/15",
-      section: "exercises",
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-2/question-15",
+      section: "material",
       title: "Soal 15",
     });
     const ref = selectExerciseRef(
@@ -152,7 +152,7 @@ describe("Nakafa agent step state", () => {
         locale: "id",
         offset: 0,
         queries: ["SNBT Pengetahuan Kuantitatif try out 2026 set 2"],
-        section: "exercises",
+        section: "material",
       },
       {
         ...exerciseResult,
@@ -176,7 +176,7 @@ describe("Nakafa agent step state", () => {
         locale: "id",
         offset: 0,
         queries: ["SNBT Pengetahuan Kuantitatif try out 2026 set 2"],
-        section: "exercises",
+        section: "material",
       },
       {
         ...exerciseResult,
@@ -198,20 +198,20 @@ describe("Nakafa agent step state", () => {
       contentId: "asset:id:detached:exercise:set-2:q15",
       description: "Detached graph question.",
       route:
-        "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/15",
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-2/question-15",
       title: "Detached Question 15",
     });
     const set = detachedExerciseSummary({
       contentId: "asset:id:detached:exercise:set-2",
       description: "Detached graph set.",
       route:
-        "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-2",
       title: "Detached Set 2",
     });
     const sourceProjectionSet = readNakafaContentRefFixture(
       "id",
       set.route,
-      "exercises"
+      "material"
     );
     const ref = selectExerciseRef(
       {
@@ -219,7 +219,7 @@ describe("Nakafa agent step state", () => {
         locale: "id",
         offset: 0,
         queries: ["SNBT Pengetahuan Kuantitatif try out 2026 set 2"],
-        section: "exercises",
+        section: "material",
       },
       {
         ...exerciseResult,
@@ -242,13 +242,13 @@ describe("Nakafa agent step state", () => {
       contentId: "asset:id:detached:exercise:set-2:q11",
       description: "Detached graph question.",
       route:
-        "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/11",
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-2/question-11",
       title: "Detached Question 11",
     });
     const sourceProjectionSet = readNakafaContentRefFixture(
       "id",
-      "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
-      "exercises"
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-2",
+      "material"
     );
     const ref = selectExerciseRef(
       {
@@ -256,7 +256,7 @@ describe("Nakafa agent step state", () => {
         locale: "id",
         offset: 0,
         queries: ["SNBT Pengetahuan Kuantitatif try out 2026 set 2"],
-        section: "exercises",
+        section: "material",
       },
       {
         ...exerciseResult,
@@ -279,8 +279,8 @@ describe("Nakafa agent step state", () => {
       description: "SMA SNBT Penalaran Matematika Try Out 2026 Set 2 Nomor 11",
       locale: "id",
       route:
-        "exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-2/11",
-      section: "exercises",
+        "material/practice/assessment/snbt/mathematical-reasoning/try-out-2026/set-2/question-11",
+      section: "material",
       title: "SNBT Penalaran Matematika Try Out 2026 Set 2 Soal 11",
     });
     const quantitativeKnowledge = {
@@ -295,7 +295,7 @@ describe("Nakafa agent step state", () => {
         locale: "id",
         offset: 0,
         queries: ["SNBT 2026 set 2 nomor 11"],
-        section: "exercises",
+        section: "material",
       },
       {
         ...exerciseResult,
@@ -319,7 +319,7 @@ describe("Nakafa agent step state", () => {
         locale: "id",
         offset: 0,
         queries: [],
-        section: "exercises",
+        section: "material",
       },
       exerciseResult
     );
@@ -337,7 +337,7 @@ describe("Nakafa agent step state", () => {
         limit: 1,
         locale: "id",
         offset: 0,
-        section: "exercises",
+        section: "material",
       },
       exerciseResult
     );
@@ -354,8 +354,8 @@ describe("Nakafa agent step state", () => {
       description: "Latihan fungsi rasional.",
       locale: "id",
       route:
-        "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/12",
-      section: "exercises",
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-2/question-12",
+      section: "material",
       title: "Soal 12",
     });
     const ref = selectExerciseRef(
@@ -364,7 +364,7 @@ describe("Nakafa agent step state", () => {
         locale: "id",
         offset: 0,
         queries: ["SNBT Pengetahuan Kuantitatif"],
-        section: "exercises",
+        section: "material",
       },
       {
         ...exerciseResult,
@@ -397,7 +397,7 @@ describe("Nakafa agent step state", () => {
         locale: "id",
         offset: 0,
         queries: ["fungsi rasional"],
-        section: "exercises",
+        section: "material",
       },
       {
         ...exerciseResult,
@@ -411,7 +411,7 @@ describe("Nakafa agent step state", () => {
         locale: "id",
         offset: 0,
         queries: ["fungsi rasional"],
-        section: "exercises",
+        section: "material",
       },
       null
     );
@@ -489,7 +489,7 @@ describe("Nakafa agent step state", () => {
         locale: "id",
         offset: 0,
         queries: ["fungsi rasional"],
-        section: "subject",
+        section: "material",
       },
       subjectResult
     );
@@ -514,7 +514,7 @@ describe("Nakafa agent step state", () => {
         locale: "id",
         offset: 0,
         queries: ["fungsi rasional"],
-        section: "exercises",
+        section: "material",
       },
       exerciseResult
     );
@@ -545,7 +545,7 @@ describe("Nakafa agent step state", () => {
         locale: "id",
         offset: 0,
         queries: ["tidak ada"],
-        section: "subject",
+        section: "material",
       },
       {
         ...subjectResult,
@@ -559,7 +559,7 @@ describe("Nakafa agent step state", () => {
         locale: "id",
         offset: 0,
         queries: ["tidak ada"],
-        section: "subject",
+        section: "material",
       },
       null
     );

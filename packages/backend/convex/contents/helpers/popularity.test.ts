@@ -3,7 +3,7 @@ import { getTestAudioContent } from "@repo/backend/convex/test.helpers";
 import { describe, expect, it } from "vitest";
 
 const subjectRoute =
-  "subject/high-school/10/mathematics/vector-operations/vector-addition";
+  "material/lesson/mathematics/vector-operations/vector-addition";
 const articleRoute = "articles/politics/dynastic-politics-asian-values";
 
 describe("contents/helpers/popularity", () => {

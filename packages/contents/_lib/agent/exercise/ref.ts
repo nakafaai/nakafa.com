@@ -5,18 +5,24 @@ import {
 import { getSourceRouteProjectionForRoute } from "@repo/contents/_types/graph/projection";
 import { Option } from "effect";
 
+const practiceMaterialRoutePrefix = "material/practice/";
+
 /** Resolves any exercise URL projection to its parent set reference. */
 export function getNakafaExerciseSetRef(input: string) {
   const ref = parseNakafaContentRef(input);
 
-  if (Option.isNone(ref) || ref.value.section !== "exercises") {
+  if (
+    Option.isNone(ref) ||
+    ref.value.section !== "material" ||
+    !ref.value.route.startsWith(practiceMaterialRoutePrefix)
+  ) {
     return Option.none();
   }
 
   return createNakafaContentRef(
     ref.value.locale,
     getNakafaExerciseSetRoute(ref.value.route),
-    "exercises"
+    "material"
   );
 }
 

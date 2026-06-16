@@ -28,7 +28,7 @@ export const getRecentlyViewed = query({
       .withIndex("by_userId_and_section_and_locale_and_lastViewedAt", (q) =>
         q
           .eq("userId", user.appUser._id)
-          .eq("section", "subject")
+          .eq("section", "material")
           .eq("locale", args.locale)
       )
       .order("desc")
@@ -46,12 +46,12 @@ export const getRecentlyViewed = query({
         .withIndex("by_content_id", (q) => q.eq("content_id", view.content_id))
         .unique();
 
-      if (route?.kind !== "subject-section") {
+      if (route?.kind !== "curriculum-lesson") {
         continue;
       }
 
       const subject = await ctx.db
-        .query("subjectSections")
+        .query("curriculumLessons")
         .withIndex("by_locale_and_slug", (q) =>
           q.eq("locale", route.locale).eq("slug", route.route)
         )
