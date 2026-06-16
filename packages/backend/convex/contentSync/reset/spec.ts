@@ -48,8 +48,6 @@ export const resettableTableNames = [
   "materials",
   "learningPlanItems",
   "learningProgramCoverage",
-  "learningProgramSources",
-  "learningPrograms",
   "quranSurahs",
   "quranVerses",
   "curriculumLessons",

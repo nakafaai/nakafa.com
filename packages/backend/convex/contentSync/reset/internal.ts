@@ -76,11 +76,6 @@ export const deleteLearningPlanItemsBatch =
 export const deleteLearningProgramCoverageBatch = createBatchDeleteMutation(
   "learningProgramCoverage"
 );
-export const deleteLearningProgramSourcesBatch = createBatchDeleteMutation(
-  "learningProgramSources"
-);
-export const deleteLearningProgramsBatch =
-  createBatchDeleteMutation("learningPrograms");
 export const deleteContentRoutesBatch =
   createBatchDeleteMutation("contentRoutes");
 export const deleteContentRouteCountsBatch =

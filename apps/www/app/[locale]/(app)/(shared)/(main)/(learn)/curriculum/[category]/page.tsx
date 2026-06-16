@@ -1,12 +1,8 @@
+import { listCurriculumCategoryParams } from "@repo/contents/_types/curriculum/routes";
 import { notFound } from "next/navigation";
 
-import { getStaticParams } from "@/lib/utils/system";
-
 export function generateStaticParams() {
-  return getStaticParams({
-    basePath: "material",
-    paramNames: ["category"],
-  });
+  return listCurriculumCategoryParams();
 }
 
 export default function Page() {

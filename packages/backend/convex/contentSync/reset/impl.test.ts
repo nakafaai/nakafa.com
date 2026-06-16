@@ -35,11 +35,10 @@ describe("contentSync/reset/impl", () => {
     const assessmentNodeDelete = await t.mutation(deleteAssessmentNodesBatch);
     const assessmentDelete = await t.mutation(deleteAssessmentsBatch);
     const planItemDelete = await t.mutation(deleteLearningPlanItemsBatch);
-    const sourceDelete = await t.mutation(deleteLearningProgramSourcesBatch);
-    const programDelete = await t.mutation(deleteLearningProgramsBatch);
     const verseDelete = await t.mutation(deleteQuranVersesBatch);
     const surahDelete = await t.mutation(deleteQuranSurahsBatch);
     const counts = await t.query(getDerivedRuntimeRows);
+    const { learningProgramSources, learningPrograms, ...resetRows } = counts;
 
     expect(routeDelete).toEqual({ deleted: 1, hasMore: false });
     expect(viewDelete).toEqual({ deleted: 1, hasMore: false });
@@ -55,11 +54,15 @@ describe("contentSync/reset/impl", () => {
     expect(assessmentNodeDelete).toEqual({ deleted: 1, hasMore: false });
     expect(assessmentDelete).toEqual({ deleted: 1, hasMore: false });
     expect(planItemDelete).toEqual({ deleted: 1, hasMore: false });
-    expect(sourceDelete).toEqual({ deleted: 1, hasMore: false });
-    expect(programDelete).toEqual({ deleted: 1, hasMore: false });
     expect(verseDelete).toEqual({ deleted: 1, hasMore: false });
     expect(surahDelete).toEqual({ deleted: 1, hasMore: false });
-    expect(counts).toEqual({
+    expect(learningProgramSources).toEqual([
+      expect.objectContaining({ label: "Fixture Source" }),
+    ]);
+    expect(learningPrograms).toEqual([
+      expect.objectContaining({ key: "fixture.program" }),
+    ]);
+    expect(resetRows).toEqual({
       learningPopularity: [],
       contentAnalyticsPartitions: [],
       contentViewAnalyticsQueue: [],
@@ -70,8 +73,6 @@ describe("contentSync/reset/impl", () => {
       curricula: [],
       curriculumMaterials: [],
       curriculumNodes: [],
-      learningProgramSources: [],
-      learningPrograms: [],
       materialLocales: [],
       materials: [],
       routes: [],
@@ -413,16 +414,6 @@ async function deleteAssessmentsBatch(ctx: MutationCtx) {
 /** Deletes one generated learning plan item reset batch. */
 async function deleteLearningPlanItemsBatch(ctx: MutationCtx) {
   return await deleteBatchFromTable(ctx, "learningPlanItems");
-}
-
-/** Deletes one generated learning program source reset batch. */
-async function deleteLearningProgramSourcesBatch(ctx: MutationCtx) {
-  return await deleteBatchFromTable(ctx, "learningProgramSources");
-}
-
-/** Deletes one generated learning program reset batch. */
-async function deleteLearningProgramsBatch(ctx: MutationCtx) {
-  return await deleteBatchFromTable(ctx, "learningPrograms");
 }
 
 /** Deletes one Quran verse reset batch through the shared reset helper. */

@@ -11,6 +11,7 @@ import {
   getMaterialPath,
   parseMaterial,
 } from "@repo/contents/_lib/curriculum/route";
+import { listCurriculumMaterialParams } from "@repo/contents/_types/curriculum/routes";
 import type {
   Grade,
   Material,
@@ -45,7 +46,6 @@ import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 import { createSEODescription } from "@/lib/utils/seo/descriptions";
 import { createSEOTitle } from "@/lib/utils/seo/titles";
-import { getStaticParams } from "@/lib/utils/system";
 
 async function getResolvedParams(
   params: PageProps<"/[locale]/curriculum/[category]/[grade]/[material]">["params"]
@@ -131,10 +131,7 @@ export async function generateMetadata({
 }
 
 export function generateStaticParams() {
-  return getStaticParams({
-    basePath: "material",
-    paramNames: ["category", "grade", "material"],
-  });
+  return listCurriculumMaterialParams();
 }
 
 export default function Page(

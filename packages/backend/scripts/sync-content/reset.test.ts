@@ -184,7 +184,7 @@ describe("sync-content reset", () => {
     expect(log).not.toHaveBeenCalledWith("\nTo delete all content, run:");
   });
 
-  it("does not treat generated program catalog rows as an empty database", async () => {
+  it("preserves selected program catalog rows when reset-managed content is empty", async () => {
     vi.mocked(getContentCounts).mockReturnValue(
       Effect.succeed({
         ...emptyCounts,
@@ -197,9 +197,12 @@ describe("sync-content reset", () => {
 
     expect(log).toHaveBeenCalledWith("  Learning Programs:     4");
     expect(log).toHaveBeenCalledWith("  Learning Program Srcs: 5");
-    expect(log).toHaveBeenCalledWith("  Total derived items:  9");
-    expect(log).toHaveBeenCalledWith("\nTo delete all content, run:");
-    expect(logSuccess).not.toHaveBeenCalled();
+    expect(log).toHaveBeenCalledWith("  Total derived items:  0");
+    expect(log).toHaveBeenCalledWith("  Total preserved items: 9");
+    expect(logSuccess).toHaveBeenCalledWith(
+      "\nReset-managed content is already empty. Nothing to delete."
+    );
+    expect(log).not.toHaveBeenCalledWith("\nTo delete all content, run:");
   });
 
   it("deletes generated plan items before program coverage during forced reset", async () => {
@@ -284,10 +287,11 @@ describe("sync-content reset", () => {
     );
   });
 
-  it("deletes generated program catalog rows during forced reset", async () => {
+  it("does not delete selected program catalog rows during forced reset", async () => {
     vi.mocked(getContentCounts).mockReturnValue(
       Effect.succeed({
         ...emptyCounts,
+        learningProgramCoverage: 1,
         learningProgramSources: 1,
         learningPrograms: 1,
       })
@@ -301,13 +305,14 @@ describe("sync-content reset", () => {
 
     expect(mutations).toContain(
       getFunctionName(
-        internal.contentSync.reset.internal.deleteLearningProgramSourcesBatch
+        internal.contentSync.reset.internal.deleteLearningProgramCoverageBatch
       )
     );
-    expect(mutations).toContain(
-      getFunctionName(
-        internal.contentSync.reset.internal.deleteLearningProgramsBatch
+    expect(
+      mutations.filter(
+        (mutation) =>
+          mutation.includes("learningProgram") && !mutation.includes("Coverage")
       )
-    );
+    ).toEqual([]);
   });
 });

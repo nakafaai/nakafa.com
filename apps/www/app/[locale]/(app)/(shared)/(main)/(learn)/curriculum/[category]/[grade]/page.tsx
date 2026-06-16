@@ -6,6 +6,7 @@ import {
 } from "@repo/contents/_lib/curriculum/grade";
 import { getCategoryIcon } from "@repo/contents/_lib/curriculum/icons";
 import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
+import { listCurriculumGradeParams } from "@repo/contents/_types/curriculum/routes";
 import type { Grade, SubjectCategory } from "@repo/contents/_types/taxonomy";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { Effect, Option } from "effect";
@@ -28,7 +29,6 @@ import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 import { createSEOTitle } from "@/lib/utils/seo/titles";
-import { getStaticParams } from "@/lib/utils/system";
 
 async function getResolvedParams(
   params: PageProps<"/[locale]/curriculum/[category]/[grade]">["params"]
@@ -101,10 +101,7 @@ export async function generateMetadata({
 }
 
 export function generateStaticParams() {
-  return getStaticParams({
-    basePath: "material",
-    paramNames: ["category", "grade"],
-  });
+  return listCurriculumGradeParams();
 }
 
 /** Reads grade subjects inside a Next Cache Components boundary. */

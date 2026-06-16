@@ -157,6 +157,20 @@ async function loadSubjects({
     };
   });
   vi.doMock("@repo/contents/_types/material/registry", () => ({
+    /** Returns typed Material sources for curriculum placement lookup. */
+    listLessonMaterialSources: () =>
+      materialTopics.map((topic) => ({
+        assetRoot: topic.slug,
+        domain: topic.domain,
+        key: topic.key,
+        kind: "lesson",
+        sections: [],
+        slug: topic.topic,
+        translations: {
+          en: { title: topic.title },
+          id: { title: topic.title },
+        },
+      })),
     /** Returns typed Material topic fixtures for curriculum sync. */
     listLessonRows: () => materialTopics,
   }));

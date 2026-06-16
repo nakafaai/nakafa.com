@@ -2,7 +2,7 @@ import { resettableTableNames } from "@repo/backend/convex/contentSync/reset/spe
 import { describe, expect, it } from "vitest";
 
 describe("contentSync/reset spec", () => {
-  it("resets generated learning program rows with the final read models", () => {
+  it("resets generated read model rows without deleting selected program identity", () => {
     expect(resettableTableNames).toContain("materials");
     expect(resettableTableNames).toContain("materialLocales");
     expect(resettableTableNames).toContain("curricula");
@@ -12,7 +12,7 @@ describe("contentSync/reset spec", () => {
     expect(resettableTableNames).toContain("assessmentNodes");
     expect(resettableTableNames).toContain("learningProgramCoverage");
     expect(resettableTableNames).toContain("learningPlanItems");
-    expect(resettableTableNames).toContain("learningPrograms");
-    expect(resettableTableNames).toContain("learningProgramSources");
+    expect(resettableTableNames).not.toContain("learningPrograms");
+    expect(resettableTableNames).not.toContain("learningProgramSources");
   });
 });

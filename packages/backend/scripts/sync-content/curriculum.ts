@@ -29,15 +29,11 @@ import type {
   SyncOptions,
   SyncResult,
 } from "@repo/backend/scripts/sync-content/types";
-import {
-  listCurriculumNodesEffect,
-  type ProjectedCurriculumNode,
-} from "@repo/contents/_types/curriculum/projection";
+import { listCurriculumNodesEffect } from "@repo/contents/_types/curriculum/projection";
+import { listSchoolCurriculumPlacements } from "@repo/contents/_types/curriculum/routes";
 import { listLessonRows } from "@repo/contents/_types/material/registry";
 import type { FunctionArgs } from "convex/server";
 import { Effect } from "effect";
-
-const CURRICULUM_CLASS_KEY_REGEX = /^class-(\d+)$/;
 
 type CurriculumTopicPayload = FunctionArgs<
   typeof internal.contentSync.mutations.curriculum.bulkSyncCurriculumTopics
@@ -96,58 +92,17 @@ const createCurriculumPlacementByMaterialKey = Effect.fn(
   >();
 
   const curriculumNodes = yield* listCurriculumNodesEffect();
-  const nodeByKey = new Map(
-    curriculumNodes.map((node) => [getProjectedNodeMapKey(node), node])
-  );
 
-  for (const node of curriculumNodes) {
-    if (node.materialKeys.length === 0) {
-      continue;
-    }
-
-    const classNode = findAncestorNode(nodeByKey, node, "class");
-    const classNumber = classNode?.key.match(CURRICULUM_CLASS_KEY_REGEX)?.[1];
-
-    if (classNumber !== "10" && classNumber !== "11" && classNumber !== "12") {
-      continue;
-    }
-
-    for (const materialKey of node.materialKeys) {
-      placementByMaterialKey.set(materialKey, {
-        category: "high-school",
-        grade: classNumber,
-        order: node.order,
-      });
-    }
+  for (const placement of listSchoolCurriculumPlacements({ curriculumNodes })) {
+    placementByMaterialKey.set(placement.materialKey, {
+      category: placement.category,
+      grade: placement.grade,
+      order: placement.order,
+    });
   }
 
   return placementByMaterialKey;
 });
-
-/** Walks a curriculum node chain until the requested outline level is found. */
-function findAncestorNode(
-  nodeByKey: ReadonlyMap<string, ProjectedCurriculumNode>,
-  node: ProjectedCurriculumNode,
-  level: ProjectedCurriculumNode["level"]
-) {
-  let current: ProjectedCurriculumNode | undefined = node;
-
-  while (current) {
-    if (current.level === level) {
-      return current;
-    }
-
-    current = current.parentKey
-      ? nodeByKey.get(`${current.curriculumKey}:${current.parentKey}`)
-      : undefined;
-  }
-
-  return null;
-}
-
-function getProjectedNodeMapKey(node: ProjectedCurriculumNode) {
-  return `${node.curriculumKey}:${node.key}`;
-}
 
 /** Syncs curriculum topic metadata from typed Material sources into Convex. */
 export const syncCurriculumTopics = Effect.fn("sync.curriculumTopics")(

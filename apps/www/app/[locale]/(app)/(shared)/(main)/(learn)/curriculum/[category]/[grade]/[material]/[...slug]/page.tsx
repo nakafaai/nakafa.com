@@ -15,6 +15,7 @@ import {
 } from "@repo/contents/_lib/curriculum/slug";
 import { getHeadings } from "@repo/contents/_lib/toc";
 import { formatContentDateISO } from "@repo/contents/_shared/date";
+import { listCurriculumLessonParams } from "@repo/contents/_types/curriculum/routes";
 import type {
   Grade,
   Material,
@@ -54,7 +55,6 @@ import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 import { generateSEOMetadata } from "@/lib/utils/seo/generator";
 import type { SEOContext } from "@/lib/utils/seo/types";
-import { getStaticParams } from "@/lib/utils/system";
 
 async function getResolvedParams(
   params: PageProps<"/[locale]/curriculum/[category]/[grade]/[material]/[...slug]">["params"]
@@ -160,12 +160,7 @@ export async function generateMetadata({
 }
 
 export function generateStaticParams() {
-  return getStaticParams({
-    basePath: "material",
-    paramNames: ["category", "grade", "material", "slug"],
-    slugParam: "slug",
-    isDeep: true,
-  });
+  return listCurriculumLessonParams();
 }
 
 /** Renders a curriculum lesson after Convex confirms the published route exists. */

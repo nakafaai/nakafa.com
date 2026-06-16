@@ -112,17 +112,6 @@ const RESET_STEPS: ResetStep[] = [
     resultLabel: "learning program coverage rows",
   },
   {
-    label: "Deleting learning program sources...",
-    mutation:
-      internal.contentSync.reset.internal.deleteLearningProgramSourcesBatch,
-    resultLabel: "learning program source rows",
-  },
-  {
-    label: "Deleting learning programs...",
-    mutation: internal.contentSync.reset.internal.deleteLearningProgramsBatch,
-    resultLabel: "learning program rows",
-  },
-  {
     label: "Deleting content route rows...",
     mutation: internal.contentSync.reset.internal.deleteContentRoutesBatch,
     resultLabel: "content route rows",
@@ -507,8 +496,6 @@ export const reset = Effect.fn("sync.reset")(function* (
     counts.assessmentNodes +
     counts.learningPlanItems +
     counts.learningProgramCoverage +
-    counts.learningProgramSources +
-    counts.learningPrograms +
     counts.contentRoutes +
     counts.contentRouteCounts +
     counts.contentRoutePages +
@@ -516,10 +503,13 @@ export const reset = Effect.fn("sync.reset")(function* (
     counts.quranVerses +
     counts.audioContentSources +
     counts.contentAudios;
+  const totalPreserved =
+    counts.learningProgramSources + counts.learningPrograms;
   log(`\n  Total content items:  ${totalContent}`);
   log(`  Total related items:  ${totalRelated}`);
   log(`  Total runtime items:  ${totalRuntime}`);
   log(`  Total derived items:  ${totalDerived}`);
+  log(`  Total preserved items: ${totalPreserved}`);
 
   if (
     totalContent === 0 &&

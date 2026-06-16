@@ -19,7 +19,7 @@ async function QuestionContent({
   locale: Locale;
   setPath: string;
 }) {
-  const questionPath = `${setPath}/${exerciseNumber}/_question`;
+  const questionPath = `${getExerciseQuestionPath(setPath, exerciseNumber)}/question`;
   const question = await importContentModuleOrNull({
     context: {
       exercise_number: exerciseNumber,
@@ -48,7 +48,7 @@ async function AnswerContent({
   locale: Locale;
   setPath: string;
 }) {
-  const answerPath = `${setPath}/${exerciseNumber}/_answer`;
+  const answerPath = `${getExerciseQuestionPath(setPath, exerciseNumber)}/answer`;
   const answer = await importContentModuleOrNull({
     context: {
       exercise_number: exerciseNumber,
@@ -161,4 +161,8 @@ export function ExerciseTrackedEntry({
       />
     </>
   );
+}
+
+function getExerciseQuestionPath(setPath: string, exerciseNumber: number) {
+  return `${setPath}/question-${exerciseNumber}`;
 }
