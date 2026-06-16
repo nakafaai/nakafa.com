@@ -1,8 +1,8 @@
 import type { CurriculumSource } from "@repo/contents/_types/curriculum/schema";
 import { CurriculumSourceSchema } from "@repo/contents/_types/curriculum/schema";
-import { cambridgeIgcseCurriculum } from "@repo/contents/curriculum/cambridge/igcse";
-import { indonesiaMerdekaCurriculum } from "@repo/contents/curriculum/indonesia/merdeka";
-import { unitedStatesCommonCoreNgssCurriculum } from "@repo/contents/curriculum/united-states/common-core-ngss";
+import { cambridgeIgcseCurriculum } from "@repo/contents/curriculum/cambridge/igcse/source";
+import { indonesiaMerdekaCurriculum } from "@repo/contents/curriculum/indonesia/merdeka/source";
+import { unitedStatesCommonCoreNgssCurriculum } from "@repo/contents/curriculum/united-states/common-core-ngss/source";
 import { Schema } from "effect";
 
 const curriculumSourceInput = [

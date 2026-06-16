@@ -97,15 +97,6 @@ function toContentsPath(filePath: string) {
   return path.relative(process.cwd(), filePath);
 }
 
-function isCurriculumModuleInterface(filePath: string) {
-  const contentsPath = toContentsPath(filePath);
-
-  return (
-    contentsPath.startsWith(`curriculum${path.sep}`) &&
-    path.basename(filePath) === "index.ts"
-  );
-}
-
 /** Finds authored material source files under the unified material tree. */
 function readMaterialSourceFiles(directory: string) {
   return Effect.runSync(
@@ -259,14 +250,10 @@ describe("contents architecture", () => {
     expect(removedFacadeImports).toStrictEqual([]);
   });
 
-  it("does not use index source modules outside curriculum interfaces", () => {
-    const indexSourceFiles = sourceFiles.filter((filePath) => {
-      if (!INDEX_SOURCE_FILE_PATTERN.test(path.basename(filePath))) {
-        return false;
-      }
-
-      return !isCurriculumModuleInterface(filePath);
-    });
+  it("does not use index source modules", () => {
+    const indexSourceFiles = sourceFiles.filter((filePath) =>
+      INDEX_SOURCE_FILE_PATTERN.test(path.basename(filePath))
+    );
 
     expect(indexSourceFiles.map(toContentsPath)).toStrictEqual([]);
   });
