@@ -158,29 +158,29 @@
           "title": "What do you want to focus on?",
           "school": {
             "title": "School lessons",
-            "description": "Follow lessons for your class."
+            "description": "Read clear explanations."
           },
           "exam": {
             "title": "University entrance",
-            "description": "Prepare for SNBT and campus selection."
+            "description": "Practice before an exam."
           }
         },
         "teacher": {
           "title": "What do you want to prepare?",
           "materials": {
             "title": "Teaching materials",
-            "description": "Find explanations for the topic."
+            "description": "Prepare explanations for class."
           },
           "practice": {
             "title": "Student practice",
-            "description": "Prepare questions for practice."
+            "description": "Prepare practice questions."
           }
         },
         "parent": {
           "title": "What does your child need help with?",
           "understand": {
             "title": "Understand lessons",
-            "description": "Find explanations that are easy to follow."
+            "description": "Read simple explanations."
           },
           "practice": {
             "title": "Practice questions",

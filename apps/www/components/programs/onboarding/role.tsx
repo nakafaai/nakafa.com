@@ -19,6 +19,10 @@ import {
 } from "@/components/programs/onboarding/model";
 import type { OnboardingRole } from "@/components/programs/onboarding/options";
 import { onboardingRoleFormSchema } from "@/components/programs/onboarding/state";
+import {
+  onboardingChoiceCardVariants,
+  onboardingChoiceGridVariants,
+} from "@/components/programs/onboarding/styles";
 import { submitOnboardingRole } from "@/components/programs/onboarding/submit";
 
 interface RoleStepFormProps {
@@ -31,10 +35,6 @@ export function RoleStepForm({ initialRole, options }: RoleStepFormProps) {
   const t = useTranslations("LearningPrograms");
   const router = useRouter();
   const updateRole = useMutation(api.users.mutations.updateUserRole);
-  const gridClassName =
-    options.length >= 3
-      ? "grid w-full grid-cols-1 items-stretch gap-4 sm:grid-cols-3"
-      : "grid w-full max-w-xl grid-cols-1 items-stretch gap-4 sm:grid-cols-2";
   const form = useForm({
     defaultValues: {
       role: initialRole ?? "",
@@ -79,13 +79,18 @@ export function RoleStepForm({ initialRole, options }: RoleStepFormProps) {
 
       <form.Field name="role">
         {(field) => (
-          <section className={gridClassName}>
+          <section
+            className={onboardingChoiceGridVariants({
+              columns: options.length >= 3 ? "three" : "two",
+            })}
+          >
             {options.map((option) => (
               <button
                 aria-label={t(option.titleKey)}
                 aria-pressed={field.state.value === option.key}
-                className="flex h-full w-full flex-col justify-between rounded-xl border bg-card text-left shadow-sm transition-colors ease-out hover:border-primary/50 hover:bg-[color-mix(in_oklch,var(--primary)_1%,var(--background))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 data-[selected=true]:border-primary/60 data-[selected=true]:bg-[color-mix(in_oklch,var(--primary)_2%,var(--background))] data-[selected=true]:ring-1 data-[selected=true]:ring-primary/20"
-                data-selected={field.state.value === option.key}
+                className={onboardingChoiceCardVariants({
+                  selected: field.state.value === option.key,
+                })}
                 key={option.key}
                 onClick={() => field.handleChange(option.key)}
                 type="button"

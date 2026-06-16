@@ -146,7 +146,7 @@
         },
         "teacher": {
           "title": "Guru",
-          "description": "Siapkan bahan ajar kelas."
+          "description": "Siapkan materi untuk kelas."
         },
         "parent": {
           "title": "Orang tua",
@@ -158,33 +158,33 @@
           "title": "Kamu mau fokus ke apa?",
           "school": {
             "title": "Pelajaran sekolah",
-            "description": "Ikuti materi sesuai kelasmu."
+            "description": "Baca penjelasan singkat."
           },
           "exam": {
             "title": "Ujian masuk kampus",
-            "description": "Siapkan SNBT dan seleksi kampus."
+            "description": "Latihan sebelum ujian."
           }
         },
         "teacher": {
           "title": "Kamu mau menyiapkan apa?",
           "materials": {
             "title": "Materi mengajar",
-            "description": "Cari penjelasan sesuai topik."
+            "description": "Siapkan penjelasan kelas."
           },
           "practice": {
             "title": "Latihan siswa",
-            "description": "Siapkan soal untuk latihan."
+            "description": "Siapkan soal latihan."
           }
         },
         "parent": {
           "title": "Anakmu butuh dibantu apa?",
           "understand": {
             "title": "Pahami materi",
-            "description": "Cari penjelasan yang mudah diikuti."
+            "description": "Baca penjelasan mudah."
           },
           "practice": {
             "title": "Latihan soal",
-            "description": "Siapkan latihan sebelum ujian."
+            "description": "Latihan sebelum ujian."
           }
         }
       },

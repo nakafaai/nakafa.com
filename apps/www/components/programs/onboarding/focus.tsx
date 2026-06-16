@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft02Icon, ArrowRight02Icon } from "@hugeicons/core-free-icons";
+import { ArrowLeft02Icon, PartyIcon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -32,6 +32,10 @@ import type {
   OnboardingRole,
 } from "@/components/programs/onboarding/options";
 import { onboardingFocusFormSchema } from "@/components/programs/onboarding/state";
+import {
+  onboardingChoiceCardVariants,
+  onboardingChoiceGridVariants,
+} from "@/components/programs/onboarding/styles";
 import { submitOnboardingSelection } from "@/components/programs/onboarding/submit";
 
 interface FocusStepFormProps {
@@ -54,10 +58,6 @@ export function FocusStepForm({
     api.learningPrograms.mutations.selectLearningProgram
   );
   const options = getFocusOptionsForRole(role, programs);
-  const gridClassName =
-    options.length >= 3
-      ? "grid w-full grid-cols-1 items-stretch gap-4 sm:grid-cols-3"
-      : "grid w-full max-w-xl grid-cols-1 items-stretch gap-4 sm:grid-cols-2";
   const form = useForm({
     defaultValues: {
       focusKey: initialFocusKey,
@@ -117,13 +117,18 @@ export function FocusStepForm({
 
       <form.Field name="focusKey">
         {(field) => (
-          <section className={gridClassName}>
+          <section
+            className={onboardingChoiceGridVariants({
+              columns: options.length >= 3 ? "three" : "two",
+            })}
+          >
             {options.map((option) => (
               <button
                 aria-label={t(option.titleKey)}
                 aria-pressed={field.state.value === option.key}
-                className="flex h-full w-full flex-col justify-between rounded-xl border bg-card text-left shadow-sm transition-colors ease-out hover:border-primary/50 hover:bg-[color-mix(in_oklch,var(--primary)_1%,var(--background))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 data-[selected=true]:border-primary/60 data-[selected=true]:bg-[color-mix(in_oklch,var(--primary)_2%,var(--background))] data-[selected=true]:ring-1 data-[selected=true]:ring-primary/20"
-                data-selected={field.state.value === option.key}
+                className={onboardingChoiceCardVariants({
+                  selected: field.state.value === option.key,
+                })}
                 key={option.key}
                 onClick={() => field.handleChange(option.key)}
                 type="button"
@@ -164,13 +169,12 @@ export function FocusStepForm({
               }
               type="submit"
             >
-              {isSubmitting ? (
-                <Spinner data-icon="inline-start" isLoading={isSubmitting} />
-              ) : null}
+              <Spinner
+                data-icon="inline-start"
+                icon={PartyIcon}
+                isLoading={isSubmitting}
+              />
               {t("onboarding.save-cta")}
-              {isSubmitting ? null : (
-                <HugeIcons data-icon="inline-end" icon={ArrowRight02Icon} />
-              )}
             </Button>
           )}
         </form.Subscribe>

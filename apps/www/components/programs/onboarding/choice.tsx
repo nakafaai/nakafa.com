@@ -1,6 +1,7 @@
 "use client";
 
 import { ImageDithering } from "@paper-design/shaders-react";
+import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
 import type {
   FocusOption,
@@ -65,7 +66,12 @@ function ChoicePreview({
   image: RoleOption["image"] | FocusOption["image"];
 }) {
   return (
-    <div className="relative aspect-video w-full overflow-hidden rounded-md bg-[color-mix(in_oklch,var(--primary)_2.5%,var(--background))]">
+    <div
+      className={cn(
+        "relative aspect-video w-full overflow-hidden rounded-md",
+        "bg-[color-mix(in_oklch,var(--primary)_2.5%,var(--background))]"
+      )}
+    >
       <ImageDithering
         aria-hidden
         className="absolute inset-0 size-full"
