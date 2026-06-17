@@ -23,6 +23,10 @@ export const exercisesMenu = data.map((item) => ({
 
 export type ExercisesMenuItem = (typeof exercisesMenu)[number]["items"][number];
 
+/**
+ * Selects the localized public practice URL carried by the exercises menu
+ * source row.
+ */
 export function getExercisesMenuHref(item: ExercisesMenuItem, locale: Locale) {
   if (locale === "id") {
     return item.href.id;

@@ -139,6 +139,11 @@ export function getExerciseSetTarget(filePath: string) {
   };
 }
 
+/**
+ * Converts separated public practice segments back to the internal source slug
+ * shape used by authored exercise files while keeping the public year segment
+ * from being duplicated in canonical URLs.
+ */
 function normalizePracticeMaterialSlug(slug: readonly string[]) {
   if (
     slug[0] === TRY_OUT_SEGMENT &&
@@ -177,6 +182,10 @@ export function getExercisesPagination(
     return { prev: emptyItem, next: emptyItem };
   }
 
+  /**
+   * Converts optional neighboring exercise items into the pagination contract
+   * consumed by the material layout.
+   */
   function getItemData(item: Option.Option<(typeof allItems)[number]>) {
     if (Option.isNone(item)) {
       return emptyItem;
@@ -224,6 +233,10 @@ export function getExerciseNumberPagination(
       ? Option.some(currentNumber + 1)
       : Option.none<number>();
 
+  /**
+   * Converts optional neighboring question numbers into route/title pairs while
+   * preserving the layout contract for missing pagination targets.
+   */
   function getNumberData(number: Option.Option<number>) {
     if (Option.isNone(number)) {
       return emptyItem;

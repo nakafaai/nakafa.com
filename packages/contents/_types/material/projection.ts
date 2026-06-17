@@ -185,6 +185,11 @@ export function normalizeMaterialRoute(route: string) {
   return cleanSlug(route).split("/").filter(Boolean).join("/");
 }
 
+/**
+ * Projects one lesson material source into a locale-specific material row while
+ * preserving the authored section order that drives lessons, pagination, and
+ * route lookup.
+ */
 function toLessonMaterialProjection(
   material: LessonMaterialSource,
   locale: MaterialLocale
@@ -206,6 +211,10 @@ function toLessonMaterialProjection(
   };
 }
 
+/**
+ * Builds the internal practice material group route consumed by material
+ * projection; public practice URLs are derived later by route projection.
+ */
 function getExerciseGroupRoute(
   material: PracticeMaterialSource,
   group: PracticeMaterialGroup
@@ -219,6 +228,10 @@ function getExerciseGroupRoute(
   return segments.join("/");
 }
 
+/**
+ * Reads localized display copy from material sources without inventing fallback
+ * descriptions, so missing copy remains visible to source audits.
+ */
 function readDescriptionTranslation(
   item: Pick<LessonMaterialSource | PracticeMaterialGroup, "translations">,
   locale: MaterialLocale

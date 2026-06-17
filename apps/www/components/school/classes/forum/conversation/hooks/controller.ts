@@ -150,6 +150,10 @@ export function useHydratedTranscriptController({
     (canGoBack ||
       !(isAtBottom || currentRestoreState.isPendingLatestPlacement));
 
+  /**
+   * Records the scroll target that still needs virtualizer confirmation before
+   * the conversation view can be treated as settled.
+   */
   const setPendingPlacement = (placement: PendingPlacement | null) => {
     pendingPlacementRef.current = placement;
     const isPendingLatestPlacement = placement?.view.kind === "bottom";
@@ -210,6 +214,10 @@ export function useHydratedTranscriptController({
   const { clear: clearHighlightTimeout, start: startHighlightTimeout } =
     useTimeout(clearHighlightedPost, 5000);
 
+  /**
+   * Samples the virtualizer viewport and mirrors it into controller state for
+   * jump-bar visibility, restore snapshots, and bottom detection.
+   */
   const syncViewport = () => {
     const handle = virtualizerHandle;
 
@@ -229,6 +237,10 @@ export function useHydratedTranscriptController({
     updateViewport(viewport);
   };
 
+  /**
+   * Clears a pending placement only after the virtualizer has reached the
+   * requested post or bottom position.
+   */
   const clearReachedPendingPlacement = () => {
     const pendingPlacement = pendingPlacementRef.current;
 
@@ -303,6 +315,10 @@ export function useHydratedTranscriptController({
     { delay: 160, flushOnUnmount: true }
   );
 
+  /**
+   * Persists the current conversation viewport so route transitions can restore
+   * the same scroll cache and last visible post.
+   */
   const persistCurrentScrollSnapshot = () => {
     const handle = virtualizerHandle;
     const viewport = handle ? getConversationViewportState(handle) : null;
@@ -336,6 +352,10 @@ export function useHydratedTranscriptController({
     persistCurrentScrollSnapshotRef.current = persistCurrentScrollSnapshot;
   });
 
+  /**
+   * Applies one pending placement to the virtualizer, using bottom scrolling or
+   * post alignment according to the captured target view.
+   */
   const scrollToPendingPlacement = ({
     align,
     behavior,
@@ -348,6 +368,10 @@ export function useHydratedTranscriptController({
     return scrollController.scrollToPost(view.postId, { align, behavior });
   };
 
+  /**
+   * Attempts to execute the pending placement after the transcript rows needed
+   * for that target are available.
+   */
   const flushPendingPlacement = () => {
     const pendingPlacement = pendingPlacementRef.current;
 
@@ -378,6 +402,10 @@ export function useHydratedTranscriptController({
     persistSettledState();
   };
 
+  /**
+   * Navigates to one post while preserving the previous settled view for the
+   * in-thread back stack.
+   */
   const goToPost = (postId: Id<"schoolClassForumPosts">) => {
     if (!activeTranscript.rowIndexByPostId.has(postId)) {
       return;
@@ -409,6 +437,10 @@ export function useHydratedTranscriptController({
     flushPendingPlacement();
   };
 
+  /**
+   * Moves to the latest conversation row and clears any transient highlighted
+   * post state.
+   */
   const goToLatest = () => {
     setPendingPlacement({
       behavior: "smooth",
@@ -421,6 +453,9 @@ export function useHydratedTranscriptController({
     flushPendingPlacement();
   };
 
+  /**
+   * Restores the most recent conversation view captured before a post jump.
+   */
   const goBack = () => {
     const backView = popBackView();
 

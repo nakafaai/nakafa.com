@@ -35,6 +35,10 @@ export const getRuntimeArticleSummaries = Effect.fn(
   );
 });
 
+/**
+ * Reads one category page from the runtime route catalog so article listings
+ * follow the same parent-route ordering as sitemap and search.
+ */
 function readArticleRouteParentPage(category: string, locale: Locale) {
   return getRuntimeContentRouteParentPage({
     cursor: null,
@@ -47,6 +51,10 @@ function readArticleRouteParentPage(category: string, locale: Locale) {
   }).pipe(Effect.map((page) => page.page));
 }
 
+/**
+ * Extracts the immediate child segment under a category route; deeper article
+ * slugs are intentionally collapsed to their first visible grouping segment.
+ */
 function getDirectChildSegment(route: string, prefix: string) {
   const [segment] = getRelativeRouteParts(
     route,
@@ -55,6 +63,10 @@ function getDirectChildSegment(route: string, prefix: string) {
   return segment;
 }
 
+/**
+ * Returns route segments below one normalized parent path, or an empty list
+ * when the runtime row is outside that parent.
+ */
 function getRelativeRouteParts(route: string, basePath: string) {
   const normalizedRoute = cleanContentPath(route);
   const normalizedBase = cleanContentPath(basePath);

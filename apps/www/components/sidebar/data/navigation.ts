@@ -85,6 +85,10 @@ export function getForYouNavigationItems(viewer: AppNavigationViewer) {
   return generalNavigationItems;
 }
 
+/**
+ * Resolves the locale-aware destination for one personalized navigation row
+ * while preserving rows that intentionally share one href across locales.
+ */
 export function getForYouNavigationHref(
   item: ForYouNavigationItem,
   locale: Locale

@@ -85,6 +85,10 @@ export function createExerciseProjection(
   });
 }
 
+/**
+ * Maps assessment source segments into the graph route category used by legacy
+ * exercise graph identifiers while route projection owns public URL shape.
+ */
 function getPracticeCategorySegment(typeSegment: string) {
   if (typeSegment === "grade-9") {
     return "middle-school";

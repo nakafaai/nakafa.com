@@ -79,6 +79,10 @@ export default function Page(props: PageProps<"/[locale]">) {
   return <MarketingHomePageContent locale={locale} />;
 }
 
+/**
+ * Builds the localized marketing home surface and SEO graph from the same
+ * navigation data that powers the app entry points.
+ */
 async function MarketingHomePageContent({ locale }: { locale: Locale }) {
   const [tMetadata, tSubject, tExercises, tFaq] = await Promise.all([
     getTranslations({ locale, namespace: "Metadata" }),

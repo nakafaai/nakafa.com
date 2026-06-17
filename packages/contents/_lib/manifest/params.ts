@@ -208,6 +208,10 @@ function getMdxPathsForRoot(slugs: readonly string[], root: ContentRoot) {
   );
 }
 
+/**
+ * Removes a validated content-root prefix before route params are handed to
+ * app-level callers that should not know the storage namespace.
+ */
 function stripRootPrefix(path: string, root: ContentRoot) {
   const prefix = `${root}/`;
 

@@ -21,6 +21,10 @@ import {
 const highSchoolSubjects =
   subjectMenu.find((subject) => subject.title === "high-school")?.items || [];
 
+/**
+ * Composes the shared marketing footer from product, policy, and social links
+ * without owning route generation itself.
+ */
 export function Footer() {
   const t = useTranslations("About");
   const tLegal = useTranslations("Legal");

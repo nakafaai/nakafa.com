@@ -26,6 +26,10 @@ export function getLocalizedContentPath(cleanPath: string, locale: Locale) {
   return `${normalizedPath}/${locale}.mdx`;
 }
 
+/**
+ * Detects practice MDX assets whose locale belongs in the filename stem so
+ * dynamic imports match the authored question and answer file layout.
+ */
 function usesFileStemLocalizedContent(cleanPath: string) {
   const leafSegment = cleanPath.split("/").at(-1);
 

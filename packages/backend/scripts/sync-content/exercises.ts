@@ -210,6 +210,10 @@ export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
   return { ...totals, durationMs, itemsPerSecond };
 });
 
+/**
+ * Maps source-owned assessment identity into the current Convex exercise
+ * category field so synced question rows keep their catalog placement stable.
+ */
 function getPracticeCategory(
   assessment: PracticeMaterialSetProjection["assessment"]
 ): ExerciseQuestionPayload["category"] {
@@ -434,6 +438,11 @@ const parseQuestionFile = Effect.fn("sync.parseQuestionFile")(function* (
   };
 });
 
+/**
+ * Builds locale-scoped set labels from typed practice material sources so
+ * question search text inherits authored exercise titles instead of route
+ * segments.
+ */
 const readExerciseSearchLabels = (options: SyncOptions) =>
   Effect.sync(() => {
     const labels = new Map<string, ExerciseSearchLabels>();

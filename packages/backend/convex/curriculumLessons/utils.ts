@@ -1,5 +1,9 @@
 export const TRENDING_BUCKET_MS = 24 * 60 * 60 * 1000;
 
+/**
+ * Floors one timestamp into the daily popularity bucket used by curriculum
+ * trending reads and writes.
+ */
 export function getTrendingBucketStart(timestamp: number) {
   return Math.floor(timestamp / TRENDING_BUCKET_MS) * TRENDING_BUCKET_MS;
 }

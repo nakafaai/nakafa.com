@@ -101,6 +101,10 @@ const getExpectedGeneratedCounts = Effect.fn("sync.expectedGeneratedCounts")(
   }
 );
 
+/**
+ * Counts lesson material locale rows from source-authored sections so verify
+ * compares Convex against the same projection inputs used by sync.
+ */
 function getExpectedLessonMaterialLocales(options: SyncOptions) {
   const localeCount = getExpectedLocaleCount(options);
 
@@ -110,6 +114,10 @@ function getExpectedLessonMaterialLocales(options: SyncOptions) {
   );
 }
 
+/**
+ * Counts practice material locale rows from source-authored groups and sets so
+ * verify catches missing localized exercise read models.
+ */
 function getExpectedPracticeMaterialLocales(options: SyncOptions) {
   const localeCount = getExpectedLocaleCount(options);
 

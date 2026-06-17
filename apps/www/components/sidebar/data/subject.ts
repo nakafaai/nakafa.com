@@ -40,6 +40,10 @@ export const subjectMenu = data.map((item) => ({
 
 export type SubjectMenuItem = (typeof subjectMenu)[number]["items"][number];
 
+/**
+ * Selects the localized public subject URL carried by the subject menu source
+ * row.
+ */
 export function getSubjectMenuHref(item: SubjectMenuItem, locale: Locale) {
   if (locale === "id") {
     return item.href.id;

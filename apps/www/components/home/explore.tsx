@@ -105,6 +105,10 @@ function NinaIcon() {
   );
 }
 
+/**
+ * Renders the home exploration shortcuts from the same canonical route helpers
+ * used by sidebar and sitemap navigation.
+ */
 export function HomeExplore() {
   const tAi = useTranslations("Ai");
   const tCommon = useTranslations("Common");

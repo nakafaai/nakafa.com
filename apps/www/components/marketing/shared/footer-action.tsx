@@ -38,6 +38,10 @@ const flagMap = {
   id: ID,
 };
 
+/**
+ * Normalizes the active browser URL before locale switching so footer actions
+ * preserve the current in-app path without leaking external locations.
+ */
 function getCurrentHref() {
   return normalizeLocalizedInternalHref(
     `${window.location.pathname}${window.location.search}${window.location.hash}`

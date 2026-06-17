@@ -103,18 +103,24 @@ export function createCurriculumCoverageInputs({
   routes: readonly LearningProgramCoverageRoute[];
   syncedAt: number;
 }) {
+  /**
+   * Resolves program ownership from projected curriculum nodes when sync has
+   * them, falling back to source registry coverage for pure content projections.
+   */
+  function resolveProgramKeys(route: LearningProgramCoverageRoute) {
+    if (curriculumNodes) {
+      return getProgramKeysForMaterialRouteFromNodes({
+        curriculumNodes,
+        route: route.route,
+      });
+    }
+
+    return getProgramKeysForMaterialRoute({ route: route.route });
+  }
+
   return createCoverageInputsFromProgramKeys({
     programs,
-    resolveProgramKeys: (route) => {
-      if (curriculumNodes) {
-        return getProgramKeysForMaterialRouteFromNodes({
-          curriculumNodes,
-          route: route.route,
-        });
-      }
-
-      return getProgramKeysForMaterialRoute({ route: route.route });
-    },
+    resolveProgramKeys,
     routes,
     syncedAt,
   });

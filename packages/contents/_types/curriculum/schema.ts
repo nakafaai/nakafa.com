@@ -209,6 +209,10 @@ type MaterialReferenceNodeInput = Omit<
   level: CurriculumNode["level"];
 };
 
+/**
+ * Decodes a structure node through the curriculum schema helper API so authored
+ * trees keep branded keys, localized copy, and child ordering at the source.
+ */
 function structureNode(
   level: CurriculumNode["level"],
   input: StructureNodeInput
@@ -269,6 +273,10 @@ export function defineCurriculum(input: CurriculumSourceInput) {
   return curriculum;
 }
 
+/**
+ * Flattens nested curriculum authoring trees in pre-order so duplicate-key
+ * validation and projection preserve the source-owned learning sequence.
+ */
 function flattenCurriculumTree(
   nodes: readonly CurriculumTreeNode[]
 ): CurriculumTreeNode[] {

@@ -10,6 +10,10 @@ import type { ScaleVersionItemSnapshot } from "@repo/backend/convex/irt/scales/r
 
 type IrtDbWriter = MutationCtx["db"];
 
+/**
+ * Records the calibration run that owns provisional item parameters for one
+ * exercise set before enough attempt data exists for an official calibration.
+ */
 function createProvisionalCalibrationRun(
   db: IrtDbWriter,
   {

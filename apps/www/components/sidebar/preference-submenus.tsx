@@ -32,6 +32,10 @@ const flagMap = {
 
 type SubmenuSide = React.ComponentProps<typeof DropdownMenuSubContent>["side"];
 
+/**
+ * Normalizes the current browser URL so preference submenu actions can preserve
+ * the active localized route.
+ */
 function getCurrentHref() {
   return normalizeLocalizedInternalHref(
     `${window.location.pathname}${window.location.search}${window.location.hash}`

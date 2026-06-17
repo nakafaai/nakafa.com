@@ -137,6 +137,10 @@ export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
 
+/**
+ * Provides the locale-scoped application shell, validates the active locale at
+ * the Next boundary, and wires providers shared by every public route.
+ */
 export default async function Layout({ children }: LayoutProps<"/[locale]">) {
   const locale = await getLocale();
 

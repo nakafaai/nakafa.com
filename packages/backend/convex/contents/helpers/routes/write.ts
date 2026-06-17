@@ -310,6 +310,10 @@ function isSameContentRoute(
   );
 }
 
+/**
+ * Derives the parent public path stored with route rows so runtime lookups can
+ * query sibling and child routes without rebuilding URL hierarchy in callers.
+ */
 function getParentPath(path: string) {
   const parentPath = path.split("/").slice(0, -1).join("/");
 

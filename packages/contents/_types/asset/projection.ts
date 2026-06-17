@@ -132,6 +132,10 @@ function getLocalizedSourceKey(source: AssetLocalizedSource) {
   return `${source.locale}:${source.localizedAssetId}`;
 }
 
+/**
+ * Orders localized asset sources by their stable locale and asset identity so
+ * projection output remains deterministic for sync and tests.
+ */
 function compareLocalizedSources(
   left: AssetLocalizedSource,
   right: AssetLocalizedSource
