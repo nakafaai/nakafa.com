@@ -110,7 +110,7 @@ function recoverStartTryoutError(
  * Starts one tryout attempt through Convex and invalidates the Next route
  * family that depends on the new attempt state.
  */
-const startTryoutEffect = Effect.fn("www.tryout.start")(function* ({
+const startTryoutAttemptMutation = Effect.fn("www.tryout.start")(function* ({
   partKeys,
   returnPath,
   ...args
@@ -158,7 +158,7 @@ export async function startTryout(input: StartTryoutInput) {
   await requireAuth();
 
   return await Effect.runPromise(
-    startTryoutEffect(input).pipe(
+    startTryoutAttemptMutation(input).pipe(
       Effect.catchAll((error) => recoverStartTryoutError(error, input))
     )
   );

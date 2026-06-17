@@ -470,8 +470,11 @@ const submitUrlToGoogle = Effect.fn("scripts.googleIndex.submitUrl")(function* (
   return { shouldStop: false, success: false };
 });
 
-// Submit URLs to Google Indexing API
-function submitUrlsToGoogleEffect(
+/**
+ * Submits URL notifications sequentially so Google rate-limit failures can
+ * stop the script before it burns through the remaining queue.
+ */
+function submitUrlsToGoogle(
   urls: string[],
   accessToken: string
 ): Effect.Effect<string[]> {
@@ -590,10 +593,7 @@ const runGoogleIndexing = Effect.fn("scripts.googleIndex.run")(function* () {
     return;
   }
 
-  const successfullySubmitted = yield* submitUrlsToGoogleEffect(
-    urls,
-    accessToken
-  );
+  const successfullySubmitted = yield* submitUrlsToGoogle(urls, accessToken);
 
   if (successfullySubmitted.length > 0) {
     const updatedHistory = updateGoogleIndexHistory(

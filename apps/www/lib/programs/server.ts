@@ -20,8 +20,8 @@ class ActiveLearningProfileReadError extends Schema.TaggedError<ActiveLearningPr
   }
 ) {}
 
-/** Effect program that reads the authenticated user's learning profile. */
-const getActiveLearningProfileEffect = Effect.fn(
+/** Reads the authenticated user's learning profile through the Convex query seam. */
+const readActiveLearningProfile = Effect.fn(
   "www.learningPrograms.activeProfile"
 )(function* (token: string, locale?: Locale) {
   const args = locale === undefined ? {} : { locale };
@@ -73,5 +73,5 @@ export async function getActiveLearningProfile(
   token: string,
   locale?: Locale
 ): Promise<ActiveLearningProfile> {
-  return await Effect.runPromise(getActiveLearningProfileEffect(token, locale));
+  return await Effect.runPromise(readActiveLearningProfile(token, locale));
 }
