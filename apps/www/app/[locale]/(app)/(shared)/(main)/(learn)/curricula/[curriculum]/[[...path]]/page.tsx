@@ -85,7 +85,9 @@ export default async function Page({ params }: CurriculumPageProps) {
           icon={getCurriculumRouteIcon(route)}
           title={route.title}
         />
-        <LayoutContent>{renderCurriculumRouteBody(body)}</LayoutContent>
+        <LayoutContent>
+          <CurriculumRouteBody {...body} />
+        </LayoutContent>
       </LayoutMaterialContent>
     </LayoutMaterial>
   );
@@ -119,7 +121,7 @@ function readCurriculumRouteBodyInput(
  * nodes reuse the subject-list composition and link material leaves to their
  * canonical material pages when a projected canonical path exists.
  */
-function renderCurriculumRouteBody({
+function CurriculumRouteBody({
   childRoutes,
   isCurriculumRoot,
   locale,
