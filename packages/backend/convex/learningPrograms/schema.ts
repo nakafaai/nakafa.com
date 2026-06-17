@@ -203,7 +203,9 @@ const tables = {
     stage: v.optional(learningStageValidator),
     updatedAt: v.number(),
     userId: v.id("users"),
-  }).index("by_userId", ["userId"]),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_programId", ["programId"]),
 
   learningPlans: defineTable({
     createdAt: v.number(),
@@ -215,7 +217,8 @@ const tables = {
     version: v.number(),
   })
     .index("by_profileId_and_status", ["profileId", "status"])
-    .index("by_userId_and_status", ["userId", "status"]),
+    .index("by_userId_and_status", ["userId", "status"])
+    .index("by_programId", ["programId"]),
 
   learningPlanItems: defineTable({
     content_id: graphContentIdValidator,

@@ -270,7 +270,6 @@ describe("learningPrograms", () => {
         ],
       }
     );
-
     const authed = t.withIdentity({
       sessionId: identity.sessionId,
       subject: identity.authUserId,
@@ -358,7 +357,6 @@ describe("learningPrograms", () => {
         ],
       }
     );
-
     const authed = t.withIdentity({
       sessionId: identity.sessionId,
       subject: identity.authUserId,
@@ -599,7 +597,7 @@ describe("learningPrograms", () => {
     expect(coverageRows).toEqual([]);
   });
 
-  it("hides omitted catalog rows without orphaning existing profiles", async () => {
+  it("deletes omitted catalog rows and their generated user-state dependents", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, { now: NOW })
@@ -644,6 +642,20 @@ describe("learningPrograms", () => {
         ],
       }
     );
+    const retiredProgramId = await t.query(async (ctx) => {
+      const program = await ctx.db
+        .query("learningPrograms")
+        .withIndex("by_key", (q) => q.eq("key", retiredProgram.key))
+        .unique();
+
+      return program?._id ?? null;
+    });
+
+    expect(retiredProgramId).not.toBeNull();
+
+    if (!retiredProgramId) {
+      return;
+    }
 
     const authed = t.withIdentity({
       sessionId: identity.sessionId,
@@ -673,14 +685,52 @@ describe("learningPrograms", () => {
       api.learningPrograms.queries.getActiveProfile,
       {}
     );
+    const omittedProgramDependents = await t.query(async (ctx) => {
+      const profiles = await ctx.db
+        .query("learningProfiles")
+        .withIndex("by_programId", (q) => q.eq("programId", retiredProgramId))
+        .take(1);
+      const plans = await ctx.db
+        .query("learningPlans")
+        .withIndex("by_programId", (q) => q.eq("programId", retiredProgramId))
+        .take(1);
+      const sources = await ctx.db
+        .query("learningProgramSources")
+        .withIndex("by_programId", (q) => q.eq("programId", retiredProgramId))
+        .take(1);
+      const coverageRows = await ctx.db
+        .query("learningProgramCoverage")
+        .withIndex("by_programId_and_locale_and_lensId", (q) =>
+          q.eq("programId", retiredProgramId)
+        )
+        .take(1);
+      const planItems = await ctx.db
+        .query("learningPlanItems")
+        .withIndex("by_programId_and_lensId_and_content_id", (q) =>
+          q.eq("programId", retiredProgramId)
+        )
+        .take(1);
+
+      return {
+        coverageRows,
+        planItems,
+        plans,
+        profiles,
+        sources,
+      };
+    });
 
     expect(result).toEqual({ created: 0, skipped: 0, updated: 7 });
     expect(selectablePrograms.map((program) => program.key)).not.toContain(
       retiredProgram.key
     );
-    expect(activeProfile?.program).toMatchObject({
-      coverageStatus: "hidden",
-      key: retiredProgram.key,
+    expect(activeProfile).toBeNull();
+    expect(omittedProgramDependents).toEqual({
+      coverageRows: [],
+      planItems: [],
+      plans: [],
+      profiles: [],
+      sources: [],
     });
   });
 

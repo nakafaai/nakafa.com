@@ -227,6 +227,7 @@ import type * as irt_workpool from "../irt/workpool.js";
 import type * as learningPrograms_catalog from "../learningPrograms/catalog.js";
 import type * as learningPrograms_impl from "../learningPrograms/impl.js";
 import type * as learningPrograms_mutations from "../learningPrograms/mutations.js";
+import type * as learningPrograms_omitted from "../learningPrograms/omitted.js";
 import type * as learningPrograms_queries from "../learningPrograms/queries.js";
 import type * as learningPrograms_sources from "../learningPrograms/sources.js";
 import type * as learningPrograms_sync from "../learningPrograms/sync.js";
@@ -594,6 +595,7 @@ declare const fullApi: ApiFromModules<{
   "learningPrograms/catalog": typeof learningPrograms_catalog;
   "learningPrograms/impl": typeof learningPrograms_impl;
   "learningPrograms/mutations": typeof learningPrograms_mutations;
+  "learningPrograms/omitted": typeof learningPrograms_omitted;
   "learningPrograms/queries": typeof learningPrograms_queries;
   "learningPrograms/sources": typeof learningPrograms_sources;
   "learningPrograms/sync": typeof learningPrograms_sync;

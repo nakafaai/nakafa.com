@@ -3,6 +3,7 @@ import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { getContentRouteByContentId } from "@repo/backend/convex/learningPrograms/impl";
+import { deleteOmittedCatalogPrograms } from "@repo/backend/convex/learningPrograms/omitted";
 import {
   learningProgramCoverageInputValidator,
   learningProgramInputValidator,
@@ -12,7 +13,6 @@ import { LearningProgramSchema } from "@repo/contents/_types/program/schema";
 import { ConvexError, type Infer, v } from "convex/values";
 import { Either, Schema } from "effect";
 
-const PROGRAM_RECONCILE_LIMIT = 100;
 const STALE_COVERAGE_DELETE_LIMIT = 200;
 const ACTIVE_PLAN_ITEM_RECONCILE_BATCH_SIZE = 100;
 const LearningProgramSyncInputSchema = Schema.Array(LearningProgramSchema);
@@ -95,9 +95,8 @@ export const syncLearningPrograms = internalMutation({
       });
     }
 
-    updated += await hideOmittedCatalogPrograms(ctx, {
+    updated += await deleteOmittedCatalogPrograms(ctx, {
       incomingKeys: new Set(programs.map((program) => program.key)),
-      syncedAt: args.syncedAt,
     });
 
     return { created, skipped: 0, updated };
@@ -409,59 +408,4 @@ async function deleteStaleCoveragePlanItemBatch(
   }
 
   return { reconciled, scheduled };
-}
-
-/** Hides rows omitted from the latest full content-catalog sync without deleting referenced program IDs. */
-async function hideOmittedCatalogPrograms(
-  ctx: MutationCtx,
-  {
-    incomingKeys,
-    syncedAt,
-  }: {
-    incomingKeys: ReadonlySet<string>;
-    syncedAt: number;
-  }
-) {
-  const existingPrograms = await ctx.db
-    .query("learningPrograms")
-    .withIndex("by_displayOrder")
-    .take(PROGRAM_RECONCILE_LIMIT + 1);
-
-  if (existingPrograms.length > PROGRAM_RECONCILE_LIMIT) {
-    throw new ConvexError({
-      code: "LEARNING_PROGRAM_RECONCILE_LIMIT_EXCEEDED",
-      message: `Learning program catalog reconciliation is limited to ${PROGRAM_RECONCILE_LIMIT} rows.`,
-    });
-  }
-
-  let hidden = 0;
-
-  for (const program of existingPrograms) {
-    if (
-      program.providerKind !== "official" &&
-      program.providerKind !== "nakafa"
-    ) {
-      continue;
-    }
-
-    if (incomingKeys.has(program.key)) {
-      continue;
-    }
-
-    if (
-      program.defaultCoverageStatus === "hidden" ||
-      program.defaultCoverageStatus === "archived"
-    ) {
-      continue;
-    }
-
-    await ctx.db.patch(program._id, {
-      defaultCoverageStatus: "hidden",
-      syncedAt,
-      updatedAt: syncedAt,
-    });
-    hidden++;
-  }
-
-  return hidden;
 }
