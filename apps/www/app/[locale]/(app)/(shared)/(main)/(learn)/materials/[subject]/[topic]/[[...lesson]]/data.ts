@@ -33,7 +33,7 @@ export { MATERIAL_ROUTES };
  * The projection owns localized slugs, duplicate checks, and source paths. This
  * route Module only matches the framework params to one decoded row.
  */
-export async function resolveMaterialRoute(params: MaterialParams) {
+export async function readMaterialRoute(params: MaterialParams) {
   const { locale: rawLocale, subject, topic, lesson } = await params;
   const locale = getLocaleOrThrow(rawLocale);
   const routePath = [subject, topic, ...(lesson ?? [])].join("/");
@@ -43,6 +43,18 @@ export async function resolveMaterialRoute(params: MaterialParams) {
       isMaterialRoute(candidate) &&
       readPathWithoutNamespace(candidate.publicPath) === routePath
   );
+
+  return { locale, route };
+}
+
+/**
+ * Resolves one public material lesson route or enters the not-found boundary.
+ *
+ * Topic rows stay projected for card grouping and parent links, but they are
+ * not standalone public pages.
+ */
+export async function resolveMaterialRoute(params: MaterialParams) {
+  const { locale, route } = await readMaterialRoute(params);
 
   if (!(route && isMaterialLessonRoute(route))) {
     notFound();

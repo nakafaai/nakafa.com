@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { resolveMaterialRoute } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
+import { readMaterialRoute } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
 import { ContentViewTracker } from "@/components/tracking/tracker";
 import { getRuntimeContentViewId } from "@/lib/content/views";
 
@@ -20,9 +20,9 @@ export default async function Layout({
   children: ReactNode;
   params: MaterialLayoutParams;
 }) {
-  const { locale, route } = await resolveMaterialRoute(params);
+  const { locale, route } = await readMaterialRoute(params);
 
-  if (route.kind !== "subject-lesson") {
+  if (route?.kind !== "subject-lesson") {
     return children;
   }
 
