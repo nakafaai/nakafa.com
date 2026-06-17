@@ -626,7 +626,7 @@ describe("curriculum registry", () => {
     }
   });
 
-  it("keeps projected rows compatible with the flat Curriculum node contract", () => {
+  it("keeps projected rows aligned with the flat Curriculum node contract", () => {
     const projectedNodes = listCurriculumNodes();
 
     for (const node of projectedNodes) {

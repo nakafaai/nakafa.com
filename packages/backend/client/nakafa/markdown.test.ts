@@ -184,7 +184,7 @@ function readContentRouteByContentId(args: unknown) {
   };
 }
 
-/** Resolves test route fixtures through public route projection before falling back to legacy fixtures. */
+/** Resolves public route fixtures first, then handles internal source-path samples used by markdown tests. */
 function readContentRoute(args: unknown) {
   const input = Schema.decodeUnknownSync(RouteArgsSchema)(args);
 

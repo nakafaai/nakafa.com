@@ -107,7 +107,7 @@ export default async function Page({ params }: AssessmentPageProps) {
  * Resolves localized assessment params through schema-owned route projection.
  *
  * Invalid combinations fail with `notFound()` at the framework boundary rather
- * than creating compatibility redirects or fallback slug behavior.
+ * than creating alternate route aliases or fallback slug behavior.
  */
 async function getAssessmentRoute(params: AssessmentPageProps["params"]) {
   const { locale: rawLocale, assessment, path } = await params;

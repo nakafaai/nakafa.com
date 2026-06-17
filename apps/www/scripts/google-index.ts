@@ -23,7 +23,7 @@
  * API Limits:
  * - 200 requests per day per project (default quota)
  * - 100 URLs maximum per batch request
- * - Rate limiting recommended to avoid temporary blocks
+ * - Rate limiting recommended to avoid short-lived API blocks
  */
 
 // Environment variables loaded via Node.js --env-file flag

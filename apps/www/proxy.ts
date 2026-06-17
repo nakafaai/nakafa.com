@@ -150,7 +150,7 @@ function isLocaleBypassPath(pathname: string) {
  *
  * The route projection owns localized public namespaces. If a request uses the
  * wrong locale's namespace, an internal app segment, or a removed route group,
- * the request must 404 rather than become a compatibility alias.
+ * the request must 404 rather than become an alternate alias.
  */
 function getRejectedPublicRouteLocale(pathname: string) {
   if (REJECTED_PUBLIC_ROOTS.has(pathname)) {
