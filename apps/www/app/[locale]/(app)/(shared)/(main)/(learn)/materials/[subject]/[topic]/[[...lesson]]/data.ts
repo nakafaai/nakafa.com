@@ -1,6 +1,5 @@
 import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 import type { ContentPagination } from "@repo/contents/_types/content";
-import type { MaterialList } from "@repo/contents/_types/curriculum/material";
 import { listPublicContentRoutesEffect } from "@repo/contents/_types/route/projection";
 import type { PublicContentRoute } from "@repo/contents/_types/route/schema";
 import { Effect } from "effect";
@@ -11,9 +10,6 @@ type MaterialParams =
   PageProps<"/[locale]/materials/[subject]/[topic]/[[...lesson]]">["params"];
 export type MaterialRoute = PublicContentRoute & {
   kind: "subject-lesson" | "subject-topic";
-};
-export type MaterialTopicRoute = PublicContentRoute & {
-  kind: "subject-topic";
 };
 export type MaterialLessonRoute = PublicContentRoute & {
   kind: "subject-lesson";
@@ -40,7 +36,7 @@ export async function resolveMaterialRoute(params: MaterialParams) {
       readPathWithoutNamespace(candidate.publicPath) === routePath
   );
 
-  if (!(route && isMaterialRoute(route))) {
+  if (!(route && isMaterialLessonRoute(route))) {
     notFound();
   }
 
@@ -48,16 +44,16 @@ export async function resolveMaterialRoute(params: MaterialParams) {
 }
 
 /**
- * Builds static params for all projected topic and lesson material rows.
+ * Builds static params only for concrete material lesson body rows.
  *
- * The internal `materials` folder remains a Next.js route Interface only; the
- * public URL vocabulary comes from next-intl pathnames and route projection.
+ * Topic rows stay in the projection for internal curriculum grouping
+ * cards and lesson pagination. They are not standalone public page hops.
  */
 export function listMaterialStaticParams() {
-  return MATERIAL_ROUTES.filter(isMaterialRoute).map((route) => {
+  return MATERIAL_ROUTES.filter(isMaterialLessonRoute).map((route) => {
     const [, subject, topic, ...lesson] = route.publicPath.split("/");
 
-    return lesson.length > 0 ? { subject, topic, lesson } : { subject, topic };
+    return { subject, topic, lesson };
   });
 }
 
@@ -84,33 +80,6 @@ export function requireParentMaterialRoute(route: MaterialRoute) {
   }
 
   return parent;
-}
-
-/**
- * Projects one topic row into the established collapsible material-card shape.
- *
- * Card links use public localized URLs. The source path remains available for
- * MDX/runtime reads and never leaks into the learner URL.
- */
-export function toMaterialCardList(route: MaterialRoute): MaterialList {
-  const lessons = MATERIAL_ROUTES.filter(
-    (candidate) =>
-      candidate.locale === route.locale &&
-      candidate.kind === "subject-lesson" &&
-      candidate.parentPath === route.publicPath
-  );
-
-  return [
-    {
-      title: route.title,
-      description: route.description,
-      href: toLocalizedHref(route),
-      items: lessons.map((lesson) => ({
-        title: lesson.title,
-        href: toLocalizedHref(lesson),
-      })),
-    },
-  ];
 }
 
 /**
@@ -172,13 +141,6 @@ export function toLocalizedHref(
 /** Checks whether one content row belongs to the material route surface. */
 function isMaterialRoute(route: PublicContentRoute): route is MaterialRoute {
   return route.kind === "subject-topic" || route.kind === "subject-lesson";
-}
-
-/** Checks whether one material row is a topic hub. */
-export function isMaterialTopicRoute(
-  route: MaterialRoute
-): route is MaterialTopicRoute {
-  return route.kind === "subject-topic";
 }
 
 /** Checks whether one material row is a concrete lesson. */

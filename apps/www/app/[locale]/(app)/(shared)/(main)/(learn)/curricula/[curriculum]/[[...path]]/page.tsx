@@ -1,26 +1,40 @@
+import { getCategoryIcon } from "@repo/contents/_lib/curriculum/icons";
 import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
-import { listPublicCurriculumRoutesEffect } from "@repo/contents/_types/route/projection";
 import type { PublicCurriculumRoute } from "@repo/contents/_types/route/schema";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { Effect } from "effect";
+import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
+import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
+import {
+  CURRICULUM_ROUTES,
+  listCurriculumStaticParams,
+  readCurriculumBreadcrumbs,
+  readCurriculumHeaderLink,
+  readCurriculumRouteModel,
+  readMaterialCardChapters,
+  resolveCurriculumRoute,
+} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/data";
 import { getCurriculumGradeIcon } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/icons";
+import { CardMaterial } from "@/components/shared/card-material";
+import { ComingSoon } from "@/components/shared/coming-soon";
+import { ContainerList } from "@/components/shared/container-list";
+import { FooterContent } from "@/components/shared/footer-content";
 import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
+import { LayoutMaterialToc } from "@/components/shared/material/toc";
+import { RefContent } from "@/components/shared/ref-content";
 import { SubjectItem, SubjectList } from "@/components/shared/subject-list";
-import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 import { createProjectedRouteAlternates } from "@/lib/utils/seo/alternates";
+import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 
 type CurriculumPageProps =
   PageProps<"/[locale]/curricula/[curriculum]/[[...path]]">;
-type CurriculumRouteLookup = Awaited<ReturnType<typeof getCurriculumRoute>>;
-type CurriculumRouteBodyInput = ReturnType<typeof readCurriculumRouteBodyInput>;
-
-const CURRICULUM_ROUTES = Effect.runSync(listPublicCurriculumRoutesEffect());
+type CurriculumRouteBodyInput = ReturnType<typeof readCurriculumRouteModel>;
 
 /**
  * Builds curriculum context params from curriculum-owned route projection rows.
@@ -29,11 +43,7 @@ const CURRICULUM_ROUTES = Effect.runSync(listPublicCurriculumRoutesEffect());
  * through canonical material paths carried by the projection.
  */
 export function generateStaticParams() {
-  return CURRICULUM_ROUTES.map((route) => {
-    const [, curriculum, ...path] = route.publicPath.split("/");
-
-    return path.length > 0 ? { curriculum, path } : { curriculum };
-  });
+  return listCurriculumStaticParams();
 }
 
 /**
@@ -45,7 +55,7 @@ export function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: CurriculumPageProps): Promise<Metadata> {
-  const { locale, route } = await getCurriculumRoute(params);
+  const { locale, route } = await resolveCurriculumRoute(params);
   const path = `/${locale}/${route.publicPath}`;
   const description = route.description ?? route.title;
 
@@ -66,68 +76,94 @@ export async function generateMetadata({
 /**
  * Renders a curriculum navigation node and its projected child routes.
  *
- * Leaf curriculum nodes link to canonical material pages when the projection
- * exposes `canonicalPath`; they do not duplicate material body content.
+ * Subject/course nodes render collapsible cards with direct canonical lesson
+ * links; topic/unit rows remain grouping data and are not separate page hops.
  */
 export default async function Page({ params }: CurriculumPageProps) {
-  const routeLookup = await getCurriculumRoute(params);
+  const routeLookup = await resolveCurriculumRoute(params);
   const { locale, route } = routeLookup;
-  const childRoutes = CURRICULUM_ROUTES.filter(
-    (child) => child.locale === locale && child.parentPath === route.publicPath
-  );
-  const body = readCurriculumRouteBodyInput(routeLookup, childRoutes);
+  const tCommon = await getTranslations({ locale, namespace: "Common" });
+  const body = readCurriculumRouteModel(routeLookup);
+  const githubUrl = getCurriculumGithubUrl(route);
 
   return (
-    <LayoutMaterial>
-      <LayoutMaterialContent>
-        <HeaderContent
-          description={route.description}
-          icon={getCurriculumRouteIcon(route)}
-          title={route.title}
+    <>
+      <BreadcrumbJsonLd
+        breadcrumbItems={createBreadcrumbItems(
+          locale,
+          readCurriculumBreadcrumbs(tCommon("home"), route)
+        )}
+      />
+      {body.materialCards.length > 0 && (
+        <CollectionPageJsonLd
+          description={route.description ?? route.title}
+          items={body.materialCards.flatMap((material) =>
+            material.items.map((item) => ({
+              name: item.title,
+              url: `https://nakafa.com${item.href}`,
+            }))
+          )}
+          name={route.title}
+          url={`https://nakafa.com/${locale}/${route.publicPath}`}
         />
-        <LayoutContent>
-          <CurriculumRouteBody {...body} />
-        </LayoutContent>
-      </LayoutMaterialContent>
-    </LayoutMaterial>
+      )}
+      <LayoutMaterial>
+        <LayoutMaterialContent>
+          <HeaderContent
+            description={route.description}
+            icon={getCurriculumRouteIcon(route)}
+            link={readCurriculumHeaderLink(locale, route)}
+            title={route.title}
+          />
+          <LayoutContent>
+            <CurriculumRouteBody {...body} />
+          </LayoutContent>
+          <FooterContent>
+            <RefContent githubUrl={githubUrl} />
+          </FooterContent>
+        </LayoutMaterialContent>
+        {body.materialCards.length > 0 && (
+          <LayoutMaterialToc
+            chapters={{
+              label: route.title,
+              data: readMaterialCardChapters(body.materialCards),
+            }}
+            githubUrl={githubUrl}
+            header={{
+              title: route.title,
+              href: `/${locale}/${route.publicPath}`,
+              description: route.description,
+            }}
+          />
+        )}
+      </LayoutMaterial>
+    </>
   );
-}
-
-/**
- * Computes the render model for one curriculum node from projected rows.
- *
- * The model is derived from `getCurriculumRoute` and route projection output so
- * the page does not introduce a second manual curriculum route contract.
- */
-function readCurriculumRouteBodyInput(
-  routeLookup: CurriculumRouteLookup,
-  childRoutes: readonly PublicCurriculumRoute[]
-) {
-  const isCurriculumRoot = routeLookup.route.level === "track";
-
-  return {
-    childRoutes,
-    isCurriculumRoot,
-    locale: routeLookup.locale,
-    route: routeLookup.route,
-    usesGradeCards: isCurriculumRoot && hasGradeCardRows(childRoutes),
-  };
 }
 
 /**
  * Renders the established curriculum navigation variants without nested modes.
  *
  * Grade-card roots reuse the old curriculum home composition. Other curriculum
- * nodes reuse the subject-list composition and link material leaves to their
- * canonical material pages when a projected canonical path exists.
+ * subject/course nodes reuse the old collapsible material-card composition.
  */
 function CurriculumRouteBody({
   childRoutes,
   isCurriculumRoot,
   locale,
-  route,
+  materialCards,
   usesGradeCards,
 }: CurriculumRouteBodyInput) {
+  if (materialCards.length > 0) {
+    return (
+      <ContainerList className="sm:grid-cols-1">
+        {materialCards.map((material) => (
+          <CardMaterial key={material.href} material={material} />
+        ))}
+      </ContainerList>
+    );
+  }
+
   if (usesGradeCards) {
     return (
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:gap-6">
@@ -171,15 +207,12 @@ function CurriculumRouteBody({
     );
   }
 
+  if (childRoutes.length === 0) {
+    return <ComingSoon />;
+  }
+
   return (
     <SubjectList>
-      {route.canonicalPath && (
-        <SubjectItem
-          href={`/${locale}/${route.canonicalPath}`}
-          icon={getCurriculumRouteIcon(route)}
-          label={route.title}
-        />
-      )}
       {childRoutes.map((child) => (
         <SubjectItem
           href={`/${locale}/${child.publicPath}`}
@@ -193,31 +226,24 @@ function CurriculumRouteBody({
 }
 
 /**
- * Resolves localized curriculum params through schema-owned route projection.
+ * Selects the source file directory behind the curriculum context page.
  *
- * This enforces the locale language rule: the same curriculum key may resolve
- * in every locale that has source-owned route slugs.
+ * Reference actions should point maintainers to the source-owned curriculum
+ * Module, while public pages continue to use localized projected URLs.
  */
-async function getCurriculumRoute(params: CurriculumPageProps["params"]) {
-  const { locale: rawLocale, curriculum, path } = await params;
-  const locale = getLocaleOrThrow(rawLocale);
-  const routePath = [curriculum, ...(path ?? [])].join("/");
-  const route = CURRICULUM_ROUTES.find(
-    (candidate) =>
-      candidate.locale === locale &&
-      getPathWithoutNamespace(candidate.publicPath) === routePath
-  );
-
-  if (!route) {
-    notFound();
+function getCurriculumGithubUrl(route: PublicCurriculumRoute) {
+  switch (route.programKey) {
+    case "cambridge-igcse":
+      return getGithubUrl({
+        path: "/packages/contents/curriculum/cambridge/igcse",
+      });
+    case "id-kurikulum-merdeka":
+      return getGithubUrl({
+        path: "/packages/contents/curriculum/indonesia/merdeka",
+      });
+    default:
+      return getGithubUrl({ path: "/packages/contents/curriculum" });
   }
-
-  return { locale, route };
-}
-
-/** Removes the localized route namespace from one projected public path. */
-function getPathWithoutNamespace(publicPath: string) {
-  return publicPath.split("/").slice(1).join("/");
 }
 
 /**
@@ -228,23 +254,9 @@ function getPathWithoutNamespace(publicPath: string) {
  * localized display copy.
  */
 function getCurriculumRouteIcon(route: PublicCurriculumRoute) {
-  return getMaterialIcon(route.materialDomain ?? "");
-}
-
-/**
- * Checks whether the current root children are curriculum class rows.
- *
- * Class rows reuse the established grade-card visuals from the old curriculum
- * root. Other curriculum models, including Cambridge course/unit routes, keep the
- * standard subject list so route identity does not imply Indonesian grades.
- */
-function hasGradeCardRows(routes: readonly PublicCurriculumRoute[]) {
-  if (routes.length === 0) {
-    return false;
+  if (route.level === "class") {
+    return getCategoryIcon("high-school");
   }
 
-  return routes.every(
-    (route) =>
-      route.level === "class" && getCurriculumGradeIcon(route.nodeKey) !== null
-  );
+  return getMaterialIcon(route.materialDomain ?? "");
 }

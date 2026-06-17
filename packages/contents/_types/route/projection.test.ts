@@ -58,6 +58,7 @@ describe("public route projection", () => {
         locale: "id",
         materialKey: "lesson.mathematics.integral",
         publicPath: "materi/matematika/integral",
+        sitemap: false,
         sourcePath: "material/lesson/mathematics/integral",
       })
     );

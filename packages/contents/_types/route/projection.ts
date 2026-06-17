@@ -545,7 +545,7 @@ function listLessonPublicRoutesEffect(
           locale,
           materialKey: material.key,
           publicPath: topicPath,
-          sitemap: true,
+          sitemap: false,
           sourcePath: material.assetRoot,
           title: material.translations[locale].title,
         })
