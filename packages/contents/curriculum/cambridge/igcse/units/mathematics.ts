@@ -9,9 +9,11 @@ export const igcseMathematicsUnitNodes = [
     order: 20,
     translations: {
       en: {
+        routeSlug: "algebra-and-graphs",
         title: "Algebra and graphs",
       },
       id: {
+        routeSlug: "aljabar-dan-grafik",
         title: "Aljabar dan grafik",
       },
     },
@@ -47,9 +49,11 @@ export const igcseMathematicsUnitNodes = [
     order: 30,
     translations: {
       en: {
+        routeSlug: "geometry-mensuration-and-trigonometry",
         title: "Geometry, mensuration, and trigonometry",
       },
       id: {
+        routeSlug: "geometri-pengukuran-dan-trigonometri",
         title: "Geometri, pengukuran, dan trigonometri",
       },
     },
@@ -85,9 +89,11 @@ export const igcseMathematicsUnitNodes = [
     order: 40,
     translations: {
       en: {
+        routeSlug: "transformations-and-vectors",
         title: "Transformations and vectors",
       },
       id: {
+        routeSlug: "transformasi-dan-vektor",
         title: "Transformasi dan vektor",
       },
     },
@@ -111,9 +117,11 @@ export const igcseMathematicsUnitNodes = [
     order: 50,
     translations: {
       en: {
+        routeSlug: "probability-and-statistics",
         title: "Probability and statistics",
       },
       id: {
+        routeSlug: "peluang-dan-statistika",
         title: "Peluang dan statistika",
       },
     },

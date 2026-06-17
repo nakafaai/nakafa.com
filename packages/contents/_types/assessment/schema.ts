@@ -4,6 +4,7 @@ import {
   LearningProgramKeySchema,
   ProgramNavigationLevelSchema,
 } from "@repo/contents/_types/program/schema";
+import { PublicRouteSegmentSchema } from "@repo/contents/_types/route/segment";
 import { Schema } from "effect";
 
 type SchemaType<T extends Schema.Schema.Any> = Schema.Schema.Type<T>;
@@ -21,6 +22,7 @@ export const AssessmentNodeKeySchema = Schema.String.pipe(
 
 export const AssessmentNodeTranslationSchema = Schema.Struct({
   description: Schema.optional(Schema.String),
+  routeSlug: PublicRouteSegmentSchema,
   title: Schema.String,
 });
 

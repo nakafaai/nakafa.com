@@ -6,6 +6,7 @@ export const lessonBiologyClimateChangeMaterial = defineLessonMaterial({
   key: "lesson.biology.climate-change",
   kind: "lesson",
   slug: "climate-change",
+  routeSlugs: { en: "climate-change", id: "perubahan-iklim" },
   translations: {
     en: {
       description:
@@ -21,6 +22,7 @@ export const lessonBiologyClimateChangeMaterial = defineLessonMaterial({
   sections: [
     {
       slug: "causes",
+      routeSlugs: { en: "causes", id: "penyebab-perubahan-iklim" },
       translations: {
         en: {
           title: "Causes of Climate Change",
@@ -32,6 +34,10 @@ export const lessonBiologyClimateChangeMaterial = defineLessonMaterial({
     },
     {
       slug: "global-cooperation",
+      routeSlugs: {
+        en: "global-cooperation",
+        id: "kerja-sama-global-untuk-mengatasi-perubahan-iklim",
+      },
       translations: {
         en: {
           title: "Global Cooperation to Address Climate Change",
@@ -43,6 +49,7 @@ export const lessonBiologyClimateChangeMaterial = defineLessonMaterial({
     },
     {
       slug: "impact",
+      routeSlugs: { en: "impact", id: "dampak-perubahan-iklim" },
       translations: {
         en: {
           title: "Impact of Climate Change",
@@ -54,6 +61,10 @@ export const lessonBiologyClimateChangeMaterial = defineLessonMaterial({
     },
     {
       slug: "mitigation-adaptation",
+      routeSlugs: {
+        en: "mitigation-adaptation",
+        id: "upaya-mitigasi-dan-adaptasi-terhadap-perubahan-iklim",
+      },
       translations: {
         en: {
           title: "Mitigation and Adaptation Efforts for Climate Change",
@@ -65,6 +76,7 @@ export const lessonBiologyClimateChangeMaterial = defineLessonMaterial({
     },
     {
       slug: "symptoms",
+      routeSlugs: { en: "symptoms", id: "gejala-perubahan-iklim" },
       translations: {
         en: {
           title: "Symptoms of Climate Change",

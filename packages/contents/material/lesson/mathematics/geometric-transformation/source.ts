@@ -7,6 +7,7 @@ export const lessonMathematicsGeometricTransformationMaterial =
     key: "lesson.mathematics.geometric-transformation",
     kind: "lesson",
     slug: "geometric-transformation",
+    routeSlugs: { en: "geometric-transformation", id: "transformasi-geometri" },
     translations: {
       en: {
         description:
@@ -22,6 +23,10 @@ export const lessonMathematicsGeometricTransformationMaterial =
     sections: [
       {
         slug: "composite-transformation-matrix",
+        routeSlugs: {
+          en: "composite-transformation-matrix",
+          id: "matriks-transformasi-komposisi",
+        },
         translations: {
           en: {
             title: "Composite Transformation Matrix",
@@ -33,6 +38,7 @@ export const lessonMathematicsGeometricTransformationMaterial =
       },
       {
         slug: "dilation",
+        routeSlugs: { en: "dilation", id: "dilatasi" },
         translations: {
           en: {
             title: "Dilation",
@@ -44,6 +50,7 @@ export const lessonMathematicsGeometricTransformationMaterial =
       },
       {
         slug: "dilation-matrix",
+        routeSlugs: { en: "dilation-matrix", id: "matriks-dilatasi" },
         translations: {
           en: {
             title: "Dilation Matrix",
@@ -55,6 +62,10 @@ export const lessonMathematicsGeometricTransformationMaterial =
       },
       {
         slug: "matrix-transformation",
+        routeSlugs: {
+          en: "matrix-transformation",
+          id: "kaitan-matriks-dengan-transformasi",
+        },
         translations: {
           en: {
             title: "Matrix and Transformation Connection",
@@ -66,6 +77,7 @@ export const lessonMathematicsGeometricTransformationMaterial =
       },
       {
         slug: "reflection-matrix",
+        routeSlugs: { en: "reflection-matrix", id: "matriks-pencerminan" },
         translations: {
           en: {
             title: "Reflection Matrix",
@@ -77,6 +89,10 @@ export const lessonMathematicsGeometricTransformationMaterial =
       },
       {
         slug: "reflection-matrix-arbitrary-point",
+        routeSlugs: {
+          en: "reflection-matrix-arbitrary-point",
+          id: "matriks-pencerminan-terhadap-sebarang-titik",
+        },
         translations: {
           en: {
             title: "Reflection Matrix over Arbitrary Point",
@@ -88,6 +104,10 @@ export const lessonMathematicsGeometricTransformationMaterial =
       },
       {
         slug: "reflection-matrix-center",
+        routeSlugs: {
+          en: "reflection-matrix-center",
+          id: "matriks-pencerminan-terhadap-titik-pusat",
+        },
         translations: {
           en: {
             title: "Reflection Matrix over Center Point",
@@ -99,6 +119,10 @@ export const lessonMathematicsGeometricTransformationMaterial =
       },
       {
         slug: "reflection-over-line",
+        routeSlugs: {
+          en: "reflection-over-line",
+          id: "pencerminan-terhadap-garis",
+        },
         translations: {
           en: {
             title: "Reflection over a Line",
@@ -110,6 +134,10 @@ export const lessonMathematicsGeometricTransformationMaterial =
       },
       {
         slug: "reflection-over-point",
+        routeSlugs: {
+          en: "reflection-over-point",
+          id: "pencerminan-terhadap-titik",
+        },
         translations: {
           en: {
             title: "Reflection over Point",
@@ -121,6 +149,10 @@ export const lessonMathematicsGeometricTransformationMaterial =
       },
       {
         slug: "reflection-over-x-axis",
+        routeSlugs: {
+          en: "reflection-over-x-axis",
+          id: "pencerminan-terhadap-sumbu-horizontal",
+        },
         translations: {
           en: {
             title: "Reflection over the Horizontal Axis",
@@ -132,6 +164,10 @@ export const lessonMathematicsGeometricTransformationMaterial =
       },
       {
         slug: "reflection-over-x-equals-k",
+        routeSlugs: {
+          en: "reflection-over-x-equals-k",
+          id: "pencerminan-terhadap-garis-vertikal",
+        },
         translations: {
           en: {
             title: "Reflection over a Vertical Line",
@@ -143,6 +179,10 @@ export const lessonMathematicsGeometricTransformationMaterial =
       },
       {
         slug: "reflection-over-y-axis",
+        routeSlugs: {
+          en: "reflection-over-y-axis",
+          id: "pencerminan-terhadap-sumbu-vertikal",
+        },
         translations: {
           en: {
             title: "Reflection over the Vertical Axis",
@@ -154,6 +194,10 @@ export const lessonMathematicsGeometricTransformationMaterial =
       },
       {
         slug: "reflection-over-y-equals-h",
+        routeSlugs: {
+          en: "reflection-over-y-equals-h",
+          id: "pencerminan-terhadap-garis-horizontal",
+        },
         translations: {
           en: {
             title: "Reflection over a Horizontal Line",
@@ -165,6 +209,10 @@ export const lessonMathematicsGeometricTransformationMaterial =
       },
       {
         slug: "reflection-over-y-equals-minus-x",
+        routeSlugs: {
+          en: "reflection-over-y-equals-minus-x",
+          id: "pencerminan-terhadap-garis-diagonal-negatif",
+        },
         translations: {
           en: {
             title: "Reflection over the Negative Diagonal Line",
@@ -176,6 +224,10 @@ export const lessonMathematicsGeometricTransformationMaterial =
       },
       {
         slug: "reflection-over-y-equals-x",
+        routeSlugs: {
+          en: "reflection-over-y-equals-x",
+          id: "pencerminan-terhadap-garis-diagonal-utama",
+        },
         translations: {
           en: {
             title: "Reflection over the Main Diagonal Line",
@@ -187,6 +239,7 @@ export const lessonMathematicsGeometricTransformationMaterial =
       },
       {
         slug: "rotation",
+        routeSlugs: { en: "rotation", id: "rotasi" },
         translations: {
           en: {
             title: "Rotation",
@@ -198,6 +251,7 @@ export const lessonMathematicsGeometricTransformationMaterial =
       },
       {
         slug: "rotation-matrix",
+        routeSlugs: { en: "rotation-matrix", id: "matriks-rotasi" },
         translations: {
           en: {
             title: "Rotation Matrix",
@@ -209,6 +263,7 @@ export const lessonMathematicsGeometricTransformationMaterial =
       },
       {
         slug: "translation",
+        routeSlugs: { en: "translation", id: "translasi" },
         translations: {
           en: {
             title: "Translation",
@@ -220,6 +275,7 @@ export const lessonMathematicsGeometricTransformationMaterial =
       },
       {
         slug: "translation-matrix",
+        routeSlugs: { en: "translation-matrix", id: "matriks-translasi" },
         translations: {
           en: {
             title: "Translation Matrix",

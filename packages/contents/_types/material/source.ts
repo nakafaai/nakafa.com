@@ -1,4 +1,3 @@
-import type { MaterialSource } from "@repo/contents/_types/material/schema";
 import { MaterialSourceSchema } from "@repo/contents/_types/material/schema";
 import { lessonAiDsAiProgrammingMaterial } from "@repo/contents/material/lesson/ai-ds/ai-programming/source";
 import { lessonAiDsLinearMethodsMaterial } from "@repo/contents/material/lesson/ai-ds/linear-methods/source";
@@ -91,7 +90,7 @@ const materialSourceInput = [
   practiceAssessmentSnbtQuantitativeKnowledgeMaterial,
   practiceAssessmentSnbtReadingAndWritingSkillsMaterial,
   practiceAssessmentTkaMathematicsMaterial,
-] satisfies readonly MaterialSource[];
+];
 
 /**
  * Source-controlled material registry.

@@ -19,11 +19,13 @@ const navigationModelValidator = literals(...PROGRAM_NAVIGATION_MODEL_VALUES);
 
 const localizedLabelValidator = v.object({
   description: v.optional(v.string()),
+  routeSlug: v.string(),
   title: v.string(),
 });
 
 const localizedProgramLabelValidator = v.object({
   description: v.string(),
+  publicSlug: v.string(),
   title: v.string(),
 });
 

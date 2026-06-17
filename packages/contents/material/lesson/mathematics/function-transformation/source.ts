@@ -7,6 +7,7 @@ export const lessonMathematicsFunctionTransformationMaterial =
     key: "lesson.mathematics.function-transformation",
     kind: "lesson",
     slug: "function-transformation",
+    routeSlugs: { en: "function-transformation", id: "transformasi-fungsi" },
     translations: {
       en: {
         description:
@@ -22,6 +23,10 @@ export const lessonMathematicsFunctionTransformationMaterial =
     sections: [
       {
         slug: "combined-transformation-function",
+        routeSlugs: {
+          en: "combined-transformation-function",
+          id: "kombinasi-transformasi-fungsi",
+        },
         translations: {
           en: {
             title: "Combined Function Transformations",
@@ -33,6 +38,7 @@ export const lessonMathematicsFunctionTransformationMaterial =
       },
       {
         slug: "horizontal-dilation",
+        routeSlugs: { en: "horizontal-dilation", id: "dilatasi-horizontal" },
         translations: {
           en: {
             title: "Horizontal Dilation",
@@ -44,6 +50,7 @@ export const lessonMathematicsFunctionTransformationMaterial =
       },
       {
         slug: "horizontal-reflection",
+        routeSlugs: { en: "horizontal-reflection", id: "refleksi-horizontal" },
         translations: {
           en: {
             title: "Horizontal Reflection",
@@ -55,6 +62,10 @@ export const lessonMathematicsFunctionTransformationMaterial =
       },
       {
         slug: "horizontal-translation",
+        routeSlugs: {
+          en: "horizontal-translation",
+          id: "translasi-horizontal",
+        },
         translations: {
           en: {
             title: "Horizontal Translation",
@@ -66,6 +77,7 @@ export const lessonMathematicsFunctionTransformationMaterial =
       },
       {
         slug: "rotation",
+        routeSlugs: { en: "rotation", id: "rotasi" },
         translations: {
           en: {
             title: "Rotation",
@@ -77,6 +89,7 @@ export const lessonMathematicsFunctionTransformationMaterial =
       },
       {
         slug: "vertical-dilation",
+        routeSlugs: { en: "vertical-dilation", id: "dilatasi-vertikal" },
         translations: {
           en: {
             title: "Vertical Dilation",
@@ -88,6 +101,7 @@ export const lessonMathematicsFunctionTransformationMaterial =
       },
       {
         slug: "vertical-reflection",
+        routeSlugs: { en: "vertical-reflection", id: "refleksi-vertikal" },
         translations: {
           en: {
             title: "Vertical Reflection",
@@ -99,6 +113,7 @@ export const lessonMathematicsFunctionTransformationMaterial =
       },
       {
         slug: "vertical-translation",
+        routeSlugs: { en: "vertical-translation", id: "translasi-vertikal" },
         translations: {
           en: {
             title: "Vertical Translation",

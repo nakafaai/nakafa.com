@@ -46,9 +46,10 @@ describe("contents/queries/recent", () => {
         assetId: seeded.ref.assetId,
         content_id: seeded.ref.assetId,
         lastViewedAt: NOW,
-        route: "material/lesson/mathematics/topic-viewed/section-viewed",
+        materialDomain: "mathematics",
+        route: "subjects/mathematics/topic-viewed/section-viewed",
         title: "Material viewed",
-        url: "https://nakafa.com/en/material/lesson/mathematics/topic-viewed/section-viewed",
+        url: "https://nakafa.com/en/subjects/mathematics/topic-viewed/section-viewed",
       }),
     ]);
     expect(results[0]).not.toHaveProperty("id");
@@ -94,8 +95,6 @@ describe("contents/queries/recent", () => {
 async function insertCurriculumLesson(ctx: MutationCtx, suffix: string) {
   const route = getMaterialLessonRoute(suffix);
   const topicId = await ctx.db.insert("curriculumTopics", {
-    category: "high-school",
-    grade: "10",
     locale: "en",
     material: "mathematics",
     order: 0,
@@ -108,11 +107,9 @@ async function insertCurriculumLesson(ctx: MutationCtx, suffix: string) {
 
   return await ctx.db.insert("curriculumLessons", {
     body: "Material body",
-    category: "high-school",
     contentHash: `material-hash-${suffix}`,
     date: NOW,
     description: `Description ${suffix}`,
-    grade: "10",
     locale: "en",
     material: "mathematics",
     order: 0,
@@ -141,8 +138,10 @@ async function insertMaterialRoute(ctx: MutationCtx, suffix: string) {
     kind: "curriculum-lesson",
     locale: "en",
     markdown: true,
-    route,
+    materialDomain: "mathematics",
+    route: getPublicMaterialLessonRoute(suffix),
     section: "material",
+    sourcePath: route,
     syncedAt: NOW,
     title: `Material ${suffix}`,
   });
@@ -187,7 +186,7 @@ function getMaterialGraph(suffix: string) {
   });
 
   if (!identity) {
-    throw new Error(`Expected material graph identity for ${route}.`);
+    expect.fail(`Expected material graph identity for ${route}.`);
   }
 
   return identity;
@@ -196,4 +195,9 @@ function getMaterialGraph(suffix: string) {
 /** Builds the canonical material route used by recent-query fixtures. */
 function getMaterialLessonRoute(suffix: string) {
   return `material/lesson/mathematics/topic-${suffix}/section-${suffix}`;
+}
+
+/** Builds the public material route used by recent-query route projections. */
+function getPublicMaterialLessonRoute(suffix: string) {
+  return `subjects/mathematics/topic-${suffix}/section-${suffix}`;
 }

@@ -10,8 +10,8 @@ export const snbtAssessment = defineAssessment({
       materialKeys: [],
       order: 10,
       translations: {
-        en: { title: "SNBT" },
-        id: { title: "SNBT" },
+        en: { routeSlug: "snbt", title: "SNBT" },
+        id: { routeSlug: "snbt", title: "SNBT" },
       },
     },
     {
@@ -21,8 +21,14 @@ export const snbtAssessment = defineAssessment({
       order: 10,
       parentKey: "snbt",
       translations: {
-        en: { title: "Quantitative Knowledge" },
-        id: { title: "Pengetahuan Kuantitatif" },
+        en: {
+          routeSlug: "quantitative-knowledge",
+          title: "Quantitative Knowledge",
+        },
+        id: {
+          routeSlug: "pengetahuan-kuantitatif",
+          title: "Pengetahuan Kuantitatif",
+        },
       },
     },
     {
@@ -32,8 +38,14 @@ export const snbtAssessment = defineAssessment({
       order: 20,
       parentKey: "snbt",
       translations: {
-        en: { title: "Mathematical Reasoning" },
-        id: { title: "Penalaran Matematika" },
+        en: {
+          routeSlug: "mathematical-reasoning",
+          title: "Mathematical Reasoning",
+        },
+        id: {
+          routeSlug: "penalaran-matematika",
+          title: "Penalaran Matematika",
+        },
       },
     },
     {
@@ -43,8 +55,8 @@ export const snbtAssessment = defineAssessment({
       order: 30,
       parentKey: "snbt",
       translations: {
-        en: { title: "General Reasoning" },
-        id: { title: "Penalaran Umum" },
+        en: { routeSlug: "general-reasoning", title: "General Reasoning" },
+        id: { routeSlug: "penalaran-umum", title: "Penalaran Umum" },
       },
     },
     {
@@ -54,8 +66,8 @@ export const snbtAssessment = defineAssessment({
       order: 40,
       parentKey: "snbt",
       translations: {
-        en: { title: "Indonesian Language" },
-        id: { title: "Bahasa Indonesia" },
+        en: { routeSlug: "indonesian-language", title: "Indonesian Language" },
+        id: { routeSlug: "bahasa-indonesia", title: "Bahasa Indonesia" },
       },
     },
     {
@@ -65,8 +77,8 @@ export const snbtAssessment = defineAssessment({
       order: 50,
       parentKey: "snbt",
       translations: {
-        en: { title: "English Language" },
-        id: { title: "Bahasa Inggris" },
+        en: { routeSlug: "english-language", title: "English Language" },
+        id: { routeSlug: "bahasa-inggris", title: "Bahasa Inggris" },
       },
     },
     {
@@ -76,8 +88,8 @@ export const snbtAssessment = defineAssessment({
       order: 60,
       parentKey: "snbt",
       translations: {
-        en: { title: "General Knowledge" },
-        id: { title: "Pengetahuan Umum" },
+        en: { routeSlug: "general-knowledge", title: "General Knowledge" },
+        id: { routeSlug: "pengetahuan-umum", title: "Pengetahuan Umum" },
       },
     },
     {
@@ -87,8 +99,14 @@ export const snbtAssessment = defineAssessment({
       order: 70,
       parentKey: "snbt",
       translations: {
-        en: { title: "Reading and Writing Skills" },
-        id: { title: "Kemampuan Memahami Bacaan dan Menulis" },
+        en: {
+          routeSlug: "reading-and-writing-skills",
+          title: "Reading and Writing Skills",
+        },
+        id: {
+          routeSlug: "kemampuan-memahami-bacaan-dan-menulis",
+          title: "Kemampuan Memahami Bacaan dan Menulis",
+        },
       },
     },
   ],

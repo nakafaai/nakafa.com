@@ -109,6 +109,17 @@ beforeEach(() => {
       });
     }
 
+    if (
+      route ===
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-1"
+    ) {
+      return Effect.succeed({
+        description: "Try-out question",
+        markdown: true,
+        title: "Question 1",
+      });
+    }
+
     return Effect.succeed(null);
   });
 });
@@ -125,6 +136,11 @@ const routeRows = [
   routeRow({
     route:
       "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
+    section: "material",
+  }),
+  routeRow({
+    route:
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-1",
     section: "material",
   }),
   routeRow({
@@ -149,7 +165,7 @@ function routeRow({
   const kind = getLearningObjectKindForRoute(route);
 
   if (!kind) {
-    throw new Error(`Expected graph route kind for ${route}.`);
+    expect.fail(`Expected graph route kind for ${route}.`);
   }
 
   return {
@@ -163,6 +179,7 @@ function routeRow({
     official: false,
     route,
     section,
+    sourcePath: route,
     syncedAt: 1,
     title: "Title",
   };
@@ -173,7 +190,7 @@ function routeGraph(locale: Locale, route: string) {
   const identity = createLearningGraphIdentityFromRoute({ locale, route });
 
   if (!identity) {
-    throw new Error(`Expected graph identity for ${route}.`);
+    expect.fail(`Expected graph identity for ${route}.`);
   }
 
   return {
@@ -185,6 +202,12 @@ function routeGraph(locale: Locale, route: string) {
 describe("llms entries", () => {
   it("classifies supported llms sections and falls back to site", () => {
     expect(getRouteSection("/articles/politics")).toBe("articles");
+    expect(getRouteSection("/subjects/chemistry/green-chemistry")).toBe(
+      "material"
+    );
+    expect(
+      getRouteSection("/practice/snbt/quantitative-knowledge/mock-test/2026")
+    ).toBe("material");
     expect(getRouteSection("/site/about")).toBe("site");
     expect(getRouteSection("/")).toBe("site");
     expect(isLlmsSection("articles")).toBe(true);
@@ -256,10 +279,29 @@ describe("llms entries", () => {
     expect(entries).toContainEqual(
       expect.objectContaining({
         description: "Green Chemistry",
-        href: "https://nakafa.com/en/material/lesson/chemistry/green-chemistry/definition.md",
-        route: "/material/lesson/chemistry/green-chemistry/definition",
+        href: "https://nakafa.com/en/subjects/chemistry/green-chemistry/definition.md",
+        route: "/subjects/chemistry/green-chemistry/definition",
         section: "material",
         title: "Definition of Green Chemistry",
+      })
+    );
+    expect(entries).toContainEqual(
+      expect.objectContaining({
+        description: "Try-out set",
+        href: "https://nakafa.com/en/practice/snbt/quantitative-knowledge/mock-test/2026/set-1.md",
+        route: "/practice/snbt/quantitative-knowledge/mock-test/2026/set-1",
+        section: "material",
+        title: "Try-out Set 1",
+      })
+    );
+    expect(entries).toContainEqual(
+      expect.objectContaining({
+        description: "Try-out question",
+        href: "https://nakafa.com/en/practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question-1.md",
+        route:
+          "/practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question-1",
+        section: "material",
+        title: "Question 1",
       })
     );
     expect(entries).toContainEqual(
@@ -281,7 +323,7 @@ describe("llms entries", () => {
     );
     expect(hrefs).not.toContain("https://nakafa.com/en/articles/politics.md");
     expect(hrefs).not.toContain(
-      "https://nakafa.com/en/material/practice/assessment/snbt/quantitative-knowledge/try-out-2026.md"
+      "https://nakafa.com/en/practice/snbt/quantitative-knowledge/mock-test/2026.md"
     );
     expect(mockGetRuntimeContentRouteArtifactPage).toHaveBeenCalledWith({
       locale: "en",
@@ -322,7 +364,7 @@ describe("llms entries", () => {
       Effect.runPromise(
         getContentListingLlmsEntries({
           locale: "en",
-          route: "curriculum/high-school/10",
+          route: "curriculum/merdeka/class-10/mathematics/integral",
         })
       )
     ).resolves.toBeNull();
@@ -330,7 +372,7 @@ describe("llms entries", () => {
       Effect.runPromise(
         getContentListingLlmsEntries({
           locale: "en",
-          route: "assessment/high-school/snbt",
+          route: "exams/snbt/quantitative-knowledge/mock-test/2026",
         })
       )
     ).resolves.toBeNull();

@@ -21,6 +21,7 @@ export function toLearningProgramSummary(
     key: program.key,
     kind: program.kind,
     navigation: program.navigation,
+    publicSlug: translation.publicSlug,
     title: translation.title,
     versionLabel: program.versionLabel,
   };
@@ -225,6 +226,7 @@ function getProgramTranslation(
   if (!firstTranslation) {
     return {
       description: program.key,
+      publicSlug: program.key,
       title: program.key,
     };
   }

@@ -22,6 +22,7 @@ describe("buildContentSearchDocument", () => {
       locale: "id",
       route,
       section: "material",
+      sourcePath: route,
       syncedAt: 1,
       text: [
         'import { getColor } from "@repo/design-system/lib/color";',
@@ -38,6 +39,7 @@ describe("buildContentSearchDocument", () => {
     expect(document).toMatchObject({
       content_id: identity.assetId,
       route,
+      sourcePath: route,
       text: "Definisi Logaritma Memahami bentuk dasar logaritma. Pengertian Logaritma Logaritma menjawab pangkat yang dibutuhkan. Baca sifat logaritma. # source-visible comment",
     });
     expect(document.text).not.toContain("material/lesson");

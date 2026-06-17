@@ -46,6 +46,7 @@ export const contentSearchResultValidator = v.object({
 export const contentSearchDocumentValidator = v.object({
   ...contentSearchSummaryValidator.fields,
   contentHash: v.string(),
+  sourcePath: v.string(),
   syncedAt: v.number(),
   text: v.string(),
 });

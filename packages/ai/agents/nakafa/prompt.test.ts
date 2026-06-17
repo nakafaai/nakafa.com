@@ -71,8 +71,8 @@ describe("nakafaAgentPrompt", () => {
       context: {
         currentDate: "May 15, 2026",
         needsPageFetch: true,
-        slug: "curriculum/high-school/10/chemistry",
-        url: "/id/curriculum/high-school/10/chemistry",
+        slug: "kurikulum/merdeka/kelas-10/kimia",
+        url: "/id/kurikulum/merdeka/kelas-10/kimia",
         verified: true,
       },
       locale: "id",

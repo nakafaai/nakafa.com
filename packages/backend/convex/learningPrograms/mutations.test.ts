@@ -294,6 +294,7 @@ async function seedContentRoute(
       markdown: true,
       route: "material/lesson/chemistry/atomic-structure",
       section: "material",
+      sourcePath: "material/lesson/chemistry/atomic-structure",
       syncedAt: NOW,
       title: "Atomic Structure",
     });

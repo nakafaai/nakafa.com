@@ -1,27 +1,16 @@
-import { getMaterialPath } from "@repo/contents/_lib/assessment/route";
 import { listPracticeMaterialSources } from "@repo/contents/_types/material/registry";
-import type {
-  ExercisesCategory,
-  ExercisesType,
-} from "@repo/contents/_types/taxonomy";
+import type { ExercisesType } from "@repo/contents/_types/taxonomy";
 import { EXERCISES_MATERIALS } from "@repo/contents/_types/taxonomy";
 import { Effect } from "effect";
 
 /**
- * Loads the material list for a given exercises category and type.
+ * Loads the material list for a given assessment type.
  *
- * @param category - Exercises category slug
  * @param type - Exercises type slug
- * @returns Material list with labels and href values, or an empty array when unavailable
- *
- * @example
- * ```ts
- * const subjects = yield* getSubjects("high-school", "tka");
- * // Returns: [{ label: "mathematics", href: "/assessment/high-school/tka/mathematics" }, ...]
- * ```
+ * @returns Material labels, or an empty array when unavailable
  */
 export const getSubjects = Effect.fn("contents.exercises.getSubjects")(
-  (category: ExercisesCategory, type: ExercisesType) =>
+  (type: ExercisesType) =>
     Effect.sync(() => {
       const availableMaterials = new Set(
         listPracticeMaterialSources()
@@ -37,7 +26,6 @@ export const getSubjects = Effect.fn("contents.exercises.getSubjects")(
         return [
           {
             label: material,
-            href: getMaterialPath(category, type, material),
           },
         ];
       });

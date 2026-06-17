@@ -2,7 +2,9 @@ import {
   getPublicContentRouteCheck,
   type PublicContentRouteCheck,
 } from "@repo/contents/_lib/manifest/public-route";
-import { Effect } from "effect";
+import { findPublicContentRouteByPathEffect } from "@repo/contents/_types/route/projection";
+import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
+import { Effect, Option } from "effect";
 import type { Locale } from "next-intl";
 import {
   getRuntimeContentRoute,
@@ -18,11 +20,16 @@ import { formatRouteTitle } from "@/lib/llms/format";
 import { getQuranRouteMetadata } from "@/lib/llms/quran";
 import {
   baseRoutes,
-  buildSitemapContentPageRoutes,
+  buildSitemapContentPageRoutesEffect,
 } from "@/lib/sitemap/routes";
 
 const LLMS_ENTRY_BUILD_CONCURRENCY = 16;
 const LLMS_LISTING_ENTRY_LIMIT = 100;
+const materialRouteNamespaces = new Set<string>(
+  PUBLIC_ROUTE_SURFACES.filter(
+    (surface) => surface.key === "subject" || surface.key === "exercises"
+  ).flatMap((surface) => Object.values(surface.routeSlugs))
+);
 
 interface ParentListingRowsArgs {
   kind: "article" | "exercise-group" | "curriculum-topic";
@@ -38,6 +45,10 @@ export function getRouteSection(route: string): LlmsSection {
 
   if (isLlmsSection(firstSegment) && firstSegment !== "site") {
     return firstSegment;
+  }
+
+  if (materialRouteNamespaces.has(firstSegment ?? "")) {
+    return "material";
   }
 
   return "site";
@@ -87,7 +98,10 @@ export const getContentPageLlmsEntries = Effect.fn(
     return [];
   }
 
-  const routes = buildSitemapContentPageRoutes(artifactPage.routes).filter(
+  const sitemapRoutes = yield* buildSitemapContentPageRoutesEffect(
+    artifactPage.routes
+  );
+  const routes = sitemapRoutes.filter(
     (route) => getRouteSection(route) === section
   );
 
@@ -136,7 +150,7 @@ function buildLocalizedLlmsEntriesFromRoutes({
 /**
  * Reads one bounded route-catalog page for supported listing route shapes.
  *
- * The interface returns null when the route is not a listing. Every supported
+ * The resolver returns null when the route is not a listing. Every supported
  * branch delegates to an indexed kind or parent page read with a fixed limit.
  */
 function readContentListingRows({
@@ -253,10 +267,14 @@ function getListingRouteMetadata(route: string) {
 /** Reads exact runtime content route metadata when the route has markdown. */
 const getContentRouteMetadata = Effect.fn("www.llms.contentRouteMetadata")(
   function* ({ locale, route }: { locale: Locale; route: string }) {
+    const contentPath = yield* getRuntimeContentLookupPath(
+      route.slice(1),
+      locale
+    );
     const contentRoute = yield* Effect.match(
       getRuntimeContentRoute({
         locale,
-        route: route.slice(1),
+        route: contentPath,
       }),
       {
         onFailure: () => null,
@@ -273,5 +291,20 @@ const getContentRouteMetadata = Effect.fn("www.llms.contentRouteMetadata")(
       hasMarkdown: contentRoute.markdown,
       title: contentRoute.title,
     };
+  }
+);
+
+/** Converts projected public material/practice paths to runtime source routes. */
+const getRuntimeContentLookupPath = Effect.fn("www.llms.contentLookupPath")(
+  function* (contentPath: string, locale: Locale) {
+    const route = yield* findPublicContentRouteByPathEffect(
+      contentPath,
+      locale
+    );
+
+    return Option.match(route, {
+      onNone: () => contentPath,
+      onSome: (publicRoute) => publicRoute.sourcePath,
+    });
   }
 );

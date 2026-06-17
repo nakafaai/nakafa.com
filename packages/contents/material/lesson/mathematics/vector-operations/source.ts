@@ -6,6 +6,7 @@ export const lessonMathematicsVectorOperationsMaterial = defineLessonMaterial({
   key: "lesson.mathematics.vector-operations",
   kind: "lesson",
   slug: "vector-operations",
+  routeSlugs: { en: "vector-operations", id: "vektor-dan-operasinya" },
   translations: {
     en: {
       description:
@@ -21,6 +22,10 @@ export const lessonMathematicsVectorOperationsMaterial = defineLessonMaterial({
   sections: [
     {
       slug: "column-row-vector",
+      routeSlugs: {
+        en: "column-row-vector",
+        id: "vektor-kolom-dan-vektor-baris",
+      },
       translations: {
         en: {
           title: "Column and Row Vectors",
@@ -32,6 +37,7 @@ export const lessonMathematicsVectorOperationsMaterial = defineLessonMaterial({
     },
     {
       slug: "equivalent-vector",
+      routeSlugs: { en: "equivalent-vector", id: "vektor-ekuivalen" },
       translations: {
         en: {
           title: "Equivalent Vectors",
@@ -43,6 +49,7 @@ export const lessonMathematicsVectorOperationsMaterial = defineLessonMaterial({
     },
     {
       slug: "opposite-vector",
+      routeSlugs: { en: "opposite-vector", id: "vektor-berkebalikan" },
       translations: {
         en: {
           title: "Reciprocal Vector",
@@ -54,6 +61,7 @@ export const lessonMathematicsVectorOperationsMaterial = defineLessonMaterial({
     },
     {
       slug: "position-vector",
+      routeSlugs: { en: "position-vector", id: "vektor-posisi" },
       translations: {
         en: {
           title: "Position Vector",
@@ -65,6 +73,10 @@ export const lessonMathematicsVectorOperationsMaterial = defineLessonMaterial({
     },
     {
       slug: "scalar-multiplication",
+      routeSlugs: {
+        en: "scalar-multiplication",
+        id: "perkalian-skalar-vektor",
+      },
       translations: {
         en: {
           title: "Scalar Vector Multiplication",
@@ -76,6 +88,7 @@ export const lessonMathematicsVectorOperationsMaterial = defineLessonMaterial({
     },
     {
       slug: "three-dimensional-vector",
+      routeSlugs: { en: "three-dimensional-vector", id: "vektor-tiga-dimensi" },
       translations: {
         en: {
           title: "Three-Dimensional Vector",
@@ -87,6 +100,7 @@ export const lessonMathematicsVectorOperationsMaterial = defineLessonMaterial({
     },
     {
       slug: "two-dimensional-vector",
+      routeSlugs: { en: "two-dimensional-vector", id: "vektor-dua-dimensi" },
       translations: {
         en: {
           title: "Two-Dimensional Vector",
@@ -98,6 +112,7 @@ export const lessonMathematicsVectorOperationsMaterial = defineLessonMaterial({
     },
     {
       slug: "unit-vector",
+      routeSlugs: { en: "unit-vector", id: "vektor-satuan-dari-suatu-vektor" },
       translations: {
         en: {
           title: "Unit Vector from a Vector",
@@ -109,6 +124,7 @@ export const lessonMathematicsVectorOperationsMaterial = defineLessonMaterial({
     },
     {
       slug: "vector-addition",
+      routeSlugs: { en: "vector-addition", id: "penjumlahan-vektor" },
       translations: {
         en: {
           title: "Vector Addition",
@@ -120,6 +136,7 @@ export const lessonMathematicsVectorOperationsMaterial = defineLessonMaterial({
     },
     {
       slug: "vector-components",
+      routeSlugs: { en: "vector-components", id: "komponen-vektor" },
       translations: {
         en: {
           title: "Vector Components",
@@ -131,6 +148,7 @@ export const lessonMathematicsVectorOperationsMaterial = defineLessonMaterial({
     },
     {
       slug: "vector-concept",
+      routeSlugs: { en: "vector-concept", id: "konsep-vektor" },
       translations: {
         en: {
           title: "Vector Concept",
@@ -142,6 +160,10 @@ export const lessonMathematicsVectorOperationsMaterial = defineLessonMaterial({
     },
     {
       slug: "vector-coordinate-system",
+      routeSlugs: {
+        en: "vector-coordinate-system",
+        id: "vektor-dan-sistem-koordinat",
+      },
       translations: {
         en: {
           title: "Vectors and Coordinate System",
@@ -153,6 +175,7 @@ export const lessonMathematicsVectorOperationsMaterial = defineLessonMaterial({
     },
     {
       slug: "vector-subtraction",
+      routeSlugs: { en: "vector-subtraction", id: "pengurangan-vektor" },
       translations: {
         en: {
           title: "Vector Subtraction",
@@ -164,6 +187,7 @@ export const lessonMathematicsVectorOperationsMaterial = defineLessonMaterial({
     },
     {
       slug: "vector-types",
+      routeSlugs: { en: "vector-types", id: "jenis-jenis-vektor" },
       translations: {
         en: {
           title: "Vector Types",
@@ -175,6 +199,7 @@ export const lessonMathematicsVectorOperationsMaterial = defineLessonMaterial({
     },
     {
       slug: "zero-vector",
+      routeSlugs: { en: "zero-vector", id: "vektor-nol" },
       translations: {
         en: {
           title: "Zero Vector",

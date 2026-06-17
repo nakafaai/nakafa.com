@@ -26,7 +26,6 @@ import type {
   SyncOptions,
 } from "@repo/backend/scripts/sync-content/types";
 import { getAllSurah } from "@repo/contents/_lib/quran";
-import { listCurriculumNodesEffect } from "@repo/contents/_types/curriculum/projection";
 import {
   listLessonMaterialSources,
   listLessonRows,
@@ -87,34 +86,18 @@ function getExpectedQuranCounts() {
 /** Builds final read-model count targets from typed material and curriculum sources. */
 const getExpectedGeneratedCounts = Effect.fn("sync.expectedGeneratedCounts")(
   function* (options: SyncOptions) {
-    const curriculumLessons = yield* listCurriculumLessonRows(options);
+    const materialTopics = listLessonRows(options.locale);
 
     return {
-      curriculumLessons: curriculumLessons.reduce(
+      curriculumLessons: materialTopics.reduce(
         (total, topic) => total + topic.sections.length,
         0
       ),
-      curriculumTopics: curriculumLessons.length,
+      curriculumTopics: materialTopics.length,
       materialLocales:
         getExpectedLessonMaterialLocales(options) +
         getExpectedPracticeMaterialLocales(options),
     };
-  }
-);
-
-const listCurriculumLessonRows = Effect.fn("sync.expectedCurriculumLessons")(
-  function* (options: SyncOptions) {
-    const curriculumMaterialKeys = new Set<string>();
-
-    for (const node of yield* listCurriculumNodesEffect()) {
-      for (const materialKey of node.materialKeys) {
-        curriculumMaterialKeys.add(materialKey);
-      }
-    }
-
-    return listLessonRows(options.locale).filter((topic) =>
-      curriculumMaterialKeys.has(topic.key)
-    );
   }
 );
 

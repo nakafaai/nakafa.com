@@ -6,6 +6,7 @@ export const lessonMathematicsCombinatoricsMaterial = defineLessonMaterial({
   key: "lesson.mathematics.combinatorics",
   kind: "lesson",
   slug: "combinatorics",
+  routeSlugs: { en: "combinatorics", id: "kombinatorik" },
   translations: {
     en: {
       description:
@@ -21,6 +22,7 @@ export const lessonMathematicsCombinatoricsMaterial = defineLessonMaterial({
   sections: [
     {
       slug: "binomial-newton",
+      routeSlugs: { en: "binomial-newton", id: "binomial-newton" },
       translations: {
         en: {
           title: "Binomial Newton",
@@ -32,6 +34,7 @@ export const lessonMathematicsCombinatoricsMaterial = defineLessonMaterial({
     },
     {
       slug: "circular-permutation",
+      routeSlugs: { en: "circular-permutation", id: "permutasi-siklis" },
       translations: {
         en: {
           title: "Circular Permutation",
@@ -43,6 +46,7 @@ export const lessonMathematicsCombinatoricsMaterial = defineLessonMaterial({
     },
     {
       slug: "combination",
+      routeSlugs: { en: "combination", id: "kombinasi" },
       translations: {
         en: {
           title: "Combination",
@@ -54,6 +58,7 @@ export const lessonMathematicsCombinatoricsMaterial = defineLessonMaterial({
     },
     {
       slug: "filling-place-rule",
+      routeSlugs: { en: "filling-place-rule", id: "aturan-pengisian-tempat" },
       translations: {
         en: {
           title: "Slot Filling Rule",
@@ -65,6 +70,10 @@ export const lessonMathematicsCombinatoricsMaterial = defineLessonMaterial({
     },
     {
       slug: "permutation-of-n-items-from-n-objects",
+      routeSlugs: {
+        en: "permutation-of-n-items-from-n-objects",
+        id: "permutasi-semua-objek",
+      },
       translations: {
         en: {
           title: "Permutation of All Objects",
@@ -76,6 +85,10 @@ export const lessonMathematicsCombinatoricsMaterial = defineLessonMaterial({
     },
     {
       slug: "permutation-with-identical-objects",
+      routeSlugs: {
+        en: "permutation-with-identical-objects",
+        id: "permutasi-dengan-objek-yang-sama",
+      },
       translations: {
         en: {
           title: "Permutation with Identical Objects",
@@ -87,6 +100,10 @@ export const lessonMathematicsCombinatoricsMaterial = defineLessonMaterial({
     },
     {
       slug: "probability-of-an-event",
+      routeSlugs: {
+        en: "probability-of-an-event",
+        id: "peluang-suatu-kejadian",
+      },
       translations: {
         en: {
           title: "Probability of an Event",
@@ -98,6 +115,10 @@ export const lessonMathematicsCombinatoricsMaterial = defineLessonMaterial({
     },
     {
       slug: "probability-of-compound-events",
+      routeSlugs: {
+        en: "probability-of-compound-events",
+        id: "peluang-kejadian-majemuk",
+      },
       translations: {
         en: {
           title: "Probability of Compound Events",
@@ -109,6 +130,10 @@ export const lessonMathematicsCombinatoricsMaterial = defineLessonMaterial({
     },
     {
       slug: "probability-of-independent-conditional-events",
+      routeSlugs: {
+        en: "probability-of-independent-conditional-events",
+        id: "peluang-kejadian-majemuk-saling-bebas-bersyarat",
+      },
       translations: {
         en: {
           title: "Probability of Independent Conditional Events",
@@ -120,6 +145,10 @@ export const lessonMathematicsCombinatoricsMaterial = defineLessonMaterial({
     },
     {
       slug: "probability-of-independent-events",
+      routeSlugs: {
+        en: "probability-of-independent-events",
+        id: "peluang-kejadian-majemuk-saling-bebas",
+      },
       translations: {
         en: {
           title: "Probability of Independent Events",
@@ -131,6 +160,10 @@ export const lessonMathematicsCombinatoricsMaterial = defineLessonMaterial({
     },
     {
       slug: "probability-of-mutually-exclusive-events",
+      routeSlugs: {
+        en: "probability-of-mutually-exclusive-events",
+        id: "peluang-kejadian-majemuk-saling-lepas",
+      },
       translations: {
         en: {
           title: "Probability of Mutually Exclusive Events",

@@ -13,8 +13,10 @@ interface SyncedExerciseSet {
   exerciseType: string;
   exerciseTypeTitle: string;
   groupContentHash: string;
+  groupPublicPath: string;
   locale: Doc<"exerciseSets">["locale"];
   material: Doc<"exerciseSets">["material"];
+  publicPath: string;
   questionCount: number;
   searchDescription: string;
   searchText: string;
@@ -41,6 +43,7 @@ interface SyncedExerciseQuestion {
   locale: Doc<"exerciseQuestions">["locale"];
   material: Doc<"exerciseQuestions">["material"];
   number: number;
+  publicPath: string;
   questionBody: string;
   searchDescription: string;
   searchText: string;
@@ -78,8 +81,10 @@ const BASE_SET: SyncedExerciseSet = {
   exerciseType: "try-out",
   exerciseTypeTitle: "Try Out",
   groupContentHash: "group-hash",
+  groupPublicPath: GROUP_SLUG,
   locale: "id",
   material: "quantitative-knowledge",
+  publicPath: SET_SLUG,
   questionCount: 1,
   searchDescription: "Old set description",
   searchText: "Set search text",
@@ -119,6 +124,7 @@ const BASE_QUESTION: SyncedExerciseQuestion = {
   locale: "id",
   material: "quantitative-knowledge",
   number: 1,
+  publicPath: QUESTION_SLUG,
   questionBody: "Question body",
   searchDescription: "Old question description",
   searchText: "Question body Answer body",
@@ -134,14 +140,31 @@ const BASE_QUESTION: SyncedExerciseQuestion = {
 function buildSet(
   overrides: Partial<SyncedExerciseSet> = {}
 ): SyncedExerciseSet {
-  return { ...BASE_SET, ...overrides };
+  const set = { ...BASE_SET, ...overrides };
+  const publicPath = overrides.publicPath ?? set.slug;
+
+  return {
+    ...set,
+    groupPublicPath: overrides.groupPublicPath ?? getParentPath(publicPath),
+    publicPath,
+  };
 }
 
 /** Builds a complete exercise question sync payload with focused overrides. */
 function buildQuestion(
   overrides: Partial<SyncedExerciseQuestion> = {}
 ): SyncedExerciseQuestion {
-  return { ...BASE_QUESTION, ...overrides };
+  const question = { ...BASE_QUESTION, ...overrides };
+
+  return {
+    ...question,
+    publicPath: overrides.publicPath ?? question.slug,
+  };
+}
+
+/** Returns the parent path for one slash-delimited fixture route. */
+function getParentPath(route: string) {
+  return route.split("/").slice(0, -1).join("/");
 }
 
 /** Returns the graph asset ID for an exercise route fixture. */

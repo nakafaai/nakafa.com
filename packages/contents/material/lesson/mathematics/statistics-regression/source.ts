@@ -7,6 +7,7 @@ export const lessonMathematicsStatisticsRegressionMaterial =
     key: "lesson.mathematics.statistics-regression",
     kind: "lesson",
     slug: "statistics-regression",
+    routeSlugs: { en: "statistics-regression", id: "regresi-statistik" },
     translations: {
       en: {
         description:
@@ -22,6 +23,10 @@ export const lessonMathematicsStatisticsRegressionMaterial =
     sections: [
       {
         slug: "coefficient-of-determination",
+        routeSlugs: {
+          en: "coefficient-of-determination",
+          id: "koefisien-determinasi",
+        },
         translations: {
           en: {
             title: "Coefficient of Determination",
@@ -33,6 +38,10 @@ export const lessonMathematicsStatisticsRegressionMaterial =
       },
       {
         slug: "correlation-analysis-concept",
+        routeSlugs: {
+          en: "correlation-analysis-concept",
+          id: "konsep-analisis-korelasi",
+        },
         translations: {
           en: {
             title: "Correlation Analysis Concept",
@@ -44,6 +53,10 @@ export const lessonMathematicsStatisticsRegressionMaterial =
       },
       {
         slug: "least-squares-method",
+        routeSlugs: {
+          en: "least-squares-method",
+          id: "metode-kuadrat-terkecil",
+        },
         translations: {
           en: {
             title: "Least Squares Method",
@@ -55,6 +68,10 @@ export const lessonMathematicsStatisticsRegressionMaterial =
       },
       {
         slug: "linear-regression-concept",
+        routeSlugs: {
+          en: "linear-regression-concept",
+          id: "konsep-regresi-linear",
+        },
         translations: {
           en: {
             title: "Linear Regression Concept",
@@ -66,6 +83,10 @@ export const lessonMathematicsStatisticsRegressionMaterial =
       },
       {
         slug: "product-moment-correlation",
+        routeSlugs: {
+          en: "product-moment-correlation",
+          id: "korelasi-product-moment",
+        },
         translations: {
           en: {
             title: "Product Moment Correlation",
@@ -77,6 +98,10 @@ export const lessonMathematicsStatisticsRegressionMaterial =
       },
       {
         slug: "scatter-diagram",
+        routeSlugs: {
+          en: "scatter-diagram",
+          id: "diagram-pencar-atau-diagram-scatter",
+        },
         translations: {
           en: {
             title: "Scatter Diagram",

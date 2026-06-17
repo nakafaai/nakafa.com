@@ -2,10 +2,10 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { CONTENT_ROUTE_KINDS } from "@repo/backend/convex/contents/constants";
 import { learningGraphIdentityValidator } from "@repo/backend/convex/contents/graph";
-import { buildContentSearchRef } from "@repo/backend/convex/contents/helpers/search/documents";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import {
   localeValidator,
+  materialValidator,
   nakafaSectionValidator,
 } from "@repo/backend/convex/lib/validators/contents";
 import { getSourceRouteProjection } from "@repo/contents/_types/graph/projection";
@@ -24,9 +24,11 @@ const contentRouteSourceValidator = v.object({
   kind: literals(...CONTENT_ROUTE_KINDS),
   locale: localeValidator,
   markdown: v.boolean(),
+  materialDomain: v.optional(materialValidator),
   official: v.optional(v.boolean()),
-  route: v.string(),
+  publicPath: v.string(),
   section: nakafaSectionValidator,
+  sourcePath: v.string(),
   syncedAt: v.number(),
   title: v.string(),
 });
@@ -39,10 +41,9 @@ export async function syncContentRoute(
   ctx: MutationCtx,
   source: ContentRouteSource
 ) {
-  const searchRef = buildContentSearchRef(source);
   const routeProjection = getSourceRouteProjection({
     kind: source.kind,
-    route: source.route,
+    route: source.sourcePath,
   });
 
   if (!routeProjection) {
@@ -58,7 +59,7 @@ export async function syncContentRoute(
     assetId: source.assetId,
     conceptId: source.conceptId,
     contentHash: source.contentHash,
-    content_id: searchRef.content_id,
+    content_id: source.assetId,
     date: source.date,
     depth: routeProjection.depth,
     description: source.description,
@@ -67,10 +68,13 @@ export async function syncContentRoute(
     locale: source.locale,
     lensId: source.lensId,
     markdown: source.markdown,
+    materialDomain: source.materialDomain,
     official: source.official,
-    parentRoute: routeProjection.parentRoute,
-    route: source.route,
+    parentRoute: getParentPath(source.publicPath),
+    route: source.publicPath,
     section: source.section,
+    sourceParentPath: routeProjection.parentRoute,
+    sourcePath: source.sourcePath,
     syncedAt: source.syncedAt,
     title: source.title,
   };
@@ -143,15 +147,15 @@ export async function deleteContentRoute(ctx: MutationCtx, contentId: string) {
   await ctx.db.delete(existing._id);
 }
 
-/** Deletes every route catalog row attached to one public route projection. */
-export async function deleteContentRoutesByRoute(
+/** Deletes every route catalog row attached to one source route projection. */
+export async function deleteContentRoutesBySourcePath(
   ctx: MutationCtx,
-  args: { locale: Locale; route: string }
+  args: { locale: Locale; sourcePath: string }
 ) {
   const rows = await ctx.db
     .query("contentRoutes")
-    .withIndex("by_locale_and_route", (q) =>
-      q.eq("locale", args.locale).eq("route", args.route)
+    .withIndex("by_locale_and_sourcePath", (q) =>
+      q.eq("locale", args.locale).eq("sourcePath", args.sourcePath)
     )
     .take(duplicateRouteRepairLimit);
 
@@ -295,10 +299,19 @@ function isSameContentRoute(
     existing.lensId === next.lensId &&
     existing.locale === next.locale &&
     existing.markdown === next.markdown &&
+    existing.materialDomain === next.materialDomain &&
     existing.official === next.official &&
     existing.parentRoute === next.parentRoute &&
     existing.route === next.route &&
     existing.section === next.section &&
+    existing.sourceParentPath === next.sourceParentPath &&
+    existing.sourcePath === next.sourcePath &&
     existing.title === next.title
   );
+}
+
+function getParentPath(path: string) {
+  const parentPath = path.split("/").slice(0, -1).join("/");
+
+  return parentPath.length > 0 ? parentPath : undefined;
 }

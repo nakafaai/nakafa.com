@@ -117,6 +117,11 @@ const RESET_STEPS: ResetStep[] = [
     resultLabel: "content route rows",
   },
   {
+    label: "Deleting public route rows...",
+    mutation: internal.contentSync.reset.internal.deletePublicRoutesBatch,
+    resultLabel: "public route rows",
+  },
+  {
     label: "Deleting content route count rows...",
     mutation: internal.contentSync.reset.internal.deleteContentRouteCountsBatch,
     resultLabel: "content route count rows",
@@ -403,6 +408,7 @@ export const reset = Effect.fn("sync.reset")(function* (
   log(`  Learning Plan Items:   ${counts.learningPlanItems}`);
   log(`  Learning Program Cov:  ${counts.learningProgramCoverage}`);
   log(`  Content Routes:        ${counts.contentRoutes}`);
+  log(`  Public Routes:         ${counts.publicRoutes}`);
   log(`  Content Route Counts:  ${counts.contentRouteCounts}`);
   log(`  Content Route Pages:   ${counts.contentRoutePages}`);
   log(`  Quran Surahs:          ${counts.quranSurahs}`);
@@ -497,6 +503,7 @@ export const reset = Effect.fn("sync.reset")(function* (
     counts.learningPlanItems +
     counts.learningProgramCoverage +
     counts.contentRoutes +
+    counts.publicRoutes +
     counts.contentRouteCounts +
     counts.contentRoutePages +
     counts.quranSurahs +

@@ -1,6 +1,7 @@
 import { type DateOnly, DateOnlySchema } from "@repo/contents/_shared/date";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { CurriculumLensScopeSchema } from "@repo/contents/_types/graph/schema";
+import { PublicRouteSegmentSchema } from "@repo/contents/_types/route/segment";
 import { Schema } from "effect";
 
 type SchemaType<T extends Schema.Schema.Any> = Schema.Schema.Type<T>;
@@ -113,11 +114,16 @@ export const LearningInterestSchema = Schema.Literal(
 
 export type LearningInterest = SchemaType<typeof LearningInterestSchema>;
 
-export const LEARNING_INTEREST_PROGRAM_KIND_MATCHES = {
+export const LEARNING_INTEREST_PROGRAM_KIND_MATCHES = Schema.decodeUnknownSync(
+  Schema.Record({
+    key: LearningInterestSchema,
+    value: Schema.Array(LearningProgramKindSchema),
+  })
+)({
   "assessment-prep": ["assessment", "admission-exam"],
   "exam-prep": ["admission-exam"],
   "school-curriculum": ["school-curriculum"],
-} as const satisfies Record<LearningInterest, readonly LearningProgramKind[]>;
+});
 
 export const LEARNING_STAGE_VALUES = [
   "grade-10",
@@ -229,6 +235,7 @@ export const ProgramSourceSchema = Schema.Struct({
 /** Localized learner-facing labels for one canonical learning program. */
 export const ProgramTranslationSchema = Schema.Struct({
   description: Schema.String,
+  publicSlug: PublicRouteSegmentSchema,
   title: Schema.String,
 });
 

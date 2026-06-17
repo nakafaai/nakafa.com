@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   getAppNavigationViewer,
+  getForYouNavigationHref,
   getForYouNavigationItems,
 } from "@/components/sidebar/data/navigation";
 
@@ -52,5 +53,15 @@ describe("sidebar navigation", () => {
     expect(
       getForYouNavigationItems("administrator").map((item) => item.id)
     ).toEqual(["subject", "askNina"]);
+  });
+
+  it("uses localized hrefs only when a navigation item owns them", () => {
+    const [subject, askNina] = getForYouNavigationItems("teacher");
+
+    expect(subject).toBeDefined();
+    expect(askNina).toBeDefined();
+    expect(getForYouNavigationHref(subject, "id")).toBe("/kurikulum/merdeka");
+    expect(getForYouNavigationHref(subject, "en")).toBe("/curriculum/merdeka");
+    expect(getForYouNavigationHref(askNina, "id")).toBe("/chat");
   });
 });

@@ -1,4 +1,6 @@
-import { Effect } from "effect";
+import { findPublicRouteByPathEffect } from "@repo/contents/_types/route/projection";
+import type { PublicRoute } from "@repo/contents/_types/route/schema";
+import { Effect, Option } from "effect";
 import type { Locale } from "next-intl";
 import {
   getCachedLlmsExerciseText,
@@ -11,6 +13,11 @@ import {
 import { getLlmsLegalPageText } from "@/lib/llms/legal";
 import { getCachedLlmsMdxText, getLlmsMdxText } from "@/lib/llms/mdx";
 import { getQuranLlmsText } from "@/lib/llms/quran";
+
+interface LlmsMarkdownSource {
+  cleanSlug: string;
+  publicSlug?: string;
+}
 
 /**
  * Resolves cached markdown for one agent-facing route.
@@ -26,8 +33,14 @@ export const getLlmsMarkdownText = Effect.fn("www.llms.markdown.cached")(
       return quranText;
     }
 
+    const source = yield* getLlmsMarkdownSource({ cleanSlug, locale });
     const exerciseText = yield* Effect.tryPromise({
-      try: () => getCachedLlmsExerciseText({ cleanSlug, locale }),
+      try: () =>
+        getCachedLlmsExerciseText({
+          cleanSlug: source.cleanSlug,
+          locale,
+          publicSlug: source.publicSlug,
+        }),
       catch: (error) => error,
     });
     if (exerciseText) {
@@ -35,7 +48,12 @@ export const getLlmsMarkdownText = Effect.fn("www.llms.markdown.cached")(
     }
 
     const mdxText = yield* Effect.tryPromise({
-      try: () => getCachedLlmsMdxText({ cleanSlug, locale }),
+      try: () =>
+        getCachedLlmsMdxText({
+          cleanSlug: source.cleanSlug,
+          locale,
+          publicSlug: source.publicSlug,
+        }),
       catch: (error) => error,
     });
     if (mdxText) {
@@ -71,12 +89,21 @@ export const getLlmsSourceMarkdownText = Effect.fn("www.llms.markdown.source")(
       return quranText;
     }
 
-    const exerciseText = yield* getLlmsExerciseText({ cleanSlug, locale });
+    const source = yield* getLlmsMarkdownSource({ cleanSlug, locale });
+    const exerciseText = yield* getLlmsExerciseText({
+      cleanSlug: source.cleanSlug,
+      locale,
+      publicSlug: source.publicSlug,
+    });
     if (exerciseText) {
       return exerciseText;
     }
 
-    const mdxText = yield* getLlmsMdxText({ cleanSlug, locale });
+    const mdxText = yield* getLlmsMdxText({
+      cleanSlug: source.cleanSlug,
+      locale,
+      publicSlug: source.publicSlug,
+    });
     if (mdxText) {
       return mdxText;
     }
@@ -89,3 +116,33 @@ export const getLlmsSourceMarkdownText = Effect.fn("www.llms.markdown.source")(
     return yield* getLlmsSectionIndexText(`llms/${locale}/${cleanSlug}`);
   }
 );
+
+/** Resolves public material/practice paths to the internal markdown source path. */
+const getLlmsMarkdownSource = Effect.fn("www.llms.markdown.sourcePath")(
+  function* ({ cleanSlug, locale }: { cleanSlug: string; locale: Locale }) {
+    const publicRoute = yield* findPublicRouteByPathEffect(cleanSlug, locale);
+
+    return Option.match(publicRoute, {
+      onNone: (): LlmsMarkdownSource => ({ cleanSlug }),
+      onSome: (route) => getPublicContentMarkdownSource(route, cleanSlug),
+    });
+  }
+);
+
+/** Keeps public route rows as the only public-to-source markdown seam. */
+function getPublicContentMarkdownSource(
+  route: PublicRoute,
+  cleanSlug: string
+): LlmsMarkdownSource {
+  if (
+    route.kind === "assessment-context" ||
+    route.kind === "curriculum-context"
+  ) {
+    return { cleanSlug };
+  }
+
+  return {
+    cleanSlug: route.sourcePath,
+    publicSlug: cleanSlug,
+  };
+}

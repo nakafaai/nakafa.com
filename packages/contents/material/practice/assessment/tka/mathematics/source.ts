@@ -5,6 +5,7 @@ export const practiceAssessmentTkaMathematicsMaterial = definePracticeMaterial({
   groups: [
     {
       exerciseType: "try-out",
+      routeSlugs: { en: "mock-test", id: "tryout" },
       year: 2026,
       translations: {
         en: {
@@ -21,6 +22,7 @@ export const practiceAssessmentTkaMathematicsMaterial = definePracticeMaterial({
       sets: [
         {
           slug: "set-1",
+          routeSlugs: { en: "set-1", id: "set-1" },
           translations: {
             en: {
               title: "Set 1",
@@ -32,6 +34,7 @@ export const practiceAssessmentTkaMathematicsMaterial = definePracticeMaterial({
         },
         {
           slug: "set-2",
+          routeSlugs: { en: "set-2", id: "set-2" },
           translations: {
             en: {
               title: "Set 2",
@@ -43,6 +46,7 @@ export const practiceAssessmentTkaMathematicsMaterial = definePracticeMaterial({
         },
         {
           slug: "set-3",
+          routeSlugs: { en: "set-3", id: "set-3" },
           translations: {
             en: {
               title: "Set 3",

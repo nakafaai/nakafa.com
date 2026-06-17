@@ -59,6 +59,7 @@ async function insertContentRoute(
     markdown: true,
     route: source.route,
     section: source.section,
+    sourcePath: source.route,
     syncedAt: NOW,
     title: source.title,
   });
@@ -99,8 +100,6 @@ async function insertArticle(
 /** Inserts one curriculum lesson row for content-view mutation tests. */
 async function insertSubject(ctx: MutationCtx) {
   const topicId = await ctx.db.insert("curriculumTopics", {
-    category: "high-school",
-    grade: "10",
     locale: "id",
     material: "mathematics",
     order: 0,
@@ -113,11 +112,9 @@ async function insertSubject(ctx: MutationCtx) {
 
   const id = await ctx.db.insert("curriculumLessons", {
     body: "Subject body",
-    category: "high-school",
     contentHash: "subject-hash",
     date: NOW,
     description: "Subject description",
-    grade: "10",
     locale: "id",
     material: "mathematics",
     order: 0,

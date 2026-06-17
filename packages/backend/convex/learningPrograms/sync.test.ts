@@ -612,10 +612,12 @@ describe("learningPrograms", () => {
       translations: {
         en: {
           description: "Retired school curriculum.",
+          publicSlug: "retired-school-curriculum",
           title: "Retired School Curriculum",
         },
         id: {
           description: "Kurikulum sekolah yang sudah dihentikan.",
+          publicSlug: "retired-school-curriculum",
           title: "Kurikulum Sekolah Lama",
         },
       },
@@ -773,6 +775,7 @@ async function seedContentRoute(
         markdown: true,
         route,
         section: "material",
+        sourcePath: route,
         syncedAt: NOW,
         title,
       })

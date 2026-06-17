@@ -111,8 +111,6 @@ async function insertSubject(
 ) {
   const sourceContent = getSubjectSource(source);
   const topicId = await ctx.db.insert("curriculumTopics", {
-    category: "high-school",
-    grade: "10",
     locale: source.locale,
     material: "mathematics",
     order: 0,
@@ -125,11 +123,9 @@ async function insertSubject(
 
   await ctx.db.insert("curriculumLessons", {
     body: source.body,
-    category: "high-school",
     contentHash: source.contentHash,
     date: publishedAt,
     description: source.description,
-    grade: "10",
     locale: source.locale,
     material: "mathematics",
     order: 0,

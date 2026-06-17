@@ -8,13 +8,12 @@ import {
   exercisesCategoryValidator,
   exercisesMaterialValidator,
   exercisesTypeValidator,
-  gradeValidator,
   localeValidator,
   materialValidator,
   nakafaSectionValidator,
-  subjectCategoryValidator,
 } from "@repo/backend/convex/lib/validators/contents";
-import { v } from "convex/values";
+import { PUBLIC_ROUTE_KIND_VALUES } from "@repo/contents/_types/route/schema";
+import { type Infer, v } from "convex/values";
 import { literals, nullable } from "convex-helpers/validators";
 
 const contentAuthorValidator = v.object({
@@ -131,6 +130,7 @@ const quranSurahValidator = v.object({
 });
 
 const contentRouteKindValidator = literals(...CONTENT_ROUTE_KINDS);
+const publicRouteKindValidator = literals(...PUBLIC_ROUTE_KIND_VALUES);
 
 const runtimeContentRouteValidator = v.object({
   ...learningGraphIdentityValidator.fields,
@@ -142,10 +142,13 @@ const runtimeContentRouteValidator = v.object({
   kind: contentRouteKindValidator,
   locale: localeValidator,
   markdown: v.boolean(),
+  materialDomain: v.optional(materialValidator),
   official: v.optional(v.boolean()),
   parentRoute: v.optional(v.string()),
   route: v.string(),
   section: nakafaSectionValidator,
+  sourceParentPath: v.optional(v.string()),
+  sourcePath: v.string(),
   syncedAt: v.number(),
   title: v.string(),
 });
@@ -157,10 +160,34 @@ const runtimeContentRouteCountValidator = v.object({
   syncedAt: v.number(),
 });
 
+const runtimePublicRouteValidator = v.object({
+  canonicalPath: v.optional(v.string()),
+  description: v.optional(v.string()),
+  kind: publicRouteKindValidator,
+  locale: localeValidator,
+  materialDomain: v.optional(materialValidator),
+  materialKey: v.optional(v.string()),
+  nodeKey: v.optional(v.string()),
+  parentPath: v.optional(v.string()),
+  programKey: v.optional(v.string()),
+  publicPath: v.string(),
+  sectionKey: v.optional(v.string()),
+  sitemap: v.boolean(),
+  sourcePath: v.optional(v.string()),
+  syncedAt: v.number(),
+  title: v.string(),
+});
+
 const paginatedContentRoutesValidator = v.object({
   continueCursor: v.string(),
   isDone: v.boolean(),
   page: v.array(runtimeContentRouteValidator),
+});
+
+const paginatedPublicRoutesValidator = v.object({
+  continueCursor: v.string(),
+  isDone: v.boolean(),
+  page: v.array(runtimePublicRouteValidator),
 });
 
 const runtimeContentRouteArtifactPageValidator = v.object({
@@ -172,24 +199,13 @@ const runtimeContentRouteArtifactPageValidator = v.object({
   syncedAt: v.number(),
 });
 
-const curriculumOutlineSectionValidator = v.object({
-  route: v.string(),
-  title: v.string(),
-});
-
-const curriculumOutlineTopicValidator = v.object({
-  description: v.optional(v.string()),
-  route: v.string(),
-  sections: v.array(curriculumOutlineSectionValidator),
-  title: v.string(),
-});
-
 const apiContentItemValidator = v.object({
   ...learningGraphIdentityValidator.fields,
   locale: localeValidator,
   metadata: contentMetadataValidator,
   raw: v.string(),
   slug: v.string(),
+  sourcePath: v.string(),
   url: v.string(),
 });
 
@@ -204,6 +220,7 @@ const runtimeExerciseGraphProjectionValidator = v.object({
   content_id: graphContentIdValidator,
   locale: localeValidator,
   route: v.string(),
+  sourcePath: v.string(),
   url: v.string(),
 });
 
@@ -244,23 +261,9 @@ export const getCurriculumPageArgsValidator = {
 export const getCurriculumPageReturnValidator = nullable(
   v.object({
     ...runtimeContentBaseValidator.fields,
-    category: subjectCategoryValidator,
-    grade: gradeValidator,
-    material: materialValidator,
     section: v.string(),
     topic: v.string(),
   })
-);
-
-export const getCurriculumOutlineArgsValidator = {
-  category: subjectCategoryValidator,
-  grade: gradeValidator,
-  locale: localeValidator,
-  material: materialValidator,
-};
-
-export const getCurriculumOutlineReturnValidator = v.array(
-  curriculumOutlineTopicValidator
 );
 
 export const getExerciseSetPageArgsValidator = {
@@ -395,6 +398,66 @@ export const listContentRouteCountsArgsValidator = {
 export const listContentRouteCountsReturnValidator = v.array(
   runtimeContentRouteCountValidator
 );
+
+const getPublicRouteByPathArgsObjectValidator = v.object({
+  locale: localeValidator,
+  publicPath: v.string(),
+});
+
+export const getPublicRouteByPathArgsValidator =
+  getPublicRouteByPathArgsObjectValidator.fields;
+export type GetPublicRouteByPathArgs = Infer<
+  typeof getPublicRouteByPathArgsObjectValidator
+>;
+export const getPublicRouteByPathReturnValidator = nullable(
+  runtimePublicRouteValidator
+);
+
+const listPublicRoutesByParentArgsObjectValidator = v.object({
+  cursor: v.union(v.string(), v.null()),
+  kind: publicRouteKindValidator,
+  limit: v.number(),
+  locale: localeValidator,
+  parentPath: v.optional(v.string()),
+  programKey: v.optional(v.string()),
+});
+
+export const listPublicRoutesByParentArgsValidator =
+  listPublicRoutesByParentArgsObjectValidator.fields;
+export type ListPublicRoutesByParentArgs = Infer<
+  typeof listPublicRoutesByParentArgsObjectValidator
+>;
+export const listPublicRoutesPageReturnValidator =
+  paginatedPublicRoutesValidator;
+
+const listPublicRoutesByMaterialArgsObjectValidator = v.object({
+  limit: v.number(),
+  locale: localeValidator,
+  materialKey: v.string(),
+});
+
+export const listPublicRoutesByMaterialArgsValidator =
+  listPublicRoutesByMaterialArgsObjectValidator.fields;
+export type ListPublicRoutesByMaterialArgs = Infer<
+  typeof listPublicRoutesByMaterialArgsObjectValidator
+>;
+export const listPublicRoutesByMaterialReturnValidator = v.array(
+  runtimePublicRouteValidator
+);
+
+const listSitemapPublicRoutesArgsObjectValidator = v.object({
+  cursor: v.union(v.string(), v.null()),
+  limit: v.number(),
+  locale: localeValidator,
+});
+
+export const listSitemapPublicRoutesArgsValidator =
+  listSitemapPublicRoutesArgsObjectValidator.fields;
+export type ListSitemapPublicRoutesArgs = Infer<
+  typeof listSitemapPublicRoutesArgsObjectValidator
+>;
+export const listSitemapPublicRoutesReturnValidator =
+  paginatedPublicRoutesValidator;
 
 export const getContentRouteArgsValidator = {
   locale: localeValidator,

@@ -1,8 +1,6 @@
 import {
-  gradeValidator,
   localeValidator,
   materialValidator,
-  subjectCategoryValidator,
 } from "@repo/backend/convex/lib/validators/contents";
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
@@ -10,7 +8,7 @@ import { v } from "convex/values";
 const tables = {
   /**
    * Curriculum lesson storage (individual lessons within a topic).
-   * URL structure: /curriculum/{category}/{grade}/{material}/{topic}/{section}
+   * URL structure is source-owned by the public route projection.
    * Authors are linked via contentAuthors join table.
    */
   curriculumLessons: defineTable({
@@ -19,9 +17,6 @@ const tables = {
     locale: localeValidator,
     /** Full URL path: "material/lesson/mathematics/integral/riemann-sum" */
     slug: v.string(),
-    /** Denormalized for query performance */
-    category: subjectCategoryValidator,
-    grade: gradeValidator,
     material: materialValidator,
     /** Topic slug: "integral", "derivative-function" */
     topic: v.string(),

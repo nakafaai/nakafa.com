@@ -31,10 +31,7 @@ export async function getCurriculumPageImpl(
 
   return {
     body: section.body,
-    category: section.category,
     contentHash: section.contentHash,
-    grade: section.grade,
-    material: section.material,
     metadata: {
       authors,
       date: formatContentDate(section.date),

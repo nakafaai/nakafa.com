@@ -4,6 +4,7 @@ import {
   Target01Icon,
 } from "@hugeicons/core-free-icons";
 import { userRoles } from "@repo/backend/convex/users/roles";
+import type { Locale } from "next-intl";
 
 const appNavigationViewers = ["pending", "guest", ...userRoles] as const;
 
@@ -12,7 +13,11 @@ export type AppNavigationRole = (typeof userRoles)[number];
 
 export const forYouNavigationItems = {
   subject: {
-    href: "/curriculum",
+    href: "/curriculum/merdeka",
+    hrefs: {
+      en: "/curriculum/merdeka",
+      id: "/kurikulum/merdeka",
+    },
     icon: Books02Icon,
     id: "subject",
     labelKey: "subject",
@@ -78,4 +83,15 @@ export function getForYouNavigationItems(viewer: AppNavigationViewer) {
   }
 
   return generalNavigationItems;
+}
+
+export function getForYouNavigationHref(
+  item: ForYouNavigationItem,
+  locale: Locale
+) {
+  if ("hrefs" in item) {
+    return item.hrefs[locale];
+  }
+
+  return item.href;
 }

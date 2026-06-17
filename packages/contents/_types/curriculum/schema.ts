@@ -1,4 +1,5 @@
 import { LocaleSchema } from "@repo/contents/_types/content";
+import { MaterialSchema } from "@repo/contents/_types/curriculum/material";
 import {
   type MaterialKey,
   MaterialKeySchema,
@@ -7,6 +8,7 @@ import {
   LearningProgramKeySchema,
   ProgramNavigationLevelSchema,
 } from "@repo/contents/_types/program/schema";
+import { PublicRouteSegmentSchema } from "@repo/contents/_types/route/segment";
 import { Schema } from "effect";
 
 type SchemaType<T extends Schema.Schema.Any> = Schema.Schema.Type<T>;
@@ -24,6 +26,7 @@ export const CurriculumNodeKeySchema = Schema.String.pipe(
 
 export const CurriculumNodeTranslationSchema = Schema.Struct({
   description: Schema.optional(Schema.String),
+  routeSlug: PublicRouteSegmentSchema,
   title: Schema.String,
 });
 
@@ -35,6 +38,7 @@ const CurriculumNodeTranslationMapSchema = Schema.Record({
 export const CurriculumNodeSchema = Schema.Struct({
   key: CurriculumNodeKeySchema,
   level: ProgramNavigationLevelSchema,
+  materialDomain: Schema.optional(MaterialSchema),
   materialKeys: Schema.Array(MaterialKeySchema),
   order: Schema.Int.pipe(Schema.nonNegative()),
   parentKey: Schema.optional(CurriculumNodeKeySchema),
@@ -47,37 +51,93 @@ export type CurriculumNodeInput = SchemaEncoded<typeof CurriculumNodeSchema>;
 export type CurriculumNodeTranslationMap = SchemaType<
   typeof CurriculumNodeTranslationMapSchema
 >;
+type CurriculumNodeTranslationEncodedMap = SchemaEncoded<
+  typeof CurriculumNodeTranslationMapSchema
+>;
 
-interface CurriculumStructureNodeValue {
+/**
+ * Private decoded recursion shape needed only to type `Schema.suspend`.
+ *
+ * Effect Schema cannot infer this recursive tree without a local alias. The
+ * exported curriculum models below still derive from the runtime schemas.
+ */
+// biome-ignore lint/style/useConsistentTypeDefinitions: Recursive Effect Schema generics need local aliases; exported models derive from schemas.
+type CurriculumStructureNodeValue = {
   children?: readonly CurriculumTreeNodeValue[];
   key: string;
   level: CurriculumNode["level"];
+  materialDomain?: CurriculumNode["materialDomain"];
   order: number;
   translations: CurriculumNodeTranslationMap;
-}
+};
 
-interface CurriculumMaterialReferenceNodeValue {
+/**
+ * Private decoded material-leaf shape for the recursive curriculum union.
+ *
+ * This keeps the recursive schema annotation precise while the public material
+ * leaf type remains schema-derived below.
+ */
+// biome-ignore lint/style/useConsistentTypeDefinitions: Recursive Effect Schema generics need local aliases; exported models derive from schemas.
+type CurriculumMaterialReferenceNodeValue = {
   displayOverride?: CurriculumNodeTranslationMap;
   key: string;
   level: CurriculumNode["level"];
   materialKeys: readonly MaterialKey[];
   order: number;
-}
+};
 
 type CurriculumTreeNodeValue =
   | CurriculumMaterialReferenceNodeValue
   | CurriculumStructureNodeValue;
 
+/**
+ * Private encoded recursion shape needed only to type authored source input.
+ *
+ * The source helpers decode this shape through `CurriculumTreeNodeSchema`, so
+ * callers never receive a parallel public contract.
+ */
+// biome-ignore lint/style/useConsistentTypeDefinitions: Recursive Effect Schema generics need local aliases; exported models derive from schemas.
+type CurriculumStructureNodeEncodedValue = {
+  children?: readonly CurriculumTreeNodeEncodedValue[];
+  key: string;
+  level: CurriculumNode["level"];
+  materialDomain?: CurriculumNode["materialDomain"];
+  order: number;
+  translations: CurriculumNodeTranslationEncodedMap;
+};
+
+/**
+ * Private encoded material-leaf shape for recursive authored curriculum input.
+ *
+ * This exists only so the recursive Effect Schema can type its encoded side.
+ */
+// biome-ignore lint/style/useConsistentTypeDefinitions: Recursive Effect Schema generics need local aliases; exported models derive from schemas.
+type CurriculumMaterialReferenceNodeEncodedValue = {
+  displayOverride?: CurriculumNodeTranslationEncodedMap;
+  key: string;
+  level: CurriculumNode["level"];
+  materialKeys: readonly string[];
+  order: number;
+};
+
+type CurriculumTreeNodeEncodedValue =
+  | CurriculumMaterialReferenceNodeEncodedValue
+  | CurriculumStructureNodeEncodedValue;
+
 export const CurriculumStructureNodeSchema = Schema.Struct({
   children: Schema.optional(
     Schema.Array(
       Schema.suspend(
-        (): Schema.Schema<CurriculumTreeNodeValue> => CurriculumTreeNodeSchema
+        (): Schema.Schema<
+          CurriculumTreeNodeValue,
+          CurriculumTreeNodeEncodedValue
+        > => CurriculumTreeNodeSchema
       )
     )
   ),
   key: CurriculumNodeKeySchema,
   level: ProgramNavigationLevelSchema,
+  materialDomain: Schema.optional(MaterialSchema),
   order: Schema.Int.pipe(Schema.nonNegative()),
   translations: CurriculumNodeTranslationMapSchema,
 });
@@ -90,11 +150,13 @@ export const CurriculumMaterialReferenceNodeSchema = Schema.Struct({
   order: Schema.Int.pipe(Schema.nonNegative()),
 });
 
-export const CurriculumTreeNodeSchema: Schema.Schema<CurriculumTreeNodeValue> =
-  Schema.Union(
-    CurriculumMaterialReferenceNodeSchema,
-    CurriculumStructureNodeSchema
-  );
+export const CurriculumTreeNodeSchema: Schema.Schema<
+  CurriculumTreeNodeValue,
+  CurriculumTreeNodeEncodedValue
+> = Schema.Union(
+  CurriculumMaterialReferenceNodeSchema,
+  CurriculumStructureNodeSchema
+);
 
 export type CurriculumStructureNode = SchemaType<
   typeof CurriculumStructureNodeSchema

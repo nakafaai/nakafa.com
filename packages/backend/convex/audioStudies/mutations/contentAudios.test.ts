@@ -15,8 +15,6 @@ const subjectAudioIdentity = getTestAudioIdentity({
 
 async function seedSubject(ctx: MutationCtx) {
   const topicId = await ctx.db.insert("curriculumTopics", {
-    category: "high-school",
-    grade: "10",
     locale: "en",
     material: "mathematics",
     order: 0,
@@ -29,11 +27,9 @@ async function seedSubject(ctx: MutationCtx) {
 
   return await ctx.db.insert("curriculumLessons", {
     body: "Audio body",
-    category: "high-school",
     contentHash,
     date: 1,
     description: "Audio description",
-    grade: "10",
     locale: "en",
     material: "mathematics",
     order: 0,

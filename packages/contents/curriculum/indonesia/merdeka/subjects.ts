@@ -14,12 +14,15 @@ import { merdekaClass12MathematicsTopicNodes } from "@repo/contents/curriculum/i
 export const merdekaClass10SubjectNodes = [
   subjectNode({
     key: "class-10-biology",
+    materialDomain: "biology",
     order: 10,
     translations: {
       en: {
+        routeSlug: "biology",
         title: "Biology",
       },
       id: {
+        routeSlug: "biologi",
         title: "Biologi",
       },
     },
@@ -27,12 +30,15 @@ export const merdekaClass10SubjectNodes = [
   }),
   subjectNode({
     key: "class-10-chemistry",
+    materialDomain: "chemistry",
     order: 20,
     translations: {
       en: {
+        routeSlug: "chemistry",
         title: "Chemistry",
       },
       id: {
+        routeSlug: "kimia",
         title: "Kimia",
       },
     },
@@ -40,12 +46,15 @@ export const merdekaClass10SubjectNodes = [
   }),
   subjectNode({
     key: "class-10-mathematics",
+    materialDomain: "mathematics",
     order: 30,
     translations: {
       en: {
+        routeSlug: "mathematics",
         title: "Mathematics",
       },
       id: {
+        routeSlug: "matematika",
         title: "Matematika",
       },
     },
@@ -53,12 +62,15 @@ export const merdekaClass10SubjectNodes = [
   }),
   subjectNode({
     key: "class-10-physics",
+    materialDomain: "physics",
     order: 40,
     translations: {
       en: {
+        routeSlug: "physics",
         title: "Physics",
       },
       id: {
+        routeSlug: "fisika",
         title: "Fisika",
       },
     },
@@ -69,12 +81,15 @@ export const merdekaClass10SubjectNodes = [
 export const merdekaClass11SubjectNodes = [
   subjectNode({
     key: "class-11-mathematics",
+    materialDomain: "mathematics",
     order: 30,
     translations: {
       en: {
+        routeSlug: "mathematics",
         title: "Mathematics",
       },
       id: {
+        routeSlug: "matematika",
         title: "Matematika",
       },
     },
@@ -82,12 +97,15 @@ export const merdekaClass11SubjectNodes = [
   }),
   subjectNode({
     key: "class-11-physics",
+    materialDomain: "physics",
     order: 40,
     translations: {
       en: {
+        routeSlug: "physics",
         title: "Physics",
       },
       id: {
+        routeSlug: "fisika",
         title: "Fisika",
       },
     },
@@ -98,12 +116,15 @@ export const merdekaClass11SubjectNodes = [
 export const merdekaClass12SubjectNodes = [
   subjectNode({
     key: "class-12-mathematics",
+    materialDomain: "mathematics",
     order: 30,
     translations: {
       en: {
+        routeSlug: "mathematics",
         title: "Mathematics",
       },
       id: {
+        routeSlug: "matematika",
         title: "Matematika",
       },
     },

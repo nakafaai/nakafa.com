@@ -38,6 +38,8 @@ import {
 import type { MaterialLocale } from "@repo/contents/_types/material/schema";
 import { findLearningProgramByKey } from "@repo/contents/_types/program/catalog";
 import type { LearningProgram } from "@repo/contents/_types/program/schema";
+import { listPublicRoutesEffect } from "@repo/contents/_types/route/projection";
+import type { PublicRoute } from "@repo/contents/_types/route/schema";
 import type {
   DefaultFunctionArgs,
   FunctionArgs,
@@ -68,6 +70,10 @@ type CurriculumMaterialPayload = FunctionArgs<
 type AssessmentNodePayload = FunctionArgs<
   typeof internal.contentSync.mutations.readModels.bulkSyncAssessmentNodes
 >["nodes"][number];
+
+type PublicRoutePayload = FunctionArgs<
+  typeof internal.contentSync.mutations.readModels.bulkSyncPublicRoutes
+>["routes"][number];
 
 type SyncMutation = FunctionReference<
   "mutation",
@@ -103,6 +109,11 @@ export const syncGeneratedReadModels = Effect.fn("sync.generatedReadModels")(
     );
     const curriculumResult = yield* syncCurricula(config, syncedAt, options);
     const assessmentResult = yield* syncAssessments(config, syncedAt, options);
+    const publicRouteResult = yield* syncPublicRoutes(
+      config,
+      syncedAt,
+      options
+    );
     const deleted = yield* deleteStaleGeneratedReadModels(
       config,
       syncedAt,
@@ -114,6 +125,7 @@ export const syncGeneratedReadModels = Effect.fn("sync.generatedReadModels")(
       materialLocaleResult,
       curriculumResult,
       assessmentResult,
+      publicRouteResult,
     ]);
     const processed = result.created + result.updated + result.unchanged;
     const durationMs = performance.now() - startTime;
@@ -288,6 +300,25 @@ const syncAssessments = Effect.fn("sync.generatedAssessments")(function* (
   });
 });
 
+const syncPublicRoutes = Effect.fn("sync.generatedPublicRoutes")(function* (
+  config: ConvexConfig,
+  syncedAt: number,
+  options: SyncOptions
+) {
+  const routes = yield* listPublicRoutesEffect();
+  const rows = routes.map(toPublicRoutePayload);
+
+  return yield* syncBatches({
+    batchSize: BATCH_SIZES.generatedPublicRoutes,
+    config,
+    label: "Public Routes",
+    mutation: internal.contentSync.mutations.readModels.bulkSyncPublicRoutes,
+    options,
+    rows,
+    toArgs: (batch) => ({ routes: batch, syncedAt }),
+  });
+});
+
 const readLessonMaterialLocaleRows = Effect.fn(
   "sync.readLessonMaterialLocaleRows"
 )(function* (options: SyncOptions) {
@@ -413,6 +444,33 @@ function toGeneratedProgramRow(
   };
 }
 
+/**
+ * Converts one source-owned route projection into the Convex route read model.
+ *
+ * Optional fields stay absent for route kinds that do not own that dimension:
+ * content rows own `sourcePath`, context rows own `programKey`/`nodeKey`, and
+ * material-backed rows expose `materialKey` for reverse lookup.
+ */
+function toPublicRoutePayload(route: PublicRoute): PublicRoutePayload {
+  return {
+    canonicalPath: "canonicalPath" in route ? route.canonicalPath : undefined,
+    description: route.description,
+    kind: route.kind,
+    locale: route.locale,
+    materialDomain:
+      "materialDomain" in route ? route.materialDomain : undefined,
+    materialKey: "materialKey" in route ? route.materialKey : undefined,
+    nodeKey: "nodeKey" in route ? route.nodeKey : undefined,
+    parentPath: route.parentPath,
+    programKey: "programKey" in route ? route.programKey : undefined,
+    publicPath: route.publicPath,
+    sectionKey: "sectionKey" in route ? route.sectionKey : undefined,
+    sitemap: route.sitemap,
+    sourcePath: "sourcePath" in route ? route.sourcePath : undefined,
+    title: route.title,
+  };
+}
+
 function combineSyncResults(results: readonly SyncResult[]): SyncResult {
   return results.reduce(
     (total, result) => ({
@@ -519,6 +577,11 @@ const deleteStaleGeneratedReadModels = Effect.fn(
       config,
       internal.contentSync.mutations.readModels.deleteStaleAssessments,
       { limit: BATCH_SIZES.generatedAssessments, syncedAt }
+    )) +
+    (yield* deleteAllStaleRows(
+      config,
+      internal.contentSync.mutations.readModels.deleteStalePublicRoutes,
+      { limit: BATCH_SIZES.generatedPublicRoutes, syncedAt }
     ));
 
   return deleted;

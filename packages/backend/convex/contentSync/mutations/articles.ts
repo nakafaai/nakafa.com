@@ -9,7 +9,7 @@ import {
   buildAuthorCache,
   deleteArticleReferencesForArticle,
   deleteContentAuthorLinks,
-  deleteContentProjectionsByRoute,
+  deleteContentProjectionsBySourcePath,
   replaceArticleReferences,
   syncContentAuthorsWithCache,
 } from "@repo/backend/convex/contentSync/lib/syncHelpers";
@@ -110,6 +110,7 @@ export const bulkSyncArticles = internalMutation({
         locale: article.locale,
         route: article.slug,
         section: "articles",
+        sourcePath: article.slug,
         syncedAt: now,
         text: article.body,
         title: article.title,
@@ -124,8 +125,9 @@ export const bulkSyncArticles = internalMutation({
         locale: article.locale,
         markdown: true,
         official: article.official,
-        route: article.slug,
+        publicPath: article.slug,
         section: "articles",
+        sourcePath: article.slug,
         syncedAt: now,
         title: article.title,
       });
@@ -259,7 +261,7 @@ export const deleteStaleArticles = internalMutation({
       const articleId = args.articleIds[index];
       await deleteContentAuthorLinks(ctx, articleId, "article");
       await deleteArticleReferencesForArticle(ctx, articleId);
-      await deleteContentProjectionsByRoute(ctx, {
+      await deleteContentProjectionsBySourcePath(ctx, {
         locale: article.locale,
         route: article.slug,
       });

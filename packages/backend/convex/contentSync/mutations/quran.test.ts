@@ -197,6 +197,7 @@ function quranRouteGraph(locale: Locale, route: string) {
   return {
     ...identity,
     content_id: identity.assetId,
+    sourcePath: route,
   };
 }
 
@@ -215,6 +216,7 @@ function catalogQuranProjection(locale: Locale, route: string) {
     locale,
     route,
     section: "quran" as const,
+    sourcePath: route,
   };
 }
 

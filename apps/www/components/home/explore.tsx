@@ -11,9 +11,10 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { cva } from "class-variance-authority";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
   getAppNavigationViewer,
+  getForYouNavigationHref,
   getForYouNavigationItems,
 } from "@/components/sidebar/data/navigation";
 import { useUser } from "@/lib/context/use-user";
@@ -107,6 +108,7 @@ function NinaIcon() {
 export function HomeExplore() {
   const tAi = useTranslations("Ai");
   const tCommon = useTranslations("Common");
+  const locale = useLocale();
   const { isPending, role } = useUser((state) => ({
     isPending: state.isPending,
     role: state.user?.appUser.role ?? null,
@@ -114,9 +116,13 @@ export function HomeExplore() {
   const viewer = getAppNavigationViewer({ isPending, role });
   const items = getForYouNavigationItems(viewer);
   const visibleCardIds = new Set(items.map((item) => item.id));
+  const subjectNavigationItem = items.find((item) => item.id === "subject");
+  const subjectHref = subjectNavigationItem
+    ? getForYouNavigationHref(subjectNavigationItem, locale)
+    : "/curriculum/merdeka";
   const cards = [
     {
-      href: "/curriculum",
+      href: subjectHref,
       id: "subject",
       title: tCommon("subject"),
       visual: <SubjectIcon />,

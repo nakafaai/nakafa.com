@@ -332,7 +332,7 @@ describe("getContentsMetadata", () => {
     mockGetMDXSlugsForLocale.mockReturnValue([
       "articles/politics/valid-entry",
       "articles/politics/missing-entry",
-      "curriculum/high-school/10/algebra",
+      "subjects/mathematics/algebra",
     ]);
     mockReadFile.mockImplementation((filePath: string) => {
       if (filePath.includes("valid-entry/en.mdx")) {
@@ -371,8 +371,8 @@ describe("getContentsMetadata", () => {
           date: "2024-01-01",
           subject: "Mathematics",
         },
-        slug: "curriculum/high-school/10/algebra",
-        url: "https://nakafa.com/en/curriculum/high-school/10/algebra",
+        slug: "subjects/mathematics/algebra",
+        url: "https://nakafa.com/en/subjects/mathematics/algebra",
       },
     ]);
   });
@@ -380,7 +380,7 @@ describe("getContentsMetadata", () => {
   it("filters metadata by basePath and locale", async () => {
     mockGetMDXSlugsForLocale.mockReturnValue([
       "articles/politics/dynastic-politics",
-      "curriculum/high-school/10/mathematics",
+      "subjects/mathematics/algebra",
     ]);
     mockReadFile.mockImplementation((filePath: string) => {
       if (filePath.includes("dynastic-politics/id.mdx")) {

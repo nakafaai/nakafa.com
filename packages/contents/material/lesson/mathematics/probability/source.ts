@@ -6,6 +6,7 @@ export const lessonMathematicsProbabilityMaterial = defineLessonMaterial({
   key: "lesson.mathematics.probability",
   kind: "lesson",
   slug: "probability",
+  routeSlugs: { en: "probability", id: "peluang" },
   translations: {
     en: {
       description:
@@ -21,6 +22,7 @@ export const lessonMathematicsProbabilityMaterial = defineLessonMaterial({
   sections: [
     {
       slug: "addition-rule",
+      routeSlugs: { en: "addition-rule", id: "aturan-penjumlahan" },
       translations: {
         en: {
           title: "Addition Rule",
@@ -32,6 +34,7 @@ export const lessonMathematicsProbabilityMaterial = defineLessonMaterial({
     },
     {
       slug: "probability-distribution",
+      routeSlugs: { en: "probability-distribution", id: "distribusi-peluang" },
       translations: {
         en: {
           title: "Probability Distribution",
@@ -43,6 +46,10 @@ export const lessonMathematicsProbabilityMaterial = defineLessonMaterial({
     },
     {
       slug: "two-events-mutually-exclusive",
+      routeSlugs: {
+        en: "two-events-mutually-exclusive",
+        id: "dua-kejadian-a-dan-b-saling-lepas",
+      },
       translations: {
         en: {
           title: "Mutually Exclusive Events A and B",
@@ -54,6 +61,10 @@ export const lessonMathematicsProbabilityMaterial = defineLessonMaterial({
     },
     {
       slug: "two-events-not-mutually-exclusive",
+      routeSlugs: {
+        en: "two-events-not-mutually-exclusive",
+        id: "dua-kejadian-a-dan-b-tidak-saling-lepas",
+      },
       translations: {
         en: {
           title: "Non-Mutually Exclusive Events A and B",

@@ -28,7 +28,7 @@ export async function getExerciseSetPageImpl(
   const graph = await getExerciseRouteProjection(ctx, {
     kind: "exercise-set",
     locale: set.locale,
-    route: set.slug,
+    sourcePath: set.slug,
   });
 
   if (!graph) {
@@ -93,7 +93,7 @@ export async function getExerciseQuestionPageImpl(
     getExerciseRouteProjection(ctx, {
       kind: "exercise-set",
       locale: set.locale,
-      route: set.slug,
+      sourcePath: set.slug,
     }),
   ]);
 
@@ -163,7 +163,7 @@ export async function getExerciseGroupPageImpl(
         const graph = await getExerciseRouteProjection(ctx, {
           kind: "exercise-set",
           locale: set.locale,
-          route: set.slug,
+          sourcePath: set.slug,
         });
 
         return graph

@@ -2,6 +2,7 @@ import { ExercisesMaterialSchema } from "@repo/contents/_types/assessment/materi
 import { ExercisesTypeSchema } from "@repo/contents/_types/assessment/type";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { MaterialSchema } from "@repo/contents/_types/curriculum/material";
+import { PublicRouteSlugMapSchema } from "@repo/contents/_types/route/segment";
 import { Schema } from "effect";
 
 type SchemaType<T extends Schema.Schema.Any> = Schema.Schema.Type<T>;
@@ -58,6 +59,7 @@ const LocaleDescriptionMapSchema = Schema.Struct({
 });
 
 export const LessonMaterialSectionSchema = Schema.Struct({
+  routeSlugs: PublicRouteSlugMapSchema,
   slug: MaterialSlugSchema,
   translations: LocaleTitleMapSchema,
 });
@@ -71,6 +73,7 @@ export const LessonMaterialSourceSchema = Schema.Struct({
   domain: MaterialSchema,
   key: MaterialKeySchema,
   kind: Schema.Literal("lesson"),
+  routeSlugs: PublicRouteSlugMapSchema,
   sections: Schema.Array(LessonMaterialSectionSchema),
   slug: MaterialSlugSchema,
   translations: LocaleDescriptionMapSchema,
@@ -84,6 +87,7 @@ export type LessonMaterialSourceInput = SchemaEncoded<
 >;
 
 export const PracticeMaterialSetSchema = Schema.Struct({
+  routeSlugs: PublicRouteSlugMapSchema,
   slug: MaterialSlugSchema,
   translations: LocaleTitleMapSchema,
 });
@@ -92,6 +96,7 @@ export type PracticeMaterialSet = SchemaType<typeof PracticeMaterialSetSchema>;
 
 export const PracticeMaterialGroupSchema = Schema.Struct({
   exerciseType: MaterialSlugSchema,
+  routeSlugs: PublicRouteSlugMapSchema,
   sets: Schema.Array(PracticeMaterialSetSchema),
   translations: LocaleDescriptionMapSchema,
   year: Schema.optional(Schema.Int.pipe(Schema.between(2000, 2100))),

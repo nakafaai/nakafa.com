@@ -8,7 +8,7 @@ import type { Infer } from "convex/values";
 type ContentSearchInput = Infer<typeof contentSearchInputValidator>;
 type ContentSearchDocument = Doc<"contentSearch">;
 
-const practiceRoutePrefix = "material/practice/";
+const practiceSourcePathPrefix = "material/practice/";
 const routeSeparatorPattern = /[/_-]+/g;
 
 /** Reads a bounded search page from the derived content search table. */
@@ -75,7 +75,9 @@ async function searchContent(
   const searchGroups = [titleDocuments, textDocuments, routeDocuments];
   const hasPracticeContext = searchGroups
     .flat()
-    .some((document) => document.route.startsWith(practiceRoutePrefix));
+    .some((document) =>
+      document.sourcePath.startsWith(practiceSourcePathPrefix)
+    );
   const documents = hasPracticeContext
     ? appendDocumentGroups([
         routeLookupDocuments,

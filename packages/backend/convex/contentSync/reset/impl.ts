@@ -1,6 +1,7 @@
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   batchDeleteResultValidator,
+  contentSearchResetBatchSize,
   eventTryoutEntitlementBatchSize,
   type ResettableTableName,
   resetBatchSize,
@@ -22,6 +23,29 @@ export async function deleteBatchFromTable(
   }
 
   const hasMore = (await ctx.db.query(tableName).first()) !== null;
+
+  return { deleted, hasMore };
+}
+
+/**
+ * Deletes one small batch of full-text search rows.
+ *
+ * Search documents can contain large MDX text payloads, so the generic reset
+ * batch can exceed Convex's per-function read byte limit before the reset loop
+ * gets a chance to continue.
+ */
+export async function deleteContentSearchRows(ctx: MutationCtx) {
+  const docs = await ctx.db
+    .query("contentSearch")
+    .take(contentSearchResetBatchSize);
+  let deleted = 0;
+
+  for (const doc of docs) {
+    await ctx.db.delete(doc._id);
+    deleted++;
+  }
+
+  const hasMore = (await ctx.db.query("contentSearch").first()) !== null;
 
   return { deleted, hasMore };
 }

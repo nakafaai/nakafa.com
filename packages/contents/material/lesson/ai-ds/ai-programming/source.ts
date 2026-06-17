@@ -6,6 +6,7 @@ export const lessonAiDsAiProgrammingMaterial = defineLessonMaterial({
   key: "lesson.ai-ds.ai-programming",
   kind: "lesson",
   slug: "ai-programming",
+  routeSlugs: { en: "ai-programming", id: "pemrograman-ai" },
   translations: {
     en: {
       description:
@@ -21,6 +22,7 @@ export const lessonAiDsAiProgrammingMaterial = defineLessonMaterial({
   sections: [
     {
       slug: "arithmetic-operator",
+      routeSlugs: { en: "arithmetic-operator", id: "operator-aritmatika" },
       translations: {
         en: {
           title: "Arithmetic Operators",
@@ -32,6 +34,7 @@ export const lessonAiDsAiProgrammingMaterial = defineLessonMaterial({
     },
     {
       slug: "array-numpy",
+      routeSlugs: { en: "array-numpy", id: "membuat-array-dengan-numpy" },
       translations: {
         en: {
           title: "Creating Arrays with NumPy",
@@ -43,6 +46,10 @@ export const lessonAiDsAiProgrammingMaterial = defineLessonMaterial({
     },
     {
       slug: "array-operation-numpy",
+      routeSlugs: {
+        en: "array-operation-numpy",
+        id: "operasi-pada-array-dengan-numpy",
+      },
       translations: {
         en: {
           title: "Array Operations with NumPy",
@@ -54,6 +61,10 @@ export const lessonAiDsAiProgrammingMaterial = defineLessonMaterial({
     },
     {
       slug: "attribute-data-type-numpy",
+      routeSlugs: {
+        en: "attribute-data-type-numpy",
+        id: "atribut-dan-tipe-data-dengan-numpy",
+      },
       translations: {
         en: {
           title: "Attributes and Data Types with NumPy",
@@ -65,6 +76,7 @@ export const lessonAiDsAiProgrammingMaterial = defineLessonMaterial({
     },
     {
       slug: "comparison-logic",
+      routeSlugs: { en: "comparison-logic", id: "perbandingan-dan-logika" },
       translations: {
         en: {
           title: "Comparison and Logic",
@@ -76,6 +88,7 @@ export const lessonAiDsAiProgrammingMaterial = defineLessonMaterial({
     },
     {
       slug: "container",
+      routeSlugs: { en: "container", id: "container" },
       translations: {
         en: {
           title: "Containers",
@@ -87,6 +100,7 @@ export const lessonAiDsAiProgrammingMaterial = defineLessonMaterial({
     },
     {
       slug: "control-flow",
+      routeSlugs: { en: "control-flow", id: "control-flow" },
       translations: {
         en: {
           title: "Control Flow",
@@ -98,6 +112,7 @@ export const lessonAiDsAiProgrammingMaterial = defineLessonMaterial({
     },
     {
       slug: "dictionary",
+      routeSlugs: { en: "dictionary", id: "dictionary" },
       translations: {
         en: {
           title: "Dictionary",
@@ -109,6 +124,7 @@ export const lessonAiDsAiProgrammingMaterial = defineLessonMaterial({
     },
     {
       slug: "escape-sequence",
+      routeSlugs: { en: "escape-sequence", id: "escape-sequence" },
       translations: {
         en: {
           title: "Escape Sequence",
@@ -120,6 +136,10 @@ export const lessonAiDsAiProgrammingMaterial = defineLessonMaterial({
     },
     {
       slug: "everything-object-python",
+      routeSlugs: {
+        en: "everything-object-python",
+        id: "semuanya-adalah-objek-di-python",
+      },
       translations: {
         en: {
           title: "Everything is an Object in Python",
@@ -131,6 +151,7 @@ export const lessonAiDsAiProgrammingMaterial = defineLessonMaterial({
     },
     {
       slug: "file-input-output",
+      routeSlugs: { en: "file-input-output", id: "file-input-dan-output" },
       translations: {
         en: {
           title: "File Input and Output",
@@ -142,6 +163,7 @@ export const lessonAiDsAiProgrammingMaterial = defineLessonMaterial({
     },
     {
       slug: "function",
+      routeSlugs: { en: "function", id: "fungsi" },
       translations: {
         en: {
           title: "Functions",
@@ -153,6 +175,10 @@ export const lessonAiDsAiProgrammingMaterial = defineLessonMaterial({
     },
     {
       slug: "immutable-mutable-identity",
+      routeSlugs: {
+        en: "immutable-mutable-identity",
+        id: "immutable-mutable-dan-identity",
+      },
       translations: {
         en: {
           title: "Immutable, Mutable, and Identity",
@@ -164,6 +190,7 @@ export const lessonAiDsAiProgrammingMaterial = defineLessonMaterial({
     },
     {
       slug: "indexing-slicing",
+      routeSlugs: { en: "indexing-slicing", id: "indexing-dan-slicing" },
       translations: {
         en: {
           title: "Indexing and Slicing",
@@ -175,6 +202,10 @@ export const lessonAiDsAiProgrammingMaterial = defineLessonMaterial({
     },
     {
       slug: "indexing-slicing-numpy",
+      routeSlugs: {
+        en: "indexing-slicing-numpy",
+        id: "indexing-dan-slicing-dengan-numpy",
+      },
       translations: {
         en: {
           title: "Indexing and Slicing with NumPy",
@@ -186,6 +217,7 @@ export const lessonAiDsAiProgrammingMaterial = defineLessonMaterial({
     },
     {
       slug: "iterable",
+      routeSlugs: { en: "iterable", id: "iterable" },
       translations: {
         en: {
           title: "Iterables",
@@ -197,6 +229,10 @@ export const lessonAiDsAiProgrammingMaterial = defineLessonMaterial({
     },
     {
       slug: "markdown-cli",
+      routeSlugs: {
+        en: "markdown-cli",
+        id: "markdown-dan-command-line-interfaces",
+      },
       translations: {
         en: {
           title: "Markdown and Command Line Interfaces",
@@ -208,6 +244,7 @@ export const lessonAiDsAiProgrammingMaterial = defineLessonMaterial({
     },
     {
       slug: "math-function",
+      routeSlugs: { en: "math-function", id: "fungsi-matematika" },
       translations: {
         en: {
           title: "Mathematical Functions",
@@ -219,6 +256,10 @@ export const lessonAiDsAiProgrammingMaterial = defineLessonMaterial({
     },
     {
       slug: "number-attribute-method",
+      routeSlugs: {
+        en: "number-attribute-method",
+        id: "atribut-dan-metode-bilangan",
+      },
       translations: {
         en: {
           title: "Number Attributes and Methods",
@@ -230,6 +271,7 @@ export const lessonAiDsAiProgrammingMaterial = defineLessonMaterial({
     },
     {
       slug: "numbers",
+      routeSlugs: { en: "numbers", id: "numbers" },
       translations: {
         en: {
           title: "Numbers",
@@ -241,6 +283,7 @@ export const lessonAiDsAiProgrammingMaterial = defineLessonMaterial({
     },
     {
       slug: "print-function",
+      routeSlugs: { en: "print-function", id: "fungsi-print" },
       translations: {
         en: {
           title: "Print Function",
@@ -252,6 +295,7 @@ export const lessonAiDsAiProgrammingMaterial = defineLessonMaterial({
     },
     {
       slug: "python-step-1",
+      routeSlugs: { en: "python-step-1", id: "step-pertama-di-python" },
       translations: {
         en: {
           title: "First Steps in Python",
@@ -263,6 +307,7 @@ export const lessonAiDsAiProgrammingMaterial = defineLessonMaterial({
     },
     {
       slug: "string-formatting",
+      routeSlugs: { en: "string-formatting", id: "pemformatan-string" },
       translations: {
         en: {
           title: "String Formatting",
@@ -274,6 +319,7 @@ export const lessonAiDsAiProgrammingMaterial = defineLessonMaterial({
     },
     {
       slug: "string-method",
+      routeSlugs: { en: "string-method", id: "metode-string" },
       translations: {
         en: {
           title: "String Methods",
@@ -285,6 +331,7 @@ export const lessonAiDsAiProgrammingMaterial = defineLessonMaterial({
     },
     {
       slug: "string-object",
+      routeSlugs: { en: "string-object", id: "objek-string" },
       translations: {
         en: {
           title: "String Objects",
@@ -296,6 +343,7 @@ export const lessonAiDsAiProgrammingMaterial = defineLessonMaterial({
     },
     {
       slug: "syntactic-sugar",
+      routeSlugs: { en: "syntactic-sugar", id: "syntactic-sugar" },
       translations: {
         en: {
           title: "Syntactic Sugar",
@@ -307,6 +355,7 @@ export const lessonAiDsAiProgrammingMaterial = defineLessonMaterial({
     },
     {
       slug: "variable",
+      routeSlugs: { en: "variable", id: "variabel" },
       translations: {
         en: {
           title: "Variables",

@@ -152,8 +152,9 @@ export const bulkSyncQuranSurahs = internalMutation({
           kind: "quran-surah",
           locale: route.locale,
           markdown: true,
-          route: `quran/${surah.number}`,
+          publicPath: `quran/${surah.number}`,
           section: "quran",
+          sourcePath: `quran/${surah.number}`,
           syncedAt: now,
           title: route.title,
         });

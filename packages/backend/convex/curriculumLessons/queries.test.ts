@@ -17,8 +17,6 @@ const NOW = Date.parse("2026-01-01T00:00:00.000Z");
 /** Inserts one curriculum lesson for trending query tests. */
 async function insertSubject(ctx: MutationCtx, suffix: string) {
   const topicId = await ctx.db.insert("curriculumTopics", {
-    category: "high-school",
-    grade: "10",
     locale: "en",
     material: "mathematics",
     order: 0,
@@ -31,11 +29,9 @@ async function insertSubject(ctx: MutationCtx, suffix: string) {
 
   return await ctx.db.insert("curriculumLessons", {
     body: "Subject body",
-    category: "high-school",
     contentHash: `subject-hash-${suffix}`,
     date: NOW,
     description: `Description ${suffix}`,
-    grade: "10",
     locale: "en",
     material: "mathematics",
     order: 0,
@@ -58,7 +54,7 @@ async function insertSubjectRoute(ctx: MutationCtx, suffix: string) {
   });
 
   if (!identity) {
-    throw new Error(`Expected subject graph identity for ${route}.`);
+    expect.fail(`Expected subject graph identity for ${route}.`);
   }
 
   await ctx.db.insert("contentRoutes", {
@@ -71,13 +67,20 @@ async function insertSubjectRoute(ctx: MutationCtx, suffix: string) {
     kind: "curriculum-lesson",
     locale: "en",
     markdown: true,
-    route,
+    materialDomain: "mathematics",
+    route: getPublicSubjectRoute(suffix),
     section: "material",
+    sourcePath: route,
     syncedAt: NOW,
     title: `Subject ${suffix}`,
   });
 
   return identity;
+}
+
+/** Builds the public material route stored in the route read model. */
+function getPublicSubjectRoute(suffix: string) {
+  return `subjects/mathematics/topic-${suffix}/section-${suffix}`;
 }
 
 /** Inserts one derived trending bucket row. */
@@ -152,17 +155,19 @@ describe("curriculumLessons/queries", () => {
       expect.objectContaining({
         assetId: secondRef.assetId,
         content_id: secondRef.assetId,
-        route: "material/lesson/mathematics/topic-second/section-second",
+        materialDomain: "mathematics",
+        route: "subjects/mathematics/topic-second/section-second",
         title: "Subject second",
-        url: "https://nakafa.com/en/material/lesson/mathematics/topic-second/section-second",
+        url: "https://nakafa.com/en/subjects/mathematics/topic-second/section-second",
         viewCount: 10,
       }),
       expect.objectContaining({
         assetId: firstRef.assetId,
         content_id: firstRef.assetId,
-        route: "material/lesson/mathematics/topic-first/section-first",
+        materialDomain: "mathematics",
+        route: "subjects/mathematics/topic-first/section-first",
         title: "Subject first",
-        url: "https://nakafa.com/en/material/lesson/mathematics/topic-first/section-first",
+        url: "https://nakafa.com/en/subjects/mathematics/topic-first/section-first",
         viewCount: 7,
       }),
     ]);
@@ -196,7 +201,7 @@ describe("curriculumLessons/queries", () => {
     expect(zeroLimit).toEqual([]);
   });
 
-  it("drops bucket rows whose subject document was deleted", async () => {
+  it("keeps bucket rows when the old curriculum lesson row is absent", async () => {
     const t = convexTest(schema, convexModules);
 
     await t.mutation(async (ctx) => {
@@ -207,6 +212,45 @@ describe("curriculumLessons/queries", () => {
         viewCount: 10,
       });
       await ctx.db.delete("curriculumLessons", subjectId);
+    });
+
+    const results = await t.query(
+      api.curriculumLessons.queries.getTrendingSubjects,
+      {
+        locale: "en",
+        since: NOW,
+        until: NOW + TRENDING_BUCKET_MS,
+      }
+    );
+
+    expect(results).toEqual([
+      expect.objectContaining({
+        materialDomain: "mathematics",
+        route: "subjects/mathematics/topic-deleted/section-deleted",
+      }),
+    ]);
+  });
+
+  it("drops bucket rows whose route projection lacks a material domain", async () => {
+    const t = convexTest(schema, convexModules);
+
+    await t.mutation(async (ctx) => {
+      await insertSubject(ctx, "missing-domain");
+      const ref = await insertSubjectRoute(ctx, "missing-domain");
+      const route = await ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (q) => q.eq("content_id", ref.assetId))
+        .unique();
+
+      if (!route) {
+        expect.fail("Expected route projection before removing domain.");
+      }
+
+      await ctx.db.patch(route._id, { materialDomain: undefined });
+      await insertTrendingBucket(ctx, ref, {
+        bucketStart: NOW,
+        viewCount: 10,
+      });
     });
 
     const results = await t.query(

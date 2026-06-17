@@ -5,10 +5,10 @@ const base = {
   currentDate: "May 9, 2026",
   currentPage: {
     locale: "id",
-    slug: "material/lesson/mathematics/function-modeling/rational-function",
+    slug: "materi/matematika/integral/jumlahan-riemann",
     verified: true,
   },
-  url: "https://nakafa.com/id/material/lesson/mathematics/function-modeling/rational-function",
+  url: "https://nakafa.com/id/materi/matematika/integral/jumlahan-riemann",
   userLocation: {
     city: "Berlin",
     country: "Germany",

@@ -24,6 +24,7 @@ import {
   formatBatchProgress,
   updateBatchProgress,
 } from "@repo/backend/scripts/sync-content/metrics";
+import { readPublicContentRoute } from "@repo/backend/scripts/sync-content/publicRoutes";
 import { globFiles } from "@repo/backend/scripts/sync-content/runtime";
 import {
   BATCH_SIZES,
@@ -104,10 +105,21 @@ export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
       const searchDescription = getExerciseSetSearchDescription(searchSource);
       const searchText = getExerciseSetSearchText(searchSource);
       const groupRoute = yield* readExerciseSetGroupRoute(set.slug);
+      const publicRoute = yield* readPublicContentRoute(set.slug, set.locale);
+
+      if (!publicRoute.parentPath) {
+        return yield* Effect.fail(
+          new ScriptFailureError({
+            message: `Missing public exercise group path for ${set.locale}:${set.slug}.`,
+          })
+        );
+      }
 
       return {
         locale: set.locale,
         slug: set.slug,
+        publicPath: publicRoute.publicPath,
+        groupPublicPath: publicRoute.parentPath,
         category,
         type: set.assessment,
         material: set.domain,
@@ -127,6 +139,7 @@ export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
             exerciseType: set.exerciseType,
             exerciseTypeTitle: set.exerciseTypeTitle,
             groupRoute,
+            groupPublicPath: publicRoute.parentPath,
             locale: set.locale,
             year: set.year,
           })
@@ -138,6 +151,7 @@ export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
             searchDescription,
             searchText,
             searchTitle,
+            publicPath: publicRoute.publicPath,
             slug: set.slug,
             year: set.year,
           })
@@ -367,10 +381,15 @@ const parseQuestionFile = Effect.fn("sync.parseQuestionFile")(function* (
   const searchDescription = getExerciseSearchDescription(searchSource);
   const searchText = getExerciseSearchText(searchSource);
   const searchTitle = getExerciseSearchTitle(searchSource);
+  const publicPath = yield* readPublicContentRoute(
+    getExerciseQuestionPublicSourcePath(setSlug, pathInfo.number),
+    pathInfo.locale
+  ).pipe(Effect.map((route) => route.publicPath));
 
   return {
     locale: pathInfo.locale,
     slug: pathInfo.slug,
+    publicPath,
     setSlug,
     category: pathInfo.category,
     type: pathInfo.examType,
@@ -398,6 +417,7 @@ const parseQuestionFile = Effect.fn("sync.parseQuestionFile")(function* (
         locale: pathInfo.locale,
         material: pathInfo.material,
         number: pathInfo.number,
+        publicPath,
         questionBody: questionParsed.body,
         searchDescription,
         searchText,
@@ -427,6 +447,13 @@ const readExerciseSearchLabels = (options: SyncOptions) =>
 
     return labels;
   });
+
+function getExerciseQuestionPublicSourcePath(
+  setSlug: string,
+  questionNumber: number
+) {
+  return `${setSlug}/question-${questionNumber}`;
+}
 
 /** Sends exercise question batches to Convex and aggregates sync counts. */
 const processQuestionBatches = Effect.fn("sync.processQuestionBatches")(

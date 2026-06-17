@@ -6,6 +6,7 @@ export const lessonMathematicsQuadraticFunctionMaterial = defineLessonMaterial({
   key: "lesson.mathematics.quadratic-function",
   kind: "lesson",
   slug: "quadratic-function",
+  routeSlugs: { en: "quadratic-function", id: "persamaan-dan-fungsi-kuadrat" },
   translations: {
     en: {
       description:
@@ -21,6 +22,7 @@ export const lessonMathematicsQuadraticFunctionMaterial = defineLessonMaterial({
   sections: [
     {
       slug: "quadratic-equation",
+      routeSlugs: { en: "quadratic-equation", id: "persamaan-kuadrat" },
       translations: {
         en: {
           title: "Quadratic Equations",
@@ -32,6 +34,10 @@ export const lessonMathematicsQuadraticFunctionMaterial = defineLessonMaterial({
     },
     {
       slug: "quadratic-equation-factorization",
+      routeSlugs: {
+        en: "quadratic-equation-factorization",
+        id: "faktorisasi-persamaan-kuadrat",
+      },
       translations: {
         en: {
           title: "Quadratic Equation Factorization",
@@ -43,6 +49,10 @@ export const lessonMathematicsQuadraticFunctionMaterial = defineLessonMaterial({
     },
     {
       slug: "quadratic-equation-formula",
+      routeSlugs: {
+        en: "quadratic-equation-formula",
+        id: "rumus-persamaan-kuadrat",
+      },
       translations: {
         en: {
           title: "Quadratic Formula",
@@ -54,6 +64,10 @@ export const lessonMathematicsQuadraticFunctionMaterial = defineLessonMaterial({
     },
     {
       slug: "quadratic-equation-imaginary-root",
+      routeSlugs: {
+        en: "quadratic-equation-imaginary-root",
+        id: "akar-tidak-nyata-atau-imajiner",
+      },
       translations: {
         en: {
           title: "Imaginary or Non-Real Roots",
@@ -65,6 +79,10 @@ export const lessonMathematicsQuadraticFunctionMaterial = defineLessonMaterial({
     },
     {
       slug: "quadratic-equation-perfect-square",
+      routeSlugs: {
+        en: "quadratic-equation-perfect-square",
+        id: "melengkapi-kuadrat-sempurna",
+      },
       translations: {
         en: {
           title: "Completing the Square",
@@ -76,6 +94,10 @@ export const lessonMathematicsQuadraticFunctionMaterial = defineLessonMaterial({
     },
     {
       slug: "quadratic-equation-types-of-root",
+      routeSlugs: {
+        en: "quadratic-equation-types-of-root",
+        id: "jenis-jenis-akar-persamaan-kuadrat",
+      },
       translations: {
         en: {
           title: "Types of Quadratic Equation Roots",
@@ -87,6 +109,10 @@ export const lessonMathematicsQuadraticFunctionMaterial = defineLessonMaterial({
     },
     {
       slug: "quadratic-function-characteristics",
+      routeSlugs: {
+        en: "quadratic-function-characteristics",
+        id: "karakteristik-fungsi-kuadrat",
+      },
       translations: {
         en: {
           title: "Characteristics of Quadratic Functions",
@@ -98,6 +124,10 @@ export const lessonMathematicsQuadraticFunctionMaterial = defineLessonMaterial({
     },
     {
       slug: "quadratic-function-construction",
+      routeSlugs: {
+        en: "quadratic-function-construction",
+        id: "mengonstruksi-fungsi-kuadrat",
+      },
       translations: {
         en: {
           title: "Constructing Quadratic Functions",
@@ -109,6 +139,10 @@ export const lessonMathematicsQuadraticFunctionMaterial = defineLessonMaterial({
     },
     {
       slug: "quadratic-function-maximum-area",
+      routeSlugs: {
+        en: "quadratic-function-maximum-area",
+        id: "menentukan-luas-maksimum",
+      },
       translations: {
         en: {
           title: "Determining Maximum Area",
@@ -120,6 +154,10 @@ export const lessonMathematicsQuadraticFunctionMaterial = defineLessonMaterial({
     },
     {
       slug: "quadratic-function-minimum-area",
+      routeSlugs: {
+        en: "quadratic-function-minimum-area",
+        id: "menentukan-luas-minimum",
+      },
       translations: {
         en: {
           title: "Determining Minimum Area",

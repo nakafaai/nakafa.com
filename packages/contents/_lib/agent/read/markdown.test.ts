@@ -11,7 +11,7 @@ import { describe, expect, it, vi } from "vitest";
 const ARTICLE_CONTENT_REF =
   "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values";
 const EXERCISE_CONTENT_REF =
-  "https://nakafa.com/en/material/practice/assessment/snbt/general-knowledge/try-out-2026/set-2";
+  "https://nakafa.com/en/practice/snbt/general-knowledge/mock-test/2026/set-2";
 const FIXTURE_DATE = Schema.decodeSync(DateOnlySchema)("2026-01-01");
 
 vi.mock("@repo/contents/_lib/metadata", async () => {
@@ -136,7 +136,7 @@ describe("Nakafa agent markdown", () => {
     );
     const missingExercise = await Effect.runPromise(
       getNakafaAgentMarkdown(
-        "https://nakafa.com/en/material/practice/assessment/snbt/general-knowledge/try-out-2026/set-404"
+        "https://nakafa.com/en/practice/snbt/general-knowledge/mock-test/2026/set-404"
       )
     );
     const missingSurah = await Effect.runPromise(
@@ -179,10 +179,20 @@ describe("Nakafa agent markdown", () => {
     expect(Option.isNone(alphabeticSurah)).toBe(true);
   });
 
+  it("returns none when a projected practice route has no exercise payload", async () => {
+    const missingExercise = await Effect.runPromise(
+      getNakafaAgentMarkdown(EXERCISE_CONTENT_REF, {
+        readExercise: () => Effect.succeed(Option.none()),
+      })
+    );
+
+    expect(Option.isNone(missingExercise)).toBe(true);
+  });
+
   it("uses subject metadata when description metadata is absent", async () => {
     const content = await Effect.runPromise(
       getNakafaAgentMarkdown(
-        "https://nakafa.com/en/material/lesson/ai-ds/ai-programming/variable",
+        "https://nakafa.com/en/articles/learning/variable",
         {
           loadContent: () =>
             Effect.succeed({

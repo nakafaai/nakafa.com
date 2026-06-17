@@ -6,6 +6,7 @@ export const lessonMathematicsComplexNumberMaterial = defineLessonMaterial({
   key: "lesson.mathematics.complex-number",
   kind: "lesson",
   slug: "complex-number",
+  routeSlugs: { en: "complex-number", id: "bilangan-kompleks" },
   translations: {
     en: {
       description:
@@ -21,6 +22,10 @@ export const lessonMathematicsComplexNumberMaterial = defineLessonMaterial({
   sections: [
     {
       slug: "addition-complex-numbers",
+      routeSlugs: {
+        en: "addition-complex-numbers",
+        id: "penjumlahan-bilangan-kompleks",
+      },
       translations: {
         en: {
           title: "Addition of Complex Numbers",
@@ -32,6 +37,10 @@ export const lessonMathematicsComplexNumberMaterial = defineLessonMaterial({
     },
     {
       slug: "complex-number-concept",
+      routeSlugs: {
+        en: "complex-number-concept",
+        id: "konsep-bilangan-kompleks",
+      },
       translations: {
         en: {
           title: "Complex Number Concept",
@@ -43,6 +52,7 @@ export const lessonMathematicsComplexNumberMaterial = defineLessonMaterial({
     },
     {
       slug: "complex-number-form",
+      routeSlugs: { en: "complex-number-form", id: "bentuk-bilangan-kompleks" },
       translations: {
         en: {
           title: "Complex Number Form",
@@ -54,6 +64,10 @@ export const lessonMathematicsComplexNumberMaterial = defineLessonMaterial({
     },
     {
       slug: "conjugate-complex-numbers",
+      routeSlugs: {
+        en: "conjugate-complex-numbers",
+        id: "konjugat-bilangan-kompleks",
+      },
       translations: {
         en: {
           title: "Complex Number Conjugate",
@@ -65,6 +79,10 @@ export const lessonMathematicsComplexNumberMaterial = defineLessonMaterial({
     },
     {
       slug: "inverse-complex-numbers",
+      routeSlugs: {
+        en: "inverse-complex-numbers",
+        id: "invers-bilangan-kompleks",
+      },
       translations: {
         en: {
           title: "Inverse of Complex Numbers",
@@ -76,6 +94,10 @@ export const lessonMathematicsComplexNumberMaterial = defineLessonMaterial({
     },
     {
       slug: "modulus-argument-complex-numbers",
+      routeSlugs: {
+        en: "modulus-argument-complex-numbers",
+        id: "modulus-dan-argumen-bilangan-kompleks",
+      },
       translations: {
         en: {
           title: "Modulus and Argument of Complex Numbers",
@@ -87,6 +109,10 @@ export const lessonMathematicsComplexNumberMaterial = defineLessonMaterial({
     },
     {
       slug: "multiplication-complex-numbers",
+      routeSlugs: {
+        en: "multiplication-complex-numbers",
+        id: "perkalian-bilangan-kompleks",
+      },
       translations: {
         en: {
           title: "Multiplication of Complex Numbers",
@@ -98,6 +124,10 @@ export const lessonMathematicsComplexNumberMaterial = defineLessonMaterial({
     },
     {
       slug: "principal-argument-complex-numbers",
+      routeSlugs: {
+        en: "principal-argument-complex-numbers",
+        id: "argumen-utama-bilangan-kompleks",
+      },
       translations: {
         en: {
           title: "Principal Argument of Complex Numbers",
@@ -109,6 +139,10 @@ export const lessonMathematicsComplexNumberMaterial = defineLessonMaterial({
     },
     {
       slug: "properties-addition-complex-numbers",
+      routeSlugs: {
+        en: "properties-addition-complex-numbers",
+        id: "sifat-penjumlahan-bilangan-kompleks",
+      },
       translations: {
         en: {
           title: "Properties of Addition of Complex Numbers",
@@ -120,6 +154,10 @@ export const lessonMathematicsComplexNumberMaterial = defineLessonMaterial({
     },
     {
       slug: "properties-modulus-complex-numbers",
+      routeSlugs: {
+        en: "properties-modulus-complex-numbers",
+        id: "sifat-operasi-modulus-bilangan-kompleks",
+      },
       translations: {
         en: {
           title: "Properties of Complex Number Modulus",
@@ -131,6 +169,10 @@ export const lessonMathematicsComplexNumberMaterial = defineLessonMaterial({
     },
     {
       slug: "properties-multiplication-complex-numbers",
+      routeSlugs: {
+        en: "properties-multiplication-complex-numbers",
+        id: "sifat-perkalian-bilangan-kompleks",
+      },
       translations: {
         en: {
           title: "Properties of Multiplication of Complex Numbers",
@@ -142,6 +184,10 @@ export const lessonMathematicsComplexNumberMaterial = defineLessonMaterial({
     },
     {
       slug: "properties-principal-argument-complex-numbers",
+      routeSlugs: {
+        en: "properties-principal-argument-complex-numbers",
+        id: "sifat-argumen-utama-bilangan-kompleks",
+      },
       translations: {
         en: {
           title: "Properties of Principal Argument of Complex Numbers",
@@ -153,6 +199,10 @@ export const lessonMathematicsComplexNumberMaterial = defineLessonMaterial({
     },
     {
       slug: "scalar-multiplication-complex-numbers",
+      routeSlugs: {
+        en: "scalar-multiplication-complex-numbers",
+        id: "perkalian-skalar-bilangan-kompleks",
+      },
       translations: {
         en: {
           title: "Scalar Multiplication of Complex Numbers",

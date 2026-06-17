@@ -16,7 +16,7 @@ import {
   defineCurriculum,
   defineCurriculumTree,
 } from "@repo/contents/_types/curriculum/schema";
-import type { MaterialSource } from "@repo/contents/_types/material/schema";
+import { definePracticeMaterial } from "@repo/contents/_types/material/schema";
 import { MATERIAL_SOURCES } from "@repo/contents/_types/material/source";
 import { Effect, Either, ParseResult, Schema } from "effect";
 import { describe, expect, it } from "vitest";
@@ -78,8 +78,8 @@ describe("curriculum registry", () => {
         level: "unit",
         order: 1,
         translations: {
-          en: { title: "Target" },
-          id: { title: "Target" },
+          en: { routeSlug: "target", title: "Target" },
+          id: { routeSlug: "target", title: "Target" },
         },
       },
     ]);
@@ -104,7 +104,18 @@ describe("curriculum registry", () => {
 
     expect(material?.kind).toBe("lesson");
     expect(node?.translations).toEqual(
-      material?.kind === "lesson" ? material.translations : undefined
+      material?.kind === "lesson"
+        ? {
+            en: {
+              ...material.translations.en,
+              routeSlug: material.routeSlugs.en,
+            },
+            id: {
+              ...material.translations.id,
+              routeSlug: material.routeSlugs.id,
+            },
+          }
+        : undefined
     );
   });
 
@@ -191,8 +202,8 @@ describe("curriculum registry", () => {
           level: "unit",
           order: 1,
           translations: {
-            en: { title: "Parent" },
-            id: { title: "Parent" },
+            en: { routeSlug: "parent", title: "Parent" },
+            id: { routeSlug: "parent", title: "Parent" },
           },
         },
       ],
@@ -217,8 +228,15 @@ describe("curriculum registry", () => {
     });
     const materialNode = valid.tree[0];
 
-    if (!(materialNode && "materialKeys" in materialNode)) {
-      throw new Error("Missing material reference fixture.");
+    if (
+      !(
+        materialNode &&
+        "materialKeys" in materialNode &&
+        Array.isArray(materialNode.materialKeys)
+      )
+    ) {
+      expect(materialNode).toBeDefined();
+      return;
     }
 
     const invalid = {
@@ -275,14 +293,24 @@ describe("curriculum registry", () => {
     );
 
     if (material?.kind !== "lesson") {
-      throw new Error("Missing fixture material.");
+      expect(material?.kind).toBe("lesson");
+      return;
     }
 
     const invalid = defineCurriculum({
       programKey: "fixture-program",
       tree: [
         {
-          displayOverride: material.translations,
+          displayOverride: {
+            en: {
+              ...material.translations.en,
+              routeSlug: material.routeSlugs.en,
+            },
+            id: {
+              ...material.translations.id,
+              routeSlug: material.routeSlugs.id,
+            },
+          },
           key: "target",
           level: "topic",
           materialKeys: [material.key],
@@ -302,7 +330,8 @@ describe("curriculum registry", () => {
     );
 
     if (material?.kind !== "lesson") {
-      throw new Error("Missing fixture material.");
+      expect(material?.kind).toBe("lesson");
+      return;
     }
 
     const valid = defineCurriculum({
@@ -310,8 +339,14 @@ describe("curriculum registry", () => {
       tree: [
         {
           displayOverride: {
-            en: { title: "Statistics in the curriculum" },
-            id: { title: "Statistika dalam kurikulum" },
+            en: {
+              routeSlug: "statistics-in-the-curriculum",
+              title: "Statistics in the curriculum",
+            },
+            id: {
+              routeSlug: "statistika-dalam-kurikulum",
+              title: "Statistika dalam kurikulum",
+            },
           },
           key: "target",
           level: "topic",
@@ -324,8 +359,14 @@ describe("curriculum registry", () => {
     expect(
       listCurriculumNodes({ curricula: [valid] })[0]?.translations
     ).toEqual({
-      en: { title: "Statistics in the curriculum" },
-      id: { title: "Statistika dalam kurikulum" },
+      en: {
+        routeSlug: "statistics-in-the-curriculum",
+        title: "Statistics in the curriculum",
+      },
+      id: {
+        routeSlug: "statistika-dalam-kurikulum",
+        title: "Statistika dalam kurikulum",
+      },
     });
   });
 
@@ -356,8 +397,14 @@ describe("curriculum registry", () => {
       tree: [
         {
           displayOverride: {
-            en: { title: "Probability and statistics" },
-            id: { title: "Peluang dan statistika" },
+            en: {
+              routeSlug: "probability-and-statistics",
+              title: "Probability and statistics",
+            },
+            id: {
+              routeSlug: "peluang-dan-statistika",
+              title: "Peluang dan statistika",
+            },
           },
           key: "combined-target",
           level: "topic",
@@ -378,8 +425,14 @@ describe("curriculum registry", () => {
           "lesson.mathematics.probability",
         ],
         translations: {
-          en: { title: "Probability and statistics" },
-          id: { title: "Peluang dan statistika" },
+          en: {
+            routeSlug: "probability-and-statistics",
+            title: "Probability and statistics",
+          },
+          id: {
+            routeSlug: "peluang-dan-statistika",
+            title: "Peluang dan statistika",
+          },
         },
       }),
     ]);
@@ -392,7 +445,14 @@ describe("curriculum registry", () => {
     );
 
     if (practice?.kind !== "practice") {
-      throw new Error("Missing practice fixture material.");
+      expect(practice?.kind).toBe("practice");
+      return;
+    }
+
+    const practiceGroup = practice.groups[0];
+    if (!practiceGroup) {
+      expect(practice.groups.length).toBeGreaterThan(0);
+      return;
     }
 
     const oneGroupPractice = defineCurriculum({
@@ -406,24 +466,37 @@ describe("curriculum registry", () => {
         },
       ],
     });
-    const multiGroupPractice = {
+    const multiGroupPractice = definePracticeMaterial({
       ...practice,
       groups: [
         ...practice.groups,
         {
           ...practice.groups[0],
           exerciseType: "review",
+          routeSlugs: {
+            en: "review",
+            id: "ulasan",
+          },
           translations: {
             en: { title: "Review" },
             id: { title: "Ulasan" },
           },
         },
       ],
-    } satisfies MaterialSource;
+    });
 
     expect(
       listCurriculumNodes({ curricula: [oneGroupPractice] })[0]?.translations
-    ).toEqual(practice.groups[0]?.translations);
+    ).toEqual({
+      en: {
+        ...practiceGroup.translations.en,
+        routeSlug: practiceGroup.routeSlugs.en,
+      },
+      id: {
+        ...practiceGroup.translations.id,
+        routeSlug: practiceGroup.routeSlugs.id,
+      },
+    });
     expect(
       getCurriculumSourceIssues({
         curricula: [oneGroupPractice],
@@ -438,8 +511,14 @@ describe("curriculum registry", () => {
       tree: [
         {
           displayOverride: {
-            en: { title: "Practice review" },
-            id: { title: "Ulasan latihan" },
+            en: {
+              routeSlug: "practice-review",
+              title: "Practice review",
+            },
+            id: {
+              routeSlug: "ulasan-latihan",
+              title: "Ulasan latihan",
+            },
           },
           key: "practice-target",
           level: "topic",
@@ -455,8 +534,8 @@ describe("curriculum registry", () => {
         materials: [multiGroupPractice],
       })[0]?.translations
     ).toEqual({
-      en: { title: "Practice review" },
-      id: { title: "Ulasan latihan" },
+      en: { routeSlug: "practice-review", title: "Practice review" },
+      id: { routeSlug: "ulasan-latihan", title: "Ulasan latihan" },
     });
   });
 
@@ -472,8 +551,8 @@ describe("curriculum registry", () => {
           level: "unit",
           order: 1,
           translations: {
-            en: { title: "Target" },
-            id: { title: "Target" },
+            en: { routeSlug: "target", title: "Target" },
+            id: { routeSlug: "target", title: "Target" },
           },
         },
         {
@@ -481,8 +560,8 @@ describe("curriculum registry", () => {
           level: "unit",
           order: 2,
           translations: {
-            en: { title: "Target Again" },
-            id: { title: "Target Again" },
+            en: { routeSlug: "target-again", title: "Target Again" },
+            id: { routeSlug: "target-again", title: "Target Again" },
           },
         },
       ],
@@ -503,8 +582,8 @@ describe("curriculum registry", () => {
             level: "unit",
             order: 1,
             translations: {
-              en: { title: "Target" },
-              id: { title: "Target" },
+              en: { routeSlug: "target", title: "Target" },
+              id: { routeSlug: "target", title: "Target" },
             },
           },
           {
@@ -512,8 +591,8 @@ describe("curriculum registry", () => {
             level: "unit",
             order: 2,
             translations: {
-              en: { title: "Target Again" },
-              id: { title: "Target Again" },
+              en: { routeSlug: "target-again", title: "Target Again" },
+              id: { routeSlug: "target-again", title: "Target Again" },
             },
           },
         ],

@@ -21,6 +21,7 @@ export const contentSearchSourceValidator = v.object({
   locale: localeValidator,
   route: v.string(),
   section: nakafaSectionValidator,
+  sourcePath: v.string(),
   syncedAt: v.number(),
   text: v.string(),
   title: v.string(),
@@ -44,6 +45,7 @@ export function buildContentSearchRef({
   locale,
   route,
   section,
+  sourcePath,
 }: Pick<
   ContentSearchSource,
   | "alignmentId"
@@ -54,9 +56,11 @@ export function buildContentSearchRef({
   | "locale"
   | "route"
   | "section"
+  | "sourcePath"
 >) {
-  const cleanRoute = cleanSlug(route);
-  const publicPath = `${locale}/${cleanRoute}`;
+  const cleanPublicPath = cleanSlug(route);
+  const cleanSourcePath = cleanSlug(sourcePath);
+  const localizedPublicPath = `${locale}/${cleanPublicPath}`;
 
   return {
     alignmentId,
@@ -66,10 +70,11 @@ export function buildContentSearchRef({
     learningObjectId,
     lensId,
     locale,
-    markdown_url: `${NAKAFA_CONTENT_BASE_URL}/${publicPath}.md`,
-    route: cleanRoute,
+    markdown_url: `${NAKAFA_CONTENT_BASE_URL}/${localizedPublicPath}.md`,
+    route: cleanPublicPath,
     section,
-    url: `${NAKAFA_CONTENT_BASE_URL}/${publicPath}`,
+    sourcePath: cleanSourcePath,
+    url: `${NAKAFA_CONTENT_BASE_URL}/${localizedPublicPath}`,
   };
 }
 

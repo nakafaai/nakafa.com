@@ -5,6 +5,7 @@ import {
 import { api } from "@repo/backend/convex/_generated/api";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import { LocaleSchema } from "@repo/contents/_types/content";
+import { findPublicRouteByPathEffect } from "@repo/contents/_types/route/projection";
 import { type FunctionReference, getFunctionName } from "convex/server";
 import { Effect, Option, Schema } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -97,9 +98,13 @@ describe("readNakafaMarkdown", () => {
       )
     );
     const subjectWithoutLabel = await Effect.runPromise(
-      readNakafaMarkdown(
+      readMdxMarkdown(
         convexUrl,
-        "https://nakafa.com/id/material/lesson/mathematics/topic/no-subject"
+        readNakafaContentRefFixture(
+          "id",
+          "material/lesson/mathematics/topic/no-subject",
+          "material"
+        )
       )
     );
     const unsupported = await Effect.runPromise(
@@ -184,6 +189,32 @@ function readContentRoute(args: unknown) {
 
   if (input.route.includes("missing")) {
     return null;
+  }
+
+  const publicRoute = Effect.runSync(
+    findPublicRouteByPathEffect(input.route, input.locale)
+  );
+
+  if (Option.isSome(publicRoute)) {
+    const route = publicRoute.value;
+
+    if (
+      route.kind === "exercise-question" ||
+      route.kind === "exercise-set" ||
+      route.kind === "subject-lesson" ||
+      route.kind === "subject-topic"
+    ) {
+      return {
+        ...readNakafaContentRefFixture(
+          input.locale,
+          route.sourcePath,
+          "material"
+        ),
+        route: route.publicPath,
+        sourcePath: route.sourcePath,
+        title: route.title,
+      };
+    }
   }
 
   return {

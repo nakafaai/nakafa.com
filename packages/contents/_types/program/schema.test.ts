@@ -83,7 +83,7 @@ describe("program/schema", () => {
         kind: "curriculum-lesson",
         lensId: "curriculum:id-kurikulum-merdeka",
         locale: "id",
-        route: "/id/learn/curriculum/id-kurikulum-merdeka",
+        route: "/id/kurikulum/merdeka/kelas-10/matematika",
       })
     ).toBe(true);
 
@@ -95,7 +95,7 @@ describe("program/schema", () => {
       kind: "curriculum-lesson",
       lensId: "curriculum:id-kurikulum-merdeka",
       locale: "id",
-      route: "/id/learn/curriculum/id-kurikulum-merdeka",
+      route: "/id/kurikulum/merdeka/kelas-10/matematika",
     });
 
     expect(Either.isLeft(invalidConcept)).toBe(true);

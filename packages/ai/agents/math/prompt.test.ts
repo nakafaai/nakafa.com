@@ -6,8 +6,8 @@ const base = {
   context: {
     currentDate: "May 15, 2026",
     needsPageFetch: false,
-    slug: "material/lesson/mathematics/function-modeling/rational-function",
-    url: "https://nakafa.com/id/material/lesson/mathematics/function-modeling/rational-function",
+    slug: "materi/matematika/integral/jumlahan-riemann",
+    url: "https://nakafa.com/id/materi/matematika/integral/jumlahan-riemann",
     userRole: "student",
     verified: true,
   },

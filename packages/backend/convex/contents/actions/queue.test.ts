@@ -164,6 +164,7 @@ describe("contents/actions/queue", () => {
         markdown: true,
         route: ARTICLE_ROUTE,
         section: "articles",
+        sourcePath: ARTICLE_ROUTE,
         syncedAt: NOW,
         title: "Dynastic Politics",
       });

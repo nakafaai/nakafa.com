@@ -1,7 +1,10 @@
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
 import { internalMutation } from "@repo/backend/convex/functions";
-import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
+import {
+  localeValidator,
+  materialValidator,
+} from "@repo/backend/convex/lib/validators/contents";
 import {
   COVERAGE_STATUS_VALUES,
   LEARNING_PROGRAM_KIND_VALUES,
@@ -10,7 +13,8 @@ import {
   PROGRAM_PROVIDER_KIND_VALUES,
   PROGRAM_SOURCE_TYPE_VALUES,
 } from "@repo/contents/_types/program/schema";
-import { v } from "convex/values";
+import { PUBLIC_ROUTE_KIND_VALUES } from "@repo/contents/_types/route/schema";
+import { type Infer, v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
 const syncSummaryValidator = v.object({
@@ -30,6 +34,7 @@ const providerKindValidator = literals(...PROGRAM_PROVIDER_KIND_VALUES);
 const sourceTypeValidator = literals(...PROGRAM_SOURCE_TYPE_VALUES);
 const navigationLevelValidator = literals(...PROGRAM_NAVIGATION_LEVEL_VALUES);
 const navigationModelValidator = literals(...PROGRAM_NAVIGATION_MODEL_VALUES);
+const publicRouteKindValidator = literals(...PUBLIC_ROUTE_KIND_VALUES);
 
 const materialConceptValidator = v.object({
   key: v.string(),
@@ -43,11 +48,13 @@ const localizedMaterialMetadataValidator = v.object({
 
 const localizedLabelValidator = v.object({
   description: v.optional(v.string()),
+  routeSlug: v.string(),
   title: v.string(),
 });
 
 const localizedProgramLabelValidator = v.object({
   description: v.string(),
+  publicSlug: v.string(),
   title: v.string(),
 });
 
@@ -134,6 +141,25 @@ const assessmentNodeRowValidator = v.object({
     id: localizedLabelValidator,
   }),
 });
+
+const publicRouteRowValidator = v.object({
+  canonicalPath: v.optional(v.string()),
+  description: v.optional(v.string()),
+  kind: publicRouteKindValidator,
+  locale: localeValidator,
+  materialDomain: v.optional(materialValidator),
+  materialKey: v.optional(v.string()),
+  nodeKey: v.optional(v.string()),
+  parentPath: v.optional(v.string()),
+  programKey: v.optional(v.string()),
+  publicPath: v.string(),
+  sectionKey: v.optional(v.string()),
+  sitemap: v.boolean(),
+  sourcePath: v.optional(v.string()),
+  title: v.string(),
+});
+type PublicRouteRow = Infer<typeof publicRouteRowValidator>;
+type SyncedPublicRouteRow = PublicRouteRow & { syncedAt: number };
 
 /** Upserts curriculum-neutral material read models from typed material sources. */
 export const bulkSyncMaterials = internalMutation({
@@ -475,6 +501,56 @@ export const bulkSyncAssessmentNodes = internalMutation({
   },
 });
 
+/** Upserts source-owned public route rows for app, SEO, and agents. */
+export const bulkSyncPublicRoutes = internalMutation({
+  args: {
+    routes: v.array(publicRouteRowValidator),
+    syncedAt: v.number(),
+  },
+  returns: syncSummaryValidator,
+  handler: async (ctx, args) => {
+    assertContentSyncBatchSize({
+      functionName: "bulkSyncPublicRoutes",
+      limit: CONTENT_SYNC_BATCH_LIMITS.generatedPublicRoutes,
+      received: args.routes.length,
+      unit: "public routes",
+    });
+
+    let created = 0;
+    let updated = 0;
+    let unchanged = 0;
+
+    for (const route of args.routes) {
+      const existing = await ctx.db
+        .query("publicRoutes")
+        .withIndex("by_locale_and_publicPath", (q) =>
+          q.eq("locale", route.locale).eq("publicPath", route.publicPath)
+        )
+        .unique();
+      const next = {
+        ...route,
+        syncedAt: args.syncedAt,
+      };
+
+      if (isSamePublicRoute(existing, next)) {
+        unchanged++;
+        continue;
+      }
+
+      if (existing) {
+        await ctx.db.patch("publicRoutes", existing._id, next);
+        updated++;
+        continue;
+      }
+
+      await ctx.db.insert("publicRoutes", next);
+      created++;
+    }
+
+    return { created, unchanged, updated };
+  },
+});
+
 export const deleteStaleMaterials = internalMutation({
   args: { limit: v.number(), syncedAt: v.number() },
   returns: deleteResultValidator,
@@ -606,3 +682,52 @@ export const deleteStaleAssessmentNodes = internalMutation({
     return { deleted: staleRows.length };
   },
 });
+
+export const deleteStalePublicRoutes = internalMutation({
+  args: { limit: v.number(), syncedAt: v.number() },
+  returns: deleteResultValidator,
+  handler: async (ctx, args) => {
+    const staleRows = await ctx.db
+      .query("publicRoutes")
+      .withIndex("by_syncedAt", (q) => q.lt("syncedAt", args.syncedAt))
+      .take(args.limit);
+
+    for (const row of staleRows) {
+      await ctx.db.delete(row._id);
+    }
+
+    return { deleted: staleRows.length };
+  },
+});
+
+/**
+ * Checks whether one stored route already matches the next projection row.
+ *
+ * Public route sync is idempotent and route rows are stable, so this keeps
+ * repeated syncs from touching unchanged documents and causing extra OCC churn.
+ */
+function isSamePublicRoute(
+  existing: SyncedPublicRouteRow | null,
+  next: SyncedPublicRouteRow
+) {
+  if (!existing) {
+    return false;
+  }
+
+  return (
+    existing.canonicalPath === next.canonicalPath &&
+    existing.description === next.description &&
+    existing.kind === next.kind &&
+    existing.locale === next.locale &&
+    existing.materialDomain === next.materialDomain &&
+    existing.materialKey === next.materialKey &&
+    existing.nodeKey === next.nodeKey &&
+    existing.parentPath === next.parentPath &&
+    existing.programKey === next.programKey &&
+    existing.publicPath === next.publicPath &&
+    existing.sectionKey === next.sectionKey &&
+    existing.sitemap === next.sitemap &&
+    existing.sourcePath === next.sourcePath &&
+    existing.title === next.title
+  );
+}

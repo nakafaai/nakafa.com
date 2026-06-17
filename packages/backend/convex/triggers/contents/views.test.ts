@@ -63,6 +63,7 @@ describe("triggers/contents/views", () => {
         markdown: true,
         route: ARTICLE_ROUTE,
         section: "articles",
+        sourcePath: ARTICLE_ROUTE,
         syncedAt: NOW,
         title: "Analytics",
       });

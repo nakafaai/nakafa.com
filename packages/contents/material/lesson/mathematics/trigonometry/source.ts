@@ -6,6 +6,7 @@ export const lessonMathematicsTrigonometryMaterial = defineLessonMaterial({
   key: "lesson.mathematics.trigonometry",
   kind: "lesson",
   slug: "trigonometry",
+  routeSlugs: { en: "trigonometry", id: "trigonometri" },
   translations: {
     en: {
       description:
@@ -21,6 +22,10 @@ export const lessonMathematicsTrigonometryMaterial = defineLessonMaterial({
   sections: [
     {
       slug: "right-triangle-naming",
+      routeSlugs: {
+        en: "right-triangle-naming",
+        id: "penamaan-sisi-segitiga-siku-siku",
+      },
       translations: {
         en: {
           title: "Right Triangle Side Naming",
@@ -32,6 +37,10 @@ export const lessonMathematicsTrigonometryMaterial = defineLessonMaterial({
     },
     {
       slug: "trigonometric-comparison-sin-cos",
+      routeSlugs: {
+        en: "trigonometric-comparison-sin-cos",
+        id: "perbandingan-trigonometri-sinus-dan-cosinus",
+      },
       translations: {
         en: {
           title: "Trigonometric Comparison: Sine and Cosine",
@@ -43,6 +52,10 @@ export const lessonMathematicsTrigonometryMaterial = defineLessonMaterial({
     },
     {
       slug: "trigonometric-comparison-special-angle",
+      routeSlugs: {
+        en: "trigonometric-comparison-special-angle",
+        id: "sudut-istimewa-perbandingan-trigonometri",
+      },
       translations: {
         en: {
           title: "Special Angles in Trigonometric Comparisons",
@@ -54,6 +67,10 @@ export const lessonMathematicsTrigonometryMaterial = defineLessonMaterial({
     },
     {
       slug: "trigonometric-comparison-tan",
+      routeSlugs: {
+        en: "trigonometric-comparison-tan",
+        id: "perbandingan-trigonometri-tangen",
+      },
       translations: {
         en: {
           title: "Trigonometric Comparison: Tangent",
@@ -65,6 +82,10 @@ export const lessonMathematicsTrigonometryMaterial = defineLessonMaterial({
     },
     {
       slug: "trigonometric-comparison-tan-usage",
+      routeSlugs: {
+        en: "trigonometric-comparison-tan-usage",
+        id: "kegunaan-perbandingan-trigonometri-tangen",
+      },
       translations: {
         en: {
           title: "Applications of the Tangent Ratio",
@@ -76,6 +97,10 @@ export const lessonMathematicsTrigonometryMaterial = defineLessonMaterial({
     },
     {
       slug: "trigonometric-comparison-three-primary",
+      routeSlugs: {
+        en: "trigonometric-comparison-three-primary",
+        id: "tiga-serangkai-perbandingan-trigonometri",
+      },
       translations: {
         en: {
           title: "The Three Primary Trigonometric Comparisons",
@@ -87,6 +112,7 @@ export const lessonMathematicsTrigonometryMaterial = defineLessonMaterial({
     },
     {
       slug: "trigonometry-concept",
+      routeSlugs: { en: "trigonometry-concept", id: "konsep-trigonometri" },
       translations: {
         en: {
           title: "Trigonometry Concept",

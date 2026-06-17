@@ -117,11 +117,20 @@ export async function getQuranReferenceImpl(
   const ref = buildContentSearchRef(routeProjection);
 
   return {
-    ...ref,
+    alignmentId: ref.alignmentId,
+    assetId: ref.assetId,
+    conceptId: ref.conceptId,
+    content_id: ref.content_id,
+    learningObjectId: ref.learningObjectId,
+    lensId: ref.lensId,
+    locale: ref.locale,
+    markdown_url: ref.markdown_url,
     name: getSurahName({ locale: args.locale, name: surah.name }),
     revelation: surah.revelation[args.locale],
+    route: ref.route,
     section: QURAN_SECTION,
     translation: surah.name.translation[args.locale],
+    url: ref.url,
     verses: verses
       .sort((left, right) => left.verseNumber - right.verseNumber)
       .map((verse) => ({

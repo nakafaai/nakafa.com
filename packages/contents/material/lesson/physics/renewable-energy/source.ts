@@ -6,6 +6,7 @@ export const lessonPhysicsRenewableEnergyMaterial = defineLessonMaterial({
   key: "lesson.physics.renewable-energy",
   kind: "lesson",
   slug: "renewable-energy",
+  routeSlugs: { en: "renewable-energy", id: "energi-terbarukan" },
   translations: {
     en: {
       description:
@@ -21,6 +22,7 @@ export const lessonPhysicsRenewableEnergyMaterial = defineLessonMaterial({
   sections: [
     {
       slug: "energy",
+      routeSlugs: { en: "energy", id: "energi" },
       translations: {
         en: {
           title: "Energy Concept",
@@ -32,6 +34,7 @@ export const lessonPhysicsRenewableEnergyMaterial = defineLessonMaterial({
     },
     {
       slug: "energy-conservation",
+      routeSlugs: { en: "energy-conservation", id: "hukum-kekekalan-energi" },
       translations: {
         en: {
           title: "Law of Energy Conservation",
@@ -43,6 +46,7 @@ export const lessonPhysicsRenewableEnergyMaterial = defineLessonMaterial({
     },
     {
       slug: "energy-forms",
+      routeSlugs: { en: "energy-forms", id: "bentuk-bentuk-energi" },
       translations: {
         en: {
           title: "Forms of Energy",
@@ -54,6 +58,10 @@ export const lessonPhysicsRenewableEnergyMaterial = defineLessonMaterial({
     },
     {
       slug: "energy-impact",
+      routeSlugs: {
+        en: "energy-impact",
+        id: "dampak-eksplorasi-dan-penggunaan-energi",
+      },
       translations: {
         en: {
           title: "Impact of Energy Exploration and Use",
@@ -65,6 +73,10 @@ export const lessonPhysicsRenewableEnergyMaterial = defineLessonMaterial({
     },
     {
       slug: "energy-solutions",
+      routeSlugs: {
+        en: "energy-solutions",
+        id: "upaya-pemenuhan-kebutuhan-energi",
+      },
       translations: {
         en: {
           title: "Solutions to Meet Energy Demands",
@@ -76,6 +88,7 @@ export const lessonPhysicsRenewableEnergyMaterial = defineLessonMaterial({
     },
     {
       slug: "energy-sources",
+      routeSlugs: { en: "energy-sources", id: "sumber-energi" },
       translations: {
         en: {
           title: "Energy Sources",
@@ -87,6 +100,7 @@ export const lessonPhysicsRenewableEnergyMaterial = defineLessonMaterial({
     },
     {
       slug: "energy-transformation",
+      routeSlugs: { en: "energy-transformation", id: "konversi-energi" },
       translations: {
         en: {
           title: "Energy Transformation",
@@ -98,6 +112,7 @@ export const lessonPhysicsRenewableEnergyMaterial = defineLessonMaterial({
     },
     {
       slug: "energy-urgency",
+      routeSlugs: { en: "energy-urgency", id: "urgensi-isu-kebutuhan-energi" },
       translations: {
         en: {
           title: "Urgency of Energy Demand Issues",
@@ -109,6 +124,10 @@ export const lessonPhysicsRenewableEnergyMaterial = defineLessonMaterial({
     },
     {
       slug: "non-renewable-sources",
+      routeSlugs: {
+        en: "non-renewable-sources",
+        id: "sumber-energi-tak-terbarukan",
+      },
       translations: {
         en: {
           title: "Non-renewable Energy Sources",
@@ -120,6 +139,7 @@ export const lessonPhysicsRenewableEnergyMaterial = defineLessonMaterial({
     },
     {
       slug: "renewable-sources",
+      routeSlugs: { en: "renewable-sources", id: "sumber-energi-terbarukan" },
       translations: {
         en: {
           title: "Renewable Energy Sources",

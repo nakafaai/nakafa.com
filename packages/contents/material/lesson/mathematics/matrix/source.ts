@@ -6,6 +6,7 @@ export const lessonMathematicsMatrixMaterial = defineLessonMaterial({
   key: "lesson.mathematics.matrix",
   kind: "lesson",
   slug: "matrix",
+  routeSlugs: { en: "matrix", id: "matriks" },
   translations: {
     en: {
       description:
@@ -21,6 +22,10 @@ export const lessonMathematicsMatrixMaterial = defineLessonMaterial({
   sections: [
     {
       slug: "cofactor-expansion-method",
+      routeSlugs: {
+        en: "cofactor-expansion-method",
+        id: "metode-ekspansi-kofaktor",
+      },
       translations: {
         en: {
           title: "Cofactor Expansion Method",
@@ -32,6 +37,7 @@ export const lessonMathematicsMatrixMaterial = defineLessonMaterial({
     },
     {
       slug: "matrix-addition",
+      routeSlugs: { en: "matrix-addition", id: "penjumlahan-matriks" },
       translations: {
         en: {
           title: "Matrix Addition",
@@ -43,6 +49,7 @@ export const lessonMathematicsMatrixMaterial = defineLessonMaterial({
     },
     {
       slug: "matrix-concept",
+      routeSlugs: { en: "matrix-concept", id: "konsep-matriks" },
       translations: {
         en: {
           title: "Matrix Concept",
@@ -54,6 +61,7 @@ export const lessonMathematicsMatrixMaterial = defineLessonMaterial({
     },
     {
       slug: "matrix-determinant",
+      routeSlugs: { en: "matrix-determinant", id: "determinan-matriks" },
       translations: {
         en: {
           title: "Matrix Determinant",
@@ -65,6 +73,7 @@ export const lessonMathematicsMatrixMaterial = defineLessonMaterial({
     },
     {
       slug: "matrix-equality",
+      routeSlugs: { en: "matrix-equality", id: "kesamaan-dua-matriks" },
       translations: {
         en: {
           title: "Matrix Equality",
@@ -76,6 +85,7 @@ export const lessonMathematicsMatrixMaterial = defineLessonMaterial({
     },
     {
       slug: "matrix-inverse",
+      routeSlugs: { en: "matrix-inverse", id: "invers-matriks" },
       translations: {
         en: {
           title: "Matrix Inverse",
@@ -87,6 +97,7 @@ export const lessonMathematicsMatrixMaterial = defineLessonMaterial({
     },
     {
       slug: "matrix-multiplication",
+      routeSlugs: { en: "matrix-multiplication", id: "perkalian-matriks" },
       translations: {
         en: {
           title: "Matrix Multiplication",
@@ -98,6 +109,10 @@ export const lessonMathematicsMatrixMaterial = defineLessonMaterial({
     },
     {
       slug: "matrix-scalar-multiplication",
+      routeSlugs: {
+        en: "matrix-scalar-multiplication",
+        id: "perkalian-matriks-dengan-skalar",
+      },
       translations: {
         en: {
           title: "Matrix Scalar Multiplication",
@@ -109,6 +124,7 @@ export const lessonMathematicsMatrixMaterial = defineLessonMaterial({
     },
     {
       slug: "matrix-subtraction",
+      routeSlugs: { en: "matrix-subtraction", id: "pengurangan-matriks" },
       translations: {
         en: {
           title: "Matrix Subtraction",
@@ -120,6 +136,7 @@ export const lessonMathematicsMatrixMaterial = defineLessonMaterial({
     },
     {
       slug: "matrix-transpose",
+      routeSlugs: { en: "matrix-transpose", id: "matriks-transpos" },
       translations: {
         en: {
           title: "Matrix Transpose",
@@ -131,6 +148,7 @@ export const lessonMathematicsMatrixMaterial = defineLessonMaterial({
     },
     {
       slug: "matrix-types",
+      routeSlugs: { en: "matrix-types", id: "jenis-jenis-matriks" },
       translations: {
         en: {
           title: "Matrix Types",
@@ -142,6 +160,10 @@ export const lessonMathematicsMatrixMaterial = defineLessonMaterial({
     },
     {
       slug: "properties-determinant-matrix",
+      routeSlugs: {
+        en: "properties-determinant-matrix",
+        id: "sifat-determinan-matriks",
+      },
       translations: {
         en: {
           title: "Properties of Matrix Determinant",
@@ -153,6 +175,7 @@ export const lessonMathematicsMatrixMaterial = defineLessonMaterial({
     },
     {
       slug: "sarrus-method",
+      routeSlugs: { en: "sarrus-method", id: "metode-sarrus" },
       translations: {
         en: {
           title: "Sarrus Method",

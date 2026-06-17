@@ -33,6 +33,11 @@ import { generateSEOMetadata } from "@/lib/utils/seo/generator";
 import type { SEOContext } from "@/lib/utils/seo/types";
 import { getStaticParams } from "@/lib/utils/system";
 
+type ArrayItem<T> = T extends readonly (infer Item)[] ? Item : T;
+type ArticleJsonLdAuthor = ArrayItem<
+  Parameters<typeof ArticleJsonLd>[0]["author"]
+>;
+
 async function getResolvedParams(
   params: PageProps<"/[locale]/articles/[category]/[slug]">["params"]
 ) {
@@ -183,11 +188,13 @@ export default async function Page({
     formatContentDateISO(contentMetadata.date),
     () => contentMetadata.date
   );
-  const authorJsonLd = contentMetadata.authors.map((author) => ({
-    "@type": "Person" as const,
-    name: author.name,
-    url: `https://nakafa.com/${locale}/contributor`,
-  }));
+  const authorJsonLd: ArticleJsonLdAuthor[] = contentMetadata.authors.map(
+    (author) => ({
+      "@type": "Person",
+      name: author.name,
+      url: `https://nakafa.com/${locale}/contributor`,
+    })
+  );
 
   return (
     <>

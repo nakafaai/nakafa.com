@@ -6,6 +6,7 @@ export const lessonMathematicsPolynomialMaterial = defineLessonMaterial({
   key: "lesson.mathematics.polynomial",
   kind: "lesson",
   slug: "polynomial",
+  routeSlugs: { en: "polynomial", id: "polinomial" },
   translations: {
     en: {
       description:
@@ -21,6 +22,10 @@ export const lessonMathematicsPolynomialMaterial = defineLessonMaterial({
   sections: [
     {
       slug: "addition-subtraction-polynomial",
+      routeSlugs: {
+        en: "addition-subtraction-polynomial",
+        id: "penjumlahan-dan-pengurangan-polinomial",
+      },
       translations: {
         en: {
           title: "Addition and Subtraction of Polynomials",
@@ -32,6 +37,7 @@ export const lessonMathematicsPolynomialMaterial = defineLessonMaterial({
     },
     {
       slug: "division-polynomial",
+      routeSlugs: { en: "division-polynomial", id: "pembagian-polinomial" },
       translations: {
         en: {
           title: "Division of Polynomials",
@@ -43,6 +49,7 @@ export const lessonMathematicsPolynomialMaterial = defineLessonMaterial({
     },
     {
       slug: "factor-theorem",
+      routeSlugs: { en: "factor-theorem", id: "teorema-faktor" },
       translations: {
         en: {
           title: "Factor Theorem",
@@ -54,6 +61,7 @@ export const lessonMathematicsPolynomialMaterial = defineLessonMaterial({
     },
     {
       slug: "horner-method",
+      routeSlugs: { en: "horner-method", id: "metode-horner" },
       translations: {
         en: {
           title: "Horner's Method",
@@ -65,6 +73,10 @@ export const lessonMathematicsPolynomialMaterial = defineLessonMaterial({
     },
     {
       slug: "multiplication-polynomial",
+      routeSlugs: {
+        en: "multiplication-polynomial",
+        id: "perkalian-polinomial",
+      },
       translations: {
         en: {
           title: "Multiplication of Polynomials",
@@ -76,6 +88,7 @@ export const lessonMathematicsPolynomialMaterial = defineLessonMaterial({
     },
     {
       slug: "polynomial-concept",
+      routeSlugs: { en: "polynomial-concept", id: "konsep-polinomial" },
       translations: {
         en: {
           title: "Polynomial Concept",
@@ -87,6 +100,7 @@ export const lessonMathematicsPolynomialMaterial = defineLessonMaterial({
     },
     {
       slug: "polynomial-degree",
+      routeSlugs: { en: "polynomial-degree", id: "derajat-polinomial" },
       translations: {
         en: {
           title: "Polynomial Degree",
@@ -98,6 +112,10 @@ export const lessonMathematicsPolynomialMaterial = defineLessonMaterial({
     },
     {
       slug: "polynomial-factorization",
+      routeSlugs: {
+        en: "polynomial-factorization",
+        id: "faktorisasi-penuh-polinomial",
+      },
       translations: {
         en: {
           title: "Complete Polynomial Factorization",
@@ -109,6 +127,7 @@ export const lessonMathematicsPolynomialMaterial = defineLessonMaterial({
     },
     {
       slug: "polynomial-function",
+      routeSlugs: { en: "polynomial-function", id: "fungsi-polinomial" },
       translations: {
         en: {
           title: "Polynomial Function",
@@ -120,6 +139,7 @@ export const lessonMathematicsPolynomialMaterial = defineLessonMaterial({
     },
     {
       slug: "polynomial-graph",
+      routeSlugs: { en: "polynomial-graph", id: "grafik-fungsi-polinomial" },
       translations: {
         en: {
           title: "Polynomial Graph",
@@ -131,6 +151,7 @@ export const lessonMathematicsPolynomialMaterial = defineLessonMaterial({
     },
     {
       slug: "polynomial-identity",
+      routeSlugs: { en: "polynomial-identity", id: "identitas-polinomial" },
       translations: {
         en: {
           title: "Polynomial Identity",
@@ -142,6 +163,7 @@ export const lessonMathematicsPolynomialMaterial = defineLessonMaterial({
     },
     {
       slug: "rational-zero",
+      routeSlugs: { en: "rational-zero", id: "pembuat-nol-rasional" },
       translations: {
         en: {
           title: "Rational Zero Theorem",
@@ -153,6 +175,7 @@ export const lessonMathematicsPolynomialMaterial = defineLessonMaterial({
     },
     {
       slug: "remainder-theorem",
+      routeSlugs: { en: "remainder-theorem", id: "teorema-sisa" },
       translations: {
         en: {
           title: "Remainder Theorem",
@@ -164,6 +187,7 @@ export const lessonMathematicsPolynomialMaterial = defineLessonMaterial({
     },
     {
       slug: "synthetic-division",
+      routeSlugs: { en: "synthetic-division", id: "pembagian-bersusun" },
       translations: {
         en: {
           title: "Polynomial Long Division",

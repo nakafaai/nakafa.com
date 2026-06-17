@@ -6,6 +6,7 @@ export const practiceAssessmentSnbtMathematicalReasoningMaterial =
     groups: [
       {
         exerciseType: "try-out",
+        routeSlugs: { en: "mock-test", id: "tryout" },
         year: 2026,
         translations: {
           en: {
@@ -22,6 +23,7 @@ export const practiceAssessmentSnbtMathematicalReasoningMaterial =
         sets: [
           {
             slug: "set-1",
+            routeSlugs: { en: "set-1", id: "set-1" },
             translations: {
               en: {
                 title: "Set 1",
@@ -33,6 +35,7 @@ export const practiceAssessmentSnbtMathematicalReasoningMaterial =
           },
           {
             slug: "set-2",
+            routeSlugs: { en: "set-2", id: "set-2" },
             translations: {
               en: {
                 title: "Set 2",
@@ -44,6 +47,7 @@ export const practiceAssessmentSnbtMathematicalReasoningMaterial =
           },
           {
             slug: "set-3",
+            routeSlugs: { en: "set-3", id: "set-3" },
             translations: {
               en: {
                 title: "Set 3",
@@ -55,6 +59,7 @@ export const practiceAssessmentSnbtMathematicalReasoningMaterial =
           },
           {
             slug: "set-4",
+            routeSlugs: { en: "set-4", id: "set-4" },
             translations: {
               en: {
                 title: "Set 4",
@@ -66,6 +71,7 @@ export const practiceAssessmentSnbtMathematicalReasoningMaterial =
           },
           {
             slug: "set-5",
+            routeSlugs: { en: "set-5", id: "set-5" },
             translations: {
               en: {
                 title: "Set 5",
@@ -77,6 +83,7 @@ export const practiceAssessmentSnbtMathematicalReasoningMaterial =
           },
           {
             slug: "set-6",
+            routeSlugs: { en: "set-6", id: "set-6" },
             translations: {
               en: {
                 title: "Set 6",
@@ -88,6 +95,7 @@ export const practiceAssessmentSnbtMathematicalReasoningMaterial =
           },
           {
             slug: "set-7",
+            routeSlugs: { en: "set-7", id: "set-7" },
             translations: {
               en: {
                 title: "Set 7",

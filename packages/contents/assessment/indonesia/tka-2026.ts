@@ -10,8 +10,8 @@ export const tkaAssessment = defineAssessment({
       materialKeys: [],
       order: 10,
       translations: {
-        en: { title: "TKA" },
-        id: { title: "TKA" },
+        en: { routeSlug: "tka", title: "TKA" },
+        id: { routeSlug: "tka", title: "TKA" },
       },
     },
     {
@@ -21,8 +21,8 @@ export const tkaAssessment = defineAssessment({
       order: 10,
       parentKey: "tka",
       translations: {
-        en: { title: "Mathematics" },
-        id: { title: "Matematika" },
+        en: { routeSlug: "mathematics", title: "Mathematics" },
+        id: { routeSlug: "matematika", title: "Matematika" },
       },
     },
   ],

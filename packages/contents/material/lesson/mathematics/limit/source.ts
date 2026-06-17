@@ -6,6 +6,7 @@ export const lessonMathematicsLimitMaterial = defineLessonMaterial({
   key: "lesson.mathematics.limit",
   kind: "lesson",
   slug: "limit",
+  routeSlugs: { en: "limit", id: "limit" },
   translations: {
     en: {
       description:
@@ -21,6 +22,10 @@ export const lessonMathematicsLimitMaterial = defineLessonMaterial({
   sections: [
     {
       slug: "application-of-limit-function",
+      routeSlugs: {
+        en: "application-of-limit-function",
+        id: "aplikasi-limit-fungsi",
+      },
       translations: {
         en: {
           title: "Application of Limit Function",
@@ -32,6 +37,10 @@ export const lessonMathematicsLimitMaterial = defineLessonMaterial({
     },
     {
       slug: "concept-of-limit-function",
+      routeSlugs: {
+        en: "concept-of-limit-function",
+        id: "konsep-limit-fungsi",
+      },
       translations: {
         en: {
           title: "Concept of Limit Function",
@@ -43,6 +52,10 @@ export const lessonMathematicsLimitMaterial = defineLessonMaterial({
     },
     {
       slug: "limit-of-algebraic-function",
+      routeSlugs: {
+        en: "limit-of-algebraic-function",
+        id: "limit-fungsi-aljabar",
+      },
       translations: {
         en: {
           title: "Limit of Algebraic Function",
@@ -54,6 +67,10 @@ export const lessonMathematicsLimitMaterial = defineLessonMaterial({
     },
     {
       slug: "limit-of-trigonometric-function",
+      routeSlugs: {
+        en: "limit-of-trigonometric-function",
+        id: "limit-fungsi-trigonometri",
+      },
       translations: {
         en: {
           title: "Limit of Trigonometric Function",
@@ -65,6 +82,10 @@ export const lessonMathematicsLimitMaterial = defineLessonMaterial({
     },
     {
       slug: "properties-of-limit-function",
+      routeSlugs: {
+        en: "properties-of-limit-function",
+        id: "sifat-limit-fungsi",
+      },
       translations: {
         en: {
           title: "Properties of Limit Function",

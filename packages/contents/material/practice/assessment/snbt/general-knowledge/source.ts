@@ -6,6 +6,7 @@ export const practiceAssessmentSnbtGeneralKnowledgeMaterial =
     groups: [
       {
         exerciseType: "try-out",
+        routeSlugs: { en: "mock-test", id: "tryout" },
         year: 2026,
         translations: {
           en: {
@@ -22,6 +23,7 @@ export const practiceAssessmentSnbtGeneralKnowledgeMaterial =
         sets: [
           {
             slug: "set-1",
+            routeSlugs: { en: "set-1", id: "set-1" },
             translations: {
               en: {
                 title: "Set 1",
@@ -33,6 +35,7 @@ export const practiceAssessmentSnbtGeneralKnowledgeMaterial =
           },
           {
             slug: "set-2",
+            routeSlugs: { en: "set-2", id: "set-2" },
             translations: {
               en: {
                 title: "Set 2",

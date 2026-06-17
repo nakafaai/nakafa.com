@@ -56,6 +56,7 @@ export const programSourceInputValidator = v.object({
 /** Localized learner-facing labels for one canonical program row. */
 export const programTranslationInputValidator = v.object({
   description: v.string(),
+  publicSlug: v.string(),
   title: v.string(),
 });
 
@@ -106,6 +107,7 @@ export const learningProgramSummaryValidator = v.object({
   key: v.string(),
   kind: learningProgramKindValidator,
   navigation: programNavigationInputValidator,
+  publicSlug: v.string(),
   title: v.string(),
   versionLabel: v.string(),
 });

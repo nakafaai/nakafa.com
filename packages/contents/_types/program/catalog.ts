@@ -50,10 +50,12 @@ const learningProgramCatalogInput = [
     translations: {
       en: {
         description: "Follow Indonesia's school curriculum by class topic.",
+        publicSlug: "merdeka",
         title: "Kurikulum Merdeka",
       },
       id: {
         description: "Ikuti materi sekolah Indonesia sesuai kelas.",
+        publicSlug: "merdeka",
         title: "Kurikulum Merdeka",
       },
     },
@@ -92,12 +94,14 @@ const learningProgramCatalogInput = [
     translations: {
       en: {
         description:
-          "Map Cambridge IGCSE subjects as Nakafa coverage is verified.",
+          "Build number, algebra, geometry, and data skills for Cambridge IGCSE.",
+        publicSlug: "cambridge-igcse",
         title: "Cambridge IGCSE",
       },
       id: {
         description:
-          "Petakan Cambridge IGCSE saat cakupan Nakafa terverifikasi.",
+          "Bangun kemampuan bilangan, aljabar, geometri, dan data untuk Cambridge IGCSE.",
+        publicSlug: "cambridge-igcse",
         title: "Cambridge IGCSE",
       },
     },
@@ -140,12 +144,14 @@ const learningProgramCatalogInput = [
     translations: {
       en: {
         description:
-          "Align Common Core Math and NGSS as verified material coverage grows.",
+          "Follow high school math and science standards by course and unit.",
+        publicSlug: "us-common-core-ngss",
         title: "Common Core Math + NGSS",
       },
       id: {
         description:
-          "Selaraskan Common Core Math dan NGSS saat cakupan materi terverifikasi.",
+          "Ikuti standar matematika dan sains SMA sesuai kursus dan unit.",
+        publicSlug: "us-common-core-ngss",
         title: "Common Core Math + NGSS",
       },
     },
@@ -181,10 +187,12 @@ const learningProgramCatalogInput = [
     translations: {
       en: {
         description: "Prepare for Indonesia's academic readiness test.",
+        publicSlug: "tka",
         title: "TKA 2026",
       },
       id: {
         description: "Siapkan diri untuk Tes Kemampuan Akademik.",
+        publicSlug: "tka",
         title: "TKA 2026",
       },
     },
@@ -217,10 +225,12 @@ const learningProgramCatalogInput = [
     translations: {
       en: {
         description: "Prepare for Indonesia's university entrance selection.",
+        publicSlug: "snbt",
         title: "SNBT 2026",
       },
       id: {
         description: "Siapkan UTBK-SNBT untuk seleksi masuk kampus.",
+        publicSlug: "snbt",
         title: "SNBT 2026",
       },
     },
@@ -230,7 +240,7 @@ const learningProgramCatalogInput = [
       endsAt: PROGRAM_2026_END,
     },
   },
-] satisfies readonly LearningProgram[];
+];
 
 /**
  * Source-controlled program registry for canonical curriculum/product identity.

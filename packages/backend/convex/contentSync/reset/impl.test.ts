@@ -16,6 +16,7 @@ describe("contentSync/reset/impl", () => {
     await t.mutation(seedDerivedRuntimeRows);
 
     const routeDelete = await t.mutation(deleteContentRoutesBatch);
+    const publicRouteDelete = await t.mutation(deletePublicRoutesBatch);
     const viewDelete = await t.mutation(deleteContentViewsBatch);
     const queueDelete = await t.mutation(deleteContentViewAnalyticsQueueBatch);
     const partitionDelete = await t.mutation(
@@ -41,6 +42,7 @@ describe("contentSync/reset/impl", () => {
     const { learningProgramSources, learningPrograms, ...resetRows } = counts;
 
     expect(routeDelete).toEqual({ deleted: 1, hasMore: false });
+    expect(publicRouteDelete).toEqual({ deleted: 1, hasMore: false });
     expect(viewDelete).toEqual({ deleted: 1, hasMore: false });
     expect(queueDelete).toEqual({ deleted: 1, hasMore: false });
     expect(partitionDelete).toEqual({ deleted: 1, hasMore: false });
@@ -75,6 +77,7 @@ describe("contentSync/reset/impl", () => {
       curriculumNodes: [],
       materialLocales: [],
       materials: [],
+      publicRoutes: [],
       routes: [],
       learningTrendingBuckets: [],
       surahs: [],
@@ -96,8 +99,19 @@ async function seedDerivedRuntimeRows(ctx: MutationCtx) {
     markdown: true,
     route: "quran/1",
     section: "quran",
+    sourcePath: "quran/1",
     syncedAt: 1,
     title: "Al-Fatihah",
+  });
+  await ctx.db.insert("publicRoutes", {
+    kind: "subject-topic",
+    locale: "id",
+    materialKey: "fixture.material",
+    publicPath: "materi/fixture/topik",
+    sitemap: true,
+    sourcePath: "material/lesson/fixture",
+    syncedAt: 1,
+    title: "Fixture Topic",
   });
   await ctx.db.insert("contentViews", {
     ...graph,
@@ -169,8 +183,16 @@ async function seedDerivedRuntimeRows(ctx: MutationCtx) {
     sources: [],
     syncedAt: 1,
     translations: {
-      en: { description: "Fixture curriculum.", title: "Fixture Curriculum" },
-      id: { description: "Kurikulum fixture.", title: "Kurikulum Fixture" },
+      en: {
+        description: "Fixture curriculum.",
+        publicSlug: "fixture-curriculum",
+        title: "Fixture Curriculum",
+      },
+      id: {
+        description: "Kurikulum fixture.",
+        publicSlug: "fixture-curriculum",
+        title: "Kurikulum Fixture",
+      },
     },
     updatedAt: 1,
     versionLabel: "Fixture",
@@ -182,8 +204,8 @@ async function seedDerivedRuntimeRows(ctx: MutationCtx) {
     level: "topic",
     syncedAt: 1,
     translations: {
-      en: { title: "Fixture Node" },
-      id: { title: "Node Fixture" },
+      en: { routeSlug: "fixture-node", title: "Fixture Node" },
+      id: { routeSlug: "node-fixture", title: "Node Fixture" },
     },
     updatedAt: 1,
   });
@@ -208,8 +230,16 @@ async function seedDerivedRuntimeRows(ctx: MutationCtx) {
     sources: [],
     syncedAt: 1,
     translations: {
-      en: { description: "Fixture assessment.", title: "Fixture Assessment" },
-      id: { description: "Asesmen fixture.", title: "Asesmen Fixture" },
+      en: {
+        description: "Fixture assessment.",
+        publicSlug: "fixture-assessment",
+        title: "Fixture Assessment",
+      },
+      id: {
+        description: "Asesmen fixture.",
+        publicSlug: "fixture-assessment",
+        title: "Asesmen Fixture",
+      },
     },
     updatedAt: 1,
     versionLabel: "Fixture",
@@ -222,8 +252,8 @@ async function seedDerivedRuntimeRows(ctx: MutationCtx) {
     materialKeys: ["fixture.material"],
     syncedAt: 1,
     translations: {
-      en: { title: "Fixture Domain" },
-      id: { title: "Domain Fixture" },
+      en: { routeSlug: "fixture-domain", title: "Fixture Domain" },
+      id: { routeSlug: "domain-fixture", title: "Domain Fixture" },
     },
     updatedAt: 1,
   });
@@ -247,8 +277,16 @@ async function seedDerivedRuntimeRows(ctx: MutationCtx) {
     recommendedCountry: "ID",
     syncedAt: 1,
     translations: {
-      en: { description: "Fixture program.", title: "Fixture Program" },
-      id: { description: "Program fixture.", title: "Program Fixture" },
+      en: {
+        description: "Fixture program.",
+        publicSlug: "fixture-program",
+        title: "Fixture Program",
+      },
+      id: {
+        description: "Program fixture.",
+        publicSlug: "fixture-program",
+        title: "Program Fixture",
+      },
     },
     updatedAt: 1,
     versionEndsAt: "2026-12-31",
@@ -351,6 +389,11 @@ async function deleteContentRoutesBatch(ctx: MutationCtx) {
   return await deleteBatchFromTable(ctx, "contentRoutes");
 }
 
+/** Deletes one generated public route reset batch. */
+async function deletePublicRoutesBatch(ctx: MutationCtx) {
+  return await deleteBatchFromTable(ctx, "publicRoutes");
+}
+
 /** Deletes one content view reset batch through the shared reset helper. */
 async function deleteContentViewsBatch(ctx: MutationCtx) {
   return await deleteBatchFromTable(ctx, "contentViews");
@@ -449,6 +492,7 @@ async function getDerivedRuntimeRows(ctx: QueryCtx) {
     learningPrograms: await ctx.db.query("learningPrograms").collect(),
     materialLocales: await ctx.db.query("materialLocales").collect(),
     materials: await ctx.db.query("materials").collect(),
+    publicRoutes: await ctx.db.query("publicRoutes").collect(),
     routes: await ctx.db.query("contentRoutes").collect(),
     learningTrendingBuckets: await ctx.db
       .query("learningTrendingBuckets")

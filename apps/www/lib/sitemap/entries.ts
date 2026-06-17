@@ -1,7 +1,12 @@
+import { findPublicRouteByPathEffect } from "@repo/contents/_types/route/projection";
+import type {
+  PublicContentRoute,
+  PublicRoute,
+} from "@repo/contents/_types/route/schema";
 import { getPathname } from "@repo/internationalization/src/navigation";
 import { routing } from "@repo/internationalization/src/routing";
 import { MAIN_DOMAIN } from "@repo/next-config/domains";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import type { Locale } from "next-intl";
 import { getRuntimeContentRoute } from "@/lib/content/runtime";
 import {
@@ -9,7 +14,7 @@ import {
   type ContentSitemapPage,
   getSitemapPageDescriptor,
   getSitemapPageDescriptorsEffect,
-  getSitemapRoutes,
+  getSitemapRoutesEffect,
 } from "@/lib/sitemap/routes";
 
 type Href = Parameters<typeof getPathname>[number]["href"];
@@ -160,7 +165,7 @@ const getSitemapPageEntries = Effect.fn("www.sitemap.entries.page")(function* (
   options: SitemapEntryOptions
 ) {
   const pageId = options.pageId;
-  const routes = yield* Effect.promise(() => getSitemapRoutes(pageId));
+  const routes = yield* getSitemapRoutesEffect(pageId);
   const locales = getSitemapEntryLocales(pageId);
   const routeArrays = yield* Effect.forEach(
     routes,
@@ -205,13 +210,14 @@ const getContentLastModified = Effect.fn("www.sitemap.contentLastModified")(
     options: SitemapEntryOptions,
     locale: Locale
   ) {
+    const sourcePath = yield* getRuntimeContentLookupPath(contentPath, locale);
     const route = yield* getRuntimeContentRoute({
       locale,
-      route: contentPath,
+      route: sourcePath,
     }).pipe(
       Effect.catchAll((error) =>
         reportError(error, options, {
-          content_path: contentPath,
+          content_path: sourcePath,
           locale,
           source: "sitemap-content-last-modified",
         }).pipe(Effect.as(null))
@@ -225,6 +231,34 @@ const getContentLastModified = Effect.fn("www.sitemap.contentLastModified")(
     return getFallbackDate(MONTHS_IN_FALLBACK_PERIOD);
   }
 );
+
+/** Converts a projected public path to the source route stored in Convex. */
+const getRuntimeContentLookupPath = Effect.fn("www.sitemap.contentLookupPath")(
+  function* (contentPath: string, locale: Locale) {
+    const route = yield* findPublicRouteByPathEffect(contentPath, locale);
+
+    return Option.match(route, {
+      onNone: () => contentPath,
+      onSome: (publicRoute) => {
+        if (isPublicContentRoute(publicRoute)) {
+          return publicRoute.sourcePath;
+        }
+
+        return contentPath;
+      },
+    });
+  }
+);
+
+/** Checks whether a projected public route has source-backed markdown content. */
+function isPublicContentRoute(route: PublicRoute): route is PublicContentRoute {
+  return (
+    route.kind === "subject-topic" ||
+    route.kind === "subject-lesson" ||
+    route.kind === "exercise-set" ||
+    route.kind === "exercise-question"
+  );
+}
 
 /** Builds a stable relative fallback date for sitemap recovery paths. */
 function getFallbackDate(monthsAgo: number) {
@@ -257,19 +291,20 @@ function getContentSeoSettings(route: string): {
     return { changeFrequency: "yearly", priority: 0.6 };
   }
 
-  if (route.includes("/university/")) {
-    return { changeFrequency: "monthly", priority: 0.9 };
-  }
-
-  if (route.includes("/high-school/")) {
+  if (route.startsWith("/subjects/") || route.startsWith("/materi/")) {
     return { changeFrequency: "monthly", priority: 0.8 };
   }
 
-  if (route.includes("/middle-school/")) {
+  if (
+    route.startsWith("/curriculum/") ||
+    route.startsWith("/kurikulum/") ||
+    route.startsWith("/exams/") ||
+    route.startsWith("/ujian/")
+  ) {
     return { changeFrequency: "monthly", priority: 0.7 };
   }
 
-  if (route.includes("/elementary-school/")) {
+  if (route.startsWith("/practice/") || route.startsWith("/latihan/")) {
     return { changeFrequency: "monthly", priority: 0.6 };
   }
 

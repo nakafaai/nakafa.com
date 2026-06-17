@@ -1,5 +1,13 @@
-import type { ExercisesMaterialList } from "@repo/contents/_types/assessment/material";
-import type { MaterialList } from "@repo/contents/_types/curriculum/material";
+import {
+  type ExercisesMaterialList,
+  ExercisesMaterialSchema,
+} from "@repo/contents/_types/assessment/material";
+import { ExercisesTypeSchema } from "@repo/contents/_types/assessment/type";
+import { LocaleSchema } from "@repo/contents/_types/content";
+import {
+  type MaterialList,
+  MaterialSchema,
+} from "@repo/contents/_types/curriculum/material";
 import type {
   LessonMaterialSource,
   MaterialLocale,
@@ -7,41 +15,57 @@ import type {
   PracticeMaterialGroup,
   PracticeMaterialSource,
 } from "@repo/contents/_types/material/schema";
+import {
+  MaterialKeySchema,
+  MaterialLocaleSchema,
+} from "@repo/contents/_types/material/schema";
 import { cleanSlug } from "@repo/utilities/helper";
+import { Schema } from "effect";
 
-/** Sync-ready lesson projected from the typed material source. */
-export interface LessonMaterialProjection {
-  description?: string;
-  domain: LessonMaterialSource["domain"];
-  key: LessonMaterialSource["key"];
-  locale: MaterialLocale;
-  order: number;
-  sections: LessonMaterialSectionProjection[];
-  slug: string;
-  title: string;
-  topic: string;
-}
+type SchemaType<T extends Schema.Schema.Any> = Schema.Schema.Type<T>;
 
-/** Sync-ready lesson section order projected from the typed material source. */
-export interface LessonMaterialSectionProjection {
-  order: number;
-  section: string;
-  slug: string;
-}
+export const LessonMaterialSectionProjectionSchema = Schema.Struct({
+  order: Schema.Int.pipe(Schema.nonNegative()),
+  section: Schema.String,
+  slug: Schema.String,
+});
 
-/** Sync-ready practice set projected from the typed material source. */
-export interface PracticeMaterialSetProjection {
-  assessment: PracticeMaterialSource["assessment"];
-  description?: string;
-  domain: PracticeMaterialSource["domain"];
-  exerciseType: string;
-  exerciseTypeTitle: string;
-  locale: MaterialLocale;
-  setName: string;
-  slug: string;
-  title: string;
-  year?: number;
-}
+export type LessonMaterialSectionProjection = SchemaType<
+  typeof LessonMaterialSectionProjectionSchema
+>;
+
+export const LessonMaterialProjectionSchema = Schema.Struct({
+  description: Schema.optional(Schema.String),
+  domain: MaterialSchema,
+  key: MaterialKeySchema,
+  locale: MaterialLocaleSchema,
+  order: Schema.Int.pipe(Schema.nonNegative()),
+  sections: Schema.Array(LessonMaterialSectionProjectionSchema),
+  slug: Schema.String,
+  title: Schema.String,
+  topic: Schema.String,
+});
+
+export type LessonMaterialProjection = SchemaType<
+  typeof LessonMaterialProjectionSchema
+>;
+
+export const PracticeMaterialSetProjectionSchema = Schema.Struct({
+  assessment: ExercisesTypeSchema,
+  description: Schema.optional(Schema.String),
+  domain: ExercisesMaterialSchema,
+  exerciseType: Schema.String,
+  exerciseTypeTitle: Schema.String,
+  locale: LocaleSchema,
+  setName: Schema.String,
+  slug: Schema.String,
+  title: Schema.String,
+  year: Schema.optional(Schema.Int.pipe(Schema.between(2000, 2100))),
+});
+
+export type PracticeMaterialSetProjection = SchemaType<
+  typeof PracticeMaterialSetProjectionSchema
+>;
 
 /** Returns the localized lesson navigation list expected by material pages. */
 export function toLessonMaterialList(

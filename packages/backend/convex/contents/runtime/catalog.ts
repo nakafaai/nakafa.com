@@ -2,12 +2,19 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { NAKAFA_CONTENT_SECTIONS } from "@repo/backend/convex/contents/constants";
 import type {
+  GetPublicRouteByPathArgs,
+  ListPublicRoutesByMaterialArgs,
+  ListPublicRoutesByParentArgs,
+  ListSitemapPublicRoutesArgs,
+} from "@repo/backend/convex/contents/runtime/spec";
+import type {
   Locale,
   NakafaSection,
 } from "@repo/backend/convex/lib/validators/contents";
 import { ConvexError } from "convex/values";
 
 const MAX_CONTENT_ROUTE_PAGE_SIZE = 100;
+const MAX_PUBLIC_ROUTE_PAGE_SIZE = 100;
 
 /** Bounded route-prefix catalog query args. */
 interface ContentRoutePrefixArgs {
@@ -217,6 +224,93 @@ export async function listContentRouteCountsImpl(
   }));
 }
 
+/** Reads one source-owned public route by its localized public path. */
+export async function getPublicRouteByPathImpl(
+  ctx: QueryCtx,
+  args: GetPublicRouteByPathArgs
+) {
+  const publicPath = normalizeRoutePrefix(args.publicPath);
+  const route = await ctx.db
+    .query("publicRoutes")
+    .withIndex("by_locale_and_publicPath", (q) =>
+      q.eq("locale", args.locale).eq("publicPath", publicPath)
+    )
+    .unique();
+
+  return route ? toRuntimePublicRoute(route) : null;
+}
+
+/** Reads one bounded page of public route children for curriculum/assessment navigation. */
+export async function listPublicRoutesByParentImpl(
+  ctx: QueryCtx,
+  args: ListPublicRoutesByParentArgs
+) {
+  assertPublicRoutePageLimit(args.limit);
+
+  if (args.programKey) {
+    const page = await ctx.db
+      .query("publicRoutes")
+      .withIndex(
+        "by_programKey_and_locale_and_kind_and_parentPath_and_publicPath",
+        (q) =>
+          q
+            .eq("programKey", args.programKey)
+            .eq("locale", args.locale)
+            .eq("kind", args.kind)
+            .eq("parentPath", args.parentPath)
+      )
+      .paginate({ cursor: args.cursor, numItems: args.limit });
+
+    return toRuntimePublicRoutePage(page);
+  }
+
+  const page = await ctx.db
+    .query("publicRoutes")
+    .withIndex("by_locale_and_kind_and_parentPath_and_publicPath", (q) =>
+      q
+        .eq("locale", args.locale)
+        .eq("kind", args.kind)
+        .eq("parentPath", args.parentPath)
+    )
+    .paginate({ cursor: args.cursor, numItems: args.limit });
+
+  return toRuntimePublicRoutePage(page);
+}
+
+/** Reads bounded localized public route contexts for one material key. */
+export async function listPublicRoutesByMaterialImpl(
+  ctx: QueryCtx,
+  args: ListPublicRoutesByMaterialArgs
+) {
+  assertPublicRoutePageLimit(args.limit);
+
+  const routes = await ctx.db
+    .query("publicRoutes")
+    .withIndex("by_materialKey_and_locale", (q) =>
+      q.eq("materialKey", args.materialKey).eq("locale", args.locale)
+    )
+    .take(args.limit);
+
+  return routes.map(toRuntimePublicRoute);
+}
+
+/** Reads one bounded sitemap-eligible public route page. */
+export async function listSitemapPublicRoutesImpl(
+  ctx: QueryCtx,
+  args: ListSitemapPublicRoutesArgs
+) {
+  assertPublicRoutePageLimit(args.limit);
+
+  const page = await ctx.db
+    .query("publicRoutes")
+    .withIndex("by_locale_and_sitemap_and_publicPath", (q) =>
+      q.eq("locale", args.locale).eq("sitemap", true)
+    )
+    .paginate({ cursor: args.cursor, numItems: args.limit });
+
+  return toRuntimePublicRoutePage(page);
+}
+
 /** Rejects route-catalog scans that exceed the public runtime page bound. */
 function assertContentRoutePageLimit(limit: number) {
   if (limit >= 1 && limit <= MAX_CONTENT_ROUTE_PAGE_SIZE) {
@@ -226,6 +320,18 @@ function assertContentRoutePageLimit(limit: number) {
   throw new ConvexError({
     code: "CONTENT_ROUTE_PAGE_LIMIT_INVALID",
     message: `Content route page limit must be between 1 and ${MAX_CONTENT_ROUTE_PAGE_SIZE}.`,
+  });
+}
+
+/** Rejects public route catalog reads that exceed the runtime page bound. */
+function assertPublicRoutePageLimit(limit: number) {
+  if (limit >= 1 && limit <= MAX_PUBLIC_ROUTE_PAGE_SIZE) {
+    return;
+  }
+
+  throw new ConvexError({
+    code: "PUBLIC_ROUTE_PAGE_LIMIT_INVALID",
+    message: `Public route page limit must be between 1 and ${MAX_PUBLIC_ROUTE_PAGE_SIZE}.`,
   });
 }
 
@@ -253,6 +359,19 @@ function toRuntimeContentRoutePage(page: {
     continueCursor: page.continueCursor,
     isDone: page.isDone,
     page: page.page.map(toRuntimeContentRoute),
+  };
+}
+
+/** Converts one paginated public route response into the runtime route shape. */
+function toRuntimePublicRoutePage(page: {
+  continueCursor: string;
+  isDone: boolean;
+  page: Doc<"publicRoutes">[];
+}) {
+  return {
+    continueCursor: page.continueCursor,
+    isDone: page.isDone,
+    page: page.page.map(toRuntimePublicRoute),
   };
 }
 
@@ -313,10 +432,34 @@ function toRuntimeContentRoute(route: Doc<"contentRoutes">) {
     locale: route.locale,
     lensId: route.lensId,
     markdown: route.markdown,
+    materialDomain: route.materialDomain,
     official: route.official,
     parentRoute: route.parentRoute,
     route: route.route,
     section: route.section,
+    sourceParentPath: route.sourceParentPath,
+    sourcePath: route.sourcePath,
+    syncedAt: route.syncedAt,
+    title: route.title,
+  };
+}
+
+/** Removes Convex system fields from source-owned public route rows. */
+function toRuntimePublicRoute(route: Doc<"publicRoutes">) {
+  return {
+    canonicalPath: route.canonicalPath,
+    description: route.description,
+    kind: route.kind,
+    locale: route.locale,
+    materialDomain: route.materialDomain,
+    materialKey: route.materialKey,
+    nodeKey: route.nodeKey,
+    parentPath: route.parentPath,
+    programKey: route.programKey,
+    publicPath: route.publicPath,
+    sectionKey: route.sectionKey,
+    sitemap: route.sitemap,
+    sourcePath: route.sourcePath,
     syncedAt: route.syncedAt,
     title: route.title,
   };

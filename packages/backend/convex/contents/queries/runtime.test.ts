@@ -51,6 +51,7 @@ function contentRouteGraph(locale: Locale, route: string) {
   return {
     ...identity,
     content_id: identity.assetId,
+    sourcePath: route,
   };
 }
 
@@ -310,8 +311,6 @@ describe("contents/queries/runtime", () => {
       });
 
       const topicId = await ctx.db.insert("curriculumTopics", {
-        category: "high-school",
-        grade: "10",
         locale: "id",
         material: "mathematics",
         order: 0,
@@ -323,11 +322,9 @@ describe("contents/queries/runtime", () => {
       });
       const sectionId = await ctx.db.insert("curriculumLessons", {
         body: "## Subject body",
-        category: "high-school",
         contentHash: "subject-hash",
         date: NOW,
         description: "Subject description",
-        grade: "10",
         locale: "id",
         material: "mathematics",
         order: 0,
@@ -588,8 +585,6 @@ describe("contents/queries/runtime", () => {
       });
 
       const topicId = await ctx.db.insert("curriculumTopics", {
-        category: "high-school",
-        grade: "10",
         locale: "id",
         material: "chemistry",
         order: 0,
@@ -603,10 +598,8 @@ describe("contents/queries/runtime", () => {
       for (const slug of [exactSlug, siblingSlug]) {
         await ctx.db.insert("curriculumLessons", {
           body: `Body for ${slug}`,
-          category: "high-school",
           contentHash: `${slug}:hash`,
           date: NOW,
-          grade: "10",
           locale: "id",
           material: "chemistry",
           order: slug === exactSlug ? 0 : 1,
@@ -802,104 +795,112 @@ describe("contents/queries/runtime", () => {
     expect(page.page.map((item) => item.route)).toEqual([topicRoute]);
   });
 
-  it("loads curriculum outlines in authored order instead of creation or slug order", async () => {
+  it("reads source-owned public routes through indexed access patterns", async () => {
     const t = createConvexTestWithBetterAuth();
 
     await t.mutation(async (ctx) => {
-      const sequenceTopicId = await ctx.db.insert("curriculumTopics", {
-        category: "high-school",
-        description: "Sequence topic",
-        grade: "10",
+      await ctx.db.insert("publicRoutes", {
+        kind: "curriculum-context",
         locale: "id",
-        material: "mathematics",
-        order: 1,
-        sectionCount: 1,
-        slug: "material/lesson/mathematics/sequence-series",
+        nodeKey: "id-kurikulum-merdeka:root",
+        programKey: "id-kurikulum-merdeka",
+        publicPath: "kurikulum/merdeka",
+        sitemap: true,
         syncedAt: NOW,
-        title: "Barisan dan Deret",
-        topic: "sequence-series",
+        title: "Kurikulum Merdeka",
       });
-      const exponentialTopicId = await ctx.db.insert("curriculumTopics", {
-        category: "high-school",
-        description: "Exponential topic",
-        grade: "10",
+      await ctx.db.insert("publicRoutes", {
+        kind: "curriculum-context",
         locale: "id",
-        material: "mathematics",
-        order: 0,
-        sectionCount: 2,
-        slug: "material/lesson/mathematics/exponential-logarithm",
+        materialDomain: "mathematics",
+        nodeKey: "class-10-mathematics",
+        parentPath: "kurikulum/merdeka/kelas-10",
+        programKey: "id-kurikulum-merdeka",
+        publicPath: "kurikulum/merdeka/kelas-10/matematika",
+        sitemap: true,
         syncedAt: NOW,
-        title: "Eksponen dan Logaritma",
-        topic: "exponential-logarithm",
+        title: "Matematika",
       });
-
-      await ctx.db.insert("curriculumLessons", {
-        body: "Properties body",
-        category: "high-school",
-        contentHash: "properties-hash",
-        date: NOW,
-        grade: "10",
+      await ctx.db.insert("publicRoutes", {
+        canonicalPath: "materi/matematika/integral",
+        kind: "curriculum-context",
         locale: "id",
-        material: "mathematics",
-        order: 1,
-        section: "properties",
-        slug: "material/lesson/mathematics/exponential-logarithm/properties",
+        materialDomain: "mathematics",
+        materialKey: "lesson.mathematics.integral",
+        nodeKey: "class-12-mathematics-integral",
+        parentPath: "kurikulum/merdeka/kelas-12/matematika",
+        programKey: "id-kurikulum-merdeka",
+        publicPath: "kurikulum/merdeka/kelas-12/matematika/integral",
+        sitemap: true,
         syncedAt: NOW,
-        title: "Sifat Eksponen",
-        topic: "exponential-logarithm",
-        topicId: exponentialTopicId,
+        title: "Integral",
       });
-      await ctx.db.insert("curriculumLessons", {
-        body: "Basic body",
-        category: "high-school",
-        contentHash: "basic-hash",
-        date: NOW,
-        grade: "10",
+      await ctx.db.insert("publicRoutes", {
+        kind: "subject-topic",
         locale: "id",
-        material: "mathematics",
-        order: 0,
-        section: "basic-concept",
-        slug: "material/lesson/mathematics/exponential-logarithm/basic-concept",
+        materialKey: "lesson.mathematics.integral",
+        publicPath: "materi/matematika/integral",
+        sitemap: true,
+        sourcePath: "material/lesson/mathematics/integral",
         syncedAt: NOW,
-        title: "Konsep Eksponen",
-        topic: "exponential-logarithm",
-        topicId: exponentialTopicId,
-      });
-      await ctx.db.insert("curriculumLessons", {
-        body: "Sequence body",
-        category: "high-school",
-        contentHash: "sequence-hash",
-        date: NOW,
-        grade: "10",
-        locale: "id",
-        material: "mathematics",
-        order: 0,
-        section: "sequence-concept",
-        slug: "material/lesson/mathematics/sequence-series/sequence-concept",
-        syncedAt: NOW,
-        title: "Konsep Barisan",
-        topic: "sequence-series",
-        topicId: sequenceTopicId,
+        title: "Integral",
       });
     });
 
-    const outline = await t.query(
-      api.contents.queries.runtime.getCurriculumOutline,
+    const exact = await t.query(
+      api.contents.queries.runtime.getPublicRouteByPath,
       {
-        category: "high-school",
-        grade: "10",
         locale: "id",
-        material: "mathematics",
+        publicPath: "kurikulum/merdeka/kelas-12/matematika/integral",
+      }
+    );
+    const children = await t.query(
+      api.contents.queries.runtime.listPublicRoutesByParent,
+      {
+        cursor: null,
+        kind: "curriculum-context",
+        limit: 10,
+        locale: "id",
+        parentPath: "kurikulum/merdeka/kelas-10",
+        programKey: "id-kurikulum-merdeka",
+      }
+    );
+    const materialRoutes = await t.query(
+      api.contents.queries.runtime.listPublicRoutesByMaterial,
+      {
+        limit: 10,
+        locale: "id",
+        materialKey: "lesson.mathematics.integral",
+      }
+    );
+    const sitemapRoutes = await t.query(
+      api.contents.queries.runtime.listSitemapPublicRoutes,
+      {
+        cursor: null,
+        limit: 10,
+        locale: "id",
       }
     );
 
-    expect(outline.map((topic) => topic.title)).toEqual([
-      "Eksponen dan Logaritma",
-      "Barisan dan Deret",
+    expect(exact).toEqual(
+      expect.objectContaining({
+        canonicalPath: "materi/matematika/integral",
+        materialDomain: "mathematics",
+        publicPath: "kurikulum/merdeka/kelas-12/matematika/integral",
+      })
+    );
+    expect(children.page.map((item) => item.publicPath)).toEqual([
+      "kurikulum/merdeka/kelas-10/matematika",
     ]);
-    expect(outline[0]?.sections.map((section) => section.title)).toEqual([
-      "Konsep Eksponen",
-      "Sifat Eksponen",
+    expect(materialRoutes.map((item) => item.publicPath).sort()).toEqual([
+      "kurikulum/merdeka/kelas-12/matematika/integral",
+      "materi/matematika/integral",
+    ]);
+    expect(sitemapRoutes.page.map((item) => item.publicPath).sort()).toEqual([
+      "kurikulum/merdeka",
+      "kurikulum/merdeka/kelas-10/matematika",
+      "kurikulum/merdeka/kelas-12/matematika/integral",
+      "materi/matematika/integral",
     ]);
   });
 
@@ -975,6 +976,7 @@ function contentRoutePageItem(route: string) {
     locale: "id" as const,
     markdown: true,
     route,
+    sourcePath: route,
     section: "articles" as const,
     syncedAt: NOW,
     title: route,

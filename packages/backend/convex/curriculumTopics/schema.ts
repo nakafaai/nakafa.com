@@ -1,8 +1,6 @@
 import {
-  gradeValidator,
   localeValidator,
   materialValidator,
-  subjectCategoryValidator,
 } from "@repo/backend/convex/lib/validators/contents";
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
@@ -17,8 +15,6 @@ const tables = {
     locale: localeValidator,
     /** Full URL path: "material/lesson/mathematics/integral" */
     slug: v.string(),
-    category: subjectCategoryValidator,
-    grade: gradeValidator,
     material: materialValidator,
     /** Authored topic position inside the typed Material source */
     order: v.number(),
@@ -34,13 +30,7 @@ const tables = {
     syncedAt: v.number(),
   })
     .index("by_locale_and_slug", ["locale", "slug"])
-    .index("by_locale_and_category_and_grade_and_material_and_order", [
-      "locale",
-      "category",
-      "grade",
-      "material",
-      "order",
-    ]),
+    .index("by_locale_and_material_and_order", ["locale", "material", "order"]),
 };
 
 export default tables;

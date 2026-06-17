@@ -1,10 +1,10 @@
 import type { api } from "@repo/backend/convex/_generated/api";
 import { CONTENT_ROUTE_ARTIFACT_PAGE_SIZE } from "@repo/backend/convex/contents/constants";
-import { getSourceRouteProjectionForRoute } from "@repo/contents/_types/graph/projection";
-import type { SourceRouteProjection } from "@repo/contents/_types/graph/schema";
+import { findPublicContentRouteBySourcePathEffect } from "@repo/contents/_types/route/projection";
+import type { PublicContentRoute } from "@repo/contents/_types/route/schema";
 import { routing } from "@repo/internationalization/src/routing";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import { hasLocale, type Locale } from "next-intl";
 import {
   getRuntimeContentRouteArtifactPage,
@@ -26,9 +26,6 @@ const contentSections: readonly RuntimeContentSection[] = [
 ];
 const sitemapBasePageId = "base";
 const quranRootRoute = "/quran";
-const curriculumRootRoute = "/curriculum";
-const assessmentRootRoute = "/assessment";
-const tryOutYearSegment = /^\d{4}$/;
 
 /** Descriptor for one graph-backed sitemap artifact page. */
 export interface ContentSitemapPage {
@@ -46,8 +43,6 @@ export const baseRoutes = [
   "/search",
   "/contributor",
   quranRootRoute,
-  curriculumRootRoute,
-  assessmentRootRoute,
   "/terms-of-service",
   "/privacy-policy",
   "/security-policy",
@@ -115,21 +110,29 @@ export function getSitemapPageDescriptor(id: string | undefined) {
   } satisfies SitemapPage;
 }
 
-/** Builds the deduplicated route list for one sitemap page. */
-export async function getSitemapRoutes(pageId?: string) {
-  const page = getSitemapPageDescriptor(pageId);
-
-  if (!page) {
-    return [];
-  }
-
-  if (!isContentSitemapPage(page)) {
-    return sortRoutes(baseRoutes);
-  }
-
-  const rows = await getRuntimeContentRoutePageRows(page);
-  return sortRoutes(buildSitemapContentPageRoutes(rows));
+/** Runs the sitemap route Effect at the Next metadata boundary. */
+export function getSitemapRoutes(pageId?: string) {
+  return Effect.runPromise(getSitemapRoutesEffect(pageId));
 }
+
+/** Builds the deduplicated route list for one sitemap page. */
+export const getSitemapRoutesEffect = Effect.fn("www.sitemap.routes")(
+  function* (pageId?: string) {
+    const page = getSitemapPageDescriptor(pageId);
+
+    if (!page) {
+      return [];
+    }
+
+    if (!isContentSitemapPage(page)) {
+      return sortRoutes(baseRoutes);
+    }
+
+    const rows = yield* getRuntimeContentRoutePageRows(page);
+    const routes = yield* buildSitemapContentPageRoutesEffect(rows);
+    return sortRoutes(routes);
+  }
+);
 
 /** Formats one materialized content route page id for Next.js sitemap generation. */
 function formatContentSitemapPageId({
@@ -158,139 +161,90 @@ function isContentSitemapPage(page: SitemapPage): page is ContentSitemapPage {
 
 /** Reads one materialized content route page through the Convex route catalog. */
 function getRuntimeContentRoutePageRows(page: ContentSitemapPage) {
-  return Effect.runPromise(
-    getRuntimeContentRouteArtifactPage({
-      locale: page.locale,
-      page: page.page,
-      section: page.section,
-    }).pipe(
-      Effect.map((artifactPage) => {
-        if (!artifactPage) {
-          return [];
-        }
+  return getRuntimeContentRouteArtifactPage({
+    locale: page.locale,
+    page: page.page,
+    section: page.section,
+  }).pipe(
+    Effect.map((artifactPage) => {
+      if (!artifactPage) {
+        return [];
+      }
 
-        return artifactPage.routes;
-      })
-    )
+      return artifactPage.routes;
+    })
   );
 }
 
 /** Builds sitemap page routes from concrete route catalog rows. */
-export function buildSitemapContentPageRoutes(
-  rows: readonly RuntimeContentRoute[]
-) {
+export const buildSitemapContentPageRoutesEffect = Effect.fn(
+  "www.sitemap.contentPageRoutes"
+)(function* (rows: readonly RuntimeContentRoute[]) {
   const routes = new Set<string>();
 
   for (const row of rows) {
-    addContentPageRoutes(routes, row.route);
+    yield* addContentPageRoutesEffect(routes, row);
   }
 
   return sortRoutes(routes);
-}
+});
 
 /** Adds the concrete route and supported parent index routes. */
-function addContentPageRoutes(routes: Set<string>, route: string) {
-  const projection = getSourceRouteProjectionForRoute(route);
+function addContentPageRoutesEffect(
+  routes: Set<string>,
+  row: RuntimeContentRoute
+) {
+  return Effect.gen(function* () {
+    if (row.section === "articles") {
+      addArticleRoutes(routes, row.route);
+      return;
+    }
 
-  if (!projection) {
-    return;
-  }
+    if (row.section === "quran") {
+      routes.add(routeToPath(row.route));
+      return;
+    }
 
-  if (projection.kind === "article") {
-    addArticleRoutes(routes, projection);
-    return;
-  }
+    const route = yield* findPublicContentRouteBySourcePathEffect(
+      row.route,
+      row.locale
+    );
 
-  if (projection.kind === "curriculum-lesson") {
-    addMaterialLessonRoutes(routes, projection);
-    return;
-  }
+    if (Option.isNone(route)) {
+      return;
+    }
 
-  const { exercise } = projection;
-  if (exercise) {
-    addExerciseRoutes(routes, projection.route, exercise);
-    return;
-  }
-
-  routes.add(routeToPath(projection.route));
+    addProjectedContentRoutes(routes, route.value);
+  });
 }
 
 /** Adds article category and detail routes. */
-function addArticleRoutes(
-  routes: Set<string>,
-  projection: SourceRouteProjection
-) {
-  const [, category] = projection.lensSegments;
-
+function addArticleRoutes(routes: Set<string>, route: string) {
+  const [, category] = route.split("/");
   routes.add(`/articles/${category}`);
-  routes.add(routeToPath(projection.route));
-}
-
-/** Adds exact reusable material lesson routes without deriving curriculum structure. */
-function addMaterialLessonRoutes(
-  routes: Set<string>,
-  projection: SourceRouteProjection
-) {
-  routes.add(routeToPath(projection.route));
-}
-
-/** Adds exercise listing, group, set, and question routes. */
-function addExerciseRoutes(
-  routes: Set<string>,
-  route: string,
-  exercise: NonNullable<SourceRouteProjection["exercise"]>
-) {
-  const {
-    categorySegment: category,
-    groupSegments,
-    materialSegment: material,
-    questionSegment,
-    setSegment,
-    typeSegment: type,
-  } = exercise;
   routes.add(routeToPath(route));
-  routes.add(`/assessment/${category}/${type}`);
-  routes.add(`/assessment/${category}/${type}/${material}`);
-
-  const nestedSegments = [...groupSegments];
-
-  if (setSegment) {
-    nestedSegments.push(setSegment);
-  }
-  if (questionSegment) {
-    nestedSegments.push(questionSegment);
-  }
-
-  for (const nestedRoute of getExerciseNestedRoutes(nestedSegments)) {
-    routes.add(`/assessment/${category}/${type}/${material}/${nestedRoute}`);
-  }
 }
 
-/** Builds canonical exercise nested routes from concrete set/question routes. */
-function getExerciseNestedRoutes(rest: string[]) {
-  const routes: string[] = [];
-  const nested: string[] = [];
-
-  for (const segment of rest) {
-    nested.push(segment);
-
-    if (isInvalidExerciseNestedRoute(nested)) {
-      continue;
-    }
-
-    routes.push(nested.join("/"));
+/** Adds projected public content routes plus their useful listing parents. */
+function addProjectedContentRoutes(
+  routes: Set<string>,
+  route: PublicContentRoute
+) {
+  if (route.kind === "exercise-question" && route.parentPath) {
+    addParentRoute(routes, route.parentPath);
   }
 
-  return routes;
+  if (route.parentPath) {
+    routes.add(routeToPath(route.parentPath));
+  }
+
+  routes.add(routeToPath(route.publicPath));
 }
 
-/** Checks whether an exercise route is missing the required try-out year. */
-function isInvalidExerciseNestedRoute(parts: string[]) {
-  if (parts[0] !== "try-out") {
-    return false;
-  }
-
-  return !(parts[1] && tryOutYearSegment.test(parts[1]));
+/** Adds the listing parent for a source-projected child route. */
+function addParentRoute(routes: Set<string>, path: string) {
+  const parent = path.split("/").slice(0, -1).join("/");
+  routes.add(routeToPath(parent));
 }
 
 /** Converts one route string into an app-level HTTP path string. */

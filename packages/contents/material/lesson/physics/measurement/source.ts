@@ -6,6 +6,7 @@ export const lessonPhysicsMeasurementMaterial = defineLessonMaterial({
   key: "lesson.physics.measurement",
   kind: "lesson",
   slug: "measurement",
+  routeSlugs: { en: "measurement", id: "pengukuran-dalam-kerja-ilmiah" },
   translations: {
     en: {
       description:
@@ -21,6 +22,7 @@ export const lessonPhysicsMeasurementMaterial = defineLessonMaterial({
   sections: [
     {
       slug: "dimension",
+      routeSlugs: { en: "dimension", id: "dimensi" },
       translations: {
         en: {
           title: "Dimensions",
@@ -32,6 +34,7 @@ export const lessonPhysicsMeasurementMaterial = defineLessonMaterial({
     },
     {
       slug: "notation",
+      routeSlugs: { en: "notation", id: "notasi-ilmiah" },
       translations: {
         en: {
           title: "Scientific Notation",
@@ -43,6 +46,7 @@ export const lessonPhysicsMeasurementMaterial = defineLessonMaterial({
     },
     {
       slug: "quantity",
+      routeSlugs: { en: "quantity", id: "besaran" },
       translations: {
         en: {
           title: "Physical Quantities",
@@ -54,6 +58,7 @@ export const lessonPhysicsMeasurementMaterial = defineLessonMaterial({
     },
     {
       slug: "significant-figures",
+      routeSlugs: { en: "significant-figures", id: "aturan-angka-penting" },
       translations: {
         en: {
           title: "Significant Figures Rules",
@@ -65,6 +70,7 @@ export const lessonPhysicsMeasurementMaterial = defineLessonMaterial({
     },
     {
       slug: "tools",
+      routeSlugs: { en: "tools", id: "macam-macam-alat-ukur" },
       translations: {
         en: {
           title: "Types of Measurement Tools",
@@ -76,6 +82,10 @@ export const lessonPhysicsMeasurementMaterial = defineLessonMaterial({
     },
     {
       slug: "uncertainty",
+      routeSlugs: {
+        en: "uncertainty",
+        id: "nilai-ketidakpastian-pada-pengukuran-berulang",
+      },
       translations: {
         en: {
           title: "Uncertainty in Repeated Measurements",
@@ -87,6 +97,7 @@ export const lessonPhysicsMeasurementMaterial = defineLessonMaterial({
     },
     {
       slug: "unit",
+      routeSlugs: { en: "unit", id: "sistem-satuan" },
       translations: {
         en: {
           title: "Unit Systems",

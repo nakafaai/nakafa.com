@@ -4,7 +4,7 @@ import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/cons
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
 import {
   buildAuthorCache,
-  deleteContentProjectionsByRoute,
+  deleteContentProjectionsBySourcePath,
   deleteExerciseQuestion,
   replaceExerciseChoices,
   syncContentAuthorsWithCache,
@@ -31,9 +31,11 @@ const syncedExerciseSetValidator = v.object({
   description: v.optional(v.string()),
   exerciseType: v.string(),
   exerciseTypeTitle: v.string(),
+  groupPublicPath: v.string(),
   groupContentHash: v.string(),
   locale: localeValidator,
   material: exercisesMaterialValidator,
+  publicPath: v.string(),
   questionCount: v.number(),
   searchDescription: v.string(),
   searchText: v.string(),
@@ -69,6 +71,7 @@ const syncedExerciseQuestionValidator = v.object({
   locale: localeValidator,
   material: exercisesMaterialValidator,
   number: v.number(),
+  publicPath: v.string(),
   questionBody: v.string(),
   searchDescription: v.string(),
   searchText: v.string(),
@@ -152,7 +155,7 @@ async function deleteExerciseGroupRouteIfEmpty(
     return;
   }
 
-  await deleteContentProjectionsByRoute(ctx, {
+  await deleteContentProjectionsBySourcePath(ctx, {
     locale: source.locale,
     route,
   });
@@ -196,8 +199,9 @@ export const bulkSyncExerciseSets = internalMutation({
           contentHash: set.contentHash,
           description: set.searchDescription,
           locale: set.locale,
-          route: set.slug,
+          route: set.publicPath,
           section: "material",
+          sourcePath: set.slug,
           syncedAt: now,
           text: set.searchText,
           title: set.searchTitle,
@@ -209,8 +213,9 @@ export const bulkSyncExerciseSets = internalMutation({
           kind: "exercise-set",
           locale: set.locale,
           markdown: true,
-          route: set.slug,
+          publicPath: set.publicPath,
           section: "material",
+          sourcePath: set.slug,
           syncedAt: now,
           title: set.title,
         });
@@ -221,13 +226,14 @@ export const bulkSyncExerciseSets = internalMutation({
           kind: "exercise-group",
           locale: set.locale,
           markdown: false,
-          route: groupRoute,
+          publicPath: set.groupPublicPath,
           section: "material",
+          sourcePath: groupRoute,
           syncedAt: now,
           title: set.exerciseTypeTitle,
         });
       } else {
-        await deleteContentProjectionsByRoute(ctx, {
+        await deleteContentProjectionsBySourcePath(ctx, {
           locale: set.locale,
           route: set.slug,
         });
@@ -349,8 +355,9 @@ export const bulkSyncExerciseQuestions = internalMutation({
         contentHash: question.contentHash,
         description: question.searchDescription,
         locale: question.locale,
-        route: question.slug,
+        route: question.publicPath,
         section: "material",
+        sourcePath: question.slug,
         syncedAt: now,
         text: question.searchText,
         title: question.searchTitle,
@@ -364,8 +371,9 @@ export const bulkSyncExerciseQuestions = internalMutation({
         kind: "exercise-question",
         locale: question.locale,
         markdown: true,
-        route: question.slug,
+        publicPath: question.publicPath,
         section: "material",
+        sourcePath: question.slug,
         syncedAt: now,
         title: question.searchTitle,
       });
@@ -491,7 +499,7 @@ export const deleteStaleExerciseSets = internalMutation({
         await deleteExerciseQuestion(ctx, question._id);
       }
 
-      await deleteContentProjectionsByRoute(ctx, {
+      await deleteContentProjectionsBySourcePath(ctx, {
         locale: exerciseSet.locale,
         route: exerciseSet.slug,
       });

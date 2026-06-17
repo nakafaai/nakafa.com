@@ -3,14 +3,17 @@ import { courseNode, unitNode } from "@repo/contents/_types/curriculum/schema";
 export const commonCoreNgssStandardNodes = [
   courseNode({
     key: "high-school-mathematics",
+    materialDomain: "mathematics",
     order: 10,
     translations: {
       en: {
+        routeSlug: "high-school-mathematics",
         title: "High School Mathematics",
         description:
           "Study high school math through functions, geometry, and statistics.",
       },
       id: {
+        routeSlug: "high-school-mathematics",
         title: "High School Mathematics",
         description:
           "Pelajari matematika SMA melalui fungsi, geometri, dan statistika.",
@@ -22,9 +25,11 @@ export const commonCoreNgssStandardNodes = [
         order: 10,
         translations: {
           en: {
+            routeSlug: "number-and-quantity",
             title: "Number and Quantity",
           },
           id: {
+            routeSlug: "bilangan-dan-kuantitas",
             title: "Bilangan dan Kuantitas",
           },
         },
@@ -34,9 +39,11 @@ export const commonCoreNgssStandardNodes = [
         order: 20,
         translations: {
           en: {
+            routeSlug: "algebra",
             title: "Algebra",
           },
           id: {
+            routeSlug: "aljabar",
             title: "Aljabar",
           },
         },
@@ -46,9 +53,11 @@ export const commonCoreNgssStandardNodes = [
         order: 30,
         translations: {
           en: {
+            routeSlug: "functions",
             title: "Functions",
           },
           id: {
+            routeSlug: "fungsi",
             title: "Fungsi",
           },
         },
@@ -58,9 +67,11 @@ export const commonCoreNgssStandardNodes = [
         order: 40,
         translations: {
           en: {
+            routeSlug: "modeling",
             title: "Modeling",
           },
           id: {
+            routeSlug: "pemodelan",
             title: "Pemodelan",
           },
         },
@@ -70,9 +81,11 @@ export const commonCoreNgssStandardNodes = [
         order: 50,
         translations: {
           en: {
+            routeSlug: "geometry",
             title: "Geometry",
           },
           id: {
+            routeSlug: "geometri",
             title: "Geometri",
           },
         },
@@ -82,9 +95,11 @@ export const commonCoreNgssStandardNodes = [
         order: 60,
         translations: {
           en: {
+            routeSlug: "statistics-and-probability",
             title: "Statistics and Probability",
           },
           id: {
+            routeSlug: "statistika-dan-peluang",
             title: "Statistika dan Peluang",
           },
         },
@@ -96,11 +111,13 @@ export const commonCoreNgssStandardNodes = [
     order: 20,
     translations: {
       en: {
+        routeSlug: "high-school-science",
         title: "High School Science",
         description:
           "Explore physical science, life science, earth science, and engineering ideas.",
       },
       id: {
+        routeSlug: "high-school-science",
         title: "High School Science",
         description: "Jelajahi fisika, biologi, bumi antariksa, dan rekayasa.",
       },
@@ -111,9 +128,11 @@ export const commonCoreNgssStandardNodes = [
         order: 10,
         translations: {
           en: {
+            routeSlug: "physical-sciences",
             title: "Physical Sciences",
           },
           id: {
+            routeSlug: "ilmu-fisika",
             title: "Ilmu Fisika",
           },
         },
@@ -123,9 +142,11 @@ export const commonCoreNgssStandardNodes = [
         order: 20,
         translations: {
           en: {
+            routeSlug: "life-sciences",
             title: "Life Sciences",
           },
           id: {
+            routeSlug: "ilmu-hayati",
             title: "Ilmu Hayati",
           },
         },
@@ -135,9 +156,11 @@ export const commonCoreNgssStandardNodes = [
         order: 30,
         translations: {
           en: {
+            routeSlug: "earth-and-space-sciences",
             title: "Earth and Space Sciences",
           },
           id: {
+            routeSlug: "ilmu-bumi-dan-antariksa",
             title: "Ilmu Bumi dan Antariksa",
           },
         },
@@ -147,9 +170,11 @@ export const commonCoreNgssStandardNodes = [
         order: 40,
         translations: {
           en: {
+            routeSlug: "engineering-technology-and-applications",
             title: "Engineering, Technology, and Applications",
           },
           id: {
+            routeSlug: "rekayasa-teknologi-dan-aplikasi",
             title: "Rekayasa, Teknologi, dan Aplikasi",
           },
         },

@@ -158,7 +158,6 @@ import type * as contents_runtime_catalog from "../contents/runtime/catalog.js";
 import type * as contents_runtime_curriculum from "../contents/runtime/curriculum.js";
 import type * as contents_runtime_exerciseRows from "../contents/runtime/exerciseRows.js";
 import type * as contents_runtime_exercises from "../contents/runtime/exercises.js";
-import type * as contents_runtime_outline from "../contents/runtime/outline.js";
 import type * as contents_runtime_quran from "../contents/runtime/quran.js";
 import type * as contents_runtime_shared from "../contents/runtime/shared.js";
 import type * as contents_runtime_spec from "../contents/runtime/spec.js";
@@ -523,7 +522,6 @@ declare const fullApi: ApiFromModules<{
   "contents/runtime/curriculum": typeof contents_runtime_curriculum;
   "contents/runtime/exerciseRows": typeof contents_runtime_exerciseRows;
   "contents/runtime/exercises": typeof contents_runtime_exercises;
-  "contents/runtime/outline": typeof contents_runtime_outline;
   "contents/runtime/quran": typeof contents_runtime_quran;
   "contents/runtime/shared": typeof contents_runtime_shared;
   "contents/runtime/spec": typeof contents_runtime_spec;

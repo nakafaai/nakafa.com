@@ -48,8 +48,6 @@ const subjectAudioSource = getTestAudioContent({
 async function insertVectorSubject(ctx: MutationCtx) {
   return await ctx.db.insert("curriculumLessons", {
     topicId: await ctx.db.insert("curriculumTopics", {
-      category: "high-school",
-      grade: "10",
       material: "mathematics",
       order: 0,
       topic: REAL_VECTOR_ADDITION_EN.topic,
@@ -61,8 +59,6 @@ async function insertVectorSubject(ctx: MutationCtx) {
     }),
     locale: REAL_VECTOR_ADDITION_EN.locale,
     slug: REAL_VECTOR_SECTION_SLUG,
-    category: "high-school",
-    grade: "10",
     material: "mathematics",
     order: 0,
     topic: REAL_VECTOR_ADDITION_EN.topic,

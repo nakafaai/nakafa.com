@@ -30,8 +30,8 @@ describe("assessment schema", () => {
             materialKeys: [],
             order: 0,
             translations: {
-              en: { title: "Root" },
-              id: { title: "Root" },
+              en: { routeSlug: "root", title: "Root" },
+              id: { routeSlug: "root", title: "Root" },
             },
           },
         ],

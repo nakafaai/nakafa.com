@@ -2,8 +2,10 @@ import {
   getPublicContentRouteCheck,
   type PublicContentRouteCheck,
 } from "@repo/contents/_lib/manifest/public-route";
+import { findPublicRouteByPathEffect } from "@repo/contents/_types/route/projection";
+import type { PublicRoute } from "@repo/contents/_types/route/schema";
 import { routing } from "@repo/internationalization/src/routing";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import {
   getRuntimeContentRoute,
   getRuntimeContentRouteParentPage,
@@ -39,10 +41,10 @@ const SITEMAP_BASE_ROUTES = new Set(baseRoutes);
 /**
  * Classifies one localized HTTP request for the proxy adapter.
  *
- * The interface hides locale parsing, `.md` suffix handling, sitemap-backed
- * static route discovery, and bounded content route probes. Catalog read
- * failures fail open so transient Convex/runtime issues do not create false
- * 404s, while confirmed missing content returns an explicit 404 decision.
+ * The resolver hides locale parsing, `.md` suffix handling, sitemap-backed
+ * static route discovery, and bounded content route probes. HTML requests
+ * always delegate to Next so static projected pages are not coupled to Convex
+ * sync state; markdown requests verify the source-backed row before rewriting.
  */
 export const resolveLlmsProxyRoute = Effect.fn("www.llms.routes.resolveProxy")(
   function* (request: LlmsProxyRouteRequest) {
@@ -58,36 +60,52 @@ export const resolveLlmsProxyRoute = Effect.fn("www.llms.routes.resolveProxy")(
       markdownExtension: localizedRoute.markdownExtension,
     });
     const routeCheck = getPublicContentRouteCheck(localizedRoute.route);
+    const publicRoute = yield* findPublicRouteByPathEffect(
+      localizedRoute.route,
+      localizedRoute.locale
+    ).pipe(
+      Effect.catchTag("InvalidPublicRouteSourceError", () =>
+        Effect.succeed(Option.none<PublicRoute>())
+      )
+    );
 
-    if (routeCheck.mode === "outside") {
-      if (wantsMarkdown && SITEMAP_BASE_ROUTES.has(localizedRoute.route)) {
-        const decision: LlmsProxyRouteDecision = {
-          kind: "rewrite-markdown",
-          localizedRoute,
-        };
+    let verifiedRouteCheck: VerifiedContentRouteCheck;
+
+    if (Option.isSome(publicRoute)) {
+      verifiedRouteCheck = getRouteProjectionCheck(publicRoute.value);
+    } else {
+      if (routeCheck.mode === "outside") {
+        if (wantsMarkdown && SITEMAP_BASE_ROUTES.has(localizedRoute.route)) {
+          const decision: LlmsProxyRouteDecision = {
+            kind: "rewrite-markdown",
+            localizedRoute,
+          };
+          return decision;
+        }
+
+        const decision: LlmsProxyRouteDecision = { kind: "delegate" };
         return decision;
       }
 
-      const decision: LlmsProxyRouteDecision = { kind: "delegate" };
-      return decision;
-    }
-
-    if (shouldVerifyContentRoute(request.method)) {
-      const exists = yield* contentRouteExists({
-        locale: localizedRoute.locale,
-        routeCheck,
-      });
-
-      if (!exists) {
-        const decision: LlmsProxyRouteDecision = {
-          kind: "content-not-found",
-          locale: localizedRoute.locale,
-        };
-        return decision;
-      }
+      verifiedRouteCheck = routeCheck;
     }
 
     if (wantsMarkdown) {
+      if (shouldVerifyContentRoute(request.method)) {
+        const exists = yield* contentRouteExists({
+          locale: localizedRoute.locale,
+          routeCheck: verifiedRouteCheck,
+        });
+
+        if (!exists) {
+          const decision: LlmsProxyRouteDecision = {
+            kind: "content-not-found",
+            locale: localizedRoute.locale,
+          };
+          return decision;
+        }
+      }
+
       const decision: LlmsProxyRouteDecision = {
         kind: "rewrite-markdown",
         localizedRoute,
@@ -99,6 +117,23 @@ export const resolveLlmsProxyRoute = Effect.fn("www.llms.routes.resolveProxy")(
     return decision;
   }
 );
+
+/** Converts a projected public route into the existing content lookup contract. */
+function getRouteProjectionCheck(
+  route: PublicRoute
+): VerifiedContentRouteCheck {
+  if (
+    route.kind === "assessment-context" ||
+    route.kind === "curriculum-context"
+  ) {
+    return { mode: "app" };
+  }
+
+  return {
+    mode: "exact",
+    route: route.sourcePath,
+  };
+}
 
 /**
  * Parses the locale-prefixed URL path into the route model used by llms.

@@ -53,7 +53,7 @@ describe("llms formatting helpers", () => {
     expect(getTranslation({ en: "English", id: "" }, "id")).toBe("English");
     expect(formatRouteTitle("/")).toBe("Home");
     expect(formatRouteTitle("")).toBe("");
-    expect(formatRouteTitle("/curriculum/high-school")).toBe("High School");
+    expect(formatRouteTitle("/curriculum/merdeka")).toBe("Merdeka");
     expect(formatSegmentTitle("multi--dash-title")).toBe("Multi Dash Title");
     expect(stripLlmsRouteExtension("quran/1.md")).toBe("quran/1");
     expect(stripLlmsRouteExtension("llms/en/llms.txt")).toBe("llms/en/llms");

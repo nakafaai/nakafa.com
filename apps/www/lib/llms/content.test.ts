@@ -105,6 +105,80 @@ describe("llms markdown content resolver", () => {
     expect(mockGetCachedLlmsSectionIndexText).not.toHaveBeenCalled();
   });
 
+  it("resolves public material routes to source markdown without changing the public URL", async () => {
+    mockGetCachedLlmsMdxText.mockResolvedValue("MDX markdown");
+
+    await expect(
+      Effect.runPromise(
+        getLlmsMarkdownText({
+          cleanSlug: "subjects/chemistry/green-chemistry/definition",
+          locale: "en",
+        })
+      )
+    ).resolves.toBe("MDX markdown");
+
+    expect(mockGetCachedLlmsMdxText).toHaveBeenCalledWith({
+      cleanSlug: "material/lesson/chemistry/green-chemistry/definition",
+      locale: "en",
+      publicSlug: "subjects/chemistry/green-chemistry/definition",
+    });
+  });
+
+  it("resolves public practice routes to source exercise markdown", async () => {
+    mockGetCachedLlmsExerciseText.mockResolvedValue("Exercise markdown");
+
+    await expect(
+      Effect.runPromise(
+        getLlmsMarkdownText({
+          cleanSlug:
+            "practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question-9",
+          locale: "en",
+        })
+      )
+    ).resolves.toBe("Exercise markdown");
+
+    expect(mockGetCachedLlmsExerciseText).toHaveBeenCalledWith({
+      cleanSlug:
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-9",
+      locale: "en",
+      publicSlug:
+        "practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question-9",
+    });
+  });
+
+  it("keeps curriculum and assessment context routes as index markdown", async () => {
+    mockGetCachedLlmsSectionIndexText.mockResolvedValueOnce(
+      "Curriculum index markdown"
+    );
+    mockGetCachedLlmsSectionIndexText.mockResolvedValueOnce(
+      "Assessment index markdown"
+    );
+
+    await expect(
+      Effect.runPromise(
+        getLlmsMarkdownText({
+          cleanSlug: "curriculum/merdeka/class-12/mathematics/integral",
+          locale: "en",
+        })
+      )
+    ).resolves.toBe("Curriculum index markdown");
+    await expect(
+      Effect.runPromise(
+        getLlmsMarkdownText({
+          cleanSlug: "exams/snbt/quantitative-knowledge/mock-test/2026",
+          locale: "en",
+        })
+      )
+    ).resolves.toBe("Assessment index markdown");
+
+    expect(mockGetCachedLlmsSectionIndexText).toHaveBeenCalledWith({
+      cleanSlug: "llms/en/curriculum/merdeka/class-12/mathematics/integral",
+    });
+    expect(mockGetCachedLlmsSectionIndexText).toHaveBeenCalledWith({
+      cleanSlug: "llms/en/exams/snbt/quantitative-knowledge/mock-test/2026",
+    });
+  });
+
   it("returns legal source markdown before route index fallbacks", async () => {
     mockGetLlmsLegalPageText.mockReturnValue(Effect.succeed("Legal markdown"));
 
@@ -126,14 +200,14 @@ describe("llms markdown content resolver", () => {
     await expect(
       Effect.runPromise(
         getLlmsMarkdownText({
-          cleanSlug: "curriculum/high-school/10/chemistry",
+          cleanSlug: "curriculum/merdeka/class-10/chemistry",
           locale: "en",
         })
       )
     ).resolves.toBe("Index markdown");
 
     expect(mockGetCachedLlmsSectionIndexText).toHaveBeenCalledWith({
-      cleanSlug: "llms/en/curriculum/high-school/10/chemistry",
+      cleanSlug: "llms/en/curriculum/merdeka/class-10/chemistry",
     });
   });
 
@@ -151,7 +225,7 @@ describe("llms markdown content resolver", () => {
 
     await expect(
       Effect.runPromise(
-        getLlmsMarkdownText({ cleanSlug: "assessment/missing", locale: "en" })
+        getLlmsMarkdownText({ cleanSlug: "exams/missing", locale: "en" })
       )
     ).rejects.toThrow(error.message);
   });
@@ -186,14 +260,14 @@ describe("llms markdown content resolver", () => {
     await expect(
       Effect.runPromise(
         getLlmsSourceMarkdownText({
-          cleanSlug: "curriculum/high-school/10/chemistry",
+          cleanSlug: "curriculum/merdeka/class-10/chemistry",
           locale: "en",
         })
       )
     ).resolves.toBe("Source index markdown");
 
     expect(mockGetLlmsSectionIndexText).toHaveBeenCalledWith(
-      "llms/en/curriculum/high-school/10/chemistry"
+      "llms/en/curriculum/merdeka/class-10/chemistry"
     );
     expect(mockGetCachedLlmsSectionIndexText).not.toHaveBeenCalled();
   });

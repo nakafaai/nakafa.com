@@ -13,24 +13,30 @@ import { getRawGithubUrl } from "@/lib/utils/github";
 export async function getCachedLlmsMdxText({
   cleanSlug,
   locale,
+  publicSlug,
 }: {
   cleanSlug: string;
   locale: Locale;
+  publicSlug?: string;
 }) {
   "use cache";
 
   applyContentRuntimeCache();
 
-  return await Effect.runPromise(getLlmsMdxText({ cleanSlug, locale }));
+  return await Effect.runPromise(
+    getLlmsMdxText({ cleanSlug, locale, publicSlug })
+  );
 }
 
 /** Builds uncached markdown for one article or subject MDX content page. */
 export const getLlmsMdxText = Effect.fn("www.llms.mdx.text")(function* ({
   cleanSlug,
   locale,
+  publicSlug,
 }: {
   cleanSlug: string;
   locale: Locale;
+  publicSlug?: string;
 }) {
   const content = yield* getMdxRuntimePage({ cleanSlug, locale });
 
@@ -40,7 +46,7 @@ export const getLlmsMdxText = Effect.fn("www.llms.mdx.text")(function* ({
 
   const scanned = [
     ...buildHeader({
-      url: `${BASE_URL}/${locale}/${cleanSlug}`,
+      url: `${BASE_URL}/${locale}/${publicSlug ?? cleanSlug}`,
       description: getPageDescription(content),
       source: getRawGithubUrl(`/packages/contents/${cleanSlug}/${locale}.mdx`),
     }),

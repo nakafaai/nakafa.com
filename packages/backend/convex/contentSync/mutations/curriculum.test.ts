@@ -1,56 +1,29 @@
 import { internal } from "@repo/backend/convex/_generated/api";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
+import type { FunctionArgs } from "convex/server";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
-interface SyncedCurriculumTopic {
-  category: Doc<"curriculumTopics">["category"];
-  contentHash: string;
-  description?: string;
-  grade: Doc<"curriculumTopics">["grade"];
-  locale: Doc<"curriculumTopics">["locale"];
-  material: Doc<"curriculumTopics">["material"];
-  order: number;
-  sectionCount: number;
-  slug: string;
-  title: string;
-  topic: string;
-}
-
-interface SyncedCurriculumLesson {
-  authors: Array<{ name: string }>;
-  body: string;
-  category: Doc<"curriculumLessons">["category"];
-  contentHash: string;
-  date: number;
-  description?: string;
-  grade: Doc<"curriculumLessons">["grade"];
-  locale: Doc<"curriculumLessons">["locale"];
-  material: Doc<"curriculumLessons">["material"];
-  order: number;
-  section: string;
-  slug: string;
-  subject?: string;
-  title: string;
-  topic: string;
-  topicSlug: string;
-}
+type SyncedCurriculumTopic = FunctionArgs<
+  typeof internal.contentSync.mutations.curriculum.bulkSyncCurriculumTopics
+>["topics"][number];
+type SyncedCurriculumLesson = FunctionArgs<
+  typeof internal.contentSync.mutations.curriculum.bulkSyncCurriculumLessons
+>["sections"][number];
 
 const TOPIC_SLUG = "material/lesson/mathematics/metadata-topic";
 const SECTION_SLUG = `${TOPIC_SLUG}/metadata-section`;
 const TOPIC_CONTENT_ID = getGraphContentId(TOPIC_SLUG);
 const SECTION_CONTENT_ID = getGraphContentId(SECTION_SLUG);
 const BASE_TOPIC: SyncedCurriculumTopic = {
-  category: "high-school",
   contentHash: "same-topic-hash",
   description: "Old topic description",
-  grade: "10",
   locale: "id",
   material: "mathematics",
   order: 1,
+  publicPath: TOPIC_SLUG,
   sectionCount: 1,
   slug: TOPIC_SLUG,
   title: "Old Topic Title",
@@ -59,14 +32,13 @@ const BASE_TOPIC: SyncedCurriculumTopic = {
 const BASE_SECTION: SyncedCurriculumLesson = {
   authors: [{ name: "Ada" }],
   body: "Subject body",
-  category: "high-school",
   contentHash: "same-subject-hash",
   date: 1,
   description: "Old subject description",
-  grade: "10",
   locale: "id",
   material: "mathematics",
   order: 2,
+  publicPath: SECTION_SLUG,
   section: "metadata-section",
   slug: SECTION_SLUG,
   subject: "Old subject",
@@ -157,6 +129,7 @@ describe("contentSync/mutations/curriculum", () => {
       contentHash: "new-topic-hash",
       kind: "curriculum-topic",
       markdown: false,
+      materialDomain: "mathematics",
       route: TOPIC_SLUG,
       title: "New Topic Title",
     });
@@ -269,6 +242,7 @@ describe("contentSync/mutations/curriculum", () => {
     expect(snapshot.route).toMatchObject({
       contentHash: "same-subject-hash",
       kind: "curriculum-lesson",
+      materialDomain: "mathematics",
       route: SECTION_SLUG,
       title: "New Subject Title",
     });
@@ -328,6 +302,10 @@ describe("contentSync/mutations/curriculum", () => {
       internal.contentSync.mutations.curriculum.bulkSyncCurriculumLessons,
       { sections: [buildSection()] }
     );
+    await t.mutation(
+      internal.contentSync.mutations.curriculum.bulkSyncCurriculumLessons,
+      { sections: [buildSection()] }
+    );
     const ids = await t.mutation(async (ctx) => {
       const section = await ctx.db
         .query("curriculumLessons")
@@ -361,10 +339,8 @@ describe("contentSync/mutations/curriculum", () => {
 
       const missingId = await ctx.db.insert("curriculumLessons", {
         body: "Missing body",
-        category: "high-school",
         contentHash: "missing-hash",
         date: 1,
-        grade: "10",
         locale: "id",
         material: "mathematics",
         order: 9,
@@ -438,7 +414,15 @@ describe("contentSync/mutations/curriculum", () => {
     });
     await t.mutation(
       internal.contentSync.mutations.curriculum.bulkSyncCurriculumTopics,
-      { topics: [buildTopic(), buildTopic({ slug: `${TOPIC_SLUG}-unsafe` })] }
+      {
+        topics: [
+          buildTopic(),
+          buildTopic({
+            publicPath: `${TOPIC_SLUG}-unsafe`,
+            slug: `${TOPIC_SLUG}-unsafe`,
+          }),
+        ],
+      }
     );
     await t.mutation(
       internal.contentSync.mutations.curriculum.bulkSyncCurriculumLessons,
@@ -458,8 +442,6 @@ describe("contentSync/mutations/curriculum", () => {
         )
         .unique();
       const missingId = await ctx.db.insert("curriculumTopics", {
-        category: "high-school",
-        grade: "10",
         locale: "id",
         material: "mathematics",
         order: 9,
@@ -524,10 +506,8 @@ describe("contentSync/mutations/curriculum", () => {
       });
       await ctx.db.insert("curriculumLessons", {
         body: "Unsafe body",
-        category: "high-school",
         contentHash: "unsafe-hash",
         date: 1,
-        grade: "10",
         locale: "id",
         material: "mathematics",
         order: 9,

@@ -7,6 +7,10 @@ export const lessonMathematicsLinearEquationInequalityMaterial =
     key: "lesson.mathematics.linear-equation-inequality",
     kind: "lesson",
     slug: "linear-equation-inequality",
+    routeSlugs: {
+      en: "linear-equation-inequality",
+      id: "sistem-persamaan-dan-pertidaksamaan-linear",
+    },
     translations: {
       en: {
         description:
@@ -22,6 +26,10 @@ export const lessonMathematicsLinearEquationInequalityMaterial =
     sections: [
       {
         slug: "system-linear-equation",
+        routeSlugs: {
+          en: "system-linear-equation",
+          id: "sistem-persamaan-linear",
+        },
         translations: {
           en: {
             title: "Linear Equation Systems",
@@ -33,6 +41,10 @@ export const lessonMathematicsLinearEquationInequalityMaterial =
       },
       {
         slug: "system-linear-inequality",
+        routeSlugs: {
+          en: "system-linear-inequality",
+          id: "sistem-pertidaksamaan-linear",
+        },
         translations: {
           en: {
             title: "Linear Inequality Systems",

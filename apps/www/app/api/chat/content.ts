@@ -1,7 +1,12 @@
 import type { MyUIMessage } from "@repo/ai/types/message";
-import type { Locale } from "@repo/contents/_types/content";
+import { type Locale, LocaleSchema } from "@repo/contents/_types/content";
+import { findPublicRouteByPathEffect } from "@repo/contents/_types/route/projection";
+import type {
+  PublicContentRoute,
+  PublicRoute,
+} from "@repo/contents/_types/route/schema";
 import { cleanSlug } from "@repo/utilities/helper";
-import { Effect } from "effect";
+import { Effect, Option, Schema } from "effect";
 
 /**
  * Converts an absolute or relative content URL into Nakafa's canonical origin.
@@ -12,6 +17,33 @@ export function getCanonicalNakafaContentUrl(url: string) {
 
   return `https://nakafa.com/${slug}`;
 }
+
+/** Maps a public content URL to the source-backed URL expected by agent refs. */
+export const getCanonicalNakafaContentRefUrlEffect = Effect.fn(
+  "chat.canonicalContentRefUrl"
+)(function* (url: string) {
+  const canonicalUrl = getCanonicalNakafaContentUrl(url);
+  const parsedUrl = new URL(canonicalUrl);
+  const [rawLocale, ...routeParts] = cleanSlug(parsedUrl.pathname)
+    .split("/")
+    .filter(Boolean);
+  const localeOption = Schema.decodeUnknownOption(LocaleSchema)(rawLocale);
+
+  if (Option.isNone(localeOption)) {
+    return canonicalUrl;
+  }
+
+  const routeOption = yield* findPublicRouteByPathEffect(
+    routeParts.join("/"),
+    localeOption.value
+  );
+
+  if (Option.isNone(routeOption) || !isPublicContentRoute(routeOption.value)) {
+    return canonicalUrl;
+  }
+
+  return `https://nakafa.com/${localeOption.value}/${routeOption.value.sourcePath}`;
+});
 
 /**
  * Builds the canonical public Nakafa URL for the current chat page projection.
@@ -29,9 +61,21 @@ export function getCanonicalCurrentPageContentUrl({
 /**
  * Normalizes absolute and relative content URLs to a comparable slug.
  */
-function normalizeContentUrl(url: string) {
-  const parsedUrl = new URL(url, "https://nakafa.com");
-  return cleanSlug(parsedUrl.pathname);
+const normalizeContentUrlEffect = Effect.fn("chat.normalizeContentUrl")(
+  function* (url: string) {
+    const canonicalUrl = yield* getCanonicalNakafaContentRefUrlEffect(url);
+    const parsedUrl = new URL(canonicalUrl, "https://nakafa.com");
+    return cleanSlug(parsedUrl.pathname);
+  }
+);
+
+function isPublicContentRoute(route: PublicRoute): route is PublicContentRoute {
+  return (
+    route.kind === "subject-topic" ||
+    route.kind === "subject-lesson" ||
+    route.kind === "exercise-set" ||
+    route.kind === "exercise-question"
+  );
 }
 
 /**
@@ -41,27 +85,31 @@ function normalizeContentUrl(url: string) {
 export const hasFetchedCurrentPageContent = Effect.fn(
   "chat.hasFetchedCurrentPageContent"
 )(function* ({ messages, url }: { messages: MyUIMessage[]; url: string }) {
-  const currentUrl = yield* Effect.sync(() => normalizeContentUrl(url));
+  const currentUrl = yield* normalizeContentUrlEffect(url);
 
-  return yield* Effect.sync(() =>
-    messages.some((message) =>
-      message.parts.some((part) => {
-        if (part.type !== "data-nakafa") {
-          return false;
-        }
+  for (const message of messages) {
+    for (const part of message.parts) {
+      if (part.type !== "data-nakafa") {
+        continue;
+      }
 
-        if (part.data.kind !== "content") {
-          return false;
-        }
+      if (part.data.kind !== "content") {
+        continue;
+      }
 
-        if (part.data.status !== "done") {
-          return false;
-        }
+      if (part.data.status !== "done") {
+        continue;
+      }
 
-        return normalizeContentUrl(part.data.result.url) === currentUrl;
-      })
-    )
-  );
+      const resultUrl = yield* normalizeContentUrlEffect(part.data.result.url);
+
+      if (resultUrl === currentUrl) {
+        return true;
+      }
+    }
+  }
+
+  return false;
 });
 
 /**

@@ -1,6 +1,7 @@
 import {
   createBatchDeleteMutation,
   deleteContentAudioRows,
+  deleteContentSearchRows,
   deleteTryoutEntitlementRows,
   deleteTryoutRuntimeRows,
 } from "@repo/backend/convex/contentSync/reset/impl";
@@ -22,8 +23,12 @@ export const deleteTryoutRuntimeBatch = internalMutation({
 
 export const deleteContentAuthorsBatch =
   createBatchDeleteMutation("contentAuthors");
-export const deleteContentSearchBatch =
-  createBatchDeleteMutation("contentSearch");
+/** Delete one bounded batch of large full-text search rows. */
+export const deleteContentSearchBatch = internalMutation({
+  args: {},
+  returns: batchDeleteResultValidator,
+  handler: deleteContentSearchRows,
+});
 export const deleteContentViewsBatch =
   createBatchDeleteMutation("contentViews");
 export const deleteContentViewAnalyticsQueueBatch = createBatchDeleteMutation(
@@ -78,6 +83,8 @@ export const deleteLearningProgramCoverageBatch = createBatchDeleteMutation(
 );
 export const deleteContentRoutesBatch =
   createBatchDeleteMutation("contentRoutes");
+export const deletePublicRoutesBatch =
+  createBatchDeleteMutation("publicRoutes");
 export const deleteContentRouteCountsBatch =
   createBatchDeleteMutation("contentRouteCounts");
 export const deleteContentRoutePagesBatch =

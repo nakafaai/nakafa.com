@@ -17,6 +17,7 @@ import type {
   PracticeMaterialGroup,
 } from "@repo/contents/_types/material/schema";
 import { MATERIAL_SOURCES } from "@repo/contents/_types/material/source";
+import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
 import { Effect, Schema } from "effect";
 
 export class CurriculumProjectionError extends Schema.TaggedError<CurriculumProjectionError>()(
@@ -26,14 +27,16 @@ export class CurriculumProjectionError extends Schema.TaggedError<CurriculumProj
   }
 ) {}
 
-interface CurriculumProjectionResult {
-  failures: CurriculumProjectionError[];
-  nodes: ProjectedCurriculumNode[];
-}
+export const ProjectedCurriculumNodeSchema = Schema.extend(
+  CurriculumNodeSchema,
+  Schema.Struct({
+    curriculumKey: LearningProgramKeySchema,
+  })
+);
 
-export interface ProjectedCurriculumNode extends CurriculumNode {
-  curriculumKey: CurriculumSource["programKey"];
-}
+export type ProjectedCurriculumNode = Schema.Schema.Type<
+  typeof ProjectedCurriculumNodeSchema
+>;
 
 /** Effect-native projection entrypoint for sync and script boundaries. */
 export const listCurriculumNodesEffect = Effect.fn(
@@ -135,7 +138,7 @@ function projectCurricula({
 }: {
   curricula: readonly CurriculumSource[];
   materials: readonly MaterialSource[];
-}): CurriculumProjectionResult {
+}) {
   const materialByKey = new Map(
     materials.map((material) => [material.key, material])
   );
@@ -149,6 +152,7 @@ function projectCurricula({
       projectTreeNode({
         curriculum,
         failures,
+        inheritedMaterialDomain: undefined,
         materialByKey,
         node: treeNode,
         nodeKeys,
@@ -169,6 +173,7 @@ function toProjectionError(failures: readonly CurriculumProjectionError[]) {
 function projectTreeNode({
   curriculum,
   failures,
+  inheritedMaterialDomain,
   materialByKey,
   node,
   nodeKeys,
@@ -177,6 +182,7 @@ function projectTreeNode({
 }: {
   curriculum: CurriculumSource;
   failures: CurriculumProjectionError[];
+  inheritedMaterialDomain: CurriculumNode["materialDomain"] | undefined;
   materialByKey: ReadonlyMap<string, MaterialSource>;
   node: CurriculumTreeNode;
   nodeKeys: Set<string>;
@@ -194,9 +200,13 @@ function projectTreeNode({
 
   nodeKeys.add(node.key);
 
+  const materialDomain = isMaterialReferenceNode(node)
+    ? inheritedMaterialDomain
+    : (node.materialDomain ?? inheritedMaterialDomain);
   const projected = toProjectedNode({
     curriculum,
     failures,
+    materialDomain,
     materialByKey,
     node,
     parentKey,
@@ -211,6 +221,7 @@ function projectTreeNode({
       projectTreeNode({
         curriculum,
         failures,
+        inheritedMaterialDomain: materialDomain,
         materialByKey,
         node: child,
         nodeKeys,
@@ -224,12 +235,14 @@ function projectTreeNode({
 function toProjectedNode({
   curriculum,
   failures,
+  materialDomain,
   materialByKey,
   node,
   parentKey,
 }: {
   curriculum: CurriculumSource;
   failures: CurriculumProjectionError[];
+  materialDomain: CurriculumNode["materialDomain"] | undefined;
   materialByKey: ReadonlyMap<string, MaterialSource>;
   node: CurriculumTreeNode;
   parentKey?: string;
@@ -237,6 +250,7 @@ function toProjectedNode({
   if (!isMaterialReferenceNode(node)) {
     return decodeCurriculumNode({
       curriculumKey: curriculum.programKey,
+      materialDomain,
       materialKeys: [],
       node,
       parentKey,
@@ -257,6 +271,7 @@ function toProjectedNode({
 
   return decodeCurriculumNode({
     curriculumKey: curriculum.programKey,
+    materialDomain,
     materialKeys: [...node.materialKeys],
     node,
     parentKey,
@@ -351,12 +366,30 @@ function resolveMaterialReferenceTranslations({
 
 function readMaterialTranslations(material: MaterialSource) {
   if (material.kind === "lesson") {
-    return material.translations;
+    return {
+      en: {
+        ...material.translations.en,
+        routeSlug: material.routeSlugs.en,
+      },
+      id: {
+        ...material.translations.id,
+        routeSlug: material.routeSlugs.id,
+      },
+    };
   }
 
   if (hasSinglePracticeGroup(material.groups)) {
     const [group] = material.groups;
-    return group.translations;
+    return {
+      en: {
+        ...group.translations.en,
+        routeSlug: group.routeSlugs.en,
+      },
+      id: {
+        ...group.translations.id,
+        routeSlug: group.routeSlugs.id,
+      },
+    };
   }
 
   return null;
@@ -381,12 +414,14 @@ function isDuplicatedDisplay(
 
 function decodeCurriculumNode({
   curriculumKey,
+  materialDomain,
   materialKeys,
   node,
   parentKey,
   translations,
 }: {
   curriculumKey: CurriculumSource["programKey"];
+  materialDomain: CurriculumNode["materialDomain"] | undefined;
   materialKeys: CurriculumNode["materialKeys"];
   node: CurriculumTreeNode;
   parentKey?: string;
@@ -395,6 +430,7 @@ function decodeCurriculumNode({
   const nodeRow = Schema.decodeUnknownSync(CurriculumNodeSchema)({
     key: node.key,
     level: node.level,
+    materialDomain,
     materialKeys,
     order: node.order,
     parentKey,

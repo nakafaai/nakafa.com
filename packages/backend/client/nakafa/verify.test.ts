@@ -79,7 +79,7 @@ describe("verifyNakafaContent", () => {
       Effect.runPromise(
         verifyNakafaContent(
           "https://example.convex.cloud",
-          "https://nakafa.com/en/material/lesson/mathematics/topic/missing"
+          "https://nakafa.com/en/subjects/mathematics/topic/missing"
         )
       )
     ).resolves.toBe(false);

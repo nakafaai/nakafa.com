@@ -6,6 +6,7 @@ export const lessonMathematicsCircleMaterial = defineLessonMaterial({
   key: "lesson.mathematics.circle",
   kind: "lesson",
   slug: "circle",
+  routeSlugs: { en: "circle", id: "lingkaran" },
   translations: {
     en: {
       description:
@@ -21,6 +22,10 @@ export const lessonMathematicsCircleMaterial = defineLessonMaterial({
   sections: [
     {
       slug: "central-angle-and-inscribed-angle",
+      routeSlugs: {
+        en: "central-angle-and-inscribed-angle",
+        id: "sudut-pusat-dan-sudut-keliling",
+      },
       translations: {
         en: {
           title: "Central Angle and Inscribed Angle",
@@ -32,6 +37,10 @@ export const lessonMathematicsCircleMaterial = defineLessonMaterial({
     },
     {
       slug: "circle-and-arc-circle",
+      routeSlugs: {
+        en: "circle-and-arc-circle",
+        id: "lingkaran-dan-busur-lingkaran",
+      },
       translations: {
         en: {
           title: "Circle and Arc Circle",
@@ -43,6 +52,7 @@ export const lessonMathematicsCircleMaterial = defineLessonMaterial({
     },
     {
       slug: "circle-and-chord",
+      routeSlugs: { en: "circle-and-chord", id: "lingkaran-dan-tali-busur" },
       translations: {
         en: {
           title: "Circle and Chord",
@@ -54,6 +64,10 @@ export const lessonMathematicsCircleMaterial = defineLessonMaterial({
     },
     {
       slug: "circle-and-tangent-line",
+      routeSlugs: {
+        en: "circle-and-tangent-line",
+        id: "lingkaran-dan-garis-singgung",
+      },
       translations: {
         en: {
           title: "Circle and Tangent Line",
@@ -65,6 +79,10 @@ export const lessonMathematicsCircleMaterial = defineLessonMaterial({
     },
     {
       slug: "external-tangent-line-and-internal-tangent-line",
+      routeSlugs: {
+        en: "external-tangent-line-and-internal-tangent-line",
+        id: "garis-singgung-persekutuan-luar-dan-dalam",
+      },
       translations: {
         en: {
           title: "External Tangent Line and Internal Tangent Line",
@@ -76,6 +94,10 @@ export const lessonMathematicsCircleMaterial = defineLessonMaterial({
     },
     {
       slug: "properties-of-angle-in-circle",
+      routeSlugs: {
+        en: "properties-of-angle-in-circle",
+        id: "sifat-sudut-dalam-lingkaran",
+      },
       translations: {
         en: {
           title: "Properties of Angle in Circle",

@@ -18,6 +18,7 @@ import {
   formatBatchProgress,
   updateBatchProgress,
 } from "@repo/backend/scripts/sync-content/metrics";
+import { readPublicContentPath } from "@repo/backend/scripts/sync-content/publicRoutes";
 import { globFiles } from "@repo/backend/scripts/sync-content/runtime";
 import {
   BATCH_SIZES,
@@ -29,8 +30,6 @@ import type {
   SyncOptions,
   SyncResult,
 } from "@repo/backend/scripts/sync-content/types";
-import { listCurriculumNodesEffect } from "@repo/contents/_types/curriculum/projection";
-import { listSchoolCurriculumPlacements } from "@repo/contents/_types/curriculum/routes";
 import { listLessonRows } from "@repo/contents/_types/material/registry";
 import type { FunctionArgs } from "convex/server";
 import { Effect } from "effect";
@@ -44,8 +43,6 @@ type CurriculumLessonPayload = FunctionArgs<
 >["sections"][number];
 
 interface CurriculumLessonOrder {
-  category: CurriculumTopicPayload["category"];
-  grade: CurriculumTopicPayload["grade"];
   material: CurriculumTopicPayload["material"];
   order: number;
   topic: string;
@@ -54,55 +51,14 @@ interface CurriculumLessonOrder {
 
 /** Projects curriculum-owned placement data into the curriculum read model. */
 const listSyncCurriculumTopics = Effect.fn("sync.listCurriculumTopics")(
-  function* (locale?: SyncOptions["locale"]) {
-    const placementByMaterialKey =
-      yield* createCurriculumPlacementByMaterialKey();
-
-    return listLessonRows(locale).flatMap((topic) => {
-      const placement = placementByMaterialKey.get(topic.key);
-
-      if (!placement) {
-        return [];
-      }
-
-      return [
-        {
-          ...topic,
-          category: placement.category,
-          grade: placement.grade,
-          material: topic.domain,
-          order: placement.order,
-        },
-      ];
-    });
-  }
+  (locale?: SyncOptions["locale"]) =>
+    Effect.succeed(
+      listLessonRows(locale).map((topic) => ({
+        ...topic,
+        material: topic.domain,
+      }))
+    )
 );
-
-/** Indexes curriculum topic nodes by material key for sync projections. */
-const createCurriculumPlacementByMaterialKey = Effect.fn(
-  "sync.createCurriculumPlacementByMaterialKey"
-)(function* () {
-  const placementByMaterialKey = new Map<
-    string,
-    {
-      category: CurriculumTopicPayload["category"];
-      grade: CurriculumTopicPayload["grade"];
-      order: number;
-    }
-  >();
-
-  const curriculumNodes = yield* listCurriculumNodesEffect();
-
-  for (const placement of listSchoolCurriculumPlacements({ curriculumNodes })) {
-    placementByMaterialKey.set(placement.materialKey, {
-      category: placement.category,
-      grade: placement.grade,
-      order: placement.order,
-    });
-  }
-
-  return placementByMaterialKey;
-});
 
 /** Syncs curriculum topic metadata from typed Material sources into Convex. */
 export const syncCurriculumTopics = Effect.fn("sync.curriculumTopics")(
@@ -121,34 +77,43 @@ export const syncCurriculumTopics = Effect.fn("sync.curriculumTopics")(
     const totals: SyncResult = { created: 0, updated: 0, unchanged: 0 };
     const sectionCountByTopicSlug =
       yield* readMaterialListedCurriculumLessonCountByTopicSlug(options);
-    const topics: CurriculumTopicPayload[] = materialTopics.map((topic) => ({
-      locale: topic.locale,
-      slug: topic.slug,
-      category: topic.category,
-      contentHash: computeHash(
-        JSON.stringify({
-          category: topic.category,
-          description: topic.description,
-          grade: topic.grade,
-          locale: topic.locale,
-          material: topic.material,
-          order: topic.order,
-          sectionCount:
-            sectionCountByTopicSlug.get(`${topic.locale}:${topic.slug}`) ?? 0,
-          slug: topic.slug,
-          title: topic.title,
-          topic: topic.topic,
+    const topics: CurriculumTopicPayload[] = yield* Effect.forEach(
+      materialTopics,
+      (topic) =>
+        Effect.gen(function* () {
+          const publicPath = yield* readPublicContentPath(
+            topic.slug,
+            topic.locale
+          );
+          const sectionCount =
+            sectionCountByTopicSlug.get(`${topic.locale}:${topic.slug}`) ?? 0;
+
+          return {
+            locale: topic.locale,
+            slug: topic.slug,
+            publicPath,
+            contentHash: computeHash(
+              JSON.stringify({
+                description: topic.description,
+                locale: topic.locale,
+                material: topic.material,
+                order: topic.order,
+                publicPath,
+                sectionCount,
+                slug: topic.slug,
+                title: topic.title,
+                topic: topic.topic,
+              })
+            ),
+            material: topic.material,
+            order: topic.order,
+            topic: topic.topic,
+            title: topic.title,
+            description: topic.description,
+            sectionCount,
+          };
         })
-      ),
-      grade: topic.grade,
-      material: topic.material,
-      order: topic.order,
-      topic: topic.topic,
-      title: topic.title,
-      description: topic.description,
-      sectionCount:
-        sectionCountByTopicSlug.get(`${topic.locale}:${topic.slug}`) ?? 0,
-    }));
+    );
 
     if (!options.quiet) {
       log(`Topics parsed: ${topics.length}`);
@@ -274,17 +239,20 @@ export const syncCurriculumLessons = Effect.fn("sync.curriculumLessons")(
           }
 
           const date = yield* parseDateToEpoch(metadata.date);
+          const publicPath = yield* readPublicContentPath(
+            pathInfo.slug,
+            pathInfo.locale
+          );
           const contentHash = computeHash(
             JSON.stringify({
               authors: metadata.authors,
               body,
-              category: sectionOrder.category,
               date,
               description: metadata.description,
-              grade: sectionOrder.grade,
               locale: pathInfo.locale,
               material: sectionOrder.material,
               order: sectionOrder.order,
+              publicPath,
               section: pathInfo.section,
               slug: pathInfo.slug,
               subject: metadata.subject,
@@ -297,9 +265,8 @@ export const syncCurriculumLessons = Effect.fn("sync.curriculumLessons")(
           return {
             locale: pathInfo.locale,
             slug: pathInfo.slug,
+            publicPath,
             topicSlug: sectionOrder.topicSlug,
-            category: sectionOrder.category,
-            grade: sectionOrder.grade,
             material: sectionOrder.material,
             order: sectionOrder.order,
             topic: sectionOrder.topic,
@@ -436,8 +403,6 @@ const readCurriculumLessonPlacementIndex = Effect.fn(
       }
 
       orderBySlug.set(key, {
-        category: topic.category,
-        grade: topic.grade,
         material: topic.material,
         order: section.order,
         topic: topic.topic,

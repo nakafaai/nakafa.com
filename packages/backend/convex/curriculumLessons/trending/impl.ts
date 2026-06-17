@@ -137,30 +137,44 @@ const buildTrendingSubjects = Effect.fn(
             return Effect.succeed([]);
           }
 
-          return loadCurriculumLesson(ctx, route).pipe(
-            Effect.map((subject) => {
-              if (!subject) {
-                return [];
-              }
+          if (!route.materialDomain) {
+            return Effect.succeed([]);
+          }
 
-              return [
-                {
-                  ...buildContentSearchRef(route),
-                  description: route.description ?? "",
-                  grade: subject.grade,
-                  material: subject.material,
-                  title: route.title,
-                  viewCount,
-                },
-              ];
-            })
-          );
+          return Effect.succeed([
+            {
+              ...toTrendingContentRef(route),
+              description: route.description ?? "",
+              materialDomain: route.materialDomain,
+              title: route.title,
+              viewCount,
+            },
+          ]);
         })
       )
   );
 
   return results.flat();
 });
+
+/** Exposes public route fields while keeping internal sourcePath out of UI rows. */
+function toTrendingContentRef(route: Doc<"contentRoutes">) {
+  const ref = buildContentSearchRef(route);
+
+  return {
+    alignmentId: ref.alignmentId,
+    assetId: ref.assetId,
+    conceptId: ref.conceptId,
+    content_id: ref.content_id,
+    learningObjectId: ref.learningObjectId,
+    lensId: ref.lensId,
+    locale: ref.locale,
+    markdown_url: ref.markdown_url,
+    route: ref.route,
+    section: ref.section,
+    url: ref.url,
+  };
+}
 
 /** Loads the graph route projection for one trending curriculum lesson. */
 const loadSubjectRoute = Effect.fn(
@@ -183,22 +197,6 @@ const loadSubjectRoute = Effect.fn(
   }
 
   return route;
-});
-
-/** Loads subject metadata for one verified graph route projection. */
-const loadCurriculumLesson = Effect.fn(
-  "curriculumLessons.trending.loadCurriculumLesson"
-)(function* (ctx: QueryCtx, route: Doc<"contentRoutes">) {
-  return yield* Effect.tryPromise({
-    try: () =>
-      ctx.db
-        .query("curriculumLessons")
-        .withIndex("by_locale_and_slug", (q) =>
-          q.eq("locale", route.locale).eq("slug", route.route)
-        )
-        .unique(),
-    catch: toTrendingSubjectIoError,
-  });
 });
 
 /**

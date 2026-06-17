@@ -6,6 +6,7 @@ export const lessonPhysicsKinematicsMaterial = defineLessonMaterial({
   key: "lesson.physics.kinematics",
   kind: "lesson",
   slug: "kinematics",
+  routeSlugs: { en: "kinematics", id: "kinematika" },
   translations: {
     en: {
       description:
@@ -21,6 +22,7 @@ export const lessonPhysicsKinematicsMaterial = defineLessonMaterial({
   sections: [
     {
       slug: "acceleration",
+      routeSlugs: { en: "acceleration", id: "percepatan" },
       translations: {
         en: {
           title: "Acceleration",
@@ -32,6 +34,10 @@ export const lessonPhysicsKinematicsMaterial = defineLessonMaterial({
     },
     {
       slug: "average-velocity-speed",
+      routeSlugs: {
+        en: "average-velocity-speed",
+        id: "kecepatan-dan-kelajuan-rata-rata",
+      },
       translations: {
         en: {
           title: "Average Velocity and Average Speed",
@@ -43,6 +49,7 @@ export const lessonPhysicsKinematicsMaterial = defineLessonMaterial({
     },
     {
       slug: "displacement-distance",
+      routeSlugs: { en: "displacement-distance", id: "perpindahan-dan-jarak" },
       translations: {
         en: {
           title: "Displacement and Distance",
@@ -54,6 +61,10 @@ export const lessonPhysicsKinematicsMaterial = defineLessonMaterial({
     },
     {
       slug: "instantaneous-velocity-speed",
+      routeSlugs: {
+        en: "instantaneous-velocity-speed",
+        id: "kecepatan-dan-kelajuan-sesaat",
+      },
       translations: {
         en: {
           title: "Instantaneous Velocity and Speed",
@@ -65,6 +76,10 @@ export const lessonPhysicsKinematicsMaterial = defineLessonMaterial({
     },
     {
       slug: "movement-position-change",
+      routeSlugs: {
+        en: "movement-position-change",
+        id: "gerak-sebagai-perubahan-posisi",
+      },
       translations: {
         en: {
           title: "Motion as a Change in Position",
@@ -76,6 +91,10 @@ export const lessonPhysicsKinematicsMaterial = defineLessonMaterial({
     },
     {
       slug: "non-uniform-linear-motion",
+      routeSlugs: {
+        en: "non-uniform-linear-motion",
+        id: "gerak-lurus-berubah-beraturan",
+      },
       translations: {
         en: {
           title: "Uniformly Accelerated Linear Motion",
@@ -87,6 +106,7 @@ export const lessonPhysicsKinematicsMaterial = defineLessonMaterial({
     },
     {
       slug: "parabolic-movement",
+      routeSlugs: { en: "parabolic-movement", id: "gerak-parabola" },
       translations: {
         en: {
           title: "Projectile Motion",
@@ -98,6 +118,10 @@ export const lessonPhysicsKinematicsMaterial = defineLessonMaterial({
     },
     {
       slug: "parabolic-movement-analysis",
+      routeSlugs: {
+        en: "parabolic-movement-analysis",
+        id: "analisis-gerak-parabola",
+      },
       translations: {
         en: {
           title: "Projectile Motion Analysis",
@@ -109,6 +133,10 @@ export const lessonPhysicsKinematicsMaterial = defineLessonMaterial({
     },
     {
       slug: "reference-frame-position",
+      routeSlugs: {
+        en: "reference-frame-position",
+        id: "kerangka-acuan-dan-posisi",
+      },
       translations: {
         en: {
           title: "Reference Frame and Position",
@@ -120,6 +148,7 @@ export const lessonPhysicsKinematicsMaterial = defineLessonMaterial({
     },
     {
       slug: "relative-movement",
+      routeSlugs: { en: "relative-movement", id: "gerak-relatif" },
       translations: {
         en: {
           title: "Relative Motion",
@@ -131,6 +160,7 @@ export const lessonPhysicsKinematicsMaterial = defineLessonMaterial({
     },
     {
       slug: "stopping-distance",
+      routeSlugs: { en: "stopping-distance", id: "jarak-henti" },
       translations: {
         en: {
           title: "Stopping Distance",
@@ -142,6 +172,10 @@ export const lessonPhysicsKinematicsMaterial = defineLessonMaterial({
     },
     {
       slug: "uniform-circular-motion",
+      routeSlugs: {
+        en: "uniform-circular-motion",
+        id: "gerak-melingkar-beraturan",
+      },
       translations: {
         en: {
           title: "Uniform Circular Motion",
@@ -153,6 +187,7 @@ export const lessonPhysicsKinematicsMaterial = defineLessonMaterial({
     },
     {
       slug: "uniform-linear-motion",
+      routeSlugs: { en: "uniform-linear-motion", id: "gerak-lurus-beraturan" },
       translations: {
         en: {
           title: "Uniform Linear Motion",
@@ -164,6 +199,7 @@ export const lessonPhysicsKinematicsMaterial = defineLessonMaterial({
     },
     {
       slug: "velocity-speed",
+      routeSlugs: { en: "velocity-speed", id: "kecepatan-dan-kelajuan" },
       translations: {
         en: {
           title: "Velocity and Speed",
@@ -175,6 +211,7 @@ export const lessonPhysicsKinematicsMaterial = defineLessonMaterial({
     },
     {
       slug: "vertical-movement",
+      routeSlugs: { en: "vertical-movement", id: "gerak-vertikal" },
       translations: {
         en: {
           title: "Vertical Motion",

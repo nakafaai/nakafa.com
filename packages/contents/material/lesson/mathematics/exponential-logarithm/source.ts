@@ -7,6 +7,7 @@ export const lessonMathematicsExponentialLogarithmMaterial =
     key: "lesson.mathematics.exponential-logarithm",
     kind: "lesson",
     slug: "exponential-logarithm",
+    routeSlugs: { en: "exponential-logarithm", id: "eksponen-dan-logaritma" },
     translations: {
       en: {
         description:
@@ -22,6 +23,7 @@ export const lessonMathematicsExponentialLogarithmMaterial =
     sections: [
       {
         slug: "basic-concept",
+        routeSlugs: { en: "basic-concept", id: "konsep-eksponen" },
         translations: {
           en: {
             title: "Exponent Concepts",
@@ -33,6 +35,7 @@ export const lessonMathematicsExponentialLogarithmMaterial =
       },
       {
         slug: "exponential-decay",
+        routeSlugs: { en: "exponential-decay", id: "peluruhan-eksponen" },
         translations: {
           en: {
             title: "Exponential Decay",
@@ -44,6 +47,7 @@ export const lessonMathematicsExponentialLogarithmMaterial =
       },
       {
         slug: "exponential-growth",
+        routeSlugs: { en: "exponential-growth", id: "pertumbuhan-eksponen" },
         translations: {
           en: {
             title: "Exponential Growth",
@@ -55,6 +59,7 @@ export const lessonMathematicsExponentialLogarithmMaterial =
       },
       {
         slug: "function-definition",
+        routeSlugs: { en: "function-definition", id: "definisi-fungsi" },
         translations: {
           en: {
             title: "Function Definition",
@@ -66,6 +71,7 @@ export const lessonMathematicsExponentialLogarithmMaterial =
       },
       {
         slug: "function-exploration",
+        routeSlugs: { en: "function-exploration", id: "eksplorasi-fungsi" },
         translations: {
           en: {
             title: "Function Exploration",
@@ -77,6 +83,7 @@ export const lessonMathematicsExponentialLogarithmMaterial =
       },
       {
         slug: "logarithm-definition",
+        routeSlugs: { en: "logarithm-definition", id: "definisi-logaritma" },
         translations: {
           en: {
             title: "Logarithm Definition",
@@ -88,6 +95,7 @@ export const lessonMathematicsExponentialLogarithmMaterial =
       },
       {
         slug: "logarithm-properties",
+        routeSlugs: { en: "logarithm-properties", id: "sifat-logaritma" },
         translations: {
           en: {
             title: "Logarithm Properties",
@@ -99,6 +107,7 @@ export const lessonMathematicsExponentialLogarithmMaterial =
       },
       {
         slug: "proof-properties",
+        routeSlugs: { en: "proof-properties", id: "pembuktian-sifat" },
         translations: {
           en: {
             title: "Property Proofs",
@@ -110,6 +119,7 @@ export const lessonMathematicsExponentialLogarithmMaterial =
       },
       {
         slug: "properties",
+        routeSlugs: { en: "properties", id: "sifat-eksponen" },
         translations: {
           en: {
             title: "Exponent Properties",
@@ -121,6 +131,7 @@ export const lessonMathematicsExponentialLogarithmMaterial =
       },
       {
         slug: "radical-form",
+        routeSlugs: { en: "radical-form", id: "bentuk-akar" },
         translations: {
           en: {
             title: "Radical Form",
@@ -132,6 +143,7 @@ export const lessonMathematicsExponentialLogarithmMaterial =
       },
       {
         slug: "rationalizing-radicals",
+        routeSlugs: { en: "rationalizing-radicals", id: "merasionalkan-akar" },
         translations: {
           en: {
             title: "Rationalizing Radicals",

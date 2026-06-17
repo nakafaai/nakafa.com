@@ -39,8 +39,13 @@ const possibleVerifiedUrls = [
   "/articles",
   "/quran",
   "/curriculum",
-  "/assessment",
-  "/material",
+  "/kurikulum",
+  "/exams",
+  "/ujian",
+  "/subjects",
+  "/materi",
+  "/practice",
+  "/latihan",
 ] as const;
 
 /**

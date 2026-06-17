@@ -11,9 +11,10 @@ import {
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar";
 import { usePathname } from "@repo/internationalization/src/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
   getAppNavigationViewer,
+  getForYouNavigationHref,
   getForYouNavigationItems,
 } from "@/components/sidebar/data/navigation";
 import { useUser } from "@/lib/context/use-user";
@@ -25,6 +26,7 @@ export function NavForYou() {
   const pathname = usePathname();
   const tAi = useTranslations("Ai");
   const tCommon = useTranslations("Common");
+  const locale = useLocale();
   const { isPending, role } = useUser((state) => ({
     isPending: state.isPending,
     role: state.user?.appUser.role ?? null,
@@ -42,12 +44,13 @@ export function NavForYou() {
               item.labelNamespace === "Ai"
                 ? tAi(item.labelKey)
                 : tCommon(item.labelKey);
+            const href = getForYouNavigationHref(item, locale);
 
             return (
               <SidebarMenuItem key={item.id}>
                 <SidebarMenuButton
-                  isActive={pathname.includes(item.href)}
-                  render={<NavigationLink href={item.href} title={label} />}
+                  isActive={pathname.includes(href)}
+                  render={<NavigationLink href={href} title={label} />}
                   tooltip={label}
                 >
                   <HugeIcons icon={item.icon} />

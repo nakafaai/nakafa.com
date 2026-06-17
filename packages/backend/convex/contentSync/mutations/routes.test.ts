@@ -1,6 +1,6 @@
 import { api, internal } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import { deleteContentProjectionsByRoute } from "@repo/backend/convex/contentSync/lib/syncHelpers";
+import { deleteContentProjectionsBySourcePath } from "@repo/backend/convex/contentSync/lib/syncHelpers";
 import { CONTENT_ROUTE_ARTIFACT_PAGE_SIZE } from "@repo/backend/convex/contents/constants";
 import { syncContentRoute } from "@repo/backend/convex/contents/helpers/routes/write";
 import {
@@ -40,8 +40,8 @@ describe("contentSync/mutations/routes", () => {
       for (const route of routes) {
         const row = await ctx.db
           .query("contentRoutes")
-          .withIndex("by_locale_and_route", (q) =>
-            q.eq("locale", "id").eq("route", route)
+          .withIndex("by_locale_and_sourcePath", (q) =>
+            q.eq("locale", "id").eq("sourcePath", route)
           )
           .unique();
 
@@ -52,31 +52,35 @@ describe("contentSync/mutations/routes", () => {
     });
 
     expect(rows).toEqual([
-      expect.objectContaining({ parentRoute: "quran", route: "quran/1" }),
       expect.objectContaining({
-        parentRoute: "material/lesson/chemistry",
-        route: "material/lesson/chemistry/atomic-structure",
+        sourceParentPath: "quran",
+        sourcePath: "quran/1",
       }),
       expect.objectContaining({
-        parentRoute: "material/lesson/chemistry/atomic-structure",
-        route:
+        sourceParentPath: "material/lesson/chemistry",
+        sourcePath: "material/lesson/chemistry/atomic-structure",
+      }),
+      expect.objectContaining({
+        sourceParentPath: "material/lesson/chemistry/atomic-structure",
+        sourcePath:
           "material/lesson/chemistry/atomic-structure/electron-configuration",
       }),
       expect.objectContaining({
-        parentRoute: "material/practice/assessment/snbt/quantitative-knowledge",
-        route:
+        sourceParentPath:
+          "material/practice/assessment/snbt/quantitative-knowledge",
+        sourcePath:
           "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026",
       }),
       expect.objectContaining({
-        parentRoute:
+        sourceParentPath:
           "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026",
-        route:
+        sourcePath:
           "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
       }),
       expect.objectContaining({
-        parentRoute:
+        sourceParentPath:
           "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
-        route:
+        sourcePath:
           "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/7",
       }),
     ]);
@@ -85,7 +89,7 @@ describe("contentSync/mutations/routes", () => {
   it("updates a detached route-indexed row instead of inserting a duplicate", async () => {
     const t = convexTest(schema, convexModules);
     const route = "articles/politics/detached";
-    const source = contentRoute(route);
+    const source = contentRouteSource(route);
 
     await t.mutation(async (ctx) => {
       await ctx.db.insert("contentRoutes", {
@@ -161,7 +165,7 @@ describe("contentSync/mutations/routes", () => {
         syncedAt: NOW,
       });
 
-      await deleteContentProjectionsByRoute(ctx, {
+      await deleteContentProjectionsBySourcePath(ctx, {
         locale: "id",
         route,
       });
@@ -382,8 +386,17 @@ function contentRoute(route: string) {
     markdown: true,
     route,
     section: "articles" as const,
+    sourcePath: route,
     syncedAt: NOW,
     title: route,
+  };
+}
+
+/** Builds one source row used by the route sync mutation. */
+function contentRouteSource(route: string) {
+  return {
+    ...contentRoute(route),
+    publicPath: route,
   };
 }
 
@@ -413,8 +426,9 @@ function contentRouteFromProjection(route: string) {
     kind: projection.kind,
     locale: "id" as const,
     markdown: true,
-    route,
+    publicPath: route,
     section: projection.sourceRoot,
+    sourcePath: route,
     syncedAt: NOW,
     title: route,
   };
@@ -444,6 +458,7 @@ function contentSearchSource(route: string): ContentSearchSource {
     locale: "id",
     route,
     section: "articles",
+    sourcePath: route,
     syncedAt: NOW,
     text: "Fixture body",
     title: "Fixture title",
@@ -478,6 +493,7 @@ function contentRoutePageItem(
     markdown: true,
     route,
     section: "articles",
+    sourcePath: route,
     syncedAt: NOW,
     title: route,
   };

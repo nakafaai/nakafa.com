@@ -8,11 +8,15 @@ import {
   getContentRouteArtifactPageImpl,
   getContentRouteByContentIdImpl,
   getContentRouteImpl,
+  getPublicRouteByPathImpl,
   listContentRouteCountsImpl,
   listContentRoutesByKindPrefixImpl,
   listContentRoutesByParentImpl,
   listContentRoutesByPrefixImpl,
   listLatestContentRoutesImpl,
+  listPublicRoutesByMaterialImpl,
+  listPublicRoutesByParentImpl,
+  listSitemapPublicRoutesImpl,
 } from "@repo/backend/convex/contents/runtime/catalog";
 import { getCurriculumPageImpl } from "@repo/backend/convex/contents/runtime/curriculum";
 import {
@@ -20,7 +24,6 @@ import {
   getExerciseQuestionPageImpl,
   getExerciseSetPageImpl,
 } from "@repo/backend/convex/contents/runtime/exercises";
-import { getCurriculumOutlineImpl } from "@repo/backend/convex/contents/runtime/outline";
 import {
   getQuranReferenceImpl,
   getQuranSurahPageImpl,
@@ -35,8 +38,6 @@ import {
   getContentRouteByContentIdArgsValidator,
   getContentRouteByContentIdReturnValidator,
   getContentRouteReturnValidator,
-  getCurriculumOutlineArgsValidator,
-  getCurriculumOutlineReturnValidator,
   getCurriculumPageArgsValidator,
   getCurriculumPageReturnValidator,
   getExerciseGroupPageArgsValidator,
@@ -45,6 +46,8 @@ import {
   getExerciseQuestionPageReturnValidator,
   getExerciseSetPageArgsValidator,
   getExerciseSetPageReturnValidator,
+  getPublicRouteByPathArgsValidator,
+  getPublicRouteByPathReturnValidator,
   getQuranReferenceArgsValidator,
   getQuranReferenceReturnValidator,
   getQuranSurahPageArgsValidator,
@@ -61,7 +64,13 @@ import {
   listLatestContentRoutesReturnValidator,
   listMaterialApiContentPageArgsValidator,
   listMaterialApiContentPageReturnValidator,
+  listPublicRoutesByMaterialArgsValidator,
+  listPublicRoutesByMaterialReturnValidator,
+  listPublicRoutesByParentArgsValidator,
+  listPublicRoutesPageReturnValidator,
   listQuranSurahsReturnValidator,
+  listSitemapPublicRoutesArgsValidator,
+  listSitemapPublicRoutesReturnValidator,
 } from "@repo/backend/convex/contents/runtime/spec";
 
 /**
@@ -80,16 +89,6 @@ export const getCurriculumPage = query({
   args: getCurriculumPageArgsValidator,
   returns: getCurriculumPageReturnValidator,
   handler: getCurriculumPageImpl,
-});
-
-/**
- * Loads one material lesson outline in authored topic and section order.
- */
-export const getCurriculumOutline = query({
-  args: getCurriculumOutlineArgsValidator,
-  returns: getCurriculumOutlineReturnValidator,
-  /** Preserves generated argument typing for the curriculum outline query. */
-  handler: (ctx, args) => getCurriculumOutlineImpl(ctx, args),
 });
 
 /**
@@ -162,6 +161,34 @@ export const listContentRouteCounts = query({
   args: listContentRouteCountsArgsValidator,
   returns: listContentRouteCountsReturnValidator,
   handler: (ctx, args) => listContentRouteCountsImpl(ctx, args),
+});
+
+/** Loads one source-owned public route by localized public path. */
+export const getPublicRouteByPath = query({
+  args: getPublicRouteByPathArgsValidator,
+  returns: getPublicRouteByPathReturnValidator,
+  handler: getPublicRouteByPathImpl,
+});
+
+/** Lists bounded public route children by context parent and optional program. */
+export const listPublicRoutesByParent = query({
+  args: listPublicRoutesByParentArgsValidator,
+  returns: listPublicRoutesPageReturnValidator,
+  handler: (ctx, args) => listPublicRoutesByParentImpl(ctx, args),
+});
+
+/** Lists bounded localized route contexts that point at one material key. */
+export const listPublicRoutesByMaterial = query({
+  args: listPublicRoutesByMaterialArgsValidator,
+  returns: listPublicRoutesByMaterialReturnValidator,
+  handler: (ctx, args) => listPublicRoutesByMaterialImpl(ctx, args),
+});
+
+/** Lists bounded sitemap-eligible public route rows by locale. */
+export const listSitemapPublicRoutes = query({
+  args: listSitemapPublicRoutesArgsValidator,
+  returns: listSitemapPublicRoutesReturnValidator,
+  handler: (ctx, args) => listSitemapPublicRoutesImpl(ctx, args),
 });
 
 /** Loads one concrete content route from the durable route catalog. */

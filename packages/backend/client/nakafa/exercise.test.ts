@@ -174,7 +174,7 @@ describe("readNakafaExercise", () => {
     const nonSetParent = await Effect.runPromise(
       readNakafaExercise(
         convexUrl,
-        "https://nakafa.com/id/material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/question-2"
+        "https://nakafa.com/id/latihan/snbt/pengetahuan-kuantitatif/tryout/2026/soal-2"
       )
     );
     const missingMarkdown = await Effect.runPromise(

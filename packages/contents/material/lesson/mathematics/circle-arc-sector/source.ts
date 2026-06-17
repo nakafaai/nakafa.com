@@ -6,6 +6,7 @@ export const lessonMathematicsCircleArcSectorMaterial = defineLessonMaterial({
   key: "lesson.mathematics.circle-arc-sector",
   kind: "lesson",
   slug: "circle-arc-sector",
+  routeSlugs: { en: "circle-arc-sector", id: "busur-dan-juring-lingkaran" },
   translations: {
     en: {
       description:
@@ -21,6 +22,7 @@ export const lessonMathematicsCircleArcSectorMaterial = defineLessonMaterial({
   sections: [
     {
       slug: "arc",
+      routeSlugs: { en: "arc", id: "busur" },
       translations: {
         en: {
           title: "Arc",
@@ -32,6 +34,7 @@ export const lessonMathematicsCircleArcSectorMaterial = defineLessonMaterial({
     },
     {
       slug: "central-angle-on-arc",
+      routeSlugs: { en: "central-angle-on-arc", id: "sudut-pusat-pada-busur" },
       translations: {
         en: {
           title: "Central Angle on Arc",
@@ -43,6 +46,10 @@ export const lessonMathematicsCircleArcSectorMaterial = defineLessonMaterial({
     },
     {
       slug: "central-angle-on-sector",
+      routeSlugs: {
+        en: "central-angle-on-sector",
+        id: "sudut-pusat-pada-juring",
+      },
       translations: {
         en: {
           title: "Central Angle on Sector",
@@ -54,6 +61,7 @@ export const lessonMathematicsCircleArcSectorMaterial = defineLessonMaterial({
     },
     {
       slug: "chord",
+      routeSlugs: { en: "chord", id: "tali-busur" },
       translations: {
         en: {
           title: "Chord",
@@ -65,6 +73,7 @@ export const lessonMathematicsCircleArcSectorMaterial = defineLessonMaterial({
     },
     {
       slug: "circle-arc",
+      routeSlugs: { en: "circle-arc", id: "busur-lingkaran" },
       translations: {
         en: {
           title: "Circle Arc",
@@ -76,6 +85,7 @@ export const lessonMathematicsCircleArcSectorMaterial = defineLessonMaterial({
     },
     {
       slug: "circle-sector",
+      routeSlugs: { en: "circle-sector", id: "juring-lingkaran" },
       translations: {
         en: {
           title: "Circle Sector",
@@ -87,6 +97,7 @@ export const lessonMathematicsCircleArcSectorMaterial = defineLessonMaterial({
     },
     {
       slug: "pi-history",
+      routeSlugs: { en: "pi-history", id: "sejarah-nilai-pi" },
       translations: {
         en: {
           title: "History of Pi",
@@ -98,6 +109,10 @@ export const lessonMathematicsCircleArcSectorMaterial = defineLessonMaterial({
     },
     {
       slug: "relationship-between-arc-length-and-sector-area",
+      routeSlugs: {
+        en: "relationship-between-arc-length-and-sector-area",
+        id: "hubungan-panjang-busur-dan-luas-juring",
+      },
       translations: {
         en: {
           title: "Relationship Between Arc Length and Sector Area",
@@ -109,6 +124,7 @@ export const lessonMathematicsCircleArcSectorMaterial = defineLessonMaterial({
     },
     {
       slug: "sector",
+      routeSlugs: { en: "sector", id: "juring" },
       translations: {
         en: {
           title: "Sector",
@@ -120,6 +136,7 @@ export const lessonMathematicsCircleArcSectorMaterial = defineLessonMaterial({
     },
     {
       slug: "segment",
+      routeSlugs: { en: "segment", id: "tembereng" },
       translations: {
         en: {
           title: "Segment",

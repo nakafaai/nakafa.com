@@ -6,6 +6,7 @@ export const lessonChemistryStructureMatterMaterial = defineLessonMaterial({
   key: "lesson.chemistry.structure-matter",
   kind: "lesson",
   slug: "structure-matter",
+  routeSlugs: { en: "structure-matter", id: "struktur-atom" },
   translations: {
     en: {
       description:
@@ -21,6 +22,10 @@ export const lessonChemistryStructureMatterMaterial = defineLessonMaterial({
   sections: [
     {
       slug: "ancient-atom-concept",
+      routeSlugs: {
+        en: "ancient-atom-concept",
+        id: "konsep-atom-zaman-yunani",
+      },
       translations: {
         en: {
           title: "Ancient Greek Atomic Concept",
@@ -32,6 +37,7 @@ export const lessonChemistryStructureMatterMaterial = defineLessonMaterial({
     },
     {
       slug: "atom-shell",
+      routeSlugs: { en: "atom-shell", id: "kulit-atom" },
       translations: {
         en: {
           title: "Atomic Shells",
@@ -43,6 +49,7 @@ export const lessonChemistryStructureMatterMaterial = defineLessonMaterial({
     },
     {
       slug: "atom-symbol",
+      routeSlugs: { en: "atom-symbol", id: "lambang-atom" },
       translations: {
         en: {
           title: "Atomic Symbol",
@@ -54,6 +61,7 @@ export const lessonChemistryStructureMatterMaterial = defineLessonMaterial({
     },
     {
       slug: "electron-configuration",
+      routeSlugs: { en: "electron-configuration", id: "konfigurasi-elektron" },
       translations: {
         en: {
           title: "Electron Configuration",
@@ -65,6 +73,7 @@ export const lessonChemistryStructureMatterMaterial = defineLessonMaterial({
     },
     {
       slug: "ion",
+      routeSlugs: { en: "ion", id: "ion" },
       translations: {
         en: {
           title: "Ions",
@@ -76,6 +85,7 @@ export const lessonChemistryStructureMatterMaterial = defineLessonMaterial({
     },
     {
       slug: "isotope",
+      routeSlugs: { en: "isotope", id: "isotop" },
       translations: {
         en: {
           title: "Isotopes",
@@ -87,6 +97,10 @@ export const lessonChemistryStructureMatterMaterial = defineLessonMaterial({
     },
     {
       slug: "modern-periodic-table",
+      routeSlugs: {
+        en: "modern-periodic-table",
+        id: "sistem-periodik-unsur-modern",
+      },
       translations: {
         en: {
           title: "Modern Periodic Table",
@@ -98,6 +112,7 @@ export const lessonChemistryStructureMatterMaterial = defineLessonMaterial({
     },
     {
       slug: "periodic-properties",
+      routeSlugs: { en: "periodic-properties", id: "sifat-keperiodikan-unsur" },
       translations: {
         en: {
           title: "Periodic Properties of Elements",
@@ -109,6 +124,10 @@ export const lessonChemistryStructureMatterMaterial = defineLessonMaterial({
     },
     {
       slug: "reconceptualization-atom",
+      routeSlugs: {
+        en: "reconceptualization-atom",
+        id: "rekonseptualisasi-atom",
+      },
       translations: {
         en: {
           title: "Atomic Reconceptualization",
@@ -120,6 +139,7 @@ export const lessonChemistryStructureMatterMaterial = defineLessonMaterial({
     },
     {
       slug: "subatomic-particles",
+      routeSlugs: { en: "subatomic-particles", id: "partikel-subatom" },
       translations: {
         en: {
           title: "Subatomic Particles",
@@ -131,6 +151,10 @@ export const lessonChemistryStructureMatterMaterial = defineLessonMaterial({
     },
     {
       slug: "subatomic-particles-properties",
+      routeSlugs: {
+        en: "subatomic-particles-properties",
+        id: "sifat-partikel-subatom",
+      },
       translations: {
         en: {
           title: "Subatomic Particle Properties",
@@ -142,6 +166,7 @@ export const lessonChemistryStructureMatterMaterial = defineLessonMaterial({
     },
     {
       slug: "valence-electron",
+      routeSlugs: { en: "valence-electron", id: "elektron-valensi" },
       translations: {
         en: {
           title: "Valence Electrons",

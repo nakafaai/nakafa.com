@@ -6,6 +6,7 @@ export const lessonBiologyVirusRoleMaterial = defineLessonMaterial({
   key: "lesson.biology.virus-role",
   kind: "lesson",
   slug: "virus-role",
+  routeSlugs: { en: "virus-role", id: "virus-dan-peranannya" },
   translations: {
     en: {
       description:
@@ -21,6 +22,10 @@ export const lessonBiologyVirusRoleMaterial = defineLessonMaterial({
   sections: [
     {
       slug: "how-virus-reproduce",
+      routeSlugs: {
+        en: "how-virus-reproduce",
+        id: "bagaimana-virus-bereproduksi",
+      },
       translations: {
         en: {
           title: "How Do Viruses Reproduce?",
@@ -32,6 +37,10 @@ export const lessonBiologyVirusRoleMaterial = defineLessonMaterial({
     },
     {
       slug: "prevent-virus-spread",
+      routeSlugs: {
+        en: "prevent-virus-spread",
+        id: "cara-mencegah-penyebaran-virus",
+      },
       translations: {
         en: {
           title: "Ways to Prevent Virus Spread",
@@ -43,6 +52,7 @@ export const lessonBiologyVirusRoleMaterial = defineLessonMaterial({
     },
     {
       slug: "role",
+      routeSlugs: { en: "role", id: "peranan-virus" },
       translations: {
         en: {
           title: "Role of Viruses",
@@ -54,6 +64,7 @@ export const lessonBiologyVirusRoleMaterial = defineLessonMaterial({
     },
     {
       slug: "what-is-virus",
+      routeSlugs: { en: "what-is-virus", id: "apa-itu-virus" },
       translations: {
         en: {
           title: "What is a Virus?",

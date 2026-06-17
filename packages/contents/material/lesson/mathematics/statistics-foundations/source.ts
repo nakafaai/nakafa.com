@@ -7,6 +7,7 @@ export const lessonMathematicsStatisticsFoundationsMaterial =
     key: "lesson.mathematics.statistics-foundations",
     kind: "lesson",
     slug: "statistics-foundations",
+    routeSlugs: { en: "statistics-foundations", id: "statistika-dasar" },
     translations: {
       en: {
         description:
@@ -22,6 +23,10 @@ export const lessonMathematicsStatisticsFoundationsMaterial =
     sections: [
       {
         slug: "central-tendency-usage",
+        routeSlugs: {
+          en: "central-tendency-usage",
+          id: "penggunaan-ukuran-pemusatan",
+        },
         translations: {
           en: {
             title: "Applications of Measures of Central Tendency",
@@ -33,6 +38,7 @@ export const lessonMathematicsStatisticsFoundationsMaterial =
       },
       {
         slug: "histogram",
+        routeSlugs: { en: "histogram", id: "histogram" },
         translations: {
           en: {
             title: "Histogram",
@@ -44,6 +50,7 @@ export const lessonMathematicsStatisticsFoundationsMaterial =
       },
       {
         slug: "interquartile-range",
+        routeSlugs: { en: "interquartile-range", id: "jangkauan-interkuartil" },
         translations: {
           en: {
             title: "Interquartile Range",
@@ -55,6 +62,7 @@ export const lessonMathematicsStatisticsFoundationsMaterial =
       },
       {
         slug: "mean",
+        routeSlugs: { en: "mean", id: "mean-rerata-atau-rata-rata" },
         translations: {
           en: {
             title: "Mean (Average)",
@@ -66,6 +74,10 @@ export const lessonMathematicsStatisticsFoundationsMaterial =
       },
       {
         slug: "mean-group-data",
+        routeSlugs: {
+          en: "mean-group-data",
+          id: "mean-rata-rata-data-kelompok",
+        },
         translations: {
           en: {
             title: "Mean for Grouped Data",
@@ -77,6 +89,10 @@ export const lessonMathematicsStatisticsFoundationsMaterial =
       },
       {
         slug: "median-mode-group-data",
+        routeSlugs: {
+          en: "median-mode-group-data",
+          id: "median-dan-kelas-modus-data-kelompok",
+        },
         translations: {
           en: {
             title: "Median and Modal Class for Grouped Data",
@@ -88,6 +104,7 @@ export const lessonMathematicsStatisticsFoundationsMaterial =
       },
       {
         slug: "mode-median",
+        routeSlugs: { en: "mode-median", id: "modus-dan-median" },
         translations: {
           en: {
             title: "Mode and Median",
@@ -99,6 +116,10 @@ export const lessonMathematicsStatisticsFoundationsMaterial =
       },
       {
         slug: "percentile-data-group",
+        routeSlugs: {
+          en: "percentile-data-group",
+          id: "persentil-data-kelompok",
+        },
         translations: {
           en: {
             title: "Percentiles for Grouped Data",
@@ -110,6 +131,7 @@ export const lessonMathematicsStatisticsFoundationsMaterial =
       },
       {
         slug: "quartile-data-group",
+        routeSlugs: { en: "quartile-data-group", id: "kuartil-data-kelompok" },
         translations: {
           en: {
             title: "Quartiles for Grouped Data",
@@ -121,6 +143,7 @@ export const lessonMathematicsStatisticsFoundationsMaterial =
       },
       {
         slug: "quartile-data-single",
+        routeSlugs: { en: "quartile-data-single", id: "kuartil-data-tunggal" },
         translations: {
           en: {
             title: "Quartiles for Ungrouped Data",
@@ -132,6 +155,7 @@ export const lessonMathematicsStatisticsFoundationsMaterial =
       },
       {
         slug: "relative-frequency",
+        routeSlugs: { en: "relative-frequency", id: "frekuensi-relatif" },
         translations: {
           en: {
             title: "Relative Frequency",
@@ -143,6 +167,10 @@ export const lessonMathematicsStatisticsFoundationsMaterial =
       },
       {
         slug: "variance-standard-deviation-data-group",
+        routeSlugs: {
+          en: "variance-standard-deviation-data-group",
+          id: "varian-dan-simpangan-baku-data-kelompok",
+        },
         translations: {
           en: {
             title: "Variance and Standard Deviation for Grouped Data",
@@ -154,6 +182,10 @@ export const lessonMathematicsStatisticsFoundationsMaterial =
       },
       {
         slug: "variance-standard-deviation-data-single",
+        routeSlugs: {
+          en: "variance-standard-deviation-data-single",
+          id: "varian-dan-simpangan-baku-data-tunggal",
+        },
         translations: {
           en: {
             title: "Variance and Standard Deviation for Ungrouped Data",

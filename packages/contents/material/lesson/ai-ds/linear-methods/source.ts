@@ -6,6 +6,7 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
   key: "lesson.ai-ds.linear-methods",
   kind: "lesson",
   slug: "linear-methods",
+  routeSlugs: { en: "linear-methods", id: "metode-linear-ai" },
   translations: {
     en: {
       description:
@@ -21,6 +22,10 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
   sections: [
     {
       slug: "all-eigenvalues-calculation",
+      routeSlugs: {
+        en: "all-eigenvalues-calculation",
+        id: "perhitungan-semua-nilai-eigen",
+      },
       translations: {
         en: {
           title: "All Eigenvalues Calculation",
@@ -32,6 +37,10 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "approximation-function-polynomial",
+      routeSlugs: {
+        en: "approximation-function-polynomial",
+        id: "perkiraan-terbaik-dalam-fungsi-dan-ruang-polinomial",
+      },
       translations: {
         en: {
           title: "Best Approximation in Function and Polynomial Spaces",
@@ -43,6 +52,10 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "characteristic-polynomial",
+      routeSlugs: {
+        en: "characteristic-polynomial",
+        id: "karakteristik-polinomial",
+      },
       translations: {
         en: {
           title: "Characteristic Polynomial",
@@ -54,6 +67,7 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "cholesky-decomposition",
+      routeSlugs: { en: "cholesky-decomposition", id: "cholesky-dekomposisi" },
       translations: {
         en: {
           title: "Cholesky Decomposition",
@@ -65,6 +79,7 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "complex-matrix",
+      routeSlugs: { en: "complex-matrix", id: "matriks-kompleks" },
       translations: {
         en: {
           title: "Complex Matrix",
@@ -76,6 +91,7 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "complex-vector-space",
+      routeSlugs: { en: "complex-vector-space", id: "ruang-vektor-kompleks" },
       translations: {
         en: {
           title: "Complex Vector Space",
@@ -87,6 +103,7 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "cramer-rule",
+      routeSlugs: { en: "cramer-rule", id: "aturan-cramer" },
       translations: {
         en: {
           title: "Cramer's Rule",
@@ -98,6 +115,7 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "determinant",
+      routeSlugs: { en: "determinant", id: "definisi-determinan" },
       translations: {
         en: {
           title: "Definition of Determinant",
@@ -109,6 +127,10 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "determinant-calculation",
+      routeSlugs: {
+        en: "determinant-calculation",
+        id: "perhitungan-determinan",
+      },
       translations: {
         en: {
           title: "Determinant Calculation",
@@ -120,6 +142,7 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "diagonalization-matrix",
+      routeSlugs: { en: "diagonalization-matrix", id: "diagonalisasi-matriks" },
       translations: {
         en: {
           title: "Matrix Diagonalization",
@@ -131,6 +154,10 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "diagonalization-procedure",
+      routeSlugs: {
+        en: "diagonalization-procedure",
+        id: "prosedur-dasar-untuk-diagonalisasi",
+      },
       translations: {
         en: {
           title: "Basic Procedure for Diagonalization",
@@ -142,6 +169,10 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "eigenvalue-diagonal-matrix",
+      routeSlugs: {
+        en: "eigenvalue-diagonal-matrix",
+        id: "nilai-eigen-dari-matriks-diagonal-dan-segitiga",
+      },
       translations: {
         en: {
           title: "Eigenvalues of Diagonal and Triangular Matrices",
@@ -153,6 +184,10 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "eigenvalue-eigenvector-eigenspace",
+      routeSlugs: {
+        en: "eigenvalue-eigenvector-eigenspace",
+        id: "nilai-eigen-vektor-eigen-dan-ruang-eigen",
+      },
       translations: {
         en: {
           title: "Eigenvalues, Eigenvectors, and Eigenspaces",
@@ -164,6 +199,10 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "identifiability-ranking",
+      routeSlugs: {
+        en: "identifiability-ranking",
+        id: "kemampuan-identifikasi-dan-pemeringkatan",
+      },
       translations: {
         en: {
           title: "Identifiability and Ranking Capability",
@@ -175,6 +214,10 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "individual-eigenvalue-calculation",
+      routeSlugs: {
+        en: "individual-eigenvalue-calculation",
+        id: "perhitungan-nilai-eigen-individu",
+      },
       translations: {
         en: {
           title: "Individual Eigenvalue Calculation",
@@ -186,6 +229,10 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "jordan-normal-form",
+      routeSlugs: {
+        en: "jordan-normal-form",
+        id: "trigonalisasi-dan-bentuk-normal-jordan",
+      },
       translations: {
         en: {
           title: "Triangularization and Jordan Normal Form",
@@ -197,6 +244,10 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "laplace-expansion",
+      routeSlugs: {
+        en: "laplace-expansion",
+        id: "teorema-pengembangan-laplace",
+      },
       translations: {
         en: {
           title: "Laplace Expansion Theorem",
@@ -208,6 +259,10 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "linear-equilibrium-problem",
+      routeSlugs: {
+        en: "linear-equilibrium-problem",
+        id: "masalah-keseimbangan-linear",
+      },
       translations: {
         en: {
           title: "Linear Equilibrium Problem",
@@ -219,6 +274,7 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "linear-model",
+      routeSlugs: { en: "linear-model", id: "linear-model" },
       translations: {
         en: {
           title: "Linear Model",
@@ -230,6 +286,7 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "lu-decomposition",
+      routeSlugs: { en: "lu-decomposition", id: "lu-dekomposisi" },
       translations: {
         en: {
           title: "LU Decomposition",
@@ -241,6 +298,7 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "matrix-condition",
+      routeSlugs: { en: "matrix-condition", id: "kondisi-matriks" },
       translations: {
         en: {
           title: "Matrix Condition",
@@ -252,6 +310,7 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "matrix-similarity",
+      routeSlugs: { en: "matrix-similarity", id: "kesamaan-matriks" },
       translations: {
         en: {
           title: "Matrix Similarity",
@@ -263,6 +322,7 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "normal-equation",
+      routeSlugs: { en: "normal-equation", id: "sistem-persamaan-normal" },
       translations: {
         en: {
           title: "Normal Equation System",
@@ -274,6 +334,10 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "normal-equation-solution",
+      routeSlugs: {
+        en: "normal-equation-solution",
+        id: "solusi-sistem-persamaan-normal",
+      },
       translations: {
         en: {
           title: "Normal Equation System Solution",
@@ -285,6 +349,10 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "numerical-eigenvalue-calculation",
+      routeSlugs: {
+        en: "numerical-eigenvalue-calculation",
+        id: "perhitungan-numerik-dari-nilai-eigen",
+      },
       translations: {
         en: {
           title: "Numerical Calculation of Eigenvalues",
@@ -296,6 +364,7 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "orthogonal-polynomials",
+      routeSlugs: { en: "orthogonal-polynomials", id: "polinomial-ortogonal" },
       translations: {
         en: {
           title: "Orthogonal Polynomials",
@@ -307,6 +376,7 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "orthogonal-projection",
+      routeSlugs: { en: "orthogonal-projection", id: "proyeksi-ortogonal" },
       translations: {
         en: {
           title: "Orthogonal Projection",
@@ -318,6 +388,10 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "orthogonal-unitary-matrix",
+      routeSlugs: {
+        en: "orthogonal-unitary-matrix",
+        id: "matriks-ortogonal-dan-uniter",
+      },
       translations: {
         en: {
           title: "Orthogonal and Unitary Matrices",
@@ -329,6 +403,10 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "positive-definite-matrix",
+      routeSlugs: {
+        en: "positive-definite-matrix",
+        id: "matriks-definit-positif",
+      },
       translations: {
         en: {
           title: "Positive Definite Matrix",
@@ -340,6 +418,10 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "principal-component-analysis",
+      routeSlugs: {
+        en: "principal-component-analysis",
+        id: "analisis-komponen-utama",
+      },
       translations: {
         en: {
           title: "Principal Component Analysis",
@@ -351,6 +433,7 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "qr-decomposition",
+      routeSlugs: { en: "qr-decomposition", id: "qr-dekomposisi" },
       translations: {
         en: {
           title: "QR Decomposition",
@@ -362,6 +445,10 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "real-axis-transformation",
+      routeSlugs: {
+        en: "real-axis-transformation",
+        id: "transformasi-sumbu-nyata",
+      },
       translations: {
         en: {
           title: "Real Axis Transformation",
@@ -373,6 +460,7 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "regularization",
+      routeSlugs: { en: "regularization", id: "regularisasi" },
       translations: {
         en: {
           title: "Regularization",
@@ -384,6 +472,7 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "scalar-product",
+      routeSlugs: { en: "scalar-product", id: "produk-skalar" },
       translations: {
         en: {
           title: "Scalar Product",
@@ -395,6 +484,10 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "spectral-complex-matrix",
+      routeSlugs: {
+        en: "spectral-complex-matrix",
+        id: "teorema-spektral-untuk-matriks-kompleks",
+      },
       translations: {
         en: {
           title: "Spectral Theorem for Complex Matrices",
@@ -406,6 +499,10 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "spectral-real-matrix",
+      routeSlugs: {
+        en: "spectral-real-matrix",
+        id: "teorema-spektral-untuk-matriks-nyata",
+      },
       translations: {
         en: {
           title: "Spectral Theorem for Real Matrices",
@@ -417,6 +514,7 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "spectral-theorem",
+      routeSlugs: { en: "spectral-theorem", id: "teorema-spektral" },
       translations: {
         en: {
           title: "Spectral Theorem",
@@ -428,6 +526,7 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "statistical-analysis",
+      routeSlugs: { en: "statistical-analysis", id: "analisis-statistik" },
       translations: {
         en: {
           title: "Statistical Analysis",
@@ -439,6 +538,10 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "symmetric-hermitian-matrix",
+      routeSlugs: {
+        en: "symmetric-hermitian-matrix",
+        id: "matriks-simetris-dan-hermitian",
+      },
       translations: {
         en: {
           title: "Symmetric and Hermitian Matrices",
@@ -450,6 +553,10 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
     },
     {
       slug: "system-linear-equation",
+      routeSlugs: {
+        en: "system-linear-equation",
+        id: "sistem-persamaan-linear",
+      },
       translations: {
         en: {
           title: "System of Linear Equations",

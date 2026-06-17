@@ -6,6 +6,7 @@ export const lessonMathematicsFunctionModelingMaterial = defineLessonMaterial({
   key: "lesson.mathematics.function-modeling",
   kind: "lesson",
   slug: "function-modeling",
+  routeSlugs: { en: "function-modeling", id: "fungsi-dan-pemodelannya" },
   translations: {
     en: {
       description:
@@ -21,6 +22,7 @@ export const lessonMathematicsFunctionModelingMaterial = defineLessonMaterial({
   sections: [
     {
       slug: "absolute-value-function",
+      routeSlugs: { en: "absolute-value-function", id: "fungsi-nilai-mutlak" },
       translations: {
         en: {
           title: "Absolute Value Function",
@@ -32,6 +34,7 @@ export const lessonMathematicsFunctionModelingMaterial = defineLessonMaterial({
     },
     {
       slug: "asymptote",
+      routeSlugs: { en: "asymptote", id: "asimtot" },
       translations: {
         en: {
           title: "Asymptote",
@@ -43,6 +46,7 @@ export const lessonMathematicsFunctionModelingMaterial = defineLessonMaterial({
     },
     {
       slug: "exponential-function",
+      routeSlugs: { en: "exponential-function", id: "fungsi-eksponensial" },
       translations: {
         en: {
           title: "Exponential Function",
@@ -54,6 +58,10 @@ export const lessonMathematicsFunctionModelingMaterial = defineLessonMaterial({
     },
     {
       slug: "logarithmic-function-concept",
+      routeSlugs: {
+        en: "logarithmic-function-concept",
+        id: "konsep-fungsi-logaritma",
+      },
       translations: {
         en: {
           title: "Logarithmic Function Concept",
@@ -65,6 +73,10 @@ export const lessonMathematicsFunctionModelingMaterial = defineLessonMaterial({
     },
     {
       slug: "logarithmic-function-graph",
+      routeSlugs: {
+        en: "logarithmic-function-graph",
+        id: "grafik-fungsi-logaritma",
+      },
       translations: {
         en: {
           title: "Logarithmic Function Graph",
@@ -76,6 +88,10 @@ export const lessonMathematicsFunctionModelingMaterial = defineLessonMaterial({
     },
     {
       slug: "logarithmic-function-identity",
+      routeSlugs: {
+        en: "logarithmic-function-identity",
+        id: "identitas-fungsi-logaritma",
+      },
       translations: {
         en: {
           title: "Logarithmic Function Identity",
@@ -87,6 +103,10 @@ export const lessonMathematicsFunctionModelingMaterial = defineLessonMaterial({
     },
     {
       slug: "piecewise-function-modeling",
+      routeSlugs: {
+        en: "piecewise-function-modeling",
+        id: "pemodelan-fungsi-piecewise",
+      },
       translations: {
         en: {
           title: "Piecewise Function Modeling",
@@ -98,6 +118,7 @@ export const lessonMathematicsFunctionModelingMaterial = defineLessonMaterial({
     },
     {
       slug: "rational-function",
+      routeSlugs: { en: "rational-function", id: "fungsi-rasional" },
       translations: {
         en: {
           title: "Rational Function",
@@ -109,6 +130,7 @@ export const lessonMathematicsFunctionModelingMaterial = defineLessonMaterial({
     },
     {
       slug: "square-root-function",
+      routeSlugs: { en: "square-root-function", id: "fungsi-akar" },
       translations: {
         en: {
           title: "Square Root Function",
@@ -120,6 +142,10 @@ export const lessonMathematicsFunctionModelingMaterial = defineLessonMaterial({
     },
     {
       slug: "step-function-modeling",
+      routeSlugs: {
+        en: "step-function-modeling",
+        id: "pemodelan-fungsi-tangga",
+      },
       translations: {
         en: {
           title: "Step Function Modeling",
@@ -131,6 +157,10 @@ export const lessonMathematicsFunctionModelingMaterial = defineLessonMaterial({
     },
     {
       slug: "trigonometric-function-arbitrary-angle",
+      routeSlugs: {
+        en: "trigonometric-function-arbitrary-angle",
+        id: "fungsi-trigonometri-sebarang-sudut",
+      },
       translations: {
         en: {
           title: "Trigonometric Function of Arbitrary Angle",
@@ -142,6 +172,10 @@ export const lessonMathematicsFunctionModelingMaterial = defineLessonMaterial({
     },
     {
       slug: "trigonometric-function-graph",
+      routeSlugs: {
+        en: "trigonometric-function-graph",
+        id: "grafik-fungsi-trigonometri",
+      },
       translations: {
         en: {
           title: "Trigonometric Function Graph",
@@ -153,6 +187,10 @@ export const lessonMathematicsFunctionModelingMaterial = defineLessonMaterial({
     },
     {
       slug: "trigonometric-identity",
+      routeSlugs: {
+        en: "trigonometric-identity",
+        id: "identitas-trigonometri",
+      },
       translations: {
         en: {
           title: "Trigonometric Identity",

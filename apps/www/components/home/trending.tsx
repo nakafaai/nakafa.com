@@ -61,7 +61,7 @@ export function HomeTrending() {
                 <div className="absolute inset-0 flex items-center justify-center">
                   <HugeIcons
                     className="size-4 text-background drop-shadow-md"
-                    icon={getMaterialIcon(subject.material)}
+                    icon={getMaterialIcon(subject.materialDomain)}
                   />
                 </div>
               </div>

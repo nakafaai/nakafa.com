@@ -1,8 +1,10 @@
 import { isPostHogProxyPathname } from "@repo/analytics/posthog/config";
+import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import type { ProxyConfig } from "next/server";
 import { type NextRequest, NextResponse } from "next/server";
+import { hasLocale } from "next-intl";
 import createMiddleware from "next-intl/middleware";
 import {
   AGENT_DISCOVERY_LINK_HEADER,
@@ -16,6 +18,7 @@ import {
 const handleLocalizedRequest = createMiddleware(routing);
 const TRAILING_SLASH_PATTERN = /\/+$/;
 const AUTH_REDIRECT_PATH_COOKIE = "auth-redirect-path";
+const REJECTED_PUBLIC_ROOTS = new Set(["/learn"]);
 const LOCALE_BYPASS_PATHS = new Set([
   "/mcp",
   "/llms.txt",
@@ -57,6 +60,12 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  const rejectedLocale = getRejectedPublicRouteLocale(pathname);
+
+  if (rejectedLocale) {
+    return rewriteToContentNotFound(request, rejectedLocale);
+  }
+
   const routeDecision = await Effect.runPromise(
     resolveLlmsProxyRoute({
       acceptHeader: request.headers.get("accept"),
@@ -87,6 +96,41 @@ function isLocaleBypassPath(pathname: string) {
   return (
     LOCALE_BYPASS_PATHS.has(pathname) || pathname.startsWith("/llms-full/")
   );
+}
+
+/**
+ * Detects stale public route roots before next-intl can normalize them.
+ *
+ * The route projection owns localized public namespaces. If a request uses the
+ * wrong locale's namespace, an internal app segment, or a removed route group,
+ * the request must 404 rather than become a compatibility alias.
+ */
+function getRejectedPublicRouteLocale(pathname: string) {
+  if (REJECTED_PUBLIC_ROOTS.has(pathname)) {
+    return routing.defaultLocale;
+  }
+
+  const [locale, namespace] = pathname.split("/").filter(Boolean);
+
+  if (!(namespace && hasLocale(routing.locales, locale))) {
+    return null;
+  }
+
+  const usesRejectedNamespace = PUBLIC_ROUTE_SURFACES.some((surface) => {
+    const expectedNamespace = surface.routeSlugs[locale];
+    const knownNamespaces = [
+      surface.appSegment,
+      surface.key,
+      ...Object.values(surface.routeSlugs),
+    ];
+
+    return (
+      namespace !== expectedNamespace &&
+      knownNamespaces.some((knownNamespace) => knownNamespace === namespace)
+    );
+  });
+
+  return usesRejectedNamespace ? locale : null;
 }
 
 /** Rewrites a localized route to the source-backed markdown handler. */

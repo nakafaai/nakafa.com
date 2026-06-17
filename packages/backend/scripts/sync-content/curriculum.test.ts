@@ -111,7 +111,10 @@ async function loadSubjects({
     /** Returns MDX fixture files for the requested subject glob. */
     globFiles: () => Effect.succeed(sectionFiles),
   }));
-  vi.doMock("@repo/contents/_types/curriculum/projection", () => {
+  vi.doMock("@repo/contents/_types/curriculum/projection", async () => {
+    const actual = await vi.importActual<
+      typeof import("@repo/contents/_types/curriculum/projection")
+    >("@repo/contents/_types/curriculum/projection");
     const curriculumNodes = [
       {
         curriculumKey: "id-kurikulum-merdeka",
@@ -120,8 +123,8 @@ async function loadSubjects({
         materialKeys: [],
         order: 1,
         translations: {
-          en: { title: "Class 10" },
-          id: { title: "Kelas 10" },
+          en: { routeSlug: "class-10", title: "Class 10" },
+          id: { routeSlug: "kelas-10", title: "Kelas 10" },
         },
       },
       {
@@ -132,8 +135,8 @@ async function loadSubjects({
         order: 1,
         parentKey: "class-10",
         translations: {
-          en: { title: "Mathematics" },
-          id: { title: "Matematika" },
+          en: { routeSlug: "mathematics", title: "Mathematics" },
+          id: { routeSlug: "matematika", title: "Matematika" },
         },
       },
       ...materialTopics.map((topic) => ({
@@ -144,13 +147,14 @@ async function loadSubjects({
         order: topic.order,
         parentKey: "class-10-mathematics",
         translations: {
-          en: { title: topic.title },
-          id: { title: topic.title },
+          en: { routeSlug: topic.topic, title: topic.title },
+          id: { routeSlug: topic.topic, title: topic.title },
         },
       })),
     ];
 
     return {
+      ...actual,
       /** Returns typed curriculum placements for curriculum sync. */
       listCurriculumNodes: () => curriculumNodes,
       listCurriculumNodesEffect: () => Effect.succeed(curriculumNodes),

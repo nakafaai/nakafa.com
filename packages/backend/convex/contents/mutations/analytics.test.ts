@@ -49,8 +49,6 @@ async function insertAnalyticsContent(ctx: MutationCtx) {
     title: "Dynastic Politics",
   });
   const topicId = await ctx.db.insert("curriculumTopics", {
-    category: "high-school",
-    grade: "10",
     locale: "en",
     material: "mathematics",
     order: 0,
@@ -62,11 +60,9 @@ async function insertAnalyticsContent(ctx: MutationCtx) {
   });
   const subjectId = await ctx.db.insert("curriculumLessons", {
     body: "Subject body",
-    category: "high-school",
     contentHash: "subject-hash",
     date: NOW,
     description: "Subject description",
-    grade: "10",
     locale: "en",
     material: "mathematics",
     order: 0,

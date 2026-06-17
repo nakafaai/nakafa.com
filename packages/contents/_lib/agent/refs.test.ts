@@ -5,6 +5,7 @@ import {
   getNakafaContentResourceUri,
   normalizeNakafaContentInput,
   parseNakafaContentRef,
+  parseNakafaContentRefEffect,
   parseNakafaContentRefFields,
 } from "@repo/contents/_lib/agent/refs";
 import { Effect, Exit, Option } from "effect";
@@ -31,6 +32,32 @@ describe("Nakafa agent references", () => {
     expect(resourceUri).toBe("nakafa://content/asset:en:quran:quran-surah:1");
     expect(normalizeNakafaContentInput(resourceUri)).toBe(directRef.content_id);
     expect(Option.isNone(parseNakafaContentRef(resourceUri))).toBe(true);
+  });
+
+  it("resolves public material URLs through route projection", async () => {
+    const topicRef = await Effect.runPromise(
+      parseNakafaContentRefEffect(
+        "https://nakafa.com/id/materi/matematika/integral"
+      )
+    );
+    const lessonRef = await Effect.runPromise(
+      parseNakafaContentRefEffect(
+        "https://nakafa.com/en/subjects/mathematics/integral/riemann-sum"
+      )
+    );
+    const contextRef = await Effect.runPromise(
+      parseNakafaContentRefEffect(
+        "https://nakafa.com/en/curriculum/merdeka/class-12/mathematics/integral"
+      )
+    );
+
+    expect(Option.getOrUndefined(topicRef)?.route).toBe(
+      "material/lesson/mathematics/integral"
+    );
+    expect(Option.getOrUndefined(lessonRef)?.route).toBe(
+      "material/lesson/mathematics/integral/riemann-sum"
+    );
+    expect(Option.isNone(contextRef)).toBe(true);
   });
 
   it("builds refs from persisted graph projections without route-derived IDs", () => {

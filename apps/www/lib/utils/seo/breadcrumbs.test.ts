@@ -6,11 +6,11 @@ describe("createBreadcrumbItems", () => {
   it("builds localized BreadcrumbList items from page hierarchy entries", () => {
     const result = createBreadcrumbItems("id", [
       { name: "Beranda", path: "" },
-      { name: "Kurikulum", path: "/curriculum" },
-      { name: "SMA", path: "/curriculum/high-school/11" },
+      { name: "Kurikulum", path: "/kurikulum/merdeka" },
+      { name: "Kelas 11", path: "/kurikulum/merdeka/kelas-11" },
       {
-        name: "Grafik Fungsi Trigonometri",
-        path: "/material/lesson/mathematics/function-modeling/trigonometric-function-graph",
+        name: "Integral",
+        path: "/materi/matematika/integral",
       },
     ]);
 
@@ -25,19 +25,19 @@ describe("createBreadcrumbItems", () => {
         "@type": "ListItem",
         position: 2,
         name: "Kurikulum",
-        item: "https://nakafa.com/id/curriculum",
+        item: "https://nakafa.com/id/kurikulum/merdeka",
       },
       {
         "@type": "ListItem",
         position: 3,
-        name: "SMA",
-        item: "https://nakafa.com/id/curriculum/high-school/11",
+        name: "Kelas 11",
+        item: "https://nakafa.com/id/kurikulum/merdeka/kelas-11",
       },
       {
         "@type": "ListItem",
         position: 4,
-        name: "Grafik Fungsi Trigonometri",
-        item: "https://nakafa.com/id/material/lesson/mathematics/function-modeling/trigonometric-function-graph",
+        name: "Integral",
+        item: "https://nakafa.com/id/materi/matematika/integral",
       },
     ]);
   });

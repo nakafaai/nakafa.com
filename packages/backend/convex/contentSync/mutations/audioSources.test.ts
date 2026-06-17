@@ -103,12 +103,11 @@ describe("contentSync audio sources", () => {
       {
         topics: [
           {
-            category: "high-school",
             contentHash: "curriculum-topic-source-hash",
-            grade: "10",
             locale: "en",
             material: "mathematics",
             order: 0,
+            publicPath: SUBJECT_TOPIC_SLUG,
             sectionCount: 1,
             slug: SUBJECT_TOPIC_SLUG,
             title: "Audio Source Topic",
@@ -124,14 +123,13 @@ describe("contentSync audio sources", () => {
           {
             authors: [],
             body: "large section body not needed by the audio queue",
-            category: "high-school",
             contentHash: "subject-source-hash",
             date: 1,
             description: "Subject source",
-            grade: "10",
             locale: "en",
             material: "mathematics",
             order: 0,
+            publicPath: SUBJECT_SECTION_SLUG,
             section: "audio-source-section",
             slug: SUBJECT_SECTION_SLUG,
             subject: "Mathematics",

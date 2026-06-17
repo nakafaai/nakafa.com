@@ -4,8 +4,8 @@ import { deleteAudioContentSourceByRoute } from "@repo/backend/convex/audioStudi
 import type { ContentAuthorContentId } from "@repo/backend/convex/authors/schema";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
-import { deleteContentRoutesByRoute } from "@repo/backend/convex/contents/helpers/routes/write";
-import { deleteContentSearchByRoute } from "@repo/backend/convex/contents/helpers/search/write";
+import { deleteContentRoutesBySourcePath } from "@repo/backend/convex/contents/helpers/routes/write";
+import { deleteContentSearchBySourcePath } from "@repo/backend/convex/contents/helpers/search/write";
 import {
   type ContentType,
   type Locale,
@@ -293,13 +293,15 @@ export async function deleteExerciseChoicesForQuestion(
   }
 }
 
-/** Delete synced search and route projections by their persisted route identity. */
-export async function deleteContentProjectionsByRoute(
+/** Delete synced search and route projections by their graph source identity. */
+export async function deleteContentProjectionsBySourcePath(
   ctx: MutationCtx,
   args: { locale: Locale; route: string }
 ) {
-  await deleteContentSearchByRoute(ctx, args);
-  await deleteContentRoutesByRoute(ctx, args);
+  const source = { locale: args.locale, sourcePath: args.route };
+
+  await deleteContentSearchBySourcePath(ctx, source);
+  await deleteContentRoutesBySourcePath(ctx, source);
 }
 
 /** Delete one exercise question together with its sync-managed dependent rows. */
@@ -310,7 +312,7 @@ export async function deleteExerciseQuestion(
   const question = await ctx.db.get(questionId);
 
   if (question) {
-    await deleteContentProjectionsByRoute(ctx, {
+    await deleteContentProjectionsBySourcePath(ctx, {
       locale: question.locale,
       route: question.slug,
     });
@@ -329,7 +331,7 @@ export async function deleteCurriculumLesson(
   const section = await ctx.db.get(sectionId);
 
   if (section) {
-    await deleteContentProjectionsByRoute(ctx, {
+    await deleteContentProjectionsBySourcePath(ctx, {
       locale: section.locale,
       route: section.slug,
     });

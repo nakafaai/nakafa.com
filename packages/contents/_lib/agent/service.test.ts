@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 const ARTICLE_CONTENT_REF =
   "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values";
 const EXERCISE_CONTENT_REF =
-  "https://nakafa.com/en/material/practice/assessment/snbt/general-knowledge/try-out-2026/set-2";
+  "https://nakafa.com/en/practice/snbt/general-knowledge/mock-test/2026/set-2";
 
 vi.mock("@repo/contents/_lib/agent/taxonomy/read", async () => {
   const { Effect } = await import("effect");
@@ -79,12 +79,14 @@ describe("Nakafa service", () => {
         const taxonomy = yield* Nakafa.taxonomy("en");
         const validPage = yield* Nakafa.verify(ARTICLE_CONTENT_REF);
         const validExerciseSet = yield* Nakafa.verify(EXERCISE_CONTENT_REF);
-        const validExercise = yield* Nakafa.verify(`${EXERCISE_CONTENT_REF}/1`);
+        const validExercise = yield* Nakafa.verify(
+          `${EXERCISE_CONTENT_REF}/question-1`
+        );
         const validQuran = yield* Nakafa.verify(
           "https://nakafa.com/en/quran/1"
         );
         const invalidExercise = yield* Nakafa.verify(
-          "https://nakafa.com/en/material/practice/assessment/snbt/general-knowledge/try-out-2026/set-404"
+          "https://nakafa.com/en/practice/snbt/general-knowledge/mock-test/2026/set-404"
         );
         const invalidPage = yield* Nakafa.verify(
           "https://nakafa.com/en/articles/politics/missing"

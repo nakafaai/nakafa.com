@@ -1,52 +1,33 @@
 import { getCategoryIcon } from "@repo/contents/_lib/curriculum/icons";
+import type { Locale } from "next-intl";
 
 const data = [
-  {
-    title: "middle-school",
-    items: [
-      {
-        title: "grade",
-        value: 7,
-        href: "/curriculum/middle-school/7",
-      },
-      {
-        title: "grade",
-        value: 8,
-        href: "/curriculum/middle-school/8",
-      },
-      {
-        title: "grade",
-        value: 9,
-        href: "/curriculum/middle-school/9",
-      },
-    ],
-  },
   {
     title: "high-school",
     items: [
       {
         title: "grade",
         value: 10,
-        href: "/curriculum/high-school/10",
+        href: {
+          en: "/curriculum/merdeka/class-10",
+          id: "/kurikulum/merdeka/kelas-10",
+        },
       },
       {
         title: "grade",
         value: 11,
-        href: "/curriculum/high-school/11",
+        href: {
+          en: "/curriculum/merdeka/class-11",
+          id: "/kurikulum/merdeka/kelas-11",
+        },
       },
       {
         title: "grade",
         value: 12,
-        href: "/curriculum/high-school/12",
-      },
-    ],
-  },
-  {
-    title: "university",
-    items: [
-      {
-        title: "bachelor",
-        href: "/curriculum/university/bachelor",
+        href: {
+          en: "/curriculum/merdeka/class-12",
+          id: "/kurikulum/merdeka/kelas-12",
+        },
       },
     ],
   },
@@ -56,3 +37,13 @@ export const subjectMenu = data.map((item) => ({
   ...item,
   icon: getCategoryIcon(item.title),
 }));
+
+export type SubjectMenuItem = (typeof subjectMenu)[number]["items"][number];
+
+export function getSubjectMenuHref(item: SubjectMenuItem, locale: Locale) {
+  if (locale === "id") {
+    return item.href.id;
+  }
+
+  return item.href.en;
+}

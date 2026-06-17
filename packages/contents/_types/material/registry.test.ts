@@ -122,6 +122,7 @@ describe("material registry", () => {
       domain: "biology",
       kind: "lesson",
       key: "lesson.biology.custom-topic",
+      routeSlugs: { en: "custom-topic", id: "topik-khusus" },
       sections: [],
       slug: "custom-topic",
       translations: {
@@ -136,8 +137,10 @@ describe("material registry", () => {
       groups: [
         {
           exerciseType: "practice",
+          routeSlugs: { en: "practice", id: "latihan" },
           sets: [
             {
+              routeSlugs: { en: "set-1", id: "set-1" },
               slug: "set-1",
               translations: {
                 en: { title: "Set 1" },
@@ -187,9 +190,9 @@ describe("material registry", () => {
     expect(
       toPracticeMaterialList(practice, "en")[0]?.description
     ).toBeUndefined();
-    expect(listPracticeMaterialSets([practice], "id")).toEqual([
-      expect.not.objectContaining({ year: expect.any(Number) }),
-    ]);
+    expect(listPracticeMaterialSets([practice], "id")[0]).not.toHaveProperty(
+      "year"
+    );
     expect(
       normalizeMaterialRoute("//material/lesson/biology/custom-topic/")
     ).toBe("material/lesson/biology/custom-topic");
@@ -201,6 +204,7 @@ describe("material registry", () => {
       domain: "mathematics",
       kind: "lesson",
       key: "lesson.mathematics.exponents",
+      routeSlugs: { en: "exponents", id: "eksponen" },
       sections: [],
       slug: "exponents",
       translations: {
@@ -224,6 +228,7 @@ describe("material registry", () => {
       domain: "mathematics",
       kind: "lesson",
       key: "Lesson Mathematics",
+      routeSlugs: { en: "exponents", id: "eksponen" },
       sections: [],
       slug: "exponents",
       translations: {
@@ -236,6 +241,7 @@ describe("material registry", () => {
       domain: "mathematics",
       kind: "lesson",
       key: "lesson.mathematics.exponents",
+      routeSlugs: { en: "exponents", id: "eksponen" },
       sections: [],
       slug: "Invalid Slug",
       translations: {

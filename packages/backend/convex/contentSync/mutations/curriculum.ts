@@ -4,7 +4,7 @@ import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/cons
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
 import {
   buildAuthorCache,
-  deleteContentProjectionsByRoute,
+  deleteContentProjectionsBySourcePath,
   deleteCurriculumLesson,
   syncContentAuthorsWithCache,
 } from "@repo/backend/convex/contentSync/lib/syncHelpers";
@@ -15,23 +15,20 @@ import { syncContentSearch } from "@repo/backend/convex/contents/helpers/search/
 import { internalMutation } from "@repo/backend/convex/functions";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import {
-  gradeValidator,
   localeValidator,
   materialValidator,
-  subjectCategoryValidator,
 } from "@repo/backend/convex/lib/validators/contents";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { ConvexError, v } from "convex/values";
 import { getAll } from "convex-helpers/server/relationships";
 
 const syncedCurriculumTopicValidator = v.object({
-  category: subjectCategoryValidator,
   contentHash: v.string(),
   description: v.optional(v.string()),
-  grade: gradeValidator,
   locale: localeValidator,
   material: materialValidator,
   order: v.number(),
+  publicPath: v.string(),
   sectionCount: v.number(),
   slug: v.string(),
   title: v.string(),
@@ -41,14 +38,13 @@ const syncedCurriculumTopicValidator = v.object({
 const syncedCurriculumLessonValidator = v.object({
   authors: v.array(v.object({ name: v.string() })),
   body: v.string(),
-  category: subjectCategoryValidator,
   contentHash: v.string(),
   date: v.number(),
   description: v.optional(v.string()),
-  grade: gradeValidator,
   locale: localeValidator,
   material: materialValidator,
   order: v.number(),
+  publicPath: v.string(),
   section: v.string(),
   slug: v.string(),
   subject: v.optional(v.string()),
@@ -103,9 +99,7 @@ export const bulkSyncCurriculumTopics = internalMutation({
         route: topic.slug,
       });
       const nextValues = {
-        category: topic.category,
         description: topic.description,
-        grade: topic.grade,
         material: topic.material,
         order: topic.order,
         sectionCount: topic.sectionCount,
@@ -120,8 +114,10 @@ export const bulkSyncCurriculumTopics = internalMutation({
         kind: "curriculum-topic",
         locale: topic.locale,
         markdown: false,
-        route: topic.slug,
+        materialDomain: topic.material,
+        publicPath: topic.publicPath,
         section: "material",
+        sourcePath: topic.slug,
         syncedAt: now,
         title: topic.title,
       });
@@ -220,8 +216,9 @@ export const bulkSyncCurriculumLessons = internalMutation({
         contentHash: section.contentHash,
         description: section.description,
         locale: section.locale,
-        route: section.slug,
+        route: section.publicPath,
         section: "material",
+        sourcePath: section.slug,
         syncedAt: now,
         text: section.body,
         title: section.title,
@@ -235,8 +232,10 @@ export const bulkSyncCurriculumLessons = internalMutation({
         kind: "curriculum-lesson",
         locale: section.locale,
         markdown: true,
-        route: section.slug,
+        materialDomain: section.material,
+        publicPath: section.publicPath,
         section: "material",
+        sourcePath: section.slug,
         syncedAt: now,
         title: section.title,
       });
@@ -255,11 +254,9 @@ export const bulkSyncCurriculumLessons = internalMutation({
 
       const nextValues = {
         body: section.body,
-        category: section.category,
         contentHash: section.contentHash,
         date: section.date,
         description: section.description,
-        grade: section.grade,
         material: section.material,
         order: section.order,
         section: section.section,
@@ -385,7 +382,7 @@ export const deleteStaleCurriculumTopics = internalMutation({
         await deleteCurriculumLesson(ctx, section._id);
       }
 
-      await deleteContentProjectionsByRoute(ctx, {
+      await deleteContentProjectionsBySourcePath(ctx, {
         locale: topic.locale,
         route: topic.slug,
       });

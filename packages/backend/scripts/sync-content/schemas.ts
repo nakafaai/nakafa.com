@@ -5,6 +5,7 @@ import {
   NAKAFA_CONTENT_SECTIONS,
 } from "@repo/backend/convex/contents/constants";
 import { CONTENT_TYPE_VALUES } from "@repo/backend/convex/lib/validators/contents";
+import { MaterialSchema } from "@repo/contents/_types/curriculum/material";
 import { locales } from "@repo/utilities/locales";
 import { Effect, Schema } from "effect";
 
@@ -48,6 +49,7 @@ export const BATCH_SIZES = {
   generatedCurriculumNodes: CONTENT_SYNC_BATCH_LIMITS.generatedCurriculumNodes,
   generatedMaterialLocales: CONTENT_SYNC_BATCH_LIMITS.generatedMaterialLocales,
   generatedMaterials: CONTENT_SYNC_BATCH_LIMITS.generatedMaterials,
+  generatedPublicRoutes: CONTENT_SYNC_BATCH_LIMITS.generatedPublicRoutes,
   quranSurahs: CONTENT_SYNC_BATCH_LIMITS.quranSurahs,
   quranVerses: CONTENT_SYNC_BATCH_LIMITS.quranVerses,
   quranSearchDocuments: CONTENT_SYNC_BATCH_LIMITS.quranSearchDocuments,
@@ -167,10 +169,13 @@ export const RuntimeContentRouteRowSchema = Schema.mutable(
     locale: SyncLocaleSchema,
     lensId: Schema.String,
     markdown: Schema.Boolean,
+    materialDomain: Schema.UndefinedOr(MaterialSchema),
     official: Schema.UndefinedOr(Schema.Boolean),
     parentRoute: Schema.UndefinedOr(Schema.String),
     route: Schema.String,
     section: SyncSectionSchema,
+    sourceParentPath: Schema.UndefinedOr(Schema.String),
+    sourcePath: Schema.String,
     syncedAt: Schema.Number,
     title: Schema.String,
   })
@@ -392,6 +397,7 @@ export const ContentCountsSchema = Schema.Struct({
   contentRouteCounts: Schema.Number,
   contentRoutePages: Schema.Number,
   contentRoutes: Schema.Number,
+  publicRoutes: Schema.Number,
   contentSearch: Schema.Number,
   contentViewAnalyticsQueue: Schema.Number,
   contentViews: Schema.Number,

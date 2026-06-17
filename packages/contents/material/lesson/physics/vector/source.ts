@@ -6,6 +6,7 @@ export const lessonPhysicsVectorMaterial = defineLessonMaterial({
   key: "lesson.physics.vector",
   kind: "lesson",
   slug: "vector",
+  routeSlugs: { en: "vector", id: "vektor" },
   translations: {
     en: {
       description:
@@ -21,6 +22,10 @@ export const lessonPhysicsVectorMaterial = defineLessonMaterial({
   sections: [
     {
       slug: "analytical-addition-subtraction",
+      routeSlugs: {
+        en: "analytical-addition-subtraction",
+        id: "penjumlahan-dan-pengurangan-vektor-dengan-metode-analitis",
+      },
       translations: {
         en: {
           title: "Vector Addition and Subtraction with Analytical Method",
@@ -32,6 +37,7 @@ export const lessonPhysicsVectorMaterial = defineLessonMaterial({
     },
     {
       slug: "component",
+      routeSlugs: { en: "component", id: "komponen-vektor" },
       translations: {
         en: {
           title: "Vector Components",
@@ -43,6 +49,7 @@ export const lessonPhysicsVectorMaterial = defineLessonMaterial({
     },
     {
       slug: "concept",
+      routeSlugs: { en: "concept", id: "konsep-vektor" },
       translations: {
         en: {
           title: "Vector Concept",
@@ -54,6 +61,10 @@ export const lessonPhysicsVectorMaterial = defineLessonMaterial({
     },
     {
       slug: "cosine-rule",
+      routeSlugs: {
+        en: "cosine-rule",
+        id: "penentuan-resultan-vektor-dengan-rumus-kosinus",
+      },
       translations: {
         en: {
           title: "Determining Vector Resultant with Cosine Rule",
@@ -65,6 +76,10 @@ export const lessonPhysicsVectorMaterial = defineLessonMaterial({
     },
     {
       slug: "graphical-addition-subtraction",
+      routeSlugs: {
+        en: "graphical-addition-subtraction",
+        id: "penjumlahan-dan-pengurangan-vektor-dengan-metode-grafis",
+      },
       translations: {
         en: {
           title: "Vector Addition and Subtraction with Graphical Method",
@@ -76,6 +91,7 @@ export const lessonPhysicsVectorMaterial = defineLessonMaterial({
     },
     {
       slug: "multiplication",
+      routeSlugs: { en: "multiplication", id: "perkalian-vektor" },
       translations: {
         en: {
           title: "Vector Multiplication",
@@ -87,6 +103,7 @@ export const lessonPhysicsVectorMaterial = defineLessonMaterial({
     },
     {
       slug: "notation",
+      routeSlugs: { en: "notation", id: "lambang-dan-notasi-vektor" },
       translations: {
         en: {
           title: "Vector Symbols and Notation",
@@ -98,6 +115,7 @@ export const lessonPhysicsVectorMaterial = defineLessonMaterial({
     },
     {
       slug: "property",
+      routeSlugs: { en: "property", id: "sifat-sifat-vektor" },
       translations: {
         en: {
           title: "Vector Properties",
@@ -109,6 +127,10 @@ export const lessonPhysicsVectorMaterial = defineLessonMaterial({
     },
     {
       slug: "sine-rule",
+      routeSlugs: {
+        en: "sine-rule",
+        id: "penentuan-arah-resultan-vektor-dengan-rumus-sinus",
+      },
       translations: {
         en: {
           title: "Determining Vector Resultant Direction with Sine Rule",
@@ -120,6 +142,10 @@ export const lessonPhysicsVectorMaterial = defineLessonMaterial({
     },
     {
       slug: "trigonometry-decomposition",
+      routeSlugs: {
+        en: "trigonometry-decomposition",
+        id: "penguraian-vektor-berdasarkan-aturan-trigonometri",
+      },
       translations: {
         en: {
           title: "Vector Decomposition Using Trigonometry Rules",

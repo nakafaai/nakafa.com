@@ -1,25 +1,16 @@
 import { getCategoryIcon } from "@repo/contents/_lib/assessment/icons";
+import type { Locale } from "next-intl";
 
 const data = [
-  {
-    title: "middle-school",
-    items: [
-      {
-        title: "grade-9",
-        href: "/assessment/middle-school/grade-9",
-      },
-    ],
-  },
   {
     title: "high-school",
     items: [
       {
-        title: "tka",
-        href: "/assessment/high-school/tka",
-      },
-      {
         title: "snbt",
-        href: "/assessment/high-school/snbt",
+        href: {
+          en: "/exams/snbt",
+          id: "/ujian/snbt",
+        },
       },
     ],
   },
@@ -29,3 +20,13 @@ export const exercisesMenu = data.map((item) => ({
   ...item,
   icon: getCategoryIcon(item.title),
 }));
+
+export type ExercisesMenuItem = (typeof exercisesMenu)[number]["items"][number];
+
+export function getExercisesMenuHref(item: ExercisesMenuItem, locale: Locale) {
+  if (locale === "id") {
+    return item.href.id;
+  }
+
+  return item.href.en;
+}

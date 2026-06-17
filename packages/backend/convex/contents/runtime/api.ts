@@ -46,15 +46,17 @@ export async function listArticleApiContentPageImpl(
         items.map(async (article) => {
           const graph = await getApiContentGraphProjection(ctx, {
             locale: article.locale,
-            route: article.slug,
+            sourcePath: article.slug,
           });
 
           if (!graph) {
             return null;
           }
 
+          const graphRef = toApiContentGraphRef(graph);
+
           return {
-            ...graph,
+            ...graphRef,
             locale: article.locale,
             metadata: {
               authors: await getContentAuthors(ctx, {
@@ -67,7 +69,8 @@ export async function listArticleApiContentPageImpl(
             },
             raw: article.body,
             slug: article.slug,
-            url: `${NAKAFA_CONTENT_BASE_URL}/${article.locale}/${article.slug}`,
+            sourcePath: article.slug,
+            url: `${NAKAFA_CONTENT_BASE_URL}/${article.locale}/${graph.publicPath}`,
           };
         })
       )
@@ -104,15 +107,17 @@ export async function listMaterialApiContentPageImpl(
         items.map(async (section) => {
           const graph = await getApiContentGraphProjection(ctx, {
             locale: section.locale,
-            route: section.slug,
+            sourcePath: section.slug,
           });
 
           if (!graph) {
             return null;
           }
 
+          const graphRef = toApiContentGraphRef(graph);
+
           return {
-            ...graph,
+            ...graphRef,
             locale: section.locale,
             metadata: {
               authors: await getContentAuthors(ctx, {
@@ -126,7 +131,8 @@ export async function listMaterialApiContentPageImpl(
             },
             raw: section.body,
             slug: section.slug,
-            url: `${NAKAFA_CONTENT_BASE_URL}/${section.locale}/${section.slug}`,
+            sourcePath: section.slug,
+            url: `${NAKAFA_CONTENT_BASE_URL}/${section.locale}/${graph.publicPath}`,
           };
         })
       )
@@ -139,13 +145,13 @@ async function getApiContentGraphProjection(
   ctx: QueryCtx,
   args: {
     locale: Locale;
-    route: string;
+    sourcePath: string;
   }
 ) {
   const route = await ctx.db
     .query("contentRoutes")
-    .withIndex("by_locale_and_route", (q) =>
-      q.eq("locale", args.locale).eq("route", args.route)
+    .withIndex("by_locale_and_sourcePath", (q) =>
+      q.eq("locale", args.locale).eq("sourcePath", args.sourcePath)
     )
     .unique();
 
@@ -159,6 +165,20 @@ async function getApiContentGraphProjection(
     conceptId: route.conceptId,
     learningObjectId: route.learningObjectId,
     lensId: route.lensId,
+    publicPath: route.route,
+  };
+}
+
+/** Keeps public API response rows aligned with their runtime validator. */
+function toApiContentGraphRef(
+  graph: NonNullable<Awaited<ReturnType<typeof getApiContentGraphProjection>>>
+) {
+  return {
+    alignmentId: graph.alignmentId,
+    assetId: graph.assetId,
+    conceptId: graph.conceptId,
+    learningObjectId: graph.learningObjectId,
+    lensId: graph.lensId,
   };
 }
 

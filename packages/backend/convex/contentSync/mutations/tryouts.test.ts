@@ -10,9 +10,7 @@ import { describe, expect, it } from "vitest";
 describe("contentSync/mutations/tryouts", () => {
   it("keeps browse order metadata in sync for an unchanged detected tryout", async () => {
     const t = createTryoutTestConvex();
-    const snbtSubjects = await Effect.runPromise(
-      getSubjects("high-school", "snbt")
-    );
+    const snbtSubjects = await Effect.runPromise(getSubjects("snbt"));
 
     await t.mutation(async (ctx) => {
       const tryoutId = await ctx.db.insert("tryouts", {

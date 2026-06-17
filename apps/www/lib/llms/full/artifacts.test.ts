@@ -105,7 +105,7 @@ describe("llms full document", () => {
               section: "material",
               title: "Notes",
             }),
-            href: "https://nakafa.com/en/material/practice/assessment/snbt/general-knowledge/try-out-2026/set-1/notes",
+            href: "https://nakafa.com/en/practice/snbt/general-knowledge/mock-test/2026/set-1/notes",
           },
         ]);
       }

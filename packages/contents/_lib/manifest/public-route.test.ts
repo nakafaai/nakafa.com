@@ -19,59 +19,43 @@ describe("public content route checks", () => {
     });
   });
 
-  it("classifies material and curriculum routes", () => {
-    expect(getPublicContentRouteCheck("subject")).toEqual({
+  it("does not classify route-projection owned material or curriculum routes", () => {
+    expect(getPublicContentRouteCheck("subject")).toEqual({ mode: "outside" });
+    expect(getPublicContentRouteCheck("subjects/mathematics")).toEqual({
       mode: "outside",
     });
-    expect(getPublicContentRouteCheck("curriculum")).toEqual({ mode: "app" });
-    expect(getPublicContentRouteCheck("material")).toEqual({ mode: "app" });
-    expect(
-      getPublicContentRouteCheck(
-        "material/lesson/mathematics/exponential-logarithm"
-      )
-    ).toEqual({
-      mode: "exact",
-      route: "material/lesson/mathematics/exponential-logarithm",
+    expect(getPublicContentRouteCheck("materi/matematika")).toEqual({
+      mode: "outside",
     });
-    expect(
-      getPublicContentRouteCheck(
-        "material/lesson/mathematics/exponential-logarithm/logarithm-definition"
-      )
-    ).toEqual({
-      mode: "exact",
-      route:
-        "material/lesson/mathematics/exponential-logarithm/logarithm-definition",
+    expect(getPublicContentRouteCheck("curriculum")).toEqual({
+      mode: "outside",
+    });
+    expect(getPublicContentRouteCheck("kurikulum/merdeka")).toEqual({
+      mode: "outside",
+    });
+    expect(getPublicContentRouteCheck("material")).toEqual({
+      mode: "outside",
+    });
+    expect(getPublicContentRouteCheck("material/lesson/mathematics")).toEqual({
+      mode: "outside",
     });
   });
 
-  it("classifies assessment material routes", () => {
+  it("does not classify route-projection owned assessment routes", () => {
     expect(getPublicContentRouteCheck("exercises")).toEqual({
       mode: "outside",
     });
-    expect(getPublicContentRouteCheck("assessment")).toEqual({ mode: "app" });
-    expect(
-      getPublicContentRouteCheck(
-        "material/practice/assessment/snbt/general-reasoning/try-out-2026"
-      )
-    ).toEqual({
-      mode: "exact",
-      route: "material/practice/assessment/snbt/general-reasoning/try-out-2026",
+    expect(getPublicContentRouteCheck("assessment")).toEqual({
+      mode: "outside",
     });
-    expect(
-      getPublicContentRouteCheck(
-        "assessment/high-school/snbt/general-reasoning/try-out/set-1"
-      )
-    ).toEqual({
-      mode: "app",
+    expect(getPublicContentRouteCheck("ujian/snbt")).toEqual({
+      mode: "outside",
     });
-    expect(
-      getPublicContentRouteCheck(
-        "material/practice/assessment/snbt/general-reasoning/try-out-2026/set-1/question-1"
-      )
-    ).toEqual({
-      mode: "exact",
-      route:
-        "material/practice/assessment/snbt/general-reasoning/try-out-2026/set-1/question-1",
+    expect(getPublicContentRouteCheck("practice/snbt")).toEqual({
+      mode: "outside",
+    });
+    expect(getPublicContentRouteCheck("latihan/snbt")).toEqual({
+      mode: "outside",
     });
   });
 

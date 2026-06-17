@@ -21,6 +21,7 @@ import {
 } from "@repo/design-system/components/ui/collapsible";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn, slugify } from "@repo/design-system/lib/utils";
+import { normalizeLocalizedInternalHref } from "@repo/internationalization/src/href";
 import { Link } from "@repo/internationalization/src/navigation";
 import { useLayoutEffect, useState } from "react";
 
@@ -119,7 +120,7 @@ export function CardMaterial({ material }: Props) {
                 <li className="group/list" key={item.href}>
                   <Link
                     className="group flex w-full scroll-mt-28 items-center gap-2 px-6 py-3 transition-colors ease-out hover:bg-accent hover:text-accent-foreground group-last/list:pb-6"
-                    href={item.href}
+                    href={normalizeLocalizedInternalHref(item.href)}
                     prefetch
                     title={item.title}
                   >

@@ -8,12 +8,12 @@ import { describe, expect, it } from "vitest";
 import {
   determinePageFetchNeed,
   getCanonicalCurrentPageContentUrl,
+  getCanonicalNakafaContentRefUrlEffect,
   getCanonicalNakafaContentUrl,
   hasFetchedCurrentPageContent,
 } from "@/app/api/chat/content";
 
-const currentContentUrl =
-  "/id/material/lesson/mathematics/function-modeling/rational-function";
+const currentContentUrl = "/id/materi/matematika/integral/jumlahan-riemann";
 
 type ContentStatus = Extract<NakafaDataPart, { kind: "content" }>["status"];
 
@@ -27,7 +27,7 @@ function contentMessage({
   url: string;
   status: ContentStatus;
 }) {
-  const contentRef = getCanonicalNakafaContentUrl(url);
+  const contentRef = Effect.runSync(getCanonicalNakafaContentRefUrlEffect(url));
 
   if (status === "loading") {
     return {
@@ -103,7 +103,7 @@ function contentMessage({
 describe("app/api/chat/content", () => {
   it("canonicalizes relative page URLs for content_ref inputs", () => {
     expect(getCanonicalNakafaContentUrl(currentContentUrl)).toBe(
-      "https://nakafa.com/id/material/lesson/mathematics/function-modeling/rational-function"
+      "https://nakafa.com/id/materi/matematika/integral/jumlahan-riemann"
     );
   });
 
@@ -116,6 +116,51 @@ describe("app/api/chat/content", () => {
     ).toBe("https://nakafa.com/id/quran/1");
   });
 
+  it("keeps unknown locale prefixes as public URLs", async () => {
+    await expect(
+      Effect.runPromise(
+        getCanonicalNakafaContentRefUrlEffect(
+          "/fr/subjects/mathematics/integral/riemann-sum"
+        )
+      )
+    ).resolves.toBe(
+      "https://nakafa.com/fr/subjects/mathematics/integral/riemann-sum"
+    );
+  });
+
+  it("maps projected practice URLs to source-backed content refs", async () => {
+    await expect(
+      Effect.runPromise(
+        getCanonicalNakafaContentRefUrlEffect(
+          "/en/practice/snbt/quantitative-knowledge/mock-test/2026/set-1"
+        )
+      )
+    ).resolves.toBe(
+      "https://nakafa.com/en/material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1"
+    );
+    await expect(
+      Effect.runPromise(
+        getCanonicalNakafaContentRefUrlEffect(
+          "/en/practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question-9"
+        )
+      )
+    ).resolves.toBe(
+      "https://nakafa.com/en/material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-9"
+    );
+  });
+
+  it("keeps curriculum context URLs as public navigation refs", async () => {
+    await expect(
+      Effect.runPromise(
+        getCanonicalNakafaContentRefUrlEffect(
+          "/en/curriculum/merdeka/class-12/mathematics/integral"
+        )
+      )
+    ).resolves.toBe(
+      "https://nakafa.com/en/curriculum/merdeka/class-12/mathematics/integral"
+    );
+  });
+
   it.each([
     [
       "same absolute URL",
@@ -126,7 +171,7 @@ describe("app/api/chat/content", () => {
     ["same relative URL", currentContentUrl, "done", true],
     [
       "different URL",
-      "/id/material/lesson/mathematics/function-modeling/function-domain",
+      "/id/materi/matematika/integral/integral-tentu",
       "done",
       false,
     ],

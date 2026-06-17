@@ -9,8 +9,8 @@ describe("getContentRuntimeSlug", () => {
     expect(getContentRuntimeSlug("articles/politics/example")).toBe(
       "articles/politics/example"
     );
-    expect(getContentRuntimeSlug("//curriculum/high-school/10/math//")).toBe(
-      "curriculum/high-school/10/math"
+    expect(getContentRuntimeSlug("//kurikulum/merdeka/kelas-10/math//")).toBe(
+      "kurikulum/merdeka/kelas-10/math"
     );
   });
 });

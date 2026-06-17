@@ -6,6 +6,7 @@ export const lessonMathematicsSequenceSeriesMaterial = defineLessonMaterial({
   key: "lesson.mathematics.sequence-series",
   kind: "lesson",
   slug: "sequence-series",
+  routeSlugs: { en: "sequence-series", id: "barisan-dan-deret" },
   translations: {
     en: {
       description:
@@ -21,6 +22,7 @@ export const lessonMathematicsSequenceSeriesMaterial = defineLessonMaterial({
   sections: [
     {
       slug: "arithmetic-sequence",
+      routeSlugs: { en: "arithmetic-sequence", id: "barisan-aritmetika" },
       translations: {
         en: {
           title: "Arithmetic Sequence",
@@ -32,6 +34,7 @@ export const lessonMathematicsSequenceSeriesMaterial = defineLessonMaterial({
     },
     {
       slug: "arithmetic-series",
+      routeSlugs: { en: "arithmetic-series", id: "deret-aritmetika" },
       translations: {
         en: {
           title: "Arithmetic Series",
@@ -43,6 +46,10 @@ export const lessonMathematicsSequenceSeriesMaterial = defineLessonMaterial({
     },
     {
       slug: "convergence-divergence",
+      routeSlugs: {
+        en: "convergence-divergence",
+        id: "perbedaan-konvergen-dan-divergen",
+      },
       translations: {
         en: {
           title: "Difference Between Convergence and Divergence",
@@ -54,6 +61,10 @@ export const lessonMathematicsSequenceSeriesMaterial = defineLessonMaterial({
     },
     {
       slug: "difference-arithmetic-geometric-sequence",
+      routeSlugs: {
+        en: "difference-arithmetic-geometric-sequence",
+        id: "perbedaan-barisan-aritmetika-dan-geometri",
+      },
       translations: {
         en: {
           title: "Difference between Arithmetic and Geometric Sequence",
@@ -65,6 +76,10 @@ export const lessonMathematicsSequenceSeriesMaterial = defineLessonMaterial({
     },
     {
       slug: "difference-arithmetic-geometric-series",
+      routeSlugs: {
+        en: "difference-arithmetic-geometric-series",
+        id: "perbedaan-deret-aritmetika-dan-geometri",
+      },
       translations: {
         en: {
           title: "Difference between Arithmetic and Geometric Series",
@@ -76,6 +91,10 @@ export const lessonMathematicsSequenceSeriesMaterial = defineLessonMaterial({
     },
     {
       slug: "difference-sequence-series",
+      routeSlugs: {
+        en: "difference-sequence-series",
+        id: "perbedaan-barisan-dan-deret",
+      },
       translations: {
         en: {
           title: "Difference between Sequence and Series",
@@ -87,6 +106,7 @@ export const lessonMathematicsSequenceSeriesMaterial = defineLessonMaterial({
     },
     {
       slug: "geometric-sequence",
+      routeSlugs: { en: "geometric-sequence", id: "barisan-geometri" },
       translations: {
         en: {
           title: "Geometric Sequence",
@@ -98,6 +118,7 @@ export const lessonMathematicsSequenceSeriesMaterial = defineLessonMaterial({
     },
     {
       slug: "geometric-series",
+      routeSlugs: { en: "geometric-series", id: "deret-geometri" },
       translations: {
         en: {
           title: "Geometric Series",
@@ -109,6 +130,10 @@ export const lessonMathematicsSequenceSeriesMaterial = defineLessonMaterial({
     },
     {
       slug: "infinite-geometric-series",
+      routeSlugs: {
+        en: "infinite-geometric-series",
+        id: "deret-geometri-tak-hingga",
+      },
       translations: {
         en: {
           title: "Infinite Geometric Series",
@@ -120,6 +145,7 @@ export const lessonMathematicsSequenceSeriesMaterial = defineLessonMaterial({
     },
     {
       slug: "sequence-concept",
+      routeSlugs: { en: "sequence-concept", id: "konsep-barisan" },
       translations: {
         en: {
           title: "Sequence Concept",
@@ -131,6 +157,7 @@ export const lessonMathematicsSequenceSeriesMaterial = defineLessonMaterial({
     },
     {
       slug: "series-concept",
+      routeSlugs: { en: "series-concept", id: "konsep-deret" },
       translations: {
         en: {
           title: "Series Concept",

@@ -7,6 +7,10 @@ export const lessonMathematicsDataAnalysisProbabilityMaterial =
     key: "lesson.mathematics.data-analysis-probability",
     kind: "lesson",
     slug: "data-analysis-probability",
+    routeSlugs: {
+      en: "data-analysis-probability",
+      id: "analisis-data-dan-peluang",
+    },
     translations: {
       en: {
         description:
@@ -22,6 +26,10 @@ export const lessonMathematicsDataAnalysisProbabilityMaterial =
     sections: [
       {
         slug: "binomial-distribution-function",
+        routeSlugs: {
+          en: "binomial-distribution-function",
+          id: "fungsi-distribusi-binomial",
+        },
         translations: {
           en: {
             title: "Binomial Distribution Function",
@@ -33,6 +41,10 @@ export const lessonMathematicsDataAnalysisProbabilityMaterial =
       },
       {
         slug: "expected-value-of-binomial-distribution",
+        routeSlugs: {
+          en: "expected-value-of-binomial-distribution",
+          id: "nilai-harapan-distribusi-binomial",
+        },
         translations: {
           en: {
             title: "Expected Value of Binomial Distribution",
@@ -44,6 +56,10 @@ export const lessonMathematicsDataAnalysisProbabilityMaterial =
       },
       {
         slug: "expected-value-of-normal-distribution",
+        routeSlugs: {
+          en: "expected-value-of-normal-distribution",
+          id: "nilai-harapan-distribusi-normal",
+        },
         translations: {
           en: {
             title: "Expected Value of Normal Distribution",
@@ -55,6 +71,10 @@ export const lessonMathematicsDataAnalysisProbabilityMaterial =
       },
       {
         slug: "normal-distribution-function",
+        routeSlugs: {
+          en: "normal-distribution-function",
+          id: "fungsi-distribusi-normal",
+        },
         translations: {
           en: {
             title: "Normal Distribution Function",
@@ -66,6 +86,7 @@ export const lessonMathematicsDataAnalysisProbabilityMaterial =
       },
       {
         slug: "uniform-distribution",
+        routeSlugs: { en: "uniform-distribution", id: "distribusi-seragam" },
         translations: {
           en: {
             title: "Uniform Distribution",

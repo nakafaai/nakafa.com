@@ -22,7 +22,7 @@ type TryoutPartKey = Effect.Effect.Success<
 
 const tryoutPartKeyReaders = {
   snbt: () =>
-    getSubjects("high-school", "snbt").pipe(
+    getSubjects("snbt").pipe(
       Effect.map((subjects) => subjects.map((subject) => subject.label))
     ),
 } satisfies Record<

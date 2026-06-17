@@ -2,7 +2,6 @@ import {
   getCategoryPath as getArticleCategoryPath,
   parseArticleCategory,
 } from "@repo/contents/_lib/articles/category";
-import { CONTENT_ROOT_VALUES } from "@repo/contents/_types/content";
 import { Option } from "effect";
 
 export type PublicContentRouteCheck =
@@ -19,22 +18,12 @@ export function getPublicContentRouteCheck(
   const parts = route.split("/").filter(Boolean);
   const [root] = parts;
 
-  if (root === CONTENT_ROOT_VALUES.articles) {
+  if (root === "articles") {
     return getArticleRouteCheck(parts);
   }
 
-  if (root === CONTENT_ROOT_VALUES.material) {
-    return parts.length === 1
-      ? { mode: "app" }
-      : { mode: "exact", route: parts.join("/") };
-  }
-
-  if (root === CONTENT_ROOT_VALUES.quran) {
+  if (root === "quran") {
     return getQuranRouteCheck(parts);
-  }
-
-  if (root === "curriculum" || root === "assessment") {
-    return { mode: "app" };
   }
 
   return { mode: "outside" };

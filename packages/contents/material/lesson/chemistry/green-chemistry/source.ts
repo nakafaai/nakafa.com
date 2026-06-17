@@ -6,6 +6,7 @@ export const lessonChemistryGreenChemistryMaterial = defineLessonMaterial({
   key: "lesson.chemistry.green-chemistry",
   kind: "lesson",
   slug: "green-chemistry",
+  routeSlugs: { en: "green-chemistry", id: "kimia-hijau" },
   translations: {
     en: {
       description:
@@ -21,6 +22,10 @@ export const lessonChemistryGreenChemistryMaterial = defineLessonMaterial({
   sections: [
     {
       slug: "chemical-processes-daily-life",
+      routeSlugs: {
+        en: "chemical-processes-daily-life",
+        id: "proses-kimia-sehari-hari",
+      },
       translations: {
         en: {
           title: "Daily Chemical Processes",
@@ -32,6 +37,7 @@ export const lessonChemistryGreenChemistryMaterial = defineLessonMaterial({
     },
     {
       slug: "definition",
+      routeSlugs: { en: "definition", id: "pengertian-kimia-hijau" },
       translations: {
         en: {
           title: "Definition of Green Chemistry",
@@ -43,6 +49,10 @@ export const lessonChemistryGreenChemistryMaterial = defineLessonMaterial({
     },
     {
       slug: "green-chemistry-activities",
+      routeSlugs: {
+        en: "green-chemistry-activities",
+        id: "kegiatan-kimia-hijau",
+      },
       translations: {
         en: {
           title: "Green Chemistry Activities",
@@ -54,6 +64,7 @@ export const lessonChemistryGreenChemistryMaterial = defineLessonMaterial({
     },
     {
       slug: "principles",
+      routeSlugs: { en: "principles", id: "prinsip-kimia-hijau" },
       translations: {
         en: {
           title: "Green Chemistry Principles",

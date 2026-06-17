@@ -10,20 +10,32 @@ import { buildHeader } from "@/lib/llms/format";
 export async function getCachedLlmsExerciseText({
   cleanSlug,
   locale,
+  publicSlug,
 }: {
   cleanSlug: string;
   locale: Locale;
+  publicSlug?: string;
 }) {
   "use cache";
 
   applyContentRuntimeCache();
 
-  return await Effect.runPromise(getLlmsExerciseText({ cleanSlug, locale }));
+  return await Effect.runPromise(
+    getLlmsExerciseText({ cleanSlug, locale, publicSlug })
+  );
 }
 
 /** Builds uncached exercise markdown from source content. */
 export const getLlmsExerciseText = Effect.fn("www.llms.exercises.text")(
-  function* ({ cleanSlug, locale }: { cleanSlug: string; locale: Locale }) {
+  function* ({
+    cleanSlug,
+    locale,
+    publicSlug,
+  }: {
+    cleanSlug: string;
+    locale: Locale;
+    publicSlug?: string;
+  }) {
     if (!cleanSlug.startsWith("material/practice")) {
       return null;
     }
@@ -56,7 +68,7 @@ export const getLlmsExerciseText = Effect.fn("www.llms.exercises.text")(
       targetExercises,
     });
     const scanned = buildHeader({
-      url: `${BASE_URL}/${locale}/${cleanSlug}`,
+      url: `${BASE_URL}/${locale}/${publicSlug ?? cleanSlug}`,
       description,
     });
 

@@ -39,17 +39,23 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 
 ## Effect-Native Standard
 
-- This is an Effect-native TypeScript codebase. All new or changed effectful TypeScript work must use Effect natively end to end.
+- This is an Effect-native TypeScript codebase. Effect is the decomposition and composition architecture, not a wrapper around raw TypeScript.
+- Effect-native architecture gives Nakafa decomposable, composable, traceable, and type-safe behavior end to end. It prevents fragmented helper chains, duplicated maps, hidden failure paths, and source-of-truth drift.
+- Every new or touched TypeScript domain capability must start from Effect-native design: Schema contracts, branded values, tagged errors, small named `Effect.fn` programs, and `Effect.Service`/`Context.Tag` plus `Layer` only where there is a real dependency seam.
+- Public module Interfaces must expose schema-derived data contracts and Effect-native operations for fallible, effectful, cross-source, or cross-module work. Do not build a raw TypeScript module and sprinkle Schema decoding, `Effect.succeed`, or a boundary runner around it later.
+- Source registries must decode through schemas and produce typed/branded rows. Projection modules must compose those rows through typed Effects, not raw loops with hidden failure or fallback paths.
+- Missing source data, duplicate routes, invalid slugs, invalid source rows, mismatched mappings, and route collisions are expected domain failures in the Effect error channel. Model them with `Schema.TaggedError` or `Data.TaggedError`, not `null`, generic `Error`, thrown parser errors, silent filtering, or fallback strings.
+- `Effect.runPromise`, `Effect.runSync`, and `Effect.runPromiseExit` are allowed only at framework, CLI, script main, test, or React/Next event boundaries. Never run an Effect inside services, domain modules, projection modules, or helper chains; compose the program instead.
 - Effectful work includes filesystem IO, HTTP/network calls, database/client calls, dynamic imports, async orchestration, shared caches, environment/config reads, logging, schema decoding failures, and expected domain failures.
-- Do not use raw `async`/`Promise`, raw `try/catch`, ad hoc mutable cache state, or untyped error classes at effectful seams.
-- Use `Effect.fn`, `Effect.Service`, `Schema.TaggedError`, `Effect.Cache`, `Config`, and `@effect/platform` APIs where they fit the seam.
-- Pure deterministic helpers should stay pure. A pure parser, path formatter, or route helper is still part of the Effect-native architecture when effectful callers compose it inside Effect programs.
-- If existing architecture is not Effect-native at an effectful seam, fix the seam directly instead of adding wrappers or compatibility patches around it.
-- App code is not exempt. In `apps/*`, Server Actions, Route Handlers, Server Components that load data, client event handlers that call mutations, scripts, dynamic imports, and analytics/logging boundaries must compose Effect programs and call `Effect.runPromise` only at the React, Next.js, CLI, or browser event boundary.
-- Do not start a non-fast-path Effect runtime inside a statically prerendered Server Component before Next.js has request data or uncached data. Installed `effect@3.21.2` creates fibers through `src/internal/runtime.ts` `unsafeRunPromiseExit()` -> `unsafeFork()` -> `FiberId.unsafeMake()`, and `src/internal/fiberId.ts` reads `Date.now()` for `startTimeMillis`; Next.js Cache Components reject that during static prerender. For SSG-only MDX/content dynamic imports, use the framework Promise boundary directly and document the exception with `https://nextjs.org/docs/messages/next-prerender-current-time`.
-- Do not preserve legacy raw `try/catch` or Promise `.catch()` in touched app code. Convert expected failures into Effect failures or explicit return values, then recover with `catchTag`, `catchTags`, `catchIf`, `match`, or a narrow outer `catchAll` that records the full cause/context.
+- App code is not exempt. In `apps/*`, Server Actions, Route Handlers, Server Components that load data, client event handlers that call mutations, scripts, dynamic imports, and analytics/logging boundaries must compose Effect programs and call a runner only at the React, Next.js, CLI, or browser event boundary.
+- Do not start a non-fast-path Effect runtime inside a statically prerendered Server Component before Next.js has request data or uncached data. Installed Effect creates fibers through `unsafeRunPromiseExit()` -> `unsafeFork()` -> `FiberId.unsafeMake()`, and `fiberId` reads current time for `startTimeMillis`; Next.js Cache Components reject that during static prerender. For SSG-only MDX/content dynamic imports, use the framework Promise boundary directly and document the exception with `https://nextjs.org/docs/messages/next-prerender-current-time`.
+- Private pure helpers are allowed only for tiny deterministic transformations after inputs have been decoded or validated by Schema and when they cannot fail, perform IO, access dependencies, mutate shared state, or create source-of-truth contracts.
+- Pure helpers must not be exported as the primary domain API when the operation can fail, validates source data, builds public routes, syncs read models, reads config, depends on multiple registries, or crosses module boundaries.
+- If existing architecture is not Effect-native at an effectful seam, fix the seam directly instead of adding wrappers, compatibility patches, or shallow pass-through adapters.
 - Name shared modules by domain capability, not by the Effect implementation style. Prefer seams such as `lib/analytics`, `lib/content`, `lib/checkout`, or `lib/school`; do not create catch-all folders like `lib/effect` just because the implementation uses Effect.
 - After touching app effectful code, run `rg -n "\btry\s*\{|\bcatch\s*\(" <touched app paths> --glob '*.{ts,tsx}'` and either make it clean or document every remaining framework-mandated exception with the exact file and reason.
+- After touching domain source or projection modules, scan for `as ` assertions, `satisfies Record`, `Record<string`, `any`, generic `Error`, raw `throw`, raw `try/catch`, `Effect.runPromise`, `Effect.runSync`, and silent source-of-truth fallbacks such as `?? toPublicSlug` or `|| fallback`.
+- Tests for Effect-domain seams must assert typed failure behavior, not just happy-path output.
 
 ## Required Reading
 
@@ -207,6 +213,7 @@ Before any Next.js work, find and read the relevant installed Next.js doc. With 
 - Use semantic HTML and accessible component APIs.
 - Prefer Next.js primitives like `<Image>` when appropriate.
 - Keep server/client boundaries explicit and minimal.
+- New or touched app route UI must reuse existing Nakafa and design-system surfaces before adding markup. Route migrations may change data and URL shape, but the visual composition should follow the established page surface for that domain, such as subject/material lists and material body layouts. Do not introduce one-off card/list styling, bespoke hover treatments, or custom shells when an existing component already owns the pattern; use `className` only as layout glue around those components.
 - When a static route hits Next.js current-time prerender errors, do not blindly add `connection()`. Installed Next.js docs state `connection()` opts the subtree into runtime rendering; use it only when the route is intentionally dynamic, not to hide an Effect runtime timestamp in content that should stay SSG.
 
 ## Convex Rules

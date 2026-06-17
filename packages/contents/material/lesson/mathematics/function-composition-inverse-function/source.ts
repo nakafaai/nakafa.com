@@ -8,6 +8,10 @@ export const lessonMathematicsFunctionCompositionInverseFunctionMaterial =
     key: "lesson.mathematics.function-composition-inverse-function",
     kind: "lesson",
     slug: "function-composition-inverse-function",
+    routeSlugs: {
+      en: "function-composition-inverse-function",
+      id: "fungsi-komposisi-dan-fungsi-invers",
+    },
     translations: {
       en: {
         description:
@@ -23,6 +27,10 @@ export const lessonMathematicsFunctionCompositionInverseFunctionMaterial =
     sections: [
       {
         slug: "addition-subtraction-function",
+        routeSlugs: {
+          en: "addition-subtraction-function",
+          id: "penjumlahan-dan-pengurangan-fungsi",
+        },
         translations: {
           en: {
             title: "Addition and Subtraction of Functions",
@@ -34,6 +42,10 @@ export const lessonMathematicsFunctionCompositionInverseFunctionMaterial =
       },
       {
         slug: "domain-codomain-range",
+        routeSlugs: {
+          en: "domain-codomain-range",
+          id: "domain-kodomain-dan-range",
+        },
         translations: {
           en: {
             title: "Domain, Codomain, and Range",
@@ -45,6 +57,10 @@ export const lessonMathematicsFunctionCompositionInverseFunctionMaterial =
       },
       {
         slug: "function-and-non-function",
+        routeSlugs: {
+          en: "function-and-non-function",
+          id: "fungsi-dan-bukan-fungsi",
+        },
         translations: {
           en: {
             title: "Function and Non-Function",
@@ -56,6 +72,7 @@ export const lessonMathematicsFunctionCompositionInverseFunctionMaterial =
       },
       {
         slug: "function-composition",
+        routeSlugs: { en: "function-composition", id: "komposisi-fungsi" },
         translations: {
           en: {
             title: "Function Composition",
@@ -67,6 +84,7 @@ export const lessonMathematicsFunctionCompositionInverseFunctionMaterial =
       },
       {
         slug: "function-concept",
+        routeSlugs: { en: "function-concept", id: "konsep-fungsi" },
         translations: {
           en: {
             title: "Function Concept",
@@ -78,6 +96,10 @@ export const lessonMathematicsFunctionCompositionInverseFunctionMaterial =
       },
       {
         slug: "injective-surjective-bijective-function",
+        routeSlugs: {
+          en: "injective-surjective-bijective-function",
+          id: "fungsi-injektif-surjektif-dan-bijektif",
+        },
         translations: {
           en: {
             title: "Injective, Surjective, and Bijective Functions",
@@ -89,6 +111,7 @@ export const lessonMathematicsFunctionCompositionInverseFunctionMaterial =
       },
       {
         slug: "inverse-function",
+        routeSlugs: { en: "inverse-function", id: "fungsi-invers" },
         translations: {
           en: {
             title: "Inverse Function",
@@ -100,6 +123,10 @@ export const lessonMathematicsFunctionCompositionInverseFunctionMaterial =
       },
       {
         slug: "multiplication-division-function",
+        routeSlugs: {
+          en: "multiplication-division-function",
+          id: "perkalian-dan-pembagian-fungsi",
+        },
         translations: {
           en: {
             title: "Multiplication and Division of Functions",
@@ -111,6 +138,10 @@ export const lessonMathematicsFunctionCompositionInverseFunctionMaterial =
       },
       {
         slug: "properties-of-function-composition",
+        routeSlugs: {
+          en: "properties-of-function-composition",
+          id: "sifat-komposisi-fungsi",
+        },
         translations: {
           en: {
             title: "Properties of Function Composition",
@@ -122,6 +153,10 @@ export const lessonMathematicsFunctionCompositionInverseFunctionMaterial =
       },
       {
         slug: "properties-of-inverse-function",
+        routeSlugs: {
+          en: "properties-of-inverse-function",
+          id: "sifat-fungsi-invers",
+        },
         translations: {
           en: {
             title: "Properties of Inverse Function",

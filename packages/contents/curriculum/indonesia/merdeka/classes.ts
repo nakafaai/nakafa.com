@@ -11,9 +11,11 @@ export const merdekaClassNodes = [
     order: 100,
     translations: {
       en: {
+        routeSlug: "class-10",
         title: "Class 10",
       },
       id: {
+        routeSlug: "kelas-10",
         title: "Kelas 10",
       },
     },
@@ -24,9 +26,11 @@ export const merdekaClassNodes = [
     order: 110,
     translations: {
       en: {
+        routeSlug: "class-11",
         title: "Class 11",
       },
       id: {
+        routeSlug: "kelas-11",
         title: "Kelas 11",
       },
     },
@@ -37,9 +41,11 @@ export const merdekaClassNodes = [
     order: 120,
     translations: {
       en: {
+        routeSlug: "class-12",
         title: "Class 12",
       },
       id: {
+        routeSlug: "kelas-12",
         title: "Kelas 12",
       },
     },

@@ -62,6 +62,7 @@ async function insertContentRoute(
     markdown: true,
     route: input.route,
     section: input.kind === "article" ? "articles" : "material",
+    sourcePath: input.route,
     syncedAt: 1,
     title: input.title,
   });
@@ -91,8 +92,6 @@ describe("contents/queries/audio", () => {
 
       await ctx.db.insert("curriculumLessons", {
         topicId: await ctx.db.insert("curriculumTopics", {
-          category: "high-school",
-          grade: "10",
           material: "mathematics",
           order: 0,
           topic: "vector-operations",
@@ -104,8 +103,6 @@ describe("contents/queries/audio", () => {
         }),
         locale: "en",
         slug: REAL_VECTOR_SECTION_SLUG,
-        category: "high-school",
-        grade: "10",
         material: "mathematics",
         order: 0,
         topic: "vector-operations",
@@ -121,8 +118,6 @@ describe("contents/queries/audio", () => {
 
       await ctx.db.insert("curriculumLessons", {
         topicId: await ctx.db.insert("curriculumTopics", {
-          category: "high-school",
-          grade: "10",
           material: "mathematics",
           order: 0,
           topic: "vector-operations",
@@ -134,8 +129,6 @@ describe("contents/queries/audio", () => {
         }),
         locale: "id",
         slug: REAL_VECTOR_SECTION_SLUG,
-        category: "high-school",
-        grade: "10",
         material: "mathematics",
         order: 0,
         topic: "vector-operations",
@@ -274,8 +267,6 @@ describe("contents/queries/audio", () => {
       });
       await ctx.db.insert("curriculumLessons", {
         topicId: await ctx.db.insert("curriculumTopics", {
-          category: "high-school",
-          grade: "10",
           material: "mathematics",
           order: 0,
           topic: "vector-operations",
@@ -287,8 +278,6 @@ describe("contents/queries/audio", () => {
         }),
         locale: "en",
         slug: REAL_VECTOR_SECTION_SLUG,
-        category: "high-school",
-        grade: "10",
         material: "mathematics",
         order: 0,
         topic: "vector-operations",

@@ -6,6 +6,7 @@ import { getEntries, getSitemapEntries, getUrl } from "@/lib/sitemap/entries";
 
 const mockGetRuntimeContentRoute = vi.hoisted(() => vi.fn());
 const mockGetSitemapRoutes = vi.hoisted(() => vi.fn());
+const mockGetSitemapRoutesEffect = vi.hoisted(() => vi.fn());
 const mockGetSitemapPageDescriptor = vi.hoisted(() => vi.fn());
 const mockGetSitemapPageDescriptorsEffect = vi.hoisted(() => vi.fn());
 const mockGetPathname = vi.hoisted(() =>
@@ -38,8 +39,6 @@ vi.mock("@/lib/sitemap/routes", () => ({
     "/search",
     "/contributor",
     "/quran",
-    "/curriculum",
-    "/assessment",
     "/terms-of-service",
     "/privacy-policy",
     "/security-policy",
@@ -47,11 +46,13 @@ vi.mock("@/lib/sitemap/routes", () => ({
   getSitemapPageDescriptorsEffect: mockGetSitemapPageDescriptorsEffect,
   getSitemapPageDescriptor: mockGetSitemapPageDescriptor,
   getSitemapRoutes: mockGetSitemapRoutes,
+  getSitemapRoutesEffect: mockGetSitemapRoutesEffect,
 }));
 
 beforeEach(() => {
   mockGetRuntimeContentRoute.mockReset();
   mockGetSitemapRoutes.mockReset();
+  mockGetSitemapRoutesEffect.mockReset();
   mockGetSitemapPageDescriptor.mockReset();
   mockGetSitemapPageDescriptorsEffect.mockReset();
   mockGetPathname.mockClear();
@@ -70,8 +71,11 @@ beforeEach(() => {
     "/search",
     "/articles/politics/dynastic-politics-asian-values",
     "/quran/1",
-    "/curriculum/high-school/10",
+    "/subjects/chemistry/green-chemistry/definition",
   ]);
+  mockGetSitemapRoutesEffect.mockImplementation((pageId) =>
+    Effect.promise(() => mockGetSitemapRoutes(pageId))
+  );
 });
 
 describe("sitemap entries", () => {
@@ -143,22 +147,30 @@ describe("sitemap entries", () => {
       expect.objectContaining({ changeFrequency: "weekly", priority: 0.8 })
     );
     await expect(
-      Effect.runPromise(getEntries("/curriculum/university/bachelor"))
-    ).resolves.toContainEqual(
-      expect.objectContaining({ changeFrequency: "monthly", priority: 0.9 })
-    );
-    await expect(
-      Effect.runPromise(getEntries("/curriculum/high-school/10"))
+      Effect.runPromise(getEntries("/subjects/mathematics/integral"))
     ).resolves.toContainEqual(
       expect.objectContaining({ changeFrequency: "monthly", priority: 0.8 })
     );
     await expect(
-      Effect.runPromise(getEntries("/curriculum/middle-school/9"))
+      Effect.runPromise(
+        getEntries("/curriculum/merdeka/class-10/mathematics/integral")
+      )
     ).resolves.toContainEqual(
       expect.objectContaining({ changeFrequency: "monthly", priority: 0.7 })
     );
     await expect(
-      Effect.runPromise(getEntries("/curriculum/elementary-school/6"))
+      Effect.runPromise(
+        getEntries("/exams/snbt/quantitative-knowledge/mock-test/2026")
+      )
+    ).resolves.toContainEqual(
+      expect.objectContaining({ changeFrequency: "monthly", priority: 0.7 })
+    );
+    await expect(
+      Effect.runPromise(
+        getEntries(
+          "/practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question-1"
+        )
+      )
     ).resolves.toContainEqual(
       expect.objectContaining({ changeFrequency: "monthly", priority: 0.6 })
     );
@@ -237,7 +249,9 @@ describe("sitemap entries", () => {
     expect(urls).toContain("https://nakafa.com/id");
     expect(urls).not.toContain("https://nakafa.com/en/about");
     expect(urls).not.toContain("https://nakafa.com/id/about");
-    expect(urls).toContain("https://nakafa.com/id/curriculum/high-school/10");
+    expect(urls).toContain(
+      "https://nakafa.com/en/subjects/chemistry/green-chemistry/definition"
+    );
   });
 
   it("generates unbounded submission entries across every sitemap page", async () => {
@@ -266,7 +280,7 @@ describe("sitemap entries", () => {
     });
     mockGetSitemapRoutes.mockImplementation((pageId) => {
       if (pageId === "content_id_subject_0") {
-        return Promise.resolve(["/curriculum/high-school/10"]);
+        return Promise.resolve(["/materi/matematika/integral"]);
       }
 
       return Promise.resolve(["/search"]);
@@ -277,7 +291,7 @@ describe("sitemap entries", () => {
     expect(entries.map((entry) => entry.url)).toEqual([
       "https://nakafa.com/en/search",
       "https://nakafa.com/id/search",
-      "https://nakafa.com/id/curriculum/high-school/10",
+      "https://nakafa.com/id/materi/matematika/integral",
     ]);
     expect(mockGetSitemapRoutes).toHaveBeenCalledWith("base");
     expect(mockGetSitemapRoutes).toHaveBeenCalledWith("content_id_subject_0");

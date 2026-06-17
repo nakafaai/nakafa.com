@@ -13,8 +13,10 @@ const material = definePracticeMaterial({
   groups: [
     {
       exerciseType: "practice",
+      routeSlugs: { en: "practice", id: "latihan" },
       sets: [
         {
+          routeSlugs: { en: "set-1", id: "set-1" },
           slug: "set-1",
           translations: {
             en: { title: "Set 1" },
@@ -41,8 +43,8 @@ const assessment = defineAssessment({
       materialKeys: [],
       order: 1,
       translations: {
-        en: { title: "Root" },
-        id: { title: "Root" },
+        en: { routeSlug: "root", title: "Root" },
+        id: { routeSlug: "root", title: "Root" },
       },
     },
     {
@@ -52,8 +54,8 @@ const assessment = defineAssessment({
       order: 1,
       parentKey: "root",
       translations: {
-        en: { title: "Domain" },
-        id: { title: "Domain" },
+        en: { routeSlug: "domain", title: "Domain" },
+        id: { routeSlug: "domain", title: "Domain" },
       },
     },
   ],
@@ -85,8 +87,8 @@ describe("assessment registry", () => {
           order: 1,
           parentKey: "missing-parent",
           translations: {
-            en: { title: "Domain" },
-            id: { title: "Domain" },
+            en: { routeSlug: "domain", title: "Domain" },
+            id: { routeSlug: "domain", title: "Domain" },
           },
         },
       ],

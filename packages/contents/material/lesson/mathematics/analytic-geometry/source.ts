@@ -6,6 +6,7 @@ export const lessonMathematicsAnalyticGeometryMaterial = defineLessonMaterial({
   key: "lesson.mathematics.analytic-geometry",
   kind: "lesson",
   slug: "analytic-geometry",
+  routeSlugs: { en: "analytic-geometry", id: "geometri-analitik" },
   translations: {
     en: {
       description:
@@ -21,6 +22,7 @@ export const lessonMathematicsAnalyticGeometryMaterial = defineLessonMaterial({
   sections: [
     {
       slug: "definition-of-circle",
+      routeSlugs: { en: "definition-of-circle", id: "definisi-lingkaran" },
       translations: {
         en: {
           title: "Definition of Circle",
@@ -32,6 +34,7 @@ export const lessonMathematicsAnalyticGeometryMaterial = defineLessonMaterial({
     },
     {
       slug: "ellipse",
+      routeSlugs: { en: "ellipse", id: "elips" },
       translations: {
         en: {
           title: "Ellipse",
@@ -43,6 +46,10 @@ export const lessonMathematicsAnalyticGeometryMaterial = defineLessonMaterial({
     },
     {
       slug: "equation-of-a-tangent-line-to-a-circle",
+      routeSlugs: {
+        en: "equation-of-a-tangent-line-to-a-circle",
+        id: "persamaan-garis-singgung-lingkaran",
+      },
       translations: {
         en: {
           title: "Equation of a Tangent Line to a Circle",
@@ -54,6 +61,7 @@ export const lessonMathematicsAnalyticGeometryMaterial = defineLessonMaterial({
     },
     {
       slug: "equation-of-circle",
+      routeSlugs: { en: "equation-of-circle", id: "persamaan-lingkaran" },
       translations: {
         en: {
           title: "Equation of Circle",
@@ -65,6 +73,7 @@ export const lessonMathematicsAnalyticGeometryMaterial = defineLessonMaterial({
     },
     {
       slug: "hyperbola",
+      routeSlugs: { en: "hyperbola", id: "hiperbola" },
       translations: {
         en: {
           title: "Hyperbola",
@@ -76,6 +85,7 @@ export const lessonMathematicsAnalyticGeometryMaterial = defineLessonMaterial({
     },
     {
       slug: "parabola",
+      routeSlugs: { en: "parabola", id: "parabola" },
       translations: {
         en: {
           title: "Parabola",
@@ -87,6 +97,10 @@ export const lessonMathematicsAnalyticGeometryMaterial = defineLessonMaterial({
     },
     {
       slug: "position-of-a-line-to-a-circle",
+      routeSlugs: {
+        en: "position-of-a-line-to-a-circle",
+        id: "kedudukan-garis-terhadap-lingkaran",
+      },
       translations: {
         en: {
           title: "Position of a Line to a Circle",
@@ -98,6 +112,10 @@ export const lessonMathematicsAnalyticGeometryMaterial = defineLessonMaterial({
     },
     {
       slug: "position-of-a-point-to-a-circle",
+      routeSlugs: {
+        en: "position-of-a-point-to-a-circle",
+        id: "kedudukan-suatu-titik-terhadap-lingkaran",
+      },
       translations: {
         en: {
           title: "Position of a Point to a Circle",
@@ -109,6 +127,10 @@ export const lessonMathematicsAnalyticGeometryMaterial = defineLessonMaterial({
     },
     {
       slug: "position-of-a-tangent-line-to-a-circle",
+      routeSlugs: {
+        en: "position-of-a-tangent-line-to-a-circle",
+        id: "kedudukan-garis-singgung-lingkaran",
+      },
       translations: {
         en: {
           title: "Position of a Tangent Line to a Circle",
@@ -120,6 +142,10 @@ export const lessonMathematicsAnalyticGeometryMaterial = defineLessonMaterial({
     },
     {
       slug: "position-of-two-circles",
+      routeSlugs: {
+        en: "position-of-two-circles",
+        id: "kedudukan-dua-lingkaran",
+      },
       translations: {
         en: {
           title: "Position of Two Circles",
@@ -131,6 +157,10 @@ export const lessonMathematicsAnalyticGeometryMaterial = defineLessonMaterial({
     },
     {
       slug: "tangent-line-to-conic-sections",
+      routeSlugs: {
+        en: "tangent-line-to-conic-sections",
+        id: "garis-singgung-pada-irisan-kerucut",
+      },
       translations: {
         en: {
           title: "Tangent Line to Conic Sections",
