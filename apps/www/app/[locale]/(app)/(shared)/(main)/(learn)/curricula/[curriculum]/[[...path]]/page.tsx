@@ -12,6 +12,7 @@ import {
   readCurriculumBreadcrumbs,
   readCurriculumHeaderLink,
   readCurriculumRouteModel,
+  readCurriculumTocHeader,
   readMaterialCardChapters,
   resolveCurriculumRoute,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/data";
@@ -129,11 +130,7 @@ export default async function Page({ params }: CurriculumPageProps) {
               data: readMaterialCardChapters(body.materialCards),
             }}
             githubUrl={githubUrl}
-            header={{
-              title: route.title,
-              href: `/${locale}/${route.publicPath}`,
-              description: route.description,
-            }}
+            header={readCurriculumTocHeader(locale, route)}
           />
         )}
       </LayoutMaterial>

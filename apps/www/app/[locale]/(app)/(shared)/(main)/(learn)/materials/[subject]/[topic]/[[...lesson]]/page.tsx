@@ -16,6 +16,7 @@ import {
   listMaterialStaticParams,
   MATERIAL_ROUTES,
   type MaterialLessonRoute,
+  readMaterialHeaderLink,
   requireParentMaterialRoute,
   resolveMaterialRoute,
   toLocalizedHref,
@@ -129,6 +130,7 @@ export default async function Page({ params }: MaterialPageProps) {
     <MaterialLessonPage
       content={runtimeLesson}
       footer={<DeferredComments slug={`/${route.publicPath}`} />}
+      headerLink={readMaterialHeaderLink(route)}
       locale={locale}
       parentTitle={parentRoute.title}
       route={route}
@@ -158,6 +160,7 @@ async function MaterialLessonPage({
   children,
   content,
   footer,
+  headerLink,
   locale,
   parentTitle,
   route,
@@ -166,6 +169,10 @@ async function MaterialLessonPage({
   children: ReactNode;
   content: RuntimeLessonPage;
   footer: ReactNode;
+  headerLink?: {
+    href: string;
+    label: string;
+  };
   locale: Locale;
   parentTitle: string;
   route: MaterialLessonRoute;
@@ -217,6 +224,7 @@ async function MaterialLessonPage({
           <HeaderContent
             content={raw}
             icon={icon}
+            link={headerLink}
             slug={toLocalizedHref(route)}
             title={metadata.title}
           />

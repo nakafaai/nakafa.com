@@ -1,7 +1,14 @@
 import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 import type { ContentPagination } from "@repo/contents/_types/content";
-import { listPublicContentRoutesEffect } from "@repo/contents/_types/route/projection";
-import type { PublicContentRoute } from "@repo/contents/_types/route/schema";
+import {
+  listPublicContentRoutesEffect,
+  listPublicCurriculumRoutesEffect,
+} from "@repo/contents/_types/route/projection";
+import type {
+  PublicContentRoute,
+  PublicCurriculumRoute,
+} from "@repo/contents/_types/route/schema";
+import { slugify } from "@repo/design-system/lib/utils";
 import { Effect } from "effect";
 import { notFound } from "next/navigation";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
@@ -16,6 +23,7 @@ export type MaterialLessonRoute = PublicContentRoute & {
 };
 
 const MATERIAL_ROUTES = Effect.runSync(listPublicContentRoutesEffect());
+const CURRICULUM_ROUTES = Effect.runSync(listPublicCurriculumRoutesEffect());
 
 export { MATERIAL_ROUTES };
 
@@ -80,6 +88,37 @@ export function requireParentMaterialRoute(route: MaterialRoute) {
   }
 
   return parent;
+}
+
+/**
+ * Builds the old material header link for the new canonical lesson route.
+ *
+ * The old route linked a lesson back to the material card list and anchored the
+ * current chapter card. Material topic hubs are now internal grouping rows, so
+ * this resolves the curriculum subject/course page that renders the card list.
+ */
+export function readMaterialHeaderLink(route: MaterialLessonRoute) {
+  const parentMaterial = requireParentMaterialRoute(route);
+  const curriculumContext = CURRICULUM_ROUTES.find(
+    (candidate) =>
+      candidate.locale === route.locale &&
+      candidate.canonicalPath === parentMaterial.publicPath
+  );
+
+  if (!curriculumContext) {
+    return;
+  }
+
+  const cardListContext = readCurriculumCardListContext(curriculumContext);
+
+  if (!cardListContext) {
+    return;
+  }
+
+  return {
+    href: `/${route.locale}/${cardListContext.publicPath}#${slugify(curriculumContext.title)}`,
+    label: curriculumContext.title,
+  };
 }
 
 /**
@@ -153,6 +192,29 @@ export function isMaterialLessonRoute(
 /** Removes the localized namespace segment from one projected public path. */
 function readPathWithoutNamespace(publicPath: string) {
   return publicPath.split("/").slice(1).join("/");
+}
+
+/** Reads the nearest curriculum page that renders collapsible material cards. */
+function readCurriculumCardListContext(route: PublicCurriculumRoute) {
+  if (route.level === "subject" || route.level === "course") {
+    return route;
+  }
+
+  if (!route.parentPath) {
+    return;
+  }
+
+  const parent = CURRICULUM_ROUTES.find(
+    (candidate) =>
+      candidate.locale === route.locale &&
+      candidate.publicPath === route.parentPath
+  );
+
+  if (!parent) {
+    return;
+  }
+
+  return readCurriculumCardListContext(parent);
 }
 
 /** Returns one pagination item while preserving empty endpoints. */
