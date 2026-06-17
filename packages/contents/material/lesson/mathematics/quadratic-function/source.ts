@@ -9,13 +9,11 @@ export const lessonMathematicsQuadraticFunctionMaterial = defineLessonMaterial({
   routeSlugs: { en: "quadratic-function", id: "persamaan-dan-fungsi-kuadrat" },
   translations: {
     en: {
-      description:
-        "Learn how to solve quadratic equations with factorization, completing the square, and the quadratic formula through examples and practice questions.",
+      description: "Solve quadratics with factors, squares, and formulas.",
       title: "Quadratic Functions",
     },
     id: {
-      description:
-        "Pelajari cara menyelesaikan persamaan kuadrat dengan faktorisasi, melengkapkan kuadrat, dan rumus kuadrat melalui contoh dan soal praktis.",
+      description: "Selesaikan kuadrat dengan faktor dan rumus.",
       title: "Persamaan dan Fungsi Kuadrat",
     },
   },

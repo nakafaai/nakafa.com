@@ -11,7 +11,7 @@ interface TryoutPartHeadProps {
   icon?: ComponentProps<typeof TryoutPageHeader>["icon"];
 }
 
-/** Renders the descriptive header for the current tryout part route. */
+/** Renders the current tryout part status in the shared route header. */
 export function TryoutPartHead({ icon }: TryoutPartHeadProps) {
   const tCommon = useTranslations("Common");
   const tTryouts = useTranslations("Tryouts");
@@ -26,47 +26,46 @@ export function TryoutPartHead({ icon }: TryoutPartHeadProps) {
   const status = useTryoutPart((state) => state.state.status);
   const tryout = useTryoutPart((state) => state.state.tryout);
 
-  let description = tTryouts("part-head-needs-tryout");
+  let statusMessage = tTryouts("part-head-needs-tryout");
 
   if (status === "in-progress" && isAwaitingExpiry) {
-    description = tTryouts("part-head-processing-expiry");
+    statusMessage = tTryouts("part-head-processing-expiry");
   } else {
     switch (status) {
       case "needs-tryout":
-        description = tTryouts("part-head-needs-tryout");
+        statusMessage = tTryouts("part-head-needs-tryout");
         break;
       case "ended":
-        description = tTryouts("part-head-ended");
+        statusMessage = tTryouts("part-head-ended");
         break;
       case "completed":
         if (!isTryoutFinished) {
-          description =
+          statusMessage =
             partEndReason === "time-expired"
               ? tTryouts("part-head-completed-time-expired-pending-review")
               : tTryouts("part-head-completed-pending-review");
           break;
         }
 
-        description =
+        statusMessage =
           partEndReason === "time-expired"
             ? tTryouts("part-head-completed-time-expired")
             : tTryouts("part-head-completed");
         break;
       case "in-progress":
-        description = tTryouts("part-head-in-progress");
+        statusMessage = tTryouts("part-head-in-progress");
         break;
       case "ready":
-        description = tTryouts("part-head-ready");
+        statusMessage = tTryouts("part-head-ready");
         break;
       default:
-        description = tTryouts("part-head-needs-tryout");
+        statusMessage = tTryouts("part-head-needs-tryout");
         break;
     }
   }
 
   return (
     <TryoutPageHeader
-      description={description}
       icon={icon}
       link={{
         href: getTryoutSetHref({
@@ -82,6 +81,7 @@ export function TryoutPartHead({ icon }: TryoutPartHeadProps) {
           product={tryout.product}
         />
       }
+      status={statusMessage}
       title={partLabel}
     />
   );

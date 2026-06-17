@@ -312,7 +312,7 @@ function toGeneratedProgramRow(
 function toPublicRoutePayload(route: PublicRoute): PublicRoutePayload {
   return {
     canonicalPath: "canonicalPath" in route ? route.canonicalPath : undefined,
-    description: route.description,
+    description: "description" in route ? route.description : undefined,
     displayGroupIconKey:
       "displayGroupIconKey" in route ? route.displayGroupIconKey : undefined,
     displayGroupTitle:

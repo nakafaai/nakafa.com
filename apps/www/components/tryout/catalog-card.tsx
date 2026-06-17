@@ -6,7 +6,6 @@ import {
   TryoutCardBody,
   TryoutCardContent,
   TryoutCardCopy,
-  TryoutCardDescription,
   TryoutCardHero,
   TryoutCardTitle,
 } from "@/components/tryout/shared/card";
@@ -17,14 +16,12 @@ export function TryoutCatalogCard({
   activeCountLabel,
   art,
   children,
-  description,
   title,
 }: {
   action?: ReactNode;
   activeCountLabel: string;
   art: ReactNode;
   children: ReactNode;
-  description: string;
   title: string;
 }) {
   return (
@@ -38,8 +35,6 @@ export function TryoutCatalogCard({
               <TryoutCardTitle>{title}</TryoutCardTitle>
               <Badge variant="outline">{activeCountLabel}</Badge>
             </div>
-
-            <TryoutCardDescription>{description}</TryoutCardDescription>
           </TryoutCardCopy>
 
           {action ? <div>{action}</div> : null}

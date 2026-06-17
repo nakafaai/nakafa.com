@@ -9,13 +9,11 @@ export const lessonBiologyVirusRoleMaterial = defineLessonMaterial({
   routeSlugs: { en: "virus-role", id: "virus-dan-peranannya" },
   translations: {
     en: {
-      description:
-        "Understand viral replication through lytic and lysogenic cycles, from attachment to the release of new virus particles.",
+      description: "Follow how viruses copy themselves inside host cells.",
       title: "Viruses and Their Role",
     },
     id: {
-      description:
-        "Memahami replikasi virus melalui siklus litik dan lisogenik, mulai dari penempelan sampai pelepasan partikel virus baru.",
+      description: "Ikuti cara virus menggandakan diri di dalam sel inang.",
       title: "Virus dan Peranannya",
     },
   },

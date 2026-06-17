@@ -32,19 +32,17 @@ export default async function Page(
   }
   const product: TryoutProduct = productParam;
 
-  const [{ attempt }, tCommon, tExercises, tTryouts, details, token] =
-    await Promise.all([
-      loadTryoutSearchParams(searchParams),
-      getTranslations({ locale, namespace: "Common" }),
-      getTranslations({ locale, namespace: "Exercises" }),
-      getTranslations({ locale, namespace: "Tryouts" }),
-      fetchQuery(api.tryouts.queries.tryouts.getTryoutDetails, {
-        locale,
-        product,
-        slug,
-      }),
-      getToken(),
-    ]);
+  const [{ attempt }, tCommon, tExercises, details, token] = await Promise.all([
+    loadTryoutSearchParams(searchParams),
+    getTranslations({ locale, namespace: "Common" }),
+    getTranslations({ locale, namespace: "Exercises" }),
+    fetchQuery(api.tryouts.queries.tryouts.getTryoutDetails, {
+      locale,
+      product,
+      slug,
+    }),
+    getToken(),
+  ]);
 
   if (!details) {
     notFound();
@@ -84,7 +82,6 @@ export default async function Page(
         <div className="space-y-10">
           <div className="space-y-6">
             <TryoutPageHeader
-              description={tTryouts("slug-description")}
               link={{
                 href: getTryoutProductHref(product),
                 label: tCommon("back"),

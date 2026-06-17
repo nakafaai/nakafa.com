@@ -9,13 +9,11 @@ export const lessonMathematicsFunctionModelingMaterial = defineLessonMaterial({
   routeSlugs: { en: "function-modeling", id: "fungsi-dan-pemodelannya" },
   translations: {
     en: {
-      description:
-        "Learn absolute value functions with interactive graphs, transformations, and worked solutions. Learn properties, equations, and real applications.",
+      description: "Model absolute value behavior with graphs and equations.",
       title: "Functions and Their Modeling",
     },
     id: {
-      description:
-        "Pelajari fungsi nilai mutlak dengan grafik interaktif, transformasi, dan solusi bertahap. Pahami sifat, persamaan, dan aplikasi nyata.",
+      description: "Modelkan nilai mutlak lewat grafik dan persamaan.",
       title: "Fungsi dan Pemodelannya",
     },
   },

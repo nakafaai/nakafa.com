@@ -10,13 +10,11 @@ export const lessonMathematicsExponentialLogarithmMaterial =
     routeSlugs: { en: "exponential-logarithm", id: "eksponen-dan-logaritma" },
     translations: {
       en: {
-        description:
-          "Exponent notation connects repeated multiplication to patterns such as paper folding, viral spread, and zero, negative, or fractional powers.",
+        description: "Connect repeated multiplication to exponent patterns.",
         title: "Exponents and Logarithms",
       },
       id: {
-        description:
-          "Eksponen menghubungkan perkalian berulang dengan pola lipatan kertas, penyebaran virus, serta pangkat nol, negatif, dan pecahan.",
+        description: "Hubungkan perkalian berulang dengan pola eksponen.",
         title: "Eksponen dan Logaritma",
       },
     },

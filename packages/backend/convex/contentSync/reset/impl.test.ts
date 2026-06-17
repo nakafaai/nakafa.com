@@ -278,12 +278,10 @@ async function seedDerivedRuntimeRows(ctx: MutationCtx) {
     syncedAt: 1,
     translations: {
       en: {
-        description: "Fixture program.",
         publicSlug: "fixture-program",
         title: "Fixture Program",
       },
       id: {
-        description: "Program fixture.",
         publicSlug: "fixture-program",
         title: "Program Fixture",
       },

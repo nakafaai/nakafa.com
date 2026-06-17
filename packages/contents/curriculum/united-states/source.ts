@@ -90,14 +90,10 @@ export const unitedStatesCurriculum = defineCurriculum({
           order: 10,
           translations: {
             en: {
-              description:
-                "Follow Common Core mathematics domains from quantity through statistics.",
               routeSlug: "common-core-mathematics",
               title: "Common Core Mathematics",
             },
             id: {
-              description:
-                "Ikuti domain matematika Common Core dari kuantitas hingga statistika.",
               routeSlug: "common-core-mathematics",
               title: "Common Core Mathematics",
             },
@@ -109,14 +105,10 @@ export const unitedStatesCurriculum = defineCurriculum({
           order: 20,
           translations: {
             en: {
-              description:
-                "Organize English language arts standards for reading, writing, speaking, and language.",
               routeSlug: "common-core-ela",
               title: "Common Core ELA",
             },
             id: {
-              description:
-                "Susun standar bahasa Inggris untuk membaca, menulis, berbicara, dan bahasa.",
               routeSlug: "common-core-ela",
               title: "Common Core ELA",
             },
@@ -186,14 +178,10 @@ export const unitedStatesCurriculum = defineCurriculum({
           order: 30,
           translations: {
             en: {
-              description:
-                "Connect NGSS science domains across physical, life, earth, and engineering ideas.",
               routeSlug: "ngss-science",
               title: "NGSS Science",
             },
             id: {
-              description:
-                "Hubungkan domain sains NGSS melalui fisika, hayati, bumi, dan rekayasa.",
               routeSlug: "ngss-science",
               title: "NGSS Science",
             },
@@ -201,23 +189,19 @@ export const unitedStatesCurriculum = defineCurriculum({
         }),
       ],
       displayGroup: {
-        en: { title: "United States Pathways" },
-        id: { title: "Jalur Amerika Serikat" },
+        en: { title: "Learning pathways" },
+        id: { title: "Jalur belajar" },
       },
-      displayGroupIconKey: "standards",
+      displayGroupIconKey: "school",
       iconKey: "standards",
       key: "k-12-core-standards",
       order: 10,
       translations: {
         en: {
-          description:
-            "Group K-12 Common Core and NGSS standards into subject pathways.",
           routeSlug: "k-12-core-standards",
           title: "K-12 Core Standards",
         },
         id: {
-          description:
-            "Kelompokkan Common Core dan NGSS K-12 menjadi jalur mata pelajaran.",
           routeSlug: "standar-inti-k-12",
           title: "Standar Inti K-12",
         },
@@ -225,23 +209,19 @@ export const unitedStatesCurriculum = defineCurriculum({
     }),
     frameworkNode({
       displayGroup: {
-        en: { title: "United States Pathways" },
-        id: { title: "Jalur Amerika Serikat" },
+        en: { title: "Learning pathways" },
+        id: { title: "Jalur belajar" },
       },
-      displayGroupIconKey: "standards",
+      displayGroupIconKey: "school",
       iconKey: "state",
       key: "state-alignments",
       order: 20,
       translations: {
         en: {
-          description:
-            "Compare state-specific pathways as their standards are added.",
           routeSlug: "state-alignments",
           title: "State Alignments",
         },
         id: {
-          description:
-            "Bandingkan jalur negara bagian saat standarnya ditambahkan.",
           routeSlug: "penyelarasan-negara-bagian",
           title: "Penyelarasan Negara Bagian",
         },
@@ -249,22 +229,19 @@ export const unitedStatesCurriculum = defineCurriculum({
     }),
     frameworkNode({
       displayGroup: {
-        en: { title: "United States Pathways" },
-        id: { title: "Jalur Amerika Serikat" },
+        en: { title: "Learning pathways" },
+        id: { title: "Jalur belajar" },
       },
-      displayGroupIconKey: "standards",
+      displayGroupIconKey: "school",
       iconKey: "advanced",
       key: "advanced-high-school",
       order: 30,
       translations: {
         en: {
-          description:
-            "Prepare advanced high school and AP pathways as they become available.",
           routeSlug: "advanced-high-school",
           title: "Advanced High School / AP",
         },
         id: {
-          description: "Siapkan jalur SMA lanjutan dan AP saat tersedia.",
           routeSlug: "sma-lanjutan-ap",
           title: "SMA Lanjutan / AP",
         },

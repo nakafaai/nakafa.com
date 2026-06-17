@@ -9,13 +9,11 @@ export const lessonMathematicsProbabilityMaterial = defineLessonMaterial({
   routeSlugs: { en: "probability", id: "peluang" },
   translations: {
     en: {
-      description:
-        "Learn probability addition rule for OR events. Learn mutually exclusive vs non-mutually exclusive events with clear examples, formulas, and worked solutions.",
+      description: "Use addition rules for overlapping and separate events.",
       title: "Probability",
     },
     id: {
-      description:
-        "Pelajari aturan penjumlahan peluang untuk kejadian ATAU. Bedakan kejadian saling lepas dan tidak saling lepas dengan contoh, rumus, dan pembahasan soal.",
+      description: "Gunakan aturan penjumlahan untuk kejadian beririsan.",
       title: "Peluang",
     },
   },

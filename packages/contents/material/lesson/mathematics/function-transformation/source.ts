@@ -10,13 +10,11 @@ export const lessonMathematicsFunctionTransformationMaterial =
     routeSlugs: { en: "function-transformation", id: "transformasi-fungsi" },
     translations: {
       en: {
-        description:
-          "Learn combined function transformations with worked examples. Learn vertical, horizontal transformations, order effects, and solve practice exercises.",
+        description: "Combine shifts, stretches, and reflections in order.",
         title: "Function Transformation",
       },
       id: {
-        description:
-          "Pelajari kombinasi transformasi fungsi dengan contoh bertahap. Pelajari transformasi vertikal, horizontal, pengaruh urutan, dan kerjakan latihan soal.",
+        description: "Gabungkan geser, regang, dan cermin sesuai urutan.",
         title: "Transformasi Fungsi",
       },
     },

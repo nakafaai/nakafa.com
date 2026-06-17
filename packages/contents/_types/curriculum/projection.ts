@@ -3,6 +3,7 @@ import {
   type CurriculumNode,
   CurriculumNodeSchema,
   type CurriculumNodeTranslationMap,
+  CurriculumNodeTranslationMapSchema,
   type CurriculumSource,
   type CurriculumTreeNode,
 } from "@repo/contents/_types/curriculum/schema";
@@ -18,7 +19,7 @@ import type {
 } from "@repo/contents/_types/material/schema";
 import { MATERIAL_SOURCES } from "@repo/contents/_types/material/source";
 import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
-import { Effect, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 
 export class CurriculumProjectionError extends Schema.TaggedError<CurriculumProjectionError>()(
   "CurriculumProjectionError",
@@ -371,31 +372,37 @@ function resolveMaterialReferenceTranslations({
 
 /** Reads learner-facing copy from material sources when a curriculum leaf maps to one material. */
 function readMaterialTranslations(material: MaterialSource) {
+  const decode = Schema.decodeUnknownOption(CurriculumNodeTranslationMapSchema);
+
   if (material.kind === "lesson") {
-    return {
+    const translations = {
       en: {
-        ...material.translations.en,
+        title: material.translations.en.title,
         routeSlug: material.routeSlugs.en,
       },
       id: {
-        ...material.translations.id,
+        title: material.translations.id.title,
         routeSlug: material.routeSlugs.id,
       },
     };
+
+    return Option.getOrNull(decode(translations));
   }
 
   if (hasSinglePracticeGroup(material.groups)) {
     const [group] = material.groups;
-    return {
+    const translations = {
       en: {
-        ...group.translations.en,
+        title: group.translations.en.title,
         routeSlug: group.routeSlugs.en,
       },
       id: {
-        ...group.translations.id,
+        title: group.translations.id.title,
         routeSlug: group.routeSlugs.id,
       },
     };
+
+    return Option.getOrNull(decode(translations));
   }
 
   return null;
@@ -414,7 +421,7 @@ function isDuplicatedDisplay(
 
     return (
       overrideTranslation.title === materialTranslation.title &&
-      overrideTranslation.description === materialTranslation.description
+      overrideTranslation.routeSlug === materialTranslation.routeSlug
     );
   });
 }

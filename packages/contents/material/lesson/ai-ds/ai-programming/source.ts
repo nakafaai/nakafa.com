@@ -9,13 +9,11 @@ export const lessonAiDsAiProgrammingMaterial = defineLessonMaterial({
   routeSlugs: { en: "ai-programming", id: "pemrograman-ai" },
   translations: {
     en: {
-      description:
-        "Python arithmetic operators, precedence rules, associativity, and practical use of +, -, *, /, //, %, and ** in code.",
+      description: "Use Python arithmetic operators with correct precedence.",
       title: "AI Programming",
     },
     id: {
-      description:
-        "Operator aritmatika Python, prioritas operasi, asosiativitas, dan penggunaan +, -, *, /, //, %, ** dalam kode.",
+      description: "Gunakan operator aritmatika Python dengan urutan tepat.",
       title: "Pemrograman AI",
     },
   },

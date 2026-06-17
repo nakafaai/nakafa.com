@@ -1,3 +1,4 @@
+import { MaterialCardDescriptionSchema } from "@repo/contents/_types/material/description";
 import {
   BACHELOR_MATERIALS,
   HIGH_SCHOOL_MATERIALS,
@@ -6,7 +7,7 @@ import { Schema } from "effect";
 
 const MaterialListItemSchema = Schema.Struct({
   title: Schema.String,
-  description: Schema.optional(Schema.String),
+  description: Schema.optional(MaterialCardDescriptionSchema),
   href: Schema.String,
   items: Schema.Array(
     Schema.Struct({

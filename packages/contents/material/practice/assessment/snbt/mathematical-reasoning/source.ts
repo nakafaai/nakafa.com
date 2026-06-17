@@ -10,13 +10,11 @@ export const practiceAssessmentSnbtMathematicalReasoningMaterial =
         year: 2026,
         translations: {
           en: {
-            description:
-              "Real exam simulation to sharpen your skills and build confidence.",
+            description: "Solve contextual problems with math reasoning.",
             title: "Try Out 2026",
           },
           id: {
-            description:
-              "Simulasi ujian nyata untuk mengasah kemampuan dan kepercayaan diri.",
+            description: "Selesaikan konteks dengan penalaran matematika.",
             title: "Try Out 2026",
           },
         },

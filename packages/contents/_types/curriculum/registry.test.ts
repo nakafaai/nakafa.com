@@ -87,8 +87,14 @@ describe("curriculum registry", () => {
         level: "unit",
         order: 1,
         translations: {
-          en: { routeSlug: "target", title: "Target" },
-          id: { routeSlug: "target", title: "Target" },
+          en: {
+            routeSlug: "target",
+            title: "Target",
+          },
+          id: {
+            routeSlug: "target",
+            title: "Target",
+          },
         },
       },
     ]);
@@ -116,11 +122,11 @@ describe("curriculum registry", () => {
       material?.kind === "lesson"
         ? {
             en: {
-              ...material.translations.en,
+              title: material.translations.en.title,
               routeSlug: material.routeSlugs.en,
             },
             id: {
-              ...material.translations.id,
+              title: material.translations.id.title,
               routeSlug: material.routeSlugs.id,
             },
           }
@@ -224,8 +230,14 @@ describe("curriculum registry", () => {
           level: "unit",
           order: 1,
           translations: {
-            en: { routeSlug: "parent", title: "Parent" },
-            id: { routeSlug: "parent", title: "Parent" },
+            en: {
+              routeSlug: "parent",
+              title: "Parent",
+            },
+            id: {
+              routeSlug: "parent",
+              title: "Parent",
+            },
           },
         },
       ],
@@ -325,11 +337,11 @@ describe("curriculum registry", () => {
         {
           displayOverride: {
             en: {
-              ...material.translations.en,
+              title: material.translations.en.title,
               routeSlug: material.routeSlugs.en,
             },
             id: {
-              ...material.translations.id,
+              title: material.translations.id.title,
               routeSlug: material.routeSlugs.id,
             },
           },
@@ -500,8 +512,11 @@ describe("curriculum registry", () => {
             id: "ulasan",
           },
           translations: {
-            en: { title: "Review" },
-            id: { title: "Ulasan" },
+            en: { description: "Review focused reasoning.", title: "Review" },
+            id: {
+              description: "Ulas kembali penalaran terarah.",
+              title: "Ulasan",
+            },
           },
         },
       ],
@@ -511,11 +526,11 @@ describe("curriculum registry", () => {
       listCurriculumNodes({ curricula: [oneGroupPractice] })[0]?.translations
     ).toEqual({
       en: {
-        ...practiceGroup.translations.en,
+        title: practiceGroup.translations.en.title,
         routeSlug: practiceGroup.routeSlugs.en,
       },
       id: {
-        ...practiceGroup.translations.id,
+        title: practiceGroup.translations.id.title,
         routeSlug: practiceGroup.routeSlugs.id,
       },
     });
@@ -556,8 +571,14 @@ describe("curriculum registry", () => {
         materials: [multiGroupPractice],
       })[0]?.translations
     ).toEqual({
-      en: { routeSlug: "practice-review", title: "Practice review" },
-      id: { routeSlug: "ulasan-latihan", title: "Ulasan latihan" },
+      en: {
+        routeSlug: "practice-review",
+        title: "Practice review",
+      },
+      id: {
+        routeSlug: "ulasan-latihan",
+        title: "Ulasan latihan",
+      },
     });
   });
 
@@ -573,8 +594,14 @@ describe("curriculum registry", () => {
           level: "unit",
           order: 1,
           translations: {
-            en: { routeSlug: "target", title: "Target" },
-            id: { routeSlug: "target", title: "Target" },
+            en: {
+              routeSlug: "target",
+              title: "Target",
+            },
+            id: {
+              routeSlug: "target",
+              title: "Target",
+            },
           },
         },
         {
@@ -582,8 +609,14 @@ describe("curriculum registry", () => {
           level: "unit",
           order: 2,
           translations: {
-            en: { routeSlug: "target-again", title: "Target Again" },
-            id: { routeSlug: "target-again", title: "Target Again" },
+            en: {
+              routeSlug: "target-again",
+              title: "Target Again",
+            },
+            id: {
+              routeSlug: "target-again",
+              title: "Target Again",
+            },
           },
         },
       ],
@@ -604,8 +637,14 @@ describe("curriculum registry", () => {
             level: "unit",
             order: 1,
             translations: {
-              en: { routeSlug: "target", title: "Target" },
-              id: { routeSlug: "target", title: "Target" },
+              en: {
+                routeSlug: "target",
+                title: "Target",
+              },
+              id: {
+                routeSlug: "target",
+                title: "Target",
+              },
             },
           },
           {
@@ -613,8 +652,14 @@ describe("curriculum registry", () => {
             level: "unit",
             order: 2,
             translations: {
-              en: { routeSlug: "target-again", title: "Target Again" },
-              id: { routeSlug: "target-again", title: "Target Again" },
+              en: {
+                routeSlug: "target-again",
+                title: "Target Again",
+              },
+              id: {
+                routeSlug: "target-again",
+                title: "Target Again",
+              },
             },
           },
         ],

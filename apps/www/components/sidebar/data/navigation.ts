@@ -42,14 +42,9 @@ export const forYouNavigationItems = {
 export type ForYouNavigationItem =
   (typeof forYouNavigationItems)[keyof typeof forYouNavigationItems];
 
-const studentNavigationItems = [
+const primaryNavigationItems = [
   forYouNavigationItems.subject,
   forYouNavigationItems.tryOut,
-  forYouNavigationItems.askNina,
-] as const;
-
-const generalNavigationItems = [
-  forYouNavigationItems.subject,
   forYouNavigationItems.askNina,
 ] as const;
 
@@ -75,14 +70,10 @@ export function getAppNavigationViewer({
 }
 
 /**
- * Returns the primary sidebar/home actions for one navigation audience.
+ * Returns the primary sidebar/home actions shared by every navigation audience.
  */
-export function getForYouNavigationItems(viewer: AppNavigationViewer) {
-  if (viewer === "guest" || viewer === "student") {
-    return studentNavigationItems;
-  }
-
-  return generalNavigationItems;
+export function getForYouNavigationItems(_viewer: AppNavigationViewer) {
+  return primaryNavigationItems;
 }
 
 /**

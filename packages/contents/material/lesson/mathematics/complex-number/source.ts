@@ -9,13 +9,11 @@ export const lessonMathematicsComplexNumberMaterial = defineLessonMaterial({
   routeSlugs: { en: "complex-number", id: "bilangan-kompleks" },
   translations: {
     en: {
-      description:
-        "Learn how to add complex numbers one step at a time with geometric visualization. Learn real and imaginary parts addition using parallelogram rule and examples.",
+      description: "Add complex numbers with real-imaginary geometry.",
       title: "Complex Number",
     },
     id: {
-      description:
-        "Pelajari cara menjumlahkan bilangan kompleks secara bertahap dengan visualisasi geometris. Pahami penjumlahan bagian real dan imajiner lewat aturan jajar genjang dan contoh.",
+      description: "Jumlahkan bilangan kompleks lewat geometri bidang.",
       title: "Bilangan Kompleks",
     },
   },

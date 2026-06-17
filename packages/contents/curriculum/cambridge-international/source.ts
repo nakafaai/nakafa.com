@@ -11,23 +11,19 @@ export const cambridgeInternationalCurriculum = defineCurriculum({
   tree: [
     stageNode({
       displayGroup: {
-        en: { title: "Cambridge Pathway" },
-        id: { title: "Cambridge Pathway" },
+        en: { title: "Learning stages" },
+        id: { title: "Tahap belajar" },
       },
-      displayGroupIconKey: "global-education",
+      displayGroupIconKey: "school",
       iconKey: "early-years",
       key: "early-years",
       order: 10,
       translations: {
         en: {
-          description:
-            "Begin the Cambridge Pathway with early foundations for ages 3 to 6.",
           routeSlug: "early-years",
           title: "Early Years",
         },
         id: {
-          description:
-            "Mulai Cambridge Pathway dengan fondasi awal untuk usia 3 hingga 6 tahun.",
           routeSlug: "early-years",
           title: "Early Years",
         },
@@ -35,23 +31,19 @@ export const cambridgeInternationalCurriculum = defineCurriculum({
     }),
     stageNode({
       displayGroup: {
-        en: { title: "Cambridge Pathway" },
-        id: { title: "Cambridge Pathway" },
+        en: { title: "Learning stages" },
+        id: { title: "Tahap belajar" },
       },
-      displayGroupIconKey: "global-education",
+      displayGroupIconKey: "school",
       iconKey: "primary-school",
       key: "primary",
       order: 20,
       translations: {
         en: {
-          description:
-            "Build primary-stage knowledge and skills across Cambridge subjects.",
           routeSlug: "primary",
           title: "Primary",
         },
         id: {
-          description:
-            "Bangun pengetahuan dan keterampilan jenjang Primary dalam mata pelajaran Cambridge.",
           routeSlug: "primary",
           title: "Primary",
         },
@@ -59,23 +51,19 @@ export const cambridgeInternationalCurriculum = defineCurriculum({
     }),
     stageNode({
       displayGroup: {
-        en: { title: "Cambridge Pathway" },
-        id: { title: "Cambridge Pathway" },
+        en: { title: "Learning stages" },
+        id: { title: "Tahap belajar" },
       },
-      displayGroupIconKey: "global-education",
+      displayGroupIconKey: "school",
       iconKey: "middle-school",
       key: "lower-secondary",
       order: 30,
       translations: {
         en: {
-          description:
-            "Strengthen Lower Secondary subject foundations before qualification pathways.",
           routeSlug: "lower-secondary",
           title: "Lower Secondary",
         },
         id: {
-          description:
-            "Perkuat fondasi mata pelajaran Lower Secondary sebelum jalur kualifikasi.",
           routeSlug: "lower-secondary",
           title: "Lower Secondary",
         },
@@ -90,14 +78,10 @@ export const cambridgeInternationalCurriculum = defineCurriculum({
           order: 10,
           translations: {
             en: {
-              description:
-                "Study Cambridge IGCSE courses through focused subject sequences.",
               routeSlug: "igcse",
               title: "Cambridge IGCSE",
             },
             id: {
-              description:
-                "Pelajari kursus Cambridge IGCSE melalui urutan mata pelajaran yang terarah.",
               routeSlug: "igcse",
               title: "Cambridge IGCSE",
             },
@@ -109,14 +93,10 @@ export const cambridgeInternationalCurriculum = defineCurriculum({
           order: 20,
           translations: {
             en: {
-              description:
-                "Prepare for Cambridge O Level subject qualifications.",
               routeSlug: "o-level",
               title: "Cambridge O Level",
             },
             id: {
-              description:
-                "Siapkan kualifikasi mata pelajaran Cambridge O Level.",
               routeSlug: "o-level",
               title: "Cambridge O Level",
             },
@@ -128,14 +108,10 @@ export const cambridgeInternationalCurriculum = defineCurriculum({
           order: 30,
           translations: {
             en: {
-              description:
-                "Explore the Cambridge ICE group award across IGCSE subjects.",
               routeSlug: "ice",
               title: "Cambridge ICE",
             },
             id: {
-              description:
-                "Jelajahi penghargaan Cambridge ICE lintas mata pelajaran IGCSE.",
               routeSlug: "ice",
               title: "Cambridge ICE",
             },
@@ -143,23 +119,19 @@ export const cambridgeInternationalCurriculum = defineCurriculum({
         }),
       ],
       displayGroup: {
-        en: { title: "Cambridge Pathway" },
-        id: { title: "Cambridge Pathway" },
+        en: { title: "Learning stages" },
+        id: { title: "Tahap belajar" },
       },
-      displayGroupIconKey: "global-education",
+      displayGroupIconKey: "school",
       iconKey: "high-school",
       key: "upper-secondary",
       order: 40,
       translations: {
         en: {
-          description:
-            "Choose Upper Secondary qualifications such as IGCSE, O Level, and ICE.",
           routeSlug: "upper-secondary",
           title: "Upper Secondary",
         },
         id: {
-          description:
-            "Pilih kualifikasi Upper Secondary seperti IGCSE, O Level, dan ICE.",
           routeSlug: "upper-secondary",
           title: "Upper Secondary",
         },
@@ -173,14 +145,10 @@ export const cambridgeInternationalCurriculum = defineCurriculum({
           order: 10,
           translations: {
             en: {
-              description:
-                "Continue into Cambridge International AS & A Level subjects.",
               routeSlug: "as-a-level",
               title: "International AS & A Level",
             },
             id: {
-              description:
-                "Lanjutkan ke mata pelajaran Cambridge International AS & A Level.",
               routeSlug: "as-a-level",
               title: "International AS & A Level",
             },
@@ -192,14 +160,10 @@ export const cambridgeInternationalCurriculum = defineCurriculum({
           order: 20,
           translations: {
             en: {
-              description:
-                "Explore the Cambridge AICE Diploma pathway across advanced subjects.",
               routeSlug: "aice",
               title: "Cambridge AICE Diploma",
             },
             id: {
-              description:
-                "Jelajahi jalur Cambridge AICE Diploma lintas mata pelajaran lanjutan.",
               routeSlug: "aice",
               title: "Cambridge AICE Diploma",
             },
@@ -211,14 +175,10 @@ export const cambridgeInternationalCurriculum = defineCurriculum({
           order: 30,
           translations: {
             en: {
-              description:
-                "Develop independent research through the Cambridge IPQ route.",
               routeSlug: "ipq",
               title: "Cambridge IPQ",
             },
             id: {
-              description:
-                "Kembangkan riset mandiri melalui jalur Cambridge IPQ.",
               routeSlug: "ipq",
               title: "Cambridge IPQ",
             },
@@ -226,23 +186,19 @@ export const cambridgeInternationalCurriculum = defineCurriculum({
         }),
       ],
       displayGroup: {
-        en: { title: "Cambridge Pathway" },
-        id: { title: "Cambridge Pathway" },
+        en: { title: "Learning stages" },
+        id: { title: "Tahap belajar" },
       },
-      displayGroupIconKey: "global-education",
+      displayGroupIconKey: "school",
       iconKey: "advanced",
       key: "advanced",
       order: 50,
       translations: {
         en: {
-          description:
-            "Move into advanced Cambridge qualifications after Upper Secondary.",
           routeSlug: "advanced",
           title: "Advanced",
         },
         id: {
-          description:
-            "Lanjutkan ke kualifikasi Cambridge lanjutan setelah Upper Secondary.",
           routeSlug: "advanced",
           title: "Advanced",
         },

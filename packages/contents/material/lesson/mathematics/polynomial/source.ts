@@ -9,13 +9,11 @@ export const lessonMathematicsPolynomialMaterial = defineLessonMaterial({
   routeSlugs: { en: "polynomial", id: "polinomial" },
   translations: {
     en: {
-      description:
-        "Learn polynomial addition and subtraction with worked examples. Understand like terms, horizontal and vertical methods, plus graphical visualization.",
+      description: "Combine like terms with polynomial operations.",
       title: "Polynomial",
     },
     id: {
-      description:
-        "Pelajari penjumlahan dan pengurangan polinomial dengan contoh bertahap. Pahami suku sejenis, metode horizontal dan vertikal, serta visualisasi grafik.",
+      description: "Gabungkan suku sejenis dalam operasi polinomial.",
       title: "Polinomial",
     },
   },

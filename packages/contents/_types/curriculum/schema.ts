@@ -26,12 +26,11 @@ export const CurriculumNodeKeySchema = Schema.String.pipe(
 );
 
 export const CurriculumNodeTranslationSchema = Schema.Struct({
-  description: Schema.optional(Schema.String),
   routeSlug: PublicRouteSegmentSchema,
   title: Schema.String,
 });
 
-const CurriculumNodeTranslationMapSchema = Schema.Record({
+export const CurriculumNodeTranslationMapSchema = Schema.Record({
   key: LocaleSchema,
   value: CurriculumNodeTranslationSchema,
 });

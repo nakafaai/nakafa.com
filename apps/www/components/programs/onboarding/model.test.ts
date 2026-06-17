@@ -17,7 +17,6 @@ import {
 const programs = [
   {
     coverageStatus: "partial",
-    description: "School curriculum.",
     displayOrder: 10,
     key: "merdeka",
     kind: "school-curriculum",
@@ -31,7 +30,6 @@ const programs = [
   },
   {
     coverageStatus: "partial",
-    description: "Admission exam.",
     displayOrder: 20,
     key: "snbt-2026",
     kind: "admission-exam",

@@ -14,7 +14,6 @@ const activeProfile = {
   planItems: [],
   program: {
     coverageStatus: "available",
-    description: "Ready school curriculum.",
     displayOrder: 10,
     key: "ready-curriculum",
     kind: "school-curriculum",
@@ -32,7 +31,6 @@ const activeProfile = {
 const catalog = [
   {
     coverageStatus: "available",
-    description: "Ready school curriculum.",
     displayOrder: 10,
     key: "ready-curriculum",
     kind: "school-curriculum",
@@ -46,7 +44,6 @@ const catalog = [
   },
   {
     coverageStatus: "planned",
-    description: "Not ready yet.",
     displayOrder: 20,
     key: "planned-path",
     kind: "school-curriculum",
@@ -60,7 +57,6 @@ const catalog = [
   },
   {
     coverageStatus: "partial",
-    description: "Partly ready path.",
     displayOrder: 30,
     key: "partial-path",
     kind: "school-curriculum",

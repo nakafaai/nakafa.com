@@ -78,9 +78,6 @@ export default async function Page(
               {tTryouts("products.snbt.title")}
             </h1>
           </div>
-          <p className="max-w-2xl text-muted-foreground">
-            {tTryouts("product-page-description")}
-          </p>
         </header>
 
         <TryoutCatalogCard
@@ -88,7 +85,6 @@ export default async function Page(
             count: catalogSnapshot.activeCount,
           })}
           art={<SnbtTryoutIcon />}
-          description={tTryouts("products.snbt.description")}
           title={tTryouts("products.snbt.title")}
         >
           <TryoutCatalogList

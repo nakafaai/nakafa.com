@@ -10,13 +10,11 @@ export const practiceAssessmentSnbtIndonesianLanguageMaterial =
         year: 2026,
         translations: {
           en: {
-            description:
-              "Real exam simulation to sharpen your skills and build confidence.",
+            description: "Read Indonesian passages and refine wording.",
             title: "Try Out 2026",
           },
           id: {
-            description:
-              "Simulasi ujian nyata untuk mengasah kemampuan dan kepercayaan diri.",
+            description: "Pahami bacaan Indonesia dan rapikan bahasa.",
             title: "Try Out 2026",
           },
         },

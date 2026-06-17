@@ -9,13 +9,11 @@ export const lessonAiDsLinearMethodsMaterial = defineLessonMaterial({
   routeSlugs: { en: "linear-methods", id: "metode-linear-ai" },
   translations: {
     en: {
-      description:
-        "Learn the QR method for calculating all eigenvalues through iterative matrix decomposition. Learn convergence properties and diagonal elements.",
+      description: "Estimate eigenvalues through QR iteration.",
       title: "Linear Methods of AI",
     },
     id: {
-      description:
-        "Pelajari metode QR untuk menghitung semua nilai eigen melalui iterasi dekomposisi matriks. Pahami sifat konvergensi dan elemen diagonal.",
+      description: "Perkirakan nilai eigen lewat iterasi QR.",
       title: "Metode Linear AI",
     },
   },

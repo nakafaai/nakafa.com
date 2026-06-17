@@ -10,13 +10,11 @@ export const practiceAssessmentSnbtGeneralKnowledgeMaterial =
         year: 2026,
         translations: {
           en: {
-            description:
-              "Real exam simulation to sharpen your skills and build confidence.",
+            description: "Use facts and concepts for public issues.",
             title: "Try Out 2026",
           },
           id: {
-            description:
-              "Simulasi ujian nyata untuk mengasah kemampuan dan kepercayaan diri.",
+            description: "Gunakan fakta dan konsep untuk isu umum.",
             title: "Try Out 2026",
           },
         },

@@ -9,13 +9,11 @@ export const lessonMathematicsSequenceSeriesMaterial = defineLessonMaterial({
   routeSlugs: { en: "sequence-series", id: "barisan-dan-deret" },
   translations: {
     en: {
-      description:
-        "Learn arithmetic sequences with worked examples, formulas, and real-world applications. Learn to find general terms and solve sequence problems.",
+      description: "Find arithmetic patterns, terms, and sums.",
       title: "Sequence and Series",
     },
     id: {
-      description:
-        "Pelajari barisan aritmetika dengan contoh bertahap, rumus suku umum, dan aplikasi nyata. Pelajari konsep beda dan pola bilangan.",
+      description: "Temukan pola, suku, dan jumlah barisan aritmetika.",
       title: "Barisan dan Deret",
     },
   },

@@ -10,13 +10,11 @@ export const lessonMathematicsStatisticsFoundationsMaterial =
     routeSlugs: { en: "statistics-foundations", id: "statistika-dasar" },
     translations: {
       en: {
-        description:
-          "Learn when to use mean, median, or mode in statistics and how outliers affect each measure in real data.",
+        description: "Choose mean, median, or mode for real data.",
         title: "Statistics",
       },
       id: {
-        description:
-          "Pelajari kapan menggunakan mean, median, atau modus dalam statistika. Pahami pengaruh pencilan dan dapatkan panduan praktis analisis data.",
+        description: "Pilih mean, median, atau modus untuk data nyata.",
         title: "Statistika",
       },
     },

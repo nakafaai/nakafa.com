@@ -19,18 +19,19 @@ import { useMutation } from "convex/react";
 import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
-import type { LearningProgramCatalog } from "@/components/programs/contract";
+import type {
+  ActiveLearningProfile,
+  LearningProgramCatalog,
+} from "@/components/programs/contract";
 import { FocusChoice } from "@/components/programs/onboarding/choice";
 import { StepHeading } from "@/components/programs/onboarding/heading";
 import {
   getFocusOptionForKey,
   getFocusOptionsForRole,
+  getInitialFocusKey,
+  parseOnboardingRole,
   resolveFocusSelection,
 } from "@/components/programs/onboarding/model";
-import type {
-  OnboardingFocusKey,
-  OnboardingRole,
-} from "@/components/programs/onboarding/options";
 import { onboardingFocusFormSchema } from "@/components/programs/onboarding/state";
 import {
   getOnboardingChoiceGridColumns,
@@ -38,19 +39,62 @@ import {
   onboardingChoiceGridVariants,
 } from "@/components/programs/onboarding/styles";
 import { submitOnboardingSelection } from "@/components/programs/onboarding/submit";
+import { useUser } from "@/lib/context/use-user";
 
-interface FocusStepFormProps {
-  initialFocusKey: OnboardingFocusKey | "";
+/** Saves the selected learning focus for the latest reactive onboarding role. */
+export function FocusStepForm({
+  activeProfile,
+  programs,
+}: {
+  activeProfile: ActiveLearningProfile;
   programs: LearningProgramCatalog;
-  role: OnboardingRole;
+}) {
+  const { isUserPending, role } = useUser((state) => ({
+    isUserPending: state.isPending,
+    role: parseOnboardingRole(state.user?.appUser.role),
+  }));
+  const options = role ? getFocusOptionsForRole(role, programs) : [];
+  const initialFocusKey = role
+    ? getInitialFocusKey({ activeProfile, programs, role })
+    : "";
+
+  if (isUserPending) {
+    return <Spinner className="mx-auto my-12" isLoading />;
+  }
+
+  if (!role) {
+    return <UnavailableFocusStep />;
+  }
+
+  const selectedRole = role;
+
+  if (options.length === 0) {
+    return <UnavailableFocusStep />;
+  }
+
+  return (
+    <FocusStepFormBody
+      initialFocusKey={initialFocusKey}
+      key={`${selectedRole}:${initialFocusKey}`}
+      options={options}
+      programs={programs}
+      selectedRole={selectedRole}
+    />
+  );
 }
 
-/** Saves the selected learning focus and first program through Convex. */
-export function FocusStepForm({
+/** Owns focus-step form state for one reactive role and profile snapshot. */
+function FocusStepFormBody({
   initialFocusKey,
+  options,
   programs,
-  role,
-}: FocusStepFormProps) {
+  selectedRole,
+}: {
+  initialFocusKey: ReturnType<typeof getInitialFocusKey>;
+  options: ReturnType<typeof getFocusOptionsForRole>;
+  programs: LearningProgramCatalog;
+  selectedRole: NonNullable<ReturnType<typeof parseOnboardingRole>>;
+}) {
   const t = useTranslations("LearningPrograms");
   const locale = useLocale();
   const router = useRouter();
@@ -58,7 +102,6 @@ export function FocusStepForm({
   const selectProgram = useMutation(
     api.learningPrograms.mutations.selectLearningProgram
   );
-  const options = getFocusOptionsForRole(role, programs);
   const form = useForm({
     defaultValues: {
       focusKey: initialFocusKey,
@@ -66,8 +109,9 @@ export function FocusStepForm({
     validators: {
       onChange: onboardingFocusFormSchema,
     },
+    /** Persists the selected focus against the latest reactive role before leaving onboarding. */
     onSubmit: async ({ value }) => {
-      const option = getFocusOptionForKey(role, value.focusKey);
+      const option = getFocusOptionForKey(selectedRole, value.focusKey);
       const selection = option ? resolveFocusSelection(programs, option) : null;
 
       if (!(option && selection)) {
@@ -77,6 +121,7 @@ export function FocusStepForm({
 
       const result = await Effect.runPromise(
         submitOnboardingSelection({
+          /** Writes the locale-scoped learning-program choice through Convex after form validation. */
           selectProgram: (formValue) =>
             selectProgram({
               interests: formValue.interests,
@@ -88,7 +133,7 @@ export function FocusStepForm({
             focusKey: option.key,
             interests: selection.interests,
             primaryProgramKey: selection.program.key,
-            role,
+            role: selectedRole,
           },
         })
       );
@@ -98,15 +143,10 @@ export function FocusStepForm({
         return;
       }
 
-      form.reset({ focusKey: option.key });
       router.replace("/home");
       router.refresh();
     },
   });
-
-  if (options.length === 0) {
-    return <UnavailableFocusStep />;
-  }
 
   return (
     <form
@@ -114,7 +154,7 @@ export function FocusStepForm({
       className="mx-auto flex w-full max-w-4xl flex-col items-center justify-center gap-y-8 px-6 py-12"
       id="program-onboarding-focus-form"
     >
-      <StepHeading title={t(`onboarding.focus.${role}.title`)} />
+      <StepHeading title={t(`onboarding.focus.${selectedRole}.title`)} />
 
       <form.Field name="focusKey">
         {(field) => (
@@ -154,18 +194,16 @@ export function FocusStepForm({
           variant="ghost"
         />
         <form.Subscribe
-          selector={(state) =>
-            [
-              state.canSubmit,
-              state.isSubmitting,
-              state.values.focusKey,
-            ] as const
-          }
+          selector={(state) => ({
+            canSubmit: state.canSubmit,
+            focusKey: state.values.focusKey,
+            isSubmitting: state.isSubmitting,
+          })}
         >
-          {([canSubmit, isSubmitting, focusKey]) => (
+          {({ canSubmit, focusKey, isSubmitting }) => (
             <Button
               disabled={
-                !(canSubmit && getFocusOptionForKey(role, focusKey)) ||
+                !(canSubmit && getFocusOptionForKey(selectedRole, focusKey)) ||
                 isSubmitting
               }
               type="submit"

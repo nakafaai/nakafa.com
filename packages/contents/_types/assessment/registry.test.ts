@@ -25,8 +25,8 @@ const material = definePracticeMaterial({
         },
       ],
       translations: {
-        en: { title: "Practice" },
-        id: { title: "Latihan" },
+        en: { description: "Practice focused reasoning.", title: "Practice" },
+        id: { description: "Latih penalaran terarah.", title: "Latihan" },
       },
     },
   ],

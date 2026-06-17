@@ -9,8 +9,8 @@ export const singaporeMoeCurriculum = defineCurriculum({
   tree: [
     stageNode({
       displayGroup: {
-        en: { title: "Singapore MOE" },
-        id: { title: "Singapore MOE" },
+        en: { title: "School stages" },
+        id: { title: "Tahap sekolah" },
       },
       displayGroupIconKey: "school",
       iconKey: "primary-school",
@@ -18,14 +18,10 @@ export const singaporeMoeCurriculum = defineCurriculum({
       order: 10,
       translations: {
         en: {
-          description:
-            "Build foundational learning across Singapore Primary subjects.",
           routeSlug: "primary",
           title: "Primary",
         },
         id: {
-          description:
-            "Bangun fondasi belajar lintas mata pelajaran Primary Singapura.",
           routeSlug: "primary",
           title: "Primary",
         },
@@ -33,8 +29,8 @@ export const singaporeMoeCurriculum = defineCurriculum({
     }),
     stageNode({
       displayGroup: {
-        en: { title: "Singapore MOE" },
-        id: { title: "Singapore MOE" },
+        en: { title: "School stages" },
+        id: { title: "Tahap sekolah" },
       },
       displayGroupIconKey: "school",
       iconKey: "middle-school",
@@ -42,14 +38,10 @@ export const singaporeMoeCurriculum = defineCurriculum({
       order: 20,
       translations: {
         en: {
-          description:
-            "Continue into Singapore Secondary subjects and pathways.",
           routeSlug: "secondary",
           title: "Secondary",
         },
         id: {
-          description:
-            "Lanjutkan ke mata pelajaran dan jalur Secondary Singapura.",
           routeSlug: "secondary",
           title: "Secondary",
         },
@@ -57,8 +49,8 @@ export const singaporeMoeCurriculum = defineCurriculum({
     }),
     stageNode({
       displayGroup: {
-        en: { title: "Singapore MOE" },
-        id: { title: "Singapore MOE" },
+        en: { title: "School stages" },
+        id: { title: "Tahap sekolah" },
       },
       displayGroupIconKey: "school",
       iconKey: "advanced",
@@ -66,14 +58,10 @@ export const singaporeMoeCurriculum = defineCurriculum({
       order: 30,
       translations: {
         en: {
-          description:
-            "Prepare for Singapore Pre-university learning and A-Level subjects.",
           routeSlug: "pre-university",
           title: "Pre-university",
         },
         id: {
-          description:
-            "Siapkan pembelajaran Pre-university Singapura dan mata pelajaran A-Level.",
           routeSlug: "pre-university",
           title: "Pre-university",
         },

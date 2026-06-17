@@ -9,13 +9,11 @@ export const lessonChemistryStructureMatterMaterial = defineLessonMaterial({
   routeSlugs: { en: "structure-matter", id: "struktur-atom" },
   translations: {
     en: {
-      description:
-        "Start from a simple question about cutting matter again and again, then see why the atomic idea appeared before modern laboratory tools existed.",
+      description: "See why atomic ideas explain matter beyond sight.",
       title: "Atomic Structure",
     },
     id: {
-      description:
-        "Mulai dari pertanyaan sederhana tentang benda yang dipotong terus-menerus, lalu lihat mengapa gagasan atom lahir sebelum alat laboratorium modern ada.",
+      description: "Lihat cara atom menjelaskan materi tak kasatmata.",
       title: "Struktur Atom",
     },
   },

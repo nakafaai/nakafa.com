@@ -9,13 +9,11 @@ export const lessonMathematicsCombinatoricsMaterial = defineLessonMaterial({
   routeSlugs: { en: "combinatorics", id: "kombinatorik" },
   translations: {
     en: {
-      description:
-        "Learn binomial theorem to expand (x+y)^n quickly. Learn coefficients, constant terms, and problem-solving with worked examples and practice problems.",
+      description: "Expand powers quickly with binomial coefficients.",
       title: "Combinatorics",
     },
     id: {
-      description:
-        "Pelajari teorema binomial untuk mengembangkan (x+y)^n dengan cepat. Pahami koefisien, suku konstanta, dan strategi penyelesaian lewat contoh serta latihan.",
+      description: "Kembangkan pangkat cepat dengan koefisien binomial.",
       title: "Kombinatorik",
     },
   },

@@ -10,7 +10,7 @@ import {
 } from "@repo/backend/convex/test.helpers";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { ConvexError } from "convex/values";
-import { describe, expect, it } from "vitest";
+import { assert, describe, expect, it } from "vitest";
 
 const NOW = 1_798_752_000_000;
 const subjectGraph = getGraphIdentity(
@@ -57,9 +57,7 @@ describe("learningPrograms", () => {
         .withIndex("by_key", (q) => q.eq("key", "tka-2026"))
         .unique();
 
-      if (!program) {
-        throw new Error("Expected synced TKA program.");
-      }
+      assert(program, "Expected synced TKA program.");
 
       const sources = await ctx.db
         .query("learningProgramSources")
@@ -147,7 +145,6 @@ describe("learningPrograms", () => {
       })
     ).resolves.toMatchObject([
       {
-        description: "Follow Indonesia's school curriculum by class topic.",
         key: "merdeka",
       },
     ]);
@@ -202,9 +199,7 @@ describe("learningPrograms", () => {
         .withIndex("by_key", (q) => q.eq("key", "merdeka"))
         .unique();
 
-      if (!program) {
-        throw new Error("Expected synced Kurikulum Merdeka program.");
-      }
+      assert(program, "Expected synced Kurikulum Merdeka program.");
 
       return await ctx.db
         .query("learningProgramCoverage")
@@ -609,12 +604,10 @@ describe("learningPrograms", () => {
       key: "retired-school-curriculum",
       translations: {
         en: {
-          description: "Retired school curriculum.",
           publicSlug: "retired-school-curriculum",
           title: "Retired School Curriculum",
         },
         id: {
-          description: "Kurikulum sekolah yang sudah dihentikan.",
           publicSlug: "retired-school-curriculum",
           title: "Kurikulum Sekolah Lama",
         },
@@ -793,9 +786,7 @@ function getGraphIdentity(route: string, locale: "en" | "id" = "id") {
     route,
   });
 
-  if (!identity) {
-    throw new Error(`Expected graph identity for ${route}.`);
-  }
+  assert(identity, `Expected graph identity for ${route}.`);
 
   return identity;
 }
@@ -857,9 +848,7 @@ async function seedGeneratedPlanItems(
       .withIndex("by_key", (q) => q.eq("key", programKey))
       .unique();
 
-    if (!program) {
-      throw new Error(`Expected synced program ${programKey}.`);
-    }
+    assert(program, `Expected synced program ${programKey}.`);
 
     const profileId = await ctx.db.insert("learningProfiles", {
       interests: ["school-curriculum"],
@@ -926,7 +915,7 @@ async function drainCoverageSampleReconcile(
     );
   }
 
-  throw new Error("Expected generated plan item sample reconcile to drain.");
+  expect.fail("Expected generated plan item sample reconcile to drain.");
 }
 
 /** Continues stale-coverage deletion until no rows point at the removed sample. */
@@ -951,7 +940,7 @@ async function drainStaleCoveragePlanItemDelete(
     );
   }
 
-  throw new Error("Expected generated plan item stale delete to drain.");
+  expect.fail("Expected generated plan item stale delete to drain.");
 }
 
 /** Counts generated plan rows for one content sample. */

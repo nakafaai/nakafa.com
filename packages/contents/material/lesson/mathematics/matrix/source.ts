@@ -9,13 +9,11 @@ export const lessonMathematicsMatrixMaterial = defineLessonMaterial({
   routeSlugs: { en: "matrix", id: "matriks" },
   translations: {
     en: {
-      description:
-        "Learn cofactor expansion for matrix determinants through minors, cofactors, and clear calculation examples.",
+      description: "Compute determinants through minors and cofactors.",
       title: "Matrix",
     },
     id: {
-      description:
-        "Pelajari metode ekspansi kofaktor untuk menghitung determinan matriks. Pahami minor, kofaktor, dan perhitungan determinan dengan contoh.",
+      description: "Hitung determinan lewat minor dan kofaktor.",
       title: "Matriks",
     },
   },

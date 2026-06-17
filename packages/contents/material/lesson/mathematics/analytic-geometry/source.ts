@@ -9,13 +9,11 @@ export const lessonMathematicsAnalyticGeometryMaterial = defineLessonMaterial({
   routeSlugs: { en: "analytic-geometry", id: "geometri-analitik" },
   translations: {
     en: {
-      description:
-        "Learn circle fundamentals such as center, radius, and equations, then derive (x-a)² + (y-b)² = r² with examples.",
+      description: "Derive circle equations from center and radius.",
       title: "Analytic Geometry",
     },
     id: {
-      description:
-        "Pelajari konsep dasar lingkaran dengan penjelasan pusat, jari-jari, dan persamaan. Pahami cara menurunkan (x-a)² + (y-b)² = r² dengan contoh interaktif.",
+      description: "Turunkan persamaan lingkaran dari pusat dan jari-jari.",
       title: "Geometri Analitik",
     },
   },

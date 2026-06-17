@@ -24,7 +24,6 @@ export type OnboardingRole = SelfSelectableUserRole;
 
 /** One role card shown on the first onboarding step. */
 export interface RoleOption {
-  descriptionKey: `onboarding.role.${OnboardingRole}.description`;
   image: PreviewAsset;
   key: OnboardingRole;
   titleKey: `onboarding.role.${OnboardingRole}.title`;
@@ -51,7 +50,6 @@ export type OnboardingFocusKey = (typeof onboardingFocusKeys)[number];
 
 const studentFocusOptions = [
   {
-    descriptionKey: "onboarding.focus.student.school.description",
     image: "/classes/writer.png",
     interest: "school-curriculum",
     key: studentSchoolFocusKey,
@@ -60,7 +58,6 @@ const studentFocusOptions = [
     tone: "school",
   },
   {
-    descriptionKey: "onboarding.focus.student.exam.description",
     image: "/classes/rocket.png",
     interest: "exam-prep",
     key: studentExamFocusKey,
@@ -72,7 +69,6 @@ const studentFocusOptions = [
 
 const teacherFocusOptions = [
   {
-    descriptionKey: "onboarding.focus.teacher.materials.description",
     image: "/classes/puzzle.png",
     interest: "school-curriculum",
     key: teacherMaterialsFocusKey,
@@ -81,7 +77,6 @@ const teacherFocusOptions = [
     tone: "school",
   },
   {
-    descriptionKey: "onboarding.focus.teacher.practice.description",
     image: "/classes/ball.png",
     interest: "assessment-prep",
     key: teacherPracticeFocusKey,
@@ -93,7 +88,6 @@ const teacherFocusOptions = [
 
 const parentFocusOptions = [
   {
-    descriptionKey: "onboarding.focus.parent.understand.description",
     image: "/classes/stars.png",
     interest: "school-curriculum",
     key: parentUnderstandFocusKey,
@@ -102,7 +96,6 @@ const parentFocusOptions = [
     tone: "school",
   },
   {
-    descriptionKey: "onboarding.focus.parent.practice.description",
     image: "/classes/music.png",
     interest: "assessment-prep",
     key: parentPracticeFocusKey,
@@ -114,21 +107,18 @@ const parentFocusOptions = [
 
 export const roleOptions = [
   {
-    descriptionKey: "onboarding.role.student.description",
     image: "/classes/sakura.png",
     key: "student",
     titleKey: "onboarding.role.student.title",
     tone: "school",
   },
   {
-    descriptionKey: "onboarding.role.teacher.description",
     image: "/classes/lamp.png",
     key: "teacher",
     titleKey: "onboarding.role.teacher.title",
     tone: "guide",
   },
   {
-    descriptionKey: "onboarding.role.parent.description",
     image: "/classes/sky.png",
     key: "parent",
     titleKey: "onboarding.role.parent.title",
@@ -143,7 +133,6 @@ export const focusOptionsByRole = {
 } as const satisfies Record<
   OnboardingRole,
   readonly {
-    descriptionKey: string;
     image: PreviewAsset;
     interest: LearningInterest;
     key: string;

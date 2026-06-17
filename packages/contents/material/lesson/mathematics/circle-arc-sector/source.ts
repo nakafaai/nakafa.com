@@ -9,13 +9,11 @@ export const lessonMathematicsCircleArcSectorMaterial = defineLessonMaterial({
   routeSlugs: { en: "circle-arc-sector", id: "busur-dan-juring-lingkaran" },
   translations: {
     en: {
-      description:
-        "Learn circle arcs, arc length formulas, and central angle relationships. Learn minor, major, and semicircular arcs with worked examples.",
+      description: "Relate arc length, central angles, and sector area.",
       title: "Circle Arcs and Sectors",
     },
     id: {
-      description:
-        "Pelajari busur lingkaran, rumus panjang busur, dan hubungan dengan sudut pusat. Pahami busur kecil, besar, dan setengah lingkaran lewat contoh soal.",
+      description: "Hubungkan busur, sudut pusat, dan luas juring.",
       title: "Busur dan Juring Lingkaran",
     },
   },

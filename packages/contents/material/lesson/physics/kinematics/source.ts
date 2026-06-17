@@ -9,13 +9,11 @@ export const lessonPhysicsKinematicsMaterial = defineLessonMaterial({
   routeSlugs: { en: "kinematics", id: "kinematika" },
   translations: {
     en: {
-      description:
-        "Learn acceleration as the change in velocity over time through motion traces, velocity-time graphs, and simple calculations.",
+      description: "Read acceleration from traces and velocity graphs.",
       title: "Kinematics",
     },
     id: {
-      description:
-        "Pelajari percepatan sebagai perubahan kecepatan terhadap waktu melalui jejak gerak, grafik kecepatan-waktu, dan perhitungan sederhana.",
+      description: "Baca percepatan dari jejak gerak dan grafik kecepatan.",
       title: "Kinematika",
     },
   },

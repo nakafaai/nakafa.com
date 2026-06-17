@@ -10,13 +10,11 @@ export const lessonMathematicsDerivativeFunctionMaterial = defineLessonMaterial(
     routeSlugs: { en: "derivative-function", id: "turunan-fungsi" },
     translations: {
       en: {
-        description:
-          "Learn how derivatives solve real-world physics problems. Calculate velocity, acceleration, and maximum heights with worked examples and formulas.",
+        description: "Use derivatives for velocity, acceleration, and height.",
         title: "Derivative Functions",
       },
       id: {
-        description:
-          "Pelajari cara turunan memecahkan masalah fisika nyata. Hitung kecepatan, percepatan, dan ketinggian maksimum dengan contoh dan rumus bertahap.",
+        description: "Gunakan turunan untuk kecepatan, percepatan, dan tinggi.",
         title: "Turunan Fungsi",
       },
     },

@@ -10,13 +10,11 @@ export const practiceAssessmentSnbtReadingAndWritingSkillsMaterial =
         year: 2026,
         translations: {
           en: {
-            description:
-              "Real exam simulation to sharpen your skills and build confidence.",
+            description: "Use reading evidence to choose stronger writing.",
             title: "Try Out 2026",
           },
           id: {
-            description:
-              "Simulasi ujian nyata untuk mengasah kemampuan dan kepercayaan diri.",
+            description: "Pakai bukti bacaan untuk memilih tulisan.",
             title: "Try Out 2026",
           },
         },

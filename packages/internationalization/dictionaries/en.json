@@ -125,11 +125,7 @@
   "LearningPrograms": {
     "metadata-title": "Start learning with Nakafa",
     "metadata-description": "Choose what you need help with and one first step.",
-    "current-title": "Current learning profile",
-    "current-description": "Current: {program} for {interests}.",
     "plan-item-untitled": "Learning step",
-    "tryout-context-title": "Active plan",
-    "tryout-context-description": "{program} is active for {interests}. Try-out choices will follow your plan.",
     "program-status": {
       "hidden": "Hidden",
       "planned": "Soon",
@@ -141,50 +137,41 @@
       "role-title": "How will you use Nakafa?",
       "role": {
         "student": {
-          "title": "Student",
-          "description": "Learn, practice, and ask Nina."
+          "title": "Student"
         },
         "teacher": {
-          "title": "Teacher",
-          "description": "Prepare lessons for class."
+          "title": "Teacher"
         },
         "parent": {
-          "title": "Parent",
-          "description": "Help your child learn simply."
+          "title": "Parent"
         }
       },
       "focus": {
         "student": {
           "title": "What do you want to focus on?",
           "school": {
-            "title": "School lessons",
-            "description": "Read clear explanations."
+            "title": "School lessons"
           },
           "exam": {
-            "title": "University entrance",
-            "description": "Practice before an exam."
+            "title": "University entrance"
           }
         },
         "teacher": {
           "title": "What do you want to prepare?",
           "materials": {
-            "title": "Teaching materials",
-            "description": "Prepare explanations for class."
+            "title": "Teaching materials"
           },
           "practice": {
-            "title": "Student practice",
-            "description": "Prepare practice questions."
+            "title": "Student practice"
           }
         },
         "parent": {
           "title": "What does your child need help with?",
           "understand": {
-            "title": "Understand lessons",
-            "description": "Read simple explanations."
+            "title": "Understand lessons"
           },
           "practice": {
-            "title": "Practice questions",
-            "description": "Prepare practice before an exam."
+            "title": "Practice questions"
           }
         }
       },
@@ -208,16 +195,13 @@
     },
     "interest": {
       "school-curriculum": {
-        "title": "School lessons",
-        "description": "Follow subjects for your class and curriculum."
+        "title": "School lessons"
       },
       "exam-prep": {
-        "title": "University entrance",
-        "description": "Practice for SNBT and campus selection."
+        "title": "University entrance"
       },
       "assessment-prep": {
-        "title": "Practice questions",
-        "description": "Measure readiness before an exam."
+        "title": "Practice questions"
       }
     },
     "plan-item-status": {
@@ -336,14 +320,12 @@
   },
   "Tryouts": {
     "title": "What tryout do you want today?",
-    "description": "Try a simulation that feels close to the real exam, so you feel more prepared.",
+    "metadata-description": "Choose a tryout package and start an exam simulation from Nakafa.",
     "package-count": "{count, plural, =0 {No packages yet} =1 {# package} other {# packages}}",
     "cta": "See packages",
     "list-empty": "There are no tryouts showing right now.",
     "available-item-description": "{questions} questions - {parts} parts",
     "year-title": "Year {year}",
-    "product-page-description": "See every SNBT package and open the one that fits your goal best.",
-    "slug-description": "When you're ready, start this tryout and choose which section you want to do first.",
     "start-cta": "Start tryout",
     "restart-cta": "Start again",
     "continue-cta": "Continue",
@@ -403,8 +385,7 @@
     "question-unit": "questions",
     "products": {
       "snbt": {
-        "title": "SNBT",
-        "description": "Pick the SNBT tryout set that fits your practice best."
+        "title": "SNBT"
       }
     }
   },

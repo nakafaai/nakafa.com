@@ -1,5 +1,4 @@
 import type { Locale } from "@repo/contents/_types/content";
-import type { MaterialList } from "@repo/contents/_types/curriculum/material";
 import {
   type ProjectedCurriculumNode,
   projectCurriculumNodes,
@@ -9,16 +8,10 @@ import { CURRICULUM_SOURCES } from "@repo/contents/_types/curriculum/source";
 import { MATERIAL_ROUTE_DOMAINS } from "@repo/contents/_types/material/domain";
 import { MATERIAL_SOURCES } from "@repo/contents/_types/material/source";
 import { LEARNING_PROGRAM_CATALOG } from "@repo/contents/_types/program/catalog";
-import {
-  createTopicRouteByMaterialKey,
-  isMaterialContentRoute,
-  isMaterialLessonRoute,
-  toLocalizedContentHref,
-} from "@repo/contents/_types/route/content";
+import { createTopicRouteByMaterialKey } from "@repo/contents/_types/route/content";
 import { InvalidPublicRouteSourceError } from "@repo/contents/_types/route/error";
 import type { RouteInputs } from "@repo/contents/_types/route/input";
 import {
-  comparePublicRouteOrder,
   decodeCurriculumRoute,
   getParentPath,
   lastPathSegment,
@@ -89,7 +82,6 @@ export const listPublicCurriculumRoutes = Effect.fn(
 
       routes.push(
         yield* decodeCurriculumRoute({
-          description: program.translations[locale].description,
           kind: "curriculum-context",
           iconKey: program.iconKey,
           level: "track",
@@ -113,7 +105,7 @@ export const listPublicCurriculumRoutes = Effect.fn(
     const program = yield* findProgram(node.curriculumKey, programs);
 
     for (const locale of locales) {
-      const nodePathSegments = yield* getCurriculumNodePathSegments({
+      const pathSegments = yield* getCurriculumNodePathSegments({
         contentRouteByMaterialKey,
         locale,
         node,
@@ -125,7 +117,7 @@ export const listPublicCurriculumRoutes = Effect.fn(
         namespace,
         program.translations[locale].publicSlug,
       ]);
-      const publicPath = yield* makePath([programPath, ...nodePathSegments]);
+      const publicPath = yield* makePath([programPath, ...pathSegments]);
       const materialKey = node.materialKeys.at(0);
       const canonicalPath = materialKey
         ? contentRouteByMaterialKey.get(`${locale}:${materialKey}`)?.publicPath
@@ -134,7 +126,6 @@ export const listPublicCurriculumRoutes = Effect.fn(
       routes.push(
         yield* decodeCurriculumRoute({
           canonicalPath,
-          description: node.translations[locale].description,
           displayGroupIconKey: node.displayGroupIconKey,
           displayGroupTitle: node.displayGroup?.[locale].title,
           iconKey: node.iconKey,
@@ -160,9 +151,9 @@ export const listPublicCurriculumRoutes = Effect.fn(
   return yield* uniqueRoutes(routes);
 });
 
-/** Checks whether a curriculum route should render a public context page. */
+/** Checks whether a curriculum route has ready mapped content for public navigation. */
 export function isRenderableCurriculumRoute(route: PublicCurriculumRoute) {
-  return RENDERABLE_CURRICULUM_LEVELS.has(route.level);
+  return RENDERABLE_CURRICULUM_LEVELS.has(route.level) && route.sitemap;
 }
 
 /** Orders sibling curriculum routes from source-owned curriculum order data. */
@@ -215,60 +206,6 @@ export function readCurriculumAncestors(
   }
 
   return ancestors;
-}
-
-/** Reads the closest subject/course context that renders material cards. */
-export function readCurriculumCardListContext(
-  route: PublicCurriculumRoute,
-  routes: readonly PublicCurriculumRoute[]
-): PublicCurriculumRoute | undefined {
-  if (route.level === "subject" || route.level === "course") {
-    return route;
-  }
-
-  if (!route.parentPath) {
-    return;
-  }
-
-  const parent = readCurriculumRouteByPublicPath(
-    routes,
-    route.locale,
-    route.parentPath
-  );
-
-  if (!parent) {
-    return;
-  }
-
-  return readCurriculumCardListContext(parent, routes);
-}
-
-/** Converts subject/course mappings into the established collapsible card model. */
-export function readCurriculumMaterialCards({
-  contentRoutes,
-  curriculumRoutes,
-  route,
-}: {
-  contentRoutes: readonly PublicContentRoute[];
-  curriculumRoutes: readonly PublicCurriculumRoute[];
-  route: PublicCurriculumRoute;
-}): MaterialList {
-  const groupRoutes = curriculumRoutes
-    .filter(
-      (candidate) =>
-        candidate.locale === route.locale &&
-        candidate.parentPath === route.publicPath
-    )
-    .slice()
-    .sort(compareCurriculumRouteOrder);
-
-  return groupRoutes.flatMap((groupRoute) =>
-    readCurriculumMaterialCard({
-      contentRoutes,
-      curriculumRoutes,
-      route: groupRoute,
-    })
-  );
 }
 
 /** Builds the lookup key used for projected curriculum node ancestry. */
@@ -376,124 +313,4 @@ function getCurriculumNodePathSegments({
 
     return segments;
   });
-}
-
-/** Converts one curriculum group route into the existing collapsible material card contract. */
-function readCurriculumMaterialCard({
-  contentRoutes,
-  curriculumRoutes,
-  route,
-}: {
-  contentRoutes: readonly PublicContentRoute[];
-  curriculumRoutes: readonly PublicCurriculumRoute[];
-  route: PublicCurriculumRoute;
-}): MaterialList {
-  const items = readCurriculumMaterialItems({
-    contentRoutes,
-    curriculumRoutes,
-    route,
-  });
-
-  if (items.length === 0) {
-    return [];
-  }
-
-  return [
-    {
-      description: route.description,
-      href: items[0].href,
-      items,
-      title: route.title,
-    },
-  ];
-}
-
-/** Expands a curriculum group and its descendants into direct canonical lesson links. */
-function readCurriculumMaterialItems({
-  contentRoutes,
-  curriculumRoutes,
-  route,
-}: {
-  contentRoutes: readonly PublicContentRoute[];
-  curriculumRoutes: readonly PublicCurriculumRoute[];
-  route: PublicCurriculumRoute;
-}) {
-  const materialItems = new Map<string, { href: string; title: string }>();
-
-  for (const curriculumRoute of [
-    route,
-    ...readCurriculumDescendants(route, curriculumRoutes),
-  ]) {
-    if (!curriculumRoute.canonicalPath) {
-      continue;
-    }
-
-    for (const item of readMaterialLessonItems(
-      curriculumRoute.locale,
-      curriculumRoute.canonicalPath,
-      contentRoutes
-    )) {
-      materialItems.set(item.href, item);
-    }
-  }
-
-  return [...materialItems.values()];
-}
-
-/** Reads canonical lesson links from a projected material topic or concrete lesson route. */
-function readMaterialLessonItems(
-  locale: PublicCurriculumRoute["locale"],
-  path: string,
-  contentRoutes: readonly PublicContentRoute[]
-) {
-  const route = contentRoutes.find(
-    (candidate) =>
-      candidate.locale === locale &&
-      candidate.publicPath === path &&
-      isMaterialContentRoute(candidate)
-  );
-
-  if (!route) {
-    return [];
-  }
-
-  if (isMaterialLessonRoute(route)) {
-    return [{ href: toLocalizedContentHref(route), title: route.title }];
-  }
-
-  return contentRoutes
-    .filter(isMaterialLessonRoute)
-    .filter(
-      (candidate) =>
-        candidate.locale === locale && candidate.parentPath === route.publicPath
-    )
-    .slice()
-    .sort(comparePublicRouteOrder)
-    .map((candidate) => ({
-      href: toLocalizedContentHref(candidate),
-      title: candidate.title,
-    }));
-}
-
-/** Walks visible curriculum descendants in source order so card lists stay deterministic. */
-function readCurriculumDescendants(
-  route: PublicCurriculumRoute,
-  routes: readonly PublicCurriculumRoute[]
-) {
-  const descendants: PublicCurriculumRoute[] = [];
-  const childRoutes = routes
-    .filter(
-      (candidate) =>
-        candidate.locale === route.locale &&
-        candidate.parentPath === route.publicPath
-    )
-    .slice()
-    .sort(compareCurriculumRouteOrder);
-
-  for (const child of childRoutes) {
-    descendants.push(child);
-    descendants.push(...readCurriculumDescendants(child, routes));
-  }
-
-  return descendants;
 }

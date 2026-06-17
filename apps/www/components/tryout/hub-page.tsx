@@ -12,7 +12,6 @@ import { TryoutCatalogCard } from "@/components/tryout/catalog-card";
 import { TryoutCatalogList } from "@/components/tryout/catalog-list";
 import { TryoutHubHeader } from "@/components/tryout/hub-header";
 import { SnbtTryoutIcon } from "@/components/tryout/product-icon";
-import { TryoutLearningProgramContext } from "@/components/tryout/program";
 import { TRYOUT_CATALOG_PAGE_SIZE } from "@/components/tryout/utils/catalog";
 import { getTryoutProductHref } from "@/components/tryout/utils/routes";
 import { getToken } from "@/lib/auth/server";
@@ -26,54 +25,39 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
     getToken(),
   ]);
 
-  const [catalogSnapshot, currentUser, initialNowMs, learningProfile] =
-    await Effect.runPromise(
-      Effect.all(
-        [
-          Effect.tryPromise(() =>
-            fetchQuery(
-              api.tryouts.queries.tryouts.getActiveTryoutCatalogSnapshot,
-              {
-                locale,
-                pageSize: TRYOUT_CATALOG_PAGE_SIZE,
-                product,
-              },
-              token ? { token } : undefined
+  const [catalogSnapshot, currentUser, initialNowMs] = await Effect.runPromise(
+    Effect.all(
+      [
+        Effect.tryPromise(() =>
+          fetchQuery(
+            api.tryouts.queries.tryouts.getActiveTryoutCatalogSnapshot,
+            {
+              locale,
+              pageSize: TRYOUT_CATALOG_PAGE_SIZE,
+              product,
+            },
+            token ? { token } : undefined
+          )
+        ),
+        token
+          ? Effect.tryPromise(() =>
+              fetchQuery(api.auth.queries.getCurrentUser, {}, { token })
             )
-          ),
-          token
-            ? Effect.tryPromise(() =>
-                fetchQuery(api.auth.queries.getCurrentUser, {}, { token })
-              )
-            : Effect.succeed(null),
-          Clock.currentTimeMillis,
-          token
-            ? Effect.tryPromise(() =>
-                fetchQuery(
-                  api.learningPrograms.queries.getActiveProfile,
-                  { locale },
-                  { token }
-                )
-              )
-            : Effect.succeed(null),
-        ] as const,
-        { concurrency: "unbounded" }
-      )
-    );
+          : Effect.succeed(null),
+        Clock.currentTimeMillis,
+      ] as const,
+      { concurrency: "unbounded" }
+    )
+  );
   const userName = currentUser?.appUser.name ?? tHome("guest");
 
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-20 sm:py-24">
-      <div className="flex flex-col gap-10">
+      <div className="space-y-10">
         <TryoutHubHeader
-          description={tTryouts("description")}
           greeting={tHome("greeting", { name: userName })}
           title={tTryouts("title")}
         />
-
-        {learningProfile ? (
-          <TryoutLearningProgramContext profile={learningProfile} />
-        ) : null}
 
         <TryoutCatalogCard
           action={
@@ -82,7 +66,7 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
               render={
                 <NavigationLink href={getTryoutProductHref(product)}>
                   {tTryouts("cta")}
-                  <HugeIcons data-icon="inline-end" icon={ArrowRight02Icon} />
+                  <HugeIcons className="size-4" icon={ArrowRight02Icon} />
                 </NavigationLink>
               }
             />
@@ -91,7 +75,6 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
             count: catalogSnapshot.activeCount,
           })}
           art={<SnbtTryoutIcon />}
-          description={tTryouts("products.snbt.description")}
           title={tTryouts("products.snbt.title")}
         >
           <TryoutCatalogList

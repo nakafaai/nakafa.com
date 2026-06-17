@@ -24,7 +24,9 @@ import {
   UniversityIcon,
 } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
+import type { ProgramNavigationIconKey } from "@repo/contents/_types/program/schema";
 import type { PublicCurriculumRoute } from "@repo/contents/_types/route/schema";
+import type { Material } from "@repo/contents/_types/taxonomy";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cva } from "class-variance-authority";
 
@@ -37,6 +39,10 @@ type CurriculumIconTone =
   | "sky"
   | "violet";
 type CurriculumIconPair = readonly [IconSvgElement, IconSvgElement];
+type CurriculumRouteVisualIdentity = Readonly<{
+  iconPair: CurriculumIconPair;
+  tone: CurriculumIconTone;
+}>;
 
 const curriculumIconMarkVariants = cva("", {
   variants: {
@@ -81,14 +87,125 @@ const curriculumIconBadgeVariants = cva(
   }
 );
 
+const materialIconPairs: { readonly [Key in Material]: CurriculumIconPair } = {
+  "ai-ds": [Brain02Icon, StructureIcon],
+  biology: [DnaIcon, MicroscopeIcon],
+  chemistry: [TestTubeIcon, Atom02Icon],
+  "computer-science": [Atom02Icon, Brain02Icon],
+  economy: [AssignmentsIcon, CertificateIcon],
+  "game-engineering": [StructureIcon, Brain02Icon],
+  geography: [GlobalEducationIcon, StructureIcon],
+  geospatial: [GlobalEducationIcon, BoardMathIcon],
+  history: [LibraryIcon, BookOpenCheckIcon],
+  informatics: [Atom02Icon, Brain02Icon],
+  "informatics-engineering": [Atom02Icon, StructureIcon],
+  "international-relations": [GlobalEducationIcon, UniversityIcon],
+  mathematics: [MathIcon, BoardMathIcon],
+  physics: [PhysicsIcon, Atom02Icon],
+  "political-science": [UniversityIcon, CertificateIcon],
+  sociology: [Knowledge01Icon, LibraryIcon],
+  "technology-electro-medical": [TestTubeIcon, MicroscopeIcon],
+};
+
+const materialIconTones: { readonly [Key in Material]: CurriculumIconTone } = {
+  "ai-ds": "sky",
+  biology: "emerald",
+  chemistry: "violet",
+  "computer-science": "sky",
+  economy: "cyan",
+  "game-engineering": "amber",
+  geography: "cyan",
+  geospatial: "fuchsia",
+  history: "amber",
+  informatics: "sky",
+  "informatics-engineering": "violet",
+  "international-relations": "indigo",
+  mathematics: "indigo",
+  physics: "amber",
+  "political-science": "emerald",
+  sociology: "fuchsia",
+  "technology-electro-medical": "emerald",
+};
+
+const navigationIconPairs: {
+  readonly [Key in ProgramNavigationIconKey]: CurriculumIconPair;
+} = {
+  advanced: [GraduationCapIcon, UniversityIcon],
+  assessment: [AssignmentsIcon, CertificateIcon],
+  certificate: [CertificateIcon, BookOpenCheckIcon],
+  course: [BookOpenCheckIcon, Books02Icon],
+  diploma: [DiplomaIcon, GraduationCapIcon],
+  "early-years": [Backpack01Icon, BookOpen02Icon],
+  framework: [StructureIcon, BoardMathIcon],
+  "global-education": [GlobalEducationIcon, SchoolIcon],
+  "grade-1": [Backpack01Icon, BookOpen02Icon],
+  "grade-2": [BookOpen02Icon, Books02Icon],
+  "grade-3": [Books02Icon, Knowledge01Icon],
+  "grade-4": [BoardMathIcon, MathIcon],
+  "grade-5": [Brain02Icon, Knowledge01Icon],
+  "grade-6": [Knowledge01Icon, CertificateIcon],
+  "grade-7": [SchoolBellIcon, Books02Icon],
+  "grade-8": [AssignmentsIcon, BoardMathIcon],
+  "grade-9": [CertificateIcon, AssignmentsIcon],
+  "grade-10": [Atom02Icon, Brain02Icon],
+  "grade-11": [MicroscopeIcon, DnaIcon],
+  "grade-12": [DiplomaIcon, SchoolIcon],
+  "high-school": [UniversityIcon, GraduationCapIcon],
+  mathematics: [MathIcon, BoardMathIcon],
+  "middle-school": [SchoolBellIcon, Books02Icon],
+  "primary-school": [SchoolIcon, Backpack01Icon],
+  qualification: [GraduationCapIcon, CertificateIcon],
+  school: [LibraryIcon, BookOpenCheckIcon],
+  science: [PhysicsIcon, TestTubeIcon],
+  standards: [BoardMathIcon, StructureIcon],
+  state: [GlobalEducationIcon, StructureIcon],
+};
+
+const navigationIconTones: {
+  readonly [Key in ProgramNavigationIconKey]: CurriculumIconTone;
+} = {
+  advanced: "indigo",
+  assessment: "cyan",
+  certificate: "emerald",
+  course: "sky",
+  diploma: "fuchsia",
+  "early-years": "sky",
+  framework: "violet",
+  "global-education": "cyan",
+  "grade-1": "sky",
+  "grade-2": "indigo",
+  "grade-3": "emerald",
+  "grade-4": "amber",
+  "grade-5": "fuchsia",
+  "grade-6": "cyan",
+  "grade-7": "sky",
+  "grade-8": "violet",
+  "grade-9": "emerald",
+  "grade-10": "amber",
+  "grade-11": "fuchsia",
+  "grade-12": "indigo",
+  "high-school": "amber",
+  mathematics: "indigo",
+  "middle-school": "violet",
+  "primary-school": "emerald",
+  qualification: "violet",
+  school: "sky",
+  science: "amber",
+  standards: "violet",
+  state: "cyan",
+};
+
 /** Renders root cards with the historical subject-page mini-card illustration. */
+/* istanbul ignore next -- Browser proof covers the visual shell; icons.test.ts audits the production identity resolver. */
 export function CurriculumRouteCardIcon({
   route,
 }: {
   readonly route: PublicCurriculumRoute;
 }) {
-  const [PrimaryIcon, SecondaryIcon] = readCurriculumRouteIconPair(route);
-  const tone = readCurriculumIconTone(route);
+  const {
+    iconPair: [PrimaryIcon, SecondaryIcon],
+    tone,
+  } = readCurriculumRouteVisualIdentity(route);
 
   return (
     <div className="relative flex h-18 w-20 items-center justify-center">
@@ -118,18 +235,40 @@ export function CurriculumRouteCardIcon({
 
 /** Resolves source-owned route identity to verified Hugeicons card icons. */
 export function readCurriculumRouteIcon(route: PublicCurriculumRoute) {
-  const [primaryIcon] = readCurriculumRouteIconPair(route);
+  const {
+    iconPair: [primaryIcon],
+  } = readCurriculumRouteVisualIdentity(route);
 
   return primaryIcon;
+}
+
+/**
+ * Resolves the production card icon pair and accent tone for one curriculum row.
+ *
+ * Curriculum chooser audits use this same identity so sibling uniqueness is
+ * proven against the visual contract rendered by `CurriculumRouteCardIcon`.
+ */
+export function readCurriculumRouteVisualIdentity(
+  route: PublicCurriculumRoute
+): CurriculumRouteVisualIdentity {
+  return {
+    iconPair: readCurriculumRouteIconPair(route),
+    tone: readCurriculumIconTone(route),
+  };
 }
 
 /** Selects a grouped-root section icon from source-owned group metadata. */
 export function readCurriculumGroupIcon(
   iconKey: PublicCurriculumRoute["displayGroupIconKey"]
 ): IconSvgElement {
-  const [primaryIcon] = readNavigationIconPair(iconKey);
+  if (iconKey) {
+    const [primaryIcon] = navigationIconPairs[iconKey];
 
-  return primaryIcon;
+    return primaryIcon;
+  }
+
+  /* istanbul ignore next -- Non-card internal rows may omit group icon metadata; visible chooser groups are audited in icons.test.ts. */
+  return navigationIconPairs.school[0];
 }
 
 /** Maps schema-owned route identity to non-redundant Hugeicons icon pairs. */
@@ -137,93 +276,16 @@ function readCurriculumRouteIconPair(
   route: PublicCurriculumRoute
 ): CurriculumIconPair {
   if (route.materialDomain) {
-    switch (route.materialDomain) {
-      case "biology":
-        return [DnaIcon, MicroscopeIcon];
-      case "chemistry":
-        return [TestTubeIcon, Atom02Icon];
-      case "mathematics":
-        return [MathIcon, BoardMathIcon];
-      case "physics":
-        return [PhysicsIcon, Atom02Icon];
-      case "ai-ds":
-        return [Brain02Icon, StructureIcon];
-      case "informatics":
-        return [Atom02Icon, Brain02Icon];
-      default:
-        return [LibraryIcon, Books02Icon];
-    }
+    return materialIconPairs[route.materialDomain];
   }
 
-  return readNavigationIconPair(route.iconKey);
-}
-
-/** Maps schema-owned navigation icon keys to paired Hugeicons identities. */
-function readNavigationIconPair(
-  iconKey: PublicCurriculumRoute["iconKey"]
-): CurriculumIconPair {
-  switch (iconKey) {
-    case "advanced":
-      return [GraduationCapIcon, UniversityIcon];
-    case "assessment":
-      return [AssignmentsIcon, CertificateIcon];
-    case "certificate":
-      return [CertificateIcon, BookOpenCheckIcon];
-    case "course":
-      return [BookOpenCheckIcon, Books02Icon];
-    case "diploma":
-      return [DiplomaIcon, GraduationCapIcon];
-    case "early-years":
-      return [Backpack01Icon, BookOpen02Icon];
-    case "framework":
-      return [StructureIcon, BoardMathIcon];
-    case "global-education":
-      return [GlobalEducationIcon, SchoolIcon];
-    case "grade-1":
-      return [Backpack01Icon, BookOpen02Icon];
-    case "grade-2":
-      return [BookOpen02Icon, Books02Icon];
-    case "grade-3":
-      return [Books02Icon, Knowledge01Icon];
-    case "grade-4":
-      return [BoardMathIcon, MathIcon];
-    case "grade-5":
-      return [Brain02Icon, Knowledge01Icon];
-    case "grade-6":
-      return [Knowledge01Icon, CertificateIcon];
-    case "grade-7":
-      return [SchoolBellIcon, Books02Icon];
-    case "grade-8":
-      return [AssignmentsIcon, BoardMathIcon];
-    case "grade-9":
-      return [CertificateIcon, AssignmentsIcon];
-    case "grade-10":
-      return [Atom02Icon, Brain02Icon];
-    case "grade-11":
-      return [MicroscopeIcon, DnaIcon];
-    case "grade-12":
-      return [DiplomaIcon, SchoolIcon];
-    case "high-school":
-      return [UniversityIcon, GraduationCapIcon];
-    case "mathematics":
-      return [MathIcon, BoardMathIcon];
-    case "middle-school":
-      return [SchoolBellIcon, Books02Icon];
-    case "primary-school":
-      return [SchoolIcon, Backpack01Icon];
-    case "qualification":
-      return [GraduationCapIcon, CertificateIcon];
-    case "science":
-      return [PhysicsIcon, TestTubeIcon];
-    case "school":
-      return [SchoolIcon, Books02Icon];
-    case "state":
-      return [GlobalEducationIcon, StructureIcon];
-    case "standards":
-      return [BoardMathIcon, StructureIcon];
-    default:
-      return [Books02Icon, BookOpen02Icon];
+  /* istanbul ignore else -- Non-card internal rows may omit icon metadata; visible chooser rows are audited in icons.test.ts. */
+  if (route.iconKey) {
+    return navigationIconPairs[route.iconKey];
   }
+
+  /* istanbul ignore next -- Non-card internal rows may omit icon metadata; visible chooser rows are audited in icons.test.ts. */
+  return navigationIconPairs.school;
 }
 
 /** Chooses the old subject-card accent tone from schema-owned route fields. */
@@ -231,60 +293,14 @@ function readCurriculumIconTone(
   route: PublicCurriculumRoute
 ): CurriculumIconTone {
   if (route.materialDomain) {
-    switch (route.materialDomain) {
-      case "biology":
-        return "emerald";
-      case "chemistry":
-        return "violet";
-      case "mathematics":
-        return "indigo";
-      case "physics":
-        return "amber";
-      default:
-        return "sky";
-    }
+    return materialIconTones[route.materialDomain];
   }
 
-  switch (route.iconKey) {
-    case "advanced":
-    case "grade-12":
-      return "indigo";
-    case "certificate":
-    case "grade-9":
-    case "qualification":
-      return "emerald";
-    case "course":
-    case "grade-2":
-    case "mathematics":
-      return "indigo";
-    case "diploma":
-    case "grade-11":
-      return "fuchsia";
-    case "early-years":
-    case "grade-1":
-    case "primary-school":
-      return "sky";
-    case "framework":
-    case "standards":
-      return "violet";
-    case "global-education":
-    case "state":
-      return "cyan";
-    case "grade-10":
-    case "science":
-      return "amber";
-    case "grade-3":
-    case "grade-4":
-    case "grade-5":
-    case "grade-6":
-      return "sky";
-    case "grade-7":
-    case "grade-8":
-    case "middle-school":
-      return "violet";
-    case "high-school":
-      return "amber";
-    default:
-      return "sky";
+  /* istanbul ignore else -- Non-card internal rows may omit icon metadata; visible chooser rows are audited in icons.test.ts. */
+  if (route.iconKey) {
+    return navigationIconTones[route.iconKey];
   }
+
+  /* istanbul ignore next -- Non-card internal rows may omit icon metadata; visible chooser rows are audited in icons.test.ts. */
+  return navigationIconTones.school;
 }

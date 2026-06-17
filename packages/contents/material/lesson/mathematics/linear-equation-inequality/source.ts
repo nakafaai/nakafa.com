@@ -13,13 +13,11 @@ export const lessonMathematicsLinearEquationInequalityMaterial =
     },
     translations: {
       en: {
-        description:
-          "Learn solving linear equation systems with substitution and elimination methods. Learn real-world applications with worked examples and visual guides.",
+        description: "Solve linear systems with substitution and elimination.",
         title: "Systems of Linear Equations and Inequalities",
       },
       id: {
-        description:
-          "Pelajari cara menyelesaikan sistem persamaan linear dengan metode substitusi dan eliminasi melalui contoh aplikasi dan panduan visual.",
+        description: "Selesaikan sistem linear dengan dua cara utama.",
         title: "Sistem Persamaan dan Pertidaksamaan Linear",
       },
     },

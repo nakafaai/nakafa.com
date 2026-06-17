@@ -9,13 +9,11 @@ export const lessonPhysicsMeasurementMaterial = defineLessonMaterial({
   routeSlugs: { en: "measurement", id: "pengukuran-dalam-kerja-ilmiah" },
   translations: {
     en: {
-      description:
-        "Learn physical dimensions as codes built from base quantities, how to derive dimensions of derived quantities, and how to check formulas without numbers.",
+      description: "Use dimensions to check quantities and formulas.",
       title: "Measurement in Scientific Work",
     },
     id: {
-      description:
-        "Pelajari dimensi fisika sebagai kode penyusun besaran pokok, cara menurunkan dimensi besaran turunan, dan cara mengecek rumus tanpa angka.",
+      description: "Gunakan dimensi untuk mengecek besaran dan rumus.",
       title: "Pengukuran dalam Kerja Ilmiah",
     },
   },

@@ -7,11 +7,12 @@ import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
 import { getGithubUrl } from "@/lib/utils/github";
 
+/** Renders the shared page-body empty state with enough vertical rhythm for content layouts. */
 export function ComingSoon({ className }: { className?: string }) {
   const t = useTranslations("ComingSoon");
 
   return (
-    <div className={cn(className)}>
+    <div className={cn("py-20", className)}>
       <Heading className="text-2xl" Tag="h2">
         {t("title")}
       </Heading>

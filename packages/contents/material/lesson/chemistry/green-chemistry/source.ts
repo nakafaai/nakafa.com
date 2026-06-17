@@ -9,13 +9,11 @@ export const lessonChemistryGreenChemistryMaterial = defineLessonMaterial({
   routeSlugs: { en: "green-chemistry", id: "kimia-hijau" },
   translations: {
     en: {
-      description:
-        "Read everyday chemical processes through atoms, elements, molecules, reaction equations, then judge whether the process fits green chemistry principles.",
+      description: "Judge everyday reactions through green chemistry ideas.",
       title: "Green Chemistry",
     },
     id: {
-      description:
-        "Baca proses kimia di sekitar kita dari atom, unsur, molekul, persamaan reaksi, lalu cek apakah prosesnya selaras dengan prinsip kimia hijau.",
+      description: "Nilai reaksi sehari-hari dengan prinsip kimia hijau.",
       title: "Kimia Hijau",
     },
   },

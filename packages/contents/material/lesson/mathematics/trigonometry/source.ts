@@ -9,13 +9,11 @@ export const lessonMathematicsTrigonometryMaterial = defineLessonMaterial({
   routeSlugs: { en: "trigonometry", id: "trigonometri" },
   translations: {
     en: {
-      description:
-        "Learn how to identify opposite, adjacent, and hypotenuse sides in right triangles. Learn the foundation of trigonometry with clear examples and visual guides.",
+      description: "Match right-triangle sides to trigonometric ratios.",
       title: "Trigonometry",
     },
     id: {
-      description:
-        "Pelajari cara mengidentifikasi sisi depan, samping, dan miring pada segitiga siku-siku. Pelajari dasar trigonometri dengan penjelasan jelas dan panduan visual.",
+      description: "Cocokkan sisi segitiga dengan rasio trigonometri.",
       title: "Trigonometri",
     },
   },

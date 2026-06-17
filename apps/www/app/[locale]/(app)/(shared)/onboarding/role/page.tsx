@@ -1,14 +1,10 @@
-import { api } from "@repo/backend/convex/_generated/api";
 import { redirect } from "@repo/internationalization/src/navigation";
-import { fetchQuery } from "convex/nextjs";
 import type { Locale } from "next-intl";
 import { Suspense } from "react";
 import { GuestProgramDiscovery } from "@/components/programs/onboarding/guest";
 import {
-  getRoleOptionForKey,
   getSelectableRoleOptions,
   hasOnboardingChoices,
-  parseOnboardingRole,
 } from "@/components/programs/onboarding/model";
 import { RoleStepForm } from "@/components/programs/onboarding/role";
 import { getToken } from "@/lib/auth/server";
@@ -44,16 +40,7 @@ async function RoleStepRuntime({ locale }: { locale: Locale }) {
     return null;
   }
 
-  const currentUser = await fetchQuery(
-    api.auth.queries.getCurrentUser,
-    {},
-    { token }
-  );
   const options = getSelectableRoleOptions(programs);
-  const initialRole = getRoleOptionForKey(
-    options,
-    parseOnboardingRole(currentUser?.appUser.role)
-  )?.key;
 
-  return <RoleStepForm initialRole={initialRole ?? null} options={options} />;
+  return <RoleStepForm options={options} />;
 }

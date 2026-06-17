@@ -9,13 +9,11 @@ export const lessonBiologyClimateChangeMaterial = defineLessonMaterial({
   routeSlugs: { en: "climate-change", id: "perubahan-iklim" },
   translations: {
     en: {
-      description:
-        "Understand the greenhouse effect, greenhouse gases, fossil fuel combustion, land-use change, organic waste, plastic, and human activities that increase warming.",
+      description: "Trace how human activity traps heat on Earth.",
       title: "Climate Change",
     },
     id: {
-      description:
-        "Memahami efek rumah kaca, gas rumah kaca, pembakaran bahan bakar fosil, perubahan lahan, limbah organik, plastik, dan aktivitas manusia yang meningkatkan pemanasan.",
+      description: "Telusuri aktivitas manusia yang memerangkap panas bumi.",
       title: "Perubahan Iklim",
     },
   },

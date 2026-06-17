@@ -10,13 +10,11 @@ export const lessonMathematicsStatisticsRegressionMaterial =
     routeSlugs: { en: "statistics-regression", id: "regresi-statistik" },
     translations: {
       en: {
-        description:
-          "Learn how r² measures how well your regression line explains data variation. Learn coefficient of determination with visual examples and calculations.",
+        description: "Read how r² shows variation explained by a model.",
         title: "Statistics",
       },
       id: {
-        description:
-          "Pelajari bagaimana r² mengukur seberapa baik garis regresi menjelaskan variasi data. Pahami koefisien determinasi dengan contoh visual dan perhitungan.",
+        description: "Baca r² sebagai ukuran variasi yang terjelaskan.",
         title: "Statistika",
       },
     },

@@ -1,17 +1,9 @@
-import { api } from "@repo/backend/convex/_generated/api";
 import { redirect } from "@repo/internationalization/src/navigation";
-import { fetchQuery } from "convex/nextjs";
 import type { Locale } from "next-intl";
 import { Suspense } from "react";
 import { FocusStepForm } from "@/components/programs/onboarding/focus";
 import { GuestProgramDiscovery } from "@/components/programs/onboarding/guest";
-import {
-  getInitialFocusKey,
-  getRoleOptionForKey,
-  getSelectableRoleOptions,
-  hasOnboardingChoices,
-  parseOnboardingRole,
-} from "@/components/programs/onboarding/model";
+import { hasOnboardingChoices } from "@/components/programs/onboarding/model";
 import { getToken } from "@/lib/auth/server";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import {
@@ -49,30 +41,7 @@ async function FocusStepRuntime({ locale }: { locale: Locale }) {
     return null;
   }
 
-  const [currentUser, activeProfile] = await Promise.all([
-    fetchQuery(api.auth.queries.getCurrentUser, {}, { token }),
-    getActiveLearningProfile(token, locale),
-  ]);
-  const roleOptions = getSelectableRoleOptions(programs);
-  const selectedRole = getRoleOptionForKey(
-    roleOptions,
-    parseOnboardingRole(currentUser?.appUser.role)
-  )?.key;
+  const activeProfile = await getActiveLearningProfile(token, locale);
 
-  if (!selectedRole) {
-    redirect({ href: "/onboarding/role", locale });
-    return null;
-  }
-
-  return (
-    <FocusStepForm
-      initialFocusKey={getInitialFocusKey({
-        activeProfile,
-        programs,
-        role: selectedRole,
-      })}
-      programs={programs}
-      role={selectedRole}
-    />
-  );
+  return <FocusStepForm activeProfile={activeProfile} programs={programs} />;
 }

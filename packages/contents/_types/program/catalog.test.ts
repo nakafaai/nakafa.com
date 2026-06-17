@@ -16,6 +16,9 @@ describe("program/catalog", () => {
       expect(program.translations.id.title.length).toBeGreaterThan(0);
       expect(program.navigation.levels.length).toBeGreaterThan(0);
       expect(program).not.toHaveProperty("locale");
+      for (const translation of Object.values(program.translations)) {
+        expect(translation).not.toHaveProperty("description");
+      }
     }
   });
 
@@ -24,8 +27,20 @@ describe("program/catalog", () => {
     const cambridgeProgram = findLearningProgramByKey(
       "cambridge-international"
     );
+    const singaporeProgram = findLearningProgramByKey("singapore-moe");
+    const unitedStatesProgram = findLearningProgramByKey("united-states");
     const examProgram = findLearningProgramByKey("snbt-2026");
 
+    for (const program of [
+      schoolProgram,
+      cambridgeProgram,
+      singaporeProgram,
+      unitedStatesProgram,
+    ]) {
+      expect(program).toBeDefined();
+    }
+
+    expect(singaporeProgram?.iconKey).toBe("global-education");
     expect(schoolProgram?.navigation).toEqual({
       levels: ["stage", "class", "subject", "topic"],
       model: "curriculum-tree",

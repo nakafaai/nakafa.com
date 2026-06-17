@@ -1,5 +1,6 @@
 import { ProjectedCurriculumNodeSchema } from "@repo/contents/_types/curriculum/projection";
 import { defineCurriculum } from "@repo/contents/_types/curriculum/schema";
+import { MATERIAL_CARD_DESCRIPTION_MAX_LENGTH } from "@repo/contents/_types/material/description";
 import { listPublicContentRoutes } from "@repo/contents/_types/route/content";
 import {
   compareCurriculumRouteOrder,
@@ -9,10 +10,12 @@ import {
   isRenderableCurriculumRoute,
   listPublicCurriculumRoutes,
   readCurriculumAncestors,
-  readCurriculumCardListContext,
-  readCurriculumMaterialCards,
   readCurriculumRouteByPublicPath,
 } from "@repo/contents/_types/route/curriculum";
+import {
+  readCurriculumCardListContext,
+  readCurriculumMaterialCards,
+} from "@repo/contents/_types/route/curriculum-card";
 import { makePath } from "@repo/contents/_types/route/path";
 import { Effect, Exit, Schema } from "effect";
 import { describe, expect, it } from "vitest";
@@ -78,8 +81,14 @@ describe("public curriculum routes", () => {
           level: "subject",
           order: 1,
           translations: {
-            en: { routeSlug: "parent", title: "Parent" },
-            id: { routeSlug: "induk", title: "Induk" },
+            en: {
+              routeSlug: "parent",
+              title: "Parent",
+            },
+            id: {
+              routeSlug: "induk",
+              title: "Induk",
+            },
           },
         },
       ],
@@ -92,8 +101,14 @@ describe("public curriculum routes", () => {
       order: 1,
       parentKey: "missing-parent",
       translations: {
-        en: { routeSlug: "child", title: "Child" },
-        id: { routeSlug: "anak", title: "Anak" },
+        en: {
+          routeSlug: "child",
+          title: "Child",
+        },
+        id: {
+          routeSlug: "anak",
+          title: "Anak",
+        },
       },
     });
     const routes = Effect.runSync(
@@ -124,8 +139,14 @@ describe("public curriculum routes", () => {
       order: 1,
       parentKey: "parent-second",
       translations: {
-        en: { routeSlug: "child-first", title: "Child first" },
-        id: { routeSlug: "anak-dulu", title: "Anak dulu" },
+        en: {
+          routeSlug: "child-first",
+          title: "Child first",
+        },
+        id: {
+          routeSlug: "anak-dulu",
+          title: "Anak dulu",
+        },
       },
     });
     const parentNode = Schema.decodeUnknownSync(ProjectedCurriculumNodeSchema)({
@@ -135,8 +156,14 @@ describe("public curriculum routes", () => {
       materialKeys: [],
       order: 1,
       translations: {
-        en: { routeSlug: "parent-second", title: "Parent second" },
-        id: { routeSlug: "induk-kedua", title: "Induk kedua" },
+        en: {
+          routeSlug: "parent-second",
+          title: "Parent second",
+        },
+        id: {
+          routeSlug: "induk-kedua",
+          title: "Induk kedua",
+        },
       },
     });
     const routes = Effect.runSync(
@@ -154,7 +181,7 @@ describe("public curriculum routes", () => {
     );
   });
 
-  it("derives Cambridge context routes and scope-true descriptions", () => {
+  it("derives Cambridge context routes without making IGCSE the curriculum root", () => {
     const routes = Effect.runSync(listPublicCurriculumRoutes());
 
     expect(routes).toContainEqual(
@@ -182,11 +209,6 @@ describe("public curriculum routes", () => {
       })
     );
 
-    const root = routes.find(
-      (route) =>
-        route.locale === "id" &&
-        route.publicPath === "kurikulum/cambridge-international"
-    );
     const stage = routes.find(
       (route) =>
         route.locale === "id" &&
@@ -198,26 +220,8 @@ describe("public curriculum routes", () => {
         route.publicPath ===
           "kurikulum/cambridge-international/upper-secondary/igcse"
     );
-    const course = routes.find(
-      (route) =>
-        route.locale === "id" &&
-        route.publicPath ===
-          "kurikulum/cambridge-international/upper-secondary/igcse/mathematics-0580"
-    );
-    const unit = routes.find(
-      (route) =>
-        route.locale === "id" &&
-        route.publicPath ===
-          "kurikulum/cambridge-international/upper-secondary/igcse/mathematics-0580/aljabar-dan-grafik"
-    );
-
-    expect(root?.description).not.toContain("bilangan");
     expect(stage?.level).toBe("stage");
     expect(qualification?.level).toBe("qualification");
-    expect(course?.description).toBeUndefined();
-    expect(unit?.description).toBe(
-      "Pelajari persamaan, barisan, fungsi, dan grafik sebagai alat aljabar yang saling terhubung."
-    );
   });
 
   it("keeps curriculum navigation order source-owned", () => {
@@ -239,6 +243,16 @@ describe("public curriculum routes", () => {
       ["lesson.mathematics.sequence-series", 30],
       ["lesson.mathematics.function-modeling", 40],
     ]);
+  });
+
+  it("does not project curriculum display descriptions", () => {
+    const routes = Effect.runSync(listPublicCurriculumRoutes());
+    const describedRoutes = routes
+      .filter(isRenderableCurriculumRoute)
+      .filter((route) => Object.hasOwn(route, "description"))
+      .map((route) => `${route.locale}:${route.publicPath}`);
+
+    expect(describedRoutes).toEqual([]);
   });
 
   it("projects source-owned group icons separately from card icons", () => {
@@ -264,8 +278,8 @@ describe("public curriculum routes", () => {
     );
     expect(routes).toContainEqual(
       expect.objectContaining({
-        displayGroupIconKey: "global-education",
-        displayGroupTitle: "Cambridge Pathway",
+        displayGroupIconKey: "school",
+        displayGroupTitle: "Learning stages",
         iconKey: "high-school",
         locale: "en",
         publicPath: "curriculum/cambridge-international/upper-secondary",
@@ -274,7 +288,7 @@ describe("public curriculum routes", () => {
     expect(routes).toContainEqual(
       expect.objectContaining({
         displayGroupIconKey: "school",
-        displayGroupTitle: "Singapore MOE",
+        displayGroupTitle: "Tahap sekolah",
         iconKey: "primary-school",
         locale: "id",
         publicPath: "kurikulum/singapore-moe/primary",
@@ -282,13 +296,51 @@ describe("public curriculum routes", () => {
     );
     expect(routes).toContainEqual(
       expect.objectContaining({
-        displayGroupIconKey: "standards",
-        displayGroupTitle: "Jalur Amerika Serikat",
+        displayGroupIconKey: "school",
+        displayGroupTitle: "Jalur belajar",
         iconKey: "standards",
         locale: "id",
         publicPath: "kurikulum/amerika-serikat/standar-inti-k-12",
       })
     );
+
+    const rootPaths = [
+      "kurikulum/merdeka",
+      "kurikulum/cambridge-international",
+      "kurikulum/singapore-moe",
+      "kurikulum/amerika-serikat",
+    ];
+
+    for (const rootPath of rootPaths) {
+      const root = routes.find(
+        (route) => route.locale === "id" && route.publicPath === rootPath
+      );
+
+      expect(root).toBeDefined();
+
+      if (!root) {
+        continue;
+      }
+
+      const children = routes
+        .filter(
+          (route) =>
+            route.locale === root.locale && route.parentPath === root.publicPath
+        )
+        .sort(compareCurriculumRouteOrder);
+      const groupedChildren = new Map<string, Set<string>>();
+
+      for (const child of children) {
+        expect(child.displayGroupTitle).not.toBe(root.title);
+        expect(child.displayGroupIconKey).not.toBe(root.iconKey);
+
+        const groupKey = child.displayGroupTitle ?? "curriculum";
+        const iconKeys = groupedChildren.get(groupKey) ?? new Set<string>();
+        expect(iconKeys.has(child.iconKey ?? "")).toBe(false);
+        iconKeys.add(child.iconKey ?? "");
+        groupedChildren.set(groupKey, iconKeys);
+      }
+    }
   });
 
   it("exposes curriculum context helpers for app card-list composition", () => {
@@ -372,10 +424,13 @@ describe("public curriculum routes", () => {
     });
 
     expect(cards.length).toBeGreaterThan(0);
-    expect(cards[0]?.description).toBeTruthy();
     expect(cards[0]?.items.length).toBeGreaterThan(0);
     expect(cards[0]?.items[0]?.href).toMatch(
       INDONESIAN_BIOLOGY_MATERIAL_HREF_PATTERN
+    );
+    expect(cards[0]?.description).toBeTruthy();
+    expect(cards[0]?.description?.length).toBeLessThanOrEqual(
+      MATERIAL_CARD_DESCRIPTION_MAX_LENGTH
     );
     expect(
       readCurriculumMaterialCards({
@@ -391,6 +446,14 @@ describe("public curriculum routes", () => {
         route: subjectRoute,
       })
     ).toEqual([]);
+    expect(
+      readCurriculumMaterialCards({
+        contentRoutes,
+        curriculumRoutes: routes,
+        materials: [],
+        route: subjectRoute,
+      })[0]?.description
+    ).toBeUndefined();
 
     const concreteLesson = contentRoutes.find(
       (route) =>
@@ -405,28 +468,30 @@ describe("public curriculum routes", () => {
       return;
     }
 
-    expect(
-      readCurriculumMaterialCards({
-        contentRoutes,
-        curriculumRoutes: [
-          subjectRoute,
-          { ...topicRoute, canonicalPath: concreteLesson.publicPath },
-        ],
-        route: subjectRoute,
-      })
-    ).toEqual([
-      {
-        description: topicRoute.description,
-        href: `/${concreteLesson.locale}/${concreteLesson.publicPath}`,
-        items: [
-          {
-            href: `/${concreteLesson.locale}/${concreteLesson.publicPath}`,
-            title: concreteLesson.title,
-          },
-        ],
-        title: topicRoute.title,
-      },
-    ]);
+    const concreteLessonCards = readCurriculumMaterialCards({
+      contentRoutes,
+      curriculumRoutes: [
+        subjectRoute,
+        { ...topicRoute, canonicalPath: concreteLesson.publicPath },
+      ],
+      route: subjectRoute,
+    });
+
+    expect(concreteLessonCards).toHaveLength(1);
+    expect(concreteLessonCards[0]).toMatchObject({
+      href: `/${concreteLesson.locale}/${concreteLesson.publicPath}`,
+      items: [
+        {
+          href: `/${concreteLesson.locale}/${concreteLesson.publicPath}`,
+          title: concreteLesson.title,
+        },
+      ],
+      title: topicRoute.title,
+    });
+    expect(concreteLessonCards[0]?.description).toBeTruthy();
+    expect(concreteLessonCards[0]?.description?.length).toBeLessThanOrEqual(
+      MATERIAL_CARD_DESCRIPTION_MAX_LENGTH
+    );
   });
 
   it("indexes projected curriculum descendants by source-owned node keys", () => {
@@ -438,8 +503,14 @@ describe("public curriculum routes", () => {
       order: 1,
       parentKey: "parent-second",
       translations: {
-        en: { routeSlug: "child-first", title: "Child first" },
-        id: { routeSlug: "anak-dulu", title: "Anak dulu" },
+        en: {
+          routeSlug: "child-first",
+          title: "Child first",
+        },
+        id: {
+          routeSlug: "anak-dulu",
+          title: "Anak dulu",
+        },
       },
     });
     const parentNode = Schema.decodeUnknownSync(ProjectedCurriculumNodeSchema)({
@@ -449,8 +520,14 @@ describe("public curriculum routes", () => {
       materialKeys: [],
       order: 1,
       translations: {
-        en: { routeSlug: "parent-second", title: "Parent second" },
-        id: { routeSlug: "induk-kedua", title: "Induk kedua" },
+        en: {
+          routeSlug: "parent-second",
+          title: "Parent second",
+        },
+        id: {
+          routeSlug: "induk-kedua",
+          title: "Induk kedua",
+        },
       },
     });
     const nodeByKey = createCurriculumNodeMap([childNode, parentNode]);
@@ -467,7 +544,7 @@ describe("public curriculum routes", () => {
     ).toBe(true);
   });
 
-  it("renders planned curriculum roots without inventing material coverage", () => {
+  it("keeps planned curriculum rows projected but unavailable for public navigation", () => {
     const routes = Effect.runSync(listPublicCurriculumRoutes());
     const singaporeRoot = routes.find(
       (route) =>
@@ -490,18 +567,27 @@ describe("public curriculum routes", () => {
       sitemap: false,
     });
     expect(singaporeRoot?.materialKey).toBeUndefined();
+    expect(singaporeRoot && isRenderableCurriculumRoute(singaporeRoot)).toBe(
+      false
+    );
     expect(singaporePrimary).toMatchObject({
       level: "stage",
       programKey: "singapore-moe",
       sitemap: false,
     });
     expect(singaporePrimary?.materialKey).toBeUndefined();
+    expect(
+      singaporePrimary && isRenderableCurriculumRoute(singaporePrimary)
+    ).toBe(false);
     expect(unitedStatesRoot).toMatchObject({
       level: "track",
       programKey: "united-states",
       sitemap: false,
     });
     expect(unitedStatesRoot?.materialKey).toBeUndefined();
+    expect(
+      unitedStatesRoot && isRenderableCurriculumRoute(unitedStatesRoot)
+    ).toBe(false);
     expect(
       [...new Set(routes.map((route) => route.programKey))].sort()
     ).toEqual([

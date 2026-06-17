@@ -46,7 +46,6 @@ export const listPublicAssessmentRoutes = Effect.fn(
 
       routes.push(
         yield* decodeAssessmentRoute({
-          description: program.translations[locale].description,
           kind: "assessment-context",
           level: "section",
           locale,
@@ -70,13 +69,13 @@ export const listPublicAssessmentRoutes = Effect.fn(
       }
 
       for (const locale of locales) {
-        const nodePathSegments = yield* getAssessmentNodePathSegments({
+        const pathSegments = yield* getAssessmentNodePathSegments({
           locale,
           node,
           nodeByKey,
         });
         const programPath = yield* makeAssessmentProgramPath(program, locale);
-        const publicPath = yield* makePath([programPath, ...nodePathSegments]);
+        const publicPath = yield* makePath([programPath, ...pathSegments]);
 
         if (publicPath === programPath) {
           continue;

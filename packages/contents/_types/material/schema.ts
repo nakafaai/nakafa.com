@@ -2,6 +2,7 @@ import { ExercisesMaterialSchema } from "@repo/contents/_types/assessment/materi
 import { ExercisesTypeSchema } from "@repo/contents/_types/assessment/type";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { MaterialSchema } from "@repo/contents/_types/curriculum/material";
+import { MaterialCardDescriptionSchema } from "@repo/contents/_types/material/description";
 import { PublicRouteSlugMapSchema } from "@repo/contents/_types/route/segment";
 import { Schema } from "effect";
 
@@ -44,7 +45,7 @@ const LocalizedTitleSchema = Schema.Struct({
 });
 
 const LocalizedDescriptionSchema = Schema.Struct({
-  description: Schema.optional(Schema.String),
+  description: MaterialCardDescriptionSchema,
   title: Schema.String,
 });
 

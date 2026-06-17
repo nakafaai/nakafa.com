@@ -9,13 +9,11 @@ export const lessonPhysicsRenewableEnergyMaterial = defineLessonMaterial({
   routeSlugs: { en: "renewable-energy", id: "energi-terbarukan" },
   translations: {
     en: {
-      description:
-        "Learn what energy means in physics, how energy relates to work, joules, power, and how to read kWh in everyday electricity use.",
+      description: "Connect energy, work, power, and electricity use.",
       title: "Renewable Energy",
     },
     id: {
-      description:
-        "Pelajari arti energi dalam fisika, hubungan energi dengan usaha, satuan joule, daya, dan cara membaca kWh pada pemakaian listrik sehari-hari.",
+      description: "Hubungkan energi, usaha, daya, dan listrik harian.",
       title: "Energi Terbarukan",
     },
   },

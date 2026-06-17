@@ -17,7 +17,6 @@ import {
   type getSelectableRoleOptions,
   parseOnboardingRole,
 } from "@/components/programs/onboarding/model";
-import type { OnboardingRole } from "@/components/programs/onboarding/options";
 import { onboardingRoleFormSchema } from "@/components/programs/onboarding/state";
 import {
   getOnboardingChoiceGridColumns,
@@ -25,24 +24,51 @@ import {
   onboardingChoiceGridVariants,
 } from "@/components/programs/onboarding/styles";
 import { submitOnboardingRole } from "@/components/programs/onboarding/submit";
+import { useUser } from "@/lib/context/use-user";
 
-interface RoleStepFormProps {
-  initialRole: OnboardingRole | null;
+/** Saves the normal Nakafa role step from the reactive current-user role. */
+export function RoleStepForm({
+  options,
+}: {
   options: ReturnType<typeof getSelectableRoleOptions>;
+}) {
+  const { currentRole, isUserPending } = useUser((state) => ({
+    currentRole: parseOnboardingRole(state.user?.appUser.role),
+    isUserPending: state.isPending,
+  }));
+
+  if (isUserPending) {
+    return <Spinner className="mx-auto my-12" isLoading />;
+  }
+
+  return (
+    <RoleStepFormBody
+      currentRole={currentRole ?? ""}
+      key={currentRole ?? "none"}
+      options={options}
+    />
+  );
 }
 
-/** Saves the normal Nakafa role step before moving to the focus route. */
-export function RoleStepForm({ initialRole, options }: RoleStepFormProps) {
+/** Owns the role-step form state for one reactive Convex role snapshot. */
+function RoleStepFormBody({
+  currentRole,
+  options,
+}: {
+  currentRole: ReturnType<typeof parseOnboardingRole> | "";
+  options: ReturnType<typeof getSelectableRoleOptions>;
+}) {
   const t = useTranslations("LearningPrograms");
   const router = useRouter();
   const updateRole = useMutation(api.users.mutations.updateUserRole);
   const form = useForm({
     defaultValues: {
-      role: initialRole ?? "",
+      role: currentRole,
     },
     validators: {
       onChange: onboardingRoleFormSchema,
     },
+    /** Saves the chosen role so the next step reads the same value from reactive Convex state. */
     onSubmit: async ({ value }) => {
       const role = parseOnboardingRole(value.role);
 
@@ -65,7 +91,6 @@ export function RoleStepForm({ initialRole, options }: RoleStepFormProps) {
         return;
       }
 
-      form.reset({ role });
       router.push("/onboarding/focus");
     },
   });
@@ -104,11 +129,13 @@ export function RoleStepForm({ initialRole, options }: RoleStepFormProps) {
       </form.Field>
 
       <form.Subscribe
-        selector={(state) =>
-          [state.canSubmit, state.isSubmitting, state.values.role] as const
-        }
+        selector={(state) => ({
+          canSubmit: state.canSubmit,
+          isSubmitting: state.isSubmitting,
+          role: state.values.role,
+        })}
       >
-        {([canSubmit, isSubmitting, role]) => (
+        {({ canSubmit, isSubmitting, role }) => (
           <Button
             disabled={!(canSubmit && parseOnboardingRole(role)) || isSubmitting}
             type="submit"

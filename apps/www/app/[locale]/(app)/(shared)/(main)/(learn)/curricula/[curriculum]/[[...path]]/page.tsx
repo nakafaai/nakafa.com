@@ -2,7 +2,6 @@ import type { PublicCurriculumRoute } from "@repo/contents/_types/route/schema";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
-import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import {
@@ -30,9 +29,9 @@ import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import { LayoutMaterialToc } from "@/components/shared/material/toc";
 import { RefContent } from "@/components/shared/ref-content";
-import { SubjectItem, SubjectList } from "@/components/shared/subject-list";
+import { SubjectItem } from "@/components/shared/subject-item";
+import { SubjectList } from "@/components/shared/subject-list";
 import { getGithubUrl } from "@/lib/utils/github";
-import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 import { createProjectedRouteAlternates } from "@/lib/utils/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 
@@ -59,21 +58,11 @@ export function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: CurriculumPageProps): Promise<Metadata> {
-  const { locale, route } = await resolveCurriculumRoute(params);
-  const path = `/${locale}/${route.publicPath}`;
-  const description = route.description ?? route.title;
+  const { route } = await resolveCurriculumRoute(params);
 
   return {
     title: { absolute: route.title },
-    description,
     alternates: createProjectedRouteAlternates(route, CURRICULUM_ROUTES),
-    ...getSocialMetadata({
-      title: route.title,
-      description,
-      locale,
-      path,
-      image: getOgUrl(locale, route.publicPath),
-    }),
   };
 }
 
@@ -98,23 +87,9 @@ export default async function Page({ params }: CurriculumPageProps) {
           readCurriculumBreadcrumbs(tCommon("home"), route)
         )}
       />
-      {body.materialCards.length > 0 && (
-        <CollectionPageJsonLd
-          description={route.description ?? route.title}
-          items={body.materialCards.flatMap((material) =>
-            material.items.map((item) => ({
-              name: item.title,
-              url: `https://nakafa.com${item.href}`,
-            }))
-          )}
-          name={route.title}
-          url={`https://nakafa.com/${locale}/${route.publicPath}`}
-        />
-      )}
       <LayoutMaterial>
         <LayoutMaterialContent>
           <HeaderContent
-            description={body.headerDescription}
             icon={readCurriculumRouteIcon(route)}
             link={readCurriculumHeaderLink(locale, route)}
             title={route.title}

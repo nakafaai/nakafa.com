@@ -23,15 +23,7 @@ export function toLearningProgramSummary(
     title: translation.title,
     versionLabel: program.versionLabel,
   };
-
-  if (!translation.description) {
-    return summary;
-  }
-
-  return {
-    ...summary,
-    description: translation.description,
-  };
+  return summary;
 }
 
 /** Checks whether a catalog row can be selected for a learner's first plan. */

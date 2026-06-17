@@ -9,13 +9,11 @@ export const lessonMathematicsVectorOperationsMaterial = defineLessonMaterial({
   routeSlugs: { en: "vector-operations", id: "vektor-dan-operasinya" },
   translations: {
     en: {
-      description:
-        "Learn column and row vector notation, transpose operations, unit vectors in Cartesian systems, and their applications in linear algebra calculations.",
+      description: "Work with vector notation, transpose, and unit vectors.",
       title: "Vector and Operations",
     },
     id: {
-      description:
-        "Pelajari notasi vektor kolom dan baris, operasi transpos, vektor satuan dalam sistem Kartesius, dan aplikasinya dalam perhitungan aljabar linear.",
+      description: "Olah notasi vektor, transpos, dan vektor satuan.",
       title: "Vektor dan Operasinya",
     },
   },

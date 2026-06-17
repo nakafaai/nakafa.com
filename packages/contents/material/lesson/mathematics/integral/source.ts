@@ -9,13 +9,11 @@ export const lessonMathematicsIntegralMaterial = defineLessonMaterial({
   routeSlugs: { en: "integral", id: "integral" },
   translations: {
     en: {
-      description:
-        "Calculate flat surface areas using definite integrals with worked solutions. Learn quadratic and irrational functions through practical examples.",
+      description: "Find areas from definite integrals and curve bounds.",
       title: "Integrals",
     },
     id: {
-      description:
-        "Hitung luas bidang datar menggunakan integral tentu dengan solusi bertahap. Pelajari fungsi kuadrat dan irasional melalui contoh praktis.",
+      description: "Cari luas dari integral tentu dan batas kurva.",
       title: "Integral",
     },
   },

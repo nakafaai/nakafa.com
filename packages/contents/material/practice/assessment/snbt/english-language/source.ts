@@ -10,13 +10,11 @@ export const practiceAssessmentSnbtEnglishLanguageMaterial =
         year: 2026,
         translations: {
           en: {
-            description:
-              "Real exam simulation to sharpen your skills and build confidence.",
+            description: "Read English passages and choose precise usage.",
             title: "Try Out 2026",
           },
           id: {
-            description:
-              "Simulasi ujian nyata untuk mengasah kemampuan dan kepercayaan diri.",
+            description: "Pahami bacaan Inggris dan pilih ungkapan tepat.",
             title: "Try Out 2026",
           },
         },

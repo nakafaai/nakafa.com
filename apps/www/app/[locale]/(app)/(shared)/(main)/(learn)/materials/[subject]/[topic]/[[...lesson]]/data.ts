@@ -6,10 +6,8 @@ import {
   readContentPathWithoutNamespace,
   readParentMaterialRoute,
 } from "@repo/contents/_types/route/content";
-import {
-  listPublicCurriculumRoutes,
-  readCurriculumCardListContext,
-} from "@repo/contents/_types/route/curriculum";
+import { listPublicCurriculumRoutes } from "@repo/contents/_types/route/curriculum";
+import { readCurriculumCardListContext } from "@repo/contents/_types/route/curriculum-card";
 import type { PublicContentRoute } from "@repo/contents/_types/route/schema";
 import { slugify } from "@repo/design-system/lib/utils";
 import { Effect } from "effect";

@@ -125,11 +125,7 @@
   "LearningPrograms": {
     "metadata-title": "Mulai belajar di Nakafa",
     "metadata-description": "Pilih bantuan belajar dan mulai dari satu langkah pertama.",
-    "current-title": "Profil belajar saat ini",
-    "current-description": "Saat ini: {program} untuk {interests}.",
     "plan-item-untitled": "Langkah belajar",
-    "tryout-context-title": "Rencana aktif",
-    "tryout-context-description": "{program} aktif untuk {interests}. Pilihan try out mengikuti rencanamu.",
     "program-status": {
       "hidden": "Tidak ditampilkan",
       "planned": "Segera",
@@ -141,50 +137,41 @@
       "role-title": "Kamu pakai Nakafa sebagai siapa?",
       "role": {
         "student": {
-          "title": "Siswa",
-          "description": "Belajar, latihan, dan tanya Nina."
+          "title": "Siswa"
         },
         "teacher": {
-          "title": "Guru",
-          "description": "Siapkan materi untuk kelas."
+          "title": "Guru"
         },
         "parent": {
-          "title": "Orang tua",
-          "description": "Bantu anak belajar mudah."
+          "title": "Orang tua"
         }
       },
       "focus": {
         "student": {
           "title": "Kamu mau fokus ke apa?",
           "school": {
-            "title": "Pelajaran sekolah",
-            "description": "Baca penjelasan singkat."
+            "title": "Pelajaran sekolah"
           },
           "exam": {
-            "title": "Ujian masuk kampus",
-            "description": "Latihan sebelum ujian."
+            "title": "Ujian masuk kampus"
           }
         },
         "teacher": {
           "title": "Kamu mau menyiapkan apa?",
           "materials": {
-            "title": "Materi mengajar",
-            "description": "Siapkan penjelasan kelas."
+            "title": "Materi mengajar"
           },
           "practice": {
-            "title": "Latihan siswa",
-            "description": "Siapkan soal latihan."
+            "title": "Latihan siswa"
           }
         },
         "parent": {
           "title": "Anakmu butuh dibantu apa?",
           "understand": {
-            "title": "Pahami materi",
-            "description": "Baca penjelasan mudah."
+            "title": "Pahami materi"
           },
           "practice": {
-            "title": "Latihan soal",
-            "description": "Latihan sebelum ujian."
+            "title": "Latihan soal"
           }
         }
       },
@@ -208,16 +195,13 @@
     },
     "interest": {
       "school-curriculum": {
-        "title": "Pelajaran sekolah",
-        "description": "Ikuti materi sesuai kelas dan kurikulummu."
+        "title": "Pelajaran sekolah"
       },
       "exam-prep": {
-        "title": "Ujian masuk kampus",
-        "description": "Latihan untuk SNBT dan seleksi kampus."
+        "title": "Ujian masuk kampus"
       },
       "assessment-prep": {
-        "title": "Latihan soal",
-        "description": "Ukur kesiapan sebelum ujian."
+        "title": "Latihan soal"
       }
     },
     "plan-item-status": {
@@ -336,14 +320,12 @@
   },
   "Tryouts": {
     "title": "Mau coba try out apa hari ini?",
-    "description": "Coba simulasi yang mirip ujian asli, biar kamu lebih siap.",
+    "metadata-description": "Pilih paket try out dan mulai simulasi ujian dari Nakafa.",
     "package-count": "{count, plural, =0 {Belum ada paket} =1 {# paket} other {# paket}}",
     "cta": "Lihat paket",
     "list-empty": "Belum ada try out yang tampil sekarang.",
     "available-item-description": "{questions} soal - {parts} bagian",
     "year-title": "Tahun {year}",
-    "product-page-description": "Lihat semua paket SNBT dan buka yang paling pas buat targetmu.",
-    "slug-description": "Kalau sudah siap, mulai try out ini lalu pilih bagian yang ingin kamu kerjakan dulu.",
     "start-cta": "Mulai try out",
     "restart-cta": "Mulai lagi",
     "continue-cta": "Lanjutkan",
@@ -403,8 +385,7 @@
     "question-unit": "soal",
     "products": {
       "snbt": {
-        "title": "SNBT",
-        "description": "Pilih set try out SNBT yang paling pas buat latihanmu."
+        "title": "SNBT"
       }
     }
   },

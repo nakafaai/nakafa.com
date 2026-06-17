@@ -9,13 +9,11 @@ export const lessonPhysicsVectorMaterial = defineLessonMaterial({
   routeSlugs: { en: "vector", id: "vektor" },
   translations: {
     en: {
-      description:
-        "Learn how to add and subtract vectors using x and y components, then determine the resultant magnitude and direction.",
+      description: "Build resultants from components and direction.",
       title: "Vector",
     },
     id: {
-      description:
-        "Pelajari cara menjumlahkan dan mengurangkan vektor dengan komponen x dan y, lalu menentukan besar serta arah resultan.",
+      description: "Susun resultan dari komponen dan arah.",
       title: "Vektor",
     },
   },

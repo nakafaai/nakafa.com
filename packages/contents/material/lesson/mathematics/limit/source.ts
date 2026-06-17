@@ -9,13 +9,11 @@ export const lessonMathematicsLimitMaterial = defineLessonMaterial({
   routeSlugs: { en: "limit", id: "limit" },
   translations: {
     en: {
-      description:
-        "Apply limits to real-world scenarios: disease spread analysis, vaccination strategies, economic models, and marginal cost calculations with examples.",
+      description: "Use limits to read change in real situations.",
       title: "Limits",
     },
     id: {
-      description:
-        "Terapkan limit pada skenario dunia nyata: analisis penyebaran penyakit, strategi vaksinasi, model ekonomi, dan perhitungan biaya marginal dengan contoh.",
+      description: "Gunakan limit untuk membaca perubahan nyata.",
       title: "Limit",
     },
   },

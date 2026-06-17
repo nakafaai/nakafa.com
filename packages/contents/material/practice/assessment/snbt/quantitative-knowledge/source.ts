@@ -10,13 +10,11 @@ export const practiceAssessmentSnbtQuantitativeKnowledgeMaterial =
         year: 2026,
         translations: {
           en: {
-            description:
-              "Real exam simulation to sharpen your skills and build confidence.",
+            description: "Work through numbers, ratios, and calculations.",
             title: "Try Out 2026",
           },
           id: {
-            description:
-              "Simulasi ujian nyata untuk mengasah kemampuan dan kepercayaan diri.",
+            description: "Olah bilangan, rasio, dan hitungan cepat.",
             title: "Try Out 2026",
           },
         },

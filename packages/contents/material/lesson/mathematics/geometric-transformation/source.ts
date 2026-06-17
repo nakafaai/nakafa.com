@@ -10,13 +10,11 @@ export const lessonMathematicsGeometricTransformationMaterial =
     routeSlugs: { en: "geometric-transformation", id: "transformasi-geometri" },
     translations: {
       en: {
-        description:
-          "Learn composite transformation matrices with worked examples. Combine reflections, rotations, and dilations using matrix multiplication.",
+        description: "Combine transformations with matrices.",
         title: "Geometric Transformation",
       },
       id: {
-        description:
-          "Pelajari matriks transformasi komposisi dengan contoh perhitungan. Gabungkan refleksi, rotasi, dan dilatasi menggunakan perkalian matriks.",
+        description: "Gabungkan transformasi menggunakan matriks.",
         title: "Transformasi Geometri",
       },
     },

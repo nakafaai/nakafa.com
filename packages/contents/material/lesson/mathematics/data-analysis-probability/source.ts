@@ -13,13 +13,11 @@ export const lessonMathematicsDataAnalysisProbabilityMaterial =
     },
     translations: {
       en: {
-        description:
-          "Learn binomial distribution formula with worked examples. Calculate probability of success in repeated trials with coin flips and practice problems.",
+        description: "Model repeated success with binomial probabilities.",
         title: "Data Analysis and Probability",
       },
       id: {
-        description:
-          "Pelajari rumus distribusi binomial untuk menghitung peluang keberhasilan dalam percobaan berulang dan latihan soal.",
+        description: "Modelkan keberhasilan berulang dengan peluang binomial.",
         title: "Analisis Data dan Peluang",
       },
     },

@@ -1,3 +1,4 @@
+import { MATERIAL_CARD_DESCRIPTION_MAX_LENGTH } from "@repo/contents/_types/material/description";
 import {
   listPracticeMaterialSets,
   normalizeMaterialRoute,
@@ -19,6 +20,7 @@ import {
   definePracticeMaterial,
   LessonMaterialSourceSchema,
 } from "@repo/contents/_types/material/schema";
+import { locales } from "@repo/utilities/locales";
 import { Either, ParseResult, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -99,6 +101,36 @@ describe("material registry", () => {
     expect(listPracticeMaterialSources()).not.toHaveLength(0);
   });
 
+  it("keeps authored material card descriptions concise", () => {
+    for (const material of listMaterials()) {
+      if (material.kind === "lesson") {
+        for (const locale of locales) {
+          const description = material.translations[locale].description;
+
+          expect(description?.trim()).toBe(description);
+          expect(description).toBeTruthy();
+          expect(description?.length).toBeLessThanOrEqual(
+            MATERIAL_CARD_DESCRIPTION_MAX_LENGTH
+          );
+        }
+
+        continue;
+      }
+
+      for (const group of material.groups) {
+        for (const locale of locales) {
+          const description = group.translations[locale].description;
+
+          expect(description?.trim()).toBe(description);
+          expect(description).toBeTruthy();
+          expect(description?.length).toBeLessThanOrEqual(
+            MATERIAL_CARD_DESCRIPTION_MAX_LENGTH
+          );
+        }
+      }
+    }
+  });
+
   it("finds concrete materials by route without exposing the wrong material kind", () => {
     expect(
       findLessonMaterial(
@@ -116,7 +148,7 @@ describe("material registry", () => {
     expect(getPracticeMaterialList("material/not-found", "en")).toEqual([]);
   });
 
-  it("projects custom typed source chunks without optional descriptions", () => {
+  it("projects custom typed source chunks with required card descriptions", () => {
     const lesson = defineLessonMaterial({
       assetRoot: "material/lesson/biology/custom-topic",
       domain: "biology",
@@ -126,8 +158,11 @@ describe("material registry", () => {
       sections: [],
       slug: "custom-topic",
       translations: {
-        en: { title: "Custom Topic" },
-        id: { title: "Topik Khusus" },
+        en: {
+          description: "Read custom biology ideas.",
+          title: "Custom Topic",
+        },
+        id: { description: "Baca ide biologi khusus.", title: "Topik Khusus" },
       },
     });
     const practice = definePracticeMaterial({
@@ -149,8 +184,11 @@ describe("material registry", () => {
             },
           ],
           translations: {
-            en: { title: "Practice" },
-            id: { title: "Latihan" },
+            en: {
+              description: "Practice focused reasoning.",
+              title: "Practice",
+            },
+            id: { description: "Latih penalaran terarah.", title: "Latihan" },
           },
         },
       ],
@@ -164,6 +202,7 @@ describe("material registry", () => {
       ])
     ).toEqual([
       {
+        description: "Read custom biology ideas.",
         href: "/material/lesson/biology/custom-topic",
         items: [],
         title: "Custom Topic",
@@ -177,6 +216,7 @@ describe("material registry", () => {
       )
     ).toEqual([
       {
+        description: "Latih penalaran terarah.",
         href: "/material/practice/assessment/snbt/fixture-domain/practice",
         items: [
           {
@@ -187,9 +227,9 @@ describe("material registry", () => {
         title: "Latihan",
       },
     ]);
-    expect(
-      toPracticeMaterialList(practice, "en")[0]?.description
-    ).toBeUndefined();
+    expect(toPracticeMaterialList(practice, "en")[0]?.description).toBe(
+      "Practice focused reasoning."
+    );
     expect(listPracticeMaterialSets([practice], "id")[0]).not.toHaveProperty(
       "year"
     );
@@ -208,8 +248,8 @@ describe("material registry", () => {
       sections: [],
       slug: "exponents",
       translations: {
-        en: { title: "Exponents" },
-        id: { title: "Eksponen" },
+        en: { description: "Read exponent patterns.", title: "Exponents" },
+        id: { description: "Baca pola eksponen.", title: "Eksponen" },
       },
     });
 
@@ -232,8 +272,8 @@ describe("material registry", () => {
       sections: [],
       slug: "exponents",
       translations: {
-        en: { title: "Exponents" },
-        id: { title: "Eksponen" },
+        en: { description: "Read exponent patterns.", title: "Exponents" },
+        id: { description: "Baca pola eksponen.", title: "Eksponen" },
       },
     });
     const invalidSlug = Schema.decodeUnknownEither(LessonMaterialSourceSchema)({
@@ -245,8 +285,8 @@ describe("material registry", () => {
       sections: [],
       slug: "Invalid Slug",
       translations: {
-        en: { title: "Invalid" },
-        id: { title: "Tidak Valid" },
+        en: { description: "Read exponent patterns.", title: "Invalid" },
+        id: { description: "Baca pola eksponen.", title: "Tidak Valid" },
       },
     });
 

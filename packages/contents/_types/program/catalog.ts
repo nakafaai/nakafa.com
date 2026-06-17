@@ -51,12 +51,10 @@ const learningProgramCatalogInput = [
     ],
     translations: {
       en: {
-        description: "Follow Indonesia's school curriculum by class topic.",
         publicSlug: "merdeka",
         title: "Kurikulum Merdeka",
       },
       id: {
-        description: "Ikuti materi sekolah Indonesia sesuai kelas.",
         publicSlug: "merdeka",
         title: "Kurikulum Merdeka",
       },
@@ -103,14 +101,10 @@ const learningProgramCatalogInput = [
     ],
     translations: {
       en: {
-        description:
-          "Explore Cambridge International stages, qualifications, and available courses.",
         publicSlug: "cambridge-international",
         title: "Cambridge International",
       },
       id: {
-        description:
-          "Jelajahi jenjang, kualifikasi, dan kursus yang tersedia dari Cambridge International.",
         publicSlug: "cambridge-international",
         title: "Cambridge International",
       },
@@ -124,7 +118,7 @@ const learningProgramCatalogInput = [
   {
     defaultCoverageStatus: "planned",
     displayOrder: 30,
-    iconKey: "primary-school",
+    iconKey: "global-education",
     key: LEARNING_PROGRAM_KEYS.singaporeMoe,
     kind: "school-curriculum",
     navigation: {
@@ -162,14 +156,10 @@ const learningProgramCatalogInput = [
     ],
     translations: {
       en: {
-        description:
-          "Follow Singapore MOE stages from Primary through Pre-university.",
         publicSlug: "singapore-moe",
         title: "Singapore MOE",
       },
       id: {
-        description:
-          "Ikuti jenjang MOE Singapura dari Primary hingga Pre-university.",
         publicSlug: "singapore-moe",
         title: "Singapore MOE",
       },
@@ -209,14 +199,10 @@ const learningProgramCatalogInput = [
     ],
     translations: {
       en: {
-        description:
-          "Follow a K-12 standards-aligned pathway for Common Core, NGSS, and state frameworks.",
         publicSlug: "united-states",
         title: "United States Standards-Aligned Pathway",
       },
       id: {
-        description:
-          "Ikuti jalur K-12 yang selaras dengan Common Core, NGSS, dan kerangka negara bagian.",
         publicSlug: "amerika-serikat",
         title: "United States Standards-Aligned Pathway",
       },
@@ -252,12 +238,10 @@ const learningProgramCatalogInput = [
     ],
     translations: {
       en: {
-        description: "Prepare for Indonesia's academic readiness test.",
         publicSlug: "tka",
         title: "TKA 2026",
       },
       id: {
-        description: "Siapkan diri untuk Tes Kemampuan Akademik.",
         publicSlug: "tka",
         title: "TKA 2026",
       },
@@ -290,12 +274,10 @@ const learningProgramCatalogInput = [
     ],
     translations: {
       en: {
-        description: "Prepare for Indonesia's university entrance selection.",
         publicSlug: "snbt",
         title: "SNBT 2026",
       },
       id: {
-        description: "Siapkan UTBK-SNBT untuk seleksi masuk kampus.",
         publicSlug: "snbt",
         title: "SNBT 2026",
       },

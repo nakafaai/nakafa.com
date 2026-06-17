@@ -14,13 +14,11 @@ export const lessonMathematicsFunctionCompositionInverseFunctionMaterial =
     },
     translations: {
       en: {
-        description:
-          "Learn how to add and subtract functions one step at a time with domain intersection rules. Learn function operations through clear examples and practice problems.",
+        description: "Operate on functions while tracking shared domains.",
         title: "Function Composition and Inverse Function",
       },
       id: {
-        description:
-          "Pelajari cara menjumlahkan dan mengurangkan fungsi dengan aturan irisan domain melalui contoh jelas dan soal latihan.",
+        description: "Operasikan fungsi sambil menjaga domain bersama.",
         title: "Fungsi Komposisi dan Fungsi Invers",
       },
     },

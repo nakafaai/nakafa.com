@@ -5,9 +5,9 @@ import {
   isRenderableCurriculumRoute,
   listPublicCurriculumRoutes,
   readCurriculumAncestors,
-  readCurriculumMaterialCards,
   readCurriculumRouteByPublicPath,
 } from "@repo/contents/_types/route/curriculum";
+import { readCurriculumMaterialCards } from "@repo/contents/_types/route/curriculum-card";
 import { readPathWithoutNamespace } from "@repo/contents/_types/route/path";
 import type { PublicCurriculumRoute } from "@repo/contents/_types/route/schema";
 import type { ParsedHeading } from "@repo/contents/_types/toc";
@@ -68,13 +68,9 @@ export function readCurriculumRouteModel({
       })
     : [];
   const childGroups = groupCurriculumChildren(childRoutes);
-  const headerDescription =
-    materialCards.length > 0 ? undefined : route.description;
-
   return {
     childGroups,
     childRoutes,
-    headerDescription,
     locale,
     materialCards,
     route,
@@ -111,12 +107,9 @@ export function readCurriculumTocHeader(
   locale: PublicCurriculumRoute["locale"],
   route: PublicCurriculumRoute
 ) {
-  const parentLink = readCurriculumHeaderLink(locale, route);
-
   return {
     title: route.title,
     href: `/${locale}/${route.publicPath}`,
-    description: parentLink?.label ?? route.description,
   };
 }
 

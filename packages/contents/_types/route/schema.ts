@@ -20,6 +20,14 @@ const PublicRouteBaseSchema = Schema.Struct({
   title: Schema.String,
 });
 
+const PublicCurriculumRouteBaseSchema = Schema.Struct({
+  locale: LocaleSchema,
+  parentPath: Schema.optional(PublicRoutePathSchema),
+  publicPath: PublicRoutePathSchema,
+  sitemap: Schema.Boolean,
+  title: Schema.String,
+});
+
 export const PUBLIC_ROUTE_KIND_VALUES = [
   "assessment-context",
   "curriculum-context",
@@ -54,7 +62,7 @@ export const PublicContentRouteSchema = Schema.extend(
 export type PublicContentRoute = SchemaType<typeof PublicContentRouteSchema>;
 
 export const PublicCurriculumRouteSchema = Schema.extend(
-  PublicRouteBaseSchema,
+  PublicCurriculumRouteBaseSchema,
   Schema.Struct({
     canonicalPath: Schema.optional(PublicRoutePathSchema),
     displayGroupIconKey: Schema.optional(ProgramNavigationIconKeySchema),

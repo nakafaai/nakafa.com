@@ -9,13 +9,11 @@ export const practiceAssessmentTkaMathematicsMaterial = definePracticeMaterial({
       year: 2026,
       translations: {
         en: {
-          description:
-            "Real exam simulation to sharpen your skills and build confidence.",
+          description: "Solve TKA math with reasoning and strategy.",
           title: "Try Out 2026",
         },
         id: {
-          description:
-            "Simulasi ujian nyata untuk mengasah kemampuan dan kepercayaan diri.",
+          description: "Pecahkan soal TKA dengan strategi matematika.",
           title: "Try Out 2026",
         },
       },

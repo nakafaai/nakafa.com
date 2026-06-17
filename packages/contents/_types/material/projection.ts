@@ -8,6 +8,7 @@ import {
   type MaterialList,
   MaterialSchema,
 } from "@repo/contents/_types/curriculum/material";
+import { MaterialCardDescriptionSchema } from "@repo/contents/_types/material/description";
 import type {
   LessonMaterialSource,
   MaterialLocale,
@@ -35,7 +36,7 @@ export type LessonMaterialSectionProjection = SchemaType<
 >;
 
 export const LessonMaterialProjectionSchema = Schema.Struct({
-  description: Schema.optional(Schema.String),
+  description: MaterialCardDescriptionSchema,
   domain: MaterialSchema,
   key: MaterialKeySchema,
   locale: MaterialLocaleSchema,
@@ -52,7 +53,7 @@ export type LessonMaterialProjection = SchemaType<
 
 export const PracticeMaterialSetProjectionSchema = Schema.Struct({
   assessment: ExercisesTypeSchema,
-  description: Schema.optional(Schema.String),
+  description: MaterialCardDescriptionSchema,
   domain: ExercisesMaterialSchema,
   exerciseType: Schema.String,
   exerciseTypeTitle: Schema.String,
@@ -239,9 +240,7 @@ function readDescriptionTranslation(
   const translation = item.translations[locale];
 
   return {
-    ...(translation.description === undefined
-      ? {}
-      : { description: translation.description }),
+    description: translation.description,
     title: translation.title,
   };
 }

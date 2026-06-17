@@ -9,13 +9,11 @@ export const lessonBiologyBiodiversityMaterial = defineLessonMaterial({
   routeSlugs: { en: "biodiversity", id: "keanekaragaman-makhluk-hidup" },
   translations: {
     en: {
-      description:
-        "Recognize bacteria as prokaryotic cells with coccus, bacillus, spiral forms, nucleoids, ribosomes, cell walls, and roles in life.",
+      description: "Connect bacterial shapes and parts to life roles.",
       title: "Biodiversity of Living Organisms",
     },
     id: {
-      description:
-        "Mengenali bakteri sebagai sel prokariotik dengan bentuk kokus, basilus, spiral, struktur nukleoid, ribosom, dinding sel, dan peran dalam kehidupan.",
+      description: "Kenali bentuk bakteri dan perannya dalam hidup.",
       title: "Keanekaragaman Makhluk Hidup",
     },
   },

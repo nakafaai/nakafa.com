@@ -9,13 +9,11 @@ export const lessonChemistryBasicChemistryLawsMaterial = defineLessonMaterial({
   routeSlugs: { en: "basic-chemistry-laws", id: "hukum-dasar-kimia" },
   translations: {
     en: {
-      description:
-        "Learn how to distinguish chemical changes from physical changes using gas, precipitates, color changes, and energy changes.",
+      description: "Spot chemical changes from observable evidence.",
       title: "Basic Laws of Chemistry",
     },
     id: {
-      description:
-        "Pelajari cara membedakan perubahan kimia dari perubahan fisika lewat gas, endapan, perubahan warna, dan perubahan energi.",
+      description: "Kenali perubahan kimia dari bukti yang terlihat.",
       title: "Hukum Dasar Kimia",
     },
   },

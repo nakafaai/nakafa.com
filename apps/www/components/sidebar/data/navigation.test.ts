@@ -10,6 +10,9 @@ describe("sidebar navigation", () => {
     expect(getAppNavigationViewer({ isPending: false, role: "teacher" })).toBe(
       "teacher"
     );
+    expect(getAppNavigationViewer({ isPending: false, role: null })).toBe(
+      "guest"
+    );
   });
 
   it("uses a neutral viewer while the user query is pending", () => {
@@ -21,42 +24,31 @@ describe("sidebar navigation", () => {
     expect(viewer).toBe("pending");
     expect(getForYouNavigationItems(viewer).map((item) => item.id)).toEqual([
       "subject",
-      "askNina",
-    ]);
-  });
-
-  it("shows try out to guests and students", () => {
-    expect(
-      getForYouNavigationItems(
-        getAppNavigationViewer({ isPending: false, role: null })
-      ).map((item) => item.id)
-    ).toEqual(["subject", "tryOut", "askNina"]);
-
-    expect(getForYouNavigationItems("student").map((item) => item.id)).toEqual([
-      "subject",
       "tryOut",
       "askNina",
     ]);
   });
 
-  it("hides try out from non-student roles", () => {
-    expect(getForYouNavigationItems("teacher").map((item) => item.id)).toEqual([
-      "subject",
-      "askNina",
-    ]);
+  it("shows try out to every app navigation audience", () => {
+    const expectedItemIds = ["subject", "tryOut", "askNina"];
+    const viewers = [
+      "pending",
+      "guest",
+      "student",
+      "teacher",
+      "parent",
+      "administrator",
+    ] as const;
 
-    expect(getForYouNavigationItems("parent").map((item) => item.id)).toEqual([
-      "subject",
-      "askNina",
-    ]);
-
-    expect(
-      getForYouNavigationItems("administrator").map((item) => item.id)
-    ).toEqual(["subject", "askNina"]);
+    for (const viewer of viewers) {
+      expect(getForYouNavigationItems(viewer).map((item) => item.id)).toEqual(
+        expectedItemIds
+      );
+    }
   });
 
   it("uses localized hrefs only when a navigation item owns them", () => {
-    const [subject, askNina] = getForYouNavigationItems("teacher");
+    const [subject, , askNina] = getForYouNavigationItems("teacher");
 
     expect(subject).toBeDefined();
     expect(askNina).toBeDefined();

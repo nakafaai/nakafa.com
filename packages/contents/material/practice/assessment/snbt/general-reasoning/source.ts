@@ -10,13 +10,11 @@ export const practiceAssessmentSnbtGeneralReasoningMaterial =
         year: 2026,
         translations: {
           en: {
-            description:
-              "Real exam simulation to sharpen your skills and build confidence.",
+            description: "Spot logic patterns and draw conclusions.",
             title: "Try Out 2026",
           },
           id: {
-            description:
-              "Simulasi ujian nyata untuk mengasah kemampuan dan kepercayaan diri.",
+            description: "Temukan pola logika dan tarik kesimpulan.",
             title: "Try Out 2026",
           },
         },

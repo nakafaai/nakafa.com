@@ -9,13 +9,11 @@ export const lessonMathematicsCircleMaterial = defineLessonMaterial({
   routeSlugs: { en: "circle", id: "lingkaran" },
   translations: {
     en: {
-      description:
-        "Learn central and inscribed angles in circles. Learn the key relationship, theorems, and solve problems with worked examples and proofs.",
+      description: "Relate central and inscribed angles in circles.",
       title: "Circle",
     },
     id: {
-      description:
-        "Pelajari sudut pusat dan keliling lingkaran. Pahami hubungan, teorema, dan cara menghitung dengan contoh soal dan pembuktian matematis.",
+      description: "Hubungkan sudut pusat dan keliling pada lingkaran.",
       title: "Lingkaran",
     },
   },
