@@ -202,6 +202,7 @@ const LearningProgramCoverageRouteSchemaFields = {
   lensId: Schema.String,
   locale: LocaleSchema,
   route: Schema.String,
+  sourcePath: Schema.String,
 };
 
 export const LearningProgramCoverageRouteSchema = Schema.Struct(

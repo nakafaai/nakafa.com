@@ -33,6 +33,7 @@ import type {
 } from "@/components/programs/onboarding/options";
 import { onboardingFocusFormSchema } from "@/components/programs/onboarding/state";
 import {
+  getOnboardingChoiceGridColumns,
   onboardingChoiceCardVariants,
   onboardingChoiceGridVariants,
 } from "@/components/programs/onboarding/styles";
@@ -119,7 +120,7 @@ export function FocusStepForm({
         {(field) => (
           <section
             className={onboardingChoiceGridVariants({
-              columns: options.length >= 3 ? "three" : "two",
+              columns: getOnboardingChoiceGridColumns(options.length),
             })}
           >
             {options.map((option) => (

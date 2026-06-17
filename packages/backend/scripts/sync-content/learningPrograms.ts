@@ -187,6 +187,7 @@ function toLearningProgramCoverageRoute(
     lensId: route.lensId,
     locale: route.locale,
     route: route.route,
+    sourcePath: route.sourcePath,
   };
 
   if (!Schema.is(LearningProgramCoverageRouteSchema)(candidate)) {

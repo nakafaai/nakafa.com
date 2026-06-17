@@ -111,11 +111,11 @@ export function createCurriculumCoverageInputs({
     if (curriculumNodes) {
       return getProgramKeysForMaterialRouteFromNodes({
         curriculumNodes,
-        route: route.route,
+        route: route.sourcePath,
       });
     }
 
-    return getProgramKeysForMaterialRoute({ route: route.route });
+    return getProgramKeysForMaterialRoute({ route: route.sourcePath });
   }
 
   return createCoverageInputsFromProgramKeys({

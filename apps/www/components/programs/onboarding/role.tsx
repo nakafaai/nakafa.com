@@ -20,6 +20,7 @@ import {
 import type { OnboardingRole } from "@/components/programs/onboarding/options";
 import { onboardingRoleFormSchema } from "@/components/programs/onboarding/state";
 import {
+  getOnboardingChoiceGridColumns,
   onboardingChoiceCardVariants,
   onboardingChoiceGridVariants,
 } from "@/components/programs/onboarding/styles";
@@ -81,7 +82,7 @@ export function RoleStepForm({ initialRole, options }: RoleStepFormProps) {
         {(field) => (
           <section
             className={onboardingChoiceGridVariants({
-              columns: options.length >= 3 ? "three" : "two",
+              columns: getOnboardingChoiceGridColumns(options.length),
             })}
           >
             {options.map((option) => (

@@ -38,8 +38,9 @@ const subjectRoute = {
   kind: "curriculum-topic",
   locale: "id",
   markdown: true,
-  route: "material/lesson/biology/biodiversity",
+  route: "materi/biologi/keanekaragaman-makhluk-hidup",
   section: "material",
+  sourcePath: "material/lesson/biology/biodiversity",
   syncedAt: 1,
   title: "Biodiversity",
 } as const;

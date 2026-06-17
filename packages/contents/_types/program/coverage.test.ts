@@ -24,7 +24,8 @@ const subjectRoute = decodeRoute({
   kind: "curriculum-topic",
   lensId: "lens:material:lesson:mathematics",
   locale: "id",
-  route: "material/lesson/mathematics/exponential-logarithm",
+  route: "materi/matematika/eksponen-logaritma",
+  sourcePath: "material/lesson/mathematics/exponential-logarithm",
 });
 
 const snbtRoute = decodeRoute({
@@ -33,7 +34,8 @@ const snbtRoute = decodeRoute({
   kind: "exercise-set",
   lensId: "lens:exercise:high-school:snbt:quantitative-knowledge",
   locale: "id",
-  route:
+  route: "latihan/snbt/pengetahuan-kuantitatif/tryout/2026/set-1",
+  sourcePath:
     "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
 });
 
@@ -42,6 +44,7 @@ const englishSubjectRoute = decodeRoute({
   assetId:
     "asset:en:material:lesson:mathematics:material-topic:mathematics:exponential-logarithm",
   locale: "en",
+  route: "subjects/mathematics/exponential-logarithm",
 });
 
 describe("program/coverage", () => {
@@ -58,7 +61,8 @@ describe("program/coverage", () => {
       kind: "curriculum-topic",
       lensId: "lens:material:lesson:biology",
       locale: "id",
-      route: "material/lesson/biology/biodiversity",
+      route: "materi/biologi/keanekaragaman-makhluk-hidup",
+      sourcePath: "material/lesson/biology/biodiversity",
     });
 
     expect(
@@ -82,6 +86,7 @@ describe("program/coverage", () => {
       lensId: "lens:article:general",
       locale: "id",
       route: "articles/learning/general",
+      sourcePath: "articles/learning/general",
     });
 
     expect(
@@ -192,17 +197,18 @@ describe("program/coverage", () => {
       assetId:
         "asset:id:material:lesson:mathematics:material-topic:mathematics:second-topic",
       conceptId: "concept:material:lesson:mathematics:second-topic",
-      route: "material/lesson/mathematics/second-topic",
+      route: "materi/matematika/topik-kedua",
+      sourcePath: "material/lesson/mathematics/second-topic",
     });
 
     const rows = createFallbackCoverageInputs({
       alignments: [
         {
-          match: { routeSegments: ["exponential-logarithm"] },
+          match: { routeSegments: ["eksponen-logaritma"] },
           programKey: LearningProgramKeySchema.make("id-kurikulum-merdeka"),
         },
         {
-          match: { routeSegments: ["second-topic"] },
+          match: { routeSegments: ["topik-kedua"] },
           programKey: LearningProgramKeySchema.make("id-kurikulum-merdeka"),
         },
       ],
@@ -250,7 +256,8 @@ describe("program/coverage", () => {
           kind: "curriculum-topic",
           lensId: "lens:material:lesson:ai-programming",
           locale: "id",
-          route: "material/lesson/ai-programming/nlp",
+          route: "materi/ai-programming/nlp",
+          sourcePath: "material/lesson/ai-programming/nlp",
         }),
       ],
       syncedAt: 1,
@@ -282,7 +289,8 @@ describe("program/coverage", () => {
       ...subjectRoute,
       assetId:
         "asset:id:material:lesson:mathematics:material-topic:mathematics:exponential-logarithm-practice",
-      route: "material/lesson/mathematics/exponential-logarithm-practice",
+      route: "materi/matematika/latihan-eksponen-logaritma",
+      sourcePath: "material/lesson/mathematics/exponential-logarithm-practice",
     });
     const programs = LEARNING_PROGRAM_CATALOG.map((program) => {
       if (program.key !== "id-kurikulum-merdeka") {
