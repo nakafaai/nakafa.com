@@ -1,9 +1,7 @@
 import { ScriptFailureError } from "@repo/backend/scripts/lib/errors";
 import type { SyncOptions } from "@repo/backend/scripts/sync-content/types";
-import {
-  findPublicContentRouteBySourcePathEffect,
-  type PublicRouteProjectionError,
-} from "@repo/contents/_types/route/projection";
+import { findPublicContentRouteBySourcePath } from "@repo/contents/_types/route/content";
+import type { PublicRouteProjectionError } from "@repo/contents/_types/route/path";
 import { Effect, Option } from "effect";
 
 type Locale = NonNullable<SyncOptions["locale"]>;
@@ -11,7 +9,7 @@ type Locale = NonNullable<SyncOptions["locale"]>;
 /** Resolves one source path through the contents-owned public route projection. */
 export const readPublicContentRoute = Effect.fn("sync.readPublicContentRoute")(
   function* (sourcePath: string, locale: Locale) {
-    const routeOption = yield* findPublicContentRouteBySourcePathEffect(
+    const routeOption = yield* findPublicContentRouteBySourcePath(
       sourcePath,
       locale
     ).pipe(Effect.mapError(toPublicRouteFailure));
@@ -37,6 +35,7 @@ export const readPublicContentPath = Effect.fn("sync.readPublicContentPath")(
   }
 );
 
+/** Converts route projection failures into the script failure channel used by sync. */
 function toPublicRouteFailure(error: PublicRouteProjectionError) {
   return new ScriptFailureError({
     message: `Cannot project public route: ${error._tag}.`,

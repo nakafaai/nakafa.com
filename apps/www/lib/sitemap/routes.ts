@@ -1,6 +1,6 @@
 import type { api } from "@repo/backend/convex/_generated/api";
 import { CONTENT_ROUTE_ARTIFACT_PAGE_SIZE } from "@repo/backend/convex/contents/constants";
-import { findPublicContentRouteBySourcePathEffect } from "@repo/contents/_types/route/projection";
+import { findPublicContentRouteBySourcePath } from "@repo/contents/_types/route/content";
 import type { PublicContentRoute } from "@repo/contents/_types/route/schema";
 import { routing } from "@repo/internationalization/src/routing";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
@@ -27,15 +27,20 @@ const contentSections: readonly RuntimeContentSection[] = [
 const sitemapBasePageId = "base";
 const quranRootRoute = "/quran";
 
-/** Descriptor for one graph-backed sitemap artifact page. */
-export interface ContentSitemapPage {
-  id: string;
-  locale: Locale;
-  page: number;
-  section: RuntimeContentSection;
-}
+type SitemapPage =
+  | { id: typeof sitemapBasePageId }
+  | {
+      id: string;
+      locale: Locale;
+      page: number;
+      section: RuntimeContentSection;
+    };
 
-type SitemapPage = { id: typeof sitemapBasePageId } | ContentSitemapPage;
+/** Descriptor for one graph-backed sitemap artifact page. */
+export type ContentSitemapPage = Extract<
+  SitemapPage,
+  { section: RuntimeContentSection }
+>;
 
 /** Static top-level routes that should always be present in the sitemap. */
 export const baseRoutes = [
@@ -50,11 +55,11 @@ export const baseRoutes = [
 
 /** Lists stable sitemap page ids from materialized route counts. */
 export function getSitemapPageDescriptors() {
-  return Effect.runPromise(getSitemapPageDescriptorsEffect());
+  return Effect.runPromise(readSitemapPageDescriptors());
 }
 
 /** Reads sitemap page descriptors without loading route rows. */
-export const getSitemapPageDescriptorsEffect = Effect.fn(
+export const readSitemapPageDescriptors = Effect.fn(
   "www.sitemap.pageDescriptors"
 )(function* () {
   const descriptors: SitemapPage[] = [{ id: sitemapBasePageId }];
@@ -112,27 +117,27 @@ export function getSitemapPageDescriptor(id: string | undefined) {
 
 /** Runs the sitemap route Effect at the Next metadata boundary. */
 export function getSitemapRoutes(pageId?: string) {
-  return Effect.runPromise(getSitemapRoutesEffect(pageId));
+  return Effect.runPromise(readSitemapRoutes(pageId));
 }
 
 /** Builds the deduplicated route list for one sitemap page. */
-export const getSitemapRoutesEffect = Effect.fn("www.sitemap.routes")(
-  function* (pageId?: string) {
-    const page = getSitemapPageDescriptor(pageId);
+export const readSitemapRoutes = Effect.fn("www.sitemap.routes")(function* (
+  pageId?: string
+) {
+  const page = getSitemapPageDescriptor(pageId);
 
-    if (!page) {
-      return [];
-    }
-
-    if (!isContentSitemapPage(page)) {
-      return sortRoutes(baseRoutes);
-    }
-
-    const rows = yield* getRuntimeContentRoutePageRows(page);
-    const routes = yield* buildSitemapContentPageRoutesEffect(rows);
-    return sortRoutes(routes);
+  if (!page) {
+    return [];
   }
-);
+
+  if (!isContentSitemapPage(page)) {
+    return sortRoutes(baseRoutes);
+  }
+
+  const rows = yield* getRuntimeContentRoutePageRows(page);
+  const routes = yield* buildSitemapContentPageRoutes(rows);
+  return sortRoutes(routes);
+});
 
 /** Formats one materialized content route page id for Next.js sitemap generation. */
 function formatContentSitemapPageId({
@@ -177,23 +182,20 @@ function getRuntimeContentRoutePageRows(page: ContentSitemapPage) {
 }
 
 /** Builds sitemap page routes from concrete route catalog rows. */
-export const buildSitemapContentPageRoutesEffect = Effect.fn(
+export const buildSitemapContentPageRoutes = Effect.fn(
   "www.sitemap.contentPageRoutes"
 )(function* (rows: readonly RuntimeContentRoute[]) {
   const routes = new Set<string>();
 
   for (const row of rows) {
-    yield* addContentPageRoutesEffect(routes, row);
+    yield* addContentPageRoutes(routes, row);
   }
 
   return sortRoutes(routes);
 });
 
 /** Adds the concrete route and supported parent index routes. */
-function addContentPageRoutesEffect(
-  routes: Set<string>,
-  row: RuntimeContentRoute
-) {
+function addContentPageRoutes(routes: Set<string>, row: RuntimeContentRoute) {
   return Effect.gen(function* () {
     if (row.section === "articles") {
       addArticleRoutes(routes, row.route);
@@ -205,7 +207,7 @@ function addContentPageRoutesEffect(
       return;
     }
 
-    const route = yield* findPublicContentRouteBySourcePathEffect(
+    const route = yield* findPublicContentRouteBySourcePath(
       row.route,
       row.locale
     );

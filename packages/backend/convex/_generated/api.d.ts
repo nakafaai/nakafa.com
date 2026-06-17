@@ -114,6 +114,7 @@ import type * as contentSync_mutations_curriculum from "../contentSync/mutations
 import type * as contentSync_mutations_exercises from "../contentSync/mutations/exercises.js";
 import type * as contentSync_mutations_quran from "../contentSync/mutations/quran.js";
 import type * as contentSync_mutations_readModels from "../contentSync/mutations/readModels.js";
+import type * as contentSync_mutations_readModels_stale from "../contentSync/mutations/readModels/stale.js";
 import type * as contentSync_mutations_routes from "../contentSync/mutations/routes.js";
 import type * as contentSync_mutations_tryouts from "../contentSync/mutations/tryouts.js";
 import type * as contentSync_queries_authors from "../contentSync/queries/authors.js";
@@ -159,6 +160,7 @@ import type * as contents_runtime_curriculum from "../contents/runtime/curriculu
 import type * as contents_runtime_exerciseRows from "../contents/runtime/exerciseRows.js";
 import type * as contents_runtime_exercises from "../contents/runtime/exercises.js";
 import type * as contents_runtime_quran from "../contents/runtime/quran.js";
+import type * as contents_runtime_routes from "../contents/runtime/routes.js";
 import type * as contents_runtime_shared from "../contents/runtime/shared.js";
 import type * as contents_runtime_spec from "../contents/runtime/spec.js";
 import type * as contents_validators from "../contents/validators.js";
@@ -478,6 +480,7 @@ declare const fullApi: ApiFromModules<{
   "contentSync/mutations/exercises": typeof contentSync_mutations_exercises;
   "contentSync/mutations/quran": typeof contentSync_mutations_quran;
   "contentSync/mutations/readModels": typeof contentSync_mutations_readModels;
+  "contentSync/mutations/readModels/stale": typeof contentSync_mutations_readModels_stale;
   "contentSync/mutations/routes": typeof contentSync_mutations_routes;
   "contentSync/mutations/tryouts": typeof contentSync_mutations_tryouts;
   "contentSync/queries/authors": typeof contentSync_queries_authors;
@@ -523,6 +526,7 @@ declare const fullApi: ApiFromModules<{
   "contents/runtime/exerciseRows": typeof contents_runtime_exerciseRows;
   "contents/runtime/exercises": typeof contents_runtime_exercises;
   "contents/runtime/quran": typeof contents_runtime_quran;
+  "contents/runtime/routes": typeof contents_runtime_routes;
   "contents/runtime/shared": typeof contents_runtime_shared;
   "contents/runtime/spec": typeof contents_runtime_spec;
   "contents/validators": typeof contents_validators;

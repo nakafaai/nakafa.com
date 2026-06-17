@@ -1,4 +1,4 @@
-import { findPublicRouteByPathEffect } from "@repo/contents/_types/route/projection";
+import { findPublicRouteByPath } from "@repo/contents/_types/route/projection";
 import type { PublicRoute } from "@repo/contents/_types/route/schema";
 import { Effect, Option } from "effect";
 import type { Locale } from "next-intl";
@@ -120,7 +120,7 @@ export const getLlmsSourceMarkdownText = Effect.fn("www.llms.markdown.source")(
 /** Resolves public material/practice paths to the internal markdown source path. */
 const getLlmsMarkdownSource = Effect.fn("www.llms.markdown.sourcePath")(
   function* ({ cleanSlug, locale }: { cleanSlug: string; locale: Locale }) {
-    const publicRoute = yield* findPublicRouteByPathEffect(cleanSlug, locale);
+    const publicRoute = yield* findPublicRouteByPath(cleanSlug, locale);
 
     return Option.match(publicRoute, {
       onNone: (): LlmsMarkdownSource => ({ cleanSlug }),

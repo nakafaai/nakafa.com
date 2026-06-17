@@ -1,9 +1,10 @@
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import type { ContentAuthorContentId } from "@repo/backend/convex/authors/schema";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
-import { contentRuntimeIntegrityErrorCode } from "@repo/backend/convex/contents/runtime/spec";
 import type { ContentType } from "@repo/backend/convex/lib/validators/contents";
 import { ConvexError } from "convex/values";
+
+const contentRuntimeIntegrityErrorCode = "CONTENT_RUNTIME_INTEGRITY_ERROR";
 
 /** Throws a structured integrity error for invalid synced content rows. */
 export function throwRuntimeIntegrityError(message: string): never {

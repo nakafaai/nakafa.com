@@ -98,8 +98,9 @@ Here are some practice problems to deepen your understanding of exponential deca
 2. The mass of a radioactive substance is <InlineMath math="0.3 \text{ kg}" /> at <InlineMath math="10" /> am. The decay rate of the radioactive substance is <InlineMath math="15\%" /> per hour. How much radioactive substance will remain <InlineMath math="8 \text{ hours}" /> later?
 
 3. A basketball is dropped from a height of <InlineMath math="3 \text{ meters}" />. The ball hits the ground and then bounces back to a height of <InlineMath math="\frac{3}{5}" /> of its previous height. The ball continues to bounce with the same height ratio until it finally stops bouncing and falls to the ground.
-   a. Draw a graph of the function showing the change in bounce height until the ball finally touches the ground.
-   b. At which bounce does the ball finally stop bouncing?
+
+    1. Draw a graph of the function showing the change in bounce height until the ball finally touches the ground.
+    2. At which bounce does the ball finally stop bouncing?
 
 ### Answer Key
 
@@ -121,36 +122,38 @@ Here are some practice problems to deepen your understanding of exponential deca
 
    <BlockMath math="f(8) = 0.3 \times (0.85)^8 \approx 0.083 \text{ kg} \text{ or about} 83 \text{ grams}." />
 
-3. a. The bounce height function is:
+3. For the basketball:
 
-   <BlockMath math="h(n) = 300 \times \left(\frac{3}{5}\right)^n" />
+    1. The bounce height function is:
 
-   <ContentBlock>
-     <FunctionChart
-       a={3 / 5}
-       p={300}
-       title="Exponential Decay Graph"
-       description="Graph decreases at a progressively slower rate."
-     />
-   </ContentBlock>
+        <BlockMath math="h(n) = 300 \times \left(\frac{3}{5}\right)^n" />
 
-   b. The ball will stop bouncing when its height approaches zero. Based on calculations, at the <InlineMath math="12" />th bounce, the ball's height reaches <InlineMath math="0.653035 \text{ cm}" />, which is small enough to consider the ball has stopped bouncing. However, considering the ball's mass, it might have stopped bouncing by the <InlineMath math="10" />th bounce, when its height is about <InlineMath math="1.8 \text{ cm}" />.
+        <ContentBlock>
+          <FunctionChart
+            a={3 / 5}
+            p={300}
+            title="Exponential Decay Graph"
+            description="Graph decreases at a progressively slower rate."
+          />
+        </ContentBlock>
 
-   | Bounce                       | Height                         |
-   | ---------------------------- | ------------------------------ |
-   | <InlineMath math="n = 0" />  | <InlineMath math="300" />      |
-   | <InlineMath math="n = 1" />  | <InlineMath math="180" />      |
-   | <InlineMath math="n = 2" />  | <InlineMath math="108" />      |
-   | <InlineMath math="n = 3" />  | <InlineMath math="64.8" />     |
-   | <InlineMath math="n = 4" />  | <InlineMath math="38.88" />    |
-   | <InlineMath math="n = 5" />  | <InlineMath math="23.328" />   |
-   | <InlineMath math="n = 6" />  | <InlineMath math="13.9968" />  |
-   | <InlineMath math="n = 7" />  | <InlineMath math="8.39808" />  |
-   | <InlineMath math="n = 8" />  | <InlineMath math="5.038848" /> |
-   | <InlineMath math="n = 9" />  | <InlineMath math="3.023309" /> |
-   | <InlineMath math="n = 10" /> | <InlineMath math="1.813985" /> |
-   | <InlineMath math="n = 11" /> | <InlineMath math="1.088391" /> |
-   | <InlineMath math="n = 12" /> | <InlineMath math="0.653035" /> |
+    2. The ball will stop bouncing when its height approaches zero. Based on calculations, at the <InlineMath math="12" />th bounce, the ball's height reaches <InlineMath math="0.653035 \text{ cm}" />, which is small enough to consider the ball has stopped bouncing. However, considering the ball's mass, it might have stopped bouncing by the <InlineMath math="10" />th bounce, when its height is about <InlineMath math="1.8 \text{ cm}" />.
+
+        | Bounce                       | Height                         |
+        | ---------------------------- | ------------------------------ |
+        | <InlineMath math="n = 0" />  | <InlineMath math="300" />      |
+        | <InlineMath math="n = 1" />  | <InlineMath math="180" />      |
+        | <InlineMath math="n = 2" />  | <InlineMath math="108" />      |
+        | <InlineMath math="n = 3" />  | <InlineMath math="64.8" />     |
+        | <InlineMath math="n = 4" />  | <InlineMath math="38.88" />    |
+        | <InlineMath math="n = 5" />  | <InlineMath math="23.328" />   |
+        | <InlineMath math="n = 6" />  | <InlineMath math="13.9968" />  |
+        | <InlineMath math="n = 7" />  | <InlineMath math="8.39808" />  |
+        | <InlineMath math="n = 8" />  | <InlineMath math="5.038848" /> |
+        | <InlineMath math="n = 9" />  | <InlineMath math="3.023309" /> |
+        | <InlineMath math="n = 10" /> | <InlineMath math="1.813985" /> |
+        | <InlineMath math="n = 11" /> | <InlineMath math="1.088391" /> |
+        | <InlineMath math="n = 12" /> | <InlineMath math="0.653035" /> |
    | <InlineMath math="n = 13" /> | <InlineMath math="0.391821" /> |
    | <InlineMath math="n = 14" /> | <InlineMath math="0.235092" /> |
    | <InlineMath math="n = 15" /> | <InlineMath math="0.141055" /> |

@@ -24,7 +24,7 @@ const localizedLabelValidator = v.object({
 });
 
 const localizedProgramLabelValidator = v.object({
-  description: v.string(),
+  description: v.optional(v.string()),
   publicSlug: v.string(),
   title: v.string(),
 });

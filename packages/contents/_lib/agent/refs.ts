@@ -22,7 +22,7 @@ import {
   createLearningGraphIdentityFromProjection,
   LearningGraphIdentitySchema,
 } from "@repo/contents/_types/learning-graph";
-import { findPublicRouteByPathEffect } from "@repo/contents/_types/route/projection";
+import { findPublicRouteByPath } from "@repo/contents/_types/route/projection";
 import { cleanSlug } from "@repo/utilities/helper";
 import { Effect, Option, Schema } from "effect";
 
@@ -109,7 +109,7 @@ export function parseNakafaUrlRoute(input: string) {
 }
 
 /** Resolves public material/practice URLs through route projection first. */
-export const parseNakafaContentRefEffect = Effect.fn(
+export const resolveNakafaContentRef = Effect.fn(
   "contents.agent.parseContentRef"
 )(function* (input: string) {
   const parsed = parseNakafaUrlRoute(input);
@@ -118,7 +118,7 @@ export const parseNakafaContentRefEffect = Effect.fn(
     return Option.none<NakafaAgentContentRef>();
   }
 
-  const publicRoute = yield* findPublicRouteByPathEffect(
+  const publicRoute = yield* findPublicRouteByPath(
     parsed.value.route,
     parsed.value.locale
   );

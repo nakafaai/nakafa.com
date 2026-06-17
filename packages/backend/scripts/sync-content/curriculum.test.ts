@@ -157,7 +157,7 @@ async function loadSubjects({
       ...actual,
       /** Returns typed curriculum placements for curriculum sync. */
       listCurriculumNodes: () => curriculumNodes,
-      listCurriculumNodesEffect: () => Effect.succeed(curriculumNodes),
+      projectCurriculumNodes: () => Effect.succeed(curriculumNodes),
     };
   });
   vi.doMock("@repo/contents/_types/material/registry", () => ({

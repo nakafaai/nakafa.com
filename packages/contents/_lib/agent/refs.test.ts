@@ -5,8 +5,8 @@ import {
   getNakafaContentResourceUri,
   normalizeNakafaContentInput,
   parseNakafaContentRef,
-  parseNakafaContentRefEffect,
   parseNakafaContentRefFields,
+  resolveNakafaContentRef,
 } from "@repo/contents/_lib/agent/refs";
 import { Effect, Exit, Option } from "effect";
 import { describe, expect, it } from "vitest";
@@ -36,17 +36,17 @@ describe("Nakafa agent references", () => {
 
   it("resolves public material URLs through route projection", async () => {
     const topicRef = await Effect.runPromise(
-      parseNakafaContentRefEffect(
+      resolveNakafaContentRef(
         "https://nakafa.com/id/materi/matematika/integral"
       )
     );
     const lessonRef = await Effect.runPromise(
-      parseNakafaContentRefEffect(
+      resolveNakafaContentRef(
         "https://nakafa.com/en/subjects/mathematics/integral/riemann-sum"
       )
     );
     const contextRef = await Effect.runPromise(
-      parseNakafaContentRefEffect(
+      resolveNakafaContentRef(
         "https://nakafa.com/en/curriculum/merdeka/class-12/mathematics/integral"
       )
     );

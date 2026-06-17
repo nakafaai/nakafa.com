@@ -5,7 +5,7 @@ import {
 import { getNakafaAgentExercise } from "@repo/contents/_lib/agent/exercise/read";
 import { formatNakafaRouteTitle } from "@repo/contents/_lib/agent/format";
 import { getNakafaAgentQuranReference } from "@repo/contents/_lib/agent/quran/read";
-import { parseNakafaContentRefEffect } from "@repo/contents/_lib/agent/refs";
+import { resolveNakafaContentRef } from "@repo/contents/_lib/agent/refs";
 import { NakafaAgentMarkdownSchema } from "@repo/contents/_lib/agent/schema/read";
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
 import { getContentMetadataWithRaw } from "@repo/contents/_lib/metadata";
@@ -26,7 +26,7 @@ const practiceMaterialRoutePrefix = "material/practice/";
 /** Retrieves full agent-readable markdown by canonical Nakafa URL projection. */
 export const getNakafaAgentMarkdown = Effect.fn("NakafaAgent.getMarkdown")(
   function* (input: string, readers: NakafaMarkdownReaders = {}) {
-    const ref = yield* parseNakafaContentRefEffect(input);
+    const ref = yield* resolveNakafaContentRef(input);
 
     if (Option.isNone(ref)) {
       return Option.none();

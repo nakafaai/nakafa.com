@@ -1,4 +1,12 @@
 import { isPostHogProxyPathname } from "@repo/analytics/posthog/config";
+import {
+  isMaterialLessonRoute,
+  listPublicContentRoutes,
+} from "@repo/contents/_types/route/content";
+import {
+  isRenderableCurriculumRoute,
+  listPublicCurriculumRoutes,
+} from "@repo/contents/_types/route/curriculum";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
@@ -16,6 +24,7 @@ import {
 } from "@/lib/llms/routes";
 
 const handleLocalizedRequest = createMiddleware(routing);
+const RENDERABLE_PROJECTED_HTML_PATHS = createRenderableProjectedHtmlPathSet();
 const TRAILING_SLASH_PATTERN = /\/+$/;
 const AUTH_REDIRECT_PATH_COOKIE = "auth-redirect-path";
 const REJECTED_PUBLIC_ROOTS = new Set(["/learn"]);
@@ -29,6 +38,38 @@ const LOCALE_BYPASS_PATHS = new Set([
   "/.well-known/agent-skills/index.json",
   "/.well-known/agent-skills/nakafa/SKILL.md",
 ]);
+
+/**
+ * Builds the fast proxy lookup for projected material and curriculum pages.
+ *
+ * The route projection still owns the source rows; the proxy only keeps a
+ * pre-stream membership set so removed grouping paths can return HTTP 404
+ * instead of a streamed soft-not-found response.
+ */
+function createRenderableProjectedHtmlPathSet() {
+  const routes = Effect.runSync(
+    Effect.all([listPublicContentRoutes(), listPublicCurriculumRoutes()])
+  );
+  const routeKeys = new Set<string>();
+
+  for (const routeGroup of routes) {
+    for (const route of routeGroup) {
+      if (route.kind === "subject-lesson" && isMaterialLessonRoute(route)) {
+        routeKeys.add(`${route.locale}:${route.publicPath}`);
+        continue;
+      }
+
+      if (
+        route.kind === "curriculum-context" &&
+        isRenderableCurriculumRoute(route)
+      ) {
+        routeKeys.add(`${route.locale}:${route.publicPath}`);
+      }
+    }
+  }
+
+  return routeKeys;
+}
 
 /**
  * Adapts Next/Vercel proxy requests to Nakafa route decisions.
@@ -82,6 +123,12 @@ export async function proxy(request: NextRequest) {
     return rewriteToContentNotFound(request, routeDecision.locale);
   }
 
+  const projectedRouteLocale = getRejectedProjectedRouteLocale(pathname);
+
+  if (projectedRouteLocale) {
+    return rewriteToContentNotFound(request, projectedRouteLocale);
+  }
+
   request.cookies.set(AUTH_REDIRECT_PATH_COOKIE, pathname);
 
   const response = handleLocalizedRequest(request);
@@ -131,6 +178,40 @@ function getRejectedPublicRouteLocale(pathname: string) {
   });
 
   return usesRejectedNamespace ? locale : null;
+}
+
+/**
+ * Rejects non-rendered material and curriculum grouping paths before streaming.
+ *
+ * Cache Components remove `dynamicParams`, and Next returns 200 for streamed
+ * `notFound()` responses. The proxy is the framework seam that can still return
+ * a real 404 for projected public route surfaces that are intentionally internal
+ * grouping rows rather than pages.
+ */
+function getRejectedProjectedRouteLocale(pathname: string) {
+  const [locale, namespace, ...pathSegments] = pathname
+    .split("/")
+    .filter(Boolean);
+
+  if (!(namespace && hasLocale(routing.locales, locale))) {
+    return null;
+  }
+
+  const surface = PUBLIC_ROUTE_SURFACES.find(
+    (item) =>
+      (item.key === "subject" || item.key === "curriculum") &&
+      item.routeSlugs[locale] === namespace
+  );
+
+  if (!surface) {
+    return null;
+  }
+
+  const publicPath = [namespace, ...pathSegments].join("/");
+
+  return RENDERABLE_PROJECTED_HTML_PATHS.has(`${locale}:${publicPath}`)
+    ? null
+    : locale;
 }
 
 /** Rewrites a localized route to the source-backed markdown handler. */

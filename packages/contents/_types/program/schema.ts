@@ -234,7 +234,7 @@ export const ProgramSourceSchema = Schema.Struct({
 
 /** Localized learner-facing labels for one canonical learning program. */
 export const ProgramTranslationSchema = Schema.Struct({
-  description: Schema.String,
+  description: Schema.optional(Schema.String),
   publicSlug: PublicRouteSegmentSchema,
   title: Schema.String,
 });

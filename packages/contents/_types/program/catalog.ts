@@ -93,14 +93,10 @@ const learningProgramCatalogInput = [
     ],
     translations: {
       en: {
-        description:
-          "Build number, algebra, geometry, and data skills for Cambridge IGCSE.",
         publicSlug: "cambridge-igcse",
         title: "Cambridge IGCSE",
       },
       id: {
-        description:
-          "Bangun kemampuan bilangan, aljabar, geometri, dan data untuk Cambridge IGCSE.",
         publicSlug: "cambridge-igcse",
         title: "Cambridge IGCSE",
       },

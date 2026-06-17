@@ -2,7 +2,7 @@ import {
   getPublicContentRouteCheck,
   type PublicContentRouteCheck,
 } from "@repo/contents/_lib/manifest/public-route";
-import { findPublicRouteByPathEffect } from "@repo/contents/_types/route/projection";
+import { findPublicRouteByPath } from "@repo/contents/_types/route/projection";
 import type { PublicRoute } from "@repo/contents/_types/route/schema";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect, Option } from "effect";
@@ -60,7 +60,7 @@ export const resolveLlmsProxyRoute = Effect.fn("www.llms.routes.resolveProxy")(
       markdownExtension: localizedRoute.markdownExtension,
     });
     const routeCheck = getPublicContentRouteCheck(localizedRoute.route);
-    const publicRoute = yield* findPublicRouteByPathEffect(
+    const publicRoute = yield* findPublicRouteByPath(
       localizedRoute.route,
       localizedRoute.locale
     ).pipe(
@@ -266,9 +266,9 @@ const contentRouteExists = Effect.fn("www.llms.routes.contentExists")(
  * producing crawler-visible false 404s.
  */
 function contentRoutePageHasRows(
-  pageEffect: Effect.Effect<{ page: readonly unknown[] }, unknown>
+  pageProgram: Effect.Effect<{ page: readonly unknown[] }, unknown>
 ) {
-  return pageEffect.pipe(
+  return pageProgram.pipe(
     Effect.match({
       onFailure: () => true,
       onSuccess: (page) => page.page.length > 0,

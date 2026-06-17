@@ -1,18 +1,21 @@
-import {
-  parseExercisesMaterial,
-  parseExercisesType,
-} from "@repo/contents/_lib/assessment/route";
 import { getExerciseNumberPagination } from "@repo/contents/_lib/assessment/slug";
 import type { ContentPagination } from "@repo/contents/_types/content";
 import {
-  findPublicContentRouteByPathEffect,
-  listPublicContentRoutesEffect,
-} from "@repo/contents/_types/route/projection";
+  findPublicContentRouteByPath,
+  listPublicContentRoutes,
+} from "@repo/contents/_types/route/content";
+import { readPathWithoutNamespace } from "@repo/contents/_types/route/path";
 import type { PublicContentRoute } from "@repo/contents/_types/route/schema";
-import { cleanSlug } from "@repo/utilities/helper";
 import { Effect, Option } from "effect";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
+import {
+  isLocalizedQuestionSegment,
+  localizeQuestionPaginationItem,
+  readExerciseSetSourceParts,
+  readGroupTitle,
+  readQuestionSourcePathParts,
+} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/practice/[assessment]/[domain]/[[...path]]/source";
 import {
   fetchRuntimeExerciseQuestionPage,
   fetchRuntimeExerciseSetPage,
@@ -62,11 +65,7 @@ export type PracticeRouteData =
 
 type PracticeGroupContext = ReturnType<typeof readPracticeGroupContext>;
 
-const PRACTICE_ROUTES = Effect.runSync(listPublicContentRoutesEffect());
-const NUMERIC_SEGMENT_PATTERN = /^\d+$/;
-const EXERCISE_TYPE_YEAR_PATTERN = /^(.+)-(\d{4})$/;
-
-export { PRACTICE_ROUTES };
+export const PRACTICE_ROUTES = Effect.runSync(listPublicContentRoutes());
 
 /**
  * Builds practice set params from projected public practice routes.
@@ -369,7 +368,7 @@ function findPracticeQuestionRoute({
   }
 
   const routeOption = Effect.runSync(
-    findPublicContentRouteByPathEffect(
+    findPublicContentRouteByPath(
       `${setRoute.publicPath}/${questionSegment}`,
       locale
     )
@@ -407,109 +406,7 @@ function isPracticeQuestionRoute(
   return route.kind === "exercise-question";
 }
 
-/** Checks one localized final question segment without creating route data. */
-function isLocalizedQuestionSegment(
-  locale: Locale,
-  segment: string | undefined
-) {
-  if (!segment) {
-    return false;
-  }
-
-  const prefix = locale === "id" ? "soal-" : "question-";
-  const numericSegment = segment.slice(prefix.length);
-
-  return (
-    segment.startsWith(prefix) && NUMERIC_SEGMENT_PATTERN.test(numericSegment)
-  );
-}
-
-/** Removes the localized namespace segment from one projected public path. */
-function readPathWithoutNamespace(publicPath: string) {
-  return publicPath.split("/").slice(1).join("/");
-}
-
 /** Removes a leading locale segment from one app href. */
 function readPathWithoutLocale(href: string) {
   return href.split("/").filter(Boolean).slice(1).join("/");
-}
-
-/** Uses the first set row to name the group card like the old route did. */
-function readGroupTitle(route: PracticeSetRoute) {
-  const sourceParts = readExerciseSetSourceParts(route.sourcePath);
-  const suffix = sourceParts.year ? ` ${sourceParts.year}` : "";
-
-  if (sourceParts.exerciseType === "try-out") {
-    return `Try Out${suffix}`;
-  }
-
-  return `${sourceParts.exerciseType}${suffix}`;
-}
-
-/** Reads source set and question number from a projected question source path. */
-function readQuestionSourcePathParts(sourcePath: string) {
-  const segments = cleanSlug(sourcePath).split("/");
-  const questionSegment = segments.at(-1);
-  const questionNumber = Number.parseInt(
-    questionSegment?.replace("question-", "") ?? "",
-    10
-  );
-
-  if (!Number.isFinite(questionNumber)) {
-    notFound();
-  }
-
-  return {
-    questionNumber,
-    setSourcePath: segments.slice(0, -1).join("/"),
-  };
-}
-
-/** Parses the stable source set path into runtime exercise group arguments. */
-function readExerciseSetSourceParts(sourcePath: string) {
-  const segments = cleanSlug(sourcePath).split("/");
-  const [, , , type, material, exerciseTypeSegment] = segments;
-  const exerciseTypeMatch = exerciseTypeSegment?.match(
-    EXERCISE_TYPE_YEAR_PATTERN
-  );
-
-  if (!(type && material && exerciseTypeSegment)) {
-    notFound();
-  }
-  const parsedType = parseExercisesType(type);
-  const parsedMaterial = parseExercisesMaterial(material);
-
-  if (Option.isNone(parsedType) || Option.isNone(parsedMaterial)) {
-    notFound();
-  }
-
-  return {
-    exerciseType: exerciseTypeMatch?.[1] ?? exerciseTypeSegment,
-    material: parsedMaterial.value,
-    type: parsedType.value,
-    year: exerciseTypeMatch?.[2],
-  };
-}
-
-/** Converts old numeric pagination into localized question label paths. */
-function localizeQuestionPaginationItem(item: ContentPagination["prev"]) {
-  if (!item.href) {
-    return item;
-  }
-
-  const segments = item.href.split("/");
-  const numericQuestion = segments.pop();
-
-  if (!numericQuestion) {
-    return item;
-  }
-
-  const locale = item.href.startsWith("/id/") ? "id" : "en";
-  const questionSegment =
-    locale === "id" ? `soal-${numericQuestion}` : `question-${numericQuestion}`;
-
-  return {
-    ...item,
-    href: [...segments, questionSegment].join("/"),
-  };
 }

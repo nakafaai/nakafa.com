@@ -39,7 +39,7 @@ export type ProjectedCurriculumNode = Schema.Schema.Type<
 >;
 
 /** Effect-native projection entrypoint for sync and script boundaries. */
-export const listCurriculumNodesEffect = Effect.fn(
+export const projectCurriculumNodes = Effect.fn(
   "contents.curriculum.listNodes"
 )(function* ({
   curricula = CURRICULUM_SOURCES,
@@ -132,6 +132,7 @@ export function getProgramKeysForMaterialRouteFromNodes({
   return [...new Set(programKeys)].sort();
 }
 
+/** Projects authored curriculum trees while collecting every source violation in one pass. */
 function projectCurricula({
   curricula,
   materials,
@@ -164,12 +165,14 @@ function projectCurricula({
   return { failures, nodes };
 }
 
+/** Combines source validation failures while preserving every curriculum issue. */
 function toProjectionError(failures: readonly CurriculumProjectionError[]) {
   return new CurriculumProjectionError({
     message: failures.map((failure) => failure.message).join("\n"),
   });
 }
 
+/** Walks one curriculum subtree, preserving ancestor order and inherited material domain identity. */
 function projectTreeNode({
   curriculum,
   failures,
@@ -232,6 +235,7 @@ function projectTreeNode({
   }
 }
 
+/** Converts one authored structure or material reference node into the flat generated row shape. */
 function toProjectedNode({
   curriculum,
   failures,
@@ -279,6 +283,7 @@ function toProjectedNode({
   });
 }
 
+/** Resolves curriculum leaf copy from material source truth or explicit multi-material overrides. */
 function resolveMaterialReferenceTranslations({
   curriculum,
   failures,
@@ -364,6 +369,7 @@ function resolveMaterialReferenceTranslations({
   return node.displayOverride ?? materialTranslations;
 }
 
+/** Reads learner-facing copy from material sources when a curriculum leaf maps to one material. */
 function readMaterialTranslations(material: MaterialSource) {
   if (material.kind === "lesson") {
     return {
@@ -395,6 +401,7 @@ function readMaterialTranslations(material: MaterialSource) {
   return null;
 }
 
+/** Detects forbidden single-material overrides that repeat material-owned display copy. */
 function isDuplicatedDisplay(
   override: CurriculumNodeTranslationMap,
   materialTranslations: CurriculumNodeTranslationMap
@@ -412,6 +419,7 @@ function isDuplicatedDisplay(
   });
 }
 
+/** Decodes the generated row through the curriculum node schema before it leaves projection. */
 function decodeCurriculumNode({
   curriculumKey,
   materialDomain,
@@ -443,18 +451,21 @@ function decodeCurriculumNode({
   };
 }
 
+/** Narrows tree nodes that own material references instead of structure only. */
 function isMaterialReferenceNode(
   node: CurriculumTreeNode
 ): node is CurriculumMaterialReferenceNode {
   return "materialKeys" in node;
 }
 
+/** Narrows one-material leaves so projection can inherit material copy safely. */
 function hasSingleMaterial(
   materials: readonly MaterialSource[]
 ): materials is readonly [MaterialSource] {
   return materials.length === 1;
 }
 
+/** Narrows one-practice-group leaves before inheriting exercise set copy. */
 function hasSinglePracticeGroup(
   groups: readonly PracticeMaterialGroup[]
 ): groups is readonly [PracticeMaterialGroup] {

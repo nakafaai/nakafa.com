@@ -3,11 +3,11 @@ import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "@/app/sitemap.xml/route";
 
-const mockGetSitemapPageDescriptorsEffect = vi.hoisted(() => vi.fn());
+const mockReadSitemapPageDescriptors = vi.hoisted(() => vi.fn());
 const mockCaptureServerException = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/sitemap/routes", () => ({
-  getSitemapPageDescriptorsEffect: mockGetSitemapPageDescriptorsEffect,
+  readSitemapPageDescriptors: mockReadSitemapPageDescriptors,
 }));
 
 vi.mock("@repo/analytics/posthog/server", () => ({
@@ -17,8 +17,8 @@ vi.mock("@repo/analytics/posthog/server", () => ({
 describe("sitemap index route", () => {
   beforeEach(() => {
     mockCaptureServerException.mockReset();
-    mockGetSitemapPageDescriptorsEffect.mockReset();
-    mockGetSitemapPageDescriptorsEffect.mockReturnValue(
+    mockReadSitemapPageDescriptors.mockReset();
+    mockReadSitemapPageDescriptors.mockReturnValue(
       Effect.succeed([{ id: "base" }, { id: "content_id_quran_0" }])
     );
   });
@@ -36,7 +36,7 @@ describe("sitemap index route", () => {
   });
 
   it("reports descriptor failures and returns a plain error response", async () => {
-    mockGetSitemapPageDescriptorsEffect.mockReturnValueOnce(
+    mockReadSitemapPageDescriptors.mockReturnValueOnce(
       Effect.fail(new Error("descriptor read failed"))
     );
 

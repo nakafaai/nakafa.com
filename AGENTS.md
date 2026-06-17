@@ -132,6 +132,18 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - Run the smallest useful verification set after changes, then expand if risk is high.
 - Prefer `pnpm start` over `pnpm dev` when you only need to run the built app. Use `pnpm dev` when the task needs devtools, hot reload, development-mode diagnostics, or Convex live debugging.
 
+## Module Size And Decomposition
+
+- Hand-written `.ts` and `.tsx` Modules should target 300 LOC or less.
+- A new or touched hand-written `.ts` or `.tsx` file over 500 LOC is a production-readiness blocker unless it is generated, vendor data, source corpus, or an intentionally dense content/curriculum registry where splitting would reduce locality. Record that exception in PR or final proof.
+- When a touched Module exceeds 500 LOC, stop and apply the architecture vocabulary deliberately: identify the Module, Interface, Implementation, Seam, Depth, Leverage, and Locality before editing.
+- Decompose by real domain capability into folder-owned files with short concrete names. Do not hide size by creating shallow wrappers, pass-through files, generic `utils` or `helpers`, or wrapper chains.
+- Apply the deletion test: if deleting a new file only moves the same filtering, mapping, sorting, or reconstruction into another caller, the split is not deep enough.
+- Do not create new `index.ts` barrels or re-export layers.
+- Do not create or keep hand-written facade Modules in touched code. Do not use `export { ... } from "./x"`, `export type { ... } from "./x"`, or imports whose only purpose is to export symbols again. Export declarations implemented in the same Module; update callers to direct imports from the owning Module instead. The only exceptions are generated files or externally mandated package entrypoints, and the exception must be explicit in proof.
+- Effect-native decomposition follows the same rule: split along schema contracts, typed errors, Effect programs, services, layers, and framework adapters, not raw TypeScript or Promise wrappers.
+- Final readiness for broad changes must include LOC proof for touched `.ts` and `.tsx` files and explicit justification for any touched hand-written file over 500 LOC.
+
 ## Formatting And Imports
 
 - Formatting is owned by Biome through Ultracite. Run `pnpm format` instead of hand-formatting.

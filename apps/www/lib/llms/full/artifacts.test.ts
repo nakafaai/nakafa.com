@@ -19,7 +19,7 @@ vi.mock("node:os", () => ({
 }));
 
 vi.mock("@/lib/sitemap/routes", () => ({
-  getSitemapPageDescriptorsEffect: () =>
+  readSitemapPageDescriptors: () =>
     Effect.succeed([
       { id: "base" },
       {
@@ -74,25 +74,24 @@ describe("llms full document", () => {
       if (section === "material") {
         return Effect.succeed([
           createEntry({
-            route:
-              "/material/practice/assessment/snbt/general-knowledge/try-out-2026/set-1",
+            route: "/practice/snbt/general-knowledge/mock-test/2026/set-1",
             section: "material",
             title: "Set 1",
           }),
           createEntry({
             route:
-              "/material/practice/assessment/snbt/general-knowledge/try-out-2026/set-1/question-9",
+              "/practice/snbt/general-knowledge/mock-test/2026/set-1/question-9",
             section: "material",
             title: "Exercise 9",
           }),
           createEntry({
-            route: "/material/lesson/chemistry/blank",
+            route: "/subjects/chemistry/blank",
             section: "material",
             title: "Blank Lesson",
           }),
           {
             ...createEntry({
-              route: "/material/practice/blank",
+              route: "/practice/blank",
               section: "material",
               title: "Blank",
             }),
@@ -101,7 +100,7 @@ describe("llms full document", () => {
           {
             ...createEntry({
               route:
-                "/material/practice/assessment/snbt/general-knowledge/try-out-2026/set-1/notes",
+                "/practice/snbt/general-knowledge/mock-test/2026/set-1/notes",
               section: "material",
               title: "Notes",
             }),
@@ -123,8 +122,8 @@ describe("llms full document", () => {
       ({ cleanSlug, locale }) => {
         if (
           cleanSlug === "articles/story/missing" ||
-          cleanSlug === "material/lesson/chemistry/blank" ||
-          cleanSlug === "material/practice/blank"
+          cleanSlug === "subjects/chemistry/blank" ||
+          cleanSlug === "practice/blank"
         ) {
           return Effect.succeed(null);
         }

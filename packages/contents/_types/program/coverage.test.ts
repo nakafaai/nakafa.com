@@ -3,8 +3,8 @@ import {
   createCurriculumCoverageInputs,
   createFallbackCoverageInputs,
   createLearningProgramCoverageInputs,
-  createLearningProgramCoverageInputsEffect,
   getProgramKeysForCoverageRoute,
+  projectLearningProgramCoverageInputs,
 } from "@repo/contents/_types/program/coverage";
 import {
   LearningProgramCoverageRouteSchema,
@@ -146,7 +146,7 @@ describe("program/coverage", () => {
 
   it("projects program coverage through the Effect sync entrypoint", async () => {
     const rows = await Effect.runPromise(
-      createLearningProgramCoverageInputsEffect({
+      projectLearningProgramCoverageInputs({
         programs: LEARNING_PROGRAM_CATALOG,
         routes: [subjectRoute, snbtRoute],
         syncedAt: 1,

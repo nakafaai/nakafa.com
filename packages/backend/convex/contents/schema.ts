@@ -257,6 +257,7 @@ const tables = {
     materialDomain: v.optional(materialValidator),
     materialKey: v.optional(v.string()),
     nodeKey: v.optional(v.string()),
+    order: v.optional(v.number()),
     parentPath: v.optional(v.string()),
     programKey: v.optional(v.string()),
     publicPath: v.string(),
@@ -288,6 +289,12 @@ const tables = {
       "locale",
       "parentPath",
       "publicPath",
+    ])
+    .index("by_programKey_and_locale_and_parentPath_and_order", [
+      "programKey",
+      "locale",
+      "parentPath",
+      "order",
     ])
     .index("by_programKey_and_locale_and_kind_and_parentPath_and_publicPath", [
       "programKey",

@@ -1,28 +1,27 @@
 import type { MaterialList } from "@repo/contents/_types/curriculum/material";
-import { listPublicCurriculumRoutesEffect } from "@repo/contents/_types/route/projection";
-import type {
-  PublicContentRoute,
-  PublicCurriculumRoute,
-} from "@repo/contents/_types/route/schema";
+import { listPublicContentRoutes } from "@repo/contents/_types/route/content";
+import {
+  compareCurriculumRouteOrder,
+  isRenderableCurriculumRoute,
+  listPublicCurriculumRoutes,
+  readCurriculumAncestors,
+  readCurriculumMaterialCards,
+  readCurriculumRouteByPublicPath,
+} from "@repo/contents/_types/route/curriculum";
+import { readPathWithoutNamespace } from "@repo/contents/_types/route/path";
+import type { PublicCurriculumRoute } from "@repo/contents/_types/route/schema";
 import type { ParsedHeading } from "@repo/contents/_types/toc";
 import { slugify } from "@repo/design-system/lib/utils";
 import { Effect } from "effect";
 import { notFound } from "next/navigation";
 import { getCurriculumGradeIcon } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/icons";
-import {
-  isMaterialLessonRoute,
-  MATERIAL_ROUTES,
-  type MaterialRoute,
-  toLocalizedHref,
-} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 type CurriculumParams =
   PageProps<"/[locale]/curricula/[curriculum]/[[...path]]">["params"];
 
-export const CURRICULUM_ROUTES = Effect.runSync(
-  listPublicCurriculumRoutesEffect()
-);
+export const CURRICULUM_ROUTES = Effect.runSync(listPublicCurriculumRoutes());
+const MATERIAL_ROUTES = Effect.runSync(listPublicContentRoutes());
 
 /** Builds static params for rendered curriculum context pages only. */
 export function listCurriculumStaticParams() {
@@ -58,11 +57,19 @@ export function readCurriculumRouteModel({
 }: Awaited<ReturnType<typeof resolveCurriculumRoute>>) {
   const childRoutes = CURRICULUM_ROUTES.filter(
     (child) => child.locale === locale && child.parentPath === route.publicPath
-  );
+  )
+    .slice()
+    .sort(compareCurriculumRouteOrder);
   const isCurriculumRoot = route.level === "track";
-  const materialCards = isCurriculumMaterialIndexRoute(route)
-    ? readCurriculumMaterialCards(route)
+  const materialCards = isMaterialCardListRoute(route)
+    ? readCurriculumMaterialCards({
+        contentRoutes: MATERIAL_ROUTES,
+        curriculumRoutes: CURRICULUM_ROUTES,
+        route,
+      })
     : [];
+  const headerDescription =
+    materialCards.length > 0 ? undefined : route.description;
   const usesGradeCards =
     isCurriculumRoot &&
     childRoutes.length > 0 &&
@@ -74,6 +81,7 @@ export function readCurriculumRouteModel({
 
   return {
     childRoutes,
+    headerDescription,
     isCurriculumRoot,
     locale,
     materialCards,
@@ -91,7 +99,11 @@ export function readCurriculumHeaderLink(
     return;
   }
 
-  const parent = readCurriculumRouteByPublicPath(locale, route.parentPath);
+  const parent = readCurriculumRouteByPublicPath(
+    CURRICULUM_ROUTES,
+    locale,
+    route.parentPath
+  );
 
   if (!(parent && isRenderableCurriculumRoute(parent))) {
     return;
@@ -123,7 +135,7 @@ export function readCurriculumBreadcrumbs(
   route: PublicCurriculumRoute
 ) {
   const breadcrumbs = [{ name: homeLabel, path: "" }];
-  const ancestors = readCurriculumAncestors(route).filter(
+  const ancestors = readCurriculumAncestors(route, CURRICULUM_ROUTES).filter(
     isRenderableCurriculumRoute
   );
 
@@ -151,162 +163,7 @@ export function readMaterialCardChapters(cards: MaterialList): ParsedHeading[] {
   }));
 }
 
-/** Checks whether a curriculum route should render a public page. */
-export function isRenderableCurriculumRoute(route: PublicCurriculumRoute) {
-  return (
-    route.level === "track" ||
-    route.level === "class" ||
-    route.level === "subject" ||
-    route.level === "course"
-  );
-}
-
-/** Removes the localized route namespace from one projected public path. */
-function readPathWithoutNamespace(publicPath: string) {
-  return publicPath.split("/").slice(1).join("/");
-}
-
 /** Checks whether a curriculum row should render the material-card index. */
-function isCurriculumMaterialIndexRoute(route: PublicCurriculumRoute) {
+function isMaterialCardListRoute(route: PublicCurriculumRoute) {
   return route.level === "subject" || route.level === "course";
-}
-
-/** Converts subject/course mappings into the old collapsible material-card UX. */
-function readCurriculumMaterialCards(
-  route: PublicCurriculumRoute
-): MaterialList {
-  const groupRoutes = CURRICULUM_ROUTES.filter(
-    (candidate) =>
-      candidate.locale === route.locale &&
-      candidate.parentPath === route.publicPath
-  );
-
-  return groupRoutes.flatMap((groupRoute) =>
-    readCurriculumMaterialCard(groupRoute)
-  );
-}
-
-/** Creates one material card from a curriculum grouping node. */
-function readCurriculumMaterialCard(
-  route: PublicCurriculumRoute
-): MaterialList {
-  const items = readCurriculumMaterialItems(route);
-
-  if (items.length === 0) {
-    return [];
-  }
-
-  return [
-    {
-      description: route.description,
-      href: items[0]?.href ?? `/${route.locale}/${route.publicPath}`,
-      items,
-      title: route.title,
-    },
-  ];
-}
-
-/** Expands descendant curriculum mappings into concrete lesson links. */
-function readCurriculumMaterialItems(route: PublicCurriculumRoute) {
-  const materialItems = new Map<string, { href: string; title: string }>();
-
-  for (const curriculumRoute of [route, ...readCurriculumDescendants(route)]) {
-    if (!curriculumRoute.canonicalPath) {
-      continue;
-    }
-
-    for (const item of readMaterialLessonItems(
-      curriculumRoute.locale,
-      curriculumRoute.canonicalPath
-    )) {
-      materialItems.set(item.href, item);
-    }
-  }
-
-  return [...materialItems.values()];
-}
-
-/** Resolves one canonical material path into concrete lesson links. */
-function readMaterialLessonItems(
-  locale: PublicCurriculumRoute["locale"],
-  path: string
-) {
-  const route = MATERIAL_ROUTES.find(
-    (candidate) =>
-      candidate.locale === locale &&
-      candidate.publicPath === path &&
-      isMaterialContentRoute(candidate)
-  );
-
-  if (!route) {
-    return [];
-  }
-
-  if (isMaterialLessonRoute(route)) {
-    return [{ href: toLocalizedHref(route), title: route.title }];
-  }
-
-  return MATERIAL_ROUTES.filter(isMaterialLessonRoute)
-    .filter(
-      (candidate) =>
-        candidate.locale === locale && candidate.parentPath === route.publicPath
-    )
-    .map((candidate) => ({
-      href: toLocalizedHref(candidate),
-      title: candidate.title,
-    }));
-}
-
-/** Narrows projected content routes to reusable lesson material rows. */
-function isMaterialContentRoute(
-  route: PublicContentRoute
-): route is MaterialRoute {
-  return route.kind === "subject-topic" || route.kind === "subject-lesson";
-}
-
-/** Reads visible projected ancestors without reconstructing URL segments. */
-function readCurriculumAncestors(route: PublicCurriculumRoute) {
-  const ancestors: PublicCurriculumRoute[] = [];
-  let parentPath = route.parentPath;
-
-  while (parentPath) {
-    const parent = readCurriculumRouteByPublicPath(route.locale, parentPath);
-
-    if (!parent) {
-      break;
-    }
-
-    ancestors.unshift(parent);
-    parentPath = parent.parentPath;
-  }
-
-  return ancestors;
-}
-
-/** Reads all projected descendants for one curriculum route in route order. */
-function readCurriculumDescendants(route: PublicCurriculumRoute) {
-  const descendants: PublicCurriculumRoute[] = [];
-  const childRoutes = CURRICULUM_ROUTES.filter(
-    (candidate) =>
-      candidate.locale === route.locale &&
-      candidate.parentPath === route.publicPath
-  );
-
-  for (const child of childRoutes) {
-    descendants.push(child);
-    descendants.push(...readCurriculumDescendants(child));
-  }
-
-  return descendants;
-}
-
-/** Looks up one curriculum route by projected public path. */
-function readCurriculumRouteByPublicPath(
-  locale: PublicCurriculumRoute["locale"],
-  publicPath: PublicCurriculumRoute["publicPath"]
-) {
-  return CURRICULUM_ROUTES.find(
-    (candidate) =>
-      candidate.locale === locale && candidate.publicPath === publicPath
-  );
 }

@@ -21,6 +21,18 @@ export const lessonMathematicsSequenceSeriesMaterial = defineLessonMaterial({
   },
   sections: [
     {
+      slug: "sequence-concept",
+      routeSlugs: { en: "sequence-concept", id: "konsep-barisan" },
+      translations: {
+        en: {
+          title: "Sequence Concept",
+        },
+        id: {
+          title: "Konsep Barisan",
+        },
+      },
+    },
+    {
       slug: "arithmetic-sequence",
       routeSlugs: { en: "arithmetic-sequence", id: "barisan-aritmetika" },
       translations: {
@@ -33,29 +45,14 @@ export const lessonMathematicsSequenceSeriesMaterial = defineLessonMaterial({
       },
     },
     {
-      slug: "arithmetic-series",
-      routeSlugs: { en: "arithmetic-series", id: "deret-aritmetika" },
+      slug: "geometric-sequence",
+      routeSlugs: { en: "geometric-sequence", id: "barisan-geometri" },
       translations: {
         en: {
-          title: "Arithmetic Series",
+          title: "Geometric Sequence",
         },
         id: {
-          title: "Deret Aritmetika",
-        },
-      },
-    },
-    {
-      slug: "convergence-divergence",
-      routeSlugs: {
-        en: "convergence-divergence",
-        id: "perbedaan-konvergen-dan-divergen",
-      },
-      translations: {
-        en: {
-          title: "Difference Between Convergence and Divergence",
-        },
-        id: {
-          title: "Perbedaan Konvergen dan Divergen",
+          title: "Barisan Geometri",
         },
       },
     },
@@ -75,21 +72,6 @@ export const lessonMathematicsSequenceSeriesMaterial = defineLessonMaterial({
       },
     },
     {
-      slug: "difference-arithmetic-geometric-series",
-      routeSlugs: {
-        en: "difference-arithmetic-geometric-series",
-        id: "perbedaan-deret-aritmetika-dan-geometri",
-      },
-      translations: {
-        en: {
-          title: "Difference between Arithmetic and Geometric Series",
-        },
-        id: {
-          title: "Perbedaan Deret Aritmetika dan Geometri",
-        },
-      },
-    },
-    {
       slug: "difference-sequence-series",
       routeSlugs: {
         en: "difference-sequence-series",
@@ -105,14 +87,26 @@ export const lessonMathematicsSequenceSeriesMaterial = defineLessonMaterial({
       },
     },
     {
-      slug: "geometric-sequence",
-      routeSlugs: { en: "geometric-sequence", id: "barisan-geometri" },
+      slug: "series-concept",
+      routeSlugs: { en: "series-concept", id: "konsep-deret" },
       translations: {
         en: {
-          title: "Geometric Sequence",
+          title: "Series Concept",
         },
         id: {
-          title: "Barisan Geometri",
+          title: "Konsep Deret",
+        },
+      },
+    },
+    {
+      slug: "arithmetic-series",
+      routeSlugs: { en: "arithmetic-series", id: "deret-aritmetika" },
+      translations: {
+        en: {
+          title: "Arithmetic Series",
+        },
+        id: {
+          title: "Deret Aritmetika",
         },
       },
     },
@@ -144,26 +138,32 @@ export const lessonMathematicsSequenceSeriesMaterial = defineLessonMaterial({
       },
     },
     {
-      slug: "sequence-concept",
-      routeSlugs: { en: "sequence-concept", id: "konsep-barisan" },
+      slug: "difference-arithmetic-geometric-series",
+      routeSlugs: {
+        en: "difference-arithmetic-geometric-series",
+        id: "perbedaan-deret-aritmetika-dan-geometri",
+      },
       translations: {
         en: {
-          title: "Sequence Concept",
+          title: "Difference between Arithmetic and Geometric Series",
         },
         id: {
-          title: "Konsep Barisan",
+          title: "Perbedaan Deret Aritmetika dan Geometri",
         },
       },
     },
     {
-      slug: "series-concept",
-      routeSlugs: { en: "series-concept", id: "konsep-deret" },
+      slug: "convergence-divergence",
+      routeSlugs: {
+        en: "convergence-divergence",
+        id: "perbedaan-konvergen-dan-divergen",
+      },
       translations: {
         en: {
-          title: "Series Concept",
+          title: "Difference Between Convergence and Divergence",
         },
         id: {
-          title: "Konsep Deret",
+          title: "Perbedaan Konvergen dan Divergen",
         },
       },
     },

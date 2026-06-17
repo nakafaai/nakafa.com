@@ -1,7 +1,7 @@
 import { captureServerException } from "@repo/analytics/posthog/server";
 import { MAIN_DOMAIN } from "@repo/next-config/domains";
 import { Effect } from "effect";
-import { getSitemapPageDescriptorsEffect } from "@/lib/sitemap/routes";
+import { readSitemapPageDescriptors } from "@/lib/sitemap/routes";
 import { buildSitemapIndexXml, sitemapXmlHeaders } from "@/lib/sitemap/xml";
 
 const sitemapIndexError = "Internal Server Error";
@@ -28,7 +28,7 @@ export function GET() {
 /** Builds the sitemap index response from materialized page descriptors. */
 const buildSitemapIndexResponse = Effect.fn("www.sitemap.index.response")(
   function* () {
-    const descriptors = yield* getSitemapPageDescriptorsEffect();
+    const descriptors = yield* readSitemapPageDescriptors();
     const urls = descriptors.map(
       (descriptor) => `${canonicalSitemapOrigin}/sitemap/${descriptor.id}.xml`
     );

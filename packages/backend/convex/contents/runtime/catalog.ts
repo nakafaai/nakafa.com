@@ -6,64 +6,26 @@ import type {
   ListPublicRoutesByMaterialArgs,
   ListPublicRoutesByParentArgs,
   ListSitemapPublicRoutesArgs,
-} from "@repo/backend/convex/contents/runtime/spec";
+} from "@repo/backend/convex/contents/runtime/routes";
 import type {
-  Locale,
-  NakafaSection,
-} from "@repo/backend/convex/lib/validators/contents";
+  GetContentRouteArgs,
+  GetContentRouteArtifactPageArgs,
+  GetContentRouteByContentIdArgs,
+  ListContentRouteCountsArgs,
+  ListContentRoutesByKindPrefixArgs,
+  ListContentRoutesByParentArgs,
+  ListContentRoutesByPrefixArgs,
+  ListLatestContentRoutesArgs,
+} from "@repo/backend/convex/contents/runtime/spec";
 import { ConvexError } from "convex/values";
 
 const MAX_CONTENT_ROUTE_PAGE_SIZE = 100;
 const MAX_PUBLIC_ROUTE_PAGE_SIZE = 100;
 
-/** Bounded route-prefix catalog query args. */
-interface ContentRoutePrefixArgs {
-  cursor: string | null;
-  limit: number;
-  locale: Locale;
-  prefix: string;
-  section: NakafaSection;
-}
-
-/** Bounded route-prefix catalog query args constrained by graph object kind. */
-interface ContentRouteKindPrefixArgs extends ContentRoutePrefixArgs {
-  kind: Doc<"contentRoutes">["kind"];
-}
-
-/** Bounded parent-route catalog query args for route projection navigation. */
-interface ContentRouteParentArgs {
-  cursor: string | null;
-  kind: Doc<"contentRoutes">["kind"];
-  limit: number;
-  locale: Locale;
-  order: "date-desc" | "route";
-  parentRoute: string;
-  section: NakafaSection;
-}
-
-/** Route artifact page coordinates for sitemap and LLMS outputs. */
-interface ContentRouteArtifactPageArgs {
-  locale: Locale;
-  page: number;
-  section: NakafaSection;
-}
-
-/** Args for newest route rows in one locale and section. */
-interface LatestContentRoutesArgs {
-  limit: number;
-  locale: Locale;
-  section: NakafaSection;
-}
-
-/** Args for materialized route-count rows in one locale. */
-interface ContentRouteCountsArgs {
-  locale: Locale;
-}
-
 /** Reads concrete content catalog routes whose route starts with one prefix. */
 export async function listContentRoutesByPrefixImpl(
   ctx: QueryCtx,
-  args: ContentRoutePrefixArgs
+  args: ListContentRoutesByPrefixArgs
 ) {
   assertContentRoutePageLimit(args.limit);
   const prefix = normalizeRoutePrefix(args.prefix);
@@ -91,7 +53,7 @@ export async function listContentRoutesByPrefixImpl(
 /** Reads content catalog routes by kind without scanning unrelated descendants. */
 export async function listContentRoutesByKindPrefixImpl(
   ctx: QueryCtx,
-  args: ContentRouteKindPrefixArgs
+  args: ListContentRoutesByKindPrefixArgs
 ) {
   assertContentRoutePageLimit(args.limit);
   const prefix = normalizeRoutePrefix(args.prefix);
@@ -120,7 +82,7 @@ export async function listContentRoutesByKindPrefixImpl(
 /** Reads immediate navigation children from materialized parent route fields. */
 export async function listContentRoutesByParentImpl(
   ctx: QueryCtx,
-  args: ContentRouteParentArgs
+  args: ListContentRoutesByParentArgs
 ) {
   assertContentRoutePageLimit(args.limit);
   const parentRoute = normalizeRoutePrefix(args.parentRoute);
@@ -162,7 +124,7 @@ export async function listContentRoutesByParentImpl(
 /** Reads one materialized route artifact page for sitemap and LLMS. */
 export async function getContentRouteArtifactPageImpl(
   ctx: QueryCtx,
-  args: ContentRouteArtifactPageArgs
+  args: GetContentRouteArtifactPageArgs
 ) {
   const page = await ctx.db
     .query("contentRoutePages")
@@ -184,7 +146,7 @@ export async function getContentRouteArtifactPageImpl(
 /** Reads a bounded newest-first content feed page from dated routes. */
 export async function listLatestContentRoutesImpl(
   ctx: QueryCtx,
-  args: LatestContentRoutesArgs
+  args: ListLatestContentRoutesArgs
 ) {
   assertContentRoutePageLimit(args.limit);
 
@@ -202,7 +164,7 @@ export async function listLatestContentRoutesImpl(
 /** Reads materialized route counts for one locale without route scans. */
 export async function listContentRouteCountsImpl(
   ctx: QueryCtx,
-  args: ContentRouteCountsArgs
+  args: ListContentRouteCountsArgs
 ) {
   const counts = await ctx.db
     .query("contentRouteCounts")
@@ -378,10 +340,7 @@ function toRuntimePublicRoutePage(page: {
 /** Loads one exact concrete content route from the durable route catalog. */
 export async function getContentRouteImpl(
   ctx: QueryCtx,
-  args: {
-    locale: Locale;
-    route: string;
-  }
+  args: GetContentRouteArgs
 ) {
   const route = await ctx.db
     .query("contentRoutes")
@@ -400,9 +359,7 @@ export async function getContentRouteImpl(
 /** Loads one concrete content route by graph-backed content ID. */
 export async function getContentRouteByContentIdImpl(
   ctx: QueryCtx,
-  args: {
-    contentId: string;
-  }
+  args: GetContentRouteByContentIdArgs
 ) {
   const route = await ctx.db
     .query("contentRoutes")
@@ -454,6 +411,7 @@ function toRuntimePublicRoute(route: Doc<"publicRoutes">) {
     materialDomain: route.materialDomain,
     materialKey: route.materialKey,
     nodeKey: route.nodeKey,
+    order: route.order,
     parentPath: route.parentPath,
     programKey: route.programKey,
     publicPath: route.publicPath,

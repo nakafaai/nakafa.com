@@ -225,7 +225,7 @@ describe("proxy", () => {
     expect(response.headers.get("x-locale-proxy")).toBe("1");
   });
 
-  it("delegates invalid public route segments without surfacing projection errors", async () => {
+  it("returns a real 404 for invalid public material route segments", async () => {
     const response = await proxy(
       new NextRequest(
         "http://localhost:3000/en/subjects/mathematics/integral/invalid.segment"
@@ -234,8 +234,11 @@ describe("proxy", () => {
 
     expect(mockGetRuntimeContentRoute).not.toHaveBeenCalled();
     expect(mockGetRuntimeContentRouteParentPage).not.toHaveBeenCalled();
-    expect(mockLocaleRouting.localeMiddleware).toHaveBeenCalledTimes(1);
-    expect(response.headers.get("x-locale-proxy")).toBe("1");
+    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
+    expect(response.status).toBe(404);
+    expect(response.headers.get("x-middleware-rewrite")).toBe(
+      "http://localhost:3000/en/_not-found"
+    );
   });
 
   it("rejects stale localized route namespaces before locale normalization", async () => {
@@ -364,15 +367,18 @@ describe("proxy", () => {
     );
   });
 
-  it("delegates subject chapter routes so app routes can redirect", async () => {
+  it("returns a real 404 for material topic grouping routes", async () => {
     const response = await proxy(
       new NextRequest(
         "http://localhost:3000/en/subjects/chemistry/green-chemistry"
       )
     );
 
-    expect(mockLocaleRouting.localeMiddleware).toHaveBeenCalledTimes(1);
-    expect(response.headers.get("x-locale-proxy")).toBe("1");
+    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
+    expect(response.status).toBe(404);
+    expect(response.headers.get("x-middleware-rewrite")).toBe(
+      "http://localhost:3000/en/_not-found"
+    );
   });
 
   it("returns a real 404 for missing markdown public content routes", async () => {
@@ -514,26 +520,32 @@ describe("proxy", () => {
     expect(response.headers.get("x-locale-proxy")).toBe("1");
   });
 
-  it("delegates unmatched curriculum app routes to the locale middleware", async () => {
+  it("returns a real 404 for unmatched curriculum app routes", async () => {
     const response = await proxy(
       new NextRequest(
         "http://localhost:3000/en/curriculum/merdeka/class-11-afdocs-nonexistent-8f3a"
       )
     );
 
-    expect(mockLocaleRouting.localeMiddleware).toHaveBeenCalledTimes(1);
-    expect(response.headers.get("x-locale-proxy")).toBe("1");
+    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
+    expect(response.status).toBe(404);
+    expect(response.headers.get("x-middleware-rewrite")).toBe(
+      "http://localhost:3000/en/_not-found"
+    );
   });
 
-  it("delegates unmatched curriculum material app routes to the locale middleware", async () => {
+  it("returns a real 404 for unmatched curriculum material app routes", async () => {
     const response = await proxy(
       new NextRequest(
         "http://localhost:3000/en/curriculum/merdeka/class-10/mathematics-afdocs-nonexistent-8f3a"
       )
     );
 
-    expect(mockLocaleRouting.localeMiddleware).toHaveBeenCalledTimes(1);
-    expect(response.headers.get("x-locale-proxy")).toBe("1");
+    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
+    expect(response.status).toBe(404);
+    expect(response.headers.get("x-middleware-rewrite")).toBe(
+      "http://localhost:3000/en/_not-found"
+    );
   });
 
   it("delegates unmatched assessment app routes to the locale middleware", async () => {

@@ -5,7 +5,7 @@ import {
 import { api } from "@repo/backend/convex/_generated/api";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import { LocaleSchema } from "@repo/contents/_types/content";
-import { findPublicRouteByPathEffect } from "@repo/contents/_types/route/projection";
+import { findPublicRouteByPath } from "@repo/contents/_types/route/projection";
 import { type FunctionReference, getFunctionName } from "convex/server";
 import { Effect, Option, Schema } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -184,6 +184,7 @@ function readContentRouteByContentId(args: unknown) {
   };
 }
 
+/** Resolves test route fixtures through public route projection before falling back to legacy fixtures. */
 function readContentRoute(args: unknown) {
   const input = Schema.decodeUnknownSync(RouteArgsSchema)(args);
 
@@ -192,7 +193,7 @@ function readContentRoute(args: unknown) {
   }
 
   const publicRoute = Effect.runSync(
-    findPublicRouteByPathEffect(input.route, input.locale)
+    findPublicRouteByPath(input.route, input.locale)
   );
 
   if (Option.isSome(publicRoute)) {
@@ -227,6 +228,7 @@ function readContentRoute(args: unknown) {
   };
 }
 
+/** Classifies fixture routes into the content section expected by the markdown reader. */
 function getSection(route: string) {
   if (route.startsWith("articles/")) {
     return "articles";

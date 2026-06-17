@@ -1,9 +1,14 @@
 import type { PublicRoute } from "@repo/contents/_types/route/schema";
 import { routing } from "@repo/internationalization/src/routing";
 
+type AlternateLanguagePath = Partial<{
+  [Key in (typeof routing.locales)[number] | "x-default"]: string;
+}>;
+type AlternateTypePath = Readonly<{ [mediaType: string]: string }>;
+
 interface LocalizedAlternatesOptions {
-  languages?: Record<string, string>;
-  types?: Record<string, string>;
+  languages?: AlternateLanguagePath;
+  types?: AlternateTypePath;
 }
 
 /** Removes an existing locale prefix before building language alternates. */
@@ -59,7 +64,7 @@ export function createProjectedRouteAlternates(
   routes: readonly PublicRoute[],
   options: Omit<LocalizedAlternatesOptions, "languages"> = {}
 ) {
-  const languages: Record<string, string> = {};
+  const languages: AlternateLanguagePath = {};
 
   for (const locale of routing.locales) {
     const alternate = routes.find(

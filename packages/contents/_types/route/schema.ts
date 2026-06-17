@@ -10,17 +10,6 @@ import { Schema } from "effect";
 
 type SchemaType<T extends Schema.Schema.Any> = Schema.Schema.Type<T>;
 
-export type {
-  PublicRoutePath,
-  PublicRouteSegment,
-  PublicRouteSlugMap,
-} from "@repo/contents/_types/route/segment";
-export {
-  PublicRoutePathSchema,
-  PublicRouteSegmentSchema,
-  PublicRouteSlugMapSchema,
-} from "@repo/contents/_types/route/segment";
-
 const PublicRouteBaseSchema = Schema.Struct({
   description: Schema.optional(Schema.String),
   locale: LocaleSchema,
@@ -55,6 +44,7 @@ export const PublicContentRouteSchema = Schema.extend(
       "exercise-question"
     ),
     materialKey: MaterialKeySchema,
+    order: Schema.optional(Schema.Int.pipe(Schema.nonNegative())),
     sectionKey: Schema.optional(Schema.String),
     sourcePath: PublicRoutePathSchema,
   })
@@ -71,6 +61,7 @@ export const PublicCurriculumRouteSchema = Schema.extend(
     materialDomain: Schema.optional(MaterialSchema),
     materialKey: Schema.optional(MaterialKeySchema),
     nodeKey: Schema.String,
+    order: Schema.Int.pipe(Schema.nonNegative()),
     programKey: LearningProgramKeySchema,
   })
 );

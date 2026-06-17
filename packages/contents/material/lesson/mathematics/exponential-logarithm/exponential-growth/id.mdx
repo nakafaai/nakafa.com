@@ -122,11 +122,11 @@ Jadi, banyaknya bakteri setelah <InlineMath math="10 \text{ jam}" /> adalah <Inl
 
 1. Bakteri E.coli menyebabkan penyakit diare pada manusia. Seorang peneliti mengamati pertumbuhan <InlineMath math="50 \text{ bakteri}" /> ini pada sepotong makanan dan menemukan bahwa bakteri ini membelah menjadi <InlineMath math="2" /> setiap seperempat jam.
 
-   a. Gambarkanlah tabel dan grafik yang menunjukkan pertumbuhan bakteri ini dari fase <InlineMath math="0" /> sampai fase <InlineMath math="5" />.
+    1. Gambarkanlah tabel dan grafik yang menunjukkan pertumbuhan bakteri ini dari fase <InlineMath math="0" /> sampai fase <InlineMath math="5" />.
 
-   b. Modelkan fungsi yang menggambarkan pertumbuhan bakteri E.coli setiap seperempat jam.
+    2. Modelkan fungsi yang menggambarkan pertumbuhan bakteri E.coli setiap seperempat jam.
 
-   c. Prediksi berapa banyaknya bakteri setelah <InlineMath math="3 \text{ jam}" /> dan <InlineMath math="4 \text{ jam}" /> pertama.
+    3. Prediksi berapa banyaknya bakteri setelah <InlineMath math="3 \text{ jam}" /> dan <InlineMath math="4 \text{ jam}" /> pertama.
 
 2. Pada tahun <InlineMath math="2015" />, kasus positif HIV-AIDS berjumlah sekitar <InlineMath math="36 \text{ juta jiwa}" />. Jumlah ini meningkat rata-rata <InlineMath math="2\%" /> setiap tahun dari tahun <InlineMath math="2010" /> hingga <InlineMath math="2015" />. Jika peningkatan kasus positif HIV di tahun-tahun berikutnya diprediksi bertambah secara eksponen pada peningkatan <InlineMath math="2\%" /> setiap tahun, berapa banyak kasus yang terjadi pada tahun <InlineMath math="2020" />?
 
@@ -134,43 +134,43 @@ Jadi, banyaknya bakteri setelah <InlineMath math="10 \text{ jam}" /> adalah <Inl
 
 1. Bakteri E.coli dengan jumlah awal <InlineMath math="50 \text{ bakteri}" /> yang membelah menjadi dua setiap <InlineMath math="15 \text{ menit}" />.
 
-   a. Pertumbuhan Bakteri:
+    1. Pertumbuhan Bakteri:
 
-   | Fase (<InlineMath math="15 \text{ menit}" />) | <InlineMath math="0" /> | <InlineMath math="1" /> | <InlineMath math="2" /> | <InlineMath math="3" /> | <InlineMath math="4" /> | <InlineMath math="5" /> |
-   | --------------- | --- | --- | --- | --- | --- | ----- |
-   | Banyak bakteri | <InlineMath math="50" /> | <InlineMath math="100" /> | <InlineMath math="200" /> | <InlineMath math="400" /> | <InlineMath math="800" /> | <InlineMath math="1.600" /> |
+        | Fase (<InlineMath math="15 \text{ menit}" />) | <InlineMath math="0" /> | <InlineMath math="1" /> | <InlineMath math="2" /> | <InlineMath math="3" /> | <InlineMath math="4" /> | <InlineMath math="5" /> |
+        | --------------- | --- | --- | --- | --- | --- | ----- |
+        | Banyak bakteri | <InlineMath math="50" /> | <InlineMath math="100" /> | <InlineMath math="200" /> | <InlineMath math="400" /> | <InlineMath math="800" /> | <InlineMath math="1.600" /> |
 
-   <FunctionChart
-     p={50}
-     a={2}
-     n={7}
-     title="Pertumbuhan Bakteri"
-     description={
-       <>
-         Pertumbuhan bakteri yang membelah menjadi dua setiap <InlineMath math="15 \text{ menit}" />.
-       </>
-     }
-   />
+        <FunctionChart
+          p={50}
+          a={2}
+          n={7}
+          title="Pertumbuhan Bakteri"
+          description={
+            <>
+              Pertumbuhan bakteri yang membelah menjadi dua setiap <InlineMath math="15 \text{ menit}" />.
+            </>
+          }
+        />
 
-   b. Fungsi pertumbuhan bakteri E.coli dapat dimodelkan dengan:
+    2. Fungsi pertumbuhan bakteri E.coli dapat dimodelkan dengan:
 
-   <BlockMath math="f(x) = 50 \cdot (2^x)" />
+        <BlockMath math="f(x) = 50 \cdot (2^x)" />
 
-   c. Setelah <InlineMath math="3 \text{ jam}" /> pertama berarti fase ke-<InlineMath math="12" /> (bakteri membelah setiap <InlineMath math="15 \text{ menit}" />):
+    3. Setelah <InlineMath math="3 \text{ jam}" /> pertama berarti fase ke-<InlineMath math="12" /> (bakteri membelah setiap <InlineMath math="15 \text{ menit}" />):
 
-   <MathContainer>
-     <BlockMath math="f(12) = 50 \cdot (2^{12})" />
-     <BlockMath math="f(12) = 50 \cdot 4.096" />
-     <BlockMath math="f(12) = 204.800" />
-   </MathContainer>
+        <MathContainer>
+          <BlockMath math="f(12) = 50 \cdot (2^{12})" />
+          <BlockMath math="f(12) = 50 \cdot 4.096" />
+          <BlockMath math="f(12) = 204.800" />
+        </MathContainer>
 
-   Setelah <InlineMath math="4 \text{ jam}" /> pertama berarti fase ke-<InlineMath math="16" /> (bakteri membelah setiap <InlineMath math="15 \text{ menit}" />):
+        Setelah <InlineMath math="4 \text{ jam}" /> pertama berarti fase ke-<InlineMath math="16" /> (bakteri membelah setiap <InlineMath math="15 \text{ menit}" />):
 
-   <MathContainer>
-     <BlockMath math="f(16) = 50 \cdot (2^{16})" />
-     <BlockMath math="f(16) = 50 \cdot 65.536" />
-     <BlockMath math="f(16) = 3.276.800" />
-   </MathContainer>
+        <MathContainer>
+          <BlockMath math="f(16) = 50 \cdot (2^{16})" />
+          <BlockMath math="f(16) = 50 \cdot 65.536" />
+          <BlockMath math="f(16) = 3.276.800" />
+        </MathContainer>
 
 2. Kasus HIV-AIDS:
 

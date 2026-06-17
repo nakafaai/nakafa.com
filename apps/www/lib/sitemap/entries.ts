@@ -1,4 +1,4 @@
-import { findPublicRouteByPathEffect } from "@repo/contents/_types/route/projection";
+import { findPublicRouteByPath } from "@repo/contents/_types/route/projection";
 import type {
   PublicContentRoute,
   PublicRoute,
@@ -13,12 +13,17 @@ import {
   baseRoutes,
   type ContentSitemapPage,
   getSitemapPageDescriptor,
-  getSitemapPageDescriptorsEffect,
-  getSitemapRoutesEffect,
+  readSitemapPageDescriptors,
+  readSitemapRoutes,
 } from "@/lib/sitemap/routes";
 
 type Href = Parameters<typeof getPathname>[number]["href"];
-type SitemapErrorContext = Record<string, string>;
+type SitemapErrorContext = Readonly<{
+  content_path?: string;
+  locale?: Locale;
+  route?: string;
+  source: string;
+}>;
 type SitemapErrorReporter = (
   error: unknown,
   context: SitemapErrorContext
@@ -115,7 +120,7 @@ function getAlternateLanguages(
   locales: readonly Locale[],
   domain: string | undefined
 ) {
-  const languages: Record<string, string> = {};
+  const languages: Partial<{ [Key in Locale | "x-default"]: string }> = {};
 
   for (const locale of locales) {
     languages[locale] = getUrl(href, locale, domain);
@@ -143,7 +148,7 @@ export const getSitemapEntries = Effect.fn("www.sitemap.entries.all")(
       return yield* getSitemapPageEntries(options);
     }
 
-    const descriptors = yield* getSitemapPageDescriptorsEffect();
+    const descriptors = yield* readSitemapPageDescriptors();
     const pageEntries = yield* Effect.forEach(
       descriptors,
       (descriptor) =>
@@ -165,7 +170,7 @@ const getSitemapPageEntries = Effect.fn("www.sitemap.entries.page")(function* (
   options: SitemapEntryOptions
 ) {
   const pageId = options.pageId;
-  const routes = yield* getSitemapRoutesEffect(pageId);
+  const routes = yield* readSitemapRoutes(pageId);
   const locales = getSitemapEntryLocales(pageId);
   const routeArrays = yield* Effect.forEach(
     routes,
@@ -235,7 +240,7 @@ const getContentLastModified = Effect.fn("www.sitemap.contentLastModified")(
 /** Converts a projected public path to the source route stored in Convex. */
 const getRuntimeContentLookupPath = Effect.fn("www.sitemap.contentLookupPath")(
   function* (contentPath: string, locale: Locale) {
-    const route = yield* findPublicRouteByPathEffect(contentPath, locale);
+    const route = yield* findPublicRouteByPath(contentPath, locale);
 
     return Option.match(route, {
       onNone: () => contentPath,

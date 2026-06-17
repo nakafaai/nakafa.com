@@ -30,6 +30,16 @@ import {
   listQuranSurahsImpl,
 } from "@repo/backend/convex/contents/runtime/quran";
 import {
+  getPublicRouteByPathArgsValidator,
+  getPublicRouteByPathReturnValidator,
+  listPublicRoutesByMaterialArgsValidator,
+  listPublicRoutesByMaterialReturnValidator,
+  listPublicRoutesByParentArgsValidator,
+  listPublicRoutesPageReturnValidator,
+  listSitemapPublicRoutesArgsValidator,
+  listSitemapPublicRoutesReturnValidator,
+} from "@repo/backend/convex/contents/runtime/routes";
+import {
   getArticlePageArgsValidator,
   getArticlePageReturnValidator,
   getContentRouteArgsValidator,
@@ -46,8 +56,6 @@ import {
   getExerciseQuestionPageReturnValidator,
   getExerciseSetPageArgsValidator,
   getExerciseSetPageReturnValidator,
-  getPublicRouteByPathArgsValidator,
-  getPublicRouteByPathReturnValidator,
   getQuranReferenceArgsValidator,
   getQuranReferenceReturnValidator,
   getQuranSurahPageArgsValidator,
@@ -64,13 +72,7 @@ import {
   listLatestContentRoutesReturnValidator,
   listMaterialApiContentPageArgsValidator,
   listMaterialApiContentPageReturnValidator,
-  listPublicRoutesByMaterialArgsValidator,
-  listPublicRoutesByMaterialReturnValidator,
-  listPublicRoutesByParentArgsValidator,
-  listPublicRoutesPageReturnValidator,
   listQuranSurahsReturnValidator,
-  listSitemapPublicRoutesArgsValidator,
-  listSitemapPublicRoutesReturnValidator,
 } from "@repo/backend/convex/contents/runtime/spec";
 
 /**

@@ -6,9 +6,9 @@ import { getEntries, getSitemapEntries, getUrl } from "@/lib/sitemap/entries";
 
 const mockGetRuntimeContentRoute = vi.hoisted(() => vi.fn());
 const mockGetSitemapRoutes = vi.hoisted(() => vi.fn());
-const mockGetSitemapRoutesEffect = vi.hoisted(() => vi.fn());
+const mockReadSitemapRoutes = vi.hoisted(() => vi.fn());
 const mockGetSitemapPageDescriptor = vi.hoisted(() => vi.fn());
-const mockGetSitemapPageDescriptorsEffect = vi.hoisted(() => vi.fn());
+const mockReadSitemapPageDescriptors = vi.hoisted(() => vi.fn());
 const mockGetPathname = vi.hoisted(() =>
   vi.fn<typeof getPathname>(({ href, locale }) => {
     const pathname = typeof href === "string" ? href : href.pathname;
@@ -43,18 +43,18 @@ vi.mock("@/lib/sitemap/routes", () => ({
     "/privacy-policy",
     "/security-policy",
   ],
-  getSitemapPageDescriptorsEffect: mockGetSitemapPageDescriptorsEffect,
+  readSitemapPageDescriptors: mockReadSitemapPageDescriptors,
   getSitemapPageDescriptor: mockGetSitemapPageDescriptor,
   getSitemapRoutes: mockGetSitemapRoutes,
-  getSitemapRoutesEffect: mockGetSitemapRoutesEffect,
+  readSitemapRoutes: mockReadSitemapRoutes,
 }));
 
 beforeEach(() => {
   mockGetRuntimeContentRoute.mockReset();
   mockGetSitemapRoutes.mockReset();
-  mockGetSitemapRoutesEffect.mockReset();
+  mockReadSitemapRoutes.mockReset();
   mockGetSitemapPageDescriptor.mockReset();
-  mockGetSitemapPageDescriptorsEffect.mockReset();
+  mockReadSitemapPageDescriptors.mockReset();
   mockGetPathname.mockClear();
 
   mockGetRuntimeContentRoute.mockReturnValue(
@@ -63,7 +63,7 @@ beforeEach(() => {
     })
   );
   mockGetSitemapPageDescriptor.mockReturnValue({ id: "base" });
-  mockGetSitemapPageDescriptorsEffect.mockReturnValue(
+  mockReadSitemapPageDescriptors.mockReturnValue(
     Effect.succeed([{ id: "base" }])
   );
   mockGetSitemapRoutes.mockResolvedValue([
@@ -73,7 +73,7 @@ beforeEach(() => {
     "/quran/1",
     "/subjects/chemistry/green-chemistry/definition",
   ]);
-  mockGetSitemapRoutesEffect.mockImplementation((pageId) =>
+  mockReadSitemapRoutes.mockImplementation((pageId) =>
     Effect.promise(() => mockGetSitemapRoutes(pageId))
   );
 });
@@ -255,7 +255,7 @@ describe("sitemap entries", () => {
   });
 
   it("generates unbounded submission entries across every sitemap page", async () => {
-    mockGetSitemapPageDescriptorsEffect.mockReturnValueOnce(
+    mockReadSitemapPageDescriptors.mockReturnValueOnce(
       Effect.succeed([
         { id: "base" },
         {

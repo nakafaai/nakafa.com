@@ -12,7 +12,6 @@ import {
   materialValidator,
   nakafaSectionValidator,
 } from "@repo/backend/convex/lib/validators/contents";
-import { PUBLIC_ROUTE_KIND_VALUES } from "@repo/contents/_types/route/schema";
 import { type Infer, v } from "convex/values";
 import { literals, nullable } from "convex-helpers/validators";
 
@@ -130,7 +129,6 @@ const quranSurahValidator = v.object({
 });
 
 const contentRouteKindValidator = literals(...CONTENT_ROUTE_KINDS);
-const publicRouteKindValidator = literals(...PUBLIC_ROUTE_KIND_VALUES);
 
 const runtimeContentRouteValidator = v.object({
   ...learningGraphIdentityValidator.fields,
@@ -160,34 +158,10 @@ const runtimeContentRouteCountValidator = v.object({
   syncedAt: v.number(),
 });
 
-const runtimePublicRouteValidator = v.object({
-  canonicalPath: v.optional(v.string()),
-  description: v.optional(v.string()),
-  kind: publicRouteKindValidator,
-  locale: localeValidator,
-  materialDomain: v.optional(materialValidator),
-  materialKey: v.optional(v.string()),
-  nodeKey: v.optional(v.string()),
-  parentPath: v.optional(v.string()),
-  programKey: v.optional(v.string()),
-  publicPath: v.string(),
-  sectionKey: v.optional(v.string()),
-  sitemap: v.boolean(),
-  sourcePath: v.optional(v.string()),
-  syncedAt: v.number(),
-  title: v.string(),
-});
-
 const paginatedContentRoutesValidator = v.object({
   continueCursor: v.string(),
   isDone: v.boolean(),
   page: v.array(runtimeContentRouteValidator),
-});
-
-const paginatedPublicRoutesValidator = v.object({
-  continueCursor: v.string(),
-  isDone: v.boolean(),
-  page: v.array(runtimePublicRouteValidator),
 });
 
 const runtimeContentRouteArtifactPageValidator = v.object({
@@ -345,20 +319,30 @@ export const getExerciseGroupPageReturnValidator = nullable(
   })
 );
 
-export const listContentRoutesByPrefixArgsValidator = {
+const listContentRoutesByPrefixArgsObjectValidator = v.object({
   cursor: v.union(v.string(), v.null()),
   limit: v.number(),
   locale: localeValidator,
   prefix: v.string(),
   section: nakafaSectionValidator,
-};
+});
+export const listContentRoutesByPrefixArgsValidator =
+  listContentRoutesByPrefixArgsObjectValidator.fields;
+export type ListContentRoutesByPrefixArgs = Infer<
+  typeof listContentRoutesByPrefixArgsObjectValidator
+>;
 
-export const listContentRoutesByKindPrefixArgsValidator = {
+const listContentRoutesByKindPrefixArgsObjectValidator = v.object({
   ...listContentRoutesByPrefixArgsValidator,
   kind: contentRouteKindValidator,
-};
+});
+export const listContentRoutesByKindPrefixArgsValidator =
+  listContentRoutesByKindPrefixArgsObjectValidator.fields;
+export type ListContentRoutesByKindPrefixArgs = Infer<
+  typeof listContentRoutesByKindPrefixArgsObjectValidator
+>;
 
-export const listContentRoutesByParentArgsValidator = {
+const listContentRoutesByParentArgsObjectValidator = v.object({
   cursor: v.union(v.string(), v.null()),
   kind: contentRouteKindValidator,
   limit: v.number(),
@@ -366,111 +350,81 @@ export const listContentRoutesByParentArgsValidator = {
   order: v.union(v.literal("date-desc"), v.literal("route")),
   parentRoute: v.string(),
   section: nakafaSectionValidator,
-};
+});
+export const listContentRoutesByParentArgsValidator =
+  listContentRoutesByParentArgsObjectValidator.fields;
+export type ListContentRoutesByParentArgs = Infer<
+  typeof listContentRoutesByParentArgsObjectValidator
+>;
 
 export const listContentRoutesPageReturnValidator =
   paginatedContentRoutesValidator;
 
-export const getContentRouteArtifactPageArgsValidator = {
+const getContentRouteArtifactPageArgsObjectValidator = v.object({
   locale: localeValidator,
   page: v.number(),
   section: nakafaSectionValidator,
-};
+});
+export const getContentRouteArtifactPageArgsValidator =
+  getContentRouteArtifactPageArgsObjectValidator.fields;
+export type GetContentRouteArtifactPageArgs = Infer<
+  typeof getContentRouteArtifactPageArgsObjectValidator
+>;
 
 export const getContentRouteArtifactPageReturnValidator = nullable(
   runtimeContentRouteArtifactPageValidator
 );
 
-export const listLatestContentRoutesArgsValidator = {
+const listLatestContentRoutesArgsObjectValidator = v.object({
   limit: v.number(),
   locale: localeValidator,
   section: nakafaSectionValidator,
-};
+});
+export const listLatestContentRoutesArgsValidator =
+  listLatestContentRoutesArgsObjectValidator.fields;
+export type ListLatestContentRoutesArgs = Infer<
+  typeof listLatestContentRoutesArgsObjectValidator
+>;
 
 export const listLatestContentRoutesReturnValidator = v.array(
   runtimeContentRouteValidator
 );
 
-export const listContentRouteCountsArgsValidator = {
+const listContentRouteCountsArgsObjectValidator = v.object({
   locale: localeValidator,
-};
+});
+export const listContentRouteCountsArgsValidator =
+  listContentRouteCountsArgsObjectValidator.fields;
+export type ListContentRouteCountsArgs = Infer<
+  typeof listContentRouteCountsArgsObjectValidator
+>;
 
 export const listContentRouteCountsReturnValidator = v.array(
   runtimeContentRouteCountValidator
 );
 
-const getPublicRouteByPathArgsObjectValidator = v.object({
-  locale: localeValidator,
-  publicPath: v.string(),
-});
-
-export const getPublicRouteByPathArgsValidator =
-  getPublicRouteByPathArgsObjectValidator.fields;
-export type GetPublicRouteByPathArgs = Infer<
-  typeof getPublicRouteByPathArgsObjectValidator
->;
-export const getPublicRouteByPathReturnValidator = nullable(
-  runtimePublicRouteValidator
-);
-
-const listPublicRoutesByParentArgsObjectValidator = v.object({
-  cursor: v.union(v.string(), v.null()),
-  kind: publicRouteKindValidator,
-  limit: v.number(),
-  locale: localeValidator,
-  parentPath: v.optional(v.string()),
-  programKey: v.optional(v.string()),
-});
-
-export const listPublicRoutesByParentArgsValidator =
-  listPublicRoutesByParentArgsObjectValidator.fields;
-export type ListPublicRoutesByParentArgs = Infer<
-  typeof listPublicRoutesByParentArgsObjectValidator
->;
-export const listPublicRoutesPageReturnValidator =
-  paginatedPublicRoutesValidator;
-
-const listPublicRoutesByMaterialArgsObjectValidator = v.object({
-  limit: v.number(),
-  locale: localeValidator,
-  materialKey: v.string(),
-});
-
-export const listPublicRoutesByMaterialArgsValidator =
-  listPublicRoutesByMaterialArgsObjectValidator.fields;
-export type ListPublicRoutesByMaterialArgs = Infer<
-  typeof listPublicRoutesByMaterialArgsObjectValidator
->;
-export const listPublicRoutesByMaterialReturnValidator = v.array(
-  runtimePublicRouteValidator
-);
-
-const listSitemapPublicRoutesArgsObjectValidator = v.object({
-  cursor: v.union(v.string(), v.null()),
-  limit: v.number(),
-  locale: localeValidator,
-});
-
-export const listSitemapPublicRoutesArgsValidator =
-  listSitemapPublicRoutesArgsObjectValidator.fields;
-export type ListSitemapPublicRoutesArgs = Infer<
-  typeof listSitemapPublicRoutesArgsObjectValidator
->;
-export const listSitemapPublicRoutesReturnValidator =
-  paginatedPublicRoutesValidator;
-
-export const getContentRouteArgsValidator = {
+const getContentRouteArgsObjectValidator = v.object({
   locale: localeValidator,
   route: v.string(),
-};
+});
+export const getContentRouteArgsValidator =
+  getContentRouteArgsObjectValidator.fields;
+export type GetContentRouteArgs = Infer<
+  typeof getContentRouteArgsObjectValidator
+>;
 
 export const getContentRouteReturnValidator = nullable(
   runtimeContentRouteValidator
 );
 
-export const getContentRouteByContentIdArgsValidator = {
+const getContentRouteByContentIdArgsObjectValidator = v.object({
   contentId: v.string(),
-};
+});
+export const getContentRouteByContentIdArgsValidator =
+  getContentRouteByContentIdArgsObjectValidator.fields;
+export type GetContentRouteByContentIdArgs = Infer<
+  typeof getContentRouteByContentIdArgsObjectValidator
+>;
 
 export const getContentRouteByContentIdReturnValidator = nullable(
   runtimeContentRouteValidator
@@ -543,6 +497,3 @@ export const getQuranReferenceReturnValidator = nullable(
     ),
   })
 );
-
-export const contentRuntimeIntegrityErrorCode =
-  "CONTENT_RUNTIME_INTEGRITY_ERROR";

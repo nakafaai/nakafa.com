@@ -2,7 +2,7 @@ import {
   getPublicContentRouteCheck,
   type PublicContentRouteCheck,
 } from "@repo/contents/_lib/manifest/public-route";
-import { findPublicContentRouteByPathEffect } from "@repo/contents/_types/route/projection";
+import { findPublicContentRouteByPath } from "@repo/contents/_types/route/content";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
 import { Effect, Option } from "effect";
 import type { Locale } from "next-intl";
@@ -20,24 +20,21 @@ import { formatRouteTitle } from "@/lib/llms/format";
 import { getQuranRouteMetadata } from "@/lib/llms/quran";
 import {
   baseRoutes,
-  buildSitemapContentPageRoutesEffect,
+  buildSitemapContentPageRoutes,
 } from "@/lib/sitemap/routes";
 
 const LLMS_ENTRY_BUILD_CONCURRENCY = 16;
 const LLMS_LISTING_ENTRY_LIMIT = 100;
+type ParentListingRowsArgs = Omit<
+  Parameters<typeof getRuntimeContentRouteParentPage>[0],
+  "cursor" | "limit"
+>;
+
 const materialRouteNamespaces = new Set<string>(
   PUBLIC_ROUTE_SURFACES.filter(
     (surface) => surface.key === "subject" || surface.key === "exercises"
   ).flatMap((surface) => Object.values(surface.routeSlugs))
 );
-
-interface ParentListingRowsArgs {
-  kind: "article" | "exercise-group" | "curriculum-topic";
-  locale: Locale;
-  order: "date-desc" | "route";
-  parentRoute: string;
-  section: "articles" | "material";
-}
 
 /** Classifies a sitemap route into the llms section that owns it. */
 export function getRouteSection(route: string): LlmsSection {
@@ -98,7 +95,7 @@ export const getContentPageLlmsEntries = Effect.fn(
     return [];
   }
 
-  const sitemapRoutes = yield* buildSitemapContentPageRoutesEffect(
+  const sitemapRoutes = yield* buildSitemapContentPageRoutes(
     artifactPage.routes
   );
   const routes = sitemapRoutes.filter(
@@ -297,10 +294,7 @@ const getContentRouteMetadata = Effect.fn("www.llms.contentRouteMetadata")(
 /** Converts projected public material/practice paths to runtime source routes. */
 const getRuntimeContentLookupPath = Effect.fn("www.llms.contentLookupPath")(
   function* (contentPath: string, locale: Locale) {
-    const route = yield* findPublicContentRouteByPathEffect(
-      contentPath,
-      locale
-    );
+    const route = yield* findPublicContentRouteByPath(contentPath, locale);
 
     return Option.match(route, {
       onNone: () => contentPath,

@@ -1,8 +1,8 @@
 import {
   getProgramKeysForMaterialRoute,
   getProgramKeysForMaterialRouteFromNodes,
-  listCurriculumNodesEffect,
   type ProjectedCurriculumNode,
+  projectCurriculumNodes,
 } from "@repo/contents/_types/curriculum/projection";
 import { getCurriculumLensScopeForKind } from "@repo/contents/_types/graph/schema";
 import { normalizeGraphRoute } from "@repo/contents/_types/learning-graph";
@@ -32,12 +32,12 @@ interface LearningProgramCoverageInputsArgs {
   syncedAt: number;
 }
 
-/** Effect-native coverage projection entrypoint for sync boundaries. */
-export const createLearningProgramCoverageInputsEffect = Effect.fn(
-  "contents.program.createLearningProgramCoverageInputs"
+/** Projects coverage rows at sync boundaries after loading curriculum mappings. */
+export const projectLearningProgramCoverageInputs = Effect.fn(
+  "contents.program.projectLearningProgramCoverageInputs"
 )(function* (args: LearningProgramCoverageInputsArgs) {
   const curriculumNodes =
-    args.curriculumNodes ?? (yield* listCurriculumNodesEffect());
+    args.curriculumNodes ?? (yield* projectCurriculumNodes());
 
   return createLearningProgramCoverageInputs({
     ...args,
@@ -120,6 +120,7 @@ export function createCurriculumCoverageInputs({
   });
 }
 
+/** Aggregates route coverage by program, locale, and lens while preserving stable sample content IDs. */
 function createCoverageInputsFromProgramKeys({
   programs,
   resolveProgramKeys,
@@ -250,6 +251,7 @@ function matchesCoverageAlignment(
   return true;
 }
 
+/** Builds the stable dedupe/sort key for one generated program coverage row. */
 function getCoverageRowKey(row: {
   lensId: string;
   locale: string;
@@ -258,6 +260,7 @@ function getCoverageRowKey(row: {
   return `${row.programKey}|${row.locale}|${row.lensId}`;
 }
 
+/** Orders generated coverage rows deterministically for sync and tests. */
 function compareCoverageRows(
   left: { lensId: string; locale: string; programKey: string },
   right: { lensId: string; locale: string; programKey: string }

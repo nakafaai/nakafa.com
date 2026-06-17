@@ -9,10 +9,14 @@ export const igcseMathematicsUnitNodes = [
     order: 20,
     translations: {
       en: {
+        description:
+          "Study equations, sequences, functions, and graphs as connected algebra tools.",
         routeSlug: "algebra-and-graphs",
         title: "Algebra and graphs",
       },
       id: {
+        description:
+          "Pelajari persamaan, barisan, fungsi, dan grafik sebagai alat aljabar yang saling terhubung.",
         routeSlug: "aljabar-dan-grafik",
         title: "Aljabar dan grafik",
       },
@@ -49,10 +53,14 @@ export const igcseMathematicsUnitNodes = [
     order: 30,
     translations: {
       en: {
+        description:
+          "Use circle, coordinate, mensuration, and trigonometry ideas to solve shape problems.",
         routeSlug: "geometry-mensuration-and-trigonometry",
         title: "Geometry, mensuration, and trigonometry",
       },
       id: {
+        description:
+          "Gunakan konsep lingkaran, koordinat, pengukuran, dan trigonometri untuk soal bentuk.",
         routeSlug: "geometri-pengukuran-dan-trigonometri",
         title: "Geometri, pengukuran, dan trigonometri",
       },
@@ -89,10 +97,14 @@ export const igcseMathematicsUnitNodes = [
     order: 40,
     translations: {
       en: {
+        description:
+          "Describe movement, direction, and position with transformations and vectors.",
         routeSlug: "transformations-and-vectors",
         title: "Transformations and vectors",
       },
       id: {
+        description:
+          "Jelaskan perpindahan, arah, dan posisi dengan transformasi dan vektor.",
         routeSlug: "transformasi-dan-vektor",
         title: "Transformasi dan vektor",
       },
@@ -117,10 +129,14 @@ export const igcseMathematicsUnitNodes = [
     order: 50,
     translations: {
       en: {
+        description:
+          "Interpret probability situations and data summaries before drawing conclusions.",
         routeSlug: "probability-and-statistics",
         title: "Probability and statistics",
       },
       id: {
+        description:
+          "Tafsirkan peluang dan ringkasan data sebelum menarik kesimpulan.",
         routeSlug: "peluang-dan-statistika",
         title: "Peluang dan statistika",
       },

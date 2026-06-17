@@ -1,5 +1,11 @@
 import { getHeadings } from "@repo/contents/_lib/toc";
 import { formatContentDateISO } from "@repo/contents/_shared/date";
+import {
+  isMaterialLessonRoute,
+  readMaterialPagination,
+  toLocalizedContentHref,
+} from "@repo/contents/_types/route/content";
+import type { PublicContentRoute } from "@repo/contents/_types/route/schema";
 import { ArticleJsonLd } from "@repo/seo/json-ld/article";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
@@ -10,16 +16,12 @@ import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import {
-  getMaterialPagination,
   getProjectedMaterialIcon,
-  isMaterialLessonRoute,
   listMaterialStaticParams,
   MATERIAL_ROUTES,
-  type MaterialLessonRoute,
   readMaterialHeaderLink,
   requireParentMaterialRoute,
   resolveMaterialRoute,
-  toLocalizedHref,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
 import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
 import { DeferredComments } from "@/components/comments/deferred";
@@ -63,7 +65,7 @@ export async function generateMetadata({
   params,
 }: MaterialPageProps): Promise<Metadata> {
   const { locale, route } = await resolveMaterialRoute(params);
-  const path = toLocalizedHref(route);
+  const path = toLocalizedContentHref(route);
   const runtimeLesson = await fetchRuntimeCurriculumPage({
     locale,
     slug: route.sourcePath,
@@ -175,7 +177,7 @@ async function MaterialLessonPage({
   };
   locale: Locale;
   parentTitle: string;
-  route: MaterialLessonRoute;
+  route: PublicContentRoute;
   toolbar: ReactNode;
 }) {
   const tCommon = await getTranslations({ locale, namespace: "Common" });
@@ -183,7 +185,7 @@ async function MaterialLessonPage({
   const raw = content.body;
   const headings = getHeadings(raw);
   const metadata = content.metadata;
-  const pagination = getMaterialPagination(route);
+  const pagination = readMaterialPagination(route, MATERIAL_ROUTES);
   const publishedAt = Option.getOrElse(
     formatContentDateISO(metadata.date),
     () => metadata.date
@@ -201,7 +203,7 @@ async function MaterialLessonPage({
       <BreadcrumbJsonLd
         breadcrumbItems={createBreadcrumbItems(locale, [
           { name: tCommon("home"), path: "" },
-          { name: metadata.title, path: toLocalizedHref(route) },
+          { name: metadata.title, path: toLocalizedContentHref(route) },
         ])}
       />
       <ArticleJsonLd
@@ -210,7 +212,7 @@ async function MaterialLessonPage({
         description={metadata.description ?? metadata.subject ?? ""}
         headline={metadata.title}
         image={getOgUrl(locale, route.publicPath)}
-        url={toLocalizedHref(route)}
+        url={toLocalizedContentHref(route)}
       />
       <LearningResourceJsonLd
         author={authorJsonLd}
@@ -225,7 +227,7 @@ async function MaterialLessonPage({
             content={raw}
             icon={icon}
             link={headerLink}
-            slug={toLocalizedHref(route)}
+            slug={toLocalizedContentHref(route)}
             title={metadata.title}
           />
           <LayoutContent>
@@ -246,7 +248,7 @@ async function MaterialLessonPage({
           })}
           header={{
             title: metadata.title,
-            href: toLocalizedHref(route),
+            href: toLocalizedContentHref(route),
             description: metadata.description ?? metadata.subject,
           }}
           showComments

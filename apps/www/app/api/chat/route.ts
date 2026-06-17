@@ -190,7 +190,7 @@ export function POST(req: Request) {
       const originalMessageCount = messages.length;
       const { messages: compressedMessages, tokens } =
         compressMessages(messages);
-      const needsPageFetch = yield* determinePageFetchNeed({
+      const needsPageFetch = determinePageFetchNeed({
         messages: compressedMessages,
         url,
         verified,

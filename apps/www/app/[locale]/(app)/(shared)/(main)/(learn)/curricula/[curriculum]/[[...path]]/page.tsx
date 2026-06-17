@@ -111,7 +111,7 @@ export default async function Page({ params }: CurriculumPageProps) {
       <LayoutMaterial>
         <LayoutMaterialContent>
           <HeaderContent
-            description={route.description}
+            description={body.headerDescription}
             icon={getCurriculumRouteIcon(route)}
             link={readCurriculumHeaderLink(locale, route)}
             title={route.title}

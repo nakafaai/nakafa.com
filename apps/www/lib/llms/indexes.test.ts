@@ -36,7 +36,7 @@ vi.mock("@/lib/llms/entries", async () => {
 });
 
 vi.mock("@/lib/sitemap/routes", () => ({
-  getSitemapPageDescriptorsEffect: () =>
+  readSitemapPageDescriptors: () =>
     Effect.succeed([
       { id: "base" },
       {

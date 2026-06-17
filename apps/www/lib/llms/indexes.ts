@@ -23,7 +23,7 @@ import {
 } from "@/lib/llms/format";
 import {
   type ContentSitemapPage,
-  getSitemapPageDescriptorsEffect,
+  readSitemapPageDescriptors,
 } from "@/lib/sitemap/routes";
 
 /** Builds the small root llms index that points agents to section indexes. */
@@ -295,7 +295,7 @@ function getLlmsSectionPages({
   locale: Locale;
   section: Exclude<LlmsSection, "site">;
 }) {
-  return getSitemapPageDescriptorsEffect().pipe(
+  return readSitemapPageDescriptors().pipe(
     Effect.map((pages) =>
       pages.filter(
         (page): page is ContentSitemapPage =>

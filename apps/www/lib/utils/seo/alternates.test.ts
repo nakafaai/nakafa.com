@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { listPublicRoutesEffect } from "@repo/contents/_types/route/projection";
+import { listPublicRoutes } from "@repo/contents/_types/route/projection";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 import {
@@ -81,7 +81,7 @@ describe("createLocalizedAlternates", () => {
   });
 
   it("builds hreflang alternates from projected material routes", () => {
-    const routes = Effect.runSync(listPublicRoutesEffect());
+    const routes = Effect.runSync(listPublicRoutes());
     const route = routes.find(
       (candidate) =>
         candidate.kind === "subject-lesson" &&
@@ -105,7 +105,7 @@ describe("createLocalizedAlternates", () => {
   });
 
   it("omits projected hreflang values when a locale route is absent", () => {
-    const routes = Effect.runSync(listPublicRoutesEffect());
+    const routes = Effect.runSync(listPublicRoutes());
     const route = routes.find(
       (candidate) =>
         candidate.kind === "subject-lesson" &&
@@ -128,7 +128,7 @@ describe("createLocalizedAlternates", () => {
   });
 
   it("builds hreflang alternates for curriculum and assessment contexts", () => {
-    const routes = Effect.runSync(listPublicRoutesEffect());
+    const routes = Effect.runSync(listPublicRoutes());
     const curriculum = routes.find(
       (candidate) =>
         candidate.kind === "curriculum-context" &&

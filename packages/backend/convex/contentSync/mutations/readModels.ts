@@ -1,165 +1,18 @@
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
+import {
+  assessmentNodeRowValidator,
+  curriculumMaterialRowValidator,
+  curriculumNodeRowValidator,
+  generatedProgramRowValidator,
+  materialLocaleRowValidator,
+  materialRowValidator,
+  publicRouteRowValidator,
+  type SyncedPublicRouteRow,
+  syncSummaryValidator,
+} from "@repo/backend/convex/contentSync/mutations/readModels/schema";
 import { internalMutation } from "@repo/backend/convex/functions";
-import {
-  localeValidator,
-  materialValidator,
-} from "@repo/backend/convex/lib/validators/contents";
-import {
-  COVERAGE_STATUS_VALUES,
-  LEARNING_PROGRAM_KIND_VALUES,
-  PROGRAM_NAVIGATION_LEVEL_VALUES,
-  PROGRAM_NAVIGATION_MODEL_VALUES,
-  PROGRAM_PROVIDER_KIND_VALUES,
-  PROGRAM_SOURCE_TYPE_VALUES,
-} from "@repo/contents/_types/program/schema";
-import { PUBLIC_ROUTE_KIND_VALUES } from "@repo/contents/_types/route/schema";
-import { type Infer, v } from "convex/values";
-import { literals } from "convex-helpers/validators";
-
-const syncSummaryValidator = v.object({
-  created: v.number(),
-  unchanged: v.number(),
-  updated: v.number(),
-});
-
-const deleteResultValidator = v.object({
-  deleted: v.number(),
-});
-
-const materialKindValidator = literals("lesson", "practice");
-const coverageStatusValidator = literals(...COVERAGE_STATUS_VALUES);
-const programKindValidator = literals(...LEARNING_PROGRAM_KIND_VALUES);
-const providerKindValidator = literals(...PROGRAM_PROVIDER_KIND_VALUES);
-const sourceTypeValidator = literals(...PROGRAM_SOURCE_TYPE_VALUES);
-const navigationLevelValidator = literals(...PROGRAM_NAVIGATION_LEVEL_VALUES);
-const navigationModelValidator = literals(...PROGRAM_NAVIGATION_MODEL_VALUES);
-const publicRouteKindValidator = literals(...PUBLIC_ROUTE_KIND_VALUES);
-
-const materialConceptValidator = v.object({
-  key: v.string(),
-  source: literals("authored", "generated"),
-});
-
-const localizedMaterialMetadataValidator = v.object({
-  description: v.optional(v.string()),
-  title: v.string(),
-});
-
-const localizedLabelValidator = v.object({
-  description: v.optional(v.string()),
-  routeSlug: v.string(),
-  title: v.string(),
-});
-
-const localizedProgramLabelValidator = v.object({
-  description: v.string(),
-  publicSlug: v.string(),
-  title: v.string(),
-});
-
-const sourceCitationValidator = v.object({
-  label: v.string(),
-  retrievedAt: v.string(),
-  reviewAfter: v.optional(v.string()),
-  type: sourceTypeValidator,
-  url: v.string(),
-});
-
-const navigationValidator = v.object({
-  levels: v.array(navigationLevelValidator),
-  model: navigationModelValidator,
-});
-
-const materialRowValidator = v.object({
-  concepts: v.array(materialConceptValidator),
-  domain: v.string(),
-  key: v.string(),
-  kind: materialKindValidator,
-  route: v.string(),
-});
-
-const materialLocaleRowValidator = v.object({
-  body: v.optional(v.string()),
-  contentHash: v.optional(v.string()),
-  date: v.optional(v.number()),
-  locale: localeValidator,
-  materialKey: v.string(),
-  metadata: localizedMaterialMetadataValidator,
-  route: v.string(),
-  sectionKey: v.optional(v.string()),
-});
-
-const generatedProgramRowValidator = v.object({
-  defaultCoverageStatus: coverageStatusValidator,
-  displayOrder: v.number(),
-  key: v.string(),
-  kind: programKindValidator,
-  navigation: navigationValidator,
-  providerCountry: v.optional(v.string()),
-  providerKind: providerKindValidator,
-  providerName: v.string(),
-  recommendedCountry: v.optional(v.string()),
-  sources: v.array(sourceCitationValidator),
-  translations: v.object({
-    en: localizedProgramLabelValidator,
-    id: localizedProgramLabelValidator,
-  }),
-  versionEndsAt: v.optional(v.string()),
-  versionLabel: v.string(),
-  versionStartsAt: v.optional(v.string()),
-});
-
-const curriculumNodeRowValidator = v.object({
-  curriculumKey: v.string(),
-  displayOrder: v.number(),
-  key: v.string(),
-  level: navigationLevelValidator,
-  parentKey: v.optional(v.string()),
-  translations: v.object({
-    en: localizedLabelValidator,
-    id: localizedLabelValidator,
-  }),
-});
-
-const curriculumMaterialRowValidator = v.object({
-  curriculumKey: v.string(),
-  materialKey: v.string(),
-  nodeKey: v.string(),
-  order: v.number(),
-});
-
-const assessmentNodeRowValidator = v.object({
-  assessmentKey: v.string(),
-  displayOrder: v.number(),
-  key: v.string(),
-  level: navigationLevelValidator,
-  materialKeys: v.array(v.string()),
-  parentKey: v.optional(v.string()),
-  translations: v.object({
-    en: localizedLabelValidator,
-    id: localizedLabelValidator,
-  }),
-});
-
-const publicRouteRowValidator = v.object({
-  canonicalPath: v.optional(v.string()),
-  description: v.optional(v.string()),
-  kind: publicRouteKindValidator,
-  locale: localeValidator,
-  materialDomain: v.optional(materialValidator),
-  materialKey: v.optional(v.string()),
-  nodeKey: v.optional(v.string()),
-  parentPath: v.optional(v.string()),
-  programKey: v.optional(v.string()),
-  publicPath: v.string(),
-  sectionKey: v.optional(v.string()),
-  sitemap: v.boolean(),
-  sourcePath: v.optional(v.string()),
-  title: v.string(),
-});
-type PublicRouteRow = Infer<typeof publicRouteRowValidator>;
-type SyncedPublicRouteRow = PublicRouteRow & { syncedAt: number };
+import { v } from "convex/values";
 
 /** Upserts curriculum-neutral material read models from typed material sources. */
 export const bulkSyncMaterials = internalMutation({
@@ -532,7 +385,10 @@ export const bulkSyncPublicRoutes = internalMutation({
         syncedAt: args.syncedAt,
       };
 
-      if (isSamePublicRoute(existing, next)) {
+      if (existing && isSamePublicRoute(existing, next)) {
+        await ctx.db.patch("publicRoutes", existing._id, {
+          syncedAt: args.syncedAt,
+        });
         unchanged++;
         continue;
       }
@@ -548,155 +404,6 @@ export const bulkSyncPublicRoutes = internalMutation({
     }
 
     return { created, unchanged, updated };
-  },
-});
-
-export const deleteStaleMaterials = internalMutation({
-  args: { limit: v.number(), syncedAt: v.number() },
-  returns: deleteResultValidator,
-  handler: async (ctx, args) => {
-    const staleRows = await ctx.db
-      .query("materials")
-      .withIndex("by_syncedAt", (q) => q.lt("syncedAt", args.syncedAt))
-      .take(args.limit);
-
-    for (const row of staleRows) {
-      await ctx.db.delete(row._id);
-    }
-
-    return { deleted: staleRows.length };
-  },
-});
-
-export const deleteStaleMaterialLocales = internalMutation({
-  args: {
-    limit: v.number(),
-    locale: v.optional(localeValidator),
-    syncedAt: v.number(),
-  },
-  returns: deleteResultValidator,
-  handler: async (ctx, args) => {
-    const locale = args.locale;
-    const staleRows =
-      locale === undefined
-        ? await ctx.db
-            .query("materialLocales")
-            .withIndex("by_syncedAt", (q) => q.lt("syncedAt", args.syncedAt))
-            .take(args.limit)
-        : await ctx.db
-            .query("materialLocales")
-            .withIndex("by_locale_and_syncedAt", (q) =>
-              q.eq("locale", locale).lt("syncedAt", args.syncedAt)
-            )
-            .take(args.limit);
-
-    for (const row of staleRows) {
-      await ctx.db.delete(row._id);
-    }
-
-    return { deleted: staleRows.length };
-  },
-});
-
-export const deleteStaleCurricula = internalMutation({
-  args: { limit: v.number(), syncedAt: v.number() },
-  returns: deleteResultValidator,
-  handler: async (ctx, args) => {
-    const staleRows = await ctx.db
-      .query("curricula")
-      .withIndex("by_syncedAt", (q) => q.lt("syncedAt", args.syncedAt))
-      .take(args.limit);
-
-    for (const row of staleRows) {
-      await ctx.db.delete(row._id);
-    }
-
-    return { deleted: staleRows.length };
-  },
-});
-
-export const deleteStaleCurriculumNodes = internalMutation({
-  args: { limit: v.number(), syncedAt: v.number() },
-  returns: deleteResultValidator,
-  handler: async (ctx, args) => {
-    const staleRows = await ctx.db
-      .query("curriculumNodes")
-      .withIndex("by_syncedAt", (q) => q.lt("syncedAt", args.syncedAt))
-      .take(args.limit);
-
-    for (const row of staleRows) {
-      await ctx.db.delete(row._id);
-    }
-
-    return { deleted: staleRows.length };
-  },
-});
-
-export const deleteStaleCurriculumMaterials = internalMutation({
-  args: { limit: v.number(), syncedAt: v.number() },
-  returns: deleteResultValidator,
-  handler: async (ctx, args) => {
-    const staleRows = await ctx.db
-      .query("curriculumMaterials")
-      .withIndex("by_syncedAt", (q) => q.lt("syncedAt", args.syncedAt))
-      .take(args.limit);
-
-    for (const row of staleRows) {
-      await ctx.db.delete(row._id);
-    }
-
-    return { deleted: staleRows.length };
-  },
-});
-
-export const deleteStaleAssessments = internalMutation({
-  args: { limit: v.number(), syncedAt: v.number() },
-  returns: deleteResultValidator,
-  handler: async (ctx, args) => {
-    const staleRows = await ctx.db
-      .query("assessments")
-      .withIndex("by_syncedAt", (q) => q.lt("syncedAt", args.syncedAt))
-      .take(args.limit);
-
-    for (const row of staleRows) {
-      await ctx.db.delete(row._id);
-    }
-
-    return { deleted: staleRows.length };
-  },
-});
-
-export const deleteStaleAssessmentNodes = internalMutation({
-  args: { limit: v.number(), syncedAt: v.number() },
-  returns: deleteResultValidator,
-  handler: async (ctx, args) => {
-    const staleRows = await ctx.db
-      .query("assessmentNodes")
-      .withIndex("by_syncedAt", (q) => q.lt("syncedAt", args.syncedAt))
-      .take(args.limit);
-
-    for (const row of staleRows) {
-      await ctx.db.delete(row._id);
-    }
-
-    return { deleted: staleRows.length };
-  },
-});
-
-export const deleteStalePublicRoutes = internalMutation({
-  args: { limit: v.number(), syncedAt: v.number() },
-  returns: deleteResultValidator,
-  handler: async (ctx, args) => {
-    const staleRows = await ctx.db
-      .query("publicRoutes")
-      .withIndex("by_syncedAt", (q) => q.lt("syncedAt", args.syncedAt))
-      .take(args.limit);
-
-    for (const row of staleRows) {
-      await ctx.db.delete(row._id);
-    }
-
-    return { deleted: staleRows.length };
   },
 });
 
@@ -722,6 +429,7 @@ function isSamePublicRoute(
     existing.materialDomain === next.materialDomain &&
     existing.materialKey === next.materialKey &&
     existing.nodeKey === next.nodeKey &&
+    existing.order === next.order &&
     existing.parentPath === next.parentPath &&
     existing.programKey === next.programKey &&
     existing.publicPath === next.publicPath &&

@@ -20,7 +20,7 @@ import {
 import type { LlmsFullDocument } from "@/lib/llms/full/types";
 import {
   type ContentSitemapPage,
-  getSitemapPageDescriptorsEffect,
+  readSitemapPageDescriptors,
 } from "@/lib/sitemap/routes";
 
 const LLMS_FULL_CONCURRENCY = availableParallelism();
@@ -101,7 +101,7 @@ const buildLlmsFullShards = Effect.fn("llms.buildLlmsFullShards")(function* (
 
 /** Lists materialized route pages that can own llms-full content documents. */
 function getLlmsFullRoutePageDescriptors() {
-  return getSitemapPageDescriptorsEffect().pipe(
+  return readSitemapPageDescriptors().pipe(
     Effect.map((descriptors) =>
       descriptors.filter(
         (descriptor): descriptor is ContentSitemapPage =>

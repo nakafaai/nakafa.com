@@ -11,7 +11,7 @@ import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  buildSitemapContentPageRoutesEffect,
+  buildSitemapContentPageRoutes,
   getSitemapPageDescriptor,
   getSitemapPageDescriptors,
   getSitemapRoutes,
@@ -149,7 +149,7 @@ describe("sitemap route discovery", () => {
 
   it("derives parent routes from concrete route catalog rows", async () => {
     await expect(
-      Effect.runPromise(buildSitemapContentPageRoutesEffect(routeRows))
+      Effect.runPromise(buildSitemapContentPageRoutes(routeRows))
     ).resolves.toEqual([
       "/articles/politics",
       "/articles/politics/dynastic-politics-asian-values",
@@ -165,7 +165,7 @@ describe("sitemap route discovery", () => {
   it("does not create public practice routes for stale source paths", async () => {
     await expect(
       Effect.runPromise(
-        buildSitemapContentPageRoutesEffect([
+        buildSitemapContentPageRoutes([
           routeProjectionRow(
             {
               locale: "en",
@@ -182,9 +182,7 @@ describe("sitemap route discovery", () => {
 
   it("skips incomplete or unsupported route projections", async () => {
     await expect(
-      Effect.runPromise(
-        buildSitemapContentPageRoutesEffect(incompleteRouteRows)
-      )
+      Effect.runPromise(buildSitemapContentPageRoutes(incompleteRouteRows))
     ).resolves.toEqual([]);
   });
 });

@@ -4,7 +4,7 @@ import {
   getCurriculumProjectionIssues,
   getProgramKeysForMaterialRoute,
   listCurriculumNodes,
-  listCurriculumNodesEffect,
+  projectCurriculumNodes,
 } from "@repo/contents/_types/curriculum/projection";
 import {
   getCurriculumSourceIssues,
@@ -25,6 +25,7 @@ const CURRICULUM_SOURCE_ROOT = join(process.cwd(), "curriculum");
 const LEARNING_PROGRAM_KEY_PATTERN = /^[a-z0-9]+(?:[.-][a-z0-9]+)*$/;
 const PUBLIC_ROUTE_FOLDER_PATTERN = /subject\/|exercises\//;
 
+/** Reads authored curriculum source files so registry guardrails inspect real checked-in modules. */
 function readCurriculumSourceFiles(directory: string): string[] {
   const sources: string[] = [];
 
@@ -88,7 +89,7 @@ describe("curriculum registry", () => {
   });
 
   it("projects curriculum nodes through the Effect entrypoint", async () => {
-    const nodes = await Effect.runPromise(listCurriculumNodesEffect());
+    const nodes = await Effect.runPromise(projectCurriculumNodes());
 
     expect(nodes.some((node) => node.key === "class-10")).toBe(true);
   });
@@ -281,7 +282,7 @@ describe("curriculum registry", () => {
     });
 
     await expect(
-      Effect.runPromise(listCurriculumNodesEffect({ curricula: [invalid] }))
+      Effect.runPromise(projectCurriculumNodes({ curricula: [invalid] }))
     ).rejects.toThrow(
       "Unknown material key missing.material in fixture-program:target"
     );

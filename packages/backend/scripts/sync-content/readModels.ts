@@ -1,10 +1,4 @@
-import { join } from "node:path";
 import { internal } from "@repo/backend/convex/_generated/api";
-import {
-  computeHash,
-  parseDateToEpoch,
-  readMdxFile,
-} from "@repo/backend/scripts/lib/mdx-parser/content";
 import { callConvexMutation } from "@repo/backend/scripts/sync-content/convex";
 import {
   formatDuration,
@@ -16,7 +10,13 @@ import {
   formatBatchProgress,
   updateBatchProgress,
 } from "@repo/backend/scripts/sync-content/metrics";
-import { CONTENTS_DIR } from "@repo/backend/scripts/sync-content/paths";
+import {
+  readAssessmentRows,
+  readCurriculumRows,
+  readMaterialLocaleRows,
+  readMaterialRows,
+  readPublicRouteRows,
+} from "@repo/backend/scripts/sync-content/readModels/rows";
 import {
   BATCH_SIZES,
   GeneratedReadModelDeleteResultSchema,
@@ -27,53 +27,12 @@ import type {
   SyncOptions,
   SyncResult,
 } from "@repo/backend/scripts/sync-content/types";
-import { listAssessments } from "@repo/contents/_types/assessment/registry";
-import { listCurriculumNodesEffect } from "@repo/contents/_types/curriculum/projection";
-import { listCurricula } from "@repo/contents/_types/curriculum/registry";
-import {
-  listLessonMaterialSources,
-  listMaterials,
-  listPracticeMaterialSources,
-} from "@repo/contents/_types/material/registry";
-import type { MaterialLocale } from "@repo/contents/_types/material/schema";
-import { findLearningProgramByKey } from "@repo/contents/_types/program/catalog";
-import type { LearningProgram } from "@repo/contents/_types/program/schema";
-import { listPublicRoutesEffect } from "@repo/contents/_types/route/projection";
-import type { PublicRoute } from "@repo/contents/_types/route/schema";
 import type {
   DefaultFunctionArgs,
   FunctionArgs,
   FunctionReference,
 } from "convex/server";
 import { Effect } from "effect";
-
-type MaterialPayload = FunctionArgs<
-  typeof internal.contentSync.mutations.readModels.bulkSyncMaterials
->["materials"][number];
-
-type MaterialLocalePayload = FunctionArgs<
-  typeof internal.contentSync.mutations.readModels.bulkSyncMaterialLocales
->["locales"][number];
-
-type GeneratedProgramPayload = FunctionArgs<
-  typeof internal.contentSync.mutations.readModels.bulkSyncCurricula
->["curricula"][number];
-
-type CurriculumNodePayload = FunctionArgs<
-  typeof internal.contentSync.mutations.readModels.bulkSyncCurriculumNodes
->["nodes"][number];
-
-type CurriculumMaterialPayload = FunctionArgs<
-  typeof internal.contentSync.mutations.readModels.bulkSyncCurriculumMaterials
->["mappings"][number];
-
-type AssessmentNodePayload = FunctionArgs<
-  typeof internal.contentSync.mutations.readModels.bulkSyncAssessmentNodes
->["nodes"][number];
-
-type PublicRoutePayload = FunctionArgs<
-  typeof internal.contentSync.mutations.readModels.bulkSyncPublicRoutes
->["routes"][number];
 
 type SyncMutation = FunctionReference<
   "mutation",
@@ -88,8 +47,6 @@ type DeleteMutation = FunctionReference<
   DefaultFunctionArgs,
   { deleted: number }
 >;
-
-const MATERIAL_LOCALES: readonly MaterialLocale[] = ["en", "id"];
 
 /** Syncs final generated material, curriculum, and assessment read models. */
 export const syncGeneratedReadModels = Effect.fn("sync.generatedReadModels")(
@@ -146,18 +103,13 @@ export const syncGeneratedReadModels = Effect.fn("sync.generatedReadModels")(
   }
 );
 
+/** Writes stable material catalog rows before locale-specific body rows. */
 const syncMaterials = Effect.fn("sync.generatedMaterials")(function* (
   config: ConvexConfig,
   syncedAt: number,
   options: SyncOptions
 ) {
-  const rows: MaterialPayload[] = listMaterials().map((material) => ({
-    concepts: [],
-    domain: material.domain,
-    key: material.key,
-    kind: material.kind,
-    route: material.assetRoot,
-  }));
+  const rows = readMaterialRows();
 
   return yield* syncBatches({
     batchSize: BATCH_SIZES.generatedMaterials,
@@ -170,11 +122,10 @@ const syncMaterials = Effect.fn("sync.generatedMaterials")(function* (
   });
 });
 
+/** Writes localized lesson and practice material rows for the selected locale scope. */
 const syncMaterialLocales = Effect.fn("sync.generatedMaterialLocales")(
   function* (config: ConvexConfig, syncedAt: number, options: SyncOptions) {
-    const lessonRows = yield* readLessonMaterialLocaleRows(options);
-    const practiceRows = readPracticeMaterialLocaleRows(options);
-    const rows = [...lessonRows, ...practiceRows];
+    const rows = yield* readMaterialLocaleRows(options);
 
     return yield* syncBatches({
       batchSize: BATCH_SIZES.generatedMaterialLocales,
@@ -189,34 +140,14 @@ const syncMaterialLocales = Effect.fn("sync.generatedMaterialLocales")(
   }
 );
 
+/** Writes curriculum program rows, hierarchy nodes, and material mappings together. */
 const syncCurricula = Effect.fn("sync.generatedCurricula")(function* (
   config: ConvexConfig,
   syncedAt: number,
   options: SyncOptions
 ) {
-  const curricula = listCurricula();
-  const curriculumNodes = yield* listCurriculumNodesEffect({ curricula });
-  const curriculumRows = curricula.flatMap((curriculum) => {
-    const program = findLearningProgramByKey(curriculum.programKey);
-    return program ? [toGeneratedProgramRow(program)] : [];
-  });
-  const nodeRows: CurriculumNodePayload[] = curriculumNodes.map((node) => ({
-    curriculumKey: node.curriculumKey,
-    displayOrder: node.order,
-    key: node.key,
-    level: node.level,
-    parentKey: node.parentKey,
-    translations: node.translations,
-  }));
-  const materialRows: CurriculumMaterialPayload[] = curriculumNodes.flatMap(
-    (node) =>
-      node.materialKeys.map((materialKey, index) => ({
-        curriculumKey: node.curriculumKey,
-        materialKey,
-        nodeKey: node.key,
-        order: index,
-      }))
-  );
+  const { curriculumRows, materialRows, nodeRows } =
+    yield* readCurriculumRows();
 
   return yield* Effect.gen(function* () {
     const curriculumResult = yield* syncBatches({
@@ -253,27 +184,13 @@ const syncCurricula = Effect.fn("sync.generatedCurricula")(function* (
   });
 });
 
+/** Writes assessment program rows and source-owned assessment nodes. */
 const syncAssessments = Effect.fn("sync.generatedAssessments")(function* (
   config: ConvexConfig,
   syncedAt: number,
   options: SyncOptions
 ) {
-  const assessments = listAssessments();
-  const assessmentRows = assessments.flatMap((assessment) => {
-    const program = findLearningProgramByKey(assessment.programKey);
-    return program ? [toGeneratedProgramRow(program)] : [];
-  });
-  const nodeRows: AssessmentNodePayload[] = assessments.flatMap((assessment) =>
-    assessment.nodes.map((node) => ({
-      assessmentKey: assessment.programKey,
-      displayOrder: node.order,
-      key: node.key,
-      level: node.level,
-      materialKeys: [...node.materialKeys],
-      parentKey: node.parentKey,
-      translations: node.translations,
-    }))
-  );
+  const { assessmentRows, nodeRows } = readAssessmentRows();
 
   return yield* Effect.gen(function* () {
     const assessmentResult = yield* syncBatches({
@@ -300,13 +217,13 @@ const syncAssessments = Effect.fn("sync.generatedAssessments")(function* (
   });
 });
 
+/** Writes the unified public route read model used by app, SEO, and lookup paths. */
 const syncPublicRoutes = Effect.fn("sync.generatedPublicRoutes")(function* (
   config: ConvexConfig,
   syncedAt: number,
   options: SyncOptions
 ) {
-  const routes = yield* listPublicRoutesEffect();
-  const rows = routes.map(toPublicRoutePayload);
+  const rows = yield* readPublicRouteRows();
 
   return yield* syncBatches({
     batchSize: BATCH_SIZES.generatedPublicRoutes,
@@ -319,158 +236,7 @@ const syncPublicRoutes = Effect.fn("sync.generatedPublicRoutes")(function* (
   });
 });
 
-const readLessonMaterialLocaleRows = Effect.fn(
-  "sync.readLessonMaterialLocaleRows"
-)(function* (options: SyncOptions) {
-  const rows: MaterialLocalePayload[] = [];
-  const locales = getLocales(options);
-
-  for (const material of listLessonMaterialSources()) {
-    for (const locale of locales) {
-      for (const section of material.sections) {
-        const route = `${material.assetRoot}/${section.slug}`;
-        const mdx = yield* readMdxFile(getMaterialMdxPath(route, locale));
-        const date = yield* parseDateToEpoch(mdx.metadata.date);
-
-        rows.push({
-          body: mdx.body,
-          contentHash: mdx.contentHash,
-          date,
-          locale,
-          materialKey: material.key,
-          metadata: {
-            description: mdx.metadata.description,
-            title: mdx.metadata.title,
-          },
-          route,
-          sectionKey: section.slug,
-        });
-      }
-    }
-  }
-
-  return rows;
-});
-
-function getMaterialMdxPath(route: string, locale: MaterialLocale) {
-  return join(CONTENTS_DIR, route, `${locale}.mdx`);
-}
-
-function readPracticeMaterialLocaleRows(options: SyncOptions) {
-  const rows: MaterialLocalePayload[] = [];
-  const locales = getLocales(options);
-
-  for (const material of listPracticeMaterialSources()) {
-    for (const locale of locales) {
-      for (const group of material.groups) {
-        const groupRoute = getPracticeGroupRoute(material.assetRoot, group);
-
-        for (const set of group.sets) {
-          const route = `${groupRoute}/${set.slug}`;
-          rows.push({
-            contentHash: computeHash(
-              JSON.stringify({
-                locale,
-                materialKey: material.key,
-                route,
-                title: set.translations[locale].title,
-              })
-            ),
-            locale,
-            materialKey: material.key,
-            metadata: {
-              description: group.translations[locale].description,
-              title: set.translations[locale].title,
-            },
-            route,
-            sectionKey: route,
-          });
-        }
-      }
-    }
-  }
-
-  return rows;
-}
-
-function getPracticeGroupRoute(
-  assetRoot: string,
-  group: ReturnType<
-    typeof listPracticeMaterialSources
-  >[number]["groups"][number]
-) {
-  const exerciseType =
-    group.year === undefined
-      ? group.exerciseType
-      : `${group.exerciseType}-${group.year}`;
-
-  return `${assetRoot}/${exerciseType}`;
-}
-
-function getLocales(options: SyncOptions): readonly MaterialLocale[] {
-  return options.locale === undefined ? MATERIAL_LOCALES : [options.locale];
-}
-
-function toGeneratedProgramRow(
-  program: LearningProgram
-): GeneratedProgramPayload {
-  return {
-    defaultCoverageStatus: program.defaultCoverageStatus,
-    displayOrder: program.displayOrder,
-    key: program.key,
-    kind: program.kind,
-    navigation: {
-      levels: [...program.navigation.levels],
-      model: program.navigation.model,
-    },
-    providerCountry: program.provider.country,
-    providerKind: program.provider.kind,
-    providerName: program.provider.name,
-    recommendedCountry: program.recommendedCountry,
-    sources: program.sources.map((source) => ({
-      label: source.label,
-      retrievedAt: source.retrievedAt,
-      reviewAfter: source.reviewAfter,
-      type: source.type,
-      url: source.url,
-    })),
-    translations: {
-      en: { ...program.translations.en },
-      id: { ...program.translations.id },
-    },
-    versionEndsAt: program.version.endsAt,
-    versionLabel: program.version.label,
-    versionStartsAt: program.version.startsAt,
-  };
-}
-
-/**
- * Converts one source-owned route projection into the Convex route read model.
- *
- * Optional fields stay absent for route kinds that do not own that dimension:
- * content rows own `sourcePath`, context rows own `programKey`/`nodeKey`, and
- * material-backed rows expose `materialKey` for reverse lookup.
- */
-function toPublicRoutePayload(route: PublicRoute): PublicRoutePayload {
-  return {
-    canonicalPath: "canonicalPath" in route ? route.canonicalPath : undefined,
-    description: route.description,
-    kind: route.kind,
-    locale: route.locale,
-    materialDomain:
-      "materialDomain" in route ? route.materialDomain : undefined,
-    materialKey: "materialKey" in route ? route.materialKey : undefined,
-    nodeKey: "nodeKey" in route ? route.nodeKey : undefined,
-    parentPath: route.parentPath,
-    programKey: "programKey" in route ? route.programKey : undefined,
-    publicPath: route.publicPath,
-    sectionKey: "sectionKey" in route ? route.sectionKey : undefined,
-    sitemap: route.sitemap,
-    sourcePath: "sourcePath" in route ? route.sourcePath : undefined,
-    title: route.title,
-  };
-}
-
+/** Combines independent batch sync totals without changing row-level semantics. */
 function combineSyncResults(results: readonly SyncResult[]): SyncResult {
   return results.reduce(
     (total, result) => ({
@@ -482,6 +248,12 @@ function combineSyncResults(results: readonly SyncResult[]): SyncResult {
   );
 }
 
+/**
+ * Sends rows to one Convex mutation in bounded batches.
+ *
+ * The caller owns row construction and mutation argument shape; this Module owns
+ * batch progress, result validation, and aggregate totals.
+ */
 function syncBatches<Row, TFunction extends SyncMutation>({
   batchSize,
   config,
@@ -535,58 +307,74 @@ function syncBatches<Row, TFunction extends SyncMutation>({
   });
 }
 
+/** Deletes generated read-model rows whose `syncedAt` was not refreshed. */
 const deleteStaleGeneratedReadModels = Effect.fn(
   "sync.deleteStaleGeneratedReadModels"
 )(function* (config: ConvexConfig, syncedAt: number, options: SyncOptions) {
-  const deleted =
-    (yield* deleteAllStaleRows(
-      config,
-      internal.contentSync.mutations.readModels.deleteStaleMaterialLocales,
-      {
-        limit: BATCH_SIZES.generatedMaterialLocales,
-        locale: options.locale,
-        syncedAt,
-      }
-    )) +
-    (yield* deleteAllStaleRows(
-      config,
-      internal.contentSync.mutations.readModels.deleteStaleMaterials,
-      { limit: BATCH_SIZES.generatedMaterials, syncedAt }
-    )) +
-    (yield* deleteAllStaleRows(
-      config,
-      internal.contentSync.mutations.readModels.deleteStaleCurriculumMaterials,
-      { limit: BATCH_SIZES.generatedCurriculumMaterials, syncedAt }
-    )) +
-    (yield* deleteAllStaleRows(
-      config,
-      internal.contentSync.mutations.readModels.deleteStaleCurriculumNodes,
-      { limit: BATCH_SIZES.generatedCurriculumNodes, syncedAt }
-    )) +
-    (yield* deleteAllStaleRows(
-      config,
-      internal.contentSync.mutations.readModels.deleteStaleCurricula,
-      { limit: BATCH_SIZES.generatedCurricula, syncedAt }
-    )) +
-    (yield* deleteAllStaleRows(
-      config,
-      internal.contentSync.mutations.readModels.deleteStaleAssessmentNodes,
-      { limit: BATCH_SIZES.generatedAssessmentNodes, syncedAt }
-    )) +
-    (yield* deleteAllStaleRows(
-      config,
-      internal.contentSync.mutations.readModels.deleteStaleAssessments,
-      { limit: BATCH_SIZES.generatedAssessments, syncedAt }
-    )) +
-    (yield* deleteAllStaleRows(
-      config,
-      internal.contentSync.mutations.readModels.deleteStalePublicRoutes,
-      { limit: BATCH_SIZES.generatedPublicRoutes, syncedAt }
-    ));
+  const materialLocales = yield* deleteAllStaleRows(
+    config,
+    internal.contentSync.mutations.readModels.stale.deleteStaleMaterialLocales,
+    {
+      limit: BATCH_SIZES.generatedMaterialLocales,
+      locale: options.locale,
+      syncedAt,
+    }
+  );
+  const materials = yield* deleteAllStaleRows(
+    config,
+    internal.contentSync.mutations.readModels.stale.deleteStaleMaterials,
+    { limit: BATCH_SIZES.generatedMaterials, syncedAt }
+  );
+  const curriculumMaterials = yield* deleteAllStaleRows(
+    config,
+    internal.contentSync.mutations.readModels.stale
+      .deleteStaleCurriculumMaterials,
+    { limit: BATCH_SIZES.generatedCurriculumMaterials, syncedAt }
+  );
+  const curriculumNodes = yield* deleteAllStaleRows(
+    config,
+    internal.contentSync.mutations.readModels.stale.deleteStaleCurriculumNodes,
+    { limit: BATCH_SIZES.generatedCurriculumNodes, syncedAt }
+  );
+  const curricula = yield* deleteAllStaleRows(
+    config,
+    internal.contentSync.mutations.readModels.stale.deleteStaleCurricula,
+    { limit: BATCH_SIZES.generatedCurricula, syncedAt }
+  );
+  const assessmentNodes = yield* deleteAllStaleRows(
+    config,
+    internal.contentSync.mutations.readModels.stale.deleteStaleAssessmentNodes,
+    { limit: BATCH_SIZES.generatedAssessmentNodes, syncedAt }
+  );
+  const assessments = yield* deleteAllStaleRows(
+    config,
+    internal.contentSync.mutations.readModels.stale.deleteStaleAssessments,
+    { limit: BATCH_SIZES.generatedAssessments, syncedAt }
+  );
+  const publicRoutes = yield* deleteAllStaleRows(
+    config,
+    internal.contentSync.mutations.readModels.stale.deleteStalePublicRoutes,
+    { limit: BATCH_SIZES.generatedPublicRoutes, syncedAt }
+  );
 
-  return deleted;
+  return (
+    materialLocales +
+    materials +
+    curriculumMaterials +
+    curriculumNodes +
+    curricula +
+    assessmentNodes +
+    assessments +
+    publicRoutes
+  );
 });
 
+/**
+ * Repeats one bounded stale-row deletion mutation until the batch is exhausted.
+ *
+ * Convex mutations stay within transaction limits because every invocation
+ * deletes at most the configured batch size.
+ */
 function deleteAllStaleRows<TFunction extends DeleteMutation>(
   config: ConvexConfig,
   mutation: TFunction,

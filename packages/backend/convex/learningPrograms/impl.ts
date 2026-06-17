@@ -13,10 +13,8 @@ export function toLearningProgramSummary(
   locale: Locale = defaultLocale
 ) {
   const translation = getProgramTranslation(program, locale);
-
-  return {
+  const summary = {
     coverageStatus: program.defaultCoverageStatus,
-    description: translation.description,
     displayOrder: program.displayOrder,
     key: program.key,
     kind: program.kind,
@@ -24,6 +22,15 @@ export function toLearningProgramSummary(
     publicSlug: translation.publicSlug,
     title: translation.title,
     versionLabel: program.versionLabel,
+  };
+
+  if (!translation.description) {
+    return summary;
+  }
+
+  return {
+    ...summary,
+    description: translation.description,
   };
 }
 
@@ -225,7 +232,6 @@ function getProgramTranslation(
 
   if (!firstTranslation) {
     return {
-      description: program.key,
       publicSlug: program.key,
       title: program.key,
     };

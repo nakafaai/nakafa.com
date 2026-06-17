@@ -1,14 +1,13 @@
 // @vitest-environment node
 import type { NakafaDataPart } from "@repo/ai/schema/data";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import { parseNakafaContentRef } from "@repo/contents/_lib/agent/refs";
+import { resolveNakafaContentRef } from "@repo/contents/_lib/agent/refs";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
 import { Effect, Option } from "effect";
 import { describe, expect, it } from "vitest";
 import {
   determinePageFetchNeed,
   getCanonicalCurrentPageContentUrl,
-  getCanonicalNakafaContentRefUrlEffect,
   getCanonicalNakafaContentUrl,
   hasFetchedCurrentPageContent,
 } from "@/app/api/chat/content";
@@ -27,7 +26,7 @@ function contentMessage({
   url: string;
   status: ContentStatus;
 }) {
-  const contentRef = Effect.runSync(getCanonicalNakafaContentRefUrlEffect(url));
+  const contentRef = getCanonicalNakafaContentUrl(url);
 
   if (status === "loading") {
     return {
@@ -70,11 +69,17 @@ function contentMessage({
     } satisfies MyUIMessage;
   }
 
-  const parsedRef = parseNakafaContentRef(contentRef);
-
-  if (Option.isNone(parsedRef)) {
-    throw new Error(`Expected a valid content URL fixture: ${url}`);
-  }
+  const parsedRef = Effect.runSync(
+    resolveNakafaContentRef(contentRef).pipe(
+      Effect.flatMap(
+        Option.match({
+          onNone: () =>
+            Effect.dieMessage(`Expected a valid content URL fixture: ${url}`),
+          onSome: (ref) => Effect.succeed(ref),
+        })
+      )
+    )
+  );
 
   return {
     id: `message-${status}`,
@@ -90,7 +95,7 @@ function contentMessage({
           },
           status,
           result: {
-            ...parsedRef.value,
+            ...parsedRef,
             title: "Rational Function",
             description: "",
           },
@@ -116,47 +121,37 @@ describe("app/api/chat/content", () => {
     ).toBe("https://nakafa.com/id/quran/1");
   });
 
-  it("keeps unknown locale prefixes as public URLs", async () => {
-    await expect(
-      Effect.runPromise(
-        getCanonicalNakafaContentRefUrlEffect(
-          "/fr/subjects/mathematics/integral/riemann-sum"
-        )
+  it("keeps unknown locale prefixes as public URLs", () => {
+    expect(
+      getCanonicalNakafaContentUrl(
+        "/fr/subjects/mathematics/integral/riemann-sum"
       )
-    ).resolves.toBe(
-      "https://nakafa.com/fr/subjects/mathematics/integral/riemann-sum"
+    ).toBe("https://nakafa.com/fr/subjects/mathematics/integral/riemann-sum");
+  });
+
+  it("keeps projected practice URLs on canonical public route refs", () => {
+    expect(
+      getCanonicalNakafaContentUrl(
+        "/en/practice/snbt/quantitative-knowledge/mock-test/2026/set-1"
+      )
+    ).toBe(
+      "https://nakafa.com/en/practice/snbt/quantitative-knowledge/mock-test/2026/set-1"
+    );
+    expect(
+      getCanonicalNakafaContentUrl(
+        "/en/practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question-9"
+      )
+    ).toBe(
+      "https://nakafa.com/en/practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question-9"
     );
   });
 
-  it("maps projected practice URLs to source-backed content refs", async () => {
-    await expect(
-      Effect.runPromise(
-        getCanonicalNakafaContentRefUrlEffect(
-          "/en/practice/snbt/quantitative-knowledge/mock-test/2026/set-1"
-        )
+  it("keeps curriculum context URLs as public navigation refs", () => {
+    expect(
+      getCanonicalNakafaContentUrl(
+        "/en/curriculum/merdeka/class-12/mathematics/integral"
       )
-    ).resolves.toBe(
-      "https://nakafa.com/en/material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1"
-    );
-    await expect(
-      Effect.runPromise(
-        getCanonicalNakafaContentRefUrlEffect(
-          "/en/practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question-9"
-        )
-      )
-    ).resolves.toBe(
-      "https://nakafa.com/en/material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-9"
-    );
-  });
-
-  it("keeps curriculum context URLs as public navigation refs", async () => {
-    await expect(
-      Effect.runPromise(
-        getCanonicalNakafaContentRefUrlEffect(
-          "/en/curriculum/merdeka/class-12/mathematics/integral"
-        )
-      )
-    ).resolves.toBe(
+    ).toBe(
       "https://nakafa.com/en/curriculum/merdeka/class-12/mathematics/integral"
     );
   });
@@ -181,9 +176,7 @@ describe("app/api/chat/content", () => {
     const messages = [contentMessage({ url, status })];
 
     expect(
-      Effect.runSync(
-        hasFetchedCurrentPageContent({ messages, url: currentContentUrl })
-      )
+      hasFetchedCurrentPageContent({ messages, url: currentContentUrl })
     ).toBe(expected);
   });
 
@@ -197,9 +190,7 @@ describe("app/api/chat/content", () => {
     ] satisfies MyUIMessage[];
 
     expect(
-      Effect.runSync(
-        hasFetchedCurrentPageContent({ messages, url: currentContentUrl })
-      )
+      hasFetchedCurrentPageContent({ messages, url: currentContentUrl })
     ).toBe(false);
   });
 
@@ -228,32 +219,26 @@ describe("app/api/chat/content", () => {
     ] satisfies MyUIMessage[];
 
     expect(
-      Effect.runSync(
-        hasFetchedCurrentPageContent({ messages, url: currentContentUrl })
-      )
+      hasFetchedCurrentPageContent({ messages, url: currentContentUrl })
     ).toBe(false);
   });
 
   it("does not need a page fetch when the page is unverified", () => {
-    const needsPageFetch = Effect.runSync(
-      determinePageFetchNeed({
-        messages: [],
-        url: currentContentUrl,
-        verified: false,
-      })
-    );
+    const needsPageFetch = determinePageFetchNeed({
+      messages: [],
+      url: currentContentUrl,
+      verified: false,
+    });
 
     expect(needsPageFetch).toBe(false);
   });
 
   it("needs a page fetch for a verified page without a retained fetch", () => {
-    const needsPageFetch = Effect.runSync(
-      determinePageFetchNeed({
-        messages: [],
-        url: currentContentUrl,
-        verified: true,
-      })
-    );
+    const needsPageFetch = determinePageFetchNeed({
+      messages: [],
+      url: currentContentUrl,
+      verified: true,
+    });
 
     expect(needsPageFetch).toBe(true);
   });
@@ -263,13 +248,11 @@ describe("app/api/chat/content", () => {
       locale: "id",
       slug: "/quran/1",
     });
-    const needsPageFetch = Effect.runSync(
-      determinePageFetchNeed({
-        messages: [],
-        url,
-        verified: true,
-      })
-    );
+    const needsPageFetch = determinePageFetchNeed({
+      messages: [],
+      url,
+      verified: true,
+    });
 
     expect(needsPageFetch).toBe(true);
   });
@@ -278,13 +261,11 @@ describe("app/api/chat/content", () => {
     const messages = [
       contentMessage({ url: currentContentUrl, status: "done" }),
     ];
-    const needsPageFetch = Effect.runSync(
-      determinePageFetchNeed({
-        messages,
-        url: currentContentUrl,
-        verified: true,
-      })
-    );
+    const needsPageFetch = determinePageFetchNeed({
+      messages,
+      url: currentContentUrl,
+      verified: true,
+    });
 
     expect(needsPageFetch).toBe(false);
   });

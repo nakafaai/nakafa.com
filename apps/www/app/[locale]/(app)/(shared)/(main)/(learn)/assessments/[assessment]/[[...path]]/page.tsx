@@ -1,5 +1,6 @@
 import { TestTubeIcon } from "@hugeicons/core-free-icons";
-import { listPublicAssessmentRoutesEffect } from "@repo/contents/_types/route/projection";
+import { listPublicAssessmentRoutes } from "@repo/contents/_types/route/assessment";
+import { readPathWithoutNamespace } from "@repo/contents/_types/route/path";
 import { Effect } from "effect";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -15,7 +16,7 @@ import { createProjectedRouteAlternates } from "@/lib/utils/seo/alternates";
 type AssessmentPageProps =
   PageProps<"/[locale]/assessments/[assessment]/[[...path]]">;
 
-const ASSESSMENT_ROUTES = Effect.runSync(listPublicAssessmentRoutesEffect());
+const ASSESSMENT_ROUTES = Effect.runSync(listPublicAssessmentRoutes());
 
 /**
  * Builds assessment context params from projected assessment route rows.
@@ -115,7 +116,7 @@ async function getAssessmentRoute(params: AssessmentPageProps["params"]) {
   const route = ASSESSMENT_ROUTES.find(
     (candidate) =>
       candidate.locale === locale &&
-      getPathWithoutNamespace(candidate.publicPath) === routePath
+      readPathWithoutNamespace(candidate.publicPath) === routePath
   );
 
   if (!route) {
@@ -123,9 +124,4 @@ async function getAssessmentRoute(params: AssessmentPageProps["params"]) {
   }
 
   return { locale, route };
-}
-
-/** Removes the localized route namespace from one projected public path. */
-function getPathWithoutNamespace(publicPath: string) {
-  return publicPath.split("/").slice(1).join("/");
 }
