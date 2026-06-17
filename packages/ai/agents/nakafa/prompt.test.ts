@@ -99,7 +99,7 @@ describe("nakafaAgentPrompt", () => {
           ],
           program: {
             coverageStatus: "partial",
-            key: "id-kurikulum-merdeka",
+            key: "merdeka",
             kind: "school-curriculum",
             title: "Kurikulum Merdeka",
             versionLabel: "Indonesia",

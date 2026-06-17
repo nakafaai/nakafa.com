@@ -66,7 +66,7 @@
       {
         "@type": "Question",
         "name": "セットアップ方法は？",
-        "acceptedAnswer": { "@type": "Answer", "text": "Claude Code: npx skills add tw93/kami -a claude-code -g -y。Claude Code プラグインマーケットプレイス（v2.1.142+）：/plugin marketplace add tw93/kami && /plugin install kami@kami。汎用エージェント：npx skills add tw93/kami -a '*' -g -y。Claude Desktop：GitHub Releases から kami.zip をダウンロードし、Skills 設定でアップロード。" }
+        "acceptedAnswer": { "@type": "Answer", "text": "Claude Code: npx skills add tw93/kami -a claude-code -g -y。Claude Code プラグインマーケットプレイス（v2.1.142+）：/plugin marketplace add tw93/kami && /plugin install kami@kami。Codex plugin marketplace：codex plugin marketplace add tw93/kami && codex plugin add kami@kami。汎用エージェント：npx skills add tw93/kami -a '*' -g -y。Claude Desktop：GitHub Releases から kami.zip をダウンロードし、Skills 設定でアップロード。" }
       },
       {
         "@type": "Question",
@@ -185,9 +185,10 @@
 <pre class="code"><span class="c"># Claude Code</span>
 npx skills add tw93/kami -a claude-code -g -y
 
-<span class="c"># Codex</span>
-npx skills add tw93/kami -a codex -g -y</pre>
-    <p class="section-lede" style="font-size:14px;">Claude Code プラグインマーケットプレイスは v2.1.142+ で利用できます：<code>/plugin marketplace add tw93/kami</code> の後に <code>/plugin install kami@kami</code> を実行してください。</p>
+<span class="c"># Codex plugin marketplace</span>
+codex plugin marketplace add tw93/kami
+codex plugin add kami@kami</pre>
+    <p class="section-lede" style="font-size:14px;">Claude Code プラグインマーケットプレイスは v2.1.142+ で利用できます：<code>/plugin marketplace add tw93/kami</code> の後に <code>/plugin install kami@kami</code> を実行してください。Codex は <code>codex plugin marketplace add tw93/kami</code> の後に <code>codex plugin add kami@kami</code> でインストールします。</p>
     <p class="section-lede" style="font-size:14px;">Claude Desktop の場合は <a href="https://github.com/tw93/kami/releases/latest/download/kami.zip" style="color:var(--brand); text-decoration:none; font-weight:500;">kami.zip</a> をダウンロードし、Customize &gt; Skills &gt; "+" &gt; Create skill からそのままアップロードします。</p>
   </section>
 
@@ -640,7 +641,7 @@ beauty   = constraints × <span class="k">intention</span> ÷ noise</pre>
       </div>
       <div class="faq-pair">
         <dt>セットアップ方法は？</dt>
-        <dd>Claude Code：<code style="font-family:var(--mono); font-size:0.9em; color:var(--brand);">npx skills add tw93/kami -a claude-code -g -y</code>。Claude Code v2.1.142+ ではプラグインマーケットプレイスも使えます：<code style="font-family:var(--mono); font-size:0.9em; color:var(--brand);">/plugin marketplace add tw93/kami</code> の後に <code style="font-family:var(--mono); font-size:0.9em; color:var(--brand);">/plugin install kami@kami</code>。汎用エージェント：<code style="font-family:var(--mono); font-size:0.9em; color:var(--brand);">npx skills add tw93/kami -a '*' -g -y</code>。Claude Desktop：GitHub Releasesからkami.zipをダウンロードし、カスタマイズ &gt; スキルでアップロード。</dd>
+        <dd>Claude Code：<code style="font-family:var(--mono); font-size:0.9em; color:var(--brand);">npx skills add tw93/kami -a claude-code -g -y</code>。Claude Code v2.1.142+ ではプラグインマーケットプレイスも使えます：<code style="font-family:var(--mono); font-size:0.9em; color:var(--brand);">/plugin marketplace add tw93/kami</code> の後に <code style="font-family:var(--mono); font-size:0.9em; color:var(--brand);">/plugin install kami@kami</code>。Codex：<code style="font-family:var(--mono); font-size:0.9em; color:var(--brand);">codex plugin marketplace add tw93/kami</code> の後に <code style="font-family:var(--mono); font-size:0.9em; color:var(--brand);">codex plugin add kami@kami</code>。汎用エージェント：<code style="font-family:var(--mono); font-size:0.9em; color:var(--brand);">npx skills add tw93/kami -a '*' -g -y</code>。Claude Desktop：GitHub Releasesからkami.zipをダウンロードし、カスタマイズ &gt; スキルでアップロード。</dd>
       </div>
       <div class="faq-pair">
         <dt>対応言語は？</dt>

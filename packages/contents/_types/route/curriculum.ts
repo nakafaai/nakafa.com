@@ -38,6 +38,9 @@ import { Effect } from "effect";
 const RENDERABLE_CURRICULUM_LEVELS = new Set<PublicCurriculumRoute["level"]>([
   "class",
   "course",
+  "framework",
+  "qualification",
+  "stage",
   "subject",
   "track",
 ]);
@@ -71,11 +74,11 @@ export const listPublicCurriculumRoutes = Effect.fn(
   const routes: PublicCurriculumRoute[] = [];
 
   for (const curriculum of curricula) {
-    if (!hasCurriculumMaterialDescendant(curriculum, descendantMaterials)) {
-      continue;
-    }
-
     const program = yield* findProgram(curriculum.programKey, programs);
+    const hasMaterialDescendant = hasCurriculumMaterialDescendant(
+      curriculum,
+      descendantMaterials
+    );
 
     for (const locale of locales) {
       const namespace = yield* lookupNamespaceSegment("curriculum", locale);
@@ -88,13 +91,14 @@ export const listPublicCurriculumRoutes = Effect.fn(
         yield* decodeCurriculumRoute({
           description: program.translations[locale].description,
           kind: "curriculum-context",
+          iconKey: program.iconKey,
           level: "track",
           locale,
           nodeKey: `${program.key}:root`,
           order: program.displayOrder,
           programKey: program.key,
           publicPath: programPath,
-          sitemap: true,
+          sitemap: hasMaterialDescendant,
           title: program.translations[locale].title,
         })
       );
@@ -102,11 +106,9 @@ export const listPublicCurriculumRoutes = Effect.fn(
   }
 
   for (const node of projectedNodes) {
-    const materialKeys = descendantMaterials.get(getCurriculumNodeMapKey(node));
-
-    if (!materialKeys || materialKeys.size === 0) {
-      continue;
-    }
+    const materialKeys = new Set(
+      descendantMaterials.get(getCurriculumNodeMapKey(node))
+    );
 
     const program = yield* findProgram(node.curriculumKey, programs);
 
@@ -133,6 +135,9 @@ export const listPublicCurriculumRoutes = Effect.fn(
         yield* decodeCurriculumRoute({
           canonicalPath,
           description: node.translations[locale].description,
+          displayGroupIconKey: node.displayGroupIconKey,
+          displayGroupTitle: node.displayGroup?.[locale].title,
+          iconKey: node.iconKey,
           kind: "curriculum-context",
           level: node.level,
           locale,
@@ -143,7 +148,9 @@ export const listPublicCurriculumRoutes = Effect.fn(
           parentPath: getParentPath(publicPath),
           programKey: node.curriculumKey,
           publicPath,
-          sitemap: RENDERABLE_CURRICULUM_LEVELS.has(node.level),
+          sitemap:
+            RENDERABLE_CURRICULUM_LEVELS.has(node.level) &&
+            materialKeys.size > 0,
           title: node.translations[locale].title,
         })
       );

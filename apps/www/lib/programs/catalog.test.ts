@@ -19,8 +19,8 @@ const activeProfile = {
     key: "ready-curriculum",
     kind: "school-curriculum",
     navigation: {
-      levels: ["class", "subject", "topic"],
-      model: "class-curriculum-topic",
+      levels: ["stage", "class", "subject", "topic"],
+      model: "curriculum-tree",
     },
     publicSlug: "ready-curriculum",
     title: "Ready curriculum",
@@ -37,8 +37,8 @@ const catalog = [
     key: "ready-curriculum",
     kind: "school-curriculum",
     navigation: {
-      levels: ["class", "subject", "topic"],
-      model: "class-curriculum-topic",
+      levels: ["stage", "class", "subject", "topic"],
+      model: "curriculum-tree",
     },
     publicSlug: "ready-curriculum",
     title: "Ready curriculum",
@@ -51,8 +51,8 @@ const catalog = [
     key: "planned-path",
     kind: "school-curriculum",
     navigation: {
-      levels: ["class", "subject", "topic"],
-      model: "class-curriculum-topic",
+      levels: ["stage", "class", "subject", "topic"],
+      model: "curriculum-tree",
     },
     publicSlug: "planned-path",
     title: "Planned path",
@@ -65,8 +65,8 @@ const catalog = [
     key: "partial-path",
     kind: "school-curriculum",
     navigation: {
-      levels: ["class", "subject", "topic"],
-      model: "class-curriculum-topic",
+      levels: ["stage", "class", "subject", "topic"],
+      model: "curriculum-tree",
     },
     publicSlug: "partial-path",
     title: "Partial path",

@@ -66,7 +66,7 @@
       {
         "@type": "Question",
         "name": "怎么安装 Kami？",
-        "acceptedAnswer": { "@type": "Answer", "text": "Claude Code: npx skills add tw93/kami -a claude-code -g -y。Claude Code 插件市场（v2.1.142+）：/plugin marketplace add tw93/kami && /plugin install kami@kami。通用 agent：npx skills add tw93/kami -a '*' -g -y。Claude Desktop：从 GitHub Releases 下载 kami.zip，在 Skills 设置中上传即可。" }
+        "acceptedAnswer": { "@type": "Answer", "text": "Claude Code: npx skills add tw93/kami -a claude-code -g -y。Claude Code 插件市场（v2.1.142+）：/plugin marketplace add tw93/kami && /plugin install kami@kami。Codex 插件市场：codex plugin marketplace add tw93/kami && codex plugin add kami@kami。通用 agent：npx skills add tw93/kami -a '*' -g -y。Claude Desktop：从 GitHub Releases 下载 kami.zip，在 Skills 设置中上传即可。" }
       },
       {
         "@type": "Question",
@@ -184,9 +184,10 @@
 <pre class="code"><span class="c"># Claude Code</span>
 npx skills add tw93/kami -a claude-code -g -y
 
-<span class="c"># Codex</span>
-npx skills add tw93/kami -a codex -g -y</pre>
-    <p class="section-lede" style="font-size:14px;">Claude Code 插件市场在 v2.1.142+ 可用：先运行 <code>/plugin marketplace add tw93/kami</code>，再运行 <code>/plugin install kami@kami</code>。</p>
+<span class="c"># Codex plugin marketplace</span>
+codex plugin marketplace add tw93/kami
+codex plugin add kami@kami</pre>
+    <p class="section-lede" style="font-size:14px;">Claude Code 插件市场在 v2.1.142+ 可用：先运行 <code>/plugin marketplace add tw93/kami</code>，再运行 <code>/plugin install kami@kami</code>。Codex 安装使用 <code>codex plugin marketplace add tw93/kami</code>，然后运行 <code>codex plugin add kami@kami</code>。</p>
     <p class="section-lede" style="font-size:14px;">Claude Desktop：下载 <a href="https://github.com/tw93/kami/releases/latest/download/kami.zip" style="color:var(--brand); text-decoration:none; font-weight:500;">kami.zip</a>，在 Customize &gt; Skills &gt; "+" &gt; Create skill 中直接上传。</p>
   </section>
 
@@ -669,7 +670,7 @@ beauty   = constraints × <span class="k">intention</span> ÷ noise</pre>
       </div>
       <div class="faq-pair">
         <dt>怎么安装？</dt>
-        <dd>Claude Code：<code style="font-family:var(--mono); font-size:0.9em; color:var(--brand);">npx skills add tw93/kami -a claude-code -g -y</code>。Claude Code v2.1.142+ 也可走插件市场：<code style="font-family:var(--mono); font-size:0.9em; color:var(--brand);">/plugin marketplace add tw93/kami</code>，然后 <code style="font-family:var(--mono); font-size:0.9em; color:var(--brand);">/plugin install kami@kami</code>。通用 agent：<code style="font-family:var(--mono); font-size:0.9em; color:var(--brand);">npx skills add tw93/kami -a '*' -g -y</code>。Claude Desktop：从 GitHub Releases 下载 kami.zip，在自定义 &gt; Skills 中上传即可。</dd>
+        <dd>Claude Code：<code style="font-family:var(--mono); font-size:0.9em; color:var(--brand);">npx skills add tw93/kami -a claude-code -g -y</code>。Claude Code v2.1.142+ 也可走插件市场：<code style="font-family:var(--mono); font-size:0.9em; color:var(--brand);">/plugin marketplace add tw93/kami</code>，然后 <code style="font-family:var(--mono); font-size:0.9em; color:var(--brand);">/plugin install kami@kami</code>。Codex：<code style="font-family:var(--mono); font-size:0.9em; color:var(--brand);">codex plugin marketplace add tw93/kami</code>，然后 <code style="font-family:var(--mono); font-size:0.9em; color:var(--brand);">codex plugin add kami@kami</code>。通用 agent：<code style="font-family:var(--mono); font-size:0.9em; color:var(--brand);">npx skills add tw93/kami -a '*' -g -y</code>。Claude Desktop：从 GitHub Releases 下载 kami.zip，在自定义 &gt; Skills 中上传即可。</dd>
       </div>
       <div class="faq-pair">
         <dt>支持哪些语言？</dt>

@@ -50,7 +50,7 @@ describe("sync-content learningPrograms", () => {
     vi.clearAllMocks();
     vi.mocked(callConvexMutation)
       .mockReturnValueOnce(
-        Effect.succeed({ created: 5, skipped: 0, updated: 0 })
+        Effect.succeed({ created: 6, skipped: 0, updated: 0 })
       )
       .mockReturnValueOnce(
         Effect.succeed({ created: 0, skipped: 0, updated: 0 })
@@ -82,14 +82,14 @@ describe("sync-content learningPrograms", () => {
     );
     const mutationCalls = vi.mocked(callConvexMutation).mock.calls;
 
-    expect(result).toMatchObject({ created: 5, skipped: 0, updated: 0 });
+    expect(result).toMatchObject({ created: 6, skipped: 0, updated: 0 });
     expect(mutationCalls[0]?.[2]).toMatchObject({
       programs: expect.arrayContaining([
         expect.objectContaining({
-          key: "id-kurikulum-merdeka",
+          key: "merdeka",
           navigation: {
-            levels: ["class", "subject", "topic"],
-            model: "class-curriculum-topic",
+            levels: ["stage", "class", "subject", "topic"],
+            model: "curriculum-tree",
           },
         }),
       ]),
@@ -99,14 +99,12 @@ describe("sync-content learningPrograms", () => {
         expect.objectContaining({
           coverageStatus: "partial",
           lensId: subjectGraph.lensId,
-          programKey: "id-kurikulum-merdeka",
+          programKey: "merdeka",
           sampleContentId: subjectGraph.assetId,
         }),
       ]),
     });
-    expect(JSON.stringify(mutationCalls[1]?.[2])).not.toContain(
-      "curriculum/high-school/10/chemistry"
-    );
+    expect(JSON.stringify(mutationCalls[1]?.[2])).not.toContain("curriculum/");
     expect(mutationCalls[2]?.[2]).toMatchObject({
       limit: 200,
       locale: "id",

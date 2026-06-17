@@ -1,0 +1,41 @@
+{
+  "name": "kami",
+  "version": "1.7.4",
+  "description": "Professional document and landing-page typesetting skill for Codex: resumes, one-pagers, reports, letters, portfolios, slides, and more.",
+  "author": {
+    "name": "Tw93",
+    "email": "hitw93@gmail.com",
+    "url": "https://github.com/tw93"
+  },
+  "homepage": "https://github.com/tw93/kami",
+  "repository": "https://github.com/tw93/kami",
+  "license": "MIT",
+  "keywords": [
+    "codex",
+    "skills",
+    "documents",
+    "typesetting",
+    "resume",
+    "slides",
+    "landing-page"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Kami",
+    "shortDescription": "Typeset polished documents and landing pages",
+    "longDescription": "Kami packages a warm parchment design system for Codex. Use it to turn briefs and raw material into resumes, one-pagers, long documents, letters, portfolios, slide decks, equity reports, changelogs, and product landing pages.",
+    "developerName": "Tw93",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/tw93/kami",
+    "defaultPrompt": [
+      "Make a polished one-pager from this brief",
+      "Build a resume using Kami",
+      "Turn this outline into a slide deck"
+    ],
+    "brandColor": "#1B365D"
+  }
+}

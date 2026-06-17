@@ -20,24 +20,26 @@ describe("program/catalog", () => {
   });
 
   it("stores hierarchy models without enumerating content route coverage", () => {
-    const schoolProgram = findLearningProgramByKey("id-kurikulum-merdeka");
-    const cambridgeProgram = findLearningProgramByKey("cambridge-igcse");
+    const schoolProgram = findLearningProgramByKey("merdeka");
+    const cambridgeProgram = findLearningProgramByKey(
+      "cambridge-international"
+    );
     const examProgram = findLearningProgramByKey("snbt-2026");
 
     expect(schoolProgram?.navigation).toEqual({
-      levels: ["class", "subject", "topic"],
-      model: "class-curriculum-topic",
+      levels: ["stage", "class", "subject", "topic"],
+      model: "curriculum-tree",
     });
     expect(examProgram?.navigation).toEqual({
       levels: ["section", "domain", "practice-set"],
       model: "exam-domain-practice-set",
     });
     expect(cambridgeProgram?.navigation).toEqual({
-      levels: ["course", "unit", "lesson"],
-      model: "course-unit-lesson",
+      levels: ["stage", "qualification", "course", "unit", "lesson"],
+      model: "curriculum-tree",
     });
     expect(JSON.stringify(LEARNING_PROGRAM_CATALOG)).not.toContain(
-      "curriculum/high-school"
+      "curriculum/"
     );
   });
 
@@ -61,9 +63,10 @@ describe("program/catalog", () => {
     );
 
     expect(visibleKeys).toEqual([
-      "id-kurikulum-merdeka",
-      "cambridge-igcse",
-      "us-common-core-ngss",
+      "merdeka",
+      "cambridge-international",
+      "singapore-moe",
+      "united-states",
       "tka-2026",
       "snbt-2026",
     ]);

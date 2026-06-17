@@ -9,12 +9,16 @@ import {
   materialValidator,
   nakafaSectionValidator,
 } from "@repo/backend/convex/lib/validators/contents";
+import { PROGRAM_NAVIGATION_ICON_KEY_VALUES } from "@repo/contents/_types/program/schema";
 import { PUBLIC_ROUTE_KIND_VALUES } from "@repo/contents/_types/route/schema";
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
 const contentRouteKindValidator = literals(...CONTENT_ROUTE_KINDS);
+const navigationIconKeyValidator = literals(
+  ...PROGRAM_NAVIGATION_ICON_KEY_VALUES
+);
 const publicRouteKindValidator = literals(...PUBLIC_ROUTE_KIND_VALUES);
 const contentRoutePageItemValidator = v.object({
   ...learningGraphIdentityValidator.fields,
@@ -252,6 +256,9 @@ const tables = {
   publicRoutes: defineTable({
     canonicalPath: v.optional(v.string()),
     description: v.optional(v.string()),
+    displayGroupIconKey: v.optional(navigationIconKeyValidator),
+    displayGroupTitle: v.optional(v.string()),
+    iconKey: v.optional(navigationIconKeyValidator),
     kind: publicRouteKindValidator,
     locale: localeValidator,
     materialDomain: v.optional(materialValidator),

@@ -50,7 +50,7 @@ const tables = {
     key: v.string(),
     kind: assessmentKindValidator,
     navigation: navigationValidator,
-    providerCountry: v.optional(v.string()),
+    providerHomeCountry: v.optional(v.string()),
     providerKind: providerKindValidator,
     providerName: v.string(),
     recommendedCountry: v.optional(v.string()),

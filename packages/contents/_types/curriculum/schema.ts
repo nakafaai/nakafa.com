@@ -6,6 +6,7 @@ import {
 } from "@repo/contents/_types/material/schema";
 import {
   LearningProgramKeySchema,
+  ProgramNavigationIconKeySchema,
   ProgramNavigationLevelSchema,
 } from "@repo/contents/_types/program/schema";
 import { PublicRouteSegmentSchema } from "@repo/contents/_types/route/segment";
@@ -35,7 +36,19 @@ const CurriculumNodeTranslationMapSchema = Schema.Record({
   value: CurriculumNodeTranslationSchema,
 });
 
+export const CurriculumDisplayGroupTranslationSchema = Schema.Struct({
+  title: Schema.String,
+});
+
+const CurriculumDisplayGroupTranslationMapSchema = Schema.Record({
+  key: LocaleSchema,
+  value: CurriculumDisplayGroupTranslationSchema,
+});
+
 export const CurriculumNodeSchema = Schema.Struct({
+  displayGroup: Schema.optional(CurriculumDisplayGroupTranslationMapSchema),
+  displayGroupIconKey: Schema.optional(ProgramNavigationIconKeySchema),
+  iconKey: Schema.optional(ProgramNavigationIconKeySchema),
   key: CurriculumNodeKeySchema,
   level: ProgramNavigationLevelSchema,
   materialDomain: Schema.optional(MaterialSchema),
@@ -64,6 +77,9 @@ type CurriculumNodeTranslationEncodedMap = SchemaEncoded<
 // biome-ignore lint/style/useConsistentTypeDefinitions: Recursive Effect Schema generics need local aliases; exported models derive from schemas.
 type CurriculumStructureNodeValue = {
   children?: readonly CurriculumTreeNodeValue[];
+  displayGroup?: SchemaType<typeof CurriculumDisplayGroupTranslationMapSchema>;
+  displayGroupIconKey?: SchemaType<typeof ProgramNavigationIconKeySchema>;
+  iconKey?: SchemaType<typeof ProgramNavigationIconKeySchema>;
   key: string;
   level: CurriculumNode["level"];
   materialDomain?: CurriculumNode["materialDomain"];
@@ -99,6 +115,11 @@ type CurriculumTreeNodeValue =
 // biome-ignore lint/style/useConsistentTypeDefinitions: Recursive Effect Schema generics need local aliases; exported models derive from schemas.
 type CurriculumStructureNodeEncodedValue = {
   children?: readonly CurriculumTreeNodeEncodedValue[];
+  displayGroup?: SchemaEncoded<
+    typeof CurriculumDisplayGroupTranslationMapSchema
+  >;
+  displayGroupIconKey?: SchemaEncoded<typeof ProgramNavigationIconKeySchema>;
+  iconKey?: SchemaEncoded<typeof ProgramNavigationIconKeySchema>;
   key: string;
   level: CurriculumNode["level"];
   materialDomain?: CurriculumNode["materialDomain"];
@@ -135,6 +156,9 @@ export const CurriculumStructureNodeSchema = Schema.Struct({
       )
     )
   ),
+  displayGroup: Schema.optional(CurriculumDisplayGroupTranslationMapSchema),
+  displayGroupIconKey: Schema.optional(ProgramNavigationIconKeySchema),
+  iconKey: Schema.optional(ProgramNavigationIconKeySchema),
   key: CurriculumNodeKeySchema,
   level: ProgramNavigationLevelSchema,
   materialDomain: Schema.optional(MaterialSchema),
@@ -236,6 +260,21 @@ export function subjectNode(input: StructureNodeInput) {
 /** Defines a course-level curriculum structure node. */
 export function courseNode(input: StructureNodeInput) {
   return structureNode("course", input);
+}
+
+/** Defines an official framework-level curriculum structure node. */
+export function frameworkNode(input: StructureNodeInput) {
+  return structureNode("framework", input);
+}
+
+/** Defines a qualification-level curriculum structure node. */
+export function qualificationNode(input: StructureNodeInput) {
+  return structureNode("qualification", input);
+}
+
+/** Defines an official stage-level curriculum structure node. */
+export function stageNode(input: StructureNodeInput) {
+  return structureNode("stage", input);
 }
 
 /** Defines a unit-level curriculum structure node. */

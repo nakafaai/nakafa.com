@@ -5,6 +5,7 @@ import {
 import {
   COVERAGE_STATUS_VALUES,
   LEARNING_PROGRAM_KIND_VALUES,
+  PROGRAM_NAVIGATION_ICON_KEY_VALUES,
   PROGRAM_NAVIGATION_LEVEL_VALUES,
   PROGRAM_NAVIGATION_MODEL_VALUES,
   PROGRAM_PROVIDER_KIND_VALUES,
@@ -30,6 +31,9 @@ const programKindValidator = literals(...LEARNING_PROGRAM_KIND_VALUES);
 const providerKindValidator = literals(...PROGRAM_PROVIDER_KIND_VALUES);
 const sourceTypeValidator = literals(...PROGRAM_SOURCE_TYPE_VALUES);
 const navigationLevelValidator = literals(...PROGRAM_NAVIGATION_LEVEL_VALUES);
+const navigationIconKeyValidator = literals(
+  ...PROGRAM_NAVIGATION_ICON_KEY_VALUES
+);
 const navigationModelValidator = literals(...PROGRAM_NAVIGATION_MODEL_VALUES);
 const publicRouteKindValidator = literals(...PUBLIC_ROUTE_KIND_VALUES);
 
@@ -93,7 +97,7 @@ export const generatedProgramRowValidator = v.object({
   key: v.string(),
   kind: programKindValidator,
   navigation: navigationValidator,
-  providerCountry: v.optional(v.string()),
+  providerHomeCountry: v.optional(v.string()),
   providerKind: providerKindValidator,
   providerName: v.string(),
   recommendedCountry: v.optional(v.string()),
@@ -142,6 +146,9 @@ export const assessmentNodeRowValidator = v.object({
 export const publicRouteRowValidator = v.object({
   canonicalPath: v.optional(v.string()),
   description: v.optional(v.string()),
+  displayGroupIconKey: v.optional(navigationIconKeyValidator),
+  displayGroupTitle: v.optional(v.string()),
+  iconKey: v.optional(navigationIconKeyValidator),
   kind: publicRouteKindValidator,
   locale: localeValidator,
   materialDomain: v.optional(materialValidator),

@@ -155,7 +155,7 @@ describe("route catalog static params", () => {
         }),
         routeRow({
           locale: "en",
-          route: "curriculum/high-school/10/chemistry",
+          route: "curriculum/merdeka/class-10/chemistry",
           section: "material",
         }),
         routeRow({

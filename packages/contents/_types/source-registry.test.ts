@@ -145,9 +145,9 @@ describe("source registry adapter", () => {
   });
 
   it("normalizes noisy source path provenance", () => {
-    expect(normalizeSourcePath("//curriculum//high-school/10//id.mdx/")).toBe(
-      "curriculum/high-school/10/id.mdx"
-    );
+    expect(
+      normalizeSourcePath("//material//lesson/biology//biodiversity//id.mdx/")
+    ).toBe("material/lesson/biology/biodiversity/id.mdx");
   });
 
   it("blocks JSON source registries under contents type modules", () => {

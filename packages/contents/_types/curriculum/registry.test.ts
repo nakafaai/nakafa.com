@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   getCurriculumProjectionIssues,
@@ -22,6 +22,18 @@ import { Effect, Either, ParseResult, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 const CURRICULUM_SOURCE_ROOT = join(process.cwd(), "curriculum");
+const CANONICAL_CURRICULUM_ROOT_DIRECTORIES = [
+  "cambridge-international",
+  "merdeka",
+  "singapore-moe",
+  "united-states",
+];
+const REMOVED_CURRICULUM_SOURCE_DIRECTORIES = [
+  "cambridge",
+  "indonesia",
+  "singapore",
+  ["united-states", ["common", "core", "ngss"].join("-")].join("/"),
+];
 const LEARNING_PROGRAM_KEY_PATTERN = /^[a-z0-9]+(?:[.-][a-z0-9]+)*$/;
 const PUBLIC_ROUTE_FOLDER_PATTERN = /subject\/|exercises\//;
 
@@ -53,23 +65,19 @@ describe("curriculum registry", () => {
       getProgramKeysForMaterialRoute({
         route: "material/lesson/mathematics/statistics-foundations",
       })
-    ).toEqual(["cambridge-igcse", "id-kurikulum-merdeka"]);
+    ).toEqual(["cambridge-international", "merdeka"]);
   });
 
   it("projects nested curriculum authoring into flat read-model rows", () => {
     const curricula = listCurricula();
     const projectedNodes = listCurriculumNodes();
     const merdeka = curricula.find(
-      (curriculum) => curriculum.programKey === "id-kurikulum-merdeka"
+      (curriculum) => curriculum.programKey === "merdeka"
     );
 
     expect(merdeka?.tree.some((node) => node.key === "class-10")).toBe(true);
     expect(projectedNodes.some((node) => node.key === "class-10")).toBe(true);
-    expect(
-      JSON.stringify(merdeka?.tree).includes(
-        "curriculum/high-school/10/mathematics"
-      )
-    ).toBe(false);
+    expect(JSON.stringify(merdeka?.tree).includes("curriculum/")).toBe(false);
   });
 
   it("decodes nested curriculum trees through the schema-owned helper", () => {
@@ -130,22 +138,35 @@ describe("curriculum registry", () => {
 
   it("keeps each real curriculum behind a folder-owned source module", () => {
     const curricula = listCurricula();
+    const rootDirectories = readdirSync(CURRICULUM_SOURCE_ROOT, {
+      withFileTypes: true,
+    })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name)
+      .sort();
 
+    expect(rootDirectories).toEqual(CANONICAL_CURRICULUM_ROOT_DIRECTORIES);
+    expect(
+      REMOVED_CURRICULUM_SOURCE_DIRECTORIES.filter((directory) =>
+        existsSync(join(CURRICULUM_SOURCE_ROOT, directory))
+      )
+    ).toEqual([]);
     expect(curricula.map((curriculum) => curriculum.programKey)).toEqual([
-      "id-kurikulum-merdeka",
-      "cambridge-igcse",
-      "us-common-core-ngss",
+      "merdeka",
+      "cambridge-international",
+      "singapore-moe",
+      "united-states",
     ]);
     expect(
       getProgramKeysForMaterialRoute({
         route: "material/lesson/mathematics/quadratic-function",
       })
-    ).toEqual(["cambridge-igcse", "id-kurikulum-merdeka"]);
+    ).toEqual(["cambridge-international", "merdeka"]);
   });
 
-  it("keeps planned US standards visible without inventing material coverage", () => {
+  it("keeps planned US pathways visible without inventing material coverage", () => {
     const usStandards = listCurriculumNodes().filter(
-      (node) => node.curriculumKey === "us-common-core-ngss"
+      (node) => node.curriculumKey === "united-states"
     );
 
     expect(usStandards.length).toBeGreaterThan(0);
@@ -154,7 +175,7 @@ describe("curriculum registry", () => {
       getProgramKeysForMaterialRoute({
         route: "material/lesson/physics/kinematics",
       })
-    ).not.toContain("us-common-core-ngss");
+    ).not.toContain("united-states");
   });
 
   it("returns no programs for routes outside the material registry", () => {

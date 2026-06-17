@@ -69,19 +69,19 @@ describe("learningPrograms", () => {
       return sources.length;
     });
 
-    expect(result).toEqual({ created: 5, skipped: 0, updated: 0 });
+    expect(result).toEqual({ created: 6, skipped: 0, updated: 0 });
     expect(programs.map((program) => program.key)).toEqual([
-      "id-kurikulum-merdeka",
+      "merdeka",
       "snbt-2026",
     ]);
-    expect(
-      programs.find((program) => program.key === "id-kurikulum-merdeka")
-    ).toMatchObject({
-      navigation: {
-        levels: ["class", "subject", "topic"],
-        model: "class-curriculum-topic",
-      },
-    });
+    expect(programs.find((program) => program.key === "merdeka")).toMatchObject(
+      {
+        navigation: {
+          levels: ["stage", "class", "subject", "topic"],
+          model: "curriculum-tree",
+        },
+      }
+    );
     expect(sourceCount).toBe(2);
   });
 
@@ -113,7 +113,7 @@ describe("learningPrograms", () => {
             lensId: subjectGraph.lensId,
             lensScope: "curriculum",
             locale: "id",
-            programKey: "id-kurikulum-merdeka",
+            programKey: "merdeka",
             sampleContentId: subjectGraph.assetId,
             syncedAt: NOW,
           },
@@ -123,7 +123,7 @@ describe("learningPrograms", () => {
             lensId: englishSubjectGraph.lensId,
             lensScope: "curriculum",
             locale: "en",
-            programKey: "id-kurikulum-merdeka",
+            programKey: "merdeka",
             sampleContentId: englishSubjectGraph.assetId,
             syncedAt: NOW,
           },
@@ -137,7 +137,7 @@ describe("learningPrograms", () => {
       })
     ).resolves.toMatchObject([
       {
-        key: "id-kurikulum-merdeka",
+        key: "merdeka",
         title: "Kurikulum Merdeka",
       },
     ]);
@@ -148,7 +148,7 @@ describe("learningPrograms", () => {
     ).resolves.toMatchObject([
       {
         description: "Follow Indonesia's school curriculum by class topic.",
-        key: "id-kurikulum-merdeka",
+        key: "merdeka",
       },
     ]);
   });
@@ -170,7 +170,7 @@ describe("learningPrograms", () => {
             lensId: "lens:subject:high-school:10:chemistry:old",
             lensScope: "curriculum",
             locale: "id",
-            programKey: "id-kurikulum-merdeka",
+            programKey: "merdeka",
             sampleContentId: subjectGraph.assetId,
             syncedAt: NOW - 1,
           },
@@ -180,7 +180,7 @@ describe("learningPrograms", () => {
             lensId: subjectGraph.lensId,
             lensScope: "curriculum",
             locale: "id",
-            programKey: "id-kurikulum-merdeka",
+            programKey: "merdeka",
             sampleContentId: subjectGraph.assetId,
             syncedAt: NOW,
           },
@@ -199,7 +199,7 @@ describe("learningPrograms", () => {
     const remainingCoverage = await t.query(async (ctx) => {
       const program = await ctx.db
         .query("learningPrograms")
-        .withIndex("by_key", (q) => q.eq("key", "id-kurikulum-merdeka"))
+        .withIndex("by_key", (q) => q.eq("key", "merdeka"))
         .unique();
 
       if (!program) {
@@ -253,7 +253,7 @@ describe("learningPrograms", () => {
             lensId: staleSubjectGraph.lensId,
             lensScope: "curriculum",
             locale: "id",
-            programKey: "id-kurikulum-merdeka",
+            programKey: "merdeka",
             sampleContentId: staleSubjectGraph.assetId,
             syncedAt: NOW - 1,
           },
@@ -263,7 +263,7 @@ describe("learningPrograms", () => {
             lensId: subjectGraph.lensId,
             lensScope: "curriculum",
             locale: "id",
-            programKey: "id-kurikulum-merdeka",
+            programKey: "merdeka",
             sampleContentId: subjectGraph.assetId,
             syncedAt: NOW,
           },
@@ -280,7 +280,7 @@ describe("learningPrograms", () => {
       {
         interests: ["school-curriculum"],
         locale: "id",
-        primaryProgramKey: "id-kurikulum-merdeka",
+        primaryProgramKey: "merdeka",
       }
     );
 
@@ -351,7 +351,7 @@ describe("learningPrograms", () => {
             lensId: subjectGraph.lensId,
             lensScope: "curriculum",
             locale: "id",
-            programKey: "id-kurikulum-merdeka",
+            programKey: "merdeka",
             sampleContentId: subjectGraph.assetId,
             syncedAt: NOW,
           },
@@ -368,7 +368,7 @@ describe("learningPrograms", () => {
       {
         interests: ["school-curriculum"],
         locale: "id",
-        primaryProgramKey: "id-kurikulum-merdeka",
+        primaryProgramKey: "merdeka",
       }
     );
 
@@ -389,7 +389,7 @@ describe("learningPrograms", () => {
             lensId: subjectGraph.lensId,
             lensScope: "curriculum",
             locale: "id",
-            programKey: "id-kurikulum-merdeka",
+            programKey: "merdeka",
             sampleContentId: replacementSubjectGraph.assetId,
             syncedAt: NOW + 1,
           },
@@ -447,7 +447,7 @@ describe("learningPrograms", () => {
             lensId: subjectGraph.lensId,
             lensScope: "curriculum",
             locale: "id",
-            programKey: "id-kurikulum-merdeka",
+            programKey: "merdeka",
             sampleContentId: subjectGraph.assetId,
             syncedAt: NOW,
           },
@@ -460,7 +460,7 @@ describe("learningPrograms", () => {
       identity,
       lensId: subjectGraph.lensId,
       lensScope: "curriculum",
-      programKey: "id-kurikulum-merdeka",
+      programKey: "merdeka",
     });
 
     await t.mutation(
@@ -473,7 +473,7 @@ describe("learningPrograms", () => {
             lensId: subjectGraph.lensId,
             lensScope: "curriculum",
             locale: "id",
-            programKey: "id-kurikulum-merdeka",
+            programKey: "merdeka",
             sampleContentId: replacementSubjectGraph.assetId,
             syncedAt: NOW + 1,
           },
@@ -547,7 +547,7 @@ describe("learningPrograms", () => {
             lensId: staleSubjectGraph.lensId,
             lensScope: "curriculum",
             locale: "id",
-            programKey: "id-kurikulum-merdeka",
+            programKey: "merdeka",
             sampleContentId: staleSubjectGraph.assetId,
             syncedAt: NOW - 1,
           },
@@ -560,7 +560,7 @@ describe("learningPrograms", () => {
       identity,
       lensId: staleSubjectGraph.lensId,
       lensScope: "curriculum",
-      programKey: "id-kurikulum-merdeka",
+      programKey: "merdeka",
     });
 
     await t.mutation(
@@ -674,7 +674,7 @@ describe("learningPrograms", () => {
       {}
     );
 
-    expect(result).toEqual({ created: 0, skipped: 0, updated: 6 });
+    expect(result).toEqual({ created: 0, skipped: 0, updated: 7 });
     expect(selectablePrograms.map((program) => program.key)).not.toContain(
       retiredProgram.key
     );

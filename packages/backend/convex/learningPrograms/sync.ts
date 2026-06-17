@@ -6,17 +6,15 @@ import { getContentRouteByContentId } from "@repo/backend/convex/learningProgram
 import {
   learningProgramCoverageInputValidator,
   learningProgramInputValidator,
-  type programSourceInputValidator,
 } from "@repo/backend/convex/learningPrograms/schema";
+import { syncProgramSources } from "@repo/backend/convex/learningPrograms/sources";
 import { LearningProgramSchema } from "@repo/contents/_types/program/schema";
 import { ConvexError, type Infer, v } from "convex/values";
 import { Either, Schema } from "effect";
 
-const SOURCE_LIMIT = 20;
 const PROGRAM_RECONCILE_LIMIT = 100;
 const STALE_COVERAGE_DELETE_LIMIT = 200;
 const ACTIVE_PLAN_ITEM_RECONCILE_BATCH_SIZE = 100;
-type ProgramSourceInput = Infer<typeof programSourceInputValidator>;
 const LearningProgramSyncInputSchema = Schema.Array(LearningProgramSchema);
 
 const syncResultValidator = v.object({
@@ -60,13 +58,14 @@ export const syncLearningPrograms = internalMutation({
       const row = {
         defaultCoverageStatus: program.defaultCoverageStatus,
         displayOrder: program.displayOrder,
+        iconKey: program.iconKey,
         key: program.key,
         kind: program.kind,
         navigation: {
           levels: [...program.navigation.levels],
           model: program.navigation.model,
         },
-        providerCountry: program.provider.country,
+        providerHomeCountry: program.provider.homeCountry,
         providerKind: program.provider.kind,
         providerName: program.provider.name,
         recommendedCountry: program.recommendedCountry,
@@ -410,51 +409,6 @@ async function deleteStaleCoveragePlanItemBatch(
   }
 
   return { reconciled, scheduled };
-}
-
-/** Replaces bounded program source rows for one catalog program. */
-async function syncProgramSources(
-  ctx: MutationCtx,
-  {
-    programId,
-    sources,
-    syncedAt,
-  }: {
-    programId: Id<"learningPrograms">;
-    sources: readonly ProgramSourceInput[];
-    syncedAt: number;
-  }
-) {
-  if (sources.length > SOURCE_LIMIT) {
-    throw new ConvexError({
-      code: "LEARNING_PROGRAM_SOURCE_LIMIT_EXCEEDED",
-      message: "Learning program source count exceeds the sync limit.",
-    });
-  }
-
-  const existingSources = await ctx.db
-    .query("learningProgramSources")
-    .withIndex("by_programId", (q) => q.eq("programId", programId))
-    .take(SOURCE_LIMIT + 1);
-
-  if (existingSources.length > SOURCE_LIMIT) {
-    throw new ConvexError({
-      code: "LEARNING_PROGRAM_SOURCE_LIMIT_EXCEEDED",
-      message: "Existing learning program sources exceed the sync limit.",
-    });
-  }
-
-  for (const row of existingSources) {
-    await ctx.db.delete(row._id);
-  }
-
-  for (const source of sources) {
-    await ctx.db.insert("learningProgramSources", {
-      ...source,
-      programId,
-      syncedAt,
-    });
-  }
 }
 
 /** Hides rows omitted from the latest full content-catalog sync without deleting referenced program IDs. */

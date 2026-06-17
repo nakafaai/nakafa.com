@@ -47,3 +47,18 @@ jobs:
           fi
           gh release upload "$TAG" dist/kami.zip --clobber
           echo "OK: kami.zip attached to release $TAG"
+
+      - name: Add release reactions
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.tag.outputs.name }}
+        run: |
+          # Match the house style every release carries: one of each positive
+          # reaction. Idempotent (re-running adds nothing) and non-fatal so a
+          # reaction hiccup never fails an otherwise-good release.
+          rid="$(gh api "repos/${{ github.repository }}/releases/tags/$TAG" --jq .id)"
+          for r in +1 eyes heart hooray laugh rocket; do
+            gh api -X POST "repos/${{ github.repository }}/releases/$rid/reactions" \
+              -f content="$r" --jq .content || echo "skip reaction $r"
+          done
+          echo "OK: reactions ensured on release $TAG"

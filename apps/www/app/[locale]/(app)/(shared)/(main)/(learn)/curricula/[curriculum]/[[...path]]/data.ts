@@ -14,7 +14,6 @@ import type { ParsedHeading } from "@repo/contents/_types/toc";
 import { slugify } from "@repo/design-system/lib/utils";
 import { Effect } from "effect";
 import { notFound } from "next/navigation";
-import { getCurriculumGradeIcon } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/icons";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 type CurriculumParams =
@@ -58,9 +57,9 @@ export function readCurriculumRouteModel({
   const childRoutes = CURRICULUM_ROUTES.filter(
     (child) => child.locale === locale && child.parentPath === route.publicPath
   )
+    .filter(isRenderableCurriculumRoute)
     .slice()
     .sort(compareCurriculumRouteOrder);
-  const isCurriculumRoot = route.level === "track";
   const materialCards = isMaterialCardListRoute(route)
     ? readCurriculumMaterialCards({
         contentRoutes: MATERIAL_ROUTES,
@@ -68,25 +67,17 @@ export function readCurriculumRouteModel({
         route,
       })
     : [];
+  const childGroups = groupCurriculumChildren(childRoutes);
   const headerDescription =
     materialCards.length > 0 ? undefined : route.description;
-  const usesGradeCards =
-    isCurriculumRoot &&
-    childRoutes.length > 0 &&
-    childRoutes.every(
-      (childRoute) =>
-        childRoute.level === "class" &&
-        getCurriculumGradeIcon(childRoute.nodeKey) !== null
-    );
 
   return {
+    childGroups,
     childRoutes,
     headerDescription,
-    isCurriculumRoot,
     locale,
     materialCards,
     route,
-    usesGradeCards,
   };
 }
 
@@ -166,4 +157,27 @@ export function readMaterialCardChapters(cards: MaterialList): ParsedHeading[] {
 /** Checks whether a curriculum row should render the material-card index. */
 function isMaterialCardListRoute(route: PublicCurriculumRoute) {
   return route.level === "subject" || route.level === "course";
+}
+
+/**
+ * Groups sibling curriculum rows by source-owned stage labels.
+ *
+ * Root pages use these groups for SD/SMP/SMA or official pathway stages,
+ * while child pages without a display group keep one unlabelled section.
+ */
+function groupCurriculumChildren(routes: readonly PublicCurriculumRoute[]) {
+  const groups = new Map<string, PublicCurriculumRoute[]>();
+
+  for (const route of routes) {
+    const groupTitle = route.displayGroupTitle ?? "";
+    groups.set(groupTitle, [...(groups.get(groupTitle) ?? []), route]);
+  }
+
+  return [...groups.entries()].map(([title, children]) => ({
+    children,
+    iconKey: children.find((child) => child.displayGroupIconKey)
+      ?.displayGroupIconKey,
+    key: title || "curriculum",
+    title: title || undefined,
+  }));
 }

@@ -81,17 +81,28 @@
     justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 12pt;
-    border-left: 2.5pt solid var(--brand);
-    border-radius: 1.5pt;
-    padding-left: 8pt;
+    padding-bottom: 10pt;
+    border-bottom: 0.5pt solid var(--border);
   }
   .ticker-block { flex: 1; }
   .ticker-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 7pt;
     font-size: 9pt;
     color: var(--brand);
-    letter-spacing: 1pt;
+    letter-spacing: 1.5pt;
     text-transform: uppercase;
+    font-weight: 500;
     margin-bottom: 4pt;
+  }
+  .ticker-eyebrow::before {
+    content: "";
+    width: 8pt;
+    height: 1.5pt;
+    border-radius: 0.75pt;
+    background: var(--brand);
+    flex-shrink: 0;
   }
   .ticker-name {
     font-family: var(--serif);

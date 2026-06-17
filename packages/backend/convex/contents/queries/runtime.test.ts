@@ -802,8 +802,8 @@ describe("contents/queries/runtime", () => {
       await ctx.db.insert("publicRoutes", {
         kind: "curriculum-context",
         locale: "id",
-        nodeKey: "id-kurikulum-merdeka:root",
-        programKey: "id-kurikulum-merdeka",
+        nodeKey: "merdeka:root",
+        programKey: "merdeka",
         publicPath: "kurikulum/merdeka",
         sitemap: true,
         syncedAt: NOW,
@@ -815,7 +815,7 @@ describe("contents/queries/runtime", () => {
         materialDomain: "mathematics",
         nodeKey: "class-10-mathematics",
         parentPath: "kurikulum/merdeka/kelas-10",
-        programKey: "id-kurikulum-merdeka",
+        programKey: "merdeka",
         publicPath: "kurikulum/merdeka/kelas-10/matematika",
         sitemap: true,
         syncedAt: NOW,
@@ -829,7 +829,7 @@ describe("contents/queries/runtime", () => {
         materialKey: "lesson.mathematics.integral",
         nodeKey: "class-12-mathematics-integral",
         parentPath: "kurikulum/merdeka/kelas-12/matematika",
-        programKey: "id-kurikulum-merdeka",
+        programKey: "merdeka",
         publicPath: "kurikulum/merdeka/kelas-12/matematika/integral",
         sitemap: true,
         syncedAt: NOW,
@@ -862,7 +862,7 @@ describe("contents/queries/runtime", () => {
         limit: 10,
         locale: "id",
         parentPath: "kurikulum/merdeka/kelas-10",
-        programKey: "id-kurikulum-merdeka",
+        programKey: "merdeka",
       }
     );
     const materialRoutes = await t.query(

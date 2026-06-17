@@ -19,11 +19,11 @@ const programs = [
     coverageStatus: "partial",
     description: "School curriculum.",
     displayOrder: 10,
-    key: "id-kurikulum-merdeka",
+    key: "merdeka",
     kind: "school-curriculum",
     navigation: {
-      levels: ["class", "subject", "topic"],
-      model: "class-curriculum-topic",
+      levels: ["stage", "class", "subject", "topic"],
+      model: "curriculum-tree",
     },
     publicSlug: "merdeka",
     title: "Kurikulum Merdeka",
@@ -58,7 +58,7 @@ describe("components/programs/onboarding/model", () => {
       getProgramsForInterests(programs, ["school-curriculum"]).map(
         (program) => program.key
       )
-    ).toEqual(["id-kurikulum-merdeka"]);
+    ).toEqual(["merdeka"]);
     expect(
       getProgramsForInterests(programs, ["exam-prep", "assessment-prep"]).map(
         (program) => program.key
@@ -107,7 +107,7 @@ describe("components/programs/onboarding/model", () => {
 
     expect(schoolSelection).toMatchObject({
       interests: ["school-curriculum"],
-      program: { key: "id-kurikulum-merdeka" },
+      program: { key: "merdeka" },
     });
     expect(examSelection).toMatchObject({
       interests: ["exam-prep"],

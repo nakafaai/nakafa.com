@@ -64,7 +64,7 @@ Rule references (read on demand when the task touches these areas):
 
 ## Component discovery
 
-All 53 primitives have dedicated reference guides at `./references/primitives/<name>.md`. To find the right one for a task, consult the component registry index:
+All 54 primitives have dedicated reference guides at `./references/primitives/<name>.md`. To find the right one for a task, consult the component registry index:
 
 - `./references/component-registry.md`
 
@@ -101,6 +101,7 @@ High-risk primitives (read these guides first -- they have the most composition 
 
 - `./references/primitives/dialog.md` — modal overlays, form-in-dialog, responsive dialog/drawer
 - `./references/primitives/menu.md` — dropdown actions, checkbox/radio items, submenus
+- `./references/primitives/context-menu.md` — right-click/long-press menus at the pointer
 - `./references/primitives/select.md` — items-first pattern, multiple, object values, groups
 - `./references/primitives/form.md` — Field composition, validation, submission
 - `./references/primitives/input-group.md` — addons, DOM order invariant, textarea layouts

@@ -73,7 +73,7 @@ describe("program/coverage", () => {
       })
     ).toEqual([
       expect.objectContaining({
-        programKey: "id-kurikulum-merdeka",
+        programKey: "merdeka",
       }),
     ]);
   });
@@ -101,7 +101,7 @@ describe("program/coverage", () => {
       getProgramKeysForCoverageRoute(unmatchedRoute, [
         {
           match: { routeKinds: ["curriculum-topic"] },
-          programKey: LearningProgramKeySchema.make("id-kurikulum-merdeka"),
+          programKey: LearningProgramKeySchema.make("merdeka"),
         },
       ])
     ).toEqual([]);
@@ -141,7 +141,7 @@ describe("program/coverage", () => {
       rows.map((row) => [row.programKey, row])
     );
 
-    expect(rowsByProgram["id-kurikulum-merdeka"]).toMatchObject({
+    expect(rowsByProgram.merdeka).toMatchObject({
       coverageStatus: "partial",
       lensScope: "curriculum",
     });
@@ -161,7 +161,7 @@ describe("program/coverage", () => {
       rows.map((row) => [row.programKey, row])
     );
 
-    expect(rowsByProgram["id-kurikulum-merdeka"]).toMatchObject({
+    expect(rowsByProgram.merdeka).toMatchObject({
       lensScope: "curriculum",
     });
     expect(rowsByProgram["snbt-2026"]).toMatchObject({ lensScope: "exam" });
@@ -170,7 +170,7 @@ describe("program/coverage", () => {
   it("preserves explicit available catalog status for real program coverage", () => {
     const rows = createLearningProgramCoverageInputs({
       programs: LEARNING_PROGRAM_CATALOG.map((program) => {
-        if (program.key !== "id-kurikulum-merdeka") {
+        if (program.key !== "merdeka") {
           return program;
         }
 
@@ -186,7 +186,7 @@ describe("program/coverage", () => {
     expect(rows).toEqual([
       expect.objectContaining({
         coverageStatus: "available",
-        programKey: "id-kurikulum-merdeka",
+        programKey: "merdeka",
       }),
     ]);
   });
@@ -205,11 +205,11 @@ describe("program/coverage", () => {
       alignments: [
         {
           match: { routeSegments: ["eksponen-logaritma"] },
-          programKey: LearningProgramKeySchema.make("id-kurikulum-merdeka"),
+          programKey: LearningProgramKeySchema.make("merdeka"),
         },
         {
           match: { routeSegments: ["topik-kedua"] },
-          programKey: LearningProgramKeySchema.make("id-kurikulum-merdeka"),
+          programKey: LearningProgramKeySchema.make("merdeka"),
         },
       ],
       programs: LEARNING_PROGRAM_CATALOG,
@@ -220,7 +220,7 @@ describe("program/coverage", () => {
     expect(rows).toEqual([
       expect.objectContaining({
         contentCount: 2,
-        programKey: "id-kurikulum-merdeka",
+        programKey: "merdeka",
         sampleContentId: subjectRoute.assetId,
       }),
     ]);
@@ -239,7 +239,7 @@ describe("program/coverage", () => {
     });
 
     expect(curriculumRows.map((row) => row.programKey).sort()).toEqual([
-      "id-kurikulum-merdeka",
+      "merdeka",
     ]);
     expect(fallbackRows).toEqual([]);
   });
@@ -276,10 +276,10 @@ describe("program/coverage", () => {
       rows.map((row) => [`${row.programKey}:${row.locale}`, row])
     );
 
-    expect(rowsByProgramAndLocale["id-kurikulum-merdeka:id"]).toMatchObject({
+    expect(rowsByProgramAndLocale["merdeka:id"]).toMatchObject({
       coverageStatus: "partial",
     });
-    expect(rowsByProgramAndLocale["id-kurikulum-merdeka:en"]).toMatchObject({
+    expect(rowsByProgramAndLocale["merdeka:en"]).toMatchObject({
       coverageStatus: "partial",
     });
   });
@@ -293,7 +293,7 @@ describe("program/coverage", () => {
       sourcePath: "material/lesson/mathematics/exponential-logarithm-practice",
     });
     const programs = LEARNING_PROGRAM_CATALOG.map((program) => {
-      if (program.key !== "id-kurikulum-merdeka") {
+      if (program.key !== "merdeka") {
         return program;
       }
 
@@ -309,7 +309,7 @@ describe("program/coverage", () => {
       rows.map((row) => [row.programKey, row])
     );
 
-    expect(rowsByProgram["id-kurikulum-merdeka"]).toBeUndefined();
+    expect(rowsByProgram.merdeka).toBeUndefined();
     expect(rowsByProgram).toEqual({});
   });
 

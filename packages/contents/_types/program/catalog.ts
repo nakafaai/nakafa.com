@@ -17,26 +17,28 @@ const PROGRAM_2028_REVIEW = ProgramDateOnlySchema.make("2028-01-01");
 
 /** Canonical program keys owned by the source-controlled program registry. */
 export const LEARNING_PROGRAM_KEYS = {
-  cambridgeIgcse: LearningProgramKeySchema.make("cambridge-igcse"),
-  indonesiaMerdekaCurriculum: LearningProgramKeySchema.make(
-    "id-kurikulum-merdeka"
+  cambridgeInternational: LearningProgramKeySchema.make(
+    "cambridge-international"
   ),
+  merdeka: LearningProgramKeySchema.make("merdeka"),
+  singaporeMoe: LearningProgramKeySchema.make("singapore-moe"),
   snbt2026: LearningProgramKeySchema.make("snbt-2026"),
   tka2026: LearningProgramKeySchema.make("tka-2026"),
-  usCommonCoreNgss: LearningProgramKeySchema.make("us-common-core-ngss"),
+  unitedStates: LearningProgramKeySchema.make("united-states"),
 } as const;
 
 const learningProgramCatalogInput = [
   {
     defaultCoverageStatus: "partial",
     displayOrder: 10,
-    key: LEARNING_PROGRAM_KEYS.indonesiaMerdekaCurriculum,
+    iconKey: "school",
+    key: LEARNING_PROGRAM_KEYS.merdeka,
     kind: "school-curriculum",
     navigation: {
-      levels: ["class", "subject", "topic"],
-      model: "class-curriculum-topic",
+      levels: ["stage", "class", "subject", "topic"],
+      model: "curriculum-tree",
     },
-    provider: { country: "ID", kind: "official", name: "Kemendikdasmen" },
+    provider: { homeCountry: "ID", kind: "official", name: "Kemendikdasmen" },
     recommendedCountry: "ID",
     sources: [
       {
@@ -64,18 +66,26 @@ const learningProgramCatalogInput = [
   {
     defaultCoverageStatus: "planned",
     displayOrder: 20,
-    key: LEARNING_PROGRAM_KEYS.cambridgeIgcse,
+    iconKey: "global-education",
+    key: LEARNING_PROGRAM_KEYS.cambridgeInternational,
     kind: "school-curriculum",
     navigation: {
-      levels: ["course", "unit", "lesson"],
-      model: "course-unit-lesson",
+      levels: ["stage", "qualification", "course", "unit", "lesson"],
+      model: "curriculum-tree",
     },
     provider: {
-      country: "GB",
+      homeCountry: "GB",
       kind: "official",
       name: "Cambridge International Education",
     },
     sources: [
+      {
+        label: "Cambridge Pathway programmes",
+        retrievedAt: SOURCE_RETRIEVED_AT_2026_06_16,
+        reviewAfter: PROGRAM_2027_END,
+        type: "official-portal",
+        url: "https://www.cambridgeinternational.org/programmes-and-qualifications/",
+      },
       {
         label: "Cambridge IGCSE Mathematics 0580",
         retrievedAt: SOURCE_RETRIEVED_AT_2026_06_16,
@@ -93,16 +103,20 @@ const learningProgramCatalogInput = [
     ],
     translations: {
       en: {
-        publicSlug: "cambridge-igcse",
-        title: "Cambridge IGCSE",
+        description:
+          "Explore Cambridge International stages, qualifications, and available courses.",
+        publicSlug: "cambridge-international",
+        title: "Cambridge International",
       },
       id: {
-        publicSlug: "cambridge-igcse",
-        title: "Cambridge IGCSE",
+        description:
+          "Jelajahi jenjang, kualifikasi, dan kursus yang tersedia dari Cambridge International.",
+        publicSlug: "cambridge-international",
+        title: "Cambridge International",
       },
     },
     version: {
-      label: "2025-2027",
+      label: "Cambridge Pathway",
       startsAt: PROGRAM_2025_START,
       endsAt: PROGRAM_2027_END,
     },
@@ -110,14 +124,70 @@ const learningProgramCatalogInput = [
   {
     defaultCoverageStatus: "planned",
     displayOrder: 30,
-    key: LEARNING_PROGRAM_KEYS.usCommonCoreNgss,
+    iconKey: "primary-school",
+    key: LEARNING_PROGRAM_KEYS.singaporeMoe,
     kind: "school-curriculum",
     navigation: {
-      levels: ["course", "unit", "lesson"],
-      model: "course-unit-lesson",
+      levels: ["stage", "course", "unit", "lesson"],
+      model: "curriculum-tree",
     },
     provider: {
-      country: "US",
+      homeCountry: "SG",
+      kind: "official",
+      name: "Ministry of Education Singapore",
+    },
+    recommendedCountry: "SG",
+    sources: [
+      {
+        label: "Singapore Primary School Education",
+        retrievedAt: SOURCE_RETRIEVED_AT_2026_06_16,
+        reviewAfter: PROGRAM_2028_REVIEW,
+        type: "official-portal",
+        url: "https://www.moe.gov.sg/primary",
+      },
+      {
+        label: "Singapore Secondary School Education",
+        retrievedAt: SOURCE_RETRIEVED_AT_2026_06_16,
+        reviewAfter: PROGRAM_2028_REVIEW,
+        type: "official-portal",
+        url: "https://www.moe.gov.sg/secondary",
+      },
+      {
+        label: "Singapore Pre-university Education",
+        retrievedAt: SOURCE_RETRIEVED_AT_2026_06_16,
+        reviewAfter: PROGRAM_2028_REVIEW,
+        type: "official-portal",
+        url: "https://www.moe.gov.sg/post-secondary/a-level-curriculum-and-subject-syllabuses",
+      },
+    ],
+    translations: {
+      en: {
+        description:
+          "Follow Singapore MOE stages from Primary through Pre-university.",
+        publicSlug: "singapore-moe",
+        title: "Singapore MOE",
+      },
+      id: {
+        description:
+          "Ikuti jenjang MOE Singapura dari Primary hingga Pre-university.",
+        publicSlug: "singapore-moe",
+        title: "Singapore MOE",
+      },
+    },
+    version: { label: "Singapore MOE" },
+  },
+  {
+    defaultCoverageStatus: "planned",
+    displayOrder: 40,
+    iconKey: "framework",
+    key: LEARNING_PROGRAM_KEYS.unitedStates,
+    kind: "school-curriculum",
+    navigation: {
+      levels: ["framework", "course", "unit", "lesson"],
+      model: "curriculum-tree",
+    },
+    provider: {
+      homeCountry: "US",
       kind: "official",
       name: "CCSSO / NGSS Lead States",
     },
@@ -140,29 +210,29 @@ const learningProgramCatalogInput = [
     translations: {
       en: {
         description:
-          "Follow high school math and science standards by course and unit.",
-        publicSlug: "us-common-core-ngss",
-        title: "Common Core Math + NGSS",
+          "Follow a K-12 standards-aligned pathway for Common Core, NGSS, and state frameworks.",
+        publicSlug: "united-states",
+        title: "United States Standards-Aligned Pathway",
       },
       id: {
         description:
-          "Ikuti standar matematika dan sains SMA sesuai kursus dan unit.",
-        publicSlug: "us-common-core-ngss",
-        title: "Common Core Math + NGSS",
+          "Ikuti jalur K-12 yang selaras dengan Common Core, NGSS, dan kerangka negara bagian.",
+        publicSlug: "amerika-serikat",
+        title: "United States Standards-Aligned Pathway",
       },
     },
-    version: { label: "High school standards" },
+    version: { label: "K-12 standards-aligned pathway" },
   },
   {
     defaultCoverageStatus: "planned",
-    displayOrder: 40,
+    displayOrder: 50,
     key: LEARNING_PROGRAM_KEYS.tka2026,
     kind: "assessment",
     navigation: {
       levels: ["section", "domain", "practice-set"],
       model: "exam-domain-practice-set",
     },
-    provider: { country: "ID", kind: "official", name: "Kemendikdasmen" },
+    provider: { homeCountry: "ID", kind: "official", name: "Kemendikdasmen" },
     recommendedCountry: "ID",
     sources: [
       {
@@ -200,14 +270,14 @@ const learningProgramCatalogInput = [
   },
   {
     defaultCoverageStatus: "partial",
-    displayOrder: 50,
+    displayOrder: 60,
     key: LEARNING_PROGRAM_KEYS.snbt2026,
     kind: "admission-exam",
     navigation: {
       levels: ["section", "domain", "practice-set"],
       model: "exam-domain-practice-set",
     },
-    provider: { country: "ID", kind: "official", name: "SNPMB" },
+    provider: { homeCountry: "ID", kind: "official", name: "SNPMB" },
     recommendedCountry: "ID",
     sources: [
       {

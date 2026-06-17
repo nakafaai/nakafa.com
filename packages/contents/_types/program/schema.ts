@@ -54,7 +54,7 @@ export const LearningProgramKindSchema = Schema.Literal(
 export type LearningProgramKind = SchemaType<typeof LearningProgramKindSchema>;
 
 export const PROGRAM_NAVIGATION_MODEL_VALUES = [
-  "class-curriculum-topic",
+  "curriculum-tree",
   "course-unit-lesson",
   "exam-domain-practice-set",
   "track-topic",
@@ -72,10 +72,13 @@ export const PROGRAM_NAVIGATION_LEVEL_VALUES = [
   "class",
   "course",
   "domain",
+  "framework",
   "lesson",
   "phase",
   "practice-set",
+  "qualification",
   "section",
+  "stage",
   "subject",
   "topic",
   "track",
@@ -88,6 +91,46 @@ export const ProgramNavigationLevelSchema = Schema.Literal(
 
 export type ProgramNavigationLevel = SchemaType<
   typeof ProgramNavigationLevelSchema
+>;
+
+export const PROGRAM_NAVIGATION_ICON_KEY_VALUES = [
+  "advanced",
+  "assessment",
+  "certificate",
+  "course",
+  "diploma",
+  "early-years",
+  "framework",
+  "global-education",
+  "grade-1",
+  "grade-2",
+  "grade-3",
+  "grade-4",
+  "grade-5",
+  "grade-6",
+  "grade-7",
+  "grade-8",
+  "grade-9",
+  "grade-10",
+  "grade-11",
+  "grade-12",
+  "high-school",
+  "mathematics",
+  "middle-school",
+  "primary-school",
+  "qualification",
+  "science",
+  "school",
+  "state",
+  "standards",
+] as const;
+
+export const ProgramNavigationIconKeySchema = Schema.Literal(
+  ...PROGRAM_NAVIGATION_ICON_KEY_VALUES
+);
+
+export type ProgramNavigationIconKey = SchemaType<
+  typeof ProgramNavigationIconKeySchema
 >;
 
 /**
@@ -213,8 +256,15 @@ export type LearningProgramCoverageRoute = SchemaType<
   typeof LearningProgramCoverageRouteSchema
 >;
 
+/**
+ * Names the official source or awarding body behind one program.
+ *
+ * `homeCountry` is provider origin metadata only. Curriculum scope and public
+ * roots stay authority/system-based so Cambridge International is not modeled
+ * as the UK National Curriculum.
+ */
 export const ProgramProviderSchema = Schema.Struct({
-  country: Schema.optional(Schema.String),
+  homeCountry: Schema.optional(Schema.String),
   kind: Schema.Literal(...PROGRAM_PROVIDER_KIND_VALUES),
   name: Schema.String,
 });
@@ -251,6 +301,7 @@ export const LearningProgramSchema = Schema.Struct({
   displayOrder: Schema.Number,
   kind: LearningProgramKindSchema,
   key: LearningProgramKeySchema,
+  iconKey: Schema.optional(ProgramNavigationIconKeySchema),
   provider: ProgramProviderSchema,
   navigation: ProgramNavigationSchema,
   recommendedCountry: Schema.optional(Schema.String),

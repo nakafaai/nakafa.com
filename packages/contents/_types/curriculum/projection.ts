@@ -436,6 +436,10 @@ function decodeCurriculumNode({
   translations: CurriculumNodeTranslationMap;
 }): ProjectedCurriculumNode {
   const nodeRow = Schema.decodeUnknownSync(CurriculumNodeSchema)({
+    displayGroup: "displayGroup" in node ? node.displayGroup : undefined,
+    displayGroupIconKey:
+      "displayGroupIconKey" in node ? node.displayGroupIconKey : undefined,
+    iconKey: "iconKey" in node ? node.iconKey : undefined,
     key: node.key,
     level: node.level,
     materialDomain,

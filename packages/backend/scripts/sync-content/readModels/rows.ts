@@ -281,7 +281,7 @@ function toGeneratedProgramRow(
       levels: [...program.navigation.levels],
       model: program.navigation.model,
     },
-    providerCountry: program.provider.country,
+    providerHomeCountry: program.provider.homeCountry,
     providerKind: program.provider.kind,
     providerName: program.provider.name,
     recommendedCountry: program.recommendedCountry,
@@ -313,6 +313,11 @@ function toPublicRoutePayload(route: PublicRoute): PublicRoutePayload {
   return {
     canonicalPath: "canonicalPath" in route ? route.canonicalPath : undefined,
     description: route.description,
+    displayGroupIconKey:
+      "displayGroupIconKey" in route ? route.displayGroupIconKey : undefined,
+    displayGroupTitle:
+      "displayGroupTitle" in route ? route.displayGroupTitle : undefined,
+    iconKey: "iconKey" in route ? route.iconKey : undefined,
     kind: route.kind,
     locale: route.locale,
     materialDomain:

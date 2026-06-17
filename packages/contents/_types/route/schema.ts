@@ -3,6 +3,7 @@ import { MaterialSchema } from "@repo/contents/_types/curriculum/material";
 import { MaterialKeySchema } from "@repo/contents/_types/material/schema";
 import {
   LearningProgramKeySchema,
+  ProgramNavigationIconKeySchema,
   ProgramNavigationLevelSchema,
 } from "@repo/contents/_types/program/schema";
 import { PublicRoutePathSchema } from "@repo/contents/_types/route/segment";
@@ -56,6 +57,9 @@ export const PublicCurriculumRouteSchema = Schema.extend(
   PublicRouteBaseSchema,
   Schema.Struct({
     canonicalPath: Schema.optional(PublicRoutePathSchema),
+    displayGroupIconKey: Schema.optional(ProgramNavigationIconKeySchema),
+    displayGroupTitle: Schema.optional(Schema.String),
+    iconKey: Schema.optional(ProgramNavigationIconKeySchema),
     kind: Schema.Literal("curriculum-context"),
     level: ProgramNavigationLevelSchema,
     materialDomain: Schema.optional(MaterialSchema),

@@ -243,10 +243,10 @@ describe("proxy", () => {
 
   it("rejects stale localized route namespaces before locale normalization", async () => {
     const paths = [
-      "/id/curriculum/high-school/10",
-      "/id/assessment/snbt-2026/pengetahuan-kuantitatif",
-      "/id/subject/matematika/integral",
-      "/id/exercises/snbt/pengetahuan-kuantitatif",
+      "/id/curricula/merdeka",
+      "/id/assessment/snbt/pengetahuan-kuantitatif",
+      "/id/subjects/matematika/integral",
+      "/id/practice/snbt/pengetahuan-kuantitatif",
       "/en/kurikulum/merdeka/kelas-10",
       "/en/materi/mathematics/integral",
     ];

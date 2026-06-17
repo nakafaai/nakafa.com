@@ -41,7 +41,7 @@ describe("learningPrograms/mutations", () => {
             lensId: subjectGraph.lensId,
             lensScope: "curriculum",
             locale: "id",
-            programKey: "id-kurikulum-merdeka",
+            programKey: "merdeka",
             sampleContentId: subjectGraph.assetId,
             syncedAt: NOW,
           },
@@ -57,7 +57,7 @@ describe("learningPrograms/mutations", () => {
       .mutation(api.learningPrograms.mutations.selectLearningProgram, {
         interests: ["school-curriculum", "exam-prep"],
         locale: "id",
-        primaryProgramKey: "id-kurikulum-merdeka",
+        primaryProgramKey: "merdeka",
         stage: "grade-10",
       });
 
@@ -69,7 +69,7 @@ describe("learningPrograms/mutations", () => {
           route: "material/lesson/chemistry/atomic-structure",
         },
       ],
-      program: { key: "id-kurikulum-merdeka" },
+      program: { key: "merdeka" },
       stage: "grade-10",
     });
   });
@@ -128,13 +128,13 @@ describe("learningPrograms/mutations", () => {
       graph: subjectGraph,
       lensScope: "curriculum",
       locale: "id",
-      programKey: "id-kurikulum-merdeka",
+      programKey: "merdeka",
     });
     await syncProgramCoverage(t, {
       graph: englishSubjectGraph,
       lensScope: "curriculum",
       locale: "en",
-      programKey: "id-kurikulum-merdeka",
+      programKey: "merdeka",
     });
 
     const authed = t.withIdentity({
@@ -146,7 +146,7 @@ describe("learningPrograms/mutations", () => {
       {
         interests: ["school-curriculum"],
         locale: "en",
-        primaryProgramKey: "id-kurikulum-merdeka",
+        primaryProgramKey: "merdeka",
       }
     );
     const englishProfile = await authed.query(
@@ -155,11 +155,11 @@ describe("learningPrograms/mutations", () => {
     );
 
     expect(englishSelection.program).toMatchObject({
-      key: "id-kurikulum-merdeka",
+      key: "merdeka",
       title: "Kurikulum Merdeka",
     });
     expect(englishProfile?.program).toMatchObject({
-      key: "id-kurikulum-merdeka",
+      key: "merdeka",
       title: "Kurikulum Merdeka",
     });
 
@@ -168,7 +168,7 @@ describe("learningPrograms/mutations", () => {
       {
         interests: ["school-curriculum"],
         locale: "id",
-        primaryProgramKey: "id-kurikulum-merdeka",
+        primaryProgramKey: "merdeka",
       }
     );
 
@@ -195,7 +195,7 @@ describe("learningPrograms/mutations", () => {
       authed.mutation(api.learningPrograms.mutations.selectLearningProgram, {
         interests: ["school-curriculum"],
         locale: "en",
-        primaryProgramKey: "id-kurikulum-merdeka",
+        primaryProgramKey: "merdeka",
       })
     ).rejects.toThrow("LEARNING_PROGRAM_CONTENT_LOCALE_UNAVAILABLE");
 

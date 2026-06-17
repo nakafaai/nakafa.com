@@ -53,10 +53,9 @@
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
-    margin-bottom: 3mm;
-    border-left: 2.5pt solid var(--brand);
-    border-radius: 1.5pt;
-    padding-left: 8pt;
+    margin-bottom: 4.2mm;
+    padding-bottom: 2.3mm;
+    border-bottom: 0.6pt solid var(--border);
   }
   .header > div:first-child { flex-shrink: 0; }
   .name {
@@ -92,18 +91,24 @@
   .contact .loc { color: var(--olive); font-weight: 500; }
 
   /* METRICS */
-  .metrics { display: flex; gap: 7mm; margin-bottom: 6.5mm; }
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    column-gap: 5mm;
+    margin-bottom: 3mm;
+  }
   .metric {
-    flex: 1;
-    padding: 1mm 0;
+    padding: 1mm 0 1.2mm;
     display: flex;
-    align-items: baseline;
-    gap: 2mm;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.7mm;
+    min-width: 0;
     break-inside: avoid;
   }
   .metric-value {
     font-family: var(--serif);
-    font-size: 14pt;
+    font-size: 13pt;
     font-weight: 500;
     color: var(--brand);
     line-height: 1;
@@ -115,7 +120,12 @@
     font-weight: 500;
     color: var(--brand);
   }
-  .metric-label { font-size: 9pt; color: var(--olive); line-height: 1.2; }
+  .metric-label {
+    font-size: 9pt;
+    color: var(--olive);
+    line-height: 1.2;
+    white-space: nowrap;
+  }
 
   /* SECTION TITLE */
   .section-title {
@@ -125,7 +135,7 @@
     color: var(--near-black);
     border-bottom: 0.5pt solid var(--border);
     padding: 0 0 3pt 0;
-    margin: 7.5mm 0 3mm 0;
+    margin: 5.8mm 0 2mm 0;
     display: flex;
     align-items: baseline;
     gap: 2.5mm;
@@ -165,13 +175,11 @@
 
   /* PROJECTS */
   .project {
-    padding: 2.5mm 0;
-    border-top: 0.4pt solid var(--border-soft);
+    padding: 2.6mm 0;
     break-inside: avoid;
   }
   .project:first-of-type {
-    border-top: 0.4pt solid var(--border);
-    padding-top: 2.5mm;
+    padding-top: 1.6mm;
   }
   .proj-head {
     display: flex; align-items: baseline;
@@ -247,7 +255,6 @@
     margin-top: 2.5mm;
     padding: 1.8mm 3mm;
     background: var(--brand-tint);
-    border-left: 1.4pt solid var(--brand);
     border-radius: 2pt;
     font-size: 9pt; line-height: 1.45;
     color: var(--near-black);

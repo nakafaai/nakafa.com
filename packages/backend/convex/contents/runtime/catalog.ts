@@ -406,6 +406,9 @@ function toRuntimePublicRoute(route: Doc<"publicRoutes">) {
   return {
     canonicalPath: route.canonicalPath,
     description: route.description,
+    displayGroupIconKey: route.displayGroupIconKey,
+    displayGroupTitle: route.displayGroupTitle,
+    iconKey: route.iconKey,
     kind: route.kind,
     locale: route.locale,
     materialDomain: route.materialDomain,

@@ -18,6 +18,7 @@ import { Effect, Exit, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 const INDONESIAN_BIOLOGY_MATERIAL_HREF_PATTERN = /^\/id\/materi\/biologi\//;
+const ROUTE_SHAPED_CURRICULUM_PATH_PATTERN = /^curriculum\/[^/]+\/\d/;
 
 describe("public curriculum routes", () => {
   it("derives Merdeka context routes from curriculum mappings, not grade folders", () => {
@@ -30,7 +31,7 @@ describe("public curriculum routes", () => {
         locale: "id",
         materialDomain: "mathematics",
         materialKey: "lesson.mathematics.integral",
-        programKey: "id-kurikulum-merdeka",
+        programKey: "merdeka",
         publicPath: "kurikulum/merdeka/kelas-12/matematika/integral",
       })
     );
@@ -40,13 +41,15 @@ describe("public curriculum routes", () => {
         kind: "curriculum-context",
         locale: "en",
         materialKey: "lesson.mathematics.integral",
-        programKey: "id-kurikulum-merdeka",
+        programKey: "merdeka",
         publicPath: "curriculum/merdeka/class-12/mathematics/integral",
       })
     );
     expect(
-      routes.every((route) => !route.publicPath.includes("high-school"))
-    ).toBe(true);
+      routes.some((route) =>
+        ROUTE_SHAPED_CURRICULUM_PATH_PATTERN.test(route.publicPath)
+      )
+    ).toBe(false);
     expect(routes).toContainEqual(
       expect.objectContaining({
         kind: "curriculum-context",
@@ -60,7 +63,7 @@ describe("public curriculum routes", () => {
 
   it("projects curriculum nodes from their material slug when a parent is absent", () => {
     const curriculum = defineCurriculum({
-      programKey: "id-kurikulum-merdeka",
+      programKey: "merdeka",
       tree: [
         {
           children: [
@@ -82,7 +85,7 @@ describe("public curriculum routes", () => {
       ],
     });
     const orphanNode = Schema.decodeUnknownSync(ProjectedCurriculumNodeSchema)({
-      curriculumKey: "id-kurikulum-merdeka",
+      curriculumKey: "merdeka",
       key: "child",
       level: "topic",
       materialKeys: ["lesson.mathematics.integral"],
@@ -110,11 +113,11 @@ describe("public curriculum routes", () => {
 
   it("projects descendant curriculum material when children are decoded first", () => {
     const curriculum = defineCurriculum({
-      programKey: "id-kurikulum-merdeka",
+      programKey: "merdeka",
       tree: [],
     });
     const childNode = Schema.decodeUnknownSync(ProjectedCurriculumNodeSchema)({
-      curriculumKey: "id-kurikulum-merdeka",
+      curriculumKey: "merdeka",
       key: "child-first",
       level: "topic",
       materialKeys: ["lesson.mathematics.integral"],
@@ -126,7 +129,7 @@ describe("public curriculum routes", () => {
       },
     });
     const parentNode = Schema.decodeUnknownSync(ProjectedCurriculumNodeSchema)({
-      curriculumKey: "id-kurikulum-merdeka",
+      curriculumKey: "merdeka",
       key: "parent-second",
       level: "subject",
       materialKeys: [],
@@ -161,9 +164,9 @@ describe("public curriculum routes", () => {
         locale: "en",
         materialDomain: "mathematics",
         materialKey: "lesson.mathematics.linear-equation-inequality",
-        programKey: "cambridge-igcse",
+        programKey: "cambridge-international",
         publicPath:
-          "curriculum/cambridge-igcse/mathematics-0580/algebra-and-graphs/linear-equation-inequality",
+          "curriculum/cambridge-international/upper-secondary/igcse/mathematics-0580/algebra-and-graphs/linear-equation-inequality",
       })
     );
     expect(routes).toContainEqual(
@@ -173,30 +176,44 @@ describe("public curriculum routes", () => {
         kind: "curriculum-context",
         locale: "id",
         materialKey: "lesson.mathematics.linear-equation-inequality",
-        programKey: "cambridge-igcse",
+        programKey: "cambridge-international",
         publicPath:
-          "kurikulum/cambridge-igcse/mathematics-0580/aljabar-dan-grafik/sistem-persamaan-dan-pertidaksamaan-linear",
+          "kurikulum/cambridge-international/upper-secondary/igcse/mathematics-0580/aljabar-dan-grafik/sistem-persamaan-dan-pertidaksamaan-linear",
       })
     );
 
     const root = routes.find(
       (route) =>
         route.locale === "id" &&
-        route.publicPath === "kurikulum/cambridge-igcse"
+        route.publicPath === "kurikulum/cambridge-international"
+    );
+    const stage = routes.find(
+      (route) =>
+        route.locale === "id" &&
+        route.publicPath === "kurikulum/cambridge-international/upper-secondary"
+    );
+    const qualification = routes.find(
+      (route) =>
+        route.locale === "id" &&
+        route.publicPath ===
+          "kurikulum/cambridge-international/upper-secondary/igcse"
     );
     const course = routes.find(
       (route) =>
         route.locale === "id" &&
-        route.publicPath === "kurikulum/cambridge-igcse/mathematics-0580"
+        route.publicPath ===
+          "kurikulum/cambridge-international/upper-secondary/igcse/mathematics-0580"
     );
     const unit = routes.find(
       (route) =>
         route.locale === "id" &&
         route.publicPath ===
-          "kurikulum/cambridge-igcse/mathematics-0580/aljabar-dan-grafik"
+          "kurikulum/cambridge-international/upper-secondary/igcse/mathematics-0580/aljabar-dan-grafik"
     );
 
-    expect(root?.description).toBeUndefined();
+    expect(root?.description).not.toContain("bilangan");
+    expect(stage?.level).toBe("stage");
+    expect(qualification?.level).toBe("qualification");
     expect(course?.description).toBeUndefined();
     expect(unit?.description).toBe(
       "Pelajari persamaan, barisan, fungsi, dan grafik sebagai alat aljabar yang saling terhubung."
@@ -210,7 +227,7 @@ describe("public curriculum routes", () => {
         (route) =>
           route.locale === "id" &&
           route.parentPath ===
-            "kurikulum/cambridge-igcse/mathematics-0580/aljabar-dan-grafik" &&
+            "kurikulum/cambridge-international/upper-secondary/igcse/mathematics-0580/aljabar-dan-grafik" &&
           route.materialKey !== undefined
       )
       .sort((left, right) => left.order - right.order)
@@ -222,6 +239,56 @@ describe("public curriculum routes", () => {
       ["lesson.mathematics.sequence-series", 30],
       ["lesson.mathematics.function-modeling", 40],
     ]);
+  });
+
+  it("projects source-owned group icons separately from card icons", () => {
+    const routes = Effect.runSync(listPublicCurriculumRoutes());
+
+    expect(routes).toContainEqual(
+      expect.objectContaining({
+        displayGroupIconKey: "primary-school",
+        displayGroupTitle: "SD",
+        iconKey: "grade-1",
+        locale: "id",
+        publicPath: "kurikulum/merdeka/kelas-1",
+      })
+    );
+    expect(routes).toContainEqual(
+      expect.objectContaining({
+        displayGroupIconKey: "high-school",
+        displayGroupTitle: "SMA",
+        iconKey: "grade-10",
+        locale: "id",
+        publicPath: "kurikulum/merdeka/kelas-10",
+      })
+    );
+    expect(routes).toContainEqual(
+      expect.objectContaining({
+        displayGroupIconKey: "global-education",
+        displayGroupTitle: "Cambridge Pathway",
+        iconKey: "high-school",
+        locale: "en",
+        publicPath: "curriculum/cambridge-international/upper-secondary",
+      })
+    );
+    expect(routes).toContainEqual(
+      expect.objectContaining({
+        displayGroupIconKey: "school",
+        displayGroupTitle: "Singapore MOE",
+        iconKey: "primary-school",
+        locale: "id",
+        publicPath: "kurikulum/singapore-moe/primary",
+      })
+    );
+    expect(routes).toContainEqual(
+      expect.objectContaining({
+        displayGroupIconKey: "standards",
+        displayGroupTitle: "Jalur Amerika Serikat",
+        iconKey: "standards",
+        locale: "id",
+        publicPath: "kurikulum/amerika-serikat/standar-inti-k-12",
+      })
+    );
   });
 
   it("exposes curriculum context helpers for app card-list composition", () => {
@@ -250,7 +317,8 @@ describe("public curriculum routes", () => {
     const courseRoute = routes.find(
       (route) =>
         route.locale === "id" &&
-        route.publicPath === "kurikulum/cambridge-igcse/mathematics-0580"
+        route.publicPath ===
+          "kurikulum/cambridge-international/upper-secondary/igcse/mathematics-0580"
     );
 
     expect(root).toBeDefined();
@@ -363,7 +431,7 @@ describe("public curriculum routes", () => {
 
   it("indexes projected curriculum descendants by source-owned node keys", () => {
     const childNode = Schema.decodeUnknownSync(ProjectedCurriculumNodeSchema)({
-      curriculumKey: "id-kurikulum-merdeka",
+      curriculumKey: "merdeka",
       key: "child-first",
       level: "topic",
       materialKeys: ["lesson.mathematics.integral"],
@@ -375,7 +443,7 @@ describe("public curriculum routes", () => {
       },
     });
     const parentNode = Schema.decodeUnknownSync(ProjectedCurriculumNodeSchema)({
-      curriculumKey: "id-kurikulum-merdeka",
+      curriculumKey: "merdeka",
       key: "parent-second",
       level: "subject",
       materialKeys: [],
@@ -399,17 +467,54 @@ describe("public curriculum routes", () => {
     ).toBe(true);
   });
 
-  it("does not invent public routes for planned curricula without material mappings", () => {
+  it("renders planned curriculum roots without inventing material coverage", () => {
+    const routes = Effect.runSync(listPublicCurriculumRoutes());
+    const singaporeRoot = routes.find(
+      (route) =>
+        route.locale === "id" && route.publicPath === "kurikulum/singapore-moe"
+    );
+    const singaporePrimary = routes.find(
+      (route) =>
+        route.locale === "id" &&
+        route.publicPath === "kurikulum/singapore-moe/primary"
+    );
+    const unitedStatesRoot = routes.find(
+      (route) =>
+        route.locale === "id" &&
+        route.publicPath === "kurikulum/amerika-serikat"
+    );
+
+    expect(singaporeRoot).toMatchObject({
+      level: "track",
+      programKey: "singapore-moe",
+      sitemap: false,
+    });
+    expect(singaporeRoot?.materialKey).toBeUndefined();
+    expect(singaporePrimary).toMatchObject({
+      level: "stage",
+      programKey: "singapore-moe",
+      sitemap: false,
+    });
+    expect(singaporePrimary?.materialKey).toBeUndefined();
+    expect(unitedStatesRoot).toMatchObject({
+      level: "track",
+      programKey: "united-states",
+      sitemap: false,
+    });
+    expect(unitedStatesRoot?.materialKey).toBeUndefined();
     expect(
-      Effect.runSync(listPublicCurriculumRoutes()).some(
-        (route) => route.programKey === "us-common-core-ngss"
-      )
-    ).toBe(false);
+      [...new Set(routes.map((route) => route.programKey))].sort()
+    ).toEqual([
+      "cambridge-international",
+      "merdeka",
+      "singapore-moe",
+      "united-states",
+    ]);
   });
 
   it("fails with typed errors when curriculum mapping references unknown material", () => {
     const invalidCurriculum = defineCurriculum({
-      programKey: "id-kurikulum-merdeka",
+      programKey: "merdeka",
       tree: [
         {
           key: "missing-material",

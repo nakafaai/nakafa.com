@@ -27,11 +27,12 @@ describe("program/schema", () => {
       )
     ).toBe(true);
     expect(kindsByKey).toMatchObject({
-      "cambridge-igcse": "school-curriculum",
-      "id-kurikulum-merdeka": "school-curriculum",
+      "cambridge-international": "school-curriculum",
+      merdeka: "school-curriculum",
+      "singapore-moe": "school-curriculum",
       "snbt-2026": "admission-exam",
       "tka-2026": "assessment",
-      "us-common-core-ngss": "school-curriculum",
+      "united-states": "school-curriculum",
     });
   });
 
@@ -44,26 +45,30 @@ describe("program/schema", () => {
     );
 
     expect(PROGRAM_NAVIGATION_MODEL_VALUES).toEqual([
-      "class-curriculum-topic",
+      "curriculum-tree",
       "course-unit-lesson",
       "exam-domain-practice-set",
       "track-topic",
     ]);
-    expect(navigationByKey["id-kurikulum-merdeka"]).toEqual({
-      levels: ["class", "subject", "topic"],
-      model: "class-curriculum-topic",
+    expect(navigationByKey.merdeka).toEqual({
+      levels: ["stage", "class", "subject", "topic"],
+      model: "curriculum-tree",
     });
     expect(navigationByKey["snbt-2026"]).toEqual({
       levels: ["section", "domain", "practice-set"],
       model: "exam-domain-practice-set",
     });
-    expect(navigationByKey["cambridge-igcse"]).toEqual({
-      levels: ["course", "unit", "lesson"],
-      model: "course-unit-lesson",
+    expect(navigationByKey["cambridge-international"]).toEqual({
+      levels: ["stage", "qualification", "course", "unit", "lesson"],
+      model: "curriculum-tree",
     });
-    expect(navigationByKey["us-common-core-ngss"]).toEqual({
-      levels: ["course", "unit", "lesson"],
-      model: "course-unit-lesson",
+    expect(navigationByKey["singapore-moe"]).toEqual({
+      levels: ["stage", "course", "unit", "lesson"],
+      model: "curriculum-tree",
+    });
+    expect(navigationByKey["united-states"]).toEqual({
+      levels: ["framework", "course", "unit", "lesson"],
+      model: "curriculum-tree",
     });
   });
 
@@ -81,7 +86,7 @@ describe("program/schema", () => {
         assetId: "material:lesson:function",
         conceptId: "concept:material:function",
         kind: "curriculum-lesson",
-        lensId: "curriculum:id-kurikulum-merdeka",
+        lensId: "curriculum:merdeka",
         locale: "id",
         route: "/id/kurikulum/merdeka/kelas-10/matematika",
         sourcePath: "material/lesson/mathematics/function",
@@ -94,7 +99,7 @@ describe("program/schema", () => {
       assetId: "material:lesson:function",
       conceptId: "fixture.invalid.key",
       kind: "curriculum-lesson",
-      lensId: "curriculum:id-kurikulum-merdeka",
+      lensId: "curriculum:merdeka",
       locale: "id",
       route: "/id/kurikulum/merdeka/kelas-10/matematika",
       sourcePath: "material/lesson/mathematics/function",
@@ -120,9 +125,7 @@ describe("program/schema", () => {
     expect(Schema.is(ProgramDateOnlySchema)("2026-06-14")).toBe(true);
     expect(Schema.is(ProgramDateOnlySchema)("not-a-date")).toBe(false);
     expect(Schema.is(ProgramDateOnlySchema)("2026-02-30")).toBe(false);
-    expect(Schema.is(LearningProgramKeySchema)("id-kurikulum-merdeka")).toBe(
-      true
-    );
+    expect(Schema.is(LearningProgramKeySchema)("merdeka")).toBe(true);
     expect(Schema.is(LearningProgramKeySchema)("id/kurikulum-merdeka")).toBe(
       false
     );

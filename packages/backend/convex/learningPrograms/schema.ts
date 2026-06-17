@@ -8,6 +8,7 @@ import {
   LEARNING_PLAN_ITEM_STATUS_VALUES,
   LEARNING_PROGRAM_KIND_VALUES,
   LEARNING_STAGE_VALUES,
+  PROGRAM_NAVIGATION_ICON_KEY_VALUES,
   PROGRAM_NAVIGATION_LEVEL_VALUES,
   PROGRAM_NAVIGATION_MODEL_VALUES,
   PROGRAM_PROVIDER_KIND_VALUES,
@@ -34,6 +35,9 @@ export const programNavigationModelValidator = literals(
 );
 export const programNavigationLevelValidator = literals(
   ...PROGRAM_NAVIGATION_LEVEL_VALUES
+);
+export const programNavigationIconKeyValidator = literals(
+  ...PROGRAM_NAVIGATION_ICON_KEY_VALUES
 );
 export const programSourceTypeValidator = literals(
   ...PROGRAM_SOURCE_TYPE_VALUES
@@ -68,11 +72,12 @@ export const programNavigationInputValidator = v.object({
 export const learningProgramInputValidator = v.object({
   defaultCoverageStatus: coverageStatusValidator,
   displayOrder: v.number(),
+  iconKey: v.optional(programNavigationIconKeyValidator),
   key: v.string(),
   kind: learningProgramKindValidator,
   navigation: programNavigationInputValidator,
   provider: v.object({
-    country: v.optional(v.string()),
+    homeCountry: v.optional(v.string()),
     kind: programProviderKindValidator,
     name: v.string(),
   }),
@@ -136,10 +141,11 @@ const tables = {
   learningPrograms: defineTable({
     defaultCoverageStatus: coverageStatusValidator,
     displayOrder: v.number(),
+    iconKey: v.optional(programNavigationIconKeyValidator),
     key: v.string(),
     kind: learningProgramKindValidator,
     navigation: programNavigationInputValidator,
-    providerCountry: v.optional(v.string()),
+    providerHomeCountry: v.optional(v.string()),
     providerKind: programProviderKindValidator,
     providerName: v.string(),
     recommendedCountry: v.optional(v.string()),

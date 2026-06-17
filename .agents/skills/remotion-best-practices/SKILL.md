@@ -201,7 +201,7 @@ npx remotion studio
 
 ## Optional: one-frame render check
 
-You can render a single frame with the CLI to sanity-check layout, colors, or timing.  
+You can render a single frame with the CLI to sanity-check layout, colors, or timing.
 Skip it for trivial edits, pure refactors, or when you already have enough confidence from Studio or prior renders.
 
 ```bash

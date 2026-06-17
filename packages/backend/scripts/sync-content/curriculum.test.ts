@@ -117,7 +117,7 @@ async function loadSubjects({
     >("@repo/contents/_types/curriculum/projection");
     const curriculumNodes = [
       {
-        curriculumKey: "id-kurikulum-merdeka",
+        curriculumKey: "merdeka",
         key: "class-10",
         level: "class",
         materialKeys: [],
@@ -128,7 +128,7 @@ async function loadSubjects({
         },
       },
       {
-        curriculumKey: "id-kurikulum-merdeka",
+        curriculumKey: "merdeka",
         key: "class-10-mathematics",
         level: "subject",
         materialKeys: [],
@@ -140,7 +140,7 @@ async function loadSubjects({
         },
       },
       ...materialTopics.map((topic) => ({
-        curriculumKey: "id-kurikulum-merdeka",
+        curriculumKey: "merdeka",
         key: `class-10-mathematics-${topic.topic}`,
         level: "topic",
         materialKeys: [topic.key],

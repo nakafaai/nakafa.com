@@ -133,7 +133,7 @@ describe("createLocalizedAlternates", () => {
       (candidate) =>
         candidate.kind === "curriculum-context" &&
         candidate.locale === "id" &&
-        candidate.programKey === "id-kurikulum-merdeka" &&
+        candidate.programKey === "merdeka" &&
         candidate.nodeKey.endsWith("integral")
     );
     const assessment = routes.find(

@@ -81,10 +81,9 @@
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
-    margin-bottom: 5.5mm;
-    border-left: 2.5pt solid var(--brand);
-    border-radius: 1.5pt;
-    padding-left: 8pt;
+    margin-bottom: 4.2mm;
+    padding-bottom: 2.3mm;
+    border-bottom: 0.6pt solid var(--border);
   }
   .header > div:first-child { flex-shrink: 0; }
   .name {
@@ -125,14 +124,22 @@
   .contact .sep { color: var(--border); margin: 0 0.4em; }
 
   /* METRICS */
-  .metrics { display: flex; gap: 6mm; margin-bottom: 5.5mm; margin-left: 0; margin-right: 0; }
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    column-gap: 6mm;
+    margin-bottom: 3mm;
+    margin-left: 0;
+    margin-right: 0;
+  }
   .metric {
-    flex: 1;
     background: transparent;
-    padding: 1mm 0;
+    padding: 1mm 0 1.2mm;
     display: flex;
-    align-items: baseline;
-    gap: 1.8mm;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.7mm;
+    min-width: 0;
     break-inside: avoid;
   }
   .metric-value {
@@ -144,7 +151,12 @@
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
-  .metric-label { font-size: 9pt; color: var(--olive); line-height: 1.2; }
+  .metric-label {
+    font-size: 9pt;
+    color: var(--olive);
+    line-height: 1.2;
+    white-space: nowrap;
+  }
 
   .metric-value .unit {
     font-size: 10.5pt;
@@ -154,8 +166,6 @@
   }
 
   .metrics--stack .metric {
-    flex-direction: column;
-    align-items: flex-start;
     gap: 0.5mm;
     padding-bottom: 2mm;
     border-bottom: 0.3pt dotted var(--border);
@@ -167,10 +177,9 @@
     font-size: 12.5pt;
     font-weight: 500;
     color: var(--near-black);
-    border-left: 2.5pt solid var(--brand);
-    border-radius: 1.5pt;
-    padding: 0 0 0 8pt;
-    margin: 6.5mm 0 2.6mm 0;
+    border-bottom: 0.5pt solid var(--border);
+    padding: 0 0 1mm 0;
+    margin: 5.8mm 0 1.7mm 0;
     display: flex;
     align-items: baseline;
     gap: 2mm;
@@ -219,11 +228,10 @@
 
   /* PROJECTS */
   .project {
-    padding: 2.4mm 0 2.4mm 0;
-    border-top: 0.4pt solid var(--border-soft);
+    padding: 2.6mm 0;
     break-inside: avoid;
   }
-  .project:first-of-type { border-top: 0.4pt solid var(--border); padding-top: 2.4mm; }
+  .project:first-of-type { padding-top: 1.2mm; }
   .proj-head {
     display: flex; align-items: baseline;
     gap: 2mm; margin-bottom: 0.75mm;
@@ -255,8 +263,7 @@
 
   .team-culture {
     margin-top: 2mm; padding: 1.5mm 2.5mm;
-    background: transparent;
-    border-left: 1.4pt solid var(--brand);
+    background: var(--brand-tint);
     border-radius: 2pt;
     font-size: 9pt; color: var(--olive); line-height: 1.40;
     break-inside: avoid;
@@ -307,7 +314,7 @@
     margin-top: 2.5mm;
     padding: 1.8mm 2.8mm;
     background: var(--brand-tint);
-    border-left: 1.4pt solid var(--brand);
+    border-radius: 2pt;
     font-size: 9pt; line-height: 1.40;
     color: var(--near-black);
     letter-spacing: 0.3pt;
@@ -492,7 +499,8 @@
   body.resume--dense { font-size: 9pt; }
   body.resume--dense .proj-text { line-height: 1.38; }
   body.resume--dense .tl-body { font-size: 8.5pt; }
-  body.resume--dense .section-title { margin-top: 3.5mm; margin-bottom: 1.2mm; }
+  body.resume--dense .project { padding: 1.6mm 0; }
+  body.resume--dense .section-title { margin-top: 4.2mm; margin-bottom: 1.2mm; }
 </style>
 </head>
 <body>

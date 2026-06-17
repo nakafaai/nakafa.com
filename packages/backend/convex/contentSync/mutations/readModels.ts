@@ -138,21 +138,19 @@ export const bulkSyncCurricula = internalMutation({
         .withIndex("by_key", (q) => q.eq("key", curriculum.key))
         .unique();
 
+      const row = {
+        ...curriculum,
+        syncedAt: args.syncedAt,
+        updatedAt: now,
+      };
+
       if (existing) {
-        await ctx.db.patch("curricula", existing._id, {
-          ...curriculum,
-          syncedAt: args.syncedAt,
-          updatedAt: now,
-        });
+        await ctx.db.replace(existing._id, row);
         updated++;
         continue;
       }
 
-      await ctx.db.insert("curricula", {
-        ...curriculum,
-        syncedAt: args.syncedAt,
-        updatedAt: now,
-      });
+      await ctx.db.insert("curricula", row);
       created++;
     }
 
@@ -283,21 +281,19 @@ export const bulkSyncAssessments = internalMutation({
         .withIndex("by_key", (q) => q.eq("key", assessment.key))
         .unique();
 
+      const row = {
+        ...assessment,
+        syncedAt: args.syncedAt,
+        updatedAt: now,
+      };
+
       if (existing) {
-        await ctx.db.patch("assessments", existing._id, {
-          ...assessment,
-          syncedAt: args.syncedAt,
-          updatedAt: now,
-        });
+        await ctx.db.replace(existing._id, row);
         updated++;
         continue;
       }
 
-      await ctx.db.insert("assessments", {
-        ...assessment,
-        syncedAt: args.syncedAt,
-        updatedAt: now,
-      });
+      await ctx.db.insert("assessments", row);
       created++;
     }
 
@@ -424,6 +420,9 @@ function isSamePublicRoute(
   return (
     existing.canonicalPath === next.canonicalPath &&
     existing.description === next.description &&
+    existing.displayGroupIconKey === next.displayGroupIconKey &&
+    existing.displayGroupTitle === next.displayGroupTitle &&
+    existing.iconKey === next.iconKey &&
     existing.kind === next.kind &&
     existing.locale === next.locale &&
     existing.materialDomain === next.materialDomain &&

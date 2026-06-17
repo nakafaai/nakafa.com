@@ -16,8 +16,8 @@ describe("learningPrograms/schema", () => {
   it("validates program navigation structures at the Convex boundary", () => {
     expect(
       validate(programNavigationInputValidator, {
-        levels: ["class", "subject", "topic"],
-        model: "class-curriculum-topic",
+        levels: ["stage", "class", "subject", "topic"],
+        model: "curriculum-tree",
       })
     ).toBe(true);
     expect(

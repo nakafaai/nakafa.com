@@ -228,6 +228,7 @@ import type * as learningPrograms_catalog from "../learningPrograms/catalog.js";
 import type * as learningPrograms_impl from "../learningPrograms/impl.js";
 import type * as learningPrograms_mutations from "../learningPrograms/mutations.js";
 import type * as learningPrograms_queries from "../learningPrograms/queries.js";
+import type * as learningPrograms_sources from "../learningPrograms/sources.js";
 import type * as learningPrograms_sync from "../learningPrograms/sync.js";
 import type * as lib_attempts from "../lib/attempts.js";
 import type * as lib_effect from "../lib/effect.js";
@@ -594,6 +595,7 @@ declare const fullApi: ApiFromModules<{
   "learningPrograms/impl": typeof learningPrograms_impl;
   "learningPrograms/mutations": typeof learningPrograms_mutations;
   "learningPrograms/queries": typeof learningPrograms_queries;
+  "learningPrograms/sources": typeof learningPrograms_sources;
   "learningPrograms/sync": typeof learningPrograms_sync;
   "lib/attempts": typeof lib_attempts;
   "lib/effect": typeof lib_effect;

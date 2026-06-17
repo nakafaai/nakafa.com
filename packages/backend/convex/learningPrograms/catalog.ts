@@ -14,6 +14,7 @@ export function getLearningProgramCatalogInputs(
   return programs.map((program) => ({
     defaultCoverageStatus: program.defaultCoverageStatus,
     displayOrder: program.displayOrder,
+    iconKey: program.iconKey,
     key: program.key,
     kind: program.kind,
     navigation: {

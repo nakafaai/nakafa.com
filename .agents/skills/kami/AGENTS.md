@@ -19,6 +19,8 @@ Kami is a document-generation skill and template system. It ships editorial HTML
 - `references/checks_thresholds.json` - rhythm / density / orphan check thresholds (loaded by `scripts/checks.py`).
 - `references/brand-profile.md` and `references/brand.example.md` - optional brand profile behavior and public example.
 - `.claude-plugin/marketplace.json` - Claude Code plugin marketplace metadata.
+- `.agents/plugins/marketplace.json` - **generated** Codex repo marketplace. Points Codex at `plugins/kami`; never hand-edit.
+- `plugins/kami/` - **generated** Codex plugin tree. Mirrors the lightweight skill package under `plugins/kami/skills/kami/`; edit source files and run `python3 scripts/build_metadata.py`.
 - `assets/templates/` - document templates including browser-only landing page variants.
 - `scripts/highlight.py` - Pygments-based syntax highlighting for code blocks at build time.
 - `assets/demos/` - README showcase demos.
@@ -38,6 +40,7 @@ Kami is a document-generation skill and template system. It ships editorial HTML
 - `scripts/shared.py` - shared constants and the canonical `HTML_TEMPLATES` registry used by the build scripts.
 - `scripts/ensure-fonts.sh` - verified font recovery helper (portable across bash 3.2+).
 - `scripts/package-skill.sh` - package builder for the release archive.
+- `scripts/build_metadata.py` - codegen for Codex marketplace metadata and plugin mirror files. Run after changing `SKILL.md`, `CHEATSHEET.md`, `VERSION`, `references/`, `scripts/`, or shipped lightweight assets.
 - `scripts/draft-release-notes.py` - bilingual release notes scaffold from `git log`.
 - `scripts/tests/test_build.py` - zero-dependency test suite for build and shared helpers.
 - `.github/workflows/check.yml` - PR/push CI that runs `--check` and the test suite.
@@ -56,6 +59,8 @@ python3 scripts/build.py --check-placeholders path/to/filled.html
 python3 scripts/build.py --check-orphans path/to/doc.pdf
 python3 scripts/build.py --check-density path/to/doc.pdf
 python3 scripts/build.py --check-rhythm slides slides-en
+python3 scripts/build_metadata.py
+python3 scripts/build_metadata.py --check
 python3 scripts/tests/test_build.py
 python3 scripts/draft-release-notes.py V1.4.0..HEAD --version V1.4.1 --title "Steadier Hand"
 bash scripts/ensure-fonts.sh
@@ -103,6 +108,7 @@ bash scripts/package-skill.sh
 - AI/public visibility spans `index*.html`, `llms.txt`, `robots.txt`, `sitemap.xml`, FAQ JSON-LD, README install text, diagram counts, and release archive links.
 - `scripts/shared.py` centralizes constants used by the build scripts; keep paths and target names in sync before adding templates or diagrams.
 - `dist/kami.zip` is a tracked release archive. Packaging changes must update and inspect it deliberately.
+- Codex plugin files are generated artifacts. Do not edit `plugins/kami/` or `.agents/plugins/marketplace.json` directly; regenerate from the root source files and let `python3 scripts/build_metadata.py --check` catch drift.
 
 ## High-Risk Pitfalls
 
@@ -153,11 +159,14 @@ magick /tmp/stacked.png -gravity Center -background '#f5f4ed' -extent 1241x1754 
 - Slide rhythm or deck changes: run `python3 scripts/build.py --check-rhythm slides slides-en` plus the affected render command.
 - Public site or AI visibility changes: check `index*.html`, `llms.txt`, `robots.txt`, `sitemap.xml`, and README links together.
 - Packaging changes: run `bash scripts/package-skill.sh` and confirm `dist/kami.zip` stays small enough for release upload.
+- Codex marketplace changes: run `python3 scripts/build_metadata.py --check` and confirm `plugins/kami/.codex-plugin/plugin.json` plus `.agents/plugins/marketplace.json` stay generated.
 - Documentation-only changes: check links and references.
 
 ## Release Notes
 
-For public releases, keep notes concise and bilingual when requested. Use one-to-one English and Chinese changelog items, 5 to 8 items, one sentence each.
+- For public releases, keep notes concise and bilingual. Use one-to-one English and Chinese changelog items, 5 to 8 items, one sentence each.
+- Generate the scaffold with `python3 scripts/draft-release-notes.py V<prev>..V<new> --version V<new> --title "<Codename>"`, then regroup the raw commit list into 5 to 8 product-themed bullets and translate each to Chinese. Do not paste raw commit subjects.
+- Match the established shape: title is `V<x.y.z> <Two-Word Codename>` (e.g. `V1.7.2 Cleaner Resumes`), body is the centered logo block + `### Changelog` (English numbered list) + `### 更新日志` (Chinese numbered list) + the closing tagline line.
 
 ## Release Flow
 
@@ -165,6 +174,8 @@ For public releases, keep notes concise and bilingual when requested. Use one-to
 - `dist/kami.zip` should be committed with release changes and uploaded to the latest GitHub release asset when refreshing the Claude Desktop package.
 - README and public site download links use `https://github.com/tw93/kami/releases/latest/download/kami.zip`; prefer refreshing that asset for small packaging or documentation fixes instead of creating a new tag.
 - Create a new version tag only when the maintainer explicitly wants a versioned release. Tag the commit that already contains the final refreshed `dist/kami.zip`; do not tag a source-only commit and refresh the archive afterward.
+- On tag push, `.github/workflows/release.yml` builds and attaches `dist/kami.zip`, creates the release if missing, and adds the house-style reactions (`+1 eyes heart hooray laugh rocket`, one each). Do not `gh release create` by hand; let CI create the placeholder, then set the real title and notes with `gh release edit V<x> --title "V<x> <Codename>" --notes-file <file>`.
+- If reactions are ever missing (older release, CI skipped), add them manually: `rid=$(gh api repos/tw93/Kami/releases/tags/V<x> --jq .id); for r in +1 eyes heart hooray laugh rocket; do gh api -X POST repos/tw93/Kami/releases/$rid/reactions -f content="$r"; done`.
 
 ## Fonts
 
