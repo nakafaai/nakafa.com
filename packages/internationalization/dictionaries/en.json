@@ -137,41 +137,50 @@
       "role-title": "How will you use Nakafa?",
       "role": {
         "student": {
-          "title": "Student"
+          "title": "Student",
+          "description": "Learn, practice, and ask Nina."
         },
         "teacher": {
-          "title": "Teacher"
+          "title": "Teacher",
+          "description": "Prepare lessons for class."
         },
         "parent": {
-          "title": "Parent"
+          "title": "Parent",
+          "description": "Help your child learn simply."
         }
       },
       "focus": {
         "student": {
           "title": "What do you want to focus on?",
           "school": {
-            "title": "School lessons"
+            "title": "School lessons",
+            "description": "Read clear explanations."
           },
           "exam": {
-            "title": "University entrance"
+            "title": "University entrance",
+            "description": "Practice before an exam."
           }
         },
         "teacher": {
           "title": "What do you want to prepare?",
           "materials": {
-            "title": "Teaching materials"
+            "title": "Teaching materials",
+            "description": "Prepare explanations for class."
           },
           "practice": {
-            "title": "Student practice"
+            "title": "Student practice",
+            "description": "Prepare practice questions."
           }
         },
         "parent": {
           "title": "What does your child need help with?",
           "understand": {
-            "title": "Understand lessons"
+            "title": "Understand lessons",
+            "description": "Read simple explanations."
           },
           "practice": {
-            "title": "Practice questions"
+            "title": "Practice questions",
+            "description": "Prepare practice before an exam."
           }
         }
       },

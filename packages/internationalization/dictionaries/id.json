@@ -137,41 +137,50 @@
       "role-title": "Kamu pakai Nakafa sebagai siapa?",
       "role": {
         "student": {
-          "title": "Siswa"
+          "title": "Siswa",
+          "description": "Belajar, latihan, dan tanya Nina."
         },
         "teacher": {
-          "title": "Guru"
+          "title": "Guru",
+          "description": "Siapkan materi untuk kelas."
         },
         "parent": {
-          "title": "Orang tua"
+          "title": "Orang tua",
+          "description": "Bantu anak belajar mudah."
         }
       },
       "focus": {
         "student": {
           "title": "Kamu mau fokus ke apa?",
           "school": {
-            "title": "Pelajaran sekolah"
+            "title": "Pelajaran sekolah",
+            "description": "Baca penjelasan singkat."
           },
           "exam": {
-            "title": "Ujian masuk kampus"
+            "title": "Ujian masuk kampus",
+            "description": "Latihan sebelum ujian."
           }
         },
         "teacher": {
           "title": "Kamu mau menyiapkan apa?",
           "materials": {
-            "title": "Materi mengajar"
+            "title": "Materi mengajar",
+            "description": "Siapkan penjelasan kelas."
           },
           "practice": {
-            "title": "Latihan siswa"
+            "title": "Latihan siswa",
+            "description": "Siapkan soal latihan."
           }
         },
         "parent": {
           "title": "Anakmu butuh dibantu apa?",
           "understand": {
-            "title": "Pahami materi"
+            "title": "Pahami materi",
+            "description": "Baca penjelasan mudah."
           },
           "practice": {
-            "title": "Latihan soal"
+            "title": "Latihan soal",
+            "description": "Latihan sebelum ujian."
           }
         }
       },

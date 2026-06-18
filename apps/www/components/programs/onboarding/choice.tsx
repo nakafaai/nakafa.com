@@ -12,21 +12,35 @@ import type {
 export function RoleChoice({ option }: { option: RoleOption }) {
   const t = useTranslations("LearningPrograms");
 
-  return <OnboardingChoice image={option.image} title={t(option.titleKey)} />;
+  return (
+    <OnboardingChoice
+      description={t(option.descriptionKey)}
+      image={option.image}
+      title={t(option.titleKey)}
+    />
+  );
 }
 
 /** Renders one learner-facing focus card for the selected role. */
 export function FocusChoice({ option }: { option: FocusOption }) {
   const t = useTranslations("LearningPrograms");
 
-  return <OnboardingChoice image={option.image} title={t(option.titleKey)} />;
+  return (
+    <OnboardingChoice
+      description={t(option.descriptionKey)}
+      image={option.image}
+      title={t(option.titleKey)}
+    />
+  );
 }
 
 /** Renders the shared product-card anatomy used by both onboarding steps. */
 function OnboardingChoice({
+  description,
   image,
   title,
 }: {
+  description: string;
   image: RoleOption["image"] | FocusOption["image"];
   title: string;
 }) {
@@ -38,6 +52,7 @@ function OnboardingChoice({
       <div className="space-y-6 px-6 pt-3 pb-6">
         <div className="grid gap-2">
           <h2 className="font-medium text-lg">{title}</h2>
+          <p className="text-muted-foreground text-sm">{description}</p>
         </div>
       </div>
     </div>
