@@ -102,11 +102,21 @@ export function readCurriculumHeaderLink(
   };
 }
 
-/** Builds the right-sidebar header from the body parent context. */
+/** Builds the right-sidebar header with the immediate curriculum parent context. */
 export function readCurriculumTocHeader(
   locale: PublicCurriculumRoute["locale"],
   route: PublicCurriculumRoute
 ) {
+  const parentLink = readCurriculumHeaderLink(locale, route);
+
+  if (parentLink) {
+    return {
+      title: route.title,
+      href: `/${locale}/${route.publicPath}`,
+      description: parentLink.label,
+    };
+  }
+
   return {
     title: route.title,
     href: `/${locale}/${route.publicPath}`,

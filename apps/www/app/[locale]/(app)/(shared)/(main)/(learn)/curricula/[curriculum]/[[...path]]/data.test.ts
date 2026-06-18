@@ -131,8 +131,23 @@ describe("curriculum route data", () => {
     const root = readRoute("kurikulum/merdeka");
     const classRoute = readRoute("kurikulum/merdeka/kelas-10");
     const biology = readRoute("kurikulum/merdeka/kelas-10/biologi");
+    const englishMathematics = readRoute(
+      "curriculum/merdeka/class-10/mathematics",
+      "en"
+    );
+    const cambridgeMathematics = readRoute(
+      "kurikulum/cambridge-international/upper-secondary/igcse/mathematics-0580"
+    );
 
-    if (!(root && classRoute && biology)) {
+    if (
+      !(
+        root &&
+        classRoute &&
+        biology &&
+        englishMathematics &&
+        cambridgeMathematics
+      )
+    ) {
       return;
     }
 
@@ -147,8 +162,19 @@ describe("curriculum route data", () => {
       title: "Kurikulum Merdeka",
     });
     expect(readCurriculumTocHeader("id", biology)).toEqual({
+      description: "Kelas 10",
       href: "/id/kurikulum/merdeka/kelas-10/biologi",
       title: "Biologi",
+    });
+    expect(readCurriculumTocHeader("en", englishMathematics)).toEqual({
+      description: "Class 10",
+      href: "/en/curriculum/merdeka/class-10/mathematics",
+      title: "Mathematics",
+    });
+    expect(readCurriculumTocHeader("id", cambridgeMathematics)).toEqual({
+      description: "Cambridge IGCSE",
+      href: "/id/kurikulum/cambridge-international/upper-secondary/igcse/mathematics-0580",
+      title: "Mathematics 0580",
     });
     expect(readCurriculumBreadcrumbs("Beranda", biology)).toEqual([
       { name: "Beranda", path: "" },
