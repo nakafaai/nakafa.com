@@ -1,10 +1,15 @@
+import { MATERIAL_ROUTE_DOMAINS } from "@repo/contents/_types/material/domain";
 import { definePracticeMaterial } from "@repo/contents/_types/material/schema";
+import { MATERIAL_SOURCES } from "@repo/contents/_types/material/source";
 import {
   findPublicContentRouteByPath,
   findPublicContentRouteBySourcePath,
   listPublicContentRoutes,
 } from "@repo/contents/_types/route/content";
-import { toPublicExerciseQuestionPath } from "@repo/contents/_types/route/practice";
+import {
+  readPublicPracticeQuestionRouteBySourcePath,
+  toPublicExerciseQuestionPath,
+} from "@repo/contents/_types/route/practice";
 import { findPublicRouteByPath } from "@repo/contents/_types/route/projection";
 import { Effect, Exit, Option } from "effect";
 import { describe, expect, it } from "vitest";
@@ -132,6 +137,21 @@ describe("public practice routes", () => {
         )
       )
     ).toBe(true);
+    expect(
+      readPublicPracticeQuestionRouteBySourcePath({
+        domains: MATERIAL_ROUTE_DOMAINS.filter(
+          (domain) =>
+            !(
+              domain.kind === "practice" &&
+              domain.domain === "quantitative-knowledge"
+            )
+        ),
+        locale: "en",
+        materials: MATERIAL_SOURCES,
+        sourcePath:
+          "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-9",
+      })
+    ).toBeUndefined();
   });
 
   it("derives question routes for practice groups that do not have a year", () => {

@@ -2,7 +2,7 @@ import type { Article, Locale } from "@repo/contents/_types/content";
 import { cleanSlug } from "@repo/utilities/helper";
 import { Effect } from "effect";
 
-import { getRuntimeContentRouteParentPage } from "@/lib/content/runtime";
+import { getRuntimeContentRouteParentPage } from "@/lib/content/runtime/routes";
 
 const articleSummaryPageLimit = 100;
 const trailingSlashPattern = /\/$/;

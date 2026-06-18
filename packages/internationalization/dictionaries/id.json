@@ -335,6 +335,7 @@
     "list-empty": "Belum ada try out yang tampil sekarang.",
     "available-item-description": "{questions} soal - {parts} bagian",
     "year-title": "Tahun {year}",
+    "product-page-description": "Lihat semua paket SNBT dan buka yang paling pas buat targetmu.",
     "start-cta": "Mulai try out",
     "restart-cta": "Mulai lagi",
     "continue-cta": "Lanjutkan",
@@ -394,7 +395,8 @@
     "question-unit": "soal",
     "products": {
       "snbt": {
-        "title": "SNBT"
+        "title": "SNBT",
+        "description": "Pilih set try out SNBT yang paling pas buat latihanmu."
       }
     }
   },

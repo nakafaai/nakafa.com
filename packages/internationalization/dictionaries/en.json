@@ -335,6 +335,7 @@
     "list-empty": "There are no tryouts showing right now.",
     "available-item-description": "{questions} questions - {parts} parts",
     "year-title": "Year {year}",
+    "product-page-description": "See every SNBT package and open the one that fits your goal best.",
     "start-cta": "Start tryout",
     "restart-cta": "Start again",
     "continue-cta": "Continue",
@@ -394,7 +395,8 @@
     "question-unit": "questions",
     "products": {
       "snbt": {
-        "title": "SNBT"
+        "title": "SNBT",
+        "description": "Pick the SNBT tryout set that fits your practice best."
       }
     }
   },

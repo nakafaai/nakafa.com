@@ -170,4 +170,28 @@ describe("createLocalizedAlternates", () => {
       },
     });
   });
+
+  it("matches assessment context alternates by node identity when no material key exists", () => {
+    const routes = Effect.runSync(listPublicRoutes());
+    const assessment = routes.find(
+      (candidate) =>
+        candidate.kind === "assessment-context" &&
+        candidate.locale === "id" &&
+        candidate.programKey === "snbt-2026" &&
+        !candidate.materialKey
+    );
+
+    if (!assessment) {
+      expect(assessment).toBeDefined();
+      return;
+    }
+
+    expect(createProjectedRouteAlternates(assessment, routes)).toMatchObject({
+      canonical: `/${assessment.locale}/${assessment.publicPath}`,
+      languages: {
+        en: expect.stringContaining("/en/exams/snbt"),
+        id: expect.stringContaining("/id/ujian/snbt"),
+      },
+    });
+  });
 });

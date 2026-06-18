@@ -1,6 +1,7 @@
-import type { MaterialList } from "@repo/contents/_types/curriculum/material";
-import type { MaterialSource } from "@repo/contents/_types/material/schema";
-import { MATERIAL_SOURCES } from "@repo/contents/_types/material/source";
+import {
+  type MaterialList,
+  MaterialListSchema,
+} from "@repo/contents/_types/curriculum/material";
 import {
   isMaterialContentRoute,
   isMaterialLessonRoute,
@@ -15,6 +16,7 @@ import type {
   PublicContentRoute,
   PublicCurriculumRoute,
 } from "@repo/contents/_types/route/schema";
+import { Schema } from "effect";
 
 /** Reads the closest subject/course context that renders material cards. */
 export function readCurriculumCardListContext(
@@ -46,14 +48,16 @@ export function readCurriculumCardListContext(
 export function readCurriculumMaterialCards({
   contentRoutes,
   curriculumRoutes,
-  materials = MATERIAL_SOURCES,
   route,
 }: {
   contentRoutes: readonly PublicContentRoute[];
   curriculumRoutes: readonly PublicCurriculumRoute[];
-  materials?: readonly MaterialSource[];
   route: PublicCurriculumRoute;
 }): MaterialList {
+  if (!(route.level === "subject" || route.level === "course")) {
+    return [];
+  }
+
   const groupRoutes = curriculumRoutes
     .filter(
       (candidate) =>
@@ -67,7 +71,6 @@ export function readCurriculumMaterialCards({
     readCurriculumMaterialCard({
       contentRoutes,
       curriculumRoutes,
-      materials,
       route: groupRoute,
     })
   );
@@ -77,12 +80,10 @@ export function readCurriculumMaterialCards({
 function readCurriculumMaterialCard({
   contentRoutes,
   curriculumRoutes,
-  materials,
   route,
 }: {
   contentRoutes: readonly PublicContentRoute[];
   curriculumRoutes: readonly PublicCurriculumRoute[];
-  materials: readonly MaterialSource[];
   route: PublicCurriculumRoute;
 }): MaterialList {
   const items = readCurriculumMaterialItems({
@@ -95,67 +96,14 @@ function readCurriculumMaterialCard({
     return [];
   }
 
-  const description = readCurriculumMaterialCardDescription({
-    curriculumRoutes,
-    materials,
-    route,
-  });
-
-  return [
+  return Schema.decodeUnknownSync(MaterialListSchema)([
     {
-      ...(description ? { description } : {}),
+      description: route.materialCardDescription,
       href: items[0].href,
       items,
-      title: route.title,
+      title: route.materialCardTitle,
     },
-  ];
-}
-
-/** Reads source-owned material copy when a card represents exactly one material. */
-function readCurriculumMaterialCardDescription({
-  curriculumRoutes,
-  materials,
-  route,
-}: {
-  curriculumRoutes: readonly PublicCurriculumRoute[];
-  materials: readonly MaterialSource[];
-  route: PublicCurriculumRoute;
-}) {
-  const materialKeys = readCurriculumMaterialKeys(route, curriculumRoutes);
-
-  if (materialKeys.size !== 1) {
-    return;
-  }
-
-  const materialKey = [...materialKeys][0];
-  const material = materials.find((candidate) => candidate.key === materialKey);
-
-  if (material?.kind !== "lesson") {
-    return;
-  }
-
-  return material.translations[route.locale].description;
-}
-
-/** Collects mapped material keys for a card route and its projected descendants. */
-function readCurriculumMaterialKeys(
-  route: PublicCurriculumRoute,
-  routes: readonly PublicCurriculumRoute[]
-) {
-  const materialKeys = new Set<string>();
-
-  for (const curriculumRoute of [
-    route,
-    ...readCurriculumDescendants(route, routes),
-  ]) {
-    if (!curriculumRoute.materialKey) {
-      continue;
-    }
-
-    materialKeys.add(curriculumRoute.materialKey);
-  }
-
-  return materialKeys;
+  ]);
 }
 
 /** Expands a curriculum group and its descendants into direct canonical lesson links. */

@@ -1,30 +1,24 @@
 import { internal } from "@repo/backend/convex/_generated/api";
-import {
-  getUnknownMessage,
-  ScriptFailureError,
-} from "@repo/backend/scripts/lib/errors";
 import { syncArticles } from "@repo/backend/scripts/sync-content/articles";
 import {
   collectAuthorNamesFromFiles,
   syncAuthors,
 } from "@repo/backend/scripts/sync-content/authors";
 import { invalidateContentRuntimeCache } from "@repo/backend/scripts/sync-content/cache";
+import { readSyncContentFileChanges } from "@repo/backend/scripts/sync-content/changes";
 import { clean } from "@repo/backend/scripts/sync-content/clean";
 import { callConvexMutation } from "@repo/backend/scripts/sync-content/convex";
 import {
   syncCurriculumLessons,
   syncCurriculumTopics,
 } from "@repo/backend/scripts/sync-content/curriculum";
-import {
-  syncExerciseQuestions,
-  syncExerciseSets,
-} from "@repo/backend/scripts/sync-content/exercises";
+import { syncExerciseQuestions } from "@repo/backend/scripts/sync-content/exerciseQuestions";
+import { syncExerciseSets } from "@repo/backend/scripts/sync-content/exercises";
 import { syncLearningPrograms } from "@repo/backend/scripts/sync-content/learningPrograms";
 import {
   formatDuration,
   formatSyncResult,
   log,
-  logError,
   logSuccess,
   logSyncMetrics,
 } from "@repo/backend/scripts/sync-content/logging";
@@ -37,6 +31,7 @@ import {
 } from "@repo/backend/scripts/sync-content/metrics";
 import { syncQuran } from "@repo/backend/scripts/sync-content/quran";
 import { syncGeneratedReadModels } from "@repo/backend/scripts/sync-content/readModels";
+import { readRoutePageOptionsAfterCleanup } from "@repo/backend/scripts/sync-content/routeOptions";
 import { syncContentRouteArtifactPages } from "@repo/backend/scripts/sync-content/routes";
 import {
   getChangedFilesSince,
@@ -48,138 +43,14 @@ import {
   AuthorSyncResultSchema,
   BATCH_SIZES,
 } from "@repo/backend/scripts/sync-content/schemas";
+import { logSyncSummary } from "@repo/backend/scripts/sync-content/summary";
 import { syncTryouts } from "@repo/backend/scripts/sync-content/tryouts";
 import type {
   ConvexConfig,
   SyncOptions,
   SyncResult,
 } from "@repo/backend/scripts/sync-content/types";
-import { verify } from "@repo/backend/scripts/sync-content/verify";
 import { Effect } from "effect";
-
-/** Prints the combined sync summary, including Quran runtime/search rows. */
-const logSyncSummary = (
-  authorResult: { created: number },
-  articleResult: SyncResult,
-  curriculumTopicResult: SyncResult,
-  curriculumLessonResult: SyncResult,
-  exerciseSetResult: SyncResult,
-  exerciseQuestionResult: SyncResult,
-  quranResult: SyncResult,
-  tryoutResult: SyncResult,
-  routePageResult: SyncResult,
-  generatedReadModelResult: SyncResult,
-  learningProgramResult: SyncResult
-): void => {
-  const totalCreated =
-    articleResult.created +
-    curriculumTopicResult.created +
-    curriculumLessonResult.created +
-    exerciseSetResult.created +
-    exerciseQuestionResult.created +
-    quranResult.created +
-    tryoutResult.created +
-    routePageResult.created +
-    generatedReadModelResult.created +
-    learningProgramResult.created;
-  const totalUpdated =
-    articleResult.updated +
-    curriculumTopicResult.updated +
-    curriculumLessonResult.updated +
-    exerciseSetResult.updated +
-    exerciseQuestionResult.updated +
-    quranResult.updated +
-    tryoutResult.updated +
-    routePageResult.updated +
-    generatedReadModelResult.updated +
-    learningProgramResult.updated;
-  const total =
-    totalCreated +
-    totalUpdated +
-    articleResult.unchanged +
-    curriculumTopicResult.unchanged +
-    curriculumLessonResult.unchanged +
-    exerciseSetResult.unchanged +
-    exerciseQuestionResult.unchanged +
-    quranResult.unchanged +
-    tryoutResult.unchanged +
-    routePageResult.unchanged +
-    generatedReadModelResult.unchanged +
-    learningProgramResult.unchanged;
-  const totalAuthorLinksCreated =
-    (articleResult.authorLinksCreated || 0) +
-    (curriculumLessonResult.authorLinksCreated || 0) +
-    (exerciseQuestionResult.authorLinksCreated || 0);
-
-  log("\n=== SYNC SUMMARY ===\n");
-  log("Primary Content:");
-  log(
-    `  Articles:           ${articleResult.created + articleResult.updated + articleResult.unchanged} (${articleResult.created} new, ${articleResult.updated} updated)`
-  );
-  log(
-    `  Curriculum Topics:     ${curriculumTopicResult.created + curriculumTopicResult.updated + curriculumTopicResult.unchanged} (${curriculumTopicResult.created} new, ${curriculumTopicResult.updated} updated)`
-  );
-  log(
-    `  Curriculum Lessons:   ${curriculumLessonResult.created + curriculumLessonResult.updated + curriculumLessonResult.unchanged} (${curriculumLessonResult.created} new, ${curriculumLessonResult.updated} updated)`
-  );
-  log(
-    `  Exercise Sets:      ${exerciseSetResult.created + exerciseSetResult.updated + exerciseSetResult.unchanged} (${exerciseSetResult.created} new, ${exerciseSetResult.updated} updated)`
-  );
-  log(
-    `  Exercise Questions: ${exerciseQuestionResult.created + exerciseQuestionResult.updated + exerciseQuestionResult.unchanged} (${exerciseQuestionResult.created} new, ${exerciseQuestionResult.updated} updated)`
-  );
-  log(
-    `  Quran:              ${quranResult.created + quranResult.updated + quranResult.unchanged} (${quranResult.created} new, ${quranResult.updated} updated)`
-  );
-  log(
-    `  Tryouts:            ${tryoutResult.created + tryoutResult.updated + tryoutResult.unchanged} (${tryoutResult.created} new, ${tryoutResult.updated} updated)`
-  );
-  log(
-    `  Route Pages:         ${routePageResult.created + routePageResult.updated + routePageResult.unchanged} (${routePageResult.created} new, ${routePageResult.updated} updated)`
-  );
-  log(
-    `  Generated Models:    ${generatedReadModelResult.created + generatedReadModelResult.updated + generatedReadModelResult.unchanged} (${generatedReadModelResult.created} new, ${generatedReadModelResult.updated} updated)`
-  );
-  log(
-    `  Learning Programs:   ${learningProgramResult.created + learningProgramResult.updated + learningProgramResult.unchanged} (${learningProgramResult.created} new, ${learningProgramResult.updated} updated)`
-  );
-
-  log("\nRelated Items:");
-  if (authorResult.created > 0) {
-    log(`  Authors:              ${authorResult.created} new`);
-  }
-  if ((articleResult.referencesCreated || 0) > 0) {
-    log(`  Article References:   ${articleResult.referencesCreated || 0}`);
-  }
-  if ((exerciseQuestionResult.choicesCreated || 0) > 0) {
-    log(
-      `  Exercise Choices:     ${exerciseQuestionResult.choicesCreated || 0}`
-    );
-  }
-  if (totalAuthorLinksCreated > 0) {
-    log(`  Content-Author Links: ${totalAuthorLinksCreated}`);
-  }
-
-  log("\nOverall:");
-  log(`  Total: ${total} items synced`);
-  if (totalCreated > 0 || totalUpdated > 0) {
-    log(`  Changes: ${totalCreated} created, ${totalUpdated} updated`);
-  } else {
-    log("  All content up to date");
-  }
-};
-
-/** Clears the route-page locale filter after cleanup may have deleted all locales. */
-function getRoutePageOptionsAfterGlobalCleanup(
-  options: SyncOptions,
-  cleanResult: { deleted: number }
-): SyncOptions {
-  if (cleanResult.deleted > 0 && options.locale) {
-    return { ...options, locale: undefined };
-  }
-
-  return options;
-}
 
 /** Runs the complete content sync in dependency-safe phases. */
 export const syncAll = Effect.fn("sync.all")(function* (
@@ -481,18 +352,7 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
     log(`  Authors: ${created} new, ${existing} existing\n`);
   }
 
-  const hasArticleChanges = changedFilesArray.some((file) =>
-    file.includes("/articles/")
-  );
-  const hasMaterialChanges = changedFilesArray.some((file) =>
-    file.includes("/material/")
-  );
-  const hasCurriculumMaterialChanges = changedFilesArray.some((file) =>
-    file.includes("/curriculum/")
-  );
-  const hasExerciseChanges = changedFilesArray.some((file) =>
-    file.includes("/assessment/")
-  );
+  const changes = readSyncContentFileChanges(changedFilesArray);
 
   let articleResult: SyncResult = { created: 0, updated: 0, unchanged: 0 };
   let curriculumTopicResult: SyncResult = {
@@ -524,7 +384,7 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
     updated: 0,
   };
 
-  if (hasArticleChanges) {
+  if (changes.hasArticleChanges) {
     log("Articles changed - syncing...");
     articleResult = yield* syncArticles(config, options);
     addPhaseMetrics(metrics, "Articles", articleResult);
@@ -532,7 +392,7 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
     log("Articles: no changes");
   }
 
-  if (hasMaterialChanges || hasCurriculumMaterialChanges) {
+  if (changes.hasMaterialChanges || changes.hasCurriculumMaterialChanges) {
     log("Curriculum material changed - syncing...");
     curriculumTopicResult = yield* syncCurriculumTopics(config, options);
     curriculumLessonResult = yield* syncCurriculumLessons(config, options);
@@ -542,7 +402,7 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
     log("Curriculum: no changes");
   }
 
-  if (hasExerciseChanges) {
+  if (changes.hasExerciseChanges) {
     log("Exercises changed - syncing...");
     exerciseSetResult = yield* syncExerciseSets(config, options);
     exerciseQuestionResult = yield* syncExerciseQuestions(config, options);
@@ -552,23 +412,15 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
     log("Exercises: no changes");
   }
 
-  const hasContentRouteChanges =
-    hasArticleChanges ||
-    hasMaterialChanges ||
-    hasCurriculumMaterialChanges ||
-    hasExerciseChanges;
   let routePageOptions = options;
 
-  if (hasContentRouteChanges) {
+  if (changes.hasContentRouteChanges) {
     log("Cleaning stale content before route artifact pages...");
     const cleanResult = yield* clean(config, {
       ...options,
       force: true,
     });
-    routePageOptions = getRoutePageOptionsAfterGlobalCleanup(
-      options,
-      cleanResult
-    );
+    routePageOptions = readRoutePageOptionsAfterCleanup(options, cleanResult);
   }
 
   quranResult = yield* syncQuran(config, {
@@ -584,9 +436,9 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
   addPhaseMetrics(metrics, "Route Pages", routePageResult);
 
   if (
-    hasMaterialChanges ||
-    hasCurriculumMaterialChanges ||
-    hasExerciseChanges
+    changes.hasMaterialChanges ||
+    changes.hasCurriculumMaterialChanges ||
+    changes.hasExerciseChanges
   ) {
     generatedReadModelResult = yield* syncGeneratedReadModels(
       config,
@@ -635,73 +487,4 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
   );
   log("\n=== INCREMENTAL SYNC COMPLETE ===");
   logSuccess("Sync state saved for next incremental sync");
-});
-
-/** Runs sync, stale cleanup, verification, and incremental-state save. */
-export const syncFull = Effect.fn("sync.full")(function* (
-  config: ConvexConfig,
-  options: SyncOptions = {}
-) {
-  log("=== FULL SYNC ===\n");
-  log(
-    "This command will: sync all content, clean stale content, verify data\n"
-  );
-
-  const currentCommit = yield* getCurrentGitCommit();
-  const result = yield* Effect.either(
-    Effect.gen(function* () {
-      yield* syncAll(config, options);
-      log("\n");
-
-      const cleanResult = yield* clean(config, {
-        ...options,
-        force: true,
-        authors: true,
-      });
-      if (cleanResult.hasStale && cleanResult.deleted) {
-        log("\nStale content was found and deleted.");
-        log("Rebuilding route artifact pages after stale cleanup...");
-        const routePageOptions = getRoutePageOptionsAfterGlobalCleanup(
-          options,
-          cleanResult
-        );
-        const routePageResult = yield* syncContentRouteArtifactPages(
-          config,
-          routePageOptions
-        );
-        log(`  Route Pages: ${formatSyncResult(routePageResult)}`);
-        const generatedReadModelResult = yield* syncGeneratedReadModels(
-          config,
-          routePageOptions
-        );
-        log(
-          `  Generated Models: ${formatSyncResult(generatedReadModelResult)}`
-        );
-        const learningProgramResult = yield* syncLearningPrograms(
-          config,
-          routePageOptions
-        );
-        log(`  Learning Programs: ${formatSyncResult(learningProgramResult)}`);
-      }
-
-      log("\n");
-      yield* verify(config, options);
-      yield* invalidateContentRuntimeCache(options);
-      yield* saveSyncState(
-        { lastSyncTimestamp: Date.now(), lastSyncCommit: currentCommit },
-        options.prod ?? false
-      );
-    })
-  );
-
-  if (result._tag === "Left") {
-    logError(`Full sync failed: ${getUnknownMessage(result.left)}`);
-    return yield* Effect.fail(
-      new ScriptFailureError({ message: "Full sync failed." })
-    );
-  }
-
-  log("\n=== FULL SYNC COMPLETE ===");
-  logSuccess("All operations completed successfully!");
-  logSuccess("Sync state saved for incremental syncs");
 });

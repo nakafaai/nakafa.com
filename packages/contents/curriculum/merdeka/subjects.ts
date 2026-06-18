@@ -1,15 +1,11 @@
 import { subjectNode } from "@repo/contents/_types/curriculum/schema";
-import {
-  merdekaClass10BiologyTopicNodes,
-  merdekaClass10ChemistryTopicNodes,
-  merdekaClass10MathematicsTopicNodes,
-  merdekaClass10PhysicsTopicNodes,
-} from "@repo/contents/curriculum/merdeka/topics/class-10";
-import {
-  merdekaClass11MathematicsTopicNodes,
-  merdekaClass11PhysicsTopicNodes,
-} from "@repo/contents/curriculum/merdeka/topics/class-11";
-import { merdekaClass12MathematicsTopicNodes } from "@repo/contents/curriculum/merdeka/topics/class-12";
+import { merdekaClass10BiologyTopicNodes } from "@repo/contents/curriculum/merdeka/topics/class-10/biology";
+import { merdekaClass10ChemistryTopicNodes } from "@repo/contents/curriculum/merdeka/topics/class-10/chemistry";
+import { merdekaClass10MathematicsTopicNodes } from "@repo/contents/curriculum/merdeka/topics/class-10/mathematics";
+import { merdekaClass10PhysicsTopicNodes } from "@repo/contents/curriculum/merdeka/topics/class-10/physics";
+import { merdekaClass11MathematicsTopicNodes } from "@repo/contents/curriculum/merdeka/topics/class-11/mathematics";
+import { merdekaClass11PhysicsTopicNodes } from "@repo/contents/curriculum/merdeka/topics/class-11/physics";
+import { merdekaClass12MathematicsTopicNodes } from "@repo/contents/curriculum/merdeka/topics/class-12/mathematics";
 
 export const merdekaClass10SubjectNodes = [
   subjectNode({

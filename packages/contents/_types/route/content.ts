@@ -18,14 +18,31 @@ import {
   uniqueRoutes,
 } from "@repo/contents/_types/route/path";
 import {
-  findPublicPracticeQuestionRouteByPath,
-  findPublicPracticeQuestionRouteBySourcePath,
   getPracticeSourceGroupSlug,
   makePracticeGroupPath,
+  readPublicPracticeQuestionRouteByPath,
+  readPublicPracticeQuestionRouteBySourcePath,
 } from "@repo/contents/_types/route/practice";
 import type { PublicContentRoute } from "@repo/contents/_types/route/schema";
 import { locales } from "@repo/utilities/locales";
 import { Effect, Option } from "effect";
+
+type MaterialContentRoute = Extract<
+  PublicContentRoute,
+  { readonly kind: "subject-topic" | "subject-lesson" }
+>;
+type MaterialLessonRoute = Extract<
+  PublicContentRoute,
+  { readonly kind: "subject-lesson" }
+>;
+type MaterialTopicRoute = Extract<
+  PublicContentRoute,
+  { readonly kind: "subject-topic" }
+>;
+type PracticeSetRoute = Extract<
+  PublicContentRoute,
+  { readonly kind: "exercise-set" }
+>;
 
 /** Projects reusable material and practice sources into canonical public routes. */
 export const listPublicContentRoutes = Effect.fn("contents.route.listContent")(
@@ -68,12 +85,14 @@ export const findPublicContentRouteByPath = Effect.fn(
     return Option.some(exactRoute);
   }
 
-  return yield* findPublicPracticeQuestionRouteByPath({
-    domains: inputs.domains ?? MATERIAL_ROUTE_DOMAINS,
-    locale,
-    materials: inputs.materials ?? MATERIAL_SOURCES,
-    publicPath,
-  });
+  return Option.fromNullable(
+    readPublicPracticeQuestionRouteByPath({
+      domains: inputs.domains ?? MATERIAL_ROUTE_DOMAINS,
+      locale,
+      materials: inputs.materials ?? MATERIAL_SOURCES,
+      publicPath,
+    })
+  );
 });
 
 /** Finds a canonical public material route by source asset path. */
@@ -93,12 +112,14 @@ export const findPublicContentRouteBySourcePath = Effect.fn(
     return Option.some(exactRoute);
   }
 
-  return yield* findPublicPracticeQuestionRouteBySourcePath({
-    domains: inputs.domains ?? MATERIAL_ROUTE_DOMAINS,
-    locale,
-    materials: inputs.materials ?? MATERIAL_SOURCES,
-    sourcePath: normalizedSourcePath,
-  });
+  return Option.fromNullable(
+    readPublicPracticeQuestionRouteBySourcePath({
+      domains: inputs.domains ?? MATERIAL_ROUTE_DOMAINS,
+      locale,
+      materials: inputs.materials ?? MATERIAL_SOURCES,
+      sourcePath: normalizedSourcePath,
+    })
+  );
 });
 
 /** Indexes material topic routes by locale and material key for context routes. */
@@ -129,18 +150,31 @@ export function createTopicRouteByMaterialKey({
 }
 
 /** Checks whether one content row belongs to reusable lesson material. */
-export function isMaterialContentRoute(route: PublicContentRoute) {
+export function isMaterialContentRoute(
+  route: PublicContentRoute
+): route is MaterialContentRoute {
   return route.kind === "subject-topic" || route.kind === "subject-lesson";
 }
 
 /** Checks whether one content row is a concrete canonical lesson body. */
-export function isMaterialLessonRoute(route: PublicContentRoute) {
+export function isMaterialLessonRoute(
+  route: PublicContentRoute
+): route is MaterialLessonRoute {
   return route.kind === "subject-lesson";
 }
 
 /** Checks whether one content row is an internal material topic grouping row. */
-export function isMaterialTopicRoute(route: PublicContentRoute) {
+export function isMaterialTopicRoute(
+  route: PublicContentRoute
+): route is MaterialTopicRoute {
   return route.kind === "subject-topic";
+}
+
+/** Checks whether one content row is a canonical practice set page. */
+export function isPracticeSetRoute(
+  route: PublicContentRoute
+): route is PracticeSetRoute {
+  return route.kind === "exercise-set";
 }
 
 /** Converts one projected content route to its localized public href. */
@@ -176,7 +210,7 @@ export function readParentMaterialRoute(
   route: PublicContentRoute,
   routes: readonly PublicContentRoute[]
 ) {
-  if (!route.parentPath) {
+  if (!isMaterialLessonRoute(route)) {
     return;
   }
 

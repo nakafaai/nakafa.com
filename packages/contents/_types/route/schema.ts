@@ -14,19 +14,23 @@ type SchemaType<T extends Schema.Schema.Any> = Schema.Schema.Type<T>;
 const PublicRouteBaseSchema = Schema.Struct({
   description: Schema.optional(Schema.String),
   locale: LocaleSchema,
-  parentPath: Schema.optional(PublicRoutePathSchema),
   publicPath: PublicRoutePathSchema,
   sitemap: Schema.Boolean,
   title: Schema.String,
 });
 
-const PublicCurriculumRouteBaseSchema = Schema.Struct({
-  locale: LocaleSchema,
+const PublicRouteOptionalParentSchema = Schema.Struct({
   parentPath: Schema.optional(PublicRoutePathSchema),
-  publicPath: PublicRoutePathSchema,
-  sitemap: Schema.Boolean,
-  title: Schema.String,
 });
+
+const PublicRouteParentSchema = Schema.Struct({
+  parentPath: PublicRoutePathSchema,
+});
+
+const PublicCurriculumRouteBaseSchema = Schema.extend(
+  PublicRouteBaseSchema,
+  PublicRouteOptionalParentSchema
+);
 
 export const PUBLIC_ROUTE_KIND_VALUES = [
   "assessment-context",
@@ -43,20 +47,33 @@ export const PublicRouteKindSchema = Schema.Literal(
 
 export type PublicRouteKind = SchemaType<typeof PublicRouteKindSchema>;
 
-export const PublicContentRouteSchema = Schema.extend(
+const PublicContentRouteBaseSchema = Schema.extend(
   PublicRouteBaseSchema,
   Schema.Struct({
-    kind: Schema.Literal(
-      "subject-topic",
-      "subject-lesson",
-      "exercise-set",
-      "exercise-question"
-    ),
     materialKey: MaterialKeySchema,
     order: Schema.optional(Schema.Int.pipe(Schema.nonNegative())),
     sectionKey: Schema.optional(Schema.String),
     sourcePath: PublicRoutePathSchema,
   })
+);
+
+export const PublicContentRouteSchema = Schema.Union(
+  Schema.extend(
+    PublicContentRouteBaseSchema,
+    Schema.Struct({ kind: Schema.Literal("subject-topic") })
+  ),
+  Schema.extend(
+    Schema.extend(PublicContentRouteBaseSchema, PublicRouteParentSchema),
+    Schema.Struct({ kind: Schema.Literal("subject-lesson") })
+  ),
+  Schema.extend(
+    Schema.extend(PublicContentRouteBaseSchema, PublicRouteParentSchema),
+    Schema.Struct({ kind: Schema.Literal("exercise-set") })
+  ),
+  Schema.extend(
+    Schema.extend(PublicContentRouteBaseSchema, PublicRouteParentSchema),
+    Schema.Struct({ kind: Schema.Literal("exercise-question") })
+  )
 );
 
 export type PublicContentRoute = SchemaType<typeof PublicContentRouteSchema>;
@@ -70,6 +87,8 @@ export const PublicCurriculumRouteSchema = Schema.extend(
     iconKey: ProgramNavigationIconKeySchema,
     kind: Schema.Literal("curriculum-context"),
     level: ProgramNavigationLevelSchema,
+    materialCardDescription: Schema.optional(Schema.String),
+    materialCardTitle: Schema.optional(Schema.String),
     materialDomain: Schema.optional(MaterialSchema),
     materialKey: Schema.optional(MaterialKeySchema),
     nodeKey: Schema.String,
@@ -83,13 +102,14 @@ export type PublicCurriculumRoute = SchemaType<
 >;
 
 export const PublicAssessmentRouteSchema = Schema.extend(
-  PublicRouteBaseSchema,
+  Schema.extend(PublicRouteBaseSchema, PublicRouteOptionalParentSchema),
   Schema.Struct({
     canonicalPath: Schema.optional(PublicRoutePathSchema),
     kind: Schema.Literal("assessment-context"),
     level: ProgramNavigationLevelSchema,
     materialKey: Schema.optional(MaterialKeySchema),
     nodeKey: Schema.String,
+    order: Schema.Int.pipe(Schema.nonNegative()),
     programKey: LearningProgramKeySchema,
   })
 );

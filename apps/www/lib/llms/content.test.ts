@@ -73,7 +73,7 @@ describe("llms markdown content resolver", () => {
     expect(mockGetCachedLlmsSectionIndexText).not.toHaveBeenCalled();
   });
 
-  it("returns exercise markdown before MDX or index fallbacks", async () => {
+  it("returns exercise markdown before MDX or route indexes", async () => {
     mockGetCachedLlmsExerciseText.mockResolvedValue("Exercise markdown");
 
     await expect(
@@ -90,7 +90,7 @@ describe("llms markdown content resolver", () => {
     expect(mockGetCachedLlmsSectionIndexText).not.toHaveBeenCalled();
   });
 
-  it("returns MDX markdown before route index fallbacks", async () => {
+  it("returns MDX markdown before route indexes", async () => {
     mockGetCachedLlmsMdxText.mockResolvedValue("MDX markdown");
 
     await expect(
@@ -179,7 +179,7 @@ describe("llms markdown content resolver", () => {
     });
   });
 
-  it("returns legal source markdown before route index fallbacks", async () => {
+  it("returns legal source markdown before route indexes", async () => {
     mockGetLlmsLegalPageText.mockReturnValue(Effect.succeed("Legal markdown"));
 
     await expect(
@@ -217,6 +217,33 @@ describe("llms markdown content resolver", () => {
         getLlmsMarkdownText({ cleanSlug: "articles/missing", locale: "en" })
       )
     ).resolves.toBeNull();
+  });
+
+  it("treats invalid projected markdown paths as unsupported content", async () => {
+    await expect(
+      Effect.runPromise(
+        getLlmsMarkdownText({
+          cleanSlug: "subjects/mathematics/integral/invalid.segment",
+          locale: "en",
+        })
+      )
+    ).resolves.toBeNull();
+
+    expect(mockGetCachedLlmsMdxText).toHaveBeenCalledWith({
+      cleanSlug: "subjects/mathematics/integral/invalid.segment",
+      locale: "en",
+      publicSlug: undefined,
+    });
+  });
+
+  it("treats the empty markdown slug as an unsupported route index", async () => {
+    await expect(
+      Effect.runPromise(getLlmsMarkdownText({ cleanSlug: "", locale: "en" }))
+    ).resolves.toBeNull();
+
+    expect(mockGetCachedLlmsSectionIndexText).toHaveBeenCalledWith({
+      cleanSlug: "llms/en/",
+    });
   });
 
   it("surfaces cached exercise markdown failures", async () => {
@@ -307,7 +334,7 @@ describe("llms markdown content resolver", () => {
     expect(mockGetLlmsSectionIndexText).not.toHaveBeenCalled();
   });
 
-  it("returns source MDX markdown before source index fallbacks", async () => {
+  it("returns source MDX markdown before source indexes", async () => {
     mockGetLlmsMdxText.mockReturnValue(Effect.succeed("Source MDX markdown"));
 
     await expect(
@@ -322,7 +349,7 @@ describe("llms markdown content resolver", () => {
     expect(mockGetLlmsSectionIndexText).not.toHaveBeenCalled();
   });
 
-  it("returns source legal markdown before source index fallbacks", async () => {
+  it("returns source legal markdown before source indexes", async () => {
     mockGetLlmsLegalPageText.mockReturnValue(
       Effect.succeed("Source legal markdown")
     );

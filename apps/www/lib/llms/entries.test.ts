@@ -38,7 +38,7 @@ vi.mock("@/lib/llms/quran", () => ({
     }),
 }));
 
-vi.mock("@/lib/content/runtime", () => ({
+vi.mock("@/lib/content/runtime/routes", () => ({
   getRuntimeContentRoute: mockGetRuntimeContentRoute,
   getRuntimeContentRouteArtifactPage: mockGetRuntimeContentRouteArtifactPage,
   getRuntimeContentRouteKindPage: mockGetRuntimeContentRouteKindPage,

@@ -53,10 +53,12 @@ const loadCli = async (options: { learningProgramFails?: boolean } = {}) => {
     },
   }));
   vi.doMock("@repo/backend/scripts/sync-content/exercises", () => ({
-    /** Records exercise question sync calls if a test accidentally reaches them. */
-    syncExerciseQuestions: unusedCommand,
     /** Records exercise set sync calls if a test accidentally reaches them. */
     syncExerciseSets: unusedCommand,
+  }));
+  vi.doMock("@repo/backend/scripts/sync-content/exerciseQuestions", () => ({
+    /** Records exercise question sync calls if a test accidentally reaches them. */
+    syncExerciseQuestions: unusedCommand,
   }));
   vi.doMock("@repo/backend/scripts/sync-content/learningPrograms", () => ({
     /** Records targeted learning-program sync calls and optional failures. */
@@ -106,11 +108,13 @@ const loadCli = async (options: { learningProgramFails?: boolean } = {}) => {
     /** Records verification calls if a test accidentally reaches them. */
     verify: unusedCommand,
   }));
+  vi.doMock("@repo/backend/scripts/sync-content/full", () => ({
+    /** Records full sync calls if a test accidentally reaches them. */
+    syncFull: unusedCommand,
+  }));
   vi.doMock("@repo/backend/scripts/sync-content/workflows", () => ({
     /** Records full all-content sync calls if a test accidentally reaches them. */
     syncAll: unusedCommand,
-    /** Records full sync calls if a test accidentally reaches them. */
-    syncFull: unusedCommand,
     /** Records incremental sync calls if a test accidentally reaches them. */
     syncIncremental: unusedCommand,
   }));

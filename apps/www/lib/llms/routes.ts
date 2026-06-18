@@ -9,7 +9,7 @@ import { Effect, Option } from "effect";
 import {
   getRuntimeContentRoute,
   getRuntimeContentRouteParentPage,
-} from "@/lib/content/runtime";
+} from "@/lib/content/runtime/routes";
 import { baseRoutes } from "@/lib/sitemap/routes";
 
 type SupportedLocale = (typeof routing.locales)[number];
@@ -36,6 +36,7 @@ export type LlmsProxyRouteDecision =
   | { kind: "rewrite-markdown"; localizedRoute: LocalizedLlmsRoute };
 
 const MARKDOWN_EXTENSION_PATTERN = /\.mdx?$/;
+const ROOT_PUBLIC_ROUTE = "/";
 const SITEMAP_BASE_ROUTES = new Set(baseRoutes);
 
 /**
@@ -75,7 +76,11 @@ export const resolveLlmsProxyRoute = Effect.fn("www.llms.routes.resolveProxy")(
       verifiedRouteCheck = getRouteProjectionCheck(publicRoute.value);
     } else {
       if (routeCheck.mode === "outside") {
-        if (wantsMarkdown && SITEMAP_BASE_ROUTES.has(localizedRoute.route)) {
+        if (
+          wantsMarkdown &&
+          localizedRoute.route !== ROOT_PUBLIC_ROUTE &&
+          SITEMAP_BASE_ROUTES.has(localizedRoute.route)
+        ) {
           const decision: LlmsProxyRouteDecision = {
             kind: "rewrite-markdown",
             localizedRoute,
@@ -131,7 +136,7 @@ function getRouteProjectionCheck(
 
   return {
     mode: "exact",
-    route: route.sourcePath,
+    route: route.publicPath,
   };
 }
 
@@ -214,7 +219,7 @@ function shouldVerifyContentRoute(method: string) {
  * Exact routes use one indexed route lookup. Listing routes use a single
  * bounded page read scoped by kind, parent, or prefix. App shell routes are
  * treated as present, known invalid taxonomy routes are treated as missing,
- * and transient catalog failures fail open to preserve URL stability.
+ * and catalog failures fail closed so unsupported URLs never become soft 404s.
  */
 const contentRouteExists = Effect.fn("www.llms.routes.contentExists")(
   function* ({
@@ -238,7 +243,7 @@ const contentRouteExists = Effect.fn("www.llms.routes.contentExists")(
         route: routeCheck.route,
       }).pipe(
         Effect.match({
-          onFailure: () => true,
+          onFailure: () => false,
           onSuccess: (contentRoute) => contentRoute !== null,
         })
       );
@@ -262,15 +267,15 @@ const contentRouteExists = Effect.fn("www.llms.routes.contentExists")(
  * Reads one already-scoped route catalog page and converts it to existence.
  *
  * The supplied Effect must already be bounded and indexed by the caller.
- * Failures return true so transient catalog outages fail open instead of
- * producing crawler-visible false 404s.
+ * Failures return false because route existence must be proven by the content
+ * runtime model before the proxy exposes markdown for a requested URL.
  */
 function contentRoutePageHasRows(
   pageProgram: Effect.Effect<{ page: readonly unknown[] }, unknown>
 ) {
   return pageProgram.pipe(
     Effect.match({
-      onFailure: () => true,
+      onFailure: () => false,
       onSuccess: (page) => page.page.length > 0,
     })
   );

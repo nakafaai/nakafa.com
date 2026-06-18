@@ -28,6 +28,16 @@ export const singaporeSecondaryMathematicsCourseNode = courseNode({
         }),
       ],
       key: "secondary-mathematics-number-algebra",
+      materialCard: {
+        en: {
+          description: "Build algebra skills from equations and powers.",
+          title: "Number and algebra",
+        },
+        id: {
+          description: "Bangun aljabar dari persamaan dan pangkat.",
+          title: "Bilangan dan aljabar",
+        },
+      },
       order: 10,
       translations: {
         en: {
@@ -62,6 +72,16 @@ export const singaporeSecondaryMathematicsCourseNode = courseNode({
         }),
       ],
       key: "secondary-mathematics-geometry-statistics",
+      materialCard: {
+        en: {
+          description: "Use shapes, data, and chance in problems.",
+          title: "Geometry, statistics, and probability",
+        },
+        id: {
+          description: "Gunakan bentuk, data, dan peluang dalam soal.",
+          title: "Geometri, statistika, dan peluang",
+        },
+      },
       order: 20,
       translations: {
         en: {
@@ -115,6 +135,16 @@ export const singaporeSecondaryAdditionalMathematicsCourseNode = courseNode({
         }),
       ],
       key: "secondary-additional-mathematics-functions-calculus",
+      materialCard: {
+        en: {
+          description: "Connect functions with rates and accumulated change.",
+          title: "Functions and calculus",
+        },
+        id: {
+          description: "Hubungkan fungsi dengan laju dan akumulasi.",
+          title: "Fungsi dan kalkulus",
+        },
+      },
       order: 10,
       translations: {
         en: {

@@ -6,6 +6,16 @@ import {
 export const igcseMathematicsUnitNodes = [
   unitNode({
     key: "mathematics-0580-algebra-graphs",
+    materialCard: {
+      en: {
+        description: "Build equations, graphs, sequences, and functions.",
+        title: "Algebra and graphs",
+      },
+      id: {
+        description: "Bangun persamaan, grafik, barisan, dan fungsi.",
+        title: "Aljabar dan grafik",
+      },
+    },
     order: 20,
     translations: {
       en: {
@@ -46,6 +56,16 @@ export const igcseMathematicsUnitNodes = [
   }),
   unitNode({
     key: "mathematics-0580-geometry",
+    materialCard: {
+      en: {
+        description: "Work with circles, coordinates, and trigonometry.",
+        title: "Geometry, mensuration, and trigonometry",
+      },
+      id: {
+        description: "Latih lingkaran, koordinat, dan trigonometri.",
+        title: "Geometri, pengukuran, dan trigonometri",
+      },
+    },
     order: 30,
     translations: {
       en: {
@@ -86,6 +106,16 @@ export const igcseMathematicsUnitNodes = [
   }),
   unitNode({
     key: "mathematics-0580-transformations-vectors",
+    materialCard: {
+      en: {
+        description: "Use transformations and vectors in geometry.",
+        title: "Transformations and vectors",
+      },
+      id: {
+        description: "Gunakan transformasi dan vektor dalam geometri.",
+        title: "Transformasi dan vektor",
+      },
+    },
     order: 40,
     translations: {
       en: {
@@ -114,6 +144,16 @@ export const igcseMathematicsUnitNodes = [
   }),
   unitNode({
     key: "mathematics-0580-probability-statistics",
+    materialCard: {
+      en: {
+        description: "Read chance and data with clear calculations.",
+        title: "Probability and statistics",
+      },
+      id: {
+        description: "Baca peluang dan data lewat perhitungan.",
+        title: "Peluang dan statistika",
+      },
+    },
     order: 50,
     translations: {
       en: {

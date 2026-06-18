@@ -6,6 +6,7 @@ import {
   isMaterialContentRoute,
   isMaterialLessonRoute,
   isMaterialTopicRoute,
+  isPracticeSetRoute,
   listPublicContentRoutes,
   readContentPathSegments,
   readContentPathWithoutNamespace,
@@ -106,6 +107,11 @@ describe("public content routes", () => {
         routes.find((route) => route.kind === "exercise-set") ?? topic
       )
     ).toBe(false);
+    expect(
+      isPracticeSetRoute(
+        routes.find((route) => route.kind === "exercise-set") ?? topic
+      )
+    ).toBe(true);
     expect(isMaterialLessonRoute(firstLesson)).toBe(true);
     expect(toLocalizedContentHref(firstLesson)).toBe(
       "/id/materi/matematika/barisan-dan-deret/konsep-barisan"

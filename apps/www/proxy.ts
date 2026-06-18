@@ -1,18 +1,8 @@
 import { isPostHogProxyPathname } from "@repo/analytics/posthog/config";
-import {
-  isMaterialLessonRoute,
-  listPublicContentRoutes,
-} from "@repo/contents/_types/route/content";
-import {
-  isRenderableCurriculumRoute,
-  listPublicCurriculumRoutes,
-} from "@repo/contents/_types/route/curriculum";
-import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import type { ProxyConfig } from "next/server";
 import { type NextRequest, NextResponse } from "next/server";
-import { hasLocale } from "next-intl";
 import createMiddleware from "next-intl/middleware";
 import {
   AGENT_DISCOVERY_LINK_HEADER,
@@ -22,12 +12,14 @@ import {
   type LocalizedLlmsRoute,
   resolveLlmsProxyRoute,
 } from "@/lib/llms/routes";
+import {
+  readProjectedHtmlRouteRejection,
+  readSourceBackedHtmlRouteRejection,
+} from "@/lib/routing/public-html";
 
 const handleLocalizedRequest = createMiddleware(routing);
-const RENDERABLE_PROJECTED_HTML_PATHS = createRenderableProjectedHtmlPathSet();
 const TRAILING_SLASH_PATTERN = /\/+$/;
 const AUTH_REDIRECT_PATH_COOKIE = "auth-redirect-path";
-const REJECTED_PUBLIC_ROOTS = new Set(["/learn"]);
 const LOCALE_BYPASS_PATHS = new Set([
   "/mcp",
   "/llms.txt",
@@ -38,38 +30,6 @@ const LOCALE_BYPASS_PATHS = new Set([
   "/.well-known/agent-skills/index.json",
   "/.well-known/agent-skills/nakafa/SKILL.md",
 ]);
-
-/**
- * Builds the fast proxy lookup for projected material and curriculum pages.
- *
- * The route projection still owns the source rows; the proxy only keeps a
- * pre-stream membership set so removed grouping paths can return HTTP 404
- * instead of a streamed soft-not-found response.
- */
-function createRenderableProjectedHtmlPathSet() {
-  const routes = Effect.runSync(
-    Effect.all([listPublicContentRoutes(), listPublicCurriculumRoutes()])
-  );
-  const routeKeys = new Set<string>();
-
-  for (const routeGroup of routes) {
-    for (const route of routeGroup) {
-      if (route.kind === "subject-lesson" && isMaterialLessonRoute(route)) {
-        routeKeys.add(`${route.locale}:${route.publicPath}`);
-        continue;
-      }
-
-      if (
-        route.kind === "curriculum-context" &&
-        isRenderableCurriculumRoute(route)
-      ) {
-        routeKeys.add(`${route.locale}:${route.publicPath}`);
-      }
-    }
-  }
-
-  return routeKeys;
-}
 
 /**
  * Adapts Next/Vercel proxy requests to Nakafa route decisions.
@@ -101,10 +61,15 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const rejectedLocale = getRejectedPublicRouteLocale(pathname);
+  const sourceBackedRouteRejection = await Effect.runPromise(
+    readSourceBackedHtmlRouteRejection({
+      method: request.method,
+      pathname,
+    })
+  );
 
-  if (rejectedLocale) {
-    return rewriteToContentNotFound(request, rejectedLocale);
+  if (sourceBackedRouteRejection) {
+    return rewriteToContentNotFound(request, sourceBackedRouteRejection);
   }
 
   const routeDecision = await Effect.runPromise(
@@ -123,7 +88,9 @@ export async function proxy(request: NextRequest) {
     return rewriteToContentNotFound(request, routeDecision.locale);
   }
 
-  const projectedRouteLocale = getRejectedProjectedRouteLocale(pathname);
+  const projectedRouteLocale = await Effect.runPromise(
+    readProjectedHtmlRouteRejection(pathname)
+  );
 
   if (projectedRouteLocale) {
     return rewriteToContentNotFound(request, projectedRouteLocale);
@@ -143,75 +110,6 @@ function isLocaleBypassPath(pathname: string) {
   return (
     LOCALE_BYPASS_PATHS.has(pathname) || pathname.startsWith("/llms-full/")
   );
-}
-
-/**
- * Detects stale public route roots before next-intl can normalize them.
- *
- * The route projection owns localized public namespaces. If a request uses the
- * wrong locale's namespace, an internal app segment, or a removed route group,
- * the request must 404 rather than become an alternate alias.
- */
-function getRejectedPublicRouteLocale(pathname: string) {
-  if (REJECTED_PUBLIC_ROOTS.has(pathname)) {
-    return routing.defaultLocale;
-  }
-
-  const [locale, namespace] = pathname.split("/").filter(Boolean);
-
-  if (!(namespace && hasLocale(routing.locales, locale))) {
-    return null;
-  }
-
-  const usesRejectedNamespace = PUBLIC_ROUTE_SURFACES.some((surface) => {
-    const expectedNamespace = surface.routeSlugs[locale];
-    const knownNamespaces = [
-      surface.appSegment,
-      surface.key,
-      ...Object.values(surface.routeSlugs),
-    ];
-
-    return (
-      namespace !== expectedNamespace &&
-      knownNamespaces.some((knownNamespace) => knownNamespace === namespace)
-    );
-  });
-
-  return usesRejectedNamespace ? locale : null;
-}
-
-/**
- * Rejects non-rendered material and curriculum grouping paths before streaming.
- *
- * Cache Components remove `dynamicParams`, and Next returns 200 for streamed
- * `notFound()` responses. The proxy is the framework seam that can still return
- * a real 404 for projected public route surfaces that are intentionally internal
- * grouping rows rather than pages.
- */
-function getRejectedProjectedRouteLocale(pathname: string) {
-  const [locale, namespace, ...pathSegments] = pathname
-    .split("/")
-    .filter(Boolean);
-
-  if (!(namespace && hasLocale(routing.locales, locale))) {
-    return null;
-  }
-
-  const surface = PUBLIC_ROUTE_SURFACES.find(
-    (item) =>
-      (item.key === "subject" || item.key === "curriculum") &&
-      item.routeSlugs[locale] === namespace
-  );
-
-  if (!surface) {
-    return null;
-  }
-
-  const publicPath = [namespace, ...pathSegments].join("/");
-
-  return RENDERABLE_PROJECTED_HTML_PATHS.has(`${locale}:${publicPath}`)
-    ? null
-    : locale;
 }
 
 /** Rewrites a localized route to the source-backed markdown handler. */

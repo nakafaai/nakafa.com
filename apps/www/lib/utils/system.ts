@@ -8,7 +8,7 @@ import { applyContentRuntimeCache } from "@/lib/content/cache";
 import {
   getRuntimeContentRoute,
   listRuntimeLatestContentRoutes,
-} from "@/lib/content/runtime";
+} from "@/lib/content/runtime/routes";
 
 type RuntimeContentSection = FunctionArgs<
   typeof api.contents.queries.runtime.listContentRoutesByPrefix
@@ -143,7 +143,7 @@ function routeToStaticParam(route: string, config: ParamConfig) {
   return param;
 }
 
-/** Gets SEO metadata from the Convex route catalog with translation fallbacks. */
+/** Gets SEO metadata from the Convex route catalog with translation defaults. */
 export function getMetadataFromSlug(
   locale: Locale,
   slug: string[]

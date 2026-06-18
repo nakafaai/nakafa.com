@@ -28,6 +28,16 @@ export const singaporeSecondaryScienceCourseNode = courseNode({
         }),
       ],
       key: "secondary-science-physics",
+      materialCard: {
+        en: {
+          description: "Measure motion, vectors, and energy clearly.",
+          title: "Physics",
+        },
+        id: {
+          description: "Ukur gerak, vektor, dan energi dengan jelas.",
+          title: "Fisika",
+        },
+      },
       materialDomain: "physics",
       order: 10,
       translations: {
@@ -57,6 +67,16 @@ export const singaporeSecondaryScienceCourseNode = courseNode({
         }),
       ],
       key: "secondary-science-chemistry",
+      materialCard: {
+        en: {
+          description: "Model matter and reactions from evidence.",
+          title: "Chemistry",
+        },
+        id: {
+          description: "Modelkan materi dan reaksi dari bukti.",
+          title: "Kimia",
+        },
+      },
       materialDomain: "chemistry",
       order: 20,
       translations: {
@@ -86,6 +106,16 @@ export const singaporeSecondaryScienceCourseNode = courseNode({
         }),
       ],
       key: "secondary-science-biology",
+      materialCard: {
+        en: {
+          description: "Study living systems and ecosystem change.",
+          title: "Biology",
+        },
+        id: {
+          description: "Pelajari sistem hayati dan perubahan ekosistem.",
+          title: "Biologi",
+        },
+      },
       materialDomain: "biology",
       order: 30,
       translations: {

@@ -86,11 +86,9 @@ export function CardMaterial({ material }: Props) {
                 <HugeIcons className="size-4" icon={Link04Icon} />
               </a>
             </CardTitle>
-            {!!material.description && (
-              <CardDescription title={material.description}>
-                {material.description}
-              </CardDescription>
-            )}
+            <CardDescription title={material.description}>
+              {material.description}
+            </CardDescription>
           </div>
           <Button
             aria-label={isOpen ? "Close content" : "Open content"}

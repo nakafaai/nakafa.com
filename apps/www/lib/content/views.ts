@@ -1,5 +1,5 @@
 import { applyContentRuntimeCache } from "@/lib/content/cache";
-import { fetchRuntimeContentRoute } from "@/lib/content/runtime";
+import { fetchRuntimeContentRoute } from "@/lib/content/runtime/routes";
 
 /** Reads the persisted graph content ID for a public route projection. */
 export async function getRuntimeContentViewId(

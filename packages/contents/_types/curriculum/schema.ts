@@ -1,5 +1,6 @@
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { MaterialSchema } from "@repo/contents/_types/curriculum/material";
+import { MaterialCardDescriptionSchema } from "@repo/contents/_types/material/description";
 import {
   type MaterialKey,
   MaterialKeySchema,
@@ -44,12 +45,23 @@ const CurriculumDisplayGroupTranslationMapSchema = Schema.Record({
   value: CurriculumDisplayGroupTranslationSchema,
 });
 
+export const CurriculumMaterialCardTranslationSchema = Schema.Struct({
+  description: MaterialCardDescriptionSchema,
+  title: Schema.String,
+});
+
+const CurriculumMaterialCardTranslationMapSchema = Schema.Record({
+  key: LocaleSchema,
+  value: CurriculumMaterialCardTranslationSchema,
+});
+
 export const CurriculumNodeSchema = Schema.Struct({
   displayGroup: Schema.optional(CurriculumDisplayGroupTranslationMapSchema),
   displayGroupIconKey: Schema.optional(ProgramNavigationIconKeySchema),
   iconKey: Schema.optional(ProgramNavigationIconKeySchema),
   key: CurriculumNodeKeySchema,
   level: ProgramNavigationLevelSchema,
+  materialCard: Schema.optional(CurriculumMaterialCardTranslationMapSchema),
   materialDomain: Schema.optional(MaterialSchema),
   materialKeys: Schema.Array(MaterialKeySchema),
   order: Schema.Int.pipe(Schema.nonNegative()),
@@ -80,6 +92,7 @@ interface CurriculumStructureNodeValue {
   iconKey?: SchemaType<typeof ProgramNavigationIconKeySchema>;
   key: string;
   level: CurriculumNode["level"];
+  materialCard?: SchemaType<typeof CurriculumMaterialCardTranslationMapSchema>;
   materialDomain?: CurriculumNode["materialDomain"];
   order: number;
   translations: CurriculumNodeTranslationMap;
@@ -118,6 +131,9 @@ interface CurriculumStructureNodeEncodedValue {
   iconKey?: SchemaEncoded<typeof ProgramNavigationIconKeySchema>;
   key: string;
   level: CurriculumNode["level"];
+  materialCard?: SchemaEncoded<
+    typeof CurriculumMaterialCardTranslationMapSchema
+  >;
   materialDomain?: CurriculumNode["materialDomain"];
   order: number;
   translations: CurriculumNodeTranslationEncodedMap;
@@ -156,6 +172,7 @@ export const CurriculumStructureNodeSchema = Schema.Struct({
   iconKey: Schema.optional(ProgramNavigationIconKeySchema),
   key: CurriculumNodeKeySchema,
   level: ProgramNavigationLevelSchema,
+  materialCard: Schema.optional(CurriculumMaterialCardTranslationMapSchema),
   materialDomain: Schema.optional(MaterialSchema),
   order: Schema.Int.pipe(Schema.nonNegative()),
   translations: CurriculumNodeTranslationMapSchema,

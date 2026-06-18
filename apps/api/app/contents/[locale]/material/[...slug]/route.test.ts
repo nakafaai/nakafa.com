@@ -3,8 +3,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import * as route from "./route";
 
 const runtimeMocks = vi.hoisted(() => ({
-  listApiStaticParams: vi.fn(),
+  getExerciseApiQuestionPage: vi.fn(),
+  getExerciseApiSetPage: vi.fn(),
   getMaterialApiContentPage: vi.fn(),
+  listApiStaticParams: vi.fn(),
 }));
 const loggingMocks = vi.hoisted(() => ({
   logError: vi.fn(),
@@ -26,8 +28,10 @@ vi.mock("@/lib/content/runtime", async (importOriginal) => {
 
   return {
     ...actual,
-    listApiStaticParams: runtimeMocks.listApiStaticParams,
+    getExerciseApiQuestionPage: runtimeMocks.getExerciseApiQuestionPage,
+    getExerciseApiSetPage: runtimeMocks.getExerciseApiSetPage,
     getMaterialApiContentPage: runtimeMocks.getMaterialApiContentPage,
+    listApiStaticParams: runtimeMocks.listApiStaticParams,
   };
 });
 
@@ -120,6 +124,81 @@ describe("material content API route", () => {
       locale: "id",
       prefix: "material/lesson/mathematics",
     });
+  });
+
+  it("returns exercise set content for unified practice material requests", async () => {
+    const page = {
+      exercises: [{ number: 1, title: "Question 1" }],
+      set: {
+        slug: "material/practice/assessment/snbt/general-knowledge/set-1",
+      },
+    };
+
+    runtimeMocks.getExerciseApiSetPage.mockReturnValue(Effect.succeed(page));
+
+    const response = await route.GET(
+      new Request(
+        "http://localhost/contents/en/material/practice/assessment/snbt/general-knowledge/set-1"
+      ),
+      {
+        params: Promise.resolve({
+          locale: "en",
+          slug: [
+            "practice",
+            "assessment",
+            "snbt",
+            "general-knowledge",
+            "set-1",
+          ],
+        }),
+      }
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual(page);
+    expect(runtimeMocks.getExerciseApiSetPage).toHaveBeenCalledWith({
+      locale: "en",
+      slug: "material/practice/assessment/snbt/general-knowledge/set-1",
+    });
+    expect(runtimeMocks.getMaterialApiContentPage).not.toHaveBeenCalled();
+  });
+
+  it("returns exercise question content for localized practice question requests", async () => {
+    const page = {
+      exercise: { number: 9, title: "Question 9" },
+      exerciseCount: 10,
+    };
+
+    runtimeMocks.getExerciseApiQuestionPage.mockReturnValue(
+      Effect.succeed(page)
+    );
+
+    const response = await route.GET(
+      new Request(
+        "http://localhost/contents/id/material/practice/assessment/snbt/pengetahuan-umum/set-1/soal-9"
+      ),
+      {
+        params: Promise.resolve({
+          locale: "id",
+          slug: [
+            "practice",
+            "assessment",
+            "snbt",
+            "pengetahuan-umum",
+            "set-1",
+            "soal-9",
+          ],
+        }),
+      }
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual(page);
+    expect(runtimeMocks.getExerciseApiQuestionPage).toHaveBeenCalledWith({
+      locale: "id",
+      slug: "material/practice/assessment/snbt/pengetahuan-umum/set-1/9",
+    });
+    expect(runtimeMocks.getMaterialApiContentPage).not.toHaveBeenCalled();
   });
 
   it("rejects invalid locales before reading Convex", async () => {

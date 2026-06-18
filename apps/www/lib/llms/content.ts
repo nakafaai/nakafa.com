@@ -1,5 +1,6 @@
 import { findPublicRouteByPath } from "@repo/contents/_types/route/projection";
 import type { PublicRoute } from "@repo/contents/_types/route/schema";
+import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
 import { Effect, Option } from "effect";
 import type { Locale } from "next-intl";
 import {
@@ -18,6 +19,10 @@ interface LlmsMarkdownSource {
   cleanSlug: string;
   publicSlug?: string;
 }
+
+const PROJECTED_PUBLIC_ROUTE_SEGMENTS: ReadonlySet<string> = new Set(
+  PUBLIC_ROUTE_SURFACES.flatMap((surface) => Object.values(surface.routeSlugs))
+);
 
 /**
  * Resolves cached markdown for one agent-facing route.
@@ -120,7 +125,15 @@ export const getLlmsSourceMarkdownText = Effect.fn("www.llms.markdown.source")(
 /** Resolves public material/practice paths to the internal markdown source path. */
 const getLlmsMarkdownSource = Effect.fn("www.llms.markdown.sourcePath")(
   function* ({ cleanSlug, locale }: { cleanSlug: string; locale: Locale }) {
-    const publicRoute = yield* findPublicRouteByPath(cleanSlug, locale);
+    if (!isProjectedPublicMarkdownRoute(cleanSlug)) {
+      return { cleanSlug };
+    }
+
+    const publicRoute = yield* findPublicRouteByPath(cleanSlug, locale).pipe(
+      Effect.catchTag("InvalidPublicRouteSourceError", () =>
+        Effect.succeed(Option.none<PublicRoute>())
+      )
+    );
 
     return Option.match(publicRoute, {
       onNone: (): LlmsMarkdownSource => ({ cleanSlug }),
@@ -128,6 +141,13 @@ const getLlmsMarkdownSource = Effect.fn("www.llms.markdown.sourcePath")(
     });
   }
 );
+
+/** Limits public-to-source projection lookups to projected route namespaces. */
+function isProjectedPublicMarkdownRoute(cleanSlug: string) {
+  const [segment] = cleanSlug.split("/").filter(Boolean);
+
+  return PROJECTED_PUBLIC_ROUTE_SEGMENTS.has(segment ?? "");
+}
 
 /** Keeps public route rows as the only public-to-source markdown seam. */
 function getPublicContentMarkdownSource(

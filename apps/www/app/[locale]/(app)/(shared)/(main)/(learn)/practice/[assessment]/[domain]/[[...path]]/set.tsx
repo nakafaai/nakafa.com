@@ -1,7 +1,7 @@
+import { Quiz03Icon } from "@hugeicons/core-free-icons";
 import { getExercisesPagination } from "@repo/contents/_lib/assessment/slug";
 import { formatContentDateISO } from "@repo/contents/_shared/date";
 import type { ParsedHeading } from "@repo/contents/_types/toc";
-import { slugify } from "@repo/design-system/lib/utils";
 import { ArticleJsonLd } from "@repo/seo/json-ld/article";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { FOUNDER } from "@repo/seo/json-ld/constants";
@@ -9,11 +9,9 @@ import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
 import { Option } from "effect";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
-import { ExerciseAttempt } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/practice/[assessment]/[domain]/[[...path]]/attempt";
 import type { PracticeRouteData } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/practice/[assessment]/[domain]/[[...path]]/data";
 import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
 import { DeferredComments } from "@/components/comments/deferred";
-import { ExerciseTrackedEntry } from "@/components/exercise/entry";
 import { FooterContent } from "@/components/shared/footer-content";
 import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
@@ -21,6 +19,8 @@ import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import { LayoutMaterialToc } from "@/components/shared/material/toc";
 import { PaginationContent } from "@/components/shared/pagination-content";
+import { SubjectItem } from "@/components/shared/subject-item";
+import { SubjectList } from "@/components/shared/subject-list";
 import { getOgUrl } from "@/lib/utils/metadata";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 
@@ -41,11 +41,13 @@ export async function PracticeSetPage({
   const pagination = getExercisesPagination(data.pagePath, [
     data.group.material,
   ]);
-  const headings: ParsedHeading[] = data.exercises.map((exercise) => ({
-    label: t("number-count", { count: exercise.number }),
-    href: `#${slugify(t("number-count", { count: exercise.number }))}`,
-    children: [],
-  }));
+  const headings: ParsedHeading[] = [
+    {
+      label: t("exercises"),
+      href: "#questions",
+      children: [],
+    },
+  ];
   const description = `${t("exercises")} - ${data.route.title} - ${data.group.material.title}`;
   const educationalLevel = `${t(data.group.sourceType)} - ${t(data.group.sourceMaterial)}`;
   const publishedAt = Option.getOrElse(
@@ -88,17 +90,30 @@ export async function PracticeSetPage({
             }}
             title={data.route.title}
           />
-          <LayoutContent as="section" className="flex flex-col gap-12">
-            <ExerciseAttempt totalExercises={data.exercises.length} />
-            {data.exercises.map((exercise) => (
-              <ExerciseTrackedEntry
-                exercise={exercise}
-                key={exercise.number}
-                locale={locale}
-                setPath={data.route.sourcePath}
-                srLabel={t("number-count", { count: exercise.number })}
-              />
-            ))}
+          <p className="sr-only">
+            {locale === "id"
+              ? "Pilih nomor soal untuk membuka latihan lengkap dengan pilihan jawaban dan pembahasan."
+              : "Choose a question number to open the full prompt, choices, and explanation."}
+          </p>
+          <LayoutContent as="section">
+            <SubjectList id="questions">
+              {data.exercises.map((exercise) => {
+                const questionSegment = readPracticeQuestionSegment({
+                  locale,
+                  number: exercise.number,
+                });
+                const label = t("number-count", { count: exercise.number });
+
+                return (
+                  <SubjectItem
+                    href={`${data.pagePath}/${questionSegment}`}
+                    icon={Quiz03Icon}
+                    key={exercise.number}
+                    label={label}
+                  />
+                );
+              })}
+            </SubjectList>
           </LayoutContent>
           <PaginationContent pagination={pagination} />
           <FooterContent>
@@ -121,4 +136,15 @@ export async function PracticeSetPage({
       </LayoutMaterial>
     </>
   );
+}
+
+/** Builds the localized virtual question segment for one practice set row. */
+function readPracticeQuestionSegment({
+  locale,
+  number,
+}: {
+  locale: Locale;
+  number: number;
+}) {
+  return locale === "id" ? `soal-${number}` : `question-${number}`;
 }

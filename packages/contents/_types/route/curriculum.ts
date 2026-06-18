@@ -131,6 +131,8 @@ export const listPublicCurriculumRoutes = Effect.fn(
           kind: "curriculum-context",
           level: node.level,
           locale,
+          materialCardDescription: node.materialCard?.[locale].description,
+          materialCardTitle: node.materialCard?.[locale].title,
           materialDomain: node.materialDomain,
           materialKey,
           nodeKey: node.key,

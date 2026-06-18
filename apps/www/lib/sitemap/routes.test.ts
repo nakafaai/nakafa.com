@@ -22,16 +22,21 @@ type RuntimeContentRoute = NonNullable<
     typeof api.contents.queries.runtime.getContentRouteArtifactPage
   >
 >["routes"][number];
+type RuntimeSitemapPublicRoute = FunctionReturnType<
+  typeof api.contents.queries.runtime.listSitemapPublicRoutes
+>["page"][number];
 
 const runtimeMocks = vi.hoisted(() => ({
   getRuntimeContentRouteArtifactPage: vi.fn(),
   getRuntimeContentRouteCounts: vi.fn(),
+  getRuntimeSitemapPublicRoutes: vi.fn(),
 }));
 
-vi.mock("@/lib/content/runtime", () => ({
+vi.mock("@/lib/content/runtime/routes", () => ({
   getRuntimeContentRouteArtifactPage:
     runtimeMocks.getRuntimeContentRouteArtifactPage,
   getRuntimeContentRouteCounts: runtimeMocks.getRuntimeContentRouteCounts,
+  getRuntimeSitemapPublicRoutes: runtimeMocks.getRuntimeSitemapPublicRoutes,
 }));
 
 vi.mock("@repo/internationalization/src/routing", async () => {
@@ -45,6 +50,7 @@ vi.mock("@repo/internationalization/src/routing", async () => {
 beforeEach(() => {
   runtimeMocks.getRuntimeContentRouteArtifactPage.mockReset();
   runtimeMocks.getRuntimeContentRouteCounts.mockReset();
+  runtimeMocks.getRuntimeSitemapPublicRoutes.mockReset();
   runtimeMocks.getRuntimeContentRouteCounts.mockImplementation(({ locale }) =>
     Effect.succeed(
       locale === "en"
@@ -65,26 +71,53 @@ beforeEach(() => {
         syncedAt: 1,
       })
   );
+  runtimeMocks.getRuntimeSitemapPublicRoutes.mockImplementation(
+    ({ cursor, locale }) =>
+      Effect.succeed({
+        continueCursor: "",
+        isDone: true,
+        page:
+          cursor === null
+            ? publicRouteRows.filter((route) => route.locale === locale)
+            : [],
+      })
+  );
 });
 
 describe("sitemap route discovery", () => {
   it("builds stable page descriptors from materialized counts", async () => {
     await expect(getSitemapPageDescriptors()).resolves.toEqual([
       { id: "base" },
+      { id: "public_en", kind: "public", locale: "en" },
       {
         id: "content_en_articles_0",
+        kind: "content",
         locale: "en",
         page: 0,
         section: "articles",
       },
       {
         id: "content_en_material_0",
+        kind: "content",
         locale: "en",
         page: 0,
         section: "material",
       },
-      { id: "content_id_quran_0", locale: "id", page: 0, section: "quran" },
-      { id: "content_id_quran_1", locale: "id", page: 1, section: "quran" },
+      { id: "public_id", kind: "public", locale: "id" },
+      {
+        id: "content_id_quran_0",
+        kind: "content",
+        locale: "id",
+        page: 0,
+        section: "quran",
+      },
+      {
+        id: "content_id_quran_1",
+        kind: "content",
+        locale: "id",
+        page: 1,
+        section: "quran",
+      },
     ]);
     expect(
       runtimeMocks.getRuntimeContentRouteArtifactPage
@@ -94,9 +127,15 @@ describe("sitemap route discovery", () => {
   it("parses valid content page ids and rejects malformed ids", () => {
     expect(getSitemapPageDescriptor("content_en_articles_1")).toEqual({
       id: "content_en_articles_1",
+      kind: "content",
       locale: "en",
       page: 1,
       section: "articles",
+    });
+    expect(getSitemapPageDescriptor("public_en")).toEqual({
+      id: "public_en",
+      kind: "public",
+      locale: "en",
     });
     expect(getSitemapPageDescriptor(undefined)).toEqual({ id: "base" });
     expect(getSitemapPageDescriptor("content_en_articles")).toBeNull();
@@ -104,9 +143,10 @@ describe("sitemap route discovery", () => {
     expect(getSitemapPageDescriptor("content_fr_articles_1")).toBeNull();
     expect(getSitemapPageDescriptor("content_en_unknown_1")).toBeNull();
     expect(getSitemapPageDescriptor("content_en_articles_bad")).toBeNull();
+    expect(getSitemapPageDescriptor("public_en_extra")).toBeNull();
   });
 
-  it("builds base and content sitemap routes from one materialized page", async () => {
+  it("builds base, content, and public sitemap routes from bounded pages", async () => {
     await expect(getSitemapRoutes()).resolves.toEqual([
       "/",
       "/contributor",
@@ -123,7 +163,6 @@ describe("sitemap route discovery", () => {
       "/practice/snbt/quantitative-knowledge/mock-test/2026",
       "/practice/snbt/quantitative-knowledge/mock-test/2026/set-1",
       "/practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question-1",
-      "/subjects/chemistry/green-chemistry",
       "/subjects/chemistry/green-chemistry/definition",
     ]);
     expect(
@@ -132,6 +171,16 @@ describe("sitemap route discovery", () => {
       locale: "en",
       page: 0,
       section: "material",
+    });
+
+    await expect(getSitemapRoutes("public_en")).resolves.toEqual([
+      "/curriculum/merdeka/class-10/mathematics",
+      "/exams/snbt/quantitative-knowledge",
+    ]);
+    expect(runtimeMocks.getRuntimeSitemapPublicRoutes).toHaveBeenCalledWith({
+      cursor: null,
+      limit: 100,
+      locale: "en",
     });
   });
 
@@ -147,6 +196,36 @@ describe("sitemap route discovery", () => {
     );
   });
 
+  it("walks bounded public route pages until the runtime cursor is done", async () => {
+    runtimeMocks.getRuntimeSitemapPublicRoutes.mockImplementation(
+      ({ cursor, locale }) =>
+        Effect.succeed({
+          continueCursor: cursor === null ? "next" : "",
+          isDone: cursor !== null,
+          page:
+            cursor === null
+              ? publicRouteRows
+                  .filter((route) => route.locale === locale)
+                  .slice(0, 1)
+              : publicRouteRows
+                  .filter((route) => route.locale === locale)
+                  .slice(1),
+        })
+    );
+
+    await expect(getSitemapRoutes("public_en")).resolves.toEqual([
+      "/curriculum/merdeka/class-10/mathematics",
+      "/exams/snbt/quantitative-knowledge",
+    ]);
+    expect(runtimeMocks.getRuntimeSitemapPublicRoutes).toHaveBeenLastCalledWith(
+      {
+        cursor: "next",
+        limit: 100,
+        locale: "en",
+      }
+    );
+  });
+
   it("derives parent routes from concrete route catalog rows", async () => {
     await expect(
       Effect.runPromise(buildSitemapContentPageRoutes(routeRows))
@@ -157,7 +236,6 @@ describe("sitemap route discovery", () => {
       "/practice/snbt/quantitative-knowledge/mock-test/2026/set-1",
       "/practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question-1",
       "/quran/1",
-      "/subjects/chemistry/green-chemistry",
       "/subjects/chemistry/green-chemistry/definition",
     ]);
   });
@@ -170,7 +248,7 @@ describe("sitemap route discovery", () => {
             {
               locale: "en",
               route:
-                "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
+                "practice/snbt/quantitative-knowledge/mock-test/2026/set-1",
               section: "material",
             },
             "material/practice/assessment/snbt/quantitative-knowledge/try-out/set-1"
@@ -195,25 +273,30 @@ const routeRows = [
   }),
   routeRow({
     locale: "en",
-    route: "material/lesson/chemistry/green-chemistry/definition",
+    route: "subjects/chemistry/green-chemistry/definition",
     section: "material",
+    sourcePath: "material/lesson/chemistry/green-chemistry/definition",
   }),
   routeRow({
     locale: "en",
-    route: "material/lesson/chemistry/green-chemistry",
+    route: "subjects/chemistry/green-chemistry",
     section: "material",
+    sourcePath: "material/lesson/chemistry/green-chemistry",
   }),
   routeRow({
     locale: "en",
-    route:
+    route: "practice/snbt/quantitative-knowledge/mock-test/2026/set-1",
+    section: "material",
+    sourcePath:
       "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
-    section: "material",
   }),
   routeRow({
     locale: "en",
     route:
-      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-1",
+      "practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question-1",
     section: "material",
+    sourcePath:
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-1",
   }),
   routeRow({
     locale: "en",
@@ -226,7 +309,7 @@ const incompleteRouteRows = [
   routeProjectionRow(
     {
       locale: "en",
-      route: "material/lesson/chemistry/green-chemistry/definition",
+      route: "subjects/chemistry/green-chemistry/definition",
       section: "material",
     },
     "material/lesson/chemistry/green-chemistry/unknown-section"
@@ -234,8 +317,7 @@ const incompleteRouteRows = [
   routeProjectionRow(
     {
       locale: "en",
-      route:
-        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
+      route: "practice/snbt/quantitative-knowledge/mock-test/2026/set-1",
       section: "material",
     },
     "material/practice/assessment/snbt/quantitative-knowledge/try-out-2027/set-1"
@@ -252,16 +334,18 @@ function routeRow({
   locale,
   route,
   section,
+  sourcePath = route,
 }: {
   locale: Locale;
   route: string;
   section: SourceRegistryRoot;
+  sourcePath?: string;
 }): RuntimeContentRoute {
-  const graph = routeGraph(locale, route);
-  const kind = getLearningObjectKindForRoute(route);
+  const graph = routeGraph(locale, sourcePath);
+  const kind = getLearningObjectKindForRoute(sourcePath);
 
   if (!kind) {
-    throw new Error(`Expected graph route kind for ${route}.`);
+    throw new Error(`Expected graph route kind for ${sourcePath}.`);
   }
 
   return {
@@ -275,7 +359,7 @@ function routeRow({
     official: false,
     route,
     section,
-    sourcePath: route,
+    sourcePath,
     syncedAt: 1,
     title: "Title",
   };
@@ -288,13 +372,79 @@ function routeProjectionRow(
     route: string;
     section: SourceRegistryRoot;
   },
-  route: string
+  sourcePath: string
 ): RuntimeContentRoute {
   return {
-    ...routeRow(input),
-    route,
+    ...routeRow({ ...input, sourcePath }),
+    sourcePath,
   };
 }
+
+const publicRouteRows: RuntimeSitemapPublicRoute[] = [
+  {
+    canonicalPath: undefined,
+    description: undefined,
+    displayGroupIconKey: undefined,
+    displayGroupTitle: undefined,
+    iconKey: "mathematics",
+    kind: "curriculum-context",
+    locale: "en",
+    materialDomain: "mathematics",
+    materialKey: "lesson.mathematics.integral",
+    nodeKey: "merdeka.class-10.mathematics",
+    order: 1,
+    parentPath: "curriculum/merdeka/class-10",
+    programKey: "merdeka",
+    publicPath: "curriculum/merdeka/class-10/mathematics",
+    sectionKey: undefined,
+    sitemap: true,
+    sourcePath: undefined,
+    syncedAt: 1,
+    title: "Mathematics",
+  },
+  {
+    canonicalPath: "practice/snbt/quantitative-knowledge/mock-test/2026",
+    description: undefined,
+    displayGroupIconKey: undefined,
+    displayGroupTitle: undefined,
+    iconKey: "assessment",
+    kind: "assessment-context",
+    locale: "en",
+    materialDomain: undefined,
+    materialKey: "practice.assessment.snbt.quantitative-knowledge",
+    nodeKey: "snbt.quantitative-knowledge",
+    order: 1,
+    parentPath: "exams/snbt",
+    programKey: "snbt-2026",
+    publicPath: "exams/snbt/quantitative-knowledge",
+    sectionKey: undefined,
+    sitemap: true,
+    sourcePath: undefined,
+    syncedAt: 1,
+    title: "Quantitative Knowledge",
+  },
+  {
+    canonicalPath: undefined,
+    description: undefined,
+    displayGroupIconKey: undefined,
+    displayGroupTitle: undefined,
+    iconKey: undefined,
+    kind: "subject-lesson",
+    locale: "en",
+    materialDomain: "mathematics",
+    materialKey: "lesson.mathematics.integral",
+    nodeKey: undefined,
+    order: 1,
+    parentPath: "subjects/mathematics/integral",
+    programKey: undefined,
+    publicPath: "subjects/mathematics/integral/area",
+    sectionKey: undefined,
+    sitemap: true,
+    sourcePath: "material/lesson/mathematics/integral/area",
+    syncedAt: 1,
+    title: "Area",
+  },
+];
 
 /** Builds graph identity fields for a sitemap route fixture. */
 function routeGraph(locale: Locale, route: string) {

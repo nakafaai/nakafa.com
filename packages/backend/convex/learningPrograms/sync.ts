@@ -3,7 +3,10 @@ import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { getContentRouteByContentId } from "@repo/backend/convex/learningPrograms/impl";
-import { deleteOmittedCatalogPrograms } from "@repo/backend/convex/learningPrograms/omitted";
+import {
+  deleteOmittedCatalogProgramBatch,
+  deleteOmittedCatalogPrograms,
+} from "@repo/backend/convex/learningPrograms/omitted";
 import {
   learningProgramCoverageInputValidator,
   learningProgramInputValidator,
@@ -97,10 +100,25 @@ export const syncLearningPrograms = internalMutation({
 
     updated += await deleteOmittedCatalogPrograms(ctx, {
       incomingKeys: new Set(programs.map((program) => program.key)),
+      omittedAt: args.syncedAt,
     });
 
     return { created, skipped: 0, updated };
   },
+});
+
+/** Continues bounded omitted-program dependency cleanup after a catalog sync. */
+export const continueOmittedProgramDelete = internalMutation({
+  args: {
+    omittedAt: v.number(),
+    programId: v.id("learningPrograms"),
+  },
+  returns: v.object({
+    deleted: v.boolean(),
+    scheduled: v.boolean(),
+  }),
+  handler: async (ctx, args) =>
+    await deleteOmittedCatalogProgramBatch(ctx, args),
 });
 
 /** Decodes sync rows through the Effect-owned program registry contract before writes. */

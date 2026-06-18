@@ -32,7 +32,7 @@ vi.mock("@repo/internationalization/src/routing", async () => {
   };
 });
 
-vi.mock("@/lib/content/runtime", () => ({
+vi.mock("@/lib/content/runtime/routes", () => ({
   getRuntimeContentRoute: runtimeMocks.getRuntimeContentRoute,
   listRuntimeLatestContentRoutes: routeMocks.listRuntimeLatestContentRoutes,
 }));
@@ -310,7 +310,7 @@ describe("route catalog metadata", () => {
     });
   });
 
-  it("uses translation fallbacks for sparse route metadata", async () => {
+  it("uses translation defaults for sparse route metadata", async () => {
     runtimeMocks.getRuntimeContentRoute.mockReturnValueOnce(
       Effect.succeed({
         authors: [{ name: "Nakafa" }],

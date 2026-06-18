@@ -53,5 +53,11 @@ describe("public route path helpers", () => {
         { order: 1, publicPath: Effect.runSync(makePath(["materi", "a"])) }
       )
     ).toBeGreaterThan(0);
+    expect(
+      comparePublicRouteOrder(
+        { publicPath: Effect.runSync(makePath(["materi", "b"])) },
+        { publicPath: Effect.runSync(makePath(["materi", "a"])) }
+      )
+    ).toBeGreaterThan(0);
   });
 });

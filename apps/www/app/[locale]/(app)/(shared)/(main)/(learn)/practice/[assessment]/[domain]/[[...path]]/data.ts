@@ -1,16 +1,18 @@
 import { getExerciseNumberPagination } from "@repo/contents/_lib/assessment/slug";
 import type { ContentPagination } from "@repo/contents/_types/content";
-import {
-  findPublicContentRouteByPath,
-  listPublicContentRoutes,
-} from "@repo/contents/_types/route/content";
-import { readPathWithoutNamespace } from "@repo/contents/_types/route/path";
-import type { PublicContentRoute } from "@repo/contents/_types/route/schema";
-import { Effect, Option } from "effect";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import {
-  isLocalizedQuestionSegment,
+  findPracticeGroupSet,
+  findPracticeRoute,
+  PRACTICE_ROUTES,
+  type PracticeQuestionRoute,
+  type PracticeSetRoute,
+  type PublicPracticeRouteRows,
+  readPracticeQuestionRoute,
+  toPracticeHref,
+} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/practice/[assessment]/[domain]/[[...path]]/routes";
+import {
   localizeQuestionPaginationItem,
   readExerciseSetSourceParts,
   readGroupTitle,
@@ -19,16 +21,11 @@ import {
 import {
   fetchRuntimeExerciseQuestionPage,
   fetchRuntimeExerciseSetPage,
-} from "@/lib/content/runtime";
+} from "@/lib/content/runtime/pages";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 type PracticeParams =
   PageProps<"/[locale]/practice/[assessment]/[domain]/[[...path]]">["params"];
-type PracticeSetRoute = PublicContentRoute & { kind: "exercise-set" };
-type PracticeQuestionRoute = PublicContentRoute & {
-  kind: "exercise-question";
-};
-type PracticeRoute = PracticeSetRoute | PracticeQuestionRoute;
 type RuntimeSetPage = NonNullable<
   Awaited<ReturnType<typeof fetchRuntimeExerciseSetPage>>
 >;
@@ -61,11 +58,10 @@ export type PracticeRouteData =
       group: PracticeGroupContext;
       locale: Locale;
       pagePath: string;
+      publicPath: string;
     };
 
 type PracticeGroupContext = ReturnType<typeof readPracticeGroupContext>;
-
-export const PRACTICE_ROUTES = Effect.runSync(listPublicContentRoutes());
 
 /**
  * Builds practice set params from projected public practice routes.
@@ -74,7 +70,7 @@ export const PRACTICE_ROUTES = Effect.runSync(listPublicContentRoutes());
  * question segment, so static params stay bounded by authored exercise sets.
  */
 export function listPracticeStaticParams() {
-  return PRACTICE_ROUTES.filter(isPracticeSetRoute).map((route) => {
+  return PRACTICE_ROUTES.map((route) => {
     const [, assessment, domain, ...path] = route.publicPath.split("/");
 
     return { assessment, domain, path };
@@ -82,7 +78,7 @@ export function listPracticeStaticParams() {
 }
 
 /**
- * Resolves practice params into the old explicit page variants.
+ * Resolves practice params into the canonical practice page variants.
  *
  * The returned data keeps public paths for links and source paths for Convex
  * runtime rows, attempts, and compiled MDX question/answer imports.
@@ -93,37 +89,40 @@ export async function getPracticeRouteData(
   const { locale: rawLocale, assessment, domain, path = [] } = await params;
   const locale = getLocaleOrThrow(rawLocale);
   const pathWithoutNamespace = [assessment, domain, ...path].join("/");
-  const exactRoute = findPracticeRoute(locale, pathWithoutNamespace);
+  const exactRoute = findPracticeRoute(
+    PRACTICE_ROUTES,
+    locale,
+    pathWithoutNamespace
+  );
 
-  if (exactRoute && isPracticeSetRoute(exactRoute)) {
-    return await getSetRouteData(locale, exactRoute);
+  if (exactRoute) {
+    return await getSetRouteData(locale, exactRoute, PRACTICE_ROUTES);
   }
 
-  const questionRoute = findPracticeQuestionRoute({
+  const questionRoute = readPracticeQuestionRoute({
     locale,
     path,
+    routes: PRACTICE_ROUTES,
     setPathWithoutNamespace: [assessment, domain, ...path.slice(0, -1)].join(
       "/"
     ),
   });
 
   if (questionRoute) {
-    return await getSingleRouteData(locale, questionRoute);
+    return await getSingleRouteData(locale, questionRoute, PRACTICE_ROUTES);
   }
 
-  const groupSet = PRACTICE_ROUTES.find(
-    (candidate) =>
-      candidate.locale === locale &&
-      isPracticeSetRoute(candidate) &&
-      candidate.parentPath !== undefined &&
-      readPathWithoutNamespace(candidate.parentPath) === pathWithoutNamespace
+  const groupSet = findPracticeGroupSet(
+    PRACTICE_ROUTES,
+    locale,
+    pathWithoutNamespace
   );
 
-  if (!(groupSet && isPracticeSetRoute(groupSet) && groupSet.parentPath)) {
+  if (!groupSet) {
     notFound();
   }
 
-  return getGroupRouteData(locale, groupSet.parentPath);
+  return getGroupRouteData(locale, groupSet, PRACTICE_ROUTES);
 }
 
 /**
@@ -134,7 +133,11 @@ export async function getPracticeRouteData(
  */
 export async function getPracticeRuntimeSetPath(
   params: PracticeParams
-): Promise<{ locale: Locale; routePath?: string; setPath?: string }> {
+): Promise<{
+  locale: Locale;
+  routePath?: string;
+  setPath?: string;
+}> {
   const data = await getPracticeRouteData(params);
 
   if (data.kind === "year-group") {
@@ -178,48 +181,39 @@ export function getPracticeQuestionPagination({
 }
 
 /**
- * Converts a projected route row to a locale-prefixed app href.
- *
- * Practice pages use these public URLs for learner navigation while the attempt
- * store continues to use the source set slug.
- */
-export function toPracticeHref(
-  route: Pick<PracticeRoute, "locale" | "publicPath">
-) {
-  return `/${route.locale}/${route.publicPath}`;
-}
-
-/**
  * Reads one practice group context from projected public route rows.
  *
  * The group context feeds the established `CardMaterial` navigation component
  * with public set links.
  */
-function readPracticeGroupContext(locale: Locale, groupPath: string) {
-  const sets = PRACTICE_ROUTES.filter(
+function readPracticeGroupContext(
+  locale: Locale,
+  setRoute: PracticeSetRoute,
+  routes: PublicPracticeRouteRows
+) {
+  const sets = routes.filter(
     (candidate) =>
       candidate.locale === locale &&
-      isPracticeSetRoute(candidate) &&
-      candidate.parentPath === groupPath
+      candidate.parentPath === setRoute.parentPath
   );
-  const firstSet = sets.at(0);
+  const sourceParts = readExerciseSetSourceParts(setRoute.sourcePath);
 
-  if (!(firstSet && isPracticeSetRoute(firstSet))) {
-    notFound();
-  }
-
-  const sourceParts = readExerciseSetSourceParts(firstSet.sourcePath);
+  const description = setRoute.description;
 
   return {
-    description: firstSet.description,
-    materialPath: `/${locale}/${groupPath}`,
-    pagePath: `/${locale}/${groupPath}`,
+    description,
+    alternatePaths: readPracticeGroupAlternatePaths(
+      setRoute.sourcePath,
+      routes
+    ),
+    materialPath: `/${locale}/${setRoute.parentPath}`,
+    pagePath: `/${locale}/${setRoute.parentPath}`,
     sourceMaterial: sourceParts.material,
     sourceType: sourceParts.type,
     material: {
-      title: readGroupTitle(firstSet),
-      description: firstSet.description,
-      href: `/${locale}/${groupPath}`,
+      title: readGroupTitle(setRoute),
+      description,
+      href: `/${locale}/${setRoute.parentPath}`,
       items: sets.map((set) => ({
         href: toPracticeHref(set),
         title: set.title,
@@ -228,34 +222,36 @@ function readPracticeGroupContext(locale: Locale, groupPath: string) {
   };
 }
 
-/** Loads the restored set page data from the Convex runtime read model. */
+/** Loads canonical set page data from the Convex runtime read model. */
 async function getSetRouteData(
   locale: Locale,
-  route: PracticeSetRoute
+  route: PracticeSetRoute,
+  routes: PublicPracticeRouteRows
 ): Promise<PracticeRouteData> {
   const setPage = await fetchRuntimeExerciseSetPage({
     locale,
     slug: route.sourcePath,
   });
 
-  if (!(setPage && route.parentPath)) {
+  if (!setPage) {
     notFound();
   }
 
   return {
     kind: "set",
     exercises: setPage.exercises,
-    group: readPracticeGroupContext(locale, route.parentPath),
+    group: readPracticeGroupContext(locale, route, routes),
     locale,
     pagePath: toPracticeHref(route),
     route,
   };
 }
 
-/** Loads the restored single-question page data from the Convex runtime row. */
+/** Loads canonical single-question page data from the Convex runtime row. */
 async function getSingleRouteData(
   locale: Locale,
-  route: PracticeQuestionRoute
+  route: PracticeQuestionRoute,
+  routes: PublicPracticeRouteRows
 ): Promise<PracticeRouteData> {
   const { questionNumber, setSourcePath } = readQuestionSourcePathParts(
     route.sourcePath
@@ -264,14 +260,12 @@ async function getSingleRouteData(
     locale,
     slug: `${setSourcePath}/${questionNumber}`,
   });
-  const setRoute = PRACTICE_ROUTES.find(
+  const setRoute = routes.find(
     (candidate) =>
-      candidate.locale === locale &&
-      isPracticeSetRoute(candidate) &&
-      candidate.publicPath === route.parentPath
+      candidate.locale === locale && candidate.publicPath === route.parentPath
   );
 
-  if (!(questionPage && setRoute && isPracticeSetRoute(setRoute))) {
+  if (!(questionPage && setRoute)) {
     notFound();
   }
 
@@ -280,7 +274,7 @@ async function getSingleRouteData(
     exercise: questionPage.exercise,
     exerciseCount: questionPage.exerciseCount,
     exerciseFilePath: toPracticeHref(route),
-    group: readPracticeGroupContext(locale, setRoute.parentPath ?? ""),
+    group: readPracticeGroupContext(locale, setRoute, routes),
     locale,
     route,
     setPath: setSourcePath,
@@ -291,119 +285,48 @@ async function getSingleRouteData(
 /** Resolves a practice year group from projected public practice rows. */
 function getGroupRouteData(
   locale: Locale,
-  groupPath: string
+  setRoute: PracticeSetRoute,
+  routes: PublicPracticeRouteRows
 ): PracticeRouteData {
-  const setRoute = PRACTICE_ROUTES.find(
-    (candidate) =>
-      candidate.locale === locale &&
-      isPracticeSetRoute(candidate) &&
-      candidate.parentPath === groupPath
-  );
-
-  if (!(setRoute && isPracticeSetRoute(setRoute))) {
-    notFound();
-  }
-
   return {
     kind: "year-group",
-    group: readPracticeGroupContext(locale, groupPath),
+    group: readPracticeGroupContext(locale, setRoute, routes),
     locale,
-    pagePath: `/${locale}/${groupPath}`,
+    pagePath: `/${locale}/${setRoute.parentPath}`,
+    publicPath: setRoute.parentPath,
   };
 }
 
-/** Finds one projected practice route by localized path without namespace. */
-function findPracticeRoute(
-  locale: Locale,
-  pathWithoutNamespace: string
-): PracticeRoute | undefined {
-  for (const candidate of PRACTICE_ROUTES) {
-    if (!isPracticeRoute(candidate)) {
+/** Finds localized public group paths from sibling set rows with the same source group. */
+function readPracticeGroupAlternatePaths(
+  sourceSetPath: string,
+  routes: PublicPracticeRouteRows
+) {
+  const sourceGroupPath = sourceSetPath.split("/").slice(0, -1).join("/");
+  const paths: Array<{ locale: Locale; publicPath: string }> = [];
+  const seen = new Set<string>();
+
+  for (const route of routes) {
+    const candidateGroupPath = route.sourcePath
+      .split("/")
+      .slice(0, -1)
+      .join("/");
+
+    if (candidateGroupPath !== sourceGroupPath) {
       continue;
     }
 
-    if (candidate.locale !== locale) {
+    const key = `${route.locale}:${route.parentPath}`;
+
+    if (seen.has(key)) {
       continue;
     }
 
-    if (
-      readPathWithoutNamespace(candidate.publicPath) !== pathWithoutNamespace
-    ) {
-      continue;
-    }
-
-    return candidate;
+    seen.add(key);
+    paths.push({ locale: route.locale, publicPath: route.parentPath });
   }
 
-  return;
-}
-
-/**
- * Resolves a localized `soal-*` or `question-*` URL through route projection.
- *
- * Exercise question rows are derived from their set source and are not part of
- * the bounded static set inventory. Calling the Effect route projection here
- * keeps the localized public question path schema-owned instead of rebuilding
- * it in the app route.
- */
-function findPracticeQuestionRoute({
-  locale,
-  path,
-  setPathWithoutNamespace,
-}: {
-  locale: Locale;
-  path: readonly string[];
-  setPathWithoutNamespace: string;
-}) {
-  const questionSegment = path.at(-1);
-
-  if (!isLocalizedQuestionSegment(locale, questionSegment)) {
-    return;
-  }
-
-  const setRoute = findPracticeRoute(locale, setPathWithoutNamespace);
-
-  if (!(setRoute && isPracticeSetRoute(setRoute))) {
-    return;
-  }
-
-  const routeOption = Effect.runSync(
-    findPublicContentRouteByPath(
-      `${setRoute.publicPath}/${questionSegment}`,
-      locale
-    )
-  );
-
-  if (Option.isNone(routeOption)) {
-    return;
-  }
-
-  const route = routeOption.value;
-
-  if (!isPracticeQuestionRoute(route)) {
-    return;
-  }
-
-  return route;
-}
-
-/** Checks whether one content route is a practice set or question row. */
-function isPracticeRoute(route: PublicContentRoute): route is PracticeRoute {
-  return route.kind === "exercise-set" || route.kind === "exercise-question";
-}
-
-/** Checks whether one content route is an authored exercise set row. */
-function isPracticeSetRoute(
-  route: PublicContentRoute
-): route is PracticeSetRoute {
-  return route.kind === "exercise-set";
-}
-
-/** Checks whether one content row is a projected exercise question row. */
-function isPracticeQuestionRoute(
-  route: PublicContentRoute
-): route is PracticeQuestionRoute {
-  return route.kind === "exercise-question";
+  return paths;
 }
 
 /** Removes a leading locale segment from one app href. */

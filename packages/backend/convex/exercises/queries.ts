@@ -32,7 +32,6 @@ export const getLatestAttemptBySlug = query({
   handler: async (ctx, args) => {
     const { appUser } = await requireAuth(ctx);
     const userId = appUser._id;
-
     const attempt = await ctx.db
       .query("exerciseAttempts")
       .withIndex("by_userId_and_origin_and_slug_and_scope_and_startedAt", (q) =>

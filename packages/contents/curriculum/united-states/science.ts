@@ -40,6 +40,16 @@ export const usHighSchoolScienceCourseNode = courseNode({
         }),
       ],
       key: "high-school-science-physical-sciences",
+      materialCard: {
+        en: {
+          description: "Connect motion, energy, matter, and reactions.",
+          title: "Physical Sciences",
+        },
+        id: {
+          description: "Hubungkan gerak, energi, materi, dan reaksi.",
+          title: "Ilmu fisika dan kimia",
+        },
+      },
       order: 10,
       translations: {
         en: {
@@ -68,6 +78,16 @@ export const usHighSchoolScienceCourseNode = courseNode({
         }),
       ],
       key: "high-school-science-life-sciences",
+      materialCard: {
+        en: {
+          description: "Compare living systems, viruses, and diversity.",
+          title: "Life Sciences",
+        },
+        id: {
+          description: "Bandingkan sistem hayati, virus, dan keragaman.",
+          title: "Ilmu hayati",
+        },
+      },
       order: 20,
       translations: {
         en: {
@@ -90,6 +110,16 @@ export const usHighSchoolScienceCourseNode = courseNode({
         }),
       ],
       key: "high-school-science-earth-space-sciences",
+      materialCard: {
+        en: {
+          description: "Trace climate change through Earth systems.",
+          title: "Earth and Space Sciences",
+        },
+        id: {
+          description: "Telusuri perubahan iklim lewat sistem bumi.",
+          title: "Ilmu bumi dan antariksa",
+        },
+      },
       order: 30,
       translations: {
         en: {

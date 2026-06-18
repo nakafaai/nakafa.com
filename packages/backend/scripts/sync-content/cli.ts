@@ -8,10 +8,9 @@ import {
   syncCurriculumLessons,
   syncCurriculumTopics,
 } from "@repo/backend/scripts/sync-content/curriculum";
-import {
-  syncExerciseQuestions,
-  syncExerciseSets,
-} from "@repo/backend/scripts/sync-content/exercises";
+import { syncExerciseQuestions } from "@repo/backend/scripts/sync-content/exerciseQuestions";
+import { syncExerciseSets } from "@repo/backend/scripts/sync-content/exercises";
+import { syncFull } from "@repo/backend/scripts/sync-content/full";
 import { syncLearningPrograms } from "@repo/backend/scripts/sync-content/learningPrograms";
 import { log, logError } from "@repo/backend/scripts/sync-content/logging";
 import { syncGeneratedReadModels } from "@repo/backend/scripts/sync-content/readModels";
@@ -24,7 +23,6 @@ import { validate } from "@repo/backend/scripts/sync-content/validate";
 import { verify } from "@repo/backend/scripts/sync-content/verify";
 import {
   syncAll,
-  syncFull,
   syncIncremental,
 } from "@repo/backend/scripts/sync-content/workflows";
 import { Effect } from "effect";

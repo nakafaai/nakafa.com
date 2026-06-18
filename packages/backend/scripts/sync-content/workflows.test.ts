@@ -83,10 +83,12 @@ const loadWorkflow = async (
       Effect.fail(new Error("Unexpected Convex mutation call.")),
   }));
   vi.doMock("@repo/backend/scripts/sync-content/exercises", () => ({
-    /** Records exercise question sync calls. */
-    syncExerciseQuestions: () => syncStep("syncExerciseQuestions"),
     /** Records exercise set sync calls. */
     syncExerciseSets: () => syncStep("syncExerciseSets"),
+  }));
+  vi.doMock("@repo/backend/scripts/sync-content/exerciseQuestions", () => ({
+    /** Records exercise question sync calls. */
+    syncExerciseQuestions: () => syncStep("syncExerciseQuestions"),
   }));
   vi.doMock("@repo/backend/scripts/sync-content/logging", () => ({
     /** Suppresses duration formatting noise in workflow tests. */
@@ -185,9 +187,20 @@ const loadWorkflow = async (
     },
   }));
 
-  const workflow = await import("@repo/backend/scripts/sync-content/workflows");
+  const full = await import("@repo/backend/scripts/sync-content/full");
+  const workflows = await import(
+    "@repo/backend/scripts/sync-content/workflows"
+  );
 
-  return { events, learningProgramOptions, routePageOptions, workflow };
+  return {
+    events,
+    learningProgramOptions,
+    routePageOptions,
+    workflow: {
+      syncFull: full.syncFull,
+      syncIncremental: workflows.syncIncremental,
+    },
+  };
 };
 
 afterEach(() => {

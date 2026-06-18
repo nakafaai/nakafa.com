@@ -8,10 +8,9 @@ import { routing } from "@repo/internationalization/src/routing";
 import { MAIN_DOMAIN } from "@repo/next-config/domains";
 import { Effect, Option } from "effect";
 import type { Locale } from "next-intl";
-import { getRuntimeContentRoute } from "@/lib/content/runtime";
+import { getRuntimeContentRoute } from "@/lib/content/runtime/routes";
 import {
   baseRoutes,
-  type ContentSitemapPage,
   getSitemapPageDescriptor,
   readSitemapPageDescriptors,
   readSitemapRoutes,
@@ -191,18 +190,14 @@ const getSitemapPageEntries = Effect.fn("www.sitemap.entries.page")(function* (
 function getSitemapEntryLocales(pageId: string | undefined): readonly Locale[] {
   const descriptor = getSitemapPageDescriptor(pageId);
 
-  if (isContentSitemapDescriptor(descriptor)) {
+  if (
+    descriptor &&
+    (descriptor.kind === "content" || descriptor.kind === "public")
+  ) {
     return [descriptor.locale];
   }
 
   return routing.locales;
-}
-
-/** Identifies parsed sitemap descriptors that are scoped to one locale. */
-function isContentSitemapDescriptor(
-  descriptor: ReturnType<typeof getSitemapPageDescriptor>
-): descriptor is ContentSitemapPage {
-  return Boolean(descriptor && "locale" in descriptor);
 }
 
 /**
@@ -265,7 +260,7 @@ function isPublicContentRoute(route: PublicRoute): route is PublicContentRoute {
   );
 }
 
-/** Builds a stable relative fallback date for sitemap recovery paths. */
+/** Builds a stable relative recovery date for sitemap rows without source dates. */
 function getFallbackDate(monthsAgo: number) {
   const date = new Date();
   date.setMonth(date.getMonth() - monthsAgo);

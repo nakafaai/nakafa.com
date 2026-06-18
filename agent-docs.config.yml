@@ -1,0 +1,6 @@
+url: http://localhost:3000
+options:
+  canonicalOrigin: https://nakafa.com
+  maxLinksToTest: 50
+  requestTimeout: 20000
+  samplingStrategy: deterministic

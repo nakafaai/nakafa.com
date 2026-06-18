@@ -44,11 +44,9 @@ export function lookupNamespaceSegment(
   locale: Locale
 ) {
   return Effect.gen(function* () {
-    const surface = PUBLIC_ROUTE_SURFACES.find(
-      (item) => item.key === namespace
-    );
+    const segment = readNamespaceSegment(namespace, locale);
 
-    if (!surface) {
+    if (!segment) {
       return yield* Effect.fail(
         new MissingPublicSlugError({
           locale,
@@ -58,11 +56,20 @@ export function lookupNamespaceSegment(
       );
     }
 
-    return surface.routeSlugs[locale];
+    return segment;
   });
 }
 
-/** Finds a source-owned localized domain slug or fails without fallback text. */
+/** Reads a localized namespace segment from the already decoded route surface registry. */
+export function readNamespaceSegment(
+  namespace: PublicRouteSurfaceKey,
+  locale: Locale
+) {
+  return PUBLIC_ROUTE_SURFACES.find((item) => item.key === namespace)
+    ?.routeSlugs[locale];
+}
+
+/** Finds a source-owned localized domain slug or fails without invented text. */
 export function lookupDomainSlug(
   domains: readonly MaterialRouteDomain[],
   kind: MaterialRouteDomain["kind"],
@@ -70,11 +77,9 @@ export function lookupDomainSlug(
   locale: Locale
 ) {
   return Effect.gen(function* () {
-    const row = domains.find(
-      (candidate) => candidate.kind === kind && candidate.domain === domain
-    );
+    const slug = readDomainSlug(domains, kind, domain, locale);
 
-    if (!row) {
+    if (!slug) {
       return yield* Effect.fail(
         new MissingPublicSlugError({
           locale,
@@ -84,8 +89,20 @@ export function lookupDomainSlug(
       );
     }
 
-    return row.routeSlugs[locale];
+    return slug;
   });
+}
+
+/** Reads one source-owned domain slug from decoded domain rows. */
+export function readDomainSlug(
+  domains: readonly MaterialRouteDomain[],
+  kind: MaterialRouteDomain["kind"],
+  domain: MaterialRouteDomain["domain"],
+  locale: Locale
+) {
+  return domains.find(
+    (candidate) => candidate.kind === kind && candidate.domain === domain
+  )?.routeSlugs[locale];
 }
 
 /** Decodes one generated canonical content route row. */

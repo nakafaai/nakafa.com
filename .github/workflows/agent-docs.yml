@@ -1,0 +1,64 @@
+name: Agent-Friendly Docs
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: agent-docs-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  agent-docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build production app
+        run: pnpm build
+
+      - name: Start web app
+        run: |
+          pnpm --filter www start > /tmp/nakafa-www.log 2>&1 &
+          echo "$!" > /tmp/nakafa-www.pid
+
+      - name: Wait for web app
+        run: |
+          for attempt in {1..60}; do
+            if curl -fsS http://localhost:3000/llms.txt > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/nakafa-www.log
+          exit 1
+
+      - name: Run AFDocs checks
+        run: pnpm agent-docs
+
+      - name: Stop web app
+        if: always()
+        run: |
+          if [ -f /tmp/nakafa-www.pid ]; then
+            kill "$(cat /tmp/nakafa-www.pid)" || true
+          fi

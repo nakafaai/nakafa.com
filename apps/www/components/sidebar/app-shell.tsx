@@ -22,13 +22,13 @@ export function AppShell({
 }) {
   return (
     <SidebarProvider locked={locked}>
-      <AppSidebar />
       <SidebarInset>
         <Header />
         <SearchCommand />
         <AiSheet />
         <div className="relative">{children}</div>
       </SidebarInset>
+      <AppSidebar containerClassName="order-first" />
     </SidebarProvider>
   );
 }

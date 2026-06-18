@@ -10,7 +10,7 @@ import {
   getRuntimeContentRoute,
   getRuntimeContentRouteArtifactPage,
   getRuntimeContentRouteParentPage,
-} from "@/lib/content/runtime";
+} from "@/lib/content/runtime/routes";
 import {
   BASE_URL,
   type LlmsSection,
@@ -252,7 +252,7 @@ const getRouteMetadata = Effect.fn("www.llms.routeMetadata")(function* ({
   };
 });
 
-/** Builds fallback metadata for sitemap-derived listing routes without markdown. */
+/** Builds listing metadata for sitemap-derived routes that do not have markdown. */
 function getListingRouteMetadata(route: string) {
   return {
     description: undefined,

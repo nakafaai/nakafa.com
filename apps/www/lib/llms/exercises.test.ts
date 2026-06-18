@@ -12,7 +12,7 @@ vi.mock("next/cache", () => ({
   cacheTag: mockCacheTag,
 }));
 
-vi.mock("@/lib/content/runtime", () => ({
+vi.mock("@/lib/content/runtime/pages", () => ({
   getRuntimeExerciseSetPage: mockGetRuntimeExerciseSetPage,
 }));
 
@@ -102,17 +102,22 @@ describe("llms exercise markdown", () => {
     ).resolves.toBeNull();
   });
 
-  it("renders set markdown with localized choices and set descriptions", async () => {
+  it("renders set markdown as a bounded question index", async () => {
     const text = await getCachedLlmsExerciseText({
       cleanSlug: validSetPath,
       locale: "id",
+      publicSlug: "latihan/snbt/pengetahuan-kuantitatif/try-out/2026/set-1",
     });
 
     expect(text).toContain("Practice with quantitative reasoning.");
-    expect(text).toContain("## Exercise 1");
-    expect(text).toContain("- [x] A. Benar");
-    expect(text).toContain("## Exercise 2");
-    expect(text).toContain("Second answer raw");
+    expect(text).toContain("## Questions");
+    expect(text).toContain(
+      "https://nakafa.com/id/latihan/snbt/pengetahuan-kuantitatif/try-out/2026/set-1/soal-1.md"
+    );
+    expect(text).toContain(
+      "https://nakafa.com/id/latihan/snbt/pengetahuan-kuantitatif/try-out/2026/set-1/soal-2.md"
+    );
+    expect(text).not.toContain("### Answer & Explanation");
   });
 
   it("treats a trailing slash as the whole exercise set", async () => {
@@ -121,11 +126,11 @@ describe("llms exercise markdown", () => {
       locale: "en",
     });
 
-    expect(text).toContain("## Exercise 1");
-    expect(text).toContain("## Exercise 2");
+    expect(text).toContain("## Questions");
+    expect(text).toContain(`${validSetPath}/question-1.md`);
   });
 
-  it("renders one exercise with English choices and title fallback", async () => {
+  it("renders one exercise with English choices and source title", async () => {
     mockGetRuntimeExerciseSetPage.mockReturnValue(
       Effect.succeed({
         exercises: [
@@ -166,6 +171,17 @@ describe("llms exercise markdown", () => {
     expect(text).toContain(
       "Practice with quantitative reasoning. - Question title"
     );
+  });
+
+  it("renders one exercise without choice rows when source choices are absent", async () => {
+    const text = await getCachedLlmsExerciseText({
+      cleanSlug: `${validSetPath}/question-2`,
+      locale: "en",
+    });
+
+    expect(text).toContain("Second question raw");
+    expect(text).toContain("### Choices");
+    expect(text).not.toContain("- [");
   });
 
   it("returns null when the requested exercise number is missing", async () => {

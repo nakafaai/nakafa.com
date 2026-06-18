@@ -25,30 +25,31 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
     getToken(),
   ]);
 
-  const [catalogSnapshot, currentUser, initialNowMs] = await Effect.runPromise(
-    Effect.all(
-      [
-        Effect.tryPromise(() =>
-          fetchQuery(
-            api.tryouts.queries.tryouts.getActiveTryoutCatalogSnapshot,
-            {
-              locale,
-              pageSize: TRYOUT_CATALOG_PAGE_SIZE,
-              product,
-            },
-            token ? { token } : undefined
-          )
-        ),
-        token
-          ? Effect.tryPromise(() =>
-              fetchQuery(api.auth.queries.getCurrentUser, {}, { token })
+  const { catalogSnapshot, currentUser, initialNowMs } =
+    await Effect.runPromise(
+      Effect.all(
+        {
+          catalogSnapshot: Effect.tryPromise(() =>
+            fetchQuery(
+              api.tryouts.queries.tryouts.getActiveTryoutCatalogSnapshot,
+              {
+                locale,
+                pageSize: TRYOUT_CATALOG_PAGE_SIZE,
+                product,
+              },
+              token ? { token } : undefined
             )
-          : Effect.succeed(null),
-        Clock.currentTimeMillis,
-      ] as const,
-      { concurrency: "unbounded" }
-    )
-  );
+          ),
+          currentUser: token
+            ? Effect.tryPromise(() =>
+                fetchQuery(api.auth.queries.getCurrentUser, {}, { token })
+              )
+            : Effect.succeed(null),
+          initialNowMs: Clock.currentTimeMillis,
+        },
+        { concurrency: "unbounded" }
+      )
+    );
   const userName = currentUser?.appUser.name ?? tHome("guest");
 
   return (
@@ -75,6 +76,7 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
             count: catalogSnapshot.activeCount,
           })}
           art={<SnbtTryoutIcon />}
+          description={tTryouts("products.snbt.description")}
           title={tTryouts("products.snbt.title")}
         >
           <TryoutCatalogList

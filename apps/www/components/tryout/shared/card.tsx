@@ -2,8 +2,7 @@ import { cn } from "@repo/design-system/lib/utils";
 import type * as React from "react";
 
 /**
- * Provides the try-out card frame shared by catalog and detail surfaces without
- * adding explanatory copy.
+ * Provides the try-out card frame shared by catalog and detail surfaces.
  */
 export function TryoutCard({
   className,
@@ -72,8 +71,7 @@ export function TryoutCardBody({
 }
 
 /**
- * Groups concise try-out card copy while leaving page-level helper descriptions
- * outside this component contract.
+ * Groups concise try-out card copy inside the shared try-out card frame.
  */
 export function TryoutCardCopy({
   className,
@@ -96,6 +94,16 @@ export function TryoutCardTitle({
       {children}
     </h2>
   );
+}
+
+/**
+ * Renders concise helper copy that disambiguates try-out catalog products.
+ */
+export function TryoutCardDescription({
+  className,
+  ...props
+}: React.ComponentProps<"p">) {
+  return <p className={cn("text-muted-foreground", className)} {...props} />;
 }
 
 /**

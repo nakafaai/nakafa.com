@@ -3,10 +3,8 @@ import { Effect } from "effect";
 import { Feed, type Item } from "feed";
 import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
-import {
-  fetchRuntimeQuranSurahs,
-  listRuntimeLatestContentRoutes,
-} from "@/lib/content/runtime";
+import { fetchRuntimeQuranSurahs } from "@/lib/content/runtime/pages";
+import { listRuntimeLatestContentRoutes } from "@/lib/content/runtime/routes";
 import { getQuranSurahName } from "@/lib/utils/pages/quran";
 
 const baseUrl = "https://nakafa.com";

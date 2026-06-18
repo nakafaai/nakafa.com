@@ -28,6 +28,16 @@ export const usHighSchoolMathematicsCourseNode = courseNode({
         }),
       ],
       key: "high-school-mathematics-number-quantity",
+      materialCard: {
+        en: {
+          description: "Use complex numbers, vectors, and matrices.",
+          title: "Number and Quantity",
+        },
+        id: {
+          description: "Gunakan bilangan kompleks, vektor, dan matriks.",
+          title: "Bilangan dan Kuantitas",
+        },
+      },
       order: 10,
       translations: {
         en: {
@@ -68,6 +78,16 @@ export const usHighSchoolMathematicsCourseNode = courseNode({
         }),
       ],
       key: "high-school-mathematics-algebra",
+      materialCard: {
+        en: {
+          description: "Solve equations, polynomials, and exponentials.",
+          title: "Algebra",
+        },
+        id: {
+          description: "Selesaikan persamaan, polinom, dan eksponen.",
+          title: "Aljabar",
+        },
+      },
       order: 20,
       translations: {
         en: {
@@ -104,6 +124,16 @@ export const usHighSchoolMathematicsCourseNode = courseNode({
         }),
       ],
       key: "high-school-mathematics-functions",
+      materialCard: {
+        en: {
+          description: "Model, compose, and transform functions.",
+          title: "Functions",
+        },
+        id: {
+          description: "Modelkan, susun, dan ubah fungsi.",
+          title: "Fungsi",
+        },
+      },
       order: 30,
       translations: {
         en: {
@@ -138,6 +168,16 @@ export const usHighSchoolMathematicsCourseNode = courseNode({
         }),
       ],
       key: "high-school-mathematics-geometry",
+      materialCard: {
+        en: {
+          description: "Use circles, coordinates, and trigonometry.",
+          title: "Geometry",
+        },
+        id: {
+          description: "Gunakan lingkaran, koordinat, dan trigonometri.",
+          title: "Geometri",
+        },
+      },
       order: 40,
       translations: {
         en: {
@@ -172,6 +212,16 @@ export const usHighSchoolMathematicsCourseNode = courseNode({
         }),
       ],
       key: "high-school-mathematics-statistics-probability",
+      materialCard: {
+        en: {
+          description: "Read data, chance, and regression models.",
+          title: "Statistics and Probability",
+        },
+        id: {
+          description: "Baca data, peluang, dan model regresi.",
+          title: "Statistika dan Peluang",
+        },
+      },
       order: 50,
       translations: {
         en: {

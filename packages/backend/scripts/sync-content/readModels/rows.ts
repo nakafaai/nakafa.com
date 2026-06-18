@@ -325,7 +325,7 @@ function toPublicRoutePayload(route: PublicRoute): PublicRoutePayload {
     materialKey: "materialKey" in route ? route.materialKey : undefined,
     nodeKey: "nodeKey" in route ? route.nodeKey : undefined,
     order: "order" in route ? route.order : undefined,
-    parentPath: route.parentPath,
+    parentPath: "parentPath" in route ? route.parentPath : undefined,
     programKey: "programKey" in route ? route.programKey : undefined,
     publicPath: route.publicPath,
     sectionKey: "sectionKey" in route ? route.sectionKey : undefined,

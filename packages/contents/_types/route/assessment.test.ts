@@ -14,6 +14,7 @@ describe("public assessment routes", () => {
         kind: "assessment-context",
         locale: "id",
         materialKey: "practice.assessment.snbt.quantitative-knowledge",
+        order: 1,
         programKey: "snbt-2026",
         publicPath: "ujian/snbt/pengetahuan-kuantitatif/tryout/2026",
       })
@@ -24,6 +25,7 @@ describe("public assessment routes", () => {
         kind: "assessment-context",
         locale: "en",
         materialKey: "practice.assessment.snbt.quantitative-knowledge",
+        order: 1,
         programKey: "snbt-2026",
         publicPath: "exams/snbt/quantitative-knowledge/mock-test/2026",
       })
@@ -119,6 +121,7 @@ describe("public assessment routes", () => {
       expect.objectContaining({
         materialKey: undefined,
         nodeKey: "parent-domain",
+        order: 1,
         publicPath: "ujian/snbt/domain-induk",
       })
     );
@@ -127,6 +130,7 @@ describe("public assessment routes", () => {
         canonicalPath: "latihan/snbt/pengetahuan-kuantitatif/tryout/2026",
         materialKey: "practice.assessment.snbt.quantitative-knowledge",
         nodeKey: "child-practice",
+        order: 1,
       })
     );
   });

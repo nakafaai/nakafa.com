@@ -23,7 +23,7 @@ import { LayoutMaterial } from "@/components/shared/material/layout";
 import { LayoutMaterialToc } from "@/components/shared/material/toc";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
 import { importContentModuleOrNull } from "@/lib/content/module";
-import { fetchRuntimeArticlePage } from "@/lib/content/runtime";
+import { fetchRuntimeArticlePage } from "@/lib/content/runtime/pages";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
@@ -38,6 +38,7 @@ type ArticleJsonLdAuthor = ArrayItem<
   Parameters<typeof ArticleJsonLd>[0]["author"]
 >;
 
+/** Validates localized article route params before metadata and rendering touch content modules. */
 async function getResolvedParams(
   params: PageProps<"/[locale]/articles/[category]/[slug]">["params"]
 ) {
@@ -54,6 +55,7 @@ async function getResolvedParams(
   return { category, locale, slug };
 }
 
+/** Builds article metadata from the projected article route and runtime content row. */
 export async function generateMetadata({
   params,
 }: {
@@ -144,7 +146,7 @@ type ArticleRuntimePage = NonNullable<
   Awaited<ReturnType<typeof getArticleMetadataData>>["content"]
 >;
 
-// Generate bottom-up static params
+/** Prebuilds article pages from the runtime route catalog instead of filesystem-only slugs. */
 export function generateStaticParams() {
   return getStaticParams({
     basePath: "articles",

@@ -27,8 +27,8 @@ import { useUser } from "@/lib/context/use-user";
 /**
  * Renders the existing completion flow for canonical practice routes.
  *
- * The dialog, progress, and stats toggle match the old exercise route behavior;
- * only the route location changed.
+ * The dialog, progress, and stats toggle stay attached to the canonical
+ * practice attempt context rendered by concrete question pages.
  */
 export function CompleteExerciseButton() {
   const t = useTranslations("Exercises");

@@ -9,7 +9,8 @@ import { hasLocale, type Locale } from "next-intl";
 import {
   getRuntimeContentRouteArtifactPage,
   getRuntimeContentRouteCounts,
-} from "@/lib/content/runtime";
+  getRuntimeSitemapPublicRoutes,
+} from "@/lib/content/runtime/routes";
 
 type RuntimeContentSection = FunctionArgs<
   typeof api.contents.queries.runtime.listContentRoutesByPrefix
@@ -19,6 +20,12 @@ type RuntimeContentRoute = NonNullable<
     typeof api.contents.queries.runtime.getContentRouteArtifactPage
   >
 >["routes"][number];
+type RuntimeSitemapPublicRoute = FunctionReturnType<
+  typeof api.contents.queries.runtime.listSitemapPublicRoutes
+>["page"][number];
+type RuntimeSitemapPublicRoutePage = FunctionReturnType<
+  typeof api.contents.queries.runtime.listSitemapPublicRoutes
+>;
 const contentSections: readonly RuntimeContentSection[] = [
   "articles",
   "material",
@@ -31,16 +38,19 @@ type SitemapPage =
   | { id: typeof sitemapBasePageId }
   | {
       id: string;
+      kind: "content";
       locale: Locale;
       page: number;
       section: RuntimeContentSection;
+    }
+  | {
+      id: string;
+      kind: "public";
+      locale: Locale;
     };
 
 /** Descriptor for one graph-backed sitemap artifact page. */
-export type ContentSitemapPage = Extract<
-  SitemapPage,
-  { section: RuntimeContentSection }
->;
+export type ContentSitemapPage = Extract<SitemapPage, { kind: "content" }>;
 
 /** Static top-level routes that should always be present in the sitemap. */
 export const baseRoutes = [
@@ -65,6 +75,12 @@ export const readSitemapPageDescriptors = Effect.fn(
   const descriptors: SitemapPage[] = [{ id: sitemapBasePageId }];
 
   for (const locale of routing.locales) {
+    descriptors.push({
+      id: formatPublicSitemapPageId(locale),
+      kind: "public",
+      locale,
+    });
+
     const counts = yield* getRuntimeContentRouteCounts({ locale });
 
     for (const count of counts) {
@@ -76,6 +92,7 @@ export const readSitemapPageDescriptors = Effect.fn(
       for (let page = 0; page < pageCount; page++) {
         descriptors.push({
           id: formatContentSitemapPageId({ locale, section, page }),
+          kind: "content",
           locale,
           page,
           section,
@@ -94,6 +111,15 @@ export function getSitemapPageDescriptor(id: string | undefined) {
   }
 
   const [prefix, locale, section, rawPage] = id.split("_");
+
+  if (prefix === "public" && hasLocale(routing.locales, locale) && !section) {
+    return {
+      id,
+      kind: "public",
+      locale,
+    } satisfies SitemapPage;
+  }
+
   if (prefix !== "content" || !hasLocale(routing.locales, locale)) {
     return null;
   }
@@ -109,6 +135,7 @@ export function getSitemapPageDescriptor(id: string | undefined) {
 
   return {
     id,
+    kind: "content",
     locale,
     page,
     section,
@@ -128,6 +155,10 @@ export const readSitemapRoutes = Effect.fn("www.sitemap.routes")(function* (
 
   if (!page) {
     return [];
+  }
+
+  if (isPublicSitemapPage(page)) {
+    return yield* readSitemapPublicRoutes(page.locale);
   }
 
   if (!isContentSitemapPage(page)) {
@@ -152,6 +183,11 @@ function formatContentSitemapPageId({
   return `content_${locale}_${section}_${page}`;
 }
 
+/** Formats the public-context route sitemap page id for one locale. */
+function formatPublicSitemapPageId(locale: Locale) {
+  return `public_${locale}`;
+}
+
 /** Checks whether a raw route page segment is a content section. */
 function isRuntimeContentSection(
   section: string | undefined
@@ -161,7 +197,14 @@ function isRuntimeContentSection(
 
 /** Checks whether one parsed sitemap page targets content route rows. */
 function isContentSitemapPage(page: SitemapPage): page is ContentSitemapPage {
-  return "section" in page && typeof page.section === "string";
+  return "kind" in page && page.kind === "content";
+}
+
+/** Checks whether one parsed sitemap page targets public route rows. */
+function isPublicSitemapPage(
+  page: SitemapPage
+): page is Extract<SitemapPage, { kind: "public" }> {
+  return "kind" in page && page.kind === "public";
 }
 
 /** Reads one materialized content route page through the Convex route catalog. */
@@ -194,6 +237,35 @@ export const buildSitemapContentPageRoutes = Effect.fn(
   return sortRoutes(routes);
 });
 
+/** Reads sitemap-eligible public context routes through bounded Convex pages. */
+const readSitemapPublicRoutes = Effect.fn("www.sitemap.publicRoutes")(
+  function* (locale: Locale) {
+    const routes = new Set<string>();
+    let cursor: string | null = null;
+
+    while (true) {
+      const page: RuntimeSitemapPublicRoutePage =
+        yield* getRuntimeSitemapPublicRoutes({
+          cursor,
+          limit: CONTENT_ROUTE_ARTIFACT_PAGE_SIZE,
+          locale,
+        });
+
+      for (const route of page.page) {
+        if (isSitemapPublicContextRoute(route)) {
+          routes.add(routeToPath(route.publicPath));
+        }
+      }
+
+      if (page.isDone) {
+        return sortRoutes(routes);
+      }
+
+      cursor = page.continueCursor;
+    }
+  }
+);
+
 /** Adds the concrete route and supported parent index routes. */
 function addContentPageRoutes(routes: Set<string>, row: RuntimeContentRoute) {
   return Effect.gen(function* () {
@@ -208,7 +280,7 @@ function addContentPageRoutes(routes: Set<string>, row: RuntimeContentRoute) {
     }
 
     const route = yield* findPublicContentRouteBySourcePath(
-      row.route,
+      row.sourcePath,
       row.locale
     );
 
@@ -232,15 +304,28 @@ function addProjectedContentRoutes(
   routes: Set<string>,
   route: PublicContentRoute
 ) {
-  if (route.kind === "exercise-question" && route.parentPath) {
+  if (route.kind === "subject-topic") {
+    return;
+  }
+
+  if (route.kind === "subject-lesson") {
+    routes.add(routeToPath(route.publicPath));
+    return;
+  }
+
+  if (route.kind === "exercise-question") {
     addParentRoute(routes, route.parentPath);
   }
 
-  if (route.parentPath) {
-    routes.add(routeToPath(route.parentPath));
-  }
-
+  routes.add(routeToPath(route.parentPath));
   routes.add(routeToPath(route.publicPath));
+}
+
+/** Keeps public-route sitemap rows scoped to rendered app context pages. */
+function isSitemapPublicContextRoute(route: RuntimeSitemapPublicRoute) {
+  return (
+    route.kind === "assessment-context" || route.kind === "curriculum-context"
+  );
 }
 
 /** Adds the listing parent for a source-projected child route. */

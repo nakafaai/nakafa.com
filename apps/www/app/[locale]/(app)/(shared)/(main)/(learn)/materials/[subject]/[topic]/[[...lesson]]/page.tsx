@@ -34,7 +34,7 @@ import { LayoutMaterial } from "@/components/shared/material/layout";
 import { LayoutMaterialToc } from "@/components/shared/material/toc";
 import { PaginationContent } from "@/components/shared/pagination-content";
 import { importContentModuleOrNull } from "@/lib/content/module";
-import { fetchRuntimeCurriculumPage } from "@/lib/content/runtime";
+import { fetchRuntimeCurriculumPage } from "@/lib/content/runtime/pages";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 import { createProjectedRouteAlternates } from "@/lib/utils/seo/alternates";

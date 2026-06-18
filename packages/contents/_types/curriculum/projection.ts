@@ -449,6 +449,7 @@ function decodeCurriculumNode({
     iconKey: "iconKey" in node ? node.iconKey : undefined,
     key: node.key,
     level: node.level,
+    materialCard: "materialCard" in node ? node.materialCard : undefined,
     materialDomain,
     materialKeys,
     order: node.order,

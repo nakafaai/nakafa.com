@@ -6,6 +6,16 @@ import {
 export const igcseBiologyUnitNodes = [
   unitNode({
     key: "biology-0610-living-organisms",
+    materialCard: {
+      en: {
+        description: "Classify organisms and compare living systems.",
+        title: "Living organisms",
+      },
+      id: {
+        description: "Klasifikasi makhluk hidup dan sistemnya.",
+        title: "Makhluk hidup",
+      },
+    },
     order: 10,
     translations: {
       en: {
@@ -28,6 +38,16 @@ export const igcseBiologyUnitNodes = [
   }),
   unitNode({
     key: "biology-0610-disease-ecosystems",
+    materialCard: {
+      en: {
+        description: "Connect viruses, ecosystems, and climate effects.",
+        title: "Disease and ecosystems",
+      },
+      id: {
+        description: "Hubungkan virus, ekosistem, dan iklim.",
+        title: "Penyakit dan ekosistem",
+      },
+    },
     order: 20,
     translations: {
       en: {
@@ -59,6 +79,16 @@ export const igcseBiologyUnitNodes = [
 export const igcseChemistryUnitNodes = [
   unitNode({
     key: "chemistry-0620-matter-reactions",
+    materialCard: {
+      en: {
+        description: "Model atoms, reactions, and chemical laws.",
+        title: "Matter and reactions",
+      },
+      id: {
+        description: "Modelkan atom, reaksi, dan hukum kimia.",
+        title: "Materi dan reaksi",
+      },
+    },
     order: 10,
     translations: {
       en: {
@@ -87,6 +117,16 @@ export const igcseChemistryUnitNodes = [
   }),
   unitNode({
     key: "chemistry-0620-environment",
+    materialCard: {
+      en: {
+        description: "Judge reactions with greener chemistry choices.",
+        title: "Environmental chemistry",
+      },
+      id: {
+        description: "Nilai reaksi dengan pilihan kimia hijau.",
+        title: "Kimia lingkungan",
+      },
+    },
     order: 20,
     translations: {
       en: {
@@ -112,6 +152,16 @@ export const igcseChemistryUnitNodes = [
 export const igcsePhysicsUnitNodes = [
   unitNode({
     key: "physics-0625-measurement-motion",
+    materialCard: {
+      en: {
+        description: "Measure motion, vectors, and forces clearly.",
+        title: "Measurement, motion, and forces",
+      },
+      id: {
+        description: "Ukur gerak, vektor, dan gaya dengan jelas.",
+        title: "Pengukuran, gerak, dan gaya",
+      },
+    },
     order: 10,
     translations: {
       en: {
@@ -146,6 +196,16 @@ export const igcsePhysicsUnitNodes = [
   }),
   unitNode({
     key: "physics-0625-energy",
+    materialCard: {
+      en: {
+        description: "Compare energy sources and their tradeoffs.",
+        title: "Energy",
+      },
+      id: {
+        description: "Bandingkan sumber energi dan dampaknya.",
+        title: "Energi",
+      },
+    },
     order: 20,
     translations: {
       en: {

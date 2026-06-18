@@ -3,9 +3,12 @@ import { notFound } from "next/navigation";
 import {
   getPracticeRouteData,
   listPracticeStaticParams,
-  PRACTICE_ROUTES,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/practice/[assessment]/[domain]/[[...path]]/data";
 import { PracticeGroupPage } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/practice/[assessment]/[domain]/[[...path]]/group";
+import {
+  PRACTICE_ROUTES,
+  readPracticeRouteAlternates,
+} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/practice/[assessment]/[domain]/[[...path]]/routes";
 import { PracticeSetPage } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/practice/[assessment]/[domain]/[[...path]]/set";
 import { SinglePracticePage } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/practice/[assessment]/[domain]/[[...path]]/single";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
@@ -38,14 +41,24 @@ export async function generateMetadata({
     data.kind === "year-group"
       ? (data.group.material.description ?? title)
       : (data.route.description ?? title);
-  const path =
+  const publicPath =
+    data.kind === "year-group" ? data.publicPath : data.route.publicPath;
+  const path = `/${data.locale}/${publicPath}`;
+  const projectedAlternates =
     data.kind === "year-group"
-      ? data.pagePath
-      : `/${data.locale}/${data.route.publicPath}`;
+      ? []
+      : readPracticeRouteAlternates(data.route, PRACTICE_ROUTES);
   const alternates =
     data.kind === "year-group"
-      ? createLocalizedAlternates(path)
-      : createProjectedRouteAlternates(data.route, PRACTICE_ROUTES, {
+      ? createLocalizedAlternates(path, {
+          languages: Object.fromEntries(
+            data.group.alternatePaths.map((alternate) => [
+              alternate.locale,
+              `/${alternate.locale}/${alternate.publicPath}`,
+            ])
+          ),
+        })
+      : createProjectedRouteAlternates(data.route, projectedAlternates, {
           types: { "text/markdown": `${path}.md` },
         });
 
@@ -58,7 +71,7 @@ export async function generateMetadata({
       description,
       locale: data.locale,
       path,
-      image: getOgUrl(data.locale, path),
+      image: getOgUrl(data.locale, publicPath),
       type: "article",
     }),
   };

@@ -7,7 +7,7 @@ import { Schema } from "effect";
 
 const MaterialListItemSchema = Schema.Struct({
   title: Schema.String,
-  description: Schema.optional(MaterialCardDescriptionSchema),
+  description: MaterialCardDescriptionSchema,
   href: Schema.String,
   items: Schema.Array(
     Schema.Struct({

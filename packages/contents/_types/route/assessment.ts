@@ -50,6 +50,7 @@ export const listPublicAssessmentRoutes = Effect.fn(
           level: "section",
           locale,
           nodeKey: `${program.key}:root`,
+          order: program.displayOrder,
           programKey: program.key,
           publicPath: rootPath,
           sitemap: assessment.nodes.some(
@@ -97,6 +98,7 @@ export const listPublicAssessmentRoutes = Effect.fn(
             locale,
             materialKey,
             nodeKey: node.key,
+            order: node.order,
             parentPath: getParentPath(publicPath),
             programKey: assessment.programKey,
             publicPath,
@@ -115,7 +117,7 @@ export const listPublicAssessmentRoutes = Effect.fn(
           continue;
         }
 
-        for (const group of material.groups) {
+        for (const [groupIndex, group] of material.groups.entries()) {
           const groupSegments = getPracticeActivitySegments(group, locale);
           const groupPath = yield* makePath([publicPath, ...groupSegments]);
           const groupKey = groupSegments.join("-");
@@ -134,6 +136,7 @@ export const listPublicAssessmentRoutes = Effect.fn(
               locale,
               materialKey,
               nodeKey: `${node.key}:${groupKey}`,
+              order: groupIndex + 1,
               parentPath: publicPath,
               programKey: assessment.programKey,
               publicPath: groupPath,

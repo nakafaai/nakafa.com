@@ -2,9 +2,11 @@ import { getExerciseQuestionNumberSegment } from "@repo/contents/_types/graph/ro
 import { Effect, Option } from "effect";
 import type { Locale } from "next-intl";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
-import { getRuntimeExerciseSetPage } from "@/lib/content/runtime";
+import { getRuntimeExerciseSetPage } from "@/lib/content/runtime/pages";
 import { BASE_URL } from "@/lib/llms/constants";
 import { buildHeader } from "@/lib/llms/format";
+
+const TRAILING_SLASH_PATTERN = /\/+$/;
 
 /** Runs the cached exercise markdown Effect at the Next cache boundary. */
 export async function getCachedLlmsExerciseText({
@@ -62,8 +64,17 @@ export const getLlmsExerciseText = Effect.fn("www.llms.exercises.text")(
       return null;
     }
 
+    if (Option.isNone(exerciseNumber)) {
+      return getExerciseSetIndexMarkdown({
+        cleanSlug,
+        locale,
+        publicSlug,
+        setPage,
+      });
+    }
+
     const description = getExerciseDescription({
-      exerciseNumber,
+      exerciseNumber: exerciseNumber.value,
       setPage,
       targetExercises,
     });
@@ -106,6 +117,71 @@ export const getLlmsExerciseText = Effect.fn("www.llms.exercises.text")(
   }
 );
 
+/**
+ * Builds set-level markdown as a question index so large practice sets stay
+ * agent-readable while each concrete question remains available on its own URL.
+ */
+function getExerciseSetIndexMarkdown({
+  cleanSlug,
+  locale,
+  publicSlug,
+  setPage,
+}: {
+  cleanSlug: string;
+  locale: Locale;
+  publicSlug?: string;
+  setPage: ExerciseSetPage;
+}) {
+  const baseSlug = (publicSlug ?? cleanSlug).replace(
+    TRAILING_SLASH_PATTERN,
+    ""
+  );
+  const scanned = buildHeader({
+    url: `${BASE_URL}/${locale}/${baseSlug}`,
+    description: getExerciseSetDescription(setPage),
+  });
+
+  scanned.push("## Questions");
+  scanned.push("");
+
+  for (const exercise of setPage.exercises) {
+    const label = `Question ${exercise.number}`;
+    const questionTitle = exercise.question.metadata.title;
+    const questionSegment = readExerciseQuestionMarkdownSegment({
+      locale,
+      number: exercise.number,
+      usesPublicSlug: Boolean(publicSlug),
+    });
+    const title = questionTitle ? `${label} - ${questionTitle}` : label;
+
+    scanned.push(
+      `- [${title}](${BASE_URL}/${locale}/${baseSlug}/${questionSegment}.md)`
+    );
+  }
+
+  return scanned.join("\n");
+}
+
+/**
+ * Resolves public localized question segments while source markdown keeps the
+ * source-owned English `question-n` segment used by material assets.
+ */
+function readExerciseQuestionMarkdownSegment({
+  locale,
+  number,
+  usesPublicSlug,
+}: {
+  locale: Locale;
+  number: number;
+  usesPublicSlug: boolean;
+}) {
+  if (usesPublicSlug && locale === "id") {
+    return `soal-${number}`;
+  }
+
+  return `question-${number}`;
+}
+
 /** Finds the exercise set path and optional question number from a route. */
 function getExerciseMarkdownTarget(cleanSlug: string) {
   const parts = cleanSlug.split("/");
@@ -144,15 +220,11 @@ function getExerciseDescription({
   setPage,
   targetExercises,
 }: {
-  exerciseNumber: Option.Option<number>;
+  exerciseNumber: number;
   setPage: ExerciseSetPage;
   targetExercises: ExerciseRows;
 }) {
   const description = getExerciseSetDescription(setPage);
-
-  if (Option.isNone(exerciseNumber)) {
-    return description;
-  }
 
   const exerciseTitle = targetExercises[0]?.question.metadata.title;
 
@@ -160,7 +232,7 @@ function getExerciseDescription({
     return `${description} - ${exerciseTitle}`;
   }
 
-  return `${description} - Question ${exerciseNumber.value}`;
+  return `${description} - Question ${exerciseNumber}`;
 }
 
 /** Resolves the markdown description for an exercise set page. */

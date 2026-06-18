@@ -14,12 +14,16 @@ import {
 } from "@repo/contents/_types/route/error";
 import type { RouteInputs } from "@repo/contents/_types/route/input";
 import {
-  decodeContentRoute,
   lookupDomainSlug,
   lookupNamespaceSegment,
   makePath,
+  readDomainSlug,
+  readNamespaceSegment,
 } from "@repo/contents/_types/route/path";
-import type { PublicContentRoute } from "@repo/contents/_types/route/schema";
+import {
+  type PublicContentRoute,
+  PublicContentRouteSchema,
+} from "@repo/contents/_types/route/schema";
 import { PublicRouteSegmentSchema } from "@repo/contents/_types/route/segment";
 import { locales } from "@repo/utilities/locales";
 import { Effect, Option, Schema } from "effect";
@@ -135,8 +139,8 @@ export const toPublicExerciseQuestionPath = Effect.fn(
   ]);
 });
 
-/** Locates a virtual question route by localized public path segments. */
-export function findPublicPracticeQuestionRouteByPath({
+/** Reads a virtual question route by localized public path segments during SSG. */
+export function readPublicPracticeQuestionRouteByPath({
   domains,
   locale,
   materials,
@@ -146,103 +150,97 @@ export function findPublicPracticeQuestionRouteByPath({
   locale: Locale;
   materials: NonNullable<RouteInputs["materials"]>;
   publicPath: string;
-}) {
-  return Effect.gen(function* () {
-    const pathSegments = publicPath.split("/").filter(Boolean);
-    const namespace = yield* lookupNamespaceSegment("exercises", locale);
+}): PublicContentRoute | undefined {
+  const pathSegments = publicPath.split("/").filter(Boolean);
+  const namespace = readNamespaceSegment("exercises", locale);
 
-    if (pathSegments[0] !== namespace) {
-      return Option.none<PublicContentRoute>();
+  if (!namespace || pathSegments[0] !== namespace) {
+    return;
+  }
+
+  for (const material of materials) {
+    if (!isPracticeMaterialSource(material)) {
+      continue;
     }
 
-    for (const material of materials) {
-      if (!isPracticeMaterialSource(material)) {
+    const domainSlug = readDomainSlug(
+      domains,
+      "practice",
+      material.domain,
+      locale
+    );
+
+    if (
+      !domainSlug ||
+      pathSegments[1] !== material.assessment ||
+      pathSegments[2] !== domainSlug
+    ) {
+      continue;
+    }
+
+    for (const group of material.groups) {
+      const groupSegments = getPracticeActivitySegments(group, locale);
+
+      if (!segmentsMatch(pathSegments.slice(3), groupSegments)) {
         continue;
       }
 
-      const domainSlug = yield* lookupDomainSlug(
-        domains,
-        "practice",
-        material.domain,
-        locale
-      );
+      for (const set of group.sets) {
+        const setIndex = 3 + groupSegments.length;
+        const questionIndex = setIndex + 1;
+        const questionNumber = readQuestionNumber(
+          pathSegments[questionIndex],
+          locale
+        );
 
-      if (
-        pathSegments[1] !== material.assessment ||
-        pathSegments[2] !== domainSlug
-      ) {
-        continue;
-      }
-
-      for (const group of material.groups) {
-        const groupSegments = getPracticeActivitySegments(group, locale);
-
-        if (!segmentsMatch(pathSegments.slice(3), groupSegments)) {
+        if (
+          pathSegments[setIndex] !== set.routeSlugs[locale] ||
+          pathSegments.length !== questionIndex + 1 ||
+          questionNumber === null
+        ) {
           continue;
         }
 
-        for (const set of group.sets) {
-          const setIndex = 3 + groupSegments.length;
-          const questionIndex = setIndex + 1;
-          const questionNumber = readQuestionNumber(
-            pathSegments[questionIndex],
-            locale
-          );
+        const setPath = [
+          namespace,
+          material.assessment,
+          domainSlug,
+          ...groupSegments,
+          set.routeSlugs[locale],
+        ].join("/");
+        const questionPath = `${setPath}/${pathSegments[questionIndex]}`;
+        const sourcePath = [
+          material.assetRoot,
+          getPracticeSourceGroupSlug(group),
+          set.slug,
+          `question-${questionNumber}`,
+        ].join("/");
 
-          if (
-            pathSegments[setIndex] !== set.routeSlugs[locale] ||
-            pathSegments.length !== questionIndex + 1 ||
-            questionNumber === null
-          ) {
-            continue;
-          }
-
-          const setPath = yield* makePath([
-            namespace,
-            material.assessment,
-            domainSlug,
-            ...groupSegments,
-            set.routeSlugs[locale],
-          ]);
-          const questionPath = yield* makePath([
-            setPath,
-            pathSegments[questionIndex],
-          ]);
-          const sourcePath = yield* makePath([
-            material.assetRoot,
-            getPracticeSourceGroupSlug(group),
-            set.slug,
-            `question-${questionNumber}`,
-          ]);
-
-          return Option.some(
-            yield* decodeContentRoute({
-              description: group.translations[locale].description,
-              kind: "exercise-question",
-              locale,
-              materialKey: material.key,
-              order: questionNumber,
-              parentPath: setPath,
-              publicPath: questionPath,
-              sectionKey: `question-${questionNumber}`,
-              sitemap: true,
-              sourcePath,
-              title:
-                locale === "id"
-                  ? `${set.translations[locale].title} Soal ${questionNumber}`
-                  : `${set.translations[locale].title} Question ${questionNumber}`,
-            })
-          );
-        }
+        return decodePracticeQuestionRoute({
+          description: group.translations[locale].description,
+          kind: "exercise-question",
+          locale,
+          materialKey: material.key,
+          order: questionNumber,
+          parentPath: setPath,
+          publicPath: questionPath,
+          sectionKey: `question-${questionNumber}`,
+          sitemap: true,
+          sourcePath,
+          title:
+            locale === "id"
+              ? `${set.translations[locale].title} Soal ${questionNumber}`
+              : `${set.translations[locale].title} Question ${questionNumber}`,
+        });
       }
     }
+  }
 
-    return Option.none<PublicContentRoute>();
-  });
+  return;
 }
 
-/** Locates a virtual question route by source asset path. */
-export function findPublicPracticeQuestionRouteBySourcePath({
+/** Reads a virtual question route by source asset path during SSG and metadata generation. */
+export function readPublicPracticeQuestionRouteBySourcePath({
   domains,
   locale,
   materials,
@@ -252,81 +250,84 @@ export function findPublicPracticeQuestionRouteBySourcePath({
   locale: Locale;
   materials: NonNullable<RouteInputs["materials"]>;
   sourcePath: string;
-}) {
-  return Effect.gen(function* () {
-    for (const material of materials) {
-      if (!isPracticeMaterialSource(material)) {
+}): PublicContentRoute | undefined {
+  for (const material of materials) {
+    if (!isPracticeMaterialSource(material)) {
+      continue;
+    }
+
+    if (!sourcePath.startsWith(`${material.assetRoot}/`)) {
+      continue;
+    }
+
+    const pathSegments = sourcePath
+      .slice(material.assetRoot.length + 1)
+      .split("/")
+      .filter(Boolean);
+
+    for (const group of material.groups) {
+      if (pathSegments[0] !== getPracticeSourceGroupSlug(group)) {
         continue;
       }
 
-      if (!sourcePath.startsWith(`${material.assetRoot}/`)) {
-        continue;
-      }
+      for (const set of group.sets) {
+        const questionNumber = readQuestionNumber(pathSegments[2], "en");
 
-      const pathSegments = sourcePath
-        .slice(material.assetRoot.length + 1)
-        .split("/")
-        .filter(Boolean);
-
-      for (const group of material.groups) {
-        if (pathSegments[0] !== getPracticeSourceGroupSlug(group)) {
+        if (
+          pathSegments[1] !== set.slug ||
+          pathSegments.length !== 3 ||
+          questionNumber === null
+        ) {
           continue;
         }
 
-        for (const set of group.sets) {
-          const questionNumber = readQuestionNumber(pathSegments[2], "en");
+        const namespace = readNamespaceSegment("exercises", locale);
+        const domainSlug = readDomainSlug(
+          domains,
+          "practice",
+          material.domain,
+          locale
+        );
 
-          if (
-            pathSegments[1] !== set.slug ||
-            pathSegments.length !== 3 ||
-            questionNumber === null
-          ) {
-            continue;
-          }
-
-          const setPath = yield* makePath([
-            yield* lookupNamespaceSegment("exercises", locale),
-            material.assessment,
-            yield* lookupDomainSlug(
-              domains,
-              "practice",
-              material.domain,
-              locale
-            ),
-            ...getPracticeActivitySegments(group, locale),
-            set.routeSlugs[locale],
-          ]);
-          const publicPath = yield* makePath([
-            setPath,
-            locale === "id"
-              ? `soal-${questionNumber}`
-              : `question-${questionNumber}`,
-          ]);
-
-          return Option.some(
-            yield* decodeContentRoute({
-              description: group.translations[locale].description,
-              kind: "exercise-question",
-              locale,
-              materialKey: material.key,
-              order: questionNumber,
-              parentPath: setPath,
-              publicPath,
-              sectionKey: pathSegments[2],
-              sitemap: true,
-              sourcePath,
-              title:
-                locale === "id"
-                  ? `${set.translations[locale].title} Soal ${questionNumber}`
-                  : `${set.translations[locale].title} Question ${questionNumber}`,
-            })
-          );
+        if (!(namespace && domainSlug)) {
+          continue;
         }
+
+        const setPath = [
+          namespace,
+          material.assessment,
+          domainSlug,
+          ...getPracticeActivitySegments(group, locale),
+          set.routeSlugs[locale],
+        ].join("/");
+        const publicPath = [
+          setPath,
+          locale === "id"
+            ? `soal-${questionNumber}`
+            : `question-${questionNumber}`,
+        ].join("/");
+
+        return decodePracticeQuestionRoute({
+          description: group.translations[locale].description,
+          kind: "exercise-question",
+          locale,
+          materialKey: material.key,
+          order: questionNumber,
+          parentPath: setPath,
+          publicPath,
+          sectionKey: pathSegments[2],
+          sitemap: true,
+          sourcePath,
+          title:
+            locale === "id"
+              ? `${set.translations[locale].title} Soal ${questionNumber}`
+              : `${set.translations[locale].title} Question ${questionNumber}`,
+        });
       }
     }
+  }
 
-    return Option.none<PublicContentRoute>();
-  });
+  return;
 }
 
 /** Reads the activity and year route segments from a decoded practice group. */
@@ -383,4 +384,11 @@ function readQuestionNumber(segment: string | undefined, locale: Locale) {
   const value = Number.parseInt(segment.slice(prefix.length), 10);
 
   return Number.isInteger(value) && value > 0 ? value : null;
+}
+
+/** Decodes a virtual practice question row through the public route schema. */
+function decodePracticeQuestionRoute(route: unknown) {
+  return Option.getOrUndefined(
+    Schema.decodeUnknownOption(PublicContentRouteSchema)(route)
+  );
 }

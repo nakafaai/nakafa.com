@@ -1,6 +1,9 @@
 import { TestTubeIcon } from "@hugeicons/core-free-icons";
 import { listPublicAssessmentRoutes } from "@repo/contents/_types/route/assessment";
-import { readPathWithoutNamespace } from "@repo/contents/_types/route/path";
+import {
+  comparePublicRouteOrder,
+  readPathWithoutNamespace,
+} from "@repo/contents/_types/route/path";
 import { Effect } from "effect";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -17,6 +20,13 @@ import { createProjectedRouteAlternates } from "@/lib/utils/seo/alternates";
 type AssessmentPageProps =
   PageProps<"/[locale]/assessments/[assessment]/[[...path]]">;
 
+/**
+ * Canonical assessment context route rows for static page generation.
+ *
+ * Next statically prerenders assessment pages, so Server Components read this
+ * immutable projection table instead of starting an Effect runtime during
+ * prerender.
+ */
 const ASSESSMENT_ROUTES = Effect.runSync(listPublicAssessmentRoutes());
 
 /**
@@ -42,14 +52,14 @@ export function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: AssessmentPageProps): Promise<Metadata> {
-  const { locale, route } = await getAssessmentRoute(params);
+  const { locale, route, routes } = await getAssessmentRoute(params);
   const path = `/${locale}/${route.publicPath}`;
   const description = route.description ?? route.title;
 
   return {
     title: { absolute: route.title },
     description,
-    alternates: createProjectedRouteAlternates(route, ASSESSMENT_ROUTES),
+    alternates: createProjectedRouteAlternates(route, routes),
     ...getSocialMetadata({
       title: route.title,
       description,
@@ -67,10 +77,13 @@ export async function generateMetadata({
  * duplicating the practice body in the context page.
  */
 export default async function Page({ params }: AssessmentPageProps) {
-  const { locale, route } = await getAssessmentRoute(params);
-  const childRoutes = ASSESSMENT_ROUTES.filter(
-    (child) => child.locale === locale && child.parentPath === route.publicPath
-  );
+  const { locale, route, routes } = await getAssessmentRoute(params);
+  const childRoutes = routes
+    .filter(
+      (child) =>
+        child.locale === locale && child.parentPath === route.publicPath
+    )
+    .sort(comparePublicRouteOrder);
 
   return (
     <LayoutMaterial>
@@ -80,6 +93,11 @@ export default async function Page({ params }: AssessmentPageProps) {
           icon={TestTubeIcon}
           title={route.title}
         />
+        <p className="sr-only">
+          {locale === "id"
+            ? "Pilih latihan yang tersedia untuk membuka set soal atau halaman latihan yang sesuai."
+            : "Choose an available practice entry to open the matching question set or practice page."}
+        </p>
         <LayoutContent>
           <SubjectList>
             {route.canonicalPath && (
@@ -108,7 +126,7 @@ export default async function Page({ params }: AssessmentPageProps) {
  * Resolves localized assessment params through schema-owned route projection.
  *
  * Invalid combinations fail with `notFound()` at the framework boundary rather
- * than creating alternate route aliases or fallback slug behavior.
+ * than creating alternate route aliases or inferred slug behavior.
  */
 async function getAssessmentRoute(params: AssessmentPageProps["params"]) {
   const { locale: rawLocale, assessment, path } = await params;
@@ -124,5 +142,5 @@ async function getAssessmentRoute(params: AssessmentPageProps["params"]) {
     notFound();
   }
 
-  return { locale, route };
+  return { locale, route, routes: ASSESSMENT_ROUTES };
 }

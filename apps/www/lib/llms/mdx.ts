@@ -4,7 +4,7 @@ import { applyContentRuntimeCache } from "@/lib/content/cache";
 import {
   getRuntimeArticlePage,
   getRuntimeCurriculumPage,
-} from "@/lib/content/runtime";
+} from "@/lib/content/runtime/pages";
 import { BASE_URL } from "@/lib/llms/constants";
 import { buildHeader } from "@/lib/llms/format";
 import { getRawGithubUrl } from "@/lib/utils/github";
@@ -85,7 +85,7 @@ type RuntimeMdxPage = NonNullable<
   Effect.Effect.Success<ReturnType<typeof getMdxRuntimePage>>
 >;
 
-/** Returns a markdown description with curriculum fallback for curriculum lessons. */
+/** Returns the best available markdown header description for one content page. */
 function getPageDescription(content: RuntimeMdxPage) {
   if (content.metadata.description) {
     return content.metadata.description;

@@ -727,6 +727,68 @@ describe("learningPrograms", () => {
     });
   });
 
+  it("continues omitted catalog cleanup through bounded generated plan-item pages", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const identity = await t.mutation((ctx) =>
+      seedAuthenticatedUser(ctx, { now: NOW })
+    );
+    const catalog = getLearningProgramCatalogInputs();
+    const retiredProgram = {
+      ...catalog[0],
+      displayOrder: 50,
+      key: "retired-school-curriculum",
+      translations: {
+        en: {
+          publicSlug: "retired-school-curriculum",
+          title: "Retired School Curriculum",
+        },
+        id: {
+          publicSlug: "retired-school-curriculum",
+          title: "Kurikulum Sekolah Lama",
+        },
+      },
+    } satisfies LearningProgramSyncInput;
+
+    await t.mutation(internal.learningPrograms.sync.syncLearningPrograms, {
+      programs: [...catalog, retiredProgram],
+      syncedAt: NOW,
+    });
+    const { programId } = await seedGeneratedPlanItems(t, {
+      contentId: subjectGraph.assetId,
+      count: POPULAR_PLAN_ITEM_COUNT,
+      identity,
+      lensId: subjectGraph.lensId,
+      lensScope: "curriculum",
+      programKey: retiredProgram.key,
+    });
+
+    const result = await t.mutation(
+      internal.learningPrograms.sync.syncLearningPrograms,
+      {
+        programs: catalog,
+        syncedAt: NOW + 1,
+      }
+    );
+
+    expect(result).toEqual({ created: 0, skipped: 0, updated: catalog.length });
+
+    await drainOmittedProgramDelete(t, {
+      omittedAt: NOW + 1,
+      programId,
+    });
+
+    const remaining = await countRowsForProgram(t, programId);
+
+    expect(remaining).toEqual({
+      coverageRows: 0,
+      planItems: 0,
+      plans: 0,
+      profiles: 0,
+      program: 0,
+      sources: 0,
+    });
+  });
+
   it("rejects empty catalog batches before reconciliation", async () => {
     const t = createConvexTestWithBetterAuth();
 
@@ -778,6 +840,73 @@ describe("learningPrograms", () => {
     ).rejects.toThrow("LEARNING_PROGRAM_CATALOG_INVALID");
   });
 });
+
+/** Continues omitted-program deletion until the catalog row disappears. */
+async function drainOmittedProgramDelete(
+  t: ReturnType<typeof createConvexTestWithBetterAuth>,
+  args: {
+    omittedAt: number;
+    programId: Id<"learningPrograms">;
+  }
+) {
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const remaining = await countRowsForProgram(t, args.programId);
+
+    if (remaining.program === 0) {
+      return;
+    }
+
+    await t.mutation(
+      internal.learningPrograms.sync.continueOmittedProgramDelete,
+      args
+    );
+  }
+
+  expect.fail("Expected omitted program delete to drain.");
+}
+
+/** Counts program rows across the tables removed by omitted catalog cleanup. */
+async function countRowsForProgram(
+  t: ReturnType<typeof createConvexTestWithBetterAuth>,
+  programId: Id<"learningPrograms">
+) {
+  return await t.query(async (ctx) => {
+    const program = await ctx.db.get(programId);
+    const profiles = await ctx.db
+      .query("learningProfiles")
+      .withIndex("by_programId", (q) => q.eq("programId", programId))
+      .take(POPULAR_PLAN_ITEM_COUNT + 1);
+    const plans = await ctx.db
+      .query("learningPlans")
+      .withIndex("by_programId", (q) => q.eq("programId", programId))
+      .take(POPULAR_PLAN_ITEM_COUNT + 1);
+    const sources = await ctx.db
+      .query("learningProgramSources")
+      .withIndex("by_programId", (q) => q.eq("programId", programId))
+      .take(POPULAR_PLAN_ITEM_COUNT + 1);
+    const coverageRows = await ctx.db
+      .query("learningProgramCoverage")
+      .withIndex("by_programId_and_locale_and_lensId", (q) =>
+        q.eq("programId", programId)
+      )
+      .take(POPULAR_PLAN_ITEM_COUNT + 1);
+    const planItems = await ctx.db
+      .query("learningPlanItems")
+      .withIndex("by_programId_and_lensId_and_content_id", (q) =>
+        q.eq("programId", programId)
+      )
+      .take(POPULAR_PLAN_ITEM_COUNT + 1);
+
+    return {
+      coverageRows: coverageRows.length,
+      planItems: planItems.length,
+      plans: plans.length,
+      profiles: profiles.length,
+      program: program ? 1 : 0,
+      sources: sources.length,
+    };
+  });
+}
 
 /** Returns graph identity for a route fixture and fails fast on invalid fixtures. */
 function getGraphIdentity(route: string, locale: "en" | "id" = "id") {

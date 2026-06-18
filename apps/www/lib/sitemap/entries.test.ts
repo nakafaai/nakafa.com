@@ -18,7 +18,7 @@ const mockGetPathname = vi.hoisted(() =>
   })
 );
 
-vi.mock("@/lib/content/runtime", () => ({
+vi.mock("@/lib/content/runtime/routes", () => ({
   getRuntimeContentRoute: mockGetRuntimeContentRoute,
 }));
 
@@ -260,6 +260,7 @@ describe("sitemap entries", () => {
         { id: "base" },
         {
           id: "content_id_subject_0",
+          kind: "content",
           locale: "id",
           page: 0,
           section: "material",
@@ -270,6 +271,7 @@ describe("sitemap entries", () => {
       if (pageId === "content_id_subject_0") {
         return {
           id: "content_id_subject_0",
+          kind: "content",
           locale: "id",
           page: 0,
           section: "material",
@@ -300,6 +302,7 @@ describe("sitemap entries", () => {
   it("keeps English content sitemap pages scoped to English URLs", async () => {
     mockGetSitemapPageDescriptor.mockReturnValueOnce({
       id: "content_en_articles_0",
+      kind: "content",
       locale: "en",
       page: 0,
       section: "articles",
@@ -326,6 +329,7 @@ describe("sitemap entries", () => {
   it("keeps Indonesian content sitemap pages scoped to Indonesian URLs", async () => {
     mockGetSitemapPageDescriptor.mockReturnValueOnce({
       id: "content_id_articles_0",
+      kind: "content",
       locale: "id",
       page: 0,
       section: "articles",

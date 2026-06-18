@@ -10,7 +10,7 @@ import {
   normalizePublicPath,
   uniqueRoutes,
 } from "@repo/contents/_types/route/path";
-import { findPublicPracticeQuestionRouteByPath } from "@repo/contents/_types/route/practice";
+import { readPublicPracticeQuestionRouteByPath } from "@repo/contents/_types/route/practice";
 import type { PublicRoute } from "@repo/contents/_types/route/schema";
 import { Effect, Option } from "effect";
 
@@ -40,11 +40,13 @@ export const findPublicRouteByPath = Effect.fn("contents.route.findByPath")(
       return Option.some<PublicRoute>(exactRoute);
     }
 
-    return yield* findPublicPracticeQuestionRouteByPath({
-      domains: inputs.domains ?? MATERIAL_ROUTE_DOMAINS,
-      locale,
-      materials: inputs.materials ?? MATERIAL_SOURCES,
-      publicPath,
-    });
+    return Option.fromNullable(
+      readPublicPracticeQuestionRouteByPath({
+        domains: inputs.domains ?? MATERIAL_ROUTE_DOMAINS,
+        locale,
+        materials: inputs.materials ?? MATERIAL_SOURCES,
+        publicPath,
+      })
+    );
   }
 );

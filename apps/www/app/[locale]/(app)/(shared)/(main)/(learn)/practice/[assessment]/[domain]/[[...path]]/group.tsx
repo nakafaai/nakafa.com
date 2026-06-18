@@ -62,6 +62,11 @@ export async function PracticeGroupPage({
             }}
             title={data.group.material.title}
           />
+          <p className="sr-only">
+            {locale === "id"
+              ? "Pilih set latihan yang tersedia untuk membuka soal latihan pada topik ini."
+              : "Choose an available practice set to open the questions for this topic."}
+          </p>
           <LayoutContent>
             <ContainerList className="sm:grid-cols-1">
               <CardMaterial material={data.group.material} />

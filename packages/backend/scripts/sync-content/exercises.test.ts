@@ -143,9 +143,12 @@ const loadExercisesScript = async ({
   }));
 
   return {
+    exerciseQuestions: await import(
+      "@repo/backend/scripts/sync-content/exerciseQuestions"
+    ),
     logErrors,
     mutationCalls,
-    script: await import("@repo/backend/scripts/sync-content/exercises"),
+    exerciseSets: await import("@repo/backend/scripts/sync-content/exercises"),
   };
 };
 
@@ -156,21 +159,22 @@ afterEach(() => {
 
 describe("sync-content exercises", () => {
   it("syncs exercise set counts from valid question payloads", async () => {
-    const { logErrors, mutationCalls, script } = await loadExercisesScript({
-      choices: {
-        en: [
-          { label: "A", value: true },
-          { label: "B", value: false },
-        ],
-        id: [
-          { label: "A", value: true },
-          { label: "B", value: false },
-        ],
-      },
-    });
+    const { exerciseSets, logErrors, mutationCalls } =
+      await loadExercisesScript({
+        choices: {
+          en: [
+            { label: "A", value: true },
+            { label: "B", value: false },
+          ],
+          id: [
+            { label: "A", value: true },
+            { label: "B", value: false },
+          ],
+        },
+      });
 
     const result = await Effect.runPromise(
-      script.syncExerciseSets(config, { quiet: false })
+      exerciseSets.syncExerciseSets(config, { quiet: false })
     );
 
     expect(logErrors).toEqual([]);
@@ -188,12 +192,12 @@ describe("sync-content exercises", () => {
   });
 
   it("fails exercise set sync before publishing invalid question counts", async () => {
-    const { mutationCalls, script } = await loadExercisesScript({
+    const { exerciseSets, mutationCalls } = await loadExercisesScript({
       choices: { en: [], id: [{ label: "A", value: true }] },
     });
 
     await expect(
-      Effect.runPromise(script.syncExerciseSets(config, { quiet: true }))
+      Effect.runPromise(exerciseSets.syncExerciseSets(config, { quiet: true }))
     ).rejects.toThrow(
       "Cannot sync exercise sets with invalid exercise questions"
     );
@@ -202,7 +206,7 @@ describe("sync-content exercises", () => {
   });
 
   it("rejects material set routes that graph projection cannot classify", async () => {
-    const { mutationCalls, script } = await loadExercisesScript({
+    const { exerciseSets, mutationCalls } = await loadExercisesScript({
       choices: {
         en: [{ label: "A", value: true }],
         id: [{ label: "A", value: true }],
@@ -212,7 +216,7 @@ describe("sync-content exercises", () => {
     });
 
     await expect(
-      Effect.runPromise(script.syncExerciseSets(config, { quiet: true }))
+      Effect.runPromise(exerciseSets.syncExerciseSets(config, { quiet: true }))
     ).rejects.toThrow(
       "Exercise set route cannot be projected into a graph group route"
     );
@@ -221,21 +225,22 @@ describe("sync-content exercises", () => {
   });
 
   it("syncs exercise questions with both locale choice arrays", async () => {
-    const { logErrors, mutationCalls, script } = await loadExercisesScript({
-      choices: {
-        en: [
-          { label: "A", value: true },
-          { label: "B", value: false },
-        ],
-        id: [
-          { label: "A", value: true },
-          { label: "B", value: false },
-        ],
-      },
-    });
+    const { exerciseQuestions, logErrors, mutationCalls } =
+      await loadExercisesScript({
+        choices: {
+          en: [
+            { label: "A", value: true },
+            { label: "B", value: false },
+          ],
+          id: [
+            { label: "A", value: true },
+            { label: "B", value: false },
+          ],
+        },
+      });
 
     const result = await Effect.runPromise(
-      script.syncExerciseQuestions(config, { quiet: false })
+      exerciseQuestions.syncExerciseQuestions(config, { quiet: false })
     );
 
     expect(logErrors).toEqual([]);
@@ -261,12 +266,12 @@ describe("sync-content exercises", () => {
   });
 
   it("does not send incomplete exercise choices to Convex", async () => {
-    const { mutationCalls, script } = await loadExercisesScript({
+    const { exerciseQuestions, mutationCalls } = await loadExercisesScript({
       choices: { en: [], id: [{ label: "A", value: true }] },
     });
 
     const result = await Effect.runPromise(
-      script.syncExerciseQuestions(config, { quiet: true })
+      exerciseQuestions.syncExerciseQuestions(config, { quiet: true })
     );
 
     expect(result.created).toBe(0);

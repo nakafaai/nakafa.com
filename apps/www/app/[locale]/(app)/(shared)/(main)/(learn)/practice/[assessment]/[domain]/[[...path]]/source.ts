@@ -3,7 +3,6 @@ import {
   parseExercisesType,
 } from "@repo/contents/_lib/assessment/route";
 import type { ContentPagination } from "@repo/contents/_types/content";
-import type { PublicContentRoute } from "@repo/contents/_types/route/schema";
 import { cleanSlug } from "@repo/utilities/helper";
 import { Option } from "effect";
 import { notFound } from "next/navigation";
@@ -29,8 +28,8 @@ export function isLocalizedQuestionSegment(
   );
 }
 
-/** Uses the first set row to name the group card like the old route did. */
-export function readGroupTitle(route: Pick<PublicContentRoute, "sourcePath">) {
+/** Uses the first set row to name the grouped practice card consistently. */
+export function readGroupTitle(route: { sourcePath: string }) {
   const sourceParts = readExerciseSetSourceParts(route.sourcePath);
   const suffix = sourceParts.year ? ` ${sourceParts.year}` : "";
 
@@ -45,8 +44,13 @@ export function readGroupTitle(route: Pick<PublicContentRoute, "sourcePath">) {
 export function readQuestionSourcePathParts(sourcePath: string) {
   const segments = cleanSlug(sourcePath).split("/");
   const questionSegment = segments.at(-1);
+
+  if (!questionSegment) {
+    notFound();
+  }
+
   const questionNumber = Number.parseInt(
-    questionSegment?.replace("question-", "") ?? "",
+    questionSegment.replace("question-", ""),
     10
   );
 
@@ -86,7 +90,7 @@ export function readExerciseSetSourceParts(sourcePath: string) {
   };
 }
 
-/** Converts old numeric pagination into localized question label paths. */
+/** Converts numeric pagination into localized public question label paths. */
 export function localizeQuestionPaginationItem(
   item: ContentPagination["prev"]
 ) {
