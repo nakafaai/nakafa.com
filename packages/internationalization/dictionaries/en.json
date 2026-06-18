@@ -392,6 +392,7 @@
     "complete-part-success": "Section finished. You can choose another section or go back to the set.",
     "complete-part-error": "We could not finish this section yet. Please try again.",
     "back-to-set-cta": "Back to set",
+    "slug-description": "When you're ready, start this tryout and choose which section you want to do first.",
     "question-unit": "questions",
     "products": {
       "snbt": {

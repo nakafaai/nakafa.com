@@ -4,6 +4,7 @@ import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import type { ReactNode } from "react";
 
 interface TryoutPageHeaderProps {
+  description?: ReactNode;
   icon?: IconSvgElement;
   link: {
     href: string;
@@ -15,10 +16,11 @@ interface TryoutPageHeaderProps {
 }
 
 /**
- * Renders the compact try-out page header with a parent link, optional status,
- * and no visible helper-description slot.
+ * Renders the compact try-out page header with parent navigation and optional
+ * concise state or set-introduction copy.
  */
 export function TryoutPageHeader({
+  description,
   icon,
   link,
   meta,
@@ -49,6 +51,10 @@ export function TryoutPageHeader({
           </h1>
         </div>
       </div>
+
+      {description ? (
+        <p className="max-w-2xl text-muted-foreground">{description}</p>
+      ) : null}
 
       {status ? (
         <p className="max-w-2xl text-muted-foreground">{status}</p>

@@ -392,6 +392,7 @@
     "complete-part-success": "Bagian selesai. Sekarang kamu bisa pilih bagian lain atau kembali ke set.",
     "complete-part-error": "Bagian belum bisa diselesaikan. Coba lagi ya.",
     "back-to-set-cta": "Kembali ke set",
+    "slug-description": "Kalau sudah siap, mulai try out ini lalu pilih bagian yang ingin kamu kerjakan dulu.",
     "question-unit": "soal",
     "products": {
       "snbt": {

@@ -35,7 +35,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build production app
-        run: pnpm build
+        run: pnpm --filter www build
 
       - name: Start web app
         run: |
