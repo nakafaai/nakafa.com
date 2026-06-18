@@ -59,7 +59,7 @@ describe("program/schema", () => {
       model: "exam-domain-practice-set",
     });
     expect(navigationByKey["cambridge-international"]).toEqual({
-      levels: ["stage", "qualification", "course", "unit", "lesson"],
+      levels: ["stage", "course", "unit", "lesson"],
       model: "curriculum-tree",
     });
     expect(navigationByKey["singapore-moe"]).toEqual({
@@ -67,7 +67,7 @@ describe("program/schema", () => {
       model: "curriculum-tree",
     });
     expect(navigationByKey["united-states"]).toEqual({
-      levels: ["framework", "course", "unit", "lesson"],
+      levels: ["stage", "course", "unit", "lesson"],
       model: "curriculum-tree",
     });
   });

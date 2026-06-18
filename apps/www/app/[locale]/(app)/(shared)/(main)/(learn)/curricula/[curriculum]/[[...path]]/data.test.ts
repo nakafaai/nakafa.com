@@ -72,6 +72,29 @@ describe("curriculum route data", () => {
         })
       )
     ).rejects.toThrow();
+    await expect(
+      resolveCurriculumRoute(
+        Promise.resolve({
+          curriculum: "cambridge-international",
+          locale: "en",
+          path: ["upper-secondary", "igcse", "mathematics-0580"],
+        })
+      )
+    ).rejects.toThrow();
+    await expect(
+      resolveCurriculumRoute(
+        Promise.resolve({
+          curriculum: "cambridge-international",
+          locale: "en",
+          path: ["upper-secondary", "mathematics-0580"],
+        })
+      )
+    ).resolves.toMatchObject({
+      route: {
+        publicPath:
+          "curriculum/cambridge-international/upper-secondary/mathematics-0580",
+      },
+    });
 
     await expect(
       resolveCurriculumRoute(
@@ -136,7 +159,7 @@ describe("curriculum route data", () => {
       "en"
     );
     const cambridgeMathematics = readRoute(
-      "kurikulum/cambridge-international/upper-secondary/igcse/mathematics-0580"
+      "kurikulum/cambridge-international/upper-secondary/mathematics-0580"
     );
 
     if (
@@ -172,8 +195,8 @@ describe("curriculum route data", () => {
       title: "Mathematics",
     });
     expect(readCurriculumTocHeader("id", cambridgeMathematics)).toEqual({
-      description: "Cambridge IGCSE",
-      href: "/id/kurikulum/cambridge-international/upper-secondary/igcse/mathematics-0580",
+      description: "Upper Secondary",
+      href: "/id/kurikulum/cambridge-international/upper-secondary/mathematics-0580",
       title: "Mathematics 0580",
     });
     expect(readCurriculumBreadcrumbs("Beranda", biology)).toEqual([

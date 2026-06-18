@@ -114,7 +114,7 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - `pnpm --filter www exec vitest run __tests__/pages.test.tsx`
 - `pnpm --filter api exec vitest run lib/__tests__/proxy.test.ts`
 - `pnpm --filter @repo/backend exec vitest run helpers/chunk.test.ts`
-- `pnpm --filter @repo/contents exec vitest run _lib/content.test.ts --coverage.enabled=false`
+- `pnpm --filter @repo/contents exec vitest run _lib/content.test.ts`
 - Some workspaces enforce per-file 100% coverage, so use the full workspace test for the coverage gate.
 - Add `-t "test name"` to run one named test.
 - Use `pnpm --filter <workspace> test` for the whole workspace suite.

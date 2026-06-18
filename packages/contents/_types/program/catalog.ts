@@ -68,7 +68,7 @@ const learningProgramCatalogInput = [
     key: LEARNING_PROGRAM_KEYS.cambridgeInternational,
     kind: "school-curriculum",
     navigation: {
-      levels: ["stage", "qualification", "course", "unit", "lesson"],
+      levels: ["stage", "course", "unit", "lesson"],
       model: "curriculum-tree",
     },
     provider: {
@@ -97,6 +97,27 @@ const learningProgramCatalogInput = [
         reviewAfter: PROGRAM_2027_END,
         type: "official-blueprint",
         url: "https://www.cambridgeinternational.org/Images/662466-2025-2027-syllabus.pdf",
+      },
+      {
+        label: "Cambridge IGCSE Biology 0610 syllabus 2026-2028",
+        retrievedAt: SOURCE_RETRIEVED_AT_2026_06_16,
+        reviewAfter: PROGRAM_2028_REVIEW,
+        type: "official-blueprint",
+        url: "https://www.cambridgeinternational.org/Images/697203-2026-2028-syllabus.pdf",
+      },
+      {
+        label: "Cambridge IGCSE Chemistry 0620 syllabus 2026-2028",
+        retrievedAt: SOURCE_RETRIEVED_AT_2026_06_16,
+        reviewAfter: PROGRAM_2028_REVIEW,
+        type: "official-blueprint",
+        url: "https://www.cambridgeinternational.org/Images/697205-2026-2028-syllabus.pdf",
+      },
+      {
+        label: "Cambridge IGCSE Physics 0625 syllabus 2026-2028",
+        retrievedAt: SOURCE_RETRIEVED_AT_2026_06_16,
+        reviewAfter: PROGRAM_2028_REVIEW,
+        type: "official-blueprint",
+        url: "https://www.cambridgeinternational.org/Images/697209-2026-2028-syllabus.pdf",
       },
     ],
     translations: {
@@ -147,6 +168,27 @@ const learningProgramCatalogInput = [
         url: "https://www.moe.gov.sg/secondary",
       },
       {
+        label: "Singapore G2/G3 Mathematics syllabuses",
+        retrievedAt: SOURCE_RETRIEVED_AT_2026_06_16,
+        reviewAfter: PROGRAM_2028_REVIEW,
+        type: "official-blueprint",
+        url: "https://www.moe.gov.sg/api/media/d415c25d-cf29-4b05-83da-9713f38edd14/2020-G2-and-G3-Mathematics-Syllabuses.pdf",
+      },
+      {
+        label: "Singapore G2/G3 Additional Mathematics syllabuses",
+        retrievedAt: SOURCE_RETRIEVED_AT_2026_06_16,
+        reviewAfter: PROGRAM_2028_REVIEW,
+        type: "official-blueprint",
+        url: "https://www.moe.gov.sg/api/media/2155cce5-f6b4-4532-897c-c5a8fa1852c6/2020-G2-and-G3-Additional-Mathematics-Syllabuses.pdf",
+      },
+      {
+        label: "Singapore G2/G3 Lower Secondary Science syllabus",
+        retrievedAt: SOURCE_RETRIEVED_AT_2026_06_16,
+        reviewAfter: PROGRAM_2028_REVIEW,
+        type: "official-blueprint",
+        url: "https://www.moe.gov.sg/api/media/b6d63789-2ad0-4630-b847-42fd380ec404/G2-3-Lower-Secondary-Science-Teaching-and-Learning-Syllabus.pdf",
+      },
+      {
         label: "Singapore Pre-university Education",
         retrievedAt: SOURCE_RETRIEVED_AT_2026_06_16,
         reviewAfter: PROGRAM_2028_REVIEW,
@@ -169,11 +211,11 @@ const learningProgramCatalogInput = [
   {
     defaultCoverageStatus: "planned",
     displayOrder: 40,
-    iconKey: "framework",
+    iconKey: "standards",
     key: LEARNING_PROGRAM_KEYS.unitedStates,
     kind: "school-curriculum",
     navigation: {
-      levels: ["framework", "course", "unit", "lesson"],
+      levels: ["stage", "course", "unit", "lesson"],
       model: "curriculum-tree",
     },
     provider: {
@@ -212,6 +254,7 @@ const learningProgramCatalogInput = [
   {
     defaultCoverageStatus: "planned",
     displayOrder: 50,
+    iconKey: "assessment",
     key: LEARNING_PROGRAM_KEYS.tka2026,
     kind: "assessment",
     navigation: {
@@ -255,6 +298,7 @@ const learningProgramCatalogInput = [
   {
     defaultCoverageStatus: "partial",
     displayOrder: 60,
+    iconKey: "certificate",
     key: LEARNING_PROGRAM_KEYS.snbt2026,
     kind: "admission-exam",
     navigation: {

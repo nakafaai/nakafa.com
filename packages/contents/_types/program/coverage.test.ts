@@ -65,16 +65,19 @@ describe("program/coverage", () => {
       sourcePath: "material/lesson/biology/biodiversity",
     });
 
-    expect(
-      createCurriculumCoverageInputs({
-        programs: LEARNING_PROGRAM_CATALOG,
-        routes: [mappedTopicRoute],
-        syncedAt: 1,
-      })
-    ).toEqual([
-      expect.objectContaining({
-        programKey: "merdeka",
-      }),
+    const programKeys = createCurriculumCoverageInputs({
+      programs: LEARNING_PROGRAM_CATALOG,
+      routes: [mappedTopicRoute],
+      syncedAt: 1,
+    })
+      .map((row) => row.programKey)
+      .sort();
+
+    expect(programKeys).toEqual([
+      "cambridge-international",
+      "merdeka",
+      "singapore-moe",
+      "united-states",
     ]);
   });
 
@@ -183,12 +186,22 @@ describe("program/coverage", () => {
       syncedAt: 1,
     });
 
-    expect(rows).toEqual([
-      expect.objectContaining({
-        coverageStatus: "available",
-        programKey: "merdeka",
-      }),
-    ]);
+    const rowsByProgram = Object.fromEntries(
+      rows.map((row) => [row.programKey, row])
+    );
+
+    expect(rowsByProgram.merdeka).toMatchObject({
+      coverageStatus: "available",
+      programKey: "merdeka",
+    });
+    expect(rowsByProgram["singapore-moe"]).toMatchObject({
+      coverageStatus: "partial",
+      programKey: "singapore-moe",
+    });
+    expect(rowsByProgram["united-states"]).toMatchObject({
+      coverageStatus: "partial",
+      programKey: "united-states",
+    });
   });
 
   it("counts multiple materials under the same program language and lens", () => {
@@ -240,6 +253,8 @@ describe("program/coverage", () => {
 
     expect(curriculumRows.map((row) => row.programKey).sort()).toEqual([
       "merdeka",
+      "singapore-moe",
+      "united-states",
     ]);
     expect(fallbackRows).toEqual([]);
   });
@@ -310,7 +325,12 @@ describe("program/coverage", () => {
     );
 
     expect(rowsByProgram.merdeka).toBeUndefined();
-    expect(rowsByProgram).toEqual({});
+    expect(rowsByProgram["singapore-moe"]).toMatchObject({
+      coverageStatus: "partial",
+    });
+    expect(rowsByProgram["united-states"]).toMatchObject({
+      coverageStatus: "partial",
+    });
   });
 
   it("projects archived and unknown programs without inventing availability", () => {

@@ -67,7 +67,7 @@ export const PublicCurriculumRouteSchema = Schema.extend(
     canonicalPath: Schema.optional(PublicRoutePathSchema),
     displayGroupIconKey: Schema.optional(ProgramNavigationIconKeySchema),
     displayGroupTitle: Schema.optional(Schema.String),
-    iconKey: Schema.optional(ProgramNavigationIconKeySchema),
+    iconKey: ProgramNavigationIconKeySchema,
     kind: Schema.Literal("curriculum-context"),
     level: ProgramNavigationLevelSchema,
     materialDomain: Schema.optional(MaterialSchema),

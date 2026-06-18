@@ -1,6 +1,5 @@
 import {
   defineCurriculum,
-  qualificationNode,
   stageNode,
 } from "@repo/contents/_types/curriculum/schema";
 import { LEARNING_PROGRAM_KEYS } from "@repo/contents/_types/program/catalog";
@@ -70,54 +69,7 @@ export const cambridgeInternationalCurriculum = defineCurriculum({
       },
     }),
     stageNode({
-      children: [
-        qualificationNode({
-          children: igcseCourseNodes,
-          iconKey: "qualification",
-          key: "igcse",
-          order: 10,
-          translations: {
-            en: {
-              routeSlug: "igcse",
-              title: "Cambridge IGCSE",
-            },
-            id: {
-              routeSlug: "igcse",
-              title: "Cambridge IGCSE",
-            },
-          },
-        }),
-        qualificationNode({
-          iconKey: "certificate",
-          key: "o-level",
-          order: 20,
-          translations: {
-            en: {
-              routeSlug: "o-level",
-              title: "Cambridge O Level",
-            },
-            id: {
-              routeSlug: "o-level",
-              title: "Cambridge O Level",
-            },
-          },
-        }),
-        qualificationNode({
-          iconKey: "diploma",
-          key: "ice",
-          order: 30,
-          translations: {
-            en: {
-              routeSlug: "ice",
-              title: "Cambridge ICE",
-            },
-            id: {
-              routeSlug: "ice",
-              title: "Cambridge ICE",
-            },
-          },
-        }),
-      ],
+      children: igcseCourseNodes,
       displayGroup: {
         en: { title: "Learning stages" },
         id: { title: "Tahap belajar" },
@@ -138,53 +90,6 @@ export const cambridgeInternationalCurriculum = defineCurriculum({
       },
     }),
     stageNode({
-      children: [
-        qualificationNode({
-          iconKey: "course",
-          key: "as-a-level",
-          order: 10,
-          translations: {
-            en: {
-              routeSlug: "as-a-level",
-              title: "International AS & A Level",
-            },
-            id: {
-              routeSlug: "as-a-level",
-              title: "International AS & A Level",
-            },
-          },
-        }),
-        qualificationNode({
-          iconKey: "diploma",
-          key: "aice",
-          order: 20,
-          translations: {
-            en: {
-              routeSlug: "aice",
-              title: "Cambridge AICE Diploma",
-            },
-            id: {
-              routeSlug: "aice",
-              title: "Cambridge AICE Diploma",
-            },
-          },
-        }),
-        qualificationNode({
-          iconKey: "certificate",
-          key: "ipq",
-          order: 30,
-          translations: {
-            en: {
-              routeSlug: "ipq",
-              title: "Cambridge IPQ",
-            },
-            id: {
-              routeSlug: "ipq",
-              title: "Cambridge IPQ",
-            },
-          },
-        }),
-      ],
       displayGroup: {
         en: { title: "Learning stages" },
         id: { title: "Tahap belajar" },

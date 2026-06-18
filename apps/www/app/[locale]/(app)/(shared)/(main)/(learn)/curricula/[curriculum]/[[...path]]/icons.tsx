@@ -27,8 +27,6 @@ import type { IconSvgElement } from "@hugeicons/react";
 import type { ProgramNavigationIconKey } from "@repo/contents/_types/program/schema";
 import type { PublicCurriculumRoute } from "@repo/contents/_types/route/schema";
 import type { Material } from "@repo/contents/_types/taxonomy";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { cva } from "class-variance-authority";
 
 type CurriculumIconTone =
   | "amber"
@@ -43,49 +41,9 @@ type CurriculumRouteVisualIdentity = Readonly<{
   iconPair: CurriculumIconPair;
   tone: CurriculumIconTone;
 }>;
-
-const curriculumIconMarkVariants = cva("", {
-  variants: {
-    shape: {
-      dot: "size-4 rounded-lg",
-      full: "h-1 w-full rounded-full",
-      medium: "h-1 w-2/3 rounded-full",
-      short: "h-1 w-6 rounded-full",
-    },
-    tone: {
-      amber: "bg-amber-500/20 dark:bg-amber-400/20",
-      cyan: "bg-cyan-500/20 dark:bg-cyan-400/20",
-      emerald: "bg-emerald-500/20 dark:bg-emerald-400/20",
-      fuchsia: "bg-fuchsia-500/20 dark:bg-fuchsia-400/20",
-      indigo: "bg-indigo-500/20 dark:bg-indigo-400/20",
-      sky: "bg-sky-500/20 dark:bg-sky-400/20",
-      violet: "bg-violet-500/20 dark:bg-violet-400/20",
-    },
-  },
-});
-
-const curriculumIconBadgeVariants = cva(
-  "absolute flex items-center justify-center rounded-full border-2 border-card text-white shadow-xs transition-all ease-out group-hover:scale-110",
-  {
-    variants: {
-      size: {
-        large:
-          "-bottom-2 -left-2 size-9 group-hover:-translate-x-1 group-hover:translate-y-1",
-        small:
-          "top-2 -right-2 size-6 group-hover:translate-x-1 group-hover:-translate-y-1",
-      },
-      tone: {
-        amber: "bg-amber-500 dark:bg-amber-600",
-        cyan: "bg-cyan-500 dark:bg-cyan-600",
-        emerald: "bg-emerald-500 dark:bg-emerald-600",
-        fuchsia: "bg-fuchsia-500 dark:bg-fuchsia-600",
-        indigo: "bg-indigo-500 dark:bg-indigo-600",
-        sky: "bg-sky-500 dark:bg-sky-600",
-        violet: "bg-violet-500 dark:bg-violet-600",
-      },
-    },
-  }
-);
+type CurriculumVisualSource =
+  | Readonly<{ kind: "material"; key: Material }>
+  | Readonly<{ kind: "navigation"; key: ProgramNavigationIconKey }>;
 
 const materialIconPairs: { readonly [Key in Material]: CurriculumIconPair } = {
   "ai-ds": [Brain02Icon, StructureIcon],
@@ -136,7 +94,6 @@ const navigationIconPairs: {
   course: [BookOpenCheckIcon, Books02Icon],
   diploma: [DiplomaIcon, GraduationCapIcon],
   "early-years": [Backpack01Icon, BookOpen02Icon],
-  framework: [StructureIcon, BoardMathIcon],
   "global-education": [GlobalEducationIcon, SchoolIcon],
   "grade-1": [Backpack01Icon, BookOpen02Icon],
   "grade-2": [BookOpen02Icon, Books02Icon],
@@ -154,7 +111,6 @@ const navigationIconPairs: {
   mathematics: [MathIcon, BoardMathIcon],
   "middle-school": [SchoolBellIcon, Books02Icon],
   "primary-school": [SchoolIcon, Backpack01Icon],
-  qualification: [GraduationCapIcon, CertificateIcon],
   school: [LibraryIcon, BookOpenCheckIcon],
   science: [PhysicsIcon, TestTubeIcon],
   standards: [BoardMathIcon, StructureIcon],
@@ -164,13 +120,12 @@ const navigationIconPairs: {
 const navigationIconTones: {
   readonly [Key in ProgramNavigationIconKey]: CurriculumIconTone;
 } = {
-  advanced: "indigo",
+  advanced: "fuchsia",
   assessment: "cyan",
   certificate: "emerald",
   course: "sky",
   diploma: "fuchsia",
   "early-years": "sky",
-  framework: "violet",
   "global-education": "cyan",
   "grade-1": "sky",
   "grade-2": "indigo",
@@ -188,50 +143,11 @@ const navigationIconTones: {
   mathematics: "indigo",
   "middle-school": "violet",
   "primary-school": "emerald",
-  qualification: "violet",
   school: "sky",
   science: "amber",
   standards: "violet",
   state: "cyan",
 };
-
-/** Renders root cards with the historical subject-page mini-card illustration. */
-/* istanbul ignore next -- Browser proof covers the visual shell; icons.test.ts audits the production identity resolver. */
-export function CurriculumRouteCardIcon({
-  route,
-}: {
-  readonly route: PublicCurriculumRoute;
-}) {
-  const {
-    iconPair: [PrimaryIcon, SecondaryIcon],
-    tone,
-  } = readCurriculumRouteVisualIdentity(route);
-
-  return (
-    <div className="relative flex h-18 w-20 items-center justify-center">
-      <div className="relative flex h-14 w-16 flex-col gap-1.5 rounded-md border bg-card p-2.5 shadow-xs transition-all ease-out group-hover:-translate-y-1">
-        <div className="flex items-center justify-between">
-          <div className={curriculumIconMarkVariants({ shape: "dot", tone })} />
-          <div
-            className={curriculumIconMarkVariants({ shape: "short", tone })}
-          />
-        </div>
-        <div className={curriculumIconMarkVariants({ shape: "full", tone })} />
-        <div
-          className={curriculumIconMarkVariants({ shape: "medium", tone })}
-        />
-
-        <div className={curriculumIconBadgeVariants({ size: "small", tone })}>
-          <HugeIcons className="size-3.5" icon={SecondaryIcon} />
-        </div>
-
-        <div className={curriculumIconBadgeVariants({ size: "large", tone })}>
-          <HugeIcons className="size-4.5" icon={PrimaryIcon} />
-        </div>
-      </div>
-    </div>
-  );
-}
 
 /** Resolves source-owned route identity to verified Hugeicons card icons. */
 export function readCurriculumRouteIcon(route: PublicCurriculumRoute) {
@@ -259,48 +175,60 @@ export function readCurriculumRouteVisualIdentity(
 
 /** Selects a grouped-root section icon from source-owned group metadata. */
 export function readCurriculumGroupIcon(
-  iconKey: PublicCurriculumRoute["displayGroupIconKey"]
+  iconKey: ProgramNavigationIconKey
 ): IconSvgElement {
-  if (iconKey) {
-    const [primaryIcon] = navigationIconPairs[iconKey];
+  const [primaryIcon] = navigationIconPairs[iconKey];
 
-    return primaryIcon;
-  }
-
-  /* istanbul ignore next -- Non-card internal rows may omit group icon metadata; visible chooser groups are audited in icons.test.ts. */
-  return navigationIconPairs.school[0];
+  return primaryIcon;
 }
 
 /** Maps schema-owned route identity to non-redundant Hugeicons icon pairs. */
 function readCurriculumRouteIconPair(
   route: PublicCurriculumRoute
 ): CurriculumIconPair {
-  if (route.materialDomain) {
-    return materialIconPairs[route.materialDomain];
+  const source = readCurriculumVisualSource(route);
+
+  if (source.kind === "navigation") {
+    return navigationIconPairs[source.key];
   }
 
-  /* istanbul ignore else -- Non-card internal rows may omit icon metadata; visible chooser rows are audited in icons.test.ts. */
-  if (route.iconKey) {
-    return navigationIconPairs[route.iconKey];
-  }
-
-  /* istanbul ignore next -- Non-card internal rows may omit icon metadata; visible chooser rows are audited in icons.test.ts. */
-  return navigationIconPairs.school;
+  return materialIconPairs[source.key];
 }
 
 /** Chooses the old subject-card accent tone from schema-owned route fields. */
 function readCurriculumIconTone(
   route: PublicCurriculumRoute
 ): CurriculumIconTone {
-  if (route.materialDomain) {
-    return materialIconTones[route.materialDomain];
+  const source = readCurriculumVisualSource(route);
+
+  if (source.kind === "navigation") {
+    return navigationIconTones[source.key];
   }
 
-  /* istanbul ignore else -- Non-card internal rows may omit icon metadata; visible chooser rows are audited in icons.test.ts. */
-  if (route.iconKey) {
-    return navigationIconTones[route.iconKey];
+  return materialIconTones[source.key];
+}
+
+/**
+ * Selects the source-owned identity that drives curriculum card visuals.
+ *
+ * Generic subject icon keys stay domain-driven so science siblings keep
+ * biology, chemistry, and physics identities from `materialDomain`; specific
+ * course/stage keys keep their authored navigation identity.
+ */
+function readCurriculumVisualSource(
+  route: PublicCurriculumRoute
+): CurriculumVisualSource {
+  if (!route.materialDomain) {
+    return { kind: "navigation", key: route.iconKey };
   }
 
-  /* istanbul ignore next -- Non-card internal rows may omit icon metadata; visible chooser rows are audited in icons.test.ts. */
-  return navigationIconTones.school;
+  if (
+    route.iconKey &&
+    route.iconKey !== "mathematics" &&
+    route.iconKey !== "science"
+  ) {
+    return { kind: "navigation", key: route.iconKey };
+  }
+
+  return { kind: "material", key: route.materialDomain };
 }

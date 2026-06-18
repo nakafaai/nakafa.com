@@ -73,8 +73,7 @@ type CurriculumNodeTranslationEncodedMap = SchemaEncoded<
  * Effect Schema cannot infer this recursive tree without a local alias. The
  * exported curriculum models below still derive from the runtime schemas.
  */
-// biome-ignore lint/style/useConsistentTypeDefinitions: Recursive Effect Schema generics need local aliases; exported models derive from schemas.
-type CurriculumStructureNodeValue = {
+interface CurriculumStructureNodeValue {
   children?: readonly CurriculumTreeNodeValue[];
   displayGroup?: SchemaType<typeof CurriculumDisplayGroupTranslationMapSchema>;
   displayGroupIconKey?: SchemaType<typeof ProgramNavigationIconKeySchema>;
@@ -84,7 +83,7 @@ type CurriculumStructureNodeValue = {
   materialDomain?: CurriculumNode["materialDomain"];
   order: number;
   translations: CurriculumNodeTranslationMap;
-};
+}
 
 /**
  * Private decoded material-leaf shape for the recursive curriculum union.
@@ -92,14 +91,13 @@ type CurriculumStructureNodeValue = {
  * This keeps the recursive schema annotation precise while the public material
  * leaf type remains schema-derived below.
  */
-// biome-ignore lint/style/useConsistentTypeDefinitions: Recursive Effect Schema generics need local aliases; exported models derive from schemas.
-type CurriculumMaterialReferenceNodeValue = {
+interface CurriculumMaterialReferenceNodeValue {
   displayOverride?: CurriculumNodeTranslationMap;
   key: string;
   level: CurriculumNode["level"];
   materialKeys: readonly MaterialKey[];
   order: number;
-};
+}
 
 type CurriculumTreeNodeValue =
   | CurriculumMaterialReferenceNodeValue
@@ -111,8 +109,7 @@ type CurriculumTreeNodeValue =
  * The source helpers decode this shape through `CurriculumTreeNodeSchema`, so
  * callers never receive a parallel public contract.
  */
-// biome-ignore lint/style/useConsistentTypeDefinitions: Recursive Effect Schema generics need local aliases; exported models derive from schemas.
-type CurriculumStructureNodeEncodedValue = {
+interface CurriculumStructureNodeEncodedValue {
   children?: readonly CurriculumTreeNodeEncodedValue[];
   displayGroup?: SchemaEncoded<
     typeof CurriculumDisplayGroupTranslationMapSchema
@@ -124,21 +121,20 @@ type CurriculumStructureNodeEncodedValue = {
   materialDomain?: CurriculumNode["materialDomain"];
   order: number;
   translations: CurriculumNodeTranslationEncodedMap;
-};
+}
 
 /**
  * Private encoded material-leaf shape for recursive authored curriculum input.
  *
  * This exists only so the recursive Effect Schema can type its encoded side.
  */
-// biome-ignore lint/style/useConsistentTypeDefinitions: Recursive Effect Schema generics need local aliases; exported models derive from schemas.
-type CurriculumMaterialReferenceNodeEncodedValue = {
+interface CurriculumMaterialReferenceNodeEncodedValue {
   displayOverride?: CurriculumNodeTranslationEncodedMap;
   key: string;
   level: CurriculumNode["level"];
   materialKeys: readonly string[];
   order: number;
-};
+}
 
 type CurriculumTreeNodeEncodedValue =
   | CurriculumMaterialReferenceNodeEncodedValue
@@ -259,16 +255,6 @@ export function subjectNode(input: StructureNodeInput) {
 /** Defines a course-level curriculum structure node. */
 export function courseNode(input: StructureNodeInput) {
   return structureNode("course", input);
-}
-
-/** Defines an official framework-level curriculum structure node. */
-export function frameworkNode(input: StructureNodeInput) {
-  return structureNode("framework", input);
-}
-
-/** Defines a qualification-level curriculum structure node. */
-export function qualificationNode(input: StructureNodeInput) {
-  return structureNode("qualification", input);
 }
 
 /** Defines an official stage-level curriculum structure node. */

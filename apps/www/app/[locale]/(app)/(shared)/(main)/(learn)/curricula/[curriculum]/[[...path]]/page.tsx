@@ -4,6 +4,7 @@ import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import { CurriculumRouteCardIcon } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/card-icon";
 import {
   CURRICULUM_ROUTES,
   listCurriculumStaticParams,
@@ -15,7 +16,6 @@ import {
   resolveCurriculumRoute,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/data";
 import {
-  CurriculumRouteCardIcon,
   readCurriculumGroupIcon,
   readCurriculumRouteIcon,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/icons";
@@ -151,10 +151,12 @@ function CurriculumRouteBody({
           <section className="flex flex-col gap-6" key={group.key}>
             {group.title && (
               <div className="flex items-center gap-2">
-                <HugeIcons
-                  className="size-5"
-                  icon={readCurriculumGroupIcon(group.iconKey)}
-                />
+                {group.iconKey && (
+                  <HugeIcons
+                    className="size-5"
+                    icon={readCurriculumGroupIcon(group.iconKey)}
+                  />
+                )}
                 <h2 className="font-medium text-lg">{group.title}</h2>
               </div>
             )}

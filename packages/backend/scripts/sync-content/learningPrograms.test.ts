@@ -6,7 +6,7 @@ import { syncLearningPrograms } from "@repo/backend/scripts/sync-content/learnin
 import { log } from "@repo/backend/scripts/sync-content/logging";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { Effect } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { assert, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@repo/backend/scripts/sync-content/convex", () => ({
   callConvexMutation: vi.fn(),
@@ -27,9 +27,7 @@ const subjectGraph = createLearningGraphIdentityFromRoute({
   route: "material/lesson/biology/biodiversity",
 });
 
-if (!subjectGraph) {
-  throw new Error("Expected subject graph fixture.");
-}
+assert(subjectGraph, "Expected subject graph fixture.");
 
 const subjectRoute = {
   ...subjectGraph,
@@ -99,7 +97,25 @@ describe("sync-content learningPrograms", () => {
         expect.objectContaining({
           coverageStatus: "partial",
           lensId: subjectGraph.lensId,
+          programKey: "cambridge-international",
+          sampleContentId: subjectGraph.assetId,
+        }),
+        expect.objectContaining({
+          coverageStatus: "partial",
+          lensId: subjectGraph.lensId,
           programKey: "merdeka",
+          sampleContentId: subjectGraph.assetId,
+        }),
+        expect.objectContaining({
+          coverageStatus: "partial",
+          lensId: subjectGraph.lensId,
+          programKey: "singapore-moe",
+          sampleContentId: subjectGraph.assetId,
+        }),
+        expect.objectContaining({
+          coverageStatus: "partial",
+          lensId: subjectGraph.lensId,
+          programKey: "united-states",
           sampleContentId: subjectGraph.assetId,
         }),
       ]),
@@ -110,7 +126,7 @@ describe("sync-content learningPrograms", () => {
       locale: "id",
     });
     expect(log).toHaveBeenCalledWith(
-      expect.stringContaining("Coverage: 1 rows from 1 graph routes")
+      expect.stringContaining("Coverage: 4 rows from 1 graph routes")
     );
   });
 });

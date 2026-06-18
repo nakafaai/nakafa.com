@@ -193,7 +193,7 @@ describe("public curriculum routes", () => {
         materialKey: "lesson.mathematics.linear-equation-inequality",
         programKey: "cambridge-international",
         publicPath:
-          "curriculum/cambridge-international/upper-secondary/igcse/mathematics-0580/algebra-and-graphs/linear-equation-inequality",
+          "curriculum/cambridge-international/upper-secondary/mathematics-0580/algebra-and-graphs/linear-equation-inequality",
       })
     );
     expect(routes).toContainEqual(
@@ -205,7 +205,7 @@ describe("public curriculum routes", () => {
         materialKey: "lesson.mathematics.linear-equation-inequality",
         programKey: "cambridge-international",
         publicPath:
-          "kurikulum/cambridge-international/upper-secondary/igcse/mathematics-0580/aljabar-dan-grafik/sistem-persamaan-dan-pertidaksamaan-linear",
+          "kurikulum/cambridge-international/upper-secondary/mathematics-0580/aljabar-dan-grafik/sistem-persamaan-dan-pertidaksamaan-linear",
       })
     );
 
@@ -220,8 +220,23 @@ describe("public curriculum routes", () => {
         route.publicPath ===
           "kurikulum/cambridge-international/upper-secondary/igcse"
     );
+    const course = routes.find(
+      (route) =>
+        route.locale === "id" &&
+        route.publicPath ===
+          "kurikulum/cambridge-international/upper-secondary/mathematics-0580"
+    );
     expect(stage?.level).toBe("stage");
-    expect(qualification?.level).toBe("qualification");
+    expect(qualification).toBeUndefined();
+    expect(course).toMatchObject({
+      level: "course",
+      parentPath: "kurikulum/cambridge-international/upper-secondary",
+    });
+    expect(
+      routes.some((route) =>
+        route.publicPath.includes("/upper-secondary/igcse")
+      )
+    ).toBe(false);
   });
 
   it("keeps curriculum navigation order source-owned", () => {
@@ -231,7 +246,7 @@ describe("public curriculum routes", () => {
         (route) =>
           route.locale === "id" &&
           route.parentPath ===
-            "kurikulum/cambridge-international/upper-secondary/igcse/mathematics-0580/aljabar-dan-grafik" &&
+            "kurikulum/cambridge-international/upper-secondary/mathematics-0580/aljabar-dan-grafik" &&
           route.materialKey !== undefined
       )
       .sort((left, right) => left.order - right.order)
@@ -297,10 +312,10 @@ describe("public curriculum routes", () => {
     expect(routes).toContainEqual(
       expect.objectContaining({
         displayGroupIconKey: "school",
-        displayGroupTitle: "Jalur belajar",
-        iconKey: "standards",
+        displayGroupTitle: "Tahap sekolah",
+        iconKey: "high-school",
         locale: "id",
-        publicPath: "kurikulum/amerika-serikat/standar-inti-k-12",
+        publicPath: "kurikulum/amerika-serikat/sma",
       })
     );
 
@@ -370,7 +385,7 @@ describe("public curriculum routes", () => {
       (route) =>
         route.locale === "id" &&
         route.publicPath ===
-          "kurikulum/cambridge-international/upper-secondary/igcse/mathematics-0580"
+          "kurikulum/cambridge-international/upper-secondary/mathematics-0580"
     );
 
     expect(root).toBeDefined();
@@ -544,7 +559,7 @@ describe("public curriculum routes", () => {
     ).toBe(true);
   });
 
-  it("keeps planned curriculum rows projected but unavailable for public navigation", () => {
+  it("keeps only ready mapped curriculum rows renderable", () => {
     const routes = Effect.runSync(listPublicCurriculumRoutes());
     const singaporeRoot = routes.find(
       (route) =>
@@ -560,15 +575,35 @@ describe("public curriculum routes", () => {
         route.locale === "id" &&
         route.publicPath === "kurikulum/amerika-serikat"
     );
+    const singaporeSecondary = routes.find(
+      (route) =>
+        route.locale === "en" &&
+        route.publicPath === "curriculum/singapore-moe/secondary"
+    );
+    const singaporeMathematics = routes.find(
+      (route) =>
+        route.locale === "en" &&
+        route.publicPath === "curriculum/singapore-moe/secondary/mathematics"
+    );
+    const unitedStatesHighSchool = routes.find(
+      (route) =>
+        route.locale === "en" &&
+        route.publicPath === "curriculum/united-states/high-school"
+    );
+    const unitedStatesMathematics = routes.find(
+      (route) =>
+        route.locale === "en" &&
+        route.publicPath === "curriculum/united-states/high-school/mathematics"
+    );
 
     expect(singaporeRoot).toMatchObject({
       level: "track",
       programKey: "singapore-moe",
-      sitemap: false,
+      sitemap: true,
     });
     expect(singaporeRoot?.materialKey).toBeUndefined();
     expect(singaporeRoot && isRenderableCurriculumRoute(singaporeRoot)).toBe(
-      false
+      true
     );
     expect(singaporePrimary).toMatchObject({
       level: "stage",
@@ -582,12 +617,26 @@ describe("public curriculum routes", () => {
     expect(unitedStatesRoot).toMatchObject({
       level: "track",
       programKey: "united-states",
-      sitemap: false,
+      sitemap: true,
     });
     expect(unitedStatesRoot?.materialKey).toBeUndefined();
     expect(
       unitedStatesRoot && isRenderableCurriculumRoute(unitedStatesRoot)
-    ).toBe(false);
+    ).toBe(true);
+    expect(
+      singaporeSecondary && isRenderableCurriculumRoute(singaporeSecondary)
+    ).toBe(true);
+    expect(
+      singaporeMathematics && isRenderableCurriculumRoute(singaporeMathematics)
+    ).toBe(true);
+    expect(
+      unitedStatesHighSchool &&
+        isRenderableCurriculumRoute(unitedStatesHighSchool)
+    ).toBe(true);
+    expect(
+      unitedStatesMathematics &&
+        isRenderableCurriculumRoute(unitedStatesMathematics)
+    ).toBe(true);
     expect(
       [...new Set(routes.map((route) => route.programKey))].sort()
     ).toEqual([

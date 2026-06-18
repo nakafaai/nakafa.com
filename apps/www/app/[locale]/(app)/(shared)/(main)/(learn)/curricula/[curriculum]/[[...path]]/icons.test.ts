@@ -28,7 +28,13 @@ describe("curriculum route icons", () => {
         const seenTones = new Map<string, string>();
         const duplicateKeys: string[] = [];
 
-        expect(readCurriculumGroupIcon(group.iconKey)).toBeTruthy();
+        if (group.title) {
+          expect(group.iconKey).toBeTruthy();
+        }
+
+        if (group.iconKey) {
+          expect(readCurriculumGroupIcon(group.iconKey)).toBeTruthy();
+        }
 
         for (const child of group.children) {
           const { iconPair, tone } = readCurriculumRouteVisualIdentity(child);

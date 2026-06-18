@@ -50,7 +50,7 @@ describe("program/catalog", () => {
       model: "exam-domain-practice-set",
     });
     expect(cambridgeProgram?.navigation).toEqual({
-      levels: ["stage", "qualification", "course", "unit", "lesson"],
+      levels: ["stage", "course", "unit", "lesson"],
       model: "curriculum-tree",
     });
     expect(JSON.stringify(LEARNING_PROGRAM_CATALOG)).not.toContain(

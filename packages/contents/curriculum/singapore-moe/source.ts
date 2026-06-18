@@ -3,6 +3,11 @@ import {
   stageNode,
 } from "@repo/contents/_types/curriculum/schema";
 import { LEARNING_PROGRAM_KEYS } from "@repo/contents/_types/program/catalog";
+import {
+  singaporeSecondaryAdditionalMathematicsCourseNode,
+  singaporeSecondaryMathematicsCourseNode,
+} from "@repo/contents/curriculum/singapore-moe/mathematics";
+import { singaporeSecondaryScienceCourseNode } from "@repo/contents/curriculum/singapore-moe/science";
 
 export const singaporeMoeCurriculum = defineCurriculum({
   programKey: LEARNING_PROGRAM_KEYS.singaporeMoe,
@@ -28,6 +33,11 @@ export const singaporeMoeCurriculum = defineCurriculum({
       },
     }),
     stageNode({
+      children: [
+        singaporeSecondaryMathematicsCourseNode,
+        singaporeSecondaryAdditionalMathematicsCourseNode,
+        singaporeSecondaryScienceCourseNode,
+      ],
       displayGroup: {
         en: { title: "School stages" },
         id: { title: "Tahap sekolah" },

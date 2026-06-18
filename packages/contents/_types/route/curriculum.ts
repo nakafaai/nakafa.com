@@ -8,6 +8,7 @@ import { CURRICULUM_SOURCES } from "@repo/contents/_types/curriculum/source";
 import { MATERIAL_ROUTE_DOMAINS } from "@repo/contents/_types/material/domain";
 import { MATERIAL_SOURCES } from "@repo/contents/_types/material/source";
 import { LEARNING_PROGRAM_CATALOG } from "@repo/contents/_types/program/catalog";
+import type { LearningProgram } from "@repo/contents/_types/program/schema";
 import { createTopicRouteByMaterialKey } from "@repo/contents/_types/route/content";
 import { InvalidPublicRouteSourceError } from "@repo/contents/_types/route/error";
 import type { RouteInputs } from "@repo/contents/_types/route/input";
@@ -31,8 +32,6 @@ import { Effect } from "effect";
 const RENDERABLE_CURRICULUM_LEVELS = new Set<PublicCurriculumRoute["level"]>([
   "class",
   "course",
-  "framework",
-  "qualification",
   "stage",
   "subject",
   "track",
@@ -128,7 +127,7 @@ export const listPublicCurriculumRoutes = Effect.fn(
           canonicalPath,
           displayGroupIconKey: node.displayGroupIconKey,
           displayGroupTitle: node.displayGroup?.[locale].title,
-          iconKey: node.iconKey,
+          iconKey: readCurriculumRouteIconKey(node, program),
           kind: "curriculum-context",
           level: node.level,
           locale,
@@ -150,6 +149,36 @@ export const listPublicCurriculumRoutes = Effect.fn(
 
   return yield* uniqueRoutes(routes);
 });
+
+/**
+ * Derives the route-row icon key from authored node metadata and material domain.
+ *
+ * Public curriculum routes always carry a navigation icon key for Convex and
+ * app read models. Material-domain rows use broad navigation keys while keeping
+ * `materialDomain` available for concrete card identity in the UI.
+ */
+function readCurriculumRouteIconKey(
+  node: ProjectedCurriculumNode,
+  program: LearningProgram
+) {
+  if (node.iconKey) {
+    return node.iconKey;
+  }
+
+  if (node.materialDomain === "mathematics") {
+    return "mathematics";
+  }
+
+  if (
+    node.materialDomain === "biology" ||
+    node.materialDomain === "chemistry" ||
+    node.materialDomain === "physics"
+  ) {
+    return "science";
+  }
+
+  return program.iconKey;
+}
 
 /** Checks whether a curriculum route has ready mapped content for public navigation. */
 export function isRenderableCurriculumRoute(route: PublicCurriculumRoute) {

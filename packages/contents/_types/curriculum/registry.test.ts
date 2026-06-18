@@ -65,7 +65,12 @@ describe("curriculum registry", () => {
       getProgramKeysForMaterialRoute({
         route: "material/lesson/mathematics/statistics-foundations",
       })
-    ).toEqual(["cambridge-international", "merdeka"]);
+    ).toEqual([
+      "cambridge-international",
+      "merdeka",
+      "singapore-moe",
+      "united-states",
+    ]);
   });
 
   it("projects nested curriculum authoring into flat read-model rows", () => {
@@ -167,21 +172,40 @@ describe("curriculum registry", () => {
       getProgramKeysForMaterialRoute({
         route: "material/lesson/mathematics/quadratic-function",
       })
-    ).toEqual(["cambridge-international", "merdeka"]);
+    ).toEqual([
+      "cambridge-international",
+      "merdeka",
+      "singapore-moe",
+      "united-states",
+    ]);
   });
 
-  it("keeps planned US pathways visible without inventing material coverage", () => {
+  it("maps Singapore and United States curricula to verified reusable material", () => {
+    const singaporeNodes = listCurriculumNodes().filter(
+      (node) => node.curriculumKey === "singapore-moe"
+    );
     const usStandards = listCurriculumNodes().filter(
       (node) => node.curriculumKey === "united-states"
     );
 
+    expect(singaporeNodes.length).toBeGreaterThan(0);
+    expect(singaporeNodes.flatMap((node) => node.materialKeys)).toContain(
+      "lesson.mathematics.trigonometry"
+    );
     expect(usStandards.length).toBeGreaterThan(0);
-    expect(usStandards.flatMap((node) => node.materialKeys)).toEqual([]);
+    expect(usStandards.flatMap((node) => node.materialKeys)).toContain(
+      "lesson.physics.kinematics"
+    );
     expect(
       getProgramKeysForMaterialRoute({
         route: "material/lesson/physics/kinematics",
       })
-    ).not.toContain("united-states");
+    ).toEqual([
+      "cambridge-international",
+      "merdeka",
+      "singapore-moe",
+      "united-states",
+    ]);
   });
 
   it("returns no programs for routes outside the material registry", () => {
