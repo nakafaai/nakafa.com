@@ -159,17 +159,20 @@ describe("llms exercise markdown", () => {
     expect(text).toContain("Quantitative Knowledge Set 1");
     expect(text).toContain("Question 3");
     expect(text).toContain("- A. Fallback");
-    expect(text).not.toContain("### Answer & Explanation");
-    expect(text).not.toContain("Answer raw");
+    expect(text).toContain("### Answer & Explanation");
+    expect(text).toContain("Answer raw");
     expect(text).not.toContain("## Exercise 2");
   });
 
-  it("renders public exercise markdown with semantic math and link text", async () => {
+  it("renders public exercise markdown with semantic math, answers, and link text", async () => {
     mockGetRuntimeExerciseSetPage.mockReturnValue(
       Effect.succeed({
         exercises: [
           {
             ...exerciseWithLocalizedChoices,
+            answer: {
+              raw: '<BlockMath math="m = 1" />\n\nThen <InlineMath math="k = 2" /> gives the final value <InlineMath math="19" />.',
+            },
             choices: {
               en: [
                 {
@@ -201,6 +204,9 @@ describe("llms exercise markdown", () => {
       "(Adapted from: [issuu.com](https://issuu.com/naeyc/docs/example))"
     );
     expect(text).toContain("- paragraph $$1$$ and $$50\\text{ years}$$");
+    expect(text).toContain("### Answer & Explanation");
+    expect(text).toContain("```math\nm = 1\n```");
+    expect(text).toContain("Then $$k = 2$$ gives the final value $$19$$.");
     expect(text).not.toContain("InlineMath");
   });
 
@@ -284,6 +290,18 @@ The axis of symmetry is <InlineMath math="x = -3" />.`,
   });
 
   it("renders one exercise without choice rows when source choices are absent", async () => {
+    mockGetRuntimeExerciseSetPage.mockReturnValue(
+      Effect.succeed({
+        exercises: [
+          {
+            ...exerciseWithoutChoices,
+            answer: { raw: "   " },
+          },
+        ],
+        title: "Quantitative Knowledge Set 1",
+      })
+    );
+
     const text = await getCachedLlmsExerciseText({
       cleanSlug: `${validSetPath}/question-2`,
       locale: "en",
@@ -291,6 +309,7 @@ The axis of symmetry is <InlineMath math="x = -3" />.`,
 
     expect(text).toContain("Second question raw");
     expect(text).toContain("### Choices");
+    expect(text).not.toContain("### Answer & Explanation");
     expect(text).not.toContain("- [");
   });
 

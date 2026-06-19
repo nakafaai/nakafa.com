@@ -114,6 +114,15 @@ export const getLlmsExerciseText = Effect.fn("www.llms.exercises.text")(
         }
       }
 
+      const answerRaw = exercise.answer.raw.trim();
+
+      if (answerRaw) {
+        scanned.push("");
+        scanned.push("### Answer & Explanation");
+        scanned.push("");
+        scanned.push(yield* formatPublicExerciseMarkdown(answerRaw));
+      }
+
       scanned.push("");
       scanned.push("---");
       scanned.push("");
