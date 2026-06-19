@@ -2,9 +2,8 @@ import {
   getPublicContentRouteCheck,
   type PublicContentRouteCheck,
 } from "@repo/contents/_lib/manifest/public-route";
-import { findPublicContentRouteByPath } from "@repo/contents/_types/route/content";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import {
   getRuntimeContentRoute,
@@ -264,14 +263,10 @@ function getListingRouteMetadata(route: string) {
 /** Reads exact runtime content route metadata when the route has markdown. */
 const getContentRouteMetadata = Effect.fn("www.llms.contentRouteMetadata")(
   function* ({ locale, route }: { locale: Locale; route: string }) {
-    const contentPath = yield* getRuntimeContentLookupPath(
-      route.slice(1),
-      locale
-    );
     const contentRoute = yield* Effect.match(
       getRuntimeContentRoute({
         locale,
-        route: contentPath,
+        route: route.slice(1),
       }),
       {
         onFailure: () => null,
@@ -288,17 +283,5 @@ const getContentRouteMetadata = Effect.fn("www.llms.contentRouteMetadata")(
       hasMarkdown: contentRoute.markdown,
       title: contentRoute.title,
     };
-  }
-);
-
-/** Converts projected public material/practice paths to runtime source routes. */
-const getRuntimeContentLookupPath = Effect.fn("www.llms.contentLookupPath")(
-  function* (contentPath: string, locale: Locale) {
-    const route = yield* findPublicContentRouteByPath(contentPath, locale);
-
-    return Option.match(route, {
-      onNone: () => contentPath,
-      onSome: (publicRoute) => publicRoute.sourcePath,
-    });
   }
 );

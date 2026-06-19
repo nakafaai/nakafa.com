@@ -90,7 +90,7 @@ beforeEach(() => {
       return Effect.fail(new Error("Runtime metadata unavailable."));
     }
 
-    if (route === "material/lesson/chemistry/green-chemistry/definition") {
+    if (route === "subjects/chemistry/green-chemistry/definition") {
       return Effect.succeed({
         description: "Green Chemistry",
         markdown: true,
@@ -98,10 +98,7 @@ beforeEach(() => {
       });
     }
 
-    if (
-      route ===
-      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1"
-    ) {
+    if (route === "practice/snbt/quantitative-knowledge/mock-test/2026/set-1") {
       return Effect.succeed({
         description: "Try-out set",
         markdown: true,
@@ -111,7 +108,7 @@ beforeEach(() => {
 
     if (
       route ===
-      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/1"
+      "practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question-1"
     ) {
       return Effect.succeed({
         description: "Try-out question",
@@ -134,22 +131,26 @@ const routeRows = [
     section: "articles",
   }),
   routeRow({
-    route:
-      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
+    route: "practice/snbt/quantitative-knowledge/mock-test/2026/set-1",
     section: "material",
+    sourcePath:
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
   }),
   routeRow({
     route:
-      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/1",
+      "practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question-1",
     section: "material",
+    sourcePath:
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/1",
   }),
   routeRow({
     route: "quran/1",
     section: "quran",
   }),
   routeRow({
-    route: "material/lesson/chemistry/green-chemistry/definition",
+    route: "subjects/chemistry/green-chemistry/definition",
     section: "material",
+    sourcePath: "material/lesson/chemistry/green-chemistry/definition",
   }),
 ];
 
@@ -157,15 +158,17 @@ const routeRows = [
 function routeRow({
   route,
   section,
+  sourcePath = route,
 }: {
   route: string;
   section: SourceRegistryRoot;
+  sourcePath?: string;
 }): RuntimeContentRouteItem {
-  const graph = routeGraph("en", route);
-  const kind = getLearningObjectKindForRoute(route);
+  const graph = routeGraph("en", sourcePath);
+  const kind = getLearningObjectKindForRoute(sourcePath);
 
   if (!kind) {
-    expect.fail(`Expected graph route kind for ${route}.`);
+    expect.fail(`Expected graph route kind for ${sourcePath}.`);
   }
 
   return {
@@ -179,7 +182,7 @@ function routeRow({
     official: false,
     route,
     section,
-    sourcePath: route,
+    sourcePath,
     syncedAt: 1,
     title: "Title",
   };
@@ -325,6 +328,23 @@ describe("llms entries", () => {
     expect(hrefs).not.toContain(
       "https://nakafa.com/en/practice/snbt/quantitative-knowledge/mock-test/2026.md"
     );
+    expect(mockGetRuntimeContentRoute).toHaveBeenCalledWith({
+      locale: "en",
+      route: "subjects/chemistry/green-chemistry/definition",
+    });
+    expect(mockGetRuntimeContentRoute).toHaveBeenCalledWith({
+      locale: "en",
+      route: "practice/snbt/quantitative-knowledge/mock-test/2026/set-1",
+    });
+    expect(mockGetRuntimeContentRoute).toHaveBeenCalledWith({
+      locale: "en",
+      route:
+        "practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question-1",
+    });
+    expect(mockGetRuntimeContentRoute).not.toHaveBeenCalledWith({
+      locale: "en",
+      route: "material/lesson/chemistry/green-chemistry/definition",
+    });
     expect(mockGetRuntimeContentRouteArtifactPage).toHaveBeenCalledWith({
       locale: "en",
       page: 0,
