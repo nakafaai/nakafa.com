@@ -232,18 +232,18 @@ export function getExerciseTarget(
   });
 }
 
-/** Resolves one selected exercise question through the persisted route catalog. */
+/** Resolves one selected exercise question through the persisted source-path catalog. */
 function resolveExerciseQuestionRoute(
   convexUrl: string,
   locale: Locale,
-  route: string
+  sourcePath: string
 ) {
   return Effect.gen(function* () {
     const projection = yield* fetchNakafaRuntimeQuery(
       convexUrl,
-      "getContentRoute",
-      api.contents.queries.runtime.getContentRoute,
-      { locale, route }
+      "getContentRouteBySourcePath",
+      api.contents.queries.runtime.getContentRouteBySourcePath,
+      { locale, sourcePath }
     );
 
     if (!projection) {

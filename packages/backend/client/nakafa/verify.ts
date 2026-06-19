@@ -18,11 +18,10 @@ export function verifyNakafaContent(convexUrl: string, input: string) {
 
     const route = yield* fetchNakafaRuntimeQuery(
       convexUrl,
-      "getContentRoute",
-      api.contents.queries.runtime.getContentRoute,
+      "getContentRouteByContentId",
+      api.contents.queries.runtime.getContentRouteByContentId,
       {
-        locale: ref.value.locale,
-        route: ref.value.route,
+        contentId: ref.value.content_id,
       }
     );
 

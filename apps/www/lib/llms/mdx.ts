@@ -71,7 +71,10 @@ const getMdxRuntimePage = Effect.fn("www.llms.mdx.runtimePage")(function* ({
     });
   }
 
-  if (cleanSlug.startsWith("curriculum/")) {
+  if (
+    cleanSlug.startsWith("curriculum/") ||
+    cleanSlug.startsWith("material/lesson/")
+  ) {
     return yield* getRuntimeCurriculumPage({
       locale,
       slug: cleanSlug,

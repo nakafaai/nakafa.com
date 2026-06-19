@@ -11,6 +11,7 @@ import type {
   GetContentRouteArgs,
   GetContentRouteArtifactPageArgs,
   GetContentRouteByContentIdArgs,
+  GetContentRouteBySourcePathArgs,
   ListContentRouteCountsArgs,
   ListContentRoutesByKindPrefixArgs,
   ListContentRoutesByParentArgs,
@@ -364,6 +365,25 @@ export async function getContentRouteByContentIdImpl(
   const route = await ctx.db
     .query("contentRoutes")
     .withIndex("by_content_id", (q) => q.eq("content_id", args.contentId))
+    .unique();
+
+  if (!route) {
+    return null;
+  }
+
+  return toRuntimeContentRoute(route);
+}
+
+/** Loads one concrete content route by source-owned material or article path. */
+export async function getContentRouteBySourcePathImpl(
+  ctx: QueryCtx,
+  args: GetContentRouteBySourcePathArgs
+) {
+  const route = await ctx.db
+    .query("contentRoutes")
+    .withIndex("by_locale_and_sourcePath", (q) =>
+      q.eq("locale", args.locale).eq("sourcePath", args.sourcePath)
+    )
     .unique();
 
   if (!route) {

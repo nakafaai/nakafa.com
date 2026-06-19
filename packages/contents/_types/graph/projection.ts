@@ -92,7 +92,7 @@ export function getExerciseQuestionRouteForNumber(
     return null;
   }
 
-  return joinRoute(projection.route, `question-${exerciseNumber}`);
+  return joinRoute(projection.route, `${exerciseNumber}`);
 }
 
 /** Decodes and parses a declared route projection with the graph domain error. */

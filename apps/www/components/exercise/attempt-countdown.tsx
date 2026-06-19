@@ -1,10 +1,5 @@
 "use client";
 
-import {
-  NumberFormat,
-  NumberFormatGroup,
-} from "@repo/design-system/components/ui/number-flow";
-
 interface CountdownProps {
   timer: {
     formatted: {
@@ -15,34 +10,18 @@ interface CountdownProps {
   };
 }
 
+/** Renders the attempt timer as stable tabular text for production pages. */
 export function Countdown({ timer }: CountdownProps) {
   const { formatted } = timer;
+  const hours = formatted.hours.toString().padStart(2, "0");
+  const minutes = formatted.minutes.toString().padStart(2, "0");
+  const seconds = formatted.seconds.toString().padStart(2, "0");
 
   return (
     <div className="pl-2">
-      <NumberFormatGroup>
-        <div className="flex items-baseline font-mono text-lg tabular-nums">
-          <NumberFormat
-            format={{ minimumIntegerDigits: 2 }}
-            trend={-1}
-            value={formatted.hours}
-          />
-          <NumberFormat
-            digits={{ 1: { max: 5 } }}
-            format={{ minimumIntegerDigits: 2 }}
-            prefix=":"
-            trend={-1}
-            value={formatted.minutes}
-          />
-          <NumberFormat
-            digits={{ 1: { max: 5 } }}
-            format={{ minimumIntegerDigits: 2 }}
-            prefix=":"
-            trend={-1}
-            value={formatted.seconds}
-          />
-        </div>
-      </NumberFormatGroup>
+      <time className="font-mono text-lg tabular-nums">
+        {hours}:{minutes}:{seconds}
+      </time>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import path from "node:path";
+import { postHogProxyKeys } from "@repo/analytics/keys";
 import { createPostHogProxyRewrites } from "@repo/analytics/posthog/config";
 import {
   config,
@@ -6,11 +7,17 @@ import {
   withAnalyzer,
   withMDX,
 } from "@repo/next-config";
+import { analyzeKeys } from "@repo/next-config/keys";
+import { createEnv } from "@t3-oss/env-nextjs";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
-import { env } from "@/env";
 import { AGENT_DISCOVERY_HEADERS } from "@/lib/agent-discovery";
 import { LLMS_CACHE_CONTROL } from "@/lib/llms/constants";
+
+const configEnv = createEnv({
+  extends: [analyzeKeys(), postHogProxyKeys()],
+  runtimeEnv: {},
+});
 
 const withNextIntl = createNextIntlPlugin(
   "../../packages/internationalization/src/request.ts"
@@ -68,7 +75,7 @@ function createAppRewrites() {
     // PostHog requires the specific static and array rewrites to come before the
     // catch-all analytics rewrite so asset cache headers are preserved.
     afterFiles: [
-      ...createPostHogProxyRewrites(env.POSTHOG_PROXY_HOST),
+      ...createPostHogProxyRewrites(configEnv.POSTHOG_PROXY_HOST),
       ...agentDiscoveryRewrites,
       // Keep canonical OG image routes out of the broad extension rewrites.
       // After a pass-through match, Next checks the localized dynamic route
@@ -203,6 +210,6 @@ const nextConfig = {
 } satisfies NextConfig;
 
 const analyzedConfig =
-  env.ANALYZE === "true" ? withAnalyzer(nextConfig) : nextConfig;
+  configEnv.ANALYZE === "true" ? withAnalyzer(nextConfig) : nextConfig;
 
 export default withMDX(withNextIntl(analyzedConfig));

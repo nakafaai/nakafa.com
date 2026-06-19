@@ -39,11 +39,11 @@ export function getExerciseQuestionNumberSegment(segment: string) {
   return isNumberSegment(questionNumber) ? questionNumber : null;
 }
 
-/** Returns the material practice question segment for a one-based exercise number. */
+/** Returns the material practice question source segment for a one-based exercise number. */
 export function getExerciseQuestionSegment(exerciseNumber: number) {
   if (!(Number.isSafeInteger(exerciseNumber) && exerciseNumber > 0)) {
     return null;
   }
 
-  return `question-${exerciseNumber}`;
+  return `${exerciseNumber}`;
 }

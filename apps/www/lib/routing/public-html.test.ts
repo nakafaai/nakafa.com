@@ -117,6 +117,11 @@ describe("public html route rejection", () => {
       { method: "GET", pathname: "/id/quran" },
       { method: "GET", pathname: "/en/articles" },
       { method: "GET", pathname: "/en/articles/politics" },
+      { method: "GET", pathname: "/id/quran/1.md" },
+      {
+        method: "GET",
+        pathname: "/en/articles/politics/nepotism-in-political-governance.md",
+      },
       { method: "POST", pathname: "/en/articles/politics/not-a-read-check" },
     ];
 
@@ -125,6 +130,7 @@ describe("public html route rejection", () => {
         Effect.runPromise(readSourceBackedHtmlRouteRejection(request))
       ).resolves.toBe(null);
     }
+    expect(runtimeMocks.getRuntimeContentRoute).not.toHaveBeenCalled();
   });
 
   it("rejects projected app routes that cannot render HTML", async () => {

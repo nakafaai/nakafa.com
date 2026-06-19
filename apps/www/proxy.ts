@@ -61,17 +61,6 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const sourceBackedRouteRejection = await Effect.runPromise(
-    readSourceBackedHtmlRouteRejection({
-      method: request.method,
-      pathname,
-    })
-  );
-
-  if (sourceBackedRouteRejection) {
-    return rewriteToContentNotFound(request, sourceBackedRouteRejection);
-  }
-
   const routeDecision = await Effect.runPromise(
     resolveLlmsProxyRoute({
       acceptHeader: request.headers.get("accept"),
@@ -86,6 +75,17 @@ export async function proxy(request: NextRequest) {
 
   if (routeDecision.kind === "content-not-found") {
     return rewriteToContentNotFound(request, routeDecision.locale);
+  }
+
+  const sourceBackedRouteRejection = await Effect.runPromise(
+    readSourceBackedHtmlRouteRejection({
+      method: request.method,
+      pathname,
+    })
+  );
+
+  if (sourceBackedRouteRejection) {
+    return rewriteToContentNotFound(request, sourceBackedRouteRejection);
   }
 
   const projectedRouteLocale = await Effect.runPromise(

@@ -38,7 +38,7 @@ export function RoleStepForm({
   }));
 
   if (isUserPending) {
-    return <Spinner className="mx-auto my-12" isLoading />;
+    return null;
   }
 
   return (

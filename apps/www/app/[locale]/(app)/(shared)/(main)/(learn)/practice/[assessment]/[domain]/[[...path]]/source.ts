@@ -22,9 +22,13 @@ export function isLocalizedQuestionSegment(
 
   const prefix = locale === "id" ? "soal-" : "question-";
   const numericSegment = segment.slice(prefix.length);
+  const questionNumber = Number.parseInt(numericSegment, 10);
 
   return (
-    segment.startsWith(prefix) && NUMERIC_SEGMENT_PATTERN.test(numericSegment)
+    segment.startsWith(prefix) &&
+    NUMERIC_SEGMENT_PATTERN.test(numericSegment) &&
+    questionNumber > 0 &&
+    questionNumber.toString() === numericSegment
   );
 }
 
@@ -49,12 +53,12 @@ export function readQuestionSourcePathParts(sourcePath: string) {
     notFound();
   }
 
-  const questionNumber = Number.parseInt(
-    questionSegment.replace("question-", ""),
-    10
-  );
+  const questionNumber = Number.parseInt(questionSegment, 10);
 
-  if (!Number.isFinite(questionNumber)) {
+  if (
+    !(Number.isSafeInteger(questionNumber) && questionNumber > 0) ||
+    questionNumber.toString() !== questionSegment
+  ) {
     notFound();
   }
 

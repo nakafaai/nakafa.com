@@ -795,6 +795,46 @@ describe("contents/queries/runtime", () => {
     expect(page.page.map((item) => item.route)).toEqual([topicRoute]);
   });
 
+  it("reads route catalog rows by source path while preserving public routes", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const sourcePath =
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/2";
+    const publicPath =
+      "latihan/snbt/pengetahuan-kuantitatif/tryout/2026/set-1/soal-2";
+
+    await t.mutation(async (ctx) => {
+      await ctx.db.insert("contentRoutes", {
+        ...contentRouteGraph("id", sourcePath),
+        authors: [],
+        contentHash: "question-route-hash",
+        kind: "exercise-question",
+        locale: "id",
+        markdown: true,
+        route: publicPath,
+        section: "material",
+        sourcePath,
+        syncedAt: NOW,
+        title: "Soal 2",
+      });
+    });
+
+    const route = await t.query(
+      api.contents.queries.runtime.getContentRouteBySourcePath,
+      {
+        locale: "id",
+        sourcePath,
+      }
+    );
+
+    expect(route).toEqual(
+      expect.objectContaining({
+        kind: "exercise-question",
+        route: publicPath,
+        sourcePath,
+      })
+    );
+  });
+
   it("reads source-owned public routes through indexed access patterns", async () => {
     const t = createConvexTestWithBetterAuth();
 
@@ -983,6 +1023,7 @@ function contentRoutePageItem(route: string) {
   };
 }
 
+/** Builds graph identity fields for routes that are valid runtime rows without public graph routes. */
 function detachedContentRouteGraph(route: string, token: string) {
   const graph = contentRouteGraph("id", route);
   const assetId = `asset:id:catalog:${token}`;

@@ -6,7 +6,10 @@ import {
   readPublicPracticeQuestionRouteByPath,
   readPublicPracticeQuestionRouteBySourcePath,
 } from "@repo/contents/_types/route/practice";
-import type { PublicContentRoute } from "@repo/contents/_types/route/schema";
+import type {
+  PublicContentRoute,
+  PublicPracticeQuestionRoute,
+} from "@repo/contents/_types/route/schema";
 import { locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
@@ -16,10 +19,7 @@ export type PracticeSetRoute = Extract<
   PublicContentRoute,
   { readonly kind: "exercise-set" }
 > & { readonly description: string };
-export type PracticeQuestionRoute = Extract<
-  PublicContentRoute,
-  { readonly kind: "exercise-question" }
->;
+export type PracticeQuestionRoute = PublicPracticeQuestionRoute;
 export type PracticeRoute = PracticeSetRoute | PracticeQuestionRoute;
 export type PublicPracticeRouteRows = readonly PracticeSetRoute[];
 
@@ -133,14 +133,12 @@ export function readPracticeQuestionRoute({
     return;
   }
 
-  const route = readPublicPracticeQuestionRouteByPath({
+  return readPublicPracticeQuestionRouteByPath({
     domains: MATERIAL_ROUTE_DOMAINS,
     locale,
     materials: MATERIAL_SOURCES,
     publicPath: `${setRoute.publicPath}/${questionSegment}`,
   });
-
-  return route && isPracticeQuestionRoute(route) ? route : undefined;
 }
 
 /** Checks whether one content route is an authored exercise set row. */
@@ -157,11 +155,4 @@ export function isPracticeSetRoute(
 /** Checks whether one content route is a practice set or question row. */
 function isPracticeRoute(route: PublicContentRoute): route is PracticeRoute {
   return route.kind === "exercise-set" || route.kind === "exercise-question";
-}
-
-/** Checks whether one content row is a projected exercise question row. */
-function isPracticeQuestionRoute(
-  route: PublicContentRoute
-): route is PracticeQuestionRoute {
-  return route.kind === "exercise-question";
 }

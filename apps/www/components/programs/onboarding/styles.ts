@@ -30,7 +30,7 @@ export function getOnboardingChoiceGridColumns(optionCount: number) {
 }
 
 export const onboardingChoiceCardVariants = cva(
-  "flex h-full w-full cursor-pointer flex-col justify-between rounded-xl border bg-card text-left shadow-sm transition-colors ease-out hover:border-primary/50 hover:bg-[color-mix(in_oklch,var(--primary)_1%,var(--background))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+  "flex h-full w-full cursor-pointer flex-col justify-between overflow-hidden rounded-xl border bg-card text-left shadow-sm transition-colors ease-out hover:border-primary/50 hover:bg-[color-mix(in_oklch,var(--primary)_1%,var(--background))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
   {
     variants: {
       selected: {

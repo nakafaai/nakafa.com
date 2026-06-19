@@ -70,7 +70,7 @@ describe("public practice routes", () => {
       publicPath:
         "practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question-9",
       sourcePath:
-        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-9",
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/9",
     });
     expect(
       Option.getOrNull(
@@ -84,13 +84,13 @@ describe("public practice routes", () => {
     ).toMatchObject({
       kind: "exercise-question",
       sourcePath:
-        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-9",
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/9",
     });
     expect(
       Option.getOrNull(
         Effect.runSync(
           findPublicContentRouteBySourcePath(
-            "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-9",
+            "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/9",
             "en"
           )
         )
@@ -103,7 +103,7 @@ describe("public practice routes", () => {
       Option.getOrNull(
         Effect.runSync(
           findPublicContentRouteBySourcePath(
-            "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-9",
+            "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/9",
             "id"
           )
         )
@@ -120,6 +120,7 @@ describe("public practice routes", () => {
       "latihan/snbt/pengetahuan-kuantitatif/review/2026/set-1/soal-1",
       "latihan/snbt/pengetahuan-kuantitatif/tryout/2026/set-1/question-1",
       "latihan/snbt/pengetahuan-kuantitatif/tryout/2026/set-1/soal-0",
+      "latihan/snbt/pengetahuan-kuantitatif/tryout/2026/set-1/soal-01",
     ];
 
     for (const path of invalidPaths) {
@@ -131,7 +132,7 @@ describe("public practice routes", () => {
       Option.isNone(
         Effect.runSync(
           findPublicContentRouteBySourcePath(
-            "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-0",
+            "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/0",
             "en"
           )
         )
@@ -149,7 +150,25 @@ describe("public practice routes", () => {
         locale: "en",
         materials: MATERIAL_SOURCES,
         sourcePath:
-          "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-9",
+          "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/9",
+      })
+    ).toBeUndefined();
+    expect(
+      readPublicPracticeQuestionRouteBySourcePath({
+        domains: MATERIAL_ROUTE_DOMAINS,
+        locale: "en",
+        materials: MATERIAL_SOURCES,
+        sourcePath:
+          "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
+      })
+    ).toBeUndefined();
+    expect(
+      readPublicPracticeQuestionRouteBySourcePath({
+        domains: MATERIAL_ROUTE_DOMAINS,
+        locale: "en",
+        materials: MATERIAL_SOURCES,
+        sourcePath:
+          "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/not-a-question",
       })
     ).toBeUndefined();
   });
@@ -200,7 +219,7 @@ describe("public practice routes", () => {
       Option.isNone(
         Effect.runSync(
           findPublicContentRouteBySourcePath(
-            "material/practice/assessment/snbt/mathematics/drill/set-a/question-0",
+            "material/practice/assessment/snbt/mathematics/drill/set-a/0",
             "en",
             { materials: [practiceWithoutYear] }
           )

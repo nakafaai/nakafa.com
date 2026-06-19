@@ -65,7 +65,7 @@ describe("source route projection", () => {
     const groupRoute =
       "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026";
     const setRoute = `${groupRoute}/set-1`;
-    const questionRoute = `${setRoute}/question-7`;
+    const questionRoute = `${setRoute}/7`;
 
     expect(getSourceRouteProjectionForRoute(groupRoute)).toMatchObject({
       exercise: {
@@ -87,7 +87,7 @@ describe("source route projection", () => {
     expect(getSourceRouteProjectionForRoute(questionRoute)).toMatchObject({
       exercise: {
         groupRoute,
-        questionSegment: "question-7",
+        questionSegment: "7",
         setRoute,
         setSegment: "set-1",
       },
@@ -183,7 +183,7 @@ describe("source route projection", () => {
     expect(getExerciseQuestionNumberSegment("question-x")).toBeNull();
     expect(getExerciseQuestionNumberSegment("7")).toBe("7");
     expect(getExerciseQuestionSegment(0)).toBeNull();
-    expect(getExerciseQuestionSegment(7)).toBe("question-7");
+    expect(getExerciseQuestionSegment(7)).toBe("7");
   });
 
   it("keeps declared kind validation next to the projection spec", () => {

@@ -1,6 +1,7 @@
 import { ExercisesMaterialSchema } from "@repo/contents/_types/assessment/material";
 import { ExercisesTypeSchema } from "@repo/contents/_types/assessment/type";
 import type { Locale } from "@repo/contents/_types/content";
+import { getExerciseQuestionNumberSegment } from "@repo/contents/_types/graph/route";
 import { MATERIAL_ROUTE_DOMAINS } from "@repo/contents/_types/material/domain";
 import type {
   MaterialSource,
@@ -21,8 +22,8 @@ import {
   readNamespaceSegment,
 } from "@repo/contents/_types/route/path";
 import {
-  type PublicContentRoute,
-  PublicContentRouteSchema,
+  type PublicPracticeQuestionRoute,
+  PublicPracticeQuestionRouteSchema,
 } from "@repo/contents/_types/route/schema";
 import { PublicRouteSegmentSchema } from "@repo/contents/_types/route/segment";
 import { locales } from "@repo/utilities/locales";
@@ -150,7 +151,7 @@ export function readPublicPracticeQuestionRouteByPath({
   locale: Locale;
   materials: NonNullable<RouteInputs["materials"]>;
   publicPath: string;
-}): PublicContentRoute | undefined {
+}): PublicPracticeQuestionRoute | undefined {
   const pathSegments = publicPath.split("/").filter(Boolean);
   const namespace = readNamespaceSegment("exercises", locale);
 
@@ -213,7 +214,7 @@ export function readPublicPracticeQuestionRouteByPath({
           material.assetRoot,
           getPracticeSourceGroupSlug(group),
           set.slug,
-          `question-${questionNumber}`,
+          questionNumber.toString(),
         ].join("/");
 
         return decodePracticeQuestionRoute({
@@ -250,7 +251,7 @@ export function readPublicPracticeQuestionRouteBySourcePath({
   locale: Locale;
   materials: NonNullable<RouteInputs["materials"]>;
   sourcePath: string;
-}): PublicContentRoute | undefined {
+}): PublicPracticeQuestionRoute | undefined {
   for (const material of materials) {
     if (!isPracticeMaterialSource(material)) {
       continue;
@@ -271,7 +272,7 @@ export function readPublicPracticeQuestionRouteBySourcePath({
       }
 
       for (const set of group.sets) {
-        const questionNumber = readQuestionNumber(pathSegments[2], "en");
+        const questionNumber = readSourceQuestionNumber(pathSegments[2]);
 
         if (
           pathSegments[1] !== set.slug ||
@@ -381,14 +382,34 @@ function readQuestionNumber(segment: string | undefined, locale: Locale) {
     return null;
   }
 
-  const value = Number.parseInt(segment.slice(prefix.length), 10);
+  const rawValue = segment.slice(prefix.length);
+  const value = Number.parseInt(rawValue, 10);
 
-  return Number.isInteger(value) && value > 0 ? value : null;
+  return Number.isInteger(value) && value > 0 && value.toString() === rawValue
+    ? value
+    : null;
+}
+
+/** Parses source-owned exercise question segments from synced material rows. */
+function readSourceQuestionNumber(segment: string | undefined) {
+  if (!segment) {
+    return null;
+  }
+
+  const rawValue = getExerciseQuestionNumberSegment(segment);
+
+  if (!rawValue) {
+    return null;
+  }
+
+  const value = Number.parseInt(rawValue, 10);
+
+  return value > 0 ? value : null;
 }
 
 /** Decodes a virtual practice question row through the public route schema. */
 function decodePracticeQuestionRoute(route: unknown) {
   return Option.getOrUndefined(
-    Schema.decodeUnknownOption(PublicContentRouteSchema)(route)
+    Schema.decodeUnknownOption(PublicPracticeQuestionRouteSchema)(route)
   );
 }

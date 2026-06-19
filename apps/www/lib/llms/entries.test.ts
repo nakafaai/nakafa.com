@@ -111,7 +111,7 @@ beforeEach(() => {
 
     if (
       route ===
-      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-1"
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/1"
     ) {
       return Effect.succeed({
         description: "Try-out question",
@@ -140,7 +140,7 @@ const routeRows = [
   }),
   routeRow({
     route:
-      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-1",
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/1",
     section: "material",
   }),
   routeRow({

@@ -62,6 +62,7 @@ export function ExerciseAttempt({
         "sticky top-18 z-1 mb-20 lg:top-2",
         hidden && "pointer-events-none"
       )}
+      data-markdown-ignore
     >
       <LazyMotion features={domAnimation} strict>
         <m.div

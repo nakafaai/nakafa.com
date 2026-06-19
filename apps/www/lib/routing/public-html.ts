@@ -25,6 +25,7 @@ const PROJECTED_ROUTE_SURFACE_KEYS = new Set([
   "exercises",
   "subject",
 ]);
+const MARKDOWN_EXTENSION_PATTERN = /\.mdx?$/;
 const QURAN_SURAH_COUNT = 114;
 
 /**
@@ -219,6 +220,10 @@ function readMissingHtmlContentLocale({
   const [locale, root, ...segments] = pathname.split("/").filter(Boolean);
 
   if (!(root && hasLocale(routing.locales, locale))) {
+    return Effect.succeed(null);
+  }
+
+  if (MARKDOWN_EXTENSION_PATTERN.test(pathname)) {
     return Effect.succeed(null);
   }
 

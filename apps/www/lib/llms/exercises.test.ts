@@ -158,8 +158,51 @@ describe("llms exercise markdown", () => {
 
     expect(text).toContain("Quantitative Knowledge Set 1");
     expect(text).toContain("Question 3");
-    expect(text).toContain("- [x] A. Fallback");
+    expect(text).toContain("- A. Fallback");
+    expect(text).not.toContain("### Answer & Explanation");
+    expect(text).not.toContain("Answer raw");
     expect(text).not.toContain("## Exercise 2");
+  });
+
+  it("renders public exercise markdown with visible math and link text", async () => {
+    mockGetRuntimeExerciseSetPage.mockReturnValue(
+      Effect.succeed({
+        exercises: [
+          {
+            ...exerciseWithLocalizedChoices,
+            choices: {
+              en: [
+                {
+                  label:
+                    'paragraph $$1$$ and <InlineMath math="50\\text{ years}" />',
+                  value: false,
+                },
+              ],
+            },
+            number: 4,
+            question: {
+              metadata: {},
+              raw: 'Read paragraph <InlineMath math="1" /> with $x + y$.\n\n<BlockMath math="x = 2" />\n\n(Adapted from: https://issuu.com/naeyc/docs/example)',
+            },
+          },
+        ],
+        title: "English Language Set 1",
+      })
+    );
+
+    const text = await getCachedLlmsExerciseText({
+      cleanSlug: `${validSetPath}/question-4`,
+      locale: "en",
+    });
+
+    expect(text).toContain("Read paragraph 1 with x + y.");
+    expect(text).toContain("x = 2");
+    expect(text).toContain(
+      "(Adapted from: [issuu.com](https://issuu.com/naeyc/docs/example))"
+    );
+    expect(text).toContain("- paragraph 1 and 50 years");
+    expect(text).not.toContain("InlineMath");
+    expect(text).not.toContain("$$1$$");
   });
 
   it("uses the exercise title when rendering one titled exercise", async () => {

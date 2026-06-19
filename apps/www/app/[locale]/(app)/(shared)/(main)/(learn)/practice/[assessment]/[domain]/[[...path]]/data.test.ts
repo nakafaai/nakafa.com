@@ -76,7 +76,7 @@ describe("practice route data", () => {
 
     const question = Effect.runSync(
       findPublicContentRouteBySourcePath(
-        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-9",
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/9",
         "en"
       )
     );
@@ -328,6 +328,7 @@ describe("practice route data", () => {
     expect(isLocalizedQuestionSegment("en", undefined)).toBe(false);
     expect(isLocalizedQuestionSegment("en", "soal-1")).toBe(false);
     expect(isLocalizedQuestionSegment("id", "soal-one")).toBe(false);
+    expect(isLocalizedQuestionSegment("en", "question-01")).toBe(false);
     expect(isLocalizedQuestionSegment("id", "soal-1")).toBe(true);
     expect(isLocalizedQuestionSegment("en", "question-1")).toBe(true);
     expect(
@@ -344,7 +345,7 @@ describe("practice route data", () => {
     ).toBe("drill");
     expect(
       readQuestionSourcePathParts(
-        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-9"
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/9"
       )
     ).toEqual({
       questionNumber: 9,

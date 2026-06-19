@@ -18,31 +18,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      AI_GATEWAY_API_KEY: ci-agent-docs
-      AI_SDK_DEVTOOLS: "false"
-      AUTH_GOOGLE_ID: ci-agent-docs
-      AUTH_GOOGLE_SECRET: ci-agent-docs
-      BETTER_AUTH_SECRET: ci-agent-docs
-      CONVEX_SITE_URL: https://dapper-antelope-269.convex.site
-      CONVEX_URL: https://dapper-antelope-269.convex.cloud
-      ELEVENLABS_API_KEY: ci-agent-docs
-      FIRECRAWL_API_KEY: ci-agent-docs
       INTERNAL_CONTENT_API_KEY: ci-agent-docs
-      MATH_CAS_API_KEY: ci-agent-docs
-      NEXT_PUBLIC_API_URL: https://api.nakafa.com
       NEXT_PUBLIC_APP_URL: http://localhost:3000
-      NEXT_PUBLIC_CAS_URL: https://cas.nakafa.com
       NEXT_PUBLIC_CONVEX_SITE_URL: https://dapper-antelope-269.convex.site
       NEXT_PUBLIC_CONVEX_URL: https://dapper-antelope-269.convex.cloud
-      NEXT_PUBLIC_GITHUB_URL: /nakafaai/nakafa.com
       NEXT_PUBLIC_MCP_URL: https://mcp.nakafa.com
-      NEXT_PUBLIC_POLAR_SERVER: production
       NEXT_PUBLIC_POSTHOG_KEY: phc_agent_docs_ci
       NEXT_PUBLIC_POSTHOG_UI_HOST: https://eu.posthog.com
-      NEXT_PUBLIC_VERSION: agent-docs-ci
-      OPENWEATHER_API_KEY: ci-agent-docs
-      POLAR_ACCESS_TOKEN: ci-agent-docs
-      POLAR_WEBHOOK_SECRET: ci-agent-docs
       POSTHOG_PROXY_HOST: https://t.nakafa.com
       SITE_URL: http://localhost:3000
     steps:

@@ -8,7 +8,10 @@ import {
   selfSelectableUserRoles,
 } from "@repo/backend/convex/users/roles";
 
-const roleIcons: Record<SelfSelectableUserRole, typeof TeacherIcon> = {
+export const roleIconByValue: Record<
+  SelfSelectableUserRole,
+  typeof TeacherIcon
+> = {
   parent: ChildIcon,
   student: StudentIcon,
   teacher: TeacherIcon,
@@ -16,6 +19,6 @@ const roleIcons: Record<SelfSelectableUserRole, typeof TeacherIcon> = {
 
 /** Self-selectable user roles with UI-local icon metadata. */
 export const roles = selfSelectableUserRoles.map((value) => ({
-  icon: roleIcons[value],
+  icon: roleIconByValue[value],
   value,
 }));

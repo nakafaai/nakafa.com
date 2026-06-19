@@ -150,6 +150,17 @@ describe("proxy", () => {
     );
   });
 
+  it("lets explicit markdown suffixes reach the llms route adapter", async () => {
+    const response = await proxy(
+      new NextRequest("http://localhost:3000/en/quran/1.md")
+    );
+
+    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
+    expect(response.headers.get("x-middleware-rewrite")).toBe(
+      "http://localhost:3000/llms.mdx/en/quran/1"
+    );
+  });
+
   it("returns real 404 responses for unsupported markdown requests", async () => {
     mockGetRuntimeContentRoute.mockReturnValueOnce(Effect.succeed(null));
 

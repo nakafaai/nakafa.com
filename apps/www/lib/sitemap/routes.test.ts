@@ -296,7 +296,7 @@ const routeRows = [
       "practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question-1",
     section: "material",
     sourcePath:
-      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-1",
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/1",
   }),
   routeRow({
     locale: "en",

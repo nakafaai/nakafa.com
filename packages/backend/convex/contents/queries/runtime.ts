@@ -7,6 +7,7 @@ import { getArticlePageImpl } from "@repo/backend/convex/contents/runtime/articl
 import {
   getContentRouteArtifactPageImpl,
   getContentRouteByContentIdImpl,
+  getContentRouteBySourcePathImpl,
   getContentRouteImpl,
   getPublicRouteByPathImpl,
   listContentRouteCountsImpl,
@@ -47,6 +48,8 @@ import {
   getContentRouteArtifactPageReturnValidator,
   getContentRouteByContentIdArgsValidator,
   getContentRouteByContentIdReturnValidator,
+  getContentRouteBySourcePathArgsValidator,
+  getContentRouteBySourcePathReturnValidator,
   getContentRouteReturnValidator,
   getCurriculumPageArgsValidator,
   getCurriculumPageReturnValidator,
@@ -205,6 +208,13 @@ export const getContentRouteByContentId = query({
   args: getContentRouteByContentIdArgsValidator,
   returns: getContentRouteByContentIdReturnValidator,
   handler: getContentRouteByContentIdImpl,
+});
+
+/** Loads one concrete content route by source-owned material or article path. */
+export const getContentRouteBySourcePath = query({
+  args: getContentRouteBySourcePathArgsValidator,
+  returns: getContentRouteBySourcePathReturnValidator,
+  handler: getContentRouteBySourcePathImpl,
 });
 
 /** Lists article API rows matching one route prefix. */

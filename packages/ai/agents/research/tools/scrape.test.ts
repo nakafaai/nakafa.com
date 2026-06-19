@@ -17,7 +17,7 @@ const selectRelevantContent = vi.hoisted(() =>
 );
 
 vi.mock("@repo/ai/config/firecrawl", () => ({
-  firecrawlApp,
+  readFirecrawlApp: () => firecrawlApp,
 }));
 
 vi.mock("node:dns/promises", () => ({

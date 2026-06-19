@@ -27,6 +27,10 @@ const ContentRouteArgsSchema = Schema.Struct({
   locale: LocaleSchema,
   route: Schema.String,
 });
+const SourcePathArgsSchema = Schema.Struct({
+  locale: LocaleSchema,
+  sourcePath: Schema.String,
+});
 const ContentIdArgsSchema = Schema.Struct({
   contentId: Schema.String,
 });
@@ -42,7 +46,7 @@ const detachedSetRef = detachedExerciseRef(
 );
 const detachedQuestionRef = detachedExerciseRef(
   "asset:id:catalog:exercise:set-1:q2",
-  `${setRoute}/question-2`
+  `${setRoute}/2`
 );
 
 beforeEach(() => {
@@ -61,7 +65,7 @@ describe("readNakafaExercise", () => {
     );
     const questionRef = readNakafaContentRefFixture(
       "id",
-      `${setRoute}/question-2`,
+      `${setRoute}/2`,
       "material"
     );
     const graphQuestion = await Effect.runPromise(
@@ -83,7 +87,7 @@ describe("readNakafaExercise", () => {
       detachedQuestionRef.route
     );
     expect(Option.getOrUndefined(explicitQuestion)?.url).toBe(
-      detachedQuestionRef.url
+      "https://nakafa.com/id/latihan/snbt/pengetahuan-kuantitatif/tryout/2026/set-1/soal-2"
     );
     expect(Option.getOrUndefined(graphQuestion)?.exercise_number).toBe(2);
     expect(Option.getOrUndefined(markdown)?.text).toContain("- [x] A. Benar");
@@ -121,7 +125,7 @@ describe("readNakafaExercise", () => {
       detachedQuestionRef.route
     );
     expect(Option.getOrUndefined(selectedQuestion)?.url).toBe(
-      detachedQuestionRef.url
+      "https://nakafa.com/id/latihan/snbt/pengetahuan-kuantitatif/tryout/2026/set-1/soal-2"
     );
     expect(Option.getOrUndefined(question)?.exercise_number).toBe(2);
     expect(Option.getOrUndefined(matchingQuestion)?.content_id).toBe(
@@ -258,6 +262,13 @@ function readRuntimeFixture(
 
   if (
     getFunctionName(query) ===
+    getFunctionName(api.contents.queries.runtime.getContentRouteBySourcePath)
+  ) {
+    return Promise.resolve(readContentRouteBySourcePath(args));
+  }
+
+  if (
+    getFunctionName(query) ===
     getFunctionName(api.contents.queries.runtime.getExerciseSetPage)
   ) {
     return Promise.resolve(readExerciseSetPage(args));
@@ -288,13 +299,33 @@ function readContentRoute(args: unknown) {
   };
 }
 
+/** Builds one source-path lookup fixture from the persisted route catalog. */
+function readContentRouteBySourcePath(args: unknown) {
+  const input = Schema.decodeUnknownSync(SourcePathArgsSchema)(args);
+  const refs = [detachedSetRef, detachedQuestionRef];
+  const ref = refs.find(
+    (item) => item.locale === input.locale && item.route === input.sourcePath
+  );
+
+  if (!ref) {
+    return null;
+  }
+
+  return {
+    ...ref,
+    route: `latihan/snbt/pengetahuan-kuantitatif/tryout/2026/set-1/soal-${input.sourcePath.split("/").at(-1)}`,
+    sourcePath: ref.route,
+    title: ref.route,
+  };
+}
+
 /** Builds one route lookup fixture from a graph asset ID. */
 function readContentRouteByContentId(args: unknown) {
   const input = Schema.decodeUnknownSync(ContentIdArgsSchema)(args);
   const setRef = readNakafaContentRefFixture("id", setRoute, "material");
   const questionRef = readNakafaContentRefFixture(
     "id",
-    `${setRoute}/question-2`,
+    `${setRoute}/2`,
     "material"
   );
   const articleRef = readNakafaContentRefFixture(

@@ -430,6 +430,20 @@ export const getContentRouteByContentIdReturnValidator = nullable(
   runtimeContentRouteValidator
 );
 
+const getContentRouteBySourcePathArgsObjectValidator = v.object({
+  locale: localeValidator,
+  sourcePath: v.string(),
+});
+export const getContentRouteBySourcePathArgsValidator =
+  getContentRouteBySourcePathArgsObjectValidator.fields;
+export type GetContentRouteBySourcePathArgs = Infer<
+  typeof getContentRouteBySourcePathArgsObjectValidator
+>;
+
+export const getContentRouteBySourcePathReturnValidator = nullable(
+  runtimeContentRouteValidator
+);
+
 export const listArticleApiContentPageArgsValidator = {
   cursor: v.union(v.string(), v.null()),
   limit: v.number(),

@@ -2,5 +2,7 @@ url: http://localhost:3000
 options:
   canonicalOrigin: https://nakafa.com
   maxLinksToTest: 50
+  parityExclusions:
+    - .katex-mathml
   requestTimeout: 20000
   samplingStrategy: deterministic

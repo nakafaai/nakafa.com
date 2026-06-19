@@ -57,6 +57,14 @@ const PublicContentRouteBaseSchema = Schema.extend(
   })
 );
 
+export const PublicPracticeQuestionRouteSchema = Schema.extend(
+  Schema.extend(PublicContentRouteBaseSchema, PublicRouteParentSchema),
+  Schema.Struct({ kind: Schema.Literal("exercise-question") })
+);
+export type PublicPracticeQuestionRoute = SchemaType<
+  typeof PublicPracticeQuestionRouteSchema
+>;
+
 export const PublicContentRouteSchema = Schema.Union(
   Schema.extend(
     PublicContentRouteBaseSchema,
@@ -70,10 +78,7 @@ export const PublicContentRouteSchema = Schema.Union(
     Schema.extend(PublicContentRouteBaseSchema, PublicRouteParentSchema),
     Schema.Struct({ kind: Schema.Literal("exercise-set") })
   ),
-  Schema.extend(
-    Schema.extend(PublicContentRouteBaseSchema, PublicRouteParentSchema),
-    Schema.Struct({ kind: Schema.Literal("exercise-question") })
-  )
+  PublicPracticeQuestionRouteSchema
 );
 
 export type PublicContentRoute = SchemaType<typeof PublicContentRouteSchema>;

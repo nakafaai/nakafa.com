@@ -9,7 +9,7 @@ const firecrawlApp = vi.hoisted(() => ({
 }));
 
 vi.mock("@repo/ai/config/firecrawl", () => ({
-  firecrawlApp,
+  readFirecrawlApp: () => firecrawlApp,
 }));
 
 vi.mock("@repo/ai/lib/selection", () => ({

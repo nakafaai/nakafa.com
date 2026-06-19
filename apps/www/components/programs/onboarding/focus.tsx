@@ -59,7 +59,7 @@ export function FocusStepForm({
     : "";
 
   if (isUserPending) {
-    return <Spinner className="mx-auto my-12" isLoading />;
+    return null;
   }
 
   if (!role) {
