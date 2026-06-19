@@ -116,6 +116,7 @@ export function readPracticeSourceSetParts(sourcePath: string) {
   }
 
   return {
+    category: exercise.categorySegment,
     ...readPracticeSourceGroupIdentity(group),
     material: parsedMaterial.value,
     type: parsedType.value,

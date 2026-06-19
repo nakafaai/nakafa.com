@@ -75,6 +75,7 @@ describe("practice source route identity", () => {
         "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1"
       )
     ).toEqual({
+      category: "high-school",
       exerciseType: "try-out",
       material: "quantitative-knowledge",
       type: "snbt",

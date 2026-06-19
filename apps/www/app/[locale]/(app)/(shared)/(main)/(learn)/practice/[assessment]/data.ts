@@ -1,3 +1,4 @@
+import { listAssessments } from "@repo/contents/_types/assessment/registry";
 import { readPathWithoutNamespace } from "@repo/contents/_types/route/path";
 import {
   readPublicPracticeAssessmentPath,
@@ -25,6 +26,7 @@ export interface PracticeProgramData {
   domains: PracticeProgramDomain[];
   locale: Locale;
   publicPath: string;
+  sourceCategory: ReturnType<typeof readExerciseSetSourceParts>["category"];
   sourceType: ReturnType<typeof readExerciseSetSourceParts>["type"];
 }
 
@@ -73,9 +75,14 @@ export async function getPracticeProgramData(
   return {
     alternatePaths: readPracticeProgramAlternatePaths(sourceParts.type, routes),
     assessmentPath: `/${locale}/${publicPath}`,
-    domains: readPracticeProgramDomains(locale, programRoutes),
+    domains: readPracticeProgramDomains(
+      locale,
+      programRoutes,
+      sourceParts.type
+    ),
     locale,
     publicPath,
+    sourceCategory: sourceParts.category,
     sourceType: sourceParts.type,
   };
 }
@@ -83,7 +90,8 @@ export async function getPracticeProgramData(
 /** Reads one title-only domain row for each practice domain under a program root. */
 function readPracticeProgramDomains(
   locale: Locale,
-  routes: readonly PracticeSetRoute[]
+  routes: readonly PracticeSetRoute[],
+  sourceType: PracticeProgramData["sourceType"]
 ) {
   const domainsByPath = new Map<string, PracticeProgramDomain>();
 
@@ -102,7 +110,37 @@ function readPracticeProgramDomains(
     });
   }
 
-  return Array.from(domainsByPath.values());
+  const materialOrder = readPracticeProgramMaterialOrder(sourceType);
+
+  return Array.from(domainsByPath.values()).sort(
+    (left, right) =>
+      materialOrder.indexOf(left.sourceMaterial) -
+      materialOrder.indexOf(right.sourceMaterial)
+  );
+}
+
+/** Reads assessment-owned practice domain order from material mappings. */
+function readPracticeProgramMaterialOrder(
+  sourceType: PracticeProgramData["sourceType"]
+) {
+  const materialKeyPrefix = `practice.assessment.${sourceType}.`;
+  const sourceMaterials: string[] = [];
+
+  for (const assessment of listAssessments()) {
+    for (const node of assessment.nodes) {
+      for (const materialKey of node.materialKeys) {
+        if (!materialKey.startsWith(materialKeyPrefix)) {
+          continue;
+        }
+
+        const sourceMaterial = materialKey.slice(materialKeyPrefix.length);
+
+        sourceMaterials.push(sourceMaterial);
+      }
+    }
+  }
+
+  return sourceMaterials;
 }
 
 /** Reads localized practice program root alternates from projected sibling rows. */

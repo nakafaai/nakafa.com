@@ -1,5 +1,17 @@
 // @vitest-environment node
 
+import {
+  AbsoluteIcon,
+  BookEditIcon,
+  Brain02Icon,
+  ChatQuestionIcon,
+  File01Icon,
+  LanguageSkillIcon,
+  PuzzleIcon,
+  SwatchIcon,
+} from "@hugeicons/core-free-icons";
+import { getCategoryIcon } from "@repo/contents/_lib/assessment/icons";
+import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 import { describe, expect, it } from "vitest";
 
 describe("practice program route data", () => {
@@ -14,20 +26,51 @@ describe("practice program route data", () => {
       assessmentPath: "/id/latihan/snbt",
       locale: "id",
       publicPath: "latihan/snbt",
+      sourceCategory: "high-school",
       sourceType: "snbt",
     });
-    expect(data.domains).toEqual(
-      expect.arrayContaining([
-        {
-          href: "/id/latihan/snbt/pengetahuan-kuantitatif",
-          sourceMaterial: "quantitative-knowledge",
-        },
-        {
-          href: "/id/latihan/snbt/penalaran-matematika",
-          sourceMaterial: "mathematical-reasoning",
-        },
-      ])
-    );
+    expect(getCategoryIcon(data.sourceCategory)).toBe(SwatchIcon);
+    expect(data.domains).toEqual([
+      {
+        href: "/id/latihan/snbt/pengetahuan-kuantitatif",
+        sourceMaterial: "quantitative-knowledge",
+      },
+      {
+        href: "/id/latihan/snbt/penalaran-matematika",
+        sourceMaterial: "mathematical-reasoning",
+      },
+      {
+        href: "/id/latihan/snbt/penalaran-umum",
+        sourceMaterial: "general-reasoning",
+      },
+      {
+        href: "/id/latihan/snbt/bahasa-indonesia",
+        sourceMaterial: "indonesian-language",
+      },
+      {
+        href: "/id/latihan/snbt/bahasa-inggris",
+        sourceMaterial: "english-language",
+      },
+      {
+        href: "/id/latihan/snbt/pengetahuan-umum",
+        sourceMaterial: "general-knowledge",
+      },
+      {
+        href: "/id/latihan/snbt/literasi-membaca-menulis",
+        sourceMaterial: "reading-and-writing-skills",
+      },
+    ]);
+    expect(
+      data.domains.map((domain) => getMaterialIcon(domain.sourceMaterial))
+    ).toEqual([
+      AbsoluteIcon,
+      PuzzleIcon,
+      Brain02Icon,
+      ChatQuestionIcon,
+      LanguageSkillIcon,
+      BookEditIcon,
+      File01Icon,
+    ]);
     expect(data.alternatePaths).toEqual(
       expect.arrayContaining([
         { locale: "id", publicPath: "latihan/snbt" },

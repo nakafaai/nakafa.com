@@ -1,4 +1,4 @@
-import { TestTubeIcon } from "@hugeicons/core-free-icons";
+import { getCategoryIcon } from "@repo/contents/_lib/assessment/icons";
 import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
@@ -99,7 +99,7 @@ export default async function Page({ params }: PracticeProgramPageProps) {
         <LayoutMaterialContent>
           <HeaderContent
             description={description}
-            icon={TestTubeIcon}
+            icon={getCategoryIcon(data.sourceCategory)}
             title={title}
           />
           <p className="sr-only">
