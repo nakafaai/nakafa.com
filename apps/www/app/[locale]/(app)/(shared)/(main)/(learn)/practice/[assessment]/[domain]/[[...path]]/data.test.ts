@@ -1,5 +1,7 @@
 // @vitest-environment node
 
+import { AbsoluteIcon } from "@hugeicons/core-free-icons";
+import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 import { findPublicContentRouteBySourcePath } from "@repo/contents/_types/route/content";
 import { PublicRoutePathSchema } from "@repo/contents/_types/route/segment";
 import { Effect, Option, Schema } from "effect";
@@ -59,6 +61,8 @@ describe("practice route data", () => {
     expect(domain.publicPath).toBe("practice/snbt/quantitative-knowledge");
     expect(domain.assessmentPath).toBe("/en/practice/snbt");
     expect(domain.pagePath).toBe("/en/practice/snbt/quantitative-knowledge");
+    expect(domain.sourceMaterial).toBe("quantitative-knowledge");
+    expect(getMaterialIcon(domain.sourceMaterial)).toBe(AbsoluteIcon);
     expect(domain.groups[0]?.material).toMatchObject({
       title: "Try Out 2026",
       items: expect.arrayContaining([

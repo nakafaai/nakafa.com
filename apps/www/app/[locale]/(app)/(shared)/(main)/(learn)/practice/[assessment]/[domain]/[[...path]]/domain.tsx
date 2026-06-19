@@ -1,3 +1,4 @@
+import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 import { slugify } from "@repo/design-system/lib/utils";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
@@ -55,6 +56,7 @@ export async function PracticeDomainPage({
       <LayoutMaterial>
         <LayoutMaterialContent>
           <HeaderContent
+            icon={getMaterialIcon(data.sourceMaterial)}
             link={{ href: data.assessmentPath, label: t(data.sourceType) }}
             title={title}
           />
