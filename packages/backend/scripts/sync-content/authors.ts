@@ -37,11 +37,11 @@ export const collectAllAuthorNames = Effect.fn("sync.collectAllAuthorNames")(
         ? `articles/**/${options.locale}.mdx`
         : "articles/**/*.mdx",
       options.locale
-        ? `curriculum/**/${options.locale}.mdx`
-        : "curriculum/**/*.mdx",
+        ? `material/lesson/**/${options.locale}.mdx`
+        : "material/lesson/**/*.mdx",
       options.locale
-        ? `assessment/**/_question/${options.locale}.mdx`
-        : "assessment/**/_question/*.mdx",
+        ? `material/practice/**/question.${options.locale}.mdx`
+        : "material/practice/**/question.*.mdx",
     ];
 
     for (const pattern of patterns) {

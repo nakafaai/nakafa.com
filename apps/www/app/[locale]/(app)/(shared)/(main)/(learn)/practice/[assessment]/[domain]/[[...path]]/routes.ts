@@ -3,6 +3,7 @@ import { MATERIAL_SOURCES } from "@repo/contents/_types/material/source";
 import { listPublicContentRoutes } from "@repo/contents/_types/route/content";
 import { readPathWithoutNamespace } from "@repo/contents/_types/route/path";
 import {
+  readPublicPracticeQuestionNumber,
   readPublicPracticeQuestionRouteByPath,
   readPublicPracticeQuestionRouteBySourcePath,
 } from "@repo/contents/_types/route/practice";
@@ -13,7 +14,6 @@ import type {
 import { locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
-import { isLocalizedQuestionSegment } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/practice/[assessment]/[domain]/[[...path]]/source";
 
 export type PracticeSetRoute = Extract<
   PublicContentRoute,
@@ -23,19 +23,22 @@ export type PracticeQuestionRoute = PublicPracticeQuestionRoute;
 export type PracticeRoute = PracticeSetRoute | PracticeQuestionRoute;
 export type PublicPracticeRouteRows = readonly PracticeSetRoute[];
 
-/**
- * Canonical practice set route rows from the public content projection.
- *
- * Next statically prerenders practice pages, so Server Components must read
- * plain route data instead of starting an Effect runtime during prerender.
- * Virtual question routes are derived from the same set rows and material
- * registries.
- */
-export const PRACTICE_ROUTES: PublicPracticeRouteRows = Effect.runSync(
-  Effect.map(listPublicContentRoutes(), (routes) =>
-    routes.filter(isPracticeSetRoute)
-  )
-);
+let practiceRouteCache: PublicPracticeRouteRows | undefined;
+
+/** Lazily decodes canonical practice set rows at the Next framework boundary. */
+export function readPracticeRoutes(): PublicPracticeRouteRows {
+  if (practiceRouteCache) {
+    return practiceRouteCache;
+  }
+
+  practiceRouteCache = Effect.runSync(
+    Effect.map(listPublicContentRoutes(), (routes) =>
+      routes.filter(isPracticeSetRoute)
+    )
+  );
+
+  return practiceRouteCache;
+}
 
 /**
  * Reads localized alternate rows for a concrete practice set or question.
@@ -123,7 +126,10 @@ export function readPracticeQuestionRoute({
 }) {
   const questionSegment = path.at(-1);
 
-  if (!isLocalizedQuestionSegment(locale, questionSegment)) {
+  if (
+    readPublicPracticeQuestionNumber({ locale, segment: questionSegment }) ===
+    null
+  ) {
     return;
   }
 

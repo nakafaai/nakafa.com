@@ -5,12 +5,11 @@ import { PublicRoutePathSchema } from "@repo/contents/_types/route/segment";
 import { Effect, Option, Schema } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  PRACTICE_ROUTES,
   readPracticeRouteAlternates,
+  readPracticeRoutes,
   toPracticeHref,
 } from "./routes";
 import {
-  isLocalizedQuestionSegment,
   localizeQuestionPaginationItem,
   readExerciseSetSourceParts,
   readGroupTitle,
@@ -95,7 +94,7 @@ describe("practice route data", () => {
 
     const questionAlternates = readPracticeRouteAlternates(
       question.value,
-      PRACTICE_ROUTES
+      readPracticeRoutes()
     );
 
     expect(
@@ -147,7 +146,7 @@ describe("practice route data", () => {
     expect(toPracticeHref(set.route)).toBe(set.pagePath);
     const setAlternates = readPracticeRouteAlternates(
       set.route,
-      PRACTICE_ROUTES
+      readPracticeRoutes()
     );
 
     expect(
@@ -175,7 +174,7 @@ describe("practice route data", () => {
             )
           ),
         },
-        PRACTICE_ROUTES
+        readPracticeRoutes()
       )
     ).toEqual([]);
     await expect(getPracticeRuntimeSetPath(params)).resolves.toMatchObject({
@@ -324,13 +323,7 @@ describe("practice route data", () => {
     ).rejects.toThrow();
   });
 
-  it("keeps source-path parsing and localized question labels schema-owned", () => {
-    expect(isLocalizedQuestionSegment("en", undefined)).toBe(false);
-    expect(isLocalizedQuestionSegment("en", "soal-1")).toBe(false);
-    expect(isLocalizedQuestionSegment("id", "soal-one")).toBe(false);
-    expect(isLocalizedQuestionSegment("en", "question-01")).toBe(false);
-    expect(isLocalizedQuestionSegment("id", "soal-1")).toBe(true);
-    expect(isLocalizedQuestionSegment("en", "question-1")).toBe(true);
+  it("keeps source-path parsing and pagination labels route-owned", () => {
     expect(
       readGroupTitle({
         sourcePath:
@@ -368,6 +361,15 @@ describe("practice route data", () => {
     expect(
       localizeQuestionPaginationItem({ href: "/", title: "Next" })
     ).toEqual({ href: "/", title: "Next" });
+    expect(
+      localizeQuestionPaginationItem({
+        href: "/en/practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question",
+        title: "Question",
+      })
+    ).toEqual({
+      href: "/en/practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question",
+      title: "Question",
+    });
     expect(
       localizeQuestionPaginationItem({
         href: "/en/practice/snbt/quantitative-knowledge/mock-test/2026/set-1/2",

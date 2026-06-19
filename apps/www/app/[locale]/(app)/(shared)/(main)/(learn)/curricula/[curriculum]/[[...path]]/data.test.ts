@@ -1,11 +1,11 @@
 import { MATERIAL_CARD_DESCRIPTION_MAX_LENGTH } from "@repo/contents/_types/material/description";
 import { describe, expect, it } from "vitest";
 import {
-  CURRICULUM_ROUTES,
   listCurriculumStaticParams,
   readCurriculumBreadcrumbs,
   readCurriculumHeaderLink,
   readCurriculumRouteModel,
+  readCurriculumRoutes,
   readCurriculumTocHeader,
   readMaterialCardChapters,
   resolveCurriculumRoute,
@@ -13,7 +13,7 @@ import {
 
 /** Finds a renderable curriculum route fixture by its projected public path. */
 function readRoute(publicPath: string, locale: "en" | "id" = "id") {
-  const route = CURRICULUM_ROUTES.find(
+  const route = readCurriculumRoutes().find(
     (candidate) =>
       candidate.locale === locale && candidate.publicPath === publicPath
   );

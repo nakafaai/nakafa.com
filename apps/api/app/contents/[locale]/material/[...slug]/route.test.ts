@@ -231,6 +231,44 @@ describe("material content API route", () => {
     expect(runtimeMocks.getMaterialApiContentPage).not.toHaveBeenCalled();
   });
 
+  it("returns exercise question content for source numeric practice question requests", async () => {
+    const page = {
+      exercise: { number: 9, title: "Question 9" },
+      exerciseCount: 10,
+    };
+
+    runtimeMocks.getExerciseApiQuestionPage.mockReturnValue(
+      Effect.succeed(page)
+    );
+
+    const response = await route.GET(
+      new Request(
+        "http://localhost/contents/id/material/practice/assessment/snbt/pengetahuan-umum/set-1/9"
+      ),
+      {
+        params: Promise.resolve({
+          locale: "id",
+          slug: [
+            "practice",
+            "assessment",
+            "snbt",
+            "pengetahuan-umum",
+            "set-1",
+            "9",
+          ],
+        }),
+      }
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual(page);
+    expect(runtimeMocks.getExerciseApiQuestionPage).toHaveBeenCalledWith({
+      locale: "id",
+      slug: "material/practice/assessment/snbt/pengetahuan-umum/set-1/9",
+    });
+    expect(runtimeMocks.getMaterialApiContentPage).not.toHaveBeenCalled();
+  });
+
   it("returns not found when an exact practice question row is missing", async () => {
     runtimeMocks.getExerciseApiQuestionPage.mockReturnValue(
       Effect.succeed(null)
@@ -264,12 +302,12 @@ describe("material content API route", () => {
     expect(runtimeMocks.getMaterialApiContentPage).not.toHaveBeenCalled();
   });
 
-  it("does not normalize malformed localized question leaves as exact questions", async () => {
+  it("does not normalize malformed question leaves as exact questions", async () => {
     runtimeMocks.getExerciseApiSetPage.mockReturnValue(Effect.succeed(null));
 
     const response = await route.GET(
       new Request(
-        "http://localhost/contents/id/material/practice/assessment/snbt/pengetahuan-umum/set-1/question-9"
+        "http://localhost/contents/id/material/practice/assessment/snbt/pengetahuan-umum/set-1/question-09"
       ),
       {
         params: Promise.resolve({
@@ -280,7 +318,7 @@ describe("material content API route", () => {
             "snbt",
             "pengetahuan-umum",
             "set-1",
-            "question-9",
+            "question-09",
           ],
         }),
       }
@@ -290,7 +328,7 @@ describe("material content API route", () => {
     expect(runtimeMocks.getExerciseApiQuestionPage).not.toHaveBeenCalled();
     expect(runtimeMocks.getExerciseApiSetPage).toHaveBeenCalledWith({
       locale: "id",
-      slug: "material/practice/assessment/snbt/pengetahuan-umum/set-1/question-9",
+      slug: "material/practice/assessment/snbt/pengetahuan-umum/set-1/question-09",
     });
   });
 

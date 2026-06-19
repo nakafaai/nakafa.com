@@ -1,4 +1,5 @@
 import { getExerciseQuestionNumberSegment } from "@repo/contents/_types/graph/route";
+import { toPublicPracticeQuestionSegment } from "@repo/contents/_types/route/practice";
 import { Effect, Option } from "effect";
 import type { Locale } from "next-intl";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
@@ -179,11 +180,11 @@ function readExerciseQuestionMarkdownSegment({
   number: number;
   usesPublicSlug: boolean;
 }) {
-  if (usesPublicSlug && locale === "id") {
-    return `soal-${number}`;
+  if (usesPublicSlug) {
+    return toPublicPracticeQuestionSegment({ locale, number });
   }
 
-  return `question-${number}`;
+  return toPublicPracticeQuestionSegment({ locale: "en", number });
 }
 
 /** Finds the exercise set path and optional question number from a route. */

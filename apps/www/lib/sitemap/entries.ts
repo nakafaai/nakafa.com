@@ -1,12 +1,7 @@
-import { findPublicRouteByPath } from "@repo/contents/_types/route/projection";
-import type {
-  PublicContentRoute,
-  PublicRoute,
-} from "@repo/contents/_types/route/schema";
 import { getPathname } from "@repo/internationalization/src/navigation";
 import { routing } from "@repo/internationalization/src/routing";
 import { MAIN_DOMAIN } from "@repo/next-config/domains";
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { getRuntimeContentRoute } from "@/lib/content/runtime/routes";
 import {
@@ -210,14 +205,13 @@ const getContentLastModified = Effect.fn("www.sitemap.contentLastModified")(
     options: SitemapEntryOptions,
     locale: Locale
   ) {
-    const sourcePath = yield* getRuntimeContentLookupPath(contentPath, locale);
     const route = yield* getRuntimeContentRoute({
       locale,
-      route: sourcePath,
+      route: contentPath,
     }).pipe(
       Effect.catchAll((error) =>
         reportError(error, options, {
-          content_path: sourcePath,
+          content_path: contentPath,
           locale,
           source: "sitemap-content-last-modified",
         }).pipe(Effect.as(null))
@@ -231,34 +225,6 @@ const getContentLastModified = Effect.fn("www.sitemap.contentLastModified")(
     return getFallbackDate(MONTHS_IN_FALLBACK_PERIOD);
   }
 );
-
-/** Converts a projected public path to the source route stored in Convex. */
-const getRuntimeContentLookupPath = Effect.fn("www.sitemap.contentLookupPath")(
-  function* (contentPath: string, locale: Locale) {
-    const route = yield* findPublicRouteByPath(contentPath, locale);
-
-    return Option.match(route, {
-      onNone: () => contentPath,
-      onSome: (publicRoute) => {
-        if (isPublicContentRoute(publicRoute)) {
-          return publicRoute.sourcePath;
-        }
-
-        return contentPath;
-      },
-    });
-  }
-);
-
-/** Checks whether a projected public route has source-backed markdown content. */
-function isPublicContentRoute(route: PublicRoute): route is PublicContentRoute {
-  return (
-    route.kind === "subject-topic" ||
-    route.kind === "subject-lesson" ||
-    route.kind === "exercise-set" ||
-    route.kind === "exercise-question"
-  );
-}
 
 /** Builds a stable relative recovery date for sitemap rows without source dates. */
 function getFallbackDate(monthsAgo: number) {

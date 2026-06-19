@@ -5,11 +5,11 @@ import type { Locale } from "next-intl";
 import {
   findPracticeGroupSet,
   findPracticeRoute,
-  PRACTICE_ROUTES,
   type PracticeQuestionRoute,
   type PracticeSetRoute,
   type PublicPracticeRouteRows,
   readPracticeQuestionRoute,
+  readPracticeRoutes,
   toPracticeHref,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/practice/[assessment]/[domain]/[[...path]]/routes";
 import {
@@ -70,7 +70,7 @@ type PracticeGroupContext = ReturnType<typeof readPracticeGroupContext>;
  * question segment, so static params stay bounded by authored exercise sets.
  */
 export function listPracticeStaticParams() {
-  return PRACTICE_ROUTES.map((route) => {
+  return readPracticeRoutes().map((route) => {
     const [, assessment, domain, ...path] = route.publicPath.split("/");
 
     return { assessment, domain, path };
@@ -89,40 +89,33 @@ export async function getPracticeRouteData(
   const { locale: rawLocale, assessment, domain, path = [] } = await params;
   const locale = getLocaleOrThrow(rawLocale);
   const pathWithoutNamespace = [assessment, domain, ...path].join("/");
-  const exactRoute = findPracticeRoute(
-    PRACTICE_ROUTES,
-    locale,
-    pathWithoutNamespace
-  );
+  const routes = readPracticeRoutes();
+  const exactRoute = findPracticeRoute(routes, locale, pathWithoutNamespace);
 
   if (exactRoute) {
-    return await getSetRouteData(locale, exactRoute, PRACTICE_ROUTES);
+    return await getSetRouteData(locale, exactRoute, routes);
   }
 
   const questionRoute = readPracticeQuestionRoute({
     locale,
     path,
-    routes: PRACTICE_ROUTES,
+    routes,
     setPathWithoutNamespace: [assessment, domain, ...path.slice(0, -1)].join(
       "/"
     ),
   });
 
   if (questionRoute) {
-    return await getSingleRouteData(locale, questionRoute, PRACTICE_ROUTES);
+    return await getSingleRouteData(locale, questionRoute, routes);
   }
 
-  const groupSet = findPracticeGroupSet(
-    PRACTICE_ROUTES,
-    locale,
-    pathWithoutNamespace
-  );
+  const groupSet = findPracticeGroupSet(routes, locale, pathWithoutNamespace);
 
   if (!groupSet) {
     notFound();
   }
 
-  return getGroupRouteData(locale, groupSet, PRACTICE_ROUTES);
+  return getGroupRouteData(locale, groupSet, routes);
 }
 
 /**

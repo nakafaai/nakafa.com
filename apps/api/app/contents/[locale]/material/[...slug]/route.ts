@@ -1,4 +1,7 @@
-import { readPublicPracticeQuestionNumber } from "@repo/contents/_types/route/practice";
+import {
+  readPublicPracticeQuestionNumber,
+  readSourcePracticeQuestionNumber,
+} from "@repo/contents/_types/route/practice";
 import { logError } from "@repo/utilities/logging/effect";
 import { Effect } from "effect";
 import { NextResponse } from "next/server";
@@ -177,10 +180,11 @@ function readPracticeApiRequest({
 
   const segments = prefix.split("/");
   const questionSegment = segments.at(-1);
-  const questionNumber = readPublicPracticeQuestionNumber({
-    locale,
-    segment: questionSegment,
-  });
+  const questionNumber =
+    readPublicPracticeQuestionNumber({
+      locale,
+      segment: questionSegment,
+    }) ?? readSourcePracticeQuestionNumber(questionSegment);
 
   if (questionNumber !== null) {
     return {

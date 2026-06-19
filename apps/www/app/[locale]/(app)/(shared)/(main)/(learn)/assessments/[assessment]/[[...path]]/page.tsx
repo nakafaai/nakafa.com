@@ -4,6 +4,7 @@ import {
   comparePublicRouteOrder,
   readPathWithoutNamespace,
 } from "@repo/contents/_types/route/path";
+import type { PublicAssessmentRoute } from "@repo/contents/_types/route/schema";
 import { Effect } from "effect";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -20,14 +21,18 @@ import { createProjectedRouteAlternates } from "@/lib/utils/seo/alternates";
 type AssessmentPageProps =
   PageProps<"/[locale]/assessments/[assessment]/[[...path]]">;
 
-/**
- * Canonical assessment context route rows for static page generation.
- *
- * Next statically prerenders assessment pages, so Server Components read this
- * immutable projection table instead of starting an Effect runtime during
- * prerender.
- */
-const ASSESSMENT_ROUTES = Effect.runSync(listPublicAssessmentRoutes());
+let assessmentRouteCache: readonly PublicAssessmentRoute[] | undefined;
+
+/** Lazily decodes assessment context rows at the Next framework boundary. */
+function readAssessmentRoutes() {
+  if (assessmentRouteCache) {
+    return assessmentRouteCache;
+  }
+
+  assessmentRouteCache = Effect.runSync(listPublicAssessmentRoutes());
+
+  return assessmentRouteCache;
+}
 
 /**
  * Builds assessment context params from projected assessment route rows.
@@ -36,7 +41,7 @@ const ASSESSMENT_ROUTES = Effect.runSync(listPublicAssessmentRoutes());
  * remain canonical under the practice route projection.
  */
 export function generateStaticParams() {
-  return ASSESSMENT_ROUTES.map((route) => {
+  return readAssessmentRoutes().map((route) => {
     const [, assessment, ...path] = route.publicPath.split("/");
 
     return path.length > 0 ? { assessment, path } : { assessment };
@@ -132,7 +137,8 @@ async function getAssessmentRoute(params: AssessmentPageProps["params"]) {
   const { locale: rawLocale, assessment, path } = await params;
   const locale = getLocaleOrThrow(rawLocale);
   const routePath = [assessment, ...(path ?? [])].join("/");
-  const route = ASSESSMENT_ROUTES.find(
+  const routes = readAssessmentRoutes();
+  const route = routes.find(
     (candidate) =>
       candidate.locale === locale &&
       readPathWithoutNamespace(candidate.publicPath) === routePath
@@ -142,5 +148,5 @@ async function getAssessmentRoute(params: AssessmentPageProps["params"]) {
     notFound();
   }
 
-  return { locale, route, routes: ASSESSMENT_ROUTES };
+  return { locale, route, routes };
 }

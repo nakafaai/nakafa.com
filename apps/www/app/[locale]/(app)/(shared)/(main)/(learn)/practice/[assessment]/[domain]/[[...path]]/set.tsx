@@ -1,6 +1,7 @@
 import { Quiz03Icon } from "@hugeicons/core-free-icons";
 import { getExercisesPagination } from "@repo/contents/_lib/assessment/slug";
 import { formatContentDateISO } from "@repo/contents/_shared/date";
+import { toPublicPracticeQuestionSegment } from "@repo/contents/_types/route/practice";
 import type { ParsedHeading } from "@repo/contents/_types/toc";
 import { ArticleJsonLd } from "@repo/seo/json-ld/article";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
@@ -98,7 +99,7 @@ export async function PracticeSetPage({
           <LayoutContent as="section">
             <SubjectList id="questions">
               {data.exercises.map((exercise) => {
-                const questionSegment = readPracticeQuestionSegment({
+                const questionSegment = toPublicPracticeQuestionSegment({
                   locale,
                   number: exercise.number,
                 });
@@ -136,15 +137,4 @@ export async function PracticeSetPage({
       </LayoutMaterial>
     </>
   );
-}
-
-/** Builds the localized virtual question segment for one practice set row. */
-function readPracticeQuestionSegment({
-  locale,
-  number,
-}: {
-  locale: Locale;
-  number: number;
-}) {
-  return locale === "id" ? `soal-${number}` : `question-${number}`;
 }

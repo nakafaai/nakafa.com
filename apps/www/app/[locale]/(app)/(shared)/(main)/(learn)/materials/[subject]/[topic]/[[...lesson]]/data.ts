@@ -8,7 +8,10 @@ import {
 } from "@repo/contents/_types/route/content";
 import { listPublicCurriculumRoutes } from "@repo/contents/_types/route/curriculum";
 import { readCurriculumCardListContext } from "@repo/contents/_types/route/curriculum-card";
-import type { PublicContentRoute } from "@repo/contents/_types/route/schema";
+import type {
+  PublicContentRoute,
+  PublicCurriculumRoute,
+} from "@repo/contents/_types/route/schema";
 import { slugify } from "@repo/design-system/lib/utils";
 import { Effect } from "effect";
 import { notFound } from "next/navigation";
@@ -17,8 +20,30 @@ import { getLocaleOrThrow } from "@/lib/i18n/params";
 type MaterialParams =
   PageProps<"/[locale]/materials/[subject]/[topic]/[[...lesson]]">["params"];
 
-export const MATERIAL_ROUTES = Effect.runSync(listPublicContentRoutes());
-const CURRICULUM_ROUTES = Effect.runSync(listPublicCurriculumRoutes());
+let materialRouteCache: readonly PublicContentRoute[] | undefined;
+let curriculumRouteCache: readonly PublicCurriculumRoute[] | undefined;
+
+/** Lazily decodes content routes when a framework route function needs them. */
+export function readMaterialRoutes() {
+  if (materialRouteCache) {
+    return materialRouteCache;
+  }
+
+  materialRouteCache = Effect.runSync(listPublicContentRoutes());
+
+  return materialRouteCache;
+}
+
+/** Lazily decodes curriculum routes for material header context lookups. */
+function readCurriculumRoutes() {
+  if (curriculumRouteCache) {
+    return curriculumRouteCache;
+  }
+
+  curriculumRouteCache = Effect.runSync(listPublicCurriculumRoutes());
+
+  return curriculumRouteCache;
+}
 
 /**
  * Resolves localized material params through the contents route projection.
@@ -30,7 +55,7 @@ export async function readMaterialRoute(params: MaterialParams) {
   const { locale: rawLocale, subject, topic, lesson } = await params;
   const locale = getLocaleOrThrow(rawLocale);
   const routePath = [subject, topic, ...(lesson ?? [])].join("/");
-  const route = MATERIAL_ROUTES.find(
+  const route = readMaterialRoutes().find(
     (candidate) =>
       candidate.locale === locale &&
       isMaterialContentRoute(candidate) &&
@@ -63,11 +88,13 @@ export async function resolveMaterialRoute(params: MaterialParams) {
  * cards and lesson pagination. They are not standalone public page hops.
  */
 export function listMaterialStaticParams() {
-  return MATERIAL_ROUTES.filter(isMaterialLessonRoute).map((route) => {
-    const [, subject, topic, ...lesson] = route.publicPath.split("/");
+  return readMaterialRoutes()
+    .filter(isMaterialLessonRoute)
+    .map((route) => {
+      const [, subject, topic, ...lesson] = route.publicPath.split("/");
 
-    return { subject, topic, lesson };
-  });
+      return { subject, topic, lesson };
+    });
 }
 
 /**
@@ -77,7 +104,7 @@ export function listMaterialStaticParams() {
  * the route-not-found boundary.
  */
 export function requireParentMaterialRoute(route: PublicContentRoute) {
-  const parent = readParentMaterialRoute(route, MATERIAL_ROUTES);
+  const parent = readParentMaterialRoute(route, readMaterialRoutes());
 
   if (parent?.kind !== "subject-topic") {
     notFound();
@@ -95,7 +122,8 @@ export function requireParentMaterialRoute(route: PublicContentRoute) {
  */
 export function readMaterialHeaderLink(route: PublicContentRoute) {
   const parentMaterial = requireParentMaterialRoute(route);
-  const curriculumContext = CURRICULUM_ROUTES.find(
+  const curriculumRoutes = readCurriculumRoutes();
+  const curriculumContext = curriculumRoutes.find(
     (candidate) =>
       candidate.locale === route.locale &&
       candidate.canonicalPath === parentMaterial.publicPath
@@ -107,7 +135,7 @@ export function readMaterialHeaderLink(route: PublicContentRoute) {
 
   const cardListContext = readCurriculumCardListContext(
     curriculumContext,
-    CURRICULUM_ROUTES
+    curriculumRoutes
   );
 
   if (!cardListContext) {

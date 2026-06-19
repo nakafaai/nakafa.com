@@ -107,6 +107,32 @@ describe("sitemap entries", () => {
     });
   });
 
+  it("looks up content lastmod by public sitemap route", async () => {
+    await Effect.runPromise(
+      getEntries(
+        "/practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question-1"
+      )
+    );
+    await Effect.runPromise(
+      getEntries("/subjects/chemistry/green-chemistry/definition")
+    );
+
+    expect(mockGetRuntimeContentRoute).toHaveBeenCalledWith({
+      locale: "en",
+      route:
+        "practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question-1",
+    });
+    expect(mockGetRuntimeContentRoute).toHaveBeenCalledWith({
+      locale: "en",
+      route: "subjects/chemistry/green-chemistry/definition",
+    });
+    expect(mockGetRuntimeContentRoute).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        route: expect.stringContaining("material/"),
+      })
+    );
+  });
+
   it("supports object hrefs and custom domains", async () => {
     const entries = await Effect.runPromise(
       getEntries(

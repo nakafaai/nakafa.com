@@ -9,7 +9,10 @@ import {
 } from "@repo/contents/_types/route/curriculum";
 import { readCurriculumMaterialCards } from "@repo/contents/_types/route/curriculum-card";
 import { readPathWithoutNamespace } from "@repo/contents/_types/route/path";
-import type { PublicCurriculumRoute } from "@repo/contents/_types/route/schema";
+import type {
+  PublicContentRoute,
+  PublicCurriculumRoute,
+} from "@repo/contents/_types/route/schema";
 import type { ParsedHeading } from "@repo/contents/_types/toc";
 import { slugify } from "@repo/design-system/lib/utils";
 import { Effect } from "effect";
@@ -19,16 +22,40 @@ import { getLocaleOrThrow } from "@/lib/i18n/params";
 type CurriculumParams =
   PageProps<"/[locale]/curricula/[curriculum]/[[...path]]">["params"];
 
-export const CURRICULUM_ROUTES = Effect.runSync(listPublicCurriculumRoutes());
-const MATERIAL_ROUTES = Effect.runSync(listPublicContentRoutes());
+let curriculumRouteCache: readonly PublicCurriculumRoute[] | undefined;
+let materialRouteCache: readonly PublicContentRoute[] | undefined;
+
+/** Lazily decodes curriculum routes when a framework route function needs them. */
+export function readCurriculumRoutes() {
+  if (curriculumRouteCache) {
+    return curriculumRouteCache;
+  }
+
+  curriculumRouteCache = Effect.runSync(listPublicCurriculumRoutes());
+
+  return curriculumRouteCache;
+}
+
+/** Lazily decodes content routes used by curriculum material-card indexes. */
+export function readMaterialRoutes() {
+  if (materialRouteCache) {
+    return materialRouteCache;
+  }
+
+  materialRouteCache = Effect.runSync(listPublicContentRoutes());
+
+  return materialRouteCache;
+}
 
 /** Builds static params for rendered curriculum context pages only. */
 export function listCurriculumStaticParams() {
-  return CURRICULUM_ROUTES.filter(isRenderableCurriculumRoute).map((route) => {
-    const [, curriculum, ...path] = route.publicPath.split("/");
+  return readCurriculumRoutes()
+    .filter(isRenderableCurriculumRoute)
+    .map((route) => {
+      const [, curriculum, ...path] = route.publicPath.split("/");
 
-    return path.length > 0 ? { curriculum, path } : { curriculum };
-  });
+      return path.length > 0 ? { curriculum, path } : { curriculum };
+    });
 }
 
 /** Resolves localized curriculum params through projected route rows. */
@@ -36,7 +63,7 @@ export async function resolveCurriculumRoute(params: CurriculumParams) {
   const { locale: rawLocale, curriculum, path } = await params;
   const locale = getLocaleOrThrow(rawLocale);
   const routePath = [curriculum, ...(path ?? [])].join("/");
-  const route = CURRICULUM_ROUTES.find(
+  const route = readCurriculumRoutes().find(
     (candidate) =>
       candidate.locale === locale &&
       readPathWithoutNamespace(candidate.publicPath) === routePath
@@ -54,16 +81,19 @@ export function readCurriculumRouteModel({
   locale,
   route,
 }: Awaited<ReturnType<typeof resolveCurriculumRoute>>) {
-  const childRoutes = CURRICULUM_ROUTES.filter(
-    (child) => child.locale === locale && child.parentPath === route.publicPath
-  )
+  const curriculumRoutes = readCurriculumRoutes();
+  const childRoutes = curriculumRoutes
+    .filter(
+      (child) =>
+        child.locale === locale && child.parentPath === route.publicPath
+    )
     .filter(isRenderableCurriculumRoute)
     .slice()
     .sort(compareCurriculumRouteOrder);
   const materialCards = isMaterialCardListRoute(route)
     ? readCurriculumMaterialCards({
-        contentRoutes: MATERIAL_ROUTES,
-        curriculumRoutes: CURRICULUM_ROUTES,
+        contentRoutes: readMaterialRoutes(),
+        curriculumRoutes,
         route,
       })
     : [];
@@ -87,7 +117,7 @@ export function readCurriculumHeaderLink(
   }
 
   const parent = readCurriculumRouteByPublicPath(
-    CURRICULUM_ROUTES,
+    readCurriculumRoutes(),
     locale,
     route.parentPath
   );
@@ -129,9 +159,10 @@ export function readCurriculumBreadcrumbs(
   route: PublicCurriculumRoute
 ) {
   const breadcrumbs = [{ name: homeLabel, path: "" }];
-  const ancestors = readCurriculumAncestors(route, CURRICULUM_ROUTES).filter(
-    isRenderableCurriculumRoute
-  );
+  const ancestors = readCurriculumAncestors(
+    route,
+    readCurriculumRoutes()
+  ).filter(isRenderableCurriculumRoute);
 
   for (const ancestor of ancestors) {
     breadcrumbs.push({

@@ -18,8 +18,8 @@ import type { ReactNode } from "react";
 import {
   getProjectedMaterialIcon,
   listMaterialStaticParams,
-  MATERIAL_ROUTES,
   readMaterialHeaderLink,
+  readMaterialRoutes,
   requireParentMaterialRoute,
   resolveMaterialRoute,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
@@ -78,7 +78,7 @@ export async function generateMetadata({
     title: { absolute: title },
     description,
     authors: runtimeLesson?.metadata.authors,
-    alternates: createProjectedRouteAlternates(route, MATERIAL_ROUTES, {
+    alternates: createProjectedRouteAlternates(route, readMaterialRoutes(), {
       types: { "text/markdown": `${path}.md` },
     }),
     ...getSocialMetadata({
@@ -185,7 +185,7 @@ async function MaterialLessonPage({
   const raw = content.body;
   const headings = getHeadings(raw);
   const metadata = content.metadata;
-  const pagination = readMaterialPagination(route, MATERIAL_ROUTES);
+  const pagination = readMaterialPagination(route, readMaterialRoutes());
   const publishedAt = Option.getOrElse(
     formatContentDateISO(metadata.date),
     () => metadata.date

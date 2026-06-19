@@ -134,9 +134,10 @@ export const toPublicExerciseQuestionPath = Effect.fn(
     ),
     ...getPracticeActivitySegments(group, decoded.locale),
     decoded.setName,
-    decoded.locale === "id"
-      ? `soal-${decoded.number}`
-      : `question-${decoded.number}`,
+    toPublicPracticeQuestionSegment({
+      locale: decoded.locale,
+      number: decoded.number,
+    }),
   ]);
 });
 
@@ -272,7 +273,9 @@ export function readPublicPracticeQuestionRouteBySourcePath({
       }
 
       for (const set of group.sets) {
-        const questionNumber = readSourceQuestionNumber(pathSegments[2]);
+        const questionNumber = readSourcePracticeQuestionNumber(
+          pathSegments[2]
+        );
 
         if (
           pathSegments[1] !== set.slug ||
@@ -303,9 +306,7 @@ export function readPublicPracticeQuestionRouteBySourcePath({
         ].join("/");
         const publicPath = [
           setPath,
-          locale === "id"
-            ? `soal-${questionNumber}`
-            : `question-${questionNumber}`,
+          toPublicPracticeQuestionSegment({ locale, number: questionNumber }),
         ].join("/");
 
         return decodePracticeQuestionRoute({
@@ -396,8 +397,8 @@ export function readPublicPracticeQuestionNumber({
     : null;
 }
 
-/** Parses source-owned exercise question segments from synced material rows. */
-function readSourceQuestionNumber(segment: string | undefined) {
+/** Parses source-owned practice question segments from material API and projection paths. */
+export function readSourcePracticeQuestionNumber(segment: string | undefined) {
   if (!segment) {
     return null;
   }
@@ -411,6 +412,17 @@ function readSourceQuestionNumber(segment: string | undefined) {
   const value = Number.parseInt(rawValue, 10);
 
   return value > 0 ? value : null;
+}
+
+/** Builds the locale-owned public practice question segment for a positive number. */
+export function toPublicPracticeQuestionSegment({
+  locale,
+  number,
+}: {
+  locale: Locale;
+  number: number;
+}) {
+  return locale === "id" ? `soal-${number}` : `question-${number}`;
 }
 
 /** Decodes a virtual practice question row through the public route schema. */

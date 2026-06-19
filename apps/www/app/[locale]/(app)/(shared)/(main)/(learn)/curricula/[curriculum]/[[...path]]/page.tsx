@@ -6,11 +6,11 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { CurriculumRouteCardIcon } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/card-icon";
 import {
-  CURRICULUM_ROUTES,
   listCurriculumStaticParams,
   readCurriculumBreadcrumbs,
   readCurriculumHeaderLink,
   readCurriculumRouteModel,
+  readCurriculumRoutes,
   readCurriculumTocHeader,
   readMaterialCardChapters,
   resolveCurriculumRoute,
@@ -62,7 +62,7 @@ export async function generateMetadata({
 
   return {
     title: { absolute: route.title },
-    alternates: createProjectedRouteAlternates(route, CURRICULUM_ROUTES),
+    alternates: createProjectedRouteAlternates(route, readCurriculumRoutes()),
   };
 }
 

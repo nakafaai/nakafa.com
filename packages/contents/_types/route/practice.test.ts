@@ -9,6 +9,7 @@ import {
 import {
   readPublicPracticeQuestionNumber,
   readPublicPracticeQuestionRouteBySourcePath,
+  readSourcePracticeQuestionNumber,
   toPublicExerciseQuestionPath,
 } from "@repo/contents/_types/route/practice";
 import { findPublicRouteByPath } from "@repo/contents/_types/route/projection";
@@ -41,6 +42,15 @@ describe("public practice routes", () => {
 
     for (const input of invalidSegments) {
       expect(readPublicPracticeQuestionNumber(input)).toBeNull();
+    }
+  });
+
+  it("parses source practice question leaves through one route grammar", () => {
+    expect(readSourcePracticeQuestionNumber("9")).toBe(9);
+    expect(readSourcePracticeQuestionNumber("question-9")).toBe(9);
+
+    for (const segment of ["0", "09", "soal-9", "question-x", undefined]) {
+      expect(readSourcePracticeQuestionNumber(segment)).toBeNull();
     }
   });
 

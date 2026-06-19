@@ -6,8 +6,8 @@ import {
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/practice/[assessment]/[domain]/[[...path]]/data";
 import { PracticeGroupPage } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/practice/[assessment]/[domain]/[[...path]]/group";
 import {
-  PRACTICE_ROUTES,
   readPracticeRouteAlternates,
+  readPracticeRoutes,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/practice/[assessment]/[domain]/[[...path]]/routes";
 import { PracticeSetPage } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/practice/[assessment]/[domain]/[[...path]]/set";
 import { SinglePracticePage } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/practice/[assessment]/[domain]/[[...path]]/single";
@@ -47,7 +47,7 @@ export async function generateMetadata({
   const projectedAlternates =
     data.kind === "year-group"
       ? []
-      : readPracticeRouteAlternates(data.route, PRACTICE_ROUTES);
+      : readPracticeRouteAlternates(data.route, readPracticeRoutes());
   const alternates =
     data.kind === "year-group"
       ? createLocalizedAlternates(path, {
