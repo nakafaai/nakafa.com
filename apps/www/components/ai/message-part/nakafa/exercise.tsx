@@ -8,6 +8,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import type { NakafaDataPart } from "@repo/ai/schema/data";
+import { toPublicPracticeQuestionSegment } from "@repo/contents/_types/route/practice";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -43,7 +44,10 @@ export const ExercisePart = ({ message }: Props) => {
             nativeButton={false}
             render={
               <a
-                href={`${message.result.url}/${number}`}
+                href={`${message.result.url}/${toPublicPracticeQuestionSegment({
+                  locale: message.result.locale,
+                  number,
+                })}`}
                 rel="noopener noreferrer"
                 target="_blank"
               >

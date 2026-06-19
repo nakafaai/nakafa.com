@@ -36,6 +36,14 @@ describe("curriculum route data", () => {
       curriculum: "merdeka",
       path: ["kelas-1"],
     });
+    expect(listCurriculumStaticParams("en")).toContainEqual({
+      curriculum: "merdeka",
+      path: ["class-10", "biology"],
+    });
+    expect(listCurriculumStaticParams("en")).not.toContainEqual({
+      curriculum: "merdeka",
+      path: ["kelas-10", "biologi"],
+    });
   });
 
   it("resolves localized params through projected public paths", async () => {

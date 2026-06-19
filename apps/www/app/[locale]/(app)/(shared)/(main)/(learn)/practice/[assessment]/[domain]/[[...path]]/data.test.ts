@@ -191,6 +191,24 @@ describe("practice route data", () => {
         },
       ])
     );
+    expect(listPracticeStaticParams("id")).toEqual(
+      expect.arrayContaining([
+        {
+          assessment: "snbt",
+          domain: "pengetahuan-kuantitatif",
+          path: ["tryout", "2026", "set-1"],
+        },
+      ])
+    );
+    expect(listPracticeStaticParams("id")).not.toEqual(
+      expect.arrayContaining([
+        {
+          assessment: "snbt",
+          domain: "quantitative-knowledge",
+          path: ["mock-test", "2026", "set-1"],
+        },
+      ])
+    );
 
     const singleParams = Promise.resolve({
       assessment: "snbt",
@@ -213,8 +231,7 @@ describe("practice route data", () => {
     await expect(
       getPracticeRuntimeSetPath(singleParams)
     ).resolves.toMatchObject({
-      routePath:
-        "practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question-9",
+      routePath: "practice/snbt/quantitative-knowledge/mock-test/2026/set-1",
       setPath:
         "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
     });

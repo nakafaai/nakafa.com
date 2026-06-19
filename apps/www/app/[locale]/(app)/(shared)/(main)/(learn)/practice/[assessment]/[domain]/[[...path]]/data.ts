@@ -69,12 +69,16 @@ type PracticeGroupContext = ReturnType<typeof readPracticeGroupContext>;
  * Question pages are generated dynamically from their set and localized final
  * question segment, so static params stay bounded by authored exercise sets.
  */
-export function listPracticeStaticParams() {
-  return readPracticeRoutes().map((route) => {
-    const [, assessment, domain, ...path] = route.publicPath.split("/");
+export function listPracticeStaticParams(rawLocale?: string) {
+  const locale = rawLocale ? getLocaleOrThrow(rawLocale) : undefined;
 
-    return { assessment, domain, path };
-  });
+  return readPracticeRoutes()
+    .filter((route) => !locale || route.locale === locale)
+    .map((route) => {
+      const [, assessment, domain, ...path] = route.publicPath.split("/");
+
+      return { assessment, domain, path };
+    });
 }
 
 /**
@@ -143,7 +147,7 @@ export async function getPracticeRuntimeSetPath(
   return {
     locale: data.locale,
     routePath:
-      data.kind === "set" ? data.route.publicPath : data.route.publicPath,
+      data.kind === "set" ? data.route.publicPath : data.setRoute.publicPath,
     setPath: data.kind === "set" ? data.route.sourcePath : data.setPath,
   };
 }

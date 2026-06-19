@@ -21,8 +21,12 @@ type PracticePageProps =
   PageProps<"/[locale]/practice/[assessment]/[domain]/[[...path]]">;
 
 /** Builds static practice params from projected public exercise set rows. */
-export function generateStaticParams() {
-  return listPracticeStaticParams();
+export function generateStaticParams({
+  params,
+}: {
+  params: { locale: string };
+}) {
+  return listPracticeStaticParams(params.locale);
 }
 
 /**

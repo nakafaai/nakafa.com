@@ -48,8 +48,11 @@ export function readMaterialRoutes() {
 }
 
 /** Builds static params for rendered curriculum context pages only. */
-export function listCurriculumStaticParams() {
+export function listCurriculumStaticParams(rawLocale?: string) {
+  const locale = rawLocale ? getLocaleOrThrow(rawLocale) : undefined;
+
   return readCurriculumRoutes()
+    .filter((route) => !locale || route.locale === locale)
     .filter(isRenderableCurriculumRoute)
     .map((route) => {
       const [, curriculum, ...path] = route.publicPath.split("/");

@@ -87,8 +87,11 @@ export async function resolveMaterialRoute(params: MaterialParams) {
  * Topic rows stay in the projection for internal curriculum grouping
  * cards and lesson pagination. They are not standalone public page hops.
  */
-export function listMaterialStaticParams() {
+export function listMaterialStaticParams(rawLocale?: string) {
+  const locale = rawLocale ? getLocaleOrThrow(rawLocale) : undefined;
+
   return readMaterialRoutes()
+    .filter((route) => !locale || route.locale === locale)
     .filter(isMaterialLessonRoute)
     .map((route) => {
       const [, subject, topic, ...lesson] = route.publicPath.split("/");

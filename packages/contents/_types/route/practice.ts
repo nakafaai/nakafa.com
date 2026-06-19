@@ -414,6 +414,24 @@ export function readSourcePracticeQuestionNumber(segment: string | undefined) {
   return value > 0 ? value : null;
 }
 
+/**
+ * Checks whether a path ends with a known practice question leaf.
+ *
+ * Search and preview callers use this route-owned predicate instead of keeping
+ * their own public/source question suffix grammar.
+ */
+export function isPracticeQuestionPath(path: string) {
+  const segment = path.split("/").at(-1);
+
+  if (readSourcePracticeQuestionNumber(segment) !== null) {
+    return true;
+  }
+
+  return locales.some(
+    (locale) => readPublicPracticeQuestionNumber({ locale, segment }) !== null
+  );
+}
+
 /** Builds the locale-owned public practice question segment for a positive number. */
 export function toPublicPracticeQuestionSegment({
   locale,

@@ -51,8 +51,12 @@ type ArticleJsonLdAuthor = ArrayItem<
 >;
 
 /** Builds material topic and lesson params from projected public route rows. */
-export function generateStaticParams() {
-  return listMaterialStaticParams();
+export function generateStaticParams({
+  params,
+}: {
+  params: { locale: string };
+}) {
+  return listMaterialStaticParams(params.locale);
 }
 
 /**

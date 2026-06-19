@@ -40,12 +40,25 @@ function readAssessmentRoutes() {
  * Assessment context pages are navigation surfaces. Practice question bodies
  * remain canonical under the practice route projection.
  */
-export function generateStaticParams() {
-  return readAssessmentRoutes().map((route) => {
+export function generateStaticParams({
+  params,
+}: {
+  params: { locale: string };
+}) {
+  const locale = getLocaleOrThrow(params.locale);
+  const staticParams: { assessment: string; path?: string[] }[] = [];
+
+  for (const route of readAssessmentRoutes()) {
+    if (route.locale !== locale) {
+      continue;
+    }
+
     const [, assessment, ...path] = route.publicPath.split("/");
 
-    return path.length > 0 ? { assessment, path } : { assessment };
-  });
+    staticParams.push(path.length > 0 ? { assessment, path } : { assessment });
+  }
+
+  return staticParams;
 }
 
 /**

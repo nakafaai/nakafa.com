@@ -45,8 +45,12 @@ type CurriculumRouteBodyInput = ReturnType<typeof readCurriculumRouteModel>;
  * Curriculum paths are navigation context only; material bodies remain linked
  * through canonical material paths carried by the projection.
  */
-export function generateStaticParams() {
-  return listCurriculumStaticParams();
+export function generateStaticParams({
+  params,
+}: {
+  params: { locale: string };
+}) {
+  return listCurriculumStaticParams(params.locale);
 }
 
 /**

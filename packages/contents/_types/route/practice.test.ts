@@ -7,6 +7,7 @@ import {
   listPublicContentRoutes,
 } from "@repo/contents/_types/route/content";
 import {
+  isPracticeQuestionPath,
   readPublicPracticeQuestionNumber,
   readPublicPracticeQuestionRouteBySourcePath,
   readSourcePracticeQuestionNumber,
@@ -52,6 +53,29 @@ describe("public practice routes", () => {
     for (const segment of ["0", "09", "soal-9", "question-x", undefined]) {
       expect(readSourcePracticeQuestionNumber(segment)).toBeNull();
     }
+  });
+
+  it("recognizes practice question paths through the owned route grammar", () => {
+    expect(
+      isPracticeQuestionPath(
+        "practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question-9"
+      )
+    ).toBe(true);
+    expect(
+      isPracticeQuestionPath(
+        "latihan/snbt/pengetahuan-kuantitatif/tryout/2026/set-1/soal-9"
+      )
+    ).toBe(true);
+    expect(
+      isPracticeQuestionPath(
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/9"
+      )
+    ).toBe(true);
+    expect(
+      isPracticeQuestionPath(
+        "practice/snbt/quantitative-knowledge/mock-test/2026/set-1"
+      )
+    ).toBe(false);
   });
 
   it("derives canonical exercise set and localized question routes", () => {
