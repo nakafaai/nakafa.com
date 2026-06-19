@@ -1,6 +1,4 @@
 import { getPublicContentRouteCheck } from "@repo/contents/_lib/manifest/public-route";
-import { MATERIAL_ROUTE_DOMAINS } from "@repo/contents/_types/material/domain";
-import { MATERIAL_SOURCES } from "@repo/contents/_types/material/source";
 import { listPublicAssessmentRoutes } from "@repo/contents/_types/route/assessment";
 import {
   isMaterialLessonRoute,
@@ -11,7 +9,7 @@ import {
   isRenderableCurriculumRoute,
   listPublicCurriculumRoutes,
 } from "@repo/contents/_types/route/curriculum";
-import { readPublicPracticeQuestionRouteByPath } from "@repo/contents/_types/route/practice";
+import { readPublicPracticeQuestionNumber } from "@repo/contents/_types/route/practice";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
@@ -78,7 +76,7 @@ export const readProjectedHtmlRouteRejection = Effect.fn(
 
   if (
     surface.key === "exercises" &&
-    isRenderablePracticeQuestionPath({ locale, publicPath })
+    (yield* isRenderablePracticeQuestionPath({ locale, publicPath }))
   ) {
     return null;
   }
@@ -150,13 +148,33 @@ function isRenderablePracticeQuestionPath({
   locale: (typeof routing.locales)[number];
   publicPath: string;
 }) {
-  return Boolean(
-    readPublicPracticeQuestionRouteByPath({
-      domains: MATERIAL_ROUTE_DOMAINS,
-      locale,
-      materials: MATERIAL_SOURCES,
-      publicPath,
+  if (!hasPracticeQuestionShape({ locale, publicPath })) {
+    return Effect.succeed(false);
+  }
+
+  return getRuntimeContentRoute({ locale, route: publicPath }).pipe(
+    Effect.match({
+      onFailure: () => false,
+      onSuccess: (contentRoute) => contentRoute?.kind === "exercise-question",
     })
+  );
+}
+
+/** Checks only the localized virtual question suffix before the runtime probe. */
+function hasPracticeQuestionShape({
+  locale,
+  publicPath,
+}: {
+  locale: (typeof routing.locales)[number];
+  publicPath: string;
+}) {
+  const questionSegment = publicPath.split("/").at(-1);
+
+  return (
+    readPublicPracticeQuestionNumber({
+      locale,
+      segment: questionSegment,
+    }) !== null
   );
 }
 

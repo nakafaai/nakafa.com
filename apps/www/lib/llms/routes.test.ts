@@ -103,6 +103,30 @@ describe("llms proxy route resolver", () => {
     ).not.toHaveBeenCalled();
   });
 
+  it("rejects curriculum and assessment context markdown without rewriting", async () => {
+    const requests = [
+      "/en/curriculum/merdeka/class-10/mathematics.md",
+      "/en/exams/snbt/general-knowledge/mock-test/2026.md",
+    ];
+
+    for (const pathname of requests) {
+      await expect(
+        Effect.runPromise(
+          resolveLlmsProxyRoute({
+            acceptHeader: pathname.endsWith(".md") ? null : "text/markdown",
+            method: "GET",
+            pathname,
+          })
+        )
+      ).resolves.toEqual({ kind: "content-not-found", locale: "en" });
+    }
+
+    expect(runtimeMocks.getRuntimeContentRoute).not.toHaveBeenCalled();
+    expect(
+      runtimeMocks.getRuntimeContentRouteParentPage
+    ).not.toHaveBeenCalled();
+  });
+
   it("rejects exact markdown pages when the runtime route cannot prove them", async () => {
     runtimeMocks.getRuntimeContentRoute.mockReturnValueOnce(
       Effect.fail(new Error("runtime unavailable"))

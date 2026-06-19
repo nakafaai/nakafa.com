@@ -127,6 +127,14 @@ describe("llms full document", () => {
         ) {
           return Effect.succeed(null);
         }
+        if (
+          cleanSlug ===
+          "practice/snbt/general-knowledge/mock-test/2026/set-1/question-9"
+        ) {
+          return Effect.succeed(
+            `${locale}:question body\n\n### Choices\n\n- A. First choice`
+          );
+        }
         return Effect.succeed(`${locale}:${cleanSlug}: full markdown`);
       }
     );
@@ -144,7 +152,7 @@ describe("llms full document", () => {
     expect(text).toContain("## How To Use");
     expect(text).toContain("## Corpus Summary");
     expect(text).toContain("## Shards");
-    expect(text).toContain("- Documents: 3");
+    expect(text).toContain("- Documents: 4");
     expect(text).toContain(
       "Nakafa English Articles: Page / 0 Full Documentation"
     );
@@ -177,7 +185,17 @@ describe("llms full document", () => {
       artifacts.shards.find(
         (artifact) => artifact.path === "llms-full/en/material/page/0.txt"
       )?.text
-    ).not.toContain("question-9: full markdown");
+    ).toContain(
+      "Nakafa English Material: Page / 0 / Mock Test Full Documentation"
+    );
+    const fullShardText = artifacts.shards
+      .map((artifact) => artifact.text)
+      .join("\n");
+    expect(fullShardText).toContain("en:question body");
+    expect(fullShardText).toContain("- A. First choice");
+    expect(fullShardText).toContain(
+      "Markdown URL: https://nakafa.com/en/practice/snbt/general-knowledge/mock-test/2026/set-1/question-9.md"
+    );
     expect(
       artifacts.shards.find(
         (artifact) => artifact.path === "llms-full/en/material/page/0.txt"
@@ -187,7 +205,7 @@ describe("llms full document", () => {
     expect(manifestData.manifest).toBe(
       "https://nakafa.com/llms-full/index.json"
     );
-    expect(manifestData.totals.documents).toBe(3);
+    expect(manifestData.totals.documents).toBe(4);
     expect(mockGetContentPageLlmsEntries).toHaveBeenCalledWith({
       id: "content_en_articles_0",
       locale: "en",

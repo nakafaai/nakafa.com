@@ -163,6 +163,36 @@ describe("material content API route", () => {
     expect(runtimeMocks.getMaterialApiContentPage).not.toHaveBeenCalled();
   });
 
+  it("returns not found when an exact practice set row is missing", async () => {
+    runtimeMocks.getExerciseApiSetPage.mockReturnValue(Effect.succeed(null));
+
+    const response = await route.GET(
+      new Request(
+        "http://localhost/contents/en/material/practice/assessment/snbt/general-knowledge/set-1"
+      ),
+      {
+        params: Promise.resolve({
+          locale: "en",
+          slug: [
+            "practice",
+            "assessment",
+            "snbt",
+            "general-knowledge",
+            "set-1",
+          ],
+        }),
+      }
+    );
+
+    expect(response.status).toBe(404);
+    expect(await response.json()).toEqual({ error: "Content not found." });
+    expect(runtimeMocks.getExerciseApiSetPage).toHaveBeenCalledWith({
+      locale: "en",
+      slug: "material/practice/assessment/snbt/general-knowledge/set-1",
+    });
+    expect(runtimeMocks.getMaterialApiContentPage).not.toHaveBeenCalled();
+  });
+
   it("returns exercise question content for localized practice question requests", async () => {
     const page = {
       exercise: { number: 9, title: "Question 9" },
@@ -199,6 +229,69 @@ describe("material content API route", () => {
       slug: "material/practice/assessment/snbt/pengetahuan-umum/set-1/9",
     });
     expect(runtimeMocks.getMaterialApiContentPage).not.toHaveBeenCalled();
+  });
+
+  it("returns not found when an exact practice question row is missing", async () => {
+    runtimeMocks.getExerciseApiQuestionPage.mockReturnValue(
+      Effect.succeed(null)
+    );
+
+    const response = await route.GET(
+      new Request(
+        "http://localhost/contents/id/material/practice/assessment/snbt/pengetahuan-umum/set-1/soal-9"
+      ),
+      {
+        params: Promise.resolve({
+          locale: "id",
+          slug: [
+            "practice",
+            "assessment",
+            "snbt",
+            "pengetahuan-umum",
+            "set-1",
+            "soal-9",
+          ],
+        }),
+      }
+    );
+
+    expect(response.status).toBe(404);
+    expect(await response.json()).toEqual({ error: "Content not found." });
+    expect(runtimeMocks.getExerciseApiQuestionPage).toHaveBeenCalledWith({
+      locale: "id",
+      slug: "material/practice/assessment/snbt/pengetahuan-umum/set-1/9",
+    });
+    expect(runtimeMocks.getMaterialApiContentPage).not.toHaveBeenCalled();
+  });
+
+  it("does not normalize malformed localized question leaves as exact questions", async () => {
+    runtimeMocks.getExerciseApiSetPage.mockReturnValue(Effect.succeed(null));
+
+    const response = await route.GET(
+      new Request(
+        "http://localhost/contents/id/material/practice/assessment/snbt/pengetahuan-umum/set-1/question-9"
+      ),
+      {
+        params: Promise.resolve({
+          locale: "id",
+          slug: [
+            "practice",
+            "assessment",
+            "snbt",
+            "pengetahuan-umum",
+            "set-1",
+            "question-9",
+          ],
+        }),
+      }
+    );
+
+    expect(response.status).toBe(404);
+    expect(runtimeMocks.getExerciseApiQuestionPage).not.toHaveBeenCalled();
+    expect(runtimeMocks.getExerciseApiSetPage).toHaveBeenCalledWith({
+      locale: "id",
+      slug: "material/practice/assessment/snbt/pengetahuan-umum/set-1/question-9",
+    });
   });
 
   it("rejects invalid locales before reading Convex", async () => {

@@ -7,6 +7,7 @@ import {
   listPublicContentRoutes,
 } from "@repo/contents/_types/route/content";
 import {
+  readPublicPracticeQuestionNumber,
   readPublicPracticeQuestionRouteBySourcePath,
   toPublicExerciseQuestionPath,
 } from "@repo/contents/_types/route/practice";
@@ -15,6 +16,34 @@ import { Effect, Exit, Option } from "effect";
 import { describe, expect, it } from "vitest";
 
 describe("public practice routes", () => {
+  it("parses localized public question segments through one route grammar", () => {
+    expect(
+      readPublicPracticeQuestionNumber({
+        locale: "en",
+        segment: "question-9",
+      })
+    ).toBe(9);
+    expect(
+      readPublicPracticeQuestionNumber({
+        locale: "id",
+        segment: "soal-9",
+      })
+    ).toBe(9);
+
+    const invalidSegments = [
+      { locale: "en", segment: "soal-9" },
+      { locale: "id", segment: "question-9" },
+      { locale: "en", segment: "question-0" },
+      { locale: "id", segment: "soal-01" },
+      { locale: "en", segment: "question-one" },
+      { locale: "id", segment: undefined },
+    ] as const;
+
+    for (const input of invalidSegments) {
+      expect(readPublicPracticeQuestionNumber(input)).toBeNull();
+    }
+  });
+
   it("derives canonical exercise set and localized question routes", () => {
     expect(Effect.runSync(listPublicContentRoutes())).toContainEqual(
       expect.objectContaining({

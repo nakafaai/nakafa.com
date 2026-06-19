@@ -1,3 +1,4 @@
+import { readPublicPracticeQuestionNumber } from "@repo/contents/_types/route/practice";
 import { logError } from "@repo/utilities/logging/effect";
 import { Effect } from "effect";
 import { NextResponse } from "next/server";
@@ -11,8 +12,6 @@ import {
 } from "@/lib/content/runtime";
 
 export const revalidate = false;
-
-const PRACTICE_QUESTION_SEGMENT_PATTERN = /^(?:question|soal)-(\d+)$/;
 
 /** Generates all locale-aware material API paths from the Convex route catalog. */
 export function generateStaticParams() {
@@ -68,34 +67,43 @@ function getMaterialApiPage({
   limit: number;
   locale: NonNullable<ReturnType<typeof parseApiLocale>>;
   prefix: string;
-}): Effect.Effect<unknown, Error, never> {
-  const practiceRequest = readPracticeApiRequest(prefix);
+}) {
+  const practiceRequest = readPracticeApiRequest({ locale, prefix });
 
   if (practiceRequest?.kind === "question") {
-    return getExerciseApiQuestionPage({
-      locale,
-      slug: practiceRequest.slug,
-    });
+    return {
+      kind: "question" as const,
+      page: getExerciseApiQuestionPage({
+        locale,
+        slug: practiceRequest.slug,
+      }),
+    };
   }
 
   if (practiceRequest?.kind === "set") {
-    return getExerciseApiSetPage({
-      locale,
-      slug: practiceRequest.slug,
-    });
+    return {
+      kind: "set" as const,
+      page: getExerciseApiSetPage({
+        locale,
+        slug: practiceRequest.slug,
+      }),
+    };
   }
 
-  return getMaterialApiContentPage({
-    cursor,
-    limit,
-    locale,
-    prefix,
-  });
+  return {
+    kind: "list" as const,
+    page: getMaterialApiContentPage({
+      cursor,
+      limit,
+      locale,
+      prefix,
+    }),
+  };
 }
 
 /** Converts one content-runtime read into the shared material API response shape. */
 function runMaterialApiRead(
-  apiPage: Effect.Effect<unknown, Error, never>,
+  apiRead: ReturnType<typeof getMaterialApiPage>,
   {
     locale,
     slug,
@@ -104,45 +112,80 @@ function runMaterialApiRead(
     slug: readonly string[];
   }
 ) {
-  return Effect.runPromise(
-    apiPage.pipe(
-      Effect.map((data): Response => NextResponse.json(data)),
-      Effect.catchAll((error) =>
-        Effect.gen(function* () {
-          yield* logError(error, {
-            service: "api-contents",
-            locale,
-            basePath: slug.join("/") || "/",
-            slugLength: slug.length,
-            message: "Failed to fetch contents.",
-          });
+  const onError = (error: Parameters<typeof logError>[0]) =>
+    Effect.gen(function* () {
+      yield* logError(error, {
+        service: "api-contents",
+        locale,
+        basePath: slug.join("/") || "/",
+        slugLength: slug.length,
+        message: "Failed to fetch contents.",
+      });
 
-          return NextResponse.json(
-            { error: "Failed to fetch contents." },
-            { status: 500 }
-          );
-        })
+      return NextResponse.json(
+        { error: "Failed to fetch contents." },
+        { status: 500 }
+      );
+    });
+
+  if (apiRead.kind === "list") {
+    return Effect.runPromise(
+      apiRead.page.pipe(
+        Effect.map((data): Response => NextResponse.json(data)),
+        Effect.catchAll(onError)
       )
+    );
+  }
+
+  if (apiRead.kind === "question") {
+    return Effect.runPromise(
+      apiRead.page.pipe(
+        Effect.map((data): Response => readExactMaterialApiResponse(data)),
+        Effect.catchAll(onError)
+      )
+    );
+  }
+
+  return Effect.runPromise(
+    apiRead.page.pipe(
+      Effect.map((data): Response => readExactMaterialApiResponse(data)),
+      Effect.catchAll(onError)
     )
   );
 }
 
+/** Converts exact exercise content rows to JSON while preserving missing rows as 404s. */
+function readExactMaterialApiResponse<T>(data: T | null) {
+  if (data === null) {
+    return NextResponse.json({ error: "Content not found." }, { status: 404 });
+  }
+
+  return NextResponse.json(data);
+}
+
 /** Classifies material/practice source prefixes into exercise set or question rows. */
-function readPracticeApiRequest(prefix: string) {
+function readPracticeApiRequest({
+  locale,
+  prefix,
+}: {
+  locale: NonNullable<ReturnType<typeof parseApiLocale>>;
+  prefix: string;
+}) {
   if (!prefix.startsWith("material/practice/")) {
     return;
   }
 
   const segments = prefix.split("/");
   const questionSegment = segments.at(-1);
-  const questionMatch = questionSegment?.match(
-    PRACTICE_QUESTION_SEGMENT_PATTERN
-  );
+  const questionNumber = readPublicPracticeQuestionNumber({
+    locale,
+    segment: questionSegment,
+  });
 
-  if (questionMatch?.[1]) {
+  if (questionNumber !== null) {
     return {
       kind: "question" as const,
-      slug: [...segments.slice(0, -1), questionMatch[1]].join("/"),
+      slug: [...segments.slice(0, -1), questionNumber.toString()].join("/"),
     };
   }
 

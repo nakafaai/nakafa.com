@@ -39,6 +39,10 @@ export const getLlmsMarkdownText = Effect.fn("www.llms.markdown.cached")(
     }
 
     const source = yield* getLlmsMarkdownSource({ cleanSlug, locale });
+    if (!source) {
+      return null;
+    }
+
     const exerciseText = yield* Effect.tryPromise({
       try: () =>
         getCachedLlmsExerciseText({
@@ -95,6 +99,10 @@ export const getLlmsSourceMarkdownText = Effect.fn("www.llms.markdown.source")(
     }
 
     const source = yield* getLlmsMarkdownSource({ cleanSlug, locale });
+    if (!source) {
+      return null;
+    }
+
     const exerciseText = yield* getLlmsExerciseText({
       cleanSlug: source.cleanSlug,
       locale,
@@ -153,12 +161,12 @@ function isProjectedPublicMarkdownRoute(cleanSlug: string) {
 function getPublicContentMarkdownSource(
   route: PublicRoute,
   cleanSlug: string
-): LlmsMarkdownSource {
+): LlmsMarkdownSource | null {
   if (
     route.kind === "assessment-context" ||
     route.kind === "curriculum-context"
   ) {
-    return { cleanSlug };
+    return null;
   }
 
   return {

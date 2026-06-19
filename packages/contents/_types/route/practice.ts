@@ -189,10 +189,10 @@ export function readPublicPracticeQuestionRouteByPath({
       for (const set of group.sets) {
         const setIndex = 3 + groupSegments.length;
         const questionIndex = setIndex + 1;
-        const questionNumber = readQuestionNumber(
-          pathSegments[questionIndex],
-          locale
-        );
+        const questionNumber = readPublicPracticeQuestionNumber({
+          locale,
+          segment: pathSegments[questionIndex],
+        });
 
         if (
           pathSegments[setIndex] !== set.routeSlugs[locale] ||
@@ -370,8 +370,14 @@ function segmentsMatch(actual: readonly string[], expected: readonly string[]) {
   return expected.every((segment, index) => actual[index] === segment);
 }
 
-/** Parses localized question segments while rejecting malformed or non-positive question numbers. */
-function readQuestionNumber(segment: string | undefined, locale: Locale) {
+/** Parses localized public question segments while rejecting malformed or non-positive question numbers. */
+export function readPublicPracticeQuestionNumber({
+  locale,
+  segment,
+}: {
+  locale: Locale;
+  segment: string | undefined;
+}) {
   if (!segment) {
     return null;
   }

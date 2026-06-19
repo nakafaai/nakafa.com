@@ -63,4 +63,19 @@ describe("createBreadcrumbItems", () => {
       },
     ]);
   });
+
+  it("does not double-prefix already localized paths", () => {
+    const result = createBreadcrumbItems("en", [
+      { name: "Home", path: "/en" },
+      { name: "Practice", path: "/en/practice/snbt" },
+      { name: "Materials", path: "en/subjects/chemistry" },
+    ]);
+
+    expect(result.map((item) => item.item)).toEqual([
+      "https://nakafa.com/en",
+      "https://nakafa.com/en/practice/snbt",
+      "https://nakafa.com/en/subjects/chemistry",
+    ]);
+    expect(result.map((item) => item.item).join("\n")).not.toContain("/en/en/");
+  });
 });

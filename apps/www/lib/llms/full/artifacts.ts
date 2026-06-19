@@ -1,5 +1,4 @@
 import { availableParallelism } from "node:os";
-import { getExerciseQuestionNumberSegment } from "@repo/contents/_types/graph/route";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import type { LlmsSection } from "@/lib/llms/constants";
@@ -147,7 +146,7 @@ function getEntryDocument({
   entry: LlmsEntry;
   locale: Locale;
 }) {
-  if (!entry.href.endsWith(".md") || isDuplicateExerciseQuestionEntry(entry)) {
+  if (!entry.href.endsWith(".md")) {
     return Effect.succeed(null);
   }
 
@@ -171,23 +170,4 @@ function getEntryDocument({
       text: documentText,
     } satisfies LlmsFullDocument;
   });
-}
-
-/** Keeps llms-full from repeating questions already present in set markdown. */
-function isDuplicateExerciseQuestionEntry(entry: LlmsEntry) {
-  if (entry.section !== "material") {
-    return false;
-  }
-
-  if (!entry.segments.includes("practice")) {
-    return false;
-  }
-
-  const lastSegment = entry.segments.at(-1);
-
-  if (!lastSegment) {
-    return false;
-  }
-
-  return Boolean(getExerciseQuestionNumberSegment(lastSegment));
 }

@@ -18,7 +18,7 @@ describe("public html route rejection", () => {
   beforeEach(() => {
     runtimeMocks.getRuntimeContentRoute.mockReset();
     runtimeMocks.getRuntimeContentRoute.mockReturnValue(
-      Effect.succeed({ route: "fixture" })
+      Effect.succeed({ kind: "exercise-question", route: "fixture" })
     );
   });
 
@@ -160,6 +160,7 @@ describe("public html route rejection", () => {
       "/en/practice/snbt/general-reasoning/mock-test/2026",
       "/en/practice/snbt/mathematical-reasoning/mock-test/2026/set-2",
       "/en/practice/snbt/mathematical-reasoning/mock-test/2026/set-2/question-1",
+      "/id/latihan/snbt/penalaran-matematika/tryout/2026/set-2/soal-1",
     ];
 
     for (const pathname of paths) {
@@ -167,5 +168,56 @@ describe("public html route rejection", () => {
         Effect.runPromise(readProjectedHtmlRouteRejection(pathname))
       ).resolves.toBe(null);
     }
+  });
+
+  it("rejects virtual practice questions missing from the runtime catalog", async () => {
+    runtimeMocks.getRuntimeContentRoute.mockReturnValueOnce(
+      Effect.succeed(null)
+    );
+
+    await expect(
+      Effect.runPromise(
+        readProjectedHtmlRouteRejection(
+          "/en/practice/snbt/mathematical-reasoning/mock-test/2026/set-2/question-999"
+        )
+      )
+    ).resolves.toBe("en");
+    expect(runtimeMocks.getRuntimeContentRoute).toHaveBeenCalledWith({
+      locale: "en",
+      route:
+        "practice/snbt/mathematical-reasoning/mock-test/2026/set-2/question-999",
+    });
+  });
+
+  it("rejects malformed localized practice question leaves before runtime lookup", async () => {
+    await expect(
+      Effect.runPromise(
+        readProjectedHtmlRouteRejection(
+          "/en/practice/snbt/mathematical-reasoning/mock-test/2026/set-2/question-099"
+        )
+      )
+    ).resolves.toBe("en");
+    await expect(
+      Effect.runPromise(
+        readProjectedHtmlRouteRejection(
+          "/id/latihan/snbt/penalaran-matematika/tryout/2026/set-2/question-1"
+        )
+      )
+    ).resolves.toBe("id");
+    expect(runtimeMocks.getRuntimeContentRoute).not.toHaveBeenCalled();
+  });
+
+  it("fails closed when virtual practice question runtime lookup fails", async () => {
+    runtimeMocks.getRuntimeContentRoute.mockReturnValueOnce(
+      Effect.fail(new Error("runtime unavailable"))
+    );
+
+    await expect(
+      Effect.runPromise(
+        readProjectedHtmlRouteRejection(
+          "/en/practice/snbt/mathematical-reasoning/mock-test/2026/set-2/question-999"
+        )
+      )
+    ).resolves.toBe("en");
   });
 });

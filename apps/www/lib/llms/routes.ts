@@ -73,6 +73,17 @@ export const resolveLlmsProxyRoute = Effect.fn("www.llms.routes.resolveProxy")(
     let verifiedRouteCheck: VerifiedContentRouteCheck;
 
     if (Option.isSome(publicRoute)) {
+      if (
+        wantsMarkdown &&
+        isUnsupportedContextMarkdownRoute(publicRoute.value)
+      ) {
+        const decision: LlmsProxyRouteDecision = {
+          kind: "content-not-found",
+          locale: localizedRoute.locale,
+        };
+        return decision;
+      }
+
       verifiedRouteCheck = getRouteProjectionCheck(publicRoute.value);
     } else {
       if (routeCheck.mode === "outside") {
@@ -122,6 +133,13 @@ export const resolveLlmsProxyRoute = Effect.fn("www.llms.routes.resolveProxy")(
     return decision;
   }
 );
+
+/** Checks projected app pages that intentionally have no markdown source. */
+function isUnsupportedContextMarkdownRoute(route: PublicRoute) {
+  return (
+    route.kind === "assessment-context" || route.kind === "curriculum-context"
+  );
+}
 
 /** Converts a projected public route into the existing content lookup contract. */
 function getRouteProjectionCheck(

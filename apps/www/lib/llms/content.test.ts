@@ -146,14 +146,7 @@ describe("llms markdown content resolver", () => {
     });
   });
 
-  it("keeps curriculum and assessment context routes as index markdown", async () => {
-    mockGetCachedLlmsSectionIndexText.mockResolvedValueOnce(
-      "Curriculum index markdown"
-    );
-    mockGetCachedLlmsSectionIndexText.mockResolvedValueOnce(
-      "Assessment index markdown"
-    );
-
+  it("does not invent markdown for curriculum and assessment context routes", async () => {
     await expect(
       Effect.runPromise(
         getLlmsMarkdownText({
@@ -161,7 +154,7 @@ describe("llms markdown content resolver", () => {
           locale: "en",
         })
       )
-    ).resolves.toBe("Curriculum index markdown");
+    ).resolves.toBeNull();
     await expect(
       Effect.runPromise(
         getLlmsMarkdownText({
@@ -169,14 +162,11 @@ describe("llms markdown content resolver", () => {
           locale: "en",
         })
       )
-    ).resolves.toBe("Assessment index markdown");
+    ).resolves.toBeNull();
 
-    expect(mockGetCachedLlmsSectionIndexText).toHaveBeenCalledWith({
-      cleanSlug: "llms/en/curriculum/merdeka/class-12/mathematics/integral",
-    });
-    expect(mockGetCachedLlmsSectionIndexText).toHaveBeenCalledWith({
-      cleanSlug: "llms/en/exams/snbt/quantitative-knowledge/mock-test/2026",
-    });
+    expect(mockGetCachedLlmsExerciseText).not.toHaveBeenCalled();
+    expect(mockGetCachedLlmsMdxText).not.toHaveBeenCalled();
+    expect(mockGetCachedLlmsSectionIndexText).not.toHaveBeenCalled();
   });
 
   it("returns legal source markdown before route indexes", async () => {
@@ -200,14 +190,14 @@ describe("llms markdown content resolver", () => {
     await expect(
       Effect.runPromise(
         getLlmsMarkdownText({
-          cleanSlug: "curriculum/merdeka/class-10/chemistry",
+          cleanSlug: "articles/politics",
           locale: "en",
         })
       )
     ).resolves.toBe("Index markdown");
 
     expect(mockGetCachedLlmsSectionIndexText).toHaveBeenCalledWith({
-      cleanSlug: "llms/en/curriculum/merdeka/class-10/chemistry",
+      cleanSlug: "llms/en/articles/politics",
     });
   });
 
@@ -287,14 +277,14 @@ describe("llms markdown content resolver", () => {
     await expect(
       Effect.runPromise(
         getLlmsSourceMarkdownText({
-          cleanSlug: "curriculum/merdeka/class-10/chemistry",
+          cleanSlug: "articles/politics",
           locale: "en",
         })
       )
     ).resolves.toBe("Source index markdown");
 
     expect(mockGetLlmsSectionIndexText).toHaveBeenCalledWith(
-      "llms/en/curriculum/merdeka/class-10/chemistry"
+      "llms/en/articles/politics"
     );
     expect(mockGetCachedLlmsSectionIndexText).not.toHaveBeenCalled();
   });
@@ -346,6 +336,21 @@ describe("llms markdown content resolver", () => {
       )
     ).resolves.toBe("Source MDX markdown");
 
+    expect(mockGetLlmsSectionIndexText).not.toHaveBeenCalled();
+  });
+
+  it("does not build source artifacts for context routes without markdown", async () => {
+    await expect(
+      Effect.runPromise(
+        getLlmsSourceMarkdownText({
+          cleanSlug: "curriculum/merdeka/class-10/mathematics",
+          locale: "en",
+        })
+      )
+    ).resolves.toBeNull();
+
+    expect(mockGetLlmsExerciseText).not.toHaveBeenCalled();
+    expect(mockGetLlmsMdxText).not.toHaveBeenCalled();
     expect(mockGetLlmsSectionIndexText).not.toHaveBeenCalled();
   });
 
