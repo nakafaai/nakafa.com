@@ -41,6 +41,12 @@ jobs:
           node-version: 24
           cache: "pnpm"
 
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v8.2.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: apps/cas/uv.lock
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
