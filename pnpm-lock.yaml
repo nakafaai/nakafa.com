@@ -693,10 +693,22 @@ importers:
       react-aria-components:
         specifier: ^1.18.0
         version: 1.18.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      remark-mdx:
+        specifier: 3.1.1
+        version: 3.1.1
+      remark-parse:
+        specifier: 11.0.0
+        version: 11.0.0
+      unified:
+        specifier: 11.0.5
+        version: 11.0.5
     devDependencies:
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
+      '@types/mdast':
+        specifier: 4.0.4
+        version: 4.0.4
       '@types/node':
         specifier: 25.9.3
         version: 25.9.3
@@ -706,6 +718,9 @@ importers:
       '@vitest/coverage-istanbul':
         specifier: ^4.1.8
         version: 4.1.8(vitest@4.1.8)
+      mdast-util-mdx-jsx:
+        specifier: 3.2.0
+        version: 3.2.0
       vitest:
         specifier: ^4.1.8
         version: 4.1.8(@edge-runtime/vm@5.0.0)(@opentelemetry/api@1.9.1)(@types/node@25.9.3)(@vitest/coverage-istanbul@4.1.8)(@vitest/ui@4.1.8)(jsdom@29.1.1(@noble/hashes@2.2.0))(vite@8.0.16(@types/node@25.9.3)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))

@@ -106,6 +106,58 @@ describe("getLlmsMdxText", () => {
     expect(text).toContain("Lesson body");
   });
 
+  it("uses the content-owned MDX semantic projection", async () => {
+    runtimeMocks.getRuntimeCurriculumPage.mockReturnValue(
+      Effect.succeed({
+        body: `<LineEquation
+  title={<>Sector <InlineMath math="60^\\circ" /></>}
+  data={[{ points: [{ x: 0, y: 0, z: 0 }] }]}
+/>
+
+<Mermaid chart={\`graph TD;
+A-->B\`} />`,
+        metadata: {
+          description: "Lesson description",
+          title: "Lesson title",
+        },
+      })
+    );
+
+    const text = await Effect.runPromise(
+      getLlmsMdxText({
+        cleanSlug: "material/lesson/mathematics/example",
+        locale: "en",
+      })
+    );
+
+    expect(text).toContain("Component: LineEquation");
+    expect(text).toContain("points: [{ x: 0, y: 0, z: 0 }]");
+    expect(text).toContain("```mermaid\ngraph TD;");
+  });
+
+  it("preserves authored source when semantic projection fails", async () => {
+    runtimeMocks.getRuntimeCurriculumPage.mockReturnValue(
+      Effect.succeed({
+        body: "The source keeps \\(x^2\\) even when {syntax is incomplete.",
+        metadata: {
+          description: "Lesson description",
+          title: "Lesson title",
+        },
+      })
+    );
+
+    const text = await Effect.runPromise(
+      getLlmsMdxText({
+        cleanSlug: "material/lesson/mathematics/example",
+        locale: "en",
+      })
+    );
+
+    expect(text).toContain(
+      "The source keeps $$x^2$$ even when {syntax is incomplete."
+    );
+  });
+
   it("loads curriculum source slugs through the runtime material reader", async () => {
     runtimeMocks.getRuntimeCurriculumPage.mockReturnValue(
       Effect.succeed({

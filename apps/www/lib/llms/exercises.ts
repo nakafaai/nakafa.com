@@ -1,4 +1,8 @@
 import { getExerciseQuestionNumberSegment } from "@repo/contents/_types/graph/route";
+import {
+  preserveMdxSourceForAgentMarkdown,
+  projectMdxForAgentMarkdown,
+} from "@repo/contents/_types/llms/mdx";
 import { toPublicPracticeQuestionSegment } from "@repo/contents/_types/route/practice";
 import { Effect, Option } from "effect";
 import type { Locale } from "next-intl";
@@ -8,14 +12,9 @@ import { BASE_URL } from "@/lib/llms/constants";
 import { buildHeader } from "@/lib/llms/format";
 
 const TRAILING_SLASH_PATTERN = /\/+$/;
-const BLOCK_MATH_PATTERN =
-  /<BlockMath\s+math=["']([\s\S]*?)["']\s*\/?>(?:<\/BlockMath>)?/g;
-const DOUBLE_DOLLAR_MATH_PATTERN = /\$\$([\s\S]*?)\$\$/g;
-const INLINE_MATH_PATTERN =
-  /<InlineMath\s+math=["']([\s\S]*?)["']\s*\/?>(?:<\/InlineMath>)?/g;
 const PUBLIC_URL_PATTERN = /\bhttps?:\/\/[^\s*)]+/g;
-const SINGLE_DOLLAR_MATH_PATTERN = /(^|[^$\\])\$([^$\n]+)\$(?!\$)/g;
-const TEXT_COMMAND_PATTERN = /\\text\{([^}]*)\}/g;
+const PUBLIC_URL_PROTOCOL_PATTERN = /^https?:\/\//;
+const PUBLIC_URL_PATH_PATTERN = /[/?#].*$/;
 const WWW_PREFIX_PATTERN = /^www\./;
 
 /** Runs the cached exercise markdown Effect at the Next cache boundary. */
@@ -98,7 +97,7 @@ export const getLlmsExerciseText = Effect.fn("www.llms.exercises.text")(
       scanned.push("");
       scanned.push("### Question");
       scanned.push("");
-      scanned.push(formatPublicExerciseMarkdown(exercise.question.raw));
+      scanned.push(yield* formatPublicExerciseMarkdown(exercise.question.raw));
       scanned.push("");
       scanned.push("### Choices");
       scanned.push("");
@@ -109,7 +108,9 @@ export const getLlmsExerciseText = Effect.fn("www.llms.exercises.text")(
 
       if (choices) {
         for (const choice of choices) {
-          scanned.push(`- ${formatPublicExerciseMarkdown(choice.label)}`);
+          const choiceLabel = yield* formatPublicExerciseMarkdown(choice.label);
+
+          scanned.push(`- ${choiceLabel}`);
         }
       }
 
@@ -219,37 +220,25 @@ function getExerciseMarkdownTarget(cleanSlug: string) {
  * by public practice pages while preserving external hrefs for agents.
  */
 function formatPublicExerciseMarkdown(raw: string) {
-  return raw
-    .replace(INLINE_MATH_PATTERN, (_, math: string) => formatMathText(math))
-    .replace(BLOCK_MATH_PATTERN, (_, math: string) => formatMathText(math))
-    .replace(DOUBLE_DOLLAR_MATH_PATTERN, (_, math: string) =>
-      formatMathText(math)
+  return projectMdxForAgentMarkdown(raw).pipe(
+    Effect.catchTag("MdxAgentProjectionError", () =>
+      Effect.succeed(preserveMdxSourceForAgentMarkdown(raw))
+    ),
+    Effect.map((markdown) =>
+      markdown.replace(PUBLIC_URL_PATTERN, (url) => {
+        const label = readPublicUrlLabel(url);
+        return `[${label}](${url})`;
+      })
     )
-    .replace(
-      SINGLE_DOLLAR_MATH_PATTERN,
-      (_, prefix: string, math: string) => `${prefix}${formatMathText(math)}`
-    )
-    .replace(PUBLIC_URL_PATTERN, (url) => {
-      const label = readPublicUrlLabel(url);
-      return `[${label}](${url})`;
-    });
-}
-
-/** Formats the LaTeX fragments that exercise pages render as visible text. */
-function formatMathText(math: string) {
-  return math
-    .replace(TEXT_COMMAND_PATTERN, "$1")
-    .replace(/\\%/g, "%")
-    .replace(/\\[,;!]/g, " ")
-    .replace(/\\quad/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  );
 }
 
 /** Returns the compact external-link text shown by the public MDX renderer. */
 function readPublicUrlLabel(url: string) {
-  const parsed = new URL(url);
-  return parsed.hostname.replace(WWW_PREFIX_PATTERN, "");
+  return url
+    .replace(PUBLIC_URL_PROTOCOL_PATTERN, "")
+    .replace(WWW_PREFIX_PATTERN, "")
+    .replace(PUBLIC_URL_PATH_PATTERN, "");
 }
 
 type ExerciseSetPage = NonNullable<

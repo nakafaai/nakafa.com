@@ -1,3 +1,7 @@
+import {
+  preserveMdxSourceForAgentMarkdown,
+  projectMdxForAgentMarkdown,
+} from "@repo/contents/_types/llms/mdx";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
@@ -44,13 +48,18 @@ export const getLlmsMdxText = Effect.fn("www.llms.mdx.text")(function* ({
     return null;
   }
 
+  const body = yield* projectMdxForAgentMarkdown(content.body).pipe(
+    Effect.catchTag("MdxAgentProjectionError", () =>
+      Effect.succeed(preserveMdxSourceForAgentMarkdown(content.body))
+    )
+  );
   const scanned = [
     ...buildHeader({
       url: `${BASE_URL}/${locale}/${publicSlug ?? cleanSlug}`,
       description: getPageDescription(content),
       source: getRawGithubUrl(`/packages/contents/${cleanSlug}/${locale}.mdx`),
     }),
-    content.body,
+    body,
   ];
 
   return scanned.join("\n");

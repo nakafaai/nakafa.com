@@ -41,18 +41,21 @@ vi.mock("@/lib/sitemap/routes", () => ({
       { id: "base" },
       {
         id: "content_en_articles_0",
+        kind: "content",
         locale: "en",
         page: 0,
         section: "articles",
       },
       {
         id: "content_en_articles_1",
+        kind: "content",
         locale: "en",
         page: 1,
         section: "articles",
       },
       {
         id: "content_id_articles_0",
+        kind: "content",
         locale: "id",
         page: 0,
         section: "articles",
@@ -91,16 +94,92 @@ describe("llms indexes", () => {
 
     expect(text.startsWith("# Nakafa\n\n> ")).toBe(true);
     expect(text).toContain("https://nakafa.com/llms/en/llms.txt");
+    expect(text).toContain("https://nakafa.com/llms/en/pages/llms.txt");
     expect(text).toContain("https://nakafa.com/llms/id/llms.txt");
+    expect(text).toContain("https://nakafa.com/llms/id/pages/llms.txt");
     expect(text).toContain("https://nakafa.com/mcp");
     expect(text).toContain("https://nakafa.com/llms-full.txt");
     expect(text).toContain("https://nakafa.com/llms-full/index.json");
   });
 
-  it("builds locale and section page-map indexes without reading content pages", async () => {
-    await expect(
-      Effect.runPromise(getLlmsSectionIndexText("llms/en"))
-    ).resolves.toContain("# Nakafa English Content");
+  it("builds locale indexes with direct starter pages", async () => {
+    const text = await Effect.runPromise(getLlmsSectionIndexText("llms/en"));
+
+    expect(text).toContain("# Nakafa English Content");
+    expect(text).toContain("## Sections");
+    expect(text).toContain("## Starter Pages");
+    expect(text).toContain(
+      "- [Dynastic Politics](https://nakafa.com/en/articles/politics/dynastic-politics.md)"
+    );
+    expect(mockGetContentPageLlmsEntries).toHaveBeenCalled();
+  });
+
+  it("omits the starter page section when locale page entries are empty", async () => {
+    mockGetContentPageLlmsEntries.mockReturnValue(Effect.succeed([]));
+
+    const text = await Effect.runPromise(getLlmsSectionIndexText("llms/en"));
+
+    expect(text).toContain("# Nakafa English Content");
+    expect(text).not.toContain("## Starter Pages");
+  });
+
+  it("builds locale page catalogs from sitemap content pages", async () => {
+    mockGetContentPageLlmsEntries.mockImplementation(
+      ({ page }: { page: number }) =>
+        Effect.succeed([
+          createFixtureEntry({
+            route: "/articles/politics/dynastic-politics",
+            title: "Dynastic Politics",
+          }),
+          ...(page === 0
+            ? []
+            : [
+                createFixtureEntry({
+                  route: "/articles/politics/asian-values",
+                  title: "Asian Values",
+                }),
+              ]),
+        ])
+    );
+
+    const text = await Effect.runPromise(
+      getLlmsSectionIndexText("llms/en/pages/llms.txt")
+    );
+
+    expect(text).toContain("# Nakafa English Page Catalog");
+    expect(text).toContain(
+      "- [Asian Values](https://nakafa.com/en/articles/politics/asian-values.md)"
+    );
+    expect(text).toContain(
+      "- [Dynastic Politics](https://nakafa.com/en/articles/politics/dynastic-politics.md)"
+    );
+    expect(mockGetContentPageLlmsEntries).toHaveBeenCalledWith({
+      locale: "en",
+      page: 0,
+      section: "articles",
+    });
+    expect(mockGetContentPageLlmsEntries).toHaveBeenCalledWith({
+      locale: "en",
+      page: 1,
+      section: "articles",
+    });
+  });
+
+  it("renders an explicit empty locale page catalog", async () => {
+    mockGetContentPageLlmsEntries.mockReturnValue(Effect.succeed([]));
+
+    const text = await Effect.runPromise(
+      getLlmsSectionIndexText("llms/en/pages/llms.txt")
+    );
+
+    expect(text).toContain("# Nakafa English Page Catalog");
+    expect(text).toContain(
+      "This English page catalog currently has no markdown entries."
+    );
+  });
+
+  it("builds section page-map indexes without reading content pages", async () => {
+    mockGetContentPageLlmsEntries.mockClear();
 
     const sectionIndex = await Effect.runPromise(
       getLlmsSectionIndexText("llms/en/articles")

@@ -3,6 +3,7 @@ options:
   canonicalOrigin: https://nakafa.com
   maxLinksToTest: 50
   parityExclusions:
+    - .katex
     - .katex-mathml
   requestTimeout: 20000
   samplingStrategy: deterministic

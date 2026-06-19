@@ -26,6 +26,9 @@ import {
   readSitemapPageDescriptors,
 } from "@/lib/sitemap/routes";
 
+const LOCALE_INDEX_ENTRY_LIMIT = 60;
+const PAGE_CATALOG_SEGMENT = "pages";
+
 /** Builds the small root llms index that points agents to section indexes. */
 export function buildRootLlmsIndexText() {
   return [
@@ -35,7 +38,7 @@ export function buildRootLlmsIndexText() {
     "",
     "## Indexes",
     "",
-    ...routing.locales.map(formatLocaleIndexLine),
+    ...routing.locales.flatMap(formatLocaleIndexLines),
     "",
     "## References",
     "",
@@ -71,7 +74,13 @@ export const getLlmsSectionIndexText = Effect.fn("www.llms.index.text")(
     const { locale, prefixParts } = parsed;
 
     if (prefixParts.length === 0) {
-      return buildLocaleLlmsIndexText(locale);
+      const entries = yield* getLocaleIndexEntries(locale);
+      return buildLocaleLlmsIndexText({ entries, locale });
+    }
+
+    if (isLocalePageCatalogRoute(prefixParts)) {
+      const entries = yield* getLocalePageCatalogEntries(locale);
+      return buildLocalePageCatalogIndexText({ entries, locale });
     }
 
     const section = prefixParts[0];
@@ -147,6 +156,10 @@ function parseLlmsIndexSlug(cleanSlug: string) {
   };
 }
 
+function isLocalePageCatalogRoute(prefixParts: readonly string[]) {
+  return prefixParts.length === 1 && prefixParts[0] === PAGE_CATALOG_SEGMENT;
+}
+
 /** Builds the bounded site index from static site routes only. */
 function buildLlmsSiteIndexText({
   entries,
@@ -164,14 +177,29 @@ function buildLlmsSiteIndexText({
   });
 }
 
-/** Builds the locale-level index that links to each content section. */
-function buildLocaleLlmsIndexText(locale: Locale) {
+/** Builds the locale-level index that links to sections and starter page URLs. */
+function buildLocaleLlmsIndexText({
+  entries,
+  locale,
+}: {
+  entries: LlmsEntry[];
+  locale: Locale;
+}) {
   const localeLabel = getLocaleLabel(locale);
+  const starterLines: string[] = [];
+  if (entries.length > 0) {
+    starterLines.push(
+      "## Starter Pages",
+      "",
+      ...entries.map(formatLlmsEntryLine),
+      ""
+    );
+  }
 
   return [
     `# Nakafa ${localeLabel} Content`,
     "",
-    `> For AI agents: use [llms.txt](${BASE_URL}/llms.txt). ${localeLabel} Nakafa content index generated from the sitemap. Follow a section llms.txt link, then use \`.md\` page links when available for clean markdown content.`,
+    `> For AI agents: use [llms.txt](${BASE_URL}/llms.txt). ${localeLabel} Nakafa content index generated from the sitemap. Start with the direct \`.md\` page links below, or open a section llms.txt for the full bounded route catalog.`,
     "",
     "## Sections",
     "",
@@ -179,7 +207,80 @@ function buildLocaleLlmsIndexText(locale: Locale) {
       formatSectionIndexLine({ locale, localeLabel, section })
     ),
     "",
+    ...starterLines,
   ].join("\n");
+}
+
+/** Builds the locale-level page catalog that lists sitemap-backed page URLs. */
+function buildLocalePageCatalogIndexText({
+  entries,
+  locale,
+}: {
+  entries: LlmsEntry[];
+  locale: Locale;
+}) {
+  const localeLabel = getLocaleLabel(locale);
+
+  if (entries.length === 0) {
+    return renderIndexText({
+      lines: [],
+      summary: `This ${localeLabel} page catalog currently has no markdown entries.`,
+      title: `Nakafa ${localeLabel} Page Catalog`,
+    });
+  }
+
+  return renderIndexText({
+    lines: entries.map(formatLlmsEntryLine),
+    summary: `For AI agents: page-level ${localeLabel} URLs from the sitemap-backed content route catalog. Prefer \`.md\` links for clean markdown retrieval when they are available.`,
+    title: `Nakafa ${localeLabel} Page Catalog`,
+  });
+}
+
+/** Reads a bounded starter set of page-level markdown entries for one locale. */
+function getLocaleIndexEntries(locale: Locale) {
+  const sections = getLlmsSections().filter(isContentLlmsSection);
+
+  return Effect.all(
+    sections.map((section) =>
+      getContentPageLlmsEntries({
+        locale,
+        page: 0,
+        section,
+      })
+    )
+  ).pipe(
+    Effect.map((sectionEntries) =>
+      sectionEntries.flat().slice(0, LOCALE_INDEX_ENTRY_LIMIT)
+    )
+  );
+}
+
+function isContentLlmsSection(
+  section: LlmsSection
+): section is Exclude<LlmsSection, "site"> {
+  return section !== "site";
+}
+
+/** Reads every sitemap-backed page entry for one locale for AFDocs coverage. */
+function getLocalePageCatalogEntries(locale: Locale) {
+  return readSitemapPageDescriptors().pipe(
+    Effect.flatMap((pages) =>
+      Effect.forEach(
+        pages.filter(
+          (page): page is ContentSitemapPage =>
+            "kind" in page && page.kind === "content" && page.locale === locale
+        ),
+        (page) =>
+          getContentPageLlmsEntries({
+            locale,
+            page: page.page,
+            section: page.section,
+          }),
+        { concurrency: 4 }
+      )
+    ),
+    Effect.map((pageEntries) => sortUniqueEntries(pageEntries.flat()))
+  );
 }
 
 /** Builds a bounded section index that links to materialized route pages. */
@@ -335,10 +436,28 @@ function formatLlmsEntryLine(entry: LlmsEntry) {
   return `- [${entry.title}](${entry.href})${suffix}`;
 }
 
-/** Formats one root index link to a locale index. */
-function formatLocaleIndexLine(locale: Locale) {
+/** Sorts page entries and removes routes repeated across sitemap parent rows. */
+function sortUniqueEntries(entries: Iterable<LlmsEntry>) {
+  const entriesByHref = new Map<string, LlmsEntry>();
+
+  for (const entry of entries) {
+    if (!entriesByHref.has(entry.href)) {
+      entriesByHref.set(entry.href, entry);
+    }
+  }
+
+  return Array.from(entriesByHref.values()).sort((a, b) =>
+    a.href.localeCompare(b.href)
+  );
+}
+
+/** Formats root index links to one locale index and page catalog. */
+function formatLocaleIndexLines(locale: Locale) {
   const localeLabel = getLocaleLabel(locale);
-  return `- [${localeLabel} content index](${BASE_URL}/llms/${locale}/llms.txt): ${localeLabel} pages grouped by content area.`;
+  return [
+    `- [${localeLabel} content index](${BASE_URL}/llms/${locale}/llms.txt): ${localeLabel} pages grouped by content area.`,
+    `- [${localeLabel} page catalog](${BASE_URL}/llms/${locale}/${PAGE_CATALOG_SEGMENT}/llms.txt): sitemap-backed ${localeLabel} page URLs for AFDocs and agent coverage.`,
+  ];
 }
 
 /** Formats one locale index link to a section index. */

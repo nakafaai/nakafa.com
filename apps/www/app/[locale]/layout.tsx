@@ -9,6 +9,7 @@ import { routing } from "@repo/internationalization/src/routing";
 import { EducationalOrgJsonLd } from "@repo/seo/json-ld/educational-org";
 import { WebsiteJsonLd } from "@repo/seo/json-ld/website";
 import type { Metadata, Viewport } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
@@ -153,6 +154,10 @@ export default async function Layout({ children }: LayoutProps<"/[locale]">) {
   return (
     <html className={fonts} lang={locale} suppressHydrationWarning>
       <body className="relative">
+        <p className="sr-only">
+          For AI agents: use <Link href="/llms.txt">/llms.txt</Link> for the
+          Nakafa content index.
+        </p>
         <EducationalOrgJsonLd />
         <WebsiteJsonLd locale={locale} />
         <NextIntlClientProvider locale={locale} messages={messages}>

@@ -164,7 +164,7 @@ describe("llms exercise markdown", () => {
     expect(text).not.toContain("## Exercise 2");
   });
 
-  it("renders public exercise markdown with visible math and link text", async () => {
+  it("renders public exercise markdown with semantic math and link text", async () => {
     mockGetRuntimeExerciseSetPage.mockReturnValue(
       Effect.succeed({
         exercises: [
@@ -195,14 +195,81 @@ describe("llms exercise markdown", () => {
       locale: "en",
     });
 
-    expect(text).toContain("Read paragraph 1 with x + y.");
-    expect(text).toContain("x = 2");
+    expect(text).toContain("Read paragraph $$1$$ with $$x + y$$.");
+    expect(text).toContain("```math\nx = 2\n```");
     expect(text).toContain(
       "(Adapted from: [issuu.com](https://issuu.com/naeyc/docs/example))"
     );
-    expect(text).toContain("- paragraph 1 and 50 years");
+    expect(text).toContain("- paragraph $$1$$ and $$50\\text{ years}$$");
     expect(text).not.toContain("InlineMath");
-    expect(text).not.toContain("$$1$$");
+  });
+
+  it("preserves practice-local visual component semantics", async () => {
+    mockGetRuntimeExerciseSetPage.mockReturnValue(
+      Effect.succeed({
+        exercises: [
+          {
+            ...exerciseWithLocalizedChoices,
+            choices: {},
+            number: 5,
+            question: {
+              metadata: {},
+              raw: `import { Graph } from "./graph";
+
+<Graph
+  title="Parabola Graph"
+  description={
+    <>
+      A parabola intersecting the <InlineMath math="x" />-axis.
+    </>
+  }
+/>
+
+The axis of symmetry is <InlineMath math="x = -3" />.`,
+            },
+          },
+        ],
+        title: "Quantitative Knowledge Set 7",
+      })
+    );
+
+    const text = await getCachedLlmsExerciseText({
+      cleanSlug: `${validSetPath}/question-5`,
+      locale: "en",
+    });
+
+    expect(text).toContain("Component: Graph");
+    expect(text).toContain("- title: Parabola Graph");
+    expect(text).toContain("A parabola intersecting the $$x$$-axis.");
+    expect(text).toContain("The axis of symmetry is $$x = -3$$.");
+    expect(text).not.toContain('import { Graph } from "./graph"');
+  });
+
+  it("preserves malformed exercise source text after typed projection failure", async () => {
+    mockGetRuntimeExerciseSetPage.mockReturnValue(
+      Effect.succeed({
+        exercises: [
+          {
+            ...exerciseWithLocalizedChoices,
+            choices: {},
+            number: 6,
+            question: {
+              metadata: {},
+              raw: "Keep \\(x^2\\) and source https://example.com when {syntax breaks.",
+            },
+          },
+        ],
+        title: "Quantitative Knowledge Set 8",
+      })
+    );
+
+    const text = await getCachedLlmsExerciseText({
+      cleanSlug: `${validSetPath}/question-6`,
+      locale: "en",
+    });
+
+    expect(text).toContain("Keep $$x^2$$ and source");
+    expect(text).toContain("[example.com](https://example.com)");
   });
 
   it("uses the exercise title when rendering one titled exercise", async () => {

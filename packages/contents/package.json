@@ -25,13 +25,18 @@
     "motion": "^12.40.0",
     "next-intl": "^4.13.0",
     "react": "19.2.7",
-    "react-aria-components": "^1.18.0"
+    "react-aria-components": "^1.18.0",
+    "remark-mdx": "3.1.1",
+    "remark-parse": "11.0.0",
+    "unified": "11.0.5"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
+    "@types/mdast": "4.0.4",
     "@types/node": "25.9.3",
     "@types/react": "^19.2.17",
     "@vitest/coverage-istanbul": "^4.1.8",
+    "mdast-util-mdx-jsx": "3.2.0",
     "vitest": "^4.1.8"
   }
 }
