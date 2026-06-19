@@ -7,7 +7,7 @@ import {
   readCurriculumAncestors,
   readCurriculumRouteByPublicPath,
 } from "@repo/contents/_types/route/curriculum";
-import { readCurriculumMaterialCards } from "@repo/contents/_types/route/curriculum-card";
+import { readCurriculumMaterialCards } from "@repo/contents/_types/route/curriculum/card";
 import { readPathWithoutNamespace } from "@repo/contents/_types/route/path";
 import type {
   PublicContentRoute,

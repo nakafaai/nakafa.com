@@ -37,7 +37,7 @@ export async function PracticeDomainPage({
       <BreadcrumbJsonLd
         breadcrumbItems={createBreadcrumbItems(locale, [
           { name: tCommon("home"), path: "" },
-          { name: t(data.sourceType), path: data.pagePath },
+          { name: t(data.sourceType), path: data.assessmentPath },
           { name: title, path: data.pagePath },
         ])}
       />
@@ -54,7 +54,10 @@ export async function PracticeDomainPage({
       />
       <LayoutMaterial>
         <LayoutMaterialContent>
-          <HeaderContent title={title} />
+          <HeaderContent
+            link={{ href: data.assessmentPath, label: t(data.sourceType) }}
+            title={title}
+          />
           <p className="sr-only">
             {locale === "id"
               ? "Pilih set latihan yang tersedia untuk membuka soal latihan pada domain ini."

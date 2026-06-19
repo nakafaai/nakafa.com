@@ -17,6 +17,10 @@ export const routing = defineRouting({
       en: "/subjects/[subject]/[topic]/[[...lesson]]",
       id: "/materi/[subject]/[topic]/[[...lesson]]",
     },
+    "/practice/[assessment]": {
+      en: "/practice/[assessment]",
+      id: "/latihan/[assessment]",
+    },
     "/practice/[assessment]/[domain]/[[...path]]": {
       en: "/practice/[assessment]/[domain]/[[...path]]",
       id: "/latihan/[assessment]/[domain]/[[...path]]",

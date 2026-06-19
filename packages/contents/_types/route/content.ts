@@ -17,12 +17,12 @@ import {
   normalizePublicPath,
   uniqueRoutes,
 } from "@repo/contents/_types/route/path";
+import { makePracticeGroupPath } from "@repo/contents/_types/route/practice/group";
+import { getPracticeSourceGroupSlug } from "@repo/contents/_types/route/practice/path";
 import {
-  getPracticeSourceGroupSlug,
-  makePracticeGroupPath,
   readPublicPracticeQuestionRouteByPath,
   readPublicPracticeQuestionRouteBySourcePath,
-} from "@repo/contents/_types/route/practice";
+} from "@repo/contents/_types/route/practice/question";
 import type { PublicContentRoute } from "@repo/contents/_types/route/schema";
 import { locales } from "@repo/utilities/locales";
 import { Effect, Option } from "effect";

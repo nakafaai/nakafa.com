@@ -1,7 +1,4 @@
-import {
-  readPublicPracticeQuestionNumber,
-  readSourcePracticeQuestionNumber,
-} from "@repo/contents/_types/route/practice";
+import { readPracticeSourceRouteByPath } from "@repo/contents/_types/route/practice/identity";
 import { logError } from "@repo/utilities/logging/effect";
 import { Effect } from "effect";
 import { NextResponse } from "next/server";
@@ -174,27 +171,24 @@ function readPracticeApiRequest({
   locale: NonNullable<ReturnType<typeof parseApiLocale>>;
   prefix: string;
 }) {
-  if (!prefix.startsWith("material/practice/")) {
+  const materialPath = prefix.slice("material/".length);
+  const practiceRoute =
+    readPracticeSourceRouteByPath({ locale, route: materialPath }) ??
+    readPracticeSourceRouteByPath({ locale, route: prefix });
+
+  if (!practiceRoute) {
     return;
   }
 
-  const segments = prefix.split("/");
-  const questionSegment = segments.at(-1);
-  const questionNumber =
-    readPublicPracticeQuestionNumber({
-      locale,
-      segment: questionSegment,
-    }) ?? readSourcePracticeQuestionNumber(questionSegment);
-
-  if (questionNumber !== null) {
+  if (practiceRoute.kind === "question") {
     return {
       kind: "question" as const,
-      slug: [...segments.slice(0, -1), questionNumber.toString()].join("/"),
+      slug: practiceRoute.sourcePath,
     };
   }
 
   return {
     kind: "set" as const,
-    slug: prefix,
+    slug: practiceRoute.sourcePath,
   };
 }

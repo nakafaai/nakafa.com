@@ -5,9 +5,11 @@ import { readPathWithoutNamespace } from "@repo/contents/_types/route/path";
 import {
   readPublicPracticeDomainPath,
   readPublicPracticeQuestionNumber,
+} from "@repo/contents/_types/route/practice/path";
+import {
   readPublicPracticeQuestionRouteByPath,
   readPublicPracticeQuestionRouteBySourcePath,
-} from "@repo/contents/_types/route/practice";
+} from "@repo/contents/_types/route/practice/question";
 import type {
   PublicContentRoute,
   PublicPracticeQuestionRoute,

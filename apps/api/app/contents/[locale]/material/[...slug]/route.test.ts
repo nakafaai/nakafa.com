@@ -130,7 +130,7 @@ describe("material content API route", () => {
     const page = {
       exercises: [{ number: 1, title: "Question 1" }],
       set: {
-        slug: "material/practice/assessment/snbt/general-knowledge/set-1",
+        slug: "material/practice/assessment/snbt/general-knowledge/try-out-2026/set-1",
       },
     };
 
@@ -138,7 +138,7 @@ describe("material content API route", () => {
 
     const response = await route.GET(
       new Request(
-        "http://localhost/contents/en/material/practice/assessment/snbt/general-knowledge/set-1"
+        "http://localhost/contents/en/material/practice/assessment/snbt/general-knowledge/try-out-2026/set-1"
       ),
       {
         params: Promise.resolve({
@@ -148,6 +148,7 @@ describe("material content API route", () => {
             "assessment",
             "snbt",
             "general-knowledge",
+            "try-out-2026",
             "set-1",
           ],
         }),
@@ -158,7 +159,7 @@ describe("material content API route", () => {
     expect(await response.json()).toEqual(page);
     expect(runtimeMocks.getExerciseApiSetPage).toHaveBeenCalledWith({
       locale: "en",
-      slug: "material/practice/assessment/snbt/general-knowledge/set-1",
+      slug: "material/practice/assessment/snbt/general-knowledge/try-out-2026/set-1",
     });
     expect(runtimeMocks.getMaterialApiContentPage).not.toHaveBeenCalled();
   });
@@ -168,7 +169,7 @@ describe("material content API route", () => {
 
     const response = await route.GET(
       new Request(
-        "http://localhost/contents/en/material/practice/assessment/snbt/general-knowledge/set-1"
+        "http://localhost/contents/en/material/practice/assessment/snbt/general-knowledge/try-out-2026/set-1"
       ),
       {
         params: Promise.resolve({
@@ -178,6 +179,7 @@ describe("material content API route", () => {
             "assessment",
             "snbt",
             "general-knowledge",
+            "try-out-2026",
             "set-1",
           ],
         }),
@@ -188,7 +190,7 @@ describe("material content API route", () => {
     expect(await response.json()).toEqual({ error: "Content not found." });
     expect(runtimeMocks.getExerciseApiSetPage).toHaveBeenCalledWith({
       locale: "en",
-      slug: "material/practice/assessment/snbt/general-knowledge/set-1",
+      slug: "material/practice/assessment/snbt/general-knowledge/try-out-2026/set-1",
     });
     expect(runtimeMocks.getMaterialApiContentPage).not.toHaveBeenCalled();
   });
@@ -205,16 +207,16 @@ describe("material content API route", () => {
 
     const response = await route.GET(
       new Request(
-        "http://localhost/contents/id/material/practice/assessment/snbt/pengetahuan-umum/set-1/soal-9"
+        "http://localhost/contents/id/material/latihan/snbt/pengetahuan-umum/tryout-2026/set-1/soal-9"
       ),
       {
         params: Promise.resolve({
           locale: "id",
           slug: [
-            "practice",
-            "assessment",
+            "latihan",
             "snbt",
             "pengetahuan-umum",
+            "tryout-2026",
             "set-1",
             "soal-9",
           ],
@@ -226,7 +228,7 @@ describe("material content API route", () => {
     expect(await response.json()).toEqual(page);
     expect(runtimeMocks.getExerciseApiQuestionPage).toHaveBeenCalledWith({
       locale: "id",
-      slug: "material/practice/assessment/snbt/pengetahuan-umum/set-1/9",
+      slug: "material/practice/assessment/snbt/general-knowledge/try-out-2026/set-1/9",
     });
     expect(runtimeMocks.getMaterialApiContentPage).not.toHaveBeenCalled();
   });
@@ -243,7 +245,7 @@ describe("material content API route", () => {
 
     const response = await route.GET(
       new Request(
-        "http://localhost/contents/id/material/practice/assessment/snbt/pengetahuan-umum/set-1/9"
+        "http://localhost/contents/id/material/practice/assessment/snbt/general-knowledge/try-out-2026/set-1/9"
       ),
       {
         params: Promise.resolve({
@@ -252,7 +254,8 @@ describe("material content API route", () => {
             "practice",
             "assessment",
             "snbt",
-            "pengetahuan-umum",
+            "general-knowledge",
+            "try-out-2026",
             "set-1",
             "9",
           ],
@@ -264,7 +267,7 @@ describe("material content API route", () => {
     expect(await response.json()).toEqual(page);
     expect(runtimeMocks.getExerciseApiQuestionPage).toHaveBeenCalledWith({
       locale: "id",
-      slug: "material/practice/assessment/snbt/pengetahuan-umum/set-1/9",
+      slug: "material/practice/assessment/snbt/general-knowledge/try-out-2026/set-1/9",
     });
     expect(runtimeMocks.getMaterialApiContentPage).not.toHaveBeenCalled();
   });
@@ -276,16 +279,16 @@ describe("material content API route", () => {
 
     const response = await route.GET(
       new Request(
-        "http://localhost/contents/id/material/practice/assessment/snbt/pengetahuan-umum/set-1/soal-9"
+        "http://localhost/contents/id/material/latihan/snbt/pengetahuan-umum/tryout-2026/set-1/soal-9"
       ),
       {
         params: Promise.resolve({
           locale: "id",
           slug: [
-            "practice",
-            "assessment",
+            "latihan",
             "snbt",
             "pengetahuan-umum",
+            "tryout-2026",
             "set-1",
             "soal-9",
           ],
@@ -297,17 +300,20 @@ describe("material content API route", () => {
     expect(await response.json()).toEqual({ error: "Content not found." });
     expect(runtimeMocks.getExerciseApiQuestionPage).toHaveBeenCalledWith({
       locale: "id",
-      slug: "material/practice/assessment/snbt/pengetahuan-umum/set-1/9",
+      slug: "material/practice/assessment/snbt/general-knowledge/try-out-2026/set-1/9",
     });
     expect(runtimeMocks.getMaterialApiContentPage).not.toHaveBeenCalled();
   });
 
   it("does not normalize malformed question leaves as exact questions", async () => {
-    runtimeMocks.getExerciseApiSetPage.mockReturnValue(Effect.succeed(null));
+    const page = { items: [], nextCursor: null };
+    runtimeMocks.getMaterialApiContentPage.mockReturnValue(
+      Effect.succeed(page)
+    );
 
     const response = await route.GET(
       new Request(
-        "http://localhost/contents/id/material/practice/assessment/snbt/pengetahuan-umum/set-1/question-09"
+        "http://localhost/contents/id/material/practice/assessment/snbt/general-knowledge/try-out-2026/set-1/question-09"
       ),
       {
         params: Promise.resolve({
@@ -316,7 +322,8 @@ describe("material content API route", () => {
             "practice",
             "assessment",
             "snbt",
-            "pengetahuan-umum",
+            "general-knowledge",
+            "try-out-2026",
             "set-1",
             "question-09",
           ],
@@ -324,11 +331,16 @@ describe("material content API route", () => {
       }
     );
 
-    expect(response.status).toBe(404);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual(page);
     expect(runtimeMocks.getExerciseApiQuestionPage).not.toHaveBeenCalled();
-    expect(runtimeMocks.getExerciseApiSetPage).toHaveBeenCalledWith({
+    expect(runtimeMocks.getExerciseApiSetPage).not.toHaveBeenCalled();
+    expect(runtimeMocks.getMaterialApiContentPage).toHaveBeenCalledWith({
+      cursor: null,
+      limit: 100,
       locale: "id",
-      slug: "material/practice/assessment/snbt/pengetahuan-umum/set-1/question-09",
+      prefix:
+        "material/practice/assessment/snbt/general-knowledge/try-out-2026/set-1/question-09",
     });
   });
 

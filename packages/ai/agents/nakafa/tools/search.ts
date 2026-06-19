@@ -6,7 +6,7 @@ import type {
   NakafaAgentSearchResult,
 } from "@repo/contents/_lib/agent/schema/search";
 import type { Locale } from "@repo/contents/_types/content";
-import { isPracticeQuestionPath } from "@repo/contents/_types/route/practice";
+import { isPracticeQuestionPath } from "@repo/contents/_types/route/practice/path";
 import type { UIMessageStreamWriter } from "ai";
 import { Effect, Either } from "effect";
 

@@ -1,7 +1,10 @@
 import type { api } from "@repo/backend/convex/_generated/api";
 import { CONTENT_ROUTE_ARTIFACT_PAGE_SIZE } from "@repo/backend/convex/contents/constants";
 import { findPublicContentRouteBySourcePath } from "@repo/contents/_types/route/content";
-import { readPublicPracticeDomainPath } from "@repo/contents/_types/route/practice";
+import {
+  readPublicPracticeAssessmentPath,
+  readPublicPracticeDomainPath,
+} from "@repo/contents/_types/route/practice/path";
 import type { PublicContentRoute } from "@repo/contents/_types/route/schema";
 import { routing } from "@repo/internationalization/src/routing";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
@@ -318,6 +321,7 @@ function addProjectedContentRoutes(
     routes.add(routeToPath(route.parentPath));
   }
 
+  routes.add(routeToPath(readPublicPracticeAssessmentPath(route)));
   routes.add(routeToPath(readPublicPracticeDomainPath(route)));
   routes.add(routeToPath(route.publicPath));
 }

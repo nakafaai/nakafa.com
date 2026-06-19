@@ -8,6 +8,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import type { NakafaDataPart } from "@repo/ai/schema/data";
+import { readPracticeSourceRouteByPath } from "@repo/contents/_types/route/practice/identity";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -125,7 +126,13 @@ function getSearchLabel(
     case "articles":
       return t("nakafa-search-articles");
     case "material":
-      if (firstItem?.route.startsWith("material/practice/")) {
+      if (
+        firstItem &&
+        readPracticeSourceRouteByPath({
+          locale: firstItem.locale,
+          route: firstItem.route,
+        })
+      ) {
         return t("nakafa-search-exercises");
       }
 

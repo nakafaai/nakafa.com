@@ -14,10 +14,8 @@ import {
   makePath,
   uniqueRoutes,
 } from "@repo/contents/_types/route/path";
-import {
-  createPracticeMaterialByKey,
-  makePracticeDomainPath,
-} from "@repo/contents/_types/route/practice";
+import { makePracticeDomainPath } from "@repo/contents/_types/route/practice/group";
+import { createPracticeMaterialByKey } from "@repo/contents/_types/route/practice/material";
 import { findProgram } from "@repo/contents/_types/route/program";
 import type { PublicAssessmentRoute } from "@repo/contents/_types/route/schema";
 import type { PublicRouteSegment } from "@repo/contents/_types/route/segment";

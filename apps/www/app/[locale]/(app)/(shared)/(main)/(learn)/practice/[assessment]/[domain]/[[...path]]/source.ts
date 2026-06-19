@@ -1,17 +1,13 @@
-import {
-  parseExercisesMaterial,
-  parseExercisesType,
-} from "@repo/contents/_lib/assessment/route";
 import type { ContentPagination } from "@repo/contents/_types/content";
+import {
+  readPracticeQuestionSourceParts,
+  readPracticeSourceSetParts,
+} from "@repo/contents/_types/route/practice/identity";
 import {
   readSourcePracticeQuestionNumber,
   toPublicPracticeQuestionSegment,
-} from "@repo/contents/_types/route/practice";
-import { cleanSlug } from "@repo/utilities/helper";
-import { Option } from "effect";
+} from "@repo/contents/_types/route/practice/path";
 import { notFound } from "next/navigation";
-
-const EXERCISE_TYPE_YEAR_PATTERN = /^(.+)-(\d{4})$/;
 
 /** Uses the first set row to name the grouped practice card consistently. */
 export function readGroupTitle(route: { sourcePath: string }) {
@@ -27,49 +23,24 @@ export function readGroupTitle(route: { sourcePath: string }) {
 
 /** Reads source set and question number from a projected question source path. */
 export function readQuestionSourcePathParts(sourcePath: string) {
-  const segments = cleanSlug(sourcePath).split("/");
-  const questionSegment = segments.at(-1);
+  const parts = readPracticeQuestionSourceParts(sourcePath);
 
-  if (!questionSegment) {
+  if (!parts) {
     notFound();
   }
 
-  const questionNumber = readSourcePracticeQuestionNumber(questionSegment);
-
-  if (questionNumber === null) {
-    notFound();
-  }
-
-  return {
-    questionNumber,
-    setSourcePath: segments.slice(0, -1).join("/"),
-  };
+  return parts;
 }
 
 /** Parses the stable source set path into runtime exercise group arguments. */
 export function readExerciseSetSourceParts(sourcePath: string) {
-  const segments = cleanSlug(sourcePath).split("/");
-  const [, , , type, material, exerciseTypeSegment] = segments;
-  const exerciseTypeMatch = exerciseTypeSegment?.match(
-    EXERCISE_TYPE_YEAR_PATTERN
-  );
+  const parts = readPracticeSourceSetParts(sourcePath);
 
-  if (!(type && material && exerciseTypeSegment)) {
-    notFound();
-  }
-  const parsedType = parseExercisesType(type);
-  const parsedMaterial = parseExercisesMaterial(material);
-
-  if (Option.isNone(parsedType) || Option.isNone(parsedMaterial)) {
+  if (!parts) {
     notFound();
   }
 
-  return {
-    exerciseType: exerciseTypeMatch?.[1] ?? exerciseTypeSegment,
-    material: parsedMaterial.value,
-    type: parsedType.value,
-    year: exerciseTypeMatch?.[2],
-  };
+  return parts;
 }
 
 /** Converts numeric pagination into localized public question label paths. */

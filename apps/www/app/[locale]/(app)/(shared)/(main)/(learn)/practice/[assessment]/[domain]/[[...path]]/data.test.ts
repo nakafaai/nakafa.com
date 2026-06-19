@@ -57,6 +57,8 @@ describe("practice route data", () => {
     }
 
     expect(domain.publicPath).toBe("practice/snbt/quantitative-knowledge");
+    expect(domain.assessmentPath).toBe("/en/practice/snbt");
+    expect(domain.pagePath).toBe("/en/practice/snbt/quantitative-knowledge");
     expect(domain.groups[0]?.material).toMatchObject({
       title: "Try Out 2026",
       items: expect.arrayContaining([
@@ -147,6 +149,10 @@ describe("practice route data", () => {
 
     expect(set.pagePath).toBe(
       "/en/practice/snbt/quantitative-knowledge/mock-test-2026/set-1"
+    );
+    expect(set.group.pagePath).toBe("/en/practice/snbt");
+    expect(set.group.materialPath).toBe(
+      "/en/practice/snbt/quantitative-knowledge"
     );
     expect(set.group.material.items.length).toBeGreaterThan(0);
     expect(toPracticeHref(set.route)).toBe(set.pagePath);

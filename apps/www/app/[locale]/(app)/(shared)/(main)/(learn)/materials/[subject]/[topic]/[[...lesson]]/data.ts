@@ -7,7 +7,7 @@ import {
   readParentMaterialRoute,
 } from "@repo/contents/_types/route/content";
 import { listPublicCurriculumRoutes } from "@repo/contents/_types/route/curriculum";
-import { readCurriculumCardListContext } from "@repo/contents/_types/route/curriculum-card";
+import { readCurriculumCardListContext } from "@repo/contents/_types/route/curriculum/card";
 import type {
   PublicContentRoute,
   PublicCurriculumRoute,

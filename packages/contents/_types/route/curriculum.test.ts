@@ -15,7 +15,7 @@ import {
 import {
   readCurriculumCardListContext,
   readCurriculumMaterialCards,
-} from "@repo/contents/_types/route/curriculum-card";
+} from "@repo/contents/_types/route/curriculum/card";
 import { makePath } from "@repo/contents/_types/route/path";
 import { Effect, Exit, Schema } from "effect";
 import { describe, expect, it } from "vitest";

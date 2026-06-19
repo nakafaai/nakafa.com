@@ -10,7 +10,7 @@ import {
   normalizePublicPath,
   uniqueRoutes,
 } from "@repo/contents/_types/route/path";
-import { readPublicPracticeQuestionRouteByPath } from "@repo/contents/_types/route/practice";
+import { readPublicPracticeQuestionRouteByPath } from "@repo/contents/_types/route/practice/question";
 import type { PublicRoute } from "@repo/contents/_types/route/schema";
 import { Effect, Option } from "effect";
 

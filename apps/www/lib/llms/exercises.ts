@@ -5,7 +5,7 @@ import {
 import {
   readSourcePracticeQuestionNumber,
   toPublicPracticeQuestionSegment,
-} from "@repo/contents/_types/route/practice";
+} from "@repo/contents/_types/route/practice/path";
 import { Effect, Option } from "effect";
 import type { Locale } from "next-intl";
 import { applyContentRuntimeCache } from "@/lib/content/cache";

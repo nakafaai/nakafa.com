@@ -1,6 +1,9 @@
 import { getExerciseNumberPagination } from "@repo/contents/_lib/assessment/slug";
 import type { ContentPagination } from "@repo/contents/_types/content";
-import { readPublicPracticeDomainPath } from "@repo/contents/_types/route/practice";
+import {
+  readPublicPracticeAssessmentPath,
+  readPublicPracticeDomainPath,
+} from "@repo/contents/_types/route/practice/path";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import {
@@ -39,6 +42,7 @@ export type PracticeRouteData =
   | {
       kind: "domain";
       alternatePaths: Array<{ locale: Locale; publicPath: string }>;
+      assessmentPath: string;
       groups: PracticeGroupContext[];
       locale: Locale;
       pagePath: string;
@@ -217,12 +221,13 @@ function readPracticeGroupContext(
   const sourceParts = readExerciseSetSourceParts(setRoute.sourcePath);
 
   const description = setRoute.description;
+  const assessmentPath = readPublicPracticeAssessmentPath(setRoute);
   const domainPath = readPublicPracticeDomainPath(setRoute);
 
   return {
     description,
     materialPath: `/${locale}/${domainPath}`,
-    pagePath: `/${locale}/${domainPath}`,
+    pagePath: `/${locale}/${assessmentPath}`,
     sourceMaterial: sourceParts.material,
     sourceType: sourceParts.type,
     material: {
@@ -322,6 +327,7 @@ function getDomainRouteData(
       firstRoute.materialKey,
       routes
     ),
+    assessmentPath: `/${locale}/${readPublicPracticeAssessmentPath(firstRoute)}`,
     groups,
     locale,
     pagePath: `/${locale}/${publicPath}`,

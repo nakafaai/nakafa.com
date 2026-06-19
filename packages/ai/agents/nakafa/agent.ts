@@ -86,17 +86,19 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
                   Effect.provideService(NakafaSearch, searchService),
                   Effect.tap((output) =>
                     Effect.sync(() => {
-                      if (input.section !== "material") {
-                        hasPendingContentRead =
-                          hasPendingContentRead ||
-                          shouldReadAfterSearch(input, output.result);
-                        return;
-                      }
-
-                      pendingExerciseRef = selectExerciseRef(
+                      const exerciseRef = selectExerciseRef(
                         input,
                         output.result
                       );
+
+                      if (Option.isSome(exerciseRef)) {
+                        pendingExerciseRef = exerciseRef;
+                        return;
+                      }
+
+                      hasPendingContentRead =
+                        hasPendingContentRead ||
+                        shouldReadAfterSearch(input, output.result);
                     })
                   ),
                   Effect.map((output) => output.text)

@@ -12,10 +12,8 @@ import {
   type LocalizedLlmsRoute,
   resolveLlmsProxyRoute,
 } from "@/lib/llms/routes";
-import {
-  readProjectedHtmlRouteRejection,
-  readSourceBackedHtmlRouteRejection,
-} from "@/lib/routing/public-html";
+import { readProjectedHtmlRouteRejection } from "@/lib/routing/public/projected";
+import { readSourceBackedHtmlRouteRejection } from "@/lib/routing/public/source";
 
 const handleLocalizedRequest = createMiddleware(routing);
 const TRAILING_SLASH_PATTERN = /\/+$/;

@@ -160,6 +160,7 @@ describe("sitemap route discovery", () => {
     const routes = await getSitemapRoutes("content_en_material_0");
 
     expect(routes).toEqual([
+      "/practice/snbt",
       "/practice/snbt/quantitative-knowledge",
       "/practice/snbt/quantitative-knowledge/mock-test-2026/set-1",
       "/practice/snbt/quantitative-knowledge/mock-test-2026/set-1/question-1",
@@ -232,6 +233,7 @@ describe("sitemap route discovery", () => {
     ).resolves.toEqual([
       "/articles/politics",
       "/articles/politics/dynastic-politics-asian-values",
+      "/practice/snbt",
       "/practice/snbt/quantitative-knowledge",
       "/practice/snbt/quantitative-knowledge/mock-test-2026/set-1",
       "/practice/snbt/quantitative-knowledge/mock-test-2026/set-1/question-1",

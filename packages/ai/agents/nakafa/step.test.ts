@@ -44,11 +44,13 @@ function detachedExerciseSummary({
   contentId,
   description,
   route,
+  sourcePath,
   title,
 }: {
   contentId: string;
   description: string;
   route: string;
+  sourcePath?: string;
   title: string;
 }) {
   const ref = createNakafaContentRefFromGraphProjection({
@@ -61,6 +63,7 @@ function detachedExerciseSummary({
     locale: "id",
     route,
     section: "material",
+    sourcePath,
   });
 
   if (Option.isNone(ref)) {
@@ -191,6 +194,46 @@ describe("Nakafa agent step state", () => {
     }
 
     expect(ref.value).toBe(exerciseSetResult.content_id);
+  });
+
+  it("selects exercise refs from localized public practice routes", () => {
+    const question = detachedExerciseSummary({
+      contentId: "asset:id:public:exercise:set-1:q9",
+      description: "Public graph question.",
+      route: "latihan/snbt/pengetahuan-umum/tryout-2026/set-1/soal-9",
+      sourcePath:
+        "material/practice/assessment/snbt/general-knowledge/try-out-2026/set-1/9",
+      title: "Public Question 9",
+    });
+    const set = detachedExerciseSummary({
+      contentId: "asset:id:public:exercise:set-1",
+      description: "Public graph set.",
+      route: "latihan/snbt/pengetahuan-umum/tryout-2026/set-1",
+      sourcePath:
+        "material/practice/assessment/snbt/general-knowledge/try-out-2026/set-1",
+      title: "Public Set 1",
+    });
+    const ref = selectExerciseRef(
+      {
+        limit: 20,
+        locale: "id",
+        offset: 0,
+        queries: ["SNBT pengetahuan umum set 1"],
+        section: "material",
+      },
+      {
+        ...exerciseResult,
+        count: 2,
+        items: [question, set],
+        limit: 20,
+      }
+    );
+
+    if (Option.isNone(ref)) {
+      throw new Error("Expected a public practice set reference.");
+    }
+
+    expect(ref.value).toBe(set.content_id);
   });
 
   it("does not rebuild detached set graph IDs from route projections", () => {
@@ -415,10 +458,33 @@ describe("Nakafa agent step state", () => {
       },
       null
     );
+    const quranSearch = selectExerciseRef(
+      {
+        limit: 1,
+        locale: "id",
+        offset: 0,
+        queries: ["al fatihah"],
+        section: "material",
+      },
+      {
+        ...exerciseResult,
+        count: 1,
+        items: [
+          contentSummary({
+            description: "Surah pembuka.",
+            locale: "id",
+            route: "quran/1",
+            section: "quran",
+            title: "Al-Fatihah",
+          }),
+        ],
+      }
+    );
 
     expect(Option.isNone(broadSearch)).toBe(true);
     expect(Option.isNone(emptySearch)).toBe(true);
     expect(Option.isNone(failedSearch)).toBe(true);
+    expect(Option.isNone(quranSearch)).toBe(true);
   });
 
   it("forces exercise for one step when an exercise reference is pending", () => {
@@ -563,8 +629,31 @@ describe("Nakafa agent step state", () => {
       },
       null
     );
+    const publicExerciseSearch = shouldReadAfterSearch(
+      {
+        limit: 1,
+        locale: "id",
+        offset: 0,
+        queries: ["SNBT pengetahuan umum set 1"],
+        section: "material",
+      },
+      {
+        ...exerciseResult,
+        items: [
+          detachedExerciseSummary({
+            contentId: "asset:id:public:exercise:set-1",
+            description: "Public graph set.",
+            route: "latihan/snbt/pengetahuan-umum/tryout-2026/set-1",
+            sourcePath:
+              "material/practice/assessment/snbt/general-knowledge/try-out-2026/set-1",
+            title: "Public Set 1",
+          }),
+        ],
+      }
+    );
 
     expect(exerciseSearch).toBe(false);
+    expect(publicExerciseSearch).toBe(false);
     expect(quranSearch).toBe(false);
     expect(emptySearch).toBe(false);
     expect(failedSearch).toBe(false);

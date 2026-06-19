@@ -8,11 +8,11 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import type { NakafaDataPart } from "@repo/ai/schema/data";
-import { toPublicPracticeQuestionSegment } from "@repo/contents/_types/route/practice";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
+import { readExercisePreviewHref } from "@/components/ai/message-part/nakafa/exercise/link";
 
 const MAX_SHOWN_EXERCISES = 5;
 
@@ -44,10 +44,12 @@ export const ExercisePart = ({ message }: Props) => {
             nativeButton={false}
             render={
               <a
-                href={`${message.result.url}/${toPublicPracticeQuestionSegment({
+                href={readExercisePreviewHref({
+                  exerciseNumber: message.result.exercise_number,
                   locale: message.result.locale,
                   number,
-                })}`}
+                  url: message.result.url,
+                })}
                 rel="noopener noreferrer"
                 target="_blank"
               >
