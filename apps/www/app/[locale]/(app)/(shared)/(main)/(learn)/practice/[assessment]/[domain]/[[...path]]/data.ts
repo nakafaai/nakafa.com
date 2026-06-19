@@ -1,9 +1,10 @@
 import { getExerciseNumberPagination } from "@repo/contents/_lib/assessment/slug";
 import type { ContentPagination } from "@repo/contents/_types/content";
+import { readPublicPracticeDomainPath } from "@repo/contents/_types/route/practice";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import {
-  findPracticeGroupSet,
+  findPracticeDomainRoutes,
   findPracticeRoute,
   type PracticeQuestionRoute,
   type PracticeSetRoute,
@@ -32,8 +33,19 @@ type RuntimeSetPage = NonNullable<
 type RuntimeQuestionPage = NonNullable<
   Awaited<ReturnType<typeof fetchRuntimeExerciseQuestionPage>>
 >;
+type ExerciseSetSourceParts = ReturnType<typeof readExerciseSetSourceParts>;
 
 export type PracticeRouteData =
+  | {
+      kind: "domain";
+      alternatePaths: Array<{ locale: Locale; publicPath: string }>;
+      groups: PracticeGroupContext[];
+      locale: Locale;
+      pagePath: string;
+      publicPath: string;
+      sourceMaterial: ExerciseSetSourceParts["material"];
+      sourceType: ExerciseSetSourceParts["type"];
+    }
   | {
       kind: "single";
       exercise: RuntimeQuestionPage["exercise"];
@@ -52,13 +64,6 @@ export type PracticeRouteData =
       locale: Locale;
       pagePath: string;
       route: PracticeSetRoute;
-    }
-  | {
-      kind: "year-group";
-      group: PracticeGroupContext;
-      locale: Locale;
-      pagePath: string;
-      publicPath: string;
     };
 
 type PracticeGroupContext = ReturnType<typeof readPracticeGroupContext>;
@@ -71,14 +76,29 @@ type PracticeGroupContext = ReturnType<typeof readPracticeGroupContext>;
  */
 export function listPracticeStaticParams(rawLocale?: string) {
   const locale = rawLocale ? getLocaleOrThrow(rawLocale) : undefined;
+  const paramsByPath = new Map<
+    string,
+    { assessment: string; domain: string; path?: string[] }
+  >();
 
-  return readPracticeRoutes()
-    .filter((route) => !locale || route.locale === locale)
-    .map((route) => {
-      const [, assessment, domain, ...path] = route.publicPath.split("/");
+  for (const route of readPracticeRoutes()) {
+    if (locale && route.locale !== locale) {
+      continue;
+    }
 
-      return { assessment, domain, path };
+    const [, assessment, domain, ...path] = route.publicPath.split("/");
+    paramsByPath.set([route.locale, assessment, domain].join("/"), {
+      assessment,
+      domain,
     });
+    paramsByPath.set([route.locale, assessment, domain, ...path].join("/"), {
+      assessment,
+      domain,
+      path,
+    });
+  }
+
+  return Array.from(paramsByPath.values());
 }
 
 /**
@@ -113,20 +133,24 @@ export async function getPracticeRouteData(
     return await getSingleRouteData(locale, questionRoute, routes);
   }
 
-  const groupSet = findPracticeGroupSet(routes, locale, pathWithoutNamespace);
+  const domainRoutes = findPracticeDomainRoutes(
+    routes,
+    locale,
+    pathWithoutNamespace
+  );
 
-  if (!groupSet) {
+  if (!hasPracticeDomainRoutes(domainRoutes)) {
     notFound();
   }
 
-  return getGroupRouteData(locale, groupSet, routes);
+  return getDomainRouteData(locale, domainRoutes, routes);
 }
 
 /**
  * Resolves the source set slug used by attempt providers and view tracking.
  *
- * Returning null for group pages keeps navigation-only pages from creating an
- * exercise attempt context for no concrete set.
+ * Domain pages return no concrete set slug, so navigation pages never create
+ * exercise attempt context for a non-set route.
  */
 export async function getPracticeRuntimeSetPath(
   params: PracticeParams
@@ -137,11 +161,8 @@ export async function getPracticeRuntimeSetPath(
 }> {
   const data = await getPracticeRouteData(params);
 
-  if (data.kind === "year-group") {
-    return {
-      locale: data.locale,
-      routePath: readPathWithoutLocale(data.pagePath),
-    };
+  if (data.kind === "domain") {
+    return { locale: data.locale };
   }
 
   return {
@@ -196,21 +217,18 @@ function readPracticeGroupContext(
   const sourceParts = readExerciseSetSourceParts(setRoute.sourcePath);
 
   const description = setRoute.description;
+  const domainPath = readPublicPracticeDomainPath(setRoute);
 
   return {
     description,
-    alternatePaths: readPracticeGroupAlternatePaths(
-      setRoute.sourcePath,
-      routes
-    ),
-    materialPath: `/${locale}/${setRoute.parentPath}`,
-    pagePath: `/${locale}/${setRoute.parentPath}`,
+    materialPath: `/${locale}/${domainPath}`,
+    pagePath: `/${locale}/${domainPath}`,
     sourceMaterial: sourceParts.material,
     sourceType: sourceParts.type,
     material: {
       title: readGroupTitle(setRoute),
       description,
-      href: `/${locale}/${setRoute.parentPath}`,
+      href: `/${locale}/${domainPath}`,
       items: sets.map((set) => ({
         href: toPracticeHref(set),
         title: set.title,
@@ -279,54 +297,70 @@ async function getSingleRouteData(
   };
 }
 
-/** Resolves a practice year group from projected public practice rows. */
-function getGroupRouteData(
+/** Resolves a rendered practice domain from projected concrete set rows. */
+function getDomainRouteData(
   locale: Locale,
-  setRoute: PracticeSetRoute,
+  domainRoutes: readonly [PracticeSetRoute, ...PracticeSetRoute[]],
   routes: PublicPracticeRouteRows
 ): PracticeRouteData {
+  const firstRoute = domainRoutes[0];
+
+  const sourceParts = readExerciseSetSourceParts(firstRoute.sourcePath);
+  const publicPath = readPublicPracticeDomainPath(firstRoute);
+  const groups = Array.from(
+    new Map(
+      domainRoutes.map((route) => [
+        route.parentPath,
+        readPracticeGroupContext(locale, route, routes),
+      ])
+    ).values()
+  );
+
   return {
-    kind: "year-group",
-    group: readPracticeGroupContext(locale, setRoute, routes),
+    kind: "domain",
+    alternatePaths: readPracticeDomainAlternatePaths(
+      firstRoute.materialKey,
+      routes
+    ),
+    groups,
     locale,
-    pagePath: `/${locale}/${setRoute.parentPath}`,
-    publicPath: setRoute.parentPath,
+    pagePath: `/${locale}/${publicPath}`,
+    publicPath,
+    sourceMaterial: sourceParts.material,
+    sourceType: sourceParts.type,
   };
 }
 
-/** Finds localized public group paths from sibling set rows with the same source group. */
-function readPracticeGroupAlternatePaths(
-  sourceSetPath: string,
+/** Narrows projected set rows to the non-empty domain page input. */
+function hasPracticeDomainRoutes(
+  routes: readonly PracticeSetRoute[]
+): routes is readonly [PracticeSetRoute, ...PracticeSetRoute[]] {
+  return routes.length > 0;
+}
+
+/** Finds localized rendered domain paths from sibling set rows with the same material. */
+function readPracticeDomainAlternatePaths(
+  materialKey: PracticeSetRoute["materialKey"],
   routes: PublicPracticeRouteRows
 ) {
-  const sourceGroupPath = sourceSetPath.split("/").slice(0, -1).join("/");
   const paths: Array<{ locale: Locale; publicPath: string }> = [];
   const seen = new Set<string>();
 
   for (const route of routes) {
-    const candidateGroupPath = route.sourcePath
-      .split("/")
-      .slice(0, -1)
-      .join("/");
-
-    if (candidateGroupPath !== sourceGroupPath) {
+    if (route.materialKey !== materialKey) {
       continue;
     }
 
-    const key = `${route.locale}:${route.parentPath}`;
+    const publicPath = readPublicPracticeDomainPath(route);
+    const key = `${route.locale}:${publicPath}`;
 
     if (seen.has(key)) {
       continue;
     }
 
     seen.add(key);
-    paths.push({ locale: route.locale, publicPath: route.parentPath });
+    paths.push({ locale: route.locale, publicPath });
   }
 
   return paths;
-}
-
-/** Removes a leading locale segment from one app href. */
-function readPathWithoutLocale(href: string) {
-  return href.split("/").filter(Boolean).slice(1).join("/");
 }

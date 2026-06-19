@@ -3,6 +3,7 @@ import { MATERIAL_SOURCES } from "@repo/contents/_types/material/source";
 import { listPublicContentRoutes } from "@repo/contents/_types/route/content";
 import { readPathWithoutNamespace } from "@repo/contents/_types/route/path";
 import {
+  readPublicPracticeDomainPath,
   readPublicPracticeQuestionNumber,
   readPublicPracticeQuestionRouteByPath,
   readPublicPracticeQuestionRouteBySourcePath,
@@ -99,16 +100,17 @@ export function findPracticeRoute(
   );
 }
 
-/** Finds the first set row that makes a public practice group page renderable. */
-export function findPracticeGroupSet(
+/** Finds concrete set rows for one rendered practice domain page. */
+export function findPracticeDomainRoutes(
   routes: PublicPracticeRouteRows,
   locale: Locale,
   pathWithoutNamespace: string
 ) {
-  return routes.find(
+  return routes.filter(
     (candidate) =>
       candidate.locale === locale &&
-      readPathWithoutNamespace(candidate.parentPath) === pathWithoutNamespace
+      readPathWithoutNamespace(readPublicPracticeDomainPath(candidate)) ===
+        pathWithoutNamespace
   );
 }
 

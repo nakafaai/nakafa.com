@@ -16,66 +16,64 @@ import { RefContent } from "@/components/shared/ref-content";
 import { getGithubUrl } from "@/lib/utils/github";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 
-type GroupPracticeData = Extract<PracticeRouteData, { kind: "year-group" }>;
+type DomainPracticeData = Extract<PracticeRouteData, { kind: "domain" }>;
 
-/** Renders the restored practice group overview under the canonical URL. */
-export async function PracticeGroupPage({
+/** Renders a practice domain page with curriculum-style material cards. */
+export async function PracticeDomainPage({
   data,
   locale,
 }: {
-  data: GroupPracticeData;
+  data: DomainPracticeData;
   locale: Locale;
 }) {
   const [t, tCommon] = await Promise.all([
     getTranslations({ locale, namespace: "Exercises" }),
     getTranslations({ locale, namespace: "Common" }),
   ]);
-  const headingId = slugify(data.group.material.title);
+  const title = t(data.sourceMaterial);
 
   return (
     <>
       <BreadcrumbJsonLd
         breadcrumbItems={createBreadcrumbItems(locale, [
           { name: tCommon("home"), path: "" },
-          { name: t(data.group.sourceType), path: data.group.pagePath },
-          { name: t(data.group.sourceMaterial), path: data.group.materialPath },
-          { name: data.group.material.title, path: data.pagePath },
+          { name: t(data.sourceType), path: data.pagePath },
+          { name: title, path: data.pagePath },
         ])}
       />
       <CollectionPageJsonLd
-        description={
-          data.group.material.description ?? t(data.group.sourceType)
-        }
-        items={data.group.material.items.map((item) => ({
-          name: item.title,
-          url: `https://nakafa.com${item.href}`,
-        }))}
-        name={`${t(data.group.sourceMaterial)} - ${data.group.material.title}`}
+        description={title}
+        items={data.groups.flatMap((group) =>
+          group.material.items.map((item) => ({
+            name: item.title,
+            url: `https://nakafa.com${item.href}`,
+          }))
+        )}
+        name={`${t(data.sourceType)} - ${title}`}
         url={`https://nakafa.com${data.pagePath}`}
       />
       <LayoutMaterial>
         <LayoutMaterialContent>
-          <HeaderContent
-            link={{
-              href: data.group.materialPath,
-              label: t(data.group.sourceMaterial),
-            }}
-            title={data.group.material.title}
-          />
+          <HeaderContent title={title} />
           <p className="sr-only">
             {locale === "id"
-              ? "Pilih set latihan yang tersedia untuk membuka soal latihan pada topik ini."
-              : "Choose an available practice set to open the questions for this topic."}
+              ? "Pilih set latihan yang tersedia untuk membuka soal latihan pada domain ini."
+              : "Choose an available practice set to open the questions for this domain."}
           </p>
           <LayoutContent>
             <ContainerList className="sm:grid-cols-1">
-              <CardMaterial material={data.group.material} />
+              {data.groups.map((group) => (
+                <CardMaterial
+                  key={group.material.title}
+                  material={group.material}
+                />
+              ))}
             </ContainerList>
           </LayoutContent>
           <FooterContent>
             <RefContent
               githubUrl={getGithubUrl({
-                path: `/packages/contents/material/practice/assessment/${data.group.sourceType}/${data.group.sourceMaterial}`,
+                path: `/packages/contents/material/practice/assessment/${data.sourceType}/${data.sourceMaterial}`,
               })}
             />
           </FooterContent>
@@ -83,19 +81,15 @@ export async function PracticeGroupPage({
         <LayoutMaterialToc
           chapters={{
             label: t("exercises"),
-            data: [
-              {
-                label: data.group.material.title,
-                href: `#${headingId}`,
-                children: [],
-              },
-            ],
+            data: data.groups.map((group) => ({
+              label: group.material.title,
+              href: `#${slugify(group.material.title)}`,
+              children: [],
+            })),
           }}
           header={{
-            title: data.group.material.title,
+            title,
             href: data.pagePath,
-            description:
-              data.group.material.description ?? t(data.group.sourceType),
           }}
         />
       </LayoutMaterial>

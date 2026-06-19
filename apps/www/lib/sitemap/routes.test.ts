@@ -160,9 +160,9 @@ describe("sitemap route discovery", () => {
     const routes = await getSitemapRoutes("content_en_material_0");
 
     expect(routes).toEqual([
-      "/practice/snbt/quantitative-knowledge/mock-test/2026",
-      "/practice/snbt/quantitative-knowledge/mock-test/2026/set-1",
-      "/practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question-1",
+      "/practice/snbt/quantitative-knowledge",
+      "/practice/snbt/quantitative-knowledge/mock-test-2026/set-1",
+      "/practice/snbt/quantitative-knowledge/mock-test-2026/set-1/question-1",
       "/subjects/chemistry/green-chemistry/definition",
     ]);
     expect(
@@ -232,9 +232,9 @@ describe("sitemap route discovery", () => {
     ).resolves.toEqual([
       "/articles/politics",
       "/articles/politics/dynastic-politics-asian-values",
-      "/practice/snbt/quantitative-knowledge/mock-test/2026",
-      "/practice/snbt/quantitative-knowledge/mock-test/2026/set-1",
-      "/practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question-1",
+      "/practice/snbt/quantitative-knowledge",
+      "/practice/snbt/quantitative-knowledge/mock-test-2026/set-1",
+      "/practice/snbt/quantitative-knowledge/mock-test-2026/set-1/question-1",
       "/quran/1",
       "/subjects/chemistry/green-chemistry/definition",
     ]);
@@ -248,7 +248,7 @@ describe("sitemap route discovery", () => {
             {
               locale: "en",
               route:
-                "practice/snbt/quantitative-knowledge/mock-test/2026/set-1",
+                "practice/snbt/quantitative-knowledge/mock-test-2026/set-1",
               section: "material",
             },
             "material/practice/assessment/snbt/quantitative-knowledge/try-out/set-1"
@@ -285,7 +285,7 @@ const routeRows = [
   }),
   routeRow({
     locale: "en",
-    route: "practice/snbt/quantitative-knowledge/mock-test/2026/set-1",
+    route: "practice/snbt/quantitative-knowledge/mock-test-2026/set-1",
     section: "material",
     sourcePath:
       "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
@@ -293,7 +293,7 @@ const routeRows = [
   routeRow({
     locale: "en",
     route:
-      "practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question-1",
+      "practice/snbt/quantitative-knowledge/mock-test-2026/set-1/question-1",
     section: "material",
     sourcePath:
       "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/1",
@@ -317,7 +317,7 @@ const incompleteRouteRows = [
   routeProjectionRow(
     {
       locale: "en",
-      route: "practice/snbt/quantitative-knowledge/mock-test/2026/set-1",
+      route: "practice/snbt/quantitative-knowledge/mock-test-2026/set-1",
       section: "material",
     },
     "material/practice/assessment/snbt/quantitative-knowledge/try-out-2027/set-1"
@@ -403,7 +403,7 @@ const publicRouteRows: RuntimeSitemapPublicRoute[] = [
     title: "Mathematics",
   },
   {
-    canonicalPath: "practice/snbt/quantitative-knowledge/mock-test/2026",
+    canonicalPath: "practice/snbt/quantitative-knowledge",
     description: undefined,
     displayGroupIconKey: undefined,
     displayGroupTitle: undefined,

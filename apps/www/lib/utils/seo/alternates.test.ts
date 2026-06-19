@@ -141,8 +141,7 @@ describe("createLocalizedAlternates", () => {
         candidate.kind === "assessment-context" &&
         candidate.locale === "id" &&
         candidate.programKey === "snbt-2026" &&
-        candidate.publicPath ===
-          "ujian/snbt/pengetahuan-kuantitatif/tryout/2026"
+        candidate.publicPath === "ujian/snbt/pengetahuan-kuantitatif"
     );
 
     if (!curriculum) {
@@ -163,10 +162,10 @@ describe("createLocalizedAlternates", () => {
       },
     });
     expect(createProjectedRouteAlternates(assessment, routes)).toMatchObject({
-      canonical: "/id/ujian/snbt/pengetahuan-kuantitatif/tryout/2026",
+      canonical: "/id/ujian/snbt/pengetahuan-kuantitatif",
       languages: {
-        en: "/en/exams/snbt/quantitative-knowledge/mock-test/2026",
-        id: "/id/ujian/snbt/pengetahuan-kuantitatif/tryout/2026",
+        en: "/en/exams/snbt/quantitative-knowledge",
+        id: "/id/ujian/snbt/pengetahuan-kuantitatif",
       },
     });
   });

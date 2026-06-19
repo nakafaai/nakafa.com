@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import {
   getPracticeRouteData,
   listPracticeStaticParams,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/practice/[assessment]/[domain]/[[...path]]/data";
-import { PracticeGroupPage } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/practice/[assessment]/[domain]/[[...path]]/group";
+import { PracticeDomainPage } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/practice/[assessment]/[domain]/[[...path]]/domain";
 import {
   readPracticeRouteAlternates,
   readPracticeRoutes,
@@ -30,33 +31,35 @@ export function generateStaticParams({
 }
 
 /**
- * Generates metadata for restored practice group, set, and question pages.
+ * Generates metadata for restored practice domain, set, and question pages.
  *
- * Concrete set/question pages use projected route alternates. Group pages are
+ * Concrete set/question pages use projected route alternates. Domain pages are
  * navigation surfaces over set rows, so they use their localized public href.
  */
 export async function generateMetadata({
   params,
 }: PracticePageProps): Promise<Metadata> {
   const data = await getPracticeRouteData(params);
+  const t = await getTranslations({
+    locale: data.locale,
+    namespace: "Exercises",
+  });
   const title =
-    data.kind === "year-group" ? data.group.material.title : data.route.title;
+    data.kind === "domain" ? t(data.sourceMaterial) : data.route.title;
   const description =
-    data.kind === "year-group"
-      ? (data.group.material.description ?? title)
-      : (data.route.description ?? title);
+    data.kind === "domain" ? title : (data.route.description ?? title);
   const publicPath =
-    data.kind === "year-group" ? data.publicPath : data.route.publicPath;
+    data.kind === "domain" ? data.publicPath : data.route.publicPath;
   const path = `/${data.locale}/${publicPath}`;
   const projectedAlternates =
-    data.kind === "year-group"
+    data.kind === "domain"
       ? []
       : readPracticeRouteAlternates(data.route, readPracticeRoutes());
   const alternates =
-    data.kind === "year-group"
+    data.kind === "domain"
       ? createLocalizedAlternates(path, {
           languages: Object.fromEntries(
-            data.group.alternatePaths.map((alternate) => [
+            data.alternatePaths.map((alternate) => [
               alternate.locale,
               `/${alternate.locale}/${alternate.publicPath}`,
             ])
@@ -90,8 +93,8 @@ export default async function Page({ params }: PracticePageProps) {
       return <SinglePracticePage data={data} locale={data.locale} />;
     case "set":
       return <PracticeSetPage data={data} locale={data.locale} />;
-    case "year-group":
-      return <PracticeGroupPage data={data} locale={data.locale} />;
+    case "domain":
+      return <PracticeDomainPage data={data} locale={data.locale} />;
     default:
       notFound();
   }

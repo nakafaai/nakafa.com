@@ -131,7 +131,7 @@ describe("llms markdown content resolver", () => {
       Effect.runPromise(
         getLlmsMarkdownText({
           cleanSlug:
-            "practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question-9",
+            "practice/snbt/quantitative-knowledge/mock-test-2026/set-1/question-9",
           locale: "en",
         })
       )
@@ -142,7 +142,7 @@ describe("llms markdown content resolver", () => {
         "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/9",
       locale: "en",
       publicSlug:
-        "practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question-9",
+        "practice/snbt/quantitative-knowledge/mock-test-2026/set-1/question-9",
     });
   });
 
@@ -158,7 +158,7 @@ describe("llms markdown content resolver", () => {
     await expect(
       Effect.runPromise(
         getLlmsMarkdownText({
-          cleanSlug: "exams/snbt/quantitative-knowledge/mock-test/2026",
+          cleanSlug: "exams/snbt/quantitative-knowledge",
           locale: "en",
         })
       )

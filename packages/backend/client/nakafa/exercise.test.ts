@@ -87,7 +87,7 @@ describe("readNakafaExercise", () => {
       detachedQuestionRef.route
     );
     expect(Option.getOrUndefined(explicitQuestion)?.url).toBe(
-      "https://nakafa.com/id/latihan/snbt/pengetahuan-kuantitatif/tryout/2026/set-1/soal-2"
+      "https://nakafa.com/id/latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1/soal-2"
     );
     expect(Option.getOrUndefined(graphQuestion)?.exercise_number).toBe(2);
     expect(Option.getOrUndefined(markdown)?.text).toContain("- [x] A. Benar");
@@ -125,7 +125,7 @@ describe("readNakafaExercise", () => {
       detachedQuestionRef.route
     );
     expect(Option.getOrUndefined(selectedQuestion)?.url).toBe(
-      "https://nakafa.com/id/latihan/snbt/pengetahuan-kuantitatif/tryout/2026/set-1/soal-2"
+      "https://nakafa.com/id/latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1/soal-2"
     );
     expect(Option.getOrUndefined(question)?.exercise_number).toBe(2);
     expect(Option.getOrUndefined(matchingQuestion)?.content_id).toBe(
@@ -178,7 +178,7 @@ describe("readNakafaExercise", () => {
     const nonSetParent = await Effect.runPromise(
       readNakafaExercise(
         convexUrl,
-        "https://nakafa.com/id/latihan/snbt/pengetahuan-kuantitatif/tryout/2026/soal-2"
+        "https://nakafa.com/id/latihan/snbt/pengetahuan-kuantitatif/tryout-2026/soal-2"
       )
     );
     const missingMarkdown = await Effect.runPromise(
@@ -313,7 +313,7 @@ function readContentRouteBySourcePath(args: unknown) {
 
   return {
     ...ref,
-    route: `latihan/snbt/pengetahuan-kuantitatif/tryout/2026/set-1/soal-${input.sourcePath.split("/").at(-1)}`,
+    route: `latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1/soal-${input.sourcePath.split("/").at(-1)}`,
     sourcePath: ref.route,
     title: ref.route,
   };

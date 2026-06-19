@@ -15,8 +15,8 @@ type PracticeLayoutProps =
  * Wraps restored practice pages with attempt context and content tracking.
  *
  * Source set slugs remain the attempt identity, while projected route paths are
- * used for content-view lookup. Group pages only need tracking when their route
- * row exists and do not create a concrete exercise attempt context.
+ * used for content-view lookup. Domain pages do not create a concrete exercise
+ * attempt context.
  */
 export default async function Layout({
   children,

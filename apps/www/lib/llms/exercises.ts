@@ -1,9 +1,11 @@
-import { getExerciseQuestionNumberSegment } from "@repo/contents/_types/graph/route";
 import {
   preserveMdxSourceForAgentMarkdown,
   projectMdxForAgentMarkdown,
 } from "@repo/contents/_types/llms/mdx";
-import { toPublicPracticeQuestionSegment } from "@repo/contents/_types/route/practice";
+import {
+  readSourcePracticeQuestionNumber,
+  toPublicPracticeQuestionSegment,
+} from "@repo/contents/_types/route/practice";
 import { Effect, Option } from "effect";
 import type { Locale } from "next-intl";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
@@ -16,6 +18,8 @@ const PUBLIC_URL_PATTERN = /\bhttps?:\/\/[^\s*)]+/g;
 const PUBLIC_URL_PROTOCOL_PATTERN = /^https?:\/\//;
 const PUBLIC_URL_PATH_PATTERN = /[/?#].*$/;
 const WWW_PREFIX_PATTERN = /^www\./;
+const TABLE_CELL_NEWLINE_PATTERN = /\n+/g;
+const TABLE_CELL_PIPE_PATTERN = /\|/g;
 
 /** Runs the cached exercise markdown Effect at the Next cache boundary. */
 export async function getCachedLlmsExerciseText({
@@ -107,10 +111,22 @@ export const getLlmsExerciseText = Effect.fn("www.llms.exercises.text")(
         exercise.choices.en;
 
       if (choices) {
+        scanned.push(
+          locale === "id" ? "| Pilihan | Benar |" : "| Choice | Correct |"
+        );
+        scanned.push("| --- | --- |");
+
         for (const choice of choices) {
           const choiceLabel = yield* formatPublicExerciseMarkdown(choice.label);
 
-          scanned.push(`- ${choiceLabel}`);
+          scanned.push(
+            `| ${formatMarkdownTableCell(choiceLabel)} | ${formatChoiceCorrectness(
+              {
+                correct: choice.value,
+                locale,
+              }
+            )} |`
+          );
         }
       }
 
@@ -209,9 +225,9 @@ function getExerciseMarkdownTarget(cleanSlug: string) {
     };
   }
 
-  const exerciseNumber = getExerciseQuestionNumberSegment(lastPart);
+  const exerciseNumber = readSourcePracticeQuestionNumber(lastPart);
 
-  if (!exerciseNumber) {
+  if (exerciseNumber === null) {
     return {
       exerciseNumber: Option.none(),
       path: cleanSlug,
@@ -219,7 +235,7 @@ function getExerciseMarkdownTarget(cleanSlug: string) {
   }
 
   return {
-    exerciseNumber: Option.some(Number.parseInt(exerciseNumber, 10)),
+    exerciseNumber: Option.some(exerciseNumber),
     path: parts.slice(0, -1).join("/"),
   };
 }
@@ -248,6 +264,29 @@ function readPublicUrlLabel(url: string) {
     .replace(PUBLIC_URL_PROTOCOL_PATTERN, "")
     .replace(WWW_PREFIX_PATTERN, "")
     .replace(PUBLIC_URL_PATH_PATTERN, "");
+}
+
+/** Keeps projected MDX choice labels readable inside markdown tables. */
+function formatMarkdownTableCell(value: string) {
+  return value
+    .replace(TABLE_CELL_PIPE_PATTERN, "\\|")
+    .replace(TABLE_CELL_NEWLINE_PATTERN, "<br>")
+    .trim();
+}
+
+/** Formats a source-owned choice boolean for agent-readable markdown tables. */
+function formatChoiceCorrectness({
+  correct,
+  locale,
+}: {
+  correct: boolean;
+  locale: Locale;
+}) {
+  if (locale === "id") {
+    return correct ? "Ya" : "Tidak";
+  }
+
+  return correct ? "Yes" : "No";
 }
 
 type ExerciseSetPage = NonNullable<

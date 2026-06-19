@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 const ARTICLE_CONTENT_REF =
   "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values";
 const EXERCISE_CONTENT_REF =
-  "https://nakafa.com/en/practice/snbt/general-knowledge/mock-test/2026/set-2";
+  "https://nakafa.com/en/practice/snbt/general-knowledge/mock-test-2026/set-2";
 
 vi.mock("@repo/contents/_lib/agent/taxonomy/read", async () => {
   const { Effect } = await import("effect");
@@ -86,7 +86,7 @@ describe("Nakafa service", () => {
           "https://nakafa.com/en/quran/1"
         );
         const invalidExercise = yield* Nakafa.verify(
-          "https://nakafa.com/en/practice/snbt/general-knowledge/mock-test/2026/set-404"
+          "https://nakafa.com/en/practice/snbt/general-knowledge/mock-test-2026/set-404"
         );
         const invalidPage = yield* Nakafa.verify(
           "https://nakafa.com/en/articles/politics/missing"

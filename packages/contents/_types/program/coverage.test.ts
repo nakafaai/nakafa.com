@@ -34,7 +34,7 @@ const snbtRoute = decodeRoute({
   kind: "exercise-set",
   lensId: "lens:exercise:high-school:snbt:quantitative-knowledge",
   locale: "id",
-  route: "latihan/snbt/pengetahuan-kuantitatif/tryout/2026/set-1",
+  route: "latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1",
   sourcePath:
     "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
 });

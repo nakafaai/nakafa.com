@@ -4,8 +4,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { resolveLlmsProxyRoute } from "@/lib/llms/routes";
 
 const runtimeMocks = vi.hoisted(() => ({
+  getRuntimeExerciseQuestionPage: vi.fn(),
+  getRuntimeExerciseSetPage: vi.fn(),
   getRuntimeContentRoute: vi.fn(),
   getRuntimeContentRouteParentPage: vi.fn(),
+}));
+
+vi.mock("@/lib/content/runtime/pages", () => ({
+  getRuntimeExerciseQuestionPage: runtimeMocks.getRuntimeExerciseQuestionPage,
+  getRuntimeExerciseSetPage: runtimeMocks.getRuntimeExerciseSetPage,
 }));
 
 vi.mock("@/lib/content/runtime/routes", () => ({
@@ -16,8 +23,16 @@ vi.mock("@/lib/content/runtime/routes", () => ({
 
 describe("llms proxy route resolver", () => {
   beforeEach(() => {
+    runtimeMocks.getRuntimeExerciseQuestionPage.mockReset();
+    runtimeMocks.getRuntimeExerciseSetPage.mockReset();
     runtimeMocks.getRuntimeContentRoute.mockReset();
     runtimeMocks.getRuntimeContentRouteParentPage.mockReset();
+    runtimeMocks.getRuntimeExerciseQuestionPage.mockReturnValue(
+      Effect.succeed({ exercise: { number: 1 } })
+    );
+    runtimeMocks.getRuntimeExerciseSetPage.mockReturnValue(
+      Effect.succeed({ exercises: [{ number: 1 }] })
+    );
     runtimeMocks.getRuntimeContentRoute.mockReturnValue(
       Effect.succeed({ route: "fixture" })
     );
@@ -106,7 +121,7 @@ describe("llms proxy route resolver", () => {
   it("rejects curriculum and assessment context markdown without rewriting", async () => {
     const requests = [
       "/en/curriculum/merdeka/class-10/mathematics.md",
-      "/en/exams/snbt/general-knowledge/mock-test/2026.md",
+      "/en/exams/snbt/general-knowledge.md",
     ];
 
     for (const pathname of requests) {
@@ -217,7 +232,7 @@ describe("llms proxy route resolver", () => {
           acceptHeader: null,
           method: "GET",
           pathname:
-            "/en/practice/snbt/general-knowledge/mock-test/2026/set-1/question-9.md",
+            "/en/practice/snbt/general-knowledge/mock-test-2026/set-1/question-9.md",
         })
       )
     ).resolves.toEqual({
@@ -226,9 +241,107 @@ describe("llms proxy route resolver", () => {
         locale: "en",
         markdownExtension: ".md",
         route:
-          "/practice/snbt/general-knowledge/mock-test/2026/set-1/question-9",
+          "/practice/snbt/general-knowledge/mock-test-2026/set-1/question-9",
       },
     });
+    expect(runtimeMocks.getRuntimeExerciseQuestionPage).toHaveBeenCalledWith({
+      locale: "en",
+      slug: "material/practice/assessment/snbt/general-knowledge/try-out-2026/set-1/9",
+    });
+    expect(runtimeMocks.getRuntimeContentRoute).not.toHaveBeenCalled();
+  });
+
+  it("preserves markdown alternates for real practice set routes", async () => {
+    await expect(
+      Effect.runPromise(
+        resolveLlmsProxyRoute({
+          acceptHeader: null,
+          method: "GET",
+          pathname:
+            "/en/practice/snbt/general-knowledge/mock-test-2026/set-1.md",
+        })
+      )
+    ).resolves.toEqual({
+      kind: "rewrite-markdown",
+      localizedRoute: {
+        locale: "en",
+        markdownExtension: ".md",
+        route: "/practice/snbt/general-knowledge/mock-test-2026/set-1",
+      },
+    });
+    expect(runtimeMocks.getRuntimeExerciseSetPage).toHaveBeenCalledWith({
+      locale: "en",
+      slug: "material/practice/assessment/snbt/general-knowledge/try-out-2026/set-1",
+    });
+    expect(runtimeMocks.getRuntimeContentRoute).not.toHaveBeenCalled();
+  });
+
+  it("rejects practice question markdown when the runtime question row is missing", async () => {
+    runtimeMocks.getRuntimeExerciseQuestionPage.mockReturnValueOnce(
+      Effect.succeed(null)
+    );
+
+    await expect(
+      Effect.runPromise(
+        resolveLlmsProxyRoute({
+          acceptHeader: null,
+          method: "GET",
+          pathname:
+            "/en/practice/snbt/general-knowledge/mock-test-2026/set-1/question-999.md",
+        })
+      )
+    ).resolves.toEqual({ kind: "content-not-found", locale: "en" });
+  });
+
+  it("rejects practice set markdown when the runtime set row is missing", async () => {
+    runtimeMocks.getRuntimeExerciseSetPage.mockReturnValueOnce(
+      Effect.succeed(null)
+    );
+
+    await expect(
+      Effect.runPromise(
+        resolveLlmsProxyRoute({
+          acceptHeader: null,
+          method: "GET",
+          pathname:
+            "/en/practice/snbt/general-knowledge/mock-test-2026/set-1.md",
+        })
+      )
+    ).resolves.toEqual({ kind: "content-not-found", locale: "en" });
+  });
+
+  it("fails closed when practice question markdown runtime lookup fails", async () => {
+    runtimeMocks.getRuntimeExerciseQuestionPage.mockReturnValueOnce(
+      Effect.fail(new Error("runtime unavailable"))
+    );
+
+    await expect(
+      Effect.runPromise(
+        resolveLlmsProxyRoute({
+          acceptHeader: null,
+          method: "GET",
+          pathname:
+            "/en/practice/snbt/general-knowledge/mock-test-2026/set-1/question-9.md",
+        })
+      )
+    ).resolves.toEqual({ kind: "content-not-found", locale: "en" });
+  });
+
+  it("fails closed when practice set markdown runtime lookup fails", async () => {
+    runtimeMocks.getRuntimeExerciseSetPage.mockReturnValueOnce(
+      Effect.fail(new Error("runtime unavailable"))
+    );
+
+    await expect(
+      Effect.runPromise(
+        resolveLlmsProxyRoute({
+          acceptHeader: null,
+          method: "GET",
+          pathname:
+            "/en/practice/snbt/general-knowledge/mock-test-2026/set-1.md",
+        })
+      )
+    ).resolves.toEqual({ kind: "content-not-found", locale: "en" });
   });
 
   it("does not serve locale home markdown from the llms index", async () => {

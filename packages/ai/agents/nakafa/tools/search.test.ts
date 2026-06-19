@@ -485,14 +485,14 @@ describe("nakafa search tool", () => {
                     ...setItem,
                     content_id: "asset:id:exercise:snbt:2026:set-1:q2",
                     route:
-                      "latihan/snbt/pengetahuan-kuantitatif/tryout/2026/set-1/soal-2",
-                    url: "https://nakafa.com/id/latihan/snbt/pengetahuan-kuantitatif/tryout/2026/set-1/soal-2",
+                      "latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1/soal-2",
+                    url: "https://nakafa.com/id/latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1/soal-2",
                   },
                   {
                     ...setItem,
                     route:
-                      "latihan/snbt/pengetahuan-kuantitatif/tryout/2026/set-1",
-                    url: "https://nakafa.com/id/latihan/snbt/pengetahuan-kuantitatif/tryout/2026/set-1",
+                      "latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1",
+                    url: "https://nakafa.com/id/latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1",
                   },
                 ],
                 limit: input.limit,
@@ -505,8 +505,8 @@ describe("nakafa search tool", () => {
     );
 
     expect(output.result?.items.map((item) => item.route)).toEqual([
-      "latihan/snbt/pengetahuan-kuantitatif/tryout/2026/set-1",
-      "latihan/snbt/pengetahuan-kuantitatif/tryout/2026/set-1/soal-2",
+      "latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1",
+      "latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1/soal-2",
     ]);
   });
 

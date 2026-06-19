@@ -10,26 +10,32 @@ describe("public assessment routes", () => {
 
     expect(routes).toContainEqual(
       expect.objectContaining({
-        canonicalPath: "latihan/snbt/pengetahuan-kuantitatif/tryout/2026",
+        canonicalPath: "latihan/snbt/pengetahuan-kuantitatif",
         kind: "assessment-context",
         locale: "id",
         materialKey: "practice.assessment.snbt.quantitative-knowledge",
-        order: 1,
+        order: 10,
         programKey: "snbt-2026",
-        publicPath: "ujian/snbt/pengetahuan-kuantitatif/tryout/2026",
+        publicPath: "ujian/snbt/pengetahuan-kuantitatif",
       })
     );
     expect(routes).toContainEqual(
       expect.objectContaining({
-        canonicalPath: "practice/snbt/quantitative-knowledge/mock-test/2026",
+        canonicalPath: "practice/snbt/quantitative-knowledge",
         kind: "assessment-context",
         locale: "en",
         materialKey: "practice.assessment.snbt.quantitative-knowledge",
-        order: 1,
+        order: 10,
         programKey: "snbt-2026",
-        publicPath: "exams/snbt/quantitative-knowledge/mock-test/2026",
+        publicPath: "exams/snbt/quantitative-knowledge",
       })
     );
+    expect(
+      routes.some((route) => route.publicPath.includes("mock-test-2026"))
+    ).toBe(false);
+    expect(
+      routes.some((route) => route.publicPath.includes("tryout-2026"))
+    ).toBe(false);
   });
 
   it("skips assessment nodes without material-backed public coverage", () => {
@@ -127,7 +133,7 @@ describe("public assessment routes", () => {
     );
     expect(routes).toContainEqual(
       expect.objectContaining({
-        canonicalPath: "latihan/snbt/pengetahuan-kuantitatif/tryout/2026",
+        canonicalPath: "latihan/snbt/pengetahuan-kuantitatif",
         materialKey: "practice.assessment.snbt.quantitative-knowledge",
         nodeKey: "child-practice",
         order: 1,

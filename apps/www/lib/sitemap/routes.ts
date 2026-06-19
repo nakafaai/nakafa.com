@@ -1,6 +1,7 @@
 import type { api } from "@repo/backend/convex/_generated/api";
 import { CONTENT_ROUTE_ARTIFACT_PAGE_SIZE } from "@repo/backend/convex/contents/constants";
 import { findPublicContentRouteBySourcePath } from "@repo/contents/_types/route/content";
+import { readPublicPracticeDomainPath } from "@repo/contents/_types/route/practice";
 import type { PublicContentRoute } from "@repo/contents/_types/route/schema";
 import { routing } from "@repo/internationalization/src/routing";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
@@ -314,10 +315,10 @@ function addProjectedContentRoutes(
   }
 
   if (route.kind === "exercise-question") {
-    addParentRoute(routes, route.parentPath);
+    routes.add(routeToPath(route.parentPath));
   }
 
-  routes.add(routeToPath(route.parentPath));
+  routes.add(routeToPath(readPublicPracticeDomainPath(route)));
   routes.add(routeToPath(route.publicPath));
 }
 
@@ -326,12 +327,6 @@ function isSitemapPublicContextRoute(route: RuntimeSitemapPublicRoute) {
   return (
     route.kind === "assessment-context" || route.kind === "curriculum-context"
   );
-}
-
-/** Adds the listing parent for a source-projected child route. */
-function addParentRoute(routes: Set<string>, path: string) {
-  const parent = path.split("/").slice(0, -1).join("/");
-  routes.add(routeToPath(parent));
 }
 
 /** Converts one route string into an app-level HTTP path string. */

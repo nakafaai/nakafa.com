@@ -800,7 +800,7 @@ describe("contents/queries/runtime", () => {
     const sourcePath =
       "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/2";
     const publicPath =
-      "latihan/snbt/pengetahuan-kuantitatif/tryout/2026/set-1/soal-2";
+      "latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1/soal-2";
 
     await t.mutation(async (ctx) => {
       await ctx.db.insert("contentRoutes", {

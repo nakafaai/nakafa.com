@@ -7,7 +7,12 @@ import {
 } from "@/lib/routing/public-html";
 
 const runtimeMocks = vi.hoisted(() => ({
+  getRuntimeExerciseQuestionPage: vi.fn(),
   getRuntimeContentRoute: vi.fn(),
+}));
+
+vi.mock("@/lib/content/runtime/pages", () => ({
+  getRuntimeExerciseQuestionPage: runtimeMocks.getRuntimeExerciseQuestionPage,
 }));
 
 vi.mock("@/lib/content/runtime/routes", () => ({
@@ -16,6 +21,10 @@ vi.mock("@/lib/content/runtime/routes", () => ({
 
 describe("public html route rejection", () => {
   beforeEach(() => {
+    runtimeMocks.getRuntimeExerciseQuestionPage.mockReset();
+    runtimeMocks.getRuntimeExerciseQuestionPage.mockReturnValue(
+      Effect.succeed({ exercise: { number: 1 } })
+    );
     runtimeMocks.getRuntimeContentRoute.mockReset();
     runtimeMocks.getRuntimeContentRoute.mockReturnValue(
       Effect.succeed({ kind: "exercise-question", route: "fixture" })
@@ -139,9 +148,11 @@ describe("public html route rejection", () => {
       "/en/subjects/chemistry/green-chemistry",
       "/en/curriculum/merdeka/class-11-afdocs-nonexistent-8f3a",
       "/en/curriculum/merdeka/class-10/mathematics-afdocs-nonexistent-8f3a",
-      "/en/exams/snbt/general-knowledge/mock-test/2026-afdocs-nonexistent-8f3a",
-      "/en/practice/snbt/general-reasoning/mock-test/2026-afdocs-nonexistent-8f3a",
-      "/en/practice/snbt/general-reasoning/mock-test/2026/set-7-afdocs-nonexistent-8f3a",
+      "/en/exams/snbt/general-knowledge/mock-test-2026",
+      "/en/exams/snbt/general-knowledge/mock-test-2026-afdocs-nonexistent-8f3a",
+      "/en/practice/snbt/general-reasoning/mock-test-2026",
+      "/en/practice/snbt/general-reasoning/mock-test-2026-afdocs-nonexistent-8f3a",
+      "/en/practice/snbt/general-reasoning/mock-test-2026/set-7-afdocs-nonexistent-8f3a",
     ];
 
     for (const pathname of paths) {
@@ -156,11 +167,11 @@ describe("public html route rejection", () => {
       "/en/subjects/chemistry/green-chemistry/definition",
       "/id/kurikulum/merdeka/kelas-10/biologi",
       "/en/curriculum/merdeka/class-10",
-      "/en/exams/snbt/general-knowledge/mock-test/2026",
-      "/en/practice/snbt/general-reasoning/mock-test/2026",
-      "/en/practice/snbt/mathematical-reasoning/mock-test/2026/set-2",
-      "/en/practice/snbt/mathematical-reasoning/mock-test/2026/set-2/question-1",
-      "/id/latihan/snbt/penalaran-matematika/tryout/2026/set-2/soal-1",
+      "/en/exams/snbt/general-knowledge",
+      "/en/practice/snbt/general-reasoning",
+      "/en/practice/snbt/mathematical-reasoning/mock-test-2026/set-2",
+      "/en/practice/snbt/mathematical-reasoning/mock-test-2026/set-2/question-1",
+      "/id/latihan/snbt/penalaran-matematika/tryout-2026/set-2/soal-1",
     ];
 
     for (const pathname of paths) {
@@ -171,21 +182,20 @@ describe("public html route rejection", () => {
   });
 
   it("rejects virtual practice questions missing from the runtime catalog", async () => {
-    runtimeMocks.getRuntimeContentRoute.mockReturnValueOnce(
+    runtimeMocks.getRuntimeExerciseQuestionPage.mockReturnValueOnce(
       Effect.succeed(null)
     );
 
     await expect(
       Effect.runPromise(
         readProjectedHtmlRouteRejection(
-          "/en/practice/snbt/mathematical-reasoning/mock-test/2026/set-2/question-999"
+          "/en/practice/snbt/mathematical-reasoning/mock-test-2026/set-2/question-999"
         )
       )
     ).resolves.toBe("en");
-    expect(runtimeMocks.getRuntimeContentRoute).toHaveBeenCalledWith({
+    expect(runtimeMocks.getRuntimeExerciseQuestionPage).toHaveBeenCalledWith({
       locale: "en",
-      route:
-        "practice/snbt/mathematical-reasoning/mock-test/2026/set-2/question-999",
+      slug: "material/practice/assessment/snbt/mathematical-reasoning/try-out-2026/set-2/999",
     });
   });
 
@@ -193,29 +203,36 @@ describe("public html route rejection", () => {
     await expect(
       Effect.runPromise(
         readProjectedHtmlRouteRejection(
-          "/en/practice/snbt/mathematical-reasoning/mock-test/2026/set-2/question-099"
+          "/en/practice/snbt/mathematical-reasoning/mock-test-2026/set-2/question-099"
         )
       )
     ).resolves.toBe("en");
     await expect(
       Effect.runPromise(
         readProjectedHtmlRouteRejection(
-          "/id/latihan/snbt/penalaran-matematika/tryout/2026/set-2/question-1"
+          "/id/latihan/snbt/penalaran-matematika/tryout-2026/set-2/question-1"
         )
       )
     ).resolves.toBe("id");
-    expect(runtimeMocks.getRuntimeContentRoute).not.toHaveBeenCalled();
+    await expect(
+      Effect.runPromise(
+        readProjectedHtmlRouteRejection(
+          "/en/practice/snbt/mathematical-reasoning/mock-test-2027/set-2/question-1"
+        )
+      )
+    ).resolves.toBe("en");
+    expect(runtimeMocks.getRuntimeExerciseQuestionPage).not.toHaveBeenCalled();
   });
 
   it("fails closed when virtual practice question runtime lookup fails", async () => {
-    runtimeMocks.getRuntimeContentRoute.mockReturnValueOnce(
+    runtimeMocks.getRuntimeExerciseQuestionPage.mockReturnValueOnce(
       Effect.fail(new Error("runtime unavailable"))
     );
 
     await expect(
       Effect.runPromise(
         readProjectedHtmlRouteRejection(
-          "/en/practice/snbt/mathematical-reasoning/mock-test/2026/set-2/question-999"
+          "/en/practice/snbt/mathematical-reasoning/mock-test-2026/set-2/question-999"
         )
       )
     ).resolves.toBe("en");

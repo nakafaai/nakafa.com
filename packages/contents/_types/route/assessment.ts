@@ -16,8 +16,7 @@ import {
 } from "@repo/contents/_types/route/path";
 import {
   createPracticeMaterialByKey,
-  getPracticeActivitySegments,
-  makePracticeGroupPath,
+  makePracticeDomainPath,
 } from "@repo/contents/_types/route/practice";
 import { findProgram } from "@repo/contents/_types/route/program";
 import type { PublicAssessmentRoute } from "@repo/contents/_types/route/schema";
@@ -106,45 +105,6 @@ export const listPublicAssessmentRoutes = Effect.fn(
             title: node.translations[locale].title,
           })
         );
-
-        if (!materialKey) {
-          continue;
-        }
-
-        const material = practiceMaterialByKey.get(materialKey);
-
-        if (!material) {
-          continue;
-        }
-
-        for (const [groupIndex, group] of material.groups.entries()) {
-          const groupSegments = getPracticeActivitySegments(group, locale);
-          const groupPath = yield* makePath([publicPath, ...groupSegments]);
-          const groupKey = groupSegments.join("-");
-
-          routes.push(
-            yield* decodeAssessmentRoute({
-              canonicalPath: yield* makePracticeGroupPath({
-                domains,
-                group,
-                locale,
-                material,
-              }),
-              description: group.translations[locale].description,
-              kind: "assessment-context",
-              level: "practice-set",
-              locale,
-              materialKey,
-              nodeKey: `${node.key}:${groupKey}`,
-              order: groupIndex + 1,
-              parentPath: publicPath,
-              programKey: assessment.programKey,
-              publicPath: groupPath,
-              sitemap: true,
-              title: group.translations[locale].title,
-            })
-          );
-        }
       }
     }
   }
@@ -193,7 +153,7 @@ function getAssessmentNodePathSegments({
   return Effect.succeed(segments);
 }
 
-/** Reads the canonical practice group path for an assessment material context. */
+/** Reads the rendered practice domain path for an assessment material context. */
 function getAssessmentCanonicalPath({
   domains,
   locale,
@@ -211,18 +171,12 @@ function getAssessmentCanonicalPath({
     }
 
     const material = practiceMaterialByKey.get(materialKey);
-    const group = material?.groups.at(0);
 
-    if (!(material && group)) {
+    if (!material) {
       return;
     }
 
-    return yield* makePracticeGroupPath({
-      domains,
-      group,
-      locale,
-      material,
-    });
+    return yield* makePracticeDomainPath({ domains, locale, material });
   });
 }
 

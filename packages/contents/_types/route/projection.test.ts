@@ -45,7 +45,7 @@ describe("public route projection", () => {
     const invalidPaths = [
       "material/lesson/mathematics/integral/riemann-sum",
       "subject/matematika/integral/jumlahan-riemann",
-      "assessment/snbt/pengetahuan-kuantitatif/tryout/2026",
+      "assessment/snbt/pengetahuan-kuantitatif/tryout-2026",
     ];
 
     for (const path of invalidPaths) {

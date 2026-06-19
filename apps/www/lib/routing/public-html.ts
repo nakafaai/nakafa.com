@@ -1,4 +1,6 @@
 import { getPublicContentRouteCheck } from "@repo/contents/_lib/manifest/public-route";
+import { MATERIAL_ROUTE_DOMAINS } from "@repo/contents/_types/material/domain";
+import { MATERIAL_SOURCES } from "@repo/contents/_types/material/source";
 import { listPublicAssessmentRoutes } from "@repo/contents/_types/route/assessment";
 import {
   isMaterialLessonRoute,
@@ -9,11 +11,16 @@ import {
   isRenderableCurriculumRoute,
   listPublicCurriculumRoutes,
 } from "@repo/contents/_types/route/curriculum";
-import { readPublicPracticeQuestionNumber } from "@repo/contents/_types/route/practice";
+import {
+  readPublicPracticeDomainPath,
+  readPublicPracticeQuestionNumber,
+  readPublicPracticeQuestionRouteByPath,
+} from "@repo/contents/_types/route/practice";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import { hasLocale } from "next-intl";
+import { getRuntimeExerciseQuestionPage } from "@/lib/content/runtime/pages";
 import { getRuntimeContentRoute } from "@/lib/content/runtime/routes";
 
 const REJECTED_PUBLIC_ROOTS = new Set(["/learn"]);
@@ -112,12 +119,7 @@ function readRenderableProjectedHtmlPathSet() {
 
       if (isPracticeSetRoute(route)) {
         routeKeys.add(`${route.locale}:${route.publicPath}`);
-        routeKeys.add(
-          `${route.locale}:${route.publicPath
-            .split("/")
-            .slice(0, -1)
-            .join("/")}`
-        );
+        routeKeys.add(`${route.locale}:${readPublicPracticeDomainPath(route)}`);
       }
     }
 
@@ -152,10 +154,24 @@ function isRenderablePracticeQuestionPath({
     return Effect.succeed(false);
   }
 
-  return getRuntimeContentRoute({ locale, route: publicPath }).pipe(
+  const route = readPublicPracticeQuestionRouteByPath({
+    domains: MATERIAL_ROUTE_DOMAINS,
+    locale,
+    materials: MATERIAL_SOURCES,
+    publicPath,
+  });
+
+  if (!route) {
+    return Effect.succeed(false);
+  }
+
+  return getRuntimeExerciseQuestionPage({
+    locale,
+    slug: route.sourcePath,
+  }).pipe(
     Effect.match({
       onFailure: () => false,
-      onSuccess: (contentRoute) => contentRoute?.kind === "exercise-question",
+      onSuccess: (questionPage) => questionPage !== null,
     })
   );
 }
@@ -187,7 +203,7 @@ function isProjectedRouteSurface(key: string) {
  * Rejects known public-route namespaces when a request uses a stale slug.
  *
  * This is a clean cutover check: known non-canonical namespaces become 404s
- * instead of being treated as localized pages or redirects.
+ * instead of being treated as localized pages.
  */
 function readRejectedPublicRouteLocale(pathname: string) {
   if (REJECTED_PUBLIC_ROOTS.has(pathname)) {

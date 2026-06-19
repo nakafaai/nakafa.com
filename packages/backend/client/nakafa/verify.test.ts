@@ -32,7 +32,7 @@ const exerciseGroupRoute =
 const exerciseSetRoute = `${exerciseGroupRoute}/set-1`;
 const exerciseQuestionRoute = `${exerciseSetRoute}/2`;
 const publicExerciseSetRoute =
-  "latihan/snbt/pengetahuan-kuantitatif/try-out/2026/set-1";
+  "latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1";
 const publicExerciseQuestionRoute = `${publicExerciseSetRoute}/soal-2`;
 
 beforeEach(() => {
@@ -98,7 +98,7 @@ describe("verifyNakafaContent", () => {
       Effect.runPromise(
         verifyNakafaContent(
           "https://example.convex.cloud",
-          "https://nakafa.com/id/latihan/snbt/pengetahuan-kuantitatif/try-out/2026"
+          "https://nakafa.com/id/latihan/snbt/pengetahuan-kuantitatif/tryout-2026"
         )
       )
     ).resolves.toBe(false);

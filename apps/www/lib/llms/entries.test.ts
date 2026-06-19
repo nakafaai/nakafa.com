@@ -98,7 +98,7 @@ beforeEach(() => {
       });
     }
 
-    if (route === "practice/snbt/quantitative-knowledge/mock-test/2026/set-1") {
+    if (route === "practice/snbt/quantitative-knowledge/mock-test-2026/set-1") {
       return Effect.succeed({
         description: "Try-out set",
         markdown: true,
@@ -108,7 +108,7 @@ beforeEach(() => {
 
     if (
       route ===
-      "practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question-1"
+      "practice/snbt/quantitative-knowledge/mock-test-2026/set-1/question-1"
     ) {
       return Effect.succeed({
         description: "Try-out question",
@@ -131,14 +131,14 @@ const routeRows = [
     section: "articles",
   }),
   routeRow({
-    route: "practice/snbt/quantitative-knowledge/mock-test/2026/set-1",
+    route: "practice/snbt/quantitative-knowledge/mock-test-2026/set-1",
     section: "material",
     sourcePath:
       "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
   }),
   routeRow({
     route:
-      "practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question-1",
+      "practice/snbt/quantitative-knowledge/mock-test-2026/set-1/question-1",
     section: "material",
     sourcePath:
       "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/1",
@@ -208,9 +208,9 @@ describe("llms entries", () => {
     expect(getRouteSection("/subjects/chemistry/green-chemistry")).toBe(
       "material"
     );
-    expect(
-      getRouteSection("/practice/snbt/quantitative-knowledge/mock-test/2026")
-    ).toBe("material");
+    expect(getRouteSection("/practice/snbt/quantitative-knowledge")).toBe(
+      "material"
+    );
     expect(getRouteSection("/site/about")).toBe("site");
     expect(getRouteSection("/")).toBe("site");
     expect(isLlmsSection("articles")).toBe(true);
@@ -291,8 +291,8 @@ describe("llms entries", () => {
     expect(entries).toContainEqual(
       expect.objectContaining({
         description: "Try-out set",
-        href: "https://nakafa.com/en/practice/snbt/quantitative-knowledge/mock-test/2026/set-1.md",
-        route: "/practice/snbt/quantitative-knowledge/mock-test/2026/set-1",
+        href: "https://nakafa.com/en/practice/snbt/quantitative-knowledge/mock-test-2026/set-1.md",
+        route: "/practice/snbt/quantitative-knowledge/mock-test-2026/set-1",
         section: "material",
         title: "Try-out Set 1",
       })
@@ -300,9 +300,9 @@ describe("llms entries", () => {
     expect(entries).toContainEqual(
       expect.objectContaining({
         description: "Try-out question",
-        href: "https://nakafa.com/en/practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question-1.md",
+        href: "https://nakafa.com/en/practice/snbt/quantitative-knowledge/mock-test-2026/set-1/question-1.md",
         route:
-          "/practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question-1",
+          "/practice/snbt/quantitative-knowledge/mock-test-2026/set-1/question-1",
         section: "material",
         title: "Question 1",
       })
@@ -326,7 +326,7 @@ describe("llms entries", () => {
     );
     expect(hrefs).not.toContain("https://nakafa.com/en/articles/politics.md");
     expect(hrefs).not.toContain(
-      "https://nakafa.com/en/practice/snbt/quantitative-knowledge/mock-test/2026.md"
+      "https://nakafa.com/en/practice/snbt/quantitative-knowledge/mock-test-2026.md"
     );
     expect(mockGetRuntimeContentRoute).toHaveBeenCalledWith({
       locale: "en",
@@ -334,12 +334,12 @@ describe("llms entries", () => {
     });
     expect(mockGetRuntimeContentRoute).toHaveBeenCalledWith({
       locale: "en",
-      route: "practice/snbt/quantitative-knowledge/mock-test/2026/set-1",
+      route: "practice/snbt/quantitative-knowledge/mock-test-2026/set-1",
     });
     expect(mockGetRuntimeContentRoute).toHaveBeenCalledWith({
       locale: "en",
       route:
-        "practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question-1",
+        "practice/snbt/quantitative-knowledge/mock-test-2026/set-1/question-1",
     });
     expect(mockGetRuntimeContentRoute).not.toHaveBeenCalledWith({
       locale: "en",
@@ -392,7 +392,7 @@ describe("llms entries", () => {
       Effect.runPromise(
         getContentListingLlmsEntries({
           locale: "en",
-          route: "exams/snbt/quantitative-knowledge/mock-test/2026",
+          route: "exams/snbt/quantitative-knowledge",
         })
       )
     ).resolves.toBeNull();

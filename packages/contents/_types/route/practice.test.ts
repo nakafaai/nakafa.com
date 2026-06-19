@@ -4,10 +4,12 @@ import { MATERIAL_SOURCES } from "@repo/contents/_types/material/source";
 import {
   findPublicContentRouteByPath,
   findPublicContentRouteBySourcePath,
+  isPracticeSetRoute,
   listPublicContentRoutes,
 } from "@repo/contents/_types/route/content";
 import {
   isPracticeQuestionPath,
+  readPublicPracticeDomainPath,
   readPublicPracticeQuestionNumber,
   readPublicPracticeQuestionRouteBySourcePath,
   readSourcePracticeQuestionNumber,
@@ -58,12 +60,12 @@ describe("public practice routes", () => {
   it("recognizes practice question paths through the owned route grammar", () => {
     expect(
       isPracticeQuestionPath(
-        "practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question-9"
+        "practice/snbt/quantitative-knowledge/mock-test-2026/set-1/question-9"
       )
     ).toBe(true);
     expect(
       isPracticeQuestionPath(
-        "latihan/snbt/pengetahuan-kuantitatif/tryout/2026/set-1/soal-9"
+        "latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1/soal-9"
       )
     ).toBe(true);
     expect(
@@ -73,17 +75,19 @@ describe("public practice routes", () => {
     ).toBe(true);
     expect(
       isPracticeQuestionPath(
-        "practice/snbt/quantitative-knowledge/mock-test/2026/set-1"
+        "practice/snbt/quantitative-knowledge/mock-test-2026/set-1"
       )
     ).toBe(false);
   });
 
   it("derives canonical exercise set and localized question routes", () => {
-    expect(Effect.runSync(listPublicContentRoutes())).toContainEqual(
+    const routes = Effect.runSync(listPublicContentRoutes());
+
+    expect(routes).toContainEqual(
       expect.objectContaining({
         kind: "exercise-set",
         locale: "id",
-        publicPath: "latihan/snbt/pengetahuan-kuantitatif/tryout/2026/set-1",
+        publicPath: "latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1",
         sourcePath:
           "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
       })
@@ -100,7 +104,7 @@ describe("public practice routes", () => {
           year: 2026,
         })
       )
-    ).toBe("latihan/snbt/pengetahuan-kuantitatif/tryout/2026/set-1/soal-9");
+    ).toBe("latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1/soal-9");
     expect(
       Effect.runSync(
         toPublicExerciseQuestionPath({
@@ -114,7 +118,33 @@ describe("public practice routes", () => {
         })
       )
     ).toBe(
-      "practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question-9"
+      "practice/snbt/quantitative-knowledge/mock-test-2026/set-1/question-9"
+    );
+
+    const setRoute = routes
+      .filter(isPracticeSetRoute)
+      .find(
+        (route) =>
+          route.publicPath ===
+          "practice/snbt/quantitative-knowledge/mock-test-2026/set-1"
+      );
+    const questionRoute = readPublicPracticeQuestionRouteBySourcePath({
+      domains: MATERIAL_ROUTE_DOMAINS,
+      locale: "en",
+      materials: MATERIAL_SOURCES,
+      sourcePath:
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/9",
+    });
+
+    if (!(setRoute && questionRoute)) {
+      expect.fail("Expected canonical set and question route fixtures.");
+    }
+
+    expect(readPublicPracticeDomainPath(setRoute)).toBe(
+      "practice/snbt/quantitative-knowledge"
+    );
+    expect(readPublicPracticeDomainPath(questionRoute)).toBe(
+      "practice/snbt/quantitative-knowledge"
     );
   });
 
@@ -123,7 +153,7 @@ describe("public practice routes", () => {
       Option.getOrNull(
         Effect.runSync(
           findPublicRouteByPath(
-            "practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question-9",
+            "practice/snbt/quantitative-knowledge/mock-test-2026/set-1/question-9",
             "en"
           )
         )
@@ -131,7 +161,7 @@ describe("public practice routes", () => {
     ).toMatchObject({
       kind: "exercise-question",
       publicPath:
-        "practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question-9",
+        "practice/snbt/quantitative-knowledge/mock-test-2026/set-1/question-9",
       sourcePath:
         "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/9",
     });
@@ -139,7 +169,7 @@ describe("public practice routes", () => {
       Option.getOrNull(
         Effect.runSync(
           findPublicContentRouteByPath(
-            "latihan/snbt/pengetahuan-kuantitatif/tryout/2026/set-1/soal-9",
+            "latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1/soal-9",
             "id"
           )
         )
@@ -160,7 +190,7 @@ describe("public practice routes", () => {
       )
     ).toMatchObject({
       publicPath:
-        "practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question-9",
+        "practice/snbt/quantitative-knowledge/mock-test-2026/set-1/question-9",
     });
     expect(
       Option.getOrNull(
@@ -173,7 +203,7 @@ describe("public practice routes", () => {
       )
     ).toMatchObject({
       publicPath:
-        "latihan/snbt/pengetahuan-kuantitatif/tryout/2026/set-1/soal-9",
+        "latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1/soal-9",
       title: "Set 1 Soal 9",
     });
   });
@@ -181,9 +211,11 @@ describe("public practice routes", () => {
   it("rejects invalid localized exercise paths and source paths", () => {
     const invalidPaths = [
       "latihan/snbt/pengetahuan-kuantitatif/review/2026/set-1/soal-1",
-      "latihan/snbt/pengetahuan-kuantitatif/tryout/2026/set-1/question-1",
-      "latihan/snbt/pengetahuan-kuantitatif/tryout/2026/set-1/soal-0",
-      "latihan/snbt/pengetahuan-kuantitatif/tryout/2026/set-1/soal-01",
+      "latihan/snbt/pengetahuan-kuantitatif/tryout/2026/set-1/soal-1",
+      "practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question-1",
+      "latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1/question-1",
+      "latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1/soal-0",
+      "latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1/soal-01",
     ];
 
     for (const path of invalidPaths) {

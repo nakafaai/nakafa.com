@@ -7,6 +7,10 @@ import type { PublicRoute } from "@repo/contents/_types/route/schema";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect, Option } from "effect";
 import {
+  getRuntimeExerciseQuestionPage,
+  getRuntimeExerciseSetPage,
+} from "@/lib/content/runtime/pages";
+import {
   getRuntimeContentRoute,
   getRuntimeContentRouteParentPage,
 } from "@/lib/content/runtime/routes";
@@ -17,6 +21,10 @@ type VerifiedContentRouteCheck = Exclude<
   PublicContentRouteCheck,
   { mode: "outside" }
 >;
+type VerifiedLlmsRouteCheck =
+  | VerifiedContentRouteCheck
+  | { mode: "exercise-set"; sourcePath: string }
+  | { mode: "exercise-question"; sourcePath: string };
 
 export interface LocalizedLlmsRoute {
   locale: SupportedLocale;
@@ -70,7 +78,7 @@ export const resolveLlmsProxyRoute = Effect.fn("www.llms.routes.resolveProxy")(
       )
     );
 
-    let verifiedRouteCheck: VerifiedContentRouteCheck;
+    let verifiedRouteCheck: VerifiedLlmsRouteCheck;
 
     if (Option.isSome(publicRoute)) {
       if (
@@ -142,14 +150,26 @@ function isUnsupportedContextMarkdownRoute(route: PublicRoute) {
 }
 
 /** Converts a projected public route into the existing content lookup contract. */
-function getRouteProjectionCheck(
-  route: PublicRoute
-): VerifiedContentRouteCheck {
+function getRouteProjectionCheck(route: PublicRoute): VerifiedLlmsRouteCheck {
   if (
     route.kind === "assessment-context" ||
     route.kind === "curriculum-context"
   ) {
     return { mode: "app" };
+  }
+
+  if (route.kind === "exercise-question") {
+    return {
+      mode: "exercise-question",
+      sourcePath: route.sourcePath,
+    };
+  }
+
+  if (route.kind === "exercise-set") {
+    return {
+      mode: "exercise-set",
+      sourcePath: route.sourcePath,
+    };
   }
 
   return {
@@ -245,10 +265,34 @@ const contentRouteExists = Effect.fn("www.llms.routes.contentExists")(
     routeCheck,
   }: {
     locale: SupportedLocale;
-    routeCheck: VerifiedContentRouteCheck;
+    routeCheck: VerifiedLlmsRouteCheck;
   }) {
     if (routeCheck.mode === "app") {
       return true;
+    }
+
+    if (routeCheck.mode === "exercise-question") {
+      return yield* getRuntimeExerciseQuestionPage({
+        locale,
+        slug: routeCheck.sourcePath,
+      }).pipe(
+        Effect.match({
+          onFailure: () => false,
+          onSuccess: (questionPage) => questionPage !== null,
+        })
+      );
+    }
+
+    if (routeCheck.mode === "exercise-set") {
+      return yield* getRuntimeExerciseSetPage({
+        locale,
+        slug: routeCheck.sourcePath,
+      }).pipe(
+        Effect.match({
+          onFailure: () => false,
+          onSuccess: (setPage) => setPage !== null,
+        })
+      );
     }
 
     if (routeCheck.mode === "missing") {

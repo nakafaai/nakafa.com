@@ -106,16 +106,16 @@ describe("llms exercise markdown", () => {
     const text = await getCachedLlmsExerciseText({
       cleanSlug: validSetPath,
       locale: "id",
-      publicSlug: "latihan/snbt/pengetahuan-kuantitatif/try-out/2026/set-1",
+      publicSlug: "latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1",
     });
 
     expect(text).toContain("Practice with quantitative reasoning.");
     expect(text).toContain("## Questions");
     expect(text).toContain(
-      "https://nakafa.com/id/latihan/snbt/pengetahuan-kuantitatif/try-out/2026/set-1/soal-1.md"
+      "https://nakafa.com/id/latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1/soal-1.md"
     );
     expect(text).toContain(
-      "https://nakafa.com/id/latihan/snbt/pengetahuan-kuantitatif/try-out/2026/set-1/soal-2.md"
+      "https://nakafa.com/id/latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1/soal-2.md"
     );
     expect(text).not.toContain("### Answer & Explanation");
   });
@@ -138,7 +138,10 @@ describe("llms exercise markdown", () => {
           {
             ...exerciseWithLocalizedChoices,
             choices: {
-              en: [{ label: "A. Fallback", value: true }],
+              en: [
+                { label: "A. Fallback", value: true },
+                { label: "B. Fallback", value: false },
+              ],
             },
             number: 3,
             question: {
@@ -158,7 +161,9 @@ describe("llms exercise markdown", () => {
 
     expect(text).toContain("Quantitative Knowledge Set 1");
     expect(text).toContain("Question 3");
-    expect(text).toContain("- A. Fallback");
+    expect(text).toContain("| Pilihan | Benar |");
+    expect(text).toContain("| A. Fallback | Ya |");
+    expect(text).toContain("| B. Fallback | Tidak |");
     expect(text).toContain("### Answer & Explanation");
     expect(text).toContain("Answer raw");
     expect(text).not.toContain("## Exercise 2");
@@ -203,7 +208,9 @@ describe("llms exercise markdown", () => {
     expect(text).toContain(
       "(Adapted from: [issuu.com](https://issuu.com/naeyc/docs/example))"
     );
-    expect(text).toContain("- paragraph $$1$$ and $$50\\text{ years}$$");
+    expect(text).toContain(
+      "| paragraph $$1$$ and $$50\\text{ years}$$<br>Visible text: paragraph and | No |"
+    );
     expect(text).toContain("### Answer & Explanation");
     expect(text).toContain("```math\nm = 1\n```");
     expect(text).toContain("Then $$k = 2$$ gives the final value $$19$$.");

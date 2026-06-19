@@ -22,6 +22,7 @@ import {
   readNamespaceSegment,
 } from "@repo/contents/_types/route/path";
 import {
+  type PublicContentRoute,
   type PublicPracticeQuestionRoute,
   PublicPracticeQuestionRouteSchema,
 } from "@repo/contents/_types/route/schema";
@@ -51,7 +52,7 @@ export function isPracticeMaterialSource(
   return material.kind === "practice";
 }
 
-/** Builds one canonical public practice group path from source-owned route slugs. */
+/** Builds the canonical practice group prefix beneath one rendered domain page. */
 export function makePracticeGroupPath({
   domains,
   group,
@@ -68,7 +69,26 @@ export function makePracticeGroupPath({
       yield* lookupNamespaceSegment("exercises", locale),
       material.assessment,
       yield* lookupDomainSlug(domains, "practice", material.domain, locale),
-      ...getPracticeActivitySegments(group, locale),
+      toPublicPracticeGroupSegment(group, locale),
+    ]);
+  });
+}
+
+/** Builds the rendered practice domain path that owns visible set-group cards. */
+export function makePracticeDomainPath({
+  domains,
+  locale,
+  material,
+}: {
+  domains: NonNullable<RouteInputs["domains"]>;
+  locale: Locale;
+  material: Pick<PracticeMaterialSource, "assessment" | "domain">;
+}) {
+  return Effect.gen(function* () {
+    return yield* makePath([
+      yield* lookupNamespaceSegment("exercises", locale),
+      material.assessment,
+      yield* lookupDomainSlug(domains, "practice", material.domain, locale),
     ]);
   });
 }
@@ -132,7 +152,7 @@ export const toPublicExerciseQuestionPath = Effect.fn(
       material.domain,
       decoded.locale
     ),
-    ...getPracticeActivitySegments(group, decoded.locale),
+    toPublicPracticeGroupSegment(group, decoded.locale),
     decoded.setName,
     toPublicPracticeQuestionSegment({
       locale: decoded.locale,
@@ -181,14 +201,14 @@ export function readPublicPracticeQuestionRouteByPath({
     }
 
     for (const group of material.groups) {
-      const groupSegments = getPracticeActivitySegments(group, locale);
+      const groupSegment = toPublicPracticeGroupSegment(group, locale);
 
-      if (!segmentsMatch(pathSegments.slice(3), groupSegments)) {
+      if (pathSegments[3] !== groupSegment) {
         continue;
       }
 
       for (const set of group.sets) {
-        const setIndex = 3 + groupSegments.length;
+        const setIndex = 4;
         const questionIndex = setIndex + 1;
         const questionNumber = readPublicPracticeQuestionNumber({
           locale,
@@ -207,7 +227,7 @@ export function readPublicPracticeQuestionRouteByPath({
           namespace,
           material.assessment,
           domainSlug,
-          ...groupSegments,
+          groupSegment,
           set.routeSlugs[locale],
         ].join("/");
         const questionPath = `${setPath}/${pathSegments[questionIndex]}`;
@@ -301,7 +321,7 @@ export function readPublicPracticeQuestionRouteBySourcePath({
           namespace,
           material.assessment,
           domainSlug,
-          ...getPracticeActivitySegments(group, locale),
+          toPublicPracticeGroupSegment(group, locale),
           set.routeSlugs[locale],
         ].join("/");
         const publicPath = [
@@ -332,16 +352,29 @@ export function readPublicPracticeQuestionRouteBySourcePath({
   return;
 }
 
-/** Reads the activity and year route segments from a decoded practice group. */
-export function getPracticeActivitySegments(
+/** Builds the localized public practice group segment without splitting year. */
+export function toPublicPracticeGroupSegment(
   group: Pick<PracticeMaterialGroup, "routeSlugs" | "year">,
   locale: Locale
 ) {
-  if (group.year === undefined) {
-    return [group.routeSlugs[locale]];
-  }
+  const slug = group.routeSlugs[locale];
 
-  return [group.routeSlugs[locale], group.year.toString()];
+  return group.year === undefined ? slug : `${slug}-${group.year}`;
+}
+
+type PracticeDomainRouteInput =
+  | Pick<
+      Extract<PublicContentRoute, { kind: "exercise-set" }>,
+      "kind" | "publicPath"
+    >
+  | Pick<PublicPracticeQuestionRoute, "kind" | "publicPath">;
+
+/** Reads the rendered practice domain path from a concrete set or question row. */
+export function readPublicPracticeDomainPath(route: PracticeDomainRouteInput) {
+  const segments = route.publicPath.split("/");
+  const droppedSegments = route.kind === "exercise-question" ? 3 : 2;
+
+  return segments.slice(0, -droppedSegments).join("/");
 }
 
 /** Reads the source asset folder for one practice material group. */
@@ -364,11 +397,6 @@ export function createPracticeMaterialByKey(
   }
 
   return new Map(entries);
-}
-
-/** Compares public path prefixes without accepting reordered practice segments. */
-function segmentsMatch(actual: readonly string[], expected: readonly string[]) {
-  return expected.every((segment, index) => actual[index] === segment);
 }
 
 /** Parses localized public question segments while rejecting malformed or non-positive question numbers. */
