@@ -50,6 +50,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Export app version
+        run: |
+          echo "NEXT_PUBLIC_VERSION=$(node -p 'require(\"./package.json\").version')" >> "$GITHUB_ENV"
+
       - name: Build production app
         run: pnpm build
 
