@@ -110,7 +110,7 @@ describe("sitemap entries", () => {
   it("looks up content lastmod by public sitemap route", async () => {
     await Effect.runPromise(
       getEntries(
-        "/practice/snbt/quantitative-knowledge/mock-test-2026/set-1/question-1"
+        "/practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-1"
       )
     );
     await Effect.runPromise(
@@ -120,7 +120,7 @@ describe("sitemap entries", () => {
     expect(mockGetRuntimeContentRoute).toHaveBeenCalledWith({
       locale: "en",
       route:
-        "practice/snbt/quantitative-knowledge/mock-test-2026/set-1/question-1",
+        "practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-1",
     });
     expect(mockGetRuntimeContentRoute).toHaveBeenCalledWith({
       locale: "en",
@@ -192,7 +192,7 @@ describe("sitemap entries", () => {
     await expect(
       Effect.runPromise(
         getEntries(
-          "/practice/snbt/quantitative-knowledge/mock-test-2026/set-1/question-1"
+          "/practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-1"
         )
       )
     ).resolves.toContainEqual(

@@ -20,7 +20,7 @@ describe("practice source route identity", () => {
     expect(
       readPracticeSourceRouteByPath({
         locale: "en",
-        route: "practice/snbt/general-knowledge/mock-test-2026/set-1",
+        route: "practice/snbt/general-knowledge/tryout-2026/set-1",
       })
     ).toEqual({
       kind: "set",

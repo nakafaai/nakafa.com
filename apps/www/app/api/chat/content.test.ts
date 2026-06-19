@@ -132,17 +132,17 @@ describe("app/api/chat/content", () => {
   it("keeps projected practice URLs on canonical public route refs", () => {
     expect(
       getCanonicalNakafaContentUrl(
-        "/en/practice/snbt/quantitative-knowledge/mock-test-2026/set-1"
+        "/en/practice/snbt/quantitative-knowledge/tryout-2026/set-1"
       )
     ).toBe(
-      "https://nakafa.com/en/practice/snbt/quantitative-knowledge/mock-test-2026/set-1"
+      "https://nakafa.com/en/practice/snbt/quantitative-knowledge/tryout-2026/set-1"
     );
     expect(
       getCanonicalNakafaContentUrl(
-        "/en/practice/snbt/quantitative-knowledge/mock-test-2026/set-1/question-9"
+        "/en/practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-9"
       )
     ).toBe(
-      "https://nakafa.com/en/practice/snbt/quantitative-knowledge/mock-test-2026/set-1/question-9"
+      "https://nakafa.com/en/practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-9"
     );
   });
 

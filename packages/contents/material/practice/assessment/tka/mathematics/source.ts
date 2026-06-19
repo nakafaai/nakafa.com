@@ -5,7 +5,7 @@ export const practiceAssessmentTkaMathematicsMaterial = definePracticeMaterial({
   groups: [
     {
       exerciseType: "try-out",
-      routeSlugs: { en: "mock-test", id: "tryout" },
+      routeSlugs: { en: "tryout", id: "tryout" },
       year: 2026,
       translations: {
         en: {

@@ -232,7 +232,7 @@ describe("llms proxy route resolver", () => {
           acceptHeader: null,
           method: "GET",
           pathname:
-            "/en/practice/snbt/general-knowledge/mock-test-2026/set-1/question-9.md",
+            "/en/practice/snbt/general-knowledge/tryout-2026/set-1/question-9.md",
         })
       )
     ).resolves.toEqual({
@@ -240,8 +240,7 @@ describe("llms proxy route resolver", () => {
       localizedRoute: {
         locale: "en",
         markdownExtension: ".md",
-        route:
-          "/practice/snbt/general-knowledge/mock-test-2026/set-1/question-9",
+        route: "/practice/snbt/general-knowledge/tryout-2026/set-1/question-9",
       },
     });
     expect(runtimeMocks.getRuntimeExerciseQuestionPage).toHaveBeenCalledWith({
@@ -257,8 +256,7 @@ describe("llms proxy route resolver", () => {
         resolveLlmsProxyRoute({
           acceptHeader: null,
           method: "GET",
-          pathname:
-            "/en/practice/snbt/general-knowledge/mock-test-2026/set-1.md",
+          pathname: "/en/practice/snbt/general-knowledge/tryout-2026/set-1.md",
         })
       )
     ).resolves.toEqual({
@@ -266,7 +264,7 @@ describe("llms proxy route resolver", () => {
       localizedRoute: {
         locale: "en",
         markdownExtension: ".md",
-        route: "/practice/snbt/general-knowledge/mock-test-2026/set-1",
+        route: "/practice/snbt/general-knowledge/tryout-2026/set-1",
       },
     });
     expect(runtimeMocks.getRuntimeExerciseSetPage).toHaveBeenCalledWith({
@@ -287,7 +285,7 @@ describe("llms proxy route resolver", () => {
           acceptHeader: null,
           method: "GET",
           pathname:
-            "/en/practice/snbt/general-knowledge/mock-test-2026/set-1/question-999.md",
+            "/en/practice/snbt/general-knowledge/tryout-2026/set-1/question-999.md",
         })
       )
     ).resolves.toEqual({ kind: "content-not-found", locale: "en" });
@@ -303,8 +301,7 @@ describe("llms proxy route resolver", () => {
         resolveLlmsProxyRoute({
           acceptHeader: null,
           method: "GET",
-          pathname:
-            "/en/practice/snbt/general-knowledge/mock-test-2026/set-1.md",
+          pathname: "/en/practice/snbt/general-knowledge/tryout-2026/set-1.md",
         })
       )
     ).resolves.toEqual({ kind: "content-not-found", locale: "en" });
@@ -321,7 +318,7 @@ describe("llms proxy route resolver", () => {
           acceptHeader: null,
           method: "GET",
           pathname:
-            "/en/practice/snbt/general-knowledge/mock-test-2026/set-1/question-9.md",
+            "/en/practice/snbt/general-knowledge/tryout-2026/set-1/question-9.md",
         })
       )
     ).resolves.toEqual({ kind: "content-not-found", locale: "en" });
@@ -337,8 +334,7 @@ describe("llms proxy route resolver", () => {
         resolveLlmsProxyRoute({
           acceptHeader: null,
           method: "GET",
-          pathname:
-            "/en/practice/snbt/general-knowledge/mock-test-2026/set-1.md",
+          pathname: "/en/practice/snbt/general-knowledge/tryout-2026/set-1.md",
         })
       )
     ).resolves.toEqual({ kind: "content-not-found", locale: "en" });

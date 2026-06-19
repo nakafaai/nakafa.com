@@ -74,13 +74,13 @@ describe("llms full document", () => {
       if (section === "material") {
         return Effect.succeed([
           createEntry({
-            route: "/practice/snbt/general-knowledge/mock-test-2026/set-1",
+            route: "/practice/snbt/general-knowledge/tryout-2026/set-1",
             section: "material",
             title: "Set 1",
           }),
           createEntry({
             route:
-              "/practice/snbt/general-knowledge/mock-test-2026/set-1/question-9",
+              "/practice/snbt/general-knowledge/tryout-2026/set-1/question-9",
             section: "material",
             title: "Exercise 9",
           }),
@@ -99,12 +99,11 @@ describe("llms full document", () => {
           },
           {
             ...createEntry({
-              route:
-                "/practice/snbt/general-knowledge/mock-test-2026/set-1/notes",
+              route: "/practice/snbt/general-knowledge/tryout-2026/set-1/notes",
               section: "material",
               title: "Notes",
             }),
-            href: "https://nakafa.com/en/practice/snbt/general-knowledge/mock-test-2026/set-1/notes",
+            href: "https://nakafa.com/en/practice/snbt/general-knowledge/tryout-2026/set-1/notes",
           },
         ]);
       }
@@ -129,7 +128,7 @@ describe("llms full document", () => {
         }
         if (
           cleanSlug ===
-          "practice/snbt/general-knowledge/mock-test-2026/set-1/question-9"
+          "practice/snbt/general-knowledge/tryout-2026/set-1/question-9"
         ) {
           return Effect.succeed(
             `${locale}:question body\n\n### Choices\n\n- A. First choice`
@@ -186,7 +185,7 @@ describe("llms full document", () => {
         (artifact) => artifact.path === "llms-full/en/material/page/0.txt"
       )?.text
     ).toContain(
-      "Nakafa English Material: Page / 0 / Mock Test 2026 Full Documentation"
+      "Nakafa English Material: Page / 0 / Tryout 2026 Full Documentation"
     );
     const fullShardText = artifacts.shards
       .map((artifact) => artifact.text)
@@ -194,7 +193,7 @@ describe("llms full document", () => {
     expect(fullShardText).toContain("en:question body");
     expect(fullShardText).toContain("- A. First choice");
     expect(fullShardText).toContain(
-      "Markdown URL: https://nakafa.com/en/practice/snbt/general-knowledge/mock-test-2026/set-1/question-9.md"
+      "Markdown URL: https://nakafa.com/en/practice/snbt/general-knowledge/tryout-2026/set-1/question-9.md"
     );
     expect(
       artifacts.shards.find(

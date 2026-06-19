@@ -26,7 +26,7 @@ vi.mock("@/app/api/chat/nakafa-content", async () => {
             url ===
               "https://nakafa.com/id/articles/politics/dynastic-politics-asian-values" ||
             url ===
-              "https://nakafa.com/en/practice/snbt/general-knowledge/mock-test-2026/set-2/question-1" ||
+              "https://nakafa.com/en/practice/snbt/general-knowledge/tryout-2026/set-2/question-1" ||
             url === "asset:id:quran:quran-surah:1" ||
             url === "nakafa://content/asset:id:quran:quran-surah:1"
         ),
@@ -46,7 +46,7 @@ describe("app/api/chat/utils", () => {
       true,
     ],
     [
-      "https://nakafa.com/en/practice/snbt/general-knowledge/mock-test-2026/set-2/question-1",
+      "https://nakafa.com/en/practice/snbt/general-knowledge/tryout-2026/set-2/question-1",
       true,
     ],
     ["asset:id:quran:quran-surah:1", true],

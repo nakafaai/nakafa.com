@@ -26,7 +26,7 @@ describe("practice set routes", () => {
         domains: MATERIAL_ROUTE_DOMAINS,
         locale: "en",
         materials: MATERIAL_SOURCES,
-        publicPath: "practice/snbt/quantitative-knowledge/mock-test-2026/set-1",
+        publicPath: "practice/snbt/quantitative-knowledge/tryout-2026/set-1",
       })
     ).toEqual({
       kind: "set",
@@ -54,20 +54,32 @@ describe("practice set routes", () => {
         .some(
           (route) =>
             route.publicPath ===
-            "practice/snbt/quantitative-knowledge/mock-test-2026/set-1"
+            "practice/snbt/quantitative-knowledge/tryout-2026/set-1"
         )
     ).toBe(true);
     expect(
       readPublicPracticeSetRouteByPath({
         locale: "en",
         publicPath:
-          "practice/snbt/quantitative-knowledge/mock-test-2026/set-1/question-1",
+          "practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-1",
       })
     ).toBeUndefined();
     expect(
       readPublicPracticeSetRouteByPath({
         locale: "en",
-        publicPath: "practice/snbt/quantitative-knowledge/mock-test/2026/set-1",
+        publicPath: "practice/snbt/quantitative-knowledge/tryout/2026/set-1",
+      })
+    ).toBeUndefined();
+    expect(
+      readPublicPracticeSetRouteByPath({
+        locale: "en",
+        publicPath: "practice/snbt/quantitative-knowledge/tryout-2027/set-1",
+      })
+    ).toBeUndefined();
+    expect(
+      readPublicPracticeSetRouteByPath({
+        locale: "en",
+        publicPath: "practice/snbt/unknown-domain/tryout-2026/set-1",
       })
     ).toBeUndefined();
   });

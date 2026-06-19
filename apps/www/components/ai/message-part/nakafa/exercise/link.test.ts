@@ -20,10 +20,10 @@ describe("readExercisePreviewHref", () => {
         exerciseNumber: 9,
         locale: "en",
         number: 9,
-        url: "https://nakafa.com/en/practice/snbt/quantitative-knowledge/mock-test-2026/set-1/question-9",
+        url: "https://nakafa.com/en/practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-9",
       })
     ).toBe(
-      "https://nakafa.com/en/practice/snbt/quantitative-knowledge/mock-test-2026/set-1/question-9"
+      "https://nakafa.com/en/practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-9"
     );
   });
 });

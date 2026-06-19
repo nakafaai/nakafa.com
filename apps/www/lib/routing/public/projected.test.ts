@@ -25,11 +25,11 @@ describe("projected public html route rejection", () => {
       "/en/subjects/chemistry/green-chemistry",
       "/en/curriculum/merdeka/class-11-afdocs-nonexistent-8f3a",
       "/en/curriculum/merdeka/class-10/mathematics-afdocs-nonexistent-8f3a",
-      "/en/exams/snbt/general-knowledge/mock-test-2026",
-      "/en/exams/snbt/general-knowledge/mock-test-2026-afdocs-nonexistent-8f3a",
-      "/en/practice/snbt/general-reasoning/mock-test-2026",
-      "/en/practice/snbt/general-reasoning/mock-test-2026-afdocs-nonexistent-8f3a",
-      "/en/practice/snbt/general-reasoning/mock-test-2026/set-7-afdocs-nonexistent-8f3a",
+      "/en/exams/snbt/general-knowledge/tryout-2026",
+      "/en/exams/snbt/general-knowledge/tryout-2026-afdocs-nonexistent-8f3a",
+      "/en/practice/snbt/general-reasoning/tryout-2026",
+      "/en/practice/snbt/general-reasoning/tryout-2026-afdocs-nonexistent-8f3a",
+      "/en/practice/snbt/general-reasoning/tryout-2026/set-7-afdocs-nonexistent-8f3a",
     ];
 
     for (const pathname of paths) {
@@ -47,8 +47,8 @@ describe("projected public html route rejection", () => {
       "/en/exams/snbt/general-knowledge",
       "/en/practice/snbt",
       "/en/practice/snbt/general-reasoning",
-      "/en/practice/snbt/mathematical-reasoning/mock-test-2026/set-2",
-      "/en/practice/snbt/mathematical-reasoning/mock-test-2026/set-2/question-1",
+      "/en/practice/snbt/mathematical-reasoning/tryout-2026/set-2",
+      "/en/practice/snbt/mathematical-reasoning/tryout-2026/set-2/question-1",
       "/id/latihan/snbt/penalaran-matematika/tryout-2026/set-2/soal-1",
     ];
 
@@ -67,7 +67,7 @@ describe("projected public html route rejection", () => {
     await expect(
       Effect.runPromise(
         readProjectedHtmlRouteRejection(
-          "/en/practice/snbt/mathematical-reasoning/mock-test-2026/set-2/question-999"
+          "/en/practice/snbt/mathematical-reasoning/tryout-2026/set-2/question-999"
         )
       )
     ).resolves.toBe("en");
@@ -81,7 +81,7 @@ describe("projected public html route rejection", () => {
     await expect(
       Effect.runPromise(
         readProjectedHtmlRouteRejection(
-          "/en/practice/snbt/mathematical-reasoning/mock-test-2026/set-2/question-099"
+          "/en/practice/snbt/mathematical-reasoning/tryout-2026/set-2/question-099"
         )
       )
     ).resolves.toBe("en");
@@ -95,7 +95,21 @@ describe("projected public html route rejection", () => {
     await expect(
       Effect.runPromise(
         readProjectedHtmlRouteRejection(
-          "/en/practice/snbt/mathematical-reasoning/mock-test-2027/set-2/question-1"
+          "/en/practice/snbt/mathematical-reasoning/tryout-2027/set-2/question-1"
+        )
+      )
+    ).resolves.toBe("en");
+    await expect(
+      Effect.runPromise(
+        readProjectedHtmlRouteRejection(
+          "/en/practice/snbt/unknown-domain/tryout-2026/set-2/question-1"
+        )
+      )
+    ).resolves.toBe("en");
+    await expect(
+      Effect.runPromise(
+        readProjectedHtmlRouteRejection(
+          "/en/practice/unknown-assessment/mathematical-reasoning/tryout-2026/set-2/question-1"
         )
       )
     ).resolves.toBe("en");
@@ -110,7 +124,7 @@ describe("projected public html route rejection", () => {
     await expect(
       Effect.runPromise(
         readProjectedHtmlRouteRejection(
-          "/en/practice/snbt/mathematical-reasoning/mock-test-2026/set-2/question-999"
+          "/en/practice/snbt/mathematical-reasoning/tryout-2026/set-2/question-999"
         )
       )
     ).resolves.toBe("en");

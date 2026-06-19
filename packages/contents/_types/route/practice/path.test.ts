@@ -143,7 +143,7 @@ describe("practice route path grammar", () => {
 
     expect(
       isPracticeQuestionPath(
-        "practice/snbt/quantitative-knowledge/mock-test-2026/set-1/question-9"
+        "practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-9"
       )
     ).toBe(true);
     expect(
@@ -158,7 +158,7 @@ describe("practice route path grammar", () => {
     ).toBe(true);
     expect(
       isPracticeQuestionPath(
-        "practice/snbt/quantitative-knowledge/mock-test-2026/set-1"
+        "practice/snbt/quantitative-knowledge/tryout-2026/set-1"
       )
     ).toBe(false);
   });
@@ -220,7 +220,7 @@ describe("practice route path grammar", () => {
       .find(
         (route) =>
           route.publicPath ===
-          "practice/snbt/quantitative-knowledge/mock-test-2026/set-1"
+          "practice/snbt/quantitative-knowledge/tryout-2026/set-1"
       );
     const projectedQuestionRoute = readPublicPracticeQuestionRouteBySourcePath({
       domains: MATERIAL_ROUTE_DOMAINS,

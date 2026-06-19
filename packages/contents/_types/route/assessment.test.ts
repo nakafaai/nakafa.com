@@ -31,7 +31,7 @@ describe("public assessment routes", () => {
       })
     );
     expect(
-      routes.some((route) => route.publicPath.includes("mock-test-2026"))
+      routes.some((route) => route.publicPath.includes("tryout-2026"))
     ).toBe(false);
     expect(
       routes.some((route) => route.publicPath.includes("tryout-2026"))

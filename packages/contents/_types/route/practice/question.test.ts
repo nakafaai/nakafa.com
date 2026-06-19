@@ -6,6 +6,7 @@ import {
   findPublicContentRouteBySourcePath,
 } from "@repo/contents/_types/route/content";
 import {
+  readPublicPracticeQuestionRouteByPath,
   readPublicPracticeQuestionRouteBySourcePath,
   toPublicExerciseQuestionPath,
 } from "@repo/contents/_types/route/practice/question";
@@ -40,9 +41,7 @@ describe("practice question routes", () => {
           year: 2026,
         })
       )
-    ).toBe(
-      "practice/snbt/quantitative-knowledge/mock-test-2026/set-1/question-9"
-    );
+    ).toBe("practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-9");
 
     const questionRoute = readPublicPracticeQuestionRouteBySourcePath({
       domains: MATERIAL_ROUTE_DOMAINS,
@@ -57,7 +56,7 @@ describe("practice question routes", () => {
     }
 
     expect(questionRoute.publicPath).toBe(
-      "practice/snbt/quantitative-knowledge/mock-test-2026/set-1/question-9"
+      "practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-9"
     );
   });
 
@@ -66,7 +65,7 @@ describe("practice question routes", () => {
       Option.getOrNull(
         Effect.runSync(
           findPublicRouteByPath(
-            "practice/snbt/quantitative-knowledge/mock-test-2026/set-1/question-9",
+            "practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-9",
             "en"
           )
         )
@@ -74,7 +73,7 @@ describe("practice question routes", () => {
     ).toMatchObject({
       kind: "exercise-question",
       publicPath:
-        "practice/snbt/quantitative-knowledge/mock-test-2026/set-1/question-9",
+        "practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-9",
       sourcePath:
         "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/9",
     });
@@ -103,7 +102,7 @@ describe("practice question routes", () => {
       )
     ).toMatchObject({
       publicPath:
-        "practice/snbt/quantitative-knowledge/mock-test-2026/set-1/question-9",
+        "practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-9",
     });
     expect(
       Option.getOrNull(
@@ -125,7 +124,9 @@ describe("practice question routes", () => {
     const invalidPaths = [
       "latihan/snbt/pengetahuan-kuantitatif/review/2026/set-1/soal-1",
       "latihan/snbt/pengetahuan-kuantitatif/tryout/2026/set-1/soal-1",
-      "practice/snbt/quantitative-knowledge/mock-test/2026/set-1/question-1",
+      "practice/snbt/quantitative-knowledge/tryout/2026/set-1/question-1",
+      "practice/snbt/quantitative-knowledge/tryout-2027/set-1/question-1",
+      "practice/snbt/unknown-domain/tryout-2026/set-1/question-1",
       "latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1/question-1",
       "latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1/soal-0",
       "latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1/soal-01",
@@ -133,9 +134,18 @@ describe("practice question routes", () => {
 
     for (const path of invalidPaths) {
       expect(
-        Option.isNone(Effect.runSync(findPublicRouteByPath(path, "id")))
+        Option.isNone(Effect.runSync(findPublicRouteByPath(path, "en")))
       ).toBe(true);
     }
+    expect(
+      readPublicPracticeQuestionRouteByPath({
+        domains: MATERIAL_ROUTE_DOMAINS,
+        locale: "en",
+        materials: MATERIAL_SOURCES,
+        publicPath:
+          "practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-0",
+      })
+    ).toBeUndefined();
     expect(
       Option.isNone(
         Effect.runSync(

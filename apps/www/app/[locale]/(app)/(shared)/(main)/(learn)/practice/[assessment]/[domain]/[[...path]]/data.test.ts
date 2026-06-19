@@ -67,7 +67,7 @@ describe("practice route data", () => {
       title: "Try Out 2026",
       items: expect.arrayContaining([
         expect.objectContaining({
-          href: "/en/practice/snbt/quantitative-knowledge/mock-test-2026/set-1",
+          href: "/en/practice/snbt/quantitative-knowledge/tryout-2026/set-1",
           title: "Set 1",
         }),
       ]),
@@ -119,7 +119,7 @@ describe("practice route data", () => {
         {
           locale: "en",
           publicPath:
-            "practice/snbt/quantitative-knowledge/mock-test-2026/set-1/question-9",
+            "practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-9",
         },
         {
           locale: "id",
@@ -141,7 +141,7 @@ describe("practice route data", () => {
       assessment: "snbt",
       domain: "quantitative-knowledge",
       locale: "en",
-      path: ["mock-test-2026", "set-1"],
+      path: ["tryout-2026", "set-1"],
     });
     const set = await getPracticeRouteData(params);
 
@@ -152,7 +152,7 @@ describe("practice route data", () => {
     }
 
     expect(set.pagePath).toBe(
-      "/en/practice/snbt/quantitative-knowledge/mock-test-2026/set-1"
+      "/en/practice/snbt/quantitative-knowledge/tryout-2026/set-1"
     );
     expect(set.group.pagePath).toBe("/en/practice/snbt");
     expect(set.group.materialPath).toBe(
@@ -173,7 +173,7 @@ describe("practice route data", () => {
     ).toEqual([
       {
         locale: "en",
-        publicPath: "practice/snbt/quantitative-knowledge/mock-test-2026/set-1",
+        publicPath: "practice/snbt/quantitative-knowledge/tryout-2026/set-1",
       },
       {
         locale: "id",
@@ -194,7 +194,7 @@ describe("practice route data", () => {
       )
     ).toEqual([]);
     await expect(getPracticeRuntimeSetPath(params)).resolves.toMatchObject({
-      routePath: "practice/snbt/quantitative-knowledge/mock-test-2026/set-1",
+      routePath: "practice/snbt/quantitative-knowledge/tryout-2026/set-1",
       setPath:
         "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
     });
@@ -203,7 +203,7 @@ describe("practice route data", () => {
         {
           assessment: "snbt",
           domain: "quantitative-knowledge",
-          path: ["mock-test-2026", "set-1"],
+          path: ["tryout-2026", "set-1"],
         },
         {
           assessment: "snbt",
@@ -229,7 +229,7 @@ describe("practice route data", () => {
         {
           assessment: "snbt",
           domain: "quantitative-knowledge",
-          path: ["mock-test", "2026", "set-1"],
+          path: ["tryout", "2026", "set-1"],
         },
       ])
     );
@@ -238,7 +238,7 @@ describe("practice route data", () => {
       assessment: "snbt",
       domain: "quantitative-knowledge",
       locale: "en",
-      path: ["mock-test-2026", "set-1", "question-9"],
+      path: ["tryout-2026", "set-1", "question-9"],
     });
     const single = await getPracticeRouteData(singleParams);
 
@@ -250,12 +250,12 @@ describe("practice route data", () => {
 
     expect(single.exerciseCount).toBe(10);
     expect(single.exerciseFilePath).toBe(
-      "/en/practice/snbt/quantitative-knowledge/mock-test-2026/set-1/question-9"
+      "/en/practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-9"
     );
     await expect(
       getPracticeRuntimeSetPath(singleParams)
     ).resolves.toMatchObject({
-      routePath: "practice/snbt/quantitative-knowledge/mock-test-2026/set-1",
+      routePath: "practice/snbt/quantitative-knowledge/tryout-2026/set-1",
       setPath:
         "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
     });
@@ -296,7 +296,7 @@ describe("practice route data", () => {
           assessment: "snbt",
           domain: "quantitative-knowledge",
           locale: "en",
-          path: ["mock-test-2026"],
+          path: ["tryout-2026"],
         })
       )
     ).rejects.toThrow();
@@ -306,7 +306,7 @@ describe("practice route data", () => {
           assessment: "snbt",
           domain: "quantitative-knowledge",
           locale: "en",
-          path: ["mock-test", "2026"],
+          path: ["tryout", "2026"],
         })
       )
     ).rejects.toThrow();
@@ -316,7 +316,7 @@ describe("practice route data", () => {
           assessment: "snbt",
           domain: "quantitative-knowledge",
           locale: "en",
-          path: ["mock-test-2027", "set-1", "question-1"],
+          path: ["tryout-2027", "set-1"],
         })
       )
     ).rejects.toThrow();
@@ -326,7 +326,17 @@ describe("practice route data", () => {
           assessment: "snbt",
           domain: "quantitative-knowledge",
           locale: "en",
-          path: ["mock-test-2026", "set-1", "question-0"],
+          path: ["tryout-2027", "set-1", "question-1"],
+        })
+      )
+    ).rejects.toThrow();
+    await expect(
+      getPracticeRouteData(
+        Promise.resolve({
+          assessment: "snbt",
+          domain: "quantitative-knowledge",
+          locale: "en",
+          path: ["tryout-2026", "set-1", "question-0"],
         })
       )
     ).rejects.toThrow();
@@ -343,7 +353,7 @@ describe("practice route data", () => {
           assessment: "snbt",
           domain: "quantitative-knowledge",
           locale: "en",
-          path: ["mock-test-2026", "set-1"],
+          path: ["tryout-2026", "set-1"],
         })
       )
     ).rejects.toThrow();
@@ -356,7 +366,7 @@ describe("practice route data", () => {
           assessment: "snbt",
           domain: "quantitative-knowledge",
           locale: "en",
-          path: ["mock-test-2026", "set-1", "question-9"],
+          path: ["tryout-2026", "set-1", "question-9"],
         })
       )
     ).rejects.toThrow();
@@ -403,20 +413,20 @@ describe("practice route data", () => {
     ).toEqual({ href: "/", title: "Next" });
     expect(
       localizeQuestionPaginationItem({
-        href: "/en/practice/snbt/quantitative-knowledge/mock-test-2026/set-1/question",
+        href: "/en/practice/snbt/quantitative-knowledge/tryout-2026/set-1/question",
         title: "Question",
       })
     ).toEqual({
-      href: "/en/practice/snbt/quantitative-knowledge/mock-test-2026/set-1/question",
+      href: "/en/practice/snbt/quantitative-knowledge/tryout-2026/set-1/question",
       title: "Question",
     });
     expect(
       localizeQuestionPaginationItem({
-        href: "/en/practice/snbt/quantitative-knowledge/mock-test-2026/set-1/2",
+        href: "/en/practice/snbt/quantitative-knowledge/tryout-2026/set-1/2",
         title: "Question 2",
       })
     ).toEqual({
-      href: "/en/practice/snbt/quantitative-knowledge/mock-test-2026/set-1/question-2",
+      href: "/en/practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-2",
       title: "Question 2",
     });
     expect(() => readQuestionSourcePathParts("question-x")).toThrow();
