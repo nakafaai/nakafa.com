@@ -5,7 +5,6 @@ import {
   syncAuthors,
 } from "@repo/backend/scripts/sync-content/authors";
 import { invalidateContentRuntimeCache } from "@repo/backend/scripts/sync-content/cache";
-import { readSyncContentFileChanges } from "@repo/backend/scripts/sync-content/changes";
 import { clean } from "@repo/backend/scripts/sync-content/clean";
 import { callConvexMutation } from "@repo/backend/scripts/sync-content/convex";
 import {
@@ -50,6 +49,7 @@ import type {
   SyncOptions,
   SyncResult,
 } from "@repo/backend/scripts/sync-content/types";
+import { readIncrementalSyncPlan } from "@repo/backend/scripts/sync-content/workflow/plan";
 import { Effect } from "effect";
 
 /** Runs the complete content sync in dependency-safe phases. */
@@ -352,7 +352,7 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
     log(`  Authors: ${created} new, ${existing} existing\n`);
   }
 
-  const changes = readSyncContentFileChanges(changedFilesArray);
+  const syncPlan = readIncrementalSyncPlan(changedFilesArray);
 
   let articleResult: SyncResult = { created: 0, updated: 0, unchanged: 0 };
   let curriculumTopicResult: SyncResult = {
@@ -384,37 +384,45 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
     updated: 0,
   };
 
-  if (changes.hasArticleChanges) {
-    log("Articles changed - syncing...");
-    articleResult = yield* syncArticles(config, options);
-    addPhaseMetrics(metrics, "Articles", articleResult);
-  } else {
-    log("Articles: no changes");
-  }
+  const plannedRowPhases = new Set(syncPlan.rowPhases);
 
-  if (changes.hasMaterialChanges || changes.hasCurriculumMaterialChanges) {
-    log("Curriculum material changed - syncing...");
-    curriculumTopicResult = yield* syncCurriculumTopics(config, options);
-    curriculumLessonResult = yield* syncCurriculumLessons(config, options);
-    addPhaseMetrics(metrics, "Curriculum Topics", curriculumTopicResult);
-    addPhaseMetrics(metrics, "Curriculum Lessons", curriculumLessonResult);
-  } else {
-    log("Curriculum: no changes");
-  }
+  for (const rowPhase of syncPlan.rowPhases) {
+    if (rowPhase === "articles") {
+      log("Article content rows changed - syncing...");
+      articleResult = yield* syncArticles(config, options);
+      addPhaseMetrics(metrics, "Articles", articleResult);
+      continue;
+    }
 
-  if (changes.hasExerciseChanges) {
-    log("Exercises changed - syncing...");
+    if (rowPhase === "curriculum") {
+      log("Curriculum content rows changed - syncing...");
+      curriculumTopicResult = yield* syncCurriculumTopics(config, options);
+      curriculumLessonResult = yield* syncCurriculumLessons(config, options);
+      addPhaseMetrics(metrics, "Curriculum Topics", curriculumTopicResult);
+      addPhaseMetrics(metrics, "Curriculum Lessons", curriculumLessonResult);
+      continue;
+    }
+
+    log("Exercise content rows changed - syncing...");
     exerciseSetResult = yield* syncExerciseSets(config, options);
     exerciseQuestionResult = yield* syncExerciseQuestions(config, options);
     addPhaseMetrics(metrics, "Exercise Sets", exerciseSetResult);
     addPhaseMetrics(metrics, "Exercise Questions", exerciseQuestionResult);
-  } else {
+  }
+
+  if (!plannedRowPhases.has("articles")) {
+    log("Articles: no changes");
+  }
+  if (!plannedRowPhases.has("curriculum")) {
+    log("Curriculum: no changes");
+  }
+  if (!plannedRowPhases.has("exercises")) {
     log("Exercises: no changes");
   }
 
   let routePageOptions = options;
 
-  if (changes.hasContentRouteChanges) {
+  if (syncPlan.cleanBeforeRouteArtifacts) {
     log("Cleaning stale content before route artifact pages...");
     const cleanResult = yield* clean(config, {
       ...options,
@@ -435,7 +443,7 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
   );
   addPhaseMetrics(metrics, "Route Pages", routePageResult);
 
-  if (changes.hasGeneratedReadModelChanges) {
+  if (syncPlan.refreshGeneratedReadModels) {
     generatedReadModelResult = yield* syncGeneratedReadModels(
       config,
       routePageOptions
