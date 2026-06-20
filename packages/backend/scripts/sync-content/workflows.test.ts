@@ -410,7 +410,7 @@ describe("sync-content workflows", () => {
     expect(learningProgramOptions[0]?.locale).toBeUndefined();
   });
 
-  it("refreshes generated read models for projection-only incremental changes", async () => {
+  it("resyncs projected content rows before route artifacts for route-only changes", async () => {
     const { events, workflow } = await loadWorkflow(
       {
         deleted: 0,
@@ -430,6 +430,10 @@ describe("sync-content workflows", () => {
 
     expect(events).toEqual(
       expect.arrayContaining([
+        "syncCurriculumTopics",
+        "syncCurriculumLessons",
+        "syncExerciseSets",
+        "syncExerciseQuestions",
         "clean",
         "syncRoutePages",
         "syncGeneratedReadModels",
@@ -438,13 +442,77 @@ describe("sync-content workflows", () => {
         "saveSyncState",
       ])
     );
-    expect(events).not.toContain("syncExerciseSets");
-    expect(events).not.toContain("syncExerciseQuestions");
+    expect(events).not.toContain("syncArticles");
+    expect(events.indexOf("syncCurriculumTopics")).toBeLessThan(
+      events.indexOf("clean")
+    );
+    expect(events.indexOf("syncCurriculumLessons")).toBeLessThan(
+      events.indexOf("clean")
+    );
+    expect(events.indexOf("syncExerciseSets")).toBeLessThan(
+      events.indexOf("clean")
+    );
+    expect(events.indexOf("syncExerciseQuestions")).toBeLessThan(
+      events.indexOf("clean")
+    );
+    expect(events.indexOf("clean")).toBeLessThan(
+      events.indexOf("syncRoutePages")
+    );
     expect(events.indexOf("syncRoutePages")).toBeLessThan(
       events.indexOf("syncGeneratedReadModels")
     );
     expect(events.indexOf("syncGeneratedReadModels")).toBeLessThan(
       events.indexOf("syncLearningPrograms")
+    );
+  });
+
+  it("resyncs article rows before route artifacts for graph-only changes", async () => {
+    const { events, workflow } = await loadWorkflow(
+      {
+        deleted: 0,
+        hasStale: false,
+      },
+      {
+        changedFiles: ["packages/contents/_types/graph/projection.ts"],
+        syncState: {
+          lastSyncCommit: "previous-commit",
+          lastSyncTimestamp: 1,
+        },
+      }
+    );
+    const options: SyncOptions = {};
+
+    await Effect.runPromise(workflow.syncIncremental(config, options));
+
+    expect(events).toEqual(
+      expect.arrayContaining([
+        "syncArticles",
+        "syncCurriculumTopics",
+        "syncCurriculumLessons",
+        "syncExerciseSets",
+        "syncExerciseQuestions",
+        "clean",
+        "syncRoutePages",
+        "syncGeneratedReadModels",
+        "syncLearningPrograms",
+        "invalidateContentRuntimeCache",
+        "saveSyncState",
+      ])
+    );
+    expect(events.indexOf("syncArticles")).toBeLessThan(
+      events.indexOf("clean")
+    );
+    expect(events.indexOf("syncCurriculumLessons")).toBeLessThan(
+      events.indexOf("clean")
+    );
+    expect(events.indexOf("syncExerciseQuestions")).toBeLessThan(
+      events.indexOf("clean")
+    );
+    expect(events.indexOf("clean")).toBeLessThan(
+      events.indexOf("syncRoutePages")
+    );
+    expect(events.indexOf("syncRoutePages")).toBeLessThan(
+      events.indexOf("syncGeneratedReadModels")
     );
   });
 

@@ -2,7 +2,7 @@ import { readSyncContentFileChanges } from "@repo/backend/scripts/sync-content/c
 import { describe, expect, it } from "vitest";
 
 describe("readSyncContentFileChanges", () => {
-  it("rebuilds route artifacts when route projection modules change", () => {
+  it("resyncs material and practice rows when route projection modules change", () => {
     expect(
       readSyncContentFileChanges([
         "packages/contents/_types/route/practice/path.ts",
@@ -10,10 +10,25 @@ describe("readSyncContentFileChanges", () => {
     ).toMatchObject({
       hasArticleChanges: false,
       hasContentRouteChanges: true,
-      hasCurriculumMaterialChanges: false,
-      hasExerciseChanges: false,
+      hasCurriculumMaterialChanges: true,
+      hasExerciseChanges: true,
       hasGeneratedReadModelChanges: true,
-      hasMaterialChanges: false,
+      hasMaterialChanges: true,
+    });
+  });
+
+  it("resyncs every content row surface when graph projection modules change", () => {
+    expect(
+      readSyncContentFileChanges([
+        "packages/contents/_types/graph/projection.ts",
+      ])
+    ).toMatchObject({
+      hasArticleChanges: true,
+      hasContentRouteChanges: true,
+      hasCurriculumMaterialChanges: true,
+      hasExerciseChanges: true,
+      hasGeneratedReadModelChanges: true,
+      hasMaterialChanges: true,
     });
   });
 

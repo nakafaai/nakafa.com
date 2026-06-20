@@ -11,44 +11,53 @@ interface SyncContentFileChanges {
 /**
  * Classifies changed source paths into the sync phases they invalidate.
  *
- * The incremental workflow uses this as its routing policy so filesystem path
- * knowledge stays local to the sync-content script surface.
+ * Projection modules are part of the content-row contract because runtime
+ * rows store projected public paths and graph identities in `contentRoutes`
+ * and `contentSearch`, not only in generated public-route read models.
  */
 export function readSyncContentFileChanges(
   changedFiles: readonly string[]
 ): SyncContentFileChanges {
+  const hasGraphProjectionChanges = changedFiles.some((file) =>
+    file.startsWith("packages/contents/_types/graph/")
+  );
+  const hasRouteProjectionChanges = changedFiles.some((file) =>
+    file.startsWith("packages/contents/_types/route/")
+  );
+  const hasContentProjectionChanges =
+    hasGraphProjectionChanges || hasRouteProjectionChanges;
   const hasArticleChanges = changedFiles.some((file) =>
     file.includes("/articles/")
   );
-  const hasMaterialChanges = changedFiles.some((file) =>
-    file.includes("/material/")
-  );
-  const hasCurriculumMaterialChanges = changedFiles.some((file) =>
-    file.includes("/curriculum/")
-  );
-  const hasExerciseChanges = changedFiles.some(
-    (file) =>
-      file.includes("/material/practice/") || file.includes("/assessment/")
-  );
-  const hasRouteProjectionChanges = changedFiles.some(
-    (file) =>
-      file.startsWith("packages/contents/_types/route/") ||
-      file.startsWith("packages/contents/_types/graph/")
-  );
+  const hasMaterialChanges =
+    hasContentProjectionChanges ||
+    changedFiles.some((file) => file.includes("/material/"));
+  const hasCurriculumMaterialChanges =
+    hasContentProjectionChanges ||
+    changedFiles.some((file) => file.includes("/curriculum/"));
+  const hasExerciseChanges =
+    hasContentProjectionChanges ||
+    changedFiles.some(
+      (file) =>
+        file.includes("/material/practice/") || file.includes("/assessment/")
+    );
+  const hasArticleRowChanges = hasArticleChanges || hasGraphProjectionChanges;
   const hasGeneratedReadModelChanges =
     hasMaterialChanges ||
     hasCurriculumMaterialChanges ||
     hasExerciseChanges ||
-    hasRouteProjectionChanges;
+    hasRouteProjectionChanges ||
+    hasGraphProjectionChanges;
 
   return {
-    hasArticleChanges,
+    hasArticleChanges: hasArticleRowChanges,
     hasContentRouteChanges:
-      hasArticleChanges ||
+      hasArticleRowChanges ||
       hasMaterialChanges ||
       hasCurriculumMaterialChanges ||
       hasExerciseChanges ||
-      hasRouteProjectionChanges,
+      hasRouteProjectionChanges ||
+      hasGraphProjectionChanges,
     hasCurriculumMaterialChanges,
     hasExerciseChanges,
     hasGeneratedReadModelChanges,
