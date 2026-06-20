@@ -135,7 +135,7 @@ export default async function Page({ params }: MaterialPageProps) {
   return (
     <MaterialLessonPage
       content={runtimeLesson}
-      footer={<DeferredComments slug={`/${route.publicPath}`} />}
+      footer={<DeferredComments slug={route.sourcePath} />}
       headerLink={readMaterialHeaderLink(route)}
       locale={locale}
       parentTitle={parentRoute.title}

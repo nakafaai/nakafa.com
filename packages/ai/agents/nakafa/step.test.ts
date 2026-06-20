@@ -3,6 +3,7 @@ import {
   prepareExerciseStep,
   prepareReadStep,
   prepareTaxonomyAnswerStep,
+  readSearchFollowup,
   selectExerciseRef,
   shouldAnswerFromNakafaEvidence,
   shouldReadAfterSearch,
@@ -657,6 +658,31 @@ describe("Nakafa agent step state", () => {
     expect(quranSearch).toBe(false);
     expect(emptySearch).toBe(false);
     expect(failedSearch).toBe(false);
+  });
+
+  it("preserves lesson reads when material search also returns practice rows", () => {
+    const followup = readSearchFollowup(
+      {
+        limit: 20,
+        locale: "id",
+        offset: 0,
+        queries: ["fungsi rasional dan latihan SNBT"],
+        section: "material",
+      },
+      {
+        ...subjectResult,
+        count: 2,
+        items: [exerciseResult.items[0], subjectResult.items[0]],
+        limit: 20,
+      }
+    );
+
+    if (Option.isNone(followup.exerciseRef)) {
+      throw new Error("Expected the practice hit to select an exercise ref.");
+    }
+
+    expect(followup.exerciseRef.value).toBe(exerciseResult.items[0].content_id);
+    expect(followup.shouldReadContent).toBe(true);
   });
 
   it("forces read for one step when content search evidence is pending", () => {

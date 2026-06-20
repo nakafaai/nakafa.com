@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { listPublicRoutes } from "@repo/contents/_types/route/projection";
+import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 import {
@@ -8,6 +9,10 @@ import {
 } from "@/lib/utils/seo/alternates";
 
 describe("createLocalizedAlternates", () => {
+  it("keeps projected route alternates out of template-only locale middleware", () => {
+    expect(routing.alternateLinks).toBe(false);
+  });
+
   it("builds canonical, locale, default, and markdown alternates", () => {
     const result = createLocalizedAlternates("/id/articles/politics/example", {
       types: {

@@ -13,15 +13,13 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { themes } from "@repo/design-system/lib/theme";
 import { cn } from "@repo/design-system/lib/utils";
 import { languages } from "@repo/internationalization/data/lang";
-import { normalizeLocalizedInternalHref } from "@repo/internationalization/src/href";
-import { useRouter } from "@repo/internationalization/src/navigation";
 import { IconCircleFilled } from "@tabler/icons-react";
 import GB from "country-flag-icons/react/3x2/GB";
 import ID from "country-flag-icons/react/3x2/ID";
 import { type Locale, useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import type * as React from "react";
-import { useTransition } from "react";
+import { useLocalizedRouteSwitch } from "@/lib/routing/locale/client";
 
 const BASE_THEMES_COUNT = 3;
 
@@ -31,16 +29,6 @@ const flagMap = {
 };
 
 type SubmenuSide = React.ComponentProps<typeof DropdownMenuSubContent>["side"];
-
-/**
- * Normalizes the current browser URL so preference submenu actions can preserve
- * the active localized route.
- */
-function getCurrentHref() {
-  return normalizeLocalizedInternalHref(
-    `${window.location.pathname}${window.location.search}${window.location.hash}`
-  );
-}
 
 function ActiveBadge({ isActive }: { isActive: boolean }) {
   return (
@@ -55,19 +43,12 @@ function ActiveBadge({ isActive }: { isActive: boolean }) {
 
 /** Renders the nested preferences language submenu. */
 function LanguageSubmenuContent({ side }: { side: SubmenuSide }) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const { isPending, replace } = useLocalizedRouteSwitch();
   const currentLocale = useLocale();
-
-  function handlePrefetch(locale: Locale) {
-    router.prefetch(getCurrentHref(), { locale });
-  }
 
   /** Replaces the current route with the selected locale. */
   function handleChangeLocale(locale: Locale) {
-    startTransition(() => {
-      router.replace(getCurrentHref(), { locale });
-    });
+    replace(locale);
   }
 
   return (
@@ -85,8 +66,6 @@ function LanguageSubmenuContent({ side }: { side: SubmenuSide }) {
               disabled={isPending}
               key={language.value}
               onClick={() => handleChangeLocale(language.value)}
-              onFocus={() => handlePrefetch(language.value)}
-              onMouseEnter={() => handlePrefetch(language.value)}
             >
               <Flag className="size-4 shrink-0" />
               <span className="truncate">{language.label}</span>

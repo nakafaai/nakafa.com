@@ -1,5 +1,6 @@
 import type { PublicRoute } from "@repo/contents/_types/route/schema";
 import { routing } from "@repo/internationalization/src/routing";
+import { isSamePublicRouteIdentity } from "@/lib/routing/locale/identity";
 
 type AlternateLanguagePath = Partial<{
   [Key in (typeof routing.locales)[number] | "x-default"]: string;
@@ -69,7 +70,8 @@ export function createProjectedRouteAlternates(
   for (const locale of routing.locales) {
     const alternate = routes.find(
       (candidate) =>
-        candidate.locale === locale && isSameProjectedRoute(route, candidate)
+        candidate.locale === locale &&
+        isSamePublicRouteIdentity(route, candidate)
     );
 
     if (alternate) {
@@ -81,26 +83,4 @@ export function createProjectedRouteAlternates(
     ...options,
     languages,
   });
-}
-
-/** Matches localized projected rows by stable source identity, not public slug text. */
-function isSameProjectedRoute(left: PublicRoute, right: PublicRoute) {
-  if (left.kind !== right.kind) {
-    return false;
-  }
-
-  if (
-    left.kind === "curriculum-context" &&
-    right.kind === "curriculum-context"
-  ) {
-    return (
-      left.programKey === right.programKey && left.nodeKey === right.nodeKey
-    );
-  }
-
-  return (
-    "sourcePath" in left &&
-    "sourcePath" in right &&
-    left.sourcePath === right.sourcePath
-  );
 }

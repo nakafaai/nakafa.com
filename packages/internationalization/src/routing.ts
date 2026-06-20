@@ -2,6 +2,8 @@ import { defaultLocale, locales } from "@repo/utilities/locales";
 import { defineRouting } from "next-intl/routing";
 
 export const routing = defineRouting({
+  // Page metadata and sitemap build source-identity alternates for projected content routes.
+  alternateLinks: false,
   locales,
   defaultLocale,
   pathnames: {

@@ -435,11 +435,7 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
   );
   addPhaseMetrics(metrics, "Route Pages", routePageResult);
 
-  if (
-    changes.hasMaterialChanges ||
-    changes.hasCurriculumMaterialChanges ||
-    changes.hasExerciseChanges
-  ) {
+  if (changes.hasGeneratedReadModelChanges) {
     generatedReadModelResult = yield* syncGeneratedReadModels(
       config,
       routePageOptions

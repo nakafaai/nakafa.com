@@ -120,6 +120,23 @@ export function shouldReadAfterSearch(
   );
 }
 
+/**
+ * Classifies the forced follow-up tools needed after one Nakafa search result.
+ *
+ * Mixed material results can contain both concrete lessons and practice rows;
+ * callers must preserve both intents so Nina reads lesson context instead of
+ * answering from snippets after selecting an exercise reference.
+ */
+export function readSearchFollowup(
+  input: NakafaAgentSearchInput,
+  result: NakafaAgentSearchResult | null
+) {
+  return {
+    exerciseRef: selectExerciseRef(input, result),
+    shouldReadContent: shouldReadAfterSearch(input, result),
+  };
+}
+
 /** Resolves practice search rows whether search stored source or public route identity. */
 function readPracticeSearchSourceRoute(
   item: NakafaAgentSearchResult["items"][number]

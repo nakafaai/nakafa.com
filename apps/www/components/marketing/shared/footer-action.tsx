@@ -15,14 +15,13 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { themes } from "@repo/design-system/lib/theme";
 import { cn } from "@repo/design-system/lib/utils";
 import { languages } from "@repo/internationalization/data/lang";
-import { normalizeLocalizedInternalHref } from "@repo/internationalization/src/href";
-import { useRouter } from "@repo/internationalization/src/navigation";
 import { IconCircleFilled } from "@tabler/icons-react";
 import GB from "country-flag-icons/react/3x2/GB";
 import ID from "country-flag-icons/react/3x2/ID";
 import { type Locale, useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
-import { type ComponentProps, useTransition } from "react";
+import type { ComponentProps } from "react";
+import { useLocalizedRouteSwitch } from "@/lib/routing/locale/client";
 
 export function FooterAction() {
   return (
@@ -38,32 +37,15 @@ const flagMap = {
   id: ID,
 };
 
-/**
- * Normalizes the active browser URL before locale switching so footer actions
- * preserve the current in-app path without leaking external locations.
- */
-function getCurrentHref() {
-  return normalizeLocalizedInternalHref(
-    `${window.location.pathname}${window.location.search}${window.location.hash}`
-  );
-}
-
 /** Renders the footer language switcher. */
 function Language() {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const { isPending, replace } = useLocalizedRouteSwitch();
   const currentLocale = useLocale();
   const t = useTranslations("Common");
 
-  function handlePrefetch(locale: Locale) {
-    router.prefetch(getCurrentHref(), { locale });
-  }
-
   /** Replaces the current route with the selected locale. */
   function handleChangeLocale(locale: Locale) {
-    startTransition(() => {
-      router.replace(getCurrentHref(), { locale });
-    });
+    replace(locale);
   }
 
   return (
@@ -93,8 +75,6 @@ function Language() {
                   event.stopPropagation();
                   handleChangeLocale(language.value);
                 }}
-                onFocus={() => handlePrefetch(language.value)}
-                onMouseEnter={() => handlePrefetch(language.value)}
               >
                 <Flag className="size-4 shrink-0" />
                 <span className="truncate">{language.label}</span>

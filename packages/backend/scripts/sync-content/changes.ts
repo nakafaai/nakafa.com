@@ -3,6 +3,7 @@ interface SyncContentFileChanges {
   hasContentRouteChanges: boolean;
   hasCurriculumMaterialChanges: boolean;
   hasExerciseChanges: boolean;
+  hasGeneratedReadModelChanges: boolean;
   hasMaterialChanges: boolean;
 }
 
@@ -24,14 +25,20 @@ export function readSyncContentFileChanges(
   const hasCurriculumMaterialChanges = changedFiles.some((file) =>
     file.includes("/curriculum/")
   );
-  const hasExerciseChanges = changedFiles.some((file) =>
-    file.includes("/assessment/")
+  const hasExerciseChanges = changedFiles.some(
+    (file) =>
+      file.includes("/material/practice/") || file.includes("/assessment/")
   );
   const hasRouteProjectionChanges = changedFiles.some(
     (file) =>
       file.startsWith("packages/contents/_types/route/") ||
       file.startsWith("packages/contents/_types/graph/")
   );
+  const hasGeneratedReadModelChanges =
+    hasMaterialChanges ||
+    hasCurriculumMaterialChanges ||
+    hasExerciseChanges ||
+    hasRouteProjectionChanges;
 
   return {
     hasArticleChanges,
@@ -43,6 +50,7 @@ export function readSyncContentFileChanges(
       hasRouteProjectionChanges,
     hasCurriculumMaterialChanges,
     hasExerciseChanges,
+    hasGeneratedReadModelChanges,
     hasMaterialChanges,
   };
 }

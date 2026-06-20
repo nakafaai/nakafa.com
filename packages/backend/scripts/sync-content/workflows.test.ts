@@ -410,6 +410,44 @@ describe("sync-content workflows", () => {
     expect(learningProgramOptions[0]?.locale).toBeUndefined();
   });
 
+  it("refreshes generated read models for projection-only incremental changes", async () => {
+    const { events, workflow } = await loadWorkflow(
+      {
+        deleted: 0,
+        hasStale: false,
+      },
+      {
+        changedFiles: ["packages/contents/_types/route/practice/path.ts"],
+        syncState: {
+          lastSyncCommit: "previous-commit",
+          lastSyncTimestamp: 1,
+        },
+      }
+    );
+    const options: SyncOptions = {};
+
+    await Effect.runPromise(workflow.syncIncremental(config, options));
+
+    expect(events).toEqual(
+      expect.arrayContaining([
+        "clean",
+        "syncRoutePages",
+        "syncGeneratedReadModels",
+        "syncLearningPrograms",
+        "invalidateContentRuntimeCache",
+        "saveSyncState",
+      ])
+    );
+    expect(events).not.toContain("syncExerciseSets");
+    expect(events).not.toContain("syncExerciseQuestions");
+    expect(events.indexOf("syncRoutePages")).toBeLessThan(
+      events.indexOf("syncGeneratedReadModels")
+    );
+    expect(events.indexOf("syncGeneratedReadModels")).toBeLessThan(
+      events.indexOf("syncLearningPrograms")
+    );
+  });
+
   it("refreshes runtime read models before saving no-op incremental sync", async () => {
     const { events, workflow } = await loadWorkflow(
       {
