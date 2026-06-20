@@ -5,7 +5,10 @@ import { getSourceRouteProjectionForRoute } from "@repo/contents/_types/graph/pr
 import { MATERIAL_ROUTE_DOMAINS } from "@repo/contents/_types/material/domain";
 import { MATERIAL_SOURCES } from "@repo/contents/_types/material/source";
 import type { RouteInputs } from "@repo/contents/_types/route/input";
-import { readPracticeSourceGroupIdentity } from "@repo/contents/_types/route/practice/path";
+import {
+  readPracticeSourceGroupIdentity,
+  readSourcePracticeRoutePath,
+} from "@repo/contents/_types/route/practice/path";
 import { readPublicPracticeQuestionRouteByPath } from "@repo/contents/_types/route/practice/question";
 import { readPublicPracticeSetRouteByPath } from "@repo/contents/_types/route/practice/set";
 import { Option, Schema } from "effect";
@@ -64,17 +67,7 @@ export function readPracticeSourceRouteByPath({
     return publicRoute;
   }
 
-  const projection = getSourceRouteProjectionForRoute(route);
-
-  if (projection?.kind === "exercise-question") {
-    return { kind: "question" as const, sourcePath: projection.route };
-  }
-
-  if (projection?.kind === "exercise-set") {
-    return { kind: "set" as const, sourcePath: projection.route };
-  }
-
-  return;
+  return readSourcePracticeRoutePath(route);
 }
 
 /** Reads runtime set arguments from one canonical practice source route. */

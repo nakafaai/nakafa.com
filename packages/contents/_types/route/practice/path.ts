@@ -1,4 +1,5 @@
 import type { Locale } from "@repo/contents/_types/content";
+import { getSourceRouteProjectionForRoute } from "@repo/contents/_types/graph/projection";
 import { getExerciseQuestionNumberSegment } from "@repo/contents/_types/graph/route";
 import type { PracticeMaterialGroup } from "@repo/contents/_types/material/schema";
 import type {
@@ -114,6 +115,29 @@ export function readSourcePracticeQuestionNumber(segment: string | undefined) {
   const value = Number.parseInt(rawValue, 10);
 
   return value > 0 ? value : null;
+}
+
+/** Resolves source practice set and question paths to the persisted runtime slug shape. */
+export function readSourcePracticeRoutePath(sourcePath: string) {
+  const projection = getSourceRouteProjectionForRoute(sourcePath);
+
+  if (projection?.kind === "exercise-set") {
+    return {
+      kind: "set" as const,
+      sourcePath: projection.route,
+    };
+  }
+
+  if (!(projection?.kind === "exercise-question" && projection.exercise)) {
+    return;
+  }
+
+  const questionNumber = projection.learningObjectSegments.slice(-1).join("");
+
+  return {
+    kind: "question" as const,
+    sourcePath: `${projection.parentRoute}/${questionNumber}`,
+  };
 }
 
 /**

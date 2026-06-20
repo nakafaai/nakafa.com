@@ -242,6 +242,13 @@ export function readPublicPracticeQuestionRouteBySourcePath({
           toPublicPracticeQuestionSegment({ locale, number: questionNumber }),
         ].join("/");
 
+        const canonicalSourcePath = [
+          material.assetRoot,
+          getPracticeSourceGroupSlug(group),
+          set.slug,
+          questionNumber.toString(),
+        ].join("/");
+
         return decodePracticeQuestionRoute({
           description: group.translations[locale].description,
           kind: "exercise-question",
@@ -252,7 +259,7 @@ export function readPublicPracticeQuestionRouteBySourcePath({
           publicPath,
           sectionKey: parts.question,
           sitemap: true,
-          sourcePath,
+          sourcePath: canonicalSourcePath,
           title:
             locale === "id"
               ? `${set.translations[locale].title} Soal ${questionNumber}`

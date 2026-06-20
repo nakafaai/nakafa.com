@@ -42,6 +42,17 @@ describe("practice source route identity", () => {
       readPracticeSourceRouteByPath({
         locale: "id",
         route:
+          "material/practice/assessment/snbt/general-knowledge/try-out-2026/set-1/question-9",
+      })
+    ).toEqual({
+      kind: "question",
+      sourcePath:
+        "material/practice/assessment/snbt/general-knowledge/try-out-2026/set-1/9",
+    });
+    expect(
+      readPracticeSourceRouteByPath({
+        locale: "id",
+        route:
           "material/practice/assessment/snbt/general-knowledge/try-out-2026/set-1",
       })
     ).toEqual({

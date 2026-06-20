@@ -15,6 +15,7 @@ import {
   readPublicPracticeQuestionNumber,
   readSourcePracticePathParts,
   readSourcePracticeQuestionNumber,
+  readSourcePracticeRoutePath,
   toPublicPracticeGroupSegment,
   toPublicPracticeQuestionSegment,
 } from "@repo/contents/_types/route/practice/path";
@@ -210,6 +211,32 @@ describe("practice route path grammar", () => {
         sourcePath:
           "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/9/extra",
       })
+    ).toBeUndefined();
+  });
+
+  it("canonicalizes source-folder question leaves to persisted numeric routes", () => {
+    expect(
+      readSourcePracticeRoutePath(
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-9"
+      )
+    ).toEqual({
+      kind: "question",
+      sourcePath:
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/9",
+    });
+    expect(
+      readSourcePracticeRoutePath(
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1"
+      )
+    ).toEqual({
+      kind: "set",
+      sourcePath:
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
+    });
+    expect(
+      readSourcePracticeRoutePath(
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-09"
+      )
     ).toBeUndefined();
   });
 

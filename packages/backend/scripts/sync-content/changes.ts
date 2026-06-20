@@ -27,6 +27,11 @@ export function readSyncContentFileChanges(
   const hasExerciseChanges = changedFiles.some((file) =>
     file.includes("/assessment/")
   );
+  const hasRouteProjectionChanges = changedFiles.some(
+    (file) =>
+      file.startsWith("packages/contents/_types/route/") ||
+      file.startsWith("packages/contents/_types/graph/")
+  );
 
   return {
     hasArticleChanges,
@@ -34,7 +39,8 @@ export function readSyncContentFileChanges(
       hasArticleChanges ||
       hasMaterialChanges ||
       hasCurriculumMaterialChanges ||
-      hasExerciseChanges,
+      hasExerciseChanges ||
+      hasRouteProjectionChanges,
     hasCurriculumMaterialChanges,
     hasExerciseChanges,
     hasMaterialChanges,
