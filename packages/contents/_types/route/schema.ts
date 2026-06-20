@@ -33,7 +33,6 @@ const PublicCurriculumRouteBaseSchema = Schema.extend(
 );
 
 export const PUBLIC_ROUTE_KIND_VALUES = [
-  "assessment-context",
   "curriculum-context",
   "exercise-question",
   "exercise-set",
@@ -106,27 +105,9 @@ export type PublicCurriculumRoute = SchemaType<
   typeof PublicCurriculumRouteSchema
 >;
 
-export const PublicAssessmentRouteSchema = Schema.extend(
-  Schema.extend(PublicRouteBaseSchema, PublicRouteOptionalParentSchema),
-  Schema.Struct({
-    canonicalPath: Schema.optional(PublicRoutePathSchema),
-    kind: Schema.Literal("assessment-context"),
-    level: ProgramNavigationLevelSchema,
-    materialKey: Schema.optional(MaterialKeySchema),
-    nodeKey: Schema.String,
-    order: Schema.Int.pipe(Schema.nonNegative()),
-    programKey: LearningProgramKeySchema,
-  })
-);
-
-export type PublicAssessmentRoute = SchemaType<
-  typeof PublicAssessmentRouteSchema
->;
-
 export const PublicRouteSchema = Schema.Union(
   PublicContentRouteSchema,
-  PublicCurriculumRouteSchema,
-  PublicAssessmentRouteSchema
+  PublicCurriculumRouteSchema
 );
 
 export type PublicRoute = SchemaType<typeof PublicRouteSchema>;

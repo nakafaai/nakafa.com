@@ -261,12 +261,7 @@ function getContentSeoSettings(route: string): {
     return { changeFrequency: "monthly", priority: 0.8 };
   }
 
-  if (
-    route.startsWith("/curriculum/") ||
-    route.startsWith("/kurikulum/") ||
-    route.startsWith("/exams/") ||
-    route.startsWith("/ujian/")
-  ) {
+  if (route.startsWith("/curriculum/") || route.startsWith("/kurikulum/")) {
     return { changeFrequency: "monthly", priority: 0.7 };
   }
 

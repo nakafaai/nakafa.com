@@ -176,7 +176,6 @@ describe("sitemap route discovery", () => {
 
     await expect(getSitemapRoutes("public_en")).resolves.toEqual([
       "/curriculum/merdeka/class-10/mathematics",
-      "/exams/snbt/quantitative-knowledge",
     ]);
     expect(runtimeMocks.getRuntimeSitemapPublicRoutes).toHaveBeenCalledWith({
       cursor: null,
@@ -216,7 +215,6 @@ describe("sitemap route discovery", () => {
 
     await expect(getSitemapRoutes("public_en")).resolves.toEqual([
       "/curriculum/merdeka/class-10/mathematics",
-      "/exams/snbt/quantitative-knowledge",
     ]);
     expect(runtimeMocks.getRuntimeSitemapPublicRoutes).toHaveBeenLastCalledWith(
       {
@@ -401,27 +399,6 @@ const publicRouteRows: RuntimeSitemapPublicRoute[] = [
     sourcePath: undefined,
     syncedAt: 1,
     title: "Mathematics",
-  },
-  {
-    canonicalPath: "practice/snbt/quantitative-knowledge",
-    description: undefined,
-    displayGroupIconKey: undefined,
-    displayGroupTitle: undefined,
-    iconKey: "assessment",
-    kind: "assessment-context",
-    locale: "en",
-    materialDomain: undefined,
-    materialKey: "practice.assessment.snbt.quantitative-knowledge",
-    nodeKey: "snbt.quantitative-knowledge",
-    order: 1,
-    parentPath: "exams/snbt",
-    programKey: "snbt-2026",
-    publicPath: "exams/snbt/quantitative-knowledge",
-    sectionKey: undefined,
-    sitemap: true,
-    sourcePath: undefined,
-    syncedAt: 1,
-    title: "Quantitative Knowledge",
   },
   {
     canonicalPath: undefined,

@@ -328,9 +328,7 @@ function addProjectedContentRoutes(
 
 /** Keeps public-route sitemap rows scoped to rendered app context pages. */
 function isSitemapPublicContextRoute(route: RuntimeSitemapPublicRoute) {
-  return (
-    route.kind === "assessment-context" || route.kind === "curriculum-context"
-  );
+  return route.kind === "curriculum-context";
 }
 
 /** Converts one route string into an app-level HTTP path string. */

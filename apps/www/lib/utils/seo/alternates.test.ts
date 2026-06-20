@@ -127,7 +127,32 @@ describe("createLocalizedAlternates", () => {
     });
   });
 
-  it("builds hreflang alternates for curriculum and assessment contexts", () => {
+  it("builds hreflang alternates for localized material route identities", () => {
+    const routes = Effect.runSync(listPublicRoutes());
+    const vectorConcept = routes.find(
+      (candidate) =>
+        candidate.kind === "subject-lesson" &&
+        candidate.locale === "id" &&
+        candidate.sourcePath === "material/lesson/physics/vector/concept"
+    );
+
+    if (!vectorConcept) {
+      expect(vectorConcept).toBeDefined();
+      return;
+    }
+
+    expect(createProjectedRouteAlternates(vectorConcept, routes)).toMatchObject(
+      {
+        canonical: "/id/materi/fisika/vektor/konsep-vektor",
+        languages: {
+          en: "/en/subjects/physics/vector/concept",
+          id: "/id/materi/fisika/vektor/konsep-vektor",
+        },
+      }
+    );
+  });
+
+  it("builds hreflang alternates for curriculum contexts", () => {
     const routes = Effect.runSync(listPublicRoutes());
     const curriculum = routes.find(
       (candidate) =>
@@ -136,21 +161,9 @@ describe("createLocalizedAlternates", () => {
         candidate.programKey === "merdeka" &&
         candidate.nodeKey.endsWith("integral")
     );
-    const assessment = routes.find(
-      (candidate) =>
-        candidate.kind === "assessment-context" &&
-        candidate.locale === "id" &&
-        candidate.programKey === "snbt-2026" &&
-        candidate.publicPath === "ujian/snbt/pengetahuan-kuantitatif"
-    );
 
     if (!curriculum) {
       expect(curriculum).toBeDefined();
-      return;
-    }
-
-    if (!assessment) {
-      expect(assessment).toBeDefined();
       return;
     }
 
@@ -159,37 +172,6 @@ describe("createLocalizedAlternates", () => {
       languages: {
         en: expect.stringContaining("/en/curriculum/merdeka/"),
         id: expect.stringContaining("/id/kurikulum/merdeka/"),
-      },
-    });
-    expect(createProjectedRouteAlternates(assessment, routes)).toMatchObject({
-      canonical: "/id/ujian/snbt/pengetahuan-kuantitatif",
-      languages: {
-        en: "/en/exams/snbt/quantitative-knowledge",
-        id: "/id/ujian/snbt/pengetahuan-kuantitatif",
-      },
-    });
-  });
-
-  it("matches assessment context alternates by node identity when no material key exists", () => {
-    const routes = Effect.runSync(listPublicRoutes());
-    const assessment = routes.find(
-      (candidate) =>
-        candidate.kind === "assessment-context" &&
-        candidate.locale === "id" &&
-        candidate.programKey === "snbt-2026" &&
-        !candidate.materialKey
-    );
-
-    if (!assessment) {
-      expect(assessment).toBeDefined();
-      return;
-    }
-
-    expect(createProjectedRouteAlternates(assessment, routes)).toMatchObject({
-      canonical: `/${assessment.locale}/${assessment.publicPath}`,
-      languages: {
-        en: expect.stringContaining("/en/exams/snbt"),
-        id: expect.stringContaining("/id/ujian/snbt"),
       },
     });
   });

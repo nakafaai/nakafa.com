@@ -144,17 +144,12 @@ export const resolveLlmsProxyRoute = Effect.fn("www.llms.routes.resolveProxy")(
 
 /** Checks projected app pages that intentionally have no markdown source. */
 function isUnsupportedContextMarkdownRoute(route: PublicRoute) {
-  return (
-    route.kind === "assessment-context" || route.kind === "curriculum-context"
-  );
+  return route.kind === "curriculum-context";
 }
 
 /** Converts a projected public route into the existing content lookup contract. */
 function getRouteProjectionCheck(route: PublicRoute): VerifiedLlmsRouteCheck {
-  if (
-    route.kind === "assessment-context" ||
-    route.kind === "curriculum-context"
-  ) {
+  if (route.kind === "curriculum-context") {
     return { mode: "app" };
   }
 

@@ -378,20 +378,12 @@ describe("llms entries", () => {
     });
   });
 
-  it("returns null for curriculum and assessment app route listings", async () => {
+  it("returns null for curriculum app route listings", async () => {
     await expect(
       Effect.runPromise(
         getContentListingLlmsEntries({
           locale: "en",
           route: "curriculum/merdeka/class-10/mathematics/integral",
-        })
-      )
-    ).resolves.toBeNull();
-    await expect(
-      Effect.runPromise(
-        getContentListingLlmsEntries({
-          locale: "en",
-          route: "exams/snbt/quantitative-knowledge",
         })
       )
     ).resolves.toBeNull();

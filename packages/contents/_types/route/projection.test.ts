@@ -13,11 +13,11 @@ import { describe, expect, it } from "vitest";
 describe("public route projection", () => {
   it("aggregates routes from every public route surface", () => {
     const routes = Effect.runSync(listPublicRoutes());
-    const kinds = new Set(routes.map((route) => route.kind));
+    const kinds = new Set<string>(routes.map((route) => route.kind));
 
     expect(kinds.has("subject-lesson")).toBe(true);
     expect(kinds.has("curriculum-context")).toBe(true);
-    expect(kinds.has("assessment-context")).toBe(true);
+    expect(kinds.has("assessment-context")).toBe(false);
     expect(kinds.has("exercise-set")).toBe(true);
   });
 
@@ -46,6 +46,8 @@ describe("public route projection", () => {
       "material/lesson/mathematics/integral/riemann-sum",
       "subject/matematika/integral/jumlahan-riemann",
       "assessment/snbt/pengetahuan-kuantitatif/tryout-2026",
+      "ujian/snbt/pengetahuan-kuantitatif",
+      "exams/snbt/quantitative-knowledge",
     ];
 
     for (const path of invalidPaths) {

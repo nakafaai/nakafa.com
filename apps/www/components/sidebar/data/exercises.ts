@@ -8,8 +8,8 @@ const data = [
       {
         title: "snbt",
         href: {
-          en: "/exams/snbt",
-          id: "/ujian/snbt",
+          en: "/practice/snbt",
+          id: "/latihan/snbt",
         },
       },
     ],

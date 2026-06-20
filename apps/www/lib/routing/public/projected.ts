@@ -1,6 +1,5 @@
 import { MATERIAL_ROUTE_DOMAINS } from "@repo/contents/_types/material/domain";
 import { MATERIAL_SOURCES } from "@repo/contents/_types/material/source";
-import { listPublicAssessmentRoutes } from "@repo/contents/_types/route/assessment";
 import {
   isMaterialLessonRoute,
   isPracticeSetRoute,
@@ -23,7 +22,6 @@ import { hasLocale } from "next-intl";
 import { getRuntimeExerciseQuestionPage } from "@/lib/content/runtime/pages";
 
 const PROJECTED_ROUTE_SURFACE_KEYS = new Set([
-  "assessment",
   "curriculum",
   "exercises",
   "subject",
@@ -80,12 +78,10 @@ export const readProjectedHtmlRouteRejection = Effect.fn(
  */
 function readRenderableProjectedHtmlPathSet() {
   return Effect.gen(function* () {
-    const [contentRoutes, curriculumRoutes, assessmentRoutes] =
-      yield* Effect.all([
-        listPublicContentRoutes(),
-        listPublicCurriculumRoutes(),
-        listPublicAssessmentRoutes(),
-      ]);
+    const [contentRoutes, curriculumRoutes] = yield* Effect.all([
+      listPublicContentRoutes(),
+      listPublicCurriculumRoutes(),
+    ]);
     const routeKeys = new Set<string>();
 
     for (const route of contentRoutes) {
@@ -107,10 +103,6 @@ function readRenderableProjectedHtmlPathSet() {
       if (isRenderableCurriculumRoute(route)) {
         routeKeys.add(`${route.locale}:${route.publicPath}`);
       }
-    }
-
-    for (const route of assessmentRoutes) {
-      routeKeys.add(`${route.locale}:${route.publicPath}`);
     }
 
     return routeKeys;

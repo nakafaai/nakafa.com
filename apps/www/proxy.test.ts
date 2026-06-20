@@ -260,24 +260,6 @@ describe("proxy", () => {
     expect(mockGetRuntimeContentRouteKindPage).not.toHaveBeenCalled();
   });
 
-  it("delegates assessment app routes to the locale middleware", async () => {
-    const routes = ["/id/ujian/snbt", "/id/ujian/snbt/pengetahuan-kuantitatif"];
-
-    for (const route of routes) {
-      const response = await proxy(
-        new NextRequest(`http://localhost:3000${route}`)
-      );
-
-      expect(response.headers.get("x-locale-proxy")).toBe("1");
-    }
-
-    expect(mockLocaleRouting.localeMiddleware).toHaveBeenCalledTimes(
-      routes.length
-    );
-    expect(mockGetRuntimeContentRouteKindPage).not.toHaveBeenCalled();
-    expect(mockGetRuntimeContentRouteParentPage).not.toHaveBeenCalled();
-  });
-
   it("delegates non-read content requests without an exact route lookup", async () => {
     const response = await proxy(
       new NextRequest(

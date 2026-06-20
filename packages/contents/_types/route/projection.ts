@@ -1,7 +1,6 @@
 import type { Locale } from "@repo/contents/_types/content";
 import { MATERIAL_ROUTE_DOMAINS } from "@repo/contents/_types/material/domain";
 import { MATERIAL_SOURCES } from "@repo/contents/_types/material/source";
-import { listPublicAssessmentRoutes } from "@repo/contents/_types/route/assessment";
 import { listPublicContentRoutes } from "@repo/contents/_types/route/content";
 import { listPublicCurriculumRoutes } from "@repo/contents/_types/route/curriculum";
 import type { RouteInputs } from "@repo/contents/_types/route/input";
@@ -14,14 +13,13 @@ import { readPublicPracticeQuestionRouteByPath } from "@repo/contents/_types/rou
 import type { PublicRoute } from "@repo/contents/_types/route/schema";
 import { Effect, Option } from "effect";
 
-/** Lists every public route row generated from material, curriculum, and assessment sources. */
+/** Lists every public route row generated from material and curriculum sources. */
 export const listPublicRoutes = Effect.fn("contents.route.listAll")(function* (
   inputs: RouteInputs = {}
 ) {
   const routes = yield* Effect.all([
     listPublicContentRoutes(inputs),
     listPublicCurriculumRoutes(inputs),
-    listPublicAssessmentRoutes(inputs),
   ]);
 
   return yield* uniqueRoutes(routes.flat());

@@ -9,7 +9,6 @@ import {
   MissingPublicSlugError,
 } from "@repo/contents/_types/route/error";
 import {
-  PublicAssessmentRouteSchema,
   PublicContentRouteSchema,
   PublicCurriculumRouteSchema,
   type PublicRoute,
@@ -119,15 +118,6 @@ export function decodeCurriculumRoute(
   input: Schema.Schema.Encoded<typeof PublicCurriculumRouteSchema>
 ) {
   return Schema.decodeUnknown(PublicCurriculumRouteSchema)(input).pipe(
-    Effect.mapError(toInvalidSourceError)
-  );
-}
-
-/** Decodes one generated assessment context route row. */
-export function decodeAssessmentRoute(
-  input: Schema.Schema.Encoded<typeof PublicAssessmentRouteSchema>
-) {
-  return Schema.decodeUnknown(PublicAssessmentRouteSchema)(input).pipe(
     Effect.mapError(toInvalidSourceError)
   );
 }

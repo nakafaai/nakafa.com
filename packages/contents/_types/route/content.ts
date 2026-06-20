@@ -69,8 +69,7 @@ export const listPublicContentRoutes = Effect.fn("contents.route.listContent")(
  * Finds only canonical material/practice routes for one localized public path.
  *
  * Context routes are intentionally excluded so callers that need source-backed
- * markdown cannot treat curriculum or assessment navigation pages as duplicate
- * material bodies.
+ * markdown cannot treat curriculum navigation pages as duplicate material bodies.
  */
 export const findPublicContentRouteByPath = Effect.fn(
   "contents.route.findContentByPath"

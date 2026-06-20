@@ -98,22 +98,6 @@ function isSameProjectedRoute(left: PublicRoute, right: PublicRoute) {
     );
   }
 
-  if (
-    left.kind === "assessment-context" &&
-    right.kind === "assessment-context"
-  ) {
-    if (left.materialKey && right.materialKey && left.level === right.level) {
-      return (
-        left.programKey === right.programKey &&
-        left.materialKey === right.materialKey
-      );
-    }
-
-    return (
-      left.programKey === right.programKey && left.nodeKey === right.nodeKey
-    );
-  }
-
   return (
     "sourcePath" in left &&
     "sourcePath" in right &&

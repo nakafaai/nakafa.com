@@ -40,8 +40,6 @@ const possibleVerifiedUrls = [
   "/quran",
   "/curriculum",
   "/kurikulum",
-  "/exams",
-  "/ujian",
   "/subjects",
   "/materi",
   "/practice",

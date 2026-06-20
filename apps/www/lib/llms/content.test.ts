@@ -146,19 +146,11 @@ describe("llms markdown content resolver", () => {
     });
   });
 
-  it("does not invent markdown for curriculum and assessment context routes", async () => {
+  it("does not invent markdown for curriculum context routes", async () => {
     await expect(
       Effect.runPromise(
         getLlmsMarkdownText({
           cleanSlug: "curriculum/merdeka/class-12/mathematics/integral",
-          locale: "en",
-        })
-      )
-    ).resolves.toBeNull();
-    await expect(
-      Effect.runPromise(
-        getLlmsMarkdownText({
-          cleanSlug: "exams/snbt/quantitative-knowledge",
           locale: "en",
         })
       )
@@ -242,7 +234,7 @@ describe("llms markdown content resolver", () => {
 
     await expect(
       Effect.runPromise(
-        getLlmsMarkdownText({ cleanSlug: "exams/missing", locale: "en" })
+        getLlmsMarkdownText({ cleanSlug: "practice/missing", locale: "en" })
       )
     ).rejects.toThrow(error.message);
   });

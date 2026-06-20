@@ -185,11 +185,6 @@ describe("sitemap entries", () => {
       expect.objectContaining({ changeFrequency: "monthly", priority: 0.7 })
     );
     await expect(
-      Effect.runPromise(getEntries("/exams/snbt/quantitative-knowledge"))
-    ).resolves.toContainEqual(
-      expect.objectContaining({ changeFrequency: "monthly", priority: 0.7 })
-    );
-    await expect(
       Effect.runPromise(
         getEntries(
           "/practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-1"

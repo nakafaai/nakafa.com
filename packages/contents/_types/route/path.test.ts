@@ -34,6 +34,14 @@ describe("public route path helpers", () => {
     expect(Exit.isFailure(exit)).toBe(true);
   });
 
+  it("fails with typed route source errors for unknown namespaces", () => {
+    const exit = Effect.runSyncExit(
+      getPublicRouteNamespace(JSON.parse('"missing-surface"'), "en")
+    );
+
+    expect(Exit.isFailure(exit)).toBe(true);
+  });
+
   it("reads route hierarchy and deterministic ordering from decoded paths", () => {
     expect(getParentPath("materi/matematika/integral/jumlahan-riemann")).toBe(
       "materi/matematika/integral"

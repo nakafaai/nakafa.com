@@ -41,7 +41,7 @@ describe("public content route checks", () => {
     });
   });
 
-  it("does not classify route-projection owned assessment routes", () => {
+  it("does not classify route-projection owned practice routes or deleted exam routes", () => {
     expect(getPublicContentRouteCheck("exercises")).toEqual({
       mode: "outside",
     });

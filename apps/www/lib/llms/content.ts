@@ -162,10 +162,7 @@ function getPublicContentMarkdownSource(
   route: PublicRoute,
   cleanSlug: string
 ): LlmsMarkdownSource | null {
-  if (
-    route.kind === "assessment-context" ||
-    route.kind === "curriculum-context"
-  ) {
+  if (route.kind === "curriculum-context") {
     return null;
   }
 

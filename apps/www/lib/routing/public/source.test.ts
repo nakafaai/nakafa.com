@@ -22,7 +22,6 @@ describe("source-backed public html route rejection", () => {
   it("rejects stale public namespaces and invisible route groups", async () => {
     const paths = [
       ["/id/curricula/merdeka", "id"],
-      ["/id/assessment/snbt/pengetahuan-kuantitatif", "id"],
       ["/id/subjects/matematika/integral", "id"],
       ["/id/practice/snbt/pengetahuan-kuantitatif", "id"],
       ["/en/kurikulum/merdeka/kelas-10", "en"],

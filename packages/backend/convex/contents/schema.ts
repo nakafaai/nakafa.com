@@ -246,12 +246,12 @@ const tables = {
     .index("by_locale_and_section", ["locale", "section"]),
 
   /**
-   * Source-owned public route projection for every material, curriculum,
-   * assessment, and practice surface.
+   * Source-owned public route projection for material, curriculum, and
+   * practice surfaces.
    *
    * These rows are not graph content bodies. They are the durable route
    * contract used by app routing, SEO artifacts, assistant context, and
-   * curriculum/assessment navigation.
+   * curriculum navigation.
    */
   publicRoutes: defineTable({
     canonicalPath: v.optional(v.string()),

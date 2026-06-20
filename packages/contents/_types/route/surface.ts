@@ -8,7 +8,6 @@ import { Schema } from "effect";
 type SchemaType<T extends Schema.Schema.Any> = Schema.Schema.Type<T>;
 
 export const PublicRouteSurfaceKeySchema = Schema.Literal(
-  "assessment",
   "curriculum",
   "exercises",
   "subject"
@@ -27,11 +26,6 @@ export const PublicRouteSurfaceSchema = Schema.Struct({
 export type PublicRouteSurface = SchemaType<typeof PublicRouteSurfaceSchema>;
 
 const publicRouteSurfaceInput = [
-  {
-    appSegment: "assessments",
-    key: "assessment",
-    routeSlugs: { en: "exams", id: "ujian" },
-  },
   {
     appSegment: "curricula",
     key: "curriculum",

@@ -203,7 +203,7 @@ export async function getPublicRouteByPathImpl(
   return route ? toRuntimePublicRoute(route) : null;
 }
 
-/** Reads one bounded page of public route children for curriculum/assessment navigation. */
+/** Reads one bounded page of public route children for curriculum navigation. */
 export async function listPublicRoutesByParentImpl(
   ctx: QueryCtx,
   args: ListPublicRoutesByParentArgs
