@@ -14,6 +14,12 @@ import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 
+/**
+ * Builds locale-scoped root metadata for every page under `[locale]`.
+ *
+ * Next resolves this on the server, so invalid locale segments fail through
+ * `notFound()` before route children render.
+ */
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
 
@@ -123,6 +129,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+/** Root viewport contract shared by every localized app route. */
 export const viewport: Viewport = {
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#f5f5f5" },
@@ -134,6 +141,7 @@ export const viewport: Viewport = {
   interactiveWidget: "resizes-visual",
 };
 
+/** Prebuilds one root layout shell per configured next-intl locale. */
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }

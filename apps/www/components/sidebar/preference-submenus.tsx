@@ -28,8 +28,10 @@ const flagMap = {
   id: ID,
 };
 
+/** Dropdown side contract inherited from the design-system submenu content. */
 type SubmenuSide = React.ComponentProps<typeof DropdownMenuSubContent>["side"];
 
+/** Shows the active menu option without changing the item label layout. */
 function ActiveBadge({ isActive }: { isActive: boolean }) {
   return (
     <IconCircleFilled
@@ -41,7 +43,7 @@ function ActiveBadge({ isActive }: { isActive: boolean }) {
   );
 }
 
-/** Renders the nested preferences language submenu. */
+/** Renders the nested language submenu and delegates route projection to the shared switcher seam. */
 function LanguageSubmenuContent({ side }: { side: SubmenuSide }) {
   const { isPending, replace } = useLocalizedRouteSwitch();
   const currentLocale = useLocale();
@@ -78,6 +80,7 @@ function LanguageSubmenuContent({ side }: { side: SubmenuSide }) {
   );
 }
 
+/** Renders the nested theme submenu while keeping theme state owned by next-themes. */
 function ThemeSubmenuContent({ side }: { side: SubmenuSide }) {
   const { theme: currentTheme, setTheme } = useTheme();
   const t = useTranslations("Common");
@@ -124,6 +127,7 @@ function ThemeSubmenuContent({ side }: { side: SubmenuSide }) {
   );
 }
 
+/** Provides the sidebar preference submenus that can be mounted from account menu surfaces. */
 export function SidebarPreferenceSubmenus({ side }: { side: SubmenuSide }) {
   const t = useTranslations("Common");
 

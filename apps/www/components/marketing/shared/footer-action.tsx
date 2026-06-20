@@ -23,6 +23,7 @@ import { useTheme } from "next-themes";
 import type { ComponentProps } from "react";
 import { useLocalizedRouteSwitch } from "@/lib/routing/locale/client";
 
+/** Renders footer preference actions that share the same language route resolver as the sidebar. */
 export function FooterAction() {
   return (
     <ButtonGroup>
@@ -37,7 +38,7 @@ const flagMap = {
   id: ID,
 };
 
-/** Renders the footer language switcher. */
+/** Renders the footer language switcher and keeps localized route projection outside the UI list. */
 function Language() {
   const { isPending, replace } = useLocalizedRouteSwitch();
   const currentLocale = useLocale();
@@ -95,6 +96,7 @@ function Language() {
 
 const BASE_THEMES_COUNT = 3;
 
+/** Renders the footer theme selector while leaving the selected theme in next-themes. */
 export function Theme({
   variant = "outline",
 }: {
@@ -159,6 +161,7 @@ export function Theme({
   );
 }
 
+/** Shows the selected dropdown item without affecting the item hit target. */
 function CheckerBadge({ isActive }: { isActive: boolean }) {
   return (
     <IconCircleFilled

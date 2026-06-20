@@ -5,6 +5,7 @@ import { Data, Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { useTransition } from "react";
 
+/** Raised when the browser language switch cannot resolve a route-owned href. */
 class LocalizedHrefClientError extends Data.TaggedError(
   "LocalizedHrefClientError"
 )<{
@@ -20,6 +21,10 @@ function readCurrentHref() {
   return `${window.location.pathname}${window.location.search}${window.location.hash}`;
 }
 
+/**
+ * Calls the internal route-localization endpoint from a browser event and
+ * decodes the JSON contract before the caller hands it to `router.replace`.
+ */
 const readLocalizedHref = Effect.fn("www.routing.locale.client.read")(
   function* ({ href, locale }: { href: string; locale: Locale }) {
     const url = new URL("/api/internal/routing/locale", window.location.origin);

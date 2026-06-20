@@ -33,7 +33,10 @@ import { generateSEOMetadata } from "@/lib/utils/seo/generator";
 import type { SEOContext } from "@/lib/utils/seo/types";
 import { getStaticParams } from "@/lib/utils/system";
 
+/** Extracts one array item type from JSON-LD props without duplicating the schema. */
 type ArrayItem<T> = T extends readonly (infer Item)[] ? Item : T;
+
+/** Author object shape accepted by the Article JSON-LD component. */
 type ArticleJsonLdAuthor = ArrayItem<
   Parameters<typeof ArticleJsonLd>[0]["author"]
 >;
@@ -142,6 +145,7 @@ async function getArticleMetadataData({
   return { content, filePath };
 }
 
+/** Non-null runtime article row after metadata/page lookup has passed the 404 guard. */
 type ArticleRuntimePage = NonNullable<
   Awaited<ReturnType<typeof getArticleMetadataData>>["content"]
 >;

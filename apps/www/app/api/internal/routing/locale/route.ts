@@ -4,6 +4,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { hasLocale } from "next-intl";
 import { resolveLocalizedNavigationHref } from "@/lib/routing/locale/resolve";
 
+/** Narrows the query string target locale before route projection is attempted. */
 function readTargetLocale(value: string | null) {
   if (value && hasLocale(routing.locales, value)) {
     return value;
@@ -12,6 +13,10 @@ function readTargetLocale(value: string | null) {
   return;
 }
 
+/**
+ * Maps one browser href to the selected locale's route-owned href and converts
+ * typed projection failures into route-handler HTTP responses.
+ */
 const readLocaleRouteResponse = Effect.fn("www.routing.locale.route")(
   function* (request: NextRequest) {
     const url = new URL(request.url);

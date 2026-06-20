@@ -78,6 +78,7 @@ function getRelativeRouteParts(route: string, basePath: string) {
   return normalizedRoute.slice(normalizedBase.length + 1).split("/");
 }
 
+/** Normalizes runtime route strings before parent/child route comparisons. */
 function cleanContentPath(path: string) {
   return cleanSlug(path.startsWith("/") ? path.slice(1) : path);
 }

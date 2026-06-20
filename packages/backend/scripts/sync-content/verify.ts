@@ -132,6 +132,7 @@ function getExpectedPracticeMaterialLocales(options: SyncOptions) {
   );
 }
 
+/** Counts the locales a verify run should expect after optional locale scoping. */
 function getExpectedLocaleCount(options: SyncOptions) {
   return options.locale ? 1 : locales.length;
 }
@@ -213,6 +214,7 @@ function verifyQuranRuntime(config: ConvexConfig, options: SyncOptions) {
   });
 }
 
+/** Result shape returned by the persisted graph identity integrity check. */
 type GraphIdentityIntegrity = Effect.Effect.Success<
   ReturnType<typeof getGraphIdentityIntegrity>
 >;

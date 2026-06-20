@@ -17,14 +17,23 @@ import { Data, Effect, Option } from "effect";
 import { hasLocale } from "next-intl";
 import { isSamePublicRouteIdentity } from "@/lib/routing/locale/identity";
 
+/** Locale values accepted by next-intl routing and public route projection. */
 type Locale = (typeof routing.locales)[number];
+
+/**
+ * Concrete practice set rows are the source for virtual practice root/domain
+ * pages, because roots and domains are renderable app pages without their own
+ * persisted public-route row.
+ */
 type PublicPracticeSetRoute = Extract<PublicRoute, { kind: "exercise-set" }>;
 
+/** Browser route-localization request accepted by the resolver. */
 interface LocalizedHrefInput {
   href: string;
   locale: Locale;
 }
 
+/** Normalized browser href after stripping one optional leading locale segment. */
 interface ParsedLocalizedHref {
   currentLocale: Locale | undefined;
   hash: string;
@@ -32,6 +41,7 @@ interface ParsedLocalizedHref {
   search: string;
 }
 
+/** Raised when the browser href cannot be parsed as a safe URL. */
 class InvalidLocalizedHrefError extends Data.TaggedError(
   "InvalidLocalizedHrefError"
 )<{
@@ -49,6 +59,7 @@ export class MissingLocalizedRouteProjectionError extends Data.TaggedError(
 
 const URL_BASE = "https://nakafa.com";
 
+/** Narrows the leading path segment to a configured locale, if present. */
 function readLocale(value: string | undefined) {
   if (value && hasLocale(routing.locales, value)) {
     return value;
@@ -57,6 +68,10 @@ function readLocale(value: string | undefined) {
   return;
 }
 
+/**
+ * Parses absolute or relative browser hrefs against Nakafa's origin while
+ * preserving query/hash state for the final localized navigation.
+ */
 function parseLocalizedHref(href: string): ParsedLocalizedHref {
   const url = new URL(href, URL_BASE);
   const segments = url.pathname.split("/").filter(Boolean);
@@ -71,14 +86,23 @@ function parseLocalizedHref(href: string): ParsedLocalizedHref {
   };
 }
 
+/**
+ * Returns a next-intl navigation href without a locale prefix; the router adds
+ * the target locale using its configured localized pathname mapping.
+ */
 function toNavigationHref(publicPath: string, suffix = "") {
   return `/${publicPath}${suffix}`;
 }
 
+/** Preserves static page query/hash state when no source projection is needed. */
 function toStaticNavigationHref(parsed: ParsedLocalizedHref) {
   return toNavigationHref(parsed.publicPath, `${parsed.search}${parsed.hash}`);
 }
 
+/**
+ * Detects paths in a projected namespace so missing rows fail closed instead of
+ * falling back to mixed-locale static navigation.
+ */
 function isProjectedNamespace(publicPath: string, locale: Locale) {
   const namespace = publicPath.split("/").filter(Boolean)[0];
 
@@ -87,12 +111,17 @@ function isProjectedNamespace(publicPath: string, locale: Locale) {
   );
 }
 
+/** Narrows public route rows to concrete practice sets. */
 function isPracticeSetRoute(
   route: PublicRoute
 ): route is PublicPracticeSetRoute {
   return route.kind === "exercise-set";
 }
 
+/**
+ * Finds the target-locale public path for one projected route using stable
+ * source identity rather than localized slug text.
+ */
 function readTargetProjectedPath({
   locale,
   route,
@@ -119,6 +148,10 @@ function readTargetProjectedPath({
   return targetRoute?.publicPath;
 }
 
+/**
+ * Resolves virtual practice program roots such as `/latihan/snbt` from the
+ * concrete set row that owns the assessment/source identity.
+ */
 function readPracticeRootTargetPath({
   locale,
   path,
@@ -158,6 +191,10 @@ function readPracticeRootTargetPath({
   );
 }
 
+/**
+ * Resolves virtual practice domain pages from concrete set rows with the same
+ * source material key in the target locale.
+ */
 function readPracticeDomainTargetPath({
   locale,
   path,

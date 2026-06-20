@@ -305,6 +305,7 @@ const parseQuestionFile = Effect.fn("sync.parseQuestionFile")(function* (
   };
 });
 
+/** Builds the authored source-folder question path stored for public route projection. */
 function getExerciseQuestionPublicSourcePath(
   setSlug: string,
   questionNumber: number

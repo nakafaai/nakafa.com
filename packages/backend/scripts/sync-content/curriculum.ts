@@ -34,14 +34,17 @@ import { listLessonRows } from "@repo/contents/_types/material/registry";
 import type { FunctionArgs } from "convex/server";
 import { Effect } from "effect";
 
+/** Payload accepted by the Convex bulk topic sync mutation. */
 type CurriculumTopicPayload = FunctionArgs<
   typeof internal.contentSync.mutations.curriculum.bulkSyncCurriculumTopics
 >["topics"][number];
 
+/** Payload accepted by the Convex bulk curriculum lesson sync mutation. */
 type CurriculumLessonPayload = FunctionArgs<
   typeof internal.contentSync.mutations.curriculum.bulkSyncCurriculumLessons
 >["sections"][number];
 
+/** Material-authored section order used to validate curriculum lesson navigation. */
 interface CurriculumLessonOrder {
   material: CurriculumTopicPayload["material"];
   order: number;
@@ -475,6 +478,7 @@ const readMaterialListedCurriculumLessonCountByTopicSlug = Effect.fn(
   return counts;
 });
 
+/** Rebuilds the material topic source slug used by curriculum mapping validation. */
 function getMaterialTopicSlug(pathInfo: { material: string; topic: string }) {
   return `material/lesson/${pathInfo.material}/${pathInfo.topic}`;
 }

@@ -1,3 +1,4 @@
+/** Boolean invalidation contract consumed by the incremental sync workflow. */
 interface SyncContentFileChanges {
   hasArticleChanges: boolean;
   hasContentRouteChanges: boolean;

@@ -156,6 +156,7 @@ function parseLlmsIndexSlug(cleanSlug: string) {
   };
 }
 
+/** Detects the locale page-catalog index route used for AFDocs sitemap coverage. */
 function isLocalePageCatalogRoute(prefixParts: readonly string[]) {
   return prefixParts.length === 1 && prefixParts[0] === PAGE_CATALOG_SEGMENT;
 }
@@ -255,6 +256,7 @@ function getLocaleIndexEntries(locale: Locale) {
   );
 }
 
+/** Excludes the static site section when building content-backed locale starter links. */
 function isContentLlmsSection(
   section: LlmsSection
 ): section is Exclude<LlmsSection, "site"> {

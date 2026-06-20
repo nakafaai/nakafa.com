@@ -27,6 +27,7 @@ import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 import { getStaticParams } from "@/lib/utils/system";
 
+/** Validates article category params once so metadata and page rendering share the same 404 behavior. */
 async function getResolvedParams(
   params: PageProps<"/[locale]/articles/[category]">["params"]
 ) {
@@ -52,6 +53,7 @@ async function getCategoryArticles(category: ArticleCategory, locale: Locale) {
   return Effect.runPromise(getRuntimeArticleSummaries(category, locale));
 }
 
+/** Builds metadata for one article category from the same validated route params as the page. */
 export async function generateMetadata({
   params,
 }: {
@@ -81,7 +83,7 @@ export async function generateMetadata({
   };
 }
 
-// Generate bottom-up static params
+/** Generates localized article category paths from the system route catalog. */
 export function generateStaticParams() {
   return getStaticParams({
     basePath: "articles",
@@ -89,6 +91,7 @@ export function generateStaticParams() {
   });
 }
 
+/** Renders one article category page after validating the localized category slug. */
 export default function Page(
   props: PageProps<"/[locale]/articles/[category]">
 ) {
@@ -122,6 +125,7 @@ export default function Page(
   );
 }
 
+/** Renders the cached article card list plus list-level JSON-LD for one category. */
 async function PageArticles({
   locale,
   category,
@@ -175,6 +179,7 @@ async function PageArticles({
   );
 }
 
+/** Renders the category heading with the source-owned article icon. */
 function PageHeader({ category }: { category: ArticleCategory }) {
   const t = useTranslations("Articles");
 
