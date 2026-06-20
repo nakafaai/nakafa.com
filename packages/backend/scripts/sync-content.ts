@@ -1,5 +1,5 @@
 #!/usr/bin/env tsx
 
-import { runCli } from "@repo/backend/scripts/sync-content/main";
+import { runCli } from "@repo/backend/scripts/sync-content/cli/main";
 
 runCli();

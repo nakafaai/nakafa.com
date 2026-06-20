@@ -14,9 +14,63 @@ describe("readIncrementalSyncPlan", () => {
     });
   });
 
+  it("normalizes absolute route projection paths before planning row resyncs", () => {
+    expect(
+      readIncrementalSyncPlan([
+        "/Users/nabilfatih/.codex/worktrees/5c82/nakafa.com/packages/contents/_types/route/practice/path.ts",
+      ])
+    ).toEqual({
+      cleanBeforeRouteArtifacts: true,
+      refreshGeneratedReadModels: true,
+      rowPhases: ["curriculum", "exercises"],
+    });
+  });
+
   it("plans every content row surface when graph projection modules change", () => {
     expect(
       readIncrementalSyncPlan(["packages/contents/_types/graph/projection.ts"])
+    ).toEqual({
+      cleanBeforeRouteArtifacts: true,
+      refreshGeneratedReadModels: true,
+      rowPhases: ["articles", "curriculum", "exercises"],
+    });
+  });
+
+  it("normalizes absolute graph projection paths before planning every row surface", () => {
+    expect(
+      readIncrementalSyncPlan([
+        "/Users/nabilfatih/.codex/worktrees/5c82/nakafa.com/packages/contents/_types/graph/projection.ts",
+      ])
+    ).toEqual({
+      cleanBeforeRouteArtifacts: true,
+      refreshGeneratedReadModels: true,
+      rowPhases: ["articles", "curriculum", "exercises"],
+    });
+  });
+
+  it("plans curriculum and exercise rows when shared material route domains change", () => {
+    expect(
+      readIncrementalSyncPlan(["packages/contents/_types/material/domain.ts"])
+    ).toEqual({
+      cleanBeforeRouteArtifacts: true,
+      refreshGeneratedReadModels: true,
+      rowPhases: ["curriculum", "exercises"],
+    });
+  });
+
+  it("plans curriculum and exercise rows when shared material registry entries change", () => {
+    expect(
+      readIncrementalSyncPlan(["packages/contents/_types/material/source.ts"])
+    ).toEqual({
+      cleanBeforeRouteArtifacts: true,
+      refreshGeneratedReadModels: true,
+      rowPhases: ["curriculum", "exercises"],
+    });
+  });
+
+  it("plans every row surface when shared taxonomy contracts change", () => {
+    expect(
+      readIncrementalSyncPlan(["packages/contents/_types/taxonomy.ts"])
     ).toEqual({
       cleanBeforeRouteArtifacts: true,
       refreshGeneratedReadModels: true,

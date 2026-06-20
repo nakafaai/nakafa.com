@@ -25,18 +25,28 @@ export interface IncrementalSyncPlan {
 export function readIncrementalSyncPlan(
   changedFiles: readonly string[]
 ): IncrementalSyncPlan {
-  const hasGraphProjectionChanges = changedFiles.some(isGraphProjectionPath);
-  const hasRouteProjectionChanges = changedFiles.some(isRouteProjectionPath);
+  const sourcePaths = changedFiles.map(readContentRepositoryPath);
+  const hasGraphProjectionChanges = sourcePaths.some(isGraphProjectionPath);
+  const hasRouteProjectionChanges = sourcePaths.some(isRouteProjectionPath);
   const hasContentProjectionChanges =
     hasGraphProjectionChanges || hasRouteProjectionChanges;
+  const hasContentTaxonomyChanges = sourcePaths.some(isContentTaxonomyPath);
+  const hasMaterialRegistryChanges = sourcePaths.some(isMaterialRegistryPath);
   const articleRowsChanged =
-    hasGraphProjectionChanges || changedFiles.some(isArticleSourcePath);
+    hasGraphProjectionChanges ||
+    hasContentTaxonomyChanges ||
+    sourcePaths.some(isArticleSourcePath);
   const curriculumRowsChanged =
     hasContentProjectionChanges ||
-    changedFiles.some(isMaterialSourcePath) ||
-    changedFiles.some(isCurriculumSourcePath);
+    hasContentTaxonomyChanges ||
+    hasMaterialRegistryChanges ||
+    sourcePaths.some(isMaterialSourcePath) ||
+    sourcePaths.some(isCurriculumSourcePath);
   const exerciseRowsChanged =
-    hasContentProjectionChanges || changedFiles.some(isExerciseSourcePath);
+    hasContentProjectionChanges ||
+    hasContentTaxonomyChanges ||
+    hasMaterialRegistryChanges ||
+    sourcePaths.some(isExerciseSourcePath);
   const rowPhases: IncrementalSyncRowPhase[] = [];
 
   if (articleRowsChanged) {
@@ -56,8 +66,36 @@ export function readIncrementalSyncPlan(
   };
 }
 
+/**
+ * Normalizes runtime absolute content paths to the repo-relative paths used by
+ * source classification. Incremental sync receives both shapes: git output is
+ * content-root relative, while `runtime.ts` expands those files to absolute
+ * `packages/contents` paths before handing them to the workflow planner.
+ */
+function readContentRepositoryPath(file: string) {
+  const normalizedFile = file.replaceAll("\\", "/");
+  const packagePrefix = "packages/contents/";
+  const packageSegment = `/${packagePrefix}`;
+
+  if (normalizedFile.startsWith(packagePrefix)) {
+    return normalizedFile;
+  }
+
+  const packageSegmentIndex = normalizedFile.indexOf(packageSegment);
+
+  if (packageSegmentIndex >= 0) {
+    return normalizedFile.slice(packageSegmentIndex + 1);
+  }
+
+  return `${packagePrefix}${normalizedFile}`;
+}
+
 function isArticleSourcePath(file: string) {
   return file.includes("/articles/");
+}
+
+function isContentTaxonomyPath(file: string) {
+  return file === "packages/contents/_types/taxonomy.ts";
 }
 
 function isCurriculumSourcePath(file: string) {
@@ -70,6 +108,14 @@ function isExerciseSourcePath(file: string) {
 
 function isGraphProjectionPath(file: string) {
   return file.startsWith("packages/contents/_types/graph/");
+}
+
+function isMaterialRegistryPath(file: string) {
+  return (
+    file.startsWith("packages/contents/_types/material/") ||
+    file === "packages/contents/_types/assessment/material.ts" ||
+    file === "packages/contents/_types/curriculum/material.ts"
+  );
 }
 
 function isMaterialSourcePath(file: string) {
