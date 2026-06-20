@@ -16,6 +16,7 @@ import {
   readCurriculumCardListContext,
   readCurriculumMaterialCards,
 } from "@repo/contents/_types/route/curriculum/card";
+import { readStaticPublicCurriculumRoutes } from "@repo/contents/_types/route/curriculum/static";
 import { makePath } from "@repo/contents/_types/route/path";
 import { Effect, Exit, Schema } from "effect";
 import { describe, expect, it } from "vitest";
@@ -24,6 +25,12 @@ const INDONESIAN_BIOLOGY_MATERIAL_HREF_PATTERN = /^\/id\/materi\/biologi\//;
 const ROUTE_SHAPED_CURRICULUM_PATH_PATTERN = /^curriculum\/[^/]+\/\d/;
 
 describe("public curriculum routes", () => {
+  it("keeps static route helper rows identical to the validated default projection", () => {
+    expect(readStaticPublicCurriculumRoutes()).toEqual(
+      Effect.runSync(listPublicCurriculumRoutes())
+    );
+  });
+
   it("derives Merdeka context routes from curriculum mappings, not grade folders", () => {
     const routes = Effect.runSync(listPublicCurriculumRoutes());
 

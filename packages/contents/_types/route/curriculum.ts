@@ -159,7 +159,7 @@ export const listPublicCurriculumRoutes = Effect.fn(
  * app read models. Material-domain rows use broad navigation keys while keeping
  * `materialDomain` available for concrete card identity in the UI.
  */
-function readCurriculumRouteIconKey(
+export function readCurriculumRouteIconKey(
   node: ProjectedCurriculumNode,
   program: LearningProgram
 ) {
@@ -184,7 +184,14 @@ function readCurriculumRouteIconKey(
 
 /** Checks whether a curriculum route has ready mapped content for public navigation. */
 export function isRenderableCurriculumRoute(route: PublicCurriculumRoute) {
-  return RENDERABLE_CURRICULUM_LEVELS.has(route.level) && route.sitemap;
+  return isRenderableCurriculumLevel(route.level) && route.sitemap;
+}
+
+/** Checks whether one curriculum level can own a learner-facing page. */
+export function isRenderableCurriculumLevel(
+  level: PublicCurriculumRoute["level"]
+) {
+  return RENDERABLE_CURRICULUM_LEVELS.has(level);
 }
 
 /** Orders sibling curriculum routes from source-owned curriculum order data. */
@@ -293,7 +300,7 @@ export function createDescendantMaterialMap(
 }
 
 /** Checks whether a curriculum has renderable mapped material below its root. */
-function hasCurriculumMaterialDescendant(
+export function hasCurriculumMaterialDescendant(
   curriculum: CurriculumSource,
   descendantMaterials: ReadonlyMap<string, ReadonlySet<string>>
 ) {

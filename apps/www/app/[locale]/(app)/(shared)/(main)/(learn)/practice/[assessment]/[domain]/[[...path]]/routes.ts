@@ -1,6 +1,6 @@
 import { MATERIAL_ROUTE_DOMAINS } from "@repo/contents/_types/material/domain";
 import { MATERIAL_SOURCES } from "@repo/contents/_types/material/source";
-import { listPublicContentRoutes } from "@repo/contents/_types/route/content";
+import { readStaticPublicContentRoutes } from "@repo/contents/_types/route/content/static";
 import { readPathWithoutNamespace } from "@repo/contents/_types/route/path";
 import {
   readPublicPracticeDomainPath,
@@ -15,7 +15,6 @@ import type {
   PublicPracticeQuestionRoute,
 } from "@repo/contents/_types/route/schema";
 import { locales } from "@repo/utilities/locales";
-import { Effect } from "effect";
 import type { Locale } from "next-intl";
 
 export type PracticeSetRoute = Extract<
@@ -34,11 +33,8 @@ export function readPracticeRoutes(): PublicPracticeRouteRows {
     return practiceRouteCache;
   }
 
-  practiceRouteCache = Effect.runSync(
-    Effect.map(listPublicContentRoutes(), (routes) =>
-      routes.filter(isPracticeSetRoute)
-    )
-  );
+  practiceRouteCache =
+    readStaticPublicContentRoutes().filter(isPracticeSetRoute);
 
   return practiceRouteCache;
 }

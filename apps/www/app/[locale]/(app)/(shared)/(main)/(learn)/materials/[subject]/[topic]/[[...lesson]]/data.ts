@@ -2,18 +2,17 @@ import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 import {
   isMaterialContentRoute,
   isMaterialLessonRoute,
-  listPublicContentRoutes,
   readContentPathWithoutNamespace,
   readParentMaterialRoute,
 } from "@repo/contents/_types/route/content";
-import { listPublicCurriculumRoutes } from "@repo/contents/_types/route/curriculum";
+import { readStaticPublicContentRoutes } from "@repo/contents/_types/route/content/static";
 import { readCurriculumCardListContext } from "@repo/contents/_types/route/curriculum/card";
+import { readStaticPublicCurriculumRoutes } from "@repo/contents/_types/route/curriculum/static";
 import type {
   PublicContentRoute,
   PublicCurriculumRoute,
 } from "@repo/contents/_types/route/schema";
 import { slugify } from "@repo/design-system/lib/utils";
-import { Effect } from "effect";
 import { notFound } from "next/navigation";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
@@ -29,7 +28,7 @@ export function readMaterialRoutes() {
     return materialRouteCache;
   }
 
-  materialRouteCache = Effect.runSync(listPublicContentRoutes());
+  materialRouteCache = readStaticPublicContentRoutes();
 
   return materialRouteCache;
 }
@@ -40,7 +39,7 @@ function readCurriculumRoutes() {
     return curriculumRouteCache;
   }
 
-  curriculumRouteCache = Effect.runSync(listPublicCurriculumRoutes());
+  curriculumRouteCache = readStaticPublicCurriculumRoutes();
 
   return curriculumRouteCache;
 }

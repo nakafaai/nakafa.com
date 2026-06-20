@@ -15,6 +15,7 @@ import {
   readParentMaterialRoute,
   toLocalizedContentHref,
 } from "@repo/contents/_types/route/content";
+import { readStaticPublicContentRoutes } from "@repo/contents/_types/route/content/static";
 import {
   comparePublicRouteOrder,
   makePath,
@@ -23,6 +24,12 @@ import { Effect, Exit, Option } from "effect";
 import { describe, expect, it } from "vitest";
 
 describe("public content routes", () => {
+  it("keeps static route helper rows identical to the validated default projection", () => {
+    expect(readStaticPublicContentRoutes()).toEqual(
+      Effect.runSync(listPublicContentRoutes())
+    );
+  });
+
   it("derives canonical subject routes from unified material sources", () => {
     const routes = Effect.runSync(listPublicContentRoutes());
 

@@ -30,22 +30,27 @@ export function readIncrementalSyncPlan(
   const hasRouteProjectionChanges = sourcePaths.some(isRouteProjectionPath);
   const hasContentProjectionChanges =
     hasGraphProjectionChanges || hasRouteProjectionChanges;
-  const hasContentTaxonomyChanges = sourcePaths.some(isContentTaxonomyPath);
+  const hasSharedContentContractChanges = sourcePaths.some(
+    isSharedContentContractPath
+  );
   const hasMaterialRegistryChanges = sourcePaths.some(isMaterialRegistryPath);
+  const hasProgramCatalogChanges = sourcePaths.some(isProgramCatalogPath);
   const articleRowsChanged =
     hasGraphProjectionChanges ||
-    hasContentTaxonomyChanges ||
+    hasSharedContentContractChanges ||
     sourcePaths.some(isArticleSourcePath);
   const curriculumRowsChanged =
     hasContentProjectionChanges ||
-    hasContentTaxonomyChanges ||
+    hasSharedContentContractChanges ||
     hasMaterialRegistryChanges ||
+    hasProgramCatalogChanges ||
     sourcePaths.some(isMaterialSourcePath) ||
     sourcePaths.some(isCurriculumSourcePath);
   const exerciseRowsChanged =
     hasContentProjectionChanges ||
-    hasContentTaxonomyChanges ||
+    hasSharedContentContractChanges ||
     hasMaterialRegistryChanges ||
+    hasProgramCatalogChanges ||
     sourcePaths.some(isExerciseSourcePath);
   const rowPhases: IncrementalSyncRowPhase[] = [];
 
@@ -94,8 +99,11 @@ function isArticleSourcePath(file: string) {
   return file.includes("/articles/");
 }
 
-function isContentTaxonomyPath(file: string) {
-  return file === "packages/contents/_types/taxonomy.ts";
+function isSharedContentContractPath(file: string) {
+  return (
+    file === "packages/contents/_types/content.ts" ||
+    file === "packages/contents/_types/taxonomy.ts"
+  );
 }
 
 function isCurriculumSourcePath(file: string) {
@@ -120,6 +128,10 @@ function isMaterialRegistryPath(file: string) {
 
 function isMaterialSourcePath(file: string) {
   return file.includes("/material/");
+}
+
+function isProgramCatalogPath(file: string) {
+  return file.startsWith("packages/contents/_types/program/");
 }
 
 function isRouteProjectionPath(file: string) {

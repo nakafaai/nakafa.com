@@ -129,9 +129,30 @@ export function decodePublicPath(path: string) {
   );
 }
 
+/**
+ * Decodes a public path for static route projection without starting an Effect runtime.
+ *
+ * Use this only for source-controlled registries that were already decoded at
+ * module load. Caller-supplied or test-mutated route data should use the
+ * Effect-native decoders so expected projection failures stay typed.
+ */
+export function decodePublicPathSync(path: string) {
+  return Schema.decodeUnknownSync(PublicRoutePathSchema)(path);
+}
+
 /** Joins and decodes route segments into one branded public path. */
 export function makePath(segments: readonly (string | undefined)[]) {
   return decodePublicPath(joinRouteSegments(segments));
+}
+
+/**
+ * Joins and decodes source-owned route segments for static route helpers.
+ *
+ * This keeps `generateStaticParams` paths deterministic under Cache Components:
+ * no Effect runtime is created while Next is prerendering static routes.
+ */
+export function makePathSync(segments: readonly (string | undefined)[]) {
+  return decodePublicPathSync(joinRouteSegments(segments));
 }
 
 /** Reads and validates the final public path segment. */
@@ -142,6 +163,14 @@ export function lastPathSegment(path: string) {
   return Schema.decodeUnknown(PublicRouteSegmentSchema)(segment).pipe(
     Effect.mapError(toInvalidSourceError)
   );
+}
+
+/** Reads the final public path segment for pure static route helpers. */
+export function lastPathSegmentSync(path: string) {
+  const segments = path.split("/").filter(Boolean);
+  const segment = segments.at(-1);
+
+  return Schema.decodeUnknownSync(PublicRouteSegmentSchema)(segment);
 }
 
 /** Fails when two generated rows would claim the same localized public path. */

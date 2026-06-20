@@ -78,10 +78,42 @@ describe("readIncrementalSyncPlan", () => {
     });
   });
 
+  it("plans every row surface when shared content row contracts change", () => {
+    expect(
+      readIncrementalSyncPlan(["packages/contents/_types/content.ts"])
+    ).toEqual({
+      cleanBeforeRouteArtifacts: true,
+      refreshGeneratedReadModels: true,
+      rowPhases: ["articles", "curriculum", "exercises"],
+    });
+  });
+
+  it("plans curriculum and exercise rows when program catalog entries change", () => {
+    expect(
+      readIncrementalSyncPlan(["packages/contents/_types/program/catalog.ts"])
+    ).toEqual({
+      cleanBeforeRouteArtifacts: true,
+      refreshGeneratedReadModels: true,
+      rowPhases: ["curriculum", "exercises"],
+    });
+  });
+
   it("plans curriculum and exercise rows when practice content changes", () => {
     expect(
       readIncrementalSyncPlan([
         "packages/contents/material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-1/question.id.mdx",
+      ])
+    ).toEqual({
+      cleanBeforeRouteArtifacts: true,
+      refreshGeneratedReadModels: true,
+      rowPhases: ["curriculum", "exercises"],
+    });
+  });
+
+  it("normalizes content-root relative practice paths before planning row resyncs", () => {
+    expect(
+      readIncrementalSyncPlan([
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-1/question.id.mdx",
       ])
     ).toEqual({
       cleanBeforeRouteArtifacts: true,
