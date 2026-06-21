@@ -414,6 +414,97 @@ describe("learningPrograms", () => {
     );
   });
 
+  it("reconciles active plan item route copy when coverage keeps the same sample content", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const identity = await t.mutation((ctx) =>
+      seedAuthenticatedUser(ctx, { now: NOW })
+    );
+
+    await t.mutation(internal.learningPrograms.sync.syncLearningPrograms, {
+      programs: getLearningProgramCatalogInputs(),
+      syncedAt: NOW,
+    });
+    const routeId = await seedContentRoute(t, {
+      graph: subjectGraph,
+      route: "material/lesson/chemistry/atomic-structure",
+      title: "Atomic Structure",
+    });
+    await t.mutation(
+      internal.learningPrograms.sync.syncLearningProgramCoverage,
+      {
+        coverageRows: [
+          {
+            contentCount: 1,
+            coverageStatus: "partial",
+            lensId: subjectGraph.lensId,
+            lensScope: "curriculum",
+            locale: "id",
+            programKey: "merdeka",
+            sampleContentId: subjectGraph.assetId,
+            syncedAt: NOW,
+          },
+        ],
+      }
+    );
+    const authed = t.withIdentity({
+      sessionId: identity.sessionId,
+      subject: identity.authUserId,
+    });
+    const createdProfile = await authed.mutation(
+      api.learningPrograms.mutations.selectLearningProgram,
+      {
+        interests: ["school-curriculum"],
+        locale: "id",
+        primaryProgramKey: "merdeka",
+      }
+    );
+
+    expect(createdProfile.planItems).toEqual([
+      expect.objectContaining({
+        content_id: subjectGraph.assetId,
+        route: "material/lesson/chemistry/atomic-structure",
+        title: "Atomic Structure",
+      }),
+    ]);
+
+    await t.mutation(async (ctx) => {
+      await ctx.db.patch(routeId, {
+        route: "material/lesson/chemistry/atomic-structure/renamed",
+        title: "Atomic Structure Updated",
+      });
+    });
+    await t.mutation(
+      internal.learningPrograms.sync.syncLearningProgramCoverage,
+      {
+        coverageRows: [
+          {
+            contentCount: 1,
+            coverageStatus: "partial",
+            lensId: subjectGraph.lensId,
+            lensScope: "curriculum",
+            locale: "id",
+            programKey: "merdeka",
+            sampleContentId: subjectGraph.assetId,
+            syncedAt: NOW + 1,
+          },
+        ],
+      }
+    );
+
+    const activeProfile = await authed.query(
+      api.learningPrograms.queries.getActiveProfile,
+      { locale: "id" }
+    );
+
+    expect(activeProfile?.planItems).toEqual([
+      expect.objectContaining({
+        content_id: subjectGraph.assetId,
+        route: "material/lesson/chemistry/atomic-structure/renamed",
+        title: "Atomic Structure Updated",
+      }),
+    ]);
+  });
+
   it("reconciles popular generated plan items in bounded batches when sample content changes", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation((ctx) =>

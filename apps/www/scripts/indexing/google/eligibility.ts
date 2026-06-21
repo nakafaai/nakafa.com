@@ -4,7 +4,7 @@ import {
   GoogleStructuredDataParseError,
 } from "@/scripts/indexing/errors";
 import { hasGoogleIndexingApiEligibleStructuredData } from "@/scripts/indexing/google/structured";
-import type { SiteIndexManifest } from "@/scripts/indexing/manifest";
+import type { SiteIndexUrlBatch } from "@/scripts/indexing/manifest";
 import { logger } from "@/scripts/utils";
 
 const ELIGIBILITY_FETCH_CONCURRENCY = 8;
@@ -17,10 +17,11 @@ const decodeStructuredDataJson = Schema.decodeUnknown(
 /** Builds the eligible Indexing API URL queue from sitemap and live JSON-LD. */
 export const getEligibleGoogleIndexingUrls = Effect.fn(
   "scripts.google.eligibility.list"
-)(function* (manifest: SiteIndexManifest) {
-  logger.stats("Total URLs in sitemap", manifest.totalEntryCount);
-  logger.stats("Canonical URLs in sitemap", manifest.urls.length);
-  logger.stats("Duplicate sitemap URLs removed", manifest.duplicateCount);
+)(function* (batch: SiteIndexUrlBatch) {
+  logger.stats(
+    `Canonical URLs in sitemap batch ${batch.batchIndex}`,
+    batch.urls.length
+  );
   logger.info(
     "General Google discovery remains sitemap.xml, sitemap shards, robots.txt, canonical metadata, and Search Console."
   );
@@ -29,13 +30,16 @@ export const getEligibleGoogleIndexingUrls = Effect.fn(
   );
 
   const maybeEligibleUrls = yield* Effect.forEach(
-    manifest.urls,
+    batch.urls,
     readEligibleGoogleIndexingUrl,
     { concurrency: ELIGIBILITY_FETCH_CONCURRENCY }
   );
   const urls = maybeEligibleUrls.filter(isString);
 
-  logger.stats("Google Indexing API eligible URLs", urls.length);
+  logger.stats(
+    `Google Indexing API eligible URLs in batch ${batch.batchIndex}`,
+    urls.length
+  );
 
   return urls;
 });

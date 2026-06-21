@@ -32,6 +32,7 @@ const planItemReconcileResultValidator = v.object({
   reconciled: v.number(),
   scheduled: v.boolean(),
 });
+const optionalPlanItemReconcileCursorValidator = v.optional(v.string());
 
 /** Upserts the program catalog and its source references from contents contracts. */
 export const syncLearningPrograms = internalMutation({
@@ -188,13 +189,11 @@ export const syncLearningProgramCoverage = internalMutation({
         continue;
       }
 
-      if (existing.sampleContentId !== row.sampleContentId) {
-        await reconcileActivePlanItemsForCoverageSampleChange(ctx, {
-          coverage: existing,
-          nextCoverageStatus: row.coverageStatus,
-          nextSampleContentId: row.sampleContentId,
-        });
-      }
+      await reconcileActivePlanItemsForCoverageRefresh(ctx, {
+        coverage: existing,
+        nextCoverageStatus: row.coverageStatus,
+        nextSampleContentId: row.sampleContentId,
+      });
 
       await ctx.db.patch(existing._id, patch);
       updated++;
@@ -248,6 +247,7 @@ export const continueCoverageSamplePlanItemReconcile = internalMutation({
     previousSampleContentId:
       learningProgramCoverageInputValidator.fields.sampleContentId,
     programId: v.id("learningPrograms"),
+    cursor: optionalPlanItemReconcileCursorValidator,
   },
   returns: planItemReconcileResultValidator,
   handler: async (ctx, args) =>
@@ -267,8 +267,8 @@ export const continueStaleCoveragePlanItemDelete = internalMutation({
     await deleteStaleCoveragePlanItemBatch(ctx, args),
 });
 
-/** Refreshes generated active-plan items when coverage keeps its key but points at new content. */
-async function reconcileActivePlanItemsForCoverageSampleChange(
+/** Refreshes generated plan items when coverage keeps its key but its sample, route, or title projection changes. */
+async function reconcileActivePlanItemsForCoverageRefresh(
   ctx: MutationCtx,
   {
     coverage,
@@ -294,6 +294,7 @@ async function reconcileActivePlanItemsForCoverageSampleChange(
 async function reconcileCoverageSamplePlanItemBatch(
   ctx: MutationCtx,
   {
+    cursor,
     lensId,
     locale,
     nextCoverageStatus,
@@ -301,6 +302,7 @@ async function reconcileCoverageSamplePlanItemBatch(
     previousSampleContentId,
     programId,
   }: {
+    cursor?: string;
     lensId: string;
     locale: Doc<"learningProgramCoverage">["locale"];
     nextCoverageStatus: Doc<"learningProgramCoverage">["coverageStatus"];
@@ -309,15 +311,26 @@ async function reconcileCoverageSamplePlanItemBatch(
     programId: Id<"learningPrograms">;
   }
 ) {
-  const planItems = await ctx.db
+  const planItemQuery = ctx.db
     .query("learningPlanItems")
     .withIndex("by_programId_and_lensId_and_content_id", (q) =>
       q
         .eq("programId", programId)
         .eq("lensId", lensId)
         .eq("content_id", previousSampleContentId)
-    )
-    .take(ACTIVE_PLAN_ITEM_RECONCILE_BATCH_SIZE);
+    );
+  const keepsSameContentId = previousSampleContentId === nextSampleContentId;
+  const planItemPage = keepsSameContentId
+    ? await planItemQuery.paginate({
+        cursor: cursor ?? null,
+        numItems: ACTIVE_PLAN_ITEM_RECONCILE_BATCH_SIZE,
+      })
+    : {
+        continueCursor: null,
+        isDone: false,
+        page: await planItemQuery.take(ACTIVE_PLAN_ITEM_RECONCILE_BATCH_SIZE),
+      };
+  const planItems = planItemPage.page;
 
   const route = await getContentRouteByContentId(ctx, {
     contentId: nextSampleContentId,
@@ -350,20 +363,27 @@ async function reconcileCoverageSamplePlanItemBatch(
     reconciled++;
   }
 
-  const scheduled = planItems.length === ACTIVE_PLAN_ITEM_RECONCILE_BATCH_SIZE;
+  const scheduled = keepsSameContentId
+    ? !planItemPage.isDone
+    : planItems.length === ACTIVE_PLAN_ITEM_RECONCILE_BATCH_SIZE;
 
   if (scheduled) {
+    const continuationArgs = {
+      lensId,
+      locale,
+      nextCoverageStatus,
+      nextSampleContentId,
+      previousSampleContentId,
+      programId,
+      ...(keepsSameContentId && planItemPage.continueCursor
+        ? { cursor: planItemPage.continueCursor }
+        : {}),
+    };
+
     await ctx.scheduler.runAfter(
       0,
       internal.learningPrograms.sync.continueCoverageSamplePlanItemReconcile,
-      {
-        lensId,
-        locale,
-        nextCoverageStatus,
-        nextSampleContentId,
-        previousSampleContentId,
-        programId,
-      }
+      continuationArgs
     );
   }
 

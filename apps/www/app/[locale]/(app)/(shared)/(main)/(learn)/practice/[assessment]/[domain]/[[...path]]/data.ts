@@ -27,6 +27,7 @@ import {
   fetchRuntimeExerciseSetPage,
 } from "@/lib/content/runtime/pages";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { selectLearningStaticParams } from "@/lib/routing/prerender";
 
 type PracticeParams =
   PageProps<"/[locale]/practice/[assessment]/[domain]/[[...path]]">["params"];
@@ -102,7 +103,7 @@ export function listPracticeStaticParams(rawLocale?: string) {
     });
   }
 
-  return Array.from(paramsByPath.values());
+  return selectLearningStaticParams(Array.from(paramsByPath.values()));
 }
 
 /**

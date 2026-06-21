@@ -2,16 +2,25 @@ import type { Locale } from "@repo/contents/_types/content";
 import { MATERIAL_ROUTE_DOMAINS } from "@repo/contents/_types/material/domain";
 import { MATERIAL_SOURCES } from "@repo/contents/_types/material/source";
 import { listPublicContentRoutes } from "@repo/contents/_types/route/content";
+import { readStaticPublicContentRoutes } from "@repo/contents/_types/route/content/static";
 import { listPublicCurriculumRoutes } from "@repo/contents/_types/route/curriculum";
-import type { RouteInputs } from "@repo/contents/_types/route/input";
+import { readStaticPublicCurriculumRoutes } from "@repo/contents/_types/route/curriculum/static";
+import {
+  hasCustomRouteInputs,
+  type RouteInputs,
+} from "@repo/contents/_types/route/input";
+import {
+  createPublicLearningIndex,
+  type PublicLearningIndex,
+} from "@repo/contents/_types/route/learning/public";
 import {
   decodePublicPath,
   normalizePublicPath,
   uniqueRoutes,
 } from "@repo/contents/_types/route/path";
-import { readPublicPracticeQuestionRouteByPath } from "@repo/contents/_types/route/practice/question";
-import type { PublicRoute } from "@repo/contents/_types/route/schema";
 import { Effect, Option } from "effect";
+
+let defaultPublicLearningIndex: PublicLearningIndex | undefined;
 
 /** Lists every public route row generated from material and curriculum sources. */
 export const listPublicRoutes = Effect.fn("contents.route.listAll")(function* (
@@ -29,22 +38,42 @@ export const listPublicRoutes = Effect.fn("contents.route.listAll")(function* (
 export const findPublicRouteByPath = Effect.fn("contents.route.findByPath")(
   function* (path: string, locale: Locale, inputs: RouteInputs = {}) {
     const publicPath = yield* decodePublicPath(normalizePublicPath(path));
-    const routes = yield* listPublicRoutes(inputs);
-    const exactRoute = routes.find(
-      (route) => route.locale === locale && route.publicPath === publicPath
-    );
 
-    if (exactRoute) {
-      return Option.some<PublicRoute>(exactRoute);
+    if (!hasCustomRouteInputs(inputs)) {
+      return Option.fromNullable(
+        readDefaultPublicLearningIndex().resolveRouteByPath(publicPath, locale)
+      );
     }
 
-    return Option.fromNullable(
-      readPublicPracticeQuestionRouteByPath({
-        domains: inputs.domains ?? MATERIAL_ROUTE_DOMAINS,
-        locale,
-        materials: inputs.materials ?? MATERIAL_SOURCES,
-        publicPath,
-      })
-    );
+    const routes = yield* listPublicRoutes(inputs);
+    const index = createPublicLearningIndex({
+      domains: inputs.domains ?? MATERIAL_ROUTE_DOMAINS,
+      materials: inputs.materials ?? MATERIAL_SOURCES,
+      routes,
+    });
+
+    return Option.fromNullable(index.resolveRouteByPath(publicPath, locale));
   }
 );
+
+/**
+ * Builds the shared default route lookup index without starting an Effect runtime.
+ *
+ * Agent URL parsing and other default-source callers should not rebuild every
+ * public route row for each lookup. Sync/tests with custom source inputs still
+ * use the Effect projection branch above so source validation is preserved.
+ */
+function readDefaultPublicLearningIndex() {
+  if (defaultPublicLearningIndex) {
+    return defaultPublicLearningIndex;
+  }
+
+  defaultPublicLearningIndex = createPublicLearningIndex({
+    routes: [
+      ...readStaticPublicContentRoutes(),
+      ...readStaticPublicCurriculumRoutes(),
+    ],
+  });
+
+  return defaultPublicLearningIndex;
+}

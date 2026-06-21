@@ -11,12 +11,10 @@ import {
   compareCurriculumRouteOrder,
   readCurriculumRouteByPublicPath,
 } from "@repo/contents/_types/route/curriculum";
-import { toContextualMaterialHref } from "@repo/contents/_types/route/material/context";
 import {
-  listMaterialContextRefs,
-  type MaterialContextRef,
-  readMaterialContextRef,
-} from "@repo/contents/_types/route/material/reference";
+  createMaterialContextIndex,
+  type MaterialContextIndex,
+} from "@repo/contents/_types/route/learning/context";
 import { comparePublicRouteOrder } from "@repo/contents/_types/route/path";
 import type {
   PublicContentRoute,
@@ -64,7 +62,7 @@ export function readCurriculumMaterialCards({
     return [];
   }
 
-  const contextRefs = listMaterialContextRefs({
+  const materialContextIndex = createMaterialContextIndex({
     contentRoutes,
     curriculumRoutes,
   });
@@ -80,8 +78,8 @@ export function readCurriculumMaterialCards({
   return groupRoutes.flatMap((groupRoute) =>
     readCurriculumMaterialCard({
       contentRoutes,
-      contextRefs,
       curriculumRoutes,
+      materialContextIndex,
       route: groupRoute,
     })
   );
@@ -90,19 +88,19 @@ export function readCurriculumMaterialCards({
 /** Converts one curriculum group route into the existing collapsible material card contract. */
 function readCurriculumMaterialCard({
   contentRoutes,
-  contextRefs,
   curriculumRoutes,
+  materialContextIndex,
   route,
 }: {
   contentRoutes: readonly PublicContentRoute[];
-  contextRefs: readonly MaterialContextRef[];
   curriculumRoutes: readonly PublicCurriculumRoute[];
+  materialContextIndex: MaterialContextIndex;
   route: PublicCurriculumRoute;
 }): MaterialList {
   const items = readCurriculumMaterialItems({
     contentRoutes,
-    contextRefs,
     curriculumRoutes,
+    materialContextIndex,
     route,
   });
 
@@ -123,13 +121,13 @@ function readCurriculumMaterialCard({
 /** Expands a curriculum group and its descendants into direct canonical lesson links. */
 function readCurriculumMaterialItems({
   contentRoutes,
-  contextRefs,
   curriculumRoutes,
+  materialContextIndex,
   route,
 }: {
   contentRoutes: readonly PublicContentRoute[];
-  contextRefs: readonly MaterialContextRef[];
   curriculumRoutes: readonly PublicCurriculumRoute[];
+  materialContextIndex: MaterialContextIndex;
   route: PublicCurriculumRoute;
 }) {
   const materialItems = new Map<string, { href: string; title: string }>();
@@ -146,7 +144,7 @@ function readCurriculumMaterialItems({
       curriculumRoute.locale,
       curriculumRoute.canonicalPath,
       contentRoutes,
-      contextRefs,
+      materialContextIndex,
       route
     )) {
       materialItems.set(item.href, item);
@@ -161,7 +159,7 @@ function readMaterialLessonItems(
   locale: PublicCurriculumRoute["locale"],
   path: string,
   contentRoutes: readonly PublicContentRoute[],
-  contextRefs: readonly MaterialContextRef[],
+  materialContextIndex: MaterialContextIndex,
   contextRoute: PublicCurriculumRoute
 ) {
   const route = contentRoutes.find(
@@ -176,7 +174,7 @@ function readMaterialLessonItems(
   }
 
   if (isMaterialLessonRoute(route)) {
-    return [toMaterialLessonItem(route, contextRefs, contextRoute)];
+    return [toMaterialLessonItem(route, materialContextIndex, contextRoute)];
   }
 
   return contentRoutes
@@ -188,26 +186,21 @@ function readMaterialLessonItems(
     .slice()
     .sort(comparePublicRouteOrder)
     .map((candidate) =>
-      toMaterialLessonItem(candidate, contextRefs, contextRoute)
+      toMaterialLessonItem(candidate, materialContextIndex, contextRoute)
     );
 }
 
 /** Builds one direct lesson item with a validated curriculum context hint. */
 function toMaterialLessonItem(
   route: PublicContentRoute,
-  contextRefs: readonly MaterialContextRef[],
+  materialContextIndex: MaterialContextIndex,
   contextRoute: PublicCurriculumRoute
 ) {
-  const ref = readMaterialContextRef({
-    contextRoute,
-    refs: contextRefs,
-    route,
-  });
-
   return {
-    href: toContextualMaterialHref({
+    href: materialContextIndex.toContextualHref({
+      contextRoute,
       href: toLocalizedContentHref(route),
-      ref,
+      route,
     }),
     title: route.title,
   };

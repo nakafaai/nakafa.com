@@ -1,7 +1,7 @@
-import { findPublicRouteByPath } from "@repo/contents/_types/route/projection";
+import { loadStaticPublicLearningIndex } from "@repo/contents/_types/route/learning/static";
 import type { PublicRoute } from "@repo/contents/_types/route/schema";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import {
   getCachedLlmsExerciseText,
@@ -137,16 +137,14 @@ const getLlmsMarkdownSource = Effect.fn("www.llms.markdown.sourcePath")(
       return { cleanSlug };
     }
 
-    const publicRoute = yield* findPublicRouteByPath(cleanSlug, locale).pipe(
-      Effect.catchTag("InvalidPublicRouteSourceError", () =>
-        Effect.succeed(Option.none<PublicRoute>())
-      )
-    );
+    const publicIndex = yield* loadStaticPublicLearningIndex();
+    const publicRoute = publicIndex.resolveRouteByPath(cleanSlug, locale);
 
-    return Option.match(publicRoute, {
-      onNone: (): LlmsMarkdownSource => ({ cleanSlug }),
-      onSome: (route) => getPublicContentMarkdownSource(route, cleanSlug),
-    });
+    if (!publicRoute) {
+      return { cleanSlug };
+    }
+
+    return getPublicContentMarkdownSource(publicRoute, cleanSlug);
   }
 );
 

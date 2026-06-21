@@ -1,5 +1,7 @@
-import * as routeProjection from "@repo/contents/_types/route/projection";
-import { Effect, Option } from "effect";
+import { readStaticPublicContentRoutes } from "@repo/contents/_types/route/content/static";
+import type { PublicLearningIndex } from "@repo/contents/_types/route/learning/public";
+import * as publicLearningStatic from "@repo/contents/_types/route/learning/static";
+import { Effect } from "effect";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { resolveLocalizedNavigationHref } from "@/lib/routing/locale/resolve";
 
@@ -141,18 +143,29 @@ describe("resolveLocalizedNavigationHref", () => {
   });
 
   it("fails projected routes when the target locale projection is missing", () => {
-    const idOnlyRoute = Effect.runSync(routeProjection.listPublicRoutes()).find(
+    const idOnlyRoute = readStaticPublicContentRoutes().find(
       (route) => route.publicPath === "materi/fisika/vektor/konsep-vektor"
     );
 
     expect(idOnlyRoute).toBeDefined();
 
-    vi.spyOn(routeProjection, "listPublicRoutes").mockImplementation(() =>
-      Effect.succeed(idOnlyRoute ? [idOnlyRoute] : [])
-    );
-    vi.spyOn(routeProjection, "findPublicRouteByPath").mockImplementation(() =>
-      Effect.succeed(Option.fromNullable(idOnlyRoute))
-    );
+    if (!idOnlyRoute) {
+      throw new Error("Expected ID vector lesson route fixture");
+    }
+
+    const index: PublicLearningIndex = {
+      projectMaterialContextToLocale: () => undefined,
+      projectPracticeDomainPath: () => undefined,
+      projectPracticeRootPath: () => undefined,
+      projectRouteToLocale: () => undefined,
+      resolveMaterialHeaderLink: () => undefined,
+      resolveRouteByPath: () => idOnlyRoute,
+    };
+
+    vi.spyOn(
+      publicLearningStatic,
+      "loadStaticPublicLearningIndex"
+    ).mockImplementation(() => Effect.succeed(index));
 
     const result = Effect.runSyncExit(
       resolveLocalizedNavigationHref({

@@ -2,10 +2,10 @@ import {
   getPublicContentRouteCheck,
   type PublicContentRouteCheck,
 } from "@repo/contents/_lib/manifest/public-route";
-import { findPublicRouteByPath } from "@repo/contents/_types/route/projection";
+import { loadStaticPublicLearningIndex } from "@repo/contents/_types/route/learning/static";
 import type { PublicRoute } from "@repo/contents/_types/route/schema";
 import { routing } from "@repo/internationalization/src/routing";
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
 import {
   getRuntimeExerciseQuestionPage,
   getRuntimeExerciseSetPage,
@@ -69,22 +69,16 @@ export const resolveLlmsProxyRoute = Effect.fn("www.llms.routes.resolveProxy")(
       markdownExtension: localizedRoute.markdownExtension,
     });
     const routeCheck = getPublicContentRouteCheck(localizedRoute.route);
-    const publicRoute = yield* findPublicRouteByPath(
+    const publicIndex = yield* loadStaticPublicLearningIndex();
+    const publicRoute = publicIndex.resolveRouteByPath(
       localizedRoute.route,
       localizedRoute.locale
-    ).pipe(
-      Effect.catchTag("InvalidPublicRouteSourceError", () =>
-        Effect.succeed(Option.none<PublicRoute>())
-      )
     );
 
     let verifiedRouteCheck: VerifiedLlmsRouteCheck;
 
-    if (Option.isSome(publicRoute)) {
-      if (
-        wantsMarkdown &&
-        isUnsupportedContextMarkdownRoute(publicRoute.value)
-      ) {
+    if (publicRoute) {
+      if (wantsMarkdown && isUnsupportedContextMarkdownRoute(publicRoute)) {
         const decision: LlmsProxyRouteDecision = {
           kind: "content-not-found",
           locale: localizedRoute.locale,
@@ -92,7 +86,7 @@ export const resolveLlmsProxyRoute = Effect.fn("www.llms.routes.resolveProxy")(
         return decision;
       }
 
-      verifiedRouteCheck = getRouteProjectionCheck(publicRoute.value);
+      verifiedRouteCheck = getRouteProjectionCheck(publicRoute);
     } else {
       if (routeCheck.mode === "outside") {
         if (

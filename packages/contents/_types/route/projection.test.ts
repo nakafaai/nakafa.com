@@ -1,4 +1,5 @@
 import { ContentIO } from "@repo/contents/_lib/io/content";
+import { MATERIAL_ROUTE_DOMAINS } from "@repo/contents/_types/material/domain";
 import {
   findPublicRouteByPath,
   listPublicRoutes,
@@ -55,6 +56,40 @@ describe("public route projection", () => {
         Option.isNone(Effect.runSync(findPublicRouteByPath(path, "id")))
       ).toBe(true);
     }
+  });
+
+  it("uses scoped Effect projection when callers provide source overrides", () => {
+    expect(
+      Option.isSome(
+        Effect.runSync(
+          findPublicRouteByPath("materi/fisika/vektor/konsep-vektor", "id", {
+            curricula: [],
+          })
+        )
+      )
+    ).toBe(true);
+
+    expect(
+      Option.isSome(
+        Effect.runSync(
+          findPublicRouteByPath("materi/fisika/vektor/konsep-vektor", "id", {
+            curricula: [],
+            domains: MATERIAL_ROUTE_DOMAINS,
+          })
+        )
+      )
+    ).toBe(true);
+
+    expect(
+      Option.isNone(
+        Effect.runSync(
+          findPublicRouteByPath("materi/fisika/vektor/konsep-vektor", "id", {
+            curricula: [],
+            materials: [],
+          })
+        )
+      )
+    ).toBe(true);
   });
 
   it("keeps dynamic slug maps outside the route projection aggregator", async () => {

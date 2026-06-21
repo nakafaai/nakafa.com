@@ -17,6 +17,7 @@ import type { ParsedHeading } from "@repo/contents/_types/toc";
 import { slugify } from "@repo/design-system/lib/utils";
 import { notFound } from "next/navigation";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { selectLearningStaticParams } from "@/lib/routing/prerender";
 
 type CurriculumParams =
   PageProps<"/[locale]/curricula/[curriculum]/[[...path]]">["params"];
@@ -50,7 +51,7 @@ export function readMaterialRoutes() {
 export function listCurriculumStaticParams(rawLocale?: string) {
   const locale = rawLocale ? getLocaleOrThrow(rawLocale) : undefined;
 
-  return readCurriculumRoutes()
+  const params = readCurriculumRoutes()
     .filter((route) => !locale || route.locale === locale)
     .filter(isRenderableCurriculumRoute)
     .map((route) => {
@@ -58,6 +59,8 @@ export function listCurriculumStaticParams(rawLocale?: string) {
 
       return path.length > 0 ? { curriculum, path } : { curriculum };
     });
+
+  return selectLearningStaticParams(params);
 }
 
 /** Resolves localized curriculum params through projected route rows. */

@@ -2,26 +2,24 @@ import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 import {
   isMaterialContentRoute,
   isMaterialLessonRoute,
-  readContentPathWithoutNamespace,
   readParentMaterialRoute,
 } from "@repo/contents/_types/route/content";
 import { readStaticPublicContentRoutes } from "@repo/contents/_types/route/content/static";
-import { readStaticPublicCurriculumRoutes } from "@repo/contents/_types/route/curriculum/static";
-import { resolveMaterialHeaderLink } from "@repo/contents/_types/route/material/context";
+import { readStaticPublicLearningIndex } from "@repo/contents/_types/route/learning/static";
 import type { MaterialContextIdentity } from "@repo/contents/_types/route/material/reference";
-import { listMaterialContextRefs } from "@repo/contents/_types/route/material/reference";
+import { readNamespaceSegment } from "@repo/contents/_types/route/path";
 import type {
   PublicContentRoute,
-  PublicCurriculumRoute,
+  PublicRoute,
 } from "@repo/contents/_types/route/schema";
 import { notFound } from "next/navigation";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { selectLearningStaticParams } from "@/lib/routing/prerender";
 
 type MaterialParams =
   PageProps<"/[locale]/materials/[subject]/[topic]/[[...lesson]]">["params"];
 
 let materialRouteCache: readonly PublicContentRoute[] | undefined;
-let curriculumRouteCache: readonly PublicCurriculumRoute[] | undefined;
 
 /** Lazily decodes content routes when a framework route function needs them. */
 export function readMaterialRoutes() {
@@ -34,17 +32,6 @@ export function readMaterialRoutes() {
   return materialRouteCache;
 }
 
-/** Lazily decodes curriculum routes for material header context lookups. */
-function readCurriculumRoutes() {
-  if (curriculumRouteCache) {
-    return curriculumRouteCache;
-  }
-
-  curriculumRouteCache = readStaticPublicCurriculumRoutes();
-
-  return curriculumRouteCache;
-}
-
 /**
  * Resolves localized material params through the contents route projection.
  *
@@ -54,15 +41,33 @@ function readCurriculumRoutes() {
 export async function readMaterialRoute(params: MaterialParams) {
   const { locale: rawLocale, subject, topic, lesson } = await params;
   const locale = getLocaleOrThrow(rawLocale);
-  const routePath = [subject, topic, ...(lesson ?? [])].join("/");
-  const route = readMaterialRoutes().find(
-    (candidate) =>
-      candidate.locale === locale &&
-      isMaterialContentRoute(candidate) &&
-      readContentPathWithoutNamespace(candidate) === routePath
+  const namespace = readNamespaceSegment("subject", locale);
+
+  if (!namespace) {
+    return { locale, route: undefined };
+  }
+
+  const publicPath = [namespace, subject, topic, ...(lesson ?? [])].join("/");
+  const route = readStaticPublicLearningIndex().resolveRouteByPath(
+    publicPath,
+    locale
   );
 
-  return { locale, route };
+  return {
+    locale,
+    route: isProjectedMaterialContentRoute(route) ? route : undefined,
+  };
+}
+
+/** Narrows indexed public-route lookups to source-owned material rows only. */
+function isProjectedMaterialContentRoute(
+  route: PublicRoute | undefined
+): route is PublicContentRoute {
+  return Boolean(
+    route &&
+      route.kind !== "curriculum-context" &&
+      isMaterialContentRoute(route)
+  );
 }
 
 /**
@@ -90,7 +95,7 @@ export async function resolveMaterialRoute(params: MaterialParams) {
 export function listMaterialStaticParams(rawLocale?: string) {
   const locale = rawLocale ? getLocaleOrThrow(rawLocale) : undefined;
 
-  return readMaterialRoutes()
+  const params = readMaterialRoutes()
     .filter((route) => !locale || route.locale === locale)
     .filter(isMaterialLessonRoute)
     .map((route) => {
@@ -98,6 +103,8 @@ export function listMaterialStaticParams(rawLocale?: string) {
 
       return { subject, topic, lesson };
     });
+
+  return selectLearningStaticParams(params);
 }
 
 /**
@@ -126,12 +133,8 @@ export function readMaterialHeaderLink(
   route: PublicContentRoute,
   context: MaterialContextIdentity | undefined
 ) {
-  return resolveMaterialHeaderLink({
+  return readStaticPublicLearningIndex().resolveMaterialHeaderLink({
     context,
-    refs: listMaterialContextRefs({
-      contentRoutes: readMaterialRoutes(),
-      curriculumRoutes: readCurriculumRoutes(),
-    }),
     route,
   });
 }

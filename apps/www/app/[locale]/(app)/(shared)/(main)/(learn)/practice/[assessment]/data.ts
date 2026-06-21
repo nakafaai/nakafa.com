@@ -12,6 +12,7 @@ import {
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/practice/[assessment]/[domain]/[[...path]]/routes";
 import { readExerciseSetSourceParts } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/practice/[assessment]/[domain]/[[...path]]/source";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { selectLearningStaticParams } from "@/lib/routing/prerender";
 
 type PracticeProgramParams = Promise<{ assessment: string; locale: string }>;
 
@@ -47,7 +48,7 @@ export function listPracticeProgramStaticParams(rawLocale?: string) {
     paramsByPath.set(`${route.locale}:${assessment}`, { assessment });
   }
 
-  return Array.from(paramsByPath.values());
+  return selectLearningStaticParams(Array.from(paramsByPath.values()));
 }
 
 /** Resolves one canonical practice program root from projected set rows. */

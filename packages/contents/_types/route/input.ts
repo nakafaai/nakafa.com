@@ -16,3 +16,15 @@ export const RouteInputsSchema = Schema.Struct({
 });
 
 export type RouteInputs = Schema.Schema.Type<typeof RouteInputsSchema>;
+
+/** Detects source overrides that must bypass default static route caches. */
+export function hasCustomRouteInputs(inputs: RouteInputs) {
+  return Boolean(
+    inputs.assessments ||
+      inputs.curricula ||
+      inputs.curriculumNodes ||
+      inputs.domains ||
+      inputs.materials ||
+      inputs.programs
+  );
+}
