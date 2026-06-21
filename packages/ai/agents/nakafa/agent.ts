@@ -13,8 +13,7 @@ import {
   prepareExerciseStep,
   prepareReadStep,
   prepareTaxonomyAnswerStep,
-  selectExerciseRef,
-  shouldReadAfterSearch,
+  readSearchFollowup,
 } from "@repo/ai/agents/nakafa/step";
 import { exercise } from "@repo/ai/agents/nakafa/tools/exercise";
 import { quran } from "@repo/ai/agents/nakafa/tools/quran";
@@ -86,17 +85,14 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
                   Effect.provideService(NakafaSearch, searchService),
                   Effect.tap((output) =>
                     Effect.sync(() => {
-                      if (input.section !== "exercises") {
-                        hasPendingContentRead =
-                          hasPendingContentRead ||
-                          shouldReadAfterSearch(input, output.result);
-                        return;
+                      const followup = readSearchFollowup(input, output.result);
+
+                      if (Option.isSome(followup.exerciseRef)) {
+                        pendingExerciseRef = followup.exerciseRef;
                       }
 
-                      pendingExerciseRef = selectExerciseRef(
-                        input,
-                        output.result
-                      );
+                      hasPendingContentRead =
+                        hasPendingContentRead || followup.shouldReadContent;
                     })
                   ),
                   Effect.map((output) => output.text)

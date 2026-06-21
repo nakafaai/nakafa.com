@@ -1,5 +1,6 @@
 import { createExerciseProjection } from "@repo/contents/_types/graph/exercise";
 import {
+  getExerciseQuestionNumberSegment,
   isNumberSegment,
   joinRoute,
   normalizeSourceRouteProjection,
@@ -80,9 +81,11 @@ export function getExerciseQuestionRouteForNumber(
   }
 
   if (projection.kind === "exercise-question") {
-    return projection.exercise.questionSegment === `${exerciseNumber}`
-      ? projection.route
-      : null;
+    const questionNumber = getExerciseQuestionNumberSegment(
+      String(projection.exercise.questionSegment)
+    );
+
+    return questionNumber === `${exerciseNumber}` ? projection.route : null;
   }
 
   if (projection.kind !== "exercise-set") {
@@ -214,15 +217,61 @@ function createProjectionDraft(
     return createQuranProjection(route, segments);
   }
 
-  if (root === "subject") {
-    return createSubjectProjection(route, segments);
-  }
-
-  if (root === "exercises") {
-    return createExerciseProjection(route, segments);
+  if (root === "material") {
+    return createMaterialProjection(route, segments);
   }
 
   return null;
+}
+
+/** Projects final material source routes into graph metadata. */
+function createMaterialProjection(route: string, segments: readonly string[]) {
+  const [kindSegment, ...materialSegments] = segments;
+
+  if (kindSegment === "lesson") {
+    return createMaterialLessonProjection(route, materialSegments);
+  }
+
+  if (kindSegment === "practice") {
+    return createExerciseProjection(route, materialSegments);
+  }
+
+  return null;
+}
+
+/** Projects a curriculum-neutral lesson material route into graph metadata. */
+function createMaterialLessonProjection(
+  route: string,
+  segments: readonly string[]
+) {
+  const [domain, topic, section, ...extraSegments] = segments;
+
+  if (!(domain && topic) || extraSegments.length > 0) {
+    return null;
+  }
+
+  const lensSegments = ["material", "lesson", domain];
+  const conceptSegments = ["material", "lesson", domain, topic];
+
+  if (!section) {
+    return {
+      conceptSegments,
+      kind: "curriculum-topic",
+      learningObjectSegments: ["material-topic", domain, topic],
+      lensSegments,
+      parentRoute: joinRoute("material", "lesson", domain),
+      route,
+    } satisfies SourceRouteProjectionDraft;
+  }
+
+  return {
+    conceptSegments,
+    kind: "curriculum-lesson",
+    learningObjectSegments: ["material-section", domain, topic, section],
+    lensSegments,
+    parentRoute: joinRoute("material", "lesson", domain, topic),
+    route,
+  } satisfies SourceRouteProjectionDraft;
 }
 
 /** Projects an article route into article-domain graph metadata. */
@@ -261,38 +310,6 @@ function createQuranProjection(route: string, segments: readonly string[]) {
     lensSegments: ["quran"],
     parentRoute: "quran",
     quran: { surahSegment },
-    route,
-  } satisfies SourceRouteProjectionDraft;
-}
-
-/** Projects a subject topic or section route into curriculum graph metadata. */
-function createSubjectProjection(route: string, segments: readonly string[]) {
-  const [school, grade, subject, topic, section, ...extraSegments] = segments;
-
-  if (!(school && grade && subject && topic) || extraSegments.length > 0) {
-    return null;
-  }
-
-  const lensSegments = ["subject", school, grade, subject];
-  const conceptSegments = ["subject", subject, topic];
-
-  if (!section) {
-    return {
-      conceptSegments,
-      kind: "subject-topic",
-      learningObjectSegments: ["subject-topic", subject, topic],
-      lensSegments,
-      parentRoute: joinRoute("subject", school, grade, subject),
-      route,
-    } satisfies SourceRouteProjectionDraft;
-  }
-
-  return {
-    conceptSegments,
-    kind: "subject-section",
-    learningObjectSegments: ["subject-section", subject, topic, section],
-    lensSegments,
-    parentRoute: joinRoute("subject", school, grade, subject, topic),
     route,
   } satisfies SourceRouteProjectionDraft;
 }

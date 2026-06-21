@@ -15,17 +15,15 @@ import type { ReactNode } from "react";
 import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
 import { DeferredComments } from "@/components/comments/deferred";
 import { ComingSoon } from "@/components/shared/coming-soon";
-import {
-  LayoutMaterial,
-  LayoutMaterialContent,
-  LayoutMaterialFooter,
-  LayoutMaterialHeader,
-  LayoutMaterialMain,
-  LayoutMaterialToc,
-} from "@/components/shared/layout-material";
+import { FooterContent } from "@/components/shared/footer-content";
+import { HeaderContent } from "@/components/shared/header-content";
+import { LayoutContent } from "@/components/shared/layout-content";
+import { LayoutMaterialContent } from "@/components/shared/material/content";
+import { LayoutMaterial } from "@/components/shared/material/layout";
+import { LayoutMaterialToc } from "@/components/shared/material/toc";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
 import { importContentModuleOrNull } from "@/lib/content/module";
-import { fetchRuntimeArticlePage } from "@/lib/content/runtime";
+import { fetchRuntimeArticlePage } from "@/lib/content/runtime/pages";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
@@ -35,6 +33,15 @@ import { generateSEOMetadata } from "@/lib/utils/seo/generator";
 import type { SEOContext } from "@/lib/utils/seo/types";
 import { getStaticParams } from "@/lib/utils/system";
 
+/** Extracts one array item type from JSON-LD props without duplicating the schema. */
+type ArrayItem<T> = T extends readonly (infer Item)[] ? Item : T;
+
+/** Author object shape accepted by the Article JSON-LD component. */
+type ArticleJsonLdAuthor = ArrayItem<
+  Parameters<typeof ArticleJsonLd>[0]["author"]
+>;
+
+/** Validates localized article route params before metadata and rendering touch content modules. */
 async function getResolvedParams(
   params: PageProps<"/[locale]/articles/[category]/[slug]">["params"]
 ) {
@@ -51,6 +58,7 @@ async function getResolvedParams(
   return { category, locale, slug };
 }
 
+/** Builds article metadata from the projected article route and runtime content row. */
 export async function generateMetadata({
   params,
 }: {
@@ -137,11 +145,12 @@ async function getArticleMetadataData({
   return { content, filePath };
 }
 
+/** Non-null runtime article row after metadata/page lookup has passed the 404 guard. */
 type ArticleRuntimePage = NonNullable<
   Awaited<ReturnType<typeof getArticleMetadataData>>["content"]
 >;
 
-// Generate bottom-up static params
+/** Prebuilds article pages from the runtime route catalog instead of filesystem-only slugs. */
 export function generateStaticParams() {
   return getStaticParams({
     basePath: "articles",
@@ -185,11 +194,13 @@ export default async function Page({
     formatContentDateISO(contentMetadata.date),
     () => contentMetadata.date
   );
-  const authorJsonLd = contentMetadata.authors.map((author) => ({
-    "@type": "Person" as const,
-    name: author.name,
-    url: `https://nakafa.com/${locale}/contributor`,
-  }));
+  const authorJsonLd: ArticleJsonLdAuthor[] = contentMetadata.authors.map(
+    (author) => ({
+      "@type": "Person",
+      name: author.name,
+      url: `https://nakafa.com/${locale}/contributor`,
+    })
+  );
 
   return (
     <>
@@ -272,7 +283,7 @@ async function ArticleShell({
   return (
     <LayoutMaterial>
       <LayoutMaterialContent>
-        <LayoutMaterialHeader
+        <HeaderContent
           content={raw}
           description={metadata.description}
           link={{
@@ -282,11 +293,11 @@ async function ArticleShell({
           slug={`/${locale}${filePath}`}
           title={metadata.title}
         />
-        <LayoutMaterialMain>
+        <LayoutContent>
           {headings.length === 0 && <ComingSoon />}
           {headings.length > 0 ? children : null}
-        </LayoutMaterialMain>
-        <LayoutMaterialFooter>{footer}</LayoutMaterialFooter>
+        </LayoutContent>
+        <FooterContent>{footer}</FooterContent>
         {toolbar}
       </LayoutMaterialContent>
       <LayoutMaterialToc

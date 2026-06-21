@@ -34,6 +34,7 @@ import {
   MenuGroup,
   MenuGroupLabel,
   MenuItem,
+  MenuLinkItem,
   MenuPopup,
   MenuRadioGroup,
   MenuRadioItem,
@@ -66,7 +67,7 @@ Use popup positioning props like `align` / `sideOffset` only when a layout needs
 - **Portal forwarding**: optional `portalProps` on `MenuPopup` → Base UI `Menu.Portal` (`keepMounted`, `container`, …). See [portal-props.md](../portal-props.md).
 - Use `MenuTrigger render={<Button ... />}` as the default trigger composition.
 - Use `openOnHover` on `MenuTrigger` only for explicit hover-driven UX.
-- Use `MenuItem render={<Link ... />}` for navigational entries.
+- Use `MenuLinkItem` for navigation links. If migrating from `MenuItem render={<Link href="..." />}`, change the component to `MenuLinkItem` but **keep `render={<Link … />}`** — do not swap to `href` alone with a router Link. Use `href` on `MenuLinkItem` only for plain anchors.
 - Use `MenuItem closeOnClick` for action menus where selection should always dismiss the popup.
 - Use `MenuCheckboxItem variant="switch"` for toggle-style preferences.
 - Use `MenuRadioGroup` + `MenuRadioItem` with a `defaultValue` when enforcing single-choice selection.
@@ -87,7 +88,7 @@ Use popup positioning props like `align` / `sideOffset` only when a layout needs
 - hover-activated trigger pattern: `p-menu-2`
 - checkbox item pattern: `p-menu-3`
 - radio group pattern: `p-menu-4`
-- link/navigation items via `render`: `p-menu-5`
+- link/navigation with `MenuLinkItem render={<Link … />}`: `p-menu-5`
 - grouped sections with labels + separators: `p-menu-6`
 - nested submenu pattern: `p-menu-7`
 - force close on click actions: `p-menu-8`

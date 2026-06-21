@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { startTryout } from "@/components/tryout/actions/tryout";
 
 const mocks = vi.hoisted(() => {
-  /** Test double for unauthenticated server-action calls. */
+  /** Test double for unauthenticated tryout cache-seam calls. */
   class MockAuthenticationRequiredError extends Error {}
 
   return {

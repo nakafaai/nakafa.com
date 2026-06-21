@@ -28,7 +28,7 @@ export const getRecentlyViewed = query({
       .withIndex("by_userId_and_section_and_locale_and_lastViewedAt", (q) =>
         q
           .eq("userId", user.appUser._id)
-          .eq("section", "subject")
+          .eq("section", "material")
           .eq("locale", args.locale)
       )
       .order("desc")
@@ -46,27 +46,19 @@ export const getRecentlyViewed = query({
         .withIndex("by_content_id", (q) => q.eq("content_id", view.content_id))
         .unique();
 
-      if (route?.kind !== "subject-section") {
+      if (route?.kind !== "curriculum-lesson") {
         continue;
       }
 
-      const subject = await ctx.db
-        .query("subjectSections")
-        .withIndex("by_locale_and_slug", (q) =>
-          q.eq("locale", route.locale).eq("slug", route.route)
-        )
-        .unique();
-
-      if (!subject) {
+      if (!route.materialDomain) {
         continue;
       }
 
       results.push({
-        ...buildContentSearchRef(route),
+        ...toPublicContentRef(route),
         description: route.description ?? "",
-        grade: subject.grade,
         lastViewedAt: view.lastViewedAt,
-        material: subject.material,
+        materialDomain: route.materialDomain,
         title: route.title,
       });
     }
@@ -74,3 +66,24 @@ export const getRecentlyViewed = query({
     return results;
   },
 });
+
+/** Exposes only public content-ref fields accepted by the recent-view validator. */
+function toPublicContentRef(
+  route: Parameters<typeof buildContentSearchRef>[0]
+) {
+  const ref = buildContentSearchRef(route);
+
+  return {
+    alignmentId: ref.alignmentId,
+    assetId: ref.assetId,
+    conceptId: ref.conceptId,
+    content_id: ref.content_id,
+    learningObjectId: ref.learningObjectId,
+    lensId: ref.lensId,
+    locale: ref.locale,
+    markdown_url: ref.markdown_url,
+    route: ref.route,
+    section: ref.section,
+    url: ref.url,
+  };
+}

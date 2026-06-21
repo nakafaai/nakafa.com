@@ -151,7 +151,7 @@ const nakafaTestRuntime = {
       locale,
       locales: Array.from(locales),
       quran: { surah_count: 114 },
-      sections: ["articles", "subject", "exercises", "quran"],
+      sections: ["articles", "material", "quran"],
       subject: {
         categories: ["high-school"],
         grades: ["10"],
@@ -179,8 +179,8 @@ const nakafaTestRefs = [
   readNakafaContentRefFixture("en", "articles/politics/missing", "articles"),
   readNakafaContentRefFixture(
     "en",
-    "exercises/high-school/snbt/general-knowledge/try-out/2026/set-2",
-    "exercises"
+    "material/practice/assessment/snbt/general-knowledge/try-out-2026/set-2",
+    "material"
   ),
 ] as const;
 

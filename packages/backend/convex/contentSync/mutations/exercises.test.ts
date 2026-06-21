@@ -13,8 +13,10 @@ interface SyncedExerciseSet {
   exerciseType: string;
   exerciseTypeTitle: string;
   groupContentHash: string;
+  groupPublicPath: string;
   locale: Doc<"exerciseSets">["locale"];
   material: Doc<"exerciseSets">["material"];
+  publicPath: string;
   questionCount: number;
   searchDescription: string;
   searchText: string;
@@ -41,6 +43,7 @@ interface SyncedExerciseQuestion {
   locale: Doc<"exerciseQuestions">["locale"];
   material: Doc<"exerciseQuestions">["material"];
   number: number;
+  publicPath: string;
   questionBody: string;
   searchDescription: string;
   searchText: string;
@@ -60,12 +63,12 @@ interface SyncedExerciseChoice {
 }
 
 const SET_SLUG =
-  "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1";
+  "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1";
 const QUESTION_SLUG = `${SET_SLUG}/1`;
 const GROUP_SLUG =
-  "exercises/high-school/snbt/quantitative-knowledge/try-out/2026";
+  "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026";
 const SINGLE_GROUP_SLUG =
-  "exercises/high-school/snbt/quantitative-knowledge/practice";
+  "material/practice/assessment/snbt/quantitative-knowledge/practice";
 const SINGLE_SET_SLUG = `${SINGLE_GROUP_SLUG}/set-1`;
 const SET_CONTENT_ID = getGraphContentId(SET_SLUG);
 const QUESTION_CONTENT_ID = getGraphContentId(QUESTION_SLUG);
@@ -78,8 +81,10 @@ const BASE_SET: SyncedExerciseSet = {
   exerciseType: "try-out",
   exerciseTypeTitle: "Try Out",
   groupContentHash: "group-hash",
+  groupPublicPath: GROUP_SLUG,
   locale: "id",
   material: "quantitative-knowledge",
+  publicPath: SET_SLUG,
   questionCount: 1,
   searchDescription: "Old set description",
   searchText: "Set search text",
@@ -119,6 +124,7 @@ const BASE_QUESTION: SyncedExerciseQuestion = {
   locale: "id",
   material: "quantitative-knowledge",
   number: 1,
+  publicPath: QUESTION_SLUG,
   questionBody: "Question body",
   searchDescription: "Old question description",
   searchText: "Question body Answer body",
@@ -134,14 +140,31 @@ const BASE_QUESTION: SyncedExerciseQuestion = {
 function buildSet(
   overrides: Partial<SyncedExerciseSet> = {}
 ): SyncedExerciseSet {
-  return { ...BASE_SET, ...overrides };
+  const set = { ...BASE_SET, ...overrides };
+  const publicPath = overrides.publicPath ?? set.slug;
+
+  return {
+    ...set,
+    groupPublicPath: overrides.groupPublicPath ?? getParentPath(publicPath),
+    publicPath,
+  };
 }
 
 /** Builds a complete exercise question sync payload with focused overrides. */
 function buildQuestion(
   overrides: Partial<SyncedExerciseQuestion> = {}
 ): SyncedExerciseQuestion {
-  return { ...BASE_QUESTION, ...overrides };
+  const question = { ...BASE_QUESTION, ...overrides };
+
+  return {
+    ...question,
+    publicPath: overrides.publicPath ?? question.slug,
+  };
+}
+
+/** Returns the parent path for one slash-delimited fixture route. */
+function getParentPath(route: string) {
+  return route.split("/").slice(0, -1).join("/");
 }
 
 /** Returns the graph asset ID for an exercise route fixture. */
@@ -198,13 +221,13 @@ describe("contentSync/mutations/exercises", () => {
 
     expect(snapshot.nestedGroupRoute).toMatchObject({
       kind: "exercise-group",
-      parentRoute: "exercises/high-school/snbt/quantitative-knowledge",
+      parentRoute: "material/practice/assessment/snbt/quantitative-knowledge",
       route: GROUP_SLUG,
     });
     expect(snapshot.singleGroupRoute).toMatchObject({
       contentHash: "practice-group-hash",
       kind: "exercise-group",
-      parentRoute: "exercises/high-school/snbt/quantitative-knowledge",
+      parentRoute: "material/practice/assessment/snbt/quantitative-knowledge",
       route: SINGLE_GROUP_SLUG,
       title: "Practice",
     });
@@ -213,7 +236,7 @@ describe("contentSync/mutations/exercises", () => {
   it("rejects malformed set routes instead of deriving a parent route by slicing", async () => {
     const t = convexTest(schema, convexModules);
     const malformedSetSlug =
-      "exercises/high-school/snbt/quantitative-knowledge/set-1";
+      "material/practice/assessment/snbt/quantitative-knowledge/set-1";
 
     await expect(
       t.mutation(
@@ -237,7 +260,10 @@ describe("contentSync/mutations/exercises", () => {
           .withIndex("by_locale_and_route", (q) =>
             q
               .eq("locale", "id")
-              .eq("route", "exercises/high-school/snbt/quantitative-knowledge")
+              .eq(
+                "route",
+                "material/practice/assessment/snbt/quantitative-knowledge"
+              )
           )
           .collect()
     );
@@ -326,7 +352,8 @@ describe("contentSync/mutations/exercises", () => {
       contentHash: "group-hash",
       kind: "exercise-group",
       markdown: false,
-      route: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026",
+      route:
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026",
       title: "Try Out",
     });
     expect(searchRemoved).toEqual({ created: 0, unchanged: 0, updated: 1 });
@@ -418,7 +445,7 @@ describe("contentSync/mutations/exercises", () => {
       const authorLinks = await ctx.db
         .query("contentAuthors")
         .withIndex("by_contentId_and_contentType_and_authorId", (q) =>
-          q.eq("contentId", question._id).eq("contentType", "exercise")
+          q.eq("contentId", question._id).eq("contentType", "material")
         )
         .collect();
       const search = await ctx.db
@@ -523,6 +550,46 @@ describe("contentSync/mutations/exercises", () => {
     expect(questionDelete).toEqual({ deleted: 0 });
   });
 
+  it("deletes stale route-shaped exercise sets from the removed content tree", async () => {
+    const t = convexTest(schema, convexModules);
+    const removedRouteSegments = [
+      "exercises",
+      "high-school",
+      "tka",
+      "mathematics",
+      "try-out",
+      "2026",
+      "set-1",
+    ];
+    const staleSetId = await t.mutation(
+      async (ctx) =>
+        await ctx.db.insert("exerciseSets", {
+          category: "high-school",
+          exerciseType: "try-out",
+          locale: "id",
+          material: "mathematics",
+          questionCount: 0,
+          setName: "set-1",
+          slug: removedRouteSegments.join("/"),
+          syncedAt: 1,
+          title: "Set 1",
+          type: "tka",
+          year: "2026",
+        })
+    );
+
+    const result = await t.mutation(
+      internal.contentSync.mutations.exercises.deleteStaleExerciseSets,
+      { setIds: [staleSetId] }
+    );
+    const deletedSet = await t.query(
+      async (ctx) => await ctx.db.get(staleSetId)
+    );
+
+    expect(result).toEqual({ deleted: 1 });
+    expect(deletedSet).toBeNull();
+  });
+
   it("deletes stale exercise questions and skips IDs that already disappeared", async () => {
     const t = convexTest(schema, convexModules);
 
@@ -594,7 +661,7 @@ describe("contentSync/mutations/exercises", () => {
       const authorLinks = await ctx.db
         .query("contentAuthors")
         .withIndex("by_contentId_and_contentType_and_authorId", (q) =>
-          q.eq("contentId", ids.questionId).eq("contentType", "exercise")
+          q.eq("contentId", ids.questionId).eq("contentType", "material")
         )
         .collect();
       const search = await ctx.db

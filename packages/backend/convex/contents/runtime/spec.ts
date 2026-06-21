@@ -8,13 +8,11 @@ import {
   exercisesCategoryValidator,
   exercisesMaterialValidator,
   exercisesTypeValidator,
-  gradeValidator,
   localeValidator,
   materialValidator,
   nakafaSectionValidator,
-  subjectCategoryValidator,
 } from "@repo/backend/convex/lib/validators/contents";
-import { v } from "convex/values";
+import { type Infer, v } from "convex/values";
 import { literals, nullable } from "convex-helpers/validators";
 
 const contentAuthorValidator = v.object({
@@ -142,10 +140,13 @@ const runtimeContentRouteValidator = v.object({
   kind: contentRouteKindValidator,
   locale: localeValidator,
   markdown: v.boolean(),
+  materialDomain: v.optional(materialValidator),
   official: v.optional(v.boolean()),
   parentRoute: v.optional(v.string()),
   route: v.string(),
   section: nakafaSectionValidator,
+  sourceParentPath: v.optional(v.string()),
+  sourcePath: v.string(),
   syncedAt: v.number(),
   title: v.string(),
 });
@@ -172,24 +173,13 @@ const runtimeContentRouteArtifactPageValidator = v.object({
   syncedAt: v.number(),
 });
 
-const subjectOutlineSectionValidator = v.object({
-  route: v.string(),
-  title: v.string(),
-});
-
-const subjectOutlineTopicValidator = v.object({
-  description: v.optional(v.string()),
-  route: v.string(),
-  sections: v.array(subjectOutlineSectionValidator),
-  title: v.string(),
-});
-
 const apiContentItemValidator = v.object({
   ...learningGraphIdentityValidator.fields,
   locale: localeValidator,
   metadata: contentMetadataValidator,
   raw: v.string(),
   slug: v.string(),
+  sourcePath: v.string(),
   url: v.string(),
 });
 
@@ -204,6 +194,7 @@ const runtimeExerciseGraphProjectionValidator = v.object({
   content_id: graphContentIdValidator,
   locale: localeValidator,
   route: v.string(),
+  sourcePath: v.string(),
   url: v.string(),
 });
 
@@ -236,31 +227,17 @@ export const getArticlePageReturnValidator = nullable(
   })
 );
 
-export const getSubjectPageArgsValidator = {
+export const getCurriculumPageArgsValidator = {
   locale: localeValidator,
   slug: v.string(),
 };
 
-export const getSubjectPageReturnValidator = nullable(
+export const getCurriculumPageReturnValidator = nullable(
   v.object({
     ...runtimeContentBaseValidator.fields,
-    category: subjectCategoryValidator,
-    grade: gradeValidator,
-    material: materialValidator,
     section: v.string(),
     topic: v.string(),
   })
-);
-
-export const getSubjectOutlineArgsValidator = {
-  category: subjectCategoryValidator,
-  grade: gradeValidator,
-  locale: localeValidator,
-  material: materialValidator,
-};
-
-export const getSubjectOutlineReturnValidator = v.array(
-  subjectOutlineTopicValidator
 );
 
 export const getExerciseSetPageArgsValidator = {
@@ -342,20 +319,30 @@ export const getExerciseGroupPageReturnValidator = nullable(
   })
 );
 
-export const listContentRoutesByPrefixArgsValidator = {
+const listContentRoutesByPrefixArgsObjectValidator = v.object({
   cursor: v.union(v.string(), v.null()),
   limit: v.number(),
   locale: localeValidator,
   prefix: v.string(),
   section: nakafaSectionValidator,
-};
+});
+export const listContentRoutesByPrefixArgsValidator =
+  listContentRoutesByPrefixArgsObjectValidator.fields;
+export type ListContentRoutesByPrefixArgs = Infer<
+  typeof listContentRoutesByPrefixArgsObjectValidator
+>;
 
-export const listContentRoutesByKindPrefixArgsValidator = {
+const listContentRoutesByKindPrefixArgsObjectValidator = v.object({
   ...listContentRoutesByPrefixArgsValidator,
   kind: contentRouteKindValidator,
-};
+});
+export const listContentRoutesByKindPrefixArgsValidator =
+  listContentRoutesByKindPrefixArgsObjectValidator.fields;
+export type ListContentRoutesByKindPrefixArgs = Infer<
+  typeof listContentRoutesByKindPrefixArgsObjectValidator
+>;
 
-export const listContentRoutesByParentArgsValidator = {
+const listContentRoutesByParentArgsObjectValidator = v.object({
   cursor: v.union(v.string(), v.null()),
   kind: contentRouteKindValidator,
   limit: v.number(),
@@ -363,53 +350,97 @@ export const listContentRoutesByParentArgsValidator = {
   order: v.union(v.literal("date-desc"), v.literal("route")),
   parentRoute: v.string(),
   section: nakafaSectionValidator,
-};
+});
+export const listContentRoutesByParentArgsValidator =
+  listContentRoutesByParentArgsObjectValidator.fields;
+export type ListContentRoutesByParentArgs = Infer<
+  typeof listContentRoutesByParentArgsObjectValidator
+>;
 
 export const listContentRoutesPageReturnValidator =
   paginatedContentRoutesValidator;
 
-export const getContentRouteArtifactPageArgsValidator = {
+const getContentRouteArtifactPageArgsObjectValidator = v.object({
   locale: localeValidator,
   page: v.number(),
   section: nakafaSectionValidator,
-};
+});
+export const getContentRouteArtifactPageArgsValidator =
+  getContentRouteArtifactPageArgsObjectValidator.fields;
+export type GetContentRouteArtifactPageArgs = Infer<
+  typeof getContentRouteArtifactPageArgsObjectValidator
+>;
 
 export const getContentRouteArtifactPageReturnValidator = nullable(
   runtimeContentRouteArtifactPageValidator
 );
 
-export const listLatestContentRoutesArgsValidator = {
+const listLatestContentRoutesArgsObjectValidator = v.object({
   limit: v.number(),
   locale: localeValidator,
   section: nakafaSectionValidator,
-};
+});
+export const listLatestContentRoutesArgsValidator =
+  listLatestContentRoutesArgsObjectValidator.fields;
+export type ListLatestContentRoutesArgs = Infer<
+  typeof listLatestContentRoutesArgsObjectValidator
+>;
 
 export const listLatestContentRoutesReturnValidator = v.array(
   runtimeContentRouteValidator
 );
 
-export const listContentRouteCountsArgsValidator = {
+const listContentRouteCountsArgsObjectValidator = v.object({
   locale: localeValidator,
-};
+});
+export const listContentRouteCountsArgsValidator =
+  listContentRouteCountsArgsObjectValidator.fields;
+export type ListContentRouteCountsArgs = Infer<
+  typeof listContentRouteCountsArgsObjectValidator
+>;
 
 export const listContentRouteCountsReturnValidator = v.array(
   runtimeContentRouteCountValidator
 );
 
-export const getContentRouteArgsValidator = {
+const getContentRouteArgsObjectValidator = v.object({
   locale: localeValidator,
   route: v.string(),
-};
+});
+export const getContentRouteArgsValidator =
+  getContentRouteArgsObjectValidator.fields;
+export type GetContentRouteArgs = Infer<
+  typeof getContentRouteArgsObjectValidator
+>;
 
 export const getContentRouteReturnValidator = nullable(
   runtimeContentRouteValidator
 );
 
-export const getContentRouteByContentIdArgsValidator = {
+const getContentRouteByContentIdArgsObjectValidator = v.object({
   contentId: v.string(),
-};
+});
+export const getContentRouteByContentIdArgsValidator =
+  getContentRouteByContentIdArgsObjectValidator.fields;
+export type GetContentRouteByContentIdArgs = Infer<
+  typeof getContentRouteByContentIdArgsObjectValidator
+>;
 
 export const getContentRouteByContentIdReturnValidator = nullable(
+  runtimeContentRouteValidator
+);
+
+const getContentRouteBySourcePathArgsObjectValidator = v.object({
+  locale: localeValidator,
+  sourcePath: v.string(),
+});
+export const getContentRouteBySourcePathArgsValidator =
+  getContentRouteBySourcePathArgsObjectValidator.fields;
+export type GetContentRouteBySourcePathArgs = Infer<
+  typeof getContentRouteBySourcePathArgsObjectValidator
+>;
+
+export const getContentRouteBySourcePathReturnValidator = nullable(
   runtimeContentRouteValidator
 );
 
@@ -423,14 +454,14 @@ export const listArticleApiContentPageArgsValidator = {
 export const listArticleApiContentPageReturnValidator =
   paginatedApiContentValidator;
 
-export const listSubjectApiContentPageArgsValidator = {
+export const listMaterialApiContentPageArgsValidator = {
   cursor: v.union(v.string(), v.null()),
   limit: v.number(),
   locale: localeValidator,
   prefix: v.string(),
 };
 
-export const listSubjectApiContentPageReturnValidator =
+export const listMaterialApiContentPageReturnValidator =
   paginatedApiContentValidator;
 
 export const listQuranSurahsReturnValidator = v.array(
@@ -480,6 +511,3 @@ export const getQuranReferenceReturnValidator = nullable(
     ),
   })
 );
-
-export const contentRuntimeIntegrityErrorCode =
-  "CONTENT_RUNTIME_INTEGRITY_ERROR";

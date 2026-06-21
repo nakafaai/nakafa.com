@@ -6,9 +6,12 @@ import { GET } from "@/app/rss.xml/route";
 const mockFetchRuntimeQuranSurahs = vi.hoisted(() => vi.fn());
 const mockListRuntimeLatestContentRoutes = vi.hoisted(() => vi.fn());
 
-vi.mock("@/lib/content/runtime", () => ({
+vi.mock("@/lib/content/runtime/pages", () => ({
   /** Supplies deterministic Quran rows for the RSS route test. */
   fetchRuntimeQuranSurahs: mockFetchRuntimeQuranSurahs,
+}));
+
+vi.mock("@/lib/content/runtime/routes", () => ({
   /** Supplies deterministic latest content route rows for the RSS route test. */
   listRuntimeLatestContentRoutes: mockListRuntimeLatestContentRoutes,
 }));

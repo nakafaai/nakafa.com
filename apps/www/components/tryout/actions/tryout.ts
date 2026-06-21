@@ -60,7 +60,7 @@ function getCheckoutSuccessUrl({
   return new URL(localizedPath, env.SITE_URL).toString();
 }
 
-/** Maps the public Convex start result into the route-level server action result. */
+/** Maps the public Convex start result into the route-level UI result. */
 function getStartTryoutResult({
   locale,
   returnPath,
@@ -107,10 +107,10 @@ function recoverStartTryoutError(
 }
 
 /**
- * Starts one tryout attempt and invalidates the SSR route family that depends
- * on the new attempt state.
+ * Starts one tryout attempt through Convex and invalidates the Next route
+ * family that depends on the new attempt state.
  */
-const startTryoutEffect = Effect.fn("www.tryout.start")(function* ({
+const startTryoutAttemptMutation = Effect.fn("www.tryout.start")(function* ({
   partKeys,
   returnPath,
   ...args
@@ -144,16 +144,21 @@ const startTryoutEffect = Effect.fn("www.tryout.start")(function* ({
 });
 
 /**
- * Authenticates the public start-tryout Server Action before mutation work.
+ * Next cache-invalidation seam for starting one tryout attempt.
+ *
+ * Convex owns the data validation, authorization, and transaction. This route
+ * seam stays in Next because the successful mutation must invalidate cached
+ * tryout pages and may return a localized checkout success URL.
  *
  * @see https://nextjs.org/docs/app/guides/authentication#server-actions
+ * @see https://nextjs.org/docs/app/api-reference/functions/revalidatePath
  * @see https://nextjs.org/docs/app/guides/data-security#mutations
  */
 export async function startTryout(input: StartTryoutInput) {
   await requireAuth();
 
   return await Effect.runPromise(
-    startTryoutEffect(input).pipe(
+    startTryoutAttemptMutation(input).pipe(
       Effect.catchAll((error) => recoverStartTryoutError(error, input))
     )
   );

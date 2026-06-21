@@ -1,0 +1,71 @@
+export const metadata = {
+  title: "Determining Vector Resultant with Cosine Rule",
+  description:
+    "Learn how to determine the magnitude of the resultant of two vectors that form an angle using the cosine rule.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "2026-05-31",
+  subject: "Vector",
+};
+
+## When Two Vectors Form an Angle
+
+If two vectors point in the same direction, their resultant is a simple sum. If they point in opposite directions, their resultant is a difference. Many forces and displacements, however, form an angle with each other. In that situation, the resultant magnitude can be found using the **cosine rule**.
+
+This rule is used when the magnitudes of two vectors <InlineMath math="\vec{A}" /> and <InlineMath math="\vec{B}" /> are known, and the included angle <InlineMath math="\theta" /> between them is known.
+
+<BlockMath math="R=\sqrt{A^2+B^2+2AB\cos\theta}" />
+
+> Angle <InlineMath math="\theta" /> in the cosine rule is the angle between the two vectors when their tails are placed together.
+
+## Why Cosine Appears
+
+The cosine rule appears because the resultant of two vectors forms a triangle with two known sides. If the angle between the vectors is small, the vectors reinforce each other more strongly. If the angle approaches <InlineMath math="180^\circ" />, they cancel each other more.
+
+The value of <InlineMath math="\cos\theta" /> captures that change:
+
+| Included angle | Value of <InlineMath math="\cos\theta" /> | Physical meaning |
+| :------------- | :---------------------------------------- | :--------------- |
+| <InlineMath math="0^\circ" /> | <InlineMath math="1" /> | vectors point the same way and fully reinforce |
+| <InlineMath math="90^\circ" /> | <InlineMath math="0" /> | vectors are perpendicular |
+| <InlineMath math="180^\circ" /> | <InlineMath math="-1" /> | vectors point in opposite directions |
+
+When <InlineMath math="\theta=90^\circ" />, the cosine rule becomes the Pythagorean form because <InlineMath math="\cos90^\circ=0" />.
+
+## Resultant of Two Forces
+
+Two forces act at one point. The first force is <InlineMath math="10\text{ N}" />, the second force is <InlineMath math="8\text{ N}" />, and the angle between them is <InlineMath math="60^\circ" />. Find the resultant magnitude.
+
+Use the formula:
+
+<BlockMath math="\begin{aligned}
+R&=\sqrt{A^2+B^2+2AB\cos\theta} \\
+&=\sqrt{10^2+8^2+2(10)(8)\cos60^\circ} \\
+&=\sqrt{100+64+160(0.5)} \\
+&=\sqrt{244} \\
+&\approx15.6\text{ N}
+\end{aligned}" />
+
+The resultant is less than <InlineMath math="18\text{ N}" /> because the two forces are not perfectly aligned, but it is greater than either individual force because they still point in fairly similar directions.
+
+## Checking with Boundary Cases
+
+Boundary cases help check whether an answer is reasonable. If the angle is <InlineMath math="0^\circ" />, the formula should give <InlineMath math="A+B" />.
+
+<BlockMath math="R=\sqrt{A^2+B^2+2AB}=\sqrt{(A+B)^2}=A+B" />
+
+If the angle is <InlineMath math="180^\circ" />, the formula should give the difference of the magnitudes.
+
+<BlockMath math="R=\sqrt{A^2+B^2-2AB}=\sqrt{(A-B)^2}=\lvert A-B\rvert" />
+
+This check shows that the cosine rule is connected to the simpler same-direction, opposite-direction, and perpendicular-vector cases.
+
+## When to Choose the Cosine Rule
+
+Use the cosine rule when:
+
+- there are only two vectors;
+- both vector magnitudes are known;
+- the included angle is known;
+- the question asks for resultant magnitude.
+
+If there are more than two vectors or the angles are measured from coordinate axes, the component method is usually cleaner. The cosine rule is strongest when the problem is truly two vectors with one angle between them.

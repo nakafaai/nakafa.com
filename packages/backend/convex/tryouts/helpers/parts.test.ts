@@ -11,7 +11,7 @@ import { describe, expect, it } from "vitest";
 async function insertExerciseSet(ctx: MutationCtx, suffix: string) {
   return await ctx.db.insert("exerciseSets", {
     locale: "id",
-    slug: `exercises/high-school/snbt/quantitative-knowledge/try-out/2026/${suffix}`,
+    slug: `material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/${suffix}`,
     category: "high-school",
     type: "snbt",
     material: "quantitative-knowledge",

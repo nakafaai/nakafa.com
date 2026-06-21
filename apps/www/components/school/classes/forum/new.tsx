@@ -37,7 +37,7 @@ import { useParams, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Suspense } from "react";
 import { toast } from "sonner";
-import { getTag, getTagsByRole } from "@/components/school/classes/_data/tag";
+import { getTag, getTagsByRole } from "@/components/school/classes/data/tag";
 import { getSchoolClassesForumHref } from "@/components/school/classes/forum/helpers/routes";
 import { reportClientException } from "@/lib/analytics/client";
 import { useClass } from "@/lib/context/use-class";

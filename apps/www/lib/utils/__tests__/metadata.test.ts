@@ -47,12 +47,12 @@ describe("getOgUrl", () => {
 describe("getSocialMetadata", () => {
   it("builds complete Open Graph and Twitter metadata for content pages", () => {
     const image =
-      "/id/og/subject/high-school/11/mathematics/function-modeling/trigonometric-function-graph/image.png";
+      "/id/og/materi/matematika/pemodelan-fungsi/grafik-fungsi-trigonometri/image.png";
     const result = getSocialMetadata({
       title: "Grafik Fungsi Trigonometri",
       description: "Pelajari grafik fungsi trigonometri.",
       locale: "id",
-      path: "/id/subject/high-school/11/mathematics/function-modeling/trigonometric-function-graph",
+      path: "/id/materi/matematika/pemodelan-fungsi/grafik-fungsi-trigonometri",
       image,
       type: "article",
     });
@@ -60,7 +60,7 @@ describe("getSocialMetadata", () => {
     expect(result.openGraph).toMatchObject({
       title: "Grafik Fungsi Trigonometri",
       description: "Pelajari grafik fungsi trigonometri.",
-      url: "/id/subject/high-school/11/mathematics/function-modeling/trigonometric-function-graph",
+      url: "/id/materi/matematika/pemodelan-fungsi/grafik-fungsi-trigonometri",
       siteName: "Nakafa",
       locale: "id",
       type: "article",
@@ -88,8 +88,8 @@ describe("getSocialMetadata", () => {
       title: "Materi Kimia",
       description: "Belajar kimia.",
       locale: "id",
-      path: "/id/subject/high-school/10/chemistry",
-      image: "/id/og/subject/high-school/10/chemistry/image.png",
+      path: "/id/kurikulum/merdeka/kelas-10/kimia",
+      image: "/id/og/materi/kimia/image.png",
     });
 
     expect(result.openGraph.images).not.toContainEqual(

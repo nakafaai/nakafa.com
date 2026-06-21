@@ -33,7 +33,7 @@ v=DMARC1; p=none; rua=mailto:dmarc@example.com
 
 **Rollout:** `p=none` (monitor) → `p=quarantine; pct=25` → `p=reject`
 
-Learn more: https://resend.com/blog/dmarc-policy-modes 
+Learn more: https://resend.com/blog/dmarc-policy-modes
 
 ### Verify Your Setup
 

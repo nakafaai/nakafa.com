@@ -44,7 +44,7 @@ export const metadata = {
   title: "${title}",
   description: "${title} Description",
   authors: [{ name: "${title} Author" }],
-  date: "01/01/2024",
+  date: "2024-01-01",
   subject: "Mathematics"
 };
 
@@ -52,7 +52,7 @@ export const metadata = {
 `;
 
 const localeFileNames = new Set(["en.mdx", "id.mdx"]);
-const seoContentRoots = ["articles", "subject"] as const;
+const seoContentRoots = ["articles", "material"] as const;
 
 /** Returns the package root whether Vitest runs from the workspace or repo root. */
 function getContentsRoot() {
@@ -103,7 +103,7 @@ describe("extractMetadata", () => {
       title: "Valid",
       description: "Valid Description",
       authors: [{ name: "Valid Author" }],
-      date: "01/01/2024",
+      date: "2024-01-01",
       subject: "Mathematics",
     });
   });
@@ -119,7 +119,7 @@ describe("extractMetadata", () => {
 export const metadata = {
   title: "Broken",
   authors: [{ name: "Author" }],
-  date: "01/01/2024",
+  date: "2024-01-01",
 `);
 
     expect(Option.isNone(result)).toBe(true);
@@ -130,7 +130,7 @@ export const metadata = {
 export const metadata = {
   title: Broken,
   authors: [{ name: "Author" }],
-  date: "01/01/2024"
+  date: "2024-01-01"
 };
 `);
 
@@ -142,19 +142,19 @@ export const metadata = {
 export const metadata = {
   title: "Broken",
   authors: "Author",
-  date: "01/01/2024"
+  date: "2024-01-01"
 };
 `);
 
     expect(Option.isNone(result)).toBe(true);
   });
 
-  it("returns none when metadata date is not MM/DD/YYYY", () => {
+  it("returns none when metadata date is not ISO date-only", () => {
     const result = extractMetadata(`
 export const metadata = {
   title: "Broken",
   authors: [{ name: "Author" }],
-  date: "2024-01-01"
+  date: "not-a-date"
 };
 `);
 
@@ -222,7 +222,7 @@ describe("getContentMetadataWithRaw", () => {
     mockReadFile.mockResolvedValue(raw);
 
     const result = await Effect.runPromise(
-      getContentMetadataWithRaw("en", "subject/high-school/10/mathematics")
+      getContentMetadataWithRaw("en", "curriculum/high-school/10/mathematics")
     );
 
     expect(mockReadFile).toHaveBeenCalledTimes(1);
@@ -231,7 +231,7 @@ describe("getContentMetadataWithRaw", () => {
         title: "Algebra",
         description: "Algebra Description",
         authors: [{ name: "Algebra Author" }],
-        date: "01/01/2024",
+        date: "2024-01-01",
         subject: "Mathematics",
       },
       raw,
@@ -267,7 +267,7 @@ describe("getContentMetadataWithRaw", () => {
     mockReadFile.mockRejectedValue(new Error("missing file"));
 
     const result = await Effect.runPromise(
-      Effect.match(getContentMetadataWithRaw("en", "subject/missing"), {
+      Effect.match(getContentMetadataWithRaw("en", "curriculum/missing"), {
         onSuccess: () => null,
         onFailure: (error) => error,
       })
@@ -280,7 +280,7 @@ describe("getContentMetadataWithRaw", () => {
     mockReadFile.mockResolvedValue("# Metadata is missing");
 
     const result = await Effect.runPromise(
-      Effect.match(getContentMetadataWithRaw("en", "subject/no-metadata"), {
+      Effect.match(getContentMetadataWithRaw("en", "curriculum/no-metadata"), {
         onSuccess: () => null,
         onFailure: (error) => error,
       })
@@ -317,7 +317,7 @@ describe("getContentMetadata", () => {
     mockReadFile.mockResolvedValue("# Metadata is missing");
 
     const result = await Effect.runPromise(
-      Effect.match(getContentMetadata("subject/no-metadata", "en"), {
+      Effect.match(getContentMetadata("curriculum/no-metadata", "en"), {
         onSuccess: () => null,
         onFailure: (error) => error,
       })
@@ -332,7 +332,7 @@ describe("getContentsMetadata", () => {
     mockGetMDXSlugsForLocale.mockReturnValue([
       "articles/politics/valid-entry",
       "articles/politics/missing-entry",
-      "subject/high-school/10/algebra",
+      "subjects/mathematics/algebra",
     ]);
     mockReadFile.mockImplementation((filePath: string) => {
       if (filePath.includes("valid-entry/en.mdx")) {
@@ -356,7 +356,7 @@ describe("getContentsMetadata", () => {
           title: "Valid Entry",
           description: "Valid Entry Description",
           authors: [{ name: "Valid Entry Author" }],
-          date: "01/01/2024",
+          date: "2024-01-01",
           subject: "Mathematics",
         },
         slug: "articles/politics/valid-entry",
@@ -368,11 +368,11 @@ describe("getContentsMetadata", () => {
           title: "Algebra",
           description: "Algebra Description",
           authors: [{ name: "Algebra Author" }],
-          date: "01/01/2024",
+          date: "2024-01-01",
           subject: "Mathematics",
         },
-        slug: "subject/high-school/10/algebra",
-        url: "https://nakafa.com/en/subject/high-school/10/algebra",
+        slug: "subjects/mathematics/algebra",
+        url: "https://nakafa.com/en/subjects/mathematics/algebra",
       },
     ]);
   });
@@ -380,7 +380,7 @@ describe("getContentsMetadata", () => {
   it("filters metadata by basePath and locale", async () => {
     mockGetMDXSlugsForLocale.mockReturnValue([
       "articles/politics/dynastic-politics",
-      "subject/high-school/10/mathematics",
+      "subjects/mathematics/algebra",
     ]);
     mockReadFile.mockImplementation((filePath: string) => {
       if (filePath.includes("dynastic-politics/id.mdx")) {
@@ -406,7 +406,7 @@ describe("getContentsMetadata", () => {
           title: "Politik Dinasti",
           description: "Politik Dinasti Description",
           authors: [{ name: "Politik Dinasti Author" }],
-          date: "01/01/2024",
+          date: "2024-01-01",
           subject: "Mathematics",
         },
         slug: "articles/politics/dynastic-politics",

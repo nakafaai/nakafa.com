@@ -20,7 +20,7 @@ describe("tryouts/helpers/attemptLifecycle", () => {
       const tryout = await insertTryoutSkeleton(ctx, "part-start-snapshot");
       const replacementSetId = await ctx.db.insert("exerciseSets", {
         locale: "id",
-        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/part-start-replacement",
+        slug: "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/part-start-replacement",
         category: "high-school",
         type: "snbt",
         material: "quantitative-knowledge",

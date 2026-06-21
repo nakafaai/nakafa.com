@@ -1,0 +1,246 @@
+import { UnitCircle } from "@repo/design-system/components/contents/mathematics/unit-circle";
+import { Triangle } from "@repo/design-system/components/contents/mathematics/triangle";
+
+export const metadata = {
+  title: "Trigonometric Function of Arbitrary Angle",
+  description: "Learn trigonometric functions for any angle using unit circle method. Learn quadrant signs, reference angles, and solve windmill rotation problems.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "2025-05-18",
+  subject: "Functions and Their Modeling",
+};
+
+## Understanding Angles Greater than a Right Angle
+
+Have you ever observed a clock? When the minute hand moves from <InlineMath math="12" /> to <InlineMath math="6" />, it forms a <InlineMath math="180^\circ" /> angle. Even in one complete rotation, the hand forms a <InlineMath math="360^\circ" /> angle.
+
+In mathematics, we need to understand trigonometric values for angles like these. Not just limited to acute angles in right triangles.
+
+## Unit Circle
+
+To understand trigonometric functions of arbitrary angles, we use the unit circle. A circle with a radius of exactly <InlineMath math="1 \text{ unit}" /> centered at point <InlineMath math="O(0,0)" />.
+
+<UnitCircle
+  title="Unit Circle Exploration"
+  description="Move the slider to see how coordinates change as the angle rotates."
+  angle={30}
+/>
+
+Let's understand in detail:
+
+- Angle <InlineMath math="\theta" /> is always measured from the positive <InlineMath math="x" />-axis
+- Positive direction is counterclockwise
+- Every point on the circle has coordinates <InlineMath math="(x, y)" />
+
+**Important definitions:**
+
+<MathContainer>
+  <BlockMath math="\sin \theta = y \text{ (vertical coordinate)}" />
+  <BlockMath math="\cos \theta = x \text{ (horizontal coordinate)}" />
+  <BlockMath math="\tan \theta = \frac{y}{x} = \frac{\sin \theta}{\cos \theta}, \quad x \neq 0" />
+</MathContainer>
+
+## Why Do Signs Change in Each Quadrant?
+
+Notice that as the point moves around the circle, the <InlineMath math="x" /> and <InlineMath math="y" /> coordinates can be positive or negative. This is what causes the signs of trigonometric functions to change.
+
+<Triangle
+  title="Sign Change Visualization"
+  description={<>Observe how <InlineMath math="\sin" />, <InlineMath math="\cos" />, and <InlineMath math="\tan" /> values change as the angle passes through each quadrant.</>}
+  angle={0}
+  size={2}
+  labels={{
+    opposite: "Opposite Side",
+    adjacent: "Adjacent Side",
+    hypotenuse: "Hypotenuse",
+  }}
+/>
+
+**Signs in each quadrant:**
+
+| Quadrant | Angle Range                                | <InlineMath math="x" /> | <InlineMath math="y" /> | <InlineMath math="\sin" /> | <InlineMath math="\cos" /> | <InlineMath math="\tan" /> |
+| -------- | ------------------------------------------ | --- | --- | --- | --- | --- |
+| <InlineMath math="\text{I}" />   | <InlineMath math="0^\circ < \theta < 90^\circ" />    | <InlineMath math="+" /> | <InlineMath math="+" /> | <InlineMath math="+" /> | <InlineMath math="+" /> | <InlineMath math="+" /> |
+| <InlineMath math="\text{II}" />  | <InlineMath math="90^\circ < \theta < 180^\circ" />  | <InlineMath math="-" /> | <InlineMath math="+" /> | <InlineMath math="+" /> | <InlineMath math="-" /> | <InlineMath math="-" /> |
+| <InlineMath math="\text{III}" /> | <InlineMath math="180^\circ < \theta < 270^\circ" /> | <InlineMath math="-" /> | <InlineMath math="-" /> | <InlineMath math="-" /> | <InlineMath math="-" /> | <InlineMath math="+" /> |
+| <InlineMath math="\text{IV}" />  | <InlineMath math="270^\circ < \theta < 360^\circ" /> | <InlineMath math="+" /> | <InlineMath math="-" /> | <InlineMath math="-" /> | <InlineMath math="+" /> | <InlineMath math="-" /> |
+
+To avoid confusion, we can remember this with **"All Students Take Calculus"**. In quadrant I **A**ll are positive, in quadrant II only <InlineMath math="\sin" /> is positive, in quadrant III only <InlineMath math="\tan" /> is positive, in quadrant IV only <InlineMath math="\cos" /> is positive.
+
+## Reference Angle
+
+A reference angle is an acute angle (<InlineMath math="0^\circ" /> to <InlineMath math="90^\circ" />) formed between the terminal side of an angle and the nearest <InlineMath math="x" />-axis. This concept allows us to use trigonometric values of acute angles that we've already memorized.
+
+<UnitCircle
+  title="Understanding Reference Angle"
+  description={<>Notice the acute angle formed with the <InlineMath math="x" />-axis as the angle changes.</>}
+  angle={135}
+/>
+
+**How to determine reference angle (<InlineMath math="\alpha" />):**
+
+- Quadrant I: <InlineMath math="\alpha = \theta" />
+- Quadrant II: <InlineMath math="\alpha = 180^\circ - \theta" />
+- Quadrant III: <InlineMath math="\alpha = \theta - 180^\circ" />
+- Quadrant IV: <InlineMath math="\alpha = 360^\circ - \theta" />
+
+## Determining Trigonometric Values
+
+Here are systematic steps to determine trigonometric function values:
+
+1. **Simplify the angle** (if greater than <InlineMath math="360^\circ" /> or negative)
+2. **Determine the quadrant** where the angle lies
+3. **Calculate the reference angle**
+4. **Use the reference angle value** with the appropriate sign for the quadrant
+
+### Angle in Quadrant Two
+
+**Problem:** Determine <InlineMath math="\sin 120^\circ" />, <InlineMath math="\cos 120^\circ" />, and <InlineMath math="\tan 120^\circ" />
+
+**Solution:**
+
+- Angle <InlineMath math="120^\circ" /> lies in quadrant II (since <InlineMath math="90^\circ < 120^\circ < 180^\circ" />)
+- Reference angle: <InlineMath math="\alpha = 180^\circ - 120^\circ = 60^\circ" />
+- In quadrant II: <InlineMath math="\sin(+), \cos(-), \tan(-)" />
+
+Using special angle values for <InlineMath math="60^\circ" />:
+
+<MathContainer>
+  <BlockMath math="\sin 120^\circ = +\sin 60^\circ = \frac{\sqrt{3}}{2}" />
+  <BlockMath math="\cos 120^\circ = -\cos 60^\circ = -\frac{1}{2}" />
+  <BlockMath math="\tan 120^\circ = -\tan 60^\circ = -\sqrt{3}" />
+</MathContainer>
+
+### Angle in Quadrant Three
+
+**Problem:** Determine trigonometric values for angle <InlineMath math="240^\circ" />
+
+**Solution:**
+
+- Angle <InlineMath math="240^\circ" /> lies in quadrant III (since <InlineMath math="180^\circ < 240^\circ < 270^\circ" />)
+- Reference angle: <InlineMath math="\alpha = 240^\circ - 180^\circ = 60^\circ" />
+- In quadrant III: <InlineMath math="\sin(-), \cos(-), \tan(+)" />
+
+Using special angle values for <InlineMath math="60^\circ" />:
+
+<MathContainer>
+  <BlockMath math="\sin 240^\circ = -\sin 60^\circ = -\frac{\sqrt{3}}{2}" />
+  <BlockMath math="\cos 240^\circ = -\cos 60^\circ = -\frac{1}{2}" />
+  <BlockMath math="\tan 240^\circ = +\tan 60^\circ = \sqrt{3}" />
+</MathContainer>
+
+### Angle in Quadrant Four
+
+**Problem:** Determine trigonometric values for angle <InlineMath math="300^\circ" />
+
+**Solution:**
+
+- Angle <InlineMath math="300^\circ" /> lies in quadrant IV (since <InlineMath math="270^\circ < 300^\circ < 360^\circ" />)
+
+- Reference angle: <InlineMath math="\alpha = 360^\circ - 300^\circ = 60^\circ" />
+- In quadrant IV: <InlineMath math="\sin(-), \cos(+), \tan(-)" />
+
+Using special angle values for <InlineMath math="60^\circ" />:
+
+<MathContainer>
+  <BlockMath math="\sin 300^\circ = -\sin 60^\circ = -\frac{\sqrt{3}}{2}" />
+  <BlockMath math="\cos 300^\circ = +\cos 60^\circ = \frac{1}{2}" />
+  <BlockMath math="\tan 300^\circ = -\tan 60^\circ = -\sqrt{3}" />
+</MathContainer>
+
+## Handling Special Angles
+
+### Negative Angles
+
+When the angle is negative, we move clockwise. Use the properties:
+
+- <InlineMath math="\sin(-\theta) = -\sin \theta" /> (odd function)
+- <InlineMath math="\cos(-\theta) = \cos \theta" /> (even function)
+- <InlineMath math="\tan(-\theta) = -\tan \theta" /> (odd function)
+
+**Example:** <InlineMath math="\sin(-30^\circ) = -\sin 30^\circ = -\frac{1}{2}" />
+
+### Angles Greater than One Full Rotation
+
+Use the periodicity property. Subtract or add multiples of <InlineMath math="360^\circ" /> until the angle is in the range of <InlineMath math="0^\circ" /> to <InlineMath math="360^\circ" />.
+
+**Example:**
+
+- <InlineMath math="750^\circ = 750^\circ - 2(360^\circ) = 750^\circ - 720^\circ = 30^\circ" />
+- Therefore <InlineMath math="\sin 750^\circ = \sin 30^\circ = \frac{1}{2}" />
+
+## Exercises
+
+1. Determine the values of <InlineMath math="\sin 315^\circ" />, <InlineMath math="\cos 315^\circ" />, and <InlineMath math="\tan 315^\circ" />.
+
+2. Calculate <InlineMath math="\sin(-60^\circ) + \cos 210^\circ - \tan(-135^\circ)" />.
+
+3. If <InlineMath math="\sin \theta = \frac{3}{5}" /> and <InlineMath math="\theta" /> is in quadrant II, determine <InlineMath math="\cos \theta" /> and <InlineMath math="\tan \theta" />.
+
+4. Simplify <InlineMath math="\sin 840^\circ \cdot \cos(-330^\circ)" />.
+
+5. A windmill rotates <InlineMath math="1050^\circ" /> from its initial position. If the initial position of the blade is on the positive <InlineMath math="x" />-axis, determine the coordinates of the blade tip on the unit circle after this rotation.
+
+### Answer Key
+
+1. For angle <InlineMath math="315^\circ" />, we need to determine its quadrant first.
+
+   Since <InlineMath math="270^\circ < 315^\circ < 360^\circ" />, the angle is in quadrant IV.
+
+   The reference angle is <InlineMath math="360^\circ - 315^\circ = 45^\circ" />.
+
+   <MathContainer>
+     <BlockMath math="\sin 315^\circ = -\sin 45^\circ = -\frac{\sqrt{2}}{2}" />
+     <BlockMath math="\cos 315^\circ = +\cos 45^\circ = \frac{\sqrt{2}}{2}" />
+     <BlockMath math="\tan 315^\circ = -\tan 45^\circ = -1" />
+   </MathContainer>
+
+2. Let's calculate each term separately. For <InlineMath math="\sin(-60^\circ)" />, use the odd function property.
+
+   For <InlineMath math="\cos 210^\circ" />, the angle is in quadrant III with reference <InlineMath math="30^\circ" />.
+
+   For <InlineMath math="\tan(-135^\circ)" />, first convert to positive angle.
+
+   <MathContainer>
+     <BlockMath math="\sin(-60^\circ) = -\sin 60^\circ = -\frac{\sqrt{3}}{2}" />
+     <BlockMath math="\cos 210^\circ = -\cos 30^\circ = -\frac{\sqrt{3}}{2}" />
+     <BlockMath math="\tan(-135^\circ) = -\tan 135^\circ = -(-\tan 45^\circ) = 1" />
+     <BlockMath math="\text{Result} = -\frac{\sqrt{3}}{2} - \frac{\sqrt{3}}{2} + 1 = -\sqrt{3} + 1" />
+   </MathContainer>
+
+3. Given <InlineMath math="\sin \theta = \frac{3}{5}" /> in quadrant II.
+
+   Use the Pythagorean identity to find <InlineMath math="\cos \theta" />.
+
+   Remember that in quadrant II, <InlineMath math="\cos" /> is negative.
+
+   <MathContainer>
+     <BlockMath math="\sin^2 \theta + \cos^2 \theta = 1" />
+     <BlockMath math="\left(\frac{3}{5}\right)^2 + \cos^2 \theta = 1" />
+     <BlockMath math="\cos^2 \theta = 1 - \frac{9}{25} = \frac{16}{25}" />
+     <BlockMath math="\cos \theta = -\frac{4}{5} \text{ (negative in quadrant II)}" />
+     <BlockMath math="\tan \theta = \frac{\sin \theta}{\cos \theta} = \frac{3/5}{-4/5} = -\frac{3}{4}" />
+   </MathContainer>
+
+4. First simplify the angles.
+
+   <BlockMath math="840^\circ = 840^\circ - 2(360^\circ) = 120^\circ" />
+
+   For <InlineMath math="-330^\circ" />, add <InlineMath math="360^\circ" /> to get <InlineMath math="30^\circ" />.
+
+   <MathContainer>
+     <BlockMath math="\sin 840^\circ = \sin 120^\circ = \sin(180^\circ - 60^\circ) = \sin 60^\circ = \frac{\sqrt{3}}{2}" />
+     <BlockMath math="\cos(-330^\circ) = \cos 330^\circ = \cos(360^\circ - 30^\circ) = \cos 30^\circ = \frac{\sqrt{3}}{2}" />
+     <BlockMath math="\sin 840^\circ \cdot \cos(-330^\circ) = \frac{\sqrt{3}}{2} \cdot \frac{\sqrt{3}}{2} = \frac{3}{4}" />
+   </MathContainer>
+
+5. Angle <InlineMath math="1050^\circ" /> needs to be simplified first.
+
+   <BlockMath math="1050^\circ = 1050^\circ - 2(360^\circ) = 1050^\circ - 720^\circ = 330^\circ" />
+
+   Angle <InlineMath math="330^\circ" /> is in quadrant IV with reference angle <InlineMath math="30^\circ" />.
+
+   <MathContainer>
+     <BlockMath math="x = \cos 330^\circ = \cos 30^\circ = \frac{\sqrt{3}}{2}" />
+     <BlockMath math="y = \sin 330^\circ = -\sin 30^\circ = -\frac{1}{2}" />
+     <BlockMath math="\text{Blade tip coordinates: } \left(\frac{\sqrt{3}}{2}, -\frac{1}{2}\right)" />
+   </MathContainer>

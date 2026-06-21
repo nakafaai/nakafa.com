@@ -235,7 +235,7 @@ describe("nakafa search tool", () => {
           locale: "en",
           offset: 0,
           queries: ["cari materi fungsi rasional kelas 11"],
-          section: "subject",
+          section: "material",
         },
         locale: "id",
         toolCallId: "search-locale",
@@ -253,8 +253,8 @@ describe("nakafa search tool", () => {
                     description: "Pelajari fungsi rasional.",
                     locale: input.locale,
                     route:
-                      "subject/high-school/11/mathematics/function-modeling/rational-function",
-                    section: "subject",
+                      "material/lesson/mathematics/function-modeling/rational-function",
+                    section: "material",
                     title: "Fungsi Rasional",
                   }),
                 ],
@@ -339,7 +339,7 @@ describe("nakafa search tool", () => {
           locale: "en",
           offset: 0,
           queries: ["kimia kelas 10", "hukum kekekalan massa", "stoikiometri"],
-          section: "subject",
+          section: "material",
         },
         locale: "id",
         toolCallId: "search-queries",
@@ -357,8 +357,8 @@ describe("nakafa search tool", () => {
                     description: "Pelajari hukum kekekalan massa.",
                     locale: input.locale,
                     route:
-                      "subject/high-school/10/chemistry/basic-chemistry-laws/mass-conservation-law",
-                    section: "subject",
+                      "material/lesson/chemistry/basic-chemistry-laws/mass-conservation-law",
+                    section: "material",
                     title: "Hukum Kekekalan Massa",
                   }),
                 ],
@@ -404,7 +404,7 @@ describe("nakafa search tool", () => {
           locale: "id",
           offset: 0,
           queries: ["SNBT Pengetahuan Kuantitatif try out 2026 set 2"],
-          section: "exercises",
+          section: "material",
         },
         locale: "id",
         toolCallId: "search-exercise-set",
@@ -425,8 +425,8 @@ describe("nakafa search tool", () => {
                       "SMA SNBT Pengetahuan Kuantitatif Try Out 2026 Set 2 20 soal",
                     locale: input.locale,
                     route:
-                      "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
-                    section: "exercises",
+                      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-2",
+                    section: "material",
                     title: "SNBT Pengetahuan Kuantitatif Try Out 2026 Set 2",
                   }),
                 ],
@@ -449,6 +449,67 @@ describe("nakafa search tool", () => {
     ).toEqual([["SNBT Pengetahuan Kuantitatif try out 2026 set 2"]]);
   });
 
+  it("prefers Indonesian set rows over matching question rows", async () => {
+    const { writer } = createWriter();
+    const output = await Effect.runPromise(
+      search({
+        input: {
+          limit: 2,
+          locale: "id",
+          offset: 0,
+          queries: ["set 1"],
+          section: "material",
+        },
+        locale: "id",
+        toolCallId: "search-exercise-set-priority",
+        writer,
+      }).pipe(
+        Effect.provideService(NakafaSearch, {
+          /** Returns a tied Indonesian question/set pair to prove route-owned question detection. */
+          search: (input) => {
+            const setItem = searchItem({
+              description: "SNBT set 1",
+              locale: input.locale,
+              route:
+                "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
+              section: "material",
+              title: "SNBT set 1",
+            });
+
+            return Effect.succeed(
+              searchResult({
+                count: 2,
+                has_more: false,
+                items: [
+                  {
+                    ...setItem,
+                    content_id: "asset:id:exercise:snbt:2026:set-1:q2",
+                    route:
+                      "latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1/soal-2",
+                    url: "https://nakafa.com/id/latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1/soal-2",
+                  },
+                  {
+                    ...setItem,
+                    route:
+                      "latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1",
+                    url: "https://nakafa.com/id/latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1",
+                  },
+                ],
+                limit: input.limit,
+                offset: input.offset,
+              })
+            );
+          },
+        })
+      )
+    );
+
+    expect(output.result?.items.map((item) => item.route)).toEqual([
+      "latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1",
+      "latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1/soal-2",
+    ]);
+  });
+
   it("does not change an already anchored exercise query", async () => {
     const { writer } = createWriter();
     const capturedQueries: string[][] = [];
@@ -461,7 +522,7 @@ describe("nakafa search tool", () => {
           locale: "id",
           offset: 0,
           queries: [query],
-          section: "exercises",
+          section: "material",
         },
         locale: "id",
         toolCallId: "search-exercise-number",
@@ -500,7 +561,7 @@ describe("nakafa search tool", () => {
           locale: "id",
           offset: 0,
           queries: ["Pengetahuan Kuantitatif SNBT"],
-          section: "exercises",
+          section: "material",
         },
         locale: "id",
         toolCallId: "search-exercise-query",
@@ -538,7 +599,7 @@ describe("nakafa search tool", () => {
           limit: 10,
           locale: "id",
           offset: 0,
-          section: "exercises",
+          section: "material",
         },
         locale: "id",
         toolCallId: "search-exercise-without-query",
@@ -575,7 +636,7 @@ describe("nakafa search tool", () => {
           locale: "id",
           offset: 0,
           queries: ["pola bilangan", "Penalaran Matematika"],
-          section: "exercises",
+          section: "material",
         },
         locale: "id",
         toolCallId: "search-exercise-combined",
@@ -595,8 +656,8 @@ describe("nakafa search tool", () => {
                         "SNBT Penalaran Matematika Try Out 2026 Set 1 pola bilangan",
                       locale: input.locale,
                       route:
-                        "exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1",
-                      section: "exercises",
+                        "material/practice/assessment/snbt/mathematical-reasoning/try-out-2026/set-1",
+                      section: "material",
                       title: "SNBT Penalaran Matematika Try Out 2026 Set 1",
                     }),
                   ],
@@ -616,8 +677,8 @@ describe("nakafa search tool", () => {
                       "Soal Bahasa Indonesia yang menyebut pola bilangan.",
                     locale: input.locale,
                     route:
-                      "exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1",
-                    section: "exercises",
+                      "material/practice/assessment/snbt/indonesian-language/try-out-2026/set-1/question-1",
+                    section: "material",
                     title: "Soal 1 Bahasa Indonesia",
                   }),
                 ],
@@ -659,7 +720,7 @@ describe("nakafa search tool", () => {
           locale: "id",
           offset: 0,
           queries: ["pola bilangan", "Penalaran Matematika"],
-          section: "exercises",
+          section: "material",
         },
         locale: "id",
         toolCallId: "search-exercise-scoped-error",
@@ -715,7 +776,7 @@ describe("nakafa search tool", () => {
           locale: "id",
           offset: 0,
           queries: ["!!!", "???"],
-          section: "exercises",
+          section: "material",
         },
         locale: "id",
         toolCallId: "search-exercise-empty-tokens",
@@ -727,8 +788,8 @@ describe("nakafa search tool", () => {
             const query = input.queries?.at(0) ?? "empty";
             const route =
               query === "???"
-                ? "exercises/high-school/snbt/general-reasoning/try-out/2026/set-2"
-                : "exercises/high-school/snbt/general-reasoning/try-out/2026/set-1";
+                ? "material/practice/assessment/snbt/general-reasoning/try-out-2026/set-2"
+                : "material/practice/assessment/snbt/general-reasoning/try-out-2026/set-1";
 
             return Effect.succeed(
               searchResult({
@@ -739,7 +800,7 @@ describe("nakafa search tool", () => {
                     description: "",
                     locale: input.locale,
                     route,
-                    section: "exercises",
+                    section: "material",
                     title: query,
                   }),
                 ],
@@ -767,7 +828,7 @@ describe("nakafa search tool", () => {
           locale: "id",
           offset: 0,
           queries: ["pola", "bilangan"],
-          section: "exercises",
+          section: "material",
         },
         locale: "id",
         toolCallId: "search-exercise-tie",
@@ -787,8 +848,8 @@ describe("nakafa search tool", () => {
                       excerpt: "pola",
                       locale: input.locale,
                       route:
-                        "exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1",
-                      section: "exercises",
+                        "material/practice/assessment/snbt/mathematical-reasoning/try-out-2026/set-1",
+                      section: "material",
                       title: "Set Penalaran Matematika",
                     }),
                   ],
@@ -808,8 +869,8 @@ describe("nakafa search tool", () => {
                     excerpt: "pola",
                     locale: input.locale,
                     route:
-                      "exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1",
-                    section: "exercises",
+                      "material/practice/assessment/snbt/indonesian-language/try-out-2026/set-1/question-1",
+                    section: "material",
                     title: "Soal 1",
                   }),
                 ],
@@ -838,7 +899,7 @@ describe("nakafa search tool", () => {
           locale: "id",
           offset: 0,
           queries: ["fungsi kuadrat"],
-          section: "subject",
+          section: "material",
         },
         locale: "id",
         toolCallId: "search-exercise-no-hints",
@@ -876,7 +937,7 @@ describe("nakafa search tool", () => {
           locale: "id",
           offset: 0,
           queries: ["pola bilangan aritmatika dasar"],
-          section: "subject",
+          section: "material",
         },
         locale: "id",
         toolCallId: "search-subject-ranking",
@@ -894,16 +955,16 @@ describe("nakafa search tool", () => {
                     description: "Operasi aritmatika dasar.",
                     locale: input.locale,
                     route:
-                      "subject/high-school/10/mathematics/arithmetic/arithmetic-operators",
-                    section: "subject",
+                      "material/lesson/mathematics/arithmetic/arithmetic-operators",
+                    section: "material",
                     title: "Operator Aritmatika",
                   }),
                   searchItem({
                     description: "Pola bilangan pada barisan aritmatika.",
                     locale: input.locale,
                     route:
-                      "subject/high-school/10/mathematics/sequence/arithmetic-sequence",
-                    section: "subject",
+                      "material/lesson/mathematics/sequence/arithmetic-sequence",
+                    section: "material",
                     title: "Barisan Aritmatika",
                   }),
                 ],

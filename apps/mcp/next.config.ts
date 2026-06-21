@@ -1,6 +1,8 @@
 import { config, withAnalyzer } from "@repo/next-config";
+import { analyzeKeys } from "@repo/next-config/keys";
 import type { NextConfig } from "next";
-import { env } from "@/env";
+
+const configEnv = analyzeKeys();
 
 const nextConfig = {
   ...config,
@@ -8,6 +10,6 @@ const nextConfig = {
 } satisfies NextConfig;
 
 const analyzedConfig =
-  env.ANALYZE === "true" ? withAnalyzer(nextConfig) : nextConfig;
+  configEnv.ANALYZE === "true" ? withAnalyzer(nextConfig) : nextConfig;
 
 export default analyzedConfig;

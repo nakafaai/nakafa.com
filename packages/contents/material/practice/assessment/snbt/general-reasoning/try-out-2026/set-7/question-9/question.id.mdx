@@ -1,0 +1,25 @@
+import { VisitorChart } from "./chart";
+
+export const metadata = {
+  title: "Soal 9",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "2026-01-26",
+};
+
+Berikut ini adalah data pengunjung dua fasilitas di SMA MMM pada bulan September pada minggu pertama dari hari Senin hingga Jumat.
+
+<VisitorChart
+  dayLabels={{
+    friday: "Jumat",
+    monday: "Senin",
+    thursday: "Kamis",
+    tuesday: "Selasa",
+    wednesday: "Rabu",
+  }}
+  description="Jumlah pengunjung Perpustakaan dan Laboratorium (Senin-Jumat)."
+  seriesLabels={{ laboratory: "Laboratorium", library: "Perpustakaan" }}
+  title="Data Pengunjung Fasilitas SMA MMM"
+  yAxisLabel="Jumlah Pengunjung"
+/>
+
+Berdasarkan data tersebut, jumlah pengunjung tertinggi kedua di dua fasilitas SMA MMM tersebut terjadi pada hari ...

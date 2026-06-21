@@ -16,9 +16,9 @@ import { convexTest } from "convex-test";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const publishedAt = 1_744_416_000_000;
-const subjectTopicSlug = "subject/high-school/10/mathematics/vector-operations";
-const subjectSectionSlug =
-  "subject/high-school/10/mathematics/vector-operations/vector-addition";
+const curriculumTopicSlug = "material/lesson/mathematics/vector-operations";
+const curriculumLessonSlug =
+  "material/lesson/mathematics/vector-operations/vector-addition";
 const articleSlug = "articles/politics/dynastic-politics-asian-values";
 
 const englishSubject = {
@@ -62,12 +62,12 @@ const indonesianArticle = {
 const englishSubjectSource = getTestAudioContent({
   contentHash: englishSubject.contentHash,
   locale: englishSubject.locale,
-  route: subjectSectionSlug,
+  route: curriculumLessonSlug,
 });
 const indonesianSubjectSource = getTestAudioContent({
   contentHash: indonesianSubject.contentHash,
   locale: indonesianSubject.locale,
-  route: subjectSectionSlug,
+  route: curriculumLessonSlug,
 });
 const englishArticleSource = getTestAudioContent({
   contentHash: englishArticle.contentHash,
@@ -103,38 +103,34 @@ function getArticleSource(
     : indonesianArticleSource;
 }
 
-/** Inserts one subject section and optionally its compact graph audio source. */
+/** Inserts one curriculum lesson and optionally its compact graph audio source. */
 async function insertSubject(
   ctx: MutationCtx,
   source: typeof englishSubject | typeof indonesianSubject,
   syncSource = true
 ) {
   const sourceContent = getSubjectSource(source);
-  const topicId = await ctx.db.insert("subjectTopics", {
-    category: "high-school",
-    grade: "10",
+  const topicId = await ctx.db.insert("curriculumTopics", {
     locale: source.locale,
     material: "mathematics",
     order: 0,
     sectionCount: 15,
-    slug: subjectTopicSlug,
+    slug: curriculumTopicSlug,
     syncedAt: 1,
     title: source.topicTitle,
     topic: "vector-operations",
   });
 
-  await ctx.db.insert("subjectSections", {
+  await ctx.db.insert("curriculumLessons", {
     body: source.body,
-    category: "high-school",
     contentHash: source.contentHash,
     date: publishedAt,
     description: source.description,
-    grade: "10",
     locale: source.locale,
     material: "mathematics",
     order: 0,
     section: source.section,
-    slug: subjectSectionSlug,
+    slug: curriculumLessonSlug,
     subject: source.subject,
     syncedAt: 1,
     title: source.title,
@@ -297,7 +293,7 @@ describe("contents/mutations/audio", () => {
       }
     );
     const queuedItems = await t.query(
-      async (ctx) => await readPendingQueueItems(ctx, subjectSectionSlug)
+      async (ctx) => await readPendingQueueItems(ctx, curriculumLessonSlug)
     );
 
     expect(result).toEqual({ processed: 1, queued: 2 });
@@ -319,7 +315,7 @@ describe("contents/mutations/audio", () => {
       }
     );
     const queuedItems = await t.query(
-      async (ctx) => await readPendingQueueItems(ctx, subjectSectionSlug)
+      async (ctx) => await readPendingQueueItems(ctx, curriculumLessonSlug)
     );
 
     expect(result).toEqual({ processed: 1, queued: 1 });
@@ -362,7 +358,7 @@ describe("contents/mutations/audio", () => {
       }
     );
     const queuedItems = await t.query(
-      async (ctx) => await readPendingQueueItems(ctx, subjectSectionSlug)
+      async (ctx) => await readPendingQueueItems(ctx, curriculumLessonSlug)
     );
 
     expect(result).toEqual({ processed: 1, queued: 1 });
@@ -420,7 +416,7 @@ describe("contents/mutations/audio", () => {
         "audioGenerationQueue",
         completedQueueId
       ),
-      queuedItems: await readPendingQueueItems(ctx, subjectSectionSlug),
+      queuedItems: await readPendingQueueItems(ctx, curriculumLessonSlug),
     }));
 
     expect(result).toEqual({ processed: 1, queued: 2 });
@@ -450,7 +446,7 @@ describe("contents/mutations/audio", () => {
     expect(queuedItems).toHaveLength(1);
     expect(queuedItems[0]?.content_id).toBe(englishSubjectSource.content_id);
     expect(queuedItems[0]?.locale).toBe(englishSubject.locale);
-    expect(queuedItems[0]?.route).toBe(subjectSectionSlug);
+    expect(queuedItems[0]?.route).toBe(curriculumLessonSlug);
   });
 
   it("queues one item per supported locale for an article candidate", async () => {

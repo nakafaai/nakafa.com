@@ -1,7 +1,7 @@
 import { type Infer, v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
-export const AUDIO_CONTENT_TYPES = ["article", "subject"] as const;
+export const AUDIO_CONTENT_TYPES = ["article", "material"] as const;
 export const audioContentTypeValidator = literals(...AUDIO_CONTENT_TYPES);
 export type AudioContentType = Infer<typeof audioContentTypeValidator>;
 

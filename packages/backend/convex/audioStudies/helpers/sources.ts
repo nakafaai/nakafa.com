@@ -73,7 +73,7 @@ export async function getAudioContentSourceByRoute(
   ctx: AudioSourceReaderCtx,
   route: Doc<"contentRoutes">
 ) {
-  if (route.kind !== "article" && route.kind !== "subject-section") {
+  if (route.kind !== "article" && route.kind !== "curriculum-lesson") {
     return null;
   }
 

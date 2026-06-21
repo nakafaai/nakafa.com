@@ -5,6 +5,7 @@ import type {
   NakafaAgentSearchInput,
   NakafaAgentSearchResult,
 } from "@repo/contents/_lib/agent/schema/search";
+import { readPracticeSourceRouteByPath } from "@repo/contents/_types/route/practice/identity";
 import type { ModelMessage } from "ai";
 import { Option } from "effect";
 
@@ -28,21 +29,25 @@ export function selectExerciseRef(
     return Option.none();
   }
 
-  if (input.section !== "exercises") {
+  if (input.section !== "material") {
     return Option.none();
   }
 
-  const items = result.items.filter((item) => item.section === "exercises");
+  const items = result.items.flatMap((item) => {
+    const sourceRoute = readPracticeSearchSourceRoute(item);
+
+    return sourceRoute ? [{ item, sourceRoute }] : [];
+  });
   const firstItem = items.at(0);
 
   if (!firstItem) {
     return Option.none();
   }
 
-  const setRoute = getNakafaExerciseSetRoute(firstItem.route);
-  const setItem = items.find((item) => item.route === setRoute);
+  const setRoute = getNakafaExerciseSetRoute(firstItem.sourceRoute);
+  const setItem = items.find(({ sourceRoute }) => sourceRoute === setRoute);
 
-  return Option.some(setItem?.content_id ?? firstItem.content_id);
+  return Option.some(setItem?.item.content_id ?? firstItem.item.content_id);
 }
 
 /**
@@ -104,13 +109,46 @@ export function shouldReadAfterSearch(
     return false;
   }
 
-  if (input.section === "exercises" || input.section === "quran") {
+  if (input.section === "quran") {
     return false;
   }
 
   return result.items.some(
-    (item) => item.section === "articles" || item.section === "subject"
+    (item) =>
+      item.section === "articles" ||
+      (item.section === "material" && !readPracticeSearchSourceRoute(item))
   );
+}
+
+/**
+ * Classifies the forced follow-up tools needed after one Nakafa search result.
+ *
+ * Mixed material results can contain both concrete lessons and practice rows;
+ * callers must preserve both intents so Nina reads lesson context instead of
+ * answering from snippets after selecting an exercise reference.
+ */
+export function readSearchFollowup(
+  input: NakafaAgentSearchInput,
+  result: NakafaAgentSearchResult | null
+) {
+  return {
+    exerciseRef: selectExerciseRef(input, result),
+    shouldReadContent: shouldReadAfterSearch(input, result),
+  };
+}
+
+/** Resolves practice search rows whether search stored source or public route identity. */
+function readPracticeSearchSourceRoute(
+  item: NakafaAgentSearchResult["items"][number]
+) {
+  if (item.section !== "material") {
+    return;
+  }
+
+  return readPracticeSourceRouteByPath({
+    locale: item.locale,
+    route: item.route,
+  })?.sourcePath;
 }
 
 /**

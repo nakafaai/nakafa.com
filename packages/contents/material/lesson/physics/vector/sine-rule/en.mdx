@@ -1,0 +1,76 @@
+export const metadata = {
+  title: "Determining Vector Resultant Direction with Sine Rule",
+  description:
+    "Learn how to determine the direction of the resultant of two vectors using the sine rule after the resultant magnitude is known.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "2026-05-31",
+  subject: "Vector",
+};
+
+## Resultant Direction Needs a New Angle
+
+The cosine rule gives the resultant magnitude, but it does not fully give the direction. In vector problems, an answer such as <InlineMath math="15.6\text{ N}" /> is incomplete if the force direction is not stated.
+
+For two vectors, the resultant direction can be found using the **sine rule**. This rule works on the resultant triangle formed by the two vectors and their resultant.
+
+<BlockMath math="\frac{\sin\phi}{B}=\frac{\sin\theta}{R}" />
+
+Here, <InlineMath math="\theta" /> is the included angle between <InlineMath math="\vec{A}" /> and <InlineMath math="\vec{B}" />, <InlineMath math="R" /> is the resultant magnitude, and <InlineMath math="\phi" /> is the angle between <InlineMath math="\vec{A}" /> and resultant <InlineMath math="\vec{R}" />.
+
+> The sine rule is usually used after the resultant magnitude is known.
+
+## Reading the Angle Being Asked For
+
+Before calculating, decide the reference direction. If the question asks for the resultant direction relative to <InlineMath math="\vec{A}" />, the required angle is from <InlineMath math="\vec{A}" /> toward <InlineMath math="\vec{R}" />.
+
+If the question asks for direction relative to <InlineMath math="\vec{B}" />, the angle is different. Do not swap angles without checking the vector triangle.
+
+A common relationship is:
+
+<MathContainer>
+  <BlockMath math="\sin\phi=\frac{B\sin\theta}{R}" />
+  <BlockMath math="\phi=\sin^{-1}\left(\frac{B\sin\theta}{R}\right)" />
+</MathContainer>
+
+This formula finds the resultant angle relative to vector <InlineMath math="\vec{A}" />. Because the side opposite angle <InlineMath math="\phi" /> has magnitude <InlineMath math="B" />, <InlineMath math="B" /> appears in the numerator.
+
+## Resultant Force Direction
+
+Two forces act at one point. <InlineMath math="A=10\text{ N}" />, <InlineMath math="B=8\text{ N}" />, and the included angle is <InlineMath math="60^\circ" />. From the cosine rule, the resultant magnitude is <InlineMath math="R\approx15.6\text{ N}" />.
+
+Now find angle <InlineMath math="\phi" /> between <InlineMath math="\vec{A}" /> and <InlineMath math="\vec{R}" />.
+
+<BlockMath math="\begin{aligned}
+\sin\phi&=\frac{B\sin\theta}{R} \\
+&=\frac{8\sin60^\circ}{15.6} \\
+&=\frac{8(0.866)}{15.6} \\
+&\approx0.444
+\end{aligned}" />
+
+Therefore:
+
+<BlockMath math="\phi=\sin^{-1}(0.444)\approx26.4^\circ" />
+
+So the resultant force is about <InlineMath math="15.6\text{ N}" /> at <InlineMath math="26.4^\circ" /> from <InlineMath math="\vec{A}" /> toward <InlineMath math="\vec{B}" />.
+
+## Checking with Components
+
+The same direction can be checked using components. If <InlineMath math="\vec{A}" /> is placed on the positive <InlineMath math="x" /> axis, then:
+
+<MathContainer>
+  <BlockMath math="R_x=A+B\cos\theta" />
+  <BlockMath math="R_y=B\sin\theta" />
+  <BlockMath math="\tan\phi=\frac{R_y}{R_x}" />
+</MathContainer>
+
+For the same example:
+
+<BlockMath math="\tan\phi=\frac{8\sin60^\circ}{10+8\cos60^\circ}=\frac{6.928}{14}\approx0.495" />
+
+This gives <InlineMath math="\phi\approx26.4^\circ" />, matching the sine rule. This check is useful when you are unsure which angle is being found.
+
+## When the Sine Rule Is Less Practical
+
+The sine rule is less practical when there are more than two vectors or when each vector direction is already given relative to coordinate axes. In those cases, the component method is usually safer because all directions are organized along the <InlineMath math="x" /> and <InlineMath math="y" /> axes.
+
+Use the sine rule when the problem is clear: two vectors, a known included angle, a known resultant magnitude, and a requested resultant direction relative to one of the vectors.

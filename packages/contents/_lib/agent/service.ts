@@ -1,7 +1,7 @@
 import { getNakafaAgentExercise } from "@repo/contents/_lib/agent/exercise/read";
 import { getNakafaAgentQuranReference } from "@repo/contents/_lib/agent/quran/read";
 import { getNakafaAgentMarkdown } from "@repo/contents/_lib/agent/read/markdown";
-import { parseNakafaContentRef } from "@repo/contents/_lib/agent/refs";
+import { resolveNakafaContentRef } from "@repo/contents/_lib/agent/refs";
 import { getNakafaAgentTaxonomy } from "@repo/contents/_lib/agent/taxonomy/read";
 import { getSurah } from "@repo/contents/_lib/quran";
 import { parseQuranSurahNumberForRoute } from "@repo/contents/_types/graph/projection";
@@ -13,7 +13,7 @@ export const verifyNakafaContent = Effect.fn("Nakafa.verify")(function* (
   readContent: typeof getNakafaAgentMarkdown = getNakafaAgentMarkdown,
   loadSurah: typeof getSurah = getSurah
 ) {
-  const ref = parseNakafaContentRef(contentRef);
+  const ref = yield* resolveNakafaContentRef(contentRef);
 
   if (Option.isNone(ref)) {
     return false;

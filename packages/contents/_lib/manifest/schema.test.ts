@@ -33,7 +33,7 @@ describe("ContentManifestRouteSchema", () => {
 
 describe("content manifest support modules", () => {
   it("ignores empty route roots", () => {
-    expect(getRouteRoots(["", "/subject/high-school"])).toEqual(["/subject"]);
+    expect(getRouteRoots(["", "/kurikulum/merdeka"])).toEqual(["/kurikulum"]);
   });
 
   it("treats invalid folder paths as empty route groups", () => {

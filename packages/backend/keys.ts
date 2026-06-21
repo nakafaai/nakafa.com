@@ -22,9 +22,20 @@ export const convexKeys = () =>
     },
   });
 
+/** Defines the public Convex site URL used by auth and public HTTP adapters. */
+export const convexSiteKeys = () =>
+  createEnv({
+    client: {
+      NEXT_PUBLIC_CONVEX_SITE_URL: urlSchema,
+    },
+    runtimeEnv: {
+      NEXT_PUBLIC_CONVEX_SITE_URL: process.env.NEXT_PUBLIC_CONVEX_SITE_URL,
+    },
+  });
+
 export const keys = () =>
   createEnv({
-    extends: [convexKeys()],
+    extends: [convexKeys(), convexSiteKeys()],
     server: {
       CONVEX_URL: stringSchema,
       CONVEX_SITE_URL: urlSchema,
@@ -37,7 +48,6 @@ export const keys = () =>
       INTERNAL_CONTENT_API_KEY: secretSchema,
     },
     client: {
-      NEXT_PUBLIC_CONVEX_SITE_URL: urlSchema,
       NEXT_PUBLIC_POLAR_SERVER: Schema.standardSchemaV1(
         Schema.Literal("production", "sandbox")
       ),
@@ -50,7 +60,6 @@ export const keys = () =>
       AUTH_GOOGLE_SECRET: process.env.AUTH_GOOGLE_SECRET,
       POLAR_ACCESS_TOKEN: process.env.POLAR_ACCESS_TOKEN,
       POLAR_WEBHOOK_SECRET: process.env.POLAR_WEBHOOK_SECRET,
-      NEXT_PUBLIC_CONVEX_SITE_URL: process.env.NEXT_PUBLIC_CONVEX_SITE_URL,
       NEXT_PUBLIC_POLAR_SERVER: process.env.NEXT_PUBLIC_POLAR_SERVER,
       BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
       INTERNAL_CONTENT_API_KEY: process.env.INTERNAL_CONTENT_API_KEY,

@@ -79,8 +79,8 @@ function readContentRouteCounts(args: unknown) {
 
   return [
     countRow(input.locale, "articles", 1),
-    countRow(input.locale, "subject", 2),
-    countRow(input.locale, "exercises", 3),
+    countRow(input.locale, "material", 2),
+    countRow(input.locale, "material", 3),
     countRow(input.locale, "quran", 2),
   ];
 }

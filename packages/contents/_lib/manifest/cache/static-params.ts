@@ -26,9 +26,16 @@ export function getContentStaticParams({
   locales?: readonly string[];
 }) {
   return Effect.runPromise(
-    Effect.map(getContentStaticParamManifestForParams(locales), (manifest) =>
-      filterParamsByLocales(manifest.staticParams[basePath], locales)
-    )
+    Effect.map(getContentStaticParamManifestForParams(locales), (manifest) => {
+      if (!(basePath in manifest.staticParams)) {
+        return [];
+      }
+
+      return filterParamsByLocales(
+        manifest.staticParams[basePath as keyof typeof manifest.staticParams],
+        locales
+      );
+    })
   );
 }
 

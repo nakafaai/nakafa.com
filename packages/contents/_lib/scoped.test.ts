@@ -55,6 +55,13 @@ vi.mock("@repo/contents/_lib/io/content", async () => {
 });
 
 vi.mock("@repo/contents/_lib/module", () => ({
+  getLocalizedContentPath: (cleanPath: string, locale: string) => {
+    if (cleanPath.endsWith("/answer") || cleanPath.endsWith("/question")) {
+      return `${cleanPath}.${locale}.mdx`;
+    }
+
+    return `${cleanPath}/${locale}.mdx`;
+  },
   importContentModule: mockImportContentModule,
 }));
 
@@ -63,7 +70,7 @@ export const metadata = {
   title: "Raw Title",
   description: "Raw Description",
   authors: [{ name: "Author" }],
-  date: "01/01/2024"
+  date: "2024-01-01"
 };
 `;
 
@@ -98,9 +105,9 @@ describe("scoped content helpers", () => {
 
     const result = await Effect.runPromise(
       getScopedContent(
-        "subject",
+        "material",
         "en",
-        "subject/high-school/10/mathematics/algebra/basic-concept",
+        "material/lesson/mathematics/algebra/basic-concept",
         { includeMDX: false }
       )
     );
@@ -118,9 +125,9 @@ describe("scoped content helpers", () => {
     const failure = await Effect.runPromise(
       Effect.flip(
         getScopedContent(
-          "subject",
+          "material",
           "en",
-          "subject/high-school/10/mathematics/algebra/basic-concept",
+          "material/lesson/mathematics/algebra/basic-concept",
           { includeMDX: false }
         )
       )
@@ -135,7 +142,7 @@ describe("scoped content helpers", () => {
         getScopedContent(
           "articles",
           "en",
-          "subject/high-school/10/mathematics/algebra/basic-concept",
+          "material/lesson/mathematics/algebra/basic-concept",
           { includeMDX: false }
         )
       )
@@ -162,9 +169,9 @@ describe("scoped content helpers", () => {
     const failure = await Effect.runPromise(
       Effect.flip(
         getScopedContent(
-          "exercises",
+          "material",
           "en",
-          "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1/1/_question",
+          "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-1/question",
           { includeMDX: false }
         )
       )
@@ -179,7 +186,7 @@ describe("scoped content helpers", () => {
         title: "Scoped Title",
         description: "Scoped Description",
         authors: [{ name: "Author" }],
-        date: "01/01/2024",
+        date: "2024-01-01",
       },
       default: () => "Scoped MDX",
     });
@@ -208,7 +215,7 @@ describe("scoped content helpers", () => {
           title: cleanPath,
           description: "Scoped Description",
           authors: [{ name: "Author" }],
-          date: "01/01/2024",
+          date: "2024-01-01",
         },
         default: () => "Scoped MDX",
       })
@@ -234,12 +241,12 @@ describe("scoped content helpers", () => {
 
   it("omits scoped list entries that fail to load", async () => {
     mockGetMDXSlugsForLocale.mockReturnValue([
-      "subject/high-school/10/math/algebra",
-      "subject/high-school/10/math/geometry",
+      "material/lesson/math/algebra",
+      "material/lesson/math/geometry",
     ]);
 
     mockImportContentModule.mockImplementation((cleanPath: string) => {
-      if (cleanPath === "subject/high-school/10/math/geometry") {
+      if (cleanPath === "material/lesson/math/geometry") {
         return Promise.reject(new Error("broken module"));
       }
 
@@ -248,26 +255,26 @@ describe("scoped content helpers", () => {
           title: cleanPath,
           description: "Scoped Description",
           authors: [{ name: "Author" }],
-          date: "01/01/2024",
+          date: "2024-01-01",
         },
         default: () => "Scoped MDX",
       });
     });
 
     const result = await Effect.runPromise(
-      getScopedContents("subject", {
+      getScopedContents("material", {
         locale: "en",
       })
     );
 
     expect(result).toHaveLength(1);
-    expect(result[0]?.slug).toBe("subject/high-school/10/math/algebra");
+    expect(result[0]?.slug).toBe("material/lesson/math/algebra");
   });
 
   it("uses the root as the default scoped list base path", async () => {
     mockGetMDXSlugsForLocale.mockReturnValue([
       "articles/politics/test-article",
-      "subject/high-school/10/math/algebra",
+      "material/lesson/math/algebra",
     ]);
 
     mockImportContentModule.mockResolvedValue({
@@ -275,7 +282,7 @@ describe("scoped content helpers", () => {
         title: "Scoped Title",
         description: "Scoped Description",
         authors: [{ name: "Author" }],
-        date: "01/01/2024",
+        date: "2024-01-01",
       },
       default: () => "Scoped MDX",
     });
@@ -379,7 +386,7 @@ describe("scoped content helpers", () => {
       getScopedReferences(
         "articles",
         importReferencesModule,
-        "subject/high-school/10/mathematics"
+        "curriculum/high-school/10/mathematics"
       )
     );
 
@@ -453,7 +460,7 @@ describe("scoped exported primitives", () => {
           title: "Imported Article",
           description: "Imported Description",
           authors: [{ name: "Author" }],
-          date: "01/01/2024",
+          date: "2024-01-01",
           subject: "Politics",
         },
       })
@@ -463,7 +470,7 @@ describe("scoped exported primitives", () => {
       title: "Imported Article",
       description: "Imported Description",
       authors: [{ name: "Author" }],
-      date: "01/01/2024",
+      date: "2024-01-01",
       subject: "Politics",
     });
   });

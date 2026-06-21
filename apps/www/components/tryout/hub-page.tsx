@@ -25,28 +25,37 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
     getToken(),
   ]);
 
-  const [catalogSnapshot, currentUser, initialNowMs] = await Promise.all([
-    fetchQuery(
-      api.tryouts.queries.tryouts.getActiveTryoutCatalogSnapshot,
-      {
-        locale,
-        pageSize: TRYOUT_CATALOG_PAGE_SIZE,
-        product,
-      },
-      token ? { token } : undefined
-    ),
-    token
-      ? fetchQuery(api.auth.queries.getCurrentUser, {}, { token })
-      : Promise.resolve(null),
-    Effect.runPromise(Clock.currentTimeMillis),
-  ]);
+  const { catalogSnapshot, currentUser, initialNowMs } =
+    await Effect.runPromise(
+      Effect.all(
+        {
+          catalogSnapshot: Effect.tryPromise(() =>
+            fetchQuery(
+              api.tryouts.queries.tryouts.getActiveTryoutCatalogSnapshot,
+              {
+                locale,
+                pageSize: TRYOUT_CATALOG_PAGE_SIZE,
+                product,
+              },
+              token ? { token } : undefined
+            )
+          ),
+          currentUser: token
+            ? Effect.tryPromise(() =>
+                fetchQuery(api.auth.queries.getCurrentUser, {}, { token })
+              )
+            : Effect.succeed(null),
+          initialNowMs: Clock.currentTimeMillis,
+        },
+        { concurrency: "unbounded" }
+      )
+    );
   const userName = currentUser?.appUser.name ?? tHome("guest");
 
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-20 sm:py-24">
       <div className="space-y-10">
         <TryoutHubHeader
-          description={tTryouts("description")}
           greeting={tHome("greeting", { name: userName })}
           title={tTryouts("title")}
         />

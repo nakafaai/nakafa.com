@@ -6,10 +6,9 @@ import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
 const ARTICLE_SLUG = "articles/science/audio-source";
-const SUBJECT_TOPIC_SLUG =
-  "subject/high-school/10/mathematics/audio-source-topic";
+const SUBJECT_TOPIC_SLUG = "material/lesson/mathematics/audio-source-topic";
 const SUBJECT_SECTION_SLUG =
-  "subject/high-school/10/mathematics/audio-source-topic/audio-source-section";
+  "material/lesson/mathematics/audio-source-topic/audio-source-section";
 const articleSource = getTestAudioContent({
   contentHash: "article-source-hash",
   locale: "id",
@@ -100,16 +99,15 @@ describe("contentSync audio sources", () => {
     const t = convexTest(schema, convexModules);
 
     await t.mutation(
-      internal.contentSync.mutations.subjects.bulkSyncSubjectTopics,
+      internal.contentSync.mutations.curriculum.bulkSyncCurriculumTopics,
       {
         topics: [
           {
-            category: "high-school",
-            contentHash: "subject-topic-source-hash",
-            grade: "10",
+            contentHash: "curriculum-topic-source-hash",
             locale: "en",
             material: "mathematics",
             order: 0,
+            publicPath: SUBJECT_TOPIC_SLUG,
             sectionCount: 1,
             slug: SUBJECT_TOPIC_SLUG,
             title: "Audio Source Topic",
@@ -119,20 +117,19 @@ describe("contentSync audio sources", () => {
       }
     );
     await t.mutation(
-      internal.contentSync.mutations.subjects.bulkSyncSubjectSections,
+      internal.contentSync.mutations.curriculum.bulkSyncCurriculumLessons,
       {
         sections: [
           {
             authors: [],
             body: "large section body not needed by the audio queue",
-            category: "high-school",
             contentHash: "subject-source-hash",
             date: 1,
             description: "Subject source",
-            grade: "10",
             locale: "en",
             material: "mathematics",
             order: 0,
+            publicPath: SUBJECT_SECTION_SLUG,
             section: "audio-source-section",
             slug: SUBJECT_SECTION_SLUG,
             subject: "Mathematics",
@@ -152,7 +149,7 @@ describe("contentSync audio sources", () => {
         )
         .unique();
       const section = await ctx.db
-        .query("subjectSections")
+        .query("curriculumLessons")
         .withIndex("by_locale_and_slug", (q) =>
           q.eq("locale", "en").eq("slug", SUBJECT_SECTION_SLUG)
         )
@@ -177,7 +174,7 @@ describe("contentSync audio sources", () => {
     });
 
     await t.mutation(
-      internal.contentSync.mutations.subjects.deleteStaleSubjectSections,
+      internal.contentSync.mutations.curriculum.deleteStaleCurriculumLessons,
       {
         sectionIds: [sourceBefore.sectionId],
       }

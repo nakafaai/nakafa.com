@@ -2,14 +2,14 @@ import {
   getPublicContentRouteCheck,
   type PublicContentRouteCheck,
 } from "@repo/contents/_lib/manifest/public-route";
+import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import {
   getRuntimeContentRoute,
   getRuntimeContentRouteArtifactPage,
-  getRuntimeContentRouteKindPage,
   getRuntimeContentRouteParentPage,
-} from "@/lib/content/runtime";
+} from "@/lib/content/runtime/routes";
 import {
   BASE_URL,
   type LlmsSection,
@@ -24,21 +24,16 @@ import {
 
 const LLMS_ENTRY_BUILD_CONCURRENCY = 16;
 const LLMS_LISTING_ENTRY_LIMIT = 100;
+type ParentListingRowsArgs = Omit<
+  Parameters<typeof getRuntimeContentRouteParentPage>[0],
+  "cursor" | "limit"
+>;
 
-interface ParentListingRowsArgs {
-  kind: "article" | "exercise-group" | "subject-topic";
-  locale: Locale;
-  order: "date-desc" | "route";
-  parentRoute: string;
-  section: "articles" | "exercises" | "subject";
-}
-
-interface KindListingRowsArgs {
-  kind: "exercise-group" | "subject-topic";
-  locale: Locale;
-  prefix: string;
-  section: "exercises" | "subject";
-}
+const materialRouteNamespaces = new Set<string>(
+  PUBLIC_ROUTE_SURFACES.filter(
+    (surface) => surface.key === "subject" || surface.key === "exercises"
+  ).flatMap((surface) => Object.values(surface.routeSlugs))
+);
 
 /** Classifies a sitemap route into the llms section that owns it. */
 export function getRouteSection(route: string): LlmsSection {
@@ -46,6 +41,10 @@ export function getRouteSection(route: string): LlmsSection {
 
   if (isLlmsSection(firstSegment) && firstSegment !== "site") {
     return firstSegment;
+  }
+
+  if (materialRouteNamespaces.has(firstSegment ?? "")) {
+    return "material";
   }
 
   return "site";
@@ -95,7 +94,10 @@ export const getContentPageLlmsEntries = Effect.fn(
     return [];
   }
 
-  const routes = buildSitemapContentPageRoutes(artifactPage.routes).filter(
+  const sitemapRoutes = yield* buildSitemapContentPageRoutes(
+    artifactPage.routes
+  );
+  const routes = sitemapRoutes.filter(
     (route) => getRouteSection(route) === section
   );
 
@@ -144,7 +146,7 @@ function buildLocalizedLlmsEntriesFromRoutes({
 /**
  * Reads one bounded route-catalog page for supported listing route shapes.
  *
- * The interface returns null when the route is not a listing. Every supported
+ * The resolver returns null when the route is not a listing. Every supported
  * branch delegates to an indexed kind or parent page read with a fixed limit.
  */
 function readContentListingRows({
@@ -164,44 +166,6 @@ function readContentListingRows({
     });
   }
 
-  if (routeCheck.mode === "exercise-type") {
-    return readKindListingRows({
-      kind: "exercise-group",
-      locale,
-      prefix: routeCheck.prefix,
-      section: "exercises",
-    });
-  }
-
-  if (routeCheck.mode === "exercise-material") {
-    return readParentListingRows({
-      kind: "exercise-group",
-      locale,
-      order: "route",
-      parentRoute: routeCheck.parentRoute,
-      section: "exercises",
-    });
-  }
-
-  if (routeCheck.mode === "subject-grade") {
-    return readKindListingRows({
-      kind: "subject-topic",
-      locale,
-      prefix: routeCheck.prefix,
-      section: "subject",
-    });
-  }
-
-  if (routeCheck.mode === "subject-material") {
-    return readParentListingRows({
-      kind: "subject-topic",
-      locale,
-      order: "route",
-      parentRoute: routeCheck.parentRoute,
-      section: "subject",
-    });
-  }
-
   return Effect.succeed(null);
 }
 
@@ -214,20 +178,6 @@ function readContentListingRows({
  */
 function readParentListingRows(args: ParentListingRowsArgs) {
   return getRuntimeContentRouteParentPage({
-    ...args,
-    cursor: null,
-    limit: LLMS_LISTING_ENTRY_LIMIT,
-  }).pipe(Effect.map((page) => page.page));
-}
-
-/**
- * Reads one kind-scoped route page for a listing markdown document.
- *
- * Prefix and kind come from the content route classifier; this helper keeps the
- * query bounded and returns only the rows the llms entry builder needs.
- */
-function readKindListingRows(args: KindListingRowsArgs) {
-  return getRuntimeContentRouteKindPage({
     ...args,
     cursor: null,
     limit: LLMS_LISTING_ENTRY_LIMIT,
@@ -284,11 +234,7 @@ const getRouteMetadata = Effect.fn("www.llms.routeMetadata")(function* ({
     return yield* getQuranRouteMetadata({ locale, route });
   }
 
-  if (
-    section === "articles" ||
-    section === "exercises" ||
-    section === "subject"
-  ) {
+  if (section === "articles" || section === "material") {
     const metadata = yield* getContentRouteMetadata({ locale, route });
 
     if (metadata) {
@@ -305,7 +251,7 @@ const getRouteMetadata = Effect.fn("www.llms.routeMetadata")(function* ({
   };
 });
 
-/** Builds fallback metadata for sitemap-derived listing routes without markdown. */
+/** Builds listing metadata for sitemap-derived routes that do not have markdown. */
 function getListingRouteMetadata(route: string) {
   return {
     description: undefined,

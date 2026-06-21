@@ -12,6 +12,7 @@ import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
+import { readExercisePreviewHref } from "@/components/ai/message-part/nakafa/exercise/link";
 
 const MAX_SHOWN_EXERCISES = 5;
 
@@ -43,7 +44,12 @@ export const ExercisePart = ({ message }: Props) => {
             nativeButton={false}
             render={
               <a
-                href={`${message.result.url}/${number}`}
+                href={readExercisePreviewHref({
+                  exerciseNumber: message.result.exercise_number,
+                  locale: message.result.locale,
+                  number,
+                  url: message.result.url,
+                })}
                 rel="noopener noreferrer"
                 target="_blank"
               >

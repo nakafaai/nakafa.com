@@ -51,6 +51,7 @@
     "source-code": "Source code",
     "language": "Language",
     "articles": "Articles",
+    "material": "Material",
     "subject": "Subjects",
     "for-you": "For you",
     "explore": "Explore",
@@ -121,15 +122,102 @@
     "back-to-latest": "Back to latest",
     "back": "Back"
   },
-  "Onboarding": {
-    "title": "Welcome to Nakafa!",
-    "description": "We're excited to have you here. Let's personalize your learning experience by getting to know you better.",
-    "teacher": "Teacher",
-    "student": "Student",
-    "parent": "Parent",
-    "administrator": "Administrator",
-    "select-role": "Select your role",
-    "button": "Start learning"
+  "LearningPrograms": {
+    "metadata-title": "Start learning with Nakafa",
+    "metadata-description": "Choose what you need help with and one first step.",
+    "plan-item-untitled": "Learning step",
+    "program-status": {
+      "hidden": "Hidden",
+      "planned": "Soon",
+      "partial": "Partly ready",
+      "available": "Ready",
+      "archived": "Archived"
+    },
+    "onboarding": {
+      "role-title": "How will you use Nakafa?",
+      "role": {
+        "student": {
+          "title": "Student",
+          "description": "Learn, practice, and ask Nina."
+        },
+        "teacher": {
+          "title": "Teacher",
+          "description": "Prepare lessons for class."
+        },
+        "parent": {
+          "title": "Parent",
+          "description": "Help your child learn simply."
+        }
+      },
+      "focus": {
+        "student": {
+          "title": "What do you want to focus on?",
+          "school": {
+            "title": "School lessons",
+            "description": "Read clear explanations."
+          },
+          "exam": {
+            "title": "University entrance",
+            "description": "Practice before an exam."
+          }
+        },
+        "teacher": {
+          "title": "What do you want to prepare?",
+          "materials": {
+            "title": "Teaching materials",
+            "description": "Prepare explanations for class."
+          },
+          "practice": {
+            "title": "Student practice",
+            "description": "Prepare practice questions."
+          }
+        },
+        "parent": {
+          "title": "What does your child need help with?",
+          "understand": {
+            "title": "Understand lessons",
+            "description": "Read simple explanations."
+          },
+          "practice": {
+            "title": "Practice questions",
+            "description": "Prepare practice before an exam."
+          }
+        }
+      },
+      "back": "Back",
+      "continue": "Continue",
+      "save-cta": "Start learning",
+      "invalid-selection": "Choose your role and one learning focus.",
+      "save-error": "We could not save your choice. Try again.",
+      "unavailable-title": "Choose another option for now",
+      "unavailable-helper": "This choice is not ready yet.",
+      "auth-title": "Sign in to start",
+      "auth-helper": "Save your first plan and continue on any device.",
+      "auth-cta": "Sign in to Nakafa"
+    },
+    "kind": {
+      "school-curriculum": "School curriculum",
+      "assessment": "Practice questions",
+      "admission-exam": "Admission exam",
+      "custom-program": "Custom program",
+      "institution-program": "Institution program"
+    },
+    "interest": {
+      "school-curriculum": {
+        "title": "School lessons"
+      },
+      "exam-prep": {
+        "title": "University entrance"
+      },
+      "assessment-prep": {
+        "title": "Practice questions"
+      }
+    },
+    "plan-item-status": {
+      "ready": "Ready",
+      "done": "Done",
+      "skipped": "Skipped"
+    }
   },
   "Comments": {
     "add-comment-placeholder": "Add a comment...",
@@ -241,14 +329,13 @@
   },
   "Tryouts": {
     "title": "What tryout do you want today?",
-    "description": "Try a simulation that feels close to the real exam, so you feel more prepared.",
+    "metadata-description": "Choose a tryout package and start an exam simulation from Nakafa.",
     "package-count": "{count, plural, =0 {No packages yet} =1 {# package} other {# packages}}",
     "cta": "See packages",
     "list-empty": "There are no tryouts showing right now.",
     "available-item-description": "{questions} questions - {parts} parts",
     "year-title": "Year {year}",
     "product-page-description": "See every SNBT package and open the one that fits your goal best.",
-    "slug-description": "When you're ready, start this tryout and choose which section you want to do first.",
     "start-cta": "Start tryout",
     "restart-cta": "Start again",
     "continue-cta": "Continue",
@@ -305,6 +392,7 @@
     "complete-part-success": "Section finished. You can choose another section or go back to the set.",
     "complete-part-error": "We could not finish this section yet. Please try again.",
     "back-to-set-cta": "Back to set",
+    "slug-description": "When you're ready, start this tryout and choose which section you want to do first.",
     "question-unit": "questions",
     "products": {
       "snbt": {

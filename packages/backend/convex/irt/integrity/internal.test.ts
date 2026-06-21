@@ -28,7 +28,7 @@ async function insertActiveTryout(ctx: MutationCtx, slug: string) {
 async function insertExerciseSet(ctx: MutationCtx, slugSuffix: string) {
   return await ctx.db.insert("exerciseSets", {
     locale: "id",
-    slug: `exercises/high-school/snbt/quantitative-knowledge/try-out/2026/${slugSuffix}`,
+    slug: `material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/${slugSuffix}`,
     category: "high-school",
     type: "snbt",
     material: "quantitative-knowledge",

@@ -11,9 +11,9 @@ import { defaultLocale, locales } from "@repo/utilities/locales";
 import { describe, expect, it } from "vitest";
 
 const subjectRoute =
-  "subject/high-school/10/mathematics/example-topic/example-section";
+  "material/lesson/mathematics/example-topic/example-section";
 const exerciseRoute =
-  "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1";
+  "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1";
 
 describe("Nakafa formatter", () => {
   it("formats search results", () => {
@@ -22,7 +22,7 @@ describe("Nakafa formatter", () => {
       has_more: false,
       items: [
         {
-          ...readNakafaContentRefFixture("id", subjectRoute, "subject"),
+          ...readNakafaContentRefFixture("id", subjectRoute, "material"),
           description: "Pelajari contoh.",
           excerpt: "Pelajari contoh.",
           title: "Contoh Materi",
@@ -42,7 +42,7 @@ describe("Nakafa formatter", () => {
 
   it("formats full content reads", () => {
     const text = formatRead({
-      ...readNakafaContentRefFixture("id", subjectRoute, "subject"),
+      ...readNakafaContentRefFixture("id", subjectRoute, "material"),
       description: "Pelajari contoh.",
       text: "Isi materi lengkap.",
       title: "Contoh Materi",
@@ -57,7 +57,7 @@ describe("Nakafa formatter", () => {
 
   it("formats structured exercises", () => {
     const result = {
-      ...readNakafaContentRefFixture("id", exerciseRoute, "exercises"),
+      ...readNakafaContentRefFixture("id", exerciseRoute, "material"),
       count: 1,
       exercise_number: 2,
       exercises: [
@@ -138,7 +138,7 @@ describe("Nakafa formatter", () => {
       quran: {
         surah_count: 114,
       },
-      sections: ["articles", "subject", "exercises", "quran"],
+      sections: ["articles", "material", "quran"],
       subject: {
         categories: ["high-school"],
         grades: ["10"],

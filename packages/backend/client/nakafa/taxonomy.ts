@@ -11,7 +11,7 @@ import {
   getExerciseCategoryOptions,
   getExerciseMaterialOptions,
   getExerciseTypeOptions,
-} from "@repo/contents/_lib/exercises/label";
+} from "@repo/contents/_lib/assessment/label";
 import {
   ARTICLE_CATEGORIES,
   BACHELOR_MATERIALS,

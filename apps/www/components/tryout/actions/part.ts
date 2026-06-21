@@ -86,10 +86,10 @@ function recoverTryoutPartError(
 }
 
 /**
- * Starts one tryout part and invalidates the tryout routes whenever the runtime
- * state changed.
+ * Starts one tryout part through Convex and invalidates the dependent Next
+ * route family whenever the runtime state changed.
  */
-const startTryoutPartEffect = Effect.fn("www.tryout.part.start")(function* ({
+const startTryoutPartMutation = Effect.fn("www.tryout.part.start")(function* ({
   partKeys,
   ...args
 }: StartTryoutPartInput) {
@@ -113,16 +113,21 @@ const startTryoutPartEffect = Effect.fn("www.tryout.part.start")(function* ({
 });
 
 /**
- * Authenticates the public start-part Server Action before mutation work.
+ * Next cache-invalidation seam for starting one tryout part.
+ *
+ * Convex owns the data validation, authorization, and transaction. This route
+ * seam stays in Next because the successful mutation must invalidate cached
+ * tryout pages.
  *
  * @see https://nextjs.org/docs/app/guides/authentication#server-actions
+ * @see https://nextjs.org/docs/app/api-reference/functions/revalidatePath
  * @see https://nextjs.org/docs/app/guides/data-security#mutations
  */
 export async function startTryoutPart(input: StartTryoutPartInput) {
   await requireAuth();
 
   return await Effect.runPromise(
-    startTryoutPartEffect(input).pipe(
+    startTryoutPartMutation(input).pipe(
       Effect.catchAll((error) =>
         recoverTryoutPartError(error, input, "start-tryout-part")
       )
@@ -131,10 +136,10 @@ export async function startTryoutPart(input: StartTryoutPartInput) {
 }
 
 /**
- * Completes one tryout part and invalidates the SSR route family that depends
- * on the finished part state.
+ * Completes one tryout part through Convex and invalidates the Next route
+ * family that depends on the finished part state.
  */
-const completeTryoutPartEffect = Effect.fn("www.tryout.part.complete")(
+const completeTryoutPartMutation = Effect.fn("www.tryout.part.complete")(
   function* ({ partKeys, ...args }: CompleteTryoutPartInput) {
     const result = yield* Effect.tryPromise({
       try: () =>
@@ -157,16 +162,21 @@ const completeTryoutPartEffect = Effect.fn("www.tryout.part.complete")(
 );
 
 /**
- * Authenticates the public complete-part Server Action before mutation work.
+ * Next cache-invalidation seam for completing one tryout part.
+ *
+ * Convex owns the data validation, authorization, and transaction. This route
+ * seam stays in Next because the successful mutation must invalidate cached
+ * tryout pages.
  *
  * @see https://nextjs.org/docs/app/guides/authentication#server-actions
+ * @see https://nextjs.org/docs/app/api-reference/functions/revalidatePath
  * @see https://nextjs.org/docs/app/guides/data-security#mutations
  */
 export async function completeTryoutPart(input: CompleteTryoutPartInput) {
   await requireAuth();
 
   return await Effect.runPromise(
-    completeTryoutPartEffect(input).pipe(
+    completeTryoutPartMutation(input).pipe(
       Effect.catchAll((error) =>
         recoverTryoutPartError(error, input, "complete-tryout-part")
       )

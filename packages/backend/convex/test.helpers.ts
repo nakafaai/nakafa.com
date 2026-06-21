@@ -117,8 +117,8 @@ function getAudioContentTypeForTestRoute(route: string): AudioContentType {
     return "article";
   }
 
-  if (route.startsWith("subject/")) {
-    return "subject";
+  if (route.startsWith("material/lesson/")) {
+    return "material";
   }
 
   throw new Error(`Expected audio content route, received ${route}.`);

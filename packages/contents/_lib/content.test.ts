@@ -46,6 +46,13 @@ vi.mock("@repo/contents/_lib/mdx-slugs/cache", () => ({
 }));
 
 vi.mock("@repo/contents/_lib/module", () => ({
+  getLocalizedContentPath: (cleanPath: string, locale: string) => {
+    if (cleanPath.endsWith("/answer") || cleanPath.endsWith("/question")) {
+      return `${cleanPath}.${locale}.mdx`;
+    }
+
+    return `${cleanPath}/${locale}.mdx`;
+  },
   importContentModule: mockImportContentModule,
 }));
 
@@ -54,7 +61,7 @@ export const metadata = {
   title: "Raw Title",
   description: "Raw Description",
   authors: [{ name: "Raw Author" }],
-  date: "01/01/2024"
+  date: "2024-01-01"
 };
 
 # Raw Content
@@ -65,7 +72,7 @@ const moduleContent = {
     title: "Module Title",
     description: "Module Description",
     authors: [{ name: "Module Author" }],
-    date: "01/01/2024",
+    date: "2024-01-01",
   },
   default: () => "Module MDX",
 };
@@ -98,7 +105,7 @@ describe("getContent", () => {
         title: "Raw Title",
         description: "Raw Description",
         authors: [{ name: "Raw Author" }],
-        date: "01/01/2024",
+        date: "2024-01-01",
       },
       raw: rawMetadataSource,
     });
@@ -207,7 +214,7 @@ describe("getContents", () => {
     mockGetMDXSlugsForLocale.mockReturnValue([
       "articles/politics/valid-entry",
       "articles/politics/broken-entry",
-      "subject/high-school/10/mathematics",
+      "curriculum/high-school/10/mathematics",
     ]);
     mockReadFile.mockImplementation((filePath: string) => {
       if (filePath.includes("broken-entry/en.mdx")) {
@@ -231,7 +238,7 @@ describe("getContents", () => {
         title: "Raw Title",
         description: "Raw Description",
         authors: [{ name: "Raw Author" }],
-        date: "01/01/2024",
+        date: "2024-01-01",
       },
       raw: rawMetadataSource,
       url: "https://nakafa.com/en/articles/politics/valid-entry",
@@ -259,7 +266,7 @@ describe("getContents", () => {
 
   it("returns an empty list when no cached slugs match the base path", async () => {
     mockGetMDXSlugsForLocale.mockReturnValue([
-      "subject/high-school/10/mathematics",
+      "curriculum/high-school/10/mathematics",
     ]);
 
     const result = await Effect.runPromise(

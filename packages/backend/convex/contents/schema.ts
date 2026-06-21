@@ -6,13 +6,20 @@ import {
 import { contentSearchDocumentValidator } from "@repo/backend/convex/contents/helpers/search/schema";
 import {
   localeValidator,
+  materialValidator,
   nakafaSectionValidator,
 } from "@repo/backend/convex/lib/validators/contents";
+import { PROGRAM_NAVIGATION_ICON_KEY_VALUES } from "@repo/contents/_types/program/schema";
+import { PUBLIC_ROUTE_KIND_VALUES } from "@repo/contents/_types/route/schema";
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
 const contentRouteKindValidator = literals(...CONTENT_ROUTE_KINDS);
+const navigationIconKeyValidator = literals(
+  ...PROGRAM_NAVIGATION_ICON_KEY_VALUES
+);
+const publicRouteKindValidator = literals(...PUBLIC_ROUTE_KIND_VALUES);
 const contentRoutePageItemValidator = v.object({
   ...learningGraphIdentityValidator.fields,
   authors: v.array(v.object({ name: v.string() })),
@@ -23,10 +30,13 @@ const contentRoutePageItemValidator = v.object({
   kind: contentRouteKindValidator,
   locale: localeValidator,
   markdown: v.boolean(),
+  materialDomain: v.optional(materialValidator),
   official: v.optional(v.boolean()),
   parentRoute: v.optional(v.string()),
   route: v.string(),
   section: nakafaSectionValidator,
+  sourceParentPath: v.optional(v.string()),
+  sourcePath: v.string(),
   syncedAt: v.number(),
   title: v.string(),
 });
@@ -140,6 +150,7 @@ const tables = {
   contentSearch: defineTable(contentSearchDocumentValidator)
     .index("by_content_id", ["content_id"])
     .index("by_locale_and_route", ["locale", "route"])
+    .index("by_locale_and_sourcePath", ["locale", "sourcePath"])
     .index("by_locale_and_title", ["locale", "title"])
     .index("by_locale_and_section_and_title", ["locale", "section", "title"])
     .searchIndex("search_title", {
@@ -171,16 +182,20 @@ const tables = {
     kind: contentRouteKindValidator,
     locale: localeValidator,
     markdown: v.boolean(),
+    materialDomain: v.optional(materialValidator),
     official: v.optional(v.boolean()),
     parentRoute: v.optional(v.string()),
     route: v.string(),
     section: nakafaSectionValidator,
+    sourceParentPath: v.optional(v.string()),
+    sourcePath: v.string(),
     syncedAt: v.number(),
     title: v.string(),
   })
     .index("by_content_id", ["content_id"])
     .index("by_locale", ["locale"])
     .index("by_locale_and_route", ["locale", "route"])
+    .index("by_locale_and_sourcePath", ["locale", "sourcePath"])
     .index("by_locale_and_kind", ["locale", "kind"])
     .index("by_locale_and_section", ["locale", "section"])
     .index("by_locale_and_section_and_date", ["locale", "section", "date"])
@@ -229,6 +244,79 @@ const tables = {
   })
     .index("by_locale", ["locale"])
     .index("by_locale_and_section", ["locale", "section"]),
+
+  /**
+   * Source-owned public route projection for material, curriculum, and
+   * practice surfaces.
+   *
+   * These rows are not graph content bodies. They are the durable route
+   * contract used by app routing, SEO artifacts, assistant context, and
+   * curriculum navigation.
+   */
+  publicRoutes: defineTable({
+    canonicalPath: v.optional(v.string()),
+    description: v.optional(v.string()),
+    displayGroupIconKey: v.optional(navigationIconKeyValidator),
+    displayGroupTitle: v.optional(v.string()),
+    iconKey: v.optional(navigationIconKeyValidator),
+    kind: publicRouteKindValidator,
+    locale: localeValidator,
+    materialDomain: v.optional(materialValidator),
+    materialKey: v.optional(v.string()),
+    nodeKey: v.optional(v.string()),
+    order: v.optional(v.number()),
+    parentPath: v.optional(v.string()),
+    programKey: v.optional(v.string()),
+    publicPath: v.string(),
+    sectionKey: v.optional(v.string()),
+    sitemap: v.boolean(),
+    sourcePath: v.optional(v.string()),
+    syncedAt: v.number(),
+    title: v.string(),
+  })
+    .index("by_locale_and_publicPath", ["locale", "publicPath"])
+    .index("by_locale_and_kind_and_publicPath", [
+      "locale",
+      "kind",
+      "publicPath",
+    ])
+    .index("by_locale_and_kind_and_parentPath_and_publicPath", [
+      "locale",
+      "kind",
+      "parentPath",
+      "publicPath",
+    ])
+    .index("by_programKey_and_locale_and_publicPath", [
+      "programKey",
+      "locale",
+      "publicPath",
+    ])
+    .index("by_programKey_and_locale_and_parentPath_and_publicPath", [
+      "programKey",
+      "locale",
+      "parentPath",
+      "publicPath",
+    ])
+    .index("by_programKey_and_locale_and_parentPath_and_order", [
+      "programKey",
+      "locale",
+      "parentPath",
+      "order",
+    ])
+    .index("by_programKey_and_locale_and_kind_and_parentPath_and_publicPath", [
+      "programKey",
+      "locale",
+      "kind",
+      "parentPath",
+      "publicPath",
+    ])
+    .index("by_materialKey_and_locale", ["materialKey", "locale"])
+    .index("by_locale_and_sitemap_and_publicPath", [
+      "locale",
+      "sitemap",
+      "publicPath",
+    ])
+    .index("by_syncedAt", ["syncedAt"]),
 };
 
 export default tables;

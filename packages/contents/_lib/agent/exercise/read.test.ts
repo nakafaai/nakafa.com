@@ -8,7 +8,7 @@ import { Effect, Option } from "effect";
 import { describe, expect, it, vi } from "vitest";
 
 const EXERCISE_ROUTE =
-  "exercises/high-school/snbt/general-knowledge/try-out/2026/set-2";
+  "material/practice/assessment/snbt/general-knowledge/try-out-2026/set-2";
 const EXERCISE_CONTENT_REF = `https://nakafa.com/en/${EXERCISE_ROUTE}`;
 
 const mockExercises = vi.hoisted(() => [
@@ -35,7 +35,7 @@ const mockExercises = vi.hoisted(() => [
   },
 ]);
 
-vi.mock("@repo/contents/_lib/exercises/renderable", async () => {
+vi.mock("@repo/contents/_lib/assessment/renderable", async () => {
   const { Effect } = await import("effect");
 
   return {
@@ -121,7 +121,7 @@ describe("Nakafa agent exercises", () => {
     const error = await Effect.runPromise(
       Effect.match(
         decodeNakafaAgentExerciseResult({
-          ...readNakafaContentRefFixture("en", EXERCISE_ROUTE, "exercises"),
+          ...readNakafaContentRefFixture("en", EXERCISE_ROUTE, "material"),
           count: 1,
           exercises: [
             {

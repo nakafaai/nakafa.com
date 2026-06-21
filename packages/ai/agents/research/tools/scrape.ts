@@ -5,7 +5,7 @@ import {
 import { fetchSourceMarkdown } from "@repo/ai/agents/research/tools/markdown";
 import { getDocumentMetadata } from "@repo/ai/agents/research/tools/metadata";
 import { assertPublicResearchUrl } from "@repo/ai/agents/research/tools/safety";
-import { firecrawlApp } from "@repo/ai/config/firecrawl";
+import { readFirecrawlApp } from "@repo/ai/config/firecrawl";
 import { selectRelevantContent } from "@repo/ai/lib/selection";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { UIMessageStreamWriter } from "ai";
@@ -68,7 +68,7 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
         : Effect.succeed(undefined),
       scrapeResult: Effect.tryPromise({
         try: () =>
-          firecrawlApp.scrape(publicUrl, {
+          readFirecrawlApp().scrape(publicUrl, {
             formats: ["markdown"],
             timeout: 5000,
           }),

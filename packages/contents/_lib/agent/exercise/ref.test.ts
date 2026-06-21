@@ -8,11 +8,11 @@ import { Option } from "effect";
 import { describe, expect, it } from "vitest";
 
 const exerciseSetRoute =
-  "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2";
+  "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-2";
 const exerciseSetContentId = readNakafaContentRefFixture(
   "id",
   exerciseSetRoute,
-  "exercises"
+  "material"
 ).content_id;
 const exerciseQuestionRoute = `${exerciseSetRoute}/11`;
 

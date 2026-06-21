@@ -28,13 +28,16 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
 import { useRouter } from "@repo/internationalization/src/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type { ComponentProps, ReactElement, ReactNode } from "react";
 import { Fragment, useLayoutEffect, useTransition } from "react";
 import { SearchExcerpt } from "@/components/shared/search-excerpt";
-import { articlesMenu } from "@/components/sidebar/_data/articles";
-import { holyMenu } from "@/components/sidebar/_data/holy";
-import { subjectMenu } from "@/components/sidebar/_data/subject";
+import { articlesMenu } from "@/components/sidebar/data/articles";
+import { holyMenu } from "@/components/sidebar/data/holy";
+import {
+  getSubjectMenuHref,
+  subjectMenu,
+} from "@/components/sidebar/data/subject";
 import {
   type ContentSearchResultItem,
   useSearchQuery,
@@ -290,24 +293,23 @@ function useDefaultSearchGroups(): SearchCommandGroup[] {
   const tSubject = useTranslations("Subject");
   const tArticles = useTranslations("Articles");
   const tHoly = useTranslations("Holy");
+  const locale = useLocale();
 
   const subjectGroups = subjectMenu.map((item) => {
     const groupTitle = tSubject(item.title);
 
     return {
       items: item.items.map((subItem) => {
-        const label =
-          "value" in subItem
-            ? tSubject(subItem.title, { grade: subItem.value })
-            : tSubject(subItem.title);
+        const label = tSubject(subItem.title, { grade: subItem.value });
+        const href = getSubjectMenuHref(subItem, locale);
 
         return {
-          href: subItem.href,
+          href,
           icon: item.icon,
-          key: subItem.href,
+          key: href,
           label,
           type: "navigation" as const,
-          value: `${groupTitle} ${label} ${subItem.href}`,
+          value: `${groupTitle} ${label} ${href}`,
         };
       }),
       value: groupTitle,
@@ -356,14 +358,12 @@ function useSearchSectionLabels(): Record<
 > {
   const tCommon = useTranslations("Common");
   const tArticles = useTranslations("Articles");
-  const tExercises = useTranslations("Exercises");
   const tHoly = useTranslations("Holy");
 
   return {
     articles: tArticles("articles"),
-    exercises: tExercises("exercises"),
+    material: tCommon("material"),
     quran: tHoly("quran"),
-    subject: tCommon("subject"),
   };
 }
 

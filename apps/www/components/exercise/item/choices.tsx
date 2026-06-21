@@ -1,7 +1,7 @@
 "use client";
 
 import { api } from "@repo/backend/convex/_generated/api";
-import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
+import type { ExercisesChoices } from "@repo/contents/_types/assessment/choices";
 import { Response } from "@repo/design-system/components/ai/response";
 import type { Button } from "@repo/design-system/components/ui/button";
 import { Checkbox } from "@repo/design-system/components/ui/checkbox";

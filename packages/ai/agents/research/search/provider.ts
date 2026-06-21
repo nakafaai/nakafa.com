@@ -1,5 +1,5 @@
 import { ResearchSearchError } from "@repo/ai/agents/research/schema";
-import { firecrawlApp } from "@repo/ai/config/firecrawl";
+import { readFirecrawlApp } from "@repo/ai/config/firecrawl";
 import { Effect } from "effect";
 
 /** Calls Firecrawl search with one generated query. */
@@ -10,7 +10,7 @@ export const searchFirecrawl = Effect.fn("research.searchFirecrawl")(function* (
 
   return yield* Effect.tryPromise({
     try: () =>
-      firecrawlApp.search(query, {
+      readFirecrawlApp().search(query, {
         limit: 5,
         sources: ["web", "news"],
         scrapeOptions: {

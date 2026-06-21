@@ -1,6 +1,7 @@
 import {
   createBatchDeleteMutation,
   deleteContentAudioRows,
+  deleteContentSearchRows,
   deleteTryoutEntitlementRows,
   deleteTryoutRuntimeRows,
 } from "@repo/backend/convex/contentSync/reset/impl";
@@ -22,8 +23,12 @@ export const deleteTryoutRuntimeBatch = internalMutation({
 
 export const deleteContentAuthorsBatch =
   createBatchDeleteMutation("contentAuthors");
-export const deleteContentSearchBatch =
-  createBatchDeleteMutation("contentSearch");
+/** Delete one bounded batch of large full-text search rows. */
+export const deleteContentSearchBatch = internalMutation({
+  args: {},
+  returns: batchDeleteResultValidator,
+  handler: deleteContentSearchRows,
+});
 export const deleteContentViewsBatch =
   createBatchDeleteMutation("contentViews");
 export const deleteContentViewAnalyticsQueueBatch = createBatchDeleteMutation(
@@ -41,8 +46,45 @@ export const deleteLearningPopularityBatch =
 export const deleteLearningTrendingBucketsBatch = createBatchDeleteMutation(
   "learningTrendingBuckets"
 );
+
+/** Delete one bounded batch of generated material identity rows. */
+export const deleteMaterialsBatch = createBatchDeleteMutation("materials");
+
+/** Delete one bounded batch of generated localized material rows. */
+export const deleteMaterialLocalesBatch =
+  createBatchDeleteMutation("materialLocales");
+
+/** Delete one bounded batch of generated curriculum rows. */
+export const deleteCurriculaBatch = createBatchDeleteMutation("curricula");
+
+/** Delete one bounded batch of generated curriculum node rows. */
+export const deleteCurriculumNodesBatch =
+  createBatchDeleteMutation("curriculumNodes");
+
+/** Delete one bounded batch of generated curriculum material link rows. */
+export const deleteCurriculumMaterialsBatch = createBatchDeleteMutation(
+  "curriculumMaterials"
+);
+
+/** Delete one bounded batch of generated assessment rows. */
+export const deleteAssessmentsBatch = createBatchDeleteMutation("assessments");
+
+/** Delete one bounded batch of generated assessment node rows. */
+export const deleteAssessmentNodesBatch =
+  createBatchDeleteMutation("assessmentNodes");
+
+/** Delete one bounded batch of generated learning plan item rows. */
+export const deleteLearningPlanItemsBatch =
+  createBatchDeleteMutation("learningPlanItems");
+
+/** Delete one bounded batch of graph-backed learning program coverage rows. */
+export const deleteLearningProgramCoverageBatch = createBatchDeleteMutation(
+  "learningProgramCoverage"
+);
 export const deleteContentRoutesBatch =
   createBatchDeleteMutation("contentRoutes");
+export const deletePublicRoutesBatch =
+  createBatchDeleteMutation("publicRoutes");
 export const deleteContentRouteCountsBatch =
   createBatchDeleteMutation("contentRouteCounts");
 export const deleteContentRoutePagesBatch =
@@ -129,10 +171,10 @@ export const deleteExerciseQuestionsBatch =
   createBatchDeleteMutation("exerciseQuestions");
 export const deleteExerciseSetsBatch =
   createBatchDeleteMutation("exerciseSets");
-export const deleteSubjectSectionsBatch =
-  createBatchDeleteMutation("subjectSections");
-export const deleteSubjectTopicsBatch =
-  createBatchDeleteMutation("subjectTopics");
+export const deleteCurriculumLessonsBatch =
+  createBatchDeleteMutation("curriculumLessons");
+export const deleteCurriculumTopicsBatch =
+  createBatchDeleteMutation("curriculumTopics");
 export const deleteArticlesBatch = createBatchDeleteMutation("articleContents");
 export const deleteAuthorsBatch = createBatchDeleteMutation("authors");
 

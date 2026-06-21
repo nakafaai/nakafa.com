@@ -158,7 +158,7 @@ describe("createSEOTitle", () => {
   });
 
   describe("real-world SEO scenarios", () => {
-    it("handles subject page title", () => {
+    it("handles curriculum page title", () => {
       const result = createSEOTitle([
         "Vertical Translation",
         "Function Transformation",
@@ -320,17 +320,13 @@ describe("createSEOTitle", () => {
     });
 
     it("handles zero as a part", () => {
-      const result = createSEOTitle(["Hello", 0 as unknown as string, "World"]);
+      const result = createSEOTitle(["Hello", 0, "World"]);
       // 0 is falsy, should be filtered out
       expect(result).toBe("Hello - World - Nakafa");
     });
 
     it("handles false as a part", () => {
-      const result = createSEOTitle([
-        "Hello",
-        false as unknown as string,
-        "World",
-      ]);
+      const result = createSEOTitle(["Hello", false, "World"]);
       // false is falsy, should be filtered out
       expect(result).toBe("Hello - World - Nakafa");
     });

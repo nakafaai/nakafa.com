@@ -8,18 +8,23 @@ import {
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { FooterAction } from "@/components/marketing/shared/footer-action";
 import { FooterArt } from "@/components/marketing/shared/footer-art";
-import { articlesMenu } from "@/components/sidebar/_data/articles";
-import { holyMenu } from "@/components/sidebar/_data/holy";
-import { subjectMenu } from "@/components/sidebar/_data/subject";
+import { articlesMenu } from "@/components/sidebar/data/articles";
+import { holyMenu } from "@/components/sidebar/data/holy";
+import {
+  getSubjectMenuHref,
+  subjectMenu,
+} from "@/components/sidebar/data/subject";
 
 const highSchoolSubjects =
   subjectMenu.find((subject) => subject.title === "high-school")?.items || [];
-const universitySubjects =
-  subjectMenu.find((subject) => subject.title === "university")?.items || [];
 
+/**
+ * Composes the shared marketing footer from product, policy, and social links
+ * without owning route generation itself.
+ */
 export function Footer() {
   const t = useTranslations("About");
   const tLegal = useTranslations("Legal");
@@ -27,6 +32,7 @@ export function Footer() {
   const tHoly = useTranslations("Holy");
   const tCommon = useTranslations("Common");
   const tArticles = useTranslations("Articles");
+  const locale = useLocale();
 
   return (
     <footer className="w-full border-t" id="footer">
@@ -41,17 +47,8 @@ export function Footer() {
                 {highSchoolSubjects.map((subject) => (
                   <li key={subject.value}>
                     <LinkItem
-                      href={subject.href}
+                      href={getSubjectMenuHref(subject, locale)}
                       label={tSubject(subject.title, { grade: subject.value })}
-                    />
-                  </li>
-                ))}
-
-                {universitySubjects.map((subject) => (
-                  <li key={subject.title}>
-                    <LinkItem
-                      href={subject.href}
-                      label={tSubject(subject.title)}
                     />
                   </li>
                 ))}
@@ -138,7 +135,7 @@ export function Footer() {
 
       <NavigationLink
         className="mx-auto flex w-full max-w-7xl px-6 py-16 transition-colors ease-out hover:text-primary"
-        href="/home"
+        href="/auth"
         rel="noopener noreferrer"
         target="_blank"
       >

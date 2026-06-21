@@ -6,6 +6,7 @@ import {
   normalizeNakafaContentInput,
   parseNakafaContentRef,
   parseNakafaContentRefFields,
+  resolveNakafaContentRef,
 } from "@repo/contents/_lib/agent/refs";
 import { Effect, Exit, Option } from "effect";
 import { describe, expect, it } from "vitest";
@@ -31,6 +32,32 @@ describe("Nakafa agent references", () => {
     expect(resourceUri).toBe("nakafa://content/asset:en:quran:quran-surah:1");
     expect(normalizeNakafaContentInput(resourceUri)).toBe(directRef.content_id);
     expect(Option.isNone(parseNakafaContentRef(resourceUri))).toBe(true);
+  });
+
+  it("resolves public material URLs through route projection", async () => {
+    const topicRef = await Effect.runPromise(
+      resolveNakafaContentRef(
+        "https://nakafa.com/id/materi/matematika/integral"
+      )
+    );
+    const lessonRef = await Effect.runPromise(
+      resolveNakafaContentRef(
+        "https://nakafa.com/en/subjects/mathematics/integral/riemann-sum"
+      )
+    );
+    const contextRef = await Effect.runPromise(
+      resolveNakafaContentRef(
+        "https://nakafa.com/en/curriculum/merdeka/class-12/mathematics/integral"
+      )
+    );
+
+    expect(Option.getOrUndefined(topicRef)?.route).toBe(
+      "material/lesson/mathematics/integral"
+    );
+    expect(Option.getOrUndefined(lessonRef)?.route).toBe(
+      "material/lesson/mathematics/integral/riemann-sum"
+    );
+    expect(Option.isNone(contextRef)).toBe(true);
   });
 
   it("builds refs from persisted graph projections without route-derived IDs", () => {
@@ -114,7 +141,7 @@ describe("Nakafa agent references", () => {
     expect(Option.isNone(createNakafaContentRef("en", "", "quran"))).toBe(true);
     expect(
       Option.isNone(
-        createNakafaContentRef("en", "articles/politics/example", "subject")
+        createNakafaContentRef("en", "articles/politics/example", "material")
       )
     ).toBe(true);
     expect(
@@ -126,7 +153,7 @@ describe("Nakafa agent references", () => {
           parseNakafaContentRefFields(
             "en",
             "articles/politics/example",
-            "subject"
+            "material"
           )
         )
       )

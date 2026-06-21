@@ -161,7 +161,7 @@ export const generateScript = internalAction({
  * 1. ElevenLabs generates PCM 44.1kHz (CD quality, uncompressed)
  * 2. PCM buffers concatenate safely (no metadata headers to conflict)
  * 3. Duration calculated from exact buffer size: bytes / (44100 × 2)
- * 4. Convert to WAV for browser compatibility with accurate headers
+ * 4. Convert to WAV for browser playback with accurate headers
  *
  * WHY NOT MP3?
  * - MP3 chunks each have duration metadata headers

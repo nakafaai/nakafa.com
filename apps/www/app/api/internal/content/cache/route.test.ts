@@ -17,7 +17,7 @@ vi.mock("@/lib/content/cache", () => ({
   revalidateContentRuntimeCache: revalidateContentRuntimeCacheMock,
 }));
 
-/** Creates one Next-compatible POST request for the cache route. */
+/** Creates one Next POST request for the cache route. */
 function createRequestWithAuthorization(authorization: string | undefined) {
   const headers = new Headers();
 
@@ -31,7 +31,7 @@ function createRequestWithAuthorization(authorization: string | undefined) {
   });
 }
 
-/** Creates one authenticated Next-compatible POST request for the cache route. */
+/** Creates one authenticated Next POST request for the cache route. */
 function createRequest(token: string | undefined) {
   const authorization = token === undefined ? undefined : `Bearer ${token}`;
 

@@ -1,4 +1,4 @@
-import { isContentDateString } from "@repo/contents/_shared/date";
+import { DateOnlySchema } from "@repo/contents/_shared/date";
 import { locales } from "@repo/utilities/locales";
 import { Schema } from "effect";
 import type React from "react";
@@ -8,7 +8,7 @@ export const LocaleSchema = Schema.Literal(...locales);
 export type Locale = Schema.Schema.Type<typeof LocaleSchema>;
 
 /** Supported top-level content roots under `packages/contents/`. */
-const CONTENT_ROOTS = ["articles", "exercises", "subject"] as const;
+const CONTENT_ROOTS = ["articles", "material", "quran"] as const;
 
 /** Runtime validation schema for supported top-level content roots. */
 const ContentRootSchema = Schema.Literal(...CONTENT_ROOTS);
@@ -44,11 +44,7 @@ export const ContentMetadataSchema = Schema.Struct({
       name: Schema.String,
     }).pipe(Schema.mutable)
   ).pipe(Schema.mutable),
-  date: Schema.String.pipe(
-    Schema.filter(isContentDateString, {
-      message: () => "Invalid content date. Expected MM/DD/YYYY.",
-    })
-  ),
+  date: DateOnlySchema,
   subject: Schema.optional(Schema.String),
 }).pipe(Schema.mutable);
 export type ContentMetadata = Schema.Schema.Type<typeof ContentMetadataSchema>;
@@ -81,8 +77,8 @@ export const ReferenceListSchema = Schema.Array(ReferenceSchema).pipe(
 
 export const CONTENT_ROOT_VALUES = {
   articles: "articles",
-  exercises: "exercises",
-  subject: "subject",
+  material: "material",
+  quran: "quran",
 } as const;
 
 export type ContentWithMDX = Omit<Content, "url" | "locale" | "slug"> & {

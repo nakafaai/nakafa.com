@@ -1,7 +1,7 @@
 import { availableParallelism } from "node:os";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
-import { type LlmsSection, NUMBER_SEGMENT } from "@/lib/llms/constants";
+import type { LlmsSection } from "@/lib/llms/constants";
 import { getLlmsSourceMarkdownText } from "@/lib/llms/content";
 import { getContentPageLlmsEntries, type LlmsEntry } from "@/lib/llms/entries";
 import {
@@ -19,7 +19,7 @@ import {
 import type { LlmsFullDocument } from "@/lib/llms/full/types";
 import {
   type ContentSitemapPage,
-  getSitemapPageDescriptorsEffect,
+  readSitemapPageDescriptors,
 } from "@/lib/sitemap/routes";
 
 const LLMS_FULL_CONCURRENCY = availableParallelism();
@@ -100,7 +100,7 @@ const buildLlmsFullShards = Effect.fn("llms.buildLlmsFullShards")(function* (
 
 /** Lists materialized route pages that can own llms-full content documents. */
 function getLlmsFullRoutePageDescriptors() {
-  return getSitemapPageDescriptorsEffect().pipe(
+  return readSitemapPageDescriptors().pipe(
     Effect.map((descriptors) =>
       descriptors.filter(
         (descriptor): descriptor is ContentSitemapPage =>
@@ -146,7 +146,7 @@ function getEntryDocument({
   entry: LlmsEntry;
   locale: Locale;
 }) {
-  if (!entry.href.endsWith(".md") || isDuplicateExerciseQuestionEntry(entry)) {
+  if (!entry.href.endsWith(".md")) {
     return Effect.succeed(null);
   }
 
@@ -170,14 +170,4 @@ function getEntryDocument({
       text: documentText,
     } satisfies LlmsFullDocument;
   });
-}
-
-/** Keeps llms-full from repeating questions already present in set markdown. */
-function isDuplicateExerciseQuestionEntry(entry: LlmsEntry) {
-  if (entry.section !== "exercises") {
-    return false;
-  }
-
-  const lastSegment = entry.segments.at(-1);
-  return lastSegment !== undefined && NUMBER_SEGMENT.test(lastSegment);
 }

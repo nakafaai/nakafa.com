@@ -88,7 +88,7 @@ function PricingPlanCards({ pricingDisplay }: PricingPlanCardsProps) {
             nativeButton={false}
             render={
               <NavigationLink
-                href="/home"
+                href="/auth"
                 rel="noopener noreferrer"
                 target="_blank"
               >

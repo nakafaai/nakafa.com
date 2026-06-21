@@ -2,9 +2,9 @@
 
 import { ArrowDown02Icon, ViewIcon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
-import { getTrendingTimeRange } from "@repo/backend/convex/subjectSections/utils";
+import { getTrendingTimeRange } from "@repo/backend/convex/curriculumLessons/utils";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
-import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
+import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { GradientBlock } from "@repo/design-system/components/ui/gradient-block";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -21,7 +21,7 @@ export function HomeTrending() {
   const [timeRange] = useState(() => getTrendingTimeRange(7, Date.now()));
 
   const { data, isPending } = useQueryWithStatus(
-    api.subjectSections.queries.getTrendingSubjects,
+    api.curriculumLessons.queries.getTrendingSubjects,
     {
       locale,
       since: timeRange.since,
@@ -61,7 +61,7 @@ export function HomeTrending() {
                 <div className="absolute inset-0 flex items-center justify-center">
                   <HugeIcons
                     className="size-4 text-background drop-shadow-md"
-                    icon={getMaterialIcon(subject.material)}
+                    icon={getMaterialIcon(subject.materialDomain)}
                   />
                 </div>
               </div>

@@ -11,14 +11,20 @@ interface TryoutPageHeaderProps {
     label: string;
   };
   meta?: ReactNode;
+  status?: ReactNode;
   title: ReactNode;
 }
 
+/**
+ * Renders the compact try-out page header with parent navigation and optional
+ * concise state or set-introduction copy.
+ */
 export function TryoutPageHeader({
   description,
   icon,
   link,
   meta,
+  status,
   title,
 }: TryoutPageHeaderProps) {
   return (
@@ -48,6 +54,10 @@ export function TryoutPageHeader({
 
       {description ? (
         <p className="max-w-2xl text-muted-foreground">{description}</p>
+      ) : null}
+
+      {status ? (
+        <p className="max-w-2xl text-muted-foreground">{status}</p>
       ) : null}
     </header>
   );

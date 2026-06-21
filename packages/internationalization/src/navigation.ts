@@ -2,6 +2,10 @@ import { routing } from "@repo/internationalization/src/routing";
 import { createNavigation } from "next-intl/navigation";
 
 // Lightweight wrappers around Next.js' navigation APIs
-// that will consider the routing configuration
+// that preserve the app-wide route surface. Localized public route pathnames
+// stay in routing.ts for middleware/proxy matching and route projection.
 export const { Link, redirect, usePathname, useRouter, getPathname } =
-  createNavigation(routing);
+  createNavigation({
+    defaultLocale: routing.defaultLocale,
+    locales: routing.locales,
+  });

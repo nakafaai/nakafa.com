@@ -1,13 +1,16 @@
 import path from "node:path";
 import { readContentDirectoryPaths } from "@repo/contents/_lib/fs/folder-scan";
 import { resolveContentsDir } from "@repo/contents/_lib/root";
+import { CONTENT_ROOT_VALUES } from "@repo/contents/_types/content";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 
 const contentsDir = resolveContentsDir(import.meta.url);
 const mdxExtension = ".mdx";
-const contentScanRoots = ["articles", "subject", "exercises"] as const;
-const exerciseContentPathSegments = ["/_question/", "/_answer/"] as const;
+const contentScanRoots = [
+  CONTENT_ROOT_VALUES.articles,
+  CONTENT_ROOT_VALUES.material,
+] as const;
 
 export type MdxSlugManifest = ReadonlyMap<string, readonly string[]>;
 
@@ -86,14 +89,14 @@ function addLocalizedMdxPath(
     return;
   }
 
-  const locale = path.basename(filePath, mdxExtension);
+  const locale = getLocalizedMdxLocale(filePath);
   const slugs = slugsByLocale.get(locale);
 
   if (!slugs) {
     return;
   }
 
-  const slugPath = path.dirname(filePath);
+  const slugPath = getLocalizedMdxSlugPath(filePath);
 
   if (slugPath === ".") {
     slugs.add(root);
@@ -103,20 +106,36 @@ function addLocalizedMdxPath(
   slugs.add(`${root}/${slugPath}`);
 }
 
+/** Returns the locale suffix from `en.mdx` or typed assets like `question.en.mdx`. */
+function getLocalizedMdxLocale(filePath: string) {
+  const basename = path.basename(filePath, mdxExtension);
+
+  return basename.slice(basename.lastIndexOf(".") + 1);
+}
+
+/** Converts one localized MDX file path into its locale-free content slug. */
+function getLocalizedMdxSlugPath(filePath: string) {
+  const parentPath = path.dirname(filePath);
+  const basename = path.basename(filePath, mdxExtension);
+  const basenameParts = basename.split(".");
+
+  if (basenameParts.length === 1) {
+    return parentPath;
+  }
+
+  const contentStem = basenameParts.slice(0, -1).join(".");
+
+  if (parentPath === ".") {
+    return contentStem;
+  }
+
+  return `${parentPath}/${contentStem}`;
+}
+
 /** Returns whether a recursive path is a localized MDX content file. */
 function isLocalizedMdxPath(
-  root: (typeof contentScanRoots)[number],
+  _root: (typeof contentScanRoots)[number],
   filePath: string
 ) {
-  if (!filePath.endsWith(mdxExtension)) {
-    return false;
-  }
-
-  if (root !== "exercises") {
-    return true;
-  }
-
-  return exerciseContentPathSegments.some((segment) =>
-    filePath.includes(segment)
-  );
+  return filePath.endsWith(mdxExtension);
 }

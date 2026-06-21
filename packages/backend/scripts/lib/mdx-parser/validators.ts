@@ -1,12 +1,12 @@
 import { EXERCISE_YEAR_SEGMENT_REGEX } from "@repo/backend/scripts/lib/mdx-parser/constants";
 import { ArticleCategorySchema } from "@repo/contents/_types/articles/category";
+import { ExercisesCategorySchema } from "@repo/contents/_types/assessment/category";
+import { ExercisesMaterialSchema } from "@repo/contents/_types/assessment/material";
+import { ExercisesTypeSchema } from "@repo/contents/_types/assessment/type";
 import { LocaleSchema } from "@repo/contents/_types/content";
-import { ExercisesCategorySchema } from "@repo/contents/_types/exercises/category";
-import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
-import { ExercisesTypeSchema } from "@repo/contents/_types/exercises/type";
-import { SubjectCategorySchema } from "@repo/contents/_types/subject/category";
-import { GradeSchema } from "@repo/contents/_types/subject/grade";
-import { MaterialSchema } from "@repo/contents/_types/subject/material";
+import { SubjectCategorySchema } from "@repo/contents/_types/curriculum/category";
+import { GradeSchema } from "@repo/contents/_types/curriculum/grade";
+import { MaterialSchema } from "@repo/contents/_types/curriculum/material";
 import { Effect, Schema } from "effect";
 
 /** Identifies an invalid path segment while parsing content file paths. */
@@ -79,7 +79,7 @@ export const validateGrade = Effect.fn("mdx.validateGrade")(function* (
   return yield* parseWithSchema(GradeSchema, value, filePath, "Invalid grade");
 });
 
-/** Validates a subject material segment from a content path. */
+/** Validates a material lesson segment from a content path. */
 export const validateMaterial = Effect.fn("mdx.validateMaterial")(function* (
   value: string,
   filePath: string

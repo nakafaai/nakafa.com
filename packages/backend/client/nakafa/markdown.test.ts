@@ -5,6 +5,7 @@ import {
 import { api } from "@repo/backend/convex/_generated/api";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import { LocaleSchema } from "@repo/contents/_types/content";
+import { findPublicRouteByPath } from "@repo/contents/_types/route/projection";
 import { type FunctionReference, getFunctionName } from "convex/server";
 import { Effect, Option, Schema } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -34,9 +35,9 @@ const SurahArgsSchema = Schema.Struct({
 
 const convexUrl = "https://example.convex.cloud";
 const articleRoute = "articles/politics/example";
-const subjectRoute = "subject/high-school/10/mathematics/topic/section";
+const subjectRoute = "material/lesson/mathematics/topic/section";
 const exerciseRoute =
-  "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1";
+  "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1";
 
 beforeEach(() => {
   runtimeMocks.fetchConvexRuntimeQuery.mockReset();
@@ -53,7 +54,7 @@ describe("readNakafaMarkdown", () => {
     const exerciseRef = readNakafaContentRefFixture(
       "id",
       exerciseRoute,
-      "exercises"
+      "material"
     );
     const article = await Effect.runPromise(
       readNakafaMarkdown(convexUrl, articleRef.content_id)
@@ -61,7 +62,7 @@ describe("readNakafaMarkdown", () => {
     const subjectRef = readNakafaContentRefFixture(
       "id",
       subjectRoute,
-      "subject"
+      "material"
     );
     const subject = await Effect.runPromise(
       readNakafaMarkdown(convexUrl, subjectRef.content_id)
@@ -97,9 +98,13 @@ describe("readNakafaMarkdown", () => {
       )
     );
     const subjectWithoutLabel = await Effect.runPromise(
-      readNakafaMarkdown(
+      readMdxMarkdown(
         convexUrl,
-        "https://nakafa.com/id/subject/high-school/10/mathematics/topic/no-subject"
+        readNakafaContentRefFixture(
+          "id",
+          "material/lesson/mathematics/topic/no-subject",
+          "material"
+        )
       )
     );
     const unsupported = await Effect.runPromise(
@@ -143,8 +148,8 @@ function readRuntimeFixture(
     return Promise.resolve(readArticlePage(args));
   }
 
-  if (isRuntimeQuery(query, api.contents.queries.runtime.getSubjectPage)) {
-    return Promise.resolve(readSubjectPage(args));
+  if (isRuntimeQuery(query, api.contents.queries.runtime.getCurriculumPage)) {
+    return Promise.resolve(readCurriculumPage(args));
   }
 
   if (isRuntimeQuery(query, api.contents.queries.runtime.getExerciseSetPage)) {
@@ -163,8 +168,8 @@ function readContentRouteByContentId(args: unknown) {
   const input = Schema.decodeUnknownSync(ContentIdArgsSchema)(args);
   const refs = [
     readNakafaContentRefFixture("en", articleRoute, "articles"),
-    readNakafaContentRefFixture("id", subjectRoute, "subject"),
-    readNakafaContentRefFixture("id", exerciseRoute, "exercises"),
+    readNakafaContentRefFixture("id", subjectRoute, "material"),
+    readNakafaContentRefFixture("id", exerciseRoute, "material"),
     readNakafaContentRefFixture("id", "quran/1", "quran"),
   ];
   const ref = refs.find((item) => item.content_id === input.contentId);
@@ -179,11 +184,38 @@ function readContentRouteByContentId(args: unknown) {
   };
 }
 
+/** Resolves public route fixtures first, then handles internal source-path samples used by markdown tests. */
 function readContentRoute(args: unknown) {
   const input = Schema.decodeUnknownSync(RouteArgsSchema)(args);
 
   if (input.route.includes("missing")) {
     return null;
+  }
+
+  const publicRoute = Effect.runSync(
+    findPublicRouteByPath(input.route, input.locale)
+  );
+
+  if (Option.isSome(publicRoute)) {
+    const route = publicRoute.value;
+
+    if (
+      route.kind === "exercise-question" ||
+      route.kind === "exercise-set" ||
+      route.kind === "subject-lesson" ||
+      route.kind === "subject-topic"
+    ) {
+      return {
+        ...readNakafaContentRefFixture(
+          input.locale,
+          route.sourcePath,
+          "material"
+        ),
+        route: route.publicPath,
+        sourcePath: route.sourcePath,
+        title: route.title,
+      };
+    }
   }
 
   return {
@@ -196,17 +228,14 @@ function readContentRoute(args: unknown) {
   };
 }
 
+/** Classifies fixture routes into the content section expected by the markdown reader. */
 function getSection(route: string) {
   if (route.startsWith("articles/")) {
     return "articles";
   }
 
-  if (route.startsWith("subject/")) {
-    return "subject";
-  }
-
-  if (route.startsWith("exercises/")) {
-    return "exercises";
+  if (route.startsWith("material/")) {
+    return "material";
   }
 
   return "quran";
@@ -247,8 +276,8 @@ function readArticlePage(args: unknown) {
   };
 }
 
-/** Builds one subject page fixture for markdown rendering. */
-function readSubjectPage(args: unknown) {
+/** Builds one curriculum page fixture for markdown rendering. */
+function readCurriculumPage(args: unknown) {
   const input = Schema.decodeUnknownSync(PageArgsSchema)(args);
 
   return {

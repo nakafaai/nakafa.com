@@ -2,43 +2,41 @@ import { AllahIcon } from "@hugeicons/core-free-icons";
 import { slugify } from "@repo/design-system/lib/utils";
 import { BookJsonLd } from "@repo/seo/json-ld/book";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
-import { Effect } from "effect";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
-import {
-  LayoutMaterial,
-  LayoutMaterialContent,
-  LayoutMaterialFooter,
-  LayoutMaterialHeader,
-  LayoutMaterialMain,
-  LayoutMaterialPagination,
-  LayoutMaterialToc,
-} from "@/components/shared/layout-material";
+import { FooterContent } from "@/components/shared/footer-content";
+import { HeaderContent } from "@/components/shared/header-content";
+import { LayoutContent } from "@/components/shared/layout-content";
+import { LayoutMaterialContent } from "@/components/shared/material/content";
+import { LayoutMaterial } from "@/components/shared/material/layout";
+import { LayoutMaterialToc } from "@/components/shared/material/toc";
+import { PaginationContent } from "@/components/shared/pagination-content";
 import { QuranPageControls } from "@/components/shared/quran-controls";
 import { QuranText } from "@/components/shared/quran-text";
 import { QuranVerse } from "@/components/shared/quran-verse";
 import { RefContent } from "@/components/shared/ref-content";
 import { WindowVirtualized } from "@/components/shared/window-virtualized";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
-import { fetchRuntimeQuranSurahs } from "@/lib/content/runtime";
+import {
+  fetchRuntimeQuranSurahPage,
+  fetchRuntimeQuranSurahs,
+} from "@/lib/content/runtime/pages";
 import { VirtualProvider } from "@/lib/context/use-virtual";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getSocialMetadata } from "@/lib/utils/metadata";
-import {
-  fetchSurahContext,
-  fetchSurahMetadataContext,
-  getQuranPagination,
-  getQuranSurahName,
-} from "@/lib/utils/pages/quran";
+import { getQuranPagination, getQuranSurahName } from "@/lib/utils/pages/quran";
 import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 import { generateSEOMetadata } from "@/lib/utils/seo/generator";
 import type { SEOContext } from "@/lib/utils/seo/types";
 
+const QURAN_INITIAL_VERSE_SSR_COUNT = 80;
+
+/** Builds localized Quran surah metadata only after the runtime catalog confirms the surah exists. */
 export async function generateMetadata({
   params,
 }: {
@@ -107,6 +105,7 @@ export async function generateStaticParams() {
   }));
 }
 
+/** Keeps the public page export synchronous while the resolved shell owns async route validation. */
 export default function Page(props: PageProps<"/[locale]/quran/[surah]">) {
   return <ResolvedSurahPage params={props.params} />;
 }
@@ -173,14 +172,9 @@ async function getSurahMetadataData({ surah }: { surah: number }) {
 
   applyContentRuntimeCache();
 
-  const surahMetadataContext = await Effect.runPromise(
-    Effect.match(fetchSurahMetadataContext({ surah }), {
-      onFailure: () => null,
-      onSuccess: (data) => data,
-    })
-  );
+  const surahPage = await fetchRuntimeQuranSurahPage({ surah });
 
-  return surahMetadataContext?.surahData ?? null;
+  return surahPage?.surahData ?? null;
 }
 
 /** Renders the cached Quran surah body, controls, pagination, and table of contents. */
@@ -203,19 +197,12 @@ async function CachedSurahShell({
 
   const [t, result] = await Promise.all([
     getTranslations({ locale, namespace: "Holy" }),
-    Effect.runPromise(
-      Effect.match(fetchSurahContext({ surah: surahNumber }), {
-        onFailure: () => ({
-          surahData: null,
-          prevSurah: null,
-          nextSurah: null,
-        }),
-        onSuccess: (data) => data,
-      })
-    ),
+    fetchRuntimeQuranSurahPage({ surah: surahNumber }),
   ]);
 
-  const { surahData, prevSurah, nextSurah } = result;
+  const surahData = result?.surahData ?? null;
+  const prevSurah = result?.prevSurah ?? null;
+  const nextSurah = result?.nextSurah ?? null;
 
   if (!surahData) {
     notFound();
@@ -281,7 +268,7 @@ async function CachedSurahShell({
     <VirtualProvider>
       <LayoutMaterial>
         <LayoutMaterialContent>
-          <LayoutMaterialHeader
+          <HeaderContent
             description={translation}
             icon={AllahIcon}
             link={{
@@ -290,7 +277,7 @@ async function CachedSurahShell({
             }}
             title={title}
           />
-          <LayoutMaterialMain>
+          <LayoutContent>
             {!!preBismillah && (
               <div className="mb-20 flex flex-col items-center gap-4 rounded-xl border bg-card p-6 text-center shadow-sm">
                 <QuranText>{preBismillah.text.arab}</QuranText>
@@ -301,7 +288,12 @@ async function CachedSurahShell({
               </div>
             )}
 
-            <WindowVirtualized ssrCount={surahData.verses.length}>
+            <WindowVirtualized
+              ssrCount={Math.min(
+                surahData.verses.length,
+                QURAN_INITIAL_VERSE_SSR_COUNT
+              )}
+            >
               {surahData.verses.map((verse, index) => {
                 const verseLabel = t("verse-count", {
                   count: verse.number.inSurah,
@@ -321,11 +313,9 @@ async function CachedSurahShell({
                 );
               })}
             </WindowVirtualized>
-          </LayoutMaterialMain>
-          <LayoutMaterialPagination
-            pagination={paginationWithLocalizedTitles}
-          />
-          <LayoutMaterialFooter>{footer}</LayoutMaterialFooter>
+          </LayoutContent>
+          <PaginationContent pagination={paginationWithLocalizedTitles} />
+          <FooterContent>{footer}</FooterContent>
           <QuranPageControls
             audioSources={audioSources}
             interpretations={interpretations}

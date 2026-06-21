@@ -33,7 +33,7 @@ export function getNakafaExerciseToolResult(args: unknown) {
     return Option.match(exercise, {
       onNone: () =>
         toMcpToolError("Nakafa exercise content was not found.", [
-          'Call `nakafa_search_content` with `section: "exercises"` and reuse the returned `content_id` as `content_ref`.',
+          'Call `nakafa_search_content` with `section: "material"` and reuse the returned `content_id` as `content_ref`.',
           "If requesting one question, verify `exercise_number` exists in the exercise set.",
         ]),
       onSome: toMcpStructuredResult,

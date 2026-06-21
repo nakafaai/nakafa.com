@@ -1,4 +1,3 @@
-import { quran } from "@repo/contents/_data/quran";
 import {
   SurahNotFoundError,
   VerseNotFoundError,
@@ -9,6 +8,7 @@ import {
   SurahSchema,
   type Verse,
 } from "@repo/contents/_types/quran";
+import { quran } from "@repo/contents/quran/source";
 import { Effect, Array as EffectArray, Option, pipe, Schema } from "effect";
 
 const verses = quran.flatMap((surah) => surah.verses);

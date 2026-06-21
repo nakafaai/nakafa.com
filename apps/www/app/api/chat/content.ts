@@ -1,7 +1,6 @@
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { Locale } from "@repo/contents/_types/content";
 import { cleanSlug } from "@repo/utilities/helper";
-import { Effect } from "effect";
 
 /**
  * Converts an absolute or relative content URL into Nakafa's canonical origin.
@@ -29,8 +28,9 @@ export function getCanonicalCurrentPageContentUrl({
 /**
  * Normalizes absolute and relative content URLs to a comparable slug.
  */
-function normalizeContentUrl(url: string) {
-  const parsedUrl = new URL(url, "https://nakafa.com");
+function normalizeContentRefUrl(url: string) {
+  const canonicalUrl = getCanonicalNakafaContentUrl(url);
+  const parsedUrl = new URL(canonicalUrl, "https://nakafa.com");
   return cleanSlug(parsedUrl.pathname);
 }
 
@@ -38,50 +38,56 @@ function normalizeContentUrl(url: string) {
  * Checks whether the retained chat context already contains a successful
  * current-page content fetch for the normalized URL.
  */
-export const hasFetchedCurrentPageContent = Effect.fn(
-  "chat.hasFetchedCurrentPageContent"
-)(function* ({ messages, url }: { messages: MyUIMessage[]; url: string }) {
-  const currentUrl = yield* Effect.sync(() => normalizeContentUrl(url));
+export function hasFetchedCurrentPageContent({
+  messages,
+  url,
+}: {
+  messages: MyUIMessage[];
+  url: string;
+}) {
+  const currentUrl = normalizeContentRefUrl(url);
 
-  return yield* Effect.sync(() =>
-    messages.some((message) =>
-      message.parts.some((part) => {
-        if (part.type !== "data-nakafa") {
-          return false;
-        }
+  for (const message of messages) {
+    for (const part of message.parts) {
+      if (part.type !== "data-nakafa") {
+        continue;
+      }
 
-        if (part.data.kind !== "content") {
-          return false;
-        }
+      if (part.data.kind !== "content") {
+        continue;
+      }
 
-        if (part.data.status !== "done") {
-          return false;
-        }
+      if (part.data.status !== "done") {
+        continue;
+      }
 
-        return normalizeContentUrl(part.data.result.url) === currentUrl;
-      })
-    )
-  );
-});
+      const resultUrl = normalizeContentRefUrl(part.data.result.url);
+
+      if (resultUrl === currentUrl) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
 
 /**
  * Decides whether the verified current page still needs a content fetch.
  */
-export const determinePageFetchNeed = Effect.fn("chat.determinePageFetchNeed")(
-  function* ({
-    messages,
-    url,
-    verified,
-  }: {
-    messages: MyUIMessage[];
-    url: string;
-    verified: boolean;
-  }) {
-    if (!verified) {
-      return false;
-    }
-
-    const fetched = yield* hasFetchedCurrentPageContent({ messages, url });
-    return !fetched;
+export function determinePageFetchNeed({
+  messages,
+  url,
+  verified,
+}: {
+  messages: MyUIMessage[];
+  url: string;
+  verified: boolean;
+}) {
+  if (!verified) {
+    return false;
   }
-);
+
+  const fetched = hasFetchedCurrentPageContent({ messages, url });
+  return !fetched;
+}

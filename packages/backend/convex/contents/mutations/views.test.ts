@@ -15,10 +15,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const NOW = Date.UTC(2026, 4, 29, 10, 0, 0);
 const ARTICLE_ROUTE = "articles/politics/views";
 const ARTICLE_CONTENT_ID = "asset:id:catalog:article:views";
-const SUBJECT_ROUTE = "subject/high-school/10/mathematics/vector/addition";
+const SUBJECT_ROUTE = "material/lesson/mathematics/vector/addition";
 const SUBJECT_CONTENT_ID = "asset:id:catalog:subject:views";
 const EXERCISE_ROUTE =
-  "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1";
+  "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1";
 const EXERCISE_CONTENT_ID = "asset:id:catalog:exercise:views";
 
 /** Builds one route-catalog graph fixture from the route shape under test. */
@@ -59,6 +59,7 @@ async function insertContentRoute(
     markdown: true,
     route: source.route,
     section: source.section,
+    sourcePath: source.route,
     syncedAt: NOW,
     title: source.title,
   });
@@ -96,33 +97,29 @@ async function insertArticle(
   return { contentId, id };
 }
 
-/** Inserts one subject section row for content-view mutation tests. */
+/** Inserts one curriculum lesson row for content-view mutation tests. */
 async function insertSubject(ctx: MutationCtx) {
-  const topicId = await ctx.db.insert("subjectTopics", {
-    category: "high-school",
-    grade: "10",
+  const topicId = await ctx.db.insert("curriculumTopics", {
     locale: "id",
     material: "mathematics",
     order: 0,
     sectionCount: 1,
-    slug: "subject/high-school/10/mathematics/vector",
+    slug: "material/lesson/mathematics/vector",
     syncedAt: NOW,
     title: "Vector",
     topic: "vector",
   });
 
-  const id = await ctx.db.insert("subjectSections", {
+  const id = await ctx.db.insert("curriculumLessons", {
     body: "Subject body",
-    category: "high-school",
     contentHash: "subject-hash",
     date: NOW,
     description: "Subject description",
-    grade: "10",
     locale: "id",
     material: "mathematics",
     order: 0,
     section: "addition",
-    slug: "subject/high-school/10/mathematics/vector/addition",
+    slug: "material/lesson/mathematics/vector/addition",
     subject: "Vector",
     syncedAt: NOW,
     title: "Vector Addition",
@@ -132,9 +129,9 @@ async function insertSubject(ctx: MutationCtx) {
 
   await insertContentRoute(ctx, {
     contentId: SUBJECT_CONTENT_ID,
-    kind: "subject-section",
+    kind: "curriculum-lesson",
     route: SUBJECT_ROUTE,
-    section: "subject",
+    section: "material",
     title: "Vector Addition",
   });
 
@@ -160,7 +157,7 @@ async function insertExerciseSet(ctx: MutationCtx) {
     contentId: EXERCISE_CONTENT_ID,
     kind: "exercise-set",
     route: EXERCISE_ROUTE,
-    section: "exercises",
+    section: "material",
     title: "Views",
   });
 
@@ -390,12 +387,12 @@ describe("contents/mutations/views", () => {
 
   it("returns best-effort misses for route kinds without tracked source rows", async () => {
     const t = createConvexTestWithBetterAuth();
-    const subjectTopicContentId = await t.mutation((ctx) =>
+    const curriculumTopicContentId = await t.mutation((ctx) =>
       insertContentRoute(ctx, {
-        contentId: "asset:id:catalog:subject-topic:views",
-        kind: "subject-topic",
-        route: "subject/high-school/10/mathematics/vector",
-        section: "subject",
+        contentId: "asset:id:catalog:curriculum-topic:views",
+        kind: "curriculum-topic",
+        route: "material/lesson/mathematics/vector",
+        section: "material",
         title: "Vector",
       })
     );
@@ -412,7 +409,7 @@ describe("contents/mutations/views", () => {
     const subjectResult = await t.mutation(
       api.contents.mutations.views.recordContentView,
       {
-        contentId: subjectTopicContentId,
+        contentId: curriculumTopicContentId,
         deviceId: "device-subject",
         locale: "id",
       }

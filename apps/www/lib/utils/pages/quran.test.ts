@@ -12,7 +12,7 @@ const runtimeMocks = vi.hoisted(() => ({
   getRuntimeQuranSurahPage: vi.fn(),
 }));
 
-vi.mock("@/lib/content/runtime", () => ({
+vi.mock("@/lib/content/runtime/pages", () => ({
   getRuntimeQuranSurahPage: runtimeMocks.getRuntimeQuranSurahPage,
 }));
 

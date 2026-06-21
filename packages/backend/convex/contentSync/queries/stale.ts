@@ -9,16 +9,16 @@ import { literals } from "convex-helpers/validators";
 
 const staleContentTableNameValidator = literals(
   "articleContents",
-  "subjectTopics",
-  "subjectSections",
+  "curriculumTopics",
+  "curriculumLessons",
   "exerciseSets",
   "exerciseQuestions"
 );
 
 const staleContentIdValidator = v.union(
   v.id("articleContents"),
-  v.id("subjectTopics"),
-  v.id("subjectSections"),
+  v.id("curriculumTopics"),
+  v.id("curriculumLessons"),
   v.id("exerciseSets"),
   v.id("exerciseQuestions")
 );

@@ -3,7 +3,7 @@ import type { Locale } from "next-intl";
 import {
   getRuntimeQuranSurahPage,
   getRuntimeQuranSurahs,
-} from "@/lib/content/runtime";
+} from "@/lib/content/runtime/pages";
 import { BASE_URL } from "@/lib/llms/constants";
 import {
   buildHeader,
@@ -11,6 +11,8 @@ import {
   getTranslation,
 } from "@/lib/llms/format";
 import { getQuranSurahName } from "@/lib/utils/pages/quran";
+
+const QURAN_PAGE_MARKDOWN_VERSE_LIMIT = 80;
 
 /** Builds llms index metadata for Quran list and surah routes. */
 export const getQuranRouteMetadata = Effect.fn("www.llms.quran.metadata")(
@@ -143,7 +145,10 @@ function getSurahLlmsText({
     scanned.push("### Verses");
     scanned.push("");
 
-    for (const verse of surah.verses) {
+    for (const verse of surah.verses.slice(
+      0,
+      QURAN_PAGE_MARKDOWN_VERSE_LIMIT
+    )) {
       scanned.push(`#### Verse ${verse.number.inSurah}`);
       scanned.push("");
       scanned.push(verse.text.arab);
@@ -152,6 +157,13 @@ function getSurahLlmsText({
       scanned.push("");
       scanned.push(
         `**Translation:** ${getTranslation(verse.translation, locale)}`
+      );
+      scanned.push("");
+    }
+
+    if (surah.verses.length > QURAN_PAGE_MARKDOWN_VERSE_LIMIT) {
+      scanned.push(
+        `_This page-level markdown is bounded to verses 1-${QURAN_PAGE_MARKDOWN_VERSE_LIMIT} of ${surah.numberOfVerses}. Use the Nakafa Quran reference tool for exact verse ranges._`
       );
       scanned.push("");
     }

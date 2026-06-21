@@ -3,7 +3,7 @@ import { api } from "@repo/backend/convex/_generated/api";
 import {
   createNakafaContentRefFromGraphProjection,
   normalizeNakafaContentInput,
-  parseNakafaContentRef,
+  parseNakafaUrlRoute,
 } from "@repo/contents/_lib/agent/refs";
 import {
   NakafaAgentContentIdSchema,
@@ -49,7 +49,7 @@ function resolveNakafaContentId(convexUrl: string, contentId: string) {
 /** Resolves one canonical public URL through the backend route catalog. */
 function resolveNakafaContentUrlProjection(convexUrl: string, input: string) {
   return Effect.gen(function* () {
-    const parsed = parseNakafaContentRef(input);
+    const parsed = parseNakafaUrlRoute(input);
 
     if (Option.isNone(parsed)) {
       return Option.none<NakafaAgentContentRef>();

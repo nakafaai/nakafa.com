@@ -12,8 +12,14 @@ import { Hero } from "@/components/marketing/about/hero";
 import { Logos } from "@/components/marketing/about/logos";
 import { Pricing } from "@/components/marketing/about/pricing";
 import { Schools } from "@/components/marketing/about/schools";
-import { exercisesMenu } from "@/components/sidebar/_data/exercises";
-import { subjectMenu } from "@/components/sidebar/_data/subject";
+import {
+  exercisesMenu,
+  getExercisesMenuHref,
+} from "@/components/sidebar/data/exercises";
+import {
+  getSubjectMenuHref,
+  subjectMenu,
+} from "@/components/sidebar/data/subject";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 
@@ -73,6 +79,10 @@ export default function Page(props: PageProps<"/[locale]">) {
   return <MarketingHomePageContent locale={locale} />;
 }
 
+/**
+ * Builds the localized marketing home surface and SEO graph from the same
+ * navigation data that powers the app entry points.
+ */
 async function MarketingHomePageContent({ locale }: { locale: Locale }) {
   const [tMetadata, tSubject, tExercises, tFaq] = await Promise.all([
     getTranslations({ locale, namespace: "Metadata" }),
@@ -90,7 +100,7 @@ async function MarketingHomePageContent({ locale }: { locale: Locale }) {
             : `${tSubject(category.title)} ${tSubject(item.title)}`;
         const description = tSubject("grade-description");
         return {
-          url: `https://nakafa.com/${locale}${item.href}`,
+          url: `https://nakafa.com/${locale}${getSubjectMenuHref(item, locale)}`,
           name,
           description,
         };
@@ -101,7 +111,7 @@ async function MarketingHomePageContent({ locale }: { locale: Locale }) {
         const name = `${tExercises(item.title)}`;
         const description = tExercises("type-description");
         return {
-          url: `https://nakafa.com/${locale}${item.href}`,
+          url: `https://nakafa.com/${locale}${getExercisesMenuHref(item, locale)}`,
           name,
           description,
         };

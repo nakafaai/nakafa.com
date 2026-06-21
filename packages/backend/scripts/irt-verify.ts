@@ -3,12 +3,12 @@ import {
   formatScriptCause,
   ScriptFailureError,
 } from "@repo/backend/scripts/lib/errors";
+import { logError } from "@repo/backend/scripts/sync-content/cli/logging";
 import {
   callConvexQuery,
   getConvexConfig,
-} from "@repo/backend/scripts/sync-content/convex";
-import { logError } from "@repo/backend/scripts/sync-content/logging";
-import { loadEnvProvider } from "@repo/backend/scripts/sync-content/runtime";
+} from "@repo/backend/scripts/sync-content/convex/client";
+import { loadEnvProvider } from "@repo/backend/scripts/sync-content/runtime/files";
 import type { FunctionArgs, PaginationOptions } from "convex/server";
 import { Effect, Schema } from "effect";
 

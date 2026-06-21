@@ -219,7 +219,7 @@ describe("tryouts/queries/me/part", () => {
       });
       const firstSetId = await ctx.db.insert("exerciseSets", {
         locale: "id",
-        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/reordered-part-route-qk",
+        slug: "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/reordered-part-route-qk",
         category: "high-school",
         type: "snbt",
         material: "quantitative-knowledge",
@@ -231,7 +231,7 @@ describe("tryouts/queries/me/part", () => {
       });
       const secondSetId = await ctx.db.insert("exerciseSets", {
         locale: "id",
-        slug: "exercises/high-school/snbt/mathematical-reasoning/try-out/2026/reordered-part-route-mr",
+        slug: "material/practice/assessment/snbt/mathematical-reasoning/try-out-2026/reordered-part-route-mr",
         category: "high-school",
         type: "snbt",
         material: "mathematical-reasoning",
@@ -274,7 +274,7 @@ describe("tryouts/queries/me/part", () => {
         partKey: "mathematical-reasoning",
       });
       const firstSetAttemptId = await ctx.db.insert("exerciseAttempts", {
-        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/reordered-part-route-qk",
+        slug: "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/reordered-part-route-qk",
         userId: identity.userId,
         origin: "tryout",
         mode: "simulation",
@@ -293,7 +293,7 @@ describe("tryouts/queries/me/part", () => {
         scorePercentage: 70,
       });
       const secondSetAttemptId = await ctx.db.insert("exerciseAttempts", {
-        slug: "exercises/high-school/snbt/mathematical-reasoning/try-out/2026/reordered-part-route-mr",
+        slug: "material/practice/assessment/snbt/mathematical-reasoning/try-out-2026/reordered-part-route-mr",
         userId: identity.userId,
         origin: "tryout",
         mode: "simulation",

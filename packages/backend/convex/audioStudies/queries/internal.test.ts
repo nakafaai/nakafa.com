@@ -12,10 +12,9 @@ import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
 const REAL_VECTOR_PUBLISHED_AT = 1_744_416_000_000;
-const REAL_VECTOR_TOPIC_SLUG =
-  "subject/high-school/10/mathematics/vector-operations";
+const REAL_VECTOR_TOPIC_SLUG = "material/lesson/mathematics/vector-operations";
 const REAL_VECTOR_SECTION_SLUG =
-  "subject/high-school/10/mathematics/vector-operations/vector-addition";
+  "material/lesson/mathematics/vector-operations/vector-addition";
 const REAL_VECTOR_TOPIC_SECTION_COUNT = 15;
 
 const REAL_VECTOR_ADDITION_EN = {
@@ -47,10 +46,8 @@ const subjectAudioSource = getTestAudioContent({
 });
 
 async function insertVectorSubject(ctx: MutationCtx) {
-  return await ctx.db.insert("subjectSections", {
-    topicId: await ctx.db.insert("subjectTopics", {
-      category: "high-school",
-      grade: "10",
+  return await ctx.db.insert("curriculumLessons", {
+    topicId: await ctx.db.insert("curriculumTopics", {
       material: "mathematics",
       order: 0,
       topic: REAL_VECTOR_ADDITION_EN.topic,
@@ -62,8 +59,6 @@ async function insertVectorSubject(ctx: MutationCtx) {
     }),
     locale: REAL_VECTOR_ADDITION_EN.locale,
     slug: REAL_VECTOR_SECTION_SLUG,
-    category: "high-school",
-    grade: "10",
     material: "mathematics",
     order: 0,
     topic: REAL_VECTOR_ADDITION_EN.topic,
@@ -129,7 +124,7 @@ describe("audioStudies/queries/internal", () => {
       const subjectId = await insertVectorSubject(ctx);
       const audioId = await insertSubjectAudio(ctx);
 
-      await ctx.db.delete("subjectSections", subjectId);
+      await ctx.db.delete("curriculumLessons", subjectId);
 
       return audioId;
     });
@@ -261,8 +256,7 @@ describe("audioStudies/queries/internal", () => {
     const t = convexTest(schema, convexModules);
     const missingAudioSource = getTestAudioContent({
       locale: REAL_VECTOR_ADDITION_EN.locale,
-      route:
-        "subject/high-school/10/mathematics/vector-operations/vector-subtraction",
+      route: "material/lesson/mathematics/vector-operations/vector-subtraction",
     });
 
     await t.mutation(

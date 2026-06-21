@@ -1,4 +1,4 @@
-import { getGradeNonNumeric } from "@repo/contents/_lib/subject/grade";
+import { getGradeNonNumeric } from "@repo/contents/_lib/curriculum/grade";
 import type {
   ArticleCategory,
   ExercisesMaterial,
@@ -204,10 +204,10 @@ function getContentDescription(data: ContentSEOData) {
 }
 
 /**
- * Generates SEO metadata for subject content.
+ * Generates SEO metadata for material content.
  */
 const generateSubjectMetadata = Effect.fn("SEO.generateSubjectMetadata")(
-  (context: Extract<SEOContext, { type: "subject" }>, locale: Locale) =>
+  (context: Extract<SEOContext, { type: "material-lesson" }>, locale: Locale) =>
     Effect.gen(function* () {
       const { data, grade, material, chapter } = context;
 
@@ -395,7 +395,7 @@ export async function generateSEOMetadata(
   const { type } = context;
 
   const effect = Effect.gen(function* () {
-    if (type === "subject") {
+    if (type === "material-lesson") {
       return yield* generateSubjectMetadata(context, locale);
     }
 
@@ -423,7 +423,7 @@ export async function generateSEOMetadata(
  * Gets display name from context for fallback metadata.
  */
 function getDisplayNameFromContext(context: SEOContext): string {
-  if (context.type === "subject") {
+  if (context.type === "material-lesson") {
     return context.material;
   }
   if (context.type === "exercise") {

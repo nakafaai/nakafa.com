@@ -6,8 +6,8 @@ import {
   CONTENT_ANALYTICS_LEASE_DURATION_MS,
   CONTENT_ANALYTICS_PARTITIONS,
 } from "@repo/backend/convex/contents/constants";
+import { getTrendingBucketStart } from "@repo/backend/convex/curriculumLessons/utils";
 import schema from "@repo/backend/convex/schema";
-import { getTrendingBucketStart } from "@repo/backend/convex/subjectSections/utils";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
@@ -16,7 +16,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const NOW = Date.parse("2026-01-01T00:00:00.000Z");
 const ARTICLE_ROUTE = "articles/politics/dynastic-politics-asian-values";
-const SUBJECT_ROUTE = "subject/high-school/10/mathematics/vector/addition";
+const SUBJECT_ROUTE = "material/lesson/mathematics/vector/addition";
 
 function getGraph(route: string) {
   const graph = createLearningGraphIdentityFromRoute({
@@ -34,7 +34,7 @@ function getGraph(route: string) {
   };
 }
 
-/** Inserts one article and one subject section for analytics worker tests. */
+/** Inserts one article and one curriculum lesson for analytics worker tests. */
 async function insertAnalyticsContent(ctx: MutationCtx) {
   const articleId = await ctx.db.insert("articleContents", {
     articleSlug: "dynastic-politics-asian-values",
@@ -48,25 +48,21 @@ async function insertAnalyticsContent(ctx: MutationCtx) {
     syncedAt: NOW,
     title: "Dynastic Politics",
   });
-  const topicId = await ctx.db.insert("subjectTopics", {
-    category: "high-school",
-    grade: "10",
+  const topicId = await ctx.db.insert("curriculumTopics", {
     locale: "en",
     material: "mathematics",
     order: 0,
     sectionCount: 1,
-    slug: "subject/high-school/10/mathematics/vector",
+    slug: "material/lesson/mathematics/vector",
     syncedAt: NOW,
     title: "Vector",
     topic: "vector",
   });
-  const subjectId = await ctx.db.insert("subjectSections", {
+  const subjectId = await ctx.db.insert("curriculumLessons", {
     body: "Subject body",
-    category: "high-school",
     contentHash: "subject-hash",
     date: NOW,
     description: "Subject description",
-    grade: "10",
     locale: "en",
     material: "mathematics",
     order: 0,
@@ -112,7 +108,7 @@ async function enqueueSubjectViews(
       locale: "en",
       partition: 0,
       route: SUBJECT_ROUTE,
-      section: "subject",
+      section: "material",
       viewedAt: NOW + index,
     });
   }
@@ -165,7 +161,7 @@ describe("contents/mutations/analytics", () => {
         locale: "en",
         partition: 3,
         route: SUBJECT_ROUTE,
-        section: "subject",
+        section: "material",
         viewedAt: NOW,
       });
     });
@@ -266,7 +262,7 @@ describe("contents/mutations/analytics", () => {
         locale: "en",
         partition: 0,
         route: SUBJECT_ROUTE,
-        section: "subject",
+        section: "material",
         viewedAt: NOW,
       });
       await enqueueSubjectViews(ctx, content.subject, 1);
@@ -303,7 +299,7 @@ describe("contents/mutations/analytics", () => {
           "by_section_and_locale_and_bucketStart_and_content_id",
           (q) =>
             q
-              .eq("section", "subject")
+              .eq("section", "material")
               .eq("locale", "en")
               .eq("bucketStart", getTrendingBucketStart(NOW))
               .eq("content_id", ids.subject.content_id)
@@ -327,7 +323,7 @@ describe("contents/mutations/analytics", () => {
     expect(state.subjectLearningPopularity).toMatchObject({
       content_id: ids.subject.content_id,
       locale: "en",
-      section: "subject",
+      section: "material",
       updatedAt: NOW,
       viewCount: 2,
     });
@@ -469,7 +465,7 @@ describe("contents/mutations/analytics", () => {
     expect(state.subjectLearningPopularity).toMatchObject({
       content_id: subject.content_id,
       locale: "en",
-      section: "subject",
+      section: "material",
       viewCount: CONTENT_ANALYTICS_BATCH_SIZE,
     });
   });

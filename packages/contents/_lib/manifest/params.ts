@@ -83,15 +83,10 @@ export function getStaticParams(
       candidates,
       CONTENT_ROOT_VALUES.articles
     ),
-    exercises: getStaticParamsForRoot(
+    material: getStaticParamsForRoot(
       localeSlugs,
       candidates,
-      CONTENT_ROOT_VALUES.exercises
-    ),
-    subject: getStaticParamsForRoot(
-      localeSlugs,
-      candidates,
-      CONTENT_ROOT_VALUES.subject
+      CONTENT_ROOT_VALUES.material
     ),
   };
 }
@@ -127,10 +122,7 @@ export function getExerciseApiParams(localeSlugs: readonly LocaleSlugEntry[]) {
     ];
 
     for (const exercisePath of exercisePaths) {
-      result.push({
-        locale,
-        slug: exercisePath.slice("exercises/".length).split("/"),
-      });
+      result.push({ locale, slug: exercisePath.split("/") });
     }
   }
 
@@ -165,17 +157,15 @@ function getStaticParamsForRoot(
       }
     }
 
-    if (root !== CONTENT_ROOT_VALUES.exercises) {
+    if (root !== CONTENT_ROOT_VALUES.material) {
       continue;
     }
 
     for (const exercisePath of getExerciseSetPaths(slugs)) {
-      const relativePath = exercisePath.slice("exercises/".length);
-      if (!folderPaths.has(relativePath)) {
-        result.push({
-          locale,
-          slug: relativePath.split("/"),
-        });
+      const relativeExercisePath = stripRootPrefix(exercisePath, root);
+
+      if (!folderPaths.has(relativeExercisePath)) {
+        result.push({ locale, slug: relativeExercisePath.split("/") });
       }
     }
   }
@@ -216,4 +206,14 @@ function getMdxPathsForRoot(slugs: readonly string[], root: ContentRoot) {
       return [slug.slice(prefix.length)];
     })
   );
+}
+
+/**
+ * Removes a validated content-root prefix before route params are handed to
+ * app-level callers that should not know the storage namespace.
+ */
+function stripRootPrefix(path: string, root: ContentRoot) {
+  const prefix = `${root}/`;
+
+  return path.slice(prefix.length);
 }

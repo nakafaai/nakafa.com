@@ -2,7 +2,7 @@ import type { api } from "@repo/backend/convex/_generated/api";
 import type { Locale } from "@repo/utilities/locales";
 import type { FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
-import { getRuntimeQuranSurahPage } from "@/lib/content/runtime";
+import { getRuntimeQuranSurahPage } from "@/lib/content/runtime/pages";
 
 type QuranSurahPage = NonNullable<
   FunctionReturnType<typeof api.contents.queries.runtime.getQuranSurahPage>

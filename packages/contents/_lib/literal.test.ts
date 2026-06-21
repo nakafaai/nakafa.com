@@ -43,13 +43,13 @@ function parseJson5ObjectLiteral() {
   const result = parseObjectLiteral(`{
       title: "Valid",
       authors: [{ name: "Author" }],
-      date: "01/01/2024",
+      date: "2024-01-01",
     }`);
 
   expect(Option.getOrUndefined(result)).toStrictEqual({
     title: "Valid",
     authors: [{ name: "Author" }],
-    date: "01/01/2024",
+    date: "2024-01-01",
   });
 }
 

@@ -27,15 +27,19 @@ const ContentRouteArgsSchema = Schema.Struct({
   locale: LocaleSchema,
   route: Schema.String,
 });
+const SourcePathArgsSchema = Schema.Struct({
+  locale: LocaleSchema,
+  sourcePath: Schema.String,
+});
 const ContentIdArgsSchema = Schema.Struct({
   contentId: Schema.String,
 });
 
 const convexUrl = "https://example.convex.cloud";
 const setRoute =
-  "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1";
+  "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1";
 const missingSetRoute =
-  "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-missing";
+  "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-missing";
 const detachedSetRef = detachedExerciseRef(
   "asset:id:catalog:exercise:set-1",
   setRoute
@@ -52,7 +56,7 @@ beforeEach(() => {
 
 describe("readNakafaExercise", () => {
   it("reads full exercise sets and specific questions from Convex rows", async () => {
-    const setRef = readNakafaContentRefFixture("id", setRoute, "exercises");
+    const setRef = readNakafaContentRefFixture("id", setRoute, "material");
     const set = await Effect.runPromise(
       readNakafaExercise(convexUrl, setRef.content_id)
     );
@@ -62,7 +66,7 @@ describe("readNakafaExercise", () => {
     const questionRef = readNakafaContentRefFixture(
       "id",
       `${setRoute}/2`,
-      "exercises"
+      "material"
     );
     const graphQuestion = await Effect.runPromise(
       readNakafaExercise(convexUrl, questionRef.content_id)
@@ -70,7 +74,7 @@ describe("readNakafaExercise", () => {
     const markdown = await Effect.runPromise(
       readExerciseMarkdown(
         convexUrl,
-        readNakafaContentRefFixture("id", setRoute, "exercises")
+        readNakafaContentRefFixture("id", setRoute, "material")
       )
     );
 
@@ -83,7 +87,7 @@ describe("readNakafaExercise", () => {
       detachedQuestionRef.route
     );
     expect(Option.getOrUndefined(explicitQuestion)?.url).toBe(
-      detachedQuestionRef.url
+      "https://nakafa.com/id/latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1/soal-2"
     );
     expect(Option.getOrUndefined(graphQuestion)?.exercise_number).toBe(2);
     expect(Option.getOrUndefined(markdown)?.text).toContain("- [x] A. Benar");
@@ -105,7 +109,7 @@ describe("readNakafaExercise", () => {
     const sourceProjectionSet = readNakafaContentRefFixture(
       "id",
       setRoute,
-      "exercises"
+      "material"
     );
 
     expect(Option.getOrUndefined(set)?.content_id).toBe(
@@ -121,7 +125,7 @@ describe("readNakafaExercise", () => {
       detachedQuestionRef.route
     );
     expect(Option.getOrUndefined(selectedQuestion)?.url).toBe(
-      detachedQuestionRef.url
+      "https://nakafa.com/id/latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1/soal-2"
     );
     expect(Option.getOrUndefined(question)?.exercise_number).toBe(2);
     expect(Option.getOrUndefined(matchingQuestion)?.content_id).toBe(
@@ -153,7 +157,7 @@ describe("readNakafaExercise", () => {
     const missingSetRef = readNakafaContentRefFixture(
       "id",
       missingSetRoute,
-      "exercises"
+      "material"
     );
     const unsupported = await Effect.runPromise(
       readNakafaExercise(convexUrl, articleRef.content_id)
@@ -161,23 +165,26 @@ describe("readNakafaExercise", () => {
     const missingSet = await Effect.runPromise(
       readNakafaExercise(convexUrl, missingSetRef.content_id)
     );
-    const setRef = readNakafaContentRefFixture("id", setRoute, "exercises");
+    const setRef = readNakafaContentRefFixture("id", setRoute, "material");
     const missingQuestion = await Effect.runPromise(
       readNakafaExercise(convexUrl, setRef.content_id, 99)
     );
     const malformedQuestion = await Effect.runPromise(
-      readNakafaExercise(convexUrl, `https://nakafa.com/id/${setRoute}/two`)
+      readNakafaExercise(
+        convexUrl,
+        `https://nakafa.com/id/${setRoute}/question-two`
+      )
     );
     const nonSetParent = await Effect.runPromise(
       readNakafaExercise(
         convexUrl,
-        "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/2"
+        "https://nakafa.com/id/latihan/snbt/pengetahuan-kuantitatif/tryout-2026/soal-2"
       )
     );
     const missingMarkdown = await Effect.runPromise(
       readExerciseMarkdown(
         convexUrl,
-        readNakafaContentRefFixture("id", missingSetRoute, "exercises")
+        readNakafaContentRefFixture("id", missingSetRoute, "material")
       )
     );
 
@@ -194,7 +201,7 @@ describe("readNakafaExercise", () => {
       Option.getOrUndefined(
         getExerciseGroupArgs(
           "id",
-          "exercises/high-school/snbt/quantitative-knowledge/try-out/2026"
+          "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026"
         )
       )
     ).toMatchObject({
@@ -202,7 +209,9 @@ describe("readNakafaExercise", () => {
       year: "2026",
     });
     expect(
-      Option.isNone(getExerciseGroupArgs("id", "exercises/high-school/snbt"))
+      Option.isNone(
+        getExerciseGroupArgs("id", "material/practice/assessment/snbt")
+      )
     ).toBe(true);
     expect(
       Option.isNone(
@@ -216,7 +225,7 @@ describe("readNakafaExercise", () => {
       Option.isNone(
         getExerciseGroupArgs(
           "id",
-          "exercises/high-school/snbt/not-a-material/try-out"
+          "material/practice/assessment/snbt/not-a-material/try-out"
         )
       )
     ).toBe(true);
@@ -224,7 +233,7 @@ describe("readNakafaExercise", () => {
       Option.isNone(
         getExerciseGroupArgs(
           "id",
-          "exercises/high-school/snbt/quantitative-knowledge/try-out/not-year"
+          "material/practice/assessment/snbt/quantitative-knowledge/try-out/not-year"
         )
       )
     ).toBe(true);
@@ -249,6 +258,13 @@ function readRuntimeFixture(
     getFunctionName(api.contents.queries.runtime.getContentRoute)
   ) {
     return Promise.resolve(readContentRoute(args));
+  }
+
+  if (
+    getFunctionName(query) ===
+    getFunctionName(api.contents.queries.runtime.getContentRouteBySourcePath)
+  ) {
+    return Promise.resolve(readContentRouteBySourcePath(args));
   }
 
   if (
@@ -283,14 +299,34 @@ function readContentRoute(args: unknown) {
   };
 }
 
+/** Builds one source-path lookup fixture from the persisted route catalog. */
+function readContentRouteBySourcePath(args: unknown) {
+  const input = Schema.decodeUnknownSync(SourcePathArgsSchema)(args);
+  const refs = [detachedSetRef, detachedQuestionRef];
+  const ref = refs.find(
+    (item) => item.locale === input.locale && item.route === input.sourcePath
+  );
+
+  if (!ref) {
+    return null;
+  }
+
+  return {
+    ...ref,
+    route: `latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1/soal-${input.sourcePath.split("/").at(-1)}`,
+    sourcePath: ref.route,
+    title: ref.route,
+  };
+}
+
 /** Builds one route lookup fixture from a graph asset ID. */
 function readContentRouteByContentId(args: unknown) {
   const input = Schema.decodeUnknownSync(ContentIdArgsSchema)(args);
-  const setRef = readNakafaContentRefFixture("id", setRoute, "exercises");
+  const setRef = readNakafaContentRefFixture("id", setRoute, "material");
   const questionRef = readNakafaContentRefFixture(
     "id",
     `${setRoute}/2`,
-    "exercises"
+    "material"
   );
   const articleRef = readNakafaContentRefFixture(
     "id",
@@ -300,7 +336,7 @@ function readContentRouteByContentId(args: unknown) {
   const missingSetRef = readNakafaContentRefFixture(
     "id",
     missingSetRoute,
-    "exercises"
+    "material"
   );
   const refs = [
     setRef,
@@ -333,7 +369,7 @@ function detachedExerciseRef(contentId: string, route: string) {
     lensId: contentId.replace("asset:", "lens:"),
     locale: "id",
     route,
-    section: "exercises",
+    section: "material",
   });
 
   if (Option.isNone(ref)) {

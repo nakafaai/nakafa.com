@@ -7,14 +7,19 @@ import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { use } from "react";
+import { FooterContent } from "@/components/shared/footer-content";
 import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
-import { SubjectItem, SubjectList } from "@/components/shared/subject-list";
+import { RefContent } from "@/components/shared/ref-content";
+import { SubjectItem } from "@/components/shared/subject-item";
+import { SubjectList } from "@/components/shared/subject-list";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 
+/** Builds locale-specific article index metadata from the article namespace copy. */
 export async function generateMetadata({
   params,
 }: {
@@ -45,6 +50,7 @@ export async function generateMetadata({
   };
 }
 
+/** Adapts the localized Next route params to the article index surface. */
 export default function Page(props: PageProps<"/[locale]/articles">) {
   const { locale: rawLocale } = use(props.params);
   const locale = getLocaleOrThrow(rawLocale);
@@ -52,6 +58,7 @@ export default function Page(props: PageProps<"/[locale]/articles">) {
   return <PageContent locale={locale} />;
 }
 
+/** Renders the category chooser with the established subject-list row pattern. */
 async function PageContent({ locale }: { locale: Locale }) {
   const [tCommon, tArticles] = await Promise.all([
     getTranslations({ locale, namespace: "Common" }),
@@ -83,6 +90,11 @@ async function PageContent({ locale }: { locale: Locale }) {
           ))}
         </SubjectList>
       </LayoutContent>
+      <FooterContent className="mt-0">
+        <RefContent
+          githubUrl={getGithubUrl({ path: "/packages/contents/articles" })}
+        />
+      </FooterContent>
     </>
   );
 }

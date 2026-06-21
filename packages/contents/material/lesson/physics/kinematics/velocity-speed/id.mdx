@@ -1,0 +1,117 @@
+import { VelocitySpeedLab } from "@repo/design-system/components/contents/physics/kinematics/velocity-speed/lab";
+
+export const metadata = {
+  title: "Kecepatan dan Kelajuan",
+  description:
+    "Bedakan kelajuan sebagai cepat lambat lintasan dan kecepatan sebagai perubahan posisi yang memiliki arah.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "2026-05-31",
+  subject: "Kinematika",
+};
+
+## Dua Besaran untuk Cepat Lambat Gerak
+
+Ketika benda bergerak, kita dapat bertanya dengan dua cara. Pertama, seberapa cepat lintasan ditempuh? Jawabannya adalah **kelajuan**. Kedua, seberapa cepat posisi berubah ke arah tertentu? Jawabannya adalah **kecepatan**.
+
+Kelajuan adalah besaran skalar, sehingga hanya memiliki nilai. Kecepatan adalah besaran vektor, sehingga memiliki nilai dan arah.
+
+<BlockMath math="\begin{aligned}
+\text{kelajuan} &= \frac{s}{\Delta t} \\
+v &= \frac{\Delta x}{\Delta t}
+\end{aligned}" />
+
+Simbol <InlineMath math="s" /> menyatakan jarak tempuh, <InlineMath math="\Delta x" /> menyatakan perpindahan pada garis lurus, dan <InlineMath math="\Delta t" /> menyatakan selang waktu. Kalau kita membahas satu perjalanan utuh, rumus ini membaca kelajuan dan kecepatan selama selang waktu itu.
+
+> Kelajuan memakai seluruh jarak tempuh. Kecepatan memakai perpindahan bersih beserta tandanya.
+
+<VelocitySpeedLab
+  title={<>Gerak Mobil pada Satu Garis</>}
+  description={
+    <>
+      Pilih gerak mobil untuk membandingkan garis hijau jarak tempuh dengan
+      garis ungu saat posisi akhirnya berubah.
+    </>
+  }
+  labels={{
+    chooseCase: "Pilih gerak mobil",
+    modeLabels: {
+      forward: <>Maju</>,
+      partialReturn: <>Balik Sebagian</>,
+      backToStart: <>Kembali</>,
+    },
+    factLabels: {
+      distance: <>Jarak tempuh</>,
+      displacement: <>Perpindahan</>,
+      speed: <>Kelajuan rata-rata</>,
+      velocity: <>Kecepatan rata-rata</>,
+    },
+    viewLabel: "Visual mobil untuk kelajuan dan kecepatan",
+  }}
+/>
+
+## Lintasan dan Perubahan Posisi Tidak Sama
+
+Untuk membedakannya, periksa dua hal: panjang lintasan yang benar-benar ditempuh dan perubahan posisi dari awal ke akhir. Kelajuan dihitung dari seluruh jarak, sedangkan kecepatan dihitung dari perpindahan bersih per waktu.
+
+Pada gerak lurus tanpa berbalik, besar kelajuan dan besar kecepatan dapat sama. Namun jika benda sempat berbalik arah, jaraknya menjadi lebih besar daripada perpindahannya.
+
+| Gerak benda | Jarak tempuh | Perpindahan |
+| :---------- | :----------- | :---------- |
+| Bergerak lurus dari <InlineMath math="0 \text{ m}" /> ke <InlineMath math="8 \text{ m}" /> | <InlineMath math="8 \text{ m}" /> | <InlineMath math="+8 \text{ m}" /> |
+| Bergerak dari <InlineMath math="0 \text{ m}" /> ke <InlineMath math="8 \text{ m}" /> lalu kembali ke <InlineMath math="4 \text{ m}" /> | <InlineMath math="12 \text{ m}" /> | <InlineMath math="+4 \text{ m}" /> |
+| Bergerak dari <InlineMath math="0 \text{ m}" /> ke <InlineMath math="8 \text{ m}" /> lalu kembali ke <InlineMath math="0 \text{ m}" /> | <InlineMath math="16 \text{ m}" /> | <InlineMath math="0 \text{ m}" /> |
+
+Perhatikan baris terakhir. Bendanya jelas bergerak karena jaraknya <InlineMath math="16 \text{ m}" />, tetapi perubahan posisi akhirnya nol karena kembali ke titik awal.
+
+## Kelajuan Membaca Panjang Lintasan
+
+Misalkan benda bergerak dari posisi <InlineMath math="0 \text{ m}" /> ke <InlineMath math="8 \text{ m}" />, lalu kembali ke posisi <InlineMath math="4 \text{ m}" /> dalam <InlineMath math="4 \text{ s}" />.
+
+Jarak tempuhnya adalah:
+
+<BlockMath math="s=8 \text{ m}+4 \text{ m}=12 \text{ m}" />
+
+Kelajuannya:
+
+<BlockMath math="\text{kelajuan}=\frac{12 \text{ m}}{4 \text{ s}}=3 \text{ m/s}" />
+
+Nilai itu hanya menyatakan cepat lambat gerak sepanjang lintasan, belum menyebut arah gerak bersihnya.
+
+Karena itu, kelajuan selalu bernilai positif. Selama benda benar-benar bergerak menempuh lintasan, panjang lintasannya bertambah.
+
+## Kecepatan Membaca Arah
+
+Pada contoh yang sama, perpindahan benda adalah:
+
+<BlockMath math="\Delta x=4 \text{ m}-0 \text{ m}=+4 \text{ m}" />
+
+Kecepatannya:
+
+<BlockMath math="v=\frac{+4 \text{ m}}{4 \text{ s}}=+1 \text{ m/s}" />
+
+Tanda positif berarti arah kecepatan bersihnya ke kanan. Jika hasilnya negatif, arah kecepatan bersihnya ke kiri.
+
+Jadi, kecepatan rata-rata perlu dibaca bersama arah positif yang dipilih di awal. Tanpa arah acuan, tanda positif atau negatif tidak punya makna yang jelas.
+
+## Saat Kelajuan dan Kecepatan Terlihat Berbeda
+
+Sekarang bayangkan benda bergerak dari <InlineMath math="0 \text{ m}" /> ke <InlineMath math="8 \text{ m}" />, lalu kembali lagi ke <InlineMath math="0 \text{ m}" /> dalam <InlineMath math="4 \text{ s}" />.
+
+Jarak tempuhnya <InlineMath math="16 \text{ m}" />, sehingga kelajuannya:
+
+<BlockMath math="\text{kelajuan}=\frac{16 \text{ m}}{4 \text{ s}}=4 \text{ m/s}" />
+
+Perpindahannya <InlineMath math="0 \text{ m}" />, sehingga kecepatannya:
+
+<BlockMath math="v=\frac{0 \text{ m}}{4 \text{ s}}=0 \text{ m/s}" />
+
+Jadi, nilai kelajuan dapat tidak nol sementara kecepatan selama perjalanan itu nol. Ini tidak bertentangan. Kelajuan membaca panjang lintasan, sedangkan kecepatan membaca perubahan posisi dari awal ke akhir.
+
+## Memilih Rumus yang Tepat
+
+| Besaran | Berdasarkan | Memiliki arah? | Contoh satuan |
+| :------ | :---------- | :------------- | :------------ |
+| Kelajuan | Jarak tempuh | Tidak | <InlineMath math="\text{m/s}" /> |
+| Kecepatan | Perpindahan | Ya | <InlineMath math="\text{m/s}" /> ke kanan |
+
+Kalau soal bertanya "seberapa cepat lintasan ditempuh", pakai jarak dan kelajuan. Kalau soal bertanya "seberapa cepat posisi berubah ke arah tertentu", pakai perpindahan dan kecepatan.

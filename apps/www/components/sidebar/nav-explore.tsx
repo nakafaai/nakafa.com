@@ -12,8 +12,8 @@ import {
 } from "@repo/design-system/components/ui/sidebar";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
-import { articlesMenu } from "@/components/sidebar/_data/articles";
-import { holyMenu } from "@/components/sidebar/_data/holy";
+import { articlesMenu } from "@/components/sidebar/data/articles";
+import { holyMenu } from "@/components/sidebar/data/holy";
 
 /**
  * Renders the public exploration links that stay useful for every viewer type.

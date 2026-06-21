@@ -1,16 +1,16 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import { tryoutProducts } from "@repo/backend/convex/tryouts/products";
 import { formatScriptCause } from "@repo/backend/scripts/lib/errors";
-import {
-  callConvexQuery,
-  getConvexConfig,
-} from "@repo/backend/scripts/sync-content/convex";
-import { logError } from "@repo/backend/scripts/sync-content/logging";
-import { loadEnvProvider } from "@repo/backend/scripts/sync-content/runtime";
+import { logError } from "@repo/backend/scripts/sync-content/cli/logging";
 import {
   ConvexIdSchema,
   mutableArraySchema,
-} from "@repo/backend/scripts/sync-content/schemas";
+} from "@repo/backend/scripts/sync-content/contract/schemas";
+import {
+  callConvexQuery,
+  getConvexConfig,
+} from "@repo/backend/scripts/sync-content/convex/client";
+import { loadEnvProvider } from "@repo/backend/scripts/sync-content/runtime/files";
 import type { FunctionArgs, PaginationOptions } from "convex/server";
 import { Effect, Schema } from "effect";
 

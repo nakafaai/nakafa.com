@@ -9,7 +9,7 @@ import {
 } from "@repo/backend/convex/contents/runtime/exerciseRows";
 import { throwRuntimeIntegrityError } from "@repo/backend/convex/contents/runtime/shared";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
-import { compareExerciseSetSlugs } from "@repo/contents/_lib/exercises/slug";
+import { compareExerciseSetSlugs } from "@repo/contents/_lib/assessment/slug";
 
 /** Loads a full exercise set page from the durable content read model. */
 export async function getExerciseSetPageImpl(
@@ -28,7 +28,7 @@ export async function getExerciseSetPageImpl(
   const graph = await getExerciseRouteProjection(ctx, {
     kind: "exercise-set",
     locale: set.locale,
-    route: set.slug,
+    sourcePath: set.slug,
   });
 
   if (!graph) {
@@ -93,7 +93,7 @@ export async function getExerciseQuestionPageImpl(
     getExerciseRouteProjection(ctx, {
       kind: "exercise-set",
       locale: set.locale,
-      route: set.slug,
+      sourcePath: set.slug,
     }),
   ]);
 
@@ -163,7 +163,7 @@ export async function getExerciseGroupPageImpl(
         const graph = await getExerciseRouteProjection(ctx, {
           kind: "exercise-set",
           locale: set.locale,
-          route: set.slug,
+          sourcePath: set.slug,
         });
 
         return graph

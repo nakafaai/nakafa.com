@@ -13,7 +13,7 @@ import { UserContextProvider } from "@/lib/context/use-user";
  *
  * @see https://github.com/47ng/nuqs#readme
  * @see https://docs.convex.dev/client/nextjs/app-router/server-rendering
- * @see https://labs.convex.dev/better-auth/migrations/migrate-to-0-10#pass-initial-token-to-convexbetterauthprovider
+ * @see https://labs.convex.dev/better-auth
  */
 export function AppProviders({
   children,

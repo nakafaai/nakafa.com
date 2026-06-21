@@ -29,7 +29,7 @@ describe("NakafaAgentTaxonomySchema", () => {
         locale: "en",
         locales: ["en", "id"],
         quran: { surah_count: 114 },
-        sections: ["articles", "exercises", "quran", "subject"],
+        sections: ["articles", "material", "quran"],
         subject: { categories: [], grades: [], materials: [] },
         tools: [],
       })

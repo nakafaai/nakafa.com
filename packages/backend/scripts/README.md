@@ -249,17 +249,14 @@ packages/contents/articles/{category}/{slug}/
 
 ### Subjects
 ```
-packages/contents/subject/{category}/{grade}/{material}/{topic}/{section}/
+packages/contents/curriculum/{category}/{grade}/{material}/{topic}/{section}/
   en.mdx
   id.mdx
 ```
 
 ### Exercises
 ```
-packages/contents/exercises/{category}/{type}/{material}/
-  _data/
-    en-material.ts    # Set metadata
-    id-material.ts
+packages/contents/assessment/{category}/{type}/{material}/
   {exerciseType}/{year?}/{set}/{number}/
     _question/en.mdx
     _question/id.mdx
@@ -268,16 +265,19 @@ packages/contents/exercises/{category}/{type}/{material}/
     choices.ts
 ```
 
-**⚠️ IMPORTANT**: When adding new exercise questions, you MUST define the set in the material files:
+**⚠️ IMPORTANT**: When adding new exercise questions, you MUST define the set in the typed Material source:
 
 1. Create question directories: `{category}/{type}/{material}/{exerciseType}/{year?}/{set}/{number}/`
 2. Add MDX files and choices
-3. **Add set definition** to `exercises/{category}/{type}/{material}/_data/en-material.ts` and `id-material.ts`:
+3. **Add set definition** to `packages/contents/_types/material/source/assessment/{category}/{type}/{material}.ts`:
 
 ```typescript
 {
-  title: "Set 2",
-  href: `${BASE_PATH}/try-out/2026/set-2`,
+  slug: "set-2",
+  translations: {
+    en: { title: "Set 2" },
+    id: { title: "Set 2" },
+  },
 }
 ```
 
@@ -285,7 +285,7 @@ If you forget step 3, the sync will report:
 ```
 ERROR: X questions SKIPPED (missing exercise sets)
 ERROR: Missing sets: category/type/material/exerciseType/set-name
-ERROR: Add these sets to your material files in _data/*-material.ts
+ERROR: Add these sets to the typed Material source before syncing.
 ```
 
 ## Performance

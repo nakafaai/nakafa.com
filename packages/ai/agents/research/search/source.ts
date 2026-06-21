@@ -1,3 +1,4 @@
+import type FirecrawlApp from "@mendable/firecrawl-js";
 import type {
   Document,
   SearchResultNews,
@@ -7,7 +8,6 @@ import {
   firstText,
   getDocumentMetadata,
 } from "@repo/ai/agents/research/tools/metadata";
-import type { firecrawlApp } from "@repo/ai/config/firecrawl";
 import { extractDomain } from "@repo/ai/lib/domain";
 import { selectRelevantContent } from "@repo/ai/lib/selection";
 
@@ -19,7 +19,7 @@ export function readSearchSources({
   response,
 }: {
   query: string;
-  response: Awaited<ReturnType<typeof firecrawlApp.search>>;
+  response: Awaited<ReturnType<FirecrawlApp["search"]>>;
 }) {
   const web =
     response.web?.map((result) => getSearchSource({ query, result })) || [];

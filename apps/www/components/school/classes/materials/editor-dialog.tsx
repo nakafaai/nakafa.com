@@ -43,7 +43,7 @@ import { toast } from "sonner";
 import {
   getMaterialStatus,
   materialStatusList,
-} from "@/components/school/classes/_data/material-status";
+} from "@/components/school/classes/data/material-status";
 import {
   type MaterialGroupFormValues,
   materialGroupFormSchema,

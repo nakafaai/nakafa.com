@@ -38,13 +38,13 @@ export async function getExerciseRouteProjection(
   args: {
     kind: ExerciseRouteKind;
     locale: Locale;
-    route: string;
+    sourcePath: string;
   }
 ) {
   const route = await ctx.db
     .query("contentRoutes")
-    .withIndex("by_locale_and_route", (q) =>
-      q.eq("locale", args.locale).eq("route", args.route)
+    .withIndex("by_locale_and_sourcePath", (q) =>
+      q.eq("locale", args.locale).eq("sourcePath", args.sourcePath)
     )
     .unique();
 
@@ -65,6 +65,7 @@ export async function getExerciseRouteProjection(
     lensId: route.lensId,
     locale: route.locale,
     route: route.route,
+    sourcePath: route.sourcePath,
     url: `${NAKAFA_CONTENT_BASE_URL}/${route.locale}/${route.route}`,
   };
 }
@@ -169,13 +170,13 @@ export async function buildRuntimeExercise(
   const [authors, choices, graph] = await Promise.all([
     getContentAuthors(ctx, {
       contentId: question._id,
-      contentType: "exercise",
+      contentType: "material",
     }),
     getExerciseChoices(ctx, question),
     getExerciseRouteProjection(ctx, {
       kind: "exercise-question",
       locale: question.locale,
-      route: question.slug,
+      sourcePath: question.slug,
     }),
   ]);
 

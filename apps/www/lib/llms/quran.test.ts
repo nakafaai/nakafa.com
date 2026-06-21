@@ -8,7 +8,7 @@ const runtimeMocks = vi.hoisted(() => ({
   getRuntimeQuranSurahs: vi.fn(),
 }));
 
-vi.mock("@/lib/content/runtime", () => ({
+vi.mock("@/lib/content/runtime/pages", () => ({
   getRuntimeQuranSurahPage: runtimeMocks.getRuntimeQuranSurahPage,
   getRuntimeQuranSurahs: runtimeMocks.getRuntimeQuranSurahs,
 }));
@@ -110,6 +110,11 @@ describe("quran llms text", () => {
 
     expect(secondSurahText).toContain("## Al-Baqarah");
     expect(secondSurahText).not.toContain("### Pre-Bismillah");
+    expect(secondSurahText).toContain("#### Verse 80");
+    expect(secondSurahText).not.toContain("#### Verse 81");
+    expect(secondSurahText).toContain(
+      "page-level markdown is bounded to verses 1-80"
+    );
   });
 });
 
@@ -147,45 +152,50 @@ function surahPage(number = 1) {
     prevSurah: number === 1 ? null : surahMetadata(1),
     surahData: {
       ...surahMetadata(number),
-      verses: [
-        {
-          audio: {
-            primary: "https://audio.example/1.mp3",
-            secondary: [],
-          },
-          meta: {
-            hizbQuarter: 1,
-            juz: 1,
-            manzil: 1,
-            page: 1,
-            ruku: 1,
-            sajda: {
-              obligatory: false,
-              recommended: false,
-            },
-          },
-          number: {
-            inQuran: 1,
-            inSurah: 1,
-          },
-          tafsir: {
-            id: {
-              long: "Tafsir panjang.",
-              short: "Tafsir pendek.",
-            },
-          },
-          text: {
-            arab: "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ",
-            transliteration: {
-              en: "Bismillahirrahmanirrahim",
-            },
-          },
-          translation: {
-            en: "In the name of Allah.",
-            id: "Dengan nama Allah.",
-          },
-        },
-      ],
+      verses: Array.from({ length: number === 2 ? 82 : 1 }, (_, index) =>
+        verseFixture(index + 1)
+      ),
+    },
+  };
+}
+
+/** Builds a Quran verse fixture for bounded markdown rendering checks. */
+function verseFixture(number: number) {
+  return {
+    audio: {
+      primary: `https://audio.example/${number}.mp3`,
+      secondary: [],
+    },
+    meta: {
+      hizbQuarter: 1,
+      juz: 1,
+      manzil: 1,
+      page: 1,
+      ruku: 1,
+      sajda: {
+        obligatory: false,
+        recommended: false,
+      },
+    },
+    number: {
+      inQuran: number,
+      inSurah: number,
+    },
+    tafsir: {
+      id: {
+        long: "Tafsir panjang.",
+        short: "Tafsir pendek.",
+      },
+    },
+    text: {
+      arab: "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ",
+      transliteration: {
+        en: "Bismillahirrahmanirrahim",
+      },
+    },
+    translation: {
+      en: `Translation ${number}.`,
+      id: `Terjemahan ${number}.`,
     },
   };
 }

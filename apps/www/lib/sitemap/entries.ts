@@ -3,17 +3,21 @@ import { routing } from "@repo/internationalization/src/routing";
 import { MAIN_DOMAIN } from "@repo/next-config/domains";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
-import { getRuntimeContentRoute } from "@/lib/content/runtime";
+import { getRuntimeContentRoute } from "@/lib/content/runtime/routes";
 import {
   baseRoutes,
-  type ContentSitemapPage,
   getSitemapPageDescriptor,
-  getSitemapPageDescriptorsEffect,
-  getSitemapRoutes,
+  readSitemapPageDescriptors,
+  readSitemapRoutes,
 } from "@/lib/sitemap/routes";
 
 type Href = Parameters<typeof getPathname>[number]["href"];
-type SitemapErrorContext = Record<string, string>;
+type SitemapErrorContext = Readonly<{
+  content_path?: string;
+  locale?: Locale;
+  route?: string;
+  source: string;
+}>;
 type SitemapErrorReporter = (
   error: unknown,
   context: SitemapErrorContext
@@ -110,7 +114,7 @@ function getAlternateLanguages(
   locales: readonly Locale[],
   domain: string | undefined
 ) {
-  const languages: Record<string, string> = {};
+  const languages: Partial<{ [Key in Locale | "x-default"]: string }> = {};
 
   for (const locale of locales) {
     languages[locale] = getUrl(href, locale, domain);
@@ -138,7 +142,7 @@ export const getSitemapEntries = Effect.fn("www.sitemap.entries.all")(
       return yield* getSitemapPageEntries(options);
     }
 
-    const descriptors = yield* getSitemapPageDescriptorsEffect();
+    const descriptors = yield* readSitemapPageDescriptors();
     const pageEntries = yield* Effect.forEach(
       descriptors,
       (descriptor) =>
@@ -160,7 +164,7 @@ const getSitemapPageEntries = Effect.fn("www.sitemap.entries.page")(function* (
   options: SitemapEntryOptions
 ) {
   const pageId = options.pageId;
-  const routes = yield* Effect.promise(() => getSitemapRoutes(pageId));
+  const routes = yield* readSitemapRoutes(pageId);
   const locales = getSitemapEntryLocales(pageId);
   const routeArrays = yield* Effect.forEach(
     routes,
@@ -181,18 +185,14 @@ const getSitemapPageEntries = Effect.fn("www.sitemap.entries.page")(function* (
 function getSitemapEntryLocales(pageId: string | undefined): readonly Locale[] {
   const descriptor = getSitemapPageDescriptor(pageId);
 
-  if (isContentSitemapDescriptor(descriptor)) {
+  if (
+    descriptor &&
+    (descriptor.kind === "content" || descriptor.kind === "public")
+  ) {
     return [descriptor.locale];
   }
 
   return routing.locales;
-}
-
-/** Identifies parsed sitemap descriptors that are scoped to one locale. */
-function isContentSitemapDescriptor(
-  descriptor: ReturnType<typeof getSitemapPageDescriptor>
-): descriptor is ContentSitemapPage {
-  return Boolean(descriptor && "locale" in descriptor);
 }
 
 /**
@@ -226,7 +226,7 @@ const getContentLastModified = Effect.fn("www.sitemap.contentLastModified")(
   }
 );
 
-/** Builds a stable relative fallback date for sitemap recovery paths. */
+/** Builds a stable relative recovery date for sitemap rows without source dates. */
 function getFallbackDate(monthsAgo: number) {
   const date = new Date();
   date.setMonth(date.getMonth() - monthsAgo);
@@ -257,19 +257,15 @@ function getContentSeoSettings(route: string): {
     return { changeFrequency: "yearly", priority: 0.6 };
   }
 
-  if (route.includes("/university/")) {
-    return { changeFrequency: "monthly", priority: 0.9 };
-  }
-
-  if (route.includes("/high-school/")) {
+  if (route.startsWith("/subjects/") || route.startsWith("/materi/")) {
     return { changeFrequency: "monthly", priority: 0.8 };
   }
 
-  if (route.includes("/middle-school/")) {
+  if (route.startsWith("/curriculum/") || route.startsWith("/kurikulum/")) {
     return { changeFrequency: "monthly", priority: 0.7 };
   }
 
-  if (route.includes("/elementary-school/")) {
+  if (route.startsWith("/practice/") || route.startsWith("/latihan/")) {
     return { changeFrequency: "monthly", priority: 0.6 };
   }
 

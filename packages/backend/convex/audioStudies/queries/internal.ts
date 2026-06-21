@@ -65,7 +65,7 @@ export const getAudioAndContentForScriptGeneration = internalQuery({
     }
 
     const section = await ctx.db
-      .query("subjectSections")
+      .query("curriculumLessons")
       .withIndex("by_locale_and_slug", (q) =>
         q.eq("locale", audio.locale).eq("slug", audio.route)
       )

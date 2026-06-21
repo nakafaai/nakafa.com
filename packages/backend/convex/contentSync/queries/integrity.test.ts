@@ -521,6 +521,7 @@ function contentRoute(graph: ReturnType<typeof articleGraphWithContentId>) {
     markdown: true,
     route: ARTICLE_ROUTE,
     section: "articles" as const,
+    sourcePath: ARTICLE_ROUTE,
     syncedAt: NOW,
     title: "Integrity Article",
   };
@@ -534,6 +535,7 @@ function contentSearchDocument(
     ...contentSearchRef(graph),
     contentHash: "search-hash",
     description: "Search description",
+    sourcePath: ARTICLE_ROUTE,
     syncedAt: NOW,
     text: "Search text",
     title: "Integrity Article",
@@ -552,6 +554,7 @@ function contentRoutePageItem(
     markdown: true,
     route: ARTICLE_ROUTE,
     section: "articles",
+    sourcePath: ARTICLE_ROUTE,
     syncedAt: NOW,
     title: "Integrity Article",
   };

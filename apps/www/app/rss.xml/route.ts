@@ -3,10 +3,8 @@ import { Effect } from "effect";
 import { Feed, type Item } from "feed";
 import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
-import {
-  fetchRuntimeQuranSurahs,
-  listRuntimeLatestContentRoutes,
-} from "@/lib/content/runtime";
+import { fetchRuntimeQuranSurahs } from "@/lib/content/runtime/pages";
+import { listRuntimeLatestContentRoutes } from "@/lib/content/runtime/routes";
 import { getQuranSurahName } from "@/lib/utils/pages/quran";
 
 const baseUrl = "https://nakafa.com";
@@ -19,7 +17,7 @@ const rssHeaders = {
 export async function GET() {
   const locales = routing.locales;
 
-  const [t, tCommon] = await Promise.all([
+  const [t, tCommon, routes, surahs] = await Promise.all([
     getTranslations({
       namespace: "Metadata",
       locale: routing.defaultLocale,
@@ -28,9 +26,6 @@ export async function GET() {
       namespace: "Common",
       locale: routing.defaultLocale,
     }),
-  ]);
-
-  const [routes, surahs] = await Promise.all([
     getFeedContentRoutes(),
     fetchRuntimeQuranSurahs(),
   ]);
@@ -111,7 +106,7 @@ function getFeedContentRoutes() {
             listRuntimeLatestContentRoutes({
               limit: RSS_CONTENT_ROUTE_LIMIT,
               locale,
-              section: "subject",
+              section: "material",
             }),
           ]),
         { concurrency: routing.locales.length }

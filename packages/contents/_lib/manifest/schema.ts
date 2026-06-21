@@ -67,10 +67,7 @@ export const ContentRouteManifestSchema = Schema.Struct({
     articles: Schema.Array(ContentManifestStaticParamSchema).pipe(
       Schema.mutable
     ),
-    exercises: Schema.Array(ContentManifestStaticParamSchema).pipe(
-      Schema.mutable
-    ),
-    subject: Schema.Array(ContentManifestStaticParamSchema).pipe(
+    material: Schema.Array(ContentManifestStaticParamSchema).pipe(
       Schema.mutable
     ),
   }).pipe(Schema.mutable),
@@ -88,10 +85,7 @@ const ContentRouteParamManifestSchema = Schema.Struct({
     articles: Schema.Array(ContentManifestStaticParamSchema).pipe(
       Schema.mutable
     ),
-    exercises: Schema.Array(ContentManifestStaticParamSchema).pipe(
-      Schema.mutable
-    ),
-    subject: Schema.Array(ContentManifestStaticParamSchema).pipe(
+    material: Schema.Array(ContentManifestStaticParamSchema).pipe(
       Schema.mutable
     ),
   }).pipe(Schema.mutable),
@@ -106,10 +100,7 @@ const ContentStaticParamManifestSchema = Schema.Struct({
     articles: Schema.Array(ContentManifestStaticParamSchema).pipe(
       Schema.mutable
     ),
-    exercises: Schema.Array(ContentManifestStaticParamSchema).pipe(
-      Schema.mutable
-    ),
-    subject: Schema.Array(ContentManifestStaticParamSchema).pipe(
+    material: Schema.Array(ContentManifestStaticParamSchema).pipe(
       Schema.mutable
     ),
   }).pipe(Schema.mutable),

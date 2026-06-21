@@ -9,12 +9,12 @@ import {
   REFERENCES_REGEX,
 } from "@repo/backend/scripts/lib/mdx-parser/constants";
 import { parseContentDate } from "@repo/contents/_shared/date";
+import { ExercisesChoicesSchema } from "@repo/contents/_types/assessment/choices";
 import {
   ContentMetadataSchema,
   type Reference,
   ReferenceSchema,
 } from "@repo/contents/_types/content";
-import { ExercisesChoicesSchema } from "@repo/contents/_types/exercises/choices";
 import { Effect, Option, Schema } from "effect";
 
 class MdxReadError extends Schema.TaggedError<MdxReadError>()("MdxReadError", {
@@ -38,7 +38,7 @@ export const parseDateToEpoch = Effect.fn("mdx.parseDateToEpoch")(function* (
   if (Option.isNone(date)) {
     return yield* Effect.fail(
       new MdxReadError({
-        message: `Invalid date format: ${dateStr}. Expected MM/DD/YYYY`,
+        message: `Invalid date format: ${dateStr}. Expected YYYY-MM-DD`,
       })
     );
   }

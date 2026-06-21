@@ -2,7 +2,10 @@ import { resolveSafeContentPath } from "@repo/contents/_lib/fs/path";
 import { ContentIO } from "@repo/contents/_lib/io/content";
 import { getMdxSlugsForLocale } from "@repo/contents/_lib/mdx-slugs/cache";
 import { extractMetadata } from "@repo/contents/_lib/metadata";
-import { importContentModule } from "@repo/contents/_lib/module";
+import {
+  getLocalizedContentPath,
+  importContentModule,
+} from "@repo/contents/_lib/module";
 import { resolveContentsDir } from "@repo/contents/_lib/root";
 import {
   FileReadError,
@@ -155,7 +158,7 @@ function getScopedContentTarget(
   return getScopedPathTarget(root, filePath).pipe(
     Effect.map((target) => ({
       ...target,
-      contentPath: `${target.cleanPath}/${locale}.mdx`,
+      contentPath: getLocalizedContentPath(target.cleanPath, locale),
     }))
   );
 }

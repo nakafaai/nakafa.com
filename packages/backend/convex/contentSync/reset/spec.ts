@@ -2,6 +2,7 @@ import type { TableNames } from "@repo/backend/convex/_generated/dataModel";
 import { v } from "convex/values";
 
 export const resetBatchSize = 500;
+export const contentSearchResetBatchSize = 100;
 export const eventTryoutEntitlementBatchSize = 500;
 
 export const batchDeleteResultValidator = v.object({
@@ -20,6 +21,7 @@ export const resettableTableNames = [
   "contentRouteCounts",
   "contentRoutePages",
   "contentRoutes",
+  "publicRoutes",
   "contentSearch",
   "contentViewAnalyticsQueue",
   "contentViews",
@@ -39,10 +41,19 @@ export const resettableTableNames = [
   "irtScaleVersionItems",
   "irtScaleVersions",
   "learningPopularity",
+  "assessmentNodes",
+  "assessments",
+  "curricula",
+  "curriculumMaterials",
+  "curriculumNodes",
+  "materialLocales",
+  "materials",
+  "learningPlanItems",
+  "learningProgramCoverage",
   "quranSurahs",
   "quranVerses",
-  "subjectSections",
-  "subjectTopics",
+  "curriculumLessons",
+  "curriculumTopics",
   "learningTrendingBuckets",
   "tryoutAccessCampaignProducts",
   "tryoutAccessCampaigns",

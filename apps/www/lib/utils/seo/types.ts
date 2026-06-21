@@ -30,7 +30,7 @@ export interface ContentSEOData {
  */
 export type SEOContext =
   | {
-      type: "subject";
+      type: "material-lesson";
       category: SubjectCategory;
       grade: Grade;
       material: Material;

@@ -11,11 +11,11 @@ const tables = {
   /**
    * Exercise set storage (e.g., "Set 1", "Set 2").
    * Groups related questions together.
-   * Synced from _data/*-material.ts files.
+   * Synced from typed Material sources in packages/contents.
    */
   exerciseSets: defineTable({
     locale: localeValidator,
-    /** Full URL path: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1" */
+    /** Full URL path: "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1" */
     slug: v.string(),
     category: exercisesCategoryValidator,
     /** Exam type: "grade-9", "tka", "snbt" */

@@ -59,15 +59,15 @@ export async function deleteContentSearch(ctx: MutationCtx, contentId: string) {
   await ctx.db.delete(existing._id);
 }
 
-/** Deletes every search row attached to one public route projection. */
-export async function deleteContentSearchByRoute(
+/** Deletes every search row attached to one source route projection. */
+export async function deleteContentSearchBySourcePath(
   ctx: MutationCtx,
-  args: { locale: Doc<"contentSearch">["locale"]; route: string }
+  args: { locale: Doc<"contentSearch">["locale"]; sourcePath: string }
 ) {
   const rows = await ctx.db
     .query("contentSearch")
-    .withIndex("by_locale_and_route", (q) =>
-      q.eq("locale", args.locale).eq("route", args.route)
+    .withIndex("by_locale_and_sourcePath", (q) =>
+      q.eq("locale", args.locale).eq("sourcePath", args.sourcePath)
     )
     .take(duplicateSearchRepairLimit);
 
@@ -131,9 +131,11 @@ function isSameContentSearch(
     existing.description === next.description &&
     existing.learningObjectId === next.learningObjectId &&
     existing.lensId === next.lensId &&
+    existing.locale === next.locale &&
     existing.markdown_url === next.markdown_url &&
     existing.route === next.route &&
     existing.section === next.section &&
+    existing.sourcePath === next.sourcePath &&
     existing.text === next.text &&
     existing.title === next.title &&
     existing.url === next.url

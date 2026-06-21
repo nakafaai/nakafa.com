@@ -65,6 +65,7 @@ function contentSearchSource(route: string): ContentSearchSource {
     locale: "id",
     route,
     section: "articles",
+    sourcePath: route,
     syncedAt: NOW,
     text: "Fixture body",
     title: "Fixture title",

@@ -71,8 +71,8 @@ describe("nakafaAgentPrompt", () => {
       context: {
         currentDate: "May 15, 2026",
         needsPageFetch: true,
-        slug: "subject/high-school/10/chemistry",
-        url: "/id/subject/high-school/10/chemistry",
+        slug: "kurikulum/merdeka/kelas-10/kimia",
+        url: "/id/kurikulum/merdeka/kelas-10/kimia",
         verified: true,
       },
       locale: "id",
@@ -80,6 +80,45 @@ describe("nakafaAgentPrompt", () => {
 
     expect(prompt).toContain("- verified current page: yes");
     expect(prompt).toContain("- user role: unknown");
+  });
+
+  it("includes selected learning program context for Nakafa retrieval", () => {
+    const prompt = nakafaAgentPrompt({
+      context: {
+        ...context,
+        learningProfile: {
+          interests: ["school-curriculum"],
+          planItems: [
+            {
+              content_id: "asset:id:subject:mathematics:rational-function",
+              lensId: "lens:kurikulum-merdeka",
+              position: 1,
+              status: "ready",
+              title: "Rational Functions",
+            },
+          ],
+          program: {
+            coverageStatus: "partial",
+            key: "merdeka",
+            kind: "school-curriculum",
+            title: "Kurikulum Merdeka",
+            versionLabel: "Indonesia",
+          },
+        },
+      },
+      locale: "id",
+    });
+
+    expect(prompt).toContain("- active learning profile: selected");
+    expect(prompt).toContain("- program: Kurikulum Merdeka");
+    expect(prompt).toContain(
+      "1. Rational Functions; graph asset reference: asset:id:subject:mathematics:rational-function; status: ready"
+    );
+    const runtimeContext = prompt.slice(
+      prompt.indexOf("# Runtime Context"),
+      prompt.indexOf("# Tool Usage Guidelines")
+    );
+    expect(runtimeContext).not.toContain("content_id");
   });
 
   it("keeps Nakafa sources out of model-facing prose", () => {

@@ -6,16 +6,24 @@ import { describe, expect, it } from "vitest";
 const SOURCE_EXTENSIONS = [".ts", ".tsx"] as const;
 const REMOVED_WRAPPER_MODULES = [
   "_lib/articles/content.ts",
-  "_lib/exercises/content.ts",
-  "_lib/subject/content.ts",
+  "_lib/assessment/content.ts",
+  "_lib/curriculum/content.ts",
 ] as const;
 const REMOVED_ROOT_FACADE_MODULES = [
   "_lib/cache.ts",
   "_lib/params.ts",
 ] as const;
+const REMOVED_ROOT_DATA_DIRECTORY = ["_", "data"].join("");
+const REMOVED_TYPED_MATERIAL_SOURCE_DIRECTORY = path.join(
+  "_types",
+  "material",
+  "source"
+);
 const RELATIVE_IMPORT_PATTERN = /from\s+["']\.{1,2}\//g;
-const IMPLICIT_DATA_IMPORT_PATTERN =
-  /from\s+["']@repo\/contents\/[^"']+\/_data["']/g;
+const IMPLICIT_DATA_IMPORT_PATTERN = new RegExp(
+  `from\\s+["']@repo\\/contents\\/[^"']+\\/${REMOVED_ROOT_DATA_DIRECTORY}["']`,
+  "g"
+);
 const REMOVED_ROOT_FACADE_IMPORT_PATTERN =
   /from\s+["']@repo\/contents\/_lib\/(?:cache|params)["']/g;
 const INDEX_SOURCE_FILE_PATTERN = /^index\.tsx?$/;
@@ -89,6 +97,68 @@ function toContentsPath(filePath: string) {
   return path.relative(process.cwd(), filePath);
 }
 
+/** Finds authored material source files under the unified material tree. */
+function readMaterialSourceFiles(directory: string) {
+  return Effect.runSync(
+    Effect.sync(() => {
+      const files: string[] = [];
+      const pendingDirectories = [directory];
+
+      while (pendingDirectories.length > 0) {
+        const currentDirectory = pendingDirectories.pop();
+        if (!currentDirectory) {
+          continue;
+        }
+
+        const entries = fs.readdirSync(currentDirectory, {
+          withFileTypes: true,
+        });
+
+        for (const entry of entries) {
+          const absolutePath = path.join(currentDirectory, entry.name);
+
+          if (entry.isDirectory()) {
+            pendingDirectories.push(absolutePath);
+            continue;
+          }
+
+          if (entry.name === "source.ts") {
+            files.push(absolutePath);
+          }
+        }
+      }
+
+      return files.sort();
+    })
+  );
+}
+
+/** Returns true when a directory contains at least one material MDX descendant. */
+function hasMdxDescendant(directory: string) {
+  const pendingDirectories = [directory];
+
+  while (pendingDirectories.length > 0) {
+    const currentDirectory = pendingDirectories.pop();
+    if (!currentDirectory) {
+      continue;
+    }
+
+    for (const entry of fs.readdirSync(currentDirectory, {
+      withFileTypes: true,
+    })) {
+      if (entry.isFile() && entry.name.endsWith(".mdx")) {
+        return true;
+      }
+
+      if (entry.isDirectory()) {
+        pendingDirectories.push(path.join(currentDirectory, entry.name));
+      }
+    }
+  }
+
+  return false;
+}
+
 describe("contents architecture", () => {
   const contentsDirectory = process.cwd();
   const sourceFiles = readSourceFiles(contentsDirectory);
@@ -143,6 +213,30 @@ describe("contents architecture", () => {
     );
 
     expect(existingRootFacades).toStrictEqual([]);
+  });
+
+  it("does not keep the old root data source bucket", () => {
+    expect(
+      fs.existsSync(path.join(contentsDirectory, REMOVED_ROOT_DATA_DIRECTORY))
+    ).toBe(false);
+  });
+
+  it("keeps material source files beside material assets", () => {
+    expect(
+      fs.existsSync(
+        path.join(contentsDirectory, REMOVED_TYPED_MATERIAL_SOURCE_DIRECTORY)
+      )
+    ).toBe(false);
+
+    const materialSourceFiles = readMaterialSourceFiles(
+      path.join(contentsDirectory, "material")
+    );
+    const sourceFilesWithoutMdx = materialSourceFiles.filter(
+      (filePath) => !hasMdxDescendant(path.dirname(filePath))
+    );
+
+    expect(materialSourceFiles).not.toHaveLength(0);
+    expect(sourceFilesWithoutMdx.map(toContentsPath)).toStrictEqual([]);
   });
 
   it("uses direct modules instead of restored root facade imports", () => {

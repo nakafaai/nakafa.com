@@ -5,10 +5,10 @@ const base = {
   currentDate: "May 9, 2026",
   currentPage: {
     locale: "id",
-    slug: "subject/high-school/11/mathematics/function-modeling/rational-function",
+    slug: "materi/matematika/integral/jumlahan-riemann",
     verified: true,
   },
-  url: "https://nakafa.com/id/subject/high-school/11/mathematics/function-modeling/rational-function",
+  url: "https://nakafa.com/id/materi/matematika/integral/jumlahan-riemann",
   userLocation: {
     city: "Berlin",
     country: "Germany",
@@ -205,6 +205,45 @@ describe("nakafaPrompt", () => {
         userRole,
       })
     ).toContain("User is");
+  });
+
+  it("includes selected learning program context without table-shaped prose", () => {
+    const prompt = nakafaPrompt({
+      ...base,
+      learningProfile: {
+        interests: ["exam-prep", "assessment-prep"],
+        planItems: [
+          {
+            content_id: "asset:id:exercise:snbt:2026:set-2:1",
+            lensId: "lens:snbt",
+            position: 1,
+            route:
+              "/material/practice/assessment/snbt/general-knowledge/try-out-2026/set-2/question-1",
+            status: "ready",
+            title: "SNBT Set 2",
+          },
+        ],
+        program: {
+          coverageStatus: "partial",
+          key: "snbt-2026",
+          kind: "admission-exam",
+          title: "SNBT 2026",
+          versionLabel: "2026",
+        },
+      },
+    });
+
+    expect(prompt).toContain("- active learning profile: selected");
+    expect(prompt).toContain("- program: SNBT 2026");
+    expect(prompt).toContain("- interests: exam-prep, assessment-prep");
+    expect(prompt).toContain(
+      "1. SNBT Set 2; route: /material/practice/assessment/snbt/general-knowledge/try-out-2026/set-2/question-1; status: ready"
+    );
+    const runtimeContext = prompt.slice(
+      prompt.indexOf("# Runtime Context"),
+      prompt.indexOf("# Tool Usage Guidelines")
+    );
+    expect(runtimeContext).not.toContain("content_id");
   });
 
   it("includes default role guidance and unverified page context", () => {

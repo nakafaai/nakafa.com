@@ -12,6 +12,8 @@ import {
   type LocalizedLlmsRoute,
   resolveLlmsProxyRoute,
 } from "@/lib/llms/routes";
+import { readProjectedHtmlRouteRejection } from "@/lib/routing/public/projected";
+import { readSourceBackedHtmlRouteRejection } from "@/lib/routing/public/source";
 
 const handleLocalizedRequest = createMiddleware(routing);
 const TRAILING_SLASH_PATTERN = /\/+$/;
@@ -71,6 +73,25 @@ export async function proxy(request: NextRequest) {
 
   if (routeDecision.kind === "content-not-found") {
     return rewriteToContentNotFound(request, routeDecision.locale);
+  }
+
+  const sourceBackedRouteRejection = await Effect.runPromise(
+    readSourceBackedHtmlRouteRejection({
+      method: request.method,
+      pathname,
+    })
+  );
+
+  if (sourceBackedRouteRejection) {
+    return rewriteToContentNotFound(request, sourceBackedRouteRejection);
+  }
+
+  const projectedRouteLocale = await Effect.runPromise(
+    readProjectedHtmlRouteRejection(pathname)
+  );
+
+  if (projectedRouteLocale) {
+    return rewriteToContentNotFound(request, projectedRouteLocale);
   }
 
   request.cookies.set(AUTH_REDIRECT_PATH_COOKIE, pathname);

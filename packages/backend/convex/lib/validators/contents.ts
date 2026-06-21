@@ -21,8 +21,8 @@ export type Locale = Infer<typeof localeValidator>;
 export const nakafaSectionValidator = literals(...NAKAFA_CONTENT_SECTIONS);
 export type NakafaSection = Infer<typeof nakafaSectionValidator>;
 
-/** Content families used by source-shaped runtime tables and analytics events. */
-export const CONTENT_TYPE_VALUES = ["article", "subject", "exercise"] as const;
+/** Content families used by runtime tables and analytics events. */
+export const CONTENT_TYPE_VALUES = ["article", "material"] as const;
 export const contentTypeValidator = literals(...CONTENT_TYPE_VALUES);
 export type ContentType = Infer<typeof contentTypeValidator>;
 

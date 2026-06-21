@@ -1,11 +1,11 @@
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 import { gateway } from "@repo/ai/config/provider";
-import { keys } from "@repo/ai/keys";
+import { devtoolsKeys } from "@repo/ai/keys";
 import { wrapLanguageModel } from "ai";
 
 /** Enables AI SDK DevTools only for local development workflows. */
 function shouldUseDevTools() {
-  const env = keys();
+  const env = devtoolsKeys();
 
   if (env.AI_SDK_DEVTOOLS !== "true") {
     return false;

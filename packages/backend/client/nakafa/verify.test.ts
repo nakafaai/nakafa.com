@@ -28,9 +28,12 @@ const ExerciseGroupArgsSchema = Schema.Struct({
 
 const articleRoute = "articles/politics/example";
 const exerciseGroupRoute =
-  "exercises/high-school/snbt/quantitative-knowledge/try-out/2026";
+  "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026";
 const exerciseSetRoute = `${exerciseGroupRoute}/set-1`;
 const exerciseQuestionRoute = `${exerciseSetRoute}/2`;
+const publicExerciseSetRoute =
+  "latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1";
+const publicExerciseQuestionRoute = `${publicExerciseSetRoute}/soal-2`;
 
 beforeEach(() => {
   runtimeMocks.fetchConvexRuntimeQuery.mockReset();
@@ -57,7 +60,7 @@ describe("verifyNakafaContent", () => {
       Effect.runPromise(
         verifyNakafaContent(
           "https://example.convex.cloud",
-          `https://nakafa.com/id/${exerciseSetRoute}`
+          `https://nakafa.com/id/${publicExerciseSetRoute}`
         )
       )
     ).resolves.toBe(true);
@@ -65,10 +68,18 @@ describe("verifyNakafaContent", () => {
       Effect.runPromise(
         verifyNakafaContent(
           "https://example.convex.cloud",
-          `https://nakafa.com/id/${exerciseQuestionRoute}`
+          `https://nakafa.com/id/${publicExerciseQuestionRoute}`
         )
       )
     ).resolves.toBe(true);
+    expect(runtimeMocks.fetchConvexRuntimeQuery).toHaveBeenCalledWith(
+      "https://example.convex.cloud",
+      api.contents.queries.runtime.getContentRoute,
+      {
+        locale: "id",
+        route: publicExerciseSetRoute,
+      }
+    );
   });
 
   it("returns false for invalid refs, missing rows, unreadable exercise routes, and query failures", async () => {
@@ -79,7 +90,7 @@ describe("verifyNakafaContent", () => {
       Effect.runPromise(
         verifyNakafaContent(
           "https://example.convex.cloud",
-          "https://nakafa.com/en/subject/high-school/10/mathematics/topic/missing"
+          "https://nakafa.com/en/subjects/mathematics/topic/missing"
         )
       )
     ).resolves.toBe(false);
@@ -87,7 +98,7 @@ describe("verifyNakafaContent", () => {
       Effect.runPromise(
         verifyNakafaContent(
           "https://example.convex.cloud",
-          `https://nakafa.com/id/${exerciseGroupRoute}`
+          "https://nakafa.com/id/latihan/snbt/pengetahuan-kuantitatif/tryout-2026"
         )
       )
     ).resolves.toBe(false);
@@ -95,7 +106,7 @@ describe("verifyNakafaContent", () => {
       Effect.runPromise(
         verifyNakafaContent(
           "https://example.convex.cloud",
-          `https://nakafa.com/id/${exerciseSetRoute}/99`
+          `https://nakafa.com/id/${publicExerciseSetRoute}/soal-99`
         )
       )
     ).resolves.toBe(false);
@@ -148,14 +159,26 @@ function readContentRouteByContentId(args: unknown) {
     articleRoute,
     "articles"
   );
+  const exerciseSetRef = readNakafaContentRefFixture(
+    "id",
+    exerciseSetRoute,
+    "material"
+  );
+  const exerciseQuestionRef = readNakafaContentRefFixture(
+    "id",
+    exerciseQuestionRoute,
+    "material"
+  );
+  const refs = [articleRef, exerciseSetRef, exerciseQuestionRef];
+  const ref = refs.find((item) => item.content_id === input.contentId);
 
-  if (input.contentId !== articleRef.content_id) {
+  if (!ref) {
     return null;
   }
 
   return {
-    ...articleRef,
-    title: "Article",
+    ...ref,
+    title: ref.route,
   };
 }
 
@@ -192,14 +215,45 @@ function readContentRoute(args: unknown) {
     const ref = readNakafaContentRefFixture(
       input.locale,
       input.route,
-      "exercises"
+      "material"
     );
 
     return {
       ...ref,
       locale: input.locale,
       route: input.route,
-      section: "exercises",
+      section: "material",
+      title: "Exercise",
+    };
+  }
+
+  if (
+    input.route === publicExerciseSetRoute ||
+    input.route === publicExerciseQuestionRoute ||
+    input.route === `${publicExerciseSetRoute}/soal-99`
+  ) {
+    let sourcePath = `${exerciseSetRoute}/99`;
+
+    if (input.route === publicExerciseSetRoute) {
+      sourcePath = exerciseSetRoute;
+    }
+
+    if (input.route === publicExerciseQuestionRoute) {
+      sourcePath = exerciseQuestionRoute;
+    }
+
+    const ref = readNakafaContentRefFixture(
+      input.locale,
+      sourcePath,
+      "material"
+    );
+
+    return {
+      ...ref,
+      locale: input.locale,
+      route: input.route,
+      section: "material",
+      sourcePath,
       title: "Exercise",
     };
   }

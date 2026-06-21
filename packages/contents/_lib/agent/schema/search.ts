@@ -51,7 +51,7 @@ export const NakafaAgentSearchOptionsSchema = Schema.Struct({
   section: Schema.optional(
     NakafaAgentSectionSchema.annotations({
       description:
-        'Optional section filter. Use "subject" for lessons, school materials, class or grade topics, and study content. Use "articles" only when the user explicitly asks for articles, news, essays, analysis, or editorial content. Use "exercises" for questions, drills, tests, tryouts, or answer explanations. Use "quran" for surah, ayah, tafsir, or Quran references. Omit this filter for broad topic discovery.',
+        'Optional section filter. Use "material" for lessons, practice, school materials, class or grade topics, and study content. Use "articles" only when the user explicitly asks for articles, news, essays, analysis, or editorial content. Use "quran" for surah, ayah, tafsir, or Quran references. Omit this filter for broad topic discovery.',
     })
   ),
 })

@@ -9,6 +9,8 @@ import type { NakafaAgentMarkdown } from "@repo/contents/_lib/agent/schema/read"
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
 import { Effect, Option } from "effect";
 
+const practiceMaterialRoutePrefix = "material/practice/";
+
 /** Reads full markdown for one normalized Nakafa content reference. */
 export function readNakafaMarkdown(convexUrl: string, input: string) {
   return Effect.gen(function* () {
@@ -22,7 +24,10 @@ export function readNakafaMarkdown(convexUrl: string, input: string) {
       return yield* readQuranMarkdown(convexUrl, ref.value);
     }
 
-    if (ref.value.section === "exercises") {
+    if (
+      ref.value.section === "material" &&
+      ref.value.route.startsWith(practiceMaterialRoutePrefix)
+    ) {
       return yield* readExerciseMarkdown(convexUrl, ref.value);
     }
 
@@ -30,7 +35,7 @@ export function readNakafaMarkdown(convexUrl: string, input: string) {
   });
 }
 
-/** Reads article or subject markdown from Convex runtime rows. */
+/** Reads article or lesson material markdown from Convex runtime rows. */
 export function readMdxMarkdown(convexUrl: string, ref: NakafaAgentContentRef) {
   return Effect.gen(function* () {
     const page = yield* getMdxRuntimePage(convexUrl, ref);
@@ -50,7 +55,7 @@ export function readMdxMarkdown(convexUrl: string, ref: NakafaAgentContentRef) {
   });
 }
 
-/** Reads one article or subject page from the Convex runtime model. */
+/** Reads one article or lesson material page from the Convex runtime model. */
 export function getMdxRuntimePage(
   convexUrl: string,
   ref: NakafaAgentContentRef
@@ -67,11 +72,11 @@ export function getMdxRuntimePage(
     );
   }
 
-  if (ref.section === "subject") {
+  if (ref.section === "material") {
     return fetchNakafaRuntimeQuery(
       convexUrl,
-      "getSubjectPage",
-      api.contents.queries.runtime.getSubjectPage,
+      "getCurriculumPage",
+      api.contents.queries.runtime.getCurriculumPage,
       {
         locale: ref.locale,
         slug: ref.route,

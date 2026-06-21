@@ -6,6 +6,7 @@ import { learningGraphIdentityValidator } from "@repo/backend/convex/contents/gr
 import { internalMutation } from "@repo/backend/convex/functions";
 import {
   localeValidator,
+  materialValidator,
   nakafaSectionValidator,
 } from "@repo/backend/convex/lib/validators/contents";
 import { ConvexError, v } from "convex/values";
@@ -24,10 +25,13 @@ const contentRoutePageItemValidator = v.object({
   kind: routeKindValidator,
   locale: localeValidator,
   markdown: v.boolean(),
+  materialDomain: v.optional(materialValidator),
   official: v.optional(v.boolean()),
   parentRoute: v.optional(v.string()),
   route: v.string(),
   section: nakafaSectionValidator,
+  sourceParentPath: v.optional(v.string()),
+  sourcePath: v.string(),
   syncedAt: v.number(),
   title: v.string(),
 });

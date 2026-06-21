@@ -1,0 +1,98 @@
+import { VectorConceptLab } from "@repo/design-system/components/contents/physics/vector/concept/lab";
+
+export const metadata = {
+  title: "Konsep Vektor",
+  description:
+    "Pelajari arti vektor sebagai besaran yang punya nilai dan arah, perbedaannya dengan skalar, serta cara membaca vektor dari situasi nyata.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "2026-05-31",
+  subject: "Vektor",
+};
+
+## Angka Saja Belum Cukup
+
+Bayangkan kalian sedang memberi arahan ke teman: "jalan <InlineMath math="5 \text{ m}" />." Teman kalian pasti akan bertanya, "ke mana?" Ke depan, ke kanan, atau naik tangga?
+
+Di fisika, ada besaran yang tidak cukup dijelaskan dengan angka saja. Besaran seperti itu perlu **besar** dan **arah**. Besaran inilah yang disebut **vektor**.
+
+<BlockMath math="\text{vektor} = \text{besar} + \text{arah}" />
+
+Contohnya perpindahan <InlineMath math="5 \text{ m}" /> ke timur, gaya <InlineMath math="20 \text{ N}" /> ke atas, atau kecepatan <InlineMath math="12 \text{ m s}^{-1}" /> ke kanan. Kalau arah dihilangkan, informasi fisikanya belum lengkap.
+
+## Melihat Vektor pada Jembatan
+
+Pada model ini, beban kecil digeser di atas dek jembatan. Dua kabel menarik beban ke arah menara. Setiap tarikan kabel adalah vektor karena punya besar gaya dan arah tarikan. Coba geser beban, lalu perhatikan bagaimana panjang panah dan arahnya ikut berubah.
+
+<VectorConceptLab
+  title={<>Tarikan Kabel sebagai Vektor</>}
+  description={
+    <>
+      Geser beban di atas jembatan. Panah menunjukkan gaya tegangan kabel yang
+      bekerja pada beban.
+    </>
+  }
+  labels={{
+    bridgeView: "Model jembatan kabel",
+    chooseLoadPosition: "Geser posisi beban",
+    direction: "Arah",
+    directionValue: "ditunjukkan oleh kemiringan panah",
+    leftCable: "T Kiri",
+    magnitude: "Besar",
+    magnitudeValue: "ditunjukkan oleh panjang panah",
+    netIdea: "Resultan",
+    netIdeaValue: "gabungan beberapa vektor yang bekerja bersama",
+    rightCable: "T Kanan",
+  }}
+/>
+
+Perhatikan bagian pentingnya: saat beban tidak tepat di tengah, kedua kabel tidak lagi memberi tarikan yang sama. Kabel yang sudutnya berubah akan memiliki besar tegangan yang berbeda agar beban tetap tertahan. Jadi, dalam fisika, arah bukan hiasan visual. Arah ikut menentukan perhitungan.
+
+## Vektor dan Skalar
+
+Tidak semua besaran perlu arah. **Skalar** adalah besaran yang cukup dijelaskan dengan nilai dan satuan. **Vektor** perlu nilai, satuan, dan arah.
+
+| Situasi | Besaran | Jenis |
+| :------ | :------ | :---- |
+| Air bermassa <InlineMath math="2 \text{ kg}" /> | massa | skalar |
+| Suhu ruang <InlineMath math="27^\circ\text{C}" /> | suhu | skalar |
+| Mobil menempuh jarak <InlineMath math="80 \text{ km}" /> | jarak | skalar |
+| Mobil berpindah <InlineMath math="80 \text{ km}" /> ke utara | perpindahan | vektor |
+| Anak mendorong meja dengan gaya <InlineMath math="30 \text{ N}" /> ke kanan | gaya | vektor |
+| Angin bergerak <InlineMath math="6 \text{ m s}^{-1}" /> ke barat | kecepatan | vektor |
+
+Cara cepat membedakannya begini: kalau pertanyaan "ke arah mana?" penting untuk memahami besaran itu, kemungkinan besar kalian sedang melihat vektor.
+
+## Membaca Panah Vektor
+
+Vektor sering digambar sebagai panah. Pangkal panah menunjukkan titik awal kerja vektor, ujung panah menunjukkan arah, dan panjang panah mewakili besar vektor.
+
+Misalnya sebuah gaya ditulis sebagai <InlineMath math="\vec{F} = 20 \text{ N}" /> ke kanan. Simbol <InlineMath math="\vec{F}" /> menunjukkan bahwa gaya adalah vektor. Angka <InlineMath math="20 \text{ N}" /> adalah besar gayanya. Frasa "ke kanan" adalah arahnya.
+
+Ada juga vektor yang ditulis dari satu titik ke titik lain, seperti <InlineMath math="\overrightarrow{AB}" />. Artinya, vektor itu berawal dari titik <InlineMath math="A" /> dan berakhir di titik <InlineMath math="B" />.
+
+<BlockMath math="\lvert\overrightarrow{AB}\rvert = \text{panjang vektor dari } A \text{ ke } B" />
+
+Tanda mutlak di sekitar vektor berarti kita hanya membicarakan besarnya, bukan arahnya.
+
+## Vektor Sama Bisa Berbeda Tempat
+
+Dua vektor dikatakan sama jika besar dan arahnya sama. Letaknya boleh berbeda.
+
+Bayangkan dua anak mendorong dua meja berbeda. Keduanya mendorong dengan gaya <InlineMath math="15 \text{ N}" /> ke kanan. Walaupun mejanya berbeda tempat, vektor gaya yang mereka berikan dapat dianggap sama karena besar dan arahnya sama.
+
+Sebaliknya, gaya <InlineMath math="15 \text{ N}" /> ke kanan dan gaya <InlineMath math="15 \text{ N}" /> ke kiri bukan vektor yang sama. Besarnya sama, tetapi arahnya berlawanan.
+
+## Panah Angin yang Tidak Bisa Dibaca Separuh
+
+Seorang siswa berjalan <InlineMath math="4 \text{ m}" /> ke timur, lalu <InlineMath math="3 \text{ m}" /> ke utara. Jarak yang ditempuh adalah jumlah lintasan:
+
+<BlockMath math="4 \text{ m} + 3 \text{ m} = 7 \text{ m}" />
+
+Namun perpindahan bukan sekadar jumlah lintasan. Perpindahan adalah vektor dari posisi awal langsung ke posisi akhir.
+
+<BlockMath math="\begin{aligned}
+s &= \sqrt{4^2 + 3^2} \\
+&= 5 \text{ m}
+\end{aligned}" />
+
+Jadi, jaraknya <InlineMath math="7 \text{ m}" />, sedangkan besar perpindahannya <InlineMath math="5 \text{ m}" /> dengan arah miring ke timur laut. Di sinilah vektor membantu: kita tidak hanya tahu "seberapa jauh", tetapi juga "ke mana".

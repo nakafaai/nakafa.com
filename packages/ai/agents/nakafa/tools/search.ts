@@ -6,6 +6,7 @@ import type {
   NakafaAgentSearchResult,
 } from "@repo/contents/_lib/agent/schema/search";
 import type { Locale } from "@repo/contents/_types/content";
+import { isPracticeQuestionPath } from "@repo/contents/_types/route/practice/path";
 import type { UIMessageStreamWriter } from "ai";
 import { Effect, Either } from "effect";
 
@@ -13,7 +14,6 @@ type Writer = Pick<UIMessageStreamWriter<MyUIMessage>, "write">;
 type SearchInput = ReturnType<typeof getSearchInput>;
 
 const searchTokenPattern = /[\p{L}\p{N}]+/gu;
-const exerciseQuestionRoutePattern = /\/\d+$/u;
 const routeSeparatorPattern = /[/_-]+/gu;
 
 interface Params {
@@ -256,7 +256,7 @@ function rankSearchItems(
       return scoreDelta;
     }
 
-    if (input.section !== "exercises") {
+    if (input.section !== "material") {
       return 0;
     }
 
@@ -303,7 +303,7 @@ function getSearchScore(
 function getExerciseSetPriority(
   item: NakafaAgentSearchResult["items"][number]
 ) {
-  if (exerciseQuestionRoutePattern.test(item.route)) {
+  if (isPracticeQuestionPath(item.route)) {
     return 0;
   }
 

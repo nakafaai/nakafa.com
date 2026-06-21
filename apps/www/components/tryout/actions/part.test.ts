@@ -9,7 +9,7 @@ type TryoutAttemptId = Parameters<typeof startTryoutPart>[0]["tryoutAttemptId"];
 const tryoutAttemptId = "tryoutAttemptId" as TryoutAttemptId;
 
 const mocks = vi.hoisted(() => {
-  /** Test double for unauthenticated server-action calls. */
+  /** Test double for unauthenticated tryout cache-seam calls. */
   class MockAuthenticationRequiredError extends Error {}
 
   return {

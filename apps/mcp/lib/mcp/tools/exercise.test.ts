@@ -28,7 +28,7 @@ describe("nakafa_get_exercise", () => {
     const result = await Effect.runPromise(
       getNakafaExerciseToolResult({
         content_ref:
-          "https://nakafa.com/en/exercises/high-school/snbt/general-reasoning/try-out/2026/set-1",
+          "https://nakafa.com/en/practice/snbt/general-reasoning/tryout-2027/set-1",
       })
     );
 

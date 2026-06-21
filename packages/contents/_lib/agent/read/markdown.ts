@@ -5,7 +5,7 @@ import {
 import { getNakafaAgentExercise } from "@repo/contents/_lib/agent/exercise/read";
 import { formatNakafaRouteTitle } from "@repo/contents/_lib/agent/format";
 import { getNakafaAgentQuranReference } from "@repo/contents/_lib/agent/quran/read";
-import { parseNakafaContentRef } from "@repo/contents/_lib/agent/refs";
+import { resolveNakafaContentRef } from "@repo/contents/_lib/agent/refs";
 import { NakafaAgentMarkdownSchema } from "@repo/contents/_lib/agent/schema/read";
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
 import { getContentMetadataWithRaw } from "@repo/contents/_lib/metadata";
@@ -21,10 +21,12 @@ interface NakafaMarkdownReaders {
   readonly readQuran?: typeof getNakafaAgentQuranReference;
 }
 
+const practiceMaterialRoutePrefix = "material/practice/";
+
 /** Retrieves full agent-readable markdown by canonical Nakafa URL projection. */
 export const getNakafaAgentMarkdown = Effect.fn("NakafaAgent.getMarkdown")(
   function* (input: string, readers: NakafaMarkdownReaders = {}) {
-    const ref = parseNakafaContentRef(input);
+    const ref = yield* resolveNakafaContentRef(input);
 
     if (Option.isNone(ref)) {
       return Option.none();
@@ -34,7 +36,10 @@ export const getNakafaAgentMarkdown = Effect.fn("NakafaAgent.getMarkdown")(
       return yield* renderNakafaQuranMarkdown(ref.value, readers);
     }
 
-    if (ref.value.section === "exercises") {
+    if (
+      ref.value.section === "material" &&
+      ref.value.route.startsWith(practiceMaterialRoutePrefix)
+    ) {
       return yield* renderNakafaExerciseMarkdown(ref.value, readers);
     }
 
@@ -42,7 +47,7 @@ export const getNakafaAgentMarkdown = Effect.fn("NakafaAgent.getMarkdown")(
   }
 );
 
-/** Renders article and subject MDX source as agent markdown. */
+/** Renders article and lesson material MDX source as agent markdown. */
 function renderNakafaMdxMarkdown(
   ref: NakafaAgentContentRef,
   readers: NakafaMarkdownReaders

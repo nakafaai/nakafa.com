@@ -42,7 +42,7 @@ import { getCanonicalNakafaContentUrl } from "@/app/api/chat/content";
 import { persistAssistantFailure } from "@/app/api/chat/failure";
 import { search as nakafaSearch } from "@/app/api/chat/nakafa";
 import { nakafaContent } from "@/app/api/chat/nakafa-content";
-import { repairChatToolCall } from "@/app/api/chat/repair";
+import { recoverChatToolCall } from "@/app/api/chat/recovery";
 import { getAssistantResponseFailure } from "@/app/api/chat/response";
 import {
   recordSpecialistUsage,
@@ -52,12 +52,15 @@ import {
 import { prepareChatStep } from "@/app/api/chat/step";
 import { writeSuggestions } from "@/app/api/chat/suggestions";
 import { trackUsage } from "@/app/api/chat/usage";
-import type { getUserInfo } from "@/app/api/chat/utils";
+import type { getLearningProfile, getUserInfo } from "@/app/api/chat/utils";
 
 const MAX_ORCHESTRATOR_STEPS = 20;
 
 type Location = Parameters<typeof nakafaPrompt>[0]["userLocation"];
 type Translator = Awaited<ReturnType<typeof getTranslations>>;
+type LearningProfile = Effect.Effect.Success<
+  ReturnType<typeof getLearningProfile>
+>;
 type UserInfo = Effect.Effect.Success<ReturnType<typeof getUserInfo>>;
 
 /** Fully prepared inputs needed to stream and persist one chat response. */
@@ -86,6 +89,7 @@ interface Params {
   };
   user: {
     info: UserInfo;
+    learningProfile: LearningProfile;
     location: Location;
   };
 }
@@ -235,6 +239,7 @@ export function streamChat({ chat, page, runtime, user }: Params) {
           const usage = yield* trackUsage();
           const context = {
             currentDate: runtime.currentDate,
+            learningProfile: user.learningProfile ?? undefined,
             url: page.url,
             slug: cleanSlug(page.slug),
             verified: page.verified,
@@ -251,6 +256,7 @@ export function streamChat({ chat, page, runtime, user }: Params) {
               verified: page.verified,
             },
             currentDate: runtime.currentDate,
+            learningProfile: user.learningProfile ?? undefined,
             userLocation: user.location,
             userRole: user.info.role ?? undefined,
           });
@@ -276,11 +282,14 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                   return Effect.runPromise(
                     Effect.gen(function* () {
                       if (needsPageFetch) {
+                        const contentRef = getCanonicalNakafaContentUrl(
+                          context.url
+                        );
+
                         return yield* readNakafa({
                           input: {
-                            content_ref: NakafaAgentContentRefInputSchema.make(
-                              getCanonicalNakafaContentUrl(context.url)
-                            ),
+                            content_ref:
+                              NakafaAgentContentRefInputSchema.make(contentRef),
                           },
                           toolCallId,
                           writer,
@@ -408,7 +417,7 @@ export function streamChat({ chat, page, runtime, user }: Params) {
               ),
             experimental_repairToolCall: (options) =>
               Effect.runPromise(
-                repairChatToolCall({
+                recoverChatToolCall({
                   ...options,
                   needsPageFetch: context.needsPageFetch && !fetchedPage,
                   sessionLogger: runtime.logContext,

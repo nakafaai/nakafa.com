@@ -1,44 +1,76 @@
 import { api, internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { NAKAFA_CONTENT_BASE_URL } from "@repo/backend/convex/contents/constants";
 import { CONTENT_SEARCH_MAX_OFFSET } from "@repo/backend/convex/contents/helpers/search/constants";
 import { readContentSearchDocuments } from "@repo/backend/convex/contents/helpers/search/read";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import type { Locale } from "@repo/contents/_types/content";
 import type { SourceRegistryRoot } from "@repo/contents/_types/graph/schema";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
+import { findPublicContentRouteBySourcePath } from "@repo/contents/_types/route/content";
+import { Effect, Option } from "effect";
 import { describe, expect, it } from "vitest";
-
-interface ContentSearchFixture {
-  contentHash: string;
-  description: string;
-  locale: Locale;
-  markdown_url: string;
-  route: string;
-  section: SourceRegistryRoot;
-  syncedAt: number;
-  text: string;
-  title: string;
-  url: string;
-}
 
 /** Inserts a content search fixture with graph identity as product identity. */
 async function insertContentSearch(
   ctx: MutationCtx,
-  fixture: ContentSearchFixture
+  fixture: {
+    contentHash: string;
+    description: string;
+    locale: Locale;
+    markdown_url?: string;
+    route: string;
+    section: SourceRegistryRoot;
+    sourcePath?: string;
+    syncedAt: number;
+    text: string;
+    title: string;
+    url?: string;
+  }
 ) {
+  const sourcePath = fixture.sourcePath ?? fixture.route;
+  const publicPath = getPublicSearchPath(fixture.locale, sourcePath);
   const identity = createLearningGraphIdentityFromRoute({
     locale: fixture.locale,
-    route: fixture.route,
+    route: sourcePath,
   });
 
   if (!identity) {
-    throw new Error(`Expected graph identity for ${fixture.route}.`);
+    expect.fail(`Expected graph identity for ${sourcePath}.`);
   }
 
   await ctx.db.insert("contentSearch", {
     ...fixture,
     ...identity,
     content_id: identity.assetId,
+    markdown_url:
+      fixture.markdown_url ??
+      `${NAKAFA_CONTENT_BASE_URL}/${fixture.locale}/${publicPath}.md`,
+    route: publicPath,
+    sourcePath,
+    url:
+      fixture.url ??
+      `${NAKAFA_CONTENT_BASE_URL}/${fixture.locale}/${publicPath}`,
+  });
+}
+
+/**
+ * Resolves one source path to the localized public search route when projected.
+ * Article fixtures already use their public route shape and bypass material
+ * route projection so large pagination tests stay focused on Convex search.
+ */
+function getPublicSearchPath(locale: Locale, sourcePath: string) {
+  if (sourcePath.startsWith("articles/")) {
+    return sourcePath;
+  }
+
+  const route = Effect.runSync(
+    findPublicContentRouteBySourcePath(sourcePath, locale)
+  );
+
+  return Option.match(route, {
+    onNone: () => sourcePath,
+    onSome: (publicRoute) => publicRoute.publicPath,
   });
 }
 
@@ -47,7 +79,7 @@ function searchContentId(locale: Locale, route: string) {
   const identity = createLearningGraphIdentityFromRoute({ locale, route });
 
   if (!identity) {
-    throw new Error(`Expected graph identity for ${route}.`);
+    expect.fail(`Expected graph identity for ${route}.`);
   }
 
   return identity.assetId;
@@ -62,43 +94,34 @@ describe("contents/queries/search:search", () => {
         contentHash: "hash-rational",
         description: "Pelajari fungsi rasional.",
         locale: "id",
-        markdown_url:
-          "https://nakafa.com/id/subject/high-school/11/mathematics/function-modeling/rational-function.md",
         route:
-          "subject/high-school/11/mathematics/function-modeling/rational-function",
-        section: "subject",
+          "material/lesson/mathematics/function-modeling/rational-function",
+        section: "material",
         syncedAt: 1,
         text: "kelas 11 matematika pemodelan fungsi penyebut domain asimtot",
         title: "Fungsi Rasional",
-        url: "https://nakafa.com/id/subject/high-school/11/mathematics/function-modeling/rational-function",
       });
       await insertContentSearch(ctx, {
         contentHash: "hash-domain",
         description: "Pelajari domain dan range.",
         locale: "id",
-        markdown_url:
-          "https://nakafa.com/id/subject/high-school/11/mathematics/function-modeling/domain-codomain-range.md",
         route:
-          "subject/high-school/11/mathematics/function-modeling/domain-codomain-range",
-        section: "subject",
+          "material/lesson/mathematics/function-modeling/domain-codomain-range",
+        section: "material",
         syncedAt: 1,
         text: "fungsi rasional muncul dalam contoh batas input dan output",
         title: "Domain, Kodomain, dan Range",
-        url: "https://nakafa.com/id/subject/high-school/11/mathematics/function-modeling/domain-codomain-range",
       });
       await insertContentSearch(ctx, {
         contentHash: "hash-en",
         description: "Learn rational functions.",
         locale: "en",
-        markdown_url:
-          "https://nakafa.com/en/subject/high-school/11/mathematics/function-modeling/rational-function.md",
         route:
-          "subject/high-school/11/mathematics/function-modeling/rational-function",
-        section: "subject",
+          "material/lesson/mathematics/function-modeling/rational-function",
+        section: "material",
         syncedAt: 1,
         text: "grade 11 mathematics rational function",
         title: "Rational Function",
-        url: "https://nakafa.com/en/subject/high-school/11/mathematics/function-modeling/rational-function",
       });
     });
 
@@ -107,14 +130,14 @@ describe("contents/queries/search:search", () => {
       locale: "id",
       offset: 0,
       queries: ["fungsi rasional kelas 11"],
-      section: "subject",
+      section: "material",
     });
     const bodyResult = await t.query(api.contents.queries.search.search, {
       limit: 10,
       locale: "id",
       offset: 0,
       queries: ["batas input output"],
-      section: "subject",
+      section: "material",
     });
 
     expect(titleResult.items.map((item) => item.title)).toEqual([
@@ -130,7 +153,7 @@ describe("contents/queries/search:search", () => {
       expect.objectContaining({
         content_id: searchContentId(
           "id",
-          "subject/high-school/11/mathematics/function-modeling/domain-codomain-range"
+          "material/lesson/mathematics/function-modeling/domain-codomain-range"
         ),
         excerpt: expect.stringContaining("batas input"),
       }),
@@ -140,21 +163,20 @@ describe("contents/queries/search:search", () => {
 
   it("searches route tokens without leaking route strings into excerpts", async () => {
     const t = createConvexTestWithBetterAuth();
+    const sourcePath =
+      "material/lesson/mathematics/exponential-logarithm/logarithm-definition";
+    const publicPath = getPublicSearchPath("id", sourcePath);
 
     await t.mutation(async (ctx) => {
       await insertContentSearch(ctx, {
         contentHash: "hash-logarithm",
         description: "Memahami bentuk dasar logaritma.",
         locale: "id",
-        markdown_url:
-          "https://nakafa.com/id/subject/high-school/10/mathematics/exponential-logarithm/logarithm-definition.md",
-        route:
-          "subject/high-school/10/mathematics/exponential-logarithm/logarithm-definition",
-        section: "subject",
+        route: sourcePath,
+        section: "material",
         syncedAt: 1,
         text: "Definisi Logaritma menjelaskan pangkat yang dibutuhkan.",
         title: "Definisi Logaritma",
-        url: "https://nakafa.com/id/subject/high-school/10/mathematics/exponential-logarithm/logarithm-definition",
       });
     });
 
@@ -162,36 +184,32 @@ describe("contents/queries/search:search", () => {
       limit: 5,
       locale: "id",
       offset: 0,
-      queries: [
-        "subject/high-school/10/mathematics/exponential-logarithm/logarithm-definition",
-      ],
-      section: "subject",
+      queries: [publicPath],
+      section: "material",
     });
 
     expect(result.items).toEqual([
       expect.objectContaining({
-        content_id: searchContentId(
-          "id",
-          "subject/high-school/10/mathematics/exponential-logarithm/logarithm-definition"
-        ),
-        excerpt: expect.stringContaining("Memahami bentuk dasar logaritma."),
+        content_id: searchContentId("id", sourcePath),
+        excerpt: expect.stringContaining("pangkat"),
       }),
     ]);
-    expect(result.items[0].excerpt).not.toContain("subject/high-school");
+    expect(result.items[0].excerpt).not.toContain("material/lesson");
     expect(result.items[0].excerpt).not.toContain("exponential-logarithm");
   });
 
   it("resolves exact routes through persisted route catalog content IDs", async () => {
     const t = createConvexTestWithBetterAuth();
-    const route =
-      "subject/high-school/10/mathematics/exponential-logarithm/logarithm-definition";
+    const sourcePath =
+      "material/lesson/mathematics/exponential-logarithm/logarithm-definition";
+    const route = getPublicSearchPath("id", sourcePath);
     const identity = createLearningGraphIdentityFromRoute({
       locale: "id",
-      route,
+      route: sourcePath,
     });
 
     if (!identity) {
-      throw new Error(`Expected graph identity for ${route}.`);
+      expect.fail(`Expected graph identity for ${sourcePath}.`);
     }
 
     const catalogAssetId = `${identity.assetId}:catalog`;
@@ -206,11 +224,12 @@ describe("contents/queries/search:search", () => {
         authors: [],
         contentHash: "hash-logarithm",
         content_id: catalogAssetId,
-        kind: "subject-section",
+        kind: "curriculum-lesson",
         locale: "id",
         markdown: true,
         route,
-        section: "subject",
+        section: "material",
+        sourcePath,
         syncedAt: 1,
         title: "Definisi Logaritma",
       });
@@ -222,7 +241,8 @@ describe("contents/queries/search:search", () => {
         locale: "id",
         markdown_url: `https://nakafa.com/id/${route}.md`,
         route,
-        section: "subject",
+        section: "material",
+        sourcePath,
         syncedAt: 1,
         text: "Definisi Logaritma menjelaskan pangkat yang dibutuhkan.",
         title: "Definisi Logaritma",
@@ -239,7 +259,7 @@ describe("contents/queries/search:search", () => {
             locale: "id",
             offset: 0,
             queries: [route],
-            section: "subject",
+            section: "material",
           },
           [route],
           0
@@ -259,30 +279,24 @@ describe("contents/queries/search:search", () => {
         contentHash: "hash-english-11",
         description: "",
         locale: "id",
-        markdown_url:
-          "https://nakafa.com/id/exercises/high-school/snbt/english-language/try-out/2026/set-2/11.md",
         route:
-          "exercises/high-school/snbt/english-language/try-out/2026/set-2/11",
-        section: "exercises",
+          "material/practice/assessment/snbt/english-language/try-out-2026/set-2/question-11",
+        section: "material",
         syncedAt: 1,
         text: "Soal 11 english-language try-out set-2 reading passage",
         title: "Soal 11",
-        url: "https://nakafa.com/id/exercises/high-school/snbt/english-language/try-out/2026/set-2/11",
       });
       await insertContentSearch(ctx, {
         contentHash: "hash-quantitative-11",
         description:
           "SMA SNBT Pengetahuan Kuantitatif try out 2026 set 2 Nomor 11",
         locale: "id",
-        markdown_url:
-          "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/11.md",
         route:
-          "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/11",
-        section: "exercises",
+          "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-2/question-11",
+        section: "material",
         syncedAt: 1,
         text: "Soal 11 Nomor 11 quantitative-knowledge Pengetahuan Kuantitatif try-out try out 2026 set-2 set 2 fungsi tangga",
         title: "Soal 11",
-        url: "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/11",
       });
     });
 
@@ -291,14 +305,14 @@ describe("contents/queries/search:search", () => {
       locale: "id",
       offset: 0,
       queries: ["SNBT Pengetahuan Kuantitatif try out 2026 set 2 nomor 11"],
-      section: "exercises",
+      section: "material",
     });
 
     expect(result.items[0]).toEqual(
       expect.objectContaining({
         content_id: searchContentId(
           "id",
-          "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/11"
+          "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-2/question-11"
         ),
       })
     );
@@ -318,8 +332,12 @@ describe("contents/queries/search:search", () => {
             exerciseType: "try-out",
             exerciseTypeTitle: "Try Out",
             groupContentHash: "hash-group",
+            groupPublicPath:
+              "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026",
             locale: "id",
             material: "quantitative-knowledge",
+            publicPath:
+              "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-2",
             questionCount: 20,
             searchDescription:
               "SMA SNBT Pengetahuan Kuantitatif Try Out 2026 Set 2 20 soal",
@@ -327,7 +345,7 @@ describe("contents/queries/search:search", () => {
               "SNBT Pengetahuan Kuantitatif try-out try out 2026 set-2 set 2 fungsi rasional 20 soal",
             searchTitle: "SNBT Pengetahuan Kuantitatif Try Out 2026 Set 2",
             setName: "set-2",
-            slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
+            slug: "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-2",
             title: "Set 2",
             type: "snbt",
           },
@@ -340,14 +358,14 @@ describe("contents/queries/search:search", () => {
       locale: "id",
       offset: 0,
       queries: ["latihan fungsi rasional"],
-      section: "exercises",
+      section: "material",
     });
 
     expect(result.items[0]).toEqual(
       expect.objectContaining({
         content_id: searchContentId(
           "id",
-          "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2"
+          "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-2"
         ),
         title: "SNBT Pengetahuan Kuantitatif Try Out 2026 Set 2",
       })
@@ -368,14 +386,18 @@ describe("contents/queries/search:search", () => {
             exerciseType: "semester-1",
             exerciseTypeTitle: "Semester 1",
             groupContentHash: "hash-empty-group",
+            groupPublicPath:
+              "material/practice/assessment/grade-9/mathematics/semester-1",
             locale: "id",
             material: "mathematics",
+            publicPath:
+              "material/practice/assessment/grade-9/mathematics/semester-1/set-1",
             questionCount: 0,
             searchDescription: "SMP Kelas 9 Matematika Semester 1 Set 1 0 soal",
             searchText: "kelas 9 matematika semester 1 0 soal",
             searchTitle: "Kelas 9 Matematika Semester 1 Set 1",
             setName: "set-1",
-            slug: "exercises/middle-school/grade-9/mathematics/semester-1/set-1",
+            slug: "material/practice/assessment/grade-9/mathematics/semester-1/set-1",
             title: "Set 1",
             type: "grade-9",
           },
@@ -388,7 +410,7 @@ describe("contents/queries/search:search", () => {
       locale: "id",
       offset: 0,
       queries: ["kelas 9 matematika"],
-      section: "exercises",
+      section: "material",
     });
 
     expect(result.items).toEqual([]);
@@ -402,29 +424,23 @@ describe("contents/queries/search:search", () => {
         contentHash: "hash-language-question",
         description: "",
         locale: "id",
-        markdown_url:
-          "https://nakafa.com/id/exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1.md",
         route:
-          "exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1",
-        section: "exercises",
+          "material/practice/assessment/snbt/indonesian-language/try-out-2026/set-1/question-1",
+        section: "material",
         syncedAt: 1,
         text: "Soal bacaan yang menyebut pola bilangan sebagai contoh.",
         title: "Soal 1",
-        url: "https://nakafa.com/id/exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1",
       });
       await insertContentSearch(ctx, {
         contentHash: "hash-math-set",
         description: "SNBT Penalaran Matematika Try Out 2026 Set 1 20 soal",
         locale: "id",
-        markdown_url:
-          "https://nakafa.com/id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1.md",
         route:
-          "exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1",
-        section: "exercises",
+          "material/practice/assessment/snbt/mathematical-reasoning/try-out-2026/set-1",
+        section: "material",
         syncedAt: 1,
         text: "Latihan pola bilangan untuk penalaran matematika.",
         title: "SNBT Penalaran Matematika Try Out 2026 Set 1",
-        url: "https://nakafa.com/id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1",
       });
     });
 
@@ -433,14 +449,14 @@ describe("contents/queries/search:search", () => {
       locale: "id",
       offset: 0,
       queries: ["pola bilangan"],
-      section: "exercises",
+      section: "material",
     });
 
     expect(result.items[0]).toEqual(
       expect.objectContaining({
         content_id: searchContentId(
           "id",
-          "exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1"
+          "material/practice/assessment/snbt/mathematical-reasoning/try-out-2026/set-1"
         ),
       })
     );
@@ -454,28 +470,23 @@ describe("contents/queries/search:search", () => {
         contentHash: "hash-question-11",
         description: "SMA SNBT Penalaran Umum Try Out 2026 Set 3 Nomor 11",
         locale: "id",
-        markdown_url:
-          "https://nakafa.com/id/exercises/high-school/snbt/general-reasoning/try-out/2026/set-3/11.md",
         route:
-          "exercises/high-school/snbt/general-reasoning/try-out/2026/set-3/11",
-        section: "exercises",
+          "material/practice/assessment/snbt/general-reasoning/try-out-2026/set-3/question-11",
+        section: "material",
         syncedAt: 1,
         text: "Soal umum nomor 11.",
         title: "SNBT Penalaran Umum Try Out 2026 Set 3 Soal 11",
-        url: "https://nakafa.com/id/exercises/high-school/snbt/general-reasoning/try-out/2026/set-3/11",
       });
       await insertContentSearch(ctx, {
         contentHash: "hash-rational-set",
         description: "SMA TKA Matematika Try Out 2026 Set 1 20 soal",
         locale: "id",
-        markdown_url:
-          "https://nakafa.com/id/exercises/high-school/tka/mathematics/try-out/2026/set-1.md",
-        route: "exercises/high-school/tka/mathematics/try-out/2026/set-1",
-        section: "exercises",
+        route:
+          "material/practice/assessment/tka/mathematics/try-out-2026/set-1",
+        section: "material",
         syncedAt: 1,
         text: "Latihan fungsi rasional kelas 11.",
         title: "TKA Matematika Try Out 2026 Set 1",
-        url: "https://nakafa.com/id/exercises/high-school/tka/mathematics/try-out/2026/set-1",
       });
     });
 
@@ -484,14 +495,14 @@ describe("contents/queries/search:search", () => {
       locale: "id",
       offset: 0,
       queries: ["fungsi rasional kelas 11"],
-      section: "exercises",
+      section: "material",
     });
 
     expect(result.items[0]).toEqual(
       expect.objectContaining({
         content_id: searchContentId(
           "id",
-          "exercises/high-school/tka/mathematics/try-out/2026/set-1"
+          "material/practice/assessment/tka/mathematics/try-out-2026/set-1"
         ),
       })
     );
@@ -505,15 +516,12 @@ describe("contents/queries/search:search", () => {
         contentHash: "hash-class-question",
         description: "SMA SNBT Penalaran Umum Try Out 2026 Set 3 Nomor 11",
         locale: "id",
-        markdown_url:
-          "https://nakafa.com/id/exercises/high-school/snbt/general-reasoning/try-out/2026/set-3/11.md",
         route:
-          "exercises/high-school/snbt/general-reasoning/try-out/2026/set-3/11",
-        section: "exercises",
+          "material/practice/assessment/snbt/general-reasoning/try-out-2026/set-3/question-11",
+        section: "material",
         syncedAt: 1,
         text: "Semua siswa kelas 9 mengikuti ujian sekolah.",
         title: "SNBT Penalaran Umum Try Out 2026 Set 3 Soal 11",
-        url: "https://nakafa.com/id/exercises/high-school/snbt/general-reasoning/try-out/2026/set-3/11",
       });
     });
 
@@ -522,7 +530,7 @@ describe("contents/queries/search:search", () => {
       locale: "id",
       offset: 0,
       queries: ["fungsi rasional kelas 11"],
-      section: "exercises",
+      section: "material",
     });
 
     expect(result.items).toEqual([]);
@@ -542,8 +550,12 @@ describe("contents/queries/search:search", () => {
             exerciseType: "try-out",
             exerciseTypeTitle: "Try Out",
             groupContentHash: "hash-stale-group",
+            groupPublicPath:
+              "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026",
             locale: "id",
             material: "quantitative-knowledge",
+            publicPath:
+              "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-3",
             questionCount: 0,
             searchDescription:
               "SMA SNBT Pengetahuan Kuantitatif Try Out 2026 Set 3 0 soal",
@@ -551,7 +563,7 @@ describe("contents/queries/search:search", () => {
               "SNBT Pengetahuan Kuantitatif try-out try out 2026 set-3 set 3 fungsi kuadrat 0 soal",
             searchTitle: "SNBT Pengetahuan Kuantitatif Try Out 2026 Set 3",
             setName: "set-3",
-            slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-3",
+            slug: "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-3",
             title: "Set 3",
             type: "snbt",
           },
@@ -567,13 +579,13 @@ describe("contents/queries/search:search", () => {
             .eq("locale", "id")
             .eq(
               "slug",
-              "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-3"
+              "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-3"
             )
         )
         .unique();
 
       if (!exerciseSet) {
-        throw new Error("Expected synced exercise set.");
+        expect.fail("Expected synced exercise set.");
       }
 
       return exerciseSet._id;
@@ -591,7 +603,7 @@ describe("contents/queries/search:search", () => {
       locale: "id",
       offset: 0,
       queries: ["fungsi kuadrat"],
-      section: "exercises",
+      section: "material",
     });
 
     expect(result.items).toEqual([]);
@@ -605,42 +617,33 @@ describe("contents/queries/search:search", () => {
         contentHash: "hash-mass",
         description: "Pelajari hukum kekekalan massa.",
         locale: "id",
-        markdown_url:
-          "https://nakafa.com/id/subject/high-school/10/chemistry/basic-chemistry-laws/mass-conservation-law.md",
         route:
-          "subject/high-school/10/chemistry/basic-chemistry-laws/mass-conservation-law",
-        section: "subject",
+          "material/lesson/chemistry/basic-chemistry-laws/mass-conservation-law",
+        section: "material",
         syncedAt: 1,
         text: "kimia kelas 10 reaksi tertutup massa zat tetap",
         title: "Hukum Kekekalan Massa",
-        url: "https://nakafa.com/id/subject/high-school/10/chemistry/basic-chemistry-laws/mass-conservation-law",
       });
       await insertContentSearch(ctx, {
         contentHash: "hash-stoichiometry",
         description: "Pelajari stoikiometri.",
         locale: "id",
-        markdown_url:
-          "https://nakafa.com/id/subject/high-school/10/chemistry/stoichiometry/introduction.md",
-        route: "subject/high-school/10/chemistry/stoichiometry/introduction",
-        section: "subject",
+        route: "material/lesson/chemistry/stoichiometry/introduction",
+        section: "material",
         syncedAt: 1,
         text: "perhitungan kimia mol massa reaksi",
         title: "Stoikiometri",
-        url: "https://nakafa.com/id/subject/high-school/10/chemistry/stoichiometry/introduction",
       });
       await insertContentSearch(ctx, {
         contentHash: "hash-mass-application",
         description: "Latihan tambahan hukum kekekalan massa.",
         locale: "id",
-        markdown_url:
-          "https://nakafa.com/id/subject/high-school/10/chemistry/basic-chemistry-laws/mass-application.md",
         route:
-          "subject/high-school/10/chemistry/basic-chemistry-laws/mass-application",
-        section: "subject",
+          "material/lesson/chemistry/basic-chemistry-laws/mass-application",
+        section: "material",
         syncedAt: 1,
         text: "hukum kekekalan massa contoh lanjutan",
         title: "Aplikasi Massa",
-        url: "https://nakafa.com/id/subject/high-school/10/chemistry/basic-chemistry-laws/mass-application",
       });
     });
 
@@ -649,7 +652,7 @@ describe("contents/queries/search:search", () => {
       locale: "id",
       offset: 0,
       queries: ["hukum kekekalan massa", "stoikiometri"],
-      section: "subject",
+      section: "material",
     });
 
     expect(result.items.map((item) => item.title)).toEqual([
@@ -666,25 +669,21 @@ describe("contents/queries/search:search", () => {
         contentHash: "hash-b",
         description: "",
         locale: "id",
-        markdown_url: "https://nakafa.com/id/articles/science/b.md",
         route: "articles/science/b",
         section: "articles",
         syncedAt: 1,
         text: "Beta",
         title: "Beta",
-        url: "https://nakafa.com/id/articles/science/b",
       });
       await insertContentSearch(ctx, {
         contentHash: "hash-a",
         description: "",
         locale: "id",
-        markdown_url: "https://nakafa.com/id/articles/science/a.md",
         route: "articles/science/a",
         section: "articles",
         syncedAt: 1,
         text: "Alpha",
         title: "Alpha",
-        url: "https://nakafa.com/id/articles/science/a",
       });
     });
 
@@ -714,13 +713,11 @@ describe("contents/queries/search:search", () => {
           contentHash: `hash-search-cap-${index}`,
           description: "",
           locale: "id",
-          markdown_url: `https://nakafa.com/id/articles/search-cap/${index}.md`,
           route: `articles/search-cap/${index}`,
           section: "articles",
           syncedAt: 1,
           text: "searchcap pagination",
           title,
-          url: `https://nakafa.com/id/articles/search-cap/${index}`,
         });
       }
     });
@@ -781,7 +778,7 @@ describe("contents/queries/search:search", () => {
         .unique();
 
       if (!article) {
-        throw new Error("Expected synced article.");
+        expect.fail("Expected synced article.");
       }
 
       return article._id;
@@ -813,7 +810,7 @@ describe("contents/queries/search:search", () => {
     });
 
     if (!identity) {
-      throw new Error(`Expected graph identity for ${route}.`);
+      expect.fail(`Expected graph identity for ${route}.`);
     }
 
     const catalogGraph = {
@@ -835,6 +832,7 @@ describe("contents/queries/search:search", () => {
         markdown: true,
         route,
         section: "quran",
+        sourcePath: route,
         syncedAt: 1,
         title: "1. Al-Fatihah",
       });
@@ -847,6 +845,7 @@ describe("contents/queries/search:search", () => {
         markdown_url: `https://nakafa.com/id/${route}.md`,
         route,
         section: "quran",
+        sourcePath: route,
         syncedAt: 1,
         text: "old stale search row",
         title: "Old Al-Fatihah",

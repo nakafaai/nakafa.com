@@ -109,6 +109,7 @@ export const bulkSyncQuranSearch = internalMutation({
         learningObjectId: route.learningObjectId,
         lensId: route.lensId,
         section: "quran",
+        sourcePath: document.route,
         syncedAt: now,
       });
 

@@ -1,29 +1,57 @@
+import {
+  preserveMdxSourceForAgentMarkdown,
+  projectMdxForAgentMarkdown,
+} from "@repo/contents/_types/llms/mdx";
+import {
+  readSourcePracticeQuestionNumber,
+  toPublicPracticeQuestionSegment,
+} from "@repo/contents/_types/route/practice/path";
 import { Effect, Option } from "effect";
 import type { Locale } from "next-intl";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
-import { getRuntimeExerciseSetPage } from "@/lib/content/runtime";
-import { BASE_URL, NUMBER_SEGMENT } from "@/lib/llms/constants";
+import { getRuntimeExerciseSetPage } from "@/lib/content/runtime/pages";
+import { BASE_URL } from "@/lib/llms/constants";
 import { buildHeader } from "@/lib/llms/format";
+
+const TRAILING_SLASH_PATTERN = /\/+$/;
+const PUBLIC_URL_PATTERN = /\bhttps?:\/\/[^\s*)]+/g;
+const PUBLIC_URL_PROTOCOL_PATTERN = /^https?:\/\//;
+const PUBLIC_URL_PATH_PATTERN = /[/?#].*$/;
+const WWW_PREFIX_PATTERN = /^www\./;
+const TABLE_CELL_NEWLINE_PATTERN = /\n+/g;
+const TABLE_CELL_PIPE_PATTERN = /\|/g;
 
 /** Runs the cached exercise markdown Effect at the Next cache boundary. */
 export async function getCachedLlmsExerciseText({
   cleanSlug,
   locale,
+  publicSlug,
 }: {
   cleanSlug: string;
   locale: Locale;
+  publicSlug?: string;
 }) {
   "use cache";
 
   applyContentRuntimeCache();
 
-  return await Effect.runPromise(getLlmsExerciseText({ cleanSlug, locale }));
+  return await Effect.runPromise(
+    getLlmsExerciseText({ cleanSlug, locale, publicSlug })
+  );
 }
 
 /** Builds uncached exercise markdown from source content. */
 export const getLlmsExerciseText = Effect.fn("www.llms.exercises.text")(
-  function* ({ cleanSlug, locale }: { cleanSlug: string; locale: Locale }) {
-    if (!cleanSlug.startsWith("exercises")) {
+  function* ({
+    cleanSlug,
+    locale,
+    publicSlug,
+  }: {
+    cleanSlug: string;
+    locale: Locale;
+    publicSlug?: string;
+  }) {
+    if (!cleanSlug.startsWith("material/practice")) {
       return null;
     }
 
@@ -49,13 +77,22 @@ export const getLlmsExerciseText = Effect.fn("www.llms.exercises.text")(
       return null;
     }
 
+    if (Option.isNone(exerciseNumber)) {
+      return getExerciseSetIndexMarkdown({
+        cleanSlug,
+        locale,
+        publicSlug,
+        setPage,
+      });
+    }
+
     const description = getExerciseDescription({
-      exerciseNumber,
+      exerciseNumber: exerciseNumber.value,
       setPage,
       targetExercises,
     });
     const scanned = buildHeader({
-      url: `${BASE_URL}/${locale}/${cleanSlug}`,
+      url: `${BASE_URL}/${locale}/${publicSlug ?? cleanSlug}`,
       description,
     });
 
@@ -64,7 +101,7 @@ export const getLlmsExerciseText = Effect.fn("www.llms.exercises.text")(
       scanned.push("");
       scanned.push("### Question");
       scanned.push("");
-      scanned.push(exercise.question.raw);
+      scanned.push(yield* formatPublicExerciseMarkdown(exercise.question.raw));
       scanned.push("");
       scanned.push("### Choices");
       scanned.push("");
@@ -74,16 +111,34 @@ export const getLlmsExerciseText = Effect.fn("www.llms.exercises.text")(
         exercise.choices.en;
 
       if (choices) {
+        scanned.push(
+          locale === "id" ? "| Pilihan | Benar |" : "| Choice | Correct |"
+        );
+        scanned.push("| --- | --- |");
+
         for (const choice of choices) {
-          const mark = choice.value ? "x" : " ";
-          scanned.push(`- [${mark}] ${choice.label}`);
+          const choiceLabel = yield* formatPublicExerciseMarkdown(choice.label);
+
+          scanned.push(
+            `| ${formatMarkdownTableCell(choiceLabel)} | ${formatChoiceCorrectness(
+              {
+                correct: choice.value,
+                locale,
+              }
+            )} |`
+          );
         }
       }
 
-      scanned.push("");
-      scanned.push("### Answer & Explanation");
-      scanned.push("");
-      scanned.push(exercise.answer.raw);
+      const answerRaw = exercise.answer.raw.trim();
+
+      if (answerRaw) {
+        scanned.push("");
+        scanned.push("### Answer & Explanation");
+        scanned.push("");
+        scanned.push(yield* formatPublicExerciseMarkdown(answerRaw));
+      }
+
       scanned.push("");
       scanned.push("---");
       scanned.push("");
@@ -93,12 +148,86 @@ export const getLlmsExerciseText = Effect.fn("www.llms.exercises.text")(
   }
 );
 
+/**
+ * Builds set-level markdown as a question index so large practice sets stay
+ * agent-readable while each concrete question remains available on its own URL.
+ */
+function getExerciseSetIndexMarkdown({
+  cleanSlug,
+  locale,
+  publicSlug,
+  setPage,
+}: {
+  cleanSlug: string;
+  locale: Locale;
+  publicSlug?: string;
+  setPage: ExerciseSetPage;
+}) {
+  const baseSlug = (publicSlug ?? cleanSlug).replace(
+    TRAILING_SLASH_PATTERN,
+    ""
+  );
+  const scanned = buildHeader({
+    url: `${BASE_URL}/${locale}/${baseSlug}`,
+    description: getExerciseSetDescription(setPage),
+  });
+
+  scanned.push("## Questions");
+  scanned.push("");
+
+  for (const exercise of setPage.exercises) {
+    const label = `Question ${exercise.number}`;
+    const questionTitle = exercise.question.metadata.title;
+    const questionSegment = readExerciseQuestionMarkdownSegment({
+      locale,
+      number: exercise.number,
+      usesPublicSlug: Boolean(publicSlug),
+    });
+    const title = questionTitle ? `${label} - ${questionTitle}` : label;
+
+    scanned.push(
+      `- [${title}](${BASE_URL}/${locale}/${baseSlug}/${questionSegment}.md)`
+    );
+  }
+
+  return scanned.join("\n");
+}
+
+/**
+ * Resolves public localized question segments while source markdown keeps the
+ * source-owned English `question-n` segment used by material assets.
+ */
+function readExerciseQuestionMarkdownSegment({
+  locale,
+  number,
+  usesPublicSlug,
+}: {
+  locale: Locale;
+  number: number;
+  usesPublicSlug: boolean;
+}) {
+  if (usesPublicSlug) {
+    return toPublicPracticeQuestionSegment({ locale, number });
+  }
+
+  return toPublicPracticeQuestionSegment({ locale: "en", number });
+}
+
 /** Finds the exercise set path and optional question number from a route. */
 function getExerciseMarkdownTarget(cleanSlug: string) {
   const parts = cleanSlug.split("/");
   const lastPart = parts.at(-1);
 
-  if (!(lastPart && NUMBER_SEGMENT.test(lastPart))) {
+  if (!lastPart) {
+    return {
+      exerciseNumber: Option.none(),
+      path: cleanSlug,
+    };
+  }
+
+  const exerciseNumber = readSourcePracticeQuestionNumber(lastPart);
+
+  if (exerciseNumber === null) {
     return {
       exerciseNumber: Option.none(),
       path: cleanSlug,
@@ -106,9 +235,58 @@ function getExerciseMarkdownTarget(cleanSlug: string) {
   }
 
   return {
-    exerciseNumber: Option.some(Number.parseInt(lastPart, 10)),
+    exerciseNumber: Option.some(exerciseNumber),
     path: parts.slice(0, -1).join("/"),
   };
+}
+
+/**
+ * Converts source MDX exercise text into the same visible text shape rendered
+ * by public practice pages while preserving external hrefs for agents.
+ */
+function formatPublicExerciseMarkdown(raw: string) {
+  return projectMdxForAgentMarkdown(raw).pipe(
+    Effect.catchTag("MdxAgentProjectionError", () =>
+      Effect.succeed(preserveMdxSourceForAgentMarkdown(raw))
+    ),
+    Effect.map((markdown) =>
+      markdown.replace(PUBLIC_URL_PATTERN, (url) => {
+        const label = readPublicUrlLabel(url);
+        return `[${label}](${url})`;
+      })
+    )
+  );
+}
+
+/** Returns the compact external-link text shown by the public MDX renderer. */
+function readPublicUrlLabel(url: string) {
+  return url
+    .replace(PUBLIC_URL_PROTOCOL_PATTERN, "")
+    .replace(WWW_PREFIX_PATTERN, "")
+    .replace(PUBLIC_URL_PATH_PATTERN, "");
+}
+
+/** Keeps projected MDX choice labels readable inside markdown tables. */
+function formatMarkdownTableCell(value: string) {
+  return value
+    .replace(TABLE_CELL_PIPE_PATTERN, "\\|")
+    .replace(TABLE_CELL_NEWLINE_PATTERN, "<br>")
+    .trim();
+}
+
+/** Formats a source-owned choice boolean for agent-readable markdown tables. */
+function formatChoiceCorrectness({
+  correct,
+  locale,
+}: {
+  correct: boolean;
+  locale: Locale;
+}) {
+  if (locale === "id") {
+    return correct ? "Ya" : "Tidak";
+  }
+
+  return correct ? "Yes" : "No";
 }
 
 type ExerciseSetPage = NonNullable<
@@ -122,15 +300,11 @@ function getExerciseDescription({
   setPage,
   targetExercises,
 }: {
-  exerciseNumber: Option.Option<number>;
+  exerciseNumber: number;
   setPage: ExerciseSetPage;
   targetExercises: ExerciseRows;
 }) {
   const description = getExerciseSetDescription(setPage);
-
-  if (Option.isNone(exerciseNumber)) {
-    return description;
-  }
 
   const exerciseTitle = targetExercises[0]?.question.metadata.title;
 
@@ -138,7 +312,7 @@ function getExerciseDescription({
     return `${description} - ${exerciseTitle}`;
   }
 
-  return `${description} - Question ${exerciseNumber.value}`;
+  return `${description} - Question ${exerciseNumber}`;
 }
 
 /** Resolves the markdown description for an exercise set page. */

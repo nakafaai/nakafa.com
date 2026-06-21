@@ -1,14 +1,20 @@
 import type { api } from "@repo/backend/convex/_generated/api";
 import { CONTENT_ROUTE_ARTIFACT_PAGE_SIZE } from "@repo/backend/convex/contents/constants";
-import { getSourceRouteProjectionForRoute } from "@repo/contents/_types/graph/projection";
+import { findPublicContentRouteBySourcePath } from "@repo/contents/_types/route/content";
+import {
+  readPublicPracticeAssessmentPath,
+  readPublicPracticeDomainPath,
+} from "@repo/contents/_types/route/practice/path";
+import type { PublicContentRoute } from "@repo/contents/_types/route/schema";
 import { routing } from "@repo/internationalization/src/routing";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import { hasLocale, type Locale } from "next-intl";
 import {
   getRuntimeContentRouteArtifactPage,
   getRuntimeContentRouteCounts,
-} from "@/lib/content/runtime";
+  getRuntimeSitemapPublicRoutes,
+} from "@/lib/content/runtime/routes";
 
 type RuntimeContentSection = FunctionArgs<
   typeof api.contents.queries.runtime.listContentRoutesByPrefix
@@ -18,31 +24,37 @@ type RuntimeContentRoute = NonNullable<
     typeof api.contents.queries.runtime.getContentRouteArtifactPage
   >
 >["routes"][number];
-type SourceRouteProjection = NonNullable<
-  ReturnType<typeof getSourceRouteProjectionForRoute>
+type RuntimeSitemapPublicRoute = FunctionReturnType<
+  typeof api.contents.queries.runtime.listSitemapPublicRoutes
+>["page"][number];
+type RuntimeSitemapPublicRoutePage = FunctionReturnType<
+  typeof api.contents.queries.runtime.listSitemapPublicRoutes
 >;
-type ExerciseRouteProjection = NonNullable<SourceRouteProjection["exercise"]>;
-
 const contentSections: readonly RuntimeContentSection[] = [
   "articles",
-  "subject",
-  "exercises",
+  "material",
   "quran",
 ];
 const sitemapBasePageId = "base";
 const quranRootRoute = "/quran";
-const subjectRootRoute = "/subject";
-const tryOutYearSegment = /^\d{4}$/;
+
+type SitemapPage =
+  | { id: typeof sitemapBasePageId }
+  | {
+      id: string;
+      kind: "content";
+      locale: Locale;
+      page: number;
+      section: RuntimeContentSection;
+    }
+  | {
+      id: string;
+      kind: "public";
+      locale: Locale;
+    };
 
 /** Descriptor for one graph-backed sitemap artifact page. */
-export interface ContentSitemapPage {
-  id: string;
-  locale: Locale;
-  page: number;
-  section: RuntimeContentSection;
-}
-
-type SitemapPage = { id: typeof sitemapBasePageId } | ContentSitemapPage;
+export type ContentSitemapPage = Extract<SitemapPage, { kind: "content" }>;
 
 /** Static top-level routes that should always be present in the sitemap. */
 export const baseRoutes = [
@@ -50,7 +62,6 @@ export const baseRoutes = [
   "/search",
   "/contributor",
   quranRootRoute,
-  subjectRootRoute,
   "/terms-of-service",
   "/privacy-policy",
   "/security-policy",
@@ -58,16 +69,22 @@ export const baseRoutes = [
 
 /** Lists stable sitemap page ids from materialized route counts. */
 export function getSitemapPageDescriptors() {
-  return Effect.runPromise(getSitemapPageDescriptorsEffect());
+  return Effect.runPromise(readSitemapPageDescriptors());
 }
 
 /** Reads sitemap page descriptors without loading route rows. */
-export const getSitemapPageDescriptorsEffect = Effect.fn(
+export const readSitemapPageDescriptors = Effect.fn(
   "www.sitemap.pageDescriptors"
 )(function* () {
   const descriptors: SitemapPage[] = [{ id: sitemapBasePageId }];
 
   for (const locale of routing.locales) {
+    descriptors.push({
+      id: formatPublicSitemapPageId(locale),
+      kind: "public",
+      locale,
+    });
+
     const counts = yield* getRuntimeContentRouteCounts({ locale });
 
     for (const count of counts) {
@@ -79,6 +96,7 @@ export const getSitemapPageDescriptorsEffect = Effect.fn(
       for (let page = 0; page < pageCount; page++) {
         descriptors.push({
           id: formatContentSitemapPageId({ locale, section, page }),
+          kind: "content",
           locale,
           page,
           section,
@@ -97,6 +115,15 @@ export function getSitemapPageDescriptor(id: string | undefined) {
   }
 
   const [prefix, locale, section, rawPage] = id.split("_");
+
+  if (prefix === "public" && hasLocale(routing.locales, locale) && !section) {
+    return {
+      id,
+      kind: "public",
+      locale,
+    } satisfies SitemapPage;
+  }
+
   if (prefix !== "content" || !hasLocale(routing.locales, locale)) {
     return null;
   }
@@ -112,27 +139,40 @@ export function getSitemapPageDescriptor(id: string | undefined) {
 
   return {
     id,
+    kind: "content",
     locale,
     page,
     section,
   } satisfies SitemapPage;
 }
 
+/** Runs the sitemap route Effect at the Next metadata boundary. */
+export function getSitemapRoutes(pageId?: string) {
+  return Effect.runPromise(readSitemapRoutes(pageId));
+}
+
 /** Builds the deduplicated route list for one sitemap page. */
-export async function getSitemapRoutes(pageId?: string) {
+export const readSitemapRoutes = Effect.fn("www.sitemap.routes")(function* (
+  pageId?: string
+) {
   const page = getSitemapPageDescriptor(pageId);
 
   if (!page) {
     return [];
   }
 
+  if (isPublicSitemapPage(page)) {
+    return yield* readSitemapPublicRoutes(page.locale);
+  }
+
   if (!isContentSitemapPage(page)) {
     return sortRoutes(baseRoutes);
   }
 
-  const rows = await getRuntimeContentRoutePageRows(page);
-  return sortRoutes(buildSitemapContentPageRoutes(rows));
-}
+  const rows = yield* getRuntimeContentRoutePageRows(page);
+  const routes = yield* buildSitemapContentPageRoutes(rows);
+  return sortRoutes(routes);
+});
 
 /** Formats one materialized content route page id for Next.js sitemap generation. */
 function formatContentSitemapPageId({
@@ -147,6 +187,11 @@ function formatContentSitemapPageId({
   return `content_${locale}_${section}_${page}`;
 }
 
+/** Formats the public-context route sitemap page id for one locale. */
+function formatPublicSitemapPageId(locale: Locale) {
+  return `public_${locale}`;
+}
+
 /** Checks whether a raw route page segment is a content section. */
 function isRuntimeContentSection(
   section: string | undefined
@@ -156,146 +201,134 @@ function isRuntimeContentSection(
 
 /** Checks whether one parsed sitemap page targets content route rows. */
 function isContentSitemapPage(page: SitemapPage): page is ContentSitemapPage {
-  return "section" in page && typeof page.section === "string";
+  return "kind" in page && page.kind === "content";
+}
+
+/** Checks whether one parsed sitemap page targets public route rows. */
+function isPublicSitemapPage(
+  page: SitemapPage
+): page is Extract<SitemapPage, { kind: "public" }> {
+  return "kind" in page && page.kind === "public";
 }
 
 /** Reads one materialized content route page through the Convex route catalog. */
 function getRuntimeContentRoutePageRows(page: ContentSitemapPage) {
-  return Effect.runPromise(
-    getRuntimeContentRouteArtifactPage({
-      locale: page.locale,
-      page: page.page,
-      section: page.section,
-    }).pipe(
-      Effect.map((artifactPage) => {
-        if (!artifactPage) {
-          return [];
-        }
+  return getRuntimeContentRouteArtifactPage({
+    locale: page.locale,
+    page: page.page,
+    section: page.section,
+  }).pipe(
+    Effect.map((artifactPage) => {
+      if (!artifactPage) {
+        return [];
+      }
 
-        return artifactPage.routes;
-      })
-    )
+      return artifactPage.routes;
+    })
   );
 }
 
 /** Builds sitemap page routes from concrete route catalog rows. */
-export function buildSitemapContentPageRoutes(
-  rows: readonly RuntimeContentRoute[]
-) {
+export const buildSitemapContentPageRoutes = Effect.fn(
+  "www.sitemap.contentPageRoutes"
+)(function* (rows: readonly RuntimeContentRoute[]) {
   const routes = new Set<string>();
 
   for (const row of rows) {
-    addContentPageRoutes(routes, row.route);
+    yield* addContentPageRoutes(routes, row);
   }
 
   return sortRoutes(routes);
-}
+});
+
+/** Reads sitemap-eligible public context routes through bounded Convex pages. */
+const readSitemapPublicRoutes = Effect.fn("www.sitemap.publicRoutes")(
+  function* (locale: Locale) {
+    const routes = new Set<string>();
+    let cursor: string | null = null;
+
+    while (true) {
+      const page: RuntimeSitemapPublicRoutePage =
+        yield* getRuntimeSitemapPublicRoutes({
+          cursor,
+          limit: CONTENT_ROUTE_ARTIFACT_PAGE_SIZE,
+          locale,
+        });
+
+      for (const route of page.page) {
+        if (isSitemapPublicContextRoute(route)) {
+          routes.add(routeToPath(route.publicPath));
+        }
+      }
+
+      if (page.isDone) {
+        return sortRoutes(routes);
+      }
+
+      cursor = page.continueCursor;
+    }
+  }
+);
 
 /** Adds the concrete route and supported parent index routes. */
-function addContentPageRoutes(routes: Set<string>, route: string) {
-  const projection = getSourceRouteProjectionForRoute(route);
+function addContentPageRoutes(routes: Set<string>, row: RuntimeContentRoute) {
+  return Effect.gen(function* () {
+    if (row.section === "articles") {
+      addArticleRoutes(routes, row.route);
+      return;
+    }
 
-  if (!projection) {
-    return;
-  }
+    if (row.section === "quran") {
+      routes.add(routeToPath(row.route));
+      return;
+    }
 
-  if (projection.kind === "article") {
-    addArticleRoutes(routes, projection);
-    return;
-  }
+    const route = yield* findPublicContentRouteBySourcePath(
+      row.sourcePath,
+      row.locale
+    );
 
-  if (projection.kind === "subject-section") {
-    addSubjectRoutes(routes, projection);
-    return;
-  }
+    if (Option.isNone(route)) {
+      return;
+    }
 
-  const { exercise } = projection;
-  if (exercise) {
-    addExerciseRoutes(routes, exercise);
-    return;
-  }
-
-  routes.add(routeToPath(projection.route));
+    addProjectedContentRoutes(routes, route.value);
+  });
 }
 
 /** Adds article category and detail routes. */
-function addArticleRoutes(
-  routes: Set<string>,
-  projection: SourceRouteProjection
-) {
-  const [, category] = projection.lensSegments;
-
+function addArticleRoutes(routes: Set<string>, route: string) {
+  const [, category] = route.split("/");
   routes.add(`/articles/${category}`);
-  routes.add(routeToPath(projection.route));
+  routes.add(routeToPath(route));
 }
 
-/** Adds subject grade, material, and lesson routes. */
-function addSubjectRoutes(
+/** Adds projected public content routes plus their useful listing parents. */
+function addProjectedContentRoutes(
   routes: Set<string>,
-  projection: SourceRouteProjection
+  route: PublicContentRoute
 ) {
-  const [, category, grade, material] = projection.lensSegments;
+  if (route.kind === "subject-topic") {
+    return;
+  }
 
-  routes.add(`/subject/${category}/${grade}`);
-  routes.add(`/subject/${category}/${grade}/${material}`);
-  routes.add(routeToPath(projection.route));
+  if (route.kind === "subject-lesson") {
+    routes.add(routeToPath(route.publicPath));
+    return;
+  }
+
+  if (route.kind === "exercise-question") {
+    routes.add(routeToPath(route.parentPath));
+  }
+
+  routes.add(routeToPath(readPublicPracticeAssessmentPath(route)));
+  routes.add(routeToPath(readPublicPracticeDomainPath(route)));
+  routes.add(routeToPath(route.publicPath));
 }
 
-/** Adds exercise listing, group, set, and question routes. */
-function addExerciseRoutes(
-  routes: Set<string>,
-  exercise: ExerciseRouteProjection
-) {
-  const {
-    categorySegment: category,
-    groupSegments,
-    materialSegment: material,
-    questionSegment,
-    setSegment,
-    typeSegment: type,
-  } = exercise;
-  routes.add(`/exercises/${category}/${type}`);
-  routes.add(`/exercises/${category}/${type}/${material}`);
-
-  const nestedSegments = [...groupSegments];
-
-  if (setSegment) {
-    nestedSegments.push(setSegment);
-  }
-  if (questionSegment) {
-    nestedSegments.push(questionSegment);
-  }
-
-  for (const nestedRoute of getExerciseNestedRoutes(nestedSegments)) {
-    routes.add(`/exercises/${category}/${type}/${material}/${nestedRoute}`);
-  }
-}
-
-/** Builds canonical exercise nested routes from concrete set/question routes. */
-function getExerciseNestedRoutes(rest: string[]) {
-  const routes: string[] = [];
-  const nested: string[] = [];
-
-  for (const segment of rest) {
-    nested.push(segment);
-
-    if (isInvalidExerciseNestedRoute(nested)) {
-      continue;
-    }
-
-    routes.push(nested.join("/"));
-  }
-
-  return routes;
-}
-
-/** Checks whether an exercise route is missing the required try-out year. */
-function isInvalidExerciseNestedRoute(parts: string[]) {
-  if (parts[0] !== "try-out") {
-    return false;
-  }
-
-  return !(parts[1] && tryOutYearSegment.test(parts[1]));
+/** Keeps public-route sitemap rows scoped to rendered app context pages. */
+function isSitemapPublicContextRoute(route: RuntimeSitemapPublicRoute) {
+  return route.kind === "curriculum-context";
 }
 
 /** Converts one route string into an app-level HTTP path string. */

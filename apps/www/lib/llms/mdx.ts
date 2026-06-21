@@ -1,10 +1,14 @@
+import {
+  preserveMdxSourceForAgentMarkdown,
+  projectMdxForAgentMarkdown,
+} from "@repo/contents/_types/llms/mdx";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
 import {
   getRuntimeArticlePage,
-  getRuntimeSubjectPage,
-} from "@/lib/content/runtime";
+  getRuntimeCurriculumPage,
+} from "@/lib/content/runtime/pages";
 import { BASE_URL } from "@/lib/llms/constants";
 import { buildHeader } from "@/lib/llms/format";
 import { getRawGithubUrl } from "@/lib/utils/github";
@@ -13,24 +17,30 @@ import { getRawGithubUrl } from "@/lib/utils/github";
 export async function getCachedLlmsMdxText({
   cleanSlug,
   locale,
+  publicSlug,
 }: {
   cleanSlug: string;
   locale: Locale;
+  publicSlug?: string;
 }) {
   "use cache";
 
   applyContentRuntimeCache();
 
-  return await Effect.runPromise(getLlmsMdxText({ cleanSlug, locale }));
+  return await Effect.runPromise(
+    getLlmsMdxText({ cleanSlug, locale, publicSlug })
+  );
 }
 
 /** Builds uncached markdown for one article or subject MDX content page. */
 export const getLlmsMdxText = Effect.fn("www.llms.mdx.text")(function* ({
   cleanSlug,
   locale,
+  publicSlug,
 }: {
   cleanSlug: string;
   locale: Locale;
+  publicSlug?: string;
 }) {
   const content = yield* getMdxRuntimePage({ cleanSlug, locale });
 
@@ -38,13 +48,18 @@ export const getLlmsMdxText = Effect.fn("www.llms.mdx.text")(function* ({
     return null;
   }
 
+  const body = yield* projectMdxForAgentMarkdown(content.body).pipe(
+    Effect.catchTag("MdxAgentProjectionError", () =>
+      Effect.succeed(preserveMdxSourceForAgentMarkdown(content.body))
+    )
+  );
   const scanned = [
     ...buildHeader({
-      url: `${BASE_URL}/${locale}/${cleanSlug}`,
+      url: `${BASE_URL}/${locale}/${publicSlug ?? cleanSlug}`,
       description: getPageDescription(content),
       source: getRawGithubUrl(`/packages/contents/${cleanSlug}/${locale}.mdx`),
     }),
-    content.body,
+    body,
   ];
 
   return scanned.join("\n");
@@ -65,8 +80,11 @@ const getMdxRuntimePage = Effect.fn("www.llms.mdx.runtimePage")(function* ({
     });
   }
 
-  if (cleanSlug.startsWith("subject/")) {
-    return yield* getRuntimeSubjectPage({
+  if (
+    cleanSlug.startsWith("curriculum/") ||
+    cleanSlug.startsWith("material/lesson/")
+  ) {
+    return yield* getRuntimeCurriculumPage({
       locale,
       slug: cleanSlug,
     });
@@ -79,7 +97,7 @@ type RuntimeMdxPage = NonNullable<
   Effect.Effect.Success<ReturnType<typeof getMdxRuntimePage>>
 >;
 
-/** Returns a markdown description with subject fallback for subject lessons. */
+/** Returns the best available markdown header description for one content page. */
 function getPageDescription(content: RuntimeMdxPage) {
   if (content.metadata.description) {
     return content.metadata.description;

@@ -10,7 +10,7 @@ import { describe, expect, it } from "vitest";
 
 const NOW = Date.parse("2026-01-01T00:00:00.000Z");
 const exerciseSetSlug =
-  "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1";
+  "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1";
 const testLocale = SUPPORTED_CONTENT_LOCALES[1];
 
 /**
@@ -101,7 +101,7 @@ async function expectIntegrityError(
   });
 }
 
-describe("exercises/queries", () => {
+describe("assessment/queries", () => {
   it("loads renderable exercise rows from indexed synced content rows", async () => {
     const t = convexTest(schema, convexModules);
 

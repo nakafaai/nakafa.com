@@ -17,7 +17,7 @@ export const notificationTypesValidator = literals(
   "post_mention",
   "post_reply",
   "post_reaction",
-  // Comment related (content pages like /subject/...)
+  // Comment related (content pages like /curriculum/...)
   "comment_reply",
   "comment_mention",
   "comment_upvote",

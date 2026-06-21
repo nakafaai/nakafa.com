@@ -65,7 +65,7 @@ describe("analytics/capture", () => {
           mode: "practice",
           origin: "standalone",
           scope: "set",
-          slug: "exercises/example",
+          slug: "assessment/example",
           total_exercises: 10,
         },
       })
@@ -80,7 +80,7 @@ describe("analytics/capture", () => {
           origin: "standalone",
           score_percentage: 80,
           scope: "set",
-          slug: "exercises/example",
+          slug: "assessment/example",
           total_exercises: 10,
           total_time: 120,
         },
@@ -243,11 +243,11 @@ describe("analytics/capture", () => {
 
     const scheduledJobs = await t.mutation(async (ctx) => {
       const userId = await ctx.db.insert("users", {
-        authId: "legacy-analytics-user-auth",
+        authId: "scheduled-analytics-user-auth",
         credits: 10,
         creditsResetAt: NOW,
-        email: "legacy-analytics@example.com",
-        name: "Legacy Analytics User",
+        email: "scheduled-analytics@example.com",
+        name: "Scheduled Analytics User",
         plan: "free",
       });
 
@@ -256,10 +256,10 @@ describe("analytics/capture", () => {
         disableGeoip: true,
         event: "content viewed",
         properties: {
-          content_type: "subject",
+          content_type: "material-lesson",
           is_new_view: false,
           locale: "id",
-          slug: "subject/high-school/10/mathematics/example",
+          slug: "material/lesson/mathematics/example",
         },
         timestamp: new Date(NOW),
       });
@@ -271,10 +271,10 @@ describe("analytics/capture", () => {
       validate(productAnalyticsEventValidator, {
         name: "content viewed",
         properties: {
-          content_type: "subject",
+          content_type: "material-lesson",
           is_new_view: false,
           locale: "id",
-          slug: "subject/high-school/10/mathematics/example",
+          slug: "material/lesson/mathematics/example",
         },
       })
     ).toBe(false);
@@ -284,10 +284,10 @@ describe("analytics/capture", () => {
           expect.objectContaining({
             event: "content viewed",
             properties: JSON.stringify({
-              content_type: "subject",
+              content_type: "material-lesson",
               is_new_view: false,
               locale: "id",
-              slug: "subject/high-school/10/mathematics/example",
+              slug: "material/lesson/mathematics/example",
             }),
           }),
         ],

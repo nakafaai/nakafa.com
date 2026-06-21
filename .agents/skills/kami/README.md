@@ -12,30 +12,61 @@
 
 Kami (紙, かみ) means paper in Japanese: the surface where a finished idea lands. AI can produce documents better than most humans do manually. The missing piece is not capability but constraint: without a design system, every session drifts into generic gray and inconsistent layouts.
 
-Kami fills that gap: one constraint language, nine templates, simple enough for agents to run reliably, strict enough that every output is something you actually want to ship. English and Chinese are first-class; Japanese and Korean work via best-effort CJK paths with visual QA before delivery.
+Kami fills that gap: one constraint language, nine templates, simple enough for agents to run reliably, strict enough that every output is something you actually want to ship.
 
 Part of a trilogy: [Kaku](https://github.com/tw93/Kaku) (書く) writes code, [Waza](https://github.com/tw93/Waza) (技) drills habits, [Kami](https://github.com/tw93/Kami) (紙) delivers documents.
 
 ## See it
 
+Nine real PDFs across templates and languages. Click any preview to open it.
+
 <table>
 <tr>
-  <td align="center" width="25%">
-    <a href="assets/demos/demo-tesla.pdf"><img src="assets/demos/demo-tesla.png" alt="Tesla equity report"></a>
-    <br><b>Equity Report</b> · 中文
-    <br><sub>Tesla Q1 2026 财报点评</sub>
+  <td align="center" width="33%">
+    <a href="assets/demos/demo-musk-resume.pdf"><img src="assets/demos/demo-musk-resume.png" alt="Founder resume"></a>
+    <br><b>Resume</b> · English
+    <br><sub>Founder resume, 2 pages</sub>
   </td>
-  <td align="center" width="25%">
-    <a href="assets/demos/demo-agent-slides.pdf"><img src="assets/demos/demo-agent-slides.png" alt="Agent keynote slides" /></a>
-    <br><b>Slides</b> · English
-    <br><sub>Agent keynote, 6 slides</sub>
-  </td>
-  <td align="center" width="25%">
+  <td align="center" width="33%">
     <a href="assets/demos/demo-resume-ko.pdf"><img src="assets/demos/demo-resume-ko.png" alt="Korean resume"></a>
     <br><b>Resume</b> · 한국어
     <br><sub>개발자 이력서, 2페이지</sub>
   </td>
-  <td align="center" width="25%">
+  <td align="center" width="33%">
+    <a href="assets/demos/demo-tesla.pdf"><img src="assets/demos/demo-tesla.png" alt="Tesla equity report"></a>
+    <br><b>Equity Report</b> · 中文
+    <br><sub>Tesla Q1 2026 财报点评</sub>
+  </td>
+</tr>
+<tr>
+  <td align="center" width="33%">
+    <a href="assets/demos/demo-agent-slides.pdf"><img src="assets/demos/demo-agent-slides.png" alt="Agent keynote slides" /></a>
+    <br><b>Slides</b> · English
+    <br><sub>Agent keynote, 6 slides</sub>
+  </td>
+  <td align="center" width="33%">
+    <a href="assets/demos/demo-mole.pdf"><img src="assets/demos/demo-mole.png" alt="Mole product brief"></a>
+    <br><b>One-Pager</b> · English
+    <br><sub>Mole product brief, 1 page</sub>
+  </td>
+  <td align="center" width="33%">
+    <a href="assets/demos/demo-waza.pdf"><img src="assets/demos/demo-waza.png" alt="Waza skills one-pager"></a>
+    <br><b>One-Pager</b> · English
+    <br><sub>Waza skills intro, 1 page</sub>
+  </td>
+</tr>
+<tr>
+  <td align="center" width="33%">
+    <a href="assets/demos/demo-letter.pdf"><img src="assets/demos/demo-letter.png" alt="Recommendation letter"></a>
+    <br><b>Letter</b> · 中文
+    <br><sub>推荐信, 1 页</sub>
+  </td>
+  <td align="center" width="33%">
+    <a href="assets/demos/demo-changelog.pdf"><img src="assets/demos/demo-changelog.png" alt="Mole release notes"></a>
+    <br><b>Changelog</b> · English
+    <br><sub>Mole v1.7.1 release notes</sub>
+  </td>
+  <td align="center" width="33%">
     <a href="assets/demos/demo-kaku.pdf"><img src="assets/demos/demo-kaku.png" alt="Kaku portfolio"></a>
     <br><b>Portfolio</b> · 日本語
     <br><sub>Kaku ターミナル作品集 · 7 ページ</sub>
@@ -82,7 +113,16 @@ npx skills add tw93/kami -a claude-code -g -y
 /plugin install kami@kami
 ```
 
-**Generic agents** (Codex, OpenCode, Pi, and other tools that read from `~/.agents/`)
+**Codex plugin marketplace**
+
+```bash
+codex plugin marketplace add tw93/kami
+codex plugin add kami@kami
+```
+
+This installs Kami as a Codex plugin from the repo marketplace, so future updates can use `codex plugin marketplace upgrade kami` followed by `codex plugin add kami@kami`.
+
+**Generic agents** (OpenCode, Pi, and other tools that read from `~/.agents/`)
 
 ```bash
 npx skills add tw93/kami -a '*' -g -y
@@ -92,7 +132,15 @@ npx skills add tw93/kami -a '*' -g -y
 
 Download [kami.zip](https://github.com/tw93/kami/releases/latest/download/kami.zip), open Customize > Skills > "+" > Create skill, and upload the ZIP directly (no need to unzip).
 
-The ZIP is lightweight: large CJK fonts are excluded from the skill package. In a repo checkout they load from local font files first, then jsDelivr CDN; in an installed skill, `scripts/ensure-fonts.sh` recovers missing Chinese or Korean fonts into the user font directory. To update: download the same URL, click "..." on the skill card, choose Replace, upload.
+The ZIP is lightweight: large CJK fonts are excluded from the skill package. In a repo checkout they load from local font files first, then jsDelivr CDN; in an installed skill, `scripts/ensure-fonts.sh` recovers missing Chinese or Korean fonts into the user font directory.
+
+**Update**
+
+```bash
+npx skills update kami -g -y
+```
+
+Claude Code marketplace installs use `claude plugin update kami`. Codex plugin installs use `codex plugin marketplace upgrade kami`, then `codex plugin add kami@kami` to refresh the installed plugin snapshot. Claude Desktop: download the latest [kami.zip](https://github.com/tw93/kami/releases/latest/download/kami.zip), click "..." on the skill card, choose Replace, upload. Kami also runs a quiet version check at most once a day and tells you in chat when a newer version is out; it only reads a public version file, sends no data, and is skipped when offline.
 
 The skill auto-triggers from natural requests, no slash command needed. Optimized for English and Chinese; Japanese and Korean are supported via best-effort CJK paths with visual QA before delivery.
 
@@ -125,7 +173,7 @@ Nine template types: One-Pager, Long Doc, Letter, Portfolio, Resume, Slides, Equ
 | Shadows | Ring or whisper only, no hard drop shadows |
 | Tags | Solid hex backgrounds only. `rgba()` triggers a WeasyPrint double-rectangle bug |
 
-**Fonts**: Each language uses a single serif font for the entire page. Chinese: TsangerJinKai02. Japanese: YuMincho. Korean: Source Han Serif K. English: Charter. TsangerJinKai is free for personal use, commercial use requires a license from [tsanger.cn](https://tsanger.cn). Source Han Serif K is OFL-licensed. All other fonts are system-bundled.
+**Fonts**: Each language uses a single serif font for the entire page. Chinese: TsangerJinKai02. Japanese: YuMincho. Korean: Source Han Serif K. English: Charter. See [License](#license) for font terms.
 
 Full spec: [design.md](references/design.md). Cheatsheet: [CHEATSHEET.md](CHEATSHEET.md).
 
@@ -165,11 +213,16 @@ Later I needed to present "The Agent You Don't Know: Principles, Architecture an
 
 ## Support
 
+- The most direct way to support me is getting [Mole for Mac](https://mole.fit), my paid Mac cleanup app.
 - If kami helped you, [share it](https://twitter.com/intent/tweet?url=https://github.com/tw93/kami&text=Kami%20-%20A%20quiet%20design%20system%20for%20professional%20documents.) with friends or give it a star.
 - Got ideas or bugs? Open an issue or PR.
 - I have two cats, TangYuan and Coke. If you think kami delights your life, you can feed them <a href="https://cats.tw93.fun?name=Kami" target="_blank">canned food 🥩</a>.
 
+<details>
+<summary>These lovely people already did 🐱</summary>
+<br/>
 <a href="https://cats.tw93.fun?name=Kami"><img src="https://cdn.jsdelivr.net/gh/tw93/sponsors@main/assets/sponsors.svg" width="1000" loading="lazy" /></a>
+</details>
 
 ## License
 

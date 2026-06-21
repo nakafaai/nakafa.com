@@ -6,7 +6,7 @@ import {
   Link04Icon,
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import type { MaterialList } from "@repo/contents/_types/subject/material";
+import type { MaterialList } from "@repo/contents/_types/curriculum/material";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Card,
@@ -21,6 +21,7 @@ import {
 } from "@repo/design-system/components/ui/collapsible";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn, slugify } from "@repo/design-system/lib/utils";
+import { normalizeLocalizedInternalHref } from "@repo/internationalization/src/href";
 import { Link } from "@repo/internationalization/src/navigation";
 import { useLayoutEffect, useState } from "react";
 
@@ -29,7 +30,7 @@ interface Props {
 }
 
 /**
- * Renders one expandable material card on the subject material index page.
+ * Renders one expandable material card on the material lesson index page.
  *
  * The card defaults to open, and resets back to open when Next.js hides the
  * page through Cache Components state preservation. This keeps the material list
@@ -85,11 +86,9 @@ export function CardMaterial({ material }: Props) {
                 <HugeIcons className="size-4" icon={Link04Icon} />
               </a>
             </CardTitle>
-            {!!material.description && (
-              <CardDescription title={material.description}>
-                {material.description}
-              </CardDescription>
-            )}
+            <CardDescription title={material.description}>
+              {material.description}
+            </CardDescription>
           </div>
           <Button
             aria-label={isOpen ? "Close content" : "Open content"}
@@ -119,7 +118,7 @@ export function CardMaterial({ material }: Props) {
                 <li className="group/list" key={item.href}>
                   <Link
                     className="group flex w-full scroll-mt-28 items-center gap-2 px-6 py-3 transition-colors ease-out hover:bg-accent hover:text-accent-foreground group-last/list:pb-6"
-                    href={item.href}
+                    href={normalizeLocalizedInternalHref(item.href)}
                     prefetch
                     title={item.title}
                   >
