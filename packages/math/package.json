@@ -11,12 +11,12 @@
   },
   "dependencies": {
     "@t3-oss/env-core": "^0.13.11",
-    "effect": "^3.21.3"
+    "effect": "^3.21.4"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "25.9.3",
-    "@vitest/coverage-istanbul": "^4.1.8",
-    "vitest": "^4.1.8"
+    "@types/node": "26.0.0",
+    "@vitest/coverage-istanbul": "^4.1.9",
+    "vitest": "^4.1.9"
   }
 }

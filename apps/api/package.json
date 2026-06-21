@@ -13,7 +13,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@convex-dev/better-auth": "^0.12.3",
+    "@convex-dev/better-auth": "^0.12.4",
     "@repo/backend": "workspace:*",
     "@repo/contents": "workspace:*",
     "@repo/design-system": "workspace:*",
@@ -22,19 +22,19 @@
     "@t3-oss/env-nextjs": "^0.13.11",
     "better-auth": "~1.6.15",
     "convex": "^1.41.0",
-    "effect": "^3.21.3",
+    "effect": "^3.21.4",
     "next": "16.2.9",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "25.9.3",
+    "@types/node": "26.0.0",
     "@types/react": "19.2.17",
-    "@vercel/config": "^0.5.2",
-    "@vitest/coverage-istanbul": "^4.1.8",
+    "@vercel/config": "^0.5.3",
+    "@vitest/coverage-istanbul": "^4.1.9",
     "typescript": "^6.0.3",
     "vite": "^8.0.16",
-    "vitest": "^4.1.8"
+    "vitest": "^4.1.9"
   }
 }

@@ -12,8 +12,7 @@ import remarkMdx from "remark-mdx";
 import remarkParse from "remark-parse";
 import { type Processor, unified } from "unified";
 
-const PROCESSOR: Processor<Root> = unified().use(remarkParse);
-PROCESSOR.use(remarkMdx);
+const PROCESSOR = configureMdxProcessor(unified().use(remarkParse));
 const COMPONENT_PROP_LIMIT = 1200;
 const COMPONENT_CHILD_LIMIT = 2200;
 const OPEN_FRAGMENT_PATTERN = /^<>\s*/;
@@ -57,6 +56,7 @@ export function preserveMdxSourceForAgentMarkdown(body: string) {
   return cleanAgentMarkdown(body);
 }
 
+/** Parses authored MDX into the root tree shape consumed by the projection renderer. */
 function parseMdxTree(body: string) {
   return Effect.try({
     try: () => PROCESSOR.parse(body),
@@ -64,12 +64,14 @@ function parseMdxTree(body: string) {
   });
 }
 
+/** Converts parser and renderer defects into the typed projection failure channel. */
 function makeMdxAgentProjectionError(cause: unknown) {
   return new MdxAgentProjectionError({
     message: String(cause),
   });
 }
 
+/** Renders one MDX AST node into agent-readable markdown. */
 function renderNode(node: RootContent, source: string): string {
   if (node.type === "mdxjsEsm") {
     return "";
@@ -84,12 +86,14 @@ function renderNode(node: RootContent, source: string): string {
   );
 }
 
+/** Renders a parent node by preserving only visible child markdown rows. */
 function renderChildren(node: Parent, source: string): string[] {
   return node.children
     .map((child) => renderNode(child, source).trim())
     .filter(Boolean);
 }
 
+/** Renders framework MDX elements into a compact markdown representation. */
 function renderMdxElement(
   node: MdxJsxFlowElement | MdxJsxTextElement,
   source: string
@@ -121,6 +125,7 @@ function renderMdxElement(
   return renderGenericComponent(name, attributes, node, source);
 }
 
+/** Renders Mermaid with chart fences while preserving component props when present. */
 function renderMermaid(
   attributes: MdxAttribute[],
   node: MdxJsxFlowElement | MdxJsxTextElement,
@@ -143,6 +148,7 @@ function renderMermaid(
   return rows.join("\n");
 }
 
+/** Renders an unknown MDX component as a named component block. */
 function renderGenericComponent(
   name: string,
   attributes: MdxAttribute[],
@@ -154,6 +160,7 @@ function renderGenericComponent(
   );
 }
 
+/** Builds the rows that describe an MDX component's props and children. */
 function renderGenericComponentRows(
   name: string,
   attributes: MdxAttribute[],
@@ -180,6 +187,7 @@ function renderGenericComponentRows(
   return rows;
 }
 
+/** Formats one MDX attribute row unless the caller intentionally omits it. */
 function renderAttribute(attribute: MdxAttribute, omittedAttributes: string[]) {
   const name = readAttributeName(attribute);
 
@@ -203,6 +211,7 @@ function renderAttribute(attribute: MdxAttribute, omittedAttributes: string[]) {
   return `- ${name}: ${formatted}\n  Visible text: ${visibleText}`;
 }
 
+/** Reads a named MDX attribute as source text. */
 function readAttribute(attributes: MdxAttribute[], name: string) {
   for (const attribute of attributes) {
     if (readAttributeName(attribute) === name) {
@@ -213,6 +222,7 @@ function readAttribute(attributes: MdxAttribute[], name: string) {
   return "";
 }
 
+/** Returns the source-level attribute name, including spread expressions. */
 function readAttributeName(attribute: MdxAttribute) {
   if (isExpressionAttribute(attribute)) {
     return "spread";
@@ -221,6 +231,7 @@ function readAttributeName(attribute: MdxAttribute) {
   return attribute.name;
 }
 
+/** Converts an MDX attribute value into stable source text for agent markdown. */
 function readAttributeValue(attribute: MdxAttribute) {
   if (isExpressionAttribute(attribute)) {
     return attribute.value;
@@ -239,6 +250,7 @@ function readAttributeValue(attribute: MdxAttribute) {
   return value.value;
 }
 
+/** Reads the original source slice for a positioned Markdown node. */
 function readSourceSlice(node: RootContent, source: string) {
   const position = Schema.decodeUnknownSync(MdxPositionSchema)(node.position);
   const start = Math.max(0, position.start.offset);
@@ -247,6 +259,7 @@ function readSourceSlice(node: RootContent, source: string) {
   return source.slice(start, end).trim();
 }
 
+/** Normalizes an attribute's authored text before exposing it to agents. */
 function formatAttributeText(value: string) {
   return limitText(
     preprocessLaTeX(cleanTemplateValue(value))
@@ -260,6 +273,7 @@ function formatAttributeText(value: string) {
   );
 }
 
+/** Removes one layer of template literal quoting from authored prop values. */
 function cleanTemplateValue(value: string) {
   const trimmed = value.trim();
 
@@ -270,6 +284,7 @@ function cleanTemplateValue(value: string) {
   return trimmed;
 }
 
+/** Converts authored math text into the fenced math format used by AFDocs. */
 function toMathFence(math: string) {
   if (!math.trim()) {
     return "";
@@ -278,6 +293,7 @@ function toMathFence(math: string) {
   return `\`\`\`math\n${math.trim()}\n\`\`\``;
 }
 
+/** Caps large component prop or child payloads while preserving total size evidence. */
 function limitText(value: string, limit: number) {
   if (value.length <= limit) {
     return value;
@@ -286,6 +302,7 @@ function limitText(value: string, limit: number) {
   return `${value.slice(0, limit).trim()} ... [truncated; ${value.length} chars]`;
 }
 
+/** Normalizes blank lines and LaTeX before returning final agent markdown. */
 function cleanAgentMarkdown(markdown: string) {
   return preprocessLaTeX(markdown)
     .replace(EXCESS_BLANK_LINES_PATTERN, "\n\n")
@@ -308,6 +325,7 @@ function appendVisibleTextVariant(markdown: string) {
   return `${markdown}\n\nVisible text: ${visibleText}`;
 }
 
+/** Extracts rendered-visible prose by removing math-only source blocks. */
 function readVisibleText(markdown: string) {
   return markdown
     .replace(FENCED_MATH_BLOCK_PATTERN, "")
@@ -319,6 +337,13 @@ function readVisibleText(markdown: string) {
 
 type MdxAttribute = MdxJsxAttribute | MdxJsxExpressionAttribute;
 
+/** Configures MDX JSX parsing on the root Markdown processor. */
+function configureMdxProcessor(processor: Processor<Root>) {
+  processor.use(remarkMdx);
+  return processor;
+}
+
+/** Narrows Markdown content to MDX JSX element nodes that carry attributes. */
 function isMdxElementNode(
   node: RootContent
 ): node is MdxJsxFlowElement | MdxJsxTextElement {
@@ -329,6 +354,7 @@ function isMdxElementNode(
   );
 }
 
+/** Narrows an MDX attribute to expression/spread syntax. */
 function isExpressionAttribute(
   attribute: MdxAttribute
 ): attribute is MdxJsxExpressionAttribute {
