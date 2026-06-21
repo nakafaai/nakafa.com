@@ -28,6 +28,26 @@ describe("resolveLocalizedNavigationHref", () => {
     ).toBe("/materi/ai-ds/metode-linear-ai/sistem-persamaan-linear");
   });
 
+  it("projects valid material context hints and drops stale ones", () => {
+    expect(
+      resolveHref(
+        "/id/materi/matematika/sistem-persamaan-dan-pertidaksamaan-linear/sistem-persamaan-linear?ctx=merdeka~class-10-mathematics-linear-equation-inequality",
+        "en"
+      )
+    ).toBe(
+      "/subjects/mathematics/linear-equation-inequality/system-linear-equation?ctx=merdeka%7Eclass-10-mathematics-linear-equation-inequality"
+    );
+
+    expect(
+      resolveHref(
+        "/id/materi/matematika/sistem-persamaan-dan-pertidaksamaan-linear/sistem-persamaan-linear?ctx=merdeka~class-10-biology-virus-role",
+        "en"
+      )
+    ).toBe(
+      "/subjects/mathematics/linear-equation-inequality/system-linear-equation"
+    );
+  });
+
   it("projects other concrete material lessons to the target namespace and slugs", () => {
     expect(resolveHref("/id/materi/fisika/vektor/konsep-vektor", "en")).toBe(
       "/subjects/physics/vector/concept"

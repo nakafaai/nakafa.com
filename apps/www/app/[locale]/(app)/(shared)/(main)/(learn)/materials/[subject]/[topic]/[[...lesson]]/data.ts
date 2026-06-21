@@ -6,13 +6,13 @@ import {
   readParentMaterialRoute,
 } from "@repo/contents/_types/route/content";
 import { readStaticPublicContentRoutes } from "@repo/contents/_types/route/content/static";
-import { readCurriculumCardListContext } from "@repo/contents/_types/route/curriculum/card";
 import { readStaticPublicCurriculumRoutes } from "@repo/contents/_types/route/curriculum/static";
+import { resolveMaterialHeaderLink } from "@repo/contents/_types/route/material/context";
+import { listMaterialContextRefs } from "@repo/contents/_types/route/material/reference";
 import type {
   PublicContentRoute,
   PublicCurriculumRoute,
 } from "@repo/contents/_types/route/schema";
-import { slugify } from "@repo/design-system/lib/utils";
 import { notFound } from "next/navigation";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
@@ -116,40 +116,23 @@ export function requireParentMaterialRoute(route: PublicContentRoute) {
 }
 
 /**
- * Builds the old material header link for the new canonical lesson route.
+ * Resolves the material header return link from an explicit curriculum context.
  *
- * The old route linked a lesson back to the material card list and anchored the
- * current chapter card. Material topic hubs are now internal grouping rows, so
- * this resolves the curriculum subject/course page that renders the card list.
+ * Direct canonical material visits intentionally render without an invented
+ * curriculum parent. Stale or mismatched context query values are ignored.
  */
-export function readMaterialHeaderLink(route: PublicContentRoute) {
-  const parentMaterial = requireParentMaterialRoute(route);
-  const curriculumRoutes = readCurriculumRoutes();
-  const curriculumContext = curriculumRoutes.find(
-    (candidate) =>
-      candidate.locale === route.locale &&
-      candidate.canonicalPath === parentMaterial.publicPath
-  );
-
-  if (!curriculumContext) {
-    return;
-  }
-
-  const cardListContext = readCurriculumCardListContext(
-    curriculumContext,
-    curriculumRoutes
-  );
-
-  if (!cardListContext) {
-    return;
-  }
-
-  return {
-    href: `/${route.locale}/${cardListContext.publicPath}#${slugify(
-      curriculumContext.title
-    )}`,
-    label: curriculumContext.title,
-  };
+export function readMaterialHeaderLink(
+  route: PublicContentRoute,
+  context: string | readonly string[] | undefined
+) {
+  return resolveMaterialHeaderLink({
+    context,
+    refs: listMaterialContextRefs({
+      contentRoutes: readMaterialRoutes(),
+      curriculumRoutes: readCurriculumRoutes(),
+    }),
+    route,
+  });
 }
 
 /**

@@ -11,6 +11,12 @@ import {
   compareCurriculumRouteOrder,
   readCurriculumRouteByPublicPath,
 } from "@repo/contents/_types/route/curriculum";
+import { toContextualMaterialHref } from "@repo/contents/_types/route/material/context";
+import {
+  listMaterialContextRefs,
+  type MaterialContextRef,
+  readMaterialContextRef,
+} from "@repo/contents/_types/route/material/reference";
 import { comparePublicRouteOrder } from "@repo/contents/_types/route/path";
 import type {
   PublicContentRoute,
@@ -58,6 +64,10 @@ export function readCurriculumMaterialCards({
     return [];
   }
 
+  const contextRefs = listMaterialContextRefs({
+    contentRoutes,
+    curriculumRoutes,
+  });
   const groupRoutes = curriculumRoutes
     .filter(
       (candidate) =>
@@ -70,6 +80,7 @@ export function readCurriculumMaterialCards({
   return groupRoutes.flatMap((groupRoute) =>
     readCurriculumMaterialCard({
       contentRoutes,
+      contextRefs,
       curriculumRoutes,
       route: groupRoute,
     })
@@ -79,15 +90,18 @@ export function readCurriculumMaterialCards({
 /** Converts one curriculum group route into the existing collapsible material card contract. */
 function readCurriculumMaterialCard({
   contentRoutes,
+  contextRefs,
   curriculumRoutes,
   route,
 }: {
   contentRoutes: readonly PublicContentRoute[];
+  contextRefs: readonly MaterialContextRef[];
   curriculumRoutes: readonly PublicCurriculumRoute[];
   route: PublicCurriculumRoute;
 }): MaterialList {
   const items = readCurriculumMaterialItems({
     contentRoutes,
+    contextRefs,
     curriculumRoutes,
     route,
   });
@@ -109,10 +123,12 @@ function readCurriculumMaterialCard({
 /** Expands a curriculum group and its descendants into direct canonical lesson links. */
 function readCurriculumMaterialItems({
   contentRoutes,
+  contextRefs,
   curriculumRoutes,
   route,
 }: {
   contentRoutes: readonly PublicContentRoute[];
+  contextRefs: readonly MaterialContextRef[];
   curriculumRoutes: readonly PublicCurriculumRoute[];
   route: PublicCurriculumRoute;
 }) {
@@ -129,7 +145,9 @@ function readCurriculumMaterialItems({
     for (const item of readMaterialLessonItems(
       curriculumRoute.locale,
       curriculumRoute.canonicalPath,
-      contentRoutes
+      contentRoutes,
+      contextRefs,
+      route
     )) {
       materialItems.set(item.href, item);
     }
@@ -142,7 +160,9 @@ function readCurriculumMaterialItems({
 function readMaterialLessonItems(
   locale: PublicCurriculumRoute["locale"],
   path: string,
-  contentRoutes: readonly PublicContentRoute[]
+  contentRoutes: readonly PublicContentRoute[],
+  contextRefs: readonly MaterialContextRef[],
+  contextRoute: PublicCurriculumRoute
 ) {
   const route = contentRoutes.find(
     (candidate) =>
@@ -156,7 +176,7 @@ function readMaterialLessonItems(
   }
 
   if (isMaterialLessonRoute(route)) {
-    return [{ href: toLocalizedContentHref(route), title: route.title }];
+    return [toMaterialLessonItem(route, contextRefs, contextRoute)];
   }
 
   return contentRoutes
@@ -167,10 +187,30 @@ function readMaterialLessonItems(
     )
     .slice()
     .sort(comparePublicRouteOrder)
-    .map((candidate) => ({
-      href: toLocalizedContentHref(candidate),
-      title: candidate.title,
-    }));
+    .map((candidate) =>
+      toMaterialLessonItem(candidate, contextRefs, contextRoute)
+    );
+}
+
+/** Builds one direct lesson item with a validated curriculum context hint. */
+function toMaterialLessonItem(
+  route: PublicContentRoute,
+  contextRefs: readonly MaterialContextRef[],
+  contextRoute: PublicCurriculumRoute
+) {
+  const ref = readMaterialContextRef({
+    contextRoute,
+    refs: contextRefs,
+    route,
+  });
+
+  return {
+    href: toContextualMaterialHref({
+      href: toLocalizedContentHref(route),
+      ref,
+    }),
+    title: route.title,
+  };
 }
 
 /** Walks visible curriculum descendants in source order so card lists stay deterministic. */

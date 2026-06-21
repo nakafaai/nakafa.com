@@ -1,5 +1,11 @@
 import { MATERIAL_ROUTE_DOMAINS } from "@repo/contents/_types/material/domain";
 import { MATERIAL_SOURCES } from "@repo/contents/_types/material/source";
+import { isMaterialLessonRoute } from "@repo/contents/_types/route/content";
+import {
+  MATERIAL_CONTEXT_QUERY_PARAM,
+  projectMaterialContextHintToLocale,
+} from "@repo/contents/_types/route/material/context";
+import { listMaterialContextRefs } from "@repo/contents/_types/route/material/reference";
 import { readPracticeSourceSetParts } from "@repo/contents/_types/route/practice/identity";
 import {
   readPublicPracticeAssessmentPath,
@@ -10,7 +16,11 @@ import {
   findPublicRouteByPath,
   listPublicRoutes,
 } from "@repo/contents/_types/route/projection";
-import type { PublicRoute } from "@repo/contents/_types/route/schema";
+import type {
+  PublicContentRoute,
+  PublicCurriculumRoute,
+  PublicRoute,
+} from "@repo/contents/_types/route/schema";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
 import { routing } from "@repo/internationalization/src/routing";
 import { Data, Effect, Option } from "effect";
@@ -122,7 +132,7 @@ function isPracticeSetRoute(
  * Finds the target-locale public path for one projected route using stable
  * source identity rather than localized slug text.
  */
-function readTargetProjectedPath({
+function readTargetProjectedRoute({
   locale,
   route,
   routes,
@@ -137,15 +147,13 @@ function readTargetProjectedPath({
       locale,
       materials: MATERIAL_SOURCES,
       sourcePath: route.sourcePath,
-    })?.publicPath;
+    });
   }
 
-  const targetRoute = routes.find(
+  return routes.find(
     (candidate) =>
       candidate.locale === locale && isSamePublicRouteIdentity(route, candidate)
   );
-
-  return targetRoute?.publicPath;
 }
 
 /**
@@ -225,6 +233,67 @@ function readPracticeDomainTargetPath({
   );
 }
 
+/** Narrows projected route rows to canonical content/practice rows. */
+function isContentRoute(route: PublicRoute): route is PublicContentRoute {
+  return route.kind !== "curriculum-context";
+}
+
+/** Narrows projected route rows to curriculum context rows. */
+function isCurriculumRoute(route: PublicRoute): route is PublicCurriculumRoute {
+  return route.kind === "curriculum-context";
+}
+
+/**
+ * Preserves only validated material context state across localized projections.
+ *
+ * Other projected routes intentionally drop query/hash state because localized
+ * source-owned slugs and heading anchors are not guaranteed to be equivalent.
+ */
+function readProjectedRouteSuffix({
+  parsed,
+  route,
+  routes,
+  targetRoute,
+}: {
+  parsed: ParsedLocalizedHref;
+  route: PublicRoute;
+  routes: readonly PublicRoute[];
+  targetRoute: PublicRoute;
+}) {
+  if (
+    !(
+      isContentRoute(route) &&
+      isContentRoute(targetRoute) &&
+      isMaterialLessonRoute(route) &&
+      isMaterialLessonRoute(targetRoute)
+    )
+  ) {
+    return "";
+  }
+
+  const context = new URLSearchParams(parsed.search).get(
+    MATERIAL_CONTEXT_QUERY_PARAM
+  );
+  const projectedContext = projectMaterialContextHintToLocale({
+    context,
+    currentRoute: route,
+    refs: listMaterialContextRefs({
+      contentRoutes: routes.filter(isContentRoute),
+      curriculumRoutes: routes.filter(isCurriculumRoute),
+    }),
+    targetRoute,
+  });
+
+  if (!projectedContext) {
+    return "";
+  }
+
+  const search = new URLSearchParams();
+  search.set(MATERIAL_CONTEXT_QUERY_PARAM, projectedContext);
+
+  return `?${search.toString()}`;
+}
+
 /**
  * Resolves a browser href to the target locale's route-owned navigation href.
  *
@@ -256,8 +325,8 @@ export const resolveLocalizedNavigationHref = Effect.fn(
   ).pipe(Effect.map(Option.getOrUndefined));
 
   if (projectedRoute) {
-    const targetPath = yield* Effect.fromNullable(
-      readTargetProjectedPath({
+    const targetRoute = yield* Effect.fromNullable(
+      readTargetProjectedRoute({
         locale: input.locale,
         route: projectedRoute,
         routes,
@@ -272,7 +341,15 @@ export const resolveLocalizedNavigationHref = Effect.fn(
       )
     );
 
-    return toNavigationHref(targetPath);
+    return toNavigationHref(
+      targetRoute.publicPath,
+      readProjectedRouteSuffix({
+        parsed,
+        route: projectedRoute,
+        routes,
+        targetRoute,
+      })
+    );
   }
 
   const practiceRootPath = readPracticeRootTargetPath({

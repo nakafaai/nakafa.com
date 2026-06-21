@@ -103,27 +103,34 @@ export async function generateMetadata({
  * do not render public pages, so the learner opens concrete material content
  * directly from a collapsible card.
  */
-export default async function Page({ params }: MaterialPageProps) {
-  const { locale, route } = await resolveMaterialRoute(params);
+export default async function Page({
+  params,
+  searchParams,
+}: MaterialPageProps) {
+  const [{ locale, route }, query] = await Promise.all([
+    resolveMaterialRoute(params),
+    searchParams,
+  ]);
 
   if (!isMaterialLessonRoute(route)) {
     notFound();
   }
 
-  const runtimeLesson = await fetchRuntimeCurriculumPage({
-    locale,
-    slug: route.sourcePath,
-  });
+  const [runtimeLesson, content] = await Promise.all([
+    fetchRuntimeCurriculumPage({
+      locale,
+      slug: route.sourcePath,
+    }),
+    importContentModuleOrNull({
+      filePath: route.sourcePath,
+      locale,
+      source: "material-public-route",
+    }),
+  ]);
 
   if (!runtimeLesson) {
     notFound();
   }
-
-  const content = await importContentModuleOrNull({
-    filePath: route.sourcePath,
-    locale,
-    source: "material-public-route",
-  });
 
   if (!content?.default) {
     notFound();
@@ -136,7 +143,7 @@ export default async function Page({ params }: MaterialPageProps) {
     <MaterialLessonPage
       content={runtimeLesson}
       footer={<DeferredComments slug={route.sourcePath} />}
-      headerLink={readMaterialHeaderLink(route)}
+      headerLink={readMaterialHeaderLink(route, query?.ctx)}
       locale={locale}
       parentTitle={parentRoute.title}
       route={route}

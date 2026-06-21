@@ -519,10 +519,14 @@ describe("public curriculum routes", () => {
 
     expect(concreteLessonCards).toHaveLength(1);
     expect(concreteLessonCards[0]).toMatchObject({
-      href: `/${concreteLesson.locale}/${concreteLesson.publicPath}`,
+      href: expect.stringContaining(
+        `/${concreteLesson.locale}/${concreteLesson.publicPath}?ctx=`
+      ),
       items: [
         {
-          href: `/${concreteLesson.locale}/${concreteLesson.publicPath}`,
+          href: expect.stringContaining(
+            `/${concreteLesson.locale}/${concreteLesson.publicPath}?ctx=`
+          ),
           title: concreteLesson.title,
         },
       ],
