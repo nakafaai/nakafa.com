@@ -35,6 +35,7 @@ import { LayoutMaterialToc } from "@/components/shared/material/toc";
 import { PaginationContent } from "@/components/shared/pagination-content";
 import { importContentModuleOrNull } from "@/lib/content/module";
 import { fetchRuntimeCurriculumPage } from "@/lib/content/runtime/pages";
+import { readMaterialContextQuery } from "@/lib/routing/material/query";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 import { createProjectedRouteAlternates } from "@/lib/utils/seo/alternates";
@@ -143,7 +144,10 @@ export default async function Page({
     <MaterialLessonPage
       content={runtimeLesson}
       footer={<DeferredComments slug={route.sourcePath} />}
-      headerLink={readMaterialHeaderLink(route, query?.ctx)}
+      headerLink={readMaterialHeaderLink(
+        route,
+        readMaterialContextQuery(query ?? {})
+      )}
       locale={locale}
       parentTitle={parentRoute.title}
       route={route}

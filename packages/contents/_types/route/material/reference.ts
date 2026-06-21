@@ -122,6 +122,7 @@ export function readMaterialContextRef({
   );
 }
 
+/** Converts a curriculum card group plus material lesson into one context ref. */
 function toMaterialContextRef({
   groupRoute,
   materialRoute,
@@ -146,10 +147,17 @@ function toMaterialContextRef({
   };
 }
 
+/** Builds the stable de-duplication key for one locale/source/context ref. */
 function readMaterialContextRefKey(ref: MaterialContextRef) {
   return [ref.locale, ref.sourcePath, ref.programKey, ref.nodeKey].join(":");
 }
 
+/**
+ * Expands one canonical card material path into concrete lesson routes.
+ *
+ * A curriculum card can target either one lesson directly or a topic row whose
+ * concrete children should all carry the same validated return context.
+ */
 function readMaterialLessonRoutes({
   contentRoutes,
   locale,
@@ -184,6 +192,12 @@ function readMaterialLessonRoutes({
     .sort(comparePublicRouteOrder);
 }
 
+/**
+ * Walks from a curriculum material reference to the card-list page that owns it.
+ *
+ * The returned parent route is where the header link should send learners back;
+ * missing parents make the optional context unusable instead of inventing one.
+ */
 function readMaterialContextRoute(
   route: PublicCurriculumRoute,
   routes: readonly PublicCurriculumRoute[]
@@ -214,6 +228,7 @@ function readMaterialContextRoute(
   return;
 }
 
+/** Detects curriculum pages that render material cards for learners. */
 function isCurriculumCardListRoute(route: PublicCurriculumRoute) {
   return route.level === "subject" || route.level === "course";
 }

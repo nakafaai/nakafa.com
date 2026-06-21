@@ -80,18 +80,16 @@ export function resolveMaterialHeaderLink({
   refs,
   route,
 }: {
-  context: string | readonly string[] | null | undefined;
+  context: MaterialContextIdentity | undefined;
   refs: readonly MaterialContextRef[];
   route: MaterialRouteIdentity;
 }) {
-  const hint = readMaterialContextHint(context);
-
-  if (!hint) {
+  if (!context) {
     return;
   }
 
   const ref = readMaterialContextRef({
-    contextRoute: hint,
+    contextRoute: context,
     refs,
     route,
   });
@@ -107,30 +105,28 @@ export function resolveMaterialHeaderLink({
 }
 
 /**
- * Projects a valid material context hint to the target localized material URL.
+ * Projects a valid material context identity to the target localized material URL.
  *
  * When the target locale lacks the same curriculum context, callers drop the
  * query and keep the canonical target material URL.
  */
-export function projectMaterialContextHintToLocale({
+export function projectMaterialContextToLocale({
   context,
   currentRoute,
   refs,
   targetRoute,
 }: {
-  context: string | readonly string[] | null | undefined;
+  context: MaterialContextIdentity | undefined;
   currentRoute: MaterialRouteIdentity;
   refs: readonly MaterialContextRef[];
   targetRoute: MaterialRouteIdentity;
 }) {
-  const hint = readMaterialContextHint(context);
-
-  if (!hint) {
+  if (!context) {
     return;
   }
 
   const currentRef = readMaterialContextRef({
-    contextRoute: hint,
+    contextRoute: context,
     refs,
     route: currentRoute,
   });
@@ -149,5 +145,8 @@ export function projectMaterialContextHintToLocale({
     return;
   }
 
-  return encodeMaterialContextHint(targetRef);
+  return {
+    nodeKey: targetRef.nodeKey,
+    programKey: targetRef.programKey,
+  };
 }

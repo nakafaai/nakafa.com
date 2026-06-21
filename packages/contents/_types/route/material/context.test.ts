@@ -1,8 +1,7 @@
 import { listPublicContentRoutes } from "@repo/contents/_types/route/content";
 import { listPublicCurriculumRoutes } from "@repo/contents/_types/route/curriculum";
 import {
-  encodeMaterialContextHint,
-  projectMaterialContextHintToLocale,
+  projectMaterialContextToLocale,
   readMaterialContextHint,
   resolveMaterialHeaderLink,
   toContextualMaterialHref,
@@ -79,7 +78,7 @@ describe("material route context", () => {
     );
     expect(
       resolveMaterialHeaderLink({
-        context: encodeMaterialContextHint(merdekaRef),
+        context: merdekaRef,
         refs,
         route,
       })
@@ -107,6 +106,10 @@ describe("material route context", () => {
       return;
     }
 
+    expect(readMaterialContextHint("merdeka~node")).toEqual({
+      nodeKey: "node",
+      programKey: "merdeka",
+    });
     expect(readMaterialContextHint(["merdeka~node"])).toBeUndefined();
     expect(readMaterialContextHint("merdeka")).toBeUndefined();
     expect(readMaterialContextHint("~node")).toBeUndefined();
@@ -125,7 +128,10 @@ describe("material route context", () => {
     ).toBeUndefined();
     expect(
       resolveMaterialHeaderLink({
-        context: "merdeka~class-10-biology-virus-role",
+        context: {
+          nodeKey: "class-10-biology-virus-role",
+          programKey: "merdeka",
+        },
         refs,
         route,
       })
@@ -158,19 +164,26 @@ describe("material route context", () => {
       return;
     }
 
-    const projected = projectMaterialContextHintToLocale({
-      context: "merdeka~class-10-mathematics-linear-equation-inequality",
+    const projected = projectMaterialContextToLocale({
+      context: {
+        nodeKey: "class-10-mathematics-linear-equation-inequality",
+        programKey: "merdeka",
+      },
       currentRoute,
       refs,
       targetRoute,
     });
 
-    expect(projected).toBe(
-      "merdeka~class-10-mathematics-linear-equation-inequality"
-    );
+    expect(projected).toEqual({
+      nodeKey: "class-10-mathematics-linear-equation-inequality",
+      programKey: "merdeka",
+    });
     expect(
-      projectMaterialContextHintToLocale({
-        context: "merdeka~class-10-mathematics-linear-equation-inequality",
+      projectMaterialContextToLocale({
+        context: {
+          nodeKey: "class-10-mathematics-linear-equation-inequality",
+          programKey: "merdeka",
+        },
         currentRoute,
         refs: refs.filter(
           (ref) =>
@@ -184,7 +197,7 @@ describe("material route context", () => {
       })
     ).toBeUndefined();
     expect(
-      projectMaterialContextHintToLocale({
+      projectMaterialContextToLocale({
         context: undefined,
         currentRoute,
         refs,
@@ -192,8 +205,11 @@ describe("material route context", () => {
       })
     ).toBeUndefined();
     expect(
-      projectMaterialContextHintToLocale({
-        context: "merdeka~class-10-biology-virus-role",
+      projectMaterialContextToLocale({
+        context: {
+          nodeKey: "class-10-biology-virus-role",
+          programKey: "merdeka",
+        },
         currentRoute,
         refs,
         targetRoute,

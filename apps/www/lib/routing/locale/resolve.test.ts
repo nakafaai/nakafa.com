@@ -35,7 +35,7 @@ describe("resolveLocalizedNavigationHref", () => {
         "en"
       )
     ).toBe(
-      "/subjects/mathematics/linear-equation-inequality/system-linear-equation?ctx=merdeka%7Eclass-10-mathematics-linear-equation-inequality"
+      "/subjects/mathematics/linear-equation-inequality/system-linear-equation?ctx=merdeka~class-10-mathematics-linear-equation-inequality"
     );
 
     expect(

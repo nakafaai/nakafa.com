@@ -7,10 +7,6 @@ export const routing = defineRouting({
   locales,
   defaultLocale,
   pathnames: {
-    "/assessments/[assessment]/[[...path]]": {
-      en: "/exams/[assessment]/[[...path]]",
-      id: "/ujian/[assessment]/[[...path]]",
-    },
     "/curricula/[curriculum]/[[...path]]": {
       en: "/curriculum/[curriculum]/[[...path]]",
       id: "/kurikulum/[curriculum]/[[...path]]",

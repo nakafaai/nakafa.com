@@ -1,10 +1,7 @@
 import { MATERIAL_ROUTE_DOMAINS } from "@repo/contents/_types/material/domain";
 import { MATERIAL_SOURCES } from "@repo/contents/_types/material/source";
 import { isMaterialLessonRoute } from "@repo/contents/_types/route/content";
-import {
-  MATERIAL_CONTEXT_QUERY_PARAM,
-  projectMaterialContextHintToLocale,
-} from "@repo/contents/_types/route/material/context";
+import { projectMaterialContextToLocale } from "@repo/contents/_types/route/material/context";
 import { listMaterialContextRefs } from "@repo/contents/_types/route/material/reference";
 import { readPracticeSourceSetParts } from "@repo/contents/_types/route/practice/identity";
 import {
@@ -26,6 +23,10 @@ import { routing } from "@repo/internationalization/src/routing";
 import { Data, Effect, Option } from "effect";
 import { hasLocale } from "next-intl";
 import { isSamePublicRouteIdentity } from "@/lib/routing/locale/identity";
+import {
+  readMaterialContextQuery,
+  toMaterialContextQueryString,
+} from "@/lib/routing/material/query";
 
 /** Locale values accepted by next-intl routing and public route projection. */
 type Locale = (typeof routing.locales)[number];
@@ -271,10 +272,8 @@ function readProjectedRouteSuffix({
     return "";
   }
 
-  const context = new URLSearchParams(parsed.search).get(
-    MATERIAL_CONTEXT_QUERY_PARAM
-  );
-  const projectedContext = projectMaterialContextHintToLocale({
+  const context = readMaterialContextQuery(parsed.search);
+  const projectedContext = projectMaterialContextToLocale({
     context,
     currentRoute: route,
     refs: listMaterialContextRefs({
@@ -288,10 +287,7 @@ function readProjectedRouteSuffix({
     return "";
   }
 
-  const search = new URLSearchParams();
-  search.set(MATERIAL_CONTEXT_QUERY_PARAM, projectedContext);
-
-  return `?${search.toString()}`;
+  return toMaterialContextQueryString(projectedContext);
 }
 
 /**

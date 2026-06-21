@@ -8,6 +8,7 @@ import {
 import { readStaticPublicContentRoutes } from "@repo/contents/_types/route/content/static";
 import { readStaticPublicCurriculumRoutes } from "@repo/contents/_types/route/curriculum/static";
 import { resolveMaterialHeaderLink } from "@repo/contents/_types/route/material/context";
+import type { MaterialContextIdentity } from "@repo/contents/_types/route/material/reference";
 import { listMaterialContextRefs } from "@repo/contents/_types/route/material/reference";
 import type {
   PublicContentRoute,
@@ -123,7 +124,7 @@ export function requireParentMaterialRoute(route: PublicContentRoute) {
  */
 export function readMaterialHeaderLink(
   route: PublicContentRoute,
-  context: string | readonly string[] | undefined
+  context: MaterialContextIdentity | undefined
 ) {
   return resolveMaterialHeaderLink({
     context,
