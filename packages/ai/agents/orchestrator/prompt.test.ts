@@ -1,5 +1,55 @@
 import { nakafaPrompt } from "@repo/ai/agents/orchestrator/prompt";
+import type { NinaContextPack } from "@repo/ai/nina/context";
 import { describe, expect, it } from "vitest";
+
+const nina = {
+  learning: {
+    assetId: "asset:id:material:mathematics:integral:riemann-sum",
+    contentId: "asset:id:material:mathematics:integral:riemann-sum",
+    locale: "id",
+    materialKey: "mathematics",
+    section: "subject-lesson",
+    slug: "materi/matematika/integral/jumlahan-riemann",
+    sourcePath: "material/lesson/mathematics/integral/riemann-sum",
+    title: "Jumlahan Riemann",
+    url: "https://nakafa.com/id/materi/matematika/integral/jumlahan-riemann",
+    verified: true,
+  },
+  snapshot: {
+    capturedAt: "2026-05-09T00:00:00.000Z",
+    learning: {
+      assetId: "asset:id:material:mathematics:integral:riemann-sum",
+      contentId: "asset:id:material:mathematics:integral:riemann-sum",
+      locale: "id",
+      materialKey: "mathematics",
+      section: "subject-lesson",
+      slug: "materi/matematika/integral/jumlahan-riemann",
+      sourcePath: "material/lesson/mathematics/integral/riemann-sum",
+      title: "Jumlahan Riemann",
+      url: "https://nakafa.com/id/materi/matematika/integral/jumlahan-riemann",
+      verified: true,
+    },
+    source: "current-page",
+    tools: {
+      allowDeepResearch: true,
+      allowMath: true,
+      allowNakafa: true,
+      allowPageFetch: true,
+      evidenceScope: "verified-page",
+    },
+  },
+  tools: {
+    allowDeepResearch: true,
+    allowMath: true,
+    allowNakafa: true,
+    allowPageFetch: true,
+    evidenceScope: "verified-page",
+  },
+  transition: {
+    reason: "page-context",
+    toContextKey: "canonical:materi/matematika/integral/jumlahan-riemann",
+  },
+} satisfies NinaContextPack;
 
 const base = {
   currentDate: "May 9, 2026",
@@ -16,6 +66,7 @@ const base = {
     latitude: "52.52",
     longitude: "13.405",
   },
+  nina,
 } as const;
 
 describe("nakafaPrompt", () => {

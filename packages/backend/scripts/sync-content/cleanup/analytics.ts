@@ -31,10 +31,10 @@ interface ResetAnalyticsStep {
 
 const RESET_ANALYTICS_STEPS: ResetAnalyticsStep[] = [
   {
-    label: "Deleting content view analytics queue...",
+    label: "Deleting learning engagement queue...",
     mutation:
-      internal.contentSync.reset.internal.deleteContentViewAnalyticsQueueBatch,
-    resultLabel: "content view analytics queue rows",
+      internal.contentSync.reset.internal.deleteLearningEngagementQueueBatch,
+    resultLabel: "learning engagement queue rows",
   },
   {
     label: "Deleting content analytics partition leases...",
@@ -43,20 +43,34 @@ const RESET_ANALYTICS_STEPS: ResetAnalyticsStep[] = [
     resultLabel: "content analytics partition leases",
   },
   {
-    label: "Deleting content view rows...",
-    mutation: internal.contentSync.reset.internal.deleteContentViewsBatch,
-    resultLabel: "content view rows",
+    label: "Deleting learning view rows...",
+    mutation: internal.contentSync.reset.internal.deleteLearningViewsBatch,
+    resultLabel: "learning view rows",
   },
   {
-    label: "Deleting learning popularity rows...",
-    mutation: internal.contentSync.reset.internal.deleteLearningPopularityBatch,
-    resultLabel: "learning popularity rows",
-  },
-  {
-    label: "Deleting learning trending bucket rows...",
+    label: "Deleting user learning recents rows...",
     mutation:
-      internal.contentSync.reset.internal.deleteLearningTrendingBucketsBatch,
-    resultLabel: "learning trending bucket rows",
+      internal.contentSync.reset.internal.deleteUserLearningRecentsBatch,
+    resultLabel: "user learning recents rows",
+  },
+  {
+    label: "Deleting learning popularity signal rows...",
+    mutation:
+      internal.contentSync.reset.internal.deleteLearningPopularitySignalsBatch,
+    resultLabel: "learning popularity signal rows",
+  },
+  {
+    label: "Deleting learning popularity viewer signal rows...",
+    mutation:
+      internal.contentSync.reset.internal
+        .deleteLearningPopularityViewerSignalsBatch,
+    resultLabel: "learning popularity viewer signal rows",
+  },
+  {
+    label: "Deleting learning popularity counter rows...",
+    mutation:
+      internal.contentSync.reset.internal.deleteLearningPopularityCountersBatch,
+    resultLabel: "learning popularity counter rows",
   },
 ];
 
@@ -108,7 +122,7 @@ export const resetAnalytics = Effect.fn("sync.resetAnalytics")(function* (
 ) {
   log("=== RESET CONTENT ANALYTICS ===\n");
   log(
-    "This deletes content view history, analytics queue rows, popularity counts, trending buckets, and analytics partition leases."
+    "This deletes learning view history, analytics queue rows, popularity read models, and analytics partition leases."
   );
   log(
     "New product traffic will repopulate these graph-backed analytics tables after strict code is deployed.\n"
@@ -127,18 +141,22 @@ export const resetAnalytics = Effect.fn("sync.resetAnalytics")(function* (
 
   const counts = yield* getContentCounts(config);
   const totalAnalyticsRows =
-    counts.contentViews +
-    counts.contentViewAnalyticsQueue +
+    counts.learningViews +
+    counts.learningEngagementQueue +
     counts.contentAnalyticsPartitions +
-    counts.learningPopularity +
-    counts.learningTrendingBuckets;
+    counts.userLearningRecents +
+    counts.learningPopularityViewerSignals +
+    counts.learningPopularitySignals +
+    counts.learningPopularityCounters;
 
   log("Current content analytics database contents:\n");
-  log(`  Content Views:        ${counts.contentViews}`);
-  log(`  Analytics Queue:      ${counts.contentViewAnalyticsQueue}`);
+  log(`  Learning Views:       ${counts.learningViews}`);
+  log(`  Engagement Queue:     ${counts.learningEngagementQueue}`);
   log(`  Analytics Partitions: ${counts.contentAnalyticsPartitions}`);
-  log(`  Learning Popularity:  ${counts.learningPopularity}`);
-  log(`  Learning Trending:    ${counts.learningTrendingBuckets}`);
+  log(`  User Recents:         ${counts.userLearningRecents}`);
+  log(`  Viewer Signals:       ${counts.learningPopularityViewerSignals}`);
+  log(`  Popularity Signals:   ${counts.learningPopularitySignals}`);
+  log(`  Popularity Counters:  ${counts.learningPopularityCounters}`);
   log(`\n  Total analytics rows: ${totalAnalyticsRows}`);
 
   if (totalAnalyticsRows === 0) {

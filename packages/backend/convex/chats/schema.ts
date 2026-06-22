@@ -1,6 +1,10 @@
 import { CHAT_GENERATION_FAILURE_CODES } from "@repo/ai/config/generation";
 import { MODEL_IDS } from "@repo/ai/config/model";
 import {
+  ninaContextSnapshotValidator,
+  ninaContextTransitionValidator,
+} from "@repo/backend/convex/chats/context";
+import {
   contentSearchInputValidator,
   contentSearchRefValidator,
   contentSearchResultValidator,
@@ -88,6 +92,8 @@ export const messageValidator = v.object({
   modelId: modelIdValidator,
   generationStatus: v.optional(messageGenerationStatusValidator),
   generationErrorCode: v.optional(messageGenerationErrorCodeValidator),
+  ninaContextSnapshot: v.optional(ninaContextSnapshotValidator),
+  ninaContextTransition: v.optional(ninaContextTransitionValidator),
 });
 
 /**

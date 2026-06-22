@@ -30,7 +30,7 @@ function toContentViewEventError(error: unknown) {
 
 /** Converts a graph route section into the product analytics event taxonomy. */
 function getContentViewEventType(
-  section: NonNullable<Change<DataModel, "contentViews">["newDoc"]>["section"]
+  section: NonNullable<Change<DataModel, "learningViews">["newDoc"]>["section"]
 ): Extract<
   ProductAnalyticsEvent,
   { name: "content viewed" }
@@ -51,7 +51,7 @@ const captureContentViewEvent = Effect.fn(
   "triggers.contents.captureContentViewEvent"
 )(function* (
   ctx: GenericMutationCtx<DataModel>,
-  change: Change<DataModel, "contentViews">
+  change: Change<DataModel, "learningViews">
 ) {
   const view = change.newDoc;
 
@@ -71,6 +71,7 @@ const captureContentViewEvent = Effect.fn(
             alignment_id: view.alignmentId,
             concept_id: view.conceptId,
             content_id: view.content_id,
+            context_key: view.contextKey,
             content_type: getContentViewEventType(view.section),
             is_new_view: change.operation === "insert",
             learning_object_id: view.learningObjectId,
@@ -88,9 +89,9 @@ const captureContentViewEvent = Effect.fn(
 /**
  * Captures signed-in content views after the durable engagement row is written.
  */
-export async function contentViewsHandler(
+export async function learningViewsHandler(
   ctx: GenericMutationCtx<DataModel>,
-  change: Change<DataModel, "contentViews">
+  change: Change<DataModel, "learningViews">
 ) {
   await runConvexProgram(captureContentViewEvent(ctx, change));
 }

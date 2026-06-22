@@ -1,6 +1,7 @@
 import type { Nakafa } from "@repo/ai/agents/nakafa/service";
 import type { ModelId } from "@repo/ai/config/model";
 import type { SourceReference } from "@repo/ai/lib/source";
+import type { NinaContextPack } from "@repo/ai/nina/context";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { PromptUserRole } from "@repo/ai/types/roles";
 import type {
@@ -34,10 +35,12 @@ export interface AgentLearningProfile {
   stage?: LearningStage;
 }
 
+/** Per-turn context shared by Nina and specialist agents after harness arbitration. */
 export interface AgentContext {
   currentDate: string;
   learningProfile?: AgentLearningProfile;
   needsPageFetch: boolean;
+  nina?: NinaContextPack;
   slug: string;
   url: string;
   userRole?: PromptUserRole;

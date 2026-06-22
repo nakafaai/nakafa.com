@@ -23,6 +23,7 @@ import {
   determinePageFetchNeed,
   getCanonicalCurrentPageContentUrl,
 } from "@/app/api/chat/content";
+import { resolveNinaLearningSession } from "@/app/api/chat/context";
 import { createChatErrorReporter } from "@/app/api/chat/observability";
 import { loadMessages, saveOrCreateChat } from "@/app/api/chat/persistence";
 import { streamChat } from "@/app/api/chat/stream";
@@ -79,12 +80,14 @@ export function POST(req: Request) {
       const {
         message,
         id,
+        context,
         locale: rawLocale,
         slug,
         model: rawModel,
       }: {
         message: MyUIMessage | undefined;
         id: Id<"chats"> | undefined;
+        context: unknown;
         locale: unknown;
         slug: string;
         model: unknown;
@@ -124,7 +127,8 @@ export function POST(req: Request) {
         url.includes(segment)
       );
 
-      const currentDate = new Date().toLocaleString("en-US", {
+      const capturedAt = new Date();
+      const currentDate = capturedAt.toLocaleString("en-US", {
         year: "numeric",
         month: "long",
         day: "numeric",
@@ -148,6 +152,14 @@ export function POST(req: Request) {
         getUserInfo(token),
         getLearningProfile(token, locale),
       ]);
+      const ninaSession = yield* resolveNinaLearningSession({
+        capturedAt: capturedAt.toISOString(),
+        locale,
+        rawContext: context,
+        slug,
+        url,
+        verified,
+      });
 
       if (!hasEnoughCredits(userInfo.credits, selectedModel)) {
         return new Response(CHAT_ERRORS.INSUFFICIENT_CREDITS.code, {
@@ -164,6 +176,7 @@ export function POST(req: Request) {
           verified,
         },
         currentDate,
+        ninaContext: ninaSession.context.snapshot,
         userLocation,
         userRole: userInfo.role,
         url,
@@ -173,6 +186,8 @@ export function POST(req: Request) {
         chatId: id,
         message,
         modelId: selectedModel,
+        ninaContextSnapshot: ninaSession.context.snapshot,
+        ninaContextTransition: ninaSession.context.transition,
         token,
       });
       const reportChatError = createChatErrorReporter({
@@ -236,6 +251,7 @@ export function POST(req: Request) {
       const page = {
         locale,
         needsFetch: needsPageFetch,
+        nina: ninaSession.context,
         slug,
         url,
         verified,

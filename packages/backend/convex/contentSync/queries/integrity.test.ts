@@ -14,10 +14,12 @@ import { describe, expect, it } from "vitest";
 const NOW = Date.parse("2026-01-02T00:00:00.000Z");
 const ARTICLE_ROUTE = "articles/politics/integrity-article";
 const GRAPH_ANALYTICS_INTEGRITY_TARGETS = [
-  "contentViews",
-  "contentViewAnalyticsQueue",
-  "learningPopularity",
-  "learningTrendingBuckets",
+  "learningViews",
+  "learningEngagementQueue",
+  "userLearningRecents",
+  "learningPopularityViewerSignals",
+  "learningPopularitySignals",
+  "learningPopularityCounters",
 ] as const;
 const GRAPH_AUDIO_INTEGRITY_TARGETS = [
   "audioContentSources",
@@ -32,6 +34,10 @@ const GRAPH_INTEGRITY_TARGETS = [
   ...GRAPH_ANALYTICS_INTEGRITY_TARGETS,
   ...GRAPH_AUDIO_INTEGRITY_TARGETS,
 ] as const;
+const canonicalContext = {
+  contextKey: "canonical",
+  contextMode: "canonical",
+} as const;
 
 describe("contentSync/queries/integrity", () => {
   it("reports graph-shaped contentRoute content_id values that differ from assetId", async () => {
@@ -223,38 +229,7 @@ describe("contentSync/queries/integrity", () => {
     const graph = articleGraphWithContentId(articleGraph().assetId);
 
     await t.mutation(async (ctx) => {
-      await ctx.db.insert("contentViews", {
-        ...graph,
-        deviceId: "integrity-device",
-        firstViewedAt: NOW,
-        lastViewedAt: NOW,
-        locale: "id",
-        route: ARTICLE_ROUTE,
-        section: "articles",
-      });
-      await ctx.db.insert("contentViewAnalyticsQueue", {
-        ...graph,
-        locale: "id",
-        partition: 0,
-        route: ARTICLE_ROUTE,
-        section: "articles",
-        viewedAt: NOW,
-      });
-      await ctx.db.insert("learningPopularity", {
-        ...graph,
-        locale: "id",
-        section: "articles",
-        updatedAt: NOW,
-        viewCount: 1,
-      });
-      await ctx.db.insert("learningTrendingBuckets", {
-        ...graph,
-        bucketStart: NOW,
-        locale: "id",
-        section: "articles",
-        updatedAt: NOW,
-        viewCount: 1,
-      });
+      await insertAnalyticsRows(ctx, graph);
     });
 
     for (const target of GRAPH_ANALYTICS_INTEGRITY_TARGETS) {
@@ -267,56 +242,20 @@ describe("contentSync/queries/integrity", () => {
     const graph = articleGraphWithContentId(`${articleGraph().assetId}:stale`);
 
     await t.mutation(async (ctx) => {
-      await ctx.db.insert("contentViews", {
-        ...graph,
-        deviceId: "integrity-device",
-        firstViewedAt: NOW,
-        lastViewedAt: NOW,
-        locale: "id",
-        route: ARTICLE_ROUTE,
-        section: "articles",
-      });
-      await ctx.db.insert("contentViewAnalyticsQueue", {
-        ...graph,
-        locale: "id",
-        partition: 0,
-        route: ARTICLE_ROUTE,
-        section: "articles",
-        viewedAt: NOW,
-      });
-      await ctx.db.insert("learningPopularity", {
-        ...graph,
-        locale: "id",
-        section: "articles",
-        updatedAt: NOW,
-        viewCount: 1,
-      });
+      await insertAnalyticsRows(ctx, graph);
     });
 
-    await expectMismatchedGraphIdentityIntegrity(t, "contentViews", {
-      assetId: graph.assetId,
-      content_id: graph.content_id,
-      kind: "contentViews",
-      route: ARTICLE_ROUTE,
-      section: "articles",
-    });
-    await expectMismatchedGraphIdentityIntegrity(
-      t,
-      "contentViewAnalyticsQueue",
-      {
+    for (const target of GRAPH_ANALYTICS_INTEGRITY_TARGETS) {
+      await expectMismatchedGraphIdentityIntegrity(t, target, {
         assetId: graph.assetId,
         content_id: graph.content_id,
-        kind: "contentViewAnalyticsQueue",
-        route: ARTICLE_ROUTE,
+        kind: target,
+        ...(target === "learningPopularityViewerSignals"
+          ? {}
+          : { route: ARTICLE_ROUTE }),
         section: "articles",
-      }
-    );
-    await expectMismatchedGraphIdentityIntegrity(t, "learningPopularity", {
-      assetId: graph.assetId,
-      content_id: graph.content_id,
-      kind: "learningPopularity",
-      section: "articles",
-    });
+      });
+    }
   });
 
   it("accepts audio rows that store graph identity", async () => {
@@ -407,6 +346,97 @@ async function expectMismatchedGraphIdentityIntegrity(
     mismatchedContentIds: 1,
     routeShapedContentIds: 0,
     scannedRows: 1,
+  });
+}
+
+/** Inserts one row in each final graph-backed engagement table. */
+async function insertAnalyticsRows(
+  ctx: MutationCtx,
+  graph: ReturnType<typeof articleGraphWithContentId>
+) {
+  const userId = await ctx.db.insert("users", {
+    authId: "analytics-integrity-user",
+    credits: 0,
+    creditsResetAt: NOW,
+    email: "analytics-integrity@example.com",
+    name: "Analytics Integrity",
+    plan: "free",
+  });
+
+  await ctx.db.insert("learningViews", {
+    ...graph,
+    ...canonicalContext,
+    deviceId: "integrity-device",
+    firstViewedAt: NOW,
+    lastViewedAt: NOW,
+    locale: "id",
+    route: ARTICLE_ROUTE,
+    section: "articles",
+  });
+  await ctx.db.insert("learningEngagementQueue", {
+    ...graph,
+    ...canonicalContext,
+    description: "Integrity article",
+    insertedAt: NOW,
+    locale: "id",
+    partition: 0,
+    route: ARTICLE_ROUTE,
+    scopeMode: "global",
+    section: "articles",
+    sourcePath: ARTICLE_ROUTE,
+    title: "Integrity Article",
+    viewedAt: NOW,
+    viewerKey: "device:integrity-device",
+  });
+  await ctx.db.insert("userLearningRecents", {
+    ...graph,
+    ...canonicalContext,
+    description: "Integrity article",
+    lastViewedAt: NOW,
+    locale: "id",
+    route: ARTICLE_ROUTE,
+    section: "articles",
+    sourcePath: ARTICLE_ROUTE,
+    title: "Integrity Article",
+    userId,
+  });
+  await ctx.db.insert("learningPopularityViewerSignals", {
+    ...graph,
+    ...canonicalContext,
+    locale: "id",
+    scopeMode: "global",
+    section: "articles",
+    signalDay: NOW,
+    viewedAt: NOW,
+    viewerKey: "device:integrity-device",
+  });
+  await ctx.db.insert("learningPopularitySignals", {
+    ...graph,
+    ...canonicalContext,
+    description: "Integrity article",
+    locale: "id",
+    route: ARTICLE_ROUTE,
+    scopeMode: "global",
+    section: "articles",
+    signalDay: NOW,
+    sourcePath: ARTICLE_ROUTE,
+    title: "Integrity Article",
+    updatedAt: NOW,
+    viewCount: 1,
+  });
+  await ctx.db.insert("learningPopularityCounters", {
+    ...graph,
+    ...canonicalContext,
+    description: "Integrity article",
+    locale: "id",
+    route: ARTICLE_ROUTE,
+    score: 1,
+    scopeMode: "global",
+    section: "articles",
+    sourcePath: ARTICLE_ROUTE,
+    title: "Integrity Article",
+    updatedAt: NOW,
+    windowKey: "7d",
   });
 }
 

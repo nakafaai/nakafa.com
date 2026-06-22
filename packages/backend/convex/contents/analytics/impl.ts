@@ -14,11 +14,12 @@ import {
   CONTENT_ANALYTICS_PARTITIONS,
 } from "@repo/backend/convex/contents/constants";
 import { isContentAnalyticsPartition } from "@repo/backend/convex/contents/helpers/partitions";
-import { applyContentAnalyticsBatch } from "@repo/backend/convex/contents/helpers/writes";
+import { applyContentAnalyticsBatch } from "@repo/backend/convex/contents/metrics/apply";
 import { logger } from "@repo/backend/convex/utils/logger";
 import type { FunctionReference } from "convex/server";
 import { Clock, Effect } from "effect";
 
+/** Internal scheduler function refs used to lease and drain analytics partitions. */
 export interface ContentAnalyticsSchedulerTargets {
   readonly processPartition: FunctionReference<
     "mutation",
@@ -44,8 +45,10 @@ export const scheduleAllContentAnalyticsPartitions = Effect.fn(
     const queuedItem = yield* Effect.tryPromise({
       try: () =>
         ctx.db
-          .query("contentViewAnalyticsQueue")
-          .withIndex("by_partition", (q) => q.eq("partition", partition))
+          .query("learningEngagementQueue")
+          .withIndex("by_partition_and_insertedAt", (q) =>
+            q.eq("partition", partition)
+          )
           .first(),
       catch: toContentAnalyticsIoError,
     });
@@ -96,8 +99,10 @@ export const claimContentAnalyticsPartition = Effect.fn(
   const queuedItem = yield* Effect.tryPromise({
     try: () =>
       ctx.db
-        .query("contentViewAnalyticsQueue")
-        .withIndex("by_partition", (q) => q.eq("partition", args.partition))
+        .query("learningEngagementQueue")
+        .withIndex("by_partition_and_insertedAt", (q) =>
+          q.eq("partition", args.partition)
+        )
         .first(),
     catch: toContentAnalyticsIoError,
   });
@@ -227,8 +232,10 @@ export const processClaimedContentAnalyticsPartition = Effect.fn(
   const queueItems = yield* Effect.tryPromise({
     try: () =>
       ctx.db
-        .query("contentViewAnalyticsQueue")
-        .withIndex("by_partition", (q) => q.eq("partition", args.partition))
+        .query("learningEngagementQueue")
+        .withIndex("by_partition_and_insertedAt", (q) =>
+          q.eq("partition", args.partition)
+        )
         .take(CONTENT_ANALYTICS_BATCH_SIZE),
     catch: toContentAnalyticsIoError,
   });
@@ -258,7 +265,7 @@ export const processClaimedContentAnalyticsPartition = Effect.fn(
 
   for (const queueItem of queueItems) {
     yield* Effect.tryPromise({
-      try: () => ctx.db.delete("contentViewAnalyticsQueue", queueItem._id),
+      try: () => ctx.db.delete("learningEngagementQueue", queueItem._id),
       catch: toContentAnalyticsIoError,
     });
   }

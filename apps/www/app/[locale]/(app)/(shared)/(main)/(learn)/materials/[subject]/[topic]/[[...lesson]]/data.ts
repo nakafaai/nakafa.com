@@ -2,7 +2,9 @@ import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 import {
   isMaterialContentRoute,
   isMaterialLessonRoute,
+  readMaterialPagination,
   readParentMaterialRoute,
+  toLocalizedContentHref,
 } from "@repo/contents/_types/route/content";
 import { readStaticPublicContentRoutes } from "@repo/contents/_types/route/content/static";
 import { readStaticPublicLearningIndex } from "@repo/contents/_types/route/learning/static";
@@ -136,6 +138,33 @@ export function readMaterialHeaderLink(
   return readStaticPublicLearningIndex().resolveMaterialHeaderLink({
     context,
     route,
+  });
+}
+
+/**
+ * Builds material sibling pagination while preserving a validated source context.
+ *
+ * Canonical visits and stale context hints use plain material URLs. Contextual
+ * visits keep the same source card identity on previous/next lesson links only
+ * when the current page and target sibling both validate against the index.
+ */
+export function readMaterialPagePagination(
+  route: PublicContentRoute,
+  context: MaterialContextIdentity | undefined
+) {
+  const index = readStaticPublicLearningIndex();
+
+  if (!(context && index.resolveMaterialHeaderLink({ context, route }))) {
+    return readMaterialPagination(route, readMaterialRoutes());
+  }
+
+  return readMaterialPagination(route, readMaterialRoutes(), {
+    toHref: (targetRoute) =>
+      index.toContextualMaterialHref({
+        context,
+        href: toLocalizedContentHref(targetRoute),
+        route: targetRoute,
+      }),
   });
 }
 

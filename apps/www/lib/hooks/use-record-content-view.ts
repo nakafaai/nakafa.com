@@ -3,6 +3,7 @@
 import { useDocumentVisibility, useLocalStorage } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
+import type { LearningContextInput } from "@repo/backend/convex/contents/context";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { generateNanoId } from "@repo/design-system/lib/utils";
 import { useMutation } from "convex/react";
@@ -12,13 +13,14 @@ import { useContentViews } from "@/lib/context/use-content-views";
 
 /** Client-side graph content-view recording configuration. */
 interface UseRecordContentViewOptions {
-  contentId: string;
+  contentId?: string | null;
+  context?: LearningContextInput;
   delay?: number;
   locale: Locale;
 }
 
 /**
- * Records unique content views per user/device.
+ * Records unique content views per user/device when a content identity exists.
  *
  * Design: Backend tracks first and last view timestamps.
  * Local deduplication prevents rapid duplicate calls within session.
@@ -28,6 +30,7 @@ interface UseRecordContentViewOptions {
  */
 export function useRecordContentView({
   contentId,
+  context,
   locale,
   delay = 3000,
 }: UseRecordContentViewOptions) {
@@ -40,7 +43,13 @@ export function useRecordContentView({
 
   const documentState = useDocumentVisibility();
   const isVisible = documentState === "visible";
-  const viewKey = `${locale}:${contentId}`;
+  const viewKey = [
+    locale,
+    contentId ?? "untracked",
+    context?.mode ?? "canonical",
+    context?.programKey ?? "",
+    context?.nodeKey ?? "",
+  ].join(":");
   const [defaultDeviceId] = useState(
     () => `${Date.now()}-${generateNanoId(9)}`
   );
@@ -50,6 +59,10 @@ export function useRecordContentView({
   });
 
   useEffect(() => {
+    if (!contentId) {
+      return;
+    }
+
     if (isViewed(viewKey)) {
       return;
     }
@@ -64,6 +77,7 @@ export function useRecordContentView({
           try: () =>
             recordView({
               contentId,
+              ...(context ? { context } : {}),
               locale,
               deviceId,
             }),
@@ -74,6 +88,7 @@ export function useRecordContentView({
             Effect.sync(() =>
               captureException(error, {
                 contentId,
+                contextMode: context?.mode ?? "canonical",
                 locale,
                 source: "record-content-view",
               })
@@ -88,6 +103,7 @@ export function useRecordContentView({
     };
   }, [
     contentId,
+    context,
     delay,
     deviceId,
     isViewed,

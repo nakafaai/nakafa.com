@@ -5,6 +5,17 @@ import { Effect } from "effect";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { resolveLocalizedNavigationHref } from "@/lib/routing/locale/resolve";
 
+/**
+ * Keeps contextual hrefs unchanged in tests that isolate locale projection
+ * failures instead of material context validation.
+ */
+function preserveContextualHref(
+  input: Parameters<PublicLearningIndex["toContextualMaterialHref"]>[0]
+) {
+  return input.href;
+}
+
+/** Resolves a localized href through the Effect boundary used by route callers. */
 function resolveHref(href: string, locale: "en" | "id") {
   return Effect.runSync(resolveLocalizedNavigationHref({ href, locale }));
 }
@@ -160,6 +171,7 @@ describe("resolveLocalizedNavigationHref", () => {
       projectRouteToLocale: () => undefined,
       resolveMaterialHeaderLink: () => undefined,
       resolveRouteByPath: () => idOnlyRoute,
+      toContextualMaterialHref: preserveContextualHref,
     };
 
     vi.spyOn(

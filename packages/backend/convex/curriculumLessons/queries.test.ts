@@ -1,153 +1,121 @@
 import { api } from "@repo/backend/convex/_generated/api";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import {
-  invalidTrendingRangeCode,
-  maxTrendingRangeDays,
-} from "@repo/backend/convex/curriculumLessons/trending/spec";
-import { TRENDING_BUCKET_MS } from "@repo/backend/convex/curriculumLessons/utils";
+import { getDefaultPopularityWindow } from "@repo/backend/convex/contents/popularity";
+import { learningPopularityRankings } from "@repo/backend/convex/contents/rankings";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import schema from "@repo/backend/convex/schema";
+import { registerLearningPopularityAggregate } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
 const NOW = Date.parse("2026-01-01T00:00:00.000Z");
+const canonicalContext = {
+  contextKey: "canonical",
+  contextMode: "canonical",
+} as const;
 
-/** Inserts one curriculum lesson for trending query tests. */
-async function insertSubject(ctx: MutationCtx, suffix: string) {
-  const topicId = await ctx.db.insert("curriculumTopics", {
-    locale: "en",
-    material: "mathematics",
-    order: 0,
-    sectionCount: 1,
-    slug: `material/lesson/mathematics/topic-${suffix}`,
-    syncedAt: NOW,
-    title: `Topic ${suffix}`,
-    topic: `topic-${suffix}`,
-  });
-
-  return await ctx.db.insert("curriculumLessons", {
-    body: "Subject body",
-    contentHash: `subject-hash-${suffix}`,
-    date: NOW,
-    description: `Description ${suffix}`,
-    locale: "en",
-    material: "mathematics",
-    order: 0,
-    section: `section-${suffix}`,
-    slug: `material/lesson/mathematics/topic-${suffix}/section-${suffix}`,
-    subject: `Topic ${suffix}`,
-    syncedAt: NOW,
-    title: `Subject ${suffix}`,
-    topic: `topic-${suffix}`,
-    topicId,
-  });
+/**
+ * Builds the Convex test instance with the popularity ranking aggregate
+ * registered, matching the production top-N query dependency.
+ */
+function createTrendingConvexTest() {
+  const t = convexTest(schema, convexModules);
+  registerLearningPopularityAggregate(t);
+  return t;
 }
 
-/** Inserts the graph route projection for one synced curriculum lesson. */
-async function insertSubjectRoute(ctx: MutationCtx, suffix: string) {
-  const route = `material/lesson/mathematics/topic-${suffix}/section-${suffix}`;
-  const identity = createLearningGraphIdentityFromRoute({
-    locale: "en",
-    route,
-  });
-
-  if (!identity) {
-    expect.fail(`Expected subject graph identity for ${route}.`);
-  }
-
-  await ctx.db.insert("contentRoutes", {
-    ...identity,
-    authors: [{ name: "Nakafa Author" }],
-    contentHash: `subject-hash-${suffix}`,
-    content_id: identity.assetId,
-    date: NOW,
-    description: `Description ${suffix}`,
-    kind: "curriculum-lesson",
-    locale: "en",
-    markdown: true,
-    materialDomain: "mathematics",
-    route: getPublicSubjectRoute(suffix),
-    section: "material",
-    sourcePath: route,
-    syncedAt: NOW,
-    title: `Subject ${suffix}`,
-  });
-
-  return identity;
-}
-
-/** Builds the public material route stored in the route read model. */
+/** Builds the public material route persisted in the popularity read model. */
 function getPublicSubjectRoute(suffix: string) {
   return `subjects/mathematics/topic-${suffix}/section-${suffix}`;
 }
 
-/** Inserts one derived trending bucket row. */
-async function insertTrendingBucket(
+/** Builds the authored source route that owns one graph asset identity. */
+function getSourceSubjectRoute(suffix: string) {
+  return `material/lesson/mathematics/topic-${suffix}/section-${suffix}`;
+}
+
+/** Inserts one ranked global popularity counter row for homepage queries. */
+async function insertSubjectCounter(
   ctx: MutationCtx,
-  graph: Awaited<ReturnType<typeof insertSubjectRoute>>,
-  {
-    bucketStart,
-    locale = "en",
-    viewCount,
-  }: {
-    bucketStart: number;
-    locale?: Locale;
-    viewCount: number;
+  input: {
+    readonly locale?: Locale;
+    readonly materialDomain?: Doc<"learningPopularityCounters">["materialDomain"];
+    readonly score: number;
+    readonly suffix: string;
+    readonly windowKey?: Doc<"learningPopularityCounters">["windowKey"];
   }
 ) {
-  await ctx.db.insert("learningTrendingBuckets", {
-    ...graph,
-    bucketStart,
-    content_id: graph.assetId,
+  const locale = input.locale ?? "en";
+  const sourcePath = getSourceSubjectRoute(input.suffix);
+  const identity = createLearningGraphIdentityFromRoute({
     locale,
-    section: "material",
-    updatedAt: NOW,
-    viewCount,
+    route: sourcePath,
   });
+
+  if (!identity) {
+    expect.fail(`Expected subject graph identity for ${sourcePath}.`);
+  }
+
+  const counterId = await ctx.db.insert("learningPopularityCounters", {
+    ...identity,
+    ...canonicalContext,
+    content_id: identity.assetId,
+    ...(input.materialDomain ? { materialDomain: input.materialDomain } : {}),
+    locale,
+    route: getPublicSubjectRoute(input.suffix),
+    score: input.score,
+    section: "material",
+    scopeMode: "global",
+    sourcePath,
+    title: `Subject ${input.suffix}`,
+    updatedAt: NOW,
+    windowKey: input.windowKey ?? getDefaultPopularityWindow(),
+  });
+  const counter = await ctx.db.get(counterId);
+
+  if (!counter) {
+    expect.fail(`Expected popularity counter for ${sourcePath}.`);
+  }
+
+  await learningPopularityRankings.insert(ctx, counter);
+
+  return identity;
 }
 
 describe("curriculumLessons/queries", () => {
-  it("returns sorted subjects aggregated across bounded daily buckets", async () => {
-    const t = convexTest(schema, convexModules);
-    const { firstRef, firstSubjectId, secondRef } = await t.mutation(
-      async (ctx) => {
-        const firstSubjectId = await insertSubject(ctx, "first");
-        await insertSubject(ctx, "second");
-        const firstRef = await insertSubjectRoute(ctx, "first");
-        const secondRef = await insertSubjectRoute(ctx, "second");
+  it("returns sorted subjects from the bounded windowed read model", async () => {
+    const t = createTrendingConvexTest();
+    const { firstRef, secondRef } = await t.mutation(async (ctx) => {
+      const firstRef = await insertSubjectCounter(ctx, {
+        materialDomain: "mathematics",
+        score: 7,
+        suffix: "first",
+      });
+      const secondRef = await insertSubjectCounter(ctx, {
+        materialDomain: "mathematics",
+        score: 10,
+        suffix: "second",
+      });
+      await insertSubjectCounter(ctx, {
+        locale: "id",
+        materialDomain: "mathematics",
+        score: 100,
+        suffix: "ignored-locale",
+      });
 
-        await insertTrendingBucket(ctx, firstRef, {
-          bucketStart: NOW,
-          viewCount: 3,
-        });
-        await insertTrendingBucket(ctx, firstRef, {
-          bucketStart: NOW + TRENDING_BUCKET_MS,
-          viewCount: 4,
-        });
-        await insertTrendingBucket(ctx, secondRef, {
-          bucketStart: NOW,
-          viewCount: 10,
-        });
-        await insertTrendingBucket(ctx, secondRef, {
-          bucketStart: NOW,
-          locale: "id",
-          viewCount: 100,
-        });
-
-        return { firstRef, firstSubjectId, secondRef };
-      }
-    );
+      return { firstRef, secondRef };
+    });
 
     const results = await t.query(
       api.curriculumLessons.queries.getTrendingSubjects,
       {
         locale: "en",
-        since: NOW,
-        until: NOW + 2 * TRENDING_BUCKET_MS,
         limit: 2,
         minViews: 5,
+        windowKey: getDefaultPopularityWindow(),
       }
     );
 
@@ -155,6 +123,8 @@ describe("curriculumLessons/queries", () => {
       expect.objectContaining({
         assetId: secondRef.assetId,
         content_id: secondRef.assetId,
+        contextKey: "canonical",
+        href: "/subjects/mathematics/topic-second/section-second",
         materialDomain: "mathematics",
         route: "subjects/mathematics/topic-second/section-second",
         title: "Subject second",
@@ -164,6 +134,8 @@ describe("curriculumLessons/queries", () => {
       expect.objectContaining({
         assetId: firstRef.assetId,
         content_id: firstRef.assetId,
+        contextKey: "canonical",
+        href: "/subjects/mathematics/topic-first/section-first",
         materialDomain: "mathematics",
         route: "subjects/mathematics/topic-first/section-first",
         title: "Subject first",
@@ -173,83 +145,66 @@ describe("curriculumLessons/queries", () => {
     ]);
     expect(results[0]).not.toHaveProperty("id");
     expect(results[0]).not.toHaveProperty("slug");
-    expect(firstSubjectId).not.toBe(firstRef.assetId);
   });
 
-  it("returns an empty list for empty or zero-limit ranges", async () => {
-    const t = convexTest(schema, convexModules);
-
-    const emptyRange = await t.query(
-      api.curriculumLessons.queries.getTrendingSubjects,
-      {
-        locale: "en",
-        since: NOW,
-        until: NOW,
-      }
-    );
-    const zeroLimit = await t.query(
-      api.curriculumLessons.queries.getTrendingSubjects,
-      {
-        locale: "en",
-        since: NOW,
-        until: NOW + TRENDING_BUCKET_MS,
-        limit: 0,
-      }
-    );
-
-    expect(emptyRange).toEqual([]);
-    expect(zeroLimit).toEqual([]);
-  });
-
-  it("keeps bucket rows when the old curriculum lesson row is absent", async () => {
-    const t = convexTest(schema, convexModules);
+  it("returns an empty list when the caller asks for zero ranked cards", async () => {
+    const t = createTrendingConvexTest();
 
     await t.mutation(async (ctx) => {
-      const subjectId = await insertSubject(ctx, "deleted");
-      const ref = await insertSubjectRoute(ctx, "deleted");
-      await insertTrendingBucket(ctx, ref, {
-        bucketStart: NOW,
-        viewCount: 10,
+      await insertSubjectCounter(ctx, {
+        materialDomain: "mathematics",
+        score: 10,
+        suffix: "zero-limit",
       });
-      await ctx.db.delete("curriculumLessons", subjectId);
     });
 
     const results = await t.query(
       api.curriculumLessons.queries.getTrendingSubjects,
       {
         locale: "en",
-        since: NOW,
-        until: NOW + TRENDING_BUCKET_MS,
+        limit: 0,
+        windowKey: getDefaultPopularityWindow(),
+      }
+    );
+
+    expect(results).toEqual([]);
+  });
+
+  it("keeps valid read-model rows even when old source lesson rows are absent", async () => {
+    const t = createTrendingConvexTest();
+
+    await t.mutation(async (ctx) => {
+      await insertSubjectCounter(ctx, {
+        materialDomain: "mathematics",
+        score: 10,
+        suffix: "source-free",
+      });
+    });
+
+    const results = await t.query(
+      api.curriculumLessons.queries.getTrendingSubjects,
+      {
+        locale: "en",
+        minViews: 5,
+        windowKey: getDefaultPopularityWindow(),
       }
     );
 
     expect(results).toEqual([
       expect.objectContaining({
         materialDomain: "mathematics",
-        route: "subjects/mathematics/topic-deleted/section-deleted",
+        route: "subjects/mathematics/topic-source-free/section-source-free",
       }),
     ]);
   });
 
-  it("drops bucket rows whose route projection lacks a material domain", async () => {
-    const t = convexTest(schema, convexModules);
+  it("drops counter rows whose read-model projection lacks a material domain", async () => {
+    const t = createTrendingConvexTest();
 
     await t.mutation(async (ctx) => {
-      await insertSubject(ctx, "missing-domain");
-      const ref = await insertSubjectRoute(ctx, "missing-domain");
-      const route = await ctx.db
-        .query("contentRoutes")
-        .withIndex("by_content_id", (q) => q.eq("content_id", ref.assetId))
-        .unique();
-
-      if (!route) {
-        expect.fail("Expected route projection before removing domain.");
-      }
-
-      await ctx.db.patch(route._id, { materialDomain: undefined });
-      await insertTrendingBucket(ctx, ref, {
-        bucketStart: NOW,
-        viewCount: 10,
+      await insertSubjectCounter(ctx, {
+        score: 10,
+        suffix: "missing-domain",
       });
     });
 
@@ -257,62 +212,11 @@ describe("curriculumLessons/queries", () => {
       api.curriculumLessons.queries.getTrendingSubjects,
       {
         locale: "en",
-        since: NOW,
-        until: NOW + TRENDING_BUCKET_MS,
+        minViews: 5,
+        windowKey: getDefaultPopularityWindow(),
       }
     );
 
     expect(results).toEqual([]);
-  });
-
-  it("drops bucket rows whose subject lacks a graph route projection", async () => {
-    const t = convexTest(schema, convexModules);
-
-    await t.mutation(async (ctx) => {
-      await insertSubject(ctx, "missing-route");
-      const route =
-        "material/lesson/mathematics/topic-missing-route/section-missing-route";
-      const ref = createLearningGraphIdentityFromRoute({
-        locale: "en",
-        route,
-      });
-
-      if (!ref) {
-        throw new Error(`Expected subject graph identity for ${route}.`);
-      }
-
-      await insertTrendingBucket(ctx, ref, {
-        bucketStart: NOW,
-        viewCount: 10,
-      });
-    });
-
-    const results = await t.query(
-      api.curriculumLessons.queries.getTrendingSubjects,
-      {
-        locale: "en",
-        since: NOW,
-        until: NOW + TRENDING_BUCKET_MS,
-      }
-    );
-
-    expect(results).toEqual([]);
-  });
-
-  it("rejects ranges wider than the supported trending window", async () => {
-    const t = convexTest(schema, convexModules);
-
-    await expect(
-      t.query(api.curriculumLessons.queries.getTrendingSubjects, {
-        locale: "en",
-        since: NOW,
-        until: NOW + (maxTrendingRangeDays + 1) * TRENDING_BUCKET_MS,
-      })
-    ).rejects.toMatchObject({
-      data: {
-        code: invalidTrendingRangeCode,
-        message: `Trending range cannot exceed ${maxTrendingRangeDays} days.`,
-      },
-    });
   });
 });

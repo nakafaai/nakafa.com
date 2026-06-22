@@ -20,6 +20,10 @@ const SUBJECT_CONTENT_ID = "asset:id:catalog:subject:views";
 const EXERCISE_ROUTE =
   "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1";
 const EXERCISE_CONTENT_ID = "asset:id:catalog:exercise:views";
+const canonicalContext = {
+  contextKey: "canonical",
+  contextMode: "canonical",
+} as const;
 
 /** Builds one route-catalog graph fixture from the route shape under test. */
 function getGraphFixture(route: string) {
@@ -164,14 +168,32 @@ async function insertExerciseSet(ctx: MutationCtx) {
   return { contentId: EXERCISE_CONTENT_ID, id };
 }
 
+/** Returns the analytics partition for one popularity signal scope. */
+function getSignalPartition(contentId: string) {
+  return getContentAnalyticsPartition(`${contentId}:global:canonical`);
+}
+
+/** Returns whether one scheduled job is the analytics partition scheduler. */
+function isAnalyticsPartitionJob(job: { args: readonly unknown[] }) {
+  const [arg] = job.args;
+
+  return typeof arg === "object" && arg !== null && "partition" in arg;
+}
+
 /** Reads content-view state that should remain small in each test fixture. */
 async function readViewState(
   t: ReturnType<typeof createConvexTestWithBetterAuth>
 ) {
   return await t.query(async (ctx) => ({
-    analyticsQueue: await ctx.db.query("contentViewAnalyticsQueue").collect(),
-    scheduledJobs: await ctx.db.system.query("_scheduled_functions").collect(),
-    views: await ctx.db.query("contentViews").collect(),
+    engagementQueue: await ctx.db.query("learningEngagementQueue").collect(),
+    recents: await ctx.db.query("userLearningRecents").collect(),
+    scheduledJobs: (
+      await ctx.db.system.query("_scheduled_functions").collect()
+    ).filter(isAnalyticsPartitionJob),
+    viewerSignals: await ctx.db
+      .query("learningPopularityViewerSignals")
+      .collect(),
+    views: await ctx.db.query("learningViews").collect(),
   }));
 }
 
@@ -207,6 +229,8 @@ describe("contents/mutations/views", () => {
       {
         assetId: article.contentId,
         content_id: article.contentId,
+        contextKey: "canonical",
+        contextMode: "canonical",
         deviceId: "device-1",
         firstViewedAt: NOW,
         lastViewedAt: NOW,
@@ -215,19 +239,31 @@ describe("contents/mutations/views", () => {
         section: "articles",
       },
     ]);
-    expect(state.analyticsQueue).toMatchObject([
+    expect(state.engagementQueue).toMatchObject([
       {
         assetId: article.contentId,
         content_id: article.contentId,
+        contextKey: "canonical",
+        contextMode: "canonical",
         locale: "id",
-        partition: getContentAnalyticsPartition(article.contentId),
+        partition: getSignalPartition(article.contentId),
         route: ARTICLE_ROUTE,
         section: "articles",
+        scopeMode: "global",
+        viewerKey: "device:device-1",
         viewedAt: NOW,
       },
     ]);
+    expect(state.viewerSignals).toMatchObject([
+      {
+        ...canonicalContext,
+        content_id: article.contentId,
+        scopeMode: "global",
+        viewerKey: "device:device-1",
+      },
+    ]);
     expect(state.scheduledJobs.map((job) => job.args[0])).toEqual([
-      { partition: getContentAnalyticsPartition(article.contentId) },
+      { partition: getSignalPartition(article.contentId) },
     ]);
   });
 
@@ -263,8 +299,9 @@ describe("contents/mutations/views", () => {
       firstViewedAt: NOW,
       lastViewedAt: NOW + 1000,
     });
-    expect(state.analyticsQueue).toHaveLength(1);
+    expect(state.engagementQueue).toHaveLength(1);
     expect(state.scheduledJobs).toHaveLength(1);
+    expect(state.viewerSignals).toHaveLength(1);
   });
 
   it("links an existing anonymous device view to a signed-in user", async () => {
@@ -309,7 +346,17 @@ describe("contents/mutations/views", () => {
       lastViewedAt: NOW + 1000,
       userId: identity.userId,
     });
-    expect(state.analyticsQueue).toHaveLength(1);
+    expect(state.engagementQueue).toHaveLength(2);
+    expect(state.recents).toMatchObject([
+      {
+        content_id: identity.contentId,
+        contextKey: "canonical",
+        lastViewedAt: NOW + 1000,
+        userId: identity.userId,
+      },
+    ]);
+    expect(state.scheduledJobs).toHaveLength(2);
+    expect(state.viewerSignals).toHaveLength(2);
   });
 
   it("deduplicates signed-in user views across devices", async () => {
@@ -358,7 +405,16 @@ describe("contents/mutations/views", () => {
       lastViewedAt: NOW + 1000,
       userId: identity.userId,
     });
-    expect(state.analyticsQueue).toHaveLength(1);
+    expect(state.engagementQueue).toHaveLength(1);
+    expect(state.recents).toMatchObject([
+      {
+        content_id: identity.contentId,
+        contextKey: "canonical",
+        lastViewedAt: NOW + 1000,
+        userId: identity.userId,
+      },
+    ]);
+    expect(state.viewerSignals).toHaveLength(1);
   });
 
   it("returns a best-effort miss when the graph content ID has no route row", async () => {
@@ -381,8 +437,9 @@ describe("contents/mutations/views", () => {
       success: false,
     });
     expect(state.views).toEqual([]);
-    expect(state.analyticsQueue).toEqual([]);
+    expect(state.engagementQueue).toEqual([]);
     expect(state.scheduledJobs).toEqual([]);
+    expect(state.viewerSignals).toEqual([]);
   });
 
   it("returns best-effort misses for route kinds without tracked source rows", async () => {
@@ -436,8 +493,9 @@ describe("contents/mutations/views", () => {
       success: false,
     });
     expect(state.views).toEqual([]);
-    expect(state.analyticsQueue).toEqual([]);
+    expect(state.engagementQueue).toEqual([]);
     expect(state.scheduledJobs).toEqual([]);
+    expect(state.viewerSignals).toEqual([]);
   });
 
   it("returns a best-effort miss for mismatched route catalog graph IDs", async () => {
@@ -477,8 +535,9 @@ describe("contents/mutations/views", () => {
       success: false,
     });
     expect(state.views).toEqual([]);
-    expect(state.analyticsQueue).toEqual([]);
+    expect(state.engagementQueue).toEqual([]);
     expect(state.scheduledJobs).toEqual([]);
+    expect(state.viewerSignals).toEqual([]);
   });
 
   it("reports auth component IO failures through the typed boundary", async () => {
@@ -529,6 +588,7 @@ describe("contents/mutations/views", () => {
         fixtures.exercise.contentId,
       ])
     );
-    expect(state.analyticsQueue).toHaveLength(2);
+    expect(state.engagementQueue).toHaveLength(2);
+    expect(state.viewerSignals).toHaveLength(2);
   });
 });

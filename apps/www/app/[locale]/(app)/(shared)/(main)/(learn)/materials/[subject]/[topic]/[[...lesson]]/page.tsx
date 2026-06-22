@@ -1,10 +1,11 @@
+import type { LearningContextInput } from "@repo/backend/convex/contents/context";
 import { getHeadings } from "@repo/contents/_lib/toc";
 import { formatContentDateISO } from "@repo/contents/_shared/date";
 import {
   isMaterialLessonRoute,
-  readMaterialPagination,
   toLocalizedContentHref,
 } from "@repo/contents/_types/route/content";
+import type { MaterialContextIdentity } from "@repo/contents/_types/route/material/reference";
 import type { PublicContentRoute } from "@repo/contents/_types/route/schema";
 import { ArticleJsonLd } from "@repo/seo/json-ld/article";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
@@ -19,6 +20,7 @@ import {
   getProjectedMaterialIcon,
   listMaterialStaticParams,
   readMaterialHeaderLink,
+  readMaterialPagePagination,
   readMaterialRoutes,
   requireParentMaterialRoute,
   resolveMaterialRoute,
@@ -33,8 +35,10 @@ import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import { LayoutMaterialToc } from "@/components/shared/material/toc";
 import { PaginationContent } from "@/components/shared/pagination-content";
+import { ContentViewTracker } from "@/components/tracking/tracker";
 import { importContentModuleOrNull } from "@/lib/content/module";
 import { fetchRuntimeCurriculumPage } from "@/lib/content/runtime/pages";
+import { getRuntimeContentViewId } from "@/lib/content/views";
 import { readMaterialContextQuery } from "@/lib/routing/material/query";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
@@ -100,7 +104,7 @@ export async function generateMetadata({
 /**
  * Renders the canonical material lesson page.
  *
- * Topic rows are grouping data for curriculum card pages. They intentionally do
+ * Topic rows are grouping data for curriculum card pages. They intentionally
  * do not render public pages, so the learner opens concrete material content
  * directly from a collapsible card.
  */
@@ -139,31 +143,47 @@ export default async function Page({
 
   const Content = content.default;
   const parentRoute = requireParentMaterialRoute(route);
+  const materialContext = readMaterialContextQuery(query ?? {});
+  const trackerContext: LearningContextInput | undefined = materialContext
+    ? {
+        mode: "placement",
+        nodeKey: materialContext.nodeKey,
+        programKey: materialContext.programKey,
+      }
+    : undefined;
+  const contentId = await getRuntimeContentViewId({
+    locale,
+    route: route.publicPath,
+  });
 
   return (
-    <MaterialLessonPage
-      content={runtimeLesson}
-      footer={<DeferredComments slug={route.sourcePath} />}
-      headerLink={readMaterialHeaderLink(
-        route,
-        readMaterialContextQuery(query ?? {})
-      )}
+    <ContentViewTracker
+      contentId={contentId}
+      context={trackerContext}
       locale={locale}
-      parentTitle={parentRoute.title}
-      route={route}
-      toolbar={
-        <DeferredAiSheetOpen
-          audio={{
-            contentType: "material",
-            locale,
-            slug: route.sourcePath,
-          }}
-          contextTitle={runtimeLesson.metadata.title}
-        />
-      }
     >
-      <Content />
-    </MaterialLessonPage>
+      <MaterialLessonPage
+        content={runtimeLesson}
+        footer={<DeferredComments slug={route.sourcePath} />}
+        headerLink={readMaterialHeaderLink(route, materialContext)}
+        locale={locale}
+        materialContext={materialContext}
+        parentTitle={parentRoute.title}
+        route={route}
+        toolbar={
+          <DeferredAiSheetOpen
+            audio={{
+              contentType: "material",
+              locale,
+              slug: route.sourcePath,
+            }}
+            contextTitle={runtimeLesson.metadata.title}
+          />
+        }
+      >
+        <Content />
+      </MaterialLessonPage>
+    </ContentViewTracker>
   );
 }
 
@@ -179,6 +199,7 @@ async function MaterialLessonPage({
   footer,
   headerLink,
   locale,
+  materialContext,
   parentTitle,
   route,
   toolbar,
@@ -191,6 +212,7 @@ async function MaterialLessonPage({
     label: string;
   };
   locale: Locale;
+  materialContext: MaterialContextIdentity | undefined;
   parentTitle: string;
   route: PublicContentRoute;
   toolbar: ReactNode;
@@ -200,7 +222,7 @@ async function MaterialLessonPage({
   const raw = content.body;
   const headings = getHeadings(raw);
   const metadata = content.metadata;
-  const pagination = readMaterialPagination(route, readMaterialRoutes());
+  const pagination = readMaterialPagePagination(route, materialContext);
   const publishedAt = Option.getOrElse(
     formatContentDateISO(metadata.date),
     () => metadata.date

@@ -1,15 +1,121 @@
-import { internalQuery } from "@repo/backend/convex/_generated/server";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import {
+  internalQuery,
+  type QueryCtx,
+} from "@repo/backend/convex/_generated/server";
 import {
   MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE,
   MIN_VIEW_THRESHOLD,
 } from "@repo/backend/convex/audioStudies/constants";
-import { getAudioContentSourceByRoute } from "@repo/backend/convex/audioStudies/helpers/sources";
+import { getAudioContentSourceByContentId } from "@repo/backend/convex/audioStudies/helpers/sources";
 import { mergePopularAudioContentItems } from "@repo/backend/convex/contents/helpers/popularity";
+import { getLifetimePopularityWindow } from "@repo/backend/convex/contents/popularity";
 import {
   type PopularAudioContentItem,
   popularAudioContentItemValidator,
 } from "@repo/backend/convex/contents/validators";
+import {
+  getUnknownErrorMessage,
+  runConvexProgram,
+} from "@repo/backend/convex/lib/effect";
+import { SUPPORTED_CONTENT_LOCALES } from "@repo/backend/convex/lib/validators/contents";
 import { v } from "convex/values";
+import { Effect, Schema } from "effect";
+
+type PopularityCounterRow = Doc<"learningPopularityCounters">;
+
+const popularAudioIoFailedCode = "POPULAR_AUDIO_IO_FAILED";
+
+/** Raised when the audio queue candidate query cannot read its ranked models. */
+class PopularAudioIoError extends Schema.TaggedError<PopularAudioIoError>()(
+  "PopularAudioIoError",
+  {
+    code: Schema.Literal(popularAudioIoFailedCode),
+    message: Schema.String,
+  }
+) {}
+
+/** Maps thrown Convex IO failures into the popular-audio error channel. */
+function toPopularAudioIoError(error: unknown) {
+  return new PopularAudioIoError({
+    code: popularAudioIoFailedCode,
+    message: getUnknownErrorMessage(error),
+  });
+}
+
+/** Checks whether an optional audio item resolved to a queue candidate. */
+function isPopularAudioItem(
+  item: PopularAudioContentItem | null
+): item is PopularAudioContentItem {
+  return item !== null;
+}
+
+/** Reads ranked popularity rows for one content section across supported locales. */
+const loadPopularRows = Effect.fn("contents.audio.loadPopularRows")(function* (
+  ctx: QueryCtx,
+  section: PopularityCounterRow["section"]
+) {
+  const windowKey = getLifetimePopularityWindow();
+  const pages = yield* Effect.forEach(SUPPORTED_CONTENT_LOCALES, (locale) =>
+    Effect.tryPromise({
+      try: () =>
+        ctx.db
+          .query("learningPopularityCounters")
+          .withIndex("by_section_locale_scope_window_score_id", (q) =>
+            q
+              .eq("section", section)
+              .eq("locale", locale)
+              .eq("scopeMode", "global")
+              .eq("windowKey", windowKey)
+          )
+          .order("desc")
+          .take(MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE),
+      catch: toPopularAudioIoError,
+    })
+  );
+
+  return pages
+    .flat()
+    .filter((row) => row.score >= MIN_VIEW_THRESHOLD)
+    .sort((left, right) => right.score - left.score)
+    .slice(0, MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE);
+});
+
+/** Resolves one ranked popularity row to an audio source candidate. */
+const loadAudioItem = Effect.fn("contents.audio.loadAudioItem")(function* (
+  ctx: QueryCtx,
+  row: PopularityCounterRow
+) {
+  const sourceContent = yield* Effect.tryPromise({
+    try: () => getAudioContentSourceByContentId(ctx, row.content_id),
+    catch: toPopularAudioIoError,
+  });
+
+  if (!sourceContent) {
+    return null;
+  }
+
+  return {
+    sourceContent,
+    viewCount: row.score,
+  };
+});
+
+/** Reads current popular audio queue candidates from ranked learning counters. */
+const listPopularAudioContent = Effect.fn(
+  "contents.audio.listPopularAudioContent"
+)(function* (ctx: QueryCtx) {
+  const [articleRows, subjectRows] = yield* Effect.all([
+    loadPopularRows(ctx, "articles"),
+    loadPopularRows(ctx, "material"),
+  ]);
+  const sourceItems = yield* Effect.forEach(
+    [...articleRows, ...subjectRows],
+    (row) => loadAudioItem(ctx, row)
+  );
+
+  return mergePopularAudioContentItems(sourceItems.filter(isPopularAudioItem));
+});
 
 /**
  * Returns the current top article and subject candidates for audio generation.
@@ -20,72 +126,6 @@ import { v } from "convex/values";
 export const getPopularContentForAudioQueue = internalQuery({
   args: {},
   returns: v.array(popularAudioContentItemValidator),
-  handler: async (ctx) => {
-    const [articleRows, subjectRows] = await Promise.all([
-      ctx.db
-        .query("learningPopularity")
-        .withIndex("by_section_and_viewCount_and_content_id", (q) =>
-          q.eq("section", "articles").gte("viewCount", MIN_VIEW_THRESHOLD)
-        )
-        .order("desc")
-        .take(MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE),
-      ctx.db
-        .query("learningPopularity")
-        .withIndex("by_section_and_viewCount_and_content_id", (q) =>
-          q.eq("section", "material").gte("viewCount", MIN_VIEW_THRESHOLD)
-        )
-        .order("desc")
-        .take(MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE),
-    ]);
-    const sourceItems: PopularAudioContentItem[] = [];
-
-    for (const row of articleRows) {
-      const route = await ctx.db
-        .query("contentRoutes")
-        .withIndex("by_content_id", (q) => q.eq("content_id", row.content_id))
-        .unique();
-
-      if (route?.kind !== "article" || route.content_id !== route.assetId) {
-        continue;
-      }
-
-      const sourceContent = await getAudioContentSourceByRoute(ctx, route);
-
-      if (!sourceContent) {
-        continue;
-      }
-
-      sourceItems.push({
-        sourceContent,
-        viewCount: row.viewCount,
-      });
-    }
-
-    for (const row of subjectRows) {
-      const route = await ctx.db
-        .query("contentRoutes")
-        .withIndex("by_content_id", (q) => q.eq("content_id", row.content_id))
-        .unique();
-
-      if (
-        route?.kind !== "curriculum-lesson" ||
-        route.content_id !== route.assetId
-      ) {
-        continue;
-      }
-
-      const sourceContent = await getAudioContentSourceByRoute(ctx, route);
-
-      if (!sourceContent) {
-        continue;
-      }
-
-      sourceItems.push({
-        sourceContent,
-        viewCount: row.viewCount,
-      });
-    }
-
-    return mergePopularAudioContentItems(sourceItems);
-  },
+  handler: async (ctx): Promise<PopularAudioContentItem[]> =>
+    await runConvexProgram(listPopularAudioContent(ctx)),
 });

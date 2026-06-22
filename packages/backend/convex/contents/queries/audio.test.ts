@@ -5,6 +5,7 @@ import {
   MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE,
   MIN_VIEW_THRESHOLD,
 } from "@repo/backend/convex/audioStudies/constants";
+import { getLifetimePopularityWindow } from "@repo/backend/convex/contents/popularity";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import schema from "@repo/backend/convex/schema";
 import { getTestAudioContent } from "@repo/backend/convex/test.helpers";
@@ -26,9 +27,14 @@ const audioRouteKinds = [
   "article",
   "curriculum-lesson",
 ] as const satisfies readonly Doc<"contentRoutes">["kind"][];
+const canonicalContext = {
+  contextKey: "canonical",
+  contextMode: "canonical",
+} as const;
 
 type AudioRouteKind = (typeof audioRouteKinds)[number];
 
+/** Builds the graph asset identity used by audio source and popularity fixtures. */
 function getGraph(locale: Locale, route: string) {
   const graph = createLearningGraphIdentityFromRoute({ locale, route });
 
@@ -42,6 +48,7 @@ function getGraph(locale: Locale, route: string) {
   };
 }
 
+/** Inserts the route-catalog row needed by audio source lookup hydration. */
 async function insertContentRoute(
   ctx: MutationCtx,
   input: {
@@ -68,6 +75,33 @@ async function insertContentRoute(
   });
 
   return graph;
+}
+
+/** Inserts one global lifetime popularity counter for audio candidate ranking. */
+async function insertPopularityCounter(
+  ctx: MutationCtx,
+  input: {
+    readonly graph: ReturnType<typeof getGraph>;
+    readonly locale: Locale;
+    readonly route: string;
+    readonly score: number;
+    readonly section: Doc<"learningPopularityCounters">["section"];
+    readonly title: string;
+  }
+) {
+  await ctx.db.insert("learningPopularityCounters", {
+    ...input.graph,
+    ...canonicalContext,
+    locale: input.locale,
+    route: input.route,
+    score: input.score,
+    section: input.section,
+    scopeMode: "global",
+    sourcePath: input.route,
+    title: input.title,
+    updatedAt: 1,
+    windowKey: getLifetimePopularityWindow(),
+  });
 }
 
 describe("contents/queries/audio", () => {
@@ -186,26 +220,29 @@ describe("contents/queries/audio", () => {
         title: "Penjumlahan Vektor",
       });
 
-      await ctx.db.insert("learningPopularity", {
-        ...articleGraph,
+      await insertPopularityCounter(ctx, {
+        graph: articleGraph,
         locale: "en",
+        route: REAL_DYNASTIC_ARTICLE_SLUG,
+        score: 80,
         section: "articles",
-        updatedAt: 1,
-        viewCount: 80,
+        title: "Dynastic Politics",
       });
-      await ctx.db.insert("learningPopularity", {
-        ...englishSubjectGraph,
+      await insertPopularityCounter(ctx, {
+        graph: englishSubjectGraph,
         locale: "en",
+        route: REAL_VECTOR_SECTION_SLUG,
+        score: 40,
         section: "material",
-        updatedAt: 1,
-        viewCount: 40,
+        title: "Vector Addition",
       });
-      await ctx.db.insert("learningPopularity", {
-        ...indonesianSubjectGraph,
+      await insertPopularityCounter(ctx, {
+        graph: indonesianSubjectGraph,
         locale: "id",
+        route: REAL_VECTOR_SECTION_SLUG,
+        score: 25,
         section: "material",
-        updatedAt: 1,
-        viewCount: 25,
+        title: "Penjumlahan Vektor",
       });
     });
 
@@ -258,12 +295,13 @@ describe("contents/queries/audio", () => {
       });
 
       const articleGraph = getGraph("en", REAL_DYNASTIC_ARTICLE_SLUG);
-      await ctx.db.insert("learningPopularity", {
-        ...articleGraph,
+      await insertPopularityCounter(ctx, {
+        graph: articleGraph,
         locale: "en",
+        route: REAL_DYNASTIC_ARTICLE_SLUG,
+        score: 80,
         section: "articles",
-        updatedAt: 1,
-        viewCount: 80,
+        title: "Dynastic Politics",
       });
       await ctx.db.insert("curriculumLessons", {
         topicId: await ctx.db.insert("curriculumTopics", {
@@ -292,12 +330,13 @@ describe("contents/queries/audio", () => {
       });
 
       const subjectGraph = getGraph("en", REAL_VECTOR_SECTION_SLUG);
-      await ctx.db.insert("learningPopularity", {
-        ...subjectGraph,
+      await insertPopularityCounter(ctx, {
+        graph: subjectGraph,
         locale: "en",
+        route: REAL_VECTOR_SECTION_SLUG,
+        score: 40,
         section: "material",
-        updatedAt: 1,
-        viewCount: 40,
+        title: "Vector Addition",
       });
     });
 
@@ -336,12 +375,13 @@ describe("contents/queries/audio", () => {
         }),
         syncedAt: 2,
       });
-      await ctx.db.insert("learningPopularity", {
-        ...getGraph("en", REAL_DYNASTIC_ARTICLE_SLUG),
+      await insertPopularityCounter(ctx, {
+        graph: getGraph("en", REAL_DYNASTIC_ARTICLE_SLUG),
         locale: "en",
+        route: REAL_DYNASTIC_ARTICLE_SLUG,
+        score: MIN_VIEW_THRESHOLD - 1,
         section: "articles",
-        updatedAt: 1,
-        viewCount: MIN_VIEW_THRESHOLD - 1,
+        title: "Dynastic Politics",
       });
     });
 
@@ -390,12 +430,13 @@ describe("contents/queries/audio", () => {
           route: slug,
           title: `Audio Candidate ${index}`,
         });
-        await ctx.db.insert("learningPopularity", {
-          ...graph,
+        await insertPopularityCounter(ctx, {
+          graph,
           locale: "en",
+          route: slug,
+          score: 1000 - index,
           section: "articles",
-          updatedAt: 1,
-          viewCount: 1000 - index,
+          title: `Audio Candidate ${index}`,
         });
       }
     });

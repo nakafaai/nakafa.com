@@ -97,6 +97,7 @@ describe("triggers/contents/views", () => {
                 alignment_id: graph.alignmentId,
                 concept_id: graph.conceptId,
                 content_id: ARTICLE_CONTENT_ID,
+                context_key: "canonical",
                 content_type: "article",
                 is_new_view: true,
                 learning_object_id: graph.learningObjectId,

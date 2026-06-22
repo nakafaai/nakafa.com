@@ -21,6 +21,8 @@ export function mapDBMessagesToUIMessages(
       credits: message.credits,
       generationErrorCode: message.generationErrorCode,
       generationStatus: message.generationStatus,
+      ninaContextSnapshot: message.ninaContextSnapshot,
+      ninaContextTransition: message.ninaContextTransition,
       tokens:
         message.inputTokens != null ||
         message.outputTokens != null ||

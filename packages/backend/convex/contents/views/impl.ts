@@ -4,7 +4,10 @@ import type {
   ScheduleContentAnalyticsPartitionArgs,
   ScheduleContentAnalyticsPartitionResult,
 } from "@repo/backend/convex/contents/analytics/spec";
-import { getContentAnalyticsPartition } from "@repo/backend/convex/contents/helpers/partitions";
+import type { LearningContextStorage } from "@repo/backend/convex/contents/context";
+import { resolveLearningContext } from "@repo/backend/convex/contents/views/context";
+import { upsertUserRecent } from "@repo/backend/convex/contents/views/recent";
+import { enqueuePopularitySignals } from "@repo/backend/convex/contents/views/signals";
 import {
   ContentViewIoError,
   contentViewIoFailedCode,
@@ -70,6 +73,7 @@ const loadExistingView = Effect.fn("contents.views.loadExistingView")(
   function* (
     db: MutationCtx["db"],
     contentId: Doc<"contentRoutes">["content_id"],
+    contextKey: string,
     input: {
       readonly deviceId: string;
       readonly userId?: Doc<"users">["_id"];
@@ -78,9 +82,12 @@ const loadExistingView = Effect.fn("contents.views.loadExistingView")(
     const existingByDevice = yield* Effect.tryPromise({
       try: () =>
         db
-          .query("contentViews")
-          .withIndex("by_deviceId_and_content_id", (q) =>
-            q.eq("deviceId", input.deviceId).eq("content_id", contentId)
+          .query("learningViews")
+          .withIndex("by_deviceId_and_content_id_and_contextKey", (q) =>
+            q
+              .eq("deviceId", input.deviceId)
+              .eq("content_id", contentId)
+              .eq("contextKey", contextKey)
           )
           .first(),
       catch: toContentViewIoError,
@@ -93,9 +100,12 @@ const loadExistingView = Effect.fn("contents.views.loadExistingView")(
     const existingByUser = yield* Effect.tryPromise({
       try: () =>
         db
-          .query("contentViews")
-          .withIndex("by_userId_and_content_id", (q) =>
-            q.eq("userId", input.userId).eq("content_id", contentId)
+          .query("learningViews")
+          .withIndex("by_userId_and_content_id_and_contextKey", (q) =>
+            q
+              .eq("userId", input.userId)
+              .eq("content_id", contentId)
+              .eq("contextKey", contextKey)
           )
           .first(),
       catch: toContentViewIoError,
@@ -105,25 +115,25 @@ const loadExistingView = Effect.fn("contents.views.loadExistingView")(
   }
 );
 
-/** Writes a new view row and its append-only analytics queue row. */
+/** Writes the first durable view row for a viewer/content/context tuple. */
 const insertNewView = Effect.fn("contents.views.insertNewView")(function* (
   db: MutationCtx["db"],
   route: Doc<"contentRoutes">,
   args: RecordContentViewArgs,
+  context: LearningContextStorage,
   input: {
     readonly now: number;
     readonly userId?: Doc<"users">["_id"];
   }
 ) {
-  const partition = getContentAnalyticsPartition(route.content_id);
-
   yield* Effect.tryPromise({
     try: () =>
-      db.insert("contentViews", {
+      db.insert("learningViews", {
         alignmentId: route.alignmentId,
         assetId: route.assetId,
         conceptId: route.conceptId,
         content_id: route.content_id,
+        ...context,
         deviceId: args.deviceId,
         firstViewedAt: input.now,
         lastViewedAt: input.now,
@@ -136,33 +146,13 @@ const insertNewView = Effect.fn("contents.views.insertNewView")(function* (
       }),
     catch: toContentViewIoError,
   });
-
-  yield* Effect.tryPromise({
-    try: () =>
-      db.insert("contentViewAnalyticsQueue", {
-        alignmentId: route.alignmentId,
-        assetId: route.assetId,
-        conceptId: route.conceptId,
-        content_id: route.content_id,
-        learningObjectId: route.learningObjectId,
-        lensId: route.lensId,
-        locale: args.locale,
-        partition,
-        route: route.route,
-        section: route.section,
-        viewedAt: input.now,
-      }),
-    catch: toContentViewIoError,
-  });
-
-  return partition;
 });
 
 /** Touches the existing view row and links it to the signed-in user when known. */
 const updateExistingView = Effect.fn("contents.views.updateExistingView")(
   function* (
     db: MutationCtx["db"],
-    view: Doc<"contentViews">,
+    view: Doc<"learningViews">,
     input: {
       readonly now: number;
       readonly userId?: Doc<"users">["_id"];
@@ -171,7 +161,7 @@ const updateExistingView = Effect.fn("contents.views.updateExistingView")(
     if (input.userId && !view.userId) {
       yield* Effect.tryPromise({
         try: () =>
-          db.patch("contentViews", view._id, {
+          db.patch("learningViews", view._id, {
             lastViewedAt: input.now,
             userId: input.userId,
           }),
@@ -182,7 +172,7 @@ const updateExistingView = Effect.fn("contents.views.updateExistingView")(
 
     yield* Effect.tryPromise({
       try: () =>
-        db.patch("contentViews", view._id, {
+        db.patch("learningViews", view._id, {
           lastViewedAt: input.now,
         }),
       catch: toContentViewIoError,
@@ -216,28 +206,86 @@ export const recordUniqueContentView = Effect.fn(
 
   const now = yield* Clock.currentTimeMillis;
   const userId = authContext?.appUser._id;
-  const existingView = yield* loadExistingView(ctx.db, target.content_id, {
-    deviceId: args.deviceId,
-    userId,
-  });
+  const learningContext = yield* resolveLearningContext(
+    ctx.db,
+    target,
+    args.context
+  );
+  const existingView = yield* loadExistingView(
+    ctx.db,
+    target.content_id,
+    learningContext.contextKey,
+    {
+      deviceId: args.deviceId,
+      userId,
+    }
+  );
 
   if (existingView) {
     yield* updateExistingView(ctx.db, existingView, { now, userId });
+    if (userId) {
+      yield* upsertUserRecent(ctx.db, target, learningContext, {
+        lastViewedAt: now,
+        userId,
+      });
+    }
+
+    const partitions = yield* enqueuePopularitySignals(
+      ctx.db,
+      target,
+      args,
+      learningContext,
+      {
+        now,
+        userId,
+      }
+    );
+
+    for (const partition of partitions) {
+      yield* Effect.tryPromise({
+        try: () =>
+          ctx.scheduler.runAfter(0, targets.scheduleAnalyticsPartition, {
+            partition,
+          }),
+        catch: toContentViewIoError,
+      });
+    }
+
     return { alreadyViewed: true, isNewView: false, success: true };
   }
 
-  const partition = yield* insertNewView(ctx.db, target, args, {
+  yield* insertNewView(ctx.db, target, args, learningContext, {
     now,
     userId,
   });
 
-  yield* Effect.tryPromise({
-    try: () =>
-      ctx.scheduler.runAfter(0, targets.scheduleAnalyticsPartition, {
-        partition,
-      }),
-    catch: toContentViewIoError,
-  });
+  if (userId) {
+    yield* upsertUserRecent(ctx.db, target, learningContext, {
+      lastViewedAt: now,
+      userId,
+    });
+  }
+
+  const partitions = yield* enqueuePopularitySignals(
+    ctx.db,
+    target,
+    args,
+    learningContext,
+    {
+      now,
+      userId,
+    }
+  );
+
+  for (const partition of partitions) {
+    yield* Effect.tryPromise({
+      try: () =>
+        ctx.scheduler.runAfter(0, targets.scheduleAnalyticsPartition, {
+          partition,
+        }),
+      catch: toContentViewIoError,
+    });
+  }
 
   return { alreadyViewed: false, isNewView: true, success: true };
 });

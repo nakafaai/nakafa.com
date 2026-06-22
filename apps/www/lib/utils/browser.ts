@@ -1,3 +1,4 @@
+import { MATERIAL_CONTEXT_QUERY_PARAM } from "@repo/contents/_types/route/material/context";
 import { routing } from "@repo/internationalization/src/routing";
 import { hasLocale } from "next-intl";
 
@@ -38,4 +39,13 @@ export function getPathname() {
 
   // If no locale in path, return the full pathname
   return pathname || "/";
+}
+
+/** Reads the raw material context hint for server-side Nina validation. */
+export function getMaterialContextHint() {
+  return (
+    new URLSearchParams(window.location.search).get(
+      MATERIAL_CONTEXT_QUERY_PARAM
+    ) ?? undefined
+  );
 }

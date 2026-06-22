@@ -231,6 +231,41 @@ describe("createPublicLearningIndex", () => {
     ).toBeUndefined();
   });
 
+  it("adds material context queries only to validated target routes", () => {
+    const index = createPublicLearningIndex({ routes: readStaticRoutes() });
+    const route = requireMaterialLessonRoute(
+      index.resolveRouteByPath(
+        "materi/matematika/eksponen-dan-logaritma/konsep-eksponen",
+        "id"
+      )
+    );
+    const staleRoute = requireMaterialLessonRoute(
+      index.resolveRouteByPath("materi/fisika/vektor/konsep-vektor", "id")
+    );
+    const context = {
+      nodeKey: "class-10-mathematics-exponential-logarithm",
+      programKey: "merdeka",
+    };
+
+    expect(
+      index.toContextualMaterialHref({
+        context,
+        href: "/id/materi/matematika/eksponen-dan-logaritma/konsep-eksponen",
+        route,
+      })
+    ).toBe(
+      "/id/materi/matematika/eksponen-dan-logaritma/konsep-eksponen?ctx=merdeka~class-10-mathematics-exponential-logarithm"
+    );
+
+    expect(
+      index.toContextualMaterialHref({
+        context,
+        href: "/id/materi/fisika/vektor/konsep-vektor",
+        route: staleRoute,
+      })
+    ).toBe("/id/materi/fisika/vektor/konsep-vektor");
+  });
+
   it("keeps lookup results stable after callers release the source route array", () => {
     const routes = readStaticRoutes();
     const index = createPublicLearningIndex({ routes });

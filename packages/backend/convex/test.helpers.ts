@@ -1,3 +1,4 @@
+import aggregateTest from "@convex-dev/aggregate/test";
 import posthogTest from "@posthog/convex/test";
 import { components } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
@@ -14,13 +15,23 @@ import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import aggregateSchema from "@repo/backend/node_modules/@convex-dev/aggregate/src/component/schema";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
-import { convexTest } from "convex-test";
+import { convexTest, type TestConvex } from "convex-test";
 
 const betterAuthModules = import.meta.glob(["./betterAuth/**/*.ts"]);
 const aggregateModules = import.meta.glob([
   "../node_modules/@convex-dev/aggregate/src/component/**/*.ts",
 ]);
 const DEFAULT_SESSION_DURATION_MS = 365 * 24 * 60 * 60 * 1000;
+
+/**
+ * Registers the learning popularity ranking aggregate in tests that exercise
+ * ranked counter writes or queries without booting the full app deployment.
+ */
+export function registerLearningPopularityAggregate(
+  t: TestConvex<typeof schema>
+) {
+  aggregateTest.register(t, "learningPopularityRankings");
+}
 
 /** Builds a Convex test instance with the Better Auth component registered. */
 export function createConvexTestWithBetterAuth() {
@@ -36,6 +47,7 @@ export function createConvexTestWithBetterAuth() {
     aggregateSchema,
     aggregateModules
   );
+  registerLearningPopularityAggregate(t);
   posthogTest.register(t);
   return t;
 }

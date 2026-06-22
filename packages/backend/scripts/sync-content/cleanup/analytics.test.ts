@@ -43,13 +43,16 @@ const emptyCounts = {
   contentRoutes: 0,
   publicRoutes: 0,
   contentSearch: 0,
-  contentViewAnalyticsQueue: 0,
-  contentViews: 0,
+  learningEngagementQueue: 0,
+  learningViews: 0,
   learningProgramCoverage: 0,
   learningPlanItems: 0,
   learningProgramSources: 0,
   learningPrograms: 0,
-  learningPopularity: 0,
+  learningPopularityCounters: 0,
+  learningPopularitySignals: 0,
+  learningPopularityViewerSignals: 0,
+  userLearningRecents: 0,
   exerciseAnswers: 0,
   exerciseAttempts: 0,
   exerciseChoices: 0,
@@ -76,7 +79,6 @@ const emptyCounts = {
   materials: 0,
   curriculumLessons: 0,
   curriculumTopics: 0,
-  learningTrendingBuckets: 0,
   tryoutAccessCampaignProducts: 0,
   tryoutAccessCampaigns: 0,
   tryoutAccessGrants: 0,
@@ -98,12 +100,12 @@ describe("sync-content resetAnalytics", () => {
 
   it("points production dry runs at the analytics-only reset command", async () => {
     vi.mocked(getContentCounts).mockReturnValue(
-      Effect.succeed({ ...emptyCounts, contentViews: 20_000 })
+      Effect.succeed({ ...emptyCounts, learningViews: 20_000 })
     );
 
     await Effect.runPromise(resetAnalytics(config, { prod: true }));
 
-    expect(log).toHaveBeenCalledWith("  Content Views:        20000");
+    expect(log).toHaveBeenCalledWith("  Learning Views:       20000");
     expect(log).toHaveBeenCalledWith(
       "\nTo delete content analytics rows, run:"
     );
@@ -117,11 +119,13 @@ describe("sync-content resetAnalytics", () => {
     vi.mocked(getContentCounts).mockReturnValue(
       Effect.succeed({
         ...emptyCounts,
-        learningPopularity: 1,
         contentAnalyticsPartitions: 1,
-        contentViewAnalyticsQueue: 1,
-        contentViews: 2,
-        learningTrendingBuckets: 1,
+        learningEngagementQueue: 1,
+        learningPopularityCounters: 1,
+        learningPopularitySignals: 1,
+        learningPopularityViewerSignals: 1,
+        learningViews: 2,
+        userLearningRecents: 1,
       })
     );
     vi.mocked(callConvexMutation)
@@ -129,26 +133,34 @@ describe("sync-content resetAnalytics", () => {
       .mockReturnValueOnce(Effect.succeed({ deleted: 1, hasMore: false }))
       .mockReturnValueOnce(Effect.succeed({ deleted: 2, hasMore: false }))
       .mockReturnValueOnce(Effect.succeed({ deleted: 1, hasMore: false }))
+      .mockReturnValueOnce(Effect.succeed({ deleted: 1, hasMore: false }))
+      .mockReturnValueOnce(Effect.succeed({ deleted: 1, hasMore: false }))
       .mockReturnValueOnce(Effect.succeed({ deleted: 1, hasMore: false }));
 
     await Effect.runPromise(resetAnalytics(config, { force: true }));
 
-    expect(callConvexMutation).toHaveBeenCalledTimes(5);
+    expect(callConvexMutation).toHaveBeenCalledTimes(7);
     expect(logSuccess).toHaveBeenCalledWith(
-      "  Deleted 1 content view analytics queue rows"
+      "  Deleted 1 learning engagement queue rows"
     );
     expect(logSuccess).toHaveBeenCalledWith(
       "  Deleted 1 content analytics partition leases"
     );
-    expect(logSuccess).toHaveBeenCalledWith("  Deleted 2 content view rows");
+    expect(logSuccess).toHaveBeenCalledWith("  Deleted 2 learning view rows");
     expect(logSuccess).toHaveBeenCalledWith(
-      "  Deleted 1 learning popularity rows"
+      "  Deleted 1 user learning recents rows"
     );
     expect(logSuccess).toHaveBeenCalledWith(
-      "  Deleted 1 learning trending bucket rows"
+      "  Deleted 1 learning popularity signal rows"
     );
     expect(logSuccess).toHaveBeenCalledWith(
-      "Deleted 6 analytics rows across content tables"
+      "  Deleted 1 learning popularity viewer signal rows"
+    );
+    expect(logSuccess).toHaveBeenCalledWith(
+      "  Deleted 1 learning popularity counter rows"
+    );
+    expect(logSuccess).toHaveBeenCalledWith(
+      "Deleted 8 analytics rows across content tables"
     );
   });
 });

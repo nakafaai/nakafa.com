@@ -6,8 +6,12 @@ import {
   CONTENT_ANALYTICS_LEASE_DURATION_MS,
   CONTENT_ANALYTICS_PARTITIONS,
 } from "@repo/backend/convex/contents/constants";
-import { getTrendingBucketStart } from "@repo/backend/convex/curriculumLessons/utils";
+import {
+  getDefaultPopularityWindow,
+  getPopularitySignalDay,
+} from "@repo/backend/convex/contents/popularity";
 import schema from "@repo/backend/convex/schema";
+import { registerLearningPopularityAggregate } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
@@ -17,7 +21,22 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const NOW = Date.parse("2026-01-01T00:00:00.000Z");
 const ARTICLE_ROUTE = "articles/politics/dynastic-politics-asian-values";
 const SUBJECT_ROUTE = "material/lesson/mathematics/vector/addition";
+const canonicalContext = {
+  contextKey: "canonical",
+  contextMode: "canonical",
+} as const;
 
+/**
+ * Builds a Convex test instance with the popularity aggregate registered so
+ * analytics counter writes exercise the same trigger path as production.
+ */
+function createAnalyticsConvexTest() {
+  const t = convexTest(schema, convexModules);
+  registerLearningPopularityAggregate(t);
+  return t;
+}
+
+/** Builds a graph identity fixture and fails fast when the route is invalid. */
 function getGraph(route: string) {
   const graph = createLearningGraphIdentityFromRoute({
     locale: "en",
@@ -103,12 +122,20 @@ async function enqueueSubjectViews(
   count: number
 ) {
   for (let index = 0; index < count; index += 1) {
-    await ctx.db.insert("contentViewAnalyticsQueue", {
+    await ctx.db.insert("learningEngagementQueue", {
       ...subject,
+      ...canonicalContext,
+      description: "Subject description",
+      insertedAt: NOW + index,
       locale: "en",
+      materialDomain: "mathematics",
       partition: 0,
       route: SUBJECT_ROUTE,
       section: "material",
+      scopeMode: "global",
+      sourcePath: SUBJECT_ROUTE,
+      title: "Vector Addition",
+      viewerKey: `device:subject-${index}`,
       viewedAt: NOW + index,
     });
   }
@@ -127,7 +154,7 @@ describe("contents/mutations/analytics", () => {
   });
 
   it("does not schedule partition work when every queue is empty", async () => {
-    const t = convexTest(schema, convexModules);
+    const t = createAnalyticsConvexTest();
 
     const result = await t.mutation(
       internal.contents.mutations.analytics.scheduleContentAnalyticsPartitions
@@ -144,24 +171,39 @@ describe("contents/mutations/analytics", () => {
   });
 
   it("schedules one worker attempt per non-empty analytics partition", async () => {
-    const t = convexTest(schema, convexModules);
+    const t = createAnalyticsConvexTest();
 
     await t.mutation(async (ctx) => {
       const { article, subject } = await insertAnalyticsContent(ctx);
-      await ctx.db.insert("contentViewAnalyticsQueue", {
+      await ctx.db.insert("learningEngagementQueue", {
         ...article,
+        ...canonicalContext,
+        description: "Article description",
+        insertedAt: NOW,
         locale: "en",
         partition: 0,
         route: ARTICLE_ROUTE,
         section: "articles",
+        scopeMode: "global",
+        sourcePath: ARTICLE_ROUTE,
+        title: "Dynastic Politics",
+        viewerKey: "device:article",
         viewedAt: NOW,
       });
-      await ctx.db.insert("contentViewAnalyticsQueue", {
+      await ctx.db.insert("learningEngagementQueue", {
         ...subject,
+        ...canonicalContext,
+        description: "Subject description",
+        insertedAt: NOW,
         locale: "en",
+        materialDomain: "mathematics",
         partition: 3,
         route: SUBJECT_ROUTE,
         section: "material",
+        scopeMode: "global",
+        sourcePath: SUBJECT_ROUTE,
+        title: "Vector Addition",
+        viewerKey: "device:subject",
         viewedAt: NOW,
       });
     });
@@ -183,7 +225,7 @@ describe("contents/mutations/analytics", () => {
   });
 
   it("creates and leases a partition once while the lease is active", async () => {
-    const t = convexTest(schema, convexModules);
+    const t = createAnalyticsConvexTest();
 
     await t.mutation(async (ctx) => {
       const { subject } = await insertAnalyticsContent(ctx);
@@ -225,7 +267,7 @@ describe("contents/mutations/analytics", () => {
   });
 
   it("does not create a lease when a partition queue is empty", async () => {
-    const t = convexTest(schema, convexModules);
+    const t = createAnalyticsConvexTest();
 
     const result = await t.mutation(
       internal.contents.mutations.analytics.scheduleContentAnalyticsPartition,
@@ -244,25 +286,40 @@ describe("contents/mutations/analytics", () => {
   });
 
   it("drains queued views into popularity tables and releases the lease", async () => {
-    const t = convexTest(schema, convexModules);
+    const t = createAnalyticsConvexTest();
 
     const ids = await t.mutation(async (ctx) => {
       const content = await insertAnalyticsContent(ctx);
       await insertActivePartition(ctx);
-      await ctx.db.insert("contentViewAnalyticsQueue", {
+      await ctx.db.insert("learningEngagementQueue", {
         ...content.article,
+        ...canonicalContext,
+        description: "Article description",
+        insertedAt: NOW,
         locale: "en",
         partition: 0,
         route: ARTICLE_ROUTE,
         section: "articles",
+        scopeMode: "global",
+        sourcePath: ARTICLE_ROUTE,
+        title: "Dynastic Politics",
+        viewerKey: "device:article",
         viewedAt: NOW,
       });
-      await ctx.db.insert("contentViewAnalyticsQueue", {
+      await ctx.db.insert("learningEngagementQueue", {
         ...content.subject,
+        ...canonicalContext,
+        description: "Subject description",
+        insertedAt: NOW,
         locale: "en",
+        materialDomain: "mathematics",
         partition: 0,
         route: SUBJECT_ROUTE,
         section: "material",
+        scopeMode: "global",
+        sourcePath: SUBJECT_ROUTE,
+        title: "Vector Addition",
+        viewerKey: "device:subject",
         viewedAt: NOW,
       });
       await enqueueSubjectViews(ctx, content.subject, 1);
@@ -276,33 +333,45 @@ describe("contents/mutations/analytics", () => {
     );
 
     const state = await t.query(async (ctx) => ({
-      articleLearningPopularity: await ctx.db
-        .query("learningPopularity")
-        .withIndex("by_content_id", (q) =>
-          q.eq("content_id", ids.article.content_id)
+      articlePopularityCounter: await ctx.db
+        .query("learningPopularityCounters")
+        .withIndex(
+          "by_windowKey_and_scopeMode_and_content_id_and_contextKey",
+          (q) =>
+            q
+              .eq("windowKey", getDefaultPopularityWindow())
+              .eq("scopeMode", "global")
+              .eq("content_id", ids.article.content_id)
+              .eq("contextKey", canonicalContext.contextKey)
         )
         .unique(),
       partitionRow: await ctx.db
         .query("contentAnalyticsPartitions")
         .withIndex("by_partition", (q) => q.eq("partition", 0))
         .unique(),
-      queueItems: await ctx.db.query("contentViewAnalyticsQueue").collect(),
-      subjectLearningPopularity: await ctx.db
-        .query("learningPopularity")
-        .withIndex("by_content_id", (q) =>
-          q.eq("content_id", ids.subject.content_id)
-        )
-        .unique(),
-      subjectTrendingBucket: await ctx.db
-        .query("learningTrendingBuckets")
+      queueItems: await ctx.db.query("learningEngagementQueue").collect(),
+      subjectPopularityCounter: await ctx.db
+        .query("learningPopularityCounters")
         .withIndex(
-          "by_section_and_locale_and_bucketStart_and_content_id",
+          "by_windowKey_and_scopeMode_and_content_id_and_contextKey",
           (q) =>
             q
-              .eq("section", "material")
-              .eq("locale", "en")
-              .eq("bucketStart", getTrendingBucketStart(NOW))
+              .eq("windowKey", getDefaultPopularityWindow())
+              .eq("scopeMode", "global")
               .eq("content_id", ids.subject.content_id)
+              .eq("contextKey", canonicalContext.contextKey)
+        )
+        .unique(),
+      subjectPopularitySignal: await ctx.db
+        .query("learningPopularitySignals")
+        .withIndex(
+          "by_scopeMode_and_signalDay_and_content_id_and_contextKey",
+          (q) =>
+            q
+              .eq("scopeMode", "global")
+              .eq("signalDay", getPopularitySignalDay(NOW))
+              .eq("content_id", ids.subject.content_id)
+              .eq("contextKey", canonicalContext.contextKey)
         )
         .unique(),
     }));
@@ -313,24 +382,27 @@ describe("contents/mutations/analytics", () => {
       processed: 3,
       skipped: false,
     });
-    expect(state.articleLearningPopularity).toMatchObject({
+    expect(state.articlePopularityCounter).toMatchObject({
       content_id: ids.article.content_id,
       locale: "en",
+      score: 1,
       section: "articles",
+      scopeMode: "global",
       updatedAt: NOW,
-      viewCount: 1,
     });
-    expect(state.subjectLearningPopularity).toMatchObject({
+    expect(state.subjectPopularityCounter).toMatchObject({
       content_id: ids.subject.content_id,
       locale: "en",
+      score: 2,
       section: "material",
+      scopeMode: "global",
       updatedAt: NOW,
-      viewCount: 2,
     });
-    expect(state.subjectTrendingBucket).toMatchObject({
-      bucketStart: getTrendingBucketStart(NOW),
+    expect(state.subjectPopularitySignal).toMatchObject({
       content_id: ids.subject.content_id,
       locale: "en",
+      scopeMode: "global",
+      signalDay: getPopularitySignalDay(NOW),
       updatedAt: NOW,
       viewCount: 2,
     });
@@ -344,7 +416,7 @@ describe("contents/mutations/analytics", () => {
   });
 
   it("reclaims expired leases and schedules the next worker", async () => {
-    const t = convexTest(schema, convexModules);
+    const t = createAnalyticsConvexTest();
 
     await t.mutation(async (ctx) => {
       const { subject } = await insertAnalyticsContent(ctx);
@@ -382,7 +454,7 @@ describe("contents/mutations/analytics", () => {
   });
 
   it("releases an active lease when the partition queue is empty", async () => {
-    const t = convexTest(schema, convexModules);
+    const t = createAnalyticsConvexTest();
 
     await t.mutation(async (ctx) => {
       await insertActivePartition(ctx);
@@ -416,7 +488,7 @@ describe("contents/mutations/analytics", () => {
   });
 
   it("continues a full partition batch without releasing the lease", async () => {
-    const t = convexTest(schema, convexModules);
+    const t = createAnalyticsConvexTest();
 
     const subject = await t.mutation(async (ctx) => {
       const { subject } = await insertAnalyticsContent(ctx);
@@ -435,14 +507,20 @@ describe("contents/mutations/analytics", () => {
         .query("contentAnalyticsPartitions")
         .withIndex("by_partition", (q) => q.eq("partition", 0))
         .unique(),
-      queueItems: await ctx.db.query("contentViewAnalyticsQueue").collect(),
+      queueItems: await ctx.db.query("learningEngagementQueue").collect(),
       scheduledJobs: await ctx.db.system
         .query("_scheduled_functions")
         .collect(),
-      subjectLearningPopularity: await ctx.db
-        .query("learningPopularity")
-        .withIndex("by_content_id", (q) =>
-          q.eq("content_id", subject.content_id)
+      subjectPopularityCounter: await ctx.db
+        .query("learningPopularityCounters")
+        .withIndex(
+          "by_windowKey_and_scopeMode_and_content_id_and_contextKey",
+          (q) =>
+            q
+              .eq("windowKey", getDefaultPopularityWindow())
+              .eq("scopeMode", "global")
+              .eq("content_id", subject.content_id)
+              .eq("contextKey", canonicalContext.contextKey)
         )
         .unique(),
     }));
@@ -462,16 +540,17 @@ describe("contents/mutations/analytics", () => {
     expect(state.scheduledJobs.map((job) => job.args[0])).toEqual([
       { leaseVersion: 1, partition: 0 },
     ]);
-    expect(state.subjectLearningPopularity).toMatchObject({
+    expect(state.subjectPopularityCounter).toMatchObject({
       content_id: subject.content_id,
       locale: "en",
+      score: CONTENT_ANALYTICS_BATCH_SIZE,
       section: "material",
-      viewCount: CONTENT_ANALYTICS_BATCH_SIZE,
+      scopeMode: "global",
     });
   });
 
   it("skips missing leases", async () => {
-    const t = convexTest(schema, convexModules);
+    const t = createAnalyticsConvexTest();
 
     await expect(
       t.mutation(
@@ -487,7 +566,7 @@ describe("contents/mutations/analytics", () => {
   });
 
   it("skips stale lease versions", async () => {
-    const t = convexTest(schema, convexModules);
+    const t = createAnalyticsConvexTest();
 
     await t.mutation(async (ctx) => {
       await insertActivePartition(ctx, { leaseVersion: 2 });
@@ -507,7 +586,7 @@ describe("contents/mutations/analytics", () => {
   });
 
   it("skips expired leases", async () => {
-    const t = convexTest(schema, convexModules);
+    const t = createAnalyticsConvexTest();
 
     await t.mutation(async (ctx) => {
       await insertActivePartition(ctx, { leaseExpiresAt: NOW - 1 });
@@ -527,7 +606,7 @@ describe("contents/mutations/analytics", () => {
   });
 
   it("rejects unknown partitions with a tagged Convex error", async () => {
-    const t = convexTest(schema, convexModules);
+    const t = createAnalyticsConvexTest();
 
     await expect(
       t.mutation(

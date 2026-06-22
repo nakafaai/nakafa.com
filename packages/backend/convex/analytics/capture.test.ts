@@ -15,6 +15,7 @@ const contentViewProperties = {
   alignment_id: "alignment:id:articles:example",
   concept_id: "concept:id:articles:example",
   content_id: "asset:id:articles:example",
+  context_key: "canonical",
   content_type: "article",
   is_new_view: true,
   learning_object_id: "lo:id:articles:example",

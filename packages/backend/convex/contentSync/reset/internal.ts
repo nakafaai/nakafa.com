@@ -29,22 +29,32 @@ export const deleteContentSearchBatch = internalMutation({
   returns: batchDeleteResultValidator,
   handler: deleteContentSearchRows,
 });
-export const deleteContentViewsBatch =
-  createBatchDeleteMutation("contentViews");
-export const deleteContentViewAnalyticsQueueBatch = createBatchDeleteMutation(
-  "contentViewAnalyticsQueue"
+export const deleteLearningViewsBatch =
+  createBatchDeleteMutation("learningViews");
+export const deleteLearningEngagementQueueBatch = createBatchDeleteMutation(
+  "learningEngagementQueue"
 );
 export const deleteContentAnalyticsPartitionsBatch = createBatchDeleteMutation(
   "contentAnalyticsPartitions"
 );
 
-/** Delete one bounded batch of graph-backed learning popularity rows. */
-export const deleteLearningPopularityBatch =
-  createBatchDeleteMutation("learningPopularity");
+/** Delete one bounded batch of graph-backed user learning recents rows. */
+export const deleteUserLearningRecentsBatch = createBatchDeleteMutation(
+  "userLearningRecents"
+);
 
-/** Delete one bounded batch of graph-backed learning trend bucket rows. */
-export const deleteLearningTrendingBucketsBatch = createBatchDeleteMutation(
-  "learningTrendingBuckets"
+/** Delete one bounded batch of graph-backed learning popularity signal rows. */
+export const deleteLearningPopularitySignalsBatch = createBatchDeleteMutation(
+  "learningPopularitySignals"
+);
+
+/** Delete one bounded batch of daily viewer popularity dedupe rows. */
+export const deleteLearningPopularityViewerSignalsBatch =
+  createBatchDeleteMutation("learningPopularityViewerSignals");
+
+/** Delete one bounded batch of graph-backed learning popularity counter rows. */
+export const deleteLearningPopularityCountersBatch = createBatchDeleteMutation(
+  "learningPopularityCounters"
 );
 
 /** Delete one bounded batch of generated material identity rows. */

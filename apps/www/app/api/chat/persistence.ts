@@ -1,5 +1,9 @@
 import type { ModelId } from "@repo/ai/config/model";
 import { compressMessages } from "@repo/ai/lib/message";
+import type {
+  NinaContextSnapshot,
+  NinaContextTransition,
+} from "@repo/ai/nina/context";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
@@ -16,10 +20,13 @@ interface ChatMessagesPage {
   page: MessageWithPartsDoc[];
 }
 
+/** User-message persistence input with the Nina context metadata saved atomically. */
 interface Save {
   chatId: Id<"chats"> | undefined;
   message: MyUIMessage;
   modelId: ModelId;
+  ninaContextSnapshot: NinaContextSnapshot;
+  ninaContextTransition: NinaContextTransition;
   token: string;
 }
 
@@ -38,6 +45,8 @@ export const saveOrCreateChat = Effect.fn("chat.saveOrCreateChat")(function* ({
   chatId,
   message,
   modelId,
+  ninaContextSnapshot,
+  ninaContextTransition,
   token,
 }: Save) {
   const dbParts = mapUIMessagePartsToDBParts({ messageParts: message.parts });
@@ -82,6 +91,8 @@ export const saveOrCreateChat = Effect.fn("chat.saveOrCreateChat")(function* ({
             role: message.role,
             identifier: message.id,
             modelId,
+            ninaContextSnapshot,
+            ninaContextTransition,
           },
           parts: dbParts,
         },
@@ -100,6 +111,8 @@ export const saveOrCreateChat = Effect.fn("chat.saveOrCreateChat")(function* ({
           role: message.role,
           identifier: message.id,
           modelId,
+          ninaContextSnapshot,
+          ninaContextTransition,
         },
         parts: dbParts,
       },

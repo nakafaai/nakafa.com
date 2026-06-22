@@ -1,15 +1,23 @@
 import { CONTENT_ROUTE_KINDS } from "@repo/backend/convex/contents/constants";
+import { learningContextStorageFields } from "@repo/backend/convex/contents/context";
 import {
   graphContentIdValidator,
   learningGraphIdentityValidator,
 } from "@repo/backend/convex/contents/graph";
 import { contentSearchDocumentValidator } from "@repo/backend/convex/contents/helpers/search/schema";
 import {
+  learningPopularityScopeValues,
+  learningPopularityWindowValues,
+} from "@repo/backend/convex/contents/popularity";
+import {
   localeValidator,
   materialValidator,
   nakafaSectionValidator,
 } from "@repo/backend/convex/lib/validators/contents";
-import { PROGRAM_NAVIGATION_ICON_KEY_VALUES } from "@repo/contents/_types/program/schema";
+import {
+  PROGRAM_NAVIGATION_ICON_KEY_VALUES,
+  PROGRAM_NAVIGATION_LEVEL_VALUES,
+} from "@repo/contents/_types/program/schema";
 import { PUBLIC_ROUTE_KIND_VALUES } from "@repo/contents/_types/route/schema";
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
@@ -19,7 +27,14 @@ const contentRouteKindValidator = literals(...CONTENT_ROUTE_KINDS);
 const navigationIconKeyValidator = literals(
   ...PROGRAM_NAVIGATION_ICON_KEY_VALUES
 );
+const navigationLevelValidator = literals(...PROGRAM_NAVIGATION_LEVEL_VALUES);
 const publicRouteKindValidator = literals(...PUBLIC_ROUTE_KIND_VALUES);
+const learningPopularityWindowValidator = literals(
+  ...learningPopularityWindowValues
+);
+const learningPopularityScopeValidator = literals(
+  ...learningPopularityScopeValues
+);
 const contentRoutePageItemValidator = v.object({
   ...learningGraphIdentityValidator.fields,
   authors: v.array(v.object({ name: v.string() })),
@@ -43,13 +58,13 @@ const contentRoutePageItemValidator = v.object({
 
 const tables = {
   /**
-   * Graph-backed content view read model.
-   * One record per user/device per content.
-   * Tracks first and last view timestamps for engagement analytics.
+   * Graph-backed learning engagement read model.
+   * One record per user/device per canonical asset and verified context.
    * `route` is a display/navigation projection; `content_id` is the graph asset ID.
    */
-  contentViews: defineTable({
+  learningViews: defineTable({
     ...learningGraphIdentityValidator.fields,
+    ...learningContextStorageFields,
     content_id: graphContentIdValidator,
     deviceId: v.string(),
     firstViewedAt: v.number(),
@@ -59,14 +74,22 @@ const tables = {
     section: nakafaSectionValidator,
     userId: v.optional(v.id("users")),
   })
-    .index("by_userId_and_content_id", ["userId", "content_id"])
+    .index("by_userId_and_content_id_and_contextKey", [
+      "userId",
+      "content_id",
+      "contextKey",
+    ])
     .index("by_userId_and_section_and_locale_and_lastViewedAt", [
       "userId",
       "section",
       "locale",
       "lastViewedAt",
     ])
-    .index("by_deviceId_and_content_id", ["deviceId", "content_id"])
+    .index("by_deviceId_and_content_id_and_contextKey", [
+      "deviceId",
+      "content_id",
+      "contextKey",
+    ])
     .index("by_locale_and_section_and_lastViewedAt", [
       "locale",
       "section",
@@ -74,19 +97,56 @@ const tables = {
     ]),
 
   /**
-   * Append-only queue of new unique views.
+   * Append-only queue of new unique learning engagement events.
    * Queue rows are partitioned so background processors can drain them in parallel.
    * Rows carry graph identity so analytics never resolves product identity from routes.
    */
-  contentViewAnalyticsQueue: defineTable({
+  learningEngagementQueue: defineTable({
     ...learningGraphIdentityValidator.fields,
+    ...learningContextStorageFields,
     content_id: graphContentIdValidator,
+    description: v.optional(v.string()),
+    insertedAt: v.number(),
     locale: localeValidator,
+    materialDomain: v.optional(materialValidator),
     partition: v.number(),
     route: v.string(),
     section: nakafaSectionValidator,
+    scopeMode: learningPopularityScopeValidator,
+    sourcePath: v.string(),
+    title: v.string(),
+    viewerKey: v.string(),
     viewedAt: v.number(),
-  }).index("by_partition", ["partition"]),
+  }).index("by_partition_and_insertedAt", ["partition", "insertedAt"]),
+
+  /**
+   * Continue Learning read model ranked by the learner's latest verified view.
+   */
+  userLearningRecents: defineTable({
+    ...learningGraphIdentityValidator.fields,
+    ...learningContextStorageFields,
+    content_id: graphContentIdValidator,
+    description: v.optional(v.string()),
+    lastViewedAt: v.number(),
+    locale: localeValidator,
+    materialDomain: v.optional(materialValidator),
+    route: v.string(),
+    section: nakafaSectionValidator,
+    sourcePath: v.string(),
+    title: v.string(),
+    userId: v.id("users"),
+  })
+    .index("by_userId_and_content_id_and_contextKey", [
+      "userId",
+      "content_id",
+      "contextKey",
+    ])
+    .index("by_userId_and_locale_and_section_and_lastViewedAt", [
+      "userId",
+      "locale",
+      "section",
+      "lastViewedAt",
+    ]),
 
   /**
    * Lease rows for partitioned analytics queue processing.
@@ -100,46 +160,97 @@ const tables = {
   }).index("by_partition", ["partition"]),
 
   /**
-   * Daily graph-backed learning trend buckets.
-   * One row per section, locale, graph asset ID, and UTC day bucket.
+   * Daily viewer de-duplication for popularity signals.
+   * One row means that viewer already contributed to the scope on that day.
    */
-  learningTrendingBuckets: defineTable({
-    bucketStart: v.number(),
+  learningPopularityViewerSignals: defineTable({
     ...learningGraphIdentityValidator.fields,
+    ...learningContextStorageFields,
     content_id: graphContentIdValidator,
     locale: localeValidator,
+    scopeMode: learningPopularityScopeValidator,
     section: nakafaSectionValidator,
-    updatedAt: v.number(),
-    viewCount: v.number(),
-  }).index("by_section_and_locale_and_bucketStart_and_content_id", [
-    "section",
-    "locale",
-    "bucketStart",
-    "content_id",
-  ]),
-
-  /**
-   * Graph-backed learning popularity read model.
-   * One row per graph asset ID; `section` and `locale` are query dimensions.
-   */
-  learningPopularity: defineTable({
-    ...learningGraphIdentityValidator.fields,
-    content_id: graphContentIdValidator,
-    locale: localeValidator,
-    section: nakafaSectionValidator,
-    viewCount: v.number(),
-    updatedAt: v.number(),
+    signalDay: v.number(),
+    viewedAt: v.number(),
+    viewerKey: v.string(),
   })
-    .index("by_content_id", ["content_id"])
-    .index("by_section_and_viewCount_and_content_id", [
-      "section",
-      "viewCount",
+    .index("by_viewer_content_day_scope_context", [
+      "viewerKey",
       "content_id",
+      "signalDay",
+      "scopeMode",
+      "contextKey",
     ])
-    .index("by_section_and_locale_and_viewCount_and_content_id", [
+    .index("by_section_and_locale_and_scopeMode_and_signalDay", [
       "section",
       "locale",
-      "viewCount",
+      "scopeMode",
+      "signalDay",
+    ]),
+
+  /**
+   * Daily verified popularity signals used for audited window rebuilds.
+   */
+  learningPopularitySignals: defineTable({
+    ...learningGraphIdentityValidator.fields,
+    ...learningContextStorageFields,
+    content_id: graphContentIdValidator,
+    description: v.optional(v.string()),
+    locale: localeValidator,
+    materialDomain: v.optional(materialValidator),
+    route: v.string(),
+    section: nakafaSectionValidator,
+    scopeMode: learningPopularityScopeValidator,
+    signalDay: v.number(),
+    sourcePath: v.string(),
+    title: v.string(),
+    updatedAt: v.number(),
+    viewCount: v.number(),
+  })
+    .index("by_scopeMode_and_signalDay_and_content_id_and_contextKey", [
+      "scopeMode",
+      "signalDay",
+      "content_id",
+      "contextKey",
+    ])
+    .index("by_section_and_locale_and_scopeMode_and_signalDay", [
+      "section",
+      "locale",
+      "scopeMode",
+      "signalDay",
+    ]),
+
+  /**
+   * Ranked popularity read model for bounded homepage and route queries.
+   */
+  learningPopularityCounters: defineTable({
+    ...learningGraphIdentityValidator.fields,
+    ...learningContextStorageFields,
+    content_id: graphContentIdValidator,
+    description: v.optional(v.string()),
+    locale: localeValidator,
+    materialDomain: v.optional(materialValidator),
+    route: v.string(),
+    score: v.number(),
+    section: nakafaSectionValidator,
+    scopeMode: learningPopularityScopeValidator,
+    sourcePath: v.string(),
+    title: v.string(),
+    updatedAt: v.number(),
+    windowKey: learningPopularityWindowValidator,
+  })
+    .index("by_windowKey_and_scopeMode_and_content_id_and_contextKey", [
+      "windowKey",
+      "scopeMode",
+      "content_id",
+      "contextKey",
+    ])
+    .index("by_section_locale_scope_window_score_id", [
+      "section",
+      "locale",
+      "scopeMode",
+      "windowKey",
+      "score",
       "content_id",
     ]),
 
@@ -260,7 +371,10 @@ const tables = {
     displayGroupTitle: v.optional(v.string()),
     iconKey: v.optional(navigationIconKeyValidator),
     kind: publicRouteKindValidator,
+    level: v.optional(navigationLevelValidator),
     locale: localeValidator,
+    materialCardDescription: v.optional(v.string()),
+    materialCardTitle: v.optional(v.string()),
     materialDomain: v.optional(materialValidator),
     materialKey: v.optional(v.string()),
     nodeKey: v.optional(v.string()),
@@ -311,6 +425,7 @@ const tables = {
       "publicPath",
     ])
     .index("by_materialKey_and_locale", ["materialKey", "locale"])
+    .index("by_locale_and_sourcePath", ["locale", "sourcePath"])
     .index("by_locale_and_sitemap_and_publicPath", [
       "locale",
       "sitemap",

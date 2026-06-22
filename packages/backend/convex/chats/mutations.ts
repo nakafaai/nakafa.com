@@ -131,6 +131,8 @@ export const saveMessage = mutation({
       role: message.role,
       identifier: message.identifier,
       modelId: message.modelId,
+      ninaContextSnapshot: message.ninaContextSnapshot,
+      ninaContextTransition: message.ninaContextTransition,
     });
 
     const partIds = await insertParts(ctx, messageId, parts);
@@ -192,6 +194,8 @@ export const createChatWithMessage = mutation({
       role: args.message.role,
       identifier: args.message.identifier,
       modelId: args.message.modelId,
+      ninaContextSnapshot: args.message.ninaContextSnapshot,
+      ninaContextTransition: args.message.ninaContextTransition,
     });
 
     const partIds = await insertParts(ctx, messageId, args.parts);
@@ -289,6 +293,8 @@ export const saveAssistantResponse = internalMutation({
       totalTokens: message.totalTokens,
       credits: creditUsage?.credits,
       generationStatus: "complete",
+      ninaContextSnapshot: message.ninaContextSnapshot,
+      ninaContextTransition: message.ninaContextTransition,
     });
 
     const partIds = await insertParts(ctx, messageId, parts);

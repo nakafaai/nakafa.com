@@ -73,6 +73,12 @@ export interface PublicLearningIndex {
   }): { href: string; label: string } | undefined;
   /** Resolves a localized public path through exact and virtual route indexes. */
   resolveRouteByPath(path: string, locale: Locale): PublicRoute | undefined;
+  /** Adds a validated material context hint to a canonical material href. */
+  toContextualMaterialHref(input: {
+    context: MaterialContextIdentity;
+    href: string;
+    route: MaterialRouteIdentity;
+  }): string;
 }
 
 /**
@@ -175,6 +181,19 @@ export function createPublicLearningIndex({
     return materialContextIndex.resolveHeaderLink(input);
   }
 
+  /** Adds a material context query only when the target route validates it. */
+  function toContextualMaterialHref(input: {
+    context: MaterialContextIdentity;
+    href: string;
+    route: MaterialRouteIdentity;
+  }) {
+    return materialContextIndex.toContextualHref({
+      contextRoute: input.context,
+      href: input.href,
+      route: input.route,
+    });
+  }
+
   return {
     projectMaterialContextToLocale,
     projectPracticeDomainPath,
@@ -182,5 +201,6 @@ export function createPublicLearningIndex({
     projectRouteToLocale,
     resolveMaterialHeaderLink,
     resolveRouteByPath,
+    toContextualMaterialHref,
   };
 }

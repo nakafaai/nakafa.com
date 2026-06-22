@@ -1,5 +1,9 @@
 import { CHAT_GENERATION_FAILURE_CODES } from "@repo/ai/config/generation";
 import { ModelIdSchema } from "@repo/ai/config/model";
+import {
+  NinaContextSnapshotSchema,
+  NinaContextTransitionSchema,
+} from "@repo/ai/nina/context";
 import { Schema } from "effect";
 
 const ComponentUsageSchema = Schema.Struct({
@@ -17,6 +21,8 @@ export const MetadataSchema = Schema.Struct({
   ),
   generationStatus: Schema.optional(Schema.Literal("complete", "failed")),
   model: ModelIdSchema,
+  ninaContextSnapshot: Schema.optional(NinaContextSnapshotSchema),
+  ninaContextTransition: Schema.optional(NinaContextTransitionSchema),
   tokens: Schema.optional(
     Schema.Struct({
       breakdown: Schema.optional(

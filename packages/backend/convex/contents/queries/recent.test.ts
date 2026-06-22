@@ -1,5 +1,5 @@
 import { api } from "@repo/backend/convex/_generated/api";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   createConvexTestWithBetterAuth,
@@ -9,6 +9,10 @@ import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/lear
 import { describe, expect, it } from "vitest";
 
 const NOW = Date.parse("2026-01-01T00:00:00.000Z");
+const canonicalContext = {
+  contextKey: "canonical",
+  contextMode: "canonical",
+} as const;
 
 describe("contents/queries/recent", () => {
   it("returns recently viewed materials through graph route projections", async () => {
@@ -21,9 +25,10 @@ describe("contents/queries/recent", () => {
       const lessonId = await insertCurriculumLesson(ctx, "viewed");
       const ref = await insertMaterialRoute(ctx, "viewed");
 
-      await insertMaterialView(ctx, {
+      await insertMaterialRecent(ctx, {
         ref,
         lastViewedAt: NOW,
+        materialDomain: "mathematics",
         suffix: "viewed",
         userId: identity.userId,
       });
@@ -57,20 +62,19 @@ describe("contents/queries/recent", () => {
     expect(seeded.lessonId).not.toBe(seeded.ref.assetId);
   });
 
-  it("drops recently viewed materials without graph route projections", async () => {
+  it("drops recently viewed materials without material-domain projection", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, {
         now: NOW,
-        suffix: "recent-missing-route",
+        suffix: "recent-missing-domain",
       });
-      await insertCurriculumLesson(ctx, "missing-route");
-      const ref = getMaterialGraph("missing-route");
+      const ref = getMaterialGraph("missing-domain");
 
-      await insertMaterialView(ctx, {
+      await insertMaterialRecent(ctx, {
         ref,
         lastViewedAt: NOW,
-        suffix: "missing-route",
+        suffix: "missing-domain",
         userId: identity.userId,
       });
 
@@ -149,30 +153,35 @@ async function insertMaterialRoute(ctx: MutationCtx, suffix: string) {
   return identity;
 }
 
-/** Inserts one material content-view row for the signed-in user. */
-async function insertMaterialView(
+/** Inserts one signed-in Continue Learning read-model row. */
+async function insertMaterialRecent(
   ctx: MutationCtx,
   {
     ref,
     lastViewedAt,
+    materialDomain,
     suffix,
     userId,
   }: {
     ref: ReturnType<typeof getMaterialGraph>;
     lastViewedAt: number;
+    materialDomain?: Doc<"userLearningRecents">["materialDomain"];
     suffix: string;
     userId: Id<"users">;
   }
 ) {
-  await ctx.db.insert("contentViews", {
+  await ctx.db.insert("userLearningRecents", {
     ...ref,
+    ...canonicalContext,
     content_id: ref.assetId,
-    deviceId: "device-recent",
-    firstViewedAt: NOW,
+    description: `Description ${suffix}`,
     lastViewedAt,
     locale: "en",
-    route: getMaterialLessonRoute(suffix),
+    ...(materialDomain ? { materialDomain } : {}),
+    route: getPublicMaterialLessonRoute(suffix),
     section: "material",
+    sourcePath: getMaterialLessonRoute(suffix),
+    title: `Material ${suffix}`,
     userId,
   });
 }

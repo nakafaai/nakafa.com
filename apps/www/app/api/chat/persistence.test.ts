@@ -1,5 +1,9 @@
 // @vitest-environment node
 import { ModelIdSchema } from "@repo/ai/config/model";
+import type {
+  NinaContextSnapshot,
+  NinaContextTransition,
+} from "@repo/ai/nina/context";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -36,6 +40,35 @@ const message = {
   role: "user",
 } satisfies MyUIMessage;
 const modelId = ModelIdSchema.make("nakafa-lite");
+const ninaContextSnapshot = {
+  capturedAt: "2026-05-09T00:00:00.000Z",
+  learning: {
+    locale: "id",
+    slug: "materi/matematika/integral/jumlahan-riemann",
+    url: "https://nakafa.com/id/materi/matematika/integral/jumlahan-riemann",
+    verified: true,
+  },
+  source: "current-page",
+  tools: {
+    allowDeepResearch: true,
+    allowMath: true,
+    allowNakafa: true,
+    allowPageFetch: true,
+    evidenceScope: "verified-page",
+  },
+} satisfies NinaContextSnapshot;
+const ninaContextTransition = {
+  reason: "page-context",
+  toContextKey: "canonical:materi/matematika/integral/jumlahan-riemann",
+} satisfies NinaContextTransition;
+
+/** Adds the required Nina context fields for chat persistence tests. */
+function withNinaContext() {
+  return {
+    ninaContextSnapshot,
+    ninaContextTransition,
+  };
+}
 
 /** Returns one typed chat ID through the public persistence path. */
 async function savedChatId() {
@@ -46,6 +79,7 @@ async function savedChatId() {
       chatId: undefined,
       message,
       modelId,
+      ...withNinaContext(),
       token: "session-token",
     })
   );
@@ -75,6 +109,7 @@ describe("app/api/chat/persistence", () => {
         chatId: undefined,
         message,
         modelId,
+        ...withNinaContext(),
         token: "session-token",
       })
     );
@@ -86,6 +121,8 @@ describe("app/api/chat/persistence", () => {
         message: {
           identifier: "message-1",
           modelId,
+          ninaContextSnapshot,
+          ninaContextTransition,
           role: "user",
         },
         parts: [],
@@ -104,6 +141,7 @@ describe("app/api/chat/persistence", () => {
         chatId,
         message,
         modelId,
+        ...withNinaContext(),
         token: "session-token",
       })
     );
@@ -116,6 +154,8 @@ describe("app/api/chat/persistence", () => {
           chatId,
           identifier: "message-1",
           modelId,
+          ninaContextSnapshot,
+          ninaContextTransition,
           role: "user",
         },
         parts: [],
@@ -137,6 +177,7 @@ describe("app/api/chat/persistence", () => {
         chatId,
         message,
         modelId,
+        ...withNinaContext(),
         token: "session-token",
       })
     );

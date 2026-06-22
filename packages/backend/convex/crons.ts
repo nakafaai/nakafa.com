@@ -49,6 +49,16 @@ crons.interval(
 );
 
 /**
+ * Rebuilds finite popularity windows from audited daily signals.
+ */
+crons.cron(
+  "refresh learning popularity windows",
+  "15 0 * * *",
+  internal.contents.mutations.popularity.scheduleLearningPopularityRefreshes,
+  {}
+);
+
+/**
  * Populates audio generation queue every 30 minutes.
  */
 crons.interval(
