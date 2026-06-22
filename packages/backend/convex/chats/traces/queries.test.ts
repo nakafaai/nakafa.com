@@ -1,4 +1,5 @@
 import { api, internal } from "@repo/backend/convex/_generated/api";
+import { CAPABILITY_TRACE_BATCH_SIZE } from "@repo/backend/convex/chats/traces/spec";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -124,5 +125,61 @@ describe("chats/traces", () => {
     expect(result).toEqual({ deleted: 1, hasMore: false });
     expect(rows.map((row) => row._id)).toEqual([retainedId]);
     expect(rows.map((row) => row._id)).not.toContain(expiredId);
+  });
+
+  it("schedules a follow-up cleanup page when expired traces exceed one batch", async () => {
+    const t = createConvexTestWithBetterAuth();
+
+    await t.mutation(async (ctx) => {
+      const user = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "trace-cleanup-page",
+      });
+      const chatId = await ctx.db.insert("chats", {
+        title: "Trace cleanup page",
+        type: "study",
+        updatedAt: NOW,
+        userId: user.userId,
+        visibility: "private",
+      });
+
+      for (let index = 0; index < CAPABILITY_TRACE_BATCH_SIZE + 1; index++) {
+        await ctx.db.insert("ninaCapabilityTraces", {
+          capability: "nakafa",
+          chatId,
+          durationMs: 4,
+          endedAt: NOW,
+          evidence: {
+            capability: "nakafa",
+            status: "available",
+            summary: `retrieved lesson summary ${index}`,
+          },
+          expiresAt: NOW - 1,
+          responseMessageIdentifier: `response-${index}`,
+          startedAt: NOW - 4,
+          status: "available",
+          userId: user.userId,
+        });
+      }
+    });
+
+    const result = await t.mutation(
+      internal.chats.traces.mutations.deleteExpiredBatch,
+      { now: NOW }
+    );
+    const scheduledJobs = await t.query(
+      async (ctx) => await ctx.db.system.query("_scheduled_functions").collect()
+    );
+
+    expect(result).toEqual({
+      deleted: CAPABILITY_TRACE_BATCH_SIZE,
+      hasMore: true,
+    });
+    expect(scheduledJobs).toEqual([
+      expect.objectContaining({
+        args: [{ now: NOW }],
+        name: expect.stringContaining("deleteExpiredBatch"),
+      }),
+    ]);
   });
 });

@@ -25,7 +25,6 @@ import { createChatErrorReporter } from "@/app/api/chat/observability";
 import {
   createChatWithMessage,
   loadPinnedNinaContext,
-  prepareExistingChatMessage,
   saveChatMessage,
 } from "@/app/api/chat/persistence";
 import { createNinaStore } from "@/app/api/chat/store";
@@ -154,10 +153,6 @@ export function POST(req: Request) {
         return new Response(CHAT_ERRORS.INSUFFICIENT_CREDITS.code, {
           status: CHAT_ERRORS.INSUFFICIENT_CREDITS.status,
         });
-      }
-
-      if (id) {
-        yield* prepareExistingChatMessage({ chatId: id, message, token });
       }
 
       const pinnedContext =

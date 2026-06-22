@@ -295,6 +295,42 @@ describe("curriculumLessons/queries", () => {
 
     expect(results).toEqual([]);
   });
+
+  it("pages past filtered practice counters to fill Trending Subjects", async () => {
+    const t = createTrendingConvexTest();
+    const validRef = await t.mutation(async (ctx) => {
+      await insertPracticeCounter(ctx, {
+        materialDomain: "mathematics",
+        score: 100,
+        suffix: "practice-page",
+      });
+
+      return await insertSubjectCounter(ctx, {
+        materialDomain: "mathematics",
+        score: 50,
+        suffix: "valid-page",
+      });
+    });
+
+    const results = await t.query(
+      api.curriculumLessons.queries.getTrendingSubjects,
+      {
+        locale: "en",
+        limit: 1,
+        minViews: 5,
+        windowKey: getDefaultPopularityWindow(),
+      }
+    );
+
+    expect(results).toEqual([
+      expect.objectContaining({
+        assetId: validRef.assetId,
+        route: "subjects/mathematics/topic-valid-page/section-valid-page",
+        title: "Subject valid-page",
+        viewCount: 50,
+      }),
+    ]);
+  });
 });
 
 /** Inserts one ranked practice counter that must not hydrate as a subject. */

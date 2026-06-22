@@ -68,6 +68,19 @@ describe("nina/capability/result", () => {
     expect(result.evidence.status).toBe("limited");
   });
 
+  it("stores a bounded evidence summary while preserving full model-facing text", () => {
+    const text = "verified evidence ".repeat(120);
+    const result = capabilityResult({
+      capability: "nakafa",
+      status: "available",
+      text,
+    });
+
+    expect(result.text).toBe(text);
+    expect(result.evidence.summary.length).toBeLessThanOrEqual(1200);
+    expect(result.evidence.summary.endsWith("...")).toBe(true);
+  });
+
   it("preserves real usage for successful specialists", async () => {
     const tracker = usageRecorder();
     const result = specialistSuccess({

@@ -15,6 +15,8 @@ type AddUsage = (
   usage: LanguageModelUsage
 ) => EffectType.Effect<void>;
 
+const maxEvidenceSummaryCharacters = 1200;
+
 /** Tagged diagnostic used when a specialist throws a non-Error value. */
 class SpecialistUnknownFailure extends Schema.TaggedError<SpecialistUnknownFailure>()(
   "SpecialistUnknownFailure",
@@ -43,10 +45,19 @@ export function capabilityResult({
       ...(limitations ? { limitations: [...limitations] } : {}),
       ...(refs ? { refs: [...refs] } : {}),
       status,
-      summary: text,
+      summary: summarizeCapabilityEvidence(text),
     }),
     text,
   });
+}
+
+/** Keeps persisted capability evidence useful without storing raw transcripts. */
+function summarizeCapabilityEvidence(text: string) {
+  if (text.length <= maxEvidenceSummaryCharacters) {
+    return text;
+  }
+
+  return `${text.slice(0, maxEvidenceSummaryCharacters - 3)}...`;
 }
 
 /** Converts completed LearningCapability evidence into the chat tool result shape. */

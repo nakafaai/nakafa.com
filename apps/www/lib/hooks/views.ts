@@ -7,14 +7,20 @@ export function createContentViewKey({
   contentId,
   context,
   locale,
+  signedInUserId,
 }: {
   readonly authenticated: boolean;
   readonly contentId?: string | null;
   readonly context?: LearningContextInput;
   readonly locale: Locale;
+  readonly signedInUserId?: string | null;
 }) {
+  const viewerKey = authenticated
+    ? `user:${signedInUserId ?? "pending"}`
+    : "anonymous";
+
   return [
-    authenticated ? "signed-in" : "anonymous",
+    viewerKey,
     locale,
     contentId ?? "untracked",
     context?.mode ?? "canonical",

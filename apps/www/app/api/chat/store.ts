@@ -1,6 +1,9 @@
 import type { ModelId } from "@repo/ai/config/model";
 import { generateTitle } from "@repo/ai/features/title";
-import type { CapabilityTrace } from "@repo/ai/nina/capability/spec";
+import {
+  type CapabilityTrace as CapabilityTraceShape,
+  encodeCapabilityTrace,
+} from "@repo/ai/nina/capability/spec";
 import type { NinaStore } from "@repo/ai/nina/runtime/store";
 import { NinaStoreError } from "@repo/ai/nina/runtime/store";
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
@@ -92,12 +95,12 @@ export function createNinaStore({
           )
         );
       }),
-    saveTrace: (trace: CapabilityTrace) =>
+    saveTrace: (trace: CapabilityTraceShape) =>
       Effect.tryPromise({
         try: () =>
           fetchMutation(
             convexApi.chats.traces.mutations.save,
-            { chatId, trace },
+            { chatId, trace: encodeCapabilityTrace(trace) },
             { token }
           ),
         catch: () =>

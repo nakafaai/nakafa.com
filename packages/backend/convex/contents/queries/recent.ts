@@ -17,6 +17,11 @@ import { Effect, Schema } from "effect";
 
 type RecentlyViewedSubject = Infer<typeof recentlyViewedSubjectValidator>;
 
+const defaultRecentLearningLimit = 5;
+const maxRecentLearningLimit = 20;
+const recentLearningPageSize = 20;
+const recentLearningMaxPages = 5;
+
 /** Convex validator for bounded Continue Learning query inputs. */
 const getRecentlyViewedArgs = {
   locale: localeValidator,
@@ -50,39 +55,61 @@ function toRecentLearningIoError(error: unknown) {
 /** Reads the authenticated learner's ranked Continue Learning rows. */
 const listRecentLearning = Effect.fn("contents.recent.listRecentLearning")(
   function* (ctx: QueryCtx, args: ListRecentLearningArgs) {
-    const limit = args.limit ?? 5;
+    const rawLimit = args.limit ?? defaultRecentLearningLimit;
+    const limit = Math.min(Math.max(rawLimit, 0), maxRecentLearningLimit);
     const user = yield* Effect.tryPromise({
       try: () => getOptionalAppUser(ctx),
       catch: toRecentLearningIoError,
     });
 
-    if (!user) {
+    if (!(user && limit > 0)) {
       return [];
     }
 
-    const recentRows = yield* Effect.tryPromise({
-      try: () =>
-        ctx.db
-          .query("userLearningRecents")
-          .withIndex("by_userId_and_locale_and_section_and_lastViewedAt", (q) =>
-            q
-              .eq("userId", user.appUser._id)
-              .eq("locale", args.locale)
-              .eq("section", "material")
-          )
-          .order("desc")
-          .take(limit),
-      catch: toRecentLearningIoError,
-    });
-
     const subjects: RecentlyViewedSubject[] = [];
+    let cursor: string | null = null;
+    let pagesRead = 0;
 
-    for (const row of recentRows) {
-      const subject = yield* toRecentlyViewedSubject(ctx.db, row);
+    while (subjects.length < limit && pagesRead < recentLearningMaxPages) {
+      const recentRows = yield* Effect.tryPromise({
+        try: () =>
+          ctx.db
+            .query("userLearningRecents")
+            .withIndex(
+              "by_userId_and_locale_and_section_and_lastViewedAt",
+              (q) =>
+                q
+                  .eq("userId", user.appUser._id)
+                  .eq("locale", args.locale)
+                  .eq("section", "material")
+            )
+            .order("desc")
+            .paginate({
+              cursor,
+              numItems: recentLearningPageSize,
+            }),
+        catch: toRecentLearningIoError,
+      });
 
-      if (subject) {
-        subjects.push(subject);
+      pagesRead += 1;
+
+      for (const row of recentRows.page) {
+        const subject = yield* toRecentlyViewedSubject(ctx.db, row);
+
+        if (subject) {
+          subjects.push(subject);
+        }
+
+        if (subjects.length >= limit) {
+          break;
+        }
       }
+
+      if (recentRows.isDone || subjects.length >= limit) {
+        break;
+      }
+
+      cursor = recentRows.continueCursor;
     }
 
     return subjects;

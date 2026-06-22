@@ -27,3 +27,11 @@ export const deleteExpiredBatch = internalMutation({
   returns: deleteExpiredCapabilityTracesResultValidator,
   handler: async (ctx, args) => await deleteExpiredCapabilityTraces(ctx, args),
 });
+
+/** Starts the scheduled retention sweep for expired capability trace summaries. */
+export const sweepExpired = internalMutation({
+  args: {},
+  returns: deleteExpiredCapabilityTracesResultValidator,
+  handler: async (ctx) =>
+    await deleteExpiredCapabilityTraces(ctx, { now: Date.now() }),
+});

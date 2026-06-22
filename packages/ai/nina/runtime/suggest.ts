@@ -4,7 +4,7 @@ import {
   getFastModelProviderOptions,
 } from "@repo/ai/config/model";
 import { gatewayProviderOptions } from "@repo/ai/config/routing";
-import { backgroundGenerationTimeout } from "@repo/ai/config/timeouts";
+import { suggestionGenerationTimeout } from "@repo/ai/config/timeouts";
 import { createEffectSchema } from "@repo/ai/lib/effect-schema";
 import { nakafaSuggestions } from "@repo/ai/prompt/suggestions";
 import type { MyUIMessage } from "@repo/ai/types/message";
@@ -67,7 +67,7 @@ export const writeNinaSuggestions = Effect.fn("nina.suggest.write")(function* ({
       gateway: gatewayProviderOptions,
       google: getFastModelProviderOptions(defaultModel),
     },
-    timeout: backgroundGenerationTimeout,
+    timeout: suggestionGenerationTimeout,
   });
 
   const dataPartId = crypto.randomUUID();

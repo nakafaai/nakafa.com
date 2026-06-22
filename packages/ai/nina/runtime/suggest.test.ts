@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { suggestionGenerationTimeout } from "@repo/ai/config/timeouts";
 import { writeNinaSuggestions } from "@repo/ai/nina/runtime/suggest";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { ModelMessage, UIMessageStreamWriter } from "ai";
@@ -83,6 +84,82 @@ describe("nina/runtime/suggest", () => {
         data: {
           data: ["Apa contoh lainnya?", "Beri latihan singkat."],
         },
+      })
+    );
+  });
+
+  it("prunes tool-call transcript parts before generating suggestions", async () => {
+    const writer = createWriter();
+    const transcriptWithToolCall = [
+      {
+        content: "Hitung 2 + 3.",
+        role: "user",
+      },
+      {
+        content: [
+          {
+            text: "Saya cek hitungannya.",
+            type: "text",
+          },
+          {
+            input: { expression: "2+3" },
+            toolCallId: "tool-1",
+            toolName: "math",
+            type: "tool-call",
+          },
+        ],
+        role: "assistant",
+      },
+      {
+        content: [
+          {
+            output: { type: "text", value: "5" },
+            toolCallId: "tool-1",
+            toolName: "math",
+            type: "tool-result",
+          },
+        ],
+        role: "tool",
+      },
+      {
+        content: "Karena dua benda ditambah tiga benda menjadi lima benda.",
+        role: "assistant",
+      },
+    ] satisfies ModelMessage[];
+    streamText.mockReturnValue({
+      output: Promise.resolve({
+        suggestions: ["Beri contoh benda nyata."],
+      }),
+      partialOutputStream: suggestionPartials([]),
+    });
+
+    await Effect.runPromise(
+      writeNinaSuggestions({
+        locale: "id",
+        messages: transcriptWithToolCall,
+        writer,
+      })
+    );
+
+    expect(streamText).toHaveBeenCalledWith(
+      expect.objectContaining({
+        messages: [
+          { content: "Hitung 2 + 3.", role: "user" },
+          {
+            content: [
+              {
+                text: "Saya cek hitungannya.",
+                type: "text",
+              },
+            ],
+            role: "assistant",
+          },
+          {
+            content: "Karena dua benda ditambah tiga benda menjadi lima benda.",
+            role: "assistant",
+          },
+        ],
+        timeout: suggestionGenerationTimeout,
       })
     );
   });

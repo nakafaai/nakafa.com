@@ -179,6 +179,63 @@ describe("contents/queries/recent", () => {
 
     expect(results).toEqual([]);
   });
+
+  it("pages past filtered practice recents to fill Continue Learning cards", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const seeded = await t.mutation(async (ctx) => {
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "recent-page-past-practice",
+      });
+      const practiceRef = await insertPracticeRoute(
+        ctx,
+        "recent-page-practice"
+      );
+      const materialRef = await insertMaterialRoute(
+        ctx,
+        "recent-page-material"
+      );
+
+      for (let index = 0; index < 20; index++) {
+        await insertMaterialRecent(ctx, {
+          ref: practiceRef,
+          lastViewedAt: NOW + 100 - index,
+          materialDomain: "mathematics",
+          suffix: `recent-page-practice-${index}`,
+          userId: identity.userId,
+        });
+      }
+
+      await insertMaterialRecent(ctx, {
+        ref: materialRef,
+        lastViewedAt: NOW,
+        materialDomain: "mathematics",
+        suffix: "recent-page-material",
+        userId: identity.userId,
+      });
+
+      return { ...identity, materialRef };
+    });
+
+    const results = await t
+      .withIdentity({
+        sessionId: seeded.sessionId,
+        subject: seeded.authUserId,
+      })
+      .query(api.contents.queries.recent.getRecentlyViewed, {
+        locale: "en",
+        limit: 1,
+      });
+
+    expect(results).toEqual([
+      expect.objectContaining({
+        assetId: seeded.materialRef.assetId,
+        route:
+          "subjects/mathematics/topic-recent-page-material/section-recent-page-material",
+        title: "Material recent-page-material",
+      }),
+    ]);
+  });
 });
 
 /** Inserts one curriculum lesson row for recently viewed query tests. */

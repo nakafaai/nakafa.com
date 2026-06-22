@@ -348,6 +348,79 @@ describe("contents/queries/audio", () => {
     expect(result).toEqual([]);
   });
 
+  it("pages past non-audio popularity rows to find queue candidates", async () => {
+    const t = convexTest(schema, convexModules);
+
+    await t.mutation(async (ctx) => {
+      for (
+        let index = 0;
+        index < MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE;
+        index++
+      ) {
+        const slug = `articles/politics/non-audio-candidate-${index}`;
+        const graph = await insertContentRoute(ctx, {
+          kind: "article",
+          locale: "en",
+          route: slug,
+          title: `Non Audio Candidate ${index}`,
+        });
+
+        await insertPopularityCounter(ctx, {
+          graph,
+          locale: "en",
+          route: slug,
+          score: 1000 - index,
+          section: "articles",
+          title: `Non Audio Candidate ${index}`,
+        });
+      }
+
+      const audioSlug = "articles/politics/audio-ready-after-page";
+      const audioGraph = await insertContentRoute(ctx, {
+        kind: "article",
+        locale: "en",
+        route: audioSlug,
+        title: "Audio Ready After Page",
+      });
+
+      await ctx.db.insert("audioContentSources", {
+        ...getTestAudioContent({
+          contentHash: "source-audio-ready-after-page",
+          locale: "en",
+          route: audioSlug,
+        }),
+        syncedAt: 2,
+      });
+      await insertPopularityCounter(ctx, {
+        graph: audioGraph,
+        locale: "en",
+        route: audioSlug,
+        score: 100,
+        section: "articles",
+        title: "Audio Ready After Page",
+      });
+    });
+
+    const result = await t.query(
+      internal.contents.queries.audio.getPopularContentForAudioQueue,
+      {}
+    );
+
+    expect(result).toEqual([
+      {
+        sourceContent: expect.objectContaining({
+          contentHash: "source-audio-ready-after-page",
+          content_id: getGraph("en", "articles/politics/audio-ready-after-page")
+            .content_id,
+          contentType: "article",
+          locale: "en",
+          route: "articles/politics/audio-ready-after-page",
+        }),
+        viewCount: 100,
+      },
+    ]);
+  });
+
   it("ignores popularity rows below the queue threshold before source lookup", async () => {
     const t = convexTest(schema, convexModules);
 

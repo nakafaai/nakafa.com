@@ -78,6 +78,17 @@ export class CapabilityTrace extends Schema.Class<CapabilityTrace>(
   toolCallId: Schema.optional(Schema.String),
 }) {}
 
+export type CapabilityTraceEncoded = Schema.Schema.Encoded<
+  typeof CapabilityTrace
+>;
+
+/** Encodes a schema-owned trace instance into a plain operational data value. */
+export function encodeCapabilityTrace(
+  trace: CapabilityTrace
+): CapabilityTraceEncoded {
+  return Schema.encodeSync(CapabilityTrace)(trace);
+}
+
 /** Expected LearningCapability failure surfaced through the Effect channel. */
 export class LearningCapabilityError extends Schema.TaggedError<LearningCapabilityError>()(
   "LearningCapabilityError",

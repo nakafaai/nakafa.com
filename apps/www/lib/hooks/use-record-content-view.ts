@@ -10,6 +10,7 @@ import { useConvexAuth, useMutation } from "convex/react";
 import { Effect } from "effect";
 import { useEffect, useState } from "react";
 import { useContentViews } from "@/lib/context/use-content-views";
+import { useUser } from "@/lib/context/use-user";
 import { createContentViewKey } from "@/lib/hooks/views";
 
 /** Client-side graph content-view recording configuration. */
@@ -42,6 +43,10 @@ export function useRecordContentView({
   const markAsViewed = useContentViews((s) => s.markAsViewed);
   const isViewed = useContentViews((s) => s.isViewed);
   const { isAuthenticated, isLoading } = useConvexAuth();
+  const { isUserPending, signedInUserId } = useUser((state) => ({
+    isUserPending: state.isPending,
+    signedInUserId: state.user?.appUser._id ?? null,
+  }));
 
   const documentState = useDocumentVisibility();
   const isVisible = documentState === "visible";
@@ -50,6 +55,7 @@ export function useRecordContentView({
     locale,
     contentId,
     context,
+    signedInUserId,
   });
   const [defaultDeviceId] = useState(
     () => `${Date.now()}-${generateNanoId(9)}`
@@ -64,7 +70,11 @@ export function useRecordContentView({
       return;
     }
 
-    if (isLoading) {
+    if (isLoading || isUserPending) {
+      return;
+    }
+
+    if (isAuthenticated && !signedInUserId) {
       return;
     }
 
@@ -111,12 +121,15 @@ export function useRecordContentView({
     context,
     delay,
     deviceId,
+    isAuthenticated,
     isLoading,
     isViewed,
+    isUserPending,
     isVisible,
     locale,
     markAsViewed,
     recordView,
+    signedInUserId,
     viewKey,
   ]);
 }

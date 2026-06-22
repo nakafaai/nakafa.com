@@ -18,13 +18,19 @@ import {
   getUnknownErrorMessage,
   runConvexProgram,
 } from "@repo/backend/convex/lib/effect";
-import { SUPPORTED_CONTENT_LOCALES } from "@repo/backend/convex/lib/validators/contents";
+import {
+  type Locale,
+  SUPPORTED_CONTENT_LOCALES,
+} from "@repo/backend/convex/lib/validators/contents";
 import { v } from "convex/values";
 import { Effect, Schema } from "effect";
 
 type PopularityCounterRow = Doc<"learningPopularityCounters">;
 
 const popularAudioIoFailedCode = "POPULAR_AUDIO_IO_FAILED";
+const popularAudioCandidatePageCount = 3;
+const maxPopularAudioSourceLookupsPerType =
+  MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE * popularAudioCandidatePageCount;
 
 /** Raised when the audio queue candidate query cannot read its ranked models. */
 class PopularAudioIoError extends Schema.TaggedError<PopularAudioIoError>()(
@@ -43,21 +49,21 @@ function toPopularAudioIoError(error: unknown) {
   });
 }
 
-/** Checks whether an optional audio item resolved to a queue candidate. */
-function isPopularAudioItem(
-  item: PopularAudioContentItem | null
-): item is PopularAudioContentItem {
-  return item !== null;
-}
-
-/** Reads ranked popularity rows for one content section across supported locales. */
-const loadPopularRows = Effect.fn("contents.audio.loadPopularRows")(function* (
+/** Reads bounded ranked popularity pages for one content section and locale. */
+const loadPopularRowsForLocale = Effect.fn(
+  "contents.audio.loadPopularRowsForLocale"
+)(function* (
   ctx: QueryCtx,
-  section: PopularityCounterRow["section"]
+  section: PopularityCounterRow["section"],
+  locale: Locale
 ) {
   const windowKey = getLifetimePopularityWindow();
-  const pages = yield* Effect.forEach(SUPPORTED_CONTENT_LOCALES, (locale) =>
-    Effect.tryPromise({
+  const rows: PopularityCounterRow[] = [];
+  let cursor: string | null = null;
+  let pagesRead = 0;
+
+  while (pagesRead < popularAudioCandidatePageCount) {
+    const page = yield* Effect.tryPromise({
       try: () =>
         ctx.db
           .query("learningPopularityCounters")
@@ -69,16 +75,39 @@ const loadPopularRows = Effect.fn("contents.audio.loadPopularRows")(function* (
               .eq("windowKey", windowKey)
           )
           .order("desc")
-          .take(MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE),
+          .paginate({
+            cursor,
+            numItems: MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE,
+          }),
       catch: toPopularAudioIoError,
-    })
+    });
+
+    rows.push(...page.page.filter((row) => row.score >= MIN_VIEW_THRESHOLD));
+    pagesRead += 1;
+
+    if (page.isDone) {
+      break;
+    }
+
+    cursor = page.continueCursor;
+  }
+
+  return rows;
+});
+
+/** Reads ranked popularity rows for one content section across supported locales. */
+const loadPopularRows = Effect.fn("contents.audio.loadPopularRows")(function* (
+  ctx: QueryCtx,
+  section: PopularityCounterRow["section"]
+) {
+  const pages = yield* Effect.forEach(SUPPORTED_CONTENT_LOCALES, (locale) =>
+    loadPopularRowsForLocale(ctx, section, locale)
   );
 
   return pages
     .flat()
-    .filter((row) => row.score >= MIN_VIEW_THRESHOLD)
     .sort((left, right) => right.score - left.score)
-    .slice(0, MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE);
+    .slice(0, maxPopularAudioSourceLookupsPerType);
 });
 
 /** Resolves one ranked popularity row to an audio source candidate. */
@@ -101,20 +130,38 @@ const loadAudioItem = Effect.fn("contents.audio.loadAudioItem")(function* (
   };
 });
 
+/** Resolves enough audio-ready items from bounded ranked popularity candidates. */
+const loadPopularAudioItems = Effect.fn("contents.audio.loadPopularAudioItems")(
+  function* (ctx: QueryCtx, section: PopularityCounterRow["section"]) {
+    const rows = yield* loadPopularRows(ctx, section);
+    const items: PopularAudioContentItem[] = [];
+
+    for (const row of rows) {
+      const item = yield* loadAudioItem(ctx, row);
+
+      if (item) {
+        items.push(item);
+      }
+
+      if (items.length >= MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE) {
+        break;
+      }
+    }
+
+    return items;
+  }
+);
+
 /** Reads current popular audio queue candidates from ranked learning counters. */
 const listPopularAudioContent = Effect.fn(
   "contents.audio.listPopularAudioContent"
 )(function* (ctx: QueryCtx) {
-  const [articleRows, subjectRows] = yield* Effect.all([
-    loadPopularRows(ctx, "articles"),
-    loadPopularRows(ctx, "material"),
+  const [articleItems, subjectItems] = yield* Effect.all([
+    loadPopularAudioItems(ctx, "articles"),
+    loadPopularAudioItems(ctx, "material"),
   ]);
-  const sourceItems = yield* Effect.forEach(
-    [...articleRows, ...subjectRows],
-    (row) => loadAudioItem(ctx, row)
-  );
 
-  return mergePopularAudioContentItems(sourceItems.filter(isPopularAudioItem));
+  return mergePopularAudioContentItems([...articleItems, ...subjectItems]);
 });
 
 /**

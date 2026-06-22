@@ -1,3 +1,4 @@
+import { internal } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type {
   MutationCtx,
@@ -99,8 +100,18 @@ export async function deleteExpiredCapabilityTraces(
     await ctx.db.delete(trace._id);
   }
 
+  const hasMore = expired.length > CAPABILITY_TRACE_BATCH_SIZE;
+
+  if (hasMore) {
+    await ctx.scheduler.runAfter(
+      0,
+      internal.chats.traces.mutations.deleteExpiredBatch,
+      { now: args.now }
+    );
+  }
+
   return {
     deleted: page.length,
-    hasMore: expired.length > CAPABILITY_TRACE_BATCH_SIZE,
+    hasMore,
   };
 }

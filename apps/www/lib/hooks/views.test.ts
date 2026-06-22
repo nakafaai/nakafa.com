@@ -13,6 +13,20 @@ describe("createContentViewKey", () => {
     ).not.toEqual(createContentViewKey({ ...input, authenticated: true }));
   });
 
+  it("keeps signed-in learners in separate dedupe buckets", () => {
+    const input = {
+      authenticated: true,
+      contentId: "asset:id:material:mathematics:algebra:linear",
+      locale: "id",
+    } as const;
+
+    expect(
+      createContentViewKey({ ...input, signedInUserId: "user-first" })
+    ).not.toEqual(
+      createContentViewKey({ ...input, signedInUserId: "user-second" })
+    );
+  });
+
   it("preserves verified placement context in the dedupe key", () => {
     expect(
       createContentViewKey({
@@ -24,9 +38,10 @@ describe("createContentViewKey", () => {
           programKey: "snbt-2026",
         },
         locale: "id",
+        signedInUserId: "user-1",
       })
     ).toBe(
-      "signed-in:id:asset:id:material:mathematics:algebra:linear:placement:snbt-2026:node:linear"
+      "user:user-1:id:asset:id:material:mathematics:algebra:linear:placement:snbt-2026:node:linear"
     );
   });
 

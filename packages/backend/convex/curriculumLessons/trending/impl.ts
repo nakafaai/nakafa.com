@@ -21,6 +21,7 @@ import { Effect } from "effect";
 
 const defaultTrendingSubjectsLimit = 6;
 const defaultTrendingMinViews = 5;
+const trendingRankingMaxPages = 5;
 
 /** Maps thrown Convex IO failures into the trending-subject error channel. */
 function toTrendingSubjectIoError(error: unknown) {
@@ -53,17 +54,33 @@ const loadRankedPopularityCounterIds = Effect.fn(
     readonly windowKey: LearningPopularityWindow;
   }
 ) {
-  const result = yield* Effect.tryPromise({
-    try: () =>
-      learningPopularityRankings.paginate(ctx, {
-        namespace: ["material", args.locale, "global", settings.windowKey],
-        order: "asc",
-        pageSize: settings.limit,
-      }),
-    catch: toTrendingSubjectIoError,
-  });
+  const ids: Doc<"learningPopularityCounters">["_id"][] = [];
+  let cursor: string | undefined;
+  let pagesRead = 0;
 
-  return result.page.map((item) => item.id);
+  while (pagesRead < trendingRankingMaxPages) {
+    const result = yield* Effect.tryPromise({
+      try: () =>
+        learningPopularityRankings.paginate(ctx, {
+          namespace: ["material", args.locale, "global", settings.windowKey],
+          order: "asc",
+          pageSize: settings.limit,
+          ...(cursor ? { cursor } : {}),
+        }),
+      catch: toTrendingSubjectIoError,
+    });
+
+    ids.push(...result.page.map((item) => item.id));
+    pagesRead += 1;
+
+    if (result.isDone) {
+      break;
+    }
+
+    cursor = result.cursor;
+  }
+
+  return ids;
 });
 
 /** Hydrates aggregate IDs back into current counter rows without changing order. */
@@ -159,9 +176,9 @@ function toTrendingSubject(
 /**
  * Lists trending subjects from the ranked popularity read model.
  *
- * The query uses equality filters for section, locale, and product-approved
- * window, then reads only the top-N score rows. No raw event or bucket scan is
- * performed at request time.
+ * The query uses the Aggregate ranked index for section, locale, and approved
+ * window, then advances through bounded pages when stale rows are filtered.
+ * No raw event or bucket scan is performed at request time.
  * @see https://docs.convex.dev/understanding/best-practices/
  */
 export const listTrendingSubjects = Effect.fn(
@@ -189,7 +206,11 @@ export const listTrendingSubjects = Effect.fn(
     }
 
     subjects.push(...toTrendingSubject(row, route));
+
+    if (subjects.length >= settings.limit) {
+      break;
+    }
   }
 
-  return subjects;
+  return subjects.slice(0, settings.limit);
 });

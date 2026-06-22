@@ -307,4 +307,69 @@ describe("chats/mutations", () => {
       }),
     ]);
   });
+
+  it("atomically replaces an existing user message and its generated tail", async () => {
+    const t = createConvexTestWithBetterAuth();
+    posthogTest.register(t);
+    const identity = await t.mutation(
+      async (ctx) =>
+        await seedAuthenticatedUser(ctx, {
+          now: NOW,
+          suffix: "rewrite-owner",
+        })
+    );
+    const owner = t.withIdentity({
+      sessionId: identity.sessionId,
+      subject: identity.authUserId,
+    });
+    const { chatId } = await owner.mutation(
+      api.chats.mutations.createChatWithMessage,
+      {
+        type: "study",
+        message: {
+          role: "user",
+          identifier: "user-rewrite",
+          modelId: "nakafa-lite",
+        },
+        parts: [],
+      }
+    );
+
+    await t.mutation(internal.chats.mutations.saveAssistantResponse, {
+      userId: identity.userId,
+      message: {
+        chatId,
+        role: "assistant",
+        identifier: "assistant-tail",
+        modelId: "nakafa-lite",
+      },
+      parts: [],
+    });
+
+    const replacement = await owner.mutation(api.chats.mutations.saveMessage, {
+      message: {
+        chatId,
+        role: "user",
+        identifier: "user-rewrite",
+        modelId: "nakafa-lite",
+      },
+      parts: [],
+    });
+    const messages = await t.query(
+      async (ctx) =>
+        await ctx.db
+          .query("messages")
+          .withIndex("by_chatId", (q) => q.eq("chatId", chatId))
+          .collect()
+    );
+
+    expect(messages).toEqual([
+      expect.objectContaining({
+        _id: replacement.messageId,
+        chatId,
+        identifier: "user-rewrite",
+        role: "user",
+      }),
+    ]);
+  });
 });

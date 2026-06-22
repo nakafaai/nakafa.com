@@ -1,9 +1,5 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { ninaContextSnapshotValidator } from "@repo/backend/convex/chats/context";
-import {
-  getMessageByIdentifier,
-  verifyChatOwnership,
-} from "@repo/backend/convex/chats/helpers";
 import { hydrateMessagePage } from "@repo/backend/convex/chats/read";
 import {
   chatTypeValidator,
@@ -11,10 +7,7 @@ import {
   paginatedChatsValidator,
   paginatedMessagesValidator,
 } from "@repo/backend/convex/chats/schema";
-import {
-  getOptionalAppUser,
-  requireAuth,
-} from "@repo/backend/convex/lib/helpers/auth";
+import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
 import { requireChatAccess } from "@repo/backend/convex/lib/helpers/chat";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { paginationOptsValidator } from "convex/server";
@@ -292,41 +285,6 @@ export const loadMessagesPage = query({
     return {
       ...page,
       page: await hydrateMessagePage(ctx.db, page.page),
-    };
-  },
-});
-
-/** Find one persisted chat message by the UI message identifier. */
-export const getMessageMatch = query({
-  args: {
-    chatId: vv.id("chats"),
-    identifier: v.string(),
-  },
-  returns: v.union(
-    v.null(),
-    v.object({
-      creationTime: v.number(),
-      messageId: vv.id("messages"),
-    })
-  ),
-  handler: async (ctx, args) => {
-    const user = await requireAuth(ctx);
-
-    await verifyChatOwnership(ctx, args.chatId, user.appUser._id);
-
-    const message = await getMessageByIdentifier(
-      ctx,
-      args.chatId,
-      args.identifier
-    );
-
-    if (!message) {
-      return null;
-    }
-
-    return {
-      creationTime: message._creationTime,
-      messageId: message._id,
     };
   },
 });
