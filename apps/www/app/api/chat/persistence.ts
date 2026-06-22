@@ -124,23 +124,26 @@ export const saveChatMessage = Effect.fn("chat.saveChatMessage")(function* ({
 });
 
 /**
- * Loads the newest stored Nina snapshot for an existing chat.
+ * Loads the newest stored Nina snapshot that can pin the incoming turn.
  *
- * The Convex query is bounded and ownership-checked. Decoding happens here so
- * app chat routing never replays unvalidated persisted context metadata.
+ * Convex resolves existing message identifiers against the retained transcript,
+ * so rewrite tails cannot leak future context into the replacement message.
+ * Decoding happens here so app routing never replays unvalidated metadata.
  */
 export const loadPinnedNinaContext = Effect.fn("chat.loadPinnedNinaContext")(
   function* ({
     chatId,
+    messageIdentifier,
     token,
   }: {
     readonly chatId: Id<"chats">;
+    readonly messageIdentifier: string;
     readonly token: string;
   }) {
     const storedContext = yield* Effect.tryPromise(() =>
       fetchQuery(
-        convexApi.chats.queries.getLatestNinaContext,
-        { chatId },
+        convexApi.chats.queries.getPinnedNinaContextForTurn,
+        { chatId, messageIdentifier },
         { token }
       )
     );

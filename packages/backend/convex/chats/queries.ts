@@ -1,5 +1,8 @@
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { query } from "@repo/backend/convex/_generated/server";
 import { ninaContextSnapshotValidator } from "@repo/backend/convex/chats/context";
+import { getMessageByIdentifier } from "@repo/backend/convex/chats/helpers";
 import { hydrateMessagePage } from "@repo/backend/convex/chats/read";
 import {
   chatTypeValidator,
@@ -15,6 +18,33 @@ import { ConvexError, v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
 
 const LATEST_NINA_CONTEXT_SCAN_LIMIT = 20;
+
+/**
+ * Reads the bounded newest messages that can pin Nina context for a turn.
+ * When a rewrite target exists, messages at or after that point are excluded
+ * because the save mutation will delete them before inserting the replacement.
+ */
+function loadPinnedContextMessages(
+  ctx: QueryCtx,
+  chatId: Id<"chats">,
+  beforeCreationTime?: number
+) {
+  if (beforeCreationTime === undefined) {
+    return ctx.db
+      .query("messages")
+      .withIndex("by_chatId", (q) => q.eq("chatId", chatId))
+      .order("desc")
+      .take(LATEST_NINA_CONTEXT_SCAN_LIMIT);
+  }
+
+  return ctx.db
+    .query("messages")
+    .withIndex("by_chatId", (q) =>
+      q.eq("chatId", chatId).lt("_creationTime", beforeCreationTime)
+    )
+    .order("desc")
+    .take(LATEST_NINA_CONTEXT_SCAN_LIMIT);
+}
 
 /**
  * Get a chat by its ID.
@@ -220,10 +250,15 @@ export const getChatTitle = query({
   },
 });
 
-/** Returns the newest stored Nina context snapshot for continuing a chat. */
-export const getLatestNinaContext = query({
+/**
+ * Returns the newest stored Nina context snapshot that survives the next turn.
+ * Existing message identifiers are treated as transcript rewrites, so context
+ * from the tail that will be deleted is not reused as pinned chat context.
+ */
+export const getPinnedNinaContextForTurn = query({
   args: {
     chatId: vv.id("chats"),
+    messageIdentifier: v.string(),
   },
   returns: nullable(ninaContextSnapshotValidator),
   handler: async (ctx, args) => {
@@ -241,11 +276,16 @@ export const getLatestNinaContext = query({
 
     requireChatAccess(chat.userId, viewerUserId, chat.visibility);
 
-    const messages = await ctx.db
-      .query("messages")
-      .withIndex("by_chatId", (q) => q.eq("chatId", args.chatId))
-      .order("desc")
-      .take(LATEST_NINA_CONTEXT_SCAN_LIMIT);
+    const existingMessage = await getMessageByIdentifier(
+      ctx,
+      args.chatId,
+      args.messageIdentifier
+    );
+    const messages = await loadPinnedContextMessages(
+      ctx,
+      args.chatId,
+      existingMessage?._creationTime
+    );
 
     return (
       messages.find((message) => message.ninaContextSnapshot)

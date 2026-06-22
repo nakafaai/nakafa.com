@@ -60,6 +60,8 @@ export async function deletePartsForMessageBatch(
 /**
  * Delete one bounded transcript batch from a creation time onward.
  * This supports message regeneration without loading an unbounded mutation.
+ * Reads one sentinel row past the supported batch so exact-size rewrites are
+ * accepted while oversized rewrites are rejected transactionally.
  */
 export async function deleteMessageBatchFromPoint(
   ctx: MutationCtx,
@@ -71,13 +73,16 @@ export async function deleteMessageBatchFromPoint(
     .withIndex("by_chatId", (q) =>
       q.eq("chatId", chatId).gte("_creationTime", fromCreationTime)
     )
-    .take(CHAT_TRANSCRIPT_REWRITE_MESSAGE_BATCH_SIZE);
+    .take(CHAT_TRANSCRIPT_REWRITE_MESSAGE_BATCH_SIZE + 1);
 
   if (messages.length === 0) {
     return { hasMore: false };
   }
 
-  for (const message of messages) {
+  for (const message of messages.slice(
+    0,
+    CHAT_TRANSCRIPT_REWRITE_MESSAGE_BATCH_SIZE
+  )) {
     const partsBatch = await deletePartsForMessageBatch(ctx, message._id);
 
     if (partsBatch.hasMore) {
@@ -88,7 +93,7 @@ export async function deleteMessageBatchFromPoint(
   }
 
   return {
-    hasMore: messages.length === CHAT_TRANSCRIPT_REWRITE_MESSAGE_BATCH_SIZE,
+    hasMore: messages.length > CHAT_TRANSCRIPT_REWRITE_MESSAGE_BATCH_SIZE,
   };
 }
 

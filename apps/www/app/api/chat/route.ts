@@ -157,7 +157,11 @@ export function POST(req: Request) {
 
       const pinnedContext =
         id && !verified
-          ? yield* loadPinnedNinaContext({ chatId: id, token })
+          ? yield* loadPinnedNinaContext({
+              chatId: id,
+              messageIdentifier: message.id,
+              token,
+            })
           : undefined;
       const ninaSession = yield* resolveNinaLearningSession({
         capturedAt: capturedAt.toISOString(),

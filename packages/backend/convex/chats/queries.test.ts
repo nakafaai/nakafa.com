@@ -1,11 +1,36 @@
 import { api } from "@repo/backend/convex/_generated/api";
+import type { ninaContextSnapshotValidator } from "@repo/backend/convex/chats/context";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
+import type { Infer } from "convex/values";
 import { describe, expect, it } from "vitest";
 
 const NOW = Date.UTC(2026, 4, 13, 12, 0, 0);
+
+/** Builds a compact Nina context snapshot for query behavior tests. */
+function testNinaContext(
+  slug: string
+): Infer<typeof ninaContextSnapshotValidator> {
+  return {
+    capturedAt: new Date(NOW).toISOString(),
+    learning: {
+      locale: "id",
+      slug,
+      url: `https://nakafa.com/id/${slug}`,
+      verified: true,
+    },
+    source: "current-page",
+    tools: {
+      allowDeepResearch: true,
+      allowMath: true,
+      allowNakafa: true,
+      allowPageFetch: true,
+      evidenceScope: "verified-page",
+    },
+  };
+}
 
 describe("chats/queries", () => {
   it("allows signed-out viewers to read public chat details", async () => {
@@ -190,5 +215,79 @@ describe("chats/queries", () => {
     expect(ownChats.page).toEqual([
       expect.objectContaining({ title: "Viewer chat" }),
     ]);
+  });
+
+  it("resolves pinned Nina context from the transcript retained after a rewrite", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const identity = await t.mutation(async (ctx) => {
+      const user = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "pinned-context",
+      });
+      const chatId = await ctx.db.insert("chats", {
+        title: "Pinned context",
+        type: "study",
+        updatedAt: NOW,
+        userId: user.userId,
+        visibility: "private",
+      });
+
+      return { chatId, user };
+    });
+    const owner = t.withIdentity({
+      sessionId: identity.user.sessionId,
+      subject: identity.user.authUserId,
+    });
+    const retainedContext = testNinaContext(
+      "materi/matematika/integral/jumlahan-riemann"
+    );
+    const deletedTailContext = testNinaContext(
+      "materi/fisika/mekanika/hukum-newton"
+    );
+
+    await t.mutation(async (ctx) => {
+      await ctx.db.insert("messages", {
+        chatId: identity.chatId,
+        identifier: "retained-anchor",
+        modelId: "nakafa-lite",
+        ninaContextSnapshot: retainedContext,
+        role: "user",
+      });
+    });
+    await t.mutation(async (ctx) => {
+      await ctx.db.insert("messages", {
+        chatId: identity.chatId,
+        identifier: "rewrite-target",
+        modelId: "nakafa-lite",
+        role: "user",
+      });
+    });
+    await t.mutation(async (ctx) => {
+      await ctx.db.insert("messages", {
+        chatId: identity.chatId,
+        identifier: "deleted-tail",
+        modelId: "nakafa-lite",
+        ninaContextSnapshot: deletedTailContext,
+        role: "assistant",
+      });
+    });
+
+    const pinnedForRewrite = await owner.query(
+      api.chats.queries.getPinnedNinaContextForTurn,
+      {
+        chatId: identity.chatId,
+        messageIdentifier: "rewrite-target",
+      }
+    );
+    const pinnedForContinuation = await owner.query(
+      api.chats.queries.getPinnedNinaContextForTurn,
+      {
+        chatId: identity.chatId,
+        messageIdentifier: "new-message",
+      }
+    );
+
+    expect(pinnedForRewrite).toEqual(retainedContext);
+    expect(pinnedForContinuation).toEqual(deletedTailContext);
   });
 });

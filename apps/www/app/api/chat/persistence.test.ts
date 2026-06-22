@@ -174,6 +174,7 @@ describe("app/api/chat/persistence", () => {
     const result = await Effect.runPromise(
       loadPinnedNinaContext({
         chatId,
+        messageIdentifier: message.id,
         token: "session-token",
       })
     );
@@ -181,7 +182,7 @@ describe("app/api/chat/persistence", () => {
     expect(result).toEqual(ninaContextSnapshot);
     expect(mocks.fetchQuery).toHaveBeenCalledWith(
       expect.anything(),
-      { chatId },
+      { chatId, messageIdentifier: message.id },
       { token: "session-token" }
     );
   });
@@ -193,6 +194,7 @@ describe("app/api/chat/persistence", () => {
     const result = await Effect.runPromise(
       loadPinnedNinaContext({
         chatId,
+        messageIdentifier: message.id,
         token: "session-token",
       })
     );
@@ -227,13 +229,14 @@ describe("app/api/chat/persistence", () => {
     );
   });
 
-  it("loads pinned context before saving a possible rewrite replacement", async () => {
+  it("loads rewrite-aware pinned context before saving a replacement", async () => {
     const chatId = await savedChatId();
     mocks.fetchQuery.mockResolvedValueOnce(ninaContextSnapshot);
 
     const pinnedContext = await Effect.runPromise(
       loadPinnedNinaContext({
         chatId,
+        messageIdentifier: message.id,
         token: "session-token",
       })
     );
@@ -253,7 +256,7 @@ describe("app/api/chat/persistence", () => {
     );
     expect(mocks.fetchQuery).toHaveBeenCalledWith(
       expect.anything(),
-      { chatId },
+      { chatId, messageIdentifier: message.id },
       { token: "session-token" }
     );
   });
