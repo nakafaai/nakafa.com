@@ -4,6 +4,7 @@ import type {
   NinaRuntime,
   NinaUser,
 } from "@repo/ai/nina/contract/turn";
+import { readNinaLearningPage } from "@repo/ai/nina/contract/turn";
 import type { NinaContextPack } from "@repo/ai/nina/memory/pack";
 import dedent from "dedent";
 
@@ -55,16 +56,18 @@ export function createNinaSystemPrompt({
   readonly runtime: NinaRuntime;
   readonly user: NinaUser;
 }) {
+  const learningPage = readNinaLearningPage(page);
+
   return nakafaPrompt({
     currentDate: runtime.currentDate,
     currentPage: {
-      locale: page.locale,
-      slug: page.slug,
-      verified: page.verified,
+      locale: learningPage.locale,
+      slug: learningPage.slug,
+      verified: learningPage.verified,
     },
     learningProfile: user.learningProfile,
     nina: page.nina,
-    url: page.url,
+    url: learningPage.url,
     userLocation: user.location,
     userRole: user.role,
   });

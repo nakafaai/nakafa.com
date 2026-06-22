@@ -62,6 +62,18 @@ export type NinaUser = Schema.Schema.Type<typeof NinaUserSchema>;
 export type NinaCopy = Schema.Schema.Type<typeof NinaCopySchema>;
 export type NinaTurn = Schema.Schema.Type<typeof NinaTurnSchema>;
 
+/** Returns the immutable learning page that should drive one Nina turn. */
+export function readNinaLearningPage(page: NinaPage) {
+  const learning = page.nina.learning;
+
+  return {
+    locale: learning.locale,
+    slug: cleanSlug(learning.slug),
+    url: learning.url,
+    verified: learning.verified,
+  };
+}
+
 /** Builds the shared specialist context from validated Nina turn inputs. */
 export function createNinaAgentContext({
   page,
@@ -72,13 +84,15 @@ export function createNinaAgentContext({
   readonly runtime: NinaRuntime;
   readonly user: NinaUser;
 }): AgentContext {
+  const learningPage = readNinaLearningPage(page);
+
   return {
     currentDate: runtime.currentDate,
     needsPageFetch: page.needsFetch,
     nina: page.nina,
-    slug: cleanSlug(page.slug),
-    url: page.url,
-    verified: page.verified,
+    slug: learningPage.slug,
+    url: learningPage.url,
+    verified: learningPage.verified,
     ...(user.learningProfile ? { learningProfile: user.learningProfile } : {}),
     ...(user.role ? { userRole: user.role } : {}),
   };

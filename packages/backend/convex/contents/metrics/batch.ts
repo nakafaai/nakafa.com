@@ -1,6 +1,8 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import {
   getPopularitySignalDay,
+  isFinitePopularityWindow,
+  isPopularitySignalInWindow,
   type LearningPopularityWindow,
   learningPopularityWindowValues,
 } from "@repo/backend/convex/contents/popularity";
@@ -80,6 +82,27 @@ function createPopularityCounterDelta(
   };
 }
 
+/** Returns whether one queued event should update the requested counter row. */
+function shouldApplyPopularityCounterDelta({
+  signalDay,
+  updatedAt,
+  windowKey,
+}: {
+  readonly signalDay: number;
+  readonly updatedAt: number;
+  readonly windowKey: LearningPopularityWindow;
+}) {
+  if (!isFinitePopularityWindow(windowKey)) {
+    return true;
+  }
+
+  return isPopularitySignalInWindow({
+    signalDay,
+    timestamp: updatedAt,
+    windowKey,
+  });
+}
+
 /** Aggregated daily popularity signal delta derived from queued view docs. */
 export type PopularitySignalDelta = ReturnType<
   typeof createPopularitySignalDelta
@@ -91,9 +114,13 @@ export type PopularityCounterDelta = ReturnType<
 >;
 
 /** Builds one analytics batch from append-only queued unique views. */
-export function buildMetricsBatch(
-  queueItems: readonly QueuedLearningEngagement[]
-) {
+export function buildMetricsBatch({
+  queueItems,
+  updatedAt,
+}: {
+  readonly queueItems: readonly QueuedLearningEngagement[];
+  readonly updatedAt: number;
+}) {
   const counters = new Map<string, PopularityCounterDelta>();
   const signals = new Map<string, PopularitySignalDelta>();
 
@@ -114,6 +141,16 @@ export function buildMetricsBatch(
     }
 
     for (const windowKey of learningPopularityWindowValues) {
+      if (
+        !shouldApplyPopularityCounterDelta({
+          signalDay,
+          updatedAt,
+          windowKey,
+        })
+      ) {
+        continue;
+      }
+
       const counterKey = [
         windowKey,
         queueItem.scopeMode,

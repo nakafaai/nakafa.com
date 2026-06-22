@@ -304,7 +304,7 @@ describe("contents/mutations/views", () => {
     expect(state.viewerSignals).toHaveLength(1);
   });
 
-  it("links an existing anonymous device view to a signed-in user", async () => {
+  it("links an anonymous view to a user without duplicate popularity analytics", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(async (ctx) => {
       const article = await insertArticle(ctx);
@@ -346,7 +346,7 @@ describe("contents/mutations/views", () => {
       lastViewedAt: NOW + 1000,
       userId: identity.userId,
     });
-    expect(state.engagementQueue).toHaveLength(2);
+    expect(state.engagementQueue).toHaveLength(1);
     expect(state.recents).toMatchObject([
       {
         content_id: identity.contentId,
@@ -355,8 +355,8 @@ describe("contents/mutations/views", () => {
         userId: identity.userId,
       },
     ]);
-    expect(state.scheduledJobs).toHaveLength(2);
-    expect(state.viewerSignals).toHaveLength(2);
+    expect(state.scheduledJobs).toHaveLength(1);
+    expect(state.viewerSignals).toHaveLength(1);
   });
 
   it("deduplicates signed-in user views across devices", async () => {

@@ -94,3 +94,19 @@ export function getPopularityWindowStartDay(
 
   return currentDay - (dayCount - 1) * POPULARITY_DAY_MS;
 }
+
+/** Returns whether a daily signal belongs to a finite window at refresh time. */
+export function isPopularitySignalInWindow({
+  signalDay,
+  timestamp,
+  windowKey,
+}: {
+  readonly signalDay: number;
+  readonly timestamp: number;
+  readonly windowKey: Exclude<LearningPopularityWindow, "lifetime">;
+}) {
+  const currentDay = getPopularitySignalDay(timestamp);
+  const startDay = getPopularityWindowStartDay(windowKey, timestamp);
+
+  return signalDay >= startDay && signalDay <= currentDay;
+}

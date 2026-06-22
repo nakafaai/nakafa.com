@@ -5,6 +5,7 @@ import { createNinaCapabilityCatalog } from "@repo/ai/nina/capability/catalog";
 import {
   createNinaAgentContext,
   type NinaTurn,
+  readNinaLearningPage,
 } from "@repo/ai/nina/contract/turn";
 import {
   type NinaAgentMessages,
@@ -54,12 +55,13 @@ export const createNinaStreamResponse = Effect.fn("nina.stream.response")(
     const logContext = createNinaLogContext(turn);
     const originalMessageCount = messages.length;
     const { messages: compressedMessages, tokens } = compressMessages(messages);
+    const learningPage = readNinaLearningPage(turn.page);
     const page = {
       ...turn.page,
       needsFetch: determinePageFetchNeed({
         messages: compressedMessages,
-        url: turn.page.url,
-        verified: turn.page.verified,
+        url: learningPage.url,
+        verified: learningPage.verified,
       }),
     };
     const isFirstMessage = messages.length === 1;
@@ -241,7 +243,7 @@ const runNinaWriterTurn = Effect.fn("nina.stream.writer")(function* ({
             reporter,
             reservePageFetch: pageFetch.reserveForRepair,
             sessionLogger: logContext,
-            url: page.url,
+            url: context.url,
           })
         ),
       tools,

@@ -47,6 +47,35 @@ function createSignalScopes(context: LearningContextStorage) {
   return scopes;
 }
 
+/** Loads an existing viewer signal for one content/context/day identity. */
+const loadViewerSignal = Effect.fn("contents.views.loadViewerSignal")(
+  function* (
+    db: MutationCtx["db"],
+    scope: ReturnType<typeof createSignalScopes>[number],
+    input: {
+      readonly contentId: Doc<"contentRoutes">["content_id"];
+      readonly signalDay: number;
+      readonly viewerKey: string;
+    }
+  ) {
+    return yield* Effect.tryPromise({
+      try: () =>
+        db
+          .query("learningPopularityViewerSignals")
+          .withIndex("by_viewer_content_day_scope_context", (q) =>
+            q
+              .eq("viewerKey", input.viewerKey)
+              .eq("content_id", input.contentId)
+              .eq("signalDay", input.signalDay)
+              .eq("scopeMode", scope.scopeMode)
+              .eq("contextKey", scope.context.contextKey)
+          )
+          .unique(),
+      catch: toSignalIoError,
+    });
+  }
+);
+
 /** Inserts one daily popularity signal if the viewer has not contributed yet. */
 const enqueueSignalScope = Effect.fn("contents.views.enqueueSignalScope")(
   function* (
@@ -60,28 +89,33 @@ const enqueueSignalScope = Effect.fn("contents.views.enqueueSignalScope")(
     }
   ) {
     const signalDay = getPopularitySignalDay(input.now);
+    const deviceViewerKey = createPopularityViewerKey({
+      deviceId: args.deviceId,
+    });
     const viewerKey = createPopularityViewerKey({
       deviceId: args.deviceId,
       userId: input.userId,
     });
-    const existingSignal = yield* Effect.tryPromise({
-      try: () =>
-        db
-          .query("learningPopularityViewerSignals")
-          .withIndex("by_viewer_content_day_scope_context", (q) =>
-            q
-              .eq("viewerKey", viewerKey)
-              .eq("content_id", route.content_id)
-              .eq("signalDay", signalDay)
-              .eq("scopeMode", scope.scopeMode)
-              .eq("contextKey", scope.context.contextKey)
-          )
-          .unique(),
-      catch: toSignalIoError,
+    const existingSignal = yield* loadViewerSignal(db, scope, {
+      contentId: route.content_id,
+      signalDay,
+      viewerKey,
     });
 
     if (existingSignal) {
       return null;
+    }
+
+    if (input.userId) {
+      const existingDeviceSignal = yield* loadViewerSignal(db, scope, {
+        contentId: route.content_id,
+        signalDay,
+        viewerKey: deviceViewerKey,
+      });
+
+      if (existingDeviceSignal) {
+        return null;
+      }
     }
 
     const partition = getContentAnalyticsPartition(

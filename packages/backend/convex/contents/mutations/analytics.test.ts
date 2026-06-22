@@ -8,7 +8,9 @@ import {
 } from "@repo/backend/convex/contents/constants";
 import {
   getDefaultPopularityWindow,
+  getLifetimePopularityWindow,
   getPopularitySignalDay,
+  POPULARITY_DAY_MS,
 } from "@repo/backend/convex/contents/popularity";
 import schema from "@repo/backend/convex/schema";
 import { registerLearningPopularityAggregate } from "@repo/backend/convex/test.helpers";
@@ -413,6 +415,88 @@ describe("contents/mutations/analytics", () => {
       partition: 0,
     });
     expect(state.queueItems).toEqual([]);
+  });
+
+  it("keeps stale queue rows out of finite windows while preserving lifetime", async () => {
+    const t = createAnalyticsConvexTest();
+    const staleViewedAt = NOW - 8 * POPULARITY_DAY_MS;
+    const subject = await t.mutation(async (ctx) => {
+      const { subject } = await insertAnalyticsContent(ctx);
+      await insertActivePartition(ctx);
+      await ctx.db.insert("learningEngagementQueue", {
+        ...subject,
+        ...canonicalContext,
+        description: "Subject description",
+        insertedAt: NOW,
+        locale: "en",
+        materialDomain: "mathematics",
+        partition: 0,
+        route: SUBJECT_ROUTE,
+        section: "material",
+        scopeMode: "global",
+        sourcePath: SUBJECT_ROUTE,
+        title: "Vector Addition",
+        viewerKey: "device:stale-subject",
+        viewedAt: staleViewedAt,
+      });
+
+      return subject;
+    });
+
+    await t.mutation(
+      internal.contents.mutations.analytics.processContentAnalyticsPartition,
+      { leaseVersion: 1, partition: 0 }
+    );
+
+    const state = await t.query(async (ctx) => ({
+      finiteCounter: await ctx.db
+        .query("learningPopularityCounters")
+        .withIndex(
+          "by_windowKey_and_scopeMode_and_content_id_and_contextKey",
+          (q) =>
+            q
+              .eq("windowKey", getDefaultPopularityWindow())
+              .eq("scopeMode", "global")
+              .eq("content_id", subject.content_id)
+              .eq("contextKey", canonicalContext.contextKey)
+        )
+        .unique(),
+      lifetimeCounter: await ctx.db
+        .query("learningPopularityCounters")
+        .withIndex(
+          "by_windowKey_and_scopeMode_and_content_id_and_contextKey",
+          (q) =>
+            q
+              .eq("windowKey", getLifetimePopularityWindow())
+              .eq("scopeMode", "global")
+              .eq("content_id", subject.content_id)
+              .eq("contextKey", canonicalContext.contextKey)
+        )
+        .unique(),
+      signal: await ctx.db
+        .query("learningPopularitySignals")
+        .withIndex(
+          "by_scopeMode_and_signalDay_and_content_id_and_contextKey",
+          (q) =>
+            q
+              .eq("scopeMode", "global")
+              .eq("signalDay", getPopularitySignalDay(staleViewedAt))
+              .eq("content_id", subject.content_id)
+              .eq("contextKey", canonicalContext.contextKey)
+        )
+        .unique(),
+    }));
+
+    expect(state.finiteCounter).toBeNull();
+    expect(state.lifetimeCounter).toMatchObject({
+      content_id: subject.content_id,
+      score: 1,
+      windowKey: getLifetimePopularityWindow(),
+    });
+    expect(state.signal).toMatchObject({
+      signalDay: getPopularitySignalDay(staleViewedAt),
+      viewCount: 1,
+    });
   });
 
   it("reclaims expired leases and schedules the next worker", async () => {

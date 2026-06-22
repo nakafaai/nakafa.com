@@ -282,6 +282,41 @@ describe("nina/agent", () => {
     expect(context.nina?.snapshot).toEqual(ninaContext.snapshot);
   });
 
+  it("uses pinned learning context when the current route is not a learning asset", () => {
+    const pinnedContext = {
+      ...ninaContext,
+      snapshot: {
+        ...ninaContext.snapshot,
+        source: "pinned-chat",
+      },
+      transition: {
+        reason: "same-context",
+        toContextKey:
+          "placement:cambridge-lower-secondary:curriculum:vector:addition:subjects/mathematics/vector/addition",
+      },
+    } satisfies NinaContextPack;
+    const context = createNinaAgentContext({
+      page: {
+        locale: "en",
+        needsFetch: true,
+        nina: pinnedContext,
+        slug: "chat/abc123",
+        url: "https://nakafa.com/en/chat/abc123",
+        verified: false,
+      },
+      runtime,
+      user,
+    });
+
+    expect(context).toMatchObject({
+      needsPageFetch: true,
+      slug: "subjects/mathematics/vector/addition",
+      url: "https://nakafa.com/en/subjects/mathematics/vector/addition",
+      verified: true,
+    });
+    expect(context.nina?.snapshot.source).toBe("pinned-chat");
+  });
+
   it("preserves selected learning profile context without inventing a user role", () => {
     const learningProfile = {
       interests: ["exam-prep"],

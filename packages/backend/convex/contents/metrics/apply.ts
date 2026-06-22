@@ -153,7 +153,7 @@ export const applyContentAnalyticsBatch = Effect.fn(
     readonly updatedAt: number;
   }
 ) {
-  const batch = buildMetricsBatch(queueItems);
+  const batch = buildMetricsBatch({ queueItems, updatedAt });
 
   for (const signal of batch.signals.values()) {
     yield* applySignal(ctx, { ...signal, updatedAt });
