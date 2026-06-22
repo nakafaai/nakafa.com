@@ -1,59 +1,43 @@
+import type { NinaReporter } from "@repo/ai/nina/runtime/report";
 import { createPrompt } from "@repo/ai/prompt/utils";
 import type { ToolName } from "@repo/ai/schema/tools";
 import type { LogContext } from "@repo/utilities/logging/types";
 import type { LanguageModelUsage } from "ai";
+import type { Context, Effect as EffectType } from "effect";
 import { Effect, Option } from "effect";
 
 type AddUsage = (
   component: ToolName,
   usage: LanguageModelUsage
-) => Effect.Effect<void>;
+) => EffectType.Effect<void>;
 
-export interface SpecialistResult {
-  text: string;
-  usage: Option.Option<LanguageModelUsage>;
-}
-
-interface RecoverSpecialistFailureParams {
-  component: ToolName;
-  error: unknown;
-  errorLocation: string;
-  reportError: (error: unknown, source: string) => void;
-}
-
-interface RecordSpecialistUsageParams {
-  addUsage: AddUsage;
-  component: ToolName;
-  logContext: LogContext;
-  result: SpecialistResult;
-}
-
-/**
- * Converts a completed specialist response into the chat tool result shape.
- */
+/** Converts a completed specialist response into the chat tool result shape. */
 export function specialistSuccess({
   text,
   usage,
 }: {
-  text: string;
-  usage: LanguageModelUsage;
-}): SpecialistResult {
+  readonly text: string;
+  readonly usage: LanguageModelUsage;
+}) {
   return {
     text,
     usage: Option.some(usage),
   };
 }
 
-/**
- * Records specialist usage only when the model returned real usage data.
- */
-export const recordSpecialistUsage = Effect.fn("chat.specialist.recordUsage")(
+/** Records specialist usage only when the model returned real usage data. */
+export const recordSpecialistUsage = Effect.fn("nina.specialist.usage")(
   function* ({
     addUsage,
     component,
     logContext,
     result,
-  }: RecordSpecialistUsageParams) {
+  }: {
+    readonly addUsage: AddUsage;
+    readonly component: ToolName;
+    readonly logContext: LogContext;
+    readonly result: ReturnType<typeof specialistSuccess>;
+  }) {
     yield* Effect.annotateCurrentSpan("component", component);
 
     if (Option.isNone(result.usage)) {
@@ -72,34 +56,31 @@ export const recordSpecialistUsage = Effect.fn("chat.specialist.recordUsage")(
   }
 );
 
-/**
- * Turns a specialist failure into model-facing recovery evidence.
- *
- * The returned text is a tool result for the orchestrator, not final user copy.
- *
- * @see https://effect.website/docs/observability/tracing/
- * @see https://effect.website/docs/observability/logging/
- */
-export const recoverSpecialistFailure = Effect.fn(
-  "chat.specialist.recoverFailure"
-)(function* ({
-  component,
-  error,
-  errorLocation,
-  reportError,
-}: RecoverSpecialistFailureParams) {
-  const normalizedError = normalizeError(error);
+/** Turns a specialist failure into model-facing recovery evidence. */
+export const recoverSpecialistFailure = Effect.fn("nina.specialist.recover")(
+  function* ({
+    component,
+    error,
+    errorLocation,
+    reporter,
+  }: {
+    readonly component: ToolName;
+    readonly error: unknown;
+    readonly errorLocation: string;
+    readonly reporter: Context.Tag.Service<typeof NinaReporter>;
+  }) {
+    const normalizedError = normalizeError(error);
 
-  yield* Effect.annotateCurrentSpan("component", component);
-  yield* Effect.annotateCurrentSpan("errorLocation", errorLocation);
+    yield* Effect.annotateCurrentSpan("component", component);
+    yield* Effect.annotateCurrentSpan("errorLocation", errorLocation);
+    yield* reporter.report({ error: normalizedError, source: errorLocation });
 
-  reportError(normalizedError, errorLocation);
-
-  return {
-    text: formatSpecialistFailure(component),
-    usage: Option.none(),
-  };
-});
+    return {
+      text: formatSpecialistFailure(component),
+      usage: Option.none(),
+    };
+  }
+);
 
 /** Normalizes unknown thrown values into Error objects for structured logs. */
 function normalizeError(error: unknown) {
@@ -110,9 +91,7 @@ function normalizeError(error: unknown) {
   return new Error(String(error));
 }
 
-/**
- * Builds a compact model-facing status for a failed specialist call.
- */
+/** Builds a compact model-facing status for a failed specialist call. */
 function formatSpecialistFailure(component: ToolName) {
   return createPrompt({
     taskContext: [

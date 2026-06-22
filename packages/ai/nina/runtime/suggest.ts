@@ -8,7 +8,7 @@ import { backgroundGenerationTimeout } from "@repo/ai/config/timeouts";
 import { createEffectSchema } from "@repo/ai/lib/effect-schema";
 import { nakafaSuggestions } from "@repo/ai/prompt/suggestions";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import type { Locale } from "@repo/backend/convex/lib/validators/contents";
+import type { Locale } from "@repo/contents/_types/content";
 import {
   type ModelMessage,
   Output,
@@ -17,12 +17,6 @@ import {
   type UIMessageStreamWriter,
 } from "ai";
 import { Effect, Schema, Stream } from "effect";
-
-interface Params {
-  locale: Locale;
-  messages: ModelMessage[];
-  writer: UIMessageStreamWriter<MyUIMessage>;
-}
 
 const SuggestionsOutputSchema = createEffectSchema(
   Schema.Struct({
@@ -33,21 +27,29 @@ const SuggestionsOutputSchema = createEffectSchema(
   })
 );
 
+/** Raised when Nina cannot stream follow-up suggestions after an answer. */
+export class NinaSuggestionError extends Schema.TaggedError<NinaSuggestionError>()(
+  "NinaSuggestionError",
+  {
+    message: Schema.String,
+  }
+) {}
+
 /**
  * Streams follow-up suggestions after the assistant response is complete.
  *
  * @see https://ai-sdk.dev/docs/reference/ai-sdk-core/output#output-object
  * @see https://ai-sdk.dev/docs/reference/ai-sdk-core/stream-text
  */
-export const writeSuggestions = Effect.fn("chat.writeSuggestions")(function* ({
+export const writeNinaSuggestions = Effect.fn("nina.suggest.write")(function* ({
   locale,
   messages,
   writer,
-}: Params) {
-  // Suggestions only need the visible conversation and final answer shape.
-  // Keep reasoning stored/rendered elsewhere, but remove it from this secondary
-  // model call so follow-up generation does not spend tokens on internal traces.
-  // https://ai-sdk.dev/docs/reference/ai-sdk-ui/prune-messages
+}: {
+  readonly locale: Locale;
+  readonly messages: ModelMessage[];
+  readonly writer: UIMessageStreamWriter<MyUIMessage>;
+}) {
   const promptMessages = pruneMessages({
     messages,
     reasoning: "all",
@@ -72,7 +74,10 @@ export const writeSuggestions = Effect.fn("chat.writeSuggestions")(function* ({
 
   yield* Stream.fromAsyncIterable(
     suggestionsStream.partialOutputStream,
-    (cause) => new Error("Failed to stream chat suggestions.", { cause })
+    () =>
+      new NinaSuggestionError({
+        message: "Failed to stream Nina suggestions.",
+      })
   ).pipe(
     Stream.runForEach((chunk) =>
       Effect.sync(() => {

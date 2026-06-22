@@ -1,7 +1,7 @@
 import {
   NINA_CONTEXT_SOURCES,
   NINA_CONTEXT_TRANSITION_REASONS,
-} from "@repo/ai/nina/context";
+} from "@repo/ai/nina/memory/pack";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";

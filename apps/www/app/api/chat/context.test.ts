@@ -1,5 +1,5 @@
 // @vitest-environment node
-import type { NinaContextSnapshot } from "@repo/ai/nina/context";
+import type { NinaContextSnapshot } from "@repo/ai/nina/memory/pack";
 import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";

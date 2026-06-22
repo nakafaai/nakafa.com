@@ -3,8 +3,8 @@ import { compressMessages } from "@repo/ai/lib/message";
 import type {
   NinaContextSnapshot,
   NinaContextTransition,
-} from "@repo/ai/nina/context";
-import { NinaContextSnapshotSchema } from "@repo/ai/nina/context";
+} from "@repo/ai/nina/memory/pack";
+import { NinaContextSnapshotSchema } from "@repo/ai/nina/memory/pack";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
@@ -20,21 +20,6 @@ type ChatMessagesPage = FunctionReturnType<
   typeof convexApi.chats.queries.loadMessagesPage
 >;
 
-/** User-message persistence input with the Nina context metadata saved atomically. */
-interface Save {
-  chatId: Id<"chats"> | undefined;
-  message: MyUIMessage;
-  modelId: ModelId;
-  ninaContextSnapshot: NinaContextSnapshot;
-  ninaContextTransition: NinaContextTransition;
-  token: string;
-}
-
-interface Load {
-  chatId: Id<"chats">;
-  token: string;
-}
-
 /**
  * Persists the user message to an existing chat, or creates a new chat with
  * the message if no chatId is provided.
@@ -48,7 +33,14 @@ export const saveOrCreateChat = Effect.fn("chat.saveOrCreateChat")(function* ({
   ninaContextSnapshot,
   ninaContextTransition,
   token,
-}: Save) {
+}: {
+  readonly chatId: Id<"chats"> | undefined;
+  readonly message: MyUIMessage;
+  readonly modelId: ModelId;
+  readonly ninaContextSnapshot: NinaContextSnapshot;
+  readonly ninaContextTransition: NinaContextTransition;
+  readonly token: string;
+}) {
   const dbParts = mapUIMessagePartsToDBParts({ messageParts: message.parts });
 
   if (chatId) {
@@ -129,7 +121,13 @@ export const saveOrCreateChat = Effect.fn("chat.saveOrCreateChat")(function* ({
  * app chat routing never replays unvalidated persisted context metadata.
  */
 export const loadPinnedNinaContext = Effect.fn("chat.loadPinnedNinaContext")(
-  function* ({ chatId, token }: Load) {
+  function* ({
+    chatId,
+    token,
+  }: {
+    readonly chatId: Id<"chats">;
+    readonly token: string;
+  }) {
     const storedContext = yield* Effect.tryPromise(() =>
       fetchQuery(
         convexApi.chats.queries.getLatestNinaContext,
@@ -159,7 +157,10 @@ export const loadPinnedNinaContext = Effect.fn("chat.loadPinnedNinaContext")(
 export const loadMessages = Effect.fn("chat.loadMessages")(function* ({
   chatId,
   token,
-}: Load) {
+}: {
+  readonly chatId: Id<"chats">;
+  readonly token: string;
+}) {
   let cursor: string | null = null;
   let messages: MyUIMessage[] = [];
 

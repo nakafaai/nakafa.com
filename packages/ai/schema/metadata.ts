@@ -3,7 +3,7 @@ import { ModelIdSchema } from "@repo/ai/config/model";
 import {
   NinaContextSnapshotSchema,
   NinaContextTransitionSchema,
-} from "@repo/ai/nina/context";
+} from "@repo/ai/nina/memory/pack";
 import { Schema } from "effect";
 
 const ComponentUsageSchema = Schema.Struct({

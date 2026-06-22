@@ -3,7 +3,7 @@ import { ModelIdSchema } from "@repo/ai/config/model";
 import type {
   NinaContextSnapshot,
   NinaContextTransition,
-} from "@repo/ai/nina/context";
+} from "@repo/ai/nina/memory/pack";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -169,11 +169,12 @@ describe("app/api/chat/persistence", () => {
   });
 
   it("loads the newest stored Nina context for pinned-chat continuation", async () => {
+    const chatId = await savedChatId();
     mocks.fetchQuery.mockResolvedValue(ninaContextSnapshot);
 
     const result = await Effect.runPromise(
       loadPinnedNinaContext({
-        chatId: "chat_existing",
+        chatId,
         token: "session-token",
       })
     );
@@ -181,17 +182,18 @@ describe("app/api/chat/persistence", () => {
     expect(result).toEqual(ninaContextSnapshot);
     expect(mocks.fetchQuery).toHaveBeenCalledWith(
       expect.anything(),
-      { chatId: "chat_existing" },
+      { chatId },
       { token: "session-token" }
     );
   });
 
   it("ignores missing pinned Nina context instead of inventing chat context", async () => {
+    const chatId = await savedChatId();
     mocks.fetchQuery.mockResolvedValue(null);
 
     const result = await Effect.runPromise(
       loadPinnedNinaContext({
-        chatId: "chat_existing",
+        chatId,
         token: "session-token",
       })
     );

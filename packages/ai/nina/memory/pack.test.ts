@@ -1,7 +1,7 @@
 import {
   type NinaLearningSessionInput,
   openNinaLearningSession,
-} from "@repo/ai/nina/context";
+} from "@repo/ai/nina/memory/pack";
 import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
 import { Effect, Exit } from "effect";
 import { describe, expect, it } from "vitest";
@@ -22,7 +22,7 @@ const placementProgramKey = LearningProgramKeySchema.make(
   "cambridge-lower-secondary"
 );
 
-describe("nina/context", () => {
+describe("nina/memory/pack", () => {
   it("opens a verified page session with a durable snapshot and page-fetch policy", async () => {
     const session = await Effect.runPromise(
       openNinaLearningSession({

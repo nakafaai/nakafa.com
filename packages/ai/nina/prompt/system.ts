@@ -1,4 +1,10 @@
-import type { NinaContextPack } from "@repo/ai/nina/context";
+import { nakafaPrompt } from "@repo/ai/agents/orchestrator/prompt";
+import type {
+  NinaPage,
+  NinaRuntime,
+  NinaUser,
+} from "@repo/ai/nina/contract/turn";
+import type { NinaContextPack } from "@repo/ai/nina/memory/pack";
 import dedent from "dedent";
 
 /** Formats Nina's validated context pack for the orchestrator prompt. */
@@ -37,4 +43,29 @@ export function formatNinaContextPackPrompt(context: NinaContextPack) {
     - deep research allowed: ${context.tools.allowDeepResearch ? "yes" : "no"}
     - evidence scope: ${context.tools.evidenceScope}
   `;
+}
+
+/** Builds Nina's system prompt from validated runtime, page, and user context. */
+export function createNinaSystemPrompt({
+  page,
+  runtime,
+  user,
+}: {
+  readonly page: NinaPage;
+  readonly runtime: NinaRuntime;
+  readonly user: NinaUser;
+}) {
+  return nakafaPrompt({
+    currentDate: runtime.currentDate,
+    currentPage: {
+      locale: page.locale,
+      slug: page.slug,
+      verified: page.verified,
+    },
+    learningProfile: user.learningProfile,
+    nina: page.nina,
+    url: page.url,
+    userLocation: user.location,
+    userRole: user.role,
+  });
 }

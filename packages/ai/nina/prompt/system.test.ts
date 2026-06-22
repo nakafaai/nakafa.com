@@ -1,5 +1,5 @@
-import type { NinaContextPack } from "@repo/ai/nina/context";
-import { formatNinaContextPackPrompt } from "@repo/ai/nina/prompt";
+import type { NinaContextPack } from "@repo/ai/nina/memory/pack";
+import { formatNinaContextPackPrompt } from "@repo/ai/nina/prompt/system";
 import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
 import { describe, expect, it } from "vitest";
 

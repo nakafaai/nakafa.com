@@ -6,13 +6,12 @@ import { Effect, Ref } from "effect";
 
 type MainUsage = Pick<LanguageModelUsage, "inputTokens" | "outputTokens">;
 
-/**
- * Tracks per-turn usage for sub-agent token costs.
- */
-export const trackUsage = Effect.fn("chat.trackUsage")(function* () {
+/** Tracks main and specialist token usage for one Nina harness turn. */
+export const trackUsage = Effect.fn("nina.usage.track")(function* () {
   const subAgents = yield* Ref.make(new Map<ToolName, ComponentUsage>());
 
-  const addUsage = Effect.fn("chat.usage.addUsage")(function* (
+  /** Adds one specialist usage row to the per-turn aggregate. */
+  const addUsage = Effect.fn("nina.usage.add")(function* (
     component: ToolName,
     usage: LanguageModelUsage
   ) {
@@ -31,12 +30,13 @@ export const trackUsage = Effect.fn("chat.trackUsage")(function* () {
     });
   });
 
-  const metadata = Effect.fn("chat.usage.metadata")(function* ({
+  /** Builds persisted Nina metadata from main-model and specialist usage. */
+  const metadata = Effect.fn("nina.usage.metadata")(function* ({
     mainUsage,
     modelId,
   }: {
-    mainUsage: MainUsage;
-    modelId: ModelId;
+    readonly mainUsage: MainUsage;
+    readonly modelId: ModelId;
   }) {
     const usages = yield* Ref.get(subAgents);
     const mainInput = mainUsage.inputTokens ?? 0;
@@ -64,9 +64,7 @@ export const trackUsage = Effect.fn("chat.trackUsage")(function* () {
   };
 });
 
-/**
- * Sums input, output, and total tokens from component usage rows.
- */
+/** Sums input, output, and total tokens from component usage rows. */
 function getTotals(usages: ReadonlyMap<ToolName, ComponentUsage>) {
   const input = Array.from(usages.values()).reduce(
     (sum, usage) => sum + usage.input,

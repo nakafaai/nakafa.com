@@ -5,13 +5,6 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { fetchAction } from "convex/nextjs";
 import { Effect } from "effect";
 
-interface PersistAssistantFailure {
-  chatId: Id<"chats">;
-  modelId: ModelId;
-  responseMessageId: string;
-  token: string;
-}
-
 /**
  * Schedules a durable failed assistant marker through Convex.
  *
@@ -24,7 +17,12 @@ export const persistAssistantFailure = Effect.fn(
   modelId,
   responseMessageId,
   token,
-}: PersistAssistantFailure) {
+}: {
+  readonly chatId: Id<"chats">;
+  readonly modelId: ModelId;
+  readonly responseMessageId: string;
+  readonly token: string;
+}) {
   yield* Effect.tryPromise({
     try: () =>
       fetchAction(

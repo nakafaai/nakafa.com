@@ -1,5 +1,5 @@
-import { NinaContextPackSchema } from "@repo/ai/nina/context";
-import { formatNinaContextPackPrompt } from "@repo/ai/nina/prompt";
+import { NinaContextPackSchema } from "@repo/ai/nina/memory/pack";
+import { formatNinaContextPackPrompt } from "@repo/ai/nina/prompt/system";
 import { formatLearningProfilePromptContext } from "@repo/ai/prompt/learning-profile";
 import { AgentLearningProfileSchema } from "@repo/ai/types/agents";
 import { LocaleSchema } from "@repo/contents/_types/content";

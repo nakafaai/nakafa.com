@@ -2,8 +2,8 @@ import type { MyUIMessage, MyUIMessagePart } from "@repo/ai/types/message";
 import { Schema } from "effect";
 
 /** Raised when AI SDK finishes without a durable assistant answer. */
-export class IncompleteChatResponseError extends Schema.TaggedError<IncompleteChatResponseError>()(
-  "IncompleteChatResponseError",
+export class IncompleteNinaResponseError extends Schema.TaggedError<IncompleteNinaResponseError>()(
+  "IncompleteNinaResponseError",
   {
     finishReason: Schema.optional(Schema.String),
     message: Schema.String,
@@ -12,27 +12,27 @@ export class IncompleteChatResponseError extends Schema.TaggedError<IncompleteCh
   }
 ) {}
 
-/** Returns a typed failure when a streamed response should not be persisted as complete. */
-export function getAssistantResponseFailure({
+/** Returns a typed failure when a streamed response should not be persisted. */
+export function getNinaResponseFailure({
   finishReason,
   isAborted,
   responseMessage,
 }: {
-  finishReason?: string;
-  isAborted: boolean;
-  responseMessage: MyUIMessage;
+  readonly finishReason?: string;
+  readonly isAborted: boolean;
+  readonly responseMessage: MyUIMessage;
 }) {
   if (isAborted) {
-    return new IncompleteChatResponseError({
+    return new IncompleteNinaResponseError({
       finishReason,
-      message: "AI SDK reported an aborted assistant response stream.",
+      message: "AI SDK reported an aborted Nina response stream.",
       reason: "aborted",
       responseMessageId: responseMessage.id,
     });
   }
 
   if (responseMessage.parts.some(isOpenStreamPart)) {
-    return new IncompleteChatResponseError({
+    return new IncompleteNinaResponseError({
       finishReason,
       message: "AI SDK finished with at least one open streaming part.",
       reason: "open-stream-part",
@@ -41,7 +41,7 @@ export function getAssistantResponseFailure({
   }
 
   if (!responseMessage.parts.some(hasFinalTextPart)) {
-    return new IncompleteChatResponseError({
+    return new IncompleteNinaResponseError({
       finishReason,
       message: "AI SDK finished without a final assistant text part.",
       reason: "missing-final-text",

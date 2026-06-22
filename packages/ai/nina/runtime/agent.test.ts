@@ -1,14 +1,17 @@
 import { ModelIdSchema } from "@repo/ai/config/model";
 import {
   createNinaAgentContext,
-  type NinaAgentAdapter,
-  type NinaAgentChat,
-  type NinaAgentPage,
-  type NinaAgentRuntime,
-  type NinaAgentUser,
-  runNinaAgentTurn,
-} from "@repo/ai/nina/agent";
-import type { NinaContextPack } from "@repo/ai/nina/context";
+  type NinaPage,
+  type NinaRuntime,
+  type NinaUser,
+} from "@repo/ai/nina/contract/turn";
+import type { NinaContextPack } from "@repo/ai/nina/memory/pack";
+import { NinaAgentError, runNinaAgentTurn } from "@repo/ai/nina/runtime/agent";
+import {
+  nakafaToolInputSchema,
+  researchToolInputSchema,
+  textOutputSchema,
+} from "@repo/ai/schema/tools";
 import type { MyMetadata, MyUIMessage } from "@repo/ai/types/message";
 import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
 import type {
@@ -17,7 +20,8 @@ import type {
   ToolSet,
   UIMessageStreamWriter,
 } from "ai";
-import { Effect, Exit } from "effect";
+import { tool } from "ai";
+import { Cause, Effect, Exit, Option } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 interface CapturedAgentSettings {
@@ -223,12 +227,12 @@ const page = {
   slug: "/subjects/mathematics/vector/addition",
   url: "https://nakafa.com/en/subjects/mathematics/vector/addition",
   verified: true,
-} satisfies NinaAgentPage;
+} satisfies NinaPage;
 
 const runtime = {
   currentDate: "June 21, 2026",
   modelId,
-} satisfies NinaAgentRuntime;
+} satisfies NinaRuntime;
 
 const user = {
   learningProfile: undefined,
@@ -240,7 +244,7 @@ const user = {
     longitude: "106.8",
   },
   role: "student",
-} satisfies NinaAgentUser;
+} satisfies NinaUser;
 
 const chat = {
   finalMessages: [
@@ -249,7 +253,7 @@ const chat = {
       role: "user",
     },
   ],
-} satisfies NinaAgentChat;
+} satisfies { readonly finalMessages: ModelMessage[] };
 
 describe("nina/agent", () => {
   beforeEach(() => {
@@ -289,7 +293,7 @@ describe("nina/agent", () => {
         title: "SNBT 2026",
         versionLabel: "2026",
       },
-    } satisfies NinaAgentUser["learningProfile"];
+    } satisfies NinaUser["learningProfile"];
     const context = createNinaAgentContext({
       page,
       runtime,
@@ -310,23 +314,30 @@ describe("nina/agent", () => {
       onError: undefined,
       write: vi.fn(),
     } satisfies UIMessageStreamWriter<MyUIMessage>;
-    const tools = {};
-    const adapter = {
-      formatStreamError: () => "translated stream error",
-      onStreamError: vi.fn(),
-      prepareStep: ({ messages }) => ({ messages }),
-      readFinishMetadata: () => ({
-        credits: 2,
-        model: modelId,
-        tokens: { input: 4, output: 6, total: 10 },
-      }),
-      repairToolCall: () => Effect.runPromise(Effect.succeed(null)),
-      tools,
-      writer,
-    } satisfies NinaAgentAdapter<typeof tools>;
-
-    const turn = await Effect.runPromise(
-      runNinaAgentTurn({ adapter, chat, page, runtime, user })
+    const tools = createTools();
+    const onStreamError = vi.fn();
+    const responseMessages = await Effect.runPromise(
+      runNinaAgentTurn({
+        messages: chat.finalMessages,
+        page,
+        runtime,
+        settings: {
+          experimental_repairToolCall: () =>
+            Effect.runPromise(Effect.succeed(null)),
+          tools,
+        },
+        stream: {
+          formatError: () => "translated stream error",
+          onError: onStreamError,
+          readFinishMetadata: () => ({
+            credits: 2,
+            model: modelId,
+            tokens: { input: 4, output: 6, total: 10 },
+          }),
+          writer,
+        },
+        user,
+      })
     );
 
     expect(fakeAgentState.settings?.id).toBe("nina");
@@ -334,7 +345,7 @@ describe("nina/agent", () => {
     expect(fakeAgentState.settings?.tools).toBe(tools);
     expect(fakeAgentState.streamOptions?.messages).toEqual(chat.finalMessages);
     expect(writer.merge).toHaveBeenCalledOnce();
-    expect(adapter.onStreamError).toHaveBeenCalledWith(
+    expect(onStreamError).toHaveBeenCalledWith(
       expect.any(Error),
       "toUIMessageStream"
     );
@@ -350,7 +361,7 @@ describe("nina/agent", () => {
       ninaContextTransition: ninaContext.transition,
       tokens: { input: 4, output: 6, total: 10 },
     });
-    expect(turn.messages).toEqual([
+    expect(responseMessages).toEqual([
       {
         content: [{ text: "Ready.", type: "text" }],
         role: "assistant",
@@ -363,15 +374,17 @@ describe("nina/agent", () => {
 
     const exit = await Effect.runPromiseExit(
       runNinaAgentTurn({
-        adapter: createAdapter(),
-        chat,
+        messages: chat.finalMessages,
         page,
         runtime,
+        settings: createSettings(),
+        stream: createStream(),
         user,
       })
     );
 
     expect(Exit.isFailure(exit)).toBe(true);
+    expect(readExitFailure(exit)).toBeInstanceOf(NinaAgentError);
   });
 
   it("keeps ToolLoopAgent response failures in the Effect error channel", async () => {
@@ -379,38 +392,68 @@ describe("nina/agent", () => {
 
     const exit = await Effect.runPromiseExit(
       runNinaAgentTurn({
-        adapter: createAdapter(),
-        chat,
+        messages: chat.finalMessages,
         page,
         runtime,
+        settings: createSettings(),
+        stream: createStream(),
         user,
       })
     );
 
     expect(Exit.isFailure(exit)).toBe(true);
+    expect(readExitFailure(exit)).toBeInstanceOf(NinaAgentError);
   });
 });
 
-/** Creates the minimal app Adapter needed to exercise Nina's package Module. */
-function createAdapter() {
+/** Extracts the typed Effect failure from an Exit for Nina agent assertions. */
+function readExitFailure(exit: Exit.Exit<unknown, unknown>) {
+  if (Exit.isSuccess(exit)) {
+    return;
+  }
+
+  const failure = Cause.failureOption(exit.cause);
+  return Option.isSome(failure) ? failure.value : undefined;
+}
+
+/** Creates the minimal AI SDK settings needed to exercise Nina's package Module. */
+function createSettings() {
+  return {
+    experimental_repairToolCall: () => Effect.runPromise(Effect.succeed(null)),
+    tools: createTools(),
+  };
+}
+
+/** Creates the minimal stream callbacks needed to exercise Nina's package Module. */
+function createStream() {
   const writer = {
     merge: vi.fn(),
     onError: undefined,
     write: vi.fn(),
   } satisfies UIMessageStreamWriter<MyUIMessage>;
-  const tools = {};
 
   return {
-    formatStreamError: () => "translated stream error",
-    onStreamError: vi.fn(),
-    prepareStep: ({ messages }) => ({ messages }),
+    formatError: () => "translated stream error",
+    onError: vi.fn(),
     readFinishMetadata: () => ({
       credits: 2,
       model: modelId,
       tokens: { input: 4, output: 6, total: 10 },
     }),
-    repairToolCall: () => Effect.runPromise(Effect.succeed(null)),
-    tools,
     writer,
-  } satisfies NinaAgentAdapter<typeof tools>;
+  };
+}
+
+/** Creates the minimal AI SDK Nina tool set required by the step policy. */
+function createTools() {
+  return {
+    deepResearch: tool({
+      inputSchema: researchToolInputSchema,
+      outputSchema: textOutputSchema,
+    }),
+    nakafa: tool({
+      inputSchema: nakafaToolInputSchema,
+      outputSchema: textOutputSchema,
+    }),
+  };
 }

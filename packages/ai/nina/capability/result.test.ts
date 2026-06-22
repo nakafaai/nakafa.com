@@ -1,13 +1,15 @@
 // @vitest-environment node
-import type { ToolName } from "@repo/ai/schema/tools";
-import type { LanguageModelUsage } from "ai";
-import { Effect, Logger, Option } from "effect";
-import { describe, expect, it } from "vitest";
+
 import {
   recordSpecialistUsage,
   recoverSpecialistFailure,
   specialistSuccess,
-} from "@/app/api/chat/specialist";
+} from "@repo/ai/nina/capability/result";
+import type { NinaReporter } from "@repo/ai/nina/runtime/report";
+import type { ToolName } from "@repo/ai/schema/tools";
+import type { LanguageModelUsage } from "ai";
+import { type Context, Effect, Logger, Option } from "effect";
+import { describe, expect, it } from "vitest";
 
 const usage = {
   inputTokens: 3,
@@ -45,7 +47,7 @@ function testLogger() {
   return { entries, logger };
 }
 
-describe("app/api/chat/specialist", () => {
+describe("nina/capability/result", () => {
   it("preserves real usage for successful specialists", async () => {
     const tracker = usageRecorder();
     const result = specialistSuccess({ text: "verified", usage });
@@ -75,9 +77,7 @@ describe("app/api/chat/specialist", () => {
           component: "deepResearch",
           error: new Error("network unavailable"),
           errorLocation: "runResearchAgent",
-          reportError: (error) => {
-            reported.push(error);
-          },
+          reporter: createReporter(reported),
         });
 
         yield* recordSpecialistUsage({
@@ -108,9 +108,7 @@ describe("app/api/chat/specialist", () => {
         component: "nakafa",
         error: "content lookup failed",
         errorLocation: "runNakafaAgent",
-        reportError: (error) => {
-          reported.push(error);
-        },
+        reporter: createReporter(reported),
       }).pipe(Effect.provide(Logger.replace(Logger.defaultLogger, logger)))
     );
 
@@ -125,3 +123,13 @@ describe("app/api/chat/specialist", () => {
     expect(result.text).toContain("Do not invent facts");
   });
 });
+
+/** Creates the diagnostics service used by specialist recovery tests. */
+function createReporter(reported: unknown[]) {
+  return {
+    report: ({ error }: { readonly error: unknown }) =>
+      Effect.sync(() => {
+        reported.push(error);
+      }),
+  } satisfies Context.Tag.Service<typeof NinaReporter>;
+}

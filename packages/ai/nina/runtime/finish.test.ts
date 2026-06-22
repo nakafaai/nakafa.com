@@ -1,10 +1,11 @@
 // @vitest-environment node
+
+import {
+  getNinaResponseFailure,
+  IncompleteNinaResponseError,
+} from "@repo/ai/nina/runtime/finish";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { describe, expect, it } from "vitest";
-import {
-  getAssistantResponseFailure,
-  IncompleteChatResponseError,
-} from "@/app/api/chat/response";
 
 const completeAssistantMessage = {
   id: "assistant-complete",
@@ -12,9 +13,9 @@ const completeAssistantMessage = {
   parts: [{ type: "text", text: "Jawaban final.", state: "done" }],
 } satisfies MyUIMessage;
 
-describe("app/api/chat/response", () => {
+describe("nina/runtime/finish", () => {
   it("accepts an assistant response with final text", () => {
-    const failure = getAssistantResponseFailure({
+    const failure = getNinaResponseFailure({
       isAborted: false,
       responseMessage: completeAssistantMessage,
     });
@@ -23,12 +24,12 @@ describe("app/api/chat/response", () => {
   });
 
   it("rejects an aborted assistant response", () => {
-    const failure = getAssistantResponseFailure({
+    const failure = getNinaResponseFailure({
       isAborted: true,
       responseMessage: completeAssistantMessage,
     });
 
-    expect(failure).toBeInstanceOf(IncompleteChatResponseError);
+    expect(failure).toBeInstanceOf(IncompleteNinaResponseError);
     expect(failure).toMatchObject({
       reason: "aborted",
       responseMessageId: "assistant-complete",
@@ -36,7 +37,7 @@ describe("app/api/chat/response", () => {
   });
 
   it("rejects a response with an open reasoning part", () => {
-    const failure = getAssistantResponseFailure({
+    const failure = getNinaResponseFailure({
       finishReason: "stop",
       isAborted: false,
       responseMessage: {
@@ -49,7 +50,7 @@ describe("app/api/chat/response", () => {
       },
     });
 
-    expect(failure).toBeInstanceOf(IncompleteChatResponseError);
+    expect(failure).toBeInstanceOf(IncompleteNinaResponseError);
     expect(failure).toMatchObject({
       finishReason: "stop",
       reason: "open-stream-part",
@@ -58,7 +59,7 @@ describe("app/api/chat/response", () => {
   });
 
   it("rejects a response with suggestions but no final text", () => {
-    const failure = getAssistantResponseFailure({
+    const failure = getNinaResponseFailure({
       isAborted: false,
       responseMessage: {
         id: "assistant-suggestions",
@@ -73,7 +74,7 @@ describe("app/api/chat/response", () => {
       },
     });
 
-    expect(failure).toBeInstanceOf(IncompleteChatResponseError);
+    expect(failure).toBeInstanceOf(IncompleteNinaResponseError);
     expect(failure).toMatchObject({
       reason: "missing-final-text",
       responseMessageId: "assistant-suggestions",
@@ -81,7 +82,7 @@ describe("app/api/chat/response", () => {
   });
 
   it("rejects a response with an open tool part", () => {
-    const failure = getAssistantResponseFailure({
+    const failure = getNinaResponseFailure({
       isAborted: false,
       responseMessage: {
         id: "assistant-open-tool",
@@ -102,7 +103,7 @@ describe("app/api/chat/response", () => {
       },
     });
 
-    expect(failure).toBeInstanceOf(IncompleteChatResponseError);
+    expect(failure).toBeInstanceOf(IncompleteNinaResponseError);
     expect(failure).toMatchObject({
       reason: "open-stream-part",
       responseMessageId: "assistant-open-tool",
@@ -110,7 +111,7 @@ describe("app/api/chat/response", () => {
   });
 
   it("rejects a response with a streaming tool input", () => {
-    const failure = getAssistantResponseFailure({
+    const failure = getNinaResponseFailure({
       isAborted: false,
       responseMessage: {
         id: "assistant-streaming-tool",
@@ -131,7 +132,7 @@ describe("app/api/chat/response", () => {
       },
     });
 
-    expect(failure).toBeInstanceOf(IncompleteChatResponseError);
+    expect(failure).toBeInstanceOf(IncompleteNinaResponseError);
     expect(failure).toMatchObject({
       reason: "open-stream-part",
       responseMessageId: "assistant-streaming-tool",
@@ -139,7 +140,7 @@ describe("app/api/chat/response", () => {
   });
 
   it("rejects a response with an open dynamic tool part", () => {
-    const failure = getAssistantResponseFailure({
+    const failure = getNinaResponseFailure({
       isAborted: false,
       responseMessage: {
         id: "assistant-dynamic-tool",
@@ -157,7 +158,7 @@ describe("app/api/chat/response", () => {
       },
     });
 
-    expect(failure).toBeInstanceOf(IncompleteChatResponseError);
+    expect(failure).toBeInstanceOf(IncompleteNinaResponseError);
     expect(failure).toMatchObject({
       reason: "open-stream-part",
       responseMessageId: "assistant-dynamic-tool",
@@ -165,7 +166,7 @@ describe("app/api/chat/response", () => {
   });
 
   it("accepts a response with terminal tool output and final text", () => {
-    const failure = getAssistantResponseFailure({
+    const failure = getNinaResponseFailure({
       isAborted: false,
       responseMessage: {
         id: "assistant-terminal-tool",

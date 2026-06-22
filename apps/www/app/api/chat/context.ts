@@ -1,11 +1,11 @@
 import type {
   NinaContextSnapshot,
   NinaLearningSessionInput,
-} from "@repo/ai/nina/context";
+} from "@repo/ai/nina/memory/pack";
 import {
   NinaContextSnapshotSchema,
   openNinaLearningSession,
-} from "@repo/ai/nina/context";
+} from "@repo/ai/nina/memory/pack";
 import { type Locale, LocaleSchema } from "@repo/contents/_types/content";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";

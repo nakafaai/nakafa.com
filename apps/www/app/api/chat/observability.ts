@@ -9,13 +9,6 @@ import { Effect } from "effect";
 
 const source = "chat-api";
 
-interface ChatErrorReporterParams {
-  chatId: Id<"chats">;
-  logContext: LogContext;
-  modelId: ModelId;
-  userId: string;
-}
-
 /** Preserves real Error details while giving non-Error failures a stable shape. */
 function toError(error: unknown) {
   if (error instanceof Error) {
@@ -44,7 +37,12 @@ export function createChatErrorReporter({
   logContext,
   modelId,
   userId,
-}: ChatErrorReporterParams) {
+}: {
+  readonly chatId: Id<"chats">;
+  readonly logContext: LogContext;
+  readonly modelId: ModelId;
+  readonly userId: string;
+}) {
   const gatewayModelId = getModelGatewayId(modelId);
 
   return (error: unknown, errorLocation: string) => {

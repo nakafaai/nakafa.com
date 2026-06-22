@@ -1,5 +1,5 @@
 import { nakafaPrompt } from "@repo/ai/agents/orchestrator/prompt";
-import type { NinaContextPack } from "@repo/ai/nina/context";
+import type { NinaContextPack } from "@repo/ai/nina/memory/pack";
 import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
 import { describe, expect, it } from "vitest";
 

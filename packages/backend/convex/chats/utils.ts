@@ -2,7 +2,7 @@ import { defaultModel, ModelIdSchema } from "@repo/ai/config/model";
 import {
   NinaContextSnapshotSchema,
   NinaContextTransitionSchema,
-} from "@repo/ai/nina/context";
+} from "@repo/ai/nina/memory/pack";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { mapDBPartToUIMessagePart } from "@repo/backend/convex/chats/messageParts/dbToUi";

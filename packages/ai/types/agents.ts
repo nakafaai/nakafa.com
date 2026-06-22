@@ -1,7 +1,7 @@
 import type { Nakafa } from "@repo/ai/agents/nakafa/service";
 import type { ModelId } from "@repo/ai/config/model";
 import type { SourceReference } from "@repo/ai/lib/source";
-import { NinaContextPackSchema } from "@repo/ai/nina/context";
+import { NinaContextPackSchema } from "@repo/ai/nina/memory/pack";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { PromptUserRoleSchema } from "@repo/ai/types/roles";
 import {

@@ -1,9 +1,9 @@
 // @vitest-environment node
 import { defaultModel, getModelCreditCost } from "@repo/ai/config/model";
+import { trackUsage } from "@repo/ai/nina/runtime/usage";
 import type { LanguageModelUsage } from "ai";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
-import { trackUsage } from "@/app/api/chat/usage";
 
 /**
  * Returns one complete AI SDK usage row for usage-tracker tests.
@@ -32,7 +32,7 @@ function usageRow({
   } satisfies LanguageModelUsage;
 }
 
-describe("app/api/chat/usage", () => {
+describe("nina/runtime/usage", () => {
   it("tracks sub-agent usage and creates final metadata", () => {
     const usage = Effect.runSync(trackUsage());
 

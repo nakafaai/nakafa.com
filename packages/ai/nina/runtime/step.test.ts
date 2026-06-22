@@ -1,8 +1,6 @@
-// @vitest-environment node
 import type { ModelMessage } from "ai";
-import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
-import { prepareChatStep } from "@/app/api/chat/step";
+import { createNinaPrepareStep, type NinaPrepareStep } from "./step";
 
 const emptyMessages = [] satisfies ModelMessage[];
 const system = "Base system prompt";
@@ -14,16 +12,13 @@ const externalUrlMessages = [
   },
 ] satisfies ModelMessage[];
 
-describe("app/api/chat/step", () => {
-  it("forces Nakafa on the first page-fetch step", () => {
-    const step = Effect.runSync(
-      prepareChatStep({
-        messages: emptyMessages,
-        needsPageFetch: true,
-        system,
-        stepNumber: 0,
-      })
-    );
+describe("nina/runtime/step", () => {
+  it("forces Nakafa on the first page-fetch step", async () => {
+    const step = await readPreparedStep({
+      messages: emptyMessages,
+      needsPageFetch: true,
+      stepNumber: 0,
+    });
 
     expect(step).toEqual({
       activeTools: ["nakafa"],
@@ -32,15 +27,12 @@ describe("app/api/chat/step", () => {
     });
   });
 
-  it("reinforces final source policy after the first page-fetch step", () => {
-    const step = Effect.runSync(
-      prepareChatStep({
-        messages: emptyMessages,
-        needsPageFetch: true,
-        system,
-        stepNumber: 1,
-      })
-    );
+  it("reinforces final source policy after the first page-fetch step", async () => {
+    const step = await readPreparedStep({
+      messages: emptyMessages,
+      needsPageFetch: true,
+      stepNumber: 1,
+    });
 
     expect(step).toEqual({
       messages: [],
@@ -50,7 +42,7 @@ describe("app/api/chat/step", () => {
     });
   });
 
-  it("leaves low-risk first non-page-fetch prompts to the orchestrator prompt", () => {
+  it("leaves low-risk first non-page-fetch prompts to the orchestrator prompt", async () => {
     const greetingMessages = [
       {
         content: "hi",
@@ -58,14 +50,11 @@ describe("app/api/chat/step", () => {
       },
     ] satisfies ModelMessage[];
 
-    const step = Effect.runSync(
-      prepareChatStep({
-        messages: greetingMessages,
-        needsPageFetch: false,
-        system,
-        stepNumber: 0,
-      })
-    );
+    const step = await readPreparedStep({
+      messages: greetingMessages,
+      needsPageFetch: false,
+      stepNumber: 0,
+    });
 
     expect(step).toEqual({
       messages: greetingMessages,
@@ -74,15 +63,12 @@ describe("app/api/chat/step", () => {
     expect(step).not.toHaveProperty("toolChoice");
   });
 
-  it("reinforces final source policy after the first non-page-fetch step", () => {
-    const step = Effect.runSync(
-      prepareChatStep({
-        messages: emptyMessages,
-        needsPageFetch: false,
-        system,
-        stepNumber: 1,
-      })
-    );
+  it("reinforces final source policy after the first non-page-fetch step", async () => {
+    const step = await readPreparedStep({
+      messages: emptyMessages,
+      needsPageFetch: false,
+      stepNumber: 1,
+    });
 
     expect(step).toEqual({
       messages: [],
@@ -148,15 +134,12 @@ describe("app/api/chat/step", () => {
     });
   });
 
-  it("forces research for first-step external URL requests", () => {
-    const step = Effect.runSync(
-      prepareChatStep({
-        messages: externalUrlMessages,
-        needsPageFetch: false,
-        system,
-        stepNumber: 0,
-      })
-    );
+  it("forces research for first-step external URL requests", async () => {
+    const step = await readPreparedStep({
+      messages: externalUrlMessages,
+      needsPageFetch: false,
+      stepNumber: 0,
+    });
 
     expect(step).toEqual({
       activeTools: ["deepResearch"],
@@ -165,15 +148,12 @@ describe("app/api/chat/step", () => {
     });
   });
 
-  it("keeps page fetch ahead of external URL requests", () => {
-    const step = Effect.runSync(
-      prepareChatStep({
-        messages: externalUrlMessages,
-        needsPageFetch: true,
-        system,
-        stepNumber: 0,
-      })
-    );
+  it("keeps page fetch ahead of external URL requests", async () => {
+    const step = await readPreparedStep({
+      messages: externalUrlMessages,
+      needsPageFetch: true,
+      stepNumber: 0,
+    });
 
     expect(step).toEqual({
       activeTools: ["nakafa"],
@@ -182,7 +162,7 @@ describe("app/api/chat/step", () => {
     });
   });
 
-  it("keeps prepared model messages available to later model steps", () => {
+  it("keeps prepared model messages available to later model steps", async () => {
     const messages = [
       {
         content: "Cek kabar tryout.",
@@ -194,19 +174,16 @@ describe("app/api/chat/step", () => {
       },
     ] satisfies ModelMessage[];
 
-    const step = Effect.runSync(
-      prepareChatStep({
-        messages,
-        needsPageFetch: false,
-        system,
-        stepNumber: 1,
-      })
-    );
+    const step = await readPreparedStep({
+      messages,
+      needsPageFetch: false,
+      stepNumber: 1,
+    });
 
-    expect(step.messages).toEqual(messages);
+    expect(step?.messages).toEqual(messages);
   });
 
-  it("leaves continuation tool choice to the model", () => {
+  it("leaves continuation tool choice to the model", async () => {
     const messages = [
       {
         content: [
@@ -230,14 +207,11 @@ describe("app/api/chat/step", () => {
       },
     ] satisfies ModelMessage[];
 
-    const step = Effect.runSync(
-      prepareChatStep({
-        messages,
-        needsPageFetch: false,
-        system,
-        stepNumber: 1,
-      })
-    );
+    const step = await readPreparedStep({
+      messages,
+      needsPageFetch: false,
+      stepNumber: 1,
+    });
 
     expect(step).toEqual({
       messages,
@@ -247,3 +221,30 @@ describe("app/api/chat/step", () => {
     expect(step).not.toHaveProperty("toolChoice");
   });
 });
+
+/**
+ * Runs Nina's deterministic step policy through the AI SDK callback contract.
+ *
+ * Tests exercise the public SDK-derived callback shape so package behavior
+ * stays aligned with `ToolLoopAgentSettings["prepareStep"]` instead of a local
+ * imitation of the callback input.
+ */
+function readPreparedStep({
+  messages,
+  needsPageFetch,
+  stepNumber,
+}: {
+  readonly messages: ModelMessage[];
+  readonly needsPageFetch: boolean;
+  readonly stepNumber: number;
+}) {
+  const prepareStep = createNinaPrepareStep({ needsPageFetch, system });
+
+  return prepareStep({
+    experimental_context: undefined,
+    messages,
+    model: "google/gemini-3-flash",
+    stepNumber,
+    steps: [],
+  } satisfies Parameters<NinaPrepareStep>[0]);
+}

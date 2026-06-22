@@ -2,7 +2,7 @@ import { chatResponseFailureCode } from "@repo/ai/config/generation";
 import type {
   NinaContextSnapshot,
   NinaContextTransition,
-} from "@repo/ai/nina/context";
+} from "@repo/ai/nina/memory/pack";
 import { mapDBMessagesToUIMessages } from "@repo/backend/convex/chats/utils";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
