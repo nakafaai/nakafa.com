@@ -81,6 +81,7 @@ export const messageGenerationErrorCodeValidator = literals(
   ...CHAT_GENERATION_FAILURE_CODES
 );
 
+/** Stored chat message contract, including optional Nina context metadata. */
 export const messageValidator = v.object({
   identifier: v.string(),
   chatId: v.id("chats"),

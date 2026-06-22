@@ -50,6 +50,7 @@ export const learningContextStorageFields = {
   contextSourcePath: v.optional(v.string()),
 };
 
+/** Persisted material/question context fields attached to engagement rows. */
 export const learningContextStorageValidator = v.object(
   learningContextStorageFields
 );

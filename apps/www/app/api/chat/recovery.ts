@@ -21,7 +21,7 @@ import { Effect } from "effect";
 type ChatRecoveryOptions = Parameters<ToolCallRepairFunction<ToolSet>>[0];
 
 interface Params extends ChatRecoveryOptions {
-  needsPageFetch: boolean;
+  reservePageFetch: () => boolean;
   sessionLogger: LogContext;
   url: string;
 }
@@ -36,7 +36,7 @@ export const recoverChatToolCall = Effect.fn("chat.recoverChatToolCall")(
   function* ({
     error,
     inputSchema,
-    needsPageFetch,
+    reservePageFetch,
     sessionLogger,
     toolCall,
     tools,
@@ -58,9 +58,9 @@ export const recoverChatToolCall = Effect.fn("chat.recoverChatToolCall")(
     }
 
     if (
-      needsPageFetch &&
       toolCall.toolName === TOOL_NAMES.nakafa &&
-      InvalidToolInputError.isInstance(error)
+      InvalidToolInputError.isInstance(error) &&
+      reservePageFetch()
     ) {
       yield* Effect.logInfo("Using server-derived Nakafa input").pipe(
         Effect.annotateLogs(sessionLogger)

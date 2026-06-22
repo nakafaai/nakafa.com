@@ -2,6 +2,7 @@ import {
   type NinaLearningSessionInput,
   openNinaLearningSession,
 } from "@repo/ai/nina/context";
+import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
 import { Effect, Exit } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -17,6 +18,9 @@ const learning = {
   url: "https://nakafa.com/en/subjects/mathematics/vector/addition",
   verified: true,
 } satisfies NinaLearningSessionInput["learning"];
+const placementProgramKey = LearningProgramKeySchema.make(
+  "cambridge-lower-secondary"
+);
 
 describe("nina/context", () => {
   it("opens a verified page session with a durable snapshot and page-fetch policy", async () => {
@@ -29,7 +33,7 @@ describe("nina/context", () => {
           nodeKey: "curriculum:vector:addition",
           parentHref: "/en/curriculum/mathematics/vector",
           parentTitle: "Vector",
-          programKey: "cambridge-lower-secondary",
+          programKey: placementProgramKey,
         },
         source: "current-page",
       } satisfies NinaLearningSessionInput)

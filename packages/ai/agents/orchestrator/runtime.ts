@@ -1,28 +1,33 @@
-import type { NinaContextPack } from "@repo/ai/nina/context";
+import { NinaContextPackSchema } from "@repo/ai/nina/context";
 import { formatNinaContextPackPrompt } from "@repo/ai/nina/prompt";
 import { formatLearningProfilePromptContext } from "@repo/ai/prompt/learning-profile";
-import type { AgentLearningProfile } from "@repo/ai/types/agents";
-import type { Locale } from "@repo/utilities/locales";
+import { AgentLearningProfileSchema } from "@repo/ai/types/agents";
+import { LocaleSchema } from "@repo/contents/_types/content";
+import { Schema } from "effect";
 
 /** Structured runtime facts that Nina can use without route or title guessing. */
-export interface RuntimePromptContext {
-  readonly currentDate: string;
-  readonly currentPage: {
-    readonly locale: Locale;
-    readonly slug: string;
-    readonly verified: boolean;
-  };
-  readonly learningProfile?: AgentLearningProfile;
-  readonly nina: NinaContextPack;
-  readonly url: string;
-  readonly userLocation: {
-    readonly city: string;
-    readonly country: string;
-    readonly countryRegion: string;
-    readonly latitude: string;
-    readonly longitude: string;
-  };
-}
+export const RuntimePromptContextSchema = Schema.Struct({
+  currentDate: Schema.String,
+  currentPage: Schema.Struct({
+    locale: LocaleSchema,
+    slug: Schema.String,
+    verified: Schema.Boolean,
+  }).pipe(Schema.mutable),
+  learningProfile: Schema.optional(AgentLearningProfileSchema),
+  nina: NinaContextPackSchema,
+  url: Schema.String,
+  userLocation: Schema.Struct({
+    city: Schema.String,
+    country: Schema.String,
+    countryRegion: Schema.String,
+    latitude: Schema.String,
+    longitude: Schema.String,
+  }).pipe(Schema.mutable),
+}).pipe(Schema.mutable);
+
+export type RuntimePromptContext = Schema.Schema.Type<
+  typeof RuntimePromptContextSchema
+>;
 
 /** Formats verified page, location, Nina context, and learning profile facts. */
 export function formatRuntimePrompt({

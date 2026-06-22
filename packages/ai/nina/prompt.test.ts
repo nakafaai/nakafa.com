@@ -1,6 +1,11 @@
 import type { NinaContextPack } from "@repo/ai/nina/context";
 import { formatNinaContextPackPrompt } from "@repo/ai/nina/prompt";
+import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
 import { describe, expect, it } from "vitest";
+
+const placementProgramKey = LearningProgramKeySchema.make(
+  "cambridge-lower-secondary"
+);
 
 const canonicalContext = {
   learning: {
@@ -57,7 +62,7 @@ const placementContext = {
     nodeKey: "curriculum:vector:addition",
     parentHref: "/en/curriculum/mathematics/vector",
     parentTitle: "Vector",
-    programKey: "cambridge-lower-secondary",
+    programKey: placementProgramKey,
   },
   snapshot: {
     capturedAt: "2026-05-09T00:00:00.000Z",
@@ -78,7 +83,7 @@ const placementContext = {
       nodeKey: "curriculum:vector:addition",
       parentHref: "/en/curriculum/mathematics/vector",
       parentTitle: "Vector",
-      programKey: "cambridge-lower-secondary",
+      programKey: placementProgramKey,
     },
     source: "current-page",
     tools: {

@@ -93,6 +93,59 @@ describe("contents/queries/recent", () => {
 
     expect(results).toEqual([]);
   });
+
+  it("uses the current route projection when a recent row has stale route copy", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const seeded = await t.mutation(async (ctx) => {
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "recent-stale-route",
+      });
+      const ref = await insertMaterialRoute(ctx, "stale-route");
+
+      await insertMaterialRecent(ctx, {
+        ref,
+        lastViewedAt: NOW,
+        materialDomain: "mathematics",
+        suffix: "stale-route",
+        userId: identity.userId,
+      });
+
+      const route = await ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (q) => q.eq("content_id", ref.assetId))
+        .unique();
+
+      if (!route) {
+        expect.fail("Expected content route for stale recent fixture.");
+      }
+
+      await ctx.db.patch(route._id, {
+        route: "subjects/mathematics/topic-current/section-current",
+        title: "Material current",
+      });
+
+      return { ...identity, ref };
+    });
+
+    const results = await t
+      .withIdentity({
+        sessionId: seeded.sessionId,
+        subject: seeded.authUserId,
+      })
+      .query(api.contents.queries.recent.getRecentlyViewed, {
+        locale: "en",
+        limit: 5,
+      });
+
+    expect(results).toEqual([
+      expect.objectContaining({
+        href: "/subjects/mathematics/topic-current/section-current",
+        route: "subjects/mathematics/topic-current/section-current",
+        title: "Material current",
+      }),
+    ]);
+  });
 });
 
 /** Inserts one curriculum lesson row for recently viewed query tests. */

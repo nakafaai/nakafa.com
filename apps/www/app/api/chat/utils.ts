@@ -1,7 +1,8 @@
+import { AgentLearningProfileSchema } from "@repo/ai/types/agents";
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import type { Locale } from "@repo/utilities/locales";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { nakafaContent } from "@/app/api/chat/nakafa-content";
 
 /**
@@ -42,7 +43,7 @@ export const getUserInfo = Effect.fn("chat.getUserInfo")(function* (
  */
 export const getLearningProfile = Effect.fn("chat.getLearningProfile")(
   function* (token: string, locale: Locale) {
-    return yield* Effect.tryPromise(() =>
+    const profile = yield* Effect.tryPromise(() =>
       fetchQuery(
         convexApi.learningPrograms.queries.getActiveProfile,
         { locale },
@@ -51,5 +52,9 @@ export const getLearningProfile = Effect.fn("chat.getLearningProfile")(
         }
       )
     );
+
+    return yield* Schema.decodeUnknown(
+      Schema.NullOr(AgentLearningProfileSchema)
+    )(profile);
   }
 );

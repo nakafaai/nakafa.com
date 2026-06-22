@@ -18,18 +18,6 @@ import {
 import { getUnknownErrorMessage } from "@repo/backend/convex/lib/effect";
 import { Effect } from "effect";
 
-/** Popularity namespace produced from one verified engagement context. */
-interface SignalScope {
-  readonly context: LearningContextStorage;
-  readonly scopeMode: LearningPopularityScope;
-}
-
-/** Viewer identity and timestamp used to de-duplicate daily signals. */
-interface SignalInput {
-  readonly now: number;
-  readonly userId?: Doc<"users">["_id"];
-}
-
 /** Maps thrown Convex IO failures into the content-view error channel. */
 function toSignalIoError(error: unknown) {
   return new ContentViewIoError({
@@ -38,20 +26,22 @@ function toSignalIoError(error: unknown) {
   });
 }
 
+/** Creates one popularity signal scope from verified learning-context storage. */
+function createSignalScope(
+  context: LearningContextStorage,
+  scopeMode: LearningPopularityScope
+) {
+  return { context, scopeMode };
+}
+
 /** Returns the popularity scopes produced by one verified learning context. */
-function createSignalScopes(context: LearningContextStorage): SignalScope[] {
-  const scopes: SignalScope[] = [
-    {
-      context: createCanonicalLearningContext(),
-      scopeMode: "global",
-    },
+function createSignalScopes(context: LearningContextStorage) {
+  const scopes = [
+    createSignalScope(createCanonicalLearningContext(), "global"),
   ];
 
   if (context.contextMode === "placement") {
-    scopes.push({
-      context,
-      scopeMode: "placement",
-    });
+    scopes.push(createSignalScope(context, "placement"));
   }
 
   return scopes;
@@ -63,8 +53,11 @@ const enqueueSignalScope = Effect.fn("contents.views.enqueueSignalScope")(
     db: MutationCtx["db"],
     route: Doc<"contentRoutes">,
     args: RecordContentViewArgs,
-    scope: SignalScope,
-    input: SignalInput
+    scope: ReturnType<typeof createSignalScopes>[number],
+    input: {
+      readonly now: number;
+      readonly userId?: Doc<"users">["_id"];
+    }
   ) {
     const signalDay = getPopularitySignalDay(input.now);
     const viewerKey = createPopularityViewerKey({
@@ -153,7 +146,10 @@ export const enqueuePopularitySignals = Effect.fn(
   route: Doc<"contentRoutes">,
   args: RecordContentViewArgs,
   context: LearningContextStorage,
-  input: SignalInput
+  input: {
+    readonly now: number;
+    readonly userId?: Doc<"users">["_id"];
+  }
 ) {
   const partitions = new Set<number>();
 

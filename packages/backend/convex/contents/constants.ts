@@ -7,7 +7,7 @@ import {
 export const CONTENT_ANALYTICS_BATCH_SIZE = 250;
 
 /** Number of popularity counters recomputed from daily signals in one mutation. */
-export const LEARNING_POPULARITY_REFRESH_BATCH_SIZE = 100;
+export const LEARNING_POPULARITY_REFRESH_BATCH_SIZE = 10;
 
 /** Number of independent analytics partitions. */
 export const CONTENT_ANALYTICS_PARTITION_COUNT = 16;

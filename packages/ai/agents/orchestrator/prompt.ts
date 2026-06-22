@@ -4,18 +4,25 @@ import {
   formatIdentityPrompt,
   formatTonePrompt,
 } from "@repo/ai/agents/orchestrator/persona";
-import type { RuntimePromptContext } from "@repo/ai/agents/orchestrator/runtime";
-import { formatRuntimePrompt } from "@repo/ai/agents/orchestrator/runtime";
+import {
+  formatRuntimePrompt,
+  RuntimePromptContextSchema,
+} from "@repo/ai/agents/orchestrator/runtime";
 import { formatTaskPrompt } from "@repo/ai/agents/orchestrator/task";
 import { formatToolPolicyPrompt } from "@repo/ai/agents/orchestrator/tools";
 import { createPrompt } from "@repo/ai/prompt/utils";
-import type { PromptUserRole } from "@repo/ai/types/roles";
+import { PromptUserRoleSchema } from "@repo/ai/types/roles";
+import { Schema } from "effect";
 
 /** Runtime context plus authenticated role used to build Nina's system prompt. */
-interface SystemPromptProps extends RuntimePromptContext {
-  /** The role of the user. */
-  userRole?: PromptUserRole;
-}
+const SystemPromptPropsSchema = Schema.extend(
+  RuntimePromptContextSchema,
+  Schema.Struct({
+    userRole: Schema.optional(PromptUserRoleSchema),
+  })
+);
+
+type SystemPromptProps = Schema.Schema.Type<typeof SystemPromptPropsSchema>;
 
 /** Builds Nina's orchestrator prompt with routing rules for specialist agents. */
 export function nakafaPrompt({ userRole, ...runtime }: SystemPromptProps) {

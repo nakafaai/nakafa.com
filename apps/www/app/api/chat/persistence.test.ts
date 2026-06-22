@@ -7,7 +7,11 @@ import type {
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { loadMessages, saveOrCreateChat } from "@/app/api/chat/persistence";
+import {
+  loadMessages,
+  loadPinnedNinaContext,
+  saveOrCreateChat,
+} from "@/app/api/chat/persistence";
 
 const mocks = vi.hoisted(() => ({
   compressMessages: vi.fn(),
@@ -162,6 +166,37 @@ describe("app/api/chat/persistence", () => {
       },
       { token: "session-token" }
     );
+  });
+
+  it("loads the newest stored Nina context for pinned-chat continuation", async () => {
+    mocks.fetchQuery.mockResolvedValue(ninaContextSnapshot);
+
+    const result = await Effect.runPromise(
+      loadPinnedNinaContext({
+        chatId: "chat_existing",
+        token: "session-token",
+      })
+    );
+
+    expect(result).toEqual(ninaContextSnapshot);
+    expect(mocks.fetchQuery).toHaveBeenCalledWith(
+      expect.anything(),
+      { chatId: "chat_existing" },
+      { token: "session-token" }
+    );
+  });
+
+  it("ignores missing pinned Nina context instead of inventing chat context", async () => {
+    mocks.fetchQuery.mockResolvedValue(null);
+
+    const result = await Effect.runPromise(
+      loadPinnedNinaContext({
+        chatId: "chat_existing",
+        token: "session-token",
+      })
+    );
+
+    expect(result).toBeUndefined();
   });
 
   it("deletes an existing message rewrite batch before saving the replacement", async () => {

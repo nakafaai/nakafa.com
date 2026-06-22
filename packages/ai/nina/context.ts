@@ -1,4 +1,5 @@
 import { LocaleSchema } from "@repo/contents/_types/content";
+import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
 import { Effect, Schema } from "effect";
 
 export const NINA_CONTEXT_TRANSITION_REASONS = [
@@ -32,7 +33,7 @@ export const LearningPlacementContextSchema = Schema.Struct({
   nodeKey: Schema.String,
   parentHref: Schema.String,
   parentTitle: Schema.String,
-  programKey: Schema.String,
+  programKey: LearningProgramKeySchema,
 }).pipe(Schema.mutable);
 
 /** Tool permissions for a Nina turn, separated from tool implementation code. */
@@ -86,18 +87,24 @@ export type NinaLearningSessionInput = Schema.Schema.Type<
 >;
 
 /** Nina context pack consumed by prompts, specialists, and message metadata. */
-export interface NinaContextPack {
-  readonly learning: NinaLearningContext;
-  readonly placement?: LearningPlacementContext;
-  readonly snapshot: NinaContextSnapshot;
-  readonly tools: NinaToolContext;
-  readonly transition: NinaContextTransition;
-}
+export const NinaContextPackSchema = Schema.Struct({
+  learning: NinaLearningContextSchema,
+  placement: Schema.optional(LearningPlacementContextSchema),
+  snapshot: NinaContextSnapshotSchema,
+  tools: NinaToolContextSchema,
+  transition: NinaContextTransitionSchema,
+}).pipe(Schema.mutable);
+
+export type NinaContextPack = Schema.Schema.Type<typeof NinaContextPackSchema>;
 
 /** NinaHarness output returned to app route boundaries for one turn. */
-export interface NinaLearningSession {
-  readonly context: NinaContextPack;
-}
+export const NinaLearningSessionSchema = Schema.Struct({
+  context: NinaContextPackSchema,
+}).pipe(Schema.mutable);
+
+export type NinaLearningSession = Schema.Schema.Type<
+  typeof NinaLearningSessionSchema
+>;
 
 /** Raised when the app boundary sends an invalid Nina learning context. */
 export class NinaContextError extends Schema.TaggedError<NinaContextError>()(

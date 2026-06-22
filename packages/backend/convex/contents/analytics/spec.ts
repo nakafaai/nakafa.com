@@ -51,6 +51,7 @@ export const processContentAnalyticsPartitionResultValidator = v.object({
   skipped: v.boolean(),
 });
 
+/** Scheduler result returned after enqueueing popularity window refresh work. */
 export const scheduleLearningPopularityRefreshesResultValidator = v.object({
   scheduledWindows: v.number(),
 });
@@ -61,10 +62,12 @@ export const refreshLearningPopularityWindowPageArgs = {
   windowKey: learningPopularityWindowValidator,
 };
 
+/** Public validator for one paginated popularity window refresh invocation. */
 export const refreshLearningPopularityWindowPageArgsValidator = v.object(
   refreshLearningPopularityWindowPageArgs
 );
 
+/** Progress contract returned by a bounded popularity refresh page. */
 export const refreshLearningPopularityWindowPageResultValidator = v.object({
   continueCursor: v.string(),
   isDone: v.boolean(),

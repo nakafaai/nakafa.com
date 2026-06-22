@@ -1,5 +1,6 @@
 import { nakafaPrompt } from "@repo/ai/agents/orchestrator/prompt";
 import type { NinaContextPack } from "@repo/ai/nina/context";
+import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
 import { describe, expect, it } from "vitest";
 
 const nina = {
@@ -276,7 +277,7 @@ describe("nakafaPrompt", () => {
         ],
         program: {
           coverageStatus: "partial",
-          key: "snbt-2026",
+          key: LearningProgramKeySchema.make("snbt-2026"),
           kind: "admission-exam",
           title: "SNBT 2026",
           versionLabel: "2026",

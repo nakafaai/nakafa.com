@@ -4,21 +4,21 @@ import type {
   NinaContextSnapshot,
   NinaContextTransition,
 } from "@repo/ai/nina/context";
+import { NinaContextSnapshotSchema } from "@repo/ai/nina/context";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { CHAT_MESSAGES_PAGE_SIZE } from "@repo/backend/convex/chats/constants";
 import { mapUIMessagePartsToDBParts } from "@repo/backend/convex/chats/messageParts/uiToDb";
-import type { MessageWithPartsDoc } from "@repo/backend/convex/chats/schema";
 import { mapDBMessagesToUIMessages } from "@repo/backend/convex/chats/utils";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
-import { Effect } from "effect";
+import type { FunctionReturnType } from "convex/server";
+import { Effect, Option, Schema } from "effect";
 
-interface ChatMessagesPage {
-  continueCursor: string;
-  isDone: boolean;
-  page: MessageWithPartsDoc[];
-}
+/** Generated Convex page shape returned by the chat-message pagination query. */
+type ChatMessagesPage = FunctionReturnType<
+  typeof convexApi.chats.queries.loadMessagesPage
+>;
 
 /** User-message persistence input with the Nina context metadata saved atomically. */
 interface Save {
@@ -121,6 +121,34 @@ export const saveOrCreateChat = Effect.fn("chat.saveOrCreateChat")(function* ({
   );
   return result.chatId;
 });
+
+/**
+ * Loads the newest stored Nina snapshot for an existing chat.
+ *
+ * The Convex query is bounded and ownership-checked. Decoding happens here so
+ * app chat routing never replays unvalidated persisted context metadata.
+ */
+export const loadPinnedNinaContext = Effect.fn("chat.loadPinnedNinaContext")(
+  function* ({ chatId, token }: Load) {
+    const storedContext = yield* Effect.tryPromise(() =>
+      fetchQuery(
+        convexApi.chats.queries.getLatestNinaContext,
+        { chatId },
+        { token }
+      )
+    );
+
+    const decoded = Schema.decodeUnknownOption(NinaContextSnapshotSchema)(
+      storedContext
+    );
+
+    if (Option.isNone(decoded)) {
+      return;
+    }
+
+    return decoded.value;
+  }
+);
 
 /**
  * Fetches a chat transcript page-by-page until the retained context is enough

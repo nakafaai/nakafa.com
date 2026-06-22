@@ -34,6 +34,7 @@ type ChatUsage = Effect.Effect.Success<ReturnType<typeof trackUsage>>;
 
 /** Inputs needed to bind Nina's specialist tools to app-owned services. */
 export interface NinaToolSetInput {
+  readonly consumePageFetch: () => boolean;
   readonly context: AgentContext;
   readonly locale: Locale;
   readonly logContext: LogContext;
@@ -49,12 +50,11 @@ export function createNinaToolSet({
   locale,
   logContext,
   modelId,
+  consumePageFetch,
   reportError,
   usage,
   writer,
 }: NinaToolSetInput) {
-  let fetchedPage = false;
-
   return {
     [TOOL_NAMES.nakafa]: tool({
       description:
@@ -62,11 +62,7 @@ export function createNinaToolSet({
       inputSchema: nakafaToolInputSchema,
       /** Runs the Nakafa specialist with one-time current-page fetch support. */
       execute: (input, { toolCallId }) => {
-        const needsPageFetch = context.needsPageFetch && !fetchedPage;
-
-        if (needsPageFetch) {
-          fetchedPage = true;
-        }
+        const needsPageFetch = consumePageFetch();
 
         return Effect.runPromise(
           Effect.gen(function* () {

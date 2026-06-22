@@ -143,6 +143,7 @@ export const assessmentNodeRowValidator = v.object({
   }),
 });
 
+/** Canonical public route row written by content sync read-model imports. */
 export const publicRouteRowValidator = v.object({
   canonicalPath: v.optional(v.string()),
   description: v.optional(v.string()),

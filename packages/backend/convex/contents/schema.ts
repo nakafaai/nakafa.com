@@ -213,6 +213,12 @@ const tables = {
       "content_id",
       "contextKey",
     ])
+    .index("by_scopeMode_and_content_id_and_contextKey_and_signalDay", [
+      "scopeMode",
+      "content_id",
+      "contextKey",
+      "signalDay",
+    ])
     .index("by_section_and_locale_and_scopeMode_and_signalDay", [
       "section",
       "locale",

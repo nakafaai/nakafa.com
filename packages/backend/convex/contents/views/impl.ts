@@ -18,15 +18,13 @@ import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
 import type { FunctionReference } from "convex/server";
 import { Clock, Effect } from "effect";
 
-/** Internal scheduler functions used after a content view is recorded. */
-export interface ContentViewSchedulerTargets {
-  readonly scheduleAnalyticsPartition: FunctionReference<
-    "mutation",
-    "internal",
-    ScheduleContentAnalyticsPartitionArgs,
-    ScheduleContentAnalyticsPartitionResult
-  >;
-}
+/** Generated internal mutation reference accepted by Convex's scheduler. */
+type ScheduleContentAnalyticsPartitionReference = FunctionReference<
+  "mutation",
+  "internal",
+  ScheduleContentAnalyticsPartitionArgs,
+  ScheduleContentAnalyticsPartitionResult
+>;
 
 /** Maps thrown Convex IO failures into the content-view error channel. */
 function toContentViewIoError(error: unknown) {
@@ -192,7 +190,7 @@ export const recordUniqueContentView = Effect.fn(
 )(function* (
   ctx: MutationCtx,
   args: RecordContentViewArgs,
-  targets: ContentViewSchedulerTargets
+  scheduleAnalyticsPartition: ScheduleContentAnalyticsPartitionReference
 ) {
   const authContext = yield* Effect.tryPromise({
     try: () => getOptionalAppUser(ctx),
@@ -244,9 +242,7 @@ export const recordUniqueContentView = Effect.fn(
     for (const partition of partitions) {
       yield* Effect.tryPromise({
         try: () =>
-          ctx.scheduler.runAfter(0, targets.scheduleAnalyticsPartition, {
-            partition,
-          }),
+          ctx.scheduler.runAfter(0, scheduleAnalyticsPartition, { partition }),
         catch: toContentViewIoError,
       });
     }
@@ -280,9 +276,7 @@ export const recordUniqueContentView = Effect.fn(
   for (const partition of partitions) {
     yield* Effect.tryPromise({
       try: () =>
-        ctx.scheduler.runAfter(0, targets.scheduleAnalyticsPartition, {
-          partition,
-        }),
+        ctx.scheduler.runAfter(0, scheduleAnalyticsPartition, { partition }),
       catch: toContentViewIoError,
     });
   }

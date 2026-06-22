@@ -25,7 +25,11 @@ import {
 } from "@/app/api/chat/content";
 import { resolveNinaLearningSession } from "@/app/api/chat/context";
 import { createChatErrorReporter } from "@/app/api/chat/observability";
-import { loadMessages, saveOrCreateChat } from "@/app/api/chat/persistence";
+import {
+  loadMessages,
+  loadPinnedNinaContext,
+  saveOrCreateChat,
+} from "@/app/api/chat/persistence";
 import { streamChat } from "@/app/api/chat/stream";
 import {
   getLearningProfile,
@@ -152,9 +156,14 @@ export function POST(req: Request) {
         getUserInfo(token),
         getLearningProfile(token, locale),
       ]);
+      const pinnedContext =
+        id && !verified
+          ? yield* loadPinnedNinaContext({ chatId: id, token })
+          : undefined;
       const ninaSession = yield* resolveNinaLearningSession({
         capturedAt: capturedAt.toISOString(),
         locale,
+        ...(pinnedContext ? { pinnedContext } : {}),
         rawContext: context,
         slug,
         url,

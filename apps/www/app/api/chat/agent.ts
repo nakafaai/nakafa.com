@@ -12,6 +12,7 @@ import type { LogContext } from "@repo/utilities/logging/types";
 import type { UIMessageStreamWriter } from "ai";
 import { Effect } from "effect";
 import type { getTranslations } from "next-intl/server";
+import { createPageFetchState } from "@/app/api/chat/fetch";
 import { recoverChatToolCall } from "@/app/api/chat/recovery";
 import { prepareChatStep } from "@/app/api/chat/step";
 import { writeSuggestions } from "@/app/api/chat/suggestions";
@@ -57,9 +58,9 @@ export interface StreamNinaAgentInput {
 /** Converts app auth/profile rows into the package-owned Nina user context. */
 function createCoreNinaUser(user: NinaAgentUser): CoreNinaAgentUser {
   return {
-    learningProfile: user.learningProfile ?? undefined,
     location: user.location,
-    role: user.info.role ?? undefined,
+    ...(user.learningProfile ? { learningProfile: user.learningProfile } : {}),
+    ...(user.info.role ? { role: user.info.role } : {}),
   };
 }
 
@@ -108,6 +109,7 @@ export const streamNinaAgent = Effect.fn("chat.streamNinaAgent")(function* ({
     runtime,
     user: coreUser,
   });
+  const pageFetch = createPageFetchState(context.needsPageFetch);
 
   const turn = yield* runNinaAgentTurn({
     adapter: {
@@ -133,7 +135,7 @@ export const streamNinaAgent = Effect.fn("chat.streamNinaAgent")(function* ({
         Effect.runPromise(
           recoverChatToolCall({
             ...options,
-            needsPageFetch: context.needsPageFetch,
+            reservePageFetch: pageFetch.reserveForRepair,
             sessionLogger: runtime.logContext,
             url: page.url,
           })
@@ -143,6 +145,7 @@ export const streamNinaAgent = Effect.fn("chat.streamNinaAgent")(function* ({
         locale: page.locale,
         logContext: runtime.logContext,
         modelId: runtime.modelId,
+        consumePageFetch: pageFetch.consumeForTool,
         reportError: runtime.reportError,
         usage,
         writer,

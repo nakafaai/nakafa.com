@@ -385,6 +385,7 @@ export const AuthorSyncResultSchema = Schema.Struct({
   existing: Schema.Number,
 });
 
+/** Counts every read-model table inspected by cleanup and import verification. */
 export const ContentCountsSchema = Schema.Struct({
   articleReferences: Schema.Number,
   articles: Schema.Number,

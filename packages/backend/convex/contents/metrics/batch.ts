@@ -4,7 +4,6 @@ import {
   type LearningPopularityWindow,
   learningPopularityWindowValues,
 } from "@repo/backend/convex/contents/popularity";
-import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 
 type QueuedLearningEngagement = Doc<"learningEngagementQueue">;
 type AnalyticsGraphRef = Pick<
@@ -16,41 +15,6 @@ type AnalyticsGraphRef = Pick<
   | "learningObjectId"
   | "lensId"
 >;
-
-/** Aggregated graph-view delta for one content asset and locale. */
-export interface AnalyticsCount {
-  readonly context: Pick<
-    QueuedLearningEngagement,
-    | "contextKey"
-    | "contextMaterialKey"
-    | "contextMode"
-    | "contextNodeKey"
-    | "contextParentPath"
-    | "contextProgramKey"
-    | "contextPublicPath"
-    | "contextSourcePath"
-  >;
-  readonly description: QueuedLearningEngagement["description"];
-  readonly locale: Locale;
-  readonly materialDomain: QueuedLearningEngagement["materialDomain"];
-  readonly ref: AnalyticsGraphRef;
-  readonly route: string;
-  readonly scopeMode: QueuedLearningEngagement["scopeMode"];
-  readonly section: QueuedLearningEngagement["section"];
-  readonly sourcePath: string;
-  readonly title: string;
-  viewCount: number;
-}
-
-/** Aggregated daily popularity signal delta. */
-export type PopularitySignalDelta = AnalyticsCount & {
-  readonly signalDay: number;
-};
-
-/** Aggregated configured-window popularity counter delta. */
-export type PopularityCounterDelta = AnalyticsCount & {
-  readonly windowKey: LearningPopularityWindow;
-};
 
 /** Extracts persisted graph identity fields from one queued content view. */
 function getAnalyticsGraphRef(
@@ -81,7 +45,7 @@ function getAnalyticsContext(item: QueuedLearningEngagement) {
 }
 
 /** Creates the first aggregate row for one queued engagement item. */
-function createAnalyticsCount(item: QueuedLearningEngagement): AnalyticsCount {
+function createAnalyticsCount(item: QueuedLearningEngagement) {
   return {
     context: getAnalyticsContext(item),
     description: item.description,
@@ -96,6 +60,35 @@ function createAnalyticsCount(item: QueuedLearningEngagement): AnalyticsCount {
     viewCount: 1,
   };
 }
+
+/** Creates the first daily popularity signal delta for one queued view. */
+function createPopularitySignalDelta(item: QueuedLearningEngagement) {
+  return {
+    ...createAnalyticsCount(item),
+    signalDay: getPopularitySignalDay(item.viewedAt),
+  };
+}
+
+/** Creates the first configured-window counter delta for one queued view. */
+function createPopularityCounterDelta(
+  item: QueuedLearningEngagement,
+  windowKey: LearningPopularityWindow
+) {
+  return {
+    ...createAnalyticsCount(item),
+    windowKey,
+  };
+}
+
+/** Aggregated daily popularity signal delta derived from queued view docs. */
+export type PopularitySignalDelta = ReturnType<
+  typeof createPopularitySignalDelta
+>;
+
+/** Aggregated configured-window counter delta derived from queued view docs. */
+export type PopularityCounterDelta = ReturnType<
+  typeof createPopularityCounterDelta
+>;
 
 /** Builds one analytics batch from append-only queued unique views. */
 export function buildMetricsBatch(
@@ -117,10 +110,7 @@ export function buildMetricsBatch(
     if (signalCount) {
       signalCount.viewCount += 1;
     } else {
-      signals.set(signalKey, {
-        ...createAnalyticsCount(queueItem),
-        signalDay,
-      });
+      signals.set(signalKey, createPopularitySignalDelta(queueItem));
     }
 
     for (const windowKey of learningPopularityWindowValues) {
@@ -135,10 +125,10 @@ export function buildMetricsBatch(
       if (counterCount) {
         counterCount.viewCount += 1;
       } else {
-        counters.set(counterKey, {
-          ...createAnalyticsCount(queueItem),
-          windowKey,
-        });
+        counters.set(
+          counterKey,
+          createPopularityCounterDelta(queueItem, windowKey)
+        );
       }
     }
   }

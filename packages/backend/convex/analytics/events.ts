@@ -31,6 +31,7 @@ import { v } from "convex/values";
 
 const optionalNumber = v.optional(v.number());
 
+/** Analytics event contract accepted by the product capture mutation. */
 export const productAnalyticsEventValidator = v.union(
   v.object({
     name: v.literal("user signed up"),

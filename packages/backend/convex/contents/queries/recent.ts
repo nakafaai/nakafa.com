@@ -8,23 +8,25 @@ import {
   runConvexProgram,
 } from "@repo/backend/convex/lib/effect";
 import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
-import {
-  type Locale,
-  localeValidator,
-} from "@repo/backend/convex/lib/validators/contents";
+import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { recentlyViewedSubjectValidator } from "@repo/backend/convex/lib/validators/trending";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { cleanSlug } from "@repo/utilities/helper";
-import type { Infer } from "convex/values";
+import { type Infer, v } from "convex/values";
 import { Effect, Schema } from "effect";
 
 type RecentlyViewedSubject = Infer<typeof recentlyViewedSubjectValidator>;
 
-/** Bounded Continue Learning query inputs after Convex validator decoding. */
-interface ListRecentLearningArgs {
-  limit?: number;
-  locale: Locale;
-}
+/** Convex validator for bounded Continue Learning query inputs. */
+const getRecentlyViewedArgs = {
+  locale: localeValidator,
+  limit: vv.optional(vv.number()),
+};
+
+/** Validator-owned argument contract used by the internal query program. */
+const getRecentlyViewedArgsValidator = v.object(getRecentlyViewedArgs);
+
+type ListRecentLearningArgs = Infer<typeof getRecentlyViewedArgsValidator>;
 
 const recentLearningIoFailedCode = "RECENT_LEARNING_IO_FAILED";
 
@@ -73,16 +75,23 @@ const listRecentLearning = Effect.fn("contents.recent.listRecentLearning")(
       catch: toRecentLearningIoError,
     });
 
-    return recentRows.flatMap(toRecentlyViewedSubject);
+    const subjects: RecentlyViewedSubject[] = [];
+
+    for (const row of recentRows) {
+      const subject = yield* toRecentlyViewedSubject(ctx.db, row);
+
+      if (subject) {
+        subjects.push(subject);
+      }
+    }
+
+    return subjects;
   }
 );
 
 /** Returns the current user's recently viewed subjects for one locale. */
 export const getRecentlyViewed = query({
-  args: {
-    locale: localeValidator,
-    limit: vv.optional(vv.number()),
-  },
+  args: getRecentlyViewedArgs,
   returns: vv.array(recentlyViewedSubjectValidator),
   handler: async (ctx, args): Promise<RecentlyViewedSubject[]> =>
     await runConvexProgram(listRecentLearning(ctx, args)),
@@ -110,20 +119,29 @@ function toPublicContentRef(
 }
 
 /** Projects one ranked recent row to the public home-card result shape. */
-function toRecentlyViewedSubject(row: Doc<"userLearningRecents">) {
-  if (!row.materialDomain) {
-    return [];
+const toRecentlyViewedSubject = Effect.fn(
+  "contents.recent.toRecentlyViewedSubject"
+)(function* (db: QueryCtx["db"], row: Doc<"userLearningRecents">) {
+  const route = yield* Effect.tryPromise({
+    try: () =>
+      db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (q) => q.eq("content_id", row.content_id))
+        .unique(),
+    catch: toRecentLearningIoError,
+  });
+
+  if (!(route && route.locale === row.locale && route.materialDomain)) {
+    return;
   }
 
-  return [
-    {
-      ...toPublicContentRef(row),
-      contextKey: row.contextKey,
-      description: row.description ?? "",
-      href: `/${cleanSlug(row.route)}${toLearningContextQuery(row)}`,
-      lastViewedAt: row.lastViewedAt,
-      materialDomain: row.materialDomain,
-      title: row.title,
-    },
-  ];
-}
+  return {
+    ...toPublicContentRef(route),
+    contextKey: row.contextKey,
+    description: route.description ?? "",
+    href: `/${cleanSlug(route.route)}${toLearningContextQuery(row)}`,
+    lastViewedAt: row.lastViewedAt,
+    materialDomain: route.materialDomain,
+    title: route.title,
+  };
+});

@@ -1,4 +1,5 @@
 import { query } from "@repo/backend/convex/_generated/server";
+import { ninaContextSnapshotValidator } from "@repo/backend/convex/chats/context";
 import {
   getMessageByIdentifier,
   verifyChatOwnership,
@@ -19,6 +20,8 @@ import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
+
+const LATEST_NINA_CONTEXT_SCAN_LIMIT = 20;
 
 /**
  * Get a chat by its ID.
@@ -221,6 +224,40 @@ export const getChatTitle = query({
     }
 
     return chat.title ?? null;
+  },
+});
+
+/** Returns the newest stored Nina context snapshot for continuing a chat. */
+export const getLatestNinaContext = query({
+  args: {
+    chatId: vv.id("chats"),
+  },
+  returns: nullable(ninaContextSnapshotValidator),
+  handler: async (ctx, args) => {
+    const viewer = await getOptionalAppUser(ctx);
+    const viewerUserId = viewer?.appUser._id ?? null;
+
+    const chat = await ctx.db.get(args.chatId);
+
+    if (!chat) {
+      throw new ConvexError({
+        code: "CHAT_NOT_FOUND",
+        message: `Chat not found for chatId: ${args.chatId}`,
+      });
+    }
+
+    requireChatAccess(chat.userId, viewerUserId, chat.visibility);
+
+    const messages = await ctx.db
+      .query("messages")
+      .withIndex("by_chatId", (q) => q.eq("chatId", args.chatId))
+      .order("desc")
+      .take(LATEST_NINA_CONTEXT_SCAN_LIMIT);
+
+    return (
+      messages.find((message) => message.ninaContextSnapshot)
+        ?.ninaContextSnapshot ?? null
+    );
   },
 });
 

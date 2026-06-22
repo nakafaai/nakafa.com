@@ -1,14 +1,17 @@
 import { nakafaPrompt } from "@repo/ai/agents/orchestrator/prompt";
 import { provider } from "@repo/ai/config/app";
-import { getModelProviderOptions, type ModelId } from "@repo/ai/config/model";
+import { getModelProviderOptions, ModelIdSchema } from "@repo/ai/config/model";
 import { gatewayProviderOptions } from "@repo/ai/config/routing";
 import { chatStreamTimeout } from "@repo/ai/config/timeouts";
-import type { NinaContextPack } from "@repo/ai/nina/context";
-import type { AgentContext, AgentLearningProfile } from "@repo/ai/types/agents";
+import { NinaContextPackSchema } from "@repo/ai/nina/context";
+import {
+  type AgentContext,
+  AgentLearningProfileSchema,
+} from "@repo/ai/types/agents";
 import type { MyMetadata, MyUIMessage } from "@repo/ai/types/message";
-import type { PromptUserRole } from "@repo/ai/types/roles";
+import { PromptUserRoleSchema } from "@repo/ai/types/roles";
+import { LocaleSchema } from "@repo/contents/_types/content";
 import { cleanSlug } from "@repo/utilities/helper";
-import type { Locale } from "@repo/utilities/locales";
 import {
   type LanguageModelUsage,
   type ModelMessage,
@@ -20,7 +23,7 @@ import {
   type ToolSet,
   type UIMessageStreamWriter,
 } from "ai";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 const MAX_ORCHESTRATOR_STEPS = 20;
 
@@ -30,33 +33,44 @@ export interface NinaAgentChat {
 }
 
 /** Verified page state consumed by Nina's ToolLoopAgent lifecycle. */
-export interface NinaAgentPage {
-  readonly locale: Locale;
-  readonly needsFetch: boolean;
-  readonly nina: NinaContextPack;
-  readonly slug: string;
-  readonly url: string;
-  readonly verified: boolean;
-}
+export const NinaAgentPageSchema = Schema.Struct({
+  locale: LocaleSchema,
+  needsFetch: Schema.Boolean,
+  nina: NinaContextPackSchema,
+  slug: Schema.String,
+  url: Schema.String,
+  verified: Schema.Boolean,
+}).pipe(Schema.mutable);
+
+export type NinaAgentPage = Schema.Schema.Type<typeof NinaAgentPageSchema>;
 
 /** Runtime model and date facts consumed by Nina's ToolLoopAgent lifecycle. */
-export interface NinaAgentRuntime {
-  readonly currentDate: string;
-  readonly modelId: ModelId;
-}
+export const NinaAgentRuntimeSchema = Schema.Struct({
+  currentDate: Schema.String,
+  modelId: ModelIdSchema,
+}).pipe(Schema.mutable);
+
+export type NinaAgentRuntime = Schema.Schema.Type<
+  typeof NinaAgentRuntimeSchema
+>;
+
+/** Coarse user-location facts allowed in Nina prompt context. */
+export const NinaAgentUserLocationSchema = Schema.Struct({
+  city: Schema.String,
+  country: Schema.String,
+  countryRegion: Schema.String,
+  latitude: Schema.String,
+  longitude: Schema.String,
+}).pipe(Schema.mutable);
 
 /** User facts Nina may use after page and profile context are validated. */
-export interface NinaAgentUser {
-  readonly learningProfile?: AgentLearningProfile;
-  readonly location: {
-    readonly city: string;
-    readonly country: string;
-    readonly countryRegion: string;
-    readonly latitude: string;
-    readonly longitude: string;
-  };
-  readonly role?: PromptUserRole;
-}
+export const NinaAgentUserSchema = Schema.Struct({
+  learningProfile: Schema.optional(AgentLearningProfileSchema),
+  location: NinaAgentUserLocationSchema,
+  role: Schema.optional(PromptUserRoleSchema),
+}).pipe(Schema.mutable);
+
+export type NinaAgentUser = Schema.Schema.Type<typeof NinaAgentUserSchema>;
 
 /** Callback surface supplied by the app Adapter around AI SDK execution. */
 export interface NinaAgentAdapter<TOOLS extends ToolSet> {
@@ -90,13 +104,13 @@ export function createNinaAgentContext({
 }): AgentContext {
   return {
     currentDate: runtime.currentDate,
-    learningProfile: user.learningProfile,
     needsPageFetch: page.needsFetch,
     nina: page.nina,
     slug: cleanSlug(page.slug),
     url: page.url,
-    userRole: user.role,
     verified: page.verified,
+    ...(user.learningProfile ? { learningProfile: user.learningProfile } : {}),
+    ...(user.role ? { userRole: user.role } : {}),
   };
 }
 

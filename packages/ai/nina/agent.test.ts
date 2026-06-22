@@ -10,6 +10,7 @@ import {
 } from "@repo/ai/nina/agent";
 import type { NinaContextPack } from "@repo/ai/nina/context";
 import type { MyMetadata, MyUIMessage } from "@repo/ai/types/message";
+import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
 import type {
   LanguageModelUsage,
   ModelMessage,
@@ -155,6 +156,9 @@ vi.mock("@repo/ai/config/app", () => ({
 }));
 
 const modelId = ModelIdSchema.make("nakafa-lite");
+const placementProgramKey = LearningProgramKeySchema.make(
+  "cambridge-lower-secondary"
+);
 
 const ninaContext = {
   learning: {
@@ -170,7 +174,7 @@ const ninaContext = {
     nodeKey: "curriculum:vector:addition",
     parentHref: "/en/curriculum/mathematics/vector",
     parentTitle: "Vector",
-    programKey: "cambridge-lower-secondary",
+    programKey: placementProgramKey,
   },
   snapshot: {
     capturedAt: "2026-06-21T00:00:00.000Z",
@@ -187,7 +191,7 @@ const ninaContext = {
       nodeKey: "curriculum:vector:addition",
       parentHref: "/en/curriculum/mathematics/vector",
       parentTitle: "Vector",
-      programKey: "cambridge-lower-secondary",
+      programKey: placementProgramKey,
     },
     source: "current-page",
     tools: {
@@ -272,6 +276,32 @@ describe("nina/agent", () => {
       verified: true,
     });
     expect(context.nina?.snapshot).toEqual(ninaContext.snapshot);
+  });
+
+  it("preserves selected learning profile context without inventing a user role", () => {
+    const learningProfile = {
+      interests: ["exam-prep"],
+      planItems: [],
+      program: {
+        coverageStatus: "partial",
+        key: LearningProgramKeySchema.make("snbt-2026"),
+        kind: "admission-exam",
+        title: "SNBT 2026",
+        versionLabel: "2026",
+      },
+    } satisfies NinaAgentUser["learningProfile"];
+    const context = createNinaAgentContext({
+      page,
+      runtime,
+      user: {
+        ...user,
+        learningProfile,
+        role: undefined,
+      },
+    });
+
+    expect(context.learningProfile).toEqual(learningProfile);
+    expect(context.userRole).toBeUndefined();
   });
 
   it("runs the ToolLoopAgent lifecycle with Nina metadata and adapter-owned tools", async () => {

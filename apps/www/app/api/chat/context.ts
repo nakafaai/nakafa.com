@@ -1,7 +1,14 @@
-import type { NinaLearningSessionInput } from "@repo/ai/nina/context";
-import { openNinaLearningSession } from "@repo/ai/nina/context";
-import type { Locale } from "@repo/contents/_types/content";
+import type {
+  NinaContextSnapshot,
+  NinaLearningSessionInput,
+} from "@repo/ai/nina/context";
+import {
+  NinaContextSnapshotSchema,
+  openNinaLearningSession,
+} from "@repo/ai/nina/context";
+import { type Locale, LocaleSchema } from "@repo/contents/_types/content";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
+import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
 import { readStaticPublicLearningIndex } from "@repo/contents/_types/route/learning/static";
 import { readMaterialContextHint } from "@repo/contents/_types/route/material/context";
 import type { PublicRoute } from "@repo/contents/_types/route/schema";
@@ -13,17 +20,21 @@ const ClientNinaContextInputSchema = Schema.Struct({
 }).pipe(Schema.mutable);
 
 /** Route-bound facts needed to open one validated Nina learning session. */
-interface ResolveNinaLearningSessionInput {
-  capturedAt: string;
-  locale: Locale;
-  rawContext: unknown;
-  slug: string;
-  url: string;
-  verified: boolean;
-}
+const ResolveNinaLearningSessionInputSchema = Schema.Struct({
+  capturedAt: Schema.String,
+  locale: LocaleSchema,
+  pinnedContext: Schema.optional(NinaContextSnapshotSchema),
+  rawContext: Schema.Unknown,
+  slug: Schema.String,
+  url: Schema.String,
+  verified: Schema.Boolean,
+}).pipe(Schema.mutable);
 
 type ClientNinaContextInput = Schema.Schema.Type<
   typeof ClientNinaContextInputSchema
+>;
+type ResolveNinaLearningSessionInput = Schema.Schema.Type<
+  typeof ResolveNinaLearningSessionInputSchema
 >;
 
 /** Decodes the optional browser-provided Nina context payload. */
@@ -105,8 +116,11 @@ function createNinaPlacementContext({
     context,
     route,
   });
+  const programKey = Schema.decodeUnknownOption(LearningProgramKeySchema)(
+    context?.programKey
+  );
 
-  if (!(context && header)) {
+  if (!(context && header) || Option.isNone(programKey)) {
     return;
   }
 
@@ -115,7 +129,7 @@ function createNinaPlacementContext({
     nodeKey: context.nodeKey,
     parentHref: header.href,
     parentTitle: header.label,
-    programKey: context.programKey,
+    programKey: programKey.value,
   };
 }
 
@@ -123,11 +137,19 @@ function createNinaPlacementContext({
 function createNinaLearningSessionInput({
   capturedAt,
   locale,
+  pinnedContext,
   rawContext,
   slug,
   url,
   verified,
 }: ResolveNinaLearningSessionInput): NinaLearningSessionInput {
+  if (!verified && pinnedContext) {
+    return createPinnedNinaLearningSessionInput({
+      capturedAt,
+      snapshot: pinnedContext,
+    });
+  }
+
   const cleanPath = cleanSlug(slug);
   const route = readStaticPublicLearningIndex().resolveRouteByPath(
     cleanPath,
@@ -149,8 +171,24 @@ function createNinaLearningSessionInput({
   return {
     capturedAt,
     learning,
-    placement,
     source: "current-page",
+    ...(placement ? { placement } : {}),
+  };
+}
+
+/** Builds NinaHarness input from the latest stored context in an existing chat. */
+function createPinnedNinaLearningSessionInput({
+  capturedAt,
+  snapshot,
+}: {
+  capturedAt: string;
+  snapshot: NinaContextSnapshot;
+}): NinaLearningSessionInput {
+  return {
+    capturedAt,
+    learning: snapshot.learning,
+    source: "pinned-chat",
+    ...(snapshot.placement ? { placement: snapshot.placement } : {}),
   };
 }
 
@@ -158,5 +196,11 @@ function createNinaLearningSessionInput({
 export const resolveNinaLearningSession = Effect.fn(
   "chat.resolveNinaLearningSession"
 )(function* (input: ResolveNinaLearningSessionInput) {
-  return yield* openNinaLearningSession(createNinaLearningSessionInput(input));
+  const routeInput = yield* Schema.decodeUnknown(
+    ResolveNinaLearningSessionInputSchema
+  )(input);
+
+  return yield* openNinaLearningSession(
+    createNinaLearningSessionInput(routeInput)
+  );
 });
