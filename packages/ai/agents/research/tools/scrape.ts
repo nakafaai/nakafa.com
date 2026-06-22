@@ -12,14 +12,6 @@ import type { UIMessageStreamWriter } from "ai";
 import dedent from "dedent";
 import { Effect, Either } from "effect";
 
-interface ScrapeUrlParams {
-  maxLength?: number;
-  selectionQuery?: string;
-  toolCallId: string;
-  url: string;
-  writer: UIMessageStreamWriter<MyUIMessage>;
-}
-
 /**
  * Scrapes one URL and returns structured evidence for citation checks.
  */
@@ -29,7 +21,13 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
   toolCallId,
   url,
   writer,
-}: ScrapeUrlParams) {
+}: {
+  readonly maxLength?: number;
+  readonly selectionQuery?: string;
+  readonly toolCallId: string;
+  readonly url: string;
+  readonly writer: UIMessageStreamWriter<MyUIMessage>;
+}) {
   yield* Effect.sync(() =>
     writer.write({
       id: toolCallId,

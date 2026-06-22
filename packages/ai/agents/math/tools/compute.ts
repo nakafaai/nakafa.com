@@ -72,18 +72,16 @@ function decodeRecoveryMessage(message: string) {
   return "Ask the user for the exact missing expression or data in their language.";
 }
 
-interface ComputeParams {
-  input: unknown;
-  toolCallId: string;
-  writer: UIMessageStreamWriter<MyUIMessage>;
-}
-
 /** Runs one deterministic math request and writes the math evidence data part. */
 export const compute = Effect.fn("math.compute")(function* ({
   input,
   toolCallId,
   writer,
-}: ComputeParams) {
+}: {
+  readonly input: unknown;
+  readonly toolCallId: string;
+  readonly writer: UIMessageStreamWriter<MyUIMessage>;
+}) {
   const decoded = yield* Schema.decodeUnknown(MathToolInputSchema)(input).pipe(
     Effect.either
   );

@@ -2,13 +2,14 @@ import { createPrompt } from "@repo/ai/prompt/utils";
 import type { AgentContext } from "@repo/ai/types/agents";
 import type { Locale } from "@repo/utilities/locales";
 
-interface MathPromptProps {
-  context: AgentContext;
-  locale: Locale;
-}
-
 /** Builds the system prompt for Nina's deterministic math agent. */
-export function mathPrompt({ locale, context }: MathPromptProps) {
+export function mathPrompt({
+  locale,
+  context,
+}: {
+  readonly context: AgentContext;
+  readonly locale: Locale;
+}) {
   return createPrompt({
     taskContext: `
       # Identity

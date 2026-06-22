@@ -1,3 +1,4 @@
+import type { WebSearchInput } from "@repo/ai/agents/research/schema";
 import type { SearchSource } from "@repo/ai/agents/research/search/source";
 import { extractDomain } from "@repo/ai/lib/domain";
 import {
@@ -20,7 +21,7 @@ export function scopeSources({
   task,
 }: {
   query: string;
-  sourcePreference: "primary" | "any";
+  sourcePreference: WebSearchInput["sourcePreference"];
   sources: SearchSource[];
   task: string;
 }) {
@@ -63,7 +64,7 @@ function getPrimarySources({
   task,
 }: {
   query: string;
-  sourcePreference: "primary" | "any";
+  sourcePreference: WebSearchInput["sourcePreference"];
   sources: SearchSource[];
   task: string;
 }) {

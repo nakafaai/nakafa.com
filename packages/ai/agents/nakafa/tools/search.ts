@@ -16,20 +16,18 @@ type SearchInput = ReturnType<typeof getSearchInput>;
 const searchTokenPattern = /[\p{L}\p{N}]+/gu;
 const routeSeparatorPattern = /[/_-]+/gu;
 
-interface Params {
-  input: NakafaAgentSearchInput;
-  locale: Locale;
-  toolCallId: string;
-  writer: Writer;
-}
-
 /** Searches Nakafa content and writes a bounded `data-nakafa` UI part. */
 export const search = Effect.fn("nakafa.search")(function* ({
   input,
   locale,
   toolCallId,
   writer,
-}: Params) {
+}: {
+  readonly input: NakafaAgentSearchInput;
+  readonly locale: Locale;
+  readonly toolCallId: string;
+  readonly writer: Writer;
+}) {
   const dataInput = getSearchInput(input, locale);
   const searchInputs = getSearchInputs(dataInput);
   const queryTokens = getSearchTokens(dataInput.queries ?? []);

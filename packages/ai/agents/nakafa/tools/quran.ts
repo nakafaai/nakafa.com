@@ -10,13 +10,6 @@ import { Effect, Either, Option } from "effect";
 
 type Writer = Pick<UIMessageStreamWriter<MyUIMessage>, "write">;
 
-interface Params {
-  input: NakafaAgentQuranReferenceOptions;
-  locale: Locale;
-  toolCallId: string;
-  writer: Writer;
-}
-
 const invalidRangeMessage = "Invalid Quran verse range.";
 const notFoundMessage = "Nakafa Quran reference was not found.";
 const oversizedRangeMessage = "Quran reference range is too large.";
@@ -27,7 +20,12 @@ export const quran = Effect.fn("nakafa.quran")(function* ({
   locale,
   toolCallId,
   writer,
-}: Params) {
+}: {
+  readonly input: NakafaAgentQuranReferenceOptions;
+  readonly locale: Locale;
+  readonly toolCallId: string;
+  readonly writer: Writer;
+}) {
   const dataInput = normalizeQuranInput(input, locale);
 
   yield* Effect.sync(() =>

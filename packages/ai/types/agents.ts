@@ -1,9 +1,10 @@
 import type { Nakafa } from "@repo/ai/agents/nakafa/service";
-import type { ModelId } from "@repo/ai/config/model";
-import type { SourceReference } from "@repo/ai/lib/source";
+import { ModelIdSchema } from "@repo/ai/config/model";
+import { SourceReferenceSchema } from "@repo/ai/lib/source";
 import { NinaContextPackSchema } from "@repo/ai/nina/memory/pack";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { PromptUserRoleSchema } from "@repo/ai/types/roles";
+import { LocaleSchema } from "@repo/contents/_types/content";
 import {
   CoverageStatusSchema,
   LearningInterestSchema,
@@ -12,7 +13,6 @@ import {
   LearningProgramKindSchema,
   LearningStageSchema,
 } from "@repo/contents/_types/program/schema";
-import type { Locale } from "@repo/utilities/locales";
 import type { UIMessageStreamWriter } from "ai";
 import { Schema } from "effect";
 
@@ -57,35 +57,41 @@ export const AgentContextSchema = Schema.Struct({
 
 export type AgentContext = Schema.Schema.Type<typeof AgentContextSchema>;
 
-/**
- * AI SDK adapter parameters shared by all specialist agents.
- *
- * Durable fields derive from Effect schemas; the writer remains the external AI
- * SDK UI-message stream Interface that tool callbacks require.
- */
-export interface BaseAgentParams {
-  context: AgentContext;
-  locale: Locale;
-  modelId: ModelId;
-  writer: UIMessageStreamWriter<MyUIMessage>;
-}
+/** Schema-derived data passed to task-oriented specialist agents. */
+export const TaskAgentDataSchema = Schema.Struct({
+  context: AgentContextSchema,
+  locale: LocaleSchema,
+  modelId: ModelIdSchema,
+  task: Schema.String,
+}).pipe(Schema.mutable);
 
-/** AI SDK adapter parameters for specialists that receive a tool task string. */
-export interface TaskAgentParams extends BaseAgentParams {
-  task: string;
-}
+type TaskAgentData = Schema.Schema.Type<typeof TaskAgentDataSchema>;
+type SpecialistWriter = UIMessageStreamWriter<MyUIMessage>;
 
-/** Parameters for the Nakafa content retrieval subagent. */
-export interface NakafaAgentParams extends TaskAgentParams {
-  nakafa: Nakafa;
-}
+/** Parameters for the deterministic math specialist Adapter. */
+export type MathAgentParams = TaskAgentData & {
+  readonly writer: SpecialistWriter;
+};
 
-/** Parameters for the external research subagent. */
-export interface ResearchAgentParams extends BaseAgentParams {
-  sourceReferences: SourceReference[];
-  task: string;
-  toolCallId: string;
-}
+/** Parameters for the Nakafa content retrieval specialist Adapter. */
+export type NakafaAgentParams = TaskAgentData & {
+  readonly nakafa: Nakafa;
+  readonly writer: SpecialistWriter;
+};
 
-/** Alias used by the deterministic math specialist adapter. */
-export type MathAgentParams = TaskAgentParams;
+/** Schema-derived data passed to the external research specialist. */
+export const ResearchAgentDataSchema = Schema.Struct({
+  context: AgentContextSchema,
+  locale: LocaleSchema,
+  modelId: ModelIdSchema,
+  sourceReferences: Schema.Array(SourceReferenceSchema),
+  task: Schema.String,
+  toolCallId: Schema.String,
+}).pipe(Schema.mutable);
+
+/** Parameters for the external research specialist Adapter. */
+export type ResearchAgentParams = Schema.Schema.Type<
+  typeof ResearchAgentDataSchema
+> & {
+  readonly writer: SpecialistWriter;
+};
