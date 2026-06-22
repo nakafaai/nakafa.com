@@ -18,7 +18,8 @@ import { commentsHandler } from "@repo/backend/convex/triggers/comments/comments
 import { commentVotesHandler } from "@repo/backend/convex/triggers/comments/commentVotes";
 import { exerciseAnswersHandler } from "@repo/backend/convex/triggers/contents/exerciseAnswers";
 import { exerciseAttemptsHandler } from "@repo/backend/convex/triggers/contents/exerciseAttempts";
-import { contentViewsHandler } from "@repo/backend/convex/triggers/contents/views";
+import { learningPopularityRankingsTrigger } from "@repo/backend/convex/triggers/contents/popularity";
+import { learningViewsHandler } from "@repo/backend/convex/triggers/contents/views";
 import { postReactionsHandler } from "@repo/backend/convex/triggers/forums/postReactions";
 import { forumPostsHandler } from "@repo/backend/convex/triggers/forums/posts";
 import { forumReactionsHandler } from "@repo/backend/convex/triggers/forums/reactions";
@@ -53,7 +54,7 @@ export const internalMutation = customMutation(
 triggers.register("notifications", notificationsHandler);
 triggers.register("subscriptions", subscriptionsHandler);
 triggers.register("messages", messagesHandler);
-triggers.register("contentViews", contentViewsHandler);
+triggers.register("learningViews", learningViewsHandler);
 triggers.register("exerciseAttempts", exerciseAttemptsHandler);
 triggers.register("exerciseAnswers", exerciseAnswersHandler);
 triggers.register("comments", commentsHandler);
@@ -69,6 +70,10 @@ triggers.register("schoolClassForumReactions", forumReactionsHandler);
 triggers.register("schoolClassMaterials", materialsHandler);
 triggers.register("schoolClassMaterialGroups", materialGroupsHandler);
 
+triggers.register(
+  "learningPopularityCounters",
+  learningPopularityRankingsTrigger
+);
 triggers.register("tryoutLeaderboardEntries", tryoutLeaderboardTrigger);
 triggers.register("userTryoutStats", globalLeaderboardTrigger);
 triggers.register("tryoutAttempts", tryoutAttemptsHandler);

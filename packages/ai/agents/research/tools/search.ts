@@ -1,4 +1,5 @@
 import {
+  type WebSearchInput,
   type WebSearchOutput,
   webSearchMaxQueries,
 } from "@repo/ai/agents/research/schema";
@@ -26,7 +27,7 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
   writer,
 }: {
   queries: readonly string[];
-  sourcePreference: "primary" | "any";
+  sourcePreference: WebSearchInput["sourcePreference"];
   task: string;
   toolCallId: string;
   writer: UIMessageStreamWriter<MyUIMessage>;

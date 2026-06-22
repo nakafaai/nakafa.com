@@ -5,7 +5,11 @@ import type { MyUIMessage } from "@repo/ai/types/message";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { DefaultChatTransport } from "ai";
 import type { AiStore } from "@/components/ai/store/types";
-import { getLocale, getPathname } from "@/lib/utils/browser";
+import {
+  getLocale,
+  getMaterialContextHint,
+  getPathname,
+} from "@/lib/utils/browser";
 
 interface CreateChatRuntimeOptions {
   apiUrl?: string;
@@ -36,6 +40,9 @@ export function createChatTransport({
           locale: getLocale(),
           message: lastMessage,
           model: getModel(),
+          context: {
+            materialContextHint: getMaterialContextHint(),
+          },
           slug: getPathname(),
         },
       };

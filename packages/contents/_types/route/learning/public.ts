@@ -29,52 +29,6 @@ import type {
   PublicRoute,
 } from "@repo/contents/_types/route/schema";
 
-interface PublicLearningIndexInput {
-  domains?: NonNullable<RouteInputs["domains"]>;
-  materials?: NonNullable<RouteInputs["materials"]>;
-  routes: readonly PublicRoute[];
-}
-
-/**
- * Route-owned lookup Interface for public learning navigation.
- *
- * Callers ask source-identity questions instead of scanning all projected
- * routes, reconstructing practice root/domain routes, or parsing material
- * context query state themselves.
- */
-export interface PublicLearningIndex {
-  /** Projects a valid material `ctx` hint from one locale route to another. */
-  projectMaterialContextToLocale(input: {
-    context: MaterialContextIdentity | undefined;
-    currentRoute: MaterialRouteIdentity;
-    targetRoute: MaterialRouteIdentity;
-  }): MaterialContextIdentity | undefined;
-  /** Projects a virtual practice domain page that has no persisted route row. */
-  projectPracticeDomainPath(input: {
-    currentLocale: Locale;
-    path: string;
-    targetLocale: Locale;
-  }): string | undefined;
-  /** Projects a virtual practice program root that has no persisted route row. */
-  projectPracticeRootPath(input: {
-    currentLocale: Locale;
-    path: string;
-    targetLocale: Locale;
-  }): string | undefined;
-  /** Projects a persisted route row through stable source identity. */
-  projectRouteToLocale(
-    route: PublicRoute,
-    locale: Locale
-  ): PublicRoute | undefined;
-  /** Resolves the contextual material header return link, if the hint is valid. */
-  resolveMaterialHeaderLink(input: {
-    context: MaterialContextIdentity | undefined;
-    route: MaterialRouteIdentity;
-  }): { href: string; label: string } | undefined;
-  /** Resolves a localized public path through exact and virtual route indexes. */
-  resolveRouteByPath(path: string, locale: Locale): PublicRoute | undefined;
-}
-
 /**
  * Builds keyed route/context maps from already-decoded public route rows.
  *
@@ -85,7 +39,11 @@ export function createPublicLearningIndex({
   domains,
   materials,
   routes,
-}: PublicLearningIndexInput): PublicLearningIndex {
+}: {
+  domains?: NonNullable<RouteInputs["domains"]>;
+  materials?: NonNullable<RouteInputs["materials"]>;
+  routes: readonly PublicRoute[];
+}) {
   const routesByPath = new Map<string, PublicRoute>();
   const routesByIdentityAndLocale = new Map<string, PublicRoute>();
   const routeDomains = domains ?? MATERIAL_ROUTE_DOMAINS;
@@ -175,6 +133,19 @@ export function createPublicLearningIndex({
     return materialContextIndex.resolveHeaderLink(input);
   }
 
+  /** Adds a material context query only when the target route validates it. */
+  function toContextualMaterialHref(input: {
+    context: MaterialContextIdentity;
+    href: string;
+    route: MaterialRouteIdentity;
+  }) {
+    return materialContextIndex.toContextualHref({
+      contextRoute: input.context,
+      href: input.href,
+      route: input.route,
+    });
+  }
+
   return {
     projectMaterialContextToLocale,
     projectPracticeDomainPath,
@@ -182,5 +153,14 @@ export function createPublicLearningIndex({
     projectRouteToLocale,
     resolveMaterialHeaderLink,
     resolveRouteByPath,
+    toContextualMaterialHref,
   };
 }
+
+/**
+ * Route-owned lookup Interface derived from `createPublicLearningIndex`.
+ *
+ * Callers ask source-identity questions instead of scanning all projected
+ * routes, reconstructing practice roots, or parsing material context state.
+ */
+export type PublicLearningIndex = ReturnType<typeof createPublicLearningIndex>;

@@ -6,6 +6,7 @@ import {
 } from "@repo/backend/convex/chats/assistantResponses/impl";
 import {
   deleteMessageBatchFromPoint,
+  getMessageByIdentifier,
   insertParts,
   verifyChatOwnership,
 } from "@repo/backend/convex/chats/helpers";
@@ -104,7 +105,7 @@ export const updateChatVisibility = mutation({
   },
 });
 
-/** Persist one user message and its parts after any transcript rewrite is complete. */
+/** Persist one user message and its parts, atomically replacing a rewrite tail. */
 export const saveMessage = mutation({
   args: {
     message: tables.messages.validator,
@@ -125,33 +126,40 @@ export const saveMessage = mutation({
 
     await verifyChatOwnership(ctx, message.chatId, user.appUser._id);
 
+    const existingMessage = await getMessageByIdentifier(
+      ctx,
+      message.chatId,
+      message.identifier
+    );
+
+    if (existingMessage) {
+      const deleteResult = await deleteMessageBatchFromPoint(
+        ctx,
+        message.chatId,
+        existingMessage._creationTime
+      );
+
+      if (deleteResult.hasMore) {
+        throw new ConvexError({
+          code: "CHAT_USER_MESSAGE_REWRITE_EXCEEDED",
+          message: "User message rewrite exceeded the supported batch size.",
+        });
+      }
+    }
+
     // modelId stored server-side so clients cannot spoof credit calculations
     const messageId = await ctx.db.insert("messages", {
       chatId: message.chatId,
       role: message.role,
       identifier: message.identifier,
       modelId: message.modelId,
+      ninaContextSnapshot: message.ninaContextSnapshot,
+      ninaContextTransition: message.ninaContextTransition,
     });
 
     const partIds = await insertParts(ctx, messageId, parts);
 
     return { messageId, partIds };
-  },
-});
-
-/** Delete one bounded transcript-rewrite batch before re-saving a message. */
-export const deleteMessageBatch = mutation({
-  args: {
-    chatId: vv.id("chats"),
-    fromCreationTime: v.number(),
-  },
-  returns: v.object({ hasMore: v.boolean() }),
-  handler: async (ctx, args) => {
-    const user = await requireAuth(ctx);
-
-    await verifyChatOwnership(ctx, args.chatId, user.appUser._id);
-
-    return deleteMessageBatchFromPoint(ctx, args.chatId, args.fromCreationTime);
   },
 });
 
@@ -192,6 +200,8 @@ export const createChatWithMessage = mutation({
       role: args.message.role,
       identifier: args.message.identifier,
       modelId: args.message.modelId,
+      ninaContextSnapshot: args.message.ninaContextSnapshot,
+      ninaContextTransition: args.message.ninaContextTransition,
     });
 
     const partIds = await insertParts(ctx, messageId, args.parts);
@@ -289,6 +299,8 @@ export const saveAssistantResponse = internalMutation({
       totalTokens: message.totalTokens,
       credits: creditUsage?.credits,
       generationStatus: "complete",
+      ninaContextSnapshot: message.ninaContextSnapshot,
+      ninaContextTransition: message.ninaContextTransition,
     });
 
     const partIds = await insertParts(ctx, messageId, parts);

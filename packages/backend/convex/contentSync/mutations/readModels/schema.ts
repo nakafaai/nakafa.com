@@ -143,6 +143,7 @@ export const assessmentNodeRowValidator = v.object({
   }),
 });
 
+/** Canonical public route row written by content sync read-model imports. */
 export const publicRouteRowValidator = v.object({
   canonicalPath: v.optional(v.string()),
   description: v.optional(v.string()),
@@ -150,7 +151,10 @@ export const publicRouteRowValidator = v.object({
   displayGroupTitle: v.optional(v.string()),
   iconKey: v.optional(navigationIconKeyValidator),
   kind: publicRouteKindValidator,
+  level: v.optional(navigationLevelValidator),
   locale: localeValidator,
+  materialCardDescription: v.optional(v.string()),
+  materialCardTitle: v.optional(v.string()),
   materialDomain: v.optional(materialValidator),
   materialKey: v.optional(v.string()),
   nodeKey: v.optional(v.string()),

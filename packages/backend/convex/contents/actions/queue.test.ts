@@ -1,11 +1,15 @@
 import { internal } from "@repo/backend/convex/_generated/api";
-import type { ActionCtx } from "@repo/backend/convex/_generated/server";
+import type {
+  ActionCtx,
+  MutationCtx,
+} from "@repo/backend/convex/_generated/server";
 import { MIN_VIEW_THRESHOLD } from "@repo/backend/convex/audioStudies/constants";
 import {
   chunkPopularAudioItems,
   populateAudioGenerationQueue,
 } from "@repo/backend/convex/contents/audioQueue/impl";
 import { audioQueuePopulationFailedCode } from "@repo/backend/convex/contents/audioQueue/spec";
+import { getLifetimePopularityWindow } from "@repo/backend/convex/contents/popularity";
 import type { PopularAudioContentItem } from "@repo/backend/convex/contents/validators";
 import schema from "@repo/backend/convex/schema";
 import { getTestAudioContent } from "@repo/backend/convex/test.helpers";
@@ -23,6 +27,31 @@ const articleSource = getTestAudioContent({
   locale: "en",
   route: ARTICLE_ROUTE,
 });
+const canonicalContext = {
+  contextKey: "canonical",
+  contextMode: "canonical",
+} as const;
+
+/** Inserts the lifetime global popularity counter consumed by audio queue reads. */
+async function insertArticlePopularityCounter(
+  ctx: MutationCtx,
+  graph: NonNullable<ReturnType<typeof createLearningGraphIdentityFromRoute>>
+) {
+  await ctx.db.insert("learningPopularityCounters", {
+    ...graph,
+    ...canonicalContext,
+    content_id: graph.assetId,
+    locale: "en",
+    route: ARTICLE_ROUTE,
+    score: MIN_VIEW_THRESHOLD,
+    section: "articles",
+    scopeMode: "global",
+    sourcePath: ARTICLE_ROUTE,
+    title: "Dynastic Politics",
+    updatedAt: NOW,
+    windowKey: getLifetimePopularityWindow(),
+  });
+}
 
 describe("contents/actions/queue", () => {
   beforeEach(() => {
@@ -169,14 +198,7 @@ describe("contents/actions/queue", () => {
         title: "Dynastic Politics",
       });
 
-      await ctx.db.insert("learningPopularity", {
-        ...graph,
-        content_id: graph.assetId,
-        locale: "en",
-        section: "articles",
-        updatedAt: NOW,
-        viewCount: MIN_VIEW_THRESHOLD,
-      });
+      await insertArticlePopularityCounter(ctx, graph);
       await ctx.db.insert("audioContentSources", {
         ...articleSource,
         syncedAt: NOW,

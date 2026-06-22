@@ -7,6 +7,8 @@ import { type Infer, v } from "convex/values";
  */
 export const trendingSubjectValidator = v.object({
   ...contentSearchSummaryValidator.fields,
+  contextKey: v.string(),
+  href: v.string(),
   materialDomain: materialValidator,
   viewCount: v.number(),
 });
@@ -18,6 +20,8 @@ export type TrendingSubject = Infer<typeof trendingSubjectValidator>;
  */
 export const recentlyViewedSubjectValidator = v.object({
   ...contentSearchSummaryValidator.fields,
+  contextKey: v.string(),
+  href: v.string(),
   lastViewedAt: v.number(),
   materialDomain: materialValidator,
 });

@@ -9,20 +9,18 @@ import { Effect } from "effect";
 
 type Writer = Pick<UIMessageStreamWriter<MyUIMessage>, "write">;
 
-interface Params {
-  input: NakafaAgentTaxonomyOptions;
-  locale: Locale;
-  toolCallId: string;
-  writer: Writer;
-}
-
 /** Reads Nakafa taxonomy and writes a bounded preview UI part. */
 export const taxonomy = Effect.fn("nakafa.taxonomy")(function* ({
   input,
   locale,
   toolCallId,
   writer,
-}: Params) {
+}: {
+  readonly input: NakafaAgentTaxonomyOptions;
+  readonly locale: Locale;
+  readonly toolCallId: string;
+  readonly writer: Writer;
+}) {
   const dataInput = { ...input, locale };
 
   yield* Effect.sync(() =>

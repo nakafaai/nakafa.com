@@ -9,6 +9,11 @@ import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { deleteBatchFromTable } from "./impl";
 
+const canonicalContext = {
+  contextKey: "canonical",
+  contextMode: "canonical",
+} as const;
+
 describe("contentSync/reset/impl", () => {
   it("deletes runtime and analytics rows through bounded reset batches", async () => {
     const t = convexTest(schema, convexModules);
@@ -17,15 +22,21 @@ describe("contentSync/reset/impl", () => {
 
     const routeDelete = await t.mutation(deleteContentRoutesBatch);
     const publicRouteDelete = await t.mutation(deletePublicRoutesBatch);
-    const viewDelete = await t.mutation(deleteContentViewsBatch);
-    const queueDelete = await t.mutation(deleteContentViewAnalyticsQueueBatch);
+    const viewDelete = await t.mutation(deleteLearningViewsBatch);
+    const queueDelete = await t.mutation(deleteLearningEngagementQueueBatch);
     const partitionDelete = await t.mutation(
       deleteContentAnalyticsPartitionsBatch
     );
-    const learningPopularityDelete = await t.mutation(
-      deleteLearningPopularityBatch
+    const recentsDelete = await t.mutation(deleteUserLearningRecentsBatch);
+    const viewerSignalsDelete = await t.mutation(
+      deleteLearningPopularityViewerSignalsBatch
     );
-    const trendingDelete = await t.mutation(deleteLearningTrendingBucketsBatch);
+    const popularitySignalsDelete = await t.mutation(
+      deleteLearningPopularitySignalsBatch
+    );
+    const popularityCountersDelete = await t.mutation(
+      deleteLearningPopularityCountersBatch
+    );
     const materialLocaleDelete = await t.mutation(deleteMaterialLocalesBatch);
     const materialDelete = await t.mutation(deleteMaterialsBatch);
     const curriculumMaterialDelete = await t.mutation(
@@ -46,8 +57,10 @@ describe("contentSync/reset/impl", () => {
     expect(viewDelete).toEqual({ deleted: 1, hasMore: false });
     expect(queueDelete).toEqual({ deleted: 1, hasMore: false });
     expect(partitionDelete).toEqual({ deleted: 1, hasMore: false });
-    expect(learningPopularityDelete).toEqual({ deleted: 1, hasMore: false });
-    expect(trendingDelete).toEqual({ deleted: 1, hasMore: false });
+    expect(recentsDelete).toEqual({ deleted: 1, hasMore: false });
+    expect(viewerSignalsDelete).toEqual({ deleted: 1, hasMore: false });
+    expect(popularitySignalsDelete).toEqual({ deleted: 1, hasMore: false });
+    expect(popularityCountersDelete).toEqual({ deleted: 1, hasMore: false });
     expect(materialLocaleDelete).toEqual({ deleted: 1, hasMore: false });
     expect(materialDelete).toEqual({ deleted: 1, hasMore: false });
     expect(curriculumMaterialDelete).toEqual({ deleted: 1, hasMore: false });
@@ -65,10 +78,12 @@ describe("contentSync/reset/impl", () => {
       expect.objectContaining({ key: "fixture.program" }),
     ]);
     expect(resetRows).toEqual({
-      learningPopularity: [],
       contentAnalyticsPartitions: [],
-      contentViewAnalyticsQueue: [],
-      contentViews: [],
+      learningEngagementQueue: [],
+      learningPopularityCounters: [],
+      learningPopularitySignals: [],
+      learningPopularityViewerSignals: [],
+      learningViews: [],
       learningPlanItems: [],
       assessmentNodes: [],
       assessments: [],
@@ -79,8 +94,8 @@ describe("contentSync/reset/impl", () => {
       materials: [],
       publicRoutes: [],
       routes: [],
-      learningTrendingBuckets: [],
       surahs: [],
+      userLearningRecents: [],
       verses: [],
     });
   });
@@ -113,8 +128,18 @@ async function seedDerivedRuntimeRows(ctx: MutationCtx) {
     syncedAt: 1,
     title: "Fixture Topic",
   });
-  await ctx.db.insert("contentViews", {
+  const recentUserId = await ctx.db.insert("users", {
+    authId: "reset-user",
+    credits: 0,
+    creditsResetAt: 1,
+    email: "reset@example.com",
+    name: "Reset User",
+    plan: "free",
+  });
+
+  await ctx.db.insert("learningViews", {
     ...graph,
+    ...canonicalContext,
     deviceId: "device-1",
     firstViewedAt: 1,
     lastViewedAt: 2,
@@ -122,12 +147,19 @@ async function seedDerivedRuntimeRows(ctx: MutationCtx) {
     route: "quran/1",
     section: "quran",
   });
-  await ctx.db.insert("contentViewAnalyticsQueue", {
+  await ctx.db.insert("learningEngagementQueue", {
     ...graph,
+    ...canonicalContext,
+    description: "Quran reset",
+    insertedAt: 2,
     locale: "id",
     partition: 0,
     route: "quran/1",
+    scopeMode: "global",
     section: "quran",
+    sourcePath: "quran/1",
+    title: "Al-Fatihah",
+    viewerKey: "device:device-1",
     viewedAt: 2,
   });
   await ctx.db.insert("contentAnalyticsPartitions", {
@@ -135,20 +167,55 @@ async function seedDerivedRuntimeRows(ctx: MutationCtx) {
     leaseVersion: 1,
     partition: 0,
   });
-  await ctx.db.insert("learningPopularity", {
+  await ctx.db.insert("userLearningRecents", {
     ...graph,
+    ...canonicalContext,
+    description: "Quran reset",
+    lastViewedAt: 2,
     locale: "id",
+    route: "quran/1",
     section: "quran",
+    sourcePath: "quran/1",
+    title: "Al-Fatihah",
+    userId: recentUserId,
+  });
+  await ctx.db.insert("learningPopularityViewerSignals", {
+    ...graph,
+    ...canonicalContext,
+    locale: "id",
+    scopeMode: "global",
+    section: "quran",
+    signalDay: 0,
+    viewedAt: 2,
+    viewerKey: "device:device-1",
+  });
+  await ctx.db.insert("learningPopularitySignals", {
+    ...graph,
+    ...canonicalContext,
+    description: "Quran reset",
+    locale: "id",
+    route: "quran/1",
+    scopeMode: "global",
+    section: "quran",
+    signalDay: 0,
+    sourcePath: "quran/1",
+    title: "Al-Fatihah",
     updatedAt: 2,
     viewCount: 1,
   });
-  await ctx.db.insert("learningTrendingBuckets", {
+  await ctx.db.insert("learningPopularityCounters", {
     ...graph,
-    bucketStart: 0,
+    ...canonicalContext,
+    description: "Quran reset",
     locale: "id",
+    route: "quran/1",
+    score: 1,
+    scopeMode: "global",
     section: "quran",
+    sourcePath: "quran/1",
+    title: "Al-Fatihah",
     updatedAt: 2,
-    viewCount: 1,
+    windowKey: "7d",
   });
   await ctx.db.insert("materials", {
     concepts: [],
@@ -392,14 +459,14 @@ async function deletePublicRoutesBatch(ctx: MutationCtx) {
   return await deleteBatchFromTable(ctx, "publicRoutes");
 }
 
-/** Deletes one content view reset batch through the shared reset helper. */
-async function deleteContentViewsBatch(ctx: MutationCtx) {
-  return await deleteBatchFromTable(ctx, "contentViews");
+/** Deletes one learning view reset batch through the shared reset helper. */
+async function deleteLearningViewsBatch(ctx: MutationCtx) {
+  return await deleteBatchFromTable(ctx, "learningViews");
 }
 
-/** Deletes one content view analytics queue reset batch. */
-async function deleteContentViewAnalyticsQueueBatch(ctx: MutationCtx) {
-  return await deleteBatchFromTable(ctx, "contentViewAnalyticsQueue");
+/** Deletes one learning engagement queue reset batch. */
+async function deleteLearningEngagementQueueBatch(ctx: MutationCtx) {
+  return await deleteBatchFromTable(ctx, "learningEngagementQueue");
 }
 
 /** Deletes one content analytics partition reset batch. */
@@ -407,14 +474,24 @@ async function deleteContentAnalyticsPartitionsBatch(ctx: MutationCtx) {
   return await deleteBatchFromTable(ctx, "contentAnalyticsPartitions");
 }
 
-/** Deletes one learning popularity reset batch. */
-async function deleteLearningPopularityBatch(ctx: MutationCtx) {
-  return await deleteBatchFromTable(ctx, "learningPopularity");
+/** Deletes one signed-in Continue Learning reset batch. */
+async function deleteUserLearningRecentsBatch(ctx: MutationCtx) {
+  return await deleteBatchFromTable(ctx, "userLearningRecents");
 }
 
-/** Deletes one learning trending bucket reset batch. */
-async function deleteLearningTrendingBucketsBatch(ctx: MutationCtx) {
-  return await deleteBatchFromTable(ctx, "learningTrendingBuckets");
+/** Deletes one daily viewer popularity signal reset batch. */
+async function deleteLearningPopularityViewerSignalsBatch(ctx: MutationCtx) {
+  return await deleteBatchFromTable(ctx, "learningPopularityViewerSignals");
+}
+
+/** Deletes one aggregated daily popularity signal reset batch. */
+async function deleteLearningPopularitySignalsBatch(ctx: MutationCtx) {
+  return await deleteBatchFromTable(ctx, "learningPopularitySignals");
+}
+
+/** Deletes one ranked popularity counter reset batch. */
+async function deleteLearningPopularityCountersBatch(ctx: MutationCtx) {
+  return await deleteBatchFromTable(ctx, "learningPopularityCounters");
 }
 
 /** Deletes one material locale reset batch. */
@@ -470,14 +547,22 @@ async function deleteQuranSurahsBatch(ctx: MutationCtx) {
 /** Reads the derived runtime tables after reset has run. */
 async function getDerivedRuntimeRows(ctx: QueryCtx) {
   return {
-    learningPopularity: await ctx.db.query("learningPopularity").collect(),
     contentAnalyticsPartitions: await ctx.db
       .query("contentAnalyticsPartitions")
       .collect(),
-    contentViewAnalyticsQueue: await ctx.db
-      .query("contentViewAnalyticsQueue")
+    learningEngagementQueue: await ctx.db
+      .query("learningEngagementQueue")
       .collect(),
-    contentViews: await ctx.db.query("contentViews").collect(),
+    learningPopularityCounters: await ctx.db
+      .query("learningPopularityCounters")
+      .collect(),
+    learningPopularitySignals: await ctx.db
+      .query("learningPopularitySignals")
+      .collect(),
+    learningPopularityViewerSignals: await ctx.db
+      .query("learningPopularityViewerSignals")
+      .collect(),
+    learningViews: await ctx.db.query("learningViews").collect(),
     learningPlanItems: await ctx.db.query("learningPlanItems").collect(),
     assessmentNodes: await ctx.db.query("assessmentNodes").collect(),
     assessments: await ctx.db.query("assessments").collect(),
@@ -492,10 +577,8 @@ async function getDerivedRuntimeRows(ctx: QueryCtx) {
     materials: await ctx.db.query("materials").collect(),
     publicRoutes: await ctx.db.query("publicRoutes").collect(),
     routes: await ctx.db.query("contentRoutes").collect(),
-    learningTrendingBuckets: await ctx.db
-      .query("learningTrendingBuckets")
-      .collect(),
     surahs: await ctx.db.query("quranSurahs").collect(),
+    userLearningRecents: await ctx.db.query("userLearningRecents").collect(),
     verses: await ctx.db.query("quranVerses").collect(),
   };
 }

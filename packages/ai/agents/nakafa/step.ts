@@ -9,13 +9,6 @@ import { readPracticeSourceRouteByPath } from "@repo/contents/_types/route/pract
 import type { ModelMessage } from "ai";
 import { Option } from "effect";
 
-/** Minimal AI SDK tool-call shape needed to detect a specific Nakafa tool step. */
-interface ToolStep<ToolName extends string> {
-  toolCalls: readonly {
-    toolName: ToolName;
-  }[];
-}
-
 /**
  * Selects the graph exercise reference to read after an exercise-scoped search.
  * Set-level search rows are preferred when present; otherwise the first
@@ -197,7 +190,9 @@ export function prepareReadStep(
  */
 export function prepareTaxonomyAnswerStep<const ToolName extends string>(
   messages: ModelMessage[],
-  steps: readonly ToolStep<ToolName>[]
+  steps: readonly {
+    readonly toolCalls: readonly { readonly toolName: ToolName }[];
+  }[]
 ) {
   const hasTaxonomyToolCall = steps.some((step) =>
     step.toolCalls.some((toolCall) => toolCall.toolName === "taxonomy")
@@ -254,7 +249,9 @@ export function prepareTaxonomyAnswerStep<const ToolName extends string>(
  * searching instead of spending the remaining loop budget on repeated discovery.
  */
 export function shouldAnswerFromNakafaEvidence<const ToolName extends string>(
-  steps: readonly ToolStep<ToolName>[]
+  steps: readonly {
+    readonly toolCalls: readonly { readonly toolName: ToolName }[];
+  }[]
 ) {
   const searchCalls = steps.flatMap((step) =>
     step.toolCalls.filter((toolCall) => toolCall.toolName === "search")
@@ -269,7 +266,12 @@ export function shouldAnswerFromNakafaEvidence<const ToolName extends string>(
  */
 export function prepareAnswerFromNakafaEvidenceStep<
   const ToolName extends string,
->(messages: ModelMessage[], steps: readonly ToolStep<ToolName>[]) {
+>(
+  messages: ModelMessage[],
+  steps: readonly {
+    readonly toolCalls: readonly { readonly toolName: ToolName }[];
+  }[]
+) {
   if (!shouldAnswerFromNakafaEvidence(steps)) {
     return;
   }

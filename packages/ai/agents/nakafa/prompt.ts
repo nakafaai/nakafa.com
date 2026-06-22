@@ -3,13 +3,14 @@ import { createPrompt } from "@repo/ai/prompt/utils";
 import type { AgentContext } from "@repo/ai/types/agents";
 import type { Locale } from "@repo/utilities/locales";
 
-interface Props {
-  context: AgentContext;
-  locale: Locale;
-}
-
 /** Builds the system prompt for the Nakafa content agent. */
-export function nakafaAgentPrompt({ locale, context }: Props) {
+export function nakafaAgentPrompt({
+  locale,
+  context,
+}: {
+  readonly context: AgentContext;
+  readonly locale: Locale;
+}) {
   return createPrompt({
     taskContext: `
       # Identity

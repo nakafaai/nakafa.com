@@ -1,5 +1,6 @@
 import { formatLearningProfilePromptContext } from "@repo/ai/prompt/learning-profile";
 import type { AgentLearningProfile } from "@repo/ai/types/agents";
+import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
 import { describe, expect, it } from "vitest";
 
 const baseLearningProfile: AgentLearningProfile = {
@@ -7,7 +8,7 @@ const baseLearningProfile: AgentLearningProfile = {
   planItems: [],
   program: {
     coverageStatus: "partial",
-    key: "snbt-2026",
+    key: LearningProgramKeySchema.make("snbt-2026"),
     kind: "admission-exam",
     title: "SNBT 2026",
     versionLabel: "2026",

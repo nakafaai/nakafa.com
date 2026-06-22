@@ -319,7 +319,14 @@ function toPublicRoutePayload(route: PublicRoute): PublicRoutePayload {
       "displayGroupTitle" in route ? route.displayGroupTitle : undefined,
     iconKey: "iconKey" in route ? route.iconKey : undefined,
     kind: route.kind,
+    level: "level" in route ? route.level : undefined,
     locale: route.locale,
+    materialCardDescription:
+      "materialCardDescription" in route
+        ? route.materialCardDescription
+        : undefined,
+    materialCardTitle:
+      "materialCardTitle" in route ? route.materialCardTitle : undefined,
     materialDomain:
       "materialDomain" in route ? route.materialDomain : undefined,
     materialKey: "materialKey" in route ? route.materialKey : undefined,

@@ -29,10 +29,10 @@ export const RESET_STEPS: ResetStep[] = [
     resultLabel: "content search rows",
   },
   {
-    label: "Deleting content view analytics queue...",
+    label: "Deleting learning engagement queue...",
     mutation:
-      internal.contentSync.reset.internal.deleteContentViewAnalyticsQueueBatch,
-    resultLabel: "content view analytics queue rows",
+      internal.contentSync.reset.internal.deleteLearningEngagementQueueBatch,
+    resultLabel: "learning engagement queue rows",
   },
   {
     label: "Deleting content analytics partition leases...",
@@ -41,20 +41,34 @@ export const RESET_STEPS: ResetStep[] = [
     resultLabel: "content analytics partition leases",
   },
   {
-    label: "Deleting content view rows...",
-    mutation: internal.contentSync.reset.internal.deleteContentViewsBatch,
-    resultLabel: "content view rows",
+    label: "Deleting learning view rows...",
+    mutation: internal.contentSync.reset.internal.deleteLearningViewsBatch,
+    resultLabel: "learning view rows",
   },
   {
-    label: "Deleting learning popularity rows...",
-    mutation: internal.contentSync.reset.internal.deleteLearningPopularityBatch,
-    resultLabel: "learning popularity rows",
-  },
-  {
-    label: "Deleting learning trending bucket rows...",
+    label: "Deleting user learning recents rows...",
     mutation:
-      internal.contentSync.reset.internal.deleteLearningTrendingBucketsBatch,
-    resultLabel: "learning trending bucket rows",
+      internal.contentSync.reset.internal.deleteUserLearningRecentsBatch,
+    resultLabel: "user learning recents rows",
+  },
+  {
+    label: "Deleting learning popularity signal rows...",
+    mutation:
+      internal.contentSync.reset.internal.deleteLearningPopularitySignalsBatch,
+    resultLabel: "learning popularity signal rows",
+  },
+  {
+    label: "Deleting learning popularity viewer signal rows...",
+    mutation:
+      internal.contentSync.reset.internal
+        .deleteLearningPopularityViewerSignalsBatch,
+    resultLabel: "learning popularity viewer signal rows",
+  },
+  {
+    label: "Deleting learning popularity counter rows...",
+    mutation:
+      internal.contentSync.reset.internal.deleteLearningPopularityCountersBatch,
+    resultLabel: "learning popularity counter rows",
   },
   {
     label: "Deleting generated assessment nodes...",

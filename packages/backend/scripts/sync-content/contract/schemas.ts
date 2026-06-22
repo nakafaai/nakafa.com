@@ -385,6 +385,7 @@ export const AuthorSyncResultSchema = Schema.Struct({
   existing: Schema.Number,
 });
 
+/** Counts every read-model table inspected by cleanup and import verification. */
 export const ContentCountsSchema = Schema.Struct({
   articleReferences: Schema.Number,
   articles: Schema.Number,
@@ -399,8 +400,8 @@ export const ContentCountsSchema = Schema.Struct({
   contentRoutes: Schema.Number,
   publicRoutes: Schema.Number,
   contentSearch: Schema.Number,
-  contentViewAnalyticsQueue: Schema.Number,
-  contentViews: Schema.Number,
+  learningEngagementQueue: Schema.Number,
+  learningViews: Schema.Number,
   exerciseAnswers: Schema.Number,
   exerciseAttempts: Schema.Number,
   exerciseChoices: Schema.Number,
@@ -425,13 +426,15 @@ export const ContentCountsSchema = Schema.Struct({
   learningPlanItems: Schema.Number,
   learningProgramSources: Schema.Number,
   learningPrograms: Schema.Number,
-  learningPopularity: Schema.Number,
+  learningPopularityCounters: Schema.Number,
+  learningPopularitySignals: Schema.Number,
+  learningPopularityViewerSignals: Schema.Number,
   materialLocales: Schema.Number,
   materials: Schema.Number,
   quranSurahs: Schema.Number,
   quranVerses: Schema.Number,
   curriculumLessons: Schema.Number,
-  learningTrendingBuckets: Schema.Number,
+  userLearningRecents: Schema.Number,
   curriculumTopics: Schema.Number,
   tryoutAccessCampaignProducts: Schema.Number,
   tryoutAccessCampaigns: Schema.Number,

@@ -8,12 +8,6 @@ import { Effect, Either, Option } from "effect";
 
 type Writer = Pick<UIMessageStreamWriter<MyUIMessage>, "write">;
 
-interface Params {
-  input: NakafaAgentReadOptions;
-  toolCallId: string;
-  writer: Writer;
-}
-
 const notFoundMessage = "Nakafa content was not found.";
 
 /** Reads one Nakafa content reference and writes a bounded preview UI part. */
@@ -21,7 +15,11 @@ export const read = Effect.fn("nakafa.read")(function* ({
   input,
   toolCallId,
   writer,
-}: Params) {
+}: {
+  readonly input: NakafaAgentReadOptions;
+  readonly toolCallId: string;
+  readonly writer: Writer;
+}) {
   yield* Effect.sync(() =>
     writer.write({
       id: toolCallId,

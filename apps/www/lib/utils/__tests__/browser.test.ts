@@ -1,6 +1,10 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getLocale, getPathname } from "@/lib/utils/browser";
+import {
+  getLocale,
+  getMaterialContextHint,
+  getPathname,
+} from "@/lib/utils/browser";
 
 describe("getLocale", () => {
   beforeEach(() => {
@@ -98,5 +102,29 @@ describe("getPathname", () => {
   it("handles paths with multiple segments", () => {
     window.location.pathname = "/en/blog/2024/12/24/release-notes";
     expect(getPathname()).toBe("/blog/2024/12/24/release-notes");
+  });
+});
+
+describe("getMaterialContextHint", () => {
+  beforeEach(() => {
+    vi.stubGlobal("window", {
+      location: { search: "" },
+    });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("returns the raw material context hint from the query string", () => {
+    window.location.search = "?ctx=program.node";
+
+    expect(getMaterialContextHint()).toBe("program.node");
+  });
+
+  it("returns undefined when the page has no material context hint", () => {
+    window.location.search = "?other=value";
+
+    expect(getMaterialContextHint()).toBeUndefined();
   });
 });

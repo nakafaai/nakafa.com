@@ -53,10 +53,12 @@ const graphIdentityTargets = [
   "contentSearch",
   "contentRoutePages",
   "parts",
-  "contentViews",
-  "contentViewAnalyticsQueue",
-  "learningPopularity",
-  "learningTrendingBuckets",
+  "learningViews",
+  "learningEngagementQueue",
+  "userLearningRecents",
+  "learningPopularityViewerSignals",
+  "learningPopularitySignals",
+  "learningPopularityCounters",
   "audioContentSources",
   "audioGenerationQueue",
   "contentAudios",
@@ -171,7 +173,7 @@ function isFilled(value: string | undefined) {
   return typeof value === "string" && value.length > 0;
 }
 
-/** Detects stale route-shaped content IDs that violate graph identity storage. */
+/** Detects invalid route-shaped content IDs that violate graph identity storage. */
 function hasRouteShapedContentId(ref: GraphIdentityRef) {
   return typeof ref.content_id === "string" && ref.content_id.includes("/");
 }
@@ -312,6 +314,7 @@ function getGraphIdentityPageResult(
   };
 }
 
+/** Returns one bounded exercise-question page for sync integrity verification. */
 export const listIntegrityExerciseQuestionsPage = internalQuery({
   args: {
     paginationOpts: paginationOptsValidator,
@@ -333,6 +336,7 @@ export const listIntegrityExerciseQuestionsPage = internalQuery({
   },
 });
 
+/** Returns one bounded exercise-choice page for sync integrity verification. */
 export const listIntegrityExerciseChoicesPage = internalQuery({
   args: {
     paginationOpts: paginationOptsValidator,
@@ -352,6 +356,7 @@ export const listIntegrityExerciseChoicesPage = internalQuery({
   },
 });
 
+/** Returns one bounded content-author page for sync integrity verification. */
 export const listIntegrityContentAuthorsPage = internalQuery({
   args: {
     paginationOpts: paginationOptsValidator,
@@ -373,6 +378,7 @@ export const listIntegrityContentAuthorsPage = internalQuery({
   },
 });
 
+/** Returns one bounded article-reference page for sync integrity verification. */
 export const listIntegrityArticleReferencesPage = internalQuery({
   args: {
     paginationOpts: paginationOptsValidator,
@@ -392,6 +398,7 @@ export const listIntegrityArticleReferencesPage = internalQuery({
   },
 });
 
+/** Returns one bounded article page for stale-content integrity verification. */
 export const listIntegrityArticlesPage = internalQuery({
   args: {
     paginationOpts: paginationOptsValidator,
@@ -413,6 +420,7 @@ export const listIntegrityArticlesPage = internalQuery({
   },
 });
 
+/** Returns one bounded curriculum-lesson page for sync integrity verification. */
 export const listIntegrityCurriculumLessonsPage = internalQuery({
   args: {
     paginationOpts: paginationOptsValidator,
@@ -479,9 +487,9 @@ export const getGraphIdentityIntegrityPage = internalQuery({
       return getGraphIdentityPageResult(summary, page);
     }
 
-    if (args.target === "contentViews") {
+    if (args.target === "learningViews") {
       const page = await ctx.db
-        .query("contentViews")
+        .query("learningViews")
         .paginate(args.paginationOpts);
 
       for (const row of page.page) {
@@ -491,9 +499,9 @@ export const getGraphIdentityIntegrityPage = internalQuery({
       return getGraphIdentityPageResult(summary, page);
     }
 
-    if (args.target === "contentViewAnalyticsQueue") {
+    if (args.target === "learningEngagementQueue") {
       const page = await ctx.db
-        .query("contentViewAnalyticsQueue")
+        .query("learningEngagementQueue")
         .paginate(args.paginationOpts);
 
       for (const row of page.page) {
@@ -503,9 +511,9 @@ export const getGraphIdentityIntegrityPage = internalQuery({
       return getGraphIdentityPageResult(summary, page);
     }
 
-    if (args.target === "learningPopularity") {
+    if (args.target === "userLearningRecents") {
       const page = await ctx.db
-        .query("learningPopularity")
+        .query("userLearningRecents")
         .paginate(args.paginationOpts);
 
       for (const row of page.page) {
@@ -515,17 +523,37 @@ export const getGraphIdentityIntegrityPage = internalQuery({
       return getGraphIdentityPageResult(summary, page);
     }
 
-    if (args.target === "learningTrendingBuckets") {
+    if (args.target === "learningPopularitySignals") {
       const page = await ctx.db
-        .query("learningTrendingBuckets")
+        .query("learningPopularitySignals")
         .paginate(args.paginationOpts);
 
       for (const row of page.page) {
-        checkGraphIdentityRef(
-          summary,
-          { ...row, section: "material" },
-          args.target
-        );
+        checkGraphIdentityRef(summary, row, args.target);
+      }
+
+      return getGraphIdentityPageResult(summary, page);
+    }
+
+    if (args.target === "learningPopularityViewerSignals") {
+      const page = await ctx.db
+        .query("learningPopularityViewerSignals")
+        .paginate(args.paginationOpts);
+
+      for (const row of page.page) {
+        checkGraphIdentityRef(summary, row, args.target);
+      }
+
+      return getGraphIdentityPageResult(summary, page);
+    }
+
+    if (args.target === "learningPopularityCounters") {
+      const page = await ctx.db
+        .query("learningPopularityCounters")
+        .paginate(args.paginationOpts);
+
+      for (const row of page.page) {
+        checkGraphIdentityRef(summary, row, args.target);
       }
 
       return getGraphIdentityPageResult(summary, page);

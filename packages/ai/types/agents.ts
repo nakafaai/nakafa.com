@@ -1,79 +1,97 @@
 import type { Nakafa } from "@repo/ai/agents/nakafa/service";
-import type { ModelId } from "@repo/ai/config/model";
-import type { SourceReference } from "@repo/ai/lib/source";
+import { ModelIdSchema } from "@repo/ai/config/model";
+import { SourceReferenceSchema } from "@repo/ai/lib/source";
+import { NinaContextPackSchema } from "@repo/ai/nina/memory/pack";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import type { PromptUserRole } from "@repo/ai/types/roles";
-import type {
-  CoverageStatus,
-  LearningInterest,
-  LearningPlanItemStatus,
-  LearningProgramKind,
-  LearningStage,
+import { PromptUserRoleSchema } from "@repo/ai/types/roles";
+import { LocaleSchema } from "@repo/contents/_types/content";
+import {
+  CoverageStatusSchema,
+  LearningInterestSchema,
+  LearningPlanItemStatusSchema,
+  LearningProgramKeySchema,
+  LearningProgramKindSchema,
+  LearningStageSchema,
 } from "@repo/contents/_types/program/schema";
-import type { Locale } from "@repo/utilities/locales";
 import type { UIMessageStreamWriter } from "ai";
+import { Schema } from "effect";
 
 /** Program and plan context agents can use without Convex document coupling. */
-export interface AgentLearningProfile {
-  interests: readonly LearningInterest[];
-  planItems: readonly {
-    content_id: string;
-    lensId: string;
-    position: number;
-    route?: string;
-    status: LearningPlanItemStatus;
-    title?: string;
-  }[];
-  program: {
-    coverageStatus: CoverageStatus;
-    key: string;
-    kind: LearningProgramKind;
-    title: string;
-    versionLabel: string;
-  };
-  stage?: LearningStage;
-}
+export const AgentLearningProfileSchema = Schema.Struct({
+  interests: Schema.Array(LearningInterestSchema),
+  planItems: Schema.Array(
+    Schema.Struct({
+      content_id: Schema.String,
+      lensId: Schema.String,
+      position: Schema.Number,
+      route: Schema.optional(Schema.String),
+      status: LearningPlanItemStatusSchema,
+      title: Schema.optional(Schema.String),
+    }).pipe(Schema.mutable)
+  ),
+  program: Schema.Struct({
+    coverageStatus: CoverageStatusSchema,
+    key: LearningProgramKeySchema,
+    kind: LearningProgramKindSchema,
+    title: Schema.String,
+    versionLabel: Schema.String,
+  }).pipe(Schema.mutable),
+  stage: Schema.optional(LearningStageSchema),
+}).pipe(Schema.mutable);
 
-export interface AgentContext {
-  currentDate: string;
-  learningProfile?: AgentLearningProfile;
-  needsPageFetch: boolean;
-  slug: string;
-  url: string;
-  userRole?: PromptUserRole;
-  verified: boolean;
-}
+export type AgentLearningProfile = Schema.Schema.Type<
+  typeof AgentLearningProfileSchema
+>;
 
-/**
- * Base parameters shared by all agents.
- */
-export interface BaseAgentParams {
-  context: AgentContext;
-  locale: Locale;
-  modelId: ModelId;
-  writer: UIMessageStreamWriter<MyUIMessage>;
-}
+/** Per-turn context shared by Nina and specialist agents after harness arbitration. */
+export const AgentContextSchema = Schema.Struct({
+  currentDate: Schema.String,
+  learningProfile: Schema.optional(AgentLearningProfileSchema),
+  needsPageFetch: Schema.Boolean,
+  nina: Schema.optional(NinaContextPackSchema),
+  slug: Schema.String,
+  url: Schema.String,
+  userRole: Schema.optional(PromptUserRoleSchema),
+  verified: Schema.Boolean,
+}).pipe(Schema.mutable);
 
-/**
- * Parameters for agents that receive a task.
- */
-export interface TaskAgentParams extends BaseAgentParams {
-  task: string;
-}
+export type AgentContext = Schema.Schema.Type<typeof AgentContextSchema>;
 
-/** Parameters for the Nakafa content retrieval subagent. */
-export interface NakafaAgentParams extends TaskAgentParams {
-  nakafa: Nakafa;
-}
+/** Schema-derived data passed to task-oriented specialist agents. */
+export const TaskAgentDataSchema = Schema.Struct({
+  context: AgentContextSchema,
+  locale: LocaleSchema,
+  modelId: ModelIdSchema,
+  task: Schema.String,
+}).pipe(Schema.mutable);
 
-/** Parameters for the external research subagent. */
-export interface ResearchAgentParams extends BaseAgentParams {
-  sourceReferences: SourceReference[];
-  task: string;
-  toolCallId: string;
-}
+type TaskAgentData = Schema.Schema.Type<typeof TaskAgentDataSchema>;
+type SpecialistWriter = UIMessageStreamWriter<MyUIMessage>;
 
-/**
- * Agent parameter exports.
- */
-export type MathAgentParams = TaskAgentParams;
+/** Parameters for the deterministic math specialist Adapter. */
+export type MathAgentParams = TaskAgentData & {
+  readonly writer: SpecialistWriter;
+};
+
+/** Parameters for the Nakafa content retrieval specialist Adapter. */
+export type NakafaAgentParams = TaskAgentData & {
+  readonly nakafa: Nakafa;
+  readonly writer: SpecialistWriter;
+};
+
+/** Schema-derived data passed to the external research specialist. */
+export const ResearchAgentDataSchema = Schema.Struct({
+  context: AgentContextSchema,
+  locale: LocaleSchema,
+  modelId: ModelIdSchema,
+  sourceReferences: Schema.Array(SourceReferenceSchema),
+  task: Schema.String,
+  toolCallId: Schema.String,
+}).pipe(Schema.mutable);
+
+/** Parameters for the external research specialist Adapter. */
+export type ResearchAgentParams = Schema.Schema.Type<
+  typeof ResearchAgentDataSchema
+> & {
+  readonly writer: SpecialistWriter;
+};

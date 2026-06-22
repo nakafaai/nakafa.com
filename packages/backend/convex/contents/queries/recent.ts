@@ -1,70 +1,127 @@
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { query } from "@repo/backend/convex/_generated/server";
+import { toLearningContextQuery } from "@repo/backend/convex/contents/context";
 import { buildContentSearchRef } from "@repo/backend/convex/contents/helpers/search/documents";
+import {
+  getUnknownErrorMessage,
+  runConvexProgram,
+} from "@repo/backend/convex/lib/effect";
 import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { recentlyViewedSubjectValidator } from "@repo/backend/convex/lib/validators/trending";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import type { Infer } from "convex/values";
+import { cleanSlug } from "@repo/utilities/helper";
+import { type Infer, v } from "convex/values";
+import { Effect, Schema } from "effect";
 
 type RecentlyViewedSubject = Infer<typeof recentlyViewedSubjectValidator>;
 
+const defaultRecentLearningLimit = 5;
+const maxRecentLearningLimit = 20;
+const recentLearningPageSize = 20;
+const recentLearningMaxPages = 5;
+
+/** Convex validator for bounded Continue Learning query inputs. */
+const getRecentlyViewedArgs = {
+  locale: localeValidator,
+  limit: vv.optional(vv.number()),
+};
+
+/** Validator-owned argument contract used by the internal query program. */
+const getRecentlyViewedArgsValidator = v.object(getRecentlyViewedArgs);
+
+type ListRecentLearningArgs = Infer<typeof getRecentlyViewedArgsValidator>;
+
+const recentLearningIoFailedCode = "RECENT_LEARNING_IO_FAILED";
+
+/** Raised when Continue Learning cannot read its ranked model. */
+class RecentLearningIoError extends Schema.TaggedError<RecentLearningIoError>()(
+  "RecentLearningIoError",
+  {
+    code: Schema.Literal(recentLearningIoFailedCode),
+    message: Schema.String,
+  }
+) {}
+
+/** Maps thrown Convex IO failures into the Continue Learning error channel. */
+function toRecentLearningIoError(error: unknown) {
+  return new RecentLearningIoError({
+    code: recentLearningIoFailedCode,
+    message: getUnknownErrorMessage(error),
+  });
+}
+
+/** Reads the authenticated learner's ranked Continue Learning rows. */
+const listRecentLearning = Effect.fn("contents.recent.listRecentLearning")(
+  function* (ctx: QueryCtx, args: ListRecentLearningArgs) {
+    const rawLimit = args.limit ?? defaultRecentLearningLimit;
+    const limit = Math.min(Math.max(rawLimit, 0), maxRecentLearningLimit);
+    const user = yield* Effect.tryPromise({
+      try: () => getOptionalAppUser(ctx),
+      catch: toRecentLearningIoError,
+    });
+
+    if (!(user && limit > 0)) {
+      return [];
+    }
+
+    const subjects: RecentlyViewedSubject[] = [];
+    let cursor: string | null = null;
+    let pagesRead = 0;
+
+    while (subjects.length < limit && pagesRead < recentLearningMaxPages) {
+      const recentRows = yield* Effect.tryPromise({
+        try: () =>
+          ctx.db
+            .query("userLearningRecents")
+            .withIndex(
+              "by_userId_and_locale_and_section_and_lastViewedAt",
+              (q) =>
+                q
+                  .eq("userId", user.appUser._id)
+                  .eq("locale", args.locale)
+                  .eq("section", "material")
+            )
+            .order("desc")
+            .paginate({
+              cursor,
+              numItems: recentLearningPageSize,
+            }),
+        catch: toRecentLearningIoError,
+      });
+
+      pagesRead += 1;
+
+      for (const row of recentRows.page) {
+        const subject = yield* toRecentlyViewedSubject(ctx.db, row);
+
+        if (subject) {
+          subjects.push(subject);
+        }
+
+        if (subjects.length >= limit) {
+          break;
+        }
+      }
+
+      if (recentRows.isDone || subjects.length >= limit) {
+        break;
+      }
+
+      cursor = recentRows.continueCursor;
+    }
+
+    return subjects;
+  }
+);
+
 /** Returns the current user's recently viewed subjects for one locale. */
 export const getRecentlyViewed = query({
-  args: {
-    locale: localeValidator,
-    limit: vv.optional(vv.number()),
-  },
+  args: getRecentlyViewedArgs,
   returns: vv.array(recentlyViewedSubjectValidator),
-  handler: async (ctx, args) => {
-    const limit = args.limit ?? 5;
-    const user = await getOptionalAppUser(ctx);
-
-    if (!user) {
-      return [];
-    }
-
-    const recentViews = await ctx.db
-      .query("contentViews")
-      .withIndex("by_userId_and_section_and_locale_and_lastViewedAt", (q) =>
-        q
-          .eq("userId", user.appUser._id)
-          .eq("section", "material")
-          .eq("locale", args.locale)
-      )
-      .order("desc")
-      .take(limit);
-
-    if (recentViews.length === 0) {
-      return [];
-    }
-
-    const results: RecentlyViewedSubject[] = [];
-
-    for (const view of recentViews) {
-      const route = await ctx.db
-        .query("contentRoutes")
-        .withIndex("by_content_id", (q) => q.eq("content_id", view.content_id))
-        .unique();
-
-      if (route?.kind !== "curriculum-lesson") {
-        continue;
-      }
-
-      if (!route.materialDomain) {
-        continue;
-      }
-
-      results.push({
-        ...toPublicContentRef(route),
-        description: route.description ?? "",
-        lastViewedAt: view.lastViewedAt,
-        materialDomain: route.materialDomain,
-        title: route.title,
-      });
-    }
-
-    return results;
-  },
+  handler: async (ctx, args) =>
+    await runConvexProgram(listRecentLearning(ctx, args)),
 });
 
 /** Exposes only public content-ref fields accepted by the recent-view validator. */
@@ -87,3 +144,38 @@ function toPublicContentRef(
     url: ref.url,
   };
 }
+
+/** Projects one ranked recent row to the public home-card result shape. */
+const toRecentlyViewedSubject = Effect.fn(
+  "contents.recent.toRecentlyViewedSubject"
+)(function* (db: QueryCtx["db"], row: Doc<"userLearningRecents">) {
+  const route = yield* Effect.tryPromise({
+    try: () =>
+      db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (q) => q.eq("content_id", row.content_id))
+        .unique(),
+    catch: toRecentLearningIoError,
+  });
+
+  if (
+    !(
+      route &&
+      route.locale === row.locale &&
+      route.kind === "curriculum-lesson" &&
+      route.materialDomain
+    )
+  ) {
+    return;
+  }
+
+  return {
+    ...toPublicContentRef(route),
+    contextKey: row.contextKey,
+    description: route.description ?? "",
+    href: `/${cleanSlug(route.route)}${toLearningContextQuery(row)}`,
+    lastViewedAt: row.lastViewedAt,
+    materialDomain: route.materialDomain,
+    title: route.title,
+  };
+});

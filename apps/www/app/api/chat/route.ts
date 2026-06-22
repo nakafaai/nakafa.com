@@ -1,31 +1,33 @@
+import { NakafaSearch } from "@repo/ai/agents/nakafa/search";
+import { Nakafa } from "@repo/ai/agents/nakafa/service";
 import {
   DEFAULT_LATITUDE,
   DEFAULT_LONGITUDE,
 } from "@repo/ai/clients/weather/client";
 import { hasEnoughCredits, ModelIdSchema } from "@repo/ai/config/model";
-import { compressMessages } from "@repo/ai/lib/message";
+import { NinaHarness } from "@repo/ai/nina/harness/stream";
+import { NinaReporter } from "@repo/ai/nina/runtime/report";
+import { NinaStore } from "@repo/ai/nina/runtime/store";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { CorsValidator } from "@repo/security/lib/cors-validator";
 import { cleanSlug } from "@repo/utilities/helper";
 import { geolocation } from "@vercel/functions";
-import {
-  convertToModelMessages,
-  createUIMessageStreamResponse,
-  generateId,
-  pruneMessages,
-} from "ai";
 import { Effect, Option, Schema } from "effect";
 import { getTranslations } from "next-intl/server";
 import { CHAT_ERRORS } from "@/app/api/chat/constants";
-import {
-  determinePageFetchNeed,
-  getCanonicalCurrentPageContentUrl,
-} from "@/app/api/chat/content";
+import { getCanonicalCurrentPageContentUrl } from "@/app/api/chat/content";
+import { resolveNinaLearningSession } from "@/app/api/chat/context";
+import { search as nakafaSearch } from "@/app/api/chat/nakafa";
+import { nakafaContent } from "@/app/api/chat/nakafa-content";
 import { createChatErrorReporter } from "@/app/api/chat/observability";
-import { loadMessages, saveOrCreateChat } from "@/app/api/chat/persistence";
-import { streamChat } from "@/app/api/chat/stream";
+import {
+  createChatWithMessage,
+  loadPinnedNinaContext,
+  saveChatMessage,
+} from "@/app/api/chat/persistence";
+import { createNinaStore } from "@/app/api/chat/store";
 import {
   getLearningProfile,
   getUserInfo,
@@ -59,12 +61,8 @@ export const maxDuration = 300;
  * POST /api/chat
  *
  * Handles an incoming chat message from the client. Validates the request,
- * gates on user credits, persists the user message, then streams the
- * assistant response back using the AI SDK UI message stream protocol.
- *
- * After the stream finishes, two fire-and-forget tasks run via `waitUntil`:
- * - Title generation (first message only)
- * - Assistant response persistence and credit deduction
+ * gates on user credits, persists the user message, then delegates response
+ * streaming to the package-owned NinaHarness.
  *
  * @see https://ai-sdk.dev/docs/reference/ai-sdk-ui/convert-to-model-messages
  * @see https://ai-sdk.dev/docs/reference/ai-sdk-ui/create-ui-message-stream-response
@@ -79,12 +77,14 @@ export function POST(req: Request) {
       const {
         message,
         id,
+        context,
         locale: rawLocale,
         slug,
         model: rawModel,
       }: {
         message: MyUIMessage | undefined;
         id: Id<"chats"> | undefined;
+        context: unknown;
         locale: unknown;
         slug: string;
         model: unknown;
@@ -124,7 +124,8 @@ export function POST(req: Request) {
         url.includes(segment)
       );
 
-      const currentDate = new Date().toLocaleString("en-US", {
+      const capturedAt = new Date();
+      const currentDate = capturedAt.toLocaleString("en-US", {
         year: "numeric",
         month: "long",
         day: "numeric",
@@ -148,12 +149,29 @@ export function POST(req: Request) {
         getUserInfo(token),
         getLearningProfile(token, locale),
       ]);
-
       if (!hasEnoughCredits(userInfo.credits, selectedModel)) {
         return new Response(CHAT_ERRORS.INSUFFICIENT_CREDITS.code, {
           status: CHAT_ERRORS.INSUFFICIENT_CREDITS.status,
         });
       }
+
+      const pinnedContext =
+        id && !verified
+          ? yield* loadPinnedNinaContext({
+              chatId: id,
+              messageIdentifier: message.id,
+              token,
+            })
+          : undefined;
+      const ninaSession = yield* resolveNinaLearningSession({
+        capturedAt: capturedAt.toISOString(),
+        locale,
+        ...(pinnedContext ? { pinnedContext } : {}),
+        rawContext: context,
+        slug,
+        url,
+        verified,
+      });
 
       const logContext = {
         service: "chat-api",
@@ -164,17 +182,32 @@ export function POST(req: Request) {
           verified,
         },
         currentDate,
+        ninaContext: ninaSession.context.snapshot,
         userLocation,
         userRole: userInfo.role,
         url,
       };
 
-      const chatId = yield* saveOrCreateChat({
-        chatId: id,
-        message,
-        modelId: selectedModel,
-        token,
-      });
+      let chatId: Id<"chats">;
+
+      if (id) {
+        chatId = yield* saveChatMessage({
+          chatId: id,
+          message,
+          modelId: selectedModel,
+          ninaContextSnapshot: ninaSession.context.snapshot,
+          ninaContextTransition: ninaSession.context.transition,
+          token,
+        });
+      } else {
+        chatId = yield* createChatWithMessage({
+          message,
+          modelId: selectedModel,
+          ninaContextSnapshot: ninaSession.context.snapshot,
+          ninaContextTransition: ninaSession.context.transition,
+          token,
+        });
+      }
       const reportChatError = createChatErrorReporter({
         chatId,
         logContext,
@@ -182,79 +215,50 @@ export function POST(req: Request) {
         userId: userInfo.userId,
       });
 
-      const messages = yield* loadMessages({ chatId, token });
-      const isFirstMessage = messages.length === 1;
-
-      const originalMessageCount = messages.length;
-      const { messages: compressedMessages, tokens } =
-        compressMessages(messages);
-      const needsPageFetch = determinePageFetchNeed({
-        messages: compressedMessages,
-        url,
-        verified,
-      });
-
-      if (compressedMessages.length < originalMessageCount) {
-        yield* Effect.logWarning(
-          `Messages compressed from ${originalMessageCount} to ${compressedMessages.length} messages (${tokens} tokens) to stay within token limit`
-        ).pipe(Effect.annotateLogs(logContext));
-      } else {
-        yield* Effect.logInfo(
-          `All ${originalMessageCount} messages fit within token limit (${tokens} tokens)`
-        ).pipe(Effect.annotateLogs(logContext));
-      }
-
-      const modelMessages = yield* Effect.tryPromise(() =>
-        convertToModelMessages(compressedMessages)
-      );
-      // Persist and render reasoning in UI, but do not feed historical
-      // assistant reasoning back into the next LLM call. AI SDK documents this
-      // as the supported way to reduce model context without deleting stored UI
-      // messages.
-      // https://ai-sdk.dev/docs/reference/ai-sdk-ui/prune-messages
-      // https://github.com/vercel/ai/blob/main/packages/ai/src/generate-text/prune-messages.ts
-      const finalMessages = pruneMessages({
-        messages: modelMessages,
-        reasoning: "all",
-      });
-
-      yield* Effect.logInfo("Chat session started").pipe(
-        Effect.annotateLogs(logContext)
-      );
-
       const translate = yield* Effect.tryPromise(() =>
         getTranslations({ locale, namespace: "Ai" })
       );
-      const chat = {
-        finalMessages,
-        id: chatId,
-        isFirstMessage,
-        messages: compressedMessages,
-        responseMessageId: generateId(),
-        token,
-      };
-      const page = {
-        locale,
-        needsFetch: needsPageFetch,
-        slug,
-        url,
-        verified,
-      };
-      const runtime = {
-        currentDate,
-        logContext,
-        modelId: selectedModel,
-        reportError: reportChatError,
-        translate,
-      };
-      const user = {
-        info: userInfo,
-        learningProfile,
-        location: userLocation,
-      };
-      const stream = streamChat({ chat, page, runtime, user });
 
-      return createUIMessageStreamResponse({ stream });
+      return yield* NinaHarness.stream({
+        copy: {
+          errorMessage: translate("error-message"),
+          rateLimitMessage: translate("rate-limit-message"),
+        },
+        page: {
+          locale,
+          needsFetch: false,
+          nina: ninaSession.context,
+          slug,
+          url,
+          verified,
+        },
+        runtime: {
+          currentDate,
+          modelId: selectedModel,
+        },
+        user: {
+          ...(learningProfile ? { learningProfile } : {}),
+          ...(userInfo.role ? { role: userInfo.role } : {}),
+          location: userLocation,
+        },
+      }).pipe(
+        Effect.provide(NinaHarness.Default),
+        Effect.provideService(
+          NinaStore,
+          createNinaStore({
+            chatId,
+            modelId: selectedModel,
+            reportError: reportChatError,
+            token,
+          })
+        ),
+        Effect.provideService(NinaReporter, {
+          report: ({ error, source }) =>
+            Effect.sync(() => reportChatError(error, source)),
+        }),
+        Effect.provideService(Nakafa, nakafaContent),
+        Effect.provideService(NakafaSearch, nakafaSearch)
+      );
     })
   );
 }

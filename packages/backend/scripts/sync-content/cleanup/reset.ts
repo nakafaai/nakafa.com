@@ -77,11 +77,13 @@ export const reset = Effect.fn("sync.reset")(function* (
   const counts = yield* getContentCounts(config);
 
   log(`  Content Search:        ${counts.contentSearch}`);
-  log(`  Content Views:         ${counts.contentViews}`);
-  log(`  View Analytics Queue:  ${counts.contentViewAnalyticsQueue}`);
+  log(`  Learning Views:        ${counts.learningViews}`);
+  log(`  Engagement Queue:      ${counts.learningEngagementQueue}`);
   log(`  Analytics Partitions:  ${counts.contentAnalyticsPartitions}`);
-  log(`  Learning Popularity:   ${counts.learningPopularity}`);
-  log(`  Learning Trending:     ${counts.learningTrendingBuckets}`);
+  log(`  User Recents:          ${counts.userLearningRecents}`);
+  log(`  Viewer Signals:        ${counts.learningPopularityViewerSignals}`);
+  log(`  Popularity Signals:    ${counts.learningPopularitySignals}`);
+  log(`  Popularity Counters:   ${counts.learningPopularityCounters}`);
   log(`  Materials:             ${counts.materials}`);
   log(`  Material Locales:      ${counts.materialLocales}`);
   log(`  Curricula:             ${counts.curricula}`);
@@ -174,11 +176,13 @@ export const reset = Effect.fn("sync.reset")(function* (
     counts.irtScaleVersionItems;
   const totalDerived =
     counts.contentSearch +
-    counts.contentViews +
-    counts.contentViewAnalyticsQueue +
+    counts.learningViews +
+    counts.learningEngagementQueue +
     counts.contentAnalyticsPartitions +
-    counts.learningPopularity +
-    counts.learningTrendingBuckets +
+    counts.userLearningRecents +
+    counts.learningPopularityViewerSignals +
+    counts.learningPopularitySignals +
+    counts.learningPopularityCounters +
     counts.materials +
     counts.materialLocales +
     counts.curricula +

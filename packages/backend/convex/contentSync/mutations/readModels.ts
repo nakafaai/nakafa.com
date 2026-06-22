@@ -424,7 +424,10 @@ function isSamePublicRoute(
     existing.displayGroupTitle === next.displayGroupTitle &&
     existing.iconKey === next.iconKey &&
     existing.kind === next.kind &&
+    existing.level === next.level &&
     existing.locale === next.locale &&
+    existing.materialCardDescription === next.materialCardDescription &&
+    existing.materialCardTitle === next.materialCardTitle &&
     existing.materialDomain === next.materialDomain &&
     existing.materialKey === next.materialKey &&
     existing.nodeKey === next.nodeKey &&

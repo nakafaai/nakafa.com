@@ -8,12 +8,6 @@ import { Effect, Either, Option } from "effect";
 
 type Writer = Pick<UIMessageStreamWriter<MyUIMessage>, "write">;
 
-interface Params {
-  input: NakafaAgentExerciseOptions;
-  toolCallId: string;
-  writer: Writer;
-}
-
 const notFoundMessage = "Nakafa exercise content was not found.";
 
 /** Reads a Nakafa exercise set or single exercise and writes a preview UI part. */
@@ -21,7 +15,11 @@ export const exercise = Effect.fn("nakafa.exercise")(function* ({
   input,
   toolCallId,
   writer,
-}: Params) {
+}: {
+  readonly input: NakafaAgentExerciseOptions;
+  readonly toolCallId: string;
+  readonly writer: Writer;
+}) {
   yield* Effect.sync(() =>
     writer.write({
       id: toolCallId,

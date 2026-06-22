@@ -230,7 +230,10 @@ export function readParentMaterialRoute(
  */
 export function readMaterialPagination(
   route: PublicContentRoute,
-  routes: readonly PublicContentRoute[]
+  routes: readonly PublicContentRoute[],
+  options: {
+    readonly toHref?: (route: PublicContentRoute) => string;
+  } = {}
 ): ContentPagination {
   const emptyItem = { href: "", title: "" };
 
@@ -257,12 +260,14 @@ export function readMaterialPagination(
 
   return {
     prev: readPaginationItem(
-      currentIndex > 0 ? siblings[currentIndex - 1] : undefined
+      currentIndex > 0 ? siblings[currentIndex - 1] : undefined,
+      options
     ),
     next: readPaginationItem(
       currentIndex < siblings.length - 1
         ? siblings[currentIndex + 1]
-        : undefined
+        : undefined,
+      options
     ),
   };
 }
@@ -369,13 +374,18 @@ function listPracticePublicRoutes(
 }
 
 /** Adapts an optional sibling lesson route to the established pagination item contract. */
-function readPaginationItem(route: PublicContentRoute | undefined) {
+function readPaginationItem(
+  route: PublicContentRoute | undefined,
+  options: {
+    readonly toHref?: (route: PublicContentRoute) => string;
+  }
+) {
   if (!route) {
     return { href: "", title: "" };
   }
 
   return {
-    href: toLocalizedContentHref(route),
+    href: options.toHref?.(route) ?? toLocalizedContentHref(route),
     title: route.title,
   };
 }

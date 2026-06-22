@@ -1,4 +1,5 @@
 import { nakafaAgentPrompt } from "@repo/ai/agents/nakafa/prompt";
+import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
 import { describe, expect, it } from "vitest";
 
 const context = {
@@ -99,7 +100,7 @@ describe("nakafaAgentPrompt", () => {
           ],
           program: {
             coverageStatus: "partial",
-            key: "merdeka",
+            key: LearningProgramKeySchema.make("merdeka"),
             kind: "school-curriculum",
             title: "Kurikulum Merdeka",
             versionLabel: "Indonesia",

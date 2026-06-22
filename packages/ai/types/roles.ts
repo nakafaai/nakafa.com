@@ -1,3 +1,5 @@
+import { Schema } from "effect";
+
 /**
  * User-role vocabulary accepted by AI prompt context.
  *
@@ -11,4 +13,8 @@ export const promptUserRoles = [
   "parent",
   "administrator",
 ] as const;
-export type PromptUserRole = (typeof promptUserRoles)[number];
+
+/** Runtime prompt role contract used by Nina and specialist prompt context. */
+export const PromptUserRoleSchema = Schema.Literal(...promptUserRoles);
+
+export type PromptUserRole = Schema.Schema.Type<typeof PromptUserRoleSchema>;

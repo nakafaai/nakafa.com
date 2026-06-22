@@ -27,3 +27,9 @@ export const backgroundGenerationTimeout = {
   stepMs: 15_000,
   totalMs: 45_000,
 } satisfies TimeoutConfiguration;
+
+/** Bounds Nina's post-answer follow-up suggestions without cutting off slow structured output. */
+export const suggestionGenerationTimeout = {
+  stepMs: 30_000,
+  totalMs: 90_000,
+} satisfies TimeoutConfiguration;

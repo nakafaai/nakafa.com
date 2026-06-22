@@ -31,6 +31,7 @@ import { v } from "convex/values";
 
 const optionalNumber = v.optional(v.number());
 
+/** Analytics event contract accepted by the product capture mutation. */
 export const productAnalyticsEventValidator = v.union(
   v.object({
     name: v.literal("user signed up"),
@@ -44,6 +45,7 @@ export const productAnalyticsEventValidator = v.union(
       alignment_id: learningGraphIdentityValidator.fields.alignmentId,
       concept_id: learningGraphIdentityValidator.fields.conceptId,
       content_id: graphContentIdValidator,
+      context_key: v.string(),
       content_type: contentTypeValidator,
       is_new_view: v.boolean(),
       learning_object_id:

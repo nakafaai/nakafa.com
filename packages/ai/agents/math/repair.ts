@@ -17,11 +17,6 @@ import { Effect, Option, Schema } from "effect";
 
 type MathRepairOptions = Parameters<ToolCallRepairFunction<ToolSet>>[0];
 
-interface RepairMathToolCallParams extends MathRepairOptions {
-  modelId: ModelId;
-  task: string;
-}
-
 const repairArgumentsSchema = Schema.Record({
   key: Schema.String,
   value: Schema.Unknown,
@@ -52,7 +47,10 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
   task,
   toolCall,
   tools,
-}: RepairMathToolCallParams) {
+}: MathRepairOptions & {
+  readonly modelId: ModelId;
+  readonly task: string;
+}) {
   if (NoSuchToolError.isInstance(error)) {
     return null;
   }

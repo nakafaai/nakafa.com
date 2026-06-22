@@ -119,7 +119,27 @@ describe("app/api/chat/utils", () => {
       getLearningProfile("test-token", "en")
     );
 
-    expect(result).toEqual(learningProfile);
+    expect(result).toEqual({
+      interests: ["exam-prep", "assessment-prep"],
+      planItems: [
+        {
+          content_id: "asset:id:exercise:snbt:2026:set-2:1",
+          lensId: "lens:snbt",
+          position: 1,
+          route:
+            "/material/practice/assessment/snbt/general-knowledge/try-out-2026/set-2/question-1",
+          status: "ready",
+          title: "SNBT Set 2",
+        },
+      ],
+      program: {
+        coverageStatus: "partial",
+        key: "snbt-2026",
+        kind: "admission-exam",
+        title: "SNBT 2026",
+        versionLabel: "2026",
+      },
+    });
     expect(fetchQuery).toHaveBeenCalledWith(
       convexApi.learningPrograms.queries.getActiveProfile,
       { locale: "en" },

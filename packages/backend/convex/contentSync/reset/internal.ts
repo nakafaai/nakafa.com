@@ -29,22 +29,35 @@ export const deleteContentSearchBatch = internalMutation({
   returns: batchDeleteResultValidator,
   handler: deleteContentSearchRows,
 });
-export const deleteContentViewsBatch =
-  createBatchDeleteMutation("contentViews");
-export const deleteContentViewAnalyticsQueueBatch = createBatchDeleteMutation(
-  "contentViewAnalyticsQueue"
+/** Delete one bounded batch of stored learning view rows. */
+export const deleteLearningViewsBatch =
+  createBatchDeleteMutation("learningViews");
+/** Delete one bounded batch of queued learning engagement events. */
+export const deleteLearningEngagementQueueBatch = createBatchDeleteMutation(
+  "learningEngagementQueue"
 );
+/** Delete one bounded batch of analytics partition checkpoint rows. */
 export const deleteContentAnalyticsPartitionsBatch = createBatchDeleteMutation(
   "contentAnalyticsPartitions"
 );
 
-/** Delete one bounded batch of graph-backed learning popularity rows. */
-export const deleteLearningPopularityBatch =
-  createBatchDeleteMutation("learningPopularity");
+/** Delete one bounded batch of graph-backed user learning recents rows. */
+export const deleteUserLearningRecentsBatch = createBatchDeleteMutation(
+  "userLearningRecents"
+);
 
-/** Delete one bounded batch of graph-backed learning trend bucket rows. */
-export const deleteLearningTrendingBucketsBatch = createBatchDeleteMutation(
-  "learningTrendingBuckets"
+/** Delete one bounded batch of graph-backed learning popularity signal rows. */
+export const deleteLearningPopularitySignalsBatch = createBatchDeleteMutation(
+  "learningPopularitySignals"
+);
+
+/** Delete one bounded batch of daily viewer popularity dedupe rows. */
+export const deleteLearningPopularityViewerSignalsBatch =
+  createBatchDeleteMutation("learningPopularityViewerSignals");
+
+/** Delete one bounded batch of graph-backed learning popularity counter rows. */
+export const deleteLearningPopularityCountersBatch = createBatchDeleteMutation(
+  "learningPopularityCounters"
 );
 
 /** Delete one bounded batch of generated material identity rows. */

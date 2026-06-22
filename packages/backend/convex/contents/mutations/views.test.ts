@@ -20,6 +20,10 @@ const SUBJECT_CONTENT_ID = "asset:id:catalog:subject:views";
 const EXERCISE_ROUTE =
   "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1";
 const EXERCISE_CONTENT_ID = "asset:id:catalog:exercise:views";
+const canonicalContext = {
+  contextKey: "canonical",
+  contextMode: "canonical",
+} as const;
 
 /** Builds one route-catalog graph fixture from the route shape under test. */
 function getGraphFixture(route: string) {
@@ -164,15 +168,66 @@ async function insertExerciseSet(ctx: MutationCtx) {
   return { contentId: EXERCISE_CONTENT_ID, id };
 }
 
+/** Returns the analytics partition for one popularity signal scope. */
+function getSignalPartition(contentId: string) {
+  return getContentAnalyticsPartition(`${contentId}:global:canonical`);
+}
+
+/** Returns whether one scheduled job is the analytics partition scheduler. */
+function isAnalyticsPartitionJob(job: { args: readonly unknown[] }) {
+  const [arg] = job.args;
+
+  return typeof arg === "object" && arg !== null && "partition" in arg;
+}
+
+/** Returns whether one scheduled job is a content-view product event. */
+function isContentViewedEventJob(job: { args: readonly unknown[] }) {
+  const [arg] = job.args;
+
+  if (typeof arg !== "object" || arg === null) {
+    return false;
+  }
+
+  return Reflect.get(arg, "event") === "content viewed";
+}
+
+/** Reads the product analytics user from a scheduled content-view event. */
+function getScheduledDistinctId(job: { args: readonly unknown[] }) {
+  const [arg] = job.args;
+
+  if (typeof arg !== "object" || arg === null) {
+    throw new Error("Expected scheduled content-view event arguments.");
+  }
+
+  const distinctId = Reflect.get(arg, "distinctId");
+
+  if (typeof distinctId !== "string") {
+    throw new Error("Expected scheduled content-view event distinct ID.");
+  }
+
+  return distinctId;
+}
+
 /** Reads content-view state that should remain small in each test fixture. */
 async function readViewState(
   t: ReturnType<typeof createConvexTestWithBetterAuth>
 ) {
-  return await t.query(async (ctx) => ({
-    analyticsQueue: await ctx.db.query("contentViewAnalyticsQueue").collect(),
-    scheduledJobs: await ctx.db.system.query("_scheduled_functions").collect(),
-    views: await ctx.db.query("contentViews").collect(),
-  }));
+  return await t.query(async (ctx) => {
+    const scheduledFunctions = await ctx.db.system
+      .query("_scheduled_functions")
+      .collect();
+
+    return {
+      contentViewEvents: scheduledFunctions.filter(isContentViewedEventJob),
+      engagementQueue: await ctx.db.query("learningEngagementQueue").collect(),
+      recents: await ctx.db.query("userLearningRecents").collect(),
+      scheduledJobs: scheduledFunctions.filter(isAnalyticsPartitionJob),
+      viewerSignals: await ctx.db
+        .query("learningPopularityViewerSignals")
+        .collect(),
+      views: await ctx.db.query("learningViews").collect(),
+    };
+  });
 }
 
 describe("contents/mutations/views", () => {
@@ -207,6 +262,8 @@ describe("contents/mutations/views", () => {
       {
         assetId: article.contentId,
         content_id: article.contentId,
+        contextKey: "canonical",
+        contextMode: "canonical",
         deviceId: "device-1",
         firstViewedAt: NOW,
         lastViewedAt: NOW,
@@ -215,19 +272,31 @@ describe("contents/mutations/views", () => {
         section: "articles",
       },
     ]);
-    expect(state.analyticsQueue).toMatchObject([
+    expect(state.engagementQueue).toMatchObject([
       {
         assetId: article.contentId,
         content_id: article.contentId,
+        contextKey: "canonical",
+        contextMode: "canonical",
         locale: "id",
-        partition: getContentAnalyticsPartition(article.contentId),
+        partition: getSignalPartition(article.contentId),
         route: ARTICLE_ROUTE,
         section: "articles",
+        scopeMode: "global",
+        viewerKey: "device:device-1",
         viewedAt: NOW,
       },
     ]);
+    expect(state.viewerSignals).toMatchObject([
+      {
+        ...canonicalContext,
+        content_id: article.contentId,
+        scopeMode: "global",
+        viewerKey: "device:device-1",
+      },
+    ]);
     expect(state.scheduledJobs.map((job) => job.args[0])).toEqual([
-      { partition: getContentAnalyticsPartition(article.contentId) },
+      { partition: getSignalPartition(article.contentId) },
     ]);
   });
 
@@ -263,11 +332,12 @@ describe("contents/mutations/views", () => {
       firstViewedAt: NOW,
       lastViewedAt: NOW + 1000,
     });
-    expect(state.analyticsQueue).toHaveLength(1);
+    expect(state.engagementQueue).toHaveLength(1);
     expect(state.scheduledJobs).toHaveLength(1);
+    expect(state.viewerSignals).toHaveLength(1);
   });
 
-  it("links an existing anonymous device view to a signed-in user", async () => {
+  it("links an anonymous view to a user without duplicate popularity analytics", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(async (ctx) => {
       const article = await insertArticle(ctx);
@@ -309,10 +379,108 @@ describe("contents/mutations/views", () => {
       lastViewedAt: NOW + 1000,
       userId: identity.userId,
     });
-    expect(state.analyticsQueue).toHaveLength(1);
+    expect(state.engagementQueue).toHaveLength(1);
+    expect(state.recents).toMatchObject([
+      {
+        content_id: identity.contentId,
+        contextKey: "canonical",
+        lastViewedAt: NOW + 1000,
+        userId: identity.userId,
+      },
+    ]);
+    expect(state.scheduledJobs).toHaveLength(1);
+    expect(state.viewerSignals).toHaveLength(1);
   });
 
-  it("deduplicates signed-in user views across devices", async () => {
+  it("keeps view ownership separate for different signed-in users on one device", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const identity = await t.mutation(async (ctx) => {
+      const article = await insertArticle(ctx);
+      const firstUser = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "shared-device-first",
+      });
+      const secondUser = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "shared-device-second",
+      });
+
+      return { contentId: article.contentId, firstUser, secondUser };
+    });
+    const firstSignedIn = t.withIdentity({
+      sessionId: identity.firstUser.sessionId,
+      subject: identity.firstUser.authUserId,
+    });
+    const secondSignedIn = t.withIdentity({
+      sessionId: identity.secondUser.sessionId,
+      subject: identity.secondUser.authUserId,
+    });
+
+    await firstSignedIn.mutation(
+      api.contents.mutations.views.recordContentView,
+      {
+        contentId: identity.contentId,
+        deviceId: "shared-device",
+        locale: "id",
+      }
+    );
+
+    vi.setSystemTime(NOW + 1000);
+
+    const result = await secondSignedIn.mutation(
+      api.contents.mutations.views.recordContentView,
+      {
+        contentId: identity.contentId,
+        deviceId: "shared-device",
+        locale: "id",
+      }
+    );
+
+    const state = await readViewState(t);
+
+    expect(result).toEqual({
+      alreadyViewed: false,
+      isNewView: true,
+      success: true,
+    });
+    expect(state.views).toHaveLength(2);
+    expect(state.views).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          deviceId: "shared-device",
+          lastViewedAt: NOW,
+          userId: identity.firstUser.userId,
+        }),
+        expect.objectContaining({
+          deviceId: "shared-device",
+          lastViewedAt: NOW + 1000,
+          userId: identity.secondUser.userId,
+        }),
+      ])
+    );
+    expect(state.recents).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          content_id: identity.contentId,
+          lastViewedAt: NOW,
+          userId: identity.firstUser.userId,
+        }),
+        expect.objectContaining({
+          content_id: identity.contentId,
+          lastViewedAt: NOW + 1000,
+          userId: identity.secondUser.userId,
+        }),
+      ])
+    );
+    expect(state.engagementQueue).toHaveLength(2);
+    expect(state.viewerSignals).toHaveLength(2);
+    expect(state.contentViewEvents.map(getScheduledDistinctId)).toEqual([
+      identity.firstUser.userId,
+      identity.secondUser.userId,
+    ]);
+  });
+
+  it("records signed-in user views per device while deduplicating popularity", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(async (ctx) => {
       const article = await insertArticle(ctx);
@@ -348,17 +516,163 @@ describe("contents/mutations/views", () => {
     const state = await readViewState(t);
 
     expect(result).toEqual({
+      alreadyViewed: false,
+      isNewView: true,
+      success: true,
+    });
+    expect(state.views).toHaveLength(2);
+    expect(state.views).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          deviceId: "device-1",
+          lastViewedAt: NOW,
+          userId: identity.userId,
+        }),
+        expect.objectContaining({
+          deviceId: "device-2",
+          lastViewedAt: NOW + 1000,
+          userId: identity.userId,
+        }),
+      ])
+    );
+    expect(state.engagementQueue).toHaveLength(1);
+    expect(state.recents).toMatchObject([
+      {
+        content_id: identity.contentId,
+        contextKey: "canonical",
+        lastViewedAt: NOW + 1000,
+        userId: identity.userId,
+      },
+    ]);
+    expect(state.viewerSignals).toHaveLength(1);
+  });
+
+  it("treats a signed-out same-device repeat as deduped without mutating ownership", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const identity = await t.mutation(async (ctx) => {
+      const article = await insertArticle(ctx);
+      const user = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "signed-out-repeat",
+      });
+
+      return { ...user, contentId: article.contentId };
+    });
+    const signedIn = t.withIdentity({
+      sessionId: identity.sessionId,
+      subject: identity.authUserId,
+    });
+
+    await signedIn.mutation(api.contents.mutations.views.recordContentView, {
+      contentId: identity.contentId,
+      deviceId: "device-1",
+      locale: "id",
+    });
+
+    vi.setSystemTime(NOW + 1000);
+
+    const result = await t.mutation(
+      api.contents.mutations.views.recordContentView,
+      {
+        contentId: identity.contentId,
+        deviceId: "device-1",
+        locale: "id",
+      }
+    );
+
+    const state = await readViewState(t);
+
+    expect(result).toEqual({
       alreadyViewed: true,
       isNewView: false,
       success: true,
     });
     expect(state.views).toHaveLength(1);
     expect(state.views[0]).toMatchObject({
-      deviceId: "device-1",
-      lastViewedAt: NOW + 1000,
+      lastViewedAt: NOW,
       userId: identity.userId,
     });
-    expect(state.analyticsQueue).toHaveLength(1);
+    expect(state.engagementQueue).toHaveLength(1);
+    expect(state.scheduledJobs).toHaveLength(1);
+    expect(state.viewerSignals).toHaveLength(1);
+    expect(state.contentViewEvents).toHaveLength(1);
+  });
+
+  it("does not add another same-day popularity signal after cross-device sign-out", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const identity = await t.mutation(async (ctx) => {
+      const article = await insertArticle(ctx);
+      const user = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "cross-device-sign-out",
+      });
+
+      return { ...user, contentId: article.contentId };
+    });
+    const signedIn = t.withIdentity({
+      sessionId: identity.sessionId,
+      subject: identity.authUserId,
+    });
+
+    await signedIn.mutation(api.contents.mutations.views.recordContentView, {
+      contentId: identity.contentId,
+      deviceId: "device-1",
+      locale: "id",
+    });
+
+    vi.setSystemTime(NOW + 1000);
+
+    await signedIn.mutation(api.contents.mutations.views.recordContentView, {
+      contentId: identity.contentId,
+      deviceId: "device-2",
+      locale: "id",
+    });
+
+    vi.setSystemTime(NOW + 2000);
+
+    const result = await t.mutation(
+      api.contents.mutations.views.recordContentView,
+      {
+        contentId: identity.contentId,
+        deviceId: "device-2",
+        locale: "id",
+      }
+    );
+
+    const state = await readViewState(t);
+
+    expect(result).toEqual({
+      alreadyViewed: true,
+      isNewView: false,
+      success: true,
+    });
+    expect(state.views).toHaveLength(2);
+    expect(state.views).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          deviceId: "device-1",
+          lastViewedAt: NOW,
+          userId: identity.userId,
+        }),
+        expect.objectContaining({
+          deviceId: "device-2",
+          lastViewedAt: NOW + 1000,
+          userId: identity.userId,
+        }),
+      ])
+    );
+    expect(state.engagementQueue).toHaveLength(1);
+    expect(state.recents).toMatchObject([
+      {
+        content_id: identity.contentId,
+        contextKey: "canonical",
+        lastViewedAt: NOW + 1000,
+        userId: identity.userId,
+      },
+    ]);
+    expect(state.scheduledJobs).toHaveLength(1);
+    expect(state.viewerSignals).toHaveLength(1);
+    expect(state.contentViewEvents).toHaveLength(2);
   });
 
   it("returns a best-effort miss when the graph content ID has no route row", async () => {
@@ -381,8 +695,9 @@ describe("contents/mutations/views", () => {
       success: false,
     });
     expect(state.views).toEqual([]);
-    expect(state.analyticsQueue).toEqual([]);
+    expect(state.engagementQueue).toEqual([]);
     expect(state.scheduledJobs).toEqual([]);
+    expect(state.viewerSignals).toEqual([]);
   });
 
   it("returns best-effort misses for route kinds without tracked source rows", async () => {
@@ -436,8 +751,9 @@ describe("contents/mutations/views", () => {
       success: false,
     });
     expect(state.views).toEqual([]);
-    expect(state.analyticsQueue).toEqual([]);
+    expect(state.engagementQueue).toEqual([]);
     expect(state.scheduledJobs).toEqual([]);
+    expect(state.viewerSignals).toEqual([]);
   });
 
   it("returns a best-effort miss for mismatched route catalog graph IDs", async () => {
@@ -477,8 +793,9 @@ describe("contents/mutations/views", () => {
       success: false,
     });
     expect(state.views).toEqual([]);
-    expect(state.analyticsQueue).toEqual([]);
+    expect(state.engagementQueue).toEqual([]);
     expect(state.scheduledJobs).toEqual([]);
+    expect(state.viewerSignals).toEqual([]);
   });
 
   it("reports auth component IO failures through the typed boundary", async () => {
@@ -529,6 +846,7 @@ describe("contents/mutations/views", () => {
         fixtures.exercise.contentId,
       ])
     );
-    expect(state.analyticsQueue).toHaveLength(2);
+    expect(state.engagementQueue).toHaveLength(2);
+    expect(state.viewerSignals).toHaveLength(2);
   });
 });
