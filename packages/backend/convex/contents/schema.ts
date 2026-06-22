@@ -59,7 +59,8 @@ const contentRoutePageItemValidator = v.object({
 const tables = {
   /**
    * Graph-backed learning engagement read model.
-   * One record per user/device per canonical asset and verified context.
+   * One record per anonymous device or authenticated user-device for each
+   * canonical asset and verified context.
    * `route` is a display/navigation projection; `content_id` is the graph asset ID.
    */
   learningViews: defineTable({
@@ -79,6 +80,12 @@ const tables = {
       "content_id",
       "contextKey",
     ])
+    .index("by_userId_and_deviceId_and_content_id_and_contextKey", [
+      "userId",
+      "deviceId",
+      "content_id",
+      "contextKey",
+    ])
     .index("by_userId_and_section_and_locale_and_lastViewedAt", [
       "userId",
       "section",
@@ -89,6 +96,12 @@ const tables = {
       "deviceId",
       "content_id",
       "contextKey",
+    ])
+    .index("by_deviceId_and_content_id_and_contextKey_and_lastViewedAt", [
+      "deviceId",
+      "content_id",
+      "contextKey",
+      "lastViewedAt",
     ])
     .index("by_locale_and_section_and_lastViewedAt", [
       "locale",

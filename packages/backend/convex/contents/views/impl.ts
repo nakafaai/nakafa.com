@@ -66,7 +66,70 @@ const loadContentTarget = Effect.fn("contents.views.loadContentTarget")(
   }
 );
 
-/** Loads an existing view for either the device or authenticated user. */
+/** Loads the latest view row recorded for a device/content/context tuple. */
+const loadLatestDeviceView = Effect.fn("contents.views.loadLatestDeviceView")(
+  function* (
+    db: MutationCtx["db"],
+    contentId: Doc<"contentRoutes">["content_id"],
+    contextKey: string,
+    deviceId: string
+  ) {
+    return yield* Effect.tryPromise({
+      try: () =>
+        db
+          .query("learningViews")
+          .withIndex(
+            "by_deviceId_and_content_id_and_contextKey_and_lastViewedAt",
+            (q) =>
+              q
+                .eq("deviceId", deviceId)
+                .eq("content_id", contentId)
+                .eq("contextKey", contextKey)
+          )
+          .order("desc")
+          .first(),
+      catch: toContentViewIoError,
+    });
+  }
+);
+
+/** Loads the view row owned by an authenticated user on the current device. */
+const loadSignedInDeviceView = Effect.fn(
+  "contents.views.loadSignedInDeviceView"
+)(function* (
+  db: MutationCtx["db"],
+  contentId: Doc<"contentRoutes">["content_id"],
+  contextKey: string,
+  input: {
+    readonly deviceId: string;
+    readonly userId: Doc<"users">["_id"];
+  }
+) {
+  return yield* Effect.tryPromise({
+    try: () =>
+      db
+        .query("learningViews")
+        .withIndex(
+          "by_userId_and_deviceId_and_content_id_and_contextKey",
+          (q) =>
+            q
+              .eq("userId", input.userId)
+              .eq("deviceId", input.deviceId)
+              .eq("content_id", contentId)
+              .eq("contextKey", contextKey)
+        )
+        .first(),
+    catch: toContentViewIoError,
+  });
+});
+
+/**
+ * Loads the only existing view row this request may mutate.
+ *
+ * Signed-in requests can touch their exact user-device row or claim an
+ * anonymous device row. They never mutate a row owned by another signed-in
+ * learner or a row from another device.
+ */
 const loadExistingView = Effect.fn("contents.views.loadExistingView")(
   function* (
     db: MutationCtx["db"],
@@ -77,39 +140,36 @@ const loadExistingView = Effect.fn("contents.views.loadExistingView")(
       readonly userId?: Doc<"users">["_id"];
     }
   ) {
-    const existingByDevice = yield* Effect.tryPromise({
-      try: () =>
-        db
-          .query("learningViews")
-          .withIndex("by_deviceId_and_content_id_and_contextKey", (q) =>
-            q
-              .eq("deviceId", input.deviceId)
-              .eq("content_id", contentId)
-              .eq("contextKey", contextKey)
-          )
-          .first(),
-      catch: toContentViewIoError,
-    });
+    const existingByDevice = yield* loadLatestDeviceView(
+      db,
+      contentId,
+      contextKey,
+      input.deviceId
+    );
 
     if (!input.userId) {
       return existingByDevice;
     }
 
-    const existingByUser = yield* Effect.tryPromise({
-      try: () =>
-        db
-          .query("learningViews")
-          .withIndex("by_userId_and_content_id_and_contextKey", (q) =>
-            q
-              .eq("userId", input.userId)
-              .eq("content_id", contentId)
-              .eq("contextKey", contextKey)
-          )
-          .first(),
-      catch: toContentViewIoError,
-    });
+    const existingBySignedInDevice = yield* loadSignedInDeviceView(
+      db,
+      contentId,
+      contextKey,
+      {
+        deviceId: input.deviceId,
+        userId: input.userId,
+      }
+    );
 
-    return existingByDevice ?? existingByUser;
+    if (existingBySignedInDevice) {
+      return existingBySignedInDevice;
+    }
+
+    if (!existingByDevice?.userId) {
+      return existingByDevice;
+    }
+
+    return null;
   }
 );
 
@@ -220,6 +280,12 @@ export const recordUniqueContentView = Effect.fn(
   );
 
   if (existingView) {
+    // Unsigned repeats can prove device-level dedupe, but must not mutate or
+    // emit analytics from a row owned by a signed-in learner.
+    if (!userId && existingView.userId) {
+      return { alreadyViewed: true, isNewView: false, success: true };
+    }
+
     const popularityUserId = userId ?? existingView.userId;
 
     yield* updateExistingView(ctx.db, existingView, { now, userId });
