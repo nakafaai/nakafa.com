@@ -102,6 +102,7 @@ const loadCurrentTrendingRoute = Effect.fn(
     !(
       route &&
       route.locale === row.locale &&
+      route.kind === "curriculum-lesson" &&
       route.section === "material" &&
       route.content_id === route.assetId
     )

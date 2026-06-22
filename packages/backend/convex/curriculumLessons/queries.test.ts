@@ -272,4 +272,96 @@ describe("curriculumLessons/queries", () => {
 
     expect(results).toEqual([]);
   });
+
+  it("drops practice counters from Trending Subjects cards", async () => {
+    const t = createTrendingConvexTest();
+
+    await t.mutation(async (ctx) => {
+      await insertPracticeCounter(ctx, {
+        materialDomain: "mathematics",
+        score: 50,
+        suffix: "practice",
+      });
+    });
+
+    const results = await t.query(
+      api.curriculumLessons.queries.getTrendingSubjects,
+      {
+        locale: "en",
+        minViews: 5,
+        windowKey: getDefaultPopularityWindow(),
+      }
+    );
+
+    expect(results).toEqual([]);
+  });
 });
+
+/** Inserts one ranked practice counter that must not hydrate as a subject. */
+async function insertPracticeCounter(
+  ctx: MutationCtx,
+  input: {
+    readonly materialDomain?: Doc<"learningPopularityCounters">["materialDomain"];
+    readonly score: number;
+    readonly suffix: string;
+  }
+) {
+  const sourcePath = getSourcePracticeRoute(input.suffix);
+  const identity = createLearningGraphIdentityFromRoute({
+    locale: "en",
+    route: sourcePath,
+  });
+
+  if (!identity) {
+    expect.fail(`Expected practice graph identity for ${sourcePath}.`);
+  }
+
+  await ctx.db.insert("contentRoutes", {
+    ...identity,
+    authors: [],
+    contentHash: `practice-route-hash-${input.suffix}`,
+    content_id: identity.assetId,
+    kind: "exercise-set",
+    locale: "en",
+    markdown: true,
+    ...(input.materialDomain ? { materialDomain: input.materialDomain } : {}),
+    route: getPublicPracticeRoute(input.suffix),
+    section: "material",
+    sourcePath,
+    syncedAt: NOW,
+    title: `Practice ${input.suffix}`,
+  });
+
+  const counterId = await ctx.db.insert("learningPopularityCounters", {
+    ...identity,
+    ...canonicalContext,
+    content_id: identity.assetId,
+    ...(input.materialDomain ? { materialDomain: input.materialDomain } : {}),
+    locale: "en",
+    route: getPublicPracticeRoute(input.suffix),
+    score: input.score,
+    section: "material",
+    scopeMode: "global",
+    sourcePath,
+    title: `Practice ${input.suffix}`,
+    updatedAt: NOW,
+    windowKey: getDefaultPopularityWindow(),
+  });
+  const counter = await ctx.db.get(counterId);
+
+  if (!counter) {
+    expect.fail(`Expected popularity counter for ${sourcePath}.`);
+  }
+
+  await learningPopularityRankings.insert(ctx, counter);
+}
+
+/** Builds the authored source route for one practice counter fixture. */
+function getSourcePracticeRoute(suffix: string) {
+  return `material/practice/assessment/snbt/quantitative-knowledge/${suffix}/set-1`;
+}
+
+/** Builds the public route for one practice counter fixture. */
+function getPublicPracticeRoute(suffix: string) {
+  return `practice/assessment/snbt/quantitative-knowledge/${suffix}/set-1`;
+}

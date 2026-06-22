@@ -146,6 +146,39 @@ describe("contents/queries/recent", () => {
       }),
     ]);
   });
+
+  it("drops practice recents from material Continue Learning cards", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const identity = await t.mutation(async (ctx) => {
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "recent-practice",
+      });
+      const ref = await insertPracticeRoute(ctx, "recent-practice");
+
+      await insertMaterialRecent(ctx, {
+        ref,
+        lastViewedAt: NOW,
+        materialDomain: "mathematics",
+        suffix: "recent-practice",
+        userId: identity.userId,
+      });
+
+      return identity;
+    });
+
+    const results = await t
+      .withIdentity({
+        sessionId: identity.sessionId,
+        subject: identity.authUserId,
+      })
+      .query(api.contents.queries.recent.getRecentlyViewed, {
+        locale: "en",
+        limit: 5,
+      });
+
+    expect(results).toEqual([]);
+  });
 });
 
 /** Inserts one curriculum lesson row for recently viewed query tests. */
@@ -201,6 +234,39 @@ async function insertMaterialRoute(ctx: MutationCtx, suffix: string) {
     sourcePath: route,
     syncedAt: NOW,
     title: `Material ${suffix}`,
+  });
+
+  return identity;
+}
+
+/** Inserts the route catalog graph projection for one practice set. */
+async function insertPracticeRoute(ctx: MutationCtx, suffix: string) {
+  const route = getPracticeSetRoute(suffix);
+  const identity = createLearningGraphIdentityFromRoute({
+    locale: "en",
+    route,
+  });
+
+  if (!identity) {
+    expect.fail(`Expected practice graph identity for ${route}.`);
+  }
+
+  await ctx.db.insert("contentRoutes", {
+    ...identity,
+    authors: [{ name: "Nakafa Author" }],
+    contentHash: `practice-hash-${suffix}`,
+    content_id: identity.assetId,
+    date: NOW,
+    description: `Practice ${suffix}`,
+    kind: "exercise-set",
+    locale: "en",
+    markdown: true,
+    materialDomain: "mathematics",
+    route: getPublicPracticeSetRoute(suffix),
+    section: "material",
+    sourcePath: route,
+    syncedAt: NOW,
+    title: `Practice ${suffix}`,
   });
 
   return identity;
@@ -262,4 +328,14 @@ function getMaterialLessonRoute(suffix: string) {
 /** Builds the public material route used by recent-query route projections. */
 function getPublicMaterialLessonRoute(suffix: string) {
   return `subjects/mathematics/topic-${suffix}/section-${suffix}`;
+}
+
+/** Builds the canonical practice route used by stale recent fixtures. */
+function getPracticeSetRoute(suffix: string) {
+  return `material/practice/assessment/snbt/quantitative-knowledge/${suffix}/set-1`;
+}
+
+/** Builds the public practice route used by stale recent fixtures. */
+function getPublicPracticeSetRoute(suffix: string) {
+  return `practice/assessment/snbt/quantitative-knowledge/${suffix}/set-1`;
 }

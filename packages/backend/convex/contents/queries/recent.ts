@@ -93,7 +93,7 @@ const listRecentLearning = Effect.fn("contents.recent.listRecentLearning")(
 export const getRecentlyViewed = query({
   args: getRecentlyViewedArgs,
   returns: vv.array(recentlyViewedSubjectValidator),
-  handler: async (ctx, args): Promise<RecentlyViewedSubject[]> =>
+  handler: async (ctx, args) =>
     await runConvexProgram(listRecentLearning(ctx, args)),
 });
 
@@ -131,7 +131,14 @@ const toRecentlyViewedSubject = Effect.fn(
     catch: toRecentLearningIoError,
   });
 
-  if (!(route && route.locale === row.locale && route.materialDomain)) {
+  if (
+    !(
+      route &&
+      route.locale === row.locale &&
+      route.kind === "curriculum-lesson" &&
+      route.materialDomain
+    )
+  ) {
     return;
   }
 

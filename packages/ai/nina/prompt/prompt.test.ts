@@ -1,5 +1,5 @@
-import { nakafaPrompt } from "@repo/ai/agents/orchestrator/prompt";
 import type { NinaContextPack } from "@repo/ai/nina/memory/pack";
+import { createNinaPrompt } from "@repo/ai/nina/prompt/prompt";
 import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
 import { describe, expect, it } from "vitest";
 
@@ -70,9 +70,9 @@ const base = {
   nina,
 } as const;
 
-describe("nakafaPrompt", () => {
+describe("createNinaPrompt", () => {
   it("keeps prompt responsibilities in clean sections", () => {
-    const prompt = nakafaPrompt({
+    const prompt = createNinaPrompt({
       ...base,
       userRole: "student",
     });
@@ -110,7 +110,7 @@ describe("nakafaPrompt", () => {
   });
 
   it("keeps one stable Nina persona without conflicting harsh-advisor rules", () => {
-    const prompt = nakafaPrompt({
+    const prompt = createNinaPrompt({
       ...base,
       userRole: "student",
     });
@@ -124,7 +124,7 @@ describe("nakafaPrompt", () => {
   });
 
   it("defines compact specialist inputs without the old task blob", () => {
-    const prompt = nakafaPrompt(base);
+    const prompt = createNinaPrompt(base);
     const toolSection = prompt.slice(
       prompt.indexOf("# Tool Usage Guidelines"),
       prompt.indexOf("# Task Instructions")
@@ -159,7 +159,7 @@ describe("nakafaPrompt", () => {
   });
 
   it("routes evidence through the right specialist before final claims", () => {
-    const prompt = nakafaPrompt(base);
+    const prompt = createNinaPrompt(base);
 
     expect(prompt).toContain(
       "Use the smallest reliable evidence path before the final answer"
@@ -181,7 +181,7 @@ describe("nakafaPrompt", () => {
   });
 
   it("keeps Nakafa practice selection separate from math verification", () => {
-    const prompt = nakafaPrompt(base);
+    const prompt = createNinaPrompt(base);
 
     expect(prompt).toContain("Practice includes warmups");
     expect(prompt).toContain(
@@ -201,7 +201,7 @@ describe("nakafaPrompt", () => {
   });
 
   it("keeps failed external research from becoming generic Nakafa fallback", () => {
-    const prompt = nakafaPrompt(base);
+    const prompt = createNinaPrompt(base);
 
     expect(prompt).toContain(
       "Do not use Nakafa to fill missing evidence for external, current, official-source, or source-owned verification questions."
@@ -218,7 +218,7 @@ describe("nakafaPrompt", () => {
   });
 
   it("keeps final answer formatting explicit but compact", () => {
-    const prompt = nakafaPrompt(base);
+    const prompt = createNinaPrompt(base);
 
     expect(prompt).toContain("Always use the user's language.");
     expect(prompt).toContain(
@@ -252,7 +252,7 @@ describe("nakafaPrompt", () => {
     "administrator",
   ] as const)("includes compact role guidance for %s", (userRole) => {
     expect(
-      nakafaPrompt({
+      createNinaPrompt({
         ...base,
         userRole,
       })
@@ -260,7 +260,7 @@ describe("nakafaPrompt", () => {
   });
 
   it("includes selected learning program context without table-shaped prose", () => {
-    const prompt = nakafaPrompt({
+    const prompt = createNinaPrompt({
       ...base,
       learningProfile: {
         interests: ["exam-prep", "assessment-prep"],
@@ -299,7 +299,7 @@ describe("nakafaPrompt", () => {
   });
 
   it("includes default role guidance and unverified page context", () => {
-    const prompt = nakafaPrompt({
+    const prompt = createNinaPrompt({
       ...base,
       currentPage: {
         ...base.currentPage,

@@ -16,7 +16,7 @@ function toRecentIoError(error: unknown) {
   });
 }
 
-/** Upserts the signed-in learner's Continue Learning read-model row. */
+/** Upserts the signed-in learner's recent content read-model row. */
 export const upsertUserRecent = Effect.fn("contents.views.upsertUserRecent")(
   function* (
     db: MutationCtx["db"],

@@ -1,4 +1,3 @@
-import { TOOL_NAMES } from "@repo/ai/agents/orchestrator/names";
 import { provider } from "@repo/ai/config/app";
 import {
   defaultModel,
@@ -6,6 +5,7 @@ import {
 } from "@repo/ai/config/model";
 import { gatewayProviderOptions } from "@repo/ai/config/routing";
 import { backgroundGenerationTimeout } from "@repo/ai/config/timeouts";
+import { NAKAFA_CAPABILITY } from "@repo/ai/nina/capability/spec";
 import type { NinaReporter } from "@repo/ai/nina/runtime/report";
 import type { NinaToolSet } from "@repo/ai/nina/runtime/step";
 import { logError } from "@repo/utilities/logging/effect";
@@ -58,7 +58,7 @@ export const repairNinaToolCall = Effect.fn("nina.repair.toolCall")(function* ({
   }
 
   if (
-    toolCall.toolName === TOOL_NAMES.nakafa &&
+    toolCall.toolName === NAKAFA_CAPABILITY &&
     InvalidToolInputError.isInstance(error) &&
     reservePageFetch()
   ) {

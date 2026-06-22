@@ -6,10 +6,11 @@ import { api } from "@repo/backend/convex/_generated/api";
 import type { LearningContextInput } from "@repo/backend/convex/contents/context";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { generateNanoId } from "@repo/design-system/lib/utils";
-import { useMutation } from "convex/react";
+import { useConvexAuth, useMutation } from "convex/react";
 import { Effect } from "effect";
 import { useEffect, useState } from "react";
 import { useContentViews } from "@/lib/context/use-content-views";
+import { createContentViewKey } from "@/lib/hooks/views";
 
 /** Client-side graph content-view recording configuration. */
 interface UseRecordContentViewOptions {
@@ -40,16 +41,16 @@ export function useRecordContentView({
 
   const markAsViewed = useContentViews((s) => s.markAsViewed);
   const isViewed = useContentViews((s) => s.isViewed);
+  const { isAuthenticated, isLoading } = useConvexAuth();
 
   const documentState = useDocumentVisibility();
   const isVisible = documentState === "visible";
-  const viewKey = [
+  const viewKey = createContentViewKey({
+    authenticated: isAuthenticated,
     locale,
-    contentId ?? "untracked",
-    context?.mode ?? "canonical",
-    context?.programKey ?? "",
-    context?.nodeKey ?? "",
-  ].join(":");
+    contentId,
+    context,
+  });
   const [defaultDeviceId] = useState(
     () => `${Date.now()}-${generateNanoId(9)}`
   );
@@ -60,6 +61,10 @@ export function useRecordContentView({
 
   useEffect(() => {
     if (!contentId) {
+      return;
+    }
+
+    if (isLoading) {
       return;
     }
 
@@ -106,6 +111,7 @@ export function useRecordContentView({
     context,
     delay,
     deviceId,
+    isLoading,
     isViewed,
     isVisible,
     locale,

@@ -1,4 +1,3 @@
-import { nakafaPrompt } from "@repo/ai/agents/orchestrator/prompt";
 import type {
   NinaPage,
   NinaRuntime,
@@ -6,9 +5,10 @@ import type {
 } from "@repo/ai/nina/contract/turn";
 import { readNinaLearningPage } from "@repo/ai/nina/contract/turn";
 import type { NinaContextPack } from "@repo/ai/nina/memory/pack";
+import { createNinaPrompt } from "@repo/ai/nina/prompt/prompt";
 import dedent from "dedent";
 
-/** Formats Nina's validated context pack for the orchestrator prompt. */
+/** Formats Nina's validated context pack for the system prompt. */
 export function formatNinaContextPackPrompt(context: NinaContextPack) {
   const placement = context.placement
     ? dedent`
@@ -58,7 +58,7 @@ export function createNinaSystemPrompt({
 }) {
   const learningPage = readNinaLearningPage(page);
 
-  return nakafaPrompt({
+  return createNinaPrompt({
     currentDate: runtime.currentDate,
     currentPage: {
       locale: learningPage.locale,

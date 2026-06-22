@@ -1,6 +1,6 @@
 import { getModelCreditCost, type ModelId } from "@repo/ai/config/model";
+import type { LearningCapabilityName } from "@repo/ai/nina/capability/spec";
 import type { ComponentUsage } from "@repo/ai/schema/metadata";
-import type { ToolName } from "@repo/ai/schema/tools";
 import type { LanguageModelUsage } from "ai";
 import { Effect, Ref } from "effect";
 
@@ -8,11 +8,13 @@ type MainUsage = Pick<LanguageModelUsage, "inputTokens" | "outputTokens">;
 
 /** Tracks main and specialist token usage for one Nina harness turn. */
 export const trackUsage = Effect.fn("nina.usage.track")(function* () {
-  const subAgents = yield* Ref.make(new Map<ToolName, ComponentUsage>());
+  const subAgents = yield* Ref.make(
+    new Map<LearningCapabilityName, ComponentUsage>()
+  );
 
   /** Adds one specialist usage row to the per-turn aggregate. */
   const addUsage = Effect.fn("nina.usage.add")(function* (
-    component: ToolName,
+    component: LearningCapabilityName,
     usage: LanguageModelUsage
   ) {
     yield* Ref.update(subAgents, (current) => {
@@ -65,7 +67,9 @@ export const trackUsage = Effect.fn("nina.usage.track")(function* () {
 });
 
 /** Sums input, output, and total tokens from component usage rows. */
-function getTotals(usages: ReadonlyMap<ToolName, ComponentUsage>) {
+function getTotals(
+  usages: ReadonlyMap<LearningCapabilityName, ComponentUsage>
+) {
   const input = Array.from(usages.values()).reduce(
     (sum, usage) => sum + usage.input,
     0

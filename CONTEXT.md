@@ -14,8 +14,17 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 
 ## Nina
 
-- **NinaHarness**: The package-owned Effect service that owns AI SDK stream response composition, ToolLoopAgent orchestration, tool policy, repair, and writer callbacks.
-- **Capability**: A Nina tool Module with schema, permission policy, execution, result normalization, and tests.
-- **Capability policy**: The per-turn decision that returns Allowed, Denied, or NeedsConfirmation for a capability.
+- **NinaHarness**: The package-owned Effect service with the only app-facing `stream` Interface for Nina chat turns.
+- **LearningCapability**: An internal education Module Nina can invoke for bounded evidence such as Nakafa retrieval, deterministic math, or external research.
+- **Evidence**: Schema-derived facts, calculations, citations, content references, and limitations that constrain Nina's answer.
+- **EvidenceEnvelope**: The schema-derived LearningCapability result that carries status, compact model-visible evidence, references, and limitations.
+- **CapabilityTrace**: A bounded operational summary of LearningCapability execution for support, integrity checks, and evals. It is not a raw transcript.
+- **Capability policy**: The per-turn decision that returns Allowed, Denied, or NeedsConfirmation for a LearningCapability.
 - **Pinned context**: The latest stored NinaContextPack reused when a continued chat is opened away from a verified learning asset.
 - **Page fetch**: The one permitted current-page Nakafa content read for a verified learning page.
+
+## Evaluation
+
+- **EvalCase**: A schema-derived test input with deterministic expected evidence, routing, or trace assertions.
+- **EvalSuite**: A named collection of EvalCases for one NinaHarness or LearningCapability behavior boundary.
+- **EvalRun**: A recorded execution of an EvalSuite with bounded evidence and trace summaries.

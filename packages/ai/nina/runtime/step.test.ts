@@ -42,7 +42,7 @@ describe("nina/runtime/step", () => {
     });
   });
 
-  it("leaves low-risk first non-page-fetch prompts to the orchestrator prompt", async () => {
+  it("leaves low-risk first non-page-fetch prompts to Nina's system prompt", async () => {
     const greetingMessages = [
       {
         content: "hi",

@@ -151,6 +151,7 @@ function provideHarnessServices<A, E>(
       loadMessages: () => Effect.succeed([]),
       saveAssistant: () => Effect.void,
       saveFailure: () => Effect.void,
+      saveTrace: () => Effect.void,
       saveTitle: () => Effect.void,
     }),
     Effect.provideService(NinaReporter, {

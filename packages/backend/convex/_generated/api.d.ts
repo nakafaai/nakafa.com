@@ -73,6 +73,10 @@ import type * as chats_messageParts_uiToDb from "../chats/messageParts/uiToDb.js
 import type * as chats_mutations from "../chats/mutations.js";
 import type * as chats_queries from "../chats/queries.js";
 import type * as chats_read from "../chats/read.js";
+import type * as chats_traces_impl from "../chats/traces/impl.js";
+import type * as chats_traces_mutations from "../chats/traces/mutations.js";
+import type * as chats_traces_queries from "../chats/traces/queries.js";
+import type * as chats_traces_spec from "../chats/traces/spec.js";
 import type * as chats_utils from "../chats/utils.js";
 import type * as classes_constants from "../classes/constants.js";
 import type * as classes_forums_aggregate from "../classes/forums/aggregate.js";
@@ -451,6 +455,10 @@ declare const fullApi: ApiFromModules<{
   "chats/mutations": typeof chats_mutations;
   "chats/queries": typeof chats_queries;
   "chats/read": typeof chats_read;
+  "chats/traces/impl": typeof chats_traces_impl;
+  "chats/traces/mutations": typeof chats_traces_mutations;
+  "chats/traces/queries": typeof chats_traces_queries;
+  "chats/traces/spec": typeof chats_traces_spec;
   "chats/utils": typeof chats_utils;
   "classes/constants": typeof classes_constants;
   "classes/forums/aggregate": typeof classes_forums_aggregate;

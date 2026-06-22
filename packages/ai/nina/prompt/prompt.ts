@@ -1,15 +1,15 @@
-import { formatExamplesPrompt } from "@repo/ai/agents/orchestrator/examples";
-import { formatAnswerPrompt } from "@repo/ai/agents/orchestrator/format";
+import { formatToolPolicyPrompt } from "@repo/ai/nina/policy/tool";
+import { formatExamplesPrompt } from "@repo/ai/nina/prompt/examples";
+import { formatAnswerPrompt } from "@repo/ai/nina/prompt/format";
 import {
   formatIdentityPrompt,
   formatTonePrompt,
-} from "@repo/ai/agents/orchestrator/persona";
+} from "@repo/ai/nina/prompt/persona";
 import {
   formatRuntimePrompt,
   RuntimePromptContextSchema,
-} from "@repo/ai/agents/orchestrator/runtime";
-import { formatTaskPrompt } from "@repo/ai/agents/orchestrator/task";
-import { formatToolPolicyPrompt } from "@repo/ai/agents/orchestrator/tools";
+} from "@repo/ai/nina/prompt/runtime";
+import { formatTaskPrompt } from "@repo/ai/nina/prompt/task";
 import { createPrompt } from "@repo/ai/prompt/utils";
 import { PromptUserRoleSchema } from "@repo/ai/types/roles";
 import { Schema } from "effect";
@@ -24,8 +24,8 @@ const SystemPromptPropsSchema = Schema.extend(
 
 type SystemPromptProps = Schema.Schema.Type<typeof SystemPromptPropsSchema>;
 
-/** Builds Nina's orchestrator prompt with routing rules for specialist agents. */
-export function nakafaPrompt({ userRole, ...runtime }: SystemPromptProps) {
+/** Builds Nina's system prompt with internal LearningCapability policy. */
+export function createNinaPrompt({ userRole, ...runtime }: SystemPromptProps) {
   return createPrompt({
     taskContext: formatIdentityPrompt(userRole),
     toneContext: formatTonePrompt(),

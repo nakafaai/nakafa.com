@@ -1,12 +1,13 @@
 // @vitest-environment node
 
 import {
+  capabilityResult,
   recordSpecialistUsage,
   recoverSpecialistFailure,
   specialistSuccess,
 } from "@repo/ai/nina/capability/result";
+import type { LearningCapabilityName } from "@repo/ai/nina/capability/spec";
 import type { NinaReporter } from "@repo/ai/nina/runtime/report";
-import type { ToolName } from "@repo/ai/schema/tools";
 import type { LanguageModelUsage } from "ai";
 import { type Context, Effect, Logger, Option } from "effect";
 import { describe, expect, it } from "vitest";
@@ -28,11 +29,14 @@ const usage = {
 
 /** Records usage rows passed through the specialist usage seam. */
 function usageRecorder() {
-  const rows: { component: ToolName; usage: LanguageModelUsage }[] = [];
+  const rows: {
+    component: LearningCapabilityName;
+    usage: LanguageModelUsage;
+  }[] = [];
 
   return {
     rows,
-    addUsage: (component: ToolName, row: LanguageModelUsage) =>
+    addUsage: (component: LearningCapabilityName, row: LanguageModelUsage) =>
       Effect.sync(() => {
         rows.push({ component, usage: row });
       }),
@@ -48,9 +52,29 @@ function testLogger() {
 }
 
 describe("nina/capability/result", () => {
+  it("preserves optional evidence limitations and references", () => {
+    const result = capabilityResult({
+      capability: "nakafa",
+      limitations: ["verified-page only"],
+      refs: ["https://nakafa.com/id/subjects/math"],
+      status: "limited",
+      text: "bounded content evidence",
+    });
+
+    expect(result.evidence.limitations).toEqual(["verified-page only"]);
+    expect(result.evidence.refs).toEqual([
+      "https://nakafa.com/id/subjects/math",
+    ]);
+    expect(result.evidence.status).toBe("limited");
+  });
+
   it("preserves real usage for successful specialists", async () => {
     const tracker = usageRecorder();
-    const result = specialistSuccess({ text: "verified", usage });
+    const result = specialistSuccess({
+      capability: "math",
+      text: "verified",
+      usage,
+    });
 
     await Effect.runPromise(
       recordSpecialistUsage({
@@ -62,6 +86,8 @@ describe("nina/capability/result", () => {
     );
 
     expect(result.text).toBe("verified");
+    expect(result.evidence.capability).toBe("math");
+    expect(result.evidence.status).toBe("available");
     expect(Option.isSome(result.usage)).toBe(true);
     expect(tracker.rows).toEqual([{ component: "math", usage }]);
   });
@@ -94,6 +120,8 @@ describe("nina/capability/result", () => {
     expect(reported).toHaveLength(1);
     expect(entries.map((entry) => entry.logLevel.label)).toEqual(["WARN"]);
     expect(Option.isNone(result.usage)).toBe(true);
+    expect(result.evidence.capability).toBe("deepResearch");
+    expect(result.evidence.status).toBe("failed");
     expect(tracker.rows).toEqual([]);
     expect(result.text).toContain("Specialist: deepResearch");
     expect(result.text).toContain("Usage returned: none");
@@ -119,6 +147,8 @@ describe("nina/capability/result", () => {
     }
     expect(entries.map((entry) => entry.logLevel.label)).toEqual([]);
     expect(Option.isNone(result.usage)).toBe(true);
+    expect(result.evidence.capability).toBe("nakafa");
+    expect(result.evidence.status).toBe("failed");
     expect(result.text).toContain("Specialist: nakafa");
     expect(result.text).toContain("Do not invent facts");
   });

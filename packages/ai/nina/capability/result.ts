@@ -1,26 +1,70 @@
+import {
+  EvidenceEnvelope,
+  type LearningCapabilityName,
+  LearningCapabilityResult,
+} from "@repo/ai/nina/capability/spec";
 import type { NinaReporter } from "@repo/ai/nina/runtime/report";
 import { createPrompt } from "@repo/ai/prompt/utils";
-import type { ToolName } from "@repo/ai/schema/tools";
 import type { LogContext } from "@repo/utilities/logging/types";
 import type { LanguageModelUsage } from "ai";
 import type { Context, Effect as EffectType } from "effect";
-import { Effect, Option } from "effect";
+import { Effect, Option, Schema } from "effect";
 
 type AddUsage = (
-  component: ToolName,
+  component: LearningCapabilityName,
   usage: LanguageModelUsage
 ) => EffectType.Effect<void>;
 
-/** Converts a completed specialist response into the chat tool result shape. */
+/** Tagged diagnostic used when a specialist throws a non-Error value. */
+class SpecialistUnknownFailure extends Schema.TaggedError<SpecialistUnknownFailure>()(
+  "SpecialistUnknownFailure",
+  {
+    message: Schema.String,
+  }
+) {}
+
+/** Builds the common model-facing result for one LearningCapability execution. */
+export function capabilityResult({
+  capability,
+  limitations,
+  refs,
+  status,
+  text,
+}: {
+  readonly capability: LearningCapabilityName;
+  readonly limitations?: readonly string[];
+  readonly refs?: readonly string[];
+  readonly status: EvidenceEnvelope["status"];
+  readonly text: string;
+}) {
+  return LearningCapabilityResult.make({
+    evidence: EvidenceEnvelope.make({
+      capability,
+      ...(limitations ? { limitations: [...limitations] } : {}),
+      ...(refs ? { refs: [...refs] } : {}),
+      status,
+      summary: text,
+    }),
+    text,
+  });
+}
+
+/** Converts completed LearningCapability evidence into the chat tool result shape. */
 export function specialistSuccess({
+  capability,
   text,
   usage,
 }: {
+  readonly capability: LearningCapabilityName;
   readonly text: string;
   readonly usage: LanguageModelUsage;
 }) {
   return {
-    text,
+    ...capabilityResult({
+      capability,
+      status: "available",
+      text,
+    }),
     usage: Option.some(usage),
   };
 }
@@ -34,7 +78,7 @@ export const recordSpecialistUsage = Effect.fn("nina.specialist.usage")(
     result,
   }: {
     readonly addUsage: AddUsage;
-    readonly component: ToolName;
+    readonly component: LearningCapabilityName;
     readonly logContext: LogContext;
     readonly result: ReturnType<typeof specialistSuccess>;
   }) {
@@ -64,7 +108,7 @@ export const recoverSpecialistFailure = Effect.fn("nina.specialist.recover")(
     errorLocation,
     reporter,
   }: {
-    readonly component: ToolName;
+    readonly component: LearningCapabilityName;
     readonly error: unknown;
     readonly errorLocation: string;
     readonly reporter: Context.Tag.Service<typeof NinaReporter>;
@@ -76,23 +120,28 @@ export const recoverSpecialistFailure = Effect.fn("nina.specialist.recover")(
     yield* reporter.report({ error: normalizedError, source: errorLocation });
 
     return {
-      text: formatSpecialistFailure(component),
+      ...capabilityResult({
+        capability: component,
+        limitations: [String(normalizedError.message)],
+        status: "failed",
+        text: formatSpecialistFailure(component),
+      }),
       usage: Option.none(),
     };
   }
 );
 
-/** Normalizes unknown thrown values into Error objects for structured logs. */
+/** Normalizes unknown thrown values into structured diagnostics for logs. */
 function normalizeError(error: unknown) {
   if (error instanceof Error) {
     return error;
   }
 
-  return new Error(String(error));
+  return new SpecialistUnknownFailure({ message: String(error) });
 }
 
-/** Builds a compact model-facing status for a failed specialist call. */
-function formatSpecialistFailure(component: ToolName) {
+/** Builds a compact model-facing status for a failed LearningCapability call. */
+function formatSpecialistFailure(component: LearningCapabilityName) {
   return createPrompt({
     taskContext: [
       "# Specialist Status",

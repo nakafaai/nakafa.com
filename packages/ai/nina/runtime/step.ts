@@ -1,14 +1,17 @@
-import { TOOL_NAMES } from "@repo/ai/agents/orchestrator/names";
 import { getSourceReferencesFromMessages } from "@repo/ai/lib/source";
+import {
+  type LearningCapabilityName,
+  NAKAFA_CAPABILITY,
+  RESEARCH_CAPABILITY,
+} from "@repo/ai/nina/capability/spec";
 import { createPrompt } from "@repo/ai/prompt/utils";
-import type { ToolName } from "@repo/ai/schema/tools";
 import type { Tool, ToolLoopAgentSettings, ToolSet } from "ai";
 
 const firstStepNumber = 0;
 
 type RequiredStepToolName =
-  | typeof TOOL_NAMES.nakafa
-  | typeof TOOL_NAMES.deepResearch;
+  | typeof NAKAFA_CAPABILITY
+  | typeof RESEARCH_CAPABILITY;
 
 export type NinaToolSet = ToolSet & Record<RequiredStepToolName, Tool>;
 
@@ -84,14 +87,14 @@ export function createNinaPrepareStep({
     if (needsPageFetch) {
       return readToolStep({
         messages,
-        toolName: TOOL_NAMES.nakafa,
+        toolName: NAKAFA_CAPABILITY,
       });
     }
 
     if (getSourceReferencesFromMessages(messages).length > 0) {
       return readToolStep({
         messages,
-        toolName: TOOL_NAMES.deepResearch,
+        toolName: RESEARCH_CAPABILITY,
       });
     }
 
@@ -105,7 +108,7 @@ function readToolStep({
   toolName,
 }: {
   readonly messages: Parameters<NinaPrepareStep>[0]["messages"];
-  readonly toolName: Extract<ToolName, RequiredStepToolName>;
+  readonly toolName: Extract<LearningCapabilityName, RequiredStepToolName>;
 }): ReturnType<NinaPrepareStep> {
   return {
     activeTools: [toolName],

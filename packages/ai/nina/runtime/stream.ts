@@ -129,11 +129,13 @@ export const createNinaStreamResponse = Effect.fn("nina.stream.response")(
             logContext,
             onStreamError: scheduleAssistantFailure,
             page,
+            responseMessageIdentifier: responseMessageId,
             runtime: turn.runtime,
             copy: turn.copy,
             user: turn.user,
             writer,
           }).pipe(
+            Effect.provideService(NinaStore, store),
             Effect.provideService(NinaReporter, reporter),
             Effect.provideService(Nakafa, nakafa),
             Effect.provideService(NakafaSearch, search)
@@ -204,6 +206,7 @@ const runNinaWriterTurn = Effect.fn("nina.stream.writer")(function* ({
   onStreamError,
   copy,
   page,
+  responseMessageIdentifier,
   runtime,
   user,
   writer,
@@ -213,6 +216,7 @@ const runNinaWriterTurn = Effect.fn("nina.stream.writer")(function* ({
   readonly logContext: LogContext;
   readonly onStreamError: (error: unknown, source: string) => void;
   readonly page: NinaTurn["page"];
+  readonly responseMessageIdentifier: string;
   readonly runtime: NinaTurn["runtime"];
   readonly user: NinaTurn["user"];
   readonly writer: UIMessageStreamWriter<MyUIMessage>;
@@ -223,9 +227,10 @@ const runNinaWriterTurn = Effect.fn("nina.stream.writer")(function* ({
   const reporter = yield* NinaReporter;
   const tools = yield* createNinaCapabilityCatalog({
     context,
-    locale: page.locale,
+    locale: page.nina.learning.locale,
     logContext,
     modelId: runtime.modelId,
+    responseMessageIdentifier,
     consumePageFetch: pageFetch.consumeForTool,
     usage,
     writer,

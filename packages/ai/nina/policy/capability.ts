@@ -1,5 +1,11 @@
-import { TOOL_NAMES } from "@repo/ai/agents/orchestrator/names";
-import type { ToolName } from "@repo/ai/schema/tools";
+import {
+  EvidenceEnvelope,
+  type LearningCapabilityName,
+  LearningCapabilityResult,
+  MATH_CAPABILITY,
+  NAKAFA_CAPABILITY,
+  RESEARCH_CAPABILITY,
+} from "@repo/ai/nina/capability/spec";
 import type { AgentContext } from "@repo/ai/types/agents";
 import { Schema } from "effect";
 
@@ -18,7 +24,7 @@ export function decideNinaCapability({
   capability,
   context,
 }: {
-  readonly capability: ToolName;
+  readonly capability: LearningCapabilityName;
   readonly context: AgentContext;
 }): NinaCapabilityDecision {
   const tools = context.nina?.tools;
@@ -30,21 +36,21 @@ export function decideNinaCapability({
     };
   }
 
-  if (capability === TOOL_NAMES.nakafa && !tools.allowNakafa) {
+  if (capability === NAKAFA_CAPABILITY && !tools.allowNakafa) {
     return {
       state: "denied",
       reason: "Nakafa evidence is not allowed for this context.",
     };
   }
 
-  if (capability === TOOL_NAMES.deepResearch && !tools.allowDeepResearch) {
+  if (capability === RESEARCH_CAPABILITY && !tools.allowDeepResearch) {
     return {
       state: "denied",
       reason: "External research is not allowed for this context.",
     };
   }
 
-  if (capability === TOOL_NAMES.math && !tools.allowMath) {
+  if (capability === MATH_CAPABILITY && !tools.allowMath) {
     return {
       state: "denied",
       reason: "Math verification is not allowed for this context.",
@@ -55,14 +61,14 @@ export function decideNinaCapability({
 }
 
 /** Builds model-facing evidence for a capability denied by turn policy. */
-export function formatDeniedCapability({
+export function deniedCapabilityResult({
   capability,
   decision,
 }: {
-  readonly capability: ToolName;
+  readonly capability: LearningCapabilityName;
   readonly decision: NinaCapabilityDecision;
 }) {
-  return [
+  const text = [
     "# Capability Policy",
     "",
     `- Capability: ${capability}`,
@@ -74,4 +80,14 @@ export function formatDeniedCapability({
     "Use only evidence already available in the conversation.",
     "Do not invent unavailable Nakafa, research, or math evidence.",
   ].join("\n");
+
+  return LearningCapabilityResult.make({
+    evidence: EvidenceEnvelope.make({
+      capability,
+      limitations: [decision.reason ?? "Not allowed for this Nina context."],
+      status: "denied",
+      summary: text,
+    }),
+    text,
+  });
 }
