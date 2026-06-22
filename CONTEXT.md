@@ -18,6 +18,13 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **LearningCapability**: An internal education Module Nina can invoke for bounded evidence such as Nakafa retrieval, deterministic math, or external research.
 - **Evidence**: Schema-derived facts, calculations, citations, content references, and limitations that constrain Nina's answer.
 - **EvidenceEnvelope**: The schema-derived LearningCapability result that carries status, compact model-visible evidence, references, and limitations.
+- **EvidenceWorkspace**: The typed per-turn evidence state Nina uses to coordinate LearningCapabilities without peer-to-peer capability calls.
+- **CapabilityContribution**: The append-only LearningCapability contribution to an EvidenceWorkspace, carrying evidence, limitations, source references, pedagogy moves, or learning artifacts for one Nina turn.
+- **PedagogyMove**: A schema-owned teaching action derived from evidence, such as a scaffold, hint, worked-example bridge, misconception check, or verification note.
+- **LearningArtifact**: A schema-owned, durable, renderable learning object emitted by Nina from verified evidence or trusted content facts.
+- **CoordinateSystemArtifact**: A LearningArtifact for mathematically verified coordinate-system primitives such as points, vectors, lines, planes, solids, curves, and surfaces.
+- **MathAst**: The allowlisted mathematical expression tree emitted by CAS for deterministic evaluation. It is the executable math contract; raw expression strings and LaTeX are display metadata.
+- **CAS proof anchor**: A compact CAS-verified landmark, domain marker, exclusion, or hash used to prove a renderer agrees with deterministic math evidence.
 - **CapabilityTrace**: A bounded operational summary of LearningCapability execution for support, integrity checks, and evals. It is not a raw transcript.
 - **Capability policy**: The per-turn decision that returns Allowed, Denied, or NeedsConfirmation for a LearningCapability.
 - **Pinned context**: The latest stored NinaContextPack reused when a continued chat is opened away from a verified learning asset.
