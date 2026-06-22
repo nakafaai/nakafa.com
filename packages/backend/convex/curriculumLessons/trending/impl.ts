@@ -85,6 +85,33 @@ const loadRankedPopularityCounters = Effect.fn(
   return rows.flatMap((row) => (row ? [row] : []));
 });
 
+/** Loads the current public route row for a ranked popularity counter. */
+const loadCurrentTrendingRoute = Effect.fn(
+  "curriculumLessons.trending.loadCurrentTrendingRoute"
+)(function* (ctx: QueryCtx, row: Doc<"learningPopularityCounters">) {
+  const route = yield* Effect.tryPromise({
+    try: () =>
+      ctx.db
+        .query("contentRoutes")
+        .withIndex("by_content_id", (q) => q.eq("content_id", row.content_id))
+        .unique(),
+    catch: toTrendingSubjectIoError,
+  });
+
+  if (
+    !(
+      route &&
+      route.locale === row.locale &&
+      route.section === "material" &&
+      route.content_id === route.assetId
+    )
+  ) {
+    return;
+  }
+
+  return route;
+});
+
 /** Exposes public route fields while keeping internal sourcePath out of UI rows. */
 function toTrendingContentRef(
   route: Parameters<typeof buildContentSearchRef>[0]
@@ -108,20 +135,21 @@ function toTrendingContentRef(
 
 /** Projects a ranked popularity row to the public homepage card shape. */
 function toTrendingSubject(
-  row: Doc<"learningPopularityCounters">
+  row: Doc<"learningPopularityCounters">,
+  route: Doc<"contentRoutes">
 ): TrendingSubject[] {
-  if (!row.materialDomain) {
+  if (!route.materialDomain) {
     return [];
   }
 
   return [
     {
-      ...toTrendingContentRef(row),
+      ...toTrendingContentRef(route),
       contextKey: row.contextKey,
-      description: row.description ?? "",
-      href: `/${cleanSlug(row.route)}${toLearningContextQuery(row)}`,
-      materialDomain: row.materialDomain,
-      title: row.title,
+      description: route.description ?? "",
+      href: `/${cleanSlug(route.route)}${toLearningContextQuery(row)}`,
+      materialDomain: route.materialDomain,
+      title: route.title,
       viewCount: row.score,
     },
   ];
@@ -146,8 +174,21 @@ export const listTrendingSubjects = Effect.fn(
 
   const ids = yield* loadRankedPopularityCounterIds(ctx, args, settings);
   const rows = yield* loadRankedPopularityCounters(ctx, ids);
+  const subjects: TrendingSubject[] = [];
 
-  return rows
-    .filter((row) => row.score >= settings.minViews)
-    .flatMap(toTrendingSubject);
+  for (const row of rows) {
+    if (row.score < settings.minViews) {
+      continue;
+    }
+
+    const route = yield* loadCurrentTrendingRoute(ctx, row);
+
+    if (!route) {
+      continue;
+    }
+
+    subjects.push(...toTrendingSubject(row, route));
+  }
+
+  return subjects;
 });

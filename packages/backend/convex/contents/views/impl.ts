@@ -220,6 +220,8 @@ export const recordUniqueContentView = Effect.fn(
   );
 
   if (existingView) {
+    const popularityUserId = userId ?? existingView.userId;
+
     yield* updateExistingView(ctx.db, existingView, { now, userId });
     if (userId) {
       yield* upsertUserRecent(ctx.db, target, learningContext, {
@@ -235,7 +237,7 @@ export const recordUniqueContentView = Effect.fn(
       learningContext,
       {
         now,
-        userId,
+        userId: popularityUserId,
       }
     );
 

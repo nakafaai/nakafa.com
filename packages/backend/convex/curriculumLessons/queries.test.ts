@@ -41,6 +41,7 @@ function getSourceSubjectRoute(suffix: string) {
 async function insertSubjectCounter(
   ctx: MutationCtx,
   input: {
+    readonly currentSuffix?: string;
     readonly locale?: Locale;
     readonly materialDomain?: Doc<"learningPopularityCounters">["materialDomain"];
     readonly score: number;
@@ -58,6 +59,24 @@ async function insertSubjectCounter(
   if (!identity) {
     expect.fail(`Expected subject graph identity for ${sourcePath}.`);
   }
+
+  const currentSuffix = input.currentSuffix ?? input.suffix;
+
+  await ctx.db.insert("contentRoutes", {
+    ...identity,
+    authors: [],
+    contentHash: `route-hash-${input.suffix}`,
+    content_id: identity.assetId,
+    kind: "curriculum-lesson",
+    locale,
+    markdown: true,
+    ...(input.materialDomain ? { materialDomain: input.materialDomain } : {}),
+    route: getPublicSubjectRoute(currentSuffix),
+    section: "material",
+    sourcePath,
+    syncedAt: NOW,
+    title: `Subject ${currentSuffix}`,
+  });
 
   const counterId = await ctx.db.insert("learningPopularityCounters", {
     ...identity,
@@ -194,6 +213,40 @@ describe("curriculumLessons/queries", () => {
       expect.objectContaining({
         materialDomain: "mathematics",
         route: "subjects/mathematics/topic-source-free/section-source-free",
+      }),
+    ]);
+  });
+
+  it("hydrates stale counter routes from the current public route row", async () => {
+    const t = createTrendingConvexTest();
+    const { currentRef } = await t.mutation(async (ctx) => {
+      const currentRef = await insertSubjectCounter(ctx, {
+        currentSuffix: "current-route",
+        materialDomain: "mathematics",
+        score: 10,
+        suffix: "stale-counter",
+      });
+
+      return { currentRef };
+    });
+
+    const results = await t.query(
+      api.curriculumLessons.queries.getTrendingSubjects,
+      {
+        locale: "en",
+        minViews: 5,
+        windowKey: getDefaultPopularityWindow(),
+      }
+    );
+
+    expect(results).toEqual([
+      expect.objectContaining({
+        assetId: currentRef.assetId,
+        content_id: currentRef.assetId,
+        href: "/subjects/mathematics/topic-current-route/section-current-route",
+        route: "subjects/mathematics/topic-current-route/section-current-route",
+        title: "Subject current-route",
+        url: "https://nakafa.com/en/subjects/mathematics/topic-current-route/section-current-route",
       }),
     ]);
   });

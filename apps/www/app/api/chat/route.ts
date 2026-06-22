@@ -23,8 +23,10 @@ import { search as nakafaSearch } from "@/app/api/chat/nakafa";
 import { nakafaContent } from "@/app/api/chat/nakafa-content";
 import { createChatErrorReporter } from "@/app/api/chat/observability";
 import {
+  createChatWithMessage,
   loadPinnedNinaContext,
-  saveOrCreateChat,
+  prepareExistingChatMessage,
+  saveChatMessage,
 } from "@/app/api/chat/persistence";
 import { createNinaStore } from "@/app/api/chat/store";
 import {
@@ -148,6 +150,16 @@ export function POST(req: Request) {
         getUserInfo(token),
         getLearningProfile(token, locale),
       ]);
+      if (!hasEnoughCredits(userInfo.credits, selectedModel)) {
+        return new Response(CHAT_ERRORS.INSUFFICIENT_CREDITS.code, {
+          status: CHAT_ERRORS.INSUFFICIENT_CREDITS.status,
+        });
+      }
+
+      if (id) {
+        yield* prepareExistingChatMessage({ chatId: id, message, token });
+      }
+
       const pinnedContext =
         id && !verified
           ? yield* loadPinnedNinaContext({ chatId: id, token })
@@ -161,12 +173,6 @@ export function POST(req: Request) {
         url,
         verified,
       });
-
-      if (!hasEnoughCredits(userInfo.credits, selectedModel)) {
-        return new Response(CHAT_ERRORS.INSUFFICIENT_CREDITS.code, {
-          status: CHAT_ERRORS.INSUFFICIENT_CREDITS.status,
-        });
-      }
 
       const logContext = {
         service: "chat-api",
@@ -183,14 +189,26 @@ export function POST(req: Request) {
         url,
       };
 
-      const chatId = yield* saveOrCreateChat({
-        chatId: id,
-        message,
-        modelId: selectedModel,
-        ninaContextSnapshot: ninaSession.context.snapshot,
-        ninaContextTransition: ninaSession.context.transition,
-        token,
-      });
+      let chatId: Id<"chats">;
+
+      if (id) {
+        chatId = yield* saveChatMessage({
+          chatId: id,
+          message,
+          modelId: selectedModel,
+          ninaContextSnapshot: ninaSession.context.snapshot,
+          ninaContextTransition: ninaSession.context.transition,
+          token,
+        });
+      } else {
+        chatId = yield* createChatWithMessage({
+          message,
+          modelId: selectedModel,
+          ninaContextSnapshot: ninaSession.context.snapshot,
+          ninaContextTransition: ninaSession.context.transition,
+          token,
+        });
+      }
       const reportChatError = createChatErrorReporter({
         chatId,
         logContext,

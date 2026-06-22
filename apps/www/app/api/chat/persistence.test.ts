@@ -8,9 +8,11 @@ import type { MyUIMessage } from "@repo/ai/types/message";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  createChatWithMessage,
   loadMessages,
   loadPinnedNinaContext,
-  saveOrCreateChat,
+  prepareExistingChatMessage,
+  saveChatMessage,
 } from "@/app/api/chat/persistence";
 
 const mocks = vi.hoisted(() => ({
@@ -79,8 +81,7 @@ async function savedChatId() {
   mocks.fetchMutation.mockResolvedValueOnce({ chatId: "chat_existing" });
 
   const chatId = await Effect.runPromise(
-    saveOrCreateChat({
-      chatId: undefined,
+    createChatWithMessage({
       message,
       modelId,
       ...withNinaContext(),
@@ -109,8 +110,7 @@ describe("app/api/chat/persistence", () => {
     mocks.fetchMutation.mockResolvedValue({ chatId: "chat_new" });
 
     const chatId = await Effect.runPromise(
-      saveOrCreateChat({
-        chatId: undefined,
+      createChatWithMessage({
         message,
         modelId,
         ...withNinaContext(),
@@ -141,7 +141,7 @@ describe("app/api/chat/persistence", () => {
     mocks.fetchQuery.mockResolvedValue(null);
 
     const result = await Effect.runPromise(
-      saveOrCreateChat({
+      saveChatMessage({
         chatId,
         message,
         modelId,
@@ -210,7 +210,14 @@ describe("app/api/chat/persistence", () => {
       .mockResolvedValueOnce({});
 
     await Effect.runPromise(
-      saveOrCreateChat({
+      prepareExistingChatMessage({
+        chatId,
+        message,
+        token: "session-token",
+      })
+    );
+    await Effect.runPromise(
+      saveChatMessage({
         chatId,
         message,
         modelId,
@@ -246,6 +253,73 @@ describe("app/api/chat/persistence", () => {
           modelId,
         }),
       }),
+      { token: "session-token" }
+    );
+  });
+
+  it("leaves an existing chat untouched when the message is not a rewrite", async () => {
+    const chatId = await savedChatId();
+    mocks.fetchQuery.mockResolvedValue(null);
+
+    await Effect.runPromise(
+      prepareExistingChatMessage({
+        chatId,
+        message,
+        token: "session-token",
+      })
+    );
+
+    expect(mocks.fetchQuery).toHaveBeenCalledWith(
+      expect.anything(),
+      {
+        chatId,
+        identifier: "message-1",
+      },
+      { token: "session-token" }
+    );
+    expect(mocks.fetchMutation).not.toHaveBeenCalled();
+  });
+
+  it("loads pinned context only after a rewrite tail is deleted", async () => {
+    const chatId = await savedChatId();
+    mocks.fetchQuery
+      .mockResolvedValueOnce({ creationTime: 123 })
+      .mockResolvedValueOnce(ninaContextSnapshot);
+    mocks.fetchMutation
+      .mockResolvedValueOnce({ hasMore: false })
+      .mockResolvedValueOnce({});
+
+    await Effect.runPromise(
+      prepareExistingChatMessage({
+        chatId,
+        message,
+        token: "session-token",
+      })
+    );
+    const pinnedContext = await Effect.runPromise(
+      loadPinnedNinaContext({
+        chatId,
+        token: "session-token",
+      })
+    );
+    await Effect.runPromise(
+      saveChatMessage({
+        chatId,
+        message,
+        modelId,
+        ...withNinaContext(),
+        token: "session-token",
+      })
+    );
+
+    expect(pinnedContext).toEqual(ninaContextSnapshot);
+    expect(mocks.fetchMutation.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.fetchQuery.mock.invocationCallOrder[1]
+    );
+    expect(mocks.fetchQuery).toHaveBeenNthCalledWith(
+      2,
+      expect.anything(),
+      { chatId },
       { token: "session-token" }
     );
   });

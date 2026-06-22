@@ -417,6 +417,56 @@ describe("contents/mutations/views", () => {
     expect(state.viewerSignals).toHaveLength(1);
   });
 
+  it("reuses the stored user viewer key after a signed-in learner signs out", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const identity = await t.mutation(async (ctx) => {
+      const article = await insertArticle(ctx);
+      const user = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "signed-out-repeat",
+      });
+
+      return { ...user, contentId: article.contentId };
+    });
+    const signedIn = t.withIdentity({
+      sessionId: identity.sessionId,
+      subject: identity.authUserId,
+    });
+
+    await signedIn.mutation(api.contents.mutations.views.recordContentView, {
+      contentId: identity.contentId,
+      deviceId: "device-1",
+      locale: "id",
+    });
+
+    vi.setSystemTime(NOW + 1000);
+
+    const result = await t.mutation(
+      api.contents.mutations.views.recordContentView,
+      {
+        contentId: identity.contentId,
+        deviceId: "device-1",
+        locale: "id",
+      }
+    );
+
+    const state = await readViewState(t);
+
+    expect(result).toEqual({
+      alreadyViewed: true,
+      isNewView: false,
+      success: true,
+    });
+    expect(state.views).toHaveLength(1);
+    expect(state.views[0]).toMatchObject({
+      lastViewedAt: NOW + 1000,
+      userId: identity.userId,
+    });
+    expect(state.engagementQueue).toHaveLength(1);
+    expect(state.scheduledJobs).toHaveLength(1);
+    expect(state.viewerSignals).toHaveLength(1);
+  });
+
   it("returns a best-effort miss when the graph content ID has no route row", async () => {
     const t = createConvexTestWithBetterAuth();
 

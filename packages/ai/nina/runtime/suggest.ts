@@ -81,17 +81,44 @@ export const writeNinaSuggestions = Effect.fn("nina.suggest.write")(function* ({
   ).pipe(
     Stream.runForEach((chunk) =>
       Effect.sync(() => {
+        const suggestions =
+          chunk.suggestions?.filter((suggestion) => suggestion !== undefined) ??
+          [];
+
+        if (suggestions.length === 0) {
+          return;
+        }
+
         writer.write({
           id: dataPartId,
           type: "data-suggestions",
           data: {
-            data:
-              chunk.suggestions?.filter(
-                (suggestion) => suggestion !== undefined
-              ) ?? [],
+            data: suggestions,
           },
         });
       })
     )
+  );
+
+  const output = yield* Effect.tryPromise({
+    try: () => suggestionsStream.output,
+    catch: () =>
+      new NinaSuggestionError({
+        message: "Failed to complete Nina suggestions.",
+      }),
+  });
+
+  if (output.suggestions.length === 0) {
+    return;
+  }
+
+  yield* Effect.sync(() =>
+    writer.write({
+      id: dataPartId,
+      type: "data-suggestions",
+      data: {
+        data: [...output.suggestions],
+      },
+    })
   );
 });
