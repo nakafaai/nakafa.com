@@ -26,10 +26,16 @@ export const EVIDENCE_CONTRIBUTION_LIMITATION_LIMIT = 6;
 export const EVIDENCE_CONTRIBUTION_LIMITATION_MAX_LENGTH = 300;
 export const EVIDENCE_CONTRIBUTION_REF_LIMIT = 12;
 export const EVIDENCE_CONTRIBUTION_REF_MAX_LENGTH = 180;
+export const EVIDENCE_WORKSPACE_TURN_ID_MAX_LENGTH = 180;
 
 const WorkspaceEvidenceRef = Schema.NonEmptyString.pipe(
   Schema.pattern(/\S/),
   Schema.maxLength(EVIDENCE_CONTRIBUTION_REF_MAX_LENGTH)
+);
+
+const EvidenceWorkspaceTurnId = Schema.NonEmptyString.pipe(
+  Schema.pattern(/\S/),
+  Schema.maxLength(EVIDENCE_WORKSPACE_TURN_ID_MAX_LENGTH)
 );
 
 /** Bounded evidence envelope retained from one Nina capability contribution. */
@@ -95,7 +101,7 @@ export class EvidenceWorkspace extends Schema.Class<EvidenceWorkspace>(
     Schema.int(),
     Schema.nonNegative()
   ),
-  turnId: Schema.NonEmptyString,
+  turnId: EvidenceWorkspaceTurnId,
 }) {}
 
 /** Expected failure raised when an evidence workspace fails validation. */
@@ -120,6 +126,7 @@ export const decodeEvidenceWorkspace = Effect.fn(
   "nina.workspace.decodeEvidenceWorkspace"
 )(function* (input: unknown) {
   const preflightIssue = yield* findWorkspaceArtifactPreflightIssue(input, {
+    artifactBytes: MAX_COORDINATE_ARTIFACT_BYTES,
     contributionArtifactBytes: EVIDENCE_CONTRIBUTION_ARTIFACT_BYTES,
     contributionArtifactLimit: EVIDENCE_CONTRIBUTION_ARTIFACT_LIMIT,
     workspaceArtifactBytes: EVIDENCE_WORKSPACE_ARTIFACT_BYTES,
@@ -203,6 +210,11 @@ function findWorkspaceIssue(workspace: EvidenceWorkspace) {
       return `Contribution capability ${contribution.capability} does not match evidence capability ${contribution.evidence.capability}.`;
     }
 
+    const unavailableIssue = findUnavailableEvidenceIssue(contribution);
+    if (unavailableIssue) {
+      return unavailableIssue;
+    }
+
     const refsIssue = findPedagogyRefsIssue(contribution);
     if (refsIssue) {
       return refsIssue;
@@ -219,6 +231,23 @@ function findWorkspaceIssue(workspace: EvidenceWorkspace) {
       }
       artifactIds.add(artifact.id);
     }
+  }
+}
+
+function findUnavailableEvidenceIssue(contribution: CapabilityContribution) {
+  if (
+    contribution.evidence.status !== "failed" &&
+    contribution.evidence.status !== "denied"
+  ) {
+    return;
+  }
+
+  if (contribution.artifacts?.length) {
+    return `Contribution ${contribution.capability} cannot attach artifacts when evidence status is ${contribution.evidence.status}.`;
+  }
+
+  if (contribution.pedagogyMoves?.length) {
+    return `Contribution ${contribution.capability} cannot attach pedagogy moves when evidence status is ${contribution.evidence.status}.`;
   }
 }
 

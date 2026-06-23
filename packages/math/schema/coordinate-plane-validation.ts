@@ -286,6 +286,10 @@ function isPlaneCoefficientMatch(
   expected: number,
   scaledExpected: number
 ) {
+  if (!Number.isFinite(scaledExpected)) {
+    return false;
+  }
+
   if (expected === 0) {
     return actual === 0;
   }

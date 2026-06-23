@@ -10,8 +10,10 @@ import {
   EVIDENCE_CONTRIBUTION_PEDAGOGY_MOVE_LIMIT,
   EVIDENCE_WORKSPACE_ARTIFACT_BYTES,
   EVIDENCE_WORKSPACE_ARTIFACT_LIMIT,
+  EVIDENCE_WORKSPACE_TURN_ID_MAX_LENGTH,
   EvidenceWorkspaceDecodeError,
 } from "@repo/ai/nina/workspace/schema";
+import { MAX_COORDINATE_ARTIFACT_BYTES } from "@repo/math/schema/artifact";
 import { Cause, Effect, Exit, Option } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -57,11 +59,13 @@ describe("EvidenceWorkspace invariants", () => {
   });
 
   it("rejects oversized contribution artifact payloads", async () => {
-    const description = "x".repeat(EVIDENCE_CONTRIBUTION_ARTIFACT_BYTES + 1);
+    const description = "x".repeat(
+      Math.floor(EVIDENCE_CONTRIBUTION_ARTIFACT_BYTES / 3) + 10_000
+    );
     const failure = await decodeFailure(
       workspace([
         contribution({
-          artifacts: [artifact("artifact-large", description)],
+          artifacts: artifactRange(0, 3, description),
         }),
       ])
     );
@@ -119,14 +123,20 @@ describe("EvidenceWorkspace invariants", () => {
 
     const largeInvalidArtifact = {
       oversized: "x".repeat(
-        Math.floor(EVIDENCE_WORKSPACE_ARTIFACT_BYTES / 3) + 20_000
+        Math.floor(EVIDENCE_WORKSPACE_ARTIFACT_BYTES / 6) + 20_000
       ),
     };
     const tooLarge = await decodeFailure(
       workspace([
-        contribution({ artifacts: [largeInvalidArtifact] }),
-        contribution({ artifacts: [largeInvalidArtifact] }),
-        contribution({ artifacts: [largeInvalidArtifact] }),
+        contribution({
+          artifacts: [largeInvalidArtifact, largeInvalidArtifact],
+        }),
+        contribution({
+          artifacts: [largeInvalidArtifact, largeInvalidArtifact],
+        }),
+        contribution({
+          artifacts: [largeInvalidArtifact, largeInvalidArtifact],
+        }),
       ])
     );
 
@@ -137,14 +147,15 @@ describe("EvidenceWorkspace invariants", () => {
   });
 
   it("preflights oversized contribution artifacts without capability metadata", async () => {
+    const oversizedPart = {
+      oversized: "x".repeat(
+        Math.floor(EVIDENCE_CONTRIBUTION_ARTIFACT_BYTES / 3) + 10_000
+      ),
+    };
     const failure = await decodeFailure(
       workspace([
         {
-          artifacts: [
-            {
-              oversized: "x".repeat(EVIDENCE_CONTRIBUTION_ARTIFACT_BYTES + 1),
-            },
-          ],
+          artifacts: [oversizedPart, oversizedPart, oversizedPart],
         },
       ])
     );
@@ -152,6 +163,25 @@ describe("EvidenceWorkspace invariants", () => {
     expectDecodeFailure(
       failure,
       `Contribution artifact payload exceeds ${EVIDENCE_CONTRIBUTION_ARTIFACT_BYTES} bytes.`
+    );
+  });
+
+  it("preflights per-artifact bytes before deep artifact decode", async () => {
+    const failure = await decodeFailure(
+      workspace([
+        contribution({
+          artifacts: [
+            {
+              oversized: "x".repeat(MAX_COORDINATE_ARTIFACT_BYTES + 1),
+            },
+          ],
+        }),
+      ])
+    );
+
+    expectDecodeFailure(
+      failure,
+      `Evidence workspace artifact exceeds ${MAX_COORDINATE_ARTIFACT_BYTES} bytes.`
     );
   });
 
@@ -211,6 +241,55 @@ describe("EvidenceWorkspace invariants", () => {
     );
   });
 
+  it("bounds workspace turn identifiers", async () => {
+    const blank = await decodeFailure(workspace([], { turnId: "   " }));
+    expectDecodeFailure(blank, "Invalid evidence workspace contract.");
+
+    const oversized = await decodeFailure(
+      workspace([], {
+        turnId: "t".repeat(EVIDENCE_WORKSPACE_TURN_ID_MAX_LENGTH + 1),
+      })
+    );
+    expectDecodeFailure(oversized, "Invalid evidence workspace contract.");
+  });
+
+  it("blocks artifacts and pedagogy moves on unavailable evidence", async () => {
+    const failedArtifact = await decodeFailure(
+      workspace([
+        contribution({
+          artifacts: [artifact("artifact-from-failed-evidence")],
+          evidenceStatus: "failed",
+        }),
+      ])
+    );
+
+    expectDecodeFailure(
+      failedArtifact,
+      "Contribution math cannot attach artifacts when evidence status is failed."
+    );
+
+    const deniedPedagogy = await decodeFailure(
+      workspace([
+        contribution({
+          evidenceStatus: "denied",
+          pedagogyMoves: [pedagogyMove("cas://math/evaluate")],
+        }),
+      ])
+    );
+
+    expectDecodeFailure(
+      deniedPedagogy,
+      "Contribution math cannot attach pedagogy moves when evidence status is denied."
+    );
+
+    const decoded = await Effect.runPromise(
+      decodeEvidenceWorkspace(
+        workspace([contribution({ evidenceStatus: "failed" })])
+      )
+    );
+    expect(decoded.contributions[0]?.evidence.status).toBe("failed");
+  });
+
   it("validates pedagogy evidence refs against contribution refs and artifacts", async () => {
     const ungrounded = await decodeFailure(
       workspace([
@@ -257,17 +336,21 @@ describe("EvidenceWorkspace invariants", () => {
   });
 });
 
-function workspace(contributions: readonly unknown[]) {
+function workspace(
+  contributions: readonly unknown[],
+  input: { turnId?: string } = {}
+) {
   return {
     contributions,
     createdAt: 1_782_195_600,
-    turnId: "turn-1",
+    turnId: input.turnId ?? "turn-1",
   };
 }
 
 function contribution(
   input: {
     artifacts?: readonly unknown[];
+    evidenceStatus?: string;
     modelSummary?: string;
     pedagogyMoves?: readonly unknown[];
   } = {}
@@ -278,7 +361,7 @@ function contribution(
     evidence: {
       capability: MATH_CAPABILITY,
       refs: ["cas://math/evaluate"],
-      status: "available",
+      status: input.evidenceStatus ?? "available",
       summary: "CAS verified the coordinate relation.",
     },
     modelSummary: input.modelSummary ?? "CAS verified the coordinate relation.",

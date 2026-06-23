@@ -1,6 +1,8 @@
 import { Effect, Schema } from "effect";
 
+/** Raw artifact budget limits enforced before EvidenceWorkspace schema decode. */
 export interface WorkspaceArtifactPreflightLimits {
+  artifactBytes: number;
   contributionArtifactBytes: number;
   contributionArtifactLimit: number;
   workspaceArtifactBytes: number;
@@ -49,6 +51,10 @@ export function findWorkspaceArtifactPreflightIssue(
       let contributionArtifactBytes = 0;
       for (const artifact of artifacts) {
         const artifactBytes = yield* readJsonBytes(artifact);
+        if (artifactBytes > limits.artifactBytes) {
+          return `Evidence workspace artifact exceeds ${limits.artifactBytes} bytes.`;
+        }
+
         contributionArtifactBytes += artifactBytes;
         workspaceArtifactBytes += artifactBytes;
         workspaceArtifactCount += 1;

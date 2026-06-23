@@ -99,6 +99,16 @@ describe("coordinate plane equation validation", () => {
     );
 
     expect(
+      readIssue(
+        scaledXAst("1e154"),
+        point("1e-154", "10", "0"),
+        point("0", "0", "0")
+      )
+    ).toBe(
+      "Coordinate primitive plane plane equation is inconsistent with point and normal."
+    );
+
+    expect(
       readIssue(zPlusTinyXAst(), point("0", "0", "1"), point("0", "0", "0"))
     ).toBe(
       "Coordinate primitive plane plane equation is inconsistent with point and normal."
@@ -205,6 +215,14 @@ function zPlusTinyXAst() {
     variableNode("x"),
     binaryNode("tiny-x", "literal-1e-10", "multiply", "x"),
     binaryNode("root", "z", "add", "tiny-x"),
+  ]);
+}
+
+function scaledXAst(scaleFactor: string) {
+  return makeAst(`${scaleFactor}*x`, [
+    literalNode(scaleFactor),
+    variableNode("x"),
+    binaryNode("root", `literal-${scaleFactor}`, "multiply", "x"),
   ]);
 }
 

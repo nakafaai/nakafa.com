@@ -70,6 +70,18 @@ describe("coordinate scalar invariants", () => {
     expect(readSortableExactScalar(scalar("1e308/1e-308"))).toBeUndefined();
   });
 
+  it("rejects nonzero exact values that underflow to zero", () => {
+    expect(readSortableExactScalar(scalar("1e-324"))).toBeUndefined();
+    expect(readSortableExactScalar(scalar("1e-200*1e-200"))).toBeUndefined();
+    expect(readSortableExactScalar(scalar("1e-324*2"))).toBeUndefined();
+    expect(readSortableExactScalar(scalar("1e-324/2"))).toBeUndefined();
+    expect(readSortableExactScalar(scalar("2/1e-324"))).toBeUndefined();
+    expect(readSortableExactScalar(scalar("-1e-324"))).toBeUndefined();
+    expect(readSortableExactScalar(scalar("0e999"))).toBe(0);
+    expect(readSortableExactScalar(scalar("0*1e-324"))).toBe(0);
+    expect(readSortableExactScalar(scalar("0/1e-324"))).toBe(0);
+  });
+
   it("rejects nonsortable exact direction components before zero checks", () => {
     const direction = ExactPoint3.make({
       x: scalar("left"),
