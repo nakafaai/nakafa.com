@@ -3,6 +3,7 @@ import {
   LearningArtifactDecodeError,
   MAX_COORDINATE_ARTIFACT_PROOF_ANCHOR_LENGTH,
   MAX_COORDINATE_ARTIFACT_PROOF_ANCHORS,
+  MAX_LEARNING_ARTIFACT_ID_LENGTH,
 } from "@repo/math/schema/artifact";
 import { MAX_FUNCTION_EXCLUSIONS } from "@repo/math/schema/coordinate-primitives";
 import { Cause, Effect, Exit, Option } from "effect";
@@ -87,6 +88,28 @@ describe("LearningArtifact safety budgets", () => {
       expect(failure.message).toBe("Invalid learning artifact contract.");
     }
   });
+
+  it("rejects blank artifact identifiers", async () => {
+    const failure = await decodeFailure(createArtifact({ id: "   " }));
+
+    expect(failure).toBeInstanceOf(LearningArtifactDecodeError);
+    if (failure instanceof LearningArtifactDecodeError) {
+      expect(failure.message).toBe("Invalid learning artifact contract.");
+    }
+  });
+
+  it("rejects artifact identifiers above the id budget", async () => {
+    const failure = await decodeFailure(
+      createArtifact({
+        id: `artifact-${"x".repeat(MAX_LEARNING_ARTIFACT_ID_LENGTH)}`,
+      })
+    );
+
+    expect(failure).toBeInstanceOf(LearningArtifactDecodeError);
+    if (failure instanceof LearningArtifactDecodeError) {
+      expect(failure.message).toBe("Invalid learning artifact contract.");
+    }
+  });
 });
 
 function createArtifact(
@@ -96,12 +119,13 @@ function createArtifact(
       y: readonly [ReturnType<typeof scalar>, ReturnType<typeof scalar>];
       z: readonly [ReturnType<typeof scalar>, ReturnType<typeof scalar>];
     };
+    id?: string;
     primitives?: readonly unknown[];
     proofAnchors?: readonly string[];
   } = {}
 ) {
   return {
-    id: "artifact-safety",
+    id: input.id ?? "artifact-safety",
     kind: "coordinate-system-3d",
     payload: {
       axes: input.axes ?? {

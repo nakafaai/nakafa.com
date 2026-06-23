@@ -188,9 +188,13 @@ function isSamePlaneExpression(
   actual: AffinePlaneExpression,
   expected: AffinePlaneExpression
 ) {
+  if (isZeroAffineExpression(actual)) {
+    return false;
+  }
+
   const scaleFactor = readScaleFactor(actual, expected);
 
-  if (scaleFactor === undefined) {
+  if (scaleFactor === undefined || isCloseToZero(scaleFactor)) {
     return false;
   }
 
@@ -236,6 +240,15 @@ function readConstant(expression: AffinePlaneExpression) {
   ) {
     return expression.constant;
   }
+}
+
+function isZeroAffineExpression(expression: AffinePlaneExpression) {
+  return (
+    isCloseToZero(expression.x) &&
+    isCloseToZero(expression.y) &&
+    isCloseToZero(expression.z) &&
+    isCloseToZero(expression.constant)
+  );
 }
 
 function add(

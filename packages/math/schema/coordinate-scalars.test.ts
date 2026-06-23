@@ -10,7 +10,7 @@ import {
 import { describe, expect, it } from "vitest";
 
 describe("coordinate scalar invariants", () => {
-  it("uses decimal hints only after symbolic exact expressions for zero checks", () => {
+  it("rejects decimal hints when exact expressions are unparseable", () => {
     expect(
       readIssueMessage([
         {
@@ -19,14 +19,18 @@ describe("coordinate scalar invariants", () => {
             y: scalar("0"),
             z: scalar("0"),
           }),
-          id: "line-symbolic-zero",
+          id: "line-symbolic-not-zero",
           kind: "line",
           point: point("1", "0", "0"),
         },
       ])
     ).toBe(
-      "Coordinate primitive line-symbolic-zero has a zero direction vector."
+      "Coordinate primitive line-symbolic-not-zero line direction x-coordinate must use a sortable numeric value."
     );
+  });
+
+  it("rejects decimal hints as sortable values for invalid exact math", () => {
+    expect(readSortableExactScalar(scalarDecimal("left", 0))).toBeUndefined();
   });
 
   it("rejects nonsortable exact direction components before zero checks", () => {

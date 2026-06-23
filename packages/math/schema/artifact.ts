@@ -17,13 +17,19 @@ export const MAX_COORDINATE_ARTIFACT_BYTES = 750_000;
 /** Maximum deterministic primitive count accepted for one coordinate artifact. */
 export const MAX_COORDINATE_ARTIFACT_PRIMITIVES = 64;
 
+/** Maximum length accepted for one learning artifact id. */
+export const MAX_LEARNING_ARTIFACT_ID_LENGTH = 180;
+
 /** Maximum proof anchors accepted on one coordinate artifact. */
 export const MAX_COORDINATE_ARTIFACT_PROOF_ANCHORS = 16;
 
 /** Maximum length accepted for one proof anchor reference. */
 export const MAX_COORDINATE_ARTIFACT_PROOF_ANCHOR_LENGTH = 180;
 
-const ArtifactIdSchema = Schema.NonEmptyString.annotations({
+const ArtifactIdSchema = Schema.NonEmptyString.pipe(
+  Schema.pattern(/\S/),
+  Schema.maxLength(MAX_LEARNING_ARTIFACT_ID_LENGTH)
+).annotations({
   description: "Stable artifact identifier used by chat part manifests.",
 });
 

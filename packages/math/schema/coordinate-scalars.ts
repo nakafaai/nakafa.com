@@ -15,11 +15,9 @@ export function readSortableExactScalar(scalar: ExactScalar) {
 
     return exactValue;
   }
-
-  return readFiniteDecimalHint(scalar);
 }
 
-/** Checks whether every coordinate is exactly zero or has a finite zero hint. */
+/** Checks whether every coordinate has a parseable exact zero expression. */
 export function isExactZeroPoint(point: ExactPoint3) {
   return (
     isExactZeroScalar(point.x) &&
@@ -53,9 +51,7 @@ function isExactZeroScalar(scalar: ExactScalar) {
   if (exactValue !== undefined) {
     return exactValue === 0;
   }
-
-  const decimal = readFiniteDecimalHint(scalar);
-  return decimal === 0;
+  return false;
 }
 
 function readFiniteExactExpression(expression: string) {

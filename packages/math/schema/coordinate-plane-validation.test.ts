@@ -70,6 +70,12 @@ describe("coordinate plane equation validation", () => {
     );
 
     expect(
+      readIssue(literalAst("0"), point("0", "0", "1"), point("0", "0", "0"))
+    ).toBe(
+      "Coordinate primitive plane plane equation is inconsistent with point and normal."
+    );
+
+    expect(
       readIssue(literalAst("0"), point("0", "0", "0"), point("0", "0", "0"))
     ).toBe(
       "Coordinate primitive plane plane equation is inconsistent with point and normal."
