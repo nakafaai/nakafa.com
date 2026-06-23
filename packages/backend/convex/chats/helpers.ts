@@ -3,6 +3,7 @@ import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
+import { deleteArtifactsForMessageBatch } from "@repo/backend/convex/chats/artifacts/delete";
 import {
   CHAT_TRANSCRIPT_REWRITE_MESSAGE_BATCH_SIZE,
   MAX_CHAT_MESSAGE_PARTS,
@@ -83,6 +84,15 @@ export async function deleteMessageBatchFromPoint(
     0,
     CHAT_TRANSCRIPT_REWRITE_MESSAGE_BATCH_SIZE
   )) {
+    const artifactsBatch = await deleteArtifactsForMessageBatch(
+      ctx,
+      message._id
+    );
+
+    if (artifactsBatch.hasMore) {
+      return { hasMore: true };
+    }
+
     const partsBatch = await deletePartsForMessageBatch(ctx, message._id);
 
     if (partsBatch.hasMore) {
@@ -97,7 +107,9 @@ export async function deleteMessageBatchFromPoint(
   };
 }
 
-/** Find the persisted message that matches one UI message identifier. */
+/**
+ * Finds the persisted message that matches one UI message identifier.
+ */
 export function getMessageByIdentifier(
   ctx: MutationCtx | QueryCtx,
   chatId: Id<"chats">,

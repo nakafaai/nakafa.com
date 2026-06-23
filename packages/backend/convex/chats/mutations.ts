@@ -1,5 +1,10 @@
 import { ModelIdSchema } from "@repo/ai/config/model";
 import { DEFAULT_TITLE } from "@repo/ai/features/constants";
+import { learningArtifactWriteValidator } from "@repo/backend/convex/chats/artifacts/spec";
+import {
+  decodeArtifactWrites,
+  insertArtifactsForMessage,
+} from "@repo/backend/convex/chats/artifacts/write";
 import {
   deleteExistingResponseByIdentifier,
   getAssistantCreditUsage,
@@ -21,6 +26,7 @@ import { internalMutation, mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { ConvexError, v } from "convex/values";
+import { Effect } from "effect";
 
 /** Creates a new chat for the authenticated user. */
 export const createChat = mutation({
@@ -109,6 +115,7 @@ export const updateChatVisibility = mutation({
 export const saveMessage = mutation({
   args: {
     message: tables.messages.validator,
+    artifacts: v.optional(v.array(learningArtifactWriteValidator)),
     parts: v.array(
       v.object({
         ...tables.parts.validator.fields,
@@ -158,6 +165,15 @@ export const saveMessage = mutation({
     });
 
     const partIds = await insertParts(ctx, messageId, parts);
+    const artifacts = await Effect.runPromise(
+      decodeArtifactWrites(args.artifacts ?? [])
+    );
+    await insertArtifactsForMessage(ctx, {
+      artifacts,
+      chatId: message.chatId,
+      messageId,
+      parts,
+    });
 
     return { messageId, partIds };
   },
@@ -172,6 +188,7 @@ export const createChatWithMessage = mutation({
       ...tables.messages.validator.fields,
       chatId: v.optional(vv.id("chats")),
     }),
+    artifacts: v.optional(v.array(learningArtifactWriteValidator)),
     parts: v.array(
       v.object({
         ...tables.parts.validator.fields,
@@ -205,6 +222,15 @@ export const createChatWithMessage = mutation({
     });
 
     const partIds = await insertParts(ctx, messageId, args.parts);
+    const artifacts = await Effect.runPromise(
+      decodeArtifactWrites(args.artifacts ?? [])
+    );
+    await insertArtifactsForMessage(ctx, {
+      artifacts,
+      chatId,
+      messageId,
+      parts: args.parts,
+    });
 
     return { chatId, messageId, partIds };
   },
@@ -250,6 +276,7 @@ export const saveAssistantResponse = internalMutation({
   args: {
     userId: vv.id("users"),
     message: tables.messages.validator,
+    artifacts: v.optional(v.array(learningArtifactWriteValidator)),
     parts: v.array(
       v.object({
         ...tables.parts.validator.fields,
@@ -304,6 +331,15 @@ export const saveAssistantResponse = internalMutation({
     });
 
     const partIds = await insertParts(ctx, messageId, parts);
+    const artifacts = await Effect.runPromise(
+      decodeArtifactWrites(args.artifacts ?? [])
+    );
+    await insertArtifactsForMessage(ctx, {
+      artifacts,
+      chatId: message.chatId,
+      messageId,
+      parts,
+    });
 
     if (!(modelId && creditUsage)) {
       return {

@@ -1,5 +1,6 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import { action } from "@repo/backend/convex/_generated/server";
+import { learningArtifactWriteValidator } from "@repo/backend/convex/chats/artifacts/spec";
 import tables, {
   messageGenerationErrorCodeValidator,
   modelIdValueValidator,
@@ -18,6 +19,7 @@ import { v } from "convex/values";
 export const scheduleSaveAssistantResponse = action({
   args: {
     message: tables.messages.validator,
+    artifacts: v.optional(v.array(learningArtifactWriteValidator)),
     parts: v.array(
       v.object({
         ...tables.parts.validator.fields,

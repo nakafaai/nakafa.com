@@ -1,4 +1,7 @@
-import { NakafaDataSchema } from "@repo/ai/schema/data";
+import {
+  LearningArtifactManifestSchema,
+  NakafaDataSchema,
+} from "@repo/ai/schema/data";
 import type { MyUIMessagePart } from "@repo/ai/types/message";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import {
@@ -8,7 +11,9 @@ import {
 import { ConvexError } from "convex/values";
 import { Schema } from "effect";
 
-/** Rebuild one UI message part from the flattened persisted part row. */
+/**
+ * Rebuilds one UI message part from the flattened persisted part row.
+ */
 export function mapDBPartToUIMessagePart({
   part,
 }: {
@@ -338,6 +343,22 @@ export function mapDBPartToUIMessagePart({
           fieldName: "dataMathData",
           partType: part.type,
         }),
+      };
+    case "data-artifact":
+      return {
+        type: part.type,
+        id: requirePartField({
+          value: part.dataArtifactId,
+          fieldName: "dataArtifactId",
+          partType: part.type,
+        }),
+        data: Schema.decodeUnknownSync(LearningArtifactManifestSchema)(
+          requirePartField({
+            value: part.dataArtifactData,
+            fieldName: "dataArtifactData",
+            partType: part.type,
+          })
+        ),
       };
     case "data-scrape-url":
       return {

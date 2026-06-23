@@ -1,6 +1,10 @@
 import { CHAT_GENERATION_FAILURE_CODES } from "@repo/ai/config/generation";
 import { MODEL_IDS } from "@repo/ai/config/model";
 import {
+  learningArtifactManifestValidator,
+  learningArtifactRowValidator,
+} from "@repo/backend/convex/chats/artifacts/spec";
+import {
   ninaContextSnapshotValidator,
   ninaContextTransitionValidator,
 } from "@repo/backend/convex/chats/context";
@@ -135,6 +139,7 @@ export const partTypeValidator = literals(
   "data-suggestions",
   "data-nakafa",
   "data-math",
+  "data-artifact",
   "data-scrape-url",
   "data-web-search"
 );
@@ -486,6 +491,9 @@ export const partValidator = v.object({
   dataMathId: v.optional(v.string()),
   dataMathData: v.optional(mathDataValidator),
 
+  dataArtifactId: v.optional(v.string()),
+  dataArtifactData: v.optional(learningArtifactManifestValidator),
+
   dataScrapeUrlId: v.optional(v.string()),
   dataScrapeUrlUrl: v.optional(v.string()),
   dataScrapeUrlContent: v.optional(v.string()),
@@ -548,10 +556,14 @@ export const tables = {
     .index("by_chatId_and_identifier", ["chatId", "identifier"])
     .index("by_role", ["role"]),
 
-  parts: defineTable(partValidator).index("by_messageId_and_order", [
-    "messageId",
-    "order",
-  ]),
+  parts: defineTable(partValidator)
+    .index("by_messageId_and_order", ["messageId", "order"])
+    .index("by_type", ["type"]),
+
+  learningArtifacts: defineTable(learningArtifactRowValidator)
+    .index("by_artifactId", ["artifactId"])
+    .index("by_messageId_and_partOrder", ["messageId", "partOrder"])
+    .index("by_chatId_and_kind", ["chatId", "kind"]),
 
   ninaCapabilityTraces: defineTable(capabilityTraceValidator)
     .index("by_chatId_and_startedAt", ["chatId", "startedAt"])

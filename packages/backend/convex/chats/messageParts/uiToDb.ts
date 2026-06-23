@@ -4,7 +4,9 @@ import type { DBPart } from "@repo/backend/convex/chats/messageParts/shared";
 import type { ToolState } from "@repo/backend/convex/chats/schema";
 import { ConvexError } from "convex/values";
 
-/** Only persist tool states the flattened chat schema can reconstruct. */
+/**
+ * Only persists tool states the flattened chat schema can reconstruct.
+ */
 function requirePersistableToolState(state: string): ToolState {
   switch (state) {
     case "input-streaming":
@@ -20,7 +22,9 @@ function requirePersistableToolState(state: string): ToolState {
   }
 }
 
-/** Returns tool result provider metadata only for tool states that carry it. */
+/**
+ * Returns tool result provider metadata only for tool states that carry it.
+ */
 function getToolResultProviderMetadata(part: MyUIMessagePart) {
   if (
     part.type !== "tool-nakafa" &&
@@ -39,7 +43,9 @@ function getToolResultProviderMetadata(part: MyUIMessagePart) {
   }
 }
 
-/** Maps one AI SDK UI message part into the flattened Convex chat part row. */
+/**
+ * Maps one AI SDK UI message part into the flattened Convex chat part row.
+ */
 function mapUIMessagePartToDBPart(
   part: MyUIMessagePart,
   order: number
@@ -141,6 +147,13 @@ function mapUIMessagePartToDBPart(
         dataMathId: part.id,
         dataMathData: part.data,
       };
+    case "data-artifact":
+      return {
+        ...baseFields,
+        type: part.type,
+        dataArtifactId: part.id,
+        dataArtifactData: part.data,
+      };
     case "data-scrape-url":
       return {
         ...baseFields,
@@ -173,7 +186,9 @@ function mapUIMessagePartToDBPart(
   }
 }
 
-/** Flatten UI message parts into persisted chat part rows. */
+/**
+ * Flattens UI message parts into persisted chat part rows.
+ */
 export function mapUIMessagePartsToDBParts({
   messageParts,
 }: {
