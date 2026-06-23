@@ -23,6 +23,10 @@ import { NinaReporter } from "@repo/ai/nina/runtime/report";
 import { NinaStore } from "@repo/ai/nina/runtime/store";
 import { writeNinaSuggestions } from "@repo/ai/nina/runtime/suggest";
 import { trackUsage } from "@repo/ai/nina/runtime/usage";
+import {
+  createNinaWorkspaceRuntime,
+  NinaWorkspaceRuntime,
+} from "@repo/ai/nina/workspace/runtime";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { LogContext } from "@repo/utilities/logging/types";
 import {
@@ -44,7 +48,9 @@ export class NinaStreamError extends Schema.TaggedError<NinaStreamError>()(
   }
 ) {}
 
-/** Creates the framework-native AI SDK stream response for one Nina turn. */
+/**
+ * Creates the framework-native AI SDK stream response for one Nina turn.
+ */
 export const createNinaStreamResponse = Effect.fn("nina.stream.response")(
   function* (turn: NinaTurn) {
     const store = yield* NinaStore;
@@ -95,7 +101,9 @@ export const createNinaStreamResponse = Effect.fn("nina.stream.response")(
       Effect.annotateLogs(logContext)
     );
 
-    /** Schedules durable failure handling once for a failed Nina stream. */
+    /**
+     * Schedules durable failure handling once for a failed Nina stream.
+     */
     function scheduleAssistantFailure(error: unknown, source: string) {
       if (failureScheduled) {
         return;
@@ -199,7 +207,9 @@ export const createNinaStreamResponse = Effect.fn("nina.stream.response")(
   }
 );
 
-/** Streams one Nina ToolLoopAgent turn into the AI SDK UI writer. */
+/**
+ * Streams one Nina ToolLoopAgent turn into the AI SDK UI writer.
+ */
 const runNinaWriterTurn = Effect.fn("nina.stream.writer")(function* ({
   finalMessages,
   logContext,
@@ -224,6 +234,9 @@ const runNinaWriterTurn = Effect.fn("nina.stream.writer")(function* ({
   const usage = yield* trackUsage();
   const context = createNinaAgentContext({ page, runtime, user });
   const pageFetch = createPageFetchState(context.needsPageFetch);
+  const workspace = yield* createNinaWorkspaceRuntime({
+    turnId: responseMessageIdentifier,
+  });
   const reporter = yield* NinaReporter;
   const tools = yield* createNinaCapabilityCatalog({
     context,
@@ -234,11 +247,12 @@ const runNinaWriterTurn = Effect.fn("nina.stream.writer")(function* ({
     consumePageFetch: pageFetch.consumeForTool,
     usage,
     writer,
-  });
+  }).pipe(Effect.provideService(NinaWorkspaceRuntime, workspace));
 
   const responseMessages = yield* runNinaAgentTurn({
     messages: finalMessages,
     page,
+    readWorkspaceProjection: () => Effect.runSync(workspace.readProjection()),
     runtime,
     settings: {
       experimental_repairToolCall: (options) =>

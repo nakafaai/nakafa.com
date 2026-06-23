@@ -134,6 +134,28 @@ describe("nina/runtime/step", () => {
     });
   });
 
+  it("adds workspace evidence only to continuation steps", async () => {
+    const workspaceProjection = "# Evidence Workspace Projection";
+    const firstStep = await readPreparedStep({
+      messages: emptyMessages,
+      needsPageFetch: false,
+      readWorkspaceProjection: () => workspaceProjection,
+      stepNumber: 0,
+    });
+    const continuationStep = await readPreparedStep({
+      messages: emptyMessages,
+      needsPageFetch: false,
+      readWorkspaceProjection: () => workspaceProjection,
+      stepNumber: 1,
+    });
+
+    expect(firstStep).toEqual({ messages: emptyMessages });
+    expect(continuationStep).toEqual({
+      messages: emptyMessages,
+      system: expect.stringContaining(workspaceProjection),
+    });
+  });
+
   it("forces research for first-step external URL requests", async () => {
     const step = await readPreparedStep({
       messages: externalUrlMessages,
@@ -232,13 +254,19 @@ describe("nina/runtime/step", () => {
 function readPreparedStep({
   messages,
   needsPageFetch,
+  readWorkspaceProjection,
   stepNumber,
 }: {
   readonly messages: ModelMessage[];
   readonly needsPageFetch: boolean;
+  readonly readWorkspaceProjection?: () => string | undefined;
   readonly stepNumber: number;
 }) {
-  const prepareStep = createNinaPrepareStep({ needsPageFetch, system });
+  const prepareStep = createNinaPrepareStep({
+    needsPageFetch,
+    readWorkspaceProjection,
+    system,
+  });
 
   return prepareStep({
     experimental_context: undefined,

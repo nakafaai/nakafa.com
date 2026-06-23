@@ -29,17 +29,22 @@ export type NinaPrepareStep = NonNullable<
  */
 export function createNinaPrepareStep({
   needsPageFetch,
+  readWorkspaceProjection,
   system,
 }: {
   readonly needsPageFetch: boolean;
+  readonly readWorkspaceProjection?: () => string | undefined;
   readonly system: string;
 }): NinaPrepareStep {
   return ({ messages, stepNumber }) => {
     if (stepNumber !== firstStepNumber) {
+      const workspaceProjection = readWorkspaceProjection?.();
+
       return {
         messages,
         system: [
           system,
+          ...(workspaceProjection ? [workspaceProjection] : []),
           createPrompt({
             taskContext: `
               # Continuation Source Policy
@@ -50,7 +55,7 @@ export function createNinaPrepareStep({
             toolUsageGuidelines: `
               # Continuation Tool Guidance
 
-              Continue with the model's tool choice, using gathered evidence as the decision source.
+              Continue with the model's tool choice, using gathered evidence for the decision source.
 
               Call math before the final answer when:
               - Nakafa selected educational math content.
@@ -74,9 +79,9 @@ export function createNinaPrepareStep({
               When research evidence contains markdown links, preserve those links in the final answer for every claim that uses that evidence.
               If the answer has sections or bullets built from source-backed research, each source-backed section or bullet must keep at least one supporting link.
               Do not add Nakafa source labels, Nakafa domain links, or citation-style links for Nakafa-owned content.
-              Never show numeric citation markers such as [1] or [4, 21, 23] to users.
-              Convert any research citation indexes into markdown links using the cited source URLs.
-              Never append a final source, reference, citation, or bibliography section in any language.
+              Never show numeric citation markers like [1] or [4, 21, 23] to users.
+              Convert research citation indexes into markdown links using the cited source URLs.
+              Never append a final source, reference, citation, or bibliography section, regardless of response language.
               Do not collect links at the end of the answer.
             `,
           }),
@@ -102,7 +107,9 @@ export function createNinaPrepareStep({
   };
 }
 
-/** Builds the SDK-owned first-step shape for one required Nina evidence tool. */
+/**
+ * Builds the SDK-owned first-step shape for one required Nina evidence tool.
+ */
 function readToolStep({
   messages,
   toolName,

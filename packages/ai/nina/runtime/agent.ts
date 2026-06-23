@@ -50,7 +50,9 @@ type NinaAgentToolSettings = Required<
     "experimental_repairToolCall"
   >;
 
-/** Emits Nina context metadata at AI SDK stream lifecycle markers. */
+/**
+ * Emits Nina context metadata at AI SDK stream lifecycle markers.
+ */
 function readNinaMessageMetadata({
   page,
   part,
@@ -84,7 +86,9 @@ function readNinaMessageMetadata({
   };
 }
 
-/** Streams one Nina ToolLoopAgent turn through the internal agent lifecycle. */
+/**
+ * Streams one Nina ToolLoopAgent turn through the internal agent lifecycle.
+ */
 export const runNinaAgentTurn = Effect.fn("nina.agent.turn")(function* ({
   messages,
   page,
@@ -92,9 +96,11 @@ export const runNinaAgentTurn = Effect.fn("nina.agent.turn")(function* ({
   settings,
   stream,
   user,
+  readWorkspaceProjection,
 }: {
   readonly messages: NinaAgentMessages;
   readonly page: NinaPage;
+  readonly readWorkspaceProjection?: () => string | undefined;
   readonly runtime: NinaRuntime;
   readonly settings: NinaAgentToolSettings;
   readonly stream: {
@@ -112,6 +118,7 @@ export const runNinaAgentTurn = Effect.fn("nina.agent.turn")(function* ({
     model: provider.languageModel(runtime.modelId),
     prepareStep: createNinaPrepareStep({
       needsPageFetch: page.needsFetch,
+      readWorkspaceProjection,
       system,
     }),
     experimental_repairToolCall: settings.experimental_repairToolCall,
