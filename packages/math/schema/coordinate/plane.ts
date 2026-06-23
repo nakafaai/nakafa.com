@@ -1,4 +1,8 @@
-import type { ExactPoint3, MathAst, MathAstNode } from "@repo/math/schema/ast";
+import type {
+  ExactPoint3,
+  MathAst,
+  MathAstNode,
+} from "@repo/math/schema/ast/schema";
 import {
   type AffinePlaneExpression,
   addAffinePlaneExpressions,
@@ -8,17 +12,13 @@ import {
   readExpectedPlaneExpression,
   scaleAffinePlaneExpression,
   variableAffinePlaneExpression,
-} from "@repo/math/schema/coordinate-plane-expression";
-import type { CanonicalFunctionSpec } from "@repo/math/schema/coordinate-primitives";
-import { readSortableExactScalar } from "@repo/math/schema/coordinate-scalars";
+} from "@repo/math/schema/coordinate/equation";
+import type { CanonicalFunctionSpec } from "@repo/math/schema/coordinate/primitive";
+import { readSortableExactScalar } from "@repo/math/schema/coordinate/scalar";
 
-interface AffinePlaneReadContext {
-  expressionsByNodeId: Map<string, AffinePlaneExpression | undefined>;
-  nodesById: ReadonlyMap<string, MathAstNode>;
-  visitingNodeIds: Set<string>;
-}
-
-/** Verifies a plane implicit equation against renderer point/normal geometry. */
+/**
+ * Verifies a plane implicit equation against renderer point/normal geometry.
+ */
 export function findPlaneEquationConsistencyIssue(
   primitiveId: string,
   equation: CanonicalFunctionSpec,
@@ -40,6 +40,9 @@ export function findPlaneEquationConsistencyIssue(
   }
 }
 
+/**
+ * Reads one affine expression from a MathAst without recursive stack growth.
+ */
 function readAffinePlaneExpression(ast: MathAst) {
   const nodesById = new Map<string, MathAstNode>();
 
@@ -52,36 +55,52 @@ function readAffinePlaneExpression(ast: MathAst) {
     return;
   }
 
-  return readNodeExpression(root, {
-    expressionsByNodeId: new Map<string, AffinePlaneExpression | undefined>(),
+  return readNodeExpression(
+    root,
     nodesById,
-    visitingNodeIds: new Set<string>(),
-  });
+    new Map<string, AffinePlaneExpression | undefined>(),
+    new Set<string>()
+  );
 }
 
+/**
+ * Reads one node with memoized affine-expression state.
+ */
 function readNodeExpression(
   node: MathAstNode,
-  context: AffinePlaneReadContext
+  nodesById: ReadonlyMap<string, MathAstNode>,
+  expressionsByNodeId: Map<string, AffinePlaneExpression | undefined>,
+  visitingNodeIds: Set<string>
 ): AffinePlaneExpression | undefined {
-  if (context.visitingNodeIds.has(node.id)) {
+  if (visitingNodeIds.has(node.id)) {
     return;
   }
 
-  if (context.expressionsByNodeId.has(node.id)) {
-    return context.expressionsByNodeId.get(node.id);
+  if (expressionsByNodeId.has(node.id)) {
+    return expressionsByNodeId.get(node.id);
   }
 
-  context.visitingNodeIds.add(node.id);
-  const expression = readAcyclicNodeExpression(node, context);
-  context.visitingNodeIds.delete(node.id);
-  context.expressionsByNodeId.set(node.id, expression);
+  visitingNodeIds.add(node.id);
+  const expression = readAcyclicNodeExpression(
+    node,
+    nodesById,
+    expressionsByNodeId,
+    visitingNodeIds
+  );
+  visitingNodeIds.delete(node.id);
+  expressionsByNodeId.set(node.id, expression);
 
   return expression;
 }
 
+/**
+ * Evaluates one acyclic MathAst node as an affine plane expression.
+ */
 function readAcyclicNodeExpression(
   node: MathAstNode,
-  context: AffinePlaneReadContext
+  nodesById: ReadonlyMap<string, MathAstNode>,
+  expressionsByNodeId: Map<string, AffinePlaneExpression | undefined>,
+  visitingNodeIds: Set<string>
 ) {
   if (node.kind === "literal") {
     const value = readSortableExactScalar(node.value);
@@ -99,7 +118,12 @@ function readAcyclicNodeExpression(
   }
 
   if (node.kind === "unary") {
-    const operand = readChildExpression(node.operand, context);
+    const operand = readChildExpression(
+      node.operand,
+      nodesById,
+      expressionsByNodeId,
+      visitingNodeIds
+    );
 
     if (!operand || node.operator !== "negate") {
       return;
@@ -108,8 +132,18 @@ function readAcyclicNodeExpression(
     return scaleAffinePlaneExpression(operand, -1);
   }
 
-  const left = readChildExpression(node.left, context);
-  const right = readChildExpression(node.right, context);
+  const left = readChildExpression(
+    node.left,
+    nodesById,
+    expressionsByNodeId,
+    visitingNodeIds
+  );
+  const right = readChildExpression(
+    node.right,
+    nodesById,
+    expressionsByNodeId,
+    visitingNodeIds
+  );
 
   if (!(left && right)) {
     return;
@@ -140,15 +174,31 @@ function readAcyclicNodeExpression(
   }
 }
 
-function readChildExpression(nodeId: string, context: AffinePlaneReadContext) {
-  const child = context.nodesById.get(nodeId);
+/**
+ * Reads a referenced child expression when the child node exists.
+ */
+function readChildExpression(
+  nodeId: string,
+  nodesById: ReadonlyMap<string, MathAstNode>,
+  expressionsByNodeId: Map<string, AffinePlaneExpression | undefined>,
+  visitingNodeIds: Set<string>
+) {
+  const child = nodesById.get(nodeId);
   if (!child) {
     return;
   }
 
-  return readNodeExpression(child, context);
+  return readNodeExpression(
+    child,
+    nodesById,
+    expressionsByNodeId,
+    visitingNodeIds
+  );
 }
 
+/**
+ * Multiplies affine expressions only when one side is constant.
+ */
 function multiply(left: AffinePlaneExpression, right: AffinePlaneExpression) {
   const leftConstant = readConstantAffinePlaneExpression(left);
   if (leftConstant !== undefined) {

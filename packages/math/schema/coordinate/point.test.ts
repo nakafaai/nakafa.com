@@ -3,28 +3,26 @@ import {
   ExactScalar,
   MathAst,
   type MathVariableName,
-} from "@repo/math/schema/ast";
+} from "@repo/math/schema/ast/schema";
 import {
   CanonicalFunctionSpec,
   type CoordinatePrimitive,
   FunctionDomain,
-} from "@repo/math/schema/coordinate-primitives";
+} from "@repo/math/schema/coordinate/primitive";
 import {
   CoordinatePrimitiveInvariantError,
   findCoordinatePrimitiveIssue,
-} from "@repo/math/schema/coordinate-validation";
+} from "@repo/math/schema/coordinate/validation";
 import { describe, expect, it } from "vitest";
 
 describe("coordinate point-like primitive validation", () => {
   const cases: {
     expected: string;
-    name: string;
     primitive: CoordinatePrimitive;
   }[] = [
     {
       expected:
         "Coordinate primitive point-bad point x-coordinate must use a sortable numeric value.",
-      name: "point coordinates",
       primitive: {
         id: "point-bad",
         kind: "point",
@@ -34,7 +32,6 @@ describe("coordinate point-like primitive validation", () => {
     {
       expected:
         "Coordinate primitive vector-tail-bad vector tail y-coordinate must use a sortable numeric value.",
-      name: "vector tails",
       primitive: {
         id: "vector-tail-bad",
         kind: "vector",
@@ -45,7 +42,6 @@ describe("coordinate point-like primitive validation", () => {
     {
       expected:
         "Coordinate primitive vector-bad vector z-coordinate must use a sortable numeric value.",
-      name: "vector components",
       primitive: {
         id: "vector-bad",
         kind: "vector",
@@ -56,7 +52,6 @@ describe("coordinate point-like primitive validation", () => {
     {
       expected:
         "Coordinate primitive segment-start-bad segment start y-coordinate must use a sortable numeric value.",
-      name: "segment start points",
       primitive: {
         end: point("1", "0", "0"),
         id: "segment-start-bad",
@@ -67,7 +62,6 @@ describe("coordinate point-like primitive validation", () => {
     {
       expected:
         "Coordinate primitive segment-end-bad segment end x-coordinate must use a sortable numeric value.",
-      name: "segment end points",
       primitive: {
         end: point("right", "0", "0"),
         id: "segment-end-bad",
@@ -78,7 +72,6 @@ describe("coordinate point-like primitive validation", () => {
     {
       expected:
         "Coordinate primitive ray-origin-bad ray origin x-coordinate must use a sortable numeric value.",
-      name: "ray origins",
       primitive: {
         direction: point("1", "0", "0"),
         id: "ray-origin-bad",
@@ -89,7 +82,6 @@ describe("coordinate point-like primitive validation", () => {
     {
       expected:
         "Coordinate primitive line-point-bad line point y-coordinate must use a sortable numeric value.",
-      name: "line points",
       primitive: {
         direction: point("1", "0", "0"),
         id: "line-point-bad",
@@ -100,7 +92,6 @@ describe("coordinate point-like primitive validation", () => {
     {
       expected:
         "Coordinate primitive plane-point-bad plane point z-coordinate must use a sortable numeric value.",
-      name: "plane points",
       primitive: {
         equation: functionSpec("z"),
         id: "plane-point-bad",
@@ -112,7 +103,6 @@ describe("coordinate point-like primitive validation", () => {
     {
       expected:
         "Coordinate primitive polygon-bad polygon vertex 2 x-coordinate must use a sortable numeric value.",
-      name: "polygon vertices",
       primitive: {
         id: "polygon-bad",
         kind: "polygon",
@@ -126,7 +116,6 @@ describe("coordinate point-like primitive validation", () => {
     {
       expected:
         "Coordinate primitive sphere-center-bad sphere center x-coordinate must use a sortable numeric value.",
-      name: "sphere centers",
       primitive: {
         center: point("left", "0", "0"),
         id: "sphere-center-bad",
@@ -136,8 +125,8 @@ describe("coordinate point-like primitive validation", () => {
     },
   ];
 
-  for (const testCase of cases) {
-    it(`rejects nonsortable ${testCase.name}`, () => {
+  for (const [index, testCase] of cases.entries()) {
+    it(`rejects nonsortable point-like primitive ${index + 1}`, () => {
       expect(readIssueMessage([testCase.primitive])).toBe(testCase.expected);
     });
   }
@@ -236,6 +225,19 @@ describe("coordinate point-like primitive validation", () => {
             point("1", "0", "0"),
             point("0", "1", "0"),
           ],
+        },
+      ])
+    ).toBeUndefined();
+  });
+
+  it("accepts distinct segment endpoints", () => {
+    expect(
+      findCoordinatePrimitiveIssue([
+        {
+          end: point("1", "0", "0"),
+          id: "segment-valid",
+          kind: "segment",
+          start: point("0", "0", "0"),
         },
       ])
     ).toBeUndefined();

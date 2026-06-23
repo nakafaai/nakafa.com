@@ -1,22 +1,22 @@
 import {
   type ExactPoint3,
-  type ExactScalar,
   type MathAst,
   readMathAstVariableNames,
-} from "@repo/math/schema/ast";
-import { findPlaneEquationConsistencyIssue } from "@repo/math/schema/coordinate-plane-validation";
-import { findPointLikeCoordinateIssue } from "@repo/math/schema/coordinate-point-validation";
+} from "@repo/math/schema/ast/schema";
+import { findPlaneEquationConsistencyIssue } from "@repo/math/schema/coordinate/plane";
+import { findPointLikeCoordinateIssue } from "@repo/math/schema/coordinate/point";
 import type {
   CanonicalFunctionSpec,
   CanonicalVectorFunctionSpec,
   CoordinatePrimitive,
   FunctionDomain,
-} from "@repo/math/schema/coordinate-primitives";
+} from "@repo/math/schema/coordinate/primitive";
 import {
   isExactZeroPoint,
   readSortableExactScalar,
-} from "@repo/math/schema/coordinate-scalars";
-import { findFunctionSurfaceOutputIssue } from "@repo/math/schema/coordinate-surface-validation";
+} from "@repo/math/schema/coordinate/scalar";
+import { findSolidPrimitiveIssue } from "@repo/math/schema/coordinate/solid";
+import { findFunctionSurfaceOutputIssue } from "@repo/math/schema/coordinate/surface";
 import { Schema } from "effect";
 
 /** Expected failure raised when coordinate primitives are not render-safe. */
@@ -27,7 +27,9 @@ export class CoordinatePrimitiveInvariantError extends Schema.TaggedError<Coordi
   }
 ) {}
 
-/** Finds deterministic domain and geometry issues in coordinate primitives. */
+/**
+ * Finds deterministic domain and geometry issues in coordinate primitives.
+ */
 export function findCoordinatePrimitiveIssue(
   primitives: readonly CoordinatePrimitive[]
 ) {
@@ -40,6 +42,9 @@ export function findCoordinatePrimitiveIssue(
   }
 }
 
+/**
+ * Validates one primitive at the first seam before renderer consumption.
+ */
 function findOnePrimitiveIssue(primitive: CoordinatePrimitive) {
   const pointIssue = findPointLikeCoordinateIssue(primitive);
   if (pointIssue) {
@@ -58,16 +63,9 @@ function findOnePrimitiveIssue(primitive: CoordinatePrimitive) {
     return findDirectionIssue(primitive.id, primitive.direction);
   }
 
-  if (primitive.kind === "cuboid") {
-    return findCuboidIssue(primitive.id, primitive.min, primitive.max);
-  }
-
-  if (primitive.kind === "sphere") {
-    return findPositiveScalarIssue(
-      primitive.id,
-      "sphere radius",
-      primitive.radius
-    );
+  const solidIssue = findSolidPrimitiveIssue(primitive);
+  if (solidIssue) {
+    return createIssue(solidIssue);
   }
 
   if (primitive.kind === "plane") {
@@ -117,6 +115,9 @@ function findOnePrimitiveIssue(primitive: CoordinatePrimitive) {
   }
 }
 
+/**
+ * Rejects vector primitives that collapse to the zero vector.
+ */
 function findZeroVectorIssue(primitiveId: string, vector: ExactPoint3) {
   if (isExactZeroPoint(vector)) {
     return createIssue(
@@ -125,6 +126,9 @@ function findZeroVectorIssue(primitiveId: string, vector: ExactPoint3) {
   }
 }
 
+/**
+ * Rejects line and ray directions that cannot determine an orientation.
+ */
 function findDirectionIssue(primitiveId: string, direction: ExactPoint3) {
   if (isExactZeroPoint(direction)) {
     return createIssue(
@@ -133,6 +137,9 @@ function findDirectionIssue(primitiveId: string, direction: ExactPoint3) {
   }
 }
 
+/**
+ * Validates scalar-function domains against all referenced MathAst variables.
+ */
 function findFunctionSpecIssue(
   primitiveId: string,
   functionSpec: CanonicalFunctionSpec
@@ -144,6 +151,9 @@ function findFunctionSpecIssue(
   return findDomainBindingIssue(primitiveId, asts, functionSpec.domain);
 }
 
+/**
+ * Validates vector-function arity before checking variable-domain binding.
+ */
 function findVectorFunctionSpecIssue(
   primitiveId: string,
   functionSpec: CanonicalVectorFunctionSpec,
@@ -162,6 +172,9 @@ function findVectorFunctionSpecIssue(
   );
 }
 
+/**
+ * Rejects duplicate, nonsortable, inverted, or missing function domains.
+ */
 function findDomainBindingIssue(
   primitiveId: string,
   asts: readonly MathAst[],
@@ -199,10 +212,16 @@ function findDomainBindingIssue(
   }
 }
 
+/**
+ * Wraps one renderer-safety invariant as a typed schema error.
+ */
 function createIssue(message: string) {
   return new CoordinatePrimitiveInvariantError({ message });
 }
 
+/**
+ * Requires each function domain interval to be sortable and increasing.
+ */
 function findIncreasingDomainIssue(
   primitiveId: string,
   domain: FunctionDomain
@@ -226,60 +245,5 @@ function findIncreasingDomainIssue(
     return createIssue(
       `Coordinate primitive ${primitiveId} domain ${domain.variable} must be increasing.`
     );
-  }
-}
-
-function findPositiveScalarIssue(
-  primitiveId: string,
-  label: string,
-  scalar: ExactScalar
-) {
-  const value = readSortableExactScalar(scalar);
-
-  if (value === undefined) {
-    return createIssue(
-      `Coordinate primitive ${primitiveId} ${label} must use a sortable numeric value.`
-    );
-  }
-
-  if (value <= 0) {
-    return createIssue(
-      `Coordinate primitive ${primitiveId} ${label} must be positive.`
-    );
-  }
-}
-
-function findCuboidIssue(
-  primitiveId: string,
-  min: ExactPoint3,
-  max: ExactPoint3
-) {
-  const axes = [
-    { name: "x", max: max.x, min: min.x },
-    { name: "y", max: max.y, min: min.y },
-    { name: "z", max: max.z, min: min.z },
-  ];
-
-  for (const axis of axes) {
-    const minValue = readSortableExactScalar(axis.min);
-    const maxValue = readSortableExactScalar(axis.max);
-
-    if (minValue === undefined) {
-      return createIssue(
-        `Coordinate primitive ${primitiveId} cuboid ${axis.name}-axis must use sortable numeric bounds.`
-      );
-    }
-
-    if (maxValue === undefined) {
-      return createIssue(
-        `Coordinate primitive ${primitiveId} cuboid ${axis.name}-axis must use sortable numeric bounds.`
-      );
-    }
-
-    if (minValue >= maxValue) {
-      return createIssue(
-        `Coordinate primitive ${primitiveId} cuboid ${axis.name}-axis must be increasing.`
-      );
-    }
   }
 }

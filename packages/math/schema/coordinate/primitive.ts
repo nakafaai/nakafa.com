@@ -3,7 +3,7 @@ import {
   ExactScalar,
   MathAst,
   MathVariableNameSchema,
-} from "@repo/math/schema/ast";
+} from "@repo/math/schema/ast/schema";
 import { Schema } from "effect";
 
 function literalValues<const Values extends readonly [string, ...string[]]>(
@@ -234,7 +234,9 @@ export type CoordinatePrimitive = Schema.Schema.Type<
   typeof CoordinatePrimitiveSchema
 >;
 
-/** Reads every MathAst embedded in coordinate primitives for validation. */
+/**
+ * Reads every MathAst embedded in coordinate primitives for validation.
+ */
 export function readCoordinatePrimitiveMathAsts(
   primitives: readonly CoordinatePrimitive[]
 ) {
@@ -272,6 +274,9 @@ export function readCoordinatePrimitiveMathAsts(
   return asts;
 }
 
+/**
+ * Reads the scalar function AST plus bounded exclusion predicates.
+ */
 function readFunctionMathAsts(functionSpec: CanonicalFunctionSpec) {
   return functionSpec.exclusions
     ? [functionSpec.ast, ...functionSpec.exclusions]

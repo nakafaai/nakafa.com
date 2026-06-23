@@ -1,16 +1,24 @@
-import type { ExactPoint3 } from "@repo/math/schema/ast";
-import { readSortableExactScalar } from "@repo/math/schema/coordinate-scalars";
+import type { ExactPoint3 } from "@repo/math/schema/ast/schema";
+import { readSortableExactScalar } from "@repo/math/schema/coordinate/scalar";
+import { Schema } from "effect";
 
 const PLANE_EQUATION_RELATIVE_TOLERANCE = 1e-9;
 
-export interface AffinePlaneExpression {
-  constant: number;
-  x: number;
-  y: number;
-  z: number;
-}
+/** Schema-owned affine expression coefficients for implicit plane equations. */
+export const AffinePlaneExpression = Schema.Struct({
+  constant: Schema.Number.pipe(Schema.finite()),
+  x: Schema.Number.pipe(Schema.finite()),
+  y: Schema.Number.pipe(Schema.finite()),
+  z: Schema.Number.pipe(Schema.finite()),
+});
 
-/** Builds the expected affine plane expression from point-normal geometry. */
+export type AffinePlaneExpression = Schema.Schema.Type<
+  typeof AffinePlaneExpression
+>;
+
+/**
+ * Builds the expected affine plane expression from point-normal geometry.
+ */
 export function readExpectedPlaneExpression(
   normal: ExactPoint3,
   point: ExactPoint3
@@ -51,7 +59,9 @@ export function readExpectedPlaneExpression(
   };
 }
 
-/** Adds two affine plane expressions coefficient-wise. */
+/**
+ * Adds two affine plane expressions coefficient-wise.
+ */
 export function addAffinePlaneExpressions(
   left: AffinePlaneExpression,
   right: AffinePlaneExpression
@@ -64,7 +74,9 @@ export function addAffinePlaneExpressions(
   };
 }
 
-/** Scales one affine plane expression by a finite scalar without underflow. */
+/**
+ * Scales one affine plane expression by a finite scalar without underflow.
+ */
 export function scaleAffinePlaneExpression(
   expression: AffinePlaneExpression,
   factor: number
@@ -91,14 +103,18 @@ export function scaleAffinePlaneExpression(
   };
 }
 
-/** Creates a constant affine plane expression. */
+/**
+ * Creates a constant affine plane expression.
+ */
 export function literalAffinePlaneExpression(
   value: number
 ): AffinePlaneExpression {
   return { constant: value, x: 0, y: 0, z: 0 };
 }
 
-/** Creates an affine expression for one coordinate variable. */
+/**
+ * Creates an affine expression for one coordinate variable.
+ */
 export function variableAffinePlaneExpression(
   name: "x" | "y" | "z"
 ): AffinePlaneExpression {
@@ -110,7 +126,9 @@ export function variableAffinePlaneExpression(
   };
 }
 
-/** Reads the constant term when an affine expression has no variables. */
+/**
+ * Reads the constant term when an affine expression has no variables.
+ */
 export function readConstantAffinePlaneExpression(
   expression: AffinePlaneExpression
 ) {
@@ -119,7 +137,9 @@ export function readConstantAffinePlaneExpression(
   }
 }
 
-/** Compares two nonzero affine plane expressions up to nonzero scale. */
+/**
+ * Compares two nonzero affine plane expressions up to nonzero scale.
+ */
 export function isSamePlaneExpression(
   actual: AffinePlaneExpression,
   expected: AffinePlaneExpression
@@ -150,6 +170,9 @@ export function isSamePlaneExpression(
   );
 }
 
+/**
+ * Computes the point-normal offset without accepting underflowed products.
+ */
 function readPlaneOffset(terms: readonly (readonly [number, number])[]) {
   let offset = 0;
 
@@ -168,6 +191,9 @@ function readPlaneOffset(terms: readonly (readonly [number, number])[]) {
   return offset;
 }
 
+/**
+ * Multiplies geometry scalars and rejects nonzero products lost to zero.
+ */
 function multiplyFinitePlaneScalars(normal: number, point: number) {
   if (normal === 0 || point === 0) {
     return 0;
@@ -181,6 +207,9 @@ function multiplyFinitePlaneScalars(normal: number, point: number) {
   return product;
 }
 
+/**
+ * Scales one coefficient and rejects nonzero products lost to zero.
+ */
 function scalePlaneCoefficient(coefficient: number, factor: number) {
   if (!Number.isFinite(factor)) {
     return;
@@ -198,6 +227,9 @@ function scalePlaneCoefficient(coefficient: number, factor: number) {
   return product;
 }
 
+/**
+ * Reads the first nonzero expected coefficient ratio as the plane scale.
+ */
 function readScaleFactor(
   actual: AffinePlaneExpression,
   expected: AffinePlaneExpression
@@ -215,6 +247,9 @@ function readScaleFactor(
   }
 }
 
+/**
+ * Detects zero affine equations, which cannot define a unique plane.
+ */
 function isZeroAffineExpression(expression: AffinePlaneExpression) {
   return (
     expression.x === 0 &&
@@ -224,6 +259,9 @@ function isZeroAffineExpression(expression: AffinePlaneExpression) {
   );
 }
 
+/**
+ * Compares one scaled coefficient using relative tolerance around expectation.
+ */
 function isPlaneCoefficientMatch(
   actual: number,
   expected: number,

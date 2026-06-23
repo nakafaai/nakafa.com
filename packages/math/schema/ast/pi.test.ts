@@ -7,7 +7,7 @@ import {
   readProductPiMultiple,
   readQuotientPiMultiple,
   readSyntacticPiMultiple,
-} from "@repo/math/schema/ast-pi-multiple";
+} from "@repo/math/schema/ast/pi";
 import { describe, expect, it } from "vitest";
 
 describe("syntactic pi multiple tracking", () => {

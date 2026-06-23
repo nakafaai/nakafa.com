@@ -1,9 +1,11 @@
-import type { ExactPoint3, ExactScalar } from "@repo/math/schema/ast";
-import { readExactNumericExpression } from "@repo/math/schema/coordinate-exact-numeric";
+import type { ExactPoint3, ExactScalar } from "@repo/math/schema/ast/schema";
+import { readExactNumericExpression } from "@repo/math/schema/coordinate/numeric";
 
 const DECIMAL_HINT_TOLERANCE = 1e-4;
 
-/** Reads a finite numeric sort key from an exact scalar display contract. */
+/**
+ * Reads a finite numeric sort key from an exact scalar display contract.
+ */
 export function readSortableExactScalar(scalar: ExactScalar) {
   if (isBlankExactExpression(scalar.expression)) {
     return;
@@ -20,7 +22,9 @@ export function readSortableExactScalar(scalar: ExactScalar) {
   }
 }
 
-/** Checks whether every coordinate has a parseable exact zero expression. */
+/**
+ * Checks whether every coordinate has a parseable exact zero expression.
+ */
 export function isExactZeroPoint(point: ExactPoint3) {
   return (
     isExactZeroScalar(point.x) &&
@@ -29,7 +33,9 @@ export function isExactZeroPoint(point: ExactPoint3) {
   );
 }
 
-/** Reads the first point coordinate that lacks a finite sortable scalar value. */
+/**
+ * Reads the first point coordinate that lacks a finite sortable scalar value.
+ */
 export function readNonSortablePointAxis(point: ExactPoint3) {
   if (readSortableExactScalar(point.x) === undefined) {
     return "x";
@@ -44,6 +50,9 @@ export function readNonSortablePointAxis(point: ExactPoint3) {
   }
 }
 
+/**
+ * Accepts only exact expressions that parse to finite numeric zero.
+ */
 function isExactZeroScalar(scalar: ExactScalar) {
   if (isBlankExactExpression(scalar.expression)) {
     return false;
@@ -57,14 +66,23 @@ function isExactZeroScalar(scalar: ExactScalar) {
   return false;
 }
 
+/**
+ * Rejects whitespace-only exact expressions before numeric coercion.
+ */
 function isBlankExactExpression(expression: string) {
   return expression.trim().length === 0;
 }
 
+/**
+ * Reads the finite decimal hint already enforced by the ExactScalar schema.
+ */
 function readFiniteDecimalHint(scalar: ExactScalar) {
   return scalar.decimal;
 }
 
+/**
+ * Rejects display decimal hints that contradict parseable exact expressions.
+ */
 function hasInconsistentDecimalHint(scalar: ExactScalar, exactValue: number) {
   const decimal = readFiniteDecimalHint(scalar);
   if (decimal === undefined) {

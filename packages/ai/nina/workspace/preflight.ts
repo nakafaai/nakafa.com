@@ -1,13 +1,23 @@
 import { Effect, Schema } from "effect";
 
-/** Raw artifact budget limits enforced before EvidenceWorkspace schema decode. */
-export interface WorkspaceArtifactPreflightLimits {
-  artifactBytes: number;
-  contributionArtifactBytes: number;
-  contributionArtifactLimit: number;
-  workspaceArtifactBytes: number;
-  workspaceArtifactLimit: number;
-}
+/** Schema-owned raw artifact budget limits enforced before workspace decode. */
+export const WorkspaceArtifactPreflightLimits = Schema.Struct({
+  artifactBytes: Schema.Number.pipe(Schema.int(), Schema.positive()),
+  contributionArtifactBytes: Schema.Number.pipe(
+    Schema.int(),
+    Schema.positive()
+  ),
+  contributionArtifactLimit: Schema.Number.pipe(
+    Schema.int(),
+    Schema.positive()
+  ),
+  workspaceArtifactBytes: Schema.Number.pipe(Schema.int(), Schema.positive()),
+  workspaceArtifactLimit: Schema.Number.pipe(Schema.int(), Schema.positive()),
+});
+
+export type WorkspaceArtifactPreflightLimits = Schema.Schema.Type<
+  typeof WorkspaceArtifactPreflightLimits
+>;
 
 export class WorkspaceArtifactPreflightError extends Schema.TaggedError<WorkspaceArtifactPreflightError>()(
   "WorkspaceArtifactPreflightError",
@@ -16,7 +26,9 @@ export class WorkspaceArtifactPreflightError extends Schema.TaggedError<Workspac
   }
 ) {}
 
-/** Checks raw workspace artifact counts and bytes before deep schema decode. */
+/**
+ * Checks raw workspace artifact counts and bytes before deep schema decode.
+ */
 export function findWorkspaceArtifactPreflightIssue(
   input: unknown,
   limits: WorkspaceArtifactPreflightLimits
@@ -78,16 +90,25 @@ export function findWorkspaceArtifactPreflightIssue(
   });
 }
 
+/**
+ * Reads an array property without trusting producer-controlled prototypes.
+ */
 function readArrayField(value: object, field: string) {
   const fieldValue = Reflect.get(value, field);
   return Array.isArray(fieldValue) ? fieldValue : undefined;
 }
 
+/**
+ * Reads optional capability labels for user-facing preflight diagnostics.
+ */
 function readStringField(value: object, field: string) {
   const fieldValue = Reflect.get(value, field);
   return typeof fieldValue === "string" ? fieldValue : undefined;
 }
 
+/**
+ * Serializes one raw artifact to bytes as a typed preflight Effect.
+ */
 function readJsonBytes(value: unknown) {
   return Effect.try({
     catch: () =>

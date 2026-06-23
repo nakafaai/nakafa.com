@@ -1,7 +1,7 @@
 import type {
   CanonicalFunctionSpec,
   CoordinateAxis,
-} from "@repo/math/schema/coordinate-primitives";
+} from "@repo/math/schema/coordinate/primitive";
 
 const COORDINATE_AXIS_NAMES = new Set<string>(["x", "y", "z"]);
 

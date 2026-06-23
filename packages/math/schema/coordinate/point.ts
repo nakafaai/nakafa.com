@@ -1,26 +1,37 @@
-import type { ExactPoint3 } from "@repo/math/schema/ast";
-import type { CoordinatePrimitive } from "@repo/math/schema/coordinate-primitives";
-import { readSortableExactScalar } from "@repo/math/schema/coordinate-scalars";
+import type { ExactPoint3 } from "@repo/math/schema/ast/schema";
+import type {
+  CoordinateAxis,
+  CoordinatePrimitive,
+} from "@repo/math/schema/coordinate/primitive";
+import { readSortableExactScalar } from "@repo/math/schema/coordinate/scalar";
+import { Schema } from "effect";
 
-interface SortablePoint3 {
-  x: number;
-  y: number;
-  z: number;
-}
+/** Schema-owned sortable point used by renderer-safety geometry checks. */
+const SortablePoint3 = Schema.Struct({
+  x: Schema.Number.pipe(Schema.finite()),
+  y: Schema.Number.pipe(Schema.finite()),
+  z: Schema.Number.pipe(Schema.finite()),
+});
 
-type PointCoordinateRead =
-  | {
-      issue: string;
-      tag: "Issue";
-    }
-  | {
-      point: SortablePoint3;
-      tag: "Point";
-    };
+type SortablePoint3 = Schema.Schema.Type<typeof SortablePoint3>;
 
-type PointAxis = "x" | "y" | "z";
+/** Schema-owned result of reading exact point coordinates into sortable values. */
+const PointCoordinateRead = Schema.Union(
+  Schema.Struct({
+    issue: Schema.String,
+    tag: Schema.Literal("Issue"),
+  }),
+  Schema.Struct({
+    point: SortablePoint3,
+    tag: Schema.Literal("Point"),
+  })
+);
 
-/** Finds nonsortable point-like coordinates before primitives reach renderers. */
+type PointCoordinateRead = Schema.Schema.Type<typeof PointCoordinateRead>;
+
+/**
+ * Finds nonsortable point-like coordinates before primitives reach renderers.
+ */
 export function findPointLikeCoordinateIssue(primitive: CoordinatePrimitive) {
   if (primitive.kind === "point") {
     return findPointCoordinateIssue(primitive.id, "point", primitive.point);
@@ -101,6 +112,9 @@ export function findPointLikeCoordinateIssue(primitive: CoordinatePrimitive) {
   }
 }
 
+/**
+ * Returns one coordinate issue string for point-like primitive fields.
+ */
 function findPointCoordinateIssue(
   primitiveId: string,
   label: string,
@@ -110,6 +124,9 @@ function findPointCoordinateIssue(
   return result.tag === "Issue" ? result.issue : undefined;
 }
 
+/**
+ * Validates all polygon vertices before area and duplicate checks run.
+ */
 function findPolygonCoordinateIssue(
   primitiveId: string,
   vertices: readonly ExactPoint3[]
@@ -136,6 +153,9 @@ function findPolygonCoordinateIssue(
   return findPolygonAreaIssue(primitiveId, sortableVertices);
 }
 
+/**
+ * Rejects segments whose decoded endpoints collapse to one point.
+ */
 function findSegmentGeometryIssue(
   primitiveId: string,
   startPoint: SortablePoint3,
@@ -146,6 +166,9 @@ function findSegmentGeometryIssue(
   }
 }
 
+/**
+ * Converts exact point fields into finite sortable coordinates.
+ */
 function readPointCoordinate(
   primitiveId: string,
   label: string,
@@ -169,10 +192,13 @@ function readPointCoordinate(
   return { point: { x, y, z }, tag: "Point" };
 }
 
+/**
+ * Builds the shared coordinate-sortability failure result.
+ */
 function pointCoordinateIssue(
   primitiveId: string,
   label: string,
-  axis: PointAxis
+  axis: CoordinateAxis
 ): PointCoordinateRead {
   return {
     issue: `Coordinate primitive ${primitiveId} ${label} ${axis}-coordinate must use a sortable numeric value.`,
@@ -180,6 +206,9 @@ function pointCoordinateIssue(
   };
 }
 
+/**
+ * Finds the first duplicate polygon vertex pair after numeric decoding.
+ */
 function findDuplicatePoint(vertices: readonly SortablePoint3[]) {
   for (const [originalIndex, original] of vertices.entries()) {
     const remainingVertices = vertices.slice(originalIndex + 1);
@@ -193,6 +222,9 @@ function findDuplicatePoint(vertices: readonly SortablePoint3[]) {
   }
 }
 
+/**
+ * Rejects polygon vertices that cannot span nonzero finite area.
+ */
 function findPolygonAreaIssue(
   primitiveId: string,
   vertices: readonly SortablePoint3[]
@@ -223,6 +255,9 @@ function findPolygonAreaIssue(
   return `Coordinate primitive ${primitiveId} polygon vertices must enclose nonzero area.`;
 }
 
+/**
+ * Subtracts two decoded points as a vector for polygon area checks.
+ */
 function subtractPoints(left: SortablePoint3, right: SortablePoint3) {
   return {
     x: left.x - right.x,
@@ -231,6 +266,9 @@ function subtractPoints(left: SortablePoint3, right: SortablePoint3) {
   };
 }
 
+/**
+ * Computes a finite cross product or rejects overflowed components.
+ */
 function readCrossProduct(left: SortablePoint3, right: SortablePoint3) {
   const x = left.y * right.z - left.z * right.y;
   const y = left.z * right.x - left.x * right.z;
@@ -243,10 +281,16 @@ function readCrossProduct(left: SortablePoint3, right: SortablePoint3) {
   return { x, y, z };
 }
 
+/**
+ * Returns true when any decoded vector component is nonzero.
+ */
 function isNonzeroPoint(point: SortablePoint3) {
   return point.x !== 0 || point.y !== 0 || point.z !== 0;
 }
 
+/**
+ * Compares decoded coordinates exactly after scalar parsing.
+ */
 function isSamePoint(left: SortablePoint3, right: SortablePoint3) {
   return left.x === right.x && left.y === right.y && left.z === right.z;
 }

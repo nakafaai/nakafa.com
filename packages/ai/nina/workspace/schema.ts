@@ -3,13 +3,14 @@ import {
   LearningCapabilityNameSchema,
 } from "@repo/ai/nina/capability/spec";
 import { PedagogyMove } from "@repo/ai/nina/pedagogy/schema";
+import { findWorkspaceIssue } from "@repo/ai/nina/workspace/invariant";
 import { findWorkspaceArtifactPreflightIssue } from "@repo/ai/nina/workspace/preflight";
-import type { LearningArtifact } from "@repo/math/schema/artifact";
+import { MAX_COORDINATE_ARTIFACT_BYTES } from "@repo/math/schema/artifact/safety";
+import type { LearningArtifact } from "@repo/math/schema/artifact/schema";
 import {
   decodeLearningArtifact,
   LearningArtifactSchema,
-  MAX_COORDINATE_ARTIFACT_BYTES,
-} from "@repo/math/schema/artifact";
+} from "@repo/math/schema/artifact/schema";
 import { Effect, Schema } from "effect";
 
 export const EVIDENCE_WORKSPACE_CONTRIBUTION_LIMIT = 20;
@@ -121,7 +122,9 @@ export class EvidenceWorkspaceLimitExceeded extends Schema.TaggedError<EvidenceW
   }
 ) {}
 
-/** Decodes a workspace and verifies cross-field and artifact invariants. */
+/**
+ * Decodes a workspace and verifies cross-field and artifact invariants.
+ */
 export const decodeEvidenceWorkspace = Effect.fn(
   "nina.workspace.decodeEvidenceWorkspace"
 )(function* (input: unknown) {
@@ -169,7 +172,9 @@ export const decodeEvidenceWorkspace = Effect.fn(
   return workspace;
 });
 
-/** Creates an empty evidence workspace for one Nina turn. */
+/**
+ * Creates an empty evidence workspace for one Nina turn.
+ */
 export const createEvidenceWorkspace = Effect.fn(
   "nina.workspace.createEvidenceWorkspace"
 )(function* (input: { createdAt: number; turnId: string }) {
@@ -180,7 +185,9 @@ export const createEvidenceWorkspace = Effect.fn(
   });
 });
 
-/** Appends one contribution while preserving workspace invariants. */
+/**
+ * Appends one contribution while preserving workspace invariants.
+ */
 export const appendCapabilityContribution = Effect.fn(
   "nina.workspace.appendCapabilityContribution"
 )(function* (
@@ -202,83 +209,9 @@ export const appendCapabilityContribution = Effect.fn(
   });
 });
 
-function findWorkspaceIssue(workspace: EvidenceWorkspace) {
-  const artifactIds = new Set<string>();
-
-  for (const contribution of workspace.contributions) {
-    if (contribution.capability !== contribution.evidence.capability) {
-      return `Contribution capability ${contribution.capability} does not match evidence capability ${contribution.evidence.capability}.`;
-    }
-
-    const unavailableIssue = findUnavailableEvidenceIssue(contribution);
-    if (unavailableIssue) {
-      return unavailableIssue;
-    }
-
-    const refsIssue = findPedagogyRefsIssue(contribution);
-    if (refsIssue) {
-      return refsIssue;
-    }
-
-    const artifacts = contribution.artifacts;
-    if (!artifacts) {
-      continue;
-    }
-
-    for (const artifact of artifacts) {
-      if (artifactIds.has(artifact.id)) {
-        return `Duplicate learning artifact id: ${artifact.id}.`;
-      }
-      artifactIds.add(artifact.id);
-    }
-  }
-}
-
-function findUnavailableEvidenceIssue(contribution: CapabilityContribution) {
-  if (
-    contribution.evidence.status !== "failed" &&
-    contribution.evidence.status !== "denied"
-  ) {
-    return;
-  }
-
-  if (contribution.artifacts?.length) {
-    return `Contribution ${contribution.capability} cannot attach artifacts when evidence status is ${contribution.evidence.status}.`;
-  }
-
-  if (contribution.pedagogyMoves?.length) {
-    return `Contribution ${contribution.capability} cannot attach pedagogy moves when evidence status is ${contribution.evidence.status}.`;
-  }
-}
-
-function findPedagogyRefsIssue(contribution: CapabilityContribution) {
-  if (!contribution.pedagogyMoves) {
-    return;
-  }
-
-  const allowedRefs = new Set<string>();
-
-  if (contribution.evidence.refs) {
-    for (const ref of contribution.evidence.refs) {
-      allowedRefs.add(ref);
-    }
-  }
-
-  if (contribution.artifacts) {
-    for (const artifact of contribution.artifacts) {
-      allowedRefs.add(artifact.id);
-    }
-  }
-
-  for (const move of contribution.pedagogyMoves) {
-    for (const ref of move.evidenceRefs) {
-      if (!allowedRefs.has(ref)) {
-        return `Pedagogy move ${move.kind} references unknown evidence ${ref}.`;
-      }
-    }
-  }
-}
-
+/**
+ * Flattens retained artifacts so decode can validate global artifact identity.
+ */
 function readWorkspaceArtifacts(workspace: EvidenceWorkspace) {
   const artifacts: LearningArtifact[] = [];
 

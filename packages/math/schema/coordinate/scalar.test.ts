@@ -1,13 +1,13 @@
-import { ExactPoint3, ExactScalar } from "@repo/math/schema/ast";
+import { ExactPoint3, ExactScalar } from "@repo/math/schema/ast/schema";
 import {
   isExactZeroPoint,
   readNonSortablePointAxis,
   readSortableExactScalar,
-} from "@repo/math/schema/coordinate-scalars";
+} from "@repo/math/schema/coordinate/scalar";
 import {
   CoordinatePrimitiveInvariantError,
   findCoordinatePrimitiveIssue,
-} from "@repo/math/schema/coordinate-validation";
+} from "@repo/math/schema/coordinate/validation";
 import { describe, expect, it } from "vitest";
 
 describe("coordinate scalar invariants", () => {
@@ -32,6 +32,7 @@ describe("coordinate scalar invariants", () => {
 
   it("rejects decimal hints as sortable values for invalid exact math", () => {
     expect(readSortableExactScalar(scalarDecimal("left", 0))).toBeUndefined();
+    expect(readSortableExactScalar(scalarDecimal("1", 2))).toBeUndefined();
   });
 
   it("accepts allowlisted exact numeric forms", () => {

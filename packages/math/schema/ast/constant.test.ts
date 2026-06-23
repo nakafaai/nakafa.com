@@ -1,9 +1,9 @@
-import { ExactScalar, type MathAstNode } from "@repo/math/schema/ast";
 import {
   type ConstantMathAstRead,
   type ConstantMathAstValue,
   readConstantMathAst,
-} from "@repo/math/schema/ast-constant";
+} from "@repo/math/schema/ast/constant";
+import { ExactScalar, type MathAstNode } from "@repo/math/schema/ast/schema";
 import { describe, expect, it } from "vitest";
 
 type BinaryOperator = Extract<MathAstNode, { kind: "binary" }>["operator"];

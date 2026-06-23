@@ -1,4 +1,4 @@
-import { findMathAstGraphIssue } from "@repo/math/schema/ast-graph";
+import { findMathAstGraphIssue } from "@repo/math/schema/ast/graph";
 import { Effect, Schema } from "effect";
 
 function literalValues<const Values extends readonly [string, ...string[]]>(
@@ -165,7 +165,9 @@ export class MathAstDecodeError extends Schema.TaggedError<MathAstDecodeError>()
   }
 ) {}
 
-/** Decodes a MathAst and verifies graph references before it reaches runtime. */
+/**
+ * Decodes a MathAst and verifies graph references before it reaches runtime.
+ */
 export const decodeMathAst = Effect.fn("math.ast.decode")(function* (
   input: unknown
 ) {
@@ -186,7 +188,9 @@ export const decodeMathAst = Effect.fn("math.ast.decode")(function* (
   return ast;
 });
 
-/** Reads the schema-owned variable names referenced by a MathAst graph. */
+/**
+ * Reads the schema-owned variable names referenced by a MathAst graph.
+ */
 export function readMathAstVariableNames(ast: MathAst) {
   const variableNames = new Set<MathVariableName>();
 

@@ -1,16 +1,19 @@
 // @vitest-environment node
 
+import { MATH_CAPABILITY } from "@repo/ai/nina/capability/spec";
 import {
-  MATH_CAPABILITY,
-  NAKAFA_CAPABILITY,
-} from "@repo/ai/nina/capability/spec";
-import { PedagogyMove } from "@repo/ai/nina/pedagogy/schema";
+  PEDAGOGY_MOVE_SUMMARY_MAX_LENGTH,
+  PedagogyMove,
+} from "@repo/ai/nina/pedagogy/schema";
 import {
   appendCapabilityContribution,
   CapabilityContribution,
   createEvidenceWorkspace,
   decodeEvidenceWorkspace,
+  EVIDENCE_CONTRIBUTION_MODEL_SUMMARY_MAX_LENGTH,
+  EVIDENCE_CONTRIBUTION_PEDAGOGY_MOVE_LIMIT,
   EVIDENCE_WORKSPACE_CONTRIBUTION_LIMIT,
+  EVIDENCE_WORKSPACE_TURN_ID_MAX_LENGTH,
   EvidenceWorkspace,
   EvidenceWorkspaceDecodeError,
   EvidenceWorkspaceLimitExceeded,
@@ -36,36 +39,6 @@ describe("EvidenceWorkspace", () => {
     expect(next.contributions[0]?.pedagogyMoves?.[0]).toBeInstanceOf(
       PedagogyMove
     );
-  });
-
-  it("rejects capability and evidence mismatches with a typed error", async () => {
-    const workspace = await Effect.runPromise(
-      createEvidenceWorkspace({
-        createdAt: 1_782_195_600,
-        turnId: "turn-1",
-      })
-    );
-    const contribution = CapabilityContribution.make({
-      capability: MATH_CAPABILITY,
-      evidence: WorkspaceEvidenceEnvelope.make({
-        capability: NAKAFA_CAPABILITY,
-        status: "available",
-        summary: "Retrieved relevant Nakafa material.",
-      }),
-      modelSummary: "Retrieved relevant Nakafa material.",
-    });
-
-    const exit = await Effect.runPromiseExit(
-      appendCapabilityContribution(workspace, contribution)
-    );
-    const failure = readExitFailure(exit);
-
-    expect(failure).toBeInstanceOf(EvidenceWorkspaceDecodeError);
-    if (failure instanceof EvidenceWorkspaceDecodeError) {
-      expect(failure.message).toBe(
-        "Contribution capability math does not match evidence capability nakafa."
-      );
-    }
   });
 
   it("rejects invalid workspace schema shapes with a typed error", async () => {
@@ -109,31 +82,6 @@ describe("EvidenceWorkspace", () => {
     }
   });
 
-  it("rejects duplicate artifact ids across contributions", async () => {
-    const exit = await Effect.runPromiseExit(
-      decodeEvidenceWorkspace({
-        contributions: [
-          createContributionInput({
-            artifacts: [createArtifactInput("artifact-1")],
-          }),
-          createContributionInput({
-            artifacts: [createArtifactInput("artifact-1")],
-          }),
-        ],
-        createdAt: 1_782_195_600,
-        turnId: "turn-1",
-      })
-    );
-    const failure = readExitFailure(exit);
-
-    expect(failure).toBeInstanceOf(EvidenceWorkspaceDecodeError);
-    if (failure instanceof EvidenceWorkspaceDecodeError) {
-      expect(failure.message).toBe(
-        "Duplicate learning artifact id: artifact-1."
-      );
-    }
-  });
-
   it("maps artifact invariant failures into workspace decode errors", async () => {
     const exit = await Effect.runPromiseExit(
       decodeEvidenceWorkspace({
@@ -159,6 +107,74 @@ describe("EvidenceWorkspace", () => {
       );
     }
   });
+
+  it("maps workspace invariant failures into workspace decode errors", async () => {
+    const exit = await Effect.runPromiseExit(
+      decodeEvidenceWorkspace({
+        contributions: [
+          createContributionInput({
+            evidenceCapability: "nakafa",
+          }),
+        ],
+        createdAt: 1_782_195_600,
+        turnId: "turn-1",
+      })
+    );
+
+    expectWorkspaceFailure(
+      exit,
+      "Contribution capability math does not match evidence capability nakafa."
+    );
+  });
+
+  it("bounds workspace and contribution model-visible fields", async () => {
+    const cases = [
+      { turnId: "   " },
+      { turnId: "t".repeat(EVIDENCE_WORKSPACE_TURN_ID_MAX_LENGTH + 1) },
+      {
+        contributions: [
+          createContributionInput({
+            modelSummary: "x".repeat(
+              EVIDENCE_CONTRIBUTION_MODEL_SUMMARY_MAX_LENGTH + 1
+            ),
+          }),
+        ],
+      },
+      {
+        contributions: [
+          createContributionInput({
+            pedagogyMoves: Array.from(
+              { length: EVIDENCE_CONTRIBUTION_PEDAGOGY_MOVE_LIMIT + 1 },
+              () => createPedagogyMove("cas://math/evaluate")
+            ),
+          }),
+        ],
+      },
+      {
+        contributions: [
+          createContributionInput({
+            pedagogyMoves: [
+              {
+                ...createPedagogyMove("cas://math/evaluate"),
+                summary: "x".repeat(PEDAGOGY_MOVE_SUMMARY_MAX_LENGTH + 1),
+              },
+            ],
+          }),
+        ],
+      },
+    ];
+
+    for (const testCase of cases) {
+      const exit = await Effect.runPromiseExit(
+        decodeEvidenceWorkspace({
+          contributions: testCase.contributions ?? [],
+          createdAt: 1_782_195_600,
+          turnId: testCase.turnId ?? "turn-1",
+        })
+      );
+      expectWorkspaceFailure(exit, "Invalid evidence workspace contract.");
+    }
+  });
 });
 
 function createContribution() {
@@ -181,17 +197,33 @@ function createContribution() {
   });
 }
 
-function createContributionInput(input: { artifacts?: readonly unknown[] }) {
+function createContributionInput(
+  input: {
+    artifacts?: readonly unknown[];
+    evidenceCapability?: string;
+    modelSummary?: string;
+    pedagogyMoves?: readonly unknown[];
+  } = {}
+) {
   return {
     artifacts: input.artifacts,
     capability: MATH_CAPABILITY,
     evidence: {
-      capability: MATH_CAPABILITY,
+      capability: input.evidenceCapability ?? MATH_CAPABILITY,
       refs: ["cas://math/evaluate"],
       status: "available",
       summary: "CAS verified the coordinate relation.",
     },
-    modelSummary: "CAS verified the coordinate relation.",
+    modelSummary: input.modelSummary ?? "CAS verified the coordinate relation.",
+    pedagogyMoves: input.pedagogyMoves,
+  };
+}
+
+function createPedagogyMove(evidenceRef: string) {
+  return {
+    evidenceRefs: [evidenceRef],
+    kind: "verification-note",
+    summary: "Anchor the explanation in verified evidence.",
   };
 }
 
@@ -243,6 +275,18 @@ function scalar(expression: string) {
     expression,
     latex: expression,
   };
+}
+
+function expectWorkspaceFailure(
+  exit: Exit.Exit<unknown, unknown>,
+  message: string
+) {
+  const failure = readExitFailure(exit);
+
+  expect(failure).toBeInstanceOf(EvidenceWorkspaceDecodeError);
+  if (failure instanceof EvidenceWorkspaceDecodeError) {
+    expect(failure.message).toBe(message);
+  }
 }
 
 /** Extracts the typed Effect failure from an Exit for workspace assertions. */
