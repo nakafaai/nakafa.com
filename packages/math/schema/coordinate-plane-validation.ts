@@ -1,15 +1,16 @@
 import type { ExactPoint3, MathAst, MathAstNode } from "@repo/math/schema/ast";
+import {
+  type AffinePlaneExpression,
+  addAffinePlaneExpressions,
+  isSamePlaneExpression,
+  literalAffinePlaneExpression,
+  readConstantAffinePlaneExpression,
+  readExpectedPlaneExpression,
+  scaleAffinePlaneExpression,
+  variableAffinePlaneExpression,
+} from "@repo/math/schema/coordinate-plane-expression";
 import type { CanonicalFunctionSpec } from "@repo/math/schema/coordinate-primitives";
 import { readSortableExactScalar } from "@repo/math/schema/coordinate-scalars";
-
-const PLANE_EQUATION_RELATIVE_TOLERANCE = 1e-9;
-
-interface AffinePlaneExpression {
-  constant: number;
-  x: number;
-  y: number;
-  z: number;
-}
 
 interface AffinePlaneReadContext {
   expressionsByNodeId: Map<string, AffinePlaneExpression | undefined>;
@@ -37,33 +38,6 @@ export function findPlaneEquationConsistencyIssue(
   if (!isSamePlaneExpression(expression, expected)) {
     return `Coordinate primitive ${primitiveId} plane equation is inconsistent with point and normal.`;
   }
-}
-
-function readExpectedPlaneExpression(normal: ExactPoint3, point: ExactPoint3) {
-  const normalX = readSortableExactScalar(normal.x);
-  const normalY = readSortableExactScalar(normal.y);
-  const normalZ = readSortableExactScalar(normal.z);
-  const pointX = readSortableExactScalar(point.x);
-  const pointY = readSortableExactScalar(point.y);
-  const pointZ = readSortableExactScalar(point.z);
-
-  if (
-    normalX === undefined ||
-    normalY === undefined ||
-    normalZ === undefined ||
-    pointX === undefined ||
-    pointY === undefined ||
-    pointZ === undefined
-  ) {
-    return;
-  }
-
-  return {
-    constant: -(normalX * pointX + normalY * pointY + normalZ * pointZ),
-    x: normalX,
-    y: normalY,
-    z: normalZ,
-  };
 }
 
 function readAffinePlaneExpression(ast: MathAst) {
@@ -111,7 +85,9 @@ function readAcyclicNodeExpression(
 ) {
   if (node.kind === "literal") {
     const value = readSortableExactScalar(node.value);
-    return value === undefined ? undefined : literal(value);
+    return value === undefined
+      ? undefined
+      : literalAffinePlaneExpression(value);
   }
 
   if (node.kind === "variable") {
@@ -119,7 +95,7 @@ function readAcyclicNodeExpression(
       return;
     }
 
-    return variable(node.name);
+    return variableAffinePlaneExpression(node.name);
   }
 
   if (node.kind === "unary") {
@@ -129,7 +105,7 @@ function readAcyclicNodeExpression(
       return;
     }
 
-    return scale(operand, -1);
+    return scaleAffinePlaneExpression(operand, -1);
   }
 
   const left = readChildExpression(node.left, context);
@@ -140,11 +116,14 @@ function readAcyclicNodeExpression(
   }
 
   if (node.operator === "add") {
-    return add(left, right);
+    return addAffinePlaneExpressions(left, right);
   }
 
   if (node.operator === "subtract") {
-    return add(left, scale(right, -1));
+    return addAffinePlaneExpressions(
+      left,
+      scaleAffinePlaneExpression(right, -1)
+    );
   }
 
   if (node.operator === "multiply") {
@@ -152,12 +131,12 @@ function readAcyclicNodeExpression(
   }
 
   if (node.operator === "divide") {
-    const divisor = readConstant(right);
+    const divisor = readConstantAffinePlaneExpression(right);
     if (divisor === undefined || divisor === 0) {
       return;
     }
 
-    return scale(left, 1 / divisor);
+    return scaleAffinePlaneExpression(left, 1 / divisor);
   }
 }
 
@@ -171,130 +150,13 @@ function readChildExpression(nodeId: string, context: AffinePlaneReadContext) {
 }
 
 function multiply(left: AffinePlaneExpression, right: AffinePlaneExpression) {
-  const leftConstant = readConstant(left);
+  const leftConstant = readConstantAffinePlaneExpression(left);
   if (leftConstant !== undefined) {
-    return scale(right, leftConstant);
+    return scaleAffinePlaneExpression(right, leftConstant);
   }
 
-  const rightConstant = readConstant(right);
+  const rightConstant = readConstantAffinePlaneExpression(right);
   if (rightConstant !== undefined) {
-    return scale(left, rightConstant);
+    return scaleAffinePlaneExpression(left, rightConstant);
   }
-}
-
-function isSamePlaneExpression(
-  actual: AffinePlaneExpression,
-  expected: AffinePlaneExpression
-) {
-  if (isZeroAffineExpression(actual)) {
-    return false;
-  }
-
-  const scaleFactor = readScaleFactor(actual, expected);
-
-  if (
-    scaleFactor === undefined ||
-    scaleFactor === 0 ||
-    !Number.isFinite(scaleFactor)
-  ) {
-    return false;
-  }
-
-  return (
-    isPlaneCoefficientMatch(actual.x, expected.x, expected.x * scaleFactor) &&
-    isPlaneCoefficientMatch(actual.y, expected.y, expected.y * scaleFactor) &&
-    isPlaneCoefficientMatch(actual.z, expected.z, expected.z * scaleFactor) &&
-    isPlaneCoefficientMatch(
-      actual.constant,
-      expected.constant,
-      expected.constant * scaleFactor
-    )
-  );
-}
-
-function readScaleFactor(
-  actual: AffinePlaneExpression,
-  expected: AffinePlaneExpression
-) {
-  if (expected.x !== 0) {
-    return actual.x / expected.x;
-  }
-
-  if (expected.y !== 0) {
-    return actual.y / expected.y;
-  }
-
-  if (expected.z !== 0) {
-    return actual.z / expected.z;
-  }
-}
-
-function readConstant(expression: AffinePlaneExpression) {
-  if (expression.x === 0 && expression.y === 0 && expression.z === 0) {
-    return expression.constant;
-  }
-}
-
-function isZeroAffineExpression(expression: AffinePlaneExpression) {
-  return (
-    expression.x === 0 &&
-    expression.y === 0 &&
-    expression.z === 0 &&
-    expression.constant === 0
-  );
-}
-
-function add(
-  left: AffinePlaneExpression,
-  right: AffinePlaneExpression
-): AffinePlaneExpression {
-  return {
-    constant: left.constant + right.constant,
-    x: left.x + right.x,
-    y: left.y + right.y,
-    z: left.z + right.z,
-  };
-}
-
-function scale(
-  expression: AffinePlaneExpression,
-  factor: number
-): AffinePlaneExpression {
-  return {
-    constant: expression.constant * factor,
-    x: expression.x * factor,
-    y: expression.y * factor,
-    z: expression.z * factor,
-  };
-}
-
-function literal(value: number): AffinePlaneExpression {
-  return { constant: value, x: 0, y: 0, z: 0 };
-}
-
-function variable(name: "x" | "y" | "z"): AffinePlaneExpression {
-  return {
-    constant: 0,
-    x: name === "x" ? 1 : 0,
-    y: name === "y" ? 1 : 0,
-    z: name === "z" ? 1 : 0,
-  };
-}
-
-function isPlaneCoefficientMatch(
-  actual: number,
-  expected: number,
-  scaledExpected: number
-) {
-  if (!Number.isFinite(scaledExpected)) {
-    return false;
-  }
-
-  if (expected === 0) {
-    return actual === 0;
-  }
-
-  const allowedDrift =
-    Math.abs(scaledExpected) * PLANE_EQUATION_RELATIVE_TOLERANCE;
-  return Math.abs(actual - scaledExpected) <= allowedDrift;
 }

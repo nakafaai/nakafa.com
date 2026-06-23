@@ -45,6 +45,8 @@ describe("coordinate scalar invariants", () => {
     expect(readSortableExactScalar(scalar("1/(2)*pi"))).toBeCloseTo(
       Math.PI / 2
     );
+    expect(readSortableExactScalar(scalar("1 * 2"))).toBe(2);
+    expect(readSortableExactScalar(scalar("1 / 2"))).toBe(0.5);
     expect(readSortableExactScalar(scalar("-pi/2"))).toBeCloseTo(-Math.PI / 2);
     expect(readSortableExactScalar(scalar("+pi"))).toBe(Math.PI);
     expect(readSortableExactScalar(scalar("(1)/2"))).toBe(0.5);
@@ -65,6 +67,10 @@ describe("coordinate scalar invariants", () => {
     expect(readSortableExactScalar(scalar("2*left"))).toBeUndefined();
     expect(readSortableExactScalar(scalar("-left"))).toBeUndefined();
     expect(readSortableExactScalar(scalar("1 2"))).toBeUndefined();
+    expect(readSortableExactScalar(scalar("1e + 2"))).toBeUndefined();
+    expect(readSortableExactScalar(scalar("1e -2"))).toBeUndefined();
+    expect(readSortableExactScalar(scalar("1e+ 2"))).toBeUndefined();
+    expect(readSortableExactScalar(scalar("1e +2"))).toBeUndefined();
     expect(readSortableExactScalar(scalar("1e9999"))).toBeUndefined();
     expect(readSortableExactScalar(scalar("1e308*1e308"))).toBeUndefined();
     expect(readSortableExactScalar(scalar("1e308/1e-308"))).toBeUndefined();

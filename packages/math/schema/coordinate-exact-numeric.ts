@@ -1,6 +1,8 @@
 const NUMERIC_LITERAL_PATTERN =
   /^[+-]?(?:(?:\d+\.?\d*)|(?:\.\d+))(?:e[+-]?\d+)?$/i;
 const UNSAFE_WHITESPACE_PATTERN = /[\dA-Za-zπ]\s+[\dA-Za-zπ]/;
+const UNSAFE_EXPONENT_WHITESPACE_PATTERN =
+  /(?:\d|\.)[eE]\s*[+-]?\s+\d|(?:\d|\.)[eE]\s+[+-]?\s*\d/;
 const DIGIT_PATTERN = /\d/;
 const EXPONENT_SEPARATOR_PATTERN = /[eE]/;
 const SIGN_PREFIX_PATTERN = /^[+-]/;
@@ -35,7 +37,11 @@ export function readExactNumericExpression(expression: string) {
 
 function compactExactExpression(expression: string) {
   const trimmed = expression.trim();
-  if (trimmed.length === 0 || UNSAFE_WHITESPACE_PATTERN.test(trimmed)) {
+  if (
+    trimmed.length === 0 ||
+    UNSAFE_WHITESPACE_PATTERN.test(trimmed) ||
+    UNSAFE_EXPONENT_WHITESPACE_PATTERN.test(trimmed)
+  ) {
     return;
   }
 

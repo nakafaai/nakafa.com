@@ -349,6 +349,44 @@ describe("MathAst", () => {
       );
     }
   });
+
+  it("rejects literal zero divisors with a typed error", async () => {
+    const exit = await Effect.runPromiseExit(
+      decodeMathAst({
+        canonical: "x / 0",
+        latex: "x / 0",
+        nodes: [
+          {
+            id: "x",
+            kind: "variable",
+            name: "x",
+          },
+          {
+            id: "zero",
+            kind: "literal",
+            value: scalar("0.0"),
+          },
+          {
+            id: "quotient",
+            kind: "binary",
+            left: "x",
+            operator: "divide",
+            right: "zero",
+          },
+        ],
+        root: "quotient",
+      })
+    );
+
+    const failure = readExitFailure(exit);
+
+    expect(failure).toBeInstanceOf(MathAstDecodeError);
+    if (failure instanceof MathAstDecodeError) {
+      expect(failure.message).toBe(
+        "MathAst divide node quotient cannot use a literal zero divisor."
+      );
+    }
+  });
 });
 
 function scalar(expression: string) {

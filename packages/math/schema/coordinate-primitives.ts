@@ -66,6 +66,9 @@ export const MAX_POLYGON_VERTICES = 32;
 /** Maximum exclusion predicates accepted on one scalar function primitive. */
 export const MAX_FUNCTION_EXCLUSIONS = 16;
 
+/** Maximum domains accepted on one function primitive. */
+export const MAX_FUNCTION_DOMAINS = 3;
+
 const commonPrimitiveFields = {
   id: PrimitiveIdSchema,
   label: Schema.optional(Schema.NonEmptyString),
@@ -95,7 +98,11 @@ export class CanonicalFunctionSpec extends Schema.Class<CanonicalFunctionSpec>(
   "CanonicalFunctionSpec"
 )({
   ast: MathAst,
-  domain: Schema.Array(FunctionDomain).pipe(Schema.minItems(1), Schema.mutable),
+  domain: Schema.Array(FunctionDomain).pipe(
+    Schema.minItems(1),
+    Schema.maxItems(MAX_FUNCTION_DOMAINS),
+    Schema.mutable
+  ),
   exclusions: Schema.optional(
     Schema.Array(MathAst).pipe(
       Schema.maxItems(MAX_FUNCTION_EXCLUSIONS),
@@ -109,7 +116,11 @@ export class CanonicalFunctionSpec extends Schema.Class<CanonicalFunctionSpec>(
 export class CanonicalVectorFunctionSpec extends Schema.Class<CanonicalVectorFunctionSpec>(
   "CanonicalVectorFunctionSpec"
 )({
-  domain: Schema.Array(FunctionDomain).pipe(Schema.minItems(1), Schema.mutable),
+  domain: Schema.Array(FunctionDomain).pipe(
+    Schema.minItems(1),
+    Schema.maxItems(MAX_FUNCTION_DOMAINS),
+    Schema.mutable
+  ),
   x: MathAst,
   y: MathAst,
   z: MathAst,

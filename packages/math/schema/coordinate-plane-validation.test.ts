@@ -67,6 +67,26 @@ describe("coordinate plane equation validation", () => {
     );
 
     expect(
+      readIssue(
+        variableAst("x"),
+        point("1e-200", "0", "0"),
+        point("1e-200", "0", "0")
+      )
+    ).toBe(
+      "Coordinate primitive plane plane geometry must use sortable numeric values."
+    );
+
+    expect(
+      readIssue(
+        variableAst("x"),
+        point("1e308", "1e308", "0"),
+        point("1", "1", "0")
+      )
+    ).toBe(
+      "Coordinate primitive plane plane geometry must use sortable numeric values."
+    );
+
+    expect(
       readIssue(variableAst("z"), point("0", "0", "1"), point("0", "0", "1"))
     ).toBe(
       "Coordinate primitive plane plane equation is inconsistent with point and normal."

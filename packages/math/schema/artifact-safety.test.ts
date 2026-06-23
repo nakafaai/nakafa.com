@@ -7,6 +7,7 @@ import {
 } from "@repo/math/schema/artifact";
 import {
   MAX_COORDINATE_PRIMITIVE_ID_LENGTH,
+  MAX_FUNCTION_DOMAINS,
   MAX_FUNCTION_EXCLUSIONS,
 } from "@repo/math/schema/coordinate-primitives";
 import { Cause, Effect, Exit, Option } from "effect";
@@ -26,6 +27,58 @@ describe("LearningArtifact safety budgets", () => {
           id: "dense-exclusions",
           kind: "function-surface",
           outputAxis: "z",
+        },
+      ],
+    });
+
+    const failure = await decodeFailure(artifact);
+
+    expect(failure).toBeInstanceOf(LearningArtifactDecodeError);
+    if (failure instanceof LearningArtifactDecodeError) {
+      expect(failure.message).toBe("Invalid learning artifact contract.");
+    }
+  });
+
+  it("rejects scalar function domain counts above budget", async () => {
+    const artifact = createArtifact({
+      primitives: [
+        {
+          function: functionSpec({
+            domains: Array.from(
+              { length: MAX_FUNCTION_DOMAINS + 1 },
+              (_, index) => domainByIndex(index)
+            ),
+          }),
+          id: "dense-scalar-domains",
+          kind: "function-surface",
+          outputAxis: "z",
+        },
+      ],
+    });
+
+    const failure = await decodeFailure(artifact);
+
+    expect(failure).toBeInstanceOf(LearningArtifactDecodeError);
+    if (failure instanceof LearningArtifactDecodeError) {
+      expect(failure.message).toBe("Invalid learning artifact contract.");
+    }
+  });
+
+  it("rejects vector function domain counts above budget", async () => {
+    const artifact = createArtifact({
+      primitives: [
+        {
+          function: {
+            domain: Array.from(
+              { length: MAX_FUNCTION_DOMAINS + 1 },
+              (_, index) => domainByIndex(index)
+            ),
+            x: variableAst("x"),
+            y: literalAst("0"),
+            z: literalAst("1"),
+          },
+          id: "dense-vector-domains",
+          kind: "parametric-surface",
         },
       ],
     });
@@ -191,15 +244,20 @@ function createArtifact(
   };
 }
 
-function functionSpec(input: { exclusions?: readonly unknown[] } = {}) {
+function functionSpec(
+  input: {
+    domains?: readonly ReturnType<typeof domainByIndex>[];
+    exclusions?: readonly unknown[];
+  } = {}
+) {
   return {
     ast: variableAst("x"),
-    domain: [domain("x"), domain("y")],
+    domain: input.domains ?? [domain("x"), domain("y")],
     exclusions: input.exclusions,
   };
 }
 
-function domain(variable: "x" | "y") {
+function domain(variable: "x" | "y" | "z" | "t") {
   return {
     closedMax: true,
     closedMin: true,
@@ -209,7 +267,12 @@ function domain(variable: "x" | "y") {
   };
 }
 
-function variableAst(variable: "x" | "y") {
+function domainByIndex(index: number) {
+  const variables = ["x", "y", "z", "t"] as const;
+  return domain(variables[index % variables.length]);
+}
+
+function variableAst(variable: "x" | "y" | "z") {
   return {
     canonical: variable,
     latex: variable,
