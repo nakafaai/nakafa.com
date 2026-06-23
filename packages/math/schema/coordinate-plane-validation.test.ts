@@ -79,6 +79,16 @@ describe("coordinate plane equation validation", () => {
     );
 
     expect(
+      readIssue(
+        variableAst("x"),
+        point("1", "1e-10", "0"),
+        point("0", "0", "0")
+      )
+    ).toBe(
+      "Coordinate primitive plane plane equation is inconsistent with point and normal."
+    );
+
+    expect(
       readIssue(zPlusTinyXAst(), point("0", "0", "1"), point("0", "0", "0"))
     ).toBe(
       "Coordinate primitive plane plane equation is inconsistent with point and normal."

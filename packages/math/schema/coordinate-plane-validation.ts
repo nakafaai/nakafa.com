@@ -2,7 +2,7 @@ import type { ExactPoint3, MathAst, MathAstNode } from "@repo/math/schema/ast";
 import type { CanonicalFunctionSpec } from "@repo/math/schema/coordinate-primitives";
 import { readSortableExactScalar } from "@repo/math/schema/coordinate-scalars";
 
-const PLANE_EQUATION_TOLERANCE = 1e-9;
+const PLANE_EQUATION_RELATIVE_TOLERANCE = 1e-9;
 
 interface AffinePlaneExpression {
   constant: number;
@@ -153,7 +153,7 @@ function readAcyclicNodeExpression(
 
   if (node.operator === "divide") {
     const divisor = readConstant(right);
-    if (divisor === undefined || isClose(divisor, 0)) {
+    if (divisor === undefined || divisor === 0) {
       return;
     }
 
@@ -192,7 +192,7 @@ function isSamePlaneExpression(
 
   const scaleFactor = readScaleFactor(actual, expected);
 
-  if (scaleFactor === undefined || isClose(scaleFactor, 0)) {
+  if (scaleFactor === undefined || scaleFactor === 0) {
     return false;
   }
 
@@ -277,10 +277,6 @@ function variable(name: "x" | "y" | "z"): AffinePlaneExpression {
   };
 }
 
-function isClose(left: number, right: number) {
-  return Math.abs(left - right) <= PLANE_EQUATION_TOLERANCE;
-}
-
 function isPlaneCoefficientMatch(
   actual: number,
   expected: number,
@@ -290,5 +286,7 @@ function isPlaneCoefficientMatch(
     return actual === 0;
   }
 
-  return isClose(actual, scaledExpected);
+  const allowedDrift =
+    Math.abs(scaledExpected) * PLANE_EQUATION_RELATIVE_TOLERANCE;
+  return Math.abs(actual - scaledExpected) <= allowedDrift;
 }

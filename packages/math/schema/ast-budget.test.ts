@@ -104,6 +104,60 @@ describe("MathAst budgets", () => {
     }
   });
 
+  it("rejects literal scalar expressions above the display budget", async () => {
+    const exit = await Effect.runPromiseExit(
+      decodeMathAst({
+        canonical: "1",
+        latex: "1",
+        nodes: [
+          {
+            id: "one",
+            kind: "literal",
+            value: {
+              expression: "1".repeat(MAX_MATH_AST_DISPLAY_LENGTH + 1),
+              latex: "1",
+            },
+          },
+        ],
+        root: "one",
+      })
+    );
+
+    const failure = readExitFailure(exit);
+
+    expect(failure).toBeInstanceOf(MathAstDecodeError);
+    if (failure instanceof MathAstDecodeError) {
+      expect(failure.message).toBe("Invalid MathAst contract.");
+    }
+  });
+
+  it("rejects literal scalar LaTeX above the display budget", async () => {
+    const exit = await Effect.runPromiseExit(
+      decodeMathAst({
+        canonical: "1",
+        latex: "1",
+        nodes: [
+          {
+            id: "one",
+            kind: "literal",
+            value: {
+              expression: "1",
+              latex: "1".repeat(MAX_MATH_AST_DISPLAY_LENGTH + 1),
+            },
+          },
+        ],
+        root: "one",
+      })
+    );
+
+    const failure = readExitFailure(exit);
+
+    expect(failure).toBeInstanceOf(MathAstDecodeError);
+    if (failure instanceof MathAstDecodeError) {
+      expect(failure.message).toBe("Invalid MathAst contract.");
+    }
+  });
+
   it("accepts a large linear graph inside the node budget", async () => {
     const ast = await Effect.runPromise(
       decodeMathAst({

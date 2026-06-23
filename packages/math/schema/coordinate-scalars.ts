@@ -5,6 +5,11 @@ const NUMERIC_LITERAL_PATTERN =
   /^[+-]?(?:(?:\d+\.?\d*)|(?:\.\d+))(?:e[+-]?\d+)?$/i;
 const UNSAFE_WHITESPACE_PATTERN = /[\dA-Za-zπ]\s+[\dA-Za-zπ]/;
 
+interface ExactNumericFactor {
+  expression: string;
+  operator: "*" | "/";
+}
+
 /** Reads a finite numeric sort key from an exact scalar display contract. */
 export function readSortableExactScalar(scalar: ExactScalar) {
   if (isBlankExactExpression(scalar.expression)) {
@@ -87,53 +92,44 @@ function compactExactExpression(expression: string) {
 
 function readExactNumericExpression(expression: string): number | undefined {
   const stripped = stripBalancedOuterParens(expression);
-  const quotientParts = splitTopLevel(stripped, "/");
-  if (quotientParts.length > 2) {
+  const sequence = splitTopLevelFactors(stripped);
+  if (sequence.first === undefined) {
     return;
   }
 
-  const numeratorExpression = quotientParts[0];
-  if (numeratorExpression === undefined) {
+  let value = readExactNumericAtom(sequence.first);
+  if (value === undefined) {
     return;
   }
 
-  const numerator = readExactNumericProduct(numeratorExpression);
-  if (numerator === undefined) {
-    return;
-  }
-
-  const denominatorExpression = quotientParts[1];
-  if (denominatorExpression === undefined) {
-    return numerator;
-  }
-
-  const denominator = readExactNumericProduct(denominatorExpression);
-  if (denominator === undefined || denominator === 0) {
-    return;
-  }
-
-  const value = numerator / denominator;
-  return Number.isFinite(value) ? value : undefined;
-}
-
-function readExactNumericProduct(expression: string) {
-  const productParts = splitTopLevel(stripBalancedOuterParens(expression), "*");
-  let product = 1;
-  for (const part of productParts) {
-    const factor = readExactNumericAtom(part);
-    if (factor === undefined) {
+  for (const factor of sequence.rest) {
+    const factorValue = readExactNumericAtom(factor.expression);
+    if (factorValue === undefined) {
       return;
     }
-    product *= factor;
+
+    if (factor.operator === "*") {
+      value *= factorValue;
+      continue;
+    }
+
+    if (factorValue === 0) {
+      return;
+    }
+    value /= factorValue;
   }
 
-  return Number.isFinite(product) ? product : undefined;
+  return Number.isFinite(value) ? value : undefined;
 }
 
 function readExactNumericAtom(expression: string): number | undefined {
   const stripped = stripBalancedOuterParens(expression);
   if (stripped.length === 0) {
     return;
+  }
+
+  if (stripped !== expression) {
+    return readExactNumericExpression(stripped);
   }
 
   if (stripped.startsWith("+")) {
@@ -189,9 +185,11 @@ function isWrappedByBalancedParens(expression: string) {
   return depth === 0;
 }
 
-function splitTopLevel(expression: string, delimiter: "/" | "*") {
-  const parts: string[] = [];
+function splitTopLevelFactors(expression: string) {
+  const rest: ExactNumericFactor[] = [];
+  let first: string | undefined;
   let depth = 0;
+  let pendingOperator: "*" | "/" | undefined;
   let startIndex = 0;
 
   for (let index = 0; index < expression.length; index += 1) {
@@ -205,23 +203,35 @@ function splitTopLevel(expression: string, delimiter: "/" | "*") {
     if (character === ")") {
       depth -= 1;
       if (depth < 0) {
-        return [];
+        return { first: undefined, rest: [] };
       }
       continue;
     }
 
-    if (character === delimiter && depth === 0) {
-      parts.push(expression.slice(startIndex, index));
+    if ((character === "*" || character === "/") && depth === 0) {
+      const part = expression.slice(startIndex, index);
+      if (pendingOperator) {
+        rest.push({ expression: part, operator: pendingOperator });
+      } else {
+        first = part;
+      }
+      pendingOperator = character;
       startIndex = index + 1;
     }
   }
 
   if (depth !== 0) {
-    return [];
+    return { first: undefined, rest: [] };
   }
 
-  parts.push(expression.slice(startIndex));
-  return parts;
+  const part = expression.slice(startIndex);
+  if (pendingOperator) {
+    rest.push({ expression: part, operator: pendingOperator });
+  } else {
+    first = part;
+  }
+
+  return { first, rest };
 }
 
 function hasInconsistentDecimalHint(scalar: ExactScalar, exactValue: number) {

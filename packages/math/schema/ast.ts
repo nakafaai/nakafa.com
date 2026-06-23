@@ -70,17 +70,25 @@ const FiniteDecimalHint = Schema.Number.pipe(Schema.finite()).annotations({
   description: "Finite decimal display hint for an exact scalar.",
 });
 
+/** Maximum display metadata length accepted for one MathAst field. */
+export const MAX_MATH_AST_DISPLAY_LENGTH = 2048;
+
 const ExactScalarExpression = Schema.NonEmptyString.pipe(
-  Schema.pattern(/\S/)
+  Schema.pattern(/\S/),
+  Schema.maxLength(MAX_MATH_AST_DISPLAY_LENGTH)
 ).annotations({
-  description: "Nonblank CAS-owned canonical scalar expression.",
+  description: "Bounded nonblank CAS-owned canonical scalar expression.",
 });
+
+const ExactScalarLatex = Schema.String.pipe(
+  Schema.maxLength(MAX_MATH_AST_DISPLAY_LENGTH)
+);
 
 /** CAS-owned exact scalar with a finite optional decimal display hint. */
 export class ExactScalar extends Schema.Class<ExactScalar>("ExactScalar")({
   decimal: Schema.optional(FiniteDecimalHint),
   expression: ExactScalarExpression,
-  latex: Schema.String,
+  latex: ExactScalarLatex,
 }) {}
 
 /** Exact three-dimensional point used by coordinate learning artifacts. */
@@ -133,9 +141,6 @@ export type MathAstNode = Schema.Schema.Type<typeof MathAstNodeSchema>;
 /** Maximum nodes accepted in one deterministic MathAst graph. */
 export const MAX_MATH_AST_NODES = 256;
 
-/** Maximum display metadata length accepted for one MathAst field. */
-export const MAX_MATH_AST_DISPLAY_LENGTH = 2048;
-
 const MathAstCanonicalSchema = Schema.NonEmptyString.pipe(
   Schema.pattern(/\S/),
   Schema.maxLength(MAX_MATH_AST_DISPLAY_LENGTH)
@@ -145,9 +150,7 @@ const MathAstCanonicalSchema = Schema.NonEmptyString.pipe(
 
 const MathAstLatexSchema = Schema.String.pipe(
   Schema.maxLength(MAX_MATH_AST_DISPLAY_LENGTH)
-).annotations({
-  description: "Bounded LaTeX display expression for a MathAst.",
-});
+);
 
 /** Flat durable graph for reproducible mathematical evaluation. */
 export class MathAst extends Schema.Class<MathAst>("MathAst")({
