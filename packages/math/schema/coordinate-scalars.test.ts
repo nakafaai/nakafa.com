@@ -81,6 +81,20 @@ describe("coordinate scalar invariants", () => {
     expect(readSortableExactScalar(scalar("1e308/1e-308"))).toBeUndefined();
   });
 
+  it("rejects unsafe integer exact literals before Number can round them", () => {
+    expect(readSortableExactScalar(scalar("9007199254740991"))).toBe(
+      Number.MAX_SAFE_INTEGER
+    );
+    expect(readSortableExactScalar(scalar("9007199254740992"))).toBeUndefined();
+    expect(readSortableExactScalar(scalar("9007199254740993"))).toBeUndefined();
+    expect(
+      readSortableExactScalar(scalar("9007199254740993.0"))
+    ).toBeUndefined();
+    expect(
+      readSortableExactScalar(scalar("-9007199254740992"))
+    ).toBeUndefined();
+  });
+
   it("rejects nonzero exact values that underflow to zero", () => {
     expect(readSortableExactScalar(scalar("1e-324"))).toBeUndefined();
     expect(readSortableExactScalar(scalar("1e-200*1e-200"))).toBeUndefined();

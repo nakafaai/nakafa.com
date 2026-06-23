@@ -1,11 +1,20 @@
 import type { MathAstNode } from "@repo/math/schema/ast";
+import {
+  isSyntacticHalfIntegerPiMultiple,
+  isSyntacticIntegerPiMultiple,
+  readAbsolutePiMultiple,
+  readCombinedPiMultiple,
+  readNegatedPiMultiple,
+  readProductPiMultiple,
+  readQuotientPiMultiple,
+  readSyntacticPiMultiple,
+} from "@repo/math/schema/ast-pi-multiple";
 import { readSortableExactScalar } from "@repo/math/schema/coordinate-scalars";
-
-const TRIG_EXACT_ZERO_TOLERANCE = 1e-12;
 
 /** Finite constant value derived from a MathAst subtree. */
 export interface ConstantMathAstValue {
   isExactZero: boolean;
+  piMultiple?: number;
   value: number;
 }
 
@@ -61,7 +70,10 @@ function readAcyclicConstantMathAstValue(
     const value = readSortableExactScalar(node.value);
     return value === undefined
       ? invalidConstantMathAst()
-      : constantMathAst(value);
+      : constantMathAst(
+          value,
+          readSyntacticPiMultiple(node.value.expression, value)
+        );
   }
 
   if (node.kind === "variable") {
@@ -131,11 +143,17 @@ function readUnaryConstantValue(
   operand: ConstantMathAstValue
 ) {
   if (operator === "negate") {
-    return constantMathAst(-operand.value);
+    return constantMathAst(
+      -operand.value,
+      readNegatedPiMultiple(operand.piMultiple)
+    );
   }
 
   if (operator === "abs") {
-    return constantMathAst(Math.abs(operand.value));
+    return constantMathAst(
+      Math.abs(operand.value),
+      readAbsolutePiMultiple(operand.piMultiple)
+    );
   }
 
   if (operator === "sqrt") {
@@ -145,23 +163,23 @@ function readUnaryConstantValue(
   }
 
   if (operator === "sin") {
-    return isIntegerMultipleOfPi(operand.value)
+    return isSyntacticIntegerPiMultiple(operand.piMultiple)
       ? constantMathAst(0)
       : finiteComputedConstantValue(Math.sin(operand.value));
   }
 
   if (operator === "tan") {
-    if (isHalfIntegerMultipleOfPi(operand.value)) {
+    if (isSyntacticHalfIntegerPiMultiple(operand.piMultiple)) {
       return invalidConstantMathAst();
     }
 
-    return isIntegerMultipleOfPi(operand.value)
+    return isSyntacticIntegerPiMultiple(operand.piMultiple)
       ? constantMathAst(0)
       : finiteComputedConstantValue(Math.tan(operand.value));
   }
 
   if (operator === "cos") {
-    return isHalfIntegerMultipleOfPi(operand.value)
+    return isSyntacticHalfIntegerPiMultiple(operand.piMultiple)
       ? constantMathAst(0)
       : finiteComputedConstantValue(Math.cos(operand.value));
   }
@@ -181,11 +199,23 @@ function readBinaryConstantValue(
   right: ConstantMathAstValue
 ) {
   if (operator === "add") {
-    return finiteComputedConstantValue(left.value + right.value);
+    return finiteComputedConstantValue(left.value + right.value, {
+      piMultiple: readCombinedPiMultiple(
+        left.piMultiple,
+        right.piMultiple,
+        "add"
+      ),
+    });
   }
 
   if (operator === "subtract") {
-    return finiteComputedConstantValue(left.value - right.value);
+    return finiteComputedConstantValue(left.value - right.value, {
+      piMultiple: readCombinedPiMultiple(
+        left.piMultiple,
+        right.piMultiple,
+        "subtract"
+      ),
+    });
   }
 
   if (operator === "multiply") {
@@ -193,7 +223,10 @@ function readBinaryConstantValue(
       return constantMathAst(0);
     }
 
-    return finiteComputedConstantValue(left.value * right.value);
+    return finiteComputedConstantValue(left.value * right.value, {
+      piMultiple: readProductPiMultiple(left, right),
+      rejectZero: true,
+    });
   }
 
   if (operator === "divide") {
@@ -205,20 +238,31 @@ function readBinaryConstantValue(
       return constantMathAst(0);
     }
 
-    return finiteComputedConstantValue(left.value / right.value);
+    return finiteComputedConstantValue(left.value / right.value, {
+      piMultiple: readQuotientPiMultiple(left, right),
+      rejectZero: true,
+    });
   }
 
   if (left.isExactZero && right.value > 0) {
     return constantMathAst(0);
   }
 
-  return finiteComputedConstantValue(left.value ** right.value);
+  return finiteComputedConstantValue(left.value ** right.value, {
+    rejectZero: true,
+  });
 }
 
-function constantMathAst(value: number): ConstantMathAstRead {
+function constantMathAst(
+  value: number,
+  piMultiple?: number
+): ConstantMathAstRead {
   return {
     tag: "Constant",
-    value: { isExactZero: value === 0, value },
+    value:
+      piMultiple === undefined
+        ? { isExactZero: value === 0, value }
+        : { isExactZero: value === 0, piMultiple, value },
   };
 }
 
@@ -230,20 +274,17 @@ function nonconstantMathAst(): ConstantMathAstRead {
   return { tag: "Nonconstant" };
 }
 
-function finiteComputedConstantValue(value: number): ConstantMathAstRead {
+function finiteComputedConstantValue(
+  value: number,
+  options: { piMultiple?: number; rejectZero?: boolean } = {}
+): ConstantMathAstRead {
   if (!Number.isFinite(value)) {
     return invalidConstantMathAst();
   }
 
-  return constantMathAst(value);
-}
+  if (options.rejectZero && value === 0) {
+    return invalidConstantMathAst();
+  }
 
-function isIntegerMultipleOfPi(value: number) {
-  const multiple = value / Math.PI;
-  return Math.abs(multiple - Math.round(multiple)) <= TRIG_EXACT_ZERO_TOLERANCE;
-}
-
-function isHalfIntegerMultipleOfPi(value: number) {
-  const multiple = value / Math.PI - 0.5;
-  return Math.abs(multiple - Math.round(multiple)) <= TRIG_EXACT_ZERO_TOLERANCE;
+  return constantMathAst(value, options.piMultiple);
 }

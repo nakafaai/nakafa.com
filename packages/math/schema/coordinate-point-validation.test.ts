@@ -193,6 +193,24 @@ describe("coordinate point-like primitive validation", () => {
     );
   });
 
+  it("rejects overflowed polygon area calculations", () => {
+    expect(
+      readIssueMessage([
+        {
+          id: "polygon-overflow",
+          kind: "polygon",
+          vertices: [
+            point("0", "0", "0"),
+            point("1e308", "1e308", "0"),
+            point("5e307", "5e307", "0"),
+          ],
+        },
+      ])
+    ).toBe(
+      "Coordinate primitive polygon-overflow polygon area calculation must stay finite."
+    );
+  });
+
   it("defensively rejects empty polygon geometry", () => {
     expect(
       readIssueMessage([

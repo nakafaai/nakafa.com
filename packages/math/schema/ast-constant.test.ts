@@ -55,6 +55,8 @@ describe("MathAst constant evaluation", () => {
     expectUnaryValue("sin", "0", 0);
     expectUnaryValue("sin", "pi", 0);
     expectUnaryValue("sin", "1", Math.sin(1));
+    expectUnaryValue("sin", "3.141592653589793", Math.sin(Math.PI));
+    expectUnaryValue("sin", "1e-13", Math.sin(1e-13));
     expectUnaryValue("tan", "0", 0);
     expectUnaryValue("tan", "pi", 0);
     expectUnaryValue("tan", "1", Math.tan(1));
@@ -81,6 +83,15 @@ describe("MathAst constant evaluation", () => {
     expectBinaryValue("2", "power", "3", 8);
 
     expect(readBinaryResult("1", "divide", "0").tag).toBe("InvalidConstant");
+    expect(readBinaryResult("1e-200", "multiply", "1e-200").tag).toBe(
+      "InvalidConstant"
+    );
+    expect(readBinaryResult("1e-200", "divide", "1e200").tag).toBe(
+      "InvalidConstant"
+    );
+    expect(readBinaryResult("1e-200", "power", "2").tag).toBe(
+      "InvalidConstant"
+    );
     expect(readBinaryResult("1e308", "multiply", "1e308").tag).toBe(
       "InvalidConstant"
     );

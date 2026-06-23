@@ -133,9 +133,7 @@ function findPolygonCoordinateIssue(
     return `Coordinate primitive ${primitiveId} polygon vertex ${duplicate.duplicateIndex + 1} must not duplicate vertex ${duplicate.originalIndex + 1}.`;
   }
 
-  if (!hasNonzeroPolygonArea(sortableVertices)) {
-    return `Coordinate primitive ${primitiveId} polygon vertices must enclose nonzero area.`;
-  }
+  return findPolygonAreaIssue(primitiveId, sortableVertices);
 }
 
 function findSegmentGeometryIssue(
@@ -195,10 +193,13 @@ function findDuplicatePoint(vertices: readonly SortablePoint3[]) {
   }
 }
 
-function hasNonzeroPolygonArea(vertices: readonly SortablePoint3[]) {
+function findPolygonAreaIssue(
+  primitiveId: string,
+  vertices: readonly SortablePoint3[]
+) {
   const anchor = vertices[0];
   if (!anchor) {
-    return false;
+    return `Coordinate primitive ${primitiveId} polygon vertices must enclose nonzero area.`;
   }
 
   const remainingVertices = vertices.slice(1);
@@ -208,13 +209,18 @@ function hasNonzeroPolygonArea(vertices: readonly SortablePoint3[]) {
 
     for (const secondPoint of laterVertices) {
       const second = subtractPoints(secondPoint, anchor);
-      if (hasNonzeroCrossProduct(first, second)) {
-        return true;
+      const crossProduct = readCrossProduct(first, second);
+      if (!crossProduct) {
+        return `Coordinate primitive ${primitiveId} polygon area calculation must stay finite.`;
+      }
+
+      if (isNonzeroPoint(crossProduct)) {
+        return;
       }
     }
   }
 
-  return false;
+  return `Coordinate primitive ${primitiveId} polygon vertices must enclose nonzero area.`;
 }
 
 function subtractPoints(left: SortablePoint3, right: SortablePoint3) {
@@ -225,12 +231,20 @@ function subtractPoints(left: SortablePoint3, right: SortablePoint3) {
   };
 }
 
-function hasNonzeroCrossProduct(left: SortablePoint3, right: SortablePoint3) {
+function readCrossProduct(left: SortablePoint3, right: SortablePoint3) {
   const x = left.y * right.z - left.z * right.y;
   const y = left.z * right.x - left.x * right.z;
   const z = left.x * right.y - left.y * right.x;
 
-  return x !== 0 || y !== 0 || z !== 0;
+  if (!(Number.isFinite(x) && Number.isFinite(y) && Number.isFinite(z))) {
+    return;
+  }
+
+  return { x, y, z };
+}
+
+function isNonzeroPoint(point: SortablePoint3) {
+  return point.x !== 0 || point.y !== 0 || point.z !== 0;
 }
 
 function isSamePoint(left: SortablePoint3, right: SortablePoint3) {

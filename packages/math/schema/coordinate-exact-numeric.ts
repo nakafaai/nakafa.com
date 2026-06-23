@@ -7,6 +7,7 @@ const UNSAFE_EXPONENT_WHITESPACE_PATTERN =
   /(?:\d|\.)[eE]\s*[+-]?\s+\d|(?:\d|\.)[eE]\s+[+-]?\s*\d/;
 const DIGIT_PATTERN = /\d/;
 const EXPONENT_SEPARATOR_PATTERN = /[eE]/;
+const PLAIN_INTEGER_LITERAL_PATTERN = /^[+-]?\d+(?:\.0*)?$/;
 const SIGN_PREFIX_PATTERN = /^[+-]/;
 const ZERO_MANTISSA_PATTERN = /^[0.]+$/;
 
@@ -119,6 +120,13 @@ function readNumericLiteralValue(literal: string) {
   const parsed = Number(literal);
 
   if (!Number.isFinite(parsed)) {
+    return;
+  }
+
+  if (
+    PLAIN_INTEGER_LITERAL_PATTERN.test(literal) &&
+    !Number.isSafeInteger(parsed)
+  ) {
     return;
   }
 
