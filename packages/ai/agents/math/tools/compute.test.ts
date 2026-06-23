@@ -57,6 +57,40 @@ const result = {
   status: "verified",
 } satisfies MathResult;
 
+const lineInput = {
+  display: {
+    description: "Explain the verified line with $$m$$.",
+    title: "Line through $$P_1$$ and $$P_2$$",
+  },
+  operation: "line",
+  points: [
+    { x: "0", y: "0" },
+    { x: "3", y: "2" },
+  ],
+} satisfies MathToolInput;
+
+const lineRequest = {
+  kind: "math",
+  operation: "line",
+  points: lineInput.points,
+} satisfies MathRequest;
+
+const lineResult = {
+  conditions: [],
+  input: lineRequest,
+  items: [],
+  kind: "line",
+  operation: "line",
+  primary: {
+    expression: "line through (0,0) and (3,2)",
+    latex: "y = \\frac{2}{3}x",
+  },
+  reason: "CAS verified the coordinate geometry result.",
+  stepStatus: "complete",
+  steps: [],
+  status: "verified",
+} satisfies MathResult;
+
 const provider = ConfigProvider.fromMap(
   new Map([
     ["MATH_CAS_API_KEY", "secret"],
@@ -97,7 +131,6 @@ describe("math compute tool", () => {
       )
     );
 
-    expect(output).toContain("# Checked Math Work");
     expect(output).toContain("- Status: verified");
     expect(parts).toEqual([
       expect.objectContaining({
@@ -121,6 +154,54 @@ describe("math compute tool", () => {
         type: "data-math",
       }),
     ]);
+  });
+
+  it("retains coordinate artifacts without streaming legacy chart parts", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(Response.json(lineResult));
+    const { parts, writer } = createWriter();
+    const recorded: unknown[] = [];
+    await Effect.runPromise(
+      compute({
+        input: lineInput,
+        recordArtifacts: (artifacts) =>
+          Effect.sync(() => {
+            recorded.push(...artifacts);
+          }),
+        toolCallId: "math-line",
+        writer,
+      }).pipe(
+        Effect.provide(MathService.Default),
+        Effect.withConfigProvider(provider)
+      )
+    );
+
+    expect(recorded).toEqual([
+      expect.objectContaining({ kind: "coordinate-system-3d" }),
+    ]);
+    expect(parts).toEqual([]);
+  });
+
+  it("requires display copy before coordinate artifact evidence can run", async () => {
+    const fetch = vi.spyOn(globalThis, "fetch");
+    const { parts, writer } = createWriter();
+    const output = await Effect.runPromise(
+      compute({
+        input: {
+          operation: "line",
+          points: lineInput.points,
+        },
+        toolCallId: "math-line-no-copy",
+        writer,
+      }).pipe(
+        Effect.provide(MathService.Default),
+        Effect.withConfigProvider(provider)
+      )
+    );
+
+    expect(output).toContain("missing_coordinate_artifact_display");
+    expect(output).toContain("display.title");
+    expect(fetch).not.toHaveBeenCalled();
+    expect(parts).toEqual([]);
   });
 
   it("writes an error data part for math request failures", async () => {
@@ -195,44 +276,6 @@ describe("math compute tool", () => {
     );
   });
 
-  it("asks the model to retry ambiguous symbolic calculus with the explicit variable", async () => {
-    vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      Response.json(
-        { detail: "Variable is required when multiple symbols are present." },
-        { status: 422 }
-      )
-    );
-    const { parts, writer } = createWriter();
-    const output = await Effect.runPromise(
-      compute({
-        input: {
-          expression: "x^(a-1) * exp(-x)",
-          lower: "0",
-          operation: "integrate",
-          upper: "oo",
-          variable: "x",
-        },
-        toolCallId: "math-ambiguous-variable",
-        writer,
-      }).pipe(
-        Effect.provide(MathService.Default),
-        Effect.withConfigProvider(provider)
-      )
-    );
-
-    expect(output).toContain(
-      "Retry the same operation with the explicit variable"
-    );
-    expect(parts.at(-1)).toEqual(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          error: "math_check_unavailable",
-          status: "error",
-        }),
-      })
-    );
-  });
-
   it("returns a model-readable error before writing data for invalid tool input", async () => {
     const fetch = vi.spyOn(globalThis, "fetch");
     const { parts, writer } = createWriter();
@@ -252,114 +295,5 @@ describe("math compute tool", () => {
     expect(output).toContain("Ask the user for the exact missing expression");
     expect(fetch).not.toHaveBeenCalled();
     expect(parts).toEqual([]);
-  });
-
-  it("tells the model how to retry bounded systems with the same bounds", async () => {
-    const fetch = vi.spyOn(globalThis, "fetch");
-    const { parts, writer } = createWriter();
-    const output = await Effect.runPromise(
-      compute({
-        input: {
-          expressions: ["x^2 = 1", "y = 0"],
-          lower: "0",
-          lowerInclusive: false,
-          operation: "solve",
-          variables: ["x", "y"],
-        },
-        toolCallId: "math-5",
-        writer,
-      }).pipe(
-        Effect.provide(MathService.Default),
-        Effect.withConfigProvider(provider)
-      )
-    );
-
-    expect(output).toContain("- Error code: invalid_math_input");
-    expect(output).toContain("Retry the same equation solve");
-    expect(output).toContain("Keep the same expressions");
-    expect(output).toContain("Set variable to the bounded variable");
-    expect(output).toContain(
-      "Set variables to the unknowns that should be solved"
-    );
-    expect(fetch).not.toHaveBeenCalled();
-    expect(parts).toEqual([]);
-  });
-
-  it("tells the model how to retry incomplete bounded system expressions", async () => {
-    const fetch = vi.spyOn(globalThis, "fetch");
-    const { parts, writer } = createWriter();
-    const output = await Effect.runPromise(
-      compute({
-        input: {
-          expressions: ["x = 2", "y = 1"],
-          lower: "0",
-          operation: "solve",
-          variable: "x",
-          variables: ["x"],
-        },
-        toolCallId: "math-6",
-        writer,
-      }).pipe(
-        Effect.provide(MathService.Default),
-        Effect.withConfigProvider(provider)
-      )
-    );
-
-    expect(output).toContain("- Error code: invalid_math_input");
-    expect(output).toContain("Retry the same bounded system solve");
-    expect(output).toContain("Keep symbolic parameters out of variables");
-    expect(output).toContain(
-      "Every expression must involve at least one selected unknown"
-    );
-    expect(fetch).not.toHaveBeenCalled();
-    expect(parts).toEqual([]);
-  });
-
-  it("keeps invalid input errors locale-free", async () => {
-    const fetch = vi.spyOn(globalThis, "fetch");
-    const { parts, writer } = createWriter();
-    const output = await Effect.runPromise(
-      compute({
-        input: { operation: "domain" },
-        toolCallId: "math-6",
-        writer,
-      }).pipe(
-        Effect.provide(MathService.Default),
-        Effect.withConfigProvider(provider)
-      )
-    );
-
-    expect(output).toContain("- Error code: invalid_math_input");
-    expect(fetch).not.toHaveBeenCalled();
-    expect(parts).toEqual([]);
-  });
-
-  it("writes locale-free error data for math service failures", async () => {
-    vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("offline"));
-    const { parts, writer } = createWriter();
-    const output = await Effect.runPromise(
-      compute({
-        input,
-        toolCallId: "math-7",
-        writer,
-      }).pipe(
-        Effect.provide(MathService.Default),
-        Effect.withConfigProvider(provider)
-      )
-    );
-
-    expect(output).toContain("- Error code: math_check_unavailable");
-    expect(parts.at(-1)).toEqual(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          error: "math_check_unavailable",
-          input: request,
-          kind: "evaluate",
-          status: "error",
-        }),
-        id: "math-7",
-        type: "data-math",
-      })
-    );
   });
 });

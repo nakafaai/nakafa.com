@@ -16,9 +16,11 @@
       {
         "files": [
           "components/contents/**/*.tsx",
+          "components/learning-artifacts/**/*.tsx",
           "components/three/**/*.tsx",
           "components/ui/orb.tsx",
           "packages/design-system/components/contents/**/*.tsx",
+          "packages/design-system/components/learning-artifacts/**/*.tsx",
           "packages/design-system/components/three/**/*.tsx",
           "packages/design-system/components/ui/orb.tsx"
         ],

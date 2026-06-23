@@ -1,9 +1,47 @@
-import { deriveCoordinateArtifactsFromMathData } from "@repo/math/artifact/derive";
+import {
+  deriveCoordinateArtifactsFromMathData,
+  isCoordinateArtifactRequest,
+} from "@repo/math/artifact/derive";
+import { LearningArtifactDisplayCopy } from "@repo/math/schema/artifact/copy";
 import type { MathData } from "@repo/math/schema/data";
 import { Effect, Exit } from "effect";
 import { describe, expect, it } from "vitest";
 
 describe("deriveCoordinateArtifactsFromMathData", () => {
+  it("detects only point-backed coordinate requests as artifact-owned visuals", () => {
+    expect(
+      isCoordinateArtifactRequest({
+        kind: "math",
+        operation: "line",
+        points: [
+          { x: "0", y: "0" },
+          { x: "3", y: "2" },
+        ],
+      })
+    ).toBe(true);
+    expect(
+      isCoordinateArtifactRequest({
+        expression: "1 + 1",
+        kind: "math",
+        operation: "evaluate",
+      })
+    ).toBe(false);
+    expect(
+      isCoordinateArtifactRequest({
+        expressions: ["x = 0", "y = 0"],
+        kind: "math",
+        operation: "intersection",
+      })
+    ).toBe(false);
+    expect(
+      isCoordinateArtifactRequest({
+        kind: "math",
+        operation: "line",
+        points: [{ x: "0", y: "0" }],
+      })
+    ).toBe(false);
+  });
+
   it("derives a bounded coordinate artifact from verified point geometry", async () => {
     const artifacts = await Effect.runPromise(
       deriveCoordinateArtifactsFromMathData({
@@ -14,6 +52,7 @@ describe("deriveCoordinateArtifactsFromMathData", () => {
             { x: "4", y: "3" },
           ],
         }),
+        copy: displayCopy(),
         proofAnchor: "math:tool-1",
       })
     );
@@ -26,11 +65,13 @@ describe("deriveCoordinateArtifactsFromMathData", () => {
         primitives: [
           expect.objectContaining({ kind: "point" }),
           expect.objectContaining({ kind: "point" }),
-          expect.objectContaining({ kind: "segment" }),
+          expect.objectContaining({ kind: "line", label: "Verified line" }),
         ],
       },
       proofAnchors: ["math:tool-1"],
+      title: "Line through $$P_1$$ and $$P_2$$",
     });
+    expect(artifacts[0]?.description).toContain("$$m$$");
   });
 
   it("does not emit artifacts for unverified or symbolic point evidence", async () => {
@@ -74,28 +115,8 @@ describe("deriveCoordinateArtifactsFromMathData", () => {
         proofAnchor: "math:tool-loading",
       })
     );
-    const unsupported = await Effect.runPromise(
-      deriveCoordinateArtifactsFromMathData({
-        artifactId: "artifact-unsupported",
-        data: mathData({ operation: "evaluate" }),
-        proofAnchor: "math:tool-unsupported",
-      })
-    );
 
     expect(loading).toEqual([]);
-    expect(unsupported).toEqual([]);
-  });
-
-  it("requires at least two sortable points before emitting an artifact", async () => {
-    const artifacts = await Effect.runPromise(
-      deriveCoordinateArtifactsFromMathData({
-        artifactId: "artifact-one-point",
-        data: mathData({ points: [{ x: "0", y: "1" }] }),
-        proofAnchor: "math:tool-one-point",
-      })
-    );
-
-    expect(artifacts).toEqual([]);
   });
 
   it("does not emit artifacts when verified geometry has no retained points", async () => {
@@ -130,7 +151,7 @@ describe("deriveCoordinateArtifactsFromMathData", () => {
     ]);
   });
 
-  it("derives two segments for verified line intersection evidence", async () => {
+  it("derives full lines for verified line intersection evidence", async () => {
     const artifacts = await Effect.runPromise(
       deriveCoordinateArtifactsFromMathData({
         artifactId: "artifact-intersection",
@@ -149,10 +170,60 @@ describe("deriveCoordinateArtifactsFromMathData", () => {
 
     expect(artifacts[0]?.payload.primitives).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ id: "segment-1", kind: "segment" }),
-        expect.objectContaining({ id: "segment-2", kind: "segment" }),
+        expect.objectContaining({ id: "line-1", kind: "line" }),
+        expect.objectContaining({ id: "line-2", kind: "line" }),
       ])
     );
+  });
+
+  it("builds artifact axes from decoded exact point coordinates", async () => {
+    const artifacts = await Effect.runPromise(
+      deriveCoordinateArtifactsFromMathData({
+        artifactId: "artifact-fractional-points",
+        data: mathData({
+          points: [
+            { x: "1/2", y: "pi/2" },
+            { x: "3/2", y: "pi" },
+          ],
+        }),
+        proofAnchor: "math:tool-fractional-points",
+      })
+    );
+
+    expect(artifacts[0]?.payload.axes.x).toMatchObject([
+      { decimal: -0.5 },
+      { decimal: 2.5 },
+    ]);
+    expect(artifacts[0]?.payload.axes.y[0].decimal).toBeTypeOf("number");
+    expect(artifacts[0]?.payload.axes.y[0].expression).not.toBe("NaN");
+  });
+
+  it("derives a parametric circle artifact from verified center geometry", async () => {
+    const artifacts = await Effect.runPromise(
+      deriveCoordinateArtifactsFromMathData({
+        artifactId: "artifact-circle",
+        data: mathData({
+          operation: "circle",
+          points: [
+            { x: "0", y: "0" },
+            { x: "3", y: "0" },
+          ],
+        }),
+        proofAnchor: "math:tool-circle",
+      })
+    );
+
+    expect(artifacts[0]).toMatchObject({
+      payload: {
+        primitives: expect.arrayContaining([
+          expect.objectContaining({
+            kind: "parametric-curve",
+            label: "Verified circle",
+          }),
+        ]),
+      },
+      title: "Circle from (0, 0) through (3, 0)",
+    });
   });
 
   it("returns a typed derivation error when artifact decoding fails", async () => {
@@ -179,7 +250,7 @@ function mathData({
   status = "verified",
 }: {
   readonly includePoints?: boolean;
-  readonly operation?: "evaluate" | "intersection" | "line";
+  readonly operation?: "circle" | "evaluate" | "intersection" | "line";
   readonly points?: readonly { readonly x: string; readonly y: string }[];
   readonly status?: "inconclusive" | "verified";
 } = {}): MathData {
@@ -214,4 +285,13 @@ function mathData({
     status,
     summary: status,
   };
+}
+
+/** Builds LLM-authored display copy accepted by the artifact schema. */
+function displayCopy() {
+  return LearningArtifactDisplayCopy.make({
+    description:
+      "The line highlights the slope $$m$$ between the two verified points.",
+    title: "Line through $$P_1$$ and $$P_2$$",
+  });
 }

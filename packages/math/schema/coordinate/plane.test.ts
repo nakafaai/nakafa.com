@@ -12,6 +12,11 @@ import {
 } from "@repo/math/schema/coordinate/primitive";
 import { describe, expect, it } from "vitest";
 
+const GEOMETRY_SORTABLE_ISSUE =
+  "Coordinate primitive plane plane geometry must use sortable numeric values.";
+const EQUATION_INCONSISTENT_ISSUE =
+  "Coordinate primitive plane plane equation is inconsistent with point and normal.";
+
 describe("coordinate plane equation validation", () => {
   it("accepts equivalent linear implicit equations", () => {
     const cases = [
@@ -68,8 +73,16 @@ describe("coordinate plane equation validation", () => {
         point("0", "3", "0")
       ),
       validCase(
-        expr("z + z", [v("z"), b("root", "z", "add", "z")]),
-        point("0", "0", "1"),
+        expr("x + ((0.1 + 0.2) - 0.3)", [
+          v("x"),
+          lit("0.1"),
+          lit("0.2"),
+          b("sum", "literal-0.1", "add", "literal-0.2"),
+          lit("0.3"),
+          b("zero", "sum", "subtract", "literal-0.3"),
+          b("root", "x", "add", "zero"),
+        ]),
+        point("1", "0", "0"),
         point("0", "0", "0")
       ),
     ];
@@ -146,22 +159,19 @@ describe("coordinate plane equation validation", () => {
     const cases = [
       {
         ast: variableAst("z"),
-        expected:
-          "Coordinate primitive plane plane geometry must use sortable numeric values.",
+        expected: GEOMETRY_SORTABLE_ISSUE,
         normal: point("0", "0", "1"),
         point: point("0", "0", "far"),
       },
       {
         ast: variableAst("x"),
-        expected:
-          "Coordinate primitive plane plane geometry must use sortable numeric values.",
+        expected: GEOMETRY_SORTABLE_ISSUE,
         normal: point("1e-200", "0", "0"),
         point: point("1e-200", "0", "0"),
       },
       {
         ast: variableAst("x"),
-        expected:
-          "Coordinate primitive plane plane geometry must use sortable numeric values.",
+        expected: GEOMETRY_SORTABLE_ISSUE,
         normal: point("1e308", "1e308", "0"),
         point: point("1", "1", "0"),
       },
@@ -219,20 +229,15 @@ describe("coordinate plane equation validation", () => {
 
     for (const testCase of cases) {
       expect(readIssue(testCase.ast, testCase.normal, testCase.point)).toBe(
-        testCase.expected ??
-          "Coordinate primitive plane plane equation is inconsistent with point and normal."
+        testCase.expected ?? EQUATION_INCONSISTENT_ISSUE
       );
     }
   });
 });
 
 function readIssue(ast: MathAst, normal: ExactPoint3, point: ExactPoint3) {
-  return findPlaneEquationConsistencyIssue(
-    "plane",
-    CanonicalFunctionSpec.make({ ast, domain: [domain("z")] }),
-    normal,
-    point
-  );
+  const equation = CanonicalFunctionSpec.make({ ast, domain: [domain("z")] });
+  return findPlaneEquationConsistencyIssue("plane", equation, normal, point);
 }
 
 function validCase(ast: MathAst, normal: ExactPoint3, planePoint: ExactPoint3) {

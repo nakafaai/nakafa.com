@@ -1,5 +1,6 @@
 import { ModelIdSchema } from "@repo/ai/config/model";
 import { DEFAULT_TITLE } from "@repo/ai/features/constants";
+import { deleteArtifactsForChatBatch } from "@repo/backend/convex/chats/artifacts/delete";
 import { learningArtifactWriteValidator } from "@repo/backend/convex/chats/artifacts/spec";
 import {
   decodeArtifactWrites,
@@ -257,6 +258,14 @@ export const deleteChat = mutation({
       throw new ConvexError({
         code: "FORBIDDEN",
         message: "You can only delete your own chats.",
+      });
+    }
+
+    const artifactsBatch = await deleteArtifactsForChatBatch(ctx, args.chatId);
+    if (artifactsBatch.hasMore) {
+      throw new ConvexError({
+        code: "CHAT_ARTIFACT_DELETE_LIMIT_EXCEEDED",
+        message: "Chat has too many artifact payloads to delete at once.",
       });
     }
 

@@ -10,6 +10,13 @@ const PI_TOKEN_PATTERN = /π|pi/gi;
 const PI_TOKEN_DETECTION_PATTERN = /π|pi/i;
 
 /**
+ * Detects whether an exact scalar expression contains a syntactic pi token.
+ */
+export function hasSyntacticPiToken(expression: string) {
+  return PI_TOKEN_DETECTION_PATTERN.test(expression);
+}
+
+/**
  * Reads a syntactic finite multiple of pi from the exact scalar grammar.
  */
 export function readSyntacticPiMultiple(expression: string, value: number) {
@@ -120,7 +127,7 @@ function combineFinitePiMultiples(
  */
 function readSafePiProduct(piMultiple: number, scalar: number) {
   const product = multiplyFiniteDecimalNumbers(piMultiple, scalar);
-  if (isRoundedPiSentinel(product)) {
+  if (product === undefined || isRoundedPiSentinel(product)) {
     return;
   }
 

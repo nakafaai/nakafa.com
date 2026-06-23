@@ -54,7 +54,6 @@ describe("MathAst constant evaluation", () => {
     expectUnaryValue("sqrt", "4", 2);
     expectUnaryValue("sin", "0", 0);
     expectUnaryValue("sin", "pi", 0);
-    expectUnaryValue("sin", "1/pi", Math.sin(1 / Math.PI));
     expectUnaryValue("sin", "1", Math.sin(1));
     expectUnaryValue("sin", "3.141592653589793", Math.sin(Math.PI));
     expectUnaryValue("sin", "1e-13", Math.sin(1e-13));
@@ -64,12 +63,17 @@ describe("MathAst constant evaluation", () => {
     expectUnaryValue("cos", "0", 1);
     expectUnaryValue("cos", "pi/2", 0);
     expectUnaryValue("cos", "9007199254740991*pi", -1);
-    expectUnaryValue("cos", "1/(2*pi)", Math.cos(1 / (2 * Math.PI)));
     expectUnaryValue("exp", "1", Math.E);
     expectUnaryValue("log", "1", 0);
 
     expect(readUnaryResult("sqrt", "-1").tag).toBe("InvalidConstant");
+    expect(readUnaryResult("sqrt", "2").tag).toBe("InvalidConstant");
+    expect(readUnaryResult("sin", "1/pi").tag).toBe("InvalidConstant");
+    expect(readUnaryResult("sin", "pi/3").tag).toBe("InvalidConstant");
+    expect(readUnaryResult("tan", "pi/4").tag).toBe("InvalidConstant");
     expect(readUnaryResult("tan", "pi/2").tag).toBe("InvalidConstant");
+    expect(readUnaryResult("cos", "1/(2*pi)").tag).toBe("InvalidConstant");
+    expect(readUnaryResult("cos", "pi/3").tag).toBe("InvalidConstant");
     expect(readUnaryResult("exp", "-1000").tag).toBe("InvalidConstant");
     expect(readUnaryResult("log", "0").tag).toBe("InvalidConstant");
   });
@@ -81,8 +85,10 @@ describe("MathAst constant evaluation", () => {
     expectBinaryValue("0", "multiply", "7", 0);
     expectBinaryValue("7", "multiply", "0", 0);
     expectBinaryValue("2", "multiply", "3", 6);
+    expect(readBinaryValue("pi", "multiply", "2")?.piMultiple).toBe(2);
     expectBinaryValue("0", "divide", "7", 0);
     expectBinaryValue("4", "divide", "2", 2);
+    expect(readBinaryValue("pi", "divide", "2")?.piMultiple).toBe(0.5);
     expectBinaryValue("0", "power", "2", 0);
     expectBinaryValue("2", "power", "3", 8);
     expect(readBinaryValue("pi", "power", "1")?.piMultiple).toBe(1);
@@ -93,6 +99,9 @@ describe("MathAst constant evaluation", () => {
     expect(readCancellationDriftToZero()?.isExactZero).toBe(true);
     expect(
       readResult("multi-pi", [literalNode("multi-pi", "(pi*pi)/pi")]).tag
+    ).toBe("InvalidConstant");
+    expect(
+      readResult("huge-pi", [literalNode("huge-pi", "1e308*pi")]).tag
     ).toBe("InvalidConstant");
     expect(readBinaryResult("1", "add", "1e-16").tag).toBe("InvalidConstant");
     expect(readBinaryResult("1e16", "subtract", "1").tag).toBe(
@@ -114,6 +123,9 @@ describe("MathAst constant evaluation", () => {
     expect(readBinaryResult("1e308", "multiply", "1e308").tag).toBe(
       "InvalidConstant"
     );
+    expectBinaryValue("1e308", "multiply", "1e-308", 1);
+    expectBinaryValue("0.3", "divide", "0.1", 3);
+    expectBinaryValue("0.1", "power", "2", 0.01);
     expect(readBinaryResult("1e308", "power", "2").tag).toBe("InvalidConstant");
   });
 });

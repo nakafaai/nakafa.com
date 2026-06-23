@@ -7,6 +7,9 @@ import { AiMessagePart } from "@/components/ai/message-part";
 import { SuggestionsPart } from "@/components/ai/message-part/suggestions";
 import { useUser } from "@/lib/context/use-user";
 
+/**
+ * Renders assistant message parts that belong in the main transcript column.
+ */
 export const AiChatMessageContent = () => {
   const parts = useMessage((state) =>
     state.message.parts.filter(
@@ -30,6 +33,9 @@ export const AiChatMessageContent = () => {
 };
 AiChatMessageContent.displayName = "AiChatMessageContent";
 
+/**
+ * Renders follow-up suggestions only for the current chat owner.
+ */
 export const AiChatMessageSuggestions = () => {
   const chat = useCurrentChat((s) => s.chat);
 

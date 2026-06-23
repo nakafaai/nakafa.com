@@ -120,7 +120,7 @@ function readExactNumericAtomValue(
   }
 
   if (stripped === "π" || stripped.toLowerCase() === "pi") {
-    return finiteNumericValue(Math.PI);
+    return finiteNumericValue(Math.PI, { usesApproximateValue: true });
   }
 }
 

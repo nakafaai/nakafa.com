@@ -1,5 +1,5 @@
+import { ArtifactSafetyReadError } from "@repo/math/schema/artifact/raw";
 import {
-  ArtifactSafetyReadError,
   findRawArtifactSizeIssue,
   MAX_COORDINATE_ARTIFACT_BYTES,
   MAX_COORDINATE_ARTIFACT_PRIMITIVES,
@@ -40,6 +40,55 @@ describe("artifact raw safety preflight", () => {
       },
       `Coordinate artifact proof anchors exceeds ${MAX_COORDINATE_ARTIFACT_PROOF_ANCHORS} items.`
     );
+  });
+
+  it("checks raw axis arrays before byte traversal", async () => {
+    await expectRawSizeIssue(
+      {
+        payload: {
+          axes: {
+            x: new Array(10),
+          },
+        },
+      },
+      "Coordinate artifact axis x range exceeds 2 items."
+    );
+  });
+
+  it("ignores producer toJSON hooks during byte checks", async () => {
+    await expectRawSizeIssue(
+      {
+        title: "x".repeat(MAX_COORDINATE_ARTIFACT_BYTES + 1),
+        toJSON() {
+          return {};
+        },
+      },
+      `Coordinate artifact exceeds ${MAX_COORDINATE_ARTIFACT_BYTES} bytes.`
+    );
+  });
+
+  it("counts raw arrays from a checked length snapshot", async () => {
+    let lengthReads = 0;
+    const primitives = new Proxy([{}], {
+      get(target, property, receiver) {
+        if (property === "length") {
+          lengthReads += 1;
+          return lengthReads === 1 ? 1 : MAX_COORDINATE_ARTIFACT_PRIMITIVES + 1;
+        }
+
+        return Reflect.get(target, property, receiver);
+      },
+    });
+
+    const issue = await Effect.runPromise(
+      findRawArtifactSizeIssue({
+        payload: {
+          primitives,
+        },
+      })
+    );
+
+    expect(issue).toBeUndefined();
   });
 
   it("checks raw primitive geometry arrays before JSON serialization", async () => {

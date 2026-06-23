@@ -71,6 +71,45 @@ describe("chats/artifacts/internal", () => {
     expect(manifestIntegrity).toMatchObject({ checked: 1, issues: [] });
   });
 
+  it("rejects mismatched part ids before writing artifact payloads", async () => {
+    const t = convexTest(schema, convexModules);
+    const artifact = createCoordinateArtifact("artifact-id-match");
+    const manifest = await createManifest(artifact);
+    const seeded = await seedArtifactMessage(t, {
+      artifactId: artifact.id,
+      manifest,
+    });
+
+    await expect(
+      t.mutation(internal.chats.artifacts.internal.insertForMessage, {
+        artifacts: [{ artifact, partOrder: 0 }],
+        chatId: seeded.chatId,
+        messageId: seeded.messageId,
+        parts: [createArtifactPart(manifest, "other-artifact")],
+      })
+    ).rejects.toThrow("part id must match");
+
+    const otherChatId = await t.mutation(
+      async (ctx) =>
+        await ctx.db.insert("chats", {
+          title: "Other chat",
+          type: "study",
+          updatedAt: now,
+          userId: seeded.userId,
+          visibility: "public",
+        })
+    );
+
+    await expect(
+      t.mutation(internal.chats.artifacts.internal.insertForMessage, {
+        artifacts: [{ artifact, partOrder: 0 }],
+        chatId: otherChatId,
+        messageId: seeded.messageId,
+        parts: [createArtifactPart(manifest)],
+      })
+    ).rejects.toThrow("message must belong");
+  });
+
   it("loads visible payloads through chat access and deletes by message", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(
@@ -179,16 +218,17 @@ async function seedArtifactMessage(
       ...createArtifactPart(manifest),
     });
 
-    return { chatId, messageId };
+    return { chatId, messageId, userId: ownerId };
   });
 }
 
 function createArtifactPart(
-  manifest: Awaited<ReturnType<typeof createManifest>>
+  manifest: Awaited<ReturnType<typeof createManifest>>,
+  dataArtifactId = manifest.artifactId
 ): Omit<Infer<typeof partValidator>, "messageId"> {
   return {
     dataArtifactData: manifest,
-    dataArtifactId: manifest.artifactId,
+    dataArtifactId,
     order: 0,
     type: "data-artifact",
   };

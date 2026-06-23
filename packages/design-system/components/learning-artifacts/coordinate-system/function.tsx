@@ -1,16 +1,16 @@
 "use client";
 
 import { Line } from "@react-three/drei";
-import type {
-  CoordinatePrimitive,
-  RenderSamplingPolicy,
-} from "@repo/math/schema/coordinate/primitive";
 import { useMemo } from "react";
 import {
   readFunctionSurfaceLines,
-  readParametricCurvePoints,
+  readParametricCurveLines,
   readParametricSurfaceLines,
 } from "./model/sample";
+import type {
+  CoordinatePrimitiveView,
+  RenderSamplingPolicyView,
+} from "./model/view";
 
 const LINE_WIDTH = 1.6;
 
@@ -24,12 +24,12 @@ export function FunctionPrimitive({
 }: {
   color: string;
   primitive: Extract<
-    CoordinatePrimitive,
+    CoordinatePrimitiveView,
     {
       kind: "function-surface" | "parametric-curve" | "parametric-surface";
     }
   >;
-  sampling: RenderSamplingPolicy;
+  sampling: RenderSamplingPolicyView;
 }) {
   if (primitive.kind === "parametric-curve") {
     return (
@@ -57,7 +57,7 @@ export function FunctionPrimitive({
 }
 
 /**
- * Renders one parametric curve through a single sampled polyline.
+ * Renders one parametric curve through deterministic sampled segments.
  */
 function CurvePrimitive({
   color,
@@ -65,17 +65,15 @@ function CurvePrimitive({
   sampling,
 }: {
   color: string;
-  primitive: Extract<CoordinatePrimitive, { kind: "parametric-curve" }>;
-  sampling: RenderSamplingPolicy;
+  primitive: Extract<CoordinatePrimitiveView, { kind: "parametric-curve" }>;
+  sampling: RenderSamplingPolicyView;
 }) {
-  const points = useMemo(
-    () => readParametricCurvePoints(primitive.function, sampling),
+  const lines = useMemo(
+    () => readParametricCurveLines(primitive.function, sampling),
     [primitive, sampling]
   );
 
-  return points.length >= 2 ? (
-    <Line color={color} lineWidth={LINE_WIDTH + 0.4} points={points} />
-  ) : null;
+  return <SampledLines color={color} lines={lines} width={LINE_WIDTH + 0.4} />;
 }
 
 /**
@@ -87,8 +85,8 @@ function SurfacePrimitive({
   sampling,
 }: {
   color: string;
-  primitive: Extract<CoordinatePrimitive, { kind: "function-surface" }>;
-  sampling: RenderSamplingPolicy;
+  primitive: Extract<CoordinatePrimitiveView, { kind: "function-surface" }>;
+  sampling: RenderSamplingPolicyView;
 }) {
   const lines = useMemo(
     () =>
@@ -100,7 +98,7 @@ function SurfacePrimitive({
     [primitive, sampling]
   );
 
-  return <SampledLines color={color} lines={lines} />;
+  return <SampledLines color={color} lines={lines} width={LINE_WIDTH} />;
 }
 
 /**
@@ -112,15 +110,15 @@ function ParametricSurfacePrimitive({
   sampling,
 }: {
   color: string;
-  primitive: Extract<CoordinatePrimitive, { kind: "parametric-surface" }>;
-  sampling: RenderSamplingPolicy;
+  primitive: Extract<CoordinatePrimitiveView, { kind: "parametric-surface" }>;
+  sampling: RenderSamplingPolicyView;
 }) {
   const lines = useMemo(
     () => readParametricSurfaceLines(primitive.function, sampling),
     [primitive, sampling]
   );
 
-  return <SampledLines color={color} lines={lines} />;
+  return <SampledLines color={color} lines={lines} width={LINE_WIDTH} />;
 }
 
 /**
@@ -129,9 +127,11 @@ function ParametricSurfacePrimitive({
 function SampledLines({
   color,
   lines,
+  width,
 }: {
   color: string;
   lines: ReturnType<typeof readFunctionSurfaceLines>;
+  width: number;
 }) {
   return (
     <>
@@ -139,7 +139,7 @@ function SampledLines({
         <Line
           color={color}
           key={readLineKey(points)}
-          lineWidth={LINE_WIDTH}
+          lineWidth={width}
           points={points}
         />
       ))}

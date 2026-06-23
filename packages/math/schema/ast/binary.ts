@@ -1,5 +1,9 @@
 import type { ConstantMathAstValue } from "@repo/math/schema/ast/constant";
-import { readFiniteDecimalSum } from "@repo/math/schema/ast/decimal";
+import {
+  divideFiniteDecimalNumbers,
+  multiplyFiniteDecimalNumbers,
+  readFiniteDecimalSum,
+} from "@repo/math/schema/ast/decimal";
 import {
   readCombinedPiMultiple,
   readProductPiMultiple,
@@ -7,11 +11,11 @@ import {
 } from "@repo/math/schema/ast/pi";
 import {
   hasPiSquareMultiple,
+  readPowerConstantValue,
   readProductPiSquareMultiple,
   readReducedPiSquareMultiple,
   readScaledPiSquareMultiple,
   readScaledPiSquareProduct,
-  readSquaredPiMultiple,
 } from "@repo/math/schema/ast/power";
 import type { MathAstNode } from "@repo/math/schema/ast/schema";
 import {
@@ -58,6 +62,11 @@ function readAdditiveConstantValue(
     right.piMultiple,
     operator
   );
+  const mixedPiMultiple = readMixedPiMultiple(operator, left, right);
+  if (mixedPiMultiple === "invalid") {
+    return INVALID_CONSTANT_MATH_AST;
+  }
+
   if (
     left.piMultiple !== undefined &&
     right.piMultiple !== undefined &&
@@ -71,7 +80,9 @@ function readAdditiveConstantValue(
     return INVALID_CONSTANT_MATH_AST;
   }
 
-  return finiteComputedConstantValue(value, { piMultiple });
+  return finiteComputedConstantValue(value, {
+    piMultiple: mixedPiMultiple ?? piMultiple,
+  });
 }
 
 /**
@@ -151,11 +162,21 @@ function readPiProductConstantValue(
   right: ConstantMathAstValue
 ) {
   const piMultiple = readProductPiMultiple(left, right);
-  if (hasExactlyOnePiMultiple(left, right) && piMultiple === undefined) {
+  const hasOnePiMultiple =
+    (left.piMultiple === undefined) !== (right.piMultiple === undefined);
+  if (hasOnePiMultiple && piMultiple === undefined) {
     return INVALID_CONSTANT_MATH_AST;
   }
 
-  return finiteComputedConstantValue(left.value * right.value, {
+  const value =
+    piMultiple === undefined
+      ? multiplyFiniteDecimalNumbers(left.value, right.value)
+      : left.value * right.value;
+  if (value === undefined) {
+    return INVALID_CONSTANT_MATH_AST;
+  }
+
+  return finiteComputedConstantValue(value, {
     piMultiple,
     rejectZero: true,
   });
@@ -235,65 +256,43 @@ function readPiQuotientConstantValue(
     return INVALID_CONSTANT_MATH_AST;
   }
 
-  return finiteComputedConstantValue(left.value / right.value, {
+  const value =
+    piMultiple === undefined
+      ? divideFiniteDecimalNumbers(left.value, right.value)
+      : left.value / right.value;
+  if (value === undefined) {
+    return INVALID_CONSTANT_MATH_AST;
+  }
+
+  return finiteComputedConstantValue(value, {
     piMultiple,
     rejectZero: true,
   });
 }
 
 /**
- * Rejects unsupported pi powers before numeric reduction hides trig evidence.
+ * Preserves pi metadata only when mixed additive constants are exact no-ops.
  */
-function readPowerConstantValue(
+function readMixedPiMultiple(
+  operator: "add" | "subtract",
   left: ConstantMathAstValue,
   right: ConstantMathAstValue
 ) {
-  if (left.isExactZero && right.value === 0) {
-    return INVALID_CONSTANT_MATH_AST;
+  if (left.piMultiple === undefined && right.piMultiple === undefined) {
+    return;
   }
 
-  if (left.isExactZero && right.value > 0) {
-    return constantMathAst(0);
+  if (left.piMultiple !== undefined && right.piMultiple !== undefined) {
+    return;
   }
 
-  if (
-    right.value === 1 &&
-    (left.piMultiple !== undefined || left.piSquareMultiple !== undefined)
-  ) {
-    return finiteComputedConstantValue(left.value, {
-      piMultiple: left.piMultiple,
-      piSquareMultiple: left.piSquareMultiple,
-      rejectZero: true,
-    });
+  if (left.piMultiple !== undefined && right.isExactZero) {
+    return left.piMultiple;
   }
 
-  if (right.value === 2 && left.piMultiple !== undefined) {
-    const piSquareMultiple = readSquaredPiMultiple(left);
-    if (piSquareMultiple === undefined) {
-      return INVALID_CONSTANT_MATH_AST;
-    }
-
-    return finiteComputedConstantValue(left.value ** right.value, {
-      piSquareMultiple,
-      rejectZero: true,
-    });
+  if (right.piMultiple !== undefined && left.isExactZero) {
+    return operator === "add" ? right.piMultiple : -right.piMultiple;
   }
 
-  if (left.piMultiple !== undefined || left.piSquareMultiple !== undefined) {
-    return INVALID_CONSTANT_MATH_AST;
-  }
-
-  return finiteComputedConstantValue(left.value ** right.value, {
-    rejectZero: true,
-  });
-}
-
-/**
- * Detects the only plain multiplication case where pi metadata must survive.
- */
-function hasExactlyOnePiMultiple(
-  left: ConstantMathAstValue,
-  right: ConstantMathAstValue
-) {
-  return (left.piMultiple === undefined) !== (right.piMultiple === undefined);
+  return "invalid";
 }

@@ -1,19 +1,15 @@
+import {
+  multiplyFiniteDecimalNumbers,
+  readFiniteDecimalSum,
+} from "@repo/math/schema/ast/decimal";
+
 const PLANE_EQUATION_RELATIVE_TOLERANCE = 1e-9;
 
 /**
  * Adds coefficients and rejects finite nonzero terms rounded out of the sum.
  */
 export function addPlaneCoefficient(left: number, right: number) {
-  const sum = left + right;
-  if (!Number.isFinite(sum)) {
-    return;
-  }
-
-  if (left !== 0 && right !== 0 && (sum === left || sum === right)) {
-    return;
-  }
-
-  return sum;
+  return readFiniteDecimalSum(left, right, "add");
 }
 
 /**
@@ -24,12 +20,7 @@ export function multiplyFinitePlaneScalars(left: number, right: number) {
     return 0;
   }
 
-  const product = left * right;
-  if (!Number.isFinite(product) || product === 0) {
-    return;
-  }
-
-  return product;
+  return multiplyFiniteDecimalNumbers(left, right);
 }
 
 /**
@@ -44,12 +35,7 @@ export function scalePlaneCoefficient(coefficient: number, factor: number) {
     return 0;
   }
 
-  const product = coefficient * factor;
-  if (!Number.isFinite(product) || product === 0) {
-    return;
-  }
-
-  return product;
+  return multiplyFiniteDecimalNumbers(coefficient, factor);
 }
 
 /**

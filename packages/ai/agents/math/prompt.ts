@@ -2,7 +2,9 @@ import { createPrompt } from "@repo/ai/prompt/utils";
 import type { AgentContext } from "@repo/ai/types/agents";
 import type { Locale } from "@repo/utilities/locales";
 
-/** Builds the system prompt for Nina's deterministic math agent. */
+/**
+ * Builds the system prompt for Nina's deterministic math agent.
+ */
 export function mathPrompt({
   locale,
   context,
@@ -97,7 +99,14 @@ export function mathPrompt({
       Geometry:
       - distance, midpoint, slope, line, circle, intersection.
       - Send points for point-based geometry and expressions for equation intersections.
+      - For coordinate-system artifact, plot, graph, visualize, or render requests, call the matching geometry operation first.
+      - For a line through two points, use line as the first check so the durable 3D artifact has full line geometry.
+      - Do not start coordinate visualization requests with simplify, solve, evaluate, or chart-like prose.
       - For two point-defined line intersections, send exactly four points in first-line then second-line order.
+      - Fill display.title and display.description for every geometry call in the user's locale.
+      - Make display copy classroom-useful, concise, and grounded in the requested geometry.
+      - Use inline math delimiters such as $$m$$ or $$y = mx + b$$ only when they clarify the artifact.
+      - Do not put unverified results, raw tool names, or backend terminology in display copy.
 
       Discrete:
       - gcd, lcm, is_prime, prime_factorization, modular, permutation, combination.

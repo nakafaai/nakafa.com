@@ -1,10 +1,17 @@
+import {
+  ArtifactSafetyReadError,
+  readRawArrayCount,
+  readRawArrayItem,
+  readRawField,
+  readRawJsonByteCount,
+} from "@repo/math/schema/artifact/raw";
 import { MAX_MATH_AST_NODES } from "@repo/math/schema/ast/schema";
 import {
   MAX_FUNCTION_DOMAINS,
   MAX_FUNCTION_EXCLUSIONS,
   MAX_POLYGON_VERTICES,
 } from "@repo/math/schema/coordinate/primitive";
-import { Effect, Schema } from "effect";
+import { Effect } from "effect";
 
 /** Maximum serialized size accepted for one coordinate learning artifact. */
 export const MAX_COORDINATE_ARTIFACT_BYTES = 750_000;
@@ -21,13 +28,14 @@ export const MAX_COORDINATE_ARTIFACT_PROOF_ANCHORS = 16;
 /** Maximum length accepted for one proof anchor reference. */
 export const MAX_COORDINATE_ARTIFACT_PROOF_ANCHOR_LENGTH = 180;
 
-/** Expected failure raised when raw artifact preflight cannot read JSON size. */
-export class ArtifactSafetyReadError extends Schema.TaggedError<ArtifactSafetyReadError>()(
-  "ArtifactSafetyReadError",
-  {
-    message: Schema.String,
-  }
-) {}
+const MAX_RAW_ARTIFACT_ARRAY_ITEMS = Math.max(
+  MAX_COORDINATE_ARTIFACT_PRIMITIVES,
+  MAX_COORDINATE_ARTIFACT_PROOF_ANCHORS,
+  MAX_FUNCTION_DOMAINS,
+  MAX_FUNCTION_EXCLUSIONS,
+  MAX_MATH_AST_NODES,
+  MAX_POLYGON_VERTICES
+);
 
 /**
  * Checks raw artifact JSON size before schema decode walks nested payloads.
@@ -40,15 +48,11 @@ export const findRawArtifactSizeIssue = Effect.fn(
     return arrayIssue;
   }
 
-  const json = yield* Effect.try({
-    catch: () =>
-      new ArtifactSafetyReadError({
-        message: "Invalid learning artifact contract.",
-      }),
-    try: () => JSON.stringify(input),
+  const sizeBytes = yield* readRawJsonByteCount(input, new WeakSet(), {
+    arrayItems: MAX_RAW_ARTIFACT_ARRAY_ITEMS,
+    bytes: MAX_COORDINATE_ARTIFACT_BYTES,
   });
-
-  if (json === undefined) {
+  if (sizeBytes === undefined) {
     return yield* Effect.fail(
       new ArtifactSafetyReadError({
         message: "Invalid learning artifact contract.",
@@ -56,7 +60,6 @@ export const findRawArtifactSizeIssue = Effect.fn(
     );
   }
 
-  const sizeBytes = new TextEncoder().encode(json).byteLength;
   if (sizeBytes > MAX_COORDINATE_ARTIFACT_BYTES) {
     return `Coordinate artifact exceeds ${MAX_COORDINATE_ARTIFACT_BYTES} bytes.`;
   }
@@ -79,6 +82,11 @@ export const findRawArtifactArrayIssue = Effect.fn(
   }
 
   const payload = yield* readRawField(input, "payload");
+  const axisIssue = yield* findRawAxisArrayIssue(payload);
+  if (axisIssue) {
+    return axisIssue;
+  }
+
   const primitives = yield* readRawField(payload, "primitives");
   const primitiveCount = yield* readRawArrayCount(
     primitives,
@@ -97,6 +105,26 @@ export const findRawArtifactArrayIssue = Effect.fn(
     }
   }
 });
+
+/**
+ * Checks raw axis tuple lengths before generic byte traversal sees arrays.
+ */
+const findRawAxisArrayIssue = Effect.fn("math.artifact.findRawAxisArrayIssue")(
+  function* (payload: unknown) {
+    const axes = yield* readRawField(payload, "axes");
+    for (const axis of ["x", "y", "z"]) {
+      const range = yield* readRawField(axes, axis);
+      const count = yield* readRawArrayCount(
+        range,
+        `Coordinate artifact axis ${axis} range`,
+        2
+      );
+      if (typeof count === "string") {
+        return count;
+      }
+    }
+  }
+);
 
 /**
  * Checks one raw primitive's nested arrays after the primitive count is bounded.
@@ -204,64 +232,3 @@ const findRawMathAstArrayIssue = Effect.fn(
   );
   return typeof nodeCount === "string" ? nodeCount : undefined;
 });
-
-/**
- * Reads a producer-controlled property through the typed Effect error path.
- */
-const readRawField = Effect.fn("math.artifact.readRawField")(function* (
-  source: unknown,
-  field: string
-) {
-  return yield* Effect.try({
-    catch: () =>
-      new ArtifactSafetyReadError({
-        message: "Invalid learning artifact contract.",
-      }),
-    try: () => (isObjectLike(source) ? Reflect.get(source, field) : undefined),
-  });
-});
-
-/**
- * Reads and bounds an array length once before iterating raw slots.
- */
-const readRawArrayCount = Effect.fn("math.artifact.readRawArrayCount")(
-  function* (value: unknown, label: string, limit: number) {
-    if (!Array.isArray(value)) {
-      return;
-    }
-
-    const length = yield* readRawField(value, "length");
-    if (
-      typeof length !== "number" ||
-      !Number.isSafeInteger(length) ||
-      length < 0
-    ) {
-      return yield* Effect.fail(
-        new ArtifactSafetyReadError({
-          message: "Invalid learning artifact contract.",
-        })
-      );
-    }
-
-    return length > limit ? `${label} exceeds ${limit} items.` : length;
-  }
-);
-
-/**
- * Reads one raw array slot through the same typed property boundary as fields.
- */
-const readRawArrayItem = Effect.fn("math.artifact.readRawArrayItem")(function* (
-  value: readonly unknown[],
-  index: number
-) {
-  return yield* readRawField(value, `${index}`);
-});
-
-/**
- * Narrows values whose properties may be inspected with Reflect.get.
- */
-function isObjectLike(value: unknown) {
-  return (
-    (typeof value === "object" || typeof value === "function") && value !== null
-  );
-}

@@ -96,19 +96,19 @@ describe("syntactic pi multiple tracking", () => {
         { piMultiple: 1, value: Math.PI },
         { value: Number.POSITIVE_INFINITY }
       )
-    ).toBe(Number.POSITIVE_INFINITY);
+    ).toBeUndefined();
     expect(
       readProductPiMultiple(
         { piMultiple: 1e308, value: 1e308 },
         { value: 1e308 }
       )
-    ).toBe(Number.POSITIVE_INFINITY);
+    ).toBeUndefined();
     expect(
       readProductPiMultiple(
         { piMultiple: 1e-308, value: 1e-308 },
         { value: 1e-308 }
       )
-    ).toBe(0);
+    ).toBeUndefined();
     expect(
       readProductPiMultiple(
         { piMultiple: 1, value: Math.PI },
@@ -132,7 +132,7 @@ describe("syntactic pi multiple tracking", () => {
         { piMultiple: 0, value: 0 },
         { value: Number.POSITIVE_INFINITY }
       )
-    ).toBe(0);
+    ).toBeUndefined();
     expect(
       readQuotientPiMultiple(
         { piMultiple: 1e-308, value: Math.PI * 1e-308 },

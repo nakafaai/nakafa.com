@@ -1,13 +1,14 @@
 "use client";
 
-import { Line } from "@react-three/drei";
-import type { CoordinatePrimitive } from "@repo/math/schema/coordinate/primitive";
+import { LineEquation } from "@repo/design-system/components/three/line-equation";
 import { useMemo } from "react";
 import { Vector3 } from "three";
 import { readVector3 } from "./model/numeric";
+import type { CoordinatePrimitiveView } from "./model/view";
 
-const POINT_RADIUS = 0.14;
-const LINE_WIDTH = 2;
+const POINT_RADIUS = 0.18;
+const LINE_WIDTH = 5;
+const ARROW_SIZE = 0.36;
 
 /**
  * Renders exact point and line-family primitives from compact contracts.
@@ -19,7 +20,7 @@ export function LinearPrimitive({
 }: {
   color: string;
   primitive: Extract<
-    CoordinatePrimitive,
+    CoordinatePrimitiveView,
     { kind: "line" | "point" | "ray" | "segment" | "vector" }
   >;
   size: number;
@@ -48,7 +49,7 @@ function PointPrimitive({
   primitive,
 }: {
   color: string;
-  primitive: Extract<CoordinatePrimitive, { kind: "point" }>;
+  primitive: Extract<CoordinatePrimitiveView, { kind: "point" }>;
 }) {
   const point = useMemo(() => readVector3(primitive.point), [primitive]);
   if (!point) {
@@ -71,7 +72,7 @@ function VectorPrimitive({
   primitive,
 }: {
   color: string;
-  primitive: Extract<CoordinatePrimitive, { kind: "vector" }>;
+  primitive: Extract<CoordinatePrimitiveView, { kind: "vector" }>;
 }) {
   const points = useMemo(() => {
     const tail = primitive.tail ? readVector3(primitive.tail) : new Vector3();
@@ -83,7 +84,14 @@ function VectorPrimitive({
     return [tail, tail.clone().add(vector)];
   }, [primitive]);
 
-  return <PrimitiveLine color={color} points={points} />;
+  return (
+    <PrimitiveLine
+      color={color}
+      label={primitive.label}
+      points={points}
+      showArrow
+    />
+  );
 }
 
 /**
@@ -94,7 +102,7 @@ function SegmentPrimitive({
   primitive,
 }: {
   color: string;
-  primitive: Extract<CoordinatePrimitive, { kind: "segment" }>;
+  primitive: Extract<CoordinatePrimitiveView, { kind: "segment" }>;
 }) {
   const points = useMemo(() => {
     const start = readVector3(primitive.start);
@@ -102,7 +110,14 @@ function SegmentPrimitive({
     return start && end ? [start, end] : [];
   }, [primitive]);
 
-  return <PrimitiveLine color={color} points={points} />;
+  return (
+    <PrimitiveLine
+      color={color}
+      label={primitive.label}
+      points={points}
+      showArrow
+    />
+  );
 }
 
 /**
@@ -114,7 +129,7 @@ function RayPrimitive({
   size,
 }: {
   color: string;
-  primitive: Extract<CoordinatePrimitive, { kind: "ray" }>;
+  primitive: Extract<CoordinatePrimitiveView, { kind: "ray" }>;
   size: number;
 }) {
   const points = useMemo(() => {
@@ -130,7 +145,14 @@ function RayPrimitive({
     ];
   }, [primitive, size]);
 
-  return <PrimitiveLine color={color} points={points} />;
+  return (
+    <PrimitiveLine
+      color={color}
+      label={primitive.label}
+      points={points}
+      showArrow
+    />
+  );
 }
 
 /**
@@ -142,7 +164,7 @@ function LinePrimitive({
   size,
 }: {
   color: string;
-  primitive: Extract<CoordinatePrimitive, { kind: "line" }>;
+  primitive: Extract<CoordinatePrimitiveView, { kind: "line" }>;
   size: number;
 }) {
   const points = useMemo(() => {
@@ -156,7 +178,14 @@ function LinePrimitive({
     return [point.clone().sub(scaled), point.clone().add(scaled)];
   }, [primitive, size]);
 
-  return <PrimitiveLine color={color} points={points} />;
+  return (
+    <PrimitiveLine
+      color={color}
+      label={primitive.label}
+      points={points}
+      showArrow
+    />
+  );
 }
 
 /**
@@ -164,12 +193,30 @@ function LinePrimitive({
  */
 function PrimitiveLine({
   color,
+  label,
   points,
+  showArrow = false,
 }: {
   color: string;
+  label?: string;
   points: readonly Vector3[];
+  showArrow?: boolean;
 }) {
   return points.length === 2 ? (
-    <Line color={color} lineWidth={LINE_WIDTH} points={points} />
+    <LineEquation
+      color={color}
+      cone={showArrow ? { position: "both", size: ARROW_SIZE } : undefined}
+      labels={
+        label ? [{ color, offset: [0, 0.32, 0], text: label }] : undefined
+      }
+      lineWidth={LINE_WIDTH}
+      points={points.map((point) => ({
+        x: point.x,
+        y: point.y,
+        z: point.z,
+      }))}
+      showPoints={false}
+      smooth={false}
+    />
   ) : null;
 }

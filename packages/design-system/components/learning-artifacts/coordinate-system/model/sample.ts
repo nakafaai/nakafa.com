@@ -12,14 +12,15 @@ const MAX_RENDER_CURVE_SAMPLES = 160;
 const MAX_RENDER_SURFACE_CELLS = 32;
 
 /**
- * Samples a vector function into a bounded deterministic curve polyline.
+ * Samples a vector function into bounded deterministic curve segments.
  */
-export function readParametricCurvePoints(
+export function readParametricCurveLines(
   spec: CanonicalVectorFunctionSpec,
   sampling: RenderSamplingPolicy
 ) {
-  const points: Vector3[] = [];
+  const lines: Vector3[][] = [];
   for (const domain of spec.domain.slice(0, 1)) {
+    let segment: Vector3[] = [];
     for (const value of readDomainSamples(
       domain,
       readCurveSampleCount(sampling)
@@ -27,12 +28,17 @@ export function readParametricCurvePoints(
       const variables = new Map([[domain.variable, value]]);
       const point = readVectorFunctionPoint(spec, variables);
       if (point) {
-        points.push(point);
+        segment.push(point);
+        continue;
       }
+
+      appendSampledLineSegment(lines, segment);
+      segment = [];
     }
+    appendSampledLineSegment(lines, segment);
   }
 
-  return points;
+  return lines;
 }
 
 /**
@@ -127,7 +133,7 @@ function appendSurfaceLine(
   sweptValues: readonly number[],
   readPoint: (variables: ReadonlyMap<string, number>) => Vector3 | undefined
 ) {
-  const points: Vector3[] = [];
+  let segment: Vector3[] = [];
 
   for (const sweptValue of sweptValues) {
     const variables = new Map([
@@ -136,13 +142,15 @@ function appendSurfaceLine(
     ]);
     const point = readPoint(variables);
     if (point) {
-      points.push(point);
+      segment.push(point);
+      continue;
     }
+
+    appendSampledLineSegment(lines, segment);
+    segment = [];
   }
 
-  if (points.length >= 2) {
-    lines.push(points);
-  }
+  appendSampledLineSegment(lines, segment);
 }
 
 /**
@@ -171,6 +179,10 @@ function readScalarSurfacePoint(
   outputAxis: CoordinateAxis,
   variables: ReadonlyMap<string, number>
 ) {
+  if (isExcludedFunctionSample(spec, variables)) {
+    return;
+  }
+
   const output = readSampleValue(spec.ast, variables);
   if (output === undefined) {
     return;
@@ -185,6 +197,22 @@ function readScalarSurfacePoint(
   }
 
   return new Vector3(x, y, z);
+}
+
+/**
+ * Drops samples where a CAS-owned exclusion predicate evaluates to zero.
+ */
+function isExcludedFunctionSample(
+  spec: CanonicalFunctionSpec,
+  variables: ReadonlyMap<string, number>
+) {
+  for (const exclusion of spec.exclusions ?? []) {
+    if (readSampleValue(exclusion, variables) === 0) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 /**
@@ -210,11 +238,28 @@ function readDomainSamples(domain: FunctionDomain, sampleCount: number) {
 
   const samples: number[] = [];
   for (let index = 0; index < sampleCount; index += 1) {
+    if (index === 0 && !domain.closedMin) {
+      continue;
+    }
+
+    if (index === sampleCount - 1 && !domain.closedMax) {
+      continue;
+    }
+
     const progress = index / (sampleCount - 1);
     samples.push(interval.min + (interval.max - interval.min) * progress);
   }
 
   return samples;
+}
+
+/**
+ * Keeps rendered polylines from crossing invalid samples or excluded holes.
+ */
+function appendSampledLineSegment(lines: Vector3[][], segment: Vector3[]) {
+  if (segment.length >= 2) {
+    lines.push(segment);
+  }
 }
 
 /**

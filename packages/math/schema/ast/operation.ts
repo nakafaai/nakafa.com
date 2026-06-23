@@ -1,4 +1,5 @@
 import type { ConstantMathAstValue } from "@repo/math/schema/ast/constant";
+import { multiplyFiniteDecimalNumbers } from "@repo/math/schema/ast/decimal";
 import {
   isSyntacticHalfIntegerPiMultiple,
   isSyntacticIntegerPiMultiple,
@@ -57,23 +58,20 @@ export function readUnaryConstantValue(
       });
     }
 
-    return finiteComputedConstantValue(Math.sqrt(operand.value));
-  }
-
-  if (operator === "sin") {
-    return isSyntacticIntegerPiMultiple(operand.piMultiple)
-      ? constantMathAst(0)
-      : finiteComputedConstantValue(Math.sin(operand.value));
-  }
-
-  if (operator === "tan") {
-    if (isSyntacticHalfIntegerPiMultiple(operand.piMultiple)) {
+    const squareRoot = readExactSquareRoot(operand.value);
+    if (squareRoot === undefined) {
       return INVALID_CONSTANT_MATH_AST;
     }
 
-    return isSyntacticIntegerPiMultiple(operand.piMultiple)
-      ? constantMathAst(0)
-      : finiteComputedConstantValue(Math.tan(operand.value));
+    return finiteComputedConstantValue(squareRoot);
+  }
+
+  if (operator === "sin") {
+    return readSyntacticPiSine(operand);
+  }
+
+  if (operator === "tan") {
+    return readSyntacticPiTangent(operand);
   }
 
   if (operator === "cos") {
@@ -84,6 +82,10 @@ export function readUnaryConstantValue(
 
     if (piMultiple !== undefined && isSyntacticIntegerPiMultiple(piMultiple)) {
       return constantMathAst(readIntegerPiCosine(piMultiple));
+    }
+
+    if (piMultiple !== undefined) {
+      return INVALID_CONSTANT_MATH_AST;
     }
 
     return finiteComputedConstantValue(Math.cos(operand.value));
@@ -98,6 +100,58 @@ export function readUnaryConstantValue(
   return operand.value <= 0
     ? INVALID_CONSTANT_MATH_AST
     : finiteComputedConstantValue(Math.log(operand.value));
+}
+
+/**
+ * Evaluates square roots only when the finite decimal result is exact.
+ */
+function readExactSquareRoot(value: number) {
+  const squareRoot = Math.sqrt(value);
+  const squared = multiplyFiniteDecimalNumbers(squareRoot, squareRoot);
+  return squared === value ? squareRoot : undefined;
+}
+
+/**
+ * Reads exact sine values for supported syntactic pi multiples.
+ */
+function readSyntacticPiSine(operand: ConstantMathAstValue) {
+  const piMultiple = operand.piMultiple;
+  if (isSyntacticIntegerPiMultiple(piMultiple)) {
+    return constantMathAst(0);
+  }
+
+  if (
+    piMultiple !== undefined &&
+    isSyntacticHalfIntegerPiMultiple(piMultiple)
+  ) {
+    return constantMathAst(readHalfIntegerPiSine(piMultiple));
+  }
+
+  return piMultiple === undefined
+    ? finiteComputedConstantValue(Math.sin(operand.value))
+    : INVALID_CONSTANT_MATH_AST;
+}
+
+/**
+ * Reads exact tangent values only for integer pi multiples.
+ */
+function readSyntacticPiTangent(operand: ConstantMathAstValue) {
+  const piMultiple = operand.piMultiple;
+  if (isSyntacticIntegerPiMultiple(piMultiple)) {
+    return constantMathAst(0);
+  }
+
+  return piMultiple === undefined
+    ? finiteComputedConstantValue(Math.tan(operand.value))
+    : INVALID_CONSTANT_MATH_AST;
+}
+
+/**
+ * Computes exact sine for multiples shaped as n + 1/2.
+ */
+function readHalfIntegerPiSine(multiple: number) {
+  const offset = Math.round(multiple - 0.5);
+  return Math.abs(offset) % 2 === 0 ? 1 : -1;
 }
 
 /**

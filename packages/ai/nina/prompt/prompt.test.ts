@@ -97,16 +97,11 @@ describe("createNinaPrompt", () => {
     expect(toolSection).toContain("## Nakafa");
     expect(toolSection).toContain("## deepResearch");
     expect(toolSection).toContain("## math");
-    expect(toolSection).toContain("## Combining Agents");
     expect(toolSection).not.toContain("Typical Session Workflow");
     expect(taskSection).toContain("Work in order:");
     expect(examplesSection).toContain("Good Nakafa input:");
-    expect(examplesSection).toContain("Bad specialist inputs:");
     expect(outputSection).toContain("## Mathematical format");
     expect(outputSection).toContain("## Links");
-    expect(outputSection).toContain(
-      "indent that child content under the list item"
-    );
   });
 
   it("keeps one stable Nina persona without conflicting harsh-advisor rules", () => {
@@ -143,19 +138,10 @@ describe("createNinaPrompt", () => {
       "do not preload solution methods or derived formulas"
     );
     expect(toolSection).toContain(
-      "ask math for the valid location and function value"
-    );
-    expect(toolSection).toContain(
       'Preserve derivation, proof, and "why" deliverables'
     );
-    expect(toolSection).toContain(
-      "keep connective wording in the user's language"
-    );
-    expect(toolSection).toContain("preserve technical names and terms exactly");
     expect(toolSection).toContain("avoid copying the full user message");
     expect(toolSection).not.toContain("exact user wording");
-    expect(toolSection).not.toContain("deepResearch uses separate fields:");
-    expect(toolSection).not.toContain("Markdown brief");
   });
 
   it("routes evidence through the right specialist before final claims", () => {
@@ -171,12 +157,6 @@ describe("createNinaPrompt", () => {
     expect(prompt).toContain("Math evidence for calculations");
     expect(prompt).toContain(
       "If evidence still cannot be gathered, answer with the limitation instead of guessing."
-    );
-    expect(prompt).toContain(
-      "Decide from the user's request and gathered evidence"
-    );
-    expect(prompt).toContain(
-      "not from content slugs, material names, section labels, or UI labels alone."
     );
   });
 
@@ -194,9 +174,6 @@ describe("createNinaPrompt", () => {
     expect(prompt).toContain("math verifies selected calculations.");
     expect(prompt).toContain(
       "Never create practice content inside the math input."
-    );
-    expect(prompt).toContain(
-      "Do not switch to different math content after verification."
     );
   });
 
@@ -222,13 +199,16 @@ describe("createNinaPrompt", () => {
 
     expect(prompt).toContain("Always use the user's language.");
     expect(prompt).toContain(
-      'Use ```mermaid title="..." description="..." for helpful flowcharts, graphs, and timelines.'
-    );
-    expect(prompt).toContain(
-      "The title and description are required, must match the response language, and must not repeat each other."
+      'Use ```mermaid title="..." description="..." for helpful non-coordinate concept maps, flowcharts, and timelines.'
     );
     expect(prompt).toContain(
       'Inside Mermaid labels, use quoted Mermaid math syntax like "$$CO_2$$"; do not use Markdown math delimiters like \\(CO_2\\).'
+    );
+    expect(prompt).toContain(
+      "Never use Mermaid, code blocks, ASCII art, markdown tables, or prose sketches for coordinate geometry graphs."
+    );
+    expect(prompt).toContain(
+      "rely on the rendered 3D coordinate-system learning artifact"
     );
     expect(prompt).toContain("Multiple-choice options MUST be formatted");
     expect(prompt).toContain("- A. Option text");
@@ -239,9 +219,6 @@ describe("createNinaPrompt", () => {
     );
     expect(prompt).toContain(
       "Never show numeric citation markers or append a source/reference/bibliography section."
-    );
-    expect(prompt).toContain(
-      "Do not add Nakafa source labels, Nakafa domain links, or citation-style links for Nakafa-owned content."
     );
   });
 

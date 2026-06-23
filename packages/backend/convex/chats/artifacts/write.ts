@@ -1,7 +1,5 @@
 import {
   buildLearningArtifactManifest,
-  isSameLearningArtifactManifest,
-  type LearningArtifactManifest,
   LearningArtifactManifestSchema,
 } from "@repo/ai/schema/artifact";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
@@ -14,6 +12,13 @@ import {
 } from "@repo/math/schema/artifact/schema";
 import { ConvexError, type Infer } from "convex/values";
 import { Effect, Schema } from "effect";
+import {
+  assertArtifactManifestCoverage,
+  isMatchingArtifactManifest,
+  readArtifactManifestsByOrder,
+  readArtifactWritesByOrder,
+  readPartOrderError,
+} from "./manifest";
 import { readStoredPayload } from "./material";
 import {
   LEARNING_ARTIFACT_SCHEMA_VERSION,
@@ -26,7 +31,7 @@ const DecodedLearningArtifactWriteSchema = Schema.Struct({
   manifest: LearningArtifactManifestSchema,
   partOrder: Schema.Number.pipe(Schema.int(), Schema.nonNegative()),
 });
-type DecodedLearningArtifactWrite = Schema.Schema.Type<
+export type DecodedLearningArtifactWrite = Schema.Schema.Type<
   typeof DecodedLearningArtifactWriteSchema
 >;
 
@@ -37,11 +42,19 @@ type DecodedLearningArtifactWrite = Schema.Schema.Type<
 export const decodeArtifactWrites = Effect.fn(
   "backend.chats.artifacts.decodeWrites"
 )(function* (artifacts: readonly LearningArtifactWrite[]) {
-  assertArtifactWriteBudget(artifacts);
+  const budgetError = readArtifactWriteBudgetError(artifacts);
+  if (budgetError) {
+    return yield* Effect.fail(budgetError);
+  }
+
   const decoded: DecodedLearningArtifactWrite[] = [];
 
   for (const artifactInput of artifacts) {
-    assertPartOrder(artifactInput.partOrder);
+    const orderError = readPartOrderError(artifactInput.partOrder);
+    if (orderError) {
+      return yield* Effect.fail(orderError);
+    }
+
     const artifact = yield* decodeLearningArtifact(artifactInput.artifact).pipe(
       Effect.mapError(
         (error) =>
@@ -91,6 +104,8 @@ export async function insertArtifactsForMessage(
   }
 ) {
   assertArtifactWriteBudget(artifacts);
+  await assertArtifactMessageBelongsToChat(ctx, messageId, chatId);
+
   const artifactByOrder = readArtifactWritesByOrder(artifacts);
   const manifestByOrder = readArtifactManifestsByOrder(parts);
   assertArtifactManifestCoverage(artifactByOrder, manifestByOrder);
@@ -100,12 +115,7 @@ export async function insertArtifactsForMessage(
     const artifact = artifactInput.artifact;
     const storedManifest = manifestByOrder.get(artifactInput.partOrder);
 
-    if (
-      !(
-        storedManifest &&
-        isSameLearningArtifactManifest(storedManifest, artifactInput.manifest)
-      )
-    ) {
+    if (!isMatchingArtifactManifest(storedManifest, artifactInput.manifest)) {
       throw new ConvexError({
         code: "LEARNING_ARTIFACT_MANIFEST_MISMATCH",
         message:
@@ -144,89 +154,26 @@ function assertArtifactWriteBudget(
     | readonly LearningArtifactWrite[]
     | readonly DecodedLearningArtifactWrite[]
 ) {
-  if (artifacts.length > MAX_CHAT_MESSAGE_PARTS) {
-    throw new ConvexError({
-      code: "LEARNING_ARTIFACT_LIMIT_EXCEEDED",
-      message: "Artifact batch exceeds the supported message part budget.",
-    });
+  const error = readArtifactWriteBudgetError(artifacts);
+  if (error) {
+    throw error;
   }
 }
 
 /**
- * Indexes artifact payload writes by the part order they must accompany.
+ * Builds the budget failure shared by Effect validation and Convex adapters.
  */
-function readArtifactWritesByOrder(
-  artifacts: readonly DecodedLearningArtifactWrite[]
+function readArtifactWriteBudgetError(
+  artifacts:
+    | readonly LearningArtifactWrite[]
+    | readonly DecodedLearningArtifactWrite[]
 ) {
-  const artifactByOrder = new Map<number, DecodedLearningArtifactWrite>();
-  for (const artifact of artifacts) {
-    assertPartOrder(artifact.partOrder);
-    if (artifactByOrder.has(artifact.partOrder)) {
-      throw new ConvexError({
-        code: "LEARNING_ARTIFACT_DUPLICATE_PART_ORDER",
-        message: "Artifact write contains duplicate part orders.",
-      });
-    }
-
-    artifactByOrder.set(artifact.partOrder, artifact);
-  }
-
-  return artifactByOrder;
-}
-
-/**
- * Reads artifact manifests from already-flattened message parts by part order.
- */
-function readArtifactManifestsByOrder(parts: readonly PersistedPartInput[]) {
-  const manifestByOrder = new Map<number, LearningArtifactManifest>();
-  for (const part of parts) {
-    if (part.type !== "data-artifact") {
-      continue;
-    }
-
-    assertPartOrder(part.order);
-    if (!part.dataArtifactData) {
-      throw new ConvexError({
-        code: "LEARNING_ARTIFACT_MANIFEST_MISSING",
-        message: "Data artifact part is missing its manifest.",
-      });
-    }
-
-    if (manifestByOrder.has(part.order)) {
-      throw new ConvexError({
-        code: "LEARNING_ARTIFACT_DUPLICATE_PART_ORDER",
-        message: "Artifact manifests contain duplicate part orders.",
-      });
-    }
-
-    manifestByOrder.set(part.order, part.dataArtifactData);
-  }
-
-  return manifestByOrder;
-}
-
-/**
- * Ensures every artifact payload has one matching manifest and no orphan part.
- */
-function assertArtifactManifestCoverage(
-  artifactByOrder: ReadonlyMap<number, DecodedLearningArtifactWrite>,
-  manifestByOrder: ReadonlyMap<number, LearningArtifactManifest>
-) {
-  if (artifactByOrder.size !== manifestByOrder.size) {
-    throw new ConvexError({
-      code: "LEARNING_ARTIFACT_MANIFEST_MISMATCH",
-      message: "Artifact payloads and manifests must match one-for-one.",
-    });
-  }
-
-  for (const order of manifestByOrder.keys()) {
-    if (!artifactByOrder.has(order)) {
-      throw new ConvexError({
-        code: "LEARNING_ARTIFACT_PAYLOAD_MISSING",
-        message: "Data artifact manifest has no durable payload.",
-      });
-    }
-  }
+  return artifacts.length > MAX_CHAT_MESSAGE_PARTS
+    ? new ConvexError({
+        code: "LEARNING_ARTIFACT_LIMIT_EXCEEDED",
+        message: "Artifact batch exceeds the supported message part budget.",
+      })
+    : undefined;
 }
 
 /**
@@ -250,13 +197,18 @@ async function assertArtifactIdIsAvailable(
 }
 
 /**
- * Validates persisted part ordering before using it as an artifact join key.
+ * Requires artifact payload rows to be stored under the message's owning chat.
  */
-function assertPartOrder(order: number) {
-  if (!Number.isSafeInteger(order) || order < 0) {
+async function assertArtifactMessageBelongsToChat(
+  ctx: MutationCtx,
+  messageId: Id<"messages">,
+  chatId: Id<"chats">
+) {
+  const message = await ctx.db.get(messageId);
+  if (!message || message.chatId !== chatId) {
     throw new ConvexError({
-      code: "LEARNING_ARTIFACT_PART_ORDER_INVALID",
-      message: "Artifact part order must be a non-negative safe integer.",
+      code: "LEARNING_ARTIFACT_MESSAGE_CHAT_MISMATCH",
+      message: "Artifact message must belong to the artifact chat.",
     });
   }
 }

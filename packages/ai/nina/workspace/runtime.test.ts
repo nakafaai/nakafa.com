@@ -20,7 +20,7 @@ describe("nina/workspace/runtime", () => {
         yield* runtime.appendResult(
           capabilityResult({
             capability: "nakafa",
-            limitations: ["Current page fetch was skipped."],
+            limitations: [" ", "Current page fetch was skipped."],
             refs: ["lesson:coordinate-system"],
             status: "available",
             text: "Nakafa selected the coordinate-system lesson.",

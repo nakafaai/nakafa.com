@@ -3,7 +3,13 @@ import {
   divideFiniteDecimalNumbers,
   isRoundedPiSentinel,
   multiplyFiniteDecimalNumbers,
+  powerFiniteDecimalNumber,
 } from "@repo/math/schema/ast/decimal";
+import {
+  constantMathAst,
+  finiteComputedConstantValue,
+  INVALID_CONSTANT_MATH_AST,
+} from "@repo/math/schema/ast/value";
 
 const PI_TOKEN_PATTERN = /π|pi/gi;
 
@@ -130,11 +136,63 @@ export function readSqrtPiSquareMultiple(value: ConstantMathAstValue) {
 }
 
 /**
+ * Rejects unsupported pi powers before numeric reduction hides trig evidence.
+ */
+export function readPowerConstantValue(
+  left: ConstantMathAstValue,
+  right: ConstantMathAstValue
+) {
+  if (left.isExactZero && right.value === 0) {
+    return INVALID_CONSTANT_MATH_AST;
+  }
+
+  if (left.isExactZero && right.value > 0) {
+    return constantMathAst(0);
+  }
+
+  if (
+    right.value === 1 &&
+    (left.piMultiple !== undefined || left.piSquareMultiple !== undefined)
+  ) {
+    return finiteComputedConstantValue(left.value, {
+      piMultiple: left.piMultiple,
+      piSquareMultiple: left.piSquareMultiple,
+      rejectZero: true,
+    });
+  }
+
+  if (right.value === 2 && left.piMultiple !== undefined) {
+    const piSquareMultiple = readSquaredPiMultiple(left);
+    if (piSquareMultiple === undefined) {
+      return INVALID_CONSTANT_MATH_AST;
+    }
+
+    return finiteComputedConstantValue(left.value * left.value, {
+      piSquareMultiple,
+      rejectZero: true,
+    });
+  }
+
+  if (left.piMultiple !== undefined || left.piSquareMultiple !== undefined) {
+    return INVALID_CONSTANT_MATH_AST;
+  }
+
+  const value = powerFiniteDecimalNumber(left.value, right.value);
+  if (value === undefined) {
+    return INVALID_CONSTANT_MATH_AST;
+  }
+
+  return finiteComputedConstantValue(value, {
+    rejectZero: true,
+  });
+}
+
+/**
  * Rejects pi products that would drift into a trig sentinel.
  */
 function readSafePiProduct(piMultiple: number, scalar: number) {
   const product = multiplyFiniteDecimalNumbers(piMultiple, scalar);
-  if (isRoundedPiSentinel(product)) {
+  if (product === undefined || isRoundedPiSentinel(product)) {
     return;
   }
 

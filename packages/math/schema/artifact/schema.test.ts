@@ -8,6 +8,7 @@ import {
 import {
   CoordinateSystemArtifact,
   decodeLearningArtifact,
+  encodeCoordinateSystemArtifact,
   LearningArtifactDecodeError,
 } from "@repo/math/schema/artifact/schema";
 import { Cause, Effect, Exit, Option } from "effect";
@@ -23,6 +24,20 @@ describe("LearningArtifactSchema", () => {
     expect(artifact.kind).toBe("coordinate-system-3d");
     expect(JSON.stringify(artifact)).not.toContain("samples");
     expect(JSON.stringify(artifact)).not.toContain("points");
+  });
+
+  it("encodes coordinate artifacts into plain client-safe data", async () => {
+    const artifact = await Effect.runPromise(
+      decodeLearningArtifact(createCoordinateArtifact())
+    );
+    const encoded = encodeCoordinateSystemArtifact(artifact);
+
+    expect(encoded).not.toBeInstanceOf(CoordinateSystemArtifact);
+    expect(JSON.parse(JSON.stringify(encoded))).toMatchObject({
+      id: "artifact-coordinate-1",
+      kind: "coordinate-system-3d",
+      title: "Coordinate artifact",
+    });
   });
 
   it("rejects invalid embedded MathAst graphs with a typed error", async () => {

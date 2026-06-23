@@ -1,3 +1,4 @@
+import { divideFiniteDecimalNumbers } from "@repo/math/schema/ast/decimal";
 import type { ExactPoint3 } from "@repo/math/schema/ast/schema";
 import {
   addPlaneCoefficient,
@@ -230,15 +231,15 @@ function readScaleFactor(
   expected: AffinePlaneExpression
 ) {
   if (expected.x !== 0) {
-    return actual.x / expected.x;
+    return divideFiniteDecimalNumbers(actual.x, expected.x);
   }
 
   if (expected.y !== 0) {
-    return actual.y / expected.y;
+    return divideFiniteDecimalNumbers(actual.y, expected.y);
   }
 
   if (expected.z !== 0) {
-    return actual.z / expected.z;
+    return divideFiniteDecimalNumbers(actual.z, expected.z);
   }
 }
 

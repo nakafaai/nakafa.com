@@ -75,6 +75,17 @@ describe("mathPrompt", () => {
       "use arithmetic evaluate on the original expression after substituting"
     );
     expect(toolSection).toContain("minimum point and maximum point requests");
+    expect(toolSection).toContain("Fill display.title and display.description");
+    expect(toolSection).toContain("Use inline math delimiters");
+    expect(toolSection).toContain(
+      "For coordinate-system artifact, plot, graph, visualize, or render requests, call the matching geometry operation first."
+    );
+    expect(toolSection).toContain(
+      "For a line through two points, use line as the first check"
+    );
+    expect(toolSection).toContain(
+      "Do not start coordinate visualization requests with simplify, solve, evaluate, or chart-like prose."
+    );
     expect(toolSection).not.toContain("Never label math as verified");
     expect(verificationSection).toContain("Never label math as verified");
     expect(verificationSection).not.toContain(

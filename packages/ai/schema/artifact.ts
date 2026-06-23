@@ -1,4 +1,8 @@
 import {
+  LearningArtifactDescriptionSchema as LearningArtifactManifestDescriptionSchema,
+  LearningArtifactTitleSchema as LearningArtifactManifestTitleSchema,
+} from "@repo/math/schema/artifact/copy";
+import {
   MAX_COORDINATE_ARTIFACT_BYTES,
   MAX_COORDINATE_ARTIFACT_PRIMITIVES,
   MAX_LEARNING_ARTIFACT_ID_LENGTH,
@@ -14,18 +18,6 @@ import { Effect, Schema } from "effect";
 /** Current durable payload version for coordinate learning artifacts. */
 export const LEARNING_ARTIFACT_SCHEMA_VERSION = 1;
 
-/** Maximum title bytes retained in chat transcript artifact manifests. */
-export const MAX_LEARNING_ARTIFACT_MANIFEST_TITLE_LENGTH = 180;
-
-/** Maximum description bytes retained in chat transcript artifact manifests. */
-export const MAX_LEARNING_ARTIFACT_MANIFEST_DESCRIPTION_LENGTH = 500;
-
-const LearningArtifactManifestTitleSchema = Schema.NonEmptyString.pipe(
-  Schema.maxLength(MAX_LEARNING_ARTIFACT_MANIFEST_TITLE_LENGTH)
-);
-const LearningArtifactManifestDescriptionSchema = Schema.String.pipe(
-  Schema.maxLength(MAX_LEARNING_ARTIFACT_MANIFEST_DESCRIPTION_LENGTH)
-);
 const LearningArtifactManifestScalarSchema = Schema.String.pipe(
   Schema.maxLength(MAX_MATH_AST_DISPLAY_LENGTH)
 );

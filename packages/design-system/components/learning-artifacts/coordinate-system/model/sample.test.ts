@@ -8,26 +8,24 @@ import {
 import { describe, expect, it } from "vitest";
 import {
   readFunctionSurfaceLines,
-  readParametricCurvePoints,
+  readParametricCurveLines,
   readParametricSurfaceLines,
 } from "./sample";
 
 describe("coordinate-system/model/sample", () => {
   it("samples a vector-valued curve inside the declared render budget", () => {
-    const points = readParametricCurvePoints(
+    const lines = readParametricCurveLines(
       CanonicalVectorFunctionSpec.make({
         domain: [domain("t", "0", "1")],
         x: variable("t"),
         y: literal("0"),
         z: literal("1"),
       }),
-      RenderSamplingPolicy.make({
-        curveSamples: 3,
-        surfaceCells: 2,
-      })
+      sampling(3, 2)
     );
 
-    expect(points.map((point) => point.toArray())).toEqual([
+    expect(lines).toHaveLength(1);
+    expect(lines[0]?.map((point) => point.toArray())).toEqual([
       [0, 0, 1],
       [0.5, 0, 1],
       [1, 0, 1],
@@ -35,33 +33,55 @@ describe("coordinate-system/model/sample", () => {
   });
 
   it("clamps curve sampling and skips invalid vector samples", () => {
-    const points = readParametricCurvePoints(
+    const lines = readParametricCurveLines(
       CanonicalVectorFunctionSpec.make({
         domain: [domain("t", "0", "1")],
         x: variable("t"),
         y: variable("u"),
         z: literal("0"),
       }),
-      RenderSamplingPolicy.make({
-        curveSamples: 512,
-        surfaceCells: 2,
-      })
+      sampling(512, 2)
     );
-    const clampedPoints = readParametricCurvePoints(
+    const clampedLines = readParametricCurveLines(
       CanonicalVectorFunctionSpec.make({
         domain: [domain("t", "0", "1")],
         x: variable("t"),
         y: literal("0"),
         z: literal("0"),
       }),
-      RenderSamplingPolicy.make({
-        curveSamples: 512,
-        surfaceCells: 2,
-      })
+      sampling(512, 2)
     );
 
-    expect(points).toEqual([]);
-    expect(clampedPoints).toHaveLength(160);
+    expect(lines).toEqual([]);
+    expect(clampedLines).toHaveLength(1);
+    expect(clampedLines[0]).toHaveLength(160);
+  });
+
+  it("splits curve lines at invalid samples and skips open endpoints", () => {
+    const splitLines = readParametricCurveLines(
+      CanonicalVectorFunctionSpec.make({
+        domain: [domain("t", "-1", "1")],
+        x: variable("t"),
+        y: divide(literal("1"), variable("t")),
+        z: literal("0"),
+      }),
+      sampling(5, 2)
+    );
+    const openLines = readParametricCurveLines(
+      CanonicalVectorFunctionSpec.make({
+        domain: [domain("t", "0", "1", false, false)],
+        x: variable("t"),
+        y: literal("0"),
+        z: literal("0"),
+      }),
+      sampling(5, 2)
+    );
+
+    expect(splitLines.map((line) => line.map((point) => point.x))).toEqual([
+      [-1, -0.5],
+      [0.5, 1],
+    ]);
+    expect(openLines[0]?.map((point) => point.x)).toEqual([0.25, 0.5, 0.75]);
   });
 
   it("samples scalar function surfaces by output axis", () => {
@@ -71,10 +91,7 @@ describe("coordinate-system/model/sample", () => {
         domain: [domain("x", "0", "1"), domain("z", "0", "1")],
       }),
       "y",
-      RenderSamplingPolicy.make({
-        curveSamples: 2,
-        surfaceCells: 2,
-      })
+      sampling(2, 2)
     );
 
     expect(lines).toHaveLength(6);
@@ -85,18 +102,29 @@ describe("coordinate-system/model/sample", () => {
     ]);
   });
 
+  it("applies scalar function surface exclusions while sampling", () => {
+    const lines = readFunctionSurfaceLines(
+      CanonicalFunctionSpec.make({
+        ast: variable("x"),
+        domain: [domain("x", "0", "1"), domain("z", "0", "1")],
+        exclusions: [variable("x")],
+      }),
+      "y",
+      sampling(2, 2)
+    );
+
+    expect(lines.flat().some((point) => point.x === 0)).toBe(false);
+  });
+
   it("drops scalar surface rows with missing domains or invalid samples", () => {
-    const sampling = RenderSamplingPolicy.make({
-      curveSamples: 2,
-      surfaceCells: 2,
-    });
+    const policy = sampling(2, 2);
     const missingDomain = readFunctionSurfaceLines(
       CanonicalFunctionSpec.make({
         ast: variable("x"),
         domain: [domain("x", "0", "1")],
       }),
       "y",
-      sampling
+      policy
     );
     const missingOutput = readFunctionSurfaceLines(
       CanonicalFunctionSpec.make({
@@ -104,7 +132,7 @@ describe("coordinate-system/model/sample", () => {
         domain: [domain("x", "0", "1"), domain("z", "0", "1")],
       }),
       "y",
-      sampling
+      policy
     );
     const missingCoordinate = readFunctionSurfaceLines(
       CanonicalFunctionSpec.make({
@@ -112,7 +140,7 @@ describe("coordinate-system/model/sample", () => {
         domain: [domain("x", "0", "1"), domain("z", "0", "1")],
       }),
       "x",
-      sampling
+      policy
     );
     const invalidInterval = readFunctionSurfaceLines(
       CanonicalFunctionSpec.make({
@@ -120,7 +148,7 @@ describe("coordinate-system/model/sample", () => {
         domain: [domain("x", "1", "1"), domain("z", "0", "1")],
       }),
       "y",
-      sampling
+      policy
     );
 
     expect(missingDomain).toEqual([]);
@@ -137,10 +165,7 @@ describe("coordinate-system/model/sample", () => {
         y: variable("v"),
         z: literal("0"),
       }),
-      RenderSamplingPolicy.make({
-        curveSamples: 2,
-        surfaceCells: 2,
-      })
+      sampling(2, 2)
     );
 
     expect(lines).toHaveLength(6);
@@ -164,10 +189,7 @@ describe("coordinate-system/model/sample", () => {
         y: variable("v"),
         z: literal("0"),
       }),
-      RenderSamplingPolicy.make({
-        curveSamples: 2,
-        surfaceCells: 2,
-      })
+      sampling(2, 2)
     );
     const clampedLines = readParametricSurfaceLines(
       CanonicalVectorFunctionSpec.make({
@@ -176,10 +198,7 @@ describe("coordinate-system/model/sample", () => {
         y: variable("v"),
         z: literal("0"),
       }),
-      RenderSamplingPolicy.make({
-        curveSamples: 2,
-        surfaceCells: 512,
-      })
+      sampling(2, 512)
     );
 
     expect(missingDomain).toEqual([]);
@@ -187,18 +206,45 @@ describe("coordinate-system/model/sample", () => {
   });
 });
 
+/** Builds a schema-owned sampling policy for deterministic renderer tests. */
+function sampling(curveSamples: number, surfaceCells: number) {
+  return RenderSamplingPolicy.make({ curveSamples, surfaceCells });
+}
+
 /** Builds a schema-owned function domain for sampling tests. */
 function domain(
   variableName: "t" | "u" | "v" | "x" | "z",
   min: string,
-  max: string
+  max: string,
+  closedMin = true,
+  closedMax = true
 ) {
   return FunctionDomain.make({
-    closedMax: true,
-    closedMin: true,
+    closedMax,
+    closedMin,
     max: scalar(max),
     min: scalar(min),
     variable: variableName,
+  });
+}
+
+/** Builds a binary division MathAst used by discontinuity sampling tests. */
+function divide(left: MathAst, right: MathAst) {
+  return MathAst.make({
+    canonical: `${left.canonical}/${right.canonical}`,
+    latex: `${left.latex}/${right.latex}`,
+    nodes: [
+      ...left.nodes.map((node) => ({ ...node, id: `left-${node.id}` })),
+      ...right.nodes.map((node) => ({ ...node, id: `right-${node.id}` })),
+      {
+        id: "root",
+        kind: "binary",
+        left: `left-${left.root}`,
+        operator: "divide",
+        right: `right-${right.root}`,
+      },
+    ],
+    root: "root",
   });
 }
 

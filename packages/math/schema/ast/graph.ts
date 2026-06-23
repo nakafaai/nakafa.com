@@ -2,6 +2,11 @@ import {
   type ConstantMathAstRead,
   readConstantMathAst,
 } from "@repo/math/schema/ast/constant";
+import {
+  hasSyntacticPiToken,
+  readSyntacticPiMultiple,
+} from "@repo/math/schema/ast/pi";
+import { hasMultipleSyntacticPiTokens } from "@repo/math/schema/ast/power";
 import type { MathAst, MathAstNode } from "@repo/math/schema/ast/schema";
 import { readSortableExactScalar } from "@repo/math/schema/coordinate/scalar";
 
@@ -42,14 +47,39 @@ function addMathAstNode(
     return `Duplicate MathAst node id: ${node.id}.`;
   }
 
-  if (
-    node.kind === "literal" &&
-    readSortableExactScalar(node.value) === undefined
-  ) {
+  if (node.kind === "literal" && !isSortableMathAstLiteral(node)) {
     return `MathAst literal node ${node.id} must use a sortable numeric value.`;
   }
 
   nodesById.set(node.id, node);
+}
+
+/**
+ * Accepts sortable scalars and large syntactic pi multiples with exact factors.
+ */
+function isSortableMathAstLiteral(
+  node: Extract<MathAstNode, { kind: "literal" }>
+) {
+  const value = readSortableExactScalar(node.value);
+  if (value !== undefined) {
+    return true;
+  }
+
+  const expression = node.value.expression;
+  if (
+    !hasSyntacticPiToken(expression) ||
+    hasMultipleSyntacticPiTokens(expression)
+  ) {
+    return false;
+  }
+
+  const piMultiple = readSyntacticPiMultiple(expression, Number.NaN);
+  if (piMultiple === undefined) {
+    return false;
+  }
+
+  const piValue = piMultiple * Math.PI;
+  return Number.isFinite(piValue) && (piMultiple === 0 || piValue !== 0);
 }
 
 /**

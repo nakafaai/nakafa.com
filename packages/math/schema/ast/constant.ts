@@ -1,6 +1,9 @@
 import { readBinaryConstantValue } from "@repo/math/schema/ast/binary";
 import { readUnaryConstantValue } from "@repo/math/schema/ast/operation";
-import { readSyntacticPiMultiple } from "@repo/math/schema/ast/pi";
+import {
+  hasSyntacticPiToken,
+  readSyntacticPiMultiple,
+} from "@repo/math/schema/ast/pi";
 import { hasMultipleSyntacticPiTokens } from "@repo/math/schema/ast/power";
 import type { MathAstNode } from "@repo/math/schema/ast/schema";
 import {
@@ -77,18 +80,32 @@ function readAcyclicConstantMathAstValue(
   visitingNodeIds: Set<string>
 ): ConstantMathAstRead {
   if (node.kind === "literal") {
+    const hasPiToken = hasSyntacticPiToken(node.value.expression);
     const value = readSortableExactScalar(node.value);
-    if (
-      value === undefined ||
-      hasMultipleSyntacticPiTokens(node.value.expression)
-    ) {
+    if (hasMultipleSyntacticPiTokens(node.value.expression)) {
       return INVALID_CONSTANT_MATH_AST;
     }
 
-    return constantMathAst(
-      value,
-      readSyntacticPiMultiple(node.value.expression, value)
-    );
+    if (hasPiToken) {
+      const piMultiple = readSyntacticPiMultiple(
+        node.value.expression,
+        value ?? Number.NaN
+      );
+      if (piMultiple === undefined) {
+        return INVALID_CONSTANT_MATH_AST;
+      }
+
+      const piValue = piMultiple * Math.PI;
+      if (!Number.isFinite(piValue) || (piMultiple !== 0 && piValue === 0)) {
+        return INVALID_CONSTANT_MATH_AST;
+      }
+
+      return constantMathAst(piValue, piMultiple);
+    }
+
+    return value === undefined
+      ? INVALID_CONSTANT_MATH_AST
+      : constantMathAst(value);
   }
 
   if (node.kind === "variable") {

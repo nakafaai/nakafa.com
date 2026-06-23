@@ -51,6 +51,23 @@ describe("binary MathAst constant operations", () => {
     });
   });
 
+  it("rejects unsafe pi coefficient products and quotients", () => {
+    expect(
+      readBinaryConstantValue(
+        "multiply",
+        constant(Number.MAX_SAFE_INTEGER * Math.PI, Number.MAX_SAFE_INTEGER),
+        constant(3)
+      ).tag
+    ).toBe("InvalidConstant");
+    expect(
+      readBinaryConstantValue(
+        "divide",
+        constant(Number.MAX_SAFE_INTEGER * Math.PI, Number.MAX_SAFE_INTEGER),
+        constant(0.2)
+      ).tag
+    ).toBe("InvalidConstant");
+  });
+
   it("preserves pi products that reduce back to one pi", () => {
     const piSquared = readBinaryConstantValue(
       "multiply",
@@ -205,6 +222,51 @@ describe("binary MathAst constant operations", () => {
     ).toEqual({
       tag: "Constant",
       value: { isExactZero: true, value: 0 },
+    });
+  });
+
+  it("allows only zero mixed additive constants around pi metadata", () => {
+    expect(
+      readBinaryConstantValue("add", constant(Math.PI, 1), constant(0))
+    ).toEqual({
+      tag: "Constant",
+      value: { isExactZero: false, piMultiple: 1, value: Math.PI },
+    });
+    expect(
+      readBinaryConstantValue("subtract", constant(0), constant(Math.PI, 1))
+    ).toEqual({
+      tag: "Constant",
+      value: { isExactZero: false, piMultiple: -1, value: -Math.PI },
+    });
+    expect(
+      readBinaryConstantValue("add", constant(0), constant(Math.PI, 1))
+    ).toEqual({
+      tag: "Constant",
+      value: { isExactZero: false, piMultiple: 1, value: Math.PI },
+    });
+    expect(
+      readBinaryConstantValue("add", constant(Math.PI, 1), constant(1)).tag
+    ).toBe("InvalidConstant");
+  });
+
+  it("preserves exact products, quotients, and powers before cancellation", () => {
+    expect(
+      readBinaryConstantValue("multiply", constant(1e308), constant(1e-308))
+    ).toEqual({
+      tag: "Constant",
+      value: { isExactZero: false, value: 1 },
+    });
+    expect(
+      readBinaryConstantValue("divide", constant(0.3), constant(0.1))
+    ).toEqual({
+      tag: "Constant",
+      value: { isExactZero: false, value: 3 },
+    });
+    expect(
+      readBinaryConstantValue("power", constant(0.1), constant(2))
+    ).toEqual({
+      tag: "Constant",
+      value: { isExactZero: false, value: 0.01 },
     });
   });
 

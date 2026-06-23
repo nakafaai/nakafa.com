@@ -1,3 +1,7 @@
+import {
+  divideFiniteDecimalNumbers,
+  multiplyFiniteDecimalNumbers,
+} from "@repo/math/schema/ast/decimal";
 import { Schema } from "effect";
 
 const DIGIT_PATTERN = /\d/;
@@ -13,6 +17,7 @@ const MAX_DECIMAL_LITERAL_SIGNIFICANT_DIGITS = 16;
 const ExactNumericValue = Schema.Struct({
   isExactZero: Schema.Boolean,
   isUnderflow: Schema.Boolean,
+  usesApproximateValue: Schema.optional(Schema.Boolean),
   value: Schema.Number.pipe(Schema.finite()),
 });
 
@@ -60,6 +65,13 @@ function isUnsafeExactIntegerLiteral(literal: string, parsed: number) {
   }
 
   const decimal = readDecimalLiteralParts(literal);
+  if (
+    decimal &&
+    isScaledPowerOfTenLiteral(decimal.coefficient, decimal.scale)
+  ) {
+    return false;
+  }
+
   return decimal
     ? decimalRepresentsInteger(decimal.coefficient, decimal.scale)
     : true;
@@ -97,6 +109,13 @@ function decimalRepresentsInteger(coefficient: bigint, scale: number) {
   return coefficient % divisor === 0n;
 }
 
+/**
+ * Allows finite powers of ten used by exact product/quotient guards.
+ */
+function isScaledPowerOfTenLiteral(coefficient: bigint, scale: number) {
+  return scale > 0 && (coefficient === 1n || coefficient === -1n);
+}
+
 /** Multiplies two exact numeric values and preserves underflow state.
  */
 export function multiplyNumericValue(
@@ -111,7 +130,12 @@ export function multiplyNumericValue(
     return underflowValue();
   }
 
-  return finiteComputedValue(left.value * right.value);
+  if (left.usesApproximateValue || right.usesApproximateValue) {
+    return finiteApproximateComputedValue(left.value * right.value);
+  }
+
+  const product = multiplyFiniteDecimalNumbers(left.value, right.value);
+  return product === undefined ? undefined : finiteNumericValue(product);
 }
 
 /** Divides exact numeric values while rejecting zero denominators.
@@ -132,7 +156,14 @@ export function divideNumericValue(
     return underflowValue();
   }
 
-  return finiteComputedValue(left.value / right.value);
+  if (left.usesApproximateValue || right.usesApproximateValue) {
+    return finiteApproximateComputedValue(left.value / right.value);
+  }
+
+  const quotient = divideFiniteDecimalNumbers(left.value, right.value);
+  return quotient === undefined
+    ? finiteApproximateComputedValue(left.value / right.value)
+    : finiteNumericValue(quotient);
 }
 
 /** Caps decimal metadata precision before Number can round it away.
@@ -151,20 +182,35 @@ function hasTooManyDecimalSignificantDigits(literal: string) {
   return significantDigits.length > MAX_DECIMAL_LITERAL_SIGNIFICANT_DIGITS;
 }
 
-/** Accepts finite nonzero computed values and marks lost nonzero values.
+/** Builds a finite nonzero exact numeric value.
  */
-function finiteComputedValue(value: number) {
+export function finiteNumericValue(
+  value: number,
+  options: { readonly usesApproximateValue?: boolean } = {}
+): ExactNumericValue {
+  return {
+    isExactZero: false,
+    isUnderflow: false,
+    ...(options.usesApproximateValue ? { usesApproximateValue: true } : {}),
+    value,
+  };
+}
+
+/**
+ * Keeps finite sortable approximate quotients while rejecting unsafe doubles.
+ */
+function finiteApproximateComputedValue(value: number) {
   if (!Number.isFinite(value)) {
     return;
   }
 
-  return value === 0 ? underflowValue() : finiteNumericValue(value);
-}
+  if (Number.isInteger(value) && !Number.isSafeInteger(value)) {
+    return;
+  }
 
-/** Builds a finite nonzero exact numeric value.
- */
-export function finiteNumericValue(value: number): ExactNumericValue {
-  return { isExactZero: false, isUnderflow: false, value };
+  return value === 0
+    ? underflowValue()
+    : finiteNumericValue(value, { usesApproximateValue: true });
 }
 
 /** Builds an exact syntactic zero value.

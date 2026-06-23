@@ -1,8 +1,8 @@
 "use client";
 
-import type { CoordinatePrimitive } from "@repo/math/schema/coordinate/primitive";
 import { useMemo } from "react";
 import { readScalarNumber, readVector3 } from "./model/numeric";
+import type { CoordinatePrimitiveView } from "./model/view";
 
 /**
  * Renders closed coordinate solids from compact exact primitive contracts.
@@ -12,7 +12,7 @@ export function ClosedPrimitive({
   primitive,
 }: {
   color: string;
-  primitive: Extract<CoordinatePrimitive, { kind: "cuboid" | "sphere" }>;
+  primitive: Extract<CoordinatePrimitiveView, { kind: "cuboid" | "sphere" }>;
 }) {
   return primitive.kind === "cuboid" ? (
     <CuboidPrimitive color={color} primitive={primitive} />
@@ -29,7 +29,7 @@ function CuboidPrimitive({
   primitive,
 }: {
   color: string;
-  primitive: Extract<CoordinatePrimitive, { kind: "cuboid" }>;
+  primitive: Extract<CoordinatePrimitiveView, { kind: "cuboid" }>;
 }) {
   const box = useMemo(() => readCuboidBox(primitive), [primitive]);
   if (!box) {
@@ -57,7 +57,7 @@ function SpherePrimitive({
   primitive,
 }: {
   color: string;
-  primitive: Extract<CoordinatePrimitive, { kind: "sphere" }>;
+  primitive: Extract<CoordinatePrimitiveView, { kind: "sphere" }>;
 }) {
   const center = useMemo(() => readVector3(primitive.center), [primitive]);
   const radius = readScalarNumber(primitive.radius);
@@ -82,7 +82,7 @@ function SpherePrimitive({
  * Reads a cuboid center and dimensions from exact min/max corners.
  */
 function readCuboidBox(
-  primitive: Extract<CoordinatePrimitive, { kind: "cuboid" }>
+  primitive: Extract<CoordinatePrimitiveView, { kind: "cuboid" }>
 ) {
   const min = readVector3(primitive.min);
   const max = readVector3(primitive.max);

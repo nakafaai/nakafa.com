@@ -4,6 +4,7 @@ import {
   appendCapabilityContribution,
   CapabilityContribution,
   createEvidenceWorkspace,
+  EVIDENCE_CONTRIBUTION_LIMITATION_MAX_LENGTH,
   type EvidenceWorkspace,
   type EvidenceWorkspaceDecodeError,
   type EvidenceWorkspaceLimitExceeded,
@@ -79,7 +80,7 @@ function createContributionFromResult(result: LearningCapabilityResult) {
     evidence: WorkspaceEvidenceEnvelope.make({
       capability: result.evidence.capability,
       ...(result.evidence.limitations
-        ? { limitations: [...result.evidence.limitations] }
+        ? { limitations: readBoundedLimitations(result.evidence.limitations) }
         : {}),
       ...(result.evidence.refs ? { refs: [...result.evidence.refs] } : {}),
       status: result.evidence.status,
@@ -87,6 +88,24 @@ function createContributionFromResult(result: LearningCapabilityResult) {
     }),
     modelSummary: readModelSummary(result),
   });
+}
+
+/**
+ * Trims provider failure text before workspace decode enforces retention caps.
+ */
+function readBoundedLimitations(limitations: readonly string[]) {
+  const bounded: string[] = [];
+
+  for (const limitation of limitations) {
+    const trimmed = limitation.trim();
+    if (trimmed.length === 0) {
+      continue;
+    }
+
+    bounded.push(trimmed.slice(0, EVIDENCE_CONTRIBUTION_LIMITATION_MAX_LENGTH));
+  }
+
+  return bounded;
 }
 
 /**

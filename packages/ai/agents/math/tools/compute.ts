@@ -1,12 +1,26 @@
 import { formatMathData } from "@repo/ai/agents/math/format";
-import { emitLearningArtifacts } from "@repo/ai/agents/math/tools/artifact";
 import {
   readCoordinateArtifactId,
   readCoordinateProofAnchor,
 } from "@repo/ai/agents/math/tools/identity";
-import { createPrompt } from "@repo/ai/prompt/utils";
+import {
+  invalidMathInputError,
+  mathCheckUnavailableError,
+  missingCoordinateArtifactDisplayError,
+  readInvalidInputRecovery,
+  readMathFailureRecovery,
+  readMissingCoordinateArtifactDisplayRecovery,
+} from "@repo/ai/agents/math/tools/recovery";
+import {
+  readArtifactDisplayCopy,
+  readMathRequestInput,
+} from "@repo/ai/agents/math/tools/request";
+import { writeMathEvidencePart } from "@repo/ai/agents/math/tools/stream";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import { deriveCoordinateArtifactsFromMathData } from "@repo/math/artifact/derive";
+import {
+  deriveCoordinateArtifactsFromMathData,
+  isCoordinateArtifactRequest,
+} from "@repo/math/artifact/derive";
 import type { LearningArtifact } from "@repo/math/schema/artifact/schema";
 import type { MathData } from "@repo/math/schema/data";
 import type { MathRequest } from "@repo/math/schema/request";
@@ -15,74 +29,11 @@ import { MathService } from "@repo/math/service";
 import type { UIMessageStreamWriter } from "ai";
 import { Effect, Either, ParseResult, Schema } from "effect";
 
-const invalidMathInputError = "invalid_math_input";
-const mathCheckUnavailableError = "math_check_unavailable";
-
-/**
- * Gives the model actionable recovery guidance without exposing raw failures.
- */
-function recoveryMessage(message: string) {
-  if (message.includes("Variable is required when multiple symbols")) {
-    return createPrompt({
-      taskContext: `
-        Retry the same operation with the explicit variable from the user's original math notation.
-      `,
-      detailedTaskInstructions: `
-        If no variable is clear, ask the user which variable to use.
-      `,
-    });
-  }
-
-  return createPrompt({
-    taskContext: `
-      Do not present this result as checked.
-    `,
-    detailedTaskInstructions: `
-      - Compare this failed input with the original task before answering.
-      - Retry the same operation if the task gives omitted variables, assumptions, domains, bounds, parameters, matrices, vectors, or data.
-      - Otherwise ask for the missing math data.
-    `,
-  });
-}
-
 /**
  * Formats schema validation errors for model-facing recovery decisions.
  */
 function formatDecodeError(error: ParseResult.ParseError) {
   return ParseResult.TreeFormatter.formatErrorSync(error);
-}
-
-/**
- * Gives the model a concrete retry path for invalid tool arguments.
- */
-function decodeRecoveryMessage(message: string) {
-  if (message.includes("Expected bounded system solves")) {
-    return createPrompt({
-      taskContext: `
-        Retry the same equation solve.
-      `,
-      detailedTaskInstructions: `
-        - Keep the same expressions, operation, bounds, and inclusivity fields from the failed input.
-        - Set variable to the bounded variable from the user's domain restriction.
-        - Set variables to the unknowns that should be solved.
-      `,
-    });
-  }
-
-  if (message.includes("Expected every bounded-system expression")) {
-    return createPrompt({
-      taskContext: `
-        Retry the same bounded system solve.
-      `,
-      detailedTaskInstructions: `
-        - Keep symbolic parameters out of variables.
-        - Set variables to the unknowns that should be solved.
-        - Every expression must involve at least one selected unknown.
-      `,
-    });
-  }
-
-  return "Ask the user for the exact missing expression or data in their language.";
 }
 
 /**
@@ -106,7 +57,7 @@ export const compute = Effect.fn("math.compute")(function* ({
   );
 
   if (Either.isLeft(decoded)) {
-    const recovery = decodeRecoveryMessage(formatDecodeError(decoded.left));
+    const recovery = readInvalidInputRecovery(formatDecodeError(decoded.left));
 
     return [
       "# Checked Math Work",
@@ -116,22 +67,29 @@ export const compute = Effect.fn("math.compute")(function* ({
     ].join("\n");
   }
 
+  const artifactCopy = readArtifactDisplayCopy(decoded.right);
   const request = {
-    ...decoded.right,
+    ...readMathRequestInput(decoded.right),
     kind: "math",
   } satisfies MathRequest;
+  if (isCoordinateArtifactRequest(request) && !artifactCopy) {
+    return [
+      "# Checked Math Work",
+      "- Status: error",
+      `- Error code: ${missingCoordinateArtifactDisplayError}`,
+      `- Recovery: ${readMissingCoordinateArtifactDisplayRecovery()}`,
+    ].join("\n");
+  }
 
-  yield* Effect.sync(() =>
-    writer.write({
-      data: {
-        input: request,
-        kind: request.operation,
-        status: "loading",
-      },
-      id: toolCallId,
-      type: "data-math",
-    })
-  );
+  yield* writeMathEvidencePart({
+    data: {
+      input: request,
+      kind: request.operation,
+      status: "loading",
+    },
+    toolCallId,
+    writer,
+  });
 
   const checked = yield* MathService.compute(request).pipe(Effect.either);
 
@@ -143,15 +101,9 @@ export const compute = Effect.fn("math.compute")(function* ({
       status: "error",
     } satisfies MathData;
 
-    yield* Effect.sync(() =>
-      writer.write({
-        data,
-        id: toolCallId,
-        type: "data-math",
-      })
-    );
+    yield* writeMathEvidencePart({ data, toolCallId, writer });
 
-    return formatMathData(data, recoveryMessage(checked.left.message));
+    return formatMathData(data, readMathFailureRecovery(checked.left.message));
   }
 
   const data = {
@@ -162,23 +114,16 @@ export const compute = Effect.fn("math.compute")(function* ({
     summary: checked.right.status,
   } satisfies MathData;
 
-  yield* Effect.sync(() =>
-    writer.write({
-      data,
-      id: toolCallId,
-      type: "data-math",
-    })
-  );
   const artifacts = yield* deriveCoordinateArtifactsFromMathData({
     artifactId: readCoordinateArtifactId(toolCallId),
+    copy: artifactCopy,
     data,
     proofAnchor: readCoordinateProofAnchor(toolCallId),
   });
-  yield* emitLearningArtifacts({
-    artifacts,
-    recordArtifacts,
-    writer,
-  });
+  yield* writeMathEvidencePart({ data, toolCallId, writer });
+  if (artifacts.length > 0 && recordArtifacts) {
+    yield* recordArtifacts(artifacts);
+  }
 
   return formatMathData(data);
 });

@@ -35,6 +35,10 @@ describe("unary MathAst constant operations", () => {
   });
 
   it("evaluates integer-pi cosine exactly", () => {
+    expect(readUnaryConstantValue("cos", constant(2 * Math.PI, 2))).toEqual({
+      tag: "Constant",
+      value: { isExactZero: false, value: 1 },
+    });
     expect(
       readUnaryConstantValue(
         "cos",
@@ -43,6 +47,37 @@ describe("unary MathAst constant operations", () => {
     ).toEqual({
       tag: "Constant",
       value: { isExactZero: false, value: -1 },
+    });
+  });
+
+  it("handles supported pi trig values exactly and fails closed otherwise", () => {
+    expect(readUnaryConstantValue("sin", constant(1.5 * Math.PI, 1.5))).toEqual(
+      {
+        tag: "Constant",
+        value: { isExactZero: false, value: -1 },
+      }
+    );
+    expect(
+      readUnaryConstantValue(
+        "sin",
+        constant(1_000_000_000.5 * Math.PI, 1_000_000_000.5)
+      )
+    ).toEqual({
+      tag: "Constant",
+      value: { isExactZero: false, value: 1 },
+    });
+    expect(readUnaryConstantValue("tan", constant(Math.PI / 4, 0.25)).tag).toBe(
+      "InvalidConstant"
+    );
+    expect(
+      readUnaryConstantValue("cos", constant(Math.PI / 3, 1 / 3)).tag
+    ).toBe("InvalidConstant");
+    expect(readUnaryConstantValue("sqrt", constant(2)).tag).toBe(
+      "InvalidConstant"
+    );
+    expect(readUnaryConstantValue("sqrt", constant(0.25))).toEqual({
+      tag: "Constant",
+      value: { isExactZero: false, value: 0.5 },
     });
   });
 });

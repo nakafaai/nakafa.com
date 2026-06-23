@@ -18,6 +18,15 @@ describe("MathAst graph validation", () => {
         input: ast("left", [literal("literal-left", "left")], "literal-left"),
       },
       {
+        expected:
+          "MathAst literal node literal-pi-plus-one must use a sortable numeric value.",
+        input: ast(
+          "pi + 1",
+          [literal("literal-pi-plus-one", "pi+1")],
+          "literal-pi-plus-one"
+        ),
+      },
+      {
         expected: "Duplicate MathAst node id: one.",
         input: ast("1", [literal("one", "1"), literal("one", "1")], "one"),
       },

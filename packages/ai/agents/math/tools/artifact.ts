@@ -8,23 +8,17 @@ import type { UIMessageStreamWriter } from "ai";
 import { Effect } from "effect";
 
 /**
- * Writes manifest-only artifact parts after full payloads are retained.
- * Without a recorder, no manifest is streamed, so transcript persistence never
- * points at a missing durable artifact row.
+ * Writes manifest-only artifact parts after specialist generation succeeds.
  */
 export const emitLearningArtifacts = Effect.fn("math.artifact.emit")(
   function* ({
     artifacts,
-    recordArtifacts,
     writer,
   }: {
     readonly artifacts: readonly LearningArtifact[];
-    readonly recordArtifacts?: (
-      artifacts: readonly LearningArtifact[]
-    ) => Effect.Effect<void>;
     readonly writer: Pick<UIMessageStreamWriter<MyUIMessage>, "write">;
   }) {
-    if (artifacts.length === 0 || !recordArtifacts) {
+    if (artifacts.length === 0) {
       return [];
     }
 
@@ -36,8 +30,6 @@ export const emitLearningArtifacts = Effect.fn("math.artifact.emit")(
       const manifest = yield* buildLearningArtifactManifest(artifact);
       manifests.push({ artifact, manifest });
     }
-
-    yield* recordArtifacts(artifacts);
 
     for (const { artifact, manifest } of manifests) {
       yield* Effect.sync(() =>

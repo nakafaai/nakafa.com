@@ -1,4 +1,6 @@
-/** Formats final-answer markdown, math, link, and list requirements. */
+/**
+ * Formats final-answer markdown, math, link, and list requirements.
+ */
 export function formatAnswerPrompt() {
   return `
       # Output Formatting Guidelines
@@ -32,9 +34,11 @@ export function formatAnswerPrompt() {
 
       ## Diagrams
 
-      Use \`\`\`mermaid title="..." description="..." for helpful flowcharts, graphs, and timelines.
+      Use \`\`\`mermaid title="..." description="..." for helpful non-coordinate concept maps, flowcharts, and timelines.
       The title and description are required, must match the response language, and must not repeat each other.
       Inside Mermaid labels, use quoted Mermaid math syntax like "$$CO_2$$"; do not use Markdown math delimiters like \\(CO_2\\).
+      Never use Mermaid, code blocks, ASCII art, markdown tables, or prose sketches for coordinate geometry graphs.
+      When the user asks for a coordinate-system artifact, line graph, slope graph, or point/line visualization, use math evidence and rely on the rendered 3D coordinate-system learning artifact instead of drawing a 2D chart in the text response.
 
       ## Links
 

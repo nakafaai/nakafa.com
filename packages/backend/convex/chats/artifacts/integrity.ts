@@ -1,3 +1,8 @@
+import {
+  isSameLearningArtifactManifest,
+  type LearningArtifactManifest,
+} from "@repo/ai/schema/artifact";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import type { Infer } from "convex/values";
 import type { artifactIntegrityIssueValidator } from "./spec";
@@ -30,13 +35,34 @@ export async function checkPayloadIntegrityPage(
       continue;
     }
 
-    const part = await ctx.db
+    if (artifact.chatId !== message.chatId) {
+      issues.push({
+        artifactId: artifact.artifactId,
+        messageId: artifact.messageId,
+        partOrder: artifact.partOrder,
+        reason: "Artifact row chat does not match its owning message.",
+      });
+      continue;
+    }
+
+    const parts = await ctx.db
       .query("parts")
       .withIndex("by_messageId_and_order", (q) =>
         q.eq("messageId", artifact.messageId).eq("order", artifact.partOrder)
       )
-      .unique();
+      .take(2);
 
+    if (parts.length > 1) {
+      issues.push({
+        artifactId: artifact.artifactId,
+        messageId: artifact.messageId,
+        partOrder: artifact.partOrder,
+        reason: "Artifact manifest part order is duplicated.",
+      });
+      continue;
+    }
+
+    const part = parts[0];
     if (!(part && part.type === "data-artifact" && part.dataArtifactData)) {
       issues.push({
         artifactId: artifact.artifactId,
@@ -47,12 +73,18 @@ export async function checkPayloadIntegrityPage(
       continue;
     }
 
-    if (part.dataArtifactData.artifactId !== artifact.artifactId) {
+    if (
+      part.dataArtifactId !== artifact.artifactId ||
+      !isSameLearningArtifactManifest(
+        part.dataArtifactData,
+        readStoredArtifactManifest(artifact)
+      )
+    ) {
       issues.push({
         artifactId: artifact.artifactId,
         messageId: artifact.messageId,
         partOrder: artifact.partOrder,
-        reason: "Artifact manifest points to a different payload.",
+        reason: "Artifact manifest fields do not match the payload row.",
       });
     }
   }
@@ -90,6 +122,16 @@ export async function checkManifestIntegrityPage(
       continue;
     }
 
+    if (part.dataArtifactId !== manifest.artifactId) {
+      issues.push({
+        artifactId: manifest.artifactId,
+        messageId: part.messageId,
+        partOrder: part.order,
+        reason: "Data artifact part id does not match its manifest.",
+      });
+      continue;
+    }
+
     const artifacts = await ctx.db
       .query("learningArtifacts")
       .withIndex("by_artifactId", (q) =>
@@ -110,13 +152,17 @@ export async function checkManifestIntegrityPage(
     const artifact = artifacts[0];
     if (
       artifact.messageId !== part.messageId ||
-      artifact.partOrder !== part.order
+      artifact.partOrder !== part.order ||
+      !isSameLearningArtifactManifest(
+        manifest,
+        readStoredArtifactManifest(artifact)
+      )
     ) {
       issues.push({
         artifactId: manifest.artifactId,
         messageId: part.messageId,
         partOrder: part.order,
-        reason: "Data artifact manifest resolves to the wrong message part.",
+        reason: "Data artifact manifest does not match its payload row.",
       });
     }
   }
@@ -126,6 +172,37 @@ export async function checkManifestIntegrityPage(
     cursor: page.continueCursor,
     isDone: page.isDone,
     issues,
+  };
+}
+
+/**
+ * Rebuilds the transcript manifest from the durable artifact row fields.
+ */
+function readStoredArtifactManifest(
+  artifact: Doc<"learningArtifacts">
+): LearningArtifactManifest {
+  return {
+    artifactId: artifact.artifactId,
+    bounds: {
+      x: {
+        max: artifact.payload.axes.x[1].expression,
+        min: artifact.payload.axes.x[0].expression,
+      },
+      y: {
+        max: artifact.payload.axes.y[1].expression,
+        min: artifact.payload.axes.y[0].expression,
+      },
+      z: {
+        max: artifact.payload.axes.z[1].expression,
+        min: artifact.payload.axes.z[0].expression,
+      },
+    },
+    ...(artifact.description ? { description: artifact.description } : {}),
+    kind: artifact.kind,
+    payloadBytes: artifact.payloadBytes,
+    primitiveCount: artifact.primitiveCount,
+    schemaVersion: artifact.schemaVersion,
+    title: artifact.title,
   };
 }
 

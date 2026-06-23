@@ -5,33 +5,59 @@ const SIGN_PREFIX_PATTERN = /^[+-]/;
  */
 export function multiplyFiniteDecimalNumbers(left: number, right: number) {
   if (!(Number.isFinite(left) && Number.isFinite(right))) {
-    return left * right;
+    return;
   }
 
   const leftDecimal = readFiniteNumberDecimal(left);
   const rightDecimal = readFiniteNumberDecimal(right);
   const coefficient = leftDecimal.coefficient * rightDecimal.coefficient;
   const exponent = leftDecimal.exponent + rightDecimal.exponent;
-  return readFiniteDecimalValue(coefficient, exponent) ?? left * right;
+  return readFiniteExactDecimalValue(coefficient, exponent);
 }
 
 /**
  * Divides finite decimal string forms and rejects drift near trig sentinels.
  */
 export function divideFiniteDecimalNumbers(left: number, right: number) {
-  const value = left / right;
-  if (!Number.isFinite(value)) {
+  if (!(Number.isFinite(left) && Number.isFinite(right)) || right === 0) {
     return;
   }
 
-  if (isRoundedPiSentinel(value)) {
+  const quotient = readFiniteDecimalQuotient(left, right);
+  if (quotient === undefined || isRoundedPiSentinel(quotient)) {
     return;
   }
 
-  if (!(Number.isFinite(left) && Number.isFinite(right))) {
-    return value;
+  return quotient;
+}
+
+/**
+ * Raises finite decimal values only when the exact result survives as Number.
+ */
+export function powerFiniteDecimalNumber(base: number, exponent: number) {
+  if (
+    !(Number.isFinite(base) && Number.isSafeInteger(exponent)) ||
+    exponent < 0
+  ) {
+    return;
   }
 
+  let value = 1;
+  for (let index = 0; index < exponent; index += 1) {
+    const nextValue = multiplyFiniteDecimalNumbers(value, base);
+    if (nextValue === undefined) {
+      return;
+    }
+    value = nextValue;
+  }
+
+  return value;
+}
+
+/**
+ * Divides finite decimal string forms as exact terminating decimal quotients.
+ */
+function readFiniteDecimalQuotient(left: number, right: number) {
   const leftDecimal = readFiniteNumberDecimal(left);
   const rightDecimal = readFiniteNumberDecimal(right);
   const exponent = Math.min(leftDecimal.exponent, rightDecimal.exponent);
@@ -40,7 +66,8 @@ export function divideFiniteDecimalNumbers(left: number, right: number) {
   const denominator =
     rightDecimal.coefficient * 10n ** BigInt(rightDecimal.exponent - exponent);
 
-  return Number(numerator) / Number(denominator);
+  const sign = denominator < 0n ? -1n : 1n;
+  return readTerminatingDecimalQuotient(numerator * sign, denominator * sign);
 }
 
 /**
@@ -133,6 +160,58 @@ function readFiniteExactDecimalValue(coefficient: bigint, exponent: number) {
   return hasSameFiniteDecimalValue(value, coefficient, exponent)
     ? value
     : undefined;
+}
+
+/**
+ * Converts an exact rational quotient only when it terminates in base ten.
+ */
+function readTerminatingDecimalQuotient(
+  numerator: bigint,
+  denominator: bigint
+) {
+  let reducedNumerator = numerator;
+  let reducedDenominator = denominator;
+  const divisor = greatestCommonDivisor(reducedNumerator, reducedDenominator);
+  reducedNumerator /= divisor;
+  reducedDenominator /= divisor;
+
+  let twos = 0;
+  while (reducedDenominator % 2n === 0n) {
+    reducedDenominator /= 2n;
+    twos += 1;
+  }
+
+  let fives = 0;
+  while (reducedDenominator % 5n === 0n) {
+    reducedDenominator /= 5n;
+    fives += 1;
+  }
+
+  if (reducedDenominator !== 1n) {
+    return;
+  }
+
+  const scale = Math.max(twos, fives);
+  const coefficient =
+    reducedNumerator * 2n ** BigInt(scale - twos) * 5n ** BigInt(scale - fives);
+
+  return readFiniteExactDecimalValue(coefficient, -scale);
+}
+
+/**
+ * Computes the positive greatest common divisor for exact rational reduction.
+ */
+function greatestCommonDivisor(left: bigint, right: bigint) {
+  let a = left < 0n ? -left : left;
+  let b = right;
+
+  while (b !== 0n) {
+    const next = a % b;
+    a = b;
+    b = next;
+  }
+
+  return a;
 }
 
 /**

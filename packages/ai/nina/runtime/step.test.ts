@@ -151,8 +151,13 @@ describe("nina/runtime/step", () => {
 
     expect(firstStep).toEqual({ messages: emptyMessages });
     expect(continuationStep).toEqual({
-      messages: emptyMessages,
-      system: expect.stringContaining(workspaceProjection),
+      messages: [
+        {
+          content: expect.stringContaining(workspaceProjection),
+          role: "assistant",
+        },
+      ],
+      system: expect.not.stringContaining(workspaceProjection),
     });
   });
 

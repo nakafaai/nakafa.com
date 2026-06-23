@@ -1,19 +1,17 @@
 import { emitLearningArtifacts } from "@repo/ai/agents/math/tools/artifact";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { deriveCoordinateArtifactsFromMathData } from "@repo/math/artifact/derive";
-import type { LearningArtifact } from "@repo/math/schema/artifact/schema";
 import type { MathData } from "@repo/math/schema/data";
 import type { UIMessageStreamWriter } from "ai";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
 describe("emitLearningArtifacts", () => {
-  it("does not stream orphan manifests without a payload recorder", async () => {
-    const artifact = await readArtifact("artifact-no-recorder");
+  it("does not write manifest parts for empty artifact batches", async () => {
     const parts: unknown[] = [];
     const emitted = await Effect.runPromise(
       emitLearningArtifacts({
-        artifacts: [artifact],
+        artifacts: [],
         writer: writerFor(parts),
       })
     );
@@ -22,23 +20,17 @@ describe("emitLearningArtifacts", () => {
     expect(parts).toEqual([]);
   });
 
-  it("records full payloads before writing manifest parts", async () => {
-    const artifact = await readArtifact("artifact-with-recorder");
+  it("writes manifest parts for retained artifacts", async () => {
+    const artifact = await readArtifact("artifact-with-manifest");
     const parts: unknown[] = [];
-    const recorded: LearningArtifact[] = [];
     const emitted = await Effect.runPromise(
       emitLearningArtifacts({
         artifacts: [artifact],
-        recordArtifacts: (artifacts) =>
-          Effect.sync(() => {
-            recorded.push(...artifacts);
-          }),
         writer: writerFor(parts),
       })
     );
 
     expect(emitted).toEqual([artifact]);
-    expect(recorded).toEqual([artifact]);
     expect(parts).toEqual([
       expect.objectContaining({
         data: expect.objectContaining({

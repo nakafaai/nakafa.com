@@ -1,6 +1,5 @@
 "use client";
 
-import type { CoordinatePrimitive } from "@repo/math/schema/coordinate/primitive";
 import { useMemo } from "react";
 import {
   BufferGeometry,
@@ -10,6 +9,7 @@ import {
   Vector3,
 } from "three";
 import { readVector3 } from "./model/numeric";
+import type { CoordinatePrimitiveView } from "./model/view";
 
 /**
  * Renders exact plane and polygon surface primitives from validated geometry.
@@ -20,7 +20,7 @@ export function SurfacePrimitive({
   size,
 }: {
   color: string;
-  primitive: Extract<CoordinatePrimitive, { kind: "plane" | "polygon" }>;
+  primitive: Extract<CoordinatePrimitiveView, { kind: "plane" | "polygon" }>;
   size: number;
 }) {
   return primitive.kind === "plane" ? (
@@ -39,7 +39,7 @@ function PlanePrimitive({
   size,
 }: {
   color: string;
-  primitive: Extract<CoordinatePrimitive, { kind: "plane" }>;
+  primitive: Extract<CoordinatePrimitiveView, { kind: "plane" }>;
   size: number;
 }) {
   const transform = useMemo(() => {
@@ -83,7 +83,7 @@ function PolygonPrimitive({
   primitive,
 }: {
   color: string;
-  primitive: Extract<CoordinatePrimitive, { kind: "polygon" }>;
+  primitive: Extract<CoordinatePrimitiveView, { kind: "polygon" }>;
 }) {
   const geometry = useMemo(() => readPolygonGeometry(primitive), [primitive]);
   if (!geometry) {
@@ -101,7 +101,7 @@ function PolygonPrimitive({
  * Builds a Three.js polygon geometry from validated exact vertices.
  */
 function readPolygonGeometry(
-  primitive: Extract<CoordinatePrimitive, { kind: "polygon" }>
+  primitive: Extract<CoordinatePrimitiveView, { kind: "polygon" }>
 ) {
   const vertices = primitive.vertices.map(readVector3);
   if (vertices.some((vertex) => vertex === undefined)) {

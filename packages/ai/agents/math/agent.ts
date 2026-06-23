@@ -25,6 +25,7 @@ import {
   mathStatisticsInput,
 } from "@repo/ai/agents/math/schema";
 import { prepareMathStep } from "@repo/ai/agents/math/step";
+import { emitLearningArtifacts } from "@repo/ai/agents/math/tools/artifact";
 import { compute } from "@repo/ai/agents/math/tools/compute";
 import { provider } from "@repo/ai/config/app";
 import { getFastModelProviderOptions } from "@repo/ai/config/model";
@@ -230,6 +231,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
       }),
     catch: (error) => error,
   });
+  yield* emitLearningArtifacts({ artifacts, writer });
 
   return {
     artifacts,

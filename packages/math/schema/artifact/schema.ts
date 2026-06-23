@@ -1,3 +1,7 @@
+import {
+  LearningArtifactDescriptionSchema,
+  LearningArtifactTitleSchema,
+} from "@repo/math/schema/artifact/copy";
 import { findLearningArtifactInvariantIssue } from "@repo/math/schema/artifact/invariant";
 import {
   findRawArtifactSizeIssue,
@@ -58,7 +62,7 @@ export class CoordinateSystemPayload extends Schema.Class<CoordinateSystemPayloa
 export class CoordinateSystemArtifact extends Schema.Class<CoordinateSystemArtifact>(
   "CoordinateSystemArtifact"
 )({
-  description: Schema.optional(Schema.String),
+  description: Schema.optional(LearningArtifactDescriptionSchema),
   id: ArtifactIdSchema,
   kind: Schema.Literal(COORDINATE_SYSTEM_ARTIFACT_KIND),
   payload: CoordinateSystemPayload,
@@ -67,8 +71,15 @@ export class CoordinateSystemArtifact extends Schema.Class<CoordinateSystemArtif
     Schema.maxItems(MAX_COORDINATE_ARTIFACT_PROOF_ANCHORS),
     Schema.mutable
   ),
-  title: Schema.NonEmptyString,
+  title: LearningArtifactTitleSchema,
 }) {}
+
+export type CoordinateSystemPayloadEncoded = Schema.Schema.Encoded<
+  typeof CoordinateSystemPayload
+>;
+export type CoordinateSystemArtifactEncoded = Schema.Schema.Encoded<
+  typeof CoordinateSystemArtifact
+>;
 
 /** Schema-owned learning artifact union. */
 export const LearningArtifactSchema = Schema.Union(CoordinateSystemArtifact);
@@ -84,6 +95,15 @@ export class LearningArtifactDecodeError extends Schema.TaggedError<LearningArti
     message: Schema.String,
   }
 ) {}
+
+/**
+ * Encodes a coordinate artifact into the plain durable shape used by clients.
+ */
+export function encodeCoordinateSystemArtifact(
+  artifact: CoordinateSystemArtifact
+): CoordinateSystemArtifactEncoded {
+  return Schema.encodeSync(CoordinateSystemArtifact)(artifact);
+}
 
 /**
  * Decodes a learning artifact and verifies symbolic math references.

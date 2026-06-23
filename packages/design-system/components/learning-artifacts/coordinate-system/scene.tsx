@@ -2,18 +2,13 @@
 
 import { FunctionPrimitive } from "@repo/design-system/components/learning-artifacts/coordinate-system/function";
 import { LinearPrimitive } from "@repo/design-system/components/learning-artifacts/coordinate-system/linear";
+import type {
+  CoordinatePrimitiveView,
+  CoordinateSystemPayloadView,
+} from "@repo/design-system/components/learning-artifacts/coordinate-system/model/view";
 import { ClosedPrimitive } from "@repo/design-system/components/learning-artifacts/coordinate-system/solid";
 import { SurfacePrimitive } from "@repo/design-system/components/learning-artifacts/coordinate-system/surface";
-import type { CoordinateSystemPayload } from "@repo/math/schema/artifact/schema";
-
-const PRIMITIVE_COLORS = [
-  "#2563eb",
-  "#dc2626",
-  "#16a34a",
-  "#9333ea",
-  "#ea580c",
-  "#0891b2",
-];
+import { getColor, randomColor } from "@repo/design-system/lib/color";
 
 /**
  * Renders the validated coordinate primitive list inside the shared 3D scene.
@@ -22,13 +17,13 @@ export function CoordinateArtifactScene({
   payload,
   size,
 }: {
-  payload: CoordinateSystemPayload;
+  payload: CoordinateSystemPayloadView;
   size: number;
 }) {
   return (
     <>
       {payload.primitives.map((primitive, index) => {
-        const color = readPrimitiveColor(index);
+        const color = readPrimitiveColor(primitive.kind, index);
         switch (primitive.kind) {
           case "parametric-curve":
           case "function-surface":
@@ -81,6 +76,17 @@ export function CoordinateArtifactScene({
 /**
  * Assigns stable visual colors by primitive order without model-controlled CSS.
  */
-function readPrimitiveColor(index: number) {
-  return PRIMITIVE_COLORS[index % PRIMITIVE_COLORS.length] ?? "#2563eb";
+function readPrimitiveColor(
+  kind: CoordinatePrimitiveView["kind"],
+  index: number
+) {
+  if (kind === "line" || kind === "ray" || kind === "segment") {
+    return getColor("ORANGE");
+  }
+
+  if (kind === "vector") {
+    return getColor("CYAN");
+  }
+
+  return randomColor(["YELLOW"], `${kind}:${index}`);
 }
