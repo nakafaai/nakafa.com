@@ -1,4 +1,5 @@
 import { ExactPoint3, ExactScalar } from "@repo/math/schema/ast";
+import { isExactZeroPoint } from "@repo/math/schema/coordinate-scalars";
 import {
   CoordinatePrimitiveInvariantError,
   findCoordinatePrimitiveIssue,
@@ -25,21 +26,26 @@ describe("coordinate scalar invariants", () => {
     );
   });
 
-  it("does not treat blank exact expressions as zero direction components", () => {
+  it("rejects blank exact direction components before zero checks", () => {
+    const direction = ExactPoint3.make({
+      x: scalarDecimal(" ", 0),
+      y: scalar("0"),
+      z: scalar("0"),
+    });
+
+    expect(isExactZeroPoint(direction)).toBe(false);
     expect(
-      findCoordinatePrimitiveIssue([
+      readIssueMessage([
         {
-          direction: ExactPoint3.make({
-            x: scalarDecimal(" ", 0),
-            y: scalar("0"),
-            z: scalar("0"),
-          }),
+          direction,
           id: "line-blank-not-zero",
           kind: "line",
           point: point("1", "0", "0"),
         },
       ])
-    ).toBeUndefined();
+    ).toBe(
+      "Coordinate primitive line-blank-not-zero line direction x-coordinate must use a sortable numeric value."
+    );
   });
 });
 

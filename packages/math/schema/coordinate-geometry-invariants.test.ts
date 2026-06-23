@@ -92,19 +92,6 @@ describe("coordinate geometry invariants", () => {
     ).toBe(
       "Coordinate primitive sphere-symbolic sphere radius must use a sortable numeric value."
     );
-
-    expect(
-      readIssueMessage([
-        {
-          center: point("0", "0", "0"),
-          id: "sphere-infinite-hint",
-          kind: "sphere",
-          radius: scalarDecimal("r", Number.POSITIVE_INFINITY),
-        },
-      ])
-    ).toBe(
-      "Coordinate primitive sphere-infinite-hint sphere radius must use a sortable numeric value."
-    );
   });
 
   it("rejects inconsistent decimal hints and blank exact scalars", () => {

@@ -28,6 +28,21 @@ export function isExactZeroPoint(point: ExactPoint3) {
   );
 }
 
+/** Reads the first point coordinate that lacks a finite sortable scalar value. */
+export function readNonSortablePointAxis(point: ExactPoint3) {
+  if (readSortableExactScalar(point.x) === undefined) {
+    return "x";
+  }
+
+  if (readSortableExactScalar(point.y) === undefined) {
+    return "y";
+  }
+
+  if (readSortableExactScalar(point.z) === undefined) {
+    return "z";
+  }
+}
+
 function isExactZeroScalar(scalar: ExactScalar) {
   if (isBlankExactExpression(scalar.expression)) {
     return false;
@@ -54,11 +69,7 @@ function isBlankExactExpression(expression: string) {
 }
 
 function readFiniteDecimalHint(scalar: ExactScalar) {
-  if (scalar.decimal === undefined) {
-    return;
-  }
-
-  return Number.isFinite(scalar.decimal) ? scalar.decimal : undefined;
+  return scalar.decimal;
 }
 
 function hasInconsistentDecimalHint(scalar: ExactScalar, exactValue: number) {

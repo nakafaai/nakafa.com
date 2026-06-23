@@ -60,6 +60,10 @@ export const MathAstNodeIdSchema = Schema.NonEmptyString.annotations({
 
 export type MathAstNodeId = Schema.Schema.Type<typeof MathAstNodeIdSchema>;
 
+const FiniteDecimalHint = Schema.Number.pipe(Schema.finite()).annotations({
+  description: "Finite decimal display hint for an exact scalar.",
+});
+
 /**
  * Exact scalar value with deterministic display metadata.
  *
@@ -67,7 +71,7 @@ export type MathAstNodeId = Schema.Schema.Type<typeof MathAstNodeIdSchema>;
  * a display hint and must not replace exact evaluation.
  */
 export class ExactScalar extends Schema.Class<ExactScalar>("ExactScalar")({
-  decimal: Schema.optional(Schema.Number),
+  decimal: Schema.optional(FiniteDecimalHint),
   expression: Schema.NonEmptyString,
   latex: Schema.String,
 }) {}

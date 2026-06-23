@@ -50,6 +50,9 @@ const SampleCountSchema = Schema.Number.pipe(
 /** Maximum exact vertices accepted for one polygon primitive. */
 export const MAX_POLYGON_VERTICES = 32;
 
+/** Maximum exclusion predicates accepted on one scalar function primitive. */
+export const MAX_FUNCTION_EXCLUSIONS = 16;
+
 const commonPrimitiveFields = {
   id: PrimitiveIdSchema,
   label: Schema.optional(Schema.NonEmptyString),
@@ -80,7 +83,12 @@ export class CanonicalFunctionSpec extends Schema.Class<CanonicalFunctionSpec>(
 )({
   ast: MathAst,
   domain: Schema.Array(FunctionDomain).pipe(Schema.minItems(1), Schema.mutable),
-  exclusions: Schema.optional(Schema.Array(MathAst).pipe(Schema.mutable)),
+  exclusions: Schema.optional(
+    Schema.Array(MathAst).pipe(
+      Schema.maxItems(MAX_FUNCTION_EXCLUSIONS),
+      Schema.mutable
+    )
+  ),
   verifiedBy: Schema.optional(Schema.NonEmptyString),
 }) {}
 

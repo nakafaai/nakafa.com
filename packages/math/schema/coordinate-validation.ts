@@ -4,6 +4,7 @@ import {
   type MathAst,
   readMathAstVariableNames,
 } from "@repo/math/schema/ast";
+import { findPointLikeCoordinateIssue } from "@repo/math/schema/coordinate-point-validation";
 import type {
   CanonicalFunctionSpec,
   CanonicalVectorFunctionSpec,
@@ -38,6 +39,11 @@ export function findCoordinatePrimitiveIssue(
 }
 
 function findOnePrimitiveIssue(primitive: CoordinatePrimitive) {
+  const pointIssue = findPointLikeCoordinateIssue(primitive);
+  if (pointIssue) {
+    return createIssue(pointIssue);
+  }
+
   if (primitive.kind === "ray") {
     return findDirectionIssue(primitive.id, primitive.direction);
   }
