@@ -25,6 +25,12 @@ describe("coordinate plane equation validation", () => {
     expect(readIssue(zTimesTwoMinusFourAst(), normal, zTwo)).toBeUndefined();
     expect(readIssue(zDividedByTwoMinusOneAst(), normal, zTwo)).toBeUndefined();
     expect(readIssue(negativeZPlusTwoAst(), normal, zTwo)).toBeUndefined();
+    expect(
+      readIssue(variableAst("x"), point("1", "0", "0"), point("0", "0", "0"))
+    ).toBeUndefined();
+    expect(
+      readIssue(yMinusThreeAst(), point("0", "1", "0"), point("0", "3", "0"))
+    ).toBeUndefined();
   });
 
   it("rejects unsupported or invalid plane equation graphs", () => {
@@ -70,6 +76,12 @@ describe("coordinate plane equation validation", () => {
     );
 
     expect(
+      readIssue(zPlusTinyXAst(), point("0", "0", "1"), point("0", "0", "0"))
+    ).toBe(
+      "Coordinate primitive plane plane equation is inconsistent with point and normal."
+    );
+
+    expect(
       readIssue(literalAst("0"), point("0", "0", "1"), point("0", "0", "0"))
     ).toBe(
       "Coordinate primitive plane plane equation is inconsistent with point and normal."
@@ -77,6 +89,12 @@ describe("coordinate plane equation validation", () => {
 
     expect(
       readIssue(literalAst("0"), point("0", "0", "0"), point("0", "0", "0"))
+    ).toBe(
+      "Coordinate primitive plane plane equation is inconsistent with point and normal."
+    );
+
+    expect(
+      readIssue(variableAst("z"), point("0", "0", "0"), point("0", "0", "0"))
     ).toBe(
       "Coordinate primitive plane plane equation is inconsistent with point and normal."
     );
@@ -139,6 +157,24 @@ function negativeZPlusTwoAst() {
     unaryNode("negative-z", "z", "negate"),
     literalNode("2"),
     binaryNode("root", "negative-z", "add", "literal-2"),
+  ]);
+}
+
+function yMinusThreeAst() {
+  return makeAst("y - 3", [
+    variableNode("y"),
+    literalNode("3"),
+    binaryNode("root", "y", "subtract", "literal-3"),
+  ]);
+}
+
+function zPlusTinyXAst() {
+  return makeAst("z + 1e-10*x", [
+    variableNode("z"),
+    literalNode("1e-10"),
+    variableNode("x"),
+    binaryNode("tiny-x", "literal-1e-10", "multiply", "x"),
+    binaryNode("root", "z", "add", "tiny-x"),
   ]);
 }
 

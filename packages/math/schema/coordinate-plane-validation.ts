@@ -11,10 +11,7 @@ interface AffinePlaneExpression {
   z: number;
 }
 
-/**
- * Verifies that a plane's implicit equation describes the same point/normal
- * geometry renderers will use.
- */
+/** Verifies a plane implicit equation against renderer point/normal geometry. */
 export function findPlaneEquationConsistencyIssue(
   primitiveId: string,
   equation: CanonicalFunctionSpec,
@@ -151,7 +148,7 @@ function readAcyclicNodeExpression(
 
   if (node.operator === "divide") {
     const divisor = readConstant(right);
-    if (divisor === undefined || isCloseToZero(divisor)) {
+    if (divisor === undefined || isClose(divisor, 0)) {
       return;
     }
 
@@ -194,60 +191,51 @@ function isSamePlaneExpression(
 
   const scaleFactor = readScaleFactor(actual, expected);
 
-  if (scaleFactor === undefined || isCloseToZero(scaleFactor)) {
+  if (scaleFactor === undefined || isClose(scaleFactor, 0)) {
     return false;
   }
 
-  const pairs = [
-    { actual: actual.x, expected: expected.x * scaleFactor },
-    { actual: actual.y, expected: expected.y * scaleFactor },
-    { actual: actual.z, expected: expected.z * scaleFactor },
-    { actual: actual.constant, expected: expected.constant * scaleFactor },
-  ];
-
-  for (const pair of pairs) {
-    if (!isClose(pair.actual, pair.expected)) {
-      return false;
-    }
-  }
-
-  return true;
+  return (
+    isPlaneCoefficientMatch(actual.x, expected.x, expected.x * scaleFactor) &&
+    isPlaneCoefficientMatch(actual.y, expected.y, expected.y * scaleFactor) &&
+    isPlaneCoefficientMatch(actual.z, expected.z, expected.z * scaleFactor) &&
+    isPlaneCoefficientMatch(
+      actual.constant,
+      expected.constant,
+      expected.constant * scaleFactor
+    )
+  );
 }
 
 function readScaleFactor(
   actual: AffinePlaneExpression,
   expected: AffinePlaneExpression
 ) {
-  const pairs = [
-    { actual: actual.x, expected: expected.x },
-    { actual: actual.y, expected: expected.y },
-    { actual: actual.z, expected: expected.z },
-    { actual: actual.constant, expected: expected.constant },
-  ];
+  if (expected.x !== 0) {
+    return actual.x / expected.x;
+  }
 
-  for (const pair of pairs) {
-    if (!isCloseToZero(pair.expected)) {
-      return pair.actual / pair.expected;
-    }
+  if (expected.y !== 0) {
+    return actual.y / expected.y;
+  }
+
+  if (expected.z !== 0) {
+    return actual.z / expected.z;
   }
 }
 
 function readConstant(expression: AffinePlaneExpression) {
-  if (
-    isCloseToZero(expression.x) &&
-    isCloseToZero(expression.y) &&
-    isCloseToZero(expression.z)
-  ) {
+  if (expression.x === 0 && expression.y === 0 && expression.z === 0) {
     return expression.constant;
   }
 }
 
 function isZeroAffineExpression(expression: AffinePlaneExpression) {
   return (
-    isCloseToZero(expression.x) &&
-    isCloseToZero(expression.y) &&
-    isCloseToZero(expression.z) &&
-    isCloseToZero(expression.constant)
+    expression.x === 0 &&
+    expression.y === 0 &&
+    expression.z === 0 &&
+    expression.constant === 0
   );
 }
 
@@ -292,6 +280,14 @@ function isClose(left: number, right: number) {
   return Math.abs(left - right) <= PLANE_EQUATION_TOLERANCE;
 }
 
-function isCloseToZero(value: number) {
-  return isClose(value, 0);
+function isPlaneCoefficientMatch(
+  actual: number,
+  expected: number,
+  scaledExpected: number
+) {
+  if (expected === 0) {
+    return actual === 0;
+  }
+
+  return isClose(actual, scaledExpected);
 }

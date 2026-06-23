@@ -33,6 +33,39 @@ describe("coordinate scalar invariants", () => {
     expect(readSortableExactScalar(scalarDecimal("left", 0))).toBeUndefined();
   });
 
+  it("accepts allowlisted exact numeric forms", () => {
+    expect(readSortableExactScalar(scalar("1/2"))).toBe(0.5);
+    expect(readSortableExactScalar(scalarDecimal("pi/2", 1.5708))).toBeCloseTo(
+      Math.PI / 2
+    );
+    expect(readSortableExactScalar(scalar("2*π/3"))).toBeCloseTo(
+      (2 * Math.PI) / 3
+    );
+    expect(readSortableExactScalar(scalar("-pi/2"))).toBeCloseTo(-Math.PI / 2);
+    expect(readSortableExactScalar(scalar("+pi"))).toBe(Math.PI);
+    expect(readSortableExactScalar(scalar("(1)/2"))).toBe(0.5);
+    expect(readSortableExactScalar(scalar("(1)/(2)"))).toBe(0.5);
+    expect(readSortableExactScalar(scalar("1/(2*pi)"))).toBeCloseTo(
+      1 / (2 * Math.PI)
+    );
+  });
+
+  it("rejects malformed exact numeric forms", () => {
+    expect(readSortableExactScalar(scalar("1/"))).toBeUndefined();
+    expect(readSortableExactScalar(scalar("1/0"))).toBeUndefined();
+    expect(readSortableExactScalar(scalar("1/left"))).toBeUndefined();
+    expect(readSortableExactScalar(scalar("1/2/3"))).toBeUndefined();
+    expect(readSortableExactScalar(scalar("1/(2"))).toBeUndefined();
+    expect(readSortableExactScalar(scalar("1)/2"))).toBeUndefined();
+    expect(readSortableExactScalar(scalar("2**pi"))).toBeUndefined();
+    expect(readSortableExactScalar(scalar("2*left"))).toBeUndefined();
+    expect(readSortableExactScalar(scalar("-left"))).toBeUndefined();
+    expect(readSortableExactScalar(scalar("1 2"))).toBeUndefined();
+    expect(readSortableExactScalar(scalar("1e9999"))).toBeUndefined();
+    expect(readSortableExactScalar(scalar("1e308*1e308"))).toBeUndefined();
+    expect(readSortableExactScalar(scalar("1e308/1e-308"))).toBeUndefined();
+  });
+
   it("rejects nonsortable exact direction components before zero checks", () => {
     const direction = ExactPoint3.make({
       x: scalar("left"),
