@@ -1,21 +1,16 @@
-import type {
-  ConstantMathAstRead,
-  ConstantMathAstValue,
-} from "@repo/math/schema/ast/constant";
+import type { ConstantMathAstValue } from "@repo/math/schema/ast/constant";
 import {
   isSyntacticHalfIntegerPiMultiple,
   isSyntacticIntegerPiMultiple,
   readAbsolutePiMultiple,
-  readCombinedPiMultiple,
   readNegatedPiMultiple,
-  readProductPiMultiple,
-  readQuotientPiMultiple,
 } from "@repo/math/schema/ast/pi";
 import type { MathAstNode } from "@repo/math/schema/ast/schema";
-
-const INVALID_CONSTANT_MATH_AST: ConstantMathAstRead = {
-  tag: "InvalidConstant",
-};
+import {
+  constantMathAst,
+  finiteComputedConstantValue,
+  INVALID_CONSTANT_MATH_AST,
+} from "@repo/math/schema/ast/value";
 
 /**
  * Applies unary operators while preserving exact-zero and syntactic-pi facts.
@@ -61,9 +56,16 @@ export function readUnaryConstantValue(
   }
 
   if (operator === "cos") {
-    return isSyntacticHalfIntegerPiMultiple(operand.piMultiple)
-      ? constantMathAst(0)
-      : finiteComputedConstantValue(Math.cos(operand.value));
+    const piMultiple = operand.piMultiple;
+    if (isSyntacticHalfIntegerPiMultiple(piMultiple)) {
+      return constantMathAst(0);
+    }
+
+    if (piMultiple !== undefined && isSyntacticIntegerPiMultiple(piMultiple)) {
+      return constantMathAst(readIntegerPiCosine(piMultiple));
+    }
+
+    return finiteComputedConstantValue(Math.cos(operand.value));
   }
 
   if (operator === "exp") {
@@ -78,189 +80,8 @@ export function readUnaryConstantValue(
 }
 
 /**
- * Applies binary operators and rejects computed underflow to false exact zero.
+ * Computes exact cosine values for syntactic integer multiples of pi.
  */
-export function readBinaryConstantValue(
-  operator: Extract<MathAstNode, { kind: "binary" }>["operator"],
-  left: ConstantMathAstValue,
-  right: ConstantMathAstValue
-) {
-  if (operator === "add") {
-    const piMultiple = readCombinedPiMultiple(
-      left.piMultiple,
-      right.piMultiple,
-      "add"
-    );
-    if (
-      left.piMultiple !== undefined &&
-      right.piMultiple !== undefined &&
-      piMultiple === undefined
-    ) {
-      return INVALID_CONSTANT_MATH_AST;
-    }
-
-    const value = readConstantSumValue(left.value, right.value, "add");
-    if (value === undefined) {
-      return INVALID_CONSTANT_MATH_AST;
-    }
-
-    return finiteComputedConstantValue(value, {
-      piMultiple,
-    });
-  }
-
-  if (operator === "subtract") {
-    const piMultiple = readCombinedPiMultiple(
-      left.piMultiple,
-      right.piMultiple,
-      "subtract"
-    );
-    if (
-      left.piMultiple !== undefined &&
-      right.piMultiple !== undefined &&
-      piMultiple === undefined
-    ) {
-      return INVALID_CONSTANT_MATH_AST;
-    }
-
-    const value = readConstantSumValue(left.value, right.value, "subtract");
-    if (value === undefined) {
-      return INVALID_CONSTANT_MATH_AST;
-    }
-
-    return finiteComputedConstantValue(value, {
-      piMultiple,
-    });
-  }
-
-  if (operator === "multiply") {
-    if (left.isExactZero || right.isExactZero) {
-      return constantMathAst(0);
-    }
-
-    const piMultiple = readProductPiMultiple(left, right);
-    if (hasExactlyOnePiMultiple(left, right) && piMultiple === undefined) {
-      return INVALID_CONSTANT_MATH_AST;
-    }
-
-    return finiteComputedConstantValue(left.value * right.value, {
-      piMultiple,
-      rejectZero: true,
-    });
-  }
-
-  if (operator === "divide") {
-    if (right.isExactZero) {
-      return INVALID_CONSTANT_MATH_AST;
-    }
-
-    if (left.isExactZero) {
-      return constantMathAst(0);
-    }
-
-    const piMultiple = readQuotientPiMultiple(left, right);
-    if (
-      left.piMultiple !== undefined &&
-      right.piMultiple === undefined &&
-      piMultiple === undefined
-    ) {
-      return INVALID_CONSTANT_MATH_AST;
-    }
-
-    return finiteComputedConstantValue(left.value / right.value, {
-      piMultiple,
-      rejectZero: true,
-    });
-  }
-
-  if (left.isExactZero && right.value === 0) {
-    return INVALID_CONSTANT_MATH_AST;
-  }
-
-  if (left.isExactZero && right.value > 0) {
-    return constantMathAst(0);
-  }
-
-  if (right.value === 1 && left.piMultiple !== undefined) {
-    return finiteComputedConstantValue(left.value, {
-      piMultiple: left.piMultiple,
-      rejectZero: true,
-    });
-  }
-
-  return finiteComputedConstantValue(left.value ** right.value, {
-    rejectZero: true,
-  });
-}
-
-/**
- * Detects the only multiplication case where pi metadata must survive.
- */
-function hasExactlyOnePiMultiple(
-  left: ConstantMathAstValue,
-  right: ConstantMathAstValue
-) {
-  return (left.piMultiple === undefined) !== (right.piMultiple === undefined);
-}
-
-/**
- * Adds or subtracts finite constants without accepting rounded-away operands.
- */
-function readConstantSumValue(
-  left: number,
-  right: number,
-  operator: "add" | "subtract"
-) {
-  const value = operator === "add" ? left + right : left - right;
-  if (!Number.isFinite(value)) {
-    return;
-  }
-
-  if (left === 0 || right === 0) {
-    return value;
-  }
-
-  if (operator === "add" && (value === left || value === right)) {
-    return;
-  }
-
-  if (operator === "subtract" && (value === left || value === -right)) {
-    return;
-  }
-
-  return value;
-}
-
-/**
- * Builds the successful constant read value with exact-zero metadata.
- */
-function constantMathAst(
-  value: number,
-  piMultiple?: number
-): ConstantMathAstRead {
-  return {
-    tag: "Constant",
-    value:
-      piMultiple === undefined
-        ? { isExactZero: value === 0, value }
-        : { isExactZero: value === 0, piMultiple, value },
-  };
-}
-
-/**
- * Accepts only finite computed constants and rejects underflow when requested.
- */
-function finiteComputedConstantValue(
-  value: number,
-  options: { piMultiple?: number; rejectZero?: boolean } = {}
-): ConstantMathAstRead {
-  if (!Number.isFinite(value)) {
-    return INVALID_CONSTANT_MATH_AST;
-  }
-
-  if (options.rejectZero && value === 0) {
-    return INVALID_CONSTANT_MATH_AST;
-  }
-
-  return constantMathAst(value, options.piMultiple);
+function readIntegerPiCosine(multiple: number) {
+  return Math.abs(multiple) % 2 === 0 ? 1 : -1;
 }

@@ -1,69 +1,18 @@
 import type { ConstantMathAstValue } from "@repo/math/schema/ast/constant";
-import { readBinaryConstantValue } from "@repo/math/schema/ast/operation";
+import { readUnaryConstantValue } from "@repo/math/schema/ast/operation";
 import { describe, expect, it } from "vitest";
 
-describe("MathAst constant operations", () => {
-  it("rejects pi multiple combinations that lose fractional offsets", () => {
+describe("unary MathAst constant operations", () => {
+  it("evaluates integer-pi cosine exactly", () => {
     expect(
-      readBinaryConstantValue(
-        "add",
-        constant(Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER),
-        constant(0.5, 0.5)
-      ).tag
-    ).toBe("InvalidConstant");
-    expect(
-      readBinaryConstantValue(
-        "subtract",
-        constant(Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER),
-        constant(0.5, 0.5)
-      ).tag
-    ).toBe("InvalidConstant");
-  });
-
-  it("rejects pi quotient drift near exact trig sentinels", () => {
-    expect(
-      readBinaryConstantValue(
-        "divide",
-        constant(Math.PI * 1e-308, 1e-308),
-        constant(1e-309 * 10)
-      ).tag
-    ).toBe("InvalidConstant");
-  });
-
-  it("rejects pi product drift and preserves identity powers", () => {
-    expect(
-      readBinaryConstantValue(
-        "multiply",
-        constant(Math.PI / 3, 1 / 3),
-        constant(3)
-      ).tag
-    ).toBe("InvalidConstant");
-
-    const poweredPi = readBinaryConstantValue(
-      "power",
-      constant(Math.PI, 1),
-      constant(1)
-    );
-
-    expect(poweredPi).toEqual({
+      readUnaryConstantValue(
+        "cos",
+        constant(9_007_199_254_740_991, 9_007_199_254_740_991)
+      )
+    ).toEqual({
       tag: "Constant",
-      value: { isExactZero: false, piMultiple: 1, value: Math.PI },
+      value: { isExactZero: false, value: -1 },
     });
-  });
-
-  it("rejects rounded and nonfinite plain constant arithmetic", () => {
-    expect(
-      readBinaryConstantValue("add", constant(1e308), constant(1e308)).tag
-    ).toBe("InvalidConstant");
-    expect(
-      readBinaryConstantValue("add", constant(1e20), constant(1)).tag
-    ).toBe("InvalidConstant");
-    expect(
-      readBinaryConstantValue("subtract", constant(1e20), constant(1)).tag
-    ).toBe("InvalidConstant");
-    expect(
-      readBinaryConstantValue("divide", constant(1e308), constant(1e-308)).tag
-    ).toBe("InvalidConstant");
   });
 });
 

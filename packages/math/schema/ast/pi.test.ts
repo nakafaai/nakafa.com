@@ -8,10 +8,13 @@ import {
   readQuotientPiMultiple,
   readSyntacticPiMultiple,
 } from "@repo/math/schema/ast/pi";
+import { hasMultipleSyntacticPiTokens } from "@repo/math/schema/ast/power";
 import { describe, expect, it } from "vitest";
 
 describe("syntactic pi multiple tracking", () => {
   it("reads exact pi multiples without numeric tolerance", () => {
+    expect(hasMultipleSyntacticPiTokens("(pi*pi)/pi")).toBe(true);
+    expect(hasMultipleSyntacticPiTokens("pi/2")).toBe(false);
     expect(readSyntacticPiMultiple("0", 0)).toBe(0);
     expect(readSyntacticPiMultiple("pi", Math.PI)).toBe(1);
     expect(readSyntacticPiMultiple("3*pi/2", (3 * Math.PI) / 2)).toBe(1.5);
@@ -29,6 +32,7 @@ describe("syntactic pi multiple tracking", () => {
     expect(
       readSyntacticPiMultiple("3.141592653589793", Math.PI)
     ).toBeUndefined();
+    expect(readSyntacticPiMultiple("(pi*pi)/pi", Math.PI)).toBeUndefined();
     expect(readSyntacticPiMultiple("left", 0)).toBeUndefined();
   });
 

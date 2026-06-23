@@ -63,6 +63,7 @@ describe("MathAst constant evaluation", () => {
     expectUnaryValue("tan", "1", Math.tan(1));
     expectUnaryValue("cos", "0", 1);
     expectUnaryValue("cos", "pi/2", 0);
+    expectUnaryValue("cos", "9007199254740991*pi", -1);
     expectUnaryValue("cos", "1/(2*pi)", Math.cos(1 / (2 * Math.PI)));
     expectUnaryValue("exp", "1", Math.E);
     expectUnaryValue("log", "1", 0);
@@ -89,6 +90,10 @@ describe("MathAst constant evaluation", () => {
 
     expect(readBinaryResult("0", "power", "0").tag).toBe("InvalidConstant");
     expect(readBinaryResult("1", "divide", "0").tag).toBe("InvalidConstant");
+    expect(readCancellationDriftToZero()?.isExactZero).toBe(true);
+    expect(
+      readResult("multi-pi", [literalNode("multi-pi", "(pi*pi)/pi")]).tag
+    ).toBe("InvalidConstant");
     expect(readBinaryResult("1", "add", "1e-16").tag).toBe("InvalidConstant");
     expect(readBinaryResult("1e16", "subtract", "1").tag).toBe(
       "InvalidConstant"
@@ -158,6 +163,16 @@ function readRoundedAwayDifference() {
     literalNode("tiny", "1e-16"),
     binaryNode("rounded", "one", "add", "tiny"),
     binaryNode("root", "rounded", "subtract", "one"),
+  ]);
+}
+
+function readCancellationDriftToZero() {
+  return readValue("root", [
+    literalNode("one-tenth", "0.1"),
+    literalNode("two-tenths", "0.2"),
+    literalNode("three-tenths", "0.3"),
+    binaryNode("sum", "one-tenth", "add", "two-tenths"),
+    binaryNode("root", "sum", "subtract", "three-tenths"),
   ]);
 }
 

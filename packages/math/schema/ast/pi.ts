@@ -39,7 +39,11 @@ export function isSyntacticIntegerPiMultiple(multiple: number | undefined) {
  * Returns true only for exact half-integer multiples tracked syntactically.
  */
 export function isSyntacticHalfIntegerPiMultiple(multiple: number | undefined) {
-  return multiple !== undefined && Number.isInteger(multiple - 0.5);
+  return (
+    multiple !== undefined &&
+    !Number.isInteger(multiple) &&
+    Number.isInteger(multiple - 0.5)
+  );
 }
 
 /**

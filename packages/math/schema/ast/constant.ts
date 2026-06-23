@@ -1,9 +1,12 @@
-import {
-  readBinaryConstantValue,
-  readUnaryConstantValue,
-} from "@repo/math/schema/ast/operation";
+import { readBinaryConstantValue } from "@repo/math/schema/ast/binary";
+import { readUnaryConstantValue } from "@repo/math/schema/ast/operation";
 import { readSyntacticPiMultiple } from "@repo/math/schema/ast/pi";
+import { hasMultipleSyntacticPiTokens } from "@repo/math/schema/ast/power";
 import type { MathAstNode } from "@repo/math/schema/ast/schema";
+import {
+  constantMathAst,
+  INVALID_CONSTANT_MATH_AST,
+} from "@repo/math/schema/ast/value";
 import { readSortableExactScalar } from "@repo/math/schema/coordinate/scalar";
 import { Schema } from "effect";
 
@@ -11,6 +14,7 @@ import { Schema } from "effect";
 export const ConstantMathAstValueSchema = Schema.Struct({
   isExactZero: Schema.Boolean,
   piMultiple: Schema.optional(Schema.Number),
+  piSquareMultiple: Schema.optional(Schema.Number),
   value: Schema.Number.pipe(Schema.finite()),
 });
 
@@ -31,10 +35,6 @@ export const ConstantMathAstReadSchema = Schema.Union(
 export type ConstantMathAstRead = Schema.Schema.Type<
   typeof ConstantMathAstReadSchema
 >;
-
-const INVALID_CONSTANT_MATH_AST: ConstantMathAstRead = {
-  tag: "InvalidConstant",
-};
 
 const NONCONSTANT_MATH_AST: ConstantMathAstRead = { tag: "Nonconstant" };
 
@@ -78,12 +78,17 @@ function readAcyclicConstantMathAstValue(
 ): ConstantMathAstRead {
   if (node.kind === "literal") {
     const value = readSortableExactScalar(node.value);
-    return value === undefined
-      ? INVALID_CONSTANT_MATH_AST
-      : constantMathAst(
-          value,
-          readSyntacticPiMultiple(node.value.expression, value)
-        );
+    if (
+      value === undefined ||
+      hasMultipleSyntacticPiTokens(node.value.expression)
+    ) {
+      return INVALID_CONSTANT_MATH_AST;
+    }
+
+    return constantMathAst(
+      value,
+      readSyntacticPiMultiple(node.value.expression, value)
+    );
   }
 
   if (node.kind === "variable") {
@@ -148,19 +153,4 @@ function readChildConstantMathAstValue(
     constantValuesByNodeId,
     visitingNodeIds
   );
-}
-
-/** Builds the successful constant read value with exact-zero metadata.
- */
-function constantMathAst(
-  value: number,
-  piMultiple?: number
-): ConstantMathAstRead {
-  return {
-    tag: "Constant",
-    value:
-      piMultiple === undefined
-        ? { isExactZero: value === 0, value }
-        : { isExactZero: value === 0, piMultiple, value },
-  };
 }

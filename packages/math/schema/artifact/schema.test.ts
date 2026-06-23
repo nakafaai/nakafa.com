@@ -110,7 +110,7 @@ describe("LearningArtifactSchema", () => {
           (_, index) => pointPrimitive(`point-${index}`, String(index))
         ),
       }),
-      "Invalid learning artifact contract."
+      `Coordinate artifact primitives exceeds ${MAX_COORDINATE_ARTIFACT_PRIMITIVES} items.`
     );
   });
 
@@ -145,7 +145,7 @@ describe("LearningArtifactSchema", () => {
           (_, index) => `cas://coordinate/proof-${index}`
         ),
       }),
-      "Invalid learning artifact contract."
+      `Coordinate artifact proof anchors exceeds ${MAX_COORDINATE_ARTIFACT_PROOF_ANCHORS} items.`
     );
     await expectDecodeFailure(
       createCoordinateArtifact({
