@@ -53,9 +53,15 @@ export const MathAstBinaryOperatorSchema = Schema.Literal(
   ...MATH_AST_BINARY_OPERATOR_VALUES
 );
 
+/** Maximum stable node id length accepted for one MathAst node. */
+export const MAX_MATH_AST_NODE_ID_LENGTH = 180;
+
 /** Stable node reference used by flat MathAst graphs. */
-export const MathAstNodeIdSchema = Schema.NonEmptyString.annotations({
-  description: "Stable node identifier inside a MathAst graph.",
+export const MathAstNodeIdSchema = Schema.NonEmptyString.pipe(
+  Schema.pattern(/\S/),
+  Schema.maxLength(MAX_MATH_AST_NODE_ID_LENGTH)
+).annotations({
+  description: "Bounded nonblank node identifier inside a MathAst graph.",
 });
 
 export type MathAstNodeId = Schema.Schema.Type<typeof MathAstNodeIdSchema>;
@@ -70,12 +76,7 @@ const ExactScalarExpression = Schema.NonEmptyString.pipe(
   description: "Nonblank CAS-owned canonical scalar expression.",
 });
 
-/**
- * Exact scalar value with deterministic display metadata.
- *
- * The expression is the CAS-owned canonical value. The decimal field is only
- * a display hint and must not replace exact evaluation.
- */
+/** CAS-owned exact scalar with a finite optional decimal display hint. */
 export class ExactScalar extends Schema.Class<ExactScalar>("ExactScalar")({
   decimal: Schema.optional(FiniteDecimalHint),
   expression: ExactScalarExpression,
@@ -132,16 +133,26 @@ export type MathAstNode = Schema.Schema.Type<typeof MathAstNodeSchema>;
 /** Maximum nodes accepted in one deterministic MathAst graph. */
 export const MAX_MATH_AST_NODES = 256;
 
-/**
- * Durable mathematical expression graph for reproducible evaluation.
- *
- * This is intentionally a flat graph instead of model-authored text or nested
- * JSON so future deterministic evaluators can verify root reachability and
- * node references before rendering.
- */
+/** Maximum display metadata length accepted for one MathAst field. */
+export const MAX_MATH_AST_DISPLAY_LENGTH = 2048;
+
+const MathAstCanonicalSchema = Schema.NonEmptyString.pipe(
+  Schema.pattern(/\S/),
+  Schema.maxLength(MAX_MATH_AST_DISPLAY_LENGTH)
+).annotations({
+  description: "Bounded nonblank canonical display expression for a MathAst.",
+});
+
+const MathAstLatexSchema = Schema.String.pipe(
+  Schema.maxLength(MAX_MATH_AST_DISPLAY_LENGTH)
+).annotations({
+  description: "Bounded LaTeX display expression for a MathAst.",
+});
+
+/** Flat durable graph for reproducible mathematical evaluation. */
 export class MathAst extends Schema.Class<MathAst>("MathAst")({
-  canonical: Schema.NonEmptyString,
-  latex: Schema.String,
+  canonical: MathAstCanonicalSchema,
+  latex: MathAstLatexSchema,
   nodes: Schema.Array(MathAstNodeSchema).pipe(
     Schema.minItems(1),
     Schema.maxItems(MAX_MATH_AST_NODES),

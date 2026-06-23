@@ -26,6 +26,9 @@ describe("coordinate plane equation validation", () => {
     expect(readIssue(zDividedByTwoMinusOneAst(), normal, zTwo)).toBeUndefined();
     expect(readIssue(negativeZPlusTwoAst(), normal, zTwo)).toBeUndefined();
     expect(
+      readIssue(zPlusZAst(), normal, point("0", "0", "0"))
+    ).toBeUndefined();
+    expect(
       readIssue(variableAst("x"), point("1", "0", "0"), point("0", "0", "0"))
     ).toBeUndefined();
     expect(
@@ -165,6 +168,13 @@ function yMinusThreeAst() {
     variableNode("y"),
     literalNode("3"),
     binaryNode("root", "y", "subtract", "literal-3"),
+  ]);
+}
+
+function zPlusZAst() {
+  return makeAst("z + z", [
+    variableNode("z"),
+    binaryNode("root", "z", "add", "z"),
   ]);
 }
 

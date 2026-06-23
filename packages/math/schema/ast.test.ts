@@ -97,6 +97,30 @@ describe("MathAst", () => {
     }
   });
 
+  it("rejects blank node ids with a typed error", async () => {
+    const exit = await Effect.runPromiseExit(
+      decodeMathAst({
+        canonical: "1",
+        latex: "1",
+        nodes: [
+          {
+            id: "   ",
+            kind: "literal",
+            value: scalar("1"),
+          },
+        ],
+        root: "   ",
+      })
+    );
+
+    const failure = readExitFailure(exit);
+
+    expect(failure).toBeInstanceOf(MathAstDecodeError);
+    if (failure instanceof MathAstDecodeError) {
+      expect(failure.message).toBe("Invalid MathAst contract.");
+    }
+  });
+
   it("rejects duplicate node ids with a typed error", async () => {
     const exit = await Effect.runPromiseExit(
       decodeMathAst({

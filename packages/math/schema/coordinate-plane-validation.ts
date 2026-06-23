@@ -11,6 +11,12 @@ interface AffinePlaneExpression {
   z: number;
 }
 
+interface AffinePlaneReadContext {
+  expressionsByNodeId: Map<string, AffinePlaneExpression | undefined>;
+  nodesById: ReadonlyMap<string, MathAstNode>;
+  visitingNodeIds: Set<string>;
+}
+
 /** Verifies a plane implicit equation against renderer point/normal geometry. */
 export function findPlaneEquationConsistencyIssue(
   primitiveId: string,
@@ -72,33 +78,36 @@ function readAffinePlaneExpression(ast: MathAst) {
     return;
   }
 
-  return readNodeExpression(root, nodesById, new Set<string>());
+  return readNodeExpression(root, {
+    expressionsByNodeId: new Map<string, AffinePlaneExpression | undefined>(),
+    nodesById,
+    visitingNodeIds: new Set<string>(),
+  });
 }
 
 function readNodeExpression(
   node: MathAstNode,
-  nodesById: ReadonlyMap<string, MathAstNode>,
-  visitingNodeIds: Set<string>
+  context: AffinePlaneReadContext
 ): AffinePlaneExpression | undefined {
-  if (visitingNodeIds.has(node.id)) {
+  if (context.visitingNodeIds.has(node.id)) {
     return;
   }
 
-  visitingNodeIds.add(node.id);
-  const expression = readAcyclicNodeExpression(
-    node,
-    nodesById,
-    visitingNodeIds
-  );
-  visitingNodeIds.delete(node.id);
+  if (context.expressionsByNodeId.has(node.id)) {
+    return context.expressionsByNodeId.get(node.id);
+  }
+
+  context.visitingNodeIds.add(node.id);
+  const expression = readAcyclicNodeExpression(node, context);
+  context.visitingNodeIds.delete(node.id);
+  context.expressionsByNodeId.set(node.id, expression);
 
   return expression;
 }
 
 function readAcyclicNodeExpression(
   node: MathAstNode,
-  nodesById: ReadonlyMap<string, MathAstNode>,
-  visitingNodeIds: Set<string>
+  context: AffinePlaneReadContext
 ) {
   if (node.kind === "literal") {
     const value = readSortableExactScalar(node.value);
@@ -114,11 +123,7 @@ function readAcyclicNodeExpression(
   }
 
   if (node.kind === "unary") {
-    const operand = readChildExpression(
-      node.operand,
-      nodesById,
-      visitingNodeIds
-    );
+    const operand = readChildExpression(node.operand, context);
 
     if (!operand || node.operator !== "negate") {
       return;
@@ -127,8 +132,8 @@ function readAcyclicNodeExpression(
     return scale(operand, -1);
   }
 
-  const left = readChildExpression(node.left, nodesById, visitingNodeIds);
-  const right = readChildExpression(node.right, nodesById, visitingNodeIds);
+  const left = readChildExpression(node.left, context);
+  const right = readChildExpression(node.right, context);
 
   if (!(left && right)) {
     return;
@@ -156,17 +161,13 @@ function readAcyclicNodeExpression(
   }
 }
 
-function readChildExpression(
-  nodeId: string,
-  nodesById: ReadonlyMap<string, MathAstNode>,
-  visitingNodeIds: Set<string>
-) {
-  const child = nodesById.get(nodeId);
+function readChildExpression(nodeId: string, context: AffinePlaneReadContext) {
+  const child = context.nodesById.get(nodeId);
   if (!child) {
     return;
   }
 
-  return readNodeExpression(child, nodesById, visitingNodeIds);
+  return readNodeExpression(child, context);
 }
 
 function multiply(left: AffinePlaneExpression, right: AffinePlaneExpression) {

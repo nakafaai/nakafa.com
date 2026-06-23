@@ -1,5 +1,7 @@
 import {
   decodeMathAst,
+  MAX_MATH_AST_DISPLAY_LENGTH,
+  MAX_MATH_AST_NODE_ID_LENGTH,
   MAX_MATH_AST_NODES,
   MathAstDecodeError,
 } from "@repo/math/schema/ast";
@@ -18,6 +20,79 @@ describe("MathAst budgets", () => {
           name: "x",
         })),
         root: "node-0",
+      })
+    );
+
+    const failure = readExitFailure(exit);
+
+    expect(failure).toBeInstanceOf(MathAstDecodeError);
+    if (failure instanceof MathAstDecodeError) {
+      expect(failure.message).toBe("Invalid MathAst contract.");
+    }
+  });
+
+  it("rejects MathAst canonical text above the display budget", async () => {
+    const exit = await Effect.runPromiseExit(
+      decodeMathAst({
+        canonical: "x".repeat(MAX_MATH_AST_DISPLAY_LENGTH + 1),
+        latex: "x",
+        nodes: [
+          {
+            id: "x",
+            kind: "variable",
+            name: "x",
+          },
+        ],
+        root: "x",
+      })
+    );
+
+    const failure = readExitFailure(exit);
+
+    expect(failure).toBeInstanceOf(MathAstDecodeError);
+    if (failure instanceof MathAstDecodeError) {
+      expect(failure.message).toBe("Invalid MathAst contract.");
+    }
+  });
+
+  it("rejects MathAst LaTeX text above the display budget", async () => {
+    const exit = await Effect.runPromiseExit(
+      decodeMathAst({
+        canonical: "x",
+        latex: "x".repeat(MAX_MATH_AST_DISPLAY_LENGTH + 1),
+        nodes: [
+          {
+            id: "x",
+            kind: "variable",
+            name: "x",
+          },
+        ],
+        root: "x",
+      })
+    );
+
+    const failure = readExitFailure(exit);
+
+    expect(failure).toBeInstanceOf(MathAstDecodeError);
+    if (failure instanceof MathAstDecodeError) {
+      expect(failure.message).toBe("Invalid MathAst contract.");
+    }
+  });
+
+  it("rejects MathAst node ids above the id budget", async () => {
+    const nodeId = `node-${"x".repeat(MAX_MATH_AST_NODE_ID_LENGTH)}`;
+    const exit = await Effect.runPromiseExit(
+      decodeMathAst({
+        canonical: "x",
+        latex: "x",
+        nodes: [
+          {
+            id: nodeId,
+            kind: "variable",
+            name: "x",
+          },
+        ],
+        root: nodeId,
       })
     );
 

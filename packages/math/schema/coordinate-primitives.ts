@@ -43,8 +43,14 @@ export type CoordinatePrimitiveKind = Schema.Schema.Type<
   typeof CoordinatePrimitiveKindSchema
 >;
 
-const PrimitiveIdSchema = Schema.NonEmptyString.annotations({
-  description: "Stable primitive identifier inside one coordinate artifact.",
+/** Maximum stable id length accepted for one coordinate primitive. */
+export const MAX_COORDINATE_PRIMITIVE_ID_LENGTH = 180;
+
+const PrimitiveIdSchema = Schema.NonEmptyString.pipe(
+  Schema.pattern(/\S/),
+  Schema.maxLength(MAX_COORDINATE_PRIMITIVE_ID_LENGTH)
+).annotations({
+  description: "Bounded nonblank primitive id inside one coordinate artifact.",
 });
 
 const SampleCountSchema = Schema.Number.pipe(

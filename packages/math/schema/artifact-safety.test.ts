@@ -5,7 +5,10 @@ import {
   MAX_COORDINATE_ARTIFACT_PROOF_ANCHORS,
   MAX_LEARNING_ARTIFACT_ID_LENGTH,
 } from "@repo/math/schema/artifact";
-import { MAX_FUNCTION_EXCLUSIONS } from "@repo/math/schema/coordinate-primitives";
+import {
+  MAX_COORDINATE_PRIMITIVE_ID_LENGTH,
+  MAX_FUNCTION_EXCLUSIONS,
+} from "@repo/math/schema/coordinate-primitives";
 import { Cause, Effect, Exit, Option } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -102,6 +105,44 @@ describe("LearningArtifact safety budgets", () => {
     const failure = await decodeFailure(
       createArtifact({
         id: `artifact-${"x".repeat(MAX_LEARNING_ARTIFACT_ID_LENGTH)}`,
+      })
+    );
+
+    expect(failure).toBeInstanceOf(LearningArtifactDecodeError);
+    if (failure instanceof LearningArtifactDecodeError) {
+      expect(failure.message).toBe("Invalid learning artifact contract.");
+    }
+  });
+
+  it("rejects blank coordinate primitive identifiers", async () => {
+    const failure = await decodeFailure(
+      createArtifact({
+        primitives: [
+          {
+            id: "   ",
+            kind: "point",
+            point: point("0", "0", "0"),
+          },
+        ],
+      })
+    );
+
+    expect(failure).toBeInstanceOf(LearningArtifactDecodeError);
+    if (failure instanceof LearningArtifactDecodeError) {
+      expect(failure.message).toBe("Invalid learning artifact contract.");
+    }
+  });
+
+  it("rejects coordinate primitive identifiers above the id budget", async () => {
+    const failure = await decodeFailure(
+      createArtifact({
+        primitives: [
+          {
+            id: `primitive-${"x".repeat(MAX_COORDINATE_PRIMITIVE_ID_LENGTH)}`,
+            kind: "point",
+            point: point("0", "0", "0"),
+          },
+        ],
       })
     );
 
