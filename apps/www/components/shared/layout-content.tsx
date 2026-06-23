@@ -1,14 +1,18 @@
 import { cn } from "@repo/design-system/lib/utils";
-import type { ReactNode } from "react";
+import type { ElementType, ReactNode } from "react";
 
-interface Props {
-  as?: React.ElementType;
+/**
+ * Renders constrained readable page content with a caller-selected semantic tag.
+ */
+export function LayoutContent({
+  children,
+  className,
+  as: Component = "article",
+}: {
+  as?: ElementType<{ children?: ReactNode; className?: string }>;
   children: ReactNode;
   className?: string;
-}
-
-export function LayoutContent({ children, className, as = "article" }: Props) {
-  const Component = as || "article";
+}) {
   return (
     <Component className={cn("mx-auto max-w-3xl px-6", className)}>
       {children}

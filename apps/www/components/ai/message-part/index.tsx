@@ -9,17 +9,19 @@ import {
 import { Response } from "@repo/design-system/components/ai/response";
 
 import { useMessage } from "@/components/ai/context/use-message";
+import { ArtifactPart } from "@/components/ai/message-part/artifact";
 import { MathPart } from "@/components/ai/message-part/math";
 import { NakafaPart } from "@/components/ai/message-part/nakafa";
 import { ScrapeUrlPart } from "@/components/ai/message-part/scrape-url";
 import { WebSearchPart } from "@/components/ai/message-part/web-search";
 
-interface Props {
+export const AiMessagePart = ({
+  part,
+  partIndex,
+}: {
   part: MyUIMessage["parts"][number];
   partIndex: number;
-}
-
-export const AiMessagePart = ({ part, partIndex }: Props) => {
+}) => {
   const messageId = useMessage((state) => state.message.id);
 
   switch (part.type) {
@@ -50,6 +52,8 @@ export const AiMessagePart = ({ part, partIndex }: Props) => {
       return <MathPart message={part.data} />;
     case "data-nakafa":
       return <NakafaPart message={part.data} />;
+    case "data-artifact":
+      return <ArtifactPart message={part.data} />;
     default:
       return null;
   }
