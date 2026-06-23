@@ -54,6 +54,7 @@ describe("MathAst constant evaluation", () => {
     expectUnaryValue("sqrt", "4", 2);
     expectUnaryValue("sin", "0", 0);
     expectUnaryValue("sin", "pi", 0);
+    expectUnaryValue("sin", "1/pi", Math.sin(1 / Math.PI));
     expectUnaryValue("sin", "1", Math.sin(1));
     expectUnaryValue("sin", "3.141592653589793", Math.sin(Math.PI));
     expectUnaryValue("sin", "1e-13", Math.sin(1e-13));
@@ -62,6 +63,7 @@ describe("MathAst constant evaluation", () => {
     expectUnaryValue("tan", "1", Math.tan(1));
     expectUnaryValue("cos", "0", 1);
     expectUnaryValue("cos", "pi/2", 0);
+    expectUnaryValue("cos", "1/(2*pi)", Math.cos(1 / (2 * Math.PI)));
     expectUnaryValue("exp", "1", Math.E);
     expectUnaryValue("log", "1", 0);
 
@@ -82,6 +84,8 @@ describe("MathAst constant evaluation", () => {
     expectBinaryValue("4", "divide", "2", 2);
     expectBinaryValue("0", "power", "2", 0);
     expectBinaryValue("2", "power", "3", 8);
+    expect(readBinaryValue("pi", "power", "1")?.piMultiple).toBe(1);
+    expectValue(readPoweredPiSine(), 0);
 
     expect(readBinaryResult("0", "power", "0").tag).toBe("InvalidConstant");
     expect(readBinaryResult("1", "divide", "0").tag).toBe("InvalidConstant");
@@ -154,6 +158,15 @@ function readRoundedAwayDifference() {
     literalNode("tiny", "1e-16"),
     binaryNode("rounded", "one", "add", "tiny"),
     binaryNode("root", "rounded", "subtract", "one"),
+  ]);
+}
+
+function readPoweredPiSine() {
+  return readValue("sin-powered-pi", [
+    literalNode("pi", "pi"),
+    literalNode("one", "1"),
+    binaryNode("powered-pi", "pi", "power", "one"),
+    unaryNode("sin-powered-pi", "powered-pi", "sin"),
   ]);
 }
 

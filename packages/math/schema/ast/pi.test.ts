@@ -15,6 +15,15 @@ describe("syntactic pi multiple tracking", () => {
     expect(readSyntacticPiMultiple("0", 0)).toBe(0);
     expect(readSyntacticPiMultiple("pi", Math.PI)).toBe(1);
     expect(readSyntacticPiMultiple("3*pi/2", (3 * Math.PI) / 2)).toBe(1.5);
+    expect(readSyntacticPiMultiple("pi/2", Math.PI / 2)).toBe(0.5);
+    expect(readSyntacticPiMultiple("(pi)/2", Math.PI / 2)).toBe(0.5);
+    expect(readSyntacticPiMultiple("(pi)*(2)", Math.PI * 2)).toBe(2);
+    expect(readSyntacticPiMultiple("-(pi/2)", -Math.PI / 2)).toBe(-0.5);
+    expect(readSyntacticPiMultiple("1/(1/pi)", Math.PI)).toBe(1);
+    expect(readSyntacticPiMultiple("1/pi", 1 / Math.PI)).toBeUndefined();
+    expect(
+      readSyntacticPiMultiple("1/(2*pi)", 1 / (2 * Math.PI))
+    ).toBeUndefined();
     expect(readSyntacticPiMultiple("pi*pi", Math.PI * Math.PI)).toBeUndefined();
     expect(readSyntacticPiMultiple("pi+1", Math.PI + 1)).toBeUndefined();
     expect(
@@ -63,6 +72,12 @@ describe("syntactic pi multiple tracking", () => {
         { value: 2 }
       )
     ).toBe(1);
+    expect(
+      readProductPiMultiple(
+        { piMultiple: 1 / 3, value: Math.PI / 3 },
+        { value: 3 }
+      )
+    ).toBeUndefined();
     expect(
       readProductPiMultiple(
         { piMultiple: 1e-308, value: Math.PI * 1e-308 },

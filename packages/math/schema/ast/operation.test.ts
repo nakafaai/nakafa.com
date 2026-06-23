@@ -30,6 +30,27 @@ describe("MathAst constant operations", () => {
     ).toBe("InvalidConstant");
   });
 
+  it("rejects pi product drift and preserves identity powers", () => {
+    expect(
+      readBinaryConstantValue(
+        "multiply",
+        constant(Math.PI / 3, 1 / 3),
+        constant(3)
+      ).tag
+    ).toBe("InvalidConstant");
+
+    const poweredPi = readBinaryConstantValue(
+      "power",
+      constant(Math.PI, 1),
+      constant(1)
+    );
+
+    expect(poweredPi).toEqual({
+      tag: "Constant",
+      value: { isExactZero: false, piMultiple: 1, value: Math.PI },
+    });
+  });
+
   it("rejects rounded and nonfinite plain constant arithmetic", () => {
     expect(
       readBinaryConstantValue("add", constant(1e308), constant(1e308)).tag

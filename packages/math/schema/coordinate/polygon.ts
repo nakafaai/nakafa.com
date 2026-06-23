@@ -88,7 +88,7 @@ function readPolygonPlaneNormal(
         return `Coordinate primitive ${primitiveId} polygon area calculation must stay finite.`;
       }
 
-      if (isNonzeroPoint(crossProduct)) {
+      if (isNonzeroAreaNormal(crossProduct, first, second)) {
         return crossProduct;
       }
     }
@@ -182,17 +182,39 @@ function isCoplanarDotProduct(
 }
 
 /**
+ * Treats rounded collinear residuals as zero-area geometry.
+ */
+function isNonzeroAreaNormal(
+  normal: SortablePoint3,
+  first: SortablePoint3,
+  second: SortablePoint3
+) {
+  const normalMagnitude = readVectorMagnitude(normal);
+  if (normalMagnitude === 0) {
+    return false;
+  }
+
+  const scale = readVectorScale(first, second);
+  if (!(Number.isFinite(normalMagnitude) && Number.isFinite(scale))) {
+    return true;
+  }
+
+  const tolerance = Number.EPSILON * scale * 64;
+  return normalMagnitude > tolerance;
+}
+
+/**
+ * Computes the finite scale of the two edge vectors that produce an area normal.
+ */
+function readVectorScale(first: SortablePoint3, second: SortablePoint3) {
+  return readVectorMagnitude(first) * readVectorMagnitude(second);
+}
+
+/**
  * Computes a finite Euclidean magnitude for relative geometry tolerance.
  */
 function readVectorMagnitude(vector: SortablePoint3) {
   return Math.hypot(vector.x, vector.y, vector.z);
-}
-
-/**
- * Returns true when at least one decoded vector component is nonzero.
- */
-function isNonzeroPoint(point: SortablePoint3) {
-  return point.x !== 0 || point.y !== 0 || point.z !== 0;
 }
 
 /**

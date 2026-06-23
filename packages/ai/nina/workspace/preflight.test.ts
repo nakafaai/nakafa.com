@@ -1,6 +1,7 @@
 // @vitest-environment node
 
 import { MATH_CAPABILITY } from "@repo/ai/nina/capability/spec";
+import { findWorkspaceArtifactPreflightIssue } from "@repo/ai/nina/workspace/preflight";
 import {
   decodeEvidenceWorkspace,
   EVIDENCE_CONTRIBUTION_ARTIFACT_BYTES,
@@ -62,22 +63,45 @@ describe("EvidenceWorkspace invariants", () => {
     expectDecodeFailure(failure);
   });
 
+  it("uses checked array lengths instead of custom raw iterators", async () => {
+    let iterated = false;
+    const contributions = [contribution()];
+    Object.defineProperty(contributions, Symbol.iterator, {
+      *value() {
+        iterated = true;
+        yield contribution({ artifacts: [oversizedPart(10)] });
+      },
+    });
+
+    await expect(
+      Effect.runPromise(
+        findWorkspaceArtifactPreflightIssue(workspace(contributions), limits())
+      )
+    ).resolves.toBeUndefined();
+    expect(iterated).toBe(false);
+  });
+
   it("rejects oversized contribution artifact payloads", async () => {
-    const description = "x".repeat(
+    const part = oversizedPart(
       Math.floor(EVIDENCE_CONTRIBUTION_ARTIFACT_BYTES / 3) + 10_000
     );
-    const failure = await decodeFailure(
-      workspace([
-        contribution({
-          artifacts: artifactRange(0, 3, description),
-        }),
-      ])
-    );
+    const cases = [
+      {
+        message: `Contribution math artifact payload exceeds ${EVIDENCE_CONTRIBUTION_ARTIFACT_BYTES} bytes.`,
+        rawContribution: contribution({ artifacts: [part, part, part] }),
+      },
+      {
+        message: `Contribution artifact payload exceeds ${EVIDENCE_CONTRIBUTION_ARTIFACT_BYTES} bytes.`,
+        rawContribution: { artifacts: [part, part, part] },
+      },
+    ];
 
-    expectDecodeFailure(
-      failure,
-      `Contribution math artifact payload exceeds ${EVIDENCE_CONTRIBUTION_ARTIFACT_BYTES} bytes.`
-    );
+    for (const testCase of cases) {
+      expectDecodeFailure(
+        await decodeFailure(workspace([testCase.rawContribution])),
+        testCase.message
+      );
+    }
   });
 
   it("preflights aggregate artifact budgets before deep artifact decode", async () => {
@@ -114,24 +138,6 @@ describe("EvidenceWorkspace invariants", () => {
     expectDecodeFailure(
       tooLarge,
       `Evidence workspace artifact payload exceeds ${EVIDENCE_WORKSPACE_ARTIFACT_BYTES} bytes.`
-    );
-  });
-
-  it("preflights oversized contribution artifacts without capability metadata", async () => {
-    const part = oversizedPart(
-      Math.floor(EVIDENCE_CONTRIBUTION_ARTIFACT_BYTES / 3) + 10_000
-    );
-    const failure = await decodeFailure(
-      workspace([
-        {
-          artifacts: [part, part, part],
-        },
-      ])
-    );
-
-    expectDecodeFailure(
-      failure,
-      `Contribution artifact payload exceeds ${EVIDENCE_CONTRIBUTION_ARTIFACT_BYTES} bytes.`
     );
   });
 
@@ -185,14 +191,11 @@ describe("EvidenceWorkspace invariants", () => {
   });
 });
 
-function workspace(
-  contributions: readonly unknown[],
-  input: { turnId?: string } = {}
-) {
+function workspace(contributions: readonly unknown[]) {
   return {
     contributions,
     createdAt: 1_782_195_600,
-    turnId: input.turnId ?? "turn-1",
+    turnId: "turn-1",
   };
 }
 
@@ -208,12 +211,6 @@ function contribution(input: { artifacts?: readonly unknown[] } = {}) {
     },
     modelSummary: "CAS verified the coordinate relation.",
   };
-}
-
-function artifactRange(start: number, count: number, description?: string) {
-  return Array.from({ length: count }, (_, index) =>
-    artifact(`artifact-${start + index}`, description)
-  );
 }
 
 function invalidArtifactRange(start: number, count: number) {
@@ -260,6 +257,17 @@ function point(x: string, y: string, z: string) {
 
 function scalar(expression: string) {
   return { expression, latex: expression };
+}
+
+function limits() {
+  return {
+    artifactBytes: MAX_COORDINATE_ARTIFACT_BYTES,
+    contributionArtifactBytes: EVIDENCE_CONTRIBUTION_ARTIFACT_BYTES,
+    contributionArtifactLimit: EVIDENCE_CONTRIBUTION_ARTIFACT_LIMIT,
+    contributionLimit: EVIDENCE_WORKSPACE_CONTRIBUTION_LIMIT,
+    workspaceArtifactBytes: EVIDENCE_WORKSPACE_ARTIFACT_BYTES,
+    workspaceArtifactLimit: EVIDENCE_WORKSPACE_ARTIFACT_LIMIT,
+  };
 }
 
 function throwingField(field: string) {

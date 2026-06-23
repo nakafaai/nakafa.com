@@ -123,6 +123,38 @@ describe("MathAst graph validation", () => {
         expected:
           "MathAst divide node quotient cannot use a constant zero divisor.",
         input: ast(
+          "x / sin(pi ^ 1)",
+          [
+            variable("x"),
+            literal("pi", "pi"),
+            literal("one", "1"),
+            binary("powered-pi", "pi", "power", "one"),
+            unary("sin-pi", "powered-pi", "sin"),
+            binary("quotient", "x", "divide", "sin-pi"),
+          ],
+          "quotient"
+        ),
+      },
+      {
+        expected:
+          "MathAst node scaled-pi contains an invalid constant expression.",
+        input: ast(
+          "x / sin((pi / 3) * 3)",
+          [
+            variable("x"),
+            literal("one-third-pi", "pi/3"),
+            literal("three", "3"),
+            binary("scaled-pi", "one-third-pi", "multiply", "three"),
+            unary("sin-pi", "scaled-pi", "sin"),
+            binary("quotient", "x", "divide", "sin-pi"),
+          ],
+          "quotient"
+        ),
+      },
+      {
+        expected:
+          "MathAst divide node quotient cannot use a constant zero divisor.",
+        input: ast(
           "x / sin((1e-15*pi)*1e15)",
           [
             variable("x"),

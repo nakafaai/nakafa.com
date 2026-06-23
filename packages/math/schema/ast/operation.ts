@@ -138,8 +138,13 @@ export function readBinaryConstantValue(
       return constantMathAst(0);
     }
 
+    const piMultiple = readProductPiMultiple(left, right);
+    if (hasExactlyOnePiMultiple(left, right) && piMultiple === undefined) {
+      return INVALID_CONSTANT_MATH_AST;
+    }
+
     return finiteComputedConstantValue(left.value * right.value, {
-      piMultiple: readProductPiMultiple(left, right),
+      piMultiple,
       rejectZero: true,
     });
   }
@@ -176,9 +181,26 @@ export function readBinaryConstantValue(
     return constantMathAst(0);
   }
 
+  if (right.value === 1 && left.piMultiple !== undefined) {
+    return finiteComputedConstantValue(left.value, {
+      piMultiple: left.piMultiple,
+      rejectZero: true,
+    });
+  }
+
   return finiteComputedConstantValue(left.value ** right.value, {
     rejectZero: true,
   });
+}
+
+/**
+ * Detects the only multiplication case where pi metadata must survive.
+ */
+function hasExactlyOnePiMultiple(
+  left: ConstantMathAstValue,
+  right: ConstantMathAstValue
+) {
+  return (left.piMultiple === undefined) !== (right.piMultiple === undefined);
 }
 
 /**

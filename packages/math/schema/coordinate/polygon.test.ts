@@ -24,6 +24,16 @@ describe("coordinate polygon geometry validation", () => {
     ).toBe(
       "Coordinate primitive polygon-collinear polygon vertices must enclose nonzero area."
     );
+
+    expect(
+      findPolygonGeometryIssue("polygon-decimal-collinear", [
+        point(0, 0, 0),
+        point(0.01, 0.03, 0),
+        point(0.07, 0.21, 0),
+      ])
+    ).toBe(
+      "Coordinate primitive polygon-decimal-collinear polygon vertices must enclose nonzero area."
+    );
   });
 
   it("rejects overflowed polygon area calculations", () => {
@@ -83,6 +93,16 @@ describe("coordinate polygon geometry validation", () => {
       ])
     ).toBe(
       "Coordinate primitive polygon-scale-overflow polygon vertices must be coplanar."
+    );
+
+    expect(
+      findPolygonGeometryIssue("polygon-large-area", [
+        point(0, 0, 0),
+        point(1e154, 0, 1e154),
+        point(0, 1e154, 1e154),
+      ])
+    ).toBe(
+      "Coordinate primitive polygon-large-area polygon planarity calculation must stay finite."
     );
   });
 

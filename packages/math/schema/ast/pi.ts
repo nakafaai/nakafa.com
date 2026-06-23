@@ -1,7 +1,13 @@
+import {
+  divideFiniteDecimalNumbers,
+  isRoundedPiSentinel,
+  multiplyFiniteDecimalNumbers,
+  readFiniteDecimalSum,
+} from "@repo/math/schema/ast/decimal";
 import { readExactNumericExpression } from "@repo/math/schema/coordinate/numeric";
 
 const PI_TOKEN_PATTERN = /π|pi/gi;
-const SIGN_PREFIX_PATTERN = /^[+-]/;
+const PI_TOKEN_DETECTION_PATTERN = /π|pi/i;
 
 /**
  * Reads a syntactic finite multiple of pi from the exact scalar grammar.
@@ -10,6 +16,10 @@ export function readSyntacticPiMultiple(expression: string, value: number) {
   const compact = expression.trim().replaceAll(/\s+/g, "");
   const matches = compact.match(PI_TOKEN_PATTERN);
   if (matches?.length === 1) {
+    if (!isNumeratorSidePiToken(compact)) {
+      return;
+    }
+
     return readExactNumericExpression(compact.replace(PI_TOKEN_PATTERN, "1"));
   }
 
@@ -69,11 +79,11 @@ export function readProductPiMultiple(
   right: { readonly piMultiple?: number; readonly value: number }
 ) {
   if (left.piMultiple !== undefined && right.piMultiple === undefined) {
-    return multiplyFiniteDecimalNumbers(left.piMultiple, right.value);
+    return readSafePiProduct(left.piMultiple, right.value);
   }
 
   if (right.piMultiple !== undefined && left.piMultiple === undefined) {
-    return multiplyFiniteDecimalNumbers(right.piMultiple, left.value);
+    return readSafePiProduct(right.piMultiple, left.value);
   }
 }
 
@@ -91,20 +101,6 @@ export function readQuotientPiMultiple(
   return divideFiniteDecimalNumbers(left.piMultiple, right.value);
 }
 
-/** Multiplies finite decimal string forms to avoid reciprocal-scale drift.
- */
-function multiplyFiniteDecimalNumbers(left: number, right: number) {
-  if (!(Number.isFinite(left) && Number.isFinite(right))) {
-    return left * right;
-  }
-
-  const leftDecimal = readFiniteNumberDecimal(left);
-  const rightDecimal = readFiniteNumberDecimal(right);
-  const coefficient = leftDecimal.coefficient * rightDecimal.coefficient;
-  const exponent = leftDecimal.exponent + rightDecimal.exponent;
-  return readFiniteDecimalValue(coefficient, exponent) ?? left * right;
-}
-
 /** Combines finite pi multiples without losing nonzero fractional offsets.
  */
 function combineFinitePiMultiples(
@@ -116,136 +112,142 @@ function combineFinitePiMultiples(
 }
 
 /**
- * Adds finite decimal string forms without accepting rounded conversions.
+ * Rejects pi products that would drift into a trig sentinel.
  */
-function readFiniteDecimalSum(
-  left: number,
-  right: number,
-  operator: "add" | "subtract"
-) {
-  if (!(Number.isFinite(left) && Number.isFinite(right))) {
+function readSafePiProduct(piMultiple: number, scalar: number) {
+  const product = multiplyFiniteDecimalNumbers(piMultiple, scalar);
+  if (isRoundedPiSentinel(product)) {
     return;
   }
 
-  const leftDecimal = readFiniteNumberDecimal(left);
-  const rightDecimal = readFiniteNumberDecimal(right);
-  const exponent = Math.min(leftDecimal.exponent, rightDecimal.exponent);
-  const leftCoefficient =
-    leftDecimal.coefficient * 10n ** BigInt(leftDecimal.exponent - exponent);
-  const rightCoefficient =
-    rightDecimal.coefficient * 10n ** BigInt(rightDecimal.exponent - exponent);
-  const coefficient =
-    operator === "add"
-      ? leftCoefficient + rightCoefficient
-      : leftCoefficient - rightCoefficient;
-
-  return readFiniteExactDecimalValue(coefficient, exponent);
+  return product;
 }
 
 /**
- * Divides finite decimal string forms and rejects drift near trig sentinels.
+ * Confirms the single pi token contributes from the numerator side.
  */
-function divideFiniteDecimalNumbers(left: number, right: number) {
-  const value = left / right;
-  if (!Number.isFinite(value)) {
-    return;
-  }
-
-  if (isRoundedPiSentinel(value)) {
-    return;
-  }
-
-  if (!(Number.isFinite(left) && Number.isFinite(right))) {
-    return value;
-  }
-
-  const leftDecimal = readFiniteNumberDecimal(left);
-  const rightDecimal = readFiniteNumberDecimal(right);
-  const exponent = Math.min(leftDecimal.exponent, rightDecimal.exponent);
-  const numerator =
-    leftDecimal.coefficient * 10n ** BigInt(leftDecimal.exponent - exponent);
-  const denominator =
-    rightDecimal.coefficient * 10n ** BigInt(rightDecimal.exponent - exponent);
-
-  return Number(numerator) / Number(denominator);
+function isNumeratorSidePiToken(expression: string) {
+  return readPiTokenOrientation(expression, 1) === 1;
 }
 
 /**
- * Detects coefficients close enough to integer or half-integer sentinels to be unsafe.
+ * Reads whether the single pi token is in a numerator or denominator position.
  */
-function isRoundedPiSentinel(value: number) {
-  if (Number.isInteger(value) || Number.isInteger(value - 0.5)) {
+function readPiTokenOrientation(
+  expression: string,
+  orientation: 1 | -1
+): 1 | -1 | undefined {
+  const stripped = stripPiExpressionWrappers(expression);
+  let depth = 0;
+  let found: 1 | -1 | undefined;
+  let pendingOperator: string | undefined;
+  let startIndex = 0;
+  let hasTopLevelOperator = false;
+
+  for (let index = 0; index < stripped.length; index += 1) {
+    const character = stripped[index];
+
+    if (character === "(") {
+      depth += 1;
+      continue;
+    }
+
+    if (character === ")") {
+      depth -= 1;
+      continue;
+    }
+
+    if ((character === "*" || character === "/") && depth === 0) {
+      hasTopLevelOperator = true;
+      found = readPiFactorOrientation(
+        stripped.slice(startIndex, index),
+        pendingOperator,
+        orientation,
+        found
+      );
+      pendingOperator = character;
+      startIndex = index + 1;
+    }
+  }
+
+  if (!hasTopLevelOperator) {
+    return PI_TOKEN_DETECTION_PATTERN.test(stripped) ? orientation : undefined;
+  }
+
+  return readPiFactorOrientation(
+    stripped.slice(startIndex),
+    pendingOperator,
+    orientation,
+    found
+  );
+}
+
+/**
+ * Reads a factor's pi orientation while accounting for division polarity.
+ */
+function readPiFactorOrientation(
+  expression: string,
+  operator: string | undefined,
+  orientation: 1 | -1,
+  existing: 1 | -1 | undefined
+): 1 | -1 | undefined {
+  let factorOrientation = orientation;
+  if (operator === "/") {
+    factorOrientation = orientation === 1 ? -1 : 1;
+  }
+
+  const found = readPiTokenOrientation(expression, factorOrientation);
+  return found === undefined ? existing : found;
+}
+
+/**
+ * Removes grouping and sign wrappers that do not change pi orientation.
+ */
+function stripPiExpressionWrappers(expression: string) {
+  let stripped = stripBalancedOuterParens(expression);
+  while (stripped.startsWith("+") || stripped.startsWith("-")) {
+    stripped = stripBalancedOuterParens(stripped.slice(1));
+  }
+
+  return stripped;
+}
+
+/**
+ * Removes balanced wrapper parentheses without changing factor polarity.
+ */
+function stripBalancedOuterParens(expression: string) {
+  let stripped = expression;
+
+  while (isWrappedByBalancedParens(stripped)) {
+    stripped = stripped.slice(1, -1);
+  }
+
+  return stripped;
+}
+
+/**
+ * Checks that outer parentheses enclose the whole pi expression.
+ */
+function isWrappedByBalancedParens(expression: string) {
+  if (!(expression.startsWith("(") && expression.endsWith(")"))) {
     return false;
   }
 
-  const nearestHalf = Math.round(value * 2) / 2;
-  const tolerance = Number.EPSILON * Math.max(1, Math.abs(value)) * 16;
-  return Math.abs(value - nearestHalf) <= tolerance;
-}
+  let depth = 0;
+  for (let index = 0; index < expression.length; index += 1) {
+    const character = expression[index];
 
-/** Reads the finite number's shortest decimal form as coefficient and exponent.
- */
-function readFiniteNumberDecimal(value: number) {
-  const text = value.toString();
-  const exponentIndex = text.indexOf("e");
-  const mantissa = exponentIndex === -1 ? text : text.slice(0, exponentIndex);
-  const exponent =
-    exponentIndex === -1 ? 0 : Number(text.slice(exponentIndex + 1));
-  const unsigned = mantissa.replace(SIGN_PREFIX_PATTERN, "");
-  const decimalIndex = unsigned.indexOf(".");
-  const decimalPlaces =
-    decimalIndex === -1 ? 0 : unsigned.length - decimalIndex - 1;
-  const digits = unsigned.replace(".", "");
-  const sign = mantissa.startsWith("-") ? "-" : "";
+    if (character === "(") {
+      depth += 1;
+    }
 
-  return {
-    coefficient: BigInt(`${sign}${digits}`),
-    exponent: exponent - decimalPlaces,
-  };
-}
-
-/** Converts decimal coefficient/exponent parts back to a finite number.
- */
-function readFiniteDecimalValue(coefficient: bigint, exponent: number) {
-  const value = Number(`${coefficient}e${exponent}`);
-  if (!Number.isFinite(value)) {
-    return;
+    if (character === ")") {
+      depth -= 1;
+      if (depth === 0 && index < expression.length - 1) {
+        return false;
+      }
+    }
   }
 
-  if (coefficient !== 0n && value === 0) {
-    return;
-  }
-
-  return value;
-}
-
-/**
- * Converts decimal parts only when Number preserves the exact decimal value.
- */
-function readFiniteExactDecimalValue(coefficient: bigint, exponent: number) {
-  const value = readFiniteDecimalValue(coefficient, exponent);
-  if (value === undefined) {
-    return;
-  }
-
-  return hasSameFiniteDecimalValue(value, coefficient, exponent)
-    ? value
-    : undefined;
-}
-
-/**
- * Compares a Number's shortest decimal form against exact decimal parts.
- */
-function hasSameFiniteDecimalValue(
-  value: number,
-  coefficient: bigint,
-  exponent: number
-) {
-  const actual = readFiniteNumberDecimal(value);
-  const commonExponent = Math.min(exponent, actual.exponent);
-  const expectedCoefficient =
-    coefficient * 10n ** BigInt(exponent - commonExponent);
-  const actualCoefficient =
-    actual.coefficient * 10n ** BigInt(actual.exponent - commonExponent);
-  return expectedCoefficient === actualCoefficient;
+  return depth === 0;
 }

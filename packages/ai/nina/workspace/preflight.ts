@@ -49,7 +49,8 @@ export const findWorkspaceArtifactPreflightIssue = Effect.fn(
   let workspaceArtifactBytes = 0;
   let workspaceArtifactCount = 0;
 
-  for (const contribution of contributions) {
+  for (let index = 0; index < contributions.length; index += 1) {
+    const contribution = yield* readArrayItem(contributions, index);
     if (typeof contribution !== "object" || contribution === null) {
       continue;
     }
@@ -64,7 +65,12 @@ export const findWorkspaceArtifactPreflightIssue = Effect.fn(
     }
 
     let contributionArtifactBytes = 0;
-    for (const artifact of artifacts) {
+    for (
+      let artifactIndex = 0;
+      artifactIndex < artifacts.length;
+      artifactIndex += 1
+    ) {
+      const artifact = yield* readArrayItem(artifacts, artifactIndex);
       const artifactBytes = yield* readJsonBytes(artifact);
       if (artifactBytes > limits.artifactBytes) {
         return `Evidence workspace artifact exceeds ${limits.artifactBytes} bytes.`;
@@ -91,6 +97,13 @@ export const findWorkspaceArtifactPreflightIssue = Effect.fn(
     }
   }
 });
+
+/**
+ * Reads one array slot by checked length instead of trusting custom iterators.
+ */
+function readArrayItem(value: readonly unknown[], index: number) {
+  return readFieldValue(value, `${index}`);
+}
 
 /**
  * Reads an array property without trusting producer-controlled prototypes.
