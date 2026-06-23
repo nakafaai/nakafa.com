@@ -117,6 +117,40 @@ describe("LearningArtifact invariants", () => {
     }
   });
 
+  it("rejects oversized raw artifacts before deep schema decode", async () => {
+    const failure = await decodeFailure({
+      oversized: "x".repeat(MAX_COORDINATE_ARTIFACT_BYTES + 1),
+    });
+
+    expect(failure).toBeInstanceOf(LearningArtifactDecodeError);
+    if (failure instanceof LearningArtifactDecodeError) {
+      expect(failure.message).toBe(
+        `Coordinate artifact exceeds ${MAX_COORDINATE_ARTIFACT_BYTES} bytes.`
+      );
+    }
+  });
+
+  it("rejects raw artifacts that cannot be serialized for preflight", async () => {
+    const cyclic: { self?: unknown } = {};
+    cyclic.self = cyclic;
+
+    const failure = await decodeFailure(cyclic);
+
+    expect(failure).toBeInstanceOf(LearningArtifactDecodeError);
+    if (failure instanceof LearningArtifactDecodeError) {
+      expect(failure.message).toBe("Invalid learning artifact contract.");
+    }
+  });
+
+  it("rejects undefined raw artifacts during preflight", async () => {
+    const failure = await decodeFailure(undefined);
+
+    expect(failure).toBeInstanceOf(LearningArtifactDecodeError);
+    if (failure instanceof LearningArtifactDecodeError) {
+      expect(failure.message).toBe("Invalid learning artifact contract.");
+    }
+  });
+
   it("rejects primitive counts above the schema budget", async () => {
     const artifact = createArtifact({
       primitives: Array.from(

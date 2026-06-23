@@ -96,6 +96,13 @@ export class LearningArtifactDecodeError extends Schema.TaggedError<LearningArti
 export const decodeLearningArtifact = Effect.fn(
   "math.artifact.decodeLearningArtifact"
 )(function* (input: unknown) {
+  const rawSizeIssue = yield* readRawArtifactSizeIssue(input);
+  if (rawSizeIssue) {
+    return yield* Effect.fail(
+      new LearningArtifactDecodeError({ message: rawSizeIssue })
+    );
+  }
+
   const artifact = yield* Schema.decodeUnknown(LearningArtifactSchema)(
     input
   ).pipe(
@@ -113,13 +120,6 @@ export const decodeLearningArtifact = Effect.fn(
       new LearningArtifactDecodeError({
         message: `Duplicate coordinate primitive id: ${duplicateId}.`,
       })
-    );
-  }
-
-  const sizeIssue = findArtifactSizeIssue(artifact);
-  if (sizeIssue) {
-    return yield* Effect.fail(
-      new LearningArtifactDecodeError({ message: sizeIssue })
     );
   }
 
@@ -163,8 +163,27 @@ function findDuplicatePrimitiveId(primitives: readonly CoordinatePrimitive[]) {
   }
 }
 
-function findArtifactSizeIssue(artifact: LearningArtifact) {
-  const json = JSON.stringify(artifact);
+function readRawArtifactSizeIssue(input: unknown) {
+  return Effect.try({
+    catch: () =>
+      new LearningArtifactDecodeError({
+        message: "Invalid learning artifact contract.",
+      }),
+    try: () => JSON.stringify(input),
+  }).pipe(
+    Effect.flatMap((json) =>
+      json === undefined
+        ? Effect.fail(
+            new LearningArtifactDecodeError({
+              message: "Invalid learning artifact contract.",
+            })
+          )
+        : Effect.succeed(findJsonSizeIssue(json))
+    )
+  );
+}
+
+function findJsonSizeIssue(json: string) {
   const sizeBytes = new TextEncoder().encode(json).byteLength;
 
   if (sizeBytes > MAX_COORDINATE_ARTIFACT_BYTES) {

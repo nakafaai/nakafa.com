@@ -121,6 +121,32 @@ describe("MathAst", () => {
     }
   });
 
+  it("rejects nonnumeric literal values with a typed error", async () => {
+    const exit = await Effect.runPromiseExit(
+      decodeMathAst({
+        canonical: "left",
+        latex: "left",
+        nodes: [
+          {
+            id: "literal-left",
+            kind: "literal",
+            value: scalar("left"),
+          },
+        ],
+        root: "literal-left",
+      })
+    );
+
+    const failure = readExitFailure(exit);
+
+    expect(failure).toBeInstanceOf(MathAstDecodeError);
+    if (failure instanceof MathAstDecodeError) {
+      expect(failure.message).toBe(
+        "MathAst literal node literal-left must use a sortable numeric value."
+      );
+    }
+  });
+
   it("rejects duplicate node ids with a typed error", async () => {
     const exit = await Effect.runPromiseExit(
       decodeMathAst({

@@ -192,7 +192,11 @@ function isSamePlaneExpression(
 
   const scaleFactor = readScaleFactor(actual, expected);
 
-  if (scaleFactor === undefined || scaleFactor === 0) {
+  if (
+    scaleFactor === undefined ||
+    scaleFactor === 0 ||
+    !Number.isFinite(scaleFactor)
+  ) {
     return false;
   }
 

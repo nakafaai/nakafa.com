@@ -16,6 +16,31 @@ import { Cause, Effect, Exit, Option } from "effect";
 import { describe, expect, it } from "vitest";
 
 describe("EvidenceWorkspace invariants", () => {
+  it("falls through to schema errors when preflight has no artifact arrays", async () => {
+    const nonObject = await decodeFailure(null);
+    expectDecodeFailure(nonObject, "Invalid evidence workspace contract.");
+
+    const missingContributions = await decodeFailure({});
+    expectDecodeFailure(
+      missingContributions,
+      "Invalid evidence workspace contract."
+    );
+
+    const nonObjectContribution = await decodeFailure(workspace([null]));
+    expectDecodeFailure(
+      nonObjectContribution,
+      "Invalid evidence workspace contract."
+    );
+
+    const undefinedArtifact = await decodeFailure(
+      workspace([contribution({ artifacts: [undefined] })])
+    );
+    expectDecodeFailure(
+      undefinedArtifact,
+      "Invalid evidence workspace contract."
+    );
+  });
+
   it("rejects too many artifacts in one contribution", async () => {
     const failure = await decodeFailure(
       workspace([
@@ -76,6 +101,69 @@ describe("EvidenceWorkspace invariants", () => {
       tooLarge,
       `Evidence workspace artifact payload exceeds ${EVIDENCE_WORKSPACE_ARTIFACT_BYTES} bytes.`
     );
+  });
+
+  it("preflights aggregate artifact budgets before deep artifact decode", async () => {
+    const tooMany = await decodeFailure(
+      workspace([
+        contribution({ artifacts: invalidArtifactRange(0, 3) }),
+        contribution({ artifacts: invalidArtifactRange(3, 3) }),
+        contribution({ artifacts: invalidArtifactRange(6, 3) }),
+      ])
+    );
+
+    expectDecodeFailure(
+      tooMany,
+      `Evidence workspace artifact count exceeds ${EVIDENCE_WORKSPACE_ARTIFACT_LIMIT}.`
+    );
+
+    const largeInvalidArtifact = {
+      oversized: "x".repeat(
+        Math.floor(EVIDENCE_WORKSPACE_ARTIFACT_BYTES / 3) + 20_000
+      ),
+    };
+    const tooLarge = await decodeFailure(
+      workspace([
+        contribution({ artifacts: [largeInvalidArtifact] }),
+        contribution({ artifacts: [largeInvalidArtifact] }),
+        contribution({ artifacts: [largeInvalidArtifact] }),
+      ])
+    );
+
+    expectDecodeFailure(
+      tooLarge,
+      `Evidence workspace artifact payload exceeds ${EVIDENCE_WORKSPACE_ARTIFACT_BYTES} bytes.`
+    );
+  });
+
+  it("preflights oversized contribution artifacts without capability metadata", async () => {
+    const failure = await decodeFailure(
+      workspace([
+        {
+          artifacts: [
+            {
+              oversized: "x".repeat(EVIDENCE_CONTRIBUTION_ARTIFACT_BYTES + 1),
+            },
+          ],
+        },
+      ])
+    );
+
+    expectDecodeFailure(
+      failure,
+      `Contribution artifact payload exceeds ${EVIDENCE_CONTRIBUTION_ARTIFACT_BYTES} bytes.`
+    );
+  });
+
+  it("maps raw artifact serialization preflight failures", async () => {
+    const cyclic: { self?: unknown } = {};
+    cyclic.self = cyclic;
+
+    const failure = await decodeFailure(
+      workspace([contribution({ artifacts: [cyclic] })])
+    );
+
+    expectDecodeFailure(failure, "Invalid evidence workspace contract.");
   });
 
   it("bounds model-visible contribution and pedagogy text", async () => {
@@ -219,6 +307,12 @@ function artifactRange(start: number, count: number, description?: string) {
   return Array.from({ length: count }, (_, index) =>
     artifact(`artifact-${start + index}`, description)
   );
+}
+
+function invalidArtifactRange(start: number, count: number) {
+  return Array.from({ length: count }, (_, index) => ({
+    id: `invalid-artifact-${start + index}`,
+  }));
 }
 
 function artifact(id: string, description?: string) {

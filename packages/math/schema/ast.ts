@@ -1,3 +1,4 @@
+import { readSortableExactScalar } from "@repo/math/schema/coordinate-scalars";
 import { Effect, Schema } from "effect";
 
 function literalValues<const Values extends readonly [string, ...string[]]>(
@@ -53,7 +54,6 @@ export const MathAstBinaryOperatorSchema = Schema.Literal(
   ...MATH_AST_BINARY_OPERATOR_VALUES
 );
 
-/** Maximum stable node id length accepted for one MathAst node. */
 export const MAX_MATH_AST_NODE_ID_LENGTH = 180;
 
 /** Stable node reference used by flat MathAst graphs. */
@@ -66,11 +66,8 @@ export const MathAstNodeIdSchema = Schema.NonEmptyString.pipe(
 
 export type MathAstNodeId = Schema.Schema.Type<typeof MathAstNodeIdSchema>;
 
-const FiniteDecimalHint = Schema.Number.pipe(Schema.finite()).annotations({
-  description: "Finite decimal display hint for an exact scalar.",
-});
+const FiniteDecimalHint = Schema.Number.pipe(Schema.finite());
 
-/** Maximum display metadata length accepted for one MathAst field. */
 export const MAX_MATH_AST_DISPLAY_LENGTH = 2048;
 
 const ExactScalarExpression = Schema.NonEmptyString.pipe(
@@ -131,14 +128,10 @@ export const MathAstNodeSchema = Schema.Union(
   MathAstVariableNodeSchema,
   MathAstUnaryNodeSchema,
   MathAstBinaryNodeSchema
-).annotations({
-  description:
-    "Flat mathematical expression node with references to other node ids.",
-});
+);
 
 export type MathAstNode = Schema.Schema.Type<typeof MathAstNodeSchema>;
 
-/** Maximum nodes accepted in one deterministic MathAst graph. */
 export const MAX_MATH_AST_NODES = 256;
 
 const MathAstCanonicalSchema = Schema.NonEmptyString.pipe(
@@ -218,6 +211,13 @@ function findMathAstGraphIssue(ast: MathAst) {
   for (const node of ast.nodes) {
     if (edgesByNodeId.has(node.id)) {
       return `Duplicate MathAst node id: ${node.id}.`;
+    }
+
+    if (
+      node.kind === "literal" &&
+      readSortableExactScalar(node.value) === undefined
+    ) {
+      return `MathAst literal node ${node.id} must use a sortable numeric value.`;
     }
 
     const edge = { children: [], node };
