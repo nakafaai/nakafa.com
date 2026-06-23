@@ -1,7 +1,7 @@
 import type { MathAst, MathAstNode } from "@repo/math/schema/ast";
 import {
-  type ConstantMathAstValue,
-  readConstantMathAstValue,
+  type ConstantMathAstRead,
+  readConstantMathAst,
 } from "@repo/math/schema/ast-constant";
 import { readSortableExactScalar } from "@repo/math/schema/coordinate-scalars";
 
@@ -69,10 +69,7 @@ function connectMathAstEdges(
   edgesByNodeId: ReadonlyMap<string, MathAstEdge>,
   nodesById: ReadonlyMap<string, MathAstNode>
 ) {
-  const constantValuesByNodeId = new Map<
-    string,
-    ConstantMathAstValue | undefined
-  >();
+  const constantValuesByNodeId = new Map<string, ConstantMathAstRead>();
 
   for (const edge of edges) {
     const issue = connectOneMathAstEdge(
@@ -91,19 +88,35 @@ function connectOneMathAstEdge(
   edge: MathAstEdge,
   edgesByNodeId: ReadonlyMap<string, MathAstEdge>,
   nodesById: ReadonlyMap<string, MathAstNode>,
-  constantValuesByNodeId: Map<string, ConstantMathAstValue | undefined>
+  constantValuesByNodeId: Map<string, ConstantMathAstRead>
 ) {
-  for (const ref of readMathAstChildRefs(edge.node)) {
+  const childRefs = readMathAstChildRefs(edge.node);
+  const childEdges: { edge: MathAstEdge; ref: MathAstChildRef }[] = [];
+
+  for (const ref of childRefs) {
     const childEdge = edgesByNodeId.get(ref.id);
     if (!childEdge) {
       return `MathAst ${edge.node.kind} node ${edge.node.id} references missing ${ref.role} ${ref.id}.`;
     }
 
+    childEdges.push({ edge: childEdge, ref });
+  }
+
+  const constantRead = readConstantMathAst(
+    edge.node,
+    nodesById,
+    constantValuesByNodeId
+  );
+  if (constantRead.tag === "InvalidConstant") {
+    return `MathAst node ${edge.node.id} contains an invalid constant expression.`;
+  }
+
+  for (const child of childEdges) {
     if (
       isConstantZeroDivisor(
         edge.node,
-        ref,
-        childEdge,
+        child.ref,
+        child.edge,
         nodesById,
         constantValuesByNodeId
       )
@@ -111,7 +124,7 @@ function connectOneMathAstEdge(
       return `MathAst divide node ${edge.node.id} cannot use a constant zero divisor.`;
     }
 
-    edge.children.push(childEdge);
+    edge.children.push(child.edge);
   }
 }
 
@@ -120,7 +133,7 @@ function isConstantZeroDivisor(
   ref: MathAstChildRef,
   childEdge: MathAstEdge,
   nodesById: ReadonlyMap<string, MathAstNode>,
-  constantValuesByNodeId: Map<string, ConstantMathAstValue | undefined>
+  constantValuesByNodeId: Map<string, ConstantMathAstRead>
 ) {
   if (
     node.kind !== "binary" ||
@@ -130,13 +143,15 @@ function isConstantZeroDivisor(
     return false;
   }
 
-  const value = readConstantMathAstValue(
+  const constantRead = readConstantMathAst(
     childEdge.node,
     nodesById,
     constantValuesByNodeId
   );
 
-  return value?.isExactZero === true;
+  return (
+    constantRead.tag === "Constant" && constantRead.value.isExactZero === true
+  );
 }
 
 function findReachabilityIssue(

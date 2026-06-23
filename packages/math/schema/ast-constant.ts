@@ -1,25 +1,41 @@
 import type { MathAstNode } from "@repo/math/schema/ast";
 import { readSortableExactScalar } from "@repo/math/schema/coordinate-scalars";
 
+const TRIG_EXACT_ZERO_TOLERANCE = 1e-12;
+
 /** Finite constant value derived from a MathAst subtree. */
 export interface ConstantMathAstValue {
   isExactZero: boolean;
   value: number;
 }
 
-/** Reads a finite deterministic constant from a MathAst subtree when possible. */
-export function readConstantMathAstValue(
+/** Result of reading deterministic constant semantics from a MathAst subtree. */
+export type ConstantMathAstRead =
+  | {
+      tag: "Constant";
+      value: ConstantMathAstValue;
+    }
+  | {
+      tag: "InvalidConstant";
+    }
+  | {
+      tag: "Nonconstant";
+    };
+
+/** Reads deterministic constant semantics from a MathAst subtree when possible. */
+export function readConstantMathAst(
   node: MathAstNode,
   nodesById: ReadonlyMap<string, MathAstNode>,
-  constantValuesByNodeId = new Map<string, ConstantMathAstValue | undefined>(),
+  constantValuesByNodeId = new Map<string, ConstantMathAstRead>(),
   visitingNodeIds = new Set<string>()
-): ConstantMathAstValue | undefined {
-  if (constantValuesByNodeId.has(node.id)) {
-    return constantValuesByNodeId.get(node.id);
+): ConstantMathAstRead {
+  const cachedValue = constantValuesByNodeId.get(node.id);
+  if (cachedValue) {
+    return cachedValue;
   }
 
   if (visitingNodeIds.has(node.id)) {
-    return;
+    return nonconstantMathAst();
   }
 
   visitingNodeIds.add(node.id);
@@ -38,16 +54,18 @@ export function readConstantMathAstValue(
 function readAcyclicConstantMathAstValue(
   node: MathAstNode,
   nodesById: ReadonlyMap<string, MathAstNode>,
-  constantValuesByNodeId: Map<string, ConstantMathAstValue | undefined>,
+  constantValuesByNodeId: Map<string, ConstantMathAstRead>,
   visitingNodeIds: Set<string>
-): ConstantMathAstValue | undefined {
+): ConstantMathAstRead {
   if (node.kind === "literal") {
     const value = readSortableExactScalar(node.value);
-    return value === undefined ? undefined : constantMathAstValue(value);
+    return value === undefined
+      ? invalidConstantMathAst()
+      : constantMathAst(value);
   }
 
   if (node.kind === "variable") {
-    return;
+    return nonconstantMathAst();
   }
 
   if (node.kind === "unary") {
@@ -58,7 +76,11 @@ function readAcyclicConstantMathAstValue(
       visitingNodeIds
     );
 
-    return operand ? readUnaryConstantValue(node.operator, operand) : undefined;
+    if (operand.tag !== "Constant") {
+      return operand;
+    }
+
+    return readUnaryConstantValue(node.operator, operand.value);
   }
 
   const left = readChildConstantMathAstValue(
@@ -74,25 +96,29 @@ function readAcyclicConstantMathAstValue(
     visitingNodeIds
   );
 
-  if (!(left && right)) {
-    return;
+  if (left.tag === "InvalidConstant" || right.tag === "InvalidConstant") {
+    return invalidConstantMathAst();
   }
 
-  return readBinaryConstantValue(node.operator, left, right);
+  if (left.tag === "Nonconstant" || right.tag === "Nonconstant") {
+    return nonconstantMathAst();
+  }
+
+  return readBinaryConstantValue(node.operator, left.value, right.value);
 }
 
 function readChildConstantMathAstValue(
   nodeId: string,
   nodesById: ReadonlyMap<string, MathAstNode>,
-  constantValuesByNodeId: Map<string, ConstantMathAstValue | undefined>,
+  constantValuesByNodeId: Map<string, ConstantMathAstRead>,
   visitingNodeIds: Set<string>
 ) {
   const child = nodesById.get(nodeId);
   if (!child) {
-    return;
+    return nonconstantMathAst();
   }
 
-  return readConstantMathAstValue(
+  return readConstantMathAst(
     child,
     nodesById,
     constantValuesByNodeId,
@@ -105,33 +131,39 @@ function readUnaryConstantValue(
   operand: ConstantMathAstValue
 ) {
   if (operator === "negate") {
-    return constantMathAstValue(-operand.value);
+    return constantMathAst(-operand.value);
   }
 
   if (operator === "abs") {
-    return constantMathAstValue(Math.abs(operand.value));
+    return constantMathAst(Math.abs(operand.value));
   }
 
   if (operator === "sqrt") {
     return operand.value < 0
-      ? undefined
+      ? invalidConstantMathAst()
       : finiteComputedConstantValue(Math.sqrt(operand.value));
   }
 
   if (operator === "sin") {
-    return operand.isExactZero
-      ? constantMathAstValue(0)
+    return isIntegerMultipleOfPi(operand.value)
+      ? constantMathAst(0)
       : finiteComputedConstantValue(Math.sin(operand.value));
   }
 
   if (operator === "tan") {
-    return operand.isExactZero
-      ? constantMathAstValue(0)
+    if (isHalfIntegerMultipleOfPi(operand.value)) {
+      return invalidConstantMathAst();
+    }
+
+    return isIntegerMultipleOfPi(operand.value)
+      ? constantMathAst(0)
       : finiteComputedConstantValue(Math.tan(operand.value));
   }
 
   if (operator === "cos") {
-    return finiteComputedConstantValue(Math.cos(operand.value));
+    return isHalfIntegerMultipleOfPi(operand.value)
+      ? constantMathAst(0)
+      : finiteComputedConstantValue(Math.cos(operand.value));
   }
 
   if (operator === "exp") {
@@ -139,7 +171,7 @@ function readUnaryConstantValue(
   }
 
   return operand.value <= 0
-    ? undefined
+    ? invalidConstantMathAst()
     : finiteComputedConstantValue(Math.log(operand.value));
 }
 
@@ -158,7 +190,7 @@ function readBinaryConstantValue(
 
   if (operator === "multiply") {
     if (left.isExactZero || right.isExactZero) {
-      return constantMathAstValue(0);
+      return constantMathAst(0);
     }
 
     return finiteComputedConstantValue(left.value * right.value);
@@ -166,33 +198,52 @@ function readBinaryConstantValue(
 
   if (operator === "divide") {
     if (right.isExactZero) {
-      return;
+      return invalidConstantMathAst();
     }
 
     if (left.isExactZero) {
-      return constantMathAstValue(0);
+      return constantMathAst(0);
     }
 
     return finiteComputedConstantValue(left.value / right.value);
   }
 
   if (left.isExactZero && right.value > 0) {
-    return constantMathAstValue(0);
+    return constantMathAst(0);
   }
 
   return finiteComputedConstantValue(left.value ** right.value);
 }
 
-function constantMathAstValue(value: number): ConstantMathAstValue {
-  return { isExactZero: value === 0, value };
+function constantMathAst(value: number): ConstantMathAstRead {
+  return {
+    tag: "Constant",
+    value: { isExactZero: value === 0, value },
+  };
 }
 
-function finiteComputedConstantValue(
-  value: number
-): ConstantMathAstValue | undefined {
+function invalidConstantMathAst(): ConstantMathAstRead {
+  return { tag: "InvalidConstant" };
+}
+
+function nonconstantMathAst(): ConstantMathAstRead {
+  return { tag: "Nonconstant" };
+}
+
+function finiteComputedConstantValue(value: number): ConstantMathAstRead {
   if (!Number.isFinite(value)) {
-    return;
+    return invalidConstantMathAst();
   }
 
-  return constantMathAstValue(value);
+  return constantMathAst(value);
+}
+
+function isIntegerMultipleOfPi(value: number) {
+  const multiple = value / Math.PI;
+  return Math.abs(multiple - Math.round(multiple)) <= TRIG_EXACT_ZERO_TOLERANCE;
+}
+
+function isHalfIntegerMultipleOfPi(value: number) {
+  const multiple = value / Math.PI - 0.5;
+  return Math.abs(multiple - Math.round(multiple)) <= TRIG_EXACT_ZERO_TOLERANCE;
 }

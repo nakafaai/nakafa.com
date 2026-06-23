@@ -470,6 +470,82 @@ describe("MathAst", () => {
       }
     }
   });
+
+  it("rejects invalid constant subtrees with a typed error", async () => {
+    const exit = await Effect.runPromiseExit(
+      decodeMathAst({
+        canonical: "sqrt(-1)",
+        latex: "sqrt(-1)",
+        nodes: [
+          {
+            id: "negative-one",
+            kind: "literal",
+            value: scalar("-1"),
+          },
+          {
+            id: "root",
+            kind: "unary",
+            operand: "negative-one",
+            operator: "sqrt",
+          },
+        ],
+        root: "root",
+      })
+    );
+
+    const failure = readExitFailure(exit);
+
+    expect(failure).toBeInstanceOf(MathAstDecodeError);
+    if (failure instanceof MathAstDecodeError) {
+      expect(failure.message).toBe(
+        "MathAst node root contains an invalid constant expression."
+      );
+    }
+  });
+
+  it("rejects exact trigonometric zero divisor subtrees", async () => {
+    const exit = await Effect.runPromiseExit(
+      decodeMathAst({
+        canonical: "x / sin(pi)",
+        latex: "x / sin(pi)",
+        nodes: [
+          {
+            id: "x",
+            kind: "variable",
+            name: "x",
+          },
+          {
+            id: "pi",
+            kind: "literal",
+            value: scalar("pi"),
+          },
+          {
+            id: "sin-pi",
+            kind: "unary",
+            operand: "pi",
+            operator: "sin",
+          },
+          {
+            id: "quotient",
+            kind: "binary",
+            left: "x",
+            operator: "divide",
+            right: "sin-pi",
+          },
+        ],
+        root: "quotient",
+      })
+    );
+
+    const failure = readExitFailure(exit);
+
+    expect(failure).toBeInstanceOf(MathAstDecodeError);
+    if (failure instanceof MathAstDecodeError) {
+      expect(failure.message).toBe(
+        "MathAst divide node quotient cannot use a constant zero divisor."
+      );
+    }
+  });
 });
 
 function scalar(expression: string) {

@@ -1,7 +1,8 @@
 import { ExactScalar, type MathAstNode } from "@repo/math/schema/ast";
 import {
+  type ConstantMathAstRead,
   type ConstantMathAstValue,
-  readConstantMathAstValue,
+  readConstantMathAst,
 } from "@repo/math/schema/ast-constant";
 import { describe, expect, it } from "vitest";
 
@@ -10,7 +11,7 @@ type UnaryOperator = Extract<MathAstNode, { kind: "unary" }>["operator"];
 
 describe("MathAst constant evaluation", () => {
   it("reads literals through the sortable scalar contract with a shared cache", () => {
-    const cache = new Map<string, ConstantMathAstValue | undefined>();
+    const cache = new Map<string, ConstantMathAstRead>();
     const nodes = [literalNode("two", "2")];
 
     const firstRead = readValue("two", nodes, cache);
@@ -20,21 +21,31 @@ describe("MathAst constant evaluation", () => {
     expect(secondRead).toEqual(firstRead);
   });
 
-  it("returns undefined for nonconstant or invalid subtrees", () => {
-    expect(readValue("x", [variableNode("x")])).toBeUndefined();
-    expect(readValue("bad", [literalNode("bad", "left")])).toBeUndefined();
+  it("distinguishes nonconstant and invalid subtrees", () => {
+    expect(readResult("x", [variableNode("x")]).tag).toBe("Nonconstant");
+    expect(readResult("bad", [literalNode("bad", "left")]).tag).toBe(
+      "InvalidConstant"
+    );
     expect(
-      readValue("missing", [unaryNode("missing", "nope", "negate")])
-    ).toBeUndefined();
+      readResult("missing", [unaryNode("missing", "nope", "negate")]).tag
+    ).toBe("Nonconstant");
     expect(
-      readValue("partial", [
+      readResult("partial", [
         literalNode("one", "1"),
         binaryNode("partial", "one", "add", "missing"),
-      ])
-    ).toBeUndefined();
+      ]).tag
+    ).toBe("Nonconstant");
     expect(
-      readValue("cycle", [unaryNode("cycle", "cycle", "negate")])
-    ).toBeUndefined();
+      readResult("cycle", [unaryNode("cycle", "cycle", "negate")]).tag
+    ).toBe("Nonconstant");
+    expect(
+      readResult("invalid-sum", [
+        literalNode("negative-one", "-1"),
+        unaryNode("sqrt-negative", "negative-one", "sqrt"),
+        literalNode("one", "1"),
+        binaryNode("invalid-sum", "sqrt-negative", "add", "one"),
+      ]).tag
+    ).toBe("InvalidConstant");
   });
 
   it("evaluates supported unary constant operations", () => {
@@ -42,15 +53,19 @@ describe("MathAst constant evaluation", () => {
     expectUnaryValue("abs", "-2", 2);
     expectUnaryValue("sqrt", "4", 2);
     expectUnaryValue("sin", "0", 0);
+    expectUnaryValue("sin", "pi", 0);
     expectUnaryValue("sin", "1", Math.sin(1));
     expectUnaryValue("tan", "0", 0);
+    expectUnaryValue("tan", "pi", 0);
     expectUnaryValue("tan", "1", Math.tan(1));
     expectUnaryValue("cos", "0", 1);
+    expectUnaryValue("cos", "pi/2", 0);
     expectUnaryValue("exp", "1", Math.E);
     expectUnaryValue("log", "1", 0);
 
-    expect(readUnaryValue("sqrt", "-1")).toBeUndefined();
-    expect(readUnaryValue("log", "0")).toBeUndefined();
+    expect(readUnaryResult("sqrt", "-1").tag).toBe("InvalidConstant");
+    expect(readUnaryResult("tan", "pi/2").tag).toBe("InvalidConstant");
+    expect(readUnaryResult("log", "0").tag).toBe("InvalidConstant");
   });
 
   it("evaluates supported binary constant operations", () => {
@@ -65,14 +80,20 @@ describe("MathAst constant evaluation", () => {
     expectBinaryValue("0", "power", "0", 1);
     expectBinaryValue("2", "power", "3", 8);
 
-    expect(readBinaryValue("1", "divide", "0")).toBeUndefined();
-    expect(readBinaryValue("1e308", "multiply", "1e308")).toBeUndefined();
-    expect(readBinaryValue("1e308", "power", "2")).toBeUndefined();
+    expect(readBinaryResult("1", "divide", "0").tag).toBe("InvalidConstant");
+    expect(readBinaryResult("1e308", "multiply", "1e308").tag).toBe(
+      "InvalidConstant"
+    );
+    expect(readBinaryResult("1e308", "power", "2").tag).toBe("InvalidConstant");
   });
 });
 
 function readUnaryValue(operator: UnaryOperator, operand: string) {
-  return readValue("root", [
+  return readConstantValue(readUnaryResult(operator, operand));
+}
+
+function readUnaryResult(operator: UnaryOperator, operand: string) {
+  return readResult("root", [
     literalNode("operand", operand),
     unaryNode("root", "operand", operator),
   ]);
@@ -91,7 +112,15 @@ function readBinaryValue(
   operator: BinaryOperator,
   right: string
 ) {
-  return readValue("root", [
+  return readConstantValue(readBinaryResult(left, operator, right));
+}
+
+function readBinaryResult(
+  left: string,
+  operator: BinaryOperator,
+  right: string
+) {
+  return readResult("root", [
     literalNode("left", left),
     literalNode("right", right),
     binaryNode("root", "left", operator, "right"),
@@ -110,19 +139,31 @@ function expectBinaryValue(
 function readValue(
   rootId: string,
   nodes: readonly MathAstNode[],
-  cache?: Map<string, ConstantMathAstValue | undefined>
+  cache?: Map<string, ConstantMathAstRead>
+) {
+  return readConstantValue(readResult(rootId, nodes, cache));
+}
+
+function readResult(
+  rootId: string,
+  nodes: readonly MathAstNode[],
+  cache?: Map<string, ConstantMathAstRead>
 ) {
   const nodesById = new Map(nodes.map((node) => [node.id, node]));
   const root = nodesById.get(rootId);
 
   expect(root).toBeDefined();
   if (!root) {
-    return;
+    return { tag: "Nonconstant" } satisfies ConstantMathAstRead;
   }
 
   return cache
-    ? readConstantMathAstValue(root, nodesById, cache)
-    : readConstantMathAstValue(root, nodesById);
+    ? readConstantMathAst(root, nodesById, cache)
+    : readConstantMathAst(root, nodesById);
+}
+
+function readConstantValue(read: ConstantMathAstRead) {
+  return read.tag === "Constant" ? read.value : undefined;
 }
 
 function expectValue(
