@@ -5,7 +5,10 @@ import { describe, expect, it } from "vitest";
 describe("coordinate plane equation coefficients", () => {
   it("rejects point-normal offsets that round away nonzero products", () => {
     expect(
-      readExpectedPlaneExpression(point("1e20", "1", "0"), point("1", "1", "0"))
+      readExpectedPlaneExpression(
+        point("1e15", "1", "0"),
+        point("1", "0.01", "0")
+      )
     ).toBeUndefined();
   });
 });

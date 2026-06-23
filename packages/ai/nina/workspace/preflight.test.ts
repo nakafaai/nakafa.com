@@ -80,37 +80,6 @@ describe("EvidenceWorkspace invariants", () => {
     );
   });
 
-  it("rejects aggregate workspace artifact count and byte budgets", async () => {
-    const tooMany = await decodeFailure(
-      workspace([
-        contribution({ artifacts: artifactRange(0, 3) }),
-        contribution({ artifacts: artifactRange(3, 3) }),
-        contribution({ artifacts: artifactRange(6, 3) }),
-      ])
-    );
-
-    expectDecodeFailure(
-      tooMany,
-      `Evidence workspace artifact count exceeds ${EVIDENCE_WORKSPACE_ARTIFACT_LIMIT}.`
-    );
-
-    const description = "x".repeat(
-      Math.floor(EVIDENCE_CONTRIBUTION_ARTIFACT_BYTES / 2) - 50_000
-    );
-    const tooLarge = await decodeFailure(
-      workspace([
-        contribution({ artifacts: artifactRange(0, 2, description) }),
-        contribution({ artifacts: artifactRange(2, 2, description) }),
-        contribution({ artifacts: artifactRange(4, 2, description) }),
-      ])
-    );
-
-    expectDecodeFailure(
-      tooLarge,
-      `Evidence workspace artifact payload exceeds ${EVIDENCE_WORKSPACE_ARTIFACT_BYTES} bytes.`
-    );
-  });
-
   it("preflights aggregate artifact budgets before deep artifact decode", async () => {
     const tooMany = await decodeFailure(
       workspace([
@@ -125,11 +94,9 @@ describe("EvidenceWorkspace invariants", () => {
       `Evidence workspace artifact count exceeds ${EVIDENCE_WORKSPACE_ARTIFACT_LIMIT}.`
     );
 
-    const largeInvalidArtifact = {
-      oversized: "x".repeat(
-        Math.floor(EVIDENCE_WORKSPACE_ARTIFACT_BYTES / 6) + 20_000
-      ),
-    };
+    const largeInvalidArtifact = oversizedPart(
+      Math.floor(EVIDENCE_WORKSPACE_ARTIFACT_BYTES / 6) + 20_000
+    );
     const tooLarge = await decodeFailure(
       workspace([
         contribution({
@@ -151,15 +118,13 @@ describe("EvidenceWorkspace invariants", () => {
   });
 
   it("preflights oversized contribution artifacts without capability metadata", async () => {
-    const oversizedPart = {
-      oversized: "x".repeat(
-        Math.floor(EVIDENCE_CONTRIBUTION_ARTIFACT_BYTES / 3) + 10_000
-      ),
-    };
+    const part = oversizedPart(
+      Math.floor(EVIDENCE_CONTRIBUTION_ARTIFACT_BYTES / 3) + 10_000
+    );
     const failure = await decodeFailure(
       workspace([
         {
-          artifacts: [oversizedPart, oversizedPart, oversizedPart],
+          artifacts: [part, part, part],
         },
       ])
     );
@@ -174,11 +139,7 @@ describe("EvidenceWorkspace invariants", () => {
     const failure = await decodeFailure(
       workspace([
         contribution({
-          artifacts: [
-            {
-              oversized: "x".repeat(MAX_COORDINATE_ARTIFACT_BYTES + 1),
-            },
-          ],
+          artifacts: [oversizedPart(MAX_COORDINATE_ARTIFACT_BYTES + 1)],
         }),
       ])
     );
@@ -198,6 +159,29 @@ describe("EvidenceWorkspace invariants", () => {
     );
 
     expectDecodeFailure(failure, "Invalid evidence workspace contract.");
+  });
+
+  it("maps throwing raw preflight getters to typed decode failures", async () => {
+    expectDecodeFailure(await decodeFailure(throwingField("contributions")));
+    expectDecodeFailure(
+      await decodeFailure(workspace([throwingField("artifacts")]))
+    );
+
+    const part = oversizedPart(
+      Math.floor(EVIDENCE_CONTRIBUTION_ARTIFACT_BYTES / 3) + 10_000
+    );
+    expectDecodeFailure(
+      await decodeFailure(
+        workspace([
+          {
+            artifacts: [part, part, part],
+            get capability() {
+              throw new Error("capability getter failed");
+            },
+          },
+        ])
+      )
+    );
   });
 });
 
@@ -238,6 +222,10 @@ function invalidArtifactRange(start: number, count: number) {
   }));
 }
 
+function oversizedPart(byteCount: number) {
+  return { oversized: "x".repeat(byteCount) };
+}
+
 function artifact(id: string, description?: string) {
   return {
     description,
@@ -267,17 +255,18 @@ function artifact(id: string, description?: string) {
 }
 
 function point(x: string, y: string, z: string) {
-  return {
-    x: scalar(x),
-    y: scalar(y),
-    z: scalar(z),
-  };
+  return { x: scalar(x), y: scalar(y), z: scalar(z) };
 }
 
 function scalar(expression: string) {
+  return { expression, latex: expression };
+}
+
+function throwingField(field: string) {
   return {
-    expression,
-    latex: expression,
+    get [field]() {
+      throw new Error(`${field} getter failed`);
+    },
   };
 }
 

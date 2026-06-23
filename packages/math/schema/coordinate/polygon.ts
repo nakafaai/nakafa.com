@@ -105,12 +105,13 @@ function findPolygonPlanarityIssue(
   vertices: readonly SortablePoint3[]
 ) {
   for (const vertex of vertices) {
-    const dotProduct = readDotProduct(normal, subtractPoints(vertex, anchor));
+    const offset = subtractPoints(vertex, anchor);
+    const dotProduct = readDotProduct(normal, offset);
     if (dotProduct === undefined) {
       return `Coordinate primitive ${primitiveId} polygon planarity calculation must stay finite.`;
     }
 
-    if (dotProduct !== 0) {
+    if (!isCoplanarDotProduct(dotProduct, normal, offset)) {
       return `Coordinate primitive ${primitiveId} polygon vertices must be coplanar.`;
     }
   }
@@ -155,6 +156,36 @@ function readDotProduct(left: SortablePoint3, right: SortablePoint3) {
 
   const xy = addPlaneCoefficient(x, y);
   return xy === undefined ? undefined : addPlaneCoefficient(xy, z);
+}
+
+/**
+ * Allows decimal-rounding residue while preserving scale-aware non-planarity.
+ */
+function isCoplanarDotProduct(
+  dotProduct: number,
+  normal: SortablePoint3,
+  offset: SortablePoint3
+) {
+  if (dotProduct === 0) {
+    return true;
+  }
+
+  const normalScale = readVectorMagnitude(normal);
+  const offsetScale = readVectorMagnitude(offset);
+  const relativeScale = normalScale * offsetScale;
+  if (!Number.isFinite(relativeScale)) {
+    return false;
+  }
+
+  const tolerance = Number.EPSILON * Math.max(1, relativeScale) * 32;
+  return Math.abs(dotProduct) <= tolerance;
+}
+
+/**
+ * Computes a finite Euclidean magnitude for relative geometry tolerance.
+ */
+function readVectorMagnitude(vector: SortablePoint3) {
+  return Math.hypot(vector.x, vector.y, vector.z);
 }
 
 /**

@@ -14,6 +14,7 @@ const UNSAFE_DECIMAL_WHITESPACE_PATTERN =
   /(?:\d\s+\.)|(?:\.\s+\d)|(?:\d\.\s+\d)/;
 const UNSAFE_EXPONENT_WHITESPACE_PATTERN =
   /(?:\d|\.)[eE]\s*[+-]?\s+\d|(?:\d|\.)[eE]\s+[+-]?\s*\d/;
+const UNSAFE_SIGN_WHITESPACE_PATTERN = /(?:^|[*/(])\s*[+-]\s+(?=[\d.πpP(])/;
 const ExactNumericFactor = Schema.Struct({
   expression: Schema.String,
   operator: Schema.Literal("*", "/"),
@@ -46,7 +47,8 @@ function compactExactExpression(expression: string) {
     trimmed.length === 0 ||
     UNSAFE_WHITESPACE_PATTERN.test(trimmed) ||
     UNSAFE_DECIMAL_WHITESPACE_PATTERN.test(trimmed) ||
-    UNSAFE_EXPONENT_WHITESPACE_PATTERN.test(trimmed)
+    UNSAFE_EXPONENT_WHITESPACE_PATTERN.test(trimmed) ||
+    UNSAFE_SIGN_WHITESPACE_PATTERN.test(trimmed)
   ) {
     return;
   }

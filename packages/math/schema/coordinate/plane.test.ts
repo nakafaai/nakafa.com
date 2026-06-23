@@ -182,16 +182,16 @@ describe("coordinate plane equation validation", () => {
       },
       {
         ast: variableAst("x"),
-        normal: point("1e308", "1e-320", "0"),
+        normal: point("1e15", "1e-320", "0"),
         point: point("0", "0", "0"),
       },
       {
-        ast: expr("1e154*x", [
-          lit("1e154"),
+        ast: expr("1e15*x", [
+          lit("1e15"),
           v("x"),
-          b("root", "literal-1e154", "multiply", "x"),
+          b("root", "literal-1e15", "multiply", "x"),
         ]),
-        normal: point("1e-154", "10", "0"),
+        normal: point("1e-15", "10", "0"),
         point: point("0", "0", "0"),
       },
       {

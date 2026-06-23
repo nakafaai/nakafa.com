@@ -123,11 +123,11 @@ describe("MathAst graph validation", () => {
         expected:
           "MathAst divide node quotient cannot use a constant zero divisor.",
         input: ast(
-          "x / sin((1e-308*pi)*1e308)",
+          "x / sin((1e-15*pi)*1e15)",
           [
             variable("x"),
-            literal("tiny", "1e-308*pi"),
-            literal("large", "1e308"),
+            literal("tiny", "1e-15*pi"),
+            literal("large", "1e15"),
             binary("pi", "tiny", "multiply", "large"),
             unary("sin-pi", "pi", "sin"),
             binary("quotient", "x", "divide", "sin-pi"),
@@ -138,14 +138,31 @@ describe("MathAst graph validation", () => {
       {
         expected: "MathAst node sum contains an invalid constant expression.",
         input: ast(
-          "x / sin((1e16*pi) + (0.5*pi))",
+          "x / sin((9007199254740991*pi) + (0.5*pi))",
           [
             variable("x"),
-            literal("large", "1e16*pi"),
+            literal("large", "9007199254740991*pi"),
             literal("half", "0.5*pi"),
             binary("sum", "large", "add", "half"),
             unary("sin-sum", "sum", "sin"),
             binary("quotient", "x", "divide", "sin-sum"),
+          ],
+          "quotient"
+        ),
+      },
+      {
+        expected: "MathAst node pi contains an invalid constant expression.",
+        input: ast(
+          "x / sin((1e-308*pi)/(1e-309*10))",
+          [
+            variable("x"),
+            literal("tiny-pi", "1e-308*pi"),
+            literal("denominator-scale", "1e-309"),
+            literal("ten", "10"),
+            binary("denominator", "denominator-scale", "multiply", "ten"),
+            binary("pi", "tiny-pi", "divide", "denominator"),
+            unary("sin-pi", "pi", "sin"),
+            binary("quotient", "x", "divide", "sin-pi"),
           ],
           "quotient"
         ),

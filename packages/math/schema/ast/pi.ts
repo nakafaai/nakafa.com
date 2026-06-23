@@ -84,21 +84,22 @@ export function readQuotientPiMultiple(
   left: { readonly piMultiple?: number; readonly value: number },
   right: { readonly piMultiple?: number; readonly value: number }
 ) {
-  return left.piMultiple === undefined || right.piMultiple !== undefined
-    ? undefined
-    : left.piMultiple / right.value;
+  if (left.piMultiple === undefined || right.piMultiple !== undefined) {
+    return;
+  }
+
+  return divideFiniteDecimalNumbers(left.piMultiple, right.value);
 }
 
 /** Multiplies finite decimal string forms to avoid reciprocal-scale drift.
  */
 function multiplyFiniteDecimalNumbers(left: number, right: number) {
-  const leftDecimal = readFiniteNumberDecimal(left);
-  const rightDecimal = readFiniteNumberDecimal(right);
-
-  if (!(leftDecimal && rightDecimal)) {
+  if (!(Number.isFinite(left) && Number.isFinite(right))) {
     return left * right;
   }
 
+  const leftDecimal = readFiniteNumberDecimal(left);
+  const rightDecimal = readFiniteNumberDecimal(right);
   const coefficient = leftDecimal.coefficient * rightDecimal.coefficient;
   const exponent = leftDecimal.exponent + rightDecimal.exponent;
   return readFiniteDecimalValue(coefficient, exponent) ?? left * right;
@@ -111,33 +112,80 @@ function combineFinitePiMultiples(
   right: number,
   operator: "add" | "subtract"
 ) {
-  const value = operator === "add" ? left + right : left - right;
+  return readFiniteDecimalSum(left, right, operator);
+}
+
+/**
+ * Adds finite decimal string forms without accepting rounded conversions.
+ */
+function readFiniteDecimalSum(
+  left: number,
+  right: number,
+  operator: "add" | "subtract"
+) {
+  if (!(Number.isFinite(left) && Number.isFinite(right))) {
+    return;
+  }
+
+  const leftDecimal = readFiniteNumberDecimal(left);
+  const rightDecimal = readFiniteNumberDecimal(right);
+  const exponent = Math.min(leftDecimal.exponent, rightDecimal.exponent);
+  const leftCoefficient =
+    leftDecimal.coefficient * 10n ** BigInt(leftDecimal.exponent - exponent);
+  const rightCoefficient =
+    rightDecimal.coefficient * 10n ** BigInt(rightDecimal.exponent - exponent);
+  const coefficient =
+    operator === "add"
+      ? leftCoefficient + rightCoefficient
+      : leftCoefficient - rightCoefficient;
+
+  return readFiniteExactDecimalValue(coefficient, exponent);
+}
+
+/**
+ * Divides finite decimal string forms and rejects drift near trig sentinels.
+ */
+function divideFiniteDecimalNumbers(left: number, right: number) {
+  const value = left / right;
   if (!Number.isFinite(value)) {
     return;
   }
 
-  if (left === 0 || right === 0) {
+  if (isRoundedPiSentinel(value)) {
+    return;
+  }
+
+  if (!(Number.isFinite(left) && Number.isFinite(right))) {
     return value;
   }
 
-  if (operator === "add" && (value === left || value === right)) {
-    return;
+  const leftDecimal = readFiniteNumberDecimal(left);
+  const rightDecimal = readFiniteNumberDecimal(right);
+  const exponent = Math.min(leftDecimal.exponent, rightDecimal.exponent);
+  const numerator =
+    leftDecimal.coefficient * 10n ** BigInt(leftDecimal.exponent - exponent);
+  const denominator =
+    rightDecimal.coefficient * 10n ** BigInt(rightDecimal.exponent - exponent);
+
+  return Number(numerator) / Number(denominator);
+}
+
+/**
+ * Detects coefficients close enough to integer or half-integer sentinels to be unsafe.
+ */
+function isRoundedPiSentinel(value: number) {
+  if (Number.isInteger(value) || Number.isInteger(value - 0.5)) {
+    return false;
   }
 
-  if (operator === "subtract" && (value === left || value === -right)) {
-    return;
-  }
-
-  return value;
+  const nearestHalf = Math.round(value * 2) / 2;
+  const tolerance = Number.EPSILON * Math.max(1, Math.abs(value)) * 16;
+  return Math.abs(value - nearestHalf) <= tolerance;
 }
 
 /** Reads the finite number's shortest decimal form as coefficient and exponent.
  */
 function readFiniteNumberDecimal(value: number) {
-  if (!Number.isFinite(value)) {
-    return;
-  }
-
   const text = value.toString();
   const exponentIndex = text.indexOf("e");
   const mantissa = exponentIndex === -1 ? text : text.slice(0, exponentIndex);
@@ -169,4 +217,35 @@ function readFiniteDecimalValue(coefficient: bigint, exponent: number) {
   }
 
   return value;
+}
+
+/**
+ * Converts decimal parts only when Number preserves the exact decimal value.
+ */
+function readFiniteExactDecimalValue(coefficient: bigint, exponent: number) {
+  const value = readFiniteDecimalValue(coefficient, exponent);
+  if (value === undefined) {
+    return;
+  }
+
+  return hasSameFiniteDecimalValue(value, coefficient, exponent)
+    ? value
+    : undefined;
+}
+
+/**
+ * Compares a Number's shortest decimal form against exact decimal parts.
+ */
+function hasSameFiniteDecimalValue(
+  value: number,
+  coefficient: bigint,
+  exponent: number
+) {
+  const actual = readFiniteNumberDecimal(value);
+  const commonExponent = Math.min(exponent, actual.exponent);
+  const expectedCoefficient =
+    coefficient * 10n ** BigInt(exponent - commonExponent);
+  const actualCoefficient =
+    actual.coefficient * 10n ** BigInt(actual.exponent - commonExponent);
+  return expectedCoefficient === actualCoefficient;
 }

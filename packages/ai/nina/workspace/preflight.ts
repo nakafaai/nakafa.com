@@ -37,7 +37,7 @@ export const findWorkspaceArtifactPreflightIssue = Effect.fn(
     return;
   }
 
-  const contributions = readArrayField(input, "contributions");
+  const contributions = yield* readArrayField(input, "contributions");
   if (!contributions) {
     return;
   }
@@ -54,7 +54,7 @@ export const findWorkspaceArtifactPreflightIssue = Effect.fn(
       continue;
     }
 
-    const artifacts = readArrayField(contribution, "artifacts");
+    const artifacts = yield* readArrayField(contribution, "artifacts");
     if (!artifacts) {
       continue;
     }
@@ -76,7 +76,7 @@ export const findWorkspaceArtifactPreflightIssue = Effect.fn(
     }
 
     if (contributionArtifactBytes > limits.contributionArtifactBytes) {
-      const capability = readStringField(contribution, "capability");
+      const capability = yield* readStringField(contribution, "capability");
       return capability
         ? `Contribution ${capability} artifact payload exceeds ${limits.contributionArtifactBytes} bytes.`
         : `Contribution artifact payload exceeds ${limits.contributionArtifactBytes} bytes.`;
@@ -96,16 +96,35 @@ export const findWorkspaceArtifactPreflightIssue = Effect.fn(
  * Reads an array property without trusting producer-controlled prototypes.
  */
 function readArrayField(value: object, field: string) {
-  const fieldValue = Reflect.get(value, field);
-  return Array.isArray(fieldValue) ? fieldValue : undefined;
+  return readFieldValue(value, field).pipe(
+    Effect.map((fieldValue) =>
+      Array.isArray(fieldValue) ? fieldValue : undefined
+    )
+  );
 }
 
 /**
  * Reads optional capability labels for user-facing preflight diagnostics.
  */
 function readStringField(value: object, field: string) {
-  const fieldValue = Reflect.get(value, field);
-  return typeof fieldValue === "string" ? fieldValue : undefined;
+  return readFieldValue(value, field).pipe(
+    Effect.map((fieldValue) =>
+      typeof fieldValue === "string" ? fieldValue : undefined
+    )
+  );
+}
+
+/**
+ * Accesses producer-controlled raw properties in the typed preflight channel.
+ */
+function readFieldValue(value: object, field: string) {
+  return Effect.try({
+    catch: () =>
+      new WorkspaceArtifactPreflightError({
+        message: "Invalid evidence workspace contract.",
+      }),
+    try: () => Reflect.get(value, field),
+  });
 }
 
 /**

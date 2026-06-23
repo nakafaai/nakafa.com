@@ -153,8 +153,17 @@ export function readBinaryConstantValue(
       return constantMathAst(0);
     }
 
+    const piMultiple = readQuotientPiMultiple(left, right);
+    if (
+      left.piMultiple !== undefined &&
+      right.piMultiple === undefined &&
+      piMultiple === undefined
+    ) {
+      return INVALID_CONSTANT_MATH_AST;
+    }
+
     return finiteComputedConstantValue(left.value / right.value, {
-      piMultiple: readQuotientPiMultiple(left, right),
+      piMultiple,
       rejectZero: true,
     });
   }

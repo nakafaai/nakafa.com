@@ -1,6 +1,8 @@
 import { Schema } from "effect";
 
 const DIGIT_PATTERN = /\d/;
+const DECIMAL_LITERAL_PATTERN =
+  /^([+-]?)(?:(\d+)(?:\.(\d*))?|\.(\d+))(?:[eE]([+-]?\d+))?$/;
 const EXPONENT_SEPARATOR_PATTERN = /[eE]/;
 const PLAIN_INTEGER_LITERAL_PATTERN = /^[+-]?\d+(?:\.0*)?$/;
 const SIGN_PREFIX_PATTERN = /^[+-]/;
@@ -32,6 +34,10 @@ export function readNumericLiteralValue(literal: string) {
     return;
   }
 
+  if (isUnsafeExactIntegerLiteral(literal, parsed)) {
+    return;
+  }
+
   if (hasTooManyDecimalSignificantDigits(literal)) {
     return;
   }
@@ -43,6 +49,52 @@ export function readNumericLiteralValue(literal: string) {
   }
 
   return finiteNumericValue(parsed);
+}
+
+/**
+ * Rejects exponent or decimal spellings that denote unsafe exact integers.
+ */
+function isUnsafeExactIntegerLiteral(literal: string, parsed: number) {
+  if (!(Number.isInteger(parsed) && !Number.isSafeInteger(parsed))) {
+    return false;
+  }
+
+  const decimal = readDecimalLiteralParts(literal);
+  return decimal
+    ? decimalRepresentsInteger(decimal.coefficient, decimal.scale)
+    : true;
+}
+
+/**
+ * Reads decimal coefficient and base-10 scale without using Number rounding.
+ */
+function readDecimalLiteralParts(literal: string) {
+  const match = DECIMAL_LITERAL_PATTERN.exec(literal);
+  if (!match) {
+    return;
+  }
+
+  const wholeDigits = match[2] ?? "";
+  const fractionalDigits = match[3] ?? match[4] ?? "";
+  const digits = `${wholeDigits}${fractionalDigits}`;
+  const exponent = match[5] ? Number(match[5]) : 0;
+
+  return {
+    coefficient: BigInt(digits),
+    scale: exponent - fractionalDigits.length,
+  };
+}
+
+/**
+ * Checks whether a decimal coefficient/scale has no fractional remainder.
+ */
+function decimalRepresentsInteger(coefficient: bigint, scale: number) {
+  if (scale >= 0) {
+    return true;
+  }
+
+  const divisor = 10n ** BigInt(-scale);
+  return coefficient % divisor === 0n;
 }
 
 /** Multiplies two exact numeric values and preserves underflow state.

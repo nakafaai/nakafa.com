@@ -73,6 +73,17 @@ describe("coordinate polygon geometry validation", () => {
     ).toBe(
       "Coordinate primitive polygon-dot-rounded polygon planarity calculation must stay finite."
     );
+
+    expect(
+      findPolygonGeometryIssue("polygon-scale-overflow", [
+        point(0, 0, 0),
+        point(1e154, 0, 0),
+        point(0, 1e154, 0),
+        point(0, 1e308, 1e-308),
+      ])
+    ).toBe(
+      "Coordinate primitive polygon-scale-overflow polygon vertices must be coplanar."
+    );
   });
 
   it("defensively rejects empty polygon geometry", () => {
@@ -88,6 +99,15 @@ describe("coordinate polygon geometry validation", () => {
         point(1, 0, 0),
         point(0, 1, 0),
         point(1, 1, 0),
+      ])
+    ).toBeUndefined();
+
+    expect(
+      findPolygonGeometryIssue("polygon-decimal-plane", [
+        point(0, 0, 0),
+        point(1, 0, 0.1),
+        point(0, 1, 0.2),
+        point(0.3, 0.4, 0.11),
       ])
     ).toBeUndefined();
   });

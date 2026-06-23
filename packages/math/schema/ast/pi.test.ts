@@ -40,8 +40,15 @@ describe("syntactic pi multiple tracking", () => {
     expect(readCombinedPiMultiple(1, 2, "add")).toBe(3);
     expect(readCombinedPiMultiple(1, 2, "subtract")).toBe(-1);
     expect(readCombinedPiMultiple(0, 2, "add")).toBe(2);
-    expect(readCombinedPiMultiple(1e16, 0.5, "add")).toBeUndefined();
-    expect(readCombinedPiMultiple(1e16, 0.5, "subtract")).toBeUndefined();
+    expect(
+      readCombinedPiMultiple(Number.POSITIVE_INFINITY, 1, "add")
+    ).toBeUndefined();
+    expect(
+      readCombinedPiMultiple(Number.MAX_SAFE_INTEGER, 0.5, "add")
+    ).toBeUndefined();
+    expect(
+      readCombinedPiMultiple(Number.MAX_SAFE_INTEGER, 0.5, "subtract")
+    ).toBeUndefined();
     expect(readCombinedPiMultiple(1e308, 1e308, "add")).toBeUndefined();
     expect(readCombinedPiMultiple(undefined, 2, "add")).toBeUndefined();
     expect(
@@ -95,6 +102,24 @@ describe("syntactic pi multiple tracking", () => {
         { value: 4 }
       )
     ).toBe(0.5);
+    expect(
+      readQuotientPiMultiple({ piMultiple: 1, value: Math.PI }, { value: 20 })
+    ).toBe(0.05);
+    expect(
+      readQuotientPiMultiple({ piMultiple: 1, value: Math.PI }, { value: 0 })
+    ).toBeUndefined();
+    expect(
+      readQuotientPiMultiple(
+        { piMultiple: 0, value: 0 },
+        { value: Number.POSITIVE_INFINITY }
+      )
+    ).toBe(0);
+    expect(
+      readQuotientPiMultiple(
+        { piMultiple: 1e-308, value: Math.PI * 1e-308 },
+        { value: 1e-309 * 10 }
+      )
+    ).toBeUndefined();
     expect(
       readQuotientPiMultiple({ value: 2 }, { piMultiple: 1, value: Math.PI })
     ).toBeUndefined();
