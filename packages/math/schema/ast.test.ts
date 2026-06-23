@@ -383,8 +383,91 @@ describe("MathAst", () => {
     expect(failure).toBeInstanceOf(MathAstDecodeError);
     if (failure instanceof MathAstDecodeError) {
       expect(failure.message).toBe(
-        "MathAst divide node quotient cannot use a literal zero divisor."
+        "MathAst divide node quotient cannot use a constant zero divisor."
       );
+    }
+  });
+
+  it("rejects constant zero divisor subtrees with a typed error", async () => {
+    const cases = [
+      {
+        canonical: "x / -0",
+        latex: "x / -0",
+        nodes: [
+          {
+            id: "x",
+            kind: "variable",
+            name: "x",
+          },
+          {
+            id: "zero",
+            kind: "literal",
+            value: scalar("0"),
+          },
+          {
+            id: "negated-zero",
+            kind: "unary",
+            operand: "zero",
+            operator: "negate",
+          },
+          {
+            id: "quotient",
+            kind: "binary",
+            left: "x",
+            operator: "divide",
+            right: "negated-zero",
+          },
+        ],
+        root: "quotient",
+      },
+      {
+        canonical: "x / (0 * 1)",
+        latex: "x / (0 * 1)",
+        nodes: [
+          {
+            id: "x",
+            kind: "variable",
+            name: "x",
+          },
+          {
+            id: "zero",
+            kind: "literal",
+            value: scalar("0"),
+          },
+          {
+            id: "one",
+            kind: "literal",
+            value: scalar("1"),
+          },
+          {
+            id: "zero-product",
+            kind: "binary",
+            left: "zero",
+            operator: "multiply",
+            right: "one",
+          },
+          {
+            id: "quotient",
+            kind: "binary",
+            left: "x",
+            operator: "divide",
+            right: "zero-product",
+          },
+        ],
+        root: "quotient",
+      },
+    ];
+
+    for (const input of cases) {
+      const exit = await Effect.runPromiseExit(decodeMathAst(input));
+      const failure = readExitFailure(exit);
+
+      expect(failure).toBeInstanceOf(MathAstDecodeError);
+      if (failure instanceof MathAstDecodeError) {
+        expect(failure.message).toBe(
+          "MathAst divide node quotient cannot use a constant zero divisor."
+        );
+      }
     }
   });
 });

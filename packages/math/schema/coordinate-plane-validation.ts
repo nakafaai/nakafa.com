@@ -120,10 +120,10 @@ function readAcyclicNodeExpression(
   }
 
   if (node.operator === "subtract") {
-    return addAffinePlaneExpressions(
-      left,
-      scaleAffinePlaneExpression(right, -1)
-    );
+    const negatedRight = scaleAffinePlaneExpression(right, -1);
+    return negatedRight
+      ? addAffinePlaneExpressions(left, negatedRight)
+      : undefined;
   }
 
   if (node.operator === "multiply") {

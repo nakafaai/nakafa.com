@@ -50,6 +50,10 @@ describe("coordinate plane equation validation", () => {
       cyclicAst(),
       literalAst("left"),
       zPowerTwoAst(),
+      zPlusUnderflowedScaledXAst(),
+      zPlusOverflowedScaledXAst(),
+      zDividedByTinyScalarAst(),
+      zMinusOverflowedSumAst(),
     ];
 
     for (const ast of invalidAsts) {
@@ -235,6 +239,47 @@ function zPlusTinyXAst() {
     variableNode("x"),
     binaryNode("tiny-x", "literal-1e-10", "multiply", "x"),
     binaryNode("root", "z", "add", "tiny-x"),
+  ]);
+}
+
+function zPlusUnderflowedScaledXAst() {
+  return makeAst("z + (1e-200 * 1e-200) * x", [
+    variableNode("z"),
+    literalNode("1e-200"),
+    variableNode("x"),
+    binaryNode("tiny-x", "literal-1e-200", "multiply", "x"),
+    binaryNode("underflowed-x", "literal-1e-200", "multiply", "tiny-x"),
+    binaryNode("root", "z", "add", "underflowed-x"),
+  ]);
+}
+
+function zPlusOverflowedScaledXAst() {
+  return makeAst("z + (1e308 * 1e308) * x", [
+    variableNode("z"),
+    literalNode("1e308"),
+    variableNode("x"),
+    binaryNode("large-x", "literal-1e308", "multiply", "x"),
+    binaryNode("overflowed-x", "literal-1e308", "multiply", "large-x"),
+    binaryNode("root", "z", "add", "overflowed-x"),
+  ]);
+}
+
+function zDividedByTinyScalarAst() {
+  return makeAst("z / 1e-309", [
+    variableNode("z"),
+    literalNode("1e-309"),
+    binaryNode("root", "z", "divide", "literal-1e-309"),
+  ]);
+}
+
+function zMinusOverflowedSumAst() {
+  return makeAst("z - (1e308*x + 1e308*x)", [
+    variableNode("z"),
+    literalNode("1e308"),
+    variableNode("x"),
+    binaryNode("large-x", "literal-1e308", "multiply", "x"),
+    binaryNode("larger-x", "large-x", "add", "large-x"),
+    binaryNode("root", "z", "subtract", "larger-x"),
   ]);
 }
 

@@ -1,6 +1,7 @@
 import { ExactPoint3, ExactScalar } from "@repo/math/schema/ast";
 import {
   isExactZeroPoint,
+  readNonSortablePointAxis,
   readSortableExactScalar,
 } from "@repo/math/schema/coordinate-scalars";
 import {
@@ -67,6 +68,10 @@ describe("coordinate scalar invariants", () => {
     expect(readSortableExactScalar(scalar("2*left"))).toBeUndefined();
     expect(readSortableExactScalar(scalar("-left"))).toBeUndefined();
     expect(readSortableExactScalar(scalar("1 2"))).toBeUndefined();
+    expect(readSortableExactScalar(scalar("1 . 2"))).toBeUndefined();
+    expect(readSortableExactScalar(scalar("1 .2"))).toBeUndefined();
+    expect(readSortableExactScalar(scalar("1. 2"))).toBeUndefined();
+    expect(readSortableExactScalar(scalar(". 5"))).toBeUndefined();
     expect(readSortableExactScalar(scalar("1e + 2"))).toBeUndefined();
     expect(readSortableExactScalar(scalar("1e -2"))).toBeUndefined();
     expect(readSortableExactScalar(scalar("1e+ 2"))).toBeUndefined();
@@ -108,6 +113,13 @@ describe("coordinate scalar invariants", () => {
     ).toBe(
       "Coordinate primitive line-nonsortable-not-zero line direction x-coordinate must use a sortable numeric value."
     );
+  });
+
+  it("reads the first nonsortable point axis", () => {
+    expect(readNonSortablePointAxis(point("left", "0", "0"))).toBe("x");
+    expect(readNonSortablePointAxis(point("0", "top", "0"))).toBe("y");
+    expect(readNonSortablePointAxis(point("0", "0", "far"))).toBe("z");
+    expect(readNonSortablePointAxis(point("0", "1", "2"))).toBeUndefined();
   });
 
   it("rejects raw blank exact expressions defensively", () => {

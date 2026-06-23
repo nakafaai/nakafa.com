@@ -1,4 +1,8 @@
 import type { MathAst, MathAstNode } from "@repo/math/schema/ast";
+import {
+  type ConstantMathAstValue,
+  readConstantMathAstValue,
+} from "@repo/math/schema/ast-constant";
 import { readSortableExactScalar } from "@repo/math/schema/coordinate-scalars";
 
 interface MathAstEdge {
@@ -15,12 +19,15 @@ interface MathAstChildRef {
 export function findMathAstGraphIssue(ast: MathAst) {
   const edges: MathAstEdge[] = [];
   const edgesByNodeId = new Map<string, MathAstEdge>();
+  const nodesById = new Map<string, MathAstNode>();
 
   for (const node of ast.nodes) {
     const issue = addMathAstEdge(node, edges, edgesByNodeId);
     if (issue) {
       return issue;
     }
+
+    nodesById.set(node.id, node);
   }
 
   const rootEdge = edgesByNodeId.get(ast.root);
@@ -28,7 +35,7 @@ export function findMathAstGraphIssue(ast: MathAst) {
     return `MathAst root node was not found: ${ast.root}.`;
   }
 
-  const referenceIssue = connectMathAstEdges(edges, edgesByNodeId);
+  const referenceIssue = connectMathAstEdges(edges, edgesByNodeId, nodesById);
   if (referenceIssue) {
     return referenceIssue;
   }
@@ -59,10 +66,21 @@ function addMathAstEdge(
 
 function connectMathAstEdges(
   edges: readonly MathAstEdge[],
-  edgesByNodeId: ReadonlyMap<string, MathAstEdge>
+  edgesByNodeId: ReadonlyMap<string, MathAstEdge>,
+  nodesById: ReadonlyMap<string, MathAstNode>
 ) {
+  const constantValuesByNodeId = new Map<
+    string,
+    ConstantMathAstValue | undefined
+  >();
+
   for (const edge of edges) {
-    const issue = connectOneMathAstEdge(edge, edgesByNodeId);
+    const issue = connectOneMathAstEdge(
+      edge,
+      edgesByNodeId,
+      nodesById,
+      constantValuesByNodeId
+    );
     if (issue) {
       return issue;
     }
@@ -71,7 +89,9 @@ function connectMathAstEdges(
 
 function connectOneMathAstEdge(
   edge: MathAstEdge,
-  edgesByNodeId: ReadonlyMap<string, MathAstEdge>
+  edgesByNodeId: ReadonlyMap<string, MathAstEdge>,
+  nodesById: ReadonlyMap<string, MathAstNode>,
+  constantValuesByNodeId: Map<string, ConstantMathAstValue | undefined>
 ) {
   for (const ref of readMathAstChildRefs(edge.node)) {
     const childEdge = edgesByNodeId.get(ref.id);
@@ -79,26 +99,44 @@ function connectOneMathAstEdge(
       return `MathAst ${edge.node.kind} node ${edge.node.id} references missing ${ref.role} ${ref.id}.`;
     }
 
-    if (isLiteralZeroDivisor(edge.node, ref, childEdge.node)) {
-      return `MathAst divide node ${edge.node.id} cannot use a literal zero divisor.`;
+    if (
+      isConstantZeroDivisor(
+        edge.node,
+        ref,
+        childEdge,
+        nodesById,
+        constantValuesByNodeId
+      )
+    ) {
+      return `MathAst divide node ${edge.node.id} cannot use a constant zero divisor.`;
     }
 
     edge.children.push(childEdge);
   }
 }
 
-function isLiteralZeroDivisor(
+function isConstantZeroDivisor(
   node: MathAstNode,
   ref: MathAstChildRef,
-  childNode: MathAstNode
+  childEdge: MathAstEdge,
+  nodesById: ReadonlyMap<string, MathAstNode>,
+  constantValuesByNodeId: Map<string, ConstantMathAstValue | undefined>
 ) {
-  return (
-    node.kind === "binary" &&
-    node.operator === "divide" &&
-    ref.role === "right operand" &&
-    childNode.kind === "literal" &&
-    readSortableExactScalar(childNode.value) === 0
+  if (
+    node.kind !== "binary" ||
+    node.operator !== "divide" ||
+    ref.role !== "right operand"
+  ) {
+    return false;
+  }
+
+  const value = readConstantMathAstValue(
+    childEdge.node,
+    nodesById,
+    constantValuesByNodeId
   );
+
+  return value?.isExactZero === true;
 }
 
 function findReachabilityIssue(

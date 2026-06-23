@@ -141,6 +141,87 @@ describe("coordinate point-like primitive validation", () => {
       expect(readIssueMessage([testCase.primitive])).toBe(testCase.expected);
     });
   }
+
+  it("rejects zero-length segment primitives", () => {
+    expect(
+      readIssueMessage([
+        {
+          end: point("1", "2", "3"),
+          id: "segment-zero",
+          kind: "segment",
+          start: point("1", "2", "3"),
+        },
+      ])
+    ).toBe(
+      "Coordinate primitive segment-zero segment endpoints must be distinct."
+    );
+  });
+
+  it("rejects duplicate polygon vertices", () => {
+    expect(
+      readIssueMessage([
+        {
+          id: "polygon-duplicate",
+          kind: "polygon",
+          vertices: [
+            point("0", "0", "0"),
+            point("1", "0", "0"),
+            point("0", "0", "0"),
+          ],
+        },
+      ])
+    ).toBe(
+      "Coordinate primitive polygon-duplicate polygon vertex 3 must not duplicate vertex 1."
+    );
+  });
+
+  it("rejects zero-area polygon primitives", () => {
+    expect(
+      readIssueMessage([
+        {
+          id: "polygon-collinear",
+          kind: "polygon",
+          vertices: [
+            point("0", "0", "0"),
+            point("1", "1", "1"),
+            point("2", "2", "2"),
+          ],
+        },
+      ])
+    ).toBe(
+      "Coordinate primitive polygon-collinear polygon vertices must enclose nonzero area."
+    );
+  });
+
+  it("defensively rejects empty polygon geometry", () => {
+    expect(
+      readIssueMessage([
+        {
+          id: "polygon-empty",
+          kind: "polygon",
+          vertices: [],
+        },
+      ])
+    ).toBe(
+      "Coordinate primitive polygon-empty polygon vertices must enclose nonzero area."
+    );
+  });
+
+  it("accepts non-collinear polygon primitives", () => {
+    expect(
+      findCoordinatePrimitiveIssue([
+        {
+          id: "polygon-area",
+          kind: "polygon",
+          vertices: [
+            point("0", "0", "0"),
+            point("1", "0", "0"),
+            point("0", "1", "0"),
+          ],
+        },
+      ])
+    ).toBeUndefined();
+  });
 });
 
 function readIssueMessage(

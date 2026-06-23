@@ -1,6 +1,24 @@
 import type { ExactPoint3 } from "@repo/math/schema/ast";
 import type { CoordinatePrimitive } from "@repo/math/schema/coordinate-primitives";
-import { readNonSortablePointAxis } from "@repo/math/schema/coordinate-scalars";
+import { readSortableExactScalar } from "@repo/math/schema/coordinate-scalars";
+
+interface SortablePoint3 {
+  x: number;
+  y: number;
+  z: number;
+}
+
+type PointCoordinateRead =
+  | {
+      issue: string;
+      tag: "Issue";
+    }
+  | {
+      point: SortablePoint3;
+      tag: "Point";
+    };
+
+type PointAxis = "x" | "y" | "z";
 
 /** Finds nonsortable point-like coordinates before primitives reach renderers. */
 export function findPointLikeCoordinateIssue(primitive: CoordinatePrimitive) {
@@ -24,16 +42,21 @@ export function findPointLikeCoordinateIssue(primitive: CoordinatePrimitive) {
   }
 
   if (primitive.kind === "segment") {
-    const startIssue = findPointCoordinateIssue(
+    const start = readPointCoordinate(
       primitive.id,
       "segment start",
       primitive.start
     );
-    if (startIssue) {
-      return startIssue;
+    if (start.tag === "Issue") {
+      return start.issue;
     }
 
-    return findPointCoordinateIssue(primitive.id, "segment end", primitive.end);
+    const end = readPointCoordinate(primitive.id, "segment end", primitive.end);
+    if (end.tag === "Issue") {
+      return end.issue;
+    }
+
+    return findSegmentGeometryIssue(primitive.id, start.point, end.point);
   }
 
   if (primitive.kind === "ray") {
@@ -83,26 +106,133 @@ function findPointCoordinateIssue(
   label: string,
   point: ExactPoint3
 ) {
-  const axis = readNonSortablePointAxis(point);
-  if (!axis) {
-    return;
-  }
-
-  return `Coordinate primitive ${primitiveId} ${label} ${axis}-coordinate must use a sortable numeric value.`;
+  const result = readPointCoordinate(primitiveId, label, point);
+  return result.tag === "Issue" ? result.issue : undefined;
 }
 
 function findPolygonCoordinateIssue(
   primitiveId: string,
   vertices: readonly ExactPoint3[]
 ) {
+  const sortableVertices: SortablePoint3[] = [];
+
   for (const [index, vertex] of vertices.entries()) {
-    const issue = findPointCoordinateIssue(
+    const result = readPointCoordinate(
       primitiveId,
       `polygon vertex ${index + 1}`,
       vertex
     );
-    if (issue) {
-      return issue;
+    if (result.tag === "Issue") {
+      return result.issue;
+    }
+    sortableVertices.push(result.point);
+  }
+
+  const duplicate = findDuplicatePoint(sortableVertices);
+  if (duplicate) {
+    return `Coordinate primitive ${primitiveId} polygon vertex ${duplicate.duplicateIndex + 1} must not duplicate vertex ${duplicate.originalIndex + 1}.`;
+  }
+
+  if (!hasNonzeroPolygonArea(sortableVertices)) {
+    return `Coordinate primitive ${primitiveId} polygon vertices must enclose nonzero area.`;
+  }
+}
+
+function findSegmentGeometryIssue(
+  primitiveId: string,
+  startPoint: SortablePoint3,
+  endPoint: SortablePoint3
+) {
+  if (isSamePoint(startPoint, endPoint)) {
+    return `Coordinate primitive ${primitiveId} segment endpoints must be distinct.`;
+  }
+}
+
+function readPointCoordinate(
+  primitiveId: string,
+  label: string,
+  point: ExactPoint3
+): PointCoordinateRead {
+  const x = readSortableExactScalar(point.x);
+  if (x === undefined) {
+    return pointCoordinateIssue(primitiveId, label, "x");
+  }
+
+  const y = readSortableExactScalar(point.y);
+  if (y === undefined) {
+    return pointCoordinateIssue(primitiveId, label, "y");
+  }
+
+  const z = readSortableExactScalar(point.z);
+  if (z === undefined) {
+    return pointCoordinateIssue(primitiveId, label, "z");
+  }
+
+  return { point: { x, y, z }, tag: "Point" };
+}
+
+function pointCoordinateIssue(
+  primitiveId: string,
+  label: string,
+  axis: PointAxis
+): PointCoordinateRead {
+  return {
+    issue: `Coordinate primitive ${primitiveId} ${label} ${axis}-coordinate must use a sortable numeric value.`,
+    tag: "Issue",
+  };
+}
+
+function findDuplicatePoint(vertices: readonly SortablePoint3[]) {
+  for (const [originalIndex, original] of vertices.entries()) {
+    const remainingVertices = vertices.slice(originalIndex + 1);
+
+    for (const [remainingIndex, duplicate] of remainingVertices.entries()) {
+      if (isSamePoint(original, duplicate)) {
+        const duplicateIndex = originalIndex + remainingIndex + 1;
+        return { duplicateIndex, originalIndex };
+      }
     }
   }
+}
+
+function hasNonzeroPolygonArea(vertices: readonly SortablePoint3[]) {
+  const anchor = vertices[0];
+  if (!anchor) {
+    return false;
+  }
+
+  const remainingVertices = vertices.slice(1);
+  for (const [firstIndex, firstPoint] of remainingVertices.entries()) {
+    const first = subtractPoints(firstPoint, anchor);
+    const laterVertices = remainingVertices.slice(firstIndex + 1);
+
+    for (const secondPoint of laterVertices) {
+      const second = subtractPoints(secondPoint, anchor);
+      if (hasNonzeroCrossProduct(first, second)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+function subtractPoints(left: SortablePoint3, right: SortablePoint3) {
+  return {
+    x: left.x - right.x,
+    y: left.y - right.y,
+    z: left.z - right.z,
+  };
+}
+
+function hasNonzeroCrossProduct(left: SortablePoint3, right: SortablePoint3) {
+  const x = left.y * right.z - left.z * right.y;
+  const y = left.z * right.x - left.x * right.z;
+  const z = left.x * right.y - left.y * right.x;
+
+  return x !== 0 || y !== 0 || z !== 0;
+}
+
+function isSamePoint(left: SortablePoint3, right: SortablePoint3) {
+  return left.x === right.x && left.y === right.y && left.z === right.z;
 }

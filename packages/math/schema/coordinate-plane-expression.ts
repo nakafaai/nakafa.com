@@ -64,16 +64,30 @@ export function addAffinePlaneExpressions(
   };
 }
 
-/** Scales one affine plane expression by a finite scalar. */
+/** Scales one affine plane expression by a finite scalar without underflow. */
 export function scaleAffinePlaneExpression(
   expression: AffinePlaneExpression,
   factor: number
-): AffinePlaneExpression {
+): AffinePlaneExpression | undefined {
+  const constant = scalePlaneCoefficient(expression.constant, factor);
+  const x = scalePlaneCoefficient(expression.x, factor);
+  const y = scalePlaneCoefficient(expression.y, factor);
+  const z = scalePlaneCoefficient(expression.z, factor);
+
+  if (
+    constant === undefined ||
+    x === undefined ||
+    y === undefined ||
+    z === undefined
+  ) {
+    return;
+  }
+
   return {
-    constant: expression.constant * factor,
-    x: expression.x * factor,
-    y: expression.y * factor,
-    z: expression.z * factor,
+    constant,
+    x,
+    y,
+    z,
   };
 }
 
@@ -160,6 +174,23 @@ function multiplyFinitePlaneScalars(normal: number, point: number) {
   }
 
   const product = normal * point;
+  if (!Number.isFinite(product) || product === 0) {
+    return;
+  }
+
+  return product;
+}
+
+function scalePlaneCoefficient(coefficient: number, factor: number) {
+  if (!Number.isFinite(factor)) {
+    return;
+  }
+
+  if (coefficient === 0 || factor === 0) {
+    return 0;
+  }
+
+  const product = coefficient * factor;
   if (!Number.isFinite(product) || product === 0) {
     return;
   }

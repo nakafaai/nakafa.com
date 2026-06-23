@@ -1,6 +1,8 @@
 const NUMERIC_LITERAL_PATTERN =
   /^[+-]?(?:(?:\d+\.?\d*)|(?:\.\d+))(?:e[+-]?\d+)?$/i;
 const UNSAFE_WHITESPACE_PATTERN = /[\dA-Za-zπ]\s+[\dA-Za-zπ]/;
+const UNSAFE_DECIMAL_WHITESPACE_PATTERN =
+  /(?:\d\s+\.)|(?:\.\s+\d)|(?:\d\.\s+\d)/;
 const UNSAFE_EXPONENT_WHITESPACE_PATTERN =
   /(?:\d|\.)[eE]\s*[+-]?\s+\d|(?:\d|\.)[eE]\s+[+-]?\s*\d/;
 const DIGIT_PATTERN = /\d/;
@@ -40,6 +42,7 @@ function compactExactExpression(expression: string) {
   if (
     trimmed.length === 0 ||
     UNSAFE_WHITESPACE_PATTERN.test(trimmed) ||
+    UNSAFE_DECIMAL_WHITESPACE_PATTERN.test(trimmed) ||
     UNSAFE_EXPONENT_WHITESPACE_PATTERN.test(trimmed)
   ) {
     return;
