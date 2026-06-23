@@ -67,7 +67,9 @@ export function readUnaryConstantValue(
   }
 
   if (operator === "exp") {
-    return finiteComputedConstantValue(Math.exp(operand.value));
+    return finiteComputedConstantValue(Math.exp(operand.value), {
+      rejectZero: true,
+    });
   }
 
   return operand.value <= 0
@@ -84,7 +86,12 @@ export function readBinaryConstantValue(
   right: ConstantMathAstValue
 ) {
   if (operator === "add") {
-    return finiteComputedConstantValue(left.value + right.value, {
+    const value = readConstantSumValue(left.value, right.value, "add");
+    if (value === undefined) {
+      return INVALID_CONSTANT_MATH_AST;
+    }
+
+    return finiteComputedConstantValue(value, {
       piMultiple: readCombinedPiMultiple(
         left.piMultiple,
         right.piMultiple,
@@ -94,7 +101,12 @@ export function readBinaryConstantValue(
   }
 
   if (operator === "subtract") {
-    return finiteComputedConstantValue(left.value - right.value, {
+    const value = readConstantSumValue(left.value, right.value, "subtract");
+    if (value === undefined) {
+      return INVALID_CONSTANT_MATH_AST;
+    }
+
+    return finiteComputedConstantValue(value, {
       piMultiple: readCombinedPiMultiple(
         left.piMultiple,
         right.piMultiple,
@@ -129,6 +141,10 @@ export function readBinaryConstantValue(
     });
   }
 
+  if (left.isExactZero && right.value === 0) {
+    return INVALID_CONSTANT_MATH_AST;
+  }
+
   if (left.isExactZero && right.value > 0) {
     return constantMathAst(0);
   }
@@ -136,6 +152,34 @@ export function readBinaryConstantValue(
   return finiteComputedConstantValue(left.value ** right.value, {
     rejectZero: true,
   });
+}
+
+/**
+ * Adds or subtracts finite constants without accepting rounded-away operands.
+ */
+function readConstantSumValue(
+  left: number,
+  right: number,
+  operator: "add" | "subtract"
+) {
+  const value = operator === "add" ? left + right : left - right;
+  if (!Number.isFinite(value)) {
+    return;
+  }
+
+  if (left === 0 || right === 0) {
+    return value;
+  }
+
+  if (operator === "add" && (value === left || value === right)) {
+    return;
+  }
+
+  if (operator === "subtract" && (value === left || value === -right)) {
+    return;
+  }
+
+  return value;
 }
 
 /**

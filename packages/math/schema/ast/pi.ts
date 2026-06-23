@@ -1,6 +1,7 @@
 import { readExactNumericExpression } from "@repo/math/schema/coordinate/numeric";
 
 const PI_TOKEN_PATTERN = /π|pi/gi;
+const SIGN_PREFIX_PATTERN = /^[+-]/;
 
 /**
  * Reads a syntactic finite multiple of pi from the exact scalar grammar.
@@ -68,11 +69,11 @@ export function readProductPiMultiple(
   right: { readonly piMultiple?: number; readonly value: number }
 ) {
   if (left.piMultiple !== undefined && right.piMultiple === undefined) {
-    return left.piMultiple * right.value;
+    return multiplyFiniteDecimalNumbers(left.piMultiple, right.value);
   }
 
   if (right.piMultiple !== undefined && left.piMultiple === undefined) {
-    return right.piMultiple * left.value;
+    return multiplyFiniteDecimalNumbers(right.piMultiple, left.value);
   }
 }
 
@@ -86,4 +87,59 @@ export function readQuotientPiMultiple(
   return left.piMultiple === undefined || right.piMultiple !== undefined
     ? undefined
     : left.piMultiple / right.value;
+}
+
+/** Multiplies finite decimal string forms to avoid reciprocal-scale drift.
+ */
+function multiplyFiniteDecimalNumbers(left: number, right: number) {
+  const leftDecimal = readFiniteNumberDecimal(left);
+  const rightDecimal = readFiniteNumberDecimal(right);
+
+  if (!(leftDecimal && rightDecimal)) {
+    return left * right;
+  }
+
+  const coefficient = leftDecimal.coefficient * rightDecimal.coefficient;
+  const exponent = leftDecimal.exponent + rightDecimal.exponent;
+  return readFiniteDecimalValue(coefficient, exponent) ?? left * right;
+}
+
+/** Reads the finite number's shortest decimal form as coefficient and exponent.
+ */
+function readFiniteNumberDecimal(value: number) {
+  if (!Number.isFinite(value)) {
+    return;
+  }
+
+  const text = value.toString();
+  const exponentIndex = text.indexOf("e");
+  const mantissa = exponentIndex === -1 ? text : text.slice(0, exponentIndex);
+  const exponent =
+    exponentIndex === -1 ? 0 : Number(text.slice(exponentIndex + 1));
+  const unsigned = mantissa.replace(SIGN_PREFIX_PATTERN, "");
+  const decimalIndex = unsigned.indexOf(".");
+  const decimalPlaces =
+    decimalIndex === -1 ? 0 : unsigned.length - decimalIndex - 1;
+  const digits = unsigned.replace(".", "");
+  const sign = mantissa.startsWith("-") ? "-" : "";
+
+  return {
+    coefficient: BigInt(`${sign}${digits}`),
+    exponent: exponent - decimalPlaces,
+  };
+}
+
+/** Converts decimal coefficient/exponent parts back to a finite number.
+ */
+function readFiniteDecimalValue(coefficient: bigint, exponent: number) {
+  const value = Number(`${coefficient}e${exponent}`);
+  if (!Number.isFinite(value)) {
+    return;
+  }
+
+  if (coefficient !== 0n && value === 0) {
+    return;
+  }
+
+  return value;
 }

@@ -130,6 +130,7 @@ export const decodeEvidenceWorkspace = Effect.fn(
 )(function* (input: unknown) {
   const preflightIssue = yield* findWorkspaceArtifactPreflightIssue(input, {
     artifactBytes: MAX_COORDINATE_ARTIFACT_BYTES,
+    contributionLimit: EVIDENCE_WORKSPACE_CONTRIBUTION_LIMIT,
     contributionArtifactBytes: EVIDENCE_CONTRIBUTION_ARTIFACT_BYTES,
     contributionArtifactLimit: EVIDENCE_CONTRIBUTION_ARTIFACT_LIMIT,
     workspaceArtifactBytes: EVIDENCE_WORKSPACE_ARTIFACT_BYTES,

@@ -110,26 +110,28 @@ describe("coordinate plane equation validation", () => {
         b("underflowed-x", "literal-1e-200", "multiply", "tiny-x"),
         b("root", "z", "add", "underflowed-x"),
       ]),
-      expr("z + huge*x", [
+      expr("z + huge-sum", [
         v("z"),
         lit("1e308"),
         v("x"),
         b("large-x", "literal-1e308", "multiply", "x"),
-        b("overflowed-x", "literal-1e308", "multiply", "large-x"),
-        b("root", "z", "add", "overflowed-x"),
+        b("larger-x", "large-x", "add", "large-x"),
+        b("root", "z", "add", "larger-x"),
       ]),
       expr("z / 1e-309", [
         v("z"),
         lit("1e-309"),
         b("root", "z", "divide", "literal-1e-309"),
       ]),
-      expr("z - huge-sum", [
+      expr("z + rounded-away*x", [
         v("z"),
-        lit("1e308"),
+        lit("1"),
+        lit("1e-16"),
         v("x"),
-        b("large-x", "literal-1e308", "multiply", "x"),
-        b("larger-x", "large-x", "add", "large-x"),
-        b("root", "z", "subtract", "larger-x"),
+        b("rounded-one", "literal-1", "add", "literal-1e-16"),
+        b("rounded-away", "rounded-one", "subtract", "literal-1"),
+        b("rounded-away-x", "rounded-away", "multiply", "x"),
+        b("root", "z", "add", "rounded-away-x"),
       ]),
     ];
 
@@ -180,7 +182,7 @@ describe("coordinate plane equation validation", () => {
       },
       {
         ast: variableAst("x"),
-        normal: point("1e-320", "1", "0"),
+        normal: point("1e308", "1e-320", "0"),
         point: point("0", "0", "0"),
       },
       {

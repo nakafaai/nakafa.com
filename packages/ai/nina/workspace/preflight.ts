@@ -3,6 +3,7 @@ import { Effect, Schema } from "effect";
 /** Schema-owned raw artifact budget limits enforced before workspace decode. */
 export const WorkspaceArtifactPreflightLimits = Schema.Struct({
   artifactBytes: Schema.Number.pipe(Schema.int(), Schema.positive()),
+  contributionLimit: Schema.Number.pipe(Schema.int(), Schema.positive()),
   contributionArtifactBytes: Schema.Number.pipe(
     Schema.int(),
     Schema.positive()
@@ -29,66 +30,67 @@ export class WorkspaceArtifactPreflightError extends Schema.TaggedError<Workspac
 /**
  * Checks raw workspace artifact counts and bytes before deep schema decode.
  */
-export function findWorkspaceArtifactPreflightIssue(
-  input: unknown,
-  limits: WorkspaceArtifactPreflightLimits
-) {
-  return Effect.gen(function* () {
-    if (typeof input !== "object" || input === null) {
-      return;
+export const findWorkspaceArtifactPreflightIssue = Effect.fn(
+  "nina.workspace.findWorkspaceArtifactPreflightIssue"
+)(function* (input: unknown, limits: WorkspaceArtifactPreflightLimits) {
+  if (typeof input !== "object" || input === null) {
+    return;
+  }
+
+  const contributions = readArrayField(input, "contributions");
+  if (!contributions) {
+    return;
+  }
+
+  if (contributions.length > limits.contributionLimit) {
+    return "Invalid evidence workspace contract.";
+  }
+
+  let workspaceArtifactBytes = 0;
+  let workspaceArtifactCount = 0;
+
+  for (const contribution of contributions) {
+    if (typeof contribution !== "object" || contribution === null) {
+      continue;
     }
 
-    const contributions = readArrayField(input, "contributions");
-    if (!contributions) {
-      return;
+    const artifacts = readArrayField(contribution, "artifacts");
+    if (!artifacts) {
+      continue;
     }
 
-    let workspaceArtifactBytes = 0;
-    let workspaceArtifactCount = 0;
-
-    for (const contribution of contributions) {
-      if (typeof contribution !== "object" || contribution === null) {
-        continue;
-      }
-
-      const artifacts = readArrayField(contribution, "artifacts");
-      if (!artifacts) {
-        continue;
-      }
-
-      if (artifacts.length > limits.contributionArtifactLimit) {
-        return "Invalid evidence workspace contract.";
-      }
-
-      let contributionArtifactBytes = 0;
-      for (const artifact of artifacts) {
-        const artifactBytes = yield* readJsonBytes(artifact);
-        if (artifactBytes > limits.artifactBytes) {
-          return `Evidence workspace artifact exceeds ${limits.artifactBytes} bytes.`;
-        }
-
-        contributionArtifactBytes += artifactBytes;
-        workspaceArtifactBytes += artifactBytes;
-        workspaceArtifactCount += 1;
-      }
-
-      if (contributionArtifactBytes > limits.contributionArtifactBytes) {
-        const capability = readStringField(contribution, "capability");
-        return capability
-          ? `Contribution ${capability} artifact payload exceeds ${limits.contributionArtifactBytes} bytes.`
-          : `Contribution artifact payload exceeds ${limits.contributionArtifactBytes} bytes.`;
-      }
-
-      if (workspaceArtifactCount > limits.workspaceArtifactLimit) {
-        return `Evidence workspace artifact count exceeds ${limits.workspaceArtifactLimit}.`;
-      }
-
-      if (workspaceArtifactBytes > limits.workspaceArtifactBytes) {
-        return `Evidence workspace artifact payload exceeds ${limits.workspaceArtifactBytes} bytes.`;
-      }
+    if (artifacts.length > limits.contributionArtifactLimit) {
+      return "Invalid evidence workspace contract.";
     }
-  });
-}
+
+    let contributionArtifactBytes = 0;
+    for (const artifact of artifacts) {
+      const artifactBytes = yield* readJsonBytes(artifact);
+      if (artifactBytes > limits.artifactBytes) {
+        return `Evidence workspace artifact exceeds ${limits.artifactBytes} bytes.`;
+      }
+
+      contributionArtifactBytes += artifactBytes;
+      workspaceArtifactBytes += artifactBytes;
+      workspaceArtifactCount += 1;
+    }
+
+    if (contributionArtifactBytes > limits.contributionArtifactBytes) {
+      const capability = readStringField(contribution, "capability");
+      return capability
+        ? `Contribution ${capability} artifact payload exceeds ${limits.contributionArtifactBytes} bytes.`
+        : `Contribution artifact payload exceeds ${limits.contributionArtifactBytes} bytes.`;
+    }
+
+    if (workspaceArtifactCount > limits.workspaceArtifactLimit) {
+      return `Evidence workspace artifact count exceeds ${limits.workspaceArtifactLimit}.`;
+    }
+
+    if (workspaceArtifactBytes > limits.workspaceArtifactBytes) {
+      return `Evidence workspace artifact payload exceeds ${limits.workspaceArtifactBytes} bytes.`;
+    }
+  }
+});
 
 /**
  * Reads an array property without trusting producer-controlled prototypes.

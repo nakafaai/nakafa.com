@@ -7,36 +7,27 @@ import {
   EVIDENCE_CONTRIBUTION_ARTIFACT_LIMIT,
   EVIDENCE_WORKSPACE_ARTIFACT_BYTES,
   EVIDENCE_WORKSPACE_ARTIFACT_LIMIT,
+  EVIDENCE_WORKSPACE_CONTRIBUTION_LIMIT,
   EvidenceWorkspaceDecodeError,
 } from "@repo/ai/nina/workspace/schema";
 import { MAX_COORDINATE_ARTIFACT_BYTES } from "@repo/math/schema/artifact/safety";
 import { Cause, Effect, Exit, Option } from "effect";
 import { describe, expect, it } from "vitest";
 
+const BAD_WORKSPACE = "Invalid evidence workspace contract.";
+
 describe("EvidenceWorkspace invariants", () => {
   it("falls through to schema errors when preflight has no artifact arrays", async () => {
-    const nonObject = await decodeFailure(null);
-    expectDecodeFailure(nonObject, "Invalid evidence workspace contract.");
+    const invalidInputs = [
+      null,
+      {},
+      workspace([null]),
+      workspace([contribution({ artifacts: [undefined] })]),
+    ];
 
-    const missingContributions = await decodeFailure({});
-    expectDecodeFailure(
-      missingContributions,
-      "Invalid evidence workspace contract."
-    );
-
-    const nonObjectContribution = await decodeFailure(workspace([null]));
-    expectDecodeFailure(
-      nonObjectContribution,
-      "Invalid evidence workspace contract."
-    );
-
-    const undefinedArtifact = await decodeFailure(
-      workspace([contribution({ artifacts: [undefined] })])
-    );
-    expectDecodeFailure(
-      undefinedArtifact,
-      "Invalid evidence workspace contract."
-    );
+    for (const input of invalidInputs) {
+      expectDecodeFailure(await decodeFailure(input));
+    }
   });
 
   it("rejects too many artifacts in one contribution", async () => {
@@ -52,6 +43,23 @@ describe("EvidenceWorkspace invariants", () => {
     );
 
     expectDecodeFailure(failure, "Invalid evidence workspace contract.");
+  });
+
+  it("rejects oversized contribution arrays before walking raw rows", async () => {
+    let inspected = false;
+    const rawContribution = {
+      get artifacts() {
+        inspected = true;
+        return [];
+      },
+    };
+    const overLimitLength = EVIDENCE_WORKSPACE_CONTRIBUTION_LIMIT + 1;
+    const failure = await decodeFailure(
+      workspace(Array.from({ length: overLimitLength }, () => rawContribution))
+    );
+
+    expect(inspected).toBe(false);
+    expectDecodeFailure(failure);
   });
 
   it("rejects oversized contribution artifact payloads", async () => {
@@ -283,7 +291,7 @@ async function decodeFailure(input: unknown) {
   return Option.isSome(failure) ? failure.value : undefined;
 }
 
-function expectDecodeFailure(error: unknown, message: string) {
+function expectDecodeFailure(error: unknown, message = BAD_WORKSPACE) {
   expect(error).toBeInstanceOf(EvidenceWorkspaceDecodeError);
   if (error instanceof EvidenceWorkspaceDecodeError) {
     expect(error.message).toBe(message);

@@ -1,8 +1,12 @@
 import type { ExactPoint3 } from "@repo/math/schema/ast/schema";
+import {
+  addPlaneCoefficient,
+  isPlaneCoefficientMatch,
+  multiplyFinitePlaneScalars,
+  scalePlaneCoefficient,
+} from "@repo/math/schema/coordinate/coefficient";
 import { readSortableExactScalar } from "@repo/math/schema/coordinate/scalar";
 import { Schema } from "effect";
-
-const PLANE_EQUATION_RELATIVE_TOLERANCE = 1e-9;
 
 /** Schema-owned affine expression coefficients for implicit plane equations. */
 export const AffinePlaneExpression = Schema.Struct({
@@ -65,12 +69,26 @@ export function readExpectedPlaneExpression(
 export function addAffinePlaneExpressions(
   left: AffinePlaneExpression,
   right: AffinePlaneExpression
-): AffinePlaneExpression {
+): AffinePlaneExpression | undefined {
+  const constant = addPlaneCoefficient(left.constant, right.constant);
+  const x = addPlaneCoefficient(left.x, right.x);
+  const y = addPlaneCoefficient(left.y, right.y);
+  const z = addPlaneCoefficient(left.z, right.z);
+
+  if (
+    constant === undefined ||
+    x === undefined ||
+    y === undefined ||
+    z === undefined
+  ) {
+    return;
+  }
+
   return {
-    constant: left.constant + right.constant,
-    x: left.x + right.x,
-    y: left.y + right.y,
-    z: left.z + right.z,
+    constant,
+    x,
+    y,
+    z,
   };
 }
 
@@ -159,13 +177,25 @@ export function isSamePlaneExpression(
   }
 
   return (
-    isPlaneCoefficientMatch(actual.x, expected.x, expected.x * scaleFactor) &&
-    isPlaneCoefficientMatch(actual.y, expected.y, expected.y * scaleFactor) &&
-    isPlaneCoefficientMatch(actual.z, expected.z, expected.z * scaleFactor) &&
+    isPlaneCoefficientMatch(
+      actual.x,
+      expected.x,
+      scalePlaneCoefficient(expected.x, scaleFactor)
+    ) &&
+    isPlaneCoefficientMatch(
+      actual.y,
+      expected.y,
+      scalePlaneCoefficient(expected.y, scaleFactor)
+    ) &&
+    isPlaneCoefficientMatch(
+      actual.z,
+      expected.z,
+      scalePlaneCoefficient(expected.z, scaleFactor)
+    ) &&
     isPlaneCoefficientMatch(
       actual.constant,
       expected.constant,
-      expected.constant * scaleFactor
+      scalePlaneCoefficient(expected.constant, scaleFactor)
     )
   );
 }
@@ -189,42 +219,6 @@ function readPlaneOffset(terms: readonly (readonly [number, number])[]) {
   }
 
   return offset;
-}
-
-/**
- * Multiplies geometry scalars and rejects nonzero products lost to zero.
- */
-function multiplyFinitePlaneScalars(normal: number, point: number) {
-  if (normal === 0 || point === 0) {
-    return 0;
-  }
-
-  const product = normal * point;
-  if (!Number.isFinite(product) || product === 0) {
-    return;
-  }
-
-  return product;
-}
-
-/**
- * Scales one coefficient and rejects nonzero products lost to zero.
- */
-function scalePlaneCoefficient(coefficient: number, factor: number) {
-  if (!Number.isFinite(factor)) {
-    return;
-  }
-
-  if (coefficient === 0 || factor === 0) {
-    return 0;
-  }
-
-  const product = coefficient * factor;
-  if (!Number.isFinite(product) || product === 0) {
-    return;
-  }
-
-  return product;
 }
 
 /**
@@ -257,25 +251,4 @@ function isZeroAffineExpression(expression: AffinePlaneExpression) {
     expression.z === 0 &&
     expression.constant === 0
   );
-}
-
-/**
- * Compares one scaled coefficient using relative tolerance around expectation.
- */
-function isPlaneCoefficientMatch(
-  actual: number,
-  expected: number,
-  scaledExpected: number
-) {
-  if (!Number.isFinite(scaledExpected)) {
-    return false;
-  }
-
-  if (expected === 0) {
-    return actual === 0;
-  }
-
-  const allowedDrift =
-    Math.abs(scaledExpected) * PLANE_EQUATION_RELATIVE_TOLERANCE;
-  return Math.abs(actual - scaledExpected) <= allowedDrift;
 }

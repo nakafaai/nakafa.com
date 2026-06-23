@@ -94,6 +94,12 @@ describe("coordinate scalar invariants", () => {
     expect(
       readSortableExactScalar(scalar("-9007199254740992"))
     ).toBeUndefined();
+    expect(
+      readSortableExactScalar(scalar("1.0000000000000001"))
+    ).toBeUndefined();
+    expect(
+      readSortableExactScalar(scalar("9007199254740992.5"))
+    ).toBeUndefined();
   });
 
   it("rejects nonzero exact values that underflow to zero", () => {

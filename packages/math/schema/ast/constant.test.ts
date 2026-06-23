@@ -67,11 +67,13 @@ describe("MathAst constant evaluation", () => {
 
     expect(readUnaryResult("sqrt", "-1").tag).toBe("InvalidConstant");
     expect(readUnaryResult("tan", "pi/2").tag).toBe("InvalidConstant");
+    expect(readUnaryResult("exp", "-1000").tag).toBe("InvalidConstant");
     expect(readUnaryResult("log", "0").tag).toBe("InvalidConstant");
   });
 
   it("evaluates supported binary constant operations", () => {
     expectBinaryValue("1", "add", "2", 3);
+    expectBinaryValue("0", "add", "2", 2);
     expectBinaryValue("1", "subtract", "1", 0);
     expectBinaryValue("0", "multiply", "7", 0);
     expectBinaryValue("7", "multiply", "0", 0);
@@ -79,10 +81,18 @@ describe("MathAst constant evaluation", () => {
     expectBinaryValue("0", "divide", "7", 0);
     expectBinaryValue("4", "divide", "2", 2);
     expectBinaryValue("0", "power", "2", 0);
-    expectBinaryValue("0", "power", "0", 1);
     expectBinaryValue("2", "power", "3", 8);
 
+    expect(readBinaryResult("0", "power", "0").tag).toBe("InvalidConstant");
     expect(readBinaryResult("1", "divide", "0").tag).toBe("InvalidConstant");
+    expect(readBinaryResult("1", "add", "1e-16").tag).toBe("InvalidConstant");
+    expect(readBinaryResult("1e16", "subtract", "1").tag).toBe(
+      "InvalidConstant"
+    );
+    expect(readRoundedAwayDifference().tag).toBe("InvalidConstant");
+    expect(readBinaryResult("1e308", "add", "1e308").tag).toBe(
+      "InvalidConstant"
+    );
     expect(readBinaryResult("1e-200", "multiply", "1e-200").tag).toBe(
       "InvalidConstant"
     );
@@ -135,6 +145,15 @@ function readBinaryResult(
     literalNode("left", left),
     literalNode("right", right),
     binaryNode("root", "left", operator, "right"),
+  ]);
+}
+
+function readRoundedAwayDifference() {
+  return readResult("root", [
+    literalNode("one", "1"),
+    literalNode("tiny", "1e-16"),
+    binaryNode("rounded", "one", "add", "tiny"),
+    binaryNode("root", "rounded", "subtract", "one"),
   ]);
 }
 

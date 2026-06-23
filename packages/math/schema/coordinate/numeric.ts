@@ -1,3 +1,12 @@
+import {
+  divideNumericValue,
+  type ExactNumericValue,
+  finiteNumericValue,
+  multiplyNumericValue,
+  readNumericLiteralValue,
+} from "@repo/math/schema/coordinate/decimal";
+import { Schema } from "effect";
+
 const NUMERIC_LITERAL_PATTERN =
   /^[+-]?(?:(?:\d+\.?\d*)|(?:\.\d+))(?:e[+-]?\d+)?$/i;
 const UNSAFE_WHITESPACE_PATTERN = /[\dA-Za-zπ]\s+[\dA-Za-zπ]/;
@@ -5,24 +14,15 @@ const UNSAFE_DECIMAL_WHITESPACE_PATTERN =
   /(?:\d\s+\.)|(?:\.\s+\d)|(?:\d\.\s+\d)/;
 const UNSAFE_EXPONENT_WHITESPACE_PATTERN =
   /(?:\d|\.)[eE]\s*[+-]?\s+\d|(?:\d|\.)[eE]\s+[+-]?\s*\d/;
-const DIGIT_PATTERN = /\d/;
-const EXPONENT_SEPARATOR_PATTERN = /[eE]/;
-const PLAIN_INTEGER_LITERAL_PATTERN = /^[+-]?\d+(?:\.0*)?$/;
-const SIGN_PREFIX_PATTERN = /^[+-]/;
-const ZERO_MANTISSA_PATTERN = /^[0.]+$/;
+const ExactNumericFactor = Schema.Struct({
+  expression: Schema.String,
+  operator: Schema.Literal("*", "/"),
+});
 
-interface ExactNumericFactor {
-  expression: string;
-  operator: "*" | "/";
-}
+type ExactNumericFactor = Schema.Schema.Type<typeof ExactNumericFactor>;
 
-interface ExactNumericValue {
-  isExactZero: boolean;
-  isUnderflow: boolean;
-  value: number;
-}
-
-/** Parses a narrow exact numeric grammar into a finite sortable number. */
+/** Parses a narrow exact numeric grammar into a finite sortable number.
+ */
 export function readExactNumericExpression(expression: string) {
   const compact = compactExactExpression(expression);
   if (!compact) {
@@ -38,6 +38,8 @@ export function readExactNumericExpression(expression: string) {
   return numericValue.value;
 }
 
+/** Removes harmless operator whitespace while rejecting token mutation.
+ */
 function compactExactExpression(expression: string) {
   const trimmed = expression.trim();
   if (
@@ -52,6 +54,8 @@ function compactExactExpression(expression: string) {
   return trimmed.replaceAll(/\s+/g, "");
 }
 
+/** Evaluates a compact exact expression as a left-to-right factor chain.
+ */
 function readExactNumericExpressionValue(
   expression: string
 ): ExactNumericValue | undefined {
@@ -86,6 +90,8 @@ function readExactNumericExpressionValue(
   return value;
 }
 
+/** Reads one parenthesized atom, signed atom, literal, or pi token.
+ */
 function readExactNumericAtomValue(
   expression: string
 ): ExactNumericValue | undefined {
@@ -116,89 +122,8 @@ function readExactNumericAtomValue(
   }
 }
 
-function readNumericLiteralValue(literal: string) {
-  const parsed = Number(literal);
-
-  if (!Number.isFinite(parsed)) {
-    return;
-  }
-
-  if (
-    PLAIN_INTEGER_LITERAL_PATTERN.test(literal) &&
-    !Number.isSafeInteger(parsed)
-  ) {
-    return;
-  }
-
-  if (parsed === 0) {
-    return isSyntacticZeroLiteral(literal)
-      ? exactZeroValue()
-      : underflowValue();
-  }
-
-  return finiteNumericValue(parsed);
-}
-
-function multiplyNumericValue(
-  left: ExactNumericValue,
-  right: ExactNumericValue
-) {
-  if (left.isExactZero || right.isExactZero) {
-    return exactZeroValue();
-  }
-
-  if (left.isUnderflow || right.isUnderflow) {
-    return underflowValue();
-  }
-
-  return finiteComputedValue(left.value * right.value);
-}
-
-function divideNumericValue(left: ExactNumericValue, right: ExactNumericValue) {
-  if (right.isExactZero) {
-    return;
-  }
-
-  if (left.isExactZero) {
-    return exactZeroValue();
-  }
-
-  if (left.isUnderflow || right.isUnderflow) {
-    return underflowValue();
-  }
-
-  return finiteComputedValue(left.value / right.value);
-}
-
-function finiteComputedValue(value: number) {
-  if (!Number.isFinite(value)) {
-    return;
-  }
-
-  return value === 0 ? underflowValue() : finiteNumericValue(value);
-}
-
-function finiteNumericValue(value: number): ExactNumericValue {
-  return { isExactZero: false, isUnderflow: false, value };
-}
-
-function exactZeroValue(): ExactNumericValue {
-  return { isExactZero: true, isUnderflow: false, value: 0 };
-}
-
-function underflowValue(): ExactNumericValue {
-  return { isExactZero: false, isUnderflow: true, value: 0 };
-}
-
-function isSyntacticZeroLiteral(literal: string) {
-  const unsigned = literal.replace(SIGN_PREFIX_PATTERN, "");
-  const exponentIndex = unsigned.search(EXPONENT_SEPARATOR_PATTERN);
-  const mantissa =
-    exponentIndex === -1 ? unsigned : unsigned.slice(0, exponentIndex);
-
-  return DIGIT_PATTERN.test(mantissa) && ZERO_MANTISSA_PATTERN.test(mantissa);
-}
-
+/** Removes balanced wrapper parentheses without changing inner grouping.
+ */
 function stripBalancedOuterParens(expression: string) {
   let stripped = expression;
 
@@ -209,6 +134,8 @@ function stripBalancedOuterParens(expression: string) {
   return stripped;
 }
 
+/** Checks that outer parentheses enclose the whole expression.
+ */
 function isWrappedByBalancedParens(expression: string) {
   if (!(expression.startsWith("(") && expression.endsWith(")"))) {
     return false;
@@ -233,6 +160,8 @@ function isWrappedByBalancedParens(expression: string) {
   return depth === 0;
 }
 
+/** Splits top-level multiplication and division factors left to right.
+ */
 function splitTopLevelFactors(expression: string) {
   const rest: ExactNumericFactor[] = [];
   let first: string | undefined;

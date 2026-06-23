@@ -120,6 +120,22 @@ describe("MathAst graph validation", () => {
         ),
       },
       {
+        expected:
+          "MathAst divide node quotient cannot use a constant zero divisor.",
+        input: ast(
+          "x / sin((1e-308*pi)*1e308)",
+          [
+            variable("x"),
+            literal("tiny", "1e-308*pi"),
+            literal("large", "1e308"),
+            binary("pi", "tiny", "multiply", "large"),
+            unary("sin-pi", "pi", "sin"),
+            binary("quotient", "x", "divide", "sin-pi"),
+          ],
+          "quotient"
+        ),
+      },
+      {
         expected: "MathAst node root contains an invalid constant expression.",
         input: ast("sqrt(-1)", [
           literal("negative-one", "-1"),
