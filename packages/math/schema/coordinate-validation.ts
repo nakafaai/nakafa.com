@@ -10,6 +10,10 @@ import type {
   CoordinatePrimitive,
   FunctionDomain,
 } from "@repo/math/schema/coordinate-primitives";
+import {
+  isExactZeroPoint,
+  readSortableExactScalar,
+} from "@repo/math/schema/coordinate-scalars";
 import { Schema } from "effect";
 
 /** Expected failure raised when coordinate primitives are not render-safe. */
@@ -65,7 +69,7 @@ function findOnePrimitiveIssue(primitive: CoordinatePrimitive) {
   }
 
   if (primitive.kind === "function-surface") {
-    return findFunctionSpecIssue(primitive.id, primitive.function);
+    return findFunctionSpecIssue(primitive.id, primitive.function, 2);
   }
 
   if (primitive.kind === "parametric-curve") {
@@ -87,8 +91,18 @@ function findDirectionIssue(primitiveId: string, direction: ExactPoint3) {
 
 function findFunctionSpecIssue(
   primitiveId: string,
-  functionSpec: CanonicalFunctionSpec
+  functionSpec: CanonicalFunctionSpec,
+  expectedDomainCount?: number
 ) {
+  if (
+    expectedDomainCount !== undefined &&
+    functionSpec.domain.length !== expectedDomainCount
+  ) {
+    return createIssue(
+      `Coordinate primitive ${primitiveId} must have exactly ${expectedDomainCount} function domain variables.`
+    );
+  }
+
   const asts = functionSpec.exclusions
     ? [functionSpec.ast, ...functionSpec.exclusions]
     : [functionSpec.ast];
@@ -234,40 +248,4 @@ function findCuboidIssue(
       );
     }
   }
-}
-
-/** Reads a finite numeric sort key from an exact scalar display contract. */
-export function readSortableExactScalar(scalar: ExactScalar) {
-  if (scalar.decimal !== undefined && Number.isFinite(scalar.decimal)) {
-    return scalar.decimal;
-  }
-
-  const parsed = Number(scalar.expression);
-  return Number.isFinite(parsed) ? parsed : undefined;
-}
-
-function isExactZeroPoint(point: ExactPoint3) {
-  return (
-    isExactZeroScalar(point.x) &&
-    isExactZeroScalar(point.y) &&
-    isExactZeroScalar(point.z)
-  );
-}
-
-function isExactZeroScalar(scalar: ExactScalar) {
-  if (scalar.decimal !== undefined) {
-    return Object.is(scalar.decimal, 0);
-  }
-
-  const expression = scalar.expression.trim();
-
-  if (expression === "0") {
-    return true;
-  }
-
-  if (expression === "+0") {
-    return true;
-  }
-
-  return expression === "-0";
 }

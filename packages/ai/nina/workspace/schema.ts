@@ -1,5 +1,5 @@
 import {
-  EvidenceEnvelope,
+  EvidenceStatusSchema,
   LearningCapabilityNameSchema,
 } from "@repo/ai/nina/capability/spec";
 import { PedagogyMove } from "@repo/ai/nina/pedagogy/schema";
@@ -12,26 +12,66 @@ import {
 import { Effect, Schema } from "effect";
 
 export const EVIDENCE_WORKSPACE_CONTRIBUTION_LIMIT = 20;
-
 /** Maximum artifacts one capability contribution may attach to a workspace. */
 export const EVIDENCE_CONTRIBUTION_ARTIFACT_LIMIT = 3;
-
 /** Maximum artifacts retained across one turn-scoped evidence workspace. */
 export const EVIDENCE_WORKSPACE_ARTIFACT_LIMIT = 8;
-
 /** Maximum serialized artifact bytes one contribution may add. */
 export const EVIDENCE_CONTRIBUTION_ARTIFACT_BYTES =
   MAX_COORDINATE_ARTIFACT_BYTES * 2;
-
 /** Maximum serialized artifact bytes retained across one workspace. */
 export const EVIDENCE_WORKSPACE_ARTIFACT_BYTES =
   MAX_COORDINATE_ARTIFACT_BYTES * 4;
-
 /** Maximum model-visible contribution summary length. */
 export const EVIDENCE_CONTRIBUTION_MODEL_SUMMARY_MAX_LENGTH = 1200;
-
 /** Maximum pedagogy moves accepted in one contribution. */
 export const EVIDENCE_CONTRIBUTION_PEDAGOGY_MOVE_LIMIT = 6;
+/** Maximum model-visible evidence summary length in one contribution. */
+export const EVIDENCE_CONTRIBUTION_SUMMARY_MAX_LENGTH = 1200;
+/** Maximum limitations one contribution may keep in workspace evidence. */
+export const EVIDENCE_CONTRIBUTION_LIMITATION_LIMIT = 6;
+/** Maximum model-visible limitation text length. */
+export const EVIDENCE_CONTRIBUTION_LIMITATION_MAX_LENGTH = 300;
+/** Maximum refs one contribution may keep in workspace evidence. */
+export const EVIDENCE_CONTRIBUTION_REF_LIMIT = 12;
+/** Maximum length accepted for one workspace evidence reference. */
+export const EVIDENCE_CONTRIBUTION_REF_MAX_LENGTH = 180;
+
+const WorkspaceEvidenceRef = Schema.NonEmptyString.pipe(
+  Schema.maxLength(EVIDENCE_CONTRIBUTION_REF_MAX_LENGTH)
+);
+
+/**
+ * Bounded workspace evidence accepted from one Nina capability contribution.
+ *
+ * This mirrors the capability envelope shape but caps model-visible text and
+ * references before the workspace can be retained or fed into a later turn.
+ */
+export class WorkspaceEvidenceEnvelope extends Schema.Class<WorkspaceEvidenceEnvelope>(
+  "WorkspaceEvidenceEnvelope"
+)({
+  capability: LearningCapabilityNameSchema,
+  limitations: Schema.optional(
+    Schema.Array(
+      Schema.NonEmptyString.pipe(
+        Schema.maxLength(EVIDENCE_CONTRIBUTION_LIMITATION_MAX_LENGTH)
+      )
+    ).pipe(
+      Schema.maxItems(EVIDENCE_CONTRIBUTION_LIMITATION_LIMIT),
+      Schema.mutable
+    )
+  ),
+  refs: Schema.optional(
+    Schema.Array(WorkspaceEvidenceRef).pipe(
+      Schema.maxItems(EVIDENCE_CONTRIBUTION_REF_LIMIT),
+      Schema.mutable
+    )
+  ),
+  status: EvidenceStatusSchema,
+  summary: Schema.String.pipe(
+    Schema.maxLength(EVIDENCE_CONTRIBUTION_SUMMARY_MAX_LENGTH)
+  ),
+}) {}
 
 /**
  * One bounded contribution from a Nina learning capability.
@@ -50,7 +90,7 @@ export class CapabilityContribution extends Schema.Class<CapabilityContribution>
     )
   ),
   capability: LearningCapabilityNameSchema,
-  evidence: EvidenceEnvelope,
+  evidence: WorkspaceEvidenceEnvelope,
   modelSummary: Schema.NonEmptyString.pipe(
     Schema.maxLength(EVIDENCE_CONTRIBUTION_MODEL_SUMMARY_MAX_LENGTH)
   ),

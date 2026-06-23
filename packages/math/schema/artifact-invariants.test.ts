@@ -4,6 +4,7 @@ import {
   MAX_COORDINATE_ARTIFACT_BYTES,
   MAX_COORDINATE_ARTIFACT_PRIMITIVES,
 } from "@repo/math/schema/artifact";
+import { MAX_POLYGON_VERTICES } from "@repo/math/schema/coordinate-primitives";
 import { Cause, Effect, Exit, Option } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -126,6 +127,27 @@ describe("LearningArtifact invariants", () => {
           point: point(String(index), "0", "0"),
         })
       ),
+    });
+
+    const failure = await decodeFailure(artifact);
+
+    expect(failure).toBeInstanceOf(LearningArtifactDecodeError);
+    if (failure instanceof LearningArtifactDecodeError) {
+      expect(failure.message).toBe("Invalid learning artifact contract.");
+    }
+  });
+
+  it("rejects polygon vertex counts above the geometry budget", async () => {
+    const artifact = createArtifact({
+      primitives: [
+        {
+          id: "dense-polygon",
+          kind: "polygon",
+          vertices: Array.from({ length: MAX_POLYGON_VERTICES + 1 }, (_, x) =>
+            point(String(x), "0", "0")
+          ),
+        },
+      ],
     });
 
     const failure = await decodeFailure(artifact);

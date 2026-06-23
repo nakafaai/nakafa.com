@@ -1,7 +1,6 @@
 // @vitest-environment node
 
 import {
-  EvidenceEnvelope,
   MATH_CAPABILITY,
   NAKAFA_CAPABILITY,
 } from "@repo/ai/nina/capability/spec";
@@ -15,6 +14,7 @@ import {
   EvidenceWorkspace,
   EvidenceWorkspaceDecodeError,
   EvidenceWorkspaceLimitExceeded,
+  WorkspaceEvidenceEnvelope,
 } from "@repo/ai/nina/workspace/schema";
 import { Cause, Effect, Exit, Option } from "effect";
 import { describe, expect, it } from "vitest";
@@ -47,7 +47,7 @@ describe("EvidenceWorkspace", () => {
     );
     const contribution = CapabilityContribution.make({
       capability: MATH_CAPABILITY,
-      evidence: EvidenceEnvelope.make({
+      evidence: WorkspaceEvidenceEnvelope.make({
         capability: NAKAFA_CAPABILITY,
         status: "available",
         summary: "Retrieved relevant Nakafa material.",
@@ -164,7 +164,7 @@ describe("EvidenceWorkspace", () => {
 function createContribution() {
   return CapabilityContribution.make({
     capability: MATH_CAPABILITY,
-    evidence: EvidenceEnvelope.make({
+    evidence: WorkspaceEvidenceEnvelope.make({
       capability: MATH_CAPABILITY,
       refs: ["cas://math/evaluate"],
       status: "available",

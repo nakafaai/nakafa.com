@@ -47,6 +47,9 @@ const SampleCountSchema = Schema.Number.pipe(
   description: "Bounded deterministic sample budget for renderer-owned meshes.",
 });
 
+/** Maximum exact vertices accepted for one polygon primitive. */
+export const MAX_POLYGON_VERTICES = 32;
+
 const commonPrimitiveFields = {
   id: PrimitiveIdSchema,
   label: Schema.optional(Schema.NonEmptyString),
@@ -136,7 +139,11 @@ const PlanePrimitiveSchema = Schema.Struct({
 const PolygonPrimitiveSchema = Schema.Struct({
   ...commonPrimitiveFields,
   kind: Schema.Literal("polygon"),
-  vertices: Schema.Array(ExactPoint3).pipe(Schema.minItems(3), Schema.mutable),
+  vertices: Schema.Array(ExactPoint3).pipe(
+    Schema.minItems(3),
+    Schema.maxItems(MAX_POLYGON_VERTICES),
+    Schema.mutable
+  ),
 }).pipe(Schema.mutable);
 
 const CuboidPrimitiveSchema = Schema.Struct({

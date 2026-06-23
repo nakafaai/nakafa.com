@@ -44,6 +44,7 @@ const PedagogyEvidenceRefSchema = Schema.NonEmptyString.pipe(
  */
 export class PedagogyMove extends Schema.Class<PedagogyMove>("PedagogyMove")({
   evidenceRefs: Schema.Array(PedagogyEvidenceRefSchema).pipe(
+    Schema.minItems(1),
     Schema.maxItems(PEDAGOGY_MOVE_EVIDENCE_REF_LIMIT),
     Schema.mutable
   ),

@@ -20,7 +20,7 @@ describe("coordinate primitive validation", () => {
     expect(
       findCoordinatePrimitiveIssue([
         {
-          function: functionSpec("x", ["x"]),
+          function: functionSpec("x", ["x", "z"]),
           id: "surface",
           kind: "function-surface",
         },
@@ -50,7 +50,7 @@ describe("coordinate primitive validation", () => {
     expect(
       readIssueMessage([
         {
-          direction: point("0", "+0", "-0"),
+          direction: point("0.0", "0e0", "-0"),
           id: "ray-zero",
           kind: "ray",
           origin: point("0", "0", "0"),
@@ -63,7 +63,7 @@ describe("coordinate primitive validation", () => {
     expect(
       readIssueMessage([
         {
-          direction: decimalPoint(0, 0, 0),
+          direction: point("0", "0", "0"),
           id: "line-zero",
           kind: "line",
           point: point("1", "0", "0"),
@@ -104,7 +104,7 @@ describe("coordinate primitive validation", () => {
     expect(
       readIssueMessage([
         {
-          function: functionSpec("x", ["z"]),
+          function: functionSpec("x", ["y", "z"]),
           id: "missing-domain",
           kind: "function-surface",
         },
@@ -137,6 +137,20 @@ describe("coordinate primitive validation", () => {
         },
       ])
     ).toBe("Coordinate primitive repeat-domain repeats function domain x.");
+  });
+
+  it("rejects scalar function surface arity mismatches", () => {
+    expect(
+      readIssueMessage([
+        {
+          function: functionSpec("x", ["x"]),
+          id: "scalar-surface-arity",
+          kind: "function-surface",
+        },
+      ])
+    ).toBe(
+      "Coordinate primitive scalar-surface-arity must have exactly 2 function domain variables."
+    );
   });
 
   it("rejects parametric curve arity mismatches", () => {
@@ -185,7 +199,10 @@ function readIssueMessage(
   return issue?.message;
 }
 
-function functionSpec(variable: "x" | "z", domains: readonly ("x" | "z")[]) {
+function functionSpec(
+  variable: MathVariableName,
+  domains: readonly MathVariableName[]
+) {
   return CanonicalFunctionSpec.make({
     ast: variableAst(variable),
     domain: domains.map(domain),
@@ -260,24 +277,8 @@ function point(x: string, y: string, z: string) {
   });
 }
 
-function decimalPoint(x: number, y: number, z: number) {
-  return ExactPoint3.make({
-    x: scalarDecimal(String(x), x),
-    y: scalarDecimal(String(y), y),
-    z: scalarDecimal(String(z), z),
-  });
-}
-
 function scalar(expression: string) {
   return ExactScalar.make({
-    expression,
-    latex: expression,
-  });
-}
-
-function scalarDecimal(expression: string, decimal: number) {
-  return ExactScalar.make({
-    decimal,
     expression,
     latex: expression,
   });

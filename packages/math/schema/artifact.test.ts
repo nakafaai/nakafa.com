@@ -177,10 +177,13 @@ function createCoordinateArtifact(
 }
 
 function functionSpec(variable: "x" | "z", exclusions?: readonly unknown[]) {
+  const domains =
+    variable === "x" ? [domain("x"), domain("z")] : [domain("z"), domain("x")];
+
   if (exclusions) {
     return {
       ast: variableAst(variable),
-      domain: [domain(variable)],
+      domain: domains,
       exclusions,
       verifiedBy: "cas://proof/function",
     };
@@ -188,7 +191,7 @@ function functionSpec(variable: "x" | "z", exclusions?: readonly unknown[]) {
 
   return {
     ast: variableAst(variable),
-    domain: [domain(variable)],
+    domain: domains,
     verifiedBy: "cas://proof/function",
   };
 }

@@ -5,10 +5,8 @@ import {
   RenderSamplingPolicy,
   readCoordinatePrimitiveMathAsts,
 } from "@repo/math/schema/coordinate-primitives";
-import {
-  findCoordinatePrimitiveIssue,
-  readSortableExactScalar,
-} from "@repo/math/schema/coordinate-validation";
+import { readSortableExactScalar } from "@repo/math/schema/coordinate-scalars";
+import { findCoordinatePrimitiveIssue } from "@repo/math/schema/coordinate-validation";
 import { Effect, Schema } from "effect";
 
 export const COORDINATE_SYSTEM_ARTIFACT_KIND = "coordinate-system-3d";

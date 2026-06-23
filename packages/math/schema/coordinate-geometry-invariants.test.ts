@@ -19,7 +19,10 @@ describe("coordinate geometry invariants", () => {
     expect(
       readIssueMessage([
         {
-          function: functionSpec("x", domain("x", "left", "1")),
+          function: functionSpec("x", [
+            domain("x", "left", "1"),
+            domain("y", "0", "1"),
+          ]),
           id: "bad-domain-min",
           kind: "function-surface",
         },
@@ -33,7 +36,10 @@ describe("coordinate geometry invariants", () => {
     expect(
       readIssueMessage([
         {
-          function: functionSpec("x", domain("x", "0", "right")),
+          function: functionSpec("x", [
+            domain("x", "0", "right"),
+            domain("y", "0", "1"),
+          ]),
           id: "bad-domain-max",
           kind: "function-surface",
         },
@@ -47,7 +53,10 @@ describe("coordinate geometry invariants", () => {
     expect(
       readIssueMessage([
         {
-          function: functionSpec("x", domain("x", "5", "-5")),
+          function: functionSpec("x", [
+            domain("x", "5", "-5"),
+            domain("y", "0", "1"),
+          ]),
           id: "bad-domain-order",
           kind: "function-surface",
         },
@@ -82,6 +91,49 @@ describe("coordinate geometry invariants", () => {
       ])
     ).toBe(
       "Coordinate primitive sphere-symbolic sphere radius must use a sortable numeric value."
+    );
+
+    expect(
+      readIssueMessage([
+        {
+          center: point("0", "0", "0"),
+          id: "sphere-infinite-hint",
+          kind: "sphere",
+          radius: scalarDecimal("r", Number.POSITIVE_INFINITY),
+        },
+      ])
+    ).toBe(
+      "Coordinate primitive sphere-infinite-hint sphere radius must use a sortable numeric value."
+    );
+  });
+
+  it("rejects inconsistent decimal hints and blank exact scalars", () => {
+    expect(
+      readIssueMessage([
+        {
+          center: point("0", "0", "0"),
+          id: "sphere-inconsistent",
+          kind: "sphere",
+          radius: scalarDecimal("-1", 1),
+        },
+      ])
+    ).toBe(
+      "Coordinate primitive sphere-inconsistent sphere radius must use a sortable numeric value."
+    );
+
+    expect(
+      readIssueMessage([
+        {
+          function: functionSpec("x", [
+            domain("x", " ", "1"),
+            domain("y", "0", "1"),
+          ]),
+          id: "blank-domain",
+          kind: "function-surface",
+        },
+      ])
+    ).toBe(
+      "Coordinate primitive blank-domain domain x must use sortable numeric bounds."
     );
   });
 
@@ -138,11 +190,11 @@ function readIssueMessage(
 
 function functionSpec(
   variable: MathVariableName,
-  functionDomain: FunctionDomain
+  domains: readonly FunctionDomain[]
 ) {
   return CanonicalFunctionSpec.make({
     ast: variableAst(variable),
-    domain: [functionDomain],
+    domain: [...domains],
   });
 }
 
@@ -175,6 +227,14 @@ function point(x: string, y: string, z: string) {
 
 function scalar(expression: string) {
   return ExactScalar.make({
+    expression,
+    latex: expression,
+  });
+}
+
+function scalarDecimal(expression: string, decimal: number) {
+  return ExactScalar.make({
+    decimal,
     expression,
     latex: expression,
   });
