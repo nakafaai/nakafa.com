@@ -1,4 +1,5 @@
 import type { ExactPoint3 } from "@repo/math/schema/ast/schema";
+import { findPolygonGeometryIssue } from "@repo/math/schema/coordinate/polygon";
 import type {
   CoordinateAxis,
   CoordinatePrimitive,
@@ -7,13 +8,13 @@ import { readSortableExactScalar } from "@repo/math/schema/coordinate/scalar";
 import { Schema } from "effect";
 
 /** Schema-owned sortable point used by renderer-safety geometry checks. */
-const SortablePoint3 = Schema.Struct({
+export const SortablePoint3 = Schema.Struct({
   x: Schema.Number.pipe(Schema.finite()),
   y: Schema.Number.pipe(Schema.finite()),
   z: Schema.Number.pipe(Schema.finite()),
 });
 
-type SortablePoint3 = Schema.Schema.Type<typeof SortablePoint3>;
+export type SortablePoint3 = Schema.Schema.Type<typeof SortablePoint3>;
 
 /** Schema-owned result of reading exact point coordinates into sortable values. */
 const PointCoordinateRead = Schema.Union(
@@ -145,12 +146,7 @@ function findPolygonCoordinateIssue(
     sortableVertices.push(result.point);
   }
 
-  const duplicate = findDuplicatePoint(sortableVertices);
-  if (duplicate) {
-    return `Coordinate primitive ${primitiveId} polygon vertex ${duplicate.duplicateIndex + 1} must not duplicate vertex ${duplicate.originalIndex + 1}.`;
-  }
-
-  return findPolygonAreaIssue(primitiveId, sortableVertices);
+  return findPolygonGeometryIssue(primitiveId, sortableVertices);
 }
 
 /**
@@ -204,88 +200,6 @@ function pointCoordinateIssue(
     issue: `Coordinate primitive ${primitiveId} ${label} ${axis}-coordinate must use a sortable numeric value.`,
     tag: "Issue",
   };
-}
-
-/**
- * Finds the first duplicate polygon vertex pair after numeric decoding.
- */
-function findDuplicatePoint(vertices: readonly SortablePoint3[]) {
-  for (const [originalIndex, original] of vertices.entries()) {
-    const remainingVertices = vertices.slice(originalIndex + 1);
-
-    for (const [remainingIndex, duplicate] of remainingVertices.entries()) {
-      if (isSamePoint(original, duplicate)) {
-        const duplicateIndex = originalIndex + remainingIndex + 1;
-        return { duplicateIndex, originalIndex };
-      }
-    }
-  }
-}
-
-/**
- * Rejects polygon vertices that cannot span nonzero finite area.
- */
-function findPolygonAreaIssue(
-  primitiveId: string,
-  vertices: readonly SortablePoint3[]
-) {
-  const anchor = vertices[0];
-  if (!anchor) {
-    return `Coordinate primitive ${primitiveId} polygon vertices must enclose nonzero area.`;
-  }
-
-  const remainingVertices = vertices.slice(1);
-  for (const [firstIndex, firstPoint] of remainingVertices.entries()) {
-    const first = subtractPoints(firstPoint, anchor);
-    const laterVertices = remainingVertices.slice(firstIndex + 1);
-
-    for (const secondPoint of laterVertices) {
-      const second = subtractPoints(secondPoint, anchor);
-      const crossProduct = readCrossProduct(first, second);
-      if (!crossProduct) {
-        return `Coordinate primitive ${primitiveId} polygon area calculation must stay finite.`;
-      }
-
-      if (isNonzeroPoint(crossProduct)) {
-        return;
-      }
-    }
-  }
-
-  return `Coordinate primitive ${primitiveId} polygon vertices must enclose nonzero area.`;
-}
-
-/**
- * Subtracts two decoded points as a vector for polygon area checks.
- */
-function subtractPoints(left: SortablePoint3, right: SortablePoint3) {
-  return {
-    x: left.x - right.x,
-    y: left.y - right.y,
-    z: left.z - right.z,
-  };
-}
-
-/**
- * Computes a finite cross product or rejects overflowed components.
- */
-function readCrossProduct(left: SortablePoint3, right: SortablePoint3) {
-  const x = left.y * right.z - left.z * right.y;
-  const y = left.z * right.x - left.x * right.z;
-  const z = left.x * right.y - left.y * right.x;
-
-  if (!(Number.isFinite(x) && Number.isFinite(y) && Number.isFinite(z))) {
-    return;
-  }
-
-  return { x, y, z };
-}
-
-/**
- * Returns true when any decoded vector component is nonzero.
- */
-function isNonzeroPoint(point: SortablePoint3) {
-  return point.x !== 0 || point.y !== 0 || point.z !== 0;
 }
 
 /**

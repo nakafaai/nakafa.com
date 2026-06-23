@@ -86,32 +86,50 @@ export function readBinaryConstantValue(
   right: ConstantMathAstValue
 ) {
   if (operator === "add") {
+    const piMultiple = readCombinedPiMultiple(
+      left.piMultiple,
+      right.piMultiple,
+      "add"
+    );
+    if (
+      left.piMultiple !== undefined &&
+      right.piMultiple !== undefined &&
+      piMultiple === undefined
+    ) {
+      return INVALID_CONSTANT_MATH_AST;
+    }
+
     const value = readConstantSumValue(left.value, right.value, "add");
     if (value === undefined) {
       return INVALID_CONSTANT_MATH_AST;
     }
 
     return finiteComputedConstantValue(value, {
-      piMultiple: readCombinedPiMultiple(
-        left.piMultiple,
-        right.piMultiple,
-        "add"
-      ),
+      piMultiple,
     });
   }
 
   if (operator === "subtract") {
+    const piMultiple = readCombinedPiMultiple(
+      left.piMultiple,
+      right.piMultiple,
+      "subtract"
+    );
+    if (
+      left.piMultiple !== undefined &&
+      right.piMultiple !== undefined &&
+      piMultiple === undefined
+    ) {
+      return INVALID_CONSTANT_MATH_AST;
+    }
+
     const value = readConstantSumValue(left.value, right.value, "subtract");
     if (value === undefined) {
       return INVALID_CONSTANT_MATH_AST;
     }
 
     return finiteComputedConstantValue(value, {
-      piMultiple: readCombinedPiMultiple(
-        left.piMultiple,
-        right.piMultiple,
-        "subtract"
-      ),
+      piMultiple,
     });
   }
 

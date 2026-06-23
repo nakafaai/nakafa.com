@@ -136,6 +136,21 @@ describe("MathAst graph validation", () => {
         ),
       },
       {
+        expected: "MathAst node sum contains an invalid constant expression.",
+        input: ast(
+          "x / sin((1e16*pi) + (0.5*pi))",
+          [
+            variable("x"),
+            literal("large", "1e16*pi"),
+            literal("half", "0.5*pi"),
+            binary("sum", "large", "add", "half"),
+            unary("sin-sum", "sum", "sin"),
+            binary("quotient", "x", "divide", "sin-sum"),
+          ],
+          "quotient"
+        ),
+      },
+      {
         expected: "MathAst node root contains an invalid constant expression.",
         input: ast("sqrt(-1)", [
           literal("negative-one", "-1"),

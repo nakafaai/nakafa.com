@@ -212,10 +212,11 @@ function readPlaneOffset(terms: readonly (readonly [number, number])[]) {
       return;
     }
 
-    offset += product;
-    if (!Number.isFinite(offset)) {
+    const nextOffset = addPlaneCoefficient(offset, product);
+    if (nextOffset === undefined) {
       return;
     }
+    offset = nextOffset;
   }
 
   return offset;

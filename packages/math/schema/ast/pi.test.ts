@@ -39,6 +39,10 @@ describe("syntactic pi multiple tracking", () => {
     expect(readAbsolutePiMultiple(undefined)).toBeUndefined();
     expect(readCombinedPiMultiple(1, 2, "add")).toBe(3);
     expect(readCombinedPiMultiple(1, 2, "subtract")).toBe(-1);
+    expect(readCombinedPiMultiple(0, 2, "add")).toBe(2);
+    expect(readCombinedPiMultiple(1e16, 0.5, "add")).toBeUndefined();
+    expect(readCombinedPiMultiple(1e16, 0.5, "subtract")).toBeUndefined();
+    expect(readCombinedPiMultiple(1e308, 1e308, "add")).toBeUndefined();
     expect(readCombinedPiMultiple(undefined, 2, "add")).toBeUndefined();
     expect(
       readProductPiMultiple({ piMultiple: 2, value: 2 * Math.PI }, { value: 3 })

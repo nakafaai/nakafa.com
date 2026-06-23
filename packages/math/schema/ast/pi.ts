@@ -58,7 +58,7 @@ export function readCombinedPiMultiple(
     return;
   }
 
-  return operator === "add" ? left + right : left - right;
+  return combineFinitePiMultiples(left, right, operator);
 }
 
 /**
@@ -102,6 +102,33 @@ function multiplyFiniteDecimalNumbers(left: number, right: number) {
   const coefficient = leftDecimal.coefficient * rightDecimal.coefficient;
   const exponent = leftDecimal.exponent + rightDecimal.exponent;
   return readFiniteDecimalValue(coefficient, exponent) ?? left * right;
+}
+
+/** Combines finite pi multiples without losing nonzero fractional offsets.
+ */
+function combineFinitePiMultiples(
+  left: number,
+  right: number,
+  operator: "add" | "subtract"
+) {
+  const value = operator === "add" ? left + right : left - right;
+  if (!Number.isFinite(value)) {
+    return;
+  }
+
+  if (left === 0 || right === 0) {
+    return value;
+  }
+
+  if (operator === "add" && (value === left || value === right)) {
+    return;
+  }
+
+  if (operator === "subtract" && (value === left || value === -right)) {
+    return;
+  }
+
+  return value;
 }
 
 /** Reads the finite number's shortest decimal form as coefficient and exponent.
