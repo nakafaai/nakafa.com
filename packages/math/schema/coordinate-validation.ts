@@ -25,74 +25,63 @@ export function findCoordinatePrimitiveIssue(
   primitives: readonly CoordinatePrimitive[]
 ) {
   for (const primitive of primitives) {
-    if (primitive.kind === "ray") {
-      if (isExactZeroPoint(primitive.direction)) {
-        return createIssue(
-          `Coordinate primitive ${primitive.id} has a zero direction vector.`
-        );
-      }
-      continue;
+    const issue = findOnePrimitiveIssue(primitive);
+
+    if (issue) {
+      return issue;
     }
+  }
+}
 
-    if (primitive.kind === "line") {
-      if (isExactZeroPoint(primitive.direction)) {
-        return createIssue(
-          `Coordinate primitive ${primitive.id} has a zero direction vector.`
-        );
-      }
-      continue;
-    }
+function findOnePrimitiveIssue(primitive: CoordinatePrimitive) {
+  if (primitive.kind === "ray") {
+    return findDirectionIssue(primitive.id, primitive.direction);
+  }
 
-    if (primitive.kind === "plane") {
-      if (isExactZeroPoint(primitive.normal)) {
-        return createIssue(
-          `Coordinate primitive ${primitive.id} has a zero normal vector.`
-        );
-      }
+  if (primitive.kind === "line") {
+    return findDirectionIssue(primitive.id, primitive.direction);
+  }
 
-      const domainIssue = findFunctionSpecIssue(
-        primitive.id,
-        primitive.equation
+  if (primitive.kind === "cuboid") {
+    return findCuboidIssue(primitive.id, primitive.min, primitive.max);
+  }
+
+  if (primitive.kind === "sphere") {
+    return findPositiveScalarIssue(
+      primitive.id,
+      "sphere radius",
+      primitive.radius
+    );
+  }
+
+  if (primitive.kind === "plane") {
+    if (isExactZeroPoint(primitive.normal)) {
+      return createIssue(
+        `Coordinate primitive ${primitive.id} has a zero normal vector.`
       );
-      if (domainIssue) {
-        return domainIssue;
-      }
-      continue;
     }
 
-    if (primitive.kind === "function-surface") {
-      const domainIssue = findFunctionSpecIssue(
-        primitive.id,
-        primitive.function
-      );
-      if (domainIssue) {
-        return domainIssue;
-      }
-      continue;
-    }
+    return findFunctionSpecIssue(primitive.id, primitive.equation);
+  }
 
-    if (primitive.kind === "parametric-curve") {
-      const domainIssue = findVectorFunctionSpecIssue(
-        primitive.id,
-        primitive.function,
-        1
-      );
-      if (domainIssue) {
-        return domainIssue;
-      }
-      continue;
-    }
+  if (primitive.kind === "function-surface") {
+    return findFunctionSpecIssue(primitive.id, primitive.function);
+  }
 
-    if (primitive.kind === "parametric-surface") {
-      const domainIssue = findVectorFunctionSpecIssue(
-        primitive.id,
-        primitive.function,
-        2
-      );
-      if (domainIssue) {
-        return domainIssue;
-      }
-    }
+  if (primitive.kind === "parametric-curve") {
+    return findVectorFunctionSpecIssue(primitive.id, primitive.function, 1);
+  }
+
+  if (primitive.kind === "parametric-surface") {
+    return findVectorFunctionSpecIssue(primitive.id, primitive.function, 2);
+  }
+}
+
+function findDirectionIssue(primitiveId: string, direction: ExactPoint3) {
+  if (isExactZeroPoint(direction)) {
+    return createIssue(
+      `Coordinate primitive ${primitiveId} has a zero direction vector.`
+    );
   }
 }
 
@@ -139,6 +128,11 @@ function findDomainBindingIssue(
       );
     }
     domainVariables.add(domain.variable);
+
+    const domainIssue = findIncreasingDomainIssue(primitiveId, domain);
+    if (domainIssue) {
+      return domainIssue;
+    }
   }
 
   const usedVariables = new Set<string>();
@@ -155,18 +149,101 @@ function findDomainBindingIssue(
       );
     }
   }
+}
 
-  for (const variableName of domainVariables) {
-    if (!usedVariables.has(variableName)) {
+function createIssue(message: string) {
+  return new CoordinatePrimitiveInvariantError({ message });
+}
+
+function findIncreasingDomainIssue(
+  primitiveId: string,
+  domain: FunctionDomain
+) {
+  const min = readSortableExactScalar(domain.min);
+  const max = readSortableExactScalar(domain.max);
+
+  if (min === undefined) {
+    return createIssue(
+      `Coordinate primitive ${primitiveId} domain ${domain.variable} must use sortable numeric bounds.`
+    );
+  }
+
+  if (max === undefined) {
+    return createIssue(
+      `Coordinate primitive ${primitiveId} domain ${domain.variable} must use sortable numeric bounds.`
+    );
+  }
+
+  if (min >= max) {
+    return createIssue(
+      `Coordinate primitive ${primitiveId} domain ${domain.variable} must be increasing.`
+    );
+  }
+}
+
+function findPositiveScalarIssue(
+  primitiveId: string,
+  label: string,
+  scalar: ExactScalar
+) {
+  const value = readSortableExactScalar(scalar);
+
+  if (value === undefined) {
+    return createIssue(
+      `Coordinate primitive ${primitiveId} ${label} must use a sortable numeric value.`
+    );
+  }
+
+  if (value <= 0) {
+    return createIssue(
+      `Coordinate primitive ${primitiveId} ${label} must be positive.`
+    );
+  }
+}
+
+function findCuboidIssue(
+  primitiveId: string,
+  min: ExactPoint3,
+  max: ExactPoint3
+) {
+  const axes = [
+    { name: "x", max: max.x, min: min.x },
+    { name: "y", max: max.y, min: min.y },
+    { name: "z", max: max.z, min: min.z },
+  ];
+
+  for (const axis of axes) {
+    const minValue = readSortableExactScalar(axis.min);
+    const maxValue = readSortableExactScalar(axis.max);
+
+    if (minValue === undefined) {
       return createIssue(
-        `Coordinate primitive ${primitiveId} has unused function domain ${variableName}.`
+        `Coordinate primitive ${primitiveId} cuboid ${axis.name}-axis must use sortable numeric bounds.`
+      );
+    }
+
+    if (maxValue === undefined) {
+      return createIssue(
+        `Coordinate primitive ${primitiveId} cuboid ${axis.name}-axis must use sortable numeric bounds.`
+      );
+    }
+
+    if (minValue >= maxValue) {
+      return createIssue(
+        `Coordinate primitive ${primitiveId} cuboid ${axis.name}-axis must be increasing.`
       );
     }
   }
 }
 
-function createIssue(message: string) {
-  return new CoordinatePrimitiveInvariantError({ message });
+/** Reads a finite numeric sort key from an exact scalar display contract. */
+export function readSortableExactScalar(scalar: ExactScalar) {
+  if (scalar.decimal !== undefined && Number.isFinite(scalar.decimal)) {
+    return scalar.decimal;
+  }
+
+  const parsed = Number(scalar.expression);
+  return Number.isFinite(parsed) ? parsed : undefined;
 }
 
 function isExactZeroPoint(point: ExactPoint3) {

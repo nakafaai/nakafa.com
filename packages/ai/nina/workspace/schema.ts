@@ -7,10 +7,31 @@ import type { LearningArtifact } from "@repo/math/schema/artifact";
 import {
   decodeLearningArtifact,
   LearningArtifactSchema,
+  MAX_COORDINATE_ARTIFACT_BYTES,
 } from "@repo/math/schema/artifact";
 import { Effect, Schema } from "effect";
 
 export const EVIDENCE_WORKSPACE_CONTRIBUTION_LIMIT = 20;
+
+/** Maximum artifacts one capability contribution may attach to a workspace. */
+export const EVIDENCE_CONTRIBUTION_ARTIFACT_LIMIT = 3;
+
+/** Maximum artifacts retained across one turn-scoped evidence workspace. */
+export const EVIDENCE_WORKSPACE_ARTIFACT_LIMIT = 8;
+
+/** Maximum serialized artifact bytes one contribution may add. */
+export const EVIDENCE_CONTRIBUTION_ARTIFACT_BYTES =
+  MAX_COORDINATE_ARTIFACT_BYTES * 2;
+
+/** Maximum serialized artifact bytes retained across one workspace. */
+export const EVIDENCE_WORKSPACE_ARTIFACT_BYTES =
+  MAX_COORDINATE_ARTIFACT_BYTES * 4;
+
+/** Maximum model-visible contribution summary length. */
+export const EVIDENCE_CONTRIBUTION_MODEL_SUMMARY_MAX_LENGTH = 1200;
+
+/** Maximum pedagogy moves accepted in one contribution. */
+export const EVIDENCE_CONTRIBUTION_PEDAGOGY_MOVE_LIMIT = 6;
 
 /**
  * One bounded contribution from a Nina learning capability.
@@ -23,13 +44,21 @@ export class CapabilityContribution extends Schema.Class<CapabilityContribution>
   "CapabilityContribution"
 )({
   artifacts: Schema.optional(
-    Schema.Array(LearningArtifactSchema).pipe(Schema.mutable)
+    Schema.Array(LearningArtifactSchema).pipe(
+      Schema.maxItems(EVIDENCE_CONTRIBUTION_ARTIFACT_LIMIT),
+      Schema.mutable
+    )
   ),
   capability: LearningCapabilityNameSchema,
   evidence: EvidenceEnvelope,
-  modelSummary: Schema.NonEmptyString,
+  modelSummary: Schema.NonEmptyString.pipe(
+    Schema.maxLength(EVIDENCE_CONTRIBUTION_MODEL_SUMMARY_MAX_LENGTH)
+  ),
   pedagogyMoves: Schema.optional(
-    Schema.Array(PedagogyMove).pipe(Schema.mutable)
+    Schema.Array(PedagogyMove).pipe(
+      Schema.maxItems(EVIDENCE_CONTRIBUTION_PEDAGOGY_MOVE_LIMIT),
+      Schema.mutable
+    )
   ),
 }) {}
 
@@ -134,23 +163,82 @@ export const appendCapabilityContribution = Effect.fn(
 
 function findWorkspaceIssue(workspace: EvidenceWorkspace) {
   const artifactIds = new Set<string>();
+  let workspaceArtifactBytes = 0;
+  let workspaceArtifactCount = 0;
 
   for (const contribution of workspace.contributions) {
     if (contribution.capability !== contribution.evidence.capability) {
       return `Contribution capability ${contribution.capability} does not match evidence capability ${contribution.evidence.capability}.`;
     }
 
-    if (!contribution.artifacts) {
+    const refsIssue = findPedagogyRefsIssue(contribution);
+    if (refsIssue) {
+      return refsIssue;
+    }
+
+    const artifacts = contribution.artifacts;
+    if (!artifacts) {
       continue;
     }
 
-    for (const artifact of contribution.artifacts) {
+    let contributionArtifactBytes = 0;
+
+    for (const artifact of artifacts) {
       if (artifactIds.has(artifact.id)) {
         return `Duplicate learning artifact id: ${artifact.id}.`;
       }
       artifactIds.add(artifact.id);
+
+      const artifactBytes = readJsonBytes(artifact);
+      contributionArtifactBytes += artifactBytes;
+      workspaceArtifactBytes += artifactBytes;
+      workspaceArtifactCount += 1;
+    }
+
+    if (contributionArtifactBytes > EVIDENCE_CONTRIBUTION_ARTIFACT_BYTES) {
+      return `Contribution ${contribution.capability} artifact payload exceeds ${EVIDENCE_CONTRIBUTION_ARTIFACT_BYTES} bytes.`;
+    }
+
+    if (workspaceArtifactCount > EVIDENCE_WORKSPACE_ARTIFACT_LIMIT) {
+      return `Evidence workspace artifact count exceeds ${EVIDENCE_WORKSPACE_ARTIFACT_LIMIT}.`;
+    }
+
+    if (workspaceArtifactBytes > EVIDENCE_WORKSPACE_ARTIFACT_BYTES) {
+      return `Evidence workspace artifact payload exceeds ${EVIDENCE_WORKSPACE_ARTIFACT_BYTES} bytes.`;
     }
   }
+}
+
+function findPedagogyRefsIssue(contribution: CapabilityContribution) {
+  if (!contribution.pedagogyMoves) {
+    return;
+  }
+
+  const allowedRefs = new Set<string>();
+
+  if (contribution.evidence.refs) {
+    for (const ref of contribution.evidence.refs) {
+      allowedRefs.add(ref);
+    }
+  }
+
+  if (contribution.artifacts) {
+    for (const artifact of contribution.artifacts) {
+      allowedRefs.add(artifact.id);
+    }
+  }
+
+  for (const move of contribution.pedagogyMoves) {
+    for (const ref of move.evidenceRefs) {
+      if (!allowedRefs.has(ref)) {
+        return `Pedagogy move ${move.kind} references unknown evidence ${ref}.`;
+      }
+    }
+  }
+}
+
+function readJsonBytes(value: unknown) {
+  return new TextEncoder().encode(JSON.stringify(value)).byteLength;
 }
 
 function readWorkspaceArtifacts(workspace: EvidenceWorkspace) {

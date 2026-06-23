@@ -5,7 +5,10 @@ import {
   RenderSamplingPolicy,
   readCoordinatePrimitiveMathAsts,
 } from "@repo/math/schema/coordinate-primitives";
-import { findCoordinatePrimitiveIssue } from "@repo/math/schema/coordinate-validation";
+import {
+  findCoordinatePrimitiveIssue,
+  readSortableExactScalar,
+} from "@repo/math/schema/coordinate-validation";
 import { Effect, Schema } from "effect";
 
 export const COORDINATE_SYSTEM_ARTIFACT_KIND = "coordinate-system-3d";
@@ -169,8 +172,8 @@ function findOneAxisRangeIssue(
   axisName: "x" | "y" | "z",
   range: readonly [ExactScalar, ExactScalar]
 ) {
-  const min = readSortableScalar(range[0]);
-  const max = readSortableScalar(range[1]);
+  const min = readSortableExactScalar(range[0]);
+  const max = readSortableExactScalar(range[1]);
 
   if (min === undefined) {
     return `Coordinate artifact ${axisName}-axis range must use sortable numeric bounds.`;
@@ -183,13 +186,4 @@ function findOneAxisRangeIssue(
   if (min >= max) {
     return `Coordinate artifact ${axisName}-axis range must be increasing.`;
   }
-}
-
-function readSortableScalar(scalar: ExactScalar) {
-  if (scalar.decimal !== undefined && Number.isFinite(scalar.decimal)) {
-    return scalar.decimal;
-  }
-
-  const parsed = Number(scalar.expression);
-  return Number.isFinite(parsed) ? parsed : undefined;
 }

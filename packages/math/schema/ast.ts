@@ -119,6 +119,9 @@ export const MathAstNodeSchema = Schema.Union(
 
 export type MathAstNode = Schema.Schema.Type<typeof MathAstNodeSchema>;
 
+/** Maximum nodes accepted in one deterministic MathAst graph. */
+export const MAX_MATH_AST_NODES = 256;
+
 /**
  * Durable mathematical expression graph for reproducible evaluation.
  *
@@ -131,6 +134,7 @@ export class MathAst extends Schema.Class<MathAst>("MathAst")({
   latex: Schema.String,
   nodes: Schema.Array(MathAstNodeSchema).pipe(
     Schema.minItems(1),
+    Schema.maxItems(MAX_MATH_AST_NODES),
     Schema.mutable
   ),
   root: MathAstNodeIdSchema,
@@ -178,115 +182,93 @@ export function readMathAstVariableNames(ast: MathAst) {
   return variableNames;
 }
 
+interface MathAstEdge {
+  children: MathAstEdge[];
+  node: MathAstNode;
+}
+
 function findMathAstGraphIssue(ast: MathAst) {
-  const nodeIds = new Set<string>();
-  let rootNode: MathAstNode | undefined;
+  const edges: MathAstEdge[] = [];
+  const edgesByNodeId = new Map<string, MathAstEdge>();
 
   for (const node of ast.nodes) {
-    if (nodeIds.has(node.id)) {
+    if (edgesByNodeId.has(node.id)) {
       return `Duplicate MathAst node id: ${node.id}.`;
     }
-    nodeIds.add(node.id);
-    if (node.id === ast.root) {
-      rootNode = node;
-    }
+
+    const edge = { children: [], node };
+    edges.push(edge);
+    edgesByNodeId.set(node.id, edge);
   }
 
-  if (!rootNode) {
+  const rootEdge = edgesByNodeId.get(ast.root);
+  if (!rootEdge) {
     return `MathAst root node was not found: ${ast.root}.`;
   }
 
-  for (const node of ast.nodes) {
-    if (node.kind === "literal") {
-      continue;
-    }
-
-    if (node.kind === "variable") {
-      continue;
-    }
-
-    if (node.kind === "unary") {
-      if (!nodeIds.has(node.operand)) {
-        return `MathAst unary node ${node.id} references missing operand ${node.operand}.`;
+  for (const edge of edges) {
+    for (const ref of readMathAstChildRefs(edge.node)) {
+      const childEdge = edgesByNodeId.get(ref.id);
+      if (!childEdge) {
+        return `MathAst ${edge.node.kind} node ${edge.node.id} references missing ${ref.role} ${ref.id}.`;
       }
-      continue;
-    }
-
-    if (!nodeIds.has(node.left)) {
-      return `MathAst binary node ${node.id} references missing left operand ${node.left}.`;
-    }
-
-    if (!nodeIds.has(node.right)) {
-      return `MathAst binary node ${node.id} references missing right operand ${node.right}.`;
+      edge.children.push(childEdge);
     }
   }
 
+  return findReachabilityIssue(rootEdge, edges);
+}
+
+function findReachabilityIssue(
+  rootEdge: MathAstEdge,
+  edges: readonly MathAstEdge[]
+) {
   const reachableNodeIds = new Set<string>();
-  const cycleAt = findReachabilityIssue({
-    node: rootNode,
-    nodes: ast.nodes,
-    reachableNodeIds,
-    visitingNodeIds: new Set(),
-  });
+  const visitingNodeIds = new Set<string>();
+  const stack = [{ edge: rootEdge, exiting: false }];
 
-  if (cycleAt) {
-    return `MathAst graph contains a cycle at node ${cycleAt}.`;
+  for (let frame = stack.pop(); frame !== undefined; frame = stack.pop()) {
+    const nodeId = frame.edge.node.id;
+
+    if (frame.exiting) {
+      visitingNodeIds.delete(nodeId);
+      reachableNodeIds.add(nodeId);
+      continue;
+    }
+
+    if (reachableNodeIds.has(nodeId)) {
+      continue;
+    }
+
+    if (visitingNodeIds.has(nodeId)) {
+      return `MathAst graph contains a cycle at node ${nodeId}.`;
+    }
+
+    visitingNodeIds.add(nodeId);
+    stack.push({ edge: frame.edge, exiting: true });
+
+    for (const childEdge of frame.edge.children) {
+      stack.push({ edge: childEdge, exiting: false });
+    }
   }
 
-  for (const node of ast.nodes) {
-    if (!reachableNodeIds.has(node.id)) {
-      return `MathAst node is unreachable from root: ${node.id}.`;
+  for (const edge of edges) {
+    if (!reachableNodeIds.has(edge.node.id)) {
+      return `MathAst node is unreachable from root: ${edge.node.id}.`;
     }
   }
 }
 
-function findReachabilityIssue(input: {
-  node: MathAstNode;
-  nodes: readonly MathAstNode[];
-  reachableNodeIds: Set<string>;
-  visitingNodeIds: Set<string>;
-}): string | undefined {
-  if (input.visitingNodeIds.has(input.node.id)) {
-    return input.node.id;
-  }
-
-  if (input.reachableNodeIds.has(input.node.id)) {
-    return;
-  }
-
-  input.visitingNodeIds.add(input.node.id);
-
-  for (const childId of readMathAstChildIds(input.node)) {
-    for (const childNode of input.nodes) {
-      if (childNode.id !== childId) {
-        continue;
-      }
-
-      const cycleAt = findReachabilityIssue({
-        node: childNode,
-        nodes: input.nodes,
-        reachableNodeIds: input.reachableNodeIds,
-        visitingNodeIds: input.visitingNodeIds,
-      });
-
-      if (cycleAt) {
-        return cycleAt;
-      }
-      break;
-    }
-  }
-
-  input.visitingNodeIds.delete(input.node.id);
-  input.reachableNodeIds.add(input.node.id);
-}
-
-function readMathAstChildIds(node: MathAstNode) {
+function readMathAstChildRefs(node: MathAstNode) {
   if (node.kind === "unary") {
-    return [node.operand];
+    return [{ id: node.operand, role: "operand" }];
   }
 
   if (node.kind === "binary") {
-    return [node.left, node.right];
+    return [
+      { id: node.left, role: "left operand" },
+      { id: node.right, role: "right operand" },
+    ];
   }
 
   return [];

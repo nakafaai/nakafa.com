@@ -23,6 +23,19 @@ export type PedagogyMoveKind = Schema.Schema.Type<
   typeof PedagogyMoveKindSchema
 >;
 
+/** Maximum model-visible text stored in one pedagogy move summary. */
+export const PEDAGOGY_MOVE_SUMMARY_MAX_LENGTH = 600;
+
+/** Maximum evidence references one pedagogy move may cite. */
+export const PEDAGOGY_MOVE_EVIDENCE_REF_LIMIT = 8;
+
+/** Maximum length accepted for one pedagogy evidence reference. */
+export const PEDAGOGY_MOVE_EVIDENCE_REF_MAX_LENGTH = 180;
+
+const PedagogyEvidenceRefSchema = Schema.NonEmptyString.pipe(
+  Schema.maxLength(PEDAGOGY_MOVE_EVIDENCE_REF_MAX_LENGTH)
+);
+
 /**
  * One bounded pedagogy move grounded in deterministic evidence.
  *
@@ -30,7 +43,12 @@ export type PedagogyMoveKind = Schema.Schema.Type<
  * evidence or artifact identifiers without storing raw specialist transcripts.
  */
 export class PedagogyMove extends Schema.Class<PedagogyMove>("PedagogyMove")({
-  evidenceRefs: Schema.Array(Schema.NonEmptyString).pipe(Schema.mutable),
+  evidenceRefs: Schema.Array(PedagogyEvidenceRefSchema).pipe(
+    Schema.maxItems(PEDAGOGY_MOVE_EVIDENCE_REF_LIMIT),
+    Schema.mutable
+  ),
   kind: PedagogyMoveKindSchema,
-  summary: Schema.NonEmptyString,
+  summary: Schema.NonEmptyString.pipe(
+    Schema.maxLength(PEDAGOGY_MOVE_SUMMARY_MAX_LENGTH)
+  ),
 }) {}

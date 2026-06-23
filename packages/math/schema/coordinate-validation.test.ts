@@ -112,16 +112,19 @@ describe("coordinate primitive validation", () => {
     ).toBe("Coordinate primitive missing-domain is missing function domain x.");
   });
 
-  it("rejects unused function domains", () => {
+  it("allows constant functions over declared domains", () => {
     expect(
-      readIssueMessage([
+      findCoordinatePrimitiveIssue([
         {
-          function: functionSpec("x", ["x", "z"]),
-          id: "unused-domain",
+          function: {
+            ast: literalAst("0"),
+            domain: [domain("x"), domain("z")],
+          },
+          id: "constant-surface",
           kind: "function-surface",
         },
       ])
-    ).toBe("Coordinate primitive unused-domain has unused function domain z.");
+    ).toBeUndefined();
   });
 
   it("rejects repeated function domains", () => {
