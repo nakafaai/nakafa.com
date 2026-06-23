@@ -64,6 +64,12 @@ const FiniteDecimalHint = Schema.Number.pipe(Schema.finite()).annotations({
   description: "Finite decimal display hint for an exact scalar.",
 });
 
+const ExactScalarExpression = Schema.NonEmptyString.pipe(
+  Schema.pattern(/\S/)
+).annotations({
+  description: "Nonblank CAS-owned canonical scalar expression.",
+});
+
 /**
  * Exact scalar value with deterministic display metadata.
  *
@@ -72,7 +78,7 @@ const FiniteDecimalHint = Schema.Number.pipe(Schema.finite()).annotations({
  */
 export class ExactScalar extends Schema.Class<ExactScalar>("ExactScalar")({
   decimal: Schema.optional(FiniteDecimalHint),
-  expression: Schema.NonEmptyString,
+  expression: ExactScalarExpression,
   latex: Schema.String,
 }) {}
 

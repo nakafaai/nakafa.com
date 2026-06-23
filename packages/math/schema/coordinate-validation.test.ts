@@ -23,6 +23,7 @@ describe("coordinate primitive validation", () => {
           function: functionSpec("x", ["x", "z"]),
           id: "surface",
           kind: "function-surface",
+          outputAxis: "y",
         },
         {
           function: vectorFunctionSpec(["t"], {
@@ -72,6 +73,18 @@ describe("coordinate primitive validation", () => {
     ).toBe("Coordinate primitive line-zero has a zero direction vector.");
   });
 
+  it("rejects zero vector primitives", () => {
+    expect(
+      readIssueMessage([
+        {
+          id: "vector-zero",
+          kind: "vector",
+          vector: point("0", "0", "0"),
+        },
+      ])
+    ).toBe("Coordinate primitive vector-zero has a zero vector.");
+  });
+
   it("rejects zero plane normals", () => {
     expect(
       readIssueMessage([
@@ -100,6 +113,50 @@ describe("coordinate primitive validation", () => {
     ).toBe("Coordinate primitive plane-domain is missing function domain z.");
   });
 
+  it("rejects plane equations that disagree with geometry", () => {
+    expect(
+      readIssueMessage([
+        {
+          equation: functionSpec("z", ["z"]),
+          id: "plane-shifted",
+          kind: "plane",
+          normal: point("0", "0", "1"),
+          point: point("0", "0", "1"),
+        },
+      ])
+    ).toBe(
+      "Coordinate primitive plane-shifted plane equation is inconsistent with point and normal."
+    );
+
+    expect(
+      readIssueMessage([
+        {
+          equation: functionSpec("x", ["x"]),
+          id: "plane-axis",
+          kind: "plane",
+          normal: point("0", "0", "1"),
+          point: point("0", "0", "0"),
+        },
+      ])
+    ).toBe(
+      "Coordinate primitive plane-axis plane equation is inconsistent with point and normal."
+    );
+  });
+
+  it("accepts plane equations that match point-normal geometry", () => {
+    expect(
+      findCoordinatePrimitiveIssue([
+        {
+          equation: functionSpecAst(subtractLiteralAst("z", "2"), ["z"]),
+          id: "plane-z-two",
+          kind: "plane",
+          normal: point("0", "0", "1"),
+          point: point("0", "0", "2"),
+        },
+      ])
+    ).toBeUndefined();
+  });
+
   it("rejects missing function domains", () => {
     expect(
       readIssueMessage([
@@ -107,6 +164,7 @@ describe("coordinate primitive validation", () => {
           function: functionSpec("x", ["y", "z"]),
           id: "missing-domain",
           kind: "function-surface",
+          outputAxis: "x",
         },
       ])
     ).toBe("Coordinate primitive missing-domain is missing function domain x.");
@@ -122,6 +180,7 @@ describe("coordinate primitive validation", () => {
           },
           id: "constant-surface",
           kind: "function-surface",
+          outputAxis: "y",
         },
       ])
     ).toBeUndefined();
@@ -134,9 +193,40 @@ describe("coordinate primitive validation", () => {
           function: functionSpec("x", ["x", "x"]),
           id: "repeat-domain",
           kind: "function-surface",
+          outputAxis: "y",
         },
       ])
     ).toBe("Coordinate primitive repeat-domain repeats function domain x.");
+  });
+
+  it("rejects scalar function surfaces with ambiguous output domains", () => {
+    expect(
+      readIssueMessage([
+        {
+          function: functionSpec("x", ["x", "y"]),
+          id: "surface-output-domain",
+          kind: "function-surface",
+          outputAxis: "x",
+        },
+      ])
+    ).toBe(
+      "Coordinate primitive surface-output-domain function surface output axis x must not be a domain variable."
+    );
+  });
+
+  it("rejects scalar function surfaces with non-coordinate domains", () => {
+    expect(
+      readIssueMessage([
+        {
+          function: functionSpec("x", ["x", "t"]),
+          id: "surface-param-domain",
+          kind: "function-surface",
+          outputAxis: "y",
+        },
+      ])
+    ).toBe(
+      "Coordinate primitive surface-param-domain function surface domain t must be a coordinate axis."
+    );
   });
 
   it("rejects scalar function surface arity mismatches", () => {
@@ -146,6 +236,7 @@ describe("coordinate primitive validation", () => {
           function: functionSpec("x", ["x"]),
           id: "scalar-surface-arity",
           kind: "function-surface",
+          outputAxis: "y",
         },
       ])
     ).toBe(
@@ -203,8 +294,12 @@ function functionSpec(
   variable: MathVariableName,
   domains: readonly MathVariableName[]
 ) {
+  return functionSpecAst(variableAst(variable), domains);
+}
+
+function functionSpecAst(ast: MathAst, domains: readonly MathVariableName[]) {
   return CanonicalFunctionSpec.make({
-    ast: variableAst(variable),
+    ast,
     domain: domains.map(domain),
   });
 }
@@ -266,6 +361,36 @@ function literalAst(expression: string) {
       },
     ],
     root: nodeId,
+  });
+}
+
+function subtractLiteralAst(variable: MathVariableName, literal: string) {
+  const literalNodeId = `literal-${literal}`;
+  const root = `${variable}-minus-${literal}`;
+
+  return MathAst.make({
+    canonical: `${variable} - ${literal}`,
+    latex: `${variable} - ${literal}`,
+    nodes: [
+      {
+        id: variable,
+        kind: "variable",
+        name: variable,
+      },
+      {
+        id: literalNodeId,
+        kind: "literal",
+        value: scalar(literal),
+      },
+      {
+        id: root,
+        kind: "binary",
+        left: variable,
+        operator: "subtract",
+        right: literalNodeId,
+      },
+    ],
+    root,
   });
 }
 

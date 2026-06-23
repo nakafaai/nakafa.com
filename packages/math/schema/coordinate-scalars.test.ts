@@ -1,5 +1,8 @@
 import { ExactPoint3, ExactScalar } from "@repo/math/schema/ast";
-import { isExactZeroPoint } from "@repo/math/schema/coordinate-scalars";
+import {
+  isExactZeroPoint,
+  readSortableExactScalar,
+} from "@repo/math/schema/coordinate-scalars";
 import {
   CoordinatePrimitiveInvariantError,
   findCoordinatePrimitiveIssue,
@@ -26,9 +29,9 @@ describe("coordinate scalar invariants", () => {
     );
   });
 
-  it("rejects blank exact direction components before zero checks", () => {
+  it("rejects nonsortable exact direction components before zero checks", () => {
     const direction = ExactPoint3.make({
-      x: scalarDecimal(" ", 0),
+      x: scalar("left"),
       y: scalar("0"),
       z: scalar("0"),
     });
@@ -38,14 +41,26 @@ describe("coordinate scalar invariants", () => {
       readIssueMessage([
         {
           direction,
-          id: "line-blank-not-zero",
+          id: "line-nonsortable-not-zero",
           kind: "line",
           point: point("1", "0", "0"),
         },
       ])
     ).toBe(
-      "Coordinate primitive line-blank-not-zero line direction x-coordinate must use a sortable numeric value."
+      "Coordinate primitive line-nonsortable-not-zero line direction x-coordinate must use a sortable numeric value."
     );
+  });
+
+  it("rejects raw blank exact expressions defensively", () => {
+    const blankScalar = { expression: " ", latex: " " };
+    const blankPoint = {
+      x: blankScalar,
+      y: scalar("0"),
+      z: scalar("0"),
+    };
+
+    expect(readSortableExactScalar(blankScalar)).toBeUndefined();
+    expect(isExactZeroPoint(blankPoint)).toBe(false);
   });
 });
 

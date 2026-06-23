@@ -33,6 +33,7 @@ export const PEDAGOGY_MOVE_EVIDENCE_REF_LIMIT = 8;
 export const PEDAGOGY_MOVE_EVIDENCE_REF_MAX_LENGTH = 180;
 
 const PedagogyEvidenceRefSchema = Schema.NonEmptyString.pipe(
+  Schema.pattern(/\S/),
   Schema.maxLength(PEDAGOGY_MOVE_EVIDENCE_REF_MAX_LENGTH)
 );
 

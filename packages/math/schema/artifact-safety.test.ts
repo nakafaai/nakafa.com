@@ -1,6 +1,8 @@
 import {
   decodeLearningArtifact,
   LearningArtifactDecodeError,
+  MAX_COORDINATE_ARTIFACT_PROOF_ANCHOR_LENGTH,
+  MAX_COORDINATE_ARTIFACT_PROOF_ANCHORS,
 } from "@repo/math/schema/artifact";
 import { MAX_FUNCTION_EXCLUSIONS } from "@repo/math/schema/coordinate-primitives";
 import { Cause, Effect, Exit, Option } from "effect";
@@ -19,6 +21,7 @@ describe("LearningArtifact safety budgets", () => {
           }),
           id: "dense-exclusions",
           kind: "function-surface",
+          outputAxis: "z",
         },
       ],
     });
@@ -51,6 +54,39 @@ describe("LearningArtifact safety budgets", () => {
       }
     }
   });
+
+  it("rejects proof anchor lists above artifact budgets", async () => {
+    const failure = await decodeFailure(
+      createArtifact({
+        proofAnchors: Array.from(
+          { length: MAX_COORDINATE_ARTIFACT_PROOF_ANCHORS + 1 },
+          (_, index) => `cas://coordinate/proof-${index}`
+        ),
+      })
+    );
+
+    expect(failure).toBeInstanceOf(LearningArtifactDecodeError);
+    if (failure instanceof LearningArtifactDecodeError) {
+      expect(failure.message).toBe("Invalid learning artifact contract.");
+    }
+  });
+
+  it("rejects proof anchors above the per-item budget", async () => {
+    const failure = await decodeFailure(
+      createArtifact({
+        proofAnchors: [
+          `cas://coordinate/${"x".repeat(
+            MAX_COORDINATE_ARTIFACT_PROOF_ANCHOR_LENGTH
+          )}`,
+        ],
+      })
+    );
+
+    expect(failure).toBeInstanceOf(LearningArtifactDecodeError);
+    if (failure instanceof LearningArtifactDecodeError) {
+      expect(failure.message).toBe("Invalid learning artifact contract.");
+    }
+  });
 });
 
 function createArtifact(
@@ -61,6 +97,7 @@ function createArtifact(
       z: readonly [ReturnType<typeof scalar>, ReturnType<typeof scalar>];
     };
     primitives?: readonly unknown[];
+    proofAnchors?: readonly string[];
   } = {}
 ) {
   return {
@@ -84,7 +121,7 @@ function createArtifact(
         surfaceCells: 16,
       },
     },
-    proofAnchors: ["cas://coordinate/artifact"],
+    proofAnchors: input.proofAnchors ?? ["cas://coordinate/artifact"],
     title: "Coordinate artifact",
   };
 }

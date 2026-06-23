@@ -38,6 +38,7 @@ export const EVIDENCE_CONTRIBUTION_REF_LIMIT = 12;
 export const EVIDENCE_CONTRIBUTION_REF_MAX_LENGTH = 180;
 
 const WorkspaceEvidenceRef = Schema.NonEmptyString.pipe(
+  Schema.pattern(/\S/),
   Schema.maxLength(EVIDENCE_CONTRIBUTION_REF_MAX_LENGTH)
 );
 
@@ -116,7 +117,11 @@ export class EvidenceWorkspace extends Schema.Class<EvidenceWorkspace>(
     Schema.mutable,
     Schema.maxItems(EVIDENCE_WORKSPACE_CONTRIBUTION_LIMIT)
   ),
-  createdAt: Schema.Number.pipe(Schema.nonNegative()),
+  createdAt: Schema.Number.pipe(
+    Schema.finite(),
+    Schema.int(),
+    Schema.nonNegative()
+  ),
   turnId: Schema.NonEmptyString,
 }) {}
 

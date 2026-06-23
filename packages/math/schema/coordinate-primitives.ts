@@ -12,6 +12,13 @@ function literalValues<const Values extends readonly [string, ...string[]]>(
   return values;
 }
 
+export const COORDINATE_AXIS_VALUES = literalValues("x", "y", "z");
+
+/** Schema-owned coordinate axes used by renderer-owned surfaces. */
+export const CoordinateAxisSchema = Schema.Literal(...COORDINATE_AXIS_VALUES);
+
+export type CoordinateAxis = Schema.Schema.Type<typeof CoordinateAxisSchema>;
+
 export const COORDINATE_PRIMITIVE_KIND_VALUES = literalValues(
   "point",
   "vector",
@@ -178,6 +185,7 @@ const FunctionSurfacePrimitiveSchema = Schema.Struct({
   ...commonPrimitiveFields,
   function: CanonicalFunctionSpec,
   kind: Schema.Literal("function-surface"),
+  outputAxis: CoordinateAxisSchema,
 }).pipe(Schema.mutable);
 
 const ParametricSurfacePrimitiveSchema = Schema.Struct({

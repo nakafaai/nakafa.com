@@ -159,6 +159,7 @@ function createCoordinateArtifact(
           function: input.functionSurface ?? functionSpec("x"),
           id: "function-surface-1",
           kind: "function-surface",
+          outputAxis: "y",
         },
         {
           function: surfaceFunctionSpec(),

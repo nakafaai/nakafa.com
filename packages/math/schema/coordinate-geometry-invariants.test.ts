@@ -25,6 +25,7 @@ describe("coordinate geometry invariants", () => {
           ]),
           id: "bad-domain-min",
           kind: "function-surface",
+          outputAxis: "z",
         },
       ])
     ).toBe(
@@ -42,6 +43,7 @@ describe("coordinate geometry invariants", () => {
           ]),
           id: "bad-domain-max",
           kind: "function-surface",
+          outputAxis: "z",
         },
       ])
     ).toBe(
@@ -59,6 +61,7 @@ describe("coordinate geometry invariants", () => {
           ]),
           id: "bad-domain-order",
           kind: "function-surface",
+          outputAxis: "z",
         },
       ])
     ).toBe(
@@ -94,7 +97,7 @@ describe("coordinate geometry invariants", () => {
     );
   });
 
-  it("rejects inconsistent decimal hints and blank exact scalars", () => {
+  it("rejects inconsistent decimal hints", () => {
     expect(
       readIssueMessage([
         {
@@ -106,21 +109,6 @@ describe("coordinate geometry invariants", () => {
       ])
     ).toBe(
       "Coordinate primitive sphere-inconsistent sphere radius must use a sortable numeric value."
-    );
-
-    expect(
-      readIssueMessage([
-        {
-          function: functionSpec("x", [
-            domain("x", " ", "1"),
-            domain("y", "0", "1"),
-          ]),
-          id: "blank-domain",
-          kind: "function-surface",
-        },
-      ])
-    ).toBe(
-      "Coordinate primitive blank-domain domain x must use sortable numeric bounds."
     );
   });
 

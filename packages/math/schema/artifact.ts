@@ -17,8 +17,21 @@ export const MAX_COORDINATE_ARTIFACT_BYTES = 750_000;
 /** Maximum deterministic primitive count accepted for one coordinate artifact. */
 export const MAX_COORDINATE_ARTIFACT_PRIMITIVES = 64;
 
+/** Maximum proof anchors accepted on one coordinate artifact. */
+export const MAX_COORDINATE_ARTIFACT_PROOF_ANCHORS = 16;
+
+/** Maximum length accepted for one proof anchor reference. */
+export const MAX_COORDINATE_ARTIFACT_PROOF_ANCHOR_LENGTH = 180;
+
 const ArtifactIdSchema = Schema.NonEmptyString.annotations({
   description: "Stable artifact identifier used by chat part manifests.",
+});
+
+const ProofAnchorSchema = Schema.NonEmptyString.pipe(
+  Schema.pattern(/\S/),
+  Schema.maxLength(MAX_COORDINATE_ARTIFACT_PROOF_ANCHOR_LENGTH)
+).annotations({
+  description: "Bounded nonblank reference to deterministic artifact proof.",
 });
 
 const AxisRangeSchema = Schema.Tuple(ExactScalar, ExactScalar).annotations({
@@ -50,8 +63,9 @@ export class CoordinateSystemArtifact extends Schema.Class<CoordinateSystemArtif
   id: ArtifactIdSchema,
   kind: Schema.Literal(COORDINATE_SYSTEM_ARTIFACT_KIND),
   payload: CoordinateSystemPayload,
-  proofAnchors: Schema.Array(Schema.NonEmptyString).pipe(
+  proofAnchors: Schema.Array(ProofAnchorSchema).pipe(
     Schema.minItems(1),
+    Schema.maxItems(MAX_COORDINATE_ARTIFACT_PROOF_ANCHORS),
     Schema.mutable
   ),
   title: Schema.NonEmptyString,

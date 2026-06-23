@@ -4,6 +4,7 @@ import {
   type MathAst,
   readMathAstVariableNames,
 } from "@repo/math/schema/ast";
+import { findPlaneEquationConsistencyIssue } from "@repo/math/schema/coordinate-plane-validation";
 import { findPointLikeCoordinateIssue } from "@repo/math/schema/coordinate-point-validation";
 import type {
   CanonicalFunctionSpec,
@@ -15,6 +16,7 @@ import {
   isExactZeroPoint,
   readSortableExactScalar,
 } from "@repo/math/schema/coordinate-scalars";
+import { findFunctionSurfaceOutputIssue } from "@repo/math/schema/coordinate-surface-validation";
 import { Schema } from "effect";
 
 /** Expected failure raised when coordinate primitives are not render-safe. */
@@ -44,6 +46,10 @@ function findOnePrimitiveIssue(primitive: CoordinatePrimitive) {
     return createIssue(pointIssue);
   }
 
+  if (primitive.kind === "vector") {
+    return findZeroVectorIssue(primitive.id, primitive.vector);
+  }
+
   if (primitive.kind === "ray") {
     return findDirectionIssue(primitive.id, primitive.direction);
   }
@@ -71,11 +77,35 @@ function findOnePrimitiveIssue(primitive: CoordinatePrimitive) {
       );
     }
 
-    return findFunctionSpecIssue(primitive.id, primitive.equation);
+    const equationIssue = findFunctionSpecIssue(
+      primitive.id,
+      primitive.equation
+    );
+    if (equationIssue) {
+      return equationIssue;
+    }
+
+    const consistencyIssue = findPlaneEquationConsistencyIssue(
+      primitive.id,
+      primitive.equation,
+      primitive.normal,
+      primitive.point
+    );
+    return consistencyIssue ? createIssue(consistencyIssue) : undefined;
   }
 
   if (primitive.kind === "function-surface") {
-    return findFunctionSpecIssue(primitive.id, primitive.function, 2);
+    const outputIssue = findFunctionSurfaceOutputIssue(
+      primitive.id,
+      primitive.outputAxis,
+      primitive.function
+    );
+
+    if (outputIssue) {
+      return createIssue(outputIssue);
+    }
+
+    return findFunctionSpecIssue(primitive.id, primitive.function);
   }
 
   if (primitive.kind === "parametric-curve") {
@@ -84,6 +114,14 @@ function findOnePrimitiveIssue(primitive: CoordinatePrimitive) {
 
   if (primitive.kind === "parametric-surface") {
     return findVectorFunctionSpecIssue(primitive.id, primitive.function, 2);
+  }
+}
+
+function findZeroVectorIssue(primitiveId: string, vector: ExactPoint3) {
+  if (isExactZeroPoint(vector)) {
+    return createIssue(
+      `Coordinate primitive ${primitiveId} has a zero vector.`
+    );
   }
 }
 
@@ -97,18 +135,8 @@ function findDirectionIssue(primitiveId: string, direction: ExactPoint3) {
 
 function findFunctionSpecIssue(
   primitiveId: string,
-  functionSpec: CanonicalFunctionSpec,
-  expectedDomainCount?: number
+  functionSpec: CanonicalFunctionSpec
 ) {
-  if (
-    expectedDomainCount !== undefined &&
-    functionSpec.domain.length !== expectedDomainCount
-  ) {
-    return createIssue(
-      `Coordinate primitive ${primitiveId} must have exactly ${expectedDomainCount} function domain variables.`
-    );
-  }
-
   const asts = functionSpec.exclusions
     ? [functionSpec.ast, ...functionSpec.exclusions]
     : [functionSpec.ast];

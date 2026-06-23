@@ -100,13 +100,53 @@ describe("EvidenceWorkspace evidence contracts", () => {
     );
 
     expectDecodeFailure(emptyRefs, "Invalid evidence workspace contract.");
+
+    const blankMoveRef = await decodeFailure(
+      workspace([
+        contribution({
+          pedagogyMoves: [
+            {
+              evidenceRefs: ["   "],
+              kind: "verification-note",
+              summary: "Anchor the explanation in verified evidence.",
+            },
+          ],
+        }),
+      ])
+    );
+    expectDecodeFailure(blankMoveRef, "Invalid evidence workspace contract.");
+  });
+
+  it("rejects blank workspace evidence references", async () => {
+    const failure = await decodeFailure(
+      workspace([
+        contribution({
+          evidence: evidence({ refs: ["   "] }),
+        }),
+      ])
+    );
+
+    expectDecodeFailure(failure, "Invalid evidence workspace contract.");
+  });
+
+  it("requires finite integer workspace timestamps", async () => {
+    for (const createdAt of [Number.POSITIVE_INFINITY, Number.NaN, 1.5]) {
+      const failure = await decodeFailure(
+        workspace([contribution({})], { createdAt })
+      );
+
+      expectDecodeFailure(failure, "Invalid evidence workspace contract.");
+    }
   });
 });
 
-function workspace(contributions: readonly unknown[]) {
+function workspace(
+  contributions: readonly unknown[],
+  input: { createdAt?: number } = {}
+) {
   return {
     contributions,
-    createdAt: 1_782_195_600,
+    createdAt: input.createdAt ?? 1_782_195_600,
     turnId: "turn-1",
   };
 }
