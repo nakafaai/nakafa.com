@@ -1,3 +1,4 @@
+import { findRawArtifactArrayIssue } from "@repo/math/schema/artifact/safety";
 import { Effect, Schema } from "effect";
 
 /** Schema-owned raw artifact budget limits enforced before workspace decode. */
@@ -42,14 +43,15 @@ export const findWorkspaceArtifactPreflightIssue = Effect.fn(
     return;
   }
 
-  if (contributions.length > limits.contributionLimit) {
+  const contributionCount = yield* readArrayLength(contributions);
+  if (contributionCount > limits.contributionLimit) {
     return "Invalid evidence workspace contract.";
   }
 
   let workspaceArtifactBytes = 0;
   let workspaceArtifactCount = 0;
 
-  for (let index = 0; index < contributions.length; index += 1) {
+  for (let index = 0; index < contributionCount; index += 1) {
     const contribution = yield* readArrayItem(contributions, index);
     if (typeof contribution !== "object" || contribution === null) {
       continue;
@@ -60,17 +62,32 @@ export const findWorkspaceArtifactPreflightIssue = Effect.fn(
       continue;
     }
 
-    if (artifacts.length > limits.contributionArtifactLimit) {
+    const artifactCount = yield* readArrayLength(artifacts);
+    if (artifactCount > limits.contributionArtifactLimit) {
       return "Invalid evidence workspace contract.";
     }
 
     let contributionArtifactBytes = 0;
     for (
       let artifactIndex = 0;
-      artifactIndex < artifacts.length;
+      artifactIndex < artifactCount;
       artifactIndex += 1
     ) {
       const artifact = yield* readArrayItem(artifacts, artifactIndex);
+      const artifactArrayIssue = yield* findRawArtifactArrayIssue(
+        artifact
+      ).pipe(
+        Effect.mapError(
+          () =>
+            new WorkspaceArtifactPreflightError({
+              message: "Invalid evidence workspace contract.",
+            })
+        )
+      );
+      if (artifactArrayIssue) {
+        return artifactArrayIssue;
+      }
+
       const artifactBytes = yield* readJsonBytes(artifact);
       if (artifactBytes > limits.artifactBytes) {
         return `Evidence workspace artifact exceeds ${limits.artifactBytes} bytes.`;
@@ -103,6 +120,23 @@ export const findWorkspaceArtifactPreflightIssue = Effect.fn(
  */
 function readArrayItem(value: readonly unknown[], index: number) {
   return readFieldValue(value, `${index}`);
+}
+
+/**
+ * Snapshots checked array length before producer-controlled slot reads can mutate it.
+ */
+function readArrayLength(value: readonly unknown[]) {
+  return readFieldValue(value, "length").pipe(
+    Effect.flatMap((length) =>
+      typeof length === "number" && Number.isSafeInteger(length) && length >= 0
+        ? Effect.succeed(length)
+        : Effect.fail(
+            new WorkspaceArtifactPreflightError({
+              message: "Invalid evidence workspace contract.",
+            })
+          )
+    )
+  );
 }
 
 /**

@@ -11,6 +11,7 @@ import {
   readReducedPiSquareMultiple,
   readScaledPiSquareMultiple,
   readScaledPiSquareProduct,
+  readSquaredPiMultiple,
 } from "@repo/math/schema/ast/power";
 import type { MathAstNode } from "@repo/math/schema/ast/schema";
 import {
@@ -241,7 +242,7 @@ function readPiQuotientConstantValue(
 }
 
 /**
- * Rejects undefined zero powers and preserves identity powers of pi exactly.
+ * Rejects unsupported pi powers before numeric reduction hides trig evidence.
  */
 function readPowerConstantValue(
   left: ConstantMathAstValue,
@@ -255,11 +256,31 @@ function readPowerConstantValue(
     return constantMathAst(0);
   }
 
-  if (right.value === 1 && left.piMultiple !== undefined) {
+  if (
+    right.value === 1 &&
+    (left.piMultiple !== undefined || left.piSquareMultiple !== undefined)
+  ) {
     return finiteComputedConstantValue(left.value, {
       piMultiple: left.piMultiple,
+      piSquareMultiple: left.piSquareMultiple,
       rejectZero: true,
     });
+  }
+
+  if (right.value === 2 && left.piMultiple !== undefined) {
+    const piSquareMultiple = readSquaredPiMultiple(left);
+    if (piSquareMultiple === undefined) {
+      return INVALID_CONSTANT_MATH_AST;
+    }
+
+    return finiteComputedConstantValue(left.value ** right.value, {
+      piSquareMultiple,
+      rejectZero: true,
+    });
+  }
+
+  if (left.piMultiple !== undefined || left.piSquareMultiple !== undefined) {
+    return INVALID_CONSTANT_MATH_AST;
   }
 
   return finiteComputedConstantValue(left.value ** right.value, {

@@ -5,6 +5,11 @@ import {
   readAbsolutePiMultiple,
   readNegatedPiMultiple,
 } from "@repo/math/schema/ast/pi";
+import {
+  readAbsolutePiSquareMultiple,
+  readNegatedPiSquareMultiple,
+  readSqrtPiSquareMultiple,
+} from "@repo/math/schema/ast/power";
 import type { MathAstNode } from "@repo/math/schema/ast/schema";
 import {
   constantMathAst,
@@ -22,21 +27,37 @@ export function readUnaryConstantValue(
   if (operator === "negate") {
     return constantMathAst(
       -operand.value,
-      readNegatedPiMultiple(operand.piMultiple)
+      readNegatedPiMultiple(operand.piMultiple),
+      readNegatedPiSquareMultiple(operand.piSquareMultiple)
     );
   }
 
   if (operator === "abs") {
     return constantMathAst(
       Math.abs(operand.value),
-      readAbsolutePiMultiple(operand.piMultiple)
+      readAbsolutePiMultiple(operand.piMultiple),
+      readAbsolutePiSquareMultiple(operand.piSquareMultiple)
     );
   }
 
   if (operator === "sqrt") {
-    return operand.value < 0
-      ? INVALID_CONSTANT_MATH_AST
-      : finiteComputedConstantValue(Math.sqrt(operand.value));
+    if (operand.value < 0) {
+      return INVALID_CONSTANT_MATH_AST;
+    }
+
+    if (operand.piSquareMultiple !== undefined) {
+      const piMultiple = readSqrtPiSquareMultiple(operand);
+      if (piMultiple === undefined) {
+        return INVALID_CONSTANT_MATH_AST;
+      }
+
+      return finiteComputedConstantValue(Math.sqrt(operand.value), {
+        piMultiple,
+        rejectZero: true,
+      });
+    }
+
+    return finiteComputedConstantValue(Math.sqrt(operand.value));
   }
 
   if (operator === "sin") {

@@ -43,6 +43,20 @@ export function readScaledPiSquareMultiple(
 }
 
 /**
+ * Carries pi-squared metadata through unary negation.
+ */
+export function readNegatedPiSquareMultiple(multiple: number | undefined) {
+  return multiple === undefined ? undefined : -multiple;
+}
+
+/**
+ * Carries pi-squared metadata through absolute value.
+ */
+export function readAbsolutePiSquareMultiple(multiple: number | undefined) {
+  return multiple === undefined ? undefined : Math.abs(multiple);
+}
+
+/**
  * Detects a carried pi-squared term that still needs reduction or scaling.
  */
 export function hasPiSquareMultiple(value: ConstantMathAstValue) {
@@ -85,6 +99,34 @@ export function readReducedPiSquareMultiple(
   }
 
   return divideFiniteDecimalNumbers(left.piSquareMultiple, right.piMultiple);
+}
+
+/**
+ * Squares a syntactic pi multiple into supported pi-squared metadata.
+ */
+export function readSquaredPiMultiple(value: ConstantMathAstValue) {
+  if (value.piMultiple === undefined) {
+    return;
+  }
+
+  return readSafePiProduct(value.piMultiple, value.piMultiple);
+}
+
+/**
+ * Reduces supported pi-squared square roots back to single-pi metadata.
+ */
+export function readSqrtPiSquareMultiple(value: ConstantMathAstValue) {
+  const multiple = value.piSquareMultiple;
+  if (multiple === undefined || multiple < 0) {
+    return;
+  }
+
+  const root = Math.sqrt(multiple);
+  if (!Number.isFinite(root) || root * root !== multiple) {
+    return;
+  }
+
+  return isRoundedPiSentinel(root) ? undefined : root;
 }
 
 /**

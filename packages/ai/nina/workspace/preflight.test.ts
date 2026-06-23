@@ -11,7 +11,10 @@ import {
   EVIDENCE_WORKSPACE_CONTRIBUTION_LIMIT,
   EvidenceWorkspaceDecodeError,
 } from "@repo/ai/nina/workspace/schema";
-import { MAX_COORDINATE_ARTIFACT_BYTES } from "@repo/math/schema/artifact/safety";
+import {
+  MAX_COORDINATE_ARTIFACT_BYTES,
+  MAX_COORDINATE_ARTIFACT_PRIMITIVES,
+} from "@repo/math/schema/artifact/safety";
 import { Cause, Effect, Exit, Option } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -19,15 +22,13 @@ const BAD_WORKSPACE = "Invalid evidence workspace contract.";
 
 describe("EvidenceWorkspace invariants", () => {
   it("falls through to schema errors when preflight has no artifact arrays", async () => {
-    const invalidInputs = [
+    for (const input of [
       null,
       {},
       workspace([null]),
       workspace([contribution({ artifacts: [undefined] })]),
-    ];
-
-    for (const input of invalidInputs) {
-      expectDecodeFailure(await decodeFailure(input));
+    ]) {
+      await expectDecodeIssue(input);
     }
   });
 
@@ -35,9 +36,9 @@ describe("EvidenceWorkspace invariants", () => {
     const failure = await decodeFailure(
       workspace([
         contribution({
-          artifacts: Array.from(
-            { length: EVIDENCE_CONTRIBUTION_ARTIFACT_LIMIT + 1 },
-            (_, index) => artifact(`artifact-${index}`)
+          artifacts: invalidArtifactRange(
+            0,
+            EVIDENCE_CONTRIBUTION_ARTIFACT_LIMIT + 1
           ),
         }),
       ])
@@ -54,10 +55,10 @@ describe("EvidenceWorkspace invariants", () => {
         return [];
       },
     };
-    const overLimitLength = EVIDENCE_WORKSPACE_CONTRIBUTION_LIMIT + 1;
-    const failure = await decodeFailure(
-      workspace(Array.from({ length: overLimitLength }, () => rawContribution))
-    );
+    const contributions = new Array(
+      EVIDENCE_WORKSPACE_CONTRIBUTION_LIMIT + 1
+    ).fill(rawContribution);
+    const failure = await decodeFailure(workspace(contributions));
 
     expect(inspected).toBe(false);
     expectDecodeFailure(failure);
@@ -74,11 +75,31 @@ describe("EvidenceWorkspace invariants", () => {
     });
 
     await expect(
-      Effect.runPromise(
-        findWorkspaceArtifactPreflightIssue(workspace(contributions), limits())
-      )
+      preflightIssue(workspace(contributions))
     ).resolves.toBeUndefined();
     expect(iterated).toBe(false);
+
+    let expanded = false;
+    const mutableContributions = [contribution(), contribution()];
+    const lengthMutatingContributions = new Proxy(mutableContributions, {
+      get(target, property, receiver) {
+        if (property === "0" && !expanded) {
+          expanded = true;
+          target.push(
+            contribution({
+              artifacts: new Array(EVIDENCE_CONTRIBUTION_ARTIFACT_LIMIT + 1),
+            })
+          );
+        }
+
+        return Reflect.get(target, property, receiver);
+      },
+    });
+
+    await expect(
+      preflightIssue(workspace(lengthMutatingContributions))
+    ).resolves.toBeUndefined();
+    expect(expanded).toBe(true);
   });
 
   it("rejects oversized contribution artifact payloads", async () => {
@@ -106,11 +127,11 @@ describe("EvidenceWorkspace invariants", () => {
 
   it("preflights aggregate artifact budgets before deep artifact decode", async () => {
     const tooMany = await decodeFailure(
-      workspace([
-        contribution({ artifacts: invalidArtifactRange(0, 3) }),
-        contribution({ artifacts: invalidArtifactRange(3, 3) }),
-        contribution({ artifacts: invalidArtifactRange(6, 3) }),
-      ])
+      workspace(
+        [0, 3, 6].map((start) =>
+          contribution({ artifacts: invalidArtifactRange(start, 3) })
+        )
+      )
     );
 
     expectDecodeFailure(
@@ -122,17 +143,13 @@ describe("EvidenceWorkspace invariants", () => {
       Math.floor(EVIDENCE_WORKSPACE_ARTIFACT_BYTES / 6) + 20_000
     );
     const tooLarge = await decodeFailure(
-      workspace([
-        contribution({
-          artifacts: [largeInvalidArtifact, largeInvalidArtifact],
-        }),
-        contribution({
-          artifacts: [largeInvalidArtifact, largeInvalidArtifact],
-        }),
-        contribution({
-          artifacts: [largeInvalidArtifact, largeInvalidArtifact],
-        }),
-      ])
+      workspace(
+        Array.from({ length: 3 }, () =>
+          contribution({
+            artifacts: [largeInvalidArtifact, largeInvalidArtifact],
+          })
+        )
+      )
     );
 
     expectDecodeFailure(
@@ -142,6 +159,24 @@ describe("EvidenceWorkspace invariants", () => {
   });
 
   it("preflights per-artifact bytes before deep artifact decode", async () => {
+    const arrayFailure = await decodeFailure(
+      workspace([
+        contribution({
+          artifacts: [
+            {
+              payload: {
+                primitives: new Array(MAX_COORDINATE_ARTIFACT_PRIMITIVES + 1),
+              },
+            },
+          ],
+        }),
+      ])
+    );
+    expectDecodeFailure(
+      arrayFailure,
+      `Coordinate artifact primitives exceeds ${MAX_COORDINATE_ARTIFACT_PRIMITIVES} items.`
+    );
+
     const failure = await decodeFailure(
       workspace([
         contribution({
@@ -156,60 +191,35 @@ describe("EvidenceWorkspace invariants", () => {
     );
   });
 
-  it("maps raw artifact serialization preflight failures", async () => {
+  it("maps raw preflight read failures to typed decode failures", async () => {
     const cyclic: { self?: unknown } = {};
     cyclic.self = cyclic;
-
-    const failure = await decodeFailure(
-      workspace([contribution({ artifacts: [cyclic] })])
-    );
-
-    expectDecodeFailure(failure, "Invalid evidence workspace contract.");
-  });
-
-  it("maps throwing raw preflight getters to typed decode failures", async () => {
-    expectDecodeFailure(await decodeFailure(throwingField("contributions")));
-    expectDecodeFailure(
-      await decodeFailure(workspace([throwingField("artifacts")]))
+    await expectDecodeIssue(workspace([contribution({ artifacts: [cyclic] })]));
+    await expectDecodeIssue({ contributions: invalidLengthArray() });
+    await expectDecodeIssue(throwingField("contributions"));
+    await expectDecodeIssue(
+      workspace([
+        contribution({
+          artifacts: [{ payload: { primitives: invalidLengthArray() } }],
+        }),
+      ])
     );
 
     const part = oversizedPart(
       Math.floor(EVIDENCE_CONTRIBUTION_ARTIFACT_BYTES / 3) + 10_000
     );
-    expectDecodeFailure(
-      await decodeFailure(
-        workspace([
-          {
-            artifacts: [part, part, part],
-            get capability() {
-              throw new Error("capability getter failed");
-            },
-          },
-        ])
-      )
-    );
+    await expectDecodeIssue(workspace([throwingCapabilityContribution(part)]));
   });
 });
 
 function workspace(contributions: readonly unknown[]) {
-  return {
-    contributions,
-    createdAt: 1_782_195_600,
-    turnId: "turn-1",
-  };
+  return { contributions, createdAt: 1_782_195_600, turnId: "turn-1" };
 }
 
 function contribution(input: { artifacts?: readonly unknown[] } = {}) {
   return {
     artifacts: input.artifacts,
     capability: MATH_CAPABILITY,
-    evidence: {
-      capability: MATH_CAPABILITY,
-      refs: ["cas://math/evaluate"],
-      status: "available",
-      summary: "CAS verified the coordinate relation.",
-    },
-    modelSummary: "CAS verified the coordinate relation.",
   };
 }
 
@@ -221,42 +231,6 @@ function invalidArtifactRange(start: number, count: number) {
 
 function oversizedPart(byteCount: number) {
   return { oversized: "x".repeat(byteCount) };
-}
-
-function artifact(id: string, description?: string) {
-  return {
-    description,
-    id,
-    kind: "coordinate-system-3d",
-    payload: {
-      axes: {
-        x: [scalar("-1"), scalar("1")],
-        y: [scalar("-1"), scalar("1")],
-        z: [scalar("-1"), scalar("1")],
-      },
-      primitives: [
-        {
-          id: "point-1",
-          kind: "point",
-          point: point("0", "0", "0"),
-        },
-      ],
-      sampling: {
-        curveSamples: 16,
-        surfaceCells: 16,
-      },
-    },
-    proofAnchors: ["cas://coordinate/artifact"],
-    title: "Coordinate artifact",
-  };
-}
-
-function point(x: string, y: string, z: string) {
-  return { x: scalar(x), y: scalar(y), z: scalar(z) };
-}
-
-function scalar(expression: string) {
-  return { expression, latex: expression };
 }
 
 function limits() {
@@ -278,6 +252,25 @@ function throwingField(field: string) {
   };
 }
 
+function invalidLengthArray() {
+  return new Proxy([], {
+    get(target, property, receiver) {
+      return property === "length"
+        ? "bad"
+        : Reflect.get(target, property, receiver);
+    },
+  });
+}
+
+function throwingCapabilityContribution(part: unknown) {
+  return {
+    artifacts: [part, part, part],
+    get capability() {
+      throw new Error("capability getter failed");
+    },
+  };
+}
+
 async function decodeFailure(input: unknown) {
   const exit = await Effect.runPromiseExit(decodeEvidenceWorkspace(input));
   if (Exit.isSuccess(exit)) {
@@ -286,6 +279,16 @@ async function decodeFailure(input: unknown) {
 
   const failure = Cause.failureOption(exit.cause);
   return Option.isSome(failure) ? failure.value : undefined;
+}
+
+function preflightIssue(input: unknown) {
+  return Effect.runPromise(
+    findWorkspaceArtifactPreflightIssue(input, limits())
+  );
+}
+
+async function expectDecodeIssue(input: unknown, message?: string) {
+  expectDecodeFailure(await decodeFailure(input), message);
 }
 
 function expectDecodeFailure(error: unknown, message = BAD_WORKSPACE) {

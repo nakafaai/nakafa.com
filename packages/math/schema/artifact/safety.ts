@@ -65,32 +65,33 @@ export const findRawArtifactSizeIssue = Effect.fn(
 /**
  * Checks producer-controlled arrays before JSON serialization can allocate.
  */
-const findRawArtifactArrayIssue = Effect.fn(
+export const findRawArtifactArrayIssue = Effect.fn(
   "math.artifact.findRawArtifactArrayIssue"
 )(function* (input: unknown) {
   const proofAnchors = yield* readRawField(input, "proofAnchors");
-  const proofIssue = readArrayLengthIssue(
+  const proofCount = yield* readRawArrayCount(
     proofAnchors,
     "Coordinate artifact proof anchors",
     MAX_COORDINATE_ARTIFACT_PROOF_ANCHORS
   );
-  if (proofIssue) {
-    return proofIssue;
+  if (typeof proofCount === "string") {
+    return proofCount;
   }
 
   const payload = yield* readRawField(input, "payload");
   const primitives = yield* readRawField(payload, "primitives");
-  const primitiveIssue = readArrayLengthIssue(
+  const primitiveCount = yield* readRawArrayCount(
     primitives,
     "Coordinate artifact primitives",
     MAX_COORDINATE_ARTIFACT_PRIMITIVES
   );
-  if (primitiveIssue || !Array.isArray(primitives)) {
-    return primitiveIssue;
+  if (typeof primitiveCount !== "number") {
+    return primitiveCount;
   }
 
-  for (let index = 0; index < primitives.length; index += 1) {
-    const issue = yield* findRawPrimitiveArrayIssue(primitives[index], index);
+  for (let index = 0; index < primitiveCount; index += 1) {
+    const primitive = yield* readRawArrayItem(primitives, index);
+    const issue = yield* findRawPrimitiveArrayIssue(primitive, index);
     if (issue) {
       return issue;
     }
@@ -104,13 +105,13 @@ const findRawPrimitiveArrayIssue = Effect.fn(
   "math.artifact.findRawPrimitiveArrayIssue"
 )(function* (primitive: unknown, index: number) {
   const vertices = yield* readRawField(primitive, "vertices");
-  const vertexIssue = readArrayLengthIssue(
+  const vertexCount = yield* readRawArrayCount(
     vertices,
     `Coordinate primitive ${index} polygon vertices`,
     MAX_POLYGON_VERTICES
   );
-  if (vertexIssue) {
-    return vertexIssue;
+  if (typeof vertexCount === "string") {
+    return vertexCount;
   }
 
   const functionSpec = yield* readRawField(primitive, "function");
@@ -136,23 +137,23 @@ const findRawFunctionArrayIssue = Effect.fn(
   "math.artifact.findRawFunctionArrayIssue"
 )(function* (spec: unknown, label: string) {
   const domain = yield* readRawField(spec, "domain");
-  const domainIssue = readArrayLengthIssue(
+  const domainCount = yield* readRawArrayCount(
     domain,
     `${label} domains`,
     MAX_FUNCTION_DOMAINS
   );
-  if (domainIssue) {
-    return domainIssue;
+  if (typeof domainCount === "string") {
+    return domainCount;
   }
 
   const exclusions = yield* readRawField(spec, "exclusions");
-  const exclusionIssue = readArrayLengthIssue(
+  const exclusionCount = yield* readRawArrayCount(
     exclusions,
     `${label} exclusions`,
     MAX_FUNCTION_EXCLUSIONS
   );
-  if (exclusionIssue) {
-    return exclusionIssue;
+  if (typeof exclusionCount === "string") {
+    return exclusionCount;
   }
 
   const astIssue = yield* findRawMathAstArrayIssue(
@@ -173,13 +174,14 @@ const findRawFunctionArrayIssue = Effect.fn(
     }
   }
 
-  if (!Array.isArray(exclusions)) {
+  if (exclusionCount === undefined) {
     return;
   }
 
-  for (let index = 0; index < exclusions.length; index += 1) {
+  for (let index = 0; index < exclusionCount; index += 1) {
+    const exclusion = yield* readRawArrayItem(exclusions, index);
     const issue = yield* findRawMathAstArrayIssue(
-      exclusions[index],
+      exclusion,
       `${label} exclusion ${index}`
     );
     if (issue) {
@@ -195,7 +197,12 @@ const findRawMathAstArrayIssue = Effect.fn(
   "math.artifact.findRawMathAstArrayIssue"
 )(function* (ast: unknown, label: string) {
   const nodes = yield* readRawField(ast, "nodes");
-  return readArrayLengthIssue(nodes, `${label} nodes`, MAX_MATH_AST_NODES);
+  const nodeCount = yield* readRawArrayCount(
+    nodes,
+    `${label} nodes`,
+    MAX_MATH_AST_NODES
+  );
+  return typeof nodeCount === "string" ? nodeCount : undefined;
 });
 
 /**
@@ -215,15 +222,40 @@ const readRawField = Effect.fn("math.artifact.readRawField")(function* (
 });
 
 /**
- * Builds a deterministic array-budget issue without iterating the array.
+ * Reads and bounds an array length once before iterating raw slots.
  */
-function readArrayLengthIssue(value: unknown, label: string, limit: number) {
-  if (!Array.isArray(value) || value.length <= limit) {
-    return;
-  }
+const readRawArrayCount = Effect.fn("math.artifact.readRawArrayCount")(
+  function* (value: unknown, label: string, limit: number) {
+    if (!Array.isArray(value)) {
+      return;
+    }
 
-  return `${label} exceeds ${limit} items.`;
-}
+    const length = yield* readRawField(value, "length");
+    if (
+      typeof length !== "number" ||
+      !Number.isSafeInteger(length) ||
+      length < 0
+    ) {
+      return yield* Effect.fail(
+        new ArtifactSafetyReadError({
+          message: "Invalid learning artifact contract.",
+        })
+      );
+    }
+
+    return length > limit ? `${label} exceeds ${limit} items.` : length;
+  }
+);
+
+/**
+ * Reads one raw array slot through the same typed property boundary as fields.
+ */
+const readRawArrayItem = Effect.fn("math.artifact.readRawArrayItem")(function* (
+  value: readonly unknown[],
+  index: number
+) {
+  return yield* readRawField(value, `${index}`);
+});
 
 /**
  * Narrows values whose properties may be inspected with Reflect.get.

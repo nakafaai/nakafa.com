@@ -152,6 +152,48 @@ describe("artifact raw safety preflight", () => {
     }
   });
 
+  it("maps throwing raw array slot reads into the typed preflight failure", async () => {
+    const primitives = new Proxy([{}], {
+      get(target, property, receiver) {
+        if (property === "0") {
+          return JSON.parse("{");
+        }
+
+        return Reflect.get(target, property, receiver);
+      },
+    });
+
+    const exit = await Effect.runPromiseExit(
+      findRawArtifactSizeIssue({ payload: { primitives } })
+    );
+    const failure = readExitFailure(exit);
+
+    expect(failure).toBeInstanceOf(ArtifactSafetyReadError);
+    if (failure instanceof ArtifactSafetyReadError) {
+      expect(failure.message).toBe("Invalid learning artifact contract.");
+    }
+  });
+
+  it("maps invalid raw array lengths into the typed preflight failure", async () => {
+    const primitives = new Proxy([], {
+      get(target, property, receiver) {
+        return property === "length"
+          ? "bad"
+          : Reflect.get(target, property, receiver);
+      },
+    });
+
+    const exit = await Effect.runPromiseExit(
+      findRawArtifactSizeIssue({ payload: { primitives } })
+    );
+    const failure = readExitFailure(exit);
+
+    expect(failure).toBeInstanceOf(ArtifactSafetyReadError);
+    if (failure instanceof ArtifactSafetyReadError) {
+      expect(failure.message).toBe("Invalid learning artifact contract.");
+    }
+  });
+
   it("maps unserializable raw artifacts into the typed preflight failure", async () => {
     const cyclic: { self?: unknown } = {};
     cyclic.self = cyclic;

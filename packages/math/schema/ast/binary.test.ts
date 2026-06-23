@@ -134,6 +134,19 @@ describe("binary MathAst constant operations", () => {
       "InvalidConstant"
     );
     expect(
+      readBinaryConstantValue("power", constant(Math.PI, 1), constant(3)).tag
+    ).toBe("InvalidConstant");
+    expect(
+      readBinaryConstantValue(
+        "power",
+        constant(Math.PI * 0.999_999_999_999_999_9, 0.999_999_999_999_999_9),
+        constant(2)
+      ).tag
+    ).toBe("InvalidConstant");
+    expect(readBinaryConstantValue("power", piSquared, constant(2)).tag).toBe(
+      "InvalidConstant"
+    );
+    expect(
       readBinaryConstantValue("divide", piSquared, {
         isExactZero: false,
         value: 0,
@@ -146,6 +159,33 @@ describe("binary MathAst constant operations", () => {
         { isExactZero: false, piMultiple: 1e-309 * 10, value: Math.PI }
       ).tag
     ).toBe("InvalidConstant");
+  });
+
+  it("preserves supported pi powers before numeric reduction", () => {
+    expect(
+      readBinaryConstantValue("power", constant(Math.PI, 1), constant(2))
+    ).toEqual({
+      tag: "Constant",
+      value: {
+        isExactZero: false,
+        piSquareMultiple: 1,
+        value: Math.PI * Math.PI,
+      },
+    });
+    expect(
+      readBinaryConstantValue(
+        "power",
+        { isExactZero: false, piSquareMultiple: 1, value: Math.PI * Math.PI },
+        constant(1)
+      )
+    ).toEqual({
+      tag: "Constant",
+      value: {
+        isExactZero: false,
+        piSquareMultiple: 1,
+        value: Math.PI * Math.PI,
+      },
+    });
   });
 
   it("uses decimal sums so exact cancellation cannot drift nonzero", () => {

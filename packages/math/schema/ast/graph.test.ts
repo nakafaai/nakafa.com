@@ -6,6 +6,9 @@ import {
 import { Cause, Effect, Exit, Option } from "effect";
 import { describe, expect, it } from "vitest";
 
+const ZERO_DIVISOR =
+  "MathAst divide node quotient cannot use a constant zero divisor.";
+
 describe("MathAst graph validation", () => {
   it("rejects malformed graph structure with typed messages", async () => {
     const cases = [
@@ -64,156 +67,119 @@ describe("MathAst graph validation", () => {
   it("rejects constant zero and invalid constant divisor subtrees", async () => {
     const cases = [
       {
-        expected:
-          "MathAst divide node quotient cannot use a constant zero divisor.",
-        input: ast(
-          "x / 0",
-          [
-            variable("x"),
-            literal("zero", "0.0"),
-            binary("quotient", "x", "divide", "zero"),
-          ],
-          "quotient"
-        ),
+        expected: ZERO_DIVISOR,
+        input: quotientAst("x / 0", [literal("zero", "0.0")], "zero"),
       },
       {
-        expected:
-          "MathAst divide node quotient cannot use a constant zero divisor.",
-        input: ast(
+        expected: ZERO_DIVISOR,
+        input: quotientAst(
           "x / -0",
-          [
-            variable("x"),
-            literal("zero", "0"),
-            unary("negated-zero", "zero", "negate"),
-            binary("quotient", "x", "divide", "negated-zero"),
-          ],
-          "quotient"
+          [literal("zero", "0"), unary("negated-zero", "zero", "negate")],
+          "negated-zero"
         ),
       },
       {
-        expected:
-          "MathAst divide node quotient cannot use a constant zero divisor.",
-        input: ast(
+        expected: ZERO_DIVISOR,
+        input: quotientAst(
           "x / (0 * 1)",
           [
-            variable("x"),
             literal("zero", "0"),
             literal("one", "1"),
             binary("zero-product", "zero", "multiply", "one"),
-            binary("quotient", "x", "divide", "zero-product"),
           ],
-          "quotient"
+          "zero-product"
         ),
       },
       {
-        expected:
-          "MathAst divide node quotient cannot use a constant zero divisor.",
-        input: ast(
+        expected: ZERO_DIVISOR,
+        input: quotientAst(
           "x / sin(pi)",
-          [
-            variable("x"),
-            literal("pi", "pi"),
-            unary("sin-pi", "pi", "sin"),
-            binary("quotient", "x", "divide", "sin-pi"),
-          ],
-          "quotient"
+          [literal("pi", "pi"), unary("sin-pi", "pi", "sin")],
+          "sin-pi"
         ),
       },
       {
-        expected:
-          "MathAst divide node quotient cannot use a constant zero divisor.",
-        input: ast(
-          "x / sin(pi ^ 1)",
+        expected: ZERO_DIVISOR,
+        input: quotientAst(
+          "x / sin(sqrt(pi*pi))",
           [
-            variable("x"),
-            literal("pi", "pi"),
-            literal("one", "1"),
-            binary("powered-pi", "pi", "power", "one"),
-            unary("sin-pi", "powered-pi", "sin"),
-            binary("quotient", "x", "divide", "sin-pi"),
+            literal("pi-left", "pi"),
+            literal("pi-right", "pi"),
+            binary("pi-squared", "pi-left", "multiply", "pi-right"),
+            unary("sqrt-pi", "pi-squared", "sqrt"),
+            unary("sin-pi", "sqrt-pi", "sin"),
           ],
-          "quotient"
+          "sin-pi"
         ),
       },
       {
         expected:
           "MathAst node scaled-pi contains an invalid constant expression.",
-        input: ast(
+        input: quotientAst(
           "x / sin((pi / 3) * 3)",
           [
-            variable("x"),
             literal("one-third-pi", "pi/3"),
             literal("three", "3"),
             binary("scaled-pi", "one-third-pi", "multiply", "three"),
             unary("sin-pi", "scaled-pi", "sin"),
-            binary("quotient", "x", "divide", "sin-pi"),
           ],
-          "quotient"
+          "sin-pi"
         ),
       },
       {
-        expected:
-          "MathAst divide node quotient cannot use a constant zero divisor.",
-        input: ast(
+        expected: ZERO_DIVISOR,
+        input: quotientAst(
           "x / sin((pi*pi)/pi)",
           [
-            variable("x"),
             literal("pi-left", "pi"),
             literal("pi-right", "pi"),
             binary("pi-squared", "pi-left", "multiply", "pi-right"),
             binary("reduced-pi", "pi-squared", "divide", "pi-right"),
             unary("sin-pi", "reduced-pi", "sin"),
-            binary("quotient", "x", "divide", "sin-pi"),
           ],
-          "quotient"
+          "sin-pi"
         ),
       },
       {
-        expected:
-          "MathAst divide node quotient cannot use a constant zero divisor.",
-        input: ast(
-          "x / sin((1e-15*pi)*1e15)",
+        expected: ZERO_DIVISOR,
+        input: quotientAst(
+          "x / sin((pi^2)/pi)",
           [
-            variable("x"),
-            literal("tiny", "1e-15*pi"),
-            literal("large", "1e15"),
-            binary("pi", "tiny", "multiply", "large"),
-            unary("sin-pi", "pi", "sin"),
-            binary("quotient", "x", "divide", "sin-pi"),
+            literal("pi", "pi"),
+            literal("two", "2"),
+            binary("pi-squared", "pi", "power", "two"),
+            binary("reduced-pi", "pi-squared", "divide", "pi"),
+            unary("sin-pi", "reduced-pi", "sin"),
           ],
-          "quotient"
+          "sin-pi"
+        ),
+      },
+      {
+        expected: ZERO_DIVISOR,
+        input: quotientAst(
+          "x / sin(abs(pi*pi)/pi)",
+          [
+            literal("pi-left", "pi"),
+            literal("pi-right", "pi"),
+            binary("pi-squared", "pi-left", "multiply", "pi-right"),
+            unary("abs-pi-squared", "pi-squared", "abs"),
+            binary("reduced-pi", "abs-pi-squared", "divide", "pi-right"),
+            unary("sin-pi", "reduced-pi", "sin"),
+          ],
+          "sin-pi"
         ),
       },
       {
         expected: "MathAst node sum contains an invalid constant expression.",
-        input: ast(
+        input: quotientAst(
           "x / sin((9007199254740991*pi) + (0.5*pi))",
           [
-            variable("x"),
             literal("large", "9007199254740991*pi"),
             literal("half", "0.5*pi"),
             binary("sum", "large", "add", "half"),
             unary("sin-sum", "sum", "sin"),
-            binary("quotient", "x", "divide", "sin-sum"),
           ],
-          "quotient"
-        ),
-      },
-      {
-        expected: "MathAst node pi contains an invalid constant expression.",
-        input: ast(
-          "x / sin((1e-308*pi)/(1e-309*10))",
-          [
-            variable("x"),
-            literal("tiny-pi", "1e-308*pi"),
-            literal("denominator-scale", "1e-309"),
-            literal("ten", "10"),
-            binary("denominator", "denominator-scale", "multiply", "ten"),
-            binary("pi", "tiny-pi", "divide", "denominator"),
-            unary("sin-pi", "pi", "sin"),
-            binary("quotient", "x", "divide", "sin-pi"),
-          ],
-          "quotient"
+          "sin-sum"
         ),
       },
       {
@@ -248,6 +214,22 @@ function ast(canonical: string, nodes: readonly MathAstNode[], root = "root") {
     nodes,
     root,
   };
+}
+
+function quotientAst(
+  canonical: string,
+  denominatorNodes: readonly MathAstNode[],
+  denominatorId: string
+) {
+  return ast(
+    canonical,
+    [
+      variable("x"),
+      ...denominatorNodes,
+      binary("quotient", "x", "divide", denominatorId),
+    ],
+    "quotient"
+  );
 }
 
 function binary(

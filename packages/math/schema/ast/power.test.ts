@@ -6,6 +6,8 @@ import {
   readReducedPiSquareMultiple,
   readScaledPiSquareMultiple,
   readScaledPiSquareProduct,
+  readSqrtPiSquareMultiple,
+  readSquaredPiMultiple,
 } from "@repo/math/schema/ast/power";
 import { describe, expect, it } from "vitest";
 
@@ -61,6 +63,26 @@ describe("pi power metadata", () => {
     expect(
       readReducedPiSquareMultiple(constant(2), constant(4 * Math.PI, 4))
     ).toBeUndefined();
+  });
+
+  it("reads supported pi powers and square roots without sentinel drift", () => {
+    expect(readSquaredPiMultiple(constant(2))).toBeUndefined();
+    expect(readSquaredPiMultiple(constant(Math.PI, 1))).toBe(1);
+    expect(readSqrtPiSquareMultiple(constant(2))).toBeUndefined();
+    expect(
+      readSqrtPiSquareMultiple(constant(-Math.PI, undefined, -1))
+    ).toBeUndefined();
+    expect(
+      readSqrtPiSquareMultiple(constant(2 * Math.PI, undefined, 2))
+    ).toBeUndefined();
+    expect(
+      readSqrtPiSquareMultiple(
+        constant(0.999_999_999_999_999_8, undefined, 0.999_999_999_999_999_8)
+      )
+    ).toBeUndefined();
+    expect(
+      readSqrtPiSquareMultiple(constant(Math.PI * Math.PI, undefined, 1))
+    ).toBe(1);
   });
 });
 
