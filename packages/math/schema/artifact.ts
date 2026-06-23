@@ -5,9 +5,16 @@ import {
   RenderSamplingPolicy,
   readCoordinatePrimitiveMathAsts,
 } from "@repo/math/schema/coordinate-primitives";
+import { findCoordinatePrimitiveIssue } from "@repo/math/schema/coordinate-validation";
 import { Effect, Schema } from "effect";
 
 export const COORDINATE_SYSTEM_ARTIFACT_KIND = "coordinate-system-3d";
+
+/** Maximum serialized size accepted for one coordinate learning artifact. */
+export const MAX_COORDINATE_ARTIFACT_BYTES = 750_000;
+
+/** Maximum deterministic primitive count accepted for one coordinate artifact. */
+export const MAX_COORDINATE_ARTIFACT_PRIMITIVES = 64;
 
 const ArtifactIdSchema = Schema.NonEmptyString.annotations({
   description: "Stable artifact identifier used by chat part manifests.",
@@ -28,6 +35,7 @@ export class CoordinateSystemPayload extends Schema.Class<CoordinateSystemPayloa
   }).pipe(Schema.mutable),
   primitives: Schema.Array(CoordinatePrimitiveSchema).pipe(
     Schema.minItems(1),
+    Schema.maxItems(MAX_COORDINATE_ARTIFACT_PRIMITIVES),
     Schema.mutable
   ),
   sampling: RenderSamplingPolicy,
@@ -87,6 +95,29 @@ export const decodeLearningArtifact = Effect.fn(
     );
   }
 
+  const sizeIssue = findArtifactSizeIssue(artifact);
+  if (sizeIssue) {
+    return yield* Effect.fail(
+      new LearningArtifactDecodeError({ message: sizeIssue })
+    );
+  }
+
+  const axisIssue = findAxisRangeIssue(artifact);
+  if (axisIssue) {
+    return yield* Effect.fail(
+      new LearningArtifactDecodeError({ message: axisIssue })
+    );
+  }
+
+  const primitiveIssue = findCoordinatePrimitiveIssue(
+    artifact.payload.primitives
+  );
+  if (primitiveIssue) {
+    return yield* Effect.fail(
+      new LearningArtifactDecodeError({ message: primitiveIssue.message })
+    );
+  }
+
   for (const ast of readCoordinatePrimitiveMathAsts(
     artifact.payload.primitives
   )) {
@@ -109,4 +140,56 @@ function findDuplicatePrimitiveId(primitives: readonly CoordinatePrimitive[]) {
     }
     ids.add(primitive.id);
   }
+}
+
+function findArtifactSizeIssue(artifact: LearningArtifact) {
+  const json = JSON.stringify(artifact);
+  const sizeBytes = new TextEncoder().encode(json).byteLength;
+
+  if (sizeBytes > MAX_COORDINATE_ARTIFACT_BYTES) {
+    return `Coordinate artifact exceeds ${MAX_COORDINATE_ARTIFACT_BYTES} bytes.`;
+  }
+}
+
+function findAxisRangeIssue(artifact: LearningArtifact) {
+  const xIssue = findOneAxisRangeIssue("x", artifact.payload.axes.x);
+  if (xIssue) {
+    return xIssue;
+  }
+
+  const yIssue = findOneAxisRangeIssue("y", artifact.payload.axes.y);
+  if (yIssue) {
+    return yIssue;
+  }
+
+  return findOneAxisRangeIssue("z", artifact.payload.axes.z);
+}
+
+function findOneAxisRangeIssue(
+  axisName: "x" | "y" | "z",
+  range: readonly [ExactScalar, ExactScalar]
+) {
+  const min = readSortableScalar(range[0]);
+  const max = readSortableScalar(range[1]);
+
+  if (min === undefined) {
+    return `Coordinate artifact ${axisName}-axis range must use sortable numeric bounds.`;
+  }
+
+  if (max === undefined) {
+    return `Coordinate artifact ${axisName}-axis range must use sortable numeric bounds.`;
+  }
+
+  if (min >= max) {
+    return `Coordinate artifact ${axisName}-axis range must be increasing.`;
+  }
+}
+
+function readSortableScalar(scalar: ExactScalar) {
+  if (scalar.decimal !== undefined && Number.isFinite(scalar.decimal)) {
+    return scalar.decimal;
+  }
+
+  const parsed = Number(scalar.expression);
+  return Number.isFinite(parsed) ? parsed : undefined;
 }

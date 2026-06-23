@@ -161,7 +161,7 @@ function createCoordinateArtifact(
           kind: "function-surface",
         },
         {
-          function: vectorFunctionSpec("u"),
+          function: surfaceFunctionSpec(),
           id: "parametric-surface-1",
           kind: "parametric-surface",
         },
@@ -202,7 +202,16 @@ function vectorFunctionSpec(variable: "t" | "u") {
   };
 }
 
-function domain(variable: "t" | "u" | "x" | "z") {
+function surfaceFunctionSpec() {
+  return {
+    domain: [domain("u"), domain("v")],
+    x: variableAst("u"),
+    y: variableAst("v"),
+    z: literalAst("0"),
+  };
+}
+
+function domain(variable: "t" | "u" | "v" | "x" | "z") {
   return {
     closedMax: true,
     closedMin: true,
@@ -212,7 +221,7 @@ function domain(variable: "t" | "u" | "x" | "z") {
   };
 }
 
-function variableAst(variable: "t" | "u" | "x" | "z") {
+function variableAst(variable: "t" | "u" | "v" | "x" | "z") {
   return {
     canonical: variable,
     latex: variable,

@@ -6,8 +6,8 @@ describe("MathAst", () => {
   it("decodes a flat symbolic expression graph", async () => {
     const ast = await Effect.runPromise(
       decodeMathAst({
-        canonical: "x + 1",
-        latex: "x + 1",
+        canonical: "x + x",
+        latex: "x + x",
         nodes: [
           {
             id: "x",
@@ -15,16 +15,11 @@ describe("MathAst", () => {
             name: "x",
           },
           {
-            id: "one",
-            kind: "literal",
-            value: scalar("1"),
-          },
-          {
             id: "sum",
             kind: "binary",
             left: "x",
             operator: "add",
-            right: "one",
+            right: "x",
           },
         ],
         root: "sum",
@@ -32,7 +27,7 @@ describe("MathAst", () => {
     );
 
     expect(ast.root).toBe("sum");
-    expect(ast.nodes).toHaveLength(3);
+    expect(ast.nodes).toHaveLength(2);
   });
 
   it("decodes unary expressions with valid operand references", async () => {
@@ -128,6 +123,68 @@ describe("MathAst", () => {
     expect(failure).toBeInstanceOf(MathAstDecodeError);
     if (failure instanceof MathAstDecodeError) {
       expect(failure.message).toBe("MathAst root node was not found: missing.");
+    }
+  });
+
+  it("rejects cyclic graphs with a typed error", async () => {
+    const exit = await Effect.runPromiseExit(
+      decodeMathAst({
+        canonical: "-(-x)",
+        latex: "-(-x)",
+        nodes: [
+          {
+            id: "first",
+            kind: "unary",
+            operand: "second",
+            operator: "negate",
+          },
+          {
+            id: "second",
+            kind: "unary",
+            operand: "first",
+            operator: "negate",
+          },
+        ],
+        root: "first",
+      })
+    );
+
+    const failure = readExitFailure(exit);
+
+    expect(failure).toBeInstanceOf(MathAstDecodeError);
+    if (failure instanceof MathAstDecodeError) {
+      expect(failure.message).toBe(
+        "MathAst graph contains a cycle at node first."
+      );
+    }
+  });
+
+  it("rejects unreachable nodes with a typed error", async () => {
+    const exit = await Effect.runPromiseExit(
+      decodeMathAst({
+        canonical: "1",
+        latex: "1",
+        nodes: [
+          {
+            id: "one",
+            kind: "literal",
+            value: scalar("1"),
+          },
+          {
+            id: "x",
+            kind: "variable",
+            name: "x",
+          },
+        ],
+        root: "one",
+      })
+    );
+
+    const failure = readExitFailure(exit);
+
+    expect(failure).toBeInstanceOf(MathAstDecodeError);
+    if (failure instanceof MathAstDecodeError) {
+      expect(failure.message).toBe("MathAst node is unreachable from root: x.");
     }
   });
 

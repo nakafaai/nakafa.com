@@ -165,17 +165,34 @@ export const decodeMathAst = Effect.fn("math.ast.decode")(function* (
   return ast;
 });
 
+/** Reads the schema-owned variable names referenced by a MathAst graph. */
+export function readMathAstVariableNames(ast: MathAst) {
+  const variableNames = new Set<MathVariableName>();
+
+  for (const node of ast.nodes) {
+    if (node.kind === "variable") {
+      variableNames.add(node.name);
+    }
+  }
+
+  return variableNames;
+}
+
 function findMathAstGraphIssue(ast: MathAst) {
   const nodeIds = new Set<string>();
+  let rootNode: MathAstNode | undefined;
 
   for (const node of ast.nodes) {
     if (nodeIds.has(node.id)) {
       return `Duplicate MathAst node id: ${node.id}.`;
     }
     nodeIds.add(node.id);
+    if (node.id === ast.root) {
+      rootNode = node;
+    }
   }
 
-  if (!nodeIds.has(ast.root)) {
+  if (!rootNode) {
     return `MathAst root node was not found: ${ast.root}.`;
   }
 
@@ -203,4 +220,74 @@ function findMathAstGraphIssue(ast: MathAst) {
       return `MathAst binary node ${node.id} references missing right operand ${node.right}.`;
     }
   }
+
+  const reachableNodeIds = new Set<string>();
+  const cycleAt = findReachabilityIssue({
+    node: rootNode,
+    nodes: ast.nodes,
+    reachableNodeIds,
+    visitingNodeIds: new Set(),
+  });
+
+  if (cycleAt) {
+    return `MathAst graph contains a cycle at node ${cycleAt}.`;
+  }
+
+  for (const node of ast.nodes) {
+    if (!reachableNodeIds.has(node.id)) {
+      return `MathAst node is unreachable from root: ${node.id}.`;
+    }
+  }
+}
+
+function findReachabilityIssue(input: {
+  node: MathAstNode;
+  nodes: readonly MathAstNode[];
+  reachableNodeIds: Set<string>;
+  visitingNodeIds: Set<string>;
+}): string | undefined {
+  if (input.visitingNodeIds.has(input.node.id)) {
+    return input.node.id;
+  }
+
+  if (input.reachableNodeIds.has(input.node.id)) {
+    return;
+  }
+
+  input.visitingNodeIds.add(input.node.id);
+
+  for (const childId of readMathAstChildIds(input.node)) {
+    for (const childNode of input.nodes) {
+      if (childNode.id !== childId) {
+        continue;
+      }
+
+      const cycleAt = findReachabilityIssue({
+        node: childNode,
+        nodes: input.nodes,
+        reachableNodeIds: input.reachableNodeIds,
+        visitingNodeIds: input.visitingNodeIds,
+      });
+
+      if (cycleAt) {
+        return cycleAt;
+      }
+      break;
+    }
+  }
+
+  input.visitingNodeIds.delete(input.node.id);
+  input.reachableNodeIds.add(input.node.id);
+}
+
+function readMathAstChildIds(node: MathAstNode) {
+  if (node.kind === "unary") {
+    return [node.operand];
+  }
+
+  if (node.kind === "binary") {
+    return [node.left, node.right];
+  }
+
+  return [];
 }
