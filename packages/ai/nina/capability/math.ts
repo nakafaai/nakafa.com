@@ -85,6 +85,7 @@ export const createMathCapabilityTool = Effect.fn("nina.capability.math.tool")(
               }).pipe(
                 Effect.map((result) =>
                   specialistSuccess({
+                    artifacts: result.artifacts,
                     capability: MATH_CAPABILITY,
                     text: result.text,
                     usage: result.usage,

@@ -9,7 +9,7 @@ import {
   Quaternion,
   Vector3,
 } from "three";
-import { readVector3 } from "./numeric";
+import { readVector3 } from "./model/numeric";
 
 /**
  * Renders exact plane and polygon surface primitives from validated geometry.

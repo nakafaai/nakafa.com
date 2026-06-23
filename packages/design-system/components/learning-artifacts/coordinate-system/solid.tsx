@@ -2,7 +2,7 @@
 
 import type { CoordinatePrimitive } from "@repo/math/schema/coordinate/primitive";
 import { useMemo } from "react";
-import { readScalarNumber, readVector3 } from "./numeric";
+import { readScalarNumber, readVector3 } from "./model/numeric";
 
 /**
  * Renders closed coordinate solids from compact exact primitive contracts.

@@ -1,5 +1,6 @@
 import type { CapabilityTrace } from "@repo/ai/nina/capability/spec";
 import type { NinaContextPack } from "@repo/ai/nina/memory/pack";
+import type { LearningArtifactWrite } from "@repo/ai/schema/artifact";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { Context, type Effect, Schema } from "effect";
 
@@ -23,6 +24,7 @@ export class NinaStore extends Context.Tag("NinaStore")<
   {
     readonly loadMessages: () => Effect.Effect<MyUIMessage[], NinaStoreError>;
     readonly saveAssistant: (input: {
+      readonly artifacts?: readonly LearningArtifactWrite[];
       readonly context: NinaContextPack;
       readonly responseMessage: MyUIMessage;
     }) => Effect.Effect<void, NinaStoreError>;

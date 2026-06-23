@@ -10,7 +10,7 @@ import {
   readFunctionSurfaceLines,
   readParametricCurvePoints,
   readParametricSurfaceLines,
-} from "./sample";
+} from "./model/sample";
 
 const LINE_WIDTH = 1.6;
 

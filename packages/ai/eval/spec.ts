@@ -2,6 +2,7 @@ import { Schema } from "effect";
 
 /** Stable deterministic eval targets required for Nina readiness. */
 export const EvalTargetSchema = Schema.Literal(
+  "artifact",
   "math",
   "nakafa",
   "research",

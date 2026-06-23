@@ -2,6 +2,7 @@ import { mathPrompt } from "@repo/ai/agents/math/prompt";
 import { nakafaAgentPrompt } from "@repo/ai/agents/nakafa/prompt";
 import { formatResearchOutput } from "@repo/ai/agents/research/output";
 import { researchPrompt } from "@repo/ai/agents/research/prompt";
+import { renderArtifactEval } from "@repo/ai/eval/artifact";
 import { EvalCase, EvalExpectation, EvalSuite } from "@repo/ai/eval/spec";
 import {
   CapabilityTrace,
@@ -12,6 +13,7 @@ import {
   readNinaLearningPage,
 } from "@repo/ai/nina/contract/turn";
 import type { AgentContext } from "@repo/ai/types/agents";
+import { Effect } from "effect";
 
 const context = {
   currentDate: "June 22, 2026",
@@ -21,7 +23,9 @@ const context = {
   verified: true,
 } satisfies AgentContext;
 
-/** Builds the deterministic local eval suite required before Nina readiness. */
+/**
+ * Builds the deterministic local eval suite required before Nina readiness.
+ */
 export function createNinaEvalSuite() {
   return EvalSuite.make({
     name: "nina-deterministic",
@@ -37,6 +41,24 @@ export function createNinaEvalSuite() {
           EvalExpectation.make({
             label: "requires evidence before final claims",
             includes: "If evidence is missing and can be checked",
+          }),
+        ],
+      }),
+      EvalCase.make({
+        id: "coordinate-artifact-emission",
+        target: "artifact",
+        expectations: [
+          EvalExpectation.make({
+            label: "uses data-artifact transcript part",
+            includes: "part: data-artifact",
+          }),
+          EvalExpectation.make({
+            label: "keeps payload outside transcript",
+            includes: "payload: learningArtifacts",
+          }),
+          EvalExpectation.make({
+            label: "renders coordinate artifact kind",
+            includes: "kind: coordinate-system-3d",
           }),
         ],
       }),
@@ -102,57 +124,76 @@ export function createNinaEvalSuite() {
 }
 
 const ninaEvalRenderers = {
-  math: () => mathPrompt({ context, locale: "id" }),
-  nakafa: () => nakafaAgentPrompt({ context, locale: "id" }),
+  artifact: () => renderArtifactEval(),
+  math: () => Effect.succeed(mathPrompt({ context, locale: "id" })),
+  nakafa: () => Effect.succeed(nakafaAgentPrompt({ context, locale: "id" })),
   research: () =>
-    [
-      researchPrompt({ context, locale: "id" }),
-      formatResearchOutput({
-        findings: [
-          {
-            citations: [{ title: "AI SDK", url: "https://ai-sdk.dev" }],
-            text: "AI SDK supports structured generation.",
-          },
-        ],
-        limitations: [],
-        noEvidenceAnswer: "No evidence.",
-      }),
-    ].join("\n\n"),
-  trace: () => {
-    const trace = CapabilityTrace.make({
-      capability: "math",
-      durationMs: 12,
-      endedAt: 12,
-      evidence: EvidenceEnvelope.make({
-        capability: "math",
-        status: "available",
-        summary: "deterministic evidence only",
-      }),
-      responseMessageIdentifier: "response-1",
-      startedAt: 0,
-      toolCallId: "tool-1",
-    });
-
-    return [
-      `capability: ${trace.capability}`,
-      `status: ${trace.evidence.status}`,
-      `summary: ${trace.evidence.summary}`,
-    ].join("\n");
-  },
-  turn: () => {
-    const page = createPinnedLocalePage();
-    const learning = readNinaLearningPage(page);
-
-    return [`locale: ${learning.locale}`, `url: ${learning.url}`].join("\n");
-  },
+    Effect.succeed(
+      [
+        researchPrompt({ context, locale: "id" }),
+        formatResearchOutput({
+          findings: [
+            {
+              citations: [{ title: "AI SDK", url: "https://ai-sdk.dev" }],
+              text: "AI SDK supports structured generation.",
+            },
+          ],
+          limitations: [],
+          noEvidenceAnswer: "No evidence.",
+        }),
+      ].join("\n\n")
+    ),
+  trace: () => Effect.succeed(readTraceEvalOutput()),
+  turn: () => Effect.succeed(readTurnEvalOutput()),
 };
 
-/** Renders one deterministic eval case through the relevant Module seam. */
-export function renderNinaEvalCase(testCase: EvalCase) {
-  return ninaEvalRenderers[testCase.target]();
+/**
+ * Renders one deterministic eval case through the relevant Module seam.
+ */
+export const renderNinaEvalCase = Effect.fn("eval.renderNinaCase")(function* (
+  testCase: EvalCase
+) {
+  return yield* ninaEvalRenderers[testCase.target]();
+});
+
+/**
+ * Renders the trace eval through the capability trace schema.
+ */
+function readTraceEvalOutput() {
+  const trace = CapabilityTrace.make({
+    capability: "math",
+    durationMs: 12,
+    endedAt: 12,
+    evidence: EvidenceEnvelope.make({
+      capability: "math",
+      status: "available",
+      summary: "deterministic evidence only",
+    }),
+    responseMessageIdentifier: "response-1",
+    startedAt: 0,
+    toolCallId: "tool-1",
+  });
+
+  return [
+    `capability: ${trace.capability}`,
+    `status: ${trace.evidence.status}`,
+    `summary: ${trace.evidence.summary}`,
+  ].join("\n");
 }
 
-/** Creates a turn fixture whose request locale differs from pinned learning. */
+/**
+ * Renders the pinned-locale turn eval through the Nina page contract.
+ */
+function readTurnEvalOutput() {
+  const page = createPinnedLocalePage();
+  const learning = readNinaLearningPage(page);
+
+  return [`locale: ${learning.locale}`, `url: ${learning.url}`].join("\n");
+}
+
+/**
+ * Creates a turn fixture whose request locale differs from pinned learning.
+ */
 function createPinnedLocalePage(): NinaPage {
   return {
     locale: "en",

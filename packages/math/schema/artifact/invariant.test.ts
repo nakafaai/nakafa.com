@@ -65,9 +65,9 @@ describe("learning artifact cross-field invariants", () => {
 function artifact(
   input: {
     axes?: {
-      x: readonly [ExactScalar, ExactScalar];
-      y: readonly [ExactScalar, ExactScalar];
-      z: readonly [ExactScalar, ExactScalar];
+      x: [ExactScalar, ExactScalar];
+      y: [ExactScalar, ExactScalar];
+      z: [ExactScalar, ExactScalar];
     };
     primitives?: CoordinatePrimitive[];
   } = {}
@@ -92,10 +92,7 @@ function artifact(
   });
 }
 
-function axisRange(
-  min: string,
-  max: string
-): readonly [ExactScalar, ExactScalar] {
+function axisRange(min: string, max: string): [ExactScalar, ExactScalar] {
   return [scalar(min), scalar(max)];
 }
 

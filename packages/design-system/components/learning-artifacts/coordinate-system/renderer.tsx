@@ -7,7 +7,7 @@ import type {
   CoordinateSystemArtifact,
   CoordinateSystemPayload,
 } from "@repo/math/schema/artifact/schema";
-import { readScalarNumber } from "./numeric";
+import { readScalarNumber } from "./model/numeric";
 
 const DEFAULT_AXIS_SIZE = 10;
 const MIN_AXIS_SIZE = 4;

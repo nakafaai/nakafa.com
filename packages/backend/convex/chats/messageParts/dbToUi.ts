@@ -1,7 +1,5 @@
-import {
-  LearningArtifactManifestSchema,
-  NakafaDataSchema,
-} from "@repo/ai/schema/data";
+import { LearningArtifactManifestSchema } from "@repo/ai/schema/artifact";
+import { NakafaDataSchema } from "@repo/ai/schema/data";
 import type { MyUIMessagePart } from "@repo/ai/types/message";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import {

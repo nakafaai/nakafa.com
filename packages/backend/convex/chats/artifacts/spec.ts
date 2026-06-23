@@ -1,3 +1,4 @@
+import { LEARNING_ARTIFACT_SCHEMA_VERSION as CURRENT_LEARNING_ARTIFACT_SCHEMA_VERSION } from "@repo/ai/schema/artifact";
 import { COORDINATE_SYSTEM_ARTIFACT_KIND } from "@repo/math/schema/artifact/schema";
 import {
   MATH_AST_BINARY_OPERATOR_VALUES,
@@ -8,14 +9,9 @@ import { COORDINATE_AXIS_VALUES } from "@repo/math/schema/coordinate/primitive";
 import { type Infer, v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
-/** Current durable payload version for coordinate learning artifacts. */
-export const LEARNING_ARTIFACT_SCHEMA_VERSION = 1;
-
-/** Maximum title bytes retained in chat transcript artifact manifests. */
-export const MAX_LEARNING_ARTIFACT_MANIFEST_TITLE_LENGTH = 180;
-
-/** Maximum description bytes retained in chat transcript artifact manifests. */
-export const MAX_LEARNING_ARTIFACT_MANIFEST_DESCRIPTION_LENGTH = 500;
+/** Durable artifact payload schema version mirrored from the AI domain schema. */
+export const LEARNING_ARTIFACT_SCHEMA_VERSION =
+  CURRENT_LEARNING_ARTIFACT_SCHEMA_VERSION;
 
 /** Durable artifact ids are globally unique logical keys, not Convex row ids. */
 export const learningArtifactIdValidator = v.string();

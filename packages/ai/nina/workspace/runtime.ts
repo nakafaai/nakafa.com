@@ -9,6 +9,7 @@ import {
   type EvidenceWorkspaceLimitExceeded,
   WorkspaceEvidenceEnvelope,
 } from "@repo/ai/nina/workspace/schema";
+import type { LearningArtifact } from "@repo/math/schema/artifact/schema";
 import { Clock, Context, Effect, Ref } from "effect";
 
 /**
@@ -25,6 +26,7 @@ export class NinaWorkspaceRuntime extends Context.Tag("NinaWorkspaceRuntime")<
       CapabilityContribution,
       EvidenceWorkspaceDecodeError | EvidenceWorkspaceLimitExceeded
     >;
+    readonly readArtifacts: () => Effect.Effect<readonly LearningArtifact[]>;
     readonly readProjection: () => Effect.Effect<string | undefined>;
     readonly readWorkspace: () => Effect.Effect<EvidenceWorkspace>;
   }
@@ -59,6 +61,8 @@ export const createNinaWorkspaceRuntime = Effect.fn(
           return contribution;
         })
       ),
+    readArtifacts: () =>
+      Ref.get(state).pipe(Effect.map(readWorkspaceArtifacts)),
     readProjection: () =>
       Ref.get(state).pipe(Effect.map(formatEvidenceWorkspaceProjection)),
     readWorkspace: () => Ref.get(state),
@@ -70,6 +74,7 @@ export const createNinaWorkspaceRuntime = Effect.fn(
  */
 function createContributionFromResult(result: LearningCapabilityResult) {
   return CapabilityContribution.make({
+    ...(result.artifacts?.length ? { artifacts: [...result.artifacts] } : {}),
     capability: result.evidence.capability,
     evidence: WorkspaceEvidenceEnvelope.make({
       capability: result.evidence.capability,
@@ -82,6 +87,22 @@ function createContributionFromResult(result: LearningCapabilityResult) {
     }),
     modelSummary: readModelSummary(result),
   });
+}
+
+/**
+ * Flattens retained artifact payloads for durable persistence.
+ */
+function readWorkspaceArtifacts(workspace: EvidenceWorkspace) {
+  const artifacts: LearningArtifact[] = [];
+
+  for (const contribution of workspace.contributions) {
+    if (!contribution.artifacts) {
+      continue;
+    }
+    artifacts.push(...contribution.artifacts);
+  }
+
+  return artifacts;
 }
 
 /**

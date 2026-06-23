@@ -5,7 +5,7 @@ import {
   evaluateRenderedCase,
   runEvalSuite,
 } from "@repo/ai/eval/runner";
-import { EvalCase, EvalExpectation } from "@repo/ai/eval/spec";
+import { EvalCase, EvalExpectation, EvalRunError } from "@repo/ai/eval/spec";
 import { createNinaEvalSuite, renderNinaEvalCase } from "@repo/ai/eval/suites";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
@@ -16,15 +16,28 @@ describe("nina deterministic eval suite", () => {
     const run = await Effect.runPromise(
       runEvalSuite(suite).pipe(
         Effect.provideService(EvalRenderer, {
-          render: (testCase) => Effect.succeed(renderNinaEvalCase(testCase)),
+          render: (testCase) =>
+            renderNinaEvalCase(testCase).pipe(
+              Effect.mapError(
+                (error) =>
+                  new EvalRunError({
+                    caseId: testCase.id,
+                    message:
+                      error instanceof Error
+                        ? error.message
+                        : "Unable to render deterministic Nina eval case.",
+                  })
+              )
+            ),
         })
       )
     );
 
     expect(run.suite).toBe("nina-deterministic");
-    expect(run.results).toHaveLength(5);
+    expect(run.results).toHaveLength(6);
     expect(run.results).toEqual(
       expect.arrayContaining([
+        expect.objectContaining({ id: "coordinate-artifact-emission" }),
         expect.objectContaining({ id: "math-deterministic-first" }),
         expect.objectContaining({ id: "nakafa-evidence-boundary" }),
         expect.objectContaining({ id: "research-source-boundary" }),

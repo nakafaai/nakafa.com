@@ -1,20 +1,19 @@
-import type { LearningArtifactManifest } from "@repo/ai/schema/data";
+import {
+  buildLearningArtifactManifest,
+  isSameLearningArtifactManifest,
+  type LearningArtifactManifest,
+  LearningArtifactManifestSchema,
+} from "@repo/ai/schema/artifact";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { MAX_CHAT_MESSAGE_PARTS } from "@repo/backend/convex/chats/constants";
 import type { partValidator } from "@repo/backend/convex/chats/schema";
-import {
-  MAX_COORDINATE_ARTIFACT_BYTES,
-  MAX_COORDINATE_ARTIFACT_PRIMITIVES,
-} from "@repo/math/schema/artifact/safety";
-import type { LearningArtifact } from "@repo/math/schema/artifact/schema";
 import {
   decodeLearningArtifact,
   LearningArtifactSchema,
 } from "@repo/math/schema/artifact/schema";
 import { ConvexError, type Infer } from "convex/values";
 import { Effect, Schema } from "effect";
-import { buildLearningArtifactManifest, isSameManifest } from "./manifest";
 import { readStoredPayload } from "./material";
 import {
   LEARNING_ARTIFACT_SCHEMA_VERSION,
@@ -24,6 +23,7 @@ import {
 type PersistedPartInput = Omit<Infer<typeof partValidator>, "messageId">;
 const DecodedLearningArtifactWriteSchema = Schema.Struct({
   artifact: LearningArtifactSchema,
+  manifest: LearningArtifactManifestSchema,
   partOrder: Schema.Number.pipe(Schema.int(), Schema.nonNegative()),
 });
 type DecodedLearningArtifactWrite = Schema.Schema.Type<
@@ -51,9 +51,19 @@ export const decodeArtifactWrites = Effect.fn(
           })
       )
     );
+    const manifest = yield* buildLearningArtifactManifest(artifact).pipe(
+      Effect.mapError(
+        (error) =>
+          new ConvexError({
+            code: "LEARNING_ARTIFACT_MANIFEST_INVALID",
+            message: error.message,
+          })
+      )
+    );
     decoded.push(
       DecodedLearningArtifactWriteSchema.make({
         artifact,
+        manifest,
         partOrder: artifactInput.partOrder,
       })
     );
@@ -88,11 +98,14 @@ export async function insertArtifactsForMessage(
   const artifactIds: Id<"learningArtifacts">[] = [];
   for (const artifactInput of artifacts) {
     const artifact = artifactInput.artifact;
-    const payloadBytes = readArtifactPayloadBytes(artifact);
-    const manifest = buildLearningArtifactManifest(artifact, payloadBytes);
     const storedManifest = manifestByOrder.get(artifactInput.partOrder);
 
-    if (!(storedManifest && isSameManifest(storedManifest, manifest))) {
+    if (
+      !(
+        storedManifest &&
+        isSameLearningArtifactManifest(storedManifest, artifactInput.manifest)
+      )
+    ) {
       throw new ConvexError({
         code: "LEARNING_ARTIFACT_MANIFEST_MISMATCH",
         message:
@@ -111,7 +124,7 @@ export async function insertArtifactsForMessage(
         messageId,
         partOrder: artifactInput.partOrder,
         payload: readStoredPayload(artifact),
-        payloadBytes,
+        payloadBytes: artifactInput.manifest.payloadBytes,
         primitiveCount: artifact.payload.primitives.length,
         proofAnchors: artifact.proofAnchors,
         schemaVersion: LEARNING_ARTIFACT_SCHEMA_VERSION,
@@ -214,30 +227,6 @@ function assertArtifactManifestCoverage(
       });
     }
   }
-}
-
-/**
- * Computes the durable payload byte budget after deterministic decoding.
- */
-function readArtifactPayloadBytes(artifact: LearningArtifact) {
-  const payloadBytes = new TextEncoder().encode(
-    JSON.stringify(artifact)
-  ).byteLength;
-  if (payloadBytes > MAX_COORDINATE_ARTIFACT_BYTES) {
-    throw new ConvexError({
-      code: "LEARNING_ARTIFACT_LIMIT_EXCEEDED",
-      message: "Learning artifact exceeds the supported payload byte budget.",
-    });
-  }
-
-  if (artifact.payload.primitives.length > MAX_COORDINATE_ARTIFACT_PRIMITIVES) {
-    throw new ConvexError({
-      code: "LEARNING_ARTIFACT_LIMIT_EXCEEDED",
-      message: "Learning artifact exceeds the supported primitive budget.",
-    });
-  }
-
-  return payloadBytes;
 }
 
 /**

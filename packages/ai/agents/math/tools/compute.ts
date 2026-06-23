@@ -1,6 +1,13 @@
 import { formatMathData } from "@repo/ai/agents/math/format";
+import { emitLearningArtifacts } from "@repo/ai/agents/math/tools/artifact";
+import {
+  readCoordinateArtifactId,
+  readCoordinateProofAnchor,
+} from "@repo/ai/agents/math/tools/identity";
 import { createPrompt } from "@repo/ai/prompt/utils";
 import type { MyUIMessage } from "@repo/ai/types/message";
+import { deriveCoordinateArtifactsFromMathData } from "@repo/math/artifact/derive";
+import type { LearningArtifact } from "@repo/math/schema/artifact/schema";
 import type { MathData } from "@repo/math/schema/data";
 import type { MathRequest } from "@repo/math/schema/request";
 import { MathToolInputSchema } from "@repo/math/schema/tool-input";
@@ -11,7 +18,9 @@ import { Effect, Either, ParseResult, Schema } from "effect";
 const invalidMathInputError = "invalid_math_input";
 const mathCheckUnavailableError = "math_check_unavailable";
 
-/** Gives the model actionable recovery guidance without exposing raw failures. */
+/**
+ * Gives the model actionable recovery guidance without exposing raw failures.
+ */
 function recoveryMessage(message: string) {
   if (message.includes("Variable is required when multiple symbols")) {
     return createPrompt({
@@ -36,12 +45,16 @@ function recoveryMessage(message: string) {
   });
 }
 
-/** Formats schema validation errors for model-facing recovery decisions. */
+/**
+ * Formats schema validation errors for model-facing recovery decisions.
+ */
 function formatDecodeError(error: ParseResult.ParseError) {
   return ParseResult.TreeFormatter.formatErrorSync(error);
 }
 
-/** Gives the model a concrete retry path for invalid tool arguments. */
+/**
+ * Gives the model a concrete retry path for invalid tool arguments.
+ */
 function decodeRecoveryMessage(message: string) {
   if (message.includes("Expected bounded system solves")) {
     return createPrompt({
@@ -72,13 +85,19 @@ function decodeRecoveryMessage(message: string) {
   return "Ask the user for the exact missing expression or data in their language.";
 }
 
-/** Runs one deterministic math request and writes the math evidence data part. */
+/**
+ * Runs one deterministic math request and writes the math evidence data part.
+ */
 export const compute = Effect.fn("math.compute")(function* ({
   input,
+  recordArtifacts,
   toolCallId,
   writer,
 }: {
   readonly input: unknown;
+  readonly recordArtifacts?: (
+    artifacts: readonly LearningArtifact[]
+  ) => Effect.Effect<void>;
   readonly toolCallId: string;
   readonly writer: UIMessageStreamWriter<MyUIMessage>;
 }) {
@@ -150,6 +169,16 @@ export const compute = Effect.fn("math.compute")(function* ({
       type: "data-math",
     })
   );
+  const artifacts = yield* deriveCoordinateArtifactsFromMathData({
+    artifactId: readCoordinateArtifactId(toolCallId),
+    data,
+    proofAnchor: readCoordinateProofAnchor(toolCallId),
+  });
+  yield* emitLearningArtifacts({
+    artifacts,
+    recordArtifacts,
+    writer,
+  });
 
   return formatMathData(data);
 });

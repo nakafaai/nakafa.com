@@ -1,6 +1,6 @@
+import { buildLearningArtifactManifest } from "@repo/ai/schema/artifact";
 import { api, internal } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { buildLearningArtifactManifest } from "@repo/backend/convex/chats/artifacts/manifest";
 import type { LearningArtifactWrite } from "@repo/backend/convex/chats/artifacts/spec";
 import { mapDBPartToUIMessagePart } from "@repo/backend/convex/chats/messageParts/dbToUi";
 import type { partValidator } from "@repo/backend/convex/chats/schema";
@@ -134,10 +134,7 @@ describe("chats/artifacts/internal", () => {
 
 async function createManifest(input: unknown) {
   const artifact = await Effect.runPromise(decodeLearningArtifact(input));
-  const payloadBytes = new TextEncoder().encode(
-    JSON.stringify(artifact)
-  ).byteLength;
-  return buildLearningArtifactManifest(artifact, payloadBytes);
+  return Effect.runPromise(buildLearningArtifactManifest(artifact));
 }
 
 async function seedArtifactMessage(

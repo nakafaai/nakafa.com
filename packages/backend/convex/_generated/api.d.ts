@@ -65,7 +65,6 @@ import type * as chats_actions from "../chats/actions.js";
 import type * as chats_artifacts_delete from "../chats/artifacts/delete.js";
 import type * as chats_artifacts_integrity from "../chats/artifacts/integrity.js";
 import type * as chats_artifacts_internal from "../chats/artifacts/internal.js";
-import type * as chats_artifacts_manifest from "../chats/artifacts/manifest.js";
 import type * as chats_artifacts_material from "../chats/artifacts/material.js";
 import type * as chats_artifacts_queries from "../chats/artifacts/queries.js";
 import type * as chats_artifacts_read from "../chats/artifacts/read.js";
@@ -456,7 +455,6 @@ declare const fullApi: ApiFromModules<{
   "chats/artifacts/delete": typeof chats_artifacts_delete;
   "chats/artifacts/integrity": typeof chats_artifacts_integrity;
   "chats/artifacts/internal": typeof chats_artifacts_internal;
-  "chats/artifacts/manifest": typeof chats_artifacts_manifest;
   "chats/artifacts/material": typeof chats_artifacts_material;
   "chats/artifacts/queries": typeof chats_artifacts_queries;
   "chats/artifacts/read": typeof chats_artifacts_read;

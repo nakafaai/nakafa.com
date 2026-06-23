@@ -1,3 +1,4 @@
+import { LearningArtifactManifestSchema } from "@repo/ai/schema/artifact";
 import { NakafaAgentExerciseOptionsSchema } from "@repo/contents/_lib/agent/schema/exercise";
 import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agent/schema/quran";
 import { NakafaAgentReadOptionsSchema } from "@repo/contents/_lib/agent/schema/read";
@@ -11,13 +12,6 @@ import {
   NakafaAgentSearchResultSchema,
 } from "@repo/contents/_lib/agent/schema/search";
 import { NakafaAgentTaxonomyOptionsSchema } from "@repo/contents/_lib/agent/schema/taxonomy";
-import {
-  MAX_COORDINATE_ARTIFACT_BYTES,
-  MAX_COORDINATE_ARTIFACT_PRIMITIVES,
-  MAX_LEARNING_ARTIFACT_ID_LENGTH,
-} from "@repo/math/schema/artifact/safety";
-import { COORDINATE_SYSTEM_ARTIFACT_KIND } from "@repo/math/schema/artifact/schema";
-import { MAX_MATH_AST_DISPLAY_LENGTH } from "@repo/math/schema/ast/schema";
 import { MathDataSchema } from "@repo/math/schema/data";
 import { locales } from "@repo/utilities/locales";
 import { Schema } from "effect";
@@ -32,45 +26,6 @@ const ReadInputSchema = NakafaAgentReadOptionsSchema;
 const ExerciseInputSchema = NakafaAgentExerciseOptionsSchema;
 const QuranInputSchema = NakafaAgentQuranReferenceOptionsSchema;
 const TaxonomyInputSchema = NakafaAgentTaxonomyOptionsSchema;
-const LearningArtifactManifestTitleSchema = Schema.NonEmptyString.pipe(
-  Schema.maxLength(180)
-);
-const LearningArtifactManifestDescriptionSchema = Schema.String.pipe(
-  Schema.maxLength(500)
-);
-const LearningArtifactManifestScalarSchema = Schema.String.pipe(
-  Schema.maxLength(MAX_MATH_AST_DISPLAY_LENGTH)
-);
-
-const LearningArtifactManifestAxisBoundsSchema = Schema.Struct({
-  max: LearningArtifactManifestScalarSchema,
-  min: LearningArtifactManifestScalarSchema,
-}).pipe(Schema.mutable);
-
-/** Lightweight chat transcript pointer to a durable learning artifact payload. */
-export const LearningArtifactManifestSchema = Schema.Struct({
-  artifactId: Schema.NonEmptyString.pipe(
-    Schema.pattern(/\S/),
-    Schema.maxLength(MAX_LEARNING_ARTIFACT_ID_LENGTH)
-  ),
-  bounds: Schema.Struct({
-    x: LearningArtifactManifestAxisBoundsSchema,
-    y: LearningArtifactManifestAxisBoundsSchema,
-    z: LearningArtifactManifestAxisBoundsSchema,
-  }).pipe(Schema.mutable),
-  description: Schema.optional(LearningArtifactManifestDescriptionSchema),
-  kind: Schema.Literal(COORDINATE_SYSTEM_ARTIFACT_KIND),
-  payloadBytes: Schema.Number.pipe(
-    Schema.int(),
-    Schema.between(1, MAX_COORDINATE_ARTIFACT_BYTES)
-  ),
-  primitiveCount: Schema.Number.pipe(
-    Schema.int(),
-    Schema.between(1, MAX_COORDINATE_ARTIFACT_PRIMITIVES)
-  ),
-  schemaVersion: Schema.Literal(1),
-  title: LearningArtifactManifestTitleSchema,
-}).pipe(Schema.mutable);
 
 const ExercisePreviewSchema = NakafaAgentContentRefSchema.pipe(
   Schema.extend(
@@ -278,7 +233,4 @@ export const DataPartSchema = Schema.Struct({
 }).pipe(Schema.mutable);
 
 export type DataPart = Schema.Schema.Type<typeof DataPartSchema>;
-export type LearningArtifactManifest = Schema.Schema.Type<
-  typeof LearningArtifactManifestSchema
->;
 export type NakafaDataPart = Schema.Schema.Type<typeof NakafaDataSchema>;

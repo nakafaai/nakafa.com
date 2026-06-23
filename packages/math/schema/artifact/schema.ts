@@ -31,9 +31,11 @@ const ProofAnchorSchema = Schema.NonEmptyString.pipe(
   description: "Bounded nonblank reference to deterministic artifact proof.",
 });
 
-const AxisRangeSchema = Schema.Tuple(ExactScalar, ExactScalar).annotations({
-  description: "Exact inclusive axis range for renderer framing.",
-});
+const AxisRangeSchema = Schema.Tuple(ExactScalar, ExactScalar)
+  .pipe(Schema.mutable)
+  .annotations({
+    description: "Exact inclusive axis range for renderer framing.",
+  });
 
 /** Deterministic coordinate system payload for educational 3D rendering. */
 export class CoordinateSystemPayload extends Schema.Class<CoordinateSystemPayload>(

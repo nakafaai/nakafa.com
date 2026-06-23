@@ -18,20 +18,17 @@ export function readParametricCurvePoints(
   spec: CanonicalVectorFunctionSpec,
   sampling: RenderSamplingPolicy
 ) {
-  const domain = spec.domain[0];
-  if (!domain) {
-    return [];
-  }
-
   const points: Vector3[] = [];
-  for (const value of readDomainSamples(
-    domain,
-    readCurveSampleCount(sampling)
-  )) {
-    const variables = new Map([[domain.variable, value]]);
-    const point = readVectorFunctionPoint(spec, variables);
-    if (point) {
-      points.push(point);
+  for (const domain of spec.domain.slice(0, 1)) {
+    for (const value of readDomainSamples(
+      domain,
+      readCurveSampleCount(sampling)
+    )) {
+      const variables = new Map([[domain.variable, value]]);
+      const point = readVectorFunctionPoint(spec, variables);
+      if (point) {
+        points.push(point);
+      }
     }
   }
 

@@ -32,6 +32,7 @@ import { gatewayProviderOptions } from "@repo/ai/config/routing";
 import { subAgentGenerationTimeout } from "@repo/ai/config/timeouts";
 import { textOutputSchema } from "@repo/ai/schema/tools";
 import type { MathAgentParams } from "@repo/ai/types/agents";
+import type { LearningArtifact } from "@repo/math/schema/artifact/schema";
 import { mathOperations } from "@repo/math/schema/operations";
 import { MathService } from "@repo/math/service";
 import { generateText, stepCountIs, tool } from "ai";
@@ -53,6 +54,15 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
   context,
   writer,
 }: MathAgentParams) {
+  const artifacts: LearningArtifact[] = [];
+  /**
+   * Retains full payloads until the Nina workspace/store can persist them.
+   */
+  const recordArtifacts = (nextArtifacts: readonly LearningArtifact[]) =>
+    Effect.sync(() => {
+      artifacts.push(...nextArtifacts);
+    });
+
   const result = yield* Effect.tryPromise({
     try: () =>
       generateText({
@@ -82,6 +92,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
               Effect.runPromise(
                 compute({
                   input,
+                  recordArtifacts,
                   toolCallId,
                   writer,
                 }).pipe(Effect.provide(MathService.Default))
@@ -95,6 +106,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
               Effect.runPromise(
                 compute({
                   input,
+                  recordArtifacts,
                   toolCallId,
                   writer,
                 }).pipe(Effect.provide(MathService.Default))
@@ -108,6 +120,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
               Effect.runPromise(
                 compute({
                   input,
+                  recordArtifacts,
                   toolCallId,
                   writer,
                 }).pipe(Effect.provide(MathService.Default))
@@ -121,6 +134,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
               Effect.runPromise(
                 compute({
                   input,
+                  recordArtifacts,
                   toolCallId,
                   writer,
                 }).pipe(Effect.provide(MathService.Default))
@@ -134,6 +148,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
               Effect.runPromise(
                 compute({
                   input,
+                  recordArtifacts,
                   toolCallId,
                   writer,
                 }).pipe(Effect.provide(MathService.Default))
@@ -147,6 +162,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
               Effect.runPromise(
                 compute({
                   input,
+                  recordArtifacts,
                   toolCallId,
                   writer,
                 }).pipe(Effect.provide(MathService.Default))
@@ -160,6 +176,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
               Effect.runPromise(
                 compute({
                   input,
+                  recordArtifacts,
                   toolCallId,
                   writer,
                 }).pipe(Effect.provide(MathService.Default))
@@ -173,6 +190,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
               Effect.runPromise(
                 compute({
                   input,
+                  recordArtifacts,
                   toolCallId,
                   writer,
                 }).pipe(Effect.provide(MathService.Default))
@@ -186,6 +204,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
               Effect.runPromise(
                 compute({
                   input,
+                  recordArtifacts,
                   toolCallId,
                   writer,
                 }).pipe(Effect.provide(MathService.Default))
@@ -199,6 +218,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
               Effect.runPromise(
                 compute({
                   input,
+                  recordArtifacts,
                   toolCallId,
                   writer,
                 }).pipe(Effect.provide(MathService.Default))
@@ -212,6 +232,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
   });
 
   return {
+    artifacts,
     text: result.text,
     usage: result.totalUsage,
   };

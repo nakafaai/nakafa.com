@@ -4,7 +4,7 @@ import { Line } from "@react-three/drei";
 import type { CoordinatePrimitive } from "@repo/math/schema/coordinate/primitive";
 import { useMemo } from "react";
 import { Vector3 } from "three";
-import { readVector3 } from "./numeric";
+import { readVector3 } from "./model/numeric";
 
 const POINT_RADIUS = 0.14;
 const LINE_WIDTH = 2;

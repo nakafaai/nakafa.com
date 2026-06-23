@@ -1,5 +1,6 @@
 import {
   EvidenceStatusSchema,
+  LEARNING_CAPABILITY_ARTIFACT_LIMIT,
   LearningCapabilityNameSchema,
 } from "@repo/ai/nina/capability/spec";
 import { PedagogyMove } from "@repo/ai/nina/pedagogy/schema";
@@ -14,7 +15,8 @@ import {
 import { Effect, Schema } from "effect";
 
 export const EVIDENCE_WORKSPACE_CONTRIBUTION_LIMIT = 20;
-export const EVIDENCE_CONTRIBUTION_ARTIFACT_LIMIT = 3;
+export const EVIDENCE_CONTRIBUTION_ARTIFACT_LIMIT =
+  LEARNING_CAPABILITY_ARTIFACT_LIMIT;
 export const EVIDENCE_WORKSPACE_ARTIFACT_LIMIT = 8;
 export const EVIDENCE_CONTRIBUTION_ARTIFACT_BYTES =
   MAX_COORDINATE_ARTIFACT_BYTES * 2;

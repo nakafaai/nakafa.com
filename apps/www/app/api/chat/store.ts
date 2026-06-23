@@ -6,6 +6,7 @@ import {
 } from "@repo/ai/nina/capability/spec";
 import type { NinaStore } from "@repo/ai/nina/runtime/store";
 import { NinaStoreError } from "@repo/ai/nina/runtime/store";
+import type { LearningArtifactWrite } from "@repo/ai/schema/artifact";
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { mapUIMessagePartsToDBParts } from "@repo/backend/convex/chats/messageParts/uiToDb";
@@ -43,9 +44,10 @@ export function createNinaStore({
             })
         )
       ),
-    saveAssistant: ({ context, responseMessage }) =>
+    saveAssistant: ({ artifacts, context, responseMessage }) =>
       Effect.sync(() => {
         const tokenData = responseMessage.metadata?.tokens;
+        const artifactWrites = readArtifactWrites(artifacts);
 
         waitUntil(
           Effect.runPromise(
@@ -64,6 +66,7 @@ export function createNinaStore({
                     role: responseMessage.role,
                     totalTokens: tokenData?.total ?? 0,
                   },
+                  ...(artifactWrites ? { artifacts: artifactWrites } : {}),
                   parts: mapUIMessagePartsToDBParts({
                     messageParts: responseMessage.parts,
                   }),
@@ -132,4 +135,17 @@ export function createNinaStore({
         );
       }),
   };
+}
+
+/**
+ * Materializes optional artifact writes for the Convex action boundary.
+ */
+function readArtifactWrites(
+  artifacts: readonly LearningArtifactWrite[] | undefined
+) {
+  if (!artifacts || artifacts.length === 0) {
+    return;
+  }
+
+  return [...artifacts];
 }

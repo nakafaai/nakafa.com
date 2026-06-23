@@ -3,6 +3,8 @@ import {
   EvidenceEnvelope,
   LearningCapabilityResult,
 } from "@repo/ai/nina/capability/spec";
+import { deriveCoordinateArtifactsFromMathData } from "@repo/math/artifact/derive";
+import type { MathData } from "@repo/math/schema/data";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 import { createNinaWorkspaceRuntime } from "./runtime";
@@ -40,7 +42,7 @@ describe("nina/workspace/runtime", () => {
   });
 
   it("projects appended evidence for later model steps", async () => {
-    const projection = await Effect.runPromise(
+    const result = await Effect.runPromise(
       Effect.gen(function* () {
         const runtime = yield* createNinaWorkspaceRuntime({
           turnId: "turn-runtime-projection",
@@ -54,12 +56,56 @@ describe("nina/workspace/runtime", () => {
           })
         );
 
-        return yield* runtime.readProjection();
+        return {
+          artifacts: yield* runtime.readArtifacts(),
+          projection: yield* runtime.readProjection(),
+        };
       })
     );
 
-    expect(projection).toContain("Capability: math");
-    expect(projection).toContain("Math verified slope 2 and y-intercept 1.");
+    expect(result.artifacts).toEqual([]);
+    expect(result.projection).toContain("Capability: math");
+    expect(result.projection).toContain(
+      "Math verified slope 2 and y-intercept 1."
+    );
+  });
+
+  it("retains full artifact payloads for persistence while projecting ids only", async () => {
+    const result = await Effect.runPromise(
+      Effect.gen(function* () {
+        const [artifact] = yield* deriveCoordinateArtifactsFromMathData({
+          artifactId: "artifact-runtime-1",
+          data: mathData(),
+          proofAnchor: "math:tool-call",
+        });
+        if (!artifact) {
+          return { artifacts: [], projection: undefined };
+        }
+
+        const runtime = yield* createNinaWorkspaceRuntime({
+          turnId: "turn-runtime-artifact",
+        });
+
+        yield* runtime.appendResult(
+          capabilityResult({
+            artifacts: [artifact],
+            capability: "math",
+            status: "available",
+            text: "Math derived a coordinate artifact.",
+          })
+        );
+
+        return {
+          artifacts: yield* runtime.readArtifacts(),
+          projection: yield* runtime.readProjection(),
+        };
+      })
+    );
+
+    expect(result.artifacts).toHaveLength(1);
+    expect(result.artifacts[0]?.id).toBe("artifact-runtime-1");
+    expect(result.projection).toContain("Artifacts: artifact-runtime-1");
+    expect(result.projection).not.toContain("primitives");
   });
 
   it("uses text or status fallback when capability summaries are blank", async () => {
@@ -98,3 +144,37 @@ describe("nina/workspace/runtime", () => {
     expect(projection).toContain("math returned failed evidence.");
   });
 });
+
+/** Builds verified coordinate evidence used by workspace artifact tests. */
+function mathData(): MathData {
+  const input = {
+    kind: "math",
+    operation: "line",
+    points: [
+      { x: "0", y: "1" },
+      { x: "4", y: "3" },
+    ],
+  } satisfies MathData["input"];
+
+  return {
+    input,
+    kind: "line",
+    result: {
+      conditions: [],
+      input,
+      items: [],
+      kind: "line",
+      operation: "line",
+      primary: {
+        expression: "line through points",
+        latex: "line",
+      },
+      reason: "CAS verified the coordinate geometry result.",
+      stepStatus: "complete",
+      steps: [],
+      status: "verified",
+    },
+    status: "verified",
+    summary: "verified",
+  };
+}

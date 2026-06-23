@@ -5,15 +5,11 @@ import {
 } from "@repo/ai/nina/capability/spec";
 import type { NinaReporter } from "@repo/ai/nina/runtime/report";
 import { createPrompt } from "@repo/ai/prompt/utils";
+import type { LearningArtifact } from "@repo/math/schema/artifact/schema";
 import type { LogContext } from "@repo/utilities/logging/types";
 import type { LanguageModelUsage } from "ai";
-import type { Context, Effect as EffectType } from "effect";
+import type { Context } from "effect";
 import { Effect, Option, Schema } from "effect";
-
-type AddUsage = (
-  component: LearningCapabilityName,
-  usage: LanguageModelUsage
-) => EffectType.Effect<void>;
 
 const maxEvidenceSummaryCharacters = 1200;
 
@@ -25,14 +21,18 @@ class SpecialistUnknownFailure extends Schema.TaggedError<SpecialistUnknownFailu
   }
 ) {}
 
-/** Builds the common model-facing result for one LearningCapability execution. */
+/**
+ * Builds the common model-facing result for one LearningCapability execution.
+ */
 export function capabilityResult({
+  artifacts,
   capability,
   limitations,
   refs,
   status,
   text,
 }: {
+  readonly artifacts?: readonly LearningArtifact[];
   readonly capability: LearningCapabilityName;
   readonly limitations?: readonly string[];
   readonly refs?: readonly string[];
@@ -40,6 +40,7 @@ export function capabilityResult({
   readonly text: string;
 }) {
   return LearningCapabilityResult.make({
+    ...(artifacts?.length ? { artifacts: [...artifacts] } : {}),
     evidence: EvidenceEnvelope.make({
       capability,
       ...(limitations ? { limitations: [...limitations] } : {}),
@@ -51,7 +52,9 @@ export function capabilityResult({
   });
 }
 
-/** Keeps persisted capability evidence useful without storing raw transcripts. */
+/**
+ * Keeps persisted capability evidence useful without storing raw transcripts.
+ */
 function summarizeCapabilityEvidence(text: string) {
   if (text.length <= maxEvidenceSummaryCharacters) {
     return text;
@@ -60,12 +63,16 @@ function summarizeCapabilityEvidence(text: string) {
   return `${text.slice(0, maxEvidenceSummaryCharacters - 3)}...`;
 }
 
-/** Converts completed LearningCapability evidence into the chat tool result shape. */
+/**
+ * Converts completed LearningCapability evidence into the chat tool result shape.
+ */
 export function specialistSuccess({
+  artifacts,
   capability,
   text,
   usage,
 }: {
+  readonly artifacts?: readonly LearningArtifact[];
   readonly capability: LearningCapabilityName;
   readonly text: string;
   readonly usage: LanguageModelUsage;
@@ -73,6 +80,7 @@ export function specialistSuccess({
   return {
     ...capabilityResult({
       capability,
+      artifacts,
       status: "available",
       text,
     }),
@@ -80,7 +88,9 @@ export function specialistSuccess({
   };
 }
 
-/** Records specialist usage only when the model returned real usage data. */
+/**
+ * Records specialist usage only when the model returned real usage data.
+ */
 export const recordSpecialistUsage = Effect.fn("nina.specialist.usage")(
   function* ({
     addUsage,
@@ -88,7 +98,10 @@ export const recordSpecialistUsage = Effect.fn("nina.specialist.usage")(
     logContext,
     result,
   }: {
-    readonly addUsage: AddUsage;
+    readonly addUsage: (
+      component: LearningCapabilityName,
+      usage: LanguageModelUsage
+    ) => Effect.Effect<void>;
     readonly component: LearningCapabilityName;
     readonly logContext: LogContext;
     readonly result: ReturnType<typeof specialistSuccess>;
@@ -111,7 +124,9 @@ export const recordSpecialistUsage = Effect.fn("nina.specialist.usage")(
   }
 );
 
-/** Turns a specialist failure into model-facing recovery evidence. */
+/**
+ * Turns a specialist failure into model-facing recovery evidence.
+ */
 export const recoverSpecialistFailure = Effect.fn("nina.specialist.recover")(
   function* ({
     component,
@@ -142,7 +157,9 @@ export const recoverSpecialistFailure = Effect.fn("nina.specialist.recover")(
   }
 );
 
-/** Normalizes unknown thrown values into structured diagnostics for logs. */
+/**
+ * Normalizes unknown thrown values into structured diagnostics for logs.
+ */
 function normalizeError(error: unknown) {
   if (error instanceof Error) {
     return error;
@@ -151,7 +168,9 @@ function normalizeError(error: unknown) {
   return new SpecialistUnknownFailure({ message: String(error) });
 }
 
-/** Builds a compact model-facing status for a failed LearningCapability call. */
+/**
+ * Builds a compact model-facing status for a failed LearningCapability call.
+ */
 function formatSpecialistFailure(component: LearningCapabilityName) {
   return createPrompt({
     taskContext: [
