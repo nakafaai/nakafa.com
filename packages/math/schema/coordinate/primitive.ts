@@ -4,13 +4,8 @@ import {
   MathAst,
   MathVariableNameSchema,
 } from "@repo/math/schema/ast/schema";
+import { literalValues } from "@repo/utilities/literals";
 import { Schema } from "effect";
-
-function literalValues<const Values extends readonly [string, ...string[]]>(
-  ...values: Values
-) {
-  return values;
-}
 
 export const COORDINATE_AXIS_VALUES = literalValues("x", "y", "z");
 

@@ -976,6 +976,9 @@ importers:
 
   packages/math:
     dependencies:
+      '@repo/utilities':
+        specifier: workspace:*
+        version: link:../utilities
       '@t3-oss/env-core':
         specifier: ^0.13.11
         version: 0.13.11(typescript@6.0.3)(zod@4.4.3)

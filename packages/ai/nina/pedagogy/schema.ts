@@ -1,10 +1,5 @@
+import { literalValues } from "@repo/utilities/literals";
 import { Schema } from "effect";
-
-function literalValues<const Values extends readonly [string, ...string[]]>(
-  ...values: Values
-) {
-  return values;
-}
 
 export const PEDAGOGY_MOVE_KIND_VALUES = literalValues(
   "scaffold",

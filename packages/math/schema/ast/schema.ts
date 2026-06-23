@@ -1,11 +1,6 @@
 import { findMathAstGraphIssue } from "@repo/math/schema/ast/graph";
+import { literalValues } from "@repo/utilities/literals";
 import { Effect, Schema } from "effect";
-
-function literalValues<const Values extends readonly [string, ...string[]]>(
-  ...values: Values
-) {
-  return values;
-}
 
 export const MATH_VARIABLE_NAME_VALUES = literalValues(
   "x",
