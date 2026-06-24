@@ -20,6 +20,7 @@ import type { CreditTransactionMetadata } from "@repo/backend/convex/credits/sch
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
+import { deleteMathWorkForResponseIdentifier } from "@repo/backend/convex/math/cleanup";
 import { ConvexError, v } from "convex/values";
 
 /** Creates a new chat for the authenticated user. */
@@ -396,6 +397,19 @@ export const saveAssistantFailure = internalMutation({
       message.chatId,
       message.identifier
     );
+    const mathWorkBatch = await deleteMathWorkForResponseIdentifier(
+      ctx,
+      message.chatId,
+      message.identifier
+    );
+
+    if (mathWorkBatch.hasMore) {
+      throw new ConvexError({
+        code: "CHAT_ASSISTANT_FAILURE_MATH_CLEANUP_EXCEEDED",
+        message:
+          "Failed assistant MathWork cleanup exceeded the supported batch size.",
+      });
+    }
 
     const messageId = await ctx.db.insert("messages", {
       chatId: message.chatId,

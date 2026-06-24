@@ -1,4 +1,5 @@
-import { api } from "@repo/backend/convex/_generated/api";
+import { chatResponseFailureCode } from "@repo/ai/config/generation";
+import { api, internal } from "@repo/backend/convex/_generated/api";
 import type { mathWorkResultValidator } from "@repo/backend/convex/math/spec";
 import {
   createConvexTestWithBetterAuth,
@@ -78,6 +79,72 @@ describe("chat transcript MathWork cleanup", () => {
         role: "user",
       }),
     ]);
+    expect(rows.works).toEqual([]);
+    expect(rows.computations).toEqual([]);
+    expect(rows.steps).toEqual([]);
+    expect(rows.artifacts).toEqual([]);
+  });
+
+  it("deletes detached MathWork when an assistant stream fails", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const identity = await t.mutation(
+      async (ctx) =>
+        await seedAuthenticatedUser(ctx, {
+          now: NOW,
+          suffix: "math-failure-cleanup",
+        })
+    );
+    const owner = t.withIdentity({
+      sessionId: identity.sessionId,
+      subject: identity.authUserId,
+    });
+    const { chatId } = await owner.mutation(
+      api.chats.mutations.createChatWithMessage,
+      {
+        message: {
+          identifier: "user-before-failure",
+          modelId: "nakafa-lite",
+          role: "user",
+        },
+        parts: [],
+        type: "study",
+      }
+    );
+
+    await owner.mutation(api.math.mutations.save, {
+      chatId,
+      responseMessageIdentifier: "assistant-failed",
+      result: mathWorkResult(),
+      toolCallId: "tool-failed",
+    });
+    await t.mutation(internal.chats.mutations.saveAssistantFailure, {
+      message: {
+        chatId,
+        generationErrorCode: chatResponseFailureCode,
+        identifier: "assistant-failed",
+        modelId: "nakafa-lite",
+      },
+      userId: identity.userId,
+    });
+
+    const rows = await t.query(async (ctx) => ({
+      artifacts: await ctx.db.query("mathWorkArtifacts").collect(),
+      computations: await ctx.db.query("mathComputations").collect(),
+      messages: await ctx.db.query("messages").collect(),
+      steps: await ctx.db.query("mathWorkSteps").collect(),
+      works: await ctx.db.query("mathWorks").collect(),
+    }));
+
+    expect(rows.messages).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          chatId,
+          generationStatus: "failed",
+          identifier: "assistant-failed",
+          role: "assistant",
+        }),
+      ])
+    );
     expect(rows.works).toEqual([]);
     expect(rows.computations).toEqual([]);
     expect(rows.steps).toEqual([]);

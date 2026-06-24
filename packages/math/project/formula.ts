@@ -12,6 +12,11 @@ export function formulaExpressionForComputation(
     return solveExpression;
   }
 
+  const itemExpression = itemExpressionForComputation(computation);
+  if (itemExpression && !computation.secondary) {
+    return itemExpression;
+  }
+
   return computation.secondary ?? computation.primary;
 }
 
@@ -55,6 +60,13 @@ function solveExpressionForComputation(
 
 /** Builds a display expression for CAS system-solve item evidence. */
 function solveSystemExpressionForComputation(
+  computation: MathComputation
+): MathComputation["primary"] | undefined {
+  return itemExpressionForComputation(computation);
+}
+
+/** Builds a display expression for item-only deterministic evidence. */
+function itemExpressionForComputation(
   computation: MathComputation
 ): MathComputation["primary"] | undefined {
   if (computation.items.length === 0) {

@@ -2,7 +2,7 @@ import { CasEngine } from "@repo/math/cas/engine";
 import { MathCasRequestError, MathCasResponseError } from "@repo/math/errors";
 import type { MathRequest } from "@repo/math/schema/request";
 import type { MathResult } from "@repo/math/schema/result";
-import { ConfigProvider, Effect, Exit } from "effect";
+import { ConfigProvider, Effect, Exit, Schema } from "effect";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const config = ConfigProvider.fromMap(
@@ -26,8 +26,10 @@ describe("CasEngine", () => {
     );
 
     const result = await Effect.runPromise(computeWithLiveCas());
+    const requestBody = readPostedJson(fetchMock);
 
     expect(result.status).toBe("verified");
+    expect(requestBody).toEqual(casRequest());
     expect(fetchMock).toHaveBeenCalledWith(
       new URL("/api/math", "https://cas.test"),
       expect.objectContaining({
@@ -38,6 +40,36 @@ describe("CasEngine", () => {
         method: "POST",
       })
     );
+  });
+
+  it("strips domain-only planning metadata before CAS transport", async () => {
+    const fetchMock = stubFetch(
+      new Response(JSON.stringify(casResult()), {
+        headers: { "content-type": "application/json" },
+        status: 200,
+      })
+    );
+
+    await Effect.runPromise(
+      computeWithLiveCas({
+        kind: "math",
+        operation: "circle",
+        pointSemantics: "circle-radius-point",
+        points: [
+          { x: "0", y: "0" },
+          { x: "1", y: "1" },
+        ],
+      })
+    );
+
+    expect(readPostedJson(fetchMock)).toEqual({
+      kind: "math",
+      operation: "circle",
+      points: [
+        { x: "0", y: "0" },
+        { x: "1", y: "1" },
+      ],
+    });
   });
 
   it("keeps network failures and unreadable JSON in typed errors", async () => {
@@ -168,10 +200,10 @@ function stubFetchFailure(error: unknown) {
 }
 
 /** Runs the live CAS service against the mocked fetch boundary. */
-function computeWithLiveCas() {
+function computeWithLiveCas(request: MathRequest = casRequest()) {
   return Effect.gen(function* () {
     const cas = yield* CasEngine;
-    return yield* cas.compute(casRequest());
+    return yield* cas.compute(request);
   }).pipe(Effect.provide(CasEngine.Default), Effect.withConfigProvider(config));
 }
 
@@ -199,6 +231,16 @@ function casResult(): MathResult {
     steps: [],
     status: "verified",
   };
+}
+
+/** Reads the JSON body sent to the mocked fetch boundary. */
+function readPostedJson(fetchMock: ReturnType<typeof stubFetch>) {
+  const body = fetchMock.mock.calls[0]?.[1]?.body;
+  if (typeof body !== "string") {
+    expect.fail("Expected a JSON request body.");
+  }
+
+  return Schema.decodeUnknownSync(Schema.parseJson(Schema.Unknown))(body);
 }
 
 /** Reads the expected failure value from an Effect exit. */

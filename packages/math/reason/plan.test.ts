@@ -29,6 +29,14 @@ describe("planCasRequest", () => {
         })
       )
     );
+    const inferredDerivative = await Effect.runPromise(
+      planCasRequest(
+        mathInput({
+          expression: "t^3",
+          operation: "differentiate",
+        })
+      )
+    );
     const integral = await Effect.runPromise(
       planCasRequest(
         mathInput({
@@ -78,6 +86,11 @@ describe("planCasRequest", () => {
       operation: "differentiate",
       order: 2,
       variable: "x",
+    });
+    expect(inferredDerivative).toMatchObject({
+      expression: "t^3",
+      operation: "differentiate",
+      variable: "t",
     });
     expect(integral).toMatchObject({
       expression: "x",
@@ -131,9 +144,9 @@ describe("planCasRequest", () => {
     const missingExpression = await Effect.runPromiseExit(
       planCasRequest(mathInput({ operation: "simplify" }))
     );
-    const missingVariable = await Effect.runPromiseExit(
+    const ambiguousVariable = await Effect.runPromiseExit(
       planCasRequest(
-        mathInput({ expression: "x^3", operation: "differentiate" })
+        mathInput({ expression: "x + y", operation: "differentiate" })
       )
     );
     const missingCalculusExpression = await Effect.runPromiseExit(
@@ -151,6 +164,18 @@ describe("planCasRequest", () => {
     );
     const missingLinePoints = await Effect.runPromiseExit(
       planCasRequest(mathInput({ operation: "line" }))
+    );
+    const extraLinePoint = await Effect.runPromiseExit(
+      planCasRequest(
+        mathInput({
+          operation: "line",
+          points: [
+            { x: "0", y: "0" },
+            { x: "1", y: "1" },
+            { x: "2", y: "3" },
+          ],
+        })
+      )
     );
     const missingCirclePoints = await Effect.runPromiseExit(
       planCasRequest(mathInput({ operation: "circle" }))
@@ -173,10 +198,11 @@ describe("planCasRequest", () => {
     );
 
     expectPlanningFailure(missingExpression);
-    expectPlanningFailure(missingVariable);
+    expectPlanningFailure(ambiguousVariable);
     expectPlanningFailure(missingCalculusExpression);
     expectPlanningFailure(partialBounds);
     expectPlanningFailure(missingLinePoints);
+    expectPlanningFailure(extraLinePoint);
     expectPlanningFailure(missingCirclePoints);
     expectPlanningFailure(missingPoints);
     expectPlanningFailure(ambiguousCircle);

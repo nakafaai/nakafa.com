@@ -51,10 +51,11 @@ function computeViaHttp({
   readonly baseUrl: string;
 }) {
   return Effect.fn("CasEngine.compute")(function* (request: MathRequest) {
+    const transportPayload = casTransportRequest(request);
     const response = yield* Effect.tryPromise({
       try: () =>
         fetch(new URL(CAS_MATH_PATH, baseUrl), {
-          body: JSON.stringify(request),
+          body: JSON.stringify(transportPayload),
           headers: {
             Authorization: `Bearer ${Redacted.value(apiKey)}`,
             "Content-Type": "application/json",
@@ -93,6 +94,11 @@ function computeViaHttp({
       )
     );
   });
+}
+
+/** Removes domain-only planning metadata before crossing the CAS Adapter seam. */
+function casTransportRequest(request: MathRequest) {
+  return { ...request, pointSemantics: undefined };
 }
 
 /** Reads CAS JSON errors without leaking framework HTML pages into evidence. */

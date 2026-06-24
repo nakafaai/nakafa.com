@@ -1,6 +1,7 @@
 import { MathPlanningError } from "@repo/math/reason/errors";
 import { planSolveRequest } from "@repo/math/reason/solve";
 import type { MathRequest } from "@repo/math/schema/request";
+import { getExpressionSymbols } from "@repo/math/schema/shared";
 import type { MathReasoningRequestShape } from "@repo/math/schema/work";
 import { Effect } from "effect";
 
@@ -66,31 +67,27 @@ function validateExpressionRequest(request: MathRequest) {
 
 /** Validates calculus operations without parsing learner-language metadata. */
 function validateCalculusRequest(request: MathRequest) {
-  if (!request.expression) {
-    return Effect.fail(
-      new MathPlanningError({
-        message: "Calculus requests need a structured expression.",
-      })
-    );
-  }
+  return Effect.gen(function* () {
+    if (!request.expression) {
+      return yield* Effect.fail(
+        new MathPlanningError({
+          message: "Calculus requests need a structured expression.",
+        })
+      );
+    }
 
-  if (!request.variable) {
-    return Effect.fail(
-      new MathPlanningError({
-        message: "Calculus requests need a structured variable.",
-      })
-    );
-  }
+    const variable = yield* calculusVariable(request, request.expression);
 
-  if (hasPartialIntegralBounds(request)) {
-    return Effect.fail(
-      new MathPlanningError({
-        message: "Definite integrals need both structured bounds.",
-      })
-    );
-  }
+    if (hasPartialIntegralBounds(request)) {
+      return yield* Effect.fail(
+        new MathPlanningError({
+          message: "Definite integrals need both structured bounds.",
+        })
+      );
+    }
 
-  return Effect.succeed(request);
+    return { ...request, variable };
+  });
 }
 
 /** Returns whether a request has exactly one integral endpoint. */
@@ -103,13 +100,13 @@ function hasPartialIntegralBounds(request: MathRequest) {
 
 /** Validates line operations against already-structured point fields. */
 function validateLineRequest(request: MathRequest) {
-  if ((request.points ?? []).length >= 2) {
+  if ((request.points ?? []).length === 2) {
     return Effect.succeed(request);
   }
 
   return Effect.fail(
     new MathPlanningError({
-      message: "Coordinate requests need structured point fields.",
+      message: "Line requests need exactly two structured points.",
     })
   );
 }
@@ -133,4 +130,22 @@ function validateCircleRequest(request: MathRequest) {
   }
 
   return Effect.succeed(request);
+}
+
+/** Resolves calculus variables from semantic fields or one expression symbol. */
+function calculusVariable(request: MathRequest, expression: string) {
+  if (request.variable) {
+    return Effect.succeed(request.variable);
+  }
+
+  const symbols = [...getExpressionSymbols(expression)];
+  if (symbols.length === 1) {
+    return Effect.succeed(symbols.join(""));
+  }
+
+  return Effect.fail(
+    new MathPlanningError({
+      message: "Calculus requests need a structured or unambiguous variable.",
+    })
+  );
 }

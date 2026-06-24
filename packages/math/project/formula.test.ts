@@ -87,6 +87,44 @@ describe("formulaExpressionForComputation", () => {
     });
   });
 
+  it("shows item-only deterministic outcomes for non-solve operations", () => {
+    const expression = formulaExpressionForComputation({
+      ...solveComputation(),
+      input: {
+        expression: "1 / x",
+        kind: "math",
+        lower: "0",
+        operation: "integrate",
+        upper: "1",
+        variable: "x",
+      },
+      items: [
+        {
+          label: "status",
+          latex: "\\text{divergent}",
+          value: "divergent",
+        },
+        {
+          label: "singularity",
+          latex: "x = 0",
+          value: "x = 0",
+        },
+      ],
+      kind: "integrate",
+      operation: "integrate",
+      primary: {
+        expression: "Integral(1 / x, (x, 0, 1))",
+        latex: "\\int_0^1 \\frac{1}{x}\\, dx",
+      },
+      secondary: undefined,
+    });
+
+    expect(expression).toEqual({
+      expression: "divergent; x = 0",
+      latex: "\\text{divergent}; x = 0",
+    });
+  });
+
   it("keeps ordinary computations on their CAS expression", () => {
     const expression = formulaExpressionForComputation({
       ...solveComputation("[3]", "\\left[3\\right]"),
