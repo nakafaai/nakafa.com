@@ -20,6 +20,8 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **MathWork**: The canonical structured evidence for one Nina math answer, including assumptions, computations, derivation steps, verification status, pedagogical projection, and future visual intent.
 - **MathWorkStep**: One semantic derivation step in a MathWork that can be projected at atomic, school, advanced, or professor detail levels.
 - **MathWorkArtifact**: A compact renderable projection manifest for a MathWork, such as a formula card, step list, table, plot intent, or future 3D visual intent.
+- **PedagogyProjection**: Learner-facing math narration generated from bounded MathWork evidence, with every visible sentence tied to a precise result, step, assumption, limitation, or verification reference.
+- **PedagogyNarrator**: The AI-owned Adapter that turns bounded MathWork evidence into a typed PedagogyProjection without owning canonical formulas, derivation steps, assumptions, limitations, or verification lanes.
 - **VisualIntent**: Math-owned metadata describing how a MathWork can be visualized, without requiring the first implementation to render that visualization.
 - **Verification lane**: The trust label on a MathWork answer or step: verified, derived, pedagogical, or speculative.
 - **Math copy projection**: The app-owned localization seam that turns MathWork semantic keys and values into student-facing Indonesian or English copy.

@@ -29,6 +29,24 @@ describe("planSolveRequest", () => {
       operation: "solve",
       variables: ["x", "y"],
     });
+
+    const scopedSystem = await Effect.runPromise(
+      planSolveRequest(
+        solveRequest({
+          expressions: ["x = 1", "y = 2"],
+          variable: "x",
+          variables: ["x", "y"],
+        })
+      )
+    );
+
+    expect(scopedSystem).toMatchObject({
+      expression: undefined,
+      expressions: ["x = 1", "y = 2"],
+      operation: "solve",
+      variable: "x",
+      variables: ["x", "y"],
+    });
   });
 
   it("preserves explicit variables and structured domain bounds", async () => {
@@ -70,16 +88,290 @@ describe("planSolveRequest", () => {
     });
   });
 
-  it("fails typed when solve fields are insufficient", async () => {
-    const missingRelation = await Effect.runPromiseExit(
-      planSolveRequest(solveRequest({}))
+  it("applies symbolic inequality requirements as structured bounds", async () => {
+    const positive = await Effect.runPromise(
+      planSolveRequest(
+        solveRequest({
+          expression: "x^2 = 4",
+          variable: "x",
+          variables: ["x"],
+        }),
+        ["x > 0"]
+      )
     );
-    const missingBoundVariable = await Effect.runPromiseExit(
+    const interval = await Effect.runPromise(
+      planSolveRequest(
+        solveRequest({
+          expression: "x^2 = 4",
+          variables: ["x"],
+        }),
+        ["0 < x < 3"]
+      )
+    );
+    const tightened = await Effect.runPromise(
+      planSolveRequest(
+        solveRequest({
+          expression: "x^2 = 4",
+          variable: "x",
+          variables: ["x"],
+        }),
+        ["x > 0", "x > 3"]
+      )
+    );
+    const upperOnly = await Effect.runPromise(
+      planSolveRequest(
+        solveRequest({
+          expression: "x^2 = 4",
+          variables: ["x"],
+        }),
+        ["x < 3"]
+      )
+    );
+    const existingBounds = await Effect.runPromise(
+      planSolveRequest(
+        solveRequest({
+          expression: "x^2 = 4",
+          lower: "-5",
+          upper: "5",
+          variables: ["x"],
+        }),
+        ["x >= 0"]
+      )
+    );
+
+    expect(positive).toMatchObject({
+      lower: "0",
+      lowerInclusive: false,
+      variable: "x",
+      variables: ["x"],
+    });
+    expect(interval).toMatchObject({
+      lower: "0",
+      lowerInclusive: false,
+      upper: "3",
+      upperInclusive: false,
+      variable: "x",
+      variables: ["x"],
+    });
+    expect(tightened).toMatchObject({
+      lower: "3",
+      lowerInclusive: false,
+      variable: "x",
+    });
+    expect(upperOnly).toMatchObject({
+      upper: "3",
+      upperInclusive: false,
+      variable: "x",
+      variables: ["x"],
+    });
+    expect(existingBounds).toMatchObject({
+      lower: "0",
+      lowerInclusive: true,
+      upper: "5",
+      upperInclusive: true,
+      variable: "x",
+    });
+  });
+
+  it("normalizes every symbolic inequality direction", async () => {
+    const cases = [
+      {
+        expected: { lower: "0", lowerInclusive: true },
+        requirement: "x >= 0",
+      },
+      {
+        expected: { upper: "3", upperInclusive: true },
+        requirement: "x <= 3",
+      },
+      {
+        expected: { lower: "0", lowerInclusive: false },
+        requirement: "0 < x",
+      },
+      {
+        expected: { lower: "0", lowerInclusive: true },
+        requirement: "0 <= x",
+      },
+      {
+        expected: { upper: "3", upperInclusive: false },
+        requirement: "3 > x",
+      },
+      {
+        expected: { upper: "3", upperInclusive: true },
+        requirement: "3 >= x",
+      },
+    ];
+
+    for (const item of cases) {
+      const planned = await Effect.runPromise(
+        planSolveRequest(
+          solveRequest({
+            expression: "x^2 = 4",
+            variables: ["x"],
+          }),
+          [item.requirement]
+        )
+      );
+
+      expect(planned).toMatchObject({
+        ...item.expected,
+        variable: "x",
+        variables: ["x"],
+      });
+    }
+  });
+
+  it("infers bounded domain variables from unambiguous structured fields", async () => {
+    const fromVariables = await Effect.runPromise(
       planSolveRequest(
         solveRequest({
           expression: "x^2 = 4",
           lower: "0",
+          lowerInclusive: false,
           variables: ["x"],
+        })
+      )
+    );
+    const fromExpression = await Effect.runPromise(
+      planSolveRequest(
+        solveRequest({
+          expression: "t^2 = 9",
+          lower: "0",
+        })
+      )
+    );
+
+    expect(fromVariables).toMatchObject({
+      expression: "x^2 = 4",
+      lower: "0",
+      lowerInclusive: false,
+      operation: "solve",
+      variable: "x",
+      variables: ["x"],
+    });
+    expect(fromExpression).toMatchObject({
+      expression: "t^2 = 9",
+      lower: "0",
+      operation: "solve",
+      variable: "t",
+      variables: ["t"],
+    });
+
+    const fromRequirement = await Effect.runPromise(
+      planSolveRequest(solveRequest({ expression: "u^2 = 16" }), ["u > 0"])
+    );
+
+    expect(fromRequirement).toMatchObject({
+      expression: "u^2 = 16",
+      lower: "0",
+      operation: "solve",
+      variable: "u",
+      variables: ["u"],
+    });
+  });
+
+  it("merges repeated bounds without weakening the domain", async () => {
+    const exactSameLower = await Effect.runPromise(
+      planSolveRequest(
+        solveRequest({ expression: "x^2 = 4", variables: ["x"] }),
+        ["x >= 0", "x > 0"]
+      )
+    );
+    const sameLower = await Effect.runPromise(
+      planSolveRequest(
+        solveRequest({ expression: "x^2 = 4", variables: ["x"] }),
+        ["x > 0", "x >= 0.0"]
+      )
+    );
+    const strongerLower = await Effect.runPromise(
+      planSolveRequest(
+        solveRequest({ expression: "x^2 = 4", variables: ["x"] }),
+        ["x > 3", "x > 0"]
+      )
+    );
+    const sameNumericLower = await Effect.runPromise(
+      planSolveRequest(
+        solveRequest({ expression: "x^2 = 4", variables: ["x"] }),
+        ["x >= 0.0", "x > 0"]
+      )
+    );
+    const existingUpper = await Effect.runPromise(
+      planSolveRequest(
+        solveRequest({ expression: "x^2 = 4", variables: ["x"] }),
+        ["x < 2", "x < 3"]
+      )
+    );
+    const strongerUpper = await Effect.runPromise(
+      planSolveRequest(
+        solveRequest({ expression: "x^2 = 4", variables: ["x"] }),
+        ["x < 3", "x < 2"]
+      )
+    );
+    const equalClosedInterval = await Effect.runPromise(
+      planSolveRequest(
+        solveRequest({ expression: "x^2 = 4", variables: ["x"] }),
+        ["0 <= x <= 0"]
+      )
+    );
+    const symbolicInterval = await Effect.runPromise(
+      planSolveRequest(
+        solveRequest({ expression: "x = y", variables: ["x"] }),
+        ["y + 1 < x < y + 2"]
+      )
+    );
+
+    expect(exactSameLower).toMatchObject({
+      lower: "0",
+      lowerInclusive: false,
+      variable: "x",
+    });
+    expect(sameLower).toMatchObject({
+      lower: "0",
+      lowerInclusive: false,
+      variable: "x",
+    });
+    expect(strongerLower).toMatchObject({
+      lower: "3",
+      lowerInclusive: false,
+      variable: "x",
+    });
+    expect(sameNumericLower).toMatchObject({
+      lower: "0.0",
+      lowerInclusive: false,
+      variable: "x",
+    });
+    expect(existingUpper).toMatchObject({
+      upper: "2",
+      upperInclusive: false,
+      variable: "x",
+    });
+    expect(strongerUpper).toMatchObject({
+      upper: "2",
+      upperInclusive: false,
+      variable: "x",
+    });
+    expect(equalClosedInterval).toMatchObject({
+      lower: "0",
+      lowerInclusive: true,
+      upper: "0",
+      upperInclusive: true,
+      variable: "x",
+    });
+    expect(symbolicInterval).toMatchObject({
+      lower: "y + 1",
+      upper: "y + 2",
+      variable: "x",
+    });
+  });
+
+  it("fails typed when solve fields are insufficient", async () => {
+    const missingRelation = await Effect.runPromiseExit(
+      planSolveRequest(solveRequest({}))
+    );
+    const ambiguousBoundVariable = await Effect.runPromiseExit(
+      planSolveRequest(
+        solveRequest({
+          expression: "x + y = 4",
+          lower: "0",
         })
       )
     );
@@ -93,10 +385,82 @@ describe("planSolveRequest", () => {
         })
       )
     );
+    const unsupportedRequirement = await Effect.runPromiseExit(
+      planSolveRequest(
+        solveRequest({
+          expression: "x^2 = 4",
+          variable: "x",
+          variables: ["x"],
+        }),
+        ["positive solution"]
+      )
+    );
+    const mismatchedRequirementVariable = await Effect.runPromiseExit(
+      planSolveRequest(
+        solveRequest({
+          expression: "x^2 = 4",
+          variable: "y",
+          variables: ["y"],
+        }),
+        ["x > 0"]
+      )
+    );
+    const mismatchedRequirementVariables = await Effect.runPromiseExit(
+      planSolveRequest(
+        solveRequest({
+          expression: "x^2 = 4",
+          variables: ["y"],
+        }),
+        ["x > 0"]
+      )
+    );
+    const mixedRequirementVariables = await Effect.runPromiseExit(
+      planSolveRequest(
+        solveRequest({
+          expressions: ["x = 1", "y = 2"],
+          variables: ["x", "y"],
+        }),
+        ["x > 0", "y > 0"]
+      )
+    );
+    const symbolicRequirementRelation = await Effect.runPromiseExit(
+      planSolveRequest(
+        solveRequest({
+          expression: "x = y",
+          variables: ["x", "y"],
+        }),
+        ["x < y"]
+      )
+    );
+    const repeatedSymbolicLower = await Effect.runPromiseExit(
+      planSolveRequest(
+        solveRequest({
+          expression: "x = y",
+          variables: ["x"],
+        }),
+        ["x > y + 1", "x > y + 2"]
+      )
+    );
+    const emptyOpenInterval = await Effect.runPromiseExit(
+      planSolveRequest(
+        solveRequest({
+          expression: "x^2 = 4",
+          variables: ["x"],
+        }),
+        ["0 < x < 0"]
+      )
+    );
 
     expectPlanningFailure(missingRelation);
-    expectPlanningFailure(missingBoundVariable);
+    expectPlanningFailure(ambiguousBoundVariable);
     expectPlanningFailure(mismatchedBoundVariable);
+    expectPlanningFailure(unsupportedRequirement);
+    expectPlanningFailure(mismatchedRequirementVariable);
+    expectPlanningFailure(mismatchedRequirementVariables);
+    expectPlanningFailure(mixedRequirementVariables);
+    expectPlanningFailure(symbolicRequirementRelation);
+    expectPlanningFailure(repeatedSymbolicLower);
+    expectPlanningFailure(emptyOpenInterval);
   });
 });
 

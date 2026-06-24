@@ -6,6 +6,7 @@ const MAX_MATH_WORK_CHILD_ROWS = 100;
 const MAX_MATH_WORK_RESPONSE_ROWS = 25;
 type MathChildId =
   | Doc<"mathComputations">["_id"]
+  | Doc<"mathPedagogyProjections">["_id"]
   | Doc<"mathWorkArtifacts">["_id"]
   | Doc<"mathWorkSteps">["_id"];
 
@@ -62,6 +63,7 @@ async function deleteMathWorkRows(
   await deleteComputations(ctx, chatId, work.workId);
   await deleteSteps(ctx, chatId, work.workId);
   await deleteArtifacts(ctx, chatId, work.workId);
+  await deletePedagogyProjections(ctx, chatId, work.workId);
   await ctx.db.delete(work._id);
 }
 
@@ -111,6 +113,22 @@ async function deleteArtifacts(
     .take(MAX_MATH_WORK_CHILD_ROWS + 1);
 
   await deleteBoundedRows(ctx, rows, "MATH_WORK_ARTIFACT_LIMIT_EXCEEDED");
+}
+
+/** Deletes bounded live pedagogy projection rows for one work id. */
+export async function deletePedagogyProjections(
+  ctx: MutationCtx,
+  chatId: Doc<"chats">["_id"],
+  workId: string
+) {
+  const rows = await ctx.db
+    .query("mathPedagogyProjections")
+    .withIndex("by_chatId_and_workId", (q) =>
+      q.eq("chatId", chatId).eq("workId", workId)
+    )
+    .take(MAX_MATH_WORK_CHILD_ROWS + 1);
+
+  await deleteBoundedRows(ctx, rows, "MATH_PEDAGOGY_LIMIT_EXCEEDED");
 }
 
 /** Deletes one bounded set of child documents or rejects oversized state. */

@@ -1,5 +1,8 @@
 import { api } from "@repo/backend/convex/_generated/api";
-import type { mathWorkResultValidator } from "@repo/backend/convex/math/spec";
+import type {
+  mathPedagogyProjectionValidator,
+  mathWorkResultValidator,
+} from "@repo/backend/convex/math/spec";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -9,6 +12,9 @@ import { describe, expect, it } from "vitest";
 
 const NOW = Date.UTC(2026, 5, 23, 9, 0, 0);
 type MathWorkResultInput = Infer<typeof mathWorkResultValidator>;
+type MathPedagogyProjectionInput = Infer<
+  typeof mathPedagogyProjectionValidator
+>;
 
 describe("math/MathWork read model", () => {
   it("persists replacement-safe normalized MathWork rows for the owner", async () => {
@@ -131,6 +137,72 @@ describe("math/MathWork read model", () => {
     ).rejects.toThrow("FORBIDDEN");
   });
 
+  it("persists one replacement-safe live pedagogy projection for a MathWork", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const seeded = await t.mutation(async (ctx) => {
+      const user = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "math-pedagogy-owner",
+      });
+      const chatId = await ctx.db.insert("chats", {
+        title: "Math pedagogy chat",
+        type: "study",
+        updatedAt: NOW,
+        userId: user.userId,
+        visibility: "private",
+      });
+
+      return { ...user, chatId };
+    });
+    const owner = t.withIdentity({
+      sessionId: seeded.sessionId,
+      subject: seeded.authUserId,
+    });
+
+    await owner.mutation(api.math.mutations.save, {
+      chatId: seeded.chatId,
+      responseMessageIdentifier: "response-pedagogy",
+      result: mathWorkResult(),
+      toolCallId: "tool-pedagogy",
+    });
+    const firstSave = await owner.mutation(
+      api.math.mutations.savePedagogyProjection,
+      {
+        chatId: seeded.chatId,
+        projection: mathPedagogyProjection(),
+        responseMessageIdentifier: "response-pedagogy",
+        toolCallId: "tool-pedagogy",
+      }
+    );
+    const secondSave = await owner.mutation(
+      api.math.mutations.savePedagogyProjection,
+      {
+        chatId: seeded.chatId,
+        projection: mathPedagogyProjection(),
+        responseMessageIdentifier: "response-pedagogy",
+        toolCallId: "tool-pedagogy",
+      }
+    );
+    const rows = await t.query(async (ctx) => ({
+      projections: await ctx.db.query("mathPedagogyProjections").collect(),
+    }));
+
+    expect(firstSave).toEqual(secondSave);
+    expect(rows.projections).toEqual([
+      expect.objectContaining({
+        chatId: seeded.chatId,
+        evidenceHash: "evidence:pedagogy-test",
+        modelId: "nakafa-lite",
+        promptVersion: "math.pedagogy.v1",
+        responseMessageIdentifier: "response-pedagogy",
+        schemaVersion: "pedagogy.projection.v1",
+        toolCallId: "tool-pedagogy",
+        userId: seeded.userId,
+        workId: "math:simplify:test",
+      }),
+    ]);
+  });
+
   it("derives child row work IDs from the root MathWork", async () => {
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation(async (ctx) => {
@@ -205,9 +277,12 @@ function mathWorkResult(): MathWorkResultInput {
     work: {
       assumptions: [
         {
-          copyKey: "math-assumption-planned-from-prompt",
+          copyKey: "math-assumption-variable",
           lane: "pedagogical",
-          values: [],
+          values: [
+            { name: "evidenceRef", value: "math:simplify:test:assumption:0" },
+            { name: "variable", value: "x" },
+          ],
         },
       ],
       computations: [
@@ -234,7 +309,6 @@ function mathWorkResult(): MathWorkResultInput {
           status: "verified",
         },
       ],
-      createdAt: NOW,
       input: {
         givens: ["2x + 3x"],
         kind: "prompt",
@@ -262,6 +336,31 @@ function mathWorkResult(): MathWorkResultInput {
       },
       workId: "math:simplify:test",
     },
+  };
+}
+
+/** Builds a compact encoded live pedagogy projection for Convex tests. */
+function mathPedagogyProjection(): MathPedagogyProjectionInput {
+  return {
+    evidenceHash: "evidence:pedagogy-test",
+    kind: "math-pedagogy-projection",
+    locale: "en",
+    model: {
+      gatewayModelId: "google/gemini-3-flash",
+      modelId: "nakafa-lite",
+      promptVersion: "math.pedagogy.v1",
+      provider: "ai-gateway",
+      schemaVersion: "pedagogy.projection.v1",
+    },
+    narratedAt: NOW,
+    sentences: [
+      {
+        evidenceRefs: ["math:simplify:test:result:primary"],
+        id: "math:simplify:test:pedagogy:0",
+        text: "The deterministic result is available for learner narration.",
+      },
+    ],
+    workId: "math:simplify:test",
   };
 }
 
@@ -293,10 +392,30 @@ function mathStep(
     order,
     output: { expression: output, latex: output },
     projection: {
-      advanced: { key: "math-step-advanced", values: [] },
-      atomic: { key: "math-step-atomic", values: [] },
-      professor: { key: "math-step-professor", values: [] },
-      school: { key: "math-step-school", values: [] },
+      advanced: {
+        key: "math-step-simplify",
+        values: [
+          { name: "evidenceRef", value: `math:simplify:test:step:${order}` },
+        ],
+      },
+      atomic: {
+        key: "math-step-simplify",
+        values: [
+          { name: "evidenceRef", value: `math:simplify:test:step:${order}` },
+        ],
+      },
+      professor: {
+        key: "math-step-simplify",
+        values: [
+          { name: "evidenceRef", value: `math:simplify:test:step:${order}` },
+        ],
+      },
+      school: {
+        key: "math-step-simplify",
+        values: [
+          { name: "evidenceRef", value: `math:simplify:test:step:${order}` },
+        ],
+      },
     },
     projectionLevels: ["atomic", "school", "advanced", "professor"],
     ruleId: "cas.simplify",

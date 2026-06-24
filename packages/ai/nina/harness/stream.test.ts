@@ -7,6 +7,8 @@ import {
   NinaHarness,
   NinaHarnessInputError,
 } from "@repo/ai/nina/harness/stream";
+import { PedagogyNarrator } from "@repo/ai/nina/pedagogy/narrator";
+import { PedagogyProjectionRepository } from "@repo/ai/nina/pedagogy/repo";
 import { NinaReporter } from "@repo/ai/nina/runtime/report";
 import { NinaStore } from "@repo/ai/nina/runtime/store";
 import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
@@ -144,7 +146,14 @@ describe("nina/harness/stream", () => {
 
 /** Provides the app-owned services required by the default NinaHarness layer. */
 function provideHarnessServices<A, E>(
-  program: Effect.Effect<A, E, MathReasoning | NinaHarness>
+  program: Effect.Effect<
+    A,
+    E,
+    | MathReasoning
+    | NinaHarness
+    | PedagogyNarrator
+    | PedagogyProjectionRepository
+  >
 ) {
   return program.pipe(
     Effect.provide(NinaHarness.Default),
@@ -168,6 +177,19 @@ function provideHarnessServices<A, E>(
       MathReasoning.make({
         produceWork: () =>
           Effect.dieMessage("MathReasoning is not used in this test."),
+      })
+    ),
+    Effect.provideService(
+      PedagogyNarrator,
+      PedagogyNarrator.make({
+        narrate: () =>
+          Effect.dieMessage("PedagogyNarrator is not used in this test."),
+      })
+    ),
+    Effect.provideService(
+      PedagogyProjectionRepository,
+      PedagogyProjectionRepository.make({
+        save: () => Effect.void,
       })
     )
   );

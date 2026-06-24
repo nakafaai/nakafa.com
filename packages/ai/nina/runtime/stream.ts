@@ -7,6 +7,8 @@ import {
   type NinaTurn,
   readNinaLearningPage,
 } from "@repo/ai/nina/contract/turn";
+import { PedagogyNarrator } from "@repo/ai/nina/pedagogy/narrator";
+import { PedagogyProjectionRepository } from "@repo/ai/nina/pedagogy/repo";
 import {
   type NinaAgentMessages,
   runNinaAgentTurn,
@@ -53,6 +55,8 @@ export const createNinaStreamResponse = Effect.fn("nina.stream.response")(
     const nakafa = yield* Nakafa;
     const search = yield* NakafaSearch;
     const mathReasoning = yield* MathReasoning;
+    const pedagogyNarrator = yield* PedagogyNarrator;
+    const pedagogyRepository = yield* PedagogyProjectionRepository;
     const messages = yield* store.loadMessages();
     const logContext = createNinaLogContext(turn);
     const originalMessageCount = messages.length;
@@ -141,7 +145,12 @@ export const createNinaStreamResponse = Effect.fn("nina.stream.response")(
             Effect.provideService(NinaReporter, reporter),
             Effect.provideService(Nakafa, nakafa),
             Effect.provideService(NakafaSearch, search),
-            Effect.provideService(MathReasoning, mathReasoning)
+            Effect.provideService(MathReasoning, mathReasoning),
+            Effect.provideService(PedagogyNarrator, pedagogyNarrator),
+            Effect.provideService(
+              PedagogyProjectionRepository,
+              pedagogyRepository
+            )
           )
         ),
       generateId: () => responseMessageId,
@@ -229,6 +238,8 @@ const runNinaWriterTurn = Effect.fn("nina.stream.writer")(function* ({
   const pageFetch = createPageFetchState(context.needsPageFetch);
   const reporter = yield* NinaReporter;
   const mathReasoning = yield* MathReasoning;
+  const pedagogyNarrator = yield* PedagogyNarrator;
+  const pedagogyRepository = yield* PedagogyProjectionRepository;
   const tools = yield* createNinaCapabilityCatalog({
     context,
     locale: page.nina.learning.locale,
@@ -238,7 +249,11 @@ const runNinaWriterTurn = Effect.fn("nina.stream.writer")(function* ({
     consumePageFetch: pageFetch.consumeForTool,
     usage,
     writer,
-  }).pipe(Effect.provideService(MathReasoning, mathReasoning));
+  }).pipe(
+    Effect.provideService(MathReasoning, mathReasoning),
+    Effect.provideService(PedagogyNarrator, pedagogyNarrator),
+    Effect.provideService(PedagogyProjectionRepository, pedagogyRepository)
+  );
 
   const responseMessages = yield* runNinaAgentTurn({
     messages: finalMessages,

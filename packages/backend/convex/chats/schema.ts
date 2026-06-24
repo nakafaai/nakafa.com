@@ -15,7 +15,7 @@ import {
   nakafaSectionValidator,
 } from "@repo/backend/convex/lib/validators/contents";
 import {
-  mathDataValidator,
+  mathReasoningDataValidator,
   mathRequestValidator,
 } from "@repo/backend/convex/math/spec";
 import { defineTable, paginationResultValidator } from "convex/server";
@@ -137,7 +137,7 @@ export const partTypeValidator = literals(
   // Data parts
   "data-suggestions",
   "data-nakafa",
-  "data-math",
+  "data-math-reasoning",
   "data-scrape-url",
   "data-web-search"
 );
@@ -375,8 +375,8 @@ export const partValidator = v.object({
   dataNakafaId: v.optional(v.string()),
   dataNakafaData: v.optional(nakafaDataValidator),
 
-  dataMathId: v.optional(v.string()),
-  dataMathData: v.optional(mathDataValidator),
+  dataMathReasoningId: v.optional(v.string()),
+  dataMathReasoningData: v.optional(mathReasoningDataValidator),
 
   dataScrapeUrlId: v.optional(v.string()),
   dataScrapeUrlUrl: v.optional(v.string()),

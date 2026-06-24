@@ -1,6 +1,8 @@
 import { NakafaSearch } from "@repo/ai/agents/nakafa/search";
 import { Nakafa } from "@repo/ai/agents/nakafa/service";
 import { NinaTurnSchema } from "@repo/ai/nina/contract/turn";
+import { PedagogyNarrator } from "@repo/ai/nina/pedagogy/narrator";
+import { PedagogyProjectionRepository } from "@repo/ai/nina/pedagogy/repo";
 import { NinaReporter } from "@repo/ai/nina/runtime/report";
 import { NinaStore } from "@repo/ai/nina/runtime/store";
 import { createNinaStreamResponse } from "@repo/ai/nina/runtime/stream";
@@ -30,6 +32,8 @@ export class NinaHarness extends Effect.Service<NinaHarness>()(
       const reporter = yield* NinaReporter;
       const nakafa = yield* Nakafa;
       const search = yield* NakafaSearch;
+      const pedagogyNarrator = yield* PedagogyNarrator;
+      const pedagogyRepository = yield* PedagogyProjectionRepository;
 
       return {
         stream: Effect.fn("nina.harness.stream")(function* (input: unknown) {
@@ -46,7 +50,12 @@ export class NinaHarness extends Effect.Service<NinaHarness>()(
             Effect.provideService(NinaStore, store),
             Effect.provideService(NinaReporter, reporter),
             Effect.provideService(Nakafa, nakafa),
-            Effect.provideService(NakafaSearch, search)
+            Effect.provideService(NakafaSearch, search),
+            Effect.provideService(PedagogyNarrator, pedagogyNarrator),
+            Effect.provideService(
+              PedagogyProjectionRepository,
+              pedagogyRepository
+            )
           );
         }),
       };

@@ -57,8 +57,8 @@ describe("MathReasoning", () => {
       "formula-card",
       "step-list",
     ]);
-    expect(exit.value.artifacts[0]?.titleKey).toBe("math-solve");
-    expect(exit.value.steps[0]?.projection.school.key).toBe("math-step-school");
+    expect(exit.value.artifacts[0]?.titleKey).toBe("math-work-formula-title");
+    expect(exit.value.steps[0]?.projection.school.key).toBe("math-step-solve");
     expect(saved).toHaveLength(1);
   });
 
@@ -211,6 +211,116 @@ describe("MathReasoning", () => {
     });
     expect(exit.value.work.computations[0]?.secondary).toBeUndefined();
   });
+
+  it("emits evidence-bound assumptions from structured request fields", async () => {
+    const exit = await Effect.runPromiseExit(
+      MathReasoning.produceWork({
+        givens: ["center (0, 0)", "radius point (3, 2)"],
+        locale: "en",
+        math: {
+          kind: "math",
+          lower: "0",
+          lowerInclusive: false,
+          operation: "circle",
+          pointSemantics: "circle-radius-point",
+          points: [
+            { x: "0", y: "0" },
+            { x: "3", y: "2" },
+          ],
+          upper: "5",
+          upperInclusive: false,
+          variable: "r",
+        },
+        objective: "Build the circle evidence",
+        persistence: "none",
+        request: "structured circle",
+        requirements: ["Use the provided point semantics."],
+      }).pipe(
+        Effect.provide(MathReasoning.Default),
+        Effect.provideService(CasEngine, fakeCasEngine(circleResult())),
+        Effect.provide(NoopMathWorkRepository),
+        Effect.withConfigProvider(config)
+      )
+    );
+
+    expect(Exit.isSuccess(exit)).toBe(true);
+    if (Exit.isFailure(exit)) {
+      return;
+    }
+
+    expect(
+      exit.value.work.assumptions.map((assumption) => assumption.copyKey)
+    ).toEqual([
+      "math-assumption-variable",
+      "math-assumption-bound",
+      "math-assumption-bound",
+      "math-assumption-points",
+      "math-assumption-circle-radius-point",
+      "math-assumption-requirement",
+    ]);
+    expect(exit.value.work.assumptions[1]?.values).toEqual(
+      expect.arrayContaining([
+        { name: "condition", value: "r > 0" },
+        { name: "conditionLatex", value: "r > 0" },
+      ])
+    );
+    expect(exit.value.work.assumptions[2]?.values).toEqual(
+      expect.arrayContaining([
+        { name: "condition", value: "r < 5" },
+        { name: "conditionLatex", value: "r < 5" },
+      ])
+    );
+
+    const domainExit = await Effect.runPromiseExit(
+      MathReasoning.produceWork({
+        givens: ["x^2 = 4"],
+        locale: "en",
+        math: {
+          expression: "x^2 = 4",
+          kind: "math",
+          operation: "solve",
+          variable: "x",
+          variables: ["x"],
+        },
+        objective: "Solve with a structured requirement",
+        persistence: "none",
+        request: "structured solve",
+        requirements: ["0 <= x <= 5"],
+      }).pipe(
+        Effect.provide(MathReasoning.Default),
+        Effect.provideService(CasEngine, fakeCasEngine(solveResult())),
+        Effect.provide(NoopMathWorkRepository),
+        Effect.withConfigProvider(config)
+      )
+    );
+
+    expect(Exit.isSuccess(domainExit)).toBe(true);
+    if (Exit.isFailure(domainExit)) {
+      return;
+    }
+
+    expect(
+      domainExit.value.work.assumptions.map((item) => item.values)
+    ).toEqual(
+      expect.arrayContaining([
+        expect.arrayContaining([
+          { name: "condition", value: "x >= 0" },
+          { name: "conditionLatex", value: "x \\ge 0" },
+        ]),
+        expect.arrayContaining([
+          { name: "condition", value: "x <= 5" },
+          { name: "conditionLatex", value: "x \\le 5" },
+        ]),
+      ])
+    );
+    expect(domainExit.value.work.plannedRequest).toMatchObject({
+      lower: "0",
+      lowerInclusive: true,
+      upper: "5",
+      upperInclusive: true,
+      variable: "x",
+    });
+  });
 });
 
 /** Provides a deterministic CAS service for MathReasoning tests. */
@@ -225,7 +335,6 @@ function fakeCasEngine(result: MathResult) {
     compute: (_request: MathRequest) => Effect.succeed(result),
   });
 }
-
 /** Provides a deterministic CAS service that fails for adapter mapping tests. */
 function failingCasEngine() {
   return CasEngine.make({
@@ -234,7 +343,6 @@ function failingCasEngine() {
       Effect.fail(new MathCasRequestError({ message: "CAS unavailable" })),
   });
 }
-
 /** Builds a verified equation-solving CAS result fixture. */
 function solveResult(): MathResult {
   return {
@@ -279,7 +387,6 @@ function solveResult(): MathResult {
     status: "verified",
   };
 }
-
 /** Builds an inconclusive coordinate-line CAS result fixture. */
 function lineResult(): MathResult {
   return {
@@ -308,7 +415,6 @@ function lineResult(): MathResult {
     status: "inconclusive",
   };
 }
-
 /** Builds a verified CAS result without a secondary expression. */
 function primaryOnlyResult(): MathResult {
   const result = solveResult();
@@ -331,7 +437,6 @@ function primaryOnlyResult(): MathResult {
     status: "contradicted",
   };
 }
-
 /** Builds a verified system-solving CAS result that reports item evidence only. */
 function systemSolveResult(): MathResult {
   return {
@@ -357,7 +462,29 @@ function systemSolveResult(): MathResult {
     steps: [],
   };
 }
-
+/** Builds a verified coordinate-circle CAS result fixture. */
+function circleResult(): MathResult {
+  return {
+    ...lineResult(),
+    input: {
+      kind: "math",
+      operation: "circle",
+      pointSemantics: "circle-radius-point",
+      points: [
+        { x: "0", y: "0" },
+        { x: "3", y: "2" },
+      ],
+    },
+    kind: "circle",
+    operation: "circle",
+    primary: {
+      expression: "(x)^2 + (y)^2 = 13",
+      latex: "x^2 + y^2 = 13",
+    },
+    secondary: undefined,
+    status: "verified",
+  };
+}
 /** Reads the expected failure value from an Effect exit. */
 function exitFailure(exit: Exit.Exit<unknown, unknown>) {
   if (Exit.isFailure(exit) && exit.cause._tag === "Fail") {

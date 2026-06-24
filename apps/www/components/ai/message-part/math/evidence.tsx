@@ -15,12 +15,13 @@ import { useTranslations } from "next-intl";
 
 import {
   type MathCopyTranslator,
+  translateEvidenceMathCopy,
   translateMathCopy,
 } from "@/components/ai/message-part/math/copy";
 import { Expression } from "@/components/ai/message-part/math/expression";
 
 interface MathEvidenceProps {
-  message: DataPart["math"];
+  message: DataPart["math-reasoning"];
 }
 
 interface WorkViewProps {
@@ -66,11 +67,7 @@ export function MathEvidence({ message }: MathEvidenceProps) {
   }
 
   if (message.status === "error") {
-    return (
-      <p className="text-muted-foreground">
-        {translateMathCopy({ key: "math-error", t: translate })}
-      </p>
-    );
+    return null;
   }
 
   return <WorkView result={message.result} t={translate} />;
@@ -82,6 +79,11 @@ function WorkView({ result, t }: WorkViewProps) {
     (artifact) => artifact.kind === "formula-card"
   );
   const visualIntent = findVisualIntent(result);
+  const verificationCopy = translateEvidenceMathCopy({
+    key: result.work.verification.reasonKey,
+    t,
+    values: result.work.verification.values,
+  });
 
   return (
     <div className="flex max-w-full flex-col gap-3">
@@ -90,13 +92,9 @@ function WorkView({ result, t }: WorkViewProps) {
         t={t}
         titleKey={formulaArtifact?.titleKey ?? "math-work-formula-title"}
       />
-      <p className="text-muted-foreground/90">
-        {translateMathCopy({
-          key: result.work.verification.reasonKey,
-          t,
-          values: result.work.verification.values,
-        })}
-      </p>
+      {verificationCopy ? (
+        <p className="text-muted-foreground/90">{verificationCopy}</p>
+      ) : null}
       <StepList steps={result.steps} t={t} />
       <NoteList
         notes={result.work.assumptions}
@@ -153,19 +151,21 @@ function StepList({ steps, t }: StepListProps) {
 
 /** Renders one localized semantic derivation step. */
 function StepRow({ number, step, t }: StepRowProps) {
+  const stepCopy = translateEvidenceMathCopy({
+    key: step.projection.school.key,
+    t,
+    values: step.projection.school.values,
+  });
+
   return (
     <div className="grid max-w-full grid-cols-[auto_minmax(0,1fr)] items-center gap-x-2 gap-y-1">
       <span className="flex shrink-0 items-center gap-2 text-muted-foreground/80">
         <span>{t("math-step", { number: String(number) })}</span>
         <HugeIcons className="size-3.5 shrink-0" icon={ArrowRight02Icon} />
       </span>
-      <span className="min-w-0 text-muted-foreground/90">
-        {translateMathCopy({
-          key: step.projection.school.key,
-          t,
-          values: step.projection.school.values,
-        })}
-      </span>
+      {stepCopy ? (
+        <span className="min-w-0 text-muted-foreground/90">{stepCopy}</span>
+      ) : null}
       <span className="col-start-2 flex min-w-0 max-w-full flex-wrap items-center gap-x-2 gap-y-1 overflow-x-auto overflow-y-hidden">
         <Expression value={step.input.latex} />
         <HugeIcons className="size-3.5 shrink-0" icon={ArrowRight02Icon} />
@@ -177,7 +177,9 @@ function StepRow({ number, step, t }: StepRowProps) {
 
 /** Renders localized MathWork notes such as planning assumptions. */
 function NoteList({ notes, titleKey, t }: NoteListProps) {
-  if (notes.length === 0) {
+  const visibleNotes = visibleNoteRows({ notes, t });
+
+  if (visibleNotes.length === 0) {
     return null;
   }
 
@@ -186,17 +188,56 @@ function NoteList({ notes, titleKey, t }: NoteListProps) {
       <span className="text-muted-foreground/80">
         {translateMathCopy({ key: titleKey, t })}
       </span>
-      {notes.map((note) => (
-        <span key={`${note.copyKey}-${note.source ?? "work"}`}>
-          {translateMathCopy({
-            key: note.copyKey,
-            t,
-            values: note.values,
-          })}
+      {visibleNotes.map((note) => (
+        <span
+          className="flex min-w-0 flex-wrap items-center gap-x-1"
+          key={note.key}
+        >
+          <span>{note.text}</span>
+          {note.conditionLatex ? (
+            <Expression value={note.conditionLatex} />
+          ) : null}
         </span>
       ))}
     </div>
   );
+}
+
+/** Projects localized note rows in one pass and omits missing evidence copy. */
+function visibleNoteRows({ notes, t }: Pick<NoteListProps, "notes" | "t">) {
+  const rows: {
+    readonly conditionLatex?: string;
+    readonly key: string;
+    readonly text: string;
+  }[] = [];
+
+  for (const note of notes) {
+    const text = translateEvidenceMathCopy({
+      key: note.copyKey,
+      t,
+      values: note.values,
+    });
+
+    if (!text) {
+      continue;
+    }
+
+    rows.push({
+      conditionLatex: noteValue(note.values, "conditionLatex"),
+      key: `${note.copyKey}-${note.source ?? "work"}`,
+      text,
+    });
+  }
+
+  return rows;
+}
+
+/** Reads one schema-owned note value by name for structured formula projection. */
+function noteValue(
+  values: MathWorkResultEncoded["work"]["assumptions"][number]["values"],
+  name: string
+) {
+  return values.find((value) => value.name === name)?.value;
 }
 
 /** Renders the localized description for structured coordinate visual intent. */

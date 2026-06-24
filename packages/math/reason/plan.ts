@@ -16,14 +16,23 @@ export const planCasRequest = Effect.fn("MathReasoning.planCasRequest")(
       );
     }
 
-    return yield* validateReasoningRequest(input.math);
+    return yield* validateReasoningRequest({
+      request: input.math,
+      requirements: input.requirements,
+    });
   }
 );
 
 /** Routes schema-owned first-slice requests to operation-specific validators. */
-function validateReasoningRequest(request: MathRequest) {
+function validateReasoningRequest({
+  request,
+  requirements,
+}: {
+  readonly request: MathRequest;
+  readonly requirements: readonly string[];
+}) {
   if (request.operation === "solve") {
-    return planSolveRequest(request);
+    return planSolveRequest(request, requirements);
   }
 
   if (request.operation === "line") {
@@ -113,10 +122,11 @@ function validateLineRequest(request: MathRequest) {
 
 /** Validates circle operations against explicit point semantics. */
 function validateCircleRequest(request: MathRequest) {
-  if ((request.points ?? []).length < 2) {
+  if ((request.points ?? []).length !== 2) {
     return Effect.fail(
       new MathPlanningError({
-        message: "Coordinate requests need structured point fields.",
+        message:
+          "Circle requests need exactly two structured points for radius-point semantics.",
       })
     );
   }

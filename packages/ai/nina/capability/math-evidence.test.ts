@@ -1,7 +1,7 @@
 import {
   formatMathCapabilityEvidence,
   formatMathCapabilityFailure,
-} from "@repo/ai/nina/capability/mathEvidence";
+} from "@repo/ai/nina/capability/math-evidence";
 import type { MathWorkResultShape } from "@repo/math/schema/work";
 import { describe, expect, it } from "vitest";
 
@@ -12,14 +12,46 @@ describe("math evidence projection", () => {
     });
 
     expect(evidence).toContain("MathReasoning internal evidence");
+    expect(evidence).toContain("A MathReasoning card has already been written");
     expect(evidence).toContain("reasonKey=math-verification-verified");
     expect(evidence).toContain("cas status: verified");
     expect(evidence).toContain("cas step status: partial");
     expect(evidence).toContain(
-      "order=0; rule=cas.solve; lane=derived; input=x^2 - 1 = 0; output=[-1, 1]; schoolKey=math-step-school"
+      "order=0; rule=cas.solve; lane=derived; input=x^2 - 1 = 0; output=[-1, 1]; schoolKey=math-step-solve"
     );
-    expect(evidence).toContain("key=math-assumption-planned-from-prompt");
+    expect(evidence).toContain("key=math-assumption-variable");
     expect(evidence).not.toContain("Checked with exact math");
+  });
+
+  it("formats live pedagogy as non-canonical evidence-bound context", () => {
+    const evidence = formatMathCapabilityEvidence({
+      pedagogy: {
+        evidenceHash: "evidence:abc",
+        kind: "math-pedagogy-projection",
+        locale: "en",
+        model: {
+          gatewayModelId: "google/gemini-3-flash",
+          modelId: "nakafa-lite",
+          promptVersion: "math.pedagogy.v1",
+          provider: "ai-gateway",
+          schemaVersion: "pedagogy.projection.v1",
+        },
+        narratedAt: 1,
+        sentences: [
+          {
+            evidenceRefs: ["math:solve:1:abc:step:0"],
+            id: "math:solve:1:abc:pedagogy:0",
+            text: "The equation is split into the solutions shown in the checked step.",
+          },
+        ],
+        workId: "math:solve:1:abc",
+      },
+      result: checkedWork(),
+    });
+
+    expect(evidence).toContain("pedagogy projection:");
+    expect(evidence).toContain("evidenceHash=evidence:abc");
+    expect(evidence).toContain("refs=math:solve:1:abc:step:0");
   });
 
   it("formats contradicted CAS status without hiding the mismatch", () => {
@@ -88,10 +120,22 @@ function checkedWork(): MathWorkResultShape {
           latex: "\\left[-1,1\\right]",
         },
         projection: {
-          advanced: { key: "math-step-advanced", values: [] },
-          atomic: { key: "math-step-atomic", values: [] },
-          professor: { key: "math-step-professor", values: [] },
-          school: { key: "math-step-school", values: [] },
+          advanced: {
+            key: "math-step-solve",
+            values: [{ name: "evidenceRef", value: "math:solve:1:abc:step:0" }],
+          },
+          atomic: {
+            key: "math-step-solve",
+            values: [{ name: "evidenceRef", value: "math:solve:1:abc:step:0" }],
+          },
+          professor: {
+            key: "math-step-solve",
+            values: [{ name: "evidenceRef", value: "math:solve:1:abc:step:0" }],
+          },
+          school: {
+            key: "math-step-solve",
+            values: [{ name: "evidenceRef", value: "math:solve:1:abc:step:0" }],
+          },
         },
         projectionLevels: ["atomic", "school", "advanced", "professor"],
         ruleId: "cas.solve",
@@ -102,9 +146,12 @@ function checkedWork(): MathWorkResultShape {
     work: {
       assumptions: [
         {
-          copyKey: "math-assumption-planned-from-prompt",
+          copyKey: "math-assumption-variable",
           lane: "pedagogical",
-          values: [],
+          values: [
+            { name: "evidenceRef", value: "math:solve:1:abc:assumption:0" },
+            { name: "variable", value: "x" },
+          ],
         },
       ],
       computations: [
@@ -131,7 +178,6 @@ function checkedWork(): MathWorkResultShape {
           status: "verified",
         },
       ],
-      createdAt: 1,
       input: {
         givens: ["x^2 - 1 = 0"],
         kind: "prompt",

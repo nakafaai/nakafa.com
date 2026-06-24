@@ -196,6 +196,19 @@ describe("planCasRequest", () => {
         })
       )
     );
+    const extraCirclePoint = await Effect.runPromiseExit(
+      planCasRequest(
+        mathInput({
+          operation: "circle",
+          pointSemantics: "circle-radius-point",
+          points: [
+            { x: "0", y: "0" },
+            { x: "3", y: "2" },
+            { x: "4", y: "4" },
+          ],
+        })
+      )
+    );
 
     expectPlanningFailure(missingExpression);
     expectPlanningFailure(ambiguousVariable);
@@ -206,6 +219,7 @@ describe("planCasRequest", () => {
     expectPlanningFailure(missingCirclePoints);
     expectPlanningFailure(missingPoints);
     expectPlanningFailure(ambiguousCircle);
+    expectPlanningFailure(extraCirclePoint);
   });
 });
 

@@ -1,11 +1,13 @@
-import { NakafaDataSchema } from "@repo/ai/schema/data";
+import {
+  MathReasoningDataPartSchema,
+  NakafaDataSchema,
+} from "@repo/ai/schema/data";
 import type { MyUIMessagePart } from "@repo/ai/types/message";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import {
   requirePartField,
   requireToolState,
-} from "@repo/backend/convex/chats/messageParts/shared";
-import { MathDataSchema } from "@repo/math/schema/data";
+} from "@repo/backend/convex/chats/parts/shared";
 import { ConvexError } from "convex/values";
 import { Schema } from "effect";
 
@@ -326,18 +328,18 @@ export function mapDBPartToUIMessagePart({
           })
         ),
       };
-    case "data-math":
+    case "data-math-reasoning":
       return {
         type: part.type,
         id: requirePartField({
-          value: part.dataMathId,
-          fieldName: "dataMathId",
+          value: part.dataMathReasoningId,
+          fieldName: "dataMathReasoningId",
           partType: part.type,
         }),
-        data: Schema.decodeUnknownSync(MathDataSchema)(
+        data: Schema.decodeUnknownSync(MathReasoningDataPartSchema)(
           requirePartField({
-            value: part.dataMathData,
-            fieldName: "dataMathData",
+            value: part.dataMathReasoningData,
+            fieldName: "dataMathReasoningData",
             partType: part.type,
           })
         ),

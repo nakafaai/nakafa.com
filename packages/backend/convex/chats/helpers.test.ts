@@ -1,6 +1,9 @@
 import { chatResponseFailureCode } from "@repo/ai/config/generation";
 import { api, internal } from "@repo/backend/convex/_generated/api";
-import type { mathWorkResultValidator } from "@repo/backend/convex/math/spec";
+import type {
+  mathPedagogyProjectionValidator,
+  mathWorkResultValidator,
+} from "@repo/backend/convex/math/spec";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -10,6 +13,9 @@ import { describe, expect, it } from "vitest";
 
 const NOW = Date.UTC(2026, 5, 24, 9, 0, 0);
 type MathWorkResultInput = Infer<typeof mathWorkResultValidator>;
+type MathPedagogyProjectionInput = Infer<
+  typeof mathPedagogyProjectionValidator
+>;
 
 describe("chat transcript MathWork cleanup", () => {
   it("deletes normalized math evidence when a generated tail is rewritten", async () => {
@@ -53,6 +59,32 @@ describe("chat transcript MathWork cleanup", () => {
       result: mathWorkResult(),
       toolCallId: "tool-cleanup",
     });
+    await owner.mutation(api.math.mutations.savePedagogyProjection, {
+      chatId,
+      projection: mathPedagogyProjection(),
+      responseMessageIdentifier: "assistant-tail",
+      toolCallId: "tool-cleanup",
+    });
+    await t.mutation(async (ctx) => {
+      await ctx.db.insert("ninaCapabilityTraces", {
+        capability: "math",
+        chatId,
+        durationMs: 8,
+        endedAt: NOW,
+        evidence: {
+          capability: "math",
+          refs: ["math:cleanup:test"],
+          status: "available",
+          summary: "math capability produced deterministic work",
+        },
+        expiresAt: NOW + 1000,
+        responseMessageIdentifier: "assistant-tail",
+        startedAt: NOW - 8,
+        status: "available",
+        toolCallId: "tool-cleanup",
+        userId: identity.userId,
+      });
+    });
 
     await owner.mutation(api.chats.mutations.saveMessage, {
       message: {
@@ -68,7 +100,9 @@ describe("chat transcript MathWork cleanup", () => {
       artifacts: await ctx.db.query("mathWorkArtifacts").collect(),
       computations: await ctx.db.query("mathComputations").collect(),
       messages: await ctx.db.query("messages").collect(),
+      pedagogy: await ctx.db.query("mathPedagogyProjections").collect(),
       steps: await ctx.db.query("mathWorkSteps").collect(),
+      traces: await ctx.db.query("ninaCapabilityTraces").collect(),
       works: await ctx.db.query("mathWorks").collect(),
     }));
 
@@ -83,6 +117,8 @@ describe("chat transcript MathWork cleanup", () => {
     expect(rows.computations).toEqual([]);
     expect(rows.steps).toEqual([]);
     expect(rows.artifacts).toEqual([]);
+    expect(rows.pedagogy).toEqual([]);
+    expect(rows.traces).toEqual([]);
   });
 
   it("deletes detached MathWork when an assistant stream fails", async () => {
@@ -117,6 +153,32 @@ describe("chat transcript MathWork cleanup", () => {
       result: mathWorkResult(),
       toolCallId: "tool-failed",
     });
+    await owner.mutation(api.math.mutations.savePedagogyProjection, {
+      chatId,
+      projection: mathPedagogyProjection(),
+      responseMessageIdentifier: "assistant-failed",
+      toolCallId: "tool-failed",
+    });
+    await t.mutation(async (ctx) => {
+      await ctx.db.insert("ninaCapabilityTraces", {
+        capability: "math",
+        chatId,
+        durationMs: 5,
+        endedAt: NOW,
+        evidence: {
+          capability: "math",
+          refs: ["math:cleanup:test"],
+          status: "available",
+          summary: "math capability produced deterministic work",
+        },
+        expiresAt: NOW + 1000,
+        responseMessageIdentifier: "assistant-failed",
+        startedAt: NOW - 5,
+        status: "available",
+        toolCallId: "tool-failed",
+        userId: identity.userId,
+      });
+    });
     await t.mutation(internal.chats.mutations.saveAssistantFailure, {
       message: {
         chatId,
@@ -131,7 +193,9 @@ describe("chat transcript MathWork cleanup", () => {
       artifacts: await ctx.db.query("mathWorkArtifacts").collect(),
       computations: await ctx.db.query("mathComputations").collect(),
       messages: await ctx.db.query("messages").collect(),
+      pedagogy: await ctx.db.query("mathPedagogyProjections").collect(),
       steps: await ctx.db.query("mathWorkSteps").collect(),
+      traces: await ctx.db.query("ninaCapabilityTraces").collect(),
       works: await ctx.db.query("mathWorks").collect(),
     }));
 
@@ -149,8 +213,35 @@ describe("chat transcript MathWork cleanup", () => {
     expect(rows.computations).toEqual([]);
     expect(rows.steps).toEqual([]);
     expect(rows.artifacts).toEqual([]);
+    expect(rows.pedagogy).toEqual([]);
+    expect(rows.traces).toEqual([]);
   });
 });
+
+/** Builds a compact encoded PedagogyProjection tied to the saved MathWork. */
+function mathPedagogyProjection(): MathPedagogyProjectionInput {
+  return {
+    evidenceHash: "evidence:cleanup",
+    kind: "math-pedagogy-projection",
+    locale: "en",
+    model: {
+      gatewayModelId: "google/gemini-3-flash",
+      modelId: "nakafa-lite",
+      promptVersion: "math.pedagogy.v1",
+      provider: "ai-gateway",
+      schemaVersion: "pedagogy.projection.v1",
+    },
+    narratedAt: NOW,
+    sentences: [
+      {
+        evidenceRefs: ["math:cleanup:test:result:primary"],
+        id: "math:cleanup:test:pedagogy:0",
+        text: "The deterministic result is available for learner narration.",
+      },
+    ],
+    workId: "math:cleanup:test",
+  };
+}
 
 /** Builds a compact encoded MathWork result tied to one assistant response. */
 function mathWorkResult(): MathWorkResultInput {
@@ -174,10 +265,30 @@ function mathWorkResult(): MathWorkResultInput {
         order: 0,
         output: { expression: "5x", latex: "5x" },
         projection: {
-          advanced: { key: "math-step-advanced", values: [] },
-          atomic: { key: "math-step-atomic", values: [] },
-          professor: { key: "math-step-professor", values: [] },
-          school: { key: "math-step-school", values: [] },
+          advanced: {
+            key: "math-step-simplify",
+            values: [
+              { name: "evidenceRef", value: "math:cleanup:test:step:0" },
+            ],
+          },
+          atomic: {
+            key: "math-step-simplify",
+            values: [
+              { name: "evidenceRef", value: "math:cleanup:test:step:0" },
+            ],
+          },
+          professor: {
+            key: "math-step-simplify",
+            values: [
+              { name: "evidenceRef", value: "math:cleanup:test:step:0" },
+            ],
+          },
+          school: {
+            key: "math-step-simplify",
+            values: [
+              { name: "evidenceRef", value: "math:cleanup:test:step:0" },
+            ],
+          },
         },
         projectionLevels: ["atomic", "school", "advanced", "professor"],
         ruleId: "cas.simplify",
@@ -205,7 +316,6 @@ function mathWorkResult(): MathWorkResultInput {
           status: "verified",
         },
       ],
-      createdAt: NOW,
       input: {
         givens: ["2x + 3x"],
         kind: "prompt",

@@ -7,7 +7,7 @@ import { MathExpressionSchema } from "@repo/math/schema/shared";
 import { Schema } from "effect";
 
 const StepProjectionCopySchema = Schema.Struct({
-  key: MathCopyKeySchema,
+  key: Schema.optional(MathCopyKeySchema),
   values: Schema.Array(MathCopyValueSchema).pipe(Schema.mutable),
 }).pipe(Schema.mutable);
 

@@ -1,3 +1,9 @@
+import {
+  PedagogyProjectionPersistenceError,
+  type PedagogyProjectionPersistenceMetadata,
+  PedagogyProjectionRepository,
+} from "@repo/ai/nina/pedagogy/repo";
+import { PedagogyProjection } from "@repo/ai/nina/pedagogy/schema";
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { CasEngine } from "@repo/math/cas/engine";
@@ -69,6 +75,36 @@ export function createMathReasoningService({
   });
 }
 
+/** Creates the Convex-backed repository Adapter for live pedagogy projections. */
+export function createPedagogyProjectionRepository({
+  chatId,
+  token,
+}: {
+  readonly chatId: Id<"chats">;
+  readonly token: string;
+}): Context.Tag.Service<typeof PedagogyProjectionRepository> {
+  return PedagogyProjectionRepository.make({
+    save: (projection, metadata) =>
+      Schema.encode(PedagogyProjection)(projection).pipe(
+        Effect.mapError(
+          (error) =>
+            new PedagogyProjectionPersistenceError({
+              message: error.message,
+              source: "pedagogyProjection.encode",
+            })
+        ),
+        Effect.flatMap((encoded) =>
+          savePedagogyProjection({
+            chatId,
+            metadata,
+            encoded,
+            token,
+          })
+        )
+      ),
+  });
+}
+
 /** Maps app Adapter setup failures into the public MathReasoning error union. */
 function mapMathReasoningServiceError(
   error:
@@ -122,6 +158,40 @@ function saveMathWork({
       new MathPersistenceError({
         message: "Unable to persist normalized MathWork evidence.",
         source: "mathWork.convex",
+      }),
+  }).pipe(Effect.asVoid);
+}
+
+/** Persists one encoded live pedagogy projection through authenticated Convex. */
+function savePedagogyProjection({
+  chatId,
+  encoded,
+  metadata,
+  token,
+}: {
+  readonly chatId: Id<"chats">;
+  readonly encoded: Schema.Schema.Encoded<typeof PedagogyProjection>;
+  readonly metadata: PedagogyProjectionPersistenceMetadata;
+  readonly token: string;
+}) {
+  return Effect.tryPromise({
+    try: () =>
+      fetchMutation(
+        convexApi.math.mutations.savePedagogyProjection,
+        {
+          chatId,
+          projection: encoded,
+          ...(metadata.responseMessageIdentifier
+            ? { responseMessageIdentifier: metadata.responseMessageIdentifier }
+            : {}),
+          ...(metadata.toolCallId ? { toolCallId: metadata.toolCallId } : {}),
+        },
+        { token }
+      ),
+    catch: () =>
+      new PedagogyProjectionPersistenceError({
+        message: "Unable to persist math pedagogy projection.",
+        source: "pedagogyProjection.convex",
       }),
   }).pipe(Effect.asVoid);
 }

@@ -1,4 +1,8 @@
 import {
+  pedagogyProjectionSchemaVersion,
+  pedagogyPromptVersion,
+} from "@repo/ai/nina/pedagogy/schema";
+import {
   mathWorkArtifactKindValues,
   visualIntentKindValues,
 } from "@repo/math/schema/artifact";
@@ -162,7 +166,7 @@ export const mathWorkNoteValidator = v.object({
 
 /** Projection copy validator for one derivation level. */
 const stepProjectionCopyValidator = v.object({
-  key: mathCopyKeyValidator,
+  key: v.optional(mathCopyKeyValidator),
   values: v.array(mathCopyValueValidator),
 });
 
@@ -229,7 +233,6 @@ export const mathWorkArtifactValidator = v.object({
 /** Canonical MathWork row shape without child computations, steps, or artifacts. */
 export const mathWorkValidator = v.object({
   assumptions: v.array(mathWorkNoteValidator),
-  createdAt: v.number(),
   input: mathWorkInputValidator,
   limitations: v.array(mathWorkNoteValidator),
   plannedRequest: mathRequestValidator,
@@ -249,27 +252,74 @@ export const mathWorkResultValidator = v.object({
   }),
 });
 
-/** Minimal math request context streamed while work is loading or failed. */
-const mathDataInputValidator = v.object({
+/** Metadata for a non-canonical live math pedagogy projection. */
+export const mathPedagogyModelValidator = v.object({
+  gatewayModelId: v.string(),
+  modelId: v.string(),
+  promptVersion: v.literal(pedagogyPromptVersion),
+  provider: v.literal("ai-gateway"),
+  schemaVersion: v.literal(pedagogyProjectionSchemaVersion),
+});
+
+/** One evidence-bound learner sentence generated from MathWork evidence. */
+export const mathPedagogySentenceValidator = v.object({
+  evidenceRefs: v.array(v.string()),
+  id: v.string(),
+  text: v.string(),
+});
+
+/** Regenerable math pedagogy projection; not canonical proof. */
+export const mathPedagogyProjectionValidator = v.object({
+  evidenceHash: v.string(),
+  kind: v.literal("math-pedagogy-projection"),
+  locale: v.string(),
+  model: mathPedagogyModelValidator,
+  narratedAt: v.number(),
+  sentences: v.array(mathPedagogySentenceValidator),
+  workId: v.string(),
+});
+
+/** Minimal MathReasoning request context streamed while work is loading or failed. */
+const mathReasoningInputValidator = v.object({
   givens: v.array(v.string()),
   objective: v.string(),
   request: v.string(),
   requirements: v.optional(v.array(v.string())),
 });
 
-/** Compact MathWork data part persisted in chat transcript rows. */
-export const mathDataValidator = v.union(
+/** Nested live pedagogy lane for the fresh MathReasoning transcript contract. */
+const mathReasoningPedagogyLaneValidator = v.union(
   v.object({
-    input: mathDataInputValidator,
+    status: v.literal("loading"),
+    workId: v.string(),
+  }),
+  v.object({
+    projection: mathPedagogyProjectionValidator,
+    status: v.literal("done"),
+  }),
+  v.object({
+    reason: v.string(),
+    status: v.literal("error"),
+    workId: v.string(),
+  })
+);
+
+/** Compact MathReasoning transcript contract persisted in chat transcript rows. */
+export const mathReasoningDataValidator = v.union(
+  v.object({
+    input: mathReasoningInputValidator,
+    pedagogy: v.optional(mathReasoningPedagogyLaneValidator),
     status: v.literal("loading"),
   }),
   v.object({
+    pedagogy: v.optional(mathReasoningPedagogyLaneValidator),
     result: mathWorkResultValidator,
     status: v.literal("done"),
   }),
   v.object({
     errorKey: mathCopyKeyValidator,
-    input: mathDataInputValidator,
+    input: mathReasoningInputValidator,
+    pedagogy: v.optional(mathReasoningPedagogyLaneValidator),
     status: v.literal("error"),
   })
 );

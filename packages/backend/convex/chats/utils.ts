@@ -5,7 +5,7 @@ import {
 } from "@repo/ai/nina/memory/pack";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import { mapDBPartToUIMessagePart } from "@repo/backend/convex/chats/messageParts/dbToUi";
+import { mapDBPartToUIMessagePart } from "@repo/backend/convex/chats/parts/ui";
 import { Option, Schema } from "effect";
 
 /** Decodes stored Nina snapshots from Convex JSON into branded AI metadata. */

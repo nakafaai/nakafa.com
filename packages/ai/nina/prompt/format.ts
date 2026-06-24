@@ -22,6 +22,18 @@ export function formatAnswerPrompt() {
       - Rewrite retrieved $...$ or $$...$$ math to \\(...\\) or \\[...\\].
       - Never use dollar delimiters or inline code for math.
 
+      ## MathReasoning cards
+
+      When a MathReasoning data part or math specialist result is present:
+      - Let the MathReasoning card own deterministic formulas, result values,
+        derivation steps, verification lanes, and live pedagogy.
+      - Do not rewrite the solution, equations, arithmetic, result values,
+        derivation steps, or verification as assistant prose.
+      - Keep the final assistant text to at most one short sentence that points
+        the learner to the card.
+      - Do not add headings, lists, LaTeX, arithmetic, vague validation claims,
+        greetings, sign-offs, or follow-up invitations.
+
       ## Code block format
 
       Use \`\`\`{language} for code blocks.

@@ -2,11 +2,12 @@ import { MathCopyKeySchema } from "@repo/math/schema/copy";
 import { MathWorkResult } from "@repo/math/schema/work";
 import { Schema } from "effect";
 
-/** Encoded MathWorkResult schema used for serializable UI data parts. */
-const MathWorkResultDataSchema = Schema.encodedSchema(MathWorkResult);
+/** Encoded MathWorkResult schema used for serializable MathReasoning data. */
+export const MathReasoningResultDataSchema =
+  Schema.encodedSchema(MathWorkResult);
 
-/** Minimal math request context streamed while work is loading or failed. */
-const MathDataInputSchema = Schema.Struct({
+/** Minimal MathReasoning request context streamed while work is loading or failed. */
+export const MathReasoningInputDataSchema = Schema.Struct({
   givens: Schema.Array(Schema.NonEmptyString).pipe(Schema.mutable),
   objective: Schema.NonEmptyString,
   request: Schema.NonEmptyString,
@@ -17,32 +18,34 @@ const MathDataInputSchema = Schema.Struct({
 }).pipe(Schema.mutable);
 
 /** Streaming state emitted before MathReasoning returns a result. */
-const MathLoadingDataSchema = Schema.Struct({
-  input: MathDataInputSchema,
+export const MathReasoningLoadingDataSchema = Schema.Struct({
+  input: MathReasoningInputDataSchema,
   status: Schema.Literal("loading"),
 }).pipe(Schema.mutable);
 
 /** Streaming state emitted after MathReasoning returns normalized evidence. */
-const MathDoneDataSchema = Schema.Struct({
-  result: MathWorkResultDataSchema,
+export const MathReasoningDoneDataSchema = Schema.Struct({
+  result: MathReasoningResultDataSchema,
   status: Schema.Literal("done"),
 }).pipe(Schema.mutable);
 
 /** Streaming state emitted when MathReasoning cannot produce evidence. */
-const MathErrorDataSchema = Schema.Struct({
+export const MathReasoningErrorDataSchema = Schema.Struct({
   errorKey: MathCopyKeySchema,
-  input: MathDataInputSchema,
+  input: MathReasoningInputDataSchema,
   status: Schema.Literal("error"),
 }).pipe(Schema.mutable);
 
-/** MathWork data part streamed to the chat UI. */
-export const MathDataSchema = Schema.Union(
-  MathLoadingDataSchema,
-  MathDoneDataSchema,
-  MathErrorDataSchema
+/** Deterministic MathReasoning lane streamed to the chat UI. */
+export const MathReasoningDataSchema = Schema.Union(
+  MathReasoningLoadingDataSchema,
+  MathReasoningDoneDataSchema,
+  MathReasoningErrorDataSchema
 ).annotations({
   description:
-    "Compact MathWork UI data part; durable evidence is stored in normalized rows.",
+    "Compact deterministic MathReasoning lane; durable evidence is stored in normalized rows.",
 });
 
-export type MathData = Schema.Schema.Type<typeof MathDataSchema>;
+export type MathReasoningData = Schema.Schema.Type<
+  typeof MathReasoningDataSchema
+>;

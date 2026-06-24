@@ -1,12 +1,16 @@
 import type { MathWorkResult } from "@repo/math/schema/work";
-import { Context, Effect, Layer } from "effect";
+import { Context, Effect, Layer, Schema } from "effect";
 import type { MathPersistenceError } from "./errors";
 
 /** App-owned metadata attached to durable MathWork rows outside canonical evidence. */
-export interface MathWorkPersistenceMetadata {
-  readonly responseMessageIdentifier?: string;
-  readonly toolCallId?: string;
-}
+export const MathWorkPersistenceMetadataSchema = Schema.Struct({
+  responseMessageIdentifier: Schema.optional(Schema.String),
+  toolCallId: Schema.optional(Schema.String),
+}).pipe(Schema.mutable);
+
+export type MathWorkPersistenceMetadata = Schema.Schema.Type<
+  typeof MathWorkPersistenceMetadataSchema
+>;
 
 /** Durable persistence seam for normalized MathWork evidence. */
 export class MathWorkRepository extends Context.Tag("MathWorkRepository")<

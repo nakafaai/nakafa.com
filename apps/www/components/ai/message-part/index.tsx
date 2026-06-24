@@ -46,7 +46,7 @@ export const AiMessagePart = ({ part, partIndex }: Props) => {
       return <ScrapeUrlPart message={part.data} />;
     case "data-suggestions":
       return null;
-    case "data-math":
+    case "data-math-reasoning":
       return <MathPart message={part.data} />;
     case "data-nakafa":
       return <NakafaPart message={part.data} />;

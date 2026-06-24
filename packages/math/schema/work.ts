@@ -87,7 +87,6 @@ export const MathComputationSchema = Schema.Struct({
 export class MathWork extends Schema.Class<MathWork>("MathWork")({
   assumptions: Schema.Array(MathWorkNoteSchema).pipe(Schema.mutable),
   computations: Schema.Array(MathComputationSchema).pipe(Schema.mutable),
-  createdAt: Schema.Number,
   input: MathWorkInputSchema,
   limitations: Schema.Array(MathWorkNoteSchema).pipe(Schema.mutable),
   plannedRequest: MathRequestSchema,

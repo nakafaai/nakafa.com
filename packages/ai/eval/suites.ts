@@ -1,9 +1,9 @@
 import { nakafaAgentPrompt } from "@repo/ai/agents/nakafa/prompt";
 import { formatResearchOutput } from "@repo/ai/agents/research/output";
 import { researchPrompt } from "@repo/ai/agents/research/prompt";
-import { createMathEvalWork } from "@repo/ai/eval/mathWork";
+import { createMathEvalWork } from "@repo/ai/eval/math-work";
 import { EvalCase, EvalExpectation, EvalSuite } from "@repo/ai/eval/spec";
-import { formatMathCapabilityEvidence } from "@repo/ai/nina/capability/mathEvidence";
+import { formatMathCapabilityEvidence } from "@repo/ai/nina/capability/math-evidence";
 import {
   CapabilityTrace,
   EvidenceEnvelope,

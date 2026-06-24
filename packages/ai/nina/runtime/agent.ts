@@ -2,6 +2,7 @@ import { provider } from "@repo/ai/config/app";
 import { getModelProviderOptions } from "@repo/ai/config/model";
 import { gatewayProviderOptions } from "@repo/ai/config/routing";
 import { chatStreamTimeout } from "@repo/ai/config/timeouts";
+import { MATH_CAPABILITY } from "@repo/ai/nina/capability/spec";
 import type {
   NinaPage,
   NinaRuntime,
@@ -15,6 +16,7 @@ import {
 import type { MyMetadata, MyUIMessage } from "@repo/ai/types/message";
 import {
   type AgentStreamParameters,
+  hasToolCall,
   type LanguageModelUsage,
   type ModelMessage,
   smoothStream,
@@ -119,7 +121,10 @@ export const runNinaAgentTurn = Effect.fn("nina.agent.turn")(function* ({
       gateway: gatewayProviderOptions,
       google: getModelProviderOptions(runtime.modelId),
     },
-    stopWhen: stepCountIs(MAX_ORCHESTRATOR_STEPS),
+    stopWhen: [
+      hasToolCall(MATH_CAPABILITY),
+      stepCountIs(MAX_ORCHESTRATOR_STEPS),
+    ],
     tools: settings.tools,
   });
   const streamTextResult = yield* Effect.tryPromise({

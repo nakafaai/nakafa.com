@@ -60,6 +60,59 @@ describe("deriveSteps", () => {
       latex: "x = 3",
     });
   });
+
+  it("maps every supported CAS action to a semantic copy key", () => {
+    const actions = [
+      "apart",
+      "cancel",
+      "compare",
+      "differentiate",
+      "distance",
+      "evaluate",
+      "expand",
+      "factor",
+      "integrate",
+      "integrate_sum",
+      "integrate_symmetry",
+      "rationalize",
+      "simplify",
+      "solve",
+      "substitute",
+      "together",
+      "unsupported",
+    ];
+    const steps = deriveSteps({
+      lane: "derived",
+      result: {
+        ...mathResult(),
+        steps: actions.map((action) => casStep(action, {})),
+      },
+      workId: "math:steps:actions",
+    });
+
+    expect(steps.map((step) => step.projection.school.key)).toEqual([
+      "math-step-apart",
+      "math-step-cancel",
+      "math-step-compare",
+      "math-step-differentiate",
+      "math-step-distance",
+      "math-step-evaluate",
+      "math-step-expand",
+      "math-step-factor",
+      "math-step-integrate",
+      "math-step-integrate-sum",
+      "math-step-integrate-symmetry",
+      "math-step-rationalize",
+      "math-step-simplify",
+      "math-step-solve",
+      "math-step-substitute",
+      "math-step-together",
+      undefined,
+    ]);
+    expect(steps.at(-1)?.projection.school.values).toEqual(
+      expect.arrayContaining([{ name: "action", value: "unsupported" }])
+    );
+  });
 });
 
 /** Builds a CAS step with optional secondary or relation output evidence. */

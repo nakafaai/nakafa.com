@@ -4,8 +4,11 @@ import {
   DEFAULT_LATITUDE,
   DEFAULT_LONGITUDE,
 } from "@repo/ai/clients/weather/client";
+import { LiveLanguageModelProvider } from "@repo/ai/config/language/live";
 import { hasEnoughCredits, ModelIdSchema } from "@repo/ai/config/model";
 import { NinaHarness } from "@repo/ai/nina/harness/stream";
+import { PedagogyNarrator } from "@repo/ai/nina/pedagogy/narrator";
+import { PedagogyProjectionRepository } from "@repo/ai/nina/pedagogy/repo";
 import { NinaReporter } from "@repo/ai/nina/runtime/report";
 import { NinaStore } from "@repo/ai/nina/runtime/store";
 import type { MyUIMessage } from "@repo/ai/types/message";
@@ -20,7 +23,10 @@ import { getTranslations } from "next-intl/server";
 import { CHAT_ERRORS } from "@/app/api/chat/constants";
 import { getCanonicalCurrentPageContentUrl } from "@/app/api/chat/content";
 import { resolveNinaLearningSession } from "@/app/api/chat/context";
-import { createMathReasoningService } from "@/app/api/chat/math";
+import {
+  createMathReasoningService,
+  createPedagogyProjectionRepository,
+} from "@/app/api/chat/math";
 import { search as nakafaSearch } from "@/app/api/chat/nakafa";
 import { nakafaContent } from "@/app/api/chat/nakafa-content";
 import { createChatErrorReporter } from "@/app/api/chat/observability";
@@ -261,6 +267,12 @@ export function POST(req: Request) {
         Effect.provideService(
           MathReasoning,
           createMathReasoningService({ chatId, token })
+        ),
+        Effect.provide(PedagogyNarrator.Default),
+        Effect.provide(LiveLanguageModelProvider),
+        Effect.provideService(
+          PedagogyProjectionRepository,
+          createPedagogyProjectionRepository({ chatId, token })
         ),
         Effect.provideService(Nakafa, nakafaContent),
         Effect.provideService(NakafaSearch, nakafaSearch)

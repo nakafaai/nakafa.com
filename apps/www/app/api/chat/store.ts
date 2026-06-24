@@ -8,7 +8,7 @@ import type { NinaStore } from "@repo/ai/nina/runtime/store";
 import { NinaStoreError } from "@repo/ai/nina/runtime/store";
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { mapUIMessagePartsToDBParts } from "@repo/backend/convex/chats/messageParts/uiToDb";
+import { mapUIMessagePartsToDBParts } from "@repo/backend/convex/chats/parts/db";
 import { waitUntil } from "@vercel/functions";
 import { fetchAction, fetchMutation } from "convex/nextjs";
 import { type Context, Effect } from "effect";

@@ -1,6 +1,6 @@
 import type { DataPart } from "@repo/ai/schema/data";
 import type { MathToolInput } from "@repo/ai/schema/tools";
-import { mapDBPartToUIMessagePart } from "@repo/backend/convex/chats/messageParts/dbToUi";
+import { mapDBPartToUIMessagePart } from "@repo/backend/convex/chats/parts/ui";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
@@ -92,9 +92,9 @@ describe("mapDBPartToUIMessagePart", () => {
       await ctx.db.insert("parts", {
         messageId,
         order: 2,
-        type: "data-math",
-        dataMathId: "math-1",
-        dataMathData: mathDataFixture(),
+        type: "data-math-reasoning",
+        dataMathReasoningId: "math-1",
+        dataMathReasoningData: mathReasoningDataFixture(),
       });
       await ctx.db.insert("parts", {
         messageId,
@@ -116,7 +116,7 @@ describe("mapDBPartToUIMessagePart", () => {
       });
       await ctx.db.insert("parts", {
         messageId,
-        order: 4,
+        order: 5,
         type: "data-nakafa",
         dataNakafaId: "taxonomy-1",
         dataNakafaData: {
@@ -133,7 +133,7 @@ describe("mapDBPartToUIMessagePart", () => {
       });
       await ctx.db.insert("parts", {
         messageId,
-        order: 5,
+        order: 6,
         type: "data-nakafa",
         dataNakafaId: "search-1",
         dataNakafaData: {
@@ -163,7 +163,7 @@ describe("mapDBPartToUIMessagePart", () => {
       });
       await ctx.db.insert("parts", {
         messageId,
-        order: 6,
+        order: 7,
         type: "data-scrape-url",
         dataScrapeUrlId: "scrape-1",
         dataScrapeUrlUrl: "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
@@ -198,9 +198,16 @@ describe("mapDBPartToUIMessagePart", () => {
         resultProviderMetadata: toolResultProviderMetadata,
       }),
       expect.objectContaining({
-        type: "data-math",
+        type: "data-math-reasoning",
         id: "math-1",
         data: expect.objectContaining({
+          pedagogy: expect.objectContaining({
+            projection: expect.objectContaining({
+              evidenceHash: "evidence:test",
+              workId: "math:simplify:test",
+            }),
+            status: "done",
+          }),
           result: expect.objectContaining({
             work: expect.objectContaining({
               workId: "math:simplify:test",
@@ -256,9 +263,10 @@ describe("mapDBPartToUIMessagePart", () => {
   });
 });
 
-/** Builds a compact MathWork data part for transcript mapping tests. */
-function mathDataFixture(): DataPart["math"] {
+/** Builds a compact MathReasoning data part for transcript mapping tests. */
+function mathReasoningDataFixture(): DataPart["math-reasoning"] {
   return {
+    pedagogy: mathPedagogyLaneFixture(),
     result: {
       artifacts: [],
       steps: [],
@@ -288,7 +296,6 @@ function mathDataFixture(): DataPart["math"] {
             status: "verified",
           },
         ],
-        createdAt: now,
         input: {
           givens: ["2x + 3x"],
           kind: "prompt",
@@ -316,6 +323,36 @@ function mathDataFixture(): DataPart["math"] {
         },
         workId: "math:simplify:test",
       },
+    },
+    status: "done",
+  };
+}
+
+/** Builds a compact live pedagogy lane for transcript mapping tests. */
+function mathPedagogyLaneFixture(): NonNullable<
+  DataPart["math-reasoning"]["pedagogy"]
+> {
+  return {
+    projection: {
+      evidenceHash: "evidence:test",
+      kind: "math-pedagogy-projection",
+      locale: "en",
+      model: {
+        gatewayModelId: "google/gemini-3-flash",
+        modelId: "nakafa-lite",
+        promptVersion: "math.pedagogy.v1",
+        provider: "ai-gateway",
+        schemaVersion: "pedagogy.projection.v1",
+      },
+      narratedAt: now,
+      sentences: [
+        {
+          evidenceRefs: ["math:simplify:test:result:primary"],
+          id: "math:simplify:test:pedagogy:0",
+          text: "The simplified expression is the result shown above.",
+        },
+      ],
+      workId: "math:simplify:test",
     },
     status: "done",
   };

@@ -9,7 +9,7 @@ import type { MyUIMessage } from "@repo/ai/types/message";
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { CHAT_MESSAGES_PAGE_SIZE } from "@repo/backend/convex/chats/constants";
-import { mapUIMessagePartsToDBParts } from "@repo/backend/convex/chats/messageParts/uiToDb";
+import { mapUIMessagePartsToDBParts } from "@repo/backend/convex/chats/parts/db";
 import { mapDBMessagesToUIMessages } from "@repo/backend/convex/chats/utils";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import type { FunctionReturnType } from "convex/server";

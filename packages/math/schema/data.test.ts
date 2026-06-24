@@ -1,11 +1,11 @@
-import { MathDataSchema } from "@repo/math/schema/data";
+import { MathReasoningDataSchema } from "@repo/math/schema/data";
 import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
-describe("MathDataSchema", () => {
-  it("decodes loading and completed MathWork data parts", () => {
+describe("MathReasoningDataSchema", () => {
+  it("decodes loading and completed deterministic MathReasoning lanes", () => {
     expect(
-      Schema.decodeUnknownSync(MathDataSchema)({
+      Schema.decodeUnknownSync(MathReasoningDataSchema)({
         input: {
           givens: ["x^2 - 1 = 0"],
           objective: "Solve the equation",
@@ -18,7 +18,7 @@ describe("MathDataSchema", () => {
     });
 
     expect(
-      Schema.decodeUnknownSync(MathDataSchema)({
+      Schema.decodeUnknownSync(MathReasoningDataSchema)({
         result: {
           artifacts: [],
           steps: [],
@@ -44,7 +44,6 @@ describe("MathDataSchema", () => {
                 status: "verified",
               },
             ],
-            createdAt: 1,
             input: {
               givens: ["x^2 - 1 = 0"],
               kind: "prompt",

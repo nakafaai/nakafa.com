@@ -1,3 +1,4 @@
+import { PedagogyLaneSchema } from "@repo/ai/nina/pedagogy/schema";
 import { NakafaAgentExerciseOptionsSchema } from "@repo/contents/_lib/agent/schema/exercise";
 import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agent/schema/quran";
 import { NakafaAgentReadOptionsSchema } from "@repo/contents/_lib/agent/schema/read";
@@ -11,7 +12,11 @@ import {
   NakafaAgentSearchResultSchema,
 } from "@repo/contents/_lib/agent/schema/search";
 import { NakafaAgentTaxonomyOptionsSchema } from "@repo/contents/_lib/agent/schema/taxonomy";
-import { MathDataSchema } from "@repo/math/schema/data";
+import {
+  MathReasoningDoneDataSchema,
+  MathReasoningErrorDataSchema,
+  MathReasoningLoadingDataSchema,
+} from "@repo/math/schema/data";
 import { locales } from "@repo/utilities/locales";
 import { Schema } from "effect";
 
@@ -174,6 +179,17 @@ const NakafaTaxonomyErrorSchema = Schema.Struct({
   status: Schema.Literal("error"),
 }).pipe(Schema.mutable);
 
+const mathPedagogyLaneField = Schema.Struct({
+  pedagogy: Schema.optional(PedagogyLaneSchema),
+});
+
+/** Public chat transcript math envelope with one deterministic lane and one optional live narration lane. */
+export const MathReasoningDataPartSchema = Schema.Union(
+  MathReasoningLoadingDataSchema.pipe(Schema.extend(mathPedagogyLaneField)),
+  MathReasoningDoneDataSchema.pipe(Schema.extend(mathPedagogyLaneField)),
+  MathReasoningErrorDataSchema.pipe(Schema.extend(mathPedagogyLaneField))
+);
+
 /**
  * UI data payloads written by Nakafa sub-tools.
  */
@@ -199,7 +215,7 @@ export const NakafaDataSchema = Schema.Union(
  * UI data parts written by Nina agents.
  */
 export const DataPartSchema = Schema.Struct({
-  math: MathDataSchema,
+  "math-reasoning": MathReasoningDataPartSchema,
   nakafa: NakafaDataSchema,
   "scrape-url": Schema.Struct({
     content: Schema.String,
@@ -231,4 +247,7 @@ export const DataPartSchema = Schema.Struct({
 }).pipe(Schema.mutable);
 
 export type DataPart = Schema.Schema.Type<typeof DataPartSchema>;
+export type MathReasoningDataPart = Schema.Schema.Type<
+  typeof MathReasoningDataPartSchema
+>;
 export type NakafaDataPart = Schema.Schema.Type<typeof NakafaDataSchema>;

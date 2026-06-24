@@ -1,6 +1,6 @@
 import type { MyUIMessage, MyUIMessagePart } from "@repo/ai/types/message";
-import { toPersistedProviderMetadata } from "@repo/backend/convex/chats/messageParts/providerMetadata";
-import type { DBPart } from "@repo/backend/convex/chats/messageParts/shared";
+import { toPersistedProviderMetadata } from "@repo/backend/convex/chats/parts/metadata";
+import type { DBPart } from "@repo/backend/convex/chats/parts/shared";
 import type { ToolState } from "@repo/backend/convex/chats/schema";
 import { ConvexError } from "convex/values";
 
@@ -134,12 +134,12 @@ function mapUIMessagePartToDBPart(
         dataNakafaId: part.id,
         dataNakafaData: part.data,
       };
-    case "data-math":
+    case "data-math-reasoning":
       return {
         ...baseFields,
         type: part.type,
-        dataMathId: part.id,
-        dataMathData: part.data,
+        dataMathReasoningId: part.id,
+        dataMathReasoningData: part.data,
       };
     case "data-scrape-url":
       return {

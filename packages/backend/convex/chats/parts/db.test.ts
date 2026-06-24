@@ -1,7 +1,7 @@
 import type { DataPart } from "@repo/ai/schema/data";
 import type { MathToolInput } from "@repo/ai/schema/tools";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import { mapUIMessagePartsToDBParts } from "@repo/backend/convex/chats/messageParts/uiToDb";
+import { mapUIMessagePartsToDBParts } from "@repo/backend/convex/chats/parts/db";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
 import type { ProviderMetadata } from "ai";
@@ -63,8 +63,8 @@ describe("mapUIMessagePartsToDBParts", () => {
       },
       {
         id: "math-1",
-        type: "data-math",
-        data: mathDataFixture(),
+        type: "data-math-reasoning",
+        data: mathReasoningDataFixture(),
       },
       {
         id: "content-1",
@@ -136,8 +136,15 @@ describe("mapUIMessagePartsToDBParts", () => {
         toolResultProviderMetadata,
       }),
       expect.objectContaining({
-        type: "data-math",
-        dataMathData: expect.objectContaining({
+        type: "data-math-reasoning",
+        dataMathReasoningData: expect.objectContaining({
+          pedagogy: expect.objectContaining({
+            projection: expect.objectContaining({
+              evidenceHash: "evidence:test",
+              workId: "math:simplify:test",
+            }),
+            status: "done",
+          }),
           result: expect.objectContaining({
             work: expect.objectContaining({
               workId: "math:simplify:test",
@@ -145,7 +152,7 @@ describe("mapUIMessagePartsToDBParts", () => {
           }),
           status: "done",
         }),
-        dataMathId: "math-1",
+        dataMathReasoningId: "math-1",
       }),
       expect.objectContaining({
         type: "data-nakafa",
@@ -210,9 +217,10 @@ describe("mapUIMessagePartsToDBParts", () => {
   });
 });
 
-/** Builds a compact MathWork data part for transcript persistence tests. */
-function mathDataFixture(): DataPart["math"] {
+/** Builds a compact MathReasoning data part for transcript persistence tests. */
+function mathReasoningDataFixture(): DataPart["math-reasoning"] {
   return {
+    pedagogy: mathPedagogyLaneFixture(),
     result: {
       artifacts: [],
       steps: [],
@@ -242,7 +250,6 @@ function mathDataFixture(): DataPart["math"] {
             status: "verified",
           },
         ],
-        createdAt: 1,
         input: {
           givens: ["2x + 3x"],
           kind: "prompt",
@@ -270,6 +277,36 @@ function mathDataFixture(): DataPart["math"] {
         },
         workId: "math:simplify:test",
       },
+    },
+    status: "done",
+  };
+}
+
+/** Builds a compact live pedagogy lane for transcript persistence tests. */
+function mathPedagogyLaneFixture(): NonNullable<
+  DataPart["math-reasoning"]["pedagogy"]
+> {
+  return {
+    projection: {
+      evidenceHash: "evidence:test",
+      kind: "math-pedagogy-projection",
+      locale: "en",
+      model: {
+        gatewayModelId: "google/gemini-3-flash",
+        modelId: "nakafa-lite",
+        promptVersion: "math.pedagogy.v1",
+        provider: "ai-gateway",
+        schemaVersion: "pedagogy.projection.v1",
+      },
+      narratedAt: 1,
+      sentences: [
+        {
+          evidenceRefs: ["math:simplify:test:result:primary"],
+          id: "math:simplify:test:pedagogy:0",
+          text: "The simplified expression is the result shown above.",
+        },
+      ],
+      workId: "math:simplify:test",
     },
     status: "done",
   };

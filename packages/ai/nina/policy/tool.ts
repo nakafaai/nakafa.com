@@ -94,15 +94,18 @@ export function formatToolPolicyPrompt() {
 
       Use math for deterministic evidence across first-slice algebra, equations, simplification, factoring, basic derivatives/integrals, and coordinate line/circle checks.
       Use math to verify user-provided expressions, user-provided data, and math content retrieved from another evidence path.
+      For a direct learner request to solve, simplify, factor, differentiate, integrate, or check a specific expression, use math even when the expression appears incomplete or invalid. Preserve the expression exactly in math.math so MathReasoning can return a typed limitation instead of letting Nina invent a workaround explanation.
 
       Do not use math as the first or only source for practice sets: warmups, quizzes, tryout preparation, examples, hints, or review tasks.
       Call Nakafa first, then use math only for deterministic verification of selected content.
 
       Math input rules:
       - Fill math.math with the complete structured calculation; use request and objective only for context and learning goal.
+      - If the learner's expression is incomplete but the intent is a direct calculation, put the incomplete expression in math.math.expression and let MathReasoning fail typed.
       - Include the complete expression or data, target operation, variables, and learning goal when relevant.
+      - Put solve domain restrictions into math.lower, math.upper, lowerInclusive, upperInclusive, and variable/variables when the user gives them.
+      - If a domain restriction cannot be represented structurally, preserve it in requirements so MathReasoning can fail typed instead of solving an unconstrained problem.
       - Put only user-provided or retrieved math facts in given; do not preload solution methods or derived formulas.
-      - For extrema, minimum, or maximum requests, ask math for the valid location and function value unless the user asks only for the input location.
       - Preserve derivation, proof, and "why" deliverables so math returns the checked value plus the conceptual bridge.
       - For multi-part requests, enumerate each calculation or verification.
       - Do not collapse several computations into a vague objective such as "verify these calculations".

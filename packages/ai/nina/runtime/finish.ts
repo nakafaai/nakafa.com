@@ -1,5 +1,6 @@
+import { MathReasoningDataPartSchema } from "@repo/ai/schema/data";
 import type { MyUIMessage, MyUIMessagePart } from "@repo/ai/types/message";
-import { Schema } from "effect";
+import { Option, Schema } from "effect";
 
 /** Raised when AI SDK finishes without a durable assistant answer. */
 export class IncompleteNinaResponseError extends Schema.TaggedError<IncompleteNinaResponseError>()(
@@ -40,10 +41,15 @@ export function getNinaResponseFailure({
     });
   }
 
-  if (!responseMessage.parts.some(hasFinalTextPart)) {
+  if (
+    !(
+      responseMessage.parts.some(hasFinalTextPart) ||
+      responseMessage.parts.some(hasFinalMathReasoningPart)
+    )
+  ) {
     return new IncompleteNinaResponseError({
       finishReason,
-      message: "AI SDK finished without a final assistant text part.",
+      message: "AI SDK finished without a final assistant answer part.",
       reason: "missing-final-text",
       responseMessageId: responseMessage.id,
     });
@@ -57,6 +63,22 @@ function hasFinalTextPart(part: MyUIMessagePart) {
     part.state !== "streaming" &&
     part.text.trim().length > 0
   );
+}
+
+/** Identifies a terminal MathReasoning card that already owns the answer. */
+function hasFinalMathReasoningPart(part: MyUIMessagePart) {
+  if (part.type !== "data-math-reasoning") {
+    return false;
+  }
+
+  const decoded = Schema.decodeUnknownOption(MathReasoningDataPartSchema)(
+    part.data
+  );
+  if (Option.isNone(decoded)) {
+    return false;
+  }
+
+  return decoded.value.status === "done" || decoded.value.status === "error";
 }
 
 /** Identifies AI SDK UI parts that still represent an in-progress stream. */

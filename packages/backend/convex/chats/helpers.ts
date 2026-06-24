@@ -8,6 +8,7 @@ import {
   MAX_CHAT_MESSAGE_PARTS,
 } from "@repo/backend/convex/chats/constants";
 import type { partValidator } from "@repo/backend/convex/chats/schema";
+import { CAPABILITY_TRACE_BATCH_SIZE } from "@repo/backend/convex/chats/traces/spec";
 import { deleteMathWorkForResponseIdentifier } from "@repo/backend/convex/math/cleanup";
 import type { Infer } from "convex/values";
 import { ConvexError } from "convex/values";
@@ -58,6 +59,30 @@ export async function deletePartsForMessageBatch(
   };
 }
 
+/** Deletes bounded capability traces for one assistant response identifier. */
+export async function deleteCapabilityTracesForResponseIdentifier(
+  ctx: MutationCtx,
+  chatId: Id<"chats">,
+  responseMessageIdentifier: string
+) {
+  const traces = await ctx.db
+    .query("ninaCapabilityTraces")
+    .withIndex("by_chatId_and_responseMessageIdentifier_and_startedAt", (q) =>
+      q
+        .eq("chatId", chatId)
+        .eq("responseMessageIdentifier", responseMessageIdentifier)
+    )
+    .take(CAPABILITY_TRACE_BATCH_SIZE + 1);
+
+  for (const trace of traces.slice(0, CAPABILITY_TRACE_BATCH_SIZE)) {
+    await ctx.db.delete(trace._id);
+  }
+
+  return {
+    hasMore: traces.length > CAPABILITY_TRACE_BATCH_SIZE,
+  };
+}
+
 /**
  * Delete one bounded transcript batch from a creation time onward.
  * This supports message regeneration without loading an unbounded mutation.
@@ -84,6 +109,16 @@ export async function deleteMessageBatchFromPoint(
     0,
     CHAT_TRANSCRIPT_REWRITE_MESSAGE_BATCH_SIZE
   )) {
+    const traceBatch = await deleteCapabilityTracesForResponseIdentifier(
+      ctx,
+      chatId,
+      message.identifier
+    );
+
+    if (traceBatch.hasMore) {
+      return { hasMore: true };
+    }
+
     const mathWorkBatch = await deleteMathWorkForResponseIdentifier(
       ctx,
       chatId,

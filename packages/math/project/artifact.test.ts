@@ -13,7 +13,7 @@ describe("projectArtifacts", () => {
     });
 
     expect(artifacts).toHaveLength(1);
-    expect(artifacts[0]?.titleKey).toBe("math-simplify");
+    expect(artifacts[0]?.titleKey).toBe("math-work-formula-title");
   });
 
   it("projects coordinate circle visual intent with semantic copy keys", () => {
@@ -45,7 +45,6 @@ function mathWork(operation: MathResult["operation"]) {
   return MathWork.make({
     assumptions: [],
     computations: [],
-    createdAt: 1,
     input: {
       givens: [],
       kind: "prompt",

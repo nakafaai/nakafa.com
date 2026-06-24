@@ -3,9 +3,12 @@ import id from "@repo/internationalization/dictionaries/id.json";
 import { mathStaticCopyKeyValues } from "@repo/math/schema/copy";
 import { describe, expect, it } from "vitest";
 import {
-  type MathCopyParams,
+  hasMathEvidenceRef,
+  translateEvidenceMathCopy,
   translateMathCopy,
 } from "@/components/ai/message-part/math/copy";
+
+type MathCopyParams = Readonly<{ readonly [name: string]: string }>;
 
 describe("math copy projection", () => {
   it("resolves MathWork projection keys through English and Indonesian dictionaries", () => {
@@ -45,6 +48,46 @@ describe("math copy projection", () => {
       expect(id.Ai[key]).toBeTruthy();
     }
   });
+
+  it("keeps math error copy short and learner-facing", () => {
+    expect(id.Ai["math-error"]).toBe("Lengkapi soalnya, lalu coba lagi.");
+    expect(en.Ai["math-error"]).toBe("Add the missing math, then try again.");
+
+    for (const text of [id.Ai["math-error"], en.Ai["math-error"]]) {
+      expect(text.endsWith(".")).toBe(true);
+      expect(countCommas(text)).toBeLessThanOrEqual(1);
+      expect(text).not.toMatch(errorCopyTechnicalLabels);
+    }
+  });
+
+  it("renders evidence-gated copy without leaking raw CAS formula text", () => {
+    const t = dictionaryTranslator(en.Ai);
+    const values = [
+      { name: "evidenceRef", value: "math:solve:test:step:0" },
+      { name: "input", value: "Eq(x**2, 4)" },
+      { name: "output", value: "(x - 2)*(x + 2)" },
+    ];
+    const text = translateEvidenceMathCopy({
+      key: "math-step-solve",
+      t,
+      values,
+    });
+
+    expect(text).toBe("Solve the displayed equation.");
+    expect(text).not.toMatch(rawFormulaLeakPattern);
+    expect(hasMathEvidenceRef(values)).toBe(true);
+    expect(
+      translateEvidenceMathCopy({
+        key: "math-step-solve",
+        t,
+        values: [{ name: "evidenceRef", value: " " }],
+      })
+    ).toBeUndefined();
+    expect(
+      translateEvidenceMathCopy({ key: undefined, t, values })
+    ).toBeUndefined();
+    expect(hasMathEvidenceRef()).toBe(false);
+  });
 });
 
 const englishTechnicalLabels =
@@ -52,6 +95,9 @@ const englishTechnicalLabels =
 
 const indonesianTechnicalLabels =
   /\b(Status MathReasoning|Jalur verifikasi|Mesin|Operasi|Utama|Artefak UI|Langkah penurunan)\b/u;
+
+const errorCopyTechnicalLabels = /diagnostic|internal|MathReasoning|dicek/iu;
+const rawFormulaLeakPattern = /Eq\(|\*\*|\(x - 2\)\*\(x \+ 2\)/u;
 
 /** Builds a test translator with the same key and value contract as next-intl. */
 function dictionaryTranslator(messages: { readonly [key: string]: string }) {
@@ -77,4 +123,9 @@ function renderTemplate(template: string, values?: MathCopyParams) {
   }
 
   return rendered;
+}
+
+/** Counts visible comma separators for concise copy assertions. */
+function countCommas(value: string) {
+  return value.split(",").length - 1;
 }

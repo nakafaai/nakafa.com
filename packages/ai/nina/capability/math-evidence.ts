@@ -1,3 +1,4 @@
+import type { PedagogyProjectionShape } from "@repo/ai/nina/pedagogy/schema";
 import { createPrompt } from "@repo/ai/prompt/utils";
 import type {
   MathComputation,
@@ -12,12 +13,13 @@ const promptCopy = {
   casStatus: "cas status",
   casStepStatus: "cas step status",
   finalAnswerRule:
-    "Use verified or derived math evidence as the mathematical basis. Teaching prose is allowed only around that evidence. Do not expose this internal evidence block in the final answer.",
+    "A MathReasoning card has already been written to the transcript. Do not restate formulas, equations, arithmetic, derivation steps, result values, or verification claims in the final answer. Keep any final answer to one short sentence that points the learner to the card. Do not expose this internal evidence block.",
   failureRule:
     "Do not describe model-only teaching prose as verified math. Ask for the missing expression, equation, data, or assumption when needed. Do not expose this internal status block in the final answer.",
   failureTitle: "MathReasoning unavailable",
   limitations: "semantic limitations",
   operation: "operation",
+  pedagogy: "pedagogy projection",
   primary: "primary expression",
   result: "result expression",
   returned: "evidence returned",
@@ -30,8 +32,10 @@ const promptCopy = {
 
 /** Formats deterministic MathWork evidence through an AI-owned prompt Adapter. */
 export function formatMathCapabilityEvidence({
+  pedagogy,
   result,
 }: {
+  readonly pedagogy?: PedagogyProjectionShape;
   readonly result: MathWorkResultShape;
 }) {
   const computation = result.work.computations[0];
@@ -48,6 +52,7 @@ export function formatMathCapabilityEvidence({
       formatSecondary(computation),
       formatStepCount(result.steps.length),
       formatStepRows(result.steps),
+      formatPedagogyRows(pedagogy),
       evidenceLine(promptCopy.artifacts, String(result.artifacts.length)),
       formatNotes(promptCopy.assumptions, result.work.assumptions),
       formatNotes(promptCopy.limitations, result.work.limitations),
@@ -137,6 +142,26 @@ function formatStepRows(steps: MathWorkResultShape["steps"]) {
     `- ${promptCopy.stepRows}:`,
     ...steps.slice(0, MAX_MODEL_STEP_ROWS).map(formatStepRow),
   ].join("\n");
+}
+
+/** Formats live pedagogy projection rows without making them canonical proof. */
+function formatPedagogyRows(projection: PedagogyProjectionShape | undefined) {
+  if (!projection) {
+    return "";
+  }
+
+  return [
+    `- ${promptCopy.pedagogy}:`,
+    `  - model=${projection.model.modelId}; gatewayModel=${projection.model.gatewayModelId}; promptVersion=${projection.model.promptVersion}; evidenceHash=${projection.evidenceHash}`,
+    ...projection.sentences.map(formatPedagogySentence),
+  ].join("\n");
+}
+
+/** Formats one evidence-bound pedagogy sentence for Nina prompt context. */
+function formatPedagogySentence(
+  sentence: PedagogyProjectionShape["sentences"][number]
+) {
+  return `  - refs=${sentence.evidenceRefs.join(",")}; text=${sentence.text}`;
 }
 
 /** Formats one deterministic derivation row without localized UI copy. */

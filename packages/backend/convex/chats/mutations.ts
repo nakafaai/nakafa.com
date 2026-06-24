@@ -5,6 +5,7 @@ import {
   getAssistantCreditUsage,
 } from "@repo/backend/convex/chats/assistantResponses/impl";
 import {
+  deleteCapabilityTracesForResponseIdentifier,
   deleteMessageBatchFromPoint,
   getMessageByIdentifier,
   insertParts,
@@ -397,6 +398,20 @@ export const saveAssistantFailure = internalMutation({
       message.chatId,
       message.identifier
     );
+    const traceBatch = await deleteCapabilityTracesForResponseIdentifier(
+      ctx,
+      message.chatId,
+      message.identifier
+    );
+
+    if (traceBatch.hasMore) {
+      throw new ConvexError({
+        code: "CHAT_ASSISTANT_FAILURE_TRACE_CLEANUP_EXCEEDED",
+        message:
+          "Failed assistant trace cleanup exceeded the supported batch size.",
+      });
+    }
+
     const mathWorkBatch = await deleteMathWorkForResponseIdentifier(
       ctx,
       message.chatId,

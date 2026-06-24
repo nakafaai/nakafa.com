@@ -27,7 +27,7 @@ export function projectArtifacts({
         expressionRefs: ["primaryResult"],
         kind: "formula-card",
       },
-      titleKey: titleKeyForOperation(result.operation),
+      titleKey: "math-work-formula-title",
       verificationLane: lane,
       workId: work.workId,
     }),
@@ -89,11 +89,6 @@ function visualIntentForResult({
     source: `cas.${result.operation}`,
     verificationLane: lane,
   };
-}
-
-/** Returns the dictionary key used for the primary operation artifact title. */
-function titleKeyForOperation(operation: MathOperation): MathCopyKey {
-  return `math-${operation}`;
 }
 
 /** Returns the dictionary key used for coordinate visual descriptions. */

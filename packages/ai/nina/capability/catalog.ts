@@ -21,6 +21,8 @@ import {
   RESEARCH_CAPABILITY,
 } from "@repo/ai/nina/capability/spec";
 import { traceLearningCapability } from "@repo/ai/nina/capability/trace";
+import { PedagogyNarrator } from "@repo/ai/nina/pedagogy/narrator";
+import { PedagogyProjectionRepository } from "@repo/ai/nina/pedagogy/repo";
 import {
   decideNinaCapability,
   deniedCapabilityResult,
@@ -78,6 +80,8 @@ export const createNinaCapabilityCatalog = Effect.fn("nina.capability.catalog")(
     const reporter = yield* NinaReporter;
     const store = yield* NinaStore;
     const mathReasoning = yield* MathReasoning;
+    const pedagogyNarrator = yield* PedagogyNarrator;
+    const pedagogyRepository = yield* PedagogyProjectionRepository;
 
     return {
       [NAKAFA_CAPABILITY]: tool({
@@ -246,7 +250,7 @@ export const createNinaCapabilityCatalog = Effect.fn("nina.capability.catalog")(
       }),
       [MATH_CAPABILITY]: tool({
         description:
-          "Verify user-provided or retrieved first-slice math with deterministic evidence for algebra, equations, simplification, factoring, basic derivatives/integrals, and coordinate line/circle checks. Do not use this as the first or only source for educational practice content; use Nakafa first, then math verifies the selected content.",
+          "Verify user-provided or retrieved first-slice math with deterministic evidence for algebra, equations, simplification, factoring, basic derivatives/integrals, and coordinate line/circle checks. Use this for direct calculation requests even when the user expression appears incomplete, preserving the expression exactly so MathReasoning can fail typed. Do not use this as the first or only source for educational practice content; use Nakafa first, then math verifies the selected content.",
         inputSchema: mathToolInputSchema,
         /** Runs the deterministic math specialist and records its token usage. */
         execute: (input, { toolCallId }) =>
@@ -270,11 +274,17 @@ export const createNinaCapabilityCatalog = Effect.fn("nina.capability.catalog")(
                 const result = yield* runMathCapability({
                   input,
                   locale,
+                  modelId,
                   responseMessageIdentifier,
                   toolCallId,
                   writer,
                 }).pipe(
                   Effect.provideService(MathReasoning, mathReasoning),
+                  Effect.provideService(PedagogyNarrator, pedagogyNarrator),
+                  Effect.provideService(
+                    PedagogyProjectionRepository,
+                    pedagogyRepository
+                  ),
                   Effect.map((result) => ({
                     ...result,
                     usage: Option.none(),

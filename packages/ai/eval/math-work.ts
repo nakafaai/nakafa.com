@@ -28,10 +28,22 @@ export function createMathEvalWork(): MathWorkResultShape {
           latex: "x = 3",
         },
         projection: {
-          advanced: { key: "math-step-advanced", values: [] },
-          atomic: { key: "math-step-atomic", values: [] },
-          professor: { key: "math-step-professor", values: [] },
-          school: { key: "math-step-school", values: [] },
+          advanced: {
+            key: "math-step-solve",
+            values: [{ name: "evidenceRef", value: "math:solve:eval:step:0" }],
+          },
+          atomic: {
+            key: "math-step-solve",
+            values: [{ name: "evidenceRef", value: "math:solve:eval:step:0" }],
+          },
+          professor: {
+            key: "math-step-solve",
+            values: [{ name: "evidenceRef", value: "math:solve:eval:step:0" }],
+          },
+          school: {
+            key: "math-step-solve",
+            values: [{ name: "evidenceRef", value: "math:solve:eval:step:0" }],
+          },
         },
         projectionLevels: ["atomic", "school", "advanced", "professor"],
         ruleId: "cas.solve",
@@ -42,9 +54,12 @@ export function createMathEvalWork(): MathWorkResultShape {
     work: {
       assumptions: [
         {
-          copyKey: "math-assumption-planned-from-prompt",
+          copyKey: "math-assumption-variable",
           lane: "pedagogical",
-          values: [],
+          values: [
+            { name: "evidenceRef", value: "math:solve:eval:assumption:0" },
+            { name: "variable", value: "x" },
+          ],
         },
       ],
       computations: [
@@ -72,7 +87,6 @@ export function createMathEvalWork(): MathWorkResultShape {
           status: "verified",
         },
       ],
-      createdAt: 1,
       input: {
         givens: ["x + 2 = 5"],
         kind: "prompt",

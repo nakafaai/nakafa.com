@@ -58,7 +58,6 @@ describe("MathWork schemas", () => {
               status: "verified",
             },
           ],
-          createdAt: 1,
           input: {
             givens: ["x^2 - 1 = 0"],
             kind: "prompt",

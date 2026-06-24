@@ -3,11 +3,32 @@ import { Schema } from "effect";
 
 /** Static learner-copy keys that MathWork can request from app dictionaries. */
 export const mathStaticCopyKeyValues = [
-  "math-assumption-planned-from-prompt",
+  "math-assumption-bound",
+  "math-assumption-circle-radius-point",
+  "math-assumption-points",
+  "math-assumption-requirement",
+  "math-assumption-variable",
+  "math-assumption-variables",
   "math-error",
   "math-limitation-cas-inconclusive",
   "math-loading",
   "math-step",
+  "math-step-apart",
+  "math-step-cancel",
+  "math-step-compare",
+  "math-step-differentiate",
+  "math-step-distance",
+  "math-step-evaluate",
+  "math-step-expand",
+  "math-step-factor",
+  "math-step-integrate",
+  "math-step-integrate-sum",
+  "math-step-integrate-symmetry",
+  "math-step-rationalize",
+  "math-step-simplify",
+  "math-step-solve",
+  "math-step-substitute",
+  "math-step-together",
   "math-verification-derived",
   "math-verification-pedagogical",
   "math-verification-contradicted",
@@ -20,11 +41,10 @@ export const mathStaticCopyKeyValues = [
   "math-work-limitations-title",
   "math-work-steps-title",
   "math-work-visual-title",
-  "math-step-advanced",
-  "math-step-atomic",
-  "math-step-professor",
-  "math-step-school",
 ] as const;
+
+/** Interpolation value name that binds visible pedagogy copy to evidence. */
+export const mathEvidenceRefValueName = "evidenceRef";
 
 /** Operation title translation keys derived from the operation source list. */
 export const mathOperationCopyKeyValues = mathOperations.map(

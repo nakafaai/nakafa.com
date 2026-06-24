@@ -103,6 +103,10 @@ describe("createNinaPrompt", () => {
     expect(examplesSection).toContain("Good Nakafa input:");
     expect(examplesSection).toContain("Bad specialist inputs:");
     expect(outputSection).toContain("## Mathematical format");
+    expect(outputSection).toContain("## MathReasoning cards");
+    expect(outputSection).toContain(
+      "Let the MathReasoning card own deterministic formulas"
+    );
     expect(outputSection).toContain("## Links");
     expect(outputSection).toContain(
       "indent that child content under the list item"
@@ -145,7 +149,22 @@ describe("createNinaPrompt", () => {
       "do not preload solution methods or derived formulas"
     );
     expect(toolSection).toContain(
-      "ask math for the valid location and function value"
+      "Fill math.math with the complete structured calculation"
+    );
+    expect(toolSection).toContain(
+      "use math even when the expression appears incomplete or invalid"
+    );
+    expect(toolSection).toContain(
+      "put the incomplete expression in math.math.expression"
+    );
+    expect(toolSection).toContain(
+      "operation id, expression(s), variables, bounds, order, matrices, values, point semantics, or points"
+    );
+    expect(toolSection).toContain(
+      "Put solve domain restrictions into math.lower"
+    );
+    expect(toolSection).toContain(
+      "preserve it in requirements so MathReasoning can fail typed"
     );
     expect(toolSection).toContain(
       'Preserve derivation, proof, and "why" deliverables'
