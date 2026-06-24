@@ -43,7 +43,7 @@ describe("nina/runtime/finish", () => {
     expect(failure).toBeUndefined();
   });
 
-  it("accepts a terminal MathReasoning error row without duplicate final text", () => {
+  it("rejects a MathReasoning error row without final prose", () => {
     const failure = getNinaResponseFailure({
       isAborted: false,
       responseMessage: {
@@ -63,6 +63,43 @@ describe("nina/runtime/finish", () => {
             },
             id: "math-call",
             type: "data-math-reasoning",
+          },
+        ],
+      },
+    });
+
+    expect(failure).toBeInstanceOf(IncompleteNinaResponseError);
+    expect(failure).toMatchObject({
+      reason: "missing-final-text",
+      responseMessageId: "assistant-math-error",
+    });
+  });
+
+  it("accepts a MathReasoning error row with final prose", () => {
+    const failure = getNinaResponseFailure({
+      isAborted: false,
+      responseMessage: {
+        id: "assistant-math-error-with-text",
+        role: "assistant",
+        parts: [
+          {
+            data: {
+              errorKey: "math-error",
+              input: {
+                givens: ["x +"],
+                objective: "Factor the expression.",
+                request: "factor x +",
+                requirements: [],
+              },
+              status: "error",
+            },
+            id: "math-call",
+            type: "data-math-reasoning",
+          },
+          {
+            state: "done",
+            text: "Aku perlu bentuk lengkapnya sebelum menghitung.",
+            type: "text",
           },
         ],
       },

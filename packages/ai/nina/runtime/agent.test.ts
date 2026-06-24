@@ -378,6 +378,7 @@ describe("nina/agent", () => {
     expect(fakeAgentState.settings?.id).toBe("nina");
     expect(fakeAgentState.settings?.instructions).toContain("Vector Addition");
     expect(fakeAgentState.settings?.tools).toBe(tools);
+    expect(fakeAgentState.settings?.stopWhen).toHaveLength(1);
     expect(fakeAgentState.streamOptions?.messages).toEqual(chat.finalMessages);
     expect(writer.merge).toHaveBeenCalledOnce();
     expect(onStreamError).toHaveBeenCalledWith(

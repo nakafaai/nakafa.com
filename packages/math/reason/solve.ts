@@ -7,6 +7,7 @@ const boundRequirementPattern =
   /^\s*([A-Za-z_][A-Za-z0-9_]*|[A-Za-z0-9_+\-*/^().\s]+?)\s*(<=|>=|<|>)\s*([A-Za-z_][A-Za-z0-9_]*|[A-Za-z0-9_+\-*/^().\s]+?)\s*$/u;
 const chainedBoundRequirementPattern =
   /^\s*([A-Za-z0-9_+\-*/^().\s]+?)\s*(<=|<)\s*([A-Za-z_][A-Za-z0-9_]*)\s*(<=|<)\s*([A-Za-z0-9_+\-*/^().\s]+?)\s*$/u;
+const symbolicConstraintOperatorPattern = /(?:<=|>=|<|>|=)/u;
 
 /** Validates and normalizes a schema-owned solve request for CAS execution. */
 export const planSolveRequest = Effect.fn("MathReasoning.planSolveRequest")(
@@ -63,12 +64,16 @@ function applyRequirementBounds({
     for (const requirement of requirements) {
       const parsed = parseRequirementBound(requirement);
       if (!parsed) {
-        return yield* Effect.fail(
-          new MathPlanningError({
-            message:
-              "Solve requirements must be structured inequality bounds or moved into semantic request fields.",
-          })
-        );
+        if (symbolicConstraintOperatorPattern.test(requirement)) {
+          return yield* Effect.fail(
+            new MathPlanningError({
+              message:
+                "Solve requirements must be structured inequality bounds or moved into semantic request fields.",
+            })
+          );
+        }
+
+        continue;
       }
 
       bounds = yield* mergeBoundSet(bounds, parsed);
@@ -76,6 +81,10 @@ function applyRequirementBounds({
         requirementVariable,
         parsed.variable
       );
+    }
+
+    if (requirementVariable === "") {
+      return request;
     }
 
     const variable = yield* resolveRequirementVariable({
@@ -117,22 +126,9 @@ function solveScope({
   });
 }
 
-/** Represents one side of a structured solve domain interval. */
-interface Bound {
-  readonly inclusive: boolean;
-  readonly value: string;
-}
-
-/** Represents lower and upper bounds parsed from symbolic requirements. */
-interface BoundSet {
-  readonly lower?: Bound;
-  readonly upper?: Bound;
-}
-
-/** Represents a parsed symbolic requirement with an explicit variable. */
-interface RequirementBoundSet extends BoundSet {
-  readonly variable: string;
-}
+type Bound = Readonly<{ readonly inclusive: boolean; readonly value: string }>;
+type BoundSet = Readonly<{ readonly lower?: Bound; readonly upper?: Bound }>;
+type RequirementBoundSet = BoundSet & Readonly<{ readonly variable: string }>;
 
 /** Reads already-structured interval fields from the request. */
 function boundsFromRequest(request: MathRequest): BoundSet {
@@ -402,6 +398,18 @@ function validateBoundVariable({
   readonly request: MathRequest;
   readonly variables: readonly string[];
 }) {
+  if (
+    request.variable &&
+    variables.length > 0 &&
+    !variables.includes(request.variable)
+  ) {
+    return Effect.fail(
+      new MathPlanningError({
+        message: "Solve variable fields must name the same target.",
+      })
+    );
+  }
+
   if (!hasBounds(request)) {
     return Effect.succeed({
       ...(request.variable ? { variable: request.variable } : {}),
@@ -414,14 +422,6 @@ function validateBoundVariable({
     return Effect.fail(
       new MathPlanningError({
         message: "Bounded solve requests need one unambiguous domain variable.",
-      })
-    );
-  }
-
-  if (!variables.includes(variable)) {
-    return Effect.fail(
-      new MathPlanningError({
-        message: "Bounded solve requests must solve the domain variable.",
       })
     );
   }

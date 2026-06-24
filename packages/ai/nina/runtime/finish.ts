@@ -65,7 +65,7 @@ function hasFinalTextPart(part: MyUIMessagePart) {
   );
 }
 
-/** Identifies a terminal MathReasoning card that already owns the answer. */
+/** Identifies a completed MathReasoning card that already owns the answer. */
 function hasFinalMathReasoningPart(part: MyUIMessagePart) {
   if (part.type !== "data-math-reasoning") {
     return false;
@@ -78,7 +78,7 @@ function hasFinalMathReasoningPart(part: MyUIMessagePart) {
     return false;
   }
 
-  return decoded.value.status === "done" || decoded.value.status === "error";
+  return decoded.value.status === "done";
 }
 
 /** Identifies AI SDK UI parts that still represent an in-progress stream. */

@@ -138,6 +138,15 @@ describe("planSolveRequest", () => {
         ["x >= 0"]
       )
     );
+    const nonBoundRequirement = await Effect.runPromise(
+      planSolveRequest(
+        solveRequest({
+          expression: "x^2 = 4",
+          variables: ["x"],
+        }),
+        ["show derivation"]
+      )
+    );
 
     expect(positive).toMatchObject({
       lower: "0",
@@ -171,6 +180,12 @@ describe("planSolveRequest", () => {
       upperInclusive: true,
       variable: "x",
     });
+    expect(nonBoundRequirement).toMatchObject({
+      expression: "x^2 = 4",
+      operation: "solve",
+      variables: ["x"],
+    });
+    expect(nonBoundRequirement).not.toHaveProperty("lower");
   });
 
   it("normalizes every symbolic inequality direction", async () => {
@@ -385,14 +400,13 @@ describe("planSolveRequest", () => {
         })
       )
     );
-    const unsupportedRequirement = await Effect.runPromiseExit(
+    const mismatchedUnboundedVariable = await Effect.runPromiseExit(
       planSolveRequest(
         solveRequest({
           expression: "x^2 = 4",
-          variable: "x",
+          variable: "y",
           variables: ["x"],
-        }),
-        ["positive solution"]
+        })
       )
     );
     const mismatchedRequirementVariable = await Effect.runPromiseExit(
@@ -454,7 +468,7 @@ describe("planSolveRequest", () => {
     expectPlanningFailure(missingRelation);
     expectPlanningFailure(ambiguousBoundVariable);
     expectPlanningFailure(mismatchedBoundVariable);
-    expectPlanningFailure(unsupportedRequirement);
+    expectPlanningFailure(mismatchedUnboundedVariable);
     expectPlanningFailure(mismatchedRequirementVariable);
     expectPlanningFailure(mismatchedRequirementVariables);
     expectPlanningFailure(mixedRequirementVariables);
