@@ -1,4 +1,5 @@
 import type { DataPart } from "@repo/ai/schema/data";
+import type { MathToolInput } from "@repo/ai/schema/tools";
 import { mapDBPartToUIMessagePart } from "@repo/backend/convex/chats/messageParts/dbToUi";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -31,9 +32,14 @@ const nakafaInput = {
 
 const mathInput = {
   given: ["x + 1", "x + 2"],
+  math: {
+    expressions: ["x + 1", "x + 2"],
+    kind: "math",
+    operation: "compare",
+  },
   objective: "Compare the expressions.",
   request: "compare x + 1 and x + 2",
-};
+} satisfies MathToolInput;
 
 describe("mapDBPartToUIMessagePart", () => {
   it("hydrates nakafa tool and data parts from the current schema", async () => {

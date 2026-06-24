@@ -1,5 +1,6 @@
 import { CasEngine } from "@repo/math/cas/engine";
 import { projectArtifacts } from "@repo/math/project/artifact";
+import { formulaExpressionForComputation } from "@repo/math/project/formula";
 import {
   MathCasAdapterError,
   MathReasoningInputError,
@@ -60,6 +61,7 @@ export class MathReasoning extends Effect.Service<MathReasoning>()(
             operation: computed.operation,
             request: request.request,
           });
+          const computation = canonicalComputation(computed);
           const steps = deriveSteps({
             lane: stepLane,
             result: computed,
@@ -67,7 +69,7 @@ export class MathReasoning extends Effect.Service<MathReasoning>()(
           });
           const work = MathWork.make({
             assumptions: planningAssumptions(),
-            computations: [canonicalComputation(computed)],
+            computations: [computation],
             createdAt,
             input: {
               givens: request.givens,
@@ -79,7 +81,7 @@ export class MathReasoning extends Effect.Service<MathReasoning>()(
             },
             limitations: limitationsForResult(computed.operation, lane),
             plannedRequest,
-            primaryResult: computed.secondary ?? computed.primary,
+            primaryResult: formulaExpressionForComputation(computation),
             status: lane === "speculative" ? "limited" : "ready",
             verification: {
               engine: "sympy",

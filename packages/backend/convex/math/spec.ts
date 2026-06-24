@@ -91,6 +91,7 @@ export const mathRequestValidator = v.object({
   order: v.optional(v.number()),
   parameters: v.optional(mathProbabilityParametersValidator),
   point: v.optional(v.string()),
+  pointSemantics: v.optional(v.literal("circle-radius-point")),
   points: v.optional(v.array(mathPointValidator)),
   right: v.optional(v.string()),
   right_matrix: v.optional(v.array(v.array(v.string()))),

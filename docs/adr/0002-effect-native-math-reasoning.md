@@ -37,6 +37,15 @@ Indonesian and English. Internal LLM prompt instructions may stay in English onl
 inside AI-owned prompt Adapters, and they must not be rendered in the UI, persisted
 as learner evidence, or shared with the app dictionaries.
 
+Natural-language interpretation is not math-domain logic. `packages/math`
+accepts schema-owned semantic fields such as operation, expression, variables,
+bounds, points, givens, and requirements, then validates or typed-fails when
+those fields are insufficient. English, Indonesian, Malay, or future-language
+command verbs, connector words, calculus phrases, derivative-order words, and
+prose-stripping rules belong in `packages/ai` tool Adapters or a dedicated
+locale parser Adapter backed by configuration/localization data. Adding a new
+language must not require editing math-domain parser internals.
+
 The implementation must be a clean replacement, not a compatibility layer. Do not
 keep permanent old/new dual paths, public backcompat wrappers, chat-renderer
 semantic workarounds, duplicate schema sources, or legacy leftovers. If existing
@@ -65,6 +74,13 @@ pull request.
   labels such as engine, operation, verification lane, or MathReasoning status.
 - AI prompt copy is an Adapter concern and remains separate from localized UI
   dictionaries so prompt instructions cannot leak into student-facing math views.
+- `packages/math`, `packages/ai`, `packages/backend/convex`, and `apps/www` keep
+  separate Module ownership: semantic reasoning, learner-language interpretation,
+  indexed persistence, and localized TSX projection respectively.
+- Tests mirror the owning Module Interface. Planner tests live in `plan.test.ts`,
+  solve normalization tests live in `solve.test.ts`, service orchestration tests
+  live in `service.test.ts`, and hybrid files such as `plan.solve.test.ts` fail
+  the deletion test.
 - File and folder names in the new math architecture should be short,
   domain-owned names, preferably one word where clear, with TS-only domain folders
   separate from TSX-only renderer folders.

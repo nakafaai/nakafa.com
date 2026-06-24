@@ -1,5 +1,6 @@
 import { createEffectSchema } from "@repo/ai/lib/effect-schema";
 import { createPrompt } from "@repo/ai/prompt/utils";
+import { MathRequestSchema } from "@repo/math/schema/request";
 import { type InferUITools, tool } from "ai";
 import { Schema } from "effect";
 
@@ -126,6 +127,21 @@ export const MathToolInputSchema = Schema.Struct({
         `,
       }),
     }),
+  math: MathRequestSchema.annotations({
+    description: createPrompt({
+      taskContext: `
+        Structured deterministic math request.
+
+        Use schema operation ids and exact math fields only.
+        Put expressions, systems, variables, bounds, derivative order,
+        matrices, values, or points in the matching fields. For circle
+        requests, provide points in center/radius-point order and set
+        pointSemantics to circle-radius-point.
+        Do not put natural-language commands, deliverable wording, or
+        explanation text in this structured object.
+      `,
+    }),
+  }),
 })
   .pipe(Schema.mutable)
   .annotations({
@@ -162,6 +178,7 @@ export function formatSpecialistToolTask(input: SpecialistToolInput) {
       "deliverables" in input ? input.deliverables : []
     ),
     formatListSection("Given", "given" in input ? input.given : []),
+    "math" in input ? formatJsonSection("Math", input.math) : "",
   ].filter(Boolean);
 
   return createPrompt({
@@ -191,6 +208,17 @@ function formatListSection(heading: string, items: readonly string[]) {
       # ${heading}
 
       ${items.map((item) => `- ${item}`).join("\n")}
+    `,
+  });
+}
+
+/** Formats a structured specialist payload as compact internal JSON. */
+function formatJsonSection(heading: string, value: object) {
+  return createPrompt({
+    taskContext: `
+      # ${heading}
+
+      ${JSON.stringify(value)}
     `,
   });
 }

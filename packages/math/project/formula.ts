@@ -23,6 +23,11 @@ function solveExpressionForComputation(
     return;
   }
 
+  const systemExpression = solveSystemExpressionForComputation(computation);
+  if (systemExpression) {
+    return systemExpression;
+  }
+
   const variables = computation.input.variables ?? [];
   const variable = variables[0];
   if (variables.length !== 1 || !variable || !computation.secondary) {
@@ -45,6 +50,25 @@ function solveExpressionForComputation(
   return {
     expression: solveExpressionText({ solutions, variable }),
     latex: solveExpressionLatex({ latexSolutions, solutions, variable }),
+  };
+}
+
+/** Builds a display expression for CAS system-solve item evidence. */
+function solveSystemExpressionForComputation(
+  computation: MathComputation
+): MathComputation["primary"] | undefined {
+  if (computation.items.length === 0) {
+    return;
+  }
+
+  const expressions = computation.items.map((item) => item.value);
+  const latexExpressions = computation.items.map(
+    (item) => item.latex ?? item.value
+  );
+
+  return {
+    expression: expressions.join("; "),
+    latex: latexExpressions.join("; "),
   };
 }
 

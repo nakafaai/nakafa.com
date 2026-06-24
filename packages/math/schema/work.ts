@@ -24,6 +24,7 @@ export class MathReasoningRequest extends Schema.Class<MathReasoningRequest>(
 )({
   givens: Schema.Array(Schema.NonEmptyString).pipe(Schema.mutable),
   locale: Schema.String,
+  math: Schema.optional(MathRequestSchema),
   objective: Schema.NonEmptyString,
   persistence: Schema.Literal("none", "persist"),
   projectionLevel: Schema.optional(

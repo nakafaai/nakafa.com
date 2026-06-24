@@ -36,6 +36,57 @@ describe("formulaExpressionForComputation", () => {
     });
   });
 
+  it("shows solve-system item evidence instead of the original system", () => {
+    const expression = formulaExpressionForComputation({
+      ...solveComputation(),
+      input: {
+        expressions: ["x = 1", "y = 2"],
+        kind: "math",
+        operation: "solve",
+        variables: ["x", "y"],
+      },
+      items: [
+        {
+          label: "solution",
+          latex: "\\left\\{x: 1, y: 2\\right\\}",
+          value: "{x: 1, y: 2}",
+        },
+      ],
+      primary: {
+        expression: "[x = 1, y = 2]",
+        latex: "\\left[x = 1, y = 2\\right]",
+      },
+    });
+
+    expect(expression).toEqual({
+      expression: "{x: 1, y: 2}",
+      latex: "\\left\\{x: 1, y: 2\\right\\}",
+    });
+  });
+
+  it("uses system item values when item LaTeX is absent", () => {
+    const expression = formulaExpressionForComputation({
+      ...solveComputation(),
+      input: {
+        expressions: ["x = 1", "y = 2"],
+        kind: "math",
+        operation: "solve",
+        variables: ["x", "y"],
+      },
+      items: [
+        {
+          label: "solution",
+          value: "{x: 1, y: 2}",
+        },
+      ],
+    });
+
+    expect(expression).toEqual({
+      expression: "{x: 1, y: 2}",
+      latex: "{x: 1, y: 2}",
+    });
+  });
+
   it("keeps ordinary computations on their CAS expression", () => {
     const expression = formulaExpressionForComputation({
       ...solveComputation("[3]", "\\left[3\\right]"),

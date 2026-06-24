@@ -24,6 +24,12 @@ describe("MathReasoning", () => {
       MathReasoning.produceWork({
         givens: ["x^2 - 1 = 0"],
         locale: "id",
+        math: {
+          expression: "x^2 - 1 = 0",
+          kind: "math",
+          operation: "solve",
+          variables: ["x"],
+        },
         objective: "Solve the equation",
         persistence: "persist",
         request: "solve x^2 - 1 = 0",
@@ -61,6 +67,14 @@ describe("MathReasoning", () => {
       MathReasoning.produceWork({
         givens: ["(0, 0)", "(3, 2)"],
         locale: "id",
+        math: {
+          kind: "math",
+          operation: "line",
+          points: [
+            { x: "0", y: "0" },
+            { x: "3", y: "2" },
+          ],
+        },
         objective: "Find the line",
         persistence: "none",
         request: "line through (0, 0) and (3, 2)",
@@ -111,6 +125,11 @@ describe("MathReasoning", () => {
       MathReasoning.produceWork({
         givens: ["x + 1"],
         locale: "en",
+        math: {
+          expression: "x + 1",
+          kind: "math",
+          operation: "simplify",
+        },
         objective: "Simplify",
         persistence: "none",
         request: "simplify x + 1",
@@ -131,6 +150,11 @@ describe("MathReasoning", () => {
       MathReasoning.produceWork({
         givens: ["x"],
         locale: "en",
+        math: {
+          expression: "x",
+          kind: "math",
+          operation: "simplify",
+        },
         objective: "Simplify",
         persistence: "persist",
         request: "simplify x",
@@ -152,6 +176,40 @@ describe("MathReasoning", () => {
     expect(exit.value.work.verification.reasonKey).toBe(
       "math-verification-contradicted"
     );
+  });
+
+  it("uses solve-system item evidence as the canonical primary result", async () => {
+    const exit = await Effect.runPromiseExit(
+      MathReasoning.produceWork({
+        givens: ["x = 1", "y = 2"],
+        locale: "en",
+        math: {
+          expressions: ["x = 1", "y = 2"],
+          kind: "math",
+          operation: "solve",
+          variables: ["x", "y"],
+        },
+        objective: "Solve the system",
+        persistence: "none",
+        request: "solve x = 1 and y = 2",
+      }).pipe(
+        Effect.provide(MathReasoning.Default),
+        Effect.provideService(CasEngine, fakeCasEngine(systemSolveResult())),
+        Effect.provide(NoopMathWorkRepository),
+        Effect.withConfigProvider(config)
+      )
+    );
+
+    expect(Exit.isSuccess(exit)).toBe(true);
+    if (Exit.isFailure(exit)) {
+      return;
+    }
+
+    expect(exit.value.work.primaryResult).toEqual({
+      expression: "{x: 1, y: 2}",
+      latex: "\\left\\{x: 1, y: 2\\right\\}",
+    });
+    expect(exit.value.work.computations[0]?.secondary).toBeUndefined();
   });
 });
 
@@ -271,6 +329,32 @@ function primaryOnlyResult(): MathResult {
     stepStatus: "complete",
     steps: [],
     status: "contradicted",
+  };
+}
+
+/** Builds a verified system-solving CAS result that reports item evidence only. */
+function systemSolveResult(): MathResult {
+  return {
+    ...solveResult(),
+    input: {
+      expressions: ["x = 1", "y = 2"],
+      kind: "math",
+      operation: "solve",
+      variables: ["x", "y"],
+    },
+    items: [
+      {
+        label: "solution",
+        latex: "\\left\\{x: 1, y: 2\\right\\}",
+        value: "{x: 1, y: 2}",
+      },
+    ],
+    primary: {
+      expression: "[x = 1, y = 2]",
+      latex: "\\left[x = 1, y = 2\\right]",
+    },
+    secondary: undefined,
+    steps: [],
   };
 }
 

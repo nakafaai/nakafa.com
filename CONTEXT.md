@@ -24,6 +24,8 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Verification lane**: The trust label on a MathWork answer or step: verified, derived, pedagogical, or speculative.
 - **Math copy projection**: The app-owned localization seam that turns MathWork semantic keys and values into student-facing Indonesian or English copy.
 - **Math prompt Adapter**: The AI-owned seam that formats internal model instructions from MathWork evidence without sharing prompt prose with UI dictionaries or persisted learner evidence.
+- **Structured MathRequest**: The schema-owned semantic math input consumed by MathReasoning. It carries operation, expression, variables, bounds, points, givens, and requirements without learner-language parser phrases.
+- **Math language Adapter**: An AI-owned or locale-parser seam that translates learner prose into a Structured MathRequest. Adding languages must happen here, not inside `packages/math`.
 - **Evidence**: Schema-derived facts, calculations, citations, content references, and limitations that constrain Nina's answer.
 - **EvidenceEnvelope**: The schema-derived LearningCapability result that carries status, compact model-visible evidence, references, and limitations.
 - **CapabilityTrace**: A bounded operational summary of LearningCapability execution for support, integrity checks, and evals. It is not a raw transcript.

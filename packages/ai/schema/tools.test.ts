@@ -62,8 +62,11 @@ describe("LearningCapability tool schemas", () => {
         given: {
           type: "array",
         },
+        math: {
+          type: "object",
+        },
       },
-      required: expect.arrayContaining(["given"]),
+      required: expect.arrayContaining(["given", "math"]),
     });
     expect(jsonSchema).toMatchObject({
       properties: {
@@ -150,6 +153,14 @@ describe("LearningCapability tool schemas", () => {
   it("omits requirements when the tool call has no real constraints", () => {
     const task = formatSpecialistToolTask({
       given: ["x^2 < 9", "x > 0"],
+      math: {
+        expression: "x^2 < 9",
+        kind: "math",
+        lower: "0",
+        operation: "solve",
+        variable: "x",
+        variables: ["x"],
+      },
       objective: "Solve the inequality with the domain restriction.",
       request: "x^2 < 9 dan x > 0",
     });
@@ -167,6 +178,10 @@ describe("LearningCapability tool schemas", () => {
 
       - x^2 < 9
       - x > 0
+
+      # Math
+
+      {"expression":"x^2 < 9","kind":"math","lower":"0","operation":"solve","variable":"x","variables":["x"]}
     `);
     expect(task).not.toContain("# Requirements");
   });
@@ -175,6 +190,15 @@ describe("LearningCapability tool schemas", () => {
     expect(
       formatSpecialistToolTask({
         given: ["A = [[2, 1, 0], [0, 2, 1], [0, 0, 2]]"],
+        math: {
+          kind: "math",
+          matrix: [
+            ["2", "1", "0"],
+            ["0", "2", "1"],
+            ["0", "0", "2"],
+          ],
+          operation: "eigen_analysis",
+        },
         objective: "Analyze whether the matrix is diagonalizable.",
         request: "is this matrix diagonalizable?",
         requirements: ["Check eigenspace evidence."],

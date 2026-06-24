@@ -14,6 +14,7 @@ export function formatExamplesPrompt() {
       - objective: check selected calculations, answer keys, and numeric claims.
       - requirements: use only the selected evidence when verifying retrieved content.
       - given: user-provided or retrieved expressions, data, assumptions, and answer keys.
+      - math: structured operation id plus expression(s), variables, bounds, order, matrices, values, or points.
 
       Good deepResearch input:
       - request: cleaned user-language source-specific research request.

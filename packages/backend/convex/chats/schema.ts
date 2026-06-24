@@ -14,7 +14,10 @@ import {
   localeValidator,
   nakafaSectionValidator,
 } from "@repo/backend/convex/lib/validators/contents";
-import { mathDataValidator } from "@repo/backend/convex/math/spec";
+import {
+  mathDataValidator,
+  mathRequestValidator,
+} from "@repo/backend/convex/math/spec";
 import { defineTable, paginationResultValidator } from "convex/server";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
@@ -321,9 +324,11 @@ export const nakafaToolInputValidator = v.object({
   deliverables: v.array(v.string()),
 });
 
+/** Structured deterministic math tool input persisted with chat tool parts. */
 export const mathToolInputValidator = v.object({
   ...specialistToolInputFields,
   given: v.array(v.string()),
+  math: mathRequestValidator,
 });
 
 export const researchToolInputValidator = v.object({

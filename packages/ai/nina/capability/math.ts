@@ -47,6 +47,7 @@ export const runMathCapability = Effect.fn("nina.math.capability")(function* ({
 
   const result = yield* MathReasoning.produceWork({
     givens: [...input.given],
+    math: input.math,
     locale,
     objective: input.objective,
     persistence: "persist",

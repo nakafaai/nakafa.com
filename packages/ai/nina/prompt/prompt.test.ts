@@ -139,6 +139,8 @@ describe("createNinaPrompt", () => {
     expect(toolSection).toContain("deepResearch.sourceRequirements");
     expect(toolSection).toContain("nakafa.deliverables");
     expect(toolSection).toContain("math.given");
+    expect(toolSection).toContain("math.math");
+    expect(toolSection).toContain("structured deterministic request");
     expect(toolSection).toContain(
       "do not preload solution methods or derived formulas"
     );

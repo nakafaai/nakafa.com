@@ -8,12 +8,21 @@ describe("MathWork schemas", () => {
       Schema.decodeUnknownSync(MathReasoningRequest)({
         givens: ["x^2 - 5x + 6 = 0"],
         locale: "id",
+        math: {
+          expression: "x^2 - 5x + 6 = 0",
+          kind: "math",
+          operation: "solve",
+          variables: ["x"],
+        },
         objective: "Solve the equation",
         persistence: "persist",
         request: "solve x^2 - 5x + 6 = 0",
       })
     ).toMatchObject({
       locale: "id",
+      math: {
+        operation: "solve",
+      },
       persistence: "persist",
     });
   });

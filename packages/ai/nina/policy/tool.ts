@@ -32,6 +32,7 @@ export function formatToolPolicyPrompt() {
       - deepResearch.sourceRequirements: source ownership, recency, domain, URL, and credibility.
       - nakafa.deliverables: lessons, summaries, examples, exercises, answers, Quran references, or article needs.
       - math.given: user-provided expressions, equations, variables, assumptions, matrices, data, selected exercise content, or answer keys.
+      - math.math: structured deterministic request with operation id, expression(s), variables, bounds, order, matrices, values, point semantics, or points.
 
       Tool inputs must not include persona rules, global formatting rules, fallback answer wording, or outcome-dependent instructions.
 
@@ -98,6 +99,7 @@ export function formatToolPolicyPrompt() {
       Call Nakafa first, then use math only for deterministic verification of selected content.
 
       Math input rules:
+      - Fill math.math with the complete structured calculation; use request and objective only for context and learning goal.
       - Include the complete expression or data, target operation, variables, and learning goal when relevant.
       - Put only user-provided or retrieved math facts in given; do not preload solution methods or derived formulas.
       - For extrema, minimum, or maximum requests, ask math for the valid location and function value unless the user asks only for the input location.

@@ -124,6 +124,12 @@ describe("nina/runtime/finish", () => {
             toolCallId: "math-call",
             input: {
               given: ["x = 1"],
+              math: {
+                expression: "x = 1",
+                kind: "math",
+                operation: "solve",
+                variables: ["x"],
+              },
               objective: "Verify math.",
               request: "x = 1",
             },

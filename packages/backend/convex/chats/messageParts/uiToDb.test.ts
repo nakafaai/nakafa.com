@@ -1,4 +1,5 @@
 import type { DataPart } from "@repo/ai/schema/data";
+import type { MathToolInput } from "@repo/ai/schema/tools";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { mapUIMessagePartsToDBParts } from "@repo/backend/convex/chats/messageParts/uiToDb";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
@@ -30,9 +31,14 @@ const nakafaInput = {
 
 const mathInput = {
   given: ["2x + 3x"],
+  math: {
+    expression: "2x + 3x",
+    kind: "math",
+    operation: "simplify",
+  },
   objective: "Simplify the expression.",
   request: "simplify 2x + 3x",
-};
+} satisfies MathToolInput;
 
 describe("mapUIMessagePartsToDBParts", () => {
   it("persists nakafa tool and data parts without old content fields", () => {

@@ -7,6 +7,7 @@ import {
 import { probabilityParametersSchema } from "@repo/math/schema/tool/probability";
 import { Schema } from "effect";
 
+/** Canonical semantic request contract for deterministic math computation. */
 export const MathRequestSchema = Schema.Struct({
   distribution: Schema.optional(Schema.String),
   expression: Schema.optional(Schema.String),
@@ -24,6 +25,7 @@ export const MathRequestSchema = Schema.Struct({
   order: Schema.optional(Schema.NonNegativeInt),
   parameters: Schema.optional(probabilityParametersSchema),
   point: Schema.optional(Schema.String),
+  pointSemantics: Schema.optional(Schema.Literal("circle-radius-point")),
   points: Schema.optional(pointArraySchema),
   right: Schema.optional(Schema.String),
   right_matrix: Schema.optional(matrixSchema),
