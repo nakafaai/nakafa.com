@@ -130,6 +130,47 @@ describe("math/MathWork read model", () => {
       })
     ).rejects.toThrow("FORBIDDEN");
   });
+
+  it("derives child row work IDs from the root MathWork", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const seeded = await t.mutation(async (ctx) => {
+      const user = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "math-child-work-id",
+      });
+      const chatId = await ctx.db.insert("chats", {
+        title: "Math chat",
+        type: "study",
+        updatedAt: NOW,
+        userId: user.userId,
+        visibility: "private",
+      });
+
+      return { ...user, chatId };
+    });
+    const owner = t.withIdentity({
+      sessionId: seeded.sessionId,
+      subject: seeded.authUserId,
+    });
+
+    await owner.mutation(api.math.mutations.save, {
+      chatId: seeded.chatId,
+      result: mathWorkResultWithMismatchedChildren(),
+    });
+    const rows = await t.query(async (ctx) => ({
+      artifacts: await ctx.db.query("mathWorkArtifacts").collect(),
+      steps: await ctx.db.query("mathWorkSteps").collect(),
+    }));
+
+    expect(rows.steps).toEqual([
+      expect.objectContaining({ workId: "math:simplify:test" }),
+      expect.objectContaining({ workId: "math:simplify:test" }),
+    ]);
+    expect(rows.artifacts).toEqual([
+      expect.objectContaining({ workId: "math:simplify:test" }),
+      expect.objectContaining({ workId: "math:simplify:test" }),
+    ]);
+  });
 });
 
 /** Builds a representative encoded MathWork result for Convex tests. */
@@ -221,6 +262,23 @@ function mathWorkResult(): MathWorkResultInput {
       },
       workId: "math:simplify:test",
     },
+  };
+}
+
+/** Builds a malformed public save payload to prove child IDs are normalized. */
+function mathWorkResultWithMismatchedChildren(): MathWorkResultInput {
+  const result = mathWorkResult();
+
+  return {
+    ...result,
+    artifacts: result.artifacts.map((artifact) => ({
+      ...artifact,
+      workId: "math:simplify:orphan",
+    })),
+    steps: result.steps.map((step) => ({
+      ...step,
+      workId: "math:simplify:orphan",
+    })),
   };
 }
 

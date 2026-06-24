@@ -110,6 +110,7 @@ async function insertSteps(
       ...step,
       chatId,
       userId,
+      workId: result.work.workId,
     });
   }
 }
@@ -126,6 +127,7 @@ async function insertArtifacts(
       ...artifact,
       chatId,
       userId,
+      workId: result.work.workId,
     });
   }
 }

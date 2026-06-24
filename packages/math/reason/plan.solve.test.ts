@@ -90,6 +90,72 @@ describe("planCasRequest solve safety", () => {
     });
   });
 
+  it("preserves signed bounds and chained interval constraints", async () => {
+    const negativeLower = await Effect.runPromise(
+      planCasRequest(mathInput("solve x^2 = 4 with x >= -1"))
+    );
+    const reversedNegativeLower = await Effect.runPromise(
+      planCasRequest(mathInput("solve x^2 = 4 with -1 <= x"))
+    );
+    const interval = await Effect.runPromise(
+      planCasRequest(mathInput("solve x^2 = 4 with 0 < x < 2"))
+    );
+
+    expect(negativeLower).toMatchObject({
+      expression: "x^2 = 4",
+      lower: "-1",
+      lowerInclusive: true,
+    });
+    expect(reversedNegativeLower).toMatchObject({
+      expression: "x^2 = 4",
+      lower: "-1",
+      lowerInclusive: true,
+    });
+    expect(interval).toMatchObject({
+      expression: "x^2 = 4",
+      lower: "0",
+      lowerInclusive: false,
+      upper: "2",
+      upperInclusive: false,
+    });
+  });
+
+  it("preserves implicit products in equations", async () => {
+    const coefficientProduct = await Effect.runPromise(
+      planCasRequest(mathInput("solve 2(x+1) = 4"))
+    );
+    const adjacentProduct = await Effect.runPromise(
+      planCasRequest(mathInput("solve (x+1)(x-1) = 0"))
+    );
+
+    expect(coefficientProduct).toMatchObject({
+      expression: "2(x+1) = 4",
+      operation: "solve",
+      variables: ["x"],
+    });
+    expect(adjacentProduct).toMatchObject({
+      expression: "(x+1)(x-1) = 0",
+      operation: "solve",
+      variables: ["x"],
+    });
+  });
+
+  it("keeps prose objectives and requirements out of operation routing", async () => {
+    const planned = await Effect.runPromise(
+      planCasRequest({
+        ...mathInput("solve x^2 = 4"),
+        objective: "compare the answer with the key",
+        requirements: ["show line-by-line evidence"],
+      })
+    );
+
+    expect(planned).toMatchObject({
+      expression: "x^2 = 4",
+      operation: "solve",
+      variables: ["x"],
+    });
+  });
+
   it("keeps pure inequality systems as relations instead of domain metadata", async () => {
     const relationSystem = await Effect.runPromise(
       planCasRequest(mathInput("solve x > 0 and x < 2"))

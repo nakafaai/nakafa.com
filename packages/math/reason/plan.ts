@@ -37,7 +37,9 @@ const COORDINATE_PAIR_PATTERN = /\(\s*([^,()]+)\s*,\s*([^,()]+)\s*\)/gu;
 export const planCasRequest = Effect.fn("MathReasoning.planCasRequest")(
   function* (input: MathReasoningRequestShape) {
     const text = normalizeText(input);
-    const unsupportedOperation = detectUnsupportedMathReasoningOperation(text);
+    const routingText = normalizeRoutingText(input);
+    const unsupportedOperation =
+      detectUnsupportedMathReasoningOperation(routingText);
     if (unsupportedOperation) {
       return yield* Effect.fail(
         new MathPlanningError({
@@ -46,7 +48,7 @@ export const planCasRequest = Effect.fn("MathReasoning.planCasRequest")(
       );
     }
 
-    const operation = detectOperation(text);
+    const operation = detectOperation(routingText);
 
     if (operation === "line" || operation === "circle") {
       const points = extractPoints(text);
@@ -86,6 +88,14 @@ function normalizeText(input: MathReasoningRequestShape) {
     ...input.givens,
     ...input.requirements,
   ]
+    .join("\n")
+    .replaceAll("−", "-")
+    .trim();
+}
+
+/** Keeps operation routing on the actual request, not prose objectives. */
+function normalizeRoutingText(input: MathReasoningRequestShape) {
+  return [input.request, ...input.givens]
     .join("\n")
     .replaceAll("−", "-")
     .trim();

@@ -6,10 +6,17 @@ import { Effect } from "effect";
 const RELATION_OPERATOR_PATTERN = />=|<=|[=<>]/u;
 const CONNECTOR_PATTERN = /\s+\b(?:and|dan|serta|with|dengan)\b\s+/iu;
 const EQUALITY_OPERATOR_PATTERN = /(?<![<>])=(?![=])/u;
+const LEADING_SOLVE_COMMAND_PATTERN =
+  /^\s*(?:.*?\b(?:solve|selesaikan|tentukan|cari|mencari)\b\s*)/iu;
+const LEADING_RELATION_DESCRIPTOR_PATTERN =
+  /^\s*(?:(?:the\s+)?(?:(?:linear|quadratic)\s+)?equation|persamaan(?:\s+(?:linear|kuadrat|satu|variabel))*)\b\s*/iu;
 const BOUND_PATTERN =
   /^\s*(?<left>[A-Za-z_][A-Za-z0-9_]*|[^<>=]+)\s*(?<operator>>=|<=|>|<)\s*(?<right>[A-Za-z_][A-Za-z0-9_]*|[^<>=]+)\s*$/u;
+const CHAINED_BOUND_PATTERN =
+  /^\s*(?<left>[^<>=]+?)\s*(?<leftOperator>>=|<=|>|<)\s*(?<variable>[A-Za-z_][A-Za-z0-9_]*)\s*(?<rightOperator>>=|<=|>|<)\s*(?<right>[^<>=]+?)\s*$/u;
 const IDENTIFIER_PATTERN = /^[A-Za-z_][A-Za-z0-9_]*$/u;
-const TERM_PATTERN_SOURCE = String.raw`(?:\d+(?:\.\d+)?(?:[A-Za-z_][A-Za-z0-9_]*)?(?:\^\d+(?:\.\d+)?)?|[A-Za-z_][A-Za-z0-9_]*(?:\([^()]*\))?(?:\^\d+(?:\.\d+)?)?|\([^()]+\))`;
+const ATOM_PATTERN_SOURCE = String.raw`(?:[-+]?\d+(?:\.\d+)?(?:[A-Za-z_][A-Za-z0-9_]*)?(?:\^\d+(?:\.\d+)?)?|[-+]?[A-Za-z_][A-Za-z0-9_]*(?:\([^()]*\))?(?:\^\d+(?:\.\d+)?)?|[-+]?\([^()]+\)(?:\^\d+(?:\.\d+)?)?)`;
+const TERM_PATTERN_SOURCE = String.raw`${ATOM_PATTERN_SOURCE}(?:\s*${ATOM_PATTERN_SOURCE})*`;
 const RELATION_LEFT_PATTERN = new RegExp(
   String.raw`(${TERM_PATTERN_SOURCE}(?:\s*[+\-*/^]\s*${TERM_PATTERN_SOURCE})*)\s*$`,
   "u"
@@ -84,8 +91,12 @@ function extractRelations(values: readonly string[]) {
 
     for (const line of lines) {
       for (const clause of line.split(CONNECTOR_PATTERN)) {
-        const relation = extractRelationFragment(clause);
-        if (relation && !seen.has(relation)) {
+        const fragments = extractRelationFragments(clause);
+        for (const relation of fragments) {
+          if (seen.has(relation)) {
+            continue;
+          }
+
           relations.push(relation);
           seen.add(relation);
         }
@@ -225,23 +236,61 @@ function boundFromRightVariable({
 }
 
 /** Extracts a mathematical relation without changing identifiers or functions. */
-function extractRelationFragment(expression: string) {
-  const match = RELATION_OPERATOR_PATTERN.exec(expression);
+function extractRelationFragments(expression: string) {
+  const relationText = stripLeadingRelationDescriptor(
+    stripLeadingSolveCommand(expression)
+  );
+  const chained = extractChainedBoundFragments(relationText);
+  if (chained.length > 0) {
+    return chained;
+  }
+
+  const match = RELATION_OPERATOR_PATTERN.exec(relationText);
   if (!match) {
-    return;
+    return [];
   }
 
   const operator = match[0];
-  const left = expression.slice(0, match.index);
-  const right = expression.slice(match.index + operator.length);
+  const left = relationText.slice(0, match.index);
+  const right = relationText.slice(match.index + operator.length);
   const leftExpression = RELATION_LEFT_PATTERN.exec(left)?.[1]?.trim();
   const rightExpression = RELATION_RIGHT_PATTERN.exec(right)?.[1]?.trim();
 
   if (!(leftExpression && rightExpression)) {
-    return;
+    return [];
   }
 
-  return `${leftExpression} ${operator} ${rightExpression}`;
+  return [`${leftExpression} ${operator} ${rightExpression}`];
+}
+
+/** Removes learner command words before parsing relation syntax. */
+function stripLeadingSolveCommand(expression: string) {
+  return expression.replace(LEADING_SOLVE_COMMAND_PATTERN, "").trim();
+}
+
+/** Removes common equation descriptors before the actual relation. */
+function stripLeadingRelationDescriptor(expression: string) {
+  return expression.replace(LEADING_RELATION_DESCRIPTOR_PATTERN, "").trim();
+}
+
+/** Splits interval notation such as 0 < x < 2 into two bound relations. */
+function extractChainedBoundFragments(expression: string) {
+  const match = CHAINED_BOUND_PATTERN.exec(expression);
+  const groups = match?.groups;
+  if (!groups) {
+    return [];
+  }
+
+  const left = String(groups.left).trim();
+  const leftOperator = String(groups.leftOperator);
+  const variable = String(groups.variable);
+  const rightOperator = String(groups.rightOperator);
+  const right = String(groups.right).trim();
+
+  return [
+    `${left} ${leftOperator} ${variable}`,
+    `${variable} ${rightOperator} ${right}`,
+  ];
 }
 
 /** Infers solve variables from relation symbols and normalized bounds. */
