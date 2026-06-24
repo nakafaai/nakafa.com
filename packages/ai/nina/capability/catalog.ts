@@ -285,10 +285,6 @@ export const createNinaCapabilityCatalog = Effect.fn("nina.capability.catalog")(
                     PedagogyProjectionRepository,
                     pedagogyRepository
                   ),
-                  Effect.map((result) => ({
-                    ...result,
-                    usage: Option.none(),
-                  })),
                   Effect.catchAll((error) =>
                     reporter
                       .report({ error, source: "runMathCapability" })
@@ -300,6 +296,13 @@ export const createNinaCapabilityCatalog = Effect.fn("nina.capability.catalog")(
                       )
                   )
                 );
+
+                yield* recordSpecialistUsage({
+                  addUsage: usage.addUsage,
+                  component: MATH_CAPABILITY,
+                  logContext,
+                  result,
+                });
 
                 return result;
               }),

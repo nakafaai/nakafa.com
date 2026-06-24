@@ -18,7 +18,7 @@ import {
   type MathWorkResultShape,
 } from "@repo/math/schema/work";
 import type { UIMessageStreamWriter } from "ai";
-import { Effect, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 
 interface RunMathCapabilityInput {
   readonly input: MathToolInput;
@@ -96,14 +96,22 @@ export const runMathCapability = Effect.fn("nina.math.capability")(function* ({
     writer,
   });
 
-  return capabilityResult({
+  const capability = capabilityResult({
     capability: MATH_CAPABILITY,
     limitations: result.work.limitations.map(
       (limitation) => limitation.copyKey
     ),
     status: result.work.status === "ready" ? "available" : "limited",
-    text: formatMathCapabilityEvidence({ pedagogy, result }),
+    text: formatMathCapabilityEvidence({
+      pedagogy: pedagogy?.projection,
+      result,
+    }),
   });
+
+  return {
+    ...capability,
+    usage: pedagogy ? Option.some(pedagogy.usage) : Option.none(),
+  };
 });
 
 /** Writes the MathReasoning UI data part at the AI SDK stream boundary. */
@@ -165,8 +173,8 @@ const writePedagogyProjection = Effect.fn("nina.math.pedagogy.write")(
         result,
       })
       .pipe(
-        Effect.tap((projection) =>
-          repository.save(projection, {
+        Effect.tap((narration) =>
+          repository.save(narration.projection, {
             responseMessageIdentifier,
             toolCallId,
           })
@@ -195,7 +203,9 @@ const writePedagogyProjection = Effect.fn("nina.math.pedagogy.write")(
       data: {
         ...mathData,
         pedagogy: {
-          projection: Schema.encodeSync(PedagogyProjection)(projection.right),
+          projection: Schema.encodeSync(PedagogyProjection)(
+            projection.right.projection
+          ),
           status: "done",
         },
         status: "done",

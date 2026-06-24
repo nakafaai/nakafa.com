@@ -270,7 +270,8 @@ function resolveRequirementVariable({
     );
   }
 
-  if (request.variables && !request.variables.includes(variable)) {
+  const variables = request.variables ?? [];
+  if (variables.length > 0 && !variables.includes(variable)) {
     return Effect.fail(
       new MathPlanningError({
         message: "Solve requirement bounds must constrain a solved variable.",
@@ -398,6 +399,22 @@ function validateBoundVariable({
   readonly request: MathRequest;
   readonly variables: readonly string[];
 }) {
+  if (request.lower === undefined && request.lowerInclusive !== undefined) {
+    return Effect.fail(
+      new MathPlanningError({
+        message: "Lower-bound inclusivity needs a structured lower endpoint.",
+      })
+    );
+  }
+
+  if (request.upper === undefined && request.upperInclusive !== undefined) {
+    return Effect.fail(
+      new MathPlanningError({
+        message: "Upper-bound inclusivity needs a structured upper endpoint.",
+      })
+    );
+  }
+
   if (
     request.variable &&
     variables.length > 0 &&
@@ -431,12 +448,7 @@ function validateBoundVariable({
 
 /** Returns whether a solve request includes a structured domain interval. */
 function hasBounds(request: MathRequest) {
-  return (
-    request.lower !== undefined ||
-    request.lowerInclusive !== undefined ||
-    request.upper !== undefined ||
-    request.upperInclusive !== undefined
-  );
+  return request.lower !== undefined || request.upper !== undefined;
 }
 
 /** Infers variables from symbolic math expressions when no field is provided. */

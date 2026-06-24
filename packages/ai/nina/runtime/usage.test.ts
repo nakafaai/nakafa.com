@@ -41,11 +41,12 @@ describe("nina/runtime/usage", () => {
     Effect.runSync(
       usage.addUsage("deepResearch", usageRow({ input: 11, output: 13 }))
     );
+    Effect.runSync(usage.addUsage("math", usageRow({ input: 17, output: 19 })));
 
     expect(
       Effect.runSync(
         usage.metadata({
-          mainUsage: { inputTokens: 17, outputTokens: 19 },
+          mainUsage: { inputTokens: 23, outputTokens: 29 },
           modelId: defaultModel,
         })
       )
@@ -53,14 +54,15 @@ describe("nina/runtime/usage", () => {
       model: defaultModel,
       credits: getModelCreditCost(defaultModel),
       tokens: {
-        input: 35,
-        output: 42,
-        total: 77,
+        input: 58,
+        output: 71,
+        total: 129,
         breakdown: {
-          main: { input: 17, output: 19 },
+          main: { input: 23, output: 29 },
           subAgents: {
             nakafa: { input: 7, output: 10 },
             deepResearch: { input: 11, output: 13 },
+            math: { input: 17, output: 19 },
           },
         },
       },

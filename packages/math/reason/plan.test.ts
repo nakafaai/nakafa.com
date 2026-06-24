@@ -26,6 +26,7 @@ describe("planCasRequest", () => {
           operation: "differentiate",
           order: 2,
           variable: "x",
+          variables: ["x"],
         })
       )
     );
@@ -87,6 +88,7 @@ describe("planCasRequest", () => {
       order: 2,
       variable: "x",
     });
+    expect(derivative).not.toHaveProperty("variables");
     expect(inferredDerivative).toMatchObject({
       expression: "t^3",
       operation: "differentiate",
@@ -152,6 +154,16 @@ describe("planCasRequest", () => {
     const missingCalculusExpression = await Effect.runPromiseExit(
       planCasRequest(mathInput({ operation: "integrate", variable: "x" }))
     );
+    const conflictingCalculusVariable = await Effect.runPromiseExit(
+      planCasRequest(
+        mathInput({
+          expression: "x^2",
+          operation: "differentiate",
+          variable: "x",
+          variables: ["y"],
+        })
+      )
+    );
     const partialBounds = await Effect.runPromiseExit(
       planCasRequest(
         mathInput({
@@ -213,6 +225,7 @@ describe("planCasRequest", () => {
     expectPlanningFailure(missingExpression);
     expectPlanningFailure(ambiguousVariable);
     expectPlanningFailure(missingCalculusExpression);
+    expectPlanningFailure(conflictingCalculusVariable);
     expectPlanningFailure(partialBounds);
     expectPlanningFailure(missingLinePoints);
     expectPlanningFailure(extraLinePoint);

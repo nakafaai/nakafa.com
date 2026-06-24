@@ -8,6 +8,7 @@ import {
   PedagogyNarrator,
 } from "@repo/ai/nina/pedagogy/narrator";
 import type { MathWorkResultShape } from "@repo/math/schema/work";
+import type { LanguageModelUsage } from "ai";
 import { MockLanguageModelV3 } from "ai/test";
 import { Cause, type Context, Effect, Exit, Option } from "effect";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -18,6 +19,20 @@ const model = new MockLanguageModelV3({
   modelId: "google/gemini-3-flash",
 });
 const EVIDENCE_HASH_PATTERN = /^evidence:/u;
+const narrationUsage = {
+  inputTokens: 13,
+  inputTokenDetails: {
+    cacheReadTokens: 0,
+    cacheWriteTokens: 0,
+    noCacheTokens: 13,
+  },
+  outputTokens: 21,
+  outputTokenDetails: {
+    reasoningTokens: 3,
+    textTokens: 18,
+  },
+  totalTokens: 34,
+} satisfies LanguageModelUsage;
 
 vi.mock("ai", async (importOriginal) => {
   const actual = await importOriginal<typeof import("ai")>();
@@ -43,9 +58,10 @@ describe("PedagogyNarrator", () => {
           },
         ],
       },
+      usage: narrationUsage,
     });
 
-    const projection = await Effect.runPromise(
+    const narration = await Effect.runPromise(
       PedagogyNarrator.narrate({
         locale: "id",
         modelId,
@@ -57,6 +73,7 @@ describe("PedagogyNarrator", () => {
         })
       )
     );
+    const projection = narration.projection;
 
     expect(generateText).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -85,6 +102,7 @@ describe("PedagogyNarrator", () => {
       ],
       workId: "math:solve:narrator",
     });
+    expect(narration.usage).toBe(narrationUsage);
   });
 
   it("fails typed when model narration cites unknown evidence", async () => {
@@ -121,10 +139,13 @@ describe("PedagogyNarrator", () => {
 
   it("repairs invalid structured output before returning narration", async () => {
     generateText
-      .mockResolvedValueOnce({ output: { sentences: [] } })
+      .mockResolvedValueOnce({
+        output: { sentences: [] },
+        usage: narrationUsage,
+      })
       .mockResolvedValueOnce(validDraft("Gunakan jawaban $x=2$ dari kartu."));
 
-    const projection = await Effect.runPromise(
+    const narration = await Effect.runPromise(
       PedagogyNarrator.narrate({
         locale: "id",
         modelId,
@@ -148,9 +169,10 @@ describe("PedagogyNarrator", () => {
         ],
       })
     );
-    expect(projection.sentences[0]?.text).toBe(
+    expect(narration.projection.sentences[0]?.text).toBe(
       "Gunakan jawaban $x=2$ dari kartu."
     );
+    expect(narration.usage).toBe(narrationUsage);
   });
 
   it("repairs thrown structured-output failures before returning narration", async () => {
@@ -158,7 +180,7 @@ describe("PedagogyNarrator", () => {
       .mockRejectedValueOnce(new Error("No object generated."))
       .mockResolvedValueOnce(validDraft("Gunakan jawaban $x=2$ dari kartu."));
 
-    const projection = await Effect.runPromise(
+    const narration = await Effect.runPromise(
       PedagogyNarrator.narrate({
         locale: "id",
         modelId,
@@ -172,7 +194,7 @@ describe("PedagogyNarrator", () => {
     );
 
     expect(generateText).toHaveBeenCalledTimes(2);
-    expect(projection.sentences[0]?.text).toBe(
+    expect(narration.projection.sentences[0]?.text).toBe(
       "Gunakan jawaban $x=2$ dari kartu."
     );
   });
@@ -186,7 +208,7 @@ describe("PedagogyNarrator", () => {
       )
       .mockResolvedValueOnce(validDraft("Gunakan jawaban $x=2$ dari kartu."));
 
-    const projection = await Effect.runPromise(
+    const narration = await Effect.runPromise(
       PedagogyNarrator.narrate({
         locale: "id",
         modelId,
@@ -200,7 +222,7 @@ describe("PedagogyNarrator", () => {
     );
 
     expect(generateText).toHaveBeenCalledTimes(2);
-    expect(projection.sentences[0]?.evidenceRefs).toEqual([
+    expect(narration.projection.sentences[0]?.evidenceRefs).toEqual([
       "math:solve:narrator:step:0",
     ]);
   });
@@ -210,7 +232,7 @@ describe("PedagogyNarrator", () => {
       .mockResolvedValueOnce(validDraft("Hasil akhirnya adalah x = 2."))
       .mockResolvedValueOnce(validDraft("Hasil akhirnya adalah $x=2$."));
 
-    const projection = await Effect.runPromise(
+    const narration = await Effect.runPromise(
       PedagogyNarrator.narrate({
         locale: "id",
         modelId,
@@ -224,7 +246,9 @@ describe("PedagogyNarrator", () => {
     );
 
     expect(generateText).toHaveBeenCalledTimes(2);
-    expect(projection.sentences[0]?.text).toBe("Hasil akhirnya adalah $x=2$.");
+    expect(narration.projection.sentences[0]?.text).toBe(
+      "Hasil akhirnya adalah $x=2$."
+    );
   });
 
   it.each([
@@ -347,6 +371,7 @@ function validDraft(
         },
       ],
     },
+    usage: narrationUsage,
   };
 }
 

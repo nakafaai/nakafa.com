@@ -129,20 +129,24 @@ function generateProjectionAttempt({
   readonly packet: PedagogyEvidencePacketShape;
 }) {
   return Effect.gen(function* () {
-    const draft = yield* generateDraft({
+    const generated = yield* generateDraft({
       failure,
       input,
       model,
       packet,
     });
     const narratedAt = yield* Clock.currentTimeMillis;
-
-    return yield* buildProjection({
-      draft,
+    const projection = yield* buildProjection({
+      draft: generated.draft,
       input,
       narratedAt,
       packet,
     });
+
+    return {
+      projection,
+      usage: generated.usage,
+    };
   });
 }
 
@@ -191,6 +195,10 @@ function generateDraft({
   }).pipe(
     Effect.flatMap((generated) =>
       Schema.decodeUnknown(PedagogyNarrationDraftSchema)(generated.output).pipe(
+        Effect.map((draft) => ({
+          draft,
+          usage: generated.usage,
+        })),
         Effect.mapError(
           (error) =>
             new PedagogyNarrationError({

@@ -108,6 +108,15 @@ describe("planSolveRequest", () => {
         ["0 < x < 3"]
       )
     );
+    const emptyVariables = await Effect.runPromise(
+      planSolveRequest(
+        solveRequest({
+          expression: "x^2 = 4",
+          variables: [],
+        }),
+        ["x > 0"]
+      )
+    );
     const tightened = await Effect.runPromise(
       planSolveRequest(
         solveRequest({
@@ -162,6 +171,12 @@ describe("planSolveRequest", () => {
       variable: "x",
       variables: ["x"],
     });
+    expect(emptyVariables).toMatchObject({
+      lower: "0",
+      lowerInclusive: false,
+      variable: "x",
+      variables: ["x"],
+    });
     expect(tightened).toMatchObject({
       lower: "3",
       lowerInclusive: false,
@@ -190,42 +205,16 @@ describe("planSolveRequest", () => {
 
   it("normalizes every symbolic inequality direction", async () => {
     const cases = [
-      {
-        expected: { lower: "0", lowerInclusive: true },
-        requirement: "x >= 0",
-      },
-      {
-        expected: { upper: "3", upperInclusive: true },
-        requirement: "x <= 3",
-      },
-      {
-        expected: { lower: "0", lowerInclusive: false },
-        requirement: "0 < x",
-      },
-      {
-        expected: { lower: "0", lowerInclusive: true },
-        requirement: "0 <= x",
-      },
-      {
-        expected: { upper: "3", upperInclusive: false },
-        requirement: "3 > x",
-      },
-      {
-        expected: { upper: "3", upperInclusive: true },
-        requirement: "3 >= x",
-      },
+      { expected: { lower: "0", lowerInclusive: true }, requirement: "x >= 0" },
+      { expected: { upper: "3", upperInclusive: true }, requirement: "x <= 3" },
+      { expected: { lower: "0", lowerInclusive: false }, requirement: "0 < x" },
+      { expected: { lower: "0", lowerInclusive: true }, requirement: "0 <= x" },
+      { expected: { upper: "3", upperInclusive: false }, requirement: "3 > x" },
+      { expected: { upper: "3", upperInclusive: true }, requirement: "3 >= x" },
     ];
 
     for (const item of cases) {
-      const planned = await Effect.runPromise(
-        planSolveRequest(
-          solveRequest({
-            expression: "x^2 = 4",
-            variables: ["x"],
-          }),
-          [item.requirement]
-        )
-      );
+      const planned = await planDefaultSolve([item.requirement]);
 
       expect(planned).toMatchObject({
         ...item.expected,
@@ -285,48 +274,13 @@ describe("planSolveRequest", () => {
   });
 
   it("merges repeated bounds without weakening the domain", async () => {
-    const exactSameLower = await Effect.runPromise(
-      planSolveRequest(
-        solveRequest({ expression: "x^2 = 4", variables: ["x"] }),
-        ["x >= 0", "x > 0"]
-      )
-    );
-    const sameLower = await Effect.runPromise(
-      planSolveRequest(
-        solveRequest({ expression: "x^2 = 4", variables: ["x"] }),
-        ["x > 0", "x >= 0.0"]
-      )
-    );
-    const strongerLower = await Effect.runPromise(
-      planSolveRequest(
-        solveRequest({ expression: "x^2 = 4", variables: ["x"] }),
-        ["x > 3", "x > 0"]
-      )
-    );
-    const sameNumericLower = await Effect.runPromise(
-      planSolveRequest(
-        solveRequest({ expression: "x^2 = 4", variables: ["x"] }),
-        ["x >= 0.0", "x > 0"]
-      )
-    );
-    const existingUpper = await Effect.runPromise(
-      planSolveRequest(
-        solveRequest({ expression: "x^2 = 4", variables: ["x"] }),
-        ["x < 2", "x < 3"]
-      )
-    );
-    const strongerUpper = await Effect.runPromise(
-      planSolveRequest(
-        solveRequest({ expression: "x^2 = 4", variables: ["x"] }),
-        ["x < 3", "x < 2"]
-      )
-    );
-    const equalClosedInterval = await Effect.runPromise(
-      planSolveRequest(
-        solveRequest({ expression: "x^2 = 4", variables: ["x"] }),
-        ["0 <= x <= 0"]
-      )
-    );
+    const exactSameLower = await planDefaultSolve(["x >= 0", "x > 0"]);
+    const sameLower = await planDefaultSolve(["x > 0", "x >= 0.0"]);
+    const strongerLower = await planDefaultSolve(["x > 3", "x > 0"]);
+    const sameNumericLower = await planDefaultSolve(["x >= 0.0", "x > 0"]);
+    const existingUpper = await planDefaultSolve(["x < 2", "x < 3"]);
+    const strongerUpper = await planDefaultSolve(["x < 3", "x < 2"]);
+    const equalClosedInterval = await planDefaultSolve(["0 <= x <= 0"]);
     const symbolicInterval = await Effect.runPromise(
       planSolveRequest(
         solveRequest({ expression: "x = y", variables: ["x"] }),
@@ -465,6 +419,15 @@ describe("planSolveRequest", () => {
       )
     );
 
+    for (const request of [
+      { expression: "x^2 = 4", lowerInclusive: true, variable: "x" },
+      { expression: "x^2 = 4", upperInclusive: false, variable: "x" },
+    ]) {
+      expectPlanningFailure(
+        await Effect.runPromiseExit(planSolveRequest(solveRequest(request)))
+      );
+    }
+
     expectPlanningFailure(missingRelation);
     expectPlanningFailure(ambiguousBoundVariable);
     expectPlanningFailure(mismatchedBoundVariable);
@@ -485,6 +448,16 @@ function solveRequest(request: Partial<MathRequest>): MathRequest {
     operation: "solve",
     ...request,
   };
+}
+
+/** Plans the common bounded equation used by requirement-bound examples. */
+function planDefaultSolve(requirements: readonly string[]) {
+  return Effect.runPromise(
+    planSolveRequest(
+      solveRequest({ expression: "x^2 = 4", variables: ["x"] }),
+      requirements
+    )
+  );
 }
 
 /** Asserts that solve planning failures stay typed in the Effect error channel. */

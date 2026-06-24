@@ -95,8 +95,29 @@ function validateCalculusRequest(request: MathRequest) {
       );
     }
 
-    return { ...request, variable };
+    return yield* normalizeCalculusScope({ request, variable });
   });
+}
+
+/** Keeps calculus requests scoped to one semantic variable field. */
+function normalizeCalculusScope({
+  request,
+  variable,
+}: {
+  readonly request: MathRequest;
+  readonly variable: string;
+}) {
+  const { variables, ...requestWithoutVariables } = request;
+  const requestedVariables = variables ?? [];
+  if (requestedVariables.length > 0 && !requestedVariables.includes(variable)) {
+    return Effect.fail(
+      new MathPlanningError({
+        message: "Calculus variable fields must name the same target.",
+      })
+    );
+  }
+
+  return Effect.succeed({ ...requestWithoutVariables, variable });
 }
 
 /** Returns whether a request has exactly one integral endpoint. */
