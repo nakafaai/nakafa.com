@@ -33,6 +33,7 @@ export const runMathCapability = Effect.fn("nina.math.capability")(function* ({
     givens: [...input.given],
     objective: input.objective,
     request: input.request,
+    requirements: [...(input.requirements ?? [])],
   };
 
   yield* writeMathDataPart({
@@ -51,6 +52,7 @@ export const runMathCapability = Effect.fn("nina.math.capability")(function* ({
     persistence: "persist",
     projectionLevel: "school",
     request: input.request,
+    requirements: [...(input.requirements ?? [])],
     responseMessageIdentifier,
     toolCallId,
   }).pipe(

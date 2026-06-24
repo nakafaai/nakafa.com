@@ -10,6 +10,7 @@ export const mathStaticCopyKeyValues = [
   "math-step",
   "math-verification-derived",
   "math-verification-pedagogical",
+  "math-verification-contradicted",
   "math-verification-speculative",
   "math-verification-verified",
   "math-visual-coordinate-circle-description",

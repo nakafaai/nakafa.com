@@ -8,6 +8,7 @@ import {
   MAX_CHAT_MESSAGE_PARTS,
 } from "@repo/backend/convex/chats/constants";
 import type { partValidator } from "@repo/backend/convex/chats/schema";
+import { deleteMathWorkForResponseIdentifier } from "@repo/backend/convex/math/cleanup";
 import type { Infer } from "convex/values";
 import { ConvexError } from "convex/values";
 
@@ -83,6 +84,16 @@ export async function deleteMessageBatchFromPoint(
     0,
     CHAT_TRANSCRIPT_REWRITE_MESSAGE_BATCH_SIZE
   )) {
+    const mathWorkBatch = await deleteMathWorkForResponseIdentifier(
+      ctx,
+      chatId,
+      message.identifier
+    );
+
+    if (mathWorkBatch.hasMore) {
+      return { hasMore: true };
+    }
+
     const partsBatch = await deletePartsForMessageBatch(ctx, message._id);
 
     if (partsBatch.hasMore) {

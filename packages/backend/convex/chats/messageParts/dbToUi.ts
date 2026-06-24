@@ -5,6 +5,7 @@ import {
   requirePartField,
   requireToolState,
 } from "@repo/backend/convex/chats/messageParts/shared";
+import { MathDataSchema } from "@repo/math/schema/data";
 import { ConvexError } from "convex/values";
 import { Schema } from "effect";
 
@@ -333,11 +334,13 @@ export function mapDBPartToUIMessagePart({
           fieldName: "dataMathId",
           partType: part.type,
         }),
-        data: requirePartField({
-          value: part.dataMathData,
-          fieldName: "dataMathData",
-          partType: part.type,
-        }),
+        data: Schema.decodeUnknownSync(MathDataSchema)(
+          requirePartField({
+            value: part.dataMathData,
+            fieldName: "dataMathData",
+            partType: part.type,
+          })
+        ),
       };
     case "data-scrape-url":
       return {

@@ -10,8 +10,7 @@ import {
 import { NinaReporter } from "@repo/ai/nina/runtime/report";
 import { NinaStore } from "@repo/ai/nina/runtime/store";
 import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
-import { CasEngine } from "@repo/math/cas/engine";
-import { MathWorkRepository } from "@repo/math/reason/repo";
+import { MathReasoning } from "@repo/math/reason/service";
 import { Cause, Effect, Exit, Option } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -145,7 +144,7 @@ describe("nina/harness/stream", () => {
 
 /** Provides the app-owned services required by the default NinaHarness layer. */
 function provideHarnessServices<A, E>(
-  program: Effect.Effect<A, E, NinaHarness>
+  program: Effect.Effect<A, E, MathReasoning | NinaHarness>
 ) {
   return program.pipe(
     Effect.provide(NinaHarness.Default),
@@ -165,14 +164,11 @@ function provideHarnessServices<A, E>(
         Effect.dieMessage("Nakafa search is not used in this test."),
     }),
     Effect.provideService(
-      CasEngine,
-      CasEngine.make({
-        capabilities: Effect.succeed([]),
-        compute: () => Effect.dieMessage("CAS is not used in this test."),
+      MathReasoning,
+      MathReasoning.make({
+        produceWork: () =>
+          Effect.dieMessage("MathReasoning is not used in this test."),
       })
-    ),
-    Effect.provideService(MathWorkRepository, {
-      save: () => Effect.void,
-    })
+    )
   );
 }

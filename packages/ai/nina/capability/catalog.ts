@@ -40,8 +40,6 @@ import type { AgentContext } from "@repo/ai/types/agents";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
 import type { Locale } from "@repo/contents/_types/content";
-import { CasEngine } from "@repo/math/cas/engine";
-import { MathWorkRepository } from "@repo/math/reason/repo";
 import { MathReasoning } from "@repo/math/reason/service";
 import type { LogContext } from "@repo/utilities/logging/types";
 import { tool, type UIMessageStreamWriter } from "ai";
@@ -79,8 +77,7 @@ export const createNinaCapabilityCatalog = Effect.fn("nina.capability.catalog")(
     const search = yield* NakafaSearch;
     const reporter = yield* NinaReporter;
     const store = yield* NinaStore;
-    const casEngine = yield* CasEngine;
-    const mathWorkRepository = yield* MathWorkRepository;
+    const mathReasoning = yield* MathReasoning;
 
     return {
       [NAKAFA_CAPABILITY]: tool({
@@ -249,7 +246,7 @@ export const createNinaCapabilityCatalog = Effect.fn("nina.capability.catalog")(
       }),
       [MATH_CAPABILITY]: tool({
         description:
-          "Verify user-provided or retrieved math with deterministic evidence for arithmetic, algebra, equations, calculus, series, matrices, statistics, probability, geometry, and discrete math. Do not use this as the first or only source for educational practice content; use Nakafa first, then math verifies the selected content.",
+          "Verify user-provided or retrieved first-slice math with deterministic evidence for algebra, equations, simplification, factoring, basic derivatives/integrals, and coordinate line/circle checks. Do not use this as the first or only source for educational practice content; use Nakafa first, then math verifies the selected content.",
         inputSchema: mathToolInputSchema,
         /** Runs the deterministic math specialist and records its token usage. */
         execute: (input, { toolCallId }) =>
@@ -277,9 +274,7 @@ export const createNinaCapabilityCatalog = Effect.fn("nina.capability.catalog")(
                   toolCallId,
                   writer,
                 }).pipe(
-                  Effect.provide(MathReasoning.Default),
-                  Effect.provideService(CasEngine, casEngine),
-                  Effect.provideService(MathWorkRepository, mathWorkRepository),
+                  Effect.provideService(MathReasoning, mathReasoning),
                   Effect.map((result) => ({
                     ...result,
                     usage: Option.none(),

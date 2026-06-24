@@ -168,7 +168,9 @@ describe("createNinaPrompt", () => {
     expect(prompt).toContain(
       "Source-backed research evidence for external or current claims."
     );
-    expect(prompt).toContain("Math evidence for calculations");
+    expect(prompt).toContain(
+      "Math evidence for first-slice algebra, equations, simplification, factoring, basic derivatives/integrals, and coordinate line/circle checks."
+    );
     expect(prompt).toContain(
       "If evidence still cannot be gathered, answer with the limitation instead of guessing."
     );

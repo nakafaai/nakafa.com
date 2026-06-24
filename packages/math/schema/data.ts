@@ -10,6 +10,10 @@ const MathDataInputSchema = Schema.Struct({
   givens: Schema.Array(Schema.NonEmptyString).pipe(Schema.mutable),
   objective: Schema.NonEmptyString,
   request: Schema.NonEmptyString,
+  requirements: Schema.optionalWith(
+    Schema.Array(Schema.NonEmptyString).pipe(Schema.mutable),
+    { default: () => [] }
+  ),
 }).pipe(Schema.mutable);
 
 /** Streaming state emitted before MathReasoning returns a result. */

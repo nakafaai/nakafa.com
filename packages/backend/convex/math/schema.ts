@@ -56,6 +56,10 @@ export type MathWorkStepRow = Infer<typeof mathWorkStepRowValidator>;
 const tables = {
   mathWorks: defineTable(mathWorkRowValidator)
     .index("by_chatId_and_workId", ["chatId", "workId"])
+    .index("by_chatId_and_responseMessageIdentifier", [
+      "chatId",
+      "responseMessageIdentifier",
+    ])
     .index("by_chatId_and_createdAt", ["chatId", "createdAt"])
     .index("by_userId_and_createdAt", ["userId", "createdAt"]),
   mathComputations: defineTable(mathComputationRowValidator)

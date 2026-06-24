@@ -41,7 +41,7 @@ export function formatToolPolicyPrompt() {
       Every factual claim needs the right evidence:
       - Nakafa evidence for Nakafa-owned content.
       - Source-backed research evidence for external or current claims.
-      - Math evidence for calculations, formulas, numeric answers, answer keys, equivalence checks, probability, statistics, matrix properties, geometry, and discrete counting.
+      - Math evidence for first-slice algebra, equations, simplification, factoring, basic derivatives/integrals, and coordinate line/circle checks.
 
       If evidence is missing, call the matching specialist.
       If evidence still cannot be gathered, answer with the limitation instead of guessing.
@@ -91,7 +91,7 @@ export function formatToolPolicyPrompt() {
 
       ## math
 
-      Use math for deterministic evidence across arithmetic, algebra, equations, inequalities, calculus, series, matrices, statistics, probability, geometry, and discrete math.
+      Use math for deterministic evidence across first-slice algebra, equations, simplification, factoring, basic derivatives/integrals, and coordinate line/circle checks.
       Use math to verify user-provided expressions, user-provided data, and math content retrieved from another evidence path.
 
       Do not use math as the first or only source for practice sets: warmups, quizzes, tryout preparation, examples, hints, or review tasks.
@@ -119,7 +119,7 @@ export function formatToolPolicyPrompt() {
       - Do not switch to different math content after verification.
 
       Use deepResearch for current, external, or source-backed information beyond Nakafa.
-      Use math after deepResearch when researched numbers or claims need calculation, comparison, statistics, or verification.
+      Use math after deepResearch when researched numbers or claims need a supported first-slice calculation or verification.
 
       Never invent source-specific content, current facts, exercise choices, citations, or verified math without relevant evidence.
       After weak or missing deepResearch evidence for an external, current, official, or source-owned claim:

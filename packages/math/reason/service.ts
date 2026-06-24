@@ -26,6 +26,7 @@ export class MathReasoning extends Effect.Service<MathReasoning>()(
     accessors: true,
     effect: Effect.gen(function* () {
       const cas = yield* CasEngine;
+      const repository = yield* MathWorkRepository;
 
       return {
         /** Produces canonical MathWork, derivation rows, artifacts, and optional persistence. */
@@ -73,6 +74,7 @@ export class MathReasoning extends Effect.Service<MathReasoning>()(
               kind: "prompt",
               locale: request.locale,
               objective: request.objective,
+              requirements: request.requirements,
               text: request.request,
             },
             limitations: limitationsForResult(computed.operation, lane),
@@ -82,7 +84,7 @@ export class MathReasoning extends Effect.Service<MathReasoning>()(
             verification: {
               engine: "sympy",
               lane,
-              reasonKey: verificationReasonKey(lane),
+              reasonKey: verificationReasonKey(computed, lane),
               source: `cas.${computed.operation}`,
               values: [
                 { name: "lane", value: lane },
@@ -104,7 +106,6 @@ export class MathReasoning extends Effect.Service<MathReasoning>()(
           });
 
           if (request.persistence === "persist") {
-            const repository = yield* MathWorkRepository;
             yield* repository.save(output, {
               responseMessageIdentifier: request.responseMessageIdentifier,
               toolCallId: request.toolCallId,
@@ -192,8 +193,12 @@ function planningAssumptions(): MathWorkShape["assumptions"] {
   ];
 }
 
-/** Selects the localized verification reason key for the work lane. */
-function verificationReasonKey(lane: VerificationLane) {
+/** Selects the localized verification reason key for the work status and lane. */
+function verificationReasonKey(result: MathResult, lane: VerificationLane) {
+  if (result.status === "contradicted") {
+    return "math-verification-contradicted";
+  }
+
   if (lane === "speculative") {
     return "math-verification-speculative";
   }

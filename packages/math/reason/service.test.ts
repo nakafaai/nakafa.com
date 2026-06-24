@@ -149,6 +149,9 @@ describe("MathReasoning", () => {
 
     expect(exit.value.work.primaryResult.expression).toBe("x");
     expect(exit.value.work.computations[0]?.secondary).toBeUndefined();
+    expect(exit.value.work.verification.reasonKey).toBe(
+      "math-verification-contradicted"
+    );
   });
 });
 
@@ -267,6 +270,7 @@ function primaryOnlyResult(): MathResult {
     secondary: undefined,
     stepStatus: "complete",
     steps: [],
+    status: "contradicted",
   };
 }
 

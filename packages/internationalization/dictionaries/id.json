@@ -625,6 +625,7 @@
     "math-assumption-planned-from-prompt": "Aku memilih cara hitung dari informasi yang kamu berikan.",
     "math-limitation-cas-inconclusive": "Jawaban ini masih perlu dicek sekali lagi sebelum kamu jadikan pegangan.",
     "math-verification-derived": "Didapat dari langkah yang sudah dicek.",
+    "math-verification-contradicted": "Pengecekan eksak menemukan hasil yang tidak cocok.",
     "math-verification-pedagogical": "Ini penjelasan bantu; bukti utamanya tetap perhitungan yang sudah dicek.",
     "math-verification-speculative": "Bagian ini belum sepenuhnya dicek.",
     "math-verification-verified": "Sudah dicek dengan perhitungan eksak.",

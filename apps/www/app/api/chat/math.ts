@@ -1,10 +1,18 @@
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { MathPersistenceError } from "@repo/math/reason/errors";
+import { CasEngine } from "@repo/math/cas/engine";
+import {
+  MathCasAdapterError,
+  MathPersistenceError,
+  MathPlanningError,
+  MathReasoningInputError,
+} from "@repo/math/reason/errors";
 import type {
   MathWorkPersistenceMetadata,
   MathWorkRepository,
 } from "@repo/math/reason/repo";
+import { MathWorkRepository as MathWorkRepositoryTag } from "@repo/math/reason/repo";
+import { MathReasoning } from "@repo/math/reason/service";
 import { MathWorkResult } from "@repo/math/schema/work";
 import { fetchMutation } from "convex/nextjs";
 import type { Context } from "effect";
@@ -38,6 +46,50 @@ export function createMathWorkRepository({
         )
       ),
   };
+}
+
+/** Creates the live MathReasoning Adapter with CAS config deferred to math use. */
+export function createMathReasoningService({
+  chatId,
+  token,
+}: {
+  readonly chatId: Id<"chats">;
+  readonly token: string;
+}): Context.Tag.Service<typeof MathReasoning> {
+  const repository = createMathWorkRepository({ chatId, token });
+
+  return MathReasoning.make({
+    produceWork: (input) =>
+      MathReasoning.produceWork(input).pipe(
+        Effect.provide(MathReasoning.Default),
+        Effect.provide(CasEngine.Default),
+        Effect.provideService(MathWorkRepositoryTag, repository),
+        Effect.mapError(mapMathReasoningServiceError)
+      ),
+  });
+}
+
+/** Maps app Adapter setup failures into the public MathReasoning error union. */
+function mapMathReasoningServiceError(
+  error:
+    | MathCasAdapterError
+    | MathPersistenceError
+    | MathPlanningError
+    | MathReasoningInputError
+    | unknown
+) {
+  if (
+    error instanceof MathCasAdapterError ||
+    error instanceof MathPersistenceError ||
+    error instanceof MathPlanningError ||
+    error instanceof MathReasoningInputError
+  ) {
+    return error;
+  }
+
+  return new MathCasAdapterError({
+    message: "MathReasoning CAS configuration is unavailable.",
+  });
 }
 
 /** Persists one encoded MathWork result through the authenticated Convex API. */

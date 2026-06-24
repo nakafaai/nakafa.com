@@ -11,8 +11,7 @@ import { NinaStore } from "@repo/ai/nina/runtime/store";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { LocaleSchema } from "@repo/contents/_types/content";
-import { CasEngine } from "@repo/math/cas/engine";
-import { MathWorkRepository } from "@repo/math/reason/repo";
+import { MathReasoning } from "@repo/math/reason/service";
 import { CorsValidator } from "@repo/security/lib/cors-validator";
 import { cleanSlug } from "@repo/utilities/helper";
 import { geolocation } from "@vercel/functions";
@@ -21,7 +20,7 @@ import { getTranslations } from "next-intl/server";
 import { CHAT_ERRORS } from "@/app/api/chat/constants";
 import { getCanonicalCurrentPageContentUrl } from "@/app/api/chat/content";
 import { resolveNinaLearningSession } from "@/app/api/chat/context";
-import { createMathWorkRepository } from "@/app/api/chat/math";
+import { createMathReasoningService } from "@/app/api/chat/math";
 import { search as nakafaSearch } from "@/app/api/chat/nakafa";
 import { nakafaContent } from "@/app/api/chat/nakafa-content";
 import { createChatErrorReporter } from "@/app/api/chat/observability";
@@ -259,10 +258,9 @@ export function POST(req: Request) {
           report: ({ error, source }) =>
             Effect.sync(() => reportChatError(error, source)),
         }),
-        Effect.provide(CasEngine.Default),
         Effect.provideService(
-          MathWorkRepository,
-          createMathWorkRepository({ chatId, token })
+          MathReasoning,
+          createMathReasoningService({ chatId, token })
         ),
         Effect.provideService(Nakafa, nakafaContent),
         Effect.provideService(NakafaSearch, nakafaSearch)

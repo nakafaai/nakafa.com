@@ -30,6 +30,10 @@ export class MathReasoningRequest extends Schema.Class<MathReasoningRequest>(
     Schema.Literal("atomic", "school", "advanced", "professor")
   ),
   request: Schema.NonEmptyString,
+  requirements: Schema.optionalWith(
+    Schema.Array(Schema.NonEmptyString).pipe(Schema.mutable),
+    { default: () => [] }
+  ),
   responseMessageIdentifier: Schema.optional(Schema.NonEmptyString),
   toolCallId: Schema.optional(Schema.NonEmptyString),
 }) {}
@@ -40,6 +44,10 @@ const MathWorkInputSchema = Schema.Struct({
   kind: Schema.Literal("prompt"),
   locale: Schema.String,
   objective: Schema.NonEmptyString,
+  requirements: Schema.optionalWith(
+    Schema.Array(Schema.NonEmptyString).pipe(Schema.mutable),
+    { default: () => [] }
+  ),
   text: Schema.NonEmptyString,
 }).pipe(Schema.mutable);
 

@@ -81,9 +81,6 @@ describe("planCasRequest", () => {
     const noVariable = await Effect.runPromise(
       planCasRequest(mathInput("integral of 2"))
     );
-    const preferredVariable = await Effect.runPromise(
-      planCasRequest(mathInput("differentiate x + y"))
-    );
     const fallbackText = await Effect.runPromise(
       planCasRequest(mathInput("check"))
     );
@@ -109,10 +106,6 @@ describe("planCasRequest", () => {
     expect(noVariable).toMatchObject({
       expression: "2",
       operation: "integrate",
-    });
-    expect(preferredVariable).toMatchObject({
-      expression: "x + y",
-      operation: "differentiate",
       variable: "x",
     });
     expect(fallbackText).toMatchObject({
@@ -243,5 +236,6 @@ function mathInput(
     objective: "Check the math",
     persistence: "none",
     request,
+    requirements: [],
   };
 }

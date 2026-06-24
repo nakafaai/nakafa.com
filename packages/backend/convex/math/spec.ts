@@ -138,6 +138,7 @@ export const mathWorkInputValidator = v.object({
   kind: v.literal("prompt"),
   locale: v.string(),
   objective: v.string(),
+  requirements: v.optional(v.array(v.string())),
   text: v.string(),
 });
 
@@ -252,6 +253,7 @@ const mathDataInputValidator = v.object({
   givens: v.array(v.string()),
   objective: v.string(),
   request: v.string(),
+  requirements: v.optional(v.array(v.string())),
 });
 
 /** Compact MathWork data part persisted in chat transcript rows. */

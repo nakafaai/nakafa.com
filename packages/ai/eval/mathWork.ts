@@ -78,6 +78,7 @@ export function createMathEvalWork(): MathWorkResultShape {
         kind: "prompt",
         locale: "id",
         objective: "solve",
+        requirements: [],
         text: "solve x + 2 = 5",
       },
       limitations: [],

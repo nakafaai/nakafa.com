@@ -1,14 +1,22 @@
 import { Schema } from "effect";
 
-export const mathOperations = [
+export const mathReasoningOperations = [
+  "circle",
+  "differentiate",
+  "factor",
+  "integrate",
+  "line",
+  "simplify",
+  "solve",
+] as const;
+
+export const casOnlyMathOperations = [
   "apart",
   "cancel",
-  "circle",
   "combination",
   "compare",
   "cumulative_probability",
   "determinant",
-  "differentiate",
   "distance",
   "distribution",
   "domain",
@@ -18,16 +26,13 @@ export const mathOperations = [
   "evaluate",
   "expected_value",
   "expand",
-  "factor",
   "gcd",
-  "integrate",
   "intersection",
   "inverse",
   "interval_probability",
   "is_prime",
   "lcm",
   "limit",
-  "line",
   "linear_system",
   "matrix_multiply",
   "mean",
@@ -45,9 +50,7 @@ export const mathOperations = [
   "roots",
   "rref",
   "series",
-  "simplify",
   "slope",
-  "solve",
   "standard_deviation",
   "summation",
   "tail_probability",
@@ -57,10 +60,25 @@ export const mathOperations = [
   "z_score",
 ] as const;
 
+export const mathOperations = [
+  ...casOnlyMathOperations,
+  ...mathReasoningOperations,
+] as const;
+
 export const MathOperationSchema = Schema.Literal(
   ...mathOperations
 ).annotations({
   description: "Supported deterministic math operation.",
 });
 
+export const MathReasoningOperationSchema = Schema.Literal(
+  ...mathReasoningOperations
+).annotations({
+  description: "First-slice operations planned by MathReasoning.",
+});
+
 export type MathOperation = Schema.Schema.Type<typeof MathOperationSchema>;
+export type CasOnlyMathOperation = (typeof casOnlyMathOperations)[number];
+export type MathReasoningOperation = Schema.Schema.Type<
+  typeof MathReasoningOperationSchema
+>;

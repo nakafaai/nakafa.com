@@ -625,6 +625,7 @@
     "math-assumption-planned-from-prompt": "I chose the calculation from the details you gave.",
     "math-limitation-cas-inconclusive": "This answer still needs another check before you rely on it.",
     "math-verification-derived": "Worked out from checked steps.",
+    "math-verification-contradicted": "The exact check found a mismatch.",
     "math-verification-pedagogical": "Helpful explanation; use the checked math above as the proof.",
     "math-verification-speculative": "Not fully checked yet.",
     "math-verification-verified": "Checked with exact math.",

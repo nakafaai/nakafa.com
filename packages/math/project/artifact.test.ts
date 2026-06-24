@@ -51,6 +51,7 @@ function mathWork(operation: MathResult["operation"]) {
       kind: "prompt",
       locale: "en",
       objective: "Check",
+      requirements: [],
       text: operation,
     },
     limitations: [],

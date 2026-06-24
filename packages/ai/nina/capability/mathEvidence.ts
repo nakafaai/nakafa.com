@@ -4,9 +4,13 @@ import type {
   MathWorkResultShape,
 } from "@repo/math/schema/work";
 
+const MAX_MODEL_STEP_ROWS = 6;
+
 const promptCopy = {
   artifacts: "artifacts",
   assumptions: "semantic assumptions",
+  casStatus: "cas status",
+  casStepStatus: "cas step status",
   finalAnswerRule:
     "Use verified or derived math evidence as the mathematical basis. Teaching prose is allowed only around that evidence. Do not expose this internal evidence block in the final answer.",
   failureRule:
@@ -19,6 +23,7 @@ const promptCopy = {
   returned: "evidence returned",
   status: "work status",
   steps: "steps",
+  stepRows: "step rows",
   title: "MathReasoning internal evidence",
   verification: "verification",
 } as const;
@@ -38,9 +43,11 @@ export function formatMathCapabilityEvidence({
       evidenceLine(promptCopy.status, result.work.status),
       evidenceLine(promptCopy.verification, formatVerification(result)),
       evidenceLine(promptCopy.operation, result.work.plannedRequest.operation),
+      formatComputationStatus(computation),
       evidenceLine(promptCopy.primary, result.work.primaryResult.expression),
       formatSecondary(computation),
       formatStepCount(result.steps.length),
+      formatStepRows(result.steps),
       evidenceLine(promptCopy.artifacts, String(result.artifacts.length)),
       formatNotes(promptCopy.assumptions, result.work.assumptions),
       formatNotes(promptCopy.limitations, result.work.limitations),
@@ -90,6 +97,18 @@ function formatVerification(result: MathWorkResultShape) {
     .join("; ");
 }
 
+/** Formats deterministic CAS status values for Nina prompt context. */
+function formatComputationStatus(computation: MathComputation | undefined) {
+  if (!computation) {
+    return "";
+  }
+
+  return [
+    evidenceLine(promptCopy.casStatus, computation.status),
+    evidenceLine(promptCopy.casStepStatus, computation.stepStatus),
+  ].join("\n");
+}
+
 /** Formats the optional secondary computation expression. */
 function formatSecondary(computation: MathComputation | undefined) {
   if (!computation?.secondary) {
@@ -106,6 +125,30 @@ function formatStepCount(count: number) {
   }
 
   return evidenceLine(promptCopy.steps, String(count));
+}
+
+/** Formats bounded deterministic derivation rows for Nina prompt context. */
+function formatStepRows(steps: MathWorkResultShape["steps"]) {
+  if (steps.length === 0) {
+    return "";
+  }
+
+  return [
+    `- ${promptCopy.stepRows}:`,
+    ...steps.slice(0, MAX_MODEL_STEP_ROWS).map(formatStepRow),
+  ].join("\n");
+}
+
+/** Formats one deterministic derivation row without localized UI copy. */
+function formatStepRow(step: MathWorkResultShape["steps"][number]) {
+  return [
+    `  - order=${step.order}`,
+    `rule=${step.ruleId}`,
+    `lane=${step.verificationLane}`,
+    `input=${step.input.expression}`,
+    `output=${step.output.expression}`,
+    `schoolKey=${step.projection.school.key}`,
+  ].join("; ");
 }
 
 /** Formats semantic note keys and interpolation values without UI prose. */

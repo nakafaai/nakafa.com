@@ -259,6 +259,7 @@ import type * as lib_validators_contents from "../lib/validators/contents.js";
 import type * as lib_validators_trending from "../lib/validators/trending.js";
 import type * as lib_validators_user from "../lib/validators/user.js";
 import type * as lib_validators_vv from "../lib/validators/vv.js";
+import type * as math_cleanup from "../math/cleanup.js";
 import type * as math_mutations from "../math/mutations.js";
 import type * as math_queries from "../math/queries.js";
 import type * as math_spec from "../math/spec.js";
@@ -644,6 +645,7 @@ declare const fullApi: ApiFromModules<{
   "lib/validators/trending": typeof lib_validators_trending;
   "lib/validators/user": typeof lib_validators_user;
   "lib/validators/vv": typeof lib_validators_vv;
+  "math/cleanup": typeof math_cleanup;
   "math/mutations": typeof math_mutations;
   "math/queries": typeof math_queries;
   "math/spec": typeof math_spec;
