@@ -10,8 +10,10 @@ import {
 } from "@repo/design-system/components/ui/collapsible";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
+import type { MathCopyKey } from "@repo/math/schema/copy";
 import { useTranslations } from "next-intl";
 
+import { translateMathCopy } from "@/components/ai/message-part/math/copy";
 import { MathEvidence } from "@/components/ai/message-part/math/evidence";
 import { getMathIcon } from "@/components/ai/message-part/math/icons";
 
@@ -23,6 +25,14 @@ interface Props {
 export const MathPart = ({ message }: Props) => {
   const t = useTranslations("Ai");
   const [expanded, { set }] = useDisclosure(false);
+  const title = translateMathCopy({
+    key: titleKeyForMessage(message),
+    t: (key, values) => t(key, values),
+  });
+  const operation =
+    message.status === "done"
+      ? message.result.work.plannedRequest.operation
+      : "evaluate";
 
   return (
     <Collapsible
@@ -36,9 +46,9 @@ export const MathPart = ({ message }: Props) => {
             "size-4 shrink-0",
             message.status === "error" ? "text-destructive" : undefined
           )}
-          icon={getMathIcon(message.kind)}
+          icon={getMathIcon(operation)}
         />
-        <span className="truncate">{t(`math-${message.kind}`)}</span>
+        <span className="truncate">{title}</span>
         <HugeIcons
           className={cn(
             "size-4 shrink-0 transition-transform",
@@ -54,3 +64,16 @@ export const MathPart = ({ message }: Props) => {
   );
 };
 MathPart.displayName = "MathPart";
+
+/** Selects the localized title key for a streamed MathWork data part. */
+function titleKeyForMessage(message: DataPart["math"]): MathCopyKey {
+  if (message.status === "loading") {
+    return "math-loading";
+  }
+
+  if (message.status === "error") {
+    return "math-error";
+  }
+
+  return message.result.artifacts[0]?.titleKey ?? "math-work-formula-title";
+}

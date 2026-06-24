@@ -3,40 +3,86 @@ import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 describe("MathDataSchema", () => {
-  it("decodes completed math data parts", () => {
+  it("decodes loading and completed MathWork data parts", () => {
     expect(
       Schema.decodeUnknownSync(MathDataSchema)({
         input: {
-          expression: "2 + 2",
-          kind: "math",
-          operation: "evaluate",
+          givens: ["x^2 - 1 = 0"],
+          objective: "Solve the equation",
+          request: "solve x^2 - 1 = 0",
         },
-        kind: "evaluate",
-        result: {
-          conditions: [],
-          input: {
-            expression: "2 + 2",
-            kind: "math",
-            operation: "evaluate",
-          },
-          items: [],
-          kind: "evaluate",
-          operation: "evaluate",
-          primary: {
-            expression: "2 + 2",
-            latex: "2 + 2",
-          },
-          reason: "Exact arithmetic was checked.",
-          stepStatus: "complete",
-          steps: [],
-          status: "verified",
-        },
-        status: "verified",
-        summary: "Exact arithmetic was checked.",
+        status: "loading",
       })
     ).toMatchObject({
-      kind: "evaluate",
-      status: "verified",
+      status: "loading",
+    });
+
+    expect(
+      Schema.decodeUnknownSync(MathDataSchema)({
+        result: {
+          artifacts: [],
+          steps: [],
+          work: {
+            assumptions: [],
+            computations: [
+              {
+                conditions: [],
+                input: {
+                  expression: "x^2 - 1 = 0",
+                  kind: "math",
+                  operation: "solve",
+                },
+                items: [],
+                kind: "solve",
+                operation: "solve",
+                primary: {
+                  expression: "x^2 - 1 = 0",
+                  latex: "x^2 - 1 = 0",
+                },
+                stepStatus: "complete",
+                steps: [],
+                status: "verified",
+              },
+            ],
+            createdAt: 1,
+            input: {
+              givens: ["x^2 - 1 = 0"],
+              kind: "prompt",
+              locale: "id",
+              objective: "Solve the equation",
+              text: "solve x^2 - 1 = 0",
+            },
+            limitations: [],
+            plannedRequest: {
+              expression: "x^2 - 1 = 0",
+              kind: "math",
+              operation: "solve",
+            },
+            primaryResult: {
+              expression: "x^2 - 1 = 0",
+              latex: "x^2 - 1 = 0",
+            },
+            status: "ready",
+            verification: {
+              engine: "sympy",
+              lane: "verified",
+              reasonKey: "math-verification-verified",
+              source: "cas.solve",
+              values: [],
+            },
+            workId: "mathwork_test",
+          },
+        },
+        status: "done",
+      })
+    ).toMatchObject({
+      result: {
+        work: {
+          status: "ready",
+          verification: { lane: "verified" },
+        },
+      },
+      status: "done",
     });
   });
 });

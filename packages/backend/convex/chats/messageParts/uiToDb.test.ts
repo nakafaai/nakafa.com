@@ -1,3 +1,4 @@
+import type { DataPart } from "@repo/ai/schema/data";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { mapUIMessagePartsToDBParts } from "@repo/backend/convex/chats/messageParts/uiToDb";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
@@ -57,56 +58,7 @@ describe("mapUIMessagePartsToDBParts", () => {
       {
         id: "math-1",
         type: "data-math",
-        data: {
-          kind: "simplify",
-          status: "verified",
-          input: {
-            expression: "2 * x + 3 * x",
-            kind: "math",
-            operation: "simplify",
-          },
-          result: {
-            conditions: [],
-            input: {
-              expression: "2 * x + 3 * x",
-              kind: "math",
-              operation: "simplify",
-            },
-            items: [],
-            kind: "simplify",
-            operation: "simplify",
-            primary: {
-              expression: "2 * x + 3 * x",
-              latex: "2x+3x",
-            },
-            reason: "The simplify transformation was checked.",
-            secondary: {
-              expression: "5 * x",
-              latex: "5x",
-            },
-            stepStatus: "complete",
-            steps: [
-              {
-                action: "simplify",
-                items: [],
-                primary: {
-                  expression: "2 * x + 3 * x",
-                  latex: "2x+3x",
-                },
-                relation: {
-                  expression: "equals",
-                  latex: "=",
-                },
-                secondary: {
-                  expression: "5 * x",
-                  latex: "5x",
-                },
-              },
-            ],
-            status: "verified",
-          },
-          summary: "Verified simplification: 5 * x",
-        },
+        data: mathDataFixture(),
       },
       {
         id: "content-1",
@@ -180,8 +132,12 @@ describe("mapUIMessagePartsToDBParts", () => {
       expect.objectContaining({
         type: "data-math",
         dataMathData: expect.objectContaining({
-          kind: "simplify",
-          status: "verified",
+          result: expect.objectContaining({
+            work: expect.objectContaining({
+              workId: "math:simplify:test",
+            }),
+          }),
+          status: "done",
         }),
         dataMathId: "math-1",
       }),
@@ -247,3 +203,68 @@ describe("mapUIMessagePartsToDBParts", () => {
     ]);
   });
 });
+
+/** Builds a compact MathWork data part for transcript persistence tests. */
+function mathDataFixture(): DataPart["math"] {
+  return {
+    result: {
+      artifacts: [],
+      steps: [],
+      work: {
+        assumptions: [],
+        computations: [
+          {
+            conditions: [],
+            input: {
+              expression: "2 * x + 3 * x",
+              kind: "math",
+              operation: "simplify",
+            },
+            items: [],
+            kind: "simplify",
+            operation: "simplify",
+            primary: {
+              expression: "2 * x + 3 * x",
+              latex: "2x+3x",
+            },
+            secondary: {
+              expression: "5 * x",
+              latex: "5x",
+            },
+            stepStatus: "complete",
+            steps: [],
+            status: "verified",
+          },
+        ],
+        createdAt: 1,
+        input: {
+          givens: ["2x + 3x"],
+          kind: "prompt",
+          locale: "en",
+          objective: "Simplify the expression.",
+          text: "simplify 2x + 3x",
+        },
+        limitations: [],
+        plannedRequest: {
+          expression: "2 * x + 3 * x",
+          kind: "math",
+          operation: "simplify",
+        },
+        primaryResult: {
+          expression: "5 * x",
+          latex: "5x",
+        },
+        status: "ready",
+        verification: {
+          engine: "sympy",
+          lane: "verified",
+          reasonKey: "math-verification-verified",
+          source: "cas.simplify",
+          values: [],
+        },
+        workId: "math:simplify:test",
+      },
+    },
+    status: "done",
+  };
+}

@@ -68,11 +68,6 @@ export const TaskAgentDataSchema = Schema.Struct({
 type TaskAgentData = Schema.Schema.Type<typeof TaskAgentDataSchema>;
 type SpecialistWriter = UIMessageStreamWriter<MyUIMessage>;
 
-/** Parameters for the deterministic math specialist Adapter. */
-export type MathAgentParams = TaskAgentData & {
-  readonly writer: SpecialistWriter;
-};
-
 /** Parameters for the Nakafa content retrieval specialist Adapter. */
 export type NakafaAgentParams = TaskAgentData & {
   readonly nakafa: Nakafa;

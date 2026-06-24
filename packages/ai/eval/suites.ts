@@ -1,8 +1,9 @@
-import { mathPrompt } from "@repo/ai/agents/math/prompt";
 import { nakafaAgentPrompt } from "@repo/ai/agents/nakafa/prompt";
 import { formatResearchOutput } from "@repo/ai/agents/research/output";
 import { researchPrompt } from "@repo/ai/agents/research/prompt";
+import { createMathEvalWork } from "@repo/ai/eval/mathWork";
 import { EvalCase, EvalExpectation, EvalSuite } from "@repo/ai/eval/spec";
+import { formatMathCapabilityEvidence } from "@repo/ai/nina/capability/mathEvidence";
 import {
   CapabilityTrace,
   EvidenceEnvelope,
@@ -32,11 +33,11 @@ export function createNinaEvalSuite() {
         expectations: [
           EvalExpectation.make({
             label: "routes through deterministic tools",
-            includes: "route math work through deterministic math tools",
+            includes: "MathReasoning internal evidence",
           }),
           EvalExpectation.make({
             label: "requires evidence before final claims",
-            includes: "If evidence is missing and can be checked",
+            includes: "Do not expose this internal evidence block",
           }),
         ],
       }),
@@ -102,49 +103,11 @@ export function createNinaEvalSuite() {
 }
 
 const ninaEvalRenderers = {
-  math: () => mathPrompt({ context, locale: "id" }),
-  nakafa: () => nakafaAgentPrompt({ context, locale: "id" }),
-  research: () =>
-    [
-      researchPrompt({ context, locale: "id" }),
-      formatResearchOutput({
-        findings: [
-          {
-            citations: [{ title: "AI SDK", url: "https://ai-sdk.dev" }],
-            text: "AI SDK supports structured generation.",
-          },
-        ],
-        limitations: [],
-        noEvidenceAnswer: "No evidence.",
-      }),
-    ].join("\n\n"),
-  trace: () => {
-    const trace = CapabilityTrace.make({
-      capability: "math",
-      durationMs: 12,
-      endedAt: 12,
-      evidence: EvidenceEnvelope.make({
-        capability: "math",
-        status: "available",
-        summary: "deterministic evidence only",
-      }),
-      responseMessageIdentifier: "response-1",
-      startedAt: 0,
-      toolCallId: "tool-1",
-    });
-
-    return [
-      `capability: ${trace.capability}`,
-      `status: ${trace.evidence.status}`,
-      `summary: ${trace.evidence.summary}`,
-    ].join("\n");
-  },
-  turn: () => {
-    const page = createPinnedLocalePage();
-    const learning = readNinaLearningPage(page);
-
-    return [`locale: ${learning.locale}`, `url: ${learning.url}`].join("\n");
-  },
+  math: renderMathEval,
+  nakafa: renderNakafaEval,
+  research: renderResearchEval,
+  trace: renderTraceEval,
+  turn: renderTurnEval,
 };
 
 /** Renders one deterministic eval case through the relevant Module seam. */
@@ -197,4 +160,64 @@ function createPinnedLocalePage(): NinaPage {
       },
     },
   };
+}
+
+/** Renders deterministic MathReasoning prompt evidence for the eval suite. */
+function renderMathEval() {
+  return formatMathCapabilityEvidence({
+    result: createMathEvalWork(),
+  });
+}
+
+/** Renders the Nakafa retrieval prompt boundary for the eval suite. */
+function renderNakafaEval() {
+  return nakafaAgentPrompt({ context, locale: "id" });
+}
+
+/** Renders the research prompt and source output boundary for the eval suite. */
+function renderResearchEval() {
+  return [
+    researchPrompt({ context, locale: "id" }),
+    formatResearchOutput({
+      findings: [
+        {
+          citations: [{ title: "AI SDK", url: "https://ai-sdk.dev" }],
+          text: "AI SDK supports structured generation.",
+        },
+      ],
+      limitations: [],
+      noEvidenceAnswer: "No evidence.",
+    }),
+  ].join("\n\n");
+}
+
+/** Renders a bounded capability trace summary for the eval suite. */
+function renderTraceEval() {
+  const trace = CapabilityTrace.make({
+    capability: "math",
+    durationMs: 12,
+    endedAt: 12,
+    evidence: EvidenceEnvelope.make({
+      capability: "math",
+      status: "available",
+      summary: "deterministic evidence only",
+    }),
+    responseMessageIdentifier: "response-1",
+    startedAt: 0,
+    toolCallId: "tool-1",
+  });
+
+  return [
+    `capability: ${trace.capability}`,
+    `status: ${trace.evidence.status}`,
+    `summary: ${trace.evidence.summary}`,
+  ].join("\n");
+}
+
+/** Renders pinned learning locale and URL evidence for the eval suite. */
+function renderTurnEval() {
+  const page = createPinnedLocalePage();
+  const learning = readNinaLearningPage(page);
+
+  return [`locale: ${learning.locale}`, `url: ${learning.url}`].join("\n");
 }

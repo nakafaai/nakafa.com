@@ -24,6 +24,8 @@ import { NinaStore } from "@repo/ai/nina/runtime/store";
 import { writeNinaSuggestions } from "@repo/ai/nina/runtime/suggest";
 import { trackUsage } from "@repo/ai/nina/runtime/usage";
 import type { MyUIMessage } from "@repo/ai/types/message";
+import { CasEngine } from "@repo/math/cas/engine";
+import { MathWorkRepository } from "@repo/math/reason/repo";
 import type { LogContext } from "@repo/utilities/logging/types";
 import {
   convertToModelMessages,
@@ -51,6 +53,8 @@ export const createNinaStreamResponse = Effect.fn("nina.stream.response")(
     const reporter = yield* NinaReporter;
     const nakafa = yield* Nakafa;
     const search = yield* NakafaSearch;
+    const casEngine = yield* CasEngine;
+    const mathWorkRepository = yield* MathWorkRepository;
     const messages = yield* store.loadMessages();
     const logContext = createNinaLogContext(turn);
     const originalMessageCount = messages.length;
@@ -138,7 +142,9 @@ export const createNinaStreamResponse = Effect.fn("nina.stream.response")(
             Effect.provideService(NinaStore, store),
             Effect.provideService(NinaReporter, reporter),
             Effect.provideService(Nakafa, nakafa),
-            Effect.provideService(NakafaSearch, search)
+            Effect.provideService(NakafaSearch, search),
+            Effect.provideService(CasEngine, casEngine),
+            Effect.provideService(MathWorkRepository, mathWorkRepository)
           )
         ),
       generateId: () => responseMessageId,
@@ -225,6 +231,8 @@ const runNinaWriterTurn = Effect.fn("nina.stream.writer")(function* ({
   const context = createNinaAgentContext({ page, runtime, user });
   const pageFetch = createPageFetchState(context.needsPageFetch);
   const reporter = yield* NinaReporter;
+  const casEngine = yield* CasEngine;
+  const mathWorkRepository = yield* MathWorkRepository;
   const tools = yield* createNinaCapabilityCatalog({
     context,
     locale: page.nina.learning.locale,
@@ -234,7 +242,10 @@ const runNinaWriterTurn = Effect.fn("nina.stream.writer")(function* ({
     consumePageFetch: pageFetch.consumeForTool,
     usage,
     writer,
-  });
+  }).pipe(
+    Effect.provideService(CasEngine, casEngine),
+    Effect.provideService(MathWorkRepository, mathWorkRepository)
+  );
 
   const responseMessages = yield* runNinaAgentTurn({
     messages: finalMessages,

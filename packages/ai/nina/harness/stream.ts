@@ -4,6 +4,8 @@ import { NinaTurnSchema } from "@repo/ai/nina/contract/turn";
 import { NinaReporter } from "@repo/ai/nina/runtime/report";
 import { NinaStore } from "@repo/ai/nina/runtime/store";
 import { createNinaStreamResponse } from "@repo/ai/nina/runtime/stream";
+import { CasEngine } from "@repo/math/cas/engine";
+import { MathWorkRepository } from "@repo/math/reason/repo";
 import { Effect, Schema } from "effect";
 
 /** Raised when a framework boundary sends an invalid Nina harness input. */
@@ -30,6 +32,8 @@ export class NinaHarness extends Effect.Service<NinaHarness>()(
       const reporter = yield* NinaReporter;
       const nakafa = yield* Nakafa;
       const search = yield* NakafaSearch;
+      const casEngine = yield* CasEngine;
+      const mathWorkRepository = yield* MathWorkRepository;
 
       return {
         stream: Effect.fn("nina.harness.stream")(function* (input: unknown) {
@@ -46,7 +50,9 @@ export class NinaHarness extends Effect.Service<NinaHarness>()(
             Effect.provideService(NinaStore, store),
             Effect.provideService(NinaReporter, reporter),
             Effect.provideService(Nakafa, nakafa),
-            Effect.provideService(NakafaSearch, search)
+            Effect.provideService(NakafaSearch, search),
+            Effect.provideService(CasEngine, casEngine),
+            Effect.provideService(MathWorkRepository, mathWorkRepository)
           );
         }),
       };

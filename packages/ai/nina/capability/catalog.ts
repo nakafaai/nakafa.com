@@ -1,4 +1,3 @@
-import { runMathAgent } from "@repo/ai/agents/math/agent";
 import { runNakafaAgent } from "@repo/ai/agents/nakafa/agent";
 import { NakafaSearch } from "@repo/ai/agents/nakafa/search";
 import { Nakafa } from "@repo/ai/agents/nakafa/service";
@@ -6,6 +5,10 @@ import { read as readNakafa } from "@repo/ai/agents/nakafa/tools/read";
 import { runResearchAgent } from "@repo/ai/agents/research/agent";
 import type { ModelId } from "@repo/ai/config/model";
 import { getSourceReferencesFromMessages } from "@repo/ai/lib/source";
+import {
+  failedMathCapability,
+  runMathCapability,
+} from "@repo/ai/nina/capability/math";
 import {
   capabilityResult,
   recordSpecialistUsage,
@@ -37,9 +40,12 @@ import type { AgentContext } from "@repo/ai/types/agents";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
 import type { Locale } from "@repo/contents/_types/content";
+import { CasEngine } from "@repo/math/cas/engine";
+import { MathWorkRepository } from "@repo/math/reason/repo";
+import { MathReasoning } from "@repo/math/reason/service";
 import type { LogContext } from "@repo/utilities/logging/types";
 import { tool, type UIMessageStreamWriter } from "ai";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 
 type NinaUsage = Effect.Effect.Success<ReturnType<typeof trackUsage>>;
 
@@ -73,6 +79,8 @@ export const createNinaCapabilityCatalog = Effect.fn("nina.capability.catalog")(
     const search = yield* NakafaSearch;
     const reporter = yield* NinaReporter;
     const store = yield* NinaStore;
+    const casEngine = yield* CasEngine;
+    const mathWorkRepository = yield* MathWorkRepository;
 
     return {
       [NAKAFA_CAPABILITY]: tool({
@@ -262,36 +270,31 @@ export const createNinaCapabilityCatalog = Effect.fn("nina.capability.catalog")(
                   });
                 }
 
-                const result = yield* runMathAgent({
-                  context,
+                const result = yield* runMathCapability({
+                  input,
                   locale,
-                  modelId,
-                  task: formatSpecialistToolTask(input),
+                  responseMessageIdentifier,
+                  toolCallId,
                   writer,
                 }).pipe(
-                  Effect.map((result) =>
-                    specialistSuccess({
-                      capability: MATH_CAPABILITY,
-                      text: result.text,
-                      usage: result.usage,
-                    })
-                  ),
+                  Effect.provide(MathReasoning.Default),
+                  Effect.provideService(CasEngine, casEngine),
+                  Effect.provideService(MathWorkRepository, mathWorkRepository),
+                  Effect.map((result) => ({
+                    ...result,
+                    usage: Option.none(),
+                  })),
                   Effect.catchAll((error) =>
-                    recoverSpecialistFailure({
-                      component: MATH_CAPABILITY,
-                      error,
-                      errorLocation: "runMathAgent",
-                      reporter,
-                    })
+                    reporter
+                      .report({ error, source: "runMathCapability" })
+                      .pipe(
+                        Effect.as({
+                          ...failedMathCapability(),
+                          usage: Option.none(),
+                        })
+                      )
                   )
                 );
-
-                yield* recordSpecialistUsage({
-                  addUsage: usage.addUsage,
-                  component: MATH_CAPABILITY,
-                  logContext,
-                  result,
-                });
 
                 return result;
               }),

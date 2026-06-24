@@ -1,3 +1,4 @@
+import type { DataPart } from "@repo/ai/schema/data";
 import { mapDBPartToUIMessagePart } from "@repo/backend/convex/chats/messageParts/dbToUi";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -87,64 +88,7 @@ describe("mapDBPartToUIMessagePart", () => {
         order: 2,
         type: "data-math",
         dataMathId: "math-1",
-        dataMathData: {
-          kind: "compare",
-          status: "contradicted",
-          input: {
-            kind: "math",
-            left: "x + 1",
-            operation: "compare",
-            right: "x + 2",
-          },
-          result: {
-            conditions: [],
-            input: {
-              kind: "math",
-              left: "x + 1",
-              operation: "compare",
-              right: "x + 2",
-            },
-            items: [
-              {
-                label: "counterexample",
-                latex: "\\left\\{ x : -3\\right\\}",
-                value: "{x: -3}",
-              },
-            ],
-            kind: "compare",
-            operation: "compare",
-            primary: {
-              expression: "x + 1",
-              latex: "x+1",
-            },
-            reason: "A deterministic numeric counterexample was found.",
-            secondary: {
-              expression: "x + 2",
-              latex: "x+2",
-            },
-            stepStatus: "partial",
-            steps: [
-              {
-                action: "compare",
-                items: [],
-                primary: {
-                  expression: "x + 1",
-                  latex: "x+1",
-                },
-                relation: {
-                  expression: "not equal",
-                  latex: "\\not=",
-                },
-                secondary: {
-                  expression: "x + 2",
-                  latex: "x+2",
-                },
-              },
-            ],
-            status: "contradicted",
-          },
-          summary: "A deterministic numeric counterexample was found.",
-        },
+        dataMathData: mathDataFixture(),
       });
       await ctx.db.insert("parts", {
         messageId,
@@ -251,8 +195,12 @@ describe("mapDBPartToUIMessagePart", () => {
         type: "data-math",
         id: "math-1",
         data: expect.objectContaining({
-          kind: "compare",
-          status: "contradicted",
+          result: expect.objectContaining({
+            work: expect.objectContaining({
+              workId: "math:simplify:test",
+            }),
+          }),
+          status: "done",
         }),
       }),
       expect.objectContaining({
@@ -301,3 +249,68 @@ describe("mapDBPartToUIMessagePart", () => {
     ]);
   });
 });
+
+/** Builds a compact MathWork data part for transcript mapping tests. */
+function mathDataFixture(): DataPart["math"] {
+  return {
+    result: {
+      artifacts: [],
+      steps: [],
+      work: {
+        assumptions: [],
+        computations: [
+          {
+            conditions: [],
+            input: {
+              expression: "2 * x + 3 * x",
+              kind: "math",
+              operation: "simplify",
+            },
+            items: [],
+            kind: "simplify",
+            operation: "simplify",
+            primary: {
+              expression: "2 * x + 3 * x",
+              latex: "2x+3x",
+            },
+            secondary: {
+              expression: "5 * x",
+              latex: "5x",
+            },
+            stepStatus: "complete",
+            steps: [],
+            status: "verified",
+          },
+        ],
+        createdAt: now,
+        input: {
+          givens: ["2x + 3x"],
+          kind: "prompt",
+          locale: "en",
+          objective: "Simplify the expression.",
+          text: "simplify 2x + 3x",
+        },
+        limitations: [],
+        plannedRequest: {
+          expression: "2 * x + 3 * x",
+          kind: "math",
+          operation: "simplify",
+        },
+        primaryResult: {
+          expression: "5 * x",
+          latex: "5x",
+        },
+        status: "ready",
+        verification: {
+          engine: "sympy",
+          lane: "verified",
+          reasonKey: "math-verification-verified",
+          source: "cas.simplify",
+          values: [],
+        },
+        workId: "math:simplify:test",
+      },
+    },
+    status: "done",
+  };
+}

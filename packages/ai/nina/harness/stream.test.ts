@@ -10,6 +10,8 @@ import {
 import { NinaReporter } from "@repo/ai/nina/runtime/report";
 import { NinaStore } from "@repo/ai/nina/runtime/store";
 import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
+import { CasEngine } from "@repo/math/cas/engine";
+import { MathWorkRepository } from "@repo/math/reason/repo";
 import { Cause, Effect, Exit, Option } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -161,6 +163,16 @@ function provideHarnessServices<A, E>(
     Effect.provideService(NakafaSearch, {
       search: () =>
         Effect.dieMessage("Nakafa search is not used in this test."),
+    }),
+    Effect.provideService(
+      CasEngine,
+      CasEngine.make({
+        capabilities: Effect.succeed([]),
+        compute: () => Effect.dieMessage("CAS is not used in this test."),
+      })
+    ),
+    Effect.provideService(MathWorkRepository, {
+      save: () => Effect.void,
     })
   );
 }

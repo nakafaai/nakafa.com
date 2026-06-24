@@ -16,6 +16,14 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 
 - **NinaHarness**: The package-owned Effect service with the only app-facing `stream` Interface for Nina chat turns.
 - **LearningCapability**: An internal education Module Nina can invoke for bounded evidence such as Nakafa retrieval, deterministic math, or external research.
+- **MathReasoning**: The internal math LearningCapability Module that produces verified, pedagogical math work for learner questions ranging from beginner level to professor-level use.
+- **MathWork**: The canonical structured evidence for one Nina math answer, including assumptions, computations, derivation steps, verification status, pedagogical projection, and future visual intent.
+- **MathWorkStep**: One semantic derivation step in a MathWork that can be projected at atomic, school, advanced, or professor detail levels.
+- **MathWorkArtifact**: A compact renderable projection manifest for a MathWork, such as a formula card, step list, table, plot intent, or future 3D visual intent.
+- **VisualIntent**: Math-owned metadata describing how a MathWork can be visualized, without requiring the first implementation to render that visualization.
+- **Verification lane**: The trust label on a MathWork answer or step: verified, derived, pedagogical, or speculative.
+- **Math copy projection**: The app-owned localization seam that turns MathWork semantic keys and values into student-facing Indonesian or English copy.
+- **Math prompt Adapter**: The AI-owned seam that formats internal model instructions from MathWork evidence without sharing prompt prose with UI dictionaries or persisted learner evidence.
 - **Evidence**: Schema-derived facts, calculations, citations, content references, and limitations that constrain Nina's answer.
 - **EvidenceEnvelope**: The schema-derived LearningCapability result that carries status, compact model-visible evidence, references, and limitations.
 - **CapabilityTrace**: A bounded operational summary of LearningCapability execution for support, integrity checks, and evals. It is not a raw transcript.

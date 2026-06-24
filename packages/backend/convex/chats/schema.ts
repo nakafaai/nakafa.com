@@ -14,7 +14,7 @@ import {
   localeValidator,
   nakafaSectionValidator,
 } from "@repo/backend/convex/lib/validators/contents";
-import { mathOperations } from "@repo/math/schema/operations";
+import { mathDataValidator } from "@repo/backend/convex/math/spec";
 import { defineTable, paginationResultValidator } from "convex/server";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
@@ -293,119 +293,6 @@ export const webSearchSourceValidator = v.object({
 });
 
 export const webSearchProviderValidator = literals("firecrawl", "google");
-
-export const mathExpressionValidator = v.object({
-  expression: v.string(),
-  latex: v.string(),
-});
-
-export const mathOperationValidator = literals(...mathOperations);
-
-export const mathStatusValidator = literals(
-  "verified",
-  "contradicted",
-  "inconclusive"
-);
-
-export const mathStepStatusValidator = literals(
-  "complete",
-  "partial",
-  "unavailable"
-);
-
-export const mathPointValidator = v.object({
-  x: v.string(),
-  y: v.string(),
-});
-
-export const mathProbabilityParametersValidator = v.object({
-  lambda: v.optional(v.string()),
-  lower: v.optional(v.string()),
-  mean: v.optional(v.string()),
-  n: v.optional(v.string()),
-  p: v.optional(v.string()),
-  standard_deviation: v.optional(v.string()),
-  upper: v.optional(v.string()),
-});
-
-export const mathRequestValidator = v.object({
-  distribution: v.optional(v.string()),
-  expression: v.optional(v.string()),
-  expressions: v.optional(v.array(v.string())),
-  inclusive: v.optional(v.boolean()),
-  k: v.optional(v.string()),
-  kind: v.literal("math"),
-  left: v.optional(v.string()),
-  lower: v.optional(v.string()),
-  lowerInclusive: v.optional(v.boolean()),
-  matrix: v.optional(v.array(v.array(v.string()))),
-  modulus: v.optional(v.string()),
-  n: v.optional(v.string()),
-  operation: mathOperationValidator,
-  order: v.optional(v.number()),
-  parameters: v.optional(mathProbabilityParametersValidator),
-  point: v.optional(v.string()),
-  points: v.optional(v.array(mathPointValidator)),
-  right: v.optional(v.string()),
-  right_matrix: v.optional(v.array(v.array(v.string()))),
-  upper: v.optional(v.string()),
-  upperInclusive: v.optional(v.boolean()),
-  values: v.optional(v.array(v.string())),
-  variable: v.optional(v.string()),
-  variables: v.optional(v.array(v.string())),
-  vector: v.optional(v.array(v.string())),
-});
-
-export const mathItemValidator = v.object({
-  label: v.string(),
-  latex: v.optional(v.string()),
-  value: v.string(),
-});
-
-export const mathStepValidator = v.object({
-  action: v.string(),
-  items: v.array(mathItemValidator),
-  primary: mathExpressionValidator,
-  relation: v.optional(mathExpressionValidator),
-  secondary: v.optional(mathExpressionValidator),
-});
-
-export const mathResultValidator = v.object({
-  conditions: v.array(mathExpressionValidator),
-  input: mathRequestValidator,
-  items: v.array(mathItemValidator),
-  kind: mathOperationValidator,
-  operation: mathOperationValidator,
-  primary: mathExpressionValidator,
-  reason: v.string(),
-  secondary: v.optional(mathExpressionValidator),
-  stepStatus: mathStepStatusValidator,
-  steps: v.array(mathStepValidator),
-  status: mathStatusValidator,
-});
-
-const currentMathDataValidator = v.union(
-  v.object({
-    kind: mathOperationValidator,
-    status: v.literal("loading"),
-    input: mathRequestValidator,
-  }),
-  v.object({
-    kind: mathOperationValidator,
-    status: mathStatusValidator,
-    input: mathRequestValidator,
-    result: mathResultValidator,
-    summary: v.string(),
-  }),
-  v.object({
-    kind: mathOperationValidator,
-    status: v.literal("error"),
-    input: mathRequestValidator,
-    error: v.string(),
-  })
-);
-
-export const mathDataValidator = currentMathDataValidator;
 
 /**
  * Provider metadata persisted with chat parts.

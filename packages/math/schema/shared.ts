@@ -79,7 +79,7 @@ export const MathExpressionSchema = Schema.Struct({
 
 export const MathItemSchema = Schema.Struct({
   label: Schema.String.annotations({
-    description: "Short student-facing label for the math item.",
+    description: "Semantic item label emitted by deterministic math evidence.",
   }),
   latex: Schema.optional(
     Schema.String.annotations({
