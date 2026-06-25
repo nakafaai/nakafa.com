@@ -190,6 +190,20 @@ describe("proxy", () => {
     );
   });
 
+  it("redirects previous material lesson URLs to the canonical architecture", async () => {
+    const response = await proxy(
+      new NextRequest(
+        "http://localhost:3000/id/subject/high-school/11/mathematics/circle/central-angle-and-inscribed-angle?utm=test"
+      )
+    );
+
+    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
+    expect(response.status).toBe(308);
+    expect(response.headers.get("location")).toBe(
+      "http://localhost:3000/id/materi/matematika/lingkaran/sudut-pusat-dan-sudut-keliling?utm=test"
+    );
+  });
+
   it("returns real 404 responses for invalid finite source-backed HTML routes", async () => {
     const response = await proxy(
       new NextRequest("http://localhost:3000/id/quran/999")
