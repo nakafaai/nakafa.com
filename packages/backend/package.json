@@ -47,7 +47,7 @@
     "sync:prod:reset:tryouts": "tsx scripts/sync-content.ts reset-tryouts --prod"
   },
   "dependencies": {
-    "@convex-dev/aggregate": "^0.2.1",
+    "@convex-dev/aggregate": "^0.2.2",
     "@convex-dev/better-auth": "^0.12.4",
     "@convex-dev/resend": "^0.2.5",
     "@convex-dev/workflow": "^0.4.4",
@@ -59,28 +59,28 @@
     "@repo/math": "workspace:*",
     "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
-    "ai": "^6.0.208",
+    "ai": "^6.0.209",
     "better-auth": "~1.6.15",
     "buffer": "^6.0.3",
-    "convex": "^1.41.0",
-    "convex-helpers": "^0.1.119",
+    "convex": "^1.42.0",
+    "convex-helpers": "^0.1.120",
     "effect": "^3.21.4",
-    "hono": "^4.12.26",
-    "jsonrepair": "^3.14.0",
-    "nanoid": "^5.1.15",
+    "hono": "^4.12.27",
+    "jsonrepair": "^3.14.1",
+    "nanoid": "^5.1.16",
     "strip-ansi": "^7.2.0"
   },
   "devDependencies": {
     "@edge-runtime/vm": "^5.0.0",
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "^26.0.0",
+    "@types/node": "^26.0.1",
     "@vitest/coverage-istanbul": "^4.1.9",
     "auth": "~1.6.20",
     "convex-test": "^0.0.53",
     "glob": "^13.0.6",
     "tsx": "^4.22.4",
     "typescript": "^6.0.3",
-    "vite": "^8.0.16",
+    "vite": "^8.1.0",
     "vitest": "^4.1.9"
   }
 }
