@@ -130,6 +130,61 @@ describe("practice route data", () => {
     );
   });
 
+  it("resolves metadata from projected rows without runtime page reads", async () => {
+    const { getPracticeMetadataData } = await importPracticeData();
+
+    await expect(
+      getPracticeMetadataData(
+        Promise.resolve({
+          assessment: "snbt",
+          domain: "quantitative-knowledge",
+          locale: "en",
+          path: ["tryout-2026", "set-1"],
+        })
+      )
+    ).resolves.toMatchObject({
+      kind: "route",
+      route: {
+        kind: "exercise-set",
+        publicPath: "practice/snbt/quantitative-knowledge/tryout-2026/set-1",
+      },
+    });
+    await expect(
+      getPracticeMetadataData(
+        Promise.resolve({
+          assessment: "snbt",
+          domain: "quantitative-knowledge",
+          locale: "en",
+          path: ["tryout-2026", "set-1", "question-9"],
+        })
+      )
+    ).resolves.toMatchObject({
+      kind: "route",
+      route: {
+        kind: "exercise-question",
+        publicPath:
+          "practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-9",
+      },
+    });
+    await expect(
+      getPracticeMetadataData(
+        Promise.resolve({
+          assessment: "snbt",
+          domain: "quantitative-knowledge",
+          locale: "en",
+        })
+      )
+    ).resolves.toMatchObject({
+      kind: "domain",
+      publicPath: "practice/snbt/quantitative-knowledge",
+      sourceMaterial: "quantitative-knowledge",
+    });
+    expect(runtimeMocks.fetchRuntimeExerciseSetPage).not.toHaveBeenCalled();
+    expect(
+      runtimeMocks.fetchRuntimeExerciseQuestionPage
+    ).not.toHaveBeenCalled();
+  });
+
   it("resolves set, question, static param, runtime slug, and pagination data", async () => {
     const {
       getPracticeQuestionPagination,
@@ -440,7 +495,6 @@ describe("practice route data", () => {
   });
 });
 
-/** Imports the route-data module after Vitest has installed runtime mocks. */
 async function importPracticeData() {
   return await import("./data");
 }

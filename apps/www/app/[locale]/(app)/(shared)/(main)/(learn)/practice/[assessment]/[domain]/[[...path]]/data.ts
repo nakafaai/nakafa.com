@@ -10,6 +10,7 @@ import {
   findPracticeDomainRoutes,
   findPracticeRoute,
   type PracticeQuestionRoute,
+  type PracticeRoute,
   type PracticeSetRoute,
   type PublicPracticeRouteRows,
   readPracticeQuestionRoute,
@@ -38,6 +39,13 @@ type RuntimeQuestionPage = NonNullable<
   Awaited<ReturnType<typeof fetchRuntimeExerciseQuestionPage>>
 >;
 type ExerciseSetSourceParts = ReturnType<typeof readExerciseSetSourceParts>;
+type ProjectedPracticeRoute =
+  | {
+      kind: "domain";
+      routes: readonly [PracticeSetRoute, ...PracticeSetRoute[]];
+    }
+  | { kind: "set"; route: PracticeSetRoute }
+  | { kind: "single"; route: PracticeQuestionRoute };
 
 export type PracticeRouteData =
   | {
@@ -69,6 +77,19 @@ export type PracticeRouteData =
       locale: Locale;
       pagePath: string;
       route: PracticeSetRoute;
+    };
+export type PracticeMetadataData =
+  | {
+      kind: "domain";
+      alternatePaths: Array<{ locale: Locale; publicPath: string }>;
+      locale: Locale;
+      publicPath: string;
+      sourceMaterial: ExerciseSetSourceParts["material"];
+    }
+  | {
+      kind: "route";
+      locale: Locale;
+      route: PracticeRoute;
     };
 
 type PracticeGroupContext = ReturnType<typeof readPracticeGroupContext>;
@@ -117,38 +138,55 @@ export async function getPracticeRouteData(
 ): Promise<PracticeRouteData> {
   const { locale: rawLocale, assessment, domain, path = [] } = await params;
   const locale = getLocaleOrThrow(rawLocale);
-  const pathWithoutNamespace = [assessment, domain, ...path].join("/");
   const routes = readPracticeRoutes();
-  const exactRoute = findPracticeRoute(routes, locale, pathWithoutNamespace);
-
-  if (exactRoute) {
-    return await getSetRouteData(locale, exactRoute, routes);
-  }
-
-  const questionRoute = readPracticeQuestionRoute({
+  const projectedRoute = resolveProjectedPracticeRoute({
+    assessment,
+    domain,
     locale,
     path,
     routes,
-    setPathWithoutNamespace: [assessment, domain, ...path.slice(0, -1)].join(
-      "/"
-    ),
   });
 
-  if (questionRoute) {
-    return await getSingleRouteData(locale, questionRoute, routes);
+  if (projectedRoute.kind === "set") {
+    return await getSetRouteData(locale, projectedRoute.route, routes);
   }
 
-  const domainRoutes = findPracticeDomainRoutes(
-    routes,
+  if (projectedRoute.kind === "single") {
+    return await getSingleRouteData(locale, projectedRoute.route, routes);
+  }
+
+  return getDomainRouteData(locale, projectedRoute.routes, routes);
+}
+
+/**
+ * Resolves metadata fields from projected practice route rows.
+ *
+ * Metadata does not need runtime exercise rows, so this stays independent of
+ * Convex-backed page reads during Cache Components prerendering.
+ */
+export async function getPracticeMetadataData(
+  params: PracticeParams
+): Promise<PracticeMetadataData> {
+  const { locale: rawLocale, assessment, domain, path = [] } = await params;
+  const locale = getLocaleOrThrow(rawLocale);
+  const routes = readPracticeRoutes();
+  const projectedRoute = resolveProjectedPracticeRoute({
+    assessment,
+    domain,
     locale,
-    pathWithoutNamespace
-  );
+    path,
+    routes,
+  });
 
-  if (!hasPracticeDomainRoutes(domainRoutes)) {
-    notFound();
+  if (projectedRoute.kind === "domain") {
+    return getDomainMetadataData(locale, projectedRoute.routes, routes);
   }
 
-  return getDomainRouteData(locale, domainRoutes, routes);
+  return {
+    kind: "route",
+    locale,
+    route: projectedRoute.route,
+  };
 }
 
 /**
@@ -243,6 +281,53 @@ function readPracticeGroupContext(
   };
 }
 
+/** Matches localized practice params against projected route rows. */
+function resolveProjectedPracticeRoute({
+  assessment,
+  domain,
+  locale,
+  path,
+  routes,
+}: {
+  assessment: string;
+  domain: string;
+  locale: Locale;
+  path: readonly string[];
+  routes: PublicPracticeRouteRows;
+}): ProjectedPracticeRoute {
+  const pathWithoutNamespace = [assessment, domain, ...path].join("/");
+  const exactRoute = findPracticeRoute(routes, locale, pathWithoutNamespace);
+
+  if (exactRoute) {
+    return { kind: "set", route: exactRoute };
+  }
+
+  const questionRoute = readPracticeQuestionRoute({
+    locale,
+    path,
+    routes,
+    setPathWithoutNamespace: [assessment, domain, ...path.slice(0, -1)].join(
+      "/"
+    ),
+  });
+
+  if (questionRoute) {
+    return { kind: "single", route: questionRoute };
+  }
+
+  const domainRoutes = findPracticeDomainRoutes(
+    routes,
+    locale,
+    pathWithoutNamespace
+  );
+
+  if (!hasPracticeDomainRoutes(domainRoutes)) {
+    notFound();
+  }
+
+  return { kind: "domain", routes: domainRoutes };
+}
+
 /** Loads canonical set page data from the Convex runtime read model. */
 async function getSetRouteData(
   locale: Locale,
@@ -300,6 +385,28 @@ async function getSingleRouteData(
     route,
     setPath: setSourcePath,
     setRoute,
+  };
+}
+
+/** Resolves only the projected fields required for practice domain metadata. */
+function getDomainMetadataData(
+  locale: Locale,
+  domainRoutes: readonly [PracticeSetRoute, ...PracticeSetRoute[]],
+  routes: PublicPracticeRouteRows
+): PracticeMetadataData {
+  const firstRoute = domainRoutes[0];
+  const sourceParts = readExerciseSetSourceParts(firstRoute.sourcePath);
+  const publicPath = readPublicPracticeDomainPath(firstRoute);
+
+  return {
+    kind: "domain",
+    alternatePaths: readPracticeDomainAlternatePaths(
+      firstRoute.materialKey,
+      routes
+    ),
+    locale,
+    publicPath,
+    sourceMaterial: sourceParts.material,
   };
 }
 

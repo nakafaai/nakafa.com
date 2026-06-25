@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import {
+  getPracticeMetadataData,
   getPracticeRouteData,
   listPracticeStaticParams,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/practice/[assessment]/[domain]/[[...path]]/data";
@@ -39,7 +40,7 @@ export function generateStaticParams({
 export async function generateMetadata({
   params,
 }: PracticePageProps): Promise<Metadata> {
-  const data = await getPracticeRouteData(params);
+  const data = await getPracticeMetadataData(params);
   const t = await getTranslations({
     locale: data.locale,
     namespace: "Exercises",
