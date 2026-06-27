@@ -9,18 +9,6 @@ import {
 } from "@repo/contents/_types/route/practice/path";
 import { notFound } from "next/navigation";
 
-/** Uses the first set row to name the grouped practice card consistently. */
-export function readGroupTitle(route: { sourcePath: string }) {
-  const sourceParts = readExerciseSetSourceParts(route.sourcePath);
-  const suffix = sourceParts.year ? ` ${sourceParts.year}` : "";
-
-  if (sourceParts.exerciseType === "try-out") {
-    return `Try Out${suffix}`;
-  }
-
-  return `${sourceParts.exerciseType}${suffix}`;
-}
-
 /** Reads source set and question number from a projected question source path. */
 export function readQuestionSourcePathParts(sourcePath: string) {
   const parts = readPracticeQuestionSourceParts(sourcePath);

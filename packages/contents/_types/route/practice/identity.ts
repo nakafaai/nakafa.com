@@ -1,3 +1,4 @@
+import { ExercisesCategorySchema } from "@repo/contents/_types/assessment/category";
 import { ExercisesMaterialSchema } from "@repo/contents/_types/assessment/material";
 import { ExercisesTypeSchema } from "@repo/contents/_types/assessment/type";
 import type { Locale } from "@repo/contents/_types/content";
@@ -89,6 +90,9 @@ export function readPracticeSourceSetParts(sourcePath: string) {
 
   const { exercise } = projection;
   const group = exercise.groupSegments.at(0);
+  const parsedCategory = Schema.decodeUnknownOption(ExercisesCategorySchema)(
+    exercise.categorySegment
+  );
   const parsedType = Schema.decodeUnknownOption(ExercisesTypeSchema)(
     exercise.typeSegment
   );
@@ -101,6 +105,7 @@ export function readPracticeSourceSetParts(sourcePath: string) {
       group &&
       exercise.groupSegments.length === 1 &&
       exercise.setSegment &&
+      Option.isSome(parsedCategory) &&
       Option.isSome(parsedType) &&
       Option.isSome(parsedMaterial)
     )
@@ -109,7 +114,7 @@ export function readPracticeSourceSetParts(sourcePath: string) {
   }
 
   return {
-    category: exercise.categorySegment,
+    category: parsedCategory.value,
     ...readPracticeSourceGroupIdentity(group),
     material: parsedMaterial.value,
     type: parsedType.value,

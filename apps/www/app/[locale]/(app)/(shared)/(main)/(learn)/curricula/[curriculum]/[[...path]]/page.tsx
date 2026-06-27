@@ -19,6 +19,7 @@ import {
   readCurriculumGroupIcon,
   readCurriculumRouteIcon,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/icons";
+import { readCurriculumSeoContext } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/seo";
 import { CardMaterial } from "@/components/shared/card-material";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { ContainerList } from "@/components/shared/container-list";
@@ -32,8 +33,10 @@ import { RefContent } from "@/components/shared/ref-content";
 import { SubjectItem } from "@/components/shared/subject-item";
 import { SubjectList } from "@/components/shared/subject-list";
 import { getGithubUrl } from "@/lib/utils/github";
+import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 import { createProjectedRouteAlternates } from "@/lib/utils/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
+import { generateSEOMetadata } from "@/lib/utils/seo/generator";
 
 type CurriculumPageProps =
   PageProps<"/[locale]/curricula/[curriculum]/[[...path]]">;
@@ -62,11 +65,23 @@ export function generateStaticParams({
 export async function generateMetadata({
   params,
 }: CurriculumPageProps): Promise<Metadata> {
-  const { route } = await resolveCurriculumRoute(params);
+  const { locale, route } = await resolveCurriculumRoute(params);
+  const seo = await generateSEOMetadata(
+    readCurriculumSeoContext(route),
+    locale
+  );
 
   return {
-    title: { absolute: route.title },
+    title: { absolute: seo.title },
+    description: seo.description,
     alternates: createProjectedRouteAlternates(route, readCurriculumRoutes()),
+    ...getSocialMetadata({
+      title: seo.title,
+      description: seo.description,
+      locale,
+      path: `/${locale}/${route.publicPath}`,
+      image: getOgUrl(locale, route.publicPath),
+    }),
   };
 }
 

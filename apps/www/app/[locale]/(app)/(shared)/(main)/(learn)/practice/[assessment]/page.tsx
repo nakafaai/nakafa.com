@@ -20,6 +20,7 @@ import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
+import { generateSEOMetadata } from "@/lib/utils/seo/generator";
 
 interface PracticeProgramPageProps {
   params: Promise<{ assessment: string; locale: string }>;
@@ -39,12 +40,9 @@ export async function generateMetadata({
   params,
 }: PracticeProgramPageProps): Promise<Metadata> {
   const data = await getPracticeProgramData(params);
-  const t = await getTranslations({
-    locale: data.locale,
-    namespace: "Exercises",
-  });
-  const title = t(data.sourceType);
-  const description = t("type-description");
+  const seo = await generateSEOMetadata(data.seoContext, data.locale);
+  const title = seo.title;
+  const description = seo.description;
   const path = data.assessmentPath;
 
   return {
@@ -102,11 +100,7 @@ export default async function Page({ params }: PracticeProgramPageProps) {
             icon={getCategoryIcon(data.sourceCategory)}
             title={title}
           />
-          <p className="sr-only">
-            {data.locale === "id"
-              ? "Pilih domain latihan SNBT yang tersedia untuk membuka set soal."
-              : "Choose an available SNBT practice domain to open question sets."}
-          </p>
+          <p className="sr-only">{t("program-domain-list-description")}</p>
           <LayoutContent>
             <SubjectList>
               {data.domains.map((domain) => (
