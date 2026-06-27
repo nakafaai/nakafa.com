@@ -9,10 +9,10 @@ import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/lear
 import { describe, expect, it } from "vitest";
 
 const NOW = Date.parse("2026-01-01T00:00:00.000Z");
-const canonicalContext = {
+const canonicalContext: CanonicalRecentContextFixture = {
   contextKey: "canonical",
   contextMode: "canonical",
-} as const;
+};
 
 describe("contents/queries/recent", () => {
   it("returns recently viewed materials through graph route projections", async () => {
@@ -143,6 +143,50 @@ describe("contents/queries/recent", () => {
         href: "/subjects/mathematics/topic-current/section-current",
         route: "subjects/mathematics/topic-current/section-current",
         title: "Material current",
+      }),
+    ]);
+  });
+
+  it("preserves the latest verified material context in the Continue Learning href", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const seeded = await t.mutation(async (ctx) => {
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "recent-context-href",
+      });
+      const ref = await insertMaterialRoute(ctx, "recent-context-href");
+
+      await insertMaterialRecent(ctx, {
+        context: {
+          contextKey: "placement:merdeka:class-10-mathematics-topic",
+          contextMode: "placement",
+          contextNodeKey: "class-10-mathematics-topic",
+          contextProgramKey: "merdeka",
+        },
+        ref,
+        lastViewedAt: NOW,
+        materialDomain: "mathematics",
+        suffix: "recent-context-href",
+        userId: identity.userId,
+      });
+
+      return identity;
+    });
+
+    const results = await t
+      .withIdentity({
+        sessionId: seeded.sessionId,
+        subject: seeded.authUserId,
+      })
+      .query(api.contents.queries.recent.getRecentlyViewed, {
+        locale: "en",
+        limit: 5,
+      });
+
+    expect(results).toEqual([
+      expect.objectContaining({
+        contextKey: "placement:merdeka:class-10-mathematics-topic",
+        href: "/subjects/mathematics/topic-recent-context-href/section-recent-context-href?ctx=merdeka~class-10-mathematics-topic",
       }),
     ]);
   });
@@ -333,12 +377,14 @@ async function insertPracticeRoute(ctx: MutationCtx, suffix: string) {
 async function insertMaterialRecent(
   ctx: MutationCtx,
   {
+    context = canonicalContext,
     ref,
     lastViewedAt,
     materialDomain,
     suffix,
     userId,
   }: {
+    context?: typeof canonicalContext | RecentContextFixture;
     ref: ReturnType<typeof getMaterialGraph>;
     lastViewedAt: number;
     materialDomain?: Doc<"userLearningRecents">["materialDomain"];
@@ -348,7 +394,7 @@ async function insertMaterialRecent(
 ) {
   await ctx.db.insert("userLearningRecents", {
     ...ref,
-    ...canonicalContext,
+    ...context,
     content_id: ref.assetId,
     description: `Description ${suffix}`,
     lastViewedAt,
@@ -360,6 +406,18 @@ async function insertMaterialRecent(
     title: `Material ${suffix}`,
     userId,
   });
+}
+
+interface CanonicalRecentContextFixture {
+  readonly contextKey: "canonical";
+  readonly contextMode: "canonical";
+}
+
+interface RecentContextFixture {
+  readonly contextKey: string;
+  readonly contextMode: "placement";
+  readonly contextNodeKey: string;
+  readonly contextProgramKey: string;
 }
 
 /** Builds the route-catalog graph identity for one material fixture. */

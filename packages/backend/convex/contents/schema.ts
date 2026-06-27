@@ -134,6 +134,8 @@ const tables = {
 
   /**
    * Continue Learning read model ranked by the learner's latest verified view.
+   * One record per signed-in learner and canonical asset. Context fields store
+   * the latest validated resume path, but never define item identity.
    */
   userLearningRecents: defineTable({
     ...learningGraphIdentityValidator.fields,
@@ -149,11 +151,7 @@ const tables = {
     title: v.string(),
     userId: v.id("users"),
   })
-    .index("by_userId_and_content_id_and_contextKey", [
-      "userId",
-      "content_id",
-      "contextKey",
-    ])
+    .index("by_userId_and_content_id", ["userId", "content_id"])
     .index("by_userId_and_locale_and_section_and_lastViewedAt", [
       "userId",
       "locale",
