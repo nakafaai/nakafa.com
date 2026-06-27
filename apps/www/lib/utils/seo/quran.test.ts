@@ -99,7 +99,7 @@ describe("generateQuranMetadata", () => {
     );
 
     expect(result.title).toBe("Surah 1. Al-Fatihah - Al-Fatihah | Nakafa");
-    expect(result.keywords).toEqual(["Al-Fatihah", "Al-Fatihah", ""]);
+    expect(result.keywords).toEqual(["Al-Fatihah", "Al-Fatihah"]);
   });
 
   it("keeps Quran metadata stable when all display names are empty", async () => {

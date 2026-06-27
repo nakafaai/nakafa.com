@@ -11,6 +11,7 @@ import { Effect, Option } from "effect";
 import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
 import { generateFallbackMetadata } from "@/lib/utils/seo/fallback";
+import { createSEOKeywords } from "@/lib/utils/seo/keywords";
 import { generateQuranMetadata } from "@/lib/utils/seo/quran";
 import { fetchSEOTranslationsNamespace } from "@/lib/utils/seo/translations";
 import type {
@@ -18,6 +19,8 @@ import type {
   SEOContext,
   SEOMetadata,
 } from "@/lib/utils/seo/types";
+
+const EMPTY_SELECT_VALUE = "__EMPTY__";
 
 /** Fetches translations for the Metadata namespace. */
 const fetchMetadataTranslations = (locale: Locale) =>
@@ -144,6 +147,18 @@ function getContentDescription(data: ContentSEOData) {
   return description;
 }
 
+/** Converts optional metadata fields into the non-empty token ICU select expects. */
+function readOptionalSelectValue(value: string | undefined) {
+  return value?.trim() || EMPTY_SELECT_VALUE;
+}
+
+/** Formats the optional question total used only when runtime counts are available. */
+function readQuestionTotalSelectValue(questionCount: number | undefined) {
+  return questionCount && questionCount > 0
+    ? `/${questionCount}`
+    : EMPTY_SELECT_VALUE;
+}
+
 /**
  * Generates SEO metadata for material content.
  */
@@ -160,8 +175,7 @@ const generateSubjectMetadata = Effect.fn("SEO.generateSubjectMetadata")(
           translateSubjectMaterial(material, locale),
         ]);
 
-      // Use sentinel value for optional fields in ICU select
-      const chapterValue = chapter?.trim() || "__EMPTY__";
+      const chapterValue = readOptionalSelectValue(chapter);
 
       return {
         title: t("subject.title", {
@@ -178,14 +192,14 @@ const generateSubjectMetadata = Effect.fn("SEO.generateSubjectMetadata")(
             material: materialDisplayName,
             grade: gradeDisplay,
           }),
-        keywords: t("subject.keywords", {
-          title: effectiveTitle,
-          chapter: chapterValue,
-          material: materialDisplayName,
-          grade: gradeDisplay,
-        })
-          .split(", ")
-          .map((k: string) => k.trim()),
+        keywords: createSEOKeywords(
+          t("subject.keywords", {
+            title: effectiveTitle,
+            chapter: chapterValue,
+            material: materialDisplayName,
+            grade: gradeDisplay,
+          })
+        ),
       };
     })
 );
@@ -221,13 +235,13 @@ const generateExerciseProgramMetadata = Effect.fn(
             exam: examDisplayName,
             title: effectiveTitle,
           }),
-        keywords: t("exercise-program.keywords", {
-          category: categoryDisplayName,
-          exam: examDisplayName,
-          title: effectiveTitle,
-        })
-          .split(", ")
-          .map((k: string) => k.trim()),
+        keywords: createSEOKeywords(
+          t("exercise-program.keywords", {
+            category: categoryDisplayName,
+            exam: examDisplayName,
+            title: effectiveTitle,
+          })
+        ),
       };
     })
 );
@@ -249,14 +263,10 @@ const generateExerciseMetadata = Effect.fn("SEO.generateExerciseMetadata")(
           translateExerciseType(exam, locale),
         ]);
 
-      // Use sentinel value for optional fields in ICU select
-      const groupValue = group?.trim() || "__EMPTY__";
-      const setValue = set?.trim() || "__EMPTY__";
-
-      // Convert number to string for ICU select
+      const groupValue = readOptionalSelectValue(group);
+      const setValue = readOptionalSelectValue(set);
       const numberValue = number && number > 0 ? String(number) : "0";
-      const questionTotalValue =
-        questionCount && questionCount > 0 ? `/${questionCount}` : "__EMPTY__";
+      const questionTotalValue = readQuestionTotalSelectValue(questionCount);
 
       return {
         title: t("exercise.title", {
@@ -277,15 +287,15 @@ const generateExerciseMetadata = Effect.fn("SEO.generateExerciseMetadata")(
           questionCount: questionCount ?? 0,
           title: effectiveTitle,
         }),
-        keywords: t("exercise.keywords", {
-          exam: examDisplayName,
-          group: groupValue,
-          set: setValue,
-          material: materialDisplayName,
-          title: effectiveTitle,
-        })
-          .split(", ")
-          .map((k: string) => k.trim()),
+        keywords: createSEOKeywords(
+          t("exercise.keywords", {
+            exam: examDisplayName,
+            group: groupValue,
+            set: setValue,
+            material: materialDisplayName,
+            title: effectiveTitle,
+          })
+        ),
       };
     })
 );
@@ -302,8 +312,8 @@ const generateCurriculumMetadata = Effect.fn("SEO.generateCurriculumMetadata")(
         fetchSEOTranslations(locale),
         getEffectiveTitle(data, locale),
       ]);
-      const parentValue = parent?.trim() || "__EMPTY__";
-      const programValue = program?.trim() || "__EMPTY__";
+      const parentValue = readOptionalSelectValue(parent);
+      const programValue = readOptionalSelectValue(program);
 
       return {
         title: t("curriculum.title", {
@@ -318,13 +328,13 @@ const generateCurriculumMetadata = Effect.fn("SEO.generateCurriculumMetadata")(
             parent: parentValue,
             program: programValue,
           }),
-        keywords: t("curriculum.keywords", {
-          title: effectiveTitle,
-          parent: parentValue,
-          program: programValue,
-        })
-          .split(", ")
-          .map((k: string) => k.trim()),
+        keywords: createSEOKeywords(
+          t("curriculum.keywords", {
+            title: effectiveTitle,
+            parent: parentValue,
+            program: programValue,
+          })
+        ),
       };
     })
 );
@@ -354,12 +364,12 @@ const generateArticleMetadata = Effect.fn("SEO.generateArticleMetadata")(
             title: effectiveTitle,
             category: categoryDisplayName,
           }),
-        keywords: t("article.keywords", {
-          title: effectiveTitle,
-          category: categoryDisplayName,
-        })
-          .split(", ")
-          .map((k: string) => k.trim()),
+        keywords: createSEOKeywords(
+          t("article.keywords", {
+            title: effectiveTitle,
+            category: categoryDisplayName,
+          })
+        ),
       };
     })
 );

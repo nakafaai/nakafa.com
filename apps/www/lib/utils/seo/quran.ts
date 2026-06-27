@@ -1,6 +1,7 @@
 import type { Surah } from "@repo/contents/_types/quran";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
+import { createSEOKeywords } from "@/lib/utils/seo/keywords";
 import { fetchSEOTranslationsNamespace } from "@/lib/utils/seo/translations";
 
 /** Generates localized SEO metadata for one Quran surah payload. */
@@ -31,13 +32,13 @@ export const generateQuranMetadata = Effect.fn("SEO.generateQuranMetadata")(
           transliteration,
           numberOfVerses: surah.numberOfVerses,
         }),
-        keywords: t("quran.keywords", {
-          name,
-          translation: effectiveTitle,
-          revelation,
-        })
-          .split(", ")
-          .map((keyword: string) => keyword.trim()),
+        keywords: createSEOKeywords(
+          t("quran.keywords", {
+            name,
+            translation: effectiveTitle,
+            revelation,
+          })
+        ),
       };
     })
 );
