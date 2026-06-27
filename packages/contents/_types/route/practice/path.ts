@@ -8,6 +8,11 @@ import type {
 } from "@repo/contents/_types/route/schema";
 import { locales } from "@repo/utilities/locales";
 
+const PUBLIC_PRACTICE_QUESTION_SEGMENTS = {
+  en: "question",
+  id: "soal",
+} satisfies { readonly [locale in Locale]: string };
+
 /** Builds the localized public practice group segment without splitting year. */
 export function toPublicPracticeGroupSegment(
   group: Pick<PracticeMaterialGroup, "routeSlugs" | "year">,
@@ -86,7 +91,7 @@ export function readPublicPracticeQuestionNumber({
     return null;
   }
 
-  const prefix = locale === "id" ? "soal-" : "question-";
+  const prefix = `${PUBLIC_PRACTICE_QUESTION_SEGMENTS[locale]}-`;
 
   if (!segment.startsWith(prefix)) {
     return null;
@@ -166,7 +171,7 @@ export function toPublicPracticeQuestionSegment({
   locale: Locale;
   number: number;
 }) {
-  return locale === "id" ? `soal-${number}` : `question-${number}`;
+  return `${PUBLIC_PRACTICE_QUESTION_SEGMENTS[locale]}-${number}`;
 }
 
 /** Parses a localized public practice set or question path into named route parts. */

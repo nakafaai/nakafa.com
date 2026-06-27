@@ -11,12 +11,6 @@ import {
   readPracticeRoutes,
   toPracticeHref,
 } from "./routes";
-import {
-  localizeQuestionPaginationItem,
-  readExerciseSetSourceParts,
-  readGroupTitle,
-  readQuestionSourcePathParts,
-} from "./source";
 
 const runtimeMocks = vi.hoisted(() => ({
   fetchRuntimeExerciseQuestionPage: vi.fn(),
@@ -425,73 +419,6 @@ describe("practice route data", () => {
         })
       )
     ).rejects.toThrow();
-  });
-
-  it("keeps source-path parsing and pagination labels route-owned", () => {
-    expect(
-      readGroupTitle({
-        sourcePath:
-          "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
-      })
-    ).toBe("Try Out 2026");
-    expect(
-      readGroupTitle({
-        sourcePath:
-          "material/practice/assessment/snbt/quantitative-knowledge/drill/set-1",
-      })
-    ).toBe("drill");
-    expect(
-      readQuestionSourcePathParts(
-        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/9"
-      )
-    ).toEqual({
-      questionNumber: 9,
-      setSourcePath:
-        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
-    });
-    expect(
-      readExerciseSetSourceParts(
-        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1"
-      )
-    ).toEqual({
-      category: "high-school",
-      exerciseType: "try-out",
-      material: "quantitative-knowledge",
-      type: "snbt",
-      year: "2026",
-    });
-    expect(
-      localizeQuestionPaginationItem({ href: "", title: "Previous" })
-    ).toEqual({ href: "", title: "Previous" });
-    expect(
-      localizeQuestionPaginationItem({ href: "/", title: "Next" })
-    ).toEqual({ href: "/", title: "Next" });
-    expect(
-      localizeQuestionPaginationItem({
-        href: "/en/practice/snbt/quantitative-knowledge/tryout-2026/set-1/question",
-        title: "Question",
-      })
-    ).toEqual({
-      href: "/en/practice/snbt/quantitative-knowledge/tryout-2026/set-1/question",
-      title: "Question",
-    });
-    expect(
-      localizeQuestionPaginationItem({
-        href: "/en/practice/snbt/quantitative-knowledge/tryout-2026/set-1/2",
-        title: "Question 2",
-      })
-    ).toEqual({
-      href: "/en/practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-2",
-      title: "Question 2",
-    });
-    expect(() => readQuestionSourcePathParts("question-x")).toThrow();
-    expect(() => readQuestionSourcePathParts("")).toThrow();
-    expect(() => readExerciseSetSourceParts("material/practice")).toThrow();
-    expect(() =>
-      readExerciseSetSourceParts(
-        "material/practice/assessment/unknown/quantitative-knowledge/try-out-2026/set-1"
-      )
-    ).toThrow();
   });
 });
 

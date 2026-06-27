@@ -6,6 +6,7 @@ import {
 } from "@repo/contents/_types/route/practice/path";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
+import { readPracticeSetDisplay } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/practice/[assessment]/[domain]/[[...path]]/display";
 import {
   findPracticeDomainRoutes,
   findPracticeRoute,
@@ -18,9 +19,12 @@ import {
   toPracticeHref,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/practice/[assessment]/[domain]/[[...path]]/routes";
 import {
+  readPracticeDomainSeoContext,
+  readPracticeRouteSeoContext,
+} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/practice/[assessment]/[domain]/[[...path]]/seo";
+import {
   localizeQuestionPaginationItem,
   readExerciseSetSourceParts,
-  readGroupTitle,
   readQuestionSourcePathParts,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/practice/[assessment]/[domain]/[[...path]]/source";
 import {
@@ -29,6 +33,7 @@ import {
 } from "@/lib/content/runtime/pages";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { selectLearningStaticParams } from "@/lib/routing/prerender";
+import type { SEOContext } from "@/lib/utils/seo/types";
 
 type PracticeParams =
   PageProps<"/[locale]/practice/[assessment]/[domain]/[[...path]]">["params"];
@@ -84,12 +89,14 @@ export type PracticeMetadataData =
       alternatePaths: Array<{ locale: Locale; publicPath: string }>;
       locale: Locale;
       publicPath: string;
+      seoContext: Extract<SEOContext, { type: "exercise" }>;
       sourceMaterial: ExerciseSetSourceParts["material"];
     }
   | {
       kind: "route";
       locale: Locale;
       route: PracticeRoute;
+      seoContext: Extract<SEOContext, { type: "exercise" }>;
     };
 
 type PracticeGroupContext = ReturnType<typeof readPracticeGroupContext>;
@@ -182,10 +189,13 @@ export async function getPracticeMetadataData(
     return getDomainMetadataData(locale, projectedRoute.routes, routes);
   }
 
+  const seoContext = readPracticeRouteSeoContext(projectedRoute.route, routes);
+
   return {
     kind: "route",
     locale,
     route: projectedRoute.route,
+    seoContext,
   };
 }
 
@@ -258,6 +268,7 @@ function readPracticeGroupContext(
       candidate.parentPath === setRoute.parentPath
   );
   const sourceParts = readExerciseSetSourceParts(setRoute.sourcePath);
+  const display = readPracticeSetDisplay(setRoute);
 
   const description = setRoute.description;
   const assessmentPath = readPublicPracticeAssessmentPath(setRoute);
@@ -270,7 +281,7 @@ function readPracticeGroupContext(
     sourceMaterial: sourceParts.material,
     sourceType: sourceParts.type,
     material: {
-      title: readGroupTitle(setRoute),
+      title: display.groupTitle,
       description,
       href: `/${locale}/${domainPath}`,
       items: sets.map((set) => ({
@@ -406,6 +417,7 @@ function getDomainMetadataData(
     ),
     locale,
     publicPath,
+    seoContext: readPracticeDomainSeoContext(firstRoute),
     sourceMaterial: sourceParts.material,
   };
 }

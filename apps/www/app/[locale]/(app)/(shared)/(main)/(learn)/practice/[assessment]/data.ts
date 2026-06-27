@@ -13,6 +13,7 @@ import {
 import { readExerciseSetSourceParts } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/practice/[assessment]/[domain]/[[...path]]/source";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { selectLearningStaticParams } from "@/lib/routing/prerender";
+import type { SEOContext } from "@/lib/utils/seo/types";
 
 type PracticeProgramParams = Promise<{ assessment: string; locale: string }>;
 
@@ -27,6 +28,7 @@ export interface PracticeProgramData {
   domains: PracticeProgramDomain[];
   locale: Locale;
   publicPath: string;
+  seoContext: Extract<SEOContext, { type: "exercise-program" }>;
   sourceCategory: ReturnType<typeof readExerciseSetSourceParts>["category"];
   sourceType: ReturnType<typeof readExerciseSetSourceParts>["type"];
 }
@@ -83,6 +85,14 @@ export async function getPracticeProgramData(
     ),
     locale,
     publicPath,
+    seoContext: {
+      type: "exercise-program",
+      category: sourceParts.category,
+      exam: sourceParts.type,
+      data: {
+        title: sourceParts.type,
+      },
+    },
     sourceCategory: sourceParts.category,
     sourceType: sourceParts.type,
   };

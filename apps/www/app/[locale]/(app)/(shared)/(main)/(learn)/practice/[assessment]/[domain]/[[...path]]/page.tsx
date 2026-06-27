@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
 import {
   getPracticeMetadataData,
   getPracticeRouteData,
@@ -18,6 +17,7 @@ import {
   createLocalizedAlternates,
   createProjectedRouteAlternates,
 } from "@/lib/utils/seo/alternates";
+import { generateSEOMetadata } from "@/lib/utils/seo/generator";
 
 type PracticePageProps =
   PageProps<"/[locale]/practice/[assessment]/[domain]/[[...path]]">;
@@ -41,14 +41,9 @@ export async function generateMetadata({
   params,
 }: PracticePageProps): Promise<Metadata> {
   const data = await getPracticeMetadataData(params);
-  const t = await getTranslations({
-    locale: data.locale,
-    namespace: "Exercises",
-  });
-  const title =
-    data.kind === "domain" ? t(data.sourceMaterial) : data.route.title;
-  const description =
-    data.kind === "domain" ? title : (data.route.description ?? title);
+  const seo = await generateSEOMetadata(data.seoContext, data.locale);
+  const title = seo.title;
+  const description = seo.description;
   const publicPath =
     data.kind === "domain" ? data.publicPath : data.route.publicPath;
   const path = `/${data.locale}/${publicPath}`;

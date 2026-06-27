@@ -1,3 +1,4 @@
+import { getExerciseQuestionRouteTitle } from "@repo/contents/_lib/assessment/label";
 import { ExercisesMaterialSchema } from "@repo/contents/_types/assessment/material";
 import { ExercisesTypeSchema } from "@repo/contents/_types/assessment/type";
 import type { Locale } from "@repo/contents/_types/content";
@@ -173,10 +174,11 @@ export function readPublicPracticeQuestionRouteByPath({
     sectionKey: `question-${questionNumber}`,
     sitemap: true,
     sourcePath,
-    title:
-      locale === "id"
-        ? `${match.set.translations[locale].title} Soal ${questionNumber}`
-        : `${match.set.translations[locale].title} Question ${questionNumber}`,
+    title: getExerciseQuestionRouteTitle({
+      locale,
+      number: questionNumber,
+      setTitle: match.set.translations[locale].title,
+    }),
   });
 }
 
@@ -260,10 +262,11 @@ export function readPublicPracticeQuestionRouteBySourcePath({
           sectionKey: parts.question,
           sitemap: true,
           sourcePath: canonicalSourcePath,
-          title:
-            locale === "id"
-              ? `${set.translations[locale].title} Soal ${questionNumber}`
-              : `${set.translations[locale].title} Question ${questionNumber}`,
+          title: getExerciseQuestionRouteTitle({
+            locale,
+            number: questionNumber,
+            setTitle: set.translations[locale].title,
+          }),
         });
       }
     }

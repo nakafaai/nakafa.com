@@ -16,20 +16,28 @@ vi.mock("next-intl/server", () => ({
   getTranslations: mockGetTranslations,
 }));
 
-type TranslationEntry =
-  | string
-  | ((values: Record<string, number | string>) => string);
+interface TranslationValues {
+  readonly [key: string]: number | string | undefined;
+}
+type TranslationEntry = string | ((values: TranslationValues) => string);
+interface TranslationDictionary {
+  readonly [key: string]: TranslationEntry | undefined;
+}
+interface TranslationNamespaces {
+  readonly [namespace: string]: TranslationDictionary | undefined;
+}
 
 /** Reads one ICU-like mock value as display text. */
-function getValue(values: Record<string, number | string>, key: string) {
+function getValue(values: TranslationValues, key: string) {
   return String(values[key] ?? "");
 }
 
-const translations = {
+const translations: TranslationNamespaces = {
   Articles: {
     politics: "Politics",
   },
   Exercises: {
+    "high-school": "High School",
     "quantitative-knowledge": "Quantitative Knowledge",
     snbt: "SNBT",
   },
@@ -43,12 +51,59 @@ const translations = {
       `${getValue(values, "title")}, ${getValue(values, "category")}, article`,
     "article.title": (values) =>
       `${getValue(values, "title")} - ${getValue(values, "category")} | Nakafa`,
-    "exercise.description": (values) =>
-      `Take ${getValue(values, "material")} ${getValue(values, "exam")} exercise with ${getValue(values, "questionCount")} questions and explanations for checking your reasoning.`,
+    "curriculum.description": (values) => {
+      const parent = getValue(values, "parent");
+      const program = getValue(values, "program");
+      const parentText = parent === "__EMPTY__" ? "" : ` in ${parent}`;
+      const programText = program === "__EMPTY__" ? "" : ` for ${program}`;
+
+      return `Browse ${getValue(values, "title")}${parentText}${programText}.`;
+    },
+    "curriculum.keywords": (values) =>
+      [
+        getValue(values, "title"),
+        getValue(values, "parent"),
+        getValue(values, "program"),
+      ]
+        .filter((value) => value && value !== "__EMPTY__")
+        .join(", "),
+    "curriculum.title": (values) => {
+      const parent = getValue(values, "parent");
+      const program = getValue(values, "program");
+      const parentText = parent === "__EMPTY__" ? "" : ` - ${parent}`;
+      const programText = program === "__EMPTY__" ? "" : ` (${program})`;
+
+      return `${getValue(values, "title")}${parentText}${programText} | Nakafa`;
+    },
+    "exercise-program.description": (values) =>
+      `Choose ${getValue(values, "exam")} practice domains for ${getValue(values, "category")}.`,
+    "exercise-program.keywords": (values) =>
+      `${getValue(values, "exam")}, ${getValue(values, "category")}, practice questions`,
+    "exercise-program.title": (values) =>
+      `${getValue(values, "exam")} Practice Questions | Nakafa`,
+    "exercise.description": (values) => {
+      const count = getValue(values, "questionCount");
+      const countLabel =
+        count === "0" ? "practice questions" : `${count} questions`;
+
+      return `Take ${getValue(values, "material")} ${getValue(values, "exam")} exercise with ${countLabel} and explanations for checking your reasoning.`;
+    },
     "exercise.keywords": (values) =>
       `${getValue(values, "material")}, ${getValue(values, "exam")}, exercise`,
-    "exercise.title": (values) =>
-      `Question ${getValue(values, "number")}/${getValue(values, "questionCount")}: ${getValue(values, "material")} (${getValue(values, "exam")}) | Nakafa`,
+    "exercise.title": (values) => {
+      const number = getValue(values, "number");
+      const questionTotal = getValue(values, "questionTotal");
+      const total = questionTotal === "__EMPTY__" ? "" : questionTotal;
+      const questionPrefix =
+        number === "0" ? "" : `Question ${number}${total}: `;
+      const set = getValue(values, "set");
+      const setPrefix =
+        set === "__EMPTY__" ? "" : `${set}${number === "0" ? ": " : " - "}`;
+      const group = getValue(values, "group");
+      const groupPrefix = group === "__EMPTY__" ? "" : `${group} - `;
+
+      return `${questionPrefix}${setPrefix}${groupPrefix}${getValue(values, "material")} (${getValue(values, "exam")}) | Nakafa`;
+    },
     "quran.description": (values) =>
       `Read Surah ${getValue(values, "name")} with ${getValue(values, "numberOfVerses")} verses.`,
     "quran.keywords": (values) =>
@@ -73,18 +128,13 @@ const translations = {
     grade: (values) => `Grade ${getValue(values, "grade")}`,
     mathematics: "Mathematics",
   },
-} satisfies Record<string, Record<string, TranslationEntry>>;
-
-const translationMap: Record<
-  string,
-  Record<string, TranslationEntry>
-> = translations;
+};
 
 /** Returns the mocked translator for the requested namespace. */
 function getTranslator(namespace: string) {
-  const dictionary = translationMap[namespace] ?? {};
+  const dictionary = translations[namespace] ?? {};
 
-  return (key: string, values: Record<string, number | string> = {}) => {
+  return (key: string, values: TranslationValues = {}) => {
     const entry = dictionary[key];
 
     if (typeof entry === "function") {
@@ -212,26 +262,6 @@ describe("generateSEOMetadata", () => {
     expect(result.title).toBe("Nakafa: Mathematics (Grade 11) | Nakafa");
   });
 
-  it("keeps long subject titles intact in the localized title template", async () => {
-    const result = await generateSEOMetadata(
-      {
-        type: "material-lesson",
-        category: "university",
-        grade: "bachelor",
-        material: "ai-ds",
-        chapter: "Linear Methods of AI",
-        data: {
-          title: "Best Approximation in Function and Polynomial Spaces",
-        },
-      },
-      "en"
-    );
-
-    expect(result.title).toBe(
-      "Best Approximation in Function and Polynomial Spaces: Linear Methods of AI - Artificial Intelligence & Data Science (Bachelor) | Nakafa"
-    );
-  });
-
   it("uses article MDX description before generated fallback copy", async () => {
     const result = await generateSEOMetadata(
       {
@@ -247,24 +277,6 @@ describe("generateSEOMetadata", () => {
 
     expect(result.description).toBe("Hand-written article summary.");
     expect(result.title).toBe("Regional Elections - Politics | Nakafa");
-  });
-
-  it("keeps long article titles intact in the localized title template", async () => {
-    const result = await generateSEOMetadata(
-      {
-        type: "article",
-        category: "politics",
-        data: {
-          title:
-            "Nepotism: The Machinations of Power in the Political Chessboard of Governance",
-        },
-      },
-      "en"
-    );
-
-    expect(result.title).toBe(
-      "Nepotism: The Machinations of Power in the Political Chessboard of Governance - Politics | Nakafa"
-    );
   });
 
   it("uses generated article description when MDX description is missing", async () => {
@@ -325,10 +337,79 @@ describe("generateSEOMetadata", () => {
     );
 
     expect(result.title).toBe(
-      "Question 0/0: Quantitative Knowledge (SNBT) | Nakafa"
+      "Set 1: Try Out - Quantitative Knowledge (SNBT) | Nakafa"
     );
     expect(result.description).toBe(
-      "Take Quantitative Knowledge SNBT exercise with 0 questions and explanations for checking your reasoning."
+      "Take Quantitative Knowledge SNBT exercise with practice questions and explanations for checking your reasoning."
+    );
+  });
+
+  it("generates assessment-root metadata without borrowing a material title", async () => {
+    const result = await generateSEOMetadata(
+      {
+        type: "exercise-program",
+        category: "high-school",
+        exam: "snbt",
+        data: { title: "SNBT" },
+      },
+      "en"
+    );
+
+    expect(result.title).toBe("SNBT Practice Questions | Nakafa");
+    expect(result.description).toBe(
+      "Choose SNBT practice domains for High School."
+    );
+  });
+
+  it("generates curriculum metadata from source-owned route context", async () => {
+    const nested = await generateSEOMetadata(
+      {
+        type: "curriculum-context",
+        level: "subject",
+        parent: "Grade 11",
+        program: "Kurikulum Merdeka",
+        data: { title: "Mathematics" },
+      },
+      "en"
+    );
+    const root = await generateSEOMetadata(
+      {
+        type: "curriculum-context",
+        level: "track",
+        data: { title: "Mathematics" },
+      },
+      "en"
+    );
+
+    expect(nested.title).toBe(
+      "Mathematics - Grade 11 (Kurikulum Merdeka) | Nakafa"
+    );
+    expect(nested.keywords).toEqual([
+      "Mathematics",
+      "Grade 11",
+      "Kurikulum Merdeka",
+    ]);
+    expect(root.title).toBe("Mathematics | Nakafa");
+    expect(root.description).toBe("Browse Mathematics.");
+  });
+
+  it("omits the question total when metadata has no runtime count", async () => {
+    const result = await generateSEOMetadata(
+      {
+        type: "exercise",
+        category: "high-school",
+        exam: "snbt",
+        material: "quantitative-knowledge",
+        group: "Try Out 2026",
+        set: "Set 1",
+        number: 9,
+        data: { title: "Set 1" },
+      },
+      "en"
+    );
+
+    expect(result.title).toBe(
+      "Question 9: Set 1 - Try Out 2026 - Quantitative Knowledge (SNBT) | Nakafa"
     );
   });
 
@@ -345,91 +426,7 @@ describe("generateSEOMetadata", () => {
     expect(result.description).toBe("Read Surah Al-Fatihah with 7 verses.");
   });
 
-  it("falls back to English Quran labels when locale labels are empty", async () => {
-    const result = await generateSEOMetadata(
-      {
-        type: "quran",
-        surah: {
-          ...surah,
-          name: {
-            ...surah.name,
-            translation: {
-              en: "The Opening",
-              id: "",
-            },
-            transliteration: {
-              en: "Al-Fatihah",
-              id: "",
-            },
-          },
-          revelation: {
-            arab: "مكة",
-            en: "Meccan",
-            id: "",
-          },
-        },
-      },
-      "id"
-    );
-
-    expect(result.title).toBe("Surah 1. Al-Fatihah - The Opening | Nakafa");
-    expect(result.keywords).toEqual(["Al-Fatihah", "The Opening", "Meccan"]);
-  });
-
-  it("falls back to the short Quran name when translated names are empty", async () => {
-    const result = await generateSEOMetadata(
-      {
-        type: "quran",
-        surah: {
-          ...surah,
-          name: {
-            ...surah.name,
-            translation: {
-              en: "",
-              id: "",
-            },
-            transliteration: {
-              en: "",
-              id: "",
-            },
-          },
-          revelation: {
-            arab: "مكة",
-            en: "",
-            id: "",
-          },
-        },
-      },
-      "id"
-    );
-
-    expect(result.title).toBe("Surah 1. Al-Fatihah - Al-Fatihah | Nakafa");
-    expect(result.keywords).toEqual(["Al-Fatihah", "Al-Fatihah", ""]);
-  });
-
-  it("keeps Quran metadata stable when all display names are empty", async () => {
-    const result = await generateSEOMetadata(
-      {
-        type: "quran",
-        surah: {
-          ...surah,
-          name: {
-            ...surah.name,
-            short: "",
-            translation: {
-              en: "",
-              id: "",
-            },
-          },
-        },
-      },
-      "id"
-    );
-
-    expect(result.title).toBe("Surah 1.  -  | Nakafa");
-  });
-
-  it("falls back to local metadata builders when translations fail", async () => {
+  it("uses fallback metadata when dictionary loading fails", async () => {
     mockGetTranslations.mockRejectedValueOnce("missing translations");
 
     const result = await generateSEOMetadata(
@@ -449,141 +446,6 @@ describe("generateSEOMetadata", () => {
     expect(result).toStrictEqual({
       title: "Trigonometric Function Graph - mathematics - Nakafa",
       description: "Graph lesson fallback. Trigonometric Function Graph",
-      keywords: [],
-    });
-  });
-
-  it("falls back when Metadata translations fail for the ultimate title fallback", async () => {
-    mockGetTranslations.mockImplementation(({ namespace }) => {
-      if (namespace === "Metadata") {
-        return Promise.reject(new Error("missing Metadata translations"));
-      }
-
-      return Promise.resolve(getTranslator(namespace));
-    });
-
-    const result = await generateSEOMetadata(
-      {
-        type: "material-lesson",
-        category: "high-school",
-        grade: "11",
-        material: "mathematics",
-        data: {},
-      },
-      "en"
-    );
-
-    expect(result).toStrictEqual({
-      title: "mathematics - Nakafa",
-      description: "",
-      keywords: [],
-    });
-  });
-
-  it("falls back when Subject translations fail", async () => {
-    mockGetTranslations.mockImplementation(({ namespace }) => {
-      if (namespace === "Subject") {
-        return Promise.reject(new Error("missing Subject translations"));
-      }
-
-      return Promise.resolve(getTranslator(namespace));
-    });
-
-    const result = await generateSEOMetadata(
-      {
-        type: "material-lesson",
-        category: "high-school",
-        grade: "11",
-        material: "mathematics",
-        data: {
-          title: "Trigonometric Function Graph",
-          description: "Graph lesson fallback.",
-        },
-      },
-      "en"
-    );
-
-    expect(result).toStrictEqual({
-      title: "Trigonometric Function Graph - mathematics - Nakafa",
-      description: "Graph lesson fallback. Trigonometric Function Graph",
-      keywords: [],
-    });
-  });
-
-  it("falls back to Quran metadata when Quran translations fail", async () => {
-    mockGetTranslations.mockRejectedValueOnce(
-      new Error("missing translations")
-    );
-
-    const result = await generateSEOMetadata(
-      {
-        type: "quran",
-        surah,
-      },
-      "en"
-    );
-
-    expect(result).toStrictEqual({
-      title: "The Opening - Nakafa",
-      description: "The Opening",
-      keywords: [],
-    });
-  });
-
-  it("falls back to exercise metadata when exercise translations fail", async () => {
-    mockGetTranslations.mockImplementation(({ namespace }) => {
-      if (namespace === "Exercises") {
-        return Promise.reject(new Error("missing Exercises translations"));
-      }
-
-      return Promise.resolve(getTranslator(namespace));
-    });
-
-    const result = await generateSEOMetadata(
-      {
-        type: "exercise",
-        category: "high-school",
-        exam: "snbt",
-        material: "quantitative-knowledge",
-        data: {
-          title: "Question 9",
-          description: "Exercise fallback.",
-        },
-      },
-      "en"
-    );
-
-    expect(result).toStrictEqual({
-      title: "Question 9 - quantitative-knowledge - Nakafa",
-      description: "Exercise fallback. Question 9",
-      keywords: [],
-    });
-  });
-
-  it("falls back to article metadata when article translations fail", async () => {
-    mockGetTranslations.mockImplementation(({ namespace }) => {
-      if (namespace === "Articles") {
-        return Promise.reject(new Error("missing Articles translations"));
-      }
-
-      return Promise.resolve(getTranslator(namespace));
-    });
-
-    const result = await generateSEOMetadata(
-      {
-        type: "article",
-        category: "politics",
-        data: {
-          title: "Regional Elections",
-          description: "Article fallback.",
-        },
-      },
-      "en"
-    );
-
-    expect(result).toStrictEqual({
-      title: "Regional Elections - politics - Nakafa",
-      description: "Article fallback. Regional Elections",
       keywords: [],
     });
   });

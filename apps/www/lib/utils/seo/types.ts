@@ -1,3 +1,4 @@
+import type { ProgramNavigationLevel } from "@repo/contents/_types/program/schema";
 import type { Surah } from "@repo/contents/_types/quran";
 import type {
   ArticleCategory,
@@ -46,6 +47,19 @@ export type SEOContext =
       set?: string; // Exercise set name (e.g., "Set 1")
       number?: number; // Exercise number for specific questions (e.g., 1, 2, 3)
       questionCount?: number;
+      data: ContentSEOData;
+    }
+  | {
+      type: "exercise-program";
+      category: ExercisesCategory;
+      exam: ExercisesType;
+      data: ContentSEOData;
+    }
+  | {
+      type: "curriculum-context";
+      level: ProgramNavigationLevel;
+      parent?: string;
+      program?: string;
       data: ContentSEOData;
     }
   | {

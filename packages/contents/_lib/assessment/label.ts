@@ -51,6 +51,21 @@ export function getExerciseNumberLabel(locale: Locale, number: number) {
   );
 }
 
+/** Returns the localized public route title for one exercise question. */
+export function getExerciseQuestionRouteTitle({
+  locale,
+  number,
+  setTitle,
+}: {
+  locale: Locale;
+  number: number;
+  setTitle: string;
+}) {
+  return dictionaries[locale]["route-question-title"]
+    .replace("{set}", setTitle)
+    .replace("{number}", number.toString());
+}
+
 /** Returns the localized display label for an exercise question count. */
 export function getExerciseQuestionCountLabel(locale: Locale, count: number) {
   return `${count} ${tryoutDictionaries[locale]["question-unit"]}`;

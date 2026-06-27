@@ -60,11 +60,7 @@ export async function PracticeDomainPage({
             link={{ href: data.assessmentPath, label: t(data.sourceType) }}
             title={title}
           />
-          <p className="sr-only">
-            {locale === "id"
-              ? "Pilih set latihan yang tersedia untuk membuka soal latihan pada domain ini."
-              : "Choose an available practice set to open the questions for this domain."}
-          </p>
+          <p className="sr-only">{t("domain-set-list-description")}</p>
           <LayoutContent>
             <ContainerList className="sm:grid-cols-1">
               {data.groups.map((group) => (
