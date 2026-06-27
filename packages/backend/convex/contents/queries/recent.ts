@@ -19,8 +19,7 @@ type RecentlyViewedSubject = Infer<typeof recentlyViewedSubjectValidator>;
 
 const defaultRecentLearningLimit = 5;
 const maxRecentLearningLimit = 20;
-const recentLearningPageSize = 20;
-const recentLearningMaxPages = 5;
+const recentLearningCandidateLimit = 100;
 
 /** Convex validator for bounded Continue Learning query inputs. */
 const getRecentlyViewedArgs = {
@@ -67,49 +66,32 @@ const listRecentLearning = Effect.fn("contents.recent.listRecentLearning")(
     }
 
     const subjects: RecentlyViewedSubject[] = [];
-    let cursor: string | null = null;
-    let pagesRead = 0;
 
-    while (subjects.length < limit && pagesRead < recentLearningMaxPages) {
-      const recentRows = yield* Effect.tryPromise({
-        try: () =>
-          ctx.db
-            .query("userLearningRecents")
-            .withIndex(
-              "by_userId_and_locale_and_section_and_lastViewedAt",
-              (q) =>
-                q
-                  .eq("userId", user.appUser._id)
-                  .eq("locale", args.locale)
-                  .eq("section", "material")
-            )
-            .order("desc")
-            .paginate({
-              cursor,
-              numItems: recentLearningPageSize,
-            }),
-        catch: toRecentLearningIoError,
-      });
+    const recentRows = yield* Effect.tryPromise({
+      try: () =>
+        ctx.db
+          .query("userLearningRecents")
+          .withIndex("by_userId_and_locale_and_section_and_lastViewedAt", (q) =>
+            q
+              .eq("userId", user.appUser._id)
+              .eq("locale", args.locale)
+              .eq("section", "material")
+          )
+          .order("desc")
+          .take(recentLearningCandidateLimit),
+      catch: toRecentLearningIoError,
+    });
 
-      pagesRead += 1;
+    for (const row of recentRows) {
+      const subject = yield* toRecentlyViewedSubject(ctx.db, row);
 
-      for (const row of recentRows.page) {
-        const subject = yield* toRecentlyViewedSubject(ctx.db, row);
-
-        if (subject) {
-          subjects.push(subject);
-        }
-
-        if (subjects.length >= limit) {
-          break;
-        }
+      if (subject) {
+        subjects.push(subject);
       }
 
-      if (recentRows.isDone || subjects.length >= limit) {
+      if (subjects.length >= limit) {
         break;
       }
-
-      cursor = recentRows.continueCursor;
     }
 
     return subjects;

@@ -1,4 +1,4 @@
-import { createWrappedLanguageModel } from "@repo/ai/config/devtools";
+import { createAppLanguageModel } from "@repo/ai/config/devtools";
 import { ModelKeySchema, modelRegistry } from "@repo/ai/config/model";
 import { NoSuchModelError } from "ai";
 import { Option, Schema } from "effect";
@@ -23,7 +23,7 @@ export const provider = {
       return unsupportedModel(modelId, "languageModel");
     }
 
-    return createWrappedLanguageModel(modelRegistry[modelKey.value].gatewayId);
+    return createAppLanguageModel(modelRegistry[modelKey.value].gatewayId);
   },
   embeddingModel(modelId: string) {
     return unsupportedModel(modelId, "embeddingModel");

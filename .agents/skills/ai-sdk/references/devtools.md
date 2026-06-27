@@ -5,25 +5,26 @@ description: Debug AI SDK calls by inspecting captured runs and steps.
 
 # AI SDK DevTools
 
+Source: https://ai-sdk.dev/v7/docs/ai-sdk-core/devtools
+
 ## Why Use DevTools
 
 DevTools captures all AI SDK calls (`generateText`, `streamText`, `ToolLoopAgent`) to a local JSON file. This lets you inspect LLM requests, responses, tool calls, and multi-step interactions without manually logging.
 
 ## Setup
 
-Requires AI SDK 6. Install `@ai-sdk/devtools` using your project's package manager.
+Requires AI SDK 7 and a Node.js-compatible local runtime. Install `@ai-sdk/devtools` using your project's package manager.
 
-Wrap your model with the middleware:
+Register the DevTools telemetry integration once at an app/server startup boundary:
 
 ```ts
-import { wrapLanguageModel, gateway } from 'ai';
-import { devToolsMiddleware } from '@ai-sdk/devtools';
+import { DevToolsTelemetry } from '@ai-sdk/devtools';
+import { registerTelemetry } from 'ai';
 
-const model = wrapLanguageModel({
-  model: gateway('anthropic/claude-sonnet-4.5'),
-  middleware: devToolsMiddleware(),
-});
+registerTelemetry(DevToolsTelemetry());
 ```
+
+After registration, AI SDK calls emit DevTools telemetry by default. Keep this local-only because prompts, outputs, and tool data are written in plaintext.
 
 ## Viewing Captured Data
 

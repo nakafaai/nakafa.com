@@ -15,6 +15,6 @@
     "typecheck": "UV_NO_DEV=0 PYTHONDONTWRITEBYTECODE=1 uv run --dev basedpyright"
   },
   "devDependencies": {
-    "@vercel/config": "^0.5.4"
+    "@vercel/config": "^0.5.5"
   }
 }

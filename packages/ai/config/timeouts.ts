@@ -1,4 +1,4 @@
-import type { TimeoutConfiguration } from "ai";
+import type { TimeoutConfiguration, ToolSet } from "ai";
 
 /**
  * Bounds user-visible chat streams without cutting off normal tool flows.
@@ -14,22 +14,22 @@ export const chatStreamTimeout = {
   chunkMs: 45_000,
   stepMs: 90_000,
   totalMs: 300_000,
-} satisfies TimeoutConfiguration;
+} satisfies TimeoutConfiguration<ToolSet>;
 
 /** Bounds subagent model steps so a slow provider cannot hold the chat open. */
 export const subAgentGenerationTimeout = {
   stepMs: 30_000,
   totalMs: 120_000,
-} satisfies TimeoutConfiguration;
+} satisfies TimeoutConfiguration<ToolSet>;
 
 /** Bounds small background generations such as titles, repairs, and suggestions. */
 export const backgroundGenerationTimeout = {
   stepMs: 15_000,
   totalMs: 45_000,
-} satisfies TimeoutConfiguration;
+} satisfies TimeoutConfiguration<ToolSet>;
 
 /** Bounds Nina's post-answer follow-up suggestions without cutting off slow structured output. */
 export const suggestionGenerationTimeout = {
   stepMs: 30_000,
   totalMs: 90_000,
-} satisfies TimeoutConfiguration;
+} satisfies TimeoutConfiguration<ToolSet>;

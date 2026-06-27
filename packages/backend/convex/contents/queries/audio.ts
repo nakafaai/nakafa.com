@@ -28,9 +28,10 @@ import { Effect, Schema } from "effect";
 type PopularityCounterRow = Doc<"learningPopularityCounters">;
 
 const popularAudioIoFailedCode = "POPULAR_AUDIO_IO_FAILED";
-const popularAudioCandidatePageCount = 3;
+const popularAudioCandidateLookaheadMultiplier = 3;
 const maxPopularAudioSourceLookupsPerType =
-  MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE * popularAudioCandidatePageCount;
+  MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE *
+  popularAudioCandidateLookaheadMultiplier;
 
 /** Raised when the audio queue candidate query cannot read its ranked models. */
 class PopularAudioIoError extends Schema.TaggedError<PopularAudioIoError>()(
@@ -49,7 +50,7 @@ function toPopularAudioIoError(error: unknown) {
   });
 }
 
-/** Reads bounded ranked popularity pages for one content section and locale. */
+/** Reads bounded ranked popularity rows for one content section and locale. */
 const loadPopularRowsForLocale = Effect.fn(
   "contents.audio.loadPopularRowsForLocale"
 )(function* (
@@ -58,41 +59,23 @@ const loadPopularRowsForLocale = Effect.fn(
   locale: Locale
 ) {
   const windowKey = getLifetimePopularityWindow();
-  const rows: PopularityCounterRow[] = [];
-  let cursor: string | null = null;
-  let pagesRead = 0;
+  const rows = yield* Effect.tryPromise({
+    try: () =>
+      ctx.db
+        .query("learningPopularityCounters")
+        .withIndex("by_section_locale_scope_window_score_id", (q) =>
+          q
+            .eq("section", section)
+            .eq("locale", locale)
+            .eq("scopeMode", "global")
+            .eq("windowKey", windowKey)
+        )
+        .order("desc")
+        .take(maxPopularAudioSourceLookupsPerType),
+    catch: toPopularAudioIoError,
+  });
 
-  while (pagesRead < popularAudioCandidatePageCount) {
-    const page = yield* Effect.tryPromise({
-      try: () =>
-        ctx.db
-          .query("learningPopularityCounters")
-          .withIndex("by_section_locale_scope_window_score_id", (q) =>
-            q
-              .eq("section", section)
-              .eq("locale", locale)
-              .eq("scopeMode", "global")
-              .eq("windowKey", windowKey)
-          )
-          .order("desc")
-          .paginate({
-            cursor,
-            numItems: MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE,
-          }),
-      catch: toPopularAudioIoError,
-    });
-
-    rows.push(...page.page.filter((row) => row.score >= MIN_VIEW_THRESHOLD));
-    pagesRead += 1;
-
-    if (page.isDone) {
-      break;
-    }
-
-    cursor = page.continueCursor;
-  }
-
-  return rows;
+  return rows.filter((row) => row.score >= MIN_VIEW_THRESHOLD);
 });
 
 /** Reads ranked popularity rows for one content section across supported locales. */

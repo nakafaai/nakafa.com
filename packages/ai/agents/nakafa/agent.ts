@@ -32,7 +32,7 @@ import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agen
 import { NakafaAgentReadOptionsSchema } from "@repo/contents/_lib/agent/schema/read";
 import { NakafaAgentSearchOptionsSchema } from "@repo/contents/_lib/agent/schema/search";
 import { NakafaAgentTaxonomyOptionsSchema } from "@repo/contents/_lib/agent/schema/taxonomy";
-import { generateText, stepCountIs, tool } from "ai";
+import { generateText, isStepCount, tool } from "ai";
 import { Effect, Option } from "effect";
 
 const nakafaSearchInputSchema = createEffectSchema(
@@ -70,7 +70,7 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
           gateway: gatewayProviderOptions,
           google: getFastModelProviderOptions(modelId),
         },
-        system: nakafaAgentPrompt({ locale, context }),
+        instructions: nakafaAgentPrompt({ locale, context }),
         messages: [{ role: "user", content: task }],
         temperature: 0,
         tools: {
@@ -201,7 +201,7 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
 
           return prepareAnswerFromNakafaEvidenceStep(messages, steps);
         },
-        stopWhen: stepCountIs(10),
+        stopWhen: isStepCount(10),
         timeout: subAgentGenerationTimeout,
       }),
     catch: (error) => error,
@@ -214,7 +214,7 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
           step.toolResults.map((toolResult) => toolResult.output)
         )
         .join("\n\n") || result.text,
-    usage: result.totalUsage,
+    usage: result.usage,
   };
 });
 

@@ -58,7 +58,7 @@ export const writeNinaSuggestions = Effect.fn("nina.suggest.write")(function* ({
 
   const suggestionsStream = streamText({
     model: provider.languageModel(defaultModel),
-    system: nakafaSuggestions({ locale }),
+    instructions: nakafaSuggestions({ locale }),
     messages: promptMessages,
     output: Output.object({
       schema: SuggestionsOutputSchema,

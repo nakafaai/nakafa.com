@@ -34,7 +34,7 @@ import { textOutputSchema } from "@repo/ai/schema/tools";
 import type { MathAgentParams } from "@repo/ai/types/agents";
 import { mathOperations } from "@repo/math/schema/operations";
 import { MathService } from "@repo/math/service";
-import { generateText, stepCountIs, tool } from "ai";
+import { generateText, isStepCount, tool } from "ai";
 import { Effect } from "effect";
 
 const MAX_MATH_STEPS = mathOperations.length;
@@ -70,9 +70,9 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
               task,
             })
           ),
+        instructions: mathPrompt({ locale, context }),
         prepareStep: prepareMathStep,
-        stopWhen: stepCountIs(MAX_MATH_STEPS),
-        system: mathPrompt({ locale, context }),
+        stopWhen: isStepCount(MAX_MATH_STEPS),
         temperature: 0,
         timeout: subAgentGenerationTimeout,
         tools: {
@@ -213,6 +213,6 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
 
   return {
     text: result.text,
-    usage: result.totalUsage,
+    usage: result.usage,
   };
 });

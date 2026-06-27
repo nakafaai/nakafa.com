@@ -7,6 +7,7 @@ import {
 } from "@repo/ai/nina/contract/turn";
 import type { NinaContextPack } from "@repo/ai/nina/memory/pack";
 import { NinaAgentError, runNinaAgentTurn } from "@repo/ai/nina/runtime/agent";
+import type { NinaPrepareStep, NinaToolSet } from "@repo/ai/nina/runtime/step";
 import {
   nakafaToolInputSchema,
   researchToolInputSchema,
@@ -17,7 +18,7 @@ import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
 import type {
   LanguageModelUsage,
   ModelMessage,
-  ToolSet,
+  TextStreamPart,
   UIMessageStreamWriter,
 } from "ai";
 import { tool } from "ai";
@@ -27,12 +28,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 interface CapturedAgentSettings {
   readonly id?: string;
   readonly instructions?: string;
-  readonly prepareStep?: (input: {
-    readonly messages: ModelMessage[];
-    readonly stepNumber: number;
-  }) => unknown;
+  readonly prepareStep?: NinaPrepareStep;
   readonly stopWhen?: unknown;
-  readonly tools?: ToolSet;
+  readonly tools?: NinaToolSet;
 }
 
 interface CapturedStreamOptions {
@@ -42,18 +40,13 @@ interface CapturedStreamOptions {
 
 interface CapturedMessageStreamOptions {
   readonly messageMetadata?: (input: {
-    readonly part:
-      | { readonly type: "start" }
-      | { readonly type: "text-delta" }
-      | { readonly type: "finish" }
-      | { readonly totalUsage: LanguageModelUsage; readonly type: "finish" };
+    readonly part: TextStreamPart<NinaToolSet>;
   }) => MyMetadata | undefined;
   readonly onError?: (error: unknown) => string;
 }
 
 interface FakeAgentState {
   deltaMetadata?: MyMetadata;
-  emptyFinishMetadata?: MyMetadata;
   finishMetadata?: MyMetadata;
   responseFailure?: Error;
   settings?: CapturedAgentSettings;
@@ -68,7 +61,6 @@ const fakeAgentState = vi.hoisted((): FakeAgentState => ({}));
 /** Returns a complete AI SDK usage object for metadata callbacks. */
 function createUsage(): LanguageModelUsage {
   return {
-    cachedInputTokens: undefined,
     inputTokenDetails: {
       cacheReadTokens: undefined,
       cacheWriteTokens: undefined,
@@ -81,7 +73,6 @@ function createUsage(): LanguageModelUsage {
     },
     outputTokens: 6,
     raw: undefined,
-    reasoningTokens: undefined,
     totalTokens: 10,
   };
 }
@@ -103,8 +94,16 @@ vi.mock("ai", async (importOriginal) => {
 
       fakeAgentState.streamOptions = options;
       fakeAgentState.settings?.prepareStep?.({
+        initialInstructions: fakeAgentState.settings.instructions,
+        initialMessages: options.messages,
+        instructions: fakeAgentState.settings.instructions,
         messages: options.messages,
+        model: "google/gemini-3-flash",
+        responseMessages: [],
+        runtimeContext: {},
         stepNumber: 0,
+        steps: [],
+        toolsContext: {},
       });
 
       return Promise.resolve({
@@ -118,32 +117,37 @@ vi.mock("ai", async (importOriginal) => {
                 },
               ],
             }),
-        /** Captures stream metadata callbacks without opening an SSE stream. */
-        toUIMessageStream(streamOptions: CapturedMessageStreamOptions) {
-          fakeAgentState.startMetadata = streamOptions.messageMetadata?.({
-            part: { type: "start" },
-          });
-          fakeAgentState.deltaMetadata = streamOptions.messageMetadata?.({
-            part: { type: "text-delta" },
-          });
-          fakeAgentState.emptyFinishMetadata = streamOptions.messageMetadata?.({
-            part: { type: "finish" },
-          });
-          fakeAgentState.finishMetadata = streamOptions.messageMetadata?.({
-            part: { totalUsage: createUsage(), type: "finish" },
-          });
-          fakeAgentState.streamErrorMessage = streamOptions.onError?.(
-            new Error("stream failed")
-          );
-
-          return new ReadableStream();
-        },
+        stream: new ReadableStream(),
       });
     }
   }
 
+  /** Captures stream metadata callbacks without opening an SSE stream. */
+  function fakeToUIMessageStream(streamOptions: CapturedMessageStreamOptions) {
+    fakeAgentState.startMetadata = streamOptions.messageMetadata?.({
+      part: { type: "start" },
+    });
+    fakeAgentState.deltaMetadata = streamOptions.messageMetadata?.({
+      part: { id: "text-1", text: "ignored", type: "text-delta" },
+    });
+    fakeAgentState.finishMetadata = streamOptions.messageMetadata?.({
+      part: {
+        finishReason: "stop",
+        rawFinishReason: "stop",
+        totalUsage: createUsage(),
+        type: "finish",
+      },
+    });
+    fakeAgentState.streamErrorMessage = streamOptions.onError?.(
+      new Error("stream failed")
+    );
+
+    return new ReadableStream();
+  }
+
   return {
     ...actual,
+    toUIMessageStream: fakeToUIMessageStream,
     ToolLoopAgent: FakeToolLoopAgent,
   };
 });
@@ -258,7 +262,6 @@ const chat = {
 describe("nina/agent", () => {
   beforeEach(() => {
     fakeAgentState.deltaMetadata = undefined;
-    fakeAgentState.emptyFinishMetadata = undefined;
     fakeAgentState.finishMetadata = undefined;
     fakeAgentState.responseFailure = undefined;
     fakeAgentState.settings = undefined;
@@ -390,7 +393,6 @@ describe("nina/agent", () => {
       ninaContextSnapshot: ninaContext.snapshot,
     });
     expect(fakeAgentState.deltaMetadata).toBeUndefined();
-    expect(fakeAgentState.emptyFinishMetadata).toBeUndefined();
     expect(fakeAgentState.finishMetadata).toMatchObject({
       model: modelId,
       ninaContextTransition: ninaContext.transition,

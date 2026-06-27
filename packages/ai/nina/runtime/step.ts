@@ -29,17 +29,16 @@ export type NinaPrepareStep = NonNullable<
  */
 export function createNinaPrepareStep({
   needsPageFetch,
-  system,
+  instructions,
 }: {
+  readonly instructions: string;
   readonly needsPageFetch: boolean;
-  readonly system: string;
 }): NinaPrepareStep {
   return ({ messages, stepNumber }) => {
     if (stepNumber !== firstStepNumber) {
       return {
-        messages,
-        system: [
-          system,
+        instructions: [
+          instructions,
           createPrompt({
             taskContext: `
               # Continuation Source Policy
@@ -81,6 +80,7 @@ export function createNinaPrepareStep({
             `,
           }),
         ].join("\n\n"),
+        messages,
       };
     }
 

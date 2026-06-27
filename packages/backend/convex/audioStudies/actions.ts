@@ -22,7 +22,7 @@ import {
   audioGenerationArgs,
 } from "@repo/backend/convex/audioStudies/generation/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
-import { experimental_generateSpeech, generateText } from "ai";
+import { generateSpeech as generateSpeechAudio, generateText } from "ai";
 import { v } from "convex/values";
 
 const audioGenerationModel = ModelIdSchema.make("nakafa-pro");
@@ -63,7 +63,7 @@ function createAudioGenerationAdapters(ctx: ActionCtx): {
         return text;
       },
       generateSpeechChunk: async (input) => {
-        const result = await experimental_generateSpeech({
+        const result = await generateSpeechAudio({
           model: elevenlabs.speech(input.model),
           text: input.text,
           voice: input.voiceId,
