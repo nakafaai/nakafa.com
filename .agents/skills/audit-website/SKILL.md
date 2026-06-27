@@ -2,7 +2,6 @@
 name: audit-website
 description: Audit websites for SEO, performance, security, technical, content, and 17 other issue categories with 240+ rules using the squirrelscan CLI. Returns LLM-optimized reports with health scores, broken links, meta tag analysis, and actionable recommendations. Use to discover and asses website or webapp issues and health.
 license: See LICENSE file in repository root
-compatibility: Requires squirrel CLI installed and accessible in PATH
 metadata:
   author: squirrelscan
   version: "1.23"
@@ -12,6 +11,10 @@ allowed-tools: Bash(squirrel:*) Read Edit Grep Glob
 # Website Audit Skill
 
 Audit websites for SEO, technical, content, performance and security issues using the squirrelscan cli.
+
+## Compatibility
+
+Requires squirrel CLI installed and accessible in PATH.
 
 squirrelscan provides a cli tool squirrel - available for macos, windows and linux. It carries out extensive website auditing
 by emulating a browser, search crawler, and analyzing the website's structure and content against 240+ rules.

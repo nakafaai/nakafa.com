@@ -1,7 +1,6 @@
 ---
 name: coss-particles
 description: Index of all COSS UI particle examples. Use when implementing UI features to find copy-paste-ready component patterns built on coss primitives. Each particle has a description and a JSON URL for easy installation.
-compatibility: Requires coss UI components installed in the project.
 license: MIT
 metadata:
   author: cosscom
@@ -10,6 +9,10 @@ metadata:
 # COSS UI Particles Index
 
 Particles are copy-paste-ready UI patterns built on [coss](https://coss.com/ui) primitives. Browse them visually at <https://coss.com/ui/particles>.
+
+## Compatibility
+
+Requires coss UI components installed in the project.
 
 ## How to use this skill
 

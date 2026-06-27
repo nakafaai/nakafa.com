@@ -1,7 +1,6 @@
 ---
 name: coss
 description: Helps implement coss UI components correctly. Use when building UIs with coss primitives (buttons, dialogs, selects, forms, menus, tabs, inputs, toasts, etc.), migrating from shadcn/Radix to coss/Base UI, composing trigger-based overlays, or troubleshooting coss component behavior. Covers imports, accessibility, Tailwind styling, and common pitfalls.
-compatibility: Requires Tailwind CSS v4 and @base-ui/react. Designed for React projects using the coss component registry.
 license: MIT
 metadata:
   author: cosscom
@@ -10,6 +9,10 @@ metadata:
 # coss ui
 
 coss ui is a component library built on Base UI with a shadcn-like developer experience plus a large particle catalog.
+
+## Compatibility
+
+Requires Tailwind CSS v4 and @base-ui/react. Designed for React projects using the coss component registry.
 
 ## What this skill is for
 
@@ -115,4 +118,3 @@ Before returning code:
 - composition structure is valid for selected primitive(s)
 - accessibility and explicit control types (`button`, `input`, etc.) are present
 - migration-sensitive flows are verified (type/lint, keyboard/a11y behavior, and SSR-sensitive primitives like Select/Command)
-

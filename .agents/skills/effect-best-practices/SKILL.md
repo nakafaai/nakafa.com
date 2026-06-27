@@ -1,7 +1,8 @@
 ---
 name: effect-best-practices
 description: Enforces Effect-TS patterns for services, errors, layers, and atoms. Use when writing code with Effect.Service, Schema.TaggedError, Layer composition, or effect-atom React components.
-version: 1.0.0
+metadata:
+  version: 1.0.0
 ---
 
 # Effect-TS Best Practices

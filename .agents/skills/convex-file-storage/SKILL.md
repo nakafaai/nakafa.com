@@ -1,10 +1,11 @@
 ---
 name: convex-file-storage
-displayName: Convex File Storage
 description: Complete file handling including upload flows, serving files via URL, storing generated files from actions, deletion, and accessing file metadata from system tables
-version: 1.0.0
-author: Convex
-tags: [convex, file-storage, uploads, images, files]
+metadata:
+  displayName: Convex File Storage
+  version: 1.0.0
+  author: Convex
+  tags: [convex, file-storage, uploads, images, files]
 ---
 
 # Convex File Storage
