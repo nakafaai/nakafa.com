@@ -19,6 +19,7 @@ import {
   type LanguageModelUsage,
   type ModelMessage,
   smoothStream,
+  type TextStreamPart,
   ToolLoopAgent,
   type ToolLoopAgentSettings,
   toUIMessageStream,
@@ -51,6 +52,8 @@ type NinaAgentToolSettings = Required<
     "experimental_repairToolCall"
   >;
 
+type NinaMessageMetadataPart = TextStreamPart<NinaToolSet>;
+
 /** Emits Nina context metadata at AI SDK stream lifecycle markers. */
 function readNinaMessageMetadata({
   page,
@@ -59,10 +62,7 @@ function readNinaMessageMetadata({
   runtime,
 }: {
   readonly page: NinaPage;
-  readonly part: {
-    readonly totalUsage?: LanguageModelUsage;
-    readonly type: string;
-  };
+  readonly part: NinaMessageMetadataPart;
   readonly readFinishMetadata: (usage: LanguageModelUsage) => MyMetadata;
   readonly runtime: NinaRuntime;
 }): MyMetadata | undefined {
@@ -74,7 +74,7 @@ function readNinaMessageMetadata({
     };
   }
 
-  if (part.type !== "finish" || !part.totalUsage) {
+  if (part.type !== "finish") {
     return;
   }
 
@@ -141,7 +141,7 @@ export const runNinaAgentTurn = Effect.fn("nina.agent.turn")(function* ({
   });
 
   stream.writer.merge(
-    toUIMessageStream({
+    toUIMessageStream<NinaToolSet, MyUIMessage>({
       messageMetadata: ({ part }) =>
         readNinaMessageMetadata({
           page,

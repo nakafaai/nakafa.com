@@ -18,6 +18,7 @@ import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
 import type {
   LanguageModelUsage,
   ModelMessage,
+  TextStreamPart,
   UIMessageStreamWriter,
 } from "ai";
 import { tool } from "ai";
@@ -39,18 +40,13 @@ interface CapturedStreamOptions {
 
 interface CapturedMessageStreamOptions {
   readonly messageMetadata?: (input: {
-    readonly part:
-      | { readonly type: "start" }
-      | { readonly type: "text-delta" }
-      | { readonly type: "finish" }
-      | { readonly totalUsage: LanguageModelUsage; readonly type: "finish" };
+    readonly part: TextStreamPart<NinaToolSet>;
   }) => MyMetadata | undefined;
   readonly onError?: (error: unknown) => string;
 }
 
 interface FakeAgentState {
   deltaMetadata?: MyMetadata;
-  emptyFinishMetadata?: MyMetadata;
   finishMetadata?: MyMetadata;
   responseFailure?: Error;
   settings?: CapturedAgentSettings;
@@ -132,13 +128,15 @@ vi.mock("ai", async (importOriginal) => {
       part: { type: "start" },
     });
     fakeAgentState.deltaMetadata = streamOptions.messageMetadata?.({
-      part: { type: "text-delta" },
-    });
-    fakeAgentState.emptyFinishMetadata = streamOptions.messageMetadata?.({
-      part: { type: "finish" },
+      part: { id: "text-1", text: "ignored", type: "text-delta" },
     });
     fakeAgentState.finishMetadata = streamOptions.messageMetadata?.({
-      part: { totalUsage: createUsage(), type: "finish" },
+      part: {
+        finishReason: "stop",
+        rawFinishReason: "stop",
+        totalUsage: createUsage(),
+        type: "finish",
+      },
     });
     fakeAgentState.streamErrorMessage = streamOptions.onError?.(
       new Error("stream failed")
@@ -264,7 +262,6 @@ const chat = {
 describe("nina/agent", () => {
   beforeEach(() => {
     fakeAgentState.deltaMetadata = undefined;
-    fakeAgentState.emptyFinishMetadata = undefined;
     fakeAgentState.finishMetadata = undefined;
     fakeAgentState.responseFailure = undefined;
     fakeAgentState.settings = undefined;
@@ -396,7 +393,6 @@ describe("nina/agent", () => {
       ninaContextSnapshot: ninaContext.snapshot,
     });
     expect(fakeAgentState.deltaMetadata).toBeUndefined();
-    expect(fakeAgentState.emptyFinishMetadata).toBeUndefined();
     expect(fakeAgentState.finishMetadata).toMatchObject({
       model: modelId,
       ninaContextTransition: ninaContext.transition,
