@@ -279,14 +279,16 @@ const generateExerciseMetadata = Effect.fn("SEO.generateExerciseMetadata")(
           material: materialDisplayName,
           title: effectiveTitle,
         }),
-        description: t("exercise.description", {
-          exam: examDisplayName,
-          group: groupValue,
-          set: setValue,
-          material: materialDisplayName,
-          questionCount: questionCount ?? 0,
-          title: effectiveTitle,
-        }),
+        description:
+          getContentDescription(data) ??
+          t("exercise.description", {
+            exam: examDisplayName,
+            group: groupValue,
+            set: setValue,
+            material: materialDisplayName,
+            questionCount: questionCount ?? 0,
+            title: effectiveTitle,
+          }),
         keywords: createSEOKeywords(
           t("exercise.keywords", {
             exam: examDisplayName,

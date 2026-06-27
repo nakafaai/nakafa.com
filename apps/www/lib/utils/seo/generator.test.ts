@@ -320,6 +320,28 @@ describe("generateSEOMetadata", () => {
     );
   });
 
+  it("uses authored exercise descriptions before generated fallback copy", async () => {
+    const result = await generateSEOMetadata(
+      {
+        type: "exercise",
+        category: "high-school",
+        exam: "snbt",
+        material: "quantitative-knowledge",
+        group: "Try Out 2026",
+        set: "Set 1",
+        data: {
+          title: "Set 1",
+          description: "Authored route description for the practice set.",
+        },
+      },
+      "en"
+    );
+
+    expect(result.description).toBe(
+      "Authored route description for the practice set."
+    );
+  });
+
   it("uses exercise defaults when optional route data is absent", async () => {
     const result = await generateSEOMetadata(
       {
