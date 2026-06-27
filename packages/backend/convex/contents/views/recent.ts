@@ -16,7 +16,21 @@ function toRecentIoError(error: unknown) {
   });
 }
 
-/** Upserts the signed-in learner's recent content read-model row. */
+/** Builds a patch that also clears stale optional context fields. */
+function toContextPatch(context: LearningContextStorage) {
+  return {
+    contextKey: context.contextKey,
+    contextMaterialKey: context.contextMaterialKey,
+    contextMode: context.contextMode,
+    contextNodeKey: context.contextNodeKey,
+    contextParentPath: context.contextParentPath,
+    contextProgramKey: context.contextProgramKey,
+    contextPublicPath: context.contextPublicPath,
+    contextSourcePath: context.contextSourcePath,
+  };
+}
+
+/** Upserts the signed-in learner's canonical recent content read-model row. */
 export const upsertUserRecent = Effect.fn("contents.views.upsertUserRecent")(
   function* (
     db: MutationCtx["db"],
@@ -31,11 +45,8 @@ export const upsertUserRecent = Effect.fn("contents.views.upsertUserRecent")(
       try: () =>
         db
           .query("userLearningRecents")
-          .withIndex("by_userId_and_content_id_and_contextKey", (q) =>
-            q
-              .eq("userId", input.userId)
-              .eq("content_id", route.content_id)
-              .eq("contextKey", context.contextKey)
+          .withIndex("by_userId_and_content_id", (q) =>
+            q.eq("userId", input.userId).eq("content_id", route.content_id)
           )
           .unique(),
       catch: toRecentIoError,
@@ -68,7 +79,11 @@ export const upsertUserRecent = Effect.fn("contents.views.upsertUserRecent")(
     }
 
     yield* Effect.tryPromise({
-      try: () => db.patch("userLearningRecents", existing._id, row),
+      try: () =>
+        db.patch("userLearningRecents", existing._id, {
+          ...row,
+          ...toContextPatch(context),
+        }),
       catch: toRecentIoError,
     });
   }
