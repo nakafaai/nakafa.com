@@ -92,7 +92,7 @@ describe("generateFallbackMetadata", () => {
     });
   });
 
-  it("prefers curriculum title context before program context", () => {
+  it("uses curriculum program context with the content title", () => {
     expect(
       generateFallbackMetadata({
         type: "curriculum-context",
@@ -103,8 +103,25 @@ describe("generateFallbackMetadata", () => {
         },
       })
     ).toStrictEqual({
-      title: "Biologi - Biologi - Nakafa",
+      title: "Biologi - Kurikulum Merdeka - Nakafa",
       description: "Biologi",
+      keywords: [],
+    });
+  });
+
+  it("uses curriculum parent context when program context is unavailable", () => {
+    expect(
+      generateFallbackMetadata({
+        type: "curriculum-context",
+        level: "class",
+        parent: "Kurikulum Merdeka",
+        data: {
+          title: "Kelas 10",
+        },
+      })
+    ).toStrictEqual({
+      title: "Kelas 10 - Kurikulum Merdeka - Nakafa",
+      description: "Kelas 10",
       keywords: [],
     });
   });

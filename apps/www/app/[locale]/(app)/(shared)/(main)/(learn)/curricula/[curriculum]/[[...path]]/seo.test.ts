@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import { describe, expect, it } from "vitest";
+import { assert, describe, expect, it } from "vitest";
 import { readCurriculumRoutes } from "./data";
 import { readCurriculumSeoContext } from "./seo";
 
@@ -11,7 +11,7 @@ function readRoute(publicPath: string) {
       candidate.locale === "id" && candidate.publicPath === publicPath
   );
 
-  expect(route).toBeDefined();
+  assert(route, `Missing curriculum route fixture: ${publicPath}`);
 
   return route;
 }
@@ -19,10 +19,6 @@ function readRoute(publicPath: string) {
 describe("curriculum route SEO context", () => {
   it("keeps root curriculum metadata scoped to the program title", () => {
     const route = readRoute("kurikulum/merdeka");
-
-    if (!route) {
-      return;
-    }
 
     expect(readCurriculumSeoContext(route)).toMatchObject({
       type: "curriculum-context",
@@ -38,10 +34,6 @@ describe("curriculum route SEO context", () => {
   it("includes parent and program context for nested curriculum pages", () => {
     const route = readRoute("kurikulum/merdeka/kelas-10/biologi");
 
-    if (!route) {
-      return;
-    }
-
     expect(readCurriculumSeoContext(route)).toMatchObject({
       type: "curriculum-context",
       level: "subject",
@@ -53,12 +45,21 @@ describe("curriculum route SEO context", () => {
     });
   });
 
-  it("does not duplicate the program title when the current route already uses it", () => {
+  it("does not duplicate the root program as both parent and program", () => {
     const route = readRoute("kurikulum/merdeka/kelas-10");
 
-    if (!route) {
-      return;
-    }
+    expect(readCurriculumSeoContext(route)).toMatchObject({
+      level: "class",
+      parent: "Kurikulum Merdeka",
+      program: undefined,
+      data: {
+        title: "Kelas 10",
+      },
+    });
+  });
+
+  it("does not duplicate the program title when the current route already uses it", () => {
+    const route = readRoute("kurikulum/merdeka/kelas-10");
 
     expect(
       readCurriculumSeoContext({ ...route, title: "Kurikulum Merdeka" })
