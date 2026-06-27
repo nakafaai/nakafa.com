@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { createNinaPrepareStep, type NinaPrepareStep } from "./step";
 
 const emptyMessages = [] satisfies ModelMessage[];
-const system = "Base system prompt";
+const instructions = "Base system prompt";
 const externalUrlMessages = [
   {
     content:
@@ -35,10 +35,10 @@ describe("nina/runtime/step", () => {
     });
 
     expect(step).toEqual({
-      messages: [],
-      system: expect.stringContaining(
+      instructions: expect.stringContaining(
         "Never append a final source, reference, citation, or bibliography section"
       ),
+      messages: [],
     });
   });
 
@@ -71,66 +71,68 @@ describe("nina/runtime/step", () => {
     });
 
     expect(step).toEqual({
-      messages: [],
-      system: expect.stringContaining(
+      instructions: expect.stringContaining(
         "Cite external research sources inline in the exact sentence they support."
       ),
+      messages: [],
     });
     expect(step).toEqual({
+      instructions: expect.stringContaining("Continuation Tool Guidance"),
       messages: [],
-      system: expect.stringContaining("Continuation Tool Guidance"),
     });
     expect(step).toEqual({
-      messages: [],
-      system: expect.stringContaining(
+      instructions: expect.stringContaining(
         "Call math before the final answer when:"
       ),
+      messages: [],
     });
     expect(step).toEqual({
-      messages: [],
-      system: expect.stringContaining(
+      instructions: expect.stringContaining(
         "- Nakafa selected educational math content."
       ),
+      messages: [],
     });
     expect(step).toEqual({
-      messages: [],
-      system: expect.stringContaining(
+      instructions: expect.stringContaining(
         "The math input must verify the exact example, exercise, answer key, and numeric claims that will appear in the final answer."
       ),
+      messages: [],
     });
     expect(step).toEqual({
-      messages: [],
-      system: expect.stringContaining(
+      instructions: expect.stringContaining(
         "After math returns, do not switch to different mathematical content unless you call math again for that replacement content."
       ),
+      messages: [],
     });
     expect(step).toEqual({
+      instructions: expect.stringContaining(
+        "Do not call math after Nakafa when:"
+      ),
       messages: [],
-      system: expect.stringContaining("Do not call math after Nakafa when:"),
     });
     expect(step).toEqual({
-      messages: [],
-      system: expect.stringContaining(
+      instructions: expect.stringContaining(
         "- The source summary contains no mathematical verification target."
       ),
+      messages: [],
     });
     expect(step).toEqual({
-      messages: [],
-      system: expect.stringContaining(
+      instructions: expect.stringContaining(
         "When research evidence contains markdown links, preserve those links in the final answer"
       ),
+      messages: [],
     });
     expect(step).toEqual({
-      messages: [],
-      system: expect.stringContaining(
+      instructions: expect.stringContaining(
         "Do not add product homepages, documentation links, or source links from memory."
       ),
+      messages: [],
     });
     expect(step).toEqual({
-      messages: [],
-      system: expect.stringContaining(
+      instructions: expect.stringContaining(
         "Do not add Nakafa source labels, Nakafa domain links, or citation-style links for Nakafa-owned content"
       ),
+      messages: [],
     });
   });
 
@@ -214,8 +216,8 @@ describe("nina/runtime/step", () => {
     });
 
     expect(step).toEqual({
+      instructions: expect.stringContaining("Continuation Source Policy"),
       messages,
-      system: expect.stringContaining("Continuation Source Policy"),
     });
     expect(step).not.toHaveProperty("activeTools");
     expect(step).not.toHaveProperty("toolChoice");
@@ -238,13 +240,18 @@ function readPreparedStep({
   readonly needsPageFetch: boolean;
   readonly stepNumber: number;
 }) {
-  const prepareStep = createNinaPrepareStep({ needsPageFetch, system });
+  const prepareStep = createNinaPrepareStep({ instructions, needsPageFetch });
 
   return prepareStep({
-    experimental_context: undefined,
+    initialInstructions: instructions,
+    initialMessages: messages,
+    instructions,
     messages,
     model: "google/gemini-3-flash",
+    responseMessages: [],
+    runtimeContext: {},
     stepNumber,
     steps: [],
+    toolsContext: {},
   } satisfies Parameters<NinaPrepareStep>[0]);
 }

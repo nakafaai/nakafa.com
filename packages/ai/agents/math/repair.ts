@@ -15,7 +15,10 @@ import {
 } from "ai";
 import { Effect, Option, Schema } from "effect";
 
-type MathRepairOptions = Parameters<ToolCallRepairFunction<ToolSet>>[0];
+type MathRepairOptions = Omit<
+  Parameters<ToolCallRepairFunction<ToolSet>>[0],
+  "system"
+>;
 
 const repairArgumentsSchema = Schema.Record({
   key: Schema.String,
@@ -42,8 +45,8 @@ function decodeOperation(input: string) {
 export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
   error,
   inputSchema,
+  instructions,
   modelId,
-  system,
   task,
   toolCall,
   tools,
@@ -134,7 +137,7 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
           gateway: gatewayProviderOptions,
           google: getFastModelProviderOptions(modelId),
         },
-        system,
+        instructions,
         timeout: backgroundGenerationTimeout,
       }),
     catch: (error) => error,

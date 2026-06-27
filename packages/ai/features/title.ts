@@ -47,7 +47,7 @@ export const generateTitle = Effect.fn("features.generateTitle")(function* ({
           gateway: gatewayProviderOptions,
           google: getFastModelProviderOptions(defaultModel),
         },
-        system: createPrompt({
+        instructions: createPrompt({
           taskContext: `
             # Title Task
 

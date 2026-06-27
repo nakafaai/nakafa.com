@@ -15,12 +15,13 @@ import {
 import type { MyMetadata, MyUIMessage } from "@repo/ai/types/message";
 import {
   type AgentStreamParameters,
+  isStepCount,
   type LanguageModelUsage,
   type ModelMessage,
   smoothStream,
-  stepCountIs,
   ToolLoopAgent,
   type ToolLoopAgentSettings,
+  toUIMessageStream,
   type UIMessageStreamWriter,
 } from "ai";
 import { Effect, Schema } from "effect";
@@ -105,21 +106,21 @@ export const runNinaAgentTurn = Effect.fn("nina.agent.turn")(function* ({
   };
   readonly user: NinaUser;
 }) {
-  const system = createNinaSystemPrompt({ page, runtime, user });
+  const instructions = createNinaSystemPrompt({ page, runtime, user });
   const agent = new ToolLoopAgent<never, NinaToolSet>({
     id: "nina",
-    instructions: system,
+    instructions,
     model: provider.languageModel(runtime.modelId),
     prepareStep: createNinaPrepareStep({
       needsPageFetch: page.needsFetch,
-      system,
+      instructions,
     }),
     experimental_repairToolCall: settings.experimental_repairToolCall,
     providerOptions: {
       gateway: gatewayProviderOptions,
       google: getModelProviderOptions(runtime.modelId),
     },
-    stopWhen: stepCountIs(MAX_ORCHESTRATOR_STEPS),
+    stopWhen: isStepCount(MAX_ORCHESTRATOR_STEPS),
     tools: settings.tools,
   });
   const streamTextResult = yield* Effect.tryPromise({
@@ -140,7 +141,7 @@ export const runNinaAgentTurn = Effect.fn("nina.agent.turn")(function* ({
   });
 
   stream.writer.merge(
-    streamTextResult.toUIMessageStream({
+    toUIMessageStream({
       messageMetadata: ({ part }) =>
         readNinaMessageMetadata({
           page,
@@ -154,6 +155,7 @@ export const runNinaAgentTurn = Effect.fn("nina.agent.turn")(function* ({
       },
       sendReasoning: true,
       sendStart: false,
+      stream: streamTextResult.stream,
     })
   );
 

@@ -176,7 +176,7 @@ export const providerCompatibleObjectSchema = <A, I>(
 /**
  * Converts an Effect schema into an AI SDK schema.
  *
- * AI SDK 6 can consume JSON Schema for tool inputs and outputs. Effect's
+ * AI SDK 7 can consume JSON Schema for tool inputs and outputs. Effect's
  * StandardSchema bridge validates values, but Effect 3.21 does not expose the
  * `~standard.jsonSchema` field that this repo's installed AI SDK reads for
  * model-facing tool metadata.

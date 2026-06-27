@@ -146,7 +146,7 @@ export const createNinaStreamResponse = Effect.fn("nina.stream.response")(
         scheduleAssistantFailure(error, "createUIMessageStream");
         return formatNinaStreamError({ error, logContext, turn });
       },
-      onFinish: ({
+      onEnd: ({
         finishReason,
         isAborted,
         messages: updatedMessages,
