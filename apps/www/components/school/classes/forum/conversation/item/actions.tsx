@@ -31,7 +31,7 @@ import type { ForumPost } from "@/components/school/classes/forum/conversation/d
  * Keeps post-level quick actions grouped together so reply and reaction updates
  * stay close to the post they mutate.
  */
-export const PostItemActions = ({ post }: { post: ForumPost }) => {
+export function PostItemActions({ post }: { post: ForumPost }) {
   const t = useTranslations("Common");
   const setForumReplyTarget = useForumSession(
     (state) => state.setForumReplyTarget
@@ -114,5 +114,4 @@ export const PostItemActions = ({ post }: { post: ForumPost }) => {
       </Tooltip>
     </ButtonGroup>
   );
-};
-PostItemActions.displayName = "PostItemActions";
+}

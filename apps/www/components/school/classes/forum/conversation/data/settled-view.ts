@@ -1,294 +1,20 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { VirtualizerHandle } from "virtua";
 import {
-  type ConversationRow,
-  FORUM_BOTTOM_THRESHOLD,
-} from "@/components/school/classes/forum/conversation/data/pages";
+  getConversationCenterThreshold,
+  getConversationPostTargetIndex,
+  getConversationRowCenter,
+  getConversationRowStart,
+  getConversationViewportCenter,
+  isConversationRowVisible,
+} from "@/components/school/classes/forum/conversation/data/geometry";
+import {
+  type ConversationGeometryHandle,
+  isConversationAtBottom,
+  isConversationAtTop,
+} from "@/components/school/classes/forum/conversation/data/metrics";
+import type { ConversationRow } from "@/components/school/classes/forum/conversation/data/pages";
 import type { ConversationView } from "@/components/school/classes/forum/conversation/data/view";
-
-type ConversationGeometryHandle = Pick<
-  VirtualizerHandle,
-  | "findItemIndex"
-  | "getItemOffset"
-  | "getItemSize"
-  | "scrollOffset"
-  | "scrollSize"
-  | "viewportSize"
->;
-
-/** Clamps one row index into the currently rendered transcript range. */
-function clampConversationIndex(index: number, itemCount: number) {
-  return Math.max(0, Math.min(itemCount - 1, index));
-}
-
-/** Returns the post id for post rows and ignores structural rows. */
-function getConversationPostId(row: ConversationRow | undefined) {
-  if (row?.type !== "post") {
-    return null;
-  }
-
-  return row.post._id;
-}
-
-/** Returns the absolute offset of the viewport center line. */
-function getConversationViewportCenter(handle: ConversationGeometryHandle) {
-  return handle.scrollOffset + handle.viewportSize / 2;
-}
-
-/** Returns one row's absolute start offset from the virtualizer cache. */
-function getConversationRowStart(
-  handle: ConversationGeometryHandle,
-  index: number
-) {
-  return handle.getItemOffset(index);
-}
-
-/** Returns one row's absolute end offset from the virtualizer cache. */
-function getConversationRowEnd(
-  handle: ConversationGeometryHandle,
-  index: number
-) {
-  return getConversationRowStart(handle, index) + handle.getItemSize(index);
-}
-
-/** Returns one row's absolute center offset from the virtualizer cache. */
-function getConversationRowCenter(
-  handle: ConversationGeometryHandle,
-  index: number
-) {
-  return (
-    (getConversationRowStart(handle, index) +
-      getConversationRowEnd(handle, index)) /
-    2
-  );
-}
-
-/** Returns whether one row intersects the current viewport. */
-function isConversationRowVisible({
-  handle,
-  index,
-}: {
-  handle: ConversationGeometryHandle;
-  index: number;
-}) {
-  const viewportStart = handle.scrollOffset;
-  const viewportEnd = viewportStart + handle.viewportSize;
-  const rowStart = getConversationRowStart(handle, index);
-  const rowEnd = getConversationRowEnd(handle, index);
-
-  return rowEnd > viewportStart && rowStart < viewportEnd;
-}
-
-/** Returns the nearest visible index bounds for the current viewport. */
-function getVisibleConversationIndexRange({
-  handle,
-  itemCount,
-}: {
-  handle: ConversationGeometryHandle;
-  itemCount: number;
-}) {
-  if (handle.viewportSize <= 0) {
-    return null;
-  }
-
-  if (itemCount === 0) {
-    return null;
-  }
-
-  const viewportStart = handle.scrollOffset;
-  const viewportEnd = viewportStart + handle.viewportSize;
-
-  return {
-    firstVisibleIndex: clampConversationIndex(
-      handle.findItemIndex(viewportStart),
-      itemCount
-    ),
-    lastVisibleIndex: clampConversationIndex(
-      handle.findItemIndex(viewportEnd),
-      itemCount
-    ),
-  };
-}
-
-/** Looks up the rendered row index for one post id. */
-function getConversationPostTargetIndex({
-  rowIndexByPostId,
-  postId,
-}: {
-  rowIndexByPostId: ReadonlyMap<Id<"schoolClassForumPosts">, number>;
-  postId: Id<"schoolClassForumPosts">;
-}) {
-  return rowIndexByPostId.get(postId);
-}
-
-/** Returns how far one row is from the viewport center line. */
-function getConversationDistanceToViewportCenter({
-  handle,
-  index,
-}: {
-  handle: ConversationGeometryHandle;
-  index: number;
-}) {
-  const viewportCenter = getConversationViewportCenter(handle);
-  const rowStart = getConversationRowStart(handle, index);
-  const rowEnd = getConversationRowEnd(handle, index);
-
-  if (rowStart <= viewportCenter && rowEnd >= viewportCenter) {
-    return 0;
-  }
-
-  if (rowEnd < viewportCenter) {
-    return viewportCenter - rowEnd;
-  }
-
-  return rowStart - viewportCenter;
-}
-
-/** Returns the viewport-center tolerance used by transcript post placement. */
-function getConversationCenterThreshold(viewportSize: number) {
-  return Math.max(32, Math.min(96, viewportSize * 0.12));
-}
-
-/** Returns the current bottom distance from the active virtualizer metrics. */
-export function getConversationBottomDistance(
-  handle: ConversationGeometryHandle
-) {
-  return Math.max(
-    0,
-    handle.scrollSize - handle.viewportSize - handle.scrollOffset
-  );
-}
-
-/** Returns stable viewport booleans after Virtua has measured its viewport. */
-export function getConversationViewportState(
-  handle: ConversationGeometryHandle
-) {
-  if (handle.viewportSize <= 0) {
-    return null;
-  }
-
-  const bottomDistance = getConversationBottomDistance(handle);
-
-  return {
-    hasOverflow:
-      handle.scrollSize - handle.viewportSize > FORUM_BOTTOM_THRESHOLD,
-    isAtBottom: bottomDistance <= FORUM_BOTTOM_THRESHOLD,
-  };
-}
-
-/** Returns the first visible post id inside the current transcript viewport. */
-export function getFirstVisibleConversationPostId({
-  handle,
-  rows,
-}: {
-  handle: ConversationGeometryHandle;
-  rows: readonly ConversationRow[];
-}) {
-  const range = getVisibleConversationIndexRange({
-    handle,
-    itemCount: rows.length,
-  });
-
-  if (!range) {
-    return null;
-  }
-
-  for (
-    let index = range.firstVisibleIndex;
-    index <= range.lastVisibleIndex;
-    index += 1
-  ) {
-    if (!isConversationRowVisible({ handle, index })) {
-      continue;
-    }
-
-    const postId = getConversationPostId(rows[index]);
-
-    if (postId) {
-      return postId;
-    }
-  }
-
-  return null;
-}
-
-/** Returns the last visible post id inside the current transcript viewport. */
-export function getLastVisibleConversationPostId({
-  handle,
-  rows,
-}: {
-  handle: ConversationGeometryHandle;
-  rows: readonly ConversationRow[];
-}) {
-  const range = getVisibleConversationIndexRange({
-    handle,
-    itemCount: rows.length,
-  });
-
-  if (!range) {
-    return null;
-  }
-
-  for (
-    let index = range.lastVisibleIndex;
-    index >= range.firstVisibleIndex;
-    index -= 1
-  ) {
-    if (!isConversationRowVisible({ handle, index })) {
-      continue;
-    }
-
-    const postId = getConversationPostId(rows[index]);
-
-    if (postId) {
-      return postId;
-    }
-  }
-
-  return null;
-}
-
-/** Returns the visible post id closest to the viewport center line. */
-export function getCenteredConversationPostId({
-  handle,
-  rows,
-}: {
-  handle: ConversationGeometryHandle;
-  rows: readonly ConversationRow[];
-}) {
-  const range = getVisibleConversationIndexRange({
-    handle,
-    itemCount: rows.length,
-  });
-
-  if (!range) {
-    return null;
-  }
-
-  let centeredPostId: Id<"schoolClassForumPosts"> | null = null;
-  let shortestDistance = Number.POSITIVE_INFINITY;
-
-  for (
-    let index = range.firstVisibleIndex;
-    index <= range.lastVisibleIndex;
-    index += 1
-  ) {
-    const postId = getConversationPostId(rows[index]);
-
-    if (!(postId && isConversationRowVisible({ handle, index }))) {
-      continue;
-    }
-
-    const distance = getConversationDistanceToViewportCenter({ handle, index });
-
-    if (distance < shortestDistance) {
-      centeredPostId = postId;
-      shortestDistance = distance;
-    }
-  }
-
-  return centeredPostId;
-}
+import { getCenteredConversationPostId } from "@/components/school/classes/forum/conversation/data/visible";
 
 /**
  * Captures the current semantic transcript view from the virtualizer metrics.
@@ -305,7 +31,7 @@ export function captureConversationView({
   handle: ConversationGeometryHandle;
   rows: readonly ConversationRow[];
 }) {
-  if (getConversationBottomDistance(handle) <= FORUM_BOTTOM_THRESHOLD) {
+  if (isConversationAtBottom(handle)) {
     return { kind: "bottom" } satisfies ConversationView;
   }
 
@@ -335,7 +61,7 @@ export function isConversationViewVisible({
   view: ConversationView;
 }) {
   if (view.kind === "bottom") {
-    return getConversationBottomDistance(handle) <= FORUM_BOTTOM_THRESHOLD;
+    return isConversationAtBottom(handle);
   }
 
   const targetIndex = getConversationPostTargetIndex({
@@ -369,7 +95,7 @@ export function isConversationViewCentered({
   view: ConversationView;
 }) {
   if (view.kind === "bottom") {
-    return getConversationBottomDistance(handle) <= FORUM_BOTTOM_THRESHOLD;
+    return isConversationAtBottom(handle);
   }
 
   const targetIndex = getConversationPostTargetIndex({
@@ -431,10 +157,10 @@ export function hasConversationViewSettledPlacement({
   const viewportCenter = getConversationViewportCenter(handle);
 
   if (targetCenter < viewportCenter) {
-    return handle.scrollOffset <= FORUM_BOTTOM_THRESHOLD;
+    return isConversationAtTop(handle);
   }
 
-  return getConversationBottomDistance(handle) <= FORUM_BOTTOM_THRESHOLD;
+  return isConversationAtBottom(handle);
 }
 
 /**

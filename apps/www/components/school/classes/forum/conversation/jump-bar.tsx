@@ -6,7 +6,7 @@ import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
 
 /** Renders the contextual jump actions for back and latest. */
-export const JumpBar = ({
+export function JumpBar({
   canGoBack,
   onBack,
   onLatest,
@@ -16,7 +16,7 @@ export const JumpBar = ({
   onBack: () => void;
   onLatest: () => void;
   visible: boolean;
-}) => {
+}) {
   const t = useTranslations("Common");
 
   return (
@@ -51,5 +51,4 @@ export const JumpBar = ({
       </div>
     </div>
   );
-};
-JumpBar.displayName = "JumpBar";
+}

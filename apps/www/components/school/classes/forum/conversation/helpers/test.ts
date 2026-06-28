@@ -4,8 +4,36 @@ import type {
   Forum,
   ForumPost,
 } from "@/components/school/classes/forum/conversation/data/entities";
+import type { ConversationRow } from "@/components/school/classes/forum/conversation/data/pages";
 
 export const conversationTestForumId = "forum_1" as Id<"schoolClassForums">;
+export const conversationTestFirstPost = createConversationTestPost({
+  postId: "post_1",
+  sequence: 1,
+});
+export const conversationTestSecondPost = createConversationTestPost({
+  postId: "post_2",
+  sequence: 2,
+});
+export const conversationTestRows = [
+  { type: "header" },
+  { type: "date", value: conversationTestFirstPost._creationTime },
+  { post: conversationTestFirstPost, type: "post" },
+  {
+    count: 2,
+    postId: conversationTestSecondPost._id,
+    status: "new",
+    type: "unread",
+  },
+  { post: conversationTestSecondPost, type: "post" },
+] satisfies ConversationRow[];
+export const conversationTestRowIndexByPostId = new Map<
+  Id<"schoolClassForumPosts">,
+  number
+>([
+  [conversationTestFirstPost._id, 2],
+  [conversationTestSecondPost._id, 4],
+]);
 
 /** Creates one readable forum-post fixture for conversation tests. */
 export function createConversationTestPost({
@@ -125,4 +153,30 @@ export function createConversationTestFindItemIndex(
 
     return lastMatchingIndex;
   };
+}
+
+/** Creates one row-backed `virtua` handle fixture for transcript tests. */
+export function createConversationTestRowsHandle({
+  offsets = conversationTestRows.map((_, index) => index * 100),
+  getItemOffset = (index: number) => offsets[index] ?? index * 100,
+  getItemSize = () => 100,
+  scrollOffset,
+  scrollSize = conversationTestRows.length * 100,
+  viewportSize = 200,
+}: {
+  offsets?: readonly number[];
+  getItemOffset?: (index: number) => number;
+  getItemSize?: (index: number) => number;
+  scrollOffset: number;
+  scrollSize?: number;
+  viewportSize?: number;
+}) {
+  return createConversationTestHandle({
+    findItemIndex: createConversationTestFindItemIndex(offsets),
+    getItemOffset,
+    getItemSize,
+    scrollOffset,
+    scrollSize,
+    viewportSize,
+  });
 }

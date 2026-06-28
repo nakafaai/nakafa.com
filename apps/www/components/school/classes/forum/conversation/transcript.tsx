@@ -8,7 +8,7 @@ import {
 } from "@/components/school/classes/forum/context/use-session";
 import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
 import { getConversationRowKey } from "@/components/school/classes/forum/conversation/data/pages";
-import { useHydratedTranscriptController } from "@/components/school/classes/forum/conversation/hooks/controller";
+import { useHydratedTranscriptController } from "@/components/school/classes/forum/conversation/hooks/use-transcript-controller";
 import { JumpBar } from "@/components/school/classes/forum/conversation/jump-bar";
 import { VirtualTranscriptRow } from "@/components/school/classes/forum/conversation/transcript-row";
 import type { ConversationScrollSnapshot } from "@/components/school/classes/forum/store/session";
@@ -26,7 +26,7 @@ import type { ConversationScrollSnapshot } from "@/components/school/classes/for
  * - virtua advanced chat story:
  *   https://github.com/inokawa/virtua/blob/main/stories/react/advanced/Chat.stories.tsx
  */
-export const ForumConversationTranscript = () => {
+export function ForumConversationTranscript() {
   const forumId = useData((state) => state.forumId);
   const isHydrated = useForumSession((state) => state.isHydrated);
   const forumSessionStore = useForumSessionStoreApi();
@@ -46,8 +46,7 @@ export const ForumConversationTranscript = () => {
       key={forumId}
     />
   );
-};
-ForumConversationTranscript.displayName = "ForumConversationTranscript";
+}
 
 /** Renders the stateful virtual transcript for one hydrated forum session. */
 function HydratedTranscript({

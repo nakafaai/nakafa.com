@@ -4,7 +4,7 @@ import { useLocale } from "next-intl";
 import { getLocale } from "@/lib/utils/date";
 
 /** Renders the calendar separator between transcript day groups. */
-export const ConversationDateSeparator = ({ value }: { value: number }) => {
+export function ConversationDateSeparator({ value }: { value: number }) {
   const locale = useLocale();
 
   return (
@@ -16,5 +16,4 @@ export const ConversationDateSeparator = ({ value }: { value: number }) => {
       <div className="h-px flex-1 bg-border" />
     </div>
   );
-};
-ConversationDateSeparator.displayName = "ConversationDateSeparator";
+}

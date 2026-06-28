@@ -1,57 +1,12 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { describe, expect, it } from "vitest";
-import type { ConversationRow } from "@/components/school/classes/forum/conversation/data/pages";
-import { createConversationScrollController } from "@/components/school/classes/forum/conversation/data/transcript-scroll";
+import { createConversationScrollController } from "@/components/school/classes/forum/conversation/data/scroll";
 import {
-  createConversationTestFindItemIndex,
-  createConversationTestHandle,
-  createConversationTestPost,
+  createConversationTestRowsHandle as createHandle,
+  conversationTestFirstPost as firstPost,
+  conversationTestRowIndexByPostId as rowIndexByPostId,
+  conversationTestRows as rows,
+  conversationTestSecondPost as secondPost,
 } from "@/components/school/classes/forum/conversation/helpers/test";
-
-const firstPost = createConversationTestPost({
-  postId: "post_1",
-  sequence: 1,
-});
-const secondPost = createConversationTestPost({
-  postId: "post_2",
-  sequence: 2,
-});
-const rows = [
-  { type: "header" },
-  { type: "date", value: firstPost._creationTime },
-  { post: firstPost, type: "post" },
-  { count: 2, postId: secondPost._id, status: "new", type: "unread" },
-  { post: secondPost, type: "post" },
-] satisfies ConversationRow[];
-const rowIndexByPostId = new Map<Id<"schoolClassForumPosts">, number>([
-  [firstPost._id, 2],
-  [secondPost._id, 4],
-]);
-
-function createHandle({
-  offsets = rows.map((_, index) => index * 100),
-  getItemOffset = (index: number) => offsets[index] ?? index * 100,
-  getItemSize = () => 100,
-  scrollOffset,
-  scrollSize = rows.length * 100,
-  viewportSize = 200,
-}: {
-  offsets?: readonly number[];
-  getItemOffset?: (index: number) => number;
-  getItemSize?: (index: number) => number;
-  scrollOffset: number;
-  scrollSize?: number;
-  viewportSize?: number;
-}) {
-  return createConversationTestHandle({
-    findItemIndex: createConversationTestFindItemIndex(offsets),
-    getItemOffset,
-    getItemSize,
-    scrollOffset,
-    scrollSize,
-    viewportSize,
-  });
-}
 
 function createController({
   handle = createHandle({
@@ -61,10 +16,10 @@ function createController({
   rowsOverride = rows,
   rowIndexByPostIdOverride = rowIndexByPostId,
 }: {
-  handle?: ReturnType<typeof createConversationTestHandle> | null;
+  handle?: ReturnType<typeof createHandle> | null;
   prefersReducedMotion?: boolean;
-  rowIndexByPostIdOverride?: ReadonlyMap<Id<"schoolClassForumPosts">, number>;
-  rowsOverride?: readonly ConversationRow[];
+  rowIndexByPostIdOverride?: typeof rowIndexByPostId;
+  rowsOverride?: typeof rows;
 } = {}) {
   return createConversationScrollController({
     handle: handle?.handle ?? null,
@@ -74,7 +29,7 @@ function createController({
   });
 }
 
-describe("conversation/data/transcript-scroll", () => {
+describe("conversation/data/scroll", () => {
   it("captures null when no virtualizer handle is available", () => {
     expect(
       createController({

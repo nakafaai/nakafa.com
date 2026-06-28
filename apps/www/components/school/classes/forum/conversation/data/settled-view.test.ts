@@ -1,312 +1,67 @@
 import { describe, expect, it } from "vitest";
-import type { ConversationRow } from "@/components/school/classes/forum/conversation/data/pages";
 import {
   captureConversationView,
-  getCenteredConversationPostId,
-  getConversationBottomDistance,
-  getConversationViewportState,
-  getFirstVisibleConversationPostId,
-  getLastVisibleConversationPostId,
   hasConversationViewReached,
   hasConversationViewSettledPlacement,
   isConversationViewCentered,
   isConversationViewVisible,
 } from "@/components/school/classes/forum/conversation/data/settled-view";
 import {
-  createConversationTestFindItemIndex,
-  createConversationTestHandle,
-  createConversationTestPost,
+  createConversationTestRowsHandle as createHandle,
+  conversationTestFirstPost as firstPost,
+  conversationTestRowIndexByPostId as rowIndexByPostId,
+  conversationTestRows as rows,
+  conversationTestSecondPost as secondPost,
 } from "@/components/school/classes/forum/conversation/helpers/test";
 
-const firstPost = createConversationTestPost({
-  postId: "post_1",
-  sequence: 1,
-});
-const secondPost = createConversationTestPost({
-  postId: "post_2",
-  sequence: 2,
-});
-const rows = [
-  { type: "header" },
-  { type: "date", value: firstPost._creationTime },
-  { post: firstPost, type: "post" },
-  { count: 2, postId: secondPost._id, status: "new", type: "unread" },
-  { post: secondPost, type: "post" },
-] satisfies ConversationRow[];
-const rowIndexByPostId = new Map([
-  [firstPost._id, 2],
-  [secondPost._id, 4],
-]);
-
-function createHandle({
-  offsets,
-  getItemOffset = (index: number) => index * 100,
-  getItemSize = () => 100,
-  scrollOffset,
-  scrollSize = rows.length * 100,
-  viewportSize = 200,
-}: {
-  offsets?: readonly number[];
-  getItemOffset?: (index: number) => number;
-  getItemSize?: (index: number) => number;
-  scrollOffset: number;
-  scrollSize?: number;
-  viewportSize?: number;
-}) {
-  return createConversationTestHandle({
-    findItemIndex: createConversationTestFindItemIndex(
-      offsets ?? rows.map((_, index) => index * 100)
-    ),
-    getItemOffset,
-    getItemSize,
-    scrollOffset,
-    scrollSize,
-    viewportSize,
-  }).handle;
-}
-
 describe("conversation/data/settled-view", () => {
-  it("returns the current virtual bottom distance", () => {
-    expect(
-      getConversationBottomDistance(
-        createHandle({
-          scrollOffset: 300,
-        })
-      )
-    ).toBe(0);
-
-    expect(
-      getConversationBottomDistance(
-        createHandle({
-          scrollOffset: 288,
-        })
-      )
-    ).toBe(12);
-  });
-
-  it("waits for a measured viewport before deriving jump-bar state", () => {
-    expect(
-      getConversationViewportState(
-        createHandle({
-          scrollOffset: 0,
-          scrollSize: 300,
-          viewportSize: 0,
-        })
-      )
-    ).toBeNull();
-  });
-
-  it("derives jump-bar state from measured virtualizer metrics", () => {
-    expect(
-      getConversationViewportState(
-        createHandle({
-          scrollOffset: 0,
-          scrollSize: 300,
-          viewportSize: 500,
-        })
-      )
-    ).toEqual({
-      hasOverflow: false,
-      isAtBottom: true,
-    });
-
-    expect(
-      getConversationViewportState(
-        createHandle({
-          scrollOffset: 100,
-          scrollSize: 800,
-          viewportSize: 500,
-        })
-      )
-    ).toEqual({
-      hasOverflow: true,
-      isAtBottom: false,
-    });
-  });
-
   it("captures bottom when the transcript is already settled at the latest edge", () => {
     expect(
       captureConversationView({
-        handle: createHandle({
-          scrollOffset: 300,
-        }),
+        handle: createHandle({ scrollOffset: 300 }).handle,
         rows,
       })
     ).toEqual({ kind: "bottom" });
   });
 
   it("captures the visible post closest to the viewport center", () => {
-    const handle = createHandle({
-      offsets: [0, 60, 120, 150, 170],
-      getItemOffset: (index) => [0, 60, 120, 150, 170][index] ?? index * 100,
-      getItemSize: (index) => [60, 60, 30, 20, 120][index] ?? 100,
-      scrollOffset: 80,
-    });
-
     expect(
       captureConversationView({
-        handle,
+        handle: createHandle({
+          offsets: [0, 60, 120, 150, 170],
+          getItemOffset: (index) =>
+            [0, 60, 120, 150, 170][index] ?? index * 100,
+          getItemSize: (index) => [60, 60, 30, 20, 120][index] ?? 100,
+          scrollOffset: 80,
+        }).handle,
         rows,
       })
     ).toEqual({
       kind: "post",
       postId: secondPost._id,
     });
-    expect(
-      getCenteredConversationPostId({
-        handle,
-        rows,
-      })
-    ).toBe(secondPost._id);
-    expect(
-      getFirstVisibleConversationPostId({
-        handle,
-        rows,
-      })
-    ).toBe(firstPost._id);
-    expect(
-      getLastVisibleConversationPostId({
-        handle,
-        rows,
-      })
-    ).toBe(secondPost._id);
-  });
-
-  it("keeps the closest visible post when a later candidate is farther away", () => {
-    const handle = createHandle({
-      offsets: [0, 60, 120, 180, 240],
-      getItemOffset: (index) => [0, 60, 120, 180, 240][index] ?? index * 100,
-      getItemSize: (index) => [60, 60, 80, 40, 60][index] ?? 100,
-      scrollOffset: 100,
-    });
-
-    expect(
-      getCenteredConversationPostId({
-        handle,
-        rows,
-      })
-    ).toBe(firstPost._id);
-  });
-
-  it("chooses the visible post below the center line when it is closer", () => {
-    const handle = createHandle({
-      offsets: [0, 60, 80, 120, 170],
-      getItemOffset: (index) => [0, 60, 80, 120, 170][index] ?? index * 100,
-      getItemSize: (index) => [60, 20, 40, 40, 40][index] ?? 100,
-      scrollOffset: 100,
-      viewportSize: 100,
-    });
-
-    expect(
-      getCenteredConversationPostId({
-        handle,
-        rows,
-      })
-    ).toBe(secondPost._id);
   });
 
   it("returns null when no visible post row exists in the current range", () => {
-    const handle = createHandle({
-      scrollOffset: 0,
-      viewportSize: 90,
-    });
-
     expect(
       captureConversationView({
-        handle,
+        handle: createHandle({ scrollOffset: 0, viewportSize: 90 }).handle,
         rows: rows.slice(0, 2),
       })
     ).toBeNull();
-    expect(
-      getFirstVisibleConversationPostId({
-        handle,
-        rows: rows.slice(0, 2),
-      })
-    ).toBeNull();
-    expect(
-      getLastVisibleConversationPostId({
-        handle,
-        rows: rows.slice(0, 2),
-      })
-    ).toBeNull();
-    expect(
-      getLastVisibleConversationPostId({
-        handle: createHandle({
-          scrollOffset: 0,
-          viewportSize: 0,
-        }),
-        rows,
-      })
-    ).toBeNull();
-    expect(
-      getCenteredConversationPostId({
-        handle: createHandle({
-          scrollOffset: 0,
-          viewportSize: 0,
-        }),
-        rows,
-      })
-    ).toBeNull();
-    expect(
-      getFirstVisibleConversationPostId({
-        handle: createHandle({
-          scrollOffset: 0,
-        }),
-        rows: [],
-      })
-    ).toBeNull();
-  });
-
-  it("skips invisible trailing rows when resolving the last visible post", () => {
-    expect(
-      getLastVisibleConversationPostId({
-        handle: createHandle({
-          offsets: [0, 100, 200, 260, 350],
-          getItemOffset: (index) =>
-            [0, 100, 200, 260, 350][index] ?? index * 100,
-          getItemSize: (index) => [100, 100, 60, 90, 100][index] ?? 100,
-          scrollOffset: 100,
-          viewportSize: 250,
-          scrollSize: 450,
-        }),
-        rows,
-      })
-    ).toBe(firstPost._id);
-  });
-
-  it("skips invisible leading rows when resolving the first visible post", () => {
-    expect(
-      getFirstVisibleConversationPostId({
-        handle: createHandle({
-          offsets: [0, 100, 200, 260, 350],
-          getItemOffset: (index) =>
-            [0, 100, 200, 260, 350][index] ?? index * 100,
-          getItemSize: (index) => [100, 50, 60, 90, 100][index] ?? 100,
-          scrollOffset: 150,
-          viewportSize: 250,
-          scrollSize: 450,
-        }),
-        rows,
-      })
-    ).toBe(firstPost._id);
   });
 
   it("treats a post target as reached once it becomes visible or passes above the viewport", () => {
     expect(
       hasConversationViewReached({
-        handle: createHandle({
-          scrollOffset: 90,
-        }),
+        handle: createHandle({ scrollOffset: 90 }).handle,
         rowIndexByPostId,
         view: { kind: "post", postId: firstPost._id },
       })
     ).toBe(true);
-
     expect(
       hasConversationViewReached({
-        handle: createHandle({
-          scrollOffset: 350,
-        }),
+        handle: createHandle({ scrollOffset: 350 }).handle,
         rowIndexByPostId,
         view: { kind: "post", postId: firstPost._id },
       })
@@ -316,29 +71,21 @@ describe("conversation/data/settled-view", () => {
   it("returns false when the target post is unknown or still below the viewport", () => {
     expect(
       hasConversationViewReached({
-        handle: createHandle({
-          scrollOffset: 0,
-        }),
+        handle: createHandle({ scrollOffset: 0 }).handle,
         rowIndexByPostId: new Map(),
         view: { kind: "post", postId: firstPost._id },
       })
     ).toBe(false);
-
     expect(
       hasConversationViewReached({
-        handle: createHandle({
-          scrollOffset: 0,
-        }),
+        handle: createHandle({ scrollOffset: 0 }).handle,
         rowIndexByPostId,
         view: { kind: "post", postId: secondPost._id },
       })
     ).toBe(false);
-
     expect(
       hasConversationViewReached({
-        handle: createHandle({
-          scrollOffset: 120,
-        }),
+        handle: createHandle({ scrollOffset: 120 }).handle,
         rowIndexByPostId,
         view: { kind: "bottom" },
       })
@@ -352,7 +99,7 @@ describe("conversation/data/settled-view", () => {
       getItemSize: (index) => [100, 20, 120, 100, 100][index] ?? 100,
       scrollOffset: 100,
       viewportSize: 300,
-    });
+    }).handle;
 
     expect(
       isConversationViewVisible({
@@ -377,7 +124,7 @@ describe("conversation/data/settled-view", () => {
       getItemSize: (index) => [100, 80, 120, 60, 100][index] ?? 100,
       scrollOffset: 80,
       viewportSize: 320,
-    });
+    }).handle;
 
     expect(
       isConversationViewCentered({
@@ -402,14 +149,14 @@ describe("conversation/data/settled-view", () => {
       getItemSize: (index) => [10, 10, 100, 100, 100][index] ?? 100,
       scrollOffset: 0,
       scrollSize: 340,
-    });
+    }).handle;
     const bottomClampedHandle = createHandle({
       offsets: [0, 100, 200, 300, 390],
       getItemOffset: (index) => [0, 100, 200, 300, 390][index] ?? index * 100,
       getItemSize: (index) => [100, 100, 100, 80, 100][index] ?? 100,
       scrollOffset: 300,
       scrollSize: 490,
-    });
+    }).handle;
 
     expect(
       hasConversationViewSettledPlacement({
@@ -427,30 +174,21 @@ describe("conversation/data/settled-view", () => {
     ).toBe(true);
   });
 
-  it("returns false for offscreen or unknown post placements", () => {
+  it("returns false for offscreen, unknown, or off-center placements", () => {
     expect(
       hasConversationViewSettledPlacement({
-        handle: createHandle({
-          scrollOffset: 0,
-        }),
+        handle: createHandle({ scrollOffset: 0 }).handle,
         rowIndexByPostId: new Map(),
         view: { kind: "post", postId: firstPost._id },
       })
     ).toBe(false);
-
     expect(
       hasConversationViewSettledPlacement({
-        handle: createHandle({
-          scrollOffset: 0,
-          viewportSize: 80,
-        }),
+        handle: createHandle({ scrollOffset: 0, viewportSize: 80 }).handle,
         rowIndexByPostId,
         view: { kind: "post", postId: secondPost._id },
       })
     ).toBe(false);
-  });
-
-  it("returns false for a visible post that is still off-center in the middle of the transcript", () => {
     expect(
       hasConversationViewSettledPlacement({
         handle: createHandle({
@@ -460,17 +198,15 @@ describe("conversation/data/settled-view", () => {
           getItemSize: (index) => [100, 40, 60, 80, 100][index] ?? 100,
           scrollOffset: 100,
           viewportSize: 220,
-        }),
+        }).handle,
         rowIndexByPostId,
         view: { kind: "post", postId: firstPost._id },
       })
     ).toBe(false);
   });
 
-  it("treats a bottom view as visible, centered, and settled when the latest edge is reached", () => {
-    const handle = createHandle({
-      scrollOffset: 300,
-    });
+  it("resolves bottom views from the latest edge", () => {
+    const handle = createHandle({ scrollOffset: 300 }).handle;
 
     expect(
       isConversationViewVisible({
@@ -493,14 +229,9 @@ describe("conversation/data/settled-view", () => {
         view: { kind: "bottom" },
       })
     ).toBe(true);
-  });
-
-  it("does not treat a bottom view as settled before the latest edge is reached", () => {
     expect(
       hasConversationViewSettledPlacement({
-        handle: createHandle({
-          scrollOffset: 120,
-        }),
+        handle: createHandle({ scrollOffset: 120 }).handle,
         rowIndexByPostId,
         view: { kind: "bottom" },
       })

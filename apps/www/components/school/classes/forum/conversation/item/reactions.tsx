@@ -11,7 +11,7 @@ import { useTransition } from "react";
 import type { ForumPost } from "@/components/school/classes/forum/conversation/data/entities";
 
 /** Renders the current reaction chips and toggles for one post. */
-export const PostReactions = ({ post }: { post: ForumPost }) => {
+export function PostReactions({ post }: { post: ForumPost }) {
   const t = useTranslations("Common");
   const [isPending, startTransition] = useTransition();
   const toggleReaction = useMutation(
@@ -71,5 +71,4 @@ export const PostReactions = ({ post }: { post: ForumPost }) => {
       })}
     </div>
   );
-};
-PostReactions.displayName = "PostReactions";
+}

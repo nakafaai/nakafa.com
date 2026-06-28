@@ -7,7 +7,7 @@ import type { Forum } from "@/components/school/classes/forum/conversation/data/
 import { createViewportStore } from "@/components/school/classes/forum/conversation/store/viewport";
 
 /** Wires immutable forum data and UI-intent state into selector contexts. */
-export const ConversationProvider = ({
+export function ConversationProvider({
   children,
   currentUserId,
   forum,
@@ -17,7 +17,7 @@ export const ConversationProvider = ({
   currentUserId: Id<"users">;
   forum: Forum | undefined;
   forumId: Id<"schoolClassForums">;
-}) => {
+}) {
   const [viewportStoreState, setViewportStoreState] = useState(() => ({
     forumId,
     store: createViewportStore(),
@@ -57,5 +57,4 @@ export const ConversationProvider = ({
       </ViewportProvider>
     </DataProvider>
   );
-};
-ConversationProvider.displayName = "ConversationProvider";
+}

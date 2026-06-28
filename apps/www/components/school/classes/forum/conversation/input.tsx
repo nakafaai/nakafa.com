@@ -31,7 +31,7 @@ import { ReplyIndicator } from "@/components/school/classes/forum/conversation/i
 import { submitForumPost } from "@/components/school/classes/forum/conversation/input/submit";
 
 /** Handles forum post submission, uploads, and reply cleanup for the transcript. */
-export const ForumPostInput = () => {
+export function ForumPostInput() {
   const t = useTranslations("School.Classes");
   const { acknowledgeUnreadCue, goToLatest } = useControls();
   const forumId = useData((state) => state.forumId);
@@ -264,4 +264,4 @@ export const ForumPostInput = () => {
       </form.Field>
     </form>
   );
-};
+}

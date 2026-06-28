@@ -5,7 +5,7 @@ import { useControls } from "@/components/school/classes/forum/conversation/cont
 import type { ForumPost } from "@/components/school/classes/forum/conversation/data/entities";
 
 /** Renders one lightweight reply preview that can jump to the replied message. */
-export const PostReplyIndicator = ({ post }: { post: ForumPost }) => {
+export function PostReplyIndicator({ post }: { post: ForumPost }) {
   const { parentId, replyToBody, replyToUser } = post;
   const { goToPost } = useControls();
 
@@ -28,5 +28,4 @@ export const PostReplyIndicator = ({ post }: { post: ForumPost }) => {
       </Activity>
     </button>
   );
-};
-PostReplyIndicator.displayName = "PostReplyIndicator";
+}

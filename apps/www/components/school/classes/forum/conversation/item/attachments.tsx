@@ -8,11 +8,11 @@ import Image from "next/image";
  * Splits forum attachments into image previews and file links while tolerating
  * storage URLs that are temporarily unavailable.
  */
-export const PostAttachments = ({
+export function PostAttachments({
   attachments,
 }: {
   attachments: PostAttachment[];
-}) => {
+}) {
   if (attachments.length === 0) {
     return null;
   }
@@ -78,5 +78,4 @@ export const PostAttachments = ({
       </div>
     </div>
   );
-};
-PostAttachments.displayName = "PostAttachments";
+}

@@ -1,51 +1,38 @@
 import { describe, expect, it } from "vitest";
 import {
-  createConversationTestFindItemIndex,
   createConversationTestForum,
   createConversationTestHandle,
   createConversationTestPost,
+  createConversationTestRowsHandle,
 } from "@/components/school/classes/forum/conversation/helpers/test";
 
 describe("conversation/helpers/test", () => {
-  it("builds readable post and forum fixtures", () => {
-    const post = createConversationTestPost({
-      postId: "post_1",
-      sequence: 1,
-    });
-    const forum = createConversationTestForum();
-
-    expect(post._id).toBe("post_1");
-    expect(post.forumId).toBe(forum._id);
-    expect(forum.postCount).toBe(3);
+  it("creates default forum and post fixtures", () => {
+    expect(createConversationTestForum().title).toBe("Forum");
+    expect(
+      createConversationTestPost({
+        postId: "post_custom",
+        sequence: 7,
+      }).body
+    ).toBe("post-7");
   });
 
-  it("creates one configurable virtualizer handle with callable scroll spies", () => {
-    const handle = createConversationTestHandle({
-      scrollOffset: 120,
+  it("creates a virtualizer handle with deterministic default geometry", () => {
+    const { handle } = createConversationTestHandle({
+      scrollOffset: 250,
     });
 
-    expect(handle.handle.getItemOffset(3)).toBe(300);
-    expect(handle.handle.getItemSize(3)).toBe(100);
-    expect(handle.handle.findItemIndex(450)).toBe(4);
-
-    handle.handle.scrollTo(240);
-    handle.handle.scrollBy(40);
-    handle.handle.scrollToIndex(6);
-
-    expect(handle.scrollTo).toHaveBeenCalledWith(240);
-    expect(handle.scrollBy).toHaveBeenCalledWith(40);
-    expect(handle.scrollToIndex).toHaveBeenCalledWith(6);
+    expect(handle.findItemIndex(250)).toBe(2);
+    expect(handle.getItemOffset(3)).toBe(300);
+    expect(handle.getItemSize(3)).toBe(100);
   });
 
-  it("creates deterministic item-index lookup from item offsets", () => {
-    const findItemIndex = createConversationTestFindItemIndex([
-      0, 60, 120, 220,
-    ]);
+  it("falls back to indexed offsets for row-backed handles", () => {
+    const { handle } = createConversationTestRowsHandle({
+      offsets: [0],
+      scrollOffset: 0,
+    });
 
-    expect(findItemIndex(-20)).toBe(0);
-    expect(findItemIndex(0)).toBe(0);
-    expect(findItemIndex(119)).toBe(1);
-    expect(findItemIndex(220)).toBe(3);
-    expect(findItemIndex(400)).toBe(3);
+    expect(handle.getItemOffset(2)).toBe(200);
   });
 });

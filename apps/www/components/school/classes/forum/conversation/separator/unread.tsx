@@ -3,13 +3,13 @@ import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
 
 /** Renders the unread marker between the last read post and the next unread post. */
-export const ConversationUnreadSeparator = ({
+export function ConversationUnreadSeparator({
   count,
   status,
 }: {
   count: number;
   status: "history" | "new";
-}) => {
+}) {
   const t = useTranslations("Common");
   const isHistory = status === "history";
 
@@ -35,5 +35,4 @@ export const ConversationUnreadSeparator = ({
       />
     </div>
   );
-};
-ConversationUnreadSeparator.displayName = "ConversationUnreadSeparator";
+}

@@ -39,7 +39,7 @@ import { getLocale } from "@/lib/utils/date";
 import { getInitialName } from "@/lib/utils/helper";
 
 /** Renders the forum starter card at the top of the transcript. */
-export const ForumHeader = () => {
+export function ForumHeader() {
   const t = useTranslations("Common");
   const locale = useLocale();
   const forum = useData((state) => state.forum);
@@ -85,10 +85,9 @@ export const ForumHeader = () => {
       </div>
     </div>
   );
-};
-ForumHeader.displayName = "ForumHeader";
+}
 
-const ForumReactions = () => {
+function ForumReactions() {
   const t = useTranslations("Common");
   const forum = useData((state) => state.forum);
 
@@ -152,10 +151,9 @@ const ForumReactions = () => {
       })}
     </div>
   );
-};
-ForumReactions.displayName = "ForumReactions";
+}
 
-const ForumActions = () => {
+function ForumActions() {
   const t = useTranslations("Common");
   const forum = useData((state) => state.forum);
 
@@ -217,5 +215,4 @@ const ForumActions = () => {
       </PopoverContent>
     </Popover>
   );
-};
-ForumActions.displayName = "ForumActions";
+}

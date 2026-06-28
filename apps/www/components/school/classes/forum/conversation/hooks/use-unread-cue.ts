@@ -16,7 +16,7 @@ import {
  * - https://react.dev/learn/referencing-values-with-refs
  * - https://react.dev/learn/state-as-a-snapshot
  */
-export function useConversationUnreadCue({
+export function useUnreadCue({
   isPending,
   posts,
 }: {

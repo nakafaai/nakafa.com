@@ -2,11 +2,11 @@ import { useData } from "@/components/school/classes/forum/conversation/context/
 import type { ConversationRow } from "@/components/school/classes/forum/conversation/data/pages";
 import { ForumHeader } from "@/components/school/classes/forum/conversation/header";
 import { ForumPostItem } from "@/components/school/classes/forum/conversation/item";
-import { ConversationDateSeparator } from "@/components/school/classes/forum/conversation/seperators/date";
-import { ConversationUnreadSeparator } from "@/components/school/classes/forum/conversation/seperators/unread";
+import { ConversationDateSeparator } from "@/components/school/classes/forum/conversation/separator/date";
+import { ConversationUnreadSeparator } from "@/components/school/classes/forum/conversation/separator/unread";
 
 /** Render one transcript row while keeping author grouping logic in one place. */
-export const TranscriptRow = ({
+export function TranscriptRow({
   row,
   previousRow,
   nextRow,
@@ -14,7 +14,7 @@ export const TranscriptRow = ({
   row: ConversationRow;
   previousRow?: ConversationRow;
   nextRow?: ConversationRow;
-}) => {
+}) {
   const forum = useData((state) => state.forum);
 
   if (row.type === "header") {
@@ -44,11 +44,10 @@ export const TranscriptRow = ({
       post={row.post}
     />
   );
-};
-TranscriptRow.displayName = "TranscriptRow";
+}
 
 /** Adapts one virtualized row index back into the grouped transcript row shape. */
-export const VirtualTranscriptRow = ({
+export function VirtualTranscriptRow({
   index,
   row,
   rows,
@@ -56,11 +55,12 @@ export const VirtualTranscriptRow = ({
   index: number;
   row: ConversationRow;
   rows: readonly ConversationRow[];
-}) => (
-  <TranscriptRow
-    nextRow={rows[index + 1]}
-    previousRow={rows[index - 1]}
-    row={row}
-  />
-);
-VirtualTranscriptRow.displayName = "VirtualTranscriptRow";
+}) {
+  return (
+    <TranscriptRow
+      nextRow={rows[index + 1]}
+      previousRow={rows[index - 1]}
+      row={row}
+    />
+  );
+}

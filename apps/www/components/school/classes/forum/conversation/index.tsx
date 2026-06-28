@@ -8,7 +8,7 @@ import { ForumPostInput } from "@/components/school/classes/forum/conversation/i
 import { ForumConversationViewport } from "@/components/school/classes/forum/conversation/viewport";
 
 /** Renders the forum conversation shell around the extracted controller state. */
-export const ForumPostConversation = ({
+export function ForumPostConversation({
   forum,
   forumId,
   currentUserId,
@@ -16,23 +16,25 @@ export const ForumPostConversation = ({
   forum: Forum | undefined;
   forumId: Id<"schoolClassForums">;
   currentUserId: Id<"users">;
-}) => (
-  <ConversationProvider
-    currentUserId={currentUserId}
-    forum={forum}
-    forumId={forumId}
-  >
-    <ConversationBody />
-  </ConversationProvider>
-);
-ForumPostConversation.displayName = "ForumPostConversation";
+}) {
+  return (
+    <ConversationProvider
+      currentUserId={currentUserId}
+      forum={forum}
+      forumId={forumId}
+    >
+      <ConversationBody />
+    </ConversationProvider>
+  );
+}
 
-const ConversationBody = () => (
-  <div className="flex size-full flex-col overflow-hidden">
-    <div className="relative min-h-0 flex-1 overflow-hidden">
-      <ForumConversationViewport />
+function ConversationBody() {
+  return (
+    <div className="flex size-full flex-col overflow-hidden">
+      <div className="relative min-h-0 flex-1 overflow-hidden">
+        <ForumConversationViewport />
+      </div>
+      <ForumPostInput />
     </div>
-    <ForumPostInput />
-  </div>
-);
-ConversationBody.displayName = "ConversationBody";
+  );
+}

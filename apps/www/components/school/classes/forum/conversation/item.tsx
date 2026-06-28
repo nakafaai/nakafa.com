@@ -20,7 +20,7 @@ import { getLocale } from "@/lib/utils/date";
 import { getInitialName } from "@/lib/utils/helper";
 
 /** Renders one forum post row with reply, attachment, and reaction controls. */
-export const ForumPostItem = ({
+export function ForumPostItem({
   post,
   isFirstInGroup,
   isLastInGroup,
@@ -28,7 +28,7 @@ export const ForumPostItem = ({
   post: ForumPost;
   isFirstInGroup: boolean;
   isLastInGroup: boolean;
-}) => {
+}) {
   const t = useTranslations("Common");
   const locale = useLocale();
   const currentUserId = useData((state) => state.currentUserId);
@@ -121,5 +121,4 @@ export const ForumPostItem = ({
       </div>
     </div>
   );
-};
-ForumPostItem.displayName = "ForumPostItem";
+}
