@@ -2,6 +2,7 @@ import { captureServerException } from "@repo/analytics/posthog/server";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { fetchQuery } from "convex/nextjs";
+import { Effect } from "effect";
 import type { Metadata } from "next";
 import { cache, Suspense, use } from "react";
 import { AiChatPage } from "@/components/ai/chat-page";
@@ -26,25 +27,37 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id } = await params;
   const defaultMetadata = {};
-  // Use try-catch to handle errors gracefully when title is not found
-  try {
-    const title = await getChatTitle(id as Id<"chats">);
-    if (!title) {
-      return defaultMetadata;
-    }
-    return {
-      title: {
-        absolute: title,
-      },
-    };
-  } catch (error) {
-    await captureServerException(error, undefined, {
-      chat_id: id,
-      source: "chat-page-metadata",
-    });
+  const title = await Effect.runPromise(
+    Effect.tryPromise({
+      try: () => getChatTitle(id as Id<"chats">),
+      catch: (error) => error,
+    }).pipe(
+      Effect.catchAll((error) =>
+        Effect.gen(function* () {
+          yield* Effect.tryPromise({
+            try: () =>
+              captureServerException(error, undefined, {
+                chat_id: id,
+                source: "chat-page-metadata",
+              }),
+            catch: (cause) => cause,
+          }).pipe(Effect.ignore);
 
+          return null;
+        })
+      )
+    )
+  );
+
+  if (!title) {
     return defaultMetadata;
   }
+
+  return {
+    title: {
+      absolute: title,
+    },
+  };
 }
 
 /** Renders the chat route with a local Suspense boundary for runtime params. */

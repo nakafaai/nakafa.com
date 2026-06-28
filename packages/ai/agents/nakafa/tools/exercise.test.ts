@@ -1,12 +1,22 @@
+import { Nakafa } from "@repo/ai/agents/nakafa/service";
 import { exercise } from "@repo/ai/agents/nakafa/tools/exercise";
-import { createWriter } from "@repo/ai/agents/nakafa/tools/test";
+import {
+  createNakafaTestService,
+  createWriter,
+} from "@repo/ai/agents/nakafa/tools/test";
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
-import { Nakafa } from "@repo/contents/_lib/agent/service";
+import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
+import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
-const EXERCISE_CONTENT_ID =
-  "en/exercises/high-school/snbt/general-knowledge/try-out/2026/set-2";
+const EXERCISE_CONTENT_ID = NakafaAgentContentRefInputSchema.make(
+  readNakafaContentRefFixture(
+    "en",
+    "material/practice/assessment/snbt/general-knowledge/try-out-2026/set-2",
+    "material"
+  ).content_id
+);
 
 describe("nakafa exercise tool", () => {
   it("writes loading and done parts for exercise sets", async () => {
@@ -16,7 +26,7 @@ describe("nakafa exercise tool", () => {
         input: { content_ref: EXERCISE_CONTENT_ID },
         toolCallId: "exercise-1",
         writer,
-      }).pipe(Effect.provide(Nakafa.Default))
+      }).pipe(Effect.provideService(Nakafa, createNakafaTestService()))
     );
 
     expect(output).toContain("# Nakafa Exercises");
@@ -38,7 +48,7 @@ describe("nakafa exercise tool", () => {
         input: { content_ref: EXERCISE_CONTENT_ID, exercise_number: 1 },
         toolCallId: "exercise-single",
         writer,
-      }).pipe(Effect.provide(Nakafa.Default))
+      }).pipe(Effect.provideService(Nakafa, createNakafaTestService()))
     );
 
     expect(output).toContain("- Exercise number: 1");
@@ -63,7 +73,7 @@ describe("nakafa exercise tool", () => {
         input: { content_ref: EXERCISE_CONTENT_ID, exercise_number: 99_999 },
         toolCallId: "exercise-2",
         writer,
-      }).pipe(Effect.provide(Nakafa.Default))
+      }).pipe(Effect.provideService(Nakafa, createNakafaTestService()))
     );
 
     expect(output).toBe("Nakafa exercise content was not found.");

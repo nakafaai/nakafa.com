@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import type { TailwindConfig } from "react-email";
 import { pixelBasedPreset, Tailwind as ReactEmailTailwind } from "react-email";
 
-const config: TailwindConfig = {
+const tailwindConfig = {
   presets: [pixelBasedPreset],
   theme: {
     extend: {
@@ -64,10 +64,11 @@ const config: TailwindConfig = {
       },
     },
   },
-};
+} satisfies TailwindConfig;
 
-export function EmailTailwind({ children }: { children: ReactNode }) {
-  return <ReactEmailTailwind config={config}>{children}</ReactEmailTailwind>;
+/** Applies Nakafa's shared React Email Tailwind theme. */
+export function Tailwind({ children }: { children: ReactNode }) {
+  return (
+    <ReactEmailTailwind config={tailwindConfig}>{children}</ReactEmailTailwind>
+  );
 }
-
-export { config, EmailTailwind as Tailwind };

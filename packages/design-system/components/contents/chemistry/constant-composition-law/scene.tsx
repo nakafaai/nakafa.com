@@ -15,13 +15,11 @@ import {
   getChemistryParticleLabelPosition,
 } from "@repo/design-system/components/contents/chemistry/particle-label";
 import { SceneLabel } from "@repo/design-system/components/contents/scene-label";
-import { ArrowHelper } from "@repo/design-system/components/three/arrow-helper";
 import type { ReactNode } from "react";
 
 const BEFORE_X = -1.08;
 const AFTER_X = 1.08;
-const STAGE_LABEL_Y = 1.03;
-const READOUT_Y = -0.86;
+const READOUT_Y = -0.84;
 const SCENE_SCALE = 1.25;
 const HYDROGEN_RADIUS = 0.095;
 const OXYGEN_RADIUS = 0.15;
@@ -113,7 +111,7 @@ export function ConstantCompositionScene({
   modeId,
 }: {
   colors: ConstantCompositionSceneColors;
-  labels: Pick<ConstantCompositionLabLabels, "after" | "before" | "modes">;
+  labels: ConstantCompositionLabLabels;
   modeId: ConstantCompositionModeId;
 }) {
   const modeLabels = labels.modes[modeId];
@@ -121,31 +119,41 @@ export function ConstantCompositionScene({
 
   return (
     <group position={[0, -0.04, 0]} scale={SCENE_SCALE}>
-      <CompositionStage
-        colors={colors}
-        readout={modeLabels.readoutBefore}
-        title={labels.before}
-        x={BEFORE_X}
+      <SceneLabel
+        color={colors.text}
+        fontSize="compact"
+        position={[BEFORE_X, 0.58, 0.16]}
       >
+        {labels.before}
+      </SceneLabel>
+      <SceneLabel
+        color={colors.text}
+        fontSize="compact"
+        position={[BEFORE_X, READOUT_Y, 0.22]}
+      >
+        {modeLabels.readoutBefore}
+      </SceneLabel>
+      <SceneLabel
+        color={colors.text}
+        fontSize="compact"
+        position={[AFTER_X, READOUT_Y, 0.22]}
+      >
+        {modeLabels.readoutAfter}
+      </SceneLabel>
+      <SceneLabel
+        color={colors.text}
+        fontSize="compact"
+        position={[AFTER_X, 0.58, 0.16]}
+      >
+        {labels.after}
+      </SceneLabel>
+      <CompositionStage x={BEFORE_X}>
         {layout.beforeAtoms.map((atomData) => (
           <AtomParticle atomData={atomData} colors={colors} key={atomData.id} />
         ))}
       </CompositionStage>
 
-      <ArrowHelper
-        arrowSize={0.13}
-        color={colors.arrow}
-        from={[-0.38, 0, 0.04]}
-        lineWidth={3}
-        to={[0.38, 0, 0.04]}
-      />
-
-      <CompositionStage
-        colors={colors}
-        readout={modeLabels.readoutAfter}
-        title={labels.after}
-        x={AFTER_X}
-      >
+      <CompositionStage x={AFTER_X}>
         <WaterMolecule colors={colors} />
         {layout.leftoverAtoms.map((atomData) => (
           <LeftoverAtom atomData={atomData} colors={colors} key={atomData.id} />
@@ -155,42 +163,8 @@ export function ConstantCompositionScene({
   );
 }
 
-function CompositionStage({
-  children,
-  colors,
-  readout,
-  title,
-  x,
-}: {
-  children: ReactNode;
-  colors: ConstantCompositionSceneColors;
-  readout: string;
-  title: string;
-  x: number;
-}) {
-  return (
-    <group position={[x, 0, 0]}>
-      <SceneLabel
-        alwaysOnTop
-        color={colors.text}
-        fontSize="compact"
-        position={[0, STAGE_LABEL_Y, 0.28]}
-      >
-        {title}
-      </SceneLabel>
-
-      {children}
-
-      <SceneLabel
-        alwaysOnTop
-        color={colors.text}
-        fontSize="compact"
-        position={[0, READOUT_Y, 0.5]}
-      >
-        {readout}
-      </SceneLabel>
-    </group>
-  );
+function CompositionStage({ children, x }: { children: ReactNode; x: number }) {
+  return <group position={[x, 0, 0]}>{children}</group>;
 }
 
 function WaterMolecule({ colors }: { colors: ConstantCompositionSceneColors }) {

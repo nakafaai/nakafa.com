@@ -1,10 +1,10 @@
 import { query } from "@repo/backend/convex/_generated/server";
-import { getAudioPlaybackBySlug } from "@repo/backend/convex/audioStudies/queries/public.impl";
+import { getAudioPlaybackBySlug } from "@repo/backend/convex/audioStudies/queries/public/impl";
 import {
   type AudioPlaybackResult,
   audioPlaybackArgs,
   audioPlaybackResultValidator,
-} from "@repo/backend/convex/audioStudies/queries/public.spec";
+} from "@repo/backend/convex/audioStudies/queries/public/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 
 /**

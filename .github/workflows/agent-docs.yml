@@ -1,0 +1,84 @@
+name: Agent-Friendly Docs
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: agent-docs-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  agent-docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      INTERNAL_CONTENT_API_KEY: ci-agent-docs
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      NEXT_PUBLIC_CONVEX_SITE_URL: https://dapper-antelope-269.convex.site
+      NEXT_PUBLIC_CONVEX_URL: https://dapper-antelope-269.convex.cloud
+      NEXT_PUBLIC_MCP_URL: https://mcp.nakafa.com
+      NEXT_PUBLIC_POSTHOG_KEY: phc_agent_docs_ci
+      NEXT_PUBLIC_POSTHOG_UI_HOST: https://eu.posthog.com
+      POSTHOG_PROXY_HOST: https://t.nakafa.com
+      SITE_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: "pnpm"
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v8.2.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: apps/cas/uv.lock
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Export app version
+        run: |
+          echo "NEXT_PUBLIC_VERSION=$(node -p 'require(\"./package.json\").version')" >> "$GITHUB_ENV"
+
+      - name: Build production app
+        run: pnpm build
+
+      - name: Start web app
+        run: |
+          pnpm --filter www start > /tmp/nakafa-www.log 2>&1 &
+          echo "$!" > /tmp/nakafa-www.pid
+
+      - name: Wait for web app
+        run: |
+          for attempt in {1..60}; do
+            if curl -fsS http://localhost:3000/llms.txt > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/nakafa-www.log
+          exit 1
+
+      - name: Run AFDocs checks
+        run: pnpm agent-docs
+
+      - name: Stop web app
+        if: always()
+        run: |
+          if [ -f /tmp/nakafa-www.pid ]; then
+            kill "$(cat /tmp/nakafa-www.pid)" || true
+          fi

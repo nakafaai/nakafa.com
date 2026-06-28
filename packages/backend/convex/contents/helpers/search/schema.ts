@@ -1,3 +1,4 @@
+import { learningGraphIdentityValidator } from "@repo/backend/convex/contents/graph";
 import {
   localeValidator,
   nakafaSectionValidator,
@@ -5,6 +6,7 @@ import {
 import { v } from "convex/values";
 
 export const contentSearchRefValidator = v.object({
+  ...learningGraphIdentityValidator.fields,
   content_id: v.string(),
   locale: localeValidator,
   markdown_url: v.string(),
@@ -19,6 +21,11 @@ export const contentSearchSummaryValidator = v.object({
   title: v.string(),
 });
 
+export const contentSearchResultItemValidator = v.object({
+  ...contentSearchSummaryValidator.fields,
+  excerpt: v.string(),
+});
+
 export const contentSearchInputValidator = v.object({
   limit: v.number(),
   locale: localeValidator,
@@ -30,15 +37,16 @@ export const contentSearchInputValidator = v.object({
 export const contentSearchResultValidator = v.object({
   count: v.number(),
   has_more: v.boolean(),
-  items: v.array(contentSearchSummaryValidator),
+  items: v.array(contentSearchResultItemValidator),
   limit: v.number(),
-  next_offset: v.union(v.number(), v.null()),
+  next_offset: v.optional(v.number()),
   offset: v.number(),
 });
 
 export const contentSearchDocumentValidator = v.object({
   ...contentSearchSummaryValidator.fields,
   contentHash: v.string(),
+  sourcePath: v.string(),
   syncedAt: v.number(),
   text: v.string(),
 });

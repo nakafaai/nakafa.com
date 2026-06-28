@@ -1,0 +1,156 @@
+export const metadata = {
+  title: "Mean (Rerata atau Rata-rata)",
+  description: "Pelajari cara menghitung mean dalam statistika dengan contoh nyata. Pelajari rumus, pahami pengaruh pencilan, dan bandingkan dengan median serta modus.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "2025-04-22",
+  subject: "Statistika",
+};
+
+## Apa itu Mean?
+
+Selain Median (nilai tengah) dan Modus (nilai paling sering muncul), kita punya satu lagi cara penting untuk melihat "pusat" data, yaitu **Mean** atau **Rata-rata**.
+
+Mean adalah nilai yang kita dapatkan jika kita **membagikan jumlah total semua data secara merata** kepada seluruh anggota data. Bayangkan kamu punya beberapa permen dengan jumlah berbeda, lalu kamu kumpulkan semua dan bagi rata ke semua temanmu, nah itulah konsep Mean.
+
+## Menghitung Mean
+
+Cara menghitung Mean sangat sederhana:
+
+<MathContainer>
+  <BlockMath math="\text{1. Jumlahkan semua nilai data.}" />
+  <BlockMath math="\text{2. Bagi jumlah total tersebut dengan banyaknya data.}" />
+</MathContainer>
+
+**Rumus Mean:**
+
+<BlockMath math="\bar{x} = \frac{\sum x}{n}" />
+
+Keterangan:
+
+- <InlineMath math="\bar{x}" /> (dibaca "x bar") adalah simbol untuk **Mean**.
+- <InlineMath math="\sum x" /> (dibaca "sigma x") artinya **Jumlah total dari semua
+  nilai data** (x).
+- <InlineMath math="n" /> adalah **banyaknya data**.
+
+## Contoh Kasus
+
+Mari kita lihat contoh biar lebih jelas.
+
+### Aksi Sosial OSIS
+
+**Situasi Awal:**
+
+OSIS Sekolah A (<InlineMath math="10 \text{ orang}" />) mengumpulkan pakaian bekas layak pakai. Jumlah baju yang dikumpulkan tiap anggota adalah:
+
+<BlockMath math="3, 5, 7, 10, 5, 3, 4, 6, 9, 8" />
+
+**Mencari Mean, Median, dan Modus Awal:**
+
+1.  **Urutkan data** (untuk Median & Modus):
+
+    <InlineMath math="3, 3, 4, 5, 5, 6, 7, 8, 9, 10" /> (ada <InlineMath math="10 \text{ data}" />, <InlineMath math="n = 10" />)
+
+2.  **Hitung Mean:**
+
+    <MathContainer>
+      <BlockMath math="\sum x = 3+3+4+5+5+6+7+8+9+10 = 60" />
+      <BlockMath math="\bar{x} = \frac{\sum x}{n} = \frac{60}{10} = 6" />
+    </MathContainer>
+
+    Jadi, mean awal adalah <InlineMath math="6" />.
+
+3.  **Cari Median:**
+
+    Jumlah data genap (<InlineMath math="n = 10" />). Data tengah ada di urutan ke-<InlineMath math="10/2 = 5" /> dan ke-<InlineMath math="(10/2)+1 = 6" />.
+
+    Nilai urutan ke-<InlineMath math="5" /> adalah <InlineMath math="5" />, dan nilai urutan ke-<InlineMath math="6" /> adalah <InlineMath math="6" />.
+
+    <BlockMath math="\text{Median} = \frac{5+6}{2} = 5.5" />
+
+    Jadi, median awal adalah <InlineMath math="5.5" />.
+
+4.  **Cari Modus:**
+
+    Nilai yang paling sering muncul adalah <InlineMath math="3" /> (<InlineMath math="2 \text{ kali}" />) dan <InlineMath math="5" /> (<InlineMath math="2 \text{ kali}" />).
+
+    Jadi, modus awal adalah <InlineMath math="3" /> dan <InlineMath math="5" /> (bimodal).
+
+**Situasi Baru:**
+
+Keesokan harinya, <InlineMath math="2 \text{ siswa}" /> lain ikut menyumbang <InlineMath math="20" /> dan <InlineMath math="22" /> baju.
+
+Data baru menjadi:
+
+<BlockMath math="3, 3, 4, 5, 5, 6, 7, 8, 9, 10, 20, 22" />
+
+**Mencari Mean, Median, dan Modus Baru:**
+
+1.  **Urutkan data**:
+
+    <InlineMath math="3, 3, 4, 5, 5, 6, 7, 8, 9, 10, 20, 22" /> (ada <InlineMath math="12 \text{ data}" />, <InlineMath math="n = 12" />)
+
+2.  **Hitung Mean Baru:**
+
+    <MathContainer>
+      <BlockMath math="\sum x = 60 + 20 + 22 = 102" />
+      <BlockMath math="\bar{x} = \frac{\sum x}{n} = \frac{102}{12} = 8.5" />
+    </MathContainer>
+
+    Jadi, mean baru adalah <InlineMath math="8.5" />.
+
+3.  **Cari Median Baru:**
+
+    Jumlah data genap (<InlineMath math="n=12" />). Data tengah ada di urutan ke-<InlineMath math="12/2 = 6" /> dan ke-<InlineMath math="(12/2)+1 = 7" />.
+
+    Nilai urutan ke-<InlineMath math="6" /> adalah <InlineMath math="6" />, nilai urutan ke-<InlineMath math="7" /> adalah <InlineMath math="7" />.
+
+    <BlockMath math="\text{Median} = \frac{6+7}{2} = 6.5" />
+
+    Jadi, median baru <InlineMath math="= 6.5" />.
+
+4.  **Cari Modus Baru:**
+
+    Nilai yang paling sering muncul masih <InlineMath math="3" /> (<InlineMath math="2 \text{ kali}" />) dan <InlineMath math="5" /> (<InlineMath math="2 \text{ kali}" />).
+
+    Jadi, modus baru <InlineMath math="= 3 \text{ dan } 5" />.
+
+## Pengaruh Penambahan Data
+
+Coba perhatikan perubahan nilai ukuran pemusatan dari situasi awal ke situasi baru:
+
+- **Mean:** Berubah dari <InlineMath math="6" /> menjadi <InlineMath math="8.5" /> (naik <InlineMath math="2.5" />)
+- **Median:** Berubah dari <InlineMath math="5.5" /> menjadi <InlineMath math="6.5" /> (naik <InlineMath math="1" />)
+- **Modus:** Tetap <InlineMath math="3" /> dan <InlineMath math="5" /> (tidak berubah)
+
+Apa yang bisa kita simpulkan? Penambahan dua data baru (<InlineMath math="20" /> dan <InlineMath math="22" />) yang nilainya cukup jauh dari data awal ternyata **paling berpengaruh pada Mean**. Nilai Mean "tertarik" oleh nilai data baru yang lebih besar.
+
+Median juga berubah, tapi perubahannya tidak sebesar Mean. Modus malah tidak berubah sama sekali.
+
+## Pengaruh Data Ekstrem (Pencilan)
+
+Bagaimana jika salah satu data baru sangat ekstrem? Misal, siswa ke-<InlineMath math="12" /> menyumbang <InlineMath math="100 \text{ baju}" />, bukan <InlineMath math="22" />.
+
+Data menjadi: <InlineMath math="3, 3, 4, 5, 5, 6, 7, 8, 9, 10, 20, 100" /> (<InlineMath math="n=12" />)
+
+1.  **Hitung Mean Ekstrem:**
+
+    <MathContainer>
+      <BlockMath math="\sum x = 60 + 20 + 100 = 180" />
+      <BlockMath math="\bar{x} = \frac{\sum x}{n} = \frac{180}{12} = 15" />
+    </MathContainer>
+
+    Mean menjadi <InlineMath math="15" />. Jauh sekali dari mean awal (<InlineMath math="6" />) atau mean sebelumnya (<InlineMath math="8.5" />).
+
+2.  **Cari Median Ekstrem:**
+
+    Data urut: <InlineMath math="3, 3, 4, 5, 5, 6, 7, 8, 9, 10, 20, 100" />
+
+    Median masih <InlineMath math="(6+7)/2 = 6.5" />. (Sama seperti situasi baru sebelumnya)
+
+3.  **Cari Modus Ekstrem:**
+
+    Modus tetap <InlineMath math="3" /> dan <InlineMath math="5" />.
+
+Data yang sangat ekstrem (disebut **pencilan** atau **outlier**) **sangat mempengaruhi nilai Mean**, tapi **hampir tidak mempengaruhi Median dan Modus**. Inilah kelemahan Mean, ia sensitif terhadap pencilan. Median dan Modus lebih "kebal" terhadap pencilan.
+
+Jadi, Mean adalah rata-rata hitung yang sederhana, tapi kita perlu hati-hati jika ada data yang nilainya sangat jauh berbeda dari data lainnya karena bisa membuat Mean menjadi kurang representatif.

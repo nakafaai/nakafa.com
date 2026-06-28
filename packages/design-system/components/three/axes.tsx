@@ -1,12 +1,12 @@
 "use client";
 
-import { Line, Text } from "@react-three/drei";
+import { Line } from "@react-three/drei";
 import {
   FONT_PATH,
   MONO_FONT_PATH,
-  resolveThreeFontSize,
   type ThreeFontSize,
 } from "@repo/design-system/components/three/data/constants";
+import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { COLORS } from "@repo/design-system/lib/color";
 import { type ComponentProps, useMemo } from "react";
 import { MeshBasicMaterial, Vector3 } from "three";
@@ -69,7 +69,6 @@ export function Axes({
   );
 
   const fontToUse = font === "mono" ? MONO_FONT_PATH : FONT_PATH;
-  const resolvedLabelSize = resolveThreeFontSize(labelSize);
 
   // Memoize label positions to avoid recreating them
   const labelPositions = useMemo(() => {
@@ -103,88 +102,76 @@ export function Axes({
       />
 
       {/* X-axis labels */}
-      <Text
+      <ThreeLabel
         anchorX="left"
         color={COLORS.RED}
         font={fontToUse}
-        fontSize={resolvedLabelSize}
-        frustumCulled={false}
+        fontSize={labelSize}
         material={redMaterial}
         position={labelPositions.xPos}
-        renderOrder={10}
         visible={showLabels}
       >
         X
-      </Text>
-      <Text
+      </ThreeLabel>
+      <ThreeLabel
         anchorX="right"
         color={COLORS.RED}
         font={fontToUse}
-        fontSize={resolvedLabelSize}
-        frustumCulled={false}
+        fontSize={labelSize}
         material={redMaterial}
         position={labelPositions.xNeg}
-        renderOrder={10}
         visible={showLabels}
       >
         -X
-      </Text>
+      </ThreeLabel>
 
       {/* Y-axis labels */}
-      <Text
+      <ThreeLabel
         anchorX="left"
         color={COLORS.GREEN}
         font={fontToUse}
-        fontSize={resolvedLabelSize}
-        frustumCulled={false}
+        fontSize={labelSize}
         material={greenMaterial}
         position={labelPositions.yPos}
-        renderOrder={10}
         visible={showLabels}
       >
         Y
-      </Text>
-      <Text
+      </ThreeLabel>
+      <ThreeLabel
         anchorX="left"
         color={COLORS.GREEN}
         font={fontToUse}
-        fontSize={resolvedLabelSize}
-        frustumCulled={false}
+        fontSize={labelSize}
         material={greenMaterial}
         position={labelPositions.yNeg}
-        renderOrder={10}
         visible={showLabels}
       >
         -Y
-      </Text>
+      </ThreeLabel>
 
       {/* Z-axis labels */}
-      <Text
+      <ThreeLabel
         anchorX="left"
         color={COLORS.BLUE}
         font={fontToUse}
-        fontSize={resolvedLabelSize}
-        frustumCulled={false}
+        fontSize={labelSize}
         material={blueMaterial}
         position={labelPositions.zPos}
-        renderOrder={10}
         visible={!!showZAxis && !!showLabels}
       >
         Z
-      </Text>
-      <Text
+      </ThreeLabel>
+      <ThreeLabel
         anchorX="left"
         color={COLORS.BLUE}
         font={fontToUse}
-        fontSize={resolvedLabelSize}
-        frustumCulled={false}
+        fontSize={labelSize}
         material={blueMaterial}
         position={labelPositions.zNeg}
-        renderOrder={10}
         visible={!!showZAxis && !!showLabels}
       >
         -Z
-      </Text>
+      </ThreeLabel>
     </group>
   );
 }

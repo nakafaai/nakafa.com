@@ -3,24 +3,80 @@ import {
   NAKAFA_MCP_INFORMATIONAL_ROOT,
 } from "@repo/contents/_lib/agent/constants";
 import type {
+  NakafaAgentContentId,
   NakafaAgentContentRef,
   NakafaAgentSection,
 } from "@repo/contents/_lib/agent/schema/ref";
-import { NakafaAgentSectionSchema } from "@repo/contents/_lib/agent/schema/ref";
+import {
+  NakafaAgentContentRefSchema,
+  NakafaAgentContentRouteSchema,
+  NakafaAgentContentUrlSchema,
+  NakafaAgentMarkdownUrlSchema,
+  NakafaAgentSectionSchema,
+} from "@repo/contents/_lib/agent/schema/ref";
 import type { Locale } from "@repo/contents/_types/content";
 import { LocaleSchema } from "@repo/contents/_types/content";
-import { routing } from "@repo/internationalization/src/routing";
+import { getSourceRouteProjectionForRoute } from "@repo/contents/_types/graph/projection";
+import { InvalidLearningGraphRouteError } from "@repo/contents/_types/graph/schema";
+import {
+  createLearningGraphIdentityFromProjection,
+  LearningGraphIdentitySchema,
+} from "@repo/contents/_types/learning-graph";
+import { findPublicRouteByPath } from "@repo/contents/_types/route/projection";
 import { cleanSlug } from "@repo/utilities/helper";
-import { Option, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 
 const CONTENT_RESOURCE_PREFIX = "nakafa://content/";
 const MARKDOWN_EXTENSION_PATTERN = /\.mdx?$/;
 
-/** Parses a content ID, Nakafa URL, or resource URI into a canonical reference. */
-export function parseNakafaContentRef(
-  input: string,
-  fallbackLocale: Locale = routing.defaultLocale
-) {
+/** Runtime schema for persisted graph projection fields accepted by agent refs. */
+const NakafaContentGraphProjectionSchema = LearningGraphIdentitySchema.pipe(
+  Schema.extend(
+    Schema.Struct({
+      content_id: Schema.String,
+      locale: LocaleSchema,
+      route: Schema.String,
+      section: NakafaAgentSectionSchema,
+      sourcePath: Schema.optional(Schema.String),
+    })
+  )
+);
+
+/** Persisted graph projection fields derived from the runtime schema. */
+type NakafaContentGraphProjection = Schema.Schema.Type<
+  typeof NakafaContentGraphProjectionSchema
+>;
+
+interface NakafaContentRefInput extends NakafaContentGraphProjection {
+  publicRoute?: string;
+}
+
+interface NakafaUrlRoute {
+  locale: Locale;
+  route: string;
+}
+
+/**
+ * Parses a canonical Nakafa URL projection into a graph-backed content ref.
+ *
+ * Graph asset IDs need the backend route read model to resolve back to a route.
+ * Bare routes are not accepted as product identity.
+ */
+export function parseNakafaContentRef(input: string) {
+  const parsed = parseNakafaUrlRoute(input);
+  if (Option.isNone(parsed)) {
+    return Option.none<NakafaAgentContentRef>();
+  }
+
+  return createNakafaSourceContentRef(parsed.value.locale, parsed.value.route);
+}
+
+/** Parses a Nakafa URL into locale and route without assuming source shape. */
+export function parseNakafaUrlRoute(input: string) {
+  if (!isNakafaUrlProjectionInput(input)) {
+    return Option.none<NakafaUrlRoute>();
+  }
+
   const normalized = normalizeNakafaContentInput(input);
   const cleanInput = cleanSlug(
     normalized.replace(MARKDOWN_EXTENSION_PATTERN, "")
@@ -29,57 +85,221 @@ export function parseNakafaContentRef(
   const firstSegment = segments.at(0);
 
   if (!firstSegment) {
-    return Option.none<NakafaAgentContentRef>();
+    return Option.none<NakafaUrlRoute>();
   }
 
-  const parsedLeadingLocale =
-    Schema.decodeUnknownOption(LocaleSchema)(firstSegment);
-  const locale = Option.getOrElse(parsedLeadingLocale, () => fallbackLocale);
-  const routeSegments = Option.isSome(parsedLeadingLocale)
-    ? segments.slice(1)
-    : segments;
-  const route = routeSegments.join("/");
-  const parsedSection = Schema.decodeUnknownOption(NakafaAgentSectionSchema)(
-    routeSegments.at(0)
+  const parsedLocale = Schema.decodeUnknownOption(LocaleSchema)(firstSegment);
+  if (Option.isNone(parsedLocale)) {
+    return Option.none<NakafaUrlRoute>();
+  }
+
+  const route = segments.slice(1).join("/");
+  const parsedRoute = Schema.decodeUnknownOption(NakafaAgentContentRouteSchema)(
+    route
   );
 
-  if (!isSafeNakafaRoute(route)) {
+  if (Option.isNone(parsedRoute)) {
+    return Option.none<NakafaUrlRoute>();
+  }
+
+  return Option.some({
+    locale: parsedLocale.value,
+    route: parsedRoute.value,
+  });
+}
+
+/** Resolves public material/practice URLs through route projection first. */
+export const resolveNakafaContentRef = Effect.fn(
+  "contents.agent.parseContentRef"
+)(function* (input: string) {
+  const parsed = parseNakafaUrlRoute(input);
+
+  if (Option.isNone(parsed)) {
     return Option.none<NakafaAgentContentRef>();
   }
 
-  if (Option.isNone(parsedSection)) {
+  const publicRoute = yield* findPublicRouteByPath(
+    parsed.value.route,
+    parsed.value.locale
+  );
+
+  if (Option.isSome(publicRoute)) {
+    const route = publicRoute.value;
+
+    if (
+      route.kind === "exercise-question" ||
+      route.kind === "exercise-set" ||
+      route.kind === "subject-lesson" ||
+      route.kind === "subject-topic"
+    ) {
+      return createNakafaContentRefFromSourceRoute({
+        locale: parsed.value.locale,
+        publicRoute: route.publicPath,
+        route: route.sourcePath,
+        section: "material",
+      });
+    }
+
     return Option.none<NakafaAgentContentRef>();
   }
 
-  return Option.some(buildNakafaContentRef(locale, route, parsedSection.value));
+  return createNakafaSourceContentRef(parsed.value.locale, parsed.value.route);
+});
+
+/** Builds a graph-backed ref from a route that already belongs to source identity. */
+function createNakafaSourceContentRef(locale: Locale, route: string) {
+  const projection = getSourceRouteProjectionForRoute(route);
+
+  if (!projection) {
+    return Option.none<NakafaAgentContentRef>();
+  }
+
+  return createNakafaContentRef(locale, route, projection.sourceRoot);
+}
+
+/** Returns whether an input is a canonical Nakafa URL or content resource ref. */
+function isNakafaUrlProjectionInput(input: string) {
+  const trimmed = input.trim();
+
+  return (
+    URL.canParse(trimmed) && normalizeNakafaContentInput(trimmed) !== trimmed
+  );
 }
 
 /** Builds a canonical content reference from already-normalized route parts. */
-export function buildNakafaContentRef(
+export function createNakafaContentRef(
   locale: Locale,
   route: string,
   section: NakafaAgentSection
 ) {
-  const contentId = `${locale}/${route}`;
-  const contentRef = {
-    content_id: contentId,
-    locale,
-    markdown_url: `${NAKAFA_BASE_URL}/${contentId}.md`,
-    route,
-    section,
-    url: `${NAKAFA_BASE_URL}/${contentId}`,
-  };
+  return createNakafaContentRefFromSourceRoute({ locale, route, section });
+}
 
-  return contentRef;
+/** Builds a canonical content reference from source route parts. */
+function createNakafaContentRefFromSourceRoute({
+  locale,
+  publicRoute,
+  route,
+  section,
+}: {
+  locale: Locale;
+  publicRoute?: string;
+  route: string;
+  section: NakafaAgentSection;
+}) {
+  const parsedRoute = Schema.decodeUnknownOption(NakafaAgentContentRouteSchema)(
+    route
+  );
+
+  if (Option.isNone(parsedRoute)) {
+    return Option.none<NakafaAgentContentRef>();
+  }
+
+  const contentRoute = parsedRoute.value;
+  const projection = getSourceRouteProjectionForRoute(contentRoute);
+
+  if (!projection) {
+    return Option.none<NakafaAgentContentRef>();
+  }
+
+  if (section !== projection.sourceRoot) {
+    return Option.none<NakafaAgentContentRef>();
+  }
+
+  const identity = createLearningGraphIdentityFromProjection({
+    locale,
+    projection,
+  });
+
+  return Schema.decodeUnknownOption(NakafaAgentContentRefSchema)(
+    createNakafaContentRefInput({
+      ...identity,
+      content_id: identity.assetId,
+      locale,
+      publicRoute,
+      route: contentRoute,
+      section,
+    })
+  );
+}
+
+/** Parses a canonical content reference with a typed graph route failure. */
+export const parseNakafaContentRefFields = Effect.fn(
+  "contents.agent.parseNakafaContentRefFields"
+)(function* (locale: Locale, route: string, section: NakafaAgentSection) {
+  const ref = createNakafaContentRef(locale, route, section);
+
+  if (Option.isSome(ref)) {
+    return ref.value;
+  }
+
+  return yield* Effect.fail(
+    new InvalidLearningGraphRouteError({
+      message: `Cannot build Nakafa graph content ref for ${route}.`,
+      route,
+    })
+  );
+});
+
+/**
+ * Builds a canonical content reference from persisted graph route-catalog fields.
+ */
+export function createNakafaContentRefFromGraphProjection(input: unknown) {
+  const projection = Schema.decodeUnknownOption(
+    NakafaContentGraphProjectionSchema
+  )(input);
+
+  if (Option.isNone(projection)) {
+    return Option.none<NakafaAgentContentRef>();
+  }
+
+  const graph = projection.value;
+
+  if (graph.content_id !== graph.assetId) {
+    return Option.none<NakafaAgentContentRef>();
+  }
+
+  const sourceRoute = graph.sourcePath ?? graph.route;
+
+  return Schema.decodeUnknownOption(NakafaAgentContentRefSchema)(
+    createNakafaContentRefInput({
+      ...graph,
+      publicRoute: graph.route,
+      route: sourceRoute,
+    })
+  );
+}
+
+/** Builds the schema-decoded agent content ref from graph projection fields. */
+function createNakafaContentRefInput(input: NakafaContentRefInput) {
+  const publicRoute = input.publicRoute ?? input.route;
+
+  return {
+    alignmentId: input.alignmentId,
+    assetId: input.assetId,
+    conceptId: input.conceptId,
+    content_id: input.content_id,
+    learningObjectId: input.learningObjectId,
+    lensId: input.lensId,
+    locale: input.locale,
+    markdown_url: NakafaAgentMarkdownUrlSchema.make(
+      `${NAKAFA_BASE_URL}/${input.locale}/${publicRoute}.md`
+    ),
+    route: input.route,
+    section: input.section,
+    url: NakafaAgentContentUrlSchema.make(
+      `${NAKAFA_BASE_URL}/${input.locale}/${publicRoute}`
+    ),
+  };
 }
 
 /** Builds the MCP resource URI for a canonical Nakafa content reference. */
-export function getNakafaContentResourceUri(contentId: string) {
+export function getNakafaContentResourceUri(contentId: NakafaAgentContentId) {
   return `${CONTENT_RESOURCE_PREFIX}${contentId.replaceAll("/", "%2F")}`;
 }
 
-/** Normalizes Nakafa URLs and custom resource URIs into content IDs. */
-function normalizeNakafaContentInput(input: string) {
+/** Normalizes Nakafa URLs and custom resource URIs into lookup strings. */
+export function normalizeNakafaContentInput(input: string) {
   const trimmed = input.trim();
 
   if (trimmed.startsWith(CONTENT_RESOURCE_PREFIX)) {
@@ -103,17 +323,4 @@ function normalizeNakafaContentInput(input: string) {
   }
 
   return trimmed;
-}
-
-/** Rejects empty or path-traversal content routes before filesystem access. */
-function isSafeNakafaRoute(route: string) {
-  if (route.length === 0) {
-    return false;
-  }
-
-  return route
-    .split("/")
-    .every(
-      (segment) => segment.length > 0 && segment !== "." && segment !== ".."
-    );
 }

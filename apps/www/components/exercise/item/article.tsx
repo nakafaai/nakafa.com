@@ -1,4 +1,4 @@
-import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
+import type { ExercisesChoices } from "@repo/contents/_types/assessment/choices";
 import type { Locale } from "next-intl";
 import type { ReactNode } from "react";
 import { ExerciseAnswerAction } from "@/components/exercise/item/action";

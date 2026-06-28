@@ -1,6 +1,15 @@
-import { getContentMetadata } from "@repo/contents/_lib/metadata";
+import {
+  getPublicContentRouteCheck,
+  type PublicContentRouteCheck,
+} from "@repo/contents/_lib/manifest/public-route";
+import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
+import {
+  getRuntimeContentRoute,
+  getRuntimeContentRouteArtifactPage,
+  getRuntimeContentRouteParentPage,
+} from "@/lib/content/runtime/routes";
 import {
   BASE_URL,
   type LlmsSection,
@@ -8,22 +17,23 @@ import {
 } from "@/lib/llms/constants";
 import { formatRouteTitle } from "@/lib/llms/format";
 import { getQuranRouteMetadata } from "@/lib/llms/quran";
-import { getSitemapRoutes } from "@/lib/sitemap/routes";
+import {
+  baseRoutes,
+  buildSitemapContentPageRoutes,
+} from "@/lib/sitemap/routes";
 
-/** Builds sitemap-aligned llms entries for one locale. */
-export const getLocalizedLlmsEntries = Effect.fn("www.llms.entries")(function* (
-  locale: Locale
-) {
-  const routes = getSitemapRoutes().sort((a, b) => a.localeCompare(b));
+const LLMS_ENTRY_BUILD_CONCURRENCY = 16;
+const LLMS_LISTING_ENTRY_LIMIT = 100;
+type ParentListingRowsArgs = Omit<
+  Parameters<typeof getRuntimeContentRouteParentPage>[0],
+  "cursor" | "limit"
+>;
 
-  return yield* Effect.forEach(
-    routes,
-    (route) => buildLocalizedLlmsEntry({ locale, route }),
-    {
-      concurrency: "unbounded",
-    }
-  );
-});
+const materialRouteNamespaces = new Set<string>(
+  PUBLIC_ROUTE_SURFACES.filter(
+    (surface) => surface.key === "subject" || surface.key === "exercises"
+  ).flatMap((surface) => Object.values(surface.routeSlugs))
+);
 
 /** Classifies a sitemap route into the llms section that owns it. */
 export function getRouteSection(route: string): LlmsSection {
@@ -31,6 +41,10 @@ export function getRouteSection(route: string): LlmsSection {
 
   if (isLlmsSection(firstSegment) && firstSegment !== "site") {
     return firstSegment;
+  }
+
+  if (materialRouteNamespaces.has(firstSegment ?? "")) {
+    return "material";
   }
 
   return "site";
@@ -46,6 +60,128 @@ export function isLlmsSection(
 /** Returns the configured llms sections in display order. */
 export function getLlmsSections() {
   return Object.keys(SECTION_LABELS).filter(isLlmsSection);
+}
+
+/** Builds site-page entries without reading the content route catalog. */
+export const getSiteLlmsEntries = Effect.fn("www.llms.siteEntries")(function* (
+  locale: Locale
+) {
+  return yield* buildLocalizedLlmsEntriesFromRoutes({
+    locale,
+    routes: baseRoutes.filter((route) => getRouteSection(route) === "site"),
+  });
+});
+
+/** Builds entries for one materialized route-catalog page without global reads. */
+export const getContentPageLlmsEntries = Effect.fn(
+  "www.llms.contentPageEntries"
+)(function* ({
+  locale,
+  page,
+  section,
+}: {
+  locale: Locale;
+  page: number;
+  section: Exclude<LlmsSection, "site">;
+}) {
+  const artifactPage = yield* getRuntimeContentRouteArtifactPage({
+    locale,
+    page,
+    section,
+  });
+
+  if (!artifactPage) {
+    return [];
+  }
+
+  const sitemapRoutes = yield* buildSitemapContentPageRoutes(
+    artifactPage.routes
+  );
+  const routes = sitemapRoutes.filter(
+    (route) => getRouteSection(route) === section
+  );
+
+  return yield* buildLocalizedLlmsEntriesFromRoutes({ locale, routes });
+});
+
+/**
+ * Builds entries for one public content listing route from route-catalog rows.
+ *
+ * Unsupported route shapes return null instead of fabricated entries. Supported
+ * shapes read one bounded catalog page and reuse the same entry formatter as
+ * normal llms indexes, so listing pages advertise only source-backed routes.
+ */
+export const getContentListingLlmsEntries = Effect.fn(
+  "www.llms.contentListingEntries"
+)(function* ({ locale, route }: { locale: Locale; route: string }) {
+  const cleanRoute = route.replace(/^\/+|\/+$/g, "");
+  const routeCheck = getPublicContentRouteCheck(cleanRoute);
+  const rows = yield* readContentListingRows({ locale, routeCheck });
+
+  if (rows === null) {
+    return null;
+  }
+
+  const routes = rows.map((row) => `/${row.route}`);
+  return yield* buildLocalizedLlmsEntriesFromRoutes({ locale, routes });
+});
+
+/** Builds locale-specific llms entries from already scoped route strings. */
+function buildLocalizedLlmsEntriesFromRoutes({
+  locale,
+  routes,
+}: {
+  locale: Locale;
+  routes: readonly string[];
+}) {
+  return Effect.forEach(
+    [...routes].sort((a, b) => a.localeCompare(b)),
+    (route) => buildLocalizedLlmsEntry({ locale, route }),
+    {
+      concurrency: LLMS_ENTRY_BUILD_CONCURRENCY,
+    }
+  );
+}
+
+/**
+ * Reads one bounded route-catalog page for supported listing route shapes.
+ *
+ * The resolver returns null when the route is not a listing. Every supported
+ * branch delegates to an indexed kind or parent page read with a fixed limit.
+ */
+function readContentListingRows({
+  locale,
+  routeCheck,
+}: {
+  locale: Locale;
+  routeCheck: PublicContentRouteCheck;
+}) {
+  if (routeCheck.mode === "article-category") {
+    return readParentListingRows({
+      kind: "article",
+      locale,
+      order: "date-desc",
+      parentRoute: routeCheck.parentRoute,
+      section: "articles",
+    });
+  }
+
+  return Effect.succeed(null);
+}
+
+/**
+ * Reads one parent-scoped route page for a listing markdown document.
+ *
+ * Callers provide the already-classified parent route, and the helper enforces
+ * the shared listing limit so listing indexes do not drift into full-table
+ * collection.
+ */
+function readParentListingRows(args: ParentListingRowsArgs) {
+  return getRuntimeContentRouteParentPage({
+    ...args,
+    cursor: null,
+    limit: LLMS_LISTING_ENTRY_LIMIT,
+  }).pipe(Effect.map((page) => page.page));
 }
 
 /** Builds one locale-specific llms entry from a sitemap route. */
@@ -95,21 +231,17 @@ const getRouteMetadata = Effect.fn("www.llms.routeMetadata")(function* ({
   section: LlmsSection;
 }) {
   if (section === "quran") {
-    return getQuranRouteMetadata({ locale, route });
+    return yield* getQuranRouteMetadata({ locale, route });
   }
 
-  if (section === "exercises") {
-    return getIndexRouteMetadata(route);
-  }
-
-  if (section === "articles" || section === "subject") {
-    const metadata = yield* getMdxRouteMetadata({ locale, route });
+  if (section === "articles" || section === "material") {
+    const metadata = yield* getContentRouteMetadata({ locale, route });
 
     if (metadata) {
       return metadata;
     }
 
-    return getIndexRouteMetadata(route);
+    return getListingRouteMetadata(route);
   }
 
   return {
@@ -119,38 +251,37 @@ const getRouteMetadata = Effect.fn("www.llms.routeMetadata")(function* ({
   };
 });
 
-/** Builds fallback metadata for routes served as sitemap-derived indexes. */
-function getIndexRouteMetadata(route: string) {
+/** Builds listing metadata for sitemap-derived routes that do not have markdown. */
+function getListingRouteMetadata(route: string) {
   return {
     description: undefined,
-    hasMarkdown: true,
+    hasMarkdown: false,
     title: formatRouteTitle(route),
   };
 }
 
-/** Reads existing MDX metadata for article and subject routes. */
-const getMdxRouteMetadata = Effect.fn("www.llms.mdxRouteMetadata")(function* ({
-  locale,
-  route,
-}: {
-  locale: Locale;
-  route: string;
-}) {
-  const metadata = yield* Effect.match(
-    getContentMetadata(route.slice(1), locale),
-    {
-      onFailure: () => null,
-      onSuccess: (data) => data,
+/** Reads exact runtime content route metadata when the route has markdown. */
+const getContentRouteMetadata = Effect.fn("www.llms.contentRouteMetadata")(
+  function* ({ locale, route }: { locale: Locale; route: string }) {
+    const contentRoute = yield* Effect.match(
+      getRuntimeContentRoute({
+        locale,
+        route: route.slice(1),
+      }),
+      {
+        onFailure: () => null,
+        onSuccess: (data) => data,
+      }
+    );
+
+    if (!contentRoute) {
+      return null;
     }
-  );
 
-  if (!metadata) {
-    return null;
+    return {
+      description: contentRoute.description,
+      hasMarkdown: contentRoute.markdown,
+      title: contentRoute.title,
+    };
   }
-
-  return {
-    description: metadata.description ?? metadata.subject,
-    hasMarkdown: true,
-    title: metadata.title,
-  };
-});
+);

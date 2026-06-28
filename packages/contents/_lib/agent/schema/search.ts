@@ -12,6 +12,18 @@ import { LocaleSchema } from "@repo/contents/_types/content";
 import { routing } from "@repo/internationalization/src/routing";
 import { Schema } from "effect";
 
+/** Runtime schema for one Convex-backed search result item. */
+export const NakafaAgentSearchItemSchema = NakafaAgentContentSummarySchema.pipe(
+  Schema.extend(
+    Schema.Struct({
+      excerpt: Schema.String.annotations({
+        description: "Plain-text search excerpt with matched context.",
+      }),
+    })
+  ),
+  Schema.mutable
+).annotations({ description: "Searchable Nakafa content result item." });
+
 /** Runtime schema for content search input. */
 export const NakafaAgentSearchOptionsSchema = Schema.Struct({
   limit: Schema.optionalWith(
@@ -39,7 +51,7 @@ export const NakafaAgentSearchOptionsSchema = Schema.Struct({
   section: Schema.optional(
     NakafaAgentSectionSchema.annotations({
       description:
-        'Optional section filter. Use "subject" for lessons, school materials, class or grade topics, and study content. Use "articles" only when the user explicitly asks for articles, news, essays, analysis, or editorial content. Use "exercises" for questions, drills, tests, tryouts, or answer explanations. Use "quran" for surah, ayah, tafsir, or Quran references. Omit this filter for broad topic discovery.',
+        'Optional section filter. Use "material" for lessons, practice, school materials, class or grade topics, and study content. Use "articles" only when the user explicitly asks for articles, news, essays, analysis, or editorial content. Use "quran" for surah, ayah, tafsir, or Quran references. Omit this filter for broad topic discovery.',
     })
   ),
 })
@@ -54,17 +66,17 @@ export const NakafaAgentSearchResultSchema = Schema.Struct({
   has_more: Schema.Boolean.annotations({
     description: "Whether another page is available.",
   }),
-  items: Schema.Array(NakafaAgentContentSummarySchema)
+  items: Schema.Array(NakafaAgentSearchItemSchema)
     .pipe(Schema.mutable)
     .annotations({ description: "Bounded search result page." }),
   limit: Schema.Number.pipe(Schema.int(), Schema.positive()).annotations({
     description: "Requested page size.",
   }),
-  next_offset: Schema.NullOr(
-    Schema.Number.pipe(Schema.int(), Schema.nonNegative())
-  ).annotations({
-    description: "Next offset, or null when there is no next page.",
-  }),
+  next_offset: Schema.optional(
+    Schema.Number.pipe(Schema.int(), Schema.nonNegative()).annotations({
+      description: "Next page offset when another page is available.",
+    })
+  ),
   offset: Schema.Number.pipe(Schema.int(), Schema.nonNegative()).annotations({
     description: "Current result offset.",
   }),

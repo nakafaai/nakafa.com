@@ -1,12 +1,29 @@
+import { Nakafa } from "@repo/ai/agents/nakafa/service";
 import { read } from "@repo/ai/agents/nakafa/tools/read";
-import { createWriter } from "@repo/ai/agents/nakafa/tools/test";
+import {
+  createNakafaTestService,
+  createWriter,
+} from "@repo/ai/agents/nakafa/tools/test";
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
-import { Nakafa } from "@repo/contents/_lib/agent/service";
+import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
+import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
-const ARTICLE_CONTENT_ID =
-  "en/articles/politics/dynastic-politics-asian-values";
+const ARTICLE_CONTENT_ID = NakafaAgentContentRefInputSchema.make(
+  readNakafaContentRefFixture(
+    "en",
+    "articles/politics/dynastic-politics-asian-values",
+    "articles"
+  ).content_id
+);
+const ARTICLE_URL = NakafaAgentContentRefInputSchema.make(
+  "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values"
+);
+const MISSING_CONTENT_ID = NakafaAgentContentRefInputSchema.make(
+  readNakafaContentRefFixture("en", "articles/politics/missing", "articles")
+    .content_id
+);
 
 describe("nakafa read tool", () => {
   it("writes loading and done parts for content reads", async () => {
@@ -16,7 +33,7 @@ describe("nakafa read tool", () => {
         input: { content_ref: ARTICLE_CONTENT_ID },
         toolCallId: "read-1",
         writer,
-      }).pipe(Effect.provide(Nakafa.Default))
+      }).pipe(Effect.provideService(Nakafa, createNakafaTestService()))
     );
 
     expect(output).toContain("# Nakafa Content");
@@ -34,14 +51,35 @@ describe("nakafa read tool", () => {
     );
   });
 
+  it("accepts canonical URL projections for current-page reads", async () => {
+    const { parts, writer } = createWriter();
+    const output = await Effect.runPromise(
+      read({
+        input: { content_ref: ARTICLE_URL },
+        toolCallId: "read-url",
+        writer,
+      }).pipe(Effect.provideService(Nakafa, createNakafaTestService()))
+    );
+
+    expect(output).toContain("# Nakafa Content");
+    expect(parts.at(-1)).toEqual(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          kind: "content",
+          status: "done",
+        }),
+      })
+    );
+  });
+
   it("writes an error part when content is missing", async () => {
     const { parts, writer } = createWriter();
     const output = await Effect.runPromise(
       read({
-        input: { content_ref: "en/articles/missing" },
+        input: { content_ref: MISSING_CONTENT_ID },
         toolCallId: "read-2",
         writer,
-      }).pipe(Effect.provide(Nakafa.Default))
+      }).pipe(Effect.provideService(Nakafa, createNakafaTestService()))
     );
 
     expect(output).toBe("Nakafa content was not found.");

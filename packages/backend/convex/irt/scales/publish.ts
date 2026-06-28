@@ -2,7 +2,7 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { IRT_OPERATIONAL_MODEL } from "@repo/backend/convex/irt/policy";
-import { buildBootstrapScaleItems } from "@repo/backend/convex/irt/scales/bootstrap";
+import { buildProvisionalScaleItems } from "@repo/backend/convex/irt/scales/provisional";
 import { evaluateTryoutScaleQuality } from "@repo/backend/convex/irt/scales/quality";
 import {
   getLatestScaleVersionForTryout,
@@ -15,15 +15,23 @@ import {
 } from "@repo/backend/convex/irt/scales/snapshot";
 import { ConvexError } from "convex/values";
 
+/** Convex writer surface required to publish frozen IRT scale rows. */
 type IrtDbWriter = MutationCtx["db"];
+
+/** Latest frozen scale version row for one tryout when present. */
 type LatestScaleVersion = Awaited<
   ReturnType<typeof getLatestScaleVersionForTryout>
 >;
+
+/** Non-null scale version row after a publish/read branch has succeeded. */
 type ResolvedScaleVersion = NonNullable<LatestScaleVersion>;
+
+/** Candidate official scale snapshot that has passed readiness checks. */
 type PublishableScaleSnapshot = NonNullable<
   Awaited<ReturnType<typeof getPublishableScaleSnapshot>>
 >;
 
+/** Decision returned by official-scale publication without mutating caller state. */
 type OfficialScaleDecision =
   | { kind: "not-ready" }
   | {
@@ -90,7 +98,7 @@ async function publishScaleVersion(
 }
 
 /** Publishes an initial frozen scale version before enough calibration data exists. */
-async function publishBootstrapScaleVersion(
+async function publishProvisionalScaleVersion(
   db: IrtDbWriter,
   {
     now,
@@ -100,7 +108,7 @@ async function publishBootstrapScaleVersion(
     tryoutId: Id<"tryouts">;
   }
 ) {
-  const items = await buildBootstrapScaleItems(db, { now, tryoutId });
+  const items = await buildProvisionalScaleItems(db, { now, tryoutId });
 
   if (!items) {
     return null;
@@ -117,6 +125,7 @@ async function publishBootstrapScaleVersion(
   return db.get("irtScaleVersions", scaleVersionId);
 }
 
+/** Publishes a new official frozen scale from a ready snapshot. */
 async function publishOfficialScaleVersion(
   db: IrtDbWriter,
   {
@@ -140,6 +149,7 @@ async function publishOfficialScaleVersion(
   return db.get("irtScaleVersions", scaleVersionId);
 }
 
+/** Reuses the latest official scale when the publishable item snapshot is unchanged. */
 async function getUnchangedOfficialScaleVersion(
   db: IrtDbWriter,
   {
@@ -168,6 +178,7 @@ async function getUnchangedOfficialScaleVersion(
   return latestScaleVersion;
 }
 
+/** Chooses whether to publish, reuse, or defer an official scale version. */
 async function resolveOfficialScaleDecision(
   db: IrtDbWriter,
   {
@@ -240,7 +251,7 @@ export async function getOrPublishScaleVersionForTryout(
       return latestScaleVersion;
     }
 
-    return publishBootstrapScaleVersion(db, { now, tryoutId });
+    return publishProvisionalScaleVersion(db, { now, tryoutId });
   }
 
   const officialScaleDecision = await resolveOfficialScaleDecision(db, {
@@ -254,7 +265,7 @@ export async function getOrPublishScaleVersionForTryout(
       return latestScaleVersion;
     }
 
-    return publishBootstrapScaleVersion(db, { now, tryoutId });
+    return publishProvisionalScaleVersion(db, { now, tryoutId });
   }
 
   return officialScaleDecision.scaleVersion;

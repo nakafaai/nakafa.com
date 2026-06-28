@@ -57,6 +57,7 @@ const BOLD_LIGHTNESS = 0.65;
 const BOLD_CHROMA = 0.2;
 const MEDIUM_LIGHTNESS = 0.7;
 const MEDIUM_CHROMA = 0.15;
+const EMPTY_STYLE = {};
 
 interface Props {
   className?: HTMLAttributes<HTMLDivElement>["className"];
@@ -94,7 +95,7 @@ function generateColorStops(colors: string[]): string {
 export function GradientBlock({
   keyString,
   className = "",
-  style = {},
+  style = EMPTY_STYLE,
   colorScheme = "monochromatic",
   intensity = "medium",
   gradientType = "linear",

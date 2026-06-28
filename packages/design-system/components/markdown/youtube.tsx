@@ -1,5 +1,8 @@
-import { ArrowUpRight01Icon, InLoveIcon } from "@hugeicons/core-free-icons";
-import { SiYoutube } from "@icons-pack/react-simple-icons";
+import {
+  ArrowUpRight01Icon,
+  InLoveIcon,
+  YoutubeIcon,
+} from "@hugeicons/core-free-icons";
 import { YoutubePlayer } from "@repo/design-system/components/markdown/youtube-player";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -21,7 +24,7 @@ export function Youtube({ videoId }: Props) {
     <Card className="my-4 grid gap-0 overflow-hidden pb-0 content-auto-card">
       <CardHeader className="gap-0 border-b">
         <CardTitle className="flex items-center gap-2">
-          <SiYoutube />
+          <HugeIcons icon={YoutubeIcon} />
           YouTube
         </CardTitle>
       </CardHeader>

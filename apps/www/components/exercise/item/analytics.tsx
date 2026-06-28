@@ -1,7 +1,7 @@
 "use client";
 
 import { useInterval } from "@mantine/hooks";
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useAttempt } from "@/lib/context/use-attempt";
 import { useExercise } from "@/lib/context/use-exercise";
 
@@ -15,10 +15,10 @@ export function QuestionAnalytics({
 }) {
   const isInputLocked = useAttempt((state) => state.isInputLocked);
   const isAttemptInProgress = useAttempt((state) => state.isAttemptInProgress);
-  const [isActive, setIsActive] = useState(false);
   const timeSpent = useExercise(
     (state) => state.timeSpent[exerciseNumber] ?? 0
   );
+  const isActiveRef = useRef(false);
   const timeCounterRef = useRef(timeSpent);
   const setTimeSpent = useExercise((state) => state.setTimeSpent);
   const hasActiveAttempt = isAttemptInProgress && !isInputLocked;
@@ -36,7 +36,7 @@ export function QuestionAnalytics({
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        setIsActive(entry?.isIntersecting ?? false);
+        isActiveRef.current = entry?.isIntersecting ?? false;
       },
       { threshold: 0.75 }
     );
@@ -48,19 +48,15 @@ export function QuestionAnalytics({
     };
   }, [articleId]);
 
-  const handleTick = useEffectEvent(() => {
-    if (isActive && hasActiveAttempt) {
+  const interval = useInterval(() => {
+    if (isActiveRef.current && hasActiveAttempt) {
       timeCounterRef.current += 1;
       setTimeSpent(exerciseNumber, timeCounterRef.current);
     }
-  });
-
-  const interval = useInterval(() => {
-    handleTick();
   }, 1000);
 
   useEffect(() => {
-    if (isActive && hasActiveAttempt) {
+    if (hasActiveAttempt) {
       interval.start();
       return () => {
         interval.stop();
@@ -68,7 +64,7 @@ export function QuestionAnalytics({
     }
 
     interval.stop();
-  }, [hasActiveAttempt, interval, isActive]);
+  }, [hasActiveAttempt, interval]);
 
   return null;
 }

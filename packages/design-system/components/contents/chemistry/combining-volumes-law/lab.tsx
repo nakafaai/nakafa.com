@@ -68,8 +68,7 @@ export function CombiningVolumesLab({
       <CardContent className="flex flex-col gap-4">
         <ToggleGroup
           aria-label={labels.chooseMode}
-          className="grid w-full grid-cols-1 sm:grid-cols-3"
-          layout="grid"
+          gridColumns="3"
           onValueChange={handleModeChange}
           type="single"
           value={selectedModeId}

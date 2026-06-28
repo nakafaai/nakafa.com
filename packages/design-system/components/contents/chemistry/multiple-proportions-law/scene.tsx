@@ -14,13 +14,11 @@ import {
   getChemistryParticleLabelFontSize,
   getChemistryParticleLabelPosition,
 } from "@repo/design-system/components/contents/chemistry/particle-label";
-import { SceneLabel } from "@repo/design-system/components/contents/scene-label";
 
 const FIRST_X = -0.78;
 const SECOND_X = 0.78;
 const SCENE_SCALE = 1.95;
 const BOND_LINE_WIDTH = 2.4;
-const FORMULA_LABEL_Y = 0.58;
 
 export function MultipleProportionsScene({
   colors,
@@ -50,14 +48,6 @@ function CompoundStage({
 }) {
   return (
     <group position={[x, 0, 0]}>
-      <SceneLabel
-        color={colors.text}
-        fontSize="marker"
-        position={[0, FORMULA_LABEL_Y, 0.34]}
-      >
-        {model.label}
-      </SceneLabel>
-
       <group position={[0, 0.02, 0]}>
         {model.molecules.map((molecule) => (
           <Molecule colors={colors} key={molecule.id} molecule={molecule} />

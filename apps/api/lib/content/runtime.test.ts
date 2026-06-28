@@ -1,0 +1,261 @@
+import { locales } from "@repo/utilities/locales";
+import { Effect } from "effect";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+  getApiContentRouteByContentId,
+  getArticleApiContentPage,
+  getExerciseApiQuestionPage,
+  getExerciseApiSetPage,
+  getMaterialApiContentPage,
+  getQuranApiSurahPage,
+  listApiStaticParams,
+  parseApiContentId,
+  parseApiLocale,
+  parseApiPageParams,
+} from "@/lib/content/runtime";
+
+const runtimeClientMocks = vi.hoisted(() => ({
+  fetchConvexRuntimeQuery: vi.fn(),
+}));
+
+vi.mock("@repo/backend/client/runtime", () => ({
+  fetchConvexRuntimeQuery: runtimeClientMocks.fetchConvexRuntimeQuery,
+}));
+
+describe("API content runtime", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("narrows supported route locales", () => {
+    for (const locale of locales) {
+      expect(parseApiLocale(locale)).toBe(locale);
+    }
+
+    expect(parseApiLocale("fr")).toBeNull();
+  });
+
+  it("parses bounded page params", () => {
+    expect(parseApiPageParams(new URLSearchParams())).toEqual({
+      cursor: null,
+      limit: 100,
+    });
+    expect(
+      parseApiPageParams(new URLSearchParams("cursor=abc&limit=5"))
+    ).toEqual({
+      cursor: "abc",
+      limit: 5,
+    });
+    expect(parseApiPageParams(new URLSearchParams("limit=0"))).toBeNull();
+    expect(parseApiPageParams(new URLSearchParams("limit=101"))).toBeNull();
+    expect(parseApiPageParams(new URLSearchParams("limit=abc"))).toBeNull();
+  });
+
+  it("narrows graph-backed content IDs", () => {
+    expect(parseApiContentId("asset:en:article:politics:article:a")).toBe(
+      "asset:en:article:politics:article:a"
+    );
+    expect(parseApiContentId("en/articles/a")).toBeNull();
+  });
+
+  it("reads one page for each API runtime content query", async () => {
+    const articlePage = { continueCursor: "", isDone: true, page: [] };
+    const subjectPage = { continueCursor: "", isDone: true, page: [] };
+    const exerciseSetPage = { exercises: [] };
+    const exerciseQuestionPage = { exercise: { number: 1 } };
+    const quranSurahPage = { surah: { number: 1 }, verses: [] };
+    const routeRow = { content_id: "asset:en:article:politics:article:a" };
+
+    runtimeClientMocks.fetchConvexRuntimeQuery
+      .mockResolvedValueOnce(articlePage)
+      .mockResolvedValueOnce(subjectPage)
+      .mockResolvedValueOnce(exerciseSetPage)
+      .mockResolvedValueOnce(exerciseQuestionPage)
+      .mockResolvedValueOnce(quranSurahPage)
+      .mockResolvedValueOnce(routeRow);
+
+    await expect(
+      Effect.runPromise(
+        getArticleApiContentPage({
+          cursor: null,
+          limit: 10,
+          locale: "en",
+          prefix: "articles/politics",
+        })
+      )
+    ).resolves.toEqual(articlePage);
+    expect(runtimeClientMocks.fetchConvexRuntimeQuery).toHaveBeenLastCalledWith(
+      "https://test.convex.cloud",
+      expect.anything(),
+      {
+        cursor: null,
+        limit: 10,
+        locale: "en",
+        prefix: "articles/politics",
+      }
+    );
+
+    await expect(
+      Effect.runPromise(
+        getMaterialApiContentPage({
+          cursor: "next",
+          limit: 5,
+          locale: "id",
+          prefix: "curriculum/high-school/10/mathematics",
+        })
+      )
+    ).resolves.toEqual(subjectPage);
+    expect(runtimeClientMocks.fetchConvexRuntimeQuery).toHaveBeenLastCalledWith(
+      "https://test.convex.cloud",
+      expect.anything(),
+      {
+        cursor: "next",
+        limit: 5,
+        locale: "id",
+        prefix: "curriculum/high-school/10/mathematics",
+      }
+    );
+
+    await expect(
+      Effect.runPromise(
+        getExerciseApiSetPage({
+          locale: "en",
+          slug: "material/practice/assessment/snbt/general-reasoning/set-1",
+        })
+      )
+    ).resolves.toEqual(exerciseSetPage);
+    expect(runtimeClientMocks.fetchConvexRuntimeQuery).toHaveBeenLastCalledWith(
+      "https://test.convex.cloud",
+      expect.anything(),
+      {
+        locale: "en",
+        slug: "material/practice/assessment/snbt/general-reasoning/set-1",
+      }
+    );
+
+    await expect(
+      Effect.runPromise(
+        getExerciseApiQuestionPage({
+          locale: "id",
+          slug: "material/practice/assessment/snbt/general-reasoning/set-1/1",
+        })
+      )
+    ).resolves.toEqual(exerciseQuestionPage);
+    expect(runtimeClientMocks.fetchConvexRuntimeQuery).toHaveBeenLastCalledWith(
+      "https://test.convex.cloud",
+      expect.anything(),
+      {
+        locale: "id",
+        slug: "material/practice/assessment/snbt/general-reasoning/set-1/1",
+      }
+    );
+
+    await expect(
+      Effect.runPromise(
+        getQuranApiSurahPage({
+          surah: 1,
+        })
+      )
+    ).resolves.toEqual(quranSurahPage);
+    expect(runtimeClientMocks.fetchConvexRuntimeQuery).toHaveBeenLastCalledWith(
+      "https://test.convex.cloud",
+      expect.anything(),
+      {
+        surah: 1,
+      }
+    );
+
+    await expect(
+      Effect.runPromise(
+        getApiContentRouteByContentId({
+          contentId: "asset:en:article:politics:article:a",
+        })
+      )
+    ).resolves.toEqual(routeRow);
+    expect(runtimeClientMocks.fetchConvexRuntimeQuery).toHaveBeenLastCalledWith(
+      "https://test.convex.cloud",
+      expect.anything(),
+      {
+        contentId: "asset:en:article:politics:article:a",
+      }
+    );
+  });
+
+  it("wraps runtime query failures with content runtime context", async () => {
+    runtimeClientMocks.fetchConvexRuntimeQuery.mockRejectedValueOnce(
+      new Error("offline")
+    );
+
+    const effect = getArticleApiContentPage({
+      cursor: null,
+      limit: 10,
+      locale: "en",
+      prefix: "articles/politics",
+    });
+
+    await expect(Effect.runPromise(effect)).rejects.toThrow(
+      "Unable to read API content runtime query: listArticleApiContentPage."
+    );
+  });
+
+  it("maps route catalog rows into API static params", async () => {
+    runtimeClientMocks.fetchConvexRuntimeQuery
+      .mockResolvedValueOnce({
+        continueCursor: "",
+        isDone: true,
+        page: [
+          {
+            route: "articles/politics/dynastic-politics-asian-values",
+          },
+        ],
+      })
+      .mockResolvedValueOnce({
+        continueCursor: "",
+        isDone: true,
+        page: [
+          {
+            route: "articles/politics/political-accountability",
+          },
+        ],
+      });
+
+    await expect(
+      listApiStaticParams({
+        prefix: "articles/",
+        section: "articles",
+      })
+    ).resolves.toEqual([
+      {
+        locale: "en",
+        slug: ["politics", "dynastic-politics-asian-values"],
+      },
+      {
+        locale: "id",
+        slug: ["politics", "political-accountability"],
+      },
+    ]);
+    expect(runtimeClientMocks.fetchConvexRuntimeQuery).toHaveBeenCalledTimes(2);
+    expect(runtimeClientMocks.fetchConvexRuntimeQuery).toHaveBeenCalledWith(
+      "https://test.convex.cloud",
+      expect.anything(),
+      {
+        cursor: null,
+        limit: 100,
+        locale: "en",
+        prefix: "articles/",
+        section: "articles",
+      }
+    );
+    expect(runtimeClientMocks.fetchConvexRuntimeQuery).toHaveBeenCalledWith(
+      "https://test.convex.cloud",
+      expect.anything(),
+      {
+        cursor: null,
+        limit: 100,
+        locale: "id",
+        prefix: "articles/",
+        section: "articles",
+      }
+    );
+  });
+});

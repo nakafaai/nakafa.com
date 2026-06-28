@@ -6,17 +6,17 @@ interface Props {
   locale: Locale;
 }
 
+const searchAction = {
+  "@type": "SearchAction",
+  target: {
+    "@type": "EntryPoint",
+    urlTemplate: "https://nakafa.com/search?q={search_term_string}",
+  },
+  "query-input": "required name=search_term_string",
+} satisfies SearchAction & { "query-input": string };
+
 export function WebsiteJsonLd({ locale }: Props) {
   const t = useTranslations("Metadata");
-
-  const searchAction: SearchAction & { "query-input": string } = {
-    "@type": "SearchAction",
-    target: {
-      "@type": "EntryPoint",
-      urlTemplate: "https://nakafa.com/search?q={search_term_string}",
-    },
-    "query-input": "required name=search_term_string",
-  };
 
   const websiteJsonLd: WithContext<WebSite> = {
     "@context": "https://schema.org",

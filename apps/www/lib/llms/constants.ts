@@ -10,10 +10,9 @@ export const ENGLISH_LANGUAGE_NAMES = new Intl.DisplayNames(["en"], {
 
 export const SECTION_LABELS = {
   articles: "Articles",
-  exercises: "Exercises",
+  material: "Material",
   quran: "Quran",
   site: "Site Pages",
-  subject: "Subject",
 };
 
 export type LlmsSection = keyof typeof SECTION_LABELS;

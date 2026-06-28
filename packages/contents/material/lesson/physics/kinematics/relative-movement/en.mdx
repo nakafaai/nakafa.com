@@ -1,0 +1,91 @@
+import { RelativeMovementLab } from "@repo/design-system/components/contents/physics/kinematics/relative-movement/lab";
+
+export const metadata = {
+  title: "Relative Motion",
+  description:
+    "Learn why motion can look different when the frame of reference changes.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "2026-05-31",
+  subject: "Kinematics",
+};
+
+## Motion Depends on the Observer
+
+Motion is always read relative to a frame of reference. An object that looks fast to an observer beside the road can look slow, still, or moving in the opposite direction to another observer who is also moving.
+
+If the observed object is named <InlineMath math="X" /> and the observer is named <InlineMath math="Y" />, the velocity of <InlineMath math="X" /> relative to <InlineMath math="Y" /> is:
+
+<BlockMath math="\vec{v}_{X/Y}=\vec{v}_X-\vec{v}_Y" />
+
+Positive and negative signs still matter because they show direction along the chosen axis.
+
+> Relative motion does not create a new motion. It reads the same motion from a different observer's seat.
+
+<RelativeMovementLab
+  title={<>Relative Motion of Two Cars</>}
+  description={
+    <>
+      Choose the direction of car B to see its motion as observed from car A.
+    </>
+  }
+  labels={{
+    chooseCase: "Choose direction",
+    modeLabels: {
+      "same-direction": <>Same Direction</>,
+      "opposite-direction": <>Opposite</>,
+    },
+    factLabels: {
+      observer: <>Car A</>,
+      target: <>Car B</>,
+      relativeVelocity: <>Relative velocity of B to A</>,
+      visibleDirection: <>As seen from A</>,
+    },
+    directionLabels: {
+      left: <>B appears to move left relative to A.</>,
+      right: <>B appears to move right relative to A.</>,
+    },
+    viewLabel: "Relative motion visual",
+  }}
+/>
+
+## Velocity Changes When the Observer Moves Too
+
+An object's velocity according to an observer changes when the observer is also moving. We compare not only the observed object, but also the motion of the observer.
+
+Suppose rightward is chosen as positive. A car moves at <InlineMath math="+12 \text{ m/s}" /> and a taxi moves at <InlineMath math="+14 \text{ m/s}" />. To a passenger in the taxi, the car appears to move backward:
+
+<BlockMath math="v_{\text{car/taxi}}=12-14=-2 \text{ m/s}" />
+
+The negative value means the relative motion points left.
+
+When two vehicles move in the same direction, the faster observer can see the other vehicle as moving backward. That does not mean the car turns around relative to the road. It only means the reading changes from the taxi passenger's seat.
+
+## When the Observer Is Still
+
+If the observer is the ground or a stationary platform, relative velocity is the same as velocity relative to the ground.
+
+<BlockMath math="v_{\text{object/ground}}=v_{\text{object}}-0" />
+
+That is why, in many simple problems, a velocity with no extra frame stated is usually assumed to be relative to the ground.
+
+## When Both Are Moving
+
+If two objects move in opposite directions, the magnitude of relative velocity can be greater than each object's velocity relative to the ground. For example, a car moves right at <InlineMath math="+12 \text{ m/s}" />, while a truck moves left at <InlineMath math="-8 \text{ m/s}" />.
+
+To the truck driver, the car's velocity is:
+
+<BlockMath math="v_{\text{car/truck}}=12-(-8)=+20 \text{ m/s}" />
+
+The value <InlineMath math="+20 \text{ m/s}" /> means the car appears to approach from the positive direction with a relative speed greater than either vehicle's speed relative to the ground.
+
+Relative motion does not change the actual motion. It changes **how the motion is read** by different observers.
+
+## What the Observer Sees Is the Difference
+
+| Situation | Calculation | Meaning of the relative motion |
+| :-------- | :---------- | :----------------------------- |
+| Observer is still | <InlineMath math="v_Y=0" /> | <InlineMath math="v_{X/Y}=v_X" /> |
+| Observer is faster in the same direction | <InlineMath math="12-14=-2 \text{ m/s}" /> | The object appears to move in the negative direction |
+| Observer moves in the opposite direction | <InlineMath math="12-(-8)=+20 \text{ m/s}" /> | The object appears to move in the positive direction |
+
+So, before saying an object is fast, slow, still, or moving backward, always check the frame of reference.

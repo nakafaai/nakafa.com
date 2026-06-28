@@ -4,7 +4,7 @@ import type { api } from "@repo/backend/convex/_generated/api";
 import { preloadedQueryResult } from "convex/nextjs";
 import { type Preloaded, useConvexAuth, usePreloadedQuery } from "convex/react";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
-import { type PropsWithChildren, useMemo } from "react";
+import type { PropsWithChildren } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 import { useTryoutClock } from "@/components/tryout/hooks/use-tryout-clock";
 import { useTryoutStartFlow } from "@/components/tryout/hooks/use-tryout-start-flow";
@@ -134,51 +134,31 @@ function useResolvedTryoutSetValue({
     resumePartKey,
   });
 
-  return useMemo(
-    () => ({
-      actions: {
-        clickStartAction,
-        confirmStartAction,
-        prefetchAuthAction,
-        setDialogOpenAction,
-      },
-      meta: {
-        isActionPending,
-        isDialogOpen,
-        isStartBlocked,
-      },
-      params,
-      state: {
-        attempt: attemptData?.attempt ?? null,
-        attemptData,
-        effectiveStatus,
-        hasFinishedAttempt,
-        initialAttemptHistory,
-        isTryoutActive,
-        nowMs,
-        remainingTime,
-        resumePartKey,
-      },
-    }),
-    [
-      attemptData,
+  return {
+    actions: {
       clickStartAction,
       confirmStartAction,
+      prefetchAuthAction,
+      setDialogOpenAction,
+    },
+    meta: {
+      isActionPending,
+      isDialogOpen,
+      isStartBlocked,
+    },
+    params,
+    state: {
+      attempt: attemptData?.attempt ?? null,
+      attemptData,
       effectiveStatus,
       hasFinishedAttempt,
       initialAttemptHistory,
       isTryoutActive,
-      isActionPending,
-      isDialogOpen,
-      isStartBlocked,
       nowMs,
-      params,
-      prefetchAuthAction,
       remainingTime,
       resumePartKey,
-      setDialogOpenAction,
-    ]
-  );
+    },
+  };
 }
 
 /** Resolves one set-route context from already available route state. */
@@ -253,10 +233,7 @@ function PreloadedTryoutSetProvider({
   preloadedSetView: PreloadedTryoutSetView;
 }>) {
   const { isAuthenticated, isLoading } = useConvexAuth();
-  const initialSetViewData = useMemo(
-    () => preloadedQueryResult(preloadedSetView),
-    [preloadedSetView]
-  );
+  const initialSetViewData = preloadedQueryResult(preloadedSetView);
 
   /**
    * Keep tryout route hydration on vanilla Convex primitives.

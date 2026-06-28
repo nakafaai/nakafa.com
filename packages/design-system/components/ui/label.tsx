@@ -3,7 +3,11 @@
 import { cn } from "@repo/design-system/lib/utils";
 import type * as React from "react";
 
-function Label({ className, ...props }: React.ComponentProps<"label">) {
+function Label({
+  children,
+  className,
+  ...props
+}: React.ComponentProps<"label">) {
   return (
     // biome-ignore lint/a11y/noLabelWithoutControl: this shared wrapper receives htmlFor or wraps a control at call sites.
     <label
@@ -13,7 +17,9 @@ function Label({ className, ...props }: React.ComponentProps<"label">) {
       )}
       data-slot="label"
       {...props}
-    />
+    >
+      {children}
+    </label>
   );
 }
 

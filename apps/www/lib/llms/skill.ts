@@ -14,7 +14,7 @@ export function getNakafaSkillText() {
     `name: ${NAKAFA_SKILL_NAME}`,
     `description: ${NAKAFA_SKILL_DESCRIPTION}`,
     "license: MIT",
-    "compatibility: Public HTTPS documentation, markdown URLs, llms.txt, llms-full.txt, and Streamable HTTP MCP clients.",
+    "clients: Public HTTPS documentation, markdown URLs, llms.txt, llms-full.txt, and Streamable HTTP MCP clients.",
     "metadata:",
     "  author: Nakafa",
     '  version: "1.0"',
@@ -22,7 +22,7 @@ export function getNakafaSkillText() {
     "",
     "# Nakafa Agent Skill",
     "",
-    "Use this skill when a user needs educational content from Nakafa, including subject lessons, Quran references, articles, and exam practice material.",
+    "Use this skill when a user needs educational content from Nakafa, including curriculum lessons, Quran references, articles, and exam practice material.",
     "",
     "## Discovery",
     "",
@@ -65,19 +65,6 @@ export function getNakafaAgentSkillIndex() {
         digest: `sha256:${createHash("sha256")
           .update(getNakafaSkillText())
           .digest("hex")}`,
-      },
-    ],
-  };
-}
-
-/** Builds the legacy skills discovery manifest. */
-export function getNakafaLegacySkillIndex() {
-  return {
-    skills: [
-      {
-        name: NAKAFA_SKILL_NAME,
-        description: NAKAFA_SKILL_DESCRIPTION,
-        files: ["SKILL.md"],
       },
     ],
   };

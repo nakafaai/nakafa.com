@@ -21,7 +21,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import {
   type InviteRole,
@@ -45,15 +45,9 @@ export function SchoolClassesPeopleInvite() {
     classId,
   });
 
-  const inviteCodesByRole = useMemo(
-    () => mapInviteCodesByRole(inviteCodes),
-    [inviteCodes]
-  );
+  const inviteCodesByRole = mapInviteCodesByRole(inviteCodes);
 
-  const code = useMemo(
-    () => inviteCodesByRole.get(selectedRole)?.code ?? "",
-    [inviteCodesByRole, selectedRole]
-  );
+  const code = inviteCodesByRole.get(selectedRole)?.code ?? "";
 
   return (
     <ButtonGroup>

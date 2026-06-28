@@ -5,7 +5,13 @@ import { HomeHeader } from "@/components/home/header";
 import { HomeTrending } from "@/components/home/trending";
 import { getToken } from "@/lib/auth/server";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { shouldRequireLearningProgramOnboarding } from "@/lib/programs/catalog";
+import {
+  getActiveLearningProfile,
+  getLearningProgramOnboardingCatalog,
+} from "@/lib/programs/server";
 
+/** Routes authenticated users into their active learning plan. */
 export default async function Page(props: PageProps<"/[locale]/home">) {
   const [{ locale: rawLocale }, token] = await Promise.all([
     props.params,
@@ -15,6 +21,17 @@ export default async function Page(props: PageProps<"/[locale]/home">) {
 
   if (!token) {
     redirect({ href: "/auth", locale });
+    return null;
+  }
+
+  const learningProfile = await getActiveLearningProfile(token, locale);
+  if (!learningProfile) {
+    const programs = await getLearningProgramOnboardingCatalog(locale);
+
+    if (shouldRequireLearningProgramOnboarding(learningProfile, programs)) {
+      redirect({ href: "/onboarding/role", locale });
+      return null;
+    }
   }
 
   return (
@@ -24,10 +41,11 @@ export default async function Page(props: PageProps<"/[locale]/home">) {
   );
 }
 
+/** Renders the authenticated home feed in the existing Nakafa home order. */
 function Main() {
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-24">
-      <div className="relative space-y-12">
+      <div className="relative flex flex-col gap-12">
         <HomeHeader />
 
         <HomeExplore />

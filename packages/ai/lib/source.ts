@@ -1,5 +1,6 @@
 import { getLatestUserText } from "@repo/ai/lib/user";
 import type { ModelMessage } from "ai";
+import { Schema } from "effect";
 import { ParseResultType, parseDomain } from "parse-domain";
 
 const whitespacePattern = /\s+/;
@@ -29,10 +30,14 @@ const pairedBoundaryPunctuation = new Map([
   ["}", "{"],
 ]);
 
-/**
- * Source reference extracted from user-written text.
- */
-export type SourceReference = ReturnType<typeof createSourceReference>;
+/** Runtime contract for one external source reference extracted from user text. */
+export const SourceReferenceSchema = Schema.Struct({
+  href: Schema.String,
+  hostname: Schema.String,
+  text: Schema.String,
+}).pipe(Schema.mutable);
+
+export type SourceReference = Schema.Schema.Type<typeof SourceReferenceSchema>;
 
 /**
  * Extracts every unique external source reference from plain user text.

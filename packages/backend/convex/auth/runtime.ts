@@ -2,6 +2,11 @@ import type { GenericCtx } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import { authComponent } from "@repo/backend/convex/auth/client";
+import { generatedUsername } from "@repo/backend/convex/auth/username/plugin";
+import {
+  createGoogleUsernameFields,
+  usernameOptions,
+} from "@repo/backend/convex/auth/username/policy";
 import authConfig from "@repo/backend/convex/auth.config";
 import { siteUrl } from "@repo/backend/convex/utils/site";
 import { type BetterAuthOptions, betterAuth } from "better-auth/minimal";
@@ -32,10 +37,7 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
         clientSecret: process.env.AUTH_GOOGLE_SECRET || "",
         accessType: "offline",
         prompt: "select_account consent",
-        mapProfileToUser: (profile) => ({
-          username: profile.email,
-          displayUsername: profile.email.split("@")[0],
-        }),
+        mapProfileToUser: createGoogleUsernameFields,
       },
     },
     user: {
@@ -45,7 +47,13 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
     },
     plugins: [
       anonymous(),
-      username(),
+      /*
+       * generatedUsername() must run before Better Auth's username plugin so
+       * Google-created users are normalized before username validation runs.
+       * Source: better-auth@1.6.16/dist/plugins/username/index.mjs
+       */
+      generatedUsername(),
+      username(usernameOptions),
       organization(),
       openAPI(),
       convex({

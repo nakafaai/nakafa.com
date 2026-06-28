@@ -1,20 +1,13 @@
 import { formatTaxonomy } from "@repo/ai/agents/nakafa/format";
 import { previewTaxonomy } from "@repo/ai/agents/nakafa/preview";
+import { Nakafa } from "@repo/ai/agents/nakafa/service";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { NakafaAgentTaxonomyOptions } from "@repo/contents/_lib/agent/schema/taxonomy";
-import { Nakafa } from "@repo/contents/_lib/agent/service";
 import type { Locale } from "@repo/contents/_types/content";
 import type { UIMessageStreamWriter } from "ai";
 import { Effect } from "effect";
 
 type Writer = Pick<UIMessageStreamWriter<MyUIMessage>, "write">;
-
-interface Params {
-  input: NakafaAgentTaxonomyOptions;
-  locale: Locale;
-  toolCallId: string;
-  writer: Writer;
-}
 
 /** Reads Nakafa taxonomy and writes a bounded preview UI part. */
 export const taxonomy = Effect.fn("nakafa.taxonomy")(function* ({
@@ -22,7 +15,12 @@ export const taxonomy = Effect.fn("nakafa.taxonomy")(function* ({
   locale,
   toolCallId,
   writer,
-}: Params) {
+}: {
+  readonly input: NakafaAgentTaxonomyOptions;
+  readonly locale: Locale;
+  readonly toolCallId: string;
+  readonly writer: Writer;
+}) {
   const dataInput = { ...input, locale };
 
   yield* Effect.sync(() =>

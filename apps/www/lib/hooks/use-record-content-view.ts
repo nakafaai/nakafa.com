@@ -1,30 +1,28 @@
 "use client";
 
-import {
-  useDocumentVisibility,
-  useLocalStorage,
-  useTimeout,
-} from "@mantine/hooks";
+import { useDocumentVisibility, useLocalStorage } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
-import type {
-  ContentViewRef,
-  Locale,
-} from "@repo/backend/convex/lib/validators/contents";
+import type { LearningContextInput } from "@repo/backend/convex/contents/context";
+import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { generateNanoId } from "@repo/design-system/lib/utils";
-import { useMutation } from "convex/react";
+import { useConvexAuth, useMutation } from "convex/react";
 import { Effect } from "effect";
-import { useEffect, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useContentViews } from "@/lib/context/use-content-views";
+import { useUser } from "@/lib/context/use-user";
+import { createContentViewKey } from "@/lib/hooks/views";
 
+/** Client-side graph content-view recording configuration. */
 interface UseRecordContentViewOptions {
-  contentView: ContentViewRef;
+  contentId?: string | null;
+  context?: LearningContextInput;
   delay?: number;
   locale: Locale;
 }
 
 /**
- * Records unique content views per user/device.
+ * Records unique content views per user/device when a content identity exists.
  *
  * Design: Backend tracks first and last view timestamps.
  * Local deduplication prevents rapid duplicate calls within session.
@@ -33,7 +31,8 @@ interface UseRecordContentViewOptions {
  * @param delay - Minimum engagement time before recording (default: 3000ms)
  */
 export function useRecordContentView({
-  contentView,
+  contentId,
+  context,
   locale,
   delay = 3000,
 }: UseRecordContentViewOptions) {
@@ -43,22 +42,57 @@ export function useRecordContentView({
 
   const markAsViewed = useContentViews((s) => s.markAsViewed);
   const isViewed = useContentViews((s) => s.isViewed);
+  const { isAuthenticated, isLoading } = useConvexAuth();
+  const { isUserPending, signedInUserId } = useUser((state) => ({
+    isUserPending: state.isPending,
+    signedInUserId: state.user?.appUser._id ?? null,
+  }));
 
   const documentState = useDocumentVisibility();
   const isVisible = documentState === "visible";
-  const viewKey = `${contentView.type}:${locale}:${contentView.slug}`;
+  const viewKey = createContentViewKey({
+    authenticated: isAuthenticated,
+    locale,
+    contentId,
+    context,
+    signedInUserId,
+  });
+  const [defaultDeviceId] = useState(
+    () => `${Date.now()}-${generateNanoId(9)}`
+  );
   const [deviceId] = useLocalStorage({
     key: "nakafa-device-id",
-    defaultValue: useMemo(() => `${Date.now()}-${generateNanoId(9)}`, []),
+    defaultValue: defaultDeviceId,
   });
 
-  const { start, clear } = useTimeout(
-    () => {
+  useEffect(() => {
+    if (!contentId) {
+      return;
+    }
+
+    if (isLoading || isUserPending) {
+      return;
+    }
+
+    if (isAuthenticated && !signedInUserId) {
+      return;
+    }
+
+    if (isViewed(viewKey)) {
+      return;
+    }
+
+    if (!isVisible) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
       Effect.runFork(
         Effect.tryPromise({
           try: () =>
             recordView({
-              contentRef: { type: contentView.type, slug: contentView.slug },
+              contentId,
+              ...(context ? { context } : {}),
               locale,
               deviceId,
             }),
@@ -68,34 +102,34 @@ export function useRecordContentView({
           Effect.catchAll((error) =>
             Effect.sync(() =>
               captureException(error, {
+                contentId,
+                contextMode: context?.mode ?? "canonical",
                 locale,
-                slug: contentView.slug,
                 source: "record-content-view",
-                type: contentView.type,
               })
             )
           )
         )
       );
-    },
-    delay,
-    { autoInvoke: false }
-  );
-
-  useEffect(() => {
-    if (isViewed(viewKey)) {
-      clear();
-      return;
-    }
-
-    if (isVisible) {
-      start();
-    } else {
-      clear();
-    }
+    }, delay);
 
     return () => {
-      clear();
+      window.clearTimeout(timeoutId);
     };
-  }, [clear, isVisible, isViewed, start, viewKey]);
+  }, [
+    contentId,
+    context,
+    delay,
+    deviceId,
+    isAuthenticated,
+    isLoading,
+    isViewed,
+    isUserPending,
+    isVisible,
+    locale,
+    markAsViewed,
+    recordView,
+    signedInUserId,
+    viewKey,
+  ]);
 }

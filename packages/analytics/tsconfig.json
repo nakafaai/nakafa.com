@@ -1,7 +1,7 @@
 {
   "extends": "@repo/typescript-config/nextjs.json",
   "compilerOptions": {
-    "types": ["node"],
+    "types": ["node", "next"],
     "paths": {
       "@repo/*": ["../*"],
       "@repo/analytics/*": ["./*"]

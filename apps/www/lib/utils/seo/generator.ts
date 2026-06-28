@@ -1,109 +1,46 @@
-import { getGradeNonNumeric } from "@repo/contents/_lib/subject/grade";
-import type { ArticleCategory } from "@repo/contents/_types/articles/category";
-import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material";
-import type { ExercisesType } from "@repo/contents/_types/exercises/type";
-import type { Grade } from "@repo/contents/_types/subject/grade";
-import type { Material } from "@repo/contents/_types/subject/material";
-import { Effect, Schema } from "effect";
+import { getGradeNonNumeric } from "@repo/contents/_lib/curriculum/grade";
+import type {
+  ArticleCategory,
+  ExercisesCategory,
+  ExercisesMaterial,
+  ExercisesType,
+  Grade,
+  Material,
+} from "@repo/contents/_types/taxonomy";
+import { Effect, Option } from "effect";
 import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
-import { getTranslations } from "next-intl/server";
-import { createSEODescription } from "@/lib/utils/seo/descriptions";
-import { createSEOTitle } from "@/lib/utils/seo/titles";
+import { generateFallbackMetadata } from "@/lib/utils/seo/fallback";
+import { createSEOKeywords } from "@/lib/utils/seo/keywords";
+import { generateQuranMetadata } from "@/lib/utils/seo/quran";
+import { fetchSEOTranslationsNamespace } from "@/lib/utils/seo/translations";
 import type {
   ContentSEOData,
   SEOContext,
   SEOMetadata,
 } from "@/lib/utils/seo/types";
 
-/** Expected failure when a localized SEO dictionary cannot be loaded. */
-class SEOTranslationLoadError extends Schema.TaggedError<SEOTranslationLoadError>()(
-  "SEOTranslationLoadError",
-  {
-    locale: Schema.String,
-    message: Schema.String,
-    namespace: Schema.String,
-  }
-) {}
+const EMPTY_SELECT_VALUE = "__EMPTY__";
 
-/** Converts unknown thrown values into readable fallback error messages. */
-function getErrorMessage(error: unknown) {
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return "Unknown translation loading error";
-}
-
-/**
- * Fetches translations for the Metadata namespace.
- */
+/** Fetches translations for the Metadata namespace. */
 const fetchMetadataTranslations = (locale: Locale) =>
-  Effect.tryPromise({
-    try: () => getTranslations({ locale, namespace: "Metadata" }),
-    catch: (error: unknown) =>
-      new SEOTranslationLoadError({
-        locale,
-        namespace: "Metadata",
-        message: `Failed to load Metadata translations: ${getErrorMessage(error)}`,
-      }),
-  });
+  fetchSEOTranslationsNamespace(locale, "Metadata");
 
-/**
- * Fetches translations for the Subject namespace.
- */
+/** Fetches translations for the Subject namespace. */
 const fetchSubjectTranslations = (locale: Locale) =>
-  Effect.tryPromise({
-    try: () => getTranslations({ locale, namespace: "Subject" }),
-    catch: (error: unknown) =>
-      new SEOTranslationLoadError({
-        locale,
-        namespace: "Subject",
-        message: `Failed to load Subject translations: ${getErrorMessage(error)}`,
-      }),
-  });
+  fetchSEOTranslationsNamespace(locale, "Subject");
 
-/**
- * Fetches translations for the Exercises namespace.
- */
+/** Fetches translations for the Exercises namespace. */
 const fetchExercisesTranslations = (locale: Locale) =>
-  Effect.tryPromise({
-    try: () => getTranslations({ locale, namespace: "Exercises" }),
-    catch: (error: unknown) =>
-      new SEOTranslationLoadError({
-        locale,
-        namespace: "Exercises",
-        message: `Failed to load Exercises translations: ${getErrorMessage(error)}`,
-      }),
-  });
+  fetchSEOTranslationsNamespace(locale, "Exercises");
 
-/**
- * Fetches translations for the Articles namespace.
- */
+/** Fetches translations for the Articles namespace. */
 const fetchArticlesTranslations = (locale: Locale) =>
-  Effect.tryPromise({
-    try: () => getTranslations({ locale, namespace: "Articles" }),
-    catch: (error: unknown) =>
-      new SEOTranslationLoadError({
-        locale,
-        namespace: "Articles",
-        message: `Failed to load Articles translations: ${getErrorMessage(error)}`,
-      }),
-  });
+  fetchSEOTranslationsNamespace(locale, "Articles");
 
-/**
- * Fetches translations for the SEO namespace.
- */
+/** Fetches translations for the SEO namespace. */
 const fetchSEOTranslations = (locale: Locale) =>
-  Effect.tryPromise({
-    try: () => getTranslations({ locale, namespace: "SEO" }),
-    catch: (error: unknown) =>
-      new SEOTranslationLoadError({
-        locale,
-        namespace: "SEO",
-        message: `Failed to load SEO translations: ${getErrorMessage(error)}`,
-      }),
-  });
+  fetchSEOTranslationsNamespace(locale, "SEO");
 
 /**
  * Gets effective title with fallback chain:
@@ -138,8 +75,8 @@ const formatGradeForDisplay = Effect.fn("SEO.formatGradeForDisplay")(
 
       const nonNumericGrade = getGradeNonNumeric(grade);
 
-      if (nonNumericGrade) {
-        return tSubject(nonNumericGrade);
+      if (Option.isSome(nonNumericGrade)) {
+        return tSubject(nonNumericGrade.value);
       }
 
       return tSubject("grade", { grade });
@@ -165,6 +102,15 @@ const translateExerciseMaterial = Effect.fn("SEO.translateExerciseMaterial")(
     Effect.gen(function* () {
       const tExercises = yield* fetchExercisesTranslations(locale);
       return tExercises(material);
+    })
+);
+
+/** Translates exercise category from Exercises namespace. */
+const translateExerciseCategory = Effect.fn("SEO.translateExerciseCategory")(
+  (category: ExercisesCategory, locale: Locale) =>
+    Effect.gen(function* () {
+      const tExercises = yield* fetchExercisesTranslations(locale);
+      return tExercises(category);
     })
 );
 
@@ -201,11 +147,23 @@ function getContentDescription(data: ContentSEOData) {
   return description;
 }
 
+/** Converts optional metadata fields into the non-empty token ICU select expects. */
+function readOptionalSelectValue(value: string | undefined) {
+  return value?.trim() || EMPTY_SELECT_VALUE;
+}
+
+/** Formats the optional question total used only when runtime counts are available. */
+function readQuestionTotalSelectValue(questionCount: number | undefined) {
+  return questionCount && questionCount > 0
+    ? `/${questionCount}`
+    : EMPTY_SELECT_VALUE;
+}
+
 /**
- * Generates SEO metadata for subject content.
+ * Generates SEO metadata for material content.
  */
 const generateSubjectMetadata = Effect.fn("SEO.generateSubjectMetadata")(
-  (context: Extract<SEOContext, { type: "subject" }>, locale: Locale) =>
+  (context: Extract<SEOContext, { type: "material-lesson" }>, locale: Locale) =>
     Effect.gen(function* () {
       const { data, grade, material, chapter } = context;
 
@@ -217,8 +175,7 @@ const generateSubjectMetadata = Effect.fn("SEO.generateSubjectMetadata")(
           translateSubjectMaterial(material, locale),
         ]);
 
-      // Use sentinel value for optional fields in ICU select
-      const chapterValue = chapter?.trim() || "__EMPTY__";
+      const chapterValue = readOptionalSelectValue(chapter);
 
       return {
         title: t("subject.title", {
@@ -235,14 +192,56 @@ const generateSubjectMetadata = Effect.fn("SEO.generateSubjectMetadata")(
             material: materialDisplayName,
             grade: gradeDisplay,
           }),
-        keywords: t("subject.keywords", {
+        keywords: createSEOKeywords(
+          t("subject.keywords", {
+            title: effectiveTitle,
+            chapter: chapterValue,
+            material: materialDisplayName,
+            grade: gradeDisplay,
+          })
+        ),
+      };
+    })
+);
+
+/** Generates SEO metadata for practice assessment roots. */
+const generateExerciseProgramMetadata = Effect.fn(
+  "SEO.generateExerciseProgramMetadata"
+)(
+  (
+    context: Extract<SEOContext, { type: "exercise-program" }>,
+    locale: Locale
+  ) =>
+    Effect.gen(function* () {
+      const { category, data, exam } = context;
+      const [t, effectiveTitle, categoryDisplayName, examDisplayName] =
+        yield* Effect.all([
+          fetchSEOTranslations(locale),
+          getEffectiveTitle(data, locale),
+          translateExerciseCategory(category, locale),
+          translateExerciseType(exam, locale),
+        ]);
+
+      return {
+        title: t("exercise-program.title", {
+          category: categoryDisplayName,
+          exam: examDisplayName,
           title: effectiveTitle,
-          chapter: chapterValue,
-          material: materialDisplayName,
-          grade: gradeDisplay,
-        })
-          .split(", ")
-          .map((k: string) => k.trim()),
+        }),
+        description:
+          getContentDescription(data) ??
+          t("exercise-program.description", {
+            category: categoryDisplayName,
+            exam: examDisplayName,
+            title: effectiveTitle,
+          }),
+        keywords: createSEOKeywords(
+          t("exercise-program.keywords", {
+            category: categoryDisplayName,
+            exam: examDisplayName,
+            title: effectiveTitle,
+          })
+        ),
       };
     })
 );
@@ -264,12 +263,10 @@ const generateExerciseMetadata = Effect.fn("SEO.generateExerciseMetadata")(
           translateExerciseType(exam, locale),
         ]);
 
-      // Use sentinel value for optional fields in ICU select
-      const groupValue = group?.trim() || "__EMPTY__";
-      const setValue = set?.trim() || "__EMPTY__";
-
-      // Convert number to string for ICU select
+      const groupValue = readOptionalSelectValue(group);
+      const setValue = readOptionalSelectValue(set);
       const numberValue = number && number > 0 ? String(number) : "0";
+      const questionTotalValue = readQuestionTotalSelectValue(questionCount);
 
       return {
         title: t("exercise.title", {
@@ -277,27 +274,69 @@ const generateExerciseMetadata = Effect.fn("SEO.generateExerciseMetadata")(
           group: groupValue,
           set: setValue,
           number: numberValue,
+          questionTotal: questionTotalValue,
           questionCount: questionCount ?? 0,
           material: materialDisplayName,
           title: effectiveTitle,
         }),
-        description: t("exercise.description", {
-          exam: examDisplayName,
-          group: groupValue,
-          set: setValue,
-          material: materialDisplayName,
-          questionCount: questionCount ?? 0,
+        description:
+          getContentDescription(data) ??
+          t("exercise.description", {
+            exam: examDisplayName,
+            group: groupValue,
+            set: setValue,
+            material: materialDisplayName,
+            questionCount: questionCount ?? 0,
+            title: effectiveTitle,
+          }),
+        keywords: createSEOKeywords(
+          t("exercise.keywords", {
+            exam: examDisplayName,
+            group: groupValue,
+            set: setValue,
+            material: materialDisplayName,
+            title: effectiveTitle,
+          })
+        ),
+      };
+    })
+);
+
+/** Generates SEO metadata for curriculum context pages. */
+const generateCurriculumMetadata = Effect.fn("SEO.generateCurriculumMetadata")(
+  (
+    context: Extract<SEOContext, { type: "curriculum-context" }>,
+    locale: Locale
+  ) =>
+    Effect.gen(function* () {
+      const { data, parent, program } = context;
+      const [t, effectiveTitle] = yield* Effect.all([
+        fetchSEOTranslations(locale),
+        getEffectiveTitle(data, locale),
+      ]);
+      const parentValue = readOptionalSelectValue(parent);
+      const programValue = readOptionalSelectValue(program);
+
+      return {
+        title: t("curriculum.title", {
           title: effectiveTitle,
+          parent: parentValue,
+          program: programValue,
         }),
-        keywords: t("exercise.keywords", {
-          exam: examDisplayName,
-          group: groupValue,
-          set: setValue,
-          material: materialDisplayName,
-          title: effectiveTitle,
-        })
-          .split(", ")
-          .map((k: string) => k.trim()),
+        description:
+          getContentDescription(data) ??
+          t("curriculum.description", {
+            title: effectiveTitle,
+            parent: parentValue,
+            program: programValue,
+          }),
+        keywords: createSEOKeywords(
+          t("curriculum.keywords", {
+            title: effectiveTitle,
+            parent: parentValue,
+            program: programValue,
+          })
+        ),
       };
     })
 );
@@ -327,54 +366,12 @@ const generateArticleMetadata = Effect.fn("SEO.generateArticleMetadata")(
             title: effectiveTitle,
             category: categoryDisplayName,
           }),
-        keywords: t("article.keywords", {
-          title: effectiveTitle,
-          category: categoryDisplayName,
-        })
-          .split(", ")
-          .map((k: string) => k.trim()),
-      };
-    })
-);
-
-/**
- * Generates SEO metadata for quran content.
- */
-const generateQuranMetadata = Effect.fn("SEO.generateQuranMetadata")(
-  (context: Extract<SEOContext, { type: "quran" }>, locale: Locale) =>
-    Effect.gen(function* () {
-      const { surah } = context;
-      const name = surah.name.short;
-      const transliteration =
-        surah.name.transliteration[locale] ||
-        surah.name.transliteration.en ||
-        name;
-      const translation =
-        surah.name.translation[locale] || surah.name.translation.en || name;
-      const revelation = surah.revelation[locale] || surah.revelation.en || "";
-      const effectiveTitle = translation || name;
-
-      const t = yield* fetchSEOTranslations(locale);
-
-      return {
-        title: t("quran.title", {
-          number: surah.number,
-          name,
-          transliteration,
-          translation: effectiveTitle,
-        }),
-        description: t("quran.description", {
-          name,
-          transliteration,
-          numberOfVerses: surah.numberOfVerses,
-        }),
-        keywords: t("quran.keywords", {
-          name,
-          translation: effectiveTitle,
-          revelation,
-        })
-          .split(", ")
-          .map((k: string) => k.trim()),
+        keywords: createSEOKeywords(
+          t("article.keywords", {
+            title: effectiveTitle,
+            category: categoryDisplayName,
+          })
+        ),
       };
     })
 );
@@ -393,7 +390,7 @@ export async function generateSEOMetadata(
   const { type } = context;
 
   const effect = Effect.gen(function* () {
-    if (type === "subject") {
+    if (type === "material-lesson") {
       return yield* generateSubjectMetadata(context, locale);
     }
 
@@ -401,11 +398,19 @@ export async function generateSEOMetadata(
       return yield* generateExerciseMetadata(context, locale);
     }
 
+    if (type === "exercise-program") {
+      return yield* generateExerciseProgramMetadata(context, locale);
+    }
+
+    if (type === "curriculum-context") {
+      return yield* generateCurriculumMetadata(context, locale);
+    }
+
     if (type === "article") {
       return yield* generateArticleMetadata(context, locale);
     }
 
-    return yield* generateQuranMetadata(context, locale);
+    return yield* generateQuranMetadata(context.surah, locale);
   });
 
   return await Effect.runPromise(
@@ -415,45 +420,4 @@ export async function generateSEOMetadata(
       )
     )
   );
-}
-
-/**
- * Gets display name from context for fallback metadata.
- */
-function getDisplayNameFromContext(context: SEOContext): string {
-  if (context.type === "subject") {
-    return context.material;
-  }
-  if (context.type === "exercise") {
-    return context.material;
-  }
-  if (context.type === "article") {
-    return context.category;
-  }
-  return "";
-}
-
-/**
- * Fallback using legacy title/description builders.
- */
-function generateFallbackMetadata(context: SEOContext): SEOMetadata {
-  const displayName = getDisplayNameFromContext(context);
-
-  // Quran type doesn't have data property - handle first
-  if (context.type === "quran") {
-    return {
-      title: createSEOTitle([context.surah.name.translation.en, displayName]),
-      description: createSEODescription([context.surah.name.translation.en]),
-      keywords: [],
-    };
-  }
-
-  // Types with data: subject, exercise, article
-  const { data } = context;
-
-  return {
-    title: createSEOTitle([data.title, data.subject, displayName]),
-    description: createSEODescription([data.description, data.title]),
-    keywords: [],
-  };
 }

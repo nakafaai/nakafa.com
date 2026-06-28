@@ -1,10 +1,14 @@
-import { promises as fsPromises } from "node:fs";
-import path from "node:path";
-import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
+import { resolveSafeContentPath } from "@repo/contents/_lib/fs/path";
+import { ContentIO } from "@repo/contents/_lib/io/content";
+import {
+  extractObjectLiteralAfterDeclaration,
+  parseObjectLiteral,
+} from "@repo/contents/_lib/literal";
+import { getMdxSlugsForLocale } from "@repo/contents/_lib/mdx-slugs/cache";
 import { resolveContentsDir } from "@repo/contents/_lib/root";
 import {
   FileReadError,
-  InvalidPathError,
+  type InvalidPathError,
   MetadataParseError,
 } from "@repo/contents/_shared/error";
 import type { Locale } from "@repo/contents/_types/content";
@@ -13,10 +17,10 @@ import {
   ContentMetadataSchema,
 } from "@repo/contents/_types/content";
 import { cleanSlug } from "@repo/utilities/helper";
-import { Effect, Either, Option, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 
 const contentsDir = resolveContentsDir(import.meta.url);
-const METADATA_REGEX = /export const metadata\s*=\s*({[\s\S]*?});/;
+const METADATA_DECLARATION_REGEX = /export const metadata\s*=/;
 
 /**
  * Metadata summary for a content entry without loading its MDX component.
@@ -45,23 +49,23 @@ export interface ContentMetadataWithRaw {
 export function extractMetadata(
   rawContent: string
 ): Option.Option<ContentMetadata> {
-  const metadataMatch = rawContent.match(METADATA_REGEX);
+  const metadataLiteral = extractObjectLiteralAfterDeclaration(
+    rawContent,
+    METADATA_DECLARATION_REGEX
+  );
 
-  if (!metadataMatch?.[1]) {
+  if (Option.isNone(metadataLiteral)) {
     return Option.none();
   }
 
-  const metadataObject = Either.try({
-    try: () => new Function(`return ${metadataMatch[1]}`)(),
-    catch: () => null,
-  });
+  const metadataObject = parseObjectLiteral(metadataLiteral.value);
 
-  if (Either.isLeft(metadataObject)) {
+  if (Option.isNone(metadataObject)) {
     return Option.none();
   }
 
   return Schema.decodeUnknownOption(ContentMetadataSchema)(
-    metadataObject.right
+    metadataObject.value
   );
 }
 
@@ -80,28 +84,26 @@ export function getContentMetadata(
   InvalidPathError | FileReadError | MetadataParseError
 > {
   const cleanPath = cleanSlug(filePath);
-  const fullPath = path.join(contentsDir, `${cleanPath}/${locale}.mdx`);
-
-  if (!fullPath.startsWith(contentsDir)) {
-    return Effect.fail(
-      new InvalidPathError({
-        message: "Path traversal detected while reading content metadata.",
-        path: filePath,
-        reason: "Path traversal detected",
-      })
-    );
-  }
+  const contentPath = `${cleanPath}/${locale}.mdx`;
 
   return Effect.gen(function* () {
-    const rawContent = yield* Effect.tryPromise({
-      try: () => fsPromises.readFile(fullPath, "utf8"),
-      catch: (error: unknown) =>
-        new FileReadError({
-          cause: error,
-          message: "Unable to read content metadata file.",
-          path: fullPath,
-        }),
-    });
+    const fullPath = yield* resolveSafeContentPath(
+      contentPath,
+      contentsDir,
+      "Path traversal detected while reading content metadata."
+    );
+
+    const rawContent = yield* ContentIO.readFileString(fullPath).pipe(
+      Effect.provide(ContentIO.Default),
+      Effect.mapError(
+        (error) =>
+          new FileReadError({
+            cause: error,
+            message: "Unable to read content metadata file.",
+            path: fullPath,
+          })
+      )
+    );
 
     const metadata = extractMetadata(rawContent);
     if (Option.isNone(metadata)) {
@@ -133,28 +135,26 @@ export function getContentMetadataWithRaw(
   InvalidPathError | FileReadError | MetadataParseError
 > {
   const cleanPath = cleanSlug(filePath);
-  const fullPath = path.join(contentsDir, `${cleanPath}/${locale}.mdx`);
-
-  if (!fullPath.startsWith(contentsDir)) {
-    return Effect.fail(
-      new InvalidPathError({
-        message: "Path traversal detected while reading content metadata.",
-        path: filePath,
-        reason: "Path traversal detected",
-      })
-    );
-  }
+  const contentPath = `${cleanPath}/${locale}.mdx`;
 
   return Effect.gen(function* () {
-    const raw = yield* Effect.tryPromise({
-      try: () => fsPromises.readFile(fullPath, "utf8"),
-      catch: (error: unknown) =>
-        new FileReadError({
-          cause: error,
-          message: "Unable to read content metadata file.",
-          path: fullPath,
-        }),
-    });
+    const fullPath = yield* resolveSafeContentPath(
+      contentPath,
+      contentsDir,
+      "Path traversal detected while reading content metadata."
+    );
+
+    const raw = yield* ContentIO.readFileString(fullPath).pipe(
+      Effect.provide(ContentIO.Default),
+      Effect.mapError(
+        (error) =>
+          new FileReadError({
+            cause: error,
+            message: "Unable to read content metadata file.",
+            path: fullPath,
+          })
+      )
+    );
 
     const metadata = extractMetadata(raw);
     if (Option.isNone(metadata)) {
@@ -184,30 +184,39 @@ export function getContentsMetadata(
   options: { basePath?: string; locale?: Locale } = {}
 ): Effect.Effect<ContentMetadataListItem[], never, never> {
   const { locale = "en", basePath = "" } = options;
-  const slugs = getMDXSlugsForLocale(locale);
-  const filteredSlugs = basePath
-    ? slugs.filter((slug) => slug.startsWith(basePath))
-    : slugs;
 
-  return Effect.forEach(
-    filteredSlugs,
-    (slug) =>
-      Effect.gen(function* () {
-        const metadata = yield* Effect.either(getContentMetadata(slug, locale));
+  return Effect.gen(function* () {
+    const slugs = yield* getMdxSlugsForLocale(locale);
+    const filteredSlugs = basePath
+      ? slugs.filter((slug) => slug.startsWith(basePath))
+      : slugs;
 
-        if (metadata._tag === "Left") {
-          return;
-        }
+    return yield* Effect.forEach(
+      filteredSlugs,
+      (slug) =>
+        Effect.gen(function* () {
+          const metadata = yield* Effect.either(
+            getContentMetadata(slug, locale)
+          );
 
-        const url = new URL(`/${locale}/${slug}`, "https://nakafa.com");
+          if (metadata._tag === "Left") {
+            return Option.none();
+          }
 
-        return {
-          locale,
-          metadata: metadata.right,
-          slug,
-          url: url.toString(),
-        } satisfies ContentMetadataListItem;
-      }),
-    { concurrency: "unbounded" }
-  ).pipe(Effect.map((items) => items.filter((item) => item !== undefined)));
+          const url = new URL(`/${locale}/${slug}`, "https://nakafa.com");
+
+          return Option.some({
+            locale,
+            metadata: metadata.right,
+            slug,
+            url: url.toString(),
+          } satisfies ContentMetadataListItem);
+        }),
+      { concurrency: "unbounded" }
+    ).pipe(
+      Effect.map((items) =>
+        items.flatMap((item) => (Option.isSome(item) ? [item.value] : []))
+      )
+    );
+  });
 }

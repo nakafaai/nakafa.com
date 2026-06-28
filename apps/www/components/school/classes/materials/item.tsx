@@ -33,11 +33,12 @@ import { cn } from "@repo/design-system/lib/utils";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { useMutation } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
+import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 import { Activity, useTransition } from "react";
 import { toast } from "sonner";
-import { getMaterialStatus } from "@/components/school/classes/_data/material-status";
+import { getMaterialStatus } from "@/components/school/classes/data/material-status";
 import { SchoolClassesDeleteDialog } from "@/components/school/classes/delete-dialog";
 import { EditMaterialGroupDialog } from "@/components/school/classes/materials/editor-dialog";
 import type { MaterialGroup } from "@/components/school/classes/materials/types";
@@ -174,25 +175,34 @@ function MaterialGroupActions({
   );
 
   function handleMoveUp() {
-    startTransition(() => {
-      reorderGroup({ groupId: group._id, direction: "up" });
+    startTransition(async () => {
+      await reorderGroup({ groupId: group._id, direction: "up" });
     });
   }
 
   function handleMoveDown() {
-    startTransition(() => {
-      reorderGroup({ groupId: group._id, direction: "down" });
+    startTransition(async () => {
+      await reorderGroup({ groupId: group._id, direction: "down" });
     });
   }
 
   function handleDelete() {
     startTransition(async () => {
-      try {
-        await deleteGroup({ groupId: group._id });
-        toast.success(schoolT("material-deleted"));
-      } catch {
-        toast.error(schoolT("delete-material-failed"));
-      }
+      await Effect.runPromise(
+        Effect.tryPromise({
+          try: async () => {
+            await deleteGroup({ groupId: group._id });
+            toast.success(schoolT("material-deleted"));
+          },
+          catch: (error) => error,
+        }).pipe(
+          Effect.catchAll(() =>
+            Effect.sync(() => {
+              toast.error(schoolT("delete-material-failed"));
+            })
+          )
+        )
+      );
     });
   }
 

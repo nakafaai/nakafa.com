@@ -1,39 +1,66 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { deleteAudioContentSource } from "@repo/backend/convex/audioStudies/helpers/sources";
+import { deleteAudioContentSourceByRoute } from "@repo/backend/convex/audioStudies/helpers/sources";
 import type { ContentAuthorContentId } from "@repo/backend/convex/authors/schema";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
-import { buildContentSearchRef } from "@repo/backend/convex/contents/helpers/search/documents";
-import { deleteContentSearch } from "@repo/backend/convex/contents/helpers/search/write";
-import type {
-  ContentType,
-  Locale,
+import { deleteContentRoutesBySourcePath } from "@repo/backend/convex/contents/helpers/routes/write";
+import { deleteContentSearchBySourcePath } from "@repo/backend/convex/contents/helpers/search/write";
+import {
+  type ContentType,
+  type Locale,
+  localeValidator,
+  SUPPORTED_CONTENT_LOCALES,
 } from "@repo/backend/convex/lib/validators/contents";
-import { ConvexError } from "convex/values";
+import { ConvexError, type Infer, v } from "convex/values";
 
 export type AuthorCache = Map<string, Id<"authors">>;
 
-export interface SyncedAuthor {
-  name: string;
-}
+/** Convex validator for author names imported from source metadata. */
+export const syncedAuthorValidator = v.object({
+  name: v.string(),
+});
 
-export interface SyncedArticleReference {
-  authors: string;
-  citation?: string;
-  details?: string;
-  publication?: string;
-  title: string;
-  url?: string;
-  year: number;
-}
+/** Author name imported from source content metadata. */
+export type SyncedAuthor = Infer<typeof syncedAuthorValidator>;
 
-export interface SyncedExerciseChoice {
-  isCorrect: boolean;
-  label: string;
-  optionKey: string;
-  order: number;
-}
+/** Convex validator for article references imported from source metadata. */
+export const syncedArticleReferenceValidator = v.object({
+  authors: v.string(),
+  citation: v.optional(v.string()),
+  details: v.optional(v.string()),
+  publication: v.optional(v.string()),
+  title: v.string(),
+  url: v.optional(v.string()),
+  year: v.number(),
+});
+
+/** Article reference imported from source content metadata. */
+export type SyncedArticleReference = Infer<
+  typeof syncedArticleReferenceValidator
+>;
+
+/** Convex validator for localized exercise choices from source metadata. */
+export const syncedExerciseChoiceValidator = v.object({
+  isCorrect: v.boolean(),
+  label: v.string(),
+  optionKey: v.string(),
+  order: v.number(),
+});
+
+/** Localized exercise choice imported from source content metadata. */
+export type SyncedExerciseChoice = Infer<typeof syncedExerciseChoiceValidator>;
+
+/** Convex validator for locale-keyed exercise choice groups. */
+export const syncedExerciseChoicesValidator = v.record(
+  localeValidator,
+  v.array(syncedExerciseChoiceValidator)
+);
+
+/** Locale-keyed exercise choices derived from the Convex validator. */
+export type SyncedExerciseChoices = Infer<
+  typeof syncedExerciseChoicesValidator
+>;
 
 /** Load existing authors into a lookup map keyed by author name. */
 export async function buildAuthorCache(
@@ -159,32 +186,35 @@ export async function replaceArticleReferences(
 export async function replaceExerciseChoices(
   ctx: MutationCtx,
   args: {
-    choices: SyncedExerciseChoice[];
-    locale: Locale;
+    choices: SyncedExerciseChoices;
     questionId: Id<"exerciseQuestions">;
   }
 ): Promise<number> {
-  assertContentSyncBatchSize({
-    functionName: "replaceExerciseChoices",
-    limit: CONTENT_SYNC_BATCH_LIMITS.exerciseChoices,
-    received: args.choices.length,
-    unit: "exercise choices",
-  });
+  for (const locale of SUPPORTED_CONTENT_LOCALES) {
+    assertContentSyncBatchSize({
+      functionName: "replaceExerciseChoices",
+      limit: CONTENT_SYNC_BATCH_LIMITS.exerciseChoices,
+      received: args.choices[locale].length,
+      unit: `${locale} exercise choices`,
+    });
+  }
 
   await deleteExerciseChoicesForQuestion(ctx, args.questionId);
 
   let created = 0;
 
-  for (const choice of args.choices) {
-    await ctx.db.insert("exerciseChoices", {
-      isCorrect: choice.isCorrect,
-      label: choice.label,
-      locale: args.locale,
-      optionKey: choice.optionKey,
-      order: choice.order,
-      questionId: args.questionId,
-    });
-    created++;
+  for (const locale of SUPPORTED_CONTENT_LOCALES) {
+    for (const choice of args.choices[locale]) {
+      await ctx.db.insert("exerciseChoices", {
+        isCorrect: choice.isCorrect,
+        label: choice.label,
+        locale,
+        optionKey: choice.optionKey,
+        order: choice.order,
+        questionId: args.questionId,
+      });
+      created++;
+    }
   }
 
   return created;
@@ -243,14 +273,15 @@ export async function deleteExerciseChoicesForQuestion(
   ctx: MutationCtx,
   questionId: Id<"exerciseQuestions">
 ) {
+  const choiceLimit = CONTENT_SYNC_BATCH_LIMITS.exerciseChoices * 2;
   const existingChoices = await ctx.db
     .query("exerciseChoices")
     .withIndex("by_questionId_and_locale", (q) =>
       q.eq("questionId", questionId)
     )
-    .take(CONTENT_SYNC_BATCH_LIMITS.exerciseChoices + 1);
+    .take(choiceLimit + 1);
 
-  if (existingChoices.length > CONTENT_SYNC_BATCH_LIMITS.exerciseChoices) {
+  if (existingChoices.length > choiceLimit) {
     throw new ConvexError({
       code: "CONTENT_SYNC_CHOICE_COUNT_EXCEEDED",
       message: "Existing exercise choice count exceeds the safe sync limit.",
@@ -262,6 +293,17 @@ export async function deleteExerciseChoicesForQuestion(
   }
 }
 
+/** Delete synced search and route projections by their graph source identity. */
+export async function deleteContentProjectionsBySourcePath(
+  ctx: MutationCtx,
+  args: { locale: Locale; route: string }
+) {
+  const source = { locale: args.locale, sourcePath: args.route };
+
+  await deleteContentSearchBySourcePath(ctx, source);
+  await deleteContentRoutesBySourcePath(ctx, source);
+}
+
 /** Delete one exercise question together with its sync-managed dependent rows. */
 export async function deleteExerciseQuestion(
   ctx: MutationCtx,
@@ -270,36 +312,38 @@ export async function deleteExerciseQuestion(
   const question = await ctx.db.get(questionId);
 
   if (question) {
-    const searchRef = buildContentSearchRef({
+    await deleteContentProjectionsBySourcePath(ctx, {
       locale: question.locale,
       route: question.slug,
-      section: "exercises",
     });
-    await deleteContentSearch(ctx, searchRef.content_id);
   }
 
-  await deleteContentAuthorLinks(ctx, questionId, "exercise");
+  await deleteContentAuthorLinks(ctx, questionId, "material");
   await deleteExerciseChoicesForQuestion(ctx, questionId);
   await ctx.db.delete("exerciseQuestions", questionId);
 }
 
-/** Delete one subject section together with its sync-managed author links. */
-export async function deleteSubjectSection(
+/** Delete one curriculum lesson together with its sync-managed author links. */
+export async function deleteCurriculumLesson(
   ctx: MutationCtx,
-  sectionId: Id<"subjectSections">
+  sectionId: Id<"curriculumLessons">
 ) {
   const section = await ctx.db.get(sectionId);
 
   if (section) {
-    const searchRef = buildContentSearchRef({
+    await deleteContentProjectionsBySourcePath(ctx, {
       locale: section.locale,
       route: section.slug,
-      section: "subject",
     });
-    await deleteContentSearch(ctx, searchRef.content_id);
   }
 
-  await deleteContentAuthorLinks(ctx, sectionId, "subject");
-  await deleteAudioContentSource(ctx, { id: sectionId, type: "subject" });
-  await ctx.db.delete("subjectSections", sectionId);
+  await deleteContentAuthorLinks(ctx, sectionId, "material");
+  if (section) {
+    await deleteAudioContentSourceByRoute(ctx, {
+      contentType: "material",
+      locale: section.locale,
+      route: section.slug,
+    });
+  }
+  await ctx.db.delete("curriculumLessons", sectionId);
 }

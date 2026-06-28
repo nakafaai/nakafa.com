@@ -1,113 +1,164 @@
 import type { ModelId } from "@repo/ai/config/model";
 import { compressMessages } from "@repo/ai/lib/message";
+import type {
+  NinaContextSnapshot,
+  NinaContextTransition,
+} from "@repo/ai/nina/memory/pack";
+import { NinaContextSnapshotSchema } from "@repo/ai/nina/memory/pack";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { CHAT_MESSAGES_PAGE_SIZE } from "@repo/backend/convex/chats/constants";
 import { mapUIMessagePartsToDBParts } from "@repo/backend/convex/chats/messageParts/uiToDb";
-import type { MessageWithPartsDoc } from "@repo/backend/convex/chats/schema";
 import { mapDBMessagesToUIMessages } from "@repo/backend/convex/chats/utils";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
-import { Effect } from "effect";
+import type { FunctionReturnType } from "convex/server";
+import { Effect, Option, Schema } from "effect";
 
-interface ChatMessagesPage {
-  continueCursor: string;
-  isDone: boolean;
-  page: MessageWithPartsDoc[];
-}
+/** Generated Convex page shape returned by the chat-message pagination query. */
+type ChatMessagesPage = FunctionReturnType<
+  typeof convexApi.chats.queries.loadMessagesPage
+>;
 
-interface Save {
-  chatId: Id<"chats"> | undefined;
-  message: MyUIMessage;
-  modelId: ModelId;
-  token: string;
-}
-
-interface Load {
-  chatId: Id<"chats">;
-  token: string;
-}
-
-/**
- * Persists the user message to an existing chat, or creates a new chat with
- * the message if no chatId is provided.
- *
- * @returns The resolved chat ID (either the existing one or the newly created one).
- */
-export const saveOrCreateChat = Effect.fn("chat.saveOrCreateChat")(function* ({
-  chatId,
+/** Maps one UI message into the Convex payload shared by create/save mutations. */
+function createPersistedMessage({
   message,
   modelId,
-  token,
-}: Save) {
-  const dbParts = mapUIMessagePartsToDBParts({ messageParts: message.parts });
+  ninaContextSnapshot,
+  ninaContextTransition,
+}: {
+  readonly message: MyUIMessage;
+  readonly modelId: ModelId;
+  readonly ninaContextSnapshot: NinaContextSnapshot;
+  readonly ninaContextTransition: NinaContextTransition;
+}) {
+  return {
+    identifier: message.id,
+    modelId,
+    ninaContextSnapshot,
+    ninaContextTransition,
+    role: message.role,
+  };
+}
 
-  if (chatId) {
-    const existingMessage = yield* Effect.tryPromise(() =>
-      fetchQuery(
-        convexApi.chats.queries.getMessageMatch,
-        {
-          chatId,
-          identifier: message.id,
-        },
-        { token }
-      )
-    );
-
-    if (existingMessage) {
-      let hasMore = true;
-
-      while (hasMore) {
-        const result = yield* Effect.tryPromise(() =>
-          fetchMutation(
-            convexApi.chats.mutations.deleteMessageBatch,
-            {
-              chatId,
-              fromCreationTime: existingMessage.creationTime,
-            },
-            { token }
-          )
-        );
-
-        hasMore = result.hasMore;
-      }
-    }
-
-    yield* Effect.tryPromise(() =>
+/** Creates a new study chat with the first persisted user message. */
+export const createChatWithMessage = Effect.fn("chat.createChatWithMessage")(
+  function* ({
+    message,
+    modelId,
+    ninaContextSnapshot,
+    ninaContextTransition,
+    token,
+  }: {
+    readonly message: MyUIMessage;
+    readonly modelId: ModelId;
+    readonly ninaContextSnapshot: NinaContextSnapshot;
+    readonly ninaContextTransition: NinaContextTransition;
+    readonly token: string;
+  }) {
+    const dbParts = mapUIMessagePartsToDBParts({ messageParts: message.parts });
+    const result = yield* Effect.tryPromise(() =>
       fetchMutation(
-        convexApi.chats.mutations.saveMessage,
+        convexApi.chats.mutations.createChatWithMessage,
         {
-          message: {
-            chatId,
-            role: message.role,
-            identifier: message.id,
+          type: "study",
+          message: createPersistedMessage({
+            message,
             modelId,
-          },
+            ninaContextSnapshot,
+            ninaContextTransition,
+          }),
           parts: dbParts,
         },
         { token }
       )
     );
-    return chatId;
-  }
 
-  const result = yield* Effect.tryPromise(() =>
+    return result.chatId;
+  }
+);
+
+/**
+ * Saves one user message to an existing chat after context has been resolved.
+ *
+ * Convex owns transcript rewrite replacement atomically by message identifier,
+ * so the app adapter never performs a separate delete before this mutation.
+ */
+export const saveChatMessage = Effect.fn("chat.saveChatMessage")(function* ({
+  chatId,
+  message,
+  modelId,
+  ninaContextSnapshot,
+  ninaContextTransition,
+  token,
+}: {
+  readonly chatId: Id<"chats">;
+  readonly message: MyUIMessage;
+  readonly modelId: ModelId;
+  readonly ninaContextSnapshot: NinaContextSnapshot;
+  readonly ninaContextTransition: NinaContextTransition;
+  readonly token: string;
+}) {
+  const dbParts = mapUIMessagePartsToDBParts({ messageParts: message.parts });
+
+  yield* Effect.tryPromise(() =>
     fetchMutation(
-      convexApi.chats.mutations.createChatWithMessage,
+      convexApi.chats.mutations.saveMessage,
       {
-        type: "study",
         message: {
-          role: message.role,
-          identifier: message.id,
-          modelId,
+          chatId,
+          ...createPersistedMessage({
+            message,
+            modelId,
+            ninaContextSnapshot,
+            ninaContextTransition,
+          }),
         },
         parts: dbParts,
       },
       { token }
     )
   );
-  return result.chatId;
+
+  return chatId;
 });
+
+/**
+ * Loads the newest stored Nina snapshot that can pin the incoming turn.
+ *
+ * Convex resolves existing message identifiers against the retained transcript,
+ * so rewrite tails cannot leak future context into the replacement message.
+ * Decoding happens here so app routing never replays unvalidated metadata.
+ */
+export const loadPinnedNinaContext = Effect.fn("chat.loadPinnedNinaContext")(
+  function* ({
+    chatId,
+    messageIdentifier,
+    token,
+  }: {
+    readonly chatId: Id<"chats">;
+    readonly messageIdentifier: string;
+    readonly token: string;
+  }) {
+    const storedContext = yield* Effect.tryPromise(() =>
+      fetchQuery(
+        convexApi.chats.queries.getPinnedNinaContextForTurn,
+        { chatId, messageIdentifier },
+        { token }
+      )
+    );
+
+    const decoded = Schema.decodeUnknownOption(NinaContextSnapshotSchema)(
+      storedContext
+    );
+
+    if (Option.isNone(decoded)) {
+      return;
+    }
+
+    return decoded.value;
+  }
+);
 
 /**
  * Fetches a chat transcript page-by-page until the retained context is enough
@@ -118,7 +169,10 @@ export const saveOrCreateChat = Effect.fn("chat.saveOrCreateChat")(function* ({
 export const loadMessages = Effect.fn("chat.loadMessages")(function* ({
   chatId,
   token,
-}: Load) {
+}: {
+  readonly chatId: Id<"chats">;
+  readonly token: string;
+}) {
   let cursor: string | null = null;
   let messages: MyUIMessage[] = [];
 

@@ -87,7 +87,7 @@ export function SubatomicParticlesLab({
       <CardContent className="flex flex-col gap-4">
         <ToggleGroup
           aria-label={labels.chooseMode}
-          className="w-full max-sm:flex-col max-sm:items-stretch"
+          className="w-full"
           onValueChange={handleModeChange}
           orientation={toggleOrientation}
           type="single"
@@ -95,11 +95,7 @@ export function SubatomicParticlesLab({
           variant="outline"
         >
           {SUBATOMIC_PARTICLE_MODE_IDS.map((modeId) => (
-            <ToggleGroupItem
-              className="max-sm:w-full max-sm:flex-none max-sm:border-t-0 max-sm:border-l max-sm:last:rounded-r-none max-sm:last:rounded-b-md max-sm:first:rounded-t-md max-sm:first:rounded-l-none max-sm:first:border-t"
-              key={modeId}
-              value={modeId}
-            >
+            <ToggleGroupItem key={modeId} value={modeId}>
               {labels.modes[modeId].tab}
             </ToggleGroupItem>
           ))}

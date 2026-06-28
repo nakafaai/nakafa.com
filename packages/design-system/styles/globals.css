@@ -90,8 +90,8 @@
   --chart-1: oklch(0.594 0.0443 196.0233);
   --chart-2: oklch(0.7214 0.1337 49.9802);
   --chart-3: oklch(0.8721 0.0864 68.5474);
-  --chart-4: oklch(0.6268 0 0);
-  --chart-5: oklch(0.683 0 0);
+  --chart-4: oklch(0.62 0.18 293);
+  --chart-5: oklch(0.64 0.18 15);
   --sidebar: oklch(0.967 0.0029 264.5419);
   --sidebar-foreground: oklch(0.2101 0.0318 264.6645);
   --sidebar-primary: oklch(0.6716 0.1368 48.513);
@@ -139,8 +139,8 @@
   --chart-1: oklch(0.594 0.0443 196.0233);
   --chart-2: oklch(0.7214 0.1337 49.9802);
   --chart-3: oklch(0.8721 0.0864 68.5474);
-  --chart-4: oklch(0.6268 0 0);
-  --chart-5: oklch(0.683 0 0);
+  --chart-4: oklch(0.62 0.18 293);
+  --chart-5: oklch(0.64 0.18 15);
   --sidebar: oklch(0.1822 0 0);
   --sidebar-foreground: oklch(0.8109 0 0);
   --sidebar-primary: oklch(0.7214 0.1337 49.9802);
@@ -320,6 +320,11 @@
 @utility content-auto-card {
   contain-intrinsic-size: auto none auto 48rem;
   content-visibility: auto;
+}
+
+.content-auto-card:has([data-slot="chart"]) {
+  contain-intrinsic-size: none;
+  content-visibility: visible;
 }
 
 @utility content-auto-quran-verse {

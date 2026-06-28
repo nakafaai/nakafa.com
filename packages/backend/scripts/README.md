@@ -1,6 +1,6 @@
 # Backend Scripts
 
-Sync MDX content and run backend maintenance checks for Convex state.
+Sync MDX content and run backend integrity checks for Convex state.
 
 ## Quick Start
 
@@ -66,20 +66,19 @@ npx convex deploy
 | `sync:prod:verify` | Verify production database |
 | `sync:prod:clean` | Clean stale content in production |
 | `sync:prod:reset` | Delete synced content/runtime rows in production (authors optional, requires --force) |
+| `sync:prod:reset:audio` | Delete production audio source, generated audio, and audio queue rows |
 | `sync:prod:reset:tryouts` | Delete tryout content/read models, access rows, entitlements, and IRT scale data in production, then run a full sync |
 
-### Maintenance
+### Integrity
 
 | Command | Description |
 |---------|-------------|
 | `tryout:verify:access` | Verify campaign/grant/entitlement time-state integrity and competition overlap integrity in development |
-| `tryout:repair:access` | Repair overdue campaign/grant states and overdue competition finalization in development |
+| `tryout:sweep:access` | Sweep overdue campaign/grant states and overdue competition finalization in development |
 | `tryout:verify:access:prod` | Verify campaign/grant/entitlement time-state integrity and competition overlap integrity in production |
-| `tryout:repair:access:prod` | Repair overdue campaign/grant states and overdue competition finalization in production |
+| `tryout:sweep:access:prod` | Sweep overdue campaign/grant states and overdue competition finalization in production |
 | `customers:verify` | Verify user/customer/subscription cohesion in development |
-| `customers:repair` | Repair missing customer rows and clean safe stale Polar customers in development |
 | `customers:verify:prod` | Verify user/customer/subscription cohesion in production |
-| `customers:repair:prod` | Repair missing customer rows and clean safe stale Polar customers in production |
 | `irt:verify:cache` | Verify cached IRT calibration state in development |
 | `irt:verify:scale` | Verify frozen IRT scale coverage in development |
 | `irt:prod:verify:cache` | Verify cached IRT calibration state in production |
@@ -151,6 +150,69 @@ pnpm --filter @repo/backend sync:prod:reset
 pnpm --filter @repo/backend sync:prod:reset --force
 ```
 
+### Reset Content Analytics
+
+Use this when content view history and derived analytics read models must be
+discarded and restarted under graph identity, such as after analytics projection
+shape changes. It clears content views, analytics queue rows, partition leases,
+popularity counts, and trending buckets. New product traffic repopulates these
+tables after strict code is deployed.
+
+```bash
+# Preview deletion
+pnpm --filter @repo/backend sync:reset:analytics
+
+# Actually delete analytics rows
+pnpm --filter @repo/backend sync:reset:analytics --force
+```
+
+For production, run the reset only during an approved Convex write/deploy
+window. This command calls internal mutations from the deployed Convex bundle, so
+it is operational read-model reset tooling after those mutations are available.
+For a strict schema projection cutover where old production rows block deploying
+the current bundle, first use an approved deployment-compatible data cutover path
+to clear or migrate the analytics rows. Then deploy strict code, run this reset
+only if analytics rows still remain, and verify:
+
+```bash
+pnpm --filter @repo/backend deploy
+pnpm --filter @repo/backend sync:prod:reset:analytics --force
+pnpm --filter @repo/backend sync:prod:verify
+```
+
+### Reset Audio Read Models
+
+Use this when derived audio read models must be discarded and rebuilt from the
+content graph, such as after audio projection shape changes or generated audio
+storage corruption. It clears only audio source, generated audio, and audio queue
+rows; then a full sync rebuilds audio source projections.
+
+```bash
+# Preview deletion
+pnpm --filter @repo/backend sync:reset:audio
+
+# Actually delete audio read models
+pnpm --filter @repo/backend sync:reset:audio --force
+
+# Rebuild audio source projections
+pnpm --filter @repo/backend sync
+```
+
+For production, run the reset only during an approved Convex write/deploy
+window. This command calls internal mutations from the deployed Convex bundle, so
+it is operational read-model reset tooling after those mutations are available.
+For a strict schema projection cutover where old production rows block deploying
+the current bundle, first use an approved deployment-compatible data cutover path
+to clear or migrate the audio read-model rows, then deploy strict code, rebuild,
+and verify:
+
+```bash
+pnpm --filter @repo/backend sync:prod:reset:audio --force
+pnpm --filter @repo/backend deploy
+pnpm --filter @repo/backend sync:prod
+pnpm --filter @repo/backend sync:prod:verify
+```
+
 ### Reset Tryouts + IRT Only
 
 ```bash
@@ -187,17 +249,14 @@ packages/contents/articles/{category}/{slug}/
 
 ### Subjects
 ```
-packages/contents/subject/{category}/{grade}/{material}/{topic}/{section}/
+packages/contents/curriculum/{category}/{grade}/{material}/{topic}/{section}/
   en.mdx
   id.mdx
 ```
 
 ### Exercises
 ```
-packages/contents/exercises/{category}/{type}/{material}/
-  _data/
-    en-material.ts    # Set metadata
-    id-material.ts
+packages/contents/assessment/{category}/{type}/{material}/
   {exerciseType}/{year?}/{set}/{number}/
     _question/en.mdx
     _question/id.mdx
@@ -206,16 +265,19 @@ packages/contents/exercises/{category}/{type}/{material}/
     choices.ts
 ```
 
-**⚠️ IMPORTANT**: When adding new exercise questions, you MUST define the set in the material files:
+**⚠️ IMPORTANT**: When adding new exercise questions, you MUST define the set in the typed Material source:
 
 1. Create question directories: `{category}/{type}/{material}/{exerciseType}/{year?}/{set}/{number}/`
 2. Add MDX files and choices
-3. **Add set definition** to `exercises/{category}/{type}/{material}/_data/en-material.ts` and `id-material.ts`:
+3. **Add set definition** to `packages/contents/_types/material/source/assessment/{category}/{type}/{material}.ts`:
 
 ```typescript
 {
-  title: "Set 2",
-  href: `${BASE_PATH}/try-out/2026/set-2`,
+  slug: "set-2",
+  translations: {
+    en: { title: "Set 2" },
+    id: { title: "Set 2" },
+  },
 }
 ```
 
@@ -223,7 +285,7 @@ If you forget step 3, the sync will report:
 ```
 ERROR: X questions SKIPPED (missing exercise sets)
 ERROR: Missing sets: category/type/material/exerciseType/set-name
-ERROR: Add these sets to your material files in _data/*-material.ts
+ERROR: Add these sets to the typed Material source before syncing.
 ```
 
 ## Performance
@@ -262,7 +324,6 @@ Content hash unchanged. This is normal for `sync:incremental`.
 |--------|---------|
 | `sync-content.ts` | Sync MDX content to Convex database |
 | `customers/verify.ts` | Verify user/customer/subscription cohesion |
-| `customers/repair.ts` | Repair missing customer rows and clean safe stale Polar customers |
 | `tryout/access.ts` | Verify campaign/grant/entitlement time-state and competition overlap integrity |
 | `irt-verify.ts` | Verify IRT cache and scale integrity |
 
@@ -272,10 +333,9 @@ Content hash unchanged. This is normal for `sync:incremental`.
 |------|---------|
 | `sync-content.ts` | Main sync script |
 | `sync-content/` | Shared sync-content helpers, validation, and workflows |
-| `customers/` | Customer cohesion verification and repair scripts |
+| `customers/` | Customer cohesion verification scripts |
 | `customers/verify.ts` | Dev/prod verification for user/customer/subscription cohesion |
-| `customers/repair.ts` | Dev/prod repair for missing customer rows and safe stale Polar customers |
-| `tryout/` | Tryout-specific maintenance scripts split by concern |
+| `tryout/` | Tryout-specific integrity scripts split by concern |
 | `tryout/access.ts` | Dev/prod integrity verification for campaigns, grants, entitlements, and competition overlap |
 | `irt-verify.ts` | Dev/prod integrity verification for IRT cache and scale state |
 | `../convex/contentSync/mutations/` | Convex sync mutations split by concern |

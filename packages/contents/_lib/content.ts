@@ -1,6 +1,9 @@
-import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
+import { getMdxSlugsForLocale } from "@repo/contents/_lib/mdx-slugs/cache";
 import { extractMetadata } from "@repo/contents/_lib/metadata";
-import { importContentModule } from "@repo/contents/_lib/module";
+import {
+  getLocalizedContentPath,
+  importContentModule,
+} from "@repo/contents/_lib/module";
 import { resolveContentsDir } from "@repo/contents/_lib/root";
 import {
   getRawContent,
@@ -41,7 +44,7 @@ function loadRenderableContentModule(
   locale: Locale
 ): Effect.Effect<RenderableContent, MetadataParseError | ModuleLoadError> {
   return Effect.gen(function* () {
-    const modulePath = `@repo/contents/${cleanPath}/${locale}.mdx`;
+    const modulePath = `@repo/contents/${getLocalizedContentPath(cleanPath, locale)}`;
 
     const contentModule = yield* Effect.tryPromise({
       try: () => importContentModule(cleanPath, locale),
@@ -109,7 +112,7 @@ export function getContent(
 > {
   const { includeMDX = true } = options;
   const cleanPath = cleanSlug(filePath);
-  const contentPath = `${cleanPath}/${locale}.mdx`;
+  const contentPath = getLocalizedContentPath(cleanPath, locale);
 
   if (includeMDX) {
     return Effect.gen(function* () {
@@ -176,41 +179,49 @@ export function getContents(
 ): Effect.Effect<ContentListWithMDX[], never, never> {
   const { includeMDX = true, locale = "en", basePath = "" } = options;
 
-  const slugs = getMDXSlugsForLocale(locale);
-
-  const filteredSlugs = basePath
-    ? slugs.filter((slug) => slug.startsWith(basePath))
-    : slugs;
-
   /**
    * Loads one cached slug into the normalized list response shape.
    */
   function processSlug(slug: string, contentLocale: Locale) {
     return Effect.gen(function* () {
-      const loc: Locale = contentLocale;
       const content = yield* Effect.either(
-        getContent(loc, slug, { includeMDX })
+        getContent(contentLocale, slug, { includeMDX })
       );
 
       if (Either.isLeft(content)) {
-        return;
+        return Option.none();
       }
 
-      const url = new URL(`/${loc}/${slug}`, "https://nakafa.com");
+      const url = new URL(`/${contentLocale}/${slug}`, "https://nakafa.com");
 
       const result: ContentListWithMDX = {
         metadata: content.right.metadata,
         raw: content.right.raw,
         url: url.toString(),
         slug,
-        locale: loc,
+        locale: contentLocale,
       };
 
-      return result;
+      return Option.some(result);
     });
   }
 
-  return Effect.forEach(filteredSlugs, (slug) => processSlug(slug, locale), {
-    concurrency: "unbounded",
-  }).pipe(Effect.map((items) => items.filter((item) => item !== undefined)));
+  return Effect.gen(function* () {
+    const slugs = yield* getMdxSlugsForLocale(locale);
+    const filteredSlugs = basePath
+      ? slugs.filter((slug) => slug.startsWith(basePath))
+      : slugs;
+
+    return yield* Effect.forEach(
+      filteredSlugs,
+      (slug) => processSlug(slug, locale),
+      {
+        concurrency: "unbounded",
+      }
+    ).pipe(
+      Effect.map((items) =>
+        items.flatMap((item) => (Option.isSome(item) ? [item.value] : []))
+      )
+    );
+  });
 }

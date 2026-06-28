@@ -11,7 +11,6 @@ import type {
   BiologySceneView,
 } from "@repo/design-system/components/contents/biology/data";
 import { BiologyLabFrame } from "@repo/design-system/components/contents/biology/lab-frame";
-import { PulsingGroup } from "@repo/design-system/components/contents/biology/parts";
 import { SceneLabel } from "@repo/design-system/components/contents/scene-label";
 
 const BACTERIA_VIEW = {
@@ -59,9 +58,9 @@ function BacterialShapes({ colors }: Pick<BiologySceneProps, "colors">) {
         <SceneLabel
           color={colors.text}
           fontSize="compact"
-          position={[0, -0.42, 0]}
+          position={[0, -0.42, 0.24]}
         >
-          kokus
+          Kokus
         </SceneLabel>
       </group>
       <group position={[0.18, 0.32, 0]} rotation={[0.1, 0, -0.18]}>
@@ -74,9 +73,9 @@ function BacterialShapes({ colors }: Pick<BiologySceneProps, "colors">) {
         <SceneLabel
           color={colors.text}
           fontSize="compact"
-          position={[0, -0.74, 0]}
+          position={[0, -0.52, 0.28]}
         >
-          basil
+          Basilus
         </SceneLabel>
       </group>
       <group position={[0.92, -0.42, 0]} rotation={[0, 0, -0.18]}>
@@ -84,9 +83,9 @@ function BacterialShapes({ colors }: Pick<BiologySceneProps, "colors">) {
         <SceneLabel
           color={colors.text}
           fontSize="compact"
-          position={[0, -0.34, 0]}
+          position={[0, -0.36, 0.26]}
         >
-          spiral
+          Spiral
         </SceneLabel>
       </group>
     </group>
@@ -105,9 +104,9 @@ function BacterialStructure({ colors }: Pick<BiologySceneProps, "colors">) {
       <SceneLabel
         color={colors.text}
         fontSize="compact"
-        position={[0, -0.68, 0.38]}
+        position={[0.58, -0.34, 0.72]}
       >
-        nukleoid DNA
+        Nukleoid DNA
       </SceneLabel>
     </group>
   );
@@ -118,23 +117,19 @@ function BacterialStructure({ colors }: Pick<BiologySceneProps, "colors">) {
  */
 function GramWallComparison({ colors }: Pick<BiologySceneProps, "colors">) {
   return (
-    <group>
-      <PulsingGroup phase={0.4} speed={1.1} strength={0.035}>
-        <WallStack
-          colors={[colors.microbe, colors.plant]}
-          label="G+"
-          textColor={colors.text}
-          x={-0.7}
-        />
-      </PulsingGroup>
-      <PulsingGroup phase={1.1} speed={1.1} strength={0.035}>
-        <WallStack
-          colors={[colors.membrane, colors.microbe, colors.pathogen]}
-          label="G-"
-          textColor={colors.text}
-          x={0.72}
-        />
-      </PulsingGroup>
+    <group position={[0, 0.32, 0]}>
+      <WallStack
+        colors={[colors.microbe, colors.plant]}
+        label="Gram positif"
+        textColor={colors.text}
+        x={-0.7}
+      />
+      <WallStack
+        colors={[colors.membrane, colors.microbe, colors.pathogen]}
+        label="Gram negatif"
+        textColor={colors.text}
+        x={0.72}
+      />
     </group>
   );
 }
@@ -176,7 +171,11 @@ function WallStack({
           </mesh>
         );
       })}
-      <SceneLabel color={textColor} fontSize="compact" position={[0, -0.48, 0]}>
+      <SceneLabel
+        color={textColor}
+        fontSize="compact"
+        position={[0, 0.44, 0.72]}
+      >
         {label}
       </SceneLabel>
     </group>

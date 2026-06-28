@@ -6,8 +6,8 @@ const base = {
   context: {
     currentDate: "May 15, 2026",
     needsPageFetch: false,
-    slug: "subject/high-school/11/mathematics/function-modeling/rational-function",
-    url: "https://nakafa.com/id/subject/high-school/11/mathematics/function-modeling/rational-function",
+    slug: "materi/matematika/integral/jumlahan-riemann",
+    url: "https://nakafa.com/id/materi/matematika/integral/jumlahan-riemann",
     userRole: "student",
     verified: true,
   },
@@ -83,6 +83,9 @@ describe("mathPrompt", () => {
     expect(outputSection).toContain("Do not mention internal system names");
     expect(outputSection).toContain(
       "Return concise markdown in the user's locale"
+    );
+    expect(outputSection).toContain(
+      "indent the \\[...\\] block under that list item"
     );
   });
 

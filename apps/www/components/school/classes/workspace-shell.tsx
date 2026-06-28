@@ -46,6 +46,8 @@ const SCHOOL_CLASSES_WORKSPACE_EMPTY_LAYOUT_STORAGE = {
     // Ignore layout writes until the client has mounted.
   },
 } as const;
+const COMPACT_WORKSPACE_MODE = { isCompact: true };
+const DESKTOP_WORKSPACE_MODE = { isCompact: false };
 const SchoolClassesWorkspaceModeContext =
   createContext<SchoolClassesWorkspaceModeContextValue | null>(null);
 
@@ -85,7 +87,7 @@ export function SchoolClassesWorkspaceShell({
     return (
       <SchoolClassesWorkspaceModeContext.Provider
         key="compact"
-        value={{ isCompact: true }}
+        value={COMPACT_WORKSPACE_MODE}
       >
         <div className="flex min-w-0 flex-col">
           {children}
@@ -109,7 +111,7 @@ export function SchoolClassesWorkspaceShell({
     return (
       <SchoolClassesWorkspaceModeContext.Provider
         key="desktop"
-        value={{ isCompact: false }}
+        value={DESKTOP_WORKSPACE_MODE}
       >
         <div className="flex min-w-0 flex-col">{children}</div>
       </SchoolClassesWorkspaceModeContext.Provider>
@@ -119,7 +121,7 @@ export function SchoolClassesWorkspaceShell({
   return (
     <SchoolClassesWorkspaceModeContext.Provider
       key="desktop"
-      value={{ isCompact: false }}
+      value={DESKTOP_WORKSPACE_MODE}
     >
       <SchoolClassesResizableWorkspaceShell panel={panel}>
         {children}

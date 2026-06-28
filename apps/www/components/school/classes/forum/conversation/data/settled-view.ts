@@ -145,7 +145,7 @@ function getConversationDistanceToViewportCenter({
 }
 
 /** Returns the viewport-center tolerance used by transcript post placement. */
-export function getConversationCenterThreshold(viewportSize: number) {
+function getConversationCenterThreshold(viewportSize: number) {
   return Math.max(32, Math.min(96, viewportSize * 0.12));
 }
 

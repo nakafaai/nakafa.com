@@ -45,10 +45,9 @@ export function LineEquation({
       </CardHeader>
       <CardContent>
         <CoordinateSystem cameraPosition={cameraPosition} showZAxis={showZAxis}>
-          {data.map((item, index) => (
+          {data.map((item) => (
             <LineEquation3D
-              // biome-ignore lint/suspicious/noArrayIndexKey: Points combination may not be unique, need index for stability
-              key={`line-${index}-${item.points.map((p) => `${p.x},${p.y},${p.z}`).join(";")}`}
+              key={`line-${item.points.map((p) => `${p.x},${p.y},${p.z}`).join(";")}`}
               {...item}
             />
           ))}

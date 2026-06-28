@@ -6,7 +6,7 @@ import { toggleVariants } from "@repo/design-system/components/ui/toggle";
 import { cn } from "@repo/design-system/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 import type * as React from "react";
-import { createContext, useContext } from "react";
+import { createContext, use, useMemo } from "react";
 
 type ToggleGroupLayout = "default" | "grid";
 
@@ -21,9 +21,17 @@ const ToggleGroupContext = createContext<ToggleGroupContextValue>({
 });
 
 const toggleGroupRootVariants = cva(
-  "group/toggle-group flex w-fit items-center rounded-md data-[orientation=vertical]:flex-col data-[orientation=vertical]:items-stretch data-[variant=outline]:shadow-xs",
+  "group/toggle-group flex w-fit items-center rounded-md data-[orientation=vertical]:w-full data-[orientation=vertical]:flex-col data-[orientation=vertical]:items-stretch data-[variant=outline]:shadow-xs",
   {
     variants: {
+      gridColumns: {
+        auto: "grid w-full grid-cols-1 sm:grid-cols-[repeat(auto-fit,minmax(8rem,1fr))]",
+        "2": "grid w-full grid-cols-2",
+        "3": "grid w-full grid-cols-1 sm:grid-cols-3",
+        "4": "grid w-full grid-cols-2 sm:grid-cols-4",
+        "4-lg": "grid w-full grid-cols-2 lg:grid-cols-4",
+        "6": "grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6",
+      },
       layout: {
         default: "",
         grid: "gap-px overflow-hidden rounded-md data-[variant=outline]:border data-[variant=outline]:bg-border",
@@ -48,11 +56,16 @@ const toggleGroupItemLayoutVariants = cva("", {
   },
 });
 
+type ToggleGroupGridColumns = NonNullable<
+  VariantProps<typeof toggleGroupRootVariants>["gridColumns"]
+>;
+
 type ToggleGroupBaseProps = Omit<
   React.ComponentProps<typeof ToggleGroupPrimitive>,
   "defaultValue" | "multiple" | "onValueChange" | "value"
 > &
   VariantProps<typeof toggleVariants> & {
+    gridColumns?: ToggleGroupGridColumns;
     layout?: ToggleGroupLayout;
   };
 
@@ -92,6 +105,7 @@ function SingleToggleGroup({
   size,
   children,
   defaultValue,
+  gridColumns,
   onValueChange,
   orientation = "horizontal",
   layout = "default",
@@ -103,6 +117,11 @@ function SingleToggleGroup({
     defaultValue === undefined ? undefined : toSingleValueArray(defaultValue);
   const groupValue =
     value === undefined ? undefined : toSingleValueArray(value);
+  const resolvedLayout = getResolvedLayout(layout, gridColumns);
+  const contextValue = useMemo(
+    () => ({ layout: resolvedLayout, variant, size }),
+    [resolvedLayout, variant, size]
+  );
 
   /**
    * Publishes only the selected item instead of Base UI's single-item array.
@@ -113,8 +132,15 @@ function SingleToggleGroup({
 
   return (
     <ToggleGroupPrimitive
-      className={cn(toggleGroupRootVariants({ layout }), className)}
-      data-layout={layout}
+      className={cn(
+        toggleGroupRootVariants({
+          gridColumns,
+          layout: resolvedLayout,
+        }),
+        className
+      )}
+      data-grid-columns={gridColumns}
+      data-layout={resolvedLayout}
       data-orientation={orientation}
       data-size={size}
       data-slot="toggle-group"
@@ -126,7 +152,7 @@ function SingleToggleGroup({
       value={groupValue}
       {...props}
     >
-      <ToggleGroupContext.Provider value={{ layout, variant, size }}>
+      <ToggleGroupContext.Provider value={contextValue}>
         {children}
       </ToggleGroupContext.Provider>
     </ToggleGroupPrimitive>
@@ -141,15 +167,29 @@ function MultipleToggleGroup({
   variant,
   size,
   children,
+  gridColumns,
   orientation = "horizontal",
   layout = "default",
   type,
   ...props
 }: ToggleGroupMultipleProps) {
+  const resolvedLayout = getResolvedLayout(layout, gridColumns);
+  const contextValue = useMemo(
+    () => ({ layout: resolvedLayout, variant, size }),
+    [resolvedLayout, variant, size]
+  );
+
   return (
     <ToggleGroupPrimitive
-      className={cn(toggleGroupRootVariants({ layout }), className)}
-      data-layout={layout}
+      className={cn(
+        toggleGroupRootVariants({
+          gridColumns,
+          layout: resolvedLayout,
+        }),
+        className
+      )}
+      data-grid-columns={gridColumns}
+      data-layout={resolvedLayout}
       data-orientation={orientation}
       data-size={size}
       data-slot="toggle-group"
@@ -159,11 +199,25 @@ function MultipleToggleGroup({
       orientation={orientation}
       {...props}
     >
-      <ToggleGroupContext.Provider value={{ layout, variant, size }}>
+      <ToggleGroupContext.Provider value={contextValue}>
         {children}
       </ToggleGroupContext.Provider>
     </ToggleGroupPrimitive>
   );
+}
+
+/**
+ * Grid column presets opt into the grid layout while leaving the default group unchanged.
+ */
+function getResolvedLayout(
+  layout: ToggleGroupLayout,
+  gridColumns?: ToggleGroupGridColumns
+): ToggleGroupLayout {
+  if (gridColumns) {
+    return "grid";
+  }
+
+  return layout;
 }
 
 /**
@@ -197,7 +251,7 @@ function ToggleGroupItem({
   ...props
 }: React.ComponentProps<typeof TogglePrimitive> &
   VariantProps<typeof toggleVariants>) {
-  const context = useContext(ToggleGroupContext);
+  const context = use(ToggleGroupContext);
   const itemSize = context.size || size;
   const itemVariant = context.variant || variant;
 

@@ -51,8 +51,10 @@
     "source-code": "Kode sumber",
     "language": "Bahasa",
     "articles": "Artikel",
+    "material": "Materi",
     "subject": "Mata pelajaran",
-    "explore-grades": "Jelajahi Kelas",
+    "for-you": "Untukmu",
+    "explore": "Jelajahi",
     "references": "Referensi",
     "show": "Tampilkan",
     "hide": "Sembunyikan",
@@ -120,15 +122,102 @@
     "back-to-latest": "Kembali ke terbaru",
     "back": "Kembali"
   },
-  "Onboarding": {
-    "title": "Selamat datang di Nakafa!",
-    "description": "Senang kamu ada di sini. Yuk, sesuaikan pengalaman belajar kamu biar lebih pas.",
-    "teacher": "Guru",
-    "student": "Siswa",
-    "parent": "Orang tua",
-    "administrator": "Administrator",
-    "select-role": "Pilih peran kamu",
-    "button": "Mulai belajar"
+  "LearningPrograms": {
+    "metadata-title": "Mulai belajar di Nakafa",
+    "metadata-description": "Pilih bantuan belajar dan mulai dari satu langkah pertama.",
+    "plan-item-untitled": "Langkah belajar",
+    "program-status": {
+      "hidden": "Tidak ditampilkan",
+      "planned": "Segera",
+      "partial": "Siap sebagian",
+      "available": "Siap",
+      "archived": "Diarsipkan"
+    },
+    "onboarding": {
+      "role-title": "Kamu pakai Nakafa sebagai siapa?",
+      "role": {
+        "student": {
+          "title": "Siswa",
+          "description": "Belajar, latihan, dan tanya Nina."
+        },
+        "teacher": {
+          "title": "Guru",
+          "description": "Siapkan materi untuk kelas."
+        },
+        "parent": {
+          "title": "Orang tua",
+          "description": "Bantu anak belajar mudah."
+        }
+      },
+      "focus": {
+        "student": {
+          "title": "Kamu mau fokus ke apa?",
+          "school": {
+            "title": "Pelajaran sekolah",
+            "description": "Baca penjelasan singkat."
+          },
+          "exam": {
+            "title": "Ujian masuk kampus",
+            "description": "Latihan sebelum ujian."
+          }
+        },
+        "teacher": {
+          "title": "Kamu mau menyiapkan apa?",
+          "materials": {
+            "title": "Materi mengajar",
+            "description": "Siapkan penjelasan kelas."
+          },
+          "practice": {
+            "title": "Latihan siswa",
+            "description": "Siapkan soal latihan."
+          }
+        },
+        "parent": {
+          "title": "Anakmu butuh dibantu apa?",
+          "understand": {
+            "title": "Pahami materi",
+            "description": "Baca penjelasan mudah."
+          },
+          "practice": {
+            "title": "Latihan soal",
+            "description": "Latihan sebelum ujian."
+          }
+        }
+      },
+      "back": "Kembali",
+      "continue": "Lanjut",
+      "save-cta": "Mulai belajar",
+      "invalid-selection": "Pilih peran dan satu fokus belajar.",
+      "save-error": "Pilihanmu belum bisa disimpan. Coba lagi.",
+      "unavailable-title": "Pilih bantuan lain dulu",
+      "unavailable-helper": "Pilihan ini belum siap dipakai.",
+      "auth-title": "Masuk untuk mulai",
+      "auth-helper": "Simpan rencana pertamamu dan lanjutkan di semua perangkat.",
+      "auth-cta": "Masuk ke Nakafa"
+    },
+    "kind": {
+      "school-curriculum": "Kurikulum sekolah",
+      "assessment": "Latihan soal",
+      "admission-exam": "Ujian masuk",
+      "custom-program": "Program khusus",
+      "institution-program": "Program institusi"
+    },
+    "interest": {
+      "school-curriculum": {
+        "title": "Pelajaran sekolah"
+      },
+      "exam-prep": {
+        "title": "Ujian masuk kampus"
+      },
+      "assessment-prep": {
+        "title": "Latihan soal"
+      }
+    },
+    "plan-item-status": {
+      "ready": "Siap",
+      "done": "Selesai",
+      "skipped": "Dilewati"
+    }
   },
   "Comments": {
     "add-comment-placeholder": "Tambahkan komentar...",
@@ -200,6 +289,9 @@
     "reset": "Ulangi",
     "explanation": "Pembahasan",
     "number-count": "Nomor {count}",
+    "route-question-title": "{set} Soal {number}",
+    "program-domain-list-description": "Pilih domain latihan yang tersedia untuk membuka set soal.",
+    "domain-set-list-description": "Pilih set latihan yang tersedia untuk membuka soal latihan pada domain ini.",
     "high-school": "SMA",
     "middle-school": "SMP",
     "grade-9": "Kelas 9",
@@ -240,14 +332,13 @@
   },
   "Tryouts": {
     "title": "Mau coba try out apa hari ini?",
-    "description": "Coba simulasi yang mirip ujian asli, biar kamu lebih siap.",
+    "metadata-description": "Pilih paket try out dan mulai simulasi ujian dari Nakafa.",
     "package-count": "{count, plural, =0 {Belum ada paket} =1 {# paket} other {# paket}}",
     "cta": "Lihat paket",
     "list-empty": "Belum ada try out yang tampil sekarang.",
     "available-item-description": "{questions} soal - {parts} bagian",
     "year-title": "Tahun {year}",
     "product-page-description": "Lihat semua paket SNBT dan buka yang paling pas buat targetmu.",
-    "slug-description": "Kalau sudah siap, mulai try out ini lalu pilih bagian yang ingin kamu kerjakan dulu.",
     "start-cta": "Mulai try out",
     "restart-cta": "Mulai lagi",
     "continue-cta": "Lanjutkan",
@@ -304,6 +395,7 @@
     "complete-part-success": "Bagian selesai. Sekarang kamu bisa pilih bagian lain atau kembali ke set.",
     "complete-part-error": "Bagian belum bisa diselesaikan. Coba lagi ya.",
     "back-to-set-cta": "Kembali ke set",
+    "slug-description": "Kalau sudah siap, mulai try out ini lalu pilih bagian yang ingin kamu kerjakan dulu.",
     "question-unit": "soal",
     "products": {
       "snbt": {
@@ -383,6 +475,8 @@
     "continue-with-google": "Masuk dengan Google",
     "logout": "Keluar",
     "login": "Masuk",
+    "login-cta-title": "Masuk",
+    "login-cta-action": "Akun Nakafa gratis",
     "account": "Akun",
     "settings": "Pengaturan",
     "settings-description": "Kelola pengaturan akun Nakafa, preferensi, dan informasi profil untuk mempersonalisasi pengalaman belajarmu.",
@@ -391,7 +485,7 @@
     "chat": "Obrolan",
     "chat-description": "Terhubung dengan asisten AI belajar untuk bimbingan personal, bantuan PR, penjelasan konsep, dan percakapan edukasi interaktif yang disesuaikan dengan kebutuhan belajarmu.",
     "subscriptions": "Langganan",
-    "subscriptions-description": "Nikmati pengalaman belajar terbaik dengan Nakafa Pro.",
+    "subscriptions-description": "Kelola Nakafa Pro, 3.000 kredit AI bulanan, dan portal pembayaranmu.",
     "get-pro": "Dapatkan Pro",
     "manage": "Kelola",
     "plan-free": "Free",
@@ -457,7 +551,7 @@
     "ask-nina": "Tanya Nina",
     "text-placeholder": "Tanya Nina apa saja...",
     "error-message": "Waduh, ada masalah nih. Coba ganti model AI-nya ya.",
-    "insufficient-credits": "Kredit tidak mencukupi. Tunggu reset harian atau upgrade ke Pro.",
+    "insufficient-credits": "Kredit AI kamu habis. Tunggu reset kredit berikutnya atau upgrade ke Pro untuk 3.000 kredit bulanan.",
     "retry": "Coba lagi",
     "rate-limit-message": "Kamu terlalu cepat! Coba lagi nanti ya.",
     "nakafa": "Nakafa",
@@ -628,12 +722,12 @@
     "free-feature-5": "Akses komunitas di Discord",
     "free-cta": "Mulai Belajar",
     "pro-title": "Pro",
-    "pro-description": "Belajar lebih pintar dengan bantuan AI tanpa batas",
+    "pro-description": "Belajar lebih serius dengan Nina, 3.000 kredit AI bulanan, dan tryout Pro.",
     "pro-period": "/bulan",
     "pro-feature-1": "Semua fitur Gratis, plus:",
-    "pro-feature-2": "Lebih banyak kredit untuk tutor Nakafa Lite dan Nakafa Pro",
-    "pro-feature-3": "Download materi apa pun sebagai PDF untuk dibaca offline",
-    "pro-feature-4": "Materi audio untuk belajar di mana saja",
+    "pro-feature-2": "3.000 kredit AI setiap bulan untuk model premium Nina",
+    "pro-feature-3": "Tryout Pro dengan skor IRT dan pembahasan detail",
+    "pro-feature-4": "Download materi sebagai PDF dan dengarkan versi audio",
     "pro-feature-5": "Bantuan prioritas saat kamu butuh arahan",
     "pro-cta": "Dapatkan Pro"
   },
@@ -643,7 +737,7 @@
     "description": "Tidak menemukan yang kamu cari? Hubungi kami langsung.",
     "cta-contact": "Hubungi founder",
     "q1": "Apakah Nakafa benar-benar gratis?",
-    "a1": "Ya. Konten inti gratis selamanya. Kami mengenakan biaya untuk fitur Pro seperti AI tanpa batas dan unduhan PDF, tapi kamu tidak akan menemukan paywall di materi pembelajaran dasar.",
+    "a1": "Ya. Konten inti gratis selamanya. Kami mengenakan biaya untuk fitur Pro seperti model AI premium, 3.000 kredit AI bulanan, tryout Pro, dan unduhan PDF, tapi kamu tidak akan menemukan paywall di materi pembelajaran dasar.",
     "q2": "Model AI apa yang bisa saya gunakan?",
     "a2": "Semua pengguna bisa memakai Nakafa Lite dan Nakafa Pro. Kredit menentukan seberapa banyak tiap model bisa digunakan.",
     "q3": "Bisakah saya mengunduh pelajaran untuk offline?",
@@ -738,7 +832,7 @@
       "learning": "Belajar",
       "classes": "Kelas",
       "nakafa-materials": "Materi Nakafa",
-      "yours": "Kamu",
+      "yours": "Untukmu",
       "notifications": "Notifikasi",
       "preparing-school": "Menyiapkan sekolahmu",
       "preparing-school-description": "Tunggu sebentar ya, kami sedang menyiapkan semuanya untukmu."
@@ -970,9 +1064,19 @@
       "keywords": "{title}, {chapter, select, __EMPTY__ {} other {{chapter}, }}{material}, {grade}, belajar, materi, contoh soal, latihan, edukasi"
     },
     "exercise": {
-      "title": "{number, select, 0 {} other {Soal {number}/{questionCount}: }}{set, select, __EMPTY__ {} other {{set}{number, select, 0 {: } other { - }}}}{group, select, __EMPTY__ {} other {{group} - }}{material} ({exam}) | Nakafa",
+      "title": "{number, select, 0 {} other {Soal {number}{questionTotal, select, __EMPTY__ {} other {{questionTotal}}}: }}{set, select, __EMPTY__ {} other {{set}{number, select, 0 {: } other { - }}}}{group, select, __EMPTY__ {} other {{group} - }}{material} ({exam}) | Nakafa",
       "description": "Latihan {material} {exam}{group, select, __EMPTY__ {} other { {group}}}{set, select, __EMPTY__ {} other { {set}}} berisi {questionCount, plural, =0 {soal-soal} =1 {1 soal} other {{questionCount} soal}} dengan pembahasan untuk memeriksa cara berpikir.",
       "keywords": "{material}, {exam}, {group, select, __EMPTY__ {} other {{group}, }}{set, select, __EMPTY__ {} other {{set}, }}latihan, soal, pembahasan, ujian"
+    },
+    "exercise-program": {
+      "title": "Latihan Soal {exam} | Nakafa",
+      "description": "Pilih domain latihan {exam} untuk {category}. Setiap domain mengarah ke set soal dengan pembahasan untuk mengecek pemahaman.",
+      "keywords": "{exam}, {category}, latihan soal, set soal, pembahasan, persiapan ujian"
+    },
+    "curriculum": {
+      "title": "{title}{parent, select, __EMPTY__ {} other { - {parent}}}{program, select, __EMPTY__ {} other { ({program})}} | Nakafa",
+      "description": "Jelajahi {title}{parent, select, __EMPTY__ {} other { dalam {parent}}}{program, select, __EMPTY__ {} other { untuk {program}}}. Indeks kurikulum ini menghubungkan pelajar ke materi dan latihan yang relevan.",
+      "keywords": "{title}, {parent, select, __EMPTY__ {} other {{parent}, }}{program, select, __EMPTY__ {} other {{program}, }}kurikulum, alur belajar, materi, latihan"
     },
     "article": {
       "title": "{title} - {category} | Nakafa",

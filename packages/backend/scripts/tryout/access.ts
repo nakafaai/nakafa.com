@@ -1,11 +1,17 @@
+import { internal } from "@repo/backend/convex/_generated/api";
 import { tryoutProducts } from "@repo/backend/convex/tryouts/products";
 import { formatScriptCause } from "@repo/backend/scripts/lib/errors";
+import { logError } from "@repo/backend/scripts/sync-content/cli/logging";
 import {
-  callConvex,
+  ConvexIdSchema,
+  mutableArraySchema,
+} from "@repo/backend/scripts/sync-content/contract/schemas";
+import {
+  callConvexQuery,
   getConvexConfig,
-} from "@repo/backend/scripts/sync-content/convex";
-import { logError } from "@repo/backend/scripts/sync-content/logging";
-import { loadEnvProvider } from "@repo/backend/scripts/sync-content/runtime";
+} from "@repo/backend/scripts/sync-content/convex/client";
+import { loadEnvProvider } from "@repo/backend/scripts/sync-content/runtime/files";
+import type { FunctionArgs, PaginationOptions } from "convex/server";
 import { Effect, Schema } from "effect";
 
 const TRYOUT_ACCESS_PAGE_SIZE = 100;
@@ -30,17 +36,19 @@ const tryoutAccessEntitlementIntegrityPageSchema = Schema.Struct({
   overdueEntitlementCount: Schema.Number,
 });
 
-const competitionCampaignProductPageSchema = Schema.Struct({
-  continueCursor: Schema.String,
-  isDone: Schema.Boolean,
-  page: Schema.Array(
-    Schema.Struct({
-      campaignId: Schema.String,
-      endsAt: Schema.Number,
-      startsAt: Schema.Number,
-    })
-  ),
-});
+const competitionCampaignProductPageSchema = Schema.mutable(
+  Schema.Struct({
+    continueCursor: Schema.String,
+    isDone: Schema.Boolean,
+    page: mutableArraySchema(
+      Schema.Struct({
+        campaignId: ConvexIdSchema("tryoutAccessCampaigns"),
+        endsAt: Schema.Number,
+        startsAt: Schema.Number,
+      })
+    ),
+  })
+);
 
 type TryoutAccessCampaignIntegrityPage = Schema.Schema.Type<
   typeof tryoutAccessCampaignIntegrityPageSchema
@@ -54,6 +62,26 @@ type TryoutAccessEntitlementIntegrityPage = Schema.Schema.Type<
 type CompetitionCampaignProductPage = Schema.Schema.Type<
   typeof competitionCampaignProductPageSchema
 >;
+type TryoutAccessCampaignIntegrityArgs = FunctionArgs<
+  typeof internal.tryoutAccess.integrity.internal.getTryoutAccessCampaignIntegrity
+>;
+type TryoutAccessGrantIntegrityArgs = FunctionArgs<
+  typeof internal.tryoutAccess.integrity.internal.getTryoutAccessGrantIntegrity
+>;
+type TryoutAccessEntitlementIntegrityArgs = FunctionArgs<
+  typeof internal.tryoutAccess.integrity.internal.getTryoutAccessEntitlementIntegrity
+>;
+type CompetitionCampaignProductArgs = FunctionArgs<
+  typeof internal.tryoutAccess.integrity.internal.listCompetitionCampaignProductsByProduct
+>;
+
+/** Builds pagination options for access verification queries. */
+const getTryoutAccessPaginationOpts = (
+  continueCursor: string | null
+): PaginationOptions => ({
+  cursor: continueCursor,
+  numItems: TRYOUT_ACCESS_PAGE_SIZE,
+});
 
 /** Reads the full access campaign integrity snapshot. */
 const getTryoutAccessCampaignIntegrity = Effect.fn(
@@ -67,17 +95,14 @@ const getTryoutAccessCampaignIntegrity = Effect.fn(
   let overdueScheduledCampaignCount = 0;
 
   while (true) {
-    const page: TryoutAccessCampaignIntegrityPage = yield* callConvex(
+    const args: TryoutAccessCampaignIntegrityArgs = {
+      nowMs,
+      paginationOpts: getTryoutAccessPaginationOpts(continueCursor),
+    };
+    const page: TryoutAccessCampaignIntegrityPage = yield* callConvexQuery(
       config,
-      "query",
-      "tryoutAccess/queries/internal/maintenance:getTryoutAccessCampaignIntegrity",
-      {
-        nowMs,
-        paginationOpts: {
-          cursor: continueCursor,
-          numItems: TRYOUT_ACCESS_PAGE_SIZE,
-        },
-      },
+      internal.tryoutAccess.integrity.internal.getTryoutAccessCampaignIntegrity,
+      args,
       tryoutAccessCampaignIntegrityPageSchema
     );
 
@@ -107,17 +132,14 @@ const getTryoutAccessGrantIntegrity = Effect.fn(
   let overdueActiveGrantCount = 0;
 
   while (true) {
-    const page: TryoutAccessGrantIntegrityPage = yield* callConvex(
+    const args: TryoutAccessGrantIntegrityArgs = {
+      nowMs,
+      paginationOpts: getTryoutAccessPaginationOpts(continueCursor),
+    };
+    const page: TryoutAccessGrantIntegrityPage = yield* callConvexQuery(
       config,
-      "query",
-      "tryoutAccess/queries/internal/maintenance:getTryoutAccessGrantIntegrity",
-      {
-        nowMs,
-        paginationOpts: {
-          cursor: continueCursor,
-          numItems: TRYOUT_ACCESS_PAGE_SIZE,
-        },
-      },
+      internal.tryoutAccess.integrity.internal.getTryoutAccessGrantIntegrity,
+      args,
       tryoutAccessGrantIntegrityPageSchema
     );
 
@@ -143,17 +165,15 @@ const getTryoutAccessEntitlementIntegrity = Effect.fn(
   let overdueEntitlementCount = 0;
 
   while (true) {
-    const page: TryoutAccessEntitlementIntegrityPage = yield* callConvex(
+    const args: TryoutAccessEntitlementIntegrityArgs = {
+      nowMs,
+      paginationOpts: getTryoutAccessPaginationOpts(continueCursor),
+    };
+    const page: TryoutAccessEntitlementIntegrityPage = yield* callConvexQuery(
       config,
-      "query",
-      "tryoutAccess/queries/internal/maintenance:getTryoutAccessEntitlementIntegrity",
-      {
-        nowMs,
-        paginationOpts: {
-          cursor: continueCursor,
-          numItems: TRYOUT_ACCESS_PAGE_SIZE,
-        },
-      },
+      internal.tryoutAccess.integrity.internal
+        .getTryoutAccessEntitlementIntegrity,
+      args,
       tryoutAccessEntitlementIntegrityPageSchema
     );
 
@@ -182,17 +202,15 @@ const getCompetitionCampaignProductOverlapIntegrity = Effect.fn(
       null;
 
     while (true) {
-      const page: CompetitionCampaignProductPage = yield* callConvex(
+      const args: CompetitionCampaignProductArgs = {
+        product,
+        paginationOpts: getTryoutAccessPaginationOpts(continueCursor),
+      };
+      const page: CompetitionCampaignProductPage = yield* callConvexQuery(
         config,
-        "query",
-        "tryoutAccess/queries/internal/maintenance:listCompetitionCampaignProductsByProduct",
-        {
-          product,
-          paginationOpts: {
-            cursor: continueCursor,
-            numItems: TRYOUT_ACCESS_PAGE_SIZE,
-          },
-        },
+        internal.tryoutAccess.integrity.internal
+          .listCompetitionCampaignProductsByProduct,
+        args,
         competitionCampaignProductPageSchema
       );
 

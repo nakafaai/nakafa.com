@@ -1,0 +1,67 @@
+export const metadata = {
+  title: "Lambang dan Notasi Vektor",
+  description:
+    "Pelajari cara membaca lambang vektor, notasi dua titik, besar vektor, vektor nol, dan vektor satuan dalam fisika.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "2026-05-31",
+  subject: "Vektor",
+};
+
+## Panah sebagai Bahasa Vektor
+
+Vektor biasanya ditampilkan sebagai anak panah. Panah ini bukan sekadar hiasan. Pangkal panah menunjukkan titik awal, ujung panah menunjukkan arah, dan panjang panah menunjukkan besar vektor.
+
+Kalau sebuah gaya ditampilkan dengan panah lebih panjang, artinya gaya itu lebih besar pada skala yang sama. Kalau ujung panahnya mengarah ke kanan atas, artinya gaya bekerja ke kanan atas.
+
+> Notasi vektor harus membuat dua informasi tetap terlihat: besar dan arah.
+
+## Notasi dengan Dua Titik
+
+Vektor dapat ditulis dari titik awal ke titik akhir. Misalnya <InlineMath math="\overrightarrow{AB}" /> dibaca sebagai vektor dari titik <InlineMath math="A" /> ke titik <InlineMath math="B" />.
+
+Urutan huruf tidak boleh ditukar sembarangan. <InlineMath math="\overrightarrow{AB}" /> dan <InlineMath math="\overrightarrow{BA}" /> memakai dua titik yang sama, tetapi arahnya berlawanan.
+
+| Notasi | Cara membaca | Makna arah |
+| :----- | :----------- | :--------- |
+| <InlineMath math="\overrightarrow{AB}" /> | vektor dari <InlineMath math="A" /> ke <InlineMath math="B" /> | pangkal di <InlineMath math="A" />, ujung di <InlineMath math="B" /> |
+| <InlineMath math="\overrightarrow{BA}" /> | vektor dari <InlineMath math="B" /> ke <InlineMath math="A" /> | pangkal di <InlineMath math="B" />, ujung di <InlineMath math="A" /> |
+| <InlineMath math="\lvert\overrightarrow{AB}\rvert" /> | besar vektor <InlineMath math="\overrightarrow{AB}" /> | hanya panjangnya, bukan arahnya |
+
+Tanda garis atau panah di atas huruf memberi tahu bahwa yang dibahas adalah vektor. Tanda mutlak memberi tahu bahwa yang dibahas hanya besarnya.
+
+## Notasi dengan Satu Huruf
+
+Dalam perhitungan, vektor sering diberi nama satu huruf seperti <InlineMath math="\vec{a}" />, <InlineMath math="\vec{v}" />, atau <InlineMath math="\vec{F}" />. Hurufnya membantu kita membedakan jenis besaran.
+
+Contohnya, <InlineMath math="\vec{F}" /> sering dipakai untuk gaya, <InlineMath math="\vec{v}" /> untuk kecepatan, dan <InlineMath math="\vec{s}" /> untuk perpindahan. Besar dari vektor tersebut ditulis tanpa panah, misalnya <InlineMath math="F" /> atau <InlineMath math="\lvert\vec{F}\rvert" />.
+
+<MathContainer>
+  <BlockMath math="\vec{F}=20\text{ N ke kanan}" />
+  <BlockMath math="\lvert\vec{F}\rvert=20\text{ N}" />
+</MathContainer>
+
+Baris pertama masih memuat arah. Baris kedua hanya menyatakan besar gaya.
+
+## Vektor Nol dan Vektor Satuan
+
+Ada dua notasi khusus yang sering muncul ketika vektor mulai dihitung dengan komponen.
+
+**Vektor nol** adalah vektor yang besarnya <InlineMath math="0" />. Pangkal dan ujungnya berimpit, sehingga arahnya tidak tentu. Dalam fisika, vektor nol dapat muncul ketika dua gaya sama besar dan berlawanan arah saling meniadakan.
+
+**Vektor satuan** adalah vektor yang besarnya <InlineMath math="1" /> dan hanya menunjukkan arah. Vektor satuan tidak dipakai untuk menyatakan seberapa kuat gaya atau seberapa jauh perpindahan, tetapi untuk menunjukkan arah sumbu.
+
+<MathContainer>
+  <BlockMath math="\hat{i}=\text{vektor satuan arah }x" />
+  <BlockMath math="\hat{j}=\text{vektor satuan arah }y" />
+  <BlockMath math="\hat{k}=\text{vektor satuan arah }z" />
+</MathContainer>
+
+Nanti, saat vektor ditulis sebagai <InlineMath math="\vec{A}=A_x\hat{i}+A_y\hat{j}" />, notasi <InlineMath math="\hat{i}" /> dan <InlineMath math="\hat{j}" /> memberi arah, sedangkan <InlineMath math="A_x" /> dan <InlineMath math="A_y" /> memberi besar komponen pada tiap sumbu.
+
+## Kesalahan Membaca yang Sering Terjadi
+
+Kesalahan pertama adalah menganggap <InlineMath math="\overrightarrow{AB}" /> sama dengan <InlineMath math="\overrightarrow{BA}" /> hanya karena memakai titik yang sama. Padahal arah vektornya berlawanan.
+
+Kesalahan kedua adalah menulis besar vektor sebagai bilangan negatif. Besar vektor selalu <InlineMath math="0" /> atau positif. Tanda negatif pada vektor biasanya berarti arahnya berlawanan terhadap arah acuan, bukan panjangnya negatif.
+
+Misalnya <InlineMath math="-\vec{a}" /> tidak berarti besar vektornya negatif. Artinya, vektor tersebut sama besar dengan <InlineMath math="\vec{a}" />, tetapi arahnya berlawanan.

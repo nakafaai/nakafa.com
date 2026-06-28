@@ -1,0 +1,159 @@
+import { BacterialGrowth } from "@repo/design-system/components/contents/mathematics/animation-bacterial";
+
+export const metadata = {
+  title: "Geometric Sequence",
+  description: "Learn geometric sequences with constant ratios. Learn formulas, solve real-world problems like bacterial growth, and discover practical applications.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "2025-04-05",
+  subject: "Sequence and Series",
+};
+
+## Understanding Geometric Sequences
+
+A geometric sequence is a sequence of numbers in which each term has a constant ratio to the previous term. This ratio is denoted by the letter <InlineMath math="r" />.
+
+If we have a geometric sequence <InlineMath math="U_1, U_2, U_3, ..., U_n" />, then:
+
+<BlockMath math="\frac{U_2}{U_1} = \frac{U_3}{U_2} = \frac{U_4}{U_3} = ... = r" />
+
+In other words, each term in a geometric sequence is obtained by multiplying the previous term by the ratio <InlineMath math="r" />.
+
+## Paper Folding Exploration
+
+Let's perform a simple exploration to understand the concept of a geometric sequence. Prepare a rectangular piece of paper and fold it several times.
+
+If the paper is folded once, it will be divided into <InlineMath math="2" /> equal parts. If folded again (twice), it will form <InlineMath math="4" /> equal parts. The following pattern emerges:
+
+| Number of folds | Number of equal parts |
+| --------------- | --------------------- |
+| <InlineMath math="1 \text{ fold}" />          | <InlineMath math="2 \text{ parts}" />               |
+| <InlineMath math="2 \text{ folds}" />         | <InlineMath math="4 \text{ parts}" />               |
+| <InlineMath math="3 \text{ folds}" />         | <InlineMath math="8 \text{ parts}" />               |
+| <InlineMath math="4 \text{ folds}" />         | <InlineMath math="16 \text{ parts}" />              |
+
+Notice that the number of parts formed creates a sequence: <InlineMath math="2, 4, 8, 16, \ldots" />
+
+In this sequence, each term is obtained by multiplying the previous term by <InlineMath math="2" />. In other words, the ratio is <InlineMath math="2" />.
+
+## General Formula for Geometric Sequences
+
+The general formula for a geometric sequence is:
+
+<BlockMath math="U_n = a \cdot r^{n-1}" />
+
+Where:
+
+- <InlineMath math="U_n" /> = general term
+- <InlineMath math="a" /> = first term
+- <InlineMath math="r" /> = ratio
+- <InlineMath math="n" /> = term number
+
+## Bacterial Division
+
+Bacteria reproduce by dividing themselves. Within two hours, one bacterial cell divides into <InlineMath math="3 \text{ parts}" />.
+
+If the initial number of bacteria is <InlineMath math="2 \text{ cells}" />, then:
+
+- First term (<InlineMath math="U_1" />) <InlineMath math="= 2" />
+- Ratio (<InlineMath math="r" />) <InlineMath math="= 3" />
+
+In <InlineMath math="20 \text{ hours}" />, division occurs <InlineMath math="10\text{ times}" /> (<InlineMath math="20 \div 2 = 10" />).
+
+To determine the number of bacteria after <InlineMath math="20 \text{ hours}" /> (<InlineMath math="10" />th term), we use the formula:
+
+<BlockMath math="U_{10} = 2 \cdot 3^{10-1} = 2 \cdot 3^9 = 2 \cdot 19{,}683 = 39{,}366" />
+
+So, after <InlineMath math="20 \text{ hours}" />, there are <InlineMath math="39{,}366 \text{ bacterial cells}" />.
+
+<BacterialGrowth
+  formulaType="geometric"
+  ratio={3}
+  initialCount={2}
+  maxGenerations={3}
+  timeInterval={2}
+  labels={{
+    title: "Bacterial Division",
+    bacterial: "Bacteria",
+    initialBacteria: "Initial Bacteria",
+  }}
+/>
+
+## Properties of Geometric Sequences
+
+### Ratio in Geometric Sequences
+
+The ratio (<InlineMath math="r" />) in a geometric sequence is always constant and can be calculated by dividing the next term by the previous term:
+
+<BlockMath math="r = \frac{U_2}{U_1} = \frac{U_3}{U_2} = \frac{U_4}{U_3} = ..." />
+
+### Finding the nth Term
+
+To find the general term of a geometric sequence, we can use the formula:
+
+<BlockMath math="U_n = a \cdot r^{n-1}" />
+
+## Applications of Geometric Sequences
+
+Geometric sequences are applied in various fields, such as:
+
+1. Population growth (as in the bacteria example)
+2. Compound interest in economics
+3. Radioactive decay in physics
+4. Cell growth in biology
+
+By understanding the concept of geometric sequences, we can model and predict various phenomena involving growth or decrease with a constant ratio.
+
+## Example Problems
+
+### Finding the Ratio
+
+The first term of a geometric sequence is <InlineMath math="4" /> and the fourth term is <InlineMath math="108" />. Determine the ratio of this sequence.
+
+**Solution**:
+
+Given:
+
+- <InlineMath math="a = 4" /> (first term)
+- <InlineMath math="U_4 = 108" /> (fourth term)
+
+Using the general formula for geometric sequences:
+
+<MathContainer>
+  <BlockMath math="U_4 = a \cdot r^{4-1}" />
+  <BlockMath math="108 = 4 \cdot r^3" />
+  <BlockMath math="r^3 = \frac{108}{4} = 27" />
+  <BlockMath math="r = \sqrt[3]{27} = 3" />
+</MathContainer>
+
+Therefore, the ratio of the geometric sequence is <InlineMath math="3" />.
+
+### Length of Rope Sections
+
+A rope is divided into <InlineMath math="5 \text{ parts}" /> with lengths forming a geometric sequence. If the shortest piece is <InlineMath math="16 \text{ cm}" /> and the longest piece is <InlineMath math="81 \text{ cm}" />, determine the length of the third piece.
+
+**Solution**:
+
+Given:
+
+- <InlineMath math="a = 16" /> (shortest piece)
+- <InlineMath math="U_5 = 81" /> (longest piece)
+
+First step, determine the ratio:
+
+<MathContainer>
+  <BlockMath math="U_5 = a \cdot r^{5-1}" />
+  <BlockMath math="81 = 16 \cdot r^4" />
+  <BlockMath math="r^4 = \frac{81}{16}" />
+  <BlockMath math="r = \sqrt[4]{\frac{81}{16}} = \frac{3}{2}" />
+</MathContainer>
+
+Then, find the length of the third piece (<InlineMath math="U_3" />):
+
+<MathContainer>
+  <BlockMath math="U_3 = a \cdot r^{3-1}" />
+  <BlockMath math="U_3 = 16 \cdot \left(\frac{3}{2}\right)^2" />
+  <BlockMath math="U_3 = 16 \cdot \frac{9}{4}" />
+  <BlockMath math="U_3 = 36" />
+</MathContainer>
+
+Therefore, the length of the third piece is <InlineMath math="36 \text{ cm}" />.

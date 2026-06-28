@@ -1,18 +1,12 @@
 import { formatExercise } from "@repo/ai/agents/nakafa/format";
 import { previewExercise } from "@repo/ai/agents/nakafa/preview";
+import { Nakafa } from "@repo/ai/agents/nakafa/service";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { NakafaAgentExerciseOptions } from "@repo/contents/_lib/agent/schema/exercise";
-import { Nakafa } from "@repo/contents/_lib/agent/service";
 import type { UIMessageStreamWriter } from "ai";
 import { Effect, Either, Option } from "effect";
 
 type Writer = Pick<UIMessageStreamWriter<MyUIMessage>, "write">;
-
-interface Params {
-  input: NakafaAgentExerciseOptions;
-  toolCallId: string;
-  writer: Writer;
-}
 
 const notFoundMessage = "Nakafa exercise content was not found.";
 
@@ -21,7 +15,11 @@ export const exercise = Effect.fn("nakafa.exercise")(function* ({
   input,
   toolCallId,
   writer,
-}: Params) {
+}: {
+  readonly input: NakafaAgentExerciseOptions;
+  readonly toolCallId: string;
+  readonly writer: Writer;
+}) {
   yield* Effect.sync(() =>
     writer.write({
       id: toolCallId,

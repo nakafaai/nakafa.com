@@ -1,6 +1,17 @@
 import { Effect, Schema } from "effect";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { getNakafaContentToolResult } from "@/lib/mcp/tools/content";
+
+vi.mock("@/lib/mcp/nakafa", async () => {
+  const { Effect, Option } = await import("effect");
+
+  return {
+    nakafaContent: {
+      /** Returns no content so the tool can shape its not-found response. */
+      read: () => Effect.succeed(Option.none()),
+    },
+  };
+});
 
 const ToolErrorResultSchema = Schema.Struct({
   isError: Schema.Literal(true),
@@ -15,7 +26,9 @@ const ToolErrorResultSchema = Schema.Struct({
 describe("nakafa_get_content", () => {
   it("returns structured not-found errors", async () => {
     const result = await Effect.runPromise(
-      getNakafaContentToolResult("en/articles/missing")
+      getNakafaContentToolResult({
+        content_ref: "https://nakafa.com/en/articles/politics/missing",
+      })
     );
 
     expect(

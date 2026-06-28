@@ -1,4 +1,5 @@
 import path from "node:path";
+import { postHogProxyKeys } from "@repo/analytics/keys";
 import { createPostHogProxyRewrites } from "@repo/analytics/posthog/config";
 import {
   config,
@@ -6,23 +7,21 @@ import {
   withAnalyzer,
   withMDX,
 } from "@repo/next-config";
+import { analyzeKeys } from "@repo/next-config/keys";
+import { createEnv } from "@t3-oss/env-nextjs";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
-import { env } from "@/env";
 import { AGENT_DISCOVERY_HEADERS } from "@/lib/agent-discovery";
 import { LLMS_CACHE_CONTROL } from "@/lib/llms/constants";
+
+const configEnv = createEnv({
+  extends: [analyzeKeys(), postHogProxyKeys()],
+  runtimeEnv: {},
+});
 
 const withNextIntl = createNextIntlPlugin(
   "../../packages/internationalization/src/request.ts"
 );
-
-const CONTENT_TRACE_FILES = [
-  "../../packages/contents/{articles,exercises,subject}/**/*",
-] as const;
-const AGENT_CONTENT_TRACE_FILES = [
-  ...CONTENT_TRACE_FILES,
-  "../../packages/contents/_data/quran.ts",
-] as const;
 
 /**
  * Build the rewrite rules for agent discovery, SEO assets, and the PostHog proxy.
@@ -43,14 +42,6 @@ function createAppRewrites() {
     },
     {
       source: "/.well-known/agent-skills/nakafa/SKILL.md",
-      destination: "/skill.md",
-    },
-    {
-      source: "/.well-known/skills/nakafa/SKILL.md",
-      destination: "/skill.md",
-    },
-    {
-      source: "/.well-known/skills/nakafa/skill.md",
       destination: "/skill.md",
     },
   ];
@@ -84,7 +75,7 @@ function createAppRewrites() {
     // PostHog requires the specific static and array rewrites to come before the
     // catch-all analytics rewrite so asset cache headers are preserved.
     afterFiles: [
-      ...createPostHogProxyRewrites(env.POSTHOG_PROXY_HOST),
+      ...createPostHogProxyRewrites(configEnv.POSTHOG_PROXY_HOST),
       ...agentDiscoveryRewrites,
       // Keep canonical OG image routes out of the broad extension rewrites.
       // After a pass-through match, Next checks the localized dynamic route
@@ -101,6 +92,11 @@ function createAppRewrites() {
 function createLocalizedRedirects() {
   const rootRedirects = [
     {
+      source: "/sitemap.txt",
+      destination: "/sitemap.xml",
+      permanent: true,
+    },
+    {
       source: "/about",
       destination: "/",
       permanent: true,
@@ -112,21 +108,6 @@ function createLocalizedRedirects() {
     },
   ];
   const redirects = [
-    {
-      source: "/subject/junior-high-school/:path*",
-      destination: "/subject/middle-school/:path*",
-      permanent: true,
-    },
-    {
-      source: "/subject/senior-high-school/:path*",
-      destination: "/subject/high-school/:path*",
-      permanent: true,
-    },
-    {
-      source: "/exercises/high-school/snbt/quantitative-reasoning/:path*",
-      destination: "/exercises/high-school/snbt/quantitative-knowledge/:path*",
-      permanent: true,
-    },
     {
       source: "/discord",
       destination: "https://discord.gg/CPCSfKhvfQ",
@@ -193,6 +174,13 @@ function createAppHeaders() {
 const nextConfig = {
   ...config,
   cacheComponents: true,
+  cacheLife: {
+    contentRuntime: {
+      stale: 300,
+      revalidate: 86_400,
+      expire: 604_800,
+    },
+  },
   // PostHog's same-origin proxy endpoints include trailing slashes such as
   // `/i/v0/e/`, so Next.js slash normalization must be disabled.
   skipTrailingSlashRedirect: true,
@@ -203,14 +191,8 @@ const nextConfig = {
   // config loading, so walking up two levels targets the monorepo root.
   outputFileTracingRoot: path.join(process.cwd(), "../.."),
   outputFileTracingIncludes: {
-    "/api/chat": [...AGENT_CONTENT_TRACE_FILES],
-    "/llms.mdx/\\[\\.\\.\\.slug\\]": [...AGENT_CONTENT_TRACE_FILES],
-    "/og/\\[\\.\\.\\.slug\\]": [...CONTENT_TRACE_FILES],
-    "/\\[locale\\]/og/\\[\\.\\.\\.slug\\]": [...CONTENT_TRACE_FILES],
-    "/\\[locale\\]/exercises/\\[category\\]/\\[type\\]/\\[material\\]/\\[\\.\\.\\.slug\\]":
-      [...CONTENT_TRACE_FILES],
-    "/\\[locale\\]/try-out/\\[product\\]/\\[slug\\]/part/\\[partKey\\]": [
-      ...CONTENT_TRACE_FILES,
+    "/llms.mdx/[...slug]": [
+      "./app/[locale]/(app)/(shared)/(site)/(legal)/**/*.mdx",
     ],
   },
   serverExternalPackages: [
@@ -228,6 +210,6 @@ const nextConfig = {
 } satisfies NextConfig;
 
 const analyzedConfig =
-  env.ANALYZE === "true" ? withAnalyzer(nextConfig) : nextConfig;
+  configEnv.ANALYZE === "true" ? withAnalyzer(nextConfig) : nextConfig;
 
 export default withMDX(withNextIntl(analyzedConfig));

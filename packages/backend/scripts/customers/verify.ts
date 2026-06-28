@@ -1,82 +1,104 @@
+import { internal } from "@repo/backend/convex/_generated/api";
 import { formatScriptCause } from "@repo/backend/scripts/lib/errors";
+import { log, logError } from "@repo/backend/scripts/sync-content/cli/logging";
 import {
-  callConvex,
+  ConvexIdSchema,
+  mutableArraySchema,
+} from "@repo/backend/scripts/sync-content/contract/schemas";
+import {
+  callConvexQuery,
   getConvexConfig,
-} from "@repo/backend/scripts/sync-content/convex";
-import { log, logError } from "@repo/backend/scripts/sync-content/logging";
-import { loadEnvProvider } from "@repo/backend/scripts/sync-content/runtime";
+} from "@repo/backend/scripts/sync-content/convex/client";
+import { loadEnvProvider } from "@repo/backend/scripts/sync-content/runtime/files";
+import type {
+  FunctionArgs,
+  FunctionReference,
+  FunctionReturnType,
+  PaginationOptions,
+} from "convex/server";
 import { Effect, Schema } from "effect";
 
 const CUSTOMER_PAGE_SIZE = 100;
 
-interface PageResult<T> {
+interface PageResult {
   continueCursor: string;
   isDone: boolean;
-  page: readonly T[];
+  page: unknown[];
 }
 
-const customerIntegrityUserPageSchema = Schema.Struct({
-  continueCursor: Schema.String,
-  isDone: Schema.Boolean,
-  page: Schema.Array(
-    Schema.Struct({
-      authId: Schema.String,
-      email: Schema.String,
-      userId: Schema.String,
-    })
-  ),
-});
+type CustomerIntegrityQuery = FunctionReference<
+  "query",
+  "internal" | "public",
+  { paginationOpts: PaginationOptions },
+  PageResult
+>;
 
-const customerIntegrityCustomerPageSchema = Schema.Struct({
-  continueCursor: Schema.String,
-  isDone: Schema.Boolean,
-  page: Schema.Array(
-    Schema.Struct({
-      externalId: Schema.NullOr(Schema.String),
-      localCustomerId: Schema.String,
-      polarCustomerId: Schema.String,
-      userId: Schema.String,
-    })
-  ),
-});
+type PageRow<TFunction extends CustomerIntegrityQuery> =
+  FunctionReturnType<TFunction>["page"][number];
 
-const customerIntegritySubscriptionPageSchema = Schema.Struct({
-  continueCursor: Schema.String,
-  isDone: Schema.Boolean,
-  page: Schema.Array(
-    Schema.Struct({
-      currentPeriodEnd: Schema.NullOr(Schema.String),
-      customerId: Schema.String,
-      status: Schema.String,
-      subscriptionId: Schema.String,
-    })
-  ),
-});
+const customerIntegrityUserPageSchema = Schema.mutable(
+  Schema.Struct({
+    continueCursor: Schema.String,
+    isDone: Schema.Boolean,
+    page: mutableArraySchema(
+      Schema.Struct({
+        authId: Schema.String,
+        email: Schema.String,
+        userId: ConvexIdSchema("users"),
+      })
+    ),
+  })
+);
+
+const customerIntegrityCustomerPageSchema = Schema.mutable(
+  Schema.Struct({
+    continueCursor: Schema.String,
+    isDone: Schema.Boolean,
+    page: mutableArraySchema(
+      Schema.Struct({
+        externalId: Schema.NullOr(Schema.String),
+        localCustomerId: ConvexIdSchema("customers"),
+        polarCustomerId: Schema.String,
+        userId: ConvexIdSchema("users"),
+      })
+    ),
+  })
+);
+
+const customerIntegritySubscriptionPageSchema = Schema.mutable(
+  Schema.Struct({
+    continueCursor: Schema.String,
+    isDone: Schema.Boolean,
+    page: mutableArraySchema(
+      Schema.Struct({
+        currentPeriodEnd: Schema.NullOr(Schema.String),
+        customerId: Schema.String,
+        status: Schema.String,
+        subscriptionId: Schema.String,
+      })
+    ),
+  })
+);
 
 /** Reads every page from one bounded internal customer-integrity query. */
 const collectIntegrityPages = Effect.fn("customers.collectIntegrityPages")(
-  function* <T>(
+  function* <TFunction extends CustomerIntegrityQuery, Encoded>(
     prod: boolean,
-    functionPath: string,
-    schema: Schema.Schema<PageResult<T>>
+    query: TFunction,
+    schema: Schema.Schema<FunctionReturnType<TFunction>, Encoded, never>
   ) {
     const config = yield* getConvexConfig({ prod });
-    const rows: T[] = [];
+    const rows: PageRow<TFunction>[] = [];
     let continueCursor: string | null = null;
 
     while (true) {
-      const result: PageResult<T> = yield* callConvex(
-        config,
-        "query",
-        functionPath,
-        {
-          paginationOpts: {
-            cursor: continueCursor,
-            numItems: CUSTOMER_PAGE_SIZE,
-          },
+      const args: FunctionArgs<TFunction> = {
+        paginationOpts: {
+          cursor: continueCursor,
+          numItems: CUSTOMER_PAGE_SIZE,
         },
-        schema
-      );
+      };
+      const result = yield* callConvexQuery(config, query, args, schema);
 
       rows.push(...result.page);
 
@@ -96,17 +118,17 @@ const getCustomerIntegrityReport = Effect.fn(
   const [users, customers, subscriptions] = yield* Effect.all([
     collectIntegrityPages(
       prod,
-      "customers/queries/internal/maintenance:listUsersForCustomerIntegrity",
+      internal.customers.integrity.internal.listUsersForCustomerIntegrity,
       customerIntegrityUserPageSchema
     ),
     collectIntegrityPages(
       prod,
-      "customers/queries/internal/maintenance:listCustomersForIntegrity",
+      internal.customers.integrity.internal.listCustomersForIntegrity,
       customerIntegrityCustomerPageSchema
     ),
     collectIntegrityPages(
       prod,
-      "customers/queries/internal/maintenance:listActiveSubscriptionsForIntegrity",
+      internal.customers.integrity.internal.listActiveSubscriptionsForIntegrity,
       customerIntegritySubscriptionPageSchema
     ),
   ]);

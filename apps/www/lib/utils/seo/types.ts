@@ -1,11 +1,14 @@
-import type { ArticleCategory } from "@repo/contents/_types/articles/category";
-import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
-import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material";
-import type { ExercisesType } from "@repo/contents/_types/exercises/type";
+import type { ProgramNavigationLevel } from "@repo/contents/_types/program/schema";
 import type { Surah } from "@repo/contents/_types/quran";
-import type { SubjectCategory } from "@repo/contents/_types/subject/category";
-import type { Grade } from "@repo/contents/_types/subject/grade";
-import type { Material } from "@repo/contents/_types/subject/material";
+import type {
+  ArticleCategory,
+  ExercisesCategory,
+  ExercisesMaterial,
+  ExercisesType,
+  Grade,
+  Material,
+  SubjectCategory,
+} from "@repo/contents/_types/taxonomy";
 
 /**
  * Base SEO data extracted from content metadata
@@ -28,7 +31,7 @@ export interface ContentSEOData {
  */
 export type SEOContext =
   | {
-      type: "subject";
+      type: "material-lesson";
       category: SubjectCategory;
       grade: Grade;
       material: Material;
@@ -44,6 +47,19 @@ export type SEOContext =
       set?: string; // Exercise set name (e.g., "Set 1")
       number?: number; // Exercise number for specific questions (e.g., 1, 2, 3)
       questionCount?: number;
+      data: ContentSEOData;
+    }
+  | {
+      type: "exercise-program";
+      category: ExercisesCategory;
+      exam: ExercisesType;
+      data: ContentSEOData;
+    }
+  | {
+      type: "curriculum-context";
+      level: ProgramNavigationLevel;
+      parent?: string;
+      program?: string;
       data: ContentSEOData;
     }
   | {

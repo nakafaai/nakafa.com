@@ -4,7 +4,8 @@ import { cronJobs } from "convex/server";
 
 const crons = cronJobs();
 const CONTENT_ANALYTICS_BACKSTOP_INTERVAL_MINUTES = 10;
-const CREDIT_RESET_PERIOD_REPAIR_INTERVAL_MINUTES = 1;
+const CREDIT_RESET_PERIOD_RECONCILE_INTERVAL_MINUTES = 10;
+const NINA_CAPABILITY_TRACE_RETENTION_INTERVAL_HOURS = 24;
 const TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES = 5;
 const TRYOUT_ACCESS_STATUS_SWEEP_INTERVAL_MINUTES = 5;
 
@@ -29,11 +30,11 @@ crons.cron(
 );
 
 /**
- * Repairs materialized credit reset periods if an exact-boundary cron was missed.
+ * Reconciles materialized credit reset periods if an exact-boundary cron was missed.
  */
 crons.interval(
-  "repair credit reset periods",
-  { minutes: CREDIT_RESET_PERIOD_REPAIR_INTERVAL_MINUTES },
+  "reconcile credit reset periods",
+  { minutes: CREDIT_RESET_PERIOD_RECONCILE_INTERVAL_MINUTES },
   internal.credits.mutations.syncAllCreditResetPeriods,
   {}
 );
@@ -45,6 +46,26 @@ crons.interval(
   "schedule content analytics partitions",
   { minutes: CONTENT_ANALYTICS_BACKSTOP_INTERVAL_MINUTES },
   internal.contents.mutations.analytics.scheduleContentAnalyticsPartitions,
+  {}
+);
+
+/**
+ * Rebuilds finite popularity windows from audited daily signals.
+ */
+crons.cron(
+  "refresh learning popularity windows",
+  "15 0 * * *",
+  internal.contents.mutations.popularity.scheduleLearningPopularityRefreshes,
+  {}
+);
+
+/**
+ * Deletes expired derived Nina capability trace summaries in bounded pages.
+ */
+crons.interval(
+  "sweep Nina capability traces",
+  { hours: NINA_CAPABILITY_TRACE_RETENTION_INTERVAL_HOURS },
+  internal.chats.traces.mutations.sweepExpired,
   {}
 );
 

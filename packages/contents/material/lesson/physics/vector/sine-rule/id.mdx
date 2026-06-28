@@ -1,0 +1,76 @@
+export const metadata = {
+  title: "Penentuan Arah Resultan Vektor dengan Rumus Sinus",
+  description:
+    "Pelajari cara menentukan arah resultan dua vektor menggunakan rumus sinus setelah besar resultannya diketahui.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "2026-05-31",
+  subject: "Vektor",
+};
+
+## Arah Resultan Perlu Sudut Baru
+
+Rumus kosinus memberi besar resultan, tetapi belum memberi arah lengkapnya. Dalam soal vektor, jawaban seperti <InlineMath math="15{,}6\text{ N}" /> belum cukup jika arah gayanya belum disebutkan.
+
+Untuk dua vektor, arah resultan dapat ditentukan dengan **rumus sinus**. Rumus ini bekerja pada segitiga resultan yang dibentuk oleh dua vektor dan resultannya.
+
+<BlockMath math="\frac{\sin\phi}{B}=\frac{\sin\theta}{R}" />
+
+Pada bentuk ini, <InlineMath math="\theta" /> adalah sudut apit antara <InlineMath math="\vec{A}" /> dan <InlineMath math="\vec{B}" />, <InlineMath math="R" /> adalah besar resultan, dan <InlineMath math="\phi" /> adalah sudut antara <InlineMath math="\vec{A}" /> dan resultan <InlineMath math="\vec{R}" />.
+
+> Rumus sinus biasanya dipakai setelah besar resultan sudah diketahui.
+
+## Membaca Sudut yang Dicari
+
+Sebelum menghitung, tentukan dulu arah acuan. Jika ditanya arah resultan terhadap <InlineMath math="\vec{A}" />, maka sudut yang dicari adalah sudut dari <InlineMath math="\vec{A}" /> menuju <InlineMath math="\vec{R}" />.
+
+Jika ditanya arah terhadap <InlineMath math="\vec{B}" />, sudutnya berbeda. Jangan menukar sudut tanpa melihat segitiga vektornya.
+
+Hubungan yang sering dipakai:
+
+<MathContainer>
+  <BlockMath math="\sin\phi=\frac{B\sin\theta}{R}" />
+  <BlockMath math="\phi=\sin^{-1}\left(\frac{B\sin\theta}{R}\right)" />
+</MathContainer>
+
+Rumus ini mencari sudut resultan terhadap vektor <InlineMath math="\vec{A}" />. Karena sisi yang berhadapan dengan sudut <InlineMath math="\phi" /> adalah besar vektor <InlineMath math="B" />, maka <InlineMath math="B" /> muncul di pembilang.
+
+## Contoh Arah Resultan Dua Gaya
+
+Dua gaya bekerja pada satu titik. <InlineMath math="A=10\text{ N}" />, <InlineMath math="B=8\text{ N}" />, dan sudut apitnya <InlineMath math="60^\circ" />. Dari rumus kosinus, besar resultannya adalah <InlineMath math="R\approx15{,}6\text{ N}" />.
+
+Sekarang cari sudut <InlineMath math="\phi" /> antara <InlineMath math="\vec{A}" /> dan <InlineMath math="\vec{R}" />.
+
+<BlockMath math="\begin{aligned}
+\sin\phi&=\frac{B\sin\theta}{R} \\
+&=\frac{8\sin60^\circ}{15{,}6} \\
+&=\frac{8(0{,}866)}{15{,}6} \\
+&\approx0{,}444
+\end{aligned}" />
+
+Maka:
+
+<BlockMath math="\phi=\sin^{-1}(0{,}444)\approx26{,}4^\circ" />
+
+Jadi, resultan gaya besarnya sekitar <InlineMath math="15{,}6\text{ N}" /> dengan arah <InlineMath math="26{,}4^\circ" /> dari <InlineMath math="\vec{A}" /> menuju <InlineMath math="\vec{B}" />.
+
+## Mengecek dengan Metode Komponen
+
+Arah yang sama dapat dicek memakai komponen. Jika <InlineMath math="\vec{A}" /> diletakkan pada sumbu <InlineMath math="x" /> positif, maka:
+
+<MathContainer>
+  <BlockMath math="R_x=A+B\cos\theta" />
+  <BlockMath math="R_y=B\sin\theta" />
+  <BlockMath math="\tan\phi=\frac{R_y}{R_x}" />
+</MathContainer>
+
+Untuk contoh yang sama:
+
+<BlockMath math="\tan\phi=\frac{8\sin60^\circ}{10+8\cos60^\circ}=\frac{6{,}928}{14}\approx0{,}495" />
+
+Nilai ini memberi <InlineMath math="\phi\approx26{,}4^\circ" />, sama seperti rumus sinus. Pengecekan ini berguna saat kalian ragu sudut mana yang sedang dicari.
+
+## Kapan Rumus Sinus Kurang Praktis
+
+Rumus sinus kurang praktis jika vektornya lebih dari dua atau jika arah tiap vektor sudah diberikan terhadap sumbu koordinat. Pada kondisi itu, metode komponen biasanya lebih aman karena semua arah ditata pada sumbu <InlineMath math="x" /> dan <InlineMath math="y" />.
+
+Gunakan rumus sinus saat bentuk soalnya jelas: dua vektor, sudut apit diketahui, besar resultan sudah ada, dan yang dicari adalah arah resultan terhadap salah satu vektor.

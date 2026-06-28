@@ -144,7 +144,7 @@ const runClaimedScriptGeneration = Effect.fn(
   yield* Effect.sync(() =>
     logger.info("Generating script with AI", {
       contentAudioId,
-      contentType: data.contentAudio.contentRef.type,
+      contentType: data.contentAudio.contentType,
     })
   );
 

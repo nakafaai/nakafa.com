@@ -1,0 +1,25 @@
+export const metadata = {
+  title: "Pembahasan Soal 1",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "2026-02-08",
+};
+
+Kita akan membandingkan total volume minyak <InlineMath math="A" /> yang diterima pada bulan April (<InlineMath math="30 \text{ hari }" />) dan Mei (<InlineMath math="31 \text{ hari }" />). Perhatikan bahwa jadwal pengiriman minyak <InlineMath math="A" /> adalah setiap <InlineMath math="3\text{ hari}" /> sekali.
+
+Berikut adalah perbandingan detailnya:
+
+| Bulan | Total Hari | Volume per Kiriman | Jadwal Pengiriman (Tanggal) | Total Kiriman | Total Volume |
+| :--- | :---: | :---: | :--- | :---: | :---: |
+| **April** | <InlineMath math="30" /> | <InlineMath math="10\text{ liter}" /> | <InlineMath math="1, 4, 7, 10, 13, 16, 19, 22, 25, 28" /> | <InlineMath math="10\text{ kali}" /> | <InlineMath math="10 \times 10 = 100\text{ liter}" /> |
+| **Mei** | <InlineMath math="31" /> | <InlineMath math="15\text{ liter}" /> | <InlineMath math="1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31" /> | <InlineMath math="11\text{ kali}" /> | <InlineMath math="11 \times 15 = 165\text{ liter}" /> |
+
+Perhatikan bahwa di bulan Mei, pengiriman terjadi sebanyak <InlineMath math="11\text{ kali}" /> karena tanggal <InlineMath math="31" /> juga termasuk jadwal pengiriman (selisih <InlineMath math="3 \text{ hari }" /> dari tanggal <InlineMath math="28" />).
+
+Maka, selisih volume minyak <InlineMath math="A" /> adalah:
+
+<MathContainer>
+  <BlockMath math="\Delta V = V_{\text{Mei}} - V_{\text{April}}" />
+  <BlockMath math="\Delta V = 165 - 100 = 65 \text{ liter}" />
+</MathContainer>
+
+Jadi, selisih volume minyak goreng merk <InlineMath math="A" /> yang diterima adalah <InlineMath math="65\text{ liter}" />.

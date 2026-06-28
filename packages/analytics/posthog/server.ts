@@ -62,15 +62,11 @@ function getPostHogCookieName() {
  * Extract one cookie value from a normalized cookie header string.
  */
 function getCookieValue(cookieHeader: string, cookieName: string) {
+  const cookiePrefix = `${cookieName}=`;
+
   for (const cookie of cookieHeader.split(COOKIE_SPLIT_PATTERN)) {
-    const separatorIndex = cookie.indexOf("=");
-
-    if (separatorIndex === -1) {
-      continue;
-    }
-
-    if (cookie.slice(0, separatorIndex) === cookieName) {
-      return cookie.slice(separatorIndex + 1);
+    if (cookie.startsWith(cookiePrefix)) {
+      return cookie.slice(cookiePrefix.length);
     }
   }
 

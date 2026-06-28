@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  Login01Icon,
-  Logout01Icon,
-  MoreVerticalIcon,
-} from "@hugeicons/core-free-icons";
+import { Logout01Icon, MoreVerticalIcon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import {
   Avatar,
@@ -32,7 +28,9 @@ import {
 } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
 import { useLayoutEffect } from "react";
-import { SidebarPreferenceSubmenus } from "@/components/sidebar/preference-submenus";
+import { NavUserGuestButton } from "@/components/sidebar/nav-user-guest-button";
+import { NavUserSkeleton } from "@/components/sidebar/nav-user-skeleton";
+import { SidebarUtilityMenuItems } from "@/components/sidebar/utility-menu-items";
 import { authClient } from "@/lib/auth/client";
 import { useUser } from "@/lib/context/use-user";
 import { getInitialName } from "@/lib/utils/helper";
@@ -46,11 +44,15 @@ export function SchoolSidebarNavUser() {
   const pathname = usePathname();
 
   const router = useRouter();
-  const user = useUser((state) => state.user);
+  const { isPending, user } = useUser((state) => ({
+    isPending: state.isPending,
+    user: state.user,
+  }));
   const [open, { close, set }] = useDisclosure(false);
 
   const { isMobile } = useSidebar();
   const authHref = `/auth?redirect=${pathname}`;
+  const dropdownSide = isMobile ? "bottom" : "right";
   const submenuSide = isMobile ? "top" : "right";
 
   useLayoutEffect(() => close, [close]);
@@ -66,13 +68,14 @@ export function SchoolSidebarNavUser() {
     });
   }
 
+  if (isPending) {
+    return <NavUserSkeleton />;
+  }
+
   if (!user) {
     return (
       <SidebarMenuItem>
-        <SidebarMenuButton onClick={() => router.push(authHref)}>
-          <HugeIcons icon={Login01Icon} />
-          {t("login")}
-        </SidebarMenuButton>
+        <NavUserGuestButton />
       </SidebarMenuItem>
     );
   }
@@ -115,7 +118,7 @@ export function SchoolSidebarNavUser() {
         <DropdownMenuContent
           align="end"
           className="w-(--anchor-width) min-w-56 max-w-[calc(100vw-2rem)] rounded-lg"
-          side={isMobile ? "bottom" : "right"}
+          side={dropdownSide}
           sideOffset={4}
         >
           <DropdownMenuGroup>
@@ -143,7 +146,7 @@ export function SchoolSidebarNavUser() {
             </DropdownMenuLabel>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
-          <SidebarPreferenceSubmenus side={submenuSide} />
+          <SidebarUtilityMenuItems side={submenuSide} />
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuItem

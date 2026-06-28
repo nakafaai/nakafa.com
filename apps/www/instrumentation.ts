@@ -4,6 +4,27 @@ import {
 } from "@repo/analytics/posthog/server";
 
 /**
+ * Registers local-only AI SDK DevTools telemetry when the Next.js server starts.
+ *
+ * The dynamic import keeps Node-only DevTools code out of Edge instrumentation.
+ *
+ * Docs:
+ * https://nextjs.org/docs/app/api-reference/file-conventions/instrumentation
+ * https://ai-sdk.dev/v7/docs/ai-sdk-core/devtools
+ */
+export async function register() {
+  if (process.env.NEXT_RUNTIME !== "nodejs") {
+    return;
+  }
+
+  const { registerAiSdkDevToolsTelemetry } = await import(
+    "@repo/ai/config/devtools"
+  );
+
+  registerAiSdkDevToolsTelemetry();
+}
+
+/**
  * Return the React/Next digest that identifies wrapped server render errors.
  *
  * Docs:

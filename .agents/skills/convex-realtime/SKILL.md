@@ -1,10 +1,11 @@
 ---
 name: convex-realtime
-displayName: Convex Realtime
 description: Patterns for building reactive apps including subscription management, optimistic updates, cache behavior, and paginated queries with cursor-based loading
-version: 1.0.0
-author: Convex
-tags: [convex, realtime, subscriptions, optimistic-updates, pagination]
+metadata:
+  displayName: Convex Realtime
+  version: 1.0.0
+  author: Convex
+  tags: [convex, realtime, subscriptions, optimistic-updates, pagination]
 ---
 
 # Convex Realtime

@@ -1,11 +1,8 @@
 import { internalAction } from "@repo/backend/convex/_generated/server";
 import {
   cleanupCustomerDataForDeletedUser,
-  cleanupOrphanedPolarCustomer,
-  repairCustomerMapping,
   syncOptionalCustomer,
 } from "@repo/backend/convex/customers/sync/impl";
-import { repairCustomerResultValidator } from "@repo/backend/convex/customers/sync/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
@@ -27,14 +24,6 @@ export const syncCustomer = internalAction({
   },
 });
 
-/** Repairs one user's customer mapping and returns structured conflict details. */
-export const repairCustomer = internalAction({
-  args: { userId: vv.id("users") },
-  returns: repairCustomerResultValidator,
-  handler: async (ctx, args) =>
-    await runConvexProgram(repairCustomerMapping(ctx, args.userId)),
-});
-
 /**
  * Clean up all user-related data when user is deleted.
  * Called from auth trigger when Better Auth user is deleted.
@@ -45,18 +34,4 @@ export const cleanupUserData = internalAction({
   returns: v.null(),
   handler: async (ctx, args) =>
     await runConvexProgram(cleanupCustomerDataForDeletedUser(ctx, args.userId)),
-});
-
-/**
- * Delete one stale Polar customer after verifying that no live user or active
- * subscription still depends on it.
- */
-export const cleanupStalePolarCustomer = internalAction({
-  args: {
-    existingExternalId: v.union(v.string(), v.null()),
-    polarCustomerId: v.string(),
-  },
-  returns: v.null(),
-  handler: async (ctx, args) =>
-    await runConvexProgram(cleanupOrphanedPolarCustomer(ctx, args)),
 });

@@ -74,7 +74,8 @@ function Content({
   };
 }) {
   const t = useTranslations("Common");
-  const [angleValue, setAngleValue] = useState(angle);
+  const [angleOverride, setAngleOverride] = useState<number | null>(null);
+  const angleValue = angleOverride ?? angle;
 
   return (
     <>
@@ -125,7 +126,7 @@ function Content({
               formatOptions={{
                 localeMatcher: "best fit",
               }}
-              onChange={setAngleValue}
+              onChange={setAngleOverride}
               value={angleValue}
             >
               <Label className="sr-only">Angle</Label>

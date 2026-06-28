@@ -109,8 +109,7 @@ export function MeasurementToolsLab({
       <CardContent className="flex flex-col gap-4">
         <ToggleGroup
           aria-label={labels.chooseTool}
-          className="grid w-full grid-cols-3"
-          layout="grid"
+          gridColumns="3"
           onValueChange={handleToolChange}
           type="single"
           value={selectedToolId}

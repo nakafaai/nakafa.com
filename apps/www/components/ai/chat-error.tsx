@@ -18,12 +18,38 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useAction } from "convex/react";
-import { useTranslations } from "next-intl";
-import { Activity, memo, useTransition } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { Activity, useTransition } from "react";
 import { CHAT_ERRORS } from "@/app/api/chat/constants";
 import { useChat } from "@/components/ai/context/use-chat";
 
-export const AiChatError = memo(() => {
+interface AiChatErrorSurfaceProps {
+  children?: React.ReactNode;
+  message: string;
+}
+
+const AiChatErrorSurface = ({ children, message }: AiChatErrorSurfaceProps) => (
+  <Empty className="rounded-xl border bg-card text-card-foreground">
+    <EmptyHeader>
+      <EmptyMedia className="bg-destructive/5" variant="icon">
+        <HugeIcons className="text-destructive" icon={Alert02Icon} />
+      </EmptyMedia>
+      <EmptyDescription>{message}</EmptyDescription>
+    </EmptyHeader>
+    {children}
+  </Empty>
+);
+AiChatErrorSurface.displayName = "AiChatErrorSurface";
+
+/** Shows a persisted assistant generation failure after chat refresh. */
+export const AiChatPersistedError = () => {
+  const t = useTranslations("Ai");
+
+  return <AiChatErrorSurface message={t("error-message")} />;
+};
+AiChatPersistedError.displayName = "AiChatPersistedError";
+
+export const AiChatError = () => {
   const t = useTranslations("Ai");
 
   const error = useChat((state) => state.chat.error);
@@ -42,20 +68,15 @@ export const AiChatError = memo(() => {
   }
 
   return (
-    <Empty className="rounded-xl border bg-card text-card-foreground">
-      <EmptyHeader>
-        <EmptyMedia className="bg-destructive/5" variant="icon">
-          <HugeIcons className="text-destructive" icon={Alert02Icon} />
-        </EmptyMedia>
-        <EmptyDescription>{errorMessage}</EmptyDescription>
-      </EmptyHeader>
+    <AiChatErrorSurface message={errorMessage}>
       {isInsufficientCredits ? <ButtonCheckout /> : <ButtonRegenerate />}
-    </Empty>
+    </AiChatErrorSurface>
   );
-});
+};
 AiChatError.displayName = "AiChatError";
 
-const ButtonCheckout = memo(() => {
+const ButtonCheckout = () => {
+  const locale = useLocale();
   const t = useTranslations("Auth");
 
   const [isPending, startTransition] = useTransition();
@@ -64,17 +85,17 @@ const ButtonCheckout = memo(() => {
     api.subscriptions.queries.hasActiveSubscription,
     { productId: products.pro.id }
   );
-  const generateCheckoutLink = useAction(
-    api.customers.actions.public.generateCheckoutLink
-  );
   const generateCustomerPortalUrl = useAction(
     api.customers.actions.public.generateCustomerPortalUrl
+  );
+  const generateCheckoutLink = useAction(
+    api.customers.actions.public.generateCheckoutLink
   );
 
   const handleCheckout = () => {
     startTransition(async () => {
       const { url } = await generateCheckoutLink({
-        productIds: [products.pro.id],
+        locale,
         successUrl: window.location.href,
       });
       window.location.href = url;
@@ -112,10 +133,10 @@ const ButtonCheckout = memo(() => {
       </Activity>
     </div>
   );
-});
+};
 ButtonCheckout.displayName = "ButtonCheckout";
 
-const ButtonRegenerate = memo(() => {
+const ButtonRegenerate = () => {
   const t = useTranslations("Ai");
 
   const regenerate = useChat((state) => state.chat.regenerate);
@@ -125,5 +146,5 @@ const ButtonRegenerate = memo(() => {
       {t("retry")}
     </Button>
   );
-});
+};
 ButtonRegenerate.displayName = "ButtonRegenerate";

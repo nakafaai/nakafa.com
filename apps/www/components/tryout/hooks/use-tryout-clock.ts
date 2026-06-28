@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore } from "react";
 
 const MILLISECONDS_PER_SECOND = 1000;
 const DISABLED_NOW_MS = 0;
@@ -67,12 +67,16 @@ function getDisabledSnapshot(initialNowMs: number) {
 
 /** Returns the shared client clock used for expiry-sensitive tryout UI. */
 export function useTryoutClock(enabled = true, initialNowMs = DISABLED_NOW_MS) {
+  const [fallbackInitialNowMs] = useState(Date.now);
+  const resolvedInitialNowMs =
+    initialNowMs === DISABLED_NOW_MS ? fallbackInitialNowMs : initialNowMs;
+
   return useSyncExternalStore(
     enabled ? subscribeEnabled : subscribeDisabled,
     () =>
       enabled
-        ? getEnabledSnapshot(initialNowMs)
-        : getDisabledSnapshot(initialNowMs),
-    () => getDisabledSnapshot(initialNowMs)
+        ? getEnabledSnapshot(resolvedInitialNowMs)
+        : getDisabledSnapshot(resolvedInitialNowMs),
+    () => getDisabledSnapshot(resolvedInitialNowMs)
   );
 }

@@ -1,0 +1,194 @@
+export const metadata = {
+  title: "Barisan Aritmetika",
+  description: "Pelajari barisan aritmetika dengan contoh bertahap, rumus suku umum, dan aplikasi nyata. Pelajari konsep beda dan pola bilangan.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "2025-04-05",
+  subject: "Barisan dan Deret",
+};
+
+## Pengertian Barisan Aritmetika
+
+Barisan aritmetika adalah suatu barisan bilangan di mana selisih atau beda antara dua suku berurutan selalu tetap atau konstan. Beda pada barisan aritmetika dilambangkan dengan <InlineMath math="b" />.
+
+## Contoh Barisan Aritmetika
+
+Perhatikan barisan bilangan berikut:
+
+<InlineMath math="4, 6, 8, 10, ..." />
+
+Pada barisan ini, kita dapat melihat bahwa:
+
+- Selisih antara suku kedua dan pertama: <InlineMath math="6 - 4 = 2" />
+- Selisih antara suku ketiga dan kedua: <InlineMath math="8 - 6 = 2" />
+- Selisih antara suku keempat dan ketiga: <InlineMath math="10 - 8 = 2" />
+
+Karena selisih antara dua suku berurutan selalu sama yaitu <InlineMath math="2" />, maka barisan ini merupakan barisan aritmetika dengan beda <InlineMath math="b = 2" />.
+
+## Beda pada Barisan Aritmetika
+
+Beda (<InlineMath math="b" />) pada barisan aritmetika dapat dihitung dengan mengurangkan dua suku berurutan:
+
+<BlockMath math="b = U_2 - U_1 = U_3 - U_2 = U_4 - U_3 = ... = U_n - U_{n-1}" />
+
+Di mana:
+
+- <InlineMath math="U_n" /> menyatakan suku ke-
+  <InlineMath math="n" />
+- <InlineMath math="U_{n-1}" /> menyatakan suku ke-(
+  <InlineMath math="n-1" />)
+
+## Rumus Suku Umum
+
+### Rumus Umum
+
+Untuk menentukan suku ke-<InlineMath math="n" /> pada barisan aritmetika, kita dapat menggunakan rumus:
+
+<BlockMath math="U_n = a + (n-1)b" />
+
+Keterangan:
+
+- <InlineMath math="U_n" /> = suku ke-
+  <InlineMath math="n" />
+- <InlineMath math="a" /> = suku pertama
+- <InlineMath math="n" /> = nomor suku
+- <InlineMath math="b" /> = beda
+
+### Cara Menurunkan Rumus
+
+Jika kita menulis beberapa suku pertama dari barisan aritmetika:
+
+- Suku ke-<InlineMath math="1" />: <InlineMath math="U_1 = a" />
+- Suku ke-<InlineMath math="2" />: <InlineMath math="U_2 = a + b" />
+- Suku ke-<InlineMath math="3" />: <InlineMath math="U_3 = a + 2b" />
+- Suku ke-<InlineMath math="4" />: <InlineMath math="U_4 = a + 3b" />
+- Suku ke-<InlineMath math="5" />: <InlineMath math="U_5 = a + 4b" />
+
+Dari pola tersebut, kita dapat melihat bahwa suku ke-<InlineMath math="n" /> adalah:
+
+<BlockMath math="U_n = a + (n-1)b" />
+
+## Aplikasi Barisan Aritmetika
+
+### Gedung Pertunjukan Seni
+
+Perhatikan jumlah kursi pada gedung pertunjukan seni berikut:
+
+- Baris ke-<InlineMath math="1" /> memiliki <InlineMath math="20" /> kursi.
+- Baris ke-<InlineMath math="2" /> memiliki <InlineMath math="24" /> kursi.
+- Baris ke-<InlineMath math="3" /> memiliki <InlineMath math="28" /> kursi.
+- Baris ke-<InlineMath math="4" /> memiliki <InlineMath math="32" /> kursi.
+- Baris ke-<InlineMath math="5" /> memiliki <InlineMath math="36" /> kursi.
+
+Untuk menentukan banyak kursi pada baris tertentu, kita perlu mencari pola dari data tersebut.
+
+**Langkah** <InlineMath math="1" />: Mencari beda antar baris
+
+- <InlineMath math="\text{Baris ke-}2 - \text{Baris ke-}1" />: <InlineMath math="24 - 20 = 4" />
+- <InlineMath math="\text{Baris ke-}3 - \text{Baris ke-}2" />: <InlineMath math="28 - 24 = 4" />
+- <InlineMath math="\text{Baris ke-}4 - \text{Baris ke-}3" />: <InlineMath math="32 - 28 = 4" />
+- <InlineMath math="\text{Baris ke-}5 - \text{Baris ke-}4" />: <InlineMath math="36 - 32 = 4" />
+
+Terlihat bahwa beda antara jumlah kursi pada baris yang berurutan adalah <InlineMath math="4" />. Ini berarti jumlah kursi di gedung pertunjukan ini membentuk barisan aritmetika dengan:
+
+- Suku pertama <InlineMath math="a = 20" />
+- Beda <InlineMath math="b = 4" />
+
+**Langkah <InlineMath math="2" />: Menggunakan rumus untuk mencari jumlah kursi pada baris ke-<InlineMath math="15" />**
+
+<MathContainer>
+  <BlockMath math="U_{15} = a + (n-1)b" />
+  <BlockMath math="U_{15} = 20 + (15-1)4" />
+  <BlockMath math="U_{15} = 20 + (14)4" />
+  <BlockMath math="U_{15} = 20 + 56" />
+  <BlockMath math="U_{15} = 76" />
+</MathContainer>
+
+Jadi, jumlah kursi pada baris ke-<InlineMath math="15" /> adalah <InlineMath math="76" /> kursi.
+
+## Latihan Pertama
+
+Diketahui suatu barisan aritmetika dengan suku ke-<InlineMath math="3" /> sama dengan <InlineMath math="9" /> dan suku ke-<InlineMath math="6" /> sama dengan <InlineMath math="18" />. Tentukan rumus suku ke-<InlineMath math="n" />.
+
+### Kunci Jawaban Latihan Pertama
+
+Untuk menentukan rumus suku umum, kita perlu mencari nilai suku pertama <InlineMath math="(a)" /> dan beda <InlineMath math="(b)" />.
+
+<MathContainer>
+  <BlockMath math="U_3 = a + 2b = 9" />
+  <BlockMath math="U_6 = a + 5b = 18" />
+</MathContainer>
+
+Kita eliminasi persamaan di atas untuk mendapatkan nilai <InlineMath math="b" />:
+
+<MathContainer>
+  <BlockMath math="U_6 - U_3 = (a + 5b) - (a + 2b)" />
+  <BlockMath math="18 - 9 = 3b" />
+  <BlockMath math="9 = 3b" />
+  <BlockMath math="b = 3" />
+</MathContainer>
+
+Setelah mendapatkan nilai <InlineMath math="b" />, kita substitusikan ke persamaan pertama untuk mendapatkan nilai <InlineMath math="a" />:
+
+<MathContainer>
+  <BlockMath math="a + 2b = 9" />
+  <BlockMath math="a + 2(3) = 9" />
+  <BlockMath math="a + 6 = 9" />
+  <BlockMath math="a = 9 - 6 = 3" />
+</MathContainer>
+
+Setelah mendapatkan nilai <InlineMath math="a = 3" /> dan <InlineMath math="b = 3" />, kita bisa merumuskan suku ke-<InlineMath math="n" />:
+
+<MathContainer>
+  <BlockMath math="U_n = a + (n-1)b" />
+  <BlockMath math="U_n = 3 + (n-1)3" />
+  <BlockMath math="U_n = 3 + 3n - 3" />
+  <BlockMath math="U_n = 3n" />
+</MathContainer>
+
+Jadi, rumus suku umum dari barisan tersebut adalah <InlineMath math="U_n = 3n" />
+
+## Latihan Kedua
+
+Rudi menabung di bank dengan selisih kenaikan nominal uang yang ditabung antarbulan tetap. Jika pada bulan ke-<InlineMath math="5" />, nominal uang yang ditabung <InlineMath math="\text{Rp}70.000{,}00" /> dan pada bulan ke-<InlineMath math="9" /> Rudi menabung sebesar <InlineMath math="\text{Rp}90.000{,}00" />.
+
+1. Berapa rupiah selisih nominal uang yang ditabung antarbulan?
+
+2. Tentukan berapa rupiah uang yang ditabung Rudi untuk pertama kalinya?
+
+### Kunci Jawaban Latihan Kedua
+
+Tabungan Rudi membentuk barisan aritmetika karena selisih kenaikan nominal antarbulan tetap.
+
+1. **Mencari selisih nominal uang yang ditabung antarbulan**
+
+    <MathContainer>
+      <BlockMath math="U_5 = 70.000" />
+      <BlockMath math="a + (5-1)b = 70.000" />
+      <BlockMath math="a + 4b = 70.000 \text{ ... (persamaan 1)}" />
+      <BlockMath math="U_9 = 90.000" />
+      <BlockMath math="a + (9-1)b = 90.000" />
+      <BlockMath math="a + 8b = 90.000 \text{ ... (persamaan 2)}" />
+    </MathContainer>
+
+    Eliminasi persamaan <InlineMath math="1" /> dan <InlineMath math="2" />:
+
+    <MathContainer>
+      <BlockMath math="4b = 20.000" />
+      <BlockMath math="b = 5.000" />
+    </MathContainer>
+
+    Jadi, selisih nominal uang yang ditabung Rudi antarbulan adalah <InlineMath math="\text{Rp}5.000{,}00" />.
+
+2. **Mencari uang yang ditabung Rudi untuk pertama kalinya**
+
+    Kita sudah mendapatkan nilai <InlineMath math="b = 5.000" />, selanjutnya kita substitusikan ke persamaan <InlineMath math="(1)" /> untuk mendapatkan nilai <InlineMath math="a" />:
+
+    <MathContainer>
+      <BlockMath math="a + 4b = 70.000" />
+      <BlockMath math="a + 4(5.000) = 70.000" />
+      <BlockMath math="a + 20.000 = 70.000" />
+      <BlockMath math="a = 70.000 - 20.000" />
+      <BlockMath math="a = 50.000" />
+    </MathContainer>
+
+    Jadi, uang yang ditabung Rudi untuk pertama kalinya adalah <InlineMath math="\text{Rp}50.000{,}00" />.

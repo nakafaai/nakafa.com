@@ -8,7 +8,6 @@ import {
   Tick01Icon,
   Time04Icon,
 } from "@hugeicons/core-free-icons";
-import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Calendar } from "@repo/design-system/components/ui/calendar";
@@ -37,13 +36,14 @@ import { cn } from "@repo/design-system/lib/utils";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
 import { startOfDay } from "date-fns";
+import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
-import { Activity } from "react";
+import { Activity, useState } from "react";
 import { toast } from "sonner";
 import {
   getMaterialStatus,
   materialStatusList,
-} from "@/components/school/classes/_data/material-status";
+} from "@/components/school/classes/data/material-status";
 import {
   type MaterialGroupFormValues,
   materialGroupFormSchema,
@@ -57,6 +57,7 @@ import {
   updateDate,
   updateTime,
 } from "@/components/school/classes/materials/utils";
+import { reportClientException } from "@/lib/analytics/client";
 import { useClass } from "@/lib/context/use-class";
 
 interface MaterialGroupDialogShellProps {
@@ -179,6 +180,7 @@ function MaterialGroupDialogShell({
   submitLabel,
   title,
 }: MaterialGroupDialogShellProps) {
+  const [minimumDate] = useState(() => startOfDay(new Date()));
   const t = useTranslations("School.Classes");
   const locale = useLocale();
 
@@ -188,25 +190,31 @@ function MaterialGroupDialogShell({
       onChange: materialGroupFormSchema,
     },
     onSubmit: async ({ value }) => {
-      try {
-        await onSubmit(value);
-        form.reset();
-        setOpenAction(false);
-      } catch (error) {
-        captureException(error, errorContext);
-        toast.error(errorMessage);
-      }
+      await Effect.runPromise(
+        Effect.tryPromise({
+          try: async () => {
+            await onSubmit(value);
+            form.reset();
+            setOpenAction(false);
+          },
+          catch: (error) => error,
+        }).pipe(
+          Effect.catchAll((error) =>
+            reportClientException(error, errorContext).pipe(
+              Effect.zipRight(
+                Effect.sync(() => {
+                  toast.error(errorMessage);
+                })
+              )
+            )
+          )
+        )
+      );
     },
   });
 
   return (
-    <form
-      id={formId}
-      onSubmit={(event) => {
-        event.preventDefault();
-        form.handleSubmit();
-      }}
-    >
+    <form action={() => form.handleSubmit()} id={formId}>
       <ResponsiveDialog
         description={description}
         footer={
@@ -383,7 +391,7 @@ function MaterialGroupDialogShell({
                             className="w-auto overflow-hidden p-0"
                           >
                             <Calendar
-                              disabled={{ before: startOfDay(new Date()) }}
+                              disabled={{ before: minimumDate }}
                               mode="single"
                               onSelect={(date) => {
                                 if (!date) {

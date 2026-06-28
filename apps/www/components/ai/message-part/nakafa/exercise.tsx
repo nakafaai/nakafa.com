@@ -12,7 +12,7 @@ import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
-import { memo } from "react";
+import { readExercisePreviewHref } from "@/components/ai/message-part/nakafa/exercise/link";
 
 const MAX_SHOWN_EXERCISES = 5;
 
@@ -21,7 +21,7 @@ interface Props {
 }
 
 /** Renders a compact exercise-set or exercise-question preview. */
-export const ExercisePart = memo(({ message }: Props) => {
+export const ExercisePart = ({ message }: Props) => {
   const t = useTranslations("Ai");
   const [expanded, { toggle }] = useDisclosure(false);
   const numbers = expanded
@@ -44,7 +44,12 @@ export const ExercisePart = memo(({ message }: Props) => {
             nativeButton={false}
             render={
               <a
-                href={`${message.result.url}/${number}`}
+                href={readExercisePreviewHref({
+                  exerciseNumber: message.result.exercise_number,
+                  locale: message.result.locale,
+                  number,
+                  url: message.result.url,
+                })}
                 rel="noopener noreferrer"
                 target="_blank"
               >
@@ -65,5 +70,5 @@ export const ExercisePart = memo(({ message }: Props) => {
       </div>
     </div>
   );
-});
+};
 ExercisePart.displayName = "ExercisePart";

@@ -3,7 +3,7 @@ import {
   NakafaAgentDataReadError,
   NakafaAgentInputError,
 } from "@repo/contents/_lib/agent/errors";
-import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
+import { parseNakafaContentRefFields } from "@repo/contents/_lib/agent/refs";
 import {
   NakafaAgentQuranReferenceOptionsSchema,
   NakafaAgentQuranReferenceSchema,
@@ -37,25 +37,32 @@ export const getNakafaAgentQuranReference = Effect.fn(
     return Option.none();
   }
 
-  const ref = buildNakafaContentRef(
+  const ref = yield* parseNakafaContentRefFields(
     parsedOptions.locale,
     `quran/${surah.value.number}`,
     "quran"
   );
-  const verses = surah.value.verses
-    .filter(
-      (verse) =>
-        verse.number.inSurah >= firstVerse && verse.number.inSurah <= lastVerse
-    )
-    .map((verse) => ({
-      arabic: verse.text.arab,
-      number: verse.number.inSurah,
-      ...(parsedOptions.include_tafsir
-        ? { tafsir: verse.tafsir.id.short }
-        : {}),
-      translation: verse.translation[parsedOptions.locale],
-      transliteration: verse.text.transliteration.en,
-    }));
+
+  const verses = surah.value.verses.flatMap((verse) => {
+    const isInRange =
+      verse.number.inSurah >= firstVerse && verse.number.inSurah <= lastVerse;
+
+    if (!isInRange) {
+      return [];
+    }
+
+    return [
+      {
+        arabic: verse.text.arab,
+        number: verse.number.inSurah,
+        ...(parsedOptions.include_tafsir
+          ? { tafsir: verse.tafsir.id.short }
+          : {}),
+        translation: verse.translation[parsedOptions.locale],
+        transliteration: verse.text.transliteration.en,
+      },
+    ];
+  });
 
   if (verses.length === 0) {
     return Option.none();

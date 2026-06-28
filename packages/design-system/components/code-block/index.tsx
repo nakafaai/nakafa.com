@@ -1,8 +1,15 @@
 "use client";
 
-import { Copy01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
-import { type IconType, SiGnometerminal } from "@icons-pack/react-simple-icons";
+import {
+  Copy01Icon,
+  TerminalIcon,
+  Tick01Icon,
+} from "@hugeicons/core-free-icons";
 import { captureException } from "@repo/analytics/posthog";
+import {
+  type ProgrammingIcon,
+  SimpleIcon,
+} from "@repo/design-system/components/icons/simple";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
@@ -27,7 +34,7 @@ import {
 import { cva } from "class-variance-authority";
 import { useTranslations } from "next-intl";
 import type { ComponentProps, HTMLAttributes, ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   type BundledLanguage,
   type CodeOptionsMultipleThemes,
@@ -127,6 +134,7 @@ export type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
   data: CodeBlockData[];
 };
 
+/** Provides code-block tab state and source data to child controls. */
 export const CodeBlock = ({
   value: controlledValue,
   onValueChange: controlledOnValueChange,
@@ -140,9 +148,13 @@ export const CodeBlock = ({
     prop: controlledValue,
     onChange: controlledOnValueChange,
   });
+  const contextValue = useMemo(
+    () => ({ value, onValueChange, data }),
+    [value, onValueChange, data]
+  );
 
   return (
-    <CodeBlockContext.Provider value={{ value, onValueChange, data }}>
+    <CodeBlockContext.Provider value={contextValue}>
       <div
         className={cn(
           "grid size-full grid-cols-1 overflow-hidden rounded-xl border shadow-sm",
@@ -194,7 +206,7 @@ export const CodeBlockFiles = ({
 };
 
 export type CodeBlockFilenameProps = HTMLAttributes<HTMLDivElement> & {
-  icon?: IconType;
+  icon?: ProgrammingIcon;
   value?: string;
 };
 
@@ -212,7 +224,7 @@ export const CodeBlockFilename = ({
     );
     return regex.test(children?.toString() ?? "");
   })?.[1];
-  const Icon = icon ?? defaultIcon ?? SiGnometerminal;
+  const iconValue = icon ?? defaultIcon;
 
   if (value !== activeValue) {
     return null;
@@ -223,7 +235,11 @@ export const CodeBlockFilename = ({
       className="flex min-w-0 items-center gap-2 px-4 py-1.5 text-muted-foreground text-sm"
       {...props}
     >
-      {!!Icon && <Icon className="size-4 shrink-0" />}
+      {iconValue ? (
+        <SimpleIcon className="size-4 shrink-0" icon={iconValue} />
+      ) : (
+        <HugeIcons className="size-4 shrink-0" icon={TerminalIcon} />
+      )}
       <span className="min-w-0 flex-1 truncate">{children}</span>
     </div>
   );
@@ -454,24 +470,43 @@ export const CodeBlockContent = ({
   syntaxHighlighting = true,
   ...props
 }: CodeBlockContentProps) => {
-  const [html, setHtml] = useState<string | null>(null);
+  const [highlightedCode, setHighlightedCode] = useState({
+    html: "",
+    source: "",
+  });
 
   useEffect(() => {
     if (!syntaxHighlighting) {
       return;
     }
 
+    let isCurrentRender = true;
+
     highlight(children, language, themes)
-      .then(setHtml)
+      .then((html) => {
+        if (isCurrentRender) {
+          setHighlightedCode({ html, source: children });
+        }
+      })
       .catch((error) => {
-        setHtml(null);
+        if (!isCurrentRender) {
+          return;
+        }
+
+        setHighlightedCode({ html: "", source: children });
         captureException(error, {
           component: "CodeBlockContent",
           language: language ?? "plain-text",
           source: "code-block-highlight",
         });
       });
+
+    return () => {
+      isCurrentRender = false;
+    };
   }, [children, themes, syntaxHighlighting, language]);
+
+  const html = highlightedCode.source === children ? highlightedCode.html : "";
 
   if (!(syntaxHighlighting && html)) {
     return <CodeBlockFallback>{children}</CodeBlockFallback>;

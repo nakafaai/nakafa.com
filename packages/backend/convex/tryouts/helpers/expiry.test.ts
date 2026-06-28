@@ -19,7 +19,7 @@ describe("tryouts/helpers/expiry", () => {
       });
       const firstSetId = await ctx.db.insert("exerciseSets", {
         locale: "id",
-        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/expire-partcount-shrink-qk",
+        slug: "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/expire-partcount-shrink-qk",
         category: "high-school",
         type: "snbt",
         material: "quantitative-knowledge",
@@ -31,7 +31,7 @@ describe("tryouts/helpers/expiry", () => {
       });
       const secondSetId = await ctx.db.insert("exerciseSets", {
         locale: "id",
-        slug: "exercises/high-school/snbt/mathematical-reasoning/try-out/2026/expire-partcount-shrink-mr",
+        slug: "material/practice/assessment/snbt/mathematical-reasoning/try-out-2026/expire-partcount-shrink-mr",
         category: "high-school",
         type: "snbt",
         material: "mathematical-reasoning",
@@ -111,7 +111,7 @@ describe("tryouts/helpers/expiry", () => {
       });
 
       const firstSetAttemptId = await ctx.db.insert("exerciseAttempts", {
-        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/expire-partcount-shrink-qk",
+        slug: "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/expire-partcount-shrink-qk",
         userId: identity.userId,
         origin: "tryout",
         mode: "simulation",
@@ -130,7 +130,7 @@ describe("tryouts/helpers/expiry", () => {
         scorePercentage: 0,
       });
       const secondSetAttemptId = await ctx.db.insert("exerciseAttempts", {
-        slug: "exercises/high-school/snbt/mathematical-reasoning/try-out/2026/expire-partcount-shrink-mr",
+        slug: "material/practice/assessment/snbt/mathematical-reasoning/try-out-2026/expire-partcount-shrink-mr",
         userId: identity.userId,
         origin: "tryout",
         mode: "simulation",

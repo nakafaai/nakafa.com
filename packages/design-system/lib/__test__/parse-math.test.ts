@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { preprocessLaTeX } from "@repo/design-system/lib/parse-math";
 import { Lexer } from "marked";
 import { describe, expect, it } from "vitest";
@@ -114,6 +115,15 @@ describe("preprocessLaTeX", () => {
 
     expect(preprocessLaTeX(markdown)).toBe(
       "Sebanyak $$15,00\\ \\text{g}$$ besi dan $$x^2 + 1$$ oksigen."
+    );
+  });
+
+  it("normalizes group notation in single-dollar spans", () => {
+    const markdown =
+      "For a $p$-group $G$, the center $Z(G)$, order $|G|$, center order $|Z(G)|$, and quotient $G/Z(G)$ are standard notation.";
+
+    expect(preprocessLaTeX(markdown)).toBe(
+      "For a $$p$$-group $$G$$, the center $$Z(G)$$, order $$|G|$$, center order $$|Z(G)|$$, and quotient $$G/Z(G)$$ are standard notation."
     );
   });
 

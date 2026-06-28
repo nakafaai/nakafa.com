@@ -1,16 +1,18 @@
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
 import {
   buildAuthorCache,
+  deleteContentProjectionsBySourcePath,
   deleteExerciseQuestion,
   replaceExerciseChoices,
   syncContentAuthorsWithCache,
 } from "@repo/backend/convex/contentSync/lib/syncHelpers";
-import { buildContentSearchRef } from "@repo/backend/convex/contents/helpers/search/documents";
-import {
-  deleteContentSearch,
-  syncContentSearch,
-} from "@repo/backend/convex/contents/helpers/search/write";
+import { hasSameSyncValues } from "@repo/backend/convex/contentSync/lib/syncValues";
+import { getContentGraphIdentity } from "@repo/backend/convex/contents/graph";
+import { syncContentRoute } from "@repo/backend/convex/contents/helpers/routes/write";
+import { syncContentSearch } from "@repo/backend/convex/contents/helpers/search/write";
 import { internalMutation } from "@repo/backend/convex/functions";
 import {
   exercisesCategoryValidator,
@@ -19,6 +21,7 @@ import {
   localeValidator,
 } from "@repo/backend/convex/lib/validators/contents";
 import { logger } from "@repo/backend/convex/utils/logger";
+import { getExerciseSetGroupRoute } from "@repo/contents/_types/graph/projection";
 import { ConvexError, v } from "convex/values";
 import { getAll } from "convex-helpers/server/relationships";
 
@@ -27,8 +30,12 @@ const syncedExerciseSetValidator = v.object({
   contentHash: v.string(),
   description: v.optional(v.string()),
   exerciseType: v.string(),
+  exerciseTypeTitle: v.string(),
+  groupPublicPath: v.string(),
+  groupContentHash: v.string(),
   locale: localeValidator,
   material: exercisesMaterialValidator,
+  publicPath: v.string(),
   questionCount: v.number(),
   searchDescription: v.string(),
   searchText: v.string(),
@@ -37,6 +44,7 @@ const syncedExerciseSetValidator = v.object({
   slug: v.string(),
   title: v.string(),
   type: exercisesTypeValidator,
+  year: v.optional(v.string()),
 });
 
 const syncedExerciseChoiceValidator = v.object({
@@ -46,11 +54,16 @@ const syncedExerciseChoiceValidator = v.object({
   order: v.number(),
 });
 
+const syncedExerciseChoicesValidator = v.object({
+  en: v.array(syncedExerciseChoiceValidator),
+  id: v.array(syncedExerciseChoiceValidator),
+});
+
 const syncedExerciseQuestionValidator = v.object({
   answerBody: v.string(),
   authors: v.array(v.object({ name: v.string() })),
   category: exercisesCategoryValidator,
-  choices: v.array(syncedExerciseChoiceValidator),
+  choices: syncedExerciseChoicesValidator,
   contentHash: v.string(),
   date: v.number(),
   description: v.optional(v.string()),
@@ -58,6 +71,7 @@ const syncedExerciseQuestionValidator = v.object({
   locale: localeValidator,
   material: exercisesMaterialValidator,
   number: v.number(),
+  publicPath: v.string(),
   questionBody: v.string(),
   searchDescription: v.string(),
   searchText: v.string(),
@@ -89,12 +103,71 @@ const deleteResultValidator = v.object({
   deleted: v.number(),
 });
 
+/** Requires the graph projection selector for an exercise set's group route. */
+function requireExerciseSetGroupRoute(setSlug: string) {
+  const route = getExerciseSetGroupRoute(setSlug);
+
+  if (route) {
+    return route;
+  }
+
+  throw new ConvexError({
+    code: "CONTENT_SYNC_INVALID_EXERCISE_SET_ROUTE",
+    message: "Exercise set route cannot be projected into a graph group route.",
+    route: setSlug,
+  });
+}
+
+/** Deletes an exercise group route when no published set remains in the group. */
+async function deleteExerciseGroupRouteIfEmpty(
+  ctx: MutationCtx,
+  source: {
+    category: Doc<"exerciseSets">["category"];
+    exerciseType: string;
+    locale: Doc<"exerciseSets">["locale"];
+    material: Doc<"exerciseSets">["material"];
+    slug: string;
+    type: Doc<"exerciseSets">["type"];
+    year?: string;
+  }
+) {
+  const route = getExerciseSetGroupRoute(source.slug);
+
+  if (!route) {
+    return;
+  }
+
+  const sets = await ctx.db
+    .query("exerciseSets")
+    .withIndex("by_locale_and_group", (q) =>
+      q
+        .eq("locale", source.locale)
+        .eq("category", source.category)
+        .eq("type", source.type)
+        .eq("material", source.material)
+        .eq("exerciseType", source.exerciseType)
+        .eq("year", source.year)
+    )
+    .take(CONTENT_SYNC_BATCH_LIMITS.exerciseSets + 1);
+  const hasPublishedSet = sets.some((set) => set.questionCount > 0);
+
+  if (hasPublishedSet) {
+    return;
+  }
+
+  await deleteContentProjectionsBySourcePath(ctx, {
+    locale: source.locale,
+    route,
+  });
+}
+
 /** Upsert exercise sets from the filesystem sync source. */
 export const bulkSyncExerciseSets = internalMutation({
   args: {
     sets: v.array(syncedExerciseSetValidator),
   },
   returns: syncSummaryValidator,
+  /** Applies one bounded exercise set sync batch and keeps set search rows current. */
   handler: async (ctx, args) => {
     assertContentSyncBatchSize({
       functionName: "bulkSyncExerciseSets",
@@ -109,25 +182,61 @@ export const bulkSyncExerciseSets = internalMutation({
     let updated = 0;
 
     for (const set of args.sets) {
-      const searchRef = buildContentSearchRef({
+      const groupRoute = requireExerciseSetGroupRoute(set.slug);
+      const setGraph = getContentGraphIdentity({
+        kind: "exercise-set",
         locale: set.locale,
         route: set.slug,
-        section: "exercises",
       });
-
+      const groupGraph = getContentGraphIdentity({
+        kind: "exercise-group",
+        locale: set.locale,
+        route: groupRoute,
+      });
       if (set.questionCount > 0) {
         await syncContentSearch(ctx, {
+          ...setGraph,
           contentHash: set.contentHash,
           description: set.searchDescription,
           locale: set.locale,
-          route: set.slug,
-          section: "exercises",
+          route: set.publicPath,
+          section: "material",
+          sourcePath: set.slug,
           syncedAt: now,
           text: set.searchText,
           title: set.searchTitle,
         });
+        await syncContentRoute(ctx, {
+          ...setGraph,
+          contentHash: set.contentHash,
+          description: set.description,
+          kind: "exercise-set",
+          locale: set.locale,
+          markdown: true,
+          publicPath: set.publicPath,
+          section: "material",
+          sourcePath: set.slug,
+          syncedAt: now,
+          title: set.title,
+        });
+        await syncContentRoute(ctx, {
+          ...groupGraph,
+          contentHash: set.groupContentHash,
+          description: set.description,
+          kind: "exercise-group",
+          locale: set.locale,
+          markdown: false,
+          publicPath: set.groupPublicPath,
+          section: "material",
+          sourcePath: groupRoute,
+          syncedAt: now,
+          title: set.exerciseTypeTitle,
+        });
       } else {
-        await deleteContentSearch(ctx, searchRef.content_id);
+        await deleteContentProjectionsBySourcePath(ctx, {
+          locale: set.locale,
+          route: set.slug,
+        });
       }
 
       const nextValues = {
@@ -139,6 +248,7 @@ export const bulkSyncExerciseSets = internalMutation({
         setName: set.setName,
         title: set.title,
         type: set.type,
+        year: set.year,
       };
 
       const existingSet = await ctx.db
@@ -148,17 +258,10 @@ export const bulkSyncExerciseSets = internalMutation({
         )
         .unique();
 
-      if (
-        existingSet &&
-        existingSet.category === nextValues.category &&
-        existingSet.description === nextValues.description &&
-        existingSet.exerciseType === nextValues.exerciseType &&
-        existingSet.material === nextValues.material &&
-        existingSet.questionCount === nextValues.questionCount &&
-        existingSet.setName === nextValues.setName &&
-        existingSet.title === nextValues.title &&
-        existingSet.type === nextValues.type
-      ) {
+      if (hasSameSyncValues(nextValues, existingSet)) {
+        if (set.questionCount === 0) {
+          await deleteExerciseGroupRouteIfEmpty(ctx, set);
+        }
         unchanged++;
         continue;
       }
@@ -168,6 +271,9 @@ export const bulkSyncExerciseSets = internalMutation({
           ...nextValues,
           syncedAt: now,
         });
+        if (set.questionCount === 0) {
+          await deleteExerciseGroupRouteIfEmpty(ctx, set);
+        }
         updated++;
         continue;
       }
@@ -178,6 +284,9 @@ export const bulkSyncExerciseSets = internalMutation({
         slug: set.slug,
         syncedAt: now,
       });
+      if (set.questionCount === 0) {
+        await deleteExerciseGroupRouteIfEmpty(ctx, set);
+      }
       created++;
     }
 
@@ -191,6 +300,7 @@ export const bulkSyncExerciseQuestions = internalMutation({
     questions: v.array(syncedExerciseQuestionValidator),
   },
   returns: syncQuestionsResultValidator,
+  /** Applies one bounded exercise question sync batch to runtime, search, author, and choice rows. */
   handler: async (ctx, args) => {
     assertContentSyncBatchSize({
       functionName: "bulkSyncExerciseQuestions",
@@ -214,6 +324,11 @@ export const bulkSyncExerciseQuestions = internalMutation({
     const authorCache = await buildAuthorCache(ctx, allAuthorNames);
 
     for (const question of args.questions) {
+      const graph = getContentGraphIdentity({
+        kind: "exercise-question",
+        locale: question.locale,
+        route: question.slug,
+      });
       const exerciseSet = await ctx.db
         .query("exerciseSets")
         .withIndex("by_locale_and_slug", (q) =>
@@ -236,20 +351,32 @@ export const bulkSyncExerciseQuestions = internalMutation({
         .unique();
 
       await syncContentSearch(ctx, {
+        ...graph,
         contentHash: question.contentHash,
         description: question.searchDescription,
         locale: question.locale,
-        route: question.slug,
-        section: "exercises",
+        route: question.publicPath,
+        section: "material",
+        sourcePath: question.slug,
         syncedAt: now,
         text: question.searchText,
         title: question.searchTitle,
       });
-
-      if (existingQuestion?.contentHash === question.contentHash) {
-        unchanged++;
-        continue;
-      }
+      await syncContentRoute(ctx, {
+        ...graph,
+        authors: question.authors,
+        contentHash: question.contentHash,
+        date: question.date,
+        description: question.searchDescription,
+        kind: "exercise-question",
+        locale: question.locale,
+        markdown: true,
+        publicPath: question.publicPath,
+        section: "material",
+        sourcePath: question.slug,
+        syncedAt: now,
+        title: question.searchTitle,
+      });
 
       const nextValues = {
         answerBody: question.answerBody,
@@ -267,6 +394,11 @@ export const bulkSyncExerciseQuestions = internalMutation({
         type: question.type,
       };
 
+      if (hasSameSyncValues(nextValues, existingQuestion)) {
+        unchanged++;
+        continue;
+      }
+
       if (existingQuestion) {
         await ctx.db.patch("exerciseQuestions", existingQuestion._id, {
           ...nextValues,
@@ -276,13 +408,12 @@ export const bulkSyncExerciseQuestions = internalMutation({
         authorLinksCreated += await syncContentAuthorsWithCache(
           ctx,
           existingQuestion._id,
-          "exercise",
+          "material",
           question.authors,
           authorCache
         );
         choicesCreated += await replaceExerciseChoices(ctx, {
           choices: question.choices,
-          locale: question.locale,
           questionId: existingQuestion._id,
         });
 
@@ -300,13 +431,12 @@ export const bulkSyncExerciseQuestions = internalMutation({
       authorLinksCreated += await syncContentAuthorsWithCache(
         ctx,
         questionId,
-        "exercise",
+        "material",
         question.authors,
         authorCache
       );
       choicesCreated += await replaceExerciseChoices(ctx, {
         choices: question.choices,
-        locale: question.locale,
         questionId,
       });
 
@@ -331,6 +461,7 @@ export const deleteStaleExerciseSets = internalMutation({
     setIds: v.array(v.id("exerciseSets")),
   },
   returns: deleteResultValidator,
+  /** Removes one bounded stale exercise set batch after validating question counts. */
   handler: async (ctx, args) => {
     assertContentSyncBatchSize({
       functionName: "deleteStaleExerciseSets",
@@ -368,14 +499,13 @@ export const deleteStaleExerciseSets = internalMutation({
         await deleteExerciseQuestion(ctx, question._id);
       }
 
-      const searchRef = buildContentSearchRef({
+      await deleteContentProjectionsBySourcePath(ctx, {
         locale: exerciseSet.locale,
         route: exerciseSet.slug,
-        section: "exercises",
       });
 
-      await deleteContentSearch(ctx, searchRef.content_id);
       await ctx.db.delete("exerciseSets", setId);
+      await deleteExerciseGroupRouteIfEmpty(ctx, exerciseSet);
       deleted++;
     }
 
@@ -389,6 +519,7 @@ export const deleteStaleExerciseQuestions = internalMutation({
     questionIds: v.array(v.id("exerciseQuestions")),
   },
   returns: deleteResultValidator,
+  /** Removes one bounded stale exercise question batch and its sync-owned dependent rows. */
   handler: async (ctx, args) => {
     assertContentSyncBatchSize({
       functionName: "deleteStaleExerciseQuestions",

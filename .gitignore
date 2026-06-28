@@ -36,6 +36,7 @@ apps/www/public/llms-full/
 
 # Google
 google-key.json
+apps/www/scripts/state/
 
 # Files that might appear in the root of a volume
 .DocumentRevisions-V100

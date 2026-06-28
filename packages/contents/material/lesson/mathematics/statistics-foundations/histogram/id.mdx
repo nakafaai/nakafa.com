@@ -1,0 +1,108 @@
+import { HistogramChart, BarChart } from "@repo/design-system/components/contents/mathematics/bar-chart";
+
+export const metadata = {
+  title: "Histogram",
+  description: "Pelajari histogram vs diagram batang dalam statistika. Pelajari cara visualisasi distribusi data dan interpretasi pola frekuensi dengan tepat.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "2025-04-22",
+  subject: "Statistika",
+};
+
+## Pengenalan Histogram
+
+Kamu pasti sering melihat diagram batang untuk menyajikan data. Nah, histogram adalah kerabat dekat diagram batang, tapi punya kegunaan yang spesifik. Mari kita bandingkan keduanya dulu supaya paham perbedaannya.
+
+## Diagram Batang vs Histogram
+
+Diagram batang digunakan untuk data kategori (seperti merek HP atau jenis olahraga favorit):
+
+<BarChart
+  title="Diagram Batang Merek HP yang Digunakan Siswa SMA"
+  description="Menunjukkan jumlah siswa per merek HP."
+  data={[
+    { name: "Apple", value: 12 },
+    { name: "Samsung", value: 10 },
+    { name: "Xiaomi", value: 8 },
+    { name: "Oppo", value: 5 },
+    { name: "Lenovo", value: 5 },
+  ]}
+  chartConfig={{
+    value: {
+      label: "Jumlah Siswa",
+      colors: {
+        light: ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"],
+        dark: ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"],
+      },
+    },
+  }}
+  yAxisLabel="Jumlah Siswa"
+/>
+
+Pada diagram batang di atas:
+
+- Merek Apple paling banyak digunakan (<InlineMath math="12" /> siswa)
+- Merek Samsung di posisi kedua (<InlineMath math="10" /> siswa)
+- Merek Xiaomi di posisi ketiga (<InlineMath math="8" /> siswa)
+- Merek Oppo dan Lenovo sama-sama digunakan oleh <InlineMath math="5" /> siswa
+
+Perhatikan bahwa setiap batang **terpisah** satu sama lain karena mewakili kategori yang berbeda.
+
+Histogram, di sisi lain, digunakan untuk data angka yang dikelompokkan dalam interval, seperti lama waktu atau tinggi badan. Batang-batangnya menempel karena interval nilainya berkelanjutan.
+
+<HistogramChart
+  title="Histogram Penggunaan Telepon Genggam oleh Siswa SMA"
+  description="Menunjukkan distribusi lama waktu siswa menggunakan HP per hari."
+  data={[
+    { name: "0-2", value: 10 },
+    { name: "2-4", value: 12 },
+    { name: "4-6", value: 32 },
+    { name: "6-8", value: 28 },
+    { name: "8-10", value: 8 },
+  ]}
+  chartConfig={{
+    value: {
+      label: "Frekuensi",
+      colors: {
+        light: ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"],
+        dark: ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"],
+      },
+    },
+  }}
+  yAxisLabel="Frekuensi"
+/>
+
+Dari histogram di atas, kita bisa melihat pola penggunaan HP siswa SMA:
+
+- <InlineMath math="10" /> siswa menggunakan HP selama <InlineMath math="0\text{-}2 \text{ jam}" /> per hari
+- <InlineMath math="12" /> siswa menggunakan HP selama <InlineMath math="2\text{-}4 \text{ jam}" /> per hari
+- Terbanyak adalah <InlineMath math="32" /> siswa yang menggunakan HP selama <InlineMath math="4\text{-}6 \text{ jam}" /> per hari
+- <InlineMath math="28" /> siswa menggunakan HP selama <InlineMath math="6\text{-}8 \text{ jam}" /> per hari
+- <InlineMath math="8" /> siswa menggunakan HP selama <InlineMath math="8\text{-}10 \text{ jam}" /> per hari
+
+Dari data ini, kita bisa menyimpulkan bahwa mayoritas siswa menggunakan HP antara <InlineMath math="4\text{-}8 \text{ jam}" /> per hari, dengan puncaknya pada rentang <InlineMath math="4\text{-}6 \text{ jam}" />.
+
+## Perbedaan Utama
+
+| Perbedaan     | Histogram                                 | Diagram Batang                               |
+| ------------- | ----------------------------------------- | -------------------------------------------- |
+| Jenis data    | Kuantitatif, dikelompokkan dalam interval | Kategorik, tiap batang untuk satu kategori   |
+| Bentuk batang | Batang saling menempel, tanpa celah       | Ada spasi antar batang                       |
+| Lebar batang  | Area batang mencerminkan frekuensi        | Lebar sama, tinggi batang menunjukkan jumlah |
+
+## Kapan Menggunakan Histogram?
+
+Gunakan histogram ketika:
+
+1. Data berbentuk angka yang bisa diukur (kuantitatif)
+2. Ingin melihat distribusi atau sebaran data
+3. Data dapat dikelompokkan dalam interval
+
+Contoh data yang cocok untuk histogram:
+
+- Tinggi badan siswa
+- Nilai ulangan
+- Waktu tempuh ke sekolah
+- Berat badan
+- Lama penggunaan gadget
+
+Histogram sangat berguna untuk melihat pola distribusi data numerik. Dengan histogram, kita bisa mengetahui nilai yang paling sering muncul, rentang nilai yang dominan, dan bentuk sebaran data (merata, miring ke kiri/kanan, atau terpusat di tengah).

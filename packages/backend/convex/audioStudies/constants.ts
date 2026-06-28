@@ -5,7 +5,7 @@
  * Environment-based behavior:
  * - populateQueue: Only queues generation work if ENABLE_AUDIO_GENERATION is set
  * - processQueue: Only executes audio generation if ENABLE_AUDIO_GENERATION is set
- * - cleanup: Always runs (maintenance)
+ * - cleanup: Always runs for stale audio lifecycle work
  *
  * To enable audio generation in production:
  * Set ENABLE_AUDIO_GENERATION=true in the Convex Dashboard deployment settings

@@ -78,7 +78,7 @@ describe("users/mutations", () => {
     expect(result.appUser?.name).toBe("Nabil Akbarazzima Fatih");
   });
 
-  it("repairs stale chat credit state when the reset period row is missing", async () => {
+  it("reconciles stale chat credit state when the reset period row is missing", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(
       async (ctx) =>
@@ -97,7 +97,7 @@ describe("users/mutations", () => {
       })
       .mutation(api.users.mutations.syncUserInfoForChat, {});
 
-    const repairedUser = await t.query(async (ctx) => ({
+    const reconciledUser = await t.query(async (ctx) => ({
       creditTransactions: await ctx.db.query("creditTransactions").collect(),
       user: await ctx.db.get("users", identity.userId),
     }));
@@ -110,11 +110,11 @@ describe("users/mutations", () => {
       credits: 7,
       userId: identity.userId,
     });
-    expect(repairedUser.user?.credits).toBe(7);
-    expect(repairedUser.user?.creditsResetAt).toBe(
+    expect(reconciledUser.user?.credits).toBe(7);
+    expect(reconciledUser.user?.creditsResetAt).toBe(
       Date.UTC(2026, 3, 2, 0, 0, 0)
     );
-    expect(repairedUser.creditTransactions).toEqual([
+    expect(reconciledUser.creditTransactions).toEqual([
       expect.objectContaining({
         userId: identity.userId,
         amount: 10,

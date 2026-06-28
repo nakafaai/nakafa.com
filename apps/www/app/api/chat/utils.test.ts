@@ -1,13 +1,38 @@
 // @vitest-environment node
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
-import { fetchMutation } from "convex/nextjs";
+import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getUserInfo, getVerified } from "@/app/api/chat/utils";
+import {
+  getLearningProfile,
+  getUserInfo,
+  getVerified,
+} from "@/app/api/chat/utils";
 
 vi.mock("convex/nextjs", () => ({
   fetchMutation: vi.fn(),
+  fetchQuery: vi.fn(),
 }));
+
+vi.mock("@/app/api/chat/nakafa-content", async () => {
+  const { Effect } = await import("effect");
+
+  return {
+    nakafaContent: {
+      /** Verifies chat content refs through deterministic URL fixtures. */
+      verify: (url: string) =>
+        Effect.succeed(
+          url === "https://nakafa.com/id/quran/1" ||
+            url ===
+              "https://nakafa.com/id/articles/politics/dynastic-politics-asian-values" ||
+            url ===
+              "https://nakafa.com/en/practice/snbt/general-knowledge/tryout-2026/set-2/question-1" ||
+            url === "asset:id:quran:quran-surah:1" ||
+            url === "nakafa://content/asset:id:quran:quran-surah:1"
+        ),
+    },
+  };
+});
 
 describe("app/api/chat/utils", () => {
   beforeEach(() => {
@@ -15,15 +40,21 @@ describe("app/api/chat/utils", () => {
   });
 
   it.each([
-    ["/id/quran/1", true],
-    ["/id/articles/politics/dynastic-politics-asian-values", true],
+    ["https://nakafa.com/id/quran/1", true],
     [
-      "/en/exercises/high-school/snbt/general-knowledge/try-out/2026/set-2/1",
+      "https://nakafa.com/id/articles/politics/dynastic-politics-asian-values",
       true,
     ],
-    ["/quran/1", true],
-    ["/id/quran/1/al-fatihah", false],
-    ["/id/articles/missing", false],
+    [
+      "https://nakafa.com/en/practice/snbt/general-knowledge/tryout-2026/set-2/question-1",
+      true,
+    ],
+    ["asset:id:quran:quran-surah:1", true],
+    ["nakafa://content/asset:id:quran:quran-surah:1", true],
+    ["/id/quran/1", false],
+    ["quran/1", false],
+    ["https://nakafa.com/id/quran/1/al-fatihah", false],
+    ["https://nakafa.com/id/articles/missing", false],
   ] as const)("verifies %s", async (url, expected) => {
     const isVerified = await Effect.runPromise(getVerified(url));
 
@@ -47,6 +78,71 @@ describe("app/api/chat/utils", () => {
     expect(fetchMutation).toHaveBeenCalledWith(
       convexApi.users.mutations.syncUserInfoForChat,
       {},
+      {
+        token: "test-token",
+      }
+    );
+  });
+
+  it("fetches active learning profile through the shared Convex query", async () => {
+    const learningProfile = {
+      interests: ["exam-prep", "assessment-prep"],
+      planItems: [
+        {
+          content_id: "asset:id:exercise:snbt:2026:set-2:1",
+          lensId: "lens:snbt",
+          position: 1,
+          reason: "program-alignment",
+          route:
+            "/material/practice/assessment/snbt/general-knowledge/try-out-2026/set-2/question-1",
+          status: "ready",
+          title: "SNBT Set 2",
+        },
+      ],
+      program: {
+        coverageStatus: "partial",
+        description: "UTBK-SNBT preparation for the 2026 admission cycle.",
+        displayOrder: 40,
+        key: "snbt-2026",
+        kind: "admission-exam",
+        navigation: {
+          levels: ["section", "domain", "practice-set"],
+          model: "exam-domain-practice-set",
+        },
+        title: "SNBT 2026",
+        versionLabel: "2026",
+      },
+    };
+    vi.mocked(fetchQuery).mockResolvedValue(learningProfile);
+
+    const result = await Effect.runPromise(
+      getLearningProfile("test-token", "en")
+    );
+
+    expect(result).toEqual({
+      interests: ["exam-prep", "assessment-prep"],
+      planItems: [
+        {
+          content_id: "asset:id:exercise:snbt:2026:set-2:1",
+          lensId: "lens:snbt",
+          position: 1,
+          route:
+            "/material/practice/assessment/snbt/general-knowledge/try-out-2026/set-2/question-1",
+          status: "ready",
+          title: "SNBT Set 2",
+        },
+      ],
+      program: {
+        coverageStatus: "partial",
+        key: "snbt-2026",
+        kind: "admission-exam",
+        title: "SNBT 2026",
+        versionLabel: "2026",
+      },
+    });
+    expect(fetchQuery).toHaveBeenCalledWith(
+      convexApi.learningPrograms.queries.getActiveProfile,
+      { locale: "en" },
       {
         token: "test-token",
       }

@@ -12,14 +12,15 @@ import {
   StepperTitle,
   StepperTrigger,
 } from "@repo/design-system/components/ui/stepper";
+import type { ReactNode } from "react";
 
 interface Props {
   labels: {
-    delivery: string;
-    election: string;
-    selection: string;
+    delivery: ReactNode;
+    election: ReactNode;
+    selection: ReactNode;
   };
-  title: string;
+  title: ReactNode;
 }
 
 export function Stage({ title, labels }: Props) {

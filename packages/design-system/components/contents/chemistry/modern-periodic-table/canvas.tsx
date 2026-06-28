@@ -30,7 +30,7 @@ const CAMERA_TARGET = [0, 0, 0.35] satisfies readonly [number, number, number];
 const NARROW_CANVAS_ASPECT_RATIO = 1.15;
 
 /**
- * Renders the modern periodic table as a responsive 3D model.
+ * Renders the modern periodic table as a responsive model.
  */
 export function ModernPeriodicTableCanvas({
   "aria-label": ariaLabel,

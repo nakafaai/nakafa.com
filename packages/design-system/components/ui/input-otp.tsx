@@ -4,7 +4,7 @@ import { MinusSignIcon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
 import { OTPInput, OTPInputContext } from "input-otp";
-import { useContext } from "react";
+import { use } from "react";
 
 function InputOTP({
   className,
@@ -36,6 +36,7 @@ function InputOTPGroup({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+/** Renders one visual OTP slot from the input-otp context. */
 function InputOTPSlot({
   index,
   className,
@@ -43,7 +44,7 @@ function InputOTPSlot({
 }: React.ComponentProps<"div"> & {
   index: number;
 }) {
-  const inputOtpContext = useContext(OTPInputContext);
+  const inputOtpContext = use(OTPInputContext);
   const { char, hasFakeCaret, isActive } = inputOtpContext?.slots[index] ?? {};
 
   return (

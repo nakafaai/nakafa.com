@@ -1020,7 +1020,7 @@ describe("tryouts/mutations/attempts", () => {
       const tryout = await insertTryoutSkeleton(ctx, "start-renamed-part");
       const replacementSetId = await ctx.db.insert("exerciseSets", {
         locale: "id",
-        slug: "exercises/high-school/snbt/mathematical-reasoning/try-out/2026/start-renamed-part-mr",
+        slug: "material/practice/assessment/snbt/mathematical-reasoning/try-out-2026/start-renamed-part-mr",
         category: "high-school",
         type: "snbt",
         material: "mathematical-reasoning",
@@ -1143,7 +1143,7 @@ describe("tryouts/mutations/attempts", () => {
       }
 
       const setAttemptId = await ctx.db.insert("exerciseAttempts", {
-        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/reuse-renamed-part",
+        slug: "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/reuse-renamed-part",
         userId: identity.userId,
         origin: "tryout",
         mode: "simulation",
@@ -1250,7 +1250,7 @@ describe("tryouts/mutations/attempts", () => {
       });
       const tryout = await insertTryoutSkeleton(ctx, "part-already-expired", 1);
       const setAttemptId = await ctx.db.insert("exerciseAttempts", {
-        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/part-already-expired",
+        slug: "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/part-already-expired",
         userId: identity.userId,
         origin: "tryout",
         mode: "simulation",
@@ -1375,7 +1375,7 @@ describe("tryouts/mutations/attempts", () => {
       });
 
       const setAttemptId = await ctx.db.insert("exerciseAttempts", {
-        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/complete-renamed-part",
+        slug: "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/complete-renamed-part",
         userId: identity.userId,
         origin: "tryout",
         mode: "simulation",
@@ -1538,7 +1538,7 @@ describe("tryouts/mutations/attempts", () => {
       });
       const secondSetId = await ctx.db.insert("exerciseSets", {
         locale: "id",
-        slug: "exercises/high-school/snbt/mathematical-reasoning/try-out/2026/reuse-shrunk-partcount-mr",
+        slug: "material/practice/assessment/snbt/mathematical-reasoning/try-out-2026/reuse-shrunk-partcount-mr",
         category: "high-school",
         type: "snbt",
         material: "mathematical-reasoning",

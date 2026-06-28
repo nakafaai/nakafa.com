@@ -1,22 +1,37 @@
+import aggregateTest from "@convex-dev/aggregate/test";
 import posthogTest from "@posthog/convex/test";
 import { components } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import authSchema from "@repo/backend/convex/betterAuth/schema";
+import type { AudioContentLookup } from "@repo/backend/convex/contents/validators";
 import {
   DEFAULT_USER_CREDITS,
   DEFAULT_USER_PLAN,
 } from "@repo/backend/convex/credits/constants";
+import type { AudioContentType } from "@repo/backend/convex/lib/validators/audio";
+import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import aggregateSchema from "@repo/backend/node_modules/@convex-dev/aggregate/src/component/schema";
-import { convexTest } from "convex-test";
+import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
+import { convexTest, type TestConvex } from "convex-test";
 
 const betterAuthModules = import.meta.glob(["./betterAuth/**/*.ts"]);
 const aggregateModules = import.meta.glob([
   "../node_modules/@convex-dev/aggregate/src/component/**/*.ts",
 ]);
 const DEFAULT_SESSION_DURATION_MS = 365 * 24 * 60 * 60 * 1000;
+
+/**
+ * Registers the learning popularity ranking aggregate in tests that exercise
+ * ranked counter writes or queries without booting the full app deployment.
+ */
+export function registerLearningPopularityAggregate(
+  t: TestConvex<typeof schema>
+) {
+  aggregateTest.register(t, "learningPopularityRankings");
+}
 
 /** Builds a Convex test instance with the Better Auth component registered. */
 export function createConvexTestWithBetterAuth() {
@@ -32,6 +47,7 @@ export function createConvexTestWithBetterAuth() {
     aggregateSchema,
     aggregateModules
   );
+  registerLearningPopularityAggregate(t);
   posthogTest.register(t);
   return t;
 }
@@ -104,5 +120,65 @@ export async function seedAuthenticatedUser(
     authUserId: authUser._id,
     sessionId: session._id,
     userId,
+  };
+}
+
+/** Infers the audio content type for graph-backed test route fixtures. */
+function getAudioContentTypeForTestRoute(route: string): AudioContentType {
+  if (route.startsWith("articles/")) {
+    return "article";
+  }
+
+  if (route.startsWith("material/lesson/")) {
+    return "material";
+  }
+
+  throw new Error(`Expected audio content route, received ${route}.`);
+}
+
+/** Builds graph-backed audio source test data from the content route contract. */
+export function getTestAudioContent(input: {
+  contentHash?: AudioContentLookup["contentHash"];
+  locale: Locale;
+  route: AudioContentLookup["route"];
+}) {
+  const graph = createLearningGraphIdentityFromRoute({
+    locale: input.locale,
+    route: input.route,
+  });
+
+  if (!graph) {
+    throw new Error(
+      `Expected graph identity for ${input.locale}/${input.route}.`
+    );
+  }
+
+  return {
+    ...graph,
+    contentHash: input.contentHash ?? `${input.locale}-${input.route}-hash`,
+    content_id: graph.assetId,
+    contentType: getAudioContentTypeForTestRoute(input.route),
+    locale: input.locale,
+    route: input.route,
+  };
+}
+
+/** Builds graph-backed audio table identity fields from a route fixture. */
+export function getTestAudioIdentity(input: {
+  locale: Locale;
+  route: AudioContentLookup["route"];
+}) {
+  const source = getTestAudioContent(input);
+
+  return {
+    alignmentId: source.alignmentId,
+    assetId: source.assetId,
+    conceptId: source.conceptId,
+    content_id: source.content_id,
+    contentType: source.contentType,
+    learningObjectId: source.learningObjectId,
+    lensId: source.lensId,
+    locale: source.locale,
+    route: source.route,
   };
 }

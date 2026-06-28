@@ -1,7 +1,9 @@
+import { AgentLearningProfileSchema } from "@repo/ai/types/agents";
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
-import { Nakafa } from "@repo/contents/_lib/agent/service";
-import { fetchMutation } from "convex/nextjs";
-import { Effect } from "effect";
+import type { Locale } from "@repo/utilities/locales";
+import { fetchMutation, fetchQuery } from "convex/nextjs";
+import { Effect, Schema } from "effect";
+import { nakafaContent } from "@/app/api/chat/nakafa-content";
 
 /**
  * Checks whether the given URL corresponds to verified content by querying
@@ -12,7 +14,7 @@ import { Effect } from "effect";
 export const getVerified = Effect.fn("chat.getVerified")(function* (
   url: string
 ) {
-  return yield* Nakafa.verify(url).pipe(Effect.provide(Nakafa.Default));
+  return yield* nakafaContent.verify(url);
 });
 
 /**
@@ -32,3 +34,27 @@ export const getUserInfo = Effect.fn("chat.getUserInfo")(function* (
     )
   );
 });
+
+/**
+ * Fetches the authenticated user's active learning profile for AI context.
+ *
+ * This uses the same Convex read interface as the app surfaces, so Nina sees
+ * the selected program and first plan items without route or folder heuristics.
+ */
+export const getLearningProfile = Effect.fn("chat.getLearningProfile")(
+  function* (token: string, locale: Locale) {
+    const profile = yield* Effect.tryPromise(() =>
+      fetchQuery(
+        convexApi.learningPrograms.queries.getActiveProfile,
+        { locale },
+        {
+          token,
+        }
+      )
+    );
+
+    return yield* Schema.decodeUnknown(
+      Schema.NullOr(AgentLearningProfileSchema)
+    )(profile);
+  }
+);

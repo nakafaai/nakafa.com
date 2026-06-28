@@ -1,76 +1,288 @@
 // @vitest-environment node
-import type { getPathname } from "@repo/internationalization/src/navigation";
-import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getLocalizedLlmsEntries } from "@/lib/llms/entries";
+import type { LlmsEntry } from "@/lib/llms/entries";
 import {
   buildRootLlmsIndexText,
   getCachedLlmsSectionIndexText,
   getLlmsSectionIndexText,
 } from "@/lib/llms/indexes";
-import { getSitemapRoutes } from "@/lib/sitemap/routes";
 
 const mockCacheLife = vi.hoisted(() => vi.fn());
-const mockGetPathname = vi.hoisted(() =>
-  vi.fn<typeof getPathname>(
-    ({ href, locale }) =>
-      `/${locale}${typeof href === "string" ? href : href.pathname}`
-  )
-);
+const mockCacheTag = vi.hoisted(() => vi.fn());
+const mockGetContentListingLlmsEntries = vi.hoisted(() => vi.fn());
+const mockGetContentPageLlmsEntries = vi.hoisted(() => vi.fn());
+const mockGetSiteLlmsEntries = vi.hoisted(() => vi.fn());
 
 vi.mock("next/cache", () => ({
   cacheLife: mockCacheLife,
+  cacheTag: mockCacheTag,
 }));
 
-vi.mock("@repo/internationalization/src/navigation", () => ({
-  getPathname: mockGetPathname,
-}));
+vi.mock("@/lib/llms/entries", async () => {
+  const constants = await import("@/lib/llms/constants");
 
-const AF_DOCS_LLMS_SIZE_LIMIT = 50_000;
-const LLMS_TITLE_WITH_SUMMARY_PATTERN = /^# .+\n\n> /;
+  const isLlmsSection = (section: unknown) =>
+    typeof section === "string" &&
+    Object.hasOwn(constants.SECTION_LABELS, section);
+
+  return {
+    getContentListingLlmsEntries: mockGetContentListingLlmsEntries,
+    getContentPageLlmsEntries: mockGetContentPageLlmsEntries,
+    getLlmsSections: () => Object.keys(constants.SECTION_LABELS),
+    getSiteLlmsEntries: mockGetSiteLlmsEntries,
+    isLlmsSection,
+  };
+});
+
+vi.mock("@/lib/sitemap/routes", () => ({
+  readSitemapPageDescriptors: () =>
+    Effect.succeed([
+      { id: "base" },
+      {
+        id: "content_en_articles_0",
+        kind: "content",
+        locale: "en",
+        page: 0,
+        section: "articles",
+      },
+      {
+        id: "content_en_articles_1",
+        kind: "content",
+        locale: "en",
+        page: 1,
+        section: "articles",
+      },
+      {
+        id: "content_id_articles_0",
+        kind: "content",
+        locale: "id",
+        page: 0,
+        section: "articles",
+      },
+    ]),
+}));
 
 beforeEach(() => {
   mockCacheLife.mockClear();
-  mockGetPathname.mockClear();
+  mockCacheTag.mockClear();
+  mockGetContentListingLlmsEntries.mockReset();
+  mockGetContentPageLlmsEntries.mockReset();
+  mockGetSiteLlmsEntries.mockReset();
+  mockGetContentListingLlmsEntries.mockReturnValue(Effect.succeed(null));
+  mockGetContentPageLlmsEntries.mockReturnValue(
+    Effect.succeed([
+      createFixtureEntry({
+        route: "/articles/politics/dynastic-politics",
+        title: "Dynastic Politics",
+      }),
+    ])
+  );
+  mockGetSiteLlmsEntries.mockReturnValue(
+    Effect.succeed([
+      createFixtureEntry({
+        route: "/search",
+        title: "Search",
+      }),
+    ])
+  );
 });
 
 describe("llms indexes", () => {
-  it("builds a small root index with the standard title and summary", () => {
+  it("builds a small root index with locale links and references", () => {
     const text = buildRootLlmsIndexText();
 
-    expect(text.length).toBeLessThan(AF_DOCS_LLMS_SIZE_LIMIT);
     expect(text.startsWith("# Nakafa\n\n> ")).toBe(true);
     expect(text).toContain("https://nakafa.com/llms/en/llms.txt");
+    expect(text).toContain("https://nakafa.com/llms/en/pages/llms.txt");
     expect(text).toContain("https://nakafa.com/llms/id/llms.txt");
+    expect(text).toContain("https://nakafa.com/llms/id/pages/llms.txt");
     expect(text).toContain("https://nakafa.com/mcp");
     expect(text).toContain("https://nakafa.com/llms-full.txt");
     expect(text).toContain("https://nakafa.com/llms-full/index.json");
-    expect(text).toContain("https://nakafa.com/sitemap.xml");
-    expect(text).not.toContain("[MCP server]");
-    expect(text).not.toContain("[Sitemap]");
   });
 
-  it("builds small locale and section indexes with blockquote summaries", async () => {
-    const slugs = routing.locales.flatMap((locale) => [
-      `llms/${locale}`,
-      `llms/${locale}/articles`,
-      `llms/${locale}/subject`,
-      `llms/${locale}/exercises`,
-      `llms/${locale}/quran`,
-      `llms/${locale}/site`,
-    ]);
+  it("builds locale indexes with direct starter pages", async () => {
+    const text = await Effect.runPromise(getLlmsSectionIndexText("llms/en"));
 
-    for (const slug of slugs) {
-      const text = await Effect.runPromise(getLlmsSectionIndexText(slug));
+    expect(text).toContain("# Nakafa English Content");
+    expect(text).toContain("## Sections");
+    expect(text).toContain("## Starter Pages");
+    expect(text).toContain(
+      "- [Dynastic Politics](https://nakafa.com/en/articles/politics/dynastic-politics.md)"
+    );
+    expect(mockGetContentPageLlmsEntries).toHaveBeenCalled();
+  });
 
-      expect(text).not.toBeNull();
-      expect(text?.length).toBeLessThan(AF_DOCS_LLMS_SIZE_LIMIT);
-      expect(text).toMatch(LLMS_TITLE_WITH_SUMMARY_PATTERN);
-    }
-  }, 30_000);
+  it("omits the starter page section when locale page entries are empty", async () => {
+    mockGetContentPageLlmsEntries.mockReturnValue(Effect.succeed([]));
 
-  it("does not generate indexes for unknown llms paths", async () => {
+    const text = await Effect.runPromise(getLlmsSectionIndexText("llms/en"));
+
+    expect(text).toContain("# Nakafa English Content");
+    expect(text).not.toContain("## Starter Pages");
+  });
+
+  it("builds locale page catalogs from sitemap content pages", async () => {
+    mockGetContentPageLlmsEntries.mockImplementation(
+      ({ page }: { page: number }) =>
+        Effect.succeed([
+          createFixtureEntry({
+            route: "/articles/politics/dynastic-politics",
+            title: "Dynastic Politics",
+          }),
+          ...(page === 0
+            ? []
+            : [
+                createFixtureEntry({
+                  route: "/articles/politics/asian-values",
+                  title: "Asian Values",
+                }),
+              ]),
+        ])
+    );
+
+    const text = await Effect.runPromise(
+      getLlmsSectionIndexText("llms/en/pages/llms.txt")
+    );
+
+    expect(text).toContain("# Nakafa English Page Catalog");
+    expect(text).toContain(
+      "- [Asian Values](https://nakafa.com/en/articles/politics/asian-values.md)"
+    );
+    expect(text).toContain(
+      "- [Dynastic Politics](https://nakafa.com/en/articles/politics/dynastic-politics.md)"
+    );
+    expect(mockGetContentPageLlmsEntries).toHaveBeenCalledWith({
+      locale: "en",
+      page: 0,
+      section: "articles",
+    });
+    expect(mockGetContentPageLlmsEntries).toHaveBeenCalledWith({
+      locale: "en",
+      page: 1,
+      section: "articles",
+    });
+  });
+
+  it("renders an explicit empty locale page catalog", async () => {
+    mockGetContentPageLlmsEntries.mockReturnValue(Effect.succeed([]));
+
+    const text = await Effect.runPromise(
+      getLlmsSectionIndexText("llms/en/pages/llms.txt")
+    );
+
+    expect(text).toContain("# Nakafa English Page Catalog");
+    expect(text).toContain(
+      "This English page catalog currently has no markdown entries."
+    );
+  });
+
+  it("builds section page-map indexes without reading content pages", async () => {
+    mockGetContentPageLlmsEntries.mockClear();
+
+    const sectionIndex = await Effect.runPromise(
+      getLlmsSectionIndexText("llms/en/articles")
+    );
+
+    expect(sectionIndex).toContain("# Nakafa English Articles Pages");
+    expect(sectionIndex).toContain(
+      "https://nakafa.com/llms/en/articles/page/0/llms.txt"
+    );
+    expect(sectionIndex).toContain(
+      "https://nakafa.com/llms/en/articles/page/1/llms.txt"
+    );
+    expect(mockGetContentPageLlmsEntries).not.toHaveBeenCalled();
+  });
+
+  it("builds one bounded content page index from the page reader", async () => {
+    mockGetContentPageLlmsEntries.mockReturnValueOnce(
+      Effect.succeed([
+        createFixtureEntry({
+          description: "",
+          route: "/articles/politics/dynastic-politics",
+          title: "Dynastic Politics",
+        }),
+      ])
+    );
+
+    const text = await Effect.runPromise(
+      getLlmsSectionIndexText("llms/en/articles/page/7/llms.txt")
+    );
+
+    expect(text).toContain("# Nakafa English Articles Page 7");
+    expect(text).toContain(
+      "- [Dynastic Politics](https://nakafa.com/en/articles/politics/dynastic-politics.md)"
+    );
+    expect(mockGetContentPageLlmsEntries).toHaveBeenCalledWith({
+      locale: "en",
+      page: 7,
+      section: "articles",
+    });
+  });
+
+  it("builds one content listing index from route-catalog entries", async () => {
+    mockGetContentListingLlmsEntries.mockReturnValueOnce(
+      Effect.succeed([
+        createFixtureEntry({
+          route: "/articles/politics/dynastic-politics",
+          title: "Dynastic Politics",
+        }),
+      ])
+    );
+
+    const text = await Effect.runPromise(
+      getLlmsSectionIndexText("llms/en/articles/politics")
+    );
+
+    expect(text).toContain("# Politics Articles");
+    expect(text).toContain(
+      "- [Dynastic Politics](https://nakafa.com/en/articles/politics/dynastic-politics.md)"
+    );
+    expect(mockGetContentListingLlmsEntries).toHaveBeenCalledWith({
+      locale: "en",
+      route: "articles/politics",
+    });
+  });
+
+  it("renders an explicit empty content listing index", async () => {
+    mockGetContentListingLlmsEntries.mockReturnValueOnce(Effect.succeed([]));
+
+    const text = await Effect.runPromise(
+      getLlmsSectionIndexText("llms/en/articles/politics")
+    );
+
+    expect(text).toContain("# Politics Articles");
+    expect(text).toContain(
+      "This English articles listing currently has no markdown entries."
+    );
+  });
+
+  it("renders an explicit empty bounded content page index", async () => {
+    mockGetContentPageLlmsEntries.mockReturnValueOnce(Effect.succeed([]));
+
+    const text = await Effect.runPromise(
+      getLlmsSectionIndexText("llms/en/articles/page/99/llms.txt")
+    );
+
+    expect(text).toContain("# Nakafa English Articles Page 99");
+    expect(text).toContain(
+      "This bounded articles route-catalog page is currently empty."
+    );
+  });
+
+  it("builds the site index from static site entries only", async () => {
+    const text = await Effect.runPromise(
+      getLlmsSectionIndexText("llms/en/site")
+    );
+
+    expect(text).toContain("# Nakafa English Site Pages");
+    expect(text).toContain("https://nakafa.com/en/search");
+    expect(mockGetSiteLlmsEntries).toHaveBeenCalledWith("en");
+    expect(mockGetContentPageLlmsEntries).not.toHaveBeenCalled();
+  });
+
+  it("does not generate indexes for unknown or malformed llms paths", async () => {
     await expect(
       Effect.runPromise(getLlmsSectionIndexText("docs"))
     ).resolves.toBeNull();
@@ -80,6 +292,14 @@ describe("llms indexes", () => {
     await expect(
       Effect.runPromise(getLlmsSectionIndexText("llms/en/unknown"))
     ).resolves.toBeNull();
+    await expect(
+      Effect.runPromise(getLlmsSectionIndexText("llms/en/articles/shard/999"))
+    ).resolves.toBeNull();
+    await expect(
+      Effect.runPromise(
+        getLlmsSectionIndexText("llms/en/articles/page/not-a-number/llms.txt")
+      )
+    ).resolves.toBeNull();
   });
 
   it("uses the Next cache boundary without changing section output", async () => {
@@ -87,68 +307,37 @@ describe("llms indexes", () => {
       getCachedLlmsSectionIndexText({ cleanSlug: "llms/en" })
     ).resolves.toContain("# Nakafa English Content");
 
-    expect(mockCacheLife).toHaveBeenCalledWith("max");
-  });
-
-  it("returns null for missing scoped entries", async () => {
-    await expect(
-      Effect.runPromise(getLlmsSectionIndexText("llms/en/articles/missing"))
-    ).resolves.toBeNull();
-  });
-
-  it("splits large nested indexes into child route groups", async () => {
-    const text = await Effect.runPromise(
-      getLlmsSectionIndexText("llms/en/subject/high-school")
-    );
-
-    expect(text).toContain("# Nakafa English Subject: High School Index");
-    expect(text).toContain("Sitemap group");
-    expect(text).toContain(
-      "https://nakafa.com/llms/en/subject/high-school/10/llms.txt"
-    );
-    expect(text).not.toContain("[High School]");
+    expect(mockCacheTag).toHaveBeenCalledWith("content-runtime");
+    expect(mockCacheLife).toHaveBeenCalledWith("contentRuntime");
   });
 });
 
-describe("llms sitemap alignment", () => {
-  it("covers sitemap routes without stale same-origin links", async () => {
-    const sitemapRoutes = new Set(getSitemapRoutes());
+/** Creates one sitemap-shaped llms entry without reading the content corpus. */
+function createFixtureEntry({
+  description = "Fixture description",
+  route,
+  title,
+}: {
+  description?: string;
+  route: string;
+  title: string;
+}): LlmsEntry {
+  const routeSegments = route.split("/").filter(Boolean);
+  const section = routeSegments[0] ?? "site";
+  const entrySection = section === "articles" ? "articles" : "site";
+  const segments =
+    entrySection === "site" ? ["site", ...routeSegments] : routeSegments;
+  const href =
+    entrySection === "site"
+      ? `https://nakafa.com/en${route === "/" ? "" : route}`
+      : `https://nakafa.com/en${route}.md`;
 
-    for (const locale of routing.locales) {
-      const entries = await Effect.runPromise(getLocalizedLlmsEntries(locale));
-      const entryRoutes = new Set(entries.map((entry) => entry.route));
-
-      expect(entryRoutes).toEqual(sitemapRoutes);
-
-      for (const entry of entries) {
-        const url = new URL(entry.href);
-        const localePrefix = `/${locale}`;
-
-        expect(url.origin).toBe("https://nakafa.com");
-        expect(url.pathname.startsWith(localePrefix)).toBe(true);
-
-        const localizedPath = url.pathname.slice(localePrefix.length) || "/";
-        const route = localizedPath.endsWith(".md")
-          ? localizedPath.slice(0, -".md".length) || "/"
-          : localizedPath;
-
-        expect(sitemapRoutes.has(route)).toBe(true);
-      }
-    }
-  }, 30_000);
-
-  it("uses markdown URLs for sitemap pages with markdown variants", async () => {
-    const entries = await Effect.runPromise(getLocalizedLlmsEntries("en"));
-
-    for (const section of ["articles", "exercises", "quran", "subject"]) {
-      const sectionEntries = entries.filter((entry) =>
-        entry.route.startsWith(`/${section}`)
-      );
-
-      expect(sectionEntries.length).toBeGreaterThan(0);
-      expect(sectionEntries.every((entry) => entry.href.endsWith(".md"))).toBe(
-        true
-      );
-    }
-  }, 30_000);
-});
+  return {
+    description,
+    href,
+    route,
+    section: entrySection,
+    segments,
+    title,
+  };
+}

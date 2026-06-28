@@ -22,8 +22,8 @@ import {
   type HTMLProps,
   type ReactNode,
   type RefObject,
+  use,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -64,6 +64,17 @@ interface AudioPlayerItem<TData = unknown> {
   src: string;
 }
 
+interface AudioPlayerSnapshot<TData = unknown> {
+  activeItem: AudioPlayerItem<TData> | null;
+  duration: number | undefined;
+  error: MediaError | null;
+  networkState: number;
+  paused: boolean;
+  playbackRate: number;
+  readyState: number;
+  time: number;
+}
+
 interface AudioPlayerApi<TData = unknown> {
   activeItem: AudioPlayerItem<TData> | null;
   duration: number | undefined;
@@ -82,8 +93,9 @@ interface AudioPlayerApi<TData = unknown> {
 
 const AudioPlayerContext = createContext<AudioPlayerApi<unknown> | null>(null);
 
+/** Reads the audio player API from the nearest AudioPlayerProvider. */
 export function useAudioPlayer<TData = unknown>(): AudioPlayerApi<TData> {
-  const api = useContext(AudioPlayerContext) as AudioPlayerApi<TData> | null;
+  const api = use(AudioPlayerContext) as AudioPlayerApi<TData> | null;
   if (!api) {
     throw new Error(
       "useAudioPlayer cannot be called outside of AudioPlayerProvider"
@@ -94,8 +106,9 @@ export function useAudioPlayer<TData = unknown>(): AudioPlayerApi<TData> {
 
 const AudioPlayerTimeContext = createContext<number | null>(null);
 
+/** Reads the current audio time from the nearest AudioPlayerProvider. */
 export const useAudioPlayerTime = () => {
-  const time = useContext(AudioPlayerTimeContext);
+  const time = use(AudioPlayerTimeContext);
   if (time === null) {
     throw new Error(
       "useAudioPlayerTime cannot be called outside of AudioPlayerProvider"
@@ -103,6 +116,58 @@ export const useAudioPlayerTime = () => {
   }
   return time;
 };
+
+/** Creates the initial state mirrored from a browser audio element. */
+function createAudioPlayerSnapshot<TData>(): AudioPlayerSnapshot<TData> {
+  return {
+    activeItem: null,
+    duration: undefined,
+    error: null,
+    networkState: NetworkState.NETWORK_EMPTY,
+    paused: true,
+    playbackRate: 1,
+    readyState: ReadyState.HAVE_NOTHING,
+    time: 0,
+  };
+}
+
+/** Reads the current browser audio element state as one render snapshot. */
+function readAudioPlayerSnapshot<TData>(
+  audio: HTMLAudioElement,
+  activeItem: AudioPlayerItem<TData> | null
+): AudioPlayerSnapshot<TData> {
+  return {
+    activeItem,
+    duration: audio.duration,
+    error: audio.error,
+    networkState: audio.networkState,
+    paused: audio.paused,
+    playbackRate: audio.playbackRate,
+    readyState: audio.readyState,
+    time: audio.currentTime,
+  };
+}
+
+/** Keeps React from re-rendering when the audio element snapshot is unchanged. */
+function stabilizeAudioPlayerSnapshot<TData>(
+  current: AudioPlayerSnapshot<TData>,
+  next: AudioPlayerSnapshot<TData>
+) {
+  if (
+    current.activeItem === next.activeItem &&
+    current.duration === next.duration &&
+    current.error === next.error &&
+    current.networkState === next.networkState &&
+    current.paused === next.paused &&
+    current.playbackRate === next.playbackRate &&
+    current.readyState === next.readyState &&
+    current.time === next.time
+  ) {
+    return current;
+  }
+
+  return next;
+}
 
 /**
  * Own a single browser audio element and keep its playback state in React.
@@ -128,19 +193,23 @@ export function AudioPlayerProvider<TData = unknown>({
   const audioRef = useRef<HTMLAudioElement>(null);
   const itemRef = useRef<AudioPlayerItem<TData> | null>(null);
   const playPromiseRef = useRef<Promise<void> | null>(null);
-  const [readyState, setReadyState] = useState<number>(0);
-  const [networkState, setNetworkState] = useState<number>(0);
-  const [time, setTime] = useState<number>(0);
-  const [duration, setDuration] = useState<number | undefined>(undefined);
-  const [error, setError] = useState<MediaError | null>(null);
-  const [activeItem, _setActiveItem] = useState<AudioPlayerItem<TData> | null>(
-    null
+  const [snapshot, setSnapshot] = useState(() =>
+    createAudioPlayerSnapshot<TData>()
   );
-  const [paused, setPaused] = useState(true);
-  const [playbackRate, setPlaybackRateState] = useState<number>(1);
+  const {
+    activeItem,
+    duration,
+    error,
+    networkState,
+    paused,
+    playbackRate,
+    readyState,
+    time,
+  } = snapshot;
 
   const setActiveItem = useCallback((item: AudioPlayerItem<TData> | null) => {
-    if (!audioRef.current) {
+    const audio = audioRef.current;
+    if (!audio) {
       return;
     }
 
@@ -148,20 +217,25 @@ export function AudioPlayerProvider<TData = unknown>({
       return;
     }
     itemRef.current = item;
-    const currentRate = audioRef.current.playbackRate;
-    audioRef.current.pause();
-    audioRef.current.currentTime = 0;
+    const currentRate = audio.playbackRate;
+    audio.pause();
+    audio.currentTime = 0;
     if (item === null) {
-      audioRef.current.removeAttribute("src");
+      audio.removeAttribute("src");
     } else {
-      audioRef.current.src = item.src;
+      audio.src = item.src;
     }
-    audioRef.current.load();
-    audioRef.current.playbackRate = currentRate;
+    audio.load();
+    audio.playbackRate = currentRate;
+    const nextSnapshot = readAudioPlayerSnapshot(audio, item);
+    setSnapshot((current) =>
+      stabilizeAudioPlayerSnapshot(current, nextSnapshot)
+    );
   }, []);
 
   const play = useCallback(async (item?: AudioPlayerItem<TData> | null) => {
-    if (!audioRef.current) {
+    const audio = audioRef.current;
+    if (!audio) {
       return;
     }
 
@@ -176,26 +250,38 @@ export function AudioPlayerProvider<TData = unknown>({
     }
 
     if (item === undefined) {
-      const playPromise = audioRef.current.play();
+      const playPromise = audio.play();
       playPromiseRef.current = playPromise;
+      const nextSnapshot = readAudioPlayerSnapshot(audio, itemRef.current);
+      setSnapshot((current) =>
+        stabilizeAudioPlayerSnapshot(current, nextSnapshot)
+      );
       return playPromise;
     }
     if (item?.id === itemRef.current?.id) {
-      const playPromise = audioRef.current.play();
+      const playPromise = audio.play();
       playPromiseRef.current = playPromise;
+      const nextSnapshot = readAudioPlayerSnapshot(audio, itemRef.current);
+      setSnapshot((current) =>
+        stabilizeAudioPlayerSnapshot(current, nextSnapshot)
+      );
       return playPromise;
     }
 
     itemRef.current = item;
-    const currentRate = audioRef.current.playbackRate;
-    if (!audioRef.current.paused) {
-      audioRef.current.pause();
+    const currentRate = audio.playbackRate;
+    if (!audio.paused) {
+      audio.pause();
     }
-    audioRef.current.currentTime = 0;
+    audio.currentTime = 0;
     if (item === null) {
-      audioRef.current.removeAttribute("src");
-      audioRef.current.load();
-      audioRef.current.playbackRate = currentRate;
+      audio.removeAttribute("src");
+      audio.load();
+      audio.playbackRate = currentRate;
+      const nextSnapshot = readAudioPlayerSnapshot<TData>(audio, null);
+      setSnapshot((current) =>
+        stabilizeAudioPlayerSnapshot(current, nextSnapshot)
+      );
       return Promise.resolve();
     }
 
@@ -204,17 +290,22 @@ export function AudioPlayerProvider<TData = unknown>({
       return Promise.reject(new Error("Invalid audio source"));
     }
 
-    audioRef.current.src = item.src;
-    audioRef.current.load();
-    audioRef.current.playbackRate = currentRate;
+    audio.src = item.src;
+    audio.load();
+    audio.playbackRate = currentRate;
 
-    const playPromise = audioRef.current.play();
+    const playPromise = audio.play();
     playPromiseRef.current = playPromise;
+    const nextSnapshot = readAudioPlayerSnapshot(audio, item);
+    setSnapshot((current) =>
+      stabilizeAudioPlayerSnapshot(current, nextSnapshot)
+    );
     return playPromise;
   }, []);
 
   const pause = useCallback(async () => {
-    if (!audioRef.current) {
+    const audio = audioRef.current;
+    if (!audio) {
       return;
     }
 
@@ -228,8 +319,12 @@ export function AudioPlayerProvider<TData = unknown>({
       }
     }
 
-    audioRef.current.pause();
+    audio.pause();
     playPromiseRef.current = null;
+    const nextSnapshot = readAudioPlayerSnapshot(audio, itemRef.current);
+    setSnapshot((current) =>
+      stabilizeAudioPlayerSnapshot(current, nextSnapshot)
+    );
   }, []);
 
   const seek = useCallback((time: number) => {
@@ -240,11 +335,15 @@ export function AudioPlayerProvider<TData = unknown>({
   }, []);
 
   const setPlaybackRate = useCallback((rate: number) => {
-    if (!audioRef.current) {
+    const audio = audioRef.current;
+    if (!audio) {
       return;
     }
-    audioRef.current.playbackRate = rate;
-    setPlaybackRateState(rate);
+    audio.playbackRate = rate;
+    const nextSnapshot = readAudioPlayerSnapshot(audio, itemRef.current);
+    setSnapshot((current) =>
+      stabilizeAudioPlayerSnapshot(current, nextSnapshot)
+    );
   }, []);
 
   const isItemActive = useCallback(
@@ -253,24 +352,24 @@ export function AudioPlayerProvider<TData = unknown>({
   );
 
   useAnimationFrame(() => {
-    if (audioRef.current) {
-      _setActiveItem(itemRef.current);
-      setReadyState(audioRef.current.readyState);
-      setNetworkState(audioRef.current.networkState);
-      setTime(audioRef.current.currentTime);
-      setDuration(audioRef.current.duration);
-      setPaused(audioRef.current.paused);
-      setError(audioRef.current.error);
-      setPlaybackRateState(audioRef.current.playbackRate);
+    if (!audioRef.current) {
+      return;
     }
+
+    const nextSnapshot = readAudioPlayerSnapshot(
+      audioRef.current,
+      itemRef.current
+    );
+
+    setSnapshot((current) =>
+      stabilizeAudioPlayerSnapshot(current, nextSnapshot)
+    );
   });
 
   useEffect(() => {
     const audio = audioRef.current;
 
     return () => {
-      playPromiseRef.current = null;
-
       if (!audio) {
         return;
       }
@@ -323,6 +422,7 @@ export function AudioPlayerProvider<TData = unknown>({
     <AudioPlayerContext.Provider value={api as AudioPlayerApi<unknown>}>
       <AudioPlayerTimeContext.Provider value={time}>
         <audio
+          aria-label="Audio player"
           className="hidden"
           crossOrigin="anonymous"
           preload="metadata"
@@ -393,7 +493,7 @@ export const AudioPlayerProgress = ({
           <SliderPrimitive.Indicator className="h-full bg-primary" />
         </SliderPrimitive.Track>
         <SliderPrimitive.Thumb
-          className="relative flex h-0 w-0 items-center justify-center opacity-0 focus-visible:opacity-100 focus-visible:outline-none group-hover/player:opacity-100 data-disabled:pointer-events-none data-disabled:opacity-50"
+          className="relative flex size-0 items-center justify-center opacity-0 focus-visible:opacity-100 focus-visible:outline-none group-hover/player:opacity-100 data-disabled:pointer-events-none data-disabled:opacity-50"
           data-slot="slider-thumb"
         >
           <div className="absolute size-3 rounded-full bg-foreground" />
@@ -450,7 +550,7 @@ function Spinner({ className }: SpinnerProps) {
         className
       )}
     >
-      <span className="sr-only">Loading...</span>
+      <span className="sr-only">Loading&hellip;</span>
     </output>
   );
 }

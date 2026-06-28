@@ -1,7 +1,9 @@
+import { getColor } from "@repo/design-system/lib/color";
+
 /** Shared neutral colors for Three.js labels and helper geometry. */
 export const ORIGIN_COLOR = {
-  LIGHT: "#f4f4f5",
-  DARK: "#18181b",
+  LIGHT: getColor("ZINC", 100),
+  DARK: getColor("ZINC", 900),
 };
 
 /** Font URL used by Drei Text inside WebGL scenes. */

@@ -10,26 +10,33 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@hugeicons/core-free-icons": "^4.2.0",
-    "@hugeicons/react": "^1.1.6",
-    "@mantine/hooks": "^9.2.2",
+    "@effect/cluster": "0.59.0",
+    "@effect/platform": "0.96.2",
+    "@effect/platform-node": "0.107.0",
+    "@effect/workflow": "0.18.2",
+    "@hugeicons/core-free-icons": "^4.2.2",
+    "@mantine/hooks": "^9.4.0",
     "@repo/design-system": "workspace:*",
     "@repo/internationalization": "workspace:*",
     "@repo/utilities": "workspace:*",
     "date-fns": "4.4.0",
-    "effect": "^3.21.2",
-    "ky": "^2.0.2",
-    "motion": "^12.40.0",
+    "effect": "^3.21.4",
+    "json5": "^2.2.3",
+    "motion": "^12.42.0",
     "next-intl": "^4.13.0",
-    "react": "19.2.6",
-    "react-aria-components": "^1.18.0",
-    "recharts": "^3.8.1"
+    "react": "19.2.7",
+    "react-aria-components": "^1.19.0",
+    "remark-mdx": "3.1.1",
+    "remark-parse": "11.0.0",
+    "unified": "11.0.5"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "25.9.1",
-    "@types/react": "^19.2.15",
-    "@vitest/coverage-istanbul": "^4.1.7",
-    "vitest": "^4.1.7"
+    "@types/mdast": "4.0.4",
+    "@types/node": "26.0.1",
+    "@types/react": "^19.2.17",
+    "@vitest/coverage-istanbul": "^4.1.9",
+    "mdast-util-mdx-jsx": "3.2.0",
+    "vitest": "^4.1.9"
   }
 }

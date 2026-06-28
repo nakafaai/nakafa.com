@@ -1,0 +1,25 @@
+export const metadata = {
+  title: "Question 1",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "2025-12-27",
+};
+
+import { Graph } from "./graph";
+
+<Graph
+  title="Triangle Pattern"
+  description="Determine the correct letter to replace the question mark."
+  mode="question"
+/>
+
+Observe the image above. The correct letter to replace the question mark <InlineMath math="?" /> in the second triangle is...
+
+<AgentContext>
+  In the first triangle, the top letter is <InlineMath math="A" />, the left
+  letter is <InlineMath math="D" />, the right letter is <InlineMath math="F" />,
+  the bottom letter is <InlineMath math="A" />, and the center letter is
+  <InlineMath math="T" />. In the second triangle, the top letter is
+  <InlineMath math="B" />, the left letter is <InlineMath math="A" />, the right
+  letter is <InlineMath math="D" />, the bottom letter is <InlineMath math="C" />,
+  and the center is the question mark <InlineMath math="?" />.
+</AgentContext>

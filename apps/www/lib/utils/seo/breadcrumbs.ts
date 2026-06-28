@@ -9,16 +9,23 @@ interface BreadcrumbEntry {
 }
 
 /** Normalizes an app path before joining it with the locale prefix. */
-function normalizeBreadcrumbPath(path: string) {
+function normalizeBreadcrumbPath(path: string, locale: Locale) {
   if (path === "" || path === "/") {
     return "";
   }
 
-  if (path.startsWith("/")) {
-    return path;
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const localePrefix = `/${locale}`;
+
+  if (normalizedPath === localePrefix) {
+    return "";
   }
 
-  return `/${path}`;
+  if (normalizedPath.startsWith(`${localePrefix}/`)) {
+    return normalizedPath.slice(localePrefix.length);
+  }
+
+  return normalizedPath;
 }
 
 /** Builds Schema.org ListItem entries for a visible page hierarchy. */
@@ -27,7 +34,7 @@ export function createBreadcrumbItems(
   entries: BreadcrumbEntry[]
 ) {
   return entries.map((entry, index) => {
-    const path = normalizeBreadcrumbPath(entry.path);
+    const path = normalizeBreadcrumbPath(entry.path, locale);
 
     return {
       "@type": "ListItem" as const,

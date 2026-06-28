@@ -17,15 +17,9 @@ import type {
 } from "@/lib/llms/full/types";
 
 /** Builds the compact full-corpus entrypoint for agent retrieval. */
-export function buildRootFullText({
-  documents,
-  localeShards,
-}: {
-  documents: LlmsFullDocument[];
-  localeShards: LlmsFullShard[];
-}) {
-  const shards = flattenShards(localeShards);
-  const oversizedShards = shards.filter((shard) => shard.oversized);
+export function buildRootFullText({ shards }: { shards: LlmsFullShard[] }) {
+  const flatShards = flattenShards(shards);
+  const oversizedShards = flatShards.filter((shard) => shard.oversized);
   const lines = [
     "# Nakafa Full Documentation",
     "",
@@ -45,13 +39,13 @@ export function buildRootFullText({
     "## Corpus Summary",
     "",
     `- Locales: ${routing.locales.map(getLocaleLabel).join(", ")}`,
-    `- Documents: ${documents.length}`,
-    `- Source bytes: ${getDocumentsBytes(documents)}`,
-    `- Shards: ${shards.length}`,
+    `- Documents: ${getShardDocumentCount(shards)}`,
+    `- Source bytes: ${getShardSourceBytes(shards)}`,
+    `- Shards: ${flatShards.length}`,
     "",
-    "## Top-Level Shards",
+    "## Shards",
     "",
-    ...localeShards.map(formatShardLine),
+    ...flatShards.map(formatShardLine),
     "",
     "## Manifest",
     "",
@@ -138,11 +132,9 @@ export function flattenShards(shards: LlmsFullShard[]): LlmsFullShard[] {
 
 /** Builds the machine-readable shard manifest served from public static files. */
 export function buildFullManifest({
-  documents,
   root,
   shards,
 }: {
-  documents: LlmsFullDocument[];
   root: LlmsFullTextArtifact;
   shards: LlmsFullShard[];
 }) {
@@ -155,9 +147,9 @@ export function buildFullManifest({
     manifest: `${BASE_URL}/${LLMS_FULL_MANIFEST_PATH}`,
     sitemap: `${BASE_URL}/sitemap.xml`,
     totals: {
-      documents: documents.length,
+      documents: getShardDocumentCount(shards),
       entrypointBytes: root.bytes,
-      sourceBytes: getDocumentsBytes(documents),
+      sourceBytes: getShardSourceBytes(shards),
     },
     shards: flattenedShards.map(formatManifestShard),
     oversized: oversizedShards.map(formatManifestShard),
@@ -357,6 +349,16 @@ function getShardSection({
 /** Sums the source text bytes represented by a set of documents. */
 function getDocumentsBytes(documents: LlmsFullDocument[]) {
   return documents.reduce((total, document) => total + document.bytes, 0);
+}
+
+/** Sums the document counts represented by generated full-content shards. */
+function getShardDocumentCount(shards: LlmsFullShard[]) {
+  return shards.reduce((total, shard) => total + shard.documentCount, 0);
+}
+
+/** Sums the source bytes represented by generated full-content shards. */
+function getShardSourceBytes(shards: LlmsFullShard[]) {
+  return shards.reduce((total, shard) => total + shard.sourceBytes, 0);
 }
 
 /** Counts UTF-8 bytes for generated agent text files. */

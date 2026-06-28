@@ -18,6 +18,7 @@ export interface ItemParameters {
   discrimination: number;
 }
 
+/** One graded response paired with the frozen item parameters used for EAP scoring. */
 export interface Response {
   correct: boolean;
   params: ItemParameters;
@@ -39,10 +40,12 @@ function getThetaGrid(): number[] {
   return grid;
 }
 
+/** Computes the two-parameter logistic probability of a correct response. */
 function probabilityCorrect(theta: number, a: number, b: number): number {
   return 1 / (1 + Math.exp(-a * (theta - b)));
 }
 
+/** Multiplies response probabilities at one theta grid point for EAP weighting. */
 function likelihood(theta: number, responses: Response[]): number {
   let product = 1;
   for (const response of responses) {
@@ -56,6 +59,7 @@ function likelihood(theta: number, responses: Response[]): number {
   return product;
 }
 
+/** Evaluates the normal prior density used by the bounded EAP estimator. */
 function normalPDF(x: number, mean: number, sd: number): number {
   const exp = -0.5 * ((x - mean) / sd) ** 2;
   return (1 / (sd * Math.sqrt(2 * Math.PI))) * Math.exp(exp);
@@ -126,7 +130,7 @@ export function getProvisionalParams(): ItemParameters {
 /**
  * Seed difficulty from the observed correct rate for uncalibrated items.
  *
- * This is only a bootstrap heuristic. Full calibration later replaces this
+ * This is only an initial heuristic. Full calibration later replaces this
  * value with the alternating 2PL estimate.
  */
 export function estimateDifficultyFromCorrectRate(correctRate: number): number {

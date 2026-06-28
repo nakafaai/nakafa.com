@@ -1,0 +1,308 @@
+import { MATERIAL_CARD_DESCRIPTION_MAX_LENGTH } from "@repo/contents/_types/material/description";
+import {
+  listPracticeMaterialSets,
+  normalizeMaterialRoute,
+  toPracticeMaterialList,
+} from "@repo/contents/_types/material/projection";
+import {
+  findLessonMaterial,
+  findPracticeMaterial,
+  getLessonMaterialList,
+  getPracticeMaterialList,
+  listLessonMaterialSources,
+  listLessonRows,
+  listMaterials,
+  listPracticeMaterialSources,
+  listPracticeSets,
+} from "@repo/contents/_types/material/registry";
+import {
+  defineLessonMaterial,
+  definePracticeMaterial,
+  LessonMaterialSourceSchema,
+} from "@repo/contents/_types/material/schema";
+import { locales } from "@repo/utilities/locales";
+import { Either, ParseResult, Schema } from "effect";
+import { describe, expect, it } from "vitest";
+
+describe("material registry", () => {
+  it("projects lesson materials into localized navigation", () => {
+    const idMaterials = getLessonMaterialList(
+      "material/lesson/mathematics/exponential-logarithm",
+      "id"
+    );
+    const enMaterials = getLessonMaterialList(
+      "/material/lesson/mathematics/exponential-logarithm",
+      "en"
+    );
+
+    expect(idMaterials[0]).toMatchObject({
+      href: "/material/lesson/mathematics/exponential-logarithm",
+      title: "Eksponen dan Logaritma",
+    });
+    expect(enMaterials[0]).toMatchObject({
+      href: "/material/lesson/mathematics/exponential-logarithm",
+      title: "Exponents and Logarithms",
+    });
+    expect(idMaterials[0]?.items[0]).toEqual({
+      href: "/material/lesson/mathematics/exponential-logarithm/basic-concept",
+      title: "Konsep Eksponen",
+    });
+  });
+
+  it("projects practice materials into localized set navigation", () => {
+    const materials = getPracticeMaterialList(
+      "material/practice/assessment/snbt/quantitative-knowledge",
+      "en"
+    );
+
+    expect(materials).toHaveLength(1);
+    expect(materials[0]).toMatchObject({
+      href: "/material/practice/assessment/snbt/quantitative-knowledge/try-out-2026",
+      title: "Try Out 2026",
+    });
+    expect(materials[0]?.items).toHaveLength(10);
+    expect(materials[0]?.items[0]).toEqual({
+      href: "/material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
+      title: "Set 1",
+    });
+  });
+
+  it("projects sync-ready rows for both supported content languages", () => {
+    const lessonRows = listLessonRows();
+    const practiceSets = listPracticeSets();
+
+    expect(lessonRows.some((lesson) => lesson.locale === "id")).toBe(true);
+    expect(lessonRows.some((lesson) => lesson.locale === "en")).toBe(true);
+    expect(
+      practiceSets.some(
+        (set) =>
+          set.locale === "en" &&
+          set.slug ===
+            "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1"
+      )
+    ).toBe(true);
+
+    expect(listLessonRows("id").every((lesson) => lesson.locale === "id")).toBe(
+      true
+    );
+    expect(listPracticeSets("id").every((set) => set.locale === "id")).toBe(
+      true
+    );
+  });
+
+  it("keeps material keys and asset roots unique", () => {
+    const materials = listMaterials();
+    const keys = new Set(materials.map((material) => material.key));
+    const assetRoots = new Set(materials.map((material) => material.assetRoot));
+
+    expect(keys.size).toBe(materials.length);
+    expect(assetRoots.size).toBe(materials.length);
+    expect(listLessonMaterialSources()).not.toHaveLength(0);
+    expect(listPracticeMaterialSources()).not.toHaveLength(0);
+  });
+
+  it("keeps authored material card descriptions concise", () => {
+    for (const material of listMaterials()) {
+      if (material.kind === "lesson") {
+        for (const locale of locales) {
+          const description = material.translations[locale].description;
+
+          expect(description?.trim()).toBe(description);
+          expect(description).toBeTruthy();
+          expect(description?.length).toBeLessThanOrEqual(
+            MATERIAL_CARD_DESCRIPTION_MAX_LENGTH
+          );
+        }
+
+        continue;
+      }
+
+      for (const group of material.groups) {
+        for (const locale of locales) {
+          const description = group.translations[locale].description;
+
+          expect(description?.trim()).toBe(description);
+          expect(description).toBeTruthy();
+          expect(description?.length).toBeLessThanOrEqual(
+            MATERIAL_CARD_DESCRIPTION_MAX_LENGTH
+          );
+        }
+      }
+    }
+  });
+
+  it("finds concrete materials by route without exposing the wrong material kind", () => {
+    expect(
+      findLessonMaterial(
+        "material/lesson/mathematics/exponential-logarithm/basic-concept"
+      )?.key
+    ).toBe("lesson.mathematics.exponential-logarithm");
+    expect(
+      findPracticeMaterial(
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1"
+      )?.key
+    ).toBe("practice.assessment.snbt.quantitative-knowledge");
+    expect(findLessonMaterial("material/practice/assessment/snbt")).toBeNull();
+    expect(findPracticeMaterial("material/lesson/mathematics")).toBeNull();
+    expect(getLessonMaterialList("material/not-found", "id")).toEqual([]);
+    expect(getPracticeMaterialList("material/not-found", "en")).toEqual([]);
+  });
+
+  it("projects custom typed source chunks with required card descriptions", () => {
+    const lesson = defineLessonMaterial({
+      assetRoot: "material/lesson/biology/custom-topic",
+      domain: "biology",
+      kind: "lesson",
+      key: "lesson.biology.custom-topic",
+      routeSlugs: { en: "custom-topic", id: "topik-khusus" },
+      sections: [],
+      slug: "custom-topic",
+      translations: {
+        en: {
+          description: "Read custom biology ideas.",
+          title: "Custom Topic",
+        },
+        id: { description: "Baca ide biologi khusus.", title: "Topik Khusus" },
+      },
+    });
+    const practice = definePracticeMaterial({
+      assessment: "snbt",
+      assetRoot: "material/practice/assessment/snbt/fixture-domain",
+      domain: "general-reasoning",
+      groups: [
+        {
+          exerciseType: "practice",
+          routeSlugs: { en: "practice", id: "latihan" },
+          sets: [
+            {
+              routeSlugs: { en: "set-1", id: "set-1" },
+              slug: "set-1",
+              translations: {
+                en: { title: "Set 1" },
+                id: { title: "Set 1" },
+              },
+            },
+          ],
+          translations: {
+            en: {
+              description: "Practice focused reasoning.",
+              title: "Practice",
+            },
+            id: { description: "Latih penalaran terarah.", title: "Latihan" },
+          },
+        },
+      ],
+      kind: "practice",
+      key: "practice.assessment.snbt.fixture-domain",
+    });
+
+    expect(
+      getLessonMaterialList("material/lesson/biology/custom-topic", "en", [
+        lesson,
+      ])
+    ).toEqual([
+      {
+        description: "Read custom biology ideas.",
+        href: "/material/lesson/biology/custom-topic",
+        items: [],
+        title: "Custom Topic",
+      },
+    ]);
+    expect(
+      getPracticeMaterialList(
+        "material/practice/assessment/snbt/fixture-domain",
+        "id",
+        [practice]
+      )
+    ).toEqual([
+      {
+        description: "Latih penalaran terarah.",
+        href: "/material/practice/assessment/snbt/fixture-domain/practice",
+        items: [
+          {
+            href: "/material/practice/assessment/snbt/fixture-domain/practice/set-1",
+            title: "Set 1",
+          },
+        ],
+        title: "Latihan",
+      },
+    ]);
+    expect(toPracticeMaterialList(practice, "en")[0]?.description).toBe(
+      "Practice focused reasoning."
+    );
+    expect(listPracticeMaterialSets([practice], "id")[0]).not.toHaveProperty(
+      "year"
+    );
+    expect(
+      normalizeMaterialRoute("//material/lesson/biology/custom-topic/")
+    ).toBe("material/lesson/biology/custom-topic");
+  });
+
+  it("rejects invalid authored material routes through the Effect Schema contract", () => {
+    const result = Schema.decodeUnknownEither(LessonMaterialSourceSchema)({
+      assetRoot: "/material/lesson/mathematics/exponents",
+      domain: "mathematics",
+      kind: "lesson",
+      key: "lesson.mathematics.exponents",
+      routeSlugs: { en: "exponents", id: "eksponen" },
+      sections: [],
+      slug: "exponents",
+      translations: {
+        en: { description: "Read exponent patterns.", title: "Exponents" },
+        id: { description: "Baca pola eksponen.", title: "Eksponen" },
+      },
+    });
+
+    expect(Either.isLeft(result)).toBe(true);
+
+    if (Either.isLeft(result)) {
+      expect(ParseResult.TreeFormatter.formatErrorSync(result.left)).toContain(
+        "Invalid material route."
+      );
+    }
+  });
+
+  it("rejects invalid authored material keys and slugs through the Effect Schema contract", () => {
+    const invalidKey = Schema.decodeUnknownEither(LessonMaterialSourceSchema)({
+      assetRoot: "material/lesson/mathematics/exponents",
+      domain: "mathematics",
+      kind: "lesson",
+      key: "Lesson Mathematics",
+      routeSlugs: { en: "exponents", id: "eksponen" },
+      sections: [],
+      slug: "exponents",
+      translations: {
+        en: { description: "Read exponent patterns.", title: "Exponents" },
+        id: { description: "Baca pola eksponen.", title: "Eksponen" },
+      },
+    });
+    const invalidSlug = Schema.decodeUnknownEither(LessonMaterialSourceSchema)({
+      assetRoot: "material/lesson/mathematics/exponents",
+      domain: "mathematics",
+      kind: "lesson",
+      key: "lesson.mathematics.exponents",
+      routeSlugs: { en: "exponents", id: "eksponen" },
+      sections: [],
+      slug: "Invalid Slug",
+      translations: {
+        en: { description: "Read exponent patterns.", title: "Invalid" },
+        id: { description: "Baca pola eksponen.", title: "Tidak Valid" },
+      },
+    });
+
+    expect(Either.isLeft(invalidKey)).toBe(true);
+    expect(Either.isLeft(invalidSlug)).toBe(true);
+
+    if (Either.isLeft(invalidKey)) {
+      expect(
+        ParseResult.TreeFormatter.formatErrorSync(invalidKey.left)
+      ).toContain("Invalid material key.");
+    }
+
+    if (Either.isLeft(invalidSlug)) {
+      expect(
+        ParseResult.TreeFormatter.formatErrorSync(invalidSlug.left)
+      ).toContain("Invalid material slug.");
+    }
+  });
+});

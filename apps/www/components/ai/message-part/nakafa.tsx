@@ -5,7 +5,7 @@ import type { NakafaDataPart } from "@repo/ai/schema/data";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useTranslations } from "next-intl";
-import { memo } from "react";
+
 import { ContentPart } from "@/components/ai/message-part/nakafa/content";
 import { ExercisePart } from "@/components/ai/message-part/nakafa/exercise";
 import { QuranPart } from "@/components/ai/message-part/nakafa/quran";
@@ -16,7 +16,7 @@ interface Props {
 }
 
 /** Renders one persisted Nakafa data envelope through its kind-specific UI. */
-export const NakafaPart = memo(({ message }: Props) => {
+export const NakafaPart = ({ message }: Props) => {
   const t = useTranslations("Ai");
 
   if (message.kind === "taxonomy") {
@@ -59,7 +59,7 @@ export const NakafaPart = memo(({ message }: Props) => {
     default:
       return null;
   }
-});
+};
 NakafaPart.displayName = "NakafaPart";
 
 /** Returns a localized label for one Nakafa data kind. */

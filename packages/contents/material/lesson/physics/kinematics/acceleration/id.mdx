@@ -1,0 +1,122 @@
+import { AccelerationGraphCard } from "@repo/design-system/components/contents/physics/kinematics/acceleration/chart-card";
+import { AccelerationLab } from "@repo/design-system/components/contents/physics/kinematics/acceleration/lab";
+
+export const metadata = {
+  title: "Percepatan",
+  description:
+    "Pelajari percepatan sebagai perubahan kecepatan terhadap waktu melalui jejak gerak, grafik kecepatan-waktu, dan perhitungan sederhana.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "2026-05-31",
+  subject: "Kinematika",
+};
+
+## Percepatan Terasa Saat Kecepatan Berubah
+
+Saat mobil baru mulai jalan, badan kita terasa terdorong ke belakang. Saat mobil direm, badan terasa terdorong ke depan. Dua kejadian itu sama-sama menunjukkan satu hal: kecepatan mobil sedang berubah.
+
+Dalam fisika, percepatan menyatakan perubahan kecepatan setiap selang waktu. Karena kecepatan memiliki besar dan arah, percepatan juga perlu dibaca bersama arah positif yang kita pilih.
+
+> Percepatan tidak selalu berarti makin cepat. Percepatan berarti kecepatan berubah.
+
+<BlockMath math="\begin{aligned}
+\vec{a} &= \frac{\Delta \vec{v}}{\Delta t} \\
+&= \frac{\vec{v}_t-\vec{v}_0}{t_t-t_0}
+\end{aligned}" />
+
+Satuan percepatan adalah <InlineMath math="\text{m/s}^2" />. Jika <InlineMath math="a=2\text{ m/s}^2" />, artinya kecepatan bertambah <InlineMath math="2\text{ m/s}" /> setiap <InlineMath math="1\text{ s}" /> selama percepatannya tetap.
+
+## Dari Jejak Ticker Timer ke Gradien
+
+Ticker timer adalah alat yang memberi tanda pada pita kertas dalam selang waktu yang sama. Jika jarak antartanda makin renggang, benda menempuh jarak lebih besar pada setiap selang waktu yang sama. Itu berarti kecepatannya bertambah. Jika jaraknya sama, kecepatannya tetap. Jika jaraknya makin rapat, kecepatannya berkurang.
+
+<AccelerationLab
+  title={<>Percepatan Roket di Luar Angkasa</>}
+  description={
+    <>
+      Kamera mengikuti roket saat gerbang waktu berselang{" "}
+      <InlineMath math="1\text{ s}" /> makin renggang, tetap, atau makin
+      rapat.
+    </>
+  }
+  labels={{
+    chooseCase: "Pilih gerak",
+    scenarioNames: {
+      "speed-up": <>Makin Cepat</>,
+      steady: <>Tetap</>,
+      "slow-down": <>Melambat</>,
+    },
+    factLabels: {
+      initialVelocity: <>Kecepatan awal</>,
+      acceleration: <>Percepatan</>,
+      finalVelocity: <>Kecepatan akhir</>,
+      timeStep: <>Selang bayangan</>,
+    },
+    viewLabel: "Visual percepatan roket di luar angkasa",
+  }}
+/>
+
+Grafik kecepatan-waktu membaca ide yang sama dengan cara yang lebih ringkas. Kemiringan garis menunjukkan seberapa besar perubahan kecepatan dibandingkan waktu yang dibutuhkan.
+
+Setelah jejaknya terlihat, pindahkan perhatian ke grafik. Jejak memberi rasa geraknya, sedangkan grafik membantu kita menghitung perubahan kecepatan dengan lebih rapi.
+
+<AccelerationGraphCard
+  title={<>Grafik Kecepatan terhadap Waktu</>}
+  description={
+    <>
+      Pilih satu segmen pada grafik yang sama, lalu baca kemiringan garisnya
+      sebagai perubahan kecepatan setiap detik.
+    </>
+  }
+  labels={{
+    chooseCase: "Pilih Segmen",
+    contextLine: "Grafik lengkap",
+    scenarioNames: {
+      "speed-up": "Makin Cepat",
+      steady: "Tetap",
+      "slow-down": "Melambat",
+    },
+    timeAxis: "t (s)",
+    velocityAxis: "v (m/s)",
+  }}
+/>
+
+Pada grafik, garis putus-putus menunjukkan grafik lengkap yang saling tersambung. Garis tebal adalah segmen yang sedang dibaca. Jika garisnya naik, kecepatannya bertambah. Jika datar, kecepatannya tetap. Jika turun, kecepatannya berkurang. Percepatan adalah perbandingan <InlineMath math="\Delta v" /> terhadap <InlineMath math="\Delta t" />.
+
+## Cara Membaca Tanda Percepatan
+
+Tanda positif, nol, atau negatif tidak boleh dibaca sendirian. Tanda itu selalu bergantung pada arah positif yang dipilih. Pada contoh satu dimensi, kita anggap arah ke kanan sebagai positif.
+
+| Tanda percepatan | Perubahan kecepatan | Bacaan pada arah positif |
+| --- | --- | --- |
+| <InlineMath math="a>0" /> | <InlineMath math="v_t>v_0" /> | Kecepatan bertambah ke arah positif |
+| <InlineMath math="a=0" /> | <InlineMath math="v_t=v_0" /> | Kecepatan tetap |
+| <InlineMath math="a<0" /> | <InlineMath math="v_t<v_0" /> | Kecepatan berkurang jika benda masih bergerak ke arah positif |
+
+Bagian terakhir sering membuat siswa keliru. Percepatan negatif bukan otomatis berarti benda bergerak ke kiri. Percepatan negatif berarti perubahan kecepatannya mengarah ke sisi negatif dari sumbu yang dipilih.
+
+## Menghitung Perubahan Kecepatan Setiap Detik
+
+Misalkan kecepatan mobil berubah dari <InlineMath math="2\text{ m/s}" /> menjadi <InlineMath math="18\text{ m/s}" /> dalam <InlineMath math="4\text{ s}" />. Percepatannya:
+
+<BlockMath math="\begin{aligned}
+a &= \frac{v_t-v_0}{\Delta t} \\
+&= \frac{18-2}{4} \\
+&= 4\text{ m/s}^2
+\end{aligned}" />
+
+Hasil itu berarti kecepatan bertambah <InlineMath math="4\text{ m/s}" /> setiap detik. Urutannya menjadi <InlineMath math="2\text{ m/s}" />, <InlineMath math="6\text{ m/s}" />, <InlineMath math="10\text{ m/s}" />, dan seterusnya jika percepatannya tetap.
+
+Sekarang bandingkan dengan mobil yang kecepatannya berubah dari <InlineMath math="18\text{ m/s}" /> menjadi <InlineMath math="2\text{ m/s}" /> dalam <InlineMath math="4\text{ s}" />.
+
+<BlockMath math="\begin{aligned}
+a &= \frac{2-18}{4} \\
+&= -4\text{ m/s}^2
+\end{aligned}" />
+
+Nilai <InlineMath math="-4\text{ m/s}^2" /> berarti kecepatan berkurang <InlineMath math="4\text{ m/s}" /> setiap detik jika mobil masih bergerak ke arah positif.
+
+## Percepatan Nol Tetap Perlu Ditafsirkan
+
+Jika <InlineMath math="a=0" />, kecepatan benda tidak berubah. Itu tidak selalu berarti benda diam. Benda bisa tetap bergerak dengan kecepatan konstan, misalnya <InlineMath math="10\text{ m/s}" /> ke kanan.
+
+Cara cepat mengeceknya adalah melihat kecepatan, bukan hanya percepatan. Jika <InlineMath math="a=0" /> dan <InlineMath math="v=0" />, benda diam. Jika <InlineMath math="a=0" /> tetapi <InlineMath math="v\neq 0" />, benda bergerak lurus dengan kecepatan tetap.

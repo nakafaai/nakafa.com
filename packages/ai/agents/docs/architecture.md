@@ -1,36 +1,39 @@
 # Nina Agent Architecture
 
-Nina has one chat route, one orchestrator, and three specialist agents. Nakafa
-content reading is owned by `packages/contents`; Nakafa discovery is served by
-the Convex `contentSearch` read model written during content sync.
+Nina has one chat route and one external package Interface:
+`NinaHarness.stream`. Math, Nakafa, and research are internal
+LearningCapabilities used by the harness to collect bounded evidence before the
+final answer.
 
 ## Flow
 
 ```mermaid
 flowchart LR
   User["User asks Nina"] --> Route["apps/www /api/chat"]
-  Route --> Check{"Verified page missing from retained chat?"}
-  Check -- "yes" --> Forced["prepareStep: force nakafa once"]
+  Route --> Harness["NinaHarness.stream"]
+  Harness --> Check{"Verified page evidence needed?"}
+  Check -- "yes" --> Forced["prepareStep: force Nakafa once"]
   Check -- "no" --> Source{"Latest user text names an external source?"}
   Source -- "yes" --> ResearchForced["prepareStep: force research once"]
-  Source -- "no" --> Normal["normal tool choice"]
-  Forced --> Orchestrator["orchestrator"]
-  ResearchForced --> Orchestrator
-  Normal --> Orchestrator
-  Orchestrator --> Nakafa["nakafa agent"]
-  Orchestrator --> Research["research agent"]
-  Orchestrator --> Math["math agent"]
+  Source -- "no" --> Normal["normal ToolLoopAgent choice"]
+  Forced --> Capabilities["internal LearningCapabilities"]
+  ResearchForced --> Capabilities
+  Normal --> Capabilities
+  Capabilities --> Nakafa["Nakafa capability"]
+  Capabilities --> Research["research capability"]
+  Capabilities --> Math["math capability"]
   Nakafa --> Search["Convex full-text search"]
   Nakafa --> Content["contents Effect service"]
   Mcp["apps/mcp"] --> Search
   Mcp --> Content
-  Research --> ResearchEvidence["evidence phase: Firecrawl then Google grounding / scrape"]
-  ResearchEvidence --> ResearchSynthesis["synthesis phase: Output.object"]
-  Math --> Evidence["evaluate / simplify / differentiate / compare"]
+  Research --> ResearchEvidence["source evidence phase"]
+  ResearchEvidence --> ResearchSynthesis["structured synthesis"]
+  Math --> MathEvidence["deterministic evidence"]
   Nakafa --> NakafaEvidence["content IDs and retrieved content"]
-  ResearchSynthesis --> ResearchCitations["external citation links"]
-  NakafaEvidence --> Final["final answer evidence contract"]
-  ResearchCitations --> Final
+  ResearchSynthesis --> Envelope["EvidenceEnvelope"]
+  MathEvidence --> Envelope
+  NakafaEvidence --> Envelope
+  Envelope --> Final["Nina answer synthesis"]
   Final --> Inline["research links inline, Nakafa source chips separate"]
 ```
 
@@ -48,24 +51,24 @@ doc. Prefer diagrams over long prose so each file stays skimmable.
 ```mermaid
 sequenceDiagram
   participant Route as "/api/chat"
-  participant Main as "orchestrator"
-  participant Tool as "nakafa"
+  participant Harness as "NinaHarness"
+  participant Nakafa as "Nakafa capability"
   participant Content as "contents service"
   participant Convex as "chat parts"
 
   Route->>Convex: hydrate retained messages
-  Route->>Route: check data-nakafa content for current URL
+  Route->>Harness: stream turn with validated context
+  Harness->>Harness: check data-nakafa content for current URL
   alt verified and missing
-    Route->>Main: force nakafa on step 0
-    Main->>Tool: one tool call
-    Tool->>Content: read current content_ref directly
-    Tool-->>Convex: persist data-nakafa kind content
+    Harness->>Nakafa: force one current-page read on step 0
+    Nakafa->>Content: read current content_ref directly
+    Nakafa-->>Convex: persist data-nakafa kind content
   else unverified or already fetched
-    Route->>Route: check latest user text for external source reference
+    Harness->>Harness: check latest user text for external source reference
     alt explicit external source
-      Route->>Main: force research on step 0
+      Harness->>Harness: force research on step 0
     else no explicit external source
-      Route->>Main: normal tool choice
+      Harness->>Harness: normal ToolLoopAgent choice
     end
   end
 ```
@@ -81,19 +84,20 @@ flowchart LR
   ReadRef --> Read["read tool"]
   Exercise --> StepResults["AI SDK step toolResults"]
   Read --> StepResults
-  StepResults --> Evidence["Nakafa agent evidence text"]
-  Evidence --> Orchestrator["Nina orchestrator synthesis"]
+  StepResults --> Evidence["Nakafa capability evidence text"]
+  Evidence --> Envelope["EvidenceEnvelope"]
+  Envelope --> Final["Nina answer synthesis"]
 ```
 
 Search can return question-level exercise hits, but the handoff to the exercise
 tool uses the parent set reference. A specific question number remains structured
-tool input (`exercise_number`) instead of local prompt parsing. The Nakafa agent
-returns collected AI SDK tool-result evidence, so user-facing prose is composed
-by Nina from retrieved content rather than invented inside the retrieval agent.
+tool input (`exercise_number`) instead of local prompt parsing. The Nakafa
+capability returns collected AI SDK tool-result evidence, so user-facing prose is
+composed by Nina from retrieved content rather than invented inside retrieval.
 Exercise discovery uses the model-provided search input directly before
-`selectExerciseRef` chooses a parent set. The orchestrator tool query is the
-single Nakafa subagent task; there is no second raw-request planning layer that
-can override or contaminate the search query.
+`selectExerciseRef` chooses a parent set. The Nakafa capability task is the
+single Nakafa evidence request; there is no second raw-request planning layer
+that can override or contaminate the search query.
 
 ## Contracts
 
@@ -122,8 +126,8 @@ can override or contaminate the search query.
   and `activeTools`.
 - Nakafa exercise search normalizes question-level refs to parent set refs before
   the exercise tool runs.
-- Nakafa subagent output is derived from AI SDK step `toolResults`, not from
-  retrieval-agent free-form prose.
+- Nakafa capability output is derived from AI SDK step `toolResults`, not from
+  retrieval free-form prose.
 - Explicit external source references are extracted by `@repo/ai/lib/source`.
   Routing uses them to enter research, and research receives the full ordered
   source list for exact-source reading.

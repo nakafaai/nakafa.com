@@ -1,6 +1,17 @@
 import { Effect, Schema } from "effect";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { getNakafaExerciseToolResult } from "@/lib/mcp/tools/exercise";
+
+vi.mock("@/lib/mcp/nakafa", async () => {
+  const { Effect, Option } = await import("effect");
+
+  return {
+    nakafaContent: {
+      /** Returns no exercise content so the tool can shape not-found output. */
+      exercise: () => Effect.succeed(Option.none()),
+    },
+  };
+});
 
 const ToolErrorResultSchema = Schema.Struct({
   isError: Schema.Literal(true),
@@ -15,7 +26,10 @@ const ToolErrorResultSchema = Schema.Struct({
 describe("nakafa_get_exercise", () => {
   it("returns structured not-found errors", async () => {
     const result = await Effect.runPromise(
-      getNakafaExerciseToolResult("en/quran/1")
+      getNakafaExerciseToolResult({
+        content_ref:
+          "https://nakafa.com/en/practice/snbt/general-reasoning/tryout-2027/set-1",
+      })
     );
 
     expect(

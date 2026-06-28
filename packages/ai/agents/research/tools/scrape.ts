@@ -5,20 +5,12 @@ import {
 import { fetchSourceMarkdown } from "@repo/ai/agents/research/tools/markdown";
 import { getDocumentMetadata } from "@repo/ai/agents/research/tools/metadata";
 import { assertPublicResearchUrl } from "@repo/ai/agents/research/tools/safety";
-import { firecrawlApp } from "@repo/ai/config/firecrawl";
+import { readFirecrawlApp } from "@repo/ai/config/firecrawl";
 import { selectRelevantContent } from "@repo/ai/lib/selection";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { UIMessageStreamWriter } from "ai";
 import dedent from "dedent";
 import { Effect, Either } from "effect";
-
-interface ScrapeUrlParams {
-  maxLength?: number;
-  selectionQuery?: string;
-  toolCallId: string;
-  url: string;
-  writer: UIMessageStreamWriter<MyUIMessage>;
-}
 
 /**
  * Scrapes one URL and returns structured evidence for citation checks.
@@ -29,7 +21,13 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
   toolCallId,
   url,
   writer,
-}: ScrapeUrlParams) {
+}: {
+  readonly maxLength?: number;
+  readonly selectionQuery?: string;
+  readonly toolCallId: string;
+  readonly url: string;
+  readonly writer: UIMessageStreamWriter<MyUIMessage>;
+}) {
   yield* Effect.sync(() =>
     writer.write({
       id: toolCallId,
@@ -68,7 +66,7 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
         : Effect.succeed(undefined),
       scrapeResult: Effect.tryPromise({
         try: () =>
-          firecrawlApp.scrape(publicUrl, {
+          readFirecrawlApp().scrape(publicUrl, {
             formats: ["markdown"],
             timeout: 5000,
           }),

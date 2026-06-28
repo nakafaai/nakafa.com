@@ -5,7 +5,7 @@ describe("Nakafa agent route formatting", () => {
   it("formats route titles for agent summaries", () => {
     expect(
       formatNakafaRouteTitle(
-        "exercises/high-school/snbt/general-reasoning/try-out/2026/set-1"
+        "material/practice/assessment/snbt/general-reasoning/try-out-2026/set-1"
       )
     ).toBe("SNBT General Reasoning Try Out 2026 Set 1");
   });
@@ -19,10 +19,10 @@ describe("Nakafa agent route formatting", () => {
   it("falls back when an exercise route uses unknown metadata", () => {
     expect(
       formatNakafaRouteTitle(
-        "exercises/high-school/unknown/general-reasoning/try-out/2026/set-1"
+        "material/practice/assessment/unknown/general-reasoning/try-out-2026/set-1"
       )
     ).toBe(
-      "High School / Unknown / General Reasoning / Try Out / 2026 / Set 1"
+      "Practice / Assessment / Unknown / General Reasoning / Try Out 2026 / Set 1"
     );
   });
 });

@@ -1,0 +1,25 @@
+import { VisitorChart } from "./chart";
+
+export const metadata = {
+  title: "Question 9",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "2026-01-26",
+};
+
+Below is the visitor data for two facilities at SMA MMM in September during the first week from Monday to Friday.
+
+<VisitorChart
+  dayLabels={{
+    friday: "Friday",
+    monday: "Monday",
+    thursday: "Thursday",
+    tuesday: "Tuesday",
+    wednesday: "Wednesday",
+  }}
+  description="Number of visitors for Library and Laboratory (Monday-Friday)."
+  seriesLabels={{ laboratory: "Laboratory", library: "Library" }}
+  title="SMA MMM Facility Visitor Data"
+  yAxisLabel="Number of Visitors"
+/>
+
+Based on this data, the second highest number of visitors in the two facilities of SMA MMM occurred on ...

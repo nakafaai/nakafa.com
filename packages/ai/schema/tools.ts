@@ -3,9 +3,6 @@ import { createPrompt } from "@repo/ai/prompt/utils";
 import { type InferUITools, tool } from "ai";
 import { Schema } from "effect";
 
-export const ToolNameSchema = Schema.Literal("nakafa", "deepResearch", "math");
-export type ToolName = Schema.Schema.Type<typeof ToolNameSchema>;
-
 const SpecialistToolInputFields = {
   request: Schema.NonEmptyString.annotations({
     description: createPrompt({
@@ -52,7 +49,7 @@ const SpecialistToolInputFields = {
 };
 
 /**
- * Input schema for the Nakafa orchestrator tool.
+ * Input schema for the Nakafa LearningCapability tool.
  */
 export const NakafaToolInputSchema = Schema.Struct({
   ...SpecialistToolInputFields,
@@ -84,7 +81,7 @@ export const NakafaToolInputSchema = Schema.Struct({
   });
 
 /**
- * Input schema for the deep research orchestrator tool.
+ * Input schema for the deep research LearningCapability tool.
  */
 export const ResearchToolInputSchema = Schema.Struct({
   ...SpecialistToolInputFields,
@@ -111,7 +108,7 @@ export const ResearchToolInputSchema = Schema.Struct({
   });
 
 /**
- * Input schema for the deterministic math orchestrator tool.
+ * Input schema for the deterministic math LearningCapability tool.
  */
 export const MathToolInputSchema = Schema.Struct({
   ...SpecialistToolInputFields,

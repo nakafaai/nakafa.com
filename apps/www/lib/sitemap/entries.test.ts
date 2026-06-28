@@ -4,7 +4,11 @@ import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getEntries, getSitemapEntries, getUrl } from "@/lib/sitemap/entries";
 
-const mockGetContentMetadata = vi.hoisted(() => vi.fn());
+const mockGetRuntimeContentRoute = vi.hoisted(() => vi.fn());
+const mockGetSitemapRoutes = vi.hoisted(() => vi.fn());
+const mockReadSitemapRoutes = vi.hoisted(() => vi.fn());
+const mockGetSitemapPageDescriptor = vi.hoisted(() => vi.fn());
+const mockReadSitemapPageDescriptors = vi.hoisted(() => vi.fn());
 const mockGetPathname = vi.hoisted(() =>
   vi.fn<typeof getPathname>(({ href, locale }) => {
     const pathname = typeof href === "string" ? href : href.pathname;
@@ -14,8 +18,8 @@ const mockGetPathname = vi.hoisted(() =>
   })
 );
 
-vi.mock("@repo/contents/_lib/metadata", () => ({
-  getContentMetadata: mockGetContentMetadata,
+vi.mock("@/lib/content/runtime/routes", () => ({
+  getRuntimeContentRoute: mockGetRuntimeContentRoute,
 }));
 
 vi.mock("@repo/internationalization/src/navigation", () => ({
@@ -35,28 +39,42 @@ vi.mock("@/lib/sitemap/routes", () => ({
     "/search",
     "/contributor",
     "/quran",
-    "/subject",
     "/terms-of-service",
     "/privacy-policy",
     "/security-policy",
   ],
-  getSitemapRoutes: () => [
+  readSitemapPageDescriptors: mockReadSitemapPageDescriptors,
+  getSitemapPageDescriptor: mockGetSitemapPageDescriptor,
+  getSitemapRoutes: mockGetSitemapRoutes,
+  readSitemapRoutes: mockReadSitemapRoutes,
+}));
+
+beforeEach(() => {
+  mockGetRuntimeContentRoute.mockReset();
+  mockGetSitemapRoutes.mockReset();
+  mockReadSitemapRoutes.mockReset();
+  mockGetSitemapPageDescriptor.mockReset();
+  mockReadSitemapPageDescriptors.mockReset();
+  mockGetPathname.mockClear();
+
+  mockGetRuntimeContentRoute.mockReturnValue(
+    Effect.succeed({
+      date: new Date(2024, 0, 2).getTime(),
+    })
+  );
+  mockGetSitemapPageDescriptor.mockReturnValue({ id: "base" });
+  mockReadSitemapPageDescriptors.mockReturnValue(
+    Effect.succeed([{ id: "base" }])
+  );
+  mockGetSitemapRoutes.mockResolvedValue([
     "/",
     "/search",
     "/articles/politics/dynastic-politics-asian-values",
     "/quran/1",
-    "/subject/high-school/10",
-  ],
-}));
-
-beforeEach(() => {
-  mockGetContentMetadata.mockReset();
-  mockGetPathname.mockClear();
-
-  mockGetContentMetadata.mockReturnValue(
-    Effect.succeed({
-      date: "01/02/2024",
-    })
+    "/subjects/chemistry/green-chemistry/definition",
+  ]);
+  mockReadSitemapRoutes.mockImplementation((pageId) =>
+    Effect.promise(() => mockGetSitemapRoutes(pageId))
   );
 });
 
@@ -87,6 +105,32 @@ describe("sitemap entries", () => {
       priority: 0.5,
       url: "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values",
     });
+  });
+
+  it("looks up content lastmod by public sitemap route", async () => {
+    await Effect.runPromise(
+      getEntries(
+        "/practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-1"
+      )
+    );
+    await Effect.runPromise(
+      getEntries("/subjects/chemistry/green-chemistry/definition")
+    );
+
+    expect(mockGetRuntimeContentRoute).toHaveBeenCalledWith({
+      locale: "en",
+      route:
+        "practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-1",
+    });
+    expect(mockGetRuntimeContentRoute).toHaveBeenCalledWith({
+      locale: "en",
+      route: "subjects/chemistry/green-chemistry/definition",
+    });
+    expect(mockGetRuntimeContentRoute).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        route: expect.stringContaining("material/"),
+      })
+    );
   });
 
   it("supports object hrefs and custom domains", async () => {
@@ -129,31 +173,32 @@ describe("sitemap entries", () => {
       expect.objectContaining({ changeFrequency: "weekly", priority: 0.8 })
     );
     await expect(
-      Effect.runPromise(getEntries("/subject/university/bachelor"))
-    ).resolves.toContainEqual(
-      expect.objectContaining({ changeFrequency: "monthly", priority: 0.9 })
-    );
-    await expect(
-      Effect.runPromise(getEntries("/subject/high-school/10"))
+      Effect.runPromise(getEntries("/subjects/mathematics/integral"))
     ).resolves.toContainEqual(
       expect.objectContaining({ changeFrequency: "monthly", priority: 0.8 })
     );
     await expect(
-      Effect.runPromise(getEntries("/subject/middle-school/9"))
+      Effect.runPromise(
+        getEntries("/curriculum/merdeka/class-10/mathematics/integral")
+      )
     ).resolves.toContainEqual(
       expect.objectContaining({ changeFrequency: "monthly", priority: 0.7 })
     );
     await expect(
-      Effect.runPromise(getEntries("/subject/elementary-school/6"))
+      Effect.runPromise(
+        getEntries(
+          "/practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-1"
+        )
+      )
     ).resolves.toContainEqual(
       expect.objectContaining({ changeFrequency: "monthly", priority: 0.6 })
     );
   });
 
   it("falls back when content metadata dates are invalid or unavailable", async () => {
-    mockGetContentMetadata.mockReturnValueOnce(
+    mockGetRuntimeContentRoute.mockReturnValueOnce(
       Effect.succeed({
-        date: "not-a-date",
+        date: undefined,
       })
     );
 
@@ -163,7 +208,7 @@ describe("sitemap entries", () => {
 
     expect(invalidDateEntries[0]?.lastModified).toBeInstanceOf(Date);
 
-    mockGetContentMetadata.mockReturnValueOnce(
+    mockGetRuntimeContentRoute.mockReturnValueOnce(
       Effect.fail(new Error("metadata unavailable"))
     );
 
@@ -172,10 +217,6 @@ describe("sitemap entries", () => {
         getEntries("/articles/politics/dynastic-politics-asian-values")
       )
     ).resolves.toHaveLength(2);
-
-    mockGetContentMetadata.mockImplementationOnce(() => {
-      throw new Error("metadata crashed");
-    });
 
     await expect(
       Effect.runPromise(
@@ -196,9 +237,9 @@ describe("sitemap entries", () => {
       return Promise.resolve();
     });
 
-    mockGetContentMetadata.mockImplementationOnce(() => {
-      throw new Error("metadata crashed");
-    });
+    mockGetRuntimeContentRoute.mockReturnValueOnce(
+      Effect.fail(new Error("metadata crashed"))
+    );
 
     const entries = await Effect.runPromise(
       getEntries("/articles/politics/dynastic-politics-asian-values", {
@@ -207,19 +248,15 @@ describe("sitemap entries", () => {
     );
 
     expect(entries).toHaveLength(2);
-    expect(reportError).toHaveBeenCalledWith(
-      expect.any(Error),
-      expect.objectContaining({
-        source: "sitemap-content-last-modified",
-      })
-    );
-    expect(reportError).toHaveBeenCalledWith(
-      expect.any(Error),
-      expect.objectContaining({
-        route: "/articles/politics/dynastic-politics-asian-values",
-        source: "sitemap-route-entry",
-      })
-    );
+    expect(reportError.mock.calls[0]?.[0]).toBeInstanceOf(Error);
+    expect(reportError.mock.calls[0]?.[1]).toMatchObject({
+      source: "sitemap-content-last-modified",
+    });
+    expect(reportError.mock.calls[1]?.[0]).toBeInstanceOf(Error);
+    expect(reportError.mock.calls[1]?.[1]).toMatchObject({
+      route: "/articles/politics/dynastic-politics-asian-values",
+      source: "sitemap-route-entry",
+    });
   });
 
   it("generates sitemap entries from route and locale inputs", async () => {
@@ -231,6 +268,124 @@ describe("sitemap entries", () => {
     expect(urls).toContain("https://nakafa.com/id");
     expect(urls).not.toContain("https://nakafa.com/en/about");
     expect(urls).not.toContain("https://nakafa.com/id/about");
-    expect(urls).toContain("https://nakafa.com/id/subject/high-school/10");
+    expect(urls).toContain(
+      "https://nakafa.com/en/subjects/chemistry/green-chemistry/definition"
+    );
+  });
+
+  it("generates unbounded submission entries across every sitemap page", async () => {
+    mockReadSitemapPageDescriptors.mockReturnValueOnce(
+      Effect.succeed([
+        { id: "base" },
+        {
+          id: "content_id_subject_0",
+          kind: "content",
+          locale: "id",
+          page: 0,
+          section: "material",
+        },
+      ])
+    );
+    mockGetSitemapPageDescriptor.mockImplementation((pageId) => {
+      if (pageId === "content_id_subject_0") {
+        return {
+          id: "content_id_subject_0",
+          kind: "content",
+          locale: "id",
+          page: 0,
+          section: "material",
+        };
+      }
+
+      return { id: "base" };
+    });
+    mockGetSitemapRoutes.mockImplementation((pageId) => {
+      if (pageId === "content_id_subject_0") {
+        return Promise.resolve(["/materi/matematika/integral"]);
+      }
+
+      return Promise.resolve(["/search"]);
+    });
+
+    const entries = await Effect.runPromise(getSitemapEntries());
+
+    expect(entries.map((entry) => entry.url)).toEqual([
+      "https://nakafa.com/en/search",
+      "https://nakafa.com/id/search",
+      "https://nakafa.com/id/materi/matematika/integral",
+    ]);
+    expect(mockGetSitemapRoutes).toHaveBeenCalledWith("base");
+    expect(mockGetSitemapRoutes).toHaveBeenCalledWith("content_id_subject_0");
+  });
+
+  it("keeps English content sitemap pages scoped to English URLs", async () => {
+    mockGetSitemapPageDescriptor.mockReturnValueOnce({
+      id: "content_en_articles_0",
+      kind: "content",
+      locale: "en",
+      page: 0,
+      section: "articles",
+    });
+    mockGetSitemapRoutes.mockResolvedValueOnce([
+      "/articles/politics/dynastic-politics-asian-values",
+    ]);
+
+    const entries = await Effect.runPromise(
+      getSitemapEntries({ pageId: "content_en_articles_0" })
+    );
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.url).toBe(
+      "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values"
+    );
+    expect(entries[0]?.alternates?.languages).toEqual({
+      en: "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values",
+      "x-default":
+        "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values",
+    });
+  });
+
+  it("keeps Indonesian content sitemap pages scoped to Indonesian URLs", async () => {
+    mockGetSitemapPageDescriptor.mockReturnValueOnce({
+      id: "content_id_articles_0",
+      kind: "content",
+      locale: "id",
+      page: 0,
+      section: "articles",
+    });
+    mockGetSitemapRoutes.mockResolvedValueOnce([
+      "/articles/politics/nepotism-in-political-governance",
+    ]);
+
+    const entries = await Effect.runPromise(
+      getSitemapEntries({ pageId: "content_id_articles_0" })
+    );
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.url).toBe(
+      "https://nakafa.com/id/articles/politics/nepotism-in-political-governance"
+    );
+    expect(entries[0]?.alternates?.languages).toEqual({
+      id: "https://nakafa.com/id/articles/politics/nepotism-in-political-governance",
+    });
+  });
+
+  it("keeps base sitemap pages localized across supported locales", async () => {
+    mockGetSitemapPageDescriptor.mockReturnValueOnce({ id: "base" });
+    mockGetSitemapRoutes.mockResolvedValueOnce(["/search"]);
+
+    const entries = await Effect.runPromise(
+      getSitemapEntries({ pageId: "base" })
+    );
+
+    expect(entries.map((entry) => entry.url)).toEqual([
+      "https://nakafa.com/en/search",
+      "https://nakafa.com/id/search",
+    ]);
+    expect(entries[0]?.alternates?.languages).toEqual({
+      en: "https://nakafa.com/en/search",
+      id: "https://nakafa.com/id/search",
+      "x-default": "https://nakafa.com/en/search",
+    });
   });
 });

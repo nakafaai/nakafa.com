@@ -9,10 +9,17 @@ import { routing } from "@repo/internationalization/src/routing";
 import { EducationalOrgJsonLd } from "@repo/seo/json-ld/educational-org";
 import { WebsiteJsonLd } from "@repo/seo/json-ld/website";
 import type { Metadata, Viewport } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 
+/**
+ * Builds locale-scoped root metadata for every page under `[locale]`.
+ *
+ * Next resolves this on the server, so invalid locale segments fail through
+ * `notFound()` before route children render.
+ */
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
 
@@ -122,6 +129,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+/** Root viewport contract shared by every localized app route. */
 export const viewport: Viewport = {
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#f5f5f5" },
@@ -133,10 +141,15 @@ export const viewport: Viewport = {
   interactiveWidget: "resizes-visual",
 };
 
+/** Prebuilds one root layout shell per configured next-intl locale. */
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
 
+/**
+ * Provides the locale-scoped application shell, validates the active locale at
+ * the Next boundary, and wires providers shared by every public route.
+ */
 export default async function Layout({ children }: LayoutProps<"/[locale]">) {
   const locale = await getLocale();
 
@@ -150,9 +163,8 @@ export default async function Layout({ children }: LayoutProps<"/[locale]">) {
     <html className={fonts} lang={locale} suppressHydrationWarning>
       <body className="relative">
         <p className="sr-only">
-          AI agents can use <a href="/llms.txt">/llms.txt</a> as a documentation
-          index. Markdown versions are available by appending <code>.md</code>{" "}
-          to content URLs or sending <code>Accept: text/markdown</code>.
+          For AI agents: use <Link href="/llms.txt">/llms.txt</Link> for the
+          Nakafa content index.
         </p>
         <EducationalOrgJsonLd />
         <WebsiteJsonLd locale={locale} />

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useState } from "react";
 import {
   type ConversationUnreadCue,
   getInitialConversationUnreadCue,
@@ -24,40 +24,40 @@ export function useConversationUnreadCue({
   posts: Parameters<typeof getInitialConversationUnreadCue>[0];
 }) {
   const [isAcknowledged, setIsAcknowledged] = useState(false);
-  const hasSeededCueRef = useRef(false);
-  const seededCueRef = useRef<ReturnType<
-    typeof getInitialConversationUnreadCue
-  > | null>(null);
-  const initialCue = useMemo(
-    () => getInitialConversationUnreadCue(posts),
-    [posts]
-  );
+  const [seedState, setSeedState] = useState<{
+    cue: ReturnType<typeof getInitialConversationUnreadCue> | null;
+    hasSeeded: boolean;
+  }>({
+    cue: null,
+    hasSeeded: false,
+  });
 
-  if (!(hasSeededCueRef.current || isPending)) {
-    hasSeededCueRef.current = true;
-    seededCueRef.current = initialCue;
+  let currentSeedState = seedState;
+
+  if (!(seedState.hasSeeded || isPending)) {
+    currentSeedState = {
+      cue: getInitialConversationUnreadCue(posts),
+      hasSeeded: true,
+    };
+    setSeedState(currentSeedState);
   }
 
-  const seededCue = seededCueRef.current;
-  const unreadCue = useMemo(() => {
-    if (!seededCue) {
-      return null;
-    }
-
-    return {
-      ...seededCue,
-      status: isAcknowledged ? "history" : "new",
-    } satisfies ConversationUnreadCue;
-  }, [isAcknowledged, seededCue]);
+  const seededCue = currentSeedState.cue;
+  const unreadCue = seededCue
+    ? ({
+        ...seededCue,
+        status: isAcknowledged ? "history" : "new",
+      } satisfies ConversationUnreadCue)
+    : null;
 
   /** Keeps the separator row but turns it into "you left off here". */
-  const acknowledgeUnreadCue = useCallback(() => {
-    if (!seededCueRef.current) {
+  const acknowledgeUnreadCue = () => {
+    if (!seededCue) {
       return;
     }
 
     setIsAcknowledged((current) => (current ? current : true));
-  }, []);
+  };
 
   return {
     acknowledgeUnreadCue,

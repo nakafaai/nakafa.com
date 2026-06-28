@@ -1,13 +1,15 @@
+import { internal } from "@repo/backend/convex/_generated/api";
 import {
   formatScriptCause,
   ScriptFailureError,
 } from "@repo/backend/scripts/lib/errors";
+import { logError } from "@repo/backend/scripts/sync-content/cli/logging";
 import {
-  callConvex,
+  callConvexQuery,
   getConvexConfig,
-} from "@repo/backend/scripts/sync-content/convex";
-import { logError } from "@repo/backend/scripts/sync-content/logging";
-import { loadEnvProvider } from "@repo/backend/scripts/sync-content/runtime";
+} from "@repo/backend/scripts/sync-content/convex/client";
+import { loadEnvProvider } from "@repo/backend/scripts/sync-content/runtime/files";
+import type { FunctionArgs, PaginationOptions } from "convex/server";
 import { Effect, Schema } from "effect";
 
 const IRT_VERIFY_PAGE_SIZE = 500;
@@ -54,6 +56,27 @@ type CalibrationQueueEntryIntegrityPage = Schema.Schema.Type<
   typeof calibrationQueueEntryIntegrityPageSchema
 >;
 
+type CalibrationCacheIntegrityArgs = FunctionArgs<
+  typeof internal.irt.integrity.internal.getCalibrationCacheIntegrity
+>;
+type ScaleQualityIntegrityArgs = FunctionArgs<
+  typeof internal.irt.integrity.internal.getScaleQualityIntegrity
+>;
+type CalibrationQueueAttemptIntegrityArgs = FunctionArgs<
+  typeof internal.irt.integrity.internal.getCalibrationQueueAttemptIntegrity
+>;
+type CalibrationQueueEntryIntegrityArgs = FunctionArgs<
+  typeof internal.irt.integrity.internal.getCalibrationQueueEntryIntegrity
+>;
+
+/** Builds pagination args for one IRT verification query. */
+const getIrtPaginationArgs = (continueCursor: string | null) => ({
+  paginationOpts: {
+    cursor: continueCursor,
+    numItems: IRT_VERIFY_PAGE_SIZE,
+  } satisfies PaginationOptions,
+});
+
 /** Aggregate paginated calibration-cache integrity totals for one deployment. */
 const getCalibrationCacheIntegrity = Effect.fn(
   "irt.getCalibrationCacheIntegrity"
@@ -64,16 +87,12 @@ const getCalibrationCacheIntegrity = Effect.fn(
   let oversizedSetCount = 0;
 
   while (true) {
-    const page: CalibrationCacheIntegrityPage = yield* callConvex(
+    const args: CalibrationCacheIntegrityArgs =
+      getIrtPaginationArgs(continueCursor);
+    const page: CalibrationCacheIntegrityPage = yield* callConvexQuery(
       config,
-      "query",
-      "irt/queries/internal/maintenance:getCalibrationCacheIntegrity",
-      {
-        paginationOpts: {
-          cursor: continueCursor,
-          numItems: IRT_VERIFY_PAGE_SIZE,
-        },
-      },
+      internal.irt.integrity.internal.getCalibrationCacheIntegrity,
+      args,
       calibrationCacheIntegrityPageSchema
     );
 
@@ -100,16 +119,12 @@ const getScaleQualityIntegrity = Effect.fn("irt.getScaleQualityIntegrity")(
     let unstartableTryoutCount = 0;
 
     while (true) {
-      const page: ScaleQualityIntegrityPage = yield* callConvex(
+      const args: ScaleQualityIntegrityArgs =
+        getIrtPaginationArgs(continueCursor);
+      const page: ScaleQualityIntegrityPage = yield* callConvexQuery(
         config,
-        "query",
-        "irt/queries/internal/maintenance:getScaleQualityIntegrity",
-        {
-          paginationOpts: {
-            cursor: continueCursor,
-            numItems: IRT_VERIFY_PAGE_SIZE,
-          },
-        },
+        internal.irt.integrity.internal.getScaleQualityIntegrity,
+        args,
         scaleQualityIntegrityPageSchema
       );
 
@@ -142,16 +157,12 @@ const getCalibrationQueueIntegrity = Effect.fn(
   let staleQueueEntryCount = 0;
 
   while (true) {
-    const page: CalibrationQueueAttemptIntegrityPage = yield* callConvex(
+    const args: CalibrationQueueAttemptIntegrityArgs =
+      getIrtPaginationArgs(attemptCursor);
+    const page: CalibrationQueueAttemptIntegrityPage = yield* callConvexQuery(
       config,
-      "query",
-      "irt/queries/internal/maintenance:getCalibrationQueueAttemptIntegrity",
-      {
-        paginationOpts: {
-          cursor: attemptCursor,
-          numItems: IRT_VERIFY_PAGE_SIZE,
-        },
-      },
+      internal.irt.integrity.internal.getCalibrationQueueAttemptIntegrity,
+      args,
       calibrationQueueAttemptIntegrityPageSchema
     );
 
@@ -167,16 +178,12 @@ const getCalibrationQueueIntegrity = Effect.fn(
   }
 
   while (true) {
-    const page: CalibrationQueueEntryIntegrityPage = yield* callConvex(
+    const args: CalibrationQueueEntryIntegrityArgs =
+      getIrtPaginationArgs(entryCursor);
+    const page: CalibrationQueueEntryIntegrityPage = yield* callConvexQuery(
       config,
-      "query",
-      "irt/queries/internal/maintenance:getCalibrationQueueEntryIntegrity",
-      {
-        paginationOpts: {
-          cursor: entryCursor,
-          numItems: IRT_VERIFY_PAGE_SIZE,
-        },
-      },
+      internal.irt.integrity.internal.getCalibrationQueueEntryIntegrity,
+      args,
       calibrationQueueEntryIntegrityPageSchema
     );
 

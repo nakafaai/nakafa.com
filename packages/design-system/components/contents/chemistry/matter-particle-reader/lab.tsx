@@ -71,8 +71,7 @@ export function MatterParticleReaderLab({
       <CardContent className="flex flex-col gap-4">
         <ToggleGroup
           aria-label={labels.chooseMode}
-          className="grid w-full grid-cols-2 sm:grid-cols-4"
-          layout="grid"
+          gridColumns="4"
           onValueChange={handleModeChange}
           type="single"
           value={selectedModeId}

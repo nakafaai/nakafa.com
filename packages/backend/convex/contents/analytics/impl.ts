@@ -14,43 +14,62 @@ import {
   CONTENT_ANALYTICS_PARTITIONS,
 } from "@repo/backend/convex/contents/constants";
 import { isContentAnalyticsPartition } from "@repo/backend/convex/contents/helpers/partitions";
-import { applyContentAnalyticsBatch } from "@repo/backend/convex/contents/helpers/writes";
+import { applyContentAnalyticsBatch } from "@repo/backend/convex/contents/metrics/apply";
 import { logger } from "@repo/backend/convex/utils/logger";
 import type { FunctionReference } from "convex/server";
 import { Clock, Effect } from "effect";
 
-export interface ContentAnalyticsSchedulerTargets {
-  readonly processPartition: FunctionReference<
-    "mutation",
-    "internal",
-    ProcessContentAnalyticsPartitionArgs,
-    ProcessContentAnalyticsPartitionResult
-  >;
-  readonly schedulePartition: FunctionReference<
-    "mutation",
-    "internal",
-    ScheduleContentAnalyticsPartitionArgs,
-    ScheduleContentAnalyticsPartitionResult
-  >;
-}
+/** Generated internal mutation reference that claims analytics partitions. */
+type ScheduleContentAnalyticsPartitionReference = FunctionReference<
+  "mutation",
+  "internal",
+  ScheduleContentAnalyticsPartitionArgs,
+  ScheduleContentAnalyticsPartitionResult
+>;
 
-/** Schedules one worker attempt per analytics partition. */
+/** Generated internal mutation reference that drains a claimed partition. */
+type ProcessContentAnalyticsPartitionReference = FunctionReference<
+  "mutation",
+  "internal",
+  ProcessContentAnalyticsPartitionArgs,
+  ProcessContentAnalyticsPartitionResult
+>;
+
+/** Schedules worker attempts only for partitions that currently have queued views. */
 export const scheduleAllContentAnalyticsPartitions = Effect.fn(
   "contents.analytics.scheduleAllContentAnalyticsPartitions"
-)(function* (ctx: MutationCtx, targets: ContentAnalyticsSchedulerTargets) {
-  yield* Effect.tryPromise({
-    try: async () => {
-      for (const partition of CONTENT_ANALYTICS_PARTITIONS) {
-        await ctx.scheduler.runAfter(0, targets.schedulePartition, {
-          partition,
-        });
-      }
-    },
-    catch: toContentAnalyticsIoError,
-  });
+)(function* (
+  ctx: MutationCtx,
+  schedulePartition: ScheduleContentAnalyticsPartitionReference
+) {
+  let enqueuedPartitions = 0;
+
+  for (const partition of CONTENT_ANALYTICS_PARTITIONS) {
+    const queuedItem = yield* Effect.tryPromise({
+      try: () =>
+        ctx.db
+          .query("learningEngagementQueue")
+          .withIndex("by_partition_and_insertedAt", (q) =>
+            q.eq("partition", partition)
+          )
+          .first(),
+      catch: toContentAnalyticsIoError,
+    });
+
+    if (!queuedItem) {
+      continue;
+    }
+
+    yield* Effect.tryPromise({
+      try: () => ctx.scheduler.runAfter(0, schedulePartition, { partition }),
+      catch: toContentAnalyticsIoError,
+    });
+
+    enqueuedPartitions += 1;
+  }
 
   return {
-    enqueuedPartitions: CONTENT_ANALYTICS_PARTITIONS.length,
+    enqueuedPartitions,
   };
 });
 
@@ -66,7 +85,7 @@ export const claimContentAnalyticsPartition = Effect.fn(
 )(function* (
   ctx: MutationCtx,
   args: ScheduleContentAnalyticsPartitionArgs,
-  targets: ContentAnalyticsSchedulerTargets
+  processPartition: ProcessContentAnalyticsPartitionReference
 ) {
   if (!isContentAnalyticsPartition(args.partition)) {
     return yield* Effect.fail(
@@ -80,8 +99,10 @@ export const claimContentAnalyticsPartition = Effect.fn(
   const queuedItem = yield* Effect.tryPromise({
     try: () =>
       ctx.db
-        .query("contentViewAnalyticsQueue")
-        .withIndex("by_partition", (q) => q.eq("partition", args.partition))
+        .query("learningEngagementQueue")
+        .withIndex("by_partition_and_insertedAt", (q) =>
+          q.eq("partition", args.partition)
+        )
         .first(),
     catch: toContentAnalyticsIoError,
   });
@@ -141,7 +162,7 @@ export const claimContentAnalyticsPartition = Effect.fn(
 
   yield* Effect.tryPromise({
     try: () =>
-      ctx.scheduler.runAfter(0, targets.processPartition, {
+      ctx.scheduler.runAfter(0, processPartition, {
         leaseVersion,
         partition: args.partition,
       }),
@@ -160,7 +181,7 @@ export const processClaimedContentAnalyticsPartition = Effect.fn(
 )(function* (
   ctx: MutationCtx,
   args: ProcessContentAnalyticsPartitionArgs,
-  targets: ContentAnalyticsSchedulerTargets
+  processPartition: ProcessContentAnalyticsPartitionReference
 ) {
   if (!isContentAnalyticsPartition(args.partition)) {
     return yield* Effect.fail(
@@ -211,8 +232,10 @@ export const processClaimedContentAnalyticsPartition = Effect.fn(
   const queueItems = yield* Effect.tryPromise({
     try: () =>
       ctx.db
-        .query("contentViewAnalyticsQueue")
-        .withIndex("by_partition", (q) => q.eq("partition", args.partition))
+        .query("learningEngagementQueue")
+        .withIndex("by_partition_and_insertedAt", (q) =>
+          q.eq("partition", args.partition)
+        )
         .take(CONTENT_ANALYTICS_BATCH_SIZE),
     catch: toContentAnalyticsIoError,
   });
@@ -242,7 +265,7 @@ export const processClaimedContentAnalyticsPartition = Effect.fn(
 
   for (const queueItem of queueItems) {
     yield* Effect.tryPromise({
-      try: () => ctx.db.delete("contentViewAnalyticsQueue", queueItem._id),
+      try: () => ctx.db.delete("learningEngagementQueue", queueItem._id),
       catch: toContentAnalyticsIoError,
     });
   }
@@ -263,7 +286,7 @@ export const processClaimedContentAnalyticsPartition = Effect.fn(
 
   if (hasMore) {
     yield* Effect.tryPromise({
-      try: () => ctx.scheduler.runAfter(0, targets.processPartition, args),
+      try: () => ctx.scheduler.runAfter(0, processPartition, args),
       catch: toContentAnalyticsIoError,
     });
   }

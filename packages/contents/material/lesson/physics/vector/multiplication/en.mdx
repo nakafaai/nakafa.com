@@ -1,0 +1,145 @@
+import { Vector3d } from "@repo/design-system/components/contents/mathematics/vector-3d";
+import { getColor } from "@repo/design-system/lib/color";
+
+export const metadata = {
+  title: "Vector Multiplication",
+  description:
+    "Learn the difference between vector dot product and cross product, including their links to work and torque.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "2026-05-31",
+  subject: "Vector",
+};
+
+## Two Kinds of Vector Multiplication
+
+Vector multiplication does not always produce another vector. Two kinds of multiplication are common in physics: the **dot product** and the **cross product**.
+
+The dot product produces a scalar. The cross product produces a new vector whose direction is perpendicular to the two original vectors.
+
+| Type of multiplication | Symbol | Result | Physics example |
+| :--------------------- | :----- | :----- | :-------------- |
+| dot product | <InlineMath math="\vec{A}\cdot\vec{B}" /> | scalar | work |
+| cross product | <InlineMath math="\vec{A}\times\vec{B}" /> | vector | torque |
+
+> The multiplication sign changes because the physical question changes: how much is in the same direction, or how strong is the turning effect.
+
+## Dot Product Measures the Same-Direction Part
+
+The dot product of <InlineMath math="\vec{A}" /> and <InlineMath math="\vec{B}" /> is defined as:
+
+<BlockMath math="\vec{A}\cdot\vec{B}=AB\cos\theta" />
+
+Angle <InlineMath math="\theta" /> is the angle between the two vectors. The result is a scalar because it gives a value, not a direction.
+
+In physics, work done by a force can be written as:
+
+<BlockMath math="W=\vec{F}\cdot\vec{s}=Fs\cos\theta" />
+
+This means only the component of force along the displacement actually does work.
+
+## Work from Dot Product
+
+A person pulls a box with a <InlineMath math="40\text{ N}" /> force while the box moves <InlineMath math="5\text{ m}" />. The force makes a <InlineMath math="60^\circ" /> angle with the displacement direction. The work is:
+
+<BlockMath math="\begin{aligned}
+W&=Fs\cos\theta \\
+&=40(5)\cos60^\circ \\
+&=200(0.5) \\
+&=100\text{ J}
+\end{aligned}" />
+
+If the force is perpendicular to the displacement, <InlineMath math="\theta=90^\circ" /> and <InlineMath math="\cos90^\circ=0" />. In that case, the force does no work in the displacement direction.
+
+## Cross Product Measures Turning Effect
+
+The cross product of <InlineMath math="\vec{A}" /> and <InlineMath math="\vec{B}" /> has magnitude:
+
+<BlockMath math="\lvert\vec{A}\times\vec{B}\rvert=AB\sin\theta" />
+
+The result is a vector perpendicular to the plane containing <InlineMath math="\vec{A}" /> and <InlineMath math="\vec{B}" />. Its direction is determined by the right-hand rule.
+
+<Vector3d
+  title={<>Direction of <InlineMath math="\vec{A}\times\vec{B}" /></>}
+  description={
+    <>
+      Vectors <InlineMath math="\vec{A}" /> and <InlineMath math="\vec{B}" /> lie in
+      one plane. Their cross product points perpendicular to that plane.
+    </>
+  }
+  cameraPosition={[8, 7, 9]}
+  cameraTarget={[1.6, 1.4, 1.2]}
+  vectors={(() => {
+    const a = [4, 0, 0];
+    const b = [0, 3, 0];
+    const cross = [
+      a[1] * b[2] - a[2] * b[1],
+      a[2] * b[0] - a[0] * b[2],
+      a[0] * b[1] - a[1] * b[0],
+    ];
+    const displayScale = 4;
+    const crossDirection = cross.map((component) => component / displayScale);
+
+    return [
+      {
+        color: getColor("RED"),
+        from: [0, 0, 0],
+        label: "A",
+        labelAnchorX: "center",
+        labelOffset: [0, -0.45, 0],
+        labelProgress: 1 / 2,
+        to: a,
+      },
+      {
+        color: getColor("GREEN"),
+        from: [0, 0, 0],
+        label: "B",
+        labelAnchorX: "center",
+        labelOffset: [0.5, 0, 0.15],
+        labelProgress: 1 / 2,
+        to: b,
+      },
+      {
+        color: getColor("BLUE"),
+        from: [0, 0, 0],
+        label: "A x B",
+        labelAnchorX: "center",
+        labelOffset: [0.45, 0.35, 0.2],
+        labelProgress: 1 / 2,
+        lineWidth: 4,
+        to: crossDirection,
+      },
+    ];
+  })()}
+/>
+
+In this visual, <InlineMath math="\vec{A}" /> points along the positive <InlineMath math="x" /> axis and <InlineMath math="\vec{B}" /> points along the positive <InlineMath math="y" /> axis. The cross-product formula gives the positive <InlineMath math="z" /> direction for <InlineMath math="\vec{A}\times\vec{B}" />. The blue arrow is scaled down to fit the scene, but its direction still comes from the calculation.
+
+For torque, the cross product is written:
+
+<BlockMath math="\vec{\tau}=\vec{r}\times\vec{F}" />
+
+Vector <InlineMath math="\vec{r}" /> is the lever arm from the rotation axis to the point where the force acts. The same force produces a larger torque when applied farther from a door hinge.
+
+## Torque from Perpendicular Force
+
+A door is pushed with a <InlineMath math="30\text{ N}" /> force at a distance of <InlineMath math="0.8\text{ m}" /> from the hinge. The force is perpendicular to the door, so <InlineMath math="\theta=90^\circ" />.
+
+<BlockMath math="\begin{aligned}
+\tau&=rF\sin\theta \\
+&=0.8(30)\sin90^\circ \\
+&=24\text{ N m}
+\end{aligned}" />
+
+If the force is applied at a smaller angle, <InlineMath math="\sin\theta" /> is also smaller. That is why pushing a door perpendicularly is usually more effective than pushing almost parallel to the door surface.
+
+## Comparing Dot and Cross Products
+
+The main difference can be seen from the angle. The dot product is largest when two vectors point the same way because <InlineMath math="\cos0^\circ=1" />. The cross product is zero in that same condition because <InlineMath math="\sin0^\circ=0" />.
+
+| Angle condition | <InlineMath math="\vec{A}\cdot\vec{B}" /> | <InlineMath math="\lvert\vec{A}\times\vec{B}\rvert" /> |
+| :-------------- | :---------------------------------------- | :------------------------------------------------------ |
+| <InlineMath math="0^\circ" /> | maximum | zero |
+| <InlineMath math="90^\circ" /> | zero | maximum |
+| <InlineMath math="180^\circ" /> | negative | zero |
+
+So the dot product is useful for asking about alignment, while the cross product is useful for perpendicular effects such as rotation.

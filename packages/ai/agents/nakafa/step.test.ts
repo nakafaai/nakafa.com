@@ -3,81 +3,133 @@ import {
   prepareExerciseStep,
   prepareReadStep,
   prepareTaxonomyAnswerStep,
+  readSearchFollowup,
   selectExerciseRef,
   shouldAnswerFromNakafaEvidence,
   shouldReadAfterSearch,
 } from "@repo/ai/agents/nakafa/step";
+import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
+import { createNakafaContentRefFromGraphProjection } from "@repo/contents/_lib/agent/refs";
+import type { NakafaAgentSection } from "@repo/contents/_lib/agent/schema/ref";
 import type { NakafaAgentSearchResult } from "@repo/contents/_lib/agent/schema/search";
+import type { Locale } from "@repo/contents/_types/content";
 import { Option } from "effect";
 import { describe, expect, it } from "vitest";
+
+/** Builds a typed Nakafa content summary fixture from canonical route parts. */
+function contentSummary({
+  description,
+  excerpt,
+  locale,
+  route,
+  section,
+  title,
+}: {
+  description: string;
+  excerpt?: string;
+  locale: Locale;
+  route: string;
+  section: NakafaAgentSection;
+  title: string;
+}) {
+  return {
+    ...readNakafaContentRefFixture(locale, route, section),
+    description,
+    excerpt: excerpt ?? description,
+    title,
+  } satisfies NakafaAgentSearchResult["items"][number];
+}
+
+/** Builds a search result fixture whose graph IDs intentionally differ by route. */
+function detachedExerciseSummary({
+  contentId,
+  description,
+  route,
+  sourcePath,
+  title,
+}: {
+  contentId: string;
+  description: string;
+  route: string;
+  sourcePath?: string;
+  title: string;
+}) {
+  const ref = createNakafaContentRefFromGraphProjection({
+    alignmentId: contentId.replace("asset:", "alignment:"),
+    assetId: contentId,
+    conceptId: contentId.replace("asset:", "concept:"),
+    content_id: contentId,
+    learningObjectId: contentId.replace("asset:", "lo:"),
+    lensId: contentId.replace("asset:", "lens:"),
+    locale: "id",
+    route,
+    section: "material",
+    sourcePath,
+  });
+
+  if (Option.isNone(ref)) {
+    throw new Error("Expected a valid detached exercise graph ref.");
+  }
+
+  return {
+    ...ref.value,
+    description,
+    excerpt: description,
+    title,
+  } satisfies NakafaAgentSearchResult["items"][number];
+}
 
 const exerciseResult = {
   count: 1,
   has_more: false,
   items: [
-    {
-      content_id:
-        "id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/11",
+    contentSummary({
       description: "Latihan fungsi rasional.",
       locale: "id",
-      markdown_url:
-        "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/11.md",
       route:
-        "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/11",
-      section: "exercises",
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-2/question-11",
+      section: "material",
       title: "Soal 11",
-      url: "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/11",
-    },
+    }),
   ],
   limit: 1,
-  next_offset: null,
   offset: 0,
 } satisfies NakafaAgentSearchResult;
 
-const exerciseSetResult = {
-  ...exerciseResult.items[0],
-  content_id:
-    "id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
+const exerciseSetResult = contentSummary({
   description: "SNBT Pengetahuan Kuantitatif Try Out 2026 Set 2.",
-  markdown_url:
-    "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2.md",
-  route: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
+  locale: "id",
+  route:
+    "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-2",
+  section: "material",
   title: "SNBT Pengetahuan Kuantitatif Try Out 2026 Set 2",
-  url: "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
-};
+});
 
 const subjectResult = {
   count: 1,
   has_more: false,
   items: [
-    {
-      content_id:
-        "id/subject/high-school/11/mathematics/function-modeling/rational-function",
+    contentSummary({
       description: "Pelajari fungsi rasional.",
       locale: "id",
-      markdown_url:
-        "https://nakafa.com/id/subject/high-school/11/mathematics/function-modeling/rational-function.md",
-      route:
-        "subject/high-school/11/mathematics/function-modeling/rational-function",
-      section: "subject",
+      route: "material/lesson/mathematics/function-modeling/rational-function",
+      section: "material",
       title: "Fungsi Rasional",
-      url: "https://nakafa.com/id/subject/high-school/11/mathematics/function-modeling/rational-function",
-    },
+    }),
   ],
   limit: 1,
-  next_offset: null,
   offset: 0,
 } satisfies NakafaAgentSearchResult;
 
 describe("Nakafa agent step state", () => {
-  it("selects the parent exercise set after broad exercise-scoped search", () => {
+  it("selects the returned exercise graph ref after exercise-scoped search", () => {
     const ref = selectExerciseRef(
       {
         limit: 1,
         locale: "id",
         offset: 0,
         queries: ["fungsi rasional"],
-        section: "exercises",
+        section: "material",
       },
       exerciseResult
     );
@@ -86,28 +138,25 @@ describe("Nakafa agent step state", () => {
       throw new Error("Expected an exercise reference.");
     }
 
-    expect(ref.value).toBe(exerciseSetResult.content_id);
+    expect(ref.value).toBe(exerciseResult.items[0].content_id);
   });
 
-  it("normalizes question-level search hits to their parent exercise set", () => {
-    const firstResult = {
-      ...exerciseResult.items[0],
-      content_id:
-        "id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/15",
-      markdown_url:
-        "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/15.md",
+  it("preserves question-level graph refs when no set-level hit is returned", () => {
+    const firstResult = contentSummary({
+      description: "Latihan fungsi rasional.",
+      locale: "id",
       route:
-        "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/15",
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-2/question-15",
+      section: "material",
       title: "Soal 15",
-      url: "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/15",
-    };
+    });
     const ref = selectExerciseRef(
       {
         limit: 20,
         locale: "id",
         offset: 0,
         queries: ["SNBT Pengetahuan Kuantitatif try out 2026 set 2"],
-        section: "exercises",
+        section: "material",
       },
       {
         ...exerciseResult,
@@ -121,17 +170,17 @@ describe("Nakafa agent step state", () => {
       throw new Error("Expected an exercise set reference.");
     }
 
-    expect(ref.value).toBe(exerciseSetResult.content_id);
+    expect(ref.value).toBe(firstResult.content_id);
   });
 
-  it("prefers set-level exercise refs for broad exercise requests", () => {
+  it("prefers returned set-level graph refs for broad exercise requests", () => {
     const ref = selectExerciseRef(
       {
         limit: 20,
         locale: "id",
         offset: 0,
         queries: ["SNBT Pengetahuan Kuantitatif try out 2026 set 2"],
-        section: "exercises",
+        section: "material",
       },
       {
         ...exerciseResult,
@@ -148,21 +197,136 @@ describe("Nakafa agent step state", () => {
     expect(ref.value).toBe(exerciseSetResult.content_id);
   });
 
-  it("keeps search ordering instead of parsing the user request locally", () => {
-    const mathematicalReasoning = {
-      ...exerciseResult.items[0],
-      content_id:
-        "id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-2/11",
-      description: "SMA SNBT Penalaran Matematika Try Out 2026 Set 2 Nomor 11",
-      markdown_url:
-        "https://nakafa.com/id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-2/11.md",
+  it("selects exercise refs from localized public practice routes", () => {
+    const question = detachedExerciseSummary({
+      contentId: "asset:id:public:exercise:set-1:q9",
+      description: "Public graph question.",
+      route: "latihan/snbt/pengetahuan-umum/tryout-2026/set-1/soal-9",
+      sourcePath:
+        "material/practice/assessment/snbt/general-knowledge/try-out-2026/set-1/9",
+      title: "Public Question 9",
+    });
+    const set = detachedExerciseSummary({
+      contentId: "asset:id:public:exercise:set-1",
+      description: "Public graph set.",
+      route: "latihan/snbt/pengetahuan-umum/tryout-2026/set-1",
+      sourcePath:
+        "material/practice/assessment/snbt/general-knowledge/try-out-2026/set-1",
+      title: "Public Set 1",
+    });
+    const ref = selectExerciseRef(
+      {
+        limit: 20,
+        locale: "id",
+        offset: 0,
+        queries: ["SNBT pengetahuan umum set 1"],
+        section: "material",
+      },
+      {
+        ...exerciseResult,
+        count: 2,
+        items: [question, set],
+        limit: 20,
+      }
+    );
+
+    if (Option.isNone(ref)) {
+      throw new Error("Expected a public practice set reference.");
+    }
+
+    expect(ref.value).toBe(set.content_id);
+  });
+
+  it("does not rebuild detached set graph IDs from route projections", () => {
+    const question = detachedExerciseSummary({
+      contentId: "asset:id:detached:exercise:set-2:q15",
+      description: "Detached graph question.",
       route:
-        "exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-2/11",
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-2/question-15",
+      title: "Detached Question 15",
+    });
+    const set = detachedExerciseSummary({
+      contentId: "asset:id:detached:exercise:set-2",
+      description: "Detached graph set.",
+      route:
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-2",
+      title: "Detached Set 2",
+    });
+    const sourceProjectionSet = readNakafaContentRefFixture(
+      "id",
+      set.route,
+      "material"
+    );
+    const ref = selectExerciseRef(
+      {
+        limit: 20,
+        locale: "id",
+        offset: 0,
+        queries: ["SNBT Pengetahuan Kuantitatif try out 2026 set 2"],
+        section: "material",
+      },
+      {
+        ...exerciseResult,
+        count: 2,
+        items: [question, set],
+        limit: 20,
+      }
+    );
+
+    if (Option.isNone(ref)) {
+      throw new Error("Expected a detached set graph reference.");
+    }
+
+    expect(ref.value).toBe(set.content_id);
+    expect(ref.value).not.toBe(sourceProjectionSet.content_id);
+  });
+
+  it("falls back to the returned question graph ID without a set-level hit", () => {
+    const question = detachedExerciseSummary({
+      contentId: "asset:id:detached:exercise:set-2:q11",
+      description: "Detached graph question.",
+      route:
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-2/question-11",
+      title: "Detached Question 11",
+    });
+    const sourceProjectionSet = readNakafaContentRefFixture(
+      "id",
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-2",
+      "material"
+    );
+    const ref = selectExerciseRef(
+      {
+        limit: 20,
+        locale: "id",
+        offset: 0,
+        queries: ["SNBT Pengetahuan Kuantitatif try out 2026 set 2"],
+        section: "material",
+      },
+      {
+        ...exerciseResult,
+        count: 1,
+        items: [question],
+        limit: 20,
+      }
+    );
+
+    if (Option.isNone(ref)) {
+      throw new Error("Expected a detached question graph reference.");
+    }
+
+    expect(ref.value).toBe(question.content_id);
+    expect(ref.value).not.toBe(sourceProjectionSet.content_id);
+  });
+
+  it("keeps search ordering instead of parsing the user request locally", () => {
+    const mathematicalReasoning = contentSummary({
+      description: "SMA SNBT Penalaran Matematika Try Out 2026 Set 2 Nomor 11",
+      locale: "id",
+      route:
+        "material/practice/assessment/snbt/mathematical-reasoning/try-out-2026/set-2/question-11",
+      section: "material",
       title: "SNBT Penalaran Matematika Try Out 2026 Set 2 Soal 11",
-      url: "https://nakafa.com/id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-2/11",
-    };
-    const mathematicalReasoningSet =
-      "id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-2";
+    });
     const quantitativeKnowledge = {
       ...exerciseResult.items[0],
       description:
@@ -175,7 +339,7 @@ describe("Nakafa agent step state", () => {
         locale: "id",
         offset: 0,
         queries: ["SNBT 2026 set 2 nomor 11"],
-        section: "exercises",
+        section: "material",
       },
       {
         ...exerciseResult,
@@ -189,7 +353,7 @@ describe("Nakafa agent step state", () => {
       throw new Error("Expected the first exercise reference.");
     }
 
-    expect(ref.value).toBe(mathematicalReasoningSet);
+    expect(ref.value).toBe(mathematicalReasoning.content_id);
   });
 
   it("keeps search order when no selection tokens are available", () => {
@@ -199,7 +363,7 @@ describe("Nakafa agent step state", () => {
         locale: "id",
         offset: 0,
         queries: [],
-        section: "exercises",
+        section: "material",
       },
       exerciseResult
     );
@@ -208,7 +372,7 @@ describe("Nakafa agent step state", () => {
       throw new Error("Expected the first exercise reference.");
     }
 
-    expect(ref.value).toBe(exerciseSetResult.content_id);
+    expect(ref.value).toBe(exerciseResult.items[0].content_id);
   });
 
   it("keeps search order when the search input does not include query text", () => {
@@ -217,7 +381,7 @@ describe("Nakafa agent step state", () => {
         limit: 1,
         locale: "id",
         offset: 0,
-        section: "exercises",
+        section: "material",
       },
       exerciseResult
     );
@@ -226,28 +390,25 @@ describe("Nakafa agent step state", () => {
       throw new Error("Expected the first exercise reference.");
     }
 
-    expect(ref.value).toBe(exerciseSetResult.content_id);
+    expect(ref.value).toBe(exerciseResult.items[0].content_id);
   });
 
   it("keeps stable search order when exercise scores tie", () => {
-    const secondResult = {
-      ...exerciseResult.items[0],
-      content_id:
-        "id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/12",
-      markdown_url:
-        "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/12.md",
+    const secondResult = contentSummary({
+      description: "Latihan fungsi rasional.",
+      locale: "id",
       route:
-        "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/12",
+        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-2/question-12",
+      section: "material",
       title: "Soal 12",
-      url: "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/12",
-    };
+    });
     const ref = selectExerciseRef(
       {
         limit: 2,
         locale: "id",
         offset: 0,
         queries: ["SNBT Pengetahuan Kuantitatif"],
-        section: "exercises",
+        section: "material",
       },
       {
         ...exerciseResult,
@@ -261,7 +422,7 @@ describe("Nakafa agent step state", () => {
       throw new Error("Expected the first tied exercise reference.");
     }
 
-    expect(ref.value).toBe(exerciseSetResult.content_id);
+    expect(ref.value).toBe(exerciseResult.items[0].content_id);
   });
 
   it("does not select exercises from broad or empty searches", () => {
@@ -280,7 +441,7 @@ describe("Nakafa agent step state", () => {
         locale: "id",
         offset: 0,
         queries: ["fungsi rasional"],
-        section: "exercises",
+        section: "material",
       },
       {
         ...exerciseResult,
@@ -294,14 +455,37 @@ describe("Nakafa agent step state", () => {
         locale: "id",
         offset: 0,
         queries: ["fungsi rasional"],
-        section: "exercises",
+        section: "material",
       },
       null
+    );
+    const quranSearch = selectExerciseRef(
+      {
+        limit: 1,
+        locale: "id",
+        offset: 0,
+        queries: ["al fatihah"],
+        section: "material",
+      },
+      {
+        ...exerciseResult,
+        count: 1,
+        items: [
+          contentSummary({
+            description: "Surah pembuka.",
+            locale: "id",
+            route: "quran/1",
+            section: "quran",
+            title: "Al-Fatihah",
+          }),
+        ],
+      }
     );
 
     expect(Option.isNone(broadSearch)).toBe(true);
     expect(Option.isNone(emptySearch)).toBe(true);
     expect(Option.isNone(failedSearch)).toBe(true);
+    expect(Option.isNone(quranSearch)).toBe(true);
   });
 
   it("forces exercise for one step when an exercise reference is pending", () => {
@@ -372,7 +556,7 @@ describe("Nakafa agent step state", () => {
         locale: "id",
         offset: 0,
         queries: ["fungsi rasional"],
-        section: "subject",
+        section: "material",
       },
       subjectResult
     );
@@ -397,7 +581,7 @@ describe("Nakafa agent step state", () => {
         locale: "id",
         offset: 0,
         queries: ["fungsi rasional"],
-        section: "exercises",
+        section: "material",
       },
       exerciseResult
     );
@@ -411,7 +595,15 @@ describe("Nakafa agent step state", () => {
       },
       {
         ...subjectResult,
-        items: [{ ...subjectResult.items[0], section: "quran" }],
+        items: [
+          contentSummary({
+            description: "Surah pembuka.",
+            locale: "id",
+            route: "quran/1",
+            section: "quran",
+            title: "Al-Fatihah",
+          }),
+        ],
       }
     );
     const emptySearch = shouldReadAfterSearch(
@@ -420,7 +612,7 @@ describe("Nakafa agent step state", () => {
         locale: "id",
         offset: 0,
         queries: ["tidak ada"],
-        section: "subject",
+        section: "material",
       },
       {
         ...subjectResult,
@@ -434,15 +626,63 @@ describe("Nakafa agent step state", () => {
         locale: "id",
         offset: 0,
         queries: ["tidak ada"],
-        section: "subject",
+        section: "material",
       },
       null
     );
+    const publicExerciseSearch = shouldReadAfterSearch(
+      {
+        limit: 1,
+        locale: "id",
+        offset: 0,
+        queries: ["SNBT pengetahuan umum set 1"],
+        section: "material",
+      },
+      {
+        ...exerciseResult,
+        items: [
+          detachedExerciseSummary({
+            contentId: "asset:id:public:exercise:set-1",
+            description: "Public graph set.",
+            route: "latihan/snbt/pengetahuan-umum/tryout-2026/set-1",
+            sourcePath:
+              "material/practice/assessment/snbt/general-knowledge/try-out-2026/set-1",
+            title: "Public Set 1",
+          }),
+        ],
+      }
+    );
 
     expect(exerciseSearch).toBe(false);
+    expect(publicExerciseSearch).toBe(false);
     expect(quranSearch).toBe(false);
     expect(emptySearch).toBe(false);
     expect(failedSearch).toBe(false);
+  });
+
+  it("preserves lesson reads when material search also returns practice rows", () => {
+    const followup = readSearchFollowup(
+      {
+        limit: 20,
+        locale: "id",
+        offset: 0,
+        queries: ["fungsi rasional dan latihan SNBT"],
+        section: "material",
+      },
+      {
+        ...subjectResult,
+        count: 2,
+        items: [exerciseResult.items[0], subjectResult.items[0]],
+        limit: 20,
+      }
+    );
+
+    if (Option.isNone(followup.exerciseRef)) {
+      throw new Error("Expected the practice hit to select an exercise ref.");
+    }
+
+    expect(followup.exerciseRef.value).toBe(exerciseResult.items[0].content_id);
+    expect(followup.shouldReadContent).toBe(true);
   });
 
   it("forces read for one step when content search evidence is pending", () => {

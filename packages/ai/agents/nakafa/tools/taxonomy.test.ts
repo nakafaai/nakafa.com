@@ -1,6 +1,9 @@
+import { Nakafa } from "@repo/ai/agents/nakafa/service";
 import { taxonomy } from "@repo/ai/agents/nakafa/tools/taxonomy";
-import { createWriter } from "@repo/ai/agents/nakafa/tools/test";
-import { Nakafa } from "@repo/contents/_lib/agent/service";
+import {
+  createNakafaTestService,
+  createWriter,
+} from "@repo/ai/agents/nakafa/tools/test";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -13,7 +16,7 @@ describe("nakafa taxonomy tool", () => {
         locale: "id",
         toolCallId: "taxonomy-1",
         writer,
-      }).pipe(Effect.provide(Nakafa.Default))
+      }).pipe(Effect.provideService(Nakafa, createNakafaTestService()))
     );
 
     expect(output).toContain("# Nakafa Taxonomy");
@@ -36,5 +39,14 @@ describe("nakafa taxonomy tool", () => {
         }),
       }),
     ]);
+  });
+
+  it("uses the injected test service for invalid route verification", async () => {
+    const service = createNakafaTestService();
+    const isVerified = await Effect.runPromise(service.verify(""));
+    const taxonomyResult = await Effect.runPromise(service.taxonomy());
+
+    expect(isVerified).toBe(false);
+    expect(taxonomyResult.locale).toBe("en");
   });
 });

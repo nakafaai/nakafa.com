@@ -1,21 +1,14 @@
 import { formatQuran } from "@repo/ai/agents/nakafa/format";
 import { previewQuran } from "@repo/ai/agents/nakafa/preview";
+import { Nakafa } from "@repo/ai/agents/nakafa/service";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { NAKAFA_AGENT_MAX_QURAN_REFERENCE_VERSES } from "@repo/contents/_lib/agent/constants";
 import type { NakafaAgentQuranReferenceOptions } from "@repo/contents/_lib/agent/schema/quran";
-import { Nakafa } from "@repo/contents/_lib/agent/service";
 import type { Locale } from "@repo/contents/_types/content";
 import type { UIMessageStreamWriter } from "ai";
 import { Effect, Either, Option } from "effect";
 
 type Writer = Pick<UIMessageStreamWriter<MyUIMessage>, "write">;
-
-interface Params {
-  input: NakafaAgentQuranReferenceOptions;
-  locale: Locale;
-  toolCallId: string;
-  writer: Writer;
-}
 
 const invalidRangeMessage = "Invalid Quran verse range.";
 const notFoundMessage = "Nakafa Quran reference was not found.";
@@ -27,7 +20,12 @@ export const quran = Effect.fn("nakafa.quran")(function* ({
   locale,
   toolCallId,
   writer,
-}: Params) {
+}: {
+  readonly input: NakafaAgentQuranReferenceOptions;
+  readonly locale: Locale;
+  readonly toolCallId: string;
+  readonly writer: Writer;
+}) {
   const dataInput = normalizeQuranInput(input, locale);
 
   yield* Effect.sync(() =>

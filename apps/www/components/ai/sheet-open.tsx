@@ -1,10 +1,8 @@
 "use client";
 
 import { api } from "@repo/backend/convex/_generated/api";
-import type {
-  ContentType,
-  Locale,
-} from "@repo/backend/convex/lib/validators/contents";
+import type { AudioContentType } from "@repo/backend/convex/lib/validators/audio";
+import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { AudioPlayerProvider } from "@repo/design-system/components/ui/audio-player";
 import { cleanSlug } from "@repo/utilities/helper";
@@ -12,9 +10,10 @@ import { PageTitleProvider } from "@/components/ai/context/use-page-title";
 import { SheetAudioToolbar } from "@/components/ai/sheet-audio-toolbar";
 import { SheetEntry } from "@/components/ai/sheet-entry";
 
+/** Nina sheet launch context derived from the current graph-backed page. */
 interface Props {
   audio?: {
-    contentType: Extract<ContentType, "article" | "subject">;
+    contentType: AudioContentType;
     locale: Locale;
     slug: string;
   };

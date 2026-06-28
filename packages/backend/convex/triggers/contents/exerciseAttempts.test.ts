@@ -31,7 +31,7 @@ describe("triggers/contents/exerciseAttempts", () => {
       {
         mode: "practice",
         scope: "set",
-        slug: "exercises/high-school/snbt/set-1",
+        slug: "material/practice/assessment/snbt/set-1",
         timeLimit: 600,
         totalExercises: 10,
       }
@@ -56,7 +56,7 @@ describe("triggers/contents/exerciseAttempts", () => {
                 mode: "practice",
                 origin: "standalone",
                 scope: "set",
-                slug: "exercises/high-school/snbt/set-1",
+                slug: "material/practice/assessment/snbt/set-1",
                 total_exercises: 10,
               }),
             }),
@@ -74,7 +74,7 @@ describe("triggers/contents/exerciseAttempts", () => {
                 origin: "standalone",
                 score_percentage: 0,
                 scope: "set",
-                slug: "exercises/high-school/snbt/set-1",
+                slug: "material/practice/assessment/snbt/set-1",
                 total_exercises: 10,
                 total_time: 0,
               }),

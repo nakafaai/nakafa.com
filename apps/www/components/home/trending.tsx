@@ -2,29 +2,24 @@
 
 import { ArrowDown02Icon, ViewIcon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
-import { getTrendingTimeRange } from "@repo/backend/convex/subjectSections/utils";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
-import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
+import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { GradientBlock } from "@repo/design-system/components/ui/gradient-block";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { cleanSlug } from "@repo/utilities/helper";
 import { useLocale, useTranslations } from "next-intl";
-import { useMemo } from "react";
 
+/** Renders the home-screen trending learning objects for the current locale. */
 export function HomeTrending() {
   const t = useTranslations("Home");
   const locale = useLocale();
 
-  const timeRange = useMemo(() => getTrendingTimeRange(7, Date.now()), []);
-
   const { data, isPending } = useQueryWithStatus(
-    api.subjectSections.queries.getTrendingSubjects,
+    api.curriculumLessons.queries.getTrendingSubjects,
     {
       locale,
-      since: timeRange.since,
-      until: timeRange.until,
+      windowKey: "7d",
     }
   );
 
@@ -46,8 +41,8 @@ export function HomeTrending() {
         {data.map((subject) => (
           <NavigationLink
             className="group grid gap-3 p-4 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
-            href={`/${cleanSlug(subject.slug)}`}
-            key={subject.id}
+            href={subject.href}
+            key={`${subject.content_id}:${subject.contextKey}`}
           >
             <div className="flex items-start gap-3">
               <div className="relative size-10 shrink-0 overflow-hidden rounded-md">
@@ -55,12 +50,12 @@ export function HomeTrending() {
                   className="absolute inset-0"
                   colorScheme="vibrant"
                   intensity="medium"
-                  keyString={subject.id}
+                  keyString={subject.content_id}
                 />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <HugeIcons
                     className="size-4 text-background drop-shadow-md"
-                    icon={getMaterialIcon(subject.material)}
+                    icon={getMaterialIcon(subject.materialDomain)}
                   />
                 </div>
               </div>

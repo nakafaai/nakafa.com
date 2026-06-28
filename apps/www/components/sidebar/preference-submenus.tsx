@@ -13,19 +13,13 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { themes } from "@repo/design-system/lib/theme";
 import { cn } from "@repo/design-system/lib/utils";
 import { languages } from "@repo/internationalization/data/lang";
-import {
-  usePathname,
-  useRouter,
-} from "@repo/internationalization/src/navigation";
 import { IconCircleFilled } from "@tabler/icons-react";
-import { useQueryClient } from "@tanstack/react-query";
 import GB from "country-flag-icons/react/3x2/GB";
 import ID from "country-flag-icons/react/3x2/ID";
-import { useParams } from "next/navigation";
 import { type Locale, useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import type * as React from "react";
-import { useTransition } from "react";
+import { useLocalizedRouteSwitch } from "@/lib/routing/locale/client";
 
 const BASE_THEMES_COUNT = 3;
 
@@ -34,8 +28,10 @@ const flagMap = {
   id: ID,
 };
 
+/** Dropdown side contract inherited from the design-system submenu content. */
 type SubmenuSide = React.ComponentProps<typeof DropdownMenuSubContent>["side"];
 
+/** Shows the active menu option without changing the item label layout. */
 function ActiveBadge({ isActive }: { isActive: boolean }) {
   return (
     <IconCircleFilled
@@ -47,36 +43,14 @@ function ActiveBadge({ isActive }: { isActive: boolean }) {
   );
 }
 
+/** Renders the nested language submenu and delegates route projection to the shared switcher seam. */
 function LanguageSubmenuContent({ side }: { side: SubmenuSide }) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
-  const pathname = usePathname();
-  const params = useParams();
+  const { isPending, replace } = useLocalizedRouteSwitch();
   const currentLocale = useLocale();
-  const queryClient = useQueryClient();
 
-  function handlePrefetch(locale: Locale) {
-    router.prefetch(
-      // @ts-expect-error -- The current route pathname and params are paired by Next.
-      { pathname, params },
-      { locale }
-    );
-  }
-
+  /** Replaces the current route with the selected locale. */
   function handleChangeLocale(locale: Locale) {
-    startTransition(async () => {
-      router.replace(
-        // @ts-expect-error -- The current route pathname and params are paired by Next.
-        { pathname, params },
-        { locale }
-      );
-
-      if (window?.pagefind) {
-        await window.pagefind.destroy?.();
-
-        queryClient.invalidateQueries({ queryKey: ["search"] });
-      }
-    });
+    replace(locale);
   }
 
   return (
@@ -94,8 +68,6 @@ function LanguageSubmenuContent({ side }: { side: SubmenuSide }) {
               disabled={isPending}
               key={language.value}
               onClick={() => handleChangeLocale(language.value)}
-              onFocus={() => handlePrefetch(language.value)}
-              onMouseEnter={() => handlePrefetch(language.value)}
             >
               <Flag className="size-4 shrink-0" />
               <span className="truncate">{language.label}</span>
@@ -108,6 +80,7 @@ function LanguageSubmenuContent({ side }: { side: SubmenuSide }) {
   );
 }
 
+/** Renders the nested theme submenu while keeping theme state owned by next-themes. */
 function ThemeSubmenuContent({ side }: { side: SubmenuSide }) {
   const { theme: currentTheme, setTheme } = useTheme();
   const t = useTranslations("Common");
@@ -118,7 +91,7 @@ function ThemeSubmenuContent({ side }: { side: SubmenuSide }) {
 
   return (
     <DropdownMenuSubContent
-      className="max-h-96 w-max max-w-[calc(100vw-2rem)]"
+      className="max-h-[min(var(--available-height),24rem)] w-max max-w-[calc(100vw-2rem)]"
       side={side}
     >
       <DropdownMenuGroup>
@@ -154,6 +127,7 @@ function ThemeSubmenuContent({ side }: { side: SubmenuSide }) {
   );
 }
 
+/** Provides the sidebar preference submenus that can be mounted from account menu surfaces. */
 export function SidebarPreferenceSubmenus({ side }: { side: SubmenuSide }) {
   const t = useTranslations("Common");
 

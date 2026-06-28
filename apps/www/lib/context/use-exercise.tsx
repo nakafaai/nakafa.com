@@ -8,7 +8,7 @@ import { createExerciseStore, type ExerciseStore } from "@/lib/store/exercise";
 
 type ExerciseStoreApi = ReturnType<typeof createExerciseStore>;
 
-export const ExerciseContext = createContext<ExerciseStoreApi | null>(null);
+const ExerciseContext = createContext<ExerciseStoreApi | null>(null);
 
 export function ExerciseContextProvider({
   children,

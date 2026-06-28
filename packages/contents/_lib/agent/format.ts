@@ -1,10 +1,10 @@
 import {
   getExerciseMaterialLabel,
   getExerciseTypeLabel,
-} from "@repo/contents/_lib/exercises/label";
+} from "@repo/contents/_lib/assessment/label";
+import { ExercisesMaterialSchema } from "@repo/contents/_types/assessment/material";
+import { ExercisesTypeSchema } from "@repo/contents/_types/assessment/type";
 import type { Locale } from "@repo/contents/_types/content";
-import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
-import { ExercisesTypeSchema } from "@repo/contents/_types/exercises/type";
 import { defaultLocale } from "@repo/utilities/locales";
 import { Option, Schema } from "effect";
 
@@ -29,11 +29,16 @@ export function formatNakafaRouteTitle(
 
 /** Formats exercise routes from localized exercise labels instead of raw slugs. */
 function formatNakafaExerciseRouteTitle(route: string, locale: Locale) {
-  const [section, , rawType, rawMaterial, ...setSlug] = route
+  const [section, kind, scope, rawType, rawMaterial, ...setSlug] = route
     .split("/")
     .filter(Boolean);
 
-  if (section !== "exercises" || setSlug.length === 0) {
+  if (
+    section !== "material" ||
+    kind !== "practice" ||
+    scope !== "assessment" ||
+    setSlug.length === 0
+  ) {
     return Option.none();
   }
 
