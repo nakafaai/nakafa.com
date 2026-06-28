@@ -1,5 +1,3 @@
-"use client";
-
 import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
 import { ForumConversationTranscript } from "@/components/school/classes/forum/conversation/transcript";
 

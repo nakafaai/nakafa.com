@@ -1,5 +1,3 @@
-"use client";
-
 import { useReducedMotion, useTimeout } from "@mantine/hooks";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useEffect, useLayoutEffect, useState } from "react";

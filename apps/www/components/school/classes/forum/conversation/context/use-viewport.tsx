@@ -1,5 +1,3 @@
-"use client";
-
 import type { ReactNode } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 import { useStore } from "zustand";

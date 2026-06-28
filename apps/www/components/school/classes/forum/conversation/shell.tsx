@@ -1,5 +1,3 @@
-"use client";
-
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 
 import { ConversationProvider } from "@/components/school/classes/forum/conversation/context/provider";

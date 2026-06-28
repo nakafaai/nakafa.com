@@ -1,5 +1,3 @@
-"use client";
-
 import { useDebouncedCallback } from "@mantine/hooks";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useRef } from "react";
