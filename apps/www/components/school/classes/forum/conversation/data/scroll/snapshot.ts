@@ -59,8 +59,8 @@ export function getInitialConversationRestoreTarget({
  * Builds the persisted scroll snapshot for one settled transcript position.
  *
  * The caller decides whether the transcript should be treated as "at bottom".
- * This keeps the helper pure and lets runtime code combine real geometry with
- * chat-specific intent such as an in-flight "go to latest" placement.
+ * This keeps the helper pure and lets runtime code count an in-flight latest
+ * placement as bottom before the virtualizer reports the final offset.
  */
 export function createConversationScrollSnapshot({
   cache,

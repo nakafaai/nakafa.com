@@ -39,7 +39,7 @@ export function SchoolClassesForumPanelSlot({
     <>
       <ResizableHandle withHandle />
       <ResizablePanel
-        className="min-w-0"
+        className="min-w-0 overflow-hidden"
         defaultSize={SCHOOL_CLASSES_FORUM_PANEL_SLOT_DEFAULT_SIZE}
         groupResizeBehavior="preserve-pixel-size"
         id={SCHOOL_CLASSES_WORKSPACE_DETAIL_PANEL_ID}

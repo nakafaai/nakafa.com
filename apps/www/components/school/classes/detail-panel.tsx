@@ -38,15 +38,15 @@ export function SchoolClassesDetailPanel({
 
   if (!isCompact) {
     return (
-      <aside className="sticky top-0 hidden h-svh w-full min-w-0 flex-col bg-background xl:flex">
-        <div className="border-b p-3">
+      <aside className="hidden h-full w-full min-w-0 flex-col bg-background xl:flex">
+        <div className="shrink-0 border-b p-3">
           <div className="flex items-center justify-between gap-2">
             {title}
             <SchoolClassesDetailPanelCloseButton onClose={onClose} />
           </div>
           <p className="sr-only">{description}</p>
         </div>
-        {children}
+        <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
       </aside>
     );
   }
@@ -61,18 +61,18 @@ export function SchoolClassesDetailPanel({
       open
     >
       <SheetContent
-        className="max-w-none gap-0 border-l-0 sm:max-w-none"
+        className="max-w-none gap-0 overflow-hidden border-l-0 sm:max-w-none"
         showCloseButton={false}
         style={{ width: "100%" }}
       >
-        <SheetHeader className="border-b p-3">
+        <SheetHeader className="shrink-0 border-b p-3">
           <SheetTitle className="flex items-center justify-between gap-2">
             {title}
             <SchoolClassesDetailPanelCloseButton onClose={onClose} />
           </SheetTitle>
           <SheetDescription className="sr-only">{description}</SheetDescription>
         </SheetHeader>
-        {children}
+        <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
       </SheetContent>
     </Sheet>
   );

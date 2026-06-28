@@ -34,24 +34,17 @@ export function isConversationAtTop(handle: ConversationGeometryHandle) {
 
 /**
  * Returns stable viewport booleans after Virtua has measured its viewport.
- * A detached viewer is never treated as at-bottom until they scroll back down.
  */
 export function getConversationViewportState(
-  handle: ConversationGeometryHandle,
-  options: {
-    isDetachedFromBottom?: boolean;
-  } = {}
+  handle: ConversationGeometryHandle
 ) {
   if (handle.viewportSize <= 0) {
     return null;
   }
 
-  const isAtBottom =
-    !options.isDetachedFromBottom && isConversationAtBottom(handle);
-
   return {
     hasOverflow:
       handle.scrollSize - handle.viewportSize > FORUM_BOTTOM_THRESHOLD,
-    isAtBottom,
+    isAtBottom: isConversationAtBottom(handle),
   };
 }

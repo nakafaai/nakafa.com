@@ -3,10 +3,6 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useRef } from "react";
 import type { VirtualizerHandle } from "virtua";
 import type { ConversationScrollController } from "@/components/school/classes/forum/conversation/data/scroll/controller";
-import {
-  getConversationScrollIntent,
-  getNextConversationBottomDetachment,
-} from "@/components/school/classes/forum/conversation/data/scroll/intent";
 import { getConversationViewportState } from "@/components/school/classes/forum/conversation/data/scroll/metrics";
 import type { ConversationPendingPlacement } from "@/components/school/classes/forum/conversation/data/scroll/restore";
 import { createConversationScrollSnapshot } from "@/components/school/classes/forum/conversation/data/scroll/snapshot";
@@ -53,39 +49,20 @@ export function useViewportSync({
   scrollController: ConversationScrollController;
   virtualizerHandle: VirtualizerHandle | null;
 }) {
-  const isDetachedFromBottomRef = useRef(false);
   const lastScrollCacheRef = useRef(initialRestorableCache);
   const lastScrollOffsetRef = useRef(initialSavedScrollSnapshot?.offset ?? 0);
   const lastWasAtBottomRef = useRef(
     initialSavedScrollSnapshot?.wasAtBottom ?? false
   );
 
-  const syncViewport = ({
-    scrollIntent = "none",
-  }: {
-    scrollIntent?: ReturnType<typeof getConversationScrollIntent>;
-  } = {}) => {
+  const syncViewport = () => {
     const handle = virtualizerHandle;
 
     if (!handle) {
       return;
     }
 
-    const measuredViewport = getConversationViewportState(handle);
-
-    if (!measuredViewport) {
-      return;
-    }
-
-    isDetachedFromBottomRef.current = getNextConversationBottomDetachment({
-      isAtBottom: measuredViewport.isAtBottom,
-      isDetachedFromBottom: isDetachedFromBottomRef.current,
-      scrollIntent,
-    });
-
-    const viewport = getConversationViewportState(handle, {
-      isDetachedFromBottom: isDetachedFromBottomRef.current,
-    });
+    const viewport = getConversationViewportState(handle);
 
     if (!viewport) {
       return;
@@ -124,11 +101,7 @@ export function useViewportSync({
 
   const persistCurrentScrollSnapshot = () => {
     const handle = virtualizerHandle;
-    const viewport = handle
-      ? getConversationViewportState(handle, {
-          isDetachedFromBottom: isDetachedFromBottomRef.current,
-        })
-      : null;
+    const viewport = handle ? getConversationViewportState(handle) : null;
     const cache =
       handle && viewport ? handle.cache : lastScrollCacheRef.current;
     const offset =
@@ -227,12 +200,8 @@ export function useViewportSync({
   };
 
   const handleScroll = (scrollOffset: number) => {
-    syncViewport({
-      scrollIntent: getConversationScrollIntent({
-        currentOffset: scrollOffset,
-        previousOffset: lastScrollOffsetRef.current,
-      }),
-    });
+    lastScrollOffsetRef.current = scrollOffset;
+    syncViewport();
     clearReachedPendingPlacement();
     persistSettledState();
   };

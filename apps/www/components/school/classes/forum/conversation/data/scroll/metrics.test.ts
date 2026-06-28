@@ -99,9 +99,12 @@ describe("conversation/data/scroll/metrics", () => {
     });
   });
 
-  it("treats a detached viewer as away from bottom inside the edge tolerance", () => {
+  it("keeps latest-edge state tied to bottom distance only", () => {
     const nearBottomHandle = createHandle({
       scrollOffset: 292,
+    });
+    const awayFromBottomHandle = createHandle({
+      scrollOffset: 280,
     });
 
     expect(getConversationViewportState(nearBottomHandle)).toEqual({
@@ -109,11 +112,7 @@ describe("conversation/data/scroll/metrics", () => {
       isAtBottom: true,
     });
 
-    expect(
-      getConversationViewportState(nearBottomHandle, {
-        isDetachedFromBottom: true,
-      })
-    ).toEqual({
+    expect(getConversationViewportState(awayFromBottomHandle)).toEqual({
       hasOverflow: true,
       isAtBottom: false,
     });
