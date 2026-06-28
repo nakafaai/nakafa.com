@@ -3,9 +3,10 @@ import {
   ResourceTemplate,
 } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
-import { Nakafa } from "@repo/contents/_lib/agent/service";
+import { Nakafa } from "@repo/ai/agents/nakafa/service";
 import { getNakafaMcpUsageMarkdown } from "@repo/contents/_lib/agent/usage";
 import { Effect, Option } from "effect";
+import { nakafaContent } from "@/lib/mcp/nakafa";
 
 /** Registers static and templated Nakafa MCP resources. */
 export function registerNakafaMcpResources(server: McpServer) {
@@ -39,7 +40,7 @@ export function registerNakafaMcpResources(server: McpServer) {
     (uri) =>
       Effect.runPromise(
         Nakafa.taxonomy().pipe(
-          Effect.provide(Nakafa.Default),
+          Effect.provideService(Nakafa, nakafaContent),
           Effect.map((taxonomy) => ({
             contents: [
               {
@@ -64,7 +65,7 @@ export function registerNakafaMcpResources(server: McpServer) {
     (uri) =>
       Effect.runPromise(
         Nakafa.read(uri.toString()).pipe(
-          Effect.provide(Nakafa.Default),
+          Effect.provideService(Nakafa, nakafaContent),
           Effect.flatMap(
             Option.match({
               onNone: () =>

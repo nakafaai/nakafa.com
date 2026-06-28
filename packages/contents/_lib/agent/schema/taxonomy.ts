@@ -111,7 +111,7 @@ export const NakafaAgentTaxonomySchema = Schema.Struct({
       .annotations({ description: "Supported grade segments." }),
     materials: Schema.Array(Schema.String)
       .pipe(Schema.mutable)
-      .annotations({ description: "Supported subject materials." }),
+      .annotations({ description: "Supported material lessons." }),
   })
     .pipe(Schema.mutable)
     .annotations({ description: "Subject taxonomy." }),

@@ -13,5 +13,8 @@
     "start": "PYTHONDONTWRITEBYTECODE=1 uv run uvicorn api.index:app --host 0.0.0.0 --port 3003",
     "test": "UV_NO_DEV=0 PYTHONDONTWRITEBYTECODE=1 uv run --dev pytest",
     "typecheck": "UV_NO_DEV=0 PYTHONDONTWRITEBYTECODE=1 uv run --dev basedpyright"
+  },
+  "devDependencies": {
+    "@vercel/config": "^0.5.5"
   }
 }

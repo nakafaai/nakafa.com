@@ -2,6 +2,10 @@ import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import type { NextRequest } from "next/server";
 import { hasLocale } from "next-intl";
+import {
+  AGENT_DISCOVERY_LINK_HEADER,
+  LLMS_TEXT_PATH,
+} from "@/lib/agent-discovery";
 import { LLMS_CACHE_CONTROL } from "@/lib/llms/constants";
 import { getLlmsMarkdownText } from "@/lib/llms/content";
 import { stripLlmsRouteExtension } from "@/lib/llms/format";
@@ -9,6 +13,7 @@ import {
   buildRootLlmsIndexText,
   getCachedLlmsSectionIndexText,
 } from "@/lib/llms/indexes";
+import { buildUnsupportedMarkdownRouteText } from "@/lib/llms/unsupported";
 
 const MARKDOWN_HEADERS = {
   "Cache-Control": LLMS_CACHE_CONTROL,
@@ -22,7 +27,20 @@ const TEXT_HEADERS = {
   Vary: "Accept",
 };
 
-/** Serves section indexes or page-level markdown for agent retrieval. */
+const MARKDOWN_NOT_FOUND_HEADERS = {
+  ...MARKDOWN_HEADERS,
+  Link: AGENT_DISCOVERY_LINK_HEADER,
+  "X-Llms-Txt": LLMS_TEXT_PATH,
+  "X-Robots-Tag": "noindex",
+};
+
+/**
+ * Serves source-backed markdown for agent retrieval.
+ *
+ * Section indexes are resolved first, page markdown sources second, and the
+ * root llms index last. Known localized routes without source return 404 with
+ * a markdown body so agents get navigation help without a soft 404.
+ */
 export async function GET(
   _req: NextRequest,
   ctx: RouteContext<"/llms.mdx/[...slug]">
@@ -63,8 +81,14 @@ export async function GET(
     });
   }
 
-  return new Response("Not found", {
-    headers: TEXT_HEADERS,
-    status: 404,
-  });
+  return new Response(
+    buildUnsupportedMarkdownRouteText({
+      locale,
+      route: `/${cleanSlug}`,
+    }),
+    {
+      headers: MARKDOWN_NOT_FOUND_HEADERS,
+      status: 404,
+    }
+  );
 }

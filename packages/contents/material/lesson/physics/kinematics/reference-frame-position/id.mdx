@@ -1,0 +1,70 @@
+export const metadata = {
+  title: "Kerangka Acuan dan Posisi",
+  description:
+    "Pelajari cara menyatakan posisi benda dengan kerangka acuan, tanda arah, dan koordinat sederhana pada satu garis.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "2026-05-31",
+  subject: "Kinematika",
+};
+
+## Posisi Selalu Bertanya Dari Mana
+
+Kalau kalian berkata, "aku ada <InlineMath math="30 \text{ m}" /> dari toko," teman kalian masih bisa bertanya, "ke arah mana?" Kalau kalian berkata, "aku ada di sebelah timur," teman kalian juga masih bisa bertanya, "seberapa jauh?"
+
+Dalam fisika, **posisi** adalah letak benda yang dinyatakan terhadap suatu patokan. Patokan ini disebut **kerangka acuan**. Kerangka acuan bisa berupa toko, rumah, tiang bendera, titik awal lomba, atau titik nol pada sumbu koordinat.
+
+> Posisi yang lengkap selalu menyebutkan patokan, nilai, satuan, dan arah.
+
+Jika gerak hanya terjadi pada satu garis, kita bisa memilih satu arah sebagai positif. Pada contoh jalan lurus, arah timur kita ambil sebagai arah positif dan arah barat sebagai arah negatif.
+
+<BlockMath math="x_{\text{relatif}}=x_{\text{benda}}-x_{\text{acuan}}" />
+
+Rumus ini tidak membuat benda berpindah. Rumus ini hanya mengubah cara kita membaca letaknya dari patokan yang dipilih.
+
+## Posisi dari Patokan Berbeda
+
+Ambil contoh satu benda berada di koordinat <InlineMath math="30 \text{ m}" /> jika dibaca dari toko sebagai titik nol. Jika patokannya diganti ke rumah Rani di koordinat <InlineMath math="20 \text{ m}" />, angka posisi benda ikut berubah menjadi <InlineMath math="+10 \text{ m}" /> dari Rani.
+
+Perhatikan bahwa bendanya tidak berpindah saat patokan diganti. Yang berubah adalah cara membaca koordinatnya. Jika patokan dipindah ke kanan, benda yang tadinya bernilai positif besar bisa menjadi positif kecil, nol, atau bahkan negatif.
+
+## Membaca Tanda dan Arah
+
+Tanda pada posisi membantu kita membaca sisi patokan. Dalam contoh jalan tadi, timur dipilih sebagai positif. Maka nilai positif berarti benda berada di timur patokan, sedangkan nilai negatif berarti benda berada di barat patokan.
+
+| Kerangka acuan | Posisi benda pada garis jalan | Posisi relatif benda |
+| :------------- | :--------------------------- | :------------------- |
+| Toko di <InlineMath math="0 \text{ m}" /> | Benda di <InlineMath math="30 \text{ m}" /> | <InlineMath math="+30 \text{ m}" /> ke timur |
+| Rumah Rani di <InlineMath math="20 \text{ m}" /> | Benda di <InlineMath math="30 \text{ m}" /> | <InlineMath math="+10 \text{ m}" /> ke timur |
+| Rumah Naya di <InlineMath math="50 \text{ m}" /> | Benda di <InlineMath math="30 \text{ m}" /> | <InlineMath math="-20 \text{ m}" /> atau <InlineMath math="20 \text{ m}" /> ke barat |
+
+Nilai <InlineMath math="-20 \text{ m}" /> bukan berarti jaraknya negatif. Tanda negatif hanya menunjukkan arah relatif terhadap patokan yang kita pilih.
+
+## Kalimat Posisi yang Tidak Membingungkan
+
+Sebuah kalimat posisi perlu memuat empat bagian. Jika salah satu bagian hilang, orang lain bisa menafsirkan letak benda dengan cara berbeda.
+
+<Mermaid
+  title="Menyusun Kalimat Posisi"
+  description="Ikuti urutan ini agar posisi benda tidak dibaca dari patokan yang salah."
+  chart={`flowchart LR
+    A["Benda yang diamati"] --> B["Kerangka acuan"]
+    B --> C["Nilai dan satuan"]
+    C --> D["Arah dari patokan"]`}
+/>
+
+Contoh kalimat yang lengkap adalah: "Benda berada <InlineMath math="10 \text{ m}" /> di timur rumah Rani." Kalimat itu jelas karena menyebut benda, patokan, jarak, satuan, dan arah.
+
+Kalimat "benda ada di dekat rumah" belum cukup untuk fisika. Dekat dari rumah mana? Berapa meter? Sebelah timur atau barat? Pertanyaan-pertanyaan kecil ini penting karena kinematika memerlukan posisi yang bisa dihitung.
+
+## Kalimat Posisi dari Patokan Toko
+
+Sebuah penanda berada pada koordinat <InlineMath math="40 \text{ m}" /> dari toko. Rumah Dimas berada pada koordinat <InlineMath math="30 \text{ m}" /> dari toko. Jika rumah Dimas dijadikan kerangka acuan, posisi penanda adalah:
+
+<BlockMath math="\begin{aligned}
+x_{\text{relatif}}
+&=x_{\text{penanda}}-x_{\text{Dimas}} \\
+&=40 \text{ m}-30 \text{ m} \\
+&=+10 \text{ m}
+\end{aligned}" />
+
+Jadi, penanda berada <InlineMath math="10 \text{ m}" /> di timur rumah Dimas. Dari toko, posisinya <InlineMath math="40 \text{ m}" />. Dari rumah Dimas, posisinya <InlineMath math="+10 \text{ m}" />. Dua pernyataan itu sama-sama benar karena memakai kerangka acuan yang berbeda.

@@ -11,6 +11,8 @@ Good content deserves good paper. One design language across eight document type
 
 Part of `Kaku · Waza · Kami` - Kaku writes code, Waza drills habits, **Kami delivers documents**.
 
+**Update check (non-blocking).** At the start of a task, run `bash scripts/check-update.sh`. It does a read-only version check at most once per day and prints one line when a newer kami is available; relay that line to the user, then continue. It sends no data, and fails silently when offline, sandboxed, or without `curl`. Never let it block the work.
+
 ## Step 0 · Load brand profile (if exists)
 
 Check `~/.config/kami/brand.md` (preferred) or `~/.kami/brand.md` (legacy fallback). If found, read `references/brand-profile.md` for the full four-layer application spec (placeholder substitution, session defaults, visual customization, habit notes) and its six guardrails. If no profile exists, continue without interruption.
@@ -76,7 +78,7 @@ Rules:
 
 Before creating or modifying an output, lock the contract: language, template, output format, page or length target, visual acceptance check, and verification command. Infer from the user's request when clear; ask only when missing fields materially change the deliverable.
 
-Use the nearest existing template and verification path. Do not add a new template, stabilizer profile, shared CSS layer, dependency, script flag, or optional mode unless the current request cannot be satisfied without it.
+Use the nearest existing template and verification path. Do not add a new template, shared CSS layer, dependency, script flag, or optional mode unless the current request cannot be satisfied without it.
 
 If a change touches `SKILL.md`, templates, scripts, references, or package inputs, decide whether `dist/kami.zip` must be refreshed before handoff. Shipped behavior is not ready until the package contains the changed files.
 
@@ -84,17 +86,17 @@ If a change touches `SKILL.md`, templates, scripts, references, or package input
 
 ## Step 2 · Pick the document type
 
-| User says | Document | CN template | EN template |
-|---|---|---|---|
-| "one-pager / 方案 / 执行摘要 / exec summary" | One-Pager | `one-pager.html` | `one-pager-en.html` |
-| "white paper / 白皮书 / 长文 / 年度总结 / technical report" | Long Doc | `long-doc.html` | `long-doc-en.html` |
-| "formal letter / 信件 / 辞职信 / 推荐信 / memo" | Letter | `letter.html` | `letter-en.html` |
-| "portfolio / 作品集 / case studies" | Portfolio | `portfolio.html` | `portfolio-en.html` |
-| "resume / CV / 简历 / 履歴書" | Resume | `resume.html` | `resume-en.html` |
-| "slides / PPT / deck / 演示" | Slides | `slides-weasy.html` | `slides-weasy-en.html` |
-| "个股研报 / equity report / 估值分析 / investment memo / 股票分析" | Equity Report | `equity-report.html` | `equity-report-en.html` |
-| "更新日志 / changelog / release notes / 版本记录" | Changelog | `changelog.html` | `changelog-en.html` |
-| "landing page / 落地页 / 官网 / product page / 产品页" | Landing Page | `landing-page.html` | `landing-page-en.html` |
+| User says | Document | CN template | EN template | KO template |
+|---|---|---|---|---|
+| "one-pager / 方案 / 执行摘要 / exec summary" | One-Pager | `one-pager.html` | `one-pager-en.html` | `one-pager-ko.html` |
+| "white paper / 白皮书 / 长文 / 年度总结 / technical report" | Long Doc | `long-doc.html` | `long-doc-en.html` | `long-doc-ko.html` |
+| "formal letter / 信件 / 辞职信 / 推荐信 / memo" | Letter | `letter.html` | `letter-en.html` | `letter-ko.html` |
+| "portfolio / 作品集 / case studies" | Portfolio | `portfolio.html` | `portfolio-en.html` | `portfolio-ko.html` |
+| "resume / CV / 简历 / 履歴書" | Resume | `resume.html` | `resume-en.html` | `resume-ko.html` |
+| "slides / PPT / deck / 演示" | Slides | `slides-weasy.html` | `slides-weasy-en.html` | `slides-weasy-ko.html` |
+| "个股研报 / equity report / 估值分析 / investment memo / 股票分析" | Equity Report | `equity-report.html` | `equity-report-en.html` | `equity-report-ko.html` |
+| "更新日志 / changelog / release notes / 版本记录" | Changelog | `changelog.html` | `changelog-en.html` | `changelog-ko.html` |
+| "landing page / 落地页 / 官网 / product page / 产品页" | Landing Page | `landing-page.html` | `landing-page-en.html` | `landing-page-ko.html` |
 
 > **Changelog vs. release notes**: The changelog template above is for styled document output. GitHub release notes are a separate deliverable; use `/write` with Release Note Template Mode.
 
@@ -102,9 +104,13 @@ If a change touches `SKILL.md`, templates, scripts, references, or package input
 
 > **Landing Page companion files**: For a production multilingual deploy, copy the five `landing-page-*.example` files alongside the main HTML, remove the `.example` suffix, and fill the placeholders. They cover Vercel rewrites and headers, sitemap hreflang, robots AI allowlist, and llms.txt + llms-full.txt for AI assistants. The main HTML already ships matching hreflang and og:locale in `<head>`; an Accept-Language redirect at the end of `landing-page-en.html` is commented out for opt-in. `{{SITE_ORIGIN}}` is the scheme + host of your `{{CANONICAL_URL}}` (e.g. `https://example.com`). See `references/design.md` Section 11 «Companion assets».
 
-> Slides: default to `slides-weasy.html` / `slides-weasy-en.html` (WeasyPrint HTML → PDF). Use `slides.py` / `slides-en.py` only when the user explicitly requires an editable PPTX file. Use `assets/templates/marp/slides-marp(.md|.css)` only when the user explicitly asks for Marp / markdown slides / a deck that lives in a `.md` file.
+> **Production product site mode**: If the user needs docs, help, releases, changelog, roadmap, legal pages, or more than two locales, treat it as a site system. Lock product category, real screenshot slots, locale list, companion files, long-content pages, and generator/check needs before filling templates. Keep project-specific release artifacts, payment providers, appcast rules, and private local paths out of Kami. See `references/design.md` Section 11 «Product site system».
 
-> Deck recipe: read design.md Section 8 before drafting slides. Marp-specific constraints live in design.md §8 «Marp variant».
+> **Documentation pages**: When a landing page grows into a docs or help site, use the doc shell in `references/design.md` Section 11 «Documentation site»: a sticky sidebar nav with a 2px brand rail (not a dark underline), an on-this-page TOC hidden below the tablet breakpoint, a constrained prose measure, and a quiet borderless prev/next pager (text links, not bordered cards). Highlight code at build time with zero runtime JS on a dark code surface; plain code stays the source of truth.
+
+> Slides: default to `slides-weasy.html` / `slides-weasy-en.html` / `slides-weasy-ko.html` (WeasyPrint HTML → PDF). Use `slides.py` / `slides-en.py` only when the user explicitly requires an editable PPTX file. Use `assets/templates/marp/slides-marp(.md|.css)` only when the user explicitly asks for Marp / markdown slides / a deck that lives in a `.md` file.
+
+> Deck recipe: read design.md Section 8 before drafting slides. Sketch title sequence, evidence shape, and image slot before generating or cropping visuals. Keep audience copy separate from visual briefs. Marp-specific constraints live in design.md §8 «Marp variant».
 
 ### Decision tree (use before asking)
 
@@ -261,7 +267,7 @@ Default to the WeasyPrint HTML path. Switch to pptx only if the user explicitly 
 
 | Path | Template | When |
 |---|---|---|
-| WeasyPrint HTML → PDF (default) | `slides-weasy.html` / `slides-weasy-en.html` | All cases unless PPTX or Marp is required |
+| WeasyPrint HTML → PDF (default) | `slides-weasy.html` / `slides-weasy-en.html` / `slides-weasy-ko.html` | All cases unless PPTX or Marp is required |
 | python-pptx → PPTX (fallback) | `slides.py` / `slides-en.py` | User explicitly requires editable PPTX |
 | Marp Markdown (variant) | `assets/templates/marp/slides-marp.md` (+ `slides-marp.css`) / `slides-marp-en.md` (+ `slides-marp-en.css`) | User explicitly asks for Marp, "markdown slides", or a `.md` deck. Shipped `.md` is a working demo of Kami Marp itself; copy it, swap content, keep the structure. Renders via local `marp` CLI; not bundled. |
 
@@ -284,12 +290,25 @@ Before drafting any slide, confirm these points with the user. Ask all at once, 
 | 1 | **Audience + venue** - who is in the room, and is it live keynote, investor 1:1, or async share link? |
 | 2 | **Length target** - presentation time or slide count? (15 min: ~10 slides / 30 min: ~20 slides / 45 min: ~25-30 slides) |
 | 3 | **Source material** - what content is already ready: outline, doc, notes, data? |
-| 4 | **Images** - are screenshots, charts, logos, or product images available, or are gaps expected? |
+| 4 | **Images** - are screenshots, charts, logos, or product images available; which slides need real evidence slots; and is a separate visual brief needed? |
 | 5 | **Hard constraints** - brand colors, required logo, PPTX required, any slides that must exist? |
 | 6 | **Format confirmation** - slides deck, or a one-pager that looks like a deck? |
 
+Before drafting any landing page or product site, lock these points from the source material. Ask once only when a missing item would change the deliverable:
+
+| # | Lock |
+|---|---|
+| 1 | **Product category** - first-viewport category: app, CLI, terminal, utility, skill, template system, or another user-provided label. |
+| 2 | **Real assets** - available product screenshots, logo, icon, or UI captures, mapped to hero/gallery/feature/social slots. Missing assets must stay marked, not replaced with stock imagery. |
+| 3 | **Site shape** - single page, or home plus docs/help/releases/changelog/roadmap/legal pages? |
+| 4 | **Locales** - exact locale list, canonical paths, and whether a generator/check mode is needed. |
+| 5 | **Truth surfaces** - install path, price, version, support route, FAQ, `llms.txt`, and `llms-full.txt` that must stay synchronized. |
+
 ### Content rules for slides
 
+- Ghost deck test: read only the slide titles in order. They must tell the argument; if not, fix titles or structure before styling
+- One evidence shape per slide: chart, table, screenshot, code, quote, or conclusion. Split mixed evidence instead of crowding one slide
+- Audience copy stays clean: titles, body, and captions never contain image prompts, crop instructions, or generation notes
 - No section divider slides: use `.eyebrow` for section numbering, not a dedicated blue-background page
 - No CJK parentheses: replace `（...）` with `·` or `,`
 - Each bullet fits one line: trim until it does
@@ -439,13 +458,25 @@ python3 scripts/build.py --verify resume-en # single target full verification
 python3 scripts/build.py landing-page        # screen-first static HTML template check
 python3 scripts/build.py --verify slides    # single slide deck verification
 python3 scripts/build.py --check-placeholders path/to/filled.html
+python3 scripts/build.py --check-resume-balance path/to/resume.pdf
 python3 scripts/build.py --check-density              # page whitespace scanner (skips cover)
 python3 scripts/build.py --check            # CSS rule violations only (fast, no build)
+python3 scripts/build_metadata.py --check   # Codex plugin mirror + marketplace drift check
 ```
+
+> **Screen verify**: `--check-density` is a print gate. For screen output (landing or docs pages) instead screenshot the rendered page at 375px and 1280px in every locale and scan for line widows before shipping. See `references/design.md` Section 11 «Responsive screenshot verification».
 
 Source templates intentionally keep `{{...}}` fields. Run placeholder checks on completed documents, not on the template library.
 
 Visual anomalies (tag double rectangle, font fallback, page break issues) -> `production.md` Part 4.
+
+### Maintainer-mode checks
+
+Use these only when maintaining this repository or release package, not for ordinary document generation.
+
+- If marketplace metadata, generated plugin mirrors, version selection, or install paths change, run `python3 scripts/build_metadata.py --check`; for Codex install behavior, also smoke with an isolated `CODEX_HOME=/tmp/...` using `codex plugin marketplace add <path>`, `codex plugin add kami@kami`, and `codex plugin list`.
+- If `SKILL.md`, templates, scripts, references, or other package inputs change and the behavior ships through the skill package, run `bash scripts/package-skill.sh` and inspect `dist/kami.zip` before handoff.
+- If a GitHub release asset is refreshed, download the uploaded `kami.zip` and compare ZIP entry names plus per-entry SHA-256 digests against local `dist/kami.zip`; page text, file size, and the container hash are not enough.
 
 ## Fonts
 
@@ -460,22 +491,27 @@ Visual anomalies (tag double rectangle, font fallback, page break issues) -> `pr
 - JP Mincho-first stack: YuMincho -> Hiragino Mincho ProN -> Noto Serif CJK JP -> Source Han Serif JP -> TsangerJinKai02 -> serif
 - Visually verify line breaks, punctuation rhythm, and emphasis weight before shipping
 
+**Korean (best-effort)**
+- Dedicated `-ko` templates use Source Han Serif K Regular / Medium, with the real OTF family name `Source Han Serif KR` kept in every fallback stack
+- Fallback: Noto Serif KR / Apple SD Gothic Neo / AppleMyungjo / Charter / Georgia
+- The OTFs are OFL-licensed and tracked for local preview / CDN fallback, but excluded from Claude Desktop skill ZIPs to keep the package small
+
 **English**
 - Single serif: Charter (system-bundled, macOS/iOS), used for both headlines and body
 - No separate sans: `--sans: var(--serif)`, one font per page
 - Fallback: Georgia (cross-platform) / Palatino / Times New Roman
 
-Font files next to HTML with relative `@font-face` paths is the most stable setup. `scripts/package-skill.sh` excludes TsangerJinKai TTFs from the Claude Desktop ZIP, so the uploaded package stays ~4.3MB. Always upload that `package-skill.sh` output, never a hand-zipped checkout (the tracked TTFs make it ~40MB and Claude Desktop rejects the upload).
+Font files next to HTML with relative `@font-face` paths is the most stable setup. `scripts/package-skill.sh` excludes large CJK font files from the Claude Desktop ZIP, so the uploaded package stays under the 6MB package ceiling. Always upload that `package-skill.sh` output, never a hand-zipped checkout (the tracked CJK fonts make it too large and Claude Desktop rejects the upload).
 
 **Font auto-recovery (Claude Desktop)**
 
-Before building Chinese documents, ensure fonts are present. The script tries multiple CDN sources with retry and size validation:
+Before building Chinese or Korean documents, ensure fonts are present. The script tries multiple CDN sources with retry and size validation:
 
 ```bash
 bash scripts/ensure-fonts.sh
 ```
 
-It downloads to the XDG user font dir (`${XDG_DATA_HOME:-~/.local/share}/fonts/kami`, override with `KAMI_FONT_DIR`), **not** into the skill's `assets/fonts` -- that keeps the installed skill small so Claude Desktop never trips its size limit. fontconfig scans that dir by default, so WeasyPrint finds `TsangerJinKai02` there; online renders fall back to the jsDelivr `@font-face` URL. Run once before building. If all sources fail, the script suggests installing Source Han Serif SC as fallback.
+It downloads to the XDG user font dir (`${XDG_DATA_HOME:-~/.local/share}/fonts/kami`, override with `KAMI_FONT_DIR`), **not** into the skill's `assets/fonts` -- that keeps the installed skill small so Claude Desktop never trips its size limit. fontconfig scans that dir by default, so WeasyPrint finds `TsangerJinKai02` and `Source Han Serif K` there; online renders fall back to the jsDelivr `@font-face` URL. Run once before building. If all sources fail, the script prints per-language alternatives.
 
 ## Feedback protocol
 

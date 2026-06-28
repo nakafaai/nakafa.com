@@ -1,29 +1,38 @@
+import { NakafaSearch } from "@repo/ai/agents/nakafa/search";
+import { Nakafa } from "@repo/ai/agents/nakafa/service";
 import {
   DEFAULT_LATITUDE,
   DEFAULT_LONGITUDE,
 } from "@repo/ai/clients/weather/client";
 import { hasEnoughCredits, ModelIdSchema } from "@repo/ai/config/model";
-import { compressMessages } from "@repo/ai/lib/message";
+import { NinaHarness } from "@repo/ai/nina/harness/stream";
+import { NinaReporter } from "@repo/ai/nina/runtime/report";
+import { NinaStore } from "@repo/ai/nina/runtime/store";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import { captureServerException } from "@repo/analytics/posthog/server";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { CorsValidator } from "@repo/security/lib/cors-validator";
 import { cleanSlug } from "@repo/utilities/helper";
-import { logError } from "@repo/utilities/logging/effect";
 import { geolocation } from "@vercel/functions";
-import {
-  convertToModelMessages,
-  createUIMessageStreamResponse,
-  pruneMessages,
-} from "ai";
 import { Effect, Option, Schema } from "effect";
 import { getTranslations } from "next-intl/server";
 import { CHAT_ERRORS } from "@/app/api/chat/constants";
-import { determinePageFetchNeed } from "@/app/api/chat/content";
-import { loadMessages, saveOrCreateChat } from "@/app/api/chat/persistence";
-import { streamChat } from "@/app/api/chat/stream";
-import { getUserInfo, getVerified } from "@/app/api/chat/utils";
+import { getCanonicalCurrentPageContentUrl } from "@/app/api/chat/content";
+import { resolveNinaLearningSession } from "@/app/api/chat/context";
+import { search as nakafaSearch } from "@/app/api/chat/nakafa";
+import { nakafaContent } from "@/app/api/chat/nakafa-content";
+import { createChatErrorReporter } from "@/app/api/chat/observability";
+import {
+  createChatWithMessage,
+  loadPinnedNinaContext,
+  saveChatMessage,
+} from "@/app/api/chat/persistence";
+import { createNinaStore } from "@/app/api/chat/store";
+import {
+  getLearningProfile,
+  getUserInfo,
+  getVerified,
+} from "@/app/api/chat/utils";
 import { getToken } from "@/lib/auth/server";
 
 const corsValidator = new CorsValidator();
@@ -31,20 +40,29 @@ const corsValidator = new CorsValidator();
 const possibleVerifiedUrls = [
   "/articles",
   "/quran",
-  "/subject",
-  "/exercises",
+  "/curriculum",
+  "/kurikulum",
+  "/subjects",
+  "/materi",
+  "/practice",
+  "/latihan",
 ] as const;
+
+/**
+ * Keeps the streamed chat route aligned with the longest normal AI SDK chat
+ * timeout. Vercel uses this route segment config to set the function limit.
+ *
+ * @see https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config#maxduration
+ * @see https://vercel.com/docs/functions/configuring-functions/duration
+ */
+export const maxDuration = 300;
 
 /**
  * POST /api/chat
  *
  * Handles an incoming chat message from the client. Validates the request,
- * gates on user credits, persists the user message, then streams the
- * assistant response back using the AI SDK UI message stream protocol.
- *
- * After the stream finishes, two fire-and-forget tasks run via `waitUntil`:
- * - Title generation (first message only)
- * - Assistant response persistence and credit deduction
+ * gates on user credits, persists the user message, then delegates response
+ * streaming to the package-owned NinaHarness.
  *
  * @see https://ai-sdk.dev/docs/reference/ai-sdk-ui/convert-to-model-messages
  * @see https://ai-sdk.dev/docs/reference/ai-sdk-ui/create-ui-message-stream-response
@@ -59,12 +77,14 @@ export function POST(req: Request) {
       const {
         message,
         id,
+        context,
         locale: rawLocale,
         slug,
         model: rawModel,
       }: {
         message: MyUIMessage | undefined;
         id: Id<"chats"> | undefined;
+        context: unknown;
         locale: unknown;
         slug: string;
         model: unknown;
@@ -99,12 +119,13 @@ export function POST(req: Request) {
         });
       }
 
-      const url = `/${locale}/${cleanSlug(slug)}`;
+      const url = getCanonicalCurrentPageContentUrl({ locale, slug });
       const shouldVerify = possibleVerifiedUrls.some((segment) =>
         url.includes(segment)
       );
 
-      const currentDate = new Date().toLocaleString("en-US", {
+      const capturedAt = new Date();
+      const currentDate = capturedAt.toLocaleString("en-US", {
         year: "numeric",
         month: "long",
         day: "numeric",
@@ -123,16 +144,34 @@ export function POST(req: Request) {
         country: geo.country ?? "Unknown",
       };
 
-      const [verified, userInfo] = yield* Effect.all([
+      const [verified, userInfo, learningProfile] = yield* Effect.all([
         shouldVerify ? getVerified(url) : Effect.succeed(false),
         getUserInfo(token),
+        getLearningProfile(token, locale),
       ]);
-
       if (!hasEnoughCredits(userInfo.credits, selectedModel)) {
         return new Response(CHAT_ERRORS.INSUFFICIENT_CREDITS.code, {
           status: CHAT_ERRORS.INSUFFICIENT_CREDITS.status,
         });
       }
+
+      const pinnedContext =
+        id && !verified
+          ? yield* loadPinnedNinaContext({
+              chatId: id,
+              messageIdentifier: message.id,
+              token,
+            })
+          : undefined;
+      const ninaSession = yield* resolveNinaLearningSession({
+        capturedAt: capturedAt.toISOString(),
+        locale,
+        ...(pinnedContext ? { pinnedContext } : {}),
+        rawContext: context,
+        slug,
+        url,
+        verified,
+      });
 
       const logContext = {
         service: "chat-api",
@@ -143,117 +182,83 @@ export function POST(req: Request) {
           verified,
         },
         currentDate,
+        ninaContext: ninaSession.context.snapshot,
         userLocation,
         userRole: userInfo.role,
         url,
       };
 
-      /**
-       * Forward one chat-route runtime error to PostHog without interrupting the
-       * user-facing stream or background persistence flow.
-       *
-       * Related docs:
-       * https://posthog.com/docs/error-tracking/capture
-       * https://posthog.com/docs/error-tracking/installation/nextjs
-       */
-      function reportChatErrorToPostHog(error: unknown, source: string) {
-        Effect.runFork(
-          Effect.tryPromise(() =>
-            captureServerException(error, userInfo.userId, { source })
-          ).pipe(
-            Effect.catchAll((captureError) =>
-              logError(
-                captureError instanceof Error
-                  ? captureError
-                  : new Error(String(captureError)),
-                {
-                  ...logContext,
-                  errorLocation: "posthog-capture",
-                  source,
-                }
-              )
-            )
-          )
-        );
-      }
+      let chatId: Id<"chats">;
 
-      const chatId = yield* saveOrCreateChat({
-        chatId: id,
-        message,
-        modelId: selectedModel,
-        token,
-      });
-      const messages = yield* loadMessages({ chatId, token });
-      const isFirstMessage = messages.length === 1;
-
-      const originalMessageCount = messages.length;
-      const { messages: compressedMessages, tokens } =
-        compressMessages(messages);
-      const needsPageFetch = yield* determinePageFetchNeed({
-        messages: compressedMessages,
-        url,
-        verified,
-      });
-
-      if (compressedMessages.length < originalMessageCount) {
-        yield* Effect.logWarning(
-          `Messages compressed from ${originalMessageCount} to ${compressedMessages.length} messages (${tokens} tokens) to stay within token limit`
-        ).pipe(Effect.annotateLogs(logContext));
+      if (id) {
+        chatId = yield* saveChatMessage({
+          chatId: id,
+          message,
+          modelId: selectedModel,
+          ninaContextSnapshot: ninaSession.context.snapshot,
+          ninaContextTransition: ninaSession.context.transition,
+          token,
+        });
       } else {
-        yield* Effect.logInfo(
-          `All ${originalMessageCount} messages fit within token limit (${tokens} tokens)`
-        ).pipe(Effect.annotateLogs(logContext));
+        chatId = yield* createChatWithMessage({
+          message,
+          modelId: selectedModel,
+          ninaContextSnapshot: ninaSession.context.snapshot,
+          ninaContextTransition: ninaSession.context.transition,
+          token,
+        });
       }
-
-      const modelMessages = yield* Effect.tryPromise(() =>
-        convertToModelMessages(compressedMessages)
-      );
-      // Persist and render reasoning in UI, but do not feed historical
-      // assistant reasoning back into the next LLM call. AI SDK documents this
-      // as the supported way to reduce model context without deleting stored UI
-      // messages.
-      // https://ai-sdk.dev/docs/reference/ai-sdk-ui/prune-messages
-      // https://github.com/vercel/ai/blob/main/packages/ai/src/generate-text/prune-messages.ts
-      const finalMessages = pruneMessages({
-        messages: modelMessages,
-        reasoning: "all",
+      const reportChatError = createChatErrorReporter({
+        chatId,
+        logContext,
+        modelId: selectedModel,
+        userId: userInfo.userId,
       });
-
-      yield* Effect.logInfo("Chat session started").pipe(
-        Effect.annotateLogs(logContext)
-      );
 
       const translate = yield* Effect.tryPromise(() =>
         getTranslations({ locale, namespace: "Ai" })
       );
-      const chat = {
-        finalMessages,
-        id: chatId,
-        isFirstMessage,
-        messages: compressedMessages,
-        token,
-      };
-      const page = {
-        locale,
-        needsFetch: needsPageFetch,
-        slug,
-        url,
-        verified,
-      };
-      const runtime = {
-        currentDate,
-        logContext,
-        modelId: selectedModel,
-        reportError: reportChatErrorToPostHog,
-        translate,
-      };
-      const user = {
-        info: userInfo,
-        location: userLocation,
-      };
-      const stream = streamChat({ chat, page, runtime, user });
 
-      return createUIMessageStreamResponse({ stream });
+      return yield* NinaHarness.stream({
+        copy: {
+          errorMessage: translate("error-message"),
+          rateLimitMessage: translate("rate-limit-message"),
+        },
+        page: {
+          locale,
+          needsFetch: false,
+          nina: ninaSession.context,
+          slug,
+          url,
+          verified,
+        },
+        runtime: {
+          currentDate,
+          modelId: selectedModel,
+        },
+        user: {
+          ...(learningProfile ? { learningProfile } : {}),
+          ...(userInfo.role ? { role: userInfo.role } : {}),
+          location: userLocation,
+        },
+      }).pipe(
+        Effect.provide(NinaHarness.Default),
+        Effect.provideService(
+          NinaStore,
+          createNinaStore({
+            chatId,
+            modelId: selectedModel,
+            reportError: reportChatError,
+            token,
+          })
+        ),
+        Effect.provideService(NinaReporter, {
+          report: ({ error, source }) =>
+            Effect.sync(() => reportChatError(error, source)),
+        }),
+        Effect.provideService(Nakafa, nakafaContent),
+        Effect.provideService(NakafaSearch, nakafaSearch)
+      );
     })
   );
 }

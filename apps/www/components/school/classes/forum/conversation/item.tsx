@@ -7,7 +7,7 @@ import {
 import { cn } from "@repo/design-system/lib/utils";
 import { format } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
-import { Activity, memo } from "react";
+import { Activity } from "react";
 import { useForumSession } from "@/components/school/classes/forum/context/use-session";
 import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
 import { useViewport } from "@/components/school/classes/forum/conversation/context/use-viewport";
@@ -20,108 +20,106 @@ import { getLocale } from "@/lib/utils/date";
 import { getInitialName } from "@/lib/utils/helper";
 
 /** Renders one forum post row with reply, attachment, and reaction controls. */
-export const ForumPostItem = memo(
-  ({
-    post,
-    isFirstInGroup,
-    isLastInGroup,
-  }: {
-    post: ForumPost;
-    isFirstInGroup: boolean;
-    isLastInGroup: boolean;
-  }) => {
-    const t = useTranslations("Common");
-    const locale = useLocale();
-    const currentUserId = useData((state) => state.currentUserId);
-    const replyTarget = useForumSession(
-      (state) => state.replyTargetByForumId[post.forumId] ?? null
-    );
-    const userName = post.user?.name ?? t("anonymous");
-    const userImage = post.user?.image ?? "";
-    const isJumpHighlighted = useViewport(
-      (state) => state.highlightedPostId === post._id
-    );
-    const isReplyTarget = replyTarget?.postId === post._id;
-    const isReplyToMe = post.replyToUserId === currentUserId;
+export const ForumPostItem = ({
+  post,
+  isFirstInGroup,
+  isLastInGroup,
+}: {
+  post: ForumPost;
+  isFirstInGroup: boolean;
+  isLastInGroup: boolean;
+}) => {
+  const t = useTranslations("Common");
+  const locale = useLocale();
+  const currentUserId = useData((state) => state.currentUserId);
+  const replyTarget = useForumSession(
+    (state) => state.replyTargetByForumId[post.forumId] ?? null
+  );
+  const userName = post.user?.name ?? t("anonymous");
+  const userImage = post.user?.image ?? "";
+  const isJumpHighlighted = useViewport(
+    (state) => state.highlightedPostId === post._id
+  );
+  const isReplyTarget = replyTarget?.postId === post._id;
+  const isReplyToMe = post.replyToUserId === currentUserId;
 
-    return (
+  return (
+    <div
+      className={cn(
+        "min-w-0",
+        isFirstInGroup === true && "pt-3",
+        isLastInGroup === true && "pb-3"
+      )}
+    >
       <div
         className={cn(
-          "min-w-0",
-          isFirstInGroup === true && "pt-3",
-          isLastInGroup === true && "pb-3"
+          "group relative flex items-start gap-3 border-l-2 border-l-transparent px-4 py-1.5 transition-colors ease-out hover:bg-accent/20",
+          isReplyToMe === true && "border-primary bg-primary/10",
+          isReplyTarget === true && "border-secondary bg-secondary/10",
+          isJumpHighlighted === true && "border-secondary bg-secondary/10"
         )}
+        id={post._id}
       >
-        <div
-          className={cn(
-            "group relative flex items-start gap-3 border-l-2 border-l-transparent px-4 py-1.5 transition-colors ease-out hover:bg-accent/20",
-            isReplyToMe === true && "border-primary bg-primary/10",
-            isReplyTarget === true && "border-secondary bg-secondary/10",
-            isJumpHighlighted === true && "border-secondary bg-secondary/10"
-          )}
-          id={post._id}
-        >
-          <PostItemActions post={post} />
+        <PostItemActions post={post} />
 
-          <div className="w-8 shrink-0">
+        <div className="w-8 shrink-0">
+          <Activity mode={isFirstInGroup === true ? "visible" : "hidden"}>
+            <Avatar className="size-8 shrink-0">
+              <AvatarImage alt={userName} src={userImage} />
+              <AvatarFallback>{getInitialName(userName)}</AvatarFallback>
+            </Avatar>
+          </Activity>
+          <time
+            className={cn(
+              "mt-1 block w-full text-center text-muted-foreground text-xs",
+              isFirstInGroup === true && "hidden",
+              isFirstInGroup !== true && isLastInGroup !== true && "invisible"
+            )}
+            title={format(post._creationTime, "PPpp", {
+              locale: getLocale(locale),
+            })}
+          >
+            {format(post._creationTime, "HH:mm", {
+              locale: getLocale(locale),
+            })}
+          </time>
+        </div>
+
+        <div className="grid min-w-0 flex-1 gap-2">
+          <div className="grid gap-1">
             <Activity mode={isFirstInGroup === true ? "visible" : "hidden"}>
-              <Avatar className="size-8 shrink-0">
-                <AvatarImage alt={userName} src={userImage} />
-                <AvatarFallback>{getInitialName(userName)}</AvatarFallback>
-              </Avatar>
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="min-w-0 truncate font-medium text-sm">
+                  {userName}
+                </span>
+                <time
+                  className="min-w-0 truncate text-muted-foreground text-xs tracking-tight"
+                  title={format(post._creationTime, "PPpp", {
+                    locale: getLocale(locale),
+                  })}
+                >
+                  {format(post._creationTime, "HH:mm", {
+                    locale: getLocale(locale),
+                  })}
+                </time>
+              </div>
             </Activity>
-            <time
-              className={cn(
-                "mt-1 block w-full text-center text-muted-foreground text-xs",
-                isFirstInGroup === true && "hidden",
-                isFirstInGroup !== true && isLastInGroup !== true && "invisible"
-              )}
-              title={format(post._creationTime, "PPpp", {
-                locale: getLocale(locale),
-              })}
-            >
-              {format(post._creationTime, "HH:mm", {
-                locale: getLocale(locale),
-              })}
-            </time>
+
+            <PostReplyIndicator post={post} />
+
+            <Activity mode={post.body.trim() ? "visible" : "hidden"}>
+              <div className="wrap-break-word min-w-0 text-chat">
+                <Response id={post._id}>{post.body}</Response>
+              </div>
+            </Activity>
+
+            <PostAttachments attachments={post.attachments} />
           </div>
 
-          <div className="grid min-w-0 flex-1 gap-2">
-            <div className="grid gap-1">
-              <Activity mode={isFirstInGroup === true ? "visible" : "hidden"}>
-                <div className="flex min-w-0 items-center gap-2">
-                  <span className="min-w-0 truncate font-medium text-sm">
-                    {userName}
-                  </span>
-                  <time
-                    className="min-w-0 truncate text-muted-foreground text-xs tracking-tight"
-                    title={format(post._creationTime, "PPpp", {
-                      locale: getLocale(locale),
-                    })}
-                  >
-                    {format(post._creationTime, "HH:mm", {
-                      locale: getLocale(locale),
-                    })}
-                  </time>
-                </div>
-              </Activity>
-
-              <PostReplyIndicator post={post} />
-
-              <Activity mode={post.body.trim() ? "visible" : "hidden"}>
-                <div className="wrap-break-word min-w-0 text-chat">
-                  <Response id={post._id}>{post.body}</Response>
-                </div>
-              </Activity>
-
-              <PostAttachments attachments={post.attachments} />
-            </div>
-
-            <PostReactions post={post} />
-          </div>
+          <PostReactions post={post} />
         </div>
       </div>
-    );
-  }
-);
+    </div>
+  );
+};
 ForumPostItem.displayName = "ForumPostItem";

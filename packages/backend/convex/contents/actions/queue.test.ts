@@ -1,20 +1,57 @@
 import { internal } from "@repo/backend/convex/_generated/api";
-import type { ActionCtx } from "@repo/backend/convex/_generated/server";
+import type {
+  ActionCtx,
+  MutationCtx,
+} from "@repo/backend/convex/_generated/server";
 import { MIN_VIEW_THRESHOLD } from "@repo/backend/convex/audioStudies/constants";
 import {
   chunkPopularAudioItems,
   populateAudioGenerationQueue,
 } from "@repo/backend/convex/contents/audioQueue/impl";
 import { audioQueuePopulationFailedCode } from "@repo/backend/convex/contents/audioQueue/spec";
+import { getLifetimePopularityWindow } from "@repo/backend/convex/contents/popularity";
 import type { PopularAudioContentItem } from "@repo/backend/convex/contents/validators";
 import schema from "@repo/backend/convex/schema";
+import { getTestAudioContent } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { logger } from "@repo/backend/convex/utils/logger";
+import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const NOW = Date.parse("2026-01-01T00:00:00.000Z");
+const ARTICLE_ROUTE = "articles/politics/dynastic-politics-asian-values";
+const articleSource = getTestAudioContent({
+  contentHash: "article-hash",
+  locale: "en",
+  route: ARTICLE_ROUTE,
+});
+const canonicalContext = {
+  contextKey: "canonical",
+  contextMode: "canonical",
+} as const;
+
+/** Inserts the lifetime global popularity counter consumed by audio queue reads. */
+async function insertArticlePopularityCounter(
+  ctx: MutationCtx,
+  graph: NonNullable<ReturnType<typeof createLearningGraphIdentityFromRoute>>
+) {
+  await ctx.db.insert("learningPopularityCounters", {
+    ...graph,
+    ...canonicalContext,
+    content_id: graph.assetId,
+    locale: "en",
+    route: ARTICLE_ROUTE,
+    score: MIN_VIEW_THRESHOLD,
+    section: "articles",
+    scopeMode: "global",
+    sourcePath: ARTICLE_ROUTE,
+    title: "Dynastic Politics",
+    updatedAt: NOW,
+    windowKey: getLifetimePopularityWindow(),
+  });
+}
 
 describe("contents/actions/queue", () => {
   beforeEach(() => {
@@ -32,33 +69,19 @@ describe("contents/actions/queue", () => {
     vi.restoreAllMocks();
   });
 
-  it("chunks popular audio candidates into bounded mutation batches", async () => {
-    const t = convexTest(schema, convexModules);
-    const items = await t.mutation(async (ctx) => {
-      const rows: PopularAudioContentItem[] = [];
+  it("chunks popular audio candidates into bounded mutation batches", () => {
+    const items: PopularAudioContentItem[] = [];
 
-      for (let index = 0; index < 25; index++) {
-        const articleId = await ctx.db.insert("articleContents", {
-          articleSlug: `article-${index}`,
-          body: "Body",
-          category: "politics",
+    for (let index = 0; index < 25; index++) {
+      items.push({
+        sourceContent: getTestAudioContent({
           contentHash: `hash-${index}`,
-          date: index,
-          description: "Description",
           locale: "en",
-          slug: `articles/politics/article-${index}`,
-          syncedAt: index,
-          title: `Article ${index}`,
-        });
-
-        rows.push({
-          ref: { type: "article", id: articleId },
-          viewCount: 25 - index,
-        });
-      }
-
-      return rows;
-    });
+          route: `articles/politics/article-${index}`,
+        }),
+        viewCount: 25 - index,
+      });
+    }
 
     const chunks = chunkPopularAudioItems(items);
 
@@ -138,8 +161,8 @@ describe("contents/actions/queue", () => {
   it("reads popular content and enqueues bounded audio work", async () => {
     const t = convexTest(schema, convexModules);
 
-    const articleId = await t.mutation(async (ctx) => {
-      const articleId = await ctx.db.insert("articleContents", {
+    await t.mutation(async (ctx) => {
+      await ctx.db.insert("articleContents", {
         articleSlug: "dynastic-politics-asian-values",
         body: "Article body",
         category: "politics",
@@ -147,25 +170,39 @@ describe("contents/actions/queue", () => {
         date: NOW,
         description: "Article description",
         locale: "en",
-        slug: "articles/politics/dynastic-politics-asian-values",
+        slug: ARTICLE_ROUTE,
+        syncedAt: NOW,
+        title: "Dynastic Politics",
+      });
+      const graph = createLearningGraphIdentityFromRoute({
+        locale: "en",
+        route: ARTICLE_ROUTE,
+      });
+
+      if (!graph) {
+        throw new Error(`Expected graph identity for ${ARTICLE_ROUTE}.`);
+      }
+
+      await ctx.db.insert("contentRoutes", {
+        ...graph,
+        authors: [],
+        contentHash: "route-hash",
+        content_id: graph.assetId,
+        kind: "article",
+        locale: "en",
+        markdown: true,
+        route: ARTICLE_ROUTE,
+        section: "articles",
+        sourcePath: ARTICLE_ROUTE,
         syncedAt: NOW,
         title: "Dynastic Politics",
       });
 
-      await ctx.db.insert("articlePopularity", {
-        contentId: articleId,
-        updatedAt: NOW,
-        viewCount: MIN_VIEW_THRESHOLD,
-      });
+      await insertArticlePopularityCounter(ctx, graph);
       await ctx.db.insert("audioContentSources", {
-        contentHash: "article-hash",
-        contentRef: { type: "article", id: articleId },
-        locale: "en",
-        slug: "articles/politics/dynastic-politics-asian-values",
+        ...articleSource,
         syncedAt: NOW,
       });
-
-      return articleId;
     });
 
     const result = await t.action(
@@ -178,11 +215,13 @@ describe("contents/actions/queue", () => {
     expect(result).toBeNull();
     expect(queuedItems).toEqual([
       expect.objectContaining({
-        contentRef: { id: articleId, type: "article" },
+        content_id: articleSource.content_id,
+        contentType: articleSource.contentType,
         locale: "en",
         priorityScore: MIN_VIEW_THRESHOLD * 10,
         requestedAt: NOW,
         retryCount: 0,
+        route: ARTICLE_ROUTE,
         status: "pending",
         updatedAt: NOW,
       }),

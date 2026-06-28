@@ -5,8 +5,15 @@ import {
   formatSearch,
   formatTaxonomy,
 } from "@repo/ai/agents/nakafa/format";
+import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import type { NakafaAgentExerciseResult } from "@repo/contents/_lib/agent/schema/exercise";
+import { defaultLocale, locales } from "@repo/utilities/locales";
 import { describe, expect, it } from "vitest";
+
+const subjectRoute =
+  "material/lesson/mathematics/example-topic/example-section";
+const exerciseRoute =
+  "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1";
 
 describe("Nakafa formatter", () => {
   it("formats search results", () => {
@@ -15,52 +22,42 @@ describe("Nakafa formatter", () => {
       has_more: false,
       items: [
         {
-          content_id: "id/subject/example",
+          ...readNakafaContentRefFixture("id", subjectRoute, "material"),
           description: "Pelajari contoh.",
-          locale: "id",
-          markdown_url: "https://nakafa.com/id/subject/example.md",
-          route: "subject/example",
-          section: "subject",
+          excerpt: "Pelajari contoh.",
           title: "Contoh Materi",
-          url: "https://nakafa.com/id/subject/example",
         },
       ],
       limit: 1,
-      next_offset: null,
       offset: 0,
     });
 
     expect(text).toContain("# Nakafa Search");
     expect(text).toContain("Contoh Materi");
     expect(text).not.toContain("Inline citation:");
-    expect(text).not.toContain("https://nakafa.com/id/subject/example");
+    expect(text).not.toContain(`https://nakafa.com/id/${subjectRoute}`);
     expect(text).not.toContain("Markdown URL:");
     expect(text).toContain("Next offset: none");
   });
 
   it("formats full content reads", () => {
     const text = formatRead({
-      content_id: "id/subject/example",
+      ...readNakafaContentRefFixture("id", subjectRoute, "material"),
       description: "Pelajari contoh.",
-      locale: "id",
-      markdown_url: "https://nakafa.com/id/subject/example.md",
-      route: "subject/example",
-      section: "subject",
       text: "Isi materi lengkap.",
       title: "Contoh Materi",
-      url: "https://nakafa.com/id/subject/example",
     });
 
     expect(text).toContain("# Nakafa Content");
     expect(text).not.toContain("Inline citation:");
-    expect(text).not.toContain("https://nakafa.com/id/subject/example");
+    expect(text).not.toContain(`https://nakafa.com/id/${subjectRoute}`);
     expect(text).not.toContain("Markdown URL:");
     expect(text).toContain("Isi materi lengkap.");
   });
 
   it("formats structured exercises", () => {
     const result = {
-      content_id: "id/exercises/example",
+      ...readNakafaContentRefFixture("id", exerciseRoute, "material"),
       count: 1,
       exercise_number: 2,
       exercises: [
@@ -74,36 +71,25 @@ describe("Nakafa formatter", () => {
           question: { raw: "Berapa 1 + 1?", title: "Soal 2" },
         },
       ],
-      locale: "id",
-      markdown_url: "https://nakafa.com/id/exercises/example.md",
-      route: "exercises/example",
-      section: "exercises",
-      url: "https://nakafa.com/id/exercises/example",
     } satisfies NakafaAgentExerciseResult;
     const text = formatExercise(result);
 
     expect(text).toContain("# Nakafa Exercises");
     expect(text).not.toContain("Inline citation:");
-    expect(text).not.toContain("https://nakafa.com/id/exercises/example");
+    expect(text).not.toContain(`https://nakafa.com/id/${exerciseRoute}`);
     expect(text).toContain("Exercise number: 2");
     expect(text).toContain("Correct: Yes");
     expect(text).toContain("Correct: No");
-    expect(formatExercise({ ...result, exercise_number: null })).toContain(
-      "Exercise number: all"
-    );
+    const { exercise_number, ...wholeSetResult } = result;
+    expect(formatExercise(wholeSetResult)).toContain("Exercise number: all");
   });
 
   it("formats Quran references with and without tafsir", () => {
     const text = formatQuran({
-      content_id: "id/quran/1",
-      locale: "id",
-      markdown_url: "https://nakafa.com/id/quran/1.md",
+      ...readNakafaContentRefFixture("id", "quran/1", "quran"),
       name: "Al-Fatihah",
       revelation: "Makkiyah",
-      route: "quran/1",
-      section: "quran",
       translation: "Pembukaan",
-      url: "https://nakafa.com/id/quran/1",
       verses: [
         {
           arabic: "بِسْمِ اللَّهِ",
@@ -134,7 +120,7 @@ describe("Nakafa formatter", () => {
         categories: ["science"],
       },
       content_counts: [{ count: 12, locale: "id" }],
-      default_locale: "en",
+      default_locale: defaultLocale,
       endpoints: {
         direct: "https://mcp.nakafa.com/mcp",
         recommended: "https://nakafa.com/mcp",
@@ -148,11 +134,11 @@ describe("Nakafa formatter", () => {
         types: [{ id: "snbt", label: "SNBT" }],
       },
       locale: "id",
-      locales: ["id", "en"],
+      locales: Array.from(locales),
       quran: {
         surah_count: 114,
       },
-      sections: ["articles", "subject", "exercises", "quran"],
+      sections: ["articles", "material", "quran"],
       subject: {
         categories: ["high-school"],
         grades: ["10"],

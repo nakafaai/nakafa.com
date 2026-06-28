@@ -10,6 +10,10 @@ import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 
+/**
+ * Builds metadata-only copy for the try-out hub while keeping helper prose out
+ * of the visible hub header.
+ */
 export async function generateMetadata({
   params,
 }: {
@@ -24,7 +28,7 @@ export async function generateMetadata({
 
   const path = `/${locale}/try-out`;
   const title = tCommon("try-out");
-  const description = tTryouts("description");
+  const description = tTryouts("metadata-description");
   const socialMetadata = getSocialMetadata({
     title,
     description,
@@ -41,6 +45,10 @@ export async function generateMetadata({
   };
 }
 
+/**
+ * Composes the localized try-out hub and JSON-LD breadcrumb for the canonical
+ * try-out entry page.
+ */
 export default function Page(props: PageProps<"/[locale]/try-out">) {
   const locale = getLocaleOrThrow(use(props.params).locale);
 
@@ -52,6 +60,10 @@ export default function Page(props: PageProps<"/[locale]/try-out">) {
   );
 }
 
+/**
+ * Emits the try-out hub breadcrumb from the same localized route labels used by
+ * the visible navigation.
+ */
 function PageBreadcrumb({ locale }: { locale: Locale }) {
   const tCommon = useTranslations("Common");
 

@@ -2,13 +2,14 @@ import { createPrompt } from "@repo/ai/prompt/utils";
 import type { AgentContext } from "@repo/ai/types/agents";
 import type { Locale } from "@repo/utilities/locales";
 
-interface MathPromptProps {
-  context: AgentContext;
-  locale: Locale;
-}
-
 /** Builds the system prompt for Nina's deterministic math agent. */
-export function mathPrompt({ locale, context }: MathPromptProps) {
+export function mathPrompt({
+  locale,
+  context,
+}: {
+  readonly context: AgentContext;
+  readonly locale: Locale;
+}) {
   return createPrompt({
     taskContext: `
       # Identity
@@ -159,6 +160,7 @@ export function mathPrompt({ locale, context }: MathPromptProps) {
       Say the calculation was checked in normal classroom language.
       Summarize the result and any limitation clearly.
       Use LaTeX for math with \\(...\\) or \\[...\\].
+      When block math belongs to a list item, indent the \\[...\\] block under that list item instead of restarting at the page margin.
       Do not use HTML or XML.
     `,
   });

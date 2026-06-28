@@ -76,6 +76,8 @@ export const polarGateway: PolarCustomerGateway = {
         checkoutsCreate(polarClient, {
           allowDiscountCodes: true,
           customerId: input.customerId,
+          customerIpAddress: input.customerIpAddress,
+          locale: input.locale,
           products: input.productIds,
           successUrl: input.successUrl,
           embedOrigin: input.embedOrigin,

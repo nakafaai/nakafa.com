@@ -1,0 +1,105 @@
+import { DisplacementDistanceLab } from "@repo/design-system/components/contents/physics/kinematics/displacement-distance/lab";
+
+export const metadata = {
+  title: "Perpindahan dan Jarak",
+  description:
+    "Pelajari perbedaan jarak sebagai panjang lintasan dan perpindahan sebagai perubahan posisi dari titik awal ke titik akhir.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "2026-05-31",
+  subject: "Kinematika",
+};
+
+## Dua Cara Membaca Perjalanan
+
+Ketika seseorang bergerak dari titik awal ke titik akhir, ada dua besaran yang sering terdengar mirip tetapi maknanya berbeda: **jarak** dan **perpindahan**.
+
+**Jarak** adalah panjang seluruh lintasan yang ditempuh. Jika lintasannya berbelok, semua bagian belokan ikut dijumlahkan. **Perpindahan** adalah perubahan posisi dari titik awal ke titik akhir, sehingga hanya memperhatikan titik awal, titik akhir, dan arah.
+
+<BlockMath math="\begin{aligned}
+s&=\text{jarak tempuh} \\
+\Delta \vec{r}&=\vec{r}_{\text{akhir}}-\vec{r}_{\text{awal}}
+\end{aligned}" />
+
+Di sini, <InlineMath math="s" /> menyatakan panjang seluruh lintasan, sedangkan <InlineMath math="\Delta \vec{r}" /> menyatakan perubahan posisi dari awal ke akhir.
+
+Pada gerak dua dimensi, perpindahan ditunjukkan sebagai garis lurus dari titik awal ke titik akhir.
+
+> Jarak menjumlahkan jalur yang benar-benar dilewati. Perpindahan melihat perubahan posisi dari awal ke akhir.
+
+<DisplacementDistanceLab
+  title={<>Jalur Tempuh dan Perpindahan</>}
+  description={
+    <>
+      Pilih rute untuk membandingkan jalur yang ditempuh dengan perpindahan
+      lurus.
+    </>
+  }
+  labels={{
+    chooseCase: "Pilih rute",
+    modeLabels: {
+      straight: <>Lurus</>,
+      turn: <>Berbelok</>,
+      return: <>Kembali</>,
+    },
+    factLabels: {
+      distance: <>Jarak tempuh</>,
+      displacement: <>Besar perpindahan</>,
+      vector: <>Vektor perpindahan</>,
+      meaning: <>Yang berubah</>,
+    },
+    meanings: {
+      straight: <>Jarak dan besar perpindahan bernilai sama.</>,
+      turn: <>Jarak lebih panjang karena mobil mengikuti belokan.</>,
+      return: <>Mobil menempuh jalur tetapi berakhir di posisi awal.</>,
+    },
+    viewLabel: "Visual jarak dan perpindahan",
+  }}
+/>
+
+## Lintasan dan Garis Lurus Memberi Angka Berbeda
+
+Bandingkan benda yang berjalan dari titik awal ke titik akhir lewat dua cara. Rute lurus memberi jarak yang sama dengan besar perpindahan. Rute memutar memberi jarak lebih panjang, tetapi perpindahannya tetap dibaca sebagai garis dari awal ke akhir.
+
+Rute memutar memiliki jarak yang lebih besar karena benda melewati lintasan lebih panjang. Namun perpindahannya tetap sama selama titik awal dan titik akhirnya sama.
+
+## Jarak Tidak Punya Arah
+
+Jarak selalu bernilai nol atau positif. Jarak menjawab pertanyaan, "sepanjang apa lintasan yang ditempuh?" Karena itu, jarak tidak menyebut arah.
+
+Jika benda berjalan <InlineMath math="4 \text{ m}" /> ke timur lalu <InlineMath math="3 \text{ m}" /> ke selatan, jaraknya:
+
+<BlockMath math="s=4 \text{ m}+3 \text{ m}=7 \text{ m}" />
+
+Simbol <InlineMath math="s" /> sering digunakan untuk menyatakan jarak tempuh.
+
+## Perpindahan Punya Arah
+
+Perpindahan adalah besaran vektor. Artinya, perpindahan memiliki besar dan arah. Untuk contoh <InlineMath math="4 \text{ m}" /> ke timur lalu <InlineMath math="3 \text{ m}" /> ke selatan, besar perpindahannya adalah garis lurus dari awal ke akhir:
+
+<BlockMath math="|\Delta \vec{r}|=\sqrt{4^2+3^2}=5 \text{ m}" />
+
+Arah perpindahan bukan mengikuti belokan lintasan, melainkan arah garis dari titik awal ke titik akhir.
+
+## Saat Kembali ke Titik Awal
+
+Jika benda bergerak berkeliling lalu kembali ke titik awal, jaraknya tidak nol karena lintasannya tetap ditempuh. Tetapi perpindahannya nol karena posisi awal dan posisi akhir sama.
+
+| Perjalanan | Jarak | Perpindahan |
+| :--------- | :---- | :---------- |
+| Dari awal ke akhir lewat rute lurus | sama dengan garis lurus | garis awal ke akhir |
+| Dari awal ke akhir lewat rute memutar | lebih panjang | tetap garis awal ke akhir |
+| Berkeliling lalu kembali ke awal | tidak nol | <InlineMath math="0" /> |
+
+Jadi, jarak menceritakan panjang jalur yang benar-benar dilalui, sedangkan perpindahan menceritakan perubahan posisi bersih.
+
+## Jalan Memutar dengan Hasil Lurus
+
+Seorang siswa berjalan <InlineMath math="8 \text{ m}" /> ke timur, lalu <InlineMath math="6 \text{ m}" /> ke utara. Jarak tempuhnya adalah:
+
+<BlockMath math="s=8 \text{ m}+6 \text{ m}=14 \text{ m}" />
+
+Besar perpindahannya adalah:
+
+<BlockMath math="|\Delta \vec{r}|=\sqrt{8^2+6^2}=10 \text{ m}" />
+
+Jaraknya <InlineMath math="14 \text{ m}" />, tetapi besar perpindahannya <InlineMath math="10 \text{ m}" />. Nilai keduanya berbeda karena lintasan yang ditempuh tidak sama dengan garis lurus dari awal ke akhir.

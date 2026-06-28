@@ -51,8 +51,10 @@
     "source-code": "Source code",
     "language": "Language",
     "articles": "Articles",
-    "subject": "Subject",
-    "explore-grades": "Explore Grades",
+    "material": "Material",
+    "subject": "Subjects",
+    "for-you": "For you",
+    "explore": "Explore",
     "references": "References",
     "show": "Show",
     "hide": "Hide",
@@ -120,15 +122,102 @@
     "back-to-latest": "Back to latest",
     "back": "Back"
   },
-  "Onboarding": {
-    "title": "Welcome to Nakafa!",
-    "description": "We're excited to have you here. Let's personalize your learning experience by getting to know you better.",
-    "teacher": "Teacher",
-    "student": "Student",
-    "parent": "Parent",
-    "administrator": "Administrator",
-    "select-role": "Select your role",
-    "button": "Start learning"
+  "LearningPrograms": {
+    "metadata-title": "Start learning with Nakafa",
+    "metadata-description": "Choose what you need help with and one first step.",
+    "plan-item-untitled": "Learning step",
+    "program-status": {
+      "hidden": "Hidden",
+      "planned": "Soon",
+      "partial": "Partly ready",
+      "available": "Ready",
+      "archived": "Archived"
+    },
+    "onboarding": {
+      "role-title": "How will you use Nakafa?",
+      "role": {
+        "student": {
+          "title": "Student",
+          "description": "Learn, practice, and ask Nina."
+        },
+        "teacher": {
+          "title": "Teacher",
+          "description": "Prepare lessons for class."
+        },
+        "parent": {
+          "title": "Parent",
+          "description": "Help your child learn simply."
+        }
+      },
+      "focus": {
+        "student": {
+          "title": "What do you want to focus on?",
+          "school": {
+            "title": "School lessons",
+            "description": "Read clear explanations."
+          },
+          "exam": {
+            "title": "University entrance",
+            "description": "Practice before an exam."
+          }
+        },
+        "teacher": {
+          "title": "What do you want to prepare?",
+          "materials": {
+            "title": "Teaching materials",
+            "description": "Prepare explanations for class."
+          },
+          "practice": {
+            "title": "Student practice",
+            "description": "Prepare practice questions."
+          }
+        },
+        "parent": {
+          "title": "What does your child need help with?",
+          "understand": {
+            "title": "Understand lessons",
+            "description": "Read simple explanations."
+          },
+          "practice": {
+            "title": "Practice questions",
+            "description": "Prepare practice before an exam."
+          }
+        }
+      },
+      "back": "Back",
+      "continue": "Continue",
+      "save-cta": "Start learning",
+      "invalid-selection": "Choose your role and one learning focus.",
+      "save-error": "We could not save your choice. Try again.",
+      "unavailable-title": "Choose another option for now",
+      "unavailable-helper": "This choice is not ready yet.",
+      "auth-title": "Sign in to start",
+      "auth-helper": "Save your first plan and continue on any device.",
+      "auth-cta": "Sign in to Nakafa"
+    },
+    "kind": {
+      "school-curriculum": "School curriculum",
+      "assessment": "Practice questions",
+      "admission-exam": "Admission exam",
+      "custom-program": "Custom program",
+      "institution-program": "Institution program"
+    },
+    "interest": {
+      "school-curriculum": {
+        "title": "School lessons"
+      },
+      "exam-prep": {
+        "title": "University entrance"
+      },
+      "assessment-prep": {
+        "title": "Practice questions"
+      }
+    },
+    "plan-item-status": {
+      "ready": "Ready",
+      "done": "Done",
+      "skipped": "Skipped"
+    }
   },
   "Comments": {
     "add-comment-placeholder": "Add a comment...",
@@ -200,6 +289,9 @@
     "reset": "Reset",
     "explanation": "Explanation",
     "number-count": "Number {count}",
+    "route-question-title": "{set} Question {number}",
+    "program-domain-list-description": "Choose an available practice domain to open question sets.",
+    "domain-set-list-description": "Choose an available practice set to open the questions for this domain.",
     "high-school": "High School",
     "middle-school": "Middle School",
     "grade-9": "Grade 9",
@@ -240,14 +332,13 @@
   },
   "Tryouts": {
     "title": "What tryout do you want today?",
-    "description": "Try a simulation that feels close to the real exam, so you feel more prepared.",
+    "metadata-description": "Choose a tryout package and start an exam simulation from Nakafa.",
     "package-count": "{count, plural, =0 {No packages yet} =1 {# package} other {# packages}}",
     "cta": "See packages",
     "list-empty": "There are no tryouts showing right now.",
     "available-item-description": "{questions} questions - {parts} parts",
     "year-title": "Year {year}",
     "product-page-description": "See every SNBT package and open the one that fits your goal best.",
-    "slug-description": "When you're ready, start this tryout and choose which section you want to do first.",
     "start-cta": "Start tryout",
     "restart-cta": "Start again",
     "continue-cta": "Continue",
@@ -304,6 +395,7 @@
     "complete-part-success": "Section finished. You can choose another section or go back to the set.",
     "complete-part-error": "We could not finish this section yet. Please try again.",
     "back-to-set-cta": "Back to set",
+    "slug-description": "When you're ready, start this tryout and choose which section you want to do first.",
     "question-unit": "questions",
     "products": {
       "snbt": {
@@ -383,6 +475,8 @@
     "continue-with-google": "Continue with Google",
     "logout": "Logout",
     "login": "Login",
+    "login-cta-title": "Log in",
+    "login-cta-action": "Free Nakafa account",
     "account": "Account",
     "settings": "Settings",
     "settings-description": "Manage your Nakafa account settings, preferences, and profile information to personalize your learning experience.",
@@ -391,7 +485,7 @@
     "chat": "Chat",
     "chat-description": "Use the AI learning assistant for homework help, concept explanations, and study conversations.",
     "subscriptions": "Subscriptions",
-    "subscriptions-description": "Get extra learning tools with Nakafa Pro.",
+    "subscriptions-description": "Manage Nakafa Pro, 3,000 monthly AI credits, and your payment portal.",
     "get-pro": "Get Pro",
     "manage": "Manage",
     "plan-free": "Free",
@@ -457,7 +551,7 @@
     "ask-nina": "Ask Nina",
     "text-placeholder": "Ask Nina anything...",
     "error-message": "Oops, something went wrong. Try switching the AI model.",
-    "insufficient-credits": "Not enough credits. Please wait for daily reset or upgrade to Pro.",
+    "insufficient-credits": "You are out of AI credits. Wait for the next credit reset or upgrade to Pro for 3,000 monthly credits.",
     "retry": "Retry",
     "rate-limit-message": "Whoa, slow down! Please try again in a moment.",
     "nakafa": "Nakafa",
@@ -628,12 +722,12 @@
     "free-feature-5": "Community access on Discord",
     "free-cta": "Start Learning",
     "pro-title": "Pro",
-    "pro-description": "Study smarter with unlimited AI help",
+    "pro-description": "Practice more seriously with Nina, 3,000 monthly AI credits, and Pro tryouts.",
     "pro-period": "/month",
     "pro-feature-1": "Everything in Free, plus:",
-    "pro-feature-2": "More credits for Nakafa Lite and Nakafa Pro tutoring",
-    "pro-feature-3": "Download any lesson as PDF for offline reading",
-    "pro-feature-4": "Audio lessons for learning on the go",
+    "pro-feature-2": "3,000 AI credits each month for premium Nina models",
+    "pro-feature-3": "Pro tryouts with IRT scoring and detailed explanations",
+    "pro-feature-4": "Download lessons as PDFs and listen to audio versions",
     "pro-feature-5": "Priority support when you need guidance",
     "pro-cta": "Get Pro"
   },
@@ -643,7 +737,7 @@
     "description": "Cannot find what you need? Reach out to us directly.",
     "cta-contact": "Contact founder",
     "q1": "Is Nakafa really free?",
-    "a1": "Yes. Core content is free forever. We charge for Pro features like unlimited AI and PDF downloads, but you will never hit a paywall on basic learning materials.",
+    "a1": "Yes. Core content is free forever. We charge for Pro features like premium AI models, 3,000 monthly AI credits, Pro tryouts, and PDF downloads, but you will never hit a paywall on basic learning materials.",
     "q2": "What AI models can I use?",
     "a2": "Everyone can use Nakafa Lite and Nakafa Pro. Credits decide how much you can use each model.",
     "q3": "Can I download lessons for offline use?",
@@ -738,7 +832,7 @@
       "learning": "Learning",
       "classes": "Classes",
       "nakafa-materials": "Nakafa Materials",
-      "yours": "Yours",
+      "yours": "For you",
       "notifications": "Notifications",
       "preparing-school": "Preparing your school",
       "preparing-school-description": "Please wait while we set things up for you."
@@ -970,9 +1064,19 @@
       "keywords": "{title}, {chapter, select, __EMPTY__ {} other {{chapter}, }}{material}, {grade}, learn, material, practice problems, exercises, education"
     },
     "exercise": {
-      "title": "{number, select, 0 {} other {Question {number}/{questionCount}: }}{set, select, __EMPTY__ {} other {{set}{number, select, 0 {: } other { - }}}}{group, select, __EMPTY__ {} other {{group} - }}{material} ({exam}) | Nakafa",
+      "title": "{number, select, 0 {} other {Question {number}{questionTotal, select, __EMPTY__ {} other {{questionTotal}}}: }}{set, select, __EMPTY__ {} other {{set}{number, select, 0 {: } other { - }}}}{group, select, __EMPTY__ {} other {{group} - }}{material} ({exam}) | Nakafa",
       "description": "Take {material} {exam} exercise{group, select, __EMPTY__ {} other { {group}}}{set, select, __EMPTY__ {} other { {set}}} with {questionCount, plural, =0 {practice questions} =1 {1 question} other {{questionCount} questions}} and explanations for checking your reasoning.",
       "keywords": "{material}, {exam}, {group, select, __EMPTY__ {} other {{group}, }}{set, select, __EMPTY__ {} other {{set}, }}exercise, practice questions, solutions, exam"
+    },
+    "exercise-program": {
+      "title": "{exam} Practice Questions | Nakafa",
+      "description": "Choose {exam} practice domains for {category}. Each domain links to question sets with explanations for checking understanding.",
+      "keywords": "{exam}, {category}, practice questions, question sets, explanations, exam preparation"
+    },
+    "curriculum": {
+      "title": "{title}{parent, select, __EMPTY__ {} other { - {parent}}}{program, select, __EMPTY__ {} other { ({program})}} | Nakafa",
+      "description": "Browse {title}{parent, select, __EMPTY__ {} other { in {parent}}}{program, select, __EMPTY__ {} other { for {program}}}. This curriculum index links learners to the relevant materials and practice routes.",
+      "keywords": "{title}, {parent, select, __EMPTY__ {} other {{parent}, }}{program, select, __EMPTY__ {} other {{program}, }}curriculum, learning path, materials, practice"
     },
     "article": {
       "title": "{title} - {category} | Nakafa",

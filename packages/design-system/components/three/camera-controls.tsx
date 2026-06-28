@@ -42,27 +42,38 @@ const DEFAULT_CAMERA_TARGET = [
  * @see https://r3f.docs.pmnd.rs/advanced/scaling-performance
  * @see https://drei.docs.pmnd.rs/controls/orbit-controls
  */
-export function CameraControls({
-  cameraPosition = DEFAULT_CAMERA_POSITION,
-  cameraTarget = DEFAULT_CAMERA_TARGET,
-  autoRotate = true,
-  maxAzimuthAngle,
-  maxDistance = 100,
-  maxPolarAngle,
-  minAzimuthAngle,
-  minDistance = 1,
-  minPolarAngle,
-}: {
+interface CameraControlsProps {
+  autoRotate?: boolean;
   cameraPosition?: readonly [number, number, number];
   cameraTarget?: readonly [number, number, number];
-  autoRotate?: boolean;
+  enablePan?: boolean;
+  enableRotate?: boolean;
+  enableZoom?: boolean;
+  fov?: number;
   maxAzimuthAngle?: number;
   maxDistance?: number;
   maxPolarAngle?: number;
   minAzimuthAngle?: number;
   minDistance?: number;
   minPolarAngle?: number;
-}) {
+}
+
+export function CameraControls(props: CameraControlsProps) {
+  const {
+    cameraPosition = DEFAULT_CAMERA_POSITION,
+    cameraTarget = DEFAULT_CAMERA_TARGET,
+    autoRotate = true,
+    enablePan = true,
+    enableRotate = true,
+    enableZoom = true,
+    fov = 50,
+    maxAzimuthAngle,
+    maxDistance = 100,
+    maxPolarAngle,
+    minAzimuthAngle,
+    minDistance = 1,
+    minPolarAngle,
+  } = props;
   const controlsRef = useRef<ComponentRef<typeof OrbitControls>>(null);
   const domElement = useThree((state) => state.gl.domElement);
   const invalidate = useThree((state) => state.invalidate);
@@ -120,7 +131,7 @@ export function CameraControls({
   /**
    * Re-renders demand-driven canvases when the user interacts with controls.
    */
-  const handleChange = useCallback(() => {
+  const invalidateCameraControls = useCallback(() => {
     regress();
     invalidate();
   }, [invalidate, regress]);
@@ -141,12 +152,15 @@ export function CameraControls({
 
   return (
     <>
-      <PerspectiveCamera fov={50} makeDefault position={cameraPosition} />
+      <PerspectiveCamera fov={fov} makeDefault position={cameraPosition} />
       <OrbitControls
         autoRotate={autoRotate}
         autoRotateSpeed={0.5}
         dampingFactor={0.05}
         enableDamping
+        enablePan={enablePan}
+        enableRotate={enableRotate}
+        enableZoom={enableZoom}
         makeDefault
         maxAzimuthAngle={maxAzimuthAngle}
         maxDistance={maxDistance}
@@ -154,7 +168,7 @@ export function CameraControls({
         minAzimuthAngle={minAzimuthAngle}
         minDistance={minDistance}
         minPolarAngle={minPolarAngle}
-        onChange={handleChange}
+        onChange={invalidateCameraControls}
         onEnd={handleEnd}
         onStart={handleStart}
         ref={controlsRef}

@@ -7,11 +7,11 @@ import {
   getNakafaExerciseSetRoute,
 } from "@repo/contents/_lib/agent/exercise/ref";
 import {
-  buildNakafaContentRef,
-  parseNakafaContentRef,
+  parseNakafaContentRefFields,
+  resolveNakafaContentRef,
 } from "@repo/contents/_lib/agent/refs";
 import { NakafaAgentExerciseResultSchema } from "@repo/contents/_lib/agent/schema/exercise";
-import { getRenderableExercisesContent } from "@repo/contents/_lib/exercises/renderable";
+import { getRenderableExercisesContent } from "@repo/contents/_lib/assessment/renderable";
 import { Effect, Option, Schema } from "effect";
 
 type NakafaRenderableExercises = Effect.Effect.Success<
@@ -22,40 +22,46 @@ type NakafaRenderableExercisesLoader = (
   ...input: Parameters<typeof getRenderableExercisesContent>
 ) => Effect.Effect<NakafaRenderableExercises, NakafaAgentDataReadError>;
 
-/** Retrieves a structured exercise set or one exercise by content ID or URL. */
+const practiceMaterialRoutePrefix = "material/practice/";
+
+/** Retrieves a structured exercise set or one exercise by canonical URL projection. */
 export const getNakafaAgentExercise = Effect.fn("NakafaAgent.getExercise")(
   function* (
     input: string,
     exerciseNumber?: number,
     loadExercises: NakafaRenderableExercisesLoader = getRenderableExercisesContent
   ) {
-    const ref = parseNakafaContentRef(input);
+    const ref = yield* resolveNakafaContentRef(input);
 
-    if (Option.isNone(ref) || ref.value.section !== "exercises") {
+    if (
+      Option.isNone(ref) ||
+      ref.value.section !== "material" ||
+      !ref.value.route.startsWith(practiceMaterialRoutePrefix)
+    ) {
       return Option.none();
     }
 
     const target = getNakafaExerciseTarget(ref.value.route, exerciseNumber);
     const exercises = yield* loadExercises(ref.value.locale, target.setRoute);
-    const selectedExercises =
-      typeof target.number === "number"
-        ? exercises.filter((exercise) => exercise.number === target.number)
-        : exercises;
-
+    const targetNumberOption = target.number;
+    const selectedExercises = Option.isSome(targetNumberOption)
+      ? exercises.filter(
+          (exercise) => exercise.number === targetNumberOption.value
+        )
+      : exercises;
     if (selectedExercises.length === 0) {
       return Option.none();
     }
 
-    const setRef = buildNakafaContentRef(
+    const setRef = yield* parseNakafaContentRefFields(
       ref.value.locale,
       target.setRoute,
-      "exercises"
+      "material"
     );
 
-    const result = yield* decodeNakafaAgentExerciseResult({
+    const exerciseResultInput = {
       ...setRef,
       count: selectedExercises.length,
-      exercise_number: target.number,
       exercises: selectedExercises.map((exercise) => ({
         answer: {
           raw: exercise.answer.raw,
@@ -71,7 +77,16 @@ export const getNakafaAgentExercise = Effect.fn("NakafaAgent.getExercise")(
           title: exercise.question.metadata.title,
         },
       })),
-    });
+    };
+    const result = yield* decodeNakafaAgentExerciseResult(
+      Option.match(targetNumberOption, {
+        onNone: () => exerciseResultInput,
+        onSome: (exerciseNumber) => ({
+          ...exerciseResultInput,
+          exercise_number: exerciseNumber,
+        }),
+      })
+    );
 
     return Option.some(result);
   }
@@ -98,7 +113,7 @@ function getNakafaExerciseTarget(route: string, exerciseNumber?: number) {
 
   if (typeof exerciseNumber === "number") {
     return {
-      number: exerciseNumber,
+      number: Option.some(exerciseNumber),
       setRoute,
     };
   }

@@ -11,7 +11,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
  * `// @vitest-environment node` in the test file so ownership stays local.
  *
  * @see https://vitest.dev/guide/environment
- * @see https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility
+ * @see https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser
  */
 export default mergeConfig(config, {
   resolve: {

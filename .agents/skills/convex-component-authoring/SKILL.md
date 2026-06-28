@@ -1,10 +1,11 @@
 ---
 name: convex-component-authoring
-displayName: Convex Component Authoring
 description: How to create, structure, and publish self-contained Convex components with proper isolation, exports, and dependency management
-version: 1.0.0
-author: Convex
-tags: [convex, components, reusable, packages, npm]
+metadata:
+  displayName: Convex Component Authoring
+  version: 1.0.0
+  author: Convex
+  tags: [convex, components, reusable, packages, npm]
 ---
 
 # Convex Component Authoring

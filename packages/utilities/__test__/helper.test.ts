@@ -115,15 +115,15 @@ describe("cleanSlug", () => {
     });
 
     it("should handle subject slug", () => {
-      const slug = "/subject/high-school/10/mathematics/";
-      expect(cleanSlug(slug)).toBe("subject/high-school/10/mathematics");
+      const slug = "/curriculum/high-school/10/mathematics/";
+      expect(cleanSlug(slug)).toBe("curriculum/high-school/10/mathematics");
     });
 
     it("should handle nested exercise slug", () => {
       const slug =
-        "/exercises/high-school/snbt/general-reasoning/try-out/2026/set-1/1/";
+        "/material/practice/assessment/snbt/general-reasoning/try-out-2026/set-1/question-1/";
       expect(cleanSlug(slug)).toBe(
-        "exercises/high-school/snbt/general-reasoning/try-out/2026/set-1/1"
+        "material/practice/assessment/snbt/general-reasoning/try-out-2026/set-1/question-1"
       );
     });
 
@@ -177,9 +177,9 @@ describe("cleanSlug", () => {
 
     it("should handle complex real-world URL", () => {
       const slug =
-        "/en/subject/high-school/10/mathematics/exponential-logarithm/basic-concept/";
+        "/en/material/lesson/mathematics/exponential-logarithm/basic-concept/";
       expect(cleanSlug(slug)).toBe(
-        "en/subject/high-school/10/mathematics/exponential-logarithm/basic-concept"
+        "en/material/lesson/mathematics/exponential-logarithm/basic-concept"
       );
     });
   });

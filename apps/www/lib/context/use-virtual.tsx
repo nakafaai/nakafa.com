@@ -1,6 +1,6 @@
 "use client";
 
-import { type RefObject, useCallback, useMemo, useRef } from "react";
+import { type RefObject, useRef } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 import type { WindowVirtualizerHandle } from "virtua";
 
@@ -21,19 +21,16 @@ const VirtualContext = createContext<VirtualContextType>({
 export function VirtualProvider({ children }: { children: React.ReactNode }) {
   const virtualRef = useRef<WindowVirtualizerHandle>(null);
 
-  const scrollToIndex = useCallback((index: number) => {
+  const scrollToIndex = (index: number) => {
     virtualRef.current?.scrollToIndex(index, {
       offset: -100,
     });
-  }, []);
+  };
 
-  const value = useMemo(
-    () => ({
-      virtualRef,
-      scrollToIndex,
-    }),
-    [scrollToIndex]
-  );
+  const value = {
+    virtualRef,
+    scrollToIndex,
+  };
 
   return (
     <VirtualContext.Provider value={value}>{children}</VirtualContext.Provider>

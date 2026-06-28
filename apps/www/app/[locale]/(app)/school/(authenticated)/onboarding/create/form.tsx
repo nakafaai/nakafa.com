@@ -1,7 +1,6 @@
 "use client";
 
 import { PartyIcon } from "@hugeicons/core-free-icons";
-import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -23,7 +22,7 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
-import { Option, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import {
@@ -31,6 +30,7 @@ import {
   schoolCreateFormSchema,
   schoolTypeSchema,
 } from "@/app/[locale]/(app)/school/(authenticated)/onboarding/create/schema";
+import { reportClientException } from "@/lib/analytics/client";
 
 /** Render the onboarding form for creating a new school. */
 export function SchoolOnboardingCreateForm() {
@@ -50,27 +50,35 @@ export function SchoolOnboardingCreateForm() {
       onChange: schoolCreateFormSchema,
     },
     onSubmit: async ({ value }) => {
-      try {
-        const { slug } = await createSchool(value);
-        router.push(`/school/${slug}`);
-      } catch (error) {
-        captureException(error, {
-          source: "school-onboarding-create",
-        });
-
-        toast.error(t("school-creation-failed"));
-      }
+      await Effect.runPromise(
+        Effect.tryPromise({
+          try: async () => {
+            const { slug } = await createSchool(value);
+            router.push(`/school/${slug}`);
+          },
+          catch: (error) => error,
+        }).pipe(
+          Effect.catchAll((error) =>
+            reportClientException(error, {
+              source: "school-onboarding-create",
+            }).pipe(
+              Effect.zipRight(
+                Effect.sync(() => {
+                  toast.error(t("school-creation-failed"));
+                })
+              )
+            )
+          )
+        )
+      );
     },
   });
 
   return (
     <form
+      action={() => form.handleSubmit()}
       className="flex flex-col gap-6"
       id="school-onboarding-create-form"
-      onSubmit={(e) => {
-        e.preventDefault();
-        form.handleSubmit();
-      }}
     >
       <FieldGroup>
         <form.Field name="name">

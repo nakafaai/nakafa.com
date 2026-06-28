@@ -1,4 +1,3 @@
-import { quran } from "@repo/contents/_data/quran";
 import {
   SurahNotFoundError,
   VerseNotFoundError,
@@ -9,7 +8,8 @@ import {
   SurahSchema,
   type Verse,
 } from "@repo/contents/_types/quran";
-import { Effect, Option, pipe, Schema } from "effect";
+import { quran } from "@repo/contents/quran/source";
+import { Effect, Array as EffectArray, Option, pipe, Schema } from "effect";
 
 const verses = quran.flatMap((surah) => surah.verses);
 
@@ -73,10 +73,7 @@ export function validateSurahWithoutVerses(
  * @returns Lightweight surah list for indexes and navigation UIs
  */
 export function getAllSurah(): Omit<Surah, "verses">[] {
-  return quran
-    .map(validateSurahWithoutVerses)
-    .filter(Option.isSome)
-    .map((option) => option.value);
+  return EffectArray.filterMap(quran, validateSurahWithoutVerses);
 }
 
 /**

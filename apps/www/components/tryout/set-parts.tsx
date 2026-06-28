@@ -2,8 +2,8 @@
 
 import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import type { api } from "@repo/backend/convex/_generated/api";
-import { parseExercisesMaterial } from "@repo/contents/_lib/exercises/route";
-import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
+import { parseExercisesMaterial } from "@repo/contents/_lib/assessment/route";
+import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 import { GradientBlock } from "@repo/design-system/components/ui/gradient-block";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
@@ -13,6 +13,7 @@ import {
 } from "@repo/design-system/components/ui/number-flow";
 import { cn } from "@repo/design-system/lib/utils";
 import type { FunctionReturnType } from "convex/server";
+import { Option } from "effect";
 import { useTranslations } from "next-intl";
 import { useQueryState } from "nuqs";
 import type { ReactNode } from "react";
@@ -258,9 +259,9 @@ function TryoutSetPartScoreFraction({
 function getTryoutPartIcon(material: string) {
   const parsedMaterial = parseExercisesMaterial(material);
 
-  if (!parsedMaterial) {
+  if (Option.isNone(parsedMaterial)) {
     return null;
   }
 
-  return getMaterialIcon(parsedMaterial);
+  return getMaterialIcon(parsedMaterial.value);
 }

@@ -1,56 +1,60 @@
+import type { api } from "@repo/backend/convex/_generated/api";
+import { CONTENT_ROUTE_ARTIFACT_PAGE_SIZE } from "@repo/backend/convex/contents/constants";
+import { findPublicContentRouteBySourcePath } from "@repo/contents/_types/route/content";
 import {
-  getCategoryPath as getArticleCategoryPath,
-  parseArticleCategory,
-} from "@repo/contents/_lib/articles/category";
-import { getSlugPath as getArticleSlugPath } from "@repo/contents/_lib/articles/slug";
-import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
-import {
-  getExerciseQuestionNumbers,
-  getExerciseSetPathsFromSlugs,
-} from "@repo/contents/_lib/exercises/collection";
-import {
-  getMaterialPath as getExerciseMaterialPath,
-  getExercisesPath,
-  parseExercisesCategory,
-  parseExercisesMaterial,
-  parseExercisesType,
-} from "@repo/contents/_lib/exercises/route";
-import {
-  getSlugPath as getExerciseSlugPath,
-  hasInvalidTryOutYearSlug,
-  isYearlessTryOutCollectionSlug,
-} from "@repo/contents/_lib/exercises/slug";
-import {
-  clearFolderChildNamesCache,
-  getFolderChildNamesSync,
-} from "@repo/contents/_lib/fs";
-import { getAllSurah } from "@repo/contents/_lib/quran";
-import { parseSubjectCategory } from "@repo/contents/_lib/subject/category";
-import { getGradePath, parseGrade } from "@repo/contents/_lib/subject/grade";
-import {
-  getMaterialPath as getSubjectMaterialPath,
-  parseMaterial,
-} from "@repo/contents/_lib/subject/route";
-import { getSlugPath as getSubjectSlugPath } from "@repo/contents/_lib/subject/slug";
-import { CONTENT_ROOT_VALUES } from "@repo/contents/_types/content";
+  readPublicPracticeAssessmentPath,
+  readPublicPracticeDomainPath,
+} from "@repo/contents/_types/route/practice/path";
+import type { PublicContentRoute } from "@repo/contents/_types/route/schema";
 import { routing } from "@repo/internationalization/src/routing";
+import type { FunctionArgs, FunctionReturnType } from "convex/server";
+import { Effect, Option } from "effect";
+import { hasLocale, type Locale } from "next-intl";
+import {
+  getRuntimeContentRouteArtifactPage,
+  getRuntimeContentRouteCounts,
+  getRuntimeSitemapPublicRoutes,
+} from "@/lib/content/runtime/routes";
 
-const quranRoot = "quran";
-const subjectRootRoute = `/${CONTENT_ROOT_VALUES.subject}`;
-const quranRootRoute = `/${quranRoot}`;
-const contentRootRoutes = Object.values(CONTENT_ROOT_VALUES).map(
-  (root) => `/${root}`
-);
-const contentRouteSetsCache = new Map<
-  "content",
-  ReturnType<typeof createContentRouteSets>
->();
+type RuntimeContentSection = FunctionArgs<
+  typeof api.contents.queries.runtime.listContentRoutesByPrefix
+>["section"];
+type RuntimeContentRoute = NonNullable<
+  FunctionReturnType<
+    typeof api.contents.queries.runtime.getContentRouteArtifactPage
+  >
+>["routes"][number];
+type RuntimeSitemapPublicRoute = FunctionReturnType<
+  typeof api.contents.queries.runtime.listSitemapPublicRoutes
+>["page"][number];
+type RuntimeSitemapPublicRoutePage = FunctionReturnType<
+  typeof api.contents.queries.runtime.listSitemapPublicRoutes
+>;
+const contentSections: readonly RuntimeContentSection[] = [
+  "articles",
+  "material",
+  "quran",
+];
+const sitemapBasePageId = "base";
+const quranRootRoute = "/quran";
 
-/** Clears memoized sitemap route scans for tests and long-lived tools. */
-export function clearSitemapRouteCache() {
-  clearFolderChildNamesCache();
-  contentRouteSetsCache.clear();
-}
+type SitemapPage =
+  | { id: typeof sitemapBasePageId }
+  | {
+      id: string;
+      kind: "content";
+      locale: Locale;
+      page: number;
+      section: RuntimeContentSection;
+    }
+  | {
+      id: string;
+      kind: "public";
+      locale: Locale;
+    };
+
+/** Descriptor for one graph-backed sitemap artifact page. */
+export type ContentSitemapPage = Extract<SitemapPage, { kind: "content" }>;
 
 /** Static top-level routes that should always be present in the sitemap. */
 export const baseRoutes = [
@@ -58,284 +62,281 @@ export const baseRoutes = [
   "/search",
   "/contributor",
   quranRootRoute,
-  subjectRootRoute,
   "/terms-of-service",
   "/privacy-policy",
   "/security-policy",
 ];
 
-/** Top-level educational pages handled outside the content route scan. */
-const publicContentBaseRoutes = [...contentRootRoutes, quranRootRoute];
-
-/** Builds relative Quran routes from validated Quran data. */
-export function getQuranRoutes() {
-  return getAllSurah().map((surah) => `/${quranRoot}/${surah.number}`);
+/** Lists stable sitemap page ids from materialized route counts. */
+export function getSitemapPageDescriptors() {
+  return Effect.runPromise(readSitemapPageDescriptors());
 }
 
-/** Builds public educational routes that are backed by content or Quran data. */
-export function getPublicContentRoutes() {
-  return [...getContentRouteSets().pages, ...getQuranRoutes()];
-}
-
-/** Builds public educational request routes, including redirect-only legacy URLs. */
-export function getPublicContentRequestRoutes() {
-  const { pages, redirects } = getContentRouteSets();
-
-  return [
-    ...publicContentBaseRoutes,
-    ...pages,
-    ...redirects.keys(),
-    ...getQuranRoutes(),
-  ];
-}
-
-/** Builds redirect-only public content routes with their canonical targets. */
-export function getPublicContentRedirects() {
-  return Array.from(getContentRouteSets().redirects);
-}
-
-/** Builds the deduplicated route list used by `/sitemap.xml` and indexing scripts. */
-export function getSitemapRoutes() {
-  const allRoutes = new Set([...baseRoutes, ...getPublicContentRoutes()]);
-
-  return Array.from(allRoutes);
-}
-
-/** Returns route roots that are backed by educational content pages. */
-export function getPublicContentRouteRoots() {
-  const roots = new Set<string>();
-
-  for (const route of getPublicContentRequestRoutes()) {
-    const [root] = route.split("/").filter(Boolean);
-    roots.add(`/${root}`);
-  }
-
-  return Array.from(roots);
-}
-
-/** Builds route paths from localized content entries instead of raw folders. */
-function getContentRouteSets() {
-  const cachedRouteSets = contentRouteSetsCache.get("content");
-
-  if (cachedRouteSets) {
-    return cachedRouteSets;
-  }
-
-  const routeSets = createContentRouteSets();
-  contentRouteSetsCache.set("content", routeSets);
-
-  return routeSets;
-}
-
-/** Creates route paths from localized content entries instead of raw folders. */
-function createContentRouteSets() {
-  const pages = new Set<string>();
-  const redirects = new Map<string, string>();
-
-  addExerciseListingRoutes(pages);
-  addSubjectListingRoutes(pages);
+/** Reads sitemap page descriptors without loading route rows. */
+export const readSitemapPageDescriptors = Effect.fn(
+  "www.sitemap.pageDescriptors"
+)(function* () {
+  const descriptors: SitemapPage[] = [{ id: sitemapBasePageId }];
 
   for (const locale of routing.locales) {
-    const slugs = getMDXSlugsForLocale(locale);
+    descriptors.push({
+      id: formatPublicSitemapPageId(locale),
+      kind: "public",
+      locale,
+    });
 
-    for (const slug of slugs) {
-      addArticleRoutes(pages, slug);
-      addSubjectRoutes(pages, redirects, slug);
-    }
+    const counts = yield* getRuntimeContentRouteCounts({ locale });
 
-    addExerciseRoutes(pages, slugs);
-  }
-
-  return { pages, redirects };
-}
-
-/** Adds exercises type and material pages backed by folder-level listing data. */
-function addExerciseListingRoutes(routes: Set<string>) {
-  for (const rawCategory of getContentFolderNames(
-    CONTENT_ROOT_VALUES.exercises
-  )) {
-    const category = parseExercisesCategory(rawCategory);
-
-    if (!category) {
-      continue;
-    }
-
-    for (const rawType of getContentFolderNames(
-      `${CONTENT_ROOT_VALUES.exercises}/${category}`
-    )) {
-      const type = parseExercisesType(rawType);
-
-      if (!type) {
-        continue;
-      }
-
-      routes.add(getExercisesPath(category, type));
-
-      for (const rawMaterial of getContentFolderNames(
-        `${CONTENT_ROOT_VALUES.exercises}/${category}/${type}`
-      )) {
-        const material = parseExercisesMaterial(rawMaterial);
-
-        if (material) {
-          routes.add(getExerciseMaterialPath(category, type, material));
-        }
-      }
-    }
-  }
-}
-
-/** Adds subject grade and material pages backed by folder-level listing data. */
-function addSubjectListingRoutes(routes: Set<string>) {
-  for (const rawCategory of getContentFolderNames(
-    CONTENT_ROOT_VALUES.subject
-  )) {
-    const category = parseSubjectCategory(rawCategory);
-
-    if (!category) {
-      continue;
-    }
-
-    for (const rawGrade of getContentFolderNames(
-      `${CONTENT_ROOT_VALUES.subject}/${category}`
-    )) {
-      const grade = parseGrade(rawGrade);
-
-      if (!grade) {
-        continue;
-      }
-
-      routes.add(getGradePath(category, grade));
-
-      for (const rawMaterial of getContentFolderNames(
-        `${CONTENT_ROOT_VALUES.subject}/${category}/${grade}`
-      )) {
-        const material = parseMaterial(rawMaterial);
-
-        if (material) {
-          routes.add(getSubjectMaterialPath(category, grade, material));
-        }
-      }
-    }
-  }
-}
-
-/** Reads content child folders with missing folders treated as empty route groups. */
-function getContentFolderNames(folder: string) {
-  return getFolderChildNamesSync(folder);
-}
-
-/** Adds article category and detail pages backed by article MDX content. */
-function addArticleRoutes(routes: Set<string>, slug: string) {
-  const [root, rawCategory, articleSlug] = slug.split("/");
-
-  if (root !== CONTENT_ROOT_VALUES.articles || !(rawCategory && articleSlug)) {
-    return;
-  }
-
-  const category = parseArticleCategory(rawCategory);
-
-  if (!category) {
-    return;
-  }
-
-  routes.add(getArticleCategoryPath(category));
-  routes.add(getArticleSlugPath(category, articleSlug));
-}
-
-/** Adds subject grade, material, and lesson pages backed by subject MDX content. */
-function addSubjectRoutes(
-  routes: Set<string>,
-  redirects: Map<string, string>,
-  slug: string
-) {
-  const [
-    root,
-    rawCategory = "",
-    rawGrade = "",
-    rawMaterial = "",
-    ...lessonSlug
-  ] = slug.split("/");
-
-  if (root !== CONTENT_ROOT_VALUES.subject || lessonSlug.length === 0) {
-    return;
-  }
-
-  const category = parseSubjectCategory(rawCategory);
-  const grade = parseGrade(rawGrade);
-  const material = parseMaterial(rawMaterial);
-
-  if (!(category && grade && material)) {
-    return;
-  }
-
-  routes.add(getGradePath(category, grade));
-  const materialRoute = getSubjectMaterialPath(category, grade, material);
-  const chapterRoute = getSubjectSlugPath(
-    category,
-    grade,
-    material,
-    lessonSlug.slice(0, 1)
-  );
-
-  routes.add(materialRoute);
-  redirects.set(chapterRoute, materialRoute);
-
-  if (isSubjectChapterRedirectSlug(lessonSlug)) {
-    return;
-  }
-
-  routes.add(getSubjectSlugPath(category, grade, material, lessonSlug));
-}
-
-/** Matches subject chapter redirects handled by the catch-all subject page. */
-function isSubjectChapterRedirectSlug(slug: string[]) {
-  const [chapter, lesson] = slug;
-  return chapter !== undefined && lesson === undefined;
-}
-
-/** Adds exercises listing, group, set, and question pages from exercise entries. */
-function addExerciseRoutes(routes: Set<string>, slugs: readonly string[]) {
-  for (const setPath of getExerciseSetPathsFromSlugs(slugs)) {
-    const [root, rawCategory = "", rawType = "", rawMaterial = "", ...setSlug] =
-      setPath.split("/");
-
-    if (root !== CONTENT_ROOT_VALUES.exercises || setSlug.length === 0) {
-      continue;
-    }
-
-    const category = parseExercisesCategory(rawCategory);
-    const type = parseExercisesType(rawType);
-    const material = parseExercisesMaterial(rawMaterial);
-
-    if (!(category && type && material) || isLegacyExerciseSlug(setSlug)) {
-      continue;
-    }
-
-    routes.add(getExercisesPath(category, type));
-    routes.add(getExerciseMaterialPath(category, type, material));
-
-    for (const parentSlug of getParentSlugs(setSlug)) {
-      if (!isLegacyExerciseSlug(parentSlug)) {
-        routes.add(getExerciseSlugPath(category, type, material, parentSlug));
-      }
-    }
-
-    routes.add(getExerciseSlugPath(category, type, material, setSlug));
-
-    for (const number of getExerciseQuestionNumbers(slugs, setPath)) {
-      routes.add(
-        getExerciseSlugPath(category, type, material, [...setSlug, number])
+    for (const count of counts) {
+      const section = count.section;
+      const pageCount = Math.ceil(
+        count.count / CONTENT_ROUTE_ARTIFACT_PAGE_SIZE
       );
+
+      for (let page = 0; page < pageCount; page++) {
+        descriptors.push({
+          id: formatContentSitemapPageId({ locale, section, page }),
+          kind: "content",
+          locale,
+          page,
+          section,
+        });
+      }
     }
   }
+
+  return descriptors;
+});
+
+/** Resolves one sitemap page id into the route artifact page it represents. */
+export function getSitemapPageDescriptor(id: string | undefined) {
+  if (!id || id === sitemapBasePageId) {
+    return { id: sitemapBasePageId } satisfies SitemapPage;
+  }
+
+  const [prefix, locale, section, rawPage] = id.split("_");
+
+  if (prefix === "public" && hasLocale(routing.locales, locale) && !section) {
+    return {
+      id,
+      kind: "public",
+      locale,
+    } satisfies SitemapPage;
+  }
+
+  if (prefix !== "content" || !hasLocale(routing.locales, locale)) {
+    return null;
+  }
+
+  if (!isRuntimeContentSection(section)) {
+    return null;
+  }
+
+  const page = Number.parseInt(rawPage ?? "", 10);
+  if (!Number.isInteger(page) || page < 0) {
+    return null;
+  }
+
+  return {
+    id,
+    kind: "content",
+    locale,
+    page,
+    section,
+  } satisfies SitemapPage;
 }
 
-/** Returns every non-empty parent slug from the current nested slug. */
-function getParentSlugs(slug: string[]) {
-  return slug.slice(0, -1).map((_, index) => slug.slice(0, index + 1));
+/** Runs the sitemap route Effect at the Next metadata boundary. */
+export function getSitemapRoutes(pageId?: string) {
+  return Effect.runPromise(readSitemapRoutes(pageId));
 }
 
-/** Keeps migrated yearless try-out paths out of canonical sitemap routes. */
-function isLegacyExerciseSlug(slug: string[]) {
-  return isYearlessTryOutCollectionSlug(slug) || hasInvalidTryOutYearSlug(slug);
+/** Builds the deduplicated route list for one sitemap page. */
+export const readSitemapRoutes = Effect.fn("www.sitemap.routes")(function* (
+  pageId?: string
+) {
+  const page = getSitemapPageDescriptor(pageId);
+
+  if (!page) {
+    return [];
+  }
+
+  if (isPublicSitemapPage(page)) {
+    return yield* readSitemapPublicRoutes(page.locale);
+  }
+
+  if (!isContentSitemapPage(page)) {
+    return sortRoutes(baseRoutes);
+  }
+
+  const rows = yield* getRuntimeContentRoutePageRows(page);
+  const routes = yield* buildSitemapContentPageRoutes(rows);
+  return sortRoutes(routes);
+});
+
+/** Formats one materialized content route page id for Next.js sitemap generation. */
+function formatContentSitemapPageId({
+  locale,
+  page,
+  section,
+}: {
+  locale: Locale;
+  page: number;
+  section: RuntimeContentSection;
+}) {
+  return `content_${locale}_${section}_${page}`;
+}
+
+/** Formats the public-context route sitemap page id for one locale. */
+function formatPublicSitemapPageId(locale: Locale) {
+  return `public_${locale}`;
+}
+
+/** Checks whether a raw route page segment is a content section. */
+function isRuntimeContentSection(
+  section: string | undefined
+): section is RuntimeContentSection {
+  return contentSections.some((candidate) => candidate === section);
+}
+
+/** Checks whether one parsed sitemap page targets content route rows. */
+function isContentSitemapPage(page: SitemapPage): page is ContentSitemapPage {
+  return "kind" in page && page.kind === "content";
+}
+
+/** Checks whether one parsed sitemap page targets public route rows. */
+function isPublicSitemapPage(
+  page: SitemapPage
+): page is Extract<SitemapPage, { kind: "public" }> {
+  return "kind" in page && page.kind === "public";
+}
+
+/** Reads one materialized content route page through the Convex route catalog. */
+function getRuntimeContentRoutePageRows(page: ContentSitemapPage) {
+  return getRuntimeContentRouteArtifactPage({
+    locale: page.locale,
+    page: page.page,
+    section: page.section,
+  }).pipe(
+    Effect.map((artifactPage) => {
+      if (!artifactPage) {
+        return [];
+      }
+
+      return artifactPage.routes;
+    })
+  );
+}
+
+/** Builds sitemap page routes from concrete route catalog rows. */
+export const buildSitemapContentPageRoutes = Effect.fn(
+  "www.sitemap.contentPageRoutes"
+)(function* (rows: readonly RuntimeContentRoute[]) {
+  const routes = new Set<string>();
+
+  for (const row of rows) {
+    yield* addContentPageRoutes(routes, row);
+  }
+
+  return sortRoutes(routes);
+});
+
+/** Reads sitemap-eligible public context routes through bounded Convex pages. */
+const readSitemapPublicRoutes = Effect.fn("www.sitemap.publicRoutes")(
+  function* (locale: Locale) {
+    const routes = new Set<string>();
+    let cursor: string | null = null;
+
+    while (true) {
+      const page: RuntimeSitemapPublicRoutePage =
+        yield* getRuntimeSitemapPublicRoutes({
+          cursor,
+          limit: CONTENT_ROUTE_ARTIFACT_PAGE_SIZE,
+          locale,
+        });
+
+      for (const route of page.page) {
+        if (isSitemapPublicContextRoute(route)) {
+          routes.add(routeToPath(route.publicPath));
+        }
+      }
+
+      if (page.isDone) {
+        return sortRoutes(routes);
+      }
+
+      cursor = page.continueCursor;
+    }
+  }
+);
+
+/** Adds the concrete route and supported parent index routes. */
+function addContentPageRoutes(routes: Set<string>, row: RuntimeContentRoute) {
+  return Effect.gen(function* () {
+    if (row.section === "articles") {
+      addArticleRoutes(routes, row.route);
+      return;
+    }
+
+    if (row.section === "quran") {
+      routes.add(routeToPath(row.route));
+      return;
+    }
+
+    const route = yield* findPublicContentRouteBySourcePath(
+      row.sourcePath,
+      row.locale
+    );
+
+    if (Option.isNone(route)) {
+      return;
+    }
+
+    addProjectedContentRoutes(routes, route.value);
+  });
+}
+
+/** Adds article category and detail routes. */
+function addArticleRoutes(routes: Set<string>, route: string) {
+  const [, category] = route.split("/");
+  routes.add(`/articles/${category}`);
+  routes.add(routeToPath(route));
+}
+
+/** Adds projected public content routes plus their useful listing parents. */
+function addProjectedContentRoutes(
+  routes: Set<string>,
+  route: PublicContentRoute
+) {
+  if (route.kind === "subject-topic") {
+    return;
+  }
+
+  if (route.kind === "subject-lesson") {
+    routes.add(routeToPath(route.publicPath));
+    return;
+  }
+
+  if (route.kind === "exercise-question") {
+    routes.add(routeToPath(route.parentPath));
+  }
+
+  routes.add(routeToPath(readPublicPracticeAssessmentPath(route)));
+  routes.add(routeToPath(readPublicPracticeDomainPath(route)));
+  routes.add(routeToPath(route.publicPath));
+}
+
+/** Keeps public-route sitemap rows scoped to rendered app context pages. */
+function isSitemapPublicContextRoute(route: RuntimeSitemapPublicRoute) {
+  return route.kind === "curriculum-context";
+}
+
+/** Converts one route string into an app-level HTTP path string. */
+function routeToPath(route: string) {
+  return `/${route}`;
+}
+
+/** Returns routes in stable lexical order for deterministic artifacts. */
+function sortRoutes(routes: Iterable<string>) {
+  return Array.from(new Set(routes)).sort((a, b) => a.localeCompare(b));
 }

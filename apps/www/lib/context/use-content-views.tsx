@@ -11,9 +11,7 @@ import {
 
 type ContentViewsStoreApi = ReturnType<typeof createContentViewsStore>;
 
-export const ContentViewsContext = createContext<ContentViewsStoreApi | null>(
-  null
-);
+const ContentViewsContext = createContext<ContentViewsStoreApi | null>(null);
 
 export function ContentViewsProvider({ children }: { children: ReactNode }) {
   const [store] = useState(() => createContentViewsStore());

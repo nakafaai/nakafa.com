@@ -1,30 +1,115 @@
 import { internal } from "@repo/backend/convex/_generated/api";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE,
   MIN_VIEW_THRESHOLD,
 } from "@repo/backend/convex/audioStudies/constants";
+import { getLifetimePopularityWindow } from "@repo/backend/convex/contents/popularity";
+import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import schema from "@repo/backend/convex/schema";
+import { getTestAudioContent } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
 const REAL_VECTOR_PUBLISHED_AT = 1_744_416_000_000;
-const REAL_VECTOR_TOPIC_SLUG =
-  "subject/high-school/10/mathematics/vector-operations";
+const REAL_VECTOR_TOPIC_SLUG = "material/lesson/mathematics/vector-operations";
 const REAL_VECTOR_SECTION_SLUG =
-  "subject/high-school/10/mathematics/vector-operations/vector-addition";
+  "material/lesson/mathematics/vector-operations/vector-addition";
 const REAL_VECTOR_TOPIC_SECTION_COUNT = 15;
 const REAL_DYNASTIC_ARTICLE_PUBLISHED_AT = 1_723_075_200_000;
 const REAL_DYNASTIC_ARTICLE_SLUG =
   "articles/politics/dynastic-politics-asian-values";
 const REAL_DYNASTIC_ARTICLE_ID = "dynastic-politics-asian-values";
+const audioRouteKinds = [
+  "article",
+  "curriculum-lesson",
+] as const satisfies readonly Doc<"contentRoutes">["kind"][];
+const canonicalContext = {
+  contextKey: "canonical",
+  contextMode: "canonical",
+} as const;
+
+type AudioRouteKind = (typeof audioRouteKinds)[number];
+
+/** Builds the graph asset identity used by audio source and popularity fixtures. */
+function getGraph(locale: Locale, route: string) {
+  const graph = createLearningGraphIdentityFromRoute({ locale, route });
+
+  if (!graph) {
+    throw new Error(`Expected graph identity for ${locale}/${route}.`);
+  }
+
+  return {
+    ...graph,
+    content_id: graph.assetId,
+  };
+}
+
+/** Inserts the route-catalog row needed by audio source lookup hydration. */
+async function insertContentRoute(
+  ctx: MutationCtx,
+  input: {
+    readonly locale: Locale;
+    readonly route: string;
+    readonly kind: AudioRouteKind;
+    readonly title: string;
+  }
+) {
+  const graph = getGraph(input.locale, input.route);
+
+  await ctx.db.insert("contentRoutes", {
+    ...graph,
+    authors: [],
+    contentHash: `route-${input.locale}-${input.route}`,
+    kind: input.kind,
+    locale: input.locale,
+    markdown: true,
+    route: input.route,
+    section: input.kind === "article" ? "articles" : "material",
+    sourcePath: input.route,
+    syncedAt: 1,
+    title: input.title,
+  });
+
+  return graph;
+}
+
+/** Inserts one global lifetime popularity counter for audio candidate ranking. */
+async function insertPopularityCounter(
+  ctx: MutationCtx,
+  input: {
+    readonly graph: ReturnType<typeof getGraph>;
+    readonly locale: Locale;
+    readonly route: string;
+    readonly score: number;
+    readonly section: Doc<"learningPopularityCounters">["section"];
+    readonly title: string;
+  }
+) {
+  await ctx.db.insert("learningPopularityCounters", {
+    ...input.graph,
+    ...canonicalContext,
+    locale: input.locale,
+    route: input.route,
+    score: input.score,
+    section: input.section,
+    scopeMode: "global",
+    sourcePath: input.route,
+    title: input.title,
+    updatedAt: 1,
+    windowKey: getLifetimePopularityWindow(),
+  });
+}
 
 describe("contents/queries/audio", () => {
   it("returns one ranked item per slug with source lookup metadata", async () => {
     const t = convexTest(schema, convexModules);
 
     await t.mutation(async (ctx) => {
-      const articleId = await ctx.db.insert("articleContents", {
+      await ctx.db.insert("articleContents", {
         locale: "en",
         slug: REAL_DYNASTIC_ARTICLE_SLUG,
         category: "politics",
@@ -39,11 +124,10 @@ describe("contents/queries/audio", () => {
         syncedAt: 1,
       });
 
-      const englishSubjectId = await ctx.db.insert("subjectSections", {
-        topicId: await ctx.db.insert("subjectTopics", {
-          category: "high-school",
-          grade: "10",
+      await ctx.db.insert("curriculumLessons", {
+        topicId: await ctx.db.insert("curriculumTopics", {
           material: "mathematics",
+          order: 0,
           topic: "vector-operations",
           title: "Vector and Operations",
           locale: "en",
@@ -53,9 +137,8 @@ describe("contents/queries/audio", () => {
         }),
         locale: "en",
         slug: REAL_VECTOR_SECTION_SLUG,
-        category: "high-school",
-        grade: "10",
         material: "mathematics",
+        order: 0,
         topic: "vector-operations",
         section: "vector-addition",
         title: "Vector Addition",
@@ -67,11 +150,10 @@ describe("contents/queries/audio", () => {
         syncedAt: 1,
       });
 
-      const indonesianSubjectId = await ctx.db.insert("subjectSections", {
-        topicId: await ctx.db.insert("subjectTopics", {
-          category: "high-school",
-          grade: "10",
+      await ctx.db.insert("curriculumLessons", {
+        topicId: await ctx.db.insert("curriculumTopics", {
           material: "mathematics",
+          order: 0,
           topic: "vector-operations",
           title: "Vektor dan Operasinya",
           locale: "id",
@@ -81,9 +163,8 @@ describe("contents/queries/audio", () => {
         }),
         locale: "id",
         slug: REAL_VECTOR_SECTION_SLUG,
-        category: "high-school",
-        grade: "10",
         material: "mathematics",
+        order: 0,
         topic: "vector-operations",
         section: "vector-addition",
         title: "Penjumlahan Vektor",
@@ -96,41 +177,72 @@ describe("contents/queries/audio", () => {
       });
 
       await ctx.db.insert("audioContentSources", {
-        contentHash: "source-article-en-hash",
-        contentRef: { type: "article", id: articleId },
-        locale: "en",
-        slug: REAL_DYNASTIC_ARTICLE_SLUG,
+        ...getTestAudioContent({
+          contentHash: "source-article-en-hash",
+          locale: "en",
+          route: REAL_DYNASTIC_ARTICLE_SLUG,
+        }),
         syncedAt: 2,
       });
       await ctx.db.insert("audioContentSources", {
-        contentHash: "source-subject-en-hash",
-        contentRef: { type: "subject", id: englishSubjectId },
-        locale: "en",
-        slug: REAL_VECTOR_SECTION_SLUG,
+        ...getTestAudioContent({
+          contentHash: "source-subject-en-hash",
+          locale: "en",
+          route: REAL_VECTOR_SECTION_SLUG,
+        }),
         syncedAt: 2,
       });
       await ctx.db.insert("audioContentSources", {
-        contentHash: "source-subject-id-hash",
-        contentRef: { type: "subject", id: indonesianSubjectId },
-        locale: "id",
-        slug: REAL_VECTOR_SECTION_SLUG,
+        ...getTestAudioContent({
+          contentHash: "source-subject-id-hash",
+          locale: "id",
+          route: REAL_VECTOR_SECTION_SLUG,
+        }),
         syncedAt: 2,
       });
 
-      await ctx.db.insert("articlePopularity", {
-        contentId: articleId,
-        updatedAt: 1,
-        viewCount: 80,
+      const articleGraph = await insertContentRoute(ctx, {
+        kind: "article",
+        locale: "en",
+        route: REAL_DYNASTIC_ARTICLE_SLUG,
+        title: "Dynastic Politics",
       });
-      await ctx.db.insert("subjectPopularity", {
-        contentId: englishSubjectId,
-        updatedAt: 1,
-        viewCount: 40,
+      const englishSubjectGraph = await insertContentRoute(ctx, {
+        kind: "curriculum-lesson",
+        locale: "en",
+        route: REAL_VECTOR_SECTION_SLUG,
+        title: "Vector Addition",
       });
-      await ctx.db.insert("subjectPopularity", {
-        contentId: indonesianSubjectId,
-        updatedAt: 1,
-        viewCount: 25,
+      const indonesianSubjectGraph = await insertContentRoute(ctx, {
+        kind: "curriculum-lesson",
+        locale: "id",
+        route: REAL_VECTOR_SECTION_SLUG,
+        title: "Penjumlahan Vektor",
+      });
+
+      await insertPopularityCounter(ctx, {
+        graph: articleGraph,
+        locale: "en",
+        route: REAL_DYNASTIC_ARTICLE_SLUG,
+        score: 80,
+        section: "articles",
+        title: "Dynastic Politics",
+      });
+      await insertPopularityCounter(ctx, {
+        graph: englishSubjectGraph,
+        locale: "en",
+        route: REAL_VECTOR_SECTION_SLUG,
+        score: 40,
+        section: "material",
+        title: "Vector Addition",
+      });
+      await insertPopularityCounter(ctx, {
+        graph: indonesianSubjectGraph,
+        locale: "id",
+        route: REAL_VECTOR_SECTION_SLUG,
+        score: 25,
+        section: "material",
+        title: "Penjumlahan Vektor",
       });
     });
 
@@ -141,33 +253,33 @@ describe("contents/queries/audio", () => {
 
     expect(result).toEqual([
       {
-        ref: expect.objectContaining({ type: "article" }),
-        sourceContent: {
+        sourceContent: expect.objectContaining({
           contentHash: "source-article-en-hash",
+          content_id: getGraph("en", REAL_DYNASTIC_ARTICLE_SLUG).content_id,
+          contentType: "article",
           locale: "en",
-          ref: expect.objectContaining({ type: "article" }),
-          slug: REAL_DYNASTIC_ARTICLE_SLUG,
-        },
+          route: REAL_DYNASTIC_ARTICLE_SLUG,
+        }),
         viewCount: 80,
       },
       {
-        ref: expect.objectContaining({ type: "subject" }),
-        sourceContent: {
+        sourceContent: expect.objectContaining({
           contentHash: "source-subject-en-hash",
+          content_id: getGraph("en", REAL_VECTOR_SECTION_SLUG).content_id,
+          contentType: "material",
           locale: "en",
-          ref: expect.objectContaining({ type: "subject" }),
-          slug: REAL_VECTOR_SECTION_SLUG,
-        },
+          route: REAL_VECTOR_SECTION_SLUG,
+        }),
         viewCount: 40,
       },
     ]);
   });
 
-  it("skips popularity rows whose source content no longer exists", async () => {
+  it("skips popularity rows whose route catalog projection is missing", async () => {
     const t = convexTest(schema, convexModules);
 
     await t.mutation(async (ctx) => {
-      const articleId = await ctx.db.insert("articleContents", {
+      await ctx.db.insert("articleContents", {
         locale: "en",
         slug: REAL_DYNASTIC_ARTICLE_SLUG,
         category: "politics",
@@ -182,16 +294,19 @@ describe("contents/queries/audio", () => {
         syncedAt: 1,
       });
 
-      await ctx.db.insert("articlePopularity", {
-        contentId: articleId,
-        updatedAt: 1,
-        viewCount: 80,
+      const articleGraph = getGraph("en", REAL_DYNASTIC_ARTICLE_SLUG);
+      await insertPopularityCounter(ctx, {
+        graph: articleGraph,
+        locale: "en",
+        route: REAL_DYNASTIC_ARTICLE_SLUG,
+        score: 80,
+        section: "articles",
+        title: "Dynastic Politics",
       });
-      const subjectId = await ctx.db.insert("subjectSections", {
-        topicId: await ctx.db.insert("subjectTopics", {
-          category: "high-school",
-          grade: "10",
+      await ctx.db.insert("curriculumLessons", {
+        topicId: await ctx.db.insert("curriculumTopics", {
           material: "mathematics",
+          order: 0,
           topic: "vector-operations",
           title: "Vector and Operations",
           locale: "en",
@@ -201,9 +316,8 @@ describe("contents/queries/audio", () => {
         }),
         locale: "en",
         slug: REAL_VECTOR_SECTION_SLUG,
-        category: "high-school",
-        grade: "10",
         material: "mathematics",
+        order: 0,
         topic: "vector-operations",
         section: "vector-addition",
         title: "Vector Addition",
@@ -215,13 +329,15 @@ describe("contents/queries/audio", () => {
         syncedAt: 1,
       });
 
-      await ctx.db.insert("subjectPopularity", {
-        contentId: subjectId,
-        updatedAt: 1,
-        viewCount: 40,
+      const subjectGraph = getGraph("en", REAL_VECTOR_SECTION_SLUG);
+      await insertPopularityCounter(ctx, {
+        graph: subjectGraph,
+        locale: "en",
+        route: REAL_VECTOR_SECTION_SLUG,
+        score: 40,
+        section: "material",
+        title: "Vector Addition",
       });
-      await ctx.db.delete("articleContents", articleId);
-      await ctx.db.delete("subjectSections", subjectId);
     });
 
     const result = await t.query(
@@ -232,11 +348,84 @@ describe("contents/queries/audio", () => {
     expect(result).toEqual([]);
   });
 
+  it("pages past non-audio popularity rows to find queue candidates", async () => {
+    const t = convexTest(schema, convexModules);
+
+    await t.mutation(async (ctx) => {
+      for (
+        let index = 0;
+        index < MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE;
+        index++
+      ) {
+        const slug = `articles/politics/non-audio-candidate-${index}`;
+        const graph = await insertContentRoute(ctx, {
+          kind: "article",
+          locale: "en",
+          route: slug,
+          title: `Non Audio Candidate ${index}`,
+        });
+
+        await insertPopularityCounter(ctx, {
+          graph,
+          locale: "en",
+          route: slug,
+          score: 1000 - index,
+          section: "articles",
+          title: `Non Audio Candidate ${index}`,
+        });
+      }
+
+      const audioSlug = "articles/politics/audio-ready-after-page";
+      const audioGraph = await insertContentRoute(ctx, {
+        kind: "article",
+        locale: "en",
+        route: audioSlug,
+        title: "Audio Ready After Page",
+      });
+
+      await ctx.db.insert("audioContentSources", {
+        ...getTestAudioContent({
+          contentHash: "source-audio-ready-after-page",
+          locale: "en",
+          route: audioSlug,
+        }),
+        syncedAt: 2,
+      });
+      await insertPopularityCounter(ctx, {
+        graph: audioGraph,
+        locale: "en",
+        route: audioSlug,
+        score: 100,
+        section: "articles",
+        title: "Audio Ready After Page",
+      });
+    });
+
+    const result = await t.query(
+      internal.contents.queries.audio.getPopularContentForAudioQueue,
+      {}
+    );
+
+    expect(result).toEqual([
+      {
+        sourceContent: expect.objectContaining({
+          contentHash: "source-audio-ready-after-page",
+          content_id: getGraph("en", "articles/politics/audio-ready-after-page")
+            .content_id,
+          contentType: "article",
+          locale: "en",
+          route: "articles/politics/audio-ready-after-page",
+        }),
+        viewCount: 100,
+      },
+    ]);
+  });
+
   it("ignores popularity rows below the queue threshold before source lookup", async () => {
     const t = convexTest(schema, convexModules);
 
     await t.mutation(async (ctx) => {
-      const articleId = await ctx.db.insert("articleContents", {
+      await ctx.db.insert("articleContents", {
         locale: "en",
         slug: REAL_DYNASTIC_ARTICLE_SLUG,
         category: "politics",
@@ -252,16 +441,20 @@ describe("contents/queries/audio", () => {
       });
 
       await ctx.db.insert("audioContentSources", {
-        contentHash: "source-article-en-hash",
-        contentRef: { type: "article", id: articleId },
-        locale: "en",
-        slug: REAL_DYNASTIC_ARTICLE_SLUG,
+        ...getTestAudioContent({
+          contentHash: "source-article-en-hash",
+          locale: "en",
+          route: REAL_DYNASTIC_ARTICLE_SLUG,
+        }),
         syncedAt: 2,
       });
-      await ctx.db.insert("articlePopularity", {
-        contentId: articleId,
-        updatedAt: 1,
-        viewCount: MIN_VIEW_THRESHOLD - 1,
+      await insertPopularityCounter(ctx, {
+        graph: getGraph("en", REAL_DYNASTIC_ARTICLE_SLUG),
+        locale: "en",
+        route: REAL_DYNASTIC_ARTICLE_SLUG,
+        score: MIN_VIEW_THRESHOLD - 1,
+        section: "articles",
+        title: "Dynastic Politics",
       });
     });
 
@@ -283,7 +476,7 @@ describe("contents/queries/audio", () => {
         index++
       ) {
         const slug = `articles/politics/audio-candidate-${index}`;
-        const articleId = await ctx.db.insert("articleContents", {
+        await ctx.db.insert("articleContents", {
           locale: "en",
           slug,
           category: "politics",
@@ -297,16 +490,26 @@ describe("contents/queries/audio", () => {
         });
 
         await ctx.db.insert("audioContentSources", {
-          contentHash: `source-article-${index}-hash`,
-          contentRef: { type: "article", id: articleId },
-          locale: "en",
-          slug,
+          ...getTestAudioContent({
+            contentHash: `source-article-${index}-hash`,
+            locale: "en",
+            route: slug,
+          }),
           syncedAt: 2,
         });
-        await ctx.db.insert("articlePopularity", {
-          contentId: articleId,
-          updatedAt: 1,
-          viewCount: 1000 - index,
+        const graph = await insertContentRoute(ctx, {
+          kind: "article",
+          locale: "en",
+          route: slug,
+          title: `Audio Candidate ${index}`,
+        });
+        await insertPopularityCounter(ctx, {
+          graph,
+          locale: "en",
+          route: slug,
+          score: 1000 - index,
+          section: "articles",
+          title: `Audio Candidate ${index}`,
         });
       }
     });

@@ -1,11 +1,11 @@
 /**
- * Single source for sync-managed table counts used by Convex maintenance
+ * Single source for sync-managed table counts used by Convex reset
  * queries and the local sync scripts.
  */
 export const contentCountTables = [
   { field: "articles", tableName: "articleContents" },
-  { field: "subjectTopics", tableName: "subjectTopics" },
-  { field: "subjectSections", tableName: "subjectSections" },
+  { field: "curriculumTopics", tableName: "curriculumTopics" },
+  { field: "curriculumLessons", tableName: "curriculumLessons" },
   { field: "exerciseSets", tableName: "exerciseSets" },
   { field: "exerciseQuestions", tableName: "exerciseQuestions" },
   { field: "exerciseAttempts", tableName: "exerciseAttempts" },
@@ -45,6 +45,45 @@ export const contentCountTables = [
   { field: "irtScaleVersions", tableName: "irtScaleVersions" },
   { field: "irtScaleVersionItems", tableName: "irtScaleVersionItems" },
   { field: "contentSearch", tableName: "contentSearch" },
+  { field: "learningViews", tableName: "learningViews" },
+  {
+    field: "learningEngagementQueue",
+    tableName: "learningEngagementQueue",
+  },
+  {
+    field: "contentAnalyticsPartitions",
+    tableName: "contentAnalyticsPartitions",
+  },
+  { field: "userLearningRecents", tableName: "userLearningRecents" },
+  {
+    field: "learningPopularityViewerSignals",
+    tableName: "learningPopularityViewerSignals",
+  },
+  {
+    field: "learningPopularitySignals",
+    tableName: "learningPopularitySignals",
+  },
+  {
+    field: "learningPopularityCounters",
+    tableName: "learningPopularityCounters",
+  },
+  { field: "materials", tableName: "materials" },
+  { field: "materialLocales", tableName: "materialLocales" },
+  { field: "curricula", tableName: "curricula" },
+  { field: "curriculumNodes", tableName: "curriculumNodes" },
+  { field: "curriculumMaterials", tableName: "curriculumMaterials" },
+  { field: "assessments", tableName: "assessments" },
+  { field: "assessmentNodes", tableName: "assessmentNodes" },
+  { field: "learningPrograms", tableName: "learningPrograms" },
+  { field: "learningProgramSources", tableName: "learningProgramSources" },
+  { field: "learningPlanItems", tableName: "learningPlanItems" },
+  { field: "learningProgramCoverage", tableName: "learningProgramCoverage" },
+  { field: "contentRoutes", tableName: "contentRoutes" },
+  { field: "publicRoutes", tableName: "publicRoutes" },
+  { field: "contentRouteCounts", tableName: "contentRouteCounts" },
+  { field: "contentRoutePages", tableName: "contentRoutePages" },
+  { field: "quranSurahs", tableName: "quranSurahs" },
+  { field: "quranVerses", tableName: "quranVerses" },
   { field: "authors", tableName: "authors" },
   { field: "contentAuthors", tableName: "contentAuthors" },
   { field: "articleReferences", tableName: "articleReferences" },

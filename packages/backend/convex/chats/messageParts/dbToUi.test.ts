@@ -1,20 +1,17 @@
 import { mapDBPartToUIMessagePart } from "@repo/backend/convex/chats/messageParts/dbToUi";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
+import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
+import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
 const now = Date.UTC(2026, 4, 8, 0, 0, 0);
-const ref = {
-  content_id: "en/articles/politics/dynastic-politics-asian-values",
-  locale: "en",
-  markdown_url:
-    "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values.md",
-  route: "articles/politics/dynastic-politics-asian-values",
-  section: "articles",
-  url: "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values",
-} satisfies NakafaAgentContentRef;
+const ref = readNakafaContentRefFixture(
+  "en",
+  "articles/politics/dynastic-politics-asian-values",
+  "articles"
+);
 
 const toolCallProviderMetadata = {
   google: { thoughtSignature: "call-signature" },
@@ -157,7 +154,9 @@ describe("mapDBPartToUIMessagePart", () => {
         dataNakafaData: {
           kind: "content",
           status: "done",
-          input: { content_ref: ref.url },
+          input: {
+            content_ref: NakafaAgentContentRefInputSchema.make(ref.url),
+          },
           result: {
             ...ref,
             description: "Article summary",
@@ -185,6 +184,36 @@ describe("mapDBPartToUIMessagePart", () => {
       await ctx.db.insert("parts", {
         messageId,
         order: 5,
+        type: "data-nakafa",
+        dataNakafaId: "search-1",
+        dataNakafaData: {
+          kind: "search",
+          status: "done",
+          input: {
+            limit: 5,
+            locale: "en",
+            offset: 0,
+            queries: ["politics"],
+          },
+          result: {
+            count: 1,
+            has_more: false,
+            items: [
+              {
+                ...ref,
+                description: "Article summary",
+                excerpt: "Article summary",
+                title: "Dynastic Politics",
+              },
+            ],
+            limit: 5,
+            offset: 0,
+          },
+        },
+      });
+      await ctx.db.insert("parts", {
+        messageId,
+        order: 6,
         type: "data-scrape-url",
         dataScrapeUrlId: "scrape-1",
         dataScrapeUrlUrl: "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
@@ -239,6 +268,21 @@ describe("mapDBPartToUIMessagePart", () => {
         id: "taxonomy-1",
         data: expect.objectContaining({
           kind: "taxonomy",
+          status: "done",
+        }),
+      }),
+      expect.objectContaining({
+        type: "data-nakafa",
+        id: "search-1",
+        data: expect.objectContaining({
+          kind: "search",
+          result: expect.objectContaining({
+            items: [
+              expect.objectContaining({
+                excerpt: "Article summary",
+              }),
+            ],
+          }),
           status: "done",
         }),
       }),

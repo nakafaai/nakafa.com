@@ -16,15 +16,8 @@ import {
 } from "@repo/backend/convex/customers/polar/spec";
 import { convertToDatabaseCustomer } from "@repo/backend/convex/customers/records";
 import {
-  CustomerExternalIdInUse,
-  CustomerHasActiveSubscription,
-  CustomerNotOrphaned,
   CustomerSyncIoError,
-  customerExternalIdInUseCode,
-  customerHasActiveSubscriptionCode,
-  customerNotOrphanedCode,
   customerSyncIoErrorCode,
-  type RepairCustomerResult,
   UserNotFound,
   userNotFoundCode,
 } from "@repo/backend/convex/customers/sync/spec";
@@ -41,11 +34,6 @@ type CustomerSyncError =
   | PolarUpdateError;
 type RequiredCustomerError = CustomerSyncError | UserNotFound;
 type CleanupUserDataError = CustomerSyncIoError | PolarDeleteError;
-type CleanupStalePolarCustomerError =
-  | CleanupUserDataError
-  | CustomerExternalIdInUse
-  | CustomerHasActiveSubscription
-  | CustomerNotOrphaned;
 
 export type RequiredCustomer = WithoutSystemFields<Doc<"customers">> & {
   readonly localCustomerId: Id<"customers">;
@@ -212,32 +200,6 @@ export const requireCustomer: (
   });
 });
 
-/** Repairs one user's customer mapping and reports duplicate-email conflicts. */
-export const repairCustomerMapping: (
-  ctx: ActionCtx,
-  userId: Id<"users">
-) => Effect.Effect<
-  RepairCustomerResult,
-  CustomerSyncIoError | PolarCustomerError | PolarUpdateError | UserNotFound
-> = Effect.fn("customers.sync.repairCustomerMapping")(function* (
-  ctx: ActionCtx,
-  userId: Id<"users">
-) {
-  return yield* requireCustomer(ctx, userId).pipe(
-    Effect.map((customer) => ({
-      localCustomerId: customer.localCustomerId,
-      status: "synced" as const,
-    })),
-    Effect.catchTag("PolarCustomerEmailConflict", (conflict) =>
-      Effect.succeed({
-        existingExternalId: conflict.existingExternalId,
-        polarCustomerId: conflict.polarCustomerId,
-        status: "conflict" as const,
-      })
-    )
-  );
-});
-
 /** Deletes Polar and local customer state for a deleted app user. */
 export const cleanupCustomerDataForDeletedUser: (
   ctx: ActionCtx,
@@ -262,100 +224,6 @@ export const cleanupCustomerDataForDeletedUser: (
   }
 
   yield* polarGateway.deleteCustomer(customer.id);
-  yield* deleteLocalCustomer(ctx, customer.id);
-
-  return null;
-});
-
-/**
- * Deletes one stale Polar customer after proving no user or active subscription
- * still depends on it.
- */
-export const cleanupOrphanedPolarCustomer: (
-  ctx: ActionCtx,
-  input: {
-    readonly existingExternalId: string | null;
-    readonly polarCustomerId: string;
-  }
-) => Effect.Effect<null, CleanupStalePolarCustomerError> = Effect.fn(
-  "customers.sync.cleanupOrphanedPolarCustomer"
-)(function* (
-  ctx: ActionCtx,
-  input: {
-    readonly existingExternalId: string | null;
-    readonly polarCustomerId: string;
-  }
-) {
-  const customer = yield* Effect.tryPromise({
-    try: () =>
-      ctx.runQuery(
-        internal.customers.queries.internal.customer.getCustomerByPolarId,
-        {
-          polarCustomerId: input.polarCustomerId,
-        }
-      ),
-    catch: (error) =>
-      customerSyncIoError("Failed to load stale Polar customer", error),
-  });
-
-  if (!customer) {
-    return null;
-  }
-
-  const [user, authUser, hasActiveSubscription] = yield* Effect.tryPromise({
-    try: () =>
-      Promise.all([
-        ctx.runQuery(internal.users.queries.getUserById, {
-          userId: customer.userId,
-        }),
-        input.existingExternalId
-          ? ctx.runQuery(internal.users.queries.getUserByAuthId, {
-              authId: input.existingExternalId,
-            })
-          : Promise.resolve(null),
-        ctx.runQuery(
-          internal.customers.queries.internal.customer
-            .hasActiveSubscriptionByCustomerId,
-          {
-            customerId: input.polarCustomerId,
-          }
-        ),
-      ]),
-    catch: (error) =>
-      customerSyncIoError("Failed to validate stale Polar customer", error),
-  });
-
-  if (user) {
-    return yield* Effect.fail(
-      new CustomerNotOrphaned({
-        code: customerNotOrphanedCode,
-        message:
-          "Cannot delete a Polar customer that still belongs to a live user.",
-      })
-    );
-  }
-
-  if (hasActiveSubscription) {
-    return yield* Effect.fail(
-      new CustomerHasActiveSubscription({
-        code: customerHasActiveSubscriptionCode,
-        message:
-          "Cannot delete a Polar customer that still has an active subscription.",
-      })
-    );
-  }
-
-  if (authUser) {
-    return yield* Effect.fail(
-      new CustomerExternalIdInUse({
-        code: customerExternalIdInUseCode,
-        message:
-          "Cannot delete a Polar customer whose external ID still belongs to a live user.",
-      })
-    );
-  }
-
-  yield* polarGateway.deleteCustomer(input.polarCustomerId);
   yield* deleteLocalCustomer(ctx, customer.id);
 
   return null;

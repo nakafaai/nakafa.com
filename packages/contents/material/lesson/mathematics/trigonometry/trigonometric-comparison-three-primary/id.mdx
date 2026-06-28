@@ -1,0 +1,196 @@
+import { Triangle } from "@repo/design-system/components/contents/mathematics/triangle";
+import { UnitCircle } from "@repo/design-system/components/contents/mathematics/unit-circle";
+
+export const metadata = {
+  title: "Tiga Serangkai Perbandingan Trigonometri",
+  description: "Pahami hubungan sin, cos, dan tan dalam segitiga siku-siku, lalu hubungkan rasio dasar ini dengan lingkaran satuan.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "2025-04-14",
+  subject: "Trigonometri",
+};
+
+## Pengenalan Tiga Serangkai Perbandingan Trigonometri
+
+Ketika matematikawan zaman kuno mempelajari segitiga, mereka menemukan pola perbandingan (rasio) panjang sisi segitiga siku-siku yang sangat bermanfaat. Ada tiga perbandingan trigonometri utama yang akan kita pelajari yaitu sinus (<InlineMath math="\sin" />), cosinus (<InlineMath math="\cos" />), dan tangen (<InlineMath math="\tan" />).
+
+<MathContainer>
+  <BlockMath math="\sin \theta = \frac{\text{sisi depan}}{\text{sisi miring}}" />
+  <BlockMath math="\cos \theta = \frac{\text{sisi samping}}{\text{sisi miring}}" />
+  <BlockMath math="\tan \theta = \frac{\text{sisi depan}}{\text{sisi samping}}" />
+</MathContainer>
+
+### Memahami Sisi-Sisi dalam Segitiga Siku-siku
+
+Sebelum kita melangkah lebih jauh, penting untuk memahami istilah-istilah yang digunakan dalam perbandingan trigonometri:
+
+1. **Sisi miring (hypotenuse)**: Sisi terpanjang pada segitiga siku-siku, selalu berada di seberang sudut siku-siku <InlineMath math="90^\circ" />.
+2. **Sisi depan (opposite)**: Sisi yang berada di seberang sudut <InlineMath math="\theta" /> yang kita tinjau.
+3. **Sisi samping (adjacent)**: Sisi yang berdekatan dengan sudut <InlineMath math="\theta" /> yang kita tinjau, bukan sisi miring.
+
+<ContentBlock>
+  <Triangle
+    title="Visualisasi Sisi-sisi Segitiga"
+    description="Geser slider untuk melihat bagaimana posisi sisi-sisi berubah sesuai sudut."
+    angle={30}
+    labels={{
+      opposite: "Sisi Depan",
+      adjacent: "Sisi Samping",
+      hypotenuse: "Sisi Miring",
+    }}
+  />
+</ContentBlock>
+
+## Sinus
+
+Sinus dari sudut <InlineMath math="\theta" /> adalah perbandingan antara panjang sisi depan dengan panjang sisi miring.
+
+<BlockMath math="\sin \theta = \frac{\text{sisi depan}}{\text{sisi miring}}" />
+
+<ContentBlock>
+  <Triangle
+    title={
+      <>
+        Visualisasi Sinus (<InlineMath math="\sin \theta" />)
+      </>
+    }
+    description={<>Perhatikan bagaimana nilai <InlineMath math="\sin" /> berubah saat sudut berubah.</>}
+    angle={30}
+    labels={{
+      opposite: "Sisi Depan (menentukan nilai sinus)",
+      adjacent: "Sisi Samping",
+      hypotenuse: "Sisi Miring (pembagi)",
+    }}
+  />
+</ContentBlock>
+
+### Contoh Nilai Sinus
+
+| Sudut                     | Nilai Sinus                              | Nilai Desimal              |
+| ------------------------- | ---------------------------------------- | -------------------------- |
+| <InlineMath math="0^\circ" />  | <InlineMath math="0" />                  | <InlineMath math="0" />    |
+| <InlineMath math="30^\circ" /> | <InlineMath math="\frac{1}{2}" />        | <InlineMath math="0{,}5" />  |
+| <InlineMath math="45^\circ" /> | <InlineMath math="\frac{\sqrt{2}}{2}" /> | <InlineMath math="0{,}71" /> |
+| <InlineMath math="60^\circ" /> | <InlineMath math="\frac{\sqrt{3}}{2}" /> | <InlineMath math="0{,}87" /> |
+| <InlineMath math="90^\circ" /> | <InlineMath math="1" />                  | <InlineMath math="1" />    |
+
+## Cosinus
+
+Cosinus dari sudut <InlineMath math="\theta" /> adalah perbandingan antara panjang sisi samping dengan panjang sisi miring.
+
+<BlockMath math="\cos \theta = \frac{\text{sisi samping}}{\text{sisi miring}}" />
+
+<ContentBlock>
+  <Triangle
+    title={
+      <>
+        Visualisasi Cosinus (<InlineMath math="\cos \theta" />)
+      </>
+    }
+    description={<>Perhatikan bagaimana nilai <InlineMath math="\cos" /> berubah saat sudut berubah.</>}
+    angle={60}
+    labels={{
+      opposite: "Sisi Depan",
+      adjacent: "Sisi Samping (menentukan nilai cosinus)",
+      hypotenuse: "Sisi Miring (pembagi)",
+    }}
+  />
+</ContentBlock>
+
+### Contoh Nilai Cosinus
+
+| Sudut                     | Nilai Cosinus                            | Nilai Desimal              |
+| ------------------------- | ---------------------------------------- | -------------------------- |
+| <InlineMath math="0^\circ" />  | <InlineMath math="1" />                  | <InlineMath math="1" />    |
+| <InlineMath math="30^\circ" /> | <InlineMath math="\frac{\sqrt{3}}{2}" /> | <InlineMath math="0{,}87" /> |
+| <InlineMath math="45^\circ" /> | <InlineMath math="\frac{\sqrt{2}}{2}" /> | <InlineMath math="0{,}71" /> |
+| <InlineMath math="60^\circ" /> | <InlineMath math="\frac{1}{2}" />        | <InlineMath math="0{,}5" />  |
+| <InlineMath math="90^\circ" /> | <InlineMath math="0" />                  | <InlineMath math="0" />    |
+
+## Tangen
+
+Tangen dari sudut <InlineMath math="\theta" /> adalah perbandingan antara panjang sisi depan dengan panjang sisi samping. Ini juga dapat dihitung sebagai perbandingan antara sinus dan cosinus dari sudut yang sama.
+
+<BlockMath math="\tan \theta = \frac{\text{sisi depan}}{\text{sisi samping}} = \frac{\sin \theta}{\cos \theta}" />
+
+<ContentBlock>
+  <Triangle
+    title={
+      <>
+        Visualisasi Tangen (<InlineMath math="\tan \theta" />)
+      </>
+    }
+    description={<>Perhatikan bagaimana nilai <InlineMath math="\tan" /> berubah saat sudut berubah.</>}
+    angle={45}
+    labels={{
+      opposite: "Sisi Depan (pembilang)",
+      adjacent: "Sisi Samping (penyebut)",
+      hypotenuse: "Sisi Miring",
+    }}
+  />
+</ContentBlock>
+
+### Contoh Nilai Tangen
+
+| Sudut                     | Nilai Tangen                             | Nilai Desimal              |
+| ------------------------- | ---------------------------------------- | -------------------------- |
+| <InlineMath math="0^\circ" />  | <InlineMath math="0" />                  | <InlineMath math="0" />    |
+| <InlineMath math="30^\circ" /> | <InlineMath math="\frac{1}{\sqrt{3}}" /> | <InlineMath math="0{,}58" /> |
+| <InlineMath math="45^\circ" /> | <InlineMath math="1" />                  | <InlineMath math="1" />    |
+| <InlineMath math="60^\circ" /> | <InlineMath math="\sqrt{3}" />           | <InlineMath math="1{,}73" /> |
+| <InlineMath math="90^\circ" /> | Tidak terdefinisi                        | Tidak terdefinisi          |
+
+## Hubungan antara Sin, Cos, dan Tan dalam Lingkaran Satuan
+
+Untuk memahami bagaimana perbandingan trigonometri ini bekerja untuk semua sudut, kita bisa menggunakan konsep lingkaran satuan (lingkaran dengan jari-jari <InlineMath math="1" />).
+
+<UnitCircle
+  title="Lingkaran Satuan dan Perbandingan Trigonometri"
+  description={<>Geser slider untuk melihat bagaimana nilai <InlineMath math="\sin" />, <InlineMath math="\cos" />, dan <InlineMath math="\tan" /> berubah di lingkaran satuan.</>}
+  angle={45}
+/>
+
+Dalam lingkaran satuan:
+
+- Koordinat <InlineMath math="x" /> pada lingkaran satuan adalah <InlineMath math="\cos \theta" />.
+- Koordinat <InlineMath math="y" /> pada lingkaran satuan adalah <InlineMath math="\sin \theta" />.
+- <InlineMath math="\tan \theta" /> adalah kemiringan garis dari pusat ke titik pada lingkaran satuan.
+
+## Hubungan antara Ketiga Perbandingan Trigonometri
+
+Ketiga perbandingan trigonometri ini saling berhubungan dengan rumus berikut:
+
+<MathContainer>
+  <BlockMath math="\tan \theta = \frac{\sin \theta}{\cos \theta}" />
+  <BlockMath math="\sin^2 \theta + \cos^2 \theta = 1" />
+</MathContainer>
+
+## Latihan
+
+Perhatikan segitiga berikut dengan sudut <InlineMath math="30^\circ" />:
+
+<Triangle
+  title={
+    <>
+      Segitiga dengan Sudut <InlineMath math="30^\circ" />
+    </>
+  }
+  description={
+    <>
+      Segitiga siku-siku dengan sudut <InlineMath math="30^\circ" />
+    </>
+  }
+  angle={30}
+  labels={{
+    opposite: "Sisi Depan",
+    adjacent: "Sisi Samping",
+    hypotenuse: "Sisi Miring",
+  }}
+/>
+
+### Cek Jawaban
+
+Jika panjang sisi miring adalah <InlineMath math="1" />, maka:
+
+- Nilai <InlineMath math="\sin 30^\circ" /> adalah panjang sisi depan, yaitu <InlineMath math="0{,}5" />
+- Nilai <InlineMath math="\cos 30^\circ" /> adalah panjang sisi samping, yaitu <InlineMath math="0{,}87" />
+- Nilai <InlineMath math="\tan 30^\circ = \frac{\sin 30^\circ}{\cos 30^\circ} = \frac{0{,}5}{0{,}87} = 0{,}58" />

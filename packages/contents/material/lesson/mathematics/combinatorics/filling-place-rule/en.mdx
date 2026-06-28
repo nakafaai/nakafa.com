@@ -1,0 +1,148 @@
+export const metadata = {
+   title: "Slot Filling Rule",
+   description: "Learn slot filling rule in combinatorics with table, tree diagram, and multiplication methods. Learn counting arrangements with examples and exercises.",
+   authors: [{ name: "Nabil Akbarazzima Fatih" }],
+   date: "2025-05-26",
+   subject: "Combinatorics",
+};
+
+## Understanding of Slot Filling Rule
+
+**Slot filling rule** is a method to determine the number of ways to place objects in available slots. This concept is very useful in solving combinatorial problems where we need to count all possible arrangements or choices that can be made.
+
+Imagine filling out a form that has several columns. Each column has certain options, and we want to know how many different ways there are to fill out the entire form.
+
+## Table Rule Method
+
+**Table method** presents all possible combinations in a systematic table format. Each row and column represents choices from different categories.
+
+Suppose a student wants to choose an online learning package. There are three platforms (Platform A, Platform B, Platform C) and four subjects (Mathematics, Physics, Chemistry, Biology).
+
+Using a table, we can see all possible combinations:
+
+| Platform | Mathematics | Physics | Chemistry | Biology |
+|----------|-------------|---------|-----------|---------|
+| Platform A | A-Math | A-Phys | A-Chem | A-Bio |
+| Platform B | B-Math | B-Phys | B-Chem | B-Bio |
+| Platform C | C-Math | C-Phys | C-Chem | C-Bio |
+
+<MathContainer>
+<BlockMath math="\text{Total combinations} = 3 \times 4 = 12 \text{ ways}" />
+</MathContainer>
+
+## Tree Diagram Method
+
+**Tree diagram** depicts each choice as a tree branch. This method helps visualize step-by-step decision making.
+
+For the same case, the tree diagram starts from one initial point, then branches into available choices.
+
+1. Level <InlineMath math="1" />:
+
+   <BlockMath math="1 \text{ initial point} \rightarrow 3 \text{ platform branches}" />
+
+2. Level <InlineMath math="2" />:
+
+   <BlockMath math="3 \text{ platforms} \rightarrow 3 \times 4 = 12 \text{ subject branches}" />
+
+3. Branch structure:
+
+   <BlockMath math="\text{Start} \rightarrow \text{Platform} \rightarrow \text{Subject}" />
+
+4. Total complete routes:
+
+   <BlockMath math="3 \times 4 = 12 \text{ combinations}" />
+
+## Multiplication Rule Method
+
+**Multiplication rule** is the most efficient method to calculate the number of ways to fill available slots. If there are <InlineMath math="n" /> slots with each slot <InlineMath math="i" /> having <InlineMath math="k_i" /> choices, then the **total number of ways to fill** is:
+
+<MathContainer>
+<BlockMath math="\text{Total ways} = k_1 \times k_2 \times k_3 \times \cdots \times k_n" />
+</MathContainer>
+
+### Example of Multiplication Rule Usage
+
+A school wants to create access codes for digital learning systems. The code consists of:
+- First slot: <InlineMath math="3 \text{ letters}" /> (<InlineMath math="A, B, C" />)
+- Second slot: <InlineMath math="5 \text{ numbers}" /> (<InlineMath math="1, 2, 3, 4, 5" />)
+- Third slot: <InlineMath math="2 \text{ symbols}" /> (<InlineMath math="@, \#" />)
+
+Then, the total different codes that can be created are:
+
+<MathContainer>
+<BlockMath math="k_1 = 3 \text{ (letter choices)}" />
+<BlockMath math="k_2 = 5 \text{ (number choices)}" />
+<BlockMath math="k_3 = 2 \text{ (symbol choices)}" />
+<BlockMath math="\text{Total different codes} = 3 \times 5 \times 2 = 30 \text{ codes}" />
+</MathContainer>
+
+## Cases with Restrictions
+
+In some situations, there are **certain restrictions** that affect the number of choices in each slot.
+
+### Repetition Not Allowed
+
+If the same object **cannot be used repeatedly**, then each filled slot will reduce the choices for the next slot.
+
+**Example:** Creating a <InlineMath math="3 \text{-digit}" /> number from digits <InlineMath math="2, 3, 4, 5, 6" /> without repetition.
+
+<MathContainer>
+<BlockMath math="\text{First slot} = 5 \text{ choices}" />
+<BlockMath math="\text{Second slot} = 4 \text{ choices (1 digit already used)}" />
+<BlockMath math="\text{Third slot} = 3 \text{ choices (2 digits already used)}" />
+<BlockMath math="\text{Total numbers} = 5 \times 4 \times 3 = 60 \text{ numbers}" />
+</MathContainer>
+
+### Repetition Allowed
+
+If the same object **can be used repeatedly**, then the choices in each slot remain the same.
+
+For the same case with repetition allowed:
+
+<MathContainer>
+<BlockMath math="\text{Each slot} = 5 \text{ choices}" />
+<BlockMath math="\text{Total numbers} = 5 \times 5 \times 5 = 125 \text{ numbers}" />
+</MathContainer>
+
+## Exercises
+
+1. An electronics store sells smartphones with <InlineMath math="4" /> different brands, each available in <InlineMath math="3" /> memory capacities and <InlineMath math="5" /> color choices. How many different smartphone combinations are there?
+
+2. To create a password consisting of <InlineMath math="1" /> letter followed by <InlineMath math="2" /> numbers, where the letter is chosen from A, B, C, D and numbers are chosen from <InlineMath math="\{1, 2, 3, 4, 5\}" /> without repetition. How many passwords can be created?
+
+3. From city <InlineMath math="P" /> to city <InlineMath math="R" /> through city <InlineMath math="Q" />, there are <InlineMath math="3" /> roads from <InlineMath math="P" /> to <InlineMath math="Q" /> and <InlineMath math="4" /> roads from <InlineMath math="Q" /> to <InlineMath math="R" />. How many different routes can be chosen for the journey from <InlineMath math="P" /> to <InlineMath math="R" />?
+
+4. Creating license plate numbers consisting of <InlineMath math="2" /> letters followed by <InlineMath math="3" /> numbers. If there are <InlineMath math="26" /> letters and <InlineMath math="10" /> numbers (<InlineMath math="0\text{-}9" />) available, and repetition is allowed, how many license plate numbers can be created?
+
+### Answer Key
+
+1. Given: <InlineMath math="4 \text{ brands}" />, <InlineMath math="3 \text{ memory capacities}" />, <InlineMath math="5 \text{ color choices}" />
+
+   <MathContainer>
+   <BlockMath math="\text{Total combinations} = 4 \times 3 \times 5 = 60 \text{ smartphone combinations}" />
+   </MathContainer>
+
+2. Given: <InlineMath math="1 \text{ letter}" /> from <InlineMath math="\{A, B, C, D\}" />, <InlineMath math="2 \text{ numbers}" /> from <InlineMath math="\{1, 2, 3, 4, 5\}" /> without repetition
+
+   <MathContainer>
+   <BlockMath math="\text{Letter choices} = 4" />
+   <BlockMath math="\text{First number choices} = 5" />
+   <BlockMath math="\text{Second number choices} = 4 \text{ (without repetition)}" />
+   <BlockMath math="\text{Total passwords} = 4 \times 5 \times 4 = 80 \text{ passwords}" />
+   </MathContainer>
+
+3. Given: <InlineMath math="3 \text{ roads}" /> from <InlineMath math="P" /> to <InlineMath math="Q" />, <InlineMath math="4 \text{ roads}" /> from <InlineMath math="Q" /> to <InlineMath math="R" />
+
+   <MathContainer>
+   <BlockMath math="\text{Total routes} = 3 \times 4 = 12 \text{ different routes}" />
+   </MathContainer>
+
+4. Given: <InlineMath math="2 \text{ letters}" /> from <InlineMath math="26 \text{ letters}" />, <InlineMath math="3 \text{ numbers}" /> from <InlineMath math="10 \text{ numbers}" />, repetition allowed
+
+   <MathContainer>
+   <BlockMath math="\text{First letter choices} = 26" />
+   <BlockMath math="\text{Second letter choices} = 26" />
+   <BlockMath math="\text{Each number choices} = 10" />
+   <BlockMath math="\text{Total license plates} = 26 \times 26 \times 10 \times 10 \times 10" />
+   <BlockMath math="= 676 \times 1000 = 676000 \text{ license plates}" />
+   </MathContainer>

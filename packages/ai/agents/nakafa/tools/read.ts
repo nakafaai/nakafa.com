@@ -1,18 +1,12 @@
 import { formatRead } from "@repo/ai/agents/nakafa/format";
 import { previewRead } from "@repo/ai/agents/nakafa/preview";
+import { Nakafa } from "@repo/ai/agents/nakafa/service";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { NakafaAgentReadOptions } from "@repo/contents/_lib/agent/schema/read";
-import { Nakafa } from "@repo/contents/_lib/agent/service";
 import type { UIMessageStreamWriter } from "ai";
 import { Effect, Either, Option } from "effect";
 
 type Writer = Pick<UIMessageStreamWriter<MyUIMessage>, "write">;
-
-interface Params {
-  input: NakafaAgentReadOptions;
-  toolCallId: string;
-  writer: Writer;
-}
 
 const notFoundMessage = "Nakafa content was not found.";
 
@@ -21,7 +15,11 @@ export const read = Effect.fn("nakafa.read")(function* ({
   input,
   toolCallId,
   writer,
-}: Params) {
+}: {
+  readonly input: NakafaAgentReadOptions;
+  readonly toolCallId: string;
+  readonly writer: Writer;
+}) {
   yield* Effect.sync(() =>
     writer.write({
       id: toolCallId,

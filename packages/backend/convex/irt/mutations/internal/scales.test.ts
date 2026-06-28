@@ -23,7 +23,7 @@ const REAL_SNBT_SET_1_TRYOUT = {
   isActive: true,
 };
 
-// Sourced from packages/contents/exercises/high-school/snbt/*/try-out/2026/set-1
+// Sourced from packages/contents/assessment/high-school/snbt/*/try-out/2026/set-1
 const REAL_SNBT_SET_1_PARTS = [
   { partKey: "quantitative-knowledge", questionCount: 20 },
   { partKey: "mathematical-reasoning", questionCount: 20 },
@@ -63,7 +63,7 @@ async function insertRealSnbtSet1Parts(
   tryoutId: Id<"tryouts">
 ) {
   for (const [partIndex, part] of REAL_SNBT_SET_1_PARTS.entries()) {
-    const setSlug = `exercises/high-school/snbt/${part.partKey}/try-out/2026/set-1`;
+    const setSlug = `assessment/high-school/snbt/${part.partKey}/try-out/2026/set-1`;
     const setId = await ctx.db.insert("exerciseSets", {
       locale: REAL_SNBT_SET_1_TRYOUT.locale,
       slug: setSlug,

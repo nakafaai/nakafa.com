@@ -1,8 +1,8 @@
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { query } from "@repo/backend/convex/_generated/server";
-import {
-  getMessageByIdentifier,
-  verifyChatOwnership,
-} from "@repo/backend/convex/chats/helpers";
+import { ninaContextSnapshotValidator } from "@repo/backend/convex/chats/context";
+import { getMessageByIdentifier } from "@repo/backend/convex/chats/helpers";
 import { hydrateMessagePage } from "@repo/backend/convex/chats/read";
 import {
   chatTypeValidator,
@@ -10,20 +10,46 @@ import {
   paginatedChatsValidator,
   paginatedMessagesValidator,
 } from "@repo/backend/convex/chats/schema";
-import {
-  getOptionalAppUser,
-  requireAuth,
-} from "@repo/backend/convex/lib/helpers/auth";
+import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
 import { requireChatAccess } from "@repo/backend/convex/lib/helpers/chat";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
 
+const LATEST_NINA_CONTEXT_SCAN_LIMIT = 20;
+
+/**
+ * Reads the bounded newest messages that can pin Nina context for a turn.
+ * When a rewrite target exists, messages at or after that point are excluded
+ * because the save mutation will delete them before inserting the replacement.
+ */
+function loadPinnedContextMessages(
+  ctx: QueryCtx,
+  chatId: Id<"chats">,
+  beforeCreationTime?: number
+) {
+  if (beforeCreationTime === undefined) {
+    return ctx.db
+      .query("messages")
+      .withIndex("by_chatId", (q) => q.eq("chatId", chatId))
+      .order("desc")
+      .take(LATEST_NINA_CONTEXT_SCAN_LIMIT);
+  }
+
+  return ctx.db
+    .query("messages")
+    .withIndex("by_chatId", (q) =>
+      q.eq("chatId", chatId).lt("_creationTime", beforeCreationTime)
+    )
+    .order("desc")
+    .take(LATEST_NINA_CONTEXT_SCAN_LIMIT);
+}
+
 /**
  * Get a chat by its ID.
- * Requires authentication. Public chats are accessible by any logged-in user.
- * Private chats are only accessible by the owner.
+ * Public chats are readable by signed-in and signed-out viewers.
+ * Private chats are only readable by the owner.
  */
 export const getChat = query({
   args: {
@@ -224,6 +250,50 @@ export const getChatTitle = query({
   },
 });
 
+/**
+ * Returns the newest stored Nina context snapshot that survives the next turn.
+ * Existing message identifiers are treated as transcript rewrites, so context
+ * from the tail that will be deleted is not reused as pinned chat context.
+ */
+export const getPinnedNinaContextForTurn = query({
+  args: {
+    chatId: vv.id("chats"),
+    messageIdentifier: v.string(),
+  },
+  returns: nullable(ninaContextSnapshotValidator),
+  handler: async (ctx, args) => {
+    const viewer = await getOptionalAppUser(ctx);
+    const viewerUserId = viewer?.appUser._id ?? null;
+
+    const chat = await ctx.db.get(args.chatId);
+
+    if (!chat) {
+      throw new ConvexError({
+        code: "CHAT_NOT_FOUND",
+        message: `Chat not found for chatId: ${args.chatId}`,
+      });
+    }
+
+    requireChatAccess(chat.userId, viewerUserId, chat.visibility);
+
+    const existingMessage = await getMessageByIdentifier(
+      ctx,
+      args.chatId,
+      args.messageIdentifier
+    );
+    const messages = await loadPinnedContextMessages(
+      ctx,
+      args.chatId,
+      existingMessage?._creationTime
+    );
+
+    return (
+      messages.find((message) => message.ninaContextSnapshot)
+        ?.ninaContextSnapshot ?? null
+    );
+  },
+});
+
 /** Return one transcript page ordered from newest to oldest. */
 export const loadMessagesPage = query({
   args: {
@@ -255,41 +325,6 @@ export const loadMessagesPage = query({
     return {
       ...page,
       page: await hydrateMessagePage(ctx.db, page.page),
-    };
-  },
-});
-
-/** Find one persisted chat message by the UI message identifier. */
-export const getMessageMatch = query({
-  args: {
-    chatId: vv.id("chats"),
-    identifier: v.string(),
-  },
-  returns: v.union(
-    v.null(),
-    v.object({
-      creationTime: v.number(),
-      messageId: vv.id("messages"),
-    })
-  ),
-  handler: async (ctx, args) => {
-    const user = await requireAuth(ctx);
-
-    await verifyChatOwnership(ctx, args.chatId, user.appUser._id);
-
-    const message = await getMessageByIdentifier(
-      ctx,
-      args.chatId,
-      args.identifier
-    );
-
-    if (!message) {
-      return null;
-    }
-
-    return {
-      creationTime: message._creationTime,
-      messageId: message._id,
     };
   },
 });

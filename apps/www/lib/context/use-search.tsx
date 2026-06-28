@@ -8,7 +8,7 @@ import { createSearchStore, type SearchStore } from "@/lib/store/search";
 
 type SearchStoreApi = ReturnType<typeof createSearchStore>;
 
-export const SearchContext = createContext<SearchStoreApi | null>(null);
+const SearchContext = createContext<SearchStoreApi | null>(null);
 
 export function SearchContextProvider({ children }: { children: ReactNode }) {
   const [store] = useState(() => createSearchStore());

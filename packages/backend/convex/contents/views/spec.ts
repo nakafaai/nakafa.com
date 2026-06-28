@@ -1,14 +1,14 @@
-import {
-  contentViewRefValidator,
-  localeValidator,
-} from "@repo/backend/convex/lib/validators/contents";
+import { learningContextInputValidator } from "@repo/backend/convex/contents/context";
+import { graphContentIdValidator } from "@repo/backend/convex/contents/graph";
+import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { type Infer, v } from "convex/values";
 import { Schema } from "effect";
 
 export const contentViewIoFailedCode = "CONTENT_VIEW_IO_FAILED";
 
 export const recordContentViewArgs = {
-  contentRef: contentViewRefValidator,
+  contentId: graphContentIdValidator,
+  context: v.optional(learningContextInputValidator),
   deviceId: v.string(),
   locale: localeValidator,
 };

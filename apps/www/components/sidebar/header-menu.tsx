@@ -29,6 +29,7 @@ export function HeaderMenu() {
               className="rounded-sm border object-contain"
               fill
               preload
+              sizes="32px"
               src="/logo.svg"
               title="Nakafa"
             />

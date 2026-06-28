@@ -10,8 +10,6 @@ import {
   type ReactionScenePoint,
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/data";
 import { SceneLabel } from "@repo/design-system/components/contents/scene-label";
-import { ArrowHelper } from "@repo/design-system/components/three/arrow-helper";
-import { THREE_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
 import { useRef } from "react";
 import { DoubleSide, type Group, type Mesh } from "three";
 
@@ -26,8 +24,6 @@ const LIQUID_Y = -0.2;
 const LIQUID_RADIUS = 0.36;
 const GLASS_OPACITY = 0.22;
 const LIQUID_OPACITY = 0.66;
-const LABEL_Y = 1.3;
-const CAPTION_Z = 0.5;
 const SCENE_Y = -0.12;
 const SCENE_SCALE = 1.2;
 const BUBBLE_RADIUS = 0.055;
@@ -137,31 +133,35 @@ export function ReactionCharacteristicsScene({
 }: {
   colors: ReactionSceneColors;
   cueId: ReactionCueId;
-  labels: Pick<ReactionCharacteristicsLabLabels, "after" | "before">;
+  labels: ReactionCharacteristicsLabLabels;
 }) {
   return (
     <group position={[0, SCENE_Y, 0]} scale={SCENE_SCALE}>
+      <SceneLabel
+        color={colors.text}
+        fontSize="compact"
+        position={[BEFORE_BEAKER_X, 0.88, 0.16]}
+      >
+        {labels.before}
+      </SceneLabel>
+      <SceneLabel
+        color={colors.text}
+        fontSize="compact"
+        position={[AFTER_BEAKER_X, 0.88, 0.16]}
+      >
+        {labels.after}
+      </SceneLabel>
       <ReactionBeaker
         colors={colors}
         cueId={cueId}
         phase="before"
-        title={labels.before}
         x={BEFORE_BEAKER_X}
-      />
-
-      <ArrowHelper
-        arrowSize={0.14}
-        color={colors.arrow}
-        from={[-0.45, 0.08, 0.04]}
-        lineWidth={3}
-        to={[0.45, 0.08, 0.04]}
       />
 
       <ReactionBeaker
         colors={colors}
         cueId={cueId}
         phase="after"
-        title={labels.after}
         x={AFTER_BEAKER_X}
       />
     </group>
@@ -175,26 +175,15 @@ function ReactionBeaker({
   colors,
   cueId,
   phase,
-  title,
   x,
 }: {
   colors: ReactionSceneColors;
   cueId: ReactionCueId;
   phase: ReactionPhase;
-  title: string;
   x: number;
 }) {
   return (
     <group position={[x, 0, 0]} scale={BEAKER_SCALE}>
-      <SceneLabel
-        alwaysOnTop
-        color={colors.text}
-        fontSize={THREE_FONT_SIZE.annotation}
-        position={[0, LABEL_Y, CAPTION_Z]}
-      >
-        {title}
-      </SceneLabel>
-
       <BeakerGlass colors={colors} />
       <Liquid color={getLiquidColor({ colors, cueId, phase })} />
       <ReactionCueVisual colors={colors} cueId={cueId} phase={phase} />

@@ -50,7 +50,7 @@ parts we can support with public sources.
 - New or weakly supported items remain `provisional` or `emerging`
 - Every active tryout has a published frozen scale version so it stays startable
 - Scale versions are split into two product states:
-  - `provisional`: bootstrap scoring only; enough to start and estimate a score
+  - `provisional`: initial scoring only; enough to start and estimate a score
   - `official`: published from a fully calibrated tryout snapshot
 - Official publication now checks a rolling live calibration window and stores a
   persisted quality summary before promoting a new frozen scale version
@@ -125,7 +125,7 @@ Nakafa currently uses this split policy:
 - **Item calibration**: only observed responses are used
 - **Cold start**: if a tryout already has a fully calibrated snapshot, Nakafa
   publishes an official scale immediately; otherwise it starts with a
-  provisional bootstrap scale and auto-promotes completed attempts later
+  provisional scale and auto-promotes completed attempts later
 
 This is a documented operational choice, not a claim of universal psychometric
 optimality. It matches a public pattern used in large-scale assessment and is
@@ -213,7 +213,7 @@ not "otherwise Nakafa breaks." The stronger statement is:
 | `policy.ts` | Centralized operational model and convergence policy |
 | `calibration.ts` | Pure TypeScript 2PL calibration math |
 | `queries/internal/calibration.ts` | Paginated response extraction for calibration |
-| `queries/internal/maintenance.ts` | Operational cache integrity checks |
+| `integrity/internal.ts` | Operational cache integrity checks |
 | `actions/internal/calibration.ts` | Set-level calibration job assembly and execution |
 | `mutations/internal/responses.ts` | Calibration response cache sync entrypoints |
 | `mutations/internal/cache.ts` | Cache stats rebuild and trim entrypoints |
@@ -224,11 +224,11 @@ not "otherwise Nakafa breaks." The stronger statement is:
 | `helpers/cache.ts` | Calibration cache readiness and stats helpers |
 | `helpers/queue.ts` | Queue and workflow orchestration helpers |
 | `scales/loaders.ts` | Shared invariant-enforcing loaders for scale publication |
-| `scales/bootstrap.ts` | Provisional scale bootstrap helpers |
+| `scales/provisional.ts` | Provisional scale helpers |
 | `scales/quality.ts` | Official-scale quality gates and persisted summaries |
 | `scales/read.ts` | Frozen scale lookups and coverage checks |
 | `scales/snapshot.ts` | Publishable scale snapshot assembly and comparison |
-| `scales/publish.ts` | Frozen scale publication and bootstrap helpers |
+| `scales/publish.ts` | Frozen scale publication helpers |
 | `workflows.ts` | Durable orchestration for long-running calibration runs |
 
 ## Run Lifecycle

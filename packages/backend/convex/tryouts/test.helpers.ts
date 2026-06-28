@@ -59,7 +59,7 @@ export async function insertTryoutSkeleton(
 ) {
   const setId = await ctx.db.insert("exerciseSets", {
     locale: "id",
-    slug: `exercises/high-school/snbt/quantitative-knowledge/try-out/2026/${slug}`,
+    slug: `material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/${slug}`,
     category: "high-school",
     type: "snbt",
     material: "quantitative-knowledge",
@@ -120,7 +120,7 @@ export async function insertExerciseQuestion(
   return await ctx.db.insert("exerciseQuestions", {
     setId,
     locale: "id",
-    slug: `exercises/high-school/snbt/${material}/try-out/2026/${slug}/1`,
+    slug: `assessment/high-school/snbt/${material}/try-out/2026/${slug}/1`,
     category: "high-school",
     type: "snbt",
     material,
@@ -154,7 +154,7 @@ export async function insertCompletedTryoutAttempt(
   }
 ) {
   const setAttemptId = await ctx.db.insert("exerciseAttempts", {
-    slug: `exercises/high-school/snbt/quantitative-knowledge/try-out/2026/${slug}`,
+    slug: `material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/${slug}`,
     userId,
     origin: "tryout",
     mode: "simulation",
@@ -228,7 +228,7 @@ export async function seedExpiredTryoutWithUntouchedPart(
   });
   const firstSetId = await ctx.db.insert("exerciseSets", {
     locale: "id",
-    slug: `exercises/high-school/snbt/quantitative-knowledge/try-out/2026/${suffix}-qk`,
+    slug: `material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/${suffix}-qk`,
     category: "high-school",
     type: "snbt",
     material: "quantitative-knowledge",
@@ -240,7 +240,7 @@ export async function seedExpiredTryoutWithUntouchedPart(
   });
   const secondSetId = await ctx.db.insert("exerciseSets", {
     locale: "id",
-    slug: `exercises/high-school/snbt/mathematical-reasoning/try-out/2026/${suffix}-mr`,
+    slug: `material/practice/assessment/snbt/mathematical-reasoning/try-out-2026/${suffix}-mr`,
     category: "high-school",
     type: "snbt",
     material: "mathematical-reasoning",
@@ -336,7 +336,7 @@ export async function seedExpiredTryoutWithUntouchedPart(
   });
 
   const setAttemptId = await ctx.db.insert("exerciseAttempts", {
-    slug: `exercises/high-school/snbt/quantitative-knowledge/try-out/2026/${suffix}-qk`,
+    slug: `material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/${suffix}-qk`,
     userId: identity.userId,
     origin: "tryout",
     mode: "simulation",

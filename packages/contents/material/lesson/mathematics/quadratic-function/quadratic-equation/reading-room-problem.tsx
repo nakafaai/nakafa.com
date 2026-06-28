@@ -1,0 +1,80 @@
+import { InlineMath } from "@repo/design-system/components/markdown/math";
+import type { ReactNode } from "react";
+
+interface ReadingRoomProblemProps {
+  heightLabel: ReactNode;
+  widthLabel: ReactNode;
+}
+
+export function ReadingRoomProblem({
+  heightLabel,
+  widthLabel,
+}: ReadingRoomProblemProps) {
+  return (
+    <div className="my-6 grid place-items-center">
+      <div className="relative w-full max-w-md">
+        {/* Main container - Classroom */}
+        <div className="relative aspect-3/2 w-full border bg-card shadow-sm">
+          {/* Top left corner square */}
+          <div className="absolute top-0 left-0 aspect-square w-[12.5%] border-r border-b bg-chart-1" />
+
+          {/* Top right corner square */}
+          <div className="absolute top-0 right-0 aspect-square w-[12.5%] border-b border-l bg-chart-2" />
+
+          {/* Bottom left corner square */}
+          <div className="absolute bottom-0 left-0 aspect-square w-[12.5%] border-t border-r bg-chart-3" />
+
+          {/* Bottom right corner square */}
+          <div className="absolute right-0 bottom-0 aspect-square w-[12.5%] border-t border-l bg-chart-4" />
+
+          {/* Red dots at corners */}
+          <div className="absolute top-0 left-0 size-2 -translate-x-1 -translate-y-1 transform rounded-full bg-border" />
+          <div className="absolute top-0 right-0 size-2 translate-x-1 -translate-y-1 transform rounded-full bg-border" />
+          <div className="absolute bottom-0 left-0 size-2 -translate-x-1 translate-y-1 transform rounded-full bg-border" />
+          <div className="absolute right-0 bottom-0 size-2 translate-x-1 translate-y-1 transform rounded-full bg-border" />
+
+          {/* Dimension labels */}
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 -translate-y-2 transform text-center">
+            <span>{widthLabel}</span>
+          </div>
+          <div className="absolute top-1/2 -right-1 -translate-x-4 -translate-y-1/2 transform text-center">
+            <span>{heightLabel}</span>
+          </div>
+
+          {/* "x" labels - Positioned to match the reference layout */}
+          {/* Top left corner labels */}
+          <div className="absolute top-[6%] left-[14.5%]">
+            <InlineMath math="x" />
+          </div>
+          <div className="absolute top-[18.5%] left-[6%]">
+            <InlineMath math="x" />
+          </div>
+
+          {/* Top right corner labels */}
+          <div className="absolute top-[6%] right-[14.5%]">
+            <InlineMath math="x" />
+          </div>
+          <div className="absolute top-[18.5%] right-[6%]">
+            <InlineMath math="x" />
+          </div>
+
+          {/* Bottom left corner labels */}
+          <div className="absolute bottom-[6%] left-[14.5%]">
+            <InlineMath math="x" />
+          </div>
+          <div className="absolute bottom-[18.5%] left-[6%]">
+            <InlineMath math="x" />
+          </div>
+
+          {/* Bottom right corner labels */}
+          <div className="absolute right-[14.5%] bottom-[6%]">
+            <InlineMath math="x" />
+          </div>
+          <div className="absolute right-[6%] bottom-[18.5%]">
+            <InlineMath math="x" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

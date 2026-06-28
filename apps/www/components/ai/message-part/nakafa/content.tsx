@@ -10,14 +10,14 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
-import { memo, useState } from "react";
+import { useState } from "react";
 
 interface Props {
   message: Extract<NakafaDataPart, { kind: "content"; status: "done" }>;
 }
 
 /** Renders a bounded preview for one retrieved Nakafa content page. */
-export const ContentPart = memo(({ message }: Props) => {
+export const ContentPart = ({ message }: Props) => {
   const t = useTranslations("Ai");
   const [open, setOpen] = useState(true);
 
@@ -56,5 +56,5 @@ export const ContentPart = memo(({ message }: Props) => {
       </CollapsibleContent>
     </Collapsible>
   );
-});
+};
 ContentPart.displayName = "ContentPart";

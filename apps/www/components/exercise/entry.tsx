@@ -1,13 +1,15 @@
-import { captureServerException } from "@repo/analytics/posthog/server";
-import { importContentModule } from "@repo/contents/_lib/module";
-import type { ExerciseWithoutDefaults } from "@repo/contents/_types/exercises/shared";
+import type { ExerciseWithoutDefaults } from "@repo/contents/_types/assessment/shared";
 import { slugify } from "@repo/design-system/lib/utils";
+import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { Suspense } from "react";
 import { QuestionAnalytics } from "@/components/exercise/item/analytics";
 import { ExerciseArticle } from "@/components/exercise/item/article";
+import { importContentModuleOrNull } from "@/lib/content/module";
 
-/** Loads the compiled question module for one exercise entry. */
+type ExerciseEntryData = Pick<ExerciseWithoutDefaults, "choices" | "number">;
+
+/** Loads the required compiled question module for one exercise entry. */
 async function QuestionContent({
   exerciseNumber,
   locale,
@@ -17,24 +19,26 @@ async function QuestionContent({
   locale: Locale;
   setPath: string;
 }) {
-  const questionPath = `${setPath}/${exerciseNumber}/_question`;
-  const question = await importContentModule(questionPath, locale).catch(
-    async (error) => {
-      await captureServerException(error, undefined, {
-        exercise_number: exerciseNumber,
-        locale,
-        source: "exercise-question-module",
-      });
+  const questionPath = `${getExerciseQuestionPath(setPath, exerciseNumber)}/question`;
+  const question = await importContentModuleOrNull({
+    context: {
+      exercise_number: exerciseNumber,
+    },
+    filePath: questionPath,
+    locale,
+    source: "exercise-question-module",
+  });
 
-      return null;
-    }
-  );
-  const Question = question?.default;
+  if (!question?.default) {
+    notFound();
+  }
 
-  return Question ? <Question /> : null;
+  const Question = question.default;
+
+  return <Question />;
 }
 
-/** Loads the compiled answer module for one exercise entry. */
+/** Loads the optional compiled answer module for one exercise entry. */
 async function AnswerContent({
   exerciseNumber,
   locale,
@@ -44,21 +48,23 @@ async function AnswerContent({
   locale: Locale;
   setPath: string;
 }) {
-  const answerPath = `${setPath}/${exerciseNumber}/_answer`;
-  const answer = await importContentModule(answerPath, locale).catch(
-    async (error) => {
-      await captureServerException(error, undefined, {
-        exercise_number: exerciseNumber,
-        locale,
-        source: "exercise-answer-module",
-      });
+  const answerPath = `${getExerciseQuestionPath(setPath, exerciseNumber)}/answer`;
+  const answer = await importContentModuleOrNull({
+    context: {
+      exercise_number: exerciseNumber,
+    },
+    filePath: answerPath,
+    locale,
+    source: "exercise-answer-module",
+  });
 
-      return null;
-    }
-  );
-  const Answer = answer?.default;
+  if (!answer?.default) {
+    return null;
+  }
 
-  return Answer ? <Answer /> : null;
+  const Answer = answer.default;
+
+  return <Answer />;
 }
 
 /** Builds the shared exercise article body used by learn and try-out routes. */
@@ -69,7 +75,7 @@ function ExerciseEntryBody({
   setPath,
   srLabel,
 }: {
-  exercise: ExerciseWithoutDefaults;
+  exercise: ExerciseEntryData;
   id: string;
   locale: Locale;
   setPath: string;
@@ -108,7 +114,7 @@ export function ExerciseEntry({
   setPath,
   srLabel,
 }: {
-  exercise: ExerciseWithoutDefaults;
+  exercise: ExerciseEntryData;
   locale: Locale;
   setPath: string;
   srLabel: string;
@@ -133,7 +139,7 @@ export function ExerciseTrackedEntry({
   setPath,
   srLabel,
 }: {
-  exercise: ExerciseWithoutDefaults;
+  exercise: ExerciseEntryData;
   locale: Locale;
   setPath: string;
   srLabel: string;
@@ -155,4 +161,8 @@ export function ExerciseTrackedEntry({
       />
     </>
   );
+}
+
+function getExerciseQuestionPath(setPath: string, exerciseNumber: number) {
+  return `${setPath}/question-${exerciseNumber}`;
 }

@@ -1,5 +1,5 @@
 import { useIntersection } from "@mantine/hooks";
-import { type ComponentProps, useEffect, useRef } from "react";
+import { type ComponentProps, useEffect, useEffectEvent, useRef } from "react";
 
 export function Intersection({
   onIntersect,
@@ -28,6 +28,7 @@ export function Intersection({
     threshold,
   });
   const hasTriggered = useRef(false);
+  const handleIntersect = useEffectEvent(onIntersect);
 
   // useEffect ensures side effect runs AFTER render (React rules)
   useEffect(() => {
@@ -41,8 +42,8 @@ export function Intersection({
     }
 
     hasTriggered.current = true;
-    onIntersect();
-  }, [entry, onIntersect, once]);
+    handleIntersect();
+  }, [entry, once]);
 
   return <div ref={ref} {...props} />;
 }

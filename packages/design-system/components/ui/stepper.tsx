@@ -5,7 +5,7 @@ import { Tick01Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
-import { createContext, useCallback, useContext, useState } from "react";
+import { createContext, use, useCallback, useMemo, useState } from "react";
 
 // Types
 interface StepperContextValue {
@@ -31,16 +31,18 @@ const StepItemContext = createContext<StepItemContextValue | undefined>(
   undefined
 );
 
+/** Reads the current stepper state from the nearest Stepper provider. */
 const useStepper = () => {
-  const context = useContext(StepperContext);
+  const context = use(StepperContext);
   if (!context) {
     throw new Error("useStepper must be used within a Stepper");
   }
   return context;
 };
 
+/** Reads the current step item state from the nearest StepperItem provider. */
 const useStepItem = () => {
-  const context = useContext(StepItemContext);
+  const context = use(StepItemContext);
   if (!context) {
     throw new Error("useStepItem must be used within a StepperItem");
   }
@@ -76,15 +78,17 @@ function Stepper({
   );
 
   const currentStep = value ?? activeStep;
+  const contextValue = useMemo(
+    () => ({
+      activeStep: currentStep,
+      setActiveStep,
+      orientation,
+    }),
+    [currentStep, setActiveStep, orientation]
+  );
 
   return (
-    <StepperContext.Provider
-      value={{
-        activeStep: currentStep,
-        setActiveStep,
-        orientation,
-      }}
-    >
+    <StepperContext.Provider value={contextValue}>
       <div
         className={cn(
           "group/stepper inline-flex data-[orientation=horizontal]:w-full data-[orientation=horizontal]:flex-row data-[orientation=vertical]:flex-col",
@@ -127,11 +131,13 @@ function StepperItem({
   }
 
   const isLoading = loading && step === activeStep;
+  const contextValue = useMemo(
+    () => ({ step, state, isDisabled: disabled, isLoading }),
+    [step, state, disabled, isLoading]
+  );
 
   return (
-    <StepItemContext.Provider
-      value={{ step, state, isDisabled: disabled, isLoading }}
-    >
+    <StepItemContext.Provider value={contextValue}>
       <div
         className={cn(
           "group/step flex items-center group-data-[orientation=horizontal]/stepper:flex-row group-data-[orientation=vertical]/stepper:flex-col",
@@ -228,6 +234,7 @@ function StepperIndicator({
 
 // StepperTitle
 function StepperTitle({
+  children,
   className,
   ...props
 }: React.HTMLAttributes<HTMLHeadingElement>) {
@@ -236,7 +243,9 @@ function StepperTitle({
       className={cn("font-medium text-sm", className)}
       data-slot="stepper-title"
       {...props}
-    />
+    >
+      {children}
+    </h3>
   );
 }
 

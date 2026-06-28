@@ -6,6 +6,7 @@ import type {
   NakafaAgentSearchResult,
 } from "@repo/contents/_lib/agent/schema/search";
 import type { Locale } from "@repo/contents/_types/content";
+import { isPracticeQuestionPath } from "@repo/contents/_types/route/practice/path";
 import type { UIMessageStreamWriter } from "ai";
 import { Effect, Either } from "effect";
 
@@ -13,15 +14,7 @@ type Writer = Pick<UIMessageStreamWriter<MyUIMessage>, "write">;
 type SearchInput = ReturnType<typeof getSearchInput>;
 
 const searchTokenPattern = /[\p{L}\p{N}]+/gu;
-const exerciseQuestionRoutePattern = /\/\d+$/u;
 const routeSeparatorPattern = /[/_-]+/gu;
-
-interface Params {
-  input: NakafaAgentSearchInput;
-  locale: Locale;
-  toolCallId: string;
-  writer: Writer;
-}
 
 /** Searches Nakafa content and writes a bounded `data-nakafa` UI part. */
 export const search = Effect.fn("nakafa.search")(function* ({
@@ -29,7 +22,12 @@ export const search = Effect.fn("nakafa.search")(function* ({
   locale,
   toolCallId,
   writer,
-}: Params) {
+}: {
+  readonly input: NakafaAgentSearchInput;
+  readonly locale: Locale;
+  readonly toolCallId: string;
+  readonly writer: Writer;
+}) {
   const dataInput = getSearchInput(input, locale);
   const searchInputs = getSearchInputs(dataInput);
   const queryTokens = getSearchTokens(dataInput.queries ?? []);
@@ -186,13 +184,21 @@ function combineSearchResults(
   const hasMore =
     ranked.length > items.length || results.some((result) => result.has_more);
 
-  return {
+  const result = {
     count: items.length,
     has_more: hasMore,
     items,
     limit: input.limit,
-    next_offset: hasMore ? nextOffset : null,
     offset: input.offset,
+  };
+
+  if (!hasMore) {
+    return result;
+  }
+
+  return {
+    ...result,
+    next_offset: nextOffset,
   };
 }
 
@@ -248,7 +254,7 @@ function rankSearchItems(
       return scoreDelta;
     }
 
-    if (input.section !== "exercises") {
+    if (input.section !== "material") {
       return 0;
     }
 
@@ -295,7 +301,7 @@ function getSearchScore(
 function getExerciseSetPriority(
   item: NakafaAgentSearchResult["items"][number]
 ) {
-  if (exerciseQuestionRoutePattern.test(item.route)) {
+  if (isPracticeQuestionPath(item.route)) {
     return 0;
   }
 

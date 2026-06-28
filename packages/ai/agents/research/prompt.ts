@@ -2,16 +2,14 @@ import { createPrompt } from "@repo/ai/prompt/utils";
 import type { AgentContext } from "@repo/ai/types/agents";
 import type { Locale } from "@repo/utilities/locales";
 
-interface ResearchPromptProps {
-  context: AgentContext;
-  locale: Locale;
-}
-
 /** Builds the research agent prompt for source evidence collection. */
 export function researchEvidencePrompt({
   locale,
   context,
-}: ResearchPromptProps) {
+}: {
+  readonly context: AgentContext;
+  readonly locale: Locale;
+}) {
   return createPrompt({
     taskContext: `
       # Identity
@@ -76,7 +74,13 @@ export function researchEvidencePrompt({
 }
 
 /** Builds the research agent prompt for structured source-backed synthesis. */
-export function researchPrompt({ locale, context }: ResearchPromptProps) {
+export function researchPrompt({
+  locale,
+  context,
+}: {
+  readonly context: AgentContext;
+  readonly locale: Locale;
+}) {
   return createPrompt({
     taskContext: `
       # Identity

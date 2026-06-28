@@ -1,31 +1,10 @@
-import { parseNakafaContentRef } from "@repo/contents/_lib/agent/refs";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
 import { NakafaAgentContentRefSchema } from "@repo/contents/_lib/agent/schema/ref";
-import { Option, Schema } from "effect";
-
-/** Content reference input accepted by the structured exercise reader. */
-export const NakafaAgentExerciseContentRefInputSchema =
-  NakafaAgentContentRefInputSchema.pipe(
-    Schema.filter(
-      (value) => {
-        const ref = parseNakafaContentRef(value);
-
-        if (Option.isNone(ref)) {
-          return false;
-        }
-
-        return ref.value.section === "exercises";
-      },
-      {
-        message: () =>
-          'Expected a Nakafa exercise content reference with section "exercises".',
-      }
-    )
-  );
+import { Schema } from "effect";
 
 /** Runtime schema for exercise read input. */
 export const NakafaAgentExerciseOptionsSchema = Schema.Struct({
-  content_ref: NakafaAgentExerciseContentRefInputSchema,
+  content_ref: NakafaAgentContentRefInputSchema,
   exercise_number: Schema.optional(
     Schema.Number.pipe(Schema.int(), Schema.positive()).annotations({
       description: "Optional exercise number inside the set.",
@@ -36,7 +15,7 @@ export const NakafaAgentExerciseOptionsSchema = Schema.Struct({
   .annotations({ description: "Nakafa exercise read options." });
 
 /** Runtime schema for one exercise choice. */
-export const NakafaAgentExerciseChoiceSchema = Schema.Struct({
+const NakafaAgentExerciseChoiceSchema = Schema.Struct({
   correct: Schema.Boolean.annotations({
     description: "Whether this choice is the correct answer.",
   }),
@@ -53,7 +32,7 @@ const NakafaAgentExerciseContentSchema = Schema.Struct({
 }).pipe(Schema.mutable);
 
 /** Runtime schema for one exercise question and explanation. */
-export const NakafaAgentExerciseItemSchema = Schema.Struct({
+const NakafaAgentExerciseItemSchema = Schema.Struct({
   answer: NakafaAgentExerciseContentSchema.annotations({
     description: "Published answer and explanation.",
   }),
@@ -77,12 +56,11 @@ export const NakafaAgentExerciseResultSchema = NakafaAgentContentRefSchema.pipe(
       count: Schema.Number.pipe(Schema.int(), Schema.positive()).annotations({
         description: "Number of returned exercises.",
       }),
-      exercise_number: Schema.NullOr(
-        Schema.Number.pipe(Schema.int(), Schema.positive())
-      ).annotations({
-        description:
-          "Requested exercise number, or null when returning a whole set.",
-      }),
+      exercise_number: Schema.optional(
+        Schema.Number.pipe(Schema.int(), Schema.positive()).annotations({
+          description: "Requested exercise number inside the set.",
+        })
+      ),
       exercises: Schema.Array(NakafaAgentExerciseItemSchema)
         .pipe(Schema.minItems(1), Schema.mutable)
         .annotations({ description: "Structured exercises." }),

@@ -13,7 +13,15 @@ import { useControllableState } from "@repo/design-system/hooks/use-controllable
 import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
-import { createContext, memo, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  memo,
+  use,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 interface ReasoningContextValue {
   duration: number;
@@ -26,7 +34,7 @@ interface ReasoningContextValue {
 const ReasoningContext = createContext<ReasoningContextValue | null>(null);
 
 function useReasoning() {
-  const context = useContext(ReasoningContext);
+  const context = use(ReasoningContext);
   if (!context) {
     throw new Error("Reasoning components must be used within Reasoning");
   }
@@ -45,6 +53,12 @@ export type ReasoningProps = ComponentProps<typeof Collapsible> & {
 const AUTO_CLOSE_DELAY = 1000;
 const MS_IN_S = 1000;
 
+interface ReasoningTiming {
+  duration: number;
+  isStreaming: boolean;
+  startedAt: number | null;
+}
+
 export const Reasoning = memo(
   ({
     className,
@@ -62,47 +76,52 @@ export const Reasoning = memo(
       defaultProp: defaultOpen,
       onChange: onOpenChange,
     });
-    const [duration, setDuration] = useControllableState({
-      prop: durationProp,
-      defaultProp: 0,
-    });
+    const hasAutoClosedRef = useRef(false);
+    const [timing, setTiming] = useState<ReasoningTiming>(() => ({
+      duration: 0,
+      isStreaming,
+      startedAt: isStreaming ? Date.now() : null,
+    }));
 
-    const [hasAutoClosed, setHasAutoClosed] = useState(false);
-    const [startTime, setStartTime] = useState<number | null>(null);
+    if (timing.isStreaming !== isStreaming) {
+      const duration =
+        isStreaming || timing.startedAt === null
+          ? timing.duration
+          : Math.ceil((Date.now() - timing.startedAt) / MS_IN_S);
 
-    // Track duration when streaming starts and ends
-    useEffect(() => {
-      if (isStreaming) {
-        if (startTime === null) {
-          setStartTime(Date.now());
-        }
-      } else if (startTime !== null) {
-        setDuration(Math.ceil((Date.now() - startTime) / MS_IN_S));
-        setStartTime(null);
-      }
-    }, [isStreaming, startTime, setDuration]);
+      setTiming({
+        duration,
+        isStreaming,
+        startedAt: isStreaming ? Date.now() : null,
+      });
+    }
+
+    const duration = durationProp ?? timing.duration;
 
     // Auto-open when streaming starts, auto-close when streaming ends (once only)
     useEffect(() => {
-      if (defaultOpen && !isStreaming && isOpen && !hasAutoClosed) {
+      if (defaultOpen && !isStreaming && isOpen && !hasAutoClosedRef.current) {
         // Add a small delay before closing to allow user to see the content
         const timer = setTimeout(() => {
           setIsOpen(false);
-          setHasAutoClosed(true);
+          hasAutoClosedRef.current = true;
         }, AUTO_CLOSE_DELAY);
 
         return () => clearTimeout(timer);
       }
-    }, [isStreaming, isOpen, defaultOpen, setIsOpen, hasAutoClosed]);
+    }, [isStreaming, isOpen, defaultOpen, setIsOpen]);
+
+    const contextValue = useMemo(
+      () => ({ hasContent, isStreaming, isOpen, setIsOpen, duration }),
+      [duration, hasContent, isOpen, isStreaming, setIsOpen]
+    );
 
     function handleOpenChange(newOpen: boolean) {
       setIsOpen(newOpen);
     }
 
     return (
-      <ReasoningContext.Provider
-        value={{ hasContent, isStreaming, isOpen, setIsOpen, duration }}
-      >
+      <ReasoningContext.Provider value={contextValue}>
         <Collapsible
           className={cn("not-prose flex flex-col gap-2", className)}
           onOpenChange={handleOpenChange}

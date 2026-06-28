@@ -1,0 +1,115 @@
+import { VelocitySpeedLab } from "@repo/design-system/components/contents/physics/kinematics/velocity-speed/lab";
+
+export const metadata = {
+  title: "Velocity and Speed",
+  description:
+    "Distinguish speed as how fast a path is traveled and velocity as position change with direction.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "2026-05-31",
+  subject: "Kinematics",
+};
+
+## Two Quantities for Motion Rate
+
+When an object moves, we can ask two different questions. First, how fast is the path being traveled? The answer is **speed**. Second, how fast is position changing in a direction? The answer is **velocity**.
+
+Speed is a scalar quantity, so it only has a value. Velocity is a vector quantity, so it has both a value and a direction.
+
+<BlockMath math="\begin{aligned}
+\text{speed} &= \frac{s}{\Delta t} \\
+v &= \frac{\Delta x}{\Delta t}
+\end{aligned}" />
+
+The symbol <InlineMath math="s" /> means distance traveled, <InlineMath math="\Delta x" /> means displacement on a straight line, and <InlineMath math="\Delta t" /> means time interval. When we discuss one whole trip, these formulas read speed and velocity over that time interval.
+
+> Speed uses the whole distance traveled. Velocity uses net displacement with its sign.
+
+<VelocitySpeedLab
+  title={<>Car Motion on One Line</>}
+  description={
+    <>
+      Choose how the car moves to compare the green distance path with the
+      purple displacement line when the final position changes.
+    </>
+  }
+  labels={{
+    chooseCase: "Choose car route",
+    modeLabels: {
+      forward: <>Forward</>,
+      partialReturn: <>Partial Return</>,
+      backToStart: <>Back to Start</>,
+    },
+    factLabels: {
+      distance: <>Distance traveled</>,
+      displacement: <>Displacement</>,
+      speed: <>Average speed</>,
+      velocity: <>Average velocity</>,
+    },
+    viewLabel: "Car motion for speed and velocity",
+  }}
+/>
+
+## Path and Position Change Are Not the Same
+
+To separate the two ideas, check the total path actually traveled and the change in position from start to finish. Speed is calculated from the whole distance, while velocity is calculated from net displacement per time.
+
+For straight motion without turning around, the magnitude of speed and velocity can be the same. But if the object turns back, distance becomes greater than displacement.
+
+| Object motion | Distance traveled | Displacement |
+| :------------ | :---------------- | :----------- |
+| Moves straight from <InlineMath math="0 \text{ m}" /> to <InlineMath math="8 \text{ m}" /> | <InlineMath math="8 \text{ m}" /> | <InlineMath math="+8 \text{ m}" /> |
+| Moves from <InlineMath math="0 \text{ m}" /> to <InlineMath math="8 \text{ m}" />, then returns to <InlineMath math="4 \text{ m}" /> | <InlineMath math="12 \text{ m}" /> | <InlineMath math="+4 \text{ m}" /> |
+| Moves from <InlineMath math="0 \text{ m}" /> to <InlineMath math="8 \text{ m}" />, then returns to <InlineMath math="0 \text{ m}" /> | <InlineMath math="16 \text{ m}" /> | <InlineMath math="0 \text{ m}" /> |
+
+Notice the last row. The object clearly moves because its distance is <InlineMath math="16 \text{ m}" />, but its final position change is zero because it returns to the starting point.
+
+## Speed Reads Path Length
+
+Suppose an object moves from position <InlineMath math="0 \text{ m}" /> to <InlineMath math="8 \text{ m}" />, then returns to position <InlineMath math="4 \text{ m}" /> in <InlineMath math="4 \text{ s}" />.
+
+The distance traveled is:
+
+<BlockMath math="s=8 \text{ m}+4 \text{ m}=12 \text{ m}" />
+
+The speed is:
+
+<BlockMath math="\text{speed}=\frac{12 \text{ m}}{4 \text{ s}}=3 \text{ m/s}" />
+
+This value only tells how fast the object moved along the path. It does not describe the net direction.
+
+## Velocity Reads Direction
+
+For the same example, the displacement is:
+
+<BlockMath math="\Delta x=4 \text{ m}-0 \text{ m}=+4 \text{ m}" />
+
+The velocity is:
+
+<BlockMath math="v=\frac{+4 \text{ m}}{4 \text{ s}}=+1 \text{ m/s}" />
+
+The positive sign means the net velocity points right. If the result is negative, the net velocity points left.
+
+This is why velocity is more than speed with a sign attached. The sign only makes sense after the positive direction and the displacement have been defined.
+
+## When Speed and Velocity Look Different
+
+Now imagine the object moves from <InlineMath math="0 \text{ m}" /> to <InlineMath math="8 \text{ m}" />, then returns to <InlineMath math="0 \text{ m}" /> in <InlineMath math="4 \text{ s}" />.
+
+The distance traveled is <InlineMath math="16 \text{ m}" />, so the speed is:
+
+<BlockMath math="\text{speed}=\frac{16 \text{ m}}{4 \text{ s}}=4 \text{ m/s}" />
+
+The displacement is <InlineMath math="0 \text{ m}" />, so the velocity is:
+
+<BlockMath math="v=\frac{0 \text{ m}}{4 \text{ s}}=0 \text{ m/s}" />
+
+So speed can be nonzero while velocity over the trip is zero. That is not a contradiction. Speed reads path length, while velocity reads position change from start to finish.
+
+## Choosing the Right Formula
+
+| Quantity | Based on | Has direction? | Example unit |
+| :------- | :------- | :------------- | :----------- |
+| Speed | Distance traveled | No | <InlineMath math="\text{m/s}" /> |
+| Velocity | Displacement | Yes | <InlineMath math="\text{m/s}" /> to the right |
+
+If the question asks how fast the path is traveled, use distance and speed. If the question asks how fast position changes in a direction, use displacement and velocity.

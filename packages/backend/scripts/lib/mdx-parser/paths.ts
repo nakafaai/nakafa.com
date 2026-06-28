@@ -3,27 +3,26 @@ import {
   ARTICLE_PATH_REGEX,
   BACKSLASH_REGEX,
   LEADING_SLASH_REGEX,
+  MATERIAL_LESSON_PATH_REGEX,
   MDX_EXTENSION_REGEX,
-  SUBJECT_PATH_REGEX,
 } from "@repo/backend/scripts/lib/mdx-parser/constants";
 import type { ExerciseParsedPath } from "@repo/backend/scripts/lib/mdx-parser/types";
 import {
   MdxPathValidationError,
   parseExerciseYear,
   validateArticleCategory,
-  validateExercisesCategory,
   validateExercisesMaterial,
   validateExercisesType,
-  validateGrade,
   validateLocale,
   validateMaterial,
-  validateSubjectCategory,
 } from "@repo/backend/scripts/lib/mdx-parser/validators";
 import { Effect } from "effect";
 
+const EXERCISE_TYPE_YEAR_REGEX = /^(.+)-(\d{4})$/;
+const EXERCISE_QUESTION_PREFIX_REGEX = /^question-/;
+
 /** Builds the canonical database slug for one exercise set path. */
 export const buildExerciseSetSlug = ({
-  category,
   examType,
   material,
   exerciseType,
@@ -31,19 +30,18 @@ export const buildExerciseSetSlug = ({
   year,
 }: Pick<
   ExerciseParsedPath,
-  "category" | "examType" | "material" | "exerciseType" | "setName" | "year"
+  "examType" | "material" | "exerciseType" | "setName" | "year"
 >) => {
+  const exerciseTypeSegment =
+    year === undefined ? exerciseType : `${exerciseType}-${year}`;
   const pathSegments = [
-    "exercises",
-    category,
+    "material",
+    "practice",
+    "assessment",
     examType,
     material,
-    exerciseType,
+    exerciseTypeSegment,
   ];
-
-  if (year !== undefined) {
-    pathSegments.push(String(year));
-  }
 
   pathSegments.push(setName);
   return pathSegments.join("/");
@@ -80,39 +78,34 @@ export const parseArticlePath = Effect.fn("mdx.parseArticlePath")(function* (
   };
 });
 
-/** Parses a subject lesson MDX path into its sync identifiers. */
-export const parseSubjectPath = Effect.fn("mdx.parseSubjectPath")(function* (
-  filePath: string
-) {
-  const normalized = filePath.replace(BACKSLASH_REGEX, "/");
-  const match = normalized.match(SUBJECT_PATH_REGEX);
+/** Parses a curriculum lesson MDX path into its sync identifiers. */
+export const parseMaterialLessonPath = Effect.fn("mdx.parseMaterialLessonPath")(
+  function* (filePath: string) {
+    const normalized = filePath.replace(BACKSLASH_REGEX, "/");
+    const match = normalized.match(MATERIAL_LESSON_PATH_REGEX);
 
-  if (!match) {
-    return yield* Effect.fail(
-      new MdxPathValidationError({
-        message: `Invalid subject path: ${filePath}`,
-      })
-    );
+    if (!match) {
+      return yield* Effect.fail(
+        new MdxPathValidationError({
+          message: `Invalid material lesson path: ${filePath}`,
+        })
+      );
+    }
+
+    const [, rawMaterial, topic, section, rawLocale] = match;
+    const material = yield* validateMaterial(rawMaterial, filePath);
+    const locale = yield* validateLocale(rawLocale, filePath);
+
+    return {
+      type: "material-lesson",
+      locale,
+      material,
+      topic,
+      section,
+      slug: `material/lesson/${material}/${topic}/${section}`,
+    };
   }
-
-  const [, rawCategory, rawGrade, rawMaterial, topic, section, rawLocale] =
-    match;
-  const category = yield* validateSubjectCategory(rawCategory, filePath);
-  const grade = yield* validateGrade(rawGrade, filePath);
-  const material = yield* validateMaterial(rawMaterial, filePath);
-  const locale = yield* validateLocale(rawLocale, filePath);
-
-  return {
-    type: "subject",
-    locale,
-    category,
-    grade,
-    material,
-    topic,
-    section,
-    slug: `subject/${category}/${grade}/${material}/${topic}/${section}`,
-  };
-});
+);
 
 /** Parses an exercise question or answer MDX path into its sync identifiers. */
 export const parseExercisePath = Effect.fn("mdx.parseExercisePath")(function* (
@@ -120,9 +113,9 @@ export const parseExercisePath = Effect.fn("mdx.parseExercisePath")(function* (
 ) {
   const normalized = filePath.replace(BACKSLASH_REGEX, "/");
   const pathSegments = normalized.split("/");
-  const exercisesIndex = pathSegments.lastIndexOf("exercises");
+  const materialIndex = pathSegments.lastIndexOf("material");
 
-  if (exercisesIndex === -1) {
+  if (materialIndex === -1) {
     return yield* Effect.fail(
       new MdxPathValidationError({
         message: `Invalid exercise path: ${filePath}`,
@@ -130,9 +123,9 @@ export const parseExercisePath = Effect.fn("mdx.parseExercisePath")(function* (
     );
   }
 
-  const relativeSegments = pathSegments.slice(exercisesIndex);
+  const relativeSegments = pathSegments.slice(materialIndex);
 
-  if (relativeSegments.length !== 9 && relativeSegments.length !== 10) {
+  if (relativeSegments.length !== 9) {
     return yield* Effect.fail(
       new MdxPathValidationError({
         message: `Invalid exercise path: ${filePath}`,
@@ -140,28 +133,19 @@ export const parseExercisePath = Effect.fn("mdx.parseExercisePath")(function* (
     );
   }
 
-  const [, rawCategory, rawExamType, rawMaterial, exerciseType] =
-    relativeSegments;
-  let year: number | undefined;
-  let setName: string | undefined;
-  let numberStr: string | undefined;
-  let questionOrAnswerDir: string | undefined;
-  let rawLocaleFile: string | undefined;
+  const [
+    ,
+    practiceSegment,
+    assessmentSegment,
+    rawExamType,
+    rawMaterial,
+    rawExerciseType,
+    setName,
+    rawQuestionNumber,
+    rawLocaleFile,
+  ] = relativeSegments;
 
-  if (relativeSegments.length === 10) {
-    year = yield* parseExerciseYear(relativeSegments[5], filePath);
-    setName = relativeSegments[6];
-    numberStr = relativeSegments[7];
-    questionOrAnswerDir = relativeSegments[8];
-    rawLocaleFile = relativeSegments[9];
-  } else {
-    setName = relativeSegments[5];
-    numberStr = relativeSegments[6];
-    questionOrAnswerDir = relativeSegments[7];
-    rawLocaleFile = relativeSegments[8];
-  }
-
-  if (!(setName && numberStr && questionOrAnswerDir && rawLocaleFile)) {
+  if (practiceSegment !== "practice" || assessmentSegment !== "assessment") {
     return yield* Effect.fail(
       new MdxPathValidationError({
         message: `Invalid exercise path: ${filePath}`,
@@ -169,10 +153,7 @@ export const parseExercisePath = Effect.fn("mdx.parseExercisePath")(function* (
     );
   }
 
-  if (
-    questionOrAnswerDir !== "_question" &&
-    questionOrAnswerDir !== "_answer"
-  ) {
+  if (!(setName && rawQuestionNumber && rawLocaleFile)) {
     return yield* Effect.fail(
       new MdxPathValidationError({
         message: `Invalid exercise path: ${filePath}`,
@@ -180,14 +161,24 @@ export const parseExercisePath = Effect.fn("mdx.parseExercisePath")(function* (
     );
   }
 
-  const category = yield* validateExercisesCategory(rawCategory, filePath);
   const examType = yield* validateExercisesType(rawExamType, filePath);
   const material = yield* validateExercisesMaterial(rawMaterial, filePath);
-  const locale = yield* validateLocale(
-    rawLocaleFile.replace(MDX_EXTENSION_REGEX, ""),
-    filePath
+  const exerciseTypeParts = rawExerciseType.match(EXERCISE_TYPE_YEAR_REGEX);
+  const exerciseType = exerciseTypeParts?.[1] ?? rawExerciseType;
+  const year =
+    exerciseTypeParts?.[2] === undefined
+      ? undefined
+      : yield* parseExerciseYear(exerciseTypeParts[2], filePath);
+  const [questionOrAnswer, rawLocale] = rawLocaleFile
+    .replace(MDX_EXTENSION_REGEX, "")
+    .split(".");
+  const locale = yield* validateLocale(rawLocale ?? "", filePath);
+  const numberStr = rawQuestionNumber.replace(
+    EXERCISE_QUESTION_PREFIX_REGEX,
+    ""
   );
   const number = Number.parseInt(numberStr, 10);
+  const category: ExerciseParsedPath["category"] = "high-school";
 
   if (!Number.isFinite(number)) {
     return yield* Effect.fail(
@@ -197,8 +188,15 @@ export const parseExercisePath = Effect.fn("mdx.parseExercisePath")(function* (
     );
   }
 
+  if (questionOrAnswer !== "question" && questionOrAnswer !== "answer") {
+    return yield* Effect.fail(
+      new MdxPathValidationError({
+        message: `Invalid exercise path: ${filePath}`,
+      })
+    );
+  }
+
   const setSlug = buildExerciseSetSlug({
-    category,
     examType,
     material,
     exerciseType,
@@ -216,7 +214,7 @@ export const parseExercisePath = Effect.fn("mdx.parseExercisePath")(function* (
     setName,
     number,
     slug: `${setSlug}/${number}`,
-    isQuestion: questionOrAnswerDir === "_question",
+    isQuestion: questionOrAnswer === "question",
     year,
   };
 });
@@ -226,7 +224,7 @@ export const getExerciseDir = Effect.fn("mdx.getExerciseDir")(function* (
   filePath: string
 ) {
   const normalized = filePath.replace(BACKSLASH_REGEX, "/");
-  const exerciseDir = posix.dirname(posix.dirname(normalized));
+  const exerciseDir = posix.dirname(normalized);
 
   if (exerciseDir === "." || exerciseDir === "/") {
     return yield* Effect.fail(

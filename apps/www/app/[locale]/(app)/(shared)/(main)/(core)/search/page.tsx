@@ -8,6 +8,7 @@ import { BackButton } from "@/components/shared/back-button";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 
+/** Builds localized search metadata while keeping the page body first for AFDocs content-start checks. */
 export async function generateMetadata({
   params,
 }: {
@@ -24,6 +25,7 @@ export async function generateMetadata({
   };
 }
 
+/** Renders search with the established personalized home header. */
 export default function Page() {
   return (
     <div className="relative min-h-[calc(100svh-4rem)] lg:min-h-svh">

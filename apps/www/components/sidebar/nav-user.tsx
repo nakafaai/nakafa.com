@@ -3,7 +3,6 @@
 import {
   FileValidationIcon,
   LockIcon,
-  Login01Icon,
   Logout01Icon,
   MessageMultiple02Icon,
   MoreVerticalIcon,
@@ -37,9 +36,12 @@ import {
 } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
 import { useLayoutEffect } from "react";
+import { NavUserGuestButton } from "@/components/sidebar/nav-user-guest-button";
 import { authClient } from "@/lib/auth/client";
 import { useUser } from "@/lib/context/use-user";
 import { getInitialName } from "@/lib/utils/helper";
+import { NavUserSkeleton } from "./nav-user-skeleton";
+import { SidebarUtilityMenuItems } from "./utility-menu-items";
 
 /**
  * Renders the signed-in user menu, plan indicator, and guest login shortcut in the sidebar.
@@ -51,11 +53,16 @@ export function NavUser() {
   const pathname = usePathname();
 
   const router = useRouter();
-  const user = useUser((state) => state.user);
+  const { isPending, user } = useUser((state) => ({
+    isPending: state.isPending,
+    user: state.user,
+  }));
   const [open, { close, set }] = useDisclosure(false);
 
   const { isMobile } = useSidebar();
   const authHref = `/auth?redirect=${pathname}`;
+  const dropdownSide = isMobile ? "bottom" : "right";
+  const submenuSide = isMobile ? "top" : "right";
 
   useLayoutEffect(() => close, [close]);
 
@@ -70,13 +77,14 @@ export function NavUser() {
     });
   }
 
+  if (isPending) {
+    return <NavUserSkeleton />;
+  }
+
   if (!user) {
     return (
       <SidebarMenuItem>
-        <SidebarMenuButton onClick={() => router.push(authHref)}>
-          <HugeIcons icon={Login01Icon} />
-          {t("login")}
-        </SidebarMenuButton>
+        <NavUserGuestButton />
       </SidebarMenuItem>
     );
   }
@@ -119,7 +127,7 @@ export function NavUser() {
         <DropdownMenuContent
           align="end"
           className="w-(--anchor-width) min-w-56 max-w-[calc(100vw-2rem)] rounded-lg"
-          side={isMobile ? "bottom" : "right"}
+          side={dropdownSide}
           sideOffset={4}
         >
           <DropdownMenuGroup>
@@ -170,6 +178,8 @@ export function NavUser() {
               {t("settings")}
             </DropdownMenuItem>
           </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          <SidebarUtilityMenuItems side={submenuSide} />
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuItem

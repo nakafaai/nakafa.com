@@ -1,0 +1,254 @@
+export const metadata = {
+   title: "Permutasi dengan Objek yang Sama",
+   description: "Pelajari permutasi dengan objek yang sama menggunakan rumus multinomial. Pelajari perhitungan susunan berbeda saat objek tidak dapat dibedakan.",
+   authors: [{ name: "Nabil Akbarazzima Fatih" }],
+   date: "2025-05-26",
+   subject: "Kombinatorik",
+};
+
+## Pengertian Permutasi dengan Objek yang Sama
+
+**Permutasi dengan objek yang sama** adalah susunan objek dimana terdapat beberapa objek yang identik atau sama. Ketika ada objek yang sama, jumlah susunan yang berbeda akan berkurang karena **pertukaran objek yang identik tidak menghasilkan susunan baru**.
+
+Bayangkan menyusun huruf dari kata "MAMA". Walaupun ada <InlineMath math="4" /> huruf, kita tidak bisa membedakan antara huruf <InlineMath math="M" /> yang pertama dengan <InlineMath math="M" /> yang kedua, atau <InlineMath math="A" /> yang pertama dengan <InlineMath math="A" /> yang kedua. Akibatnya, susunan yang terlihat berbeda tetapi menggunakan huruf yang sama di posisi berbeda dianggap identik.
+
+## Rumus Permutasi Objek Identik
+
+Untuk permutasi <InlineMath math="n" /> objek dimana terdapat objek yang sama, **rumus yang digunakan** adalah:
+
+<MathContainer>
+<BlockMath math="P = \frac{n!}{r_1! \times r_2! \times r_3! \times \cdots \times r_k!}" />
+</MathContainer>
+
+**Keterangan:**
+
+- <InlineMath math="n" /> = jumlah total objek
+- <InlineMath math="r_1, r_2, r_3, \ldots, r_k" /> = banyaknya objek yang sama pada setiap kelompok
+- <InlineMath math="k" /> = banyaknya kelompok objek yang identik
+
+**Cara mengidentifikasi objek yang sama**: Hitung berapa kali setiap objek muncul dalam seluruh susunan, bukan hanya melihat objek yang berbeda.
+
+## Penerapan pada Kata dan Huruf
+
+### Contoh Kata KALIMANTAN
+
+Mari kita hitung berapa banyak susunan huruf yang dapat dibuat dari kata "KALIMANTAN".
+
+**Langkah identifikasi sistematis:**
+Tulis huruf satu per satu: K-A-L-I-M-A-N-T-A-N
+
+Total huruf: <InlineMath math="10" />
+
+Identifikasi huruf: K muncul <InlineMath math="1 \text{ kali}" />, A muncul <InlineMath math="3 \text{ kali}" /> (posisi ke-<InlineMath math="2" />, ke-<InlineMath math="6" />, ke-<InlineMath math="9" />), L muncul <InlineMath math="1 \text{ kali}" />, I muncul <InlineMath math="1 \text{ kali}" />, M muncul <InlineMath math="1 \text{ kali}" />, N muncul <InlineMath math="2 \text{ kali}" /> (posisi ke-<InlineMath math="7" />, ke-<InlineMath math="10" />), T muncul <InlineMath math="1 \text{ kali}" />
+
+**Perhitungan:**
+
+<MathContainer>
+<BlockMath math="P = \frac{10!}{1! \times 3! \times 1! \times 1! \times 1! \times 2! \times 1!}" />
+<BlockMath math="= \frac{10!}{3! \times 2!}" />
+</MathContainer>
+
+Sederhanakan pecahan dengan membatalkan faktor yang sama:
+
+<MathContainer>
+<BlockMath math="= \frac{10 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4 \times 3!}{3! \times 2!}" />
+<BlockMath math="= \frac{10 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4}{2!}" />
+<BlockMath math="= \frac{10 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4}{2}" />
+</MathContainer>
+
+Hitung langkah demi langkah:
+- Bagi <InlineMath math="10" /> dengan <InlineMath math="2" />: <InlineMath math="\frac{10}{2} = 5" />
+- Jadi: <InlineMath math="5 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4" />
+- <InlineMath math="= 5 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4 = 302.400" />
+
+### Contoh Kata PALAPA
+
+Untuk kata "PALAPA" dengan <InlineMath math="6" /> huruf:
+Tulis huruf satu per satu: P-A-L-A-P-A
+
+**Identifikasi huruf:** P muncul <InlineMath math="2 \text{ kali}" /> (posisi ke-<InlineMath math="1" />, ke-<InlineMath math="5" />), A muncul <InlineMath math="3 \text{ kali}" /> (posisi ke-<InlineMath math="2" />, ke-<InlineMath math="4" />, ke-<InlineMath math="6" />), L muncul <InlineMath math="1 \text{ kali}" />
+
+Hitung setiap faktorial:
+- <InlineMath math="6! = 6 \times 5 \times 4 \times 3 \times 2 \times 1 = 720" />
+- <InlineMath math="2! = 2 \times 1 = 2" />
+- <InlineMath math="3! = 3 \times 2 \times 1 = 6" />
+
+Jadi, perhitungannya adalah:
+
+<MathContainer>
+<BlockMath math="P = \frac{6!}{2! \times 3! \times 1!}" />
+<BlockMath math="= \frac{6 \times 5 \times 4 \times 3!}{2! \times 3! \times 1!}" />
+<BlockMath math="= \frac{6 \times 5 \times 4}{2 \times 1}" />
+<BlockMath math="= \frac{6 \times 5 \times 4}{2}" />
+</MathContainer>
+
+Sederhanakan dengan membagi <InlineMath math="6" /> dengan <InlineMath math="2" />:
+- <InlineMath math="\frac{6}{2} = 3" />
+- Jadi: <InlineMath math="3 \times 5 \times 4 = 60 \text{ susunan}" />
+
+## Langkah Perhitungan Sistematis
+
+Untuk menyelesaikan masalah permutasi dengan objek yang sama, ikuti langkah berikut:
+
+1. **Hitung total objek**: Tentukan nilai <InlineMath math="n" />
+2. **Identifikasi objek sama**: Kelompokkan objek yang identik
+3. **Hitung frekuensi**: Tentukan berapa kali setiap objek muncul
+4. **Terapkan rumus**: Masukkan ke dalam rumus permutasi
+5. **Hitung faktorial**: Selesaikan perhitungan dengan teliti
+
+### Kata BANANA
+
+Mari kita terapkan langkah-langkah ini untuk mencari susunan kata "BANANA":
+
+1. **Hitung total objek**
+
+   Tulis huruf satu per satu: B-A-N-A-N-A
+
+   Total huruf: <InlineMath math="n = 6" />
+
+2. **Identifikasi objek sama**
+
+   Kelompokkan huruf yang identik:
+   - Kelompok B: B
+   - Kelompok A: A, A, A
+   - Kelompok N: N, N
+
+3. **Hitung frekuensi**
+
+   Hitung berapa kali setiap huruf muncul:
+   - B muncul <InlineMath math="1 \text{ kali}" />
+   - A muncul <InlineMath math="3 \text{ kali}" />
+   - N muncul <InlineMath math="2 \text{ kali}" />
+
+4. **Terapkan rumus**
+
+   Gunakan rumus permutasi dengan objek yang sama:
+
+   <MathContainer>
+   <BlockMath math="P = \frac{n!}{r_1! \times r_2! \times r_3!}" />
+   <BlockMath math="P = \frac{6!}{1! \times 3! \times 2!}" />
+   </MathContainer>
+
+5. **Hitung faktorial**
+
+   Sederhanakan pecahan terlebih dahulu:
+
+   <MathContainer>
+   <BlockMath math="P = \frac{6!}{1! \times 3! \times 2!}" />
+   <BlockMath math="= \frac{6 \times 5 \times 4 \times 3!}{1! \times 3! \times 2!}" />
+   <BlockMath math="= \frac{6 \times 5 \times 4}{1 \times 2!}" />
+   <BlockMath math="= \frac{6 \times 5 \times 4}{2}" />
+   </MathContainer>
+
+   Hitung dengan penyederhanaan:
+   - Bagi <InlineMath math="6" /> dengan <InlineMath math="2" />: <InlineMath math="\frac{6}{2} = 3" />
+   - Jadi: <InlineMath math="3 \times 5 \times 4 = 60" />
+
+Jadi, kata "BANANA" dapat disusun dalam **<InlineMath math="60 \text{ cara}" /> yang berbeda**.
+
+## Perbedaan dengan Permutasi Biasa
+
+**Permutasi biasa**: Semua objek berbeda, menggunakan rumus <InlineMath math="n!" />
+
+**Permutasi dengan objek sama**: Ada objek identik, menggunakan rumus:
+
+<MathContainer>
+<BlockMath math="\frac{n!}{r_1! \times r_2! \times \cdots \times r_k!}" />
+</MathContainer>
+
+**Contoh perbandingan:**
+
+Menyusun huruf A, B, C, D (semua berbeda): <InlineMath math="4! = 24 \text{ cara}" />
+
+Menyusun huruf <InlineMath math="A, A, B, C" /> (ada yang sama):
+
+<MathContainer>
+<BlockMath math="\frac{4!}{2!} = \frac{24}{2} = 12 \text{ cara}" />
+</MathContainer>
+
+Objek yang sama **mengurangi** jumlah susunan karena pertukaran objek identik tidak menghasilkan perbedaan.
+
+## Latihan
+
+1. Berapa banyak susunan huruf yang dapat dibuat dari kata "MATEMATIKA"?
+
+2. Sebuah toko bunga memiliki <InlineMath math="8" /> bunga mawar dimana <InlineMath math="3" /> berwarna merah, <InlineMath math="3" /> berwarna putih, dan <InlineMath math="2" /> berwarna kuning. Berapa banyak cara menyusun bunga tersebut dalam satu barisan?
+
+3. Dari angka <InlineMath math="1, 1, 2, 2, 2, 3" />, berapa banyak bilangan <InlineMath math="6" /> digit yang dapat dibentuk?
+
+4. Kata "INDONESIA" memiliki berapa banyak susunan huruf yang berbeda?
+
+### Kunci Jawaban
+
+1. Kata "MATEMATIKA" memiliki <InlineMath math="10" /> huruf
+
+   **Huruf satu per satu:** M-A-T-E-M-A-T-I-K-A
+
+   **Identifikasi huruf:** M muncul <InlineMath math="2 \text{ kali}" /> (posisi ke-<InlineMath math="1" />, ke-<InlineMath math="5" />), A muncul <InlineMath math="3 \text{ kali}" /> (posisi ke-<InlineMath math="2" />, ke-<InlineMath math="6" />, ke-<InlineMath math="10" />), T muncul <InlineMath math="2 \text{ kali}" /> (posisi ke-<InlineMath math="3" />, ke-<InlineMath math="7" />), E muncul <InlineMath math="1 \text{ kali}" />, I muncul <InlineMath math="1 \text{ kali}" />, K muncul <InlineMath math="1 \text{ kali}" />
+
+   Sederhanakan pecahan dengan membatalkan faktor yang sama:
+
+   <MathContainer>
+   <BlockMath math="P = \frac{10!}{2! \times 3! \times 2! \times 1! \times 1! \times 1!}" />
+   <BlockMath math="= \frac{10 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4 \times 3!}{2! \times 3! \times 2!}" />
+   <BlockMath math="= \frac{10 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4}{2! \times 2!}" />
+   <BlockMath math="= \frac{10 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4}{4}" />
+   </MathContainer>
+
+   Hitung dengan penyederhanaan:
+   - Perhitungan lengkap: <InlineMath math="10 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4 = 604.800" />
+   - Bagi dengan <InlineMath math="4" />: <InlineMath math="\frac{604.800}{4} = 151.200 \text{ susunan}" />
+
+2. Total <InlineMath math="8" /> bunga dengan merah <InlineMath math="3" />, putih <InlineMath math="3" />, kuning <InlineMath math="2" />
+
+   Sederhanakan pecahan dengan membatalkan faktor yang sama:
+
+   <MathContainer>
+   <BlockMath math="P = \frac{8!}{3! \times 3! \times 2!}" />
+   <BlockMath math="= \frac{8 \times 7 \times 6 \times 5 \times 4 \times 3!}{3! \times 3! \times 2!}" />
+   <BlockMath math="= \frac{8 \times 7 \times 6 \times 5 \times 4}{3! \times 2!}" />
+   <BlockMath math="= \frac{8 \times 7 \times 6 \times 5 \times 4}{6 \times 2}" />
+   <BlockMath math="= \frac{8 \times 7 \times 6 \times 5 \times 4}{12}" />
+   </MathContainer>
+
+   Hitung dengan penyederhanaan:
+   - Bagi <InlineMath math="6" /> dengan <InlineMath math="12" />: <InlineMath math="\frac{6}{12} = \frac{1}{2}" />
+   - Jadi: <InlineMath math="8 \times 7 \times \frac{1}{2} \times 5 \times 4" />
+   - <InlineMath math="= 4 \times 7 \times 5 \times 4 = 560 \text{ cara}" />
+
+3. Angka <InlineMath math="1, 1, 2, 2, 2, 3" /> (total <InlineMath math="6" /> digit)
+
+   **Identifikasi angka:** angka <InlineMath math="1" /> muncul <InlineMath math="2 \text{ kali}" />, angka <InlineMath math="2" /> muncul <InlineMath math="3 \text{ kali}" />, angka <InlineMath math="3" /> muncul <InlineMath math="1 \text{ kali}" />
+
+   Sederhanakan pecahan dengan membatalkan faktor yang sama:
+
+   <MathContainer>
+   <BlockMath math="P = \frac{6!}{2! \times 3! \times 1!}" />
+   <BlockMath math="= \frac{6 \times 5 \times 4 \times 3!}{2! \times 3!}" />
+   <BlockMath math="= \frac{6 \times 5 \times 4}{2!}" />
+   <BlockMath math="= \frac{6 \times 5 \times 4}{2}" />
+   </MathContainer>
+
+   Hitung dengan penyederhanaan:
+   - Bagi <InlineMath math="6" /> dengan <InlineMath math="2" />: <InlineMath math="\frac{6}{2} = 3" />
+   - Jadi: <InlineMath math="3 \times 5 \times 4 = 60 \text{ bilangan}" />
+
+4. Kata "INDONESIA" memiliki <InlineMath math="9" /> huruf
+
+   **Huruf satu per satu:** I-N-D-O-N-E-S-I-A
+
+   **Identifikasi huruf:** I muncul <InlineMath math="2 \text{ kali}" /> (posisi ke-<InlineMath math="1" />, ke-<InlineMath math="8" />), N muncul <InlineMath math="2 \text{ kali}" /> (posisi ke-<InlineMath math="2" />, ke-<InlineMath math="5" />), D muncul <InlineMath math="1 \text{ kali}" />, O muncul <InlineMath math="1 \text{ kali}" />, E muncul <InlineMath math="1 \text{ kali}" />, S muncul <InlineMath math="1 \text{ kali}" />, A muncul <InlineMath math="1 \text{ kali}" />
+
+   Sederhanakan pecahan dengan membatalkan faktor yang sama:
+
+   <MathContainer>
+   <BlockMath math="P = \frac{9!}{2! \times 2! \times 1! \times 1! \times 1! \times 1! \times 1!}" />
+   <BlockMath math="= \frac{9 \times 8 \times 7 \times 6 \times 5 \times 4 \times 3 \times 2!}{2! \times 2!}" />
+   <BlockMath math="= \frac{9 \times 8 \times 7 \times 6 \times 5 \times 4 \times 3}{2!}" />
+   <BlockMath math="= \frac{9 \times 8 \times 7 \times 6 \times 5 \times 4 \times 3}{2}" />
+   </MathContainer>
+
+   Hitung dengan penyederhanaan:
+   - Bagi dengan <InlineMath math="2" />: <InlineMath math="\frac{8}{2} = 4" />
+   - Jadi: <InlineMath math="9 \times 4 \times 7 \times 6 \times 5 \times 4 \times 3" />
+   - <InlineMath math="= 9 \times 4 \times 7 \times 6 \times 5 \times 4 \times 3 = 90.720 \text{ susunan}" />

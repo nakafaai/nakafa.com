@@ -1,11 +1,21 @@
-import { keys as aiKeys } from "@repo/ai/keys";
-import { keys as analyticsKeys } from "@repo/analytics/keys";
-import { keys as backendKeys } from "@repo/backend/keys";
-import { keys as mathKeys } from "@repo/math/keys";
-import { keys as core } from "@repo/next-config/keys";
+import { convexKeys, convexSiteKeys } from "@repo/backend/keys";
+import { contentApiKeys, mcpKeys, siteUrlKeys } from "@repo/next-config/keys";
 import { createEnv } from "@t3-oss/env-nextjs";
 
+/**
+ * Validates environment values consumed by `www` runtime modules.
+ *
+ * Package-specific integrations such as AI clients, CAS, Polar, and Convex
+ * backend functions keep their own env contracts at the capability that reads
+ * those values.
+ */
 export const env = createEnv({
-  extends: [core(), aiKeys(), analyticsKeys(), backendKeys(), mathKeys()],
+  extends: [
+    contentApiKeys(),
+    siteUrlKeys(),
+    convexKeys(),
+    convexSiteKeys(),
+    mcpKeys(),
+  ],
   runtimeEnv: {},
 });

@@ -1,15 +1,15 @@
 "use client";
 
 import { useDisclosure } from "@mantine/hooks";
-import type { api } from "@repo/backend/convex/_generated/api";
+import { api } from "@repo/backend/convex/_generated/api";
 import {
   usePathname,
   useRouter,
 } from "@repo/internationalization/src/navigation";
-import { useConvexAuth } from "convex/react";
+import { useAction, useConvexAuth } from "convex/react";
 import type { FunctionArgs } from "convex/server";
 import { useTranslations } from "next-intl";
-import { useCallback, useLayoutEffect, useTransition } from "react";
+import { useLayoutEffect, useTransition } from "react";
 import { toast } from "sonner";
 import { startTryout } from "@/components/tryout/actions/tryout";
 import { getTryoutPartHref } from "@/components/tryout/utils/routes";
@@ -40,6 +40,9 @@ export function useTryoutStartFlow({
   const pathname = usePathname();
   const router = useRouter();
   const { isAuthenticated, isLoading } = useConvexAuth();
+  const generateCheckoutLink = useAction(
+    api.customers.actions.public.generateCheckoutLink
+  );
   const [isActionPending, startTransition] = useTransition();
   const [isDialogOpen, { close: closeDialog, open: openDialog }] =
     useDisclosure(false);
@@ -58,20 +61,17 @@ export function useTryoutStartFlow({
   );
 
   /** Keeps the dialog state aligned with route preservation and unmounts. */
-  const setDialogOpenAction = useCallback(
-    (open: boolean) => {
-      if (open) {
-        openDialog();
-        return;
-      }
+  const setDialogOpenAction = (open: boolean) => {
+    if (open) {
+      openDialog();
+      return;
+    }
 
-      closeDialog();
-    },
-    [closeDialog, openDialog]
-  );
+    closeDialog();
+  };
 
   /** Opens auth, resumes an attempt, or opens the start dialog based on state. */
-  const clickStartAction = useCallback(() => {
+  const clickStartAction = () => {
     if (isAuthPending) {
       return;
     }
@@ -95,20 +95,10 @@ export function useTryoutStartFlow({
     }
 
     openDialog();
-  }, [
-    authHref,
-    closeDialog,
-    isAuthenticated,
-    isAuthPending,
-    openDialog,
-    params.product,
-    params.tryoutSlug,
-    resumePartKey,
-    router,
-  ]);
+  };
 
   /** Prefetches the auth route for anonymous users when the CTA becomes relevant. */
-  const prefetchAuthAction = useCallback(() => {
+  const prefetchAuthAction = () => {
     if (isAuthPending) {
       return;
     }
@@ -118,10 +108,10 @@ export function useTryoutStartFlow({
     }
 
     router.prefetch(authHref);
-  }, [authHref, isAuthenticated, isAuthPending, router]);
+  };
 
   /** Starts the tryout and maps the server result into the route-level UX. */
-  const confirmStartAction = useCallback(() => {
+  const confirmStartAction = () => {
     if (isAuthPending) {
       return;
     }
@@ -158,7 +148,11 @@ export function useTryoutStartFlow({
 
       if (result.kind === "requires-access") {
         closeDialog();
-        window.location.href = result.url;
+        const { url } = await generateCheckoutLink({
+          locale: params.locale,
+          successUrl: result.successUrl,
+        });
+        window.location.href = url;
         return;
       }
 
@@ -180,17 +174,7 @@ export function useTryoutStartFlow({
         position: "bottom-center",
       });
     });
-  }, [
-    closeDialog,
-    isAuthenticated,
-    isAuthPending,
-    partKeys,
-    params,
-    pathname,
-    authHref,
-    router,
-    tTryouts,
-  ]);
+  };
 
   return {
     clickStartAction,

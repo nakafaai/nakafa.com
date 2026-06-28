@@ -4,7 +4,6 @@ import { Label } from "@repo/design-system/components/ui/label";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import { cn } from "@repo/design-system/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
-import { useMemo } from "react";
 
 function FieldSet({ className, ...props }: React.ComponentProps<"fieldset">) {
   return (
@@ -58,15 +57,15 @@ const fieldVariants = cva(
   {
     variants: {
       orientation: {
-        vertical: ["flex-col [&>*]:w-full [&>.sr-only]:w-auto"],
+        vertical: ["flex-col *:w-full [&>.sr-only]:w-auto"],
         horizontal: [
           "flex-row items-center",
-          "[&>[data-slot=field-label]]:flex-auto",
+          "*:data-[slot=field-label]:flex-auto",
           "has-[>[data-slot=field-content]]:items-start has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px",
         ],
         responsive: [
-          "@md/field-group:flex-row flex-col @md/field-group:items-center @md/field-group:[&>*]:w-auto [&>*]:w-full [&>.sr-only]:w-auto",
-          "@md/field-group:[&>[data-slot=field-label]]:flex-auto",
+          "@md/field-group:flex-row flex-col @md/field-group:items-center *:w-full @md/field-group:*:w-auto [&>.sr-only]:w-auto",
+          "@md/field-group:*:data-[slot=field-label]:flex-auto",
           "@md/field-group:has-[>[data-slot=field-content]]:items-start @md/field-group:has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px",
         ],
       },
@@ -189,24 +188,31 @@ function FieldError({
 }: React.ComponentProps<"div"> & {
   errors?: Array<{ message?: string } | undefined>;
 }) {
-  const content = useMemo(() => {
-    if (children) {
-      return children;
-    }
-
-    if (!errors?.length) {
-      return null;
-    }
-
-    const uniqueErrors = [
-      ...new Map(errors.map((error) => [error?.message, error])).values(),
-    ];
-
-    if (uniqueErrors?.length === 1) {
-      return uniqueErrors[0]?.message;
-    }
-
+  if (children) {
     return (
+      <div
+        className={cn("font-normal text-destructive text-sm", className)}
+        data-slot="field-error"
+        role="alert"
+        {...props}
+      >
+        {children}
+      </div>
+    );
+  }
+
+  if (!errors?.length) {
+    return null;
+  }
+
+  const uniqueErrors = [
+    ...new Map(errors.map((error) => [error?.message, error])).values(),
+  ];
+
+  const content =
+    uniqueErrors.length === 1 ? (
+      uniqueErrors[0]?.message
+    ) : (
       <ul className="ml-4 flex list-disc flex-col gap-1">
         {uniqueErrors.map(
           (error, index) =>
@@ -217,7 +223,6 @@ function FieldError({
         )}
       </ul>
     );
-  }, [children, errors]);
 
   if (!content) {
     return null;

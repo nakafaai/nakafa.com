@@ -1,0 +1,105 @@
+import { Vector3d } from "@repo/design-system/components/contents/mathematics/vector-3d";
+import { getColor } from "@repo/design-system/lib/color";
+
+export const metadata = {
+  title: "Vector Addition and Subtraction with Graphical Method",
+  description:
+    "Learn how to find vector resultants using triangle, parallelogram, polygon, and negative-vector graphical methods.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "2026-05-31",
+  subject: "Vector",
+};
+
+## A Resultant as a Replacement Arrow
+
+When several vectors act in sequence or together, we can replace them with one vector that produces the same final effect. This replacement vector is called the **resultant**.
+
+The graphical method finds the resultant using a scaled drawing. Arrow lengths are proportional to vector magnitudes, and arrow directions follow the given angles or compass directions.
+
+> In the graphical method, the accuracy depends on drawing scale, ruler work, and angle measurement.
+
+## Head-to-Tail Triangle Method
+
+The triangle method is used to add two vectors. Draw the first vector, then place the tail of the second vector at the tip of the first. The resultant is drawn from the tail of the first vector to the tip of the second.
+
+<Vector3d
+  title={<>Head-to-Tail Addition</>}
+  description={
+    <>
+      Vector <InlineMath math="\vec{a}" /> is followed by{" "}
+      <InlineMath math="\vec{b}" />. Resultant <InlineMath math="\vec{R}" /> directly
+      connects the start point to the final point.
+    </>
+  }
+  vectors={(() => {
+    const a = [4, 1, 0];
+    const b = [2, 3, 0];
+    const resultant = a.map((component, index) => component + b[index]);
+
+    return [
+      {
+        from: [0, 0, 0],
+        to: a,
+        color: getColor("TEAL"),
+        label: "a",
+        labelAnchorX: "center",
+        labelProgress: 1 / 2,
+        labelOffset: [0, -0.45, 0],
+      },
+      {
+        from: a,
+        to: resultant,
+        color: getColor("AMBER"),
+        label: "b",
+        labelAnchorX: "center",
+        labelProgress: 1 / 2,
+        labelOffset: [0.35, 0.45, 0.2],
+      },
+      {
+        from: [0, 0, 0],
+        to: resultant,
+        color: getColor("VIOLET"),
+        label: "R",
+        labelAnchorX: "center",
+        labelProgress: 3 / 5,
+        labelOffset: [0.25, 0.75, 0.35],
+      },
+    ];
+  })()}
+  cameraPosition={[8, 6, 10]}
+  cameraTarget={[3, -0.7, 0]}
+/>
+
+If someone walks <InlineMath math="4\text{ m}" /> east and then <InlineMath math="3\text{ m}" /> north, the resultant is not <InlineMath math="7\text{ m}" /> in one straight direction. It is the slanted arrow from the starting point to the final point.
+
+## Parallelogram Method for Two Vectors with One Tail
+
+If two vectors are drawn from the same tail, use the parallelogram method. The two vectors form adjacent sides of a parallelogram, and the resultant is the diagonal from the shared tail to the opposite corner.
+
+This method fits forces acting on one object from the same point, such as two people pulling a ring with ropes in different directions. In the drawing, both forces start from the same point, so the diagonal shows the combined pull.
+
+Steps:
+
+- Draw both vectors from the same tail.
+- Copy the first vector at the tip of the second and copy the second vector at the tip of the first.
+- Draw the diagonal from the shared tail to the far corner of the parallelogram.
+
+## Polygon Method for Many Vectors
+
+For more than two vectors, use the polygon method. The rule is still the same: place the tail of each next vector at the tip of the previous vector.
+
+The drawing order may be rearranged as long as each vector keeps its magnitude and direction. The resultant is drawn from the tail of the first chosen vector to the tip of the last vector.
+
+<BlockMath math="\vec{R}=\vec{a}+\vec{b}+\vec{c}" />
+
+If the polygon returns to the starting point, the resultant is the zero vector. That means all vectors balance one another.
+
+## Graphical Vector Subtraction
+
+Vector subtraction does not need a new rule. Change subtraction into addition with a negative vector.
+
+<BlockMath math="\vec{a}-\vec{b}=\vec{a}+(-\vec{b})" />
+
+To draw <InlineMath math="\vec{a}-\vec{b}" />, draw <InlineMath math="\vec{a}" /> first. Then draw <InlineMath math="-\vec{b}" /> from the tip of <InlineMath math="\vec{a}" />. Vector <InlineMath math="-\vec{b}" /> has the same length as <InlineMath math="\vec{b}" /> but points in the opposite direction.
+
+The final result is still drawn from the tail of the first vector to the tip of the last vector. In this way, vector subtraction follows the same head-to-tail rule.

@@ -1,4 +1,10 @@
+import { CHAT_GENERATION_FAILURE_CODES } from "@repo/ai/config/generation";
 import { MODEL_IDS } from "@repo/ai/config/model";
+import {
+  ninaContextSnapshotValidator,
+  ninaContextTransitionValidator,
+} from "@repo/backend/convex/chats/context";
+import { capabilityTraceValidator } from "@repo/backend/convex/chats/traces/spec";
 import {
   contentSearchInputValidator,
   contentSearchRefValidator,
@@ -67,8 +73,16 @@ export const messageRoleValidator = literals("user", "assistant", "system");
  * Model ID validator using literals for type safety.
  * References MODEL_IDS from @repo/ai/config/model for single source of truth.
  */
-export const modelIdValidator = v.optional(literals(...MODEL_IDS));
+export const modelIdValueValidator = literals(...MODEL_IDS);
+export const modelIdValidator = v.optional(modelIdValueValidator);
 
+/** Assistant generation lifecycle persisted for refresh-safe chat recovery. */
+export const messageGenerationStatusValidator = literals("complete", "failed");
+export const messageGenerationErrorCodeValidator = literals(
+  ...CHAT_GENERATION_FAILURE_CODES
+);
+
+/** Stored chat message contract, including optional Nina context metadata. */
 export const messageValidator = v.object({
   identifier: v.string(),
   chatId: v.id("chats"),
@@ -78,6 +92,10 @@ export const messageValidator = v.object({
   totalTokens: v.optional(v.number()),
   credits: v.optional(v.number()),
   modelId: modelIdValidator,
+  generationStatus: v.optional(messageGenerationStatusValidator),
+  generationErrorCode: v.optional(messageGenerationErrorCodeValidator),
+  ninaContextSnapshot: v.optional(ninaContextSnapshotValidator),
+  ninaContextTransition: v.optional(ninaContextTransitionValidator),
 });
 
 /**
@@ -109,7 +127,7 @@ export const partTypeValidator = literals(
   "reasoning",
   "file",
   "step-start",
-  // Orchestrator tools
+  // Nina LearningCapability tools
   "tool-nakafa",
   "tool-deepResearch",
   "tool-math",
@@ -151,7 +169,7 @@ export const nakafaContentPreviewValidator = v.object({
 export const nakafaExercisePreviewValidator = v.object({
   ...contentSearchRefValidator.fields,
   count: v.number(),
-  exercise_number: v.union(v.number(), v.null()),
+  exercise_number: v.optional(v.number()),
   numbers: v.array(v.number()),
   title: v.string(),
 });
@@ -451,7 +469,7 @@ export const partValidator = v.object({
   toolCallProviderMetadata: providerMetadataValidator,
   toolResultProviderMetadata: providerMetadataValidator,
 
-  // Orchestrator tool fields
+  // Nina LearningCapability tool fields
   toolNakafaInput: v.optional(nakafaToolInputValidator),
   toolNakafaOutput: v.optional(v.string()),
   toolMathInput: v.optional(mathToolInputValidator),
@@ -527,12 +545,24 @@ export const tables = {
 
   messages: defineTable(messageValidator)
     .index("by_chatId", ["chatId"])
-    .index("by_chatId_and_identifier", ["chatId", "identifier"]),
+    .index("by_chatId_and_identifier", ["chatId", "identifier"])
+    .index("by_role", ["role"]),
 
   parts: defineTable(partValidator).index("by_messageId_and_order", [
     "messageId",
     "order",
   ]),
+
+  ninaCapabilityTraces: defineTable(capabilityTraceValidator)
+    .index("by_chatId_and_startedAt", ["chatId", "startedAt"])
+    .index("by_chatId_and_responseMessageIdentifier_and_startedAt", [
+      "chatId",
+      "responseMessageIdentifier",
+      "startedAt",
+    ])
+    .index("by_capability_and_startedAt", ["capability", "startedAt"])
+    .index("by_status_and_startedAt", ["status", "startedAt"])
+    .index("by_expiresAt", ["expiresAt"]),
 };
 
 export default tables;

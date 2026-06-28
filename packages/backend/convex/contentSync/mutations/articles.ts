@@ -1,6 +1,6 @@
 import { updateContentAudioHash } from "@repo/backend/convex/audioStudies/contentAudios/impl";
 import {
-  deleteAudioContentSource,
+  deleteAudioContentSourceByRoute,
   syncAudioContentSource,
 } from "@repo/backend/convex/audioStudies/helpers/sources";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
@@ -9,14 +9,14 @@ import {
   buildAuthorCache,
   deleteArticleReferencesForArticle,
   deleteContentAuthorLinks,
+  deleteContentProjectionsBySourcePath,
   replaceArticleReferences,
   syncContentAuthorsWithCache,
 } from "@repo/backend/convex/contentSync/lib/syncHelpers";
-import { buildContentSearchRef } from "@repo/backend/convex/contents/helpers/search/documents";
-import {
-  deleteContentSearch,
-  syncContentSearch,
-} from "@repo/backend/convex/contents/helpers/search/write";
+import { hasSameSyncValues } from "@repo/backend/convex/contentSync/lib/syncValues";
+import { getContentGraphIdentity } from "@repo/backend/convex/contents/graph";
+import { syncContentRoute } from "@repo/backend/convex/contents/helpers/routes/write";
+import { syncContentSearch } from "@repo/backend/convex/contents/helpers/search/write";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import {
@@ -45,6 +45,7 @@ const syncedArticleValidator = v.object({
   date: v.number(),
   description: v.optional(v.string()),
   locale: localeValidator,
+  official: v.boolean(),
   references: v.array(syncedArticleReferenceValidator),
   slug: v.string(),
   title: v.string(),
@@ -62,11 +63,13 @@ const deleteResultValidator = v.object({
   deleted: v.number(),
 });
 
+/** Upsert article rows, references, author links, search, and audio sources. */
 export const bulkSyncArticles = internalMutation({
   args: {
     articles: v.array(syncedArticleValidator),
   },
   returns: bulkSyncArticlesResultValidator,
+  /** Applies one bounded article sync batch to runtime, search, author, reference, and audio rows. */
   handler: async (ctx, args) => {
     assertContentSyncBatchSize({
       functionName: "bulkSyncArticles",
@@ -88,6 +91,11 @@ export const bulkSyncArticles = internalMutation({
     const authorCache = await buildAuthorCache(ctx, allAuthorNames);
 
     for (const article of args.articles) {
+      const graph = getContentGraphIdentity({
+        kind: "article",
+        locale: article.locale,
+        route: article.slug,
+      });
       const existingArticle = await ctx.db
         .query("articleContents")
         .withIndex("by_locale_and_slug", (q) =>
@@ -96,46 +104,70 @@ export const bulkSyncArticles = internalMutation({
         .unique();
 
       await syncContentSearch(ctx, {
+        ...graph,
         contentHash: article.contentHash,
         description: article.description,
         locale: article.locale,
         route: article.slug,
         section: "articles",
+        sourcePath: article.slug,
         syncedAt: now,
         text: article.body,
+        title: article.title,
+      });
+      await syncContentRoute(ctx, {
+        ...graph,
+        authors: article.authors,
+        contentHash: article.contentHash,
+        date: article.date,
+        description: article.description,
+        kind: "article",
+        locale: article.locale,
+        markdown: true,
+        official: article.official,
+        publicPath: article.slug,
+        section: "articles",
+        sourcePath: article.slug,
+        syncedAt: now,
         title: article.title,
       });
 
       if (existingArticle) {
         await syncAudioContentSource(ctx, {
+          ...graph,
+          content_id: graph.assetId,
+          contentType: "article",
           contentHash: article.contentHash,
           locale: article.locale,
-          ref: { id: existingArticle._id, type: "article" },
-          slug: article.slug,
+          route: article.slug,
           syncedAt: now,
         });
       }
 
-      if (existingArticle?.contentHash === article.contentHash) {
+      const nextValues = {
+        articleSlug: article.articleSlug,
+        body: article.body,
+        category: article.category,
+        contentHash: article.contentHash,
+        date: article.date,
+        description: article.description,
+        title: article.title,
+      };
+
+      if (hasSameSyncValues(nextValues, existingArticle)) {
         unchanged++;
         continue;
       }
 
       if (existingArticle) {
         await ctx.db.patch("articleContents", existingArticle._id, {
-          articleSlug: article.articleSlug,
-          body: article.body,
-          category: article.category,
-          contentHash: article.contentHash,
-          date: article.date,
-          description: article.description,
+          ...nextValues,
           syncedAt: now,
-          title: article.title,
         });
 
         await runConvexProgram(
           updateContentAudioHash(ctx, {
-            contentRef: { id: existingArticle._id, type: "article" },
+            content_id: graph.assetId,
             newHash: article.contentHash,
           })
         );
@@ -158,23 +190,19 @@ export const bulkSyncArticles = internalMutation({
       }
 
       const articleId = await ctx.db.insert("articleContents", {
-        articleSlug: article.articleSlug,
-        body: article.body,
-        category: article.category,
-        contentHash: article.contentHash,
-        date: article.date,
-        description: article.description,
+        ...nextValues,
         locale: article.locale,
         slug: article.slug,
         syncedAt: now,
-        title: article.title,
       });
 
       await syncAudioContentSource(ctx, {
+        ...graph,
+        content_id: graph.assetId,
+        contentType: "article",
         contentHash: article.contentHash,
         locale: article.locale,
-        ref: { id: articleId, type: "article" },
-        slug: article.slug,
+        route: article.slug,
         syncedAt: now,
       });
 
@@ -209,6 +237,7 @@ export const deleteStaleArticles = internalMutation({
     articleIds: v.array(v.id("articleContents")),
   },
   returns: deleteResultValidator,
+  /** Removes one bounded stale article batch and its sync-owned dependent rows. */
   handler: async (ctx, args) => {
     assertContentSyncBatchSize({
       functionName: "deleteStaleArticles",
@@ -230,16 +259,17 @@ export const deleteStaleArticles = internalMutation({
       }
 
       const articleId = args.articleIds[index];
-      const searchRef = buildContentSearchRef({
-        locale: article.locale,
-        route: article.slug,
-        section: "articles",
-      });
-
       await deleteContentAuthorLinks(ctx, articleId, "article");
       await deleteArticleReferencesForArticle(ctx, articleId);
-      await deleteContentSearch(ctx, searchRef.content_id);
-      await deleteAudioContentSource(ctx, { id: articleId, type: "article" });
+      await deleteContentProjectionsBySourcePath(ctx, {
+        locale: article.locale,
+        route: article.slug,
+      });
+      await deleteAudioContentSourceByRoute(ctx, {
+        contentType: "article",
+        locale: article.locale,
+        route: article.slug,
+      });
       await ctx.db.delete("articleContents", articleId);
       deleted++;
     }

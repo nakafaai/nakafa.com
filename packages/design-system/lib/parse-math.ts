@@ -30,6 +30,11 @@ const LATEX_SIGNAL_PATTERN = /\\[a-zA-Z]+|\\[,;! ]/;
 const MATH_SYMBOL_PATTERN = /[=^_{}<>≤≥√∞±×÷∑∫]/u;
 const MATH_OPERATOR_PATTERN = /(?:\d|\p{L})\s*(?:[+\-*/=<>])\s*(?:\d|\p{L})/u;
 const SINGLE_VARIABLE_PATTERN = /^[A-Za-z](?:[_^][A-Za-z0-9{}]+)?$/;
+const ORDER_OR_ABSOLUTE_VALUE_PATTERN = /^\|[^|\n]*[\p{L}\\][^|\n]*\|$/u;
+const FUNCTION_NOTATION_PATTERN =
+  /^(?:\\?[A-Za-z]+|[A-Z])(?:_[A-Za-z0-9{}]+)?\([^()\n]*[\p{L}\\][^()\n]*\)$/u;
+const QUOTIENT_NOTATION_PATTERN =
+  /^[\p{L}\\][\p{L}\p{N}\\_{}]*(?:\([^()\n]*\))?\/[\p{L}\\][\p{L}\p{N}\\_{}]*(?:\([^()\n]*\))?$/u;
 const TRIPLE_BACKTICK_LENGTH = 3;
 const NUMBERED_LIST_PATTERN = /^(\s*)(\d+)\.\s+/;
 const BULLET_LIST_PATTERN = /^(\s*)[-*+]\s+/;
@@ -43,35 +48,39 @@ function applyOutsideCodeFences(
   input: string,
   transform: (segment: string) => string
 ): string {
-  if (!TRIPLE_BACKTICKS.test(input)) {
-    // Reset lastIndex side-effect of .test with global regex
-    TRIPLE_BACKTICKS.lastIndex = 0;
-    return transform(input);
-  }
   TRIPLE_BACKTICKS.lastIndex = 0;
-
   let output = "";
   let cursor = 0;
 
-  while (cursor < input.length) {
-    const open = input.indexOf("```", cursor);
-    if (open === -1) {
+  while (true) {
+    const openMatch = TRIPLE_BACKTICKS.exec(input);
+
+    if (!openMatch) {
       output += transform(input.slice(cursor));
       break;
     }
+
+    const open = openMatch.index;
+
     // Transform the text before the code fence
     output += transform(input.slice(cursor, open));
-    const close = input.indexOf("```", open + TRIPLE_BACKTICK_LENGTH);
-    if (close === -1) {
+
+    const closeMatch = TRIPLE_BACKTICKS.exec(input);
+
+    if (!closeMatch) {
       // No closing fence: leave the rest untouched
       output += input.slice(open);
       break;
     }
+
+    const closeEnd = closeMatch.index + TRIPLE_BACKTICK_LENGTH;
+
     // Preserve the code fence block unchanged
-    output += input.slice(open, close + TRIPLE_BACKTICK_LENGTH);
-    cursor = close + TRIPLE_BACKTICK_LENGTH;
+    output += input.slice(open, closeEnd);
+    cursor = closeEnd;
   }
 
+  TRIPLE_BACKTICKS.lastIndex = 0;
   return output;
 }
 
@@ -180,7 +189,10 @@ function isLikelyInlineMath(content: string) {
     LATEX_SIGNAL_PATTERN.test(text) ||
     MATH_SYMBOL_PATTERN.test(text) ||
     MATH_OPERATOR_PATTERN.test(text) ||
-    SINGLE_VARIABLE_PATTERN.test(text)
+    SINGLE_VARIABLE_PATTERN.test(text) ||
+    ORDER_OR_ABSOLUTE_VALUE_PATTERN.test(text) ||
+    FUNCTION_NOTATION_PATTERN.test(text) ||
+    QUOTIENT_NOTATION_PATTERN.test(text)
   );
 }
 

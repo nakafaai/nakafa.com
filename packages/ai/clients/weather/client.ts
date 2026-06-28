@@ -4,12 +4,11 @@ import {
   ReverseGeocodeSchema,
   WeatherResponseSchema,
 } from "@repo/ai/clients/weather/schema";
-import { keys } from "@repo/ai/keys";
+import { weatherKeys } from "@repo/ai/keys";
 import { logError, timeOperation } from "@repo/utilities/logging/effect";
 import { Effect, Schema } from "effect";
 import ky from "ky";
 
-const apiKey = keys().OPENWEATHER_API_KEY;
 const GEO_BASE_URL = "https://api.openweathermap.org/geo/1.0";
 const WEATHER_BASE_URL = "https://api.openweathermap.org/data/2.5";
 export const DEFAULT_LATITUDE = "-6.2088";
@@ -44,13 +43,15 @@ export const getWeather = Effect.fn("weather.getWeather")(function* ({
   };
 
   return yield* timeOperation(
-    "fetch_weather_data",
+    "fetch_weather",
     Effect.gen(function* () {
+      const apiKey = weatherKeys().OPENWEATHER_API_KEY;
+
       yield* Effect.logInfo("Fetching weather data").pipe(
         Effect.annotateLogs(context)
       );
 
-      const geoData = yield* fetchGeoData(latitude, longitude);
+      const geoData = yield* fetchGeoData(apiKey, latitude, longitude);
 
       yield* Effect.logDebug("Geocoding completed").pipe(
         Effect.annotateLogs({
@@ -63,9 +64,13 @@ export const getWeather = Effect.fn("weather.getWeather")(function* ({
       const [weatherResult, airPollutionResult, airPollutionForecastResult] =
         yield* Effect.all(
           [
-            fetchWeatherForecast(geoData.latitude, geoData.longitude),
-            fetchAirPollution(geoData.latitude, geoData.longitude),
-            fetchAirPollutionForecast(geoData.latitude, geoData.longitude),
+            fetchWeatherForecast(apiKey, geoData.latitude, geoData.longitude),
+            fetchAirPollution(apiKey, geoData.latitude, geoData.longitude),
+            fetchAirPollutionForecast(
+              apiKey,
+              geoData.latitude,
+              geoData.longitude
+            ),
           ],
           { concurrency: "unbounded" }
         );
@@ -87,6 +92,7 @@ export const getWeather = Effect.fn("weather.getWeather")(function* ({
 
 /** Fetches location name from coordinates using reverse geocoding. */
 const fetchGeoData = Effect.fn("weather.fetchGeoData")(function* (
+  apiKey: string,
   latitude: string,
   longitude: string
 ) {
@@ -141,7 +147,7 @@ const fetchGeoData = Effect.fn("weather.fetchGeoData")(function* (
 
 /** Fetches 5-day/3-hour weather forecast. */
 const fetchWeatherForecast = Effect.fn("weather.fetchWeatherForecast")(
-  function* (latitude: string, longitude: string) {
+  function* (apiKey: string, latitude: string, longitude: string) {
     const context = { service: "weather", latitude, longitude };
 
     yield* Effect.logDebug("Fetching weather forecast").pipe(
@@ -176,6 +182,7 @@ const fetchWeatherForecast = Effect.fn("weather.fetchWeatherForecast")(
 
 /** Fetches current air pollution data. */
 const fetchAirPollution = Effect.fn("weather.fetchAirPollution")(function* (
+  apiKey: string,
   latitude: string,
   longitude: string
 ) {
@@ -213,7 +220,7 @@ const fetchAirPollution = Effect.fn("weather.fetchAirPollution")(function* (
 /** Fetches air pollution forecast data. */
 const fetchAirPollutionForecast = Effect.fn(
   "weather.fetchAirPollutionForecast"
-)(function* (latitude: string, longitude: string) {
+)(function* (apiKey: string, latitude: string, longitude: string) {
   const context = { service: "weather", latitude, longitude };
 
   yield* Effect.logDebug("Fetching air pollution forecast").pipe(

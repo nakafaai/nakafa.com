@@ -4,7 +4,6 @@ import { api } from "@repo/backend/convex/_generated/api";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import type { FunctionReturnType } from "convex/server";
 import type { Locale } from "next-intl";
-import { useMemo } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 import { useUser } from "@/lib/context/use-user";
 
@@ -53,27 +52,24 @@ export function AttemptProvider({
 }) {
   const { answerSheet, answers, attempt, isInputLocked, isReviewMode, slug } =
     value;
-  const contextValue = useMemo(() => {
-    const attemptStatus = attempt?.status ?? null;
-    const attemptMode = attempt?.mode ?? null;
-
-    return {
-      answerSheet,
-      answers,
-      attempt,
-      answerByExercise: createExerciseMap(answers),
-      answerSheetByExercise: createExerciseMap(answerSheet),
-      attemptId: attempt?._id ?? null,
-      attemptMode,
-      attemptStatus,
-      isInputLocked,
-      isAttemptInProgress: attemptStatus === "in-progress",
-      isReviewMode,
-      isSimulationInProgress:
-        attemptStatus === "in-progress" && attemptMode === "simulation",
-      slug,
-    };
-  }, [answerSheet, answers, attempt, isInputLocked, isReviewMode, slug]);
+  const attemptStatus = attempt?.status ?? null;
+  const attemptMode = attempt?.mode ?? null;
+  const contextValue = {
+    answerSheet,
+    answers,
+    attempt,
+    answerByExercise: createExerciseMap(answers),
+    answerSheetByExercise: createExerciseMap(answerSheet),
+    attemptId: attempt?._id ?? null,
+    attemptMode,
+    attemptStatus,
+    isInputLocked,
+    isAttemptInProgress: attemptStatus === "in-progress",
+    isReviewMode,
+    isSimulationInProgress:
+      attemptStatus === "in-progress" && attemptMode === "simulation",
+    slug,
+  };
 
   return (
     <AttemptContext.Provider value={contextValue}>

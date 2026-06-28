@@ -15,19 +15,15 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { themes } from "@repo/design-system/lib/theme";
 import { cn } from "@repo/design-system/lib/utils";
 import { languages } from "@repo/internationalization/data/lang";
-import {
-  usePathname,
-  useRouter,
-} from "@repo/internationalization/src/navigation";
 import { IconCircleFilled } from "@tabler/icons-react";
-import { useQueryClient } from "@tanstack/react-query";
 import GB from "country-flag-icons/react/3x2/GB";
 import ID from "country-flag-icons/react/3x2/ID";
-import { useParams } from "next/navigation";
 import { type Locale, useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
-import { type ComponentProps, useTransition } from "react";
+import type { ComponentProps } from "react";
+import { useLocalizedRouteSwitch } from "@/lib/routing/locale/client";
 
+/** Renders footer preference actions that share the same language route resolver as the sidebar. */
 export function FooterAction() {
   return (
     <ButtonGroup>
@@ -42,43 +38,15 @@ const flagMap = {
   id: ID,
 };
 
+/** Renders the footer language switcher and keeps localized route projection outside the UI list. */
 function Language() {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
-  const pathname = usePathname();
-  const params = useParams();
+  const { isPending, replace } = useLocalizedRouteSwitch();
   const currentLocale = useLocale();
-
-  const queryClient = useQueryClient();
   const t = useTranslations("Common");
 
-  function handlePrefetch(locale: Locale) {
-    router.prefetch(
-      // @ts-expect-error -- TypeScript will validate that only known `params`
-      // are used in combination with a given `pathname`. Since the two will
-      // always match for the current route, we can skip runtime checks.
-      { pathname, params },
-      { locale }
-    );
-  }
-
+  /** Replaces the current route with the selected locale. */
   function handleChangeLocale(locale: Locale) {
-    startTransition(async () => {
-      router.replace(
-        // @ts-expect-error -- TypeScript will validate that only known `params`
-        // are used in combination with a given `pathname`. Since the two will
-        // always match for the current route, we can skip runtime checks.
-        { pathname, params },
-        { locale }
-      );
-
-      // reboot the pagefind because of the language change
-      if (window?.pagefind) {
-        await window.pagefind.destroy?.();
-
-        queryClient.invalidateQueries({ queryKey: ["search"] });
-      }
-    });
+    replace(locale);
   }
 
   return (
@@ -108,8 +76,6 @@ function Language() {
                   event.stopPropagation();
                   handleChangeLocale(language.value);
                 }}
-                onFocus={() => handlePrefetch(language.value)}
-                onMouseEnter={() => handlePrefetch(language.value)}
               >
                 <Flag className="size-4 shrink-0" />
                 <span className="truncate">{language.label}</span>
@@ -130,6 +96,7 @@ function Language() {
 
 const BASE_THEMES_COUNT = 3;
 
+/** Renders the footer theme selector while leaving the selected theme in next-themes. */
 export function Theme({
   variant = "outline",
 }: {
@@ -155,7 +122,7 @@ export function Theme({
 
       <DropdownMenuContent
         align="end"
-        className="max-h-96 w-max max-w-[calc(100vw-2rem)]"
+        className="max-h-[min(var(--available-height),24rem)] w-max max-w-[calc(100vw-2rem)]"
       >
         <DropdownMenuGroup>
           {themes.slice(0, BASE_THEMES_COUNT).map((theme) => (
@@ -194,6 +161,7 @@ export function Theme({
   );
 }
 
+/** Shows the selected dropdown item without affecting the item hit target. */
 function CheckerBadge({ isActive }: { isActive: boolean }) {
   return (
     <IconCircleFilled

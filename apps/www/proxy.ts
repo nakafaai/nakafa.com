@@ -1,9 +1,6 @@
 import { isPostHogProxyPathname } from "@repo/analytics/posthog/config";
-import {
-  hasInvalidTryOutYearSlug,
-  LEGACY_YEARLESS_TRY_OUT_REDIRECT_YEAR,
-} from "@repo/contents/_lib/exercises/slug";
 import { routing } from "@repo/internationalization/src/routing";
+import { Effect } from "effect";
 import type { ProxyConfig } from "next/server";
 import { type NextRequest, NextResponse } from "next/server";
 import createMiddleware from "next-intl/middleware";
@@ -12,14 +9,15 @@ import {
   LLMS_TEXT_PATH,
 } from "@/lib/agent-discovery";
 import {
-  getPublicContentRedirects,
-  getPublicContentRequestRoutes,
-  getPublicContentRouteRoots,
-} from "@/lib/sitemap/routes";
+  type LocalizedLlmsRoute,
+  resolveLlmsProxyRoute,
+} from "@/lib/llms/routes";
+import { readPublicUrlMigrationRedirect } from "@/lib/routing/public/migration";
+import { readProjectedHtmlRouteRejection } from "@/lib/routing/public/projected";
+import { readSourceBackedHtmlRouteRejection } from "@/lib/routing/public/source";
 
 const handleLocalizedRequest = createMiddleware(routing);
 const TRAILING_SLASH_PATTERN = /\/+$/;
-const MARKDOWN_EXTENSION_PATTERN = /\.mdx?$/;
 const AUTH_REDIRECT_PATH_COOKIE = "auth-redirect-path";
 const LOCALE_BYPASS_PATHS = new Set([
   "/mcp",
@@ -30,23 +28,21 @@ const LOCALE_BYPASS_PATHS = new Set([
   "/.well-known/llms-full.txt",
   "/.well-known/agent-skills/index.json",
   "/.well-known/agent-skills/nakafa/SKILL.md",
-  "/.well-known/skills/index.json",
-  "/.well-known/skills/nakafa/SKILL.md",
-  "/.well-known/skills/nakafa/skill.md",
 ]);
-const NEXT_INTL_LOCALE_HEADER = "X-NEXT-INTL-LOCALE";
-const contentRedirects = new Map(getPublicContentRedirects());
-const publicContentRequestRoutes = new Set(getPublicContentRequestRoutes());
-const publicContentRouteRoots = new Set(getPublicContentRouteRoots());
 
 /**
- * Run locale routing while leaving the same-origin PostHog proxy untouched.
+ * Adapts Next/Vercel proxy requests to Nakafa route decisions.
+ *
+ * The proxy keeps platform concerns here: PostHog bypasses, canonical slash
+ * redirects, public discovery bypasses, locale middleware, and response
+ * rewrites. Markdown support and content existence live behind the llms routes
+ * seam so route capability knowledge does not accumulate in this adapter.
  *
  * References:
  * https://nextjs.org/docs/app/api-reference/file-conventions/proxy
  * https://posthog.com/docs/advanced/proxy/nextjs
  */
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (isPostHogProxyPathname(pathname)) {
@@ -64,56 +60,53 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const localizedContentRoute = getLocalizedContentRoute(pathname);
+  const routeDecision = await Effect.runPromise(
+    resolveLlmsProxyRoute({
+      acceptHeader: request.headers.get("accept"),
+      method: request.method,
+      pathname,
+    })
+  );
 
-  if (localizedContentRoute) {
-    const legacyRedirectPath = getLegacyTryOutRedirectPath(
-      localizedContentRoute.locale,
-      localizedContentRoute.route,
-      localizedContentRoute.markdownExtension
-    );
+  if (routeDecision.kind === "rewrite-markdown") {
+    return rewriteToLlmsMdx(request, routeDecision.localizedRoute);
+  }
 
-    if (legacyRedirectPath) {
-      const redirectUrl = new URL(request.url);
-      redirectUrl.pathname = legacyRedirectPath;
+  if (routeDecision.kind === "content-not-found") {
+    return rewriteToContentNotFound(request, routeDecision.locale);
+  }
 
-      return NextResponse.redirect(redirectUrl, 308);
-    }
+  const urlMigrationRedirect = await Effect.runPromise(
+    readPublicUrlMigrationRedirect({
+      method: request.method,
+      pathname,
+    })
+  );
 
-    const contentRedirectPath = getPublicContentRedirectPath(
-      localizedContentRoute.locale,
-      localizedContentRoute.route,
-      localizedContentRoute.markdownExtension
-    );
+  if (urlMigrationRedirect) {
+    const redirectUrl = new URL(request.url);
+    redirectUrl.pathname = urlMigrationRedirect;
 
-    if (contentRedirectPath) {
-      const redirectUrl = new URL(request.url);
-      redirectUrl.pathname = contentRedirectPath;
+    return NextResponse.redirect(redirectUrl, 308);
+  }
 
-      return NextResponse.redirect(redirectUrl, 308);
-    }
+  const sourceBackedRouteRejection = await Effect.runPromise(
+    readSourceBackedHtmlRouteRejection({
+      method: request.method,
+      pathname,
+    })
+  );
 
-    if (
-      localizedContentRoute.markdownExtension ||
-      request.headers.get("accept")?.includes("text/markdown")
-    ) {
-      const rewriteUrl = new URL(request.url);
-      rewriteUrl.pathname = `/llms.mdx/${localizedContentRoute.locale}${localizedContentRoute.route}`;
+  if (sourceBackedRouteRejection) {
+    return rewriteToContentNotFound(request, sourceBackedRouteRejection);
+  }
 
-      return NextResponse.rewrite(rewriteUrl);
-    }
+  const projectedRouteLocale = await Effect.runPromise(
+    readProjectedHtmlRouteRejection(pathname)
+  );
 
-    if (!publicContentRequestRoutes.has(localizedContentRoute.route)) {
-      const rewriteUrl = new URL(request.url);
-      rewriteUrl.pathname = `/${localizedContentRoute.locale}/__not-found`;
-      const requestHeaders = new Headers(request.headers);
-      requestHeaders.set(NEXT_INTL_LOCALE_HEADER, localizedContentRoute.locale);
-
-      return NextResponse.rewrite(rewriteUrl, {
-        request: { headers: requestHeaders },
-        status: 404,
-      });
-    }
+  if (projectedRouteLocale) {
+    return rewriteToContentNotFound(request, projectedRouteLocale);
   }
 
   request.cookies.set(AUTH_REDIRECT_PATH_COOKIE, pathname);
@@ -132,87 +125,34 @@ function isLocaleBypassPath(pathname: string) {
   );
 }
 
-/** Returns the canonical target for content routes that intentionally redirect. */
-function getPublicContentRedirectPath(
-  locale: string,
-  route: string,
-  markdownExtension: string
+/** Rewrites a localized route to the source-backed markdown handler. */
+function rewriteToLlmsMdx(
+  request: NextRequest,
+  localizedRoute: LocalizedLlmsRoute
 ) {
-  const targetRoute = contentRedirects.get(route);
+  const rewriteUrl = new URL(request.url);
+  rewriteUrl.pathname = `/llms.mdx/${localizedRoute.locale}${localizedRoute.route}`;
 
-  if (!targetRoute) {
-    return null;
-  }
-
-  return `/${locale}${targetRoute}${markdownExtension}`;
+  return NextResponse.rewrite(rewriteUrl);
 }
 
-/** Returns one localized public content route, stripped of markdown suffixes. */
-function getLocalizedContentRoute(pathname: string) {
-  const [locale, ...routeSegments] = pathname.split("/").filter(Boolean);
-
-  if (!routing.locales.some((supportedLocale) => supportedLocale === locale)) {
-    return null;
-  }
-
-  const rawRoute = `/${routeSegments.join("/")}`;
-  const markdownExtension =
-    rawRoute.match(MARKDOWN_EXTENSION_PATTERN)?.[0] ?? "";
-  const route = rawRoute.replace(MARKDOWN_EXTENSION_PATTERN, "");
-
-  if (!isPublicContentRoute(route)) {
-    return null;
-  }
-
-  return {
-    locale,
-    markdownExtension,
-    route,
-  };
-}
-
-/** Returns whether one localized route belongs to public educational content. */
-function isPublicContentRoute(route: string) {
-  const [root] = route.split("/").filter(Boolean);
-
-  return root !== undefined && publicContentRouteRoots.has(`/${root}`);
-}
-
-/** Builds the canonical redirect target for migrated yearless try-out routes. */
-function getLegacyTryOutRedirectPath(
-  locale: string,
-  route: string,
-  markdownExtension: string
+/** Rewrites missing content to the styled app not-found route with 404 status. */
+function rewriteToContentNotFound(
+  request: NextRequest,
+  locale: (typeof routing.locales)[number]
 ) {
-  const routeSegments = route.split("/").filter(Boolean);
-  const [routeBase, category, type, material, ...slug] = routeSegments;
+  const rewriteUrl = new URL(`/${locale}/_not-found`, request.url);
 
-  if (routeBase !== "exercises" || !(category && type && material)) {
-    return null;
-  }
-
-  if (!hasInvalidTryOutYearSlug(slug)) {
-    return null;
-  }
-
-  const canonicalSlug = [
-    "try-out",
-    LEGACY_YEARLESS_TRY_OUT_REDIRECT_YEAR,
-    ...slug.slice(1),
-  ];
-  const canonicalRoute = [
-    routeBase,
-    category,
-    type,
-    material,
-    ...canonicalSlug,
-  ].join("/");
-
-  return `/${locale}/${canonicalRoute}${markdownExtension}`;
+  return NextResponse.rewrite(rewriteUrl, {
+    headers: {
+      "X-Robots-Tag": "noindex",
+    },
+    status: 404,
+  });
 }
 
 export const config: ProxyConfig = {
   matcher: [
-    "/((?!_next/static|_pagefind|fonts|open-graph|api|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|js|css|xml|webmanifest|txt)$).*)",
+    "/((?!_next/static|fonts|open-graph|api|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|glb|gltf|bin|ktx2|hdr|exr|js|css|xml|webmanifest|txt)$).*)",
   ],
 };

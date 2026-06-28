@@ -1,214 +1,444 @@
 // @vitest-environment node
+
+import type { api } from "@repo/backend/convex/_generated/api";
+import type { Locale } from "@repo/contents/_types/content";
+import {
+  createLearningGraphIdentityFromRoute,
+  getLearningObjectKindForRoute,
+} from "@repo/contents/_types/learning-graph";
+import type { SourceRegistryRoot } from "@repo/contents/_types/source-registry";
+import type { FunctionReturnType } from "convex/server";
+import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  clearSitemapRouteCache,
-  getPublicContentRedirects,
-  getPublicContentRequestRoutes,
-  getPublicContentRouteRoots,
-  getQuranRoutes,
+  buildSitemapContentPageRoutes,
+  getSitemapPageDescriptor,
+  getSitemapPageDescriptors,
   getSitemapRoutes,
 } from "@/lib/sitemap/routes";
 
-const mockContentCache = vi.hoisted(() => ({
-  getMDXSlugsForLocale: vi.fn(),
-  slugs: [
-    "articles/politics/dynastic-politics-asian-values",
-    "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1/1/_answer",
-    "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1/1/_question",
-    "subject/high-school/10/chemistry/green-chemistry/definition",
-    "unknown/folder",
-  ],
+type RuntimeContentRoute = NonNullable<
+  FunctionReturnType<
+    typeof api.contents.queries.runtime.getContentRouteArtifactPage
+  >
+>["routes"][number];
+type RuntimeSitemapPublicRoute = FunctionReturnType<
+  typeof api.contents.queries.runtime.listSitemapPublicRoutes
+>["page"][number];
+
+const runtimeMocks = vi.hoisted(() => ({
+  getRuntimeContentRouteArtifactPage: vi.fn(),
+  getRuntimeContentRouteCounts: vi.fn(),
+  getRuntimeSitemapPublicRoutes: vi.fn(),
 }));
 
-const mockContentFolders = vi.hoisted(() => ({
-  clearFolderChildNamesCache: vi.fn(),
-  getFolderChildNamesSync: vi.fn(),
+vi.mock("@/lib/content/runtime/routes", () => ({
+  getRuntimeContentRouteArtifactPage:
+    runtimeMocks.getRuntimeContentRouteArtifactPage,
+  getRuntimeContentRouteCounts: runtimeMocks.getRuntimeContentRouteCounts,
+  getRuntimeSitemapPublicRoutes: runtimeMocks.getRuntimeSitemapPublicRoutes,
 }));
 
-vi.mock("@repo/contents/_lib/cache", () => ({
-  getMDXSlugsForLocale: mockContentCache.getMDXSlugsForLocale,
-}));
+vi.mock("@repo/internationalization/src/routing", async () => {
+  const { defaultLocale, locales } = await import("@repo/utilities/locales");
 
-vi.mock("@repo/contents/_lib/fs", () => ({
-  clearFolderChildNamesCache: mockContentFolders.clearFolderChildNamesCache,
-  getFolderChildNamesSync: mockContentFolders.getFolderChildNamesSync,
-}));
-
-vi.mock("@repo/internationalization/src/routing", () => ({
-  routing: {
-    defaultLocale: "en",
-    locales: ["en", "id"],
-  },
-}));
-
-function mockContentFolderTree(tree: Record<string, string[]>) {
-  mockContentFolders.getFolderChildNamesSync.mockImplementation(
-    (folder) => tree[folder] ?? []
-  );
-}
+  return {
+    routing: { defaultLocale, locales },
+  };
+});
 
 beforeEach(() => {
-  mockContentFolders.clearFolderChildNamesCache.mockReset();
-  clearSitemapRouteCache();
-  mockContentFolders.clearFolderChildNamesCache.mockClear();
-  mockContentCache.getMDXSlugsForLocale.mockReset();
-  mockContentCache.getMDXSlugsForLocale.mockReturnValue(mockContentCache.slugs);
-  mockContentFolders.getFolderChildNamesSync.mockReset();
-  mockContentFolderTree({
-    exercises: ["middle-school", "high-school"],
-    "exercises/high-school": ["snbt"],
-    "exercises/high-school/snbt": ["quantitative-knowledge"],
-    "exercises/middle-school": ["grade-9"],
-    "exercises/middle-school/grade-9": ["mathematics"],
-    subject: ["high-school"],
-    "subject/high-school": ["10"],
-    "subject/high-school/10": ["biology", "chemistry", "history"],
-  });
+  runtimeMocks.getRuntimeContentRouteArtifactPage.mockReset();
+  runtimeMocks.getRuntimeContentRouteCounts.mockReset();
+  runtimeMocks.getRuntimeSitemapPublicRoutes.mockReset();
+  runtimeMocks.getRuntimeContentRouteCounts.mockImplementation(({ locale }) =>
+    Effect.succeed(
+      locale === "en"
+        ? [countRow("en", "articles", 1), countRow("en", "material", 2)]
+        : [countRow("id", "quran", 101)]
+    )
+  );
+  runtimeMocks.getRuntimeContentRouteArtifactPage.mockImplementation(
+    ({ locale, page, section }) =>
+      Effect.succeed({
+        locale,
+        page,
+        routeCount: routeRows.length,
+        routes: routeRows.filter(
+          (route) => route.locale === locale && route.section === section
+        ),
+        section,
+        syncedAt: 1,
+      })
+  );
+  runtimeMocks.getRuntimeSitemapPublicRoutes.mockImplementation(
+    ({ cursor, locale }) =>
+      Effect.succeed({
+        continueCursor: "",
+        isDone: true,
+        page:
+          cursor === null
+            ? publicRouteRows.filter((route) => route.locale === locale)
+            : [],
+      })
+  );
 });
 
 describe("sitemap route discovery", () => {
-  it("clears folder scans when clearing sitemap route discovery", () => {
-    clearSitemapRouteCache();
-
+  it("builds stable page descriptors from materialized counts", async () => {
+    await expect(getSitemapPageDescriptors()).resolves.toEqual([
+      { id: "base" },
+      { id: "public_en", kind: "public", locale: "en" },
+      {
+        id: "content_en_articles_0",
+        kind: "content",
+        locale: "en",
+        page: 0,
+        section: "articles",
+      },
+      {
+        id: "content_en_material_0",
+        kind: "content",
+        locale: "en",
+        page: 0,
+        section: "material",
+      },
+      { id: "public_id", kind: "public", locale: "id" },
+      {
+        id: "content_id_quran_0",
+        kind: "content",
+        locale: "id",
+        page: 0,
+        section: "quran",
+      },
+      {
+        id: "content_id_quran_1",
+        kind: "content",
+        locale: "id",
+        page: 1,
+        section: "quran",
+      },
+    ]);
     expect(
-      mockContentFolders.clearFolderChildNamesCache
-    ).toHaveBeenCalledOnce();
+      runtimeMocks.getRuntimeContentRouteArtifactPage
+    ).not.toHaveBeenCalled();
   });
 
-  it("builds sitemap routes from real content entries and quran routes", () => {
-    expect(getQuranRoutes()).toHaveLength(114);
-
-    const routes = getSitemapRoutes();
-
-    expect(routes).not.toContain("/articles");
-    expect(routes).not.toContain("/exercises");
-    expect(routes).not.toContain("/exercises/high-school");
-    expect(routes).not.toContain("/subject/high-school");
-    expect(routes).not.toContain(
-      "/subject/high-school/10/chemistry/green-chemistry"
-    );
-    expect(routes).not.toContain("/unknown");
-    expect(routes).toContain("/");
-    expect(routes).not.toContain("/about");
-    expect(routes).toContain("/subject");
-    expect(routes).toContain("/quran/114");
-    expect(routes).toContain("/articles/politics");
-    expect(routes).toContain(
-      "/articles/politics/dynastic-politics-asian-values"
-    );
-    expect(routes).toContain("/exercises/middle-school/grade-9");
-    expect(routes).toContain("/exercises/middle-school/grade-9/mathematics");
-    expect(routes).toContain("/subject/high-school/10");
-    expect(routes).toContain("/subject/high-school/10/biology");
-    expect(routes).toContain("/subject/high-school/10/history");
-    expect(routes).toContain("/exercises/high-school/snbt");
-    expect(routes).toContain(
-      "/exercises/high-school/snbt/quantitative-knowledge"
-    );
-    expect(routes).toContain(
-      "/exercises/high-school/snbt/quantitative-knowledge/try-out/2026"
-    );
-    expect(routes).toContain(
-      "/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1"
-    );
-    expect(routes).toContain(
-      "/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1/1"
-    );
-    expect(routes).not.toContain(
-      "/exercises/high-school/snbt/quantitative-knowledge/try-out"
-    );
-    expect(routes).toContain(
-      "/subject/high-school/10/chemistry/green-chemistry/definition"
-    );
-    expect(getPublicContentRouteRoots()).toEqual(
-      expect.arrayContaining(["/articles", "/subject", "/exercises", "/quran"])
-    );
-    expect(getPublicContentRouteRoots()).toHaveLength(4);
-    expect(getPublicContentRequestRoutes()).toContain(
-      "/subject/high-school/10/chemistry/green-chemistry"
-    );
-    expect(getPublicContentRequestRoutes()).toContain("/subject");
-    expect(getPublicContentRequestRoutes()).toContain("/quran");
-    expect(getPublicContentRedirects()).toContainEqual([
-      "/subject/high-school/10/chemistry/green-chemistry",
-      "/subject/high-school/10/chemistry",
-    ]);
-    expect(mockContentCache.getMDXSlugsForLocale).toHaveBeenCalledTimes(2);
+  it("parses valid content page ids and rejects malformed ids", () => {
+    expect(getSitemapPageDescriptor("content_en_articles_1")).toEqual({
+      id: "content_en_articles_1",
+      kind: "content",
+      locale: "en",
+      page: 1,
+      section: "articles",
+    });
+    expect(getSitemapPageDescriptor("public_en")).toEqual({
+      id: "public_en",
+      kind: "public",
+      locale: "en",
+    });
+    expect(getSitemapPageDescriptor(undefined)).toEqual({ id: "base" });
+    expect(getSitemapPageDescriptor("content_en_articles")).toBeNull();
+    expect(getSitemapPageDescriptor("pages_en_articles_1")).toBeNull();
+    expect(getSitemapPageDescriptor("content_fr_articles_1")).toBeNull();
+    expect(getSitemapPageDescriptor("content_en_unknown_1")).toBeNull();
+    expect(getSitemapPageDescriptor("content_en_articles_bad")).toBeNull();
+    expect(getSitemapPageDescriptor("public_en_extra")).toBeNull();
   });
 
-  it("ignores malformed content entries instead of inventing sitemap pages", () => {
-    mockContentCache.getMDXSlugsForLocale.mockReturnValue([
-      "articles",
-      "articles/not-a-category/draft",
-      "subject/high-school/10/chemistry",
-      "subject/high-school/10/chemistry/green-chemistry",
-      "subject/not-a-category/10/chemistry/green-chemistry/definition",
-      "subject/high-school/not-a-grade/chemistry/green-chemistry/definition",
-      "subject/high-school/10/not-a-material/green-chemistry/definition",
-      "training/high-school/snbt/quantitative-knowledge/try-out/2026/set-1/1/_question",
-      "exercises/1/_question",
-      "exercises/high-school/snbt/quantitative-knowledge/1/_question",
-      "exercises/not-a-category/snbt/quantitative-knowledge/try-out/2026/set-1/1/_question",
-      "exercises/high-school/not-a-type/quantitative-knowledge/try-out/2026/set-1/1/_question",
-      "exercises/high-school/snbt/not-a-material/try-out/2026/set-1/1/_question",
-      "exercises/high-school/snbt/quantitative-knowledge/try-out/set-1/1/_question",
+  it("builds base, content, and public sitemap routes from bounded pages", async () => {
+    await expect(getSitemapRoutes()).resolves.toEqual([
+      "/",
+      "/contributor",
+      "/privacy-policy",
+      "/quran",
+      "/search",
+      "/security-policy",
+      "/terms-of-service",
     ]);
-    mockContentFolderTree({
-      exercises: ["not-a-category", "middle-school"],
-      "exercises/not-a-category": ["not-a-type"],
-      "exercises/middle-school": ["not-a-type", "grade-9"],
-      "exercises/middle-school/grade-9": ["not-a-material"],
-      subject: ["not-a-category", "high-school"],
-      "subject/not-a-category": ["not-a-grade"],
-      "subject/high-school": ["not-a-grade", "10"],
-      "subject/high-school/10": ["not-a-material"],
+
+    const routes = await getSitemapRoutes("content_en_material_0");
+
+    expect(routes).toEqual([
+      "/practice/snbt",
+      "/practice/snbt/quantitative-knowledge",
+      "/practice/snbt/quantitative-knowledge/tryout-2026/set-1",
+      "/practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-1",
+      "/subjects/chemistry/green-chemistry/definition",
+    ]);
+    expect(
+      runtimeMocks.getRuntimeContentRouteArtifactPage
+    ).toHaveBeenCalledWith({
+      locale: "en",
+      page: 0,
+      section: "material",
     });
 
-    const routes = getSitemapRoutes();
-
-    expect(routes).toContain("/");
-    expect(routes).not.toContain("/about");
-    expect(routes).toContain("/subject");
-    expect(routes).toContain("/quran/114");
-    expect(routes).not.toContain("/articles/not-a-category");
-    expect(routes).not.toContain(
-      "/subject/high-school/10/chemistry/green-chemistry"
-    );
-    expect(getPublicContentRequestRoutes()).toContain(
-      "/subject/high-school/10/chemistry/green-chemistry"
-    );
-    expect(getPublicContentRedirects()).toContainEqual([
-      "/subject/high-school/10/chemistry/green-chemistry",
-      "/subject/high-school/10/chemistry",
+    await expect(getSitemapRoutes("public_en")).resolves.toEqual([
+      "/curriculum/merdeka/class-10/mathematics",
     ]);
-    expect(routes).not.toContain(
-      "/subject/high-school/10/not-a-material/green-chemistry/definition"
+    expect(runtimeMocks.getRuntimeSitemapPublicRoutes).toHaveBeenCalledWith({
+      cursor: null,
+      limit: 100,
+      locale: "en",
+    });
+  });
+
+  it("returns no sitemap routes for malformed ids and missing artifact pages", async () => {
+    await expect(getSitemapRoutes("malformed")).resolves.toEqual([]);
+
+    runtimeMocks.getRuntimeContentRouteArtifactPage.mockReturnValueOnce(
+      Effect.succeed(null)
     );
-    expect(routes).not.toContain("/subject/high-school/10/not-a-material");
-    expect(routes).not.toContain(
-      "/exercises/high-school/snbt/quantitative-knowledge"
-    );
-    expect(routes).not.toContain(
-      "/exercises/high-school/snbt/quantitative-knowledge/try-out"
-    );
-    expect(routes).not.toContain(
-      "/exercises/high-school/snbt/quantitative-knowledge/try-out/set-1"
-    );
-    expect(routes).not.toContain("/exercises/middle-school/not-a-type");
-    expect(routes).not.toContain(
-      "/exercises/middle-school/grade-9/not-a-material"
+
+    await expect(getSitemapRoutes("content_en_material_0")).resolves.toEqual(
+      []
     );
   });
 
-  it("keeps sitemap discovery working when subject folders cannot be read", () => {
-    mockContentFolders.getFolderChildNamesSync.mockReturnValue([]);
+  it("walks bounded public route pages until the runtime cursor is done", async () => {
+    runtimeMocks.getRuntimeSitemapPublicRoutes.mockImplementation(
+      ({ cursor, locale }) =>
+        Effect.succeed({
+          continueCursor: cursor === null ? "next" : "",
+          isDone: cursor !== null,
+          page:
+            cursor === null
+              ? publicRouteRows
+                  .filter((route) => route.locale === locale)
+                  .slice(0, 1)
+              : publicRouteRows
+                  .filter((route) => route.locale === locale)
+                  .slice(1),
+        })
+    );
 
-    const routes = getSitemapRoutes();
+    await expect(getSitemapRoutes("public_en")).resolves.toEqual([
+      "/curriculum/merdeka/class-10/mathematics",
+    ]);
+    expect(runtimeMocks.getRuntimeSitemapPublicRoutes).toHaveBeenLastCalledWith(
+      {
+        cursor: "next",
+        limit: 100,
+        locale: "en",
+      }
+    );
+  });
 
-    expect(routes).toContain("/");
-    expect(routes).not.toContain("/about");
-    expect(routes).toContain("/subject");
-    expect(routes).toContain("/articles/politics");
-    expect(routes).not.toContain("/subject/high-school/10/biology");
+  it("derives parent routes from concrete route catalog rows", async () => {
+    await expect(
+      Effect.runPromise(buildSitemapContentPageRoutes(routeRows))
+    ).resolves.toEqual([
+      "/articles/politics",
+      "/articles/politics/dynastic-politics-asian-values",
+      "/practice/snbt",
+      "/practice/snbt/quantitative-knowledge",
+      "/practice/snbt/quantitative-knowledge/tryout-2026/set-1",
+      "/practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-1",
+      "/quran/1",
+      "/subjects/chemistry/green-chemistry/definition",
+    ]);
+  });
+
+  it("does not create public practice routes for stale source paths", async () => {
+    await expect(
+      Effect.runPromise(
+        buildSitemapContentPageRoutes([
+          routeProjectionRow(
+            {
+              locale: "en",
+              route: "practice/snbt/quantitative-knowledge/tryout-2026/set-1",
+              section: "material",
+            },
+            "material/practice/assessment/snbt/quantitative-knowledge/try-out/set-1"
+          ),
+        ])
+      )
+    ).resolves.toEqual([]);
+  });
+
+  it("skips incomplete or unsupported route projections", async () => {
+    await expect(
+      Effect.runPromise(buildSitemapContentPageRoutes(incompleteRouteRows))
+    ).resolves.toEqual([]);
   });
 });
+
+const routeRows = [
+  routeRow({
+    locale: "en",
+    route: "articles/politics/dynastic-politics-asian-values",
+    section: "articles",
+  }),
+  routeRow({
+    locale: "en",
+    route: "subjects/chemistry/green-chemistry/definition",
+    section: "material",
+    sourcePath: "material/lesson/chemistry/green-chemistry/definition",
+  }),
+  routeRow({
+    locale: "en",
+    route: "subjects/chemistry/green-chemistry",
+    section: "material",
+    sourcePath: "material/lesson/chemistry/green-chemistry",
+  }),
+  routeRow({
+    locale: "en",
+    route: "practice/snbt/quantitative-knowledge/tryout-2026/set-1",
+    section: "material",
+    sourcePath:
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
+  }),
+  routeRow({
+    locale: "en",
+    route: "practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-1",
+    section: "material",
+    sourcePath:
+      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/1",
+  }),
+  routeRow({
+    locale: "en",
+    route: "quran/1",
+    section: "quran",
+  }),
+];
+
+const incompleteRouteRows = [
+  routeProjectionRow(
+    {
+      locale: "en",
+      route: "subjects/chemistry/green-chemistry/definition",
+      section: "material",
+    },
+    "material/lesson/chemistry/green-chemistry/unknown-section"
+  ),
+  routeProjectionRow(
+    {
+      locale: "en",
+      route: "practice/snbt/quantitative-knowledge/tryout-2026/set-1",
+      section: "material",
+    },
+    "material/practice/assessment/snbt/quantitative-knowledge/try-out-2027/set-1"
+  ),
+];
+
+/** Builds one route-count fixture row for sitemap descriptor tests. */
+function countRow(locale: Locale, section: SourceRegistryRoot, count: number) {
+  return { count, locale, section, syncedAt: 1 };
+}
+
+/** Builds one route-catalog fixture row for sitemap tests. */
+function routeRow({
+  locale,
+  route,
+  section,
+  sourcePath = route,
+}: {
+  locale: Locale;
+  route: string;
+  section: SourceRegistryRoot;
+  sourcePath?: string;
+}): RuntimeContentRoute {
+  const graph = routeGraph(locale, sourcePath);
+  const kind = getLearningObjectKindForRoute(sourcePath);
+
+  if (!kind) {
+    throw new Error(`Expected graph route kind for ${sourcePath}.`);
+  }
+
+  return {
+    ...graph,
+    authors: [{ name: "Nakafa" }],
+    date: 1_735_689_600_000,
+    description: "Description",
+    kind,
+    locale,
+    markdown: true,
+    official: false,
+    route,
+    section,
+    sourcePath,
+    syncedAt: 1,
+    title: "Title",
+  };
+}
+
+/** Builds a graph-backed row with a custom route projection for edge cases. */
+function routeProjectionRow(
+  input: {
+    locale: Locale;
+    route: string;
+    section: SourceRegistryRoot;
+  },
+  sourcePath: string
+): RuntimeContentRoute {
+  return {
+    ...routeRow({ ...input, sourcePath }),
+    sourcePath,
+  };
+}
+
+const publicRouteRows: RuntimeSitemapPublicRoute[] = [
+  {
+    canonicalPath: undefined,
+    description: undefined,
+    displayGroupIconKey: undefined,
+    displayGroupTitle: undefined,
+    iconKey: "mathematics",
+    kind: "curriculum-context",
+    level: undefined,
+    locale: "en",
+    materialDomain: "mathematics",
+    materialCardDescription: undefined,
+    materialCardTitle: undefined,
+    materialKey: "lesson.mathematics.integral",
+    nodeKey: "merdeka.class-10.mathematics",
+    order: 1,
+    parentPath: "curriculum/merdeka/class-10",
+    programKey: "merdeka",
+    publicPath: "curriculum/merdeka/class-10/mathematics",
+    sectionKey: undefined,
+    sitemap: true,
+    sourcePath: undefined,
+    syncedAt: 1,
+    title: "Mathematics",
+  },
+  {
+    canonicalPath: undefined,
+    description: undefined,
+    displayGroupIconKey: undefined,
+    displayGroupTitle: undefined,
+    iconKey: undefined,
+    kind: "subject-lesson",
+    level: undefined,
+    locale: "en",
+    materialDomain: "mathematics",
+    materialCardDescription: undefined,
+    materialCardTitle: undefined,
+    materialKey: "lesson.mathematics.integral",
+    nodeKey: undefined,
+    order: 1,
+    parentPath: "subjects/mathematics/integral",
+    programKey: undefined,
+    publicPath: "subjects/mathematics/integral/area",
+    sectionKey: undefined,
+    sitemap: true,
+    sourcePath: "material/lesson/mathematics/integral/area",
+    syncedAt: 1,
+    title: "Area",
+  },
+];
+
+/** Builds graph identity fields for a sitemap route fixture. */
+function routeGraph(locale: Locale, route: string) {
+  const identity = createLearningGraphIdentityFromRoute({ locale, route });
+
+  if (!identity) {
+    throw new Error(`Expected graph identity for ${route}.`);
+  }
+
+  return {
+    ...identity,
+    content_id: identity.assetId,
+  };
+}

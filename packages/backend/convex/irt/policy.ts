@@ -69,9 +69,6 @@ export const IRT_SCALE_QUALITY_REFRESH_CLAIM_TIMEOUT_MS = 15 * 60 * 1000;
 /** Maximum number of queue rows deleted in one cleanup mutation. */
 export const IRT_QUEUE_CLEANUP_BATCH_SIZE = 100;
 
-/** Maximum number of completed attempts backfilled in one calibration sync pass. */
-export const IRT_CALIBRATION_RESPONSE_BACKFILL_BATCH_SIZE = 25;
-
 /** Maximum number of cached calibration attempts trimmed in one mutation. */
 export const IRT_CALIBRATION_CACHE_TRIM_BATCH_SIZE = 100;
 

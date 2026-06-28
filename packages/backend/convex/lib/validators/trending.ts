@@ -1,33 +1,27 @@
-import {
-  gradeValidator,
-  materialValidator,
-} from "@repo/backend/convex/lib/validators/contents";
+import { contentSearchSummaryValidator } from "@repo/backend/convex/contents/helpers/search/schema";
+import { materialValidator } from "@repo/backend/convex/lib/validators/contents";
 import { type Infer, v } from "convex/values";
 
 /**
- * Validator for trending subject item.
+ * Validator for graph-backed trending subject items.
  */
 export const trendingSubjectValidator = v.object({
-  id: v.id("subjectSections"),
-  title: v.string(),
-  description: v.optional(v.string()),
-  slug: v.string(),
+  ...contentSearchSummaryValidator.fields,
+  contextKey: v.string(),
+  href: v.string(),
+  materialDomain: materialValidator,
   viewCount: v.number(),
-  grade: gradeValidator,
-  material: materialValidator,
 });
 
 export type TrendingSubject = Infer<typeof trendingSubjectValidator>;
 
 /**
- * Validator for recently viewed subject item.
+ * Validator for graph-backed recently viewed subject items.
  */
 export const recentlyViewedSubjectValidator = v.object({
-  id: v.id("subjectSections"),
-  title: v.string(),
-  description: v.optional(v.string()),
-  slug: v.string(),
-  grade: gradeValidator,
-  material: materialValidator,
+  ...contentSearchSummaryValidator.fields,
+  contextKey: v.string(),
+  href: v.string(),
   lastViewedAt: v.number(),
+  materialDomain: materialValidator,
 });

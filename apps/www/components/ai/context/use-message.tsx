@@ -1,7 +1,7 @@
 "use client";
 
 import type { MyUIMessage } from "@repo/ai/types/message";
-import { type PropsWithChildren, useMemo } from "react";
+import type { PropsWithChildren } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 
 interface MessageContextValue {
@@ -15,7 +15,7 @@ export function MessageProvider({
   message,
   children,
 }: PropsWithChildren<{ message: MyUIMessage }>) {
-  const value = useMemo(() => ({ message }), [message]);
+  const value = { message };
 
   return (
     <MessageContext.Provider value={value}>{children}</MessageContext.Provider>

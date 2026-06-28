@@ -2,6 +2,7 @@
 
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
+import { useState } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 
 type SchoolRouteValue = FunctionReturnType<
@@ -15,6 +16,13 @@ interface SchoolContextValue {
 
 const SchoolContext = createContext<SchoolContextValue | null>(null);
 
+function createSchoolContextValue(value: SchoolRouteValue): SchoolContextValue {
+  return {
+    school: value.school,
+    schoolMembership: value.membership,
+  };
+}
+
 /**
  * Provide the resolved school route snapshot to the school client subtree.
  */
@@ -25,13 +33,21 @@ export function SchoolContextProvider({
   children: React.ReactNode;
   value: SchoolRouteValue;
 }) {
+  const [contextValue, setContextValue] = useState(() =>
+    createSchoolContextValue(value)
+  );
+  let currentContextValue = contextValue;
+
+  if (
+    contextValue.school?._id !== value.school?._id ||
+    contextValue.schoolMembership?._id !== value.membership?._id
+  ) {
+    currentContextValue = createSchoolContextValue(value);
+    setContextValue(currentContextValue);
+  }
+
   return (
-    <SchoolContext.Provider
-      value={{
-        school: value.school,
-        schoolMembership: value.membership,
-      }}
-    >
+    <SchoolContext.Provider value={currentContextValue}>
       {children}
     </SchoolContext.Provider>
   );

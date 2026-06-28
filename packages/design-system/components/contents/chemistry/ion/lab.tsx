@@ -68,8 +68,7 @@ export function IonLab({ title, description, labels }: IonLabProps) {
       <CardContent className="flex flex-col gap-5">
         <ToggleGroup
           aria-label={labels.chooseIon}
-          className="grid w-full grid-cols-2 sm:grid-cols-4"
-          layout="grid"
+          gridColumns="4"
           onValueChange={handleSampleChange}
           type="single"
           value={selectedSampleId}

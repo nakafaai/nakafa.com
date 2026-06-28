@@ -1,6 +1,14 @@
 import { query } from "@repo/backend/convex/_generated/server";
+import {
+  getQuestionAnswerSheetBySlugImpl,
+  getRenderableRowsBySlugImpl,
+} from "@repo/backend/convex/exercises/renderable/impl";
+import {
+  questionAnswerSheetReturnValidator,
+  renderableRowsBySlugArgsValidator,
+  renderableRowsBySlugReturnValidator,
+} from "@repo/backend/convex/exercises/renderable/spec";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
-import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
 import { getManyFrom } from "convex-helpers/server/relationships";
@@ -10,19 +18,6 @@ const attemptWithAnswersValidator = v.object({
   attempt: vv.doc("exerciseAttempts"),
   answers: v.array(vv.doc("exerciseAnswers")),
 });
-
-const questionAnswerSheetValidator = v.array(
-  v.object({
-    exerciseNumber: v.number(),
-    questionId: vv.id("exerciseQuestions"),
-    options: v.array(
-      v.object({
-        optionKey: v.string(),
-        order: v.number(),
-      })
-    ),
-  })
-);
 
 /**
  * Get the latest attempt for a specific exercise/set.
@@ -37,7 +32,6 @@ export const getLatestAttemptBySlug = query({
   handler: async (ctx, args) => {
     const { appUser } = await requireAuth(ctx);
     const userId = appUser._id;
-
     const attempt = await ctx.db
       .query("exerciseAttempts")
       .withIndex("by_userId_and_origin_and_slug_and_scope_and_startedAt", (q) =>
@@ -75,56 +69,23 @@ export const getLatestAttemptBySlug = query({
  * server-authoritative answer scoring without trusting client correctness flags.
  */
 export const getQuestionAnswerSheetBySlug = query({
-  args: {
-    locale: localeValidator,
-    slug: v.string(),
-  },
-  returns: questionAnswerSheetValidator,
+  args: renderableRowsBySlugArgsValidator,
+  returns: questionAnswerSheetReturnValidator,
   handler: async (ctx, args) => {
     await requireAuth(ctx);
 
-    const set = await ctx.db
-      .query("exerciseSets")
-      .withIndex("by_locale_and_slug", (q) =>
-        q.eq("locale", args.locale).eq("slug", args.slug)
-      )
-      .first();
-
-    if (!set) {
-      return [];
-    }
-
-    const questions = await getManyFrom(
-      ctx.db,
-      "exerciseQuestions",
-      "by_setId",
-      set._id
-    );
-    const orderedQuestions = [...questions].sort((a, b) => a.number - b.number);
-
-    const answerSheet = await Promise.all(
-      orderedQuestions.map(async (question) => {
-        const choices = await getManyFrom(
-          ctx.db,
-          "exerciseChoices",
-          "by_questionId_and_locale",
-          question._id,
-          "questionId"
-        );
-
-        return {
-          exerciseNumber: question.number,
-          questionId: question._id,
-          options: choices
-            .map((choice) => ({
-              optionKey: choice.optionKey,
-              order: choice.order,
-            }))
-            .sort((a, b) => a.order - b.order),
-        };
-      })
-    );
-
-    return answerSheet;
+    return await getQuestionAnswerSheetBySlugImpl(ctx, args);
   },
+});
+
+/**
+ * Load renderable exercise rows from the synced Convex content read model.
+ *
+ * This query owns runtime try-out set membership. The page still imports exact
+ * compiled MDX modules by number for the visible question and answer bodies.
+ */
+export const getRenderableRowsBySlug = query({
+  args: renderableRowsBySlugArgsValidator,
+  returns: renderableRowsBySlugReturnValidator,
+  handler: getRenderableRowsBySlugImpl,
 });

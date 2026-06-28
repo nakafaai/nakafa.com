@@ -27,7 +27,7 @@ describe("auth/cleanup", () => {
         slug
       );
       const setAttemptId = await ctx.db.insert("exerciseAttempts", {
-        slug: `exercises/high-school/snbt/quantitative-knowledge/try-out/2026/${slug}`,
+        slug: `material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/${slug}`,
         userId: identity.userId,
         origin: "tryout",
         mode: "simulation",

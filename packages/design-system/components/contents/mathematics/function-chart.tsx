@@ -1,27 +1,36 @@
 "use client";
 
 import {
+  EvilLineChart,
+  Grid,
+  Legend,
+  Line,
+  XAxis,
+  YAxis,
+} from "@repo/design-system/components/evilcharts/charts/line-chart";
+import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
+import {
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@repo/design-system/components/evilcharts/ui/tooltip";
+import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import type { ChartConfig } from "@repo/design-system/components/ui/chart";
-import {
-  ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
-  ChartTooltip,
-  ChartTooltipContent,
-  getColorVariable,
-} from "@repo/design-system/components/ui/chart";
 import type { ReactNode } from "react";
 import { useMemo } from "react";
-import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 
 const THRESHOLD_VALUE = 1000;
 const THRESHOLD_VALUE_DECIMAL_PLACES = 0;
+const FUNCTION_CHART_CONFIG = {
+  y: {
+    label: "f(x)",
+    colors: { light: ["var(--chart-1)"], dark: ["var(--chart-1)"] },
+  },
+} satisfies ChartConfig;
 
 interface Props {
   a: number;
@@ -47,13 +56,6 @@ export function FunctionChart({ p, a, title, description, n = 11 }: Props) {
     [a, p, n]
   );
 
-  const chartConfig = {
-    y: {
-      label: "f(x)",
-      colors: { light: ["var(--chart-1)"] },
-    },
-  } satisfies ChartConfig;
-
   return (
     <Card className="content-auto-card">
       <CardHeader>
@@ -61,70 +63,65 @@ export function FunctionChart({ p, a, title, description, n = 11 }: Props) {
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig}>
-          <LineChart accessibilityLayer data={data}>
-            <CartesianGrid />
-            <XAxis
-              dataKey="x"
-              tickFormatter={(value) => value.toString()}
-              tickMargin={8}
-            />
-            <YAxis
-              label={{
-                value: "f(x)",
-                angle: -90,
-                position: "insideLeft",
-                style: { textAnchor: "middle" },
-              }}
-              tickFormatter={(value) =>
-                value >= THRESHOLD_VALUE
-                  ? `${(value / THRESHOLD_VALUE).toFixed(THRESHOLD_VALUE_DECIMAL_PLACES)}k`
-                  : String(value)
-              }
-              tickMargin={8}
-            />
-            <ChartTooltip
-              content={({ active, payload }) => {
-                if (active && payload && payload.length > 0) {
-                  const xValue = payload[0].payload.x;
-                  const yValue = payload[0].payload.y;
+        <EvilLineChart
+          config={FUNCTION_CHART_CONFIG}
+          curveType="monotone"
+          data={data}
+        >
+          <Grid />
+          <XAxis
+            dataKey="x"
+            tickFormatter={(value) => value.toString()}
+            tickMargin={8}
+          />
+          <YAxis
+            label={{
+              value: "f(x)",
+              angle: -90,
+              position: "insideLeft",
+              style: { textAnchor: "middle" },
+            }}
+            tickFormatter={(value) =>
+              value >= THRESHOLD_VALUE
+                ? `${(value / THRESHOLD_VALUE).toFixed(THRESHOLD_VALUE_DECIMAL_PLACES)}k`
+                : String(value)
+            }
+            tickMargin={8}
+          />
+          <ChartTooltip
+            content={({ active, payload }) => {
+              if (active && payload && payload.length > 0) {
+                const xValue = payload[0].payload.x;
+                const yValue = payload[0].payload.y;
 
-                  // Special handling for undefined case
-                  if (yValue === null) {
-                    return (
-                      <ChartTooltipContent
-                        active={active}
-                        label={`x = ${xValue}, y = undefined`}
-                        payload={[]}
-                      />
-                    );
-                  }
-
+                if (yValue === null) {
                   return (
                     <ChartTooltipContent
                       active={active}
-                      label={`x = ${xValue}`}
-                      payload={payload}
+                      label={`x = ${xValue}, y = undefined`}
+                      payload={[]}
                     />
                   );
                 }
-                return null;
-              }}
-            />
-            <Line
-              connectNulls={false}
-              dataKey="y"
-              dot
-              name="y"
-              stroke={getColorVariable("y", 0)}
-              strokeWidth={2}
-              type="monotone"
-            />
-            <ChartLegend
-              content={<ChartLegendContent verticalAlign="bottom" />}
-            />
-          </LineChart>
-        </ChartContainer>
+
+                return (
+                  <ChartTooltipContent
+                    active={active}
+                    label={`x = ${xValue}`}
+                    payload={payload}
+                  />
+                );
+              }
+              return null;
+            }}
+          />
+          <Line
+            connectNulls={false}
+            dataKey="y"
+            lineProps={{ dot: true, name: "y", strokeWidth: 2 }}
+          />
+          <Legend verticalAlign="bottom" />
+        </EvilLineChart>
       </CardContent>
     </Card>
   );

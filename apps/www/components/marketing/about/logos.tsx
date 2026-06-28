@@ -8,6 +8,8 @@ interface SchoolLogoProps {
   school: (typeof schools)[number];
 }
 
+const duplicatedSchools = [...schools, ...schools];
+
 function SchoolLogo({ school }: SchoolLogoProps) {
   return (
     <a
@@ -36,7 +38,6 @@ function SchoolLogo({ school }: SchoolLogoProps) {
 
 export function Logos() {
   const t = useTranslations("About");
-  const duplicatedSchools = [...schools, ...schools];
 
   return (
     <section className="grid scroll-mt-28 gap-12 py-36" id="logos">

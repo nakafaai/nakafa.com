@@ -3,19 +3,50 @@ import {
   decodeNakafaAgentExerciseResult,
   getNakafaAgentExercise,
 } from "@repo/contents/_lib/agent/exercise/read";
-import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
+import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import { Effect, Option } from "effect";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-const EXERCISE_CONTENT_ID =
-  "en/exercises/high-school/snbt/general-knowledge/try-out/2026/set-2";
 const EXERCISE_ROUTE =
-  "exercises/high-school/snbt/general-knowledge/try-out/2026/set-2";
+  "material/practice/assessment/snbt/general-knowledge/try-out-2026/set-2";
+const EXERCISE_CONTENT_REF = `https://nakafa.com/en/${EXERCISE_ROUTE}`;
+
+const mockExercises = vi.hoisted(() => [
+  {
+    answer: {
+      metadata: { title: "Answer 1" },
+      raw: "Jawaban nomor 1.",
+    },
+    choices: {
+      en: [
+        { label: "A", value: true },
+        { label: "B", value: false },
+      ],
+      id: [
+        { label: "A", value: true },
+        { label: "B", value: false },
+      ],
+    },
+    number: 1,
+    question: {
+      metadata: { title: "Question 1" },
+      raw: "Pertanyaan nomor 1.",
+    },
+  },
+]);
+
+vi.mock("@repo/contents/_lib/assessment/renderable", async () => {
+  const { Effect } = await import("effect");
+
+  return {
+    getRenderableExercisesContent: () => Effect.succeed(mockExercises),
+  };
+});
 
 describe("Nakafa agent exercises", () => {
   it("retrieves whole exercise sets, numbered exercises, and missing exercise paths", async () => {
     const exerciseSet = await Effect.runPromise(
-      getNakafaAgentExercise(EXERCISE_CONTENT_ID)
+      getNakafaAgentExercise(EXERCISE_CONTENT_REF)
     );
 
     if (Option.isNone(exerciseSet)) {
@@ -29,22 +60,22 @@ describe("Nakafa agent exercises", () => {
     }
 
     const numberedExercise = await Effect.runPromise(
-      getNakafaAgentExercise(`${EXERCISE_CONTENT_ID}/${firstExercise.number}`)
+      getNakafaAgentExercise(`${EXERCISE_CONTENT_REF}/${firstExercise.number}`)
     );
     const explicitExercise = await Effect.runPromise(
-      getNakafaAgentExercise(EXERCISE_CONTENT_ID, firstExercise.number)
+      getNakafaAgentExercise(EXERCISE_CONTENT_REF, firstExercise.number)
     );
     const explicitNumberedExercise = await Effect.runPromise(
       getNakafaAgentExercise(
-        `${EXERCISE_CONTENT_ID}/${firstExercise.number}`,
+        `${EXERCISE_CONTENT_REF}/${firstExercise.number}`,
         firstExercise.number
       )
     );
     const missingExercise = await Effect.runPromise(
-      getNakafaAgentExercise(EXERCISE_CONTENT_ID, 99_999)
+      getNakafaAgentExercise(EXERCISE_CONTENT_REF, 99_999)
     );
     const nonExercise = await Effect.runPromise(
-      getNakafaAgentExercise("en/quran/1")
+      getNakafaAgentExercise("https://nakafa.com/en/quran/1")
     );
 
     if (
@@ -68,7 +99,7 @@ describe("Nakafa agent exercises", () => {
   it("fails with a typed read error when renderable exercise loading fails", async () => {
     const error = await Effect.runPromise(
       Effect.match(
-        getNakafaAgentExercise(EXERCISE_CONTENT_ID, undefined, () =>
+        getNakafaAgentExercise(EXERCISE_CONTENT_REF, undefined, () =>
           Effect.fail(
             new NakafaAgentDataReadError({
               cause: "broken",
@@ -90,9 +121,8 @@ describe("Nakafa agent exercises", () => {
     const error = await Effect.runPromise(
       Effect.match(
         decodeNakafaAgentExerciseResult({
-          ...buildNakafaContentRef("en", EXERCISE_ROUTE, "exercises"),
+          ...readNakafaContentRefFixture("en", EXERCISE_ROUTE, "material"),
           count: 1,
-          exercise_number: null,
           exercises: [
             {
               answer: {

@@ -1,18 +1,23 @@
-import { getContentsMetadata } from "@repo/contents/_lib/metadata";
-import { getAllSurah, getSurahName } from "@repo/contents/_lib/quran";
-import { parseContentDate } from "@repo/contents/_shared/date";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import { Feed, type Item } from "feed";
 import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
+import { fetchRuntimeQuranSurahs } from "@/lib/content/runtime/pages";
+import { listRuntimeLatestContentRoutes } from "@/lib/content/runtime/routes";
+import { getQuranSurahName } from "@/lib/utils/pages/quran";
 
 const baseUrl = "https://nakafa.com";
+const RSS_CONTENT_ROUTE_LIMIT = 100;
+const rssHeaders = {
+  "Content-Type": "application/rss+xml; charset=utf-8",
+};
 
+/** Serves the RSS feed from Convex content routes and Quran runtime rows. */
 export async function GET() {
   const locales = routing.locales;
 
-  const [t, tCommon] = await Promise.all([
+  const [t, tCommon, routes, surahs] = await Promise.all([
     getTranslations({
       namespace: "Metadata",
       locale: routing.defaultLocale,
@@ -21,25 +26,9 @@ export async function GET() {
       namespace: "Common",
       locale: routing.defaultLocale,
     }),
+    getFeedContentRoutes(),
+    fetchRuntimeQuranSurahs(),
   ]);
-
-  // Fetch all articles and subjects for all locales in parallel
-  const contentPromises = locales.flatMap((locale) => [
-    Effect.runPromise(
-      getContentsMetadata({ locale, basePath: "articles" })
-    ).then((contents) => ({
-      locale,
-      contents,
-    })),
-    Effect.runPromise(
-      getContentsMetadata({ locale, basePath: "subject" })
-    ).then((contents) => ({
-      locale,
-      contents,
-    })),
-  ]);
-
-  const results = await Promise.all(contentPromises);
 
   const feed = new Feed({
     title: t("title"),
@@ -55,41 +44,27 @@ export async function GET() {
   // Collect all feed items
   const feedItems: Item[] = [];
 
-  for (const result of results) {
-    for (const content of result.contents) {
-      if (!content) {
-        continue;
-      }
-
-      // Extract locale and path from URL to match canonical OG URL pattern
-      const url = new URL(content.url);
-      const pathname = url.pathname; // e.g., "/en/articles/politics/my-article"
-      const pathSegments = pathname.split("/").filter(Boolean);
-      const locale = pathSegments[0]; // e.g., "en"
-      const path = pathSegments.slice(1).join("/"); // e.g., "articles/politics/my-article"
-
-      const publishedAt = parseContentDate(content.metadata.date);
-      if (!publishedAt) {
-        continue;
-      }
-
-      feedItems.push({
-        title: content.metadata.title,
-        description: content.metadata.description ?? content.metadata.title,
-        link: content.url,
-        date: publishedAt,
-        id: content.url,
-        author: content.metadata.authors,
-        image: `${baseUrl}/${locale}/og/${path}/image.png`,
-      });
+  for (const route of routes) {
+    if (!route.date) {
+      continue;
     }
+
+    const link = `${baseUrl}/${route.locale}/${route.route}`;
+    feedItems.push({
+      title: route.title,
+      description: route.description ?? route.title,
+      link,
+      date: new Date(route.date),
+      id: link,
+      author: route.authors,
+      image: `${baseUrl}/${route.locale}/og/${route.route}/image.png`,
+    });
   }
 
   // Add Quran surahs to feed
-  const surahs = getAllSurah();
   for (const locale of locales) {
     for (const surah of surahs) {
-      const title = getSurahName({ locale, name: surah.name });
+      const title = getQuranSurahName({ locale, name: surah.name });
       const translation =
         surah.name.translation[locale] || surah.name.translation.en;
 
@@ -112,5 +87,35 @@ export async function GET() {
     feed.addItem(item);
   }
 
-  return new NextResponse(feed.rss2());
+  return new NextResponse(feed.rss2(), { headers: rssHeaders });
+}
+
+/** Reads article and subject feed routes from the Convex route catalog. */
+function getFeedContentRoutes() {
+  return Effect.runPromise(
+    Effect.gen(function* () {
+      const routes = yield* Effect.forEach(
+        routing.locales,
+        (locale) =>
+          Effect.all([
+            listRuntimeLatestContentRoutes({
+              limit: RSS_CONTENT_ROUTE_LIMIT,
+              locale,
+              section: "articles",
+            }),
+            listRuntimeLatestContentRoutes({
+              limit: RSS_CONTENT_ROUTE_LIMIT,
+              locale,
+              section: "material",
+            }),
+          ]),
+        { concurrency: routing.locales.length }
+      );
+
+      return routes
+        .flat(2)
+        .sort((left, right) => (right.date ?? 0) - (left.date ?? 0))
+        .slice(0, RSS_CONTENT_ROUTE_LIMIT);
+    })
+  );
 }

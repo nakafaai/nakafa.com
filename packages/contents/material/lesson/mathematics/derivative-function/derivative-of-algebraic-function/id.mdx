@@ -1,0 +1,112 @@
+export const metadata = {
+  title: "Turunan Fungsi Aljabar",
+  description: "Pelajari diferensiasi fungsi aljabar menggunakan aturan pangkat, hasil kali, dan hasil bagi. Pelajari cara menurunkan polinomial, akar, dan fungsi rasional.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "2025-05-26",
+  subject: "Turunan Fungsi",
+};
+
+## Menerapkan Aturan Turunan
+
+Setelah kita menguasai berbagai [sifat turunan](/id/materi/matematika/turunan-fungsi/sifat-turunan-fungsi), kini saatnya untuk mengaplikasikannya pada berbagai bentuk fungsi aljabar. Baik itu polinomial, fungsi rasional, atau yang mengandung bentuk akar, kuncinya adalah mengenali struktur fungsi dan memilih 'alat' atau sifat yang tepat untuk menurunkannya. Mari kita lihat bagaimana strategi ini diterapkan dalam beberapa contoh.
+
+## Penggunaan Sifat Turunan
+
+Mari kita lihat bagaimana sifat-sifat turunan bekerja dalam praktik melalui beberapa contoh.
+
+### Menurunkan Polinomial
+
+Tentukan turunan pertama dari <InlineMath math="y = 4x^2 + x + 2" />.
+
+**Penyelesaian:**
+
+Kita bisa menurunkan setiap suku satu per satu menggunakan aturan pangkat dan aturan konstanta.
+
+<MathContainer>
+  <BlockMath math="y' = (4 \cdot 2)x^{2-1} + (1 \cdot 1)x^{1-1} + 0" />
+  <BlockMath math="y' = 8x^1 + 1x^0" />
+  <BlockMath math="y' = 8x + 1 \quad (\text{karena } x^0=1)" />
+</MathContainer>
+
+### Menaklukkan Bentuk Akar
+
+Tentukan turunan pertama dari <InlineMath math="y = x\sqrt{x^3}" />.
+
+**Penyelesaian:**
+
+Ada dua cara untuk menyelesaikan ini.
+
+**Cara <InlineMath math="1" />: Menggunakan Aturan Hasil Kali**
+
+Pertama, kita ubah bentuk akar menjadi pangkat: <InlineMath math="y = x \cdot x^{3/2}" />.
+
+Misalkan <InlineMath math="u(x) = x" /> dan <InlineMath math="v(x) = x^{3/2}" />. Maka, <InlineMath math="u'(x)=1" /> dan <InlineMath math="v'(x) = \frac{3}{2}x^{1/2}" />.
+
+<MathContainer>
+  <BlockMath math="y' = u'(x)v(x) + u(x)v'(x)" />
+  <BlockMath math="y' = (1)(x^{3/2}) + (x)(\frac{3}{2}x^{1/2})" />
+  <BlockMath math="y' = x^{3/2} + \frac{3}{2}x^{3/2}" />
+  <BlockMath math="y' = \frac{5}{2}x^{3/2}" />
+</MathContainer>
+
+**Cara <InlineMath math="2" />: Menyederhanakan Terlebih Dahulu**
+
+Kita bisa menyederhanakan fungsinya sebelum diturunkan.
+
+<MathContainer>
+  <BlockMath math="y = x \cdot x^{3/2} = x^{1 + 3/2} = x^{5/2}" />
+  <BlockMath math="y' = \frac{5}{2}x^{5/2 - 1} = \frac{5}{2}x^{3/2}" />
+</MathContainer>
+
+> Kedua cara memberikan hasil yang sama. Terkadang, menyederhanakan fungsi terlebih dahulu dapat membuat proses penurunan menjadi lebih cepat.
+
+### Mengatasi Fungsi Rasional
+
+Tentukan turunan pertama dari <InlineMath math="y = 2\left(\frac{x^2+2}{x}\right)" />.
+
+**Penyelesaian:**
+
+Kita gunakan aturan hasil bagi. Misalkan <InlineMath math="u(x) = x^2+2" /> dan <InlineMath math="v(x) = x" />. Maka <InlineMath math="u'(x) = 2x" /> dan <InlineMath math="v'(x) = 1" />.
+
+<MathContainer>
+  <BlockMath math="y' = 2 \cdot \left(\frac{u'(x)v(x) - u(x)v'(x)}{[v(x)]^2}\right)" />
+  <BlockMath math="y' = 2 \cdot \left(\frac{(2x)(x) - (x^2+2)(1)}{x^2}\right)" />
+  <BlockMath math="y' = 2 \cdot \left(\frac{2x^2 - x^2 - 2}{x^2}\right)" />
+  <BlockMath math="y' = 2 \cdot \left(\frac{x^2 - 2}{x^2}\right)" />
+  <BlockMath math="y' = 2 \cdot \left(\frac{x^2}{x^2} - \frac{2}{x^2}\right) = 2 \cdot \left(1 - \frac{2}{x^2}\right) = 2 - \frac{4}{x^2}" />
+</MathContainer>
+
+## Latihan
+
+1.  Tentukan turunan pertama dari <InlineMath math="y = \frac{\sqrt{x} + x^2}{2x}" />.
+
+### Kunci Jawaban
+
+1.  Untuk soal ini, cara termudah adalah dengan menyederhanakan fungsi terlebih dahulu sebelum menurunkannya.
+
+    **Langkah** <InlineMath math="1" />: Urai Pecahan
+
+    Kita bisa memecah pecahan menjadi dua bagian terpisah untuk mempermudah.
+
+    <BlockMath math="y = \frac{\sqrt{x}}{2x} + \frac{x^2}{2x}" />
+
+    **Langkah** <InlineMath math="2" />: Sederhanakan Setiap Suku
+
+    Ubah bentuk akar menjadi pangkat <InlineMath math="x^{1/2}" /> dan gunakan sifat eksponen untuk menyederhanakan setiap suku.
+
+    <MathContainer>
+      <BlockMath math="y = \frac{x^{1/2}}{2x^1} + \frac{x^2}{2x^1}" />
+      <BlockMath math="y = \frac{1}{2}x^{1/2 - 1} + \frac{1}{2}x^{2-1}" />
+      <BlockMath math="y = \frac{1}{2}x^{-1/2} + \frac{1}{2}x" />
+    </MathContainer>
+
+    **Langkah** <InlineMath math="3" />: Terapkan Aturan Pangkat
+
+    Setelah fungsi menjadi sederhana, kita bisa langsung menurunkannya suku per suku.
+
+    <MathContainer>
+      <BlockMath math="y' = \frac{1}{2}\left(-\frac{1}{2}x^{-1/2 - 1}\right) + \frac{1}{2}(1)" />
+      <BlockMath math="y' = -\frac{1}{4}x^{-3/2} + \frac{1}{2}" />
+    </MathContainer>
+
+    Jadi, turunan pertamanya adalah <InlineMath math="\frac{1}{2} - \frac{1}{4}x^{-3/2}" />.

@@ -1,8 +1,18 @@
 // @vitest-environment node
+import { ModelIdSchema } from "@repo/ai/config/model";
+import type {
+  NinaContextSnapshot,
+  NinaContextTransition,
+} from "@repo/ai/nina/memory/pack";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { loadMessages, saveOrCreateChat } from "@/app/api/chat/persistence";
+import {
+  createChatWithMessage,
+  loadMessages,
+  loadPinnedNinaContext,
+  saveChatMessage,
+} from "@/app/api/chat/persistence";
 
 const mocks = vi.hoisted(() => ({
   compressMessages: vi.fn(),
@@ -34,16 +44,46 @@ const message = {
   parts: [],
   role: "user",
 } satisfies MyUIMessage;
+const modelId = ModelIdSchema.make("nakafa-lite");
+const ninaContextSnapshot = {
+  capturedAt: "2026-05-09T00:00:00.000Z",
+  learning: {
+    locale: "id",
+    slug: "materi/matematika/integral/jumlahan-riemann",
+    url: "https://nakafa.com/id/materi/matematika/integral/jumlahan-riemann",
+    verified: true,
+  },
+  source: "current-page",
+  tools: {
+    allowDeepResearch: true,
+    allowMath: true,
+    allowNakafa: true,
+    allowPageFetch: true,
+    evidenceScope: "verified-page",
+  },
+} satisfies NinaContextSnapshot;
+const ninaContextTransition = {
+  reason: "page-context",
+  toContextKey: "canonical:materi/matematika/integral/jumlahan-riemann",
+} satisfies NinaContextTransition;
+
+/** Adds the required Nina context fields for chat persistence tests. */
+function withNinaContext() {
+  return {
+    ninaContextSnapshot,
+    ninaContextTransition,
+  };
+}
 
 /** Returns one typed chat ID through the public persistence path. */
 async function savedChatId() {
   mocks.fetchMutation.mockResolvedValueOnce({ chatId: "chat_existing" });
 
   const chatId = await Effect.runPromise(
-    saveOrCreateChat({
-      chatId: undefined,
+    createChatWithMessage({
       message,
-      modelId: "nakafa-lite",
+      modelId,
+      ...withNinaContext(),
       token: "session-token",
     })
   );
@@ -69,10 +109,10 @@ describe("app/api/chat/persistence", () => {
     mocks.fetchMutation.mockResolvedValue({ chatId: "chat_new" });
 
     const chatId = await Effect.runPromise(
-      saveOrCreateChat({
-        chatId: undefined,
+      createChatWithMessage({
         message,
-        modelId: "nakafa-lite",
+        modelId,
+        ...withNinaContext(),
         token: "session-token",
       })
     );
@@ -83,7 +123,9 @@ describe("app/api/chat/persistence", () => {
       {
         message: {
           identifier: "message-1",
-          modelId: "nakafa-lite",
+          modelId,
+          ninaContextSnapshot,
+          ninaContextTransition,
           role: "user",
         },
         parts: [],
@@ -98,10 +140,11 @@ describe("app/api/chat/persistence", () => {
     mocks.fetchQuery.mockResolvedValue(null);
 
     const result = await Effect.runPromise(
-      saveOrCreateChat({
+      saveChatMessage({
         chatId,
         message,
-        modelId: "nakafa-lite",
+        modelId,
+        ...withNinaContext(),
         token: "session-token",
       })
     );
@@ -113,7 +156,9 @@ describe("app/api/chat/persistence", () => {
         message: {
           chatId,
           identifier: "message-1",
-          modelId: "nakafa-lite",
+          modelId,
+          ninaContextSnapshot,
+          ninaContextTransition,
           role: "user",
         },
         parts: [],
@@ -122,50 +167,96 @@ describe("app/api/chat/persistence", () => {
     );
   });
 
-  it("deletes an existing message rewrite batch before saving the replacement", async () => {
+  it("loads the newest stored Nina context for pinned-chat continuation", async () => {
     const chatId = await savedChatId();
-    mocks.fetchQuery.mockResolvedValue({ creationTime: 123 });
-    mocks.fetchMutation
-      .mockResolvedValueOnce({ hasMore: true })
-      .mockResolvedValueOnce({ hasMore: false })
-      .mockResolvedValueOnce({});
+    mocks.fetchQuery.mockResolvedValue(ninaContextSnapshot);
 
-    await Effect.runPromise(
-      saveOrCreateChat({
+    const result = await Effect.runPromise(
+      loadPinnedNinaContext({
         chatId,
-        message,
-        modelId: "nakafa-lite",
+        messageIdentifier: message.id,
         token: "session-token",
       })
     );
 
-    expect(mocks.fetchMutation).toHaveBeenNthCalledWith(
-      1,
+    expect(result).toEqual(ninaContextSnapshot);
+    expect(mocks.fetchQuery).toHaveBeenCalledWith(
       expect.anything(),
-      {
-        chatId,
-        fromCreationTime: 123,
-      },
+      { chatId, messageIdentifier: message.id },
       { token: "session-token" }
     );
-    expect(mocks.fetchMutation).toHaveBeenNthCalledWith(
-      2,
-      expect.anything(),
-      {
+  });
+
+  it("ignores missing pinned Nina context instead of inventing chat context", async () => {
+    const chatId = await savedChatId();
+    mocks.fetchQuery.mockResolvedValue(null);
+
+    const result = await Effect.runPromise(
+      loadPinnedNinaContext({
         chatId,
-        fromCreationTime: 123,
-      },
-      { token: "session-token" }
+        messageIdentifier: message.id,
+        token: "session-token",
+      })
     );
-    expect(mocks.fetchMutation).toHaveBeenNthCalledWith(
-      3,
+
+    expect(result).toBeUndefined();
+  });
+
+  it("saves an existing chat rewrite through one atomic Convex mutation", async () => {
+    const chatId = await savedChatId();
+
+    await Effect.runPromise(
+      saveChatMessage({
+        chatId,
+        message,
+        modelId,
+        ...withNinaContext(),
+        token: "session-token",
+      })
+    );
+
+    expect(mocks.fetchQuery).not.toHaveBeenCalled();
+    expect(mocks.fetchMutation).toHaveBeenCalledTimes(1);
+    expect(mocks.fetchMutation).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({
         message: expect.objectContaining({
           chatId,
-          modelId: "nakafa-lite",
+          modelId,
         }),
       }),
+      { token: "session-token" }
+    );
+  });
+
+  it("loads rewrite-aware pinned context before saving a replacement", async () => {
+    const chatId = await savedChatId();
+    mocks.fetchQuery.mockResolvedValueOnce(ninaContextSnapshot);
+
+    const pinnedContext = await Effect.runPromise(
+      loadPinnedNinaContext({
+        chatId,
+        messageIdentifier: message.id,
+        token: "session-token",
+      })
+    );
+    await Effect.runPromise(
+      saveChatMessage({
+        chatId,
+        message,
+        modelId,
+        ...withNinaContext(),
+        token: "session-token",
+      })
+    );
+
+    expect(pinnedContext).toEqual(ninaContextSnapshot);
+    expect(mocks.fetchQuery.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.fetchMutation.mock.invocationCallOrder[0]
+    );
+    expect(mocks.fetchQuery).toHaveBeenCalledWith(
+      expect.anything(),
+      { chatId, messageIdentifier: message.id },
       { token: "session-token" }
     );
   });

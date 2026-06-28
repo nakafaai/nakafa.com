@@ -17,7 +17,7 @@ import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { cn } from "@repo/design-system/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 import type * as React from "react";
-import { createContext, useContext } from "react";
+import { createContext, use, useMemo } from "react";
 
 type DrawerPosition = "bottom" | "left" | "right" | "top";
 
@@ -36,7 +36,7 @@ const swipeDirectionByPosition: Record<
 };
 
 const drawerViewportVariants = cva(
-  "fixed inset-0 z-50 touch-none [--bleed:--spacing(12)] [--inset:--spacing(0)]",
+  "fixed inset-0 z-50 touch-none [--bleed:--spacing(12)] [--inset:0px]",
   {
     compoundVariants: [
       {
@@ -193,6 +193,7 @@ const drawerMenuItemVariants = cva(
 
 const DrawerCreateHandle = DrawerPrimitive.createHandle;
 
+/** Provides drawer position context and Base UI swipe direction defaults. */
 function Drawer({
   position = "bottom",
   swipeDirection,
@@ -200,8 +201,10 @@ function Drawer({
 }: DrawerPrimitive.Root.Props & {
   position?: DrawerPosition;
 }) {
+  const contextValue = useMemo(() => ({ position }), [position]);
+
   return (
-    <DrawerContext.Provider value={{ position }}>
+    <DrawerContext.Provider value={contextValue}>
       <DrawerPrimitive.Root
         data-slot="drawer"
         swipeDirection={swipeDirection ?? swipeDirectionByPosition[position]}
@@ -223,6 +226,7 @@ function DrawerClose(props: DrawerPrimitive.Close.Props) {
   return <DrawerPrimitive.Close data-slot="drawer-close" {...props} />;
 }
 
+/** Renders the invisible swipe target for the active drawer edge. */
 function DrawerSwipeArea({
   className,
   position: positionProp,
@@ -230,7 +234,7 @@ function DrawerSwipeArea({
 }: DrawerPrimitive.SwipeArea.Props & {
   position?: DrawerPosition;
 }) {
-  const { position: contextPosition } = useContext(DrawerContext);
+  const { position: contextPosition } = use(DrawerContext);
   const position = positionProp ?? contextPosition;
 
   return (
@@ -249,6 +253,7 @@ function DrawerSwipeArea({
   );
 }
 
+/** Renders the animated overlay paired with the active drawer popup. */
 function DrawerBackdrop({
   className,
   ...props
@@ -265,6 +270,7 @@ function DrawerBackdrop({
   );
 }
 
+/** Renders the drawer viewport for the active drawer edge. */
 function DrawerViewport({
   className,
   position: positionProp,
@@ -274,7 +280,7 @@ function DrawerViewport({
   VariantProps<typeof drawerViewportVariants> & {
     position?: DrawerPosition;
   }) {
-  const { position: contextPosition } = useContext(DrawerContext);
+  const { position: contextPosition } = use(DrawerContext);
   const position = positionProp ?? contextPosition;
 
   return (
@@ -286,6 +292,7 @@ function DrawerViewport({
   );
 }
 
+/** Renders drawer popup chrome, backdrop, viewport, and optional affordances. */
 function DrawerPopup({
   children,
   className,
@@ -302,7 +309,7 @@ function DrawerPopup({
     showBar?: boolean;
     showCloseButton?: boolean;
   }) {
-  const { position: contextPosition } = useContext(DrawerContext);
+  const { position: contextPosition } = use(DrawerContext);
   const position = positionProp ?? contextPosition;
 
   return (
@@ -331,6 +338,7 @@ function DrawerPopup({
   );
 }
 
+/** Provides selectable content semantics for header, panel, and footer slots. */
 function DrawerContent({ className, ...props }: DrawerPrimitive.Content.Props) {
   return (
     <DrawerPrimitive.Content
@@ -341,6 +349,7 @@ function DrawerContent({ className, ...props }: DrawerPrimitive.Content.Props) {
   );
 }
 
+/** Renders the main drawer body with optional scroll area and text selection. */
 function DrawerPanel({
   allowSelection = true,
   className,
@@ -375,6 +384,7 @@ function DrawerPanel({
   );
 }
 
+/** Renders the drag handle for the active drawer edge. */
 function DrawerBar({
   className,
   position: positionProp,
@@ -382,7 +392,7 @@ function DrawerBar({
 }: React.ComponentProps<"div"> & {
   position?: DrawerPosition;
 }) {
-  const { position: contextPosition } = useContext(DrawerContext);
+  const { position: contextPosition } = use(DrawerContext);
   const position = positionProp ?? contextPosition;
 
   return (
@@ -395,6 +405,7 @@ function DrawerBar({
   );
 }
 
+/** Renders the drawer heading region with the COSS selection default. */
 function DrawerHeader({
   allowSelection = false,
   className,
@@ -419,6 +430,7 @@ function DrawerHeader({
   });
 }
 
+/** Renders the drawer action region with safe-area aware footer spacing. */
 function DrawerFooter({
   allowSelection = true,
   className,
@@ -449,6 +461,7 @@ function DrawerFooter({
   });
 }
 
+/** Renders the accessible drawer title using the primitive title slot. */
 function DrawerTitle({ className, ...props }: DrawerPrimitive.Title.Props) {
   return (
     <DrawerPrimitive.Title
@@ -462,6 +475,7 @@ function DrawerTitle({ className, ...props }: DrawerPrimitive.Title.Props) {
   );
 }
 
+/** Renders optional drawer helper copy using the primitive description slot. */
 function DrawerDescription({
   className,
   ...props
@@ -475,6 +489,7 @@ function DrawerDescription({
   );
 }
 
+/** Renders a drawer-local navigation menu with slot metadata for styling. */
 function DrawerMenu({
   className,
   render,
@@ -492,6 +507,7 @@ function DrawerMenu({
   });
 }
 
+/** Renders one command-style menu item inside a drawer menu. */
 function DrawerMenuItem({
   className,
   disabled,
@@ -514,6 +530,7 @@ function DrawerMenuItem({
   });
 }
 
+/** Renders a visual separator between drawer menu groups or items. */
 function DrawerMenuSeparator({
   className,
   render,
@@ -531,6 +548,7 @@ function DrawerMenuSeparator({
   });
 }
 
+/** Groups related drawer menu items without changing their command semantics. */
 function DrawerMenuGroup({
   className,
   render,
@@ -548,6 +566,7 @@ function DrawerMenuGroup({
   });
 }
 
+/** Labels a drawer menu group with subdued non-interactive text. */
 function DrawerMenuGroupLabel({
   className,
   render,
@@ -565,6 +584,7 @@ function DrawerMenuGroupLabel({
   });
 }
 
+/** Renders a drawer menu item that opens a nested drawer. */
 function DrawerMenuTrigger({
   children,
   className,
@@ -582,6 +602,7 @@ function DrawerMenuTrigger({
   );
 }
 
+/** Renders a checked drawer menu item using checkbox or switch affordance. */
 function DrawerMenuCheckboxItem({
   checked,
   children,
@@ -635,6 +656,7 @@ function DrawerMenuCheckboxItem({
   );
 }
 
+/** Groups mutually exclusive drawer menu radio items. */
 function DrawerMenuRadioGroup({
   className,
   ...props
@@ -648,6 +670,7 @@ function DrawerMenuRadioGroup({
   );
 }
 
+/** Renders one mutually exclusive drawer menu option. */
 function DrawerMenuRadioItem({
   children,
   className,

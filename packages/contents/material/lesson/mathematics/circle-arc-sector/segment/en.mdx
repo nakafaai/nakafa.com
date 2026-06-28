@@ -1,0 +1,581 @@
+export const metadata = {
+  title: "Segment",
+  description: "Understand circle segments bounded by chord and arc. Learn minor and major types, area calculations using sector-triangle methods, and tank applications.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "2025-05-26",
+  subject: "Circle Arcs and Sectors",
+};
+
+import {
+  createCircleArcLine,
+  createCircleChordPoints,
+  createCircleOutlinePoints,
+  createCircleRadiusPoints,
+  createCircleSegmentBoundaryLines,
+} from "@repo/design-system/components/contents/mathematics/circle";
+import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
+import { getColor } from "@repo/design-system/lib/color";
+
+## Basic Concept of Segment
+
+A segment is one part of a circle that we often encounter in daily life. Imagine a round cake that is cut with a straight knife, the part that is separated from the cake is similar to the concept of a segment in circle geometry.
+
+A segment is a region inside a circle that is bounded by a chord and the arc of the circle that is in front of the chord. In other words, a segment is the part of a circle that is "cut off" by a straight line connecting two points on the circumference of the circle.
+
+## Difference Between Arc and Segment
+
+Start with the fundamental difference between an arc and a segment:
+
+<ContentStack>
+
+<LineEquation
+  title="Circle Arc"
+  description={<>An arc is a curved line on the circumference of a circle that connects two points. An arc only has length in one dimension and has no area.</>}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+  data={[
+    {
+      points: createCircleOutlinePoints(4),
+      color: getColor("INDIGO"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 1,
+    },
+    {
+      points: createCircleChordPoints({
+        radius: 4,
+        startDegrees: 30,
+        sweepDegrees: 120,
+      }),
+      color: getColor("VIOLET"),
+      showPoints: false,
+      smooth: false,
+      lineWidth: 2,
+      labels: [
+        {
+          text: "Chord",
+          at: 1,
+          offset: [0, -0.8, 0],
+        },
+      ],
+    },
+    createCircleArcLine({
+      color: getColor("ORANGE"),
+      lineWidth: 4,
+      label: {
+        text: "Arc (curved line)",
+        offset: [0, 0.8, 0],
+      },
+      radius: 4,
+      startDegrees: 30,
+      sweepDegrees: 120,
+    }),
+  ]}
+/>
+
+<LineEquation
+  title="Circle Segment"
+  description={<>A segment is a region (area) inside a circle that is bounded by an arc and a chord. A segment has area in two dimensions and can be filled with color.</>}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+  data={[
+    {
+      points: createCircleOutlinePoints(4),
+      color: getColor("INDIGO"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 1,
+    },
+    {
+      points: createCircleChordPoints({
+        radius: 4,
+        startDegrees: 30,
+        sweepDegrees: 120,
+      }),
+      color: getColor("VIOLET"),
+      showPoints: false,
+      smooth: false,
+      lineWidth: 2,
+      labels: [
+        {
+          text: "Chord",
+          at: 1,
+          offset: [0, -0.8, 0],
+        },
+      ],
+    },
+    createCircleArcLine({
+      color: getColor("ORANGE"),
+      lineWidth: 2,
+      radius: 4,
+      startDegrees: 30,
+      sweepDegrees: 120,
+    }),
+    ...createCircleSegmentBoundaryLines({
+      color: getColor("LIME"),
+      radius: 4,
+      startDegrees: 30,
+      sweepDegrees: 120,
+      label: {
+        text: "Segment (area/region)",
+        offset: [0, 0.8, 0],
+      },
+    }),
+  ]}
+/>
+
+</ContentStack>
+
+**Summary of Differences:**
+- **Arc**: Curved line on the circumference of a circle (only has length, no area)
+- **Segment**: Region surrounded by arc and chord (has area, can be calculated)
+
+## Types of Segment Based on Size
+
+Based on their size, segments can be divided into two types with different characteristics:
+
+<ContentStack>
+
+<LineEquation
+  title={<>Minor Segment (Central Angle &lt; <InlineMath math="180^\circ" />)</>}
+  description={<>A segment whose area is smaller than half a circle, formed when the central angle is less than <InlineMath math="180^\circ" />. This example shows a segment with a central angle of <InlineMath math="120^\circ" />.</>}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+  data={[
+    // Main circle
+    {
+      points: createCircleOutlinePoints(4),
+      color: getColor("INDIGO"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 1,
+    },
+    // Center point O
+    {
+      points: [{ x: 0, y: 0, z: 0 }],
+      color: getColor("ROSE"),
+      showPoints: true,
+      smooth: false,
+      lineWidth: 3,
+      labels: [
+        {
+          text: "O",
+          at: 0,
+          offset: [-0.4, -0.4, 0],
+        },
+      ],
+    },
+    // Radius OA
+    {
+      points: createCircleRadiusPoints({ radius: 4, degrees: 30 }),
+      color: getColor("CYAN"),
+      showPoints: false,
+      smooth: false,
+      lineWidth: 2,
+      labels: [
+        {
+          text: "A",
+          at: 1,
+          offset: [0.4, 0.2, 0],
+        },
+      ],
+    },
+    // Radius OB
+    {
+      points: createCircleRadiusPoints({ radius: 4, degrees: 150 }),
+      color: getColor("CYAN"),
+      showPoints: false,
+      smooth: false,
+      lineWidth: 2,
+      labels: [
+        {
+          text: "B",
+          at: 1,
+          offset: [-0.4, 0.2, 0],
+        },
+      ],
+    },
+    // Central angle arc to show 120°
+    createCircleArcLine({
+      color: getColor("AMBER"),
+      lineWidth: 3,
+      label: {
+        text: "120°",
+        offset: [0, -0.5, 0],
+      },
+      radius: 1.5,
+      startDegrees: 30,
+      sweepDegrees: 120,
+    }),
+    // Chord AB
+    {
+      points: createCircleChordPoints({
+        radius: 4,
+        startDegrees: 30,
+        sweepDegrees: 120,
+      }),
+      color: getColor("PURPLE"),
+      showPoints: false,
+      smooth: false,
+      lineWidth: 3,
+    },
+    // Segment (shaded area)
+    ...createCircleSegmentBoundaryLines({
+      color: getColor("ORANGE"),
+      radius: 4,
+      startDegrees: 30,
+      sweepDegrees: 120,
+      label: {
+        text: "Minor Segment",
+        offset: [0, 0.8, 0],
+      },
+    }),
+  ]}
+/>
+
+<LineEquation
+  title={<>Major Segment (Central Angle &gt; <InlineMath math="180^\circ" />)</>}
+  description={<>A segment whose area is larger than half a circle, formed when the central angle is more than <InlineMath math="180^\circ" />. This example shows a segment with a central angle of <InlineMath math="240^\circ" />.</>}
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+  data={[
+    // Main circle
+    {
+      points: createCircleOutlinePoints(4),
+      color: getColor("INDIGO"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 1,
+    },
+    // Center point O
+    {
+      points: [{ x: 0, y: 0, z: 0 }],
+      color: getColor("ROSE"),
+      showPoints: true,
+      smooth: false,
+      lineWidth: 3,
+      labels: [
+        {
+          text: "O",
+          at: 0,
+          offset: [-0.4, -0.4, 0],
+        },
+      ],
+    },
+    // Radius OA (using different angle for major)
+    {
+      points: createCircleRadiusPoints({ radius: 4, degrees: 45 }),
+      color: getColor("CYAN"),
+      showPoints: false,
+      smooth: false,
+      lineWidth: 2,
+      labels: [
+        {
+          text: "A",
+          at: 1,
+          offset: [0.4, 0.2, 0],
+        },
+      ],
+    },
+    // Radius OB
+    {
+      points: createCircleRadiusPoints({ radius: 4, degrees: 285 }),
+      color: getColor("CYAN"),
+      showPoints: false,
+      smooth: false,
+      lineWidth: 2,
+      labels: [
+        {
+          text: "B",
+          at: 1,
+          offset: [0.4, -0.4, 0],
+        },
+      ],
+    },
+    // Central angle arc to show 240° (using larger arc)
+    createCircleArcLine({
+      color: getColor("AMBER"),
+      lineWidth: 3,
+      label: {
+        progress: 7 / 8,
+        text: "240°",
+        offset: [0.5, -0.5, 0],
+      },
+      radius: 1.2,
+      startDegrees: 45,
+      sweepDegrees: 240,
+    }),
+    // Chord AB
+    {
+      points: createCircleChordPoints({
+        radius: 4,
+        startDegrees: 45,
+        sweepDegrees: 240,
+      }),
+      color: getColor("CYAN"),
+      showPoints: false,
+      smooth: false,
+      lineWidth: 3,
+    },
+    // Major segment (shaded area)
+    ...createCircleSegmentBoundaryLines({
+      color: getColor("LIME"),
+      radius: 4,
+      startDegrees: 45,
+      sweepDegrees: 240,
+      label: {
+        progress: 2 / 3,
+        text: "Major Segment",
+        offset: [0, -1.5, 0],
+      },
+    }),
+  ]}
+/>
+
+</ContentStack>
+
+**Key Differences:**
+- **Minor Segment**: central angle <InlineMath math="\lt 180^\circ" />, segment area <InlineMath math="\lt" /> half circle area
+- **Major Segment**: central angle <InlineMath math="\gt 180^\circ" />, segment area <InlineMath math="\gt" /> half circle area
+
+## Segment Area Formula
+
+To calculate the area of a segment, we need to understand that a segment is formed from a sector minus the triangle formed by two radii and a chord.
+
+**Why is it different from the arc length formula?**
+- **Arc Length** is <InlineMath math="\frac{\alpha}{360^\circ} \times 2\pi r" /> (units: cm, m, etc.)
+- **Segment Area** <InlineMath math="\neq" /> Arc Length (because segment is a <InlineMath math="2\text{D}" /> area, not a <InlineMath math="1\text{D}" /> line)
+
+    <MathContainer>
+    <BlockMath math="\text{Segment Area} = \text{Sector Area} - \text{Triangle Area}" />
+    </MathContainer>
+
+    In more detail, the formula can be written as:
+
+    <MathContainer>
+    <BlockMath math="\text{Segment Area} = \frac{\alpha}{360^\circ} \times \pi r^2 - \frac{1}{2} r^2 \sin \alpha" />
+    </MathContainer>
+
+    Where <InlineMath math="\alpha" /> is the central angle in degrees and <InlineMath math="r" /> is the radius of the circle.
+
+**Note the difference in units:**
+- Arc length: <InlineMath math="\text{cm}" />, <InlineMath math="\text{m}" /> (length units)
+- Segment area: <InlineMath math="\text{cm}^2" />, <InlineMath math="\text{m}^2" /> (area units)
+
+## Visualization of Segment Formation
+
+Let's see how a segment is formed from its components:
+
+<ContentStack>
+
+<LineEquation
+  title="Components of Segment Formation"
+  description={
+    <>
+      A segment is formed from sector <InlineMath math="AOB" /> minus triangle{" "}
+      <InlineMath math="AOB" />, with a central angle of{" "}
+      <InlineMath math="90^\circ" /> and radius of{" "}
+      <InlineMath math="4 \text{ units}" />.
+    </>
+  }
+  cameraPosition={[0, 0, 12]}
+  showZAxis={false}
+  data={[
+    {
+      points: createCircleOutlinePoints(4),
+      color: getColor("INDIGO"),
+      showPoints: false,
+      smooth: true,
+      lineWidth: 1,
+    },
+    {
+      points: createCircleRadiusPoints({ radius: 4, degrees: 0 }),
+      color: getColor("VIOLET"),
+      showPoints: false,
+      smooth: false,
+      lineWidth: 2,
+      labels: [
+        {
+          text: "O",
+          at: 0,
+          offset: [-0.3, -0.3, 0],
+        },
+        {
+          text: "A",
+          at: 1,
+          offset: [0.3, -0.3, 0],
+        },
+      ],
+    },
+    {
+      points: createCircleRadiusPoints({ radius: 4, degrees: 90 }),
+      color: getColor("VIOLET"),
+      showPoints: false,
+      smooth: false,
+      lineWidth: 2,
+      labels: [
+        {
+          text: "B",
+          at: 1,
+          offset: [-0.3, 0.3, 0],
+        },
+      ],
+    },
+    {
+      points: createCircleChordPoints({
+        radius: 4,
+        startDegrees: 0,
+        sweepDegrees: 90,
+      }),
+      color: getColor("LIME"),
+      showPoints: false,
+      smooth: false,
+      lineWidth: 3,
+      labels: [
+        {
+          text: "Chord AB",
+          at: 1,
+          offset: [2.5, 0.5, 0],
+        },
+      ],
+    },
+    createCircleArcLine({
+      color: getColor("FUCHSIA"),
+      lineWidth: 4,
+      label: {
+        text: "Arc AB (90°)",
+        offset: [2, 0.5, 0],
+      },
+      radius: 4,
+      startDegrees: 0,
+      sweepDegrees: 90,
+    }),
+  ]}
+/>
+
+</ContentStack>
+
+## Segment Area Calculation
+
+To understand how to calculate the area of a segment, let's use an example with a central angle of <InlineMath math="90^\circ" /> and radius <InlineMath math="r = 10 \text{ cm}" />, according to the visualization of segment formation components above.
+
+**Step** <InlineMath math="1" />: Calculate Sector Area
+
+<MathContainer>
+<BlockMath math="\text{Sector Area} = \frac{90^\circ}{360^\circ} \times \pi r^2" />
+<BlockMath math="= \frac{1}{4} \times \pi \times 10^2" />
+<BlockMath math="= \frac{1}{4} \times \pi \times 100" />
+<BlockMath math="= 25\pi \text{ cm}^2 = 78.5398 \text{ cm}^2" />
+</MathContainer>
+
+**Step** <InlineMath math="2" />: Calculate Triangle Area
+
+For a <InlineMath math="90^\circ" /> angle, the triangle formed is a right triangle with both perpendicular sides being radii:
+
+<MathContainer>
+<BlockMath math="\text{Triangle Area} = \frac{1}{2} \times r^2 \times \sin 90^\circ" />
+<BlockMath math="= \frac{1}{2} \times 10^2 \times 1" />
+<BlockMath math="= \frac{1}{2} \times 100 \times 1" />
+<BlockMath math="= 50 \text{ cm}^2" />
+</MathContainer>
+
+**Step** <InlineMath math="3" />: Calculate Segment Area
+
+<MathContainer>
+<BlockMath math="\text{Segment Area} = \text{Sector Area} - \text{Triangle Area}" />
+<BlockMath math="= 25\pi - 50" />
+<BlockMath math="= 78.5398 - 50" />
+<BlockMath math="= 28.5398 \text{ cm}^2" />
+</MathContainer>
+
+## Exercises
+
+1. A circle has a radius of <InlineMath math="7 \text{ cm}" />. If there is a segment with a central angle of <InlineMath math="60^\circ" />, determine the area of the segment.
+
+2. A segment is known to have an area of <InlineMath math="15.7 \text{ cm}^2" /> on a circle with a radius of <InlineMath math="5 \text{ cm}" />. Determine the central angle that forms the segment.
+
+3. A cylindrical tank with a radius of <InlineMath math="2 \text{ meters}" /> contains water up to a depth of <InlineMath math="1.5 \text{ meters}" /> from the bottom of the tank. Determine the area of the water surface visible from above.
+
+### Answer Key
+
+1. **Solution Steps:**
+
+   Given: <InlineMath math="r = 7 \text{ cm}" />, <InlineMath math="\alpha = 60^\circ" />
+
+   Calculate sector area:
+
+   <MathContainer>
+   <BlockMath math="\text{Sector Area} = \frac{60^\circ}{360^\circ} \times \pi \times 7^2" />
+   <BlockMath math="= \frac{1}{6} \times \pi \times 49" />
+   <BlockMath math="= \frac{49\pi}{6} \text{ cm}^2" />
+   </MathContainer>
+
+   Calculate triangle area:
+
+   <MathContainer>
+   <BlockMath math="\text{Triangle Area} = \frac{1}{2} r^2 \sin 60^\circ" />
+   <BlockMath math="= \frac{1}{2} \times 49 \times \frac{\sqrt{3}}{2}" />
+   <BlockMath math="= \frac{49\sqrt{3}}{4} \text{ cm}^2" />
+   </MathContainer>
+
+   Calculate segment area:
+
+   <MathContainer>
+   <BlockMath math="\text{Segment Area} = \frac{49\pi}{6} - \frac{49\sqrt{3}}{4}" />
+   <BlockMath math="= 25.6563 - 21.2176 = 4.4387 \text{ cm}^2" />
+   </MathContainer>
+
+2. **Solution Steps:**
+
+   Given: segment area = <InlineMath math="15.7 \text{ cm}^2" />, <InlineMath math="r = 5 \text{ cm}" />
+
+   Using the formula: <InlineMath math="\text{Segment Area} = \frac{\alpha}{360^\circ} \times \pi r^2 - \frac{1}{2} r^2 \sin \alpha" />
+
+   Using trial and numerical approximation or graphing calculator, we get:
+   <InlineMath math="\alpha \approx 120^\circ" />
+
+   Verification:
+
+   <MathContainer>
+   <BlockMath math="\text{Sector Area} = \frac{120^\circ}{360^\circ} \times \pi \times 25 = \frac{25\pi}{3}" />
+   <BlockMath math="\text{Triangle Area} = \frac{1}{2} \times 25 \times \sin 120^\circ = \frac{25\sqrt{3}}{4}" />
+   <BlockMath math="\text{Segment Area} = \frac{25\pi}{3} - \frac{25\sqrt{3}}{4} \approx 26.1799 - 10.8253 = 15.3546 \text{ cm}^2" />
+   </MathContainer>
+
+   The calculated result (<InlineMath math="15.3546 \text{ cm}^2" />) is slightly different from what is given in the problem (<InlineMath math="15.7 \text{ cm}^2" />). This difference is due to the precision of the values <InlineMath math="\pi" /> and <InlineMath math="\sqrt{3}" /> used. Mathematically, the calculated result <InlineMath math="15.3546 \text{ cm}^2" /> is the most accurate.
+
+3. **Solution Steps:**
+
+   Given: tank radius = <InlineMath math="2 \text{ m}" />, water depth = <InlineMath math="1.5 \text{ m}" />
+
+   Since the water depth (<InlineMath math="1.5 \text{ m}" />) is less than the radius (<InlineMath math="2 \text{ m}" />), the water surface forms a segment.
+
+   For horizontal cylindrical tanks, we use a special segment formula with a specific height.
+
+   Determine segment height from tank bottom:
+
+   <MathContainer>
+   <BlockMath math="h = 1.5 \text{ m (water height from bottom)}" />
+   </MathContainer>
+
+   Using the segment area formula for water segment in horizontal tanks:
+
+   <MathContainer>
+   <BlockMath math="\text{Area} = r^2 \times \left[\arccos\left(\frac{r-h}{r}\right) - \frac{r-h}{r} \times \sqrt{1-\left(\frac{r-h}{r}\right)^2}\right]" />
+   </MathContainer>
+
+   Substitute values:
+
+   <MathContainer>
+   <BlockMath math="\frac{r-h}{r} = \frac{2-1.5}{2} = 0.25" />
+   <BlockMath math="\arccos(0.25) = 1.3181 \text{ radians}" />
+   <BlockMath math="\sqrt{1-0.25^2} = \sqrt{0.9375} = 0.9682" />
+   </MathContainer>
+
+   Calculate water surface area:
+
+   <MathContainer>
+   <BlockMath math="\text{Area} = 4 \times [1.3181 - 0.25 \times 0.9682]" />
+   <BlockMath math="= 4 \times [1.3181 - 0.2421]" />
+   <BlockMath math="= 4 \times 1.0760 = 4.3040 \text{ m}^2" />
+   </MathContainer>

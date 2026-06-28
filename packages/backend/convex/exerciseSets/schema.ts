@@ -11,11 +11,11 @@ const tables = {
   /**
    * Exercise set storage (e.g., "Set 1", "Set 2").
    * Groups related questions together.
-   * Synced from _data/*-material.ts files.
+   * Synced from typed Material sources in packages/contents.
    */
   exerciseSets: defineTable({
     locale: localeValidator,
-    /** Full URL path: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1" */
+    /** Full URL path: "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1" */
     slug: v.string(),
     category: exercisesCategoryValidator,
     /** Exam type: "grade-9", "tka", "snbt" */
@@ -25,6 +25,8 @@ const tables = {
     exerciseType: v.string(),
     /** Set identifier: "set-1", "set-2" */
     setName: v.string(),
+    /** Optional 4-digit collection year for yearful routes such as try-out/2026. */
+    year: v.optional(v.string()),
     /** Display title: "Set 1" */
     title: v.string(),
     /** Optional description from parent exerciseType */
@@ -39,6 +41,14 @@ const tables = {
       "locale",
       "type",
       "exerciseType",
+    ])
+    .index("by_locale_and_group", [
+      "locale",
+      "category",
+      "type",
+      "material",
+      "exerciseType",
+      "year",
     ]),
 };
 

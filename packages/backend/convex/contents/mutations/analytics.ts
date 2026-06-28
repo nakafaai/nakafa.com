@@ -1,6 +1,5 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import {
-  type ContentAnalyticsSchedulerTargets,
   claimContentAnalyticsPartition,
   processClaimedContentAnalyticsPartition,
   scheduleAllContentAnalyticsPartitions,
@@ -18,20 +17,16 @@ import {
 import { internalMutation } from "@repo/backend/convex/functions";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 
-const schedulerTargets: ContentAnalyticsSchedulerTargets = {
-  processPartition:
-    internal.contents.mutations.analytics.processContentAnalyticsPartition,
-  schedulePartition:
-    internal.contents.mutations.analytics.scheduleContentAnalyticsPartition,
-};
-
 /** Schedules one worker attempt per analytics partition. */
 export const scheduleContentAnalyticsPartitions = internalMutation({
   args: {},
   returns: scheduleContentAnalyticsPartitionsResultValidator,
   handler: async (ctx): Promise<ScheduleContentAnalyticsPartitionsResult> =>
     await runConvexProgram(
-      scheduleAllContentAnalyticsPartitions(ctx, schedulerTargets)
+      scheduleAllContentAnalyticsPartitions(
+        ctx,
+        internal.contents.mutations.analytics.scheduleContentAnalyticsPartition
+      )
     ),
 });
 
@@ -44,7 +39,11 @@ export const scheduleContentAnalyticsPartition = internalMutation({
     args
   ): Promise<ScheduleContentAnalyticsPartitionResult> =>
     await runConvexProgram(
-      claimContentAnalyticsPartition(ctx, args, schedulerTargets)
+      claimContentAnalyticsPartition(
+        ctx,
+        args,
+        internal.contents.mutations.analytics.processContentAnalyticsPartition
+      )
     ),
 });
 
@@ -54,6 +53,10 @@ export const processContentAnalyticsPartition = internalMutation({
   returns: processContentAnalyticsPartitionResultValidator,
   handler: async (ctx, args): Promise<ProcessContentAnalyticsPartitionResult> =>
     await runConvexProgram(
-      processClaimedContentAnalyticsPartition(ctx, args, schedulerTargets)
+      processClaimedContentAnalyticsPartition(
+        ctx,
+        args,
+        internal.contents.mutations.analytics.processContentAnalyticsPartition
+      )
     ),
 });

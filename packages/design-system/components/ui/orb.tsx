@@ -2,6 +2,7 @@
 
 import { useTexture } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { useStableMutableValue } from "@repo/design-system/hooks/use-stable-mutable-value";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
@@ -23,6 +24,9 @@ interface OrbProps {
   volumeMode?: "auto" | "manual";
 }
 
+/**
+ * Renders the animated voice orb canvas used for listening and speaking states.
+ */
 export function Orb({
   colors = ["#CADCFC", "#A0B9D1"],
   colorsRef,
@@ -66,6 +70,9 @@ export function Orb({
   );
 }
 
+/**
+ * Owns the Three.js scene, uniforms, and per-frame orb animation state.
+ */
 function Scene({
   colors,
   colorsRef,
@@ -95,8 +102,8 @@ function Scene({
   const circleRef =
     useRef<THREE.Mesh<THREE.CircleGeometry, THREE.ShaderMaterial>>(null);
   const initialColorsRef = useRef<[string, string]>(colors);
-  const targetColor1Ref = useRef(new THREE.Color(colors[0]));
-  const targetColor2Ref = useRef(new THREE.Color(colors[1]));
+  const targetColor1 = useStableMutableValue(() => new THREE.Color(colors[0]));
+  const targetColor2 = useStableMutableValue(() => new THREE.Color(colors[1]));
   const animSpeedRef = useRef(0.1);
   const perlinNoiseTexture = useTexture(
     "https://storage.googleapis.com/eleven-public-cdn/images/perlin-noise.png"
@@ -140,9 +147,9 @@ function Scene({
   );
 
   useEffect(() => {
-    targetColor1Ref.current = new THREE.Color(colors[0]);
-    targetColor2Ref.current = new THREE.Color(colors[1]);
-  }, [colors]);
+    targetColor1.set(colors[0]);
+    targetColor2.set(colors[1]);
+  }, [colors, targetColor1, targetColor2]);
 
   useEffect(() => {
     const apply = () => {
@@ -171,10 +178,10 @@ function Scene({
     const live = colorsRef?.current;
     if (live) {
       if (live[0]) {
-        targetColor1Ref.current.set(live[0]);
+        targetColor1.set(live[0]);
       }
       if (live[1]) {
-        targetColor2Ref.current.set(live[1]);
+        targetColor2.set(live[1]);
       }
     }
     const u = mat.uniforms;
@@ -221,8 +228,8 @@ function Scene({
     u.uAnimation.value += delta * animSpeedRef.current;
     u.uInputVolume.value = curInRef.current;
     u.uOutputVolume.value = curOutRef.current;
-    u.uColor1.value.lerp(targetColor1Ref.current, 0.08);
-    u.uColor2.value.lerp(targetColor2Ref.current, 0.08);
+    u.uColor1.value.lerp(targetColor1, 0.08);
+    u.uColor2.value.lerp(targetColor2, 0.08);
   });
 
   useEffect(() => {
@@ -271,6 +278,9 @@ function Scene({
   );
 }
 
+/**
+ * Creates a deterministic 32-bit pseudo-random number generator.
+ */
 function splitmix32(initialSeed: number) {
   // biome-ignore lint/suspicious/noBitwiseOperators: <Required for PRNG>
   let state = initialSeed | 0;
@@ -289,6 +299,9 @@ function splitmix32(initialSeed: number) {
   };
 }
 
+/**
+ * Clamps a numeric value into the inclusive 0..1 range.
+ */
 function clamp01(n: number) {
   if (!Number.isFinite(n)) {
     return 0;

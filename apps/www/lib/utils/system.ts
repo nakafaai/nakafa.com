@@ -1,146 +1,153 @@
-import { getFolderChildNames, getNestedSlugs } from "@repo/contents/_lib/fs";
-import { getContentMetadata } from "@repo/contents/_lib/metadata";
-import type { ContentMetadata } from "@repo/contents/_types/content";
-import { Data, Effect, Option } from "effect";
-import { cacheLife } from "next/cache";
+import type { api } from "@repo/backend/convex/_generated/api";
+import { routing } from "@repo/internationalization/src/routing";
+import type { FunctionArgs, FunctionReturnType } from "convex/server";
+import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
+import { applyContentRuntimeCache } from "@/lib/content/cache";
+import {
+  getRuntimeContentRoute,
+  listRuntimeLatestContentRoutes,
+} from "@/lib/content/runtime/routes";
 
-class TranslationLoadError extends Data.TaggedError("TranslationLoadError")<{
-  readonly namespace: string;
-  readonly locale: Locale;
-}> {}
+type RuntimeContentSection = FunctionArgs<
+  typeof api.contents.queries.runtime.listContentRoutesByPrefix
+>["section"];
+type LatestContentRoute = FunctionReturnType<
+  typeof api.contents.queries.runtime.listLatestContentRoutes
+>[number];
 
-class MetadataNotFoundError extends Data.TaggedError("MetadataNotFoundError")<{
-  readonly slug: string;
-}> {}
+/** Expected failure raised when route metadata translations cannot be loaded. */
+class TranslationLoadError extends Schema.TaggedError<TranslationLoadError>()(
+  "TranslationLoadError",
+  {
+    locale: Schema.String,
+    namespace: Schema.String,
+  }
+) {}
 
 interface ParamConfig {
-  basePath: string;
+  basePath: RuntimeContentSection;
   isDeep?: boolean;
   paramNames: string[];
   slugParam?: string;
 }
 
-/**
- * Generates static params for Next.js pages based on folder structure
- * @param config - Configuration for generating static params
- * @returns Array of parameter objects for generateStaticParams
- */
-export function getStaticParams(
-  config: ParamConfig
-): Record<string, string | string[]>[] {
-  const { basePath, paramNames, slugParam, isDeep = false } = config;
+interface SystemMetadata {
+  authors: { name: string }[];
+  date: string;
+  description?: string;
+  title: string;
+}
 
-  if (paramNames.length === 0) {
-    return [];
-  }
+type StaticParam = Record<string, string | string[]>;
 
-  // Get first level folders
-  const firstParam = paramNames[0];
-  const firstLevelFolders = Effect.runSync(
-    Effect.match(getFolderChildNames(basePath), {
-      onFailure: () => [],
-      onSuccess: (names) => names,
-    })
-  );
+const staticParamCandidateLimit = 100;
 
-  if (paramNames.length === 1) {
-    // Simple case: just return the first level folder names
-    return firstLevelFolders.map((folder) => ({ [firstParam]: folder }));
-  }
+/** Generates static params from the Convex-backed public route catalog. */
+export function getStaticParams(config: ParamConfig): Promise<StaticParam[]> {
+  return Effect.runPromise(buildStaticParams(config));
+}
 
-  // For nested structures, process recursively
-  return firstLevelFolders.flatMap((firstFolder) => {
-    // Handle the rest of the params
-    const restParams = paramNames.slice(1);
-    const nextBasePath = `${basePath}/${firstFolder}`;
+/** Builds static params from route catalog paths as a native Effect program. */
+function buildStaticParams(config: ParamConfig) {
+  return Effect.gen(function* () {
+    const routes = yield* getStaticParamRoutes(config);
+    const params = new Map<string, StaticParam>();
 
-    // For the last param level
-    if (restParams.length === 1) {
-      const lastParam = restParams[0];
-      const folders = Effect.runSync(
-        Effect.match(getFolderChildNames(nextBasePath), {
-          onFailure: () => [],
-          onSuccess: (names) => names,
-        })
-      );
+    for (const route of routes) {
+      const param = routeToStaticParam(route, config);
 
-      // If this is a catch-all slug parameter with deep nesting
-      if (slugParam === lastParam && isDeep) {
-        // For each entry at this level, we need to explore all possible nested paths
-        const result: Record<string, string | string[]>[] = [];
-
-        for (const folder of folders) {
-          const slugBasePath = `${nextBasePath}/${folder}`;
-
-          // Get all nested paths starting from this folder
-          const nestedPaths = getNestedSlugs(slugBasePath);
-
-          if (nestedPaths.length === 0) {
-            // If no nested paths, include the folder itself as a valid path
-            result.push({
-              [firstParam]: firstFolder,
-              [lastParam]: [folder],
-            });
-          } else {
-            // Include the folder itself as a valid path
-            result.push({
-              [firstParam]: firstFolder,
-              [lastParam]: [folder],
-            });
-
-            // Include nested paths with the folder as the first element
-            for (const nestedPath of nestedPaths) {
-              result.push({
-                [firstParam]: firstFolder,
-                [lastParam]: [folder, ...nestedPath],
-              });
-            }
-          }
-        }
-
-        return result;
+      if (!param) {
+        continue;
       }
 
-      // Standard case
-      return folders.map((folder) => ({
-        [firstParam]: firstFolder,
-        [lastParam]: folder,
-      }));
+      params.set(JSON.stringify(param), param);
     }
 
-    // Recursive case - need to go deeper
-    const nestedConfig: ParamConfig = {
-      basePath: nextBasePath,
-      paramNames: restParams,
-      slugParam,
-      isDeep,
-    };
+    return Array.from(params.values());
+  }).pipe(Effect.withSpan("www.system.getStaticParams"));
+}
 
-    const nestedParams = getStaticParams(nestedConfig);
+/** Reads deliberate latest-content candidates for one static params generator. */
+function getStaticParamRoutes(config: ParamConfig) {
+  return Effect.gen(function* () {
+    const routeGroups = yield* Effect.forEach(
+      routing.locales,
+      (locale) =>
+        listRuntimeLatestContentRoutes({
+          limit: staticParamCandidateLimit,
+          locale,
+          section: config.basePath,
+        }),
+      { concurrency: routing.locales.length }
+    );
+    const routes = routeGroups
+      .flat()
+      .map((route) => getStaticParamRoutePath(route, config));
 
-    // Combine the current param with nested params
-    return nestedParams.map((nestedParam) => ({
-      [firstParam]: firstFolder,
-      ...nestedParam,
-    }));
+    return new Set(routes);
   });
 }
 
-/**
- * Gets the title and description from an MDX file based on the slug
- * @param locale - The locale for the content
- * @param slug - The slug parts as an array of strings (e.g. ["articles", "politics", "nepotism"])
- * @returns Effect that resolves to ContentMetadata with title and description
- */
+/** Selects the concrete URL path to prerender from one latest-content row. */
+function getStaticParamRoutePath(
+  route: LatestContentRoute,
+  config: ParamConfig
+) {
+  if (
+    config.basePath === "material" &&
+    config.isDeep &&
+    route.kind === "exercise-question" &&
+    route.parentRoute
+  ) {
+    return `/${route.parentRoute}`;
+  }
+
+  return `/${route.route}`;
+}
+
+/** Converts one public route into a route-level static params object. */
+function routeToStaticParam(route: string, config: ParamConfig) {
+  const parts = route.split("/").filter(Boolean);
+  const [root] = parts;
+
+  if (root !== config.basePath) {
+    return null;
+  }
+
+  const segments = parts.slice(1);
+  const param: StaticParam = {};
+
+  for (const [index, paramName] of config.paramNames.entries()) {
+    if (paramName === config.slugParam && config.isDeep) {
+      const slug = segments.slice(index);
+
+      if (slug.length === 0) {
+        return null;
+      }
+
+      param[paramName] = slug;
+      return param;
+    }
+
+    const value = segments[index];
+
+    if (!value) {
+      return null;
+    }
+
+    param[paramName] = value;
+  }
+
+  return param;
+}
+
+/** Gets SEO metadata from the Convex route catalog with translation defaults. */
 export function getMetadataFromSlug(
   locale: Locale,
   slug: string[]
-): Effect.Effect<
-  ContentMetadata,
-  TranslationLoadError | MetadataNotFoundError
-> {
+): Effect.Effect<SystemMetadata, TranslationLoadError> {
   return Effect.gen(function* () {
     const [tCommon, tMetadata] = yield* Effect.all(
       [
@@ -160,45 +167,39 @@ export function getMetadataFromSlug(
 
     const defaultTitle = tCommon("made-with-love");
     const shortDescription = tMetadata("short-description");
-    const slugPath = slug.join("/");
-
-    const defaultMetadata: ContentMetadata = {
+    const defaultMetadata: SystemMetadata = {
       title: defaultTitle,
       description: shortDescription,
       authors: [{ name: "Nakafa" }],
       date: "",
     };
 
-    const contentMetadata = yield* Effect.catchAll(
-      getContentMetadata(slugPath, locale),
-      () => Effect.succeed(null)
-    );
-    const metadata = Option.fromNullable(contentMetadata);
+    const route = yield* getRuntimeContentRoute({
+      locale,
+      route: slug.join("/"),
+    }).pipe(Effect.catchAll(() => Effect.succeed(null)));
 
-    if (Option.isNone(metadata)) {
+    if (!route) {
       return defaultMetadata;
     }
 
-    const metadataValue = metadata.value;
-    const title = metadataValue.title || defaultTitle;
-    const description =
-      metadataValue.description || metadataValue.subject || shortDescription;
-
-    return { ...metadataValue, title, description };
+    return {
+      authors: route.authors,
+      date: route.date ? new Date(route.date).toISOString() : "",
+      description: route.description ?? shortDescription,
+      title: route.title || defaultTitle,
+    };
   });
 }
 
-/**
- * Resolves one content metadata payload inside a Cache Components-safe helper for
- * route handlers that need static image generation.
- */
+/** Resolves metadata inside a Cache Components-safe helper for OG routes. */
 export async function getCachedMetadataFromSlug(
   locale: Locale,
   slug: string[]
 ) {
   "use cache";
 
-  cacheLife("max");
+  applyContentRuntimeCache();
 
   return await Effect.runPromise(getMetadataFromSlug(locale, slug));
 }

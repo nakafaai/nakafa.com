@@ -1,3 +1,4 @@
+import { NakafaDataSchema } from "@repo/ai/schema/data";
 import type { MyUIMessagePart } from "@repo/ai/types/message";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import {
@@ -5,6 +6,7 @@ import {
   requireToolState,
 } from "@repo/backend/convex/chats/messageParts/shared";
 import { ConvexError } from "convex/values";
+import { Schema } from "effect";
 
 /** Rebuild one UI message part from the flattened persisted part row. */
 export function mapDBPartToUIMessagePart({
@@ -315,11 +317,13 @@ export function mapDBPartToUIMessagePart({
           fieldName: "dataNakafaId",
           partType: part.type,
         }),
-        data: requirePartField({
-          value: part.dataNakafaData,
-          fieldName: "dataNakafaData",
-          partType: part.type,
-        }),
+        data: Schema.decodeUnknownSync(NakafaDataSchema)(
+          requirePartField({
+            value: part.dataNakafaData,
+            fieldName: "dataNakafaData",
+            partType: part.type,
+          })
+        ),
       };
     case "data-math":
       return {

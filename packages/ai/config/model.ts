@@ -1,15 +1,23 @@
 import type { GatewayModelId } from "@ai-sdk/gateway";
 import type { GoogleLanguageModelOptions } from "@ai-sdk/google";
-import { Schema } from "effect";
+import { Brand, Schema } from "effect";
 
 /**
  * User-facing Nakafa chat models.
  */
 export const MODEL_IDS = ["nakafa-lite", "nakafa-pro"] as const;
 
-/** Runtime schema for public Nakafa model IDs accepted by clients and Convex. */
-export const ModelIdSchema = Schema.Literal(...MODEL_IDS);
+/**
+ * Runtime schema for public Nakafa model IDs accepted by clients and Convex.
+ *
+ * @see https://effect.website/docs/code-style/branded-types/
+ */
+export const ModelKeySchema = Schema.Literal(...MODEL_IDS);
+export const ModelIdSchema = ModelKeySchema.pipe(
+  Schema.brand("@Nakafa/ModelId")
+);
 
+export type ModelKey = Schema.Schema.Type<typeof ModelKeySchema>;
 export type ModelId = Schema.Schema.Type<typeof ModelIdSchema>;
 
 const interactiveProviderOptions = {
@@ -27,10 +35,7 @@ const fastProviderOptions = {
 
 export const ModelInfoSchema = Schema.Struct({
   credits: Schema.Number.pipe(Schema.int(), Schema.positive()),
-  gatewayId: Schema.Literal(
-    "google/gemini-3.1-flash-lite",
-    "google/gemini-3.5-flash"
-  ),
+  gatewayId: Schema.Literal("google/gemini-3-flash", "google/gemini-3.5-flash"),
 }).annotations({
   description: "Public Nakafa model metadata used for billing and routing.",
 });
@@ -40,7 +45,7 @@ export type ModelInfo = Schema.Schema.Type<typeof ModelInfoSchema>;
 export const modelRegistry = {
   "nakafa-lite": {
     credits: 2,
-    gatewayId: "google/gemini-3.1-flash-lite",
+    gatewayId: "google/gemini-3-flash",
     providerOptions: {
       fast: fastProviderOptions,
       interactive: interactiveProviderOptions,
@@ -55,7 +60,7 @@ export const modelRegistry = {
     },
   },
 } satisfies Record<
-  ModelId,
+  ModelKey,
   ModelInfo & {
     gatewayId: GatewayModelId;
     providerOptions: {
@@ -65,16 +70,16 @@ export const modelRegistry = {
   }
 >;
 
-export const defaultModel = "nakafa-lite" satisfies ModelId;
+export const defaultModel = ModelIdSchema.make("nakafa-lite");
 
 /** Checks whether an untrusted string is one of the public Nakafa model IDs. */
 export function isModelId(value: string): value is ModelId {
-  return MODEL_IDS.some((modelId) => modelId === value);
+  return Schema.is(ModelIdSchema)(value);
 }
 
 /** Returns the credit cost for one Nakafa model response. */
 export function getModelCreditCost(modelId: ModelId) {
-  return modelRegistry[modelId].credits;
+  return modelRegistry[Brand.unbranded(modelId)].credits;
 }
 
 /** Returns whether the current balance can pay for one Nakafa model response. */
@@ -84,15 +89,15 @@ export function hasEnoughCredits(currentCredits: number, modelId: ModelId) {
 
 /** Returns the Vercel AI Gateway model behind a Nakafa model. */
 export function getModelGatewayId(modelId: ModelId) {
-  return modelRegistry[modelId].gatewayId;
+  return modelRegistry[Brand.unbranded(modelId)].gatewayId;
 }
 
 /** Returns Gemini provider options for one Nakafa model. */
 export function getModelProviderOptions(modelId: ModelId) {
-  return modelRegistry[modelId].providerOptions.interactive;
+  return modelRegistry[Brand.unbranded(modelId)].providerOptions.interactive;
 }
 
 /** Returns Gemini provider options for background and tool-routing calls. */
 export function getFastModelProviderOptions(modelId: ModelId) {
-  return modelRegistry[modelId].providerOptions.fast;
+  return modelRegistry[Brand.unbranded(modelId)].providerOptions.fast;
 }

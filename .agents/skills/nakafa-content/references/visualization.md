@@ -34,7 +34,7 @@ Use this reference when a lesson needs Mermaid, imported content components, cus
 - Use shared `ThreeCanvas`, camera controls, scene labels, theme-aware colors, materials, and existing scene utilities where they fit.
 - Use `threeSceneFrameVariants()` from `packages/design-system/components/three/scene-frame.ts` for educational R3F lab containers unless the scene has a documented reason not to. When applying it, verify first-render framing at mobile and desktop; add or reuse a narrow-camera position with `isNarrowThreeScene` when square mobile would otherwise crop the model.
 - Use `SceneLabel`, `THREE_FONT_SIZE`, `resolveThreeFontSize`, and `getThreeParticleLabelFontSize` from `packages/design-system/components/three/data/constants.ts` before introducing any 3D text sizing.
-- Keep orbit, pan, and zoom available; tune the default camera instead of requiring interaction to understand the model.
+- Keep orbit, pan, and zoom available; tune the default camera instead of requiring interaction to understand the model. Use scene-specific `minDistance` and `maxDistance` when they keep inspection usable, but never use zoom bounds as a substitute for a good default camera.
 - Labels must stay readable while rotating or zooming. Follow existing scene-label patterns instead of placing raw text that blends into the background.
 - Derive geometry from structured data. Do not hard-code repeated particles, points, rows, columns, labels, or visual states by hand.
 
@@ -51,6 +51,7 @@ points: Array.from({ length: 100 }, (_, i) => {
 - Do not use palette utility classes such as `text-white`, `bg-blue-*`, or `bg-rose-*` in reusable content UI unless a visualization truly needs measured category colors and the foreground remains readable in every theme.
 - Do not use arbitrary Tailwind values for common typography or spacing when scale utilities exist, such as `text-xs`, `text-sm`, `gap-2`, or `p-3`.
 - Use `getColor()` for deterministic visualization colors.
+- Do not hard-code hex color literals in 3D or custom visual components. If a visual needs a specific Tailwind shade, add that shade to `packages/design-system/lib/color.ts` and call `getColor("COLOR", shade)`.
 - Avoid default red, green, or blue for generic lines. Pick colors that support the explanation.
 
 ## Mermaid

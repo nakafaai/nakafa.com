@@ -8,7 +8,8 @@ import {
   DrawerPopup,
   DrawerTitle,
 } from "@repo/design-system/components/ui/drawer";
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { Effect } from "effect";
+import { useEffectEvent, useLayoutEffect, useRef, useState } from "react";
 
 export interface QuranControlLabels {
   interpretation: string;
@@ -27,6 +28,7 @@ type AudioButtonState = "idle" | "playing";
 const AUDIO_BUTTON_SELECTOR = "[data-quran-audio-index]";
 const AUDIO_LABEL_SELECTOR = "[data-quran-audio-label]";
 const INTERPRETATION_BUTTON_SELECTOR = "[data-quran-interpretation-index]";
+const EMPTY_INTERPRETATIONS: string[] = [];
 
 /**
  * Reads the fallback audio source list for one server-rendered verse button.
@@ -115,7 +117,7 @@ function getInterpretationText({
  */
 export function QuranPageControls({
   audioSources,
-  interpretations = [],
+  interpretations = EMPTY_INTERPRETATIONS,
   labels,
 }: Props) {
   const activeAudioObserverRef = useRef<MutationObserver | null>(null);
@@ -134,7 +136,7 @@ export function QuranPageControls({
   /**
    * Stops watching the active verse button after playback ends or changes.
    */
-  const disconnectActiveAudioObserver = useCallback(() => {
+  const disconnectActiveAudioObserver = () => {
     const observer = activeAudioObserverRef.current;
 
     if (!observer) {
@@ -143,9 +145,9 @@ export function QuranPageControls({
 
     observer.disconnect();
     activeAudioObserverRef.current = null;
-  }, []);
+  };
 
-  const stopAudio = useCallback(() => {
+  const stopAudio = () => {
     disconnectActiveAudioObserver();
 
     const audio = audioRef.current;
@@ -171,123 +173,128 @@ export function QuranPageControls({
       state: "idle",
     });
     activeAudioButtonRef.current = null;
-  }, [disconnectActiveAudioObserver, labels.playAudio]);
+  };
 
-  const playAudio = useCallback(
-    (button: HTMLButtonElement) => {
-      const sources = getAudioSources({ audioSources, button });
+  const playAudio = (button: HTMLButtonElement) => {
+    const sources = getAudioSources({ audioSources, button });
 
-      if (sources.length === 0) {
-        return;
-      }
+    if (sources.length === 0) {
+      return;
+    }
 
-      if (activeAudioButtonRef.current === button) {
-        stopAudio();
+    if (activeAudioButtonRef.current === button) {
+      stopAudio();
+      return;
+    }
+
+    stopAudio();
+
+    const audio = new Audio();
+    audio.preload = "none";
+    audioRef.current = audio;
+    activeAudioButtonRef.current = button;
+
+    setAudioButtonState({
+      button,
+      label: labels.stopAudio,
+      state: "playing",
+    });
+
+    const activeAudioObserver = new MutationObserver(() => {
+      if (button.isConnected) {
         return;
       }
 
       stopAudio();
+    });
 
-      const audio = new Audio();
-      audio.preload = "none";
-      audioRef.current = audio;
-      activeAudioButtonRef.current = button;
+    activeAudioObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+    activeAudioObserverRef.current = activeAudioObserver;
 
-      setAudioButtonState({
-        button,
-        label: labels.stopAudio,
-        state: "playing",
-      });
+    let sourceIndex = 0;
 
-      const activeAudioObserver = new MutationObserver(() => {
-        if (button.isConnected) {
-          return;
-        }
-
-        stopAudio();
-      });
-
-      activeAudioObserver.observe(document.body, {
-        childList: true,
-        subtree: true,
-      });
-      activeAudioObserverRef.current = activeAudioObserver;
-
-      let sourceIndex = 0;
-
-      /**
-       * Stops this playback request only while it is still the active request.
-       */
-      function stopThisAudio() {
-        if (audioRef.current !== audio) {
-          return;
-        }
-
-        stopAudio();
-      }
-
-      /**
-       * Attempts the next available recitation source for this verse.
-       */
-      function playNextSource() {
-        if (audioRef.current !== audio) {
-          return;
-        }
-
-        const source = sources[sourceIndex];
-        sourceIndex += 1;
-
-        if (!source) {
-          stopThisAudio();
-          return;
-        }
-
-        let hasFailed = false;
-
-        /**
-         * Moves to the next source once for a failed playback attempt.
-         */
-        function handlePlaybackFailure() {
-          if (audioRef.current !== audio) {
-            return;
-          }
-
-          if (hasFailed) {
-            return;
-          }
-
-          hasFailed = true;
-          playNextSource();
-        }
-
-        audio.src = source;
-        audio.onerror = handlePlaybackFailure;
-        audio.onended = stopThisAudio;
-
-        audio.play().catch(handlePlaybackFailure);
-      }
-
-      playNextSource();
-    },
-    [audioSources, labels.stopAudio, stopAudio]
-  );
-
-  const openInterpretation = useCallback(
-    (button: HTMLButtonElement) => {
-      const interpretation = getInterpretationText({
-        button,
-        interpretations,
-      });
-
-      if (!interpretation) {
+    /**
+     * Stops this playback request only while it is still the active request.
+     */
+    function stopThisAudio() {
+      if (audioRef.current !== audio) {
         return;
       }
 
-      setSelectedInterpretation(interpretation);
-      openInterpretationDrawer();
-    },
-    [interpretations, openInterpretationDrawer]
-  );
+      stopAudio();
+    }
+
+    /**
+     * Attempts the next available recitation source for this verse.
+     */
+    function playNextSource() {
+      if (audioRef.current !== audio) {
+        return;
+      }
+
+      const source = sources[sourceIndex];
+      sourceIndex += 1;
+
+      if (!source) {
+        stopThisAudio();
+        return;
+      }
+
+      let hasFailed = false;
+
+      /**
+       * Moves to the next source once for a failed playback attempt.
+       */
+      function handlePlaybackFailure() {
+        if (audioRef.current !== audio) {
+          return;
+        }
+
+        if (hasFailed) {
+          return;
+        }
+
+        hasFailed = true;
+        playNextSource();
+      }
+
+      audio.src = source;
+      audio.onerror = handlePlaybackFailure;
+      audio.onended = stopThisAudio;
+
+      Effect.runFork(
+        Effect.tryPromise({
+          try: () => audio.play(),
+          catch: (error) => error,
+        }).pipe(Effect.catchAll(() => Effect.sync(handlePlaybackFailure)))
+      );
+    }
+
+    playNextSource();
+  };
+
+  const openInterpretation = (button: HTMLButtonElement) => {
+    const interpretation = getInterpretationText({
+      button,
+      interpretations,
+    });
+
+    if (!interpretation) {
+      return;
+    }
+
+    setSelectedInterpretation(interpretation);
+    openInterpretationDrawer();
+  };
+
+  const cleanupControls = useEffectEvent(() => {
+    stopAudio();
+    closeInterpretation();
+    setSelectedInterpretation("");
+  });
 
   useWindowEvent("click", (event) => {
     const audioButton = getDelegatedButton(event, AUDIO_BUTTON_SELECTOR);
@@ -311,11 +318,9 @@ export function QuranPageControls({
 
   useLayoutEffect(
     () => () => {
-      stopAudio();
-      closeInterpretation();
-      setSelectedInterpretation("");
+      cleanupControls();
     },
-    [closeInterpretation, stopAudio]
+    []
   );
 
   return (

@@ -28,20 +28,22 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
 import { useRouter } from "@repo/internationalization/src/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type { ComponentProps, ReactElement, ReactNode } from "react";
 import { Fragment, useLayoutEffect, useTransition } from "react";
-import { articlesMenu } from "@/components/sidebar/_data/articles";
-import { holyMenu } from "@/components/sidebar/_data/holy";
-import { subjectMenu } from "@/components/sidebar/_data/subject";
-import { getErrorMessage, usePagefind } from "@/lib/context/use-pagefind";
-import { useSearch } from "@/lib/context/use-search";
-import { useSearchQuery } from "@/lib/react-query/use-search";
+import { SearchExcerpt } from "@/components/shared/search-excerpt";
+import { articlesMenu } from "@/components/sidebar/data/articles";
+import { holyMenu } from "@/components/sidebar/data/holy";
 import {
-  getPagefindSectionResults,
-  hasPagefindExcerpt,
-} from "@/lib/utils/pagefind";
-import type { PagefindResult } from "@/types/pagefind";
+  getSubjectMenuHref,
+  subjectMenu,
+} from "@/components/sidebar/data/subject";
+import {
+  type ContentSearchResultItem,
+  useSearchQuery,
+} from "@/lib/content/use-search-query";
+import { useSearch } from "@/lib/context/use-search";
+import { getErrorMessage } from "@/lib/utils/error";
 
 const DEBOUNCE_TIME = 500;
 
@@ -53,7 +55,8 @@ type SearchCommandItem =
       href: string;
       key: string;
       label: string;
-      type: "pagefind";
+      query: string;
+      type: "content";
       value: string;
     }
   | {
@@ -100,12 +103,13 @@ export function SearchCommand() {
   );
 }
 
+/** Coordinates debounced Convex content search inside the command dialog. */
 function SearchMain() {
   const t = useTranslations("Utils");
   const query = useSearch((state) => state.query);
   const setQuery = useSearch((state) => state.setQuery);
-  const pagefindError = usePagefind((context) => context.error);
   const defaultGroups = useDefaultSearchGroups();
+  const sectionLabels = useSearchSectionLabels();
   const [debouncedSearch] = useDebouncedValue(query, DEBOUNCE_TIME);
   const currentSearch = query.trim();
   const search = debouncedSearch.trim();
@@ -117,19 +121,16 @@ function SearchMain() {
     isError,
     error,
     isLoading,
-    isPlaceholderData,
   } = useSearchQuery({
     enabled: Boolean(search),
     query: search,
   });
 
-  const hasError = isError || Boolean(pagefindError);
-  const displayError = pagefindError || (error ? getErrorMessage(error) : "");
+  const hasError = isError;
+  const displayError = error ? getErrorMessage(error) : "";
   const showLoading =
-    isSearching &&
-    !hasError &&
-    (isDebouncing || (Boolean(isLoading) && !isPlaceholderData));
-  const resultGroups = getResultGroups(results);
+    isSearching && !hasError && (isDebouncing || Boolean(isLoading));
+  const resultGroups = getResultGroups(results, sectionLabels, search);
   let groups = defaultGroups;
 
   if (isSearching && search) {
@@ -243,6 +244,7 @@ function SearchList({ groups }: { groups: SearchCommandGroup[] }) {
   );
 }
 
+/** Renders one navigation or content result inside the command list. */
 function SearchListItem({
   isPending,
   item,
@@ -252,7 +254,7 @@ function SearchListItem({
   item: SearchCommandItem;
   onClick: () => void;
 }) {
-  if (item.type === "pagefind") {
+  if (item.type === "content") {
     return (
       <CommandItem
         className="group cursor-pointer flex-col items-start"
@@ -264,13 +266,10 @@ function SearchListItem({
           <HugeIcons icon={FileIcon} />
           <span className="line-clamp-1">{item.label}</span>
         </div>
-        <p
-          className={cn(
-            "line-clamp-3 text-muted-foreground text-xs group-data-highlighted:text-accent-foreground",
-            !hasPagefindExcerpt(item.excerpt) && "hidden"
-          )}
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: Pagefind returns highlighted HTML excerpts
-          dangerouslySetInnerHTML={{ __html: item.excerpt }}
+        <SearchExcerpt
+          className="line-clamp-3 text-muted-foreground text-xs group-data-highlighted:text-accent-foreground"
+          excerpt={item.excerpt}
+          query={item.query}
         />
       </CommandItem>
     );
@@ -289,28 +288,28 @@ function SearchListItem({
   );
 }
 
+/** Builds localized default navigation groups shown before content search runs. */
 function useDefaultSearchGroups(): SearchCommandGroup[] {
   const tSubject = useTranslations("Subject");
   const tArticles = useTranslations("Articles");
   const tHoly = useTranslations("Holy");
+  const locale = useLocale();
 
   const subjectGroups = subjectMenu.map((item) => {
     const groupTitle = tSubject(item.title);
 
     return {
       items: item.items.map((subItem) => {
-        const label =
-          "value" in subItem
-            ? tSubject(subItem.title, { grade: subItem.value })
-            : tSubject(subItem.title);
+        const label = tSubject(subItem.title, { grade: subItem.value });
+        const href = getSubjectMenuHref(subItem, locale);
 
         return {
-          href: subItem.href,
+          href,
           icon: item.icon,
-          key: subItem.href,
+          key: href,
           label,
           type: "navigation" as const,
-          value: `${groupTitle} ${label} ${subItem.href}`,
+          value: `${groupTitle} ${label} ${href}`,
         };
       }),
       value: groupTitle,
@@ -352,18 +351,51 @@ function useDefaultSearchGroups(): SearchCommandGroup[] {
   ];
 }
 
-function getResultGroups(results: PagefindResult[]): SearchCommandGroup[] {
-  return results.map((result) => ({
-    items: getPagefindSectionResults(result).map((subResult, subIndex) => ({
-      excerpt: subResult.excerpt,
-      href: subResult.url,
-      key: `${subResult.url}-${subResult.title}-${subIndex}`,
-      label: subResult.title,
-      type: "pagefind",
-      value: `${result.meta.title} ${subResult.title} ${subResult.url}`,
-    })),
-    value: result.meta.title,
-  }));
+/** Resolves localized section labels for grouped command search results. */
+function useSearchSectionLabels(): Record<
+  ContentSearchResultItem["section"],
+  string
+> {
+  const tCommon = useTranslations("Common");
+  const tArticles = useTranslations("Articles");
+  const tHoly = useTranslations("Holy");
+
+  return {
+    articles: tArticles("articles"),
+    material: tCommon("material"),
+    quran: tHoly("quran"),
+  };
+}
+
+/** Groups flat Convex search results by section for command rendering. */
+function getResultGroups(
+  results: ContentSearchResultItem[],
+  sectionLabels: Record<ContentSearchResultItem["section"], string>,
+  query: string
+): SearchCommandGroup[] {
+  const groups = new Map<
+    ContentSearchResultItem["section"],
+    SearchCommandGroup
+  >();
+
+  for (const result of results) {
+    const value = sectionLabels[result.section];
+    const group = groups.get(result.section) ?? { items: [], value };
+
+    group.items.push({
+      excerpt: result.excerpt,
+      href: `/${result.route}`,
+      key: result.content_id,
+      label: result.title,
+      query,
+      type: "content",
+      value: `${result.title} ${result.description} ${result.route}`,
+    });
+
+    groups.set(result.section, group);
+  }
+
+  return Array.from(groups.values());
 }
 
 function searchCommandItemToString(item: SearchCommandItem) {

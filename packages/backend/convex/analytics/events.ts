@@ -1,7 +1,16 @@
 import {
   chatTypeValidator,
+  messageGenerationErrorCodeValidator,
   modelIdValidator,
 } from "@repo/backend/convex/chats/schema";
+import {
+  graphContentIdValidator,
+  learningGraphIdentityValidator,
+} from "@repo/backend/convex/contents/graph";
+import {
+  checkoutLocaleValidator,
+  polarCheckoutLocaleValidator,
+} from "@repo/backend/convex/customers/checkout/localization";
 import {
   exerciseAttemptModeValidator,
   exerciseAttemptOriginValidator,
@@ -22,6 +31,7 @@ import { v } from "convex/values";
 
 const optionalNumber = v.optional(v.number());
 
+/** Analytics event contract accepted by the product capture mutation. */
 export const productAnalyticsEventValidator = v.union(
   v.object({
     name: v.literal("user signed up"),
@@ -32,10 +42,17 @@ export const productAnalyticsEventValidator = v.union(
   v.object({
     name: v.literal("content viewed"),
     properties: v.object({
+      alignment_id: learningGraphIdentityValidator.fields.alignmentId,
+      concept_id: learningGraphIdentityValidator.fields.conceptId,
+      content_id: graphContentIdValidator,
+      context_key: v.string(),
       content_type: contentTypeValidator,
       is_new_view: v.boolean(),
+      learning_object_id:
+        learningGraphIdentityValidator.fields.learningObjectId,
+      lens_id: learningGraphIdentityValidator.fields.lensId,
       locale: localeValidator,
-      slug: v.string(),
+      route: v.string(),
     }),
   }),
   v.object({
@@ -107,8 +124,19 @@ export const productAnalyticsEventValidator = v.union(
     }),
   }),
   v.object({
+    name: v.literal("chat response failed"),
+    properties: v.object({
+      chat_type: chatTypeValidator,
+      error_code: messageGenerationErrorCodeValidator,
+      model_id: modelIdValidator,
+    }),
+  }),
+  v.object({
     name: v.literal("checkout started"),
     properties: v.object({
+      checkout_locale: polarCheckoutLocaleValidator,
+      customer_ip_available: v.boolean(),
+      locale: checkoutLocaleValidator,
       product_count: v.number(),
       product_id: v.string(),
     }),

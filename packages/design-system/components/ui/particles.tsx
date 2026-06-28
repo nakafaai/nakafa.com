@@ -2,12 +2,13 @@
 
 import { useMediaQuery } from "@mantine/hooks";
 import { useMousePosition } from "@repo/design-system/hooks/use-mouse";
+import { useStableMutableValue } from "@repo/design-system/hooks/use-stable-mutable-value";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { createSeededRandom } from "@repo/design-system/lib/random";
 import { cn } from "@repo/design-system/lib/utils";
 import dynamic from "next/dynamic";
 import { useTheme } from "next-themes";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useEffectEvent, useMemo, useRef } from "react";
 
 const MIN_PARTICLE_SIZE = 1;
 const MAX_PARTICLE_SIZE = 3;
@@ -48,6 +49,9 @@ interface RemapValueProps {
   value: number;
 }
 
+/**
+ * Renders the responsive particle canvas used as a subtle interactive backdrop.
+ */
 function ParticlesComponent({
   className = "",
   quantity = 50,
@@ -63,40 +67,20 @@ function ParticlesComponent({
   const mousePositionRef = useMousePosition();
   const mouse = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const canvasSize = useRef<{ w: number; h: number }>({ w: 0, h: 0 });
+  const animationFrameRef = useRef<number | null>(null);
   const dpr = typeof window === "undefined" ? 1 : window.devicePixelRatio;
 
   const isMobile = useMediaQuery(TAILWIND_MEDIA_QUERIES.belowMd);
 
-  const rngRef = useRef(createSeededRandom(quantity, staticity, ease));
+  const rng = useStableMutableValue(() =>
+    createSeededRandom(quantity, staticity, ease)
+  );
 
   const isThemeDark = useMemo(() => {
     if (!resolvedTheme) {
       return false;
     }
     return resolvedTheme === "dark";
-  }, [resolvedTheme]);
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: we need to call initCanvas and animate on mount
-  useEffect(() => {
-    if (canvasRef.current) {
-      context.current = canvasRef.current.getContext("2d");
-    }
-    initCanvas();
-    animate();
-    window.addEventListener("resize", initCanvas);
-
-    return () => {
-      window.removeEventListener("resize", initCanvas);
-    };
-  }, []);
-
-  // when color changes, we need to re-render the particles
-  // biome-ignore lint/correctness/useExhaustiveDependencies: we need to call initCanvas and animate on mount
-  useEffect(() => {
-    if (resolvedTheme) {
-      initCanvas();
-      animate();
-    }
   }, [resolvedTheme]);
 
   const resizeCanvas = useCallback(() => {
@@ -113,7 +97,6 @@ function ParticlesComponent({
   }, [dpr]);
 
   const circleParams = useCallback((): Circle => {
-    const rng = rngRef.current;
     const x = Math.floor(rng.next() * canvasSize.current.w);
     const y = Math.floor(rng.next() * canvasSize.current.h);
     const translateX = 0;
@@ -138,7 +121,7 @@ function ParticlesComponent({
       dy,
       magnetism,
     };
-  }, []);
+  }, [rng]);
 
   const drawCircle = useCallback(
     (circle: Circle, update = false) => {
@@ -301,7 +284,7 @@ function ParticlesComponent({
         );
       }
     });
-    window.requestAnimationFrame(animate);
+    animationFrameRef.current = window.requestAnimationFrame(animate);
   }, [
     circleParams,
     clearContext,
@@ -311,6 +294,44 @@ function ParticlesComponent({
     staticity,
     isMobile,
   ]);
+
+  const stopAnimation = useCallback(() => {
+    if (animationFrameRef.current === null) {
+      return;
+    }
+
+    window.cancelAnimationFrame(animationFrameRef.current);
+    animationFrameRef.current = null;
+  }, []);
+
+  const handleResize = useEffectEvent(() => {
+    initCanvas();
+  });
+
+  useEffect(() => {
+    if (canvasRef.current) {
+      context.current = canvasRef.current.getContext("2d");
+    }
+
+    const onResize = () => handleResize();
+
+    handleResize();
+    animate();
+    window.addEventListener("resize", onResize);
+
+    return () => {
+      stopAnimation();
+      window.removeEventListener("resize", onResize);
+    };
+  }, [animate, stopAnimation]);
+
+  useEffect(() => {
+    if (!resolvedTheme) {
+      return;
+    }
+
+    initCanvas();
+  }, [initCanvas, resolvedTheme]);
 
   return (
     <div aria-hidden="true" className={cn(className)} ref={canvasContainerRef}>

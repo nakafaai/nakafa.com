@@ -1,17 +1,26 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import { readSourcePracticeRoutePath } from "@repo/contents/_types/route/practice/path";
 
-type ContentSearchDocument = Doc<"contentSearch">;
+/** Minimal persisted search fields required by deterministic reranking. */
+export type ContentSearchRankDocument = Pick<
+  Doc<"contentSearch">,
+  | "description"
+  | "locale"
+  | "route"
+  | "section"
+  | "sourcePath"
+  | "text"
+  | "title"
+>;
 
 const searchTokenPattern = /[\p{L}\p{N}]+/gu;
 const numericTokenPattern = /^\p{N}+$/u;
-const exerciseQuestionRoutePattern = /\/\d+$/u;
 const routeSeparatorPattern = /[/_-]+/g;
 
 /** Re-ranks bounded search candidates by direct query-token evidence. */
-export function rankContentSearchDocuments(
-  documents: readonly ContentSearchDocument[],
-  queryText: string
-) {
+export function rankContentSearchDocuments<
+  Document extends ContentSearchRankDocument,
+>(documents: readonly Document[], queryText: string) {
   const queryTokens = tokenizeSearchText(queryText);
   const semanticTokens = queryTokens.filter(
     (token) => !numericTokenPattern.test(token)
@@ -87,23 +96,21 @@ function scoreSearchText(text: string, queryTokens: readonly string[]) {
 }
 
 /** Joins content identity fields before using body text as a tie-breaker. */
-function getDocumentMetadataSearchText(document: ContentSearchDocument) {
+function getDocumentMetadataSearchText(document: ContentSearchRankDocument) {
   return [document.title, document.description, document.route]
     .join(" ")
     .replaceAll(routeSeparatorPattern, " ");
 }
 
 /** Prefers set/material exercise rows over question rows for semantic searches. */
-function getExerciseSetPriority(document: ContentSearchDocument) {
-  if (document.section !== "exercises") {
+function getExerciseSetPriority(document: ContentSearchRankDocument) {
+  if (document.section !== "material") {
     return 0;
   }
 
-  if (exerciseQuestionRoutePattern.test(document.route)) {
-    return 0;
-  }
+  const practiceRoute = readSourcePracticeRoutePath(document.sourcePath);
 
-  return 1;
+  return practiceRoute?.kind === "set" ? 1 : 0;
 }
 
 /** Tokenizes multilingual query and document text for deterministic ranking. */

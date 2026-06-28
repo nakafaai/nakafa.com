@@ -49,9 +49,9 @@ import type { ResearchAgentParams } from "@repo/ai/types/agents";
 import {
   extractJsonMiddleware,
   generateText,
+  isStepCount,
   NoObjectGeneratedError,
   Output,
-  stepCountIs,
   tool,
   wrapLanguageModel,
 } from "ai";
@@ -97,7 +97,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
       try: () =>
         generateText({
           model: provider.languageModel(modelId),
-          system: researchEvidencePrompt({ locale, context }),
+          instructions: researchEvidencePrompt({ locale, context }),
           messages: createResearchMessages(task, collectedEvidence),
           tools: {
             google_search: google.tools.googleSearch({
@@ -189,7 +189,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
             gateway: gatewayProviderOptions,
             google: getFastModelProviderOptions(modelId),
           },
-          stopWhen: stepCountIs(5),
+          stopWhen: isStepCount(5),
           timeout: subAgentGenerationTimeout,
         }),
       catch: (error) => {
@@ -210,7 +210,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
     });
 
     const groundedSearchData = createGroundingWebSearchData({
-      providerMetadata: evidenceResult.providerMetadata,
+      providerMetadata: evidenceResult.finalStep.providerMetadata,
       sources: evidenceResult.sources,
     });
 
@@ -239,7 +239,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
             middleware: extractJsonMiddleware(),
             model: provider.languageModel(modelId),
           }),
-          system: researchPrompt({ locale, context }),
+          instructions: researchPrompt({ locale, context }),
           messages: createResearchSynthesisMessages({
             collectedEvidence: sourceEvidenceAvailable ? collectedEvidence : [],
             evidence: sourceEvidenceAvailable ? evidenceResult.text : "",
@@ -303,8 +303,8 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
           })
       )
     );
-    const evidenceUsage = evidenceResult.totalUsage;
-    const synthesisUsage = synthesisResult.totalUsage;
+    const evidenceUsage = evidenceResult.usage;
+    const synthesisUsage = synthesisResult.usage;
 
     const filteredOutput = filterResearchOutputCitations(
       output,

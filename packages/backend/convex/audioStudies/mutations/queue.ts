@@ -7,19 +7,16 @@ import {
   isAudioGenerationEnabled,
   QUEUE_TIMEOUT_MS,
 } from "@repo/backend/convex/audioStudies/constants";
+import { audioContentIdentityValidator } from "@repo/backend/convex/audioStudies/content/spec";
 import { internalMutation } from "@repo/backend/convex/functions";
-import { audioContentRefValidator } from "@repo/backend/convex/lib/validators/audio";
-import {
-  localeValidator,
-  SUPPORTED_CONTENT_LOCALES,
-} from "@repo/backend/convex/lib/validators/contents";
+import { SUPPORTED_CONTENT_LOCALES } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { workflow } from "@repo/backend/convex/workflow";
 import { ConvexError, v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
 
-const AUDIO_QUEUE_PER_SLUG_LIMIT = SUPPORTED_CONTENT_LOCALES.length + 1;
+const AUDIO_QUEUE_PER_ROUTE_LIMIT = SUPPORTED_CONTENT_LOCALES.length + 1;
 const AUDIO_QUEUE_CLEANUP_BATCH_SIZE = 100;
 const incompleteAudioStatuses = [
   "pending",
@@ -98,12 +95,7 @@ export const lockQueueItem = internalMutation({
   args: {
     queueItemId: vv.id("audioGenerationQueue"),
   },
-  returns: nullable(
-    v.object({
-      contentRef: audioContentRefValidator,
-      locale: localeValidator,
-    })
-  ),
+  returns: nullable(audioContentIdentityValidator),
   handler: async (ctx, args) => {
     const item = await ctx.db.get("audioGenerationQueue", args.queueItemId);
 
@@ -135,8 +127,15 @@ export const lockQueueItem = internalMutation({
     });
 
     return {
-      contentRef: item.contentRef,
+      alignmentId: item.alignmentId,
+      assetId: item.assetId,
+      conceptId: item.conceptId,
+      content_id: item.content_id,
+      contentType: item.contentType,
+      learningObjectId: item.learningObjectId,
+      lensId: item.lensId,
       locale: item.locale,
+      route: item.route,
     };
   },
 });
@@ -156,15 +155,15 @@ export const markQueueFailed = internalMutation({
 });
 
 /**
- * Start workflows for the next pending slug, processing all pending locales for
- * that slug together.
+ * Start workflows for the next pending route, processing all pending locales
+ * for that route together.
  */
 export const startWorkflowsForPendingItems = internalMutation({
   args: {},
   returns: v.object({
     started: v.number(),
     skipped: v.number(),
-    contentRef: v.optional(audioContentRefValidator),
+    content_id: v.optional(audioContentIdentityValidator.fields.content_id),
   }),
   handler: async (ctx) => {
     if (!isAudioGenerationEnabled()) {
@@ -181,15 +180,15 @@ export const startWorkflowsForPendingItems = internalMutation({
         q.eq("status", "completed").gte("completedAt", today)
       )
       .take(maxContentPerDay + 10);
-    const completedSlugs = new Set<string>();
+    const completedRoutes = new Set<string>();
 
     for (const item of completedToday) {
-      completedSlugs.add(item.slug);
+      completedRoutes.add(item.route);
     }
 
-    if (completedSlugs.size >= maxContentPerDay) {
+    if (completedRoutes.size >= maxContentPerDay) {
       logger.info(
-        `Daily limit reached: ${completedSlugs.size}/${maxContentPerDay}`
+        `Daily limit reached: ${completedRoutes.size}/${maxContentPerDay}`
       );
       return { started: 0, skipped: 0 };
     }
@@ -209,15 +208,15 @@ export const startWorkflowsForPendingItems = internalMutation({
 
     const contentItems = await ctx.db
       .query("audioGenerationQueue")
-      .withIndex("by_slug_and_status", (q) =>
-        q.eq("slug", topItem.slug).eq("status", "pending")
+      .withIndex("by_route_and_status", (q) =>
+        q.eq("route", topItem.route).eq("status", "pending")
       )
-      .take(AUDIO_QUEUE_PER_SLUG_LIMIT);
+      .take(AUDIO_QUEUE_PER_ROUTE_LIMIT);
 
     if (contentItems.length > SUPPORTED_CONTENT_LOCALES.length) {
       throw new ConvexError({
         code: "AUDIO_QUEUE_LOCALE_COUNT_EXCEEDED",
-        message: "Audio queue slug exceeded the supported locale count.",
+        message: "Audio queue route exceeded the supported locale count.",
       });
     }
 
@@ -239,12 +238,12 @@ export const startWorkflowsForPendingItems = internalMutation({
       started += 1;
     }
 
-    logger.info(`Started ${started} locales for content: ${topItem.slug}`);
+    logger.info(`Started ${started} locales for content: ${topItem.route}`);
 
     return {
       started,
       skipped: 0,
-      contentRef: topItem.contentRef,
+      content_id: topItem.content_id,
     };
   },
 });

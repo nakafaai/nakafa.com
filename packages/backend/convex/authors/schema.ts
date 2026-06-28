@@ -5,7 +5,7 @@ import { type Infer, v } from "convex/values";
 /** Polymorphic content IDs supported by the author-link join table. */
 export const contentAuthorContentIdValidator = v.union(
   v.id("articleContents"),
-  v.id("subjectSections"),
+  v.id("curriculumLessons"),
   v.id("exerciseQuestions")
 );
 export type ContentAuthorContentId = Infer<
@@ -41,7 +41,7 @@ const tables = {
    *   ).collect();
    */
   contentAuthors: defineTable({
-    /** Document ID from articleContents, subjectSections, or exerciseQuestions. */
+    /** Document ID from articleContents, curriculumLessons, or exerciseQuestions. */
     contentId: contentAuthorContentIdValidator,
     /** Discriminator: which table contentId refers to */
     contentType: contentTypeValidator,

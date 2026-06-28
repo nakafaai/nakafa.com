@@ -74,8 +74,7 @@ export function IsotopeLab({ title, description, labels }: IsotopeLabProps) {
       <CardContent className="flex flex-col gap-4">
         <ToggleGroup
           aria-label={labels.chooseIsotope}
-          className="grid w-full grid-cols-2 sm:grid-cols-3"
-          layout="grid"
+          gridColumns="3"
           onValueChange={handleSampleChange}
           type="single"
           value={selectedSampleId}
@@ -179,10 +178,9 @@ function NucleusDots({
   );
 
   return (
-    <div
+    <figure
       aria-label={`${labels.protons}: ${protonCount}, ${labels.neutrons}: ${neutronCount}`}
       className="flex w-full justify-center p-2"
-      role="img"
     >
       <div className="flex max-w-sm flex-wrap justify-center gap-2">
         {protons.map((protonIndex) => (
@@ -200,7 +198,7 @@ function NucleusDots({
           />
         ))}
       </div>
-    </div>
+    </figure>
   );
 }
 

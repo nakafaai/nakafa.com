@@ -1,6 +1,6 @@
 import { useInterval } from "@mantine/hooks";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export interface UseExerciseTimerProps {
   attempt: Doc<"exerciseAttempts"> | null;
@@ -77,7 +77,7 @@ export function useExerciseTimer({
   onExpire,
 }: UseExerciseTimerProps): UseExerciseTimerReturn {
   const [localNowMs, setLocalNowMs] = useState(Date.now);
-  const [hasHandledExpiry, setHasHandledExpiry] = useState(false);
+  const hasHandledExpiryRef = useRef(false);
   const currentNowMs = nowMs ?? localNowMs;
   const usesInternalClock = nowMs === undefined;
 
@@ -103,28 +103,28 @@ export function useExerciseTimer({
 
     const remaining = calculateRemainingTime(attempt, now, expiresAtMs);
 
-    if (remaining === 0 && !hasHandledExpiry) {
-      setHasHandledExpiry(true);
+    if (remaining === 0 && !hasHandledExpiryRef.current) {
+      hasHandledExpiryRef.current = true;
       onExpire?.();
     }
   }, UPDATE_INTERVAL_MS);
 
   useEffect(() => {
-    if (!hasHandledExpiry || isExpired) {
+    if (isExpired) {
       return;
     }
 
-    setHasHandledExpiry(false);
-  }, [hasHandledExpiry, isExpired]);
+    hasHandledExpiryRef.current = false;
+  }, [isExpired]);
 
   useEffect(() => {
-    if (!isExpired || hasHandledExpiry) {
+    if (!isExpired || hasHandledExpiryRef.current) {
       return;
     }
 
-    setHasHandledExpiry(true);
+    hasHandledExpiryRef.current = true;
     onExpire?.();
-  }, [hasHandledExpiry, isExpired, onExpire]);
+  }, [isExpired, onExpire]);
 
   useEffect(() => {
     if (!(usesInternalClock && isActive)) {
@@ -139,10 +139,7 @@ export function useExerciseTimer({
     };
   }, [isActive, interval, usesInternalClock]);
 
-  const formatted = useMemo(
-    () => formatTime(remainingSeconds),
-    [remainingSeconds]
-  );
+  const formatted = formatTime(remainingSeconds);
 
   return {
     isActive,

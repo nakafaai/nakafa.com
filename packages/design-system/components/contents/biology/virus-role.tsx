@@ -1,10 +1,6 @@
 "use client";
 
 import { BacillusBacteriumModel } from "@repo/design-system/components/contents/biology/bacteria-parts";
-import {
-  BiologyCallouts,
-  type BiologyCalloutTarget,
-} from "@repo/design-system/components/contents/biology/callouts";
 import type {
   BiologyLabProps,
   BiologySceneProps,
@@ -19,45 +15,8 @@ import {
 const ROLE_VIEW = {
   cameraPosition: [0, 1.5, 3.18],
   cameraTarget: [0, 0.08, 0.16],
-  maxAzimuthAngle: Math.PI * 0.16,
-  maxPolarAngle: Math.PI * 0.42,
-  minAzimuthAngle: Math.PI * -0.16,
-  minPolarAngle: Math.PI * 0.28,
   narrowCameraPosition: [0, 1.82, 3.62],
 } satisfies BiologySceneView;
-const PATHOGEN_CALLOUT_TARGETS = [
-  {
-    id: "host-cell",
-    labelPosition: [-1.06, 1.04, 0.9],
-  },
-  {
-    id: "virus-particle",
-    labelPosition: [0.94, 1.04, 0.9],
-    target: [0.9, 0.18, 0.58],
-  },
-] satisfies readonly BiologyCalloutTarget[];
-const ECOLOGY_CALLOUT_TARGETS = [
-  {
-    id: "bacteriophage",
-    labelPosition: [-1.02, 1.1, 0.9],
-    target: [-0.78, 0.75, 0.5],
-  },
-  {
-    id: "target-bacteria",
-    labelPosition: [0.5, 1.02, 0.88],
-  },
-] satisfies readonly BiologyCalloutTarget[];
-const BIOTECH_CALLOUT_TARGETS = [
-  {
-    id: "gene-cargo",
-    labelPosition: [-1.08, 1.34, 1.04],
-    target: [-0.72, 0.1, 0.48],
-  },
-  {
-    id: "target-cell",
-    labelPosition: [0.72, 1.04, 0.9],
-  },
-] satisfies readonly BiologyCalloutTarget[];
 const TARGET_BACTERIA = [
   {
     id: "infected",
@@ -89,25 +48,34 @@ export function VirusRoleLab(props: BiologyLabProps) {
 /**
  * Changes the whole scene so students do not read all virus roles as disease.
  */
-function VirusRoleScene({ colors, item, selectedIndex }: BiologySceneProps) {
+function VirusRoleScene({ colors, selectedIndex }: BiologySceneProps) {
   if (selectedIndex === 1) {
-    return <EcologyRole colors={colors} item={item} />;
+    return (
+      <group scale={0.86}>
+        <EcologyRole colors={colors} />
+      </group>
+    );
   }
 
   if (selectedIndex === 2) {
-    return <BiotechRole colors={colors} item={item} />;
+    return (
+      <group scale={0.86}>
+        <BiotechRole colors={colors} />
+      </group>
+    );
   }
 
-  return <PathogenRole colors={colors} item={item} />;
+  return (
+    <group scale={0.86}>
+      <PathogenRole colors={colors} />
+    </group>
+  );
 }
 
 /**
  * Shows virus damage as a host cell with many pathogen particles.
  */
-function PathogenRole({
-  colors,
-  item,
-}: Pick<BiologySceneProps, "colors" | "item">) {
+function PathogenRole({ colors }: Pick<BiologySceneProps, "colors">) {
   return (
     <group>
       <mesh scale={[1.2, 0.78, 0.78]}>
@@ -122,11 +90,6 @@ function PathogenRole({
           <MiniEnvelopedVirion colors={colors} scale={0.75} />
         </group>
       ))}
-      <BiologyCallouts
-        callouts={item.callouts}
-        color={colors.text}
-        targets={PATHOGEN_CALLOUT_TARGETS}
-      />
     </group>
   );
 }
@@ -134,10 +97,7 @@ function PathogenRole({
 /**
  * Shows bacteriophages linking viruses to microbial population control.
  */
-function EcologyRole({
-  colors,
-  item,
-}: Pick<BiologySceneProps, "colors" | "item">) {
+function EcologyRole({ colors }: Pick<BiologySceneProps, "colors">) {
   return (
     <group>
       {TARGET_BACTERIA.map((bacterium) => (
@@ -158,11 +118,6 @@ function EcologyRole({
       <group position={[-0.98, 0.42, 0.46]} rotation={[0, 0, -0.72]}>
         <BacteriophageModel colors={colors} scale={0.72} />
       </group>
-      <BiologyCallouts
-        callouts={item.callouts}
-        color={colors.text}
-        targets={ECOLOGY_CALLOUT_TARGETS}
-      />
     </group>
   );
 }
@@ -170,10 +125,7 @@ function EcologyRole({
 /**
  * Shows a viral vector carrying a gene into a target cell.
  */
-function BiotechRole({
-  colors,
-  item,
-}: Pick<BiologySceneProps, "colors" | "item">) {
+function BiotechRole({ colors }: Pick<BiologySceneProps, "colors">) {
   return (
     <group>
       <mesh position={[0.9, 0, 0]} scale={[0.82, 0.62, 0.62]}>
@@ -187,11 +139,6 @@ function BiotechRole({
           <meshStandardMaterial color={colors.genome} />
         </mesh>
       </group>
-      <BiologyCallouts
-        callouts={item.callouts}
-        color={colors.text}
-        targets={BIOTECH_CALLOUT_TARGETS}
-      />
     </group>
   );
 }

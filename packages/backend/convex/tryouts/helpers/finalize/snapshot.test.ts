@@ -91,7 +91,7 @@ describe("tryouts/helpers/finalize/snapshot", () => {
           1
         );
         const setAttemptId = await ctx.db.insert("exerciseAttempts", {
-          slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/missing-snapshot-exercise-attempt",
+          slug: "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/missing-snapshot-exercise-attempt",
           userId: identity.userId,
           origin: "tryout",
           mode: "simulation",
@@ -182,7 +182,7 @@ describe("tryouts/helpers/finalize/snapshot", () => {
       });
       const originalSetId = await ctx.db.insert("exerciseSets", {
         locale: "id",
-        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/snapshot-original",
+        slug: "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/snapshot-original",
         category: "high-school",
         type: "snbt",
         material: "quantitative-knowledge",
@@ -194,7 +194,7 @@ describe("tryouts/helpers/finalize/snapshot", () => {
       });
       const replacementSetId = await ctx.db.insert("exerciseSets", {
         locale: "id",
-        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/snapshot-replacement",
+        slug: "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/snapshot-replacement",
         category: "high-school",
         type: "snbt",
         material: "quantitative-knowledge",
@@ -289,7 +289,7 @@ describe("tryouts/helpers/finalize/snapshot", () => {
       });
 
       const setAttemptId = await ctx.db.insert("exerciseAttempts", {
-        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/snapshot-original",
+        slug: "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/snapshot-original",
         userId: identity.userId,
         origin: "tryout",
         mode: "simulation",
@@ -401,7 +401,7 @@ describe("tryouts/helpers/finalize/snapshot", () => {
       });
       const firstSetId = await ctx.db.insert("exerciseSets", {
         locale: "id",
-        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/snapshot-partcount-shrink-qk",
+        slug: "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/snapshot-partcount-shrink-qk",
         category: "high-school",
         type: "snbt",
         material: "quantitative-knowledge",
@@ -413,7 +413,7 @@ describe("tryouts/helpers/finalize/snapshot", () => {
       });
       const secondSetId = await ctx.db.insert("exerciseSets", {
         locale: "id",
-        slug: "exercises/high-school/snbt/mathematical-reasoning/try-out/2026/snapshot-partcount-shrink-mr",
+        slug: "material/practice/assessment/snbt/mathematical-reasoning/try-out-2026/snapshot-partcount-shrink-mr",
         category: "high-school",
         type: "snbt",
         material: "mathematical-reasoning",
@@ -493,7 +493,7 @@ describe("tryouts/helpers/finalize/snapshot", () => {
       });
 
       const firstSetAttemptId = await ctx.db.insert("exerciseAttempts", {
-        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/snapshot-partcount-shrink-qk",
+        slug: "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/snapshot-partcount-shrink-qk",
         userId: identity.userId,
         origin: "tryout",
         mode: "simulation",
@@ -512,7 +512,7 @@ describe("tryouts/helpers/finalize/snapshot", () => {
         scorePercentage: 0,
       });
       const secondSetAttemptId = await ctx.db.insert("exerciseAttempts", {
-        slug: "exercises/high-school/snbt/mathematical-reasoning/try-out/2026/snapshot-partcount-shrink-mr",
+        slug: "material/practice/assessment/snbt/mathematical-reasoning/try-out-2026/snapshot-partcount-shrink-mr",
         userId: identity.userId,
         origin: "tryout",
         mode: "simulation",
@@ -654,7 +654,7 @@ describe("tryouts/helpers/finalize/snapshot", () => {
       });
 
       const setAttemptId = await ctx.db.insert("exerciseAttempts", {
-        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/snapshot-stale-completed-indices",
+        slug: "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/snapshot-stale-completed-indices",
         userId: identity.userId,
         origin: "tryout",
         mode: "simulation",

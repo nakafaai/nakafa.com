@@ -30,7 +30,7 @@ export const NakafaAgentQuranReferenceOptionsSchema = Schema.Struct({
   .annotations({ description: "Nakafa Quran reference options." });
 
 /** Runtime schema for one Quran verse returned to agents. */
-export const NakafaAgentQuranVerseSchema = Schema.Struct({
+const NakafaAgentQuranVerseSchema = Schema.Struct({
   arabic: Schema.String.annotations({
     description: "Arabic Quran verse text.",
   }),

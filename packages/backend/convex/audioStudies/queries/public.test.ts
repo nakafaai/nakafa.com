@@ -1,11 +1,17 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
+import { getTestAudioContent } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
 const NOW = Date.parse("2026-01-01T00:00:00.000Z");
 const ARTICLE_SLUG = "articles/politics/audio-playback";
+const articleSource = getTestAudioContent({
+  contentHash: "article-hash",
+  locale: "en",
+  route: ARTICLE_SLUG,
+});
 
 /** Inserts the compact source row and optional completed audio row. */
 async function insertAudioPlaybackFixture(
@@ -13,7 +19,7 @@ async function insertAudioPlaybackFixture(
   options: { completed: boolean }
 ) {
   await t.run(async (ctx) => {
-    const articleId = await ctx.db.insert("articleContents", {
+    await ctx.db.insert("articleContents", {
       articleSlug: "audio-playback",
       body: "Body intentionally not read by the playback query.",
       category: "politics",
@@ -32,20 +38,15 @@ async function insertAudioPlaybackFixture(
       : undefined;
 
     await ctx.db.insert("audioContentSources", {
-      contentHash: "article-hash",
-      contentRef: { id: articleId, type: "article" },
-      locale: "en",
-      slug: ARTICLE_SLUG,
+      ...articleSource,
       syncedAt: NOW,
     });
     await ctx.db.insert("contentAudios", {
+      ...articleSource,
       ...(options.completed
         ? { audioDuration: 12_345, audioStorageId: storageId }
         : {}),
-      contentHash: "article-hash",
-      contentRef: { id: articleId, type: "article" },
       generationAttempts: 1,
-      locale: "en",
       model: "eleven_v3",
       script: "Generated script",
       status: options.completed ? "completed" : "pending",

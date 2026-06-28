@@ -8,7 +8,7 @@ import { asSchema } from "ai";
 import dedent from "dedent";
 import { describe, expect, it } from "vitest";
 
-describe("orchestrator tool schemas", () => {
+describe("LearningCapability tool schemas", () => {
   it("uses one compact specialist input contract for every delegation tool", async () => {
     const jsonSchemas = [
       await Promise.resolve(asSchema(nakafaToolInputSchema).jsonSchema),

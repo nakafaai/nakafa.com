@@ -1,37 +1,40 @@
 import { internal } from "@repo/backend/convex/_generated/api";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
+import { getTestAudioIdentity } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
 const contentHash = "audio-hash";
+const subjectRoute = "material/lesson/mathematics/audio/intro";
+const subjectAudioIdentity = getTestAudioIdentity({
+  locale: "en",
+  route: subjectRoute,
+});
 
 async function seedSubject(ctx: MutationCtx) {
-  const topicId = await ctx.db.insert("subjectTopics", {
-    category: "high-school",
-    grade: "10",
+  const topicId = await ctx.db.insert("curriculumTopics", {
     locale: "en",
     material: "mathematics",
+    order: 0,
     sectionCount: 1,
-    slug: "subject/high-school/10/mathematics/audio",
+    slug: "material/lesson/mathematics/audio",
     syncedAt: 1,
     title: "Audio Topic",
     topic: "audio",
   });
 
-  return await ctx.db.insert("subjectSections", {
+  return await ctx.db.insert("curriculumLessons", {
     body: "Audio body",
-    category: "high-school",
     contentHash,
     date: 1,
     description: "Audio description",
-    grade: "10",
     locale: "en",
     material: "mathematics",
+    order: 0,
     section: "intro",
-    slug: "subject/high-school/10/mathematics/audio/intro",
+    slug: subjectRoute,
     subject: "Audio",
     syncedAt: 1,
     title: "Audio Intro",
@@ -40,12 +43,11 @@ async function seedSubject(ctx: MutationCtx) {
   });
 }
 
-async function seedAudio(ctx: MutationCtx, subjectId: Id<"subjectSections">) {
+async function seedAudio(ctx: MutationCtx) {
   return await ctx.db.insert("contentAudios", {
+    ...subjectAudioIdentity,
     contentHash,
-    contentRef: { type: "subject", id: subjectId },
     generationAttempts: 0,
-    locale: "en",
     model: "eleven_v3",
     status: "pending",
     updatedAt: 1,
@@ -57,9 +59,9 @@ describe("audioStudies/mutations/contentAudios", () => {
   it("claims and saves script and speech generation state", async () => {
     const t = convexTest(schema, convexModules);
     const { audioId, storageId } = await t.run(async (ctx) => {
-      const subjectId = await seedSubject(ctx);
+      await seedSubject(ctx);
       return {
-        audioId: await seedAudio(ctx, subjectId),
+        audioId: await seedAudio(ctx),
         storageId: await ctx.storage.store(
           new Blob(["audio"], { type: "audio/wav" })
         ),
@@ -105,9 +107,9 @@ describe("audioStudies/mutations/contentAudios", () => {
   it("resets failed generation steps to the next retryable status", async () => {
     const t = convexTest(schema, convexModules);
     const ids = await t.run(async (ctx) => {
-      const subjectId = await seedSubject(ctx);
-      const scriptAudioId = await seedAudio(ctx, subjectId);
-      const speechAudioId = await seedAudio(ctx, subjectId);
+      await seedSubject(ctx);
+      const scriptAudioId = await seedAudio(ctx);
+      const speechAudioId = await seedAudio(ctx);
 
       await ctx.db.patch("contentAudios", scriptAudioId, {
         generationAttempts: 1,
@@ -151,10 +153,10 @@ describe("audioStudies/mutations/contentAudios", () => {
 
   it("reuses stale duplicate audio rows by keeping one reset row", async () => {
     const t = convexTest(schema, convexModules);
-    const { duplicateId, keeperId, subjectId } = await t.run(async (ctx) => {
-      const subjectId = await seedSubject(ctx);
-      const keeperId = await seedAudio(ctx, subjectId);
-      const duplicateId = await seedAudio(ctx, subjectId);
+    const { duplicateId, keeperId } = await t.run(async (ctx) => {
+      await seedSubject(ctx);
+      const keeperId = await seedAudio(ctx);
+      const duplicateId = await seedAudio(ctx);
 
       await ctx.db.patch("contentAudios", keeperId, {
         audioDuration: 42,
@@ -163,15 +165,14 @@ describe("audioStudies/mutations/contentAudios", () => {
         status: "completed",
       });
 
-      return { duplicateId, keeperId, subjectId };
+      return { duplicateId, keeperId };
     });
 
     const resultId = await t.mutation(
       internal.audioStudies.mutations.contentAudios.createOrGetAudioRecord,
       {
+        ...subjectAudioIdentity,
         contentHash: "fresh-hash",
-        contentRef: { type: "subject", id: subjectId },
-        locale: "en",
       }
     );
     const rows = await t.run(

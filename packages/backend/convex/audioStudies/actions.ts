@@ -2,6 +2,7 @@ import { elevenlabs } from "@repo/ai/config/elevenlabs";
 import {
   getModelGatewayId,
   getModelProviderOptions,
+  ModelIdSchema,
 } from "@repo/ai/config/model";
 import { gateway } from "@repo/ai/config/provider";
 import { gatewayProviderOptions } from "@repo/ai/config/routing";
@@ -21,8 +22,10 @@ import {
   audioGenerationArgs,
 } from "@repo/backend/convex/audioStudies/generation/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
-import { experimental_generateSpeech, generateText } from "ai";
+import { generateSpeech as generateSpeechAudio, generateText } from "ai";
 import { v } from "convex/values";
+
+const audioGenerationModel = ModelIdSchema.make("nakafa-pro");
 
 /**
  * Native Convex adapter for audio-generation business logic.
@@ -40,7 +43,7 @@ function createAudioGenerationAdapters(ctx: ActionCtx): {
     providers: {
       defaultVoiceSettings: getDefaultVoiceSettings(),
       generateScriptText: async (content) => {
-        const languageModel = gateway(getModelGatewayId("nakafa-pro"));
+        const languageModel = gateway(getModelGatewayId(audioGenerationModel));
         const prompt = podcastScriptPrompt({
           title: content.title,
           description: content.description,
@@ -53,14 +56,14 @@ function createAudioGenerationAdapters(ctx: ActionCtx): {
           prompt,
           providerOptions: {
             gateway: gatewayProviderOptions,
-            google: getModelProviderOptions("nakafa-pro"),
+            google: getModelProviderOptions(audioGenerationModel),
           },
         });
 
         return text;
       },
       generateSpeechChunk: async (input) => {
-        const result = await experimental_generateSpeech({
+        const result = await generateSpeechAudio({
           model: elevenlabs.speech(input.model),
           text: input.text,
           voice: input.voiceId,
@@ -158,7 +161,7 @@ export const generateScript = internalAction({
  * 1. ElevenLabs generates PCM 44.1kHz (CD quality, uncompressed)
  * 2. PCM buffers concatenate safely (no metadata headers to conflict)
  * 3. Duration calculated from exact buffer size: bytes / (44100 × 2)
- * 4. Convert to WAV for browser compatibility with accurate headers
+ * 4. Convert to WAV for browser playback with accurate headers
  *
  * WHY NOT MP3?
  * - MP3 chunks each have duration metadata headers

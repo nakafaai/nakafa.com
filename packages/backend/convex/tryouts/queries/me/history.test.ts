@@ -144,7 +144,7 @@ describe("tryouts/queries/me/history", () => {
     ]);
   });
 
-  it("repairs ended history rows from the finalized snapshot when later parts were never started", async () => {
+  it("reconciles ended history rows from the finalized snapshot when later parts were never started", async () => {
     const t = createTryoutTestConvex();
     const { identity, tryoutSlug } = await t.mutation(
       async (ctx) =>

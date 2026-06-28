@@ -17,8 +17,8 @@ Research evidence has two separate surfaces:
 
 ```mermaid
 flowchart TD
-  User["User asks for source-backed answer"] --> Orchestrator["Nina orchestrator"]
-  Orchestrator --> Research["deepResearch tool"]
+  User["User asks for source-backed answer"] --> Harness["NinaHarness"]
+  Harness --> Research["deepResearch capability"]
   Research --> Evidence["Evidence phase (text mode)"]
   Evidence --> Firecrawl["webSearch / Firecrawl"]
   Firecrawl --> SearchUI["query-scoped source rows"]
@@ -34,8 +34,8 @@ flowchart TD
   Retry -->|no| Synthesis
   Retry -->|yes| Render["formatResearchOutput()"]
   Render --> Linked["Research markdown with inline [source](url) links"]
-  Linked --> Orchestrator
-  Orchestrator --> Final["Final answer"]
+  Linked --> Harness
+  Harness --> Final["Final answer"]
   Final --> Response["Response markdown renderer"]
   Response --> Anchor["markdown Anchor"]
   Anchor --> Source["Source chip with favicon"]
