@@ -63,6 +63,7 @@ def test_api_accepts_auth(monkeypatch) -> None:
     assert payload["conditions"] == []
     assert payload["items"] == []
     assert payload["steps"]
+    assert "reason" not in payload["steps"][0]
     assert payload["secondary"]["expression"] == "4"
 
 

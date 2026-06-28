@@ -44,5 +44,5 @@ testpaths = ["tests"]
 entrypoint = "api.index:app"
 
 [tool.basedpyright]
-include = ["api", "cas", "tests"]
+include = ["api", "cas", "scripts", "tests"]
 typeCheckingMode = "standard"

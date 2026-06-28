@@ -9,6 +9,7 @@
     "dev": "PYTHONDONTWRITEBYTECODE=1 uv run uvicorn api.index:app --host 0.0.0.0 --port 3003 --reload",
     "format": "UV_NO_DEV=0 uv run --dev ruff check --fix --no-cache . && UV_NO_DEV=0 uv run --dev ruff format --no-cache .",
     "lint": "UV_NO_DEV=0 uv run --dev ruff check --no-cache .",
+    "poc:api": "UV_NO_DEV=0 PYTHONDONTWRITEBYTECODE=1 uv run --dev python -m scripts.api_poc",
     "setup": "uv sync",
     "start": "PYTHONDONTWRITEBYTECODE=1 uv run uvicorn api.index:app --host 0.0.0.0 --port 3003",
     "test": "UV_NO_DEV=0 PYTHONDONTWRITEBYTECODE=1 uv run --dev pytest",

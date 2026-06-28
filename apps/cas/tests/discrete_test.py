@@ -202,6 +202,27 @@ def test_prime_reason_keeps_checked_divisors() -> None:
     assert result.steps[0].items[0].value == "2, 3"
 
 
+@pytest.mark.parametrize(
+    ("value", "expected_reason", "expected_items"),
+    [
+        ("1", "Prime numbers are integers greater than 1.", []),
+        ("2", "2 has exactly two positive divisors: 1 and 2.", []),
+        ("21", "3 divides 21, so 21 is not prime.", [("divisor", "3")]),
+    ],
+)
+def test_primality_reasons_cover_definition_and_composite_evidence(
+    value: str,
+    expected_reason: str,
+    expected_items: list[tuple[str, str]],
+) -> None:
+    result = run(MathRequest(kind="math", n=value, operation="is_prime"))
+
+    assert result.steps[0].reason == expected_reason
+    assert [(entry.label, entry.value) for entry in result.steps[0].items] == (
+        expected_items
+    )
+
+
 def test_prime_factorization() -> None:
     result = run(MathRequest(kind="math", n="84", operation="prime_factorization"))
 
@@ -227,6 +248,14 @@ def test_prime_factorization_keeps_negative_sign_first() -> None:
     assert result.secondary.expression == "-1*2^2*3"
 
 
+def test_prime_factorization_of_negative_one_explains_sign_unit() -> None:
+    result = run(MathRequest(kind="math", n="-1", operation="prime_factorization"))
+
+    assert result.steps[0].reason == (
+        "-1 is the sign unit and has no positive prime factors."
+    )
+
+
 def test_prime_factorization_rejects_zero() -> None:
     with pytest.raises(ValueError, match="nonzero integer"):
         run(MathRequest(kind="math", n="0", operation="prime_factorization"))
@@ -240,6 +269,51 @@ def test_gcd_with_more_than_two_values_uses_function_notation() -> None:
     assert result.secondary.expression == "6"
     assert result.stepStatus == "complete"
     assert result.steps[0].primary.expression == "gcd(84, 30, 6)"
+
+
+@pytest.mark.parametrize(
+    ("operation", "values", "expected", "expected_reason"),
+    [
+        (
+            "gcd",
+            ["0", "0"],
+            "0",
+            "The gcd of two zeros is 0 in this exact integer convention.",
+        ),
+        (
+            "gcd",
+            ["18", "0"],
+            "18",
+            "The gcd of an integer and 0 is the integer's absolute value.",
+        ),
+        (
+            "lcm",
+            ["0", "0"],
+            "0",
+            (
+                "Both inputs are zero, so the least common multiple is 0 in this "
+                "exact integer convention."
+            ),
+        ),
+        (
+            "lcm",
+            ["6", "8", "12"],
+            "24",
+            "Reduce the integer list using the associative lcm operation.",
+        ),
+    ],
+)
+def test_gcd_and_lcm_special_cases_explain_their_conventions(
+    operation: str,
+    values: list[str],
+    expected: str,
+    expected_reason: str,
+) -> None:
+    result = run(MathRequest(kind="math", operation=operation, values=values))
+
+    assert result.secondary
+    assert result.secondary.expression == expected
+    assert result.steps[0].reason == expected_reason
 
 
 @pytest.mark.parametrize(
