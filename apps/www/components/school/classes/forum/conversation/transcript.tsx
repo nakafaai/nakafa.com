@@ -7,8 +7,8 @@ import {
   useForumSessionStoreApi,
 } from "@/components/school/classes/forum/context/use-session";
 import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
-import { getConversationRowKey } from "@/components/school/classes/forum/conversation/data/pages";
-import { useHydratedTranscriptController } from "@/components/school/classes/forum/conversation/hooks/use-transcript-controller";
+import { getConversationRowKey } from "@/components/school/classes/forum/conversation/data/transcript/pages";
+import { useHydratedTranscriptController } from "@/components/school/classes/forum/conversation/hooks/transcript/use-controller";
 import { JumpBar } from "@/components/school/classes/forum/conversation/jump-bar";
 import { VirtualTranscriptRow } from "@/components/school/classes/forum/conversation/transcript-row";
 import type { ConversationScrollSnapshot } from "@/components/school/classes/forum/store/session";

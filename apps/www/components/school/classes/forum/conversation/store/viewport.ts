@@ -4,7 +4,7 @@ import { immer } from "zustand/middleware/immer";
 import {
   areConversationViewsEqual,
   type ConversationView,
-} from "@/components/school/classes/forum/conversation/data/view";
+} from "@/components/school/classes/forum/conversation/data/view/model";
 
 interface State {
   backStack: ConversationView[];

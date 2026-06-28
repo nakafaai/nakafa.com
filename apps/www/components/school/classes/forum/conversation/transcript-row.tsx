@@ -1,5 +1,5 @@
 import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
-import type { ConversationRow } from "@/components/school/classes/forum/conversation/data/pages";
+import type { ConversationRow } from "@/components/school/classes/forum/conversation/data/transcript/pages";
 import { ForumHeader } from "@/components/school/classes/forum/conversation/header";
 import { ForumPostItem } from "@/components/school/classes/forum/conversation/item";
 import { ConversationDateSeparator } from "@/components/school/classes/forum/conversation/separator/date";
