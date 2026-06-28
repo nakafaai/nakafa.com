@@ -37,18 +37,20 @@ export function SchoolClassesForumPanelSlot({
 
   return (
     <>
-      <ResizableHandle withHandle />
+      <ResizableHandle className="sticky top-0 h-svh self-start" withHandle />
       <ResizablePanel
-        className="min-w-0 overflow-hidden"
+        className="!overflow-visible min-w-0"
         defaultSize={SCHOOL_CLASSES_FORUM_PANEL_SLOT_DEFAULT_SIZE}
         groupResizeBehavior="preserve-pixel-size"
         id={SCHOOL_CLASSES_WORKSPACE_DETAIL_PANEL_ID}
         maxSize={SCHOOL_CLASSES_FORUM_PANEL_SLOT_MAX_SIZE}
         minSize={SCHOOL_CLASSES_FORUM_PANEL_SLOT_MIN_SIZE}
       >
-        <Suspense fallback={null}>
-          <SchoolClassesForumPanel forumId={forumId} />
-        </Suspense>
+        <div className="sticky top-0 h-svh min-w-0 overflow-hidden">
+          <Suspense fallback={null}>
+            <SchoolClassesForumPanel forumId={forumId} />
+          </Suspense>
+        </div>
       </ResizablePanel>
     </>
   );

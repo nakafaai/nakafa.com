@@ -6,7 +6,7 @@ import {
   ResizablePanelGroup,
   useResizableDefaultLayout,
 } from "@repo/design-system/components/ui/resizable";
-import { type ReactNode, useLayoutEffect, useState } from "react";
+import type { ReactNode } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 import { SCHOOL_CLASSES_DETAIL_PANEL_BREAKPOINT } from "@/components/school/classes/detail-panel";
 
@@ -18,7 +18,6 @@ export const SCHOOL_CLASSES_WORKSPACE_DETAIL_PANEL_ID = "detail";
 const SCHOOL_CLASSES_WORKSPACE_MAIN_PANEL_ID = "content";
 const SCHOOL_CLASSES_WORKSPACE_MAIN_PANEL_MIN_SIZE = "36rem";
 const SCHOOL_CLASSES_WORKSPACE_PANEL_GROUP_ID = "school-classes-workspace-v2";
-const SCHOOL_CLASSES_WORKSPACE_FALLBACK_HEIGHT = "100dvh";
 const SCHOOL_CLASSES_WORKSPACE_RESIZE_TARGET_MINIMUM_SIZE = {
   coarse: 28,
   fine: 12,
@@ -51,47 +50,6 @@ const COMPACT_WORKSPACE_MODE = { isCompact: true };
 const DESKTOP_WORKSPACE_MODE = { isCompact: false };
 const SchoolClassesWorkspaceModeContext =
   createContext<SchoolClassesWorkspaceModeContextValue | null>(null);
-
-/** Read the visible viewport height so split panes do not follow page scroll under browser zoom. */
-function getSchoolClassesWorkspaceViewportHeight() {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  const height = window.visualViewport?.height ?? window.innerHeight;
-
-  return Math.round(height * 100) / 100;
-}
-
-/** Keep the open-detail workspace sized to the visible viewport, not the CSS layout viewport. */
-function useSchoolClassesWorkspaceViewportHeight() {
-  const [height, setHeight] = useState<number | null>(null);
-
-  useLayoutEffect(() => {
-    const updateHeight = () => {
-      const nextHeight = getSchoolClassesWorkspaceViewportHeight();
-
-      setHeight((currentHeight) => {
-        if (currentHeight === nextHeight) {
-          return currentHeight;
-        }
-
-        return nextHeight;
-      });
-    };
-
-    updateHeight();
-    window.addEventListener("resize", updateHeight);
-    window.visualViewport?.addEventListener("resize", updateHeight);
-
-    return () => {
-      window.removeEventListener("resize", updateHeight);
-      window.visualViewport?.removeEventListener("resize", updateHeight);
-    };
-  }, []);
-
-  return height;
-}
 
 /** Read whether the class workspace is currently in compact mode. */
 export function useSchoolClassesWorkspaceIsCompact() {
@@ -181,10 +139,6 @@ function SchoolClassesResizableWorkspaceShell({
   panel: ReactNode;
 }) {
   const isMounted = useMounted();
-  const workspaceHeight = useSchoolClassesWorkspaceViewportHeight();
-  const workspaceHeightStyle = workspaceHeight
-    ? `${workspaceHeight}px`
-    : SCHOOL_CLASSES_WORKSPACE_FALLBACK_HEIGHT;
   const { defaultLayout, onLayoutChanged } = useResizableDefaultLayout({
     id: SCHOOL_CLASSES_WORKSPACE_PANEL_GROUP_ID,
     panelIds: [
@@ -205,7 +159,7 @@ function SchoolClassesResizableWorkspaceShell({
 
   return (
     <ResizablePanelGroup
-      className="min-w-0 overflow-hidden"
+      className="!overflow-visible min-w-0"
       defaultLayout={defaultLayout}
       id={SCHOOL_CLASSES_WORKSPACE_PANEL_GROUP_ID}
       onLayoutChanged={onLayoutChanged}
@@ -213,19 +167,13 @@ function SchoolClassesResizableWorkspaceShell({
       resizeTargetMinimumSize={
         SCHOOL_CLASSES_WORKSPACE_RESIZE_TARGET_MINIMUM_SIZE
       }
-      style={{
-        height: workspaceHeightStyle,
-        maxHeight: workspaceHeightStyle,
-      }}
     >
       <ResizablePanel
-        className="min-w-0 overflow-hidden"
+        className="min-w-0"
         id={SCHOOL_CLASSES_WORKSPACE_MAIN_PANEL_ID}
         minSize={SCHOOL_CLASSES_WORKSPACE_MAIN_PANEL_MIN_SIZE}
       >
-        <div className="h-full min-h-0 min-w-0 overflow-y-auto overscroll-contain">
-          {children}
-        </div>
+        <div className="min-w-0">{children}</div>
       </ResizablePanel>
 
       {panel}
