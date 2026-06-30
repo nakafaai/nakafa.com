@@ -7,6 +7,7 @@ import {
   type ReactNode,
   type RefObject,
   useEffect,
+  useEffectEvent,
   useRef,
   useState,
 } from "react";
@@ -136,8 +137,22 @@ export function ConversationViewportProvider({
   const virtualizerHandleRef = useRef<VirtualizerHandle | null>(null);
   const viewportRef = useRef<ConversationViewport | null>(null);
   const [state, setState] = useState(initialViewportState);
+  const getOpeningTranscript = useEffectEvent(() => ({
+    activeTranscript,
+    savedSnapshot,
+    unreadCue,
+  }));
 
   useEffect(() => {
+    const {
+      activeTranscript: openingTranscript,
+      savedSnapshot: openingSavedSnapshot,
+      unreadCue: openingUnreadCue,
+    } = getOpeningTranscript();
+    activeTranscriptRef.current = openingTranscript;
+    savedSnapshotRef.current = openingSavedSnapshot;
+    unreadCueRef.current = openingUnreadCue;
+
     const { adapters, scroller } = createBrowserViewportAdapters({
       forumId,
       getHandle: () => virtualizerHandleRef.current,
@@ -160,10 +175,10 @@ export function ConversationViewportProvider({
 
     Effect.runFork(
       viewport.dispatch({
-        activeTranscript: activeTranscriptRef.current,
-        savedSnapshot: savedSnapshotRef.current,
+        activeTranscript: openingTranscript,
+        savedSnapshot: openingSavedSnapshot,
         type: "transcript",
-        unreadCue: unreadCueRef.current,
+        unreadCue: openingUnreadCue,
       })
     );
     requestViewportMeasureFrame({ frameRef, scrollerRef, viewportRef });
