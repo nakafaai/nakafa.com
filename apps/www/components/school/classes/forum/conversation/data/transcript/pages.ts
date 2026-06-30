@@ -4,8 +4,6 @@ import type {
 } from "@/components/school/classes/forum/conversation/data/entities";
 import type { ConversationUnreadCue } from "@/components/school/classes/forum/conversation/data/transcript/unread";
 
-export const FORUM_BOTTOM_THRESHOLD = 12;
-
 export type ConversationRow =
   | { type: "date"; value: number }
   | { type: "header" }

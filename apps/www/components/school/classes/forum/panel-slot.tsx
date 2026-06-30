@@ -21,8 +21,10 @@ const SCHOOL_CLASSES_FORUM_PANEL_SLOT_MIN_SIZE = "28rem";
  * resizable branch beside the class workspace.
  */
 export function SchoolClassesForumPanelSlot({
+  closeHref,
   forumId,
 }: {
+  closeHref: string;
   forumId: Id<"schoolClassForums">;
 }) {
   const isCompact = useSchoolClassesWorkspaceIsCompact();
@@ -30,7 +32,7 @@ export function SchoolClassesForumPanelSlot({
   if (isCompact) {
     return (
       <Suspense fallback={null}>
-        <SchoolClassesForumPanel forumId={forumId} />
+        <SchoolClassesForumPanel closeHref={closeHref} forumId={forumId} />
       </Suspense>
     );
   }
@@ -48,7 +50,7 @@ export function SchoolClassesForumPanelSlot({
       >
         <div className="sticky top-0 h-svh min-w-0 overflow-hidden">
           <Suspense fallback={null}>
-            <SchoolClassesForumPanel forumId={forumId} />
+            <SchoolClassesForumPanel closeHref={closeHref} forumId={forumId} />
           </Suspense>
         </div>
       </ResizablePanel>

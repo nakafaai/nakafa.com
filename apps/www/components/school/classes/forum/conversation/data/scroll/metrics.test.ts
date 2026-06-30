@@ -46,14 +46,14 @@ describe("conversation/data/scroll/metrics", () => {
     expect(
       isConversationAtBottom(
         createHandle({
-          scrollOffset: 288,
+          scrollOffset: 298,
         })
       )
     ).toBe(true);
     expect(
       isConversationAtTop(
         createHandle({
-          scrollOffset: 12,
+          scrollOffset: 2,
         })
       )
     ).toBe(true);
@@ -101,10 +101,10 @@ describe("conversation/data/scroll/metrics", () => {
 
   it("keeps latest-edge state tied to bottom distance only", () => {
     const nearBottomHandle = createHandle({
-      scrollOffset: 292,
+      scrollOffset: 298,
     });
     const awayFromBottomHandle = createHandle({
-      scrollOffset: 280,
+      scrollOffset: 294,
     });
 
     expect(getConversationViewportState(nearBottomHandle)).toEqual({

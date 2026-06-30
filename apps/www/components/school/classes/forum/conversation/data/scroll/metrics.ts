@@ -1,5 +1,6 @@
 import type { VirtualizerHandle } from "virtua";
-import { FORUM_BOTTOM_THRESHOLD } from "@/components/school/classes/forum/conversation/data/transcript/pages";
+
+export const CONVERSATION_EDGE_TOLERANCE = 2;
 
 /** Minimal virtualizer geometry used by transcript scroll calculations. */
 export type ConversationGeometryHandle = Pick<
@@ -24,12 +25,12 @@ export function getConversationBottomDistance(
 
 /** Returns whether the transcript viewport is settled at the latest edge. */
 export function isConversationAtBottom(handle: ConversationGeometryHandle) {
-  return getConversationBottomDistance(handle) <= FORUM_BOTTOM_THRESHOLD;
+  return getConversationBottomDistance(handle) <= CONVERSATION_EDGE_TOLERANCE;
 }
 
 /** Returns whether the transcript viewport is settled at the first edge. */
 export function isConversationAtTop(handle: ConversationGeometryHandle) {
-  return handle.scrollOffset <= FORUM_BOTTOM_THRESHOLD;
+  return handle.scrollOffset <= CONVERSATION_EDGE_TOLERANCE;
 }
 
 /**
@@ -44,7 +45,7 @@ export function getConversationViewportState(
 
   return {
     hasOverflow:
-      handle.scrollSize - handle.viewportSize > FORUM_BOTTOM_THRESHOLD,
+      handle.scrollSize - handle.viewportSize > CONVERSATION_EDGE_TOLERANCE,
     isAtBottom: isConversationAtBottom(handle),
   };
 }

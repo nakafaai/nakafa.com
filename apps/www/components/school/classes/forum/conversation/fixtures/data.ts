@@ -119,7 +119,6 @@ export function createConversationTestHandle({
 
   return {
     handle: {
-      cache: {},
       findItemIndex,
       getItemOffset,
       getItemSize,

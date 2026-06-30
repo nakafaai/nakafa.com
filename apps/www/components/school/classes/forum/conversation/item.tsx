@@ -10,12 +10,12 @@ import { useLocale, useTranslations } from "next-intl";
 import { Activity } from "react";
 import { useForumSession } from "@/components/school/classes/forum/context/use-session";
 import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
-import { useViewport } from "@/components/school/classes/forum/conversation/context/use-viewport";
 import type { ForumPost } from "@/components/school/classes/forum/conversation/data/entities";
 import { PostItemActions } from "@/components/school/classes/forum/conversation/item/actions";
 import { PostAttachments } from "@/components/school/classes/forum/conversation/item/attachments";
 import { PostReactions } from "@/components/school/classes/forum/conversation/item/reactions";
 import { PostReplyIndicator } from "@/components/school/classes/forum/conversation/item/reply-indicator";
+import { useViewport } from "@/components/school/classes/forum/conversation/viewport/context";
 import { getLocale } from "@/lib/utils/date";
 import { getInitialName } from "@/lib/utils/helper";
 

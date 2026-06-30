@@ -28,3 +28,13 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **EvalCase**: A schema-derived test input with deterministic expected evidence, routing, or trace assertions.
 - **EvalSuite**: A named collection of EvalCases for one NinaHarness or LearningCapability behavior boundary.
 - **EvalRun**: A recorded execution of an EvalSuite with bounded evidence and trace summaries.
+
+## Forum Conversation
+
+- **Forum Conversation**: The opened discussion surface for one class forum, usually shown as the right-side panel beside the forum list.
+- **Transcript**: The ordered message log rendered inside a Forum Conversation.
+- **Viewport**: The visible scroll window over a Transcript.
+- **Placement**: The intended Viewport target, such as the latest message edge or a specific post.
+- **Snapshot**: A persisted restorable Viewport state for one Forum Conversation.
+- **Navigation History**: The ordered semantic Viewport positions a user can return to inside one Forum Conversation.
+- **Latest Affinity**: The user state where a Forum Conversation Viewport is attached to the newest Transcript edge.

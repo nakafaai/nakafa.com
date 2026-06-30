@@ -1,18 +1,16 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Virtualizer } from "virtua";
-import {
-  useForumSession,
-  useForumSessionStoreApi,
-} from "@/components/school/classes/forum/context/use-session";
-import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
+import type { Forum } from "@/components/school/classes/forum/conversation/data/entities";
+import type { ActiveTranscriptModel } from "@/components/school/classes/forum/conversation/data/transcript/active";
 import { getConversationRowKey } from "@/components/school/classes/forum/conversation/data/transcript/pages";
-import { useHydratedTranscriptController } from "@/components/school/classes/forum/conversation/hooks/transcript/use-controller";
 import { JumpBar } from "@/components/school/classes/forum/conversation/jump-bar";
 import { VirtualTranscriptRow } from "@/components/school/classes/forum/conversation/transcript-row";
-import type { ConversationScrollSnapshot } from "@/components/school/classes/forum/store/session";
+import {
+  useControls,
+  useViewport,
+} from "@/components/school/classes/forum/conversation/viewport/context";
 
 /**
- * Virtua transcript backed by one reactive Convex query.
+ * Renders the Virtua Transcript surface for one hydrated Forum Conversation.
  *
  * References:
  * - Convex best practices:
@@ -24,61 +22,22 @@ import type { ConversationScrollSnapshot } from "@/components/school/classes/for
  * - virtua advanced chat story:
  *   https://github.com/inokawa/virtua/blob/main/stories/react/advanced/Chat.stories.tsx
  */
-export function ForumConversationTranscript() {
-  const forumId = useData((state) => state.forumId);
-  const isHydrated = useForumSession((state) => state.isHydrated);
-  const forumSessionStore = useForumSessionStoreApi();
-
-  const savedScrollSnapshot =
-    forumSessionStore.getState().conversationScrollSnapshotByForumId[forumId] ??
-    null;
-
-  if (!isHydrated) {
-    return null;
-  }
-
-  return (
-    <HydratedTranscript
-      forumId={forumId}
-      initialSavedScrollSnapshot={savedScrollSnapshot}
-      key={forumId}
-    />
-  );
-}
-
-/** Renders the stateful virtual transcript for one hydrated forum session. */
-function HydratedTranscript({
-  forumId,
-  initialSavedScrollSnapshot,
+export function ForumConversationTranscript({
+  activeTranscript,
+  forum,
 }: {
-  forumId: Id<"schoolClassForums">;
-  initialSavedScrollSnapshot: ConversationScrollSnapshot | null;
+  activeTranscript: ActiveTranscriptModel;
+  forum: Forum | undefined;
 }) {
   const {
-    activeTranscript,
-    canGoBack,
-    error,
-    forum,
     goBack,
     goToLatest,
     handleScroll,
-    initialRestorableCache,
-    isError,
-    isPending,
+    handleScrollEnd,
     setVirtualizerHandle,
-    shouldShowJumpBar,
-  } = useHydratedTranscriptController({
-    forumId,
-    initialSavedScrollSnapshot,
-  });
-
-  if (isError) {
-    throw error;
-  }
-
-  if (isPending) {
-    return null;
-  }
+  } = useControls();
+  const canGoBack = useViewport((state) => state.backStack.length > 0);
+  const shouldShowLatest = useViewport((state) => state.shouldShowLatestButton);
 
   return (
     <>
@@ -87,9 +46,9 @@ function HydratedTranscript({
         style={{ overflowAnchor: "none" }}
       >
         <Virtualizer
-          cache={initialRestorableCache ?? undefined}
           data={activeTranscript.rows}
           onScroll={handleScroll}
+          onScrollEnd={handleScrollEnd}
           ref={setVirtualizerHandle}
         >
           {(row, index) => (
@@ -107,7 +66,7 @@ function HydratedTranscript({
         canGoBack={canGoBack}
         onBack={goBack}
         onLatest={goToLatest}
-        visible={shouldShowJumpBar}
+        showLatest={shouldShowLatest}
       />
     </>
   );

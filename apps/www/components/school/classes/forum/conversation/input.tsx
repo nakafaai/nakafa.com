@@ -22,13 +22,13 @@ import { useTranslations } from "next-intl";
 import { Activity, type ComponentRef, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { useForumSession } from "@/components/school/classes/forum/context/use-session";
-import { useControls } from "@/components/school/classes/forum/conversation/context/use-controls";
 import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
 import { AttachmentPreviews } from "@/components/school/classes/forum/conversation/input/attachment-previews";
 import { InputAttachments } from "@/components/school/classes/forum/conversation/input/attachments-trigger";
 import { EmojiButton } from "@/components/school/classes/forum/conversation/input/emoji-button";
 import { ReplyIndicator } from "@/components/school/classes/forum/conversation/input/reply-indicator";
 import { submitForumPost } from "@/components/school/classes/forum/conversation/input/submit";
+import { useControls } from "@/components/school/classes/forum/conversation/viewport/context";
 
 /** Handles forum post submission, uploads, and reply cleanup for the transcript. */
 export function ForumPostInput() {

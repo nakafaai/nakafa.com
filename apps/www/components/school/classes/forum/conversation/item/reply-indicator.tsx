@@ -1,8 +1,8 @@
 import { ArrowTurnForwardIcon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Activity } from "react";
-import { useControls } from "@/components/school/classes/forum/conversation/context/use-controls";
 import type { ForumPost } from "@/components/school/classes/forum/conversation/data/entities";
+import { useControls } from "@/components/school/classes/forum/conversation/viewport/context";
 
 /** Renders one lightweight reply preview that can jump to the replied message. */
 export function PostReplyIndicator({ post }: { post: ForumPost }) {

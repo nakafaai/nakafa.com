@@ -23,7 +23,7 @@ export function getConversationViewportCenter(
   return handle.scrollOffset + handle.viewportSize / 2;
 }
 
-/** Returns one row's absolute start offset from the virtualizer cache. */
+/** Returns one row's absolute start offset from virtualizer geometry. */
 export function getConversationRowStart(
   handle: ConversationGeometryHandle,
   index: number
@@ -31,7 +31,7 @@ export function getConversationRowStart(
   return handle.getItemOffset(index);
 }
 
-/** Returns one row's absolute end offset from the virtualizer cache. */
+/** Returns one row's absolute end offset from virtualizer geometry. */
 export function getConversationRowEnd(
   handle: ConversationGeometryHandle,
   index: number
@@ -39,7 +39,7 @@ export function getConversationRowEnd(
   return getConversationRowStart(handle, index) + handle.getItemSize(index);
 }
 
-/** Returns one row's absolute center offset from the virtualizer cache. */
+/** Returns one row's absolute center offset from virtualizer geometry. */
 export function getConversationRowCenter(
   handle: ConversationGeometryHandle,
   index: number
