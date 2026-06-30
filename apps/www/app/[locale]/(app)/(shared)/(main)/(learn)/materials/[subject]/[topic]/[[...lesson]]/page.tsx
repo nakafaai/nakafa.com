@@ -1,10 +1,7 @@
 import type { LearningContextInput } from "@repo/backend/convex/contents/context";
 import { getHeadings } from "@repo/contents/_lib/toc";
 import { formatContentDateISO } from "@repo/contents/_shared/date";
-import {
-  isMaterialLessonRoute,
-  toLocalizedContentHref,
-} from "@repo/contents/_types/route/content";
+import { toLocalizedContentHref } from "@repo/contents/_types/route/content";
 import type { MaterialContextIdentity } from "@repo/contents/_types/route/material/reference";
 import type { PublicContentRoute } from "@repo/contents/_types/route/schema";
 import { ArticleJsonLd } from "@repo/seo/json-ld/article";
@@ -116,10 +113,6 @@ export default async function Page({
     resolveMaterialRoute(params),
     searchParams,
   ]);
-
-  if (!isMaterialLessonRoute(route)) {
-    notFound();
-  }
 
   const [runtimeLesson, content] = await Promise.all([
     fetchRuntimeCurriculumPage({
@@ -263,7 +256,7 @@ async function MaterialLessonPage({
           <HeaderContent
             content={raw}
             icon={icon}
-            link={headerLink}
+            link={headerLink ?? { href: "/home", label: tCommon("home") }}
             slug={toLocalizedContentHref(route)}
             title={metadata.title}
           />
