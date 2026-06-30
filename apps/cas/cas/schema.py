@@ -81,6 +81,7 @@ class MathStep(BaseModel):
     relation: MathExpression | None = None
     secondary: MathExpression | None = None
     items: list[MathItem] = Field(default_factory=list)
+    reason: str | None = None
 
 
 class MathResult(BaseModel):

@@ -101,6 +101,13 @@ export const MathStepSchema = Schema.Struct({
   items: Schema.Array(MathItemSchema).pipe(Schema.mutable),
   primary: MathExpressionSchema,
   relation: Schema.optional(MathExpressionSchema),
+  reason: Schema.optional(
+    Schema.NullOr(
+      Schema.String.annotations({
+        description: "Student-facing reason why this step is valid.",
+      })
+    )
+  ),
   secondary: Schema.optional(MathExpressionSchema),
 })
   .pipe(Schema.mutable)

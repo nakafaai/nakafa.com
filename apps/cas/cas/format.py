@@ -47,6 +47,7 @@ def step(
     relation: MathExpression | None = None,
     secondary: object | None = None,
     items: Sequence[MathItem] | None = None,
+    reason: str | None = None,
 ) -> MathStep:
     """Build one deterministic math evidence step."""
     return MathStep(
@@ -55,6 +56,7 @@ def step(
         relation=relation,
         secondary=math_expression(secondary) if secondary is not None else None,
         items=list(items or []),
+        reason=reason,
     )
 
 
