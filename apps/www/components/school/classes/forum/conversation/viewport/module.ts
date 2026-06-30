@@ -33,14 +33,22 @@ const HIGHLIGHT_DURATION_MS = 5000;
 const PERSIST_DELAY_MS = 160;
 const VIEWPORT_EVENT_CAPACITY = 64;
 
+type ActiveTranscript = ActiveTranscriptModel | null;
+type ForumPostId = Id<"schoolClassForumPosts">;
+type Measurement = ViewportMeasurement | null;
+type RuntimeFiber = Fiber.RuntimeFiber<void, never>;
+type ViewportStateDraft = Omit<ViewportState, "shouldShowLatestButton"> & {
+  shouldShowLatestButton?: boolean;
+};
+
 interface RuntimeState {
-  activeTranscriptRef: Ref.Ref<ActiveTranscriptModel | null>;
+  activeTranscriptRef: Ref.Ref<ActiveTranscript>;
   adapters: ViewportAdapters;
   eventQueue: Queue.Queue<ViewportEvent>;
-  highlightFiberRef: Ref.Ref<Fiber.RuntimeFiber<void, never> | null>;
-  lastMeasurementRef: Ref.Ref<ViewportMeasurement | null>;
-  lastReadPostIdRef: Ref.Ref<Id<"schoolClassForumPosts"> | null>;
-  persistFiberRef: Ref.Ref<Fiber.RuntimeFiber<void, never> | null>;
+  highlightFiberRef: Ref.Ref<RuntimeFiber | null>;
+  lastMeasurementRef: Ref.Ref<Measurement>;
+  lastReadPostIdRef: Ref.Ref<ForumPostId | null>;
+  persistFiberRef: Ref.Ref<RuntimeFiber | null>;
   scope: Scope.CloseableScope;
   stateRef: SubscriptionRef.SubscriptionRef<ViewportState>;
 }
@@ -48,6 +56,7 @@ interface RuntimeState {
 export interface ConversationViewport {
   changes: Stream.Stream<ViewportState>;
   dispatch: (event: ViewportEvent) => Effect.Effect<void>;
+  flushSnapshot: Effect.Effect<void>;
   getState: Effect.Effect<ViewportState>;
   shutdown: Effect.Effect<void>;
 }
@@ -62,22 +71,11 @@ export function makeConversationViewport(
     );
     const scope = yield* Scope.make();
     const stateRef = yield* SubscriptionRef.make(initialViewportState);
-    const activeTranscriptRef = yield* Ref.make<ActiveTranscriptModel | null>(
-      null
-    );
-    const highlightFiberRef = yield* Ref.make<Fiber.RuntimeFiber<
-      void,
-      never
-    > | null>(null);
-    const persistFiberRef = yield* Ref.make<Fiber.RuntimeFiber<
-      void,
-      never
-    > | null>(null);
-    const lastMeasurementRef = yield* Ref.make<ViewportMeasurement | null>(
-      null
-    );
-    const lastReadPostIdRef =
-      yield* Ref.make<Id<"schoolClassForumPosts"> | null>(null);
+    const activeTranscriptRef = yield* Ref.make<ActiveTranscript>(null);
+    const highlightFiberRef = yield* Ref.make<RuntimeFiber | null>(null);
+    const persistFiberRef = yield* Ref.make<RuntimeFiber | null>(null);
+    const lastMeasurementRef = yield* Ref.make<Measurement>(null);
+    const lastReadPostIdRef = yield* Ref.make<ForumPostId | null>(null);
     const runtime = {
       activeTranscriptRef,
       adapters,
@@ -95,6 +93,7 @@ export function makeConversationViewport(
     return {
       changes: stateRef.changes,
       dispatch: (event) => Queue.offer(eventQueue, event).pipe(Effect.asVoid),
+      flushSnapshot: flushCurrentSnapshot(runtime),
       getState: SubscriptionRef.get(stateRef),
       shutdown: Queue.shutdown(eventQueue).pipe(
         Effect.zipRight(Scope.close(scope, Exit.succeed(undefined)))
@@ -202,15 +201,21 @@ function handleMeasurement(
     const shouldRetryPendingPlacement =
       source === "frame" &&
       pendingPlacement !== null &&
-      !reachedPendingPlacement;
+      !(hasUserDetachedFromLatest || reachedPendingPlacement);
 
     yield* updateState(runtime, (state) => ({
       ...state,
       hasOverflow: measurement.hasOverflow,
       isAtLatest: measurement.isAtLatest,
       latestAffinity,
-      lifecycle: reachedPendingPlacement ? "ready" : state.lifecycle,
-      pendingPlacement: reachedPendingPlacement ? null : state.pendingPlacement,
+      lifecycle:
+        hasUserDetachedFromLatest || reachedPendingPlacement
+          ? "ready"
+          : state.lifecycle,
+      pendingPlacement:
+        hasUserDetachedFromLatest || reachedPendingPlacement
+          ? null
+          : state.pendingPlacement,
     }));
 
     if (shouldRetryPendingPlacement && pendingPlacement) {
@@ -229,10 +234,7 @@ function handleMeasurement(
   });
 }
 
-function handlePost(
-  runtime: RuntimeState,
-  postId: Id<"schoolClassForumPosts">
-) {
+function handlePost(runtime: RuntimeState, postId: ForumPostId) {
   return Effect.gen(function* () {
     const activeTranscript = yield* Ref.get(runtime.activeTranscriptRef);
 
@@ -350,10 +352,7 @@ function hasReachedPendingPlacement(
   return runtime.adapters.scroller.isViewReached(placement.view);
 }
 
-function startHighlight(
-  runtime: RuntimeState,
-  postId: Id<"schoolClassForumPosts">
-) {
+function startHighlight(runtime: RuntimeState, postId: ForumPostId) {
   return Effect.gen(function* () {
     const currentFiber = yield* Ref.get(runtime.highlightFiberRef);
 
@@ -384,7 +383,7 @@ function startHighlight(
 
 function markLastVisiblePostRead(
   runtime: RuntimeState,
-  postId: Id<"schoolClassForumPosts"> | null
+  postId: ForumPostId | null
 ) {
   if (!postId) {
     return Effect.void;
@@ -397,11 +396,11 @@ function markLastVisiblePostRead(
       return;
     }
 
-    yield* Ref.set(runtime.lastReadPostIdRef, postId);
     yield* Effect.forkIn(
-      runtime.adapters.read
-        .markPostRead(postId)
-        .pipe(Effect.catchTag("ViewportReadError", () => Effect.void)),
+      runtime.adapters.read.markPostRead(postId).pipe(
+        Effect.zipRight(Ref.set(runtime.lastReadPostIdRef, postId)),
+        Effect.catchTag("ViewportReadError", () => Effect.void)
+      ),
       runtime.scope
     );
   });
@@ -422,7 +421,6 @@ function clearReachedBackTarget(runtime: RuntimeState) {
     }));
   });
 }
-
 function scheduleSnapshotPersist(runtime: RuntimeState) {
   return Effect.gen(function* () {
     const currentFiber = yield* Ref.get(runtime.persistFiberRef);
@@ -439,6 +437,19 @@ function scheduleSnapshotPersist(runtime: RuntimeState) {
     );
 
     yield* Ref.set(runtime.persistFiberRef, fiber);
+  });
+}
+
+function flushCurrentSnapshot(runtime: RuntimeState) {
+  return Effect.gen(function* () {
+    const currentFiber = yield* Ref.get(runtime.persistFiberRef);
+
+    if (currentFiber) {
+      yield* Fiber.interrupt(currentFiber);
+      yield* Ref.set(runtime.persistFiberRef, null);
+    }
+
+    yield* persistCurrentSnapshot(runtime);
   });
 }
 
@@ -474,19 +485,13 @@ function persistCurrentSnapshot(runtime: RuntimeState) {
 
 function updateState(
   runtime: RuntimeState,
-  updater: (state: ViewportState) => Omit<
-    ViewportState,
-    "shouldShowLatestButton"
-  > & {
-    shouldShowLatestButton?: boolean;
-  }
+  updater: (state: ViewportState) => ViewportStateDraft
 ) {
   return SubscriptionRef.update(runtime.stateRef, (state) =>
     deriveViewportState(updater(state))
   );
 }
-
-function hasPost(runtime: RuntimeState, postId: Id<"schoolClassForumPosts">) {
+function hasPost(runtime: RuntimeState, postId: ForumPostId) {
   return Effect.map(
     Ref.get(runtime.activeTranscriptRef),
     (activeTranscript) => !!activeTranscript?.rowIndexByPostId.has(postId)

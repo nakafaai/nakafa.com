@@ -23,6 +23,7 @@ export function useTranscriptData({
 
   const transcriptPosts = posts ?? [];
   const { acknowledgeUnreadCue, unreadCue } = useUnreadCue({
+    forumId,
     isPending,
     posts: transcriptPosts,
   });

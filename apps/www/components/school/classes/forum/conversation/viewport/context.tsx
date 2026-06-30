@@ -5,9 +5,8 @@ import { useMutation } from "convex/react";
 import { Effect, Fiber, Stream } from "effect";
 import {
   type ReactNode,
-  useCallback,
+  type RefObject,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from "react";
@@ -49,6 +48,63 @@ interface ViewportContextValue {
 
 const ViewportContext = createContext<ViewportContextValue | null>(null);
 
+/** Sends one event into the current Viewport Module instance. */
+function dispatchViewportEvent(
+  viewportRef: RefObject<ConversationViewport | null>,
+  event: ViewportEvent
+) {
+  const viewport = viewportRef.current;
+
+  if (!viewport) {
+    return;
+  }
+
+  Effect.runFork(viewport.dispatch(event));
+}
+
+/** Measures the current scroller and forwards the result to the Viewport Module. */
+function measureViewport(
+  scrollerRef: RefObject<BrowserViewportScroller | null>,
+  viewportRef: RefObject<ConversationViewport | null>,
+  source: "frame" | "scroll"
+) {
+  dispatchViewportEvent(viewportRef, {
+    measurement: scrollerRef.current?.measure() ?? null,
+    source,
+    type: "measure",
+  });
+}
+
+/** Schedules one animation-frame measurement for Virtua layout changes. */
+function requestViewportMeasureFrame({
+  frameRef,
+  scrollerRef,
+  viewportRef,
+}: {
+  frameRef: RefObject<number | null>;
+  scrollerRef: RefObject<BrowserViewportScroller | null>;
+  viewportRef: RefObject<ConversationViewport | null>;
+}) {
+  if (frameRef.current !== null) {
+    cancelAnimationFrame(frameRef.current);
+  }
+
+  frameRef.current = requestAnimationFrame(() => {
+    frameRef.current = null;
+    measureViewport(scrollerRef, viewportRef, "frame");
+  });
+}
+
+/** Cancels any pending animation-frame measurement. */
+function cancelViewportMeasureFrame(frameRef: RefObject<number | null>) {
+  if (frameRef.current === null) {
+    return;
+  }
+
+  cancelAnimationFrame(frameRef.current);
+  frameRef.current = null;
+}
+
 /** Provides the React Interface for one Effect-owned Forum Conversation Viewport. */
 export function ConversationViewportProvider({
   acknowledgeUnreadCue,
@@ -81,42 +137,6 @@ export function ConversationViewportProvider({
   const viewportRef = useRef<ConversationViewport | null>(null);
   const [state, setState] = useState(initialViewportState);
 
-  activeTranscriptRef.current = activeTranscript;
-  savedSnapshotRef.current = savedSnapshot;
-  unreadCueRef.current = unreadCue;
-
-  const dispatch = useCallback((event: ViewportEvent) => {
-    const viewport = viewportRef.current;
-
-    if (!viewport) {
-      return;
-    }
-
-    Effect.runFork(viewport.dispatch(event));
-  }, []);
-
-  const measure = useCallback(
-    (source: "frame" | "scroll") => {
-      dispatch({
-        measurement: scrollerRef.current?.measure() ?? null,
-        source,
-        type: "measure",
-      });
-    },
-    [dispatch]
-  );
-
-  const requestMeasureFrame = useCallback(() => {
-    if (frameRef.current !== null) {
-      cancelAnimationFrame(frameRef.current);
-    }
-
-    frameRef.current = requestAnimationFrame(() => {
-      frameRef.current = null;
-      measure("frame");
-    });
-  }, [measure]);
-
   useEffect(() => {
     const { adapters, scroller } = createBrowserViewportAdapters({
       forumId,
@@ -146,47 +166,57 @@ export function ConversationViewportProvider({
         unreadCue: unreadCueRef.current,
       })
     );
-    requestMeasureFrame();
+    requestViewportMeasureFrame({ frameRef, scrollerRef, viewportRef });
 
     return () => {
-      if (frameRef.current !== null) {
-        cancelAnimationFrame(frameRef.current);
-        frameRef.current = null;
-      }
+      cancelViewportMeasureFrame(frameRef);
 
+      const currentViewport = viewportRef.current;
       scrollerRef.current = null;
       viewportRef.current = null;
+
+      if (!currentViewport) {
+        Effect.runFork(Fiber.interrupt(stateFiber));
+        return;
+      }
+
       Effect.runFork(
-        Fiber.interrupt(stateFiber).pipe(Effect.zipRight(viewport.shutdown))
+        currentViewport.flushSnapshot.pipe(
+          Effect.zipRight(Fiber.interrupt(stateFiber)),
+          Effect.zipRight(currentViewport.shutdown)
+        )
       );
     };
   }, [
     forumId,
     markForumRead,
     prefersReducedMotion,
-    requestMeasureFrame,
     saveConversationScrollSnapshot,
   ]);
 
   useEffect(() => {
-    dispatch({
+    activeTranscriptRef.current = activeTranscript;
+    savedSnapshotRef.current = savedSnapshot;
+    unreadCueRef.current = unreadCue;
+
+    dispatchViewportEvent(viewportRef, {
       activeTranscript,
       savedSnapshot,
       type: "transcript",
       unreadCue,
     });
-    requestMeasureFrame();
-  }, [
-    activeTranscript,
-    dispatch,
-    requestMeasureFrame,
-    savedSnapshot,
-    unreadCue,
-  ]);
+    requestViewportMeasureFrame({ frameRef, scrollerRef, viewportRef });
+  }, [activeTranscript, savedSnapshot, unreadCue]);
 
   useEffect(() => {
     const persist = () => {
-      dispatch({ type: "persist" });
+      const viewport = viewportRef.current;
+
+      if (!viewport) {
+        return;
+      }
+
+      Effect.runFork(viewport.flushSnapshot);
     };
     const handleVisibilityChange = () => {
       if (document.visibilityState === "hidden") {
@@ -202,45 +232,46 @@ export function ConversationViewportProvider({
       window.removeEventListener("pagehide", persist);
       persist();
     };
-  }, [dispatch]);
+  }, []);
 
-  const actions = useMemo(
-    () =>
-      ({
-        acknowledgeUnreadCue,
-        flushSnapshot: () => dispatch({ type: "persist" }),
-        goBack: () => {
-          dispatch({ type: "back" });
-          requestMeasureFrame();
-        },
-        goToLatest: () => {
-          dispatch({ type: "latest" });
-          requestMeasureFrame();
-        },
-        goToPost: (postId) => {
-          dispatch({ postId, type: "post" });
-          requestMeasureFrame();
-        },
-        handleScroll: () => {
-          measure("scroll");
-        },
-        handleScrollEnd: () => {
-          measure("frame");
-        },
-        setVirtualizerHandle: (handle) => {
-          virtualizerHandleRef.current = handle;
-          requestMeasureFrame();
-        },
-      }) satisfies ViewportActions,
-    [acknowledgeUnreadCue, dispatch, measure, requestMeasureFrame]
-  );
-  const value = useMemo(
-    () => ({
-      actions,
-      state,
-    }),
-    [actions, state]
-  );
+  const actions = {
+    acknowledgeUnreadCue,
+    flushSnapshot: () => {
+      const viewport = viewportRef.current;
+
+      if (!viewport) {
+        return;
+      }
+
+      Effect.runFork(viewport.flushSnapshot);
+    },
+    goBack: () => {
+      dispatchViewportEvent(viewportRef, { type: "back" });
+      requestViewportMeasureFrame({ frameRef, scrollerRef, viewportRef });
+    },
+    goToLatest: () => {
+      dispatchViewportEvent(viewportRef, { type: "latest" });
+      requestViewportMeasureFrame({ frameRef, scrollerRef, viewportRef });
+    },
+    goToPost: (postId) => {
+      dispatchViewportEvent(viewportRef, { postId, type: "post" });
+      requestViewportMeasureFrame({ frameRef, scrollerRef, viewportRef });
+    },
+    handleScroll: () => {
+      measureViewport(scrollerRef, viewportRef, "scroll");
+    },
+    handleScrollEnd: () => {
+      measureViewport(scrollerRef, viewportRef, "frame");
+    },
+    setVirtualizerHandle: (handle) => {
+      virtualizerHandleRef.current = handle;
+      requestViewportMeasureFrame({ frameRef, scrollerRef, viewportRef });
+    },
+  } satisfies ViewportActions;
+  const value = {
+    actions,
+    state,
+  };
 
   return (
     <ViewportContext.Provider value={value}>

@@ -143,6 +143,57 @@ describe("conversation/viewport/module", () => {
     await shutdownViewport(viewport);
   });
 
+  it("cancels pending latest placement when the user scrolls away", async () => {
+    const rig = createAdapters();
+    const viewport = await createViewport(rig.adapters);
+
+    await openTranscript(viewport);
+    await waitForState(
+      viewport,
+      (state) => state.pendingPlacement?.view.kind === "bottom"
+    );
+    await dispatchMeasure(
+      viewport,
+      makeMeasurement({
+        bottomDistance: 4,
+        isAtLatest: false,
+        offset: 120,
+        view: { kind: "post", postId: firstPost._id },
+      })
+    );
+    const placementCount = rig.placements.length;
+
+    await dispatchMeasure(
+      viewport,
+      makeMeasurement({
+        bottomDistance: 7,
+        isAtLatest: false,
+        offset: 117,
+        view: { kind: "post", postId: firstPost._id },
+      }),
+      "scroll"
+    );
+    const state = await waitForState(
+      viewport,
+      (nextState) =>
+        nextState.lifecycle === "ready" &&
+        nextState.latestAffinity === "detached"
+    );
+
+    expect(state.pendingPlacement).toBeNull();
+    await dispatchMeasure(
+      viewport,
+      makeMeasurement({
+        bottomDistance: 7,
+        isAtLatest: false,
+        offset: 117,
+        view: { kind: "post", postId: firstPost._id },
+      })
+    );
+    expect(rig.placements).toHaveLength(placementCount);
+    await shutdownViewport(viewport);
+  });
+
   it("settles unread opening placements through post reach checks", async () => {
     const rig = createAdapters();
     const viewport = await createViewport(rig.adapters);
@@ -414,6 +465,41 @@ describe("conversation/viewport/module", () => {
     await shutdownViewport(viewport);
   });
 
+  it("retries the same visible post after failed read sync", async () => {
+    const rig = createAdapters();
+    const readAttempts: Id<"schoolClassForumPosts">[] = [];
+    const viewport = await createViewport({
+      ...rig.adapters,
+      read: {
+        markPostRead: (postId) =>
+          Effect.gen(function* () {
+            readAttempts.push(postId);
+
+            if (readAttempts.length === 1) {
+              return yield* Effect.fail(
+                new ViewportReadError({
+                  cause: "test",
+                  message: "First read sync failed in test.",
+                })
+              );
+            }
+
+            rig.readPostIds.push(postId);
+          }),
+      },
+    });
+
+    await openTranscript(viewport);
+    await dispatchMeasure(viewport, makePostMeasurement(firstPost._id));
+    await waitForState(viewport, () => readAttempts.length === 1);
+    await dispatchMeasure(viewport, makePostMeasurement(firstPost._id));
+    await waitForState(viewport, () => rig.readPostIds.length === 1);
+
+    expect(readAttempts).toEqual([firstPost._id, firstPost._id]);
+    expect(rig.readPostIds).toEqual([firstPost._id]);
+    await shutdownViewport(viewport);
+  });
+
   it("highlights an already settled post and clears the highlight event", async () => {
     const rig = createAdapters();
     const viewport = await createViewport(rig.adapters);
@@ -533,6 +619,30 @@ describe("conversation/viewport/module", () => {
 
     expect(state.pendingPlacement).toBeNull();
     expect(rig.snapshots).toEqual([]);
+    await shutdownViewport(viewport);
+  });
+
+  it("flushes a pending snapshot before shutdown", async () => {
+    const rig = createAdapters();
+    const viewport = await createViewport(rig.adapters);
+
+    await openReadyViewport(viewport);
+    const detachedMeasurement = makePostMeasurement(firstPost._id);
+    rig.setMeasurement(detachedMeasurement);
+    await dispatchMeasure(viewport, detachedMeasurement, "scroll");
+    expect(rig.snapshots).toEqual([]);
+
+    await Effect.runPromise(viewport.flushSnapshot);
+
+    expect(rig.snapshots.at(-1)).toMatchObject({
+      lastPostId: secondPost._id,
+      view: { kind: "post", postId: firstPost._id },
+      wasAtBottom: false,
+    });
+
+    await Effect.runPromise(viewport.flushSnapshot);
+    expect(rig.snapshots).toHaveLength(2);
+
     await shutdownViewport(viewport);
   });
 

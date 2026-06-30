@@ -38,7 +38,7 @@ export function ForumConversationBody() {
     throw error;
   }
 
-  if (isPending) {
+  if (isPending || !forum) {
     return null;
   }
 

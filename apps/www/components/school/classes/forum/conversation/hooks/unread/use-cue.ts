@@ -1,3 +1,4 @@
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useState } from "react";
 import {
   type ConversationUnreadCue,
@@ -17,28 +18,46 @@ import {
  * - https://react.dev/learn/state-as-a-snapshot
  */
 export function useUnreadCue({
+  forumId,
   isPending,
   posts,
 }: {
+  forumId: Id<"schoolClassForums">;
   isPending: boolean;
   posts: Parameters<typeof getInitialConversationUnreadCue>[0];
 }) {
-  const [isAcknowledged, setIsAcknowledged] = useState(false);
   const [seedState, setSeedState] = useState<{
     cue: ReturnType<typeof getInitialConversationUnreadCue> | null;
+    forumId: Id<"schoolClassForums">;
     hasSeeded: boolean;
+    isAcknowledged: boolean;
   }>({
     cue: null,
+    forumId,
     hasSeeded: false,
+    isAcknowledged: false,
   });
 
   let currentSeedState = seedState;
 
-  if (!(seedState.hasSeeded || isPending)) {
+  if (currentSeedState.forumId !== forumId) {
     currentSeedState = {
+      cue: null,
+      forumId,
+      hasSeeded: false,
+      isAcknowledged: false,
+    };
+  }
+
+  if (!(currentSeedState.hasSeeded || isPending)) {
+    currentSeedState = {
+      ...currentSeedState,
       cue: getInitialConversationUnreadCue(posts),
       hasSeeded: true,
     };
+  }
+
+  if (currentSeedState !== seedState) {
     setSeedState(currentSeedState);
   }
 
@@ -46,7 +65,7 @@ export function useUnreadCue({
   const unreadCue = seededCue
     ? ({
         ...seededCue,
-        status: isAcknowledged ? "history" : "new",
+        status: currentSeedState.isAcknowledged ? "history" : "new",
       } satisfies ConversationUnreadCue)
     : null;
 
@@ -56,7 +75,16 @@ export function useUnreadCue({
       return;
     }
 
-    setIsAcknowledged((current) => (current ? current : true));
+    setSeedState((current) => {
+      if (current.forumId !== forumId || current.isAcknowledged) {
+        return current;
+      }
+
+      return {
+        ...current,
+        isAcknowledged: true,
+      };
+    });
   };
 
   return {

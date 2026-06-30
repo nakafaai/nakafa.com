@@ -161,7 +161,11 @@ export function canRestoreViewportSnapshot({
     return false;
   }
 
-  return snapshot.renderedRowCount === activeTranscript.rows.length;
+  if (snapshot.view.kind === "post") {
+    return activeTranscript.rowIndexByPostId.has(snapshot.view.postId);
+  }
+
+  return true;
 }
 
 /** Selects the first Placement for a freshly opened Forum Conversation. */
@@ -175,9 +179,12 @@ export function getOpeningPlacement({
   unreadCue: ConversationUnreadCue | null;
 }) {
   if (
+    savedSnapshot &&
     canRestoreViewportSnapshot({ activeTranscript, snapshot: savedSnapshot })
   ) {
-    if (savedSnapshot?.view.kind === "bottom") {
+    const restoredView = savedSnapshot.view;
+
+    if (restoredView.kind === "bottom") {
       return {
         completion: "reached",
         highlightPostId: null,
@@ -186,18 +193,13 @@ export function getOpeningPlacement({
       } satisfies ViewportPlacement;
     }
 
-    if (
-      savedSnapshot?.view.kind === "post" &&
-      activeTranscript.rowIndexByPostId.has(savedSnapshot.view.postId)
-    ) {
-      return {
-        align: "center",
-        completion: "settled",
-        highlightPostId: null,
-        motion: "instant",
-        view: savedSnapshot.view,
-      } satisfies ViewportPlacement;
-    }
+    return {
+      align: "center",
+      completion: "settled",
+      highlightPostId: null,
+      motion: "instant",
+      view: restoredView,
+    } satisfies ViewportPlacement;
   }
 
   if (unreadCue && activeTranscript.rowIndexByPostId.has(unreadCue.postId)) {
