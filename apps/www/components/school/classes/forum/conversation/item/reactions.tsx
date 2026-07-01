@@ -1,3 +1,4 @@
+import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -6,6 +7,7 @@ import {
   HoverCardTrigger,
 } from "@repo/design-system/components/ui/hover-card";
 import { useMutation } from "convex/react";
+import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import type { ForumPost } from "@/components/school/classes/forum/conversation/data/entities";
@@ -35,9 +37,24 @@ export function PostReactions({ post }: { post: ForumPost }) {
                 <Button
                   disabled={isPending}
                   onClick={() => {
-                    startTransition(async () => {
-                      await toggleReaction({ postId: post._id, emoji });
-                    });
+                    startTransition(() =>
+                      Effect.runPromise(
+                        Effect.tryPromise({
+                          try: () =>
+                            toggleReaction({ postId: post._id, emoji }),
+                          catch: (cause) => cause,
+                        }).pipe(
+                          Effect.asVoid,
+                          Effect.catchAll((cause) =>
+                            Effect.sync(() => {
+                              captureException(cause, {
+                                source: "post-reaction-toggle",
+                              });
+                            })
+                          )
+                        )
+                      )
+                    );
                   }}
                   size="sm"
                   variant={

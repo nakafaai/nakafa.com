@@ -1,3 +1,4 @@
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
 import type { ConversationRow } from "@/components/school/classes/forum/conversation/data/transcript/pages";
 import { ForumHeader } from "@/components/school/classes/forum/conversation/header";
@@ -7,10 +8,12 @@ import { ConversationUnreadSeparator } from "@/components/school/classes/forum/c
 
 /** Render one transcript row while keeping author grouping logic in one place. */
 export function TranscriptRow({
+  highlightedPostId,
   row,
   previousRow,
   nextRow,
 }: {
+  highlightedPostId: Id<"schoolClassForumPosts"> | null;
   row: ConversationRow;
   previousRow?: ConversationRow;
   nextRow?: ConversationRow;
@@ -40,6 +43,7 @@ export function TranscriptRow({
   return (
     <ForumPostItem
       isFirstInGroup={isFirstInGroup}
+      isJumpHighlighted={highlightedPostId === row.post._id}
       isLastInGroup={isLastInGroup}
       post={row.post}
     />
@@ -48,16 +52,19 @@ export function TranscriptRow({
 
 /** Adapts one virtualized row index back into the grouped transcript row shape. */
 export function VirtualTranscriptRow({
+  highlightedPostId,
   index,
   row,
   rows,
 }: {
+  highlightedPostId: Id<"schoolClassForumPosts"> | null;
   index: number;
   row: ConversationRow;
   rows: readonly ConversationRow[];
 }) {
   return (
     <TranscriptRow
+      highlightedPostId={highlightedPostId}
       nextRow={rows[index + 1]}
       previousRow={rows[index - 1]}
       row={row}

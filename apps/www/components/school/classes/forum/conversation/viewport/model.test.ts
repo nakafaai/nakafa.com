@@ -294,6 +294,13 @@ describe("conversation/viewport/model", () => {
         },
         previousMeasurement: null,
       })
+    ).toBe(false);
+    expect(
+      isViewportDetachedScroll({
+        measurement,
+        pendingPlacement: null,
+        previousMeasurement,
+      })
     ).toBe(true);
   });
 

@@ -1,7 +1,7 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 
 import { ForumConversationBody } from "@/components/school/classes/forum/conversation/body";
-import { ConversationProvider } from "@/components/school/classes/forum/conversation/context/provider";
+import { DataProvider } from "@/components/school/classes/forum/conversation/context/use-data";
 import type { Forum } from "@/components/school/classes/forum/conversation/data/entities";
 
 /** Renders the forum conversation shell around the extracted controller state. */
@@ -15,16 +15,14 @@ export function ForumPostConversation({
   currentUserId: Id<"users">;
 }) {
   return (
-    <ConversationProvider
-      currentUserId={currentUserId}
-      forum={forum}
-      forumId={forumId}
+    <DataProvider
+      value={{
+        currentUserId,
+        forum,
+        forumId,
+      }}
     >
-      <ConversationBody />
-    </ConversationProvider>
+      <ForumConversationBody />
+    </DataProvider>
   );
-}
-
-function ConversationBody() {
-  return <ForumConversationBody />;
 }

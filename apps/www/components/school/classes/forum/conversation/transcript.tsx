@@ -37,6 +37,7 @@ export function ForumConversationTranscript({
     setVirtualizerHandle,
   } = useControls();
   const canGoBack = useViewport((state) => state.backStack.length > 0);
+  const highlightedPostId = useViewport((state) => state.highlightedPostId);
   const shouldShowLatest = useViewport((state) => state.shouldShowLatestButton);
 
   return (
@@ -53,6 +54,7 @@ export function ForumConversationTranscript({
         >
           {(row, index) => (
             <VirtualTranscriptRow
+              highlightedPostId={highlightedPostId}
               index={index}
               key={getConversationRowKey(row, forum?._id)}
               row={row}

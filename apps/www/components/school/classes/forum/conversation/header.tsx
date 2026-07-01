@@ -1,5 +1,6 @@
 import { WinkIcon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
+import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Response } from "@repo/design-system/components/ai/response";
 import {
@@ -32,6 +33,7 @@ import {
 } from "@repo/design-system/components/ui/tooltip";
 import { useMutation } from "convex/react";
 import { format } from "date-fns";
+import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
@@ -87,6 +89,7 @@ export function ForumHeader() {
   );
 }
 
+/** Renders the existing forum reaction chips with hover detail and toggles. */
 function ForumReactions() {
   const t = useTranslations("Common");
   const forum = useData((state) => state.forum);
@@ -100,10 +103,25 @@ function ForumReactions() {
     return null;
   }
 
+  /** Toggles the current user's forum reaction without blocking transcript input. */
   const handleToggleReaction = (emoji: string) => {
-    startTransition(async () => {
-      await toggleReaction({ forumId: forum._id, emoji });
-    });
+    startTransition(() =>
+      Effect.runPromise(
+        Effect.tryPromise({
+          try: () => toggleReaction({ forumId: forum._id, emoji }),
+          catch: (cause) => cause,
+        }).pipe(
+          Effect.asVoid,
+          Effect.catchAll((cause) =>
+            Effect.sync(() => {
+              captureException(cause, {
+                source: "forum-reaction-toggle",
+              });
+            })
+          )
+        )
+      )
+    );
   };
 
   return (
@@ -153,6 +171,7 @@ function ForumReactions() {
   );
 }
 
+/** Renders the forum-level action controls for adding reactions. */
 function ForumActions() {
   const t = useTranslations("Common");
   const forum = useData((state) => state.forum);
@@ -167,10 +186,25 @@ function ForumActions() {
     return null;
   }
 
+  /** Applies a picked forum reaction from the header action menu. */
   const handleToggleReaction = (emoji: string) => {
-    startTransition(async () => {
-      await toggleReaction({ forumId: forum._id, emoji });
-    });
+    startTransition(() =>
+      Effect.runPromise(
+        Effect.tryPromise({
+          try: () => toggleReaction({ forumId: forum._id, emoji }),
+          catch: (cause) => cause,
+        }).pipe(
+          Effect.asVoid,
+          Effect.catchAll((cause) =>
+            Effect.sync(() => {
+              captureException(cause, {
+                source: "forum-reaction-picker",
+              });
+            })
+          )
+        )
+      )
+    );
   };
 
   return (

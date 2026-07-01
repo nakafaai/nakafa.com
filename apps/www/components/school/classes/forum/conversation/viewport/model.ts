@@ -43,7 +43,7 @@ export type ViewportEvent =
     }
   | { postId: Id<"schoolClassForumPosts">; type: "post" }
   | { type: "back" }
-  | { type: "highlight-expired" }
+  | { token: number; type: "highlight-expired" }
   | { type: "latest" }
   | { type: "persist" };
 
@@ -117,8 +117,12 @@ export function isViewportDetachedScroll({
   pendingPlacement: ViewportPlacement | null;
   previousMeasurement: ViewportMeasurement | null;
 }) {
-  if (pendingPlacement?.view.kind !== "bottom") {
+  if (!pendingPlacement) {
     return true;
+  }
+
+  if (pendingPlacement.view.kind !== "bottom") {
+    return false;
   }
 
   if (!previousMeasurement) {

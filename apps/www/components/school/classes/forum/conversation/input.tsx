@@ -86,7 +86,7 @@ export function ForumPostInput() {
         })
       ),
     },
-    onSubmit: async ({ value }) => {
+    onSubmit: ({ value }) => {
       const hasBody = value.body.trim().length > 0;
       const hasAttachments = files.length > 0;
 
@@ -94,47 +94,53 @@ export function ForumPostInput() {
         return;
       }
 
-      const result = await Effect.runPromise(
-        Effect.either(
-          submitForumPost({
-            files,
-            mutations: {
-              createPost,
-              discardForumUploads,
-              generateUploadUrl,
-              saveForumUpload,
-            },
-            post: {
-              body: value.body,
-              forumId,
-              parentId: replyTarget?.postId,
-            },
-          })
-        )
+      return Effect.runPromise(
+        Effect.gen(function* () {
+          const result = yield* Effect.either(
+            submitForumPost({
+              files,
+              mutations: {
+                createPost,
+                discardForumUploads,
+                generateUploadUrl,
+                saveForumUpload,
+              },
+              post: {
+                body: value.body,
+                forumId,
+                parentId: replyTarget?.postId,
+              },
+            })
+          );
+
+          if (Either.isLeft(result)) {
+            yield* Effect.sync(() => {
+              captureException(result.left, {
+                source: "forum-post-submit",
+              });
+              toast.error(t("create-post-failed"));
+
+              requestAnimationFrame(() => {
+                textareaRef.current?.focus();
+              });
+            });
+
+            return;
+          }
+
+          yield* Effect.sync(() => {
+            form.reset();
+            clearFiles();
+            setForumReplyTarget(forumId, null);
+            acknowledgeUnreadCue();
+
+            requestAnimationFrame(() => {
+              textareaRef.current?.focus();
+              goToLatest();
+            });
+          });
+        })
       );
-
-      if (Either.isLeft(result)) {
-        captureException(result.left, {
-          source: "forum-post-submit",
-        });
-        toast.error(t("create-post-failed"));
-
-        requestAnimationFrame(() => {
-          textareaRef.current?.focus();
-        });
-
-        return;
-      }
-
-      form.reset();
-      clearFiles();
-      setForumReplyTarget(forumId, null);
-      acknowledgeUnreadCue();
-
-      requestAnimationFrame(() => {
-        textareaRef.current?.focus();
-        goToLatest();
-      });
     },
   });
 

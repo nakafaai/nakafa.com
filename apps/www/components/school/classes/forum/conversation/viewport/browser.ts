@@ -26,10 +26,14 @@ type MarkForumReadMutation = (
 
 interface BrowserViewportAdaptersInput {
   forumId: Id<"schoolClassForums">;
+  /** Returns the mounted Virtua handle when the transcript is rendered. */
   getHandle: () => VirtualizerHandle | null;
+  /** Returns the latest active transcript model held by the React boundary. */
   getTranscript: () => ActiveTranscriptModel;
+  /** Convex mutation boundary for marking the visible post as read. */
   markForumRead: MarkForumReadMutation;
   prefersReducedMotion: boolean;
+  /** Session-store boundary for saving the semantic scroll snapshot. */
   saveSnapshot: (
     forumId: Id<"schoolClassForums">,
     snapshot: ConversationScrollSnapshot

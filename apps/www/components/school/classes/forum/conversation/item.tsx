@@ -15,7 +15,6 @@ import { PostItemActions } from "@/components/school/classes/forum/conversation/
 import { PostAttachments } from "@/components/school/classes/forum/conversation/item/attachments";
 import { PostReactions } from "@/components/school/classes/forum/conversation/item/reactions";
 import { PostReplyIndicator } from "@/components/school/classes/forum/conversation/item/reply-indicator";
-import { useViewport } from "@/components/school/classes/forum/conversation/viewport/context";
 import { getLocale } from "@/lib/utils/date";
 import { getInitialName } from "@/lib/utils/helper";
 
@@ -23,10 +22,12 @@ import { getInitialName } from "@/lib/utils/helper";
 export function ForumPostItem({
   post,
   isFirstInGroup,
+  isJumpHighlighted,
   isLastInGroup,
 }: {
   post: ForumPost;
   isFirstInGroup: boolean;
+  isJumpHighlighted: boolean;
   isLastInGroup: boolean;
 }) {
   const t = useTranslations("Common");
@@ -37,9 +38,6 @@ export function ForumPostItem({
   );
   const userName = post.user?.name ?? t("anonymous");
   const userImage = post.user?.image ?? "";
-  const isJumpHighlighted = useViewport(
-    (state) => state.highlightedPostId === post._id
-  );
   const isReplyTarget = replyTarget?.postId === post._id;
   const isReplyToMe = post.replyToUserId === currentUserId;
 

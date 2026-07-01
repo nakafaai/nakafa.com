@@ -1,0 +1,59 @@
+import { Effect, Ref, SubscriptionRef } from "effect";
+import { startViewportPlacement } from "@/components/school/classes/forum/conversation/viewport/placement";
+import type { ViewportRuntime } from "@/components/school/classes/forum/conversation/viewport/runtime";
+import { updateViewportState } from "@/components/school/classes/forum/conversation/viewport/state";
+
+/** Navigates to the latest semantic back target and discards stale back entries. */
+export function handleBackNavigation(runtime: ViewportRuntime) {
+  return Effect.gen(function* () {
+    const state = yield* SubscriptionRef.get(runtime.stateRef);
+    const backView = state.backStack.at(-1);
+
+    if (!backView) {
+      return;
+    }
+
+    yield* updateViewportState(runtime, (current) => ({
+      ...current,
+      backStack: current.backStack.slice(0, -1),
+      highlightedPostId: null,
+    }));
+    const activeTranscript = yield* Ref.get(runtime.activeTranscriptRef);
+
+    if (
+      backView.kind === "post" &&
+      !activeTranscript?.rowIndexByPostId.has(backView.postId)
+    ) {
+      yield* startViewportPlacement(runtime, {
+        completion: "reached",
+        highlightPostId: null,
+        view: { kind: "bottom" },
+      });
+      return;
+    }
+
+    yield* startViewportPlacement(runtime, {
+      align: backView.kind === "post" ? "center" : undefined,
+      completion: backView.kind === "post" ? "settled" : "reached",
+      highlightPostId: null,
+      view: backView,
+    });
+  });
+}
+
+/** Removes a back target after user scrolling reaches that semantic view. */
+export function clearReachedBackTarget(runtime: ViewportRuntime) {
+  return Effect.gen(function* () {
+    const state = yield* SubscriptionRef.get(runtime.stateRef);
+    const backView = state.backStack.at(-1);
+
+    if (!(backView && runtime.adapters.scroller.isViewReached(backView))) {
+      return;
+    }
+
+    yield* updateViewportState(runtime, (current) => ({
+      ...current,
+      backStack: current.backStack.slice(0, -1),
+    }));
+  });
+}

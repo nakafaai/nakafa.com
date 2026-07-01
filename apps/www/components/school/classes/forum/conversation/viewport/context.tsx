@@ -5,7 +5,6 @@ import { useMutation } from "convex/react";
 import { Effect, Fiber, Stream } from "effect";
 import {
   type ReactNode,
-  type RefObject,
   useEffect,
   useEffectEvent,
   useRef,
@@ -16,29 +15,43 @@ import type { VirtualizerHandle } from "virtua";
 import { useForumSession } from "@/components/school/classes/forum/context/use-session";
 import type { ActiveTranscriptModel } from "@/components/school/classes/forum/conversation/data/transcript/active";
 import type { ConversationUnreadCue } from "@/components/school/classes/forum/conversation/data/transcript/unread";
+import { ConversationViewportAdapters } from "@/components/school/classes/forum/conversation/viewport/adapter";
 import {
   type BrowserViewportScroller,
   createBrowserViewportAdapters,
 } from "@/components/school/classes/forum/conversation/viewport/browser";
 import {
+  cancelViewportMeasureFrame,
+  dispatchViewportEvent,
+  measureViewport,
+  requestViewportMeasureFrame,
+} from "@/components/school/classes/forum/conversation/viewport/frame";
+import {
   initialViewportState,
-  type ViewportEvent,
   type ViewportState,
 } from "@/components/school/classes/forum/conversation/viewport/model";
 import {
   type ConversationViewport,
   makeConversationViewport,
-} from "@/components/school/classes/forum/conversation/viewport/module";
+} from "@/components/school/classes/forum/conversation/viewport/service";
 import type { ConversationScrollSnapshot } from "@/components/school/classes/forum/store/session";
 
 interface ViewportActions {
+  /** Clears the current unread cue once the UI has acknowledged it. */
   acknowledgeUnreadCue: () => void;
+  /** Persists the current semantic scroll snapshot immediately. */
   flushSnapshot: () => void;
+  /** Navigates to the last semantic back target. */
   goBack: () => void;
+  /** Navigates to the latest Forum Conversation message. */
   goToLatest: () => void;
+  /** Navigates to one Forum Conversation message by post id. */
   goToPost: (postId: Id<"schoolClassForumPosts">) => void;
+  /** Captures a user-driven scroll measurement. */
   handleScroll: () => void;
+  /** Captures a settled layout measurement after scrolling ends. */
   handleScrollEnd: () => void;
+  /** Registers the mounted virtualizer handle used by the viewport service. */
   setVirtualizerHandle: (handle: VirtualizerHandle | null) => void;
 }
 
@@ -48,63 +61,6 @@ interface ViewportContextValue {
 }
 
 const ViewportContext = createContext<ViewportContextValue | null>(null);
-
-/** Sends one event into the current Viewport Module instance. */
-function dispatchViewportEvent(
-  viewportRef: RefObject<ConversationViewport | null>,
-  event: ViewportEvent
-) {
-  const viewport = viewportRef.current;
-
-  if (!viewport) {
-    return;
-  }
-
-  Effect.runFork(viewport.dispatch(event));
-}
-
-/** Measures the current scroller and forwards the result to the Viewport Module. */
-function measureViewport(
-  scrollerRef: RefObject<BrowserViewportScroller | null>,
-  viewportRef: RefObject<ConversationViewport | null>,
-  source: "frame" | "scroll"
-) {
-  dispatchViewportEvent(viewportRef, {
-    measurement: scrollerRef.current?.measure() ?? null,
-    source,
-    type: "measure",
-  });
-}
-
-/** Schedules one animation-frame measurement for Virtua layout changes. */
-function requestViewportMeasureFrame({
-  frameRef,
-  scrollerRef,
-  viewportRef,
-}: {
-  frameRef: RefObject<number | null>;
-  scrollerRef: RefObject<BrowserViewportScroller | null>;
-  viewportRef: RefObject<ConversationViewport | null>;
-}) {
-  if (frameRef.current !== null) {
-    cancelAnimationFrame(frameRef.current);
-  }
-
-  frameRef.current = requestAnimationFrame(() => {
-    frameRef.current = null;
-    measureViewport(scrollerRef, viewportRef, "frame");
-  });
-}
-
-/** Cancels any pending animation-frame measurement. */
-function cancelViewportMeasureFrame(frameRef: RefObject<number | null>) {
-  if (frameRef.current === null) {
-    return;
-  }
-
-  cancelAnimationFrame(frameRef.current);
-  frameRef.current = null;
-}
 
 /** Provides the React Interface for one Effect-owned Forum Conversation Viewport. */
 export function ConversationViewportProvider({
@@ -131,9 +87,7 @@ export function ConversationViewportProvider({
   const prefersReducedMotion = useReducedMotion();
   const activeTranscriptRef = useRef(activeTranscript);
   const frameRef = useRef<number | null>(null);
-  const savedSnapshotRef = useRef(savedSnapshot);
   const scrollerRef = useRef<BrowserViewportScroller | null>(null);
-  const unreadCueRef = useRef(unreadCue);
   const virtualizerHandleRef = useRef<VirtualizerHandle | null>(null);
   const viewportRef = useRef<ConversationViewport | null>(null);
   const [state, setState] = useState(initialViewportState);
@@ -150,8 +104,6 @@ export function ConversationViewportProvider({
       unreadCue: openingUnreadCue,
     } = getOpeningTranscript();
     activeTranscriptRef.current = openingTranscript;
-    savedSnapshotRef.current = openingSavedSnapshot;
-    unreadCueRef.current = openingUnreadCue;
 
     const { adapters, scroller } = createBrowserViewportAdapters({
       forumId,
@@ -161,7 +113,11 @@ export function ConversationViewportProvider({
       prefersReducedMotion: prefersReducedMotion === true,
       saveSnapshot: saveConversationScrollSnapshot,
     });
-    const viewport = Effect.runSync(makeConversationViewport(adapters));
+    const viewport = Effect.runSync(
+      makeConversationViewport().pipe(
+        Effect.provideService(ConversationViewportAdapters, adapters)
+      )
+    );
     const stateFiber = Effect.runFork(
       Stream.runForEach(viewport.changes, (nextState) =>
         Effect.sync(() => {
@@ -211,8 +167,6 @@ export function ConversationViewportProvider({
 
   useEffect(() => {
     activeTranscriptRef.current = activeTranscript;
-    savedSnapshotRef.current = savedSnapshot;
-    unreadCueRef.current = unreadCue;
 
     dispatchViewportEvent(viewportRef, {
       activeTranscript,
@@ -224,6 +178,7 @@ export function ConversationViewportProvider({
   }, [activeTranscript, savedSnapshot, unreadCue]);
 
   useEffect(() => {
+    /** Persists the latest semantic viewport before the page can suspend. */
     const persist = () => {
       const viewport = viewportRef.current;
 
@@ -233,6 +188,7 @@ export function ConversationViewportProvider({
 
       Effect.runFork(viewport.flushSnapshot);
     };
+    /** Flushes the viewport snapshot when the document moves to the background. */
     const handleVisibilityChange = () => {
       if (document.visibilityState === "hidden") {
         persist();
@@ -262,15 +218,12 @@ export function ConversationViewportProvider({
     },
     goBack: () => {
       dispatchViewportEvent(viewportRef, { type: "back" });
-      requestViewportMeasureFrame({ frameRef, scrollerRef, viewportRef });
     },
     goToLatest: () => {
       dispatchViewportEvent(viewportRef, { type: "latest" });
-      requestViewportMeasureFrame({ frameRef, scrollerRef, viewportRef });
     },
     goToPost: (postId) => {
       dispatchViewportEvent(viewportRef, { postId, type: "post" });
-      requestViewportMeasureFrame({ frameRef, scrollerRef, viewportRef });
     },
     handleScroll: () => {
       measureViewport(scrollerRef, viewportRef, "scroll");

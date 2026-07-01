@@ -10,7 +10,7 @@ import { ForumPostInput } from "@/components/school/classes/forum/conversation/i
 import { ForumConversationTranscript } from "@/components/school/classes/forum/conversation/transcript";
 import { ConversationViewportProvider } from "@/components/school/classes/forum/conversation/viewport/context";
 
-/** Loads and wires one Forum Conversation body into the Viewport Module. */
+/** Loads and wires one Forum Conversation body into the viewport service. */
 export function ForumConversationBody() {
   const forumId = useData((state) => state.forumId);
   const isHydrated = useForumSession((state) => state.isHydrated);

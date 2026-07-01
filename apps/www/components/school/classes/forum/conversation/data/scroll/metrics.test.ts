@@ -7,6 +7,7 @@ import {
 } from "@/components/school/classes/forum/conversation/data/scroll/metrics";
 import { createConversationTestHandle } from "@/components/school/classes/forum/conversation/fixtures/data";
 
+/** Creates a minimal virtualizer geometry handle for scroll metric tests. */
 function createHandle({
   scrollOffset,
   scrollSize = 500,

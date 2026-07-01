@@ -12,24 +12,28 @@ import {
   conversationTestRows as rows,
   conversationTestSecondPost as secondPost,
 } from "@/components/school/classes/forum/conversation/fixtures/data";
-import type { ViewportAdapters } from "@/components/school/classes/forum/conversation/viewport/adapter";
+import {
+  ConversationViewportAdapters,
+  type ViewportAdapters,
+} from "@/components/school/classes/forum/conversation/viewport/adapter";
 import type {
   ViewportEvent,
   ViewportMeasurement,
   ViewportPlacement,
   ViewportState,
 } from "@/components/school/classes/forum/conversation/viewport/model";
-import type { ConversationViewport } from "@/components/school/classes/forum/conversation/viewport/module";
-import { makeConversationViewport } from "@/components/school/classes/forum/conversation/viewport/module";
+import type { ConversationViewport } from "@/components/school/classes/forum/conversation/viewport/service";
+import { makeConversationViewport } from "@/components/school/classes/forum/conversation/viewport/service";
 import type { ConversationScrollSnapshot } from "@/components/school/classes/forum/store/session";
 
-export const moduleTestTranscript = {
+export const viewportTestTranscript = {
   lastPostId: secondPost._id,
   postIds: [firstPost._id, secondPost._id],
   rowIndexByPostId,
   rows,
 } satisfies ActiveTranscriptModel;
 
+/** Creates one normalized bottom measurement for viewport service tests. */
 export function makeMeasurement(
   overrides: Partial<ViewportMeasurement> = {}
 ): ViewportMeasurement {
@@ -44,6 +48,7 @@ export function makeMeasurement(
   };
 }
 
+/** Creates one detached post measurement for viewport service tests. */
 export function makePostMeasurement(
   postId: Id<"schoolClassForumPosts">,
   bottomDistance = 80
@@ -57,6 +62,7 @@ export function makePostMeasurement(
   });
 }
 
+/** Creates browser adapter fakes for one viewport service test. */
 export function createAdapters() {
   let measurement: ViewportMeasurement | null = makeMeasurement();
   let placeResult = true;
@@ -120,10 +126,16 @@ export function createAdapters() {
   };
 }
 
+/** Creates one Effect-owned viewport service with test adapters provided. */
 export function createViewport(adapters: ViewportAdapters) {
-  return Effect.runPromise(makeConversationViewport(adapters));
+  return Effect.runPromise(
+    makeConversationViewport().pipe(
+      Effect.provideService(ConversationViewportAdapters, adapters)
+    )
+  );
 }
 
+/** Sends one event through the serialized viewport service queue. */
 export async function dispatchViewport(
   viewport: ConversationViewport,
   event: ViewportEvent
@@ -131,6 +143,7 @@ export async function dispatchViewport(
   await Effect.runPromise(viewport.dispatch(event));
 }
 
+/** Sends one normalized measurement event through the viewport service queue. */
 export async function dispatchMeasure(
   viewport: ConversationViewport,
   measurement: ViewportMeasurement | null,
@@ -143,21 +156,24 @@ export async function dispatchMeasure(
   });
 }
 
+/** Opens the test transcript without waiting for initial placement to settle. */
 export async function openTranscript(viewport: ConversationViewport) {
   await dispatchViewport(viewport, {
-    activeTranscript: moduleTestTranscript,
+    activeTranscript: viewportTestTranscript,
     savedSnapshot: null,
     type: "transcript",
     unreadCue: null,
   });
 }
 
+/** Opens the test transcript and settles it at the latest edge. */
 export async function openReadyViewport(viewport: ConversationViewport) {
   await openTranscript(viewport);
   await dispatchMeasure(viewport, makeMeasurement());
   return waitForState(viewport, (state) => state.lifecycle === "ready");
 }
 
+/** Waits until the viewport service exposes a state matching the predicate. */
 export async function waitForState(
   viewport: ConversationViewport,
   predicate: (state: ViewportState) => boolean
@@ -175,6 +191,7 @@ export async function waitForState(
   return Effect.runPromise(viewport.getState);
 }
 
+/** Shuts down one viewport service test instance. */
 export async function shutdownViewport(viewport: ConversationViewport) {
   await Effect.runPromise(viewport.shutdown);
 }
