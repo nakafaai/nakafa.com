@@ -4,6 +4,7 @@ import {
   listCurriculumStaticParams,
   readCurriculumBreadcrumbs,
   readCurriculumHeaderLink,
+  readCurriculumRootOptions,
   readCurriculumRouteModel,
   readCurriculumRoutes,
   readCurriculumTocHeader,
@@ -156,6 +157,35 @@ describe("curriculum route data", () => {
       )
     ).toBe(true);
     expect("headerDescription" in biologyModel).toBe(false);
+  });
+
+  it("builds localized root curriculum options with provider country metadata", () => {
+    expect(readCurriculumRootOptions("id")).toEqual([
+      {
+        countryCode: "ID",
+        href: "/id/kurikulum/merdeka",
+        title: "Kurikulum Merdeka",
+        value: "kurikulum/merdeka",
+      },
+      {
+        countryCode: "GB",
+        href: "/id/kurikulum/cambridge-international",
+        title: "Cambridge International",
+        value: "kurikulum/cambridge-international",
+      },
+      {
+        countryCode: "SG",
+        href: "/id/kurikulum/singapore-moe",
+        title: "Singapore MOE",
+        value: "kurikulum/singapore-moe",
+      },
+      {
+        countryCode: "US",
+        href: "/id/kurikulum/amerika-serikat",
+        title: "United States Standards-Aligned Pathway",
+        value: "kurikulum/amerika-serikat",
+      },
+    ]);
   });
 
   it("builds parent links, breadcrumbs, TOC headers, and material chapters", () => {

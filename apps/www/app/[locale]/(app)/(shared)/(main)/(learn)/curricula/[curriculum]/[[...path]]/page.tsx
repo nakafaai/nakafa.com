@@ -1,24 +1,23 @@
 import type { PublicCurriculumRoute } from "@repo/contents/_types/route/schema";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { CurriculumRouteCardIcon } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/card-icon";
 import {
   listCurriculumStaticParams,
   readCurriculumBreadcrumbs,
   readCurriculumHeaderLink,
+  readCurriculumRootOptions,
   readCurriculumRouteModel,
   readCurriculumRoutes,
   readCurriculumTocHeader,
   readMaterialCardChapters,
   resolveCurriculumRoute,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/data";
+import { readCurriculumRouteIcon } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/icons";
 import {
-  readCurriculumGroupIcon,
-  readCurriculumRouteIcon,
-} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/icons";
+  CurriculumRootCards,
+  CurriculumRootHeader,
+} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/root";
 import { readCurriculumSeoContext } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/seo";
 import { CardMaterial } from "@/components/shared/card-material";
 import { ComingSoon } from "@/components/shared/coming-soon";
@@ -95,24 +94,38 @@ export default async function Page({ params }: CurriculumPageProps) {
   const routeLookup = await resolveCurriculumRoute(params);
   const { locale, route } = routeLookup;
   const tCommon = await getTranslations({ locale, namespace: "Common" });
+  const breadcrumbs = readCurriculumBreadcrumbs(tCommon("home"), route);
+  const selectorLabel =
+    route.level === "track"
+      ? (await getTranslations({ locale, namespace: "LearningPrograms" }))(
+          "kind.school-curriculum"
+        )
+      : "";
   const body = readCurriculumRouteModel(routeLookup);
   const githubUrl = getCurriculumGithubUrl(route);
 
   return (
     <>
       <BreadcrumbJsonLd
-        breadcrumbItems={createBreadcrumbItems(
-          locale,
-          readCurriculumBreadcrumbs(tCommon("home"), route)
-        )}
+        breadcrumbItems={createBreadcrumbItems(locale, breadcrumbs)}
       />
       <LayoutMaterial>
         <LayoutMaterialContent>
-          <HeaderContent
-            icon={readCurriculumRouteIcon(route)}
-            link={readCurriculumHeaderLink(locale, route)}
-            title={route.title}
-          />
+          {route.level === "track" ? (
+            <CurriculumRootHeader
+              breadcrumbs={breadcrumbs}
+              currentRoute={route}
+              locale={locale}
+              options={readCurriculumRootOptions(locale)}
+              selectorLabel={selectorLabel}
+            />
+          ) : (
+            <HeaderContent
+              icon={readCurriculumRouteIcon(route)}
+              link={readCurriculumHeaderLink(locale, route)}
+              title={route.title}
+            />
+          )}
           <LayoutContent>
             <CurriculumRouteBody {...body} />
           </LayoutContent>
@@ -138,9 +151,9 @@ export default async function Page({ params }: CurriculumPageProps) {
 /**
  * Renders curriculum context pages through established route-level composition.
  *
- * Root rows reuse the historical subject grouped-card grid. Lower chooser
- * rows reuse `SubjectList`, and subject/course nodes keep the established
- * collapsible material-card composition with direct canonical lesson links.
+ * Root rows render direct curriculum choice cards. Lower chooser rows reuse
+ * `SubjectList`, and subject/course nodes keep the established collapsible
+ * material-card composition with direct canonical lesson links.
  */
 function CurriculumRouteBody({
   childGroups,
@@ -164,40 +177,7 @@ function CurriculumRouteBody({
   }
 
   if (route.level === "track") {
-    return (
-      <div className="flex flex-col gap-12 pb-24">
-        {childGroups.map((group) => (
-          <section className="flex flex-col gap-6" key={group.key}>
-            {group.title && (
-              <div className="flex items-center gap-2">
-                {group.iconKey && (
-                  <HugeIcons
-                    className="size-5"
-                    icon={readCurriculumGroupIcon(group.iconKey)}
-                  />
-                )}
-                <h2 className="font-medium text-lg">{group.title}</h2>
-              </div>
-            )}
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:gap-6">
-              {group.children.map((child) => (
-                <NavigationLink
-                  className="group flex flex-col items-center gap-2"
-                  href={`/${locale}/${child.publicPath}`}
-                  key={child.publicPath}
-                  prefetch
-                >
-                  <div className="flex aspect-[1/0.95] w-full items-center justify-center rounded-xl bg-muted/50 transition-all ease-out group-hover:bg-muted">
-                    <CurriculumRouteCardIcon route={child} />
-                  </div>
-                  <h3 className="text-center">{child.title}</h3>
-                </NavigationLink>
-              ))}
-            </div>
-          </section>
-        ))}
-      </div>
-    );
+    return <CurriculumRootCards locale={locale} routes={childRoutes} />;
   }
 
   return (

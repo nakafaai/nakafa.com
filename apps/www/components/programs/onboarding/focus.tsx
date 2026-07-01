@@ -35,10 +35,10 @@ import {
 import { onboardingFocusFormSchema } from "@/components/programs/onboarding/state";
 import {
   getOnboardingChoiceGridColumns,
-  onboardingChoiceCardVariants,
   onboardingChoiceGridVariants,
 } from "@/components/programs/onboarding/styles";
 import { submitOnboardingSelection } from "@/components/programs/onboarding/submit";
+import { choiceCardVariants } from "@/components/shared/choice-card";
 import { useUser } from "@/lib/context/use-user";
 
 /** Saves the selected learning focus for the latest reactive onboarding role. */
@@ -151,7 +151,7 @@ function FocusStepFormBody({
   return (
     <form
       action={() => form.handleSubmit()}
-      className="mx-auto flex w-full max-w-4xl flex-col items-center justify-center gap-y-8 px-6 py-12"
+      className="mx-auto flex w-full max-w-3xl flex-col items-center justify-center gap-y-8 px-6 py-12"
       id="program-onboarding-focus-form"
     >
       <StepHeading title={t(`onboarding.focus.${selectedRole}.title`)} />
@@ -167,7 +167,7 @@ function FocusStepFormBody({
               <button
                 aria-label={t(option.titleKey)}
                 aria-pressed={field.state.value === option.key}
-                className={onboardingChoiceCardVariants({
+                className={choiceCardVariants({
                   selected: field.state.value === option.key,
                 })}
                 key={option.key}
