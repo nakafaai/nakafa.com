@@ -2,10 +2,7 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect } from "effect";
 import { vi } from "vitest";
 import type { ActiveTranscriptModel } from "@/components/school/classes/forum/conversation/data/transcript/active";
-import {
-  areConversationViewsEqual,
-  type ConversationView,
-} from "@/components/school/classes/forum/conversation/data/view/model";
+import { areConversationViewsEqual } from "@/components/school/classes/forum/conversation/data/view/model";
 import {
   conversationTestFirstPost as firstPost,
   conversationTestRowIndexByPostId as rowIndexByPostId,
@@ -66,7 +63,6 @@ export function makePostMeasurement(
 export function createAdapters() {
   let measurement: ViewportMeasurement | null = makeMeasurement();
   let placeResult = true;
-  let settledView: ConversationView | null = null;
   const placements: ViewportPlacement[] = [];
   const readPostIds: Id<"schoolClassForumPosts">[] = [];
   const snapshots: ConversationScrollSnapshot[] = [];
@@ -90,8 +86,17 @@ export function createAdapters() {
 
         return areConversationViewsEqual(measurement.view, view);
       },
-      isViewSettled: (view) =>
-        areConversationViewsEqual(settledView ?? measurement?.view, view),
+      isViewVisible: (view) => {
+        if (!measurement) {
+          return false;
+        }
+
+        if (view.kind === "bottom") {
+          return measurement.isAtLatest;
+        }
+
+        return areConversationViewsEqual(measurement.view, view);
+      },
       measure: () => measurement,
       place: vi.fn((placement: ViewportPlacement) => {
         placements.push(placement);
@@ -118,9 +123,6 @@ export function createAdapters() {
     },
     setPlaceResult: (nextPlaceResult: boolean) => {
       placeResult = nextPlaceResult;
-    },
-    setSettledView: (view: ConversationView | null) => {
-      settledView = view;
     },
     snapshots,
   };

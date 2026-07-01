@@ -68,7 +68,15 @@ export function handleViewportMeasurement(
     }));
 
     if (shouldRetryPendingPlacement && pendingPlacement) {
-      runtime.adapters.scroller.place(pendingPlacement);
+      const didPlace = runtime.adapters.scroller.place(pendingPlacement);
+
+      if (!didPlace) {
+        yield* updateViewportState(runtime, (state) => ({
+          ...state,
+          lifecycle: "ready",
+          pendingPlacement: null,
+        }));
+      }
     }
 
     if (reachedPendingPlacement && pendingPlacement?.highlightPostId) {

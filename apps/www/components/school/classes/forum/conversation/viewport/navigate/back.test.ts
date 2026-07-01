@@ -32,7 +32,6 @@ describe("conversation/viewport/navigate/back", () => {
     );
 
     expect(rig.placements.at(-1)).toMatchObject({
-      completion: "reached",
       view: { kind: "bottom" },
     });
 
@@ -56,7 +55,6 @@ describe("conversation/viewport/navigate/back", () => {
 
     expect(rig.placements.at(-1)).toMatchObject({
       align: "center",
-      completion: "settled",
       view: { kind: "post", postId: firstPost._id },
     });
 
@@ -88,7 +86,6 @@ describe("conversation/viewport/navigate/back", () => {
     );
 
     expect(rig.placements.at(-1)).toMatchObject({
-      completion: "reached",
       view: { kind: "bottom" },
     });
 

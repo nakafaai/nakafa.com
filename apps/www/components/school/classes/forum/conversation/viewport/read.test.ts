@@ -1,5 +1,5 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Effect } from "effect";
+import { Deferred, Effect } from "effect";
 import { describe, expect, it } from "vitest";
 import {
   conversationTestFirstPost as firstPost,
@@ -99,6 +99,70 @@ describe("conversation/viewport/read", () => {
 
     expect(readAttempts).toEqual([firstPost._id, firstPost._id]);
     expect(rig.readPostIds).toEqual([firstPost._id]);
+    await shutdownViewport(viewport);
+  });
+
+  it("suppresses duplicate read sync while the post is in flight", async () => {
+    const rig = createAdapters();
+    const readAttempts: Id<"schoolClassForumPosts">[] = [];
+    const viewport = await createViewport({
+      ...rig.adapters,
+      read: {
+        markPostRead: (postId) =>
+          Effect.gen(function* () {
+            readAttempts.push(postId);
+            return yield* Effect.never;
+          }),
+      },
+    });
+
+    await openTranscript(viewport);
+    await dispatchMeasure(viewport, makePostMeasurement(firstPost._id));
+    await waitForState(viewport, () => readAttempts.length === 1);
+    await dispatchMeasure(viewport, makePostMeasurement(firstPost._id));
+
+    expect(readAttempts).toEqual([firstPost._id]);
+    await shutdownViewport(viewport);
+  });
+
+  it("keeps a newer in-flight read marker when an older sync fails", async () => {
+    const rig = createAdapters();
+    const firstRead = await Effect.runPromise(
+      Deferred.make<void, ViewportReadError>()
+    );
+    const readAttempts: Id<"schoolClassForumPosts">[] = [];
+    const viewport = await createViewport({
+      ...rig.adapters,
+      read: {
+        markPostRead: (postId) => {
+          readAttempts.push(postId);
+
+          if (postId === firstPost._id) {
+            return Deferred.await(firstRead);
+          }
+
+          return Effect.never;
+        },
+      },
+    });
+
+    await openTranscript(viewport);
+    await dispatchMeasure(viewport, makePostMeasurement(firstPost._id));
+    await waitForState(viewport, () => readAttempts.length === 1);
+    await dispatchMeasure(viewport, makePostMeasurement(secondPost._id));
+    await waitForState(viewport, () => readAttempts.length === 2);
+    await Effect.runPromise(
+      Deferred.fail(
+        firstRead,
+        new ViewportReadError({
+          cause: "test",
+          message: "Older read sync failed in test.",
+        })
+      )
+    );
+    await dispatchMeasure(viewport, makePostMeasurement(secondPost._id));
+
+    expect(readAttempts).toEqual([firstPost._id, secondPost._id]);
     await shutdownViewport(viewport);
   });
 

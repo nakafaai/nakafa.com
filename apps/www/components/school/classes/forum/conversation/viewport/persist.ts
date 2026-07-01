@@ -56,6 +56,10 @@ export function persistCurrentSnapshot(runtime: ViewportRuntime) {
       return;
     }
 
+    if (!measurement.isAtLatest) {
+      return;
+    }
+
     yield* runtime.adapters.session
       .saveSnapshot(
         createConversationScrollSnapshot({

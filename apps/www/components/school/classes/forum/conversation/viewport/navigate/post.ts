@@ -38,14 +38,16 @@ export function handlePostNavigation(
       targetPostId: postId,
     });
 
-    if (runtime.adapters.scroller.isViewSettled(targetView)) {
-      if (backView) {
-        yield* updateViewportState(runtime, (state) => ({
-          ...state,
-          backStack: pushViewportBackView(state.backStack, backView),
-          latestAffinity: "detached",
-        }));
-      }
+    if (runtime.adapters.scroller.isViewVisible(targetView)) {
+      yield* updateViewportState(runtime, (state) => ({
+        ...state,
+        backStack: backView
+          ? pushViewportBackView(state.backStack, backView)
+          : state.backStack,
+        latestAffinity: "detached",
+        lifecycle: "ready",
+        pendingPlacement: null,
+      }));
 
       yield* startViewportHighlight(runtime, postId);
       return;
@@ -62,7 +64,6 @@ export function handlePostNavigation(
 
     yield* startViewportPlacement(runtime, {
       align: "center",
-      completion: "settled",
       highlightPostId: postId,
       view: targetView,
     });

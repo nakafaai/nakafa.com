@@ -43,13 +43,9 @@ export function hasReachedViewportPlacement({
   placement: ViewportPlacement;
   runtime: ViewportRuntime;
 }) {
-  if (placement.completion === "settled") {
-    return runtime.adapters.scroller.isViewSettled(placement.view);
-  }
-
   if (placement.view.kind === "bottom") {
     return measurement.isAtLatest;
   }
 
-  return runtime.adapters.scroller.isViewReached(placement.view);
+  return runtime.adapters.scroller.isViewVisible(placement.view);
 }

@@ -39,18 +39,6 @@ export function getConversationRowEnd(
   return getConversationRowStart(handle, index) + handle.getItemSize(index);
 }
 
-/** Returns one row's absolute center offset from virtualizer geometry. */
-export function getConversationRowCenter(
-  handle: ConversationGeometryHandle,
-  index: number
-) {
-  return (
-    (getConversationRowStart(handle, index) +
-      getConversationRowEnd(handle, index)) /
-    2
-  );
-}
-
 /** Returns whether one row intersects the current viewport. */
 export function isConversationRowVisible({
   handle,
@@ -130,9 +118,4 @@ export function getConversationDistanceToViewportCenter({
   }
 
   return rowStart - viewportCenter;
-}
-
-/** Returns the viewport-center tolerance used by transcript post placement. */
-export function getConversationCenterThreshold(viewportSize: number) {
-  return Math.max(32, Math.min(96, viewportSize * 0.12));
 }

@@ -1,16 +1,12 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import {
-  getConversationCenterThreshold,
   getConversationPostTargetIndex,
-  getConversationRowCenter,
   getConversationRowStart,
-  getConversationViewportCenter,
   isConversationRowVisible,
 } from "@/components/school/classes/forum/conversation/data/scroll/geometry";
 import {
   type ConversationGeometryHandle,
   isConversationAtBottom,
-  isConversationAtTop,
 } from "@/components/school/classes/forum/conversation/data/scroll/metrics";
 import type { ConversationRow } from "@/components/school/classes/forum/conversation/data/transcript/pages";
 import type { ConversationView } from "@/components/school/classes/forum/conversation/data/view/model";
@@ -77,90 +73,6 @@ export function isConversationViewVisible({
     handle,
     index: targetIndex,
   });
-}
-
-/**
- * Returns whether one semantic transcript view is already centered.
- *
- * `go to message` should keep scrolling until the target row reaches the
- * viewport center, even if that row is already only partially visible.
- */
-export function isConversationViewCentered({
-  handle,
-  rowIndexByPostId,
-  view,
-}: {
-  handle: ConversationGeometryHandle;
-  rowIndexByPostId: ReadonlyMap<Id<"schoolClassForumPosts">, number>;
-  view: ConversationView;
-}) {
-  if (view.kind === "bottom") {
-    return isConversationAtBottom(handle);
-  }
-
-  const targetIndex = getConversationPostTargetIndex({
-    rowIndexByPostId,
-    postId: view.postId,
-  });
-
-  if (targetIndex === undefined) {
-    return false;
-  }
-
-  if (!isConversationRowVisible({ handle, index: targetIndex })) {
-    return false;
-  }
-
-  return (
-    Math.abs(
-      getConversationRowCenter(handle, targetIndex) -
-        getConversationViewportCenter(handle)
-    ) <= getConversationCenterThreshold(handle.viewportSize)
-  );
-}
-
-/**
- * Returns whether one semantic post placement has settled as far as the
- * virtualizer can place it.
- */
-export function hasConversationViewSettledPlacement({
-  handle,
-  rowIndexByPostId,
-  view,
-}: {
-  handle: ConversationGeometryHandle;
-  rowIndexByPostId: ReadonlyMap<Id<"schoolClassForumPosts">, number>;
-  view: ConversationView;
-}) {
-  if (isConversationViewCentered({ handle, rowIndexByPostId, view })) {
-    return true;
-  }
-
-  if (view.kind === "bottom") {
-    return false;
-  }
-
-  const targetIndex = getConversationPostTargetIndex({
-    rowIndexByPostId,
-    postId: view.postId,
-  });
-
-  if (targetIndex === undefined) {
-    return false;
-  }
-
-  if (!isConversationRowVisible({ handle, index: targetIndex })) {
-    return false;
-  }
-
-  const targetCenter = getConversationRowCenter(handle, targetIndex);
-  const viewportCenter = getConversationViewportCenter(handle);
-
-  if (targetCenter < viewportCenter) {
-    return isConversationAtTop(handle);
-  }
-
-  return isConversationAtBottom(handle);
 }
 
 /**

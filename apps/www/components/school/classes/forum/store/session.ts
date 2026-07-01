@@ -95,7 +95,7 @@ export function createForumSessionStore(classId: string) {
         }),
         skipHydration: true,
         storage: createJSONStorage(() => sessionStorage),
-        version: 3,
+        version: 4,
       }
     )
   );

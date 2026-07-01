@@ -26,11 +26,10 @@ describe("conversation/viewport/scroller", () => {
 
     expect(scroller.captureView()).toBeNull();
     expect(scroller.isViewReached({ kind: "bottom" })).toBe(false);
-    expect(scroller.isViewSettled({ kind: "bottom" })).toBe(false);
+    expect(scroller.isViewVisible({ kind: "bottom" })).toBe(false);
     expect(scroller.measure()).toBeNull();
     expect(
       scroller.place({
-        completion: "reached",
         highlightPostId: null,
         view: { kind: "bottom" },
       })
@@ -88,7 +87,6 @@ describe("conversation/viewport/scroller", () => {
 
     expect(
       scroller.place({
-        completion: "reached",
         highlightPostId: null,
         view: { kind: "bottom" },
       })
@@ -102,7 +100,6 @@ describe("conversation/viewport/scroller", () => {
     expect(
       scroller.place({
         align: "start",
-        completion: "reached",
         highlightPostId: null,
         view: { kind: "post", postId: firstPost._id },
       })
@@ -133,7 +130,6 @@ describe("conversation/viewport/scroller", () => {
 
     expect(
       scroller.place({
-        completion: "reached",
         highlightPostId: null,
         view: { kind: "bottom" },
       })
@@ -157,7 +153,6 @@ describe("conversation/viewport/scroller", () => {
 
     expect(
       scroller.place({
-        completion: "reached",
         highlightPostId: null,
         motion: "instant",
         view: { kind: "bottom" },
@@ -193,14 +188,12 @@ describe("conversation/viewport/scroller", () => {
 
     expect(
       emptyScroller.place({
-        completion: "reached",
         highlightPostId: null,
         view: { kind: "bottom" },
       })
     ).toBe(false);
     expect(
       reducedMotionScroller.place({
-        completion: "settled",
         highlightPostId: null,
         view: { kind: "post", postId: firstPost._id },
       })
@@ -214,7 +207,6 @@ describe("conversation/viewport/scroller", () => {
     );
     expect(
       reducedMotionScroller.place({
-        completion: "settled",
         highlightPostId: null,
         view: {
           kind: "post",
@@ -224,9 +216,9 @@ describe("conversation/viewport/scroller", () => {
     ).toBe(false);
   });
 
-  it("delegates visibility and settled checks to measured transcript geometry", () => {
+  it("separates visible checks from reached-or-passed checks", () => {
     const { handle } = createConversationTestRowsHandle({
-      scrollOffset: 300,
+      scrollOffset: 350,
     });
     const scroller = createViewportScroller({
       getHandle: () => handle,
@@ -236,10 +228,12 @@ describe("conversation/viewport/scroller", () => {
 
     expect(scroller.captureView()).toEqual({ kind: "bottom" });
     expect(scroller.isViewReached({ kind: "bottom" })).toBe(true);
-    expect(scroller.isViewSettled({ kind: "bottom" })).toBe(true);
     expect(
       scroller.isViewReached({ kind: "post", postId: firstPost._id })
     ).toBe(true);
+    expect(
+      scroller.isViewVisible({ kind: "post", postId: firstPost._id })
+    ).toBe(false);
   });
 
   it("returns null measurement before the virtualizer has a viewport size", () => {

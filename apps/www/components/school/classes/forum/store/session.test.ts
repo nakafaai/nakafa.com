@@ -113,7 +113,7 @@ describe("forum/store/session", () => {
             },
           },
         },
-        version: 2,
+        version: 3,
       })
     );
     const reader = createForumSessionStore("class-session-test");

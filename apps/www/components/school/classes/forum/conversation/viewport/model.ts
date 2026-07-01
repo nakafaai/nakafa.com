@@ -23,7 +23,6 @@ export interface ViewportMeasurement {
 
 export interface ViewportPlacement {
   align?: PlacementAlign;
-  completion: "reached" | "settled";
   highlightPostId: Id<"schoolClassForumPosts"> | null;
   motion?: PlacementMotion;
   view: ConversationView;
@@ -149,7 +148,7 @@ export function pushViewportBackView(
   return [...backStack, view];
 }
 
-/** Returns whether one Snapshot still points at the current Transcript shape. */
+/** Returns whether one latest-position Snapshot still matches the Transcript. */
 export function canRestoreViewportSnapshot({
   activeTranscript,
   snapshot,
@@ -161,15 +160,11 @@ export function canRestoreViewportSnapshot({
     return false;
   }
 
-  if (snapshot.lastPostId !== activeTranscript.lastPostId) {
+  if (!(snapshot.wasAtBottom && snapshot.view.kind === "bottom")) {
     return false;
   }
 
-  if (snapshot.view.kind === "post") {
-    return activeTranscript.rowIndexByPostId.has(snapshot.view.postId);
-  }
-
-  return true;
+  return snapshot.lastPostId === activeTranscript.lastPostId;
 }
 
 /** Selects the first Placement for a freshly opened Forum Conversation. */
@@ -182,42 +177,27 @@ export function getOpeningPlacement({
   savedSnapshot: ConversationScrollSnapshot | null;
   unreadCue: ConversationUnreadCue | null;
 }) {
-  if (
-    savedSnapshot &&
-    canRestoreViewportSnapshot({ activeTranscript, snapshot: savedSnapshot })
-  ) {
-    const restoredView = savedSnapshot.view;
-
-    if (restoredView.kind === "bottom") {
-      return {
-        completion: "reached",
-        highlightPostId: null,
-        motion: "instant",
-        view: { kind: "bottom" },
-      } satisfies ViewportPlacement;
-    }
-
-    return {
-      align: "center",
-      completion: "settled",
-      highlightPostId: null,
-      motion: "instant",
-      view: restoredView,
-    } satisfies ViewportPlacement;
-  }
-
   if (unreadCue && activeTranscript.rowIndexByPostId.has(unreadCue.postId)) {
     return {
       align: "start",
-      completion: "reached",
       highlightPostId: null,
       motion: "instant",
       view: { kind: "post", postId: unreadCue.postId },
     } satisfies ViewportPlacement;
   }
 
+  if (
+    savedSnapshot &&
+    canRestoreViewportSnapshot({ activeTranscript, snapshot: savedSnapshot })
+  ) {
+    return {
+      highlightPostId: null,
+      motion: "instant",
+      view: { kind: "bottom" },
+    } satisfies ViewportPlacement;
+  }
+
   return {
-    completion: "reached",
     highlightPostId: null,
     motion: "instant",
     view: { kind: "bottom" },

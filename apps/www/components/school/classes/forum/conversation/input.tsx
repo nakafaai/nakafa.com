@@ -17,7 +17,7 @@ import { useFileUpload } from "@repo/design-system/hooks/use-file-upload";
 import { cn } from "@repo/design-system/lib/utils";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
-import { Effect, Either, Schema } from "effect";
+import { Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { Activity, type ComponentRef, useEffect, useRef } from "react";
 import { toast } from "sonner";
@@ -95,51 +95,46 @@ export function ForumPostInput() {
       }
 
       return Effect.runPromise(
-        Effect.gen(function* () {
-          const result = yield* Effect.either(
-            submitForumPost({
-              files,
-              mutations: {
-                createPost,
-                discardForumUploads,
-                generateUploadUrl,
-                saveForumUpload,
-              },
-              post: {
-                body: value.body,
-                forumId,
-                parentId: replyTarget?.postId,
-              },
-            })
-          );
+        submitForumPost({
+          files,
+          mutations: {
+            createPost,
+            discardForumUploads,
+            generateUploadUrl,
+            saveForumUpload,
+          },
+          post: {
+            body: value.body,
+            forumId,
+            parentId: replyTarget?.postId,
+          },
+        }).pipe(
+          Effect.matchEffect({
+            onFailure: (error) =>
+              Effect.sync(() => {
+                captureException(error, {
+                  source: "forum-post-submit",
+                });
+                toast.error(t("create-post-failed"));
 
-          if (Either.isLeft(result)) {
-            yield* Effect.sync(() => {
-              captureException(result.left, {
-                source: "forum-post-submit",
-              });
-              toast.error(t("create-post-failed"));
+                requestAnimationFrame(() => {
+                  textareaRef.current?.focus();
+                });
+              }),
+            onSuccess: () =>
+              Effect.sync(() => {
+                form.reset();
+                clearFiles();
+                setForumReplyTarget(forumId, null);
+                acknowledgeUnreadCue();
 
-              requestAnimationFrame(() => {
-                textareaRef.current?.focus();
-              });
-            });
-
-            return;
-          }
-
-          yield* Effect.sync(() => {
-            form.reset();
-            clearFiles();
-            setForumReplyTarget(forumId, null);
-            acknowledgeUnreadCue();
-
-            requestAnimationFrame(() => {
-              textareaRef.current?.focus();
-              goToLatest();
-            });
-          });
-        })
+                requestAnimationFrame(() => {
+                  textareaRef.current?.focus();
+                  goToLatest();
+                });
+              }),
+          })
+        )
       );
     },
   });

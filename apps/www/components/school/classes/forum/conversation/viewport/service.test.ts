@@ -27,15 +27,14 @@ describe("conversation/viewport/service", () => {
     );
 
     expect(rig.placements.at(-1)).toMatchObject({
-      completion: "reached",
       view: { kind: "bottom" },
     });
     await dispatchMeasure(viewport, makeMeasurement());
-    const settled = await waitForState(
+    const ready = await waitForState(
       viewport,
       (state) => state.lifecycle === "ready" && state.isAtLatest
     );
-    expect(settled.shouldShowLatestButton).toBe(false);
+    expect(ready.shouldShowLatestButton).toBe(false);
     await waitForState(viewport, () => rig.readPostIds.length === 1);
     expect(rig.readPostIds).toEqual([secondPost._id]);
 
@@ -60,6 +59,19 @@ describe("conversation/viewport/service", () => {
 
     rig.setMeasurement(null);
     expect(rig.adapters.scroller.isViewReached({ kind: "bottom" })).toBe(false);
+    expect(rig.adapters.scroller.isViewVisible({ kind: "bottom" })).toBe(false);
+    rig.setMeasurement(makeMeasurement());
+    expect(rig.adapters.scroller.isViewVisible({ kind: "bottom" })).toBe(true);
+    rig.setMeasurement(
+      makeMeasurement({ view: { kind: "post", postId: firstPost._id } })
+    );
+    expect(
+      rig.adapters.scroller.isViewReached({
+        kind: "post",
+        postId: firstPost._id,
+      })
+    ).toBe(true);
+    rig.setMeasurement(null);
     await dispatchViewport(viewport, { type: "back" });
     await dispatchMeasure(viewport, null);
     await dispatchViewport(viewport, { postId: firstPost._id, type: "post" });

@@ -39,7 +39,6 @@ describe("conversation/viewport/navigate/post", () => {
     expect(postState.highlightedPostId).toBeNull();
     expect(rig.placements.at(-1)).toMatchObject({
       align: "center",
-      completion: "settled",
       view: { kind: "post", postId: firstPost._id },
     });
 
@@ -61,13 +60,13 @@ describe("conversation/viewport/navigate/post", () => {
     await shutdownViewport(viewport);
   });
 
-  it("keeps semantic back when a visible reply target is already settled", async () => {
+  it("keeps semantic back when a visible reply target is already reached", async () => {
     const rig = createAdapters();
     const viewport = await createViewport(rig.adapters);
 
     await openReadyViewport(viewport);
     const placementCount = rig.placements.length;
-    rig.setSettledView({ kind: "post", postId: firstPost._id });
+    rig.setMeasurement(makePostMeasurement(firstPost._id, 120));
 
     await dispatchViewport(viewport, { postId: firstPost._id, type: "post" });
     const highlighted = await waitForState(
@@ -78,7 +77,6 @@ describe("conversation/viewport/navigate/post", () => {
     expect(highlighted.backStack).toEqual([{ kind: "bottom" }]);
     expect(rig.placements).toHaveLength(placementCount);
 
-    rig.setSettledView(null);
     const detachedView = makePostMeasurement(firstPost._id, 210);
     rig.setMeasurement(detachedView);
     await dispatchMeasure(viewport, detachedView);
@@ -100,7 +98,6 @@ describe("conversation/viewport/navigate/post", () => {
     await openReadyViewport(viewport);
     const targetMeasurement = makePostMeasurement(firstPost._id, 120);
     rig.setMeasurement(targetMeasurement);
-    rig.setSettledView({ kind: "post", postId: firstPost._id });
 
     await dispatchViewport(viewport, { postId: firstPost._id, type: "post" });
     const state = await waitForState(
@@ -112,6 +109,7 @@ describe("conversation/viewport/navigate/post", () => {
 
     expect(state.backStack).toEqual([{ kind: "bottom" }]);
     expect(state.shouldShowLatestButton).toBe(false);
+    expect(state.pendingPlacement).toBeNull();
 
     await shutdownViewport(viewport);
   });
@@ -150,7 +148,6 @@ describe("conversation/viewport/navigate/post", () => {
       (state) => state.pendingPlacement?.view.kind === "bottom"
     );
     rig.setMeasurement(makePostMeasurement(firstPost._id, 120));
-    rig.setSettledView({ kind: "post", postId: firstPost._id });
 
     await dispatchViewport(viewport, { postId: firstPost._id, type: "post" });
     const state = await waitForState(
@@ -166,14 +163,14 @@ describe("conversation/viewport/navigate/post", () => {
     await shutdownViewport(viewport);
   });
 
-  it("highlights an already settled post and clears the highlight event", async () => {
+  it("highlights an already reached post and clears the highlight event", async () => {
     const rig = createAdapters();
     const viewport = await createViewport(rig.adapters);
 
     await openTranscript(viewport);
     rig.setMeasurement(makePostMeasurement(firstPost._id));
     expect(
-      rig.adapters.scroller.isViewReached({
+      rig.adapters.scroller.isViewVisible({
         kind: "post",
         postId: firstPost._id,
       })
@@ -218,7 +215,6 @@ describe("conversation/viewport/navigate/post", () => {
       viewport,
       (state) => state.latestAffinity === "detached"
     );
-    rig.setSettledView({ kind: "post", postId: firstPost._id });
 
     await dispatchViewport(viewport, { postId: firstPost._id, type: "post" });
     const highlighted = await waitForState(
@@ -251,6 +247,31 @@ describe("conversation/viewport/navigate/post", () => {
 
     expect(state.backStack).toEqual([]);
     expect(state.latestAffinity).toBe("detached");
+    expect(rig.placements.at(-1)).toMatchObject({
+      align: "center",
+      view: { kind: "post", postId: firstPost._id },
+    });
+
+    await shutdownViewport(viewport);
+  });
+
+  it("places a reference target that has been passed but is not visible", async () => {
+    const rig = createAdapters();
+    const viewport = await createViewport(rig.adapters);
+
+    await openReadyViewport(viewport);
+    rig.adapters.scroller.isViewReached = (view) =>
+      view.kind === "post" && view.postId === firstPost._id;
+    rig.adapters.scroller.isViewVisible = () => false;
+
+    await dispatchViewport(viewport, { postId: firstPost._id, type: "post" });
+    const state = await waitForState(
+      viewport,
+      (nextState) => nextState.pendingPlacement?.view.kind === "post"
+    );
+
+    expect(state.backStack).toEqual([{ kind: "bottom" }]);
+    expect(state.highlightedPostId).toBeNull();
     expect(rig.placements.at(-1)).toMatchObject({
       align: "center",
       view: { kind: "post", postId: firstPost._id },

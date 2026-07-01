@@ -37,7 +37,6 @@ function handleViewportEvent(runtime: ViewportRuntime, event: ViewportEvent) {
       });
     case "latest":
       return startViewportPlacement(runtime, {
-        completion: "reached",
         highlightPostId: null,
         view: { kind: "bottom" },
       });

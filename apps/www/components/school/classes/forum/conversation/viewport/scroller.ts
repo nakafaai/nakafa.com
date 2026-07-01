@@ -8,8 +8,8 @@ import type { ActiveTranscriptModel } from "@/components/school/classes/forum/co
 import {
   captureConversationView,
   hasConversationViewReached,
-  hasConversationViewSettledPlacement,
-} from "@/components/school/classes/forum/conversation/data/view/settled";
+  isConversationViewVisible,
+} from "@/components/school/classes/forum/conversation/data/view/position";
 import { getLastVisibleConversationPostId } from "@/components/school/classes/forum/conversation/data/view/visible";
 import type { ViewportScroller } from "@/components/school/classes/forum/conversation/viewport/adapter";
 
@@ -76,14 +76,14 @@ export function createViewportScroller({
       });
     },
 
-    isViewSettled: (view) => {
+    isViewVisible: (view) => {
       const handle = getHandle();
 
       if (!handle) {
         return false;
       }
 
-      return hasConversationViewSettledPlacement({
+      return isConversationViewVisible({
         handle,
         rowIndexByPostId: getTranscript().rowIndexByPostId,
         view,

@@ -25,7 +25,6 @@ export function handleBackNavigation(runtime: ViewportRuntime) {
       !activeTranscript?.rowIndexByPostId.has(backView.postId)
     ) {
       yield* startViewportPlacement(runtime, {
-        completion: "reached",
         highlightPostId: null,
         view: { kind: "bottom" },
       });
@@ -34,7 +33,6 @@ export function handleBackNavigation(runtime: ViewportRuntime) {
 
     yield* startViewportPlacement(runtime, {
       align: backView.kind === "post" ? "center" : undefined,
-      completion: backView.kind === "post" ? "settled" : "reached",
       highlightPostId: null,
       view: backView,
     });

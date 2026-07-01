@@ -5,7 +5,6 @@ import {
   ResizableHandle,
   ResizablePanel,
 } from "@repo/design-system/components/ui/resizable";
-import { Suspense } from "react";
 import { SchoolClassesForumPanel } from "@/components/school/classes/forum/panel";
 import {
   SCHOOL_CLASSES_WORKSPACE_DETAIL_PANEL_ID,
@@ -21,20 +20,14 @@ const SCHOOL_CLASSES_FORUM_PANEL_SLOT_MIN_SIZE = "28rem";
  * resizable branch beside the class workspace.
  */
 export function SchoolClassesForumPanelSlot({
-  closeHref,
   forumId,
 }: {
-  closeHref: string;
   forumId: Id<"schoolClassForums">;
 }) {
   const isCompact = useSchoolClassesWorkspaceIsCompact();
 
   if (isCompact) {
-    return (
-      <Suspense fallback={null}>
-        <SchoolClassesForumPanel closeHref={closeHref} forumId={forumId} />
-      </Suspense>
-    );
+    return <SchoolClassesForumPanel forumId={forumId} />;
   }
 
   return (
@@ -49,9 +42,7 @@ export function SchoolClassesForumPanelSlot({
         minSize={SCHOOL_CLASSES_FORUM_PANEL_SLOT_MIN_SIZE}
       >
         <div className="sticky top-0 h-svh min-w-0 overflow-hidden">
-          <Suspense fallback={null}>
-            <SchoolClassesForumPanel closeHref={closeHref} forumId={forumId} />
-          </Suspense>
+          <SchoolClassesForumPanel forumId={forumId} />
         </div>
       </ResizablePanel>
     </>

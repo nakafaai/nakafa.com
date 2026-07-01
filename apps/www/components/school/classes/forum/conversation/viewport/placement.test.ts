@@ -46,7 +46,6 @@ describe("conversation/viewport/placement", () => {
 
     expect(rig.placements).toHaveLength(2);
     expect(rig.placements.at(-1)).toMatchObject({
-      completion: "reached",
       view: { kind: "bottom" },
     });
     expect(retrying.lifecycle).toBe("placing");
@@ -159,7 +158,6 @@ describe("conversation/viewport/placement", () => {
 
     expect(rig.placements.at(-1)).toMatchObject({
       align: "start",
-      completion: "reached",
       view: { kind: "post", postId: firstPost._id },
     });
 
@@ -189,6 +187,37 @@ describe("conversation/viewport/placement", () => {
 
     expect(rig.placements).toHaveLength(1);
     expect(state.pendingPlacement).toBeNull();
+    await shutdownViewport(viewport);
+  });
+
+  it("clears pending placement when a frame retry cannot place", async () => {
+    const rig = createAdapters();
+    const viewport = await createViewport(rig.adapters);
+    const staleBottom = makeMeasurement({
+      bottomDistance: 260,
+      isAtLatest: false,
+      offset: 140,
+      view: { kind: "bottom" },
+    });
+
+    await openTranscript(viewport);
+    await waitForState(
+      viewport,
+      (state) => state.pendingPlacement?.view.kind === "bottom"
+    );
+    rig.setMeasurement(staleBottom);
+    rig.setPlaceResult(false);
+
+    await dispatchMeasure(viewport, staleBottom, "frame");
+    const state = await waitForState(
+      viewport,
+      (nextState) =>
+        nextState.lifecycle === "ready" && nextState.pendingPlacement === null
+    );
+
+    expect(state.pendingPlacement).toBeNull();
+    await dispatchMeasure(viewport, staleBottom, "frame");
+    expect(rig.placements).toHaveLength(2);
     await shutdownViewport(viewport);
   });
 });

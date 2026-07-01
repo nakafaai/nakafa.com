@@ -34,7 +34,7 @@ describe("conversation/viewport/model", () => {
     ).toBe(false);
   });
 
-  it("restores a fresh semantic snapshot before unread fallback", () => {
+  it("ignores detached snapshots on open so fresh panels start at an unread cue", () => {
     expect(
       getOpeningPlacement({
         activeTranscript,
@@ -52,11 +52,30 @@ describe("conversation/viewport/model", () => {
         },
       })
     ).toEqual({
-      align: "center",
-      completion: "settled",
+      align: "start",
       highlightPostId: null,
       motion: "instant",
-      view: { kind: "post", postId: firstPost._id },
+      view: { kind: "post", postId: secondPost._id },
+    });
+  });
+
+  it("falls back to latest when only a detached snapshot exists", () => {
+    expect(
+      getOpeningPlacement({
+        activeTranscript,
+        savedSnapshot: {
+          lastPostId: firstPost._id,
+          offset: 240,
+          renderedRowCount: rows.length - 1,
+          view: { kind: "post", postId: firstPost._id },
+          wasAtBottom: false,
+        },
+        unreadCue: null,
+      })
+    ).toEqual({
+      highlightPostId: null,
+      motion: "instant",
+      view: { kind: "bottom" },
     });
   });
 
@@ -79,7 +98,6 @@ describe("conversation/viewport/model", () => {
       })
     ).toEqual({
       align: "start",
-      completion: "reached",
       highlightPostId: null,
       motion: "instant",
       view: { kind: "post", postId: secondPost._id },
@@ -100,7 +118,6 @@ describe("conversation/viewport/model", () => {
         unreadCue: null,
       })
     ).toEqual({
-      completion: "reached",
       highlightPostId: null,
       motion: "instant",
       view: { kind: "bottom" },
@@ -113,7 +130,6 @@ describe("conversation/viewport/model", () => {
         unreadCue: null,
       })
     ).toEqual({
-      completion: "reached",
       highlightPostId: null,
       motion: "instant",
       view: { kind: "bottom" },
@@ -137,7 +153,6 @@ describe("conversation/viewport/model", () => {
         unreadCue: null,
       })
     ).toEqual({
-      completion: "reached",
       highlightPostId: null,
       motion: "instant",
       view: { kind: "bottom" },
@@ -178,7 +193,6 @@ describe("conversation/viewport/model", () => {
         latestAffinity: "latest",
         lifecycle: "placing",
         pendingPlacement: {
-          completion: "reached",
           highlightPostId: null,
           view: { kind: "bottom" },
         },
@@ -255,7 +269,6 @@ describe("conversation/viewport/model", () => {
       isViewportDetachedScroll({
         measurement,
         pendingPlacement: {
-          completion: "reached",
           highlightPostId: null,
           view: { kind: "bottom" },
         },
@@ -266,7 +279,6 @@ describe("conversation/viewport/model", () => {
       isViewportDetachedScroll({
         measurement: { ...measurement, bottomDistance: 5 },
         pendingPlacement: {
-          completion: "reached",
           highlightPostId: null,
           view: { kind: "bottom" },
         },
@@ -277,7 +289,6 @@ describe("conversation/viewport/model", () => {
       isViewportDetachedScroll({
         measurement,
         pendingPlacement: {
-          completion: "reached",
           highlightPostId: null,
           view: { kind: "bottom" },
         },
@@ -288,7 +299,6 @@ describe("conversation/viewport/model", () => {
       isViewportDetachedScroll({
         measurement,
         pendingPlacement: {
-          completion: "settled",
           highlightPostId: firstPost._id,
           view: { kind: "post", postId: firstPost._id },
         },

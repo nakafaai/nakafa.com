@@ -31,8 +31,8 @@ export interface ViewportScroller {
   captureView: () => ConversationView | null;
   /** Returns whether the scroll position has reached the semantic view. */
   isViewReached: (view: ConversationView) => boolean;
-  /** Returns whether the semantic view is fully settled for highlight/back behavior. */
-  isViewSettled: (view: ConversationView) => boolean;
+  /** Returns whether the semantic view is currently visible. */
+  isViewVisible: (view: ConversationView) => boolean;
   /** Measures the current virtualized transcript geometry. */
   measure: () => ViewportMeasurement | null;
   /** Imperatively places the virtualized scroller at a semantic target. */

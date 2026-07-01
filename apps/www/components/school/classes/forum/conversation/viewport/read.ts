@@ -20,10 +20,18 @@ export function markLastVisibleViewportPostRead(
       return;
     }
 
+    yield* Ref.set(runtime.lastReadPostIdRef, postId);
     yield* Effect.forkIn(
       runtime.adapters.read.markPostRead(postId).pipe(
-        Effect.zipRight(Ref.set(runtime.lastReadPostIdRef, postId)),
-        Effect.catchTag("ViewportReadError", () => Effect.void)
+        Effect.catchTag("ViewportReadError", () =>
+          Ref.update(runtime.lastReadPostIdRef, (currentPostId) => {
+            if (currentPostId === postId) {
+              return null;
+            }
+
+            return currentPostId;
+          })
+        )
       ),
       runtime.scope
     );

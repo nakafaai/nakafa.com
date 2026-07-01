@@ -30,7 +30,6 @@ export function handleViewportTranscript(
     }
 
     yield* startViewportPlacement(runtime, {
-      completion: "reached",
       highlightPostId: null,
       motion: "instant",
       view: { kind: "bottom" },

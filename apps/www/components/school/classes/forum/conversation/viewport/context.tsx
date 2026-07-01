@@ -7,6 +7,7 @@ import {
   type ReactNode,
   useEffect,
   useEffectEvent,
+  useLayoutEffect,
   useRef,
   useState,
 } from "react";
@@ -61,6 +62,7 @@ interface ViewportContextValue {
 }
 
 const ViewportContext = createContext<ViewportContextValue | null>(null);
+const missingViewportContext = Symbol("missing-viewport-context");
 
 /** Provides the React Interface for one Effect-owned Forum Conversation Viewport. */
 export function ConversationViewportProvider({
@@ -97,7 +99,7 @@ export function ConversationViewportProvider({
     unreadCue,
   }));
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const {
       activeTranscript: openingTranscript,
       savedSnapshot: openingSavedSnapshot,
@@ -227,9 +229,11 @@ export function ConversationViewportProvider({
     },
     handleScroll: () => {
       measureViewport(scrollerRef, viewportRef, "scroll");
+      requestViewportMeasureFrame({ frameRef, scrollerRef, viewportRef });
     },
     handleScrollEnd: () => {
       measureViewport(scrollerRef, viewportRef, "frame");
+      requestViewportMeasureFrame({ frameRef, scrollerRef, viewportRef });
     },
     setVirtualizerHandle: (handle) => {
       virtualizerHandleRef.current = handle;
@@ -250,13 +254,19 @@ export function ConversationViewportProvider({
 
 /** Reads one selected state slice from the Effect-owned Viewport Interface. */
 export function useViewport<T>(selector: (state: ViewportState) => T) {
-  const value = useContextSelector(ViewportContext, (context) => context);
+  const selected = useContextSelector(ViewportContext, (context) => {
+    if (!context) {
+      return missingViewportContext;
+    }
 
-  if (!value) {
+    return selector(context.state);
+  });
+
+  if (selected === missingViewportContext) {
     throw new Error("useViewport must be used within a ConversationProvider");
   }
 
-  return selector(value.state);
+  return selected;
 }
 
 /** Reads the semantic actions exposed by the Effect-owned Viewport Interface. */

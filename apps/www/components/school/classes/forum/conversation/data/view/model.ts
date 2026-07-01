@@ -27,7 +27,7 @@ export function areConversationViewsEqual(
   return right.kind === "post" && left.postId === right.postId;
 }
 
-/** Returns whether the current settled view is already anchored to one post. */
+/** Returns whether one semantic view is already anchored to one post. */
 export function isConversationViewAtPost(
   view: ConversationView | null,
   postId: Id<"schoolClassForumPosts">

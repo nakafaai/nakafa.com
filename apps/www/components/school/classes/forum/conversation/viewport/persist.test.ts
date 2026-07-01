@@ -1,4 +1,4 @@
-import { Effect } from "effect";
+import { Effect, Exit, Queue, Ref, Scope, SubscriptionRef } from "effect";
 import { describe, expect, it } from "vitest";
 import {
   conversationTestFirstPost as firstPost,
@@ -16,11 +16,24 @@ import {
   openReadyViewport,
   openTranscript,
   shutdownViewport,
+  viewportTestTranscript,
   waitForState,
 } from "@/components/school/classes/forum/conversation/viewport/fixture";
+import {
+  deriveViewportState,
+  type ViewportEvent,
+  type ViewportMeasurement,
+} from "@/components/school/classes/forum/conversation/viewport/model";
+import { flushCurrentSnapshot } from "@/components/school/classes/forum/conversation/viewport/persist";
+import type {
+  ActiveTranscript,
+  ForumPostId,
+  RuntimeFiber,
+  ViewportRuntime,
+} from "@/components/school/classes/forum/conversation/viewport/runtime";
 
 describe("conversation/viewport/persist", () => {
-  it("persists only after opening placement has settled", async () => {
+  it("persists only after opening placement has reached its target", async () => {
     const rig = createAdapters();
     const viewport = await createViewport(rig.adapters);
 
@@ -89,6 +102,71 @@ describe("conversation/viewport/persist", () => {
     await shutdownViewport(viewport);
   });
 
+  it("flushes pending debounce work before saving a latest snapshot", async () => {
+    const rig = createAdapters();
+    const latestMeasurement = makeMeasurement({ offset: 360 });
+    rig.setMeasurement(latestMeasurement);
+
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const scope = yield* Scope.make();
+        const pendingFiber = yield* Effect.forkIn(
+          Effect.never.pipe(Effect.asVoid),
+          scope
+        );
+        const runtime = {
+          activeTranscriptRef: yield* Ref.make<ActiveTranscript>(
+            viewportTestTranscript
+          ),
+          adapters: rig.adapters,
+          eventQueue: yield* Queue.bounded<ViewportEvent>(1),
+          highlightFiberRef: yield* Ref.make<RuntimeFiber | null>(null),
+          highlightTokenRef: yield* Ref.make(0),
+          lastMeasurementRef: yield* Ref.make<ViewportMeasurement | null>(
+            latestMeasurement
+          ),
+          lastReadPostIdRef: yield* Ref.make<ForumPostId | null>(null),
+          persistFiberRef: yield* Ref.make<RuntimeFiber | null>(pendingFiber),
+          scope,
+          stateRef: yield* SubscriptionRef.make(
+            deriveViewportState({
+              backStack: [],
+              hasOverflow: true,
+              highlightedPostId: null,
+              isAtLatest: true,
+              latestAffinity: "latest",
+              lifecycle: "ready",
+              pendingPlacement: null,
+            })
+          ),
+        } satisfies ViewportRuntime;
+
+        yield* flushCurrentSnapshot(runtime);
+
+        expect(yield* Ref.get(runtime.persistFiberRef)).toBeNull();
+        yield* flushCurrentSnapshot(runtime);
+        yield* Scope.close(scope, Exit.succeed(undefined));
+      })
+    );
+
+    expect(rig.snapshots).toEqual([
+      {
+        lastPostId: secondPost._id,
+        offset: 360,
+        renderedRowCount: rows.length,
+        view: { kind: "bottom" },
+        wasAtBottom: true,
+      },
+      {
+        lastPostId: secondPost._id,
+        offset: 360,
+        renderedRowCount: rows.length,
+        view: { kind: "bottom" },
+        wasAtBottom: true,
+      },
+    ]);
+  });
+
   it("keeps viewport state alive when snapshot persistence fails", async () => {
     const rig = createAdapters();
     const viewport = await createViewport({
@@ -116,7 +194,7 @@ describe("conversation/viewport/persist", () => {
     await shutdownViewport(viewport);
   });
 
-  it("flushes a pending snapshot before shutdown", async () => {
+  it("does not persist detached snapshots before shutdown", async () => {
     const rig = createAdapters();
     const viewport = await createViewport(rig.adapters);
 
@@ -128,14 +206,7 @@ describe("conversation/viewport/persist", () => {
 
     await Effect.runPromise(viewport.flushSnapshot);
 
-    expect(rig.snapshots.at(-1)).toMatchObject({
-      lastPostId: secondPost._id,
-      view: { kind: "post", postId: firstPost._id },
-      wasAtBottom: false,
-    });
-
-    await Effect.runPromise(viewport.flushSnapshot);
-    expect(rig.snapshots).toHaveLength(2);
+    expect(rig.snapshots).toEqual([]);
 
     await shutdownViewport(viewport);
   });
