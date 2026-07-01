@@ -20,10 +20,10 @@ import {
 import { onboardingRoleFormSchema } from "@/components/programs/onboarding/state";
 import {
   getOnboardingChoiceGridColumns,
-  onboardingChoiceCardVariants,
   onboardingChoiceGridVariants,
 } from "@/components/programs/onboarding/styles";
 import { submitOnboardingRole } from "@/components/programs/onboarding/submit";
+import { choiceCardVariants } from "@/components/shared/choice-card";
 import { useUser } from "@/lib/context/use-user";
 
 /** Saves the normal Nakafa role step from the reactive current-user role. */
@@ -98,7 +98,7 @@ function RoleStepFormBody({
   return (
     <form
       action={() => form.handleSubmit()}
-      className="mx-auto flex w-full max-w-4xl flex-col items-center justify-center gap-y-8 px-6 py-12"
+      className="mx-auto flex w-full max-w-3xl flex-col items-center justify-center gap-y-8 px-6 py-12"
       id="program-onboarding-role-form"
     >
       <StepHeading title={t("onboarding.role-title")} />
@@ -114,7 +114,7 @@ function RoleStepFormBody({
               <button
                 aria-label={t(option.titleKey)}
                 aria-pressed={field.state.value === option.key}
-                className={onboardingChoiceCardVariants({
+                className={choiceCardVariants({
                   selected: field.state.value === option.key,
                 })}
                 key={option.key}
