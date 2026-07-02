@@ -1,25 +1,44 @@
 import {
+  AbacusIcon,
   AssignmentsIcon,
   Atom02Icon,
   Backpack01Icon,
+  Backpack02Icon,
   BoardMathIcon,
-  BookOpen02Icon,
-  BookOpenCheckIcon,
-  Books02Icon,
+  Book01Icon,
+  BookBookmark01Icon,
   Brain02Icon,
+  CalendarMortarboardIcon,
   CertificateIcon,
+  CourseIcon,
   DiplomaIcon,
   DnaIcon,
+  Flag01Icon,
   GlobalEducationIcon,
-  GraduationCapIcon,
+  KidIcon,
   Knowledge01Icon,
   LibraryIcon,
   MathIcon,
+  Medal01Icon,
   MicroscopeIcon,
+  MoleculesIcon,
+  Mortarboard01Icon,
+  Notebook01Icon,
+  OnlineLearning01Icon,
+  PencilRulerIcon,
   PhysicsIcon,
-  SchoolBellIcon,
+  Presentation01Icon,
+  Quiz03Icon,
+  School01Icon,
+  SchoolBell01Icon,
   SchoolIcon,
+  SchoolReportCardIcon,
+  SchoolTieIcon,
   StructureIcon,
+  StudentCardIcon,
+  StudentIcon,
+  StudentsIcon,
+  Target01Icon,
   TestTubeIcon,
   UniversityIcon,
 } from "@hugeicons/core-free-icons";
@@ -55,44 +74,54 @@ const materialIcons: { readonly [Key in Material]: IconSvgElement } = {
 const navigationIcons: {
   readonly [Key in ProgramNavigationIconKey]: IconSvgElement;
 } = {
-  advanced: GraduationCapIcon,
-  assessment: AssignmentsIcon,
-  certificate: CertificateIcon,
-  course: BookOpenCheckIcon,
+  advanced: Mortarboard01Icon,
+  assessment: Quiz03Icon,
+  certificate: CalendarMortarboardIcon,
+  course: CourseIcon,
   diploma: DiplomaIcon,
-  "early-years": Backpack01Icon,
-  "global-education": GlobalEducationIcon,
+  "early-years": KidIcon,
+  "global-education": OnlineLearning01Icon,
   "grade-1": Backpack01Icon,
-  "grade-2": BookOpen02Icon,
-  "grade-3": Books02Icon,
-  "grade-4": BoardMathIcon,
-  "grade-5": Brain02Icon,
-  "grade-6": Knowledge01Icon,
-  "grade-7": SchoolBellIcon,
-  "grade-8": AssignmentsIcon,
-  "grade-9": CertificateIcon,
-  "grade-10": Atom02Icon,
-  "grade-11": MicroscopeIcon,
-  "grade-12": DiplomaIcon,
-  "high-school": UniversityIcon,
-  mathematics: MathIcon,
-  "middle-school": SchoolBellIcon,
-  "primary-school": SchoolIcon,
-  school: LibraryIcon,
-  science: PhysicsIcon,
-  standards: StructureIcon,
-  state: GlobalEducationIcon,
+  "grade-2": PencilRulerIcon,
+  "grade-3": Book01Icon,
+  "grade-4": Notebook01Icon,
+  "grade-5": BookBookmark01Icon,
+  "grade-6": SchoolReportCardIcon,
+  "grade-7": StudentIcon,
+  "grade-8": StudentsIcon,
+  "grade-9": StudentCardIcon,
+  "grade-10": SchoolTieIcon,
+  "grade-11": Presentation01Icon,
+  "grade-12": Medal01Icon,
+  "high-school": School01Icon,
+  mathematics: AbacusIcon,
+  "middle-school": SchoolBell01Icon,
+  "primary-school": Backpack02Icon,
+  school: SchoolIcon,
+  science: MoleculesIcon,
+  standards: Target01Icon,
+  state: Flag01Icon,
 };
+
+/** Resolves a source-owned material identity to its Hugeicons card icon. */
+export function readCurriculumMaterialIcon(material: Material) {
+  return materialIcons[material];
+}
+
+/** Resolves a source-owned navigation identity to its Hugeicons card icon. */
+export function readCurriculumNavigationIcon(key: ProgramNavigationIconKey) {
+  return navigationIcons[key];
+}
 
 /** Resolves source-owned route identity to a verified Hugeicons card icon. */
 export function readCurriculumRouteIcon(route: PublicCurriculumRoute) {
   const source = readCurriculumVisualSource(route);
 
   if (source.kind === "navigation") {
-    return navigationIcons[source.key];
+    return readCurriculumNavigationIcon(source.key);
   }
 
-  return materialIcons[source.key];
+  return readCurriculumMaterialIcon(source.key);
 }
 
 /**
