@@ -194,7 +194,7 @@ describe("conversation/viewport/persist", () => {
     await shutdownViewport(viewport);
   });
 
-  it("does not persist detached snapshots before shutdown", async () => {
+  it("persists detached snapshots to invalidate stale bottom restores", async () => {
     const rig = createAdapters();
     const viewport = await createViewport(rig.adapters);
 
@@ -206,7 +206,15 @@ describe("conversation/viewport/persist", () => {
 
     await Effect.runPromise(viewport.flushSnapshot);
 
-    expect(rig.snapshots).toEqual([]);
+    expect(rig.snapshots).toEqual([
+      {
+        lastPostId: secondPost._id,
+        offset: 160,
+        renderedRowCount: rows.length,
+        view: { kind: "post", postId: firstPost._id },
+        wasAtBottom: false,
+      },
+    ]);
 
     await shutdownViewport(viewport);
   });

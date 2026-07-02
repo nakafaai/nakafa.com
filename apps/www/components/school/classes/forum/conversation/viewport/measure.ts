@@ -50,10 +50,14 @@ export function handleViewportMeasurement(
       source === "frame" &&
       pendingPlacement !== null &&
       !(hasUserDetachedFromLatest || reachedPendingPlacement);
-    const shouldClearBackStack =
-      pendingPlacement === null &&
-      currentState.backStack.length > 0 &&
+    const reachedLatestPlacement =
+      pendingPlacement?.view.kind === "bottom" &&
+      reachedPendingPlacement &&
       measurement.isAtLatest;
+    const shouldClearBackStack =
+      currentState.backStack.length > 0 &&
+      measurement.isAtLatest &&
+      (pendingPlacement === null || reachedLatestPlacement);
 
     yield* updateViewportState(runtime, (state) => ({
       ...state,

@@ -43,7 +43,7 @@ export interface ViewportScroller {
 
 /** Adapter Interface for persisting one Forum Conversation Snapshot. */
 export interface ViewportSession {
-  /** Saves the latest restorable semantic scroll snapshot for the forum. */
+  /** Saves a restorable latest snapshot or a detached snapshot that invalidates it. */
   saveSnapshot: (
     snapshot: ConversationScrollSnapshot
   ) => Effect.Effect<void, ViewportSessionError>;

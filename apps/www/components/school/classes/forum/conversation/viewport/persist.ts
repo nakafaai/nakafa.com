@@ -39,7 +39,7 @@ export function flushCurrentSnapshot(runtime: ViewportRuntime) {
   });
 }
 
-/** Persists one stable conversation scroll snapshot from measured state. */
+/** Persists one stable latest snapshot or detached invalidation snapshot. */
 export function persistCurrentSnapshot(runtime: ViewportRuntime) {
   return Effect.gen(function* () {
     const activeTranscript = yield* Ref.get(runtime.activeTranscriptRef);
@@ -53,10 +53,6 @@ export function persistCurrentSnapshot(runtime: ViewportRuntime) {
     }
 
     if (!(activeTranscript && measurement?.view)) {
-      return;
-    }
-
-    if (!measurement.isAtLatest) {
       return;
     }
 
