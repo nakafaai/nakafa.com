@@ -104,6 +104,30 @@ describe("conversation/viewport/model", () => {
     });
   });
 
+  it("restores a fresh bottom snapshot before considering unread cues", () => {
+    expect(
+      getOpeningPlacement({
+        activeTranscript,
+        savedSnapshot: {
+          lastPostId: secondPost._id,
+          offset: 320,
+          renderedRowCount: rows.length,
+          view: { kind: "bottom" },
+          wasAtBottom: true,
+        },
+        unreadCue: {
+          count: 1,
+          postId: firstPost._id,
+          status: "new",
+        },
+      })
+    ).toEqual({
+      highlightPostId: null,
+      motion: "instant",
+      view: { kind: "bottom" },
+    });
+  });
+
   it("restores a fresh bottom snapshot and falls back to bottom when no anchor exists", () => {
     expect(
       getOpeningPlacement({

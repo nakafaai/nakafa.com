@@ -2,12 +2,15 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import {
   getConversationDistanceToViewportCenter,
   getConversationPostTargetIndex,
+  getConversationRowEnd,
   getConversationRowStart,
+  getConversationViewportCenter,
   isConversationRowVisible,
 } from "@/components/school/classes/forum/conversation/data/scroll/geometry";
 import {
   type ConversationGeometryHandle,
   isConversationAtBottom,
+  isConversationAtTop,
 } from "@/components/school/classes/forum/conversation/data/scroll/metrics";
 import type { ConversationRow } from "@/components/school/classes/forum/conversation/data/transcript/pages";
 import type { ConversationView } from "@/components/school/classes/forum/conversation/data/view/model";
@@ -99,12 +102,33 @@ export function isConversationViewSettled({
     return false;
   }
 
-  return (
-    getConversationDistanceToViewportCenter({
+  const distanceToCenter = getConversationDistanceToViewportCenter({
+    handle,
+    index: targetIndex,
+  });
+
+  if (distanceToCenter === 0) {
+    return true;
+  }
+
+  if (
+    !isConversationRowVisible({
       handle,
       index: targetIndex,
-    }) === 0
-  );
+    })
+  ) {
+    return false;
+  }
+
+  const viewportCenter = getConversationViewportCenter(handle);
+  const rowStart = getConversationRowStart(handle, targetIndex);
+  const rowEnd = getConversationRowEnd(handle, targetIndex);
+
+  if (rowEnd < viewportCenter) {
+    return isConversationAtTop(handle);
+  }
+
+  return rowStart > viewportCenter && isConversationAtBottom(handle);
 }
 
 /**

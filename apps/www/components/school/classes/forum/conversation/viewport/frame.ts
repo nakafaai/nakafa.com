@@ -15,7 +15,7 @@ export function dispatchViewportEvent(
     return;
   }
 
-  Effect.runSync(viewport.dispatch(event));
+  Effect.runFork(viewport.dispatch(event));
 }
 
 /** Measures the current scroller and forwards the result to the Viewport service. */

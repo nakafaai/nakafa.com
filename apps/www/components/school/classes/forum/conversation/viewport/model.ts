@@ -177,15 +177,6 @@ export function getOpeningPlacement({
   savedSnapshot: ConversationScrollSnapshot | null;
   unreadCue: ConversationUnreadCue | null;
 }) {
-  if (unreadCue && activeTranscript.rowIndexByPostId.has(unreadCue.postId)) {
-    return {
-      align: "start",
-      highlightPostId: null,
-      motion: "instant",
-      view: { kind: "post", postId: unreadCue.postId },
-    } satisfies ViewportPlacement;
-  }
-
   if (
     savedSnapshot &&
     canRestoreViewportSnapshot({ activeTranscript, snapshot: savedSnapshot })
@@ -194,6 +185,15 @@ export function getOpeningPlacement({
       highlightPostId: null,
       motion: "instant",
       view: { kind: "bottom" },
+    } satisfies ViewportPlacement;
+  }
+
+  if (unreadCue && activeTranscript.rowIndexByPostId.has(unreadCue.postId)) {
+    return {
+      align: "start",
+      highlightPostId: null,
+      motion: "instant",
+      view: { kind: "post", postId: unreadCue.postId },
     } satisfies ViewportPlacement;
   }
 

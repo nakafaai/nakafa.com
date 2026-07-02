@@ -133,6 +133,47 @@ describe("conversation/data/view/position", () => {
     ).toBe(false);
   });
 
+  it("settles visible post targets that are clamped by transcript edges", () => {
+    const topHandle = createHandle({
+      getItemOffset: (index) => [0, 10, 20, 90, 150][index] ?? index * 100,
+      getItemSize: (index) => [10, 10, 30, 60, 30][index] ?? 100,
+      offsets: [0, 10, 20, 90, 150],
+      scrollOffset: 0,
+      scrollSize: 500,
+      viewportSize: 200,
+    }).handle;
+    const bottomHandle = createHandle({
+      getItemOffset: (index) => [0, 40, 70, 120, 170][index] ?? index * 100,
+      getItemSize: (index) => [40, 30, 30, 50, 30][index] ?? 100,
+      offsets: [0, 40, 70, 120, 170],
+      scrollOffset: 20,
+      scrollSize: 220,
+      viewportSize: 200,
+    }).handle;
+
+    expect(
+      isConversationViewSettled({
+        handle: topHandle,
+        rowIndexByPostId,
+        view: { kind: "post", postId: firstPost._id },
+      })
+    ).toBe(true);
+    expect(
+      isConversationViewSettled({
+        handle: topHandle,
+        rowIndexByPostId,
+        view: { kind: "post", postId: secondPost._id },
+      })
+    ).toBe(false);
+    expect(
+      isConversationViewSettled({
+        handle: bottomHandle,
+        rowIndexByPostId,
+        view: { kind: "post", postId: secondPost._id },
+      })
+    ).toBe(true);
+  });
+
   it("resolves bottom views from the latest edge", () => {
     const handle = createHandle({ scrollOffset: 300 }).handle;
 
