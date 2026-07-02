@@ -60,13 +60,14 @@ describe("conversation/viewport/navigate/post", () => {
     await shutdownViewport(viewport);
   });
 
-  it("keeps semantic back when a visible reply target is already reached", async () => {
+  it("highlights a settled latest reply target without back navigation", async () => {
     const rig = createAdapters();
     const viewport = await createViewport(rig.adapters);
 
     await openReadyViewport(viewport);
     const placementCount = rig.placements.length;
-    rig.setMeasurement(makePostMeasurement(firstPost._id, 120));
+    rig.adapters.scroller.isViewSettled = (view) =>
+      view.kind === "post" && view.postId === firstPost._id;
 
     await dispatchViewport(viewport, { postId: firstPost._id, type: "post" });
     const highlighted = await waitForState(
@@ -74,24 +75,15 @@ describe("conversation/viewport/navigate/post", () => {
       (state) => state.highlightedPostId === firstPost._id
     );
 
-    expect(highlighted.backStack).toEqual([{ kind: "bottom" }]);
+    expect(highlighted.backStack).toEqual([]);
+    expect(highlighted.latestAffinity).toBe("latest");
+    expect(highlighted.shouldShowLatestButton).toBe(false);
     expect(rig.placements).toHaveLength(placementCount);
-
-    const detachedView = makePostMeasurement(firstPost._id, 210);
-    rig.setMeasurement(detachedView);
-    await dispatchMeasure(viewport, detachedView);
-    const detached = await waitForState(
-      viewport,
-      (state) => state.backStack.length === 1
-    );
-
-    expect(detached.backStack).toEqual([{ kind: "bottom" }]);
-    expect(detached.shouldShowLatestButton).toBe(false);
 
     await shutdownViewport(viewport);
   });
 
-  it("keeps latest as back target when live capture already points at the reply target", async () => {
+  it("highlights the current reply target without adding a back entry", async () => {
     const rig = createAdapters();
     const viewport = await createViewport(rig.adapters);
 
@@ -103,11 +95,11 @@ describe("conversation/viewport/navigate/post", () => {
     const state = await waitForState(
       viewport,
       (nextState) =>
-        nextState.backStack.length === 1 &&
+        nextState.backStack.length === 0 &&
         nextState.highlightedPostId === firstPost._id
     );
 
-    expect(state.backStack).toEqual([{ kind: "bottom" }]);
+    expect(state.backStack).toEqual([]);
     expect(state.shouldShowLatestButton).toBe(false);
     expect(state.pendingPlacement).toBeNull();
 
@@ -209,7 +201,7 @@ describe("conversation/viewport/navigate/post", () => {
       (state) => state.highlightedPostId === firstPost._id
     );
 
-    expect(highlighted.backStack).toEqual([{ kind: "bottom" }]);
+    expect(highlighted.backStack).toEqual([]);
 
     await dispatchViewport(viewport, { token: 0, type: "highlight-expired" });
     const stillHighlighted = await waitForState(
@@ -249,6 +241,35 @@ describe("conversation/viewport/navigate/post", () => {
     );
 
     expect(highlighted.backStack).toEqual([]);
+    await shutdownViewport(viewport);
+  });
+
+  it("recenters the current detached target without adding a back entry", async () => {
+    const rig = createAdapters();
+    const viewport = await createViewport(rig.adapters);
+    const targetMeasurement = makePostMeasurement(firstPost._id);
+
+    await openReadyViewport(viewport);
+    rig.setMeasurement(targetMeasurement);
+    await dispatchMeasure(viewport, targetMeasurement, "scroll");
+    await waitForState(
+      viewport,
+      (state) => state.latestAffinity === "detached"
+    );
+    rig.adapters.scroller.isViewSettled = () => false;
+
+    await dispatchViewport(viewport, { postId: firstPost._id, type: "post" });
+    const state = await waitForState(
+      viewport,
+      (nextState) => nextState.pendingPlacement?.view.kind === "post"
+    );
+
+    expect(state.backStack).toEqual([]);
+    expect(rig.placements.at(-1)).toMatchObject({
+      align: "center",
+      view: { kind: "post", postId: firstPost._id },
+    });
+
     await shutdownViewport(viewport);
   });
 

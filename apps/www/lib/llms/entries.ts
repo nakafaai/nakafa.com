@@ -22,7 +22,7 @@ import {
   buildSitemapContentPageRoutes,
 } from "@/lib/sitemap/routes";
 
-const LLMS_ENTRY_BUILD_CONCURRENCY = 16;
+const LLMS_ENTRY_BUILD_CONCURRENCY = 4;
 const LLMS_LISTING_ENTRY_LIMIT = 100;
 type ParentListingRowsArgs = Omit<
   Parameters<typeof getRuntimeContentRouteParentPage>[0],

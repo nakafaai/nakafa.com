@@ -29,6 +29,18 @@ export function handlePostNavigation(
     }
 
     const targetView = { kind: "post", postId } satisfies ConversationView;
+
+    if (runtime.adapters.scroller.isViewSettled(targetView)) {
+      yield* updateViewportState(runtime, (state) => ({
+        ...state,
+        lifecycle: "ready",
+        pendingPlacement: null,
+      }));
+
+      yield* startViewportHighlight(runtime, postId);
+      return;
+    }
+
     const measurement = yield* Ref.get(runtime.lastMeasurementRef);
     const state = yield* SubscriptionRef.get(runtime.stateRef);
     const backView = getPostNavigationBackView({
@@ -37,21 +49,6 @@ export function handlePostNavigation(
       state,
       targetPostId: postId,
     });
-
-    if (runtime.adapters.scroller.isViewSettled(targetView)) {
-      yield* updateViewportState(runtime, (state) => ({
-        ...state,
-        backStack: backView
-          ? pushViewportBackView(state.backStack, backView)
-          : state.backStack,
-        latestAffinity: "detached",
-        lifecycle: "ready",
-        pendingPlacement: null,
-      }));
-
-      yield* startViewportHighlight(runtime, postId);
-      return;
-    }
 
     yield* updateViewportState(runtime, (state) => ({
       ...state,
