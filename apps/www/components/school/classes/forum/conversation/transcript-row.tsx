@@ -1,20 +1,23 @@
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
-import type { ConversationRow } from "@/components/school/classes/forum/conversation/data/pages";
+import type { ConversationRow } from "@/components/school/classes/forum/conversation/data/transcript/pages";
 import { ForumHeader } from "@/components/school/classes/forum/conversation/header";
 import { ForumPostItem } from "@/components/school/classes/forum/conversation/item";
-import { ConversationDateSeparator } from "@/components/school/classes/forum/conversation/seperators/date";
-import { ConversationUnreadSeparator } from "@/components/school/classes/forum/conversation/seperators/unread";
+import { ConversationDateSeparator } from "@/components/school/classes/forum/conversation/separator/date";
+import { ConversationUnreadSeparator } from "@/components/school/classes/forum/conversation/separator/unread";
 
 /** Render one transcript row while keeping author grouping logic in one place. */
-export const TranscriptRow = ({
+export function TranscriptRow({
+  highlightedPostId,
   row,
   previousRow,
   nextRow,
 }: {
+  highlightedPostId: Id<"schoolClassForumPosts"> | null;
   row: ConversationRow;
   previousRow?: ConversationRow;
   nextRow?: ConversationRow;
-}) => {
+}) {
   const forum = useData((state) => state.forum);
 
   if (row.type === "header") {
@@ -40,27 +43,31 @@ export const TranscriptRow = ({
   return (
     <ForumPostItem
       isFirstInGroup={isFirstInGroup}
+      isJumpHighlighted={highlightedPostId === row.post._id}
       isLastInGroup={isLastInGroup}
       post={row.post}
     />
   );
-};
-TranscriptRow.displayName = "TranscriptRow";
+}
 
 /** Adapts one virtualized row index back into the grouped transcript row shape. */
-export const VirtualTranscriptRow = ({
+export function VirtualTranscriptRow({
+  highlightedPostId,
   index,
   row,
   rows,
 }: {
+  highlightedPostId: Id<"schoolClassForumPosts"> | null;
   index: number;
   row: ConversationRow;
   rows: readonly ConversationRow[];
-}) => (
-  <TranscriptRow
-    nextRow={rows[index + 1]}
-    previousRow={rows[index - 1]}
-    row={row}
-  />
-);
-VirtualTranscriptRow.displayName = "VirtualTranscriptRow";
+}) {
+  return (
+    <TranscriptRow
+      highlightedPostId={highlightedPostId}
+      nextRow={rows[index + 1]}
+      previousRow={rows[index - 1]}
+      row={row}
+    />
+  );
+}

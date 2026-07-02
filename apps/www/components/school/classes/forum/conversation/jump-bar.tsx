@@ -6,18 +6,19 @@ import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
 
 /** Renders the contextual jump actions for back and latest. */
-export const JumpBar = ({
+export function JumpBar({
   canGoBack,
   onBack,
   onLatest,
-  visible,
+  showLatest,
 }: {
   canGoBack: boolean;
   onBack: () => void;
   onLatest: () => void;
-  visible: boolean;
-}) => {
+  showLatest: boolean;
+}) {
   const t = useTranslations("Common");
+  const visible = canGoBack || showLatest;
 
   return (
     <div
@@ -34,22 +35,22 @@ export const JumpBar = ({
       >
         <ButtonGroup>
           {canGoBack ? (
-            <Button disabled={!visible} onClick={onBack} variant="outline">
+            <Button onClick={onBack} variant="outline">
               {t("back")}
             </Button>
           ) : null}
-          <Button
-            aria-label={t("back-to-latest")}
-            disabled={!visible}
-            onClick={onLatest}
-            size="icon"
-            variant="outline"
-          >
-            <HugeIcons icon={ArrowDown02Icon} />
-          </Button>
+          {showLatest ? (
+            <Button
+              aria-label={t("back-to-latest")}
+              onClick={onLatest}
+              size="icon"
+              variant="outline"
+            >
+              <HugeIcons icon={ArrowDown02Icon} />
+            </Button>
+          ) : null}
         </ButtonGroup>
       </div>
     </div>
   );
-};
-JumpBar.displayName = "JumpBar";
+}

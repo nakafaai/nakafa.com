@@ -8,7 +8,7 @@ import { useTranslations } from "next-intl";
 import { Activity } from "react";
 
 /** Renders the local attachment preview strip above the forum input. */
-export const AttachmentPreviews = ({
+export function AttachmentPreviews({
   files,
   hasReplyTo,
   onRemove,
@@ -16,7 +16,7 @@ export const AttachmentPreviews = ({
   files: FileWithPreview[];
   hasReplyTo: boolean;
   onRemove: (id: string) => void;
-}) => {
+}) {
   const t = useTranslations("File");
 
   if (files.length === 0) {
@@ -83,5 +83,4 @@ export const AttachmentPreviews = ({
       })}
     </div>
   );
-};
-AttachmentPreviews.displayName = "AttachmentPreviews";
+}

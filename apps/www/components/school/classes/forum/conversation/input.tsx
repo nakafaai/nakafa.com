@@ -17,21 +17,21 @@ import { useFileUpload } from "@repo/design-system/hooks/use-file-upload";
 import { cn } from "@repo/design-system/lib/utils";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
-import { Effect, Either, Schema } from "effect";
+import { Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { Activity, type ComponentRef, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { useForumSession } from "@/components/school/classes/forum/context/use-session";
-import { useControls } from "@/components/school/classes/forum/conversation/context/use-controls";
 import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
 import { AttachmentPreviews } from "@/components/school/classes/forum/conversation/input/attachment-previews";
 import { InputAttachments } from "@/components/school/classes/forum/conversation/input/attachments-trigger";
 import { EmojiButton } from "@/components/school/classes/forum/conversation/input/emoji-button";
 import { ReplyIndicator } from "@/components/school/classes/forum/conversation/input/reply-indicator";
 import { submitForumPost } from "@/components/school/classes/forum/conversation/input/submit";
+import { useControls } from "@/components/school/classes/forum/conversation/viewport/context";
 
 /** Handles forum post submission, uploads, and reply cleanup for the transcript. */
-export const ForumPostInput = () => {
+export function ForumPostInput() {
   const t = useTranslations("School.Classes");
   const { acknowledgeUnreadCue, goToLatest } = useControls();
   const forumId = useData((state) => state.forumId);
@@ -86,7 +86,7 @@ export const ForumPostInput = () => {
         })
       ),
     },
-    onSubmit: async ({ value }) => {
+    onSubmit: ({ value }) => {
       const hasBody = value.body.trim().length > 0;
       const hasAttachments = files.length > 0;
 
@@ -94,47 +94,48 @@ export const ForumPostInput = () => {
         return;
       }
 
-      const result = await Effect.runPromise(
-        Effect.either(
-          submitForumPost({
-            files,
-            mutations: {
-              createPost,
-              discardForumUploads,
-              generateUploadUrl,
-              saveForumUpload,
-            },
-            post: {
-              body: value.body,
-              forumId,
-              parentId: replyTarget?.postId,
-            },
+      return Effect.runPromise(
+        submitForumPost({
+          files,
+          mutations: {
+            createPost,
+            discardForumUploads,
+            generateUploadUrl,
+            saveForumUpload,
+          },
+          post: {
+            body: value.body,
+            forumId,
+            parentId: replyTarget?.postId,
+          },
+        }).pipe(
+          Effect.matchEffect({
+            onFailure: (error) =>
+              Effect.sync(() => {
+                captureException(error, {
+                  source: "forum-post-submit",
+                });
+                toast.error(t("create-post-failed"));
+
+                requestAnimationFrame(() => {
+                  textareaRef.current?.focus();
+                });
+              }),
+            onSuccess: () =>
+              Effect.sync(() => {
+                form.reset();
+                clearFiles();
+                setForumReplyTarget(forumId, null);
+                acknowledgeUnreadCue();
+
+                requestAnimationFrame(() => {
+                  textareaRef.current?.focus();
+                  goToLatest();
+                });
+              }),
           })
         )
       );
-
-      if (Either.isLeft(result)) {
-        captureException(result.left, {
-          source: "forum-post-submit",
-        });
-        toast.error(t("create-post-failed"));
-
-        requestAnimationFrame(() => {
-          textareaRef.current?.focus();
-        });
-
-        return;
-      }
-
-      form.reset();
-      clearFiles();
-      setForumReplyTarget(forumId, null);
-      acknowledgeUnreadCue();
-
-      requestAnimationFrame(() => {
-        textareaRef.current?.focus();
-        goToLatest();
-      });
     },
   });
 
@@ -264,4 +265,4 @@ export const ForumPostInput = () => {
       </form.Field>
     </form>
   );
-};
+}
