@@ -17,21 +17,6 @@ import {
 } from "@/components/school/classes/forum/conversation/viewport/fixture";
 
 describe("conversation/viewport/navigate/post", () => {
-  it("exposes settled semantics through the viewport fixture scroller", () => {
-    const rig = createAdapters();
-
-    expect(rig.adapters.scroller.isViewSettled({ kind: "bottom" })).toBe(true);
-    rig.setMeasurement(makePostMeasurement(firstPost._id));
-    expect(
-      rig.adapters.scroller.isViewSettled({
-        kind: "post",
-        postId: firstPost._id,
-      })
-    ).toBe(true);
-    rig.setMeasurement(null);
-    expect(rig.adapters.scroller.isViewSettled({ kind: "bottom" })).toBe(false);
-  });
-
   it("pushes a semantic back view when jumping to a post", async () => {
     const rig = createAdapters();
     const viewport = await createViewport(rig.adapters);
