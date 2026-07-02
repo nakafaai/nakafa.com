@@ -73,16 +73,15 @@ export function CurriculumSelector({
       </SelectTrigger>
       <SelectContent
         align="end"
-        className="w-[min(32rem,calc(100vw-2rem))] min-w-56"
+        alignItemWithTrigger={false}
+        className="sm:w-max sm:max-w-[min(28rem,calc(100vw-2rem))]"
       >
         <SelectGroup>
           <SelectLabel>{label}</SelectLabel>
           {options.map((option) => (
             <SelectItem key={option.value} value={option.value}>
               <CountryFlagIcon countryCode={option.countryCode} />
-              <span className="min-w-0 whitespace-normal break-words leading-snug">
-                {option.title}
-              </span>
+              <span className="min-w-0 truncate">{option.title}</span>
             </SelectItem>
           ))}
         </SelectGroup>
