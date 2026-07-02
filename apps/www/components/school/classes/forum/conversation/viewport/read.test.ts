@@ -34,7 +34,7 @@ describe("conversation/viewport/read", () => {
       (nextState) => nextState.latestAffinity === "detached"
     );
 
-    expect(state.shouldShowLatestButton).toBe(true);
+    expect(state.jumpControl).toEqual({ kind: "latest" });
     await waitForState(viewport, () => rig.readPostIds.length === 2);
     expect(rig.readPostIds).toEqual([secondPost._id, firstPost._id]);
     await shutdownViewport(viewport);

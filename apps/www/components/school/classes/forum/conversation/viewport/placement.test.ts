@@ -49,7 +49,7 @@ describe("conversation/viewport/placement", () => {
       view: { kind: "bottom" },
     });
     expect(retrying.lifecycle).toBe("placing");
-    expect(retrying.shouldShowLatestButton).toBe(false);
+    expect(retrying.jumpControl).toEqual({ kind: "none" });
 
     rig.setMeasurement(makeMeasurement());
     await dispatchMeasure(viewport, makeMeasurement(), "frame");
@@ -137,6 +137,45 @@ describe("conversation/viewport/placement", () => {
     await shutdownViewport(viewport);
   });
 
+  it("keeps visible post placement pending until it is settled", async () => {
+    const rig = createAdapters();
+    const viewport = await createViewport(rig.adapters);
+
+    await openTranscript(viewport);
+    await dispatchViewport(viewport, { postId: firstPost._id, type: "post" });
+    await waitForState(
+      viewport,
+      (state) => state.pendingPlacement?.view.kind === "post"
+    );
+
+    const visiblePostView = makePostMeasurement(firstPost._id, 24);
+    rig.setMeasurement(visiblePostView);
+    rig.adapters.scroller.isViewVisible = () => true;
+    rig.adapters.scroller.isViewSettled = () => false;
+
+    await dispatchMeasure(viewport, visiblePostView);
+    const pending = await waitForState(
+      viewport,
+      (state) => state.pendingPlacement?.view.kind === "post"
+    );
+
+    expect(pending.highlightedPostId).toBeNull();
+    expect(pending.jumpControl).toEqual({ kind: "back" });
+
+    rig.adapters.scroller.isViewSettled = (view) =>
+      view.kind === "post" && view.postId === firstPost._id;
+    await dispatchMeasure(viewport, visiblePostView);
+    const settled = await waitForState(
+      viewport,
+      (state) =>
+        state.pendingPlacement === null &&
+        state.highlightedPostId === firstPost._id
+    );
+
+    expect(settled.jumpControl).toEqual({ kind: "back" });
+    await shutdownViewport(viewport);
+  });
+
   it("settles unread opening placements through post reach checks", async () => {
     const rig = createAdapters();
     const viewport = await createViewport(rig.adapters);
@@ -170,7 +209,7 @@ describe("conversation/viewport/placement", () => {
         nextState.lifecycle === "ready" && nextState.pendingPlacement === null
     );
 
-    expect(state.shouldShowLatestButton).toBe(true);
+    expect(state.jumpControl).toEqual({ kind: "latest" });
     await shutdownViewport(viewport);
   });
 

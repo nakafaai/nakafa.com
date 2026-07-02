@@ -1,5 +1,8 @@
 import { Effect, Queue, Ref } from "effect";
-import { handleViewportMeasurement } from "@/components/school/classes/forum/conversation/viewport/measure";
+import {
+  handleViewportMeasurement,
+  handleViewportUserScroll,
+} from "@/components/school/classes/forum/conversation/viewport/measure";
 import type { ViewportEvent } from "@/components/school/classes/forum/conversation/viewport/model";
 import { handleBackNavigation } from "@/components/school/classes/forum/conversation/viewport/navigate/back";
 import { handlePostNavigation } from "@/components/school/classes/forum/conversation/viewport/navigate/post";
@@ -52,6 +55,8 @@ function handleViewportEvent(runtime: ViewportRuntime, event: ViewportEvent) {
       return handlePostNavigation(runtime, event.postId);
     case "transcript":
       return handleViewportTranscript(runtime, event);
+    case "user-scroll":
+      return handleViewportUserScroll(runtime);
     default:
       return Effect.void;
   }

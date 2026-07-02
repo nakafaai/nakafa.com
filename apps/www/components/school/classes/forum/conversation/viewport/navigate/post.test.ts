@@ -77,7 +77,7 @@ describe("conversation/viewport/navigate/post", () => {
 
     expect(highlighted.backStack).toEqual([]);
     expect(highlighted.latestAffinity).toBe("latest");
-    expect(highlighted.shouldShowLatestButton).toBe(false);
+    expect(highlighted.jumpControl).toEqual({ kind: "none" });
     expect(rig.placements).toHaveLength(placementCount);
 
     await shutdownViewport(viewport);
@@ -100,7 +100,7 @@ describe("conversation/viewport/navigate/post", () => {
     );
 
     expect(state.backStack).toEqual([]);
-    expect(state.shouldShowLatestButton).toBe(false);
+    expect(state.jumpControl).toEqual({ kind: "none" });
     expect(state.pendingPlacement).toBeNull();
 
     await shutdownViewport(viewport);

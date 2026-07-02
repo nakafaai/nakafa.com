@@ -34,16 +34,18 @@ export function ForumConversationTranscript({
     goToLatest,
     handleScroll,
     handleScrollEnd,
+    handleUserScrollIntent,
     setVirtualizerHandle,
   } = useControls();
-  const canGoBack = useViewport((state) => state.backStack.length > 0);
   const highlightedPostId = useViewport((state) => state.highlightedPostId);
-  const shouldShowLatest = useViewport((state) => state.shouldShowLatestButton);
+  const jumpControl = useViewport((state) => state.jumpControl);
 
   return (
     <>
       <div
         className="absolute inset-0 flex flex-col overflow-y-auto overscroll-contain"
+        onTouchMove={handleUserScrollIntent}
+        onWheel={handleUserScrollIntent}
         style={{ overflowAnchor: "none" }}
       >
         <Virtualizer
@@ -64,12 +66,7 @@ export function ForumConversationTranscript({
         </Virtualizer>
       </div>
 
-      <JumpBar
-        canGoBack={canGoBack}
-        onBack={goBack}
-        onLatest={goToLatest}
-        showLatest={shouldShowLatest}
-      />
+      <JumpBar control={jumpControl} onBack={goBack} onLatest={goToLatest} />
     </>
   );
 }

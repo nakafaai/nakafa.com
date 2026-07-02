@@ -12,6 +12,16 @@ import type { ConversationScrollSnapshot } from "@/components/school/classes/for
 type PlacementAlign = NonNullable<ScrollToIndexOpts["align"]>;
 type PlacementMotion = "instant" | "smooth";
 
+/** A mutually exclusive transcript jump action derived from viewport state. */
+export type ViewportJumpControl =
+  | { kind: "back" }
+  | { kind: "latest" }
+  | { kind: "none" };
+
+const jumpControlBack = { kind: "back" } satisfies ViewportJumpControl;
+const jumpControlLatest = { kind: "latest" } satisfies ViewportJumpControl;
+const jumpControlNone = { kind: "none" } satisfies ViewportJumpControl;
+
 export interface ViewportMeasurement {
   bottomDistance: number;
   hasOverflow: boolean;
@@ -44,17 +54,18 @@ export type ViewportEvent =
   | { type: "back" }
   | { token: number; type: "highlight-expired" }
   | { type: "latest" }
-  | { type: "persist" };
+  | { type: "persist" }
+  | { type: "user-scroll" };
 
 export interface ViewportState {
   backStack: ConversationView[];
   hasOverflow: boolean;
   highlightedPostId: Id<"schoolClassForumPosts"> | null;
   isAtLatest: boolean;
+  jumpControl: ViewportJumpControl;
   latestAffinity: "detached" | "latest";
   lifecycle: "opening" | "placing" | "ready";
   pendingPlacement: ViewportPlacement | null;
-  shouldShowLatestButton: boolean;
 }
 
 export const initialViewportState = deriveViewportState({
@@ -69,20 +80,41 @@ export const initialViewportState = deriveViewportState({
 
 /** Derives render facts from the canonical Forum Conversation Viewport state. */
 export function deriveViewportState(
-  state: Omit<ViewportState, "shouldShowLatestButton"> & {
-    shouldShowLatestButton?: boolean;
+  state: Omit<ViewportState, "jumpControl"> & {
+    jumpControl?: ViewportJumpControl;
   }
 ) {
-  const latestIsBackTarget = state.backStack.at(-1)?.kind === "bottom";
-  const shouldShowLatestButton =
-    state.hasOverflow &&
-    !latestIsBackTarget &&
-    !(state.isAtLatest || state.pendingPlacement?.view.kind === "bottom");
+  const jumpControl = getViewportJumpControl(state);
 
   return {
     ...state,
-    shouldShowLatestButton,
+    jumpControl,
   } satisfies ViewportState;
+}
+
+/** Selects the one jump action allowed to render for the current viewport. */
+export function getViewportJumpControl({
+  backStack,
+  hasOverflow,
+  isAtLatest,
+  pendingPlacement,
+}: Pick<
+  ViewportState,
+  "backStack" | "hasOverflow" | "isAtLatest" | "pendingPlacement"
+>) {
+  if (isAtLatest || pendingPlacement?.view.kind === "bottom") {
+    return jumpControlNone;
+  }
+
+  if (backStack.length > 0) {
+    return jumpControlBack;
+  }
+
+  if (hasOverflow) {
+    return jumpControlLatest;
+  }
+
+  return jumpControlNone;
 }
 
 /** Returns the next latest affinity after one normalized Viewport measurement. */

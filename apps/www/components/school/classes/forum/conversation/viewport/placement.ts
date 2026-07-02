@@ -47,5 +47,5 @@ export function hasReachedViewportPlacement({
     return measurement.isAtLatest;
   }
 
-  return runtime.adapters.scroller.isViewVisible(placement.view);
+  return runtime.adapters.scroller.isViewSettled(placement.view);
 }

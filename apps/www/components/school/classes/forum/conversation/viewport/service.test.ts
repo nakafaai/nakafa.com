@@ -34,7 +34,7 @@ describe("conversation/viewport/service", () => {
       viewport,
       (state) => state.lifecycle === "ready" && state.isAtLatest
     );
-    expect(ready.shouldShowLatestButton).toBe(false);
+    expect(ready.jumpControl).toEqual({ kind: "none" });
     await waitForState(viewport, () => rig.readPostIds.length === 1);
     expect(rig.readPostIds).toEqual([secondPost._id]);
 
@@ -61,6 +61,7 @@ describe("conversation/viewport/service", () => {
     expect(rig.adapters.scroller.isViewReached({ kind: "bottom" })).toBe(false);
     expect(rig.adapters.scroller.isViewVisible({ kind: "bottom" })).toBe(false);
     rig.setMeasurement(makeMeasurement());
+    expect(rig.adapters.scroller.isViewReached({ kind: "bottom" })).toBe(true);
     expect(rig.adapters.scroller.isViewVisible({ kind: "bottom" })).toBe(true);
     rig.setMeasurement(
       makeMeasurement({ view: { kind: "post", postId: firstPost._id } })

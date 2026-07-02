@@ -183,7 +183,7 @@ describe("conversation/viewport/model", () => {
     });
   });
 
-  it("hides the latest button while already at latest or placing latest", () => {
+  it("hides jump controls while already at latest or placing latest", () => {
     expect(
       deriveViewportState({
         backStack: [],
@@ -193,8 +193,8 @@ describe("conversation/viewport/model", () => {
         latestAffinity: "latest",
         lifecycle: "ready",
         pendingPlacement: null,
-      }).shouldShowLatestButton
-    ).toBe(false);
+      }).jumpControl
+    ).toEqual({ kind: "none" });
 
     expect(
       deriveViewportState({
@@ -205,8 +205,8 @@ describe("conversation/viewport/model", () => {
         latestAffinity: "latest",
         lifecycle: "ready",
         pendingPlacement: null,
-      }).shouldShowLatestButton
-    ).toBe(false);
+      }).jumpControl
+    ).toEqual({ kind: "none" });
 
     expect(
       deriveViewportState({
@@ -220,11 +220,11 @@ describe("conversation/viewport/model", () => {
           highlightPostId: null,
           view: { kind: "bottom" },
         },
-      }).shouldShowLatestButton
-    ).toBe(false);
+      }).jumpControl
+    ).toEqual({ kind: "none" });
   });
 
-  it("shows the latest button only when the viewer is meaningfully detached", () => {
+  it("selects exactly one detached jump control", () => {
     expect(
       deriveViewportState({
         backStack: [],
@@ -234,8 +234,8 @@ describe("conversation/viewport/model", () => {
         latestAffinity: "detached",
         lifecycle: "ready",
         pendingPlacement: null,
-      }).shouldShowLatestButton
-    ).toBe(true);
+      }).jumpControl
+    ).toEqual({ kind: "latest" });
 
     expect(
       deriveViewportState({
@@ -246,8 +246,32 @@ describe("conversation/viewport/model", () => {
         latestAffinity: "detached",
         lifecycle: "ready",
         pendingPlacement: null,
-      }).shouldShowLatestButton
-    ).toBe(false);
+      }).jumpControl
+    ).toEqual({ kind: "back" });
+
+    expect(
+      deriveViewportState({
+        backStack: [{ kind: "post", postId: firstPost._id }],
+        highlightedPostId: null,
+        hasOverflow: true,
+        isAtLatest: false,
+        latestAffinity: "detached",
+        lifecycle: "ready",
+        pendingPlacement: null,
+      }).jumpControl
+    ).toEqual({ kind: "back" });
+
+    expect(
+      deriveViewportState({
+        backStack: [],
+        highlightedPostId: null,
+        hasOverflow: false,
+        isAtLatest: false,
+        latestAffinity: "detached",
+        lifecycle: "ready",
+        pendingPlacement: null,
+      }).jumpControl
+    ).toEqual({ kind: "none" });
   });
 
   it("derives latest affinity from measured latest and user detachment", () => {

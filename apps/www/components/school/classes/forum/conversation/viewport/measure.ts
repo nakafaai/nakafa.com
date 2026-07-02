@@ -5,7 +5,6 @@ import {
   isViewportDetachedScroll,
   type ViewportMeasurement,
 } from "@/components/school/classes/forum/conversation/viewport/model";
-import { clearReachedBackTarget } from "@/components/school/classes/forum/conversation/viewport/navigate/back";
 import { scheduleViewportSnapshotPersist } from "@/components/school/classes/forum/conversation/viewport/persist";
 import { hasReachedViewportPlacement } from "@/components/school/classes/forum/conversation/viewport/placement";
 import { markLastVisibleViewportPostRead } from "@/components/school/classes/forum/conversation/viewport/read";
@@ -51,9 +50,14 @@ export function handleViewportMeasurement(
       source === "frame" &&
       pendingPlacement !== null &&
       !(hasUserDetachedFromLatest || reachedPendingPlacement);
+    const shouldClearBackStack =
+      pendingPlacement === null &&
+      currentState.backStack.length > 0 &&
+      measurement.isAtLatest;
 
     yield* updateViewportState(runtime, (state) => ({
       ...state,
+      backStack: shouldClearBackStack ? [] : state.backStack,
       hasOverflow: measurement.hasOverflow,
       isAtLatest: measurement.isAtLatest,
       latestAffinity,
@@ -87,9 +91,22 @@ export function handleViewportMeasurement(
       runtime,
       measurement.lastVisiblePostId
     );
-    if (!pendingPlacement) {
-      yield* clearReachedBackTarget(runtime);
-    }
     yield* scheduleViewportSnapshotPersist(runtime);
+  });
+}
+
+/** Cancels semantic jump state when direct user input takes over scrolling. */
+export function handleViewportUserScroll(runtime: ViewportRuntime) {
+  return updateViewportState(runtime, (state) => {
+    if (state.backStack.length === 0 && state.pendingPlacement === null) {
+      return state;
+    }
+
+    return {
+      ...state,
+      backStack: [],
+      lifecycle: "ready",
+      pendingPlacement: null,
+    };
   });
 }

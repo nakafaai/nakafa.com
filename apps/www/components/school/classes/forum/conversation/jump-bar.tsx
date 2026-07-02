@@ -4,21 +4,20 @@ import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
+import type { ViewportJumpControl } from "@/components/school/classes/forum/conversation/viewport/model";
 
 /** Renders the contextual jump actions for back and latest. */
 export function JumpBar({
-  canGoBack,
+  control,
   onBack,
   onLatest,
-  showLatest,
 }: {
-  canGoBack: boolean;
+  control: ViewportJumpControl;
   onBack: () => void;
   onLatest: () => void;
-  showLatest: boolean;
 }) {
   const t = useTranslations("Common");
-  const visible = canGoBack || showLatest;
+  const visible = control.kind !== "none";
 
   return (
     <div
@@ -34,12 +33,12 @@ export function JumpBar({
         )}
       >
         <ButtonGroup>
-          {canGoBack ? (
+          {control.kind === "back" ? (
             <Button onClick={onBack} variant="outline">
               {t("back")}
             </Button>
           ) : null}
-          {showLatest ? (
+          {control.kind === "latest" ? (
             <Button
               aria-label={t("back-to-latest")}
               onClick={onLatest}

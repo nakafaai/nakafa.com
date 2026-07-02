@@ -38,20 +38,3 @@ export function handleBackNavigation(runtime: ViewportRuntime) {
     });
   });
 }
-
-/** Removes a back target after user scrolling reaches that semantic view. */
-export function clearReachedBackTarget(runtime: ViewportRuntime) {
-  return Effect.gen(function* () {
-    const state = yield* SubscriptionRef.get(runtime.stateRef);
-    const backView = state.backStack.at(-1);
-
-    if (!(backView && runtime.adapters.scroller.isViewReached(backView))) {
-      return;
-    }
-
-    yield* updateViewportState(runtime, (current) => ({
-      ...current,
-      backStack: current.backStack.slice(0, -1),
-    }));
-  });
-}

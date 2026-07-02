@@ -106,7 +106,49 @@ describe("conversation/viewport/navigate/back", () => {
     await shutdownViewport(viewport);
   });
 
-  it("clears reached back targets during measurement", async () => {
+  it("clears back targets after explicit user scroll", async () => {
+    const rig = createAdapters();
+    const viewport = await createViewport(rig.adapters);
+
+    await openTranscript(viewport);
+    await dispatchViewport(viewport, { postId: firstPost._id, type: "post" });
+    await waitForState(viewport, (state) => state.backStack.length === 1);
+    const firstPostView = makePostMeasurement(firstPost._id);
+    rig.setMeasurement(firstPostView);
+    await dispatchMeasure(viewport, firstPostView);
+    const settled = await waitForState(
+      viewport,
+      (state) => state.pendingPlacement === null
+    );
+    expect(settled.backStack).toEqual([{ kind: "bottom" }]);
+    expect(settled.jumpControl).toEqual({ kind: "back" });
+
+    await dispatchMeasure(viewport, firstPostView);
+    const stable = await waitForState(
+      viewport,
+      (state) => state.backStack.length === 1
+    );
+    expect(stable.jumpControl).toEqual({ kind: "back" });
+
+    await dispatchMeasure(viewport, firstPostView, "scroll");
+    const programmaticScroll = await waitForState(
+      viewport,
+      (state) => state.backStack.length === 1
+    );
+    expect(programmaticScroll.jumpControl).toEqual({ kind: "back" });
+
+    await dispatchViewport(viewport, { type: "user-scroll" });
+    const state = await waitForState(
+      viewport,
+      (nextState) => nextState.backStack.length === 0
+    );
+
+    expect(state.backStack).toEqual([]);
+    expect(state.jumpControl).toEqual({ kind: "latest" });
+    await shutdownViewport(viewport);
+  });
+
+  it("clears stale back targets after returning to latest", async () => {
     const rig = createAdapters();
     const viewport = await createViewport(rig.adapters);
 
@@ -117,15 +159,16 @@ describe("conversation/viewport/navigate/back", () => {
     rig.setMeasurement(firstPostView);
     await dispatchMeasure(viewport, firstPostView);
     await waitForState(viewport, (state) => state.pendingPlacement === null);
-    rig.setMeasurement(makeMeasurement());
 
-    await dispatchMeasure(viewport, makeMeasurement(), "scroll");
+    const latest = makeMeasurement();
+    rig.setMeasurement(latest);
+    await dispatchMeasure(viewport, latest);
     const state = await waitForState(
       viewport,
       (nextState) => nextState.backStack.length === 0
     );
 
-    expect(state.backStack).toEqual([]);
+    expect(state.jumpControl).toEqual({ kind: "none" });
     await shutdownViewport(viewport);
   });
 });
