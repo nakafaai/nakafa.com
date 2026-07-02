@@ -1,4 +1,5 @@
 import type { MaterialList } from "@repo/contents/_types/curriculum/material";
+import { findLearningProgramByKey } from "@repo/contents/_types/program/catalog";
 import { readStaticPublicContentRoutes } from "@repo/contents/_types/route/content/static";
 import {
   compareCurriculumRouteOrder,
@@ -112,6 +113,31 @@ export function readCurriculumRouteModel({
   };
 }
 
+/** Builds the root curriculum select options from projected route and catalog sources. */
+export function readCurriculumRootOptions(
+  locale: PublicCurriculumRoute["locale"]
+) {
+  return readCurriculumRoutes()
+    .filter(
+      (route) =>
+        route.locale === locale &&
+        route.level === "track" &&
+        isRenderableCurriculumRoute(route)
+    )
+    .slice()
+    .sort(compareCurriculumRouteOrder)
+    .map((route) => {
+      const program = findLearningProgramByKey(route.programKey);
+
+      return {
+        countryCode: program?.provider.homeCountry,
+        href: `/${locale}/${route.publicPath}`,
+        title: route.title,
+        value: route.publicPath,
+      };
+    });
+}
+
 /** Builds the small parent link shown above curriculum page titles. */
 export function readCurriculumHeaderLink(
   locale: PublicCurriculumRoute["locale"],
@@ -214,8 +240,6 @@ function groupCurriculumChildren(routes: readonly PublicCurriculumRoute[]) {
 
   return [...groups.entries()].map(([title, children]) => ({
     children,
-    iconKey: children.find((child) => child.displayGroupIconKey)
-      ?.displayGroupIconKey,
     key: title || "curriculum",
     title: title || undefined,
   }));
