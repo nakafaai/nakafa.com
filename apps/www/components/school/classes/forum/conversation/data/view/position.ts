@@ -1,5 +1,6 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import {
+  getConversationDistanceToViewportCenter,
   getConversationPostTargetIndex,
   getConversationRowStart,
   isConversationRowVisible,
@@ -73,6 +74,37 @@ export function isConversationViewVisible({
     handle,
     index: targetIndex,
   });
+}
+
+/** Returns whether one semantic transcript view is in reading position. */
+export function isConversationViewSettled({
+  handle,
+  rowIndexByPostId,
+  view,
+}: {
+  handle: ConversationGeometryHandle;
+  rowIndexByPostId: ReadonlyMap<Id<"schoolClassForumPosts">, number>;
+  view: ConversationView;
+}) {
+  if (view.kind === "bottom") {
+    return isConversationAtBottom(handle);
+  }
+
+  const targetIndex = getConversationPostTargetIndex({
+    rowIndexByPostId,
+    postId: view.postId,
+  });
+
+  if (targetIndex === undefined) {
+    return false;
+  }
+
+  return (
+    getConversationDistanceToViewportCenter({
+      handle,
+      index: targetIndex,
+    }) === 0
+  );
 }
 
 /**

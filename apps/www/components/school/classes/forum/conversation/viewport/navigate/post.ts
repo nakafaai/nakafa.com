@@ -38,7 +38,7 @@ export function handlePostNavigation(
       targetPostId: postId,
     });
 
-    if (runtime.adapters.scroller.isViewVisible(targetView)) {
+    if (runtime.adapters.scroller.isViewSettled(targetView)) {
       yield* updateViewportState(runtime, (state) => ({
         ...state,
         backStack: backView
@@ -88,16 +88,16 @@ function getPostNavigationBackView({
     state.pendingPlacement?.view.kind === "bottom" ||
     measurement?.isAtLatest;
 
+  if (shouldUseLatestBackTarget) {
+    return { kind: "bottom" } satisfies ConversationView;
+  }
+
   if (!currentView) {
-    return shouldUseLatestBackTarget
-      ? ({ kind: "bottom" } satisfies ConversationView)
-      : null;
+    return null;
   }
 
   if (isConversationViewAtPost(currentView, targetPostId)) {
-    return shouldUseLatestBackTarget
-      ? ({ kind: "bottom" } satisfies ConversationView)
-      : null;
+    return null;
   }
 
   return currentView;

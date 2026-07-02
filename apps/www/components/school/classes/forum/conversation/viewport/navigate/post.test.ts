@@ -17,6 +17,21 @@ import {
 } from "@/components/school/classes/forum/conversation/viewport/fixture";
 
 describe("conversation/viewport/navigate/post", () => {
+  it("exposes settled semantics through the viewport fixture scroller", () => {
+    const rig = createAdapters();
+
+    expect(rig.adapters.scroller.isViewSettled({ kind: "bottom" })).toBe(true);
+    rig.setMeasurement(makePostMeasurement(firstPost._id));
+    expect(
+      rig.adapters.scroller.isViewSettled({
+        kind: "post",
+        postId: firstPost._id,
+      })
+    ).toBe(true);
+    rig.setMeasurement(null);
+    expect(rig.adapters.scroller.isViewSettled({ kind: "bottom" })).toBe(false);
+  });
+
   it("pushes a semantic back view when jumping to a post", async () => {
     const rig = createAdapters();
     const viewport = await createViewport(rig.adapters);
@@ -149,16 +164,42 @@ describe("conversation/viewport/navigate/post", () => {
     );
     rig.setMeasurement(makePostMeasurement(firstPost._id, 120));
 
-    await dispatchViewport(viewport, { postId: firstPost._id, type: "post" });
+    await dispatchViewport(viewport, { postId: secondPost._id, type: "post" });
     const state = await waitForState(
       viewport,
       (nextState) =>
         nextState.backStack.length === 1 &&
-        nextState.highlightedPostId === firstPost._id
+        nextState.pendingPlacement?.view.kind === "post"
     );
 
     expect(state.backStack).toEqual([{ kind: "bottom" }]);
-    expect(state.shouldShowLatestButton).toBe(false);
+    expect(rig.placements.at(-1)).toMatchObject({
+      align: "center",
+      view: { kind: "post", postId: secondPost._id },
+    });
+
+    await shutdownViewport(viewport);
+  });
+
+  it("centers a visible reply target before highlighting when it is not settled", async () => {
+    const rig = createAdapters();
+    const viewport = await createViewport(rig.adapters);
+
+    await openReadyViewport(viewport);
+    rig.setMeasurement(makePostMeasurement(firstPost._id, 120));
+    rig.adapters.scroller.isViewSettled = () => false;
+
+    await dispatchViewport(viewport, { postId: firstPost._id, type: "post" });
+    const state = await waitForState(
+      viewport,
+      (nextState) => nextState.pendingPlacement?.view.kind === "post"
+    );
+
+    expect(state.highlightedPostId).toBeNull();
+    expect(rig.placements.at(-1)).toMatchObject({
+      align: "center",
+      view: { kind: "post", postId: firstPost._id },
+    });
 
     await shutdownViewport(viewport);
   });

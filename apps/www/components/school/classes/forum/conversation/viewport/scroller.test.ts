@@ -26,6 +26,7 @@ describe("conversation/viewport/scroller", () => {
 
     expect(scroller.captureView()).toBeNull();
     expect(scroller.isViewReached({ kind: "bottom" })).toBe(false);
+    expect(scroller.isViewSettled({ kind: "bottom" })).toBe(false);
     expect(scroller.isViewVisible({ kind: "bottom" })).toBe(false);
     expect(scroller.measure()).toBeNull();
     expect(
@@ -54,6 +55,7 @@ describe("conversation/viewport/scroller", () => {
       isAtLatest: true,
       view: { kind: "bottom" },
     });
+    expect(scroller.isViewSettled({ kind: "bottom" })).toBe(true);
   });
 
   it("keeps bottom reach aligned with the latest measurement tolerance", () => {
@@ -234,6 +236,24 @@ describe("conversation/viewport/scroller", () => {
     expect(
       scroller.isViewVisible({ kind: "post", postId: firstPost._id })
     ).toBe(false);
+    expect(
+      scroller.isViewSettled({ kind: "post", postId: firstPost._id })
+    ).toBe(false);
+  });
+
+  it("settles a post view only at the transcript center line", () => {
+    const { handle } = createConversationTestRowsHandle({
+      scrollOffset: 150,
+    });
+    const scroller = createViewportScroller({
+      getHandle: () => handle,
+      getTranscript: () => activeTranscript,
+      prefersReducedMotion: false,
+    });
+
+    expect(
+      scroller.isViewSettled({ kind: "post", postId: firstPost._id })
+    ).toBe(true);
   });
 
   it("returns null measurement before the virtualizer has a viewport size", () => {

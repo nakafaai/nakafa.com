@@ -11,6 +11,7 @@ import {
   dispatchViewport,
   makeMeasurement,
   makePostMeasurement,
+  openReadyViewport,
   openTranscript,
   shutdownViewport,
   waitForState,
@@ -42,8 +43,10 @@ describe("conversation/viewport/navigate/back", () => {
     const rig = createAdapters();
     const viewport = await createViewport(rig.adapters);
 
-    await openTranscript(viewport);
-    rig.setMeasurement(makePostMeasurement(firstPost._id));
+    await openReadyViewport(viewport);
+    const firstPostView = makePostMeasurement(firstPost._id);
+    rig.setMeasurement(firstPostView);
+    await dispatchMeasure(viewport, firstPostView, "scroll");
     await dispatchViewport(viewport, { postId: secondPost._id, type: "post" });
     await waitForState(viewport, (state) => state.backStack.length === 1);
 
@@ -66,7 +69,7 @@ describe("conversation/viewport/navigate/back", () => {
     const rig = createAdapters();
     const viewport = await createViewport(rig.adapters);
 
-    await openTranscript(viewport);
+    await openReadyViewport(viewport);
     rig.setMeasurement(
       makeMeasurement({
         bottomDistance: 80,
@@ -75,6 +78,17 @@ describe("conversation/viewport/navigate/back", () => {
         offset: 160,
         view: { kind: "post", postId: stalePostId },
       })
+    );
+    await dispatchMeasure(
+      viewport,
+      makeMeasurement({
+        bottomDistance: 80,
+        isAtLatest: false,
+        lastVisiblePostId: firstPost._id,
+        offset: 160,
+        view: { kind: "post", postId: stalePostId },
+      }),
+      "scroll"
     );
     await dispatchViewport(viewport, { postId: firstPost._id, type: "post" });
     await waitForState(viewport, (state) => state.backStack.length === 1);

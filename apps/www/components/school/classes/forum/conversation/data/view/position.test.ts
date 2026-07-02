@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   captureConversationView,
   hasConversationViewReached,
+  isConversationViewSettled,
   isConversationViewVisible,
 } from "@/components/school/classes/forum/conversation/data/view/position";
 import {
@@ -106,6 +107,30 @@ describe("conversation/data/view/position", () => {
         view: { kind: "post", postId: firstPost._id },
       })
     ).toBe(true);
+    expect(
+      isConversationViewSettled({
+        handle,
+        rowIndexByPostId,
+        view: { kind: "post", postId: firstPost._id },
+      })
+    ).toBe(false);
+  });
+
+  it("settles a post only when the row reaches the viewport center", () => {
+    expect(
+      isConversationViewSettled({
+        handle: createHandle({ scrollOffset: 150 }).handle,
+        rowIndexByPostId,
+        view: { kind: "post", postId: firstPost._id },
+      })
+    ).toBe(true);
+    expect(
+      isConversationViewSettled({
+        handle: createHandle({ scrollOffset: 150 }).handle,
+        rowIndexByPostId: new Map(),
+        view: { kind: "post", postId: firstPost._id },
+      })
+    ).toBe(false);
   });
 
   it("resolves bottom views from the latest edge", () => {
@@ -113,6 +138,13 @@ describe("conversation/data/view/position", () => {
 
     expect(
       isConversationViewVisible({
+        handle,
+        rowIndexByPostId,
+        view: { kind: "bottom" },
+      })
+    ).toBe(true);
+    expect(
+      isConversationViewSettled({
         handle,
         rowIndexByPostId,
         view: { kind: "bottom" },

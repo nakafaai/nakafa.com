@@ -86,6 +86,17 @@ export function createAdapters() {
 
         return areConversationViewsEqual(measurement.view, view);
       },
+      isViewSettled: (view) => {
+        if (!measurement) {
+          return false;
+        }
+
+        if (view.kind === "bottom") {
+          return measurement.isAtLatest;
+        }
+
+        return areConversationViewsEqual(measurement.view, view);
+      },
       isViewVisible: (view) => {
         if (!measurement) {
           return false;
