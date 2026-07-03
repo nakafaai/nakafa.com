@@ -1,3 +1,4 @@
+import { findLearningProgramByKey } from "@repo/contents/_types/program/catalog";
 import type { PublicCurriculumRoute } from "@repo/contents/_types/route/schema";
 import {
   Breadcrumb,
@@ -16,6 +17,7 @@ import {
   type CurriculumSelectorOption,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/selector";
 import { choiceCardVariants } from "@/components/shared/choice-card";
+import { CountryFlagIcon } from "@/components/shared/country-flag";
 
 /** Renders the curriculum index header with breadcrumb context. */
 export function CurriculumIndexHeader({
@@ -93,6 +95,9 @@ export function CurriculumRootCards({
     <div className="grid grid-cols-2 gap-4 pt-6 pb-24 md:grid-cols-3">
       {routes.map((route) => {
         const Icon = readCurriculumRouteIcon(route);
+        const program = findLearningProgramByKey(route.programKey);
+        const countryCode =
+          route.level === "track" ? program?.provider.homeCountry : undefined;
 
         return (
           <NavigationLink
@@ -107,11 +112,18 @@ export function CurriculumRootCards({
                 intensity="medium"
                 keyString={route.publicPath}
               />
-              <HugeIcons
-                aria-hidden
-                className="relative size-6 text-foreground"
-                icon={Icon}
-              />
+              {countryCode ? (
+                <CountryFlagIcon
+                  className="relative h-6 w-9 rounded-[2px] ring-1 ring-border/60"
+                  countryCode={countryCode}
+                />
+              ) : (
+                <HugeIcons
+                  aria-hidden
+                  className="relative size-6 text-foreground"
+                  icon={Icon}
+                />
+              )}
             </div>
             <div className="px-6 pt-3 pb-6 text-center">
               <h2>{route.title}</h2>
