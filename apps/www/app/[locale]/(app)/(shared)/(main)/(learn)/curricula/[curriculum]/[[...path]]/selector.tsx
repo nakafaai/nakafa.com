@@ -119,7 +119,7 @@ export function CurriculumSelector({
       <SelectContent
         align="end"
         alignItemWithTrigger={false}
-        className="max-w-(--available-width) sm:w-[min(28rem,var(--available-width))]"
+        className="max-w-(--available-width) sm:w-max sm:min-w-(--anchor-width)"
       >
         <SelectGroup>
           <SelectLabel>{label}</SelectLabel>
