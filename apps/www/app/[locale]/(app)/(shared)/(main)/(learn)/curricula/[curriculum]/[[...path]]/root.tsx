@@ -61,7 +61,7 @@ export function CurriculumRootCards({
   routes: readonly PublicCurriculumRoute[];
 }) {
   return (
-    <div className="grid grid-cols-2 gap-4 pt-6 pb-24 md:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 pt-6 pb-24 md:grid-cols-3">
       {routes.map((route) => {
         const Icon = readCurriculumRouteIcon(route);
 
@@ -80,7 +80,7 @@ export function CurriculumRootCards({
               />
               <HugeIcons
                 aria-hidden
-                className="relative size-8 text-foreground/70"
+                className="relative size-6 text-foreground"
                 icon={Icon}
               />
             </div>

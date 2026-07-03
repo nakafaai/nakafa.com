@@ -54,7 +54,7 @@ function OnboardingChoice({
       <ChoicePreview icon={icon} seed={seed} />
       <div className="space-y-2 px-6 pt-3 pb-6 text-center">
         <div className="grid gap-2">
-          <h2 className="font-medium text-lg">{title}</h2>
+          <h2 className="font-medium">{title}</h2>
           <p className="text-muted-foreground text-sm">{description}</p>
         </div>
       </div>
@@ -74,7 +74,7 @@ function ChoicePreview({ icon, seed }: { icon: IconSvgElement; seed: string }) {
       />
       <HugeIcons
         aria-hidden
-        className="relative size-8 text-foreground/70"
+        className="relative size-6 text-foreground"
         icon={icon}
       />
     </div>
