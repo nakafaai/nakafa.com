@@ -1,5 +1,7 @@
 import { Effect, Fiber, Ref } from "effect";
 import { createConversationScrollSnapshot } from "@/components/school/classes/forum/conversation/data/scroll/snapshot";
+import type { ConversationView } from "@/components/school/classes/forum/conversation/data/view/model";
+import type { ViewportState } from "@/components/school/classes/forum/conversation/viewport/model";
 import {
   PERSIST_DELAY_MS,
   type ViewportRuntime,
@@ -39,33 +41,55 @@ export function flushCurrentSnapshot(runtime: ViewportRuntime) {
   });
 }
 
-/** Persists one stable latest snapshot or detached invalidation snapshot. */
+/** Persists one stable snapshot from the viewport-owned captured measurement. */
 export function persistCurrentSnapshot(runtime: ViewportRuntime) {
   return Effect.gen(function* () {
     const activeTranscript = yield* Ref.get(runtime.activeTranscriptRef);
     const state = yield* Ref.get(runtime.stateRef);
-    const measurement =
-      runtime.adapters.scroller.measure() ??
-      (yield* Ref.get(runtime.lastMeasurementRef));
+    const measurement = yield* Ref.get(runtime.lastMeasurementRef);
+    const hasPendingLatestIntent = isPendingLatestIntent(state);
 
-    if (state.lifecycle !== "ready" || state.pendingPlacement) {
+    if (!(state.lifecycle === "ready" || hasPendingLatestIntent)) {
       return;
     }
 
-    if (!(activeTranscript && measurement?.view)) {
+    if (state.pendingPlacement && !hasPendingLatestIntent) {
+      return;
+    }
+
+    if (!(activeTranscript && measurement)) {
+      return;
+    }
+
+    const view: ConversationView | null = hasPendingLatestIntent
+      ? { kind: "bottom" }
+      : measurement.view;
+
+    if (!view) {
       return;
     }
 
     yield* runtime.adapters.session
       .saveSnapshot(
         createConversationScrollSnapshot({
-          isAtBottom: measurement.isAtLatest,
+          isAtBottom: hasPendingLatestIntent || measurement.isAtLatest,
           lastPostId: activeTranscript.lastPostId,
           offset: measurement.offset,
           renderedRowCount: activeTranscript.rows.length,
-          view: measurement.view,
+          view,
         })
       )
       .pipe(Effect.catchTag("ViewportSessionError", () => Effect.void));
   });
+}
+
+/** Returns whether a pending placement should persist the user's latest intent. */
+function isPendingLatestIntent(state: ViewportState) {
+  const placement = state.pendingPlacement;
+
+  return (
+    state.lifecycle === "placing" &&
+    placement?.view.kind === "bottom" &&
+    placement.motion !== "instant"
+  );
 }

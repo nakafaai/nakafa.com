@@ -176,7 +176,9 @@ export function ForumPostInput() {
       });
 
       if (isTextOnlyPost) {
-        Effect.runPromise(
+        Effect.runSync(completeSubmit());
+
+        return Effect.runPromise(
           submitPost.pipe(
             Effect.matchEffect({
               onFailure: (error) => reportSubmitFailure({ draft, error }),
@@ -184,8 +186,6 @@ export function ForumPostInput() {
             })
           )
         );
-        Effect.runSync(completeSubmit());
-        return;
       }
 
       return Effect.runPromise(

@@ -70,14 +70,41 @@ describe("conversation/viewport/persist", () => {
 
   it("skips snapshot persistence when ready viewport has no captured view", async () => {
     const rig = createAdapters();
-    const viewport = await createViewport(rig.adapters);
-    await openReadyViewport(viewport);
 
-    rig.setMeasurement(makeMeasurement({ view: null }));
-    await dispatchViewport(viewport, { type: "persist" });
-    await waitForState(viewport, () => true);
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const scope = yield* Scope.make();
+        const runtime = {
+          activeTranscriptRef: yield* Ref.make<ActiveTranscript>(
+            viewportTestTranscript
+          ),
+          adapters: rig.adapters,
+          eventQueue: yield* Queue.bounded<ViewportEvent>(1),
+          highlightFiberRef: yield* Ref.make<RuntimeFiber | null>(null),
+          highlightTokenRef: yield* Ref.make(0),
+          lastMeasurementRef: yield* Ref.make<ViewportMeasurement | null>(null),
+          lastReadPostIdRef: yield* Ref.make<ForumPostId | null>(null),
+          persistFiberRef: yield* Ref.make<RuntimeFiber | null>(null),
+          scope,
+          stateRef: yield* SubscriptionRef.make(
+            deriveViewportState({
+              backStack: [],
+              hasOverflow: true,
+              highlightedPostId: null,
+              isAtLatest: true,
+              latestAffinity: "latest",
+              lifecycle: "ready",
+              pendingPlacement: null,
+            })
+          ),
+        } satisfies ViewportRuntime;
+
+        yield* flushCurrentSnapshot(runtime);
+        yield* Scope.close(scope, Exit.succeed(undefined));
+      })
+    );
+
     expect(rig.snapshots).toEqual([]);
-    await shutdownViewport(viewport);
   });
 
   it("persists from the last measurement when live measurement is unavailable", async () => {
@@ -93,6 +120,173 @@ describe("conversation/viewport/persist", () => {
       {
         lastPostId: secondPost._id,
         offset: 300,
+        renderedRowCount: rows.length,
+        view: { kind: "bottom" },
+        wasAtBottom: true,
+      },
+    ]);
+
+    await shutdownViewport(viewport);
+  });
+
+  it("persists from the captured measurement when live geometry has changed", async () => {
+    const rig = createAdapters();
+    const capturedMeasurement = makePostMeasurement(firstPost._id);
+    const liveMeasurement = makeMeasurement({ offset: 999 });
+    rig.setMeasurement(liveMeasurement);
+    expect(rig.adapters.scroller.measure()).toEqual(liveMeasurement);
+
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const scope = yield* Scope.make();
+        const runtime = {
+          activeTranscriptRef: yield* Ref.make<ActiveTranscript>(
+            viewportTestTranscript
+          ),
+          adapters: rig.adapters,
+          eventQueue: yield* Queue.bounded<ViewportEvent>(1),
+          highlightFiberRef: yield* Ref.make<RuntimeFiber | null>(null),
+          highlightTokenRef: yield* Ref.make(0),
+          lastMeasurementRef: yield* Ref.make<ViewportMeasurement | null>(
+            capturedMeasurement
+          ),
+          lastReadPostIdRef: yield* Ref.make<ForumPostId | null>(null),
+          persistFiberRef: yield* Ref.make<RuntimeFiber | null>(null),
+          scope,
+          stateRef: yield* SubscriptionRef.make(
+            deriveViewportState({
+              backStack: [],
+              hasOverflow: true,
+              highlightedPostId: null,
+              isAtLatest: false,
+              latestAffinity: "detached",
+              lifecycle: "ready",
+              pendingPlacement: null,
+            })
+          ),
+        } satisfies ViewportRuntime;
+
+        yield* flushCurrentSnapshot(runtime);
+        yield* Scope.close(scope, Exit.succeed(undefined));
+      })
+    );
+
+    expect(rig.snapshots).toEqual([
+      {
+        lastPostId: secondPost._id,
+        offset: 160,
+        renderedRowCount: rows.length,
+        view: { kind: "post", postId: firstPost._id },
+        wasAtBottom: false,
+      },
+    ]);
+  });
+
+  it("skips pending post placements during snapshot persistence", async () => {
+    const rig = createAdapters();
+
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const scope = yield* Scope.make();
+        const runtime = {
+          activeTranscriptRef: yield* Ref.make<ActiveTranscript>(
+            viewportTestTranscript
+          ),
+          adapters: rig.adapters,
+          eventQueue: yield* Queue.bounded<ViewportEvent>(1),
+          highlightFiberRef: yield* Ref.make<RuntimeFiber | null>(null),
+          highlightTokenRef: yield* Ref.make(0),
+          lastMeasurementRef: yield* Ref.make<ViewportMeasurement | null>(
+            makePostMeasurement(firstPost._id)
+          ),
+          lastReadPostIdRef: yield* Ref.make<ForumPostId | null>(null),
+          persistFiberRef: yield* Ref.make<RuntimeFiber | null>(null),
+          scope,
+          stateRef: yield* SubscriptionRef.make(
+            deriveViewportState({
+              backStack: [],
+              hasOverflow: true,
+              highlightedPostId: null,
+              isAtLatest: false,
+              latestAffinity: "detached",
+              lifecycle: "ready",
+              pendingPlacement: {
+                highlightPostId: firstPost._id,
+                view: { kind: "post", postId: firstPost._id },
+              },
+            })
+          ),
+        } satisfies ViewportRuntime;
+
+        yield* flushCurrentSnapshot(runtime);
+        yield* Scope.close(scope, Exit.succeed(undefined));
+      })
+    );
+
+    expect(rig.snapshots).toEqual([]);
+  });
+
+  it("skips captured measurements without a semantic view", async () => {
+    const rig = createAdapters();
+
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const scope = yield* Scope.make();
+        const runtime = {
+          activeTranscriptRef: yield* Ref.make<ActiveTranscript>(
+            viewportTestTranscript
+          ),
+          adapters: rig.adapters,
+          eventQueue: yield* Queue.bounded<ViewportEvent>(1),
+          highlightFiberRef: yield* Ref.make<RuntimeFiber | null>(null),
+          highlightTokenRef: yield* Ref.make(0),
+          lastMeasurementRef: yield* Ref.make<ViewportMeasurement | null>(
+            makeMeasurement({ view: null })
+          ),
+          lastReadPostIdRef: yield* Ref.make<ForumPostId | null>(null),
+          persistFiberRef: yield* Ref.make<RuntimeFiber | null>(null),
+          scope,
+          stateRef: yield* SubscriptionRef.make(
+            deriveViewportState({
+              backStack: [],
+              hasOverflow: true,
+              highlightedPostId: null,
+              isAtLatest: true,
+              latestAffinity: "latest",
+              lifecycle: "ready",
+              pendingPlacement: null,
+            })
+          ),
+        } satisfies ViewportRuntime;
+
+        yield* flushCurrentSnapshot(runtime);
+        yield* Scope.close(scope, Exit.succeed(undefined));
+      })
+    );
+
+    expect(rig.snapshots).toEqual([]);
+  });
+
+  it("persists a pending latest placement as bottom intent", async () => {
+    const rig = createAdapters();
+    const viewport = await createViewport(rig.adapters);
+
+    await openReadyViewport(viewport);
+    const detachedMeasurement = makePostMeasurement(firstPost._id);
+    rig.setMeasurement(detachedMeasurement);
+    await dispatchMeasure(viewport, detachedMeasurement, "scroll");
+    await dispatchViewport(viewport, { type: "latest" });
+    await waitForState(
+      viewport,
+      (state) => state.pendingPlacement?.view.kind === "bottom"
+    );
+
+    await Effect.runPromise(viewport.flushSnapshot);
+
+    expect(rig.snapshots).toEqual([
+      {
+        lastPostId: secondPost._id,
+        offset: 160,
         renderedRowCount: rows.length,
         view: { kind: "bottom" },
         wasAtBottom: true,
