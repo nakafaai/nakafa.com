@@ -53,6 +53,7 @@ export function createOptimisticForumPost({
     classId: forum.classId,
     createdBy: currentUser._id,
     forumId: args.forumId,
+    isOptimistic: true,
     isUnread: false,
     mentions: args.mentions ?? [],
     myReactions: [],

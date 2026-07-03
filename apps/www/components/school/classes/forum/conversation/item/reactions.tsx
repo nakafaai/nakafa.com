@@ -10,7 +10,10 @@ import { useMutation } from "convex/react";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
-import type { ForumPost } from "@/components/school/classes/forum/conversation/data/entities";
+import {
+  type ForumPost,
+  isOptimisticForumPost,
+} from "@/components/school/classes/forum/conversation/data/entities";
 
 /** Renders the current reaction chips and toggles for one post. */
 export function PostReactions({ post }: { post: ForumPost }) {
@@ -20,7 +23,7 @@ export function PostReactions({ post }: { post: ForumPost }) {
     api.classes.forums.mutations.reactions.togglePostReaction
   );
 
-  if (post.reactionUsers.length === 0) {
+  if (isOptimisticForumPost(post) || post.reactionUsers.length === 0) {
     return null;
   }
 

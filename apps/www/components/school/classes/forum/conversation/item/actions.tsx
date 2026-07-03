@@ -27,7 +27,10 @@ import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { useForumSession } from "@/components/school/classes/forum/context/use-session";
-import type { ForumPost } from "@/components/school/classes/forum/conversation/data/entities";
+import {
+  type ForumPost,
+  isOptimisticForumPost,
+} from "@/components/school/classes/forum/conversation/data/entities";
 
 /**
  * Keeps post-level quick actions grouped together so reply and reaction updates
@@ -44,6 +47,10 @@ export function PostItemActions({ post }: { post: ForumPost }) {
     api.classes.forums.mutations.reactions.togglePostReaction
   );
   const userName = post.user?.name ?? t("anonymous");
+
+  if (isOptimisticForumPost(post)) {
+    return null;
+  }
 
   return (
     <ButtonGroup

@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
+import type { ForumPost } from "@/components/school/classes/forum/conversation/data/entities";
+import type { ConversationRow } from "@/components/school/classes/forum/conversation/data/transcript/pages";
 import {
   getCenteredConversationPostId,
   getFirstVisibleConversationPostId,
   getLastVisibleConversationPostId,
 } from "@/components/school/classes/forum/conversation/data/view/visible";
 import {
+  createConversationTestPost,
   createConversationTestRowsHandle as createHandle,
   conversationTestFirstPost as firstPost,
   conversationTestRows as rows,
@@ -128,5 +131,31 @@ describe("conversation/data/view/visible", () => {
         rows,
       })
     ).toBe(firstPost._id);
+  });
+
+  it("skips optimistic rows when resolving server-bound visible post ids", () => {
+    const optimisticPost = {
+      ...createConversationTestPost({
+        postId: "optimistic_post",
+        sequence: 3,
+      }),
+      isOptimistic: true,
+    } satisfies ForumPost;
+    const rowsWithOptimisticPost = [
+      ...rows,
+      { post: optimisticPost, type: "post" },
+    ] satisfies ConversationRow[];
+    const handle = createHandle({
+      scrollOffset: 350,
+      scrollSize: 600,
+      viewportSize: 250,
+    }).handle;
+
+    expect(
+      getLastVisibleConversationPostId({
+        handle,
+        rows: rowsWithOptimisticPost,
+      })
+    ).toBe(secondPost._id);
   });
 });

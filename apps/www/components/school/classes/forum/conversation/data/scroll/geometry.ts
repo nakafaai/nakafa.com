@@ -1,19 +1,8 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { ConversationGeometryHandle } from "@/components/school/classes/forum/conversation/data/scroll/metrics";
-import type { ConversationRow } from "@/components/school/classes/forum/conversation/data/transcript/pages";
-
 /** Clamps one row index into the currently rendered transcript range. */
 export function clampConversationIndex(index: number, itemCount: number) {
   return Math.max(0, Math.min(itemCount - 1, index));
-}
-
-/** Returns the post id for post rows and ignores structural rows. */
-export function getConversationPostId(row: ConversationRow | undefined) {
-  if (row?.type !== "post") {
-    return null;
-  }
-
-  return row.post._id;
 }
 
 /** Returns the absolute offset of the viewport center line. */

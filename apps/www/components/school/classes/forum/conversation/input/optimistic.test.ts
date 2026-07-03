@@ -78,6 +78,7 @@ describe("conversation/input/optimistic", () => {
       classId: forum.classId,
       createdBy: currentUser._id,
       forumId: forum._id,
+      isOptimistic: true,
       isUnread: false,
       myReactions: [],
       parentId: parentPost._id,

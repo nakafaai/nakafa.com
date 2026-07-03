@@ -1,7 +1,7 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { isOptimisticForumPost } from "@/components/school/classes/forum/conversation/data/entities";
 import {
   getConversationDistanceToViewportCenter,
-  getConversationPostId,
   getVisibleConversationIndexRange,
   isConversationRowVisible,
 } from "@/components/school/classes/forum/conversation/data/scroll/geometry";
@@ -34,10 +34,10 @@ export function getFirstVisibleConversationPostId({
       continue;
     }
 
-    const postId = getConversationPostId(rows[index]);
+    const row = rows[index];
 
-    if (postId) {
-      return postId;
+    if (row?.type === "post" && !isOptimisticForumPost(row.post)) {
+      return row.post._id;
     }
   }
 
@@ -70,10 +70,10 @@ export function getLastVisibleConversationPostId({
       continue;
     }
 
-    const postId = getConversationPostId(rows[index]);
+    const row = rows[index];
 
-    if (postId) {
-      return postId;
+    if (row?.type === "post" && !isOptimisticForumPost(row.post)) {
+      return row.post._id;
     }
   }
 
@@ -105,16 +105,20 @@ export function getCenteredConversationPostId({
     index <= range.lastVisibleIndex;
     index += 1
   ) {
-    const postId = getConversationPostId(rows[index]);
+    const row = rows[index];
 
-    if (!(postId && isConversationRowVisible({ handle, index }))) {
+    if (
+      row?.type !== "post" ||
+      isOptimisticForumPost(row.post) ||
+      !isConversationRowVisible({ handle, index })
+    ) {
       continue;
     }
 
     const distance = getConversationDistanceToViewportCenter({ handle, index });
 
     if (distance < shortestDistance) {
-      centeredPostId = postId;
+      centeredPostId = row.post._id;
       shortestDistance = distance;
     }
   }

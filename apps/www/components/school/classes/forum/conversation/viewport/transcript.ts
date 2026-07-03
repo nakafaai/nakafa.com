@@ -12,8 +12,12 @@ export function handleViewportTranscript(
   event: Extract<ViewportEvent, { type: "transcript" }>
 ) {
   return Effect.gen(function* () {
-    yield* Ref.set(runtime.activeTranscriptRef, event.activeTranscript);
     const currentState = yield* SubscriptionRef.get(runtime.stateRef);
+    const detachedView =
+      currentState.latestAffinity === "latest"
+        ? null
+        : runtime.adapters.scroller.captureView();
+    yield* Ref.set(runtime.activeTranscriptRef, event.activeTranscript);
 
     if (currentState.lifecycle === "opening") {
       const placement = getOpeningPlacement({
@@ -26,6 +30,29 @@ export function handleViewportTranscript(
     }
 
     if (currentState.latestAffinity !== "latest") {
+      if (
+        currentState.pendingPlacement?.view.kind === "post" &&
+        event.activeTranscript.rowIndexByPostId.has(
+          currentState.pendingPlacement.view.postId
+        )
+      ) {
+        return yield* startViewportPlacement(
+          runtime,
+          currentState.pendingPlacement
+        );
+      }
+
+      if (
+        detachedView?.kind === "post" &&
+        event.activeTranscript.rowIndexByPostId.has(detachedView.postId)
+      ) {
+        return yield* startViewportPlacement(runtime, {
+          highlightPostId: null,
+          motion: "instant",
+          view: detachedView,
+        });
+      }
+
       return;
     }
 
