@@ -121,21 +121,24 @@ describe("conversation/viewport/navigate/back", () => {
       (state) => state.pendingPlacement === null
     );
     expect(settled.backStack).toEqual([{ kind: "bottom" }]);
-    expect(settled.jumpControl).toEqual({ kind: "back" });
+    expect(settled.jumpControl).toEqual({ showBack: true, showLatest: true });
 
     await dispatchMeasure(viewport, firstPostView);
     const stable = await waitForState(
       viewport,
       (state) => state.backStack.length === 1
     );
-    expect(stable.jumpControl).toEqual({ kind: "back" });
+    expect(stable.jumpControl).toEqual({ showBack: true, showLatest: true });
 
     await dispatchMeasure(viewport, firstPostView, "scroll");
     const programmaticScroll = await waitForState(
       viewport,
       (state) => state.backStack.length === 1
     );
-    expect(programmaticScroll.jumpControl).toEqual({ kind: "back" });
+    expect(programmaticScroll.jumpControl).toEqual({
+      showBack: true,
+      showLatest: true,
+    });
 
     await dispatchViewport(viewport, { type: "user-scroll" });
     const state = await waitForState(
@@ -144,7 +147,7 @@ describe("conversation/viewport/navigate/back", () => {
     );
 
     expect(state.backStack).toEqual([]);
-    expect(state.jumpControl).toEqual({ kind: "latest" });
+    expect(state.jumpControl).toEqual({ showBack: false, showLatest: true });
     await shutdownViewport(viewport);
   });
 
@@ -168,7 +171,7 @@ describe("conversation/viewport/navigate/back", () => {
       (nextState) => nextState.backStack.length === 0
     );
 
-    expect(state.jumpControl).toEqual({ kind: "none" });
+    expect(state.jumpControl).toEqual({ showBack: false, showLatest: false });
     await shutdownViewport(viewport);
   });
 });

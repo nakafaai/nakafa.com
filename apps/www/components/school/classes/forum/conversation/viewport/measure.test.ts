@@ -41,7 +41,7 @@ describe("conversation/viewport/measure", () => {
         nextState.isAtLatest
     );
 
-    expect(state.jumpControl).toEqual({ kind: "none" });
+    expect(state.jumpControl).toEqual({ showBack: false, showLatest: false });
     await shutdownViewport(viewport);
   });
 });

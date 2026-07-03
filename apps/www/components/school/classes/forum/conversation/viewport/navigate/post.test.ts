@@ -77,7 +77,10 @@ describe("conversation/viewport/navigate/post", () => {
 
     expect(highlighted.backStack).toEqual([]);
     expect(highlighted.latestAffinity).toBe("latest");
-    expect(highlighted.jumpControl).toEqual({ kind: "none" });
+    expect(highlighted.jumpControl).toEqual({
+      showBack: false,
+      showLatest: false,
+    });
     expect(rig.placements).toHaveLength(placementCount);
 
     await shutdownViewport(viewport);
@@ -100,7 +103,10 @@ describe("conversation/viewport/navigate/post", () => {
     );
 
     expect(state.backStack).toEqual([]);
-    expect(state.jumpControl).toEqual({ kind: "none" });
+    expect(state.jumpControl).toEqual({
+      showBack: false,
+      showLatest: false,
+    });
     expect(state.pendingPlacement).toBeNull();
 
     await shutdownViewport(viewport);

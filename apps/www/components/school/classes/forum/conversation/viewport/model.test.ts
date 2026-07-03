@@ -183,7 +183,7 @@ describe("conversation/viewport/model", () => {
     });
   });
 
-  it("hides jump controls while already at latest or placing latest", () => {
+  it("hides jump controls while already at latest", () => {
     expect(
       deriveViewportState({
         backStack: [],
@@ -194,7 +194,7 @@ describe("conversation/viewport/model", () => {
         lifecycle: "ready",
         pendingPlacement: null,
       }).jumpControl
-    ).toEqual({ kind: "none" });
+    ).toEqual({ showBack: false, showLatest: false });
 
     expect(
       deriveViewportState({
@@ -206,8 +206,10 @@ describe("conversation/viewport/model", () => {
         lifecycle: "ready",
         pendingPlacement: null,
       }).jumpControl
-    ).toEqual({ kind: "none" });
+    ).toEqual({ showBack: false, showLatest: false });
+  });
 
+  it("keeps latest visible while latest placement has not reached bottom", () => {
     expect(
       deriveViewportState({
         backStack: [],
@@ -221,10 +223,10 @@ describe("conversation/viewport/model", () => {
           view: { kind: "bottom" },
         },
       }).jumpControl
-    ).toEqual({ kind: "none" });
+    ).toEqual({ showBack: false, showLatest: true });
   });
 
-  it("selects exactly one detached jump control", () => {
+  it("derives independent detached jump controls", () => {
     expect(
       deriveViewportState({
         backStack: [],
@@ -235,7 +237,7 @@ describe("conversation/viewport/model", () => {
         lifecycle: "ready",
         pendingPlacement: null,
       }).jumpControl
-    ).toEqual({ kind: "latest" });
+    ).toEqual({ showBack: false, showLatest: true });
 
     expect(
       deriveViewportState({
@@ -247,7 +249,7 @@ describe("conversation/viewport/model", () => {
         lifecycle: "ready",
         pendingPlacement: null,
       }).jumpControl
-    ).toEqual({ kind: "back" });
+    ).toEqual({ showBack: true, showLatest: true });
 
     expect(
       deriveViewportState({
@@ -259,7 +261,7 @@ describe("conversation/viewport/model", () => {
         lifecycle: "ready",
         pendingPlacement: null,
       }).jumpControl
-    ).toEqual({ kind: "back" });
+    ).toEqual({ showBack: true, showLatest: true });
 
     expect(
       deriveViewportState({
@@ -271,7 +273,7 @@ describe("conversation/viewport/model", () => {
         lifecycle: "ready",
         pendingPlacement: null,
       }).jumpControl
-    ).toEqual({ kind: "none" });
+    ).toEqual({ showBack: false, showLatest: false });
   });
 
   it("derives latest affinity from measured latest and user detachment", () => {

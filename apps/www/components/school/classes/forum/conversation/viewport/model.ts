@@ -12,15 +12,11 @@ import type { ConversationScrollSnapshot } from "@/components/school/classes/for
 type PlacementAlign = NonNullable<ScrollToIndexOpts["align"]>;
 type PlacementMotion = "instant" | "smooth";
 
-/** A mutually exclusive transcript jump action derived from viewport state. */
-export type ViewportJumpControl =
-  | { kind: "back" }
-  | { kind: "latest" }
-  | { kind: "none" };
-
-const jumpControlBack = { kind: "back" } satisfies ViewportJumpControl;
-const jumpControlLatest = { kind: "latest" } satisfies ViewportJumpControl;
-const jumpControlNone = { kind: "none" } satisfies ViewportJumpControl;
+/** Independent transcript jump actions derived from canonical viewport state. */
+export interface ViewportJumpControl {
+  showBack: boolean;
+  showLatest: boolean;
+}
 
 export interface ViewportMeasurement {
   bottomDistance: number;
@@ -92,29 +88,16 @@ export function deriveViewportState(
   } satisfies ViewportState;
 }
 
-/** Selects the one jump action allowed to render for the current viewport. */
+/** Selects the jump actions allowed to render for the current viewport. */
 export function getViewportJumpControl({
   backStack,
   hasOverflow,
   isAtLatest,
-  pendingPlacement,
-}: Pick<
-  ViewportState,
-  "backStack" | "hasOverflow" | "isAtLatest" | "pendingPlacement"
->) {
-  if (isAtLatest || pendingPlacement?.view.kind === "bottom") {
-    return jumpControlNone;
-  }
-
-  if (backStack.length > 0) {
-    return jumpControlBack;
-  }
-
-  if (hasOverflow) {
-    return jumpControlLatest;
-  }
-
-  return jumpControlNone;
+}: Pick<ViewportState, "backStack" | "hasOverflow" | "isAtLatest">) {
+  return {
+    showBack: !isAtLatest && backStack.length > 0,
+    showLatest: !isAtLatest && hasOverflow,
+  } satisfies ViewportJumpControl;
 }
 
 /** Returns the next latest affinity after one normalized Viewport measurement. */

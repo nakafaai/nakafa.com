@@ -34,7 +34,7 @@ describe("conversation/viewport/service", () => {
       viewport,
       (state) => state.lifecycle === "ready" && state.isAtLatest
     );
-    expect(ready.jumpControl).toEqual({ kind: "none" });
+    expect(ready.jumpControl).toEqual({ showBack: false, showLatest: false });
     await waitForState(viewport, () => rig.readPostIds.length === 1);
     expect(rig.readPostIds).toEqual([secondPost._id]);
 

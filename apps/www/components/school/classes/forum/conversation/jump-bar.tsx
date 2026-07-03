@@ -17,7 +17,7 @@ export function JumpBar({
   onLatest: () => void;
 }) {
   const t = useTranslations("Common");
-  const visible = control.kind !== "none";
+  const visible = control.showBack || control.showLatest;
 
   return (
     <div
@@ -33,12 +33,12 @@ export function JumpBar({
         )}
       >
         <ButtonGroup>
-          {control.kind === "back" ? (
+          {control.showBack ? (
             <Button onClick={onBack} variant="outline">
               {t("back")}
             </Button>
           ) : null}
-          {control.kind === "latest" ? (
+          {control.showLatest ? (
             <Button
               aria-label={t("back-to-latest")}
               onClick={onLatest}

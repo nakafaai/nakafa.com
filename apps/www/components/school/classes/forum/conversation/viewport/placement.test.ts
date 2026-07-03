@@ -49,7 +49,10 @@ describe("conversation/viewport/placement", () => {
       view: { kind: "bottom" },
     });
     expect(retrying.lifecycle).toBe("placing");
-    expect(retrying.jumpControl).toEqual({ kind: "none" });
+    expect(retrying.jumpControl).toEqual({
+      showBack: false,
+      showLatest: true,
+    });
 
     rig.setMeasurement(makeMeasurement());
     await dispatchMeasure(viewport, makeMeasurement(), "frame");
@@ -160,7 +163,7 @@ describe("conversation/viewport/placement", () => {
     );
 
     expect(pending.highlightedPostId).toBeNull();
-    expect(pending.jumpControl).toEqual({ kind: "back" });
+    expect(pending.jumpControl).toEqual({ showBack: true, showLatest: true });
 
     rig.adapters.scroller.isViewSettled = (view) =>
       view.kind === "post" && view.postId === firstPost._id;
@@ -172,7 +175,7 @@ describe("conversation/viewport/placement", () => {
         state.highlightedPostId === firstPost._id
     );
 
-    expect(settled.jumpControl).toEqual({ kind: "back" });
+    expect(settled.jumpControl).toEqual({ showBack: true, showLatest: true });
     await shutdownViewport(viewport);
   });
 
@@ -209,7 +212,7 @@ describe("conversation/viewport/placement", () => {
         nextState.lifecycle === "ready" && nextState.pendingPlacement === null
     );
 
-    expect(state.jumpControl).toEqual({ kind: "latest" });
+    expect(state.jumpControl).toEqual({ showBack: false, showLatest: true });
     await shutdownViewport(viewport);
   });
 
