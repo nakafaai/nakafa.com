@@ -226,7 +226,7 @@ describe("conversation/viewport/persist", () => {
     expect(rig.snapshots).toEqual([]);
   });
 
-  it("skips captured measurements without a semantic view", async () => {
+  it("persists no-view detached measurements as stale-bottom invalidation snapshots", async () => {
     const rig = createAdapters();
 
     await Effect.runPromise(
@@ -241,7 +241,13 @@ describe("conversation/viewport/persist", () => {
           highlightFiberRef: yield* Ref.make<RuntimeFiber | null>(null),
           highlightTokenRef: yield* Ref.make(0),
           lastMeasurementRef: yield* Ref.make<ViewportMeasurement | null>(
-            makeMeasurement({ view: null })
+            makeMeasurement({
+              bottomDistance: 320,
+              isAtLatest: false,
+              lastVisiblePostId: null,
+              offset: 80,
+              view: null,
+            })
           ),
           lastReadPostIdRef: yield* Ref.make<ForumPostId | null>(null),
           persistFiberRef: yield* Ref.make<RuntimeFiber | null>(null),
@@ -251,8 +257,8 @@ describe("conversation/viewport/persist", () => {
               backStack: [],
               hasOverflow: true,
               highlightedPostId: null,
-              isAtLatest: true,
-              latestAffinity: "latest",
+              isAtLatest: false,
+              latestAffinity: "detached",
               lifecycle: "ready",
               pendingPlacement: null,
             })
@@ -264,7 +270,15 @@ describe("conversation/viewport/persist", () => {
       })
     );
 
-    expect(rig.snapshots).toEqual([]);
+    expect(rig.snapshots).toEqual([
+      {
+        lastPostId: secondPost._id,
+        offset: 80,
+        renderedRowCount: rows.length,
+        view: { kind: "bottom" },
+        wasAtBottom: false,
+      },
+    ]);
   });
 
   it("persists a pending latest placement as bottom intent", async () => {

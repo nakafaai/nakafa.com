@@ -61,18 +61,16 @@ export function persistCurrentSnapshot(runtime: ViewportRuntime) {
       return;
     }
 
-    const view: ConversationView | null = hasPendingLatestIntent
-      ? { kind: "bottom" }
-      : measurement.view;
-
-    if (!view) {
-      return;
-    }
+    const isAtBottom = hasPendingLatestIntent || measurement.isAtLatest;
+    const view = getPersistedSnapshotView({
+      isAtBottom,
+      measurementView: measurement.view,
+    });
 
     yield* runtime.adapters.session
       .saveSnapshot(
         createConversationScrollSnapshot({
-          isAtBottom: hasPendingLatestIntent || measurement.isAtLatest,
+          isAtBottom,
           lastPostId: activeTranscript.lastPostId,
           offset: measurement.offset,
           renderedRowCount: activeTranscript.rows.length,
@@ -81,6 +79,21 @@ export function persistCurrentSnapshot(runtime: ViewportRuntime) {
       )
       .pipe(Effect.catchTag("ViewportSessionError", () => Effect.void));
   });
+}
+
+/** Returns a semantic snapshot view, using bottom only for latest or detached invalidation snapshots. */
+function getPersistedSnapshotView({
+  isAtBottom,
+  measurementView,
+}: {
+  isAtBottom: boolean;
+  measurementView: ConversationView | null;
+}) {
+  if (isAtBottom) {
+    return { kind: "bottom" } satisfies ConversationView;
+  }
+
+  return measurementView ?? ({ kind: "bottom" } satisfies ConversationView);
 }
 
 /** Returns whether a pending placement should persist the user's latest intent. */
