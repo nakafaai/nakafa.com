@@ -13,10 +13,11 @@ export function handleViewportTranscript(
 ) {
   return Effect.gen(function* () {
     const currentState = yield* SubscriptionRef.get(runtime.stateRef);
+    const currentMeasurement = yield* Ref.get(runtime.lastMeasurementRef);
     const detachedView =
       currentState.latestAffinity === "latest"
         ? null
-        : runtime.adapters.scroller.captureView();
+        : (currentMeasurement?.view ?? null);
     yield* Ref.set(runtime.activeTranscriptRef, event.activeTranscript);
 
     if (currentState.lifecycle === "opening") {

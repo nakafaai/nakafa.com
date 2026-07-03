@@ -10,6 +10,7 @@ import {
   createViewport,
   dispatchMeasure,
   dispatchViewport,
+  makeMeasurement,
   makePostMeasurement,
   openReadyViewport,
   openTranscript,
@@ -117,6 +118,66 @@ describe("conversation/viewport/transcript", () => {
     expect(rig.placements.at(-1)).toMatchObject({
       view: { kind: "post", postId: secondPost._id },
     });
+    await shutdownViewport(viewport);
+  });
+
+  it("preserves the last measured detached anchor when live scroller capture has newer rows", async () => {
+    const rig = createAdapters();
+    const viewport = await createViewport(rig.adapters);
+
+    await openReadyViewport(viewport);
+    const detachedView = makePostMeasurement(firstPost._id);
+    rig.setMeasurement(detachedView);
+    await dispatchMeasure(viewport, detachedView, "scroll");
+    await waitForState(
+      viewport,
+      (state) => state.latestAffinity === "detached"
+    );
+
+    const detachedPlacementCount = rig.placements.length;
+    rig.setMeasurement(makePostMeasurement(secondPost._id));
+    await openTranscript(viewport);
+    await waitForState(
+      viewport,
+      (state) => state.pendingPlacement?.view.kind === "post"
+    );
+
+    expect(rig.placements).toHaveLength(detachedPlacementCount + 1);
+    expect(rig.placements.at(-1)).toMatchObject({
+      motion: "instant",
+      view: { kind: "post", postId: firstPost._id },
+    });
+    await shutdownViewport(viewport);
+  });
+
+  it("ignores detached transcript updates when no measured post anchor exists", async () => {
+    const rig = createAdapters();
+    const viewport = await createViewport(rig.adapters);
+
+    await openReadyViewport(viewport);
+    const detachedView = makeMeasurement({
+      bottomDistance: 120,
+      isAtLatest: false,
+      lastVisiblePostId: null,
+      offset: 80,
+      view: null,
+    });
+    rig.setMeasurement(detachedView);
+    await dispatchMeasure(viewport, detachedView, "scroll");
+    await waitForState(
+      viewport,
+      (state) => state.latestAffinity === "detached"
+    );
+
+    const detachedPlacementCount = rig.placements.length;
+    rig.setMeasurement(makePostMeasurement(secondPost._id));
+    await openTranscript(viewport);
+    await waitForState(
+      viewport,
+      (state) => state.latestAffinity === "detached"
+    );
+
+    expect(rig.placements).toHaveLength(detachedPlacementCount);
     await shutdownViewport(viewport);
   });
 });
