@@ -205,6 +205,9 @@ describe("conversation/viewport/placement", () => {
 
     const firstPostView = makePostMeasurement(firstPost._id);
     rig.setMeasurement(firstPostView);
+    rig.adapters.scroller.isViewSettled = () => false;
+    rig.adapters.scroller.isViewReached = (view) =>
+      view.kind === "post" && view.postId === firstPost._id;
     await dispatchMeasure(viewport, firstPostView);
     const state = await waitForState(
       viewport,

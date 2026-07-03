@@ -282,6 +282,7 @@ describe("conversation/viewport/model", () => {
         currentAffinity: "detached",
         hasUserDetachedFromLatest: false,
         isAtLatest: true,
+        pendingPlacement: null,
       })
     ).toBe("latest");
     expect(
@@ -289,6 +290,7 @@ describe("conversation/viewport/model", () => {
         currentAffinity: "latest",
         hasUserDetachedFromLatest: true,
         isAtLatest: false,
+        pendingPlacement: null,
       })
     ).toBe("detached");
     expect(
@@ -296,8 +298,20 @@ describe("conversation/viewport/model", () => {
         currentAffinity: "latest",
         hasUserDetachedFromLatest: false,
         isAtLatest: false,
+        pendingPlacement: null,
       })
     ).toBe("latest");
+    expect(
+      getViewportLatestAffinity({
+        currentAffinity: "latest",
+        hasUserDetachedFromLatest: false,
+        isAtLatest: true,
+        pendingPlacement: {
+          highlightPostId: firstPost._id,
+          view: { kind: "post", postId: firstPost._id },
+        },
+      })
+    ).toBe("detached");
   });
 
   it("detects only meaningful user detachment from latest placement", () => {

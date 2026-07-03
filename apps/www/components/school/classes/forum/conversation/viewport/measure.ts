@@ -45,6 +45,7 @@ export function handleViewportMeasurement(
       currentAffinity: currentState.latestAffinity,
       hasUserDetachedFromLatest,
       isAtLatest: measurement.isAtLatest,
+      pendingPlacement,
     });
     const shouldRetryPendingPlacement =
       source === "frame" &&

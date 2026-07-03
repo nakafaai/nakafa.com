@@ -105,11 +105,17 @@ export function getViewportLatestAffinity({
   currentAffinity,
   hasUserDetachedFromLatest,
   isAtLatest,
+  pendingPlacement,
 }: {
   currentAffinity: ViewportState["latestAffinity"];
   hasUserDetachedFromLatest: boolean;
   isAtLatest: boolean;
+  pendingPlacement: ViewportPlacement | null;
 }) {
+  if (pendingPlacement?.view.kind === "post") {
+    return "detached";
+  }
+
   if (isAtLatest) {
     return "latest";
   }
