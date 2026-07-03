@@ -14,10 +14,6 @@ const mockGetPathname = vi.hoisted(() =>
     const pathname = typeof href === "string" ? href : href.pathname;
     const route = pathname.startsWith("/") ? pathname : `/${pathname}`;
 
-    if (route === "/curricula") {
-      return locale === "id" ? "/id/kurikulum" : "/en/curriculum";
-    }
-
     return `/${locale}${route === "/" ? "" : route}`;
   })
 );
@@ -34,6 +30,16 @@ vi.mock("@repo/internationalization/src/routing", () => ({
   routing: {
     defaultLocale: "en",
     locales: ["en", "id"],
+    pathnames: {
+      "/curricula": {
+        en: "/curriculum",
+        id: "/kurikulum",
+      },
+      "/practice/[assessment]": {
+        en: "/practice/[assessment]",
+        id: "/latihan/[assessment]",
+      },
+    },
   },
 }));
 
@@ -156,6 +162,34 @@ describe("sitemap entries", () => {
       priority: 0.8,
       url: "https://docs.example.com/en/search",
     });
+  });
+
+  it("emits localized curriculum index URLs", async () => {
+    const entries = await Effect.runPromise(getEntries("/curricula"));
+
+    expect(getUrl("/curricula", "id")).toBe("https://nakafa.com/id/kurikulum");
+    expect(entries).toContainEqual(
+      expect.objectContaining({
+        url: "https://nakafa.com/en/curriculum",
+      })
+    );
+    expect(entries).toContainEqual(
+      expect.objectContaining({
+        url: "https://nakafa.com/id/kurikulum",
+      })
+    );
+    expect(mockGetPathname).not.toHaveBeenCalledWith(
+      expect.objectContaining({ href: "/curricula" })
+    );
+  });
+
+  it("localizes mapped route URLs from routing pathnames", () => {
+    expect(getUrl("/practice/[assessment]", "id")).toBe(
+      "https://nakafa.com/id/latihan/[assessment]"
+    );
+    expect(mockGetPathname).not.toHaveBeenCalledWith(
+      expect.objectContaining({ href: "/practice/[assessment]" })
+    );
   });
 
   it("assigns SEO settings for known route families", async () => {

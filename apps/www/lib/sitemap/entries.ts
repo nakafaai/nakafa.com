@@ -32,9 +32,12 @@ interface SitemapEntryOptions {
 }
 
 const host = `https://${MAIN_DOMAIN}`;
+const mappedPathnames = routing.pathnames;
 
 const MONTHS_IN_FALLBACK_PERIOD = 6;
 const MONTHS_IN_CONTENT_FALLBACK = 3;
+
+type MappedRoutePathname = keyof typeof mappedPathnames;
 
 /**
  * Expands one route into localized sitemap entries with alternate language
@@ -129,10 +132,29 @@ function getAlternateLanguages(
 
 /** Converts an app href and locale into an absolute canonical URL. */
 export function getUrl(href: Href, locale: Locale, domain?: string): string {
-  const pathname = getPathname({ locale, href, forcePrefix: true });
+  const pathname =
+    getMappedRoutePathname(href, locale) ??
+    getPathname({ locale, href, forcePrefix: true });
   const domainHost = domain ? `https://${domain}` : host;
 
   return domainHost + pathname;
+}
+
+/** Resolves localized pathname-map routes that sitemap entries store by app route key. */
+function getMappedRoutePathname(href: Href, locale: Locale) {
+  const pathname = typeof href === "string" ? href : href.pathname;
+
+  if (!isMappedRoutePathname(pathname)) {
+    return null;
+  }
+
+  return `/${locale}${mappedPathnames[pathname][locale]}`;
+}
+
+function isMappedRoutePathname(
+  pathname: string
+): pathname is MappedRoutePathname {
+  return Object.hasOwn(mappedPathnames, pathname);
 }
 
 /** Generates sitemap entries ready for Next metadata output or URL submission. */
