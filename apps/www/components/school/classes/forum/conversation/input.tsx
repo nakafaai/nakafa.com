@@ -28,6 +28,7 @@ import { InputAttachments } from "@/components/school/classes/forum/conversation
 import { EmojiButton } from "@/components/school/classes/forum/conversation/input/emoji-button";
 import { ReplyIndicator } from "@/components/school/classes/forum/conversation/input/reply-indicator";
 import { submitForumPost } from "@/components/school/classes/forum/conversation/input/submit";
+import { useCreateForumPost } from "@/components/school/classes/forum/conversation/input/use-create";
 import { useControls } from "@/components/school/classes/forum/conversation/viewport/context";
 
 /** Handles forum post submission, uploads, and reply cleanup for the transcript. */
@@ -52,9 +53,7 @@ export function ForumPostInput() {
   const saveForumUpload = useMutation(
     api.classes.forums.mutations.uploads.saveForumUpload
   );
-  const createPost = useMutation(
-    api.classes.forums.mutations.posts.createForumPost
-  );
+  const createPost = useCreateForumPost();
   const [{ files }, { removeFile, clearFiles, openFileDialog, getInputProps }] =
     useFileUpload({
       multiple: true,
@@ -89,50 +88,72 @@ export function ForumPostInput() {
     onSubmit: ({ value }) => {
       const hasBody = value.body.trim().length > 0;
       const hasAttachments = files.length > 0;
+      const isTextOnlyPost = !hasAttachments;
 
       if (!(hasBody || hasAttachments)) {
         return;
       }
 
+      /** Reports a failed submit without hiding already optimistic local feedback. */
+      const reportSubmitFailure = (error: unknown) =>
+        Effect.sync(() => {
+          captureException(error, {
+            source: "forum-post-submit",
+          });
+          toast.error(t("create-post-failed"));
+
+          requestAnimationFrame(() => {
+            textareaRef.current?.focus();
+          });
+        });
+
+      /** Clears the composer and keeps the transcript pinned to the latest post. */
+      const completeSubmit = () =>
+        Effect.sync(() => {
+          form.reset();
+          clearFiles();
+          setForumReplyTarget(forumId, null);
+          acknowledgeUnreadCue();
+
+          requestAnimationFrame(() => {
+            textareaRef.current?.focus();
+            goToLatest();
+          });
+        });
+
+      const submitPost = submitForumPost({
+        files,
+        mutations: {
+          createPost,
+          discardForumUploads,
+          generateUploadUrl,
+          saveForumUpload,
+        },
+        post: {
+          body: value.body,
+          forumId,
+          parentId: replyTarget?.postId,
+        },
+      });
+
+      if (isTextOnlyPost) {
+        Effect.runPromise(
+          submitPost.pipe(
+            Effect.matchEffect({
+              onFailure: reportSubmitFailure,
+              onSuccess: () => Effect.void,
+            })
+          )
+        );
+        Effect.runSync(completeSubmit());
+        return;
+      }
+
       return Effect.runPromise(
-        submitForumPost({
-          files,
-          mutations: {
-            createPost,
-            discardForumUploads,
-            generateUploadUrl,
-            saveForumUpload,
-          },
-          post: {
-            body: value.body,
-            forumId,
-            parentId: replyTarget?.postId,
-          },
-        }).pipe(
+        submitPost.pipe(
           Effect.matchEffect({
-            onFailure: (error) =>
-              Effect.sync(() => {
-                captureException(error, {
-                  source: "forum-post-submit",
-                });
-                toast.error(t("create-post-failed"));
-
-                requestAnimationFrame(() => {
-                  textareaRef.current?.focus();
-                });
-              }),
-            onSuccess: () =>
-              Effect.sync(() => {
-                form.reset();
-                clearFiles();
-                setForumReplyTarget(forumId, null);
-                acknowledgeUnreadCue();
-
-                requestAnimationFrame(() => {
-                  textareaRef.current?.focus();
-                  goToLatest();
-                });
-              }),
+            onFailure: reportSubmitFailure,
+            onSuccess: completeSubmit,
           })
         )
       );
