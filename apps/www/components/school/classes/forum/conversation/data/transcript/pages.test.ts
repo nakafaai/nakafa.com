@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { ForumPost } from "@/components/school/classes/forum/conversation/data/entities";
 import {
   createConversationRows,
   getConversationRowKey,
@@ -61,6 +62,25 @@ describe("conversation/data/transcript/pages", () => {
       third._id
     );
     expect(getLastConversationPostId([first, second, third])).toBe(third._id);
+  });
+
+  it("returns the last confirmed post before optimistic rows", () => {
+    const first = createConversationTestPost({
+      createdAt: Date.UTC(2026, 3, 20, 8, 0, 0),
+      postId: "post_1",
+      sequence: 1,
+    });
+    const optimistic = {
+      ...createConversationTestPost({
+        createdAt: Date.UTC(2026, 3, 20, 9, 0, 0),
+        postId: "optimistic_post",
+        sequence: 2,
+      }),
+      isOptimistic: true,
+    } satisfies ForumPost;
+
+    expect(getLastConversationPostId([first, optimistic])).toBe(first._id);
+    expect(getLastConversationPostId([optimistic])).toBeNull();
   });
 
   it("keeps the unread row anchored while switching from new to history", () => {

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { ForumPost } from "@/components/school/classes/forum/conversation/data/entities";
 import { createActiveTranscriptModel } from "@/components/school/classes/forum/conversation/data/transcript/active";
 import {
   createConversationTestForum,
@@ -46,6 +47,31 @@ describe("conversation/data/transcript/active", () => {
     expect(model.rowIndexByPostId.get(first._id)).toBe(2);
     expect(model.rowIndexByPostId.get(second._id)).toBe(4);
     expect(model.rowIndexByPostId.get(third._id)).toBe(6);
+  });
+
+  it("keeps optimistic rows out of restorable transcript metadata", () => {
+    const confirmed = createConversationTestPost({
+      createdAt: Date.UTC(2026, 3, 20, 8, 0, 0),
+      postId: "post_1",
+      sequence: 1,
+    });
+    const optimistic = {
+      ...createConversationTestPost({
+        createdAt: Date.UTC(2026, 3, 20, 9, 0, 0),
+        postId: "optimistic_post",
+        sequence: 2,
+      }),
+      isOptimistic: true,
+    } satisfies ForumPost;
+
+    const model = createActiveTranscriptModel({
+      forum: createConversationTestForum(),
+      posts: [confirmed, optimistic],
+      unreadCue: null,
+    });
+
+    expect(model.lastPostId).toBe(confirmed._id);
+    expect(model.rowIndexByPostId.get(optimistic._id)).toBe(3);
   });
 
   it("returns empty row metadata when the transcript has no loaded rows", () => {

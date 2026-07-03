@@ -2,6 +2,7 @@ import type {
   Forum,
   ForumPost,
 } from "@/components/school/classes/forum/conversation/data/entities";
+import { isOptimisticForumPost } from "@/components/school/classes/forum/conversation/data/entities";
 import type { ConversationUnreadCue } from "@/components/school/classes/forum/conversation/data/transcript/unread";
 
 export type ConversationRow =
@@ -49,9 +50,17 @@ export function createConversationRows({
   return rows;
 }
 
-/** Returns the final post id in one ordered transcript list. */
+/** Returns the final confirmed post id in one ordered transcript list. */
 export function getLastConversationPostId(posts: ForumPost[]) {
-  return posts.at(-1)?._id ?? null;
+  for (let index = posts.length - 1; index >= 0; index -= 1) {
+    const post = posts[index];
+
+    if (!isOptimisticForumPost(post)) {
+      return post._id;
+    }
+  }
+
+  return null;
 }
 
 /** Returns the stable React key for one rendered conversation row. */
