@@ -11,13 +11,15 @@ import {
 } from "@repo/design-system/components/ui/select";
 import { normalizeLocalizedInternalHref } from "@repo/internationalization/src/href";
 import { useRouter } from "@repo/internationalization/src/navigation";
-import { useConvexAuth, useMutation } from "convex/react";
+import { useMutation } from "convex/react";
+import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { CountryFlagIcon } from "@/components/shared/country-flag";
 import { reportClientException } from "@/lib/analytics/client";
+import { useUser } from "@/lib/context/use-user";
 
 export type CurriculumSelectorOption = Readonly<{
   countryCode?: string;
@@ -27,10 +29,16 @@ export type CurriculumSelectorOption = Readonly<{
   value: string;
 }>;
 
-type SavePreferredCurriculum = (args: {
-  locale: Locale;
-  preferredCurriculumProgramKey: string;
-}) => Promise<unknown>;
+type SavePreferredCurriculumArgs = FunctionArgs<
+  typeof api.learningPreferences.mutations.setPreferredCurriculum
+>;
+type SavePreferredCurriculum = (
+  args: SavePreferredCurriculumArgs
+) => Promise<
+  FunctionReturnType<
+    typeof api.learningPreferences.mutations.setPreferredCurriculum
+  >
+>;
 
 /** Expected failure when a background curriculum preference save fails. */
 class CurriculumPreferenceSaveError extends Schema.TaggedError<CurriculumPreferenceSaveError>()(
@@ -53,7 +61,7 @@ export function CurriculumSelector({
   const locale = useLocale();
   const router = useRouter();
   const t = useTranslations("LearningPrograms");
-  const { isAuthenticated } = useConvexAuth();
+  const user = useUser((state) => state.user);
   const setPreferredCurriculum = useMutation(
     api.learningPreferences.mutations.setPreferredCurriculum
   );
@@ -76,7 +84,7 @@ export function CurriculumSelector({
 
     router.push(normalizeLocalizedInternalHref(selectedOption.href));
 
-    if (!isAuthenticated) {
+    if (!user) {
       return;
     }
 

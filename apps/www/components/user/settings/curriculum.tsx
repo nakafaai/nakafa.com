@@ -14,6 +14,7 @@ import {
 } from "@repo/design-system/components/ui/select";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
+import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { useLocale, useTranslations } from "next-intl";
@@ -22,15 +23,20 @@ import { CountryFlagIcon } from "@/components/shared/country-flag";
 import { FormBlock } from "@/components/shared/form-block";
 import { reportClientException } from "@/lib/analytics/client";
 
-interface CurriculumProgramOption {
-  countryCode?: string;
-  key: string;
-  title: string;
-}
-type SavePreferredCurriculum = (args: {
-  locale: Locale;
-  preferredCurriculumProgramKey: string;
-}) => Promise<unknown>;
+type CurriculumPrograms = FunctionReturnType<
+  typeof api.learningPreferences.queries.listCurriculumPrograms
+>;
+type CurriculumProgramOption = CurriculumPrograms[number];
+type SavePreferredCurriculumArgs = FunctionArgs<
+  typeof api.learningPreferences.mutations.setPreferredCurriculum
+>;
+type SavePreferredCurriculum = (
+  args: SavePreferredCurriculumArgs
+) => Promise<
+  FunctionReturnType<
+    typeof api.learningPreferences.mutations.setPreferredCurriculum
+  >
+>;
 
 const formSchema = Schema.standardSchemaV1(
   Schema.Struct({
@@ -110,8 +116,8 @@ function UserSettingsCurriculumForm({
       onChange: formSchema,
     },
     onSubmit: async ({ value }) => {
-      const result = await Effect.runPromise(
-        submitCurriculumPreference({
+      const messageKey = await Effect.runPromise(
+        readCurriculumPreferenceSubmitMessage({
           locale,
           programs,
           setPreferredCurriculum,
@@ -119,9 +125,9 @@ function UserSettingsCurriculumForm({
         })
       );
 
-      if (result.status === "error") {
+      if (messageKey) {
         const message =
-          result.messageKey === "curriculum-invalid-selection"
+          messageKey === "curriculum-invalid-selection"
             ? t("curriculum-invalid-selection")
             : t("curriculum-save-error");
 
@@ -210,6 +216,23 @@ function UserSettingsCurriculumForm({
   );
 }
 
+/** Converts the typed submit outcome into the optional settings toast message key. */
+function readCurriculumPreferenceSubmitMessage(
+  args: Parameters<typeof submitCurriculumPreference>[0]
+) {
+  return submitCurriculumPreference(args).pipe(
+    Effect.as(null),
+    Effect.catchTag("CurriculumPreferenceMutationError", (error) =>
+      reportClientException(error, {
+        source: "user-settings-curriculum",
+      }).pipe(Effect.as("curriculum-save-error"))
+    ),
+    Effect.catchTag("CurriculumPreferenceValidationError", () =>
+      Effect.succeed("curriculum-invalid-selection")
+    )
+  );
+}
+
 /** Saves one settings form submission through the Convex preference mutation. */
 function submitCurriculumPreference({
   locale,
@@ -254,23 +277,6 @@ function submitCurriculumPreference({
       catch: (cause) => new CurriculumPreferenceMutationError({ cause }),
     });
 
-    return { status: "success" as const };
-  }).pipe(
-    Effect.catchTags({
-      CurriculumPreferenceMutationError: (error) =>
-        reportClientException(error, {
-          source: "user-settings-curriculum",
-        }).pipe(
-          Effect.as({
-            messageKey: "curriculum-save-error",
-            status: "error" as const,
-          })
-        ),
-      CurriculumPreferenceValidationError: () =>
-        Effect.succeed({
-          messageKey: "curriculum-invalid-selection",
-          status: "error" as const,
-        }),
-    })
-  );
+    return null;
+  });
 }

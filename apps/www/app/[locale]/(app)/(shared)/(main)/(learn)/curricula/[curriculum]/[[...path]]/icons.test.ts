@@ -1,8 +1,10 @@
 import { PROGRAM_NAVIGATION_ICON_KEY_VALUES } from "@repo/contents/_types/program/schema";
 import { isRenderableCurriculumRoute } from "@repo/contents/_types/route/curriculum";
 import { SUBJECT_MATERIALS } from "@repo/contents/_types/taxonomy";
+import { routing } from "@repo/internationalization/src/routing";
 import { describe, expect, it } from "vitest";
 import {
+  readCurriculumRootRoutes,
   readCurriculumRouteModel,
   readCurriculumRoutes,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/data";
@@ -54,6 +56,28 @@ describe("curriculum route icons", () => {
 
       seenIcons.set(iconKey, key);
     }
+
+    expect(duplicates).toEqual([]);
+  });
+
+  it("keeps curriculum chooser cards unique by icon", () => {
+    const duplicates = routing.locales.flatMap((locale) => {
+      const seenIcons = new Map<string, string>();
+      const duplicateKeys: string[] = [];
+
+      for (const route of readCurriculumRootRoutes(locale)) {
+        const iconKey = serializeIcon(readCurriculumRouteIcon(route));
+        const firstIconPath = seenIcons.get(iconKey);
+
+        if (firstIconPath) {
+          duplicateKeys.push(`${locale}:${firstIconPath}:${route.publicPath}`);
+        }
+
+        seenIcons.set(iconKey, route.publicPath);
+      }
+
+      return duplicateKeys;
+    });
 
     expect(duplicates).toEqual([]);
   });

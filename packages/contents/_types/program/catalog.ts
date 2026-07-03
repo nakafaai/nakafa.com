@@ -139,7 +139,7 @@ const learningProgramCatalogInput = [
   {
     defaultCoverageStatus: "planned",
     displayOrder: 30,
-    iconKey: "global-education",
+    iconKey: "state",
     key: LEARNING_PROGRAM_KEYS.singaporeMoe,
     kind: "school-curriculum",
     navigation: {

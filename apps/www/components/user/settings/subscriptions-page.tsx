@@ -1,12 +1,14 @@
 "use client";
 
-import { Authenticated } from "convex/react";
 import { UserSettingsSubscriptions } from "@/components/user/settings/subscriptions";
+import { useUser } from "@/lib/context/use-user";
 
 export function UserSettingsSubscriptionsPage() {
-  return (
-    <Authenticated>
-      <UserSettingsSubscriptions />
-    </Authenticated>
-  );
+  const user = useUser((state) => state.user);
+
+  if (!user) {
+    return null;
+  }
+
+  return <UserSettingsSubscriptions />;
 }

@@ -35,12 +35,12 @@ export function isSchoolCurriculumProgram(program: Doc<"learningPrograms">) {
 
 /** Reads every curriculum program option from the catalog in display order. */
 export async function listSchoolCurriculumPrograms(ctx: PreferenceCtx) {
-  const programs = await ctx.db
+  return await ctx.db
     .query("learningPrograms")
-    .withIndex("by_displayOrder")
+    .withIndex("by_kind_and_displayOrder", (q) =>
+      q.eq("kind", "school-curriculum")
+    )
     .take(CURRICULUM_PROGRAM_LIMIT);
-
-  return programs.filter(isSchoolCurriculumProgram);
 }
 
 /** Loads the saved preference row for one app user. */
