@@ -20,11 +20,9 @@ import { choiceCardVariants } from "@/components/shared/choice-card";
 /** Renders the curriculum index header with breadcrumb context. */
 export function CurriculumIndexHeader({
   homeLabel,
-  locale,
   title,
 }: {
   homeLabel: string;
-  locale: PublicCurriculumRoute["locale"];
   title: string;
 }) {
   return (
@@ -34,7 +32,11 @@ export function CurriculumIndexHeader({
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink href={`/${locale}`}>{homeLabel}</BreadcrumbLink>
+              <BreadcrumbLink
+                render={
+                  <NavigationLink href="/home">{homeLabel}</NavigationLink>
+                }
+              />
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
@@ -51,14 +53,12 @@ export function CurriculumIndexHeader({
 export function CurriculumRootHeader({
   currentRoute,
   homeLabel,
-  locale,
   options,
   selectorLabel,
   subjectLabel,
 }: {
   currentRoute: PublicCurriculumRoute;
   homeLabel: string;
-  locale: PublicCurriculumRoute["locale"];
   options: readonly CurriculumSelectorOption[];
   selectorLabel: string;
   subjectLabel: string;
@@ -69,7 +69,6 @@ export function CurriculumRootHeader({
         <h1 className="sr-only">{currentRoute.title}</h1>
         <CurriculumBreadcrumb
           homeLabel={homeLabel}
-          locale={locale}
           subjectLabel={subjectLabel}
         />
         <CurriculumSelector
@@ -127,18 +126,18 @@ export function CurriculumRootCards({
 /** Renders the visible shadcn breadcrumb for a root curriculum page. */
 function CurriculumBreadcrumb({
   homeLabel,
-  locale,
   subjectLabel,
 }: {
   homeLabel: string;
-  locale: PublicCurriculumRoute["locale"];
   subjectLabel: string;
 }) {
   return (
     <Breadcrumb>
       <BreadcrumbList>
         <BreadcrumbItem>
-          <BreadcrumbLink href={`/${locale}`}>{homeLabel}</BreadcrumbLink>
+          <BreadcrumbLink
+            render={<NavigationLink href="/home">{homeLabel}</NavigationLink>}
+          />
         </BreadcrumbItem>
         <BreadcrumbSeparator />
         <BreadcrumbItem>

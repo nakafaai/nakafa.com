@@ -18,7 +18,6 @@ import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { useLocale, useTranslations } from "next-intl";
-import { toast } from "sonner";
 import { CountryFlagIcon } from "@/components/shared/country-flag";
 import { FormBlock } from "@/components/shared/form-block";
 import { reportClientException } from "@/lib/analytics/client";
@@ -116,27 +115,30 @@ function UserSettingsCurriculumForm({
       onChange: formSchema,
     },
     onSubmit: async ({ value }) => {
-      const messageKey = await Effect.runPromise(
-        readCurriculumPreferenceSubmitMessage({
+      const didSave = await Effect.runPromise(
+        submitCurriculumPreference({
           locale,
           programs,
           setPreferredCurriculum,
           value,
-        })
+        }).pipe(
+          Effect.as(true),
+          Effect.catchTag("CurriculumPreferenceMutationError", (error) =>
+            reportClientException(error, {
+              source: "user-settings-curriculum",
+            }).pipe(Effect.as(false))
+          ),
+          Effect.catchTag("CurriculumPreferenceValidationError", () =>
+            Effect.succeed(false)
+          )
+        )
       );
 
-      if (messageKey) {
-        const message =
-          messageKey === "curriculum-invalid-selection"
-            ? t("curriculum-invalid-selection")
-            : t("curriculum-save-error");
-
-        toast.error(message);
+      if (!didSave) {
         return;
       }
 
       form.reset(value);
-      toast.success(t("curriculum-save-success"));
     },
   });
 
@@ -213,23 +215,6 @@ function UserSettingsCurriculumForm({
         </form.Field>
       </FormBlock>
     </form>
-  );
-}
-
-/** Converts the typed submit outcome into the optional settings toast message key. */
-function readCurriculumPreferenceSubmitMessage(
-  args: Parameters<typeof submitCurriculumPreference>[0]
-) {
-  return submitCurriculumPreference(args).pipe(
-    Effect.as(null),
-    Effect.catchTag("CurriculumPreferenceMutationError", (error) =>
-      reportClientException(error, {
-        source: "user-settings-curriculum",
-      }).pipe(Effect.as("curriculum-save-error"))
-    ),
-    Effect.catchTag("CurriculumPreferenceValidationError", () =>
-      Effect.succeed("curriculum-invalid-selection")
-    )
   );
 }
 

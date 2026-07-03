@@ -115,7 +115,6 @@ export default async function Page({ params }: CurriculumPageProps) {
             <CurriculumRootHeader
               currentRoute={route}
               homeLabel={tCommon("home")}
-              locale={locale}
               options={readCurriculumRootOptions(locale)}
               selectorLabel={selectorLabel}
               subjectLabel={tCommon("subject")}

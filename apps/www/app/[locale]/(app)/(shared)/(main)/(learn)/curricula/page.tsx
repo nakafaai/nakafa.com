@@ -87,11 +87,7 @@ export default async function Page({ params }: CurriculumIndexPageProps) {
       />
       <LayoutMaterial>
         <LayoutMaterialContent>
-          <CurriculumIndexHeader
-            homeLabel={tCommon("home")}
-            locale={locale}
-            title={title}
-          />
+          <CurriculumIndexHeader homeLabel={tCommon("home")} title={title} />
           <LayoutContent>
             {routes.length > 0 ? (
               <CurriculumRootCards locale={locale} routes={routes} />

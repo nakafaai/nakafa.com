@@ -119,14 +119,14 @@ export function CurriculumSelector({
       <SelectContent
         align="end"
         alignItemWithTrigger={false}
-        className="max-w-(--available-width)"
+        className="max-w-(--available-width) sm:w-[min(28rem,var(--available-width))]"
       >
         <SelectGroup>
           <SelectLabel>{label}</SelectLabel>
           {options.map((option) => (
             <SelectItem key={option.value} value={option.value}>
               <CountryFlagIcon countryCode={option.countryCode} />
-              <span className="min-w-0 whitespace-normal leading-snug">
+              <span className="min-w-0 whitespace-normal leading-snug sm:whitespace-nowrap">
                 {option.title}
               </span>
             </SelectItem>
