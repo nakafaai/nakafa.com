@@ -61,7 +61,7 @@ export function CurriculumRootCards({
   routes: readonly PublicCurriculumRoute[];
 }) {
   return (
-    <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2 md:grid-cols-3">
+    <div className="grid grid-cols-2 gap-4 pt-6 pb-24 md:grid-cols-3">
       {routes.map((route) => {
         const Icon = readCurriculumRouteIcon(route);
 
@@ -73,7 +73,7 @@ export function CurriculumRootCards({
           >
             <div className="relative flex aspect-video w-full items-center justify-center">
               <GradientBlock
-                className="pointer-events-none absolute inset-0 opacity-20 [mask-image:linear-gradient(to_bottom,black_0%,black_65%,transparent_100%)] [mask-repeat:no-repeat] [mask-size:100%_100%]"
+                className="mask-[linear-gradient(to_bottom,black_0%,black_65%,transparent_100%)] mask-no-repeat mask-size-[100%_100%] pointer-events-none absolute inset-0 opacity-20"
                 colorScheme="vibrant"
                 intensity="medium"
                 keyString={route.publicPath}

@@ -67,7 +67,7 @@ function ChoicePreview({ icon, seed }: { icon: IconSvgElement; seed: string }) {
   return (
     <div className="relative flex aspect-video w-full items-center justify-center">
       <GradientBlock
-        className="pointer-events-none absolute inset-0 opacity-20 [mask-image:linear-gradient(to_bottom,black_0%,black_65%,transparent_100%)] [mask-repeat:no-repeat] [mask-size:100%_100%]"
+        className="mask-[linear-gradient(to_bottom,black_0%,black_65%,transparent_100%)] mask-no-repeat mask-size-[100%_100%] pointer-events-none absolute inset-0 opacity-20"
         colorScheme="vibrant"
         intensity="medium"
         keyString={seed}
