@@ -14,6 +14,10 @@ const mockGetPathname = vi.hoisted(() =>
     const pathname = typeof href === "string" ? href : href.pathname;
     const route = pathname.startsWith("/") ? pathname : `/${pathname}`;
 
+    if (route === "/curricula") {
+      return locale === "id" ? "/id/kurikulum" : "/en/curriculum";
+    }
+
     return `/${locale}${route === "/" ? "" : route}`;
   })
 );
@@ -38,6 +42,7 @@ vi.mock("@/lib/sitemap/routes", () => ({
     "/",
     "/search",
     "/contributor",
+    "/curricula",
     "/quran",
     "/terms-of-service",
     "/privacy-policy",
@@ -387,5 +392,19 @@ describe("sitemap entries", () => {
       id: "https://nakafa.com/id/search",
       "x-default": "https://nakafa.com/en/search",
     });
+  });
+
+  it("localizes the curriculum index route in base sitemap entries", async () => {
+    mockGetSitemapPageDescriptor.mockReturnValueOnce({ id: "base" });
+    mockGetSitemapRoutes.mockResolvedValueOnce(["/curricula"]);
+
+    const entries = await Effect.runPromise(
+      getSitemapEntries({ pageId: "base" })
+    );
+
+    expect(entries.map((entry) => entry.url)).toEqual([
+      "https://nakafa.com/en/curriculum",
+      "https://nakafa.com/id/kurikulum",
+    ]);
   });
 });

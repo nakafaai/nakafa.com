@@ -17,6 +17,36 @@ import {
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/selector";
 import { choiceCardVariants } from "@/components/shared/choice-card";
 
+/** Renders the curriculum index header with breadcrumb context. */
+export function CurriculumIndexHeader({
+  homeLabel,
+  locale,
+  title,
+}: {
+  homeLabel: string;
+  locale: PublicCurriculumRoute["locale"];
+  title: string;
+}) {
+  return (
+    <header className="sticky top-16 z-10 flex min-h-16 w-full shrink-0 border-b bg-background lg:top-0">
+      <div className="mx-auto flex w-full max-w-3xl items-center px-6 py-3 sm:py-0">
+        <h1 className="sr-only">{title}</h1>
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href={`/${locale}`}>{homeLabel}</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>{title}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
+    </header>
+  );
+}
+
 /** Renders the root curriculum header with breadcrumb context and curriculum switching. */
 export function CurriculumRootHeader({
   currentRoute,
@@ -61,7 +91,7 @@ export function CurriculumRootCards({
   routes: readonly PublicCurriculumRoute[];
 }) {
   return (
-    <div className="grid grid-cols-1 gap-4 pt-6 pb-24 md:grid-cols-3">
+    <div className="grid grid-cols-2 gap-4 pt-6 pb-24 md:grid-cols-3">
       {routes.map((route) => {
         const Icon = readCurriculumRouteIcon(route);
 

@@ -264,6 +264,16 @@ describe("proxy", () => {
     expect(mockGetRuntimeContentRouteParentPage).not.toHaveBeenCalled();
   });
 
+  it("delegates curriculum index routes to the locale middleware", async () => {
+    const response = await proxy(
+      new NextRequest("http://localhost:3000/id/kurikulum")
+    );
+
+    expect(mockLocaleRouting.localeMiddleware).toHaveBeenCalledTimes(1);
+    expect(response.headers.get("x-locale-proxy")).toBe("1");
+    expect(mockGetRuntimeContentRouteKindPage).not.toHaveBeenCalled();
+  });
+
   it("delegates curriculum root routes to the locale middleware", async () => {
     const response = await proxy(
       new NextRequest("http://localhost:3000/en/curriculum/merdeka/class-10")

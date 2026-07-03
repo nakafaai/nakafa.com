@@ -1,5 +1,6 @@
 "use client";
 
+import { api } from "@repo/backend/convex/_generated/api";
 import {
   Select,
   SelectContent,
@@ -10,17 +11,34 @@ import {
 } from "@repo/design-system/components/ui/select";
 import { normalizeLocalizedInternalHref } from "@repo/internationalization/src/href";
 import { useRouter } from "@repo/internationalization/src/navigation";
-import GB from "country-flag-icons/react/3x2/GB";
-import ID from "country-flag-icons/react/3x2/ID";
-import SG from "country-flag-icons/react/3x2/SG";
-import US from "country-flag-icons/react/3x2/US";
+import { useConvexAuth, useMutation } from "convex/react";
+import { Effect, Schema } from "effect";
+import type { Locale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { toast } from "sonner";
+import { CountryFlagIcon } from "@/components/shared/country-flag";
+import { reportClientException } from "@/lib/analytics/client";
 
 export type CurriculumSelectorOption = Readonly<{
   countryCode?: string;
   href: string;
+  programKey: string;
   title: string;
   value: string;
 }>;
+
+type SavePreferredCurriculum = (args: {
+  locale: Locale;
+  preferredCurriculumProgramKey: string;
+}) => Promise<unknown>;
+
+/** Expected failure when a background curriculum preference save fails. */
+class CurriculumPreferenceSaveError extends Schema.TaggedError<CurriculumPreferenceSaveError>()(
+  "CurriculumPreferenceSaveError",
+  {
+    cause: Schema.Unknown,
+  }
+) {}
 
 /** Renders the root curriculum selector and navigates to the selected root. */
 export function CurriculumSelector({
@@ -32,14 +50,20 @@ export function CurriculumSelector({
   label: string;
   options: readonly CurriculumSelectorOption[];
 }) {
+  const locale = useLocale();
   const router = useRouter();
+  const t = useTranslations("LearningPrograms");
+  const { isAuthenticated } = useConvexAuth();
+  const setPreferredCurriculum = useMutation(
+    api.learningPreferences.mutations.setPreferredCurriculum
+  );
   const items = options.map((option) => ({
     label: option.title,
     value: option.value,
   }));
   const currentOption = options.find((option) => option.value === currentValue);
 
-  function handleValueChange(value: string | null) {
+  async function handleValueChange(value: string | null) {
     if (!value || value === currentValue) {
       return;
     }
@@ -51,6 +75,19 @@ export function CurriculumSelector({
     }
 
     router.push(normalizeLocalizedInternalHref(selectedOption.href));
+
+    if (!isAuthenticated) {
+      return;
+    }
+
+    await Effect.runPromise(
+      saveCurriculumPreference({
+        errorMessage: t("preference-save-error"),
+        locale,
+        programKey: selectedOption.programKey,
+        setPreferredCurriculum,
+      })
+    );
   }
 
   return (
@@ -74,14 +111,16 @@ export function CurriculumSelector({
       <SelectContent
         align="end"
         alignItemWithTrigger={false}
-        className="sm:w-max sm:max-w-[min(28rem,calc(100vw-2rem))]"
+        className="max-w-(--available-width)"
       >
         <SelectGroup>
           <SelectLabel>{label}</SelectLabel>
           {options.map((option) => (
             <SelectItem key={option.value} value={option.value}>
               <CountryFlagIcon countryCode={option.countryCode} />
-              <span className="min-w-0 truncate">{option.title}</span>
+              <span className="min-w-0 whitespace-normal leading-snug">
+                {option.title}
+              </span>
             </SelectItem>
           ))}
         </SelectGroup>
@@ -90,18 +129,37 @@ export function CurriculumSelector({
   );
 }
 
-/** Renders one supported provider country flag without creating dynamic components during render. */
-function CountryFlagIcon({ countryCode }: { countryCode?: string }) {
-  switch (countryCode) {
-    case "GB":
-      return <GB className="size-4 shrink-0" />;
-    case "ID":
-      return <ID className="size-4 shrink-0" />;
-    case "SG":
-      return <SG className="size-4 shrink-0" />;
-    case "US":
-      return <US className="size-4 shrink-0" />;
-    default:
-      return null;
-  }
+/** Persists curriculum selection without blocking route navigation. */
+function saveCurriculumPreference({
+  errorMessage,
+  locale,
+  programKey,
+  setPreferredCurriculum,
+}: {
+  errorMessage: string;
+  locale: Locale;
+  programKey: string;
+  setPreferredCurriculum: SavePreferredCurriculum;
+}) {
+  return Effect.tryPromise({
+    try: () =>
+      setPreferredCurriculum({
+        locale,
+        preferredCurriculumProgramKey: programKey,
+      }),
+    catch: (cause) => new CurriculumPreferenceSaveError({ cause }),
+  }).pipe(
+    Effect.catchAll((error) =>
+      reportClientException(error, {
+        programKey,
+        source: "curriculum-selector",
+      }).pipe(
+        Effect.zipRight(
+          Effect.sync(() => {
+            toast.error(errorMessage, { position: "bottom-center" });
+          })
+        )
+      )
+    )
+  );
 }

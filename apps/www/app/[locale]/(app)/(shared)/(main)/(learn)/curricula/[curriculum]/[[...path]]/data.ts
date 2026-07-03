@@ -113,8 +113,8 @@ export function readCurriculumRouteModel({
   };
 }
 
-/** Builds the root curriculum select options from projected route and catalog sources. */
-export function readCurriculumRootOptions(
+/** Reads renderable curriculum root routes in source display order. */
+export function readCurriculumRootRoutes(
   locale: PublicCurriculumRoute["locale"]
 ) {
   return readCurriculumRoutes()
@@ -125,17 +125,43 @@ export function readCurriculumRootOptions(
         isRenderableCurriculumRoute(route)
     )
     .slice()
-    .sort(compareCurriculumRouteOrder)
-    .map((route) => {
-      const program = findLearningProgramByKey(route.programKey);
+    .sort(compareCurriculumRouteOrder);
+}
 
-      return {
-        countryCode: program?.provider.homeCountry,
-        href: `/${locale}/${route.publicPath}`,
-        title: route.title,
-        value: route.publicPath,
-      };
-    });
+/** Builds the root curriculum select options from projected route and catalog sources. */
+export function readCurriculumRootOptions(
+  locale: PublicCurriculumRoute["locale"]
+) {
+  return readCurriculumRootRoutes(locale).map((route) => {
+    const program = findLearningProgramByKey(route.programKey);
+
+    return {
+      countryCode: program?.provider.homeCountry,
+      href: `/${locale}/${route.publicPath}`,
+      programKey: route.programKey,
+      title: route.title,
+      value: route.publicPath,
+    };
+  });
+}
+
+/** Resolves the localized root href for a preferred curriculum program key. */
+export function readCurriculumRootHrefForProgramKey({
+  locale,
+  programKey,
+}: {
+  locale: PublicCurriculumRoute["locale"];
+  programKey: string;
+}) {
+  const route = readCurriculumRootRoutes(locale).find(
+    (candidate) => candidate.programKey === programKey
+  );
+
+  if (!route) {
+    return null;
+  }
+
+  return `/${locale}/${route.publicPath}`;
 }
 
 /** Builds the small parent link shown above curriculum page titles. */

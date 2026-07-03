@@ -54,6 +54,10 @@ export const readProjectedHtmlRouteRejection = Effect.fn(
     return null;
   }
 
+  if (surface.key === "curriculum" && pathSegments.length === 0) {
+    return null;
+  }
+
   const publicPath = [namespace, ...pathSegments].join("/");
 
   if (

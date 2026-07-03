@@ -17,6 +17,7 @@ import exerciseQuestionsSchema from "@repo/backend/convex/exerciseQuestions/sche
 import exerciseSetsSchema from "@repo/backend/convex/exerciseSets/schema";
 import exercisesSchema from "@repo/backend/convex/exercises/schema";
 import irtSchema from "@repo/backend/convex/irt/schema";
+import learningPreferencesSchema from "@repo/backend/convex/learningPreferences/schema";
 import learningProgramsSchema from "@repo/backend/convex/learningPrograms/schema";
 import materialsSchema from "@repo/backend/convex/materials/schema";
 import notificationsSchema from "@repo/backend/convex/notifications/schema";
@@ -55,6 +56,7 @@ export default defineSchema(
     ...audioStudiesSchema,
     ...creditsSchema,
     ...irtSchema,
+    ...learningPreferencesSchema,
     ...learningProgramsSchema,
     ...tryoutAccessSchema,
     ...tryoutsSchema,

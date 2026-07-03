@@ -61,6 +61,7 @@ export const baseRoutes = [
   "/",
   "/search",
   "/contributor",
+  "/curricula",
   quranRootRoute,
   "/terms-of-service",
   "/privacy-policy",

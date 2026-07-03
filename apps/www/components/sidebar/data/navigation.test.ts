@@ -52,8 +52,11 @@ describe("sidebar navigation", () => {
 
     expect(subject).toBeDefined();
     expect(askNina).toBeDefined();
-    expect(getForYouNavigationHref(subject, "id")).toBe("/kurikulum/merdeka");
-    expect(getForYouNavigationHref(subject, "en")).toBe("/curriculum/merdeka");
+    expect(getForYouNavigationHref(subject, "id")).toBe("/kurikulum");
+    expect(getForYouNavigationHref(subject, "en")).toBe("/curriculum");
+    expect(
+      getForYouNavigationHref(subject, "id", "/kurikulum/amerika-serikat")
+    ).toBe("/kurikulum/amerika-serikat");
     expect(getForYouNavigationHref(askNina, "id")).toBe("/chat");
   });
 });
