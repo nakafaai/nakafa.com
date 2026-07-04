@@ -153,6 +153,37 @@ describe("conversation/viewport/read", () => {
     expect(rig.readPostIds).toContain(firstPost._id);
   });
 
+  it("starts detached read sync when the same post is already scoped in flight", async () => {
+    const rig = createAdapters();
+    const readGate = await Effect.runPromise(Deferred.make<void>());
+    const readAttempts: Id<"schoolClassForumPosts">[] = [];
+    const viewport = await createViewport({
+      ...rig.adapters,
+      read: {
+        markPostRead: (postId) => {
+          readAttempts.push(postId);
+
+          return Deferred.await(readGate).pipe(
+            Effect.zipRight(rig.adapters.read.markPostRead(postId))
+          );
+        },
+      },
+    });
+
+    const detachedMeasurement = makePostMeasurement(firstPost._id);
+    await openTranscript(viewport);
+    await dispatchMeasure(viewport, detachedMeasurement);
+    await waitForState(viewport, () => readAttempts.length === 1);
+    rig.setMeasurement(detachedMeasurement);
+    await Effect.runPromise(viewport.flushSnapshot);
+    await shutdownViewport(viewport);
+    await Effect.runPromise(Deferred.succeed(readGate, undefined));
+    await Effect.runPromise(Effect.sleep(10));
+
+    expect(readAttempts).toEqual([firstPost._id, firstPost._id]);
+    expect(rig.readPostIds).toEqual([firstPost._id]);
+  });
+
   it("keeps a newer in-flight read marker when an older sync fails", async () => {
     const rig = createAdapters();
     const firstRead = await Effect.runPromise(

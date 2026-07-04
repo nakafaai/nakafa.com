@@ -10,6 +10,7 @@ import {
 } from "@/components/school/classes/forum/conversation/viewport/model";
 import { markLastVisibleViewportPostRead } from "@/components/school/classes/forum/conversation/viewport/read";
 import {
+  type ActiveTranscript,
   PERSIST_DELAY_MS,
   type ViewportRuntime,
 } from "@/components/school/classes/forum/conversation/viewport/runtime";
@@ -44,43 +45,62 @@ export function flushCurrentSnapshot(runtime: ViewportRuntime) {
       yield* Ref.set(runtime.persistFiberRef, null);
     }
 
-    const previousMeasurement = yield* captureLiveMeasurement(runtime);
-    const measurement = yield* Ref.get(runtime.lastMeasurementRef);
+    const capture = yield* captureLiveSnapshot(runtime);
     yield* markLastVisibleViewportPostRead(
       runtime,
-      measurement?.lastVisiblePostId ?? null,
+      capture.measurement?.lastVisiblePostId ?? null,
       { lifetime: "detached" }
     );
-    yield* persistCurrentSnapshot(runtime, { previousMeasurement });
+    yield* persistCurrentSnapshot(runtime, capture);
   });
 }
 
-/** Captures live scroller geometry before synchronous boundary persistence. */
-function captureLiveMeasurement(runtime: ViewportRuntime) {
+/** Captures live scroller geometry and the transcript that produced it. */
+function captureLiveSnapshot(runtime: ViewportRuntime) {
   return Effect.gen(function* () {
     const previousMeasurement = yield* Ref.get(runtime.lastMeasurementRef);
+    const activeTranscript = yield* Effect.sync(() =>
+      runtime.adapters.scroller.getTranscript()
+    );
     const measurement = yield* Effect.sync(() =>
       runtime.adapters.scroller.measure()
     );
 
-    if (!measurement) {
-      return previousMeasurement;
-    }
-
-    yield* Ref.set(runtime.lastMeasurementRef, measurement);
-    return previousMeasurement;
+    return {
+      activeTranscript,
+      measurement: measurement ?? previousMeasurement,
+      previousMeasurement,
+    };
   });
 }
 
 /** Persists one stable snapshot from the viewport-owned captured measurement. */
 export function persistCurrentSnapshot(
   runtime: ViewportRuntime,
-  options: { previousMeasurement?: ViewportMeasurement | null } = {}
+  options: {
+    activeTranscript?: ActiveTranscript;
+    measurement?: ViewportMeasurement | null;
+    previousMeasurement?: ViewportMeasurement | null;
+  } = {}
 ) {
   return Effect.gen(function* () {
-    const activeTranscript = yield* Ref.get(runtime.activeTranscriptRef);
+    let activeTranscript: ActiveTranscript = null;
+
+    if ("activeTranscript" in options) {
+      activeTranscript = options.activeTranscript ?? null;
+    } else {
+      activeTranscript = yield* Ref.get(runtime.activeTranscriptRef);
+    }
+
     const state = yield* Ref.get(runtime.stateRef);
-    const measurement = yield* Ref.get(runtime.lastMeasurementRef);
+    let measurement: ViewportMeasurement | null = null;
+
+    if ("measurement" in options) {
+      measurement = options.measurement ?? null;
+    } else {
+      measurement = yield* Ref.get(runtime.lastMeasurementRef);
+    }
+
     const hasPendingLatestIntent = isPendingLatestIntent(state);
     const hasInterruptedPlacement = hasFlushInterruptedPlacement({
       measurement,

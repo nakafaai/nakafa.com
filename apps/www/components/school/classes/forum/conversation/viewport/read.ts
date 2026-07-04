@@ -18,9 +18,10 @@ export function markLastVisibleViewportPostRead(
   }
 
   return Effect.gen(function* () {
+    const lifetime = options.lifetime ?? "viewport";
     const lastReadPostId = yield* Ref.get(runtime.lastReadPostIdRef);
 
-    if (lastReadPostId === postId) {
+    if (lastReadPostId === postId && lifetime === "viewport") {
       return;
     }
 
@@ -37,7 +38,7 @@ export function markLastVisibleViewportPostRead(
       )
     );
 
-    if (options.lifetime === "detached") {
+    if (lifetime === "detached") {
       yield* Effect.forkDaemon(readSync);
       return;
     }

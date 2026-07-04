@@ -1,5 +1,5 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Effect } from "effect";
+import { Effect, Exit, Queue, Ref, Scope, SubscriptionRef } from "effect";
 import { vi } from "vitest";
 import type { ActiveTranscriptModel } from "@/components/school/classes/forum/conversation/data/transcript/active";
 import { areConversationViewsEqual } from "@/components/school/classes/forum/conversation/data/view/model";
@@ -19,6 +19,13 @@ import type {
   ViewportPlacement,
   ViewportState,
 } from "@/components/school/classes/forum/conversation/viewport/model";
+import { deriveViewportState } from "@/components/school/classes/forum/conversation/viewport/model";
+import type {
+  ActiveTranscript,
+  ForumPostId,
+  RuntimeFiber,
+  ViewportRuntime,
+} from "@/components/school/classes/forum/conversation/viewport/runtime";
 import type { ConversationViewport } from "@/components/school/classes/forum/conversation/viewport/service";
 import { makeConversationViewport } from "@/components/school/classes/forum/conversation/viewport/service";
 import type { ConversationScrollSnapshot } from "@/components/school/classes/forum/store/session";
@@ -63,6 +70,7 @@ export function makePostMeasurement(
 export function createAdapters() {
   let measurement: ViewportMeasurement | null = makeMeasurement();
   let placeResult = true;
+  let transcript: ActiveTranscriptModel = viewportTestTranscript;
   const placements: ViewportPlacement[] = [];
   const readPostIds: Id<"schoolClassForumPosts">[] = [];
   const snapshots: ConversationScrollSnapshot[] = [];
@@ -75,6 +83,7 @@ export function createAdapters() {
     },
     scroller: {
       captureView: () => measurement?.view ?? null,
+      getTranscript: () => transcript,
       isViewReached: (view) => {
         if (!measurement) {
           return false;
@@ -135,8 +144,60 @@ export function createAdapters() {
     setPlaceResult: (nextPlaceResult: boolean) => {
       placeResult = nextPlaceResult;
     },
+    setTranscript: (nextTranscript: ActiveTranscriptModel) => {
+      transcript = nextTranscript;
+    },
     snapshots,
   };
+}
+
+/** Creates one low-level runtime fixture for synchronous viewport program tests. */
+export function createViewportRuntime({
+  activeTranscript = viewportTestTranscript,
+  adapters,
+  measurement = null,
+  state = deriveViewportState({
+    backStack: [],
+    hasOverflow: true,
+    highlightedPostId: null,
+    isAtLatest: true,
+    latestAffinity: "latest",
+    lifecycle: "ready",
+    pendingPlacement: null,
+  }),
+}: {
+  activeTranscript?: ActiveTranscript;
+  adapters: ViewportAdapters;
+  measurement?: ViewportMeasurement | null;
+  state?: ViewportState;
+}) {
+  return Effect.gen(function* () {
+    const scope = yield* Scope.make();
+
+    return {
+      runtime: {
+        activeTranscriptRef:
+          yield* Ref.make<ActiveTranscript>(activeTranscript),
+        adapters,
+        eventQueue: yield* Queue.bounded<ViewportEvent>(1),
+        highlightFiberRef: yield* Ref.make<RuntimeFiber | null>(null),
+        highlightTokenRef: yield* Ref.make(0),
+        lastMeasurementRef: yield* Ref.make<ViewportMeasurement | null>(
+          measurement
+        ),
+        lastReadPostIdRef: yield* Ref.make<ForumPostId | null>(null),
+        persistFiberRef: yield* Ref.make<RuntimeFiber | null>(null),
+        scope,
+        stateRef: yield* SubscriptionRef.make(state),
+      } satisfies ViewportRuntime,
+      scope,
+    };
+  });
+}
+
+/** Closes one manually-created viewport runtime fixture. */
+export function closeViewportRuntime(scope: Scope.CloseableScope) {
+  return Scope.close(scope, Exit.succeed(undefined));
 }
 
 /** Creates one Effect-owned viewport service with test adapters provided. */

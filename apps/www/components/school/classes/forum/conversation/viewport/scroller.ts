@@ -63,6 +63,8 @@ export function createViewportScroller({
       });
     },
 
+    getTranscript,
+
     isViewReached: (view) => {
       const handle = getHandle();
 

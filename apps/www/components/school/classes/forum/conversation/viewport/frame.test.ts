@@ -2,6 +2,7 @@ import { Effect, Stream } from "effect";
 import type { RefObject } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { BrowserViewportScroller } from "@/components/school/classes/forum/conversation/viewport/browser";
+import { viewportTestTranscript } from "@/components/school/classes/forum/conversation/viewport/fixture";
 import {
   cancelViewportMeasureFrame,
   dispatchViewportEvent,
@@ -23,6 +24,19 @@ const measurement = {
   offset: 120,
   view: { kind: "bottom" },
 } satisfies ViewportMeasurement;
+
+/** Creates one static browser scroller fixture for frame dispatch tests. */
+function createFrameScroller() {
+  return {
+    captureView: () => ({ kind: "bottom" }),
+    getTranscript: () => viewportTestTranscript,
+    isViewReached: () => true,
+    isViewSettled: () => true,
+    isViewVisible: () => true,
+    measure: () => measurement,
+    place: () => true,
+  } satisfies BrowserViewportScroller;
+}
 
 describe("conversation/viewport/frame", () => {
   afterEach(() => {
@@ -64,14 +78,7 @@ describe("conversation/viewport/frame", () => {
     const viewportRef = {
       current: viewport,
     } satisfies RefObject<ConversationViewport | null>;
-    const scroller = {
-      captureView: () => ({ kind: "bottom" }),
-      isViewReached: () => true,
-      isViewSettled: () => true,
-      isViewVisible: () => true,
-      measure: () => measurement,
-      place: () => true,
-    } satisfies BrowserViewportScroller;
+    const scroller = createFrameScroller();
 
     measureViewport(
       { current: scroller } satisfies RefObject<BrowserViewportScroller | null>,
@@ -105,14 +112,7 @@ describe("conversation/viewport/frame", () => {
       getState: Effect.succeed(initialViewportState),
       shutdown: Effect.void,
     } satisfies ConversationViewport;
-    const scroller = {
-      captureView: () => ({ kind: "bottom" }),
-      isViewReached: () => true,
-      isViewSettled: () => true,
-      isViewVisible: () => true,
-      measure: () => measurement,
-      place: () => true,
-    } satisfies BrowserViewportScroller;
+    const scroller = createFrameScroller();
     const frameRef = { current: 5 } satisfies RefObject<number | null>;
     const viewportRef = {
       current: viewport,

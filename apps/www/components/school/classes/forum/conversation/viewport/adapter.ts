@@ -1,5 +1,6 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Context, type Effect, Schema } from "effect";
+import type { ActiveTranscriptModel } from "@/components/school/classes/forum/conversation/data/transcript/active";
 import type { ConversationView } from "@/components/school/classes/forum/conversation/data/view/model";
 import type {
   ViewportMeasurement,
@@ -29,6 +30,8 @@ export class ViewportSessionError extends Schema.TaggedError<ViewportSessionErro
 export interface ViewportScroller {
   /** Captures the semantic view currently represented by the scroll position. */
   captureView: () => ConversationView | null;
+  /** Returns the transcript that backs live virtualizer geometry. */
+  getTranscript: () => ActiveTranscriptModel;
   /** Returns whether the scroll position has reached the semantic view. */
   isViewReached: (view: ConversationView) => boolean;
   /** Returns whether the semantic view is already in reading position. */

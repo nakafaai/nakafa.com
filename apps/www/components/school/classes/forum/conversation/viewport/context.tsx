@@ -172,7 +172,7 @@ export function ConversationViewportProvider({
     saveConversationScrollSnapshot,
   ]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     activeTranscriptRef.current = activeTranscript;
 
     dispatchViewportEvent(viewportRef, {
