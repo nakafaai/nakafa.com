@@ -36,7 +36,7 @@ export function isLearningProgramSelectable(program: Doc<"learningPrograms">) {
 
 /** Loads one learning program by its stable program key. */
 export async function getLearningProgramByKey(
-  ctx: MutationCtx,
+  ctx: MutationCtx | QueryCtx,
   key: Doc<"learningPrograms">["key"]
 ) {
   return await ctx.db

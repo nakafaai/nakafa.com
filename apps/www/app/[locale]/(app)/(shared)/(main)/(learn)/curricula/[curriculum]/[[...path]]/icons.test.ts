@@ -1,17 +1,88 @@
+import { PROGRAM_NAVIGATION_ICON_KEY_VALUES } from "@repo/contents/_types/program/schema";
 import { isRenderableCurriculumRoute } from "@repo/contents/_types/route/curriculum";
+import { SUBJECT_MATERIALS } from "@repo/contents/_types/taxonomy";
+import { routing } from "@repo/internationalization/src/routing";
 import { describe, expect, it } from "vitest";
 import {
+  readCurriculumRootRoutes,
   readCurriculumRouteModel,
   readCurriculumRoutes,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/data";
 import {
-  readCurriculumGroupIcon,
+  readCurriculumMaterialIcon,
+  readCurriculumNavigationIcon,
   readCurriculumRouteIcon,
-  readCurriculumRouteVisualIdentity,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/icons";
 
+function serializeIcon(icon: unknown) {
+  return JSON.stringify(icon);
+}
+
 describe("curriculum route icons", () => {
-  it("keeps visible sibling groups unique by icon pair and tone", () => {
+  it("keeps navigation icons distinct from material subject icons", () => {
+    const subjectIcons = new Map(
+      SUBJECT_MATERIALS.map((material) => [
+        serializeIcon(readCurriculumMaterialIcon(material)),
+        material,
+      ])
+    );
+
+    const overlaps = PROGRAM_NAVIGATION_ICON_KEY_VALUES.flatMap((key) => {
+      const material = subjectIcons.get(
+        serializeIcon(readCurriculumNavigationIcon(key))
+      );
+
+      if (!material) {
+        return [];
+      }
+
+      return [`${key}:${material}`];
+    });
+
+    expect(overlaps).toEqual([]);
+  });
+
+  it("keeps navigation keys unique by icon", () => {
+    const seenIcons = new Map<string, string>();
+    const duplicates: string[] = [];
+
+    for (const key of PROGRAM_NAVIGATION_ICON_KEY_VALUES) {
+      const iconKey = serializeIcon(readCurriculumNavigationIcon(key));
+      const firstKey = seenIcons.get(iconKey);
+
+      if (firstKey) {
+        duplicates.push(`${firstKey}:${key}`);
+      }
+
+      seenIcons.set(iconKey, key);
+    }
+
+    expect(duplicates).toEqual([]);
+  });
+
+  it("keeps curriculum chooser cards unique by icon", () => {
+    const duplicates = routing.locales.flatMap((locale) => {
+      const seenIcons = new Map<string, string>();
+      const duplicateKeys: string[] = [];
+
+      for (const route of readCurriculumRootRoutes(locale)) {
+        const iconKey = serializeIcon(readCurriculumRouteIcon(route));
+        const firstIconPath = seenIcons.get(iconKey);
+
+        if (firstIconPath) {
+          duplicateKeys.push(`${locale}:${firstIconPath}:${route.publicPath}`);
+        }
+
+        seenIcons.set(iconKey, route.publicPath);
+      }
+
+      return duplicateKeys;
+    });
+
+    expect(duplicates).toEqual([]);
+  });
+
+  it("keeps visible sibling cards unique by icon", () => {
     const duplicates = readCurriculumRoutes()
       .filter(isRenderableCurriculumRoute)
       .flatMap((route) => {
@@ -23,43 +94,23 @@ describe("curriculum route icons", () => {
           return [];
         }
 
-        return model.childGroups.flatMap((group) => {
-          const seenIconPairs = new Map<string, string>();
-          const seenTones = new Map<string, string>();
-          const duplicateKeys: string[] = [];
+        const seenIcons = new Map<string, string>();
+        const duplicateKeys: string[] = [];
 
-          if (group.title) {
-            expect(group.iconKey).toBeTruthy();
+        for (const child of model.childRoutes) {
+          const iconKey = serializeIcon(readCurriculumRouteIcon(child));
+          const firstIconPath = seenIcons.get(iconKey);
+
+          if (firstIconPath) {
+            duplicateKeys.push(
+              `${route.locale}:${route.publicPath}:${firstIconPath}:${child.publicPath}`
+            );
           }
 
-          if (group.iconKey) {
-            expect(readCurriculumGroupIcon(group.iconKey)).toBeTruthy();
-          }
+          seenIcons.set(iconKey, child.publicPath);
+        }
 
-          for (const child of group.children) {
-            const { iconPair, tone } = readCurriculumRouteVisualIdentity(child);
-            const iconPairKey = JSON.stringify(iconPair);
-            const firstIconPath = seenIconPairs.get(iconPairKey);
-            const firstTonePath = seenTones.get(tone);
-
-            if (firstIconPath) {
-              duplicateKeys.push(
-                `icon:${route.locale}:${route.publicPath}:${group.key}:${firstIconPath}:${child.publicPath}`
-              );
-            }
-
-            if (firstTonePath) {
-              duplicateKeys.push(
-                `tone:${route.locale}:${route.publicPath}:${group.key}:${firstTonePath}:${child.publicPath}`
-              );
-            }
-
-            seenIconPairs.set(iconPairKey, child.publicPath);
-            seenTones.set(tone, child.publicPath);
-          }
-
-          return duplicateKeys;
-        });
+        return duplicateKeys;
       });
 
     expect(duplicates).toEqual([]);

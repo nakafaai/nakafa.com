@@ -54,7 +54,7 @@ function OnboardingChoice({
       <ChoicePreview icon={icon} seed={seed} />
       <div className="space-y-2 px-6 pt-3 pb-6 text-center">
         <div className="grid gap-2">
-          <h2 className="font-medium text-lg">{title}</h2>
+          <h2 className="font-medium">{title}</h2>
           <p className="text-muted-foreground text-sm">{description}</p>
         </div>
       </div>
@@ -67,14 +67,14 @@ function ChoicePreview({ icon, seed }: { icon: IconSvgElement; seed: string }) {
   return (
     <div className="relative flex aspect-video w-full items-center justify-center">
       <GradientBlock
-        className="pointer-events-none absolute inset-0 opacity-20 [mask-image:linear-gradient(to_bottom,black_0%,black_65%,transparent_100%)] [mask-repeat:no-repeat] [mask-size:100%_100%]"
+        className="mask-[linear-gradient(to_bottom,black_0%,black_65%,transparent_100%)] mask-no-repeat mask-size-[100%_100%] pointer-events-none absolute inset-0 opacity-20"
         colorScheme="vibrant"
         intensity="medium"
         keyString={seed}
       />
       <HugeIcons
         aria-hidden
-        className="relative size-8 text-foreground/70"
+        className="relative size-6 text-foreground"
         icon={icon}
       />
     </div>

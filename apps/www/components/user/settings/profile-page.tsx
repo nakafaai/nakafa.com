@@ -1,6 +1,6 @@
 "use client";
 
-import { Authenticated } from "convex/react";
+import { UserSettingsCurriculum } from "@/components/user/settings/curriculum";
 import { UserSettingsName } from "@/components/user/settings/name";
 import { UserSettingsRole } from "@/components/user/settings/role";
 import { useUser } from "@/lib/context/use-user";
@@ -13,9 +13,10 @@ export function UserSettingsProfilePage() {
   }
 
   return (
-    <Authenticated>
+    <>
       <UserSettingsName user={user} />
       <UserSettingsRole user={user} />
-    </Authenticated>
+      <UserSettingsCurriculum />
+    </>
   );
 }

@@ -40,7 +40,7 @@ describe("program/catalog", () => {
       expect(program).toBeDefined();
     }
 
-    expect(singaporeProgram?.iconKey).toBe("global-education");
+    expect(singaporeProgram?.iconKey).toBe("state");
     expect(schoolProgram?.navigation).toEqual({
       levels: ["stage", "class", "subject", "topic"],
       model: "curriculum-tree",

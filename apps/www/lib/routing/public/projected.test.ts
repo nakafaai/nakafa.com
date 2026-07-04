@@ -40,6 +40,8 @@ describe("projected public html route rejection", () => {
   it("delegates projected app routes that render HTML", async () => {
     const paths = [
       "/en/subjects/chemistry/green-chemistry/definition",
+      "/en/curriculum",
+      "/id/kurikulum",
       "/id/kurikulum/merdeka/kelas-10/biologi",
       "/en/curriculum/merdeka/class-10",
       "/en/practice/snbt",

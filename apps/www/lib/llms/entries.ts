@@ -17,6 +17,7 @@ import {
 } from "@/lib/llms/constants";
 import { formatRouteTitle } from "@/lib/llms/format";
 import { getQuranRouteMetadata } from "@/lib/llms/quran";
+import { getLocalizedMappedRoutePathname } from "@/lib/routing/public/pathnames";
 import {
   baseRoutes,
   buildSitemapContentPageRoutes,
@@ -192,12 +193,15 @@ const buildLocalizedLlmsEntry = Effect.fn("www.llms.entry")(function* ({
   locale: Locale;
   route: string;
 }) {
-  const hrefBase = `${BASE_URL}/${locale}${route === "/" ? "" : route}`;
-  const section = getRouteSection(route);
-  const routePath = route.slice(1);
+  const publicRoute =
+    getLocalizedMappedRoutePathname({ locale, route }) ?? route;
+  const publicPath = publicRoute === "/" ? "" : publicRoute;
+  const hrefBase = `${BASE_URL}/${locale}${publicPath}`;
+  const section = getRouteSection(publicRoute);
+  const routePath = publicRoute.slice(1);
   const metadata = yield* getRouteMetadata({
     locale,
-    route,
+    route: publicRoute,
     section,
   });
   const routeSegments = routePath.split("/").filter(Boolean);
@@ -209,7 +213,7 @@ const buildLocalizedLlmsEntry = Effect.fn("www.llms.entry")(function* ({
   return {
     description: metadata.description,
     href: metadata.hasMarkdown ? `${hrefBase}.md` : hrefBase,
-    route,
+    route: publicRoute,
     section,
     segments: routeSegments,
     title: metadata.title,

@@ -5,6 +5,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { userRoles } from "@repo/backend/convex/users/roles";
 import type { Locale } from "next-intl";
+import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
 
 const appNavigationViewers = ["pending", "guest", ...userRoles] as const;
 
@@ -13,11 +14,7 @@ export type AppNavigationRole = (typeof userRoles)[number];
 
 export const forYouNavigationItems = {
   subject: {
-    href: "/curriculum/merdeka",
-    hrefs: {
-      en: "/curriculum/merdeka",
-      id: "/kurikulum/merdeka",
-    },
+    href: "/curriculum",
     icon: Books02Icon,
     id: "subject",
     labelKey: "subject",
@@ -76,16 +73,18 @@ export function getForYouNavigationItems(_viewer: AppNavigationViewer) {
   return primaryNavigationItems;
 }
 
-/**
- * Resolves the locale-aware destination for one personalized navigation row
- * while preserving rows that intentionally share one href across locales.
- */
+/** Resolves the locale-aware destination for one personalized navigation row. */
 export function getForYouNavigationHref(
   item: ForYouNavigationItem,
-  locale: Locale
+  locale: Locale,
+  preferredCurriculumHref?: string | null
 ) {
-  if ("hrefs" in item) {
-    return item.hrefs[locale];
+  if (item.id === "subject" && preferredCurriculumHref) {
+    return preferredCurriculumHref;
+  }
+
+  if (item.id === "subject") {
+    return getCurriculumIndexHref(locale);
   }
 
   return item.href;

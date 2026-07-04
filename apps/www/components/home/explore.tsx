@@ -18,6 +18,7 @@ import {
   getForYouNavigationItems,
 } from "@/components/sidebar/data/navigation";
 import { useUser } from "@/lib/context/use-user";
+import { usePreferredCurriculumHref } from "@/lib/curriculum/preferences";
 
 const homeExploreCardVisualVariants = cva(
   "flex aspect-[1/0.95] w-full items-center justify-center rounded-xl transition-all ease-out",
@@ -119,11 +120,16 @@ export function HomeExplore() {
   }));
   const viewer = getAppNavigationViewer({ isPending, role });
   const items = getForYouNavigationItems(viewer);
+  const preferredCurriculumHref = usePreferredCurriculumHref(locale);
   const visibleCardIds = new Set(items.map((item) => item.id));
   const subjectNavigationItem = items.find((item) => item.id === "subject");
   const subjectHref = subjectNavigationItem
-    ? getForYouNavigationHref(subjectNavigationItem, locale)
-    : "/curriculum/merdeka";
+    ? getForYouNavigationHref(
+        subjectNavigationItem,
+        locale,
+        preferredCurriculumHref
+      )
+    : "/curriculum";
   const cards = [
     {
       href: subjectHref,

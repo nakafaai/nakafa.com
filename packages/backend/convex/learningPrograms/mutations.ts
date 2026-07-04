@@ -1,4 +1,5 @@
 import { mutation } from "@repo/backend/convex/functions";
+import { upsertPreferredCurriculumProgram } from "@repo/backend/convex/learningPreferences/impl";
 import {
   createInitialLearningPlanItems,
   getLearningProgramByKey,
@@ -120,6 +121,15 @@ export const selectLearningProgram = mutation({
       userId: user.appUser._id,
     });
     await ctx.db.patch(profileId, { activePlanId: planId, updatedAt: now });
+
+    if (program.kind === "school-curriculum") {
+      await upsertPreferredCurriculumProgram({
+        ctx,
+        now,
+        programKey: program.key,
+        userId: user.appUser._id,
+      });
+    }
 
     const planItems = await ctx.db
       .query("learningPlanItems")

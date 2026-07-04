@@ -30,6 +30,16 @@ vi.mock("@repo/internationalization/src/routing", () => ({
   routing: {
     defaultLocale: "en",
     locales: ["en", "id"],
+    pathnames: {
+      "/curricula": {
+        en: "/curriculum",
+        id: "/kurikulum",
+      },
+      "/practice/[assessment]": {
+        en: "/practice/[assessment]",
+        id: "/latihan/[assessment]",
+      },
+    },
   },
 }));
 
@@ -38,6 +48,7 @@ vi.mock("@/lib/sitemap/routes", () => ({
     "/",
     "/search",
     "/contributor",
+    "/curricula",
     "/quran",
     "/terms-of-service",
     "/privacy-policy",
@@ -151,6 +162,34 @@ describe("sitemap entries", () => {
       priority: 0.8,
       url: "https://docs.example.com/en/search",
     });
+  });
+
+  it("emits localized curriculum index URLs", async () => {
+    const entries = await Effect.runPromise(getEntries("/curricula"));
+
+    expect(getUrl("/curricula", "id")).toBe("https://nakafa.com/id/kurikulum");
+    expect(entries).toContainEqual(
+      expect.objectContaining({
+        url: "https://nakafa.com/en/curriculum",
+      })
+    );
+    expect(entries).toContainEqual(
+      expect.objectContaining({
+        url: "https://nakafa.com/id/kurikulum",
+      })
+    );
+    expect(mockGetPathname).not.toHaveBeenCalledWith(
+      expect.objectContaining({ href: "/curricula" })
+    );
+  });
+
+  it("localizes mapped route URLs from routing pathnames", () => {
+    expect(getUrl("/practice/[assessment]", "id")).toBe(
+      "https://nakafa.com/id/latihan/[assessment]"
+    );
+    expect(mockGetPathname).not.toHaveBeenCalledWith(
+      expect.objectContaining({ href: "/practice/[assessment]" })
+    );
   });
 
   it("assigns SEO settings for known route families", async () => {
@@ -387,5 +426,19 @@ describe("sitemap entries", () => {
       id: "https://nakafa.com/id/search",
       "x-default": "https://nakafa.com/en/search",
     });
+  });
+
+  it("localizes the curriculum index route in base sitemap entries", async () => {
+    mockGetSitemapPageDescriptor.mockReturnValueOnce({ id: "base" });
+    mockGetSitemapRoutes.mockResolvedValueOnce(["/curricula"]);
+
+    const entries = await Effect.runPromise(
+      getSitemapEntries({ pageId: "base" })
+    );
+
+    expect(entries.map((entry) => entry.url)).toEqual([
+      "https://nakafa.com/en/curriculum",
+      "https://nakafa.com/id/kurikulum",
+    ]);
   });
 });

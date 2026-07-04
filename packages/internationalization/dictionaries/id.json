@@ -125,6 +125,10 @@
   "LearningPrograms": {
     "metadata-title": "Mulai belajar di Nakafa",
     "metadata-description": "Pilih bantuan belajar dan mulai dari satu langkah pertama.",
+    "curriculum-index-metadata-title": "Kurikulum sekolah di Nakafa",
+    "curriculum-index-metadata-description": "Pilih jalur kurikulum sekolah dan jelajahi mata pelajaran Nakafa berdasarkan standar tiap negara.",
+    "curriculum-index-title": "Kurikulum sekolah",
+    "preference-save-error": "Preferensi kurikulummu belum bisa disimpan.",
     "plan-item-untitled": "Langkah belajar",
     "program-status": {
       "hidden": "Tidak ditampilkan",
@@ -138,7 +142,7 @@
       "role": {
         "student": {
           "title": "Siswa",
-          "description": "Belajar, latihan, dan tanya Nina."
+          "description": "Belajar, latihan, dan tutor."
         },
         "teacher": {
           "title": "Guru",
@@ -498,6 +502,10 @@
     "role-description": "Peranmu membantu kami menyesuaikan pengalaman belajarmu.",
     "role-footer": "Kamu bisa mengubah peran kapan saja.",
     "role-placeholder": "Pilih peran",
+    "curriculum": "Kurikulum",
+    "curriculum-description": "Preferensi kurikulummu menjaga pintasan mata pelajaran tetap sesuai dengan jalur yang paling sering kamu pakai.",
+    "curriculum-footer": "Kamu bisa mengubah kurikulum kapan saja.",
+    "curriculum-placeholder": "Pilih kurikulum",
     "teacher": "Guru",
     "student": "Siswa",
     "parent": "Orang tua",

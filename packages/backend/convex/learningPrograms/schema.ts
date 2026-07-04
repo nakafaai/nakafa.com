@@ -158,6 +158,7 @@ const tables = {
     versionStartsAt: v.optional(v.string()),
   })
     .index("by_key", ["key"])
+    .index("by_kind_and_displayOrder", ["kind", "displayOrder"])
     .index("by_displayOrder", ["displayOrder"]),
 
   learningProgramSources: defineTable({

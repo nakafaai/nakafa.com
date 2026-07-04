@@ -13,6 +13,7 @@ import {
   readMaterialContextQuery,
   toMaterialContextQueryString,
 } from "@/lib/routing/material/query";
+import { projectLocalizedMappedRoutePathname } from "@/lib/routing/public/pathnames";
 
 /** Locale values accepted by next-intl routing and public route projection. */
 type Locale = (typeof routing.locales)[number];
@@ -170,6 +171,19 @@ export const resolveLocalizedNavigationHref = Effect.fn(
 
   if (parsed.publicPath === "") {
     return toStaticNavigationHref(parsed);
+  }
+
+  const mappedPathname = projectLocalizedMappedRoutePathname({
+    currentLocale: parsed.currentLocale,
+    publicPath: parsed.publicPath,
+    targetLocale: input.locale,
+  });
+
+  if (mappedPathname) {
+    return toNavigationHref(
+      mappedPathname.slice(1),
+      `${parsed.search}${parsed.hash}`
+    );
   }
 
   const index = yield* loadStaticPublicLearningIndex();

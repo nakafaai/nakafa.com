@@ -4,6 +4,8 @@ import {
   listCurriculumStaticParams,
   readCurriculumBreadcrumbs,
   readCurriculumHeaderLink,
+  readCurriculumRootHrefForProgramKey,
+  readCurriculumRootOptions,
   readCurriculumRouteModel,
   readCurriculumRoutes,
   readCurriculumTocHeader,
@@ -156,6 +158,54 @@ describe("curriculum route data", () => {
       )
     ).toBe(true);
     expect("headerDescription" in biologyModel).toBe(false);
+  });
+
+  it("builds localized root curriculum options with provider country metadata", () => {
+    expect(readCurriculumRootOptions("id")).toEqual([
+      {
+        countryCode: "ID",
+        href: "/id/kurikulum/merdeka",
+        programKey: "merdeka",
+        title: "Kurikulum Merdeka",
+        value: "kurikulum/merdeka",
+      },
+      {
+        countryCode: "GB",
+        href: "/id/kurikulum/cambridge-international",
+        programKey: "cambridge-international",
+        title: "Cambridge International",
+        value: "kurikulum/cambridge-international",
+      },
+      {
+        countryCode: "SG",
+        href: "/id/kurikulum/singapore-moe",
+        programKey: "singapore-moe",
+        title: "Singapore MOE",
+        value: "kurikulum/singapore-moe",
+      },
+      {
+        countryCode: "US",
+        href: "/id/kurikulum/amerika-serikat",
+        programKey: "united-states",
+        title: "United States Standards-Aligned Pathway",
+        value: "kurikulum/amerika-serikat",
+      },
+    ]);
+  });
+
+  it("resolves localized root curriculum hrefs by program key", () => {
+    expect(
+      readCurriculumRootHrefForProgramKey({
+        locale: "id",
+        programKey: "united-states",
+      })
+    ).toBe("/id/kurikulum/amerika-serikat");
+    expect(
+      readCurriculumRootHrefForProgramKey({
+        locale: "en",
+        programKey: "missing",
+      })
+    ).toBeNull();
   });
 
   it("builds parent links, breadcrumbs, TOC headers, and material chapters", () => {

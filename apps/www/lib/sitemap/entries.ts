@@ -2,8 +2,10 @@ import { getPathname } from "@repo/internationalization/src/navigation";
 import { routing } from "@repo/internationalization/src/routing";
 import { MAIN_DOMAIN } from "@repo/next-config/domains";
 import { Effect } from "effect";
+import type { MetadataRoute } from "next";
 import type { Locale } from "next-intl";
 import { getRuntimeContentRoute } from "@/lib/content/runtime/routes";
+import { getLocalizedMappedRoutePathname } from "@/lib/routing/public/pathnames";
 import {
   baseRoutes,
   getSitemapPageDescriptor,
@@ -22,6 +24,8 @@ type SitemapErrorReporter = (
   error: unknown,
   context: SitemapErrorContext
 ) => Promise<void>;
+type SitemapEntry = MetadataRoute.Sitemap[number];
+type SitemapChangeFrequency = NonNullable<SitemapEntry["changeFrequency"]>;
 
 /** Optional settings shared by the Next route and standalone indexing scripts. */
 interface SitemapEntryOptions {
@@ -129,10 +133,15 @@ function getAlternateLanguages(
 
 /** Converts an app href and locale into an absolute canonical URL. */
 export function getUrl(href: Href, locale: Locale, domain?: string): string {
-  const pathname = getPathname({ locale, href, forcePrefix: true });
+  const route = typeof href === "string" ? href : href.pathname;
+  const mappedPathname = getLocalizedMappedRoutePathname({ locale, route });
   const domainHost = domain ? `https://${domain}` : host;
 
-  return domainHost + pathname;
+  if (mappedPathname) {
+    return `${domainHost}/${locale}${mappedPathname}`;
+  }
+
+  return domainHost + getPathname({ locale, href, forcePrefix: true });
 }
 
 /** Generates sitemap entries ready for Next metadata output or URL submission. */
@@ -182,7 +191,7 @@ const getSitemapPageEntries = Effect.fn("www.sitemap.entries.page")(function* (
 });
 
 /** Selects all locales for base pages and one locale for content pages. */
-function getSitemapEntryLocales(pageId: string | undefined): readonly Locale[] {
+function getSitemapEntryLocales(pageId: string | undefined) {
   const descriptor = getSitemapPageDescriptor(pageId);
 
   if (
@@ -235,14 +244,7 @@ function getFallbackDate(monthsAgo: number) {
 
 /** Chooses sitemap change frequency and priority from the route family. */
 function getContentSeoSettings(route: string): {
-  changeFrequency:
-    | "always"
-    | "hourly"
-    | "daily"
-    | "weekly"
-    | "monthly"
-    | "yearly"
-    | "never";
+  changeFrequency: SitemapChangeFrequency;
   priority: number;
 } {
   if (route === "/") {

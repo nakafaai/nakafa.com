@@ -150,6 +150,7 @@ describe("sitemap route discovery", () => {
     await expect(getSitemapRoutes()).resolves.toEqual([
       "/",
       "/contributor",
+      "/curricula",
       "/privacy-policy",
       "/quran",
       "/search",

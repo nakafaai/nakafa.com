@@ -72,6 +72,17 @@ describe("learningPrograms/mutations", () => {
       program: { key: "merdeka" },
       stage: "grade-10",
     });
+    await expect(
+      t
+        .withIdentity({
+          sessionId: identity.sessionId,
+          subject: identity.authUserId,
+        })
+        .query(api.learningPreferences.queries.getCurrent, { locale: "id" })
+    ).resolves.toMatchObject({
+      preferredCurriculumProgramKey: "merdeka",
+      program: { key: "merdeka" },
+    });
   });
 
   it("stores unique interests and rejects unrelated primary programs", async () => {

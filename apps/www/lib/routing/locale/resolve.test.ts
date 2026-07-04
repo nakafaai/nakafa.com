@@ -81,6 +81,14 @@ describe("resolveLocalizedNavigationHref", () => {
     );
   });
 
+  it("projects mapped static curriculum index pathnames without learning-index rows", () => {
+    expect(resolveHref("/id/kurikulum", "en")).toBe("/curriculum");
+    expect(resolveHref("/en/curriculum", "id")).toBe("/kurikulum");
+    expect(resolveHref("/id/kurikulum?source=sidebar#subjects", "en")).toBe(
+      "/curriculum?source=sidebar#subjects"
+    );
+  });
+
   it("projects practice root and domain pages from concrete practice route identity", () => {
     expect(resolveHref("/id/latihan/snbt", "en")).toBe("/practice/snbt");
     expect(resolveHref("/en/practice/snbt", "id")).toBe("/latihan/snbt");

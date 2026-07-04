@@ -18,6 +18,7 @@ import {
   getForYouNavigationItems,
 } from "@/components/sidebar/data/navigation";
 import { useUser } from "@/lib/context/use-user";
+import { usePreferredCurriculumHref } from "@/lib/curriculum/preferences";
 
 /**
  * Renders role-aware primary app navigation for students, teachers, parents, and guests.
@@ -33,6 +34,7 @@ export function NavForYou() {
   }));
   const viewer = getAppNavigationViewer({ isPending, role });
   const items = getForYouNavigationItems(viewer);
+  const preferredCurriculumHref = usePreferredCurriculumHref(locale);
 
   return (
     <SidebarGroup>
@@ -44,7 +46,11 @@ export function NavForYou() {
               item.labelNamespace === "Ai"
                 ? tAi(item.labelKey)
                 : tCommon(item.labelKey);
-            const href = getForYouNavigationHref(item, locale);
+            const href = getForYouNavigationHref(
+              item,
+              locale,
+              preferredCurriculumHref
+            );
 
             return (
               <SidebarMenuItem key={item.id}>
