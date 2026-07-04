@@ -1,11 +1,10 @@
 import { Effect, Ref, SubscriptionRef } from "effect";
-import { CONVERSATION_EDGE_TOLERANCE } from "@/components/school/classes/forum/conversation/data/scroll/metrics";
 import type { ActiveTranscriptModel } from "@/components/school/classes/forum/conversation/data/transcript/active";
 import type { ConversationView } from "@/components/school/classes/forum/conversation/data/view/model";
-import { areConversationViewsEqual } from "@/components/school/classes/forum/conversation/data/view/model";
 import { startViewportHighlight } from "@/components/school/classes/forum/conversation/viewport/highlight";
 import {
   getViewportLatestAffinity,
+  hasViewportMeasurementMoved,
   isViewportDetachedScroll,
   type ViewportEvent,
   type ViewportMeasurement,
@@ -212,22 +211,4 @@ export function handleViewportUserScroll(
       pendingPlacement: null,
     };
   });
-}
-
-/** Returns whether a scroll measurement moved away from the previous semantic view. */
-function hasViewportMeasurementMoved({
-  measurement,
-  previousMeasurement,
-}: {
-  measurement: ViewportMeasurement;
-  previousMeasurement: ViewportMeasurement;
-}) {
-  if (!areConversationViewsEqual(previousMeasurement.view, measurement.view)) {
-    return true;
-  }
-
-  return (
-    Math.abs(measurement.offset - previousMeasurement.offset) >
-    CONVERSATION_EDGE_TOLERANCE
-  );
 }

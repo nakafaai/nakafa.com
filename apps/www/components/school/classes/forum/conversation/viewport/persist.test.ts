@@ -183,48 +183,46 @@ describe("conversation/viewport/persist", () => {
     ]);
   });
 
-  it("skips pending post placements during snapshot persistence", async () => {
+  it("skips unchanged pending post placements during snapshot persistence", async () => {
     const rig = createAdapters();
+    const viewport = await createViewport(rig.adapters);
 
-    await Effect.runPromise(
-      Effect.gen(function* () {
-        const scope = yield* Scope.make();
-        const runtime = {
-          activeTranscriptRef: yield* Ref.make<ActiveTranscript>(
-            viewportTestTranscript
-          ),
-          adapters: rig.adapters,
-          eventQueue: yield* Queue.bounded<ViewportEvent>(1),
-          highlightFiberRef: yield* Ref.make<RuntimeFiber | null>(null),
-          highlightTokenRef: yield* Ref.make(0),
-          lastMeasurementRef: yield* Ref.make<ViewportMeasurement | null>(
-            makePostMeasurement(firstPost._id)
-          ),
-          lastReadPostIdRef: yield* Ref.make<ForumPostId | null>(null),
-          persistFiberRef: yield* Ref.make<RuntimeFiber | null>(null),
-          scope,
-          stateRef: yield* SubscriptionRef.make(
-            deriveViewportState({
-              backStack: [],
-              hasOverflow: true,
-              highlightedPostId: null,
-              isAtLatest: false,
-              latestAffinity: "detached",
-              lifecycle: "ready",
-              pendingPlacement: {
-                highlightPostId: firstPost._id,
-                view: { kind: "post", postId: firstPost._id },
-              },
-            })
-          ),
-        } satisfies ViewportRuntime;
-
-        yield* flushCurrentSnapshot(runtime);
-        yield* Scope.close(scope, Exit.succeed(undefined));
-      })
+    await openReadyViewport(viewport);
+    await dispatchViewport(viewport, { postId: firstPost._id, type: "post" });
+    await waitForState(
+      viewport,
+      (state) => state.pendingPlacement?.view.kind === "post"
     );
+    await Effect.runPromise(viewport.flushSnapshot);
 
     expect(rig.snapshots).toEqual([]);
+    await shutdownViewport(viewport);
+  });
+
+  it("persists a live moved position while post placement is still pending", async () => {
+    const rig = createAdapters();
+    const viewport = await createViewport(rig.adapters);
+
+    await openReadyViewport(viewport);
+    await dispatchViewport(viewport, { postId: firstPost._id, type: "post" });
+    await waitForState(
+      viewport,
+      (state) => state.pendingPlacement?.view.kind === "post"
+    );
+
+    rig.setMeasurement(makePostMeasurement(firstPost._id));
+    await Effect.runPromise(viewport.flushSnapshot);
+
+    expect(rig.snapshots).toEqual([
+      {
+        lastPostId: secondPost._id,
+        offset: 160,
+        renderedRowCount: rows.length,
+        view: { kind: "post", postId: firstPost._id },
+        wasAtBottom: false,
+      },
+    ]);
+    await shutdownViewport(viewport);
   });
 
   it("persists no-view detached measurements as stale-bottom invalidation snapshots", async () => {

@@ -1,7 +1,12 @@
 import { Effect, Fiber, Ref } from "effect";
 import { createConversationScrollSnapshot } from "@/components/school/classes/forum/conversation/data/scroll/snapshot";
 import type { ConversationView } from "@/components/school/classes/forum/conversation/data/view/model";
-import type { ViewportState } from "@/components/school/classes/forum/conversation/viewport/model";
+import {
+  hasViewportMeasurementMoved,
+  isViewportDetachedScroll,
+  type ViewportMeasurement,
+  type ViewportState,
+} from "@/components/school/classes/forum/conversation/viewport/model";
 import {
   PERSIST_DELAY_MS,
   type ViewportRuntime,
@@ -37,39 +42,53 @@ export function flushCurrentSnapshot(runtime: ViewportRuntime) {
       yield* Ref.set(runtime.persistFiberRef, null);
     }
 
-    yield* captureLiveMeasurement(runtime);
-    yield* persistCurrentSnapshot(runtime);
+    const previousMeasurement = yield* captureLiveMeasurement(runtime);
+    yield* persistCurrentSnapshot(runtime, { previousMeasurement });
   });
 }
 
 /** Captures live scroller geometry before synchronous boundary persistence. */
 function captureLiveMeasurement(runtime: ViewportRuntime) {
   return Effect.gen(function* () {
+    const previousMeasurement = yield* Ref.get(runtime.lastMeasurementRef);
     const measurement = yield* Effect.sync(() =>
       runtime.adapters.scroller.measure()
     );
 
     if (!measurement) {
-      return;
+      return previousMeasurement;
     }
 
     yield* Ref.set(runtime.lastMeasurementRef, measurement);
+    return previousMeasurement;
   });
 }
 
 /** Persists one stable snapshot from the viewport-owned captured measurement. */
-export function persistCurrentSnapshot(runtime: ViewportRuntime) {
+export function persistCurrentSnapshot(
+  runtime: ViewportRuntime,
+  options: { previousMeasurement?: ViewportMeasurement | null } = {}
+) {
   return Effect.gen(function* () {
     const activeTranscript = yield* Ref.get(runtime.activeTranscriptRef);
     const state = yield* Ref.get(runtime.stateRef);
     const measurement = yield* Ref.get(runtime.lastMeasurementRef);
     const hasPendingLatestIntent = isPendingLatestIntent(state);
+    const hasInterruptedPlacement = hasFlushInterruptedPlacement({
+      measurement,
+      previousMeasurement: options.previousMeasurement ?? null,
+      state,
+    });
+    const shouldPersistLatestIntent =
+      hasPendingLatestIntent && !hasInterruptedPlacement;
 
-    if (!(state.lifecycle === "ready" || hasPendingLatestIntent)) {
-      return;
-    }
-
-    if (state.pendingPlacement && !hasPendingLatestIntent) {
+    if (
+      !(
+        state.lifecycle === "ready" ||
+        shouldPersistLatestIntent ||
+        hasInterruptedPlacement
+      )
+    ) {
       return;
     }
 
@@ -77,7 +96,7 @@ export function persistCurrentSnapshot(runtime: ViewportRuntime) {
       return;
     }
 
-    const isAtBottom = hasPendingLatestIntent || measurement.isAtLatest;
+    const isAtBottom = shouldPersistLatestIntent || measurement.isAtLatest;
     const view = getPersistedSnapshotView({
       isAtBottom,
       measurementView: measurement.view,
@@ -95,6 +114,33 @@ export function persistCurrentSnapshot(runtime: ViewportRuntime) {
       )
       .pipe(Effect.catchTag("ViewportSessionError", () => Effect.void));
   });
+}
+
+/** Returns whether synchronous flush observed a moved pending placement before the event queue did. */
+function hasFlushInterruptedPlacement({
+  measurement,
+  previousMeasurement,
+  state,
+}: {
+  measurement: ViewportMeasurement | null;
+  previousMeasurement: ViewportMeasurement | null;
+  state: ViewportState;
+}) {
+  const pendingPlacement = state.pendingPlacement;
+
+  if (!(measurement && pendingPlacement && previousMeasurement)) {
+    return false;
+  }
+
+  if (pendingPlacement.view.kind === "bottom") {
+    return isViewportDetachedScroll({
+      measurement,
+      pendingPlacement,
+      previousMeasurement,
+    });
+  }
+
+  return hasViewportMeasurementMoved({ measurement, previousMeasurement });
 }
 
 /** Returns a semantic snapshot view, using bottom only for latest or detached invalidation snapshots. */

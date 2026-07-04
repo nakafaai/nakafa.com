@@ -155,6 +155,24 @@ export function isViewportDetachedScroll({
   );
 }
 
+/** Returns whether one fresh measurement changed the semantic viewport position. */
+export function hasViewportMeasurementMoved({
+  measurement,
+  previousMeasurement,
+}: {
+  measurement: ViewportMeasurement;
+  previousMeasurement: ViewportMeasurement;
+}) {
+  if (!areConversationViewsEqual(previousMeasurement.view, measurement.view)) {
+    return true;
+  }
+
+  return (
+    Math.abs(measurement.offset - previousMeasurement.offset) >
+    CONVERSATION_EDGE_TOLERANCE
+  );
+}
+
 /** Adds one semantic view to the back stack without duplicating the current entry. */
 export function pushViewportBackView(
   backStack: readonly ConversationView[],
