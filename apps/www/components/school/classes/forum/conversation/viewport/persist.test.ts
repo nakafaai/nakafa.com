@@ -70,6 +70,7 @@ describe("conversation/viewport/persist", () => {
 
   it("skips snapshot persistence when ready viewport has no captured view", async () => {
     const rig = createAdapters();
+    rig.setMeasurement(null);
 
     await Effect.runPromise(
       Effect.gen(function* () {
@@ -129,7 +130,7 @@ describe("conversation/viewport/persist", () => {
     await shutdownViewport(viewport);
   });
 
-  it("persists from the captured measurement when live geometry has changed", async () => {
+  it("persists from the live measurement when synchronous flush sees changed geometry", async () => {
     const rig = createAdapters();
     const capturedMeasurement = makePostMeasurement(firstPost._id);
     const liveMeasurement = makeMeasurement({ offset: 999 });
@@ -174,10 +175,10 @@ describe("conversation/viewport/persist", () => {
     expect(rig.snapshots).toEqual([
       {
         lastPostId: secondPost._id,
-        offset: 160,
+        offset: 999,
         renderedRowCount: rows.length,
-        view: { kind: "post", postId: firstPost._id },
-        wasAtBottom: false,
+        view: { kind: "bottom" },
+        wasAtBottom: true,
       },
     ]);
   });
@@ -228,6 +229,7 @@ describe("conversation/viewport/persist", () => {
 
   it("persists no-view detached measurements as stale-bottom invalidation snapshots", async () => {
     const rig = createAdapters();
+    rig.setMeasurement(null);
 
     await Effect.runPromise(
       Effect.gen(function* () {
@@ -378,6 +380,7 @@ describe("conversation/viewport/persist", () => {
   it("supports synchronous pagehide flush while debounce work is pending", () => {
     const rig = createAdapters();
     const latestMeasurement = makeMeasurement({ offset: 420 });
+    rig.setMeasurement(latestMeasurement);
 
     Effect.runSync(
       Effect.gen(function* () {

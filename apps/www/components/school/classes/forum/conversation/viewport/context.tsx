@@ -147,17 +147,20 @@ export function ConversationViewportProvider({
       cancelViewportMeasureFrame(frameRef);
 
       const currentViewport = viewportRef.current;
-      scrollerRef.current = null;
-      viewportRef.current = null;
 
       if (!currentViewport) {
+        scrollerRef.current = null;
+        viewportRef.current = null;
         Effect.runFork(Fiber.interrupt(stateFiber));
         return;
       }
 
+      Effect.runSync(currentViewport.flushSnapshot);
+      scrollerRef.current = null;
+      viewportRef.current = null;
+
       Effect.runFork(
-        currentViewport.flushSnapshot.pipe(
-          Effect.zipRight(Fiber.interrupt(stateFiber)),
+        Fiber.interrupt(stateFiber).pipe(
           Effect.zipRight(currentViewport.shutdown)
         )
       );

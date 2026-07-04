@@ -37,7 +37,23 @@ export function flushCurrentSnapshot(runtime: ViewportRuntime) {
       yield* Ref.set(runtime.persistFiberRef, null);
     }
 
+    yield* captureLiveMeasurement(runtime);
     yield* persistCurrentSnapshot(runtime);
+  });
+}
+
+/** Captures live scroller geometry before synchronous boundary persistence. */
+function captureLiveMeasurement(runtime: ViewportRuntime) {
+  return Effect.gen(function* () {
+    const measurement = yield* Effect.sync(() =>
+      runtime.adapters.scroller.measure()
+    );
+
+    if (!measurement) {
+      return;
+    }
+
+    yield* Ref.set(runtime.lastMeasurementRef, measurement);
   });
 }
 

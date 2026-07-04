@@ -48,11 +48,14 @@ export function handleViewportMeasurement(
           runtime,
         })
       : false;
+    const pendingPlacementForAffinity = reachedPendingPlacement
+      ? null
+      : pendingPlacement;
     const latestAffinity = getViewportLatestAffinity({
       currentAffinity: currentState.latestAffinity,
       hasUserDetachedFromLatest,
       isAtLatest: measurement.isAtLatest,
-      pendingPlacement,
+      pendingPlacement: pendingPlacementForAffinity,
     });
     const shouldRetryPendingPlacement =
       source === "frame" &&

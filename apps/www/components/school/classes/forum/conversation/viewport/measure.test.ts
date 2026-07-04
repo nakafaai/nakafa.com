@@ -359,6 +359,42 @@ describe("conversation/viewport/measure", () => {
     );
   });
 
+  it("reattaches latest affinity when a reached post placement is clamped at bottom", async () => {
+    const rig = createAdapters();
+
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const runtime = yield* makeMeasurementRuntime({
+          adapters: rig.adapters,
+          state: {
+            backStack: [{ kind: "bottom" }],
+            hasOverflow: true,
+            highlightedPostId: null,
+            isAtLatest: false,
+            latestAffinity: "detached",
+            lifecycle: "placing",
+            pendingPlacement: {
+              highlightPostId: firstPost._id,
+              view: { kind: "post", postId: firstPost._id },
+            },
+          },
+        });
+        const clampedMeasurement = makeMeasurement({
+          lastVisiblePostId: firstPost._id,
+          view: { kind: "post", postId: firstPost._id },
+        });
+        rig.setMeasurement(clampedMeasurement);
+
+        yield* handleViewportMeasurement(runtime, clampedMeasurement, "frame");
+        const state = yield* SubscriptionRef.get(runtime.stateRef);
+
+        expect(state.pendingPlacement).toBeNull();
+        expect(state.latestAffinity).toBe("latest");
+        yield* Scope.close(runtime.scope, Exit.succeed(undefined));
+      })
+    );
+  });
+
   it("detaches latest affinity on away user intent before the next measurement", async () => {
     const rig = createAdapters();
     const viewport = await createViewport(rig.adapters);
