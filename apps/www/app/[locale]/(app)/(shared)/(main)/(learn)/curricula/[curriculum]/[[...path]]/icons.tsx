@@ -1,32 +1,20 @@
 import {
   AbacusIcon,
-  AssignmentsIcon,
-  Atom02Icon,
   Backpack01Icon,
   Backpack02Icon,
-  BoardMathIcon,
   Book01Icon,
   BookBookmark01Icon,
-  Brain02Icon,
   CalendarMortarboardIcon,
-  CertificateIcon,
   CourseIcon,
   DiplomaIcon,
-  DnaIcon,
   Flag01Icon,
-  GlobalEducationIcon,
   KidIcon,
-  Knowledge01Icon,
-  LibraryIcon,
-  MathIcon,
   Medal01Icon,
-  MicroscopeIcon,
   MoleculesIcon,
   Mortarboard01Icon,
   Notebook01Icon,
   OnlineLearning01Icon,
   PencilRulerIcon,
-  PhysicsIcon,
   Presentation01Icon,
   Quiz03Icon,
   School01Icon,
@@ -34,15 +22,13 @@ import {
   SchoolIcon,
   SchoolReportCardIcon,
   SchoolTieIcon,
-  StructureIcon,
   StudentCardIcon,
   StudentIcon,
   StudentsIcon,
   Target01Icon,
-  TestTubeIcon,
-  UniversityIcon,
 } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
+import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 import type { ProgramNavigationIconKey } from "@repo/contents/_types/program/schema";
 import type { PublicCurriculumRoute } from "@repo/contents/_types/route/schema";
 import type { Material } from "@repo/contents/_types/taxonomy";
@@ -50,26 +36,6 @@ import type { Material } from "@repo/contents/_types/taxonomy";
 type CurriculumVisualSource =
   | Readonly<{ kind: "material"; key: Material }>
   | Readonly<{ kind: "navigation"; key: ProgramNavigationIconKey }>;
-
-const materialIcons: { readonly [Key in Material]: IconSvgElement } = {
-  "ai-ds": Brain02Icon,
-  biology: DnaIcon,
-  chemistry: TestTubeIcon,
-  "computer-science": Atom02Icon,
-  economy: AssignmentsIcon,
-  "game-engineering": StructureIcon,
-  geography: GlobalEducationIcon,
-  geospatial: BoardMathIcon,
-  history: LibraryIcon,
-  informatics: Brain02Icon,
-  "informatics-engineering": UniversityIcon,
-  "international-relations": GlobalEducationIcon,
-  mathematics: MathIcon,
-  physics: PhysicsIcon,
-  "political-science": CertificateIcon,
-  sociology: Knowledge01Icon,
-  "technology-electro-medical": MicroscopeIcon,
-};
 
 const navigationIcons: {
   readonly [Key in ProgramNavigationIconKey]: IconSvgElement;
@@ -105,7 +71,7 @@ const navigationIcons: {
 
 /** Resolves a source-owned material identity to its Hugeicons card icon. */
 export function readCurriculumMaterialIcon(material: Material) {
-  return materialIcons[material];
+  return getMaterialIcon(material);
 }
 
 /** Resolves a source-owned navigation identity to its Hugeicons card icon. */

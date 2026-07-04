@@ -1,3 +1,4 @@
+import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 import { PROGRAM_NAVIGATION_ICON_KEY_VALUES } from "@repo/contents/_types/program/schema";
 import { isRenderableCurriculumRoute } from "@repo/contents/_types/route/curriculum";
 import { SUBJECT_MATERIALS } from "@repo/contents/_types/taxonomy";
@@ -19,6 +20,43 @@ function serializeIcon(icon: unknown) {
 }
 
 describe("curriculum route icons", () => {
+  it("uses shared material icons for every subject material", () => {
+    for (const material of SUBJECT_MATERIALS) {
+      expect(readCurriculumMaterialIcon(material)).toBe(
+        getMaterialIcon(material)
+      );
+    }
+  });
+
+  it("uses material-domain icons for generic subject curriculum routes", () => {
+    const mismatches = readCurriculumRoutes()
+      .filter(isRenderableCurriculumRoute)
+      .flatMap((route) => {
+        if (!route.materialDomain) {
+          return [];
+        }
+
+        if (
+          route.iconKey &&
+          route.iconKey !== "mathematics" &&
+          route.iconKey !== "science"
+        ) {
+          return [];
+        }
+
+        if (
+          readCurriculumRouteIcon(route) ===
+          getMaterialIcon(route.materialDomain)
+        ) {
+          return [];
+        }
+
+        return [route.publicPath];
+      });
+
+    expect(mismatches).toEqual([]);
+  });
+
   it("keeps navigation icons distinct from material subject icons", () => {
     const subjectIcons = new Map(
       SUBJECT_MATERIALS.map((material) => [
