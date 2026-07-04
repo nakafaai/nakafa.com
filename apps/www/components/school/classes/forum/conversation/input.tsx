@@ -152,15 +152,16 @@ export function ForumPostInput() {
           form.reset();
           clearFiles();
           setForumReplyTarget(forumId, null);
-          acknowledgeUnreadCue();
 
           requestAnimationFrame(() => {
             textareaRef.current?.focus();
           });
         });
-      /** Moves to latest only after Convex confirms the submitted post. */
+      /** Acknowledges successful submit and moves to latest after Convex confirms the post. */
       const placeConfirmedPost = () =>
         Effect.sync(() => {
+          acknowledgeUnreadCue();
+
           requestAnimationFrame(() => {
             textareaRef.current?.focus();
             goToLatest();

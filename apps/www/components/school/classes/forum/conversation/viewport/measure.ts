@@ -1,14 +1,12 @@
 import { Effect, Ref, SubscriptionRef } from "effect";
-import type { ActiveTranscriptModel } from "@/components/school/classes/forum/conversation/data/transcript/active";
-import type { ConversationView } from "@/components/school/classes/forum/conversation/data/view/model";
 import { startViewportHighlight } from "@/components/school/classes/forum/conversation/viewport/highlight";
+import { hasScrollMeasurementInterruptedPlacement } from "@/components/school/classes/forum/conversation/viewport/intent";
 import {
   getViewportLatestAffinity,
   hasViewportMeasurementMoved,
   isViewportDetachedScroll,
   type ViewportEvent,
   type ViewportMeasurement,
-  type ViewportPlacement,
 } from "@/components/school/classes/forum/conversation/viewport/model";
 import { scheduleViewportSnapshotPersist } from "@/components/school/classes/forum/conversation/viewport/persist";
 import { hasReachedViewportPlacement } from "@/components/school/classes/forum/conversation/viewport/placement";
@@ -132,59 +130,6 @@ export function handleViewportMeasurement(
     );
     yield* scheduleViewportSnapshotPersist(runtime);
   });
-}
-
-/** Returns whether one manual measurement should cancel the pending Placement. */
-function hasScrollMeasurementInterruptedPlacement({
-  activeTranscript,
-  hasUserDetachedFromLatest,
-  measurement,
-  pendingPlacement,
-  previousMeasurement,
-}: {
-  activeTranscript: ActiveTranscriptModel | null;
-  hasUserDetachedFromLatest: boolean;
-  measurement: ViewportMeasurement;
-  pendingPlacement: ViewportPlacement;
-  previousMeasurement: ViewportMeasurement;
-}) {
-  if (pendingPlacement.view.kind === "bottom") {
-    return hasUserDetachedFromLatest;
-  }
-
-  const targetIndex = getViewportViewRowIndex(
-    activeTranscript,
-    pendingPlacement.view
-  );
-  const previousIndex = getViewportViewRowIndex(
-    activeTranscript,
-    previousMeasurement.view
-  );
-  const nextIndex = getViewportViewRowIndex(activeTranscript, measurement.view);
-
-  if (targetIndex === null || previousIndex === null || nextIndex === null) {
-    return false;
-  }
-
-  return (
-    Math.abs(nextIndex - targetIndex) > Math.abs(previousIndex - targetIndex)
-  );
-}
-
-/** Maps one semantic Viewport view to its Transcript row index when possible. */
-function getViewportViewRowIndex(
-  activeTranscript: ActiveTranscriptModel | null,
-  view: ConversationView | null
-) {
-  if (!(activeTranscript && view)) {
-    return null;
-  }
-
-  if (view.kind === "bottom") {
-    return Math.max(0, activeTranscript.rows.length - 1);
-  }
-
-  return activeTranscript.rowIndexByPostId.get(view.postId) ?? null;
 }
 
 /** Cancels semantic jump state when direct user input takes over scrolling. */

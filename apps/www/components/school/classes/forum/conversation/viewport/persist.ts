@@ -1,6 +1,7 @@
 import { Effect, Fiber, Ref } from "effect";
 import { createConversationScrollSnapshot } from "@/components/school/classes/forum/conversation/data/scroll/snapshot";
 import type { ConversationView } from "@/components/school/classes/forum/conversation/data/view/model";
+import { isPendingLatestIntent } from "@/components/school/classes/forum/conversation/viewport/intent";
 import {
   hasViewportMeasurementMoved,
   isViewportDetachedScroll,
@@ -156,15 +157,4 @@ function getPersistedSnapshotView({
   }
 
   return measurementView ?? ({ kind: "bottom" } satisfies ConversationView);
-}
-
-/** Returns whether a pending placement should persist the user's latest intent. */
-function isPendingLatestIntent(state: ViewportState) {
-  const placement = state.pendingPlacement;
-
-  return (
-    state.lifecycle === "placing" &&
-    placement?.view.kind === "bottom" &&
-    placement.motion !== "instant"
-  );
 }
