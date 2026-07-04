@@ -5,7 +5,9 @@ import { SchoolClassesForumPanelSlot } from "@/components/school/classes/forum/p
 export default async function Page({
   params,
 }: {
-  params: Promise<{ forumId: Id<"schoolClassForums"> }>;
+  params: Promise<{
+    forumId: Id<"schoolClassForums">;
+  }>;
 }) {
   const { forumId } = await params;
 

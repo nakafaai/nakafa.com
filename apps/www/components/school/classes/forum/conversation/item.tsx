@@ -10,7 +10,6 @@ import { useLocale, useTranslations } from "next-intl";
 import { Activity } from "react";
 import { useForumSession } from "@/components/school/classes/forum/context/use-session";
 import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
-import { useViewport } from "@/components/school/classes/forum/conversation/context/use-viewport";
 import type { ForumPost } from "@/components/school/classes/forum/conversation/data/entities";
 import { PostItemActions } from "@/components/school/classes/forum/conversation/item/actions";
 import { PostAttachments } from "@/components/school/classes/forum/conversation/item/attachments";
@@ -20,15 +19,17 @@ import { getLocale } from "@/lib/utils/date";
 import { getInitialName } from "@/lib/utils/helper";
 
 /** Renders one forum post row with reply, attachment, and reaction controls. */
-export const ForumPostItem = ({
+export function ForumPostItem({
   post,
   isFirstInGroup,
+  isJumpHighlighted,
   isLastInGroup,
 }: {
   post: ForumPost;
   isFirstInGroup: boolean;
+  isJumpHighlighted: boolean;
   isLastInGroup: boolean;
-}) => {
+}) {
   const t = useTranslations("Common");
   const locale = useLocale();
   const currentUserId = useData((state) => state.currentUserId);
@@ -37,9 +38,6 @@ export const ForumPostItem = ({
   );
   const userName = post.user?.name ?? t("anonymous");
   const userImage = post.user?.image ?? "";
-  const isJumpHighlighted = useViewport(
-    (state) => state.highlightedPostId === post._id
-  );
   const isReplyTarget = replyTarget?.postId === post._id;
   const isReplyToMe = post.replyToUserId === currentUserId;
 
@@ -121,5 +119,4 @@ export const ForumPostItem = ({
       </div>
     </div>
   );
-};
-ForumPostItem.displayName = "ForumPostItem";
+}

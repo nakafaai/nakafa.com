@@ -34,7 +34,7 @@ export function buildRootLlmsIndexText() {
   return [
     "# Nakafa",
     "",
-    "> Nakafa publishes multilingual learning materials. Use this root index to choose a locale and section, then open the linked section llms.txt files for page-level markdown URLs.",
+    "> Nakafa publishes multilingual learning materials. Use this root index to choose a locale, section, or page catalog for page-level markdown URLs.",
     "",
     "## Indexes",
     "",
@@ -42,7 +42,7 @@ export function buildRootLlmsIndexText() {
     "",
     "## References",
     "",
-    `- MCP endpoint: \`${NAKAFA_MCP_RECOMMENDED_ENDPOINT}\` with tools \`nakafa_search_content\`, \`nakafa_get_content\`, \`nakafa_get_taxonomy\`, \`nakafa_get_exercise\`, and \`nakafa_get_quran_reference\`.`,
+    `- [Nakafa MCP skill](${BASE_URL}/skill.md): public agent instructions for tools \`nakafa_search_content\`, \`nakafa_get_content\`, \`nakafa_get_taxonomy\`, \`nakafa_get_exercise\`, and \`nakafa_get_quran_reference\`. Recommended MCP endpoint: \`${NAKAFA_MCP_RECOMMENDED_ENDPOINT}\`.`,
     `- Full corpus map: \`${BASE_URL}/llms-full.txt\`; shard manifest: \`${BASE_URL}/llms-full/index.json\` for locale, section, topic, set, and Quran full-content files.`,
     `- Sitemap: \`${BASE_URL}/sitemap.xml\`, used to generate these indexes.`,
     "",
@@ -200,7 +200,11 @@ function buildLocaleLlmsIndexText({
   return [
     `# Nakafa ${localeLabel} Content`,
     "",
-    `> For AI agents: use [llms.txt](${BASE_URL}/llms.txt). ${localeLabel} Nakafa content index generated from the sitemap. Start with the direct \`.md\` page links below, or open a section llms.txt for the full bounded route catalog.`,
+    `> For AI agents: use [llms.txt](${BASE_URL}/llms.txt). ${localeLabel} Nakafa content index generated from the sitemap. Start with the direct \`.md\` page links below, open the page catalog for broad coverage, or open a section llms.txt for the bounded route catalog.`,
+    "",
+    "## Catalog",
+    "",
+    formatLocalePageCatalogLine({ locale, localeLabel }),
     "",
     "## Sections",
     "",
@@ -453,13 +457,27 @@ function sortUniqueEntries(entries: Iterable<LlmsEntry>) {
   );
 }
 
-/** Formats root index links to one locale index and page catalog. */
+/** Formats root index links to locale, page-catalog, and section indexes. */
 function formatLocaleIndexLines(locale: Locale) {
   const localeLabel = getLocaleLabel(locale);
   return [
-    `- [${localeLabel} content index](${BASE_URL}/llms/${locale}/llms.txt): ${localeLabel} pages grouped by content area.`,
-    `- [${localeLabel} page catalog](${BASE_URL}/llms/${locale}/${PAGE_CATALOG_SEGMENT}/llms.txt): sitemap-backed ${localeLabel} page URLs for AFDocs and agent coverage.`,
+    `- [${localeLabel} content index](${BASE_URL}/llms/${locale}/llms.txt): ${localeLabel} pages, section indexes, and page catalog.`,
+    formatLocalePageCatalogLine({ locale, localeLabel }),
+    ...getLlmsSections().map((section) =>
+      formatSectionIndexLine({ locale, localeLabel, section })
+    ),
   ];
+}
+
+/** Formats one locale index link to its broad sitemap-backed page catalog. */
+function formatLocalePageCatalogLine({
+  locale,
+  localeLabel,
+}: {
+  locale: Locale;
+  localeLabel: string;
+}) {
+  return `- [${localeLabel} page catalog](${BASE_URL}/llms/${locale}/${PAGE_CATALOG_SEGMENT}/llms.txt): sitemap-backed ${localeLabel} page URLs for AFDocs and agent coverage.`;
 }
 
 /** Formats one locale index link to a section index. */

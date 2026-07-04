@@ -1,8 +1,8 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { CacheSnapshot } from "virtua";
 import { createStore } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
+import type { ConversationView } from "@/components/school/classes/forum/conversation/data/view/model";
 
 export interface ForumReplyTarget {
   postId: Id<"schoolClassForumPosts">;
@@ -10,10 +10,10 @@ export interface ForumReplyTarget {
 }
 
 export interface ConversationScrollSnapshot {
-  cache: CacheSnapshot | null;
   lastPostId: Id<"schoolClassForumPosts"> | null;
   offset: number;
   renderedRowCount: number;
+  view: ConversationView;
   wasAtBottom: boolean;
 }
 
@@ -47,25 +47,9 @@ const initialState: State = {
   replyTargetByForumId: {},
 };
 
-/** Returns whether one stored cache snapshot still matches the current list. */
-export function canRestoreConversationScrollCache({
-  lastPostId,
-  renderedRowCount,
-  snapshot,
-}: {
-  lastPostId: Id<"schoolClassForumPosts"> | null;
-  renderedRowCount: number;
-  snapshot: ConversationScrollSnapshot | null | undefined;
-}) {
-  if (!snapshot?.cache) {
-    return false;
-  }
-
-  return (
-    snapshot.lastPostId === lastPostId &&
-    snapshot.renderedRowCount === renderedRowCount
-  );
-}
+const initialPersistedState = {
+  conversationScrollSnapshotByForumId: {},
+} satisfies Pick<State, "conversationScrollSnapshotByForumId">;
 
 /**
  * Creates one class-scoped session store for forum reply state and scroll restoration.
@@ -104,13 +88,14 @@ export function createForumSessionStore(classId: string) {
       })),
       {
         name: `nakafa-forum-session:${classId}`,
+        migrate: () => initialPersistedState,
         partialize: (state) => ({
           conversationScrollSnapshotByForumId:
             state.conversationScrollSnapshotByForumId,
         }),
         skipHydration: true,
         storage: createJSONStorage(() => sessionStorage),
-        version: 1,
+        version: 4,
       }
     )
   );

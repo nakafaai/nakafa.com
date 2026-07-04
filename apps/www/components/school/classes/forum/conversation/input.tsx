@@ -17,21 +17,34 @@ import { useFileUpload } from "@repo/design-system/hooks/use-file-upload";
 import { cn } from "@repo/design-system/lib/utils";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
-import { Effect, Either, Schema } from "effect";
+import { Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { Activity, type ComponentRef, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { useForumSession } from "@/components/school/classes/forum/context/use-session";
-import { useControls } from "@/components/school/classes/forum/conversation/context/use-controls";
+import {
+  useForumSession,
+  useForumSessionStoreApi,
+} from "@/components/school/classes/forum/context/use-session";
 import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
 import { AttachmentPreviews } from "@/components/school/classes/forum/conversation/input/attachment-previews";
 import { InputAttachments } from "@/components/school/classes/forum/conversation/input/attachments-trigger";
+import {
+  type ForumPostInputDraft,
+  restoreForumPostInputDraft,
+} from "@/components/school/classes/forum/conversation/input/draft";
 import { EmojiButton } from "@/components/school/classes/forum/conversation/input/emoji-button";
 import { ReplyIndicator } from "@/components/school/classes/forum/conversation/input/reply-indicator";
 import { submitForumPost } from "@/components/school/classes/forum/conversation/input/submit";
+import { useCreateForumPost } from "@/components/school/classes/forum/conversation/input/use-create";
+import { useControls } from "@/components/school/classes/forum/conversation/viewport/context";
+
+interface ForumPostFailureReport {
+  draft?: ForumPostInputDraft;
+  error: unknown;
+}
 
 /** Handles forum post submission, uploads, and reply cleanup for the transcript. */
-export const ForumPostInput = () => {
+export function ForumPostInput() {
   const t = useTranslations("School.Classes");
   const { acknowledgeUnreadCue, goToLatest } = useControls();
   const forumId = useData((state) => state.forumId);
@@ -41,6 +54,7 @@ export const ForumPostInput = () => {
   const setForumReplyTarget = useForumSession(
     (state) => state.setForumReplyTarget
   );
+  const forumSessionStore = useForumSessionStoreApi();
   const [composerRef] = useResizeObserver<HTMLFormElement>();
   const textareaRef = useRef<ComponentRef<typeof InputGroupTextarea>>(null);
   const generateUploadUrl = useMutation(
@@ -52,9 +66,7 @@ export const ForumPostInput = () => {
   const saveForumUpload = useMutation(
     api.classes.forums.mutations.uploads.saveForumUpload
   );
-  const createPost = useMutation(
-    api.classes.forums.mutations.posts.createForumPost
-  );
+  const createPost = useCreateForumPost();
   const [{ files }, { removeFile, clearFiles, openFileDialog, getInputProps }] =
     useFileUpload({
       multiple: true,
@@ -86,55 +98,115 @@ export const ForumPostInput = () => {
         })
       ),
     },
-    onSubmit: async ({ value }) => {
+    onSubmit: ({ value }) => {
       const hasBody = value.body.trim().length > 0;
       const hasAttachments = files.length > 0;
+      const isTextOnlyPost = !hasAttachments;
 
       if (!(hasBody || hasAttachments)) {
         return;
       }
+      const draft = {
+        body: value.body,
+        replyTarget,
+      } satisfies ForumPostInputDraft;
 
-      const result = await Effect.runPromise(
-        Effect.either(
-          submitForumPost({
-            files,
-            mutations: {
-              createPost,
-              discardForumUploads,
-              generateUploadUrl,
-              saveForumUpload,
-            },
-            post: {
-              body: value.body,
-              forumId,
-              parentId: replyTarget?.postId,
-            },
+      /** Reports a failed submit without hiding already optimistic local feedback. */
+      const reportSubmitFailure = ({ draft, error }: ForumPostFailureReport) =>
+        Effect.all(
+          [
+            Effect.sync(() => {
+              captureException(error, {
+                source: "forum-post-submit",
+              });
+              toast.error(t("create-post-failed"));
+            }),
+            draft
+              ? restoreForumPostInputDraft({
+                  currentBody: form.state.values.body,
+                  currentReplyTarget:
+                    forumSessionStore.getState().replyTargetByForumId[
+                      forumId
+                    ] ?? null,
+                  draft,
+                  restoreBody: (body) => {
+                    form.setFieldValue("body", body);
+                  },
+                  restoreReplyTarget: (replyTarget) => {
+                    setForumReplyTarget(forumId, replyTarget);
+                  },
+                })
+              : Effect.void,
+            Effect.sync(() => {
+              requestAnimationFrame(() => {
+                textareaRef.current?.focus();
+              });
+            }),
+          ],
+          { discard: true }
+        );
+
+      /** Clears the composer while the optimistic row covers local feedback. */
+      const clearSubmittedDraft = () =>
+        Effect.sync(() => {
+          form.reset();
+          clearFiles();
+          setForumReplyTarget(forumId, null);
+
+          requestAnimationFrame(() => {
+            textareaRef.current?.focus();
+          });
+        });
+      /** Acknowledges successful submit and moves to latest after Convex confirms the post. */
+      const placeConfirmedPost = () =>
+        Effect.sync(() => {
+          acknowledgeUnreadCue();
+
+          requestAnimationFrame(() => {
+            textareaRef.current?.focus();
+            goToLatest();
+          });
+        });
+      /** Clears the composer and keeps confirmed attachment posts visible. */
+      const completeSubmit = () =>
+        clearSubmittedDraft().pipe(Effect.zipRight(placeConfirmedPost()));
+
+      const submitPost = submitForumPost({
+        files,
+        mutations: {
+          createPost,
+          discardForumUploads,
+          generateUploadUrl,
+          saveForumUpload,
+        },
+        post: {
+          body: value.body,
+          forumId,
+          parentId: replyTarget?.postId,
+        },
+      });
+
+      if (isTextOnlyPost) {
+        Effect.runSync(clearSubmittedDraft());
+
+        return Effect.runPromise(
+          submitPost.pipe(
+            Effect.matchEffect({
+              onFailure: (error) => reportSubmitFailure({ draft, error }),
+              onSuccess: placeConfirmedPost,
+            })
+          )
+        );
+      }
+
+      return Effect.runPromise(
+        submitPost.pipe(
+          Effect.matchEffect({
+            onFailure: (error) => reportSubmitFailure({ error }),
+            onSuccess: completeSubmit,
           })
         )
       );
-
-      if (Either.isLeft(result)) {
-        captureException(result.left, {
-          source: "forum-post-submit",
-        });
-        toast.error(t("create-post-failed"));
-
-        requestAnimationFrame(() => {
-          textareaRef.current?.focus();
-        });
-
-        return;
-      }
-
-      form.reset();
-      clearFiles();
-      setForumReplyTarget(forumId, null);
-      acknowledgeUnreadCue();
-
-      requestAnimationFrame(() => {
-        textareaRef.current?.focus();
-        goToLatest();
-      });
     },
   });
 
@@ -264,4 +336,4 @@ export const ForumPostInput = () => {
       </form.Field>
     </form>
   );
-};
+}

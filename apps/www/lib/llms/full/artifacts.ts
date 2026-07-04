@@ -22,7 +22,11 @@ import {
   readSitemapPageDescriptors,
 } from "@/lib/sitemap/routes";
 
-const LLMS_FULL_CONCURRENCY = availableParallelism();
+const LLMS_FULL_ROUTE_CONCURRENCY = Math.max(
+  1,
+  Math.min(availableParallelism(), 2)
+);
+const LLMS_FULL_ENTRY_CONCURRENCY = 2;
 
 interface LlmsFullArtifactOptions {
   shardTargetBytes?: number;
@@ -92,7 +96,7 @@ const buildLlmsFullShards = Effect.fn("llms.buildLlmsFullShards")(function* (
           shardTargetBytes,
         });
       }),
-    { concurrency: LLMS_FULL_CONCURRENCY }
+    { concurrency: LLMS_FULL_ROUTE_CONCURRENCY }
   );
 
   return shardSets.flatMap((shard) => (shard ? [shard] : []));
@@ -129,7 +133,7 @@ function getLocaleDocuments({
     entries,
     (entry) => getEntryDocument({ entry, locale }),
     {
-      concurrency: LLMS_FULL_CONCURRENCY,
+      concurrency: LLMS_FULL_ENTRY_CONCURRENCY,
     }
   ).pipe(
     Effect.map((documents) =>

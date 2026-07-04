@@ -159,7 +159,7 @@ function SchoolClassesResizableWorkspaceShell({
 
   return (
     <ResizablePanelGroup
-      className="min-w-0"
+      className="!overflow-visible min-w-0"
       defaultLayout={defaultLayout}
       id={SCHOOL_CLASSES_WORKSPACE_PANEL_GROUP_ID}
       onLayoutChanged={onLayoutChanged}

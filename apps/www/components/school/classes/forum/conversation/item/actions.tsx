@@ -1,5 +1,6 @@
 import { ArrowTurnBackwardIcon, WinkIcon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
+import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
@@ -22,16 +23,20 @@ import {
 } from "@repo/design-system/components/ui/tooltip";
 import { cn } from "@repo/design-system/lib/utils";
 import { useMutation } from "convex/react";
+import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { useForumSession } from "@/components/school/classes/forum/context/use-session";
-import type { ForumPost } from "@/components/school/classes/forum/conversation/data/entities";
+import {
+  type ForumPost,
+  isOptimisticForumPost,
+} from "@/components/school/classes/forum/conversation/data/entities";
 
 /**
  * Keeps post-level quick actions grouped together so reply and reaction updates
  * stay close to the post they mutate.
  */
-export const PostItemActions = ({ post }: { post: ForumPost }) => {
+export function PostItemActions({ post }: { post: ForumPost }) {
   const t = useTranslations("Common");
   const setForumReplyTarget = useForumSession(
     (state) => state.setForumReplyTarget
@@ -42,6 +47,10 @@ export const PostItemActions = ({ post }: { post: ForumPost }) => {
     api.classes.forums.mutations.reactions.togglePostReaction
   );
   const userName = post.user?.name ?? t("anonymous");
+
+  if (isOptimisticForumPost(post)) {
+    return null;
+  }
 
   return (
     <ButtonGroup
@@ -80,9 +89,23 @@ export const PostItemActions = ({ post }: { post: ForumPost }) => {
           <EmojiPicker
             className="h-80"
             onEmojiSelect={({ emoji }) => {
-              startTransition(async () => {
-                await toggleReaction({ postId: post._id, emoji });
-              });
+              startTransition(() =>
+                Effect.runPromise(
+                  Effect.tryPromise({
+                    try: () => toggleReaction({ postId: post._id, emoji }),
+                    catch: (cause) => cause,
+                  }).pipe(
+                    Effect.asVoid,
+                    Effect.catchAll((cause) =>
+                      Effect.sync(() => {
+                        captureException(cause, {
+                          source: "post-reaction-picker",
+                        });
+                      })
+                    )
+                  )
+                )
+              );
               reactionPicker.close();
             }}
           >
@@ -114,5 +137,4 @@ export const PostItemActions = ({ post }: { post: ForumPost }) => {
       </Tooltip>
     </ButtonGroup>
   );
-};
-PostItemActions.displayName = "PostItemActions";
+}

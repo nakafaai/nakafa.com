@@ -94,10 +94,13 @@ describe("llms indexes", () => {
 
     expect(text.startsWith("# Nakafa\n\n> ")).toBe(true);
     expect(text).toContain("https://nakafa.com/llms/en/llms.txt");
+    expect(text).toContain("https://nakafa.com/llms/en/articles/llms.txt");
     expect(text).toContain("https://nakafa.com/llms/en/pages/llms.txt");
     expect(text).toContain("https://nakafa.com/llms/id/llms.txt");
+    expect(text).toContain("https://nakafa.com/llms/id/site/llms.txt");
     expect(text).toContain("https://nakafa.com/llms/id/pages/llms.txt");
     expect(text).toContain("https://nakafa.com/mcp");
+    expect(text).toContain("https://nakafa.com/skill.md");
     expect(text).toContain("https://nakafa.com/llms-full.txt");
     expect(text).toContain("https://nakafa.com/llms-full/index.json");
   });
@@ -106,6 +109,8 @@ describe("llms indexes", () => {
     const text = await Effect.runPromise(getLlmsSectionIndexText("llms/en"));
 
     expect(text).toContain("# Nakafa English Content");
+    expect(text).toContain("## Catalog");
+    expect(text).toContain("https://nakafa.com/llms/en/pages/llms.txt");
     expect(text).toContain("## Sections");
     expect(text).toContain("## Starter Pages");
     expect(text).toContain(

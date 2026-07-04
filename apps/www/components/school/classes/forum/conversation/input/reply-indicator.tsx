@@ -10,7 +10,7 @@ import { useForumSession } from "@/components/school/classes/forum/context/use-s
 import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
 
 /** Renders the active reply target bar above the forum input. */
-export const ReplyIndicator = () => {
+export function ReplyIndicator() {
   const t = useTranslations("Common");
   const forumId = useData((state) => state.forumId);
   const replyTarget = useForumSession(
@@ -50,5 +50,4 @@ export const ReplyIndicator = () => {
       </Button>
     </div>
   );
-};
-ReplyIndicator.displayName = "ReplyIndicator";
+}

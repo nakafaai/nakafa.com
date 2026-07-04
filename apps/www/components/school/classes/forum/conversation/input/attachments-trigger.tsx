@@ -11,12 +11,12 @@ import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 
 /** Renders the attachment trigger menu while keeping input actions compact. */
-export const InputAttachments = ({
+export function InputAttachments({
   onOpenFiles,
   ...props
 }: ComponentProps<typeof InputGroupButton> & {
   onOpenFiles: () => void;
-}) => {
+}) {
   const t = useTranslations("School.Classes");
 
   return (
@@ -43,5 +43,4 @@ export const InputAttachments = ({
       </DropdownMenuContent>
     </DropdownMenu>
   );
-};
-InputAttachments.displayName = "InputAttachments";
+}

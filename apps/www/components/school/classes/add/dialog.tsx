@@ -4,6 +4,7 @@ import { Add01Icon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import { FieldGroup } from "@repo/design-system/components/ui/field";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import {
@@ -81,6 +82,11 @@ export function CreateSchoolClassDialog({
       action={() => form.handleSubmit()}
       id="school-classes-header-add-form"
     >
+      <Button onClick={() => setOpenAction(true)} type="button">
+        <HugeIcons icon={Add01Icon} />
+        <span className="hidden sm:inline">{t("create-class")}</span>
+      </Button>
+
       <ResponsiveDialog
         description={t("create-class-description")}
         footer={

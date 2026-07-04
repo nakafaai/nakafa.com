@@ -1,3 +1,4 @@
+import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -6,19 +7,23 @@ import {
   HoverCardTrigger,
 } from "@repo/design-system/components/ui/hover-card";
 import { useMutation } from "convex/react";
+import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
-import type { ForumPost } from "@/components/school/classes/forum/conversation/data/entities";
+import {
+  type ForumPost,
+  isOptimisticForumPost,
+} from "@/components/school/classes/forum/conversation/data/entities";
 
 /** Renders the current reaction chips and toggles for one post. */
-export const PostReactions = ({ post }: { post: ForumPost }) => {
+export function PostReactions({ post }: { post: ForumPost }) {
   const t = useTranslations("Common");
   const [isPending, startTransition] = useTransition();
   const toggleReaction = useMutation(
     api.classes.forums.mutations.reactions.togglePostReaction
   );
 
-  if (post.reactionUsers.length === 0) {
+  if (isOptimisticForumPost(post) || post.reactionUsers.length === 0) {
     return null;
   }
 
@@ -35,9 +40,24 @@ export const PostReactions = ({ post }: { post: ForumPost }) => {
                 <Button
                   disabled={isPending}
                   onClick={() => {
-                    startTransition(async () => {
-                      await toggleReaction({ postId: post._id, emoji });
-                    });
+                    startTransition(() =>
+                      Effect.runPromise(
+                        Effect.tryPromise({
+                          try: () =>
+                            toggleReaction({ postId: post._id, emoji }),
+                          catch: (cause) => cause,
+                        }).pipe(
+                          Effect.asVoid,
+                          Effect.catchAll((cause) =>
+                            Effect.sync(() => {
+                              captureException(cause, {
+                                source: "post-reaction-toggle",
+                              });
+                            })
+                          )
+                        )
+                      )
+                    );
                   }}
                   size="sm"
                   variant={
@@ -71,5 +91,4 @@ export const PostReactions = ({ post }: { post: ForumPost }) => {
       })}
     </div>
   );
-};
-PostReactions.displayName = "PostReactions";
+}

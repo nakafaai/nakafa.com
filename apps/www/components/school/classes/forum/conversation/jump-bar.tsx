@@ -4,20 +4,20 @@ import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
+import type { ViewportJumpControl } from "@/components/school/classes/forum/conversation/viewport/model";
 
 /** Renders the contextual jump actions for back and latest. */
-export const JumpBar = ({
-  canGoBack,
+export function JumpBar({
+  control,
   onBack,
   onLatest,
-  visible,
 }: {
-  canGoBack: boolean;
+  control: ViewportJumpControl;
   onBack: () => void;
   onLatest: () => void;
-  visible: boolean;
-}) => {
+}) {
   const t = useTranslations("Common");
+  const visible = control.showBack || control.showLatest;
 
   return (
     <div
@@ -33,23 +33,23 @@ export const JumpBar = ({
         )}
       >
         <ButtonGroup>
-          {canGoBack ? (
-            <Button disabled={!visible} onClick={onBack} variant="outline">
+          {control.showBack ? (
+            <Button onClick={onBack} variant="outline">
               {t("back")}
             </Button>
           ) : null}
-          <Button
-            aria-label={t("back-to-latest")}
-            disabled={!visible}
-            onClick={onLatest}
-            size="icon"
-            variant="outline"
-          >
-            <HugeIcons icon={ArrowDown02Icon} />
-          </Button>
+          {control.showLatest ? (
+            <Button
+              aria-label={t("back-to-latest")}
+              onClick={onLatest}
+              size="icon"
+              variant="outline"
+            >
+              <HugeIcons icon={ArrowDown02Icon} />
+            </Button>
+          ) : null}
         </ButtonGroup>
       </div>
     </div>
   );
-};
-JumpBar.displayName = "JumpBar";
+}

@@ -25,25 +25,29 @@ export function SchoolClassesForumPanel({
 }) {
   return (
     <Suspense fallback={null}>
-      <SchoolClassesForumPanelContentWithSearchParams forumId={forumId} />
+      <SchoolClassesForumPanelFrame forumId={forumId} />
     </Suspense>
   );
 }
 
-function SchoolClassesForumPanelContentWithSearchParams({
+/** Resolve live route state and render the loaded forum panel frame. */
+function SchoolClassesForumPanelFrame({
   forumId,
 }: {
   forumId: Id<"schoolClassForums">;
 }) {
   const t = useTranslations("School.Classes");
   const router = useRouter();
+  const { id: classRouteId, slug } = useParams<{
+    id: string;
+    slug: string;
+  }>();
   const searchParams = useSearchParams();
-  const { id, slug } = useParams<{ id: string; slug: string }>();
   const forum = useQuery(api.classes.forums.queries.forums.getForum, {
     forumId,
   });
   const closeHref = getSchoolClassesForumHref({
-    classRouteId: id,
+    classRouteId,
     queryString: searchParams.toString(),
     slug,
   });
