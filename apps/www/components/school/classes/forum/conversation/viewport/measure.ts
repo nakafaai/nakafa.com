@@ -1,5 +1,7 @@
 import { Effect, Ref, SubscriptionRef } from "effect";
 import { CONVERSATION_EDGE_TOLERANCE } from "@/components/school/classes/forum/conversation/data/scroll/metrics";
+import type { ActiveTranscriptModel } from "@/components/school/classes/forum/conversation/data/transcript/active";
+import type { ConversationView } from "@/components/school/classes/forum/conversation/data/view/model";
 import { areConversationViewsEqual } from "@/components/school/classes/forum/conversation/data/view/model";
 import { startViewportHighlight } from "@/components/school/classes/forum/conversation/viewport/highlight";
 import {
@@ -7,6 +9,7 @@ import {
   isViewportDetachedScroll,
   type ViewportEvent,
   type ViewportMeasurement,
+  type ViewportPlacement,
 } from "@/components/school/classes/forum/conversation/viewport/model";
 import { scheduleViewportSnapshotPersist } from "@/components/school/classes/forum/conversation/viewport/persist";
 import { hasReachedViewportPlacement } from "@/components/school/classes/forum/conversation/viewport/placement";
@@ -27,6 +30,7 @@ export function handleViewportMeasurement(
   return Effect.gen(function* () {
     const previousMeasurement = yield* Ref.get(runtime.lastMeasurementRef);
     yield* Ref.set(runtime.lastMeasurementRef, measurement);
+    const activeTranscript = yield* Ref.get(runtime.activeTranscriptRef);
     const currentState = yield* SubscriptionRef.get(runtime.stateRef);
     const pendingPlacement = currentState.pendingPlacement;
     const hasUserDetachedFromLatest =
@@ -58,20 +62,39 @@ export function handleViewportMeasurement(
       pendingPlacement?.view.kind === "bottom" &&
       reachedPendingPlacement &&
       measurement.isAtLatest;
-    const didManualScrollLeaveBackTarget =
-      currentState.backStack.length > 0 &&
+    const didScrollMeasurementMove =
       source === "scroll" &&
-      pendingPlacement === null &&
-      !measurement.isAtLatest &&
+      previousMeasurement !== null &&
       hasViewportMeasurementMoved({
         measurement,
         previousMeasurement,
       });
+    const didManualScrollInterruptPlacement =
+      didScrollMeasurementMove &&
+      pendingPlacement !== null &&
+      !reachedPendingPlacement &&
+      hasScrollMeasurementInterruptedPlacement({
+        activeTranscript,
+        hasUserDetachedFromLatest,
+        measurement,
+        pendingPlacement,
+        previousMeasurement,
+      });
+    const didManualScrollLeaveBackTarget =
+      currentState.backStack.length > 0 &&
+      pendingPlacement === null &&
+      !measurement.isAtLatest &&
+      didScrollMeasurementMove;
+    const shouldCancelPendingPlacement =
+      hasUserDetachedFromLatest ||
+      didManualScrollInterruptPlacement ||
+      reachedPendingPlacement;
     const shouldClearBackStack =
       currentState.backStack.length > 0 &&
       ((measurement.isAtLatest &&
         (pendingPlacement === null || reachedLatestPlacement)) ||
-        didManualScrollLeaveBackTarget);
+        didManualScrollLeaveBackTarget ||
+        didManualScrollInterruptPlacement);
 
     yield* updateViewportState(runtime, (state) => ({
       ...state,
@@ -79,14 +102,10 @@ export function handleViewportMeasurement(
       hasOverflow: measurement.hasOverflow,
       isAtLatest: measurement.isAtLatest,
       latestAffinity,
-      lifecycle:
-        hasUserDetachedFromLatest || reachedPendingPlacement
-          ? "ready"
-          : state.lifecycle,
-      pendingPlacement:
-        hasUserDetachedFromLatest || reachedPendingPlacement
-          ? null
-          : state.pendingPlacement,
+      lifecycle: shouldCancelPendingPlacement ? "ready" : state.lifecycle,
+      pendingPlacement: shouldCancelPendingPlacement
+        ? null
+        : state.pendingPlacement,
     }));
 
     if (shouldRetryPendingPlacement && pendingPlacement) {
@@ -111,6 +130,59 @@ export function handleViewportMeasurement(
     );
     yield* scheduleViewportSnapshotPersist(runtime);
   });
+}
+
+/** Returns whether one manual measurement should cancel the pending Placement. */
+function hasScrollMeasurementInterruptedPlacement({
+  activeTranscript,
+  hasUserDetachedFromLatest,
+  measurement,
+  pendingPlacement,
+  previousMeasurement,
+}: {
+  activeTranscript: ActiveTranscriptModel | null;
+  hasUserDetachedFromLatest: boolean;
+  measurement: ViewportMeasurement;
+  pendingPlacement: ViewportPlacement;
+  previousMeasurement: ViewportMeasurement;
+}) {
+  if (pendingPlacement.view.kind === "bottom") {
+    return hasUserDetachedFromLatest;
+  }
+
+  const targetIndex = getViewportViewRowIndex(
+    activeTranscript,
+    pendingPlacement.view
+  );
+  const previousIndex = getViewportViewRowIndex(
+    activeTranscript,
+    previousMeasurement.view
+  );
+  const nextIndex = getViewportViewRowIndex(activeTranscript, measurement.view);
+
+  if (targetIndex === null || previousIndex === null || nextIndex === null) {
+    return false;
+  }
+
+  return (
+    Math.abs(nextIndex - targetIndex) > Math.abs(previousIndex - targetIndex)
+  );
+}
+
+/** Maps one semantic Viewport view to its Transcript row index when possible. */
+function getViewportViewRowIndex(
+  activeTranscript: ActiveTranscriptModel | null,
+  view: ConversationView | null
+) {
+  if (!(activeTranscript && view)) {
+    return null;
+  }
+
+  if (view.kind === "bottom") {
+    return Math.max(0, activeTranscript.rows.length - 1);
+  }
+
+  return activeTranscript.rowIndexByPostId.get(view.postId) ?? null;
 }
 
 /** Cancels semantic jump state when direct user input takes over scrolling. */
@@ -145,12 +217,8 @@ function hasViewportMeasurementMoved({
   previousMeasurement,
 }: {
   measurement: ViewportMeasurement;
-  previousMeasurement: ViewportMeasurement | null;
+  previousMeasurement: ViewportMeasurement;
 }) {
-  if (!previousMeasurement) {
-    return false;
-  }
-
   if (!areConversationViewsEqual(previousMeasurement.view, measurement.view)) {
     return true;
   }
