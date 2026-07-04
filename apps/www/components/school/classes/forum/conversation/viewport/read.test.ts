@@ -125,6 +125,34 @@ describe("conversation/viewport/read", () => {
     await shutdownViewport(viewport);
   });
 
+  it("keeps flush-time read sync alive after viewport shutdown", async () => {
+    const rig = createAdapters();
+    const flushRead = await Effect.runPromise(Deferred.make<void>());
+    const viewport = await createViewport({
+      ...rig.adapters,
+      read: {
+        markPostRead: (postId) => {
+          if (postId !== firstPost._id) {
+            return rig.adapters.read.markPostRead(postId);
+          }
+
+          return Deferred.await(flushRead).pipe(
+            Effect.zipRight(rig.adapters.read.markPostRead(postId))
+          );
+        },
+      },
+    });
+
+    await openReadyViewport(viewport);
+    rig.setMeasurement(makePostMeasurement(firstPost._id));
+    await Effect.runPromise(viewport.flushSnapshot);
+    await shutdownViewport(viewport);
+    await Effect.runPromise(Deferred.succeed(flushRead, undefined));
+    await waitForState(viewport, () => rig.readPostIds.includes(firstPost._id));
+
+    expect(rig.readPostIds).toContain(firstPost._id);
+  });
+
   it("keeps a newer in-flight read marker when an older sync fails", async () => {
     const rig = createAdapters();
     const firstRead = await Effect.runPromise(

@@ -48,7 +48,8 @@ export function flushCurrentSnapshot(runtime: ViewportRuntime) {
     const measurement = yield* Ref.get(runtime.lastMeasurementRef);
     yield* markLastVisibleViewportPostRead(
       runtime,
-      measurement?.lastVisiblePostId ?? null
+      measurement?.lastVisiblePostId ?? null,
+      { lifetime: "detached" }
     );
     yield* persistCurrentSnapshot(runtime, { previousMeasurement });
   });
