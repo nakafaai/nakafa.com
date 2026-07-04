@@ -146,8 +146,8 @@ export function ForumPostInput() {
           { discard: true }
         );
 
-      /** Clears the composer and keeps the transcript pinned to the latest post. */
-      const completeSubmit = () =>
+      /** Clears the composer while the optimistic row covers local feedback. */
+      const clearSubmittedDraft = () =>
         Effect.sync(() => {
           form.reset();
           clearFiles();
@@ -156,9 +156,19 @@ export function ForumPostInput() {
 
           requestAnimationFrame(() => {
             textareaRef.current?.focus();
+          });
+        });
+      /** Moves to latest only after Convex confirms the submitted post. */
+      const placeConfirmedPost = () =>
+        Effect.sync(() => {
+          requestAnimationFrame(() => {
+            textareaRef.current?.focus();
             goToLatest();
           });
         });
+      /** Clears the composer and keeps confirmed attachment posts visible. */
+      const completeSubmit = () =>
+        clearSubmittedDraft().pipe(Effect.zipRight(placeConfirmedPost()));
 
       const submitPost = submitForumPost({
         files,
@@ -176,13 +186,13 @@ export function ForumPostInput() {
       });
 
       if (isTextOnlyPost) {
-        Effect.runSync(completeSubmit());
+        Effect.runSync(clearSubmittedDraft());
 
         return Effect.runPromise(
           submitPost.pipe(
             Effect.matchEffect({
               onFailure: (error) => reportSubmitFailure({ draft, error }),
-              onSuccess: () => Effect.void,
+              onSuccess: placeConfirmedPost,
             })
           )
         );

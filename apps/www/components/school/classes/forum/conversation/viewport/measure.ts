@@ -1,4 +1,6 @@
 import { Effect, Ref, SubscriptionRef } from "effect";
+import { CONVERSATION_EDGE_TOLERANCE } from "@/components/school/classes/forum/conversation/data/scroll/metrics";
+import { areConversationViewsEqual } from "@/components/school/classes/forum/conversation/data/view/model";
 import { startViewportHighlight } from "@/components/school/classes/forum/conversation/viewport/highlight";
 import {
   getViewportLatestAffinity,
@@ -55,10 +57,20 @@ export function handleViewportMeasurement(
       pendingPlacement?.view.kind === "bottom" &&
       reachedPendingPlacement &&
       measurement.isAtLatest;
+    const didManualScrollLeaveBackTarget =
+      currentState.backStack.length > 0 &&
+      source === "scroll" &&
+      pendingPlacement === null &&
+      !measurement.isAtLatest &&
+      hasViewportMeasurementMoved({
+        measurement,
+        previousMeasurement,
+      });
     const shouldClearBackStack =
       currentState.backStack.length > 0 &&
-      measurement.isAtLatest &&
-      (pendingPlacement === null || reachedLatestPlacement);
+      ((measurement.isAtLatest &&
+        (pendingPlacement === null || reachedLatestPlacement)) ||
+        didManualScrollLeaveBackTarget);
 
     yield* updateViewportState(runtime, (state) => ({
       ...state,
@@ -114,4 +126,26 @@ export function handleViewportUserScroll(runtime: ViewportRuntime) {
       pendingPlacement: null,
     };
   });
+}
+
+/** Returns whether a scroll measurement moved away from the previous semantic view. */
+function hasViewportMeasurementMoved({
+  measurement,
+  previousMeasurement,
+}: {
+  measurement: ViewportMeasurement;
+  previousMeasurement: ViewportMeasurement | null;
+}) {
+  if (!previousMeasurement) {
+    return false;
+  }
+
+  if (!areConversationViewsEqual(previousMeasurement.view, measurement.view)) {
+    return true;
+  }
+
+  return (
+    Math.abs(measurement.offset - previousMeasurement.offset) >
+    CONVERSATION_EDGE_TOLERANCE
+  );
 }

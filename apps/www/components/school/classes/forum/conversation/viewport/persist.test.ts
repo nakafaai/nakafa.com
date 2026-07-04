@@ -375,6 +375,62 @@ describe("conversation/viewport/persist", () => {
     ]);
   });
 
+  it("supports synchronous pagehide flush while debounce work is pending", () => {
+    const rig = createAdapters();
+    const latestMeasurement = makeMeasurement({ offset: 420 });
+
+    Effect.runSync(
+      Effect.gen(function* () {
+        const scope = yield* Scope.make();
+        const pendingFiber = yield* Effect.forkIn(
+          Effect.never.pipe(Effect.asVoid),
+          scope
+        );
+        const runtime = {
+          activeTranscriptRef: yield* Ref.make<ActiveTranscript>(
+            viewportTestTranscript
+          ),
+          adapters: rig.adapters,
+          eventQueue: yield* Queue.bounded<ViewportEvent>(1),
+          highlightFiberRef: yield* Ref.make<RuntimeFiber | null>(null),
+          highlightTokenRef: yield* Ref.make(0),
+          lastMeasurementRef: yield* Ref.make<ViewportMeasurement | null>(
+            latestMeasurement
+          ),
+          lastReadPostIdRef: yield* Ref.make<ForumPostId | null>(null),
+          persistFiberRef: yield* Ref.make<RuntimeFiber | null>(pendingFiber),
+          scope,
+          stateRef: yield* SubscriptionRef.make(
+            deriveViewportState({
+              backStack: [],
+              hasOverflow: true,
+              highlightedPostId: null,
+              isAtLatest: true,
+              latestAffinity: "latest",
+              lifecycle: "ready",
+              pendingPlacement: null,
+            })
+          ),
+        } satisfies ViewportRuntime;
+
+        yield* flushCurrentSnapshot(runtime);
+
+        expect(yield* Ref.get(runtime.persistFiberRef)).toBeNull();
+        yield* Scope.close(scope, Exit.succeed(undefined));
+      })
+    );
+
+    expect(rig.snapshots).toEqual([
+      {
+        lastPostId: secondPost._id,
+        offset: 420,
+        renderedRowCount: rows.length,
+        view: { kind: "bottom" },
+        wasAtBottom: true,
+      },
+    ]);
+  });
+
   it("keeps viewport state alive when snapshot persistence fails", async () => {
     const rig = createAdapters();
     const viewport = await createViewport({

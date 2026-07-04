@@ -190,7 +190,7 @@ export function ConversationViewportProvider({
         return;
       }
 
-      Effect.runFork(viewport.flushSnapshot);
+      Effect.runSync(viewport.flushSnapshot);
     };
     /** Flushes the viewport snapshot when the document moves to the background. */
     const handleVisibilityChange = () => {
