@@ -72,6 +72,51 @@ describe("learningPreferences", () => {
     ).resolves.toMatchObject(saved);
   });
 
+  it("reads an existing school curriculum profile before a preference row exists", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const identity = await t.mutation((ctx) =>
+      seedAuthenticatedUser(ctx, { now: NOW })
+    );
+
+    await syncPrograms(t);
+    await t.mutation(async (ctx) => {
+      const program = await ctx.db
+        .query("learningPrograms")
+        .withIndex("by_key", (q) => q.eq("key", "merdeka"))
+        .unique();
+
+      expect(program).not.toBeNull();
+
+      if (!program) {
+        return;
+      }
+
+      await ctx.db.insert("learningProfiles", {
+        interests: ["school-curriculum"],
+        programId: program._id,
+        updatedAt: NOW,
+        userId: identity.userId,
+      });
+    });
+
+    await expect(
+      t
+        .withIdentity({
+          sessionId: identity.sessionId,
+          subject: identity.authUserId,
+        })
+        .query(api.learningPreferences.queries.getCurrent, { locale: "id" })
+    ).resolves.toMatchObject({
+      preferredCurriculumProgramKey: "merdeka",
+      program: {
+        countryCode: "ID",
+        key: "merdeka",
+        publicSlug: "merdeka",
+        title: "Kurikulum Merdeka",
+      },
+    });
+  });
+
   it("rejects non-curriculum program keys", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation((ctx) =>

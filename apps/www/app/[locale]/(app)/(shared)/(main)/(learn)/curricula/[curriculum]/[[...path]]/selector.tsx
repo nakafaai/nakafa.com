@@ -11,7 +11,7 @@ import {
 } from "@repo/design-system/components/ui/select";
 import { normalizeLocalizedInternalHref } from "@repo/internationalization/src/href";
 import { useRouter } from "@repo/internationalization/src/navigation";
-import { useMutation } from "convex/react";
+import { useConvexAuth, useMutation } from "convex/react";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
@@ -19,7 +19,6 @@ import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { CountryFlagIcon } from "@/components/shared/country-flag";
 import { reportClientException } from "@/lib/analytics/client";
-import { useUser } from "@/lib/context/use-user";
 
 export type CurriculumSelectorOption = Readonly<{
   countryCode?: string;
@@ -61,7 +60,7 @@ export function CurriculumSelector({
   const locale = useLocale();
   const router = useRouter();
   const t = useTranslations("LearningPrograms");
-  const user = useUser((state) => state.user);
+  const { isAuthenticated, isLoading } = useConvexAuth();
   const setPreferredCurriculum = useMutation(
     api.learningPreferences.mutations.setPreferredCurriculum
   );
@@ -82,9 +81,13 @@ export function CurriculumSelector({
       return;
     }
 
+    if (isLoading) {
+      return;
+    }
+
     router.push(normalizeLocalizedInternalHref(selectedOption.href));
 
-    if (!user) {
+    if (!isAuthenticated) {
       return;
     }
 
@@ -107,6 +110,7 @@ export function CurriculumSelector({
       <SelectTrigger
         aria-label={label}
         className="w-full min-w-0 sm:w-auto sm:max-w-[min(32rem,calc(100vw-2rem))]"
+        disabled={isLoading}
       >
         <span
           className="flex min-w-0 items-center gap-2"

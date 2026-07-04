@@ -68,6 +68,48 @@ export async function getSchoolCurriculumProgramByKey(
   return program;
 }
 
+/** Reads the current curriculum from explicit preference, then onboarding profile. */
+export async function getCurrentCurriculumProgram(
+  ctx: PreferenceCtx,
+  userId: Id<"users">
+) {
+  const preference = await getLearningPreferenceByUserId(ctx, userId);
+
+  if (preference) {
+    const program = await getSchoolCurriculumProgramByKey(
+      ctx,
+      preference.preferredCurriculumProgramKey
+    );
+
+    if (program) {
+      return {
+        preferredCurriculumProgramKey: preference.preferredCurriculumProgramKey,
+        program,
+      };
+    }
+  }
+
+  const profile = await ctx.db
+    .query("learningProfiles")
+    .withIndex("by_userId", (q) => q.eq("userId", userId))
+    .unique();
+
+  if (!profile) {
+    return null;
+  }
+
+  const program = await ctx.db.get(profile.programId);
+
+  if (!(program && isSchoolCurriculumProgram(program))) {
+    return null;
+  }
+
+  return {
+    preferredCurriculumProgramKey: program.key,
+    program,
+  };
+}
+
 /** Creates or updates the current user's preferred curriculum program key. */
 export async function upsertPreferredCurriculumProgram({
   ctx,

@@ -1,7 +1,6 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import {
-  getLearningPreferenceByUserId,
-  getSchoolCurriculumProgramByKey,
+  getCurrentCurriculumProgram,
   listSchoolCurriculumPrograms,
   toCurriculumProgramOption,
 } from "@repo/backend/convex/learningPreferences/impl";
@@ -41,27 +40,15 @@ export const getCurrent = query({
       return null;
     }
 
-    const preference = await getLearningPreferenceByUserId(
-      ctx,
-      user.appUser._id
-    );
+    const preference = await getCurrentCurriculumProgram(ctx, user.appUser._id);
 
     if (!preference) {
       return null;
     }
 
-    const program = await getSchoolCurriculumProgramByKey(
-      ctx,
-      preference.preferredCurriculumProgramKey
-    );
-
-    if (!program) {
-      return null;
-    }
-
     return {
       preferredCurriculumProgramKey: preference.preferredCurriculumProgramKey,
-      program: toCurriculumProgramOption(program, args.locale),
+      program: toCurriculumProgramOption(preference.program, args.locale),
     };
   },
 });
