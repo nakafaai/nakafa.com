@@ -8,6 +8,7 @@ import {
   type ViewportMeasurement,
   type ViewportState,
 } from "@/components/school/classes/forum/conversation/viewport/model";
+import { markLastVisibleViewportPostRead } from "@/components/school/classes/forum/conversation/viewport/read";
 import {
   PERSIST_DELAY_MS,
   type ViewportRuntime,
@@ -44,6 +45,11 @@ export function flushCurrentSnapshot(runtime: ViewportRuntime) {
     }
 
     const previousMeasurement = yield* captureLiveMeasurement(runtime);
+    const measurement = yield* Ref.get(runtime.lastMeasurementRef);
+    yield* markLastVisibleViewportPostRead(
+      runtime,
+      measurement?.lastVisiblePostId ?? null
+    );
     yield* persistCurrentSnapshot(runtime, { previousMeasurement });
   });
 }

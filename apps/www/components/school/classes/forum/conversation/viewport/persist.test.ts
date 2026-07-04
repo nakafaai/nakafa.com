@@ -183,6 +183,19 @@ describe("conversation/viewport/persist", () => {
     ]);
   });
 
+  it("marks the live last-visible post read during synchronous flush", async () => {
+    const rig = createAdapters();
+    const viewport = await createViewport(rig.adapters);
+
+    await openReadyViewport(viewport);
+    rig.setMeasurement(makePostMeasurement(firstPost._id));
+    await Effect.runPromise(viewport.flushSnapshot);
+    await waitForState(viewport, () => rig.readPostIds.length === 2);
+
+    expect(rig.readPostIds).toEqual([secondPost._id, firstPost._id]);
+    await shutdownViewport(viewport);
+  });
+
   it("skips unchanged pending post placements during snapshot persistence", async () => {
     const rig = createAdapters();
     const viewport = await createViewport(rig.adapters);
