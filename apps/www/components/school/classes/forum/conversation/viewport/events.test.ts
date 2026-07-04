@@ -12,7 +12,10 @@ describe("conversation/viewport/events", () => {
     const rig = createAdapters();
     const viewport = await createViewport(rig.adapters);
 
-    await dispatchViewport(viewport, { type: "user-scroll" });
+    await dispatchViewport(viewport, {
+      awayFromLatest: false,
+      type: "user-scroll",
+    });
     await dispatchViewport(viewport, { type: "latest" });
     await waitForState(
       viewport,
@@ -35,7 +38,10 @@ describe("conversation/viewport/events", () => {
 
     expect(rig.placements.at(-1)).toMatchObject({ view: { kind: "bottom" } });
     await dispatchViewport(viewport, { type: "unknown" } as never);
-    await dispatchViewport(viewport, { type: "user-scroll" });
+    await dispatchViewport(viewport, {
+      awayFromLatest: false,
+      type: "user-scroll",
+    });
     await waitForState(viewport, () => true);
     await shutdownViewport(viewport);
   });

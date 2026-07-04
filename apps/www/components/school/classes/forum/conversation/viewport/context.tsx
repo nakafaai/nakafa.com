@@ -53,7 +53,7 @@ interface ViewportActions {
   /** Captures a settled layout measurement after scrolling ends. */
   handleScrollEnd: () => void;
   /** Cancels semantic jump state when the user starts scrolling directly. */
-  handleUserScrollIntent: () => void;
+  handleUserScrollIntent: (intent: { awayFromLatest: boolean }) => void;
   /** Registers the mounted virtualizer handle used by the viewport service. */
   setVirtualizerHandle: (handle: VirtualizerHandle | null) => void;
 }
@@ -229,8 +229,11 @@ export function ConversationViewportProvider({
     goToPost: (postId) => {
       dispatchViewportEvent(viewportRef, { postId, type: "post" });
     },
-    handleUserScrollIntent: () => {
-      dispatchViewportEvent(viewportRef, { type: "user-scroll" });
+    handleUserScrollIntent: (intent) => {
+      dispatchViewportEvent(viewportRef, {
+        awayFromLatest: intent.awayFromLatest,
+        type: "user-scroll",
+      });
     },
     handleScroll: () => {
       measureViewport(scrollerRef, viewportRef, "scroll");

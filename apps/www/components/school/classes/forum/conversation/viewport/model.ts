@@ -51,7 +51,7 @@ export type ViewportEvent =
   | { token: number; type: "highlight-expired" }
   | { type: "latest" }
   | { type: "persist" }
-  | { type: "user-scroll" };
+  | { awayFromLatest: boolean; type: "user-scroll" };
 
 export interface ViewportState {
   backStack: ConversationView[];

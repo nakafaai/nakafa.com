@@ -56,7 +56,7 @@ function handleViewportEvent(runtime: ViewportRuntime, event: ViewportEvent) {
     case "transcript":
       return handleViewportTranscript(runtime, event);
     case "user-scroll":
-      return handleViewportUserScroll(runtime);
+      return handleViewportUserScroll(runtime, event);
     default:
       return Effect.void;
   }

@@ -140,7 +140,10 @@ describe("conversation/viewport/navigate/back", () => {
       showLatest: true,
     });
 
-    await dispatchViewport(viewport, { type: "user-scroll" });
+    await dispatchViewport(viewport, {
+      awayFromLatest: false,
+      type: "user-scroll",
+    });
     const state = await waitForState(
       viewport,
       (nextState) => nextState.backStack.length === 0

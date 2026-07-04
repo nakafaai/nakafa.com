@@ -5,6 +5,7 @@ import { startViewportHighlight } from "@/components/school/classes/forum/conver
 import {
   getViewportLatestAffinity,
   isViewportDetachedScroll,
+  type ViewportEvent,
   type ViewportMeasurement,
 } from "@/components/school/classes/forum/conversation/viewport/model";
 import { scheduleViewportSnapshotPersist } from "@/components/school/classes/forum/conversation/viewport/persist";
@@ -113,15 +114,25 @@ export function handleViewportMeasurement(
 }
 
 /** Cancels semantic jump state when direct user input takes over scrolling. */
-export function handleViewportUserScroll(runtime: ViewportRuntime) {
+export function handleViewportUserScroll(
+  runtime: ViewportRuntime,
+  event: Extract<ViewportEvent, { type: "user-scroll" }>
+) {
   return updateViewportState(runtime, (state) => {
-    if (state.backStack.length === 0 && state.pendingPlacement === null) {
+    const latestAffinity = event.awayFromLatest
+      ? "detached"
+      : state.latestAffinity;
+    const hasNoJumpState =
+      state.backStack.length === 0 && state.pendingPlacement === null;
+
+    if (hasNoJumpState && latestAffinity === state.latestAffinity) {
       return state;
     }
 
     return {
       ...state,
       backStack: [],
+      latestAffinity,
       lifecycle: "ready",
       pendingPlacement: null,
     };

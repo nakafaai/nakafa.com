@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { Virtualizer } from "virtua";
 import type { Forum } from "@/components/school/classes/forum/conversation/data/entities";
 import type { ActiveTranscriptModel } from "@/components/school/classes/forum/conversation/data/transcript/active";
@@ -39,13 +40,36 @@ export function ForumConversationTranscript({
   } = useControls();
   const highlightedPostId = useViewport((state) => state.highlightedPostId);
   const jumpControl = useViewport((state) => state.jumpControl);
+  const touchYRef = useRef<number | null>(null);
 
   return (
     <>
       <div
         className="absolute inset-0 flex flex-col overflow-y-auto overscroll-contain"
-        onTouchMove={handleUserScrollIntent}
-        onWheel={handleUserScrollIntent}
+        onTouchCancel={() => {
+          touchYRef.current = null;
+        }}
+        onTouchEnd={() => {
+          touchYRef.current = null;
+        }}
+        onTouchMove={(event) => {
+          const touchY = event.touches.item(0)?.clientY ?? null;
+          const previousTouchY = touchYRef.current;
+          touchYRef.current = touchY;
+
+          if (previousTouchY === null || touchY === null) {
+            handleUserScrollIntent({ awayFromLatest: false });
+            return;
+          }
+
+          handleUserScrollIntent({ awayFromLatest: touchY > previousTouchY });
+        }}
+        onTouchStart={(event) => {
+          touchYRef.current = event.touches.item(0)?.clientY ?? null;
+        }}
+        onWheel={(event) => {
+          handleUserScrollIntent({ awayFromLatest: event.deltaY < 0 });
+        }}
         style={{ overflowAnchor: "none" }}
       >
         <Virtualizer

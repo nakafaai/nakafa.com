@@ -14,6 +14,7 @@ import {
   makePostMeasurement,
   openReadyViewport,
   shutdownViewport,
+  viewportTestTranscript,
   waitForState,
 } from "@/components/school/classes/forum/conversation/viewport/fixture";
 import { handleViewportMeasurement } from "@/components/school/classes/forum/conversation/viewport/measure";
@@ -141,5 +142,75 @@ describe("conversation/viewport/measure", () => {
         yield* Scope.close(scope, Exit.succeed(undefined));
       })
     );
+  });
+
+  it("detaches latest affinity on away user intent before the next measurement", async () => {
+    const rig = createAdapters();
+    const viewport = await createViewport(rig.adapters);
+
+    await openReadyViewport(viewport);
+    const placementCount = rig.placements.length;
+    await dispatchViewport(viewport, {
+      awayFromLatest: true,
+      type: "user-scroll",
+    });
+    const detached = await waitForState(
+      viewport,
+      (state) => state.latestAffinity === "detached"
+    );
+    expect(detached.isAtLatest).toBe(true);
+    expect(detached.jumpControl).toEqual({
+      showBack: false,
+      showLatest: false,
+    });
+
+    await dispatchViewport(viewport, {
+      activeTranscript: viewportTestTranscript,
+      savedSnapshot: null,
+      type: "transcript",
+      unreadCue: null,
+    });
+    await dispatchViewport(viewport, { type: "latest" });
+    await waitForState(
+      viewport,
+      (state) => state.pendingPlacement?.view.kind === "bottom"
+    );
+
+    expect(rig.placements).toHaveLength(placementCount + 1);
+    await shutdownViewport(viewport);
+  });
+
+  it("keeps latest affinity for toward-latest user intent at bottom", async () => {
+    const rig = createAdapters();
+    const viewport = await createViewport(rig.adapters);
+
+    await openReadyViewport(viewport);
+    const placementCount = rig.placements.length;
+    await dispatchViewport(viewport, {
+      awayFromLatest: false,
+      type: "user-scroll",
+    });
+    const attached = await waitForState(
+      viewport,
+      (state) => state.latestAffinity === "latest"
+    );
+    expect(attached.jumpControl).toEqual({
+      showBack: false,
+      showLatest: false,
+    });
+
+    await dispatchViewport(viewport, {
+      activeTranscript: viewportTestTranscript,
+      savedSnapshot: null,
+      type: "transcript",
+      unreadCue: null,
+    });
+    await waitForState(
+      viewport,
+      (state) => state.pendingPlacement?.view.kind === "bottom"
+    );
+
+    expect(rig.placements).toHaveLength(placementCount + 1);
+    await shutdownViewport(viewport);
   });
 });
