@@ -35,10 +35,6 @@ vi.mock("@repo/internationalization/src/routing", () => ({
         en: "/curriculum",
         id: "/kurikulum",
       },
-      "/practice/[assessment]": {
-        en: "/practice/[assessment]",
-        id: "/latihan/[assessment]",
-      },
     },
   },
 }));
@@ -120,9 +116,7 @@ describe("sitemap entries", () => {
 
   it("looks up content lastmod by public sitemap route", async () => {
     await Effect.runPromise(
-      getEntries(
-        "/practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-1"
-      )
+      getEntries("/try-out/indonesia/snbt/set-1/quantitative-knowledge")
     );
     await Effect.runPromise(
       getEntries("/subjects/chemistry/green-chemistry/definition")
@@ -130,8 +124,7 @@ describe("sitemap entries", () => {
 
     expect(mockGetRuntimeContentRoute).toHaveBeenCalledWith({
       locale: "en",
-      route:
-        "practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-1",
+      route: "try-out/indonesia/snbt/set-1/quantitative-knowledge",
     });
     expect(mockGetRuntimeContentRoute).toHaveBeenCalledWith({
       locale: "en",
@@ -184,11 +177,9 @@ describe("sitemap entries", () => {
   });
 
   it("localizes mapped route URLs from routing pathnames", () => {
-    expect(getUrl("/practice/[assessment]", "id")).toBe(
-      "https://nakafa.com/id/latihan/[assessment]"
-    );
+    expect(getUrl("/curricula", "id")).toBe("https://nakafa.com/id/kurikulum");
     expect(mockGetPathname).not.toHaveBeenCalledWith(
-      expect.objectContaining({ href: "/practice/[assessment]" })
+      expect.objectContaining({ href: "/curricula" })
     );
   });
 
@@ -225,9 +216,7 @@ describe("sitemap entries", () => {
     );
     await expect(
       Effect.runPromise(
-        getEntries(
-          "/practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-1"
-        )
+        getEntries("/try-out/indonesia/snbt/set-1/quantitative-knowledge")
       )
     ).resolves.toContainEqual(
       expect.objectContaining({ changeFrequency: "monthly", priority: 0.6 })

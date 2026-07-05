@@ -1,10 +1,6 @@
 import type { api } from "@repo/backend/convex/_generated/api";
 import { CONTENT_ROUTE_ARTIFACT_PAGE_SIZE } from "@repo/backend/convex/contents/constants";
 import { findPublicContentRouteBySourcePath } from "@repo/contents/_types/route/content";
-import {
-  readPublicPracticeAssessmentPath,
-  readPublicPracticeDomainPath,
-} from "@repo/contents/_types/route/practice/path";
 import type { PublicContentRoute } from "@repo/contents/_types/route/schema";
 import { routing } from "@repo/internationalization/src/routing";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
@@ -33,6 +29,7 @@ type RuntimeSitemapPublicRoutePage = FunctionReturnType<
 const contentSections: readonly RuntimeContentSection[] = [
   "articles",
   "material",
+  "tryout",
   "quran",
 ];
 const sitemapBasePageId = "base";
@@ -284,6 +281,11 @@ function addContentPageRoutes(routes: Set<string>, row: RuntimeContentRoute) {
       return;
     }
 
+    if (row.section === "tryout") {
+      routes.add(routeToPath(row.route));
+      return;
+    }
+
     const route = yield* findPublicContentRouteBySourcePath(
       row.sourcePath,
       row.locale
@@ -309,22 +311,9 @@ function addProjectedContentRoutes(
   routes: Set<string>,
   route: PublicContentRoute
 ) {
-  if (route.kind === "subject-topic") {
-    return;
-  }
-
   if (route.kind === "subject-lesson") {
     routes.add(routeToPath(route.publicPath));
-    return;
   }
-
-  if (route.kind === "exercise-question") {
-    routes.add(routeToPath(route.parentPath));
-  }
-
-  routes.add(routeToPath(readPublicPracticeAssessmentPath(route)));
-  routes.add(routeToPath(readPublicPracticeDomainPath(route)));
-  routes.add(routeToPath(route.publicPath));
 }
 
 /** Keeps public-route sitemap rows scoped to rendered app context pages. */

@@ -70,19 +70,16 @@ export const NakafaAgentTaxonomySchema = Schema.Struct({
   })
     .pipe(Schema.mutable)
     .annotations({ description: "MCP endpoint guidance." }),
-  exercises: Schema.Struct({
-    categories: Schema.Array(NakafaAgentTaxonomyOptionSchema)
+  tryout: Schema.Struct({
+    countries: Schema.Array(NakafaAgentTaxonomyOptionSchema)
       .pipe(Schema.mutable)
-      .annotations({ description: "Supported exercise categories." }),
-    materials: Schema.Array(NakafaAgentTaxonomyOptionSchema)
+      .annotations({ description: "Supported try-out countries." }),
+    exams: Schema.Array(NakafaAgentTaxonomyOptionSchema)
       .pipe(Schema.mutable)
-      .annotations({ description: "Supported exercise materials." }),
-    types: Schema.Array(NakafaAgentTaxonomyOptionSchema)
-      .pipe(Schema.mutable)
-      .annotations({ description: "Supported exercise types." }),
+      .annotations({ description: "Supported try-out exams." }),
   })
     .pipe(Schema.mutable)
-    .annotations({ description: "Exercise taxonomy." }),
+    .annotations({ description: "Try-out taxonomy." }),
   locale: LocaleSchema.annotations({
     description: "Locale used for this taxonomy response.",
   }),

@@ -30,7 +30,7 @@ const GRAPH_INTEGRITY_TARGETS = [
   "contentRoutes",
   "contentSearch",
   "contentRoutePages",
-  "parts",
+  "messageParts",
   ...GRAPH_ANALYTICS_INTEGRITY_TARGETS,
   ...GRAPH_AUDIO_INTEGRITY_TARGETS,
 ] as const;
@@ -128,7 +128,7 @@ describe("contentSync/queries/integrity", () => {
 
     await t.mutation(async (ctx) => {
       const messageId = await insertAssistantMessage(ctx);
-      await ctx.db.insert("parts", {
+      await ctx.db.insert("messageParts", {
         dataNakafaData: {
           input: { content_ref: graph.assetId },
           kind: "content",
@@ -146,7 +146,7 @@ describe("contentSync/queries/integrity", () => {
       });
     });
 
-    const result = await getGraphIntegrity(t, "parts");
+    const result = await getGraphIntegrity(t, "messageParts");
 
     expect(result).toMatchObject({
       checkedRefInputs: 1,
@@ -172,7 +172,7 @@ describe("contentSync/queries/integrity", () => {
 
     await t.mutation(async (ctx) => {
       const messageId = await insertAssistantMessage(ctx);
-      await ctx.db.insert("parts", {
+      await ctx.db.insert("messageParts", {
         dataNakafaData: {
           input: { content_ref: `id/${ARTICLE_ROUTE}` },
           kind: "content",
@@ -183,19 +183,14 @@ describe("contentSync/queries/integrity", () => {
         order: 0,
         type: "data-nakafa",
       });
-      await ctx.db.insert("parts", {
+      await ctx.db.insert("messageParts", {
         dataNakafaData: {
-          input: {
-            content_ref: `id/${ARTICLE_ROUTE}`,
-            exercise_number: 1,
-          },
-          kind: "exercise",
+          input: { content_ref: `id/${ARTICLE_ROUTE}` },
+          kind: "content",
           result: {
             ...contentSearchRef(graph),
-            count: 1,
-            exercise_number: 1,
-            numbers: [1],
-            title: "Preview exercise",
+            description: "Preview content",
+            title: "Preview content",
           },
           status: "done",
         },
@@ -206,7 +201,7 @@ describe("contentSync/queries/integrity", () => {
       });
     });
 
-    const result = await getGraphIntegrity(t, "parts");
+    const result = await getGraphIntegrity(t, "messageParts");
 
     expect(result).toMatchObject({
       checkedRefInputs: 2,

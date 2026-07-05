@@ -30,8 +30,8 @@ describe("program/schema", () => {
       "cambridge-international": "school-curriculum",
       merdeka: "school-curriculum",
       "singapore-moe": "school-curriculum",
-      "snbt-2026": "admission-exam",
-      "tka-2026": "assessment",
+      snbt: "admission-exam",
+      tka: "assessment",
       "united-states": "school-curriculum",
     });
   });
@@ -47,16 +47,16 @@ describe("program/schema", () => {
     expect(PROGRAM_NAVIGATION_MODEL_VALUES).toEqual([
       "curriculum-tree",
       "course-unit-lesson",
-      "exam-domain-practice-set",
+      "exam-domain-set",
       "track-topic",
     ]);
     expect(navigationByKey.merdeka).toEqual({
       levels: ["stage", "class", "subject", "topic"],
       model: "curriculum-tree",
     });
-    expect(navigationByKey["snbt-2026"]).toEqual({
-      levels: ["section", "domain", "practice-set"],
-      model: "exam-domain-practice-set",
+    expect(navigationByKey.snbt).toEqual({
+      levels: ["section", "domain", "set"],
+      model: "exam-domain-set",
     });
     expect(navigationByKey["cambridge-international"]).toEqual({
       levels: ["stage", "course", "unit", "lesson"],

@@ -7,10 +7,7 @@ import { getNestedSlugs } from "@repo/contents/_lib/fs/nested-slugs";
 import { clearContentRouteManifestCache } from "@repo/contents/_lib/manifest/cache/lifecycle";
 import { getContentPublicRouteManifest } from "@repo/contents/_lib/manifest/cache/public-routes";
 import { getContentRouteManifest } from "@repo/contents/_lib/manifest/cache/route";
-import {
-  getContentRouteParamManifest,
-  getExerciseApiParamsForLocales,
-} from "@repo/contents/_lib/manifest/cache/route-params";
+import { getContentRouteParamManifest } from "@repo/contents/_lib/manifest/cache/route-params";
 import {
   getContentLocaleParams,
   getContentStaticParamManifest,
@@ -41,25 +38,10 @@ function mockManifestSource() {
   const folderTree = new Map([
     [".", ["articles", "material"]],
     ["articles", ["politics"]],
-    ["material", ["lesson", "practice"]],
+    ["material", ["lesson"]],
     ["material/lesson", ["chemistry"]],
     ["material/lesson/chemistry", ["green-chemistry"]],
     ["material/lesson/chemistry/green-chemistry", ["definition"]],
-    ["material/practice", ["assessment"]],
-    ["material/practice/assessment", ["snbt"]],
-    ["material/practice/assessment/snbt", ["quantitative-knowledge"]],
-    [
-      "material/practice/assessment/snbt/quantitative-knowledge",
-      ["try-out-2026"],
-    ],
-    [
-      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026",
-      ["set-1"],
-    ],
-    [
-      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
-      ["question-1", "question-2"],
-    ],
   ]);
   const nestedTree = new Map<string, string[][]>([
     ["articles", [["politics"]]],
@@ -71,43 +53,6 @@ function mockManifestSource() {
         ["lesson", "chemistry"],
         ["lesson", "chemistry", "green-chemistry"],
         ["lesson", "chemistry", "green-chemistry", "definition"],
-        ["practice"],
-        ["practice", "assessment"],
-        ["practice", "assessment", "snbt"],
-        ["practice", "assessment", "snbt", "quantitative-knowledge"],
-        [
-          "practice",
-          "assessment",
-          "snbt",
-          "quantitative-knowledge",
-          "try-out-2026",
-        ],
-        [
-          "practice",
-          "assessment",
-          "snbt",
-          "quantitative-knowledge",
-          "try-out-2026",
-          "set-1",
-        ],
-        [
-          "practice",
-          "assessment",
-          "snbt",
-          "quantitative-knowledge",
-          "try-out-2026",
-          "set-1",
-          "question-1",
-        ],
-        [
-          "practice",
-          "assessment",
-          "snbt",
-          "quantitative-knowledge",
-          "try-out-2026",
-          "set-1",
-          "question-2",
-        ],
       ],
     ],
   ]);
@@ -115,8 +60,6 @@ function mockManifestSource() {
     "articles/politics/article",
     "articles/not-a-category/draft",
     "material/lesson/chemistry/green-chemistry/definition",
-    "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-1",
-    "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-2",
   ];
 
   vi.mocked(getFolderChildNames).mockImplementation((folder) =>
@@ -175,8 +118,6 @@ describe("content route manifest", () => {
         "/articles/politics",
         "/articles/politics/article",
         "/material/lesson/chemistry/green-chemistry/definition",
-        "/material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-1",
-        "/material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-2",
         "/quran/1",
       ])
     );
@@ -190,9 +131,7 @@ describe("content route manifest", () => {
     });
     expect(manifest.staticParams.material).toContainEqual({
       locale: "en",
-      slug: "practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1".split(
-        "/"
-      ),
+      slug: ["lesson", "chemistry", "green-chemistry"],
     });
     expect(manifest.localeParams).toContainEqual({
       locale: "en",
@@ -211,7 +150,6 @@ describe("content route manifest", () => {
     const firstFolderReads = vi.mocked(getFolderChildNames).mock.calls.length;
 
     await getContentRouteManifest();
-    await getExerciseApiParamsForLocales(["en"]);
 
     expect(getFolderChildNames).toHaveBeenCalledTimes(firstFolderReads);
 
@@ -276,12 +214,6 @@ describe("content route manifest", () => {
       locale: "id",
       slug: ["articles", "politics"],
     });
-    expect(await getExerciseApiParamsForLocales()).toContainEqual({
-      locale: "en",
-      slug: "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1".split(
-        "/"
-      ),
-    });
   });
 
   it("builds a separate manifest for non-routing locale adapters", async () => {
@@ -305,24 +237,5 @@ describe("content route manifest", () => {
       locale: "en",
       slug: ["politics"],
     });
-  });
-
-  it("returns concrete exercise API params through the manifest adapter", async () => {
-    const params = await getExerciseApiParamsForLocales(["en"]);
-    const nonRoutingParams = await getExerciseApiParamsForLocales(["de"]);
-
-    expect(params).toContainEqual({
-      locale: "en",
-      slug: "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1".split(
-        "/"
-      ),
-    });
-    expect(params).toContainEqual({
-      locale: "en",
-      slug: "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-1".split(
-        "/"
-      ),
-    });
-    expect(nonRoutingParams).toEqual([]);
   });
 });

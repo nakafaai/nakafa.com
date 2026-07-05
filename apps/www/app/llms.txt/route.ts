@@ -6,7 +6,8 @@ export function GET() {
   return new Response(buildRootLlmsIndexText(), {
     headers: {
       "Cache-Control": LLMS_CACHE_CONTROL,
-      "Content-Type": "text/plain; charset=utf-8",
+      "Content-Type": "text/markdown; charset=utf-8",
+      Vary: "Accept",
     },
   });
 }

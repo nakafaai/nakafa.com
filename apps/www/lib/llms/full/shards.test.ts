@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
+import { BASE_URL } from "@/lib/llms/constants";
 import {
   buildFullManifest,
   buildRootFullText,
@@ -65,9 +66,9 @@ describe("llms full shards", () => {
     });
 
     expect(text.startsWith("# Nakafa Full Documentation\n\n> ")).toBe(true);
-    expect(text).toContain("https://nakafa.com/llms.txt");
-    expect(text).toContain("https://nakafa.com/llms-full/index.json");
-    expect(text).toContain("https://nakafa.com/sitemap.xml");
+    expect(text).toContain(`${BASE_URL}/llms.txt`);
+    expect(text).toContain(`${BASE_URL}/llms-full/index.json`);
+    expect(text).toContain(`${BASE_URL}/sitemap.xml`);
     expect(text).toContain("- Documents: 4");
     expect(text).toContain("Nakafa English Full Documentation");
     expect(text).not.toContain("Markdown URL:");

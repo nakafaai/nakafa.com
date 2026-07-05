@@ -3,7 +3,7 @@ import { NAKAFA_MCP_RECOMMENDED_ENDPOINT } from "@repo/contents/_lib/agent/const
 
 export const NAKAFA_SKILL_NAME = "nakafa";
 export const NAKAFA_SKILL_DESCRIPTION =
-  "Use Nakafa to retrieve multilingual educational lessons, Quran references, article context, and exam practice pages through agent-friendly markdown and MCP tools.";
+  "Use Nakafa to retrieve multilingual educational lessons, Quran references, article context, and try-out catalog pages through agent-friendly markdown and MCP tools.";
 export const NAKAFA_AGENT_SKILL_PATH =
   "/.well-known/agent-skills/nakafa/SKILL.md";
 
@@ -22,7 +22,7 @@ export function getNakafaSkillText() {
     "",
     "# Nakafa Agent Skill",
     "",
-    "Use this skill when a user needs educational content from Nakafa, including curriculum lessons, Quran references, articles, and exam practice material.",
+    "Use this skill when a user needs educational content from Nakafa, including curriculum lessons, Quran references, articles, and try-out catalog material.",
     "",
     "## Discovery",
     "",
@@ -32,8 +32,8 @@ export function getNakafaSkillText() {
     "- Prefer same-origin `.md` URLs from `llms.txt` for focused page retrieval.",
     "- Send `Accept: text/markdown` when requesting normal content URLs.",
     `- Use \`${NAKAFA_MCP_RECOMMENDED_ENDPOINT}\` when the client supports Streamable HTTP MCP tools.`,
-    "- Prefer `nakafa_search_content` first, then pass returned `content_id` values as `content_ref` to `nakafa_get_content` or `nakafa_get_exercise`.",
-    "- Use `nakafa_get_taxonomy` to inspect supported locales, sections, categories, grades, materials, exercise types, and endpoint guidance.",
+    "- Prefer `nakafa_search_content` first, then pass returned source-backed `content_id` values as `content_ref` to `nakafa_get_content`.",
+    "- Use `nakafa_get_taxonomy` to inspect supported locales, sections, categories, grades, materials, try-out values, and endpoint guidance.",
     "",
     "## Locale Rules",
     "",
@@ -45,8 +45,8 @@ export function getNakafaSkillText() {
     "",
     "- Cite the exact Nakafa URL used for each answer.",
     "- Prefer page-level markdown over HTML because it contains the documentation content without navigation boilerplate.",
-    "- Do not invent lesson, exercise, or Quran content that is not present in the retrieved Nakafa source.",
-    "- For exercises, include the question number and set URL when explaining an answer.",
+    "- Do not invent lesson, try-out, or Quran content that is not present in the retrieved Nakafa source.",
+    "- For try-out catalog results, cite the app URL and avoid inventing attempt-specific questions or scores.",
     "- For Quran references, include the Surah and verse numbers from the retrieved page.",
     "",
   ].join("\n");

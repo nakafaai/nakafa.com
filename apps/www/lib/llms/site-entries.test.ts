@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { Effect } from "effect";
 import { describe, expect, it, vi } from "vitest";
+import { BASE_URL } from "@/lib/llms/constants";
 import { getSiteLlmsEntries } from "@/lib/llms/entries";
 
 vi.mock("@/lib/content/runtime/routes", () => ({
@@ -30,7 +31,7 @@ describe("site llms entries", () => {
 
     expect(englishEntries).toContainEqual(
       expect.objectContaining({
-        href: "https://nakafa.com/en/curriculum",
+        href: `${BASE_URL}/en/curriculum`,
         route: "/curriculum",
         section: "site",
         title: "Curriculum",
@@ -38,17 +39,17 @@ describe("site llms entries", () => {
     );
     expect(indonesianEntries).toContainEqual(
       expect.objectContaining({
-        href: "https://nakafa.com/id/kurikulum",
+        href: `${BASE_URL}/id/kurikulum`,
         route: "/kurikulum",
         section: "site",
         title: "Kurikulum",
       })
     );
     expect(englishEntries.map((entry) => entry.href)).not.toContain(
-      "https://nakafa.com/en/curricula"
+      `${BASE_URL}/en/curricula`
     );
     expect(indonesianEntries.map((entry) => entry.href)).not.toContain(
-      "https://nakafa.com/id/curricula"
+      `${BASE_URL}/id/curricula`
     );
   });
 });

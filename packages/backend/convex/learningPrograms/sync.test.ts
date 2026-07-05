@@ -54,7 +54,7 @@ describe("learningPrograms", () => {
     const sourceCount = await t.query(async (ctx) => {
       const program = await ctx.db
         .query("learningPrograms")
-        .withIndex("by_key", (q) => q.eq("key", "tka-2026"))
+        .withIndex("by_key", (q) => q.eq("key", "tka"))
         .unique();
 
       assert(program, "Expected synced TKA program.");
@@ -68,10 +68,7 @@ describe("learningPrograms", () => {
     });
 
     expect(result).toEqual({ created: 6, skipped: 0, updated: 0 });
-    expect(programs.map((program) => program.key)).toEqual([
-      "merdeka",
-      "snbt-2026",
-    ]);
+    expect(programs.map((program) => program.key)).toEqual(["merdeka", "snbt"]);
     expect(programs.find((program) => program.key === "merdeka")).toMatchObject(
       {
         navigation: {
@@ -1131,7 +1128,10 @@ async function drainCoverageSampleReconcile(
 
     await t.mutation(
       internal.learningPrograms.sync.continueCoverageSamplePlanItemReconcile,
-      args
+      {
+        ...args,
+        updatedBefore: NOW + 1,
+      }
     );
   }
 

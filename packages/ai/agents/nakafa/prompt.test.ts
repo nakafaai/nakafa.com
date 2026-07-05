@@ -30,7 +30,6 @@ describe("nakafaAgentPrompt", () => {
     for (const heading of [
       "## Search",
       "## Read",
-      "## Exercise",
       "## Quran",
       "## Taxonomy",
       "## Multi-tool Flow",
@@ -41,7 +40,7 @@ describe("nakafaAgentPrompt", () => {
     expect(toolSection).toContain("Put all search text in queries.");
     expect(toolSection).not.toContain("Structured exercise questions");
     expect(evidenceSection).toContain(
-      "Structured exercise questions, choices, answers, and explanations must come from the exercise tool result."
+      "Try-out search results identify app routes and catalog entries only"
     );
     expect(evidenceSection).toContain(
       "Lesson-provided practice may come from read content"
@@ -49,19 +48,16 @@ describe("nakafaAgentPrompt", () => {
     expect(outputSection).toContain("Do not include public URLs");
   });
 
-  it("keeps lesson and exercise retrieval as separate focused searches", () => {
+  it("keeps lesson and try-out discovery as separate focused searches", () => {
     const prompt = nakafaAgentPrompt({ context, locale: "id" });
 
     expect(prompt).toContain(
-      "If the task asks for both lesson explanation and practice"
+      "If the task asks for both lesson explanation and exam simulation discovery"
     );
     expect(prompt).toContain("subject for the lesson");
-    expect(prompt).toContain("exercises for the practice");
+    expect(prompt).toContain("tryout for the simulation");
     expect(prompt).toContain("Call independent searches in parallel");
     expect(prompt).toContain("Preserve exact identifiers in queries");
-    expect(prompt).toContain("warmups");
-    expect(prompt).toContain("starter examples");
-    expect(prompt).toContain("preparation before practice");
     expect(prompt).toContain(
       "Use taxonomy first when the request asks what Nakafa structure is available"
     );

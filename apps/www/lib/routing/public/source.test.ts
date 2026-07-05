@@ -15,7 +15,7 @@ describe("source-backed public html route rejection", () => {
   beforeEach(() => {
     runtimeMocks.getRuntimeContentRoute.mockReset();
     runtimeMocks.getRuntimeContentRoute.mockReturnValue(
-      Effect.succeed({ kind: "exercise-question", route: "fixture" })
+      Effect.succeed({ kind: "article", route: "fixture" })
     );
   });
 
@@ -23,7 +23,6 @@ describe("source-backed public html route rejection", () => {
     const paths = [
       ["/id/curricula/merdeka", "id"],
       ["/id/subjects/matematika/integral", "id"],
-      ["/id/practice/snbt/pengetahuan-kuantitatif", "id"],
       ["/en/kurikulum/merdeka/kelas-10", "en"],
       ["/en/materi/mathematics/integral", "en"],
       ["/learn", "en"],

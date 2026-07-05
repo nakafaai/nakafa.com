@@ -12,7 +12,7 @@ import { Schema } from "effect";
 export function mapDBPartToUIMessagePart({
   part,
 }: {
-  part: Doc<"parts">;
+  part: Doc<"messageParts">;
 }): MyUIMessagePart {
   switch (part.type) {
     case "text":

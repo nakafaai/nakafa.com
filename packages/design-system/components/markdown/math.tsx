@@ -40,10 +40,12 @@ const blockMathVariants = cva(
 
 export function BlockMathKatex(props: MathComponentProps) {
   return (
-    <BlockMathReactKatex
-      errorColor="var(--color-muted-foreground)"
-      {...props}
-    />
+    <div data-markdown-ignore="">
+      <BlockMathReactKatex
+        errorColor="var(--color-muted-foreground)"
+        {...props}
+      />
+    </div>
   );
 }
 
@@ -113,7 +115,11 @@ export function BlockMath({
 }: MathComponentProps & { className?: string }) {
   // Empty string keeps this as a presence marker instead of data-math-block="true".
   return (
-    <div className={cn(blockMathVariants(), className)} data-math-block="">
+    <div
+      className={cn(blockMathVariants(), className)}
+      data-markdown-ignore=""
+      data-math-block=""
+    >
       <ScrollArea className="grid">
         <div className="px-4">
           <BlockMathReactKatex
@@ -132,9 +138,11 @@ export function BlockMath({
  */
 export function InlineMath(props: MathComponentProps) {
   return (
-    <InlineMathReactKatex
-      errorColor="var(--color-muted-foreground)"
-      {...props}
-    />
+    <span data-markdown-ignore="">
+      <InlineMathReactKatex
+        errorColor="var(--color-muted-foreground)"
+        {...props}
+      />
+    </span>
   );
 }

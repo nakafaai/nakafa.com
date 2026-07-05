@@ -122,7 +122,7 @@ export const logStaleItems = (
 
   log(`${label} (${items.length}):`);
   for (const item of items.slice(0, maxItems)) {
-    log(`  - ${item.slug} (${item.locale})`);
+    log(`  - ${item.sourcePath} (${item.locale})`);
   }
 
   if (items.length > maxItems) {

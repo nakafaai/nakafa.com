@@ -7,7 +7,6 @@ import {
   resetBatchSize,
 } from "@repo/backend/convex/contentSync/reset/spec";
 import { internalMutation } from "@repo/backend/convex/functions";
-import { ConvexError } from "convex/values";
 
 /** Deletes one bounded batch from a resettable content-derived table. */
 export async function deleteBatchFromTable(
@@ -50,50 +49,20 @@ export async function deleteContentSearchRows(ctx: MutationCtx) {
   return { deleted, hasMore };
 }
 
-/**
- * Deletes tryout part attempts together with their owned exercise attempts and
- * exercise answers.
- */
+/** Deletes one bounded batch of section attempts owned by tryout attempts. */
 export async function deleteTryoutRuntimeRows(ctx: MutationCtx) {
-  const partAttempts = await ctx.db
-    .query("tryoutPartAttempts")
+  const sectionAttempts = await ctx.db
+    .query("tryoutSectionAttempts")
     .take(resetBatchSize);
   let deleted = 0;
 
-  for (const partAttempt of partAttempts) {
-    const exerciseAttempt = await ctx.db.get(
-      "exerciseAttempts",
-      partAttempt.setAttemptId
-    );
-
-    if (exerciseAttempt) {
-      const answers = await ctx.db
-        .query("exerciseAnswers")
-        .withIndex("by_attemptId_and_exerciseNumber", (q) =>
-          q.eq("attemptId", exerciseAttempt._id)
-        )
-        .take(exerciseAttempt.totalExercises + 1);
-
-      if (answers.length > exerciseAttempt.totalExercises) {
-        throw new ConvexError({
-          code: "TRYOUT_EXERCISE_ANSWER_COUNT_EXCEEDED",
-          message:
-            "Tryout exercise answer count exceeds the exercise attempt total exercises.",
-        });
-      }
-
-      for (const answer of answers) {
-        await ctx.db.delete("exerciseAnswers", answer._id);
-      }
-
-      await ctx.db.delete("exerciseAttempts", exerciseAttempt._id);
-    }
-
-    await ctx.db.delete("tryoutPartAttempts", partAttempt._id);
+  for (const sectionAttempt of sectionAttempts) {
+    await ctx.db.delete("tryoutSectionAttempts", sectionAttempt._id);
     deleted += 1;
   }
 
-  const hasMore = (await ctx.db.query("tryoutPartAttempts").first()) !== null;
+  const hasMore =
+    (await ctx.db.query("tryoutSectionAttempts").first()) !== null;
 
   return { deleted, hasMore };
 }
@@ -131,15 +100,14 @@ export async function deleteContentAudioRows(ctx: MutationCtx) {
 /** Deletes one bounded batch of stored tryout entitlements. */
 export async function deleteTryoutEntitlementRows(ctx: MutationCtx) {
   const entitlements = await ctx.db
-    .query("userTryoutEntitlements")
+    .query("tryoutEntitlements")
     .take(eventTryoutEntitlementBatchSize);
 
   for (const entitlement of entitlements) {
-    await ctx.db.delete("userTryoutEntitlements", entitlement._id);
+    await ctx.db.delete("tryoutEntitlements", entitlement._id);
   }
 
-  const hasMore =
-    (await ctx.db.query("userTryoutEntitlements").first()) !== null;
+  const hasMore = (await ctx.db.query("tryoutEntitlements").first()) !== null;
 
   return {
     deleted: entitlements.length,

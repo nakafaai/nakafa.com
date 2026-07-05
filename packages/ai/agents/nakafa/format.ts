@@ -1,4 +1,3 @@
-import type { NakafaAgentExerciseResult } from "@repo/contents/_lib/agent/schema/exercise";
 import type { NakafaAgentQuranReference } from "@repo/contents/_lib/agent/schema/quran";
 import type { NakafaAgentMarkdown } from "@repo/contents/_lib/agent/schema/read";
 import type { NakafaAgentSearchResult } from "@repo/contents/_lib/agent/schema/search";
@@ -44,37 +43,6 @@ export function formatRead(result: NakafaAgentMarkdown) {
   `);
 }
 
-/** Formats structured Nakafa exercises with choices and explanations. */
-export function formatExercise(result: NakafaAgentExerciseResult) {
-  return dedent(`
-    # Nakafa Exercises
-    - Content ID: ${result.content_id}
-    - Count: ${result.count}
-    - Exercise number: ${result.exercise_number ?? "all"}
-
-    ${result.exercises
-      .map(
-        (exercise) => `
-    ## Exercise ${exercise.number}
-
-    ### Question
-    ${exercise.question.raw}
-
-    ### Choices
-    ${exercise.choices
-      .map(
-        (choice) =>
-          `- ${choice.label} (Correct: ${choice.correct ? "Yes" : "No"})`
-      )
-      .join("\n")}
-
-    ### Answer
-    ${exercise.answer.raw}`
-      )
-      .join("\n\n")}
-  `);
-}
-
 /** Formats a bounded Quran reference with translation and optional tafsir. */
 export function formatQuran(result: NakafaAgentQuranReference) {
   return dedent(`
@@ -116,9 +84,8 @@ export function formatTaxonomy(result: NakafaAgentTaxonomy) {
     - Grades: ${result.subject.grades.join(", ")}
     - Materials: ${result.subject.materials.join(", ")}
 
-    ## Exercises
-    - Categories: ${result.exercises.categories.map(formatTaxonomyOption).join(", ")}
-    - Types: ${result.exercises.types.map(formatTaxonomyOption).join(", ")}
-    - Materials: ${result.exercises.materials.map(formatTaxonomyOption).join(", ")}
+    ## Try Out
+    - Countries: ${result.tryout.countries.map(formatTaxonomyOption).join(", ")}
+    - Exams: ${result.tryout.exams.map(formatTaxonomyOption).join(", ")}
   `);
 }

@@ -3,39 +3,25 @@ import {
   listAssessments,
 } from "@repo/contents/_types/assessment/registry";
 import { defineAssessment } from "@repo/contents/_types/assessment/schema";
-import { definePracticeMaterial } from "@repo/contents/_types/material/schema";
+import { defineLessonMaterial } from "@repo/contents/_types/material/schema";
 import { describe, expect, it } from "vitest";
 
-const material = definePracticeMaterial({
-  assessment: "snbt",
-  assetRoot: "material/practice/assessment/snbt/fixture-domain",
-  domain: "general-reasoning",
-  groups: [
-    {
-      exerciseType: "practice",
-      routeSlugs: { en: "practice", id: "latihan" },
-      sets: [
-        {
-          routeSlugs: { en: "set-1", id: "set-1" },
-          slug: "set-1",
-          translations: {
-            en: { title: "Set 1" },
-            id: { title: "Set 1" },
-          },
-        },
-      ],
-      translations: {
-        en: { description: "Practice focused reasoning.", title: "Practice" },
-        id: { description: "Latih penalaran terarah.", title: "Latihan" },
-      },
-    },
-  ],
-  key: "practice.assessment.snbt.fixture-domain",
-  kind: "practice",
+const material = defineLessonMaterial({
+  assetRoot: "material/lesson/mathematics/fixture-domain",
+  domain: "mathematics",
+  key: "lesson.mathematics.fixture-domain",
+  kind: "lesson",
+  routeSlugs: { en: "fixture-domain", id: "domain-fixture" },
+  sections: [],
+  slug: "fixture-domain",
+  translations: {
+    en: { description: "Read fixture mathematics.", title: "Fixture Domain" },
+    id: { description: "Baca matematika fixture.", title: "Domain Fixture" },
+  },
 });
 
 const assessment = defineAssessment({
-  programKey: "snbt-2026",
+  programKey: "snbt",
   nodes: [
     {
       key: "root",
@@ -50,7 +36,7 @@ const assessment = defineAssessment({
     {
       key: "domain",
       level: "domain",
-      materialKeys: ["practice.assessment.snbt.fixture-domain"],
+      materialKeys: ["lesson.mathematics.fixture-domain"],
       order: 1,
       parentKey: "root",
       translations: {
@@ -67,7 +53,7 @@ describe("assessment registry", () => {
     expect(getAssessmentSourceIssues()).toEqual([]);
   });
 
-  it("accepts assessment mappings that point at authored practice materials", () => {
+  it("accepts assessment mappings that point at authored lesson materials", () => {
     expect(
       getAssessmentSourceIssues({
         assessments: [assessment],
@@ -78,12 +64,12 @@ describe("assessment registry", () => {
 
   it("reports missing assessment parent and material references", () => {
     const brokenAssessment = defineAssessment({
-      programKey: "snbt-2026",
+      programKey: "snbt",
       nodes: [
         {
           key: "domain",
           level: "domain",
-          materialKeys: ["practice.assessment.snbt.missing"],
+          materialKeys: ["lesson.mathematics.missing"],
           order: 1,
           parentKey: "missing-parent",
           translations: {
@@ -100,8 +86,8 @@ describe("assessment registry", () => {
         materials: [material],
       })
     ).toEqual([
-      "Unknown parent node missing-parent in snbt-2026:domain",
-      "Unknown material key practice.assessment.snbt.missing in snbt-2026:domain",
+      "Unknown parent node missing-parent in snbt:domain",
+      "Unknown material key lesson.mathematics.missing in snbt:domain",
     ]);
   });
 });

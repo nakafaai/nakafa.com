@@ -1,5 +1,4 @@
 import { decodeNakafaMarkdown } from "@repo/backend/client/nakafa/decode";
-import { readExerciseMarkdown } from "@repo/backend/client/nakafa/exercise";
 import { fetchNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
 import { readQuranMarkdown } from "@repo/backend/client/nakafa/quran";
 import { resolveNakafaContentRef } from "@repo/backend/client/nakafa/ref";
@@ -8,8 +7,6 @@ import { api } from "@repo/backend/convex/_generated/api";
 import type { NakafaAgentMarkdown } from "@repo/contents/_lib/agent/schema/read";
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
 import { Effect, Option } from "effect";
-
-const practiceMaterialRoutePrefix = "material/practice/";
 
 /** Reads full markdown for one normalized Nakafa content reference. */
 export function readNakafaMarkdown(convexUrl: string, input: string) {
@@ -22,13 +19,6 @@ export function readNakafaMarkdown(convexUrl: string, input: string) {
 
     if (ref.value.section === "quran") {
       return yield* readQuranMarkdown(convexUrl, ref.value);
-    }
-
-    if (
-      ref.value.section === "material" &&
-      ref.value.route.startsWith(practiceMaterialRoutePrefix)
-    ) {
-      return yield* readExerciseMarkdown(convexUrl, ref.value);
     }
 
     return yield* readMdxMarkdown(convexUrl, ref.value);

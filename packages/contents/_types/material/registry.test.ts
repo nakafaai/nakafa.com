@@ -1,23 +1,14 @@
 import { MATERIAL_CARD_DESCRIPTION_MAX_LENGTH } from "@repo/contents/_types/material/description";
-import {
-  listPracticeMaterialSets,
-  normalizeMaterialRoute,
-  toPracticeMaterialList,
-} from "@repo/contents/_types/material/projection";
+import { normalizeMaterialRoute } from "@repo/contents/_types/material/projection";
 import {
   findLessonMaterial,
-  findPracticeMaterial,
   getLessonMaterialList,
-  getPracticeMaterialList,
   listLessonMaterialSources,
   listLessonRows,
   listMaterials,
-  listPracticeMaterialSources,
-  listPracticeSets,
 } from "@repo/contents/_types/material/registry";
 import {
   defineLessonMaterial,
-  definePracticeMaterial,
   LessonMaterialSourceSchema,
 } from "@repo/contents/_types/material/schema";
 import { locales } from "@repo/utilities/locales";
@@ -49,48 +40,17 @@ describe("material registry", () => {
     });
   });
 
-  it("projects practice materials into localized set navigation", () => {
-    const materials = getPracticeMaterialList(
-      "material/practice/assessment/snbt/quantitative-knowledge",
-      "en"
-    );
-
-    expect(materials).toHaveLength(1);
-    expect(materials[0]).toMatchObject({
-      href: "/material/practice/assessment/snbt/quantitative-knowledge/try-out-2026",
-      title: "Try Out 2026",
-    });
-    expect(materials[0]?.items).toHaveLength(10);
-    expect(materials[0]?.items[0]).toEqual({
-      href: "/material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
-      title: "Set 1",
-    });
-  });
-
-  it("projects sync-ready rows for both supported content languages", () => {
+  it("projects sync-ready lesson rows for both supported content languages", () => {
     const lessonRows = listLessonRows();
-    const practiceSets = listPracticeSets();
 
     expect(lessonRows.some((lesson) => lesson.locale === "id")).toBe(true);
     expect(lessonRows.some((lesson) => lesson.locale === "en")).toBe(true);
-    expect(
-      practiceSets.some(
-        (set) =>
-          set.locale === "en" &&
-          set.slug ===
-            "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1"
-      )
-    ).toBe(true);
-
     expect(listLessonRows("id").every((lesson) => lesson.locale === "id")).toBe(
-      true
-    );
-    expect(listPracticeSets("id").every((set) => set.locale === "id")).toBe(
       true
     );
   });
 
-  it("keeps material keys and asset roots unique", () => {
+  it("keeps lesson material keys and asset roots unique", () => {
     const materials = listMaterials();
     const keys = new Set(materials.map((material) => material.key));
     const assetRoots = new Set(materials.map((material) => material.assetRoot));
@@ -98,57 +58,33 @@ describe("material registry", () => {
     expect(keys.size).toBe(materials.length);
     expect(assetRoots.size).toBe(materials.length);
     expect(listLessonMaterialSources()).not.toHaveLength(0);
-    expect(listPracticeMaterialSources()).not.toHaveLength(0);
   });
 
   it("keeps authored material card descriptions concise", () => {
     for (const material of listMaterials()) {
-      if (material.kind === "lesson") {
-        for (const locale of locales) {
-          const description = material.translations[locale].description;
+      for (const locale of locales) {
+        const description = material.translations[locale].description;
 
-          expect(description?.trim()).toBe(description);
-          expect(description).toBeTruthy();
-          expect(description?.length).toBeLessThanOrEqual(
-            MATERIAL_CARD_DESCRIPTION_MAX_LENGTH
-          );
-        }
-
-        continue;
-      }
-
-      for (const group of material.groups) {
-        for (const locale of locales) {
-          const description = group.translations[locale].description;
-
-          expect(description?.trim()).toBe(description);
-          expect(description).toBeTruthy();
-          expect(description?.length).toBeLessThanOrEqual(
-            MATERIAL_CARD_DESCRIPTION_MAX_LENGTH
-          );
-        }
+        expect(description?.trim()).toBe(description);
+        expect(description).toBeTruthy();
+        expect(description?.length).toBeLessThanOrEqual(
+          MATERIAL_CARD_DESCRIPTION_MAX_LENGTH
+        );
       }
     }
   });
 
-  it("finds concrete materials by route without exposing the wrong material kind", () => {
+  it("finds lesson materials by route", () => {
     expect(
       findLessonMaterial(
         "material/lesson/mathematics/exponential-logarithm/basic-concept"
       )?.key
     ).toBe("lesson.mathematics.exponential-logarithm");
-    expect(
-      findPracticeMaterial(
-        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1"
-      )?.key
-    ).toBe("practice.assessment.snbt.quantitative-knowledge");
-    expect(findLessonMaterial("material/practice/assessment/snbt")).toBeNull();
-    expect(findPracticeMaterial("material/lesson/mathematics")).toBeNull();
+    expect(findLessonMaterial("material/not-found")).toBeNull();
     expect(getLessonMaterialList("material/not-found", "id")).toEqual([]);
-    expect(getPracticeMaterialList("material/not-found", "en")).toEqual([]);
   });
 
-  it("projects custom typed source chunks with required card descriptions", () => {
+  it("projects custom typed lesson source chunks with required card descriptions", () => {
     const lesson = defineLessonMaterial({
       assetRoot: "material/lesson/biology/custom-topic",
       domain: "biology",
@@ -165,36 +101,6 @@ describe("material registry", () => {
         id: { description: "Baca ide biologi khusus.", title: "Topik Khusus" },
       },
     });
-    const practice = definePracticeMaterial({
-      assessment: "snbt",
-      assetRoot: "material/practice/assessment/snbt/fixture-domain",
-      domain: "general-reasoning",
-      groups: [
-        {
-          exerciseType: "practice",
-          routeSlugs: { en: "practice", id: "latihan" },
-          sets: [
-            {
-              routeSlugs: { en: "set-1", id: "set-1" },
-              slug: "set-1",
-              translations: {
-                en: { title: "Set 1" },
-                id: { title: "Set 1" },
-              },
-            },
-          ],
-          translations: {
-            en: {
-              description: "Practice focused reasoning.",
-              title: "Practice",
-            },
-            id: { description: "Latih penalaran terarah.", title: "Latihan" },
-          },
-        },
-      ],
-      kind: "practice",
-      key: "practice.assessment.snbt.fixture-domain",
-    });
 
     expect(
       getLessonMaterialList("material/lesson/biology/custom-topic", "en", [
@@ -208,31 +114,6 @@ describe("material registry", () => {
         title: "Custom Topic",
       },
     ]);
-    expect(
-      getPracticeMaterialList(
-        "material/practice/assessment/snbt/fixture-domain",
-        "id",
-        [practice]
-      )
-    ).toEqual([
-      {
-        description: "Latih penalaran terarah.",
-        href: "/material/practice/assessment/snbt/fixture-domain/practice",
-        items: [
-          {
-            href: "/material/practice/assessment/snbt/fixture-domain/practice/set-1",
-            title: "Set 1",
-          },
-        ],
-        title: "Latihan",
-      },
-    ]);
-    expect(toPracticeMaterialList(practice, "en")[0]?.description).toBe(
-      "Practice focused reasoning."
-    );
-    expect(listPracticeMaterialSets([practice], "id")[0]).not.toHaveProperty(
-      "year"
-    );
     expect(
       normalizeMaterialRoute("//material/lesson/biology/custom-topic/")
     ).toBe("material/lesson/biology/custom-topic");
@@ -262,12 +143,12 @@ describe("material registry", () => {
     }
   });
 
-  it("rejects invalid authored material keys and slugs through the Effect Schema contract", () => {
+  it("rejects invalid material keys and section slugs through the schema contract", () => {
     const invalidKey = Schema.decodeUnknownEither(LessonMaterialSourceSchema)({
       assetRoot: "material/lesson/mathematics/exponents",
       domain: "mathematics",
       kind: "lesson",
-      key: "Lesson Mathematics",
+      key: "lesson/mathematics/exponents",
       routeSlugs: { en: "exponents", id: "eksponen" },
       sections: [],
       slug: "exponents",
@@ -282,11 +163,20 @@ describe("material registry", () => {
       kind: "lesson",
       key: "lesson.mathematics.exponents",
       routeSlugs: { en: "exponents", id: "eksponen" },
-      sections: [],
-      slug: "Invalid Slug",
+      sections: [
+        {
+          routeSlugs: { en: "invalid", id: "invalid" },
+          slug: "InvalidSlug",
+          translations: {
+            en: { title: "Invalid" },
+            id: { title: "Invalid" },
+          },
+        },
+      ],
+      slug: "exponents",
       translations: {
-        en: { description: "Read exponent patterns.", title: "Invalid" },
-        id: { description: "Baca pola eksponen.", title: "Tidak Valid" },
+        en: { description: "Read exponent patterns.", title: "Exponents" },
+        id: { description: "Baca pola eksponen.", title: "Eksponen" },
       },
     });
 
@@ -298,7 +188,6 @@ describe("material registry", () => {
         ParseResult.TreeFormatter.formatErrorSync(invalidKey.left)
       ).toContain("Invalid material key.");
     }
-
     if (Either.isLeft(invalidSlug)) {
       expect(
         ParseResult.TreeFormatter.formatErrorSync(invalidSlug.left)

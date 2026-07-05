@@ -336,13 +336,25 @@
   },
   "Tryouts": {
     "title": "What tryout do you want today?",
-    "metadata-description": "Choose a tryout package and start an exam simulation from Nakafa.",
-    "package-count": "{count, plural, =0 {No packages yet} =1 {# package} other {# packages}}",
-    "cta": "See packages",
+    "metadata-description": "Choose a country, exam, and tryout set from Nakafa.",
+    "country-count": "{count, plural, =0 {No countries yet} =1 {# country} other {# countries}}",
+    "exam-count": "{count, plural, =0 {No exams yet} =1 {# exam} other {# exams}}",
+    "set-count": "{count, plural, =0 {No sets yet} =1 {# set} other {# sets}}",
+    "section-count": "{count, plural, =0 {No sections yet} =1 {# section} other {# sections}}",
+    "question-count": "{count, plural, =0 {No questions} =1 {# question} other {# questions}}",
+    "open-country-cta": "Open country",
+    "open-exam-cta": "Open exam",
+    "open-set-cta": "Open set",
+    "open-section-cta": "Open section",
+    "back-to-tryout": "Back to tryout",
+    "back-to-country": "Back to country",
+    "back-to-exam": "Back to exam",
+    "back-to-set": "Back to set",
     "list-empty": "There are no tryouts showing right now.",
-    "available-item-description": "{questions} questions - {parts} parts",
-    "year-title": "Year {year}",
-    "product-page-description": "See every SNBT package and open the one that fits your goal best.",
+    "available-item-description": "{questions} questions - {sections} sections",
+    "scoring-irt": "IRT scoring",
+    "scoring-raw": "Raw scoring",
+    "scoring-weighted": "Weighted scoring",
     "start-cta": "Start tryout",
     "restart-cta": "Start again",
     "continue-cta": "Continue",
@@ -400,13 +412,7 @@
     "complete-part-error": "We could not finish this section yet. Please try again.",
     "back-to-set-cta": "Back to set",
     "slug-description": "When you're ready, start this tryout and choose which section you want to do first.",
-    "question-unit": "questions",
-    "products": {
-      "snbt": {
-        "title": "SNBT",
-        "description": "Pick the SNBT tryout set that fits your practice best."
-      }
-    }
+    "question-unit": "questions"
   },
   "Utils": {
     "search": "Search",
@@ -567,7 +573,7 @@
     "nakafa-search-results": "Content found",
     "nakafa-search-articles": "Articles found",
     "nakafa-search-subject": "Materials found",
-    "nakafa-search-exercises": "Practice questions found",
+    "nakafa-search-tryout": "Try-outs found",
     "nakafa-search-quran": "Verses found",
     "nakafa-search-empty": "No matching content found.",
     "nakafa-content": "Material",

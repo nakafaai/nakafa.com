@@ -19,11 +19,6 @@ import {
   NakafaGetContentToolOutputSchema,
 } from "@/lib/mcp/tools/content";
 import {
-  getNakafaExerciseToolResult,
-  NakafaGetExerciseToolInputSchema,
-  NakafaGetExerciseToolOutputSchema,
-} from "@/lib/mcp/tools/exercise";
-import {
   getNakafaQuranReferenceToolResult,
   NakafaGetQuranReferenceToolInputSchema,
   NakafaGetQuranReferenceToolOutputSchema,
@@ -53,7 +48,7 @@ const NAKAFA_MCP_TOOLS: readonly NakafaMcpTool[] = [
   {
     annotations: NAKAFA_READ_ONLY_TOOL_ANNOTATIONS,
     description:
-      "Search the Nakafa public content index across articles, subjects, exercises, and Quran references. Returns bounded paginated summaries with stable content IDs.",
+      "Search the Nakafa public content index across articles, subjects, try-outs, and Quran references. Returns bounded paginated summaries with stable content IDs.",
     inputSchema: NakafaSearchContentToolInputSchema,
     name: "nakafa_search_content",
     outputSchema: NakafaSearchContentToolOutputSchema,
@@ -73,22 +68,12 @@ const NAKAFA_MCP_TOOLS: readonly NakafaMcpTool[] = [
   {
     annotations: NAKAFA_READ_ONLY_TOOL_ANNOTATIONS,
     description:
-      "Return supported Nakafa locales, sections, categories, grades, materials, exercise types, counts, and MCP endpoint guidance.",
+      "Return supported Nakafa locales, sections, categories, grades, materials, try-out discovery values, counts, and MCP endpoint guidance.",
     inputSchema: NakafaGetTaxonomyToolInputSchema,
     name: "nakafa_get_taxonomy",
     outputSchema: NakafaGetTaxonomyToolOutputSchema,
     run: getNakafaTaxonomyToolResult,
     title: "Get Nakafa Taxonomy",
-  },
-  {
-    annotations: NAKAFA_READ_ONLY_TOOL_ANNOTATIONS,
-    description:
-      "Return structured Nakafa exercise questions, choices, answers, explanations, URLs, and metadata for an exercise content reference.",
-    inputSchema: NakafaGetExerciseToolInputSchema,
-    name: "nakafa_get_exercise",
-    outputSchema: NakafaGetExerciseToolOutputSchema,
-    run: getNakafaExerciseToolResult,
-    title: "Get Nakafa Exercise",
   },
   {
     annotations: NAKAFA_READ_ONLY_TOOL_ANNOTATIONS,

@@ -8,7 +8,7 @@ import type { Infer } from "convex/values";
 type ContentSearchInput = Infer<typeof contentSearchInputValidator>;
 type ContentSearchDocument = Doc<"contentSearch">;
 
-const practiceSourcePathPrefix = "material/practice/";
+const tryoutQuestionSourcePathPrefix = "question-bank/tryout/";
 const routeSeparatorPattern = /[/_-]+/g;
 
 /** Reads a bounded search page from the derived content search table. */
@@ -73,12 +73,14 @@ async function searchContent(
   const routeLookupDocuments = routeLookupDocument ? [routeLookupDocument] : [];
 
   const searchGroups = [titleDocuments, textDocuments, routeDocuments];
-  const hasPracticeContext = searchGroups
+  const hasTryoutContext = searchGroups
     .flat()
-    .some((document) =>
-      document.sourcePath.startsWith(practiceSourcePathPrefix)
+    .some(
+      (document) =>
+        document.section === "tryout" ||
+        document.sourcePath.startsWith(tryoutQuestionSourcePathPrefix)
     );
-  const documents = hasPracticeContext
+  const documents = hasTryoutContext
     ? appendDocumentGroups([
         routeLookupDocuments,
         routeDocuments,
@@ -92,9 +94,9 @@ async function searchContent(
         routeDocuments,
       ]);
 
-  if (hasPracticeContext) {
-    // Practice titles are often generic ("Soal 11"), so route and body text
-    // carry the discriminating material, set, and question context.
+  if (hasTryoutContext) {
+    // Try-out question titles are often generic, so route and body text carry
+    // the discriminating country, exam, set, section, and question context.
     return rankContentSearchDocuments(documents, queryText);
   }
 

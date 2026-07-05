@@ -61,41 +61,14 @@ describe("analytics/capture", () => {
     ).toBe(false);
     expect(
       validate(productAnalyticsEventValidator, {
-        name: "exercise attempt started",
-        properties: {
-          mode: "practice",
-          origin: "standalone",
-          scope: "set",
-          slug: "assessment/example",
-          total_exercises: 10,
-        },
-      })
-    ).toBe(true);
-    expect(
-      validate(productAnalyticsEventValidator, {
-        name: "exercise attempt completed",
-        properties: {
-          answered_count: 10,
-          correct_answers: 8,
-          mode: "practice",
-          origin: "standalone",
-          score_percentage: 80,
-          scope: "set",
-          slug: "assessment/example",
-          total_exercises: 10,
-          total_time: 120,
-        },
-      })
-    ).toBe(true);
-    expect(
-      validate(productAnalyticsEventValidator, {
         name: "tryout attempt started",
         properties: {
           attempt_number: 1,
+          country_key: "indonesia",
+          exam_key: "snbt",
           locale: "id",
-          product: "snbt",
           score_status: "official",
-          tryout_slug: "snbt-2026",
+          set_key: "set-1",
         },
       })
     ).toBe(true);
@@ -104,14 +77,15 @@ describe("analytics/capture", () => {
         name: "tryout attempt completed",
         properties: {
           attempt_number: 1,
+          country_key: "indonesia",
+          exam_key: "snbt",
           locale: "id",
-          product: "snbt",
           raw_score_percentage: 75,
           score_status: "official",
+          set_key: "set-1",
           theta: 0.4,
           total_correct: 15,
           total_questions: 20,
-          tryout_slug: "snbt-2026",
         },
       })
     ).toBe(true);

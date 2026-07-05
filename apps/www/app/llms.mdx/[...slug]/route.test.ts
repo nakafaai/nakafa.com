@@ -3,6 +3,7 @@ import { Effect } from "effect";
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "@/app/llms.mdx/[...slug]/route";
+import { BASE_URL } from "@/lib/llms/constants";
 
 const mockGetLlmsMarkdownText = vi.hoisted(() => vi.fn());
 const mockGetCachedLlmsSectionIndexText = vi.hoisted(() => vi.fn());
@@ -126,7 +127,7 @@ describe("llms.mdx route", () => {
     );
     expect(response.headers.get("x-robots-tag")).toBe("noindex");
     expect(body).toContain("# Markdown page not found");
-    expect(body).toContain("https://nakafa.com/en/search");
-    expect(body).toContain("https://nakafa.com/llms/en/site/llms.txt");
+    expect(body).toContain(`${BASE_URL}/en/search`);
+    expect(body).toContain(`${BASE_URL}/llms/en/site/llms.txt`);
   });
 });

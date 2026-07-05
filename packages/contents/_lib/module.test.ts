@@ -11,11 +11,11 @@ describe("importContentModule", () => {
     );
     expect(
       getLocalizedContentPath(
-        "material/practice/assessment/snbt/set-1/question-1/question",
+        "question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1/question-1/question",
         "id"
       )
     ).toBe(
-      "material/practice/assessment/snbt/set-1/question-1/question.id.mdx"
+      "question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1/question-1/question.id.mdx"
     );
   });
 

@@ -3,7 +3,7 @@ import { defineTable } from "convex/server";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
-export const materialKindValidator = literals("lesson", "practice");
+export const materialKindValidator = literals("lesson");
 
 export const materialDomainValidator = v.string();
 
@@ -20,7 +20,7 @@ const localizedMaterialMetadataValidator = v.object({
 const tables = {
   /**
    * Curriculum-neutral material identity.
-   * One row per reusable lesson or practice material source.
+   * One row per reusable lesson material source.
    */
   materials: defineTable({
     concepts: v.array(materialConceptValidator),

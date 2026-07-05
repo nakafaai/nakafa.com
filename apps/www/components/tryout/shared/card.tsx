@@ -11,7 +11,7 @@ export function TryoutCard({
   return (
     <section
       className={cn(
-        "overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm",
+        "overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm",
         className
       )}
       {...props}
@@ -97,7 +97,7 @@ export function TryoutCardTitle({
 }
 
 /**
- * Renders concise helper copy that disambiguates try-out catalog products.
+ * Renders concise helper copy that disambiguates try-out catalog rows.
  */
 export function TryoutCardDescription({
   className,

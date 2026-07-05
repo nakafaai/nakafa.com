@@ -11,6 +11,7 @@ import { SimpleIcon } from "@repo/design-system/components/icons/simple";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { languageIconMap } from "@repo/design-system/lib/programming";
+import { preserveShikiLineBreaks } from "@repo/design-system/lib/shiki";
 import { cn, save } from "@repo/design-system/lib/utils";
 import {
   type ComponentProps,
@@ -188,8 +189,8 @@ class HighlighterManager {
     }
 
     return [
-      removePreBackground(addPreClass(light ?? "")),
-      removePreBackground(addPreClass(dark ?? "")),
+      preserveShikiLineBreaks(removePreBackground(addPreClass(light ?? ""))),
+      preserveShikiLineBreaks(removePreBackground(addPreClass(dark ?? ""))),
     ];
   }
 }

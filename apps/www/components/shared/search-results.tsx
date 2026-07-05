@@ -145,6 +145,7 @@ function useSearchSectionLabels(): Record<
     articles: tArticles("articles"),
     material: tCommon("material"),
     quran: tHoly("quran"),
+    tryout: tCommon("try-out"),
   };
 }
 

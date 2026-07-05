@@ -81,7 +81,7 @@ function parseLocalizedHref(href: string): ParsedLocalizedHref {
  * Returns a next-intl navigation href without a locale prefix; the router adds
  * the target locale using its configured localized pathname mapping.
  */
-function toNavigationHref(publicPath: string, suffix = "") {
+function toNavigationHref(publicPath: string, suffix: string) {
   return `/${publicPath}${suffix}`;
 }
 
@@ -102,7 +102,7 @@ function isProjectedNamespace(publicPath: string, locale: Locale) {
   );
 }
 
-/** Narrows projected route rows to canonical content/practice rows. */
+/** Narrows projected route rows to canonical source-backed content rows. */
 function isContentRoute(route: PublicRoute): route is PublicContentRoute {
   return route.kind !== "curriculum-context";
 }
@@ -214,26 +214,6 @@ export const resolveLocalizedNavigationHref = Effect.fn(
         targetRoute,
       })
     );
-  }
-
-  const practiceRootPath = index.projectPracticeRootPath({
-    currentLocale: parsed.currentLocale,
-    path: parsed.publicPath,
-    targetLocale: input.locale,
-  });
-
-  if (practiceRootPath) {
-    return toNavigationHref(practiceRootPath);
-  }
-
-  const practiceDomainPath = index.projectPracticeDomainPath({
-    currentLocale: parsed.currentLocale,
-    path: parsed.publicPath,
-    targetLocale: input.locale,
-  });
-
-  if (practiceDomainPath) {
-    return toNavigationHref(practiceDomainPath);
   }
 
   if (isProjectedNamespace(parsed.publicPath, parsed.currentLocale)) {

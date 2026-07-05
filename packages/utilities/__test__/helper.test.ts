@@ -119,11 +119,10 @@ describe("cleanSlug", () => {
       expect(cleanSlug(slug)).toBe("curriculum/high-school/10/mathematics");
     });
 
-    it("should handle nested exercise slug", () => {
-      const slug =
-        "/material/practice/assessment/snbt/general-reasoning/try-out-2026/set-1/question-1/";
+    it("should handle nested try-out slug", () => {
+      const slug = "/try-out/indonesia/snbt/set-1/quantitative-knowledge/";
       expect(cleanSlug(slug)).toBe(
-        "material/practice/assessment/snbt/general-reasoning/try-out-2026/set-1/question-1"
+        "try-out/indonesia/snbt/set-1/quantitative-knowledge"
       );
     });
 

@@ -7,10 +7,6 @@ import type { PublicRoute } from "@repo/contents/_types/route/schema";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import {
-  getRuntimeExerciseQuestionPage,
-  getRuntimeExerciseSetPage,
-} from "@/lib/content/runtime/pages";
-import {
   getRuntimeContentRoute,
   getRuntimeContentRouteParentPage,
 } from "@/lib/content/runtime/routes";
@@ -21,10 +17,7 @@ type VerifiedContentRouteCheck = Exclude<
   PublicContentRouteCheck,
   { mode: "outside" }
 >;
-type VerifiedLlmsRouteCheck =
-  | VerifiedContentRouteCheck
-  | { mode: "exercise-set"; sourcePath: string }
-  | { mode: "exercise-question"; sourcePath: string };
+type VerifiedLlmsRouteCheck = VerifiedContentRouteCheck;
 
 export interface LocalizedLlmsRoute {
   locale: SupportedLocale;
@@ -147,20 +140,6 @@ function getRouteProjectionCheck(route: PublicRoute): VerifiedLlmsRouteCheck {
     return { mode: "app" };
   }
 
-  if (route.kind === "exercise-question") {
-    return {
-      mode: "exercise-question",
-      sourcePath: route.sourcePath,
-    };
-  }
-
-  if (route.kind === "exercise-set") {
-    return {
-      mode: "exercise-set",
-      sourcePath: route.sourcePath,
-    };
-  }
-
   return {
     mode: "exact",
     route: route.publicPath,
@@ -258,30 +237,6 @@ const contentRouteExists = Effect.fn("www.llms.routes.contentExists")(
   }) {
     if (routeCheck.mode === "app") {
       return true;
-    }
-
-    if (routeCheck.mode === "exercise-question") {
-      return yield* getRuntimeExerciseQuestionPage({
-        locale,
-        slug: routeCheck.sourcePath,
-      }).pipe(
-        Effect.match({
-          onFailure: () => false,
-          onSuccess: (questionPage) => questionPage !== null,
-        })
-      );
-    }
-
-    if (routeCheck.mode === "exercise-set") {
-      return yield* getRuntimeExerciseSetPage({
-        locale,
-        slug: routeCheck.sourcePath,
-      }).pipe(
-        Effect.match({
-          onFailure: () => false,
-          onSuccess: (setPage) => setPage !== null,
-        })
-      );
     }
 
     if (routeCheck.mode === "missing") {

@@ -9,9 +9,9 @@ import {
 describe("lib/auth/utils", () => {
   describe("getSafeInternalRedirectPath", () => {
     it("returns valid internal paths", () => {
-      expect(getSafeInternalRedirectPath("/id/try-out/snbt/2026-set-1")).toBe(
-        "/id/try-out/snbt/2026-set-1"
-      );
+      expect(
+        getSafeInternalRedirectPath("/id/try-out/indonesia/snbt/set-1")
+      ).toBe("/id/try-out/indonesia/snbt/set-1");
       expect(getSafeInternalRedirectPath("/auth?redirect=%2Fid")).toBe(
         "/auth?redirect=%2Fid"
       );
@@ -53,8 +53,8 @@ describe("lib/auth/utils", () => {
 
     it("keeps real internal app and content callbacks unchanged", () => {
       expect(getAuthCallbackPath("/id/search?q=a,b")).toBe("/id/search?q=a,b");
-      expect(getAuthCallbackPath("/id/try-out/snbt/2026-set-1")).toBe(
-        "/id/try-out/snbt/2026-set-1"
+      expect(getAuthCallbackPath("/id/try-out/indonesia/snbt/set-1")).toBe(
+        "/id/try-out/indonesia/snbt/set-1"
       );
     });
   });

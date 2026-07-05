@@ -1,5 +1,6 @@
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { BASE_URL } from "@/lib/llms/constants";
 import { getLlmsMdxText } from "@/lib/llms/mdx";
 
 const runtimeMocks = vi.hoisted(() => ({
@@ -101,7 +102,7 @@ describe("getLlmsMdxText", () => {
       slug: "material/lesson/chemistry/green-chemistry/definition",
     });
     expect(text).toContain(
-      "https://nakafa.com/en/subjects/chemistry/green-chemistry/definition"
+      `${BASE_URL}/en/subjects/chemistry/green-chemistry/definition`
     );
     expect(text).toContain("Lesson body");
   });

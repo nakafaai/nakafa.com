@@ -93,11 +93,9 @@ describe("asset registry", () => {
   it("derives canonical asset keys from graph alignment identity", () => {
     expect(
       getCanonicalAssetKey(
-        "alignment:exercise:high-school:snbt:general-reasoning:exercise-set:general-reasoning:try-out:2026:set-1"
+        "alignment:tryout:indonesia:snbt:tryout-set:indonesia:snbt:set-1"
       )
-    ).toBe(
-      "asset:exercise:high-school:snbt:general-reasoning:exercise-set:general-reasoning:try-out:2026:set-1"
-    );
+    ).toBe("asset:tryout:indonesia:snbt:tryout-set:indonesia:snbt:set-1");
     expect(Schema.is(CanonicalAssetKeySchema)("asset:bad/key")).toBe(false);
   });
 

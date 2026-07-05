@@ -1,56 +1,41 @@
-import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
-import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
-import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { fetchQuery } from "convex/nextjs";
-import { Clock, Effect } from "effect";
+import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
-import { TryoutCatalogCard } from "@/components/tryout/catalog-card";
-import { TryoutCatalogList } from "@/components/tryout/catalog-list";
+import { TryoutCatalogGrid } from "@/components/tryout/catalog-grid";
 import { TryoutHubHeader } from "@/components/tryout/hub-header";
-import { SnbtTryoutIcon } from "@/components/tryout/product-icon";
-import { TRYOUT_CATALOG_PAGE_SIZE } from "@/components/tryout/utils/catalog";
-import { getTryoutProductHref } from "@/components/tryout/utils/routes";
-import { getToken } from "@/lib/auth/server";
+import { getTryoutPublicPathHref } from "@/components/tryout/routes";
+import { fetchAuthQuery, getToken } from "@/lib/auth/server";
+import { fetchTryoutCountries, fetchTryoutExams } from "@/lib/tryout/catalog";
 
-/** Renders the server-backed tryout hub with an SSR first catalog page. */
+/** Renders the server-backed try-out hub with country-first discovery. */
 export async function TryoutHubPage({ locale }: { locale: Locale }) {
-  const product: TryoutProduct = "snbt";
-  const [tHome, tTryouts, token] = await Promise.all([
+  const [countries, tHome, tTryouts, token] = await Promise.all([
+    fetchTryoutCountries({ locale }),
     getTranslations({ locale, namespace: "Home" }),
     getTranslations({ locale, namespace: "Tryouts" }),
     getToken(),
   ]);
-
-  const { catalogSnapshot, currentUser, initialNowMs } =
-    await Effect.runPromise(
-      Effect.all(
-        {
-          catalogSnapshot: Effect.tryPromise(() =>
-            fetchQuery(
-              api.tryouts.queries.tryouts.getActiveTryoutCatalogSnapshot,
-              {
-                locale,
-                pageSize: TRYOUT_CATALOG_PAGE_SIZE,
-                product,
-              },
-              token ? { token } : undefined
-            )
-          ),
-          currentUser: token
-            ? Effect.tryPromise(() =>
-                fetchQuery(api.auth.queries.getCurrentUser, {}, { token })
-              )
-            : Effect.succeed(null),
-          initialNowMs: Clock.currentTimeMillis,
-        },
-        { concurrency: "unbounded" }
+  const currentUser = token
+    ? await Effect.runPromise(
+        Effect.tryPromise({
+          try: () => fetchAuthQuery(api.auth.queries.getCurrentUser, {}),
+          catch: (cause) => cause,
+        }).pipe(Effect.catchAll(() => Effect.succeed(null)))
       )
-    );
+    : null;
   const userName = currentUser?.appUser.name ?? tHome("guest");
+  const countryRows = await Promise.all(
+    countries.map(async (country) => ({
+      country,
+      examCount: (
+        await fetchTryoutExams({
+          locale,
+          publicPath: country.publicPath,
+        })
+      ).length,
+    }))
+  );
 
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-20 sm:py-24">
@@ -60,32 +45,16 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
           title={tTryouts("title")}
         />
 
-        <TryoutCatalogCard
-          action={
-            <Button
-              nativeButton={false}
-              render={
-                <NavigationLink href={getTryoutProductHref(product)}>
-                  {tTryouts("cta")}
-                  <HugeIcons className="size-4" icon={ArrowRight02Icon} />
-                </NavigationLink>
-              }
-            />
-          }
-          activeCountLabel={tTryouts("package-count", {
-            count: catalogSnapshot.activeCount,
-          })}
-          art={<SnbtTryoutIcon />}
-          description={tTryouts("products.snbt.description")}
-          title={tTryouts("products.snbt.title")}
-        >
-          <TryoutCatalogList
-            initialEntries={catalogSnapshot.initialPage}
-            initialNowMs={initialNowMs}
-            locale={locale}
-            product={product}
-          />
-        </TryoutCatalogCard>
+        <TryoutCatalogGrid
+          emptyLabel={tTryouts("list-empty")}
+          items={countryRows.map(({ country, examCount }) => ({
+            badge: tTryouts("exam-count", { count: examCount }),
+            ctaLabel: tTryouts("open-country-cta"),
+            description: country.description,
+            href: getTryoutPublicPathHref(country.publicPath),
+            title: country.title,
+          }))}
+        />
       </div>
     </div>
   );

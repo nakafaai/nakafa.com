@@ -289,8 +289,8 @@ async function seedDerivedRuntimeRows(ctx: MutationCtx) {
     key: "fixture-assessment",
     kind: "assessment",
     navigation: {
-      levels: ["section", "domain", "practice-set"],
-      model: "exam-domain-practice-set",
+      levels: ["section", "domain", "set"],
+      model: "exam-domain-set",
     },
     providerKind: "nakafa",
     providerName: "Fixture Provider",

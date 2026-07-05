@@ -8,7 +8,7 @@ import {
 const validValue = {
   focusKey: "student-exam",
   interests: ["school-curriculum", "exam-prep"],
-  primaryProgramKey: "snbt-2026",
+  primaryProgramKey: "snbt",
   role: "student",
 };
 
@@ -90,7 +90,7 @@ describe("components/programs/onboarding/submit", () => {
     expect(selectedValues).toEqual([
       {
         interests: ["school-curriculum", "exam-prep"],
-        primaryProgramKey: "snbt-2026",
+        primaryProgramKey: "snbt",
       },
     ]);
   });
@@ -109,7 +109,7 @@ describe("components/programs/onboarding/submit", () => {
           return Promise.resolve();
         },
         value: {
-          primaryProgramKey: "snbt-2026",
+          primaryProgramKey: "snbt",
         },
       })
     );

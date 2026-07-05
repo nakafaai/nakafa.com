@@ -61,21 +61,3 @@ export const SUBJECT_MATERIALS = [
   ...BACHELOR_MATERIALS,
 ] as const;
 export type Material = (typeof SUBJECT_MATERIALS)[number];
-
-export const EXERCISES_CATEGORIES = ["high-school", "middle-school"] as const;
-export type ExercisesCategory = (typeof EXERCISES_CATEGORIES)[number];
-
-export const EXERCISES_TYPES = ["grade-9", "tka", "snbt"] as const;
-export type ExercisesType = (typeof EXERCISES_TYPES)[number];
-
-export const EXERCISES_MATERIALS = [
-  "mathematics",
-  "quantitative-knowledge",
-  "mathematical-reasoning",
-  "general-reasoning",
-  "indonesian-language",
-  "english-language",
-  "general-knowledge",
-  "reading-and-writing-skills",
-] as const;
-export type ExercisesMaterial = (typeof EXERCISES_MATERIALS)[number];

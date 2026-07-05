@@ -82,17 +82,6 @@ const loadWorkflow = async (
     callConvexMutation: () =>
       Effect.fail(new Error("Unexpected Convex mutation call.")),
   }));
-  vi.doMock("@repo/backend/scripts/sync-content/content/practice/sets", () => ({
-    /** Records exercise set sync calls. */
-    syncExerciseSets: () => syncStep("syncExerciseSets"),
-  }));
-  vi.doMock(
-    "@repo/backend/scripts/sync-content/content/practice/questions",
-    () => ({
-      /** Records exercise question sync calls. */
-      syncExerciseQuestions: () => syncStep("syncExerciseQuestions"),
-    })
-  );
   vi.doMock("@repo/backend/scripts/sync-content/cli/logging", () => ({
     /** Suppresses duration formatting noise in workflow tests. */
     formatDuration: () => "0ms",
@@ -420,7 +409,7 @@ describe("sync-content workflows", () => {
         hasStale: false,
       },
       {
-        changedFiles: ["packages/contents/_types/route/practice/path.ts"],
+        changedFiles: ["packages/contents/_types/route/tryout/path.ts"],
         syncState: {
           lastSyncCommit: "previous-commit",
           lastSyncTimestamp: 1,
@@ -435,8 +424,7 @@ describe("sync-content workflows", () => {
       expect.arrayContaining([
         "syncCurriculumTopics",
         "syncCurriculumLessons",
-        "syncExerciseSets",
-        "syncExerciseQuestions",
+        "syncTryouts",
         "clean",
         "syncRoutePages",
         "syncGeneratedReadModels",
@@ -452,12 +440,7 @@ describe("sync-content workflows", () => {
     expect(events.indexOf("syncCurriculumLessons")).toBeLessThan(
       events.indexOf("clean")
     );
-    expect(events.indexOf("syncExerciseSets")).toBeLessThan(
-      events.indexOf("clean")
-    );
-    expect(events.indexOf("syncExerciseQuestions")).toBeLessThan(
-      events.indexOf("clean")
-    );
+    expect(events.indexOf("syncTryouts")).toBeLessThan(events.indexOf("clean"));
     expect(events.indexOf("clean")).toBeLessThan(
       events.indexOf("syncRoutePages")
     );
@@ -492,8 +475,7 @@ describe("sync-content workflows", () => {
         "syncArticles",
         "syncCurriculumTopics",
         "syncCurriculumLessons",
-        "syncExerciseSets",
-        "syncExerciseQuestions",
+        "syncTryouts",
         "clean",
         "syncRoutePages",
         "syncGeneratedReadModels",
@@ -508,9 +490,7 @@ describe("sync-content workflows", () => {
     expect(events.indexOf("syncCurriculumLessons")).toBeLessThan(
       events.indexOf("clean")
     );
-    expect(events.indexOf("syncExerciseQuestions")).toBeLessThan(
-      events.indexOf("clean")
-    );
+    expect(events.indexOf("syncTryouts")).toBeLessThan(events.indexOf("clean"));
     expect(events.indexOf("clean")).toBeLessThan(
       events.indexOf("syncRoutePages")
     );

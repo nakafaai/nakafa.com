@@ -27,18 +27,11 @@ import {
 } from "@hugeicons/core-free-icons";
 import type { MaterialList } from "@repo/contents/_types/curriculum/material";
 import { getLessonMaterialList } from "@repo/contents/_types/material/registry";
-import type {
-  ExercisesMaterial,
-  Material,
-} from "@repo/contents/_types/taxonomy";
 import { cleanSlug } from "@repo/utilities/helper";
 import { Effect, Option } from "effect";
 import type { Locale } from "next-intl";
 
-type MaterialIconKey = ExercisesMaterial | Material;
-type MaterialIcon = typeof PiIcon;
-
-const materialIconByKey: { readonly [Key in MaterialIconKey]: MaterialIcon } = {
+const materialIconByKey = {
   "ai-ds": NeuralNetworkIcon,
   biology: DnaIcon,
   chemistry: TestTubeIcon,
@@ -65,6 +58,8 @@ const materialIconByKey: { readonly [Key in MaterialIconKey]: MaterialIcon } = {
   "technology-electro-medical": ElectricWireIcon,
 };
 
+type MaterialIconKey = keyof typeof materialIconByKey;
+
 function isMaterialIconKey(value: string): value is MaterialIconKey {
   return Object.hasOwn(materialIconByKey, value);
 }
@@ -87,7 +82,7 @@ export const getMaterials = Effect.fn("Contents.Subject.getMaterials")(
 );
 
 /**
- * Resolves the icon used for a subject or exercises material slug.
+ * Resolves the icon used for a subject material slug.
  *
  * @param material - Material slug to map to an icon
  * @returns Hugeicons icon for the material

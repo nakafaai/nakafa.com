@@ -5,9 +5,10 @@ export const LEARNING_OBJECT_KIND_VALUES = [
   "article",
   "curriculum-topic",
   "curriculum-lesson",
-  "exercise-group",
-  "exercise-set",
-  "exercise-question",
+  "tryout-country",
+  "tryout-exam",
+  "tryout-set",
+  "tryout-section",
   "quran-surah",
 ] as const;
 
@@ -25,6 +26,7 @@ export type LearningObjectKind = Schema.Schema.Type<
 export const SOURCE_REGISTRY_ROOT_VALUES = [
   "articles",
   "material",
+  "tryout",
   "quran",
 ] as const;
 
@@ -66,23 +68,6 @@ export class InvalidLearningGraphRouteError extends Schema.TaggedError<InvalidLe
   }
 ) {}
 
-/** Runtime schema for exercise-specific source route projection metadata. */
-export const ExerciseRouteProjectionSchema = Schema.Struct({
-  categorySegment: Schema.String,
-  groupRoute: Schema.String,
-  groupSegments: Schema.Array(Schema.String),
-  materialSegment: Schema.String,
-  questionSegment: Schema.optional(Schema.String),
-  setRoute: Schema.optional(Schema.String),
-  setSegment: Schema.optional(Schema.String),
-  typeSegment: Schema.String,
-});
-
-/** Exercise route projection metadata derived from the runtime schema. */
-export type ExerciseRouteProjection = Schema.Schema.Type<
-  typeof ExerciseRouteProjectionSchema
->;
-
 /** Runtime schema for Quran-specific source route projection metadata. */
 export const QuranRouteProjectionSchema = Schema.Struct({
   surahSegment: Schema.String,
@@ -96,7 +81,6 @@ export type QuranRouteProjection = Schema.Schema.Type<
 /** Runtime schema for projection drafts before derived root/scope/depth data. */
 export const SourceRouteProjectionDraftSchema = Schema.Struct({
   conceptSegments: Schema.Array(Schema.String),
-  exercise: Schema.optional(ExerciseRouteProjectionSchema),
   kind: LearningObjectKindSchema,
   learningObjectSegments: Schema.Array(Schema.String),
   lensSegments: Schema.Array(Schema.String),
@@ -140,9 +124,10 @@ export type SourceRouteInput = Schema.Schema.Type<
 
 const ROOT_BY_KIND = {
   article: "articles",
-  "exercise-group": "material",
-  "exercise-question": "material",
-  "exercise-set": "material",
+  "tryout-country": "tryout",
+  "tryout-exam": "tryout",
+  "tryout-set": "tryout",
+  "tryout-section": "tryout",
   "quran-surah": "quran",
   "curriculum-lesson": "material",
   "curriculum-topic": "material",
@@ -150,9 +135,10 @@ const ROOT_BY_KIND = {
 
 const LENS_SCOPE_BY_KIND = {
   article: "article-domain",
-  "exercise-group": "exam",
-  "exercise-question": "exam",
-  "exercise-set": "exam",
+  "tryout-country": "exam",
+  "tryout-exam": "exam",
+  "tryout-set": "exam",
+  "tryout-section": "exam",
   "quran-surah": "scripture",
   "curriculum-lesson": "curriculum",
   "curriculum-topic": "curriculum",

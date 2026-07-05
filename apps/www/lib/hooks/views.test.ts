@@ -35,13 +35,13 @@ describe("createContentViewKey", () => {
         context: {
           mode: "placement",
           nodeKey: "node:linear",
-          programKey: "snbt-2026",
+          programKey: "snbt",
         },
         locale: "id",
         signedInUserId: "user-1",
       })
     ).toBe(
-      "user:user-1:id:asset:id:material:mathematics:algebra:linear:placement:snbt-2026:node:linear"
+      "user:user-1:id:asset:id:material:mathematics:algebra:linear:placement:snbt:node:linear"
     );
   });
 

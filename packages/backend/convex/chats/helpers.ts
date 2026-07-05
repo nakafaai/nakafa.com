@@ -44,12 +44,12 @@ export async function deletePartsForMessageBatch(
   messageId: Id<"messages">
 ) {
   const parts = await ctx.db
-    .query("parts")
+    .query("messageParts")
     .withIndex("by_messageId_and_order", (q) => q.eq("messageId", messageId))
     .take(MAX_CHAT_MESSAGE_PARTS + 1);
 
   for (const part of parts.slice(0, MAX_CHAT_MESSAGE_PARTS)) {
-    await ctx.db.delete("parts", part._id);
+    await ctx.db.delete("messageParts", part._id);
   }
 
   return {
@@ -116,7 +116,7 @@ export async function insertParts(
   ctx: MutationCtx,
   messageId: Id<"messages">,
   parts: PartInput[]
-): Promise<Id<"parts">[]> {
+): Promise<Id<"messageParts">[]> {
   if (parts.length > MAX_CHAT_MESSAGE_PARTS) {
     throw new ConvexError({
       code: "CHAT_PART_LIMIT_EXCEEDED",
@@ -124,10 +124,10 @@ export async function insertParts(
     });
   }
 
-  const partIds: Id<"parts">[] = [];
+  const partIds: Id<"messageParts">[] = [];
 
   for (const part of parts) {
-    const partId = await ctx.db.insert("parts", {
+    const partId = await ctx.db.insert("messageParts", {
       ...part,
       messageId,
     });

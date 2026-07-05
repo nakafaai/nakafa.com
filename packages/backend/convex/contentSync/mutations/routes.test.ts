@@ -23,9 +23,9 @@ describe("contentSync/mutations/routes", () => {
       "quran/1",
       "material/lesson/chemistry/atomic-structure",
       "material/lesson/chemistry/atomic-structure/electron-configuration",
-      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026",
-      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
-      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/7",
+      "try-out/indonesia/snbt",
+      "try-out/indonesia/snbt/set-1",
+      "try-out/indonesia/snbt/set-1/quantitative-knowledge",
     ];
 
     await t.mutation(async (ctx) => {
@@ -66,22 +66,16 @@ describe("contentSync/mutations/routes", () => {
           "material/lesson/chemistry/atomic-structure/electron-configuration",
       }),
       expect.objectContaining({
-        sourceParentPath:
-          "material/practice/assessment/snbt/quantitative-knowledge",
-        sourcePath:
-          "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026",
+        sourceParentPath: "try-out/indonesia",
+        sourcePath: "try-out/indonesia/snbt",
       }),
       expect.objectContaining({
-        sourceParentPath:
-          "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026",
-        sourcePath:
-          "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
+        sourceParentPath: "try-out/indonesia/snbt",
+        sourcePath: "try-out/indonesia/snbt/set-1",
       }),
       expect.objectContaining({
-        sourceParentPath:
-          "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
-        sourcePath:
-          "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/7",
+        sourceParentPath: "try-out/indonesia/snbt/set-1",
+        sourcePath: "try-out/indonesia/snbt/set-1/quantitative-knowledge",
       }),
     ]);
   });

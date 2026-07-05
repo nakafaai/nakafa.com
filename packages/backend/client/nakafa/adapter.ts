@@ -1,5 +1,4 @@
 import { Nakafa } from "@repo/ai/agents/nakafa/service";
-import { readNakafaExercise } from "@repo/backend/client/nakafa/exercise";
 import { readNakafaMarkdown } from "@repo/backend/client/nakafa/markdown";
 import { readNakafaQuranReference } from "@repo/backend/client/nakafa/quran";
 import { readNakafaTaxonomy } from "@repo/backend/client/nakafa/taxonomy";
@@ -14,9 +13,6 @@ export function makeConvexNakafa({ convexUrl }: ConvexNakafaOptions) {
   return Nakafa.make({
     /** Reads markdown from Convex runtime rows instead of package files. */
     read: (input) => readNakafaMarkdown(convexUrl, input),
-    /** Reads structured exercise rows from Convex runtime rows. */
-    exercise: (input, exerciseNumber) =>
-      readNakafaExercise(convexUrl, input, exerciseNumber),
     /** Reads Quran references from Convex Quran runtime rows. */
     quran: (input) => readNakafaQuranReference(convexUrl, input),
     /** Reads taxonomy from pure taxonomy constants plus Convex counts. */

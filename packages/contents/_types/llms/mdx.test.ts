@@ -42,6 +42,7 @@ print(area)\`
 <LineEquation
   title={<>Sector <InlineMath math="60^\\circ" /></>}
   description={<>Shows <InlineMath math="\\frac{1}{6}" /> of a circle.</>}
+  caption={<>Move $$P(3,2)$$ to{" "}<InlineMath math="P'(1,5)" />.</>}
   data={[{ points: [{ x: 0, y: 0, z: 0 }, { x: 1, y: 1, z: 0 }], label: "diameter" }]}
 />
 
@@ -103,6 +104,7 @@ A-->B\`} />
     expect(markdown).toContain("points: [{ x: 0, y: 0, z: 0 }");
     expect(markdown).toContain("Visible text: Sector");
     expect(markdown).toContain("Visible text: Shows of a circle.");
+    expect(markdown).toContain("Visible text: Move to .");
     expect(markdown).toContain("diameter");
     expect(markdown).toContain("Component: NumberLine");
     expect(markdown).toContain("startInclusive: true");
@@ -178,6 +180,33 @@ The scene compares entry speed and orbit height.
     expect(markdown).toContain(
       "The scene compares entry speed and orbit height."
     );
+  });
+
+  it("keeps escaped nested code fences inside CodeBlock data", () => {
+    const markdown = Effect.runSync(
+      projectMdxForAgentMarkdown(`
+<CodeBlock
+  data={[{
+    language: "markdown",
+    filename: "syntax.md",
+    code: \`# Heading
+
+\\\`\\\`\\\`python
+print("Hello, World!")
+\\\`\\\`\\\`
+
+| Column 1 | Column 2 |
+|----------|----------|
+| Data A   | Data B   |\`
+  }]}
+/>
+`)
+    );
+
+    expect(markdown).toContain("File: syntax.md");
+    expect(markdown).toContain('print("Hello, World!")');
+    expect(markdown).toContain("| Column 1 | Column 2 |");
+    expect(markdown).toContain("| Data A   | Data B   |");
   });
 
   it("reports malformed standalone fragments as typed projection failures", () => {

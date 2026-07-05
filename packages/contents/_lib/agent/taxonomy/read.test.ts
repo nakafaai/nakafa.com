@@ -62,15 +62,18 @@ describe("Nakafa agent taxonomy", () => {
     expect(taxonomy.endpoints.root_note).toContain(
       NAKAFA_MCP_INFORMATIONAL_ROOT
     );
-    expect(taxonomy.exercises.materials).toContainEqual({
-      id: "quantitative-knowledge",
-      label: "Quantitative Knowledge",
+    expect(taxonomy.tryout.countries).toContainEqual({
+      id: "indonesia",
+      label: "Indonesia",
+    });
+    expect(taxonomy.tryout.exams).toContainEqual({
+      id: "snbt",
+      label: "SNBT",
     });
     expect(taxonomy.tools).toStrictEqual([
       "nakafa_search_content",
       "nakafa_get_content",
       "nakafa_get_taxonomy",
-      "nakafa_get_exercise",
       "nakafa_get_quran_reference",
     ]);
   });

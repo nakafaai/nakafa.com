@@ -52,17 +52,10 @@ const loadCli = async (options: { learningProgramFails?: boolean } = {}) => {
       return Effect.succeed(config);
     },
   }));
-  vi.doMock("@repo/backend/scripts/sync-content/content/practice/sets", () => ({
-    /** Records exercise set sync calls if a test accidentally reaches them. */
-    syncExerciseSets: unusedCommand,
+  vi.doMock("@repo/backend/scripts/sync-content/content/tryouts", () => ({
+    /** Records try-out sync calls if a test accidentally reaches them. */
+    syncTryouts: unusedCommand,
   }));
-  vi.doMock(
-    "@repo/backend/scripts/sync-content/content/practice/questions",
-    () => ({
-      /** Records exercise question sync calls if a test accidentally reaches them. */
-      syncExerciseQuestions: unusedCommand,
-    })
-  );
   vi.doMock("@repo/backend/scripts/sync-content/content/programs", () => ({
     /** Records targeted learning-program sync calls and optional failures. */
     syncLearningPrograms: () => {

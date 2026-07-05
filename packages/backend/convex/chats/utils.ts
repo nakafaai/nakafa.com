@@ -43,7 +43,7 @@ function readStoredNinaTransition(
  * Use this after receiving one or more pages from `loadMessagesPage`.
  */
 export function mapDBMessagesToUIMessages(
-  messages: Array<Doc<"messages"> & { parts: Doc<"parts">[] }>
+  messages: Array<Doc<"messages"> & { parts: Doc<"messageParts">[] }>
 ): MyUIMessage[] {
   return messages.map((message) => ({
     id: message.identifier,

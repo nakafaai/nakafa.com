@@ -1,14 +1,13 @@
+import path from "node:path";
 import { ScriptFailureError } from "@repo/backend/scripts/lib/errors";
 import {
   readArticleReferences,
-  readExerciseChoices,
   readMdxFile,
+  readQuestionChoices,
 } from "@repo/backend/scripts/lib/mdx-parser/content";
 import {
   getArticleDir,
-  getExerciseDir,
   parseArticlePath,
-  parseExercisePath,
   parseMaterialLessonPath,
 } from "@repo/backend/scripts/lib/mdx-parser/paths";
 import {
@@ -19,10 +18,7 @@ import {
 } from "@repo/backend/scripts/sync-content/cli/logging";
 import type { ValidationResult } from "@repo/backend/scripts/sync-content/contract/types";
 import { globFiles } from "@repo/backend/scripts/sync-content/runtime/files";
-import {
-  listLessonRows,
-  listPracticeSets,
-} from "@repo/contents/_types/material/registry";
+import { listLessonRows } from "@repo/contents/_types/material/registry";
 import { Effect } from "effect";
 
 const createValidationResult = (): ValidationResult => ({
@@ -94,47 +90,45 @@ const validateSubjects = Effect.fn("sync.validateSubjects")(function* () {
   return result;
 });
 
-const validateExercises = Effect.fn("sync.validateExercises")(function* () {
-  const questionFiles = yield* globFiles("material/practice/**/question.*.mdx");
-  const materialSets = listPracticeSets();
-  const result = createValidationResult();
-
-  log(`Validating ${questionFiles.length} exercise question files...`);
-  for (const file of questionFiles) {
-    const validated = yield* Effect.either(
-      Effect.gen(function* () {
-        yield* parseExercisePath(file);
-        yield* readMdxFile(file);
-        const exerciseDir = yield* getExerciseDir(file);
-        const choices = yield* readExerciseChoices(exerciseDir);
-        if (!choices || choices.en.length === 0 || choices.id.length === 0) {
-          return yield* Effect.fail(
-            new ScriptFailureError({
-              message: `Missing exercise choices for ${file}. Add non-empty en and id choices.ts arrays.`,
-            })
-          );
-        }
-      })
+const validateTryoutQuestions = Effect.fn("sync.validateTryoutQuestions")(
+  function* () {
+    const questionFiles = yield* globFiles(
+      "question-bank/tryout/**/question.*.mdx"
     );
+    const result = createValidationResult();
 
-    if (validated._tag === "Right") {
-      result.valid++;
-      continue;
+    log(`Validating ${questionFiles.length} try-out question files...`);
+    for (const file of questionFiles) {
+      const validated = yield* Effect.either(
+        Effect.gen(function* () {
+          yield* readMdxFile(file);
+          const choices = yield* readQuestionChoices(path.dirname(file));
+          if (!choices || choices.en.length === 0 || choices.id.length === 0) {
+            return yield* Effect.fail(
+              new ScriptFailureError({
+                message: `Missing try-out choices for ${file}. Add non-empty en and id choices.ts arrays.`,
+              })
+            );
+          }
+        })
+      );
+
+      if (validated._tag === "Right") {
+        result.valid++;
+        continue;
+      }
+
+      const message =
+        validated.left instanceof Error
+          ? validated.left.message
+          : String(validated.left);
+      result.invalid++;
+      result.errors.push({ file, error: message });
     }
 
-    const message =
-      validated.left instanceof Error
-        ? validated.left.message
-        : String(validated.left);
-    result.invalid++;
-    result.errors.push({ file, error: message });
+    return result;
   }
-
-  log(`Validating ${materialSets.length} exercise material sets...`);
-  result.valid += materialSets.length;
-
-  return result;
-});
+);
 
 /** Validates content files without writing to Convex. */
 export const validate = Effect.fn("sync.validate")(function* () {
@@ -144,16 +138,16 @@ export const validate = Effect.fn("sync.validate")(function* () {
   const startTime = performance.now();
   const articleResult = yield* validateArticles();
   const subjectResult = yield* validateSubjects();
-  const exerciseResult = yield* validateExercises();
+  const tryoutResult = yield* validateTryoutQuestions();
 
   const totalValid =
-    articleResult.valid + subjectResult.valid + exerciseResult.valid;
+    articleResult.valid + subjectResult.valid + tryoutResult.valid;
   const totalInvalid =
-    articleResult.invalid + subjectResult.invalid + exerciseResult.invalid;
+    articleResult.invalid + subjectResult.invalid + tryoutResult.invalid;
   const allErrors = [
     ...articleResult.errors,
     ...subjectResult.errors,
-    ...exerciseResult.errors,
+    ...tryoutResult.errors,
   ];
 
   log("\n=== VALIDATION SUMMARY ===\n");
@@ -164,7 +158,7 @@ export const validate = Effect.fn("sync.validate")(function* () {
     `Curriculum:  ${subjectResult.valid} valid, ${subjectResult.invalid} invalid`
   );
   log(
-    `Exercises: ${exerciseResult.valid} valid, ${exerciseResult.invalid} invalid`
+    `Try-out:   ${tryoutResult.valid} valid, ${tryoutResult.invalid} invalid`
   );
   log("---");
   log(`Total: ${totalValid} valid, ${totalInvalid} invalid`);

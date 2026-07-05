@@ -22,8 +22,8 @@ import { getAllSurah } from "@repo/contents/_lib/quran";
 import {
   listLessonMaterialSources,
   listLessonRows,
-  listPracticeMaterialSources,
 } from "@repo/contents/_types/material/registry";
+import { TRYOUT_SOURCES } from "@repo/contents/_types/tryout/source";
 import { locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
 
@@ -87,9 +87,7 @@ const getExpectedGeneratedCounts = Effect.fn("sync.expectedGeneratedCounts")(
         0
       ),
       curriculumTopics: materialTopics.length,
-      materialLocales:
-        getExpectedLessonMaterialLocales(options) +
-        getExpectedPracticeMaterialLocales(options),
+      materialLocales: getExpectedLessonMaterialLocales(options),
     };
   }
 );
@@ -107,27 +105,31 @@ function getExpectedLessonMaterialLocales(options: SyncOptions) {
   );
 }
 
-/**
- * Counts practice material locale rows from source-authored groups and sets so
- * verify catches missing localized exercise read models.
- */
-function getExpectedPracticeMaterialLocales(options: SyncOptions) {
-  const localeCount = getExpectedLocaleCount(options);
-
-  return listPracticeMaterialSources().reduce(
-    (total, material) =>
-      total +
-      material.groups.reduce(
-        (groupTotal, group) => groupTotal + group.sets.length * localeCount,
-        0
-      ),
-    0
-  );
-}
-
 /** Counts the locales a verify run should expect after optional locale scoping. */
 function getExpectedLocaleCount(options: SyncOptions) {
   return options.locale ? 1 : locales.length;
+}
+
+/** Builds try-out question-bank count targets from active source placements. */
+function getExpectedTryoutCounts(options: SyncOptions) {
+  const localeCount = getExpectedLocaleCount(options);
+  let questionSourceDirectories = 0;
+  let questionSetPlacements = 0;
+
+  for (const source of TRYOUT_SOURCES) {
+    for (const set of source.sets) {
+      for (const section of set.sections) {
+        questionSetPlacements += 1;
+        questionSourceDirectories += section.questionCount;
+      }
+    }
+  }
+
+  return {
+    localizedQuestionFiles: questionSourceDirectories * localeCount,
+    localizedQuestionSets: questionSetPlacements * localeCount,
+    questionSourceDirectories,
+  };
 }
 
 /** Result shape returned by the persisted graph identity integrity check. */
@@ -221,9 +223,9 @@ export const verify = Effect.fn("sync.verify")(function* (
   ] = yield* Effect.all([
     globFiles("articles/**/*.mdx"),
     globFiles("material/lesson/**/*.mdx"),
-    globFiles("material/practice/**/question.*.mdx"),
-    globFiles("material/practice/**/answer.*.mdx"),
-    globFiles("material/practice/**/choices.ts"),
+    globFiles("question-bank/tryout/**/question.*.mdx"),
+    globFiles("question-bank/tryout/**/answer.*.mdx"),
+    globFiles("question-bank/tryout/**/choices.ts"),
     globFiles("articles/**/ref.ts"),
   ]);
 
@@ -236,14 +238,15 @@ export const verify = Effect.fn("sync.verify")(function* (
   const lessonFilesEn = lessonFiles.filter((file) => file.endsWith("/en.mdx"));
   const lessonFilesId = lessonFiles.filter((file) => file.endsWith("/id.mdx"));
   const questionFilesEn = questionFiles.filter((file) =>
-    file.endsWith("/en.mdx")
+    file.endsWith(".en.mdx")
   );
   const questionFilesId = questionFiles.filter((file) =>
-    file.endsWith("/id.mdx")
+    file.endsWith(".id.mdx")
   );
   const lessonSourceCount = listLessonMaterialSources().length;
-  const exercisePlanCount = listPracticeMaterialSources().length;
+  const tryoutSourceCount = TRYOUT_SOURCES.length;
   const expectedGeneratedCounts = yield* getExpectedGeneratedCounts(options);
+  const expectedTryoutCounts = getExpectedTryoutCounts(options);
 
   log("=== FILESYSTEM ===\n");
   log("Articles:");
@@ -258,12 +261,12 @@ export const verify = Effect.fn("sync.verify")(function* (
   log(`    - English (en):    ${lessonFilesEn.length}`);
   log(`    - Indonesian (id): ${lessonFilesId.length}`);
 
-  log("\nExercises:");
-  log(`  Material sources:        ${exercisePlanCount}`);
-  log(`  Question files:      ${questionFiles.length} (_question/*.mdx)`);
+  log("\nTry-Out Question Bank:");
+  log(`  Try-out sources:     ${tryoutSourceCount}`);
+  log(`  Question files:      ${questionFiles.length} (question.*.mdx)`);
   log(`    - English (en):    ${questionFilesEn.length}`);
   log(`    - Indonesian (id): ${questionFilesId.length}`);
-  log(`  Answer files:        ${answerFiles.length} (_answer/*.mdx)`);
+  log(`  Answer files:        ${answerFiles.length} (answer.*.mdx)`);
   log(`  Choices files:       ${choicesFiles.length} (choices.ts)`);
 
   log("\n=== DATABASE ===\n");
@@ -291,8 +294,9 @@ export const verify = Effect.fn("sync.verify")(function* (
   log(`  assessmentNodes:     ${counts.assessmentNodes}`);
   log(`  curriculumTopics:       ${counts.curriculumTopics}`);
   log(`  curriculumLessons:     ${counts.curriculumLessons}`);
-  log(`  exerciseSets:        ${counts.exerciseSets}`);
-  log(`  exerciseQuestions:   ${counts.exerciseQuestions}`);
+  log(`  questionSets:        ${counts.questionSets}`);
+  log(`  questions:           ${counts.questions}`);
+  log(`  questionChoices:     ${counts.questionChoices}`);
   log(`  contentSearch:       ${counts.contentSearch}`);
   log(`  contentRoutes:       ${counts.contentRoutes}`);
   log(`  learningPrograms:    ${counts.learningPrograms}`);
@@ -300,13 +304,15 @@ export const verify = Effect.fn("sync.verify")(function* (
   log(`  learningProgramCov:  ${counts.learningProgramCoverage}`);
   log(`  quranSurahs:         ${counts.quranSurahs}`);
   log(`  quranVerses:         ${counts.quranVerses}`);
-  log(`  tryouts:             ${counts.tryouts}`);
+  log(`  tryoutCountries:     ${counts.tryoutCountries}`);
+  log(`  tryoutExams:         ${counts.tryoutExams}`);
+  log(`  tryoutSets:          ${counts.tryoutSets}`);
+  log(`  tryoutSections:      ${counts.tryoutSections}`);
 
   log("\nRelated tables:");
   log(`  authors:             ${counts.authors}`);
   log(`  contentAuthors:      ${counts.contentAuthors} (content-author links)`);
   log(`  articleReferences:   ${counts.articleReferences}`);
-  log(`  exerciseChoices:     ${counts.exerciseChoices}`);
 
   log("\n=== VERIFICATION ===\n");
 
@@ -343,16 +349,37 @@ export const verify = Effect.fn("sync.verify")(function* (
       label: "Curriculum Lessons",
     }) && allMatch;
 
-  if (counts.exerciseQuestions === questionFiles.length) {
-    logSuccess(
-      `Questions: ${counts.exerciseQuestions} in DB = ${questionFiles.length} question files`
-    );
-  } else {
-    logError(
-      `Questions: ${counts.exerciseQuestions} in DB != ${questionFiles.length} question files`
-    );
-    allMatch = false;
-  }
+  allMatch =
+    logCountMatch({
+      actual: questionFiles.length,
+      expected: expectedTryoutCounts.localizedQuestionFiles,
+      label: "Question Files",
+    }) && allMatch;
+  allMatch =
+    logCountMatch({
+      actual: answerFiles.length,
+      expected: expectedTryoutCounts.localizedQuestionFiles,
+      label: "Answer Files",
+    }) && allMatch;
+  allMatch =
+    logCountMatch({
+      actual: choicesFiles.length,
+      expected: expectedTryoutCounts.questionSourceDirectories,
+      label: "Choices Files",
+    }) && allMatch;
+  allMatch =
+    logCountMatch({
+      actual: counts.questions,
+      expected: expectedTryoutCounts.localizedQuestionFiles,
+      label: "Questions",
+    }) && allMatch;
+
+  allMatch =
+    logCountMatch({
+      actual: counts.questionSets,
+      expected: expectedTryoutCounts.localizedQuestionSets,
+      label: "Question Sets",
+    }) && allMatch;
 
   allMatch =
     logCountMatch({
@@ -372,11 +399,9 @@ export const verify = Effect.fn("sync.verify")(function* (
   );
 
   const avgChoicesPerQuestion =
-    counts.exerciseQuestions > 0
-      ? counts.exerciseChoices / counts.exerciseQuestions
-      : 0;
+    counts.questions > 0 ? counts.questionChoices / counts.questions : 0;
   log(
-    `Choices: ${counts.exerciseChoices} in DB (~${avgChoicesPerQuestion.toFixed(1)} per question)`
+    `Choices: ${counts.questionChoices} in DB (~${avgChoicesPerQuestion.toFixed(1)} per question)`
   );
   log(`Content-Author links: ${counts.contentAuthors} in DB`);
 
@@ -421,7 +446,7 @@ export const verify = Effect.fn("sync.verify")(function* (
     !logIntegrityList(
       "active tryouts without published scales",
       integrity.activeTryoutsWithoutScale,
-      `All ${counts.tryouts} active tryouts have published scales`
+      `All ${counts.tryoutSets} active tryout sets have published scales`
     ) && allMatch;
 
   const articlesWithRefs =
@@ -463,15 +488,18 @@ export const verify = Effect.fn("sync.verify")(function* (
     log(`  - ${counts.articles} articles`);
     log(`  - ${counts.curriculumTopics} curriculum topics`);
     log(`  - ${counts.curriculumLessons} curriculum lessons`);
-    log(`  - ${counts.exerciseSets} exercise sets`);
-    log(`  - ${counts.exerciseQuestions} exercise questions`);
+    log(`  - ${counts.questionSets} question sets`);
+    log(`  - ${counts.questions} questions`);
     log(`  - ${counts.contentSearch} content search rows`);
     log(`  - ${counts.contentRoutes} content route rows`);
     log(`  - ${counts.quranSurahs} Quran surahs`);
     log(`  - ${counts.quranVerses} Quran verses`);
-    log(`  - ${counts.tryouts} tryouts`);
+    log(`  - ${counts.tryoutCountries} try-out countries`);
+    log(`  - ${counts.tryoutExams} try-out exams`);
+    log(`  - ${counts.tryoutSets} try-out sets`);
+    log(`  - ${counts.tryoutSections} try-out sections`);
     log(`  - ${counts.articleReferences} references`);
-    log(`  - ${counts.exerciseChoices} choices`);
+    log(`  - ${counts.questionChoices} choices`);
     log(`  - ${counts.authors} authors`);
 
     if (hasWarnings) {

@@ -25,36 +25,45 @@ export const irtOperationalModelValidator = literals("2pl");
 
 const tables = {
   irtCalibrationQueue: defineTable({
-    setId: v.id("exerciseSets"),
-    attemptId: v.id("exerciseAttempts"),
+    tryoutSectionId: v.id("tryoutSections"),
+    tryoutSectionAttemptId: v.id("tryoutSectionAttempts"),
     enqueuedAt: v.number(),
   })
     .index("by_enqueuedAt", ["enqueuedAt"])
-    .index("by_setId_and_enqueuedAt", ["setId", "enqueuedAt"])
-    .index("by_attemptId_and_enqueuedAt", ["attemptId", "enqueuedAt"]),
+    .index("by_tryoutSectionId_and_enqueuedAt", [
+      "tryoutSectionId",
+      "enqueuedAt",
+    ])
+    .index("by_tryoutSectionAttemptId_and_enqueuedAt", [
+      "tryoutSectionAttemptId",
+      "enqueuedAt",
+    ]),
 
   irtCalibrationAttempts: defineTable({
-    setId: v.id("exerciseSets"),
-    attemptId: v.id("exerciseAttempts"),
+    tryoutSectionId: v.id("tryoutSections"),
+    tryoutSectionAttemptId: v.id("tryoutSectionAttempts"),
     responses: v.array(
       v.object({
-        questionId: v.id("exerciseQuestions"),
+        questionId: v.id("questions"),
         isCorrect: v.boolean(),
       })
     ),
   })
-    .index("by_setId", ["setId"])
-    .index("by_setId_and_attemptId", ["setId", "attemptId"])
-    .index("by_attemptId", ["attemptId"]),
+    .index("by_tryoutSectionId", ["tryoutSectionId"])
+    .index("by_tryoutSectionAttemptId", ["tryoutSectionAttemptId"])
+    .index("by_tryoutSectionId_and_tryoutSectionAttemptId", [
+      "tryoutSectionId",
+      "tryoutSectionAttemptId",
+    ]),
 
   irtCalibrationCacheStats: defineTable({
-    setId: v.id("exerciseSets"),
+    tryoutSectionId: v.id("tryoutSections"),
     attemptCount: v.number(),
     updatedAt: v.number(),
-  }).index("by_setId", ["setId"]),
+  }).index("by_tryoutSectionId", ["tryoutSectionId"]),
 
   irtScaleQualityChecks: defineTable({
-    tryoutId: v.id("tryouts"),
+    tryoutSetId: v.id("tryoutSets"),
     status: irtScaleQualityStatusValidator,
     blockingReason: v.union(v.string(), v.null()),
     totalQuestionCount: v.number(),
@@ -63,10 +72,10 @@ const tables = {
     minAttemptCount: v.number(),
     liveWindowStartAt: v.number(),
     checkedAt: v.number(),
-  }).index("by_tryoutId", ["tryoutId"]),
+  }).index("by_tryoutSetId", ["tryoutSetId"]),
 
   irtScaleQualityRefreshQueue: defineTable({
-    tryoutId: v.id("tryouts"),
+    tryoutSetId: v.id("tryoutSets"),
     enqueuedAt: v.number(),
     processingStartedAt: v.optional(v.number()),
   })
@@ -75,38 +84,48 @@ const tables = {
       "processingStartedAt",
       "enqueuedAt",
     ])
-    .index("by_tryoutId", ["tryoutId"]),
+    .index("by_tryoutSetId", ["tryoutSetId"]),
 
   irtScalePublicationQueue: defineTable({
-    tryoutId: v.id("tryouts"),
+    tryoutSetId: v.id("tryoutSets"),
     enqueuedAt: v.number(),
   })
     .index("by_enqueuedAt", ["enqueuedAt"])
-    .index("by_tryoutId_and_enqueuedAt", ["tryoutId", "enqueuedAt"]),
+    .index("by_tryoutSetId_and_enqueuedAt", ["tryoutSetId", "enqueuedAt"]),
 
   irtScaleVersions: defineTable({
-    tryoutId: v.id("tryouts"),
+    tryoutSetId: v.id("tryoutSets"),
     model: irtOperationalModelValidator,
     status: irtScaleVersionStatusValidator,
     questionCount: v.number(),
     publishedAt: v.number(),
-  }).index("by_tryoutId_and_publishedAt", ["tryoutId", "publishedAt"]),
+  }).index("by_tryoutSetId_and_publishedAt", ["tryoutSetId", "publishedAt"]),
 
-  irtScaleVersionItems: defineTable({
+  irtScaleItems: defineTable({
     scaleVersionId: v.id("irtScaleVersions"),
     calibrationRunId: v.id("irtCalibrationRuns"),
-    questionId: v.id("exerciseQuestions"),
-    setId: v.id("exerciseSets"),
+    questionId: v.id("questions"),
+    questionSourceKey: v.string(),
+    sourceRevision: v.string(),
+    contentHash: v.string(),
     difficulty: v.number(),
     discrimination: v.number(),
-  }).index("by_scaleVersionId_and_setId_and_questionId", [
-    "scaleVersionId",
-    "setId",
-    "questionId",
-  ]),
+    responseCount: v.number(),
+    correctRate: v.number(),
+    calibrationStatus: irtCalibrationStatusValidator,
+  })
+    .index("by_scaleVersionId_and_questionSourceKey", [
+      "scaleVersionId",
+      "questionSourceKey",
+    ])
+    .index("by_questionSourceKey_and_sourceRevision", [
+      "questionSourceKey",
+      "sourceRevision",
+    ])
+    .index("by_calibrationStatus", ["calibrationStatus"]),
 
   irtCalibrationRuns: defineTable({
-    setId: v.id("exerciseSets"),
+    tryoutSectionId: v.id("tryoutSections"),
     model: irtOperationalModelValidator,
     status: irtCalibrationRunStatusValidator,
     questionCount: v.number(),
@@ -119,29 +138,12 @@ const tables = {
     completedAt: v.optional(v.number()),
     error: v.optional(v.string()),
   })
-    .index("by_setId_and_startedAt", ["setId", "startedAt"])
-    .index("by_setId_and_status_and_startedAt", [
-      "setId",
+    .index("by_tryoutSectionId_and_startedAt", ["tryoutSectionId", "startedAt"])
+    .index("by_tryoutSectionId_and_status_and_startedAt", [
+      "tryoutSectionId",
       "status",
       "startedAt",
     ]),
-
-  exerciseItemParameters: defineTable({
-    questionId: v.id("exerciseQuestions"),
-    setId: v.id("exerciseSets"),
-    /** 2PL difficulty parameter (b). */
-    difficulty: v.number(),
-    /** 2PL discrimination parameter (a). */
-    discrimination: v.number(),
-    responseCount: v.number(),
-    correctRate: v.number(),
-    calibratedAt: v.number(),
-    calibrationStatus: irtCalibrationStatusValidator,
-    calibrationRunId: v.optional(v.id("irtCalibrationRuns")),
-  })
-    .index("by_questionId", ["questionId"])
-    .index("by_setId", ["setId"])
-    .index("by_calibrationStatus", ["calibrationStatus"]),
 };
 
 export default tables;

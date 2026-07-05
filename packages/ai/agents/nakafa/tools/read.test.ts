@@ -101,7 +101,6 @@ describe("nakafa read tool", () => {
         Effect.provideService(
           Nakafa,
           Nakafa.make({
-            exercise: () => Effect.die("unused"),
             quran: () => Effect.die("unused"),
             read: () =>
               Effect.fail(

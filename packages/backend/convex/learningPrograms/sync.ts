@@ -32,7 +32,6 @@ const planItemReconcileResultValidator = v.object({
   reconciled: v.number(),
   scheduled: v.boolean(),
 });
-const optionalPlanItemReconcileCursorValidator = v.optional(v.string());
 
 /** Upserts the program catalog and its source references from contents contracts. */
 export const syncLearningPrograms = internalMutation({
@@ -193,6 +192,7 @@ export const syncLearningProgramCoverage = internalMutation({
         coverage: existing,
         nextCoverageStatus: row.coverageStatus,
         nextSampleContentId: row.sampleContentId,
+        updatedBefore: row.syncedAt,
       });
 
       await ctx.db.patch(existing._id, patch);
@@ -247,7 +247,7 @@ export const continueCoverageSamplePlanItemReconcile = internalMutation({
     previousSampleContentId:
       learningProgramCoverageInputValidator.fields.sampleContentId,
     programId: v.id("learningPrograms"),
-    cursor: optionalPlanItemReconcileCursorValidator,
+    updatedBefore: v.number(),
   },
   returns: planItemReconcileResultValidator,
   handler: async (ctx, args) =>
@@ -274,10 +274,12 @@ async function reconcileActivePlanItemsForCoverageRefresh(
     coverage,
     nextCoverageStatus,
     nextSampleContentId,
+    updatedBefore,
   }: {
     coverage: Doc<"learningProgramCoverage">;
     nextCoverageStatus: Doc<"learningProgramCoverage">["coverageStatus"];
     nextSampleContentId: Doc<"learningProgramCoverage">["sampleContentId"];
+    updatedBefore: number;
   }
 ) {
   await reconcileCoverageSamplePlanItemBatch(ctx, {
@@ -287,6 +289,7 @@ async function reconcileActivePlanItemsForCoverageRefresh(
     nextSampleContentId,
     previousSampleContentId: coverage.sampleContentId,
     programId: coverage.programId,
+    updatedBefore,
   });
 }
 
@@ -294,49 +297,51 @@ async function reconcileActivePlanItemsForCoverageRefresh(
 async function reconcileCoverageSamplePlanItemBatch(
   ctx: MutationCtx,
   {
-    cursor,
     lensId,
     locale,
     nextCoverageStatus,
     nextSampleContentId,
     previousSampleContentId,
     programId,
+    updatedBefore,
   }: {
-    cursor?: string;
     lensId: string;
     locale: Doc<"learningProgramCoverage">["locale"];
     nextCoverageStatus: Doc<"learningProgramCoverage">["coverageStatus"];
     nextSampleContentId: Doc<"learningProgramCoverage">["sampleContentId"];
     previousSampleContentId: Doc<"learningProgramCoverage">["sampleContentId"];
     programId: Id<"learningPrograms">;
+    updatedBefore: number;
   }
 ) {
-  const planItemQuery = ctx.db
-    .query("learningPlanItems")
-    .withIndex("by_programId_and_lensId_and_content_id", (q) =>
-      q
-        .eq("programId", programId)
-        .eq("lensId", lensId)
-        .eq("content_id", previousSampleContentId)
-    );
   const keepsSameContentId = previousSampleContentId === nextSampleContentId;
-  const planItemPage = keepsSameContentId
-    ? await planItemQuery.paginate({
-        cursor: cursor ?? null,
-        numItems: ACTIVE_PLAN_ITEM_RECONCILE_BATCH_SIZE,
-      })
-    : {
-        continueCursor: null,
-        isDone: false,
-        page: await planItemQuery.take(ACTIVE_PLAN_ITEM_RECONCILE_BATCH_SIZE),
-      };
-  const planItems = planItemPage.page;
+  const planItems = keepsSameContentId
+    ? await ctx.db
+        .query("learningPlanItems")
+        .withIndex(
+          "by_programId_and_lensId_and_content_id_and_updatedAt",
+          (q) =>
+            q
+              .eq("programId", programId)
+              .eq("lensId", lensId)
+              .eq("content_id", previousSampleContentId)
+              .lt("updatedAt", updatedBefore)
+        )
+        .take(ACTIVE_PLAN_ITEM_RECONCILE_BATCH_SIZE)
+    : await ctx.db
+        .query("learningPlanItems")
+        .withIndex("by_programId_and_lensId_and_content_id", (q) =>
+          q
+            .eq("programId", programId)
+            .eq("lensId", lensId)
+            .eq("content_id", previousSampleContentId)
+        )
+        .take(ACTIVE_PLAN_ITEM_RECONCILE_BATCH_SIZE);
 
   const route = await getContentRouteByContentId(ctx, {
     contentId: nextSampleContentId,
     locale,
   });
-  const updatedAt = Date.now();
   let reconciled = 0;
 
   for (const item of planItems) {
@@ -358,14 +363,12 @@ async function reconcileCoverageSamplePlanItemBatch(
       coverageStatus: nextCoverageStatus,
       route: route.route,
       title: route.title,
-      updatedAt,
+      updatedAt: updatedBefore,
     });
     reconciled++;
   }
 
-  const scheduled = keepsSameContentId
-    ? !planItemPage.isDone
-    : planItems.length === ACTIVE_PLAN_ITEM_RECONCILE_BATCH_SIZE;
+  const scheduled = planItems.length === ACTIVE_PLAN_ITEM_RECONCILE_BATCH_SIZE;
 
   if (scheduled) {
     const continuationArgs = {
@@ -375,9 +378,7 @@ async function reconcileCoverageSamplePlanItemBatch(
       nextSampleContentId,
       previousSampleContentId,
       programId,
-      ...(keepsSameContentId && planItemPage.continueCursor
-        ? { cursor: planItemPage.continueCursor }
-        : {}),
+      updatedBefore,
     };
 
     await ctx.scheduler.runAfter(

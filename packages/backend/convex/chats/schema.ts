@@ -143,11 +143,6 @@ export const nakafaReadInputValidator = v.object({
   content_ref: v.string(),
 });
 
-export const nakafaExerciseInputValidator = v.object({
-  content_ref: v.string(),
-  exercise_number: v.optional(v.number()),
-});
-
 export const nakafaQuranInputValidator = v.object({
   from_verse: v.number(),
   include_tafsir: v.boolean(),
@@ -163,14 +158,6 @@ export const nakafaTaxonomyInputValidator = v.object({
 export const nakafaContentPreviewValidator = v.object({
   ...contentSearchRefValidator.fields,
   description: v.string(),
-  title: v.string(),
-});
-
-export const nakafaExercisePreviewValidator = v.object({
-  ...contentSearchRefValidator.fields,
-  count: v.number(),
-  exercise_number: v.optional(v.number()),
-  numbers: v.array(v.number()),
   title: v.string(),
 });
 
@@ -229,23 +216,6 @@ export const nakafaDataValidator = v.union(
     kind: v.literal("content"),
     status: v.literal("error"),
     input: nakafaReadInputValidator,
-    error: v.string(),
-  }),
-  v.object({
-    kind: v.literal("exercise"),
-    status: v.literal("loading"),
-    input: nakafaExerciseInputValidator,
-  }),
-  v.object({
-    kind: v.literal("exercise"),
-    status: v.literal("done"),
-    input: nakafaExerciseInputValidator,
-    result: nakafaExercisePreviewValidator,
-  }),
-  v.object({
-    kind: v.literal("exercise"),
-    status: v.literal("error"),
-    input: nakafaExerciseInputValidator,
     error: v.string(),
   }),
   v.object({
@@ -445,8 +415,7 @@ export const researchToolInputValidator = v.object({
 });
 
 /**
- * Part base validator (without system fields)
- * Contains all fields for the parts table
+ * Message part base validator without system fields.
  */
 export const partValidator = v.object({
   messageId: v.id("messages"),
@@ -506,12 +475,12 @@ export const partValidator = v.object({
 });
 
 /**
- * Part document validator (with system fields)
+ * Message part document validator with system fields.
  * Used internally for messageWithPartsDocValidator
  */
 const partDocValidator = addFieldsToValidator(
   partValidator,
-  systemFields("parts")
+  systemFields("messageParts")
 );
 
 /**
@@ -548,7 +517,7 @@ export const tables = {
     .index("by_chatId_and_identifier", ["chatId", "identifier"])
     .index("by_role", ["role"]),
 
-  parts: defineTable(partValidator).index("by_messageId_and_order", [
+  messageParts: defineTable(partValidator).index("by_messageId_and_order", [
     "messageId",
     "order",
   ]),

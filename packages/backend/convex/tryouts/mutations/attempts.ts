@@ -1,537 +1,353 @@
-import { internal } from "@repo/backend/convex/_generated/api";
-import { createExerciseAttempt } from "@repo/backend/convex/exercises/helpers";
+import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { mutation } from "@repo/backend/convex/functions";
-import { getLatestScaleVersionForTryout } from "@repo/backend/convex/irt/scales/read";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
-import { vv } from "@repo/backend/convex/lib/validators/vv";
-import { resolveActiveTryoutEventEntitlements } from "@repo/backend/convex/tryoutAccess/helpers/entitlements";
-import { getActiveTryoutSubscriptionForUserProduct } from "@repo/backend/convex/tryoutAccess/helpers/subscriptions";
-import {
-  requireActiveTryoutAttemptAfterExpirySync,
-  requireOwnedTryoutAttempt,
-} from "@repo/backend/convex/tryouts/helpers/access";
-import {
-  loadPartStartContext,
-  loadStartableTryout,
-  reuseExistingPartAttempt,
-  reuseExistingTryoutAttempt,
-} from "@repo/backend/convex/tryouts/helpers/attemptLifecycle";
-import { finalizeTryoutAttempt } from "@repo/backend/convex/tryouts/helpers/finalize/attempt";
-import { finalizeTryoutPartAttempt } from "@repo/backend/convex/tryouts/helpers/finalize/part";
-import {
-  loadTryoutPartSnapshots,
-  loadValidatedTryoutPartSets,
-  resolveRequestedTryoutPart,
-} from "@repo/backend/convex/tryouts/helpers/parts";
-import {
-  completePartResultValidator,
-  startPartResultValidator,
-  startTryoutResultValidator,
-} from "@repo/backend/convex/tryouts/mutations/validators";
-import {
-  tryoutProductPolicies,
-  tryoutProductValidator,
-} from "@repo/backend/convex/tryouts/products";
-import { tryoutPartKeyValidator } from "@repo/backend/convex/tryouts/schema";
-import { getConvexErrorCode } from "@repo/backend/convex/utils/error";
-import { logger } from "@repo/backend/convex/utils/logger";
+import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/schema";
 import { ConvexError, v } from "convex/values";
 
-/** Starts or resumes one authenticated tryout attempt for a product slug. */
-export const startTryout = mutation({
+const ATTEMPT_DURATION_MS = 2 * 60 * 60 * 1000;
+const MAX_ATTEMPTS_PER_USER_SET = 100;
+const CHOICE_LIMIT_PER_QUESTION = 10;
+
+type TryoutSet = Doc<"tryoutSets">;
+type TryoutSection = Doc<"tryoutSections">;
+
+/** Loads one active set by the public try-out identity. */
+async function loadActiveSet(
+  ctx: MutationCtx,
   args: {
-    product: tryoutProductValidator,
+    countryKey: string;
+    examKey: string;
+    locale: "id" | "en";
+    setKey: string;
+  }
+) {
+  const set = await ctx.db
+    .query("tryoutSets")
+    .withIndex("by_countryKey_and_examKey_and_setKey_and_locale", (q) =>
+      q
+        .eq("countryKey", args.countryKey)
+        .eq("examKey", args.examKey)
+        .eq("setKey", args.setKey)
+        .eq("locale", args.locale)
+    )
+    .unique();
+
+  if (!set?.isActive) {
+    throw new ConvexError({
+      code: "TRYOUT_SET_NOT_FOUND",
+      message: "Try-out set not found.",
+    });
+  }
+
+  return set;
+}
+
+/** Loads and validates ordered section rows for one set snapshot. */
+async function loadSections(ctx: MutationCtx, set: TryoutSet) {
+  const sections = await ctx.db
+    .query("tryoutSections")
+    .withIndex("by_tryoutSetId_and_order", (q) => q.eq("tryoutSetId", set._id))
+    .take(set.sectionCount + 1);
+
+  if (sections.length !== set.sectionCount) {
+    throw new ConvexError({
+      code: "TRYOUT_SECTION_COUNT_MISMATCH",
+      message: "Try-out set section count is not synced.",
+    });
+  }
+
+  return sections;
+}
+
+/** Loads and validates ordered question rows for one section. */
+async function loadQuestions(ctx: MutationCtx, section: TryoutSection) {
+  const questions = await ctx.db
+    .query("questions")
+    .withIndex("by_questionSetId_and_number", (q) =>
+      q.eq("questionSetId", section.questionSetId)
+    )
+    .take(section.questionCount + 1);
+
+  if (questions.length !== section.questionCount) {
+    throw new ConvexError({
+      code: "TRYOUT_QUESTION_COUNT_MISMATCH",
+      message: "Try-out section question count is not synced.",
+    });
+  }
+
+  return questions;
+}
+
+/** Returns the next bounded attempt number for one user and set. */
+async function getNextAttemptNumber(
+  ctx: MutationCtx,
+  args: { tryoutSetId: Id<"tryoutSets">; userId: Id<"users"> }
+) {
+  const attempts = await ctx.db
+    .query("tryoutAttempts")
+    .withIndex("by_userId_and_tryoutSetId_and_startedAt", (q) =>
+      q.eq("userId", args.userId).eq("tryoutSetId", args.tryoutSetId)
+    )
+    .take(MAX_ATTEMPTS_PER_USER_SET);
+
+  if (attempts.length >= MAX_ATTEMPTS_PER_USER_SET) {
+    throw new ConvexError({
+      code: "TRYOUT_ATTEMPT_LIMIT_REACHED",
+      message: "Try-out attempt limit reached for this set.",
+    });
+  }
+
+  return attempts.length + 1;
+}
+
+/** Starts one bounded try-out attempt from synced section and question rows. */
+export const startAttempt = mutation({
+  args: {
+    countryKey: tryoutRouteKeyValidator,
+    examKey: tryoutRouteKeyValidator,
     locale: localeValidator,
-    tryoutSlug: v.string(),
+    setKey: tryoutRouteKeyValidator,
   },
-  returns: startTryoutResultValidator,
+  returns: v.object({
+    attemptId: v.id("tryoutAttempts"),
+  }),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuth(ctx);
-    const userId = appUser._id;
-    const now = Date.now();
-    const startableTryout = await loadStartableTryout(ctx, args).catch(
-      (error) => {
-        const errorCode = getConvexErrorCode(error);
-
-        if (errorCode === "TRYOUT_NOT_FOUND") {
-          logger.warn("Tryout start denied because the tryout was not found", {
-            locale: args.locale,
-            product: args.product,
-            tryoutSlug: args.tryoutSlug,
-            userId,
-          });
-
-          return { kind: "not-found" as const };
-        }
-
-        if (errorCode === "TRYOUT_INACTIVE") {
-          logger.warn("Tryout start denied because the tryout is inactive", {
-            locale: args.locale,
-            product: args.product,
-            tryoutSlug: args.tryoutSlug,
-            userId,
-          });
-
-          return { kind: "inactive" as const };
-        }
-
-        throw error;
-      }
-    );
-
-    if ("kind" in startableTryout) {
-      return startableTryout;
-    }
-
-    const tryout = startableTryout;
-
-    const [scaleVersion, existingAttempt] = await Promise.all([
-      getLatestScaleVersionForTryout(ctx.db, tryout._id),
-      ctx.db
-        .query("tryoutAttempts")
-        .withIndex("by_userId_and_tryoutId_and_startedAt", (q) =>
-          q.eq("userId", userId).eq("tryoutId", tryout._id)
-        )
-        .order("desc")
-        .first(),
-    ]);
-
-    if (!scaleVersion) {
-      logger.warn("Tryout start denied because scoring is not ready", {
-        locale: args.locale,
-        product: args.product,
-        tryoutId: tryout._id,
-        tryoutSlug: tryout.slug,
-        userId,
-      });
-
-      return { kind: "not-ready" as const };
-    }
-
-    if (
-      existingAttempt &&
-      (await reuseExistingTryoutAttempt(ctx, {
-        now,
-        userId,
-        tryoutAttempt: existingAttempt,
-      }))
-    ) {
-      return { kind: "started" as const };
-    }
-
-    const [eventEntitlements, activeSubscription] = await Promise.all([
-      resolveActiveTryoutEventEntitlements(ctx.db, {
-        now,
-        product: tryout.product,
-        userId,
-      }),
-      getActiveTryoutSubscriptionForUserProduct(ctx.db, {
-        now,
-        product: tryout.product,
-        userId,
-      }),
-    ]);
-    const activeCompetitionEntitlement =
-      eventEntitlements.competitionEntitlement?.accessCampaignId &&
-      eventEntitlements.competitionEntitlement.accessGrantId
-        ? eventEntitlements.competitionEntitlement
-        : null;
-    const activeCompetitionCampaignId =
-      activeCompetitionEntitlement?.accessCampaignId ?? null;
-    const activeCompetitionGrantId =
-      activeCompetitionEntitlement?.accessGrantId ?? null;
-    const competitionAttempt = activeCompetitionCampaignId
-      ? await ctx.db
-          .query("tryoutAttempts")
-          .withIndex(
-            "by_userId_and_tryoutId_and_accessCampaignId_and_startedAt",
-            (q) =>
-              q
-                .eq("userId", userId)
-                .eq("tryoutId", tryout._id)
-                .eq("accessCampaignId", activeCompetitionCampaignId)
-          )
-          .order("desc")
-          .first()
-      : null;
-    const competitionStartSource =
-      activeCompetitionEntitlement &&
-      activeCompetitionCampaignId &&
-      activeCompetitionGrantId &&
-      !competitionAttempt
-        ? {
-            accessKind: "event" as const,
-            accessCampaignId: activeCompetitionCampaignId,
-            accessCampaignKind: "competition" as const,
-            accessEndsAt: activeCompetitionEntitlement.endsAt,
-            accessGrantId: activeCompetitionGrantId,
-            countsForCompetition: true,
-          }
-        : null;
-    const accessPassEntitlement =
-      eventEntitlements.accessPassEntitlement?.accessCampaignId &&
-      eventEntitlements.accessPassEntitlement.accessGrantId
-        ? eventEntitlements.accessPassEntitlement
-        : null;
-    const accessPassCampaignId =
-      accessPassEntitlement?.accessCampaignId ?? null;
-    const accessPassGrantId = accessPassEntitlement?.accessGrantId ?? null;
-    const hasUsedCompetitionAttempt = Boolean(competitionAttempt);
-    const accessPassStartSource =
-      accessPassEntitlement && accessPassCampaignId && accessPassGrantId
-        ? {
-            accessKind: "event" as const,
-            accessCampaignId: accessPassCampaignId,
-            accessCampaignKind: "access-pass" as const,
-            accessEndsAt: accessPassEntitlement.endsAt,
-            accessGrantId: accessPassGrantId,
-            countsForCompetition: false,
-          }
-        : null;
-    const subscriptionStartSource = activeSubscription
-      ? {
-          accessKind: "subscription" as const,
-          countsForCompetition: false,
-        }
-      : null;
-    const accessSource =
-      competitionStartSource ??
-      accessPassStartSource ??
-      subscriptionStartSource;
-
-    if (!accessSource) {
-      if (hasUsedCompetitionAttempt) {
-        logger.warn(
-          "Tryout start denied because the counted competition attempt was already used",
-          {
-            accessCampaignId: activeCompetitionCampaignId ?? undefined,
-            locale: args.locale,
-            product: args.product,
-            tryoutId: tryout._id,
-            tryoutSlug: tryout.slug,
-            userId,
-          }
-        );
-
-        return { kind: "competition-attempt-used" as const };
-      }
-
-      logger.warn(
-        "Tryout start denied because no active access source was found",
-        {
-          accessPassCampaignId: accessPassCampaignId ?? undefined,
-          activeCompetitionCampaignId: activeCompetitionCampaignId ?? undefined,
-          locale: args.locale,
-          product: args.product,
-          tryoutId: tryout._id,
-          tryoutSlug: tryout.slug,
-          userId,
-        }
-      );
-
-      return { kind: "requires-access" as const };
-    }
-
-    const partSetSnapshots = await loadTryoutPartSnapshots(ctx.db, {
-      partCount: tryout.partCount,
-      tryoutId: tryout._id,
+    const set = await loadActiveSet(ctx, args);
+    const sections = await loadSections(ctx, set);
+    const attemptNumber = await getNextAttemptNumber(ctx, {
+      tryoutSetId: set._id,
+      userId: appUser._id,
     });
-    const attemptNumber = existingAttempt
-      ? existingAttempt.attemptNumber + 1
-      : 1;
-    const attemptWindowEndsAt =
-      now + tryoutProductPolicies[tryout.product].attemptWindowMs;
-    const expiresAtMs =
-      accessSource.accessKind === "event" &&
-      accessSource.accessCampaignKind === "competition"
-        ? Math.min(attemptWindowEndsAt, accessSource.accessEndsAt)
-        : attemptWindowEndsAt;
+    const now = Date.now();
+    const expiresAt = now + ATTEMPT_DURATION_MS;
 
-    const tryoutAttemptId = await ctx.db.insert("tryoutAttempts", {
-      userId,
-      tryoutId: tryout._id,
-      scaleVersionId: scaleVersion._id,
-      accessKind: accessSource.accessKind,
-      accessCampaignId:
-        accessSource.accessKind === "event"
-          ? accessSource.accessCampaignId
-          : undefined,
-      accessCampaignKind:
-        accessSource.accessKind === "event"
-          ? accessSource.accessCampaignKind
-          : undefined,
-      accessGrantId:
-        accessSource.accessKind === "event"
-          ? accessSource.accessGrantId
-          : undefined,
-      accessEndsAt:
-        accessSource.accessKind === "event"
-          ? accessSource.accessEndsAt
-          : undefined,
-      countsForCompetition: accessSource.countsForCompetition,
-      scoreStatus: scaleVersion.status,
-      status: "in-progress",
-      partSetSnapshots,
-      completedPartIndices: [],
+    const attemptId = await ctx.db.insert("tryoutAttempts", {
       attemptNumber,
-      totalCorrect: 0,
-      totalQuestions: 0,
-      theta: 0,
-      thetaSE: 1,
-      startedAt: now,
-      expiresAt: expiresAtMs,
-      lastActivityAt: now,
       completedAt: null,
+      completedSectionKeys: [],
       endReason: null,
-    });
-
-    await ctx.scheduler.runAfter(
-      Math.max(0, expiresAtMs - now),
-      internal.tryouts.mutations.internal.expiry.expireTryoutAttemptInternal,
-      {
-        tryoutAttemptId,
-        expiresAtMs,
-      }
-    );
-
-    return { kind: "started" as const };
-  },
-});
-
-/**
- * Starts or resumes one concrete tryout part looked up by stable part key.
- *
- * Existing attempts stay bound to the persisted snapshot set ID and question
- * count so later content-sync changes cannot rewrite their timer or exercise
- * total.
- */
-export const startPart = mutation({
-  args: {
-    tryoutAttemptId: vv.id("tryoutAttempts"),
-    partKey: tryoutPartKeyValidator,
-  },
-  returns: startPartResultValidator,
-  handler: async (ctx, args) => {
-    const { appUser } = await requireAuth(ctx);
-    const userId = appUser._id;
-    const now = Date.now();
-    const partStartContext = await loadPartStartContext(ctx, {
-      now,
-      partKey: args.partKey,
-      tryoutAttemptId: args.tryoutAttemptId,
-      userId,
-    }).catch((error) => {
-      if (getConvexErrorCode(error) === "TRYOUT_EXPIRED") {
-        logger.warn("Tryout part start denied because the tryout expired", {
-          partKey: args.partKey,
-          tryoutAttemptId: args.tryoutAttemptId,
-          userId,
-        });
-
-        return { kind: "tryout-expired" as const };
-      }
-
-      throw error;
-    });
-
-    if ("kind" in partStartContext) {
-      return partStartContext;
-    }
-
-    const { tryout, tryoutPartSnapshot } = partStartContext;
-    const existingPartAttempt = await reuseExistingPartAttempt(ctx, {
-      now,
-      partIndex: tryoutPartSnapshot.partIndex,
-      tryoutAttemptId: args.tryoutAttemptId,
-    }).catch((error) => {
-      if (getConvexErrorCode(error) === "TRYOUT_PART_EXPIRED") {
-        logger.warn("Tryout part start denied because the part expired", {
-          partIndex: tryoutPartSnapshot.partIndex,
-          partKey: tryoutPartSnapshot.partKey,
-          tryoutAttemptId: args.tryoutAttemptId,
-          userId,
-        });
-
-        return { kind: "part-expired" as const };
-      }
-
-      throw error;
-    });
-
-    if (
-      typeof existingPartAttempt === "object" &&
-      existingPartAttempt !== null
-    ) {
-      return existingPartAttempt;
-    }
-
-    if (existingPartAttempt) {
-      return { kind: "started" as const };
-    }
-
-    const set = await ctx.db.get("exerciseSets", tryoutPartSnapshot.setId);
-
-    if (!set) {
-      throw new ConvexError({
-        code: "SET_NOT_FOUND",
-        message: "Exercise set not found.",
-      });
-    }
-
-    const questionCount = tryoutPartSnapshot.questionCount;
-    const timeLimit =
-      tryoutProductPolicies[tryout.product].getPartTimeLimitSeconds(
-        questionCount
-      );
-
-    const setAttemptId = await createExerciseAttempt(ctx, {
-      slug: set.slug,
-      userId,
-      origin: "tryout",
-      mode: "simulation",
-      scope: "set",
-      timeLimit,
-      startedAt: now,
-      totalExercises: questionCount,
-    });
-
-    await ctx.db.insert("tryoutPartAttempts", {
-      tryoutAttemptId: args.tryoutAttemptId,
-      partIndex: tryoutPartSnapshot.partIndex,
-      partKey: tryoutPartSnapshot.partKey,
-      setAttemptId,
-      setId: tryoutPartSnapshot.setId,
-      theta: 0,
-      thetaSE: 1,
-    });
-
-    await ctx.db.patch("tryoutAttempts", args.tryoutAttemptId, {
+      expiresAt,
       lastActivityAt: now,
+      scoreStatus: "provisional",
+      sectionSnapshots: sections.map((section) => ({
+        questionCount: section.questionCount,
+        sectionKey: section.sectionKey,
+        sectionOrder: section.order,
+        tryoutSectionId: section._id,
+      })),
+      startedAt: now,
+      status: "in-progress",
+      totalCorrect: 0,
+      totalQuestions: set.totalQuestionCount,
+      tryoutSetId: set._id,
+      userId: appUser._id,
     });
 
-    return { kind: "started" as const };
+    let questionOrder = 1;
+
+    for (const section of sections) {
+      const sectionAttemptId = await ctx.db.insert("tryoutSectionAttempts", {
+        answeredCount: 0,
+        completedAt: null,
+        correctAnswers: 0,
+        endReason: null,
+        expiresAt,
+        lastActivityAt: now,
+        sectionKey: section.sectionKey,
+        sectionOrder: section.order,
+        startedAt: now,
+        status: "in-progress",
+        totalQuestions: section.questionCount,
+        tryoutAttemptId: attemptId,
+        tryoutSectionId: section._id,
+      });
+      const questions = await loadQuestions(ctx, section);
+
+      for (const question of questions) {
+        await ctx.db.insert("tryoutAttemptPlacements", {
+          contentHash: question.contentHash,
+          questionId: question._id,
+          questionOrder,
+          questionSourceKey: question.sourceKey,
+          sourceRevision: question.sourceRevision,
+          tryoutAttemptId: attemptId,
+          tryoutSectionAttemptId: sectionAttemptId,
+          tryoutSectionId: section._id,
+        });
+        questionOrder++;
+      }
+    }
+
+    return { attemptId };
   },
 });
 
-/** Finalizes one part identified by stable part key and updates totals. */
-export const completePart = mutation({
+/** Saves one selected multiple-choice answer for a try-out placement. */
+export const saveResponse = mutation({
   args: {
-    tryoutAttemptId: vv.id("tryoutAttempts"),
-    partKey: tryoutPartKeyValidator,
+    placementId: v.id("tryoutAttemptPlacements"),
+    selectedOptionId: v.optional(v.string()),
+    timeSpent: v.number(),
   },
-  returns: completePartResultValidator,
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    await requireAuth(ctx);
+    const placement = await ctx.db.get(args.placementId);
+
+    if (!placement) {
+      throw new ConvexError({
+        code: "TRYOUT_PLACEMENT_NOT_FOUND",
+        message: "Try-out question placement not found.",
+      });
+    }
+
+    const attempt = await ctx.db.get(placement.tryoutAttemptId);
+
+    if (attempt?.status !== "in-progress") {
+      throw new ConvexError({
+        code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
+        message: "Try-out attempt is not active.",
+      });
+    }
+
+    const question = await ctx.db.get(placement.questionId);
+
+    if (!question) {
+      throw new ConvexError({
+        code: "TRYOUT_QUESTION_NOT_FOUND",
+        message: "Try-out question not found.",
+      });
+    }
+
+    const choices = await ctx.db
+      .query("questionChoices")
+      .withIndex("by_questionId_and_locale", (q) =>
+        q.eq("questionId", question._id).eq("locale", question.locale)
+      )
+      .take(CHOICE_LIMIT_PER_QUESTION);
+    const selectedChoice = choices.find(
+      (choice) => choice.optionKey === args.selectedOptionId
+    );
+    const isCorrect = selectedChoice?.isCorrect ?? false;
+    const existing = await ctx.db
+      .query("tryoutResponses")
+      .withIndex("by_placementId", (q) => q.eq("placementId", placement._id))
+      .unique();
+    const now = Date.now();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        answeredAt: existing.answeredAt,
+        isCorrect,
+        selectedOptionId: args.selectedOptionId,
+        timeSpent: args.timeSpent,
+        updatedAt: now,
+      });
+      return null;
+    }
+
+    await ctx.db.insert("tryoutResponses", {
+      answeredAt: now,
+      isCorrect,
+      placementId: placement._id,
+      questionId: placement.questionId,
+      selectedOptionId: args.selectedOptionId,
+      timeSpent: args.timeSpent,
+      tryoutAttemptId: placement.tryoutAttemptId,
+      tryoutSectionAttemptId: placement.tryoutSectionAttemptId,
+      updatedAt: now,
+    });
+
+    return null;
+  },
+});
+
+/** Finalizes one attempt idempotently and stores the score snapshot. */
+export const finalizeAttempt = mutation({
+  args: {
+    attemptId: v.id("tryoutAttempts"),
+  },
+  returns: v.object({
+    scoreId: v.id("tryoutScores"),
+  }),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuth(ctx);
-    const userId = appUser._id;
-    const now = Date.now();
-    const currentTryoutAttempt = await requireOwnedTryoutAttempt(ctx, {
-      tryoutAttemptId: args.tryoutAttemptId,
-      userId,
-    })
-      .then((tryoutAttempt) =>
-        requireActiveTryoutAttemptAfterExpirySync(ctx, {
-          now,
-          tryoutAttempt,
-        })
-      )
-      .catch((error) => {
-        if (getConvexErrorCode(error) === "TRYOUT_EXPIRED") {
-          logger.warn(
-            "Tryout part completion denied because the tryout expired",
-            {
-              partKey: args.partKey,
-              tryoutAttemptId: args.tryoutAttemptId,
-              userId,
-            }
-          );
+    const attempt = await ctx.db.get(args.attemptId);
 
-          return { kind: "tryout-expired" as const };
-        }
-
-        throw error;
-      });
-
-    if ("kind" in currentTryoutAttempt) {
-      return currentTryoutAttempt;
-    }
-
-    const tryout = await ctx.db.get("tryouts", currentTryoutAttempt.tryoutId);
-
-    if (!tryout) {
+    if (!attempt || attempt.userId !== appUser._id) {
       throw new ConvexError({
-        code: "TRYOUT_NOT_FOUND",
-        message: "Tryout not found.",
+        code: "TRYOUT_ATTEMPT_NOT_FOUND",
+        message: "Try-out attempt not found.",
       });
     }
 
-    const currentPartSets = await loadValidatedTryoutPartSets(ctx.db, {
-      partCount: tryout.partCount,
-      tryoutId: tryout._id,
-    });
-    const resolvedPart = resolveRequestedTryoutPart({
-      currentPartSets,
-      partSetSnapshots: currentTryoutAttempt.partSetSnapshots,
-      requestedPartKey: args.partKey,
-    });
-
-    if (!resolvedPart) {
-      throw new ConvexError({
-        code: "PART_ATTEMPT_NOT_FOUND",
-        message: "Tryout part attempt not found.",
-      });
-    }
-
-    const partAttempt = await ctx.db
-      .query("tryoutPartAttempts")
-      .withIndex("by_tryoutAttemptId_and_partIndex", (q) =>
-        q
-          .eq("tryoutAttemptId", args.tryoutAttemptId)
-          .eq("partIndex", resolvedPart.snapshot.partIndex)
+    const existingScore = await ctx.db
+      .query("tryoutScores")
+      .withIndex("by_tryoutAttemptId", (q) =>
+        q.eq("tryoutAttemptId", attempt._id)
       )
       .unique();
 
-    if (!partAttempt) {
+    if (existingScore) {
+      return { scoreId: existingScore._id };
+    }
+
+    const set = await ctx.db.get(attempt.tryoutSetId);
+
+    if (!set) {
       throw new ConvexError({
-        code: "PART_ATTEMPT_NOT_FOUND",
-        message: "Tryout part attempt not found.",
+        code: "TRYOUT_SET_NOT_FOUND",
+        message: "Try-out set not found.",
       });
     }
 
-    if (
-      currentTryoutAttempt.completedPartIndices.includes(partAttempt.partIndex)
-    ) {
-      return { kind: "completed" as const };
+    const responses = await ctx.db
+      .query("tryoutResponses")
+      .withIndex("by_tryoutAttemptId_and_questionId", (q) =>
+        q.eq("tryoutAttemptId", attempt._id)
+      )
+      .take(attempt.totalQuestions + 1);
+
+    if (responses.length > attempt.totalQuestions) {
+      throw new ConvexError({
+        code: "TRYOUT_RESPONSE_COUNT_EXCEEDED",
+        message: "Try-out response count exceeds the attempt question count.",
+      });
     }
 
-    await finalizeTryoutPartAttempt({
-      ctx,
-      finishedAtMs: now,
-      now,
-      partAttempt,
+    const totalCorrect = responses.filter(
+      (response) => response.isCorrect
+    ).length;
+    const publishedScore =
+      attempt.totalQuestions > 0
+        ? Math.round((totalCorrect / attempt.totalQuestions) * 100)
+        : 0;
+    const now = Date.now();
+    const scoreId = await ctx.db.insert("tryoutScores", {
+      finalizedAt: now,
+      publishedScore,
+      rawScore: publishedScore,
+      scoreStatus: set.scoringStrategy === "irt" ? "provisional" : "official",
+      scoringStrategy: set.scoringStrategy,
+      totalCorrect,
+      totalQuestions: attempt.totalQuestions,
+      tryoutAttemptId: attempt._id,
+      tryoutSetId: attempt.tryoutSetId,
+      userId: appUser._id,
+    });
+
+    await ctx.db.patch(attempt._id, {
+      completedAt: now,
+      endReason: "submitted",
+      lastActivityAt: now,
+      scoreStatus: set.scoringStrategy === "irt" ? "provisional" : "official",
       status: "completed",
-      tryoutAttemptId: args.tryoutAttemptId,
+      totalCorrect,
     });
 
-    const refreshedTryoutAttempt = await ctx.db.get(
-      "tryoutAttempts",
-      args.tryoutAttemptId
-    );
-
-    if (!refreshedTryoutAttempt) {
-      throw new ConvexError({
-        code: "ATTEMPT_NOT_FOUND",
-        message: "Tryout attempt not found.",
-      });
-    }
-
-    await finalizeTryoutAttempt({
-      ctx,
-      now,
-      tryoutAttempt: refreshedTryoutAttempt,
-      userId,
-    });
-
-    return { kind: "completed" as const };
+    return { scoreId };
   },
 });

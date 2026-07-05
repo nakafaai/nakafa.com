@@ -9,11 +9,10 @@ import { batchDeleteResultValidator } from "@repo/backend/convex/contentSync/res
 import { internalMutation } from "@repo/backend/convex/functions";
 
 /**
- * Delete one bounded batch of tryout part attempts together with their linked
- * tryout-owned exercise attempts and exercise answers.
+ * Delete one bounded batch of section attempts owned by tryout attempts.
  *
  * This is intentionally narrower than the full content reset path so operators
- * can wipe tryout runtime data without touching standalone exercise history.
+ * can wipe tryout runtime data in dependency order.
  */
 export const deleteTryoutRuntimeBatch = internalMutation({
   args: {},
@@ -106,10 +105,8 @@ export const deleteQuranVersesBatch = createBatchDeleteMutation("quranVerses");
 export const deleteQuranSurahsBatch = createBatchDeleteMutation("quranSurahs");
 export const deleteArticleReferencesBatch =
   createBatchDeleteMutation("articleReferences");
-export const deleteExerciseChoicesBatch =
-  createBatchDeleteMutation("exerciseChoices");
-export const deleteExerciseAnswersBatch =
-  createBatchDeleteMutation("exerciseAnswers");
+export const deleteQuestionChoicesBatch =
+  createBatchDeleteMutation("questionChoices");
 export const deleteAudioGenerationQueueBatch = createBatchDeleteMutation(
   "audioGenerationQueue"
 );
@@ -127,22 +124,30 @@ export const deleteContentAudiosBatch = internalMutation({
   returns: batchDeleteResultValidator,
   handler: deleteContentAudioRows,
 });
-export const deleteTryoutPartAttemptsBatch =
-  createBatchDeleteMutation("tryoutPartAttempts");
+export const deleteTryoutSectionAttemptsBatch = createBatchDeleteMutation(
+  "tryoutSectionAttempts"
+);
+export const deleteTryoutAttemptPlacementsBatch = createBatchDeleteMutation(
+  "tryoutAttemptPlacements"
+);
+export const deleteTryoutResponsesBatch =
+  createBatchDeleteMutation("tryoutResponses");
+export const deleteTryoutScoresBatch =
+  createBatchDeleteMutation("tryoutScores");
+export const deleteTryoutLeaderboardScopesBatch = createBatchDeleteMutation(
+  "tryoutLeaderboardScopes"
+);
 export const deleteTryoutLeaderboardEntriesBatch = createBatchDeleteMutation(
   "tryoutLeaderboardEntries"
 );
-export const deleteUserTryoutStatsBatch =
-  createBatchDeleteMutation("userTryoutStats");
+export const deleteTryoutLeaderboardUserStatsBatch = createBatchDeleteMutation(
+  "tryoutLeaderboardUserStats"
+);
 export const deleteIrtScalePublicationQueueBatch = createBatchDeleteMutation(
   "irtScalePublicationQueue"
 );
-export const deleteIrtScaleVersionItemsBatch = createBatchDeleteMutation(
-  "irtScaleVersionItems"
-);
-export const deleteExerciseItemParametersBatch = createBatchDeleteMutation(
-  "exerciseItemParameters"
-);
+export const deleteIrtScaleItemsBatch =
+  createBatchDeleteMutation("irtScaleItems");
 export const deleteIrtCalibrationQueueBatch = createBatchDeleteMutation(
   "irtCalibrationQueue"
 );
@@ -158,32 +163,31 @@ export const deleteIrtScaleQualityChecksBatch = createBatchDeleteMutation(
 export const deleteIrtScaleQualityRefreshQueueBatch = createBatchDeleteMutation(
   "irtScaleQualityRefreshQueue"
 );
-export const deleteExerciseAttemptsBatch =
-  createBatchDeleteMutation("exerciseAttempts");
 export const deleteTryoutAttemptsBatch =
   createBatchDeleteMutation("tryoutAttempts");
 export const deleteTryoutAccessCampaignsBatch = createBatchDeleteMutation(
   "tryoutAccessCampaigns"
 );
-export const deleteTryoutAccessCampaignProductsBatch =
-  createBatchDeleteMutation("tryoutAccessCampaignProducts");
+export const deleteTryoutAccessTargetsBatch = createBatchDeleteMutation(
+  "tryoutAccessTargets"
+);
 export const deleteTryoutAccessGrantsBatch =
   createBatchDeleteMutation("tryoutAccessGrants");
 export const deleteTryoutAccessLinksBatch =
   createBatchDeleteMutation("tryoutAccessLinks");
-export const deleteTryoutCatalogMetaBatch =
-  createBatchDeleteMutation("tryoutCatalogMeta");
-export const deleteTryoutPartSetsBatch =
-  createBatchDeleteMutation("tryoutPartSets");
+export const deleteTryoutCountriesBatch =
+  createBatchDeleteMutation("tryoutCountries");
+export const deleteTryoutExamsBatch = createBatchDeleteMutation("tryoutExams");
+export const deleteTryoutSetsBatch = createBatchDeleteMutation("tryoutSets");
+export const deleteTryoutSectionsBatch =
+  createBatchDeleteMutation("tryoutSections");
 export const deleteIrtScaleVersionsBatch =
   createBatchDeleteMutation("irtScaleVersions");
 export const deleteIrtCalibrationRunsBatch =
   createBatchDeleteMutation("irtCalibrationRuns");
-export const deleteTryoutsBatch = createBatchDeleteMutation("tryouts");
-export const deleteExerciseQuestionsBatch =
-  createBatchDeleteMutation("exerciseQuestions");
-export const deleteExerciseSetsBatch =
-  createBatchDeleteMutation("exerciseSets");
+export const deleteQuestionsBatch = createBatchDeleteMutation("questions");
+export const deleteQuestionSetsBatch =
+  createBatchDeleteMutation("questionSets");
 export const deleteCurriculumLessonsBatch =
   createBatchDeleteMutation("curriculumLessons");
 export const deleteCurriculumTopicsBatch =

@@ -1,7 +1,6 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import {
   parseArticlePath,
-  parseExercisePath,
   parseMaterialLessonPath,
 } from "@repo/backend/scripts/lib/mdx-parser/paths";
 import {
@@ -24,16 +23,16 @@ import {
   getUnusedAuthors,
 } from "@repo/backend/scripts/sync-content/convex/inspection";
 import { globFiles } from "@repo/backend/scripts/sync-content/runtime/files";
-import {
-  listLessonRows,
-  listPracticeSets,
-} from "@repo/contents/_types/material/registry";
+import { listLessonRows } from "@repo/contents/_types/material/registry";
+import { TRYOUT_SOURCES } from "@repo/contents/_types/tryout/source";
 import type {
   DefaultFunctionArgs,
   FunctionArgs,
   FunctionReference,
 } from "convex/server";
 import { Effect } from "effect";
+
+const QUESTION_MDX_SUFFIX_PATTERN = /\/question\.[a-z]{2}\.mdx$/;
 
 type DeleteStaleMutation = FunctionReference<
   "mutation",
@@ -51,11 +50,11 @@ type DeleteStaleCurriculumTopicArgs = FunctionArgs<
 type DeleteStaleCurriculumLessonArgs = FunctionArgs<
   typeof internal.contentSync.mutations.curriculum.deleteStaleCurriculumLessons
 >;
-type DeleteStaleExerciseQuestionArgs = FunctionArgs<
-  typeof internal.contentSync.mutations.exercises.deleteStaleExerciseQuestions
+type DeleteStaleQuestionArgs = FunctionArgs<
+  typeof internal.contentSync.mutations.tryouts.deleteStaleQuestions
 >;
-type DeleteStaleExerciseSetArgs = FunctionArgs<
-  typeof internal.contentSync.mutations.exercises.deleteStaleExerciseSets
+type DeleteStaleQuestionSetArgs = FunctionArgs<
+  typeof internal.contentSync.mutations.tryouts.deleteStaleQuestionSets
 >;
 
 /** Builds mutation args for deleting stale article rows. */
@@ -85,22 +84,22 @@ const buildDeleteStaleCurriculumLessonArgs = (
   sectionIds: items.map((item) => item.id),
 });
 
-/** Builds mutation args for deleting stale exercise question rows. */
-const buildDeleteStaleExerciseQuestionArgs = (
+/** Builds mutation args for deleting stale question rows. */
+const buildDeleteStaleQuestionArgs = (
   items: readonly (StaleItem & {
-    id: DeleteStaleExerciseQuestionArgs["questionIds"][number];
+    id: DeleteStaleQuestionArgs["questionIds"][number];
   })[]
-): DeleteStaleExerciseQuestionArgs => ({
+): DeleteStaleQuestionArgs => ({
   questionIds: items.map((item) => item.id),
 });
 
-/** Builds mutation args for deleting stale exercise set rows. */
-const buildDeleteStaleExerciseSetArgs = (
+/** Builds mutation args for deleting stale question-set rows. */
+const buildDeleteStaleQuestionSetArgs = (
   items: readonly (StaleItem & {
-    id: DeleteStaleExerciseSetArgs["setIds"][number];
+    id: DeleteStaleQuestionSetArgs["questionSetIds"][number];
   })[]
-): DeleteStaleExerciseSetArgs => ({
-  setIds: items.map((item) => item.id),
+): DeleteStaleQuestionSetArgs => ({
+  questionSetIds: items.map((item) => item.id),
 });
 
 /** Deletes stale rows through one generated bounded delete mutation. */
@@ -141,7 +140,7 @@ const collectFilesystemSlugs = Effect.fn("sync.collectFilesystemSlugs")(
     const [articleFiles, lessonFiles, questionFiles] = yield* Effect.all([
       globFiles("articles/**/*.mdx"),
       globFiles("material/lesson/**/*.mdx"),
-      globFiles("material/practice/**/question.*.mdx"),
+      globFiles("question-bank/tryout/**/question.*.mdx"),
     ]);
 
     const articleSlugs: string[] = [];
@@ -156,24 +155,42 @@ const collectFilesystemSlugs = Effect.fn("sync.collectFilesystemSlugs")(
       curriculumLessonSlugs.push(pathInfo.slug);
     }
 
-    const exerciseQuestionSlugs: string[] = [];
+    const questionSourcePaths = new Set<string>();
     for (const file of questionFiles) {
-      const pathInfo = yield* parseExercisePath(file);
-      exerciseQuestionSlugs.push(pathInfo.slug);
+      questionSourcePaths.add(readQuestionSourcePath(file));
     }
 
     const curriculumTopicSlugs = listLessonRows().map((topic) => topic.slug);
-    const exerciseSetSlugs = listPracticeSets().map((set) => set.slug);
+    const questionSetSourcePaths = TRYOUT_SOURCES.flatMap((source) =>
+      source.sets.flatMap((set) =>
+        set.sections.map((section) => section.questionSourcePath)
+      )
+    );
 
     return {
       articleSlugs,
       curriculumTopicSlugs,
       curriculumLessonSlugs,
-      exerciseSetSlugs,
-      exerciseQuestionSlugs,
+      questionSetSourcePaths,
+      questionSourcePaths: [...questionSourcePaths],
     };
   }
 );
+
+/** Reads the question source path from an absolute MDX file path. */
+function readQuestionSourcePath(file: string) {
+  const normalized = file.replaceAll("\\", "/");
+  const marker = "/question-bank/tryout/";
+  const markerIndex = normalized.indexOf(marker);
+
+  if (markerIndex < 0) {
+    return normalized;
+  }
+
+  return normalized
+    .slice(markerIndex + 1)
+    .replace(QUESTION_MDX_SUFFIX_PATTERN, "");
+}
 
 /** Deletes authors that no longer have content links when clean is forced. */
 const cleanUnusedAuthors = Effect.fn("sync.cleanUnusedAuthors")(function* (
@@ -247,8 +264,8 @@ export const clean = Effect.fn("sync.clean")(function* (
   log(`  Articles on disk: ${slugs.articleSlugs.length}`);
   log(`  Curriculum topics on disk: ${slugs.curriculumTopicSlugs.length}`);
   log(`  Curriculum lessons on disk: ${slugs.curriculumLessonSlugs.length}`);
-  log(`  Exercise sets on disk: ${slugs.exerciseSetSlugs.length}`);
-  log(`  Exercise questions on disk: ${slugs.exerciseQuestionSlugs.length}`);
+  log(`  Question sets on disk: ${slugs.questionSetSourcePaths.length}`);
+  log(`  Questions on disk: ${slugs.questionSourcePaths.length}`);
 
   log("\nQuerying database for stale content...");
   const stale = yield* getStaleContent(config, slugs);
@@ -257,8 +274,8 @@ export const clean = Effect.fn("sync.clean")(function* (
     stale.staleArticles.length +
     stale.staleCurriculumTopics.length +
     stale.staleCurriculumLessons.length +
-    stale.staleExerciseSets.length +
-    stale.staleExerciseQuestions.length;
+    stale.staleQuestionSets.length +
+    stale.staleQuestions.length;
 
   let hasStale = false;
   let deleted = 0;
@@ -271,8 +288,8 @@ export const clean = Effect.fn("sync.clean")(function* (
     logStaleItems("Stale articles", stale.staleArticles);
     logStaleItems("\nStale curriculum topics", stale.staleCurriculumTopics);
     logStaleItems("\nStale curriculum lessons", stale.staleCurriculumLessons);
-    logStaleItems("\nStale exercise sets", stale.staleExerciseSets);
-    logStaleItems("\nStale exercise questions", stale.staleExerciseQuestions);
+    logStaleItems("\nStale question sets", stale.staleQuestionSets);
+    logStaleItems("\nStale questions", stale.staleQuestions);
 
     if (options.force) {
       log("\nDeleting stale content...");
@@ -303,19 +320,19 @@ export const clean = Effect.fn("sync.clean")(function* (
       );
       deleted += yield* deleteStaleItems(
         config,
-        internal.contentSync.mutations.exercises.deleteStaleExerciseQuestions,
-        buildDeleteStaleExerciseQuestionArgs,
-        stale.staleExerciseQuestions,
-        "stale exercise questions",
-        BATCH_SIZES.staleExerciseQuestions
+        internal.contentSync.mutations.tryouts.deleteStaleQuestions,
+        buildDeleteStaleQuestionArgs,
+        stale.staleQuestions,
+        "stale questions",
+        BATCH_SIZES.staleQuestions
       );
       deleted += yield* deleteStaleItems(
         config,
-        internal.contentSync.mutations.exercises.deleteStaleExerciseSets,
-        buildDeleteStaleExerciseSetArgs,
-        stale.staleExerciseSets,
-        "stale exercise sets",
-        BATCH_SIZES.staleExerciseSets
+        internal.contentSync.mutations.tryouts.deleteStaleQuestionSets,
+        buildDeleteStaleQuestionSetArgs,
+        stale.staleQuestionSets,
+        "stale question sets",
+        BATCH_SIZES.staleQuestionSets
       );
     } else if (options.prod) {
       log("\nTo delete stale content, run:");

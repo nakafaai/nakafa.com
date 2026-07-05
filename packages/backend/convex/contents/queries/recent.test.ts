@@ -191,20 +191,20 @@ describe("contents/queries/recent", () => {
     ]);
   });
 
-  it("drops practice recents from material Continue Learning cards", async () => {
+  it("drops try-out recents from material Continue Learning cards", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, {
         now: NOW,
-        suffix: "recent-practice",
+        suffix: "recent-tryout",
       });
-      const ref = await insertPracticeRoute(ctx, "recent-practice");
+      const ref = await insertTryoutRoute(ctx, "recent-tryout");
 
       await insertMaterialRecent(ctx, {
         ref,
         lastViewedAt: NOW,
         materialDomain: "mathematics",
-        suffix: "recent-practice",
+        suffix: "recent-tryout",
         userId: identity.userId,
       });
 
@@ -224,17 +224,14 @@ describe("contents/queries/recent", () => {
     expect(results).toEqual([]);
   });
 
-  it("pages past filtered practice recents to fill Continue Learning cards", async () => {
+  it("pages past filtered try-out recents to fill Continue Learning cards", async () => {
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, {
         now: NOW,
-        suffix: "recent-page-past-practice",
+        suffix: "recent-page-past-tryout",
       });
-      const practiceRef = await insertPracticeRoute(
-        ctx,
-        "recent-page-practice"
-      );
+      const tryoutRef = await insertTryoutRoute(ctx, "recent-page-tryout");
       const materialRef = await insertMaterialRoute(
         ctx,
         "recent-page-material"
@@ -242,10 +239,10 @@ describe("contents/queries/recent", () => {
 
       for (let index = 0; index < 20; index++) {
         await insertMaterialRecent(ctx, {
-          ref: practiceRef,
+          ref: tryoutRef,
           lastViewedAt: NOW + 100 - index,
           materialDomain: "mathematics",
-          suffix: `recent-page-practice-${index}`,
+          suffix: `recent-page-tryout-${index}`,
           userId: identity.userId,
         });
       }
@@ -340,34 +337,34 @@ async function insertMaterialRoute(ctx: MutationCtx, suffix: string) {
   return identity;
 }
 
-/** Inserts the route catalog graph projection for one practice set. */
-async function insertPracticeRoute(ctx: MutationCtx, suffix: string) {
-  const route = getPracticeSetRoute(suffix);
+/** Inserts the route catalog graph projection for one try-out set. */
+async function insertTryoutRoute(ctx: MutationCtx, suffix: string) {
+  const route = `try-out/indonesia/snbt/${suffix}`;
   const identity = createLearningGraphIdentityFromRoute({
     locale: "en",
     route,
   });
 
   if (!identity) {
-    expect.fail(`Expected practice graph identity for ${route}.`);
+    expect.fail(`Expected try-out graph identity for ${route}.`);
   }
 
   await ctx.db.insert("contentRoutes", {
     ...identity,
     authors: [{ name: "Nakafa Author" }],
-    contentHash: `practice-hash-${suffix}`,
+    contentHash: `tryout-hash-${suffix}`,
     content_id: identity.assetId,
     date: NOW,
-    description: `Practice ${suffix}`,
-    kind: "exercise-set",
+    description: `Try-out ${suffix}`,
+    kind: "tryout-set",
     locale: "en",
     markdown: true,
     materialDomain: "mathematics",
-    route: getPublicPracticeSetRoute(suffix),
-    section: "material",
+    route,
+    section: "tryout",
     sourcePath: route,
     syncedAt: NOW,
-    title: `Practice ${suffix}`,
+    title: `Try-out ${suffix}`,
   });
 
   return identity;
@@ -443,14 +440,4 @@ function getMaterialLessonRoute(suffix: string) {
 /** Builds the public material route used by recent-query route projections. */
 function getPublicMaterialLessonRoute(suffix: string) {
   return `subjects/mathematics/topic-${suffix}/section-${suffix}`;
-}
-
-/** Builds the canonical practice route used by stale recent fixtures. */
-function getPracticeSetRoute(suffix: string) {
-  return `material/practice/assessment/snbt/quantitative-knowledge/${suffix}/set-1`;
-}
-
-/** Builds the public practice route used by stale recent fixtures. */
-function getPublicPracticeSetRoute(suffix: string) {
-  return `practice/assessment/snbt/quantitative-knowledge/${suffix}/set-1`;
 }

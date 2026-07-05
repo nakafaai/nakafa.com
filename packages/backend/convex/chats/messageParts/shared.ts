@@ -2,7 +2,10 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { isNotUndefined } from "@repo/backend/convex/utils/type";
 import { ConvexError } from "convex/values";
 
-export type DBPart = Omit<Doc<"parts">, "_id" | "_creationTime" | "messageId">;
+export type DBPart = Omit<
+  Doc<"messageParts">,
+  "_id" | "_creationTime" | "messageId"
+>;
 
 /** Validate that one persisted part field exists before reconstructing UI data. */
 export function requirePartField<T>({
@@ -11,8 +14,8 @@ export function requirePartField<T>({
   partType,
 }: {
   value: T;
-  fieldName: keyof Doc<"parts">;
-  partType: Doc<"parts">["type"];
+  fieldName: keyof Doc<"messageParts">;
+  partType: Doc<"messageParts">["type"];
 }): Exclude<T, undefined> {
   if (isNotUndefined(value)) {
     return value;
@@ -25,7 +28,7 @@ export function requirePartField<T>({
 }
 
 /** Require the persisted tool state before rebuilding one tool UI part. */
-export function requireToolState(part: Doc<"parts">) {
+export function requireToolState(part: Doc<"messageParts">) {
   return requirePartField({
     value: part.toolState,
     fieldName: "toolState",

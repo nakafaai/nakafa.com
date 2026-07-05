@@ -1,10 +1,4 @@
 import {
-  type ExercisesMaterialList,
-  ExercisesMaterialSchema,
-} from "@repo/contents/_types/assessment/material";
-import { ExercisesTypeSchema } from "@repo/contents/_types/assessment/type";
-import { LocaleSchema } from "@repo/contents/_types/content";
-import {
   type MaterialList,
   MaterialSchema,
 } from "@repo/contents/_types/curriculum/material";
@@ -13,8 +7,6 @@ import type {
   LessonMaterialSource,
   MaterialLocale,
   MaterialSource,
-  PracticeMaterialGroup,
-  PracticeMaterialSource,
 } from "@repo/contents/_types/material/schema";
 import {
   MaterialKeySchema,
@@ -51,23 +43,6 @@ export type LessonMaterialProjection = SchemaType<
   typeof LessonMaterialProjectionSchema
 >;
 
-export const PracticeMaterialSetProjectionSchema = Schema.Struct({
-  assessment: ExercisesTypeSchema,
-  description: MaterialCardDescriptionSchema,
-  domain: ExercisesMaterialSchema,
-  exerciseType: Schema.String,
-  exerciseTypeTitle: Schema.String,
-  locale: LocaleSchema,
-  setName: Schema.String,
-  slug: Schema.String,
-  title: Schema.String,
-  year: Schema.optional(Schema.Int.pipe(Schema.between(2000, 2100))),
-});
-
-export type PracticeMaterialSetProjection = SchemaType<
-  typeof PracticeMaterialSetProjectionSchema
->;
-
 /** Returns the localized lesson navigation list expected by material pages. */
 export function toLessonMaterialList(
   material: LessonMaterialSource,
@@ -85,35 +60,12 @@ export function toLessonMaterialList(
   ];
 }
 
-/** Returns the localized practice navigation list expected by assessment pages. */
-export function toPracticeMaterialList(
-  material: PracticeMaterialSource,
-  locale: MaterialLocale
-): ExercisesMaterialList {
-  return material.groups.map((group) => {
-    const groupRoute = getExerciseGroupRoute(material, group);
-
-    return {
-      ...readDescriptionTranslation(group, locale),
-      href: `/${groupRoute}`,
-      items: group.sets.map((set) => ({
-        href: `/${groupRoute}/${set.slug}`,
-        title: set.translations[locale].title,
-      })),
-    };
-  });
-}
-
 /** Projects all lesson material sources into sync-ready rows. */
 export function listLessonMaterials(
   materials: readonly MaterialSource[],
   locale?: MaterialLocale
 ) {
   return materials.flatMap((material) => {
-    if (material.kind !== "lesson") {
-      return [];
-    }
-
     const locales: MaterialLocale[] =
       locale === undefined ? ["en", "id"] : [locale];
 
@@ -123,61 +75,19 @@ export function listLessonMaterials(
   });
 }
 
-/** Projects all practice material sources into sync-ready set rows. */
-export function listPracticeMaterialSets(
-  materials: readonly MaterialSource[],
-  locale?: MaterialLocale
-) {
-  return materials.flatMap((material) => {
-    if (material.kind !== "practice") {
-      return [];
-    }
-
-    const locales: MaterialLocale[] =
-      locale === undefined ? ["en", "id"] : [locale];
-
-    return locales.flatMap((materialLocale) =>
-      material.groups.flatMap((group) =>
-        group.sets.map((set) => {
-          const groupRoute = getExerciseGroupRoute(material, group);
-
-          return {
-            assessment: material.assessment,
-            description: group.translations[materialLocale].description,
-            domain: material.domain,
-            exerciseType: group.exerciseType,
-            exerciseTypeTitle: group.translations[materialLocale].title,
-            locale: materialLocale,
-            setName: set.slug,
-            slug: `${groupRoute}/${set.slug}`,
-            title: set.translations[materialLocale].title,
-            ...(group.year === undefined ? {} : { year: group.year }),
-          };
-        })
-      )
-    );
-  });
-}
-
 /** Finds one material whose asset root matches the requested public route. */
 export function findMaterialSourceByRoute(
   materials: readonly MaterialSource[],
-  kind: MaterialSource["kind"],
   route: string
 ) {
   const normalizedRoute = normalizeMaterialRoute(route);
 
   return (
-    materials.find((material) => {
-      if (material.kind !== kind) {
-        return false;
-      }
-
-      return (
+    materials.find(
+      (material) =>
         normalizedRoute === material.assetRoot ||
         normalizedRoute.startsWith(`${material.assetRoot}/`)
-      );
-    }) ?? null
+    ) ?? null
   );
 }
 
@@ -213,28 +123,11 @@ function toLessonMaterialProjection(
 }
 
 /**
- * Builds the internal practice material group route consumed by material
- * projection; public practice URLs are derived later by route projection.
- */
-function getExerciseGroupRoute(
-  material: PracticeMaterialSource,
-  group: PracticeMaterialGroup
-) {
-  const exerciseType =
-    group.year === undefined
-      ? group.exerciseType
-      : `${group.exerciseType}-${group.year}`;
-  const segments = [material.assetRoot, exerciseType];
-
-  return segments.join("/");
-}
-
-/**
  * Reads localized display copy from material sources without inventing fallback
  * descriptions, so missing copy remains visible to source audits.
  */
 function readDescriptionTranslation(
-  item: Pick<LessonMaterialSource | PracticeMaterialGroup, "translations">,
+  item: Pick<LessonMaterialSource, "translations">,
   locale: MaterialLocale
 ) {
   const translation = item.translations[locale];

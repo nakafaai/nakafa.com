@@ -11,7 +11,7 @@ import {
   TryoutCardTitle,
 } from "@/components/tryout/shared/card";
 
-/** Renders the shared catalog card used by tryout hub and product routes. */
+/** Renders the shared catalog card used by try-out country, exam, and set routes. */
 export function TryoutCatalogCard({
   action,
   activeCountLabel,
@@ -39,7 +39,9 @@ export function TryoutCatalogCard({
               <Badge variant="outline">{activeCountLabel}</Badge>
             </div>
 
-            <TryoutCardDescription>{description}</TryoutCardDescription>
+            {description ? (
+              <TryoutCardDescription>{description}</TryoutCardDescription>
+            ) : null}
           </TryoutCardCopy>
 
           {action ? <div>{action}</div> : null}

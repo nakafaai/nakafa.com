@@ -6,7 +6,7 @@ import { type Infer, v } from "convex/values";
 export const contentAuthorContentIdValidator = v.union(
   v.id("articleContents"),
   v.id("curriculumLessons"),
-  v.id("exerciseQuestions")
+  v.id("questions")
 );
 export type ContentAuthorContentId = Infer<
   typeof contentAuthorContentIdValidator
@@ -30,7 +30,7 @@ const tables = {
   /**
    * Join table linking content to authors (N:M relationship).
    *
-   * Why polymorphic? Single table serves all content types (articles, subjects, exercises)
+   * Why polymorphic? Single table serves all authored content types.
    * instead of separate articleAuthors, subjectAuthors, etc.
    *
    * @example
@@ -41,7 +41,7 @@ const tables = {
    *   ).collect();
    */
   contentAuthors: defineTable({
-    /** Document ID from articleContents, curriculumLessons, or exerciseQuestions. */
+    /** Document ID from articleContents, curriculumLessons, or questions. */
     contentId: contentAuthorContentIdValidator,
     /** Discriminator: which table contentId refers to */
     contentType: contentTypeValidator,

@@ -10,7 +10,6 @@ export function getParamManifestFromRouteManifest(
 ) {
   return {
     version: manifest.version,
-    exerciseApiParams: manifest.exerciseApiParams,
     localeParams: manifest.localeParams,
     staticParams: manifest.staticParams,
   };

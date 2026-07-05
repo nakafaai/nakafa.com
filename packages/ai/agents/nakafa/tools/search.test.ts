@@ -393,7 +393,7 @@ describe("nakafa search tool", () => {
     ]);
   });
 
-  it("executes the model-provided exercise query unchanged", async () => {
+  it("executes the model-provided try-out query unchanged", async () => {
     const { parts, writer } = createWriter();
     const capturedQueries: string[][] = [];
 
@@ -404,14 +404,14 @@ describe("nakafa search tool", () => {
           locale: "id",
           offset: 0,
           queries: ["SNBT Pengetahuan Kuantitatif try out 2026 set 2"],
-          section: "material",
+          section: "tryout",
         },
         locale: "id",
-        toolCallId: "search-exercise-set",
+        toolCallId: "search-tryout-set",
         writer,
       }).pipe(
         Effect.provideService(NakafaSearch, {
-          /** Captures the exact exercise-set query and returns the matching set row. */
+          /** Captures the exact try-out query and returns the matching section row. */
           search: (input) => {
             capturedQueries.push(input.queries ?? []);
 
@@ -425,8 +425,8 @@ describe("nakafa search tool", () => {
                       "SMA SNBT Pengetahuan Kuantitatif Try Out 2026 Set 2 20 soal",
                     locale: input.locale,
                     route:
-                      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-2",
-                    section: "material",
+                      "try-out/indonesia/snbt/set-2/quantitative-knowledge",
+                    section: "tryout",
                     title: "SNBT Pengetahuan Kuantitatif Try Out 2026 Set 2",
                   }),
                 ],
@@ -449,7 +449,7 @@ describe("nakafa search tool", () => {
     ).toEqual([["SNBT Pengetahuan Kuantitatif try out 2026 set 2"]]);
   });
 
-  it("prefers Indonesian set rows over matching question rows", async () => {
+  it("ranks Indonesian try-out section rows by query metadata", async () => {
     const { writer } = createWriter();
     const output = await Effect.runPromise(
       search({
@@ -457,23 +457,22 @@ describe("nakafa search tool", () => {
           limit: 2,
           locale: "id",
           offset: 0,
-          queries: ["set 1"],
-          section: "material",
+          queries: ["Pengetahuan Kuantitatif set 1"],
+          section: "tryout",
         },
         locale: "id",
-        toolCallId: "search-exercise-set-priority",
+        toolCallId: "search-tryout-section-priority",
         writer,
       }).pipe(
         Effect.provideService(NakafaSearch, {
-          /** Returns a tied Indonesian question/set pair to prove route-owned question detection. */
+          /** Returns broader and section-specific rows to verify metadata ranking. */
           search: (input) => {
             const setItem = searchItem({
-              description: "SNBT set 1",
+              description: "SNBT Pengetahuan Kuantitatif set 1",
               locale: input.locale,
-              route:
-                "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
-              section: "material",
-              title: "SNBT set 1",
+              route: "try-out/indonesia/snbt/set-1/quantitative-knowledge",
+              section: "tryout",
+              title: "SNBT Pengetahuan Kuantitatif set 1",
             });
 
             return Effect.succeed(
@@ -483,16 +482,14 @@ describe("nakafa search tool", () => {
                 items: [
                   {
                     ...setItem,
-                    content_id: "asset:id:exercise:snbt:2026:set-1:q2",
-                    route:
-                      "latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1/soal-2",
-                    url: "https://nakafa.com/id/latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1/soal-2",
+                    description: "SNBT",
+                    route: "try-out/indonesia/snbt/set-1",
+                    title: "SNBT set 1",
+                    url: "https://nakafa.com/id/try-out/indonesia/snbt/set-1",
                   },
                   {
                     ...setItem,
-                    route:
-                      "latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1",
-                    url: "https://nakafa.com/id/latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1",
+                    url: "https://nakafa.com/id/try-out/indonesia/snbt/set-1/pengetahuan-kuantitatif",
                   },
                 ],
                 limit: input.limit,
@@ -505,12 +502,12 @@ describe("nakafa search tool", () => {
     );
 
     expect(output.result?.items.map((item) => item.route)).toEqual([
-      "latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1",
-      "latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1/soal-2",
+      "try-out/indonesia/snbt/set-1/quantitative-knowledge",
+      "try-out/indonesia/snbt/set-1",
     ]);
   });
 
-  it("does not change an already anchored exercise query", async () => {
+  it("does not change an already anchored try-out query", async () => {
     const { writer } = createWriter();
     const capturedQueries: string[][] = [];
     const query = "SNBT 2026 2 aljabar campuran";
@@ -522,14 +519,14 @@ describe("nakafa search tool", () => {
           locale: "id",
           offset: 0,
           queries: [query],
-          section: "material",
+          section: "tryout",
         },
         locale: "id",
-        toolCallId: "search-exercise-number",
+        toolCallId: "search-tryout-number",
         writer,
       }).pipe(
         Effect.provideService(NakafaSearch, {
-          /** Captures the anchored exercise query and returns an empty result. */
+          /** Captures the anchored try-out query and returns an empty result. */
           search: (input) => {
             capturedQueries.push(input.queries ?? []);
 
@@ -550,7 +547,7 @@ describe("nakafa search tool", () => {
     expect(capturedQueries).toEqual([[query]]);
   });
 
-  it("leaves exercise search unchanged", async () => {
+  it("leaves try-out search unchanged", async () => {
     const { writer } = createWriter();
     const capturedQueries: string[][] = [];
 
@@ -561,14 +558,14 @@ describe("nakafa search tool", () => {
           locale: "id",
           offset: 0,
           queries: ["Pengetahuan Kuantitatif SNBT"],
-          section: "material",
+          section: "tryout",
         },
         locale: "id",
-        toolCallId: "search-exercise-query",
+        toolCallId: "search-tryout-query",
         writer,
       }).pipe(
         Effect.provideService(NakafaSearch, {
-          /** Captures the exercise query and returns an empty result. */
+          /** Captures the try-out query and returns an empty result. */
           search: (input) => {
             capturedQueries.push(input.queries ?? []);
 
@@ -599,14 +596,14 @@ describe("nakafa search tool", () => {
           limit: 10,
           locale: "id",
           offset: 0,
-          section: "material",
+          section: "tryout",
         },
         locale: "id",
-        toolCallId: "search-exercise-without-query",
+        toolCallId: "search-tryout-without-query",
         writer,
       }).pipe(
         Effect.provideService(NakafaSearch, {
-          /** Captures the omitted exercise query list and returns no rows. */
+          /** Captures the omitted try-out query list and returns no rows. */
           search: (input) => {
             capturedQueries.push(input.queries ?? []);
 
@@ -627,7 +624,7 @@ describe("nakafa search tool", () => {
     expect(capturedQueries).toEqual([[]]);
   });
 
-  it("keeps exercise UI query-scoped while aggregate selection stays ranked", async () => {
+  it("keeps try-out UI query-scoped while aggregate selection stays ranked", async () => {
     const { parts, writer } = createWriter();
     const output = await Effect.runPromise(
       search({
@@ -636,14 +633,14 @@ describe("nakafa search tool", () => {
           locale: "id",
           offset: 0,
           queries: ["pola bilangan", "Penalaran Matematika"],
-          section: "material",
+          section: "tryout",
         },
         locale: "id",
-        toolCallId: "search-exercise-combined",
+        toolCallId: "search-tryout-combined",
         writer,
       }).pipe(
         Effect.provideService(NakafaSearch, {
-          /** Returns query-specific exercise rows to verify UI and aggregate ranking. */
+          /** Returns query-specific try-out rows to verify UI and aggregate ranking. */
           search: (input) => {
             if (input.queries?.at(0) === "Penalaran Matematika") {
               return Effect.succeed(
@@ -656,8 +653,8 @@ describe("nakafa search tool", () => {
                         "SNBT Penalaran Matematika Try Out 2026 Set 1 pola bilangan",
                       locale: input.locale,
                       route:
-                        "material/practice/assessment/snbt/mathematical-reasoning/try-out-2026/set-1",
-                      section: "material",
+                        "try-out/indonesia/snbt/set-1/mathematical-reasoning",
+                      section: "tryout",
                       title: "SNBT Penalaran Matematika Try Out 2026 Set 1",
                     }),
                   ],
@@ -674,12 +671,11 @@ describe("nakafa search tool", () => {
                 items: [
                   searchItem({
                     description:
-                      "Soal Bahasa Indonesia yang menyebut pola bilangan.",
+                      "Bagian Bahasa Indonesia yang menyebut pola bilangan.",
                     locale: input.locale,
-                    route:
-                      "material/practice/assessment/snbt/indonesian-language/try-out-2026/set-1/question-1",
-                    section: "material",
-                    title: "Soal 1 Bahasa Indonesia",
+                    route: "try-out/indonesia/snbt/set-1/indonesian-language",
+                    section: "tryout",
+                    title: "Bahasa Indonesia",
                   }),
                 ],
                 limit: input.limit,
@@ -711,7 +707,7 @@ describe("nakafa search tool", () => {
     ).toBe(true);
   });
 
-  it("writes query-scoped exercise error parts when every query fails", async () => {
+  it("writes query-scoped try-out error parts when every query fails", async () => {
     const { parts, writer } = createWriter();
     const output = await Effect.runPromise(
       search({
@@ -720,18 +716,18 @@ describe("nakafa search tool", () => {
           locale: "id",
           offset: 0,
           queries: ["pola bilangan", "Penalaran Matematika"],
-          section: "material",
+          section: "tryout",
         },
         locale: "id",
-        toolCallId: "search-exercise-scoped-error",
+        toolCallId: "search-tryout-scoped-error",
         writer,
       }).pipe(
         Effect.provideService(NakafaSearch, {
-          /** Fails every scoped exercise query to verify per-query error parts. */
+          /** Fails every scoped try-out query to verify per-query error parts. */
           search: () =>
             Effect.fail(
               new NakafaAgentDataReadError({
-                message: "Unable to search Nakafa exercises.",
+                message: "Unable to search Nakafa try-outs.",
               })
             ),
         })
@@ -743,8 +739,8 @@ describe("nakafa search tool", () => {
     expect(output).toEqual({
       result: null,
       text: [
-        "Unable to search Nakafa exercises.",
-        "Unable to search Nakafa exercises.",
+        "Unable to search Nakafa try-outs.",
+        "Unable to search Nakafa try-outs.",
       ].join("\n"),
     });
     expect(
@@ -762,12 +758,12 @@ describe("nakafa search tool", () => {
         .filter((part) => part.status === "error")
         .map((part) => part.error)
     ).toEqual([
-      "Unable to search Nakafa exercises.",
-      "Unable to search Nakafa exercises.",
+      "Unable to search Nakafa try-outs.",
+      "Unable to search Nakafa try-outs.",
     ]);
   });
 
-  it("keeps combined exercise order when query tokens are empty", async () => {
+  it("keeps combined try-out order when query tokens are empty", async () => {
     const { writer } = createWriter();
     const output = await Effect.runPromise(
       search({
@@ -776,20 +772,20 @@ describe("nakafa search tool", () => {
           locale: "id",
           offset: 0,
           queries: ["!!!", "???"],
-          section: "material",
+          section: "tryout",
         },
         locale: "id",
-        toolCallId: "search-exercise-empty-tokens",
+        toolCallId: "search-tryout-empty-tokens",
         writer,
       }).pipe(
         Effect.provideService(NakafaSearch, {
-          /** Returns empty-excerpt exercise rows for punctuation-only queries. */
+          /** Returns empty-excerpt try-out rows for punctuation-only queries. */
           search: (input) => {
             const query = input.queries?.at(0) ?? "empty";
             const route =
               query === "???"
-                ? "material/practice/assessment/snbt/general-reasoning/try-out-2026/set-2"
-                : "material/practice/assessment/snbt/general-reasoning/try-out-2026/set-1";
+                ? "try-out/indonesia/snbt/set-2/general-reasoning"
+                : "try-out/indonesia/snbt/set-1/general-reasoning";
 
             return Effect.succeed(
               searchResult({
@@ -800,7 +796,7 @@ describe("nakafa search tool", () => {
                     description: "",
                     locale: input.locale,
                     route,
-                    section: "material",
+                    section: "tryout",
                     title: query,
                   }),
                 ],
@@ -819,7 +815,7 @@ describe("nakafa search tool", () => {
     ]);
   });
 
-  it("prefers exercise set rows over question rows when combined scores tie", async () => {
+  it("keeps try-out query order first when combined scores tie", async () => {
     const { writer } = createWriter();
     const output = await Effect.runPromise(
       search({
@@ -828,14 +824,14 @@ describe("nakafa search tool", () => {
           locale: "id",
           offset: 0,
           queries: ["pola", "bilangan"],
-          section: "material",
+          section: "tryout",
         },
         locale: "id",
-        toolCallId: "search-exercise-tie",
+        toolCallId: "search-tryout-tie",
         writer,
       }).pipe(
         Effect.provideService(NakafaSearch, {
-          /** Returns set and question rows to verify set preference on ranking ties. */
+          /** Returns section rows to verify query-specific interleaving on ranking ties. */
           search: (input) => {
             if (input.queries?.at(0) === "bilangan") {
               return Effect.succeed(
@@ -848,9 +844,9 @@ describe("nakafa search tool", () => {
                       excerpt: "pola",
                       locale: input.locale,
                       route:
-                        "material/practice/assessment/snbt/mathematical-reasoning/try-out-2026/set-1",
-                      section: "material",
-                      title: "Set Penalaran Matematika",
+                        "try-out/indonesia/snbt/set-1/mathematical-reasoning",
+                      section: "tryout",
+                      title: "Penalaran Matematika",
                     }),
                   ],
                   limit: input.limit,
@@ -868,10 +864,9 @@ describe("nakafa search tool", () => {
                     description: "pola",
                     excerpt: "pola",
                     locale: input.locale,
-                    route:
-                      "material/practice/assessment/snbt/indonesian-language/try-out-2026/set-1/question-1",
-                    section: "material",
-                    title: "Soal 1",
+                    route: "try-out/indonesia/snbt/set-1/indonesian-language",
+                    section: "tryout",
+                    title: "Bahasa Indonesia",
                   }),
                 ],
                 limit: input.limit,
@@ -884,7 +879,7 @@ describe("nakafa search tool", () => {
     );
 
     expect(output.result?.items[0]?.content_id).toContain(
-      "mathematical-reasoning"
+      "indonesian-language"
     );
   });
 
@@ -902,11 +897,11 @@ describe("nakafa search tool", () => {
           section: "material",
         },
         locale: "id",
-        toolCallId: "search-exercise-no-hints",
+        toolCallId: "search-material-no-hints",
         writer,
       }).pipe(
         Effect.provideService(NakafaSearch, {
-          /** Captures non-exercise queries and returns an empty result. */
+          /** Captures material queries and returns an empty result. */
           search: (input) => {
             capturedQueries.push(input.queries ?? []);
 
@@ -927,7 +922,7 @@ describe("nakafa search tool", () => {
     expect(capturedQueries).toEqual([["fungsi kuadrat"]]);
   });
 
-  it("ranks non-exercise UI results by query metadata relevance", async () => {
+  it("ranks material UI results by query metadata relevance", async () => {
     const { parts, writer } = createWriter();
 
     await Effect.runPromise(

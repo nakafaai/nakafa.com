@@ -1,5 +1,4 @@
 import {
-  nakafaExercise,
   nakafaQuran,
   nakafaRead,
   nakafaSearch,
@@ -10,12 +9,10 @@ import { NakafaSearch } from "@repo/ai/agents/nakafa/search";
 import { Nakafa } from "@repo/ai/agents/nakafa/service";
 import {
   prepareAnswerFromNakafaEvidenceStep,
-  prepareExerciseStep,
   prepareReadStep,
   prepareTaxonomyAnswerStep,
   readSearchFollowup,
 } from "@repo/ai/agents/nakafa/step";
-import { exercise } from "@repo/ai/agents/nakafa/tools/exercise";
 import { quran } from "@repo/ai/agents/nakafa/tools/quran";
 import { read } from "@repo/ai/agents/nakafa/tools/read";
 import { search } from "@repo/ai/agents/nakafa/tools/search";
@@ -27,21 +24,17 @@ import { subAgentGenerationTimeout } from "@repo/ai/config/timeouts";
 import { createEffectSchema } from "@repo/ai/lib/effect-schema";
 import { textOutputSchema } from "@repo/ai/schema/tools";
 import type { NakafaAgentParams } from "@repo/ai/types/agents";
-import { NakafaAgentExerciseOptionsSchema } from "@repo/contents/_lib/agent/schema/exercise";
 import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agent/schema/quran";
 import { NakafaAgentReadOptionsSchema } from "@repo/contents/_lib/agent/schema/read";
 import { NakafaAgentSearchOptionsSchema } from "@repo/contents/_lib/agent/schema/search";
 import { NakafaAgentTaxonomyOptionsSchema } from "@repo/contents/_lib/agent/schema/taxonomy";
 import { generateText, isStepCount, tool } from "ai";
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
 
 const nakafaSearchInputSchema = createEffectSchema(
   NakafaAgentSearchOptionsSchema
 );
 const nakafaReadInputSchema = createEffectSchema(NakafaAgentReadOptionsSchema);
-const nakafaExerciseInputSchema = createEffectSchema(
-  NakafaAgentExerciseOptionsSchema
-);
 const nakafaQuranInputSchema = createEffectSchema(
   NakafaAgentQuranReferenceOptionsSchema
 );
@@ -59,7 +52,6 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
   nakafa,
 }: NakafaAgentParams) {
   const searchService = yield* NakafaSearch;
-  let pendingExerciseRef = Option.none<string>();
   let hasPendingContentRead = false;
   const result = yield* Effect.tryPromise({
     /** Runs the AI SDK Nakafa specialist loop with MCP-equivalent tools. */
@@ -87,10 +79,6 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
                     Effect.sync(() => {
                       const followup = readSearchFollowup(input, output.result);
 
-                      if (Option.isSome(followup.exerciseRef)) {
-                        pendingExerciseRef = followup.exerciseRef;
-                      }
-
                       hasPendingContentRead =
                         hasPendingContentRead || followup.shouldReadContent;
                     })
@@ -109,21 +97,6 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
 
               return Effect.runPromise(
                 read({ input, toolCallId, writer }).pipe(provideNakafa(nakafa))
-              );
-            },
-          }),
-          exercise: tool({
-            description: nakafaExercise,
-            inputSchema: nakafaExerciseInputSchema,
-            outputSchema: textOutputSchema,
-            /** Reads structured exercise data and clears pending exercise state. */
-            execute: (input, { toolCallId }) => {
-              pendingExerciseRef = Option.none();
-
-              return Effect.runPromise(
-                exercise({ input, toolCallId, writer }).pipe(
-                  provideNakafa(nakafa)
-                )
               );
             },
           }),
@@ -158,29 +131,12 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
          * https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#preparestep-callback
          */
         prepareStep: ({ messages, steps }) => {
-          const hasExerciseToolCall = steps.some((step) =>
-            step.toolCalls.some((toolCall) => toolCall.toolName === "exercise")
-          );
           const hasReadToolCall = steps.some((step) =>
             step.toolCalls.some((toolCall) => toolCall.toolName === "read")
           );
 
-          if (hasExerciseToolCall) {
-            pendingExerciseRef = Option.none();
-          }
-
           if (hasReadToolCall) {
             hasPendingContentRead = false;
-          }
-
-          const exerciseStep = prepareExerciseStep(
-            pendingExerciseRef,
-            messages,
-            hasExerciseToolCall
-          );
-
-          if (exerciseStep) {
-            return exerciseStep;
           }
 
           const readStep = prepareReadStep(

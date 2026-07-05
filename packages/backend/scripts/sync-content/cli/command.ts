@@ -11,9 +11,8 @@ import {
   syncCurriculumLessons,
   syncCurriculumTopics,
 } from "@repo/backend/scripts/sync-content/content/curriculum";
-import { syncExerciseQuestions } from "@repo/backend/scripts/sync-content/content/practice/questions";
-import { syncExerciseSets } from "@repo/backend/scripts/sync-content/content/practice/sets";
 import { syncLearningPrograms } from "@repo/backend/scripts/sync-content/content/programs";
+import { syncTryouts } from "@repo/backend/scripts/sync-content/content/tryouts";
 import { validate } from "@repo/backend/scripts/sync-content/content/validate";
 import type { SyncOptions } from "@repo/backend/scripts/sync-content/contract/types";
 import { getConvexConfig } from "@repo/backend/scripts/sync-content/convex/client";
@@ -72,6 +71,7 @@ const printUsage = (): void => {
   );
   log("  sync:validate         - Validate content without syncing (for CI)");
   log("  sync:verify           - Verify database matches filesystem");
+  log("  tryouts               - Sync source-driven try-out catalog and bank");
   log(
     "  learning-programs     - Sync program catalog and graph-backed coverage"
   );
@@ -154,20 +154,9 @@ export const runCommand = Effect.fn("sync.runCommand")(function* (
       yield* syncCurriculumLessons(config, options);
       yield* syncGeneratedReadModels(config, options);
       return;
-    case "exercise-sets":
+    case "tryouts":
       yield* syncAuthors(config, options);
-      yield* syncExerciseSets(config, options);
-      yield* syncGeneratedReadModels(config, options);
-      return;
-    case "exercise-questions":
-      yield* syncAuthors(config, options);
-      yield* syncExerciseQuestions(config, options);
-      yield* syncGeneratedReadModels(config, options);
-      return;
-    case "exercises":
-      yield* syncAuthors(config, options);
-      yield* syncExerciseSets(config, options);
-      yield* syncExerciseQuestions(config, options);
+      yield* syncTryouts(config, options);
       yield* syncGeneratedReadModels(config, options);
       return;
     case "read-models":

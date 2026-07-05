@@ -17,9 +17,8 @@ const ARTICLE_ROUTE = "articles/politics/views";
 const ARTICLE_CONTENT_ID = "asset:id:catalog:article:views";
 const SUBJECT_ROUTE = "material/lesson/mathematics/vector/addition";
 const SUBJECT_CONTENT_ID = "asset:id:catalog:subject:views";
-const EXERCISE_ROUTE =
-  "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1";
-const EXERCISE_CONTENT_ID = "asset:id:catalog:exercise:views";
+const TRYOUT_SET_ROUTE = "try-out/indonesia/snbt/set-1";
+const TRYOUT_SET_CONTENT_ID = "asset:id:catalog:tryout-set:views";
 const canonicalContext = {
   contextKey: "canonical",
   contextMode: "canonical",
@@ -142,30 +141,17 @@ async function insertSubject(ctx: MutationCtx) {
   return { contentId: SUBJECT_CONTENT_ID, id };
 }
 
-/** Inserts one exercise set row for content-view mutation tests. */
-async function insertExerciseSet(ctx: MutationCtx) {
-  const id = await ctx.db.insert("exerciseSets", {
-    category: "high-school",
-    exerciseType: "try-out",
-    locale: "id",
-    material: "quantitative-knowledge",
-    questionCount: 20,
-    setName: "set-1",
-    slug: EXERCISE_ROUTE,
-    syncedAt: NOW,
-    title: "Views",
-    type: "snbt",
-  });
-
+/** Inserts one try-out set route row for content-view mutation tests. */
+async function insertTryoutSetRoute(ctx: MutationCtx) {
   await insertContentRoute(ctx, {
-    contentId: EXERCISE_CONTENT_ID,
-    kind: "exercise-set",
-    route: EXERCISE_ROUTE,
-    section: "material",
-    title: "Views",
+    contentId: TRYOUT_SET_CONTENT_ID,
+    kind: "tryout-set",
+    route: TRYOUT_SET_ROUTE,
+    section: "tryout",
+    title: "SNBT Set 1",
   });
 
-  return { contentId: EXERCISE_CONTENT_ID, id };
+  return { contentId: TRYOUT_SET_CONTENT_ID };
 }
 
 /** Returns the analytics partition for one popularity signal scope. */
@@ -729,11 +715,11 @@ describe("contents/mutations/views", () => {
         locale: "id",
       }
     );
-    const exerciseResult = await t.mutation(
+    const quranResult = await t.mutation(
       api.contents.mutations.views.recordContentView,
       {
         contentId: quranContentId,
-        deviceId: "device-exercise",
+        deviceId: "device-quran",
         locale: "id",
       }
     );
@@ -745,7 +731,7 @@ describe("contents/mutations/views", () => {
       isNewView: false,
       success: false,
     });
-    expect(exerciseResult).toEqual({
+    expect(quranResult).toEqual({
       alreadyViewed: false,
       isNewView: false,
       success: false,
@@ -819,11 +805,11 @@ describe("contents/mutations/views", () => {
     });
   });
 
-  it("resolves subject and exercise graph IDs through the route catalog", async () => {
+  it("resolves subject and try-out graph IDs through the route catalog", async () => {
     const t = createConvexTestWithBetterAuth();
     const fixtures = await t.mutation(async (ctx) => ({
-      exercise: await insertExerciseSet(ctx),
       subject: await insertSubject(ctx),
+      tryout: await insertTryoutSetRoute(ctx),
     }));
 
     await t.mutation(api.contents.mutations.views.recordContentView, {
@@ -832,8 +818,8 @@ describe("contents/mutations/views", () => {
       locale: "id",
     });
     await t.mutation(api.contents.mutations.views.recordContentView, {
-      contentId: fixtures.exercise.contentId,
-      deviceId: "device-exercise",
+      contentId: fixtures.tryout.contentId,
+      deviceId: "device-tryout",
       locale: "id",
     });
 
@@ -843,7 +829,7 @@ describe("contents/mutations/views", () => {
     expect(refs).toEqual(
       expect.arrayContaining([
         fixtures.subject.contentId,
-        fixtures.exercise.contentId,
+        fixtures.tryout.contentId,
       ])
     );
     expect(state.engagementQueue).toHaveLength(2);

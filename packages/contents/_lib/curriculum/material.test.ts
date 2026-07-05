@@ -5,10 +5,8 @@ import {
   getMaterials,
 } from "@repo/contents/_lib/curriculum/material";
 import type { MaterialList } from "@repo/contents/_types/curriculum/material";
-import {
-  EXERCISES_MATERIALS,
-  SUBJECT_MATERIALS,
-} from "@repo/contents/_types/taxonomy";
+import { SUBJECT_MATERIALS } from "@repo/contents/_types/taxonomy";
+import { TRYOUT_SOURCES } from "@repo/contents/_types/tryout/source";
 import { Effect, Option } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -46,7 +44,11 @@ describe("getMaterialIcon", () => {
   });
 
   it("resolves every known material domain without the fallback icon", () => {
-    for (const material of [...SUBJECT_MATERIALS, ...EXERCISES_MATERIALS]) {
+    const tryoutSectionKeys = TRYOUT_SOURCES.flatMap((source) =>
+      source.sets.flatMap((set) => set.sections.map((section) => section.key))
+    );
+
+    for (const material of [...SUBJECT_MATERIALS, ...tryoutSectionKeys]) {
       expect(getMaterialIcon(material)).not.toBe(BulbIcon);
     }
   });

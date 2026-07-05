@@ -16,7 +16,7 @@ export function hydrateMessagePage(
 ) {
   return asyncMap(messages, async (message) => {
     const parts = await db
-      .query("parts")
+      .query("messageParts")
       .withIndex("by_messageId_and_order", (q) =>
         q.eq("messageId", message._id)
       )

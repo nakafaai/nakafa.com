@@ -326,7 +326,7 @@ describe("nina/agent", () => {
       planItems: [],
       program: {
         coverageStatus: "partial",
-        key: LearningProgramKeySchema.make("snbt-2026"),
+        key: LearningProgramKeySchema.make("snbt"),
         kind: "admission-exam",
         title: "SNBT 2026",
         versionLabel: "2026",

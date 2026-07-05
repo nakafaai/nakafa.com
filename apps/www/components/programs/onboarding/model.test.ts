@@ -31,11 +31,11 @@ const programs = [
   {
     coverageStatus: "partial",
     displayOrder: 20,
-    key: "snbt-2026",
+    key: "snbt",
     kind: "admission-exam",
     navigation: {
-      levels: ["section", "domain", "practice-set"],
-      model: "exam-domain-practice-set",
+      levels: ["section", "domain", "set"],
+      model: "exam-domain-set",
     },
     publicSlug: "snbt",
     title: "SNBT 2026",
@@ -61,7 +61,7 @@ describe("components/programs/onboarding/model", () => {
       getProgramsForInterests(programs, ["exam-prep", "assessment-prep"]).map(
         (program) => program.key
       )
-    ).toEqual(["snbt-2026"]);
+    ).toEqual(["snbt"]);
   });
 
   it("does not show interests that have no usable program", () => {
@@ -69,7 +69,7 @@ describe("components/programs/onboarding/model", () => {
       getProgramsForInterests(programs, ["assessment-prep"]).map(
         (program) => program.key
       )
-    ).toEqual(["snbt-2026"]);
+    ).toEqual(["snbt"]);
     expect(getProgramsForInterests(programs, [])).toEqual([]);
     expect(
       getSelectableInterests(programs, [
@@ -109,7 +109,7 @@ describe("components/programs/onboarding/model", () => {
     });
     expect(examSelection).toMatchObject({
       interests: ["exam-prep"],
-      program: { key: "snbt-2026" },
+      program: { key: "snbt" },
     });
   });
 

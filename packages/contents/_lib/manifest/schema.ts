@@ -53,9 +53,6 @@ const ContentManifestRedirectsSchema = Schema.Array(
 export const ContentRouteManifestSchema = Schema.Struct({
   version: Schema.Number,
   contentRoutes: ContentManifestRouteArraySchema,
-  exerciseApiParams: Schema.Array(ContentManifestStaticParamSchema).pipe(
-    Schema.mutable
-  ),
   localeParams: Schema.Array(ContentManifestStaticParamSchema).pipe(
     Schema.mutable
   ),
@@ -75,9 +72,6 @@ export const ContentRouteManifestSchema = Schema.Struct({
 
 const ContentRouteParamManifestSchema = Schema.Struct({
   version: Schema.Number,
-  exerciseApiParams: Schema.Array(ContentManifestStaticParamSchema).pipe(
-    Schema.mutable
-  ),
   localeParams: Schema.Array(ContentManifestStaticParamSchema).pipe(
     Schema.mutable
   ),

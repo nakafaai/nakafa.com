@@ -12,15 +12,6 @@ type ArticlePageArgs = FunctionArgs<
 type CurriculumPageArgs = FunctionArgs<
   typeof api.contents.queries.runtime.getCurriculumPage
 >;
-type ExerciseSetPageArgs = FunctionArgs<
-  typeof api.contents.queries.runtime.getExerciseSetPage
->;
-type ExerciseQuestionPageArgs = FunctionArgs<
-  typeof api.contents.queries.runtime.getExerciseQuestionPage
->;
-type ExerciseGroupPageArgs = FunctionArgs<
-  typeof api.contents.queries.runtime.getExerciseGroupPage
->;
 type QuranSurahPageArgs = FunctionArgs<
   typeof api.contents.queries.runtime.getQuranSurahPage
 >;
@@ -44,47 +35,6 @@ export function fetchRuntimeArticlePage(args: ArticlePageArgs) {
 export function fetchRuntimeCurriculumPage(args: CurriculumPageArgs) {
   return fetchRuntimeQuery(
     api.contents.queries.runtime.getCurriculumPage,
-    args
-  );
-}
-
-/**
- * Reads an exercise set from Convex through a Promise boundary for static RSCs.
- *
- * This avoids starting Effect's runtime before Next.js observes uncached data
- * during prerender. See https://nextjs.org/docs/messages/next-prerender-current-time.
- */
-export function fetchRuntimeExerciseSetPage(args: ExerciseSetPageArgs) {
-  return fetchRuntimeQuery(
-    api.contents.queries.runtime.getExerciseSetPage,
-    args
-  );
-}
-
-/**
- * Reads one exercise question from Convex through a Promise boundary for static RSCs.
- *
- * This avoids starting Effect's runtime before Next.js observes uncached data
- * during prerender. See https://nextjs.org/docs/messages/next-prerender-current-time.
- */
-export function fetchRuntimeExerciseQuestionPage(
-  args: ExerciseQuestionPageArgs
-) {
-  return fetchRuntimeQuery(
-    api.contents.queries.runtime.getExerciseQuestionPage,
-    args
-  );
-}
-
-/**
- * Reads an exercise group from Convex through a Promise boundary for static RSCs.
- *
- * This avoids starting Effect's runtime before Next.js observes uncached data
- * during prerender. See https://nextjs.org/docs/messages/next-prerender-current-time.
- */
-export function fetchRuntimeExerciseGroupPage(args: ExerciseGroupPageArgs) {
-  return fetchRuntimeQuery(
-    api.contents.queries.runtime.getExerciseGroupPage,
     args
   );
 }
@@ -127,33 +77,6 @@ export const getRuntimeCurriculumPage = Effect.fn(
 )(function* (args: CurriculumPageArgs) {
   return yield* readRuntimeQuery("getCurriculumPage", () =>
     fetchRuntimeCurriculumPage(args)
-  );
-});
-
-/** Reads an exercise set from the Convex content runtime model. */
-export const getRuntimeExerciseSetPage = Effect.fn(
-  "www.contentRuntime.exerciseSet"
-)(function* (args: ExerciseSetPageArgs) {
-  return yield* readRuntimeQuery("getExerciseSetPage", () =>
-    fetchRuntimeExerciseSetPage(args)
-  );
-});
-
-/** Reads a single exercise question from the Convex content runtime model. */
-export const getRuntimeExerciseQuestionPage = Effect.fn(
-  "www.contentRuntime.exerciseQuestion"
-)(function* (args: ExerciseQuestionPageArgs) {
-  return yield* readRuntimeQuery("getExerciseQuestionPage", () =>
-    fetchRuntimeExerciseQuestionPage(args)
-  );
-});
-
-/** Reads an exercise group route from the Convex content runtime model. */
-export const getRuntimeExerciseGroupPage = Effect.fn(
-  "www.contentRuntime.exerciseGroup"
-)(function* (args: ExerciseGroupPageArgs) {
-  return yield* readRuntimeQuery("getExerciseGroupPage", () =>
-    fetchRuntimeExerciseGroupPage(args)
   );
 });
 

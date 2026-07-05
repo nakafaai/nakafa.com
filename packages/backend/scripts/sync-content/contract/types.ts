@@ -66,7 +66,7 @@ export interface ConvexConfig {
 export interface StaleItem {
   id: string;
   locale: Locale;
-  slug: string;
+  sourcePath: string;
 }
 
 export interface ValidationError {
@@ -84,6 +84,6 @@ export interface FilesystemSlugs {
   articleSlugs: string[];
   curriculumLessonSlugs: string[];
   curriculumTopicSlugs: string[];
-  exerciseQuestionSlugs: string[];
-  exerciseSetSlugs: string[];
+  questionSetSourcePaths: string[];
+  questionSourcePaths: string[];
 }

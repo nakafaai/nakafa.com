@@ -8,7 +8,6 @@ import {
   SubscriptionPlanSyncIoError,
   subscriptionPlanSyncIoFailedCode,
 } from "@repo/backend/convex/triggers/subscriptions/spec";
-import { listCanonicalActiveTryoutSubscriptions } from "@repo/backend/convex/tryoutAccess/helpers/subscriptions";
 import type { UserPlan } from "@repo/backend/convex/users/schema";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { products } from "@repo/backend/convex/utils/polar/products";
@@ -16,6 +15,7 @@ import { Clock, Effect } from "effect";
 
 const freePlan = "free" satisfies UserPlan;
 const proPlan = "pro" satisfies UserPlan;
+const activeSubscriptionStatus = "active";
 const canceledSubscriptionStatus = "canceled";
 
 const productToPlan: ReadonlyMap<string, UserPlan> = new Map([
@@ -65,7 +65,13 @@ const loadActiveSubscriptions = Effect.fn(
   "triggers.subscriptions.loadActiveSubscriptions"
 )(function* (db: MutationCtx["db"], customerId: SubscriptionDoc["customerId"]) {
   return yield* Effect.tryPromise({
-    try: () => listCanonicalActiveTryoutSubscriptions(db, { customerId }),
+    try: () =>
+      db
+        .query("subscriptions")
+        .withIndex("by_customerId_and_status", (q) =>
+          q.eq("customerId", customerId).eq("status", activeSubscriptionStatus)
+        )
+        .collect(),
     catch: toSubscriptionPlanSyncIoError,
   });
 });

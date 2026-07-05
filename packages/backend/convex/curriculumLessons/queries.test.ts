@@ -273,14 +273,14 @@ describe("curriculumLessons/queries", () => {
     expect(results).toEqual([]);
   });
 
-  it("drops practice counters from Trending Subjects cards", async () => {
+  it("drops try-out counters from Trending Subjects cards", async () => {
     const t = createTrendingConvexTest();
 
     await t.mutation(async (ctx) => {
-      await insertPracticeCounter(ctx, {
+      await insertTryoutCounter(ctx, {
         materialDomain: "mathematics",
         score: 50,
-        suffix: "practice",
+        suffix: "tryout",
       });
     });
 
@@ -296,13 +296,13 @@ describe("curriculumLessons/queries", () => {
     expect(results).toEqual([]);
   });
 
-  it("pages past filtered practice counters to fill Trending Subjects", async () => {
+  it("pages past filtered try-out counters to fill Trending Subjects", async () => {
     const t = createTrendingConvexTest();
     const validRef = await t.mutation(async (ctx) => {
-      await insertPracticeCounter(ctx, {
+      await insertTryoutCounter(ctx, {
         materialDomain: "mathematics",
         score: 100,
-        suffix: "practice-page",
+        suffix: "tryout-page",
       });
 
       return await insertSubjectCounter(ctx, {
@@ -333,8 +333,8 @@ describe("curriculumLessons/queries", () => {
   });
 });
 
-/** Inserts one ranked practice counter that must not hydrate as a subject. */
-async function insertPracticeCounter(
+/** Inserts one ranked try-out counter that must not hydrate as a subject. */
+async function insertTryoutCounter(
   ctx: MutationCtx,
   input: {
     readonly materialDomain?: Doc<"learningPopularityCounters">["materialDomain"];
@@ -342,30 +342,30 @@ async function insertPracticeCounter(
     readonly suffix: string;
   }
 ) {
-  const sourcePath = getSourcePracticeRoute(input.suffix);
+  const sourcePath = `try-out/indonesia/snbt/${input.suffix}`;
   const identity = createLearningGraphIdentityFromRoute({
     locale: "en",
     route: sourcePath,
   });
 
   if (!identity) {
-    expect.fail(`Expected practice graph identity for ${sourcePath}.`);
+    expect.fail(`Expected try-out graph identity for ${sourcePath}.`);
   }
 
   await ctx.db.insert("contentRoutes", {
     ...identity,
     authors: [],
-    contentHash: `practice-route-hash-${input.suffix}`,
+    contentHash: `tryout-route-hash-${input.suffix}`,
     content_id: identity.assetId,
-    kind: "exercise-set",
+    kind: "tryout-set",
     locale: "en",
     markdown: true,
     ...(input.materialDomain ? { materialDomain: input.materialDomain } : {}),
-    route: getPublicPracticeRoute(input.suffix),
-    section: "material",
+    route: sourcePath,
+    section: "tryout",
     sourcePath,
     syncedAt: NOW,
-    title: `Practice ${input.suffix}`,
+    title: `Try-out ${input.suffix}`,
   });
 
   const counterId = await ctx.db.insert("learningPopularityCounters", {
@@ -374,12 +374,12 @@ async function insertPracticeCounter(
     content_id: identity.assetId,
     ...(input.materialDomain ? { materialDomain: input.materialDomain } : {}),
     locale: "en",
-    route: getPublicPracticeRoute(input.suffix),
+    route: sourcePath,
     score: input.score,
-    section: "material",
+    section: "tryout",
     scopeMode: "global",
     sourcePath,
-    title: `Practice ${input.suffix}`,
+    title: `Try-out ${input.suffix}`,
     updatedAt: NOW,
     windowKey: getDefaultPopularityWindow(),
   });
@@ -390,14 +390,4 @@ async function insertPracticeCounter(
   }
 
   await learningPopularityRankings.insert(ctx, counter);
-}
-
-/** Builds the authored source route for one practice counter fixture. */
-function getSourcePracticeRoute(suffix: string) {
-  return `material/practice/assessment/snbt/quantitative-knowledge/${suffix}/set-1`;
-}
-
-/** Builds the public route for one practice counter fixture. */
-function getPublicPracticeRoute(suffix: string) {
-  return `practice/assessment/snbt/quantitative-knowledge/${suffix}/set-1`;
 }

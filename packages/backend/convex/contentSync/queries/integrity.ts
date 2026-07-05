@@ -19,17 +19,17 @@ import { Schema } from "effect";
 const staleContentItemValidator = v.object({
   id: v.id("articleContents"),
   locale: localeValidator,
-  slug: v.string(),
+  sourcePath: v.string(),
 });
 
-const exerciseQuestionIntegrityItemValidator = v.object({
-  id: v.id("exerciseQuestions"),
+const questionIntegrityItemValidator = v.object({
+  id: v.id("questions"),
   locale: localeValidator,
-  slug: v.string(),
+  sourcePath: v.string(),
 });
 
-const exerciseChoiceIntegrityItemValidator = v.object({
-  questionId: v.id("exerciseQuestions"),
+const questionChoiceIntegrityItemValidator = v.object({
+  questionId: v.id("questions"),
 });
 
 const contentAuthorIntegrityItemValidator = v.object({
@@ -52,7 +52,7 @@ const graphIdentityTargets = [
   "contentRoutes",
   "contentSearch",
   "contentRoutePages",
-  "parts",
+  "messageParts",
   "learningViews",
   "learningEngagementQueue",
   "userLearningRecents",
@@ -119,7 +119,7 @@ type GraphIdentitySummary = Omit<
   GraphIdentityIntegrityPage,
   "continueCursor" | "isDone" | "scannedRows"
 >;
-type NakafaDataPart = NonNullable<Doc<"parts">["dataNakafaData"]>;
+type NakafaDataPart = NonNullable<Doc<"messageParts">["dataNakafaData"]>;
 type NakafaContentRefInputPart = Extract<
   NakafaDataPart,
   { input: { content_ref: string } }
@@ -261,7 +261,7 @@ function checkNakafaContentRefInput(
 /** Adds one chat part preview payload to the graph identity verifier. */
 function checkNakafaDataPart(
   summary: GraphIdentitySummary,
-  part: Doc<"parts">
+  part: Doc<"messageParts">
 ) {
   const data = part.dataNakafaData;
 
@@ -279,7 +279,6 @@ function checkNakafaDataPart(
       }
       return;
     case "content":
-    case "exercise":
       checkNakafaContentRefInput(summary, data);
 
       if (data.status !== "done") {
@@ -314,37 +313,35 @@ function getGraphIdentityPageResult(
   };
 }
 
-/** Returns one bounded exercise-question page for sync integrity verification. */
-export const listIntegrityExerciseQuestionsPage = internalQuery({
+/** Returns one bounded question page for sync integrity verification. */
+export const listIntegrityQuestionsPage = internalQuery({
   args: {
     paginationOpts: paginationOptsValidator,
   },
-  returns: paginationResultValidator(exerciseQuestionIntegrityItemValidator),
+  returns: paginationResultValidator(questionIntegrityItemValidator),
   handler: async (ctx, args) => {
-    const page = await ctx.db
-      .query("exerciseQuestions")
-      .paginate(args.paginationOpts);
+    const page = await ctx.db.query("questions").paginate(args.paginationOpts);
 
     return {
       ...page,
       page: page.page.map((question) => ({
         id: question._id,
         locale: question.locale,
-        slug: question.slug,
+        sourcePath: question.sourcePath,
       })),
     };
   },
 });
 
-/** Returns one bounded exercise-choice page for sync integrity verification. */
-export const listIntegrityExerciseChoicesPage = internalQuery({
+/** Returns one bounded question-choice page for sync integrity verification. */
+export const listIntegrityQuestionChoicesPage = internalQuery({
   args: {
     paginationOpts: paginationOptsValidator,
   },
-  returns: paginationResultValidator(exerciseChoiceIntegrityItemValidator),
+  returns: paginationResultValidator(questionChoiceIntegrityItemValidator),
   handler: async (ctx, args) => {
     const page = await ctx.db
-      .query("exerciseChoices")
+      .query("questionChoices")
       .paginate(args.paginationOpts);
 
     return {
@@ -414,7 +411,7 @@ export const listIntegrityArticlesPage = internalQuery({
       page: page.page.map((article) => ({
         id: article._id,
         locale: article.locale,
-        slug: article.slug,
+        sourcePath: article.slug,
       })),
     };
   },
@@ -595,7 +592,9 @@ export const getGraphIdentityIntegrityPage = internalQuery({
       return getGraphIdentityPageResult(summary, page);
     }
 
-    const page = await ctx.db.query("parts").paginate(args.paginationOpts);
+    const page = await ctx.db
+      .query("messageParts")
+      .paginate(args.paginationOpts);
 
     for (const row of page.page) {
       checkNakafaDataPart(summary, row);

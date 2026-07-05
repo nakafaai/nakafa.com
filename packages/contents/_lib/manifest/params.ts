@@ -1,7 +1,3 @@
-import {
-  getExerciseNumberPaths,
-  getExerciseSetPaths,
-} from "@repo/contents/_lib/manifest/exercise-paths";
 import type {
   ContentManifestStaticParam,
   ContentPathCandidate,
@@ -111,24 +107,6 @@ export function getLocaleParams(
   return result;
 }
 
-/** Builds concrete exercise API params from set and exercise-number paths. */
-export function getExerciseApiParams(localeSlugs: readonly LocaleSlugEntry[]) {
-  const result: ContentManifestStaticParam[] = [];
-
-  for (const { locale, slugs } of localeSlugs) {
-    const exercisePaths = [
-      ...getExerciseSetPaths(slugs),
-      ...getExerciseNumberPaths(slugs),
-    ];
-
-    for (const exercisePath of exercisePaths) {
-      result.push({ locale, slug: exercisePath.split("/") });
-    }
-  }
-
-  return result;
-}
-
 /** Builds broad static params for one content root. */
 function getStaticParamsForRoot(
   localeSlugs: readonly LocaleSlugEntry[],
@@ -154,18 +132,6 @@ function getStaticParamsForRoot(
           locale,
           slug: mdxPath.split("/"),
         });
-      }
-    }
-
-    if (root !== CONTENT_ROOT_VALUES.material) {
-      continue;
-    }
-
-    for (const exercisePath of getExerciseSetPaths(slugs)) {
-      const relativeExercisePath = stripRootPrefix(exercisePath, root);
-
-      if (!folderPaths.has(relativeExercisePath)) {
-        result.push({ locale, slug: relativeExercisePath.split("/") });
       }
     }
   }
@@ -206,14 +172,4 @@ function getMdxPathsForRoot(slugs: readonly string[], root: ContentRoot) {
       return [slug.slice(prefix.length)];
     })
   );
-}
-
-/**
- * Removes a validated content-root prefix before route params are handed to
- * app-level callers that should not know the storage namespace.
- */
-function stripRootPrefix(path: string, root: ContentRoot) {
-  const prefix = `${root}/`;
-
-  return path.slice(prefix.length);
 }

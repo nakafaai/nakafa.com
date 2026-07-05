@@ -21,43 +21,6 @@ describe("generateFallbackMetadata", () => {
     });
   });
 
-  it("uses exercise material context for practice fallback", () => {
-    expect(
-      generateFallbackMetadata({
-        type: "exercise",
-        category: "high-school",
-        exam: "snbt",
-        material: "quantitative-knowledge",
-        data: {
-          title: "Question 9",
-          description: "Exercise fallback.",
-        },
-      })
-    ).toStrictEqual({
-      title: "Question 9 - quantitative-knowledge - Nakafa",
-      description: "Exercise fallback. Question 9",
-      keywords: [],
-    });
-  });
-
-  it("uses the assessment key as the fallback display context", () => {
-    expect(
-      generateFallbackMetadata({
-        type: "exercise-program",
-        category: "high-school",
-        exam: "snbt",
-        data: {
-          title: "SNBT",
-          description: "Assessment fallback.",
-        },
-      })
-    ).toStrictEqual({
-      title: "SNBT - snbt - Nakafa",
-      description: "Assessment fallback. SNBT",
-      keywords: [],
-    });
-  });
-
   it("uses article category context for article fallback", () => {
     expect(
       generateFallbackMetadata({

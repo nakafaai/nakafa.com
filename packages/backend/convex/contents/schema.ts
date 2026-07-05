@@ -375,7 +375,7 @@ const tables = {
 
   /**
    * Source-owned public route projection for material, curriculum, and
-   * practice surfaces.
+   * try-out surfaces.
    *
    * These rows are not graph content bodies. They are the durable route
    * contract used by app routing, SEO artifacts, assistant context, and

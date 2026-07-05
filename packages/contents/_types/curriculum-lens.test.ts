@@ -28,25 +28,23 @@ describe("curriculum lens", () => {
     expect(section.lensId).toBe(topic.lensId);
   });
 
-  it("keeps exam questions aligned to their exam lens", () => {
-    const group = readCurriculumLensFixture({
-      kind: "exercise-group",
+  it("keeps try-out sections aligned to their exam lens", () => {
+    const exam = readCurriculumLensFixture({
+      kind: "tryout-exam",
       locale: "id",
-      route:
-        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026",
+      route: "try-out/indonesia/snbt",
     });
-    const question = readCurriculumLensFixture({
-      kind: "exercise-question",
+    const section = readCurriculumLensFixture({
+      kind: "tryout-section",
       locale: "en",
-      route:
-        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-7",
+      route: "try-out/indonesia/snbt/set-1/quantitative-knowledge",
     });
 
-    expect(group).toMatchObject({
-      lensId: "lens:exercise:high-school:snbt:quantitative-knowledge",
-      scope: getCurriculumLensScopeForKind("exercise-question"),
+    expect(exam).toMatchObject({
+      lensId: "lens:tryout:indonesia:snbt",
+      scope: getCurriculumLensScopeForKind("tryout-section"),
     });
-    expect(question.lensId).toBe(group.lensId);
+    expect(section.lensId).toBe(exam.lensId);
   });
 
   it("keeps non-curriculum source families explicit", () => {

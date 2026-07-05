@@ -35,14 +35,6 @@ import { lessonPhysicsKinematicsMaterial } from "@repo/contents/material/lesson/
 import { lessonPhysicsMeasurementMaterial } from "@repo/contents/material/lesson/physics/measurement/source";
 import { lessonPhysicsRenewableEnergyMaterial } from "@repo/contents/material/lesson/physics/renewable-energy/source";
 import { lessonPhysicsVectorMaterial } from "@repo/contents/material/lesson/physics/vector/source";
-import { practiceAssessmentSnbtEnglishLanguageMaterial } from "@repo/contents/material/practice/assessment/snbt/english-language/source";
-import { practiceAssessmentSnbtGeneralKnowledgeMaterial } from "@repo/contents/material/practice/assessment/snbt/general-knowledge/source";
-import { practiceAssessmentSnbtGeneralReasoningMaterial } from "@repo/contents/material/practice/assessment/snbt/general-reasoning/source";
-import { practiceAssessmentSnbtIndonesianLanguageMaterial } from "@repo/contents/material/practice/assessment/snbt/indonesian-language/source";
-import { practiceAssessmentSnbtMathematicalReasoningMaterial } from "@repo/contents/material/practice/assessment/snbt/mathematical-reasoning/source";
-import { practiceAssessmentSnbtQuantitativeKnowledgeMaterial } from "@repo/contents/material/practice/assessment/snbt/quantitative-knowledge/source";
-import { practiceAssessmentSnbtReadingAndWritingSkillsMaterial } from "@repo/contents/material/practice/assessment/snbt/reading-and-writing-skills/source";
-import { practiceAssessmentTkaMathematicsMaterial } from "@repo/contents/material/practice/assessment/tka/mathematics/source";
 import { Schema } from "effect";
 
 const materialSourceInput = [
@@ -82,22 +74,14 @@ const materialSourceInput = [
   lessonPhysicsMeasurementMaterial,
   lessonPhysicsRenewableEnergyMaterial,
   lessonPhysicsVectorMaterial,
-  practiceAssessmentSnbtEnglishLanguageMaterial,
-  practiceAssessmentSnbtGeneralKnowledgeMaterial,
-  practiceAssessmentSnbtGeneralReasoningMaterial,
-  practiceAssessmentSnbtIndonesianLanguageMaterial,
-  practiceAssessmentSnbtMathematicalReasoningMaterial,
-  practiceAssessmentSnbtQuantitativeKnowledgeMaterial,
-  practiceAssessmentSnbtReadingAndWritingSkillsMaterial,
-  practiceAssessmentTkaMathematicsMaterial,
 ];
 
 /**
  * Source-controlled material registry.
  *
- * Materials own reusable localized assets and learner-facing lesson/practice
- * order. Curriculum and assessment source modules map reusable material keys
- * into program-specific structures.
+ * Materials own reusable localized assets and learner-facing lesson order.
+ * Curriculum source modules map reusable material keys into program-specific
+ * structures.
  */
 export const MATERIAL_SOURCES = Schema.decodeUnknownSync(
   Schema.Array(MaterialSourceSchema)

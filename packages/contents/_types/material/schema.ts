@@ -1,5 +1,3 @@
-import { ExercisesMaterialSchema } from "@repo/contents/_types/assessment/material";
-import { ExercisesTypeSchema } from "@repo/contents/_types/assessment/type";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { MaterialSchema } from "@repo/contents/_types/curriculum/material";
 import { MaterialCardDescriptionSchema } from "@repo/contents/_types/material/description";
@@ -87,46 +85,7 @@ export type LessonMaterialSourceInput = SchemaEncoded<
   typeof LessonMaterialSourceSchema
 >;
 
-export const PracticeMaterialSetSchema = Schema.Struct({
-  routeSlugs: PublicRouteSlugMapSchema,
-  slug: MaterialSlugSchema,
-  translations: LocaleTitleMapSchema,
-});
-
-export type PracticeMaterialSet = SchemaType<typeof PracticeMaterialSetSchema>;
-
-export const PracticeMaterialGroupSchema = Schema.Struct({
-  exerciseType: MaterialSlugSchema,
-  routeSlugs: PublicRouteSlugMapSchema,
-  sets: Schema.Array(PracticeMaterialSetSchema),
-  translations: LocaleDescriptionMapSchema,
-  year: Schema.optional(Schema.Int.pipe(Schema.between(2000, 2100))),
-});
-
-export type PracticeMaterialGroup = SchemaType<
-  typeof PracticeMaterialGroupSchema
->;
-
-export const PracticeMaterialSourceSchema = Schema.Struct({
-  assessment: ExercisesTypeSchema,
-  assetRoot: MaterialRouteSchema,
-  domain: ExercisesMaterialSchema,
-  groups: Schema.Array(PracticeMaterialGroupSchema),
-  key: MaterialKeySchema,
-  kind: Schema.Literal("practice"),
-});
-
-export type PracticeMaterialSource = SchemaType<
-  typeof PracticeMaterialSourceSchema
->;
-export type PracticeMaterialSourceInput = SchemaEncoded<
-  typeof PracticeMaterialSourceSchema
->;
-
-export const MaterialSourceSchema = Schema.Union(
-  LessonMaterialSourceSchema,
-  PracticeMaterialSourceSchema
-);
+export const MaterialSourceSchema = LessonMaterialSourceSchema;
 
 export type MaterialSource = SchemaType<typeof MaterialSourceSchema>;
 
@@ -136,9 +95,4 @@ export type MaterialLocale = SchemaType<typeof MaterialLocaleSchema>;
 /** Decodes one authored material lesson source at module load time. */
 export function defineLessonMaterial(input: LessonMaterialSourceInput) {
   return Schema.decodeUnknownSync(LessonMaterialSourceSchema)(input);
-}
-
-/** Decodes one authored exercise material source at module load time. */
-export function definePracticeMaterial(input: PracticeMaterialSourceInput) {
-  return Schema.decodeUnknownSync(PracticeMaterialSourceSchema)(input);
 }

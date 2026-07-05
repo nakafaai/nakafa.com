@@ -4,8 +4,6 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   getApiContentRouteByContentId,
   getArticleApiContentPage,
-  getExerciseApiQuestionPage,
-  getExerciseApiSetPage,
   getMaterialApiContentPage,
   getQuranApiSurahPage,
   listApiStaticParams,
@@ -61,16 +59,12 @@ describe("API content runtime", () => {
   it("reads one page for each API runtime content query", async () => {
     const articlePage = { continueCursor: "", isDone: true, page: [] };
     const subjectPage = { continueCursor: "", isDone: true, page: [] };
-    const exerciseSetPage = { exercises: [] };
-    const exerciseQuestionPage = { exercise: { number: 1 } };
     const quranSurahPage = { surah: { number: 1 }, verses: [] };
     const routeRow = { content_id: "asset:en:article:politics:article:a" };
 
     runtimeClientMocks.fetchConvexRuntimeQuery
       .mockResolvedValueOnce(articlePage)
       .mockResolvedValueOnce(subjectPage)
-      .mockResolvedValueOnce(exerciseSetPage)
-      .mockResolvedValueOnce(exerciseQuestionPage)
       .mockResolvedValueOnce(quranSurahPage)
       .mockResolvedValueOnce(routeRow);
 
@@ -113,40 +107,6 @@ describe("API content runtime", () => {
         limit: 5,
         locale: "id",
         prefix: "curriculum/high-school/10/mathematics",
-      }
-    );
-
-    await expect(
-      Effect.runPromise(
-        getExerciseApiSetPage({
-          locale: "en",
-          slug: "material/practice/assessment/snbt/general-reasoning/set-1",
-        })
-      )
-    ).resolves.toEqual(exerciseSetPage);
-    expect(runtimeClientMocks.fetchConvexRuntimeQuery).toHaveBeenLastCalledWith(
-      "https://test.convex.cloud",
-      expect.anything(),
-      {
-        locale: "en",
-        slug: "material/practice/assessment/snbt/general-reasoning/set-1",
-      }
-    );
-
-    await expect(
-      Effect.runPromise(
-        getExerciseApiQuestionPage({
-          locale: "id",
-          slug: "material/practice/assessment/snbt/general-reasoning/set-1/1",
-        })
-      )
-    ).resolves.toEqual(exerciseQuestionPage);
-    expect(runtimeClientMocks.fetchConvexRuntimeQuery).toHaveBeenLastCalledWith(
-      "https://test.convex.cloud",
-      expect.anything(),
-      {
-        locale: "id",
-        slug: "material/practice/assessment/snbt/general-reasoning/set-1/1",
       }
     );
 

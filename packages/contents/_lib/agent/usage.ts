@@ -17,7 +17,7 @@ export function getNakafaMcpUsageMarkdown() {
     "",
     "1. Call `nakafa_get_taxonomy` to inspect supported locales and content sections.",
     "2. Call `nakafa_search_content` with queries, locale, and optional section.",
-    "3. Pass the returned `content_id` as `content_ref` to `nakafa_get_content` or `nakafa_get_exercise`.",
+    "3. Pass source-backed `content_id` values as `content_ref` to `nakafa_get_content`.",
     "4. Cite the returned canonical Nakafa URL in final answers.",
   ].join("\n");
 }

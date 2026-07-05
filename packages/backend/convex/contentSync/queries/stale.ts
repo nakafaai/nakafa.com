@@ -11,22 +11,22 @@ const staleContentTableNameValidator = literals(
   "articleContents",
   "curriculumTopics",
   "curriculumLessons",
-  "exerciseSets",
-  "exerciseQuestions"
+  "questionSets",
+  "questions"
 );
 
 const staleContentIdValidator = v.union(
   v.id("articleContents"),
   v.id("curriculumTopics"),
   v.id("curriculumLessons"),
-  v.id("exerciseSets"),
-  v.id("exerciseQuestions")
+  v.id("questionSets"),
+  v.id("questions")
 );
 
 const staleContentItemValidator = v.object({
   id: staleContentIdValidator,
   locale: localeValidator,
-  slug: v.string(),
+  sourcePath: v.string(),
 });
 
 /** Return one paginated page of existing content rows for stale-content detection. */
@@ -43,11 +43,15 @@ export const listStaleContentPage = internalQuery({
 
     return {
       ...page,
-      page: page.page.map((item) => ({
-        id: item._id,
-        locale: item.locale,
-        slug: item.slug,
-      })),
+      page: page.page.map((item) => {
+        const sourcePath = "sourcePath" in item ? item.sourcePath : item.slug;
+
+        return {
+          id: item._id,
+          locale: item.locale,
+          sourcePath,
+        };
+      }),
     };
   },
 });

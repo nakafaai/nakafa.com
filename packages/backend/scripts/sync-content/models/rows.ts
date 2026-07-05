@@ -1,7 +1,6 @@
 import { join } from "node:path";
 import type { internal } from "@repo/backend/convex/_generated/api";
 import {
-  computeHash,
   parseDateToEpoch,
   readMdxFile,
 } from "@repo/backend/scripts/lib/mdx-parser/content";
@@ -13,7 +12,6 @@ import { listCurricula } from "@repo/contents/_types/curriculum/registry";
 import {
   listLessonMaterialSources,
   listMaterials,
-  listPracticeMaterialSources,
 } from "@repo/contents/_types/material/registry";
 import type { MaterialLocale } from "@repo/contents/_types/material/schema";
 import { findLearningProgramByKey } from "@repo/contents/_types/program/catalog";
@@ -73,18 +71,14 @@ export function readMaterialRows() {
 }
 
 /**
- * Builds localized material rows for both lesson MDX and practice groups.
+ * Builds localized material rows for lesson MDX.
  *
- * Lesson rows read MDX through the existing parser effect so parse/date failures
- * remain in the Effect channel. Practice rows are source-registry derived
- * because practice copy is already stored in the typed source module.
+ * Rows read MDX through the existing parser effect so parse/date failures
+ * remain in the Effect channel.
  */
 export const readMaterialLocaleRows = Effect.fn("sync.readMaterialLocaleRows")(
   function* (options: SyncOptions) {
-    const lessonRows = yield* readLessonMaterialLocaleRows(options);
-    const practiceRows = readPracticeMaterialLocaleRows(options);
-
-    return [...lessonRows, ...practiceRows];
+    return yield* readLessonMaterialLocaleRows(options);
   }
 );
 
@@ -128,7 +122,7 @@ export const readCurriculumRows = Effect.fn("sync.readCurriculumRows")(
  * Builds assessment catalog and node rows from assessment source modules.
  *
  * Assessment program labels reuse the same program row shape as curricula while
- * assessment nodes keep their own material-key arrays for route and practice
+ * assessment nodes keep their own material-key arrays for route context
  * context lookups.
  */
 export function readAssessmentRows() {
@@ -202,65 +196,6 @@ const readLessonMaterialLocaleRows = Effect.fn(
 /** Resolves one localized lesson MDX file from its source asset route. */
 function getMaterialMdxPath(route: string, locale: MaterialLocale) {
   return join(CONTENTS_DIR, route, `${locale}.mdx`);
-}
-
-/** Builds practice rows from source-owned practice groups and set metadata. */
-function readPracticeMaterialLocaleRows(options: SyncOptions) {
-  const rows: MaterialLocalePayload[] = [];
-  const locales = getLocales(options);
-
-  for (const material of listPracticeMaterialSources()) {
-    for (const locale of locales) {
-      for (const group of material.groups) {
-        const groupRoute = getPracticeGroupRoute(material.assetRoot, group);
-
-        for (const set of group.sets) {
-          const route = `${groupRoute}/${set.slug}`;
-          rows.push({
-            contentHash: computeHash(
-              JSON.stringify({
-                locale,
-                materialKey: material.key,
-                route,
-                title: set.translations[locale].title,
-              })
-            ),
-            locale,
-            materialKey: material.key,
-            metadata: {
-              description: group.translations[locale].description,
-              title: set.translations[locale].title,
-            },
-            route,
-            sectionKey: route,
-          });
-        }
-      }
-    }
-  }
-
-  return rows;
-}
-
-/**
- * Builds the source asset path for a practice group.
- *
- * Source files encode the assessment year in the exercise-type folder for MDX
- * storage. Public URLs still place year as its own route segment through the
- * route projection module.
- */
-function getPracticeGroupRoute(
-  assetRoot: string,
-  group: ReturnType<
-    typeof listPracticeMaterialSources
-  >[number]["groups"][number]
-) {
-  const exerciseType =
-    group.year === undefined
-      ? group.exerciseType
-      : `${group.exerciseType}-${group.year}`;
-
-  return `${assetRoot}/${exerciseType}`;
 }
 
 /** Applies the sync locale option while defaulting to all material locales. */

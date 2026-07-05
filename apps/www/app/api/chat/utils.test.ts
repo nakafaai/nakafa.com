@@ -26,7 +26,7 @@ vi.mock("@/app/api/chat/nakafa-content", async () => {
             url ===
               "https://nakafa.com/id/articles/politics/dynastic-politics-asian-values" ||
             url ===
-              "https://nakafa.com/en/practice/snbt/general-knowledge/tryout-2026/set-2/question-1" ||
+              "https://nakafa.com/en/try-out/indonesia/snbt/set-1/quantitative-knowledge" ||
             url === "asset:id:quran:quran-surah:1" ||
             url === "nakafa://content/asset:id:quran:quran-surah:1"
         ),
@@ -46,7 +46,7 @@ describe("app/api/chat/utils", () => {
       true,
     ],
     [
-      "https://nakafa.com/en/practice/snbt/general-knowledge/tryout-2026/set-2/question-1",
+      "https://nakafa.com/en/try-out/indonesia/snbt/set-1/quantitative-knowledge",
       true,
     ],
     ["asset:id:quran:quran-surah:1", true],
@@ -89,25 +89,25 @@ describe("app/api/chat/utils", () => {
       interests: ["exam-prep", "assessment-prep"],
       planItems: [
         {
-          content_id: "asset:id:exercise:snbt:2026:set-2:1",
+          content_id:
+            "asset:en:tryout:indonesia:snbt:tryout-section:indonesia:snbt:set-1:quantitative-knowledge",
           lensId: "lens:snbt",
           position: 1,
           reason: "program-alignment",
-          route:
-            "/material/practice/assessment/snbt/general-knowledge/try-out-2026/set-2/question-1",
+          route: "/try-out/indonesia/snbt/set-1/quantitative-knowledge",
           status: "ready",
-          title: "SNBT Set 2",
+          title: "SNBT Set 1",
         },
       ],
       program: {
         coverageStatus: "partial",
         description: "UTBK-SNBT preparation for the 2026 admission cycle.",
         displayOrder: 40,
-        key: "snbt-2026",
+        key: "snbt",
         kind: "admission-exam",
         navigation: {
-          levels: ["section", "domain", "practice-set"],
-          model: "exam-domain-practice-set",
+          levels: ["section", "domain", "set"],
+          model: "exam-domain-set",
         },
         title: "SNBT 2026",
         versionLabel: "2026",
@@ -123,18 +123,18 @@ describe("app/api/chat/utils", () => {
       interests: ["exam-prep", "assessment-prep"],
       planItems: [
         {
-          content_id: "asset:id:exercise:snbt:2026:set-2:1",
+          content_id:
+            "asset:en:tryout:indonesia:snbt:tryout-section:indonesia:snbt:set-1:quantitative-knowledge",
           lensId: "lens:snbt",
           position: 1,
-          route:
-            "/material/practice/assessment/snbt/general-knowledge/try-out-2026/set-2/question-1",
+          route: "/try-out/indonesia/snbt/set-1/quantitative-knowledge",
           status: "ready",
-          title: "SNBT Set 2",
+          title: "SNBT Set 1",
         },
       ],
       program: {
         coverageStatus: "partial",
-        key: "snbt-2026",
+        key: "snbt",
         kind: "admission-exam",
         title: "SNBT 2026",
         versionLabel: "2026",

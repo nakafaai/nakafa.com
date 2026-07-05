@@ -1,7 +1,5 @@
 import { attemptEndReasonValidator } from "@repo/backend/convex/lib/attempts";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
-import { tryoutAccessCampaignKindValidator } from "@repo/backend/convex/tryoutAccess/schema";
-import { tryoutProductValidator } from "@repo/backend/convex/tryouts/products";
 import { defineTable } from "convex/server";
 import { type Infer, v } from "convex/values";
 import { literals } from "convex-helpers/validators";
@@ -19,6 +17,15 @@ export type TryoutScoreStatus = Infer<typeof tryoutScoreStatusValidator>;
 export const tryoutAccessKindValidator = literals("event", "subscription");
 export type TryoutAccessKind = Infer<typeof tryoutAccessKindValidator>;
 
+export const tryoutScoringStrategyValidator = literals(
+  "irt",
+  "raw",
+  "weighted"
+);
+export type TryoutScoringStrategy = Infer<
+  typeof tryoutScoringStrategyValidator
+>;
+
 export const tryoutPublicResultStatusValidator = literals(
   "estimated",
   "verified-irt",
@@ -28,93 +35,132 @@ export type TryoutPublicResultStatus = Infer<
   typeof tryoutPublicResultStatusValidator
 >;
 
-export const tryoutPartKeyValidator = v.string();
-export type TryoutPartKey = Infer<typeof tryoutPartKeyValidator>;
+export const tryoutRouteKeyValidator = v.string();
+export type TryoutRouteKey = Infer<typeof tryoutRouteKeyValidator>;
 
-export const tryoutPartSnapshotValidator = v.object({
-  partIndex: v.number(),
-  /** Stable public identifier for one part, e.g. `general-reasoning`. */
-  partKey: tryoutPartKeyValidator,
+export const tryoutSectionSnapshotValidator = v.object({
   questionCount: v.number(),
-  setId: v.id("exerciseSets"),
+  sectionKey: tryoutRouteKeyValidator,
+  sectionOrder: v.number(),
+  tryoutSectionId: v.id("tryoutSections"),
 });
-export type TryoutPartSnapshot = Infer<typeof tryoutPartSnapshotValidator>;
+export type TryoutSectionSnapshot = Infer<
+  typeof tryoutSectionSnapshotValidator
+>;
 
 const tables = {
-  tryouts: defineTable({
-    product: tryoutProductValidator,
+  tryoutCountries: defineTable({
+    countryKey: tryoutRouteKeyValidator,
     locale: localeValidator,
-    /** Product-defined cycle identifier, e.g. `2026` or a future `2026-wave-1`. */
-    cycleKey: v.string(),
-    slug: v.string(),
-    label: v.string(),
-    partCount: v.number(),
-    totalQuestionCount: v.number(),
+    publicPath: v.string(),
+    title: v.string(),
+    description: v.optional(v.string()),
+    order: v.number(),
     isActive: v.boolean(),
-    /** Dense product-defined browse order used by paginated catalog reads. */
-    catalogPosition: v.number(),
-    detectedAt: v.number(),
+    sourceRevision: v.string(),
     syncedAt: v.number(),
   })
-    .index("by_isActive", ["isActive"])
-    .index("by_product_and_isActive", ["product", "isActive"])
-    .index("by_product_and_locale_and_slug", ["product", "locale", "slug"])
-    .index("by_product_and_locale_and_cycleKey_and_slug", [
-      "product",
-      "locale",
-      "cycleKey",
-      "slug",
-    ])
-    .index("by_product_and_locale_and_isActive", [
-      "product",
+    .index("by_locale_and_publicPath", ["locale", "publicPath"])
+    .index("by_countryKey_and_locale", ["countryKey", "locale"])
+    .index("by_locale_and_isActive_and_order", ["locale", "isActive", "order"]),
+
+  tryoutExams: defineTable({
+    countryKey: tryoutRouteKeyValidator,
+    examKey: tryoutRouteKeyValidator,
+    locale: localeValidator,
+    publicPath: v.string(),
+    title: v.string(),
+    description: v.optional(v.string()),
+    scoringStrategy: tryoutScoringStrategyValidator,
+    order: v.number(),
+    isActive: v.boolean(),
+    sourceRevision: v.string(),
+    syncedAt: v.number(),
+  })
+    .index("by_locale_and_publicPath", ["locale", "publicPath"])
+    .index("by_countryKey_and_locale_and_isActive_and_order", [
+      "countryKey",
       "locale",
       "isActive",
+      "order",
     ])
-    .index("by_product_and_locale_and_isActive_and_catalogPosition", [
-      "product",
+    .index("by_countryKey_and_examKey_and_locale", [
+      "countryKey",
+      "examKey",
       "locale",
-      "isActive",
-      "catalogPosition",
     ]),
 
-  tryoutCatalogMeta: defineTable({
-    product: tryoutProductValidator,
+  tryoutSets: defineTable({
+    countryKey: tryoutRouteKeyValidator,
+    examKey: tryoutRouteKeyValidator,
+    setKey: tryoutRouteKeyValidator,
     locale: localeValidator,
-    activeCount: v.number(),
-    updatedAt: v.number(),
-  }).index("by_product_and_locale", ["product", "locale"]),
-
-  tryoutPartSets: defineTable({
-    tryoutId: v.id("tryouts"),
-    setId: v.id("exerciseSets"),
-    partIndex: v.number(),
-    /** Stable public identifier for one part, e.g. `general-reasoning`. */
-    partKey: tryoutPartKeyValidator,
+    publicPath: v.string(),
+    title: v.string(),
+    description: v.optional(v.string()),
+    scoringStrategy: tryoutScoringStrategyValidator,
+    sectionCount: v.number(),
+    totalQuestionCount: v.number(),
+    order: v.number(),
+    isActive: v.boolean(),
+    sourceRevision: v.string(),
+    syncedAt: v.number(),
   })
-    .index("by_tryoutId_and_partIndex", ["tryoutId", "partIndex"])
-    .index("by_tryoutId_and_partKey", ["tryoutId", "partKey"])
-    .index("by_setId", ["setId"]),
+    .index("by_locale_and_publicPath", ["locale", "publicPath"])
+    .index("by_countryKey_and_examKey_and_locale_and_isActive_and_order", [
+      "countryKey",
+      "examKey",
+      "locale",
+      "isActive",
+      "order",
+    ])
+    .index("by_countryKey_and_examKey_and_setKey_and_locale", [
+      "countryKey",
+      "examKey",
+      "setKey",
+      "locale",
+    ]),
+
+  tryoutSections: defineTable({
+    tryoutSetId: v.id("tryoutSets"),
+    questionSetId: v.id("questionSets"),
+    countryKey: tryoutRouteKeyValidator,
+    examKey: tryoutRouteKeyValidator,
+    setKey: tryoutRouteKeyValidator,
+    sectionKey: tryoutRouteKeyValidator,
+    locale: localeValidator,
+    publicPath: v.string(),
+    questionSourcePath: v.string(),
+    title: v.string(),
+    description: v.optional(v.string()),
+    questionCount: v.number(),
+    order: v.number(),
+    sourceRevision: v.string(),
+    syncedAt: v.number(),
+  })
+    .index("by_locale_and_publicPath", ["locale", "publicPath"])
+    .index("by_tryoutSetId_and_order", ["tryoutSetId", "order"])
+    .index("by_tryoutSetId_and_sectionKey", ["tryoutSetId", "sectionKey"])
+    .index("by_questionSetId", ["questionSetId"]),
 
   tryoutAttempts: defineTable({
     userId: v.id("users"),
-    tryoutId: v.id("tryouts"),
-    scaleVersionId: v.id("irtScaleVersions"),
+    tryoutSetId: v.id("tryoutSets"),
+    scaleVersionId: v.optional(v.id("irtScaleVersions")),
     accessKind: v.optional(tryoutAccessKindValidator),
     accessCampaignId: v.optional(v.id("tryoutAccessCampaigns")),
-    accessCampaignKind: v.optional(tryoutAccessCampaignKindValidator),
     accessGrantId: v.optional(v.id("tryoutAccessGrants")),
     accessEndsAt: v.optional(v.number()),
     countsForCompetition: v.optional(v.boolean()),
     scoreStatus: tryoutScoreStatusValidator,
     status: tryoutStatusValidator,
-    partSetSnapshots: v.array(tryoutPartSnapshotValidator),
-    completedPartIndices: v.array(v.number()),
-    /** Oldest-first attempt ordinal for one user and tryout. */
+    sectionSnapshots: v.array(tryoutSectionSnapshotValidator),
+    completedSectionKeys: v.array(tryoutRouteKeyValidator),
     attemptNumber: v.number(),
     totalCorrect: v.number(),
     totalQuestions: v.number(),
-    theta: v.number(),
-    thetaSE: v.number(),
+    theta: v.optional(v.number()),
+    thetaSE: v.optional(v.number()),
     startedAt: v.number(),
     expiresAt: v.number(),
     lastActivityAt: v.number(),
@@ -128,77 +174,162 @@ const tables = {
       "status",
       "expiresAt",
     ])
-    .index("by_userId_and_tryoutId_and_startedAt", [
+    .index("by_userId_and_tryoutSetId_and_startedAt", [
       "userId",
-      "tryoutId",
-      "startedAt",
-    ])
-    .index("by_userId_and_tryoutId_and_accessCampaignId_and_startedAt", [
-      "userId",
-      "tryoutId",
-      "accessCampaignId",
+      "tryoutSetId",
       "startedAt",
     ])
     .index("by_accessCampaignId_and_startedAt", [
       "accessCampaignId",
       "startedAt",
     ])
-    .index("by_tryoutId_and_scoreStatus_and_status_and_startedAt", [
-      "tryoutId",
+    .index("by_tryoutSetId_and_scoreStatus_and_status_and_startedAt", [
+      "tryoutSetId",
       "scoreStatus",
       "status",
       "startedAt",
     ]),
 
-  tryoutPartAttempts: defineTable({
+  tryoutSectionAttempts: defineTable({
     tryoutAttemptId: v.id("tryoutAttempts"),
-    partIndex: v.number(),
-    /** Snapshot of the stable public part identifier used when the attempt started. */
-    partKey: tryoutPartKeyValidator,
-    setAttemptId: v.id("exerciseAttempts"),
-    setId: v.id("exerciseSets"),
-    theta: v.number(),
-    thetaSE: v.number(),
+    tryoutSectionId: v.id("tryoutSections"),
+    sectionKey: tryoutRouteKeyValidator,
+    sectionOrder: v.number(),
+    status: tryoutStatusValidator,
+    startedAt: v.number(),
+    expiresAt: v.number(),
+    completedAt: v.union(v.number(), v.null()),
+    endReason: v.union(attemptEndReasonValidator, v.null()),
+    lastActivityAt: v.number(),
+    totalQuestions: v.number(),
+    answeredCount: v.number(),
+    correctAnswers: v.number(),
+    theta: v.optional(v.number()),
+    thetaSE: v.optional(v.number()),
   })
-    .index("by_tryoutAttemptId_and_partIndex", ["tryoutAttemptId", "partIndex"])
-    .index("by_setAttemptId", ["setAttemptId"]),
+    .index("by_tryoutAttemptId_and_sectionOrder", [
+      "tryoutAttemptId",
+      "sectionOrder",
+    ])
+    .index("by_tryoutAttemptId_and_sectionKey", [
+      "tryoutAttemptId",
+      "sectionKey",
+    ])
+    .index("by_status_and_expiresAt", ["status", "expiresAt"]),
 
-  userTryoutStats: defineTable({
+  tryoutAttemptPlacements: defineTable({
+    tryoutAttemptId: v.id("tryoutAttempts"),
+    tryoutSectionAttemptId: v.id("tryoutSectionAttempts"),
+    tryoutSectionId: v.id("tryoutSections"),
+    questionId: v.id("questions"),
+    questionSourceKey: v.string(),
+    questionOrder: v.number(),
+    sourceRevision: v.string(),
+    contentHash: v.string(),
+  })
+    .index("by_tryoutAttemptId_and_questionOrder", [
+      "tryoutAttemptId",
+      "questionOrder",
+    ])
+    .index("by_tryoutSectionAttemptId_and_questionOrder", [
+      "tryoutSectionAttemptId",
+      "questionOrder",
+    ])
+    .index("by_questionId", ["questionId"]),
+
+  tryoutResponses: defineTable({
+    tryoutAttemptId: v.id("tryoutAttempts"),
+    tryoutSectionAttemptId: v.id("tryoutSectionAttempts"),
+    placementId: v.id("tryoutAttemptPlacements"),
+    questionId: v.id("questions"),
+    selectedOptionId: v.optional(v.string()),
+    textAnswer: v.optional(v.string()),
+    isCorrect: v.boolean(),
+    timeSpent: v.number(),
+    answeredAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_tryoutSectionAttemptId_and_questionId", [
+      "tryoutSectionAttemptId",
+      "questionId",
+    ])
+    .index("by_tryoutAttemptId_and_questionId", [
+      "tryoutAttemptId",
+      "questionId",
+    ])
+    .index("by_placementId", ["placementId"]),
+
+  tryoutScores: defineTable({
+    tryoutAttemptId: v.id("tryoutAttempts"),
+    tryoutSetId: v.id("tryoutSets"),
     userId: v.id("users"),
-    product: tryoutProductValidator,
-    leaderboardNamespace: v.string(),
+    scoringStrategy: tryoutScoringStrategyValidator,
+    scoreStatus: tryoutScoreStatusValidator,
+    scaleVersionId: v.optional(v.id("irtScaleVersions")),
+    rawScore: v.number(),
+    totalCorrect: v.number(),
+    totalQuestions: v.number(),
+    theta: v.optional(v.number()),
+    thetaSE: v.optional(v.number()),
+    publishedScore: v.number(),
+    finalizedAt: v.number(),
+  })
+    .index("by_tryoutAttemptId", ["tryoutAttemptId"])
+    .index("by_tryoutSetId_and_scoreStatus_and_finalizedAt", [
+      "tryoutSetId",
+      "scoreStatus",
+      "finalizedAt",
+    ])
+    .index("by_userId_and_finalizedAt", ["userId", "finalizedAt"]),
+
+  tryoutLeaderboardScopes: defineTable({
+    countryKey: tryoutRouteKeyValidator,
+    examKey: tryoutRouteKeyValidator,
+    setKey: v.optional(tryoutRouteKeyValidator),
+    locale: localeValidator,
+    sourceRevision: v.string(),
+    syncedAt: v.number(),
+  }).index("by_countryKey_and_examKey_and_setKey_and_locale", [
+    "countryKey",
+    "examKey",
+    "setKey",
+    "locale",
+  ]),
+
+  tryoutLeaderboardUserStats: defineTable({
+    userId: v.id("users"),
+    leaderboardScopeId: v.id("tryoutLeaderboardScopes"),
     totalTryoutsCompleted: v.number(),
-    averageTheta: v.number(),
-    bestTheta: v.number(),
+    averageScore: v.number(),
+    bestScore: v.number(),
     averageRawScore: v.number(),
     lastTryoutAt: v.number(),
     updatedAt: v.number(),
-  }).index("by_userId_and_product_and_leaderboardNamespace", [
+  }).index("by_userId_and_leaderboardScopeId", [
     "userId",
-    "product",
-    "leaderboardNamespace",
+    "leaderboardScopeId",
   ]),
 
   tryoutLeaderboardEntries: defineTable({
-    tryoutId: v.id("tryouts"),
+    tryoutSetId: v.id("tryoutSets"),
     userId: v.id("users"),
-    leaderboardNamespace: v.string(),
-    theta: v.number(),
-    thetaSE: v.number(),
+    leaderboardScopeId: v.id("tryoutLeaderboardScopes"),
+    publishedScore: v.number(),
+    theta: v.optional(v.number()),
+    thetaSE: v.optional(v.number()),
     rawScore: v.number(),
     completedAt: v.number(),
     attemptId: v.id("tryoutAttempts"),
   })
-    .index("by_tryoutId_and_userId", ["tryoutId", "userId"])
-    .index("by_userId_and_leaderboardNamespace_and_completedAt", [
+    .index("by_tryoutSetId_and_userId", ["tryoutSetId", "userId"])
+    .index("by_userId_and_leaderboardScopeId_and_completedAt", [
       "userId",
-      "leaderboardNamespace",
+      "leaderboardScopeId",
       "completedAt",
     ])
-    .index("by_userId_and_leaderboardNamespace_and_theta", [
-      "userId",
-      "leaderboardNamespace",
-      "theta",
+    .index("by_leaderboardScopeId_and_publishedScore", [
+      "leaderboardScopeId",
+      "publishedScore",
     ]),
 };
 

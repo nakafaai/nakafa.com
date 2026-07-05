@@ -121,16 +121,16 @@ describe("source registry adapter", () => {
       route: "quran/1",
       sourcePath: "quran/source.ts",
     });
-    const exercise = createSourceRegistryRecord({
+    const tryout = createSourceRegistryRecord({
       locale: "en",
-      route: "material/practice/assessment/snbt/general-reasoning/try-out-2026",
+      route: "try-out/indonesia/snbt",
       sourcePath: "curriculum/unrelated-shape/file.mdx",
     });
 
     expect(quran?.sourceRoot).toBe("quran");
-    expect(exercise?.sourceRoot).toBe("material");
-    expect(exercise?.sourceRoot).toBe(
-      getSourceRegistryRootForKind("exercise-group")
+    expect(tryout?.sourceRoot).toBe("tryout");
+    expect(tryout?.sourceRoot).toBe(
+      getSourceRegistryRootForKind("tryout-exam")
     );
   });
 

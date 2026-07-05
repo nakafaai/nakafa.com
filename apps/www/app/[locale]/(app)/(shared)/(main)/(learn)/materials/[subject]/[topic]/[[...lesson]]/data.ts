@@ -1,6 +1,5 @@
 import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 import {
-  isMaterialContentRoute,
   isMaterialLessonRoute,
   readMaterialPagination,
   readParentMaterialRoute,
@@ -66,9 +65,7 @@ function isProjectedMaterialContentRoute(
   route: PublicRoute | undefined
 ): route is PublicContentRoute {
   return Boolean(
-    route &&
-      route.kind !== "curriculum-context" &&
-      isMaterialContentRoute(route)
+    route && (route.kind === "subject-topic" || route.kind === "subject-lesson")
   );
 }
 

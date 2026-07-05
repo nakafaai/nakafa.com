@@ -8,11 +8,6 @@ import {
   NAKAFA_MCP_RECOMMENDED_ENDPOINT,
 } from "@repo/contents/_lib/agent/constants";
 import {
-  getExerciseCategoryOptions,
-  getExerciseMaterialOptions,
-  getExerciseTypeOptions,
-} from "@repo/contents/_lib/assessment/label";
-import {
   ARTICLE_CATEGORIES,
   BACHELOR_MATERIALS,
   HIGH_SCHOOL_MATERIALS,
@@ -20,6 +15,7 @@ import {
   NUMERIC_GRADES,
   SUBJECT_CATEGORIES,
 } from "@repo/contents/_types/taxonomy";
+import { TRYOUT_SOURCES } from "@repo/contents/_types/tryout/source";
 import { defaultLocale, type Locale, locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
 
@@ -50,10 +46,9 @@ export function readNakafaTaxonomy(
         recommended: NAKAFA_MCP_RECOMMENDED_ENDPOINT,
         root_note: `${NAKAFA_MCP_INFORMATIONAL_ROOT} is informational only.`,
       },
-      exercises: {
-        categories: getExerciseCategoryOptions(locale),
-        materials: getExerciseMaterialOptions(locale),
-        types: getExerciseTypeOptions(locale),
+      tryout: {
+        countries: getTryoutCountryOptions(locale),
+        exams: getTryoutExamOptions(locale),
       },
       locale,
       locales,
@@ -70,11 +65,29 @@ export function readNakafaTaxonomy(
         "nakafa_search_content",
         "nakafa_get_content",
         "nakafa_get_taxonomy",
-        "nakafa_get_exercise",
         "nakafa_get_quran_reference",
       ],
     });
   });
+}
+
+/** Derives supported try-out countries from source-controlled exam programs. */
+function getTryoutCountryOptions(locale: Locale) {
+  const options = new Map<string, string>();
+
+  for (const source of TRYOUT_SOURCES) {
+    options.set(source.countryKey, source.countryTranslations[locale].title);
+  }
+
+  return Array.from(options, ([id, label]) => ({ id, label }));
+}
+
+/** Derives supported try-out exams from source-controlled exam programs. */
+function getTryoutExamOptions(locale: Locale) {
+  return TRYOUT_SOURCES.map((source) => ({
+    id: source.examKey,
+    label: source.examTranslations[locale].title,
+  }));
 }
 
 /** Reads materialized synced content route counts per locale. */

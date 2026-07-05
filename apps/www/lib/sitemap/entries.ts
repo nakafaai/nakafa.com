@@ -267,7 +267,7 @@ function getContentSeoSettings(route: string): {
     return { changeFrequency: "monthly", priority: 0.7 };
   }
 
-  if (route.startsWith("/practice/") || route.startsWith("/latihan/")) {
+  if (route.startsWith("/try-out/")) {
     return { changeFrequency: "monthly", priority: 0.6 };
   }
 

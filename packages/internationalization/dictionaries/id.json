@@ -336,13 +336,25 @@
   },
   "Tryouts": {
     "title": "Mau coba try out apa hari ini?",
-    "metadata-description": "Pilih paket try out dan mulai simulasi ujian dari Nakafa.",
-    "package-count": "{count, plural, =0 {Belum ada paket} =1 {# paket} other {# paket}}",
-    "cta": "Lihat paket",
+    "metadata-description": "Pilih negara, ujian, dan set try out dari Nakafa.",
+    "country-count": "{count, plural, =0 {Belum ada negara} =1 {# negara} other {# negara}}",
+    "exam-count": "{count, plural, =0 {Belum ada ujian} =1 {# ujian} other {# ujian}}",
+    "set-count": "{count, plural, =0 {Belum ada set} =1 {# set} other {# set}}",
+    "section-count": "{count, plural, =0 {Belum ada bagian} =1 {# bagian} other {# bagian}}",
+    "question-count": "{count, plural, =0 {Belum ada soal} =1 {# soal} other {# soal}}",
+    "open-country-cta": "Buka negara",
+    "open-exam-cta": "Buka ujian",
+    "open-set-cta": "Buka set",
+    "open-section-cta": "Buka bagian",
+    "back-to-tryout": "Kembali ke try out",
+    "back-to-country": "Kembali ke negara",
+    "back-to-exam": "Kembali ke ujian",
+    "back-to-set": "Kembali ke set",
     "list-empty": "Belum ada try out yang tampil sekarang.",
-    "available-item-description": "{questions} soal - {parts} bagian",
-    "year-title": "Tahun {year}",
-    "product-page-description": "Lihat semua paket SNBT dan buka yang paling pas buat targetmu.",
+    "available-item-description": "{questions} soal - {sections} bagian",
+    "scoring-irt": "Penilaian IRT",
+    "scoring-raw": "Penilaian mentah",
+    "scoring-weighted": "Penilaian berbobot",
     "start-cta": "Mulai try out",
     "restart-cta": "Mulai lagi",
     "continue-cta": "Lanjutkan",
@@ -400,13 +412,7 @@
     "complete-part-error": "Bagian belum bisa diselesaikan. Coba lagi ya.",
     "back-to-set-cta": "Kembali ke set",
     "slug-description": "Kalau sudah siap, mulai try out ini lalu pilih bagian yang ingin kamu kerjakan dulu.",
-    "question-unit": "soal",
-    "products": {
-      "snbt": {
-        "title": "SNBT",
-        "description": "Pilih set try out SNBT yang paling pas buat latihanmu."
-      }
-    }
+    "question-unit": "soal"
   },
   "Utils": {
     "search": "Cari",
@@ -567,7 +573,7 @@
     "nakafa-search-results": "Konten ditemukan",
     "nakafa-search-articles": "Artikel ditemukan",
     "nakafa-search-subject": "Materi ditemukan",
-    "nakafa-search-exercises": "Soal latihan ditemukan",
+    "nakafa-search-tryout": "Try out ditemukan",
     "nakafa-search-quran": "Ayat ditemukan",
     "nakafa-search-empty": "Tidak ada konten yang cocok.",
     "nakafa-content": "Materi",

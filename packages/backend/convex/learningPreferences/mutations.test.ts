@@ -134,7 +134,7 @@ describe("learningPreferences", () => {
       authed.mutation(
         api.learningPreferences.mutations.setPreferredCurriculum,
         {
-          preferredCurriculumProgramKey: "snbt-2026",
+          preferredCurriculumProgramKey: "snbt",
         }
       )
     ).rejects.toThrow("CURRICULUM_PROGRAM_NOT_SUPPORTED");

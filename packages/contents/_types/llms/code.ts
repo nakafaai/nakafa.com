@@ -1,8 +1,6 @@
-const CODE_BLOCK_CONTENT_PATTERN = /code:\s*`([\s\S]*?)`/g;
+const CODE_BLOCK_CONTENT_PATTERN = /code:\s*`((?:\\[\s\S]|[^`])*)`/g;
 const CODE_BLOCK_FILENAME_PATTERN = /filename:\s*["']([^"']+)["']/;
 const CODE_BLOCK_LANGUAGE_PATTERN = /language:\s*["']([^"']+)["']/;
-const CODE_BLOCK_PREFIX_PATTERN = /^code:\s*`/;
-const CODE_BLOCK_SUFFIX_PATTERN = /`$/;
 const TRIPLE_BACKTICKS_PATTERN = /```/g;
 
 /** Formats authored CodeBlock data as real markdown code fences. */
@@ -17,9 +15,7 @@ export function formatCodeBlockData(data: string) {
       const context = data.slice(Math.max(0, index - 320), index);
 
       return {
-        code: match[0]
-          .replace(CODE_BLOCK_PREFIX_PATTERN, "")
-          .replace(CODE_BLOCK_SUFFIX_PATTERN, ""),
+        code: match[1].replace(/\\`/g, "`"),
         filename: readPattern(context, CODE_BLOCK_FILENAME_PATTERN),
         language: readPattern(context, CODE_BLOCK_LANGUAGE_PATTERN),
       };

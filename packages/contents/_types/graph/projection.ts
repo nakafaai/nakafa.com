@@ -1,6 +1,4 @@
-import { createExerciseProjection } from "@repo/contents/_types/graph/exercise";
 import {
-  getExerciseQuestionNumberSegment,
   isNumberSegment,
   joinRoute,
   normalizeSourceRouteProjection,
@@ -38,61 +36,6 @@ export function getSourceRouteProjection(source: SourceRouteInput) {
   }
 
   return projection;
-}
-
-/** Returns the graph-owned exercise group route for a valid exercise set route. */
-export function getExerciseSetGroupRoute(route: string) {
-  return (
-    getSourceRouteProjection({
-      kind: "exercise-set",
-      route,
-    })?.parentRoute ?? null
-  );
-}
-
-/** Returns the set-level route for valid exercise set or question projections. */
-export function getExerciseSetRoute(route: string) {
-  const projection = getSourceRouteProjectionForRoute(route);
-
-  if (projection?.kind === "exercise-set") {
-    return projection.route;
-  }
-
-  if (projection?.kind === "exercise-question") {
-    return projection.parentRoute;
-  }
-
-  return null;
-}
-
-/** Returns the graph-owned question route below a valid exercise set route. */
-export function getExerciseQuestionRouteForNumber(
-  route: string,
-  exerciseNumber: number
-) {
-  if (!(Number.isSafeInteger(exerciseNumber) && exerciseNumber > 0)) {
-    return null;
-  }
-
-  const projection = getSourceRouteProjectionForRoute(route);
-
-  if (!projection?.exercise) {
-    return null;
-  }
-
-  if (projection.kind === "exercise-question") {
-    const questionNumber = getExerciseQuestionNumberSegment(
-      String(projection.exercise.questionSegment)
-    );
-
-    return questionNumber === `${exerciseNumber}` ? projection.route : null;
-  }
-
-  if (projection.kind !== "exercise-set") {
-    return null;
-  }
-
-  return joinRoute(projection.route, `${exerciseNumber}`);
 }
 
 /** Decodes and parses a declared route projection with the graph domain error. */
@@ -217,6 +160,10 @@ function createProjectionDraft(
     return createQuranProjection(route, segments);
   }
 
+  if (root === "try-out") {
+    return createTryoutProjection(route, segments);
+  }
+
   if (root === "material") {
     return createMaterialProjection(route, segments);
   }
@@ -232,11 +179,65 @@ function createMaterialProjection(route: string, segments: readonly string[]) {
     return createMaterialLessonProjection(route, materialSegments);
   }
 
-  if (kindSegment === "practice") {
-    return createExerciseProjection(route, materialSegments);
+  return null;
+}
+
+/** Projects a try-out public route into graph metadata. */
+function createTryoutProjection(route: string, segments: readonly string[]) {
+  const [country, exam, set, section, ...extraSegments] = segments;
+
+  if (!country || extraSegments.length > 0) {
+    return null;
   }
 
-  return null;
+  const countryRoute = joinRoute("try-out", country);
+  const examRoute = exam ? joinRoute(countryRoute, exam) : countryRoute;
+  const setRoute = set ? joinRoute(examRoute, set) : examRoute;
+  const lensSegments = exam
+    ? ["tryout", country, exam]
+    : ["tryout", country, "catalog"];
+
+  if (!exam) {
+    return {
+      conceptSegments: ["tryout", country],
+      kind: "tryout-country",
+      learningObjectSegments: ["tryout-country", country],
+      lensSegments,
+      parentRoute: "try-out",
+      route,
+    } satisfies SourceRouteProjectionDraft;
+  }
+
+  if (!set) {
+    return {
+      conceptSegments: ["tryout", country, exam],
+      kind: "tryout-exam",
+      learningObjectSegments: ["tryout-exam", country, exam],
+      lensSegments,
+      parentRoute: countryRoute,
+      route,
+    } satisfies SourceRouteProjectionDraft;
+  }
+
+  if (!section) {
+    return {
+      conceptSegments: ["tryout", country, exam, set],
+      kind: "tryout-set",
+      learningObjectSegments: ["tryout-set", country, exam, set],
+      lensSegments,
+      parentRoute: examRoute,
+      route,
+    } satisfies SourceRouteProjectionDraft;
+  }
+
+  return {
+    conceptSegments: ["tryout", country, exam, section],
+    kind: "tryout-section",
+    learningObjectSegments: ["tryout-section", country, exam, set, section],
+    lensSegments,
+    parentRoute: setRoute,
+    route,
+  } satisfies SourceRouteProjectionDraft;
 }
 
 /** Projects a curriculum-neutral lesson material route into graph metadata. */

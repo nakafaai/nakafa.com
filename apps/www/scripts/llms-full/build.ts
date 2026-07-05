@@ -4,7 +4,8 @@ import { loadEnvConfig } from "@next/env";
 import { Effect } from "effect";
 
 const PUBLIC_DIR = "public";
-const GENERATED_SHARD_DIR = join(PUBLIC_DIR, "llms-full");
+const GENERATED_FULL_DIR = join(PUBLIC_DIR, "llms-full");
+const GENERATED_INDEX_DIR = join(PUBLIC_DIR, "llms");
 
 /** Loads Next.js environment files for this standalone build script. */
 const loadNextEnvironment = Effect.sync(() => {
@@ -25,7 +26,10 @@ const buildLlmsFullFiles = Effect.fn("scripts.llmsFull.build")(function* () {
   const files = [artifacts.root, artifacts.manifest, ...artifacts.shards];
 
   yield* Effect.tryPromise(() =>
-    rm(GENERATED_SHARD_DIR, { recursive: true, force: true })
+    rm(GENERATED_FULL_DIR, { recursive: true, force: true })
+  );
+  yield* Effect.tryPromise(() =>
+    rm(GENERATED_INDEX_DIR, { recursive: true, force: true })
   );
   yield* Effect.forEach(
     files,

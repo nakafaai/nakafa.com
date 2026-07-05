@@ -34,13 +34,13 @@ describe("chats/read", () => {
         role: "assistant",
       });
 
-      await ctx.db.insert("parts", {
+      await ctx.db.insert("messageParts", {
         messageId,
         order: 2,
         textText: "Second",
         type: "text",
       });
-      await ctx.db.insert("parts", {
+      await ctx.db.insert("messageParts", {
         messageId,
         order: 1,
         textText: "First",
@@ -87,7 +87,7 @@ describe("chats/read", () => {
       });
 
       for (let order = 0; order <= MAX_CHAT_MESSAGE_PARTS; order += 1) {
-        await ctx.db.insert("parts", {
+        await ctx.db.insert("messageParts", {
           messageId,
           order,
           textText: `Part ${order}`,

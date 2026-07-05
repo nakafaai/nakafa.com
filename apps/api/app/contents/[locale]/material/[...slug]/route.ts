@@ -1,10 +1,7 @@
-import { readPracticeSourceRouteByPath } from "@repo/contents/_types/route/practice/identity";
 import { logError } from "@repo/utilities/logging/effect";
 import { Effect } from "effect";
 import { NextResponse } from "next/server";
 import {
-  getExerciseApiQuestionPage,
-  getExerciseApiSetPage,
   getMaterialApiContentPage,
   listApiStaticParams,
   parseApiLocale,
@@ -56,7 +53,7 @@ export async function GET(
   return runMaterialApiRead(apiPage, { locale, slug });
 }
 
-/** Routes unified material API requests to the runtime table that owns the row. */
+/** Routes unified material API requests to the material runtime table. */
 function getMaterialApiPage({
   cursor,
   limit,
@@ -68,28 +65,6 @@ function getMaterialApiPage({
   locale: NonNullable<ReturnType<typeof parseApiLocale>>;
   prefix: string;
 }) {
-  const practiceRequest = readPracticeApiRequest({ locale, prefix });
-
-  if (practiceRequest?.kind === "question") {
-    return {
-      kind: "question" as const,
-      page: getExerciseApiQuestionPage({
-        locale,
-        slug: practiceRequest.slug,
-      }),
-    };
-  }
-
-  if (practiceRequest?.kind === "set") {
-    return {
-      kind: "set" as const,
-      page: getExerciseApiSetPage({
-        locale,
-        slug: practiceRequest.slug,
-      }),
-    };
-  }
-
   return {
     kind: "list" as const,
     page: getMaterialApiContentPage({
@@ -128,67 +103,10 @@ function runMaterialApiRead(
       );
     });
 
-  if (apiRead.kind === "list") {
-    return Effect.runPromise(
-      apiRead.page.pipe(
-        Effect.map((data): Response => NextResponse.json(data)),
-        Effect.catchAll(onError)
-      )
-    );
-  }
-
-  if (apiRead.kind === "question") {
-    return Effect.runPromise(
-      apiRead.page.pipe(
-        Effect.map((data): Response => readExactMaterialApiResponse(data)),
-        Effect.catchAll(onError)
-      )
-    );
-  }
-
   return Effect.runPromise(
     apiRead.page.pipe(
-      Effect.map((data): Response => readExactMaterialApiResponse(data)),
+      Effect.map((data): Response => NextResponse.json(data)),
       Effect.catchAll(onError)
     )
   );
-}
-
-/** Converts exact exercise content rows to JSON while preserving missing rows as 404s. */
-function readExactMaterialApiResponse<T>(data: T | null) {
-  if (data === null) {
-    return NextResponse.json({ error: "Content not found." }, { status: 404 });
-  }
-
-  return NextResponse.json(data);
-}
-
-/** Classifies material/practice source prefixes into exercise set or question rows. */
-function readPracticeApiRequest({
-  locale,
-  prefix,
-}: {
-  locale: NonNullable<ReturnType<typeof parseApiLocale>>;
-  prefix: string;
-}) {
-  const materialPath = prefix.slice("material/".length);
-  const practiceRoute =
-    readPracticeSourceRouteByPath({ locale, route: materialPath }) ??
-    readPracticeSourceRouteByPath({ locale, route: prefix });
-
-  if (!practiceRoute) {
-    return;
-  }
-
-  if (practiceRoute.kind === "question") {
-    return {
-      kind: "question" as const,
-      slug: practiceRoute.sourcePath,
-    };
-  }
-
-  return {
-    kind: "set" as const,
-    slug: practiceRoute.sourcePath,
-  };
 }

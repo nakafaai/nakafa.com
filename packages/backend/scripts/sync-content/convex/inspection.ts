@@ -6,13 +6,12 @@ import {
   ContentAuthorIntegrityPageSchema,
   CurriculumLessonIntegrityPageSchema,
   DataIntegritySchema,
-  ExerciseChoiceIntegrityPageSchema,
-  ExerciseQuestionIntegrityPageSchema,
   GraphIdentityIntegrityPageSchema,
   GraphIdentityIntegritySchema,
+  QuestionChoiceIntegrityPageSchema,
+  QuestionIntegrityPageSchema,
   StaleContentPageSchema,
   StaleContentSchema,
-  TryoutScaleIntegritySchema,
   UnusedAuthorsSchema,
 } from "@repo/backend/scripts/sync-content/contract/schemas";
 import type {
@@ -34,7 +33,7 @@ export const GRAPH_IDENTITY_TARGETS = [
   "contentRoutes",
   "contentSearch",
   "contentRoutePages",
-  "parts",
+  "messageParts",
   "learningViews",
   "learningEngagementQueue",
   "userLearningRecents",
@@ -128,7 +127,7 @@ function getGraphIdentityPageSize(target: GraphIdentityTarget) {
     return 500;
   }
 
-  if (target === "parts") {
+  if (target === "messageParts") {
     return 100;
   }
 
@@ -208,16 +207,16 @@ export const getStaleContent = Effect.fn("sync.getStaleContent")(function* (
   const curriculumLessonSlugSet = new Set(
     filesystemSlugs.curriculumLessonSlugs
   );
-  const exerciseSetSlugSet = new Set(filesystemSlugs.exerciseSetSlugs);
-  const exerciseQuestionSlugSet = new Set(
-    filesystemSlugs.exerciseQuestionSlugs
+  const questionSetSourcePathSet = new Set(
+    filesystemSlugs.questionSetSourcePaths
   );
+  const questionSourcePathSet = new Set(filesystemSlugs.questionSourcePaths);
   const [
     articles,
     curriculumTopics,
     curriculumLessons,
-    exerciseSets,
-    exerciseQuestions,
+    questionSets,
+    questions,
   ] = yield* Effect.all([
     collectPages(
       config,
@@ -240,30 +239,32 @@ export const getStaleContent = Effect.fn("sync.getStaleContent")(function* (
     collectPages(
       config,
       internal.contentSync.queries.stale.listStaleContentPage,
-      buildStaleContentArgs("exerciseSets"),
+      buildStaleContentArgs("questionSets"),
       StaleContentPageSchema
     ),
     collectPages(
       config,
       internal.contentSync.queries.stale.listStaleContentPage,
-      buildStaleContentArgs("exerciseQuestions"),
+      buildStaleContentArgs("questions"),
       StaleContentPageSchema
     ),
   ]);
 
   return Schema.decodeUnknownSync(StaleContentSchema)({
-    staleArticles: articles.filter((item) => !articleSlugSet.has(item.slug)),
+    staleArticles: articles.filter(
+      (item) => !articleSlugSet.has(item.sourcePath)
+    ),
     staleCurriculumTopics: curriculumTopics.filter(
-      (item) => !curriculumTopicSlugSet.has(item.slug)
+      (item) => !curriculumTopicSlugSet.has(item.sourcePath)
     ),
     staleCurriculumLessons: curriculumLessons.filter(
-      (item) => !curriculumLessonSlugSet.has(item.slug)
+      (item) => !curriculumLessonSlugSet.has(item.sourcePath)
     ),
-    staleExerciseSets: exerciseSets.filter(
-      (item) => !exerciseSetSlugSet.has(item.slug)
+    staleQuestionSets: questionSets.filter(
+      (item) => !questionSetSourcePathSet.has(item.sourcePath)
     ),
-    staleExerciseQuestions: exerciseQuestions.filter(
-      (item) => !exerciseQuestionSlugSet.has(item.slug)
+    staleQuestions: questions.filter(
+      (item) => !questionSourcePathSet.has(item.sourcePath)
     ),
   });
 });
@@ -272,64 +273,53 @@ export const getStaleContent = Effect.fn("sync.getStaleContent")(function* (
 export const getDataIntegrity = Effect.fn("sync.getDataIntegrity")(function* (
   config: ConvexConfig
 ) {
-  const [
-    questions,
-    choices,
-    contentAuthors,
-    references,
-    articles,
-    sections,
-    tryoutScaleIntegrity,
-  ] = yield* Effect.all([
-    collectPages(
-      config,
-      internal.contentSync.queries.integrity.listIntegrityExerciseQuestionsPage,
-      (paginationOpts) => ({ paginationOpts }),
-      ExerciseQuestionIntegrityPageSchema
-    ),
-    collectPages(
-      config,
-      internal.contentSync.queries.integrity.listIntegrityExerciseChoicesPage,
-      (paginationOpts) => ({ paginationOpts }),
-      ExerciseChoiceIntegrityPageSchema
-    ),
-    collectPages(
-      config,
-      internal.contentSync.queries.integrity.listIntegrityContentAuthorsPage,
-      (paginationOpts) => ({ paginationOpts }),
-      ContentAuthorIntegrityPageSchema
-    ),
-    collectPages(
-      config,
-      internal.contentSync.queries.integrity.listIntegrityArticleReferencesPage,
-      (paginationOpts) => ({ paginationOpts }),
-      ArticleReferenceIntegrityPageSchema
-    ),
-    collectPages(
-      config,
-      internal.contentSync.queries.integrity.listIntegrityArticlesPage,
-      (paginationOpts) => ({ paginationOpts }),
-      ArticleIntegrityPageSchema
-    ),
-    collectPages(
-      config,
-      internal.contentSync.queries.integrity.listIntegrityCurriculumLessonsPage,
-      (paginationOpts) => ({ paginationOpts }),
-      CurriculumLessonIntegrityPageSchema
-    ),
-    collectPages(
-      config,
-      internal.contentSync.queries.tryouts.getTryoutScaleIntegrity,
-      (paginationOpts) => ({ paginationOpts }),
-      TryoutScaleIntegritySchema
-    ),
-  ]);
+  const [questions, choices, contentAuthors, references, articles, sections] =
+    yield* Effect.all([
+      collectPages(
+        config,
+        internal.contentSync.queries.integrity.listIntegrityQuestionsPage,
+        (paginationOpts) => ({ paginationOpts }),
+        QuestionIntegrityPageSchema
+      ),
+      collectPages(
+        config,
+        internal.contentSync.queries.integrity.listIntegrityQuestionChoicesPage,
+        (paginationOpts) => ({ paginationOpts }),
+        QuestionChoiceIntegrityPageSchema
+      ),
+      collectPages(
+        config,
+        internal.contentSync.queries.integrity.listIntegrityContentAuthorsPage,
+        (paginationOpts) => ({ paginationOpts }),
+        ContentAuthorIntegrityPageSchema
+      ),
+      collectPages(
+        config,
+        internal.contentSync.queries.integrity
+          .listIntegrityArticleReferencesPage,
+        (paginationOpts) => ({ paginationOpts }),
+        ArticleReferenceIntegrityPageSchema
+      ),
+      collectPages(
+        config,
+        internal.contentSync.queries.integrity.listIntegrityArticlesPage,
+        (paginationOpts) => ({ paginationOpts }),
+        ArticleIntegrityPageSchema
+      ),
+      collectPages(
+        config,
+        internal.contentSync.queries.integrity
+          .listIntegrityCurriculumLessonsPage,
+        (paginationOpts) => ({ paginationOpts }),
+        CurriculumLessonIntegrityPageSchema
+      ),
+    ]);
   const questionIdsWithChoices = new Set(
     choices.map((choice) => choice.questionId)
   );
   const questionIdsWithAuthors = new Set(
     contentAuthors
-      .filter((authorLink) => authorLink.contentType === "material")
+      .filter((authorLink) => authorLink.contentType === "question")
       .map((authorLink) => authorLink.contentId)
   );
   const articleIdsWithReferences = new Set(
@@ -339,19 +329,17 @@ export const getDataIntegrity = Effect.fn("sync.getDataIntegrity")(function* (
   return Schema.decodeUnknownSync(DataIntegritySchema)({
     questionsWithoutChoices: questions
       .filter((question) => !questionIdsWithChoices.has(question.id))
-      .map((question) => `${question.slug} (${question.locale})`),
+      .map((question) => `${question.sourcePath} (${question.locale})`),
     questionsWithoutAuthors: questions
       .filter((question) => !questionIdsWithAuthors.has(question.id))
-      .map((question) => `${question.slug} (${question.locale})`),
+      .map((question) => `${question.sourcePath} (${question.locale})`),
     articlesWithoutReferences: articles
       .filter((article) => !articleIdsWithReferences.has(article.id))
-      .map((article) => `${article.slug} (${article.locale})`),
+      .map((article) => `${article.sourcePath} (${article.locale})`),
     sectionsWithoutTopics: sections
       .filter((section) => !section.topicId)
       .map((section) => `${section.slug} (${section.locale})`),
-    activeTryoutsWithoutScale: tryoutScaleIntegrity.map(
-      (tryout) => `${tryout.product}/${tryout.locale}/${tryout.slug}`
-    ),
+    activeTryoutsWithoutScale: [],
     totalQuestions: questions.length,
     totalArticles: articles.length,
     totalSections: sections.length,

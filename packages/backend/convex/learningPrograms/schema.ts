@@ -240,6 +240,12 @@ const tables = {
       "programId",
       "lensId",
       "content_id",
+    ])
+    .index("by_programId_and_lensId_and_content_id_and_updatedAt", [
+      "programId",
+      "lensId",
+      "content_id",
+      "updatedAt",
     ]),
 };
 

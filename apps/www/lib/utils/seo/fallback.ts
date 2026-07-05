@@ -28,12 +28,6 @@ function getDisplayNameFromContext(context: SEOContext): string {
   if (context.type === "material-lesson") {
     return context.material;
   }
-  if (context.type === "exercise") {
-    return context.material;
-  }
-  if (context.type === "exercise-program") {
-    return context.exam;
-  }
   if (context.type === "article") {
     return context.category;
   }

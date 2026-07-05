@@ -23,12 +23,6 @@ type ArticleApiPageArgs = FunctionArgs<
 type MaterialApiPageArgs = FunctionArgs<
   typeof api.contents.queries.runtime.listMaterialApiContentPage
 >;
-type ExerciseSetPageArgs = FunctionArgs<
-  typeof api.contents.queries.runtime.getExerciseSetPage
->;
-type ExerciseQuestionPageArgs = FunctionArgs<
-  typeof api.contents.queries.runtime.getExerciseQuestionPage
->;
 type QuranSurahPageArgs = FunctionArgs<
   typeof api.contents.queries.runtime.getQuranSurahPage
 >;
@@ -115,24 +109,6 @@ export function getMaterialApiContentPage(args: MaterialApiPageArgs) {
   return fetchApiRuntimeQuery(
     "listMaterialApiContentPage",
     api.contents.queries.runtime.listMaterialApiContentPage,
-    args
-  );
-}
-
-/** Reads one exercise set page from Convex for API responses. */
-export function getExerciseApiSetPage(args: ExerciseSetPageArgs) {
-  return fetchApiRuntimeQuery(
-    "getExerciseSetPage",
-    api.contents.queries.runtime.getExerciseSetPage,
-    args
-  );
-}
-
-/** Reads one exercise question page from Convex for API responses. */
-export function getExerciseApiQuestionPage(args: ExerciseQuestionPageArgs) {
-  return fetchApiRuntimeQuery(
-    "getExerciseQuestionPage",
-    api.contents.queries.runtime.getExerciseQuestionPage,
     args
   );
 }

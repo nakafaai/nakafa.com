@@ -9,6 +9,7 @@ import type { SourceRegistryRoot } from "@repo/contents/_types/source-registry";
 import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { BASE_URL } from "@/lib/llms/constants";
 import {
   getContentListingLlmsEntries,
   getContentPageLlmsEntries,
@@ -98,7 +99,7 @@ beforeEach(() => {
       });
     }
 
-    if (route === "practice/snbt/quantitative-knowledge/tryout-2026/set-1") {
+    if (route === "try-out/indonesia/snbt/set-1") {
       return Effect.succeed({
         description: "Try-out set",
         markdown: true,
@@ -106,14 +107,11 @@ beforeEach(() => {
       });
     }
 
-    if (
-      route ===
-      "practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-1"
-    ) {
+    if (route === "try-out/indonesia/snbt/set-1/quantitative-knowledge") {
       return Effect.succeed({
-        description: "Try-out question",
+        description: "Try-out section",
         markdown: true,
-        title: "Question 1",
+        title: "Quantitative Knowledge",
       });
     }
 
@@ -123,45 +121,60 @@ beforeEach(() => {
 
 const routeRows = [
   routeRow({
+    markdown: false,
     route: "articles/politics/fail",
     section: "articles",
+    title: "Fail",
   }),
   routeRow({
+    description:
+      "Power is passed down under the guise of practicing asian values.",
     route: "articles/politics/dynastic-politics-asian-values",
     section: "articles",
+    title: "Framing Dynastic Politics in Local Elections within Asian Values",
   }),
   routeRow({
-    route: "practice/snbt/quantitative-knowledge/tryout-2026/set-1",
-    section: "material",
-    sourcePath:
-      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
+    description: "Try-out set",
+    route: "try-out/indonesia/snbt/set-1",
+    section: "tryout",
+    title: "Try-out Set 1",
   }),
   routeRow({
-    route: "practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-1",
-    section: "material",
-    sourcePath:
-      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/1",
+    description: "Try-out section",
+    route: "try-out/indonesia/snbt/set-1/quantitative-knowledge",
+    section: "tryout",
+    title: "Quantitative Knowledge",
   }),
   routeRow({
+    description: "Quran index",
     route: "quran/1",
     section: "quran",
+    title: "Al-Quran",
   }),
   routeRow({
+    description: "Green Chemistry",
     route: "subjects/chemistry/green-chemistry/definition",
     section: "material",
     sourcePath: "material/lesson/chemistry/green-chemistry/definition",
+    title: "Definition of Green Chemistry",
   }),
 ];
 
 /** Builds one route-catalog fixture row for llms entry tests. */
 function routeRow({
+  description = "Description",
+  markdown = true,
   route,
   section,
   sourcePath = route,
+  title = "Title",
 }: {
+  description?: string;
+  markdown?: boolean;
   route: string;
   section: SourceRegistryRoot;
   sourcePath?: string;
+  title?: string;
 }): RuntimeContentRouteItem {
   const graph = routeGraph("en", sourcePath);
   const kind = getLearningObjectKindForRoute(sourcePath);
@@ -174,16 +187,16 @@ function routeRow({
     ...graph,
     authors: [{ name: "Nakafa" }],
     date: 1_735_689_600_000,
-    description: "Description",
+    description,
     kind,
     locale: "en",
-    markdown: true,
+    markdown,
     official: false,
     route,
     section,
     sourcePath,
     syncedAt: 1,
-    title: "Title",
+    title,
   };
 }
 
@@ -207,9 +220,7 @@ describe("llms entries", () => {
     expect(getRouteSection("/subjects/chemistry/green-chemistry")).toBe(
       "material"
     );
-    expect(getRouteSection("/practice/snbt/quantitative-knowledge")).toBe(
-      "material"
-    );
+    expect(getRouteSection("/try-out/indonesia/snbt")).toBe("tryout");
     expect(getRouteSection("/site/about")).toBe("site");
     expect(getRouteSection("/")).toBe("site");
     expect(isLlmsSection("articles")).toBe(true);
@@ -220,6 +231,7 @@ describe("llms entries", () => {
       "material",
       "quran",
       "site",
+      "tryout",
     ]);
   });
 
@@ -234,7 +246,7 @@ describe("llms entries", () => {
         getContentPageLlmsEntries({
           locale: "en",
           page: 0,
-          section: "material",
+          section: "tryout",
         }),
         getContentPageLlmsEntries({
           locale: "en",
@@ -255,7 +267,7 @@ describe("llms entries", () => {
       expect.objectContaining({
         description:
           "Power is passed down under the guise of practicing asian values.",
-        href: "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values.md",
+        href: `${BASE_URL}/en/articles/politics/dynastic-politics-asian-values.md`,
         route: "/articles/politics/dynastic-politics-asian-values",
         section: "articles",
         title:
@@ -264,15 +276,7 @@ describe("llms entries", () => {
     );
     expect(entries).toContainEqual(
       expect.objectContaining({
-        href: "https://nakafa.com/en/articles/politics",
-        route: "/articles/politics",
-        section: "articles",
-        title: "Politics",
-      })
-    );
-    expect(entries).toContainEqual(
-      expect.objectContaining({
-        href: "https://nakafa.com/en/articles/politics/fail",
+        href: `${BASE_URL}/en/articles/politics/fail`,
         route: "/articles/politics/fail",
         section: "articles",
         title: "Fail",
@@ -281,7 +285,7 @@ describe("llms entries", () => {
     expect(entries).toContainEqual(
       expect.objectContaining({
         description: "Green Chemistry",
-        href: "https://nakafa.com/en/subjects/chemistry/green-chemistry/definition.md",
+        href: `${BASE_URL}/en/subjects/chemistry/green-chemistry/definition.md`,
         route: "/subjects/chemistry/green-chemistry/definition",
         section: "material",
         title: "Definition of Green Chemistry",
@@ -290,26 +294,25 @@ describe("llms entries", () => {
     expect(entries).toContainEqual(
       expect.objectContaining({
         description: "Try-out set",
-        href: "https://nakafa.com/en/practice/snbt/quantitative-knowledge/tryout-2026/set-1.md",
-        route: "/practice/snbt/quantitative-knowledge/tryout-2026/set-1",
-        section: "material",
+        href: `${BASE_URL}/en/try-out/indonesia/snbt/set-1.md`,
+        route: "/try-out/indonesia/snbt/set-1",
+        section: "tryout",
         title: "Try-out Set 1",
       })
     );
     expect(entries).toContainEqual(
       expect.objectContaining({
-        description: "Try-out question",
-        href: "https://nakafa.com/en/practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-1.md",
-        route:
-          "/practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-1",
-        section: "material",
-        title: "Question 1",
+        description: "Try-out section",
+        href: `${BASE_URL}/en/try-out/indonesia/snbt/set-1/quantitative-knowledge.md`,
+        route: "/try-out/indonesia/snbt/set-1/quantitative-knowledge",
+        section: "tryout",
+        title: "Quantitative Knowledge",
       })
     );
     expect(entries).toContainEqual(
       expect.objectContaining({
         description: "Quran index",
-        href: "https://nakafa.com/en/quran/1.md",
+        href: `${BASE_URL}/en/quran/1.md`,
         route: "/quran/1",
         section: "quran",
         title: "Al-Quran",
@@ -317,33 +320,15 @@ describe("llms entries", () => {
     );
     expect(entries).toContainEqual(
       expect.objectContaining({
-        href: "https://nakafa.com/en",
+        href: `${BASE_URL}/en`,
         route: "/",
         section: "site",
         title: "Home",
       })
     );
-    expect(hrefs).not.toContain("https://nakafa.com/en/articles/politics.md");
-    expect(hrefs).not.toContain(
-      "https://nakafa.com/en/practice/snbt/quantitative-knowledge/tryout-2026.md"
-    );
-    expect(mockGetRuntimeContentRoute).toHaveBeenCalledWith({
-      locale: "en",
-      route: "subjects/chemistry/green-chemistry/definition",
-    });
-    expect(mockGetRuntimeContentRoute).toHaveBeenCalledWith({
-      locale: "en",
-      route: "practice/snbt/quantitative-knowledge/tryout-2026/set-1",
-    });
-    expect(mockGetRuntimeContentRoute).toHaveBeenCalledWith({
-      locale: "en",
-      route:
-        "practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-1",
-    });
-    expect(mockGetRuntimeContentRoute).not.toHaveBeenCalledWith({
-      locale: "en",
-      route: "material/lesson/chemistry/green-chemistry/definition",
-    });
+    expect(hrefs).not.toContain(`${BASE_URL}/en/articles/politics.md`);
+    expect(hrefs).not.toContain(`${BASE_URL}/en/try-out/indonesia/snbt.md`);
+    expect(mockGetRuntimeContentRoute).not.toHaveBeenCalled();
     expect(mockGetRuntimeContentRouteArtifactPage).toHaveBeenCalledWith({
       locale: "en",
       page: 0,
@@ -362,7 +347,7 @@ describe("llms entries", () => {
     expect(entries).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          href: "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values.md",
+          href: `${BASE_URL}/en/articles/politics/dynastic-politics-asian-values.md`,
           route: "/articles/politics/dynastic-politics-asian-values",
         }),
       ])
@@ -417,6 +402,35 @@ describe("llms entries", () => {
           locale: "en",
           page: 404,
           section: "articles",
+        })
+      )
+    ).resolves.toEqual([]);
+  });
+
+  it("skips material rows that do not project to public routes", async () => {
+    mockGetRuntimeContentRouteArtifactPage.mockReturnValueOnce(
+      Effect.succeed({
+        locale: "en",
+        page: 0,
+        routeCount: 1,
+        routes: [
+          routeRow({
+            route: "subjects/chemistry/green-chemistry/missing",
+            section: "material",
+            sourcePath: "material/lesson/chemistry/green-chemistry/missing",
+          }),
+        ],
+        section: "material",
+        syncedAt: 1,
+      })
+    );
+
+    await expect(
+      Effect.runPromise(
+        getContentPageLlmsEntries({
+          locale: "en",
+          page: 0,
+          section: "material",
         })
       )
     ).resolves.toEqual([]);
