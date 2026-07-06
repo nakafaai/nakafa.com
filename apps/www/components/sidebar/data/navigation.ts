@@ -77,14 +77,21 @@ export function getForYouNavigationItems(_viewer: AppNavigationViewer) {
 export function getForYouNavigationHref(
   item: ForYouNavigationItem,
   locale: Locale,
-  preferredCurriculumHref?: string | null
+  preferences: {
+    preferredCurriculumHref?: string | null;
+    preferredTryoutHref?: string | null;
+  } = {}
 ) {
-  if (item.id === "subject" && preferredCurriculumHref) {
-    return preferredCurriculumHref;
+  if (item.id === "subject" && preferences.preferredCurriculumHref) {
+    return preferences.preferredCurriculumHref;
   }
 
   if (item.id === "subject") {
     return getCurriculumIndexHref(locale);
+  }
+
+  if (item.id === "tryOut" && preferences.preferredTryoutHref) {
+    return preferences.preferredTryoutHref;
   }
 
   return item.href;

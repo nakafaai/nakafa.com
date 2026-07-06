@@ -2,6 +2,7 @@ import { defineTryoutExamSource } from "@repo/contents/_types/tryout/schema";
 
 /** Source-controlled TKA try-out catalog and question placements. */
 export const tkaTryoutSource = defineTryoutExamSource({
+  countryCode: "ID",
   countryKey: "indonesia",
   countryRouteSlugs: { en: "indonesia", id: "indonesia" },
   countryTranslations: {

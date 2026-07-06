@@ -5,7 +5,7 @@ import { Effect } from "effect";
 
 const PUBLIC_DIR = "public";
 const GENERATED_FULL_DIR = join(PUBLIC_DIR, "llms-full");
-const GENERATED_INDEX_DIR = join(PUBLIC_DIR, "llms");
+const GENERATED_PAGE_CATALOG_DIR = join(PUBLIC_DIR, "llms");
 
 /** Loads Next.js environment files for this standalone build script. */
 const loadNextEnvironment = Effect.sync(() => {
@@ -13,23 +13,35 @@ const loadNextEnvironment = Effect.sync(() => {
 });
 
 /** Imports llms artifact builders after Next env has been loaded. */
-const loadLlmsFullArtifacts = Effect.promise(
-  () => import("@/lib/llms/full/artifacts")
+const loadLlmsArtifacts = Effect.all(
+  {
+    full: Effect.tryPromise(() => import("@/lib/llms/full/artifacts")),
+    pageCatalog: Effect.tryPromise(() => import("@/lib/llms/page-catalog")),
+  },
+  { concurrency: 2 }
 );
 
-/** Writes public llms-full files before Next.js builds static assets. */
-const buildLlmsFullFiles = Effect.fn("scripts.llmsFull.build")(function* () {
+/** Writes public llms files before Next.js builds static assets. */
+const buildLlmsFiles = Effect.fn("scripts.llms.build")(function* () {
   yield* loadNextEnvironment;
 
-  const { getLlmsFullArtifacts } = yield* loadLlmsFullArtifacts;
-  const artifacts = yield* getLlmsFullArtifacts();
-  const files = [artifacts.root, artifacts.manifest, ...artifacts.shards];
+  const { full, pageCatalog } = yield* loadLlmsArtifacts;
+  const { getLlmsFullArtifacts } = full;
+  const { getLlmsPageCatalogArtifacts } = pageCatalog;
+  const fullArtifacts = yield* getLlmsFullArtifacts();
+  const pageCatalogArtifacts = yield* getLlmsPageCatalogArtifacts();
+  const files = [
+    fullArtifacts.root,
+    fullArtifacts.manifest,
+    ...fullArtifacts.shards,
+    ...pageCatalogArtifacts,
+  ];
 
   yield* Effect.tryPromise(() =>
     rm(GENERATED_FULL_DIR, { recursive: true, force: true })
   );
   yield* Effect.tryPromise(() =>
-    rm(GENERATED_INDEX_DIR, { recursive: true, force: true })
+    rm(GENERATED_PAGE_CATALOG_DIR, { recursive: true, force: true })
   );
   yield* Effect.forEach(
     files,
@@ -42,8 +54,8 @@ const buildLlmsFullFiles = Effect.fn("scripts.llmsFull.build")(function* () {
         );
         yield* Effect.tryPromise(() => writeFile(outputPath, artifact.text));
       }),
-    { concurrency: "unbounded", discard: true }
+    { concurrency: 4, discard: true }
   );
 });
 
-Effect.runPromise(buildLlmsFullFiles());
+Effect.runPromise(buildLlmsFiles());

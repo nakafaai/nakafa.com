@@ -1,31 +1,14 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { query } from "@repo/backend/convex/_generated/server";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import {
   tryoutRouteKeyValidator,
   tryoutScoringStrategyValidator,
 } from "@repo/backend/convex/tryouts/schema";
+import { readTryoutCountryCode } from "@repo/contents/_types/tryout/countries";
 import { ConvexError, v } from "convex/values";
 
 const CATALOG_PAGE_LIMIT = 100;
 const CHOICE_LIMIT_PER_QUESTION = 10;
-
-interface PublicQuestionPayload {
-  choices: PublicQuestionChoicePayload[];
-  contentHash: string;
-  number: number;
-  questionBody: string;
-  questionId: Id<"questions">;
-  sourceKey: string;
-  sourceRevision: string;
-  title: string;
-}
-
-interface PublicQuestionChoicePayload {
-  label: string;
-  optionKey: string;
-  order: number;
-}
 
 const publicChoiceValidator = v.object({
   label: v.string(),
@@ -44,6 +27,39 @@ const publicQuestionValidator = v.object({
   choices: v.array(publicChoiceValidator),
 });
 
+const publicTryoutCountryValidator = v.object({
+  countryCode: v.string(),
+  countryKey: tryoutRouteKeyValidator,
+  description: v.optional(v.string()),
+  publicPath: v.string(),
+  title: v.string(),
+});
+
+const publicTryoutCountryWithExamCountValidator = v.object({
+  ...publicTryoutCountryValidator.fields,
+  examCount: v.number(),
+});
+
+const publicTryoutExamValidator = v.object({
+  description: v.optional(v.string()),
+  examKey: tryoutRouteKeyValidator,
+  publicPath: v.string(),
+  scoringStrategy: tryoutScoringStrategyValidator,
+  title: v.string(),
+});
+
+const publicTryoutSetValidator = v.object({
+  countryKey: tryoutRouteKeyValidator,
+  description: v.optional(v.string()),
+  examKey: tryoutRouteKeyValidator,
+  publicPath: v.string(),
+  scoringStrategy: tryoutScoringStrategyValidator,
+  sectionCount: v.number(),
+  setKey: tryoutRouteKeyValidator,
+  title: v.string(),
+  totalQuestionCount: v.number(),
+});
+
 const publicTryoutSectionValidator = v.object({
   description: v.optional(v.string()),
   publicPath: v.string(),
@@ -52,19 +68,14 @@ const publicTryoutSectionValidator = v.object({
   title: v.string(),
 });
 
-/** Lists active try-out countries for the localized hub page. */
-export const listCountries = query({
+/** Reads the localized country-first try-out hub page model. */
+export const getHubPage = query({
   args: {
     locale: localeValidator,
   },
-  returns: v.array(
-    v.object({
-      countryKey: tryoutRouteKeyValidator,
-      description: v.optional(v.string()),
-      publicPath: v.string(),
-      title: v.string(),
-    })
-  ),
+  returns: v.object({
+    countries: v.array(publicTryoutCountryWithExamCountValidator),
+  }),
   handler: async (ctx, args) => {
     const countries = await ctx.db
       .query("tryoutCountries")
@@ -73,28 +84,44 @@ export const listCountries = query({
       )
       .take(CATALOG_PAGE_LIMIT);
 
-    return countries.map((country) => ({
-      countryKey: country.countryKey,
-      description: country.description,
-      publicPath: country.publicPath,
-      title: country.title,
-    }));
+    const countryRows = await Promise.all(
+      countries.map(async (country) => {
+        const exams = await ctx.db
+          .query("tryoutExams")
+          .withIndex("by_countryKey_and_locale_and_isActive_and_order", (q) =>
+            q
+              .eq("countryKey", country.countryKey)
+              .eq("locale", args.locale)
+              .eq("isActive", true)
+          )
+          .take(CATALOG_PAGE_LIMIT);
+
+        return {
+          countryCode: readSourceCountryCode(country.countryKey),
+          countryKey: country.countryKey,
+          description: country.description,
+          examCount: exams.length,
+          publicPath: country.publicPath,
+          title: country.title,
+        };
+      })
+    );
+
+    return { countries: countryRows };
   },
 });
 
-/** Lists active exam families for one try-out country. */
-export const listExams = query({
+/** Reads one active country page with its active exam family rows. */
+export const getCountryPage = query({
   args: {
     locale: localeValidator,
     publicPath: v.string(),
   },
-  returns: v.array(
+  returns: v.union(
+    v.null(),
     v.object({
-      description: v.optional(v.string()),
-      examKey: tryoutRouteKeyValidator,
-      publicPath: v.string(),
-      scoringStrategy: tryoutScoringStrategyValidator,
-      title: v.string(),
+      country: publicTryoutCountryValidator,
+      exams: v.array(publicTryoutExamValidator),
     })
   ),
   handler: async (ctx, args) => {
@@ -106,7 +133,7 @@ export const listExams = query({
       .unique();
 
     if (!country?.isActive) {
-      return [];
+      return null;
     }
 
     const exams = await ctx.db
@@ -119,31 +146,37 @@ export const listExams = query({
       )
       .take(CATALOG_PAGE_LIMIT);
 
-    return exams.map((exam) => ({
-      description: exam.description,
-      examKey: exam.examKey,
-      publicPath: exam.publicPath,
-      scoringStrategy: exam.scoringStrategy,
-      title: exam.title,
-    }));
+    return {
+      country: {
+        countryCode: readSourceCountryCode(country.countryKey),
+        countryKey: country.countryKey,
+        description: country.description,
+        publicPath: country.publicPath,
+        title: country.title,
+      },
+      exams: exams.map((exam) => ({
+        description: exam.description,
+        examKey: exam.examKey,
+        publicPath: exam.publicPath,
+        scoringStrategy: exam.scoringStrategy,
+        title: exam.title,
+      })),
+    };
   },
 });
 
-/** Lists active sets for one country and exam family. */
-export const listSets = query({
+/** Reads one active exam page with its active try-out set rows. */
+export const getExamPage = query({
   args: {
     locale: localeValidator,
     publicPath: v.string(),
   },
-  returns: v.array(
+  returns: v.union(
+    v.null(),
     v.object({
-      description: v.optional(v.string()),
-      publicPath: v.string(),
-      scoringStrategy: tryoutScoringStrategyValidator,
-      sectionCount: v.number(),
-      setKey: tryoutRouteKeyValidator,
-      title: v.string(),
-      totalQuestionCount: v.number(),
+      country: publicTryoutCountryValidator,
+      exam: publicTryoutExamValidator,
+      sets: v.array(publicTryoutSetValidator),
     })
   ),
   handler: async (ctx, args) => {
@@ -155,36 +188,79 @@ export const listSets = query({
       .unique();
 
     if (!exam?.isActive) {
-      return [];
+      return null;
     }
 
-    const sets = await ctx.db
-      .query("tryoutSets")
-      .withIndex(
-        "by_countryKey_and_examKey_and_locale_and_isActive_and_order",
-        (q) =>
-          q
-            .eq("countryKey", exam.countryKey)
-            .eq("examKey", exam.examKey)
-            .eq("locale", args.locale)
-            .eq("isActive", true)
-      )
-      .take(CATALOG_PAGE_LIMIT);
+    const [country, sets] = await Promise.all([
+      ctx.db
+        .query("tryoutCountries")
+        .withIndex("by_countryKey_and_locale", (q) =>
+          q.eq("countryKey", exam.countryKey).eq("locale", args.locale)
+        )
+        .unique(),
+      ctx.db
+        .query("tryoutSets")
+        .withIndex(
+          "by_countryKey_and_examKey_and_locale_and_isActive_and_order",
+          (q) =>
+            q
+              .eq("countryKey", exam.countryKey)
+              .eq("examKey", exam.examKey)
+              .eq("locale", args.locale)
+              .eq("isActive", true)
+        )
+        .take(CATALOG_PAGE_LIMIT),
+    ]);
 
-    return sets.map((set) => ({
-      description: set.description,
-      publicPath: set.publicPath,
-      scoringStrategy: set.scoringStrategy,
-      sectionCount: set.sectionCount,
-      setKey: set.setKey,
-      title: set.title,
-      totalQuestionCount: set.totalQuestionCount,
-    }));
+    if (!country?.isActive) {
+      return null;
+    }
+
+    return {
+      country: {
+        countryCode: readSourceCountryCode(country.countryKey),
+        countryKey: country.countryKey,
+        description: country.description,
+        publicPath: country.publicPath,
+        title: country.title,
+      },
+      exam: {
+        description: exam.description,
+        examKey: exam.examKey,
+        publicPath: exam.publicPath,
+        scoringStrategy: exam.scoringStrategy,
+        title: exam.title,
+      },
+      sets: sets.map((set) => ({
+        countryKey: set.countryKey,
+        description: set.description,
+        examKey: set.examKey,
+        publicPath: set.publicPath,
+        scoringStrategy: set.scoringStrategy,
+        sectionCount: set.sectionCount,
+        setKey: set.setKey,
+        title: set.title,
+        totalQuestionCount: set.totalQuestionCount,
+      })),
+    };
   },
 });
 
+function readSourceCountryCode(countryKey: string) {
+  const countryCode = readTryoutCountryCode(countryKey);
+
+  if (!countryCode) {
+    throw new ConvexError({
+      code: "TRYOUT_COUNTRY_SOURCE_NOT_FOUND",
+      message: "Try-out country source not found.",
+    });
+  }
+
+  return countryCode;
+}
+
 /** Reads one try-out set and its ordered sections. */
-export const getSet = query({
+export const getSetPage = query({
   args: {
     locale: localeValidator,
     publicPath: v.string(),
@@ -192,17 +268,8 @@ export const getSet = query({
   returns: v.union(
     v.null(),
     v.object({
-      set: v.object({
-        countryKey: tryoutRouteKeyValidator,
-        description: v.optional(v.string()),
-        examKey: tryoutRouteKeyValidator,
-        publicPath: v.string(),
-        scoringStrategy: tryoutScoringStrategyValidator,
-        sectionCount: v.number(),
-        setKey: tryoutRouteKeyValidator,
-        title: v.string(),
-        totalQuestionCount: v.number(),
-      }),
+      exam: publicTryoutExamValidator,
+      set: publicTryoutSetValidator,
       sections: v.array(publicTryoutSectionValidator),
     })
   ),
@@ -218,12 +285,27 @@ export const getSet = query({
       return null;
     }
 
-    const sections = await ctx.db
-      .query("tryoutSections")
-      .withIndex("by_tryoutSetId_and_order", (q) =>
-        q.eq("tryoutSetId", set._id)
-      )
-      .take(set.sectionCount + 1);
+    const [exam, sections] = await Promise.all([
+      ctx.db
+        .query("tryoutExams")
+        .withIndex("by_countryKey_and_examKey_and_locale", (q) =>
+          q
+            .eq("countryKey", set.countryKey)
+            .eq("examKey", set.examKey)
+            .eq("locale", args.locale)
+        )
+        .unique(),
+      ctx.db
+        .query("tryoutSections")
+        .withIndex("by_tryoutSetId_and_order", (q) =>
+          q.eq("tryoutSetId", set._id)
+        )
+        .take(set.sectionCount + 1),
+    ]);
+
+    if (!exam?.isActive) {
+      return null;
+    }
 
     if (sections.length > set.sectionCount) {
       throw new ConvexError({
@@ -233,6 +315,13 @@ export const getSet = query({
     }
 
     return {
+      exam: {
+        description: exam.description,
+        examKey: exam.examKey,
+        publicPath: exam.publicPath,
+        scoringStrategy: exam.scoringStrategy,
+        title: exam.title,
+      },
       set: {
         countryKey: set.countryKey,
         description: set.description,
@@ -256,7 +345,7 @@ export const getSet = query({
 });
 
 /** Reads the public question payload for one try-out section. */
-export const getSection = query({
+export const getSectionPage = query({
   args: {
     locale: localeValidator,
     publicPath: v.string(),
@@ -264,8 +353,10 @@ export const getSection = query({
   returns: v.union(
     v.null(),
     v.object({
+      exam: publicTryoutExamValidator,
       questions: v.array(publicQuestionValidator),
       section: publicTryoutSectionValidator,
+      set: publicTryoutSetValidator,
     })
   ),
   handler: async (ctx, args) => {
@@ -286,12 +377,27 @@ export const getSection = query({
       return null;
     }
 
-    const questions = await ctx.db
-      .query("questions")
-      .withIndex("by_questionSetId_and_number", (q) =>
-        q.eq("questionSetId", section.questionSetId)
-      )
-      .take(section.questionCount + 1);
+    const [exam, questions] = await Promise.all([
+      ctx.db
+        .query("tryoutExams")
+        .withIndex("by_countryKey_and_examKey_and_locale", (q) =>
+          q
+            .eq("countryKey", set.countryKey)
+            .eq("examKey", set.examKey)
+            .eq("locale", args.locale)
+        )
+        .unique(),
+      ctx.db
+        .query("questions")
+        .withIndex("by_questionSetId_and_number", (q) =>
+          q.eq("questionSetId", section.questionSetId)
+        )
+        .take(section.questionCount + 1),
+    ]);
+
+    if (!exam?.isActive) {
+      return null;
+    }
 
     if (questions.length > section.questionCount) {
       throw new ConvexError({
@@ -300,33 +406,43 @@ export const getSection = query({
       });
     }
 
-    const questionPayloads: PublicQuestionPayload[] = [];
+    const questionPayloads = await Promise.all(
+      questions.map(async (question) => {
+        const choices = await ctx.db
+          .query("questionChoices")
+          .withIndex("by_questionId_and_locale", (q) =>
+            q.eq("questionId", question._id).eq("locale", args.locale)
+          )
+          .take(CHOICE_LIMIT_PER_QUESTION);
+        const orderedChoices = [...choices].sort(
+          (left, right) => left.order - right.order
+        );
 
-    for (const question of questions) {
-      const choices = await ctx.db
-        .query("questionChoices")
-        .withIndex("by_questionId_and_locale", (q) =>
-          q.eq("questionId", question._id).eq("locale", args.locale)
-        )
-        .take(CHOICE_LIMIT_PER_QUESTION);
-
-      questionPayloads.push({
-        choices: choices.map((choice) => ({
-          label: choice.label,
-          optionKey: choice.optionKey,
-          order: choice.order,
-        })),
-        contentHash: question.contentHash,
-        number: question.number,
-        questionBody: question.questionBody,
-        questionId: question._id,
-        sourceKey: question.sourceKey,
-        sourceRevision: question.sourceRevision,
-        title: question.title,
-      });
-    }
+        return {
+          choices: orderedChoices.map((choice) => ({
+            label: choice.label,
+            optionKey: choice.optionKey,
+            order: choice.order,
+          })),
+          contentHash: question.contentHash,
+          number: question.number,
+          questionBody: question.questionBody,
+          questionId: question._id,
+          sourceKey: question.sourceKey,
+          sourceRevision: question.sourceRevision,
+          title: question.title,
+        };
+      })
+    );
 
     return {
+      exam: {
+        description: exam.description,
+        examKey: exam.examKey,
+        publicPath: exam.publicPath,
+        scoringStrategy: exam.scoringStrategy,
+        title: exam.title,
+      },
       questions: questionPayloads,
       section: {
         description: section.description,
@@ -334,6 +450,17 @@ export const getSection = query({
         questionCount: section.questionCount,
         sectionKey: section.sectionKey,
         title: section.title,
+      },
+      set: {
+        countryKey: set.countryKey,
+        description: set.description,
+        examKey: set.examKey,
+        publicPath: set.publicPath,
+        scoringStrategy: set.scoringStrategy,
+        sectionCount: set.sectionCount,
+        setKey: set.setKey,
+        title: set.title,
+        totalQuestionCount: set.totalQuestionCount,
       },
     };
   },

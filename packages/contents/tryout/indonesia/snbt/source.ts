@@ -77,6 +77,7 @@ const snbtSections = [
 
 /** Source-controlled SNBT try-out catalog and question placements. */
 export const snbtTryoutSource = defineTryoutExamSource({
+  countryCode: "ID",
   countryKey: "indonesia",
   countryRouteSlugs: { en: "indonesia", id: "indonesia" },
   countryTranslations: {

@@ -6,6 +6,7 @@ import { Either, ParseResult, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 const validTryoutSource = {
+  countryCode: "ID",
   countryKey: "indonesia",
   countryRouteSlugs: { en: "indonesia", id: "indonesia" },
   countryTranslations: {
@@ -61,6 +62,12 @@ describe("tryout/schema", () => {
       ...validTryoutSource,
       examKey: "SNBT",
     });
+    const invalidCountryCode = Schema.decodeUnknownEither(
+      TryoutExamSourceSchema
+    )({
+      ...validTryoutSource,
+      countryCode: "indonesia",
+    });
     const invalidSourcePath = Schema.decodeUnknownEither(
       TryoutExamSourceSchema
     )({
@@ -80,12 +87,18 @@ describe("tryout/schema", () => {
     });
 
     expect(Either.isLeft(invalidKey)).toBe(true);
+    expect(Either.isLeft(invalidCountryCode)).toBe(true);
     expect(Either.isLeft(invalidSourcePath)).toBe(true);
 
     if (Either.isLeft(invalidKey)) {
       expect(
         ParseResult.TreeFormatter.formatErrorSync(invalidKey.left)
       ).toContain("Invalid try-out key.");
+    }
+    if (Either.isLeft(invalidCountryCode)) {
+      expect(
+        ParseResult.TreeFormatter.formatErrorSync(invalidCountryCode.left)
+      ).toContain("Invalid country code.");
     }
     if (Either.isLeft(invalidSourcePath)) {
       expect(

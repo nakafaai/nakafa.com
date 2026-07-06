@@ -1,14 +1,16 @@
-import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { TryoutCatalogGrid } from "@/components/tryout/catalog-grid";
-import { getTryoutScoringLabel } from "@/components/tryout/labels";
-import {
-  getTryoutHref,
-  getTryoutPublicPathHref,
-} from "@/components/tryout/routes";
-import { TryoutPageHeader } from "@/components/tryout/shared/page-header";
+import { FooterContent } from "@/components/shared/footer-content";
+import { LayoutContent } from "@/components/shared/layout-content";
+import { LayoutMaterialContent } from "@/components/shared/material/content";
+import { LayoutMaterial } from "@/components/shared/material/layout";
+import { RefContent } from "@/components/shared/ref-content";
+import { TryoutHeader } from "@/components/tryout/chrome";
+import { TryoutCountryPageClient } from "@/components/tryout/country.client";
+import { getTryoutHref } from "@/components/tryout/routes";
+import { TryoutCountrySelector } from "@/components/tryout/selector.client";
+import { readStaticTryoutCountryOptions } from "@/components/tryout/static";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
-import { fetchTryoutCountries, fetchTryoutExams } from "@/lib/tryout/catalog";
+import { getGithubUrl } from "@/lib/utils/github";
 
 /** Renders active exam families for one try-out country. */
 export default async function Page(props: {
@@ -17,37 +19,40 @@ export default async function Page(props: {
   const { country, locale: localeParam } = await props.params;
   const locale = getLocaleOrThrow(localeParam);
   const countryPath = getTryoutHref({ country }).slice(1);
-  const [countries, exams, tTryouts] = await Promise.all([
-    fetchTryoutCountries({ locale }),
-    fetchTryoutExams({ locale, publicPath: countryPath }),
+  const [tCommon, tTryouts] = await Promise.all([
+    getTranslations({ locale, namespace: "Common" }),
     getTranslations({ locale, namespace: "Tryouts" }),
   ]);
-  const countryRow = countries.find((item) => item.publicPath === countryPath);
-
-  if (!countryRow) {
-    notFound();
-  }
+  const countryOptions = readStaticTryoutCountryOptions(locale);
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-6 py-14 sm:py-16">
-      <div className="space-y-8">
-        <TryoutPageHeader
-          description={countryRow.description}
-          link={{ href: getTryoutHref(), label: tTryouts("back-to-tryout") }}
-          title={countryRow.title}
+    <LayoutMaterial>
+      <LayoutMaterialContent>
+        <TryoutHeader
+          action={
+            countryOptions.length > 0 ? (
+              <TryoutCountrySelector
+                currentValue={countryPath}
+                label={tTryouts("country-selector-label")}
+                options={countryOptions}
+              />
+            ) : undefined
+          }
+          homeLabel={tCommon("home")}
+          items={[{ label: tCommon("try-out") }]}
+          title={tCommon("try-out")}
         />
-
-        <TryoutCatalogGrid
-          emptyLabel={tTryouts("list-empty")}
-          items={exams.map((exam) => ({
-            badge: getTryoutScoringLabel(tTryouts, exam.scoringStrategy),
-            ctaLabel: tTryouts("open-exam-cta"),
-            description: exam.description,
-            href: getTryoutPublicPathHref(exam.publicPath),
-            title: exam.title,
-          }))}
-        />
-      </div>
-    </div>
+        <LayoutContent>
+          <TryoutCountryPageClient locale={locale} publicPath={countryPath} />
+        </LayoutContent>
+        <FooterContent>
+          <RefContent
+            githubUrl={getGithubUrl({
+              path: `/packages/contents/tryout/${country}`,
+            })}
+          />
+        </FooterContent>
+      </LayoutMaterialContent>
+    </LayoutMaterial>
   );
 }

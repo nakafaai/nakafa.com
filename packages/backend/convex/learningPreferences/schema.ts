@@ -8,6 +8,13 @@ export const curriculumProgramOptionValidator = v.object({
   title: v.string(),
 });
 
+export const tryoutCountryOptionValidator = v.object({
+  countryCode: v.string(),
+  key: v.string(),
+  publicPath: v.string(),
+  title: v.string(),
+});
+
 export const currentLearningPreferenceValidator = v.union(
   v.null(),
   v.object({
@@ -16,9 +23,18 @@ export const currentLearningPreferenceValidator = v.union(
   })
 );
 
+export const currentTryoutPreferenceValidator = v.union(
+  v.null(),
+  v.object({
+    country: tryoutCountryOptionValidator,
+    preferredTryoutCountryKey: v.string(),
+  })
+);
+
 const tables = {
   learningPreferences: defineTable({
-    preferredCurriculumProgramKey: v.string(),
+    preferredCurriculumProgramKey: v.optional(v.string()),
+    preferredTryoutCountryKey: v.optional(v.string()),
     updatedAt: v.number(),
     userId: v.id("users"),
   }).index("by_userId", ["userId"]),

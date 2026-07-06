@@ -4,6 +4,7 @@ import { isMaterialLessonRoute } from "@repo/contents/_types/route/content";
 import { readStaticPublicContentRoutes } from "@repo/contents/_types/route/content/static";
 import { readStaticPublicTryoutRoutes } from "@repo/contents/_types/route/tryout/static";
 import { ARTICLE_CATEGORIES } from "@repo/contents/_types/taxonomy";
+import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { BASE_URL, type LlmsSection } from "@/lib/llms/constants";
@@ -16,6 +17,11 @@ import {
 
 export const LLMS_PAGE_CATALOG_SEGMENT = "pages";
 
+interface LlmsPageCatalogArtifact {
+  path: string;
+  text: string;
+}
+
 /** Builds one locale page-catalog index from source-backed public route entries. */
 export const getLlmsPageCatalogIndexText = Effect.fn(
   "www.llms.index.pageCatalog"
@@ -23,6 +29,23 @@ export const getLlmsPageCatalogIndexText = Effect.fn(
   const entries = yield* getLocalePageCatalogEntries(locale);
 
   return buildLocalePageCatalogIndexText({ entries, locale });
+});
+
+/** Builds static locale page-catalog artifacts for fast agent docs discovery. */
+export const getLlmsPageCatalogArtifacts = Effect.fn(
+  "www.llms.index.pageCatalogArtifacts"
+)(function* () {
+  return yield* Effect.forEach(
+    routing.locales,
+    (locale): Effect.Effect<LlmsPageCatalogArtifact> =>
+      getLlmsPageCatalogIndexText(locale).pipe(
+        Effect.map((text) => ({
+          path: `llms/${locale}/${LLMS_PAGE_CATALOG_SEGMENT}/llms.txt`,
+          text,
+        }))
+      ),
+    { concurrency: 2 }
+  );
 });
 
 /** Detects the locale page-catalog index route used for AFDocs sitemap coverage. */

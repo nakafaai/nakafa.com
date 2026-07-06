@@ -1,11 +1,14 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import {
   getCurrentCurriculumProgram,
+  getCurrentTryoutCountry,
   listSchoolCurriculumPrograms,
   toCurriculumProgramOption,
+  toTryoutCountryOption,
 } from "@repo/backend/convex/learningPreferences/impl";
 import {
   currentLearningPreferenceValidator,
+  currentTryoutPreferenceValidator,
   curriculumProgramOptionValidator,
 } from "@repo/backend/convex/learningPreferences/schema";
 import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
@@ -49,6 +52,36 @@ export const getCurrent = query({
     return {
       preferredCurriculumProgramKey: preference.preferredCurriculumProgramKey,
       program: toCurriculumProgramOption(preference.program, args.locale),
+    };
+  },
+});
+
+/** Returns the current user's preferred try-out country, or null for guests/no preference. */
+export const getCurrentTryout = query({
+  args: {
+    locale: localeValidator,
+  },
+  returns: currentTryoutPreferenceValidator,
+  handler: async (ctx, args) => {
+    const user = await getOptionalAppUser(ctx);
+
+    if (!user) {
+      return null;
+    }
+
+    const preference = await getCurrentTryoutCountry({
+      ctx,
+      locale: args.locale,
+      userId: user.appUser._id,
+    });
+
+    if (!preference) {
+      return null;
+    }
+
+    return {
+      country: toTryoutCountryOption(preference.country),
+      preferredTryoutCountryKey: preference.preferredTryoutCountryKey,
     };
   },
 });
