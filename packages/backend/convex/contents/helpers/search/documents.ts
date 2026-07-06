@@ -8,7 +8,6 @@ import { cleanSlug } from "@repo/utilities/helper";
 import { type Infer, v } from "convex/values";
 
 const WHITESPACE_PATTERN = /\s+/g;
-const MDX_MODULE_LINE_PATTERN = /^\s*(?:import|export)\s.+$/gm;
 const FENCE_START_PATTERN = /^\s*(?:```|~~~)/;
 const MARKDOWN_HEADING_PATTERN = /^\s{0,3}#{1,6}\s+(.+?)\s*#*\s*$/;
 const MARKDOWN_LINK_PATTERN = /(^|[^!])\[([^\]]+)\]\([^)]+\)/g;
@@ -120,11 +119,20 @@ function cleanContentSearchLines(part: string) {
         return line;
       }
 
-      return line
-        .replace(MDX_MODULE_LINE_PATTERN, "")
-        .replace(MARKDOWN_HEADING_PATTERN, "$1");
+      if (isMdxModuleLine(line)) {
+        return "";
+      }
+
+      return line.replace(MARKDOWN_HEADING_PATTERN, "$1");
     })
     .join("\n");
+}
+
+/** Detects authoring-only ESM rows in authored MDX source. */
+function isMdxModuleLine(line: string) {
+  const text = line.trimStart();
+
+  return text.startsWith("import ") || text.startsWith("export ");
 }
 
 /** Converts source content into the derived content search document payload. */

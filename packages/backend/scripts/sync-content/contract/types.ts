@@ -85,5 +85,10 @@ export interface FilesystemSlugs {
   curriculumLessonSlugs: string[];
   curriculumTopicSlugs: string[];
   questionSetSourcePaths: string[];
+  questionSourceKeys: string[];
   questionSourcePaths: string[];
+  tryoutCountryPaths: string[];
+  tryoutExamPaths: string[];
+  tryoutSectionPaths: string[];
+  tryoutSetPaths: string[];
 }

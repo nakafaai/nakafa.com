@@ -16,7 +16,6 @@ import {
   localeValidator,
 } from "@repo/backend/convex/lib/validators/contents";
 import {
-  tryoutAccessKindValidator,
   tryoutRouteKeyValidator,
   tryoutScoreStatusValidator,
 } from "@repo/backend/convex/tryouts/schema";
@@ -53,7 +52,6 @@ export const productAnalyticsEventValidator = v.union(
   v.object({
     name: v.literal("tryout attempt started"),
     properties: v.object({
-      access_kind: v.optional(tryoutAccessKindValidator),
       attempt_number: v.number(),
       country_key: tryoutRouteKeyValidator,
       exam_key: tryoutRouteKeyValidator,

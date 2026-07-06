@@ -16,10 +16,15 @@ import {
   logError,
   logSuccess,
 } from "@repo/backend/scripts/sync-content/cli/logging";
+import { parseLocale } from "@repo/backend/scripts/sync-content/contract/schemas";
 import type { ValidationResult } from "@repo/backend/scripts/sync-content/contract/types";
 import { globFiles } from "@repo/backend/scripts/sync-content/runtime/files";
 import { listLessonRows } from "@repo/contents/_types/material/registry";
 import { Effect } from "effect";
+
+const QUESTION_FILE_PREFIX = "question.";
+const ANSWER_FILE_PREFIX = "answer.";
+const MDX_FILE_SUFFIX = ".mdx";
 
 const createValidationResult = (): ValidationResult => ({
   valid: 0,
@@ -92,17 +97,25 @@ const validateSubjects = Effect.fn("sync.validateSubjects")(function* () {
 
 const validateTryoutQuestions = Effect.fn("sync.validateTryoutQuestions")(
   function* () {
-    const questionFiles = yield* globFiles(
-      "question-bank/tryout/**/question.*.mdx"
-    );
+    const [questionFiles, answerFiles] = yield* Effect.all([
+      globFiles("question-bank/tryout/**/question.*.mdx"),
+      globFiles("question-bank/tryout/**/answer.*.mdx"),
+    ]);
     const result = createValidationResult();
+    const expectedAnswerFiles = new Set<string>();
 
     log(`Validating ${questionFiles.length} try-out question files...`);
     for (const file of questionFiles) {
       const validated = yield* Effect.either(
         Effect.gen(function* () {
           yield* readMdxFile(file);
+          const answerFile = yield* readAnswerFile(file);
+
+          expectedAnswerFiles.add(answerFile);
+          yield* readMdxFile(answerFile);
+
           const choices = yield* readQuestionChoices(path.dirname(file));
+
           if (!choices || choices.en.length === 0 || choices.id.length === 0) {
             return yield* Effect.fail(
               new ScriptFailureError({
@@ -126,7 +139,45 @@ const validateTryoutQuestions = Effect.fn("sync.validateTryoutQuestions")(
       result.errors.push({ file, error: message });
     }
 
+    for (const file of answerFiles) {
+      if (expectedAnswerFiles.has(file)) {
+        continue;
+      }
+
+      result.invalid++;
+      result.errors.push({
+        file,
+        error: "Try-out answer file does not have a matching question file.",
+      });
+    }
+
     return result;
+  }
+);
+
+/** Resolves the answer MDX file that must exist beside one question MDX file. */
+const readAnswerFile = Effect.fn("sync.readAnswerFile")(function* (
+  questionFile: string
+) {
+  const locale = yield* readLocalizedMdxLocale(
+    questionFile,
+    QUESTION_FILE_PREFIX
+  );
+
+  return path.join(
+    path.dirname(questionFile),
+    `${ANSWER_FILE_PREFIX}${locale}${MDX_FILE_SUFFIX}`
+  );
+});
+
+/** Reads and validates the locale segment from a localized MDX filename. */
+const readLocalizedMdxLocale = Effect.fn("sync.readLocalizedMdxLocale")(
+  function* (file: string, prefix: string) {
+    const basename = path.basename(file);
+    const start = prefix.length;
+    const end = basename.length - MDX_FILE_SUFFIX.length;
+
+    return yield* parseLocale(basename.slice(start, end), basename);
   }
 );
 

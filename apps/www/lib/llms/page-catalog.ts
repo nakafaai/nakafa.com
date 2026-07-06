@@ -154,7 +154,7 @@ function readTryoutPageCatalogEntries(locale: Locale) {
     .map((route) =>
       buildPageCatalogEntry({
         description: route.description,
-        hasMarkdown: route.kind === "tryout-section",
+        hasMarkdown: false,
         locale,
         publicPath: route.publicPath,
         section: "tryout",

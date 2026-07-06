@@ -1,8 +1,4 @@
-import {
-  bulkSyncTryoutsImpl,
-  deleteStaleQuestionSetsImpl,
-  deleteStaleQuestionsImpl,
-} from "@repo/backend/convex/contentSync/tryouts/impl";
+import { bulkSyncTryoutsImpl } from "@repo/backend/convex/contentSync/tryouts/impl";
 import {
   bulkSyncTryoutsResultValidator,
   deleteResultValidator,
@@ -13,6 +9,14 @@ import {
   syncedTryoutSectionValidator,
   syncedTryoutSetValidator,
 } from "@repo/backend/convex/contentSync/tryouts/spec";
+import {
+  deleteStaleQuestionSetsImpl,
+  deleteStaleQuestionsImpl,
+  deleteStaleTryoutCountriesImpl,
+  deleteStaleTryoutExamsImpl,
+  deleteStaleTryoutSectionsImpl,
+  deleteStaleTryoutSetsImpl,
+} from "@repo/backend/convex/contentSync/tryouts/stale";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { v } from "convex/values";
 
@@ -46,4 +50,40 @@ export const deleteStaleQuestionSets = internalMutation({
   },
   returns: deleteResultValidator,
   handler: async (ctx, args) => await deleteStaleQuestionSetsImpl(ctx, args),
+});
+
+/** Deletes one bounded stale try-out section batch. */
+export const deleteStaleTryoutSections = internalMutation({
+  args: {
+    sectionIds: v.array(v.id("tryoutSections")),
+  },
+  returns: deleteResultValidator,
+  handler: async (ctx, args) => await deleteStaleTryoutSectionsImpl(ctx, args),
+});
+
+/** Deletes one bounded stale try-out set batch with direct section rows. */
+export const deleteStaleTryoutSets = internalMutation({
+  args: {
+    setIds: v.array(v.id("tryoutSets")),
+  },
+  returns: deleteResultValidator,
+  handler: async (ctx, args) => await deleteStaleTryoutSetsImpl(ctx, args),
+});
+
+/** Deletes one bounded stale try-out exam batch. */
+export const deleteStaleTryoutExams = internalMutation({
+  args: {
+    examIds: v.array(v.id("tryoutExams")),
+  },
+  returns: deleteResultValidator,
+  handler: async (ctx, args) => await deleteStaleTryoutExamsImpl(ctx, args),
+});
+
+/** Deletes one bounded stale try-out country batch. */
+export const deleteStaleTryoutCountries = internalMutation({
+  args: {
+    countryIds: v.array(v.id("tryoutCountries")),
+  },
+  returns: deleteResultValidator,
+  handler: async (ctx, args) => await deleteStaleTryoutCountriesImpl(ctx, args),
 });

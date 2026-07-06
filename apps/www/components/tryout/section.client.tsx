@@ -2,33 +2,30 @@
 
 import { api } from "@repo/backend/convex/_generated/api";
 import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
-import {
-  NumberFormat,
-  NumberFormatGroup,
-} from "@repo/design-system/components/ui/number-flow";
-import { useQuery } from "convex/react";
+import type { Preloaded } from "convex/react";
+import { useConvexAuth, usePreloadedQuery, useQuery } from "convex/react";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
-import { Fragment } from "react";
+import type { ReactNode } from "react";
+import { useTryoutClock } from "@/components/tryout/clock";
+import type { TryoutQuestionContent } from "@/components/tryout/content";
 import { TryoutPageHeader } from "@/components/tryout/header";
 import { TryoutMeta } from "@/components/tryout/meta";
-import {
-  TryoutPartBody,
-  TryoutPartCtas,
-  TryoutPartLead,
-  TryoutPartStat,
-  TryoutPartStats,
-  TryoutPartSummary,
-} from "@/components/tryout/part-summary";
 import { getTryoutHref } from "@/components/tryout/routes";
 import { TryoutRuntime } from "@/components/tryout/runtime.client";
-import { StartTryoutButton } from "@/components/tryout/start-button";
+import { isTryoutActive } from "@/components/tryout/status";
+import { TryoutSectionSummary } from "@/components/tryout/summary.client";
+
+type SectionPageQuery = typeof api.tryouts.queries.catalog.getSectionPage;
+type SectionRuntimeQuery = typeof api.tryouts.queries.attempt.getSectionRuntime;
 
 interface TryoutSectionPageClientProps {
   country: string;
   exam: string;
   locale: Locale;
-  publicPath: string;
+  preloaded: Preloaded<SectionPageQuery>;
+  questions: readonly TryoutQuestionContent[];
+  runtime: Preloaded<SectionRuntimeQuery>;
   section: string;
   set: string;
 }
@@ -38,29 +35,18 @@ export function TryoutSectionPageClient({
   country,
   exam,
   locale,
-  publicPath,
+  preloaded,
+  questions,
+  runtime: preloadedRuntime,
   section,
   set,
 }: TryoutSectionPageClientProps) {
-  const page = useQuery(api.tryouts.queries.catalog.getSectionPage, {
-    locale,
-    publicPath,
-  });
+  const { isAuthenticated, isLoading } = useConvexAuth();
+  const page = usePreloadedQuery(preloaded);
+  const runtime = usePreloadedQuery(preloadedRuntime);
   const attempt = useQuery(
     api.tryouts.queries.attempt.getCurrent,
-    page
-      ? {
-          countryKey: page.set.countryKey,
-          examKey: page.set.examKey,
-          locale,
-          sectionKey: page.section.sectionKey,
-          setKey: page.set.setKey,
-        }
-      : "skip"
-  );
-  const runtime = useQuery(
-    api.tryouts.queries.attempt.getSectionRuntime,
-    page
+    page && isAuthenticated && !isLoading
       ? {
           countryKey: page.set.countryKey,
           examKey: page.set.examKey,
@@ -72,28 +58,136 @@ export function TryoutSectionPageClient({
   );
   const tCommon = useTranslations("Common");
   const tTryouts = useTranslations("Tryouts");
+  const now = useTryoutClock(
+    attempt?.status === "in-progress" ||
+      runtime?.section.status === "in-progress"
+  );
 
-  if (!page) {
+  if (!page || isLoading || (isAuthenticated && attempt === undefined)) {
     return null;
   }
 
+  const currentAttempt = attempt ?? null;
+  let activeAttempt: typeof currentAttempt = null;
+
+  if (
+    currentAttempt &&
+    isTryoutActive({
+      expiresAt: currentAttempt.expiresAt,
+      now,
+      status: currentAttempt.status,
+    })
+  ) {
+    activeAttempt = currentAttempt;
+  }
+
+  let activeSection: NonNullable<
+    NonNullable<typeof currentAttempt>["section"]
+  > | null = null;
+
+  if (
+    activeAttempt?.section &&
+    isTryoutActive({
+      expiresAt: activeAttempt.section.expiresAt,
+      now,
+      status: activeAttempt.section.status,
+    })
+  ) {
+    activeSection = activeAttempt.section;
+  }
+
+  let activeRuntime: typeof runtime | null = null;
+
+  if (
+    activeSection &&
+    runtime &&
+    isTryoutActive({
+      expiresAt: runtime.expiresAt,
+      now,
+      status: runtime.section.status,
+    })
+  ) {
+    activeRuntime = runtime;
+  }
+  const hasStaleSection =
+    currentAttempt?.section?.status === "in-progress" && !activeSection;
+
+  if (hasStaleSection) {
+    return null;
+  }
+
+  if (activeSection && !activeRuntime) {
+    return null;
+  }
+
+  if (activeRuntime && questions.length === 0) {
+    return null;
+  }
+
+  const sectionAttempt = currentAttempt?.section ?? null;
+  const sectionFinished = Boolean(
+    sectionAttempt &&
+      (sectionAttempt.status === "completed" ||
+        sectionAttempt.status === "expired")
+  );
+  const sectionTimeExpired = Boolean(
+    sectionAttempt &&
+      (sectionAttempt.endReason === "time-expired" ||
+        sectionAttempt.status === "expired")
+  );
+  const attemptFinished = Boolean(
+    currentAttempt &&
+      !isTryoutActive({
+        expiresAt: currentAttempt.expiresAt,
+        now,
+        status: currentAttempt.status,
+      })
+  );
+
   let status = tTryouts("part-head-needs-tryout");
 
-  if (runtime) {
+  if (activeRuntime) {
     status = tTryouts("part-head-in-progress");
-  } else if (attempt === undefined) {
-    status = tTryouts("part-head-loading");
-  } else if (attempt?.status === "in-progress") {
+  } else if (sectionFinished) {
+    status = getFinishedSectionStatus({
+      attemptFinished,
+      sectionTimeExpired,
+      tTryouts,
+    });
+  } else if (activeAttempt) {
     status = tTryouts("part-head-ready");
-
-    if (
-      attempt.section?.status === "in-progress" &&
-      attempt.section.answeredCount > 0
-    ) {
-      status = tTryouts("part-head-in-progress");
-    }
-  } else if (attempt) {
+  } else if (currentAttempt) {
     status = tTryouts("part-head-ended");
+  }
+
+  let sectionContent: ReactNode = (
+    <TryoutSectionSummary
+      activeAttempt={activeAttempt}
+      attempt={currentAttempt}
+      country={country}
+      exam={exam}
+      locale={locale}
+      page={page}
+      section={section}
+      set={set}
+    />
+  );
+
+  if (activeRuntime) {
+    sectionContent = (
+      <TryoutRuntime
+        questions={questions}
+        returnHref={getTryoutHref({ country, exam, set })}
+        runtime={activeRuntime}
+        runtimeQueryArgs={{
+          countryKey: page.set.countryKey,
+          examKey: page.set.examKey,
+          locale,
+          sectionKey: page.section.sectionKey,
+          setKey: page.set.setKey,
+        }}
+      />
+    );
   }
 
   return (
@@ -110,109 +204,33 @@ export function TryoutSectionPageClient({
           title={page.section.title}
         />
 
-        <div className="space-y-12">
-          {runtime ? (
-            <TryoutRuntime runtime={runtime} />
-          ) : (
-            <TryoutPartSummary>
-              <TryoutPartBody>
-                <TryoutPartLead>
-                  <TryoutPartStats>
-                    <TryoutPartStat label={tTryouts("part-questions-label")}>
-                      <TryoutMetricNumber value={page.section.questionCount} />
-                    </TryoutPartStat>
-
-                    <TryoutPartStat label={tTryouts("part-time-label")}>
-                      <TryoutMetricTime
-                        totalSeconds={page.section.timeLimitSeconds}
-                      />
-                    </TryoutPartStat>
-                  </TryoutPartStats>
-                </TryoutPartLead>
-
-                <TryoutPartCtas>
-                  <StartTryoutButton
-                    attempt={attempt}
-                    countryKey={page.set.countryKey}
-                    examKey={page.set.examKey}
-                    firstSectionHref={getTryoutHref({
-                      country,
-                      exam,
-                      section,
-                      set,
-                    })}
-                    locale={locale}
-                    setKey={page.set.setKey}
-                  />
-                </TryoutPartCtas>
-              </TryoutPartBody>
-            </TryoutPartSummary>
-          )}
-        </div>
+        <div className="space-y-12">{sectionContent}</div>
       </div>
     </div>
   );
 }
 
-/** Renders the production try-out metric number style. */
-function TryoutMetricNumber({ value }: { value: number }) {
-  return (
-    <NumberFormatGroup>
-      <div className="font-light font-mono text-5xl text-foreground tabular-nums leading-none tracking-tighter">
-        <NumberFormat
-          format={{ maximumFractionDigits: 0 }}
-          trend={0}
-          value={value}
-        />
-      </div>
-    </NumberFormatGroup>
-  );
-}
-
-/** Renders the production try-out duration style. */
-function TryoutMetricTime({ totalSeconds }: { totalSeconds: number }) {
-  const segments = getTimeSegments(totalSeconds);
-
-  return (
-    <NumberFormatGroup>
-      <div className="flex items-center gap-2 sm:gap-3">
-        {segments.map((segment, index) => (
-          <Fragment key={segment.label}>
-            <div className="font-light font-mono text-5xl text-foreground tabular-nums leading-none tracking-tighter">
-              <NumberFormat
-                format={{ minimumIntegerDigits: 2 }}
-                trend={0}
-                value={segment.value}
-              />
-            </div>
-            {index < segments.length - 1 ? (
-              <span className="font-light font-mono text-3xl text-muted-foreground leading-none">
-                :
-              </span>
-            ) : null}
-          </Fragment>
-        ))}
-      </div>
-    </NumberFormatGroup>
-  );
-}
-
-/** Splits a duration into the visible time segments for the UI. */
-function getTimeSegments(totalSeconds: number) {
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-
-  if (hours > 0) {
-    return [
-      { label: "hours", value: hours },
-      { label: "minutes", value: minutes },
-      { label: "seconds", value: seconds },
-    ] as const;
+/** Selects the production header copy for finished try-out sections. */
+function getFinishedSectionStatus({
+  attemptFinished,
+  sectionTimeExpired,
+  tTryouts,
+}: {
+  attemptFinished: boolean;
+  sectionTimeExpired: boolean;
+  tTryouts: ReturnType<typeof useTranslations>;
+}) {
+  if (sectionTimeExpired && attemptFinished) {
+    return tTryouts("part-head-completed-time-expired");
   }
 
-  return [
-    { label: "minutes", value: minutes },
-    { label: "seconds", value: seconds },
-  ] as const;
+  if (sectionTimeExpired) {
+    return tTryouts("part-head-completed-time-expired-pending-review");
+  }
+
+  if (attemptFinished) {
+    return tTryouts("part-head-completed");
+  }
+
+  return tTryouts("part-head-completed-pending-review");
 }

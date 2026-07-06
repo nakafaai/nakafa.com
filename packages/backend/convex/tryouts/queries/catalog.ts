@@ -1,6 +1,5 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
-import { TRYOUT_CHOICE_LIMIT } from "@repo/backend/convex/tryouts/questions";
 import {
   tryoutRouteKeyValidator,
   tryoutScoringStrategyValidator,
@@ -9,23 +8,6 @@ import { readTryoutCountryCode } from "@repo/contents/_types/tryout/countries";
 import { ConvexError, v } from "convex/values";
 
 const CATALOG_PAGE_LIMIT = 100;
-
-const publicChoiceValidator = v.object({
-  label: v.string(),
-  optionKey: v.string(),
-  order: v.number(),
-});
-
-const publicQuestionValidator = v.object({
-  contentHash: v.string(),
-  number: v.number(),
-  questionBody: v.string(),
-  questionId: v.id("questions"),
-  sourceKey: v.string(),
-  sourceRevision: v.string(),
-  title: v.string(),
-  choices: v.array(publicChoiceValidator),
-});
 
 const publicTryoutCountryValidator = v.object({
   countryCode: v.string(),
@@ -346,7 +328,7 @@ export const getSetPage = query({
   },
 });
 
-/** Reads the public question payload for one try-out section. */
+/** Reads public metadata for one try-out section. */
 export const getSectionPage = query({
   args: {
     locale: localeValidator,
@@ -356,7 +338,6 @@ export const getSectionPage = query({
     v.null(),
     v.object({
       exam: publicTryoutExamValidator,
-      questions: v.array(publicQuestionValidator),
       section: publicTryoutSectionValidator,
       set: publicTryoutSetValidator,
     })
@@ -379,63 +360,19 @@ export const getSectionPage = query({
       return null;
     }
 
-    const [exam, questions] = await Promise.all([
-      ctx.db
-        .query("tryoutExams")
-        .withIndex("by_countryKey_and_examKey_and_locale", (q) =>
-          q
-            .eq("countryKey", set.countryKey)
-            .eq("examKey", set.examKey)
-            .eq("locale", args.locale)
-        )
-        .unique(),
-      ctx.db
-        .query("questions")
-        .withIndex("by_questionSetId_and_number", (q) =>
-          q.eq("questionSetId", section.questionSetId)
-        )
-        .take(section.questionCount + 1),
-    ]);
+    const exam = await ctx.db
+      .query("tryoutExams")
+      .withIndex("by_countryKey_and_examKey_and_locale", (q) =>
+        q
+          .eq("countryKey", set.countryKey)
+          .eq("examKey", set.examKey)
+          .eq("locale", args.locale)
+      )
+      .unique();
 
     if (!exam?.isActive) {
       return null;
     }
-
-    if (questions.length > section.questionCount) {
-      throw new ConvexError({
-        code: "TRYOUT_QUESTION_COUNT_EXCEEDED",
-        message: "Try-out section has more questions than its snapshot count.",
-      });
-    }
-
-    const questionPayloads = await Promise.all(
-      questions.map(async (question) => {
-        const choices = await ctx.db
-          .query("questionChoices")
-          .withIndex("by_questionId_and_locale", (q) =>
-            q.eq("questionId", question._id).eq("locale", args.locale)
-          )
-          .take(TRYOUT_CHOICE_LIMIT);
-        const orderedChoices = [...choices].sort(
-          (left, right) => left.order - right.order
-        );
-
-        return {
-          choices: orderedChoices.map((choice) => ({
-            label: choice.label,
-            optionKey: choice.optionKey,
-            order: choice.order,
-          })),
-          contentHash: question.contentHash,
-          number: question.number,
-          questionBody: question.questionBody,
-          questionId: question._id,
-          sourceKey: question.sourceKey,
-          sourceRevision: question.sourceRevision,
-          title: question.title,
-        };
-      })
-    );
 
     return {
       exam: {
@@ -445,7 +382,6 @@ export const getSectionPage = query({
         scoringStrategy: exam.scoringStrategy,
         title: exam.title,
       },
-      questions: questionPayloads,
       section: {
         description: section.description,
         publicPath: section.publicPath,

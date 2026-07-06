@@ -129,6 +129,13 @@ const tables = {
       "examKey",
       "setKey",
       "endsAt",
+    ])
+    .index("by_userId_and_countryKey_and_examKey_and_setKey_and_startsAt", [
+      "userId",
+      "countryKey",
+      "examKey",
+      "setKey",
+      "startsAt",
     ]),
 };
 

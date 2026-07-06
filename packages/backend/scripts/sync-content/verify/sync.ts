@@ -18,6 +18,7 @@ import {
 } from "@repo/backend/scripts/sync-content/convex/inspection";
 import { globFiles } from "@repo/backend/scripts/sync-content/runtime/files";
 import { verifyQuranRuntime } from "@repo/backend/scripts/sync-content/verify/quran";
+import { logVerifySuccess } from "@repo/backend/scripts/sync-content/verify/summary";
 import { getAllSurah } from "@repo/contents/_lib/quran";
 import {
   listLessonMaterialSources,
@@ -317,7 +318,6 @@ export const verify = Effect.fn("sync.verify")(function* (
   log("\n=== VERIFICATION ===\n");
 
   let allMatch = true;
-  let hasWarnings = false;
 
   if (counts.articles === articleFiles.length) {
     logSuccess(
@@ -406,10 +406,10 @@ export const verify = Effect.fn("sync.verify")(function* (
   log(`Content-Author links: ${counts.contentAuthors} in DB`);
 
   if (answerFiles.length !== questionFiles.length) {
-    log(
-      `\nWARNING: Answer files (${answerFiles.length}) != Question files (${questionFiles.length})`
+    logError(
+      `Answer files (${answerFiles.length}) != Question files (${questionFiles.length})`
     );
-    hasWarnings = true;
+    allMatch = false;
   }
 
   log("\n=== DATA INTEGRITY ===\n");
@@ -484,27 +484,7 @@ export const verify = Effect.fn("sync.verify")(function* (
 
   log("\n=== SUMMARY ===\n");
   if (allMatch) {
-    logSuccess("All primary content synced correctly!");
-    log(`  - ${counts.articles} articles`);
-    log(`  - ${counts.curriculumTopics} curriculum topics`);
-    log(`  - ${counts.curriculumLessons} curriculum lessons`);
-    log(`  - ${counts.questionSets} question sets`);
-    log(`  - ${counts.questions} questions`);
-    log(`  - ${counts.contentSearch} content search rows`);
-    log(`  - ${counts.contentRoutes} content route rows`);
-    log(`  - ${counts.quranSurahs} Quran surahs`);
-    log(`  - ${counts.quranVerses} Quran verses`);
-    log(`  - ${counts.tryoutCountries} try-out countries`);
-    log(`  - ${counts.tryoutExams} try-out exams`);
-    log(`  - ${counts.tryoutSets} try-out sets`);
-    log(`  - ${counts.tryoutSections} try-out sections`);
-    log(`  - ${counts.articleReferences} references`);
-    log(`  - ${counts.questionChoices} choices`);
-    log(`  - ${counts.authors} authors`);
-
-    if (hasWarnings) {
-      log("\nSome warnings found (see above)");
-    }
+    logVerifySuccess(counts);
     return;
   }
 

@@ -5,6 +5,7 @@ const crons = cronJobs();
 const CONTENT_ANALYTICS_BACKSTOP_INTERVAL_MINUTES = 10;
 const CREDIT_RESET_PERIOD_RECONCILE_INTERVAL_MINUTES = 10;
 const NINA_CAPABILITY_TRACE_RETENTION_INTERVAL_HOURS = 24;
+const TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES = 5;
 
 /**
  * Materializes the current daily reset boundary for free-plan credits.
@@ -63,6 +64,16 @@ crons.interval(
   "sweep Nina capability traces",
   { hours: NINA_CAPABILITY_TRACE_RETENTION_INTERVAL_HOURS },
   internal.chats.traces.mutations.sweepExpired,
+  {}
+);
+
+/**
+ * Reconciles try-out expiry if a scheduled attempt or section job is missed.
+ */
+crons.interval(
+  "sweep try-out expiry",
+  { minutes: TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES },
+  internal.tryouts.mutations.expiry.sweep,
   {}
 );
 

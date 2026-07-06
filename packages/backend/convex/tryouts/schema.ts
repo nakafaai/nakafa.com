@@ -14,9 +14,6 @@ export type TryoutStatus = Infer<typeof tryoutStatusValidator>;
 export const tryoutScoreStatusValidator = literals("provisional", "official");
 export type TryoutScoreStatus = Infer<typeof tryoutScoreStatusValidator>;
 
-export const tryoutAccessKindValidator = literals("event", "subscription");
-export type TryoutAccessKind = Infer<typeof tryoutAccessKindValidator>;
-
 export const tryoutScoringStrategyValidator = literals(
   "irt",
   "raw",
@@ -47,6 +44,14 @@ export const tryoutSectionSnapshotValidator = v.object({
 export type TryoutSectionSnapshot = Infer<
   typeof tryoutSectionSnapshotValidator
 >;
+
+export const tryoutChoiceSnapshotValidator = v.object({
+  isCorrect: v.boolean(),
+  label: v.string(),
+  optionKey: v.string(),
+  order: v.number(),
+});
+export type TryoutChoiceSnapshot = Infer<typeof tryoutChoiceSnapshotValidator>;
 
 const tables = {
   tryoutCountries: defineTable({
@@ -148,7 +153,6 @@ const tables = {
     userId: v.id("users"),
     tryoutSetId: v.id("tryoutSets"),
     scaleVersionId: v.optional(v.id("irtScaleVersions")),
-    accessKind: v.optional(tryoutAccessKindValidator),
     accessCampaignId: v.optional(v.id("tryoutAccessCampaigns")),
     accessGrantId: v.optional(v.id("tryoutAccessGrants")),
     accessEndsAt: v.optional(v.number()),
@@ -225,6 +229,9 @@ const tables = {
     questionId: v.id("questions"),
     questionSourceKey: v.string(),
     questionOrder: v.number(),
+    sourcePath: v.string(),
+    title: v.string(),
+    choiceSnapshots: v.array(tryoutChoiceSnapshotValidator),
     sourceRevision: v.string(),
     contentHash: v.string(),
   })

@@ -1,8 +1,8 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { query } from "@repo/backend/convex/_generated/server";
+import { attemptEndReasonValidator } from "@repo/backend/convex/lib/attempts";
 import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
-import { TRYOUT_CHOICE_LIMIT } from "@repo/backend/convex/tryouts/questions";
 import { getActiveTryoutSet } from "@repo/backend/convex/tryouts/read";
 import {
   tryoutRouteKeyValidator,
@@ -13,6 +13,7 @@ import { ConvexError, v } from "convex/values";
 const currentSectionValidator = v.object({
   answeredCount: v.number(),
   completedAt: v.union(v.number(), v.null()),
+  endReason: v.union(attemptEndReasonValidator, v.null()),
   expiresAt: v.number(),
   sectionKey: tryoutRouteKeyValidator,
   startedAt: v.number(),
@@ -48,10 +49,10 @@ const runtimeResponseValidator = v.object({
 const runtimeQuestionValidator = v.object({
   choices: v.array(runtimeChoiceValidator),
   placementId: v.id("tryoutAttemptPlacements"),
-  questionBody: v.string(),
   questionId: v.id("questions"),
   questionOrder: v.number(),
   response: v.union(runtimeResponseValidator, v.null()),
+  sourcePath: v.string(),
   title: v.string(),
 });
 
@@ -125,6 +126,7 @@ export const getCurrent = query({
         ? {
             answeredCount: section.answeredCount,
             completedAt: section.completedAt,
+            endReason: section.endReason,
             expiresAt: section.expiresAt,
             sectionKey: section.sectionKey,
             startedAt: section.startedAt,
@@ -201,44 +203,27 @@ export const getSectionRuntime = query({
 
     const questions = await Promise.all(
       placements.map(async (placement) => {
-        const [question, choices, response] = await Promise.all([
-          ctx.db.get(placement.questionId),
-          ctx.db
-            .query("questionChoices")
-            .withIndex("by_questionId_and_locale", (q) =>
-              q.eq("questionId", placement.questionId).eq("locale", args.locale)
-            )
-            .take(TRYOUT_CHOICE_LIMIT),
-          ctx.db
-            .query("tryoutResponses")
-            .withIndex("by_tryoutSectionAttemptId_and_questionId", (q) =>
-              q
-                .eq("tryoutSectionAttemptId", section._id)
-                .eq("questionId", placement.questionId)
-            )
-            .unique(),
-        ]);
+        const response = await ctx.db
+          .query("tryoutResponses")
+          .withIndex("by_tryoutSectionAttemptId_and_questionId", (q) =>
+            q
+              .eq("tryoutSectionAttemptId", section._id)
+              .eq("questionId", placement.questionId)
+          )
+          .unique();
 
-        if (!question) {
-          throw new ConvexError({
-            code: "TRYOUT_QUESTION_NOT_FOUND",
-            message: "Try-out question not found.",
-          });
-        }
-
-        const orderedChoices = [...choices].sort(
+        const choices = [...placement.choiceSnapshots].sort(
           (left, right) => left.order - right.order
         );
 
         return {
-          choices: orderedChoices.map((choice) => ({
+          choices: choices.map((choice) => ({
             label: choice.label,
             optionKey: choice.optionKey,
             order: choice.order,
           })),
           placementId: placement._id,
-          questionBody: question.questionBody,
-          questionId: question._id,
+          questionId: placement.questionId,
           questionOrder: placement.questionOrder,
           response: response
             ? {
@@ -247,18 +232,20 @@ export const getSectionRuntime = query({
                 updatedAt: response.updatedAt,
               }
             : null,
-          title: question.title,
+          sourcePath: placement.sourcePath,
+          title: placement.title,
         };
       })
     );
 
     return {
       attemptId: attempt._id,
-      expiresAt: attempt.expiresAt,
+      expiresAt: section.expiresAt,
       questions,
       section: {
         answeredCount: section.answeredCount,
         completedAt: section.completedAt,
+        endReason: section.endReason,
         expiresAt: section.expiresAt,
         sectionKey: section.sectionKey,
         startedAt: section.startedAt,

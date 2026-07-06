@@ -5,7 +5,6 @@ import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib
 import {
   type AuthorCache,
   buildAuthorCache,
-  deleteQuestion,
   syncContentAuthorsWithCache,
 } from "@repo/backend/convex/contentSync/lib/syncHelpers";
 import { hasSameSyncValues } from "@repo/backend/convex/contentSync/lib/syncValues";
@@ -80,46 +79,6 @@ export async function bulkSyncTryoutsImpl(
   return totals;
 }
 
-/** Deletes one bounded stale question batch with sync-owned choice rows. */
-export async function deleteStaleQuestionsImpl(
-  ctx: MutationCtx,
-  args: { questionIds: Id<"questions">[] }
-) {
-  assertContentSyncBatchSize({
-    functionName: "deleteStaleQuestions",
-    limit: CONTENT_SYNC_BATCH_LIMITS.staleQuestions,
-    received: args.questionIds.length,
-    unit: "questions",
-  });
-
-  for (const questionId of args.questionIds) {
-    await deleteQuestion(ctx, questionId);
-  }
-
-  return { deleted: args.questionIds.length };
-}
-
-/** Deletes one bounded stale question-set batch after its sections are removed. */
-export async function deleteStaleQuestionSetsImpl(
-  ctx: MutationCtx,
-  args: { questionSetIds: Id<"questionSets">[] }
-) {
-  assertContentSyncBatchSize({
-    functionName: "deleteStaleQuestionSets",
-    limit: CONTENT_SYNC_BATCH_LIMITS.staleQuestionSets,
-    received: args.questionSetIds.length,
-    unit: "question sets",
-  });
-
-  let deleted = 0;
-  for (const questionSetId of args.questionSetIds) {
-    await deleteQuestionSet(ctx, questionSetId);
-    deleted++;
-  }
-
-  return { deleted };
-}
-
 function assertTryoutBatchSizes(args: BulkSyncTryoutsArgs) {
   assertContentSyncBatchSize({
     functionName: "bulkSyncTryouts",
@@ -160,11 +119,13 @@ async function syncCountry(
       q.eq("countryKey", country.countryKey).eq("locale", country.locale)
     )
     .unique();
-  const nextValues = { ...country, syncedAt };
 
-  if (hasSameSyncValues(nextValues, existing)) {
+  if (hasSameSyncValues(country, existing)) {
     return "unchanged";
   }
+
+  const nextValues = { ...country, syncedAt };
+
   if (existing) {
     await ctx.db.patch("tryoutCountries", existing._id, nextValues);
     return "updated";
@@ -188,11 +149,13 @@ async function syncExam(
         .eq("locale", exam.locale)
     )
     .unique();
-  const nextValues = { ...exam, syncedAt };
 
-  if (hasSameSyncValues(nextValues, existing)) {
+  if (hasSameSyncValues(exam, existing)) {
     return "unchanged";
   }
+
+  const nextValues = { ...exam, syncedAt };
+
   if (existing) {
     await ctx.db.patch("tryoutExams", existing._id, nextValues);
     return "updated";
@@ -217,11 +180,13 @@ async function syncSet(
         .eq("locale", set.locale)
     )
     .unique();
-  const nextValues = { ...set, syncedAt };
 
-  if (hasSameSyncValues(nextValues, existing)) {
+  if (hasSameSyncValues(set, existing)) {
     return "unchanged";
   }
+
+  const nextValues = { ...set, syncedAt };
+
   if (existing) {
     await ctx.db.patch("tryoutSets", existing._id, nextValues);
     return "updated";
@@ -244,11 +209,13 @@ async function syncQuestionSet(
         .eq("sourcePath", questionSet.sourcePath)
     )
     .unique();
-  const nextValues = { ...questionSet, syncedAt };
 
-  if (hasSameSyncValues(nextValues, existing)) {
+  if (hasSameSyncValues(questionSet, existing)) {
     return "unchanged";
   }
+
+  const nextValues = { ...questionSet, syncedAt };
+
   if (existing) {
     await ctx.db.patch("questionSets", existing._id, nextValues);
     return "updated";
@@ -280,7 +247,7 @@ async function syncQuestion(
     questionSetSourcePath: _questionSetSourcePath,
     ...values
   } = question;
-  const nextValues = { ...values, questionSetId: questionSet._id, syncedAt };
+  const nextValues = { ...values, questionSetId: questionSet._id };
 
   if (hasSameSyncValues(nextValues, existing)) {
     if (existing) {
@@ -300,8 +267,11 @@ async function syncQuestion(
     }
     return "unchanged";
   }
+
+  const writeValues = { ...nextValues, syncedAt };
+
   if (existing) {
-    await ctx.db.patch("questions", existing._id, nextValues);
+    await ctx.db.patch("questions", existing._id, writeValues);
     await replaceQuestionChoicesForLocale(
       ctx,
       existing._id,
@@ -318,7 +288,7 @@ async function syncQuestion(
     return "updated";
   }
 
-  const questionId = await ctx.db.insert("questions", nextValues);
+  const questionId = await ctx.db.insert("questions", writeValues);
   await replaceQuestionChoicesForLocale(
     ctx,
     questionId,
@@ -357,18 +327,20 @@ async function syncSection(
     ...section,
     questionSetId: questionSet._id,
     tryoutSetId: tryoutSet._id,
-    syncedAt,
   };
 
   if (hasSameSyncValues(nextValues, existing)) {
     return "unchanged";
   }
+
+  const writeValues = { ...nextValues, syncedAt };
+
   if (existing) {
-    await ctx.db.patch("tryoutSections", existing._id, nextValues);
+    await ctx.db.patch("tryoutSections", existing._id, writeValues);
     return "updated";
   }
 
-  await ctx.db.insert("tryoutSections", nextValues);
+  await ctx.db.insert("tryoutSections", writeValues);
   return "created";
 }
 
@@ -458,40 +430,4 @@ async function replaceQuestionChoicesForLocale(
       questionId,
     });
   }
-}
-
-async function deleteQuestionSet(
-  ctx: MutationCtx,
-  questionSetId: Id<"questionSets">
-) {
-  const questions = await ctx.db
-    .query("questions")
-    .withIndex("by_questionSetId_and_number", (q) =>
-      q.eq("questionSetId", questionSetId)
-    )
-    .take(1);
-
-  if (questions.length > 0) {
-    throw new ConvexError({
-      code: "TRYOUT_SYNC_QUESTION_SET_NOT_EMPTY",
-      message: "Delete stale questions before deleting their question set.",
-    });
-  }
-
-  const sections = await ctx.db
-    .query("tryoutSections")
-    .withIndex("by_questionSetId", (q) => q.eq("questionSetId", questionSetId))
-    .take(CONTENT_SYNC_BATCH_LIMITS.tryoutSets + 1);
-
-  if (sections.length > CONTENT_SYNC_BATCH_LIMITS.tryoutSets) {
-    throw new ConvexError({
-      code: "TRYOUT_SYNC_SECTION_DELETE_LIMIT_EXCEEDED",
-      message: "Question set has too many try-out sections to delete safely.",
-    });
-  }
-
-  for (const section of sections) {
-    await ctx.db.delete(section._id);
-  }
-  await ctx.db.delete("questionSets", questionSetId);
 }

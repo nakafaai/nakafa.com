@@ -102,7 +102,7 @@ beforeEach(() => {
     if (route === "try-out/indonesia/snbt/set-1") {
       return Effect.succeed({
         description: "Try-out set",
-        markdown: true,
+        markdown: false,
         title: "Try-out Set 1",
       });
     }
@@ -110,7 +110,7 @@ beforeEach(() => {
     if (route === "try-out/indonesia/snbt/set-1/quantitative-knowledge") {
       return Effect.succeed({
         description: "Try-out section",
-        markdown: true,
+        markdown: false,
         title: "Quantitative Knowledge",
       });
     }
@@ -135,12 +135,14 @@ const routeRows = [
   }),
   routeRow({
     description: "Try-out set",
+    markdown: false,
     route: "try-out/indonesia/snbt/set-1",
     section: "tryout",
     title: "Try-out Set 1",
   }),
   routeRow({
     description: "Try-out section",
+    markdown: false,
     route: "try-out/indonesia/snbt/set-1/quantitative-knowledge",
     section: "tryout",
     title: "Quantitative Knowledge",
@@ -294,7 +296,7 @@ describe("llms entries", () => {
     expect(entries).toContainEqual(
       expect.objectContaining({
         description: "Try-out set",
-        href: `${BASE_URL}/en/try-out/indonesia/snbt/set-1.md`,
+        href: `${BASE_URL}/en/try-out/indonesia/snbt/set-1`,
         route: "/try-out/indonesia/snbt/set-1",
         section: "tryout",
         title: "Try-out Set 1",
@@ -303,7 +305,7 @@ describe("llms entries", () => {
     expect(entries).toContainEqual(
       expect.objectContaining({
         description: "Try-out section",
-        href: `${BASE_URL}/en/try-out/indonesia/snbt/set-1/quantitative-knowledge.md`,
+        href: `${BASE_URL}/en/try-out/indonesia/snbt/set-1/quantitative-knowledge`,
         route: "/try-out/indonesia/snbt/set-1/quantitative-knowledge",
         section: "tryout",
         title: "Quantitative Knowledge",

@@ -318,7 +318,7 @@ export async function deleteQuestion(
     });
   }
 
-  await deleteContentAuthorLinks(ctx, questionId, "material");
+  await deleteContentAuthorLinks(ctx, questionId, "question");
   await deleteQuestionChoicesForQuestion(ctx, questionId);
   await ctx.db.delete("questions", questionId);
 }

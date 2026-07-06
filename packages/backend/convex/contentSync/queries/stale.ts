@@ -12,7 +12,11 @@ const staleContentTableNameValidator = literals(
   "curriculumTopics",
   "curriculumLessons",
   "questionSets",
-  "questions"
+  "questions",
+  "tryoutCountries",
+  "tryoutExams",
+  "tryoutSets",
+  "tryoutSections"
 );
 
 const staleContentIdValidator = v.union(
@@ -20,7 +24,11 @@ const staleContentIdValidator = v.union(
   v.id("curriculumTopics"),
   v.id("curriculumLessons"),
   v.id("questionSets"),
-  v.id("questions")
+  v.id("questions"),
+  v.id("tryoutCountries"),
+  v.id("tryoutExams"),
+  v.id("tryoutSets"),
+  v.id("tryoutSections")
 );
 
 const staleContentItemValidator = v.object({
@@ -43,15 +51,28 @@ export const listStaleContentPage = internalQuery({
 
     return {
       ...page,
-      page: page.page.map((item) => {
-        const sourcePath = "sourcePath" in item ? item.sourcePath : item.slug;
-
-        return {
-          id: item._id,
-          locale: item.locale,
-          sourcePath,
-        };
-      }),
+      page: page.page.map((item) => ({
+        id: item._id,
+        locale: item.locale,
+        sourcePath: getStaleSourcePath(item),
+      })),
     };
   },
 });
+
+/** Returns the source identity used for stale content comparison. */
+function getStaleSourcePath(item: {
+  publicPath?: string;
+  slug?: string;
+  sourcePath?: string;
+}) {
+  if (item.sourcePath) {
+    return item.sourcePath;
+  }
+
+  if (item.publicPath) {
+    return item.publicPath;
+  }
+
+  return item.slug ?? "";
+}

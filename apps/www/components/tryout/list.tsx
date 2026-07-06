@@ -4,13 +4,19 @@ import { GradientBlock } from "@repo/design-system/components/ui/gradient-block"
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { cn } from "@repo/design-system/lib/utils";
+import {
+  TryoutStatus,
+  type TryoutStatusValue,
+} from "@/components/tryout/status";
 
 export type TryoutListRow = Readonly<{
+  current?: boolean;
   description: string;
   href: string;
   icon: IconSvgElement;
   iconKey: string;
   key: string;
+  status?: TryoutStatusValue;
   title: string;
 }>;
 
@@ -68,7 +74,10 @@ function TryoutRow({ row }: { row: TryoutListRow }) {
           </div>
 
           <div className="-mt-1 flex flex-1 flex-col gap-0.5">
-            <h3>{row.title}</h3>
+            <div className="flex flex-wrap items-center gap-2">
+              <h3>{row.title}</h3>
+              {row.status ? <TryoutStatus status={row.status} /> : null}
+            </div>
             <span className="line-clamp-1 text-muted-foreground text-sm group-hover:text-accent-foreground">
               {row.description}
             </span>
@@ -77,7 +86,8 @@ function TryoutRow({ row }: { row: TryoutListRow }) {
           <HugeIcons
             className={cn(
               "size-4 shrink-0 opacity-0 transition-opacity ease-out",
-              "group-hover:opacity-100"
+              "group-hover:opacity-100",
+              row.current && "opacity-100"
             )}
             icon={ArrowRight02Icon}
           />

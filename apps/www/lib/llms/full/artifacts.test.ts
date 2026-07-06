@@ -100,22 +100,26 @@ describe("llms full document", () => {
       if (section === "tryout") {
         return Effect.succeed([
           createEntry({
+            markdown: false,
             route: "/try-out/indonesia/snbt/set-1/quantitative-knowledge",
             section: "tryout",
             title: "Quantitative Knowledge",
           }),
           createEntry({
+            markdown: false,
             route: "/try-out/indonesia/snbt/set-1",
             section: "tryout",
             title: "Set 1",
           }),
           createEntry({
+            markdown: false,
             route: "/try-out/indonesia/snbt/blank",
             section: "tryout",
             title: "Blank Try-out",
           }),
           {
             ...createEntry({
+              markdown: false,
               route: "/try-out/blank",
               section: "tryout",
               title: "Blank",
@@ -175,7 +179,7 @@ describe("llms full document", () => {
     expect(text).toContain("## How To Use");
     expect(text).toContain("## Corpus Summary");
     expect(text).toContain("## Shards");
-    expect(text).toContain("- Documents: 4");
+    expect(text).toContain("- Documents: 3");
     expect(text).toContain(
       "Nakafa English Articles: Page / 0 Full Documentation"
     );
@@ -198,7 +202,6 @@ describe("llms full document", () => {
     expect(artifacts.manifest.path).toBe("llms-full/index.json");
     expect(shardPaths).toContain("llms-full/en/articles/page/0.txt");
     expect(shardPaths).toContain("llms-full/en/material/page/0.txt");
-    expect(shardPaths).toContain("llms-full/en/tryout/page/0.txt");
     expect(shardPaths).toContain("llms-full/id/quran/page/1.txt");
     expect(
       artifacts.shards.find(
@@ -215,15 +218,13 @@ describe("llms full document", () => {
     const fullShardText = artifacts.shards
       .map((artifact) => artifact.text)
       .join("\n");
-    expect(fullShardText).toContain("en:try-out section body");
-    expect(fullShardText).toContain("- A. First choice");
-    expect(fullShardText).toContain(
-      `Markdown URL: ${BASE_URL}/en/try-out/indonesia/snbt/set-1/quantitative-knowledge.md`
-    );
+    expect(fullShardText).not.toContain("en:try-out section body");
+    expect(fullShardText).not.toContain("- A. First choice");
+    expect(fullShardText).not.toContain(`${BASE_URL}/en/try-out/`);
     expect(fullShardText).not.toContain("notes: full markdown");
     expect(manifestData.entrypoint).toBe(`${BASE_URL}/llms-full.txt`);
     expect(manifestData.manifest).toBe(`${BASE_URL}/llms-full/index.json`);
-    expect(manifestData.totals.documents).toBe(4);
+    expect(manifestData.totals.documents).toBe(3);
     expect(mockGetContentPageLlmsEntries).toHaveBeenCalledWith({
       id: "content_en_articles_0",
       kind: "content",
@@ -275,20 +276,23 @@ describe("llms full document", () => {
 /** Builds one llms entry fixture for a bounded content page. */
 function createEntry({
   locale = "en",
+  markdown = true,
   route,
   section,
   title,
 }: {
   locale?: Locale;
+  markdown?: boolean;
   route: string;
   section: LlmsEntry["section"];
   title: string;
 }): LlmsEntry {
   const segments = route.split("/").filter(Boolean);
+  const markdownSuffix = markdown ? ".md" : "";
 
   return {
     description: "Fixture description",
-    href: `${BASE_URL}/${locale}${route}.md`,
+    href: `${BASE_URL}/${locale}${route}${markdownSuffix}`,
     route,
     section,
     segments,

@@ -12,6 +12,7 @@ import {
   QuestionIntegrityPageSchema,
   StaleContentPageSchema,
   StaleContentSchema,
+  TryoutScaleIntegrityPageSchema,
   UnusedAuthorsSchema,
 } from "@repo/backend/scripts/sync-content/contract/schemas";
 import type {
@@ -210,13 +211,21 @@ export const getStaleContent = Effect.fn("sync.getStaleContent")(function* (
   const questionSetSourcePathSet = new Set(
     filesystemSlugs.questionSetSourcePaths
   );
-  const questionSourcePathSet = new Set(filesystemSlugs.questionSourcePaths);
+  const questionSourceKeySet = new Set(filesystemSlugs.questionSourceKeys);
+  const tryoutCountryPathSet = new Set(filesystemSlugs.tryoutCountryPaths);
+  const tryoutExamPathSet = new Set(filesystemSlugs.tryoutExamPaths);
+  const tryoutSetPathSet = new Set(filesystemSlugs.tryoutSetPaths);
+  const tryoutSectionPathSet = new Set(filesystemSlugs.tryoutSectionPaths);
   const [
     articles,
     curriculumTopics,
     curriculumLessons,
     questionSets,
     questions,
+    tryoutCountries,
+    tryoutExams,
+    tryoutSets,
+    tryoutSections,
   ] = yield* Effect.all([
     collectPages(
       config,
@@ -248,6 +257,30 @@ export const getStaleContent = Effect.fn("sync.getStaleContent")(function* (
       buildStaleContentArgs("questions"),
       StaleContentPageSchema
     ),
+    collectPages(
+      config,
+      internal.contentSync.queries.stale.listStaleContentPage,
+      buildStaleContentArgs("tryoutCountries"),
+      StaleContentPageSchema
+    ),
+    collectPages(
+      config,
+      internal.contentSync.queries.stale.listStaleContentPage,
+      buildStaleContentArgs("tryoutExams"),
+      StaleContentPageSchema
+    ),
+    collectPages(
+      config,
+      internal.contentSync.queries.stale.listStaleContentPage,
+      buildStaleContentArgs("tryoutSets"),
+      StaleContentPageSchema
+    ),
+    collectPages(
+      config,
+      internal.contentSync.queries.stale.listStaleContentPage,
+      buildStaleContentArgs("tryoutSections"),
+      StaleContentPageSchema
+    ),
   ]);
 
   return Schema.decodeUnknownSync(StaleContentSchema)({
@@ -264,7 +297,19 @@ export const getStaleContent = Effect.fn("sync.getStaleContent")(function* (
       (item) => !questionSetSourcePathSet.has(item.sourcePath)
     ),
     staleQuestions: questions.filter(
-      (item) => !questionSourcePathSet.has(item.sourcePath)
+      (item) => !questionSourceKeySet.has(getQuestionSourceKey(item))
+    ),
+    staleTryoutCountries: tryoutCountries.filter(
+      (item) => !tryoutCountryPathSet.has(item.sourcePath)
+    ),
+    staleTryoutExams: tryoutExams.filter(
+      (item) => !tryoutExamPathSet.has(item.sourcePath)
+    ),
+    staleTryoutSets: tryoutSets.filter(
+      (item) => !tryoutSetPathSet.has(item.sourcePath)
+    ),
+    staleTryoutSections: tryoutSections.filter(
+      (item) => !tryoutSectionPathSet.has(item.sourcePath)
     ),
   });
 });
@@ -273,47 +318,58 @@ export const getStaleContent = Effect.fn("sync.getStaleContent")(function* (
 export const getDataIntegrity = Effect.fn("sync.getDataIntegrity")(function* (
   config: ConvexConfig
 ) {
-  const [questions, choices, contentAuthors, references, articles, sections] =
-    yield* Effect.all([
-      collectPages(
-        config,
-        internal.contentSync.queries.integrity.listIntegrityQuestionsPage,
-        (paginationOpts) => ({ paginationOpts }),
-        QuestionIntegrityPageSchema
-      ),
-      collectPages(
-        config,
-        internal.contentSync.queries.integrity.listIntegrityQuestionChoicesPage,
-        (paginationOpts) => ({ paginationOpts }),
-        QuestionChoiceIntegrityPageSchema
-      ),
-      collectPages(
-        config,
-        internal.contentSync.queries.integrity.listIntegrityContentAuthorsPage,
-        (paginationOpts) => ({ paginationOpts }),
-        ContentAuthorIntegrityPageSchema
-      ),
-      collectPages(
-        config,
-        internal.contentSync.queries.integrity
-          .listIntegrityArticleReferencesPage,
-        (paginationOpts) => ({ paginationOpts }),
-        ArticleReferenceIntegrityPageSchema
-      ),
-      collectPages(
-        config,
-        internal.contentSync.queries.integrity.listIntegrityArticlesPage,
-        (paginationOpts) => ({ paginationOpts }),
-        ArticleIntegrityPageSchema
-      ),
-      collectPages(
-        config,
-        internal.contentSync.queries.integrity
-          .listIntegrityCurriculumLessonsPage,
-        (paginationOpts) => ({ paginationOpts }),
-        CurriculumLessonIntegrityPageSchema
-      ),
-    ]);
+  const [
+    questions,
+    choices,
+    contentAuthors,
+    references,
+    articles,
+    sections,
+    tryoutScales,
+  ] = yield* Effect.all([
+    collectPages(
+      config,
+      internal.contentSync.queries.integrity.listIntegrityQuestionsPage,
+      (paginationOpts) => ({ paginationOpts }),
+      QuestionIntegrityPageSchema
+    ),
+    collectPages(
+      config,
+      internal.contentSync.queries.integrity.listIntegrityQuestionChoicesPage,
+      (paginationOpts) => ({ paginationOpts }),
+      QuestionChoiceIntegrityPageSchema
+    ),
+    collectPages(
+      config,
+      internal.contentSync.queries.integrity.listIntegrityContentAuthorsPage,
+      (paginationOpts) => ({ paginationOpts }),
+      ContentAuthorIntegrityPageSchema
+    ),
+    collectPages(
+      config,
+      internal.contentSync.queries.integrity.listIntegrityArticleReferencesPage,
+      (paginationOpts) => ({ paginationOpts }),
+      ArticleReferenceIntegrityPageSchema
+    ),
+    collectPages(
+      config,
+      internal.contentSync.queries.integrity.listIntegrityArticlesPage,
+      (paginationOpts) => ({ paginationOpts }),
+      ArticleIntegrityPageSchema
+    ),
+    collectPages(
+      config,
+      internal.contentSync.queries.integrity.listIntegrityCurriculumLessonsPage,
+      (paginationOpts) => ({ paginationOpts }),
+      CurriculumLessonIntegrityPageSchema
+    ),
+    collectPages(
+      config,
+      internal.contentSync.queries.integrity.listIntegrityTryoutScalesPage,
+      (paginationOpts) => ({ paginationOpts }),
+      TryoutScaleIntegrityPageSchema
+    ),
+  ]);
   const questionIdsWithChoices = new Set(
     choices.map((choice) => choice.questionId)
   );
@@ -339,12 +395,24 @@ export const getDataIntegrity = Effect.fn("sync.getDataIntegrity")(function* (
     sectionsWithoutTopics: sections
       .filter((section) => !section.topicId)
       .map((section) => `${section.slug} (${section.locale})`),
-    activeTryoutsWithoutScale: [],
+    activeTryoutsWithoutScale: tryoutScales
+      .filter(
+        (set) =>
+          set.isActive &&
+          set.scoringStrategy === "irt" &&
+          !set.hasPublishedScale
+      )
+      .map((set) => `${set.publicPath} (${set.locale})`),
     totalQuestions: questions.length,
     totalArticles: articles.length,
     totalSections: sections.length,
   });
 });
+
+/** Builds the locale-qualified source key for one persisted question row. */
+function getQuestionSourceKey(item: { locale: string; sourcePath: string }) {
+  return `${item.locale}:${item.sourcePath}`;
+}
 
 /** Summarizes graph identity violations across persisted read models and chat previews. */
 export const getGraphIdentityIntegrity = Effect.fn(

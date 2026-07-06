@@ -1,8 +1,13 @@
+import { api } from "@repo/backend/convex/_generated/api";
+import { preloadedQueryResult, preloadQuery } from "convex/nextjs";
+import { notFound } from "next/navigation";
+import { loadTryoutQuestionContent } from "@/components/tryout/content";
 import { getTryoutHref } from "@/components/tryout/routes";
 import { TryoutSectionPageClient } from "@/components/tryout/section.client";
+import { preloadAuthQuery } from "@/lib/auth/server";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
-/** Renders the public question payload for one try-out section. */
+/** Renders one try-out section with public metadata and owned runtime content. */
 export default async function Page(props: {
   params: Promise<{
     country: string;
@@ -21,13 +26,54 @@ export default async function Page(props: {
   } = await props.params;
   const locale = getLocaleOrThrow(localeParam);
   const sectionPath = getTryoutHref({ country, exam, section, set }).slice(1);
+  const queryArgs = {
+    locale,
+    publicPath: sectionPath,
+  };
+  const preloaded = await preloadQuery(
+    api.tryouts.queries.catalog.getSectionPage,
+    queryArgs
+  );
+  const page = preloadedQueryResult(preloaded);
+
+  if (!page) {
+    notFound();
+  }
+
+  const runtimeArgs = {
+    countryKey: page.set.countryKey,
+    examKey: page.set.examKey,
+    locale,
+    sectionKey: page.section.sectionKey,
+    setKey: page.set.setKey,
+  };
+  const runtime = await preloadAuthQuery(
+    api.tryouts.queries.attempt.getSectionRuntime,
+    runtimeArgs
+  );
+  const runtimePage = preloadedQueryResult(runtime);
+  const questions = runtimePage
+    ? await loadTryoutQuestionContent({
+        locale,
+        questions: runtimePage.questions.map((question) => ({
+          number: question.questionOrder,
+          sourcePath: question.sourcePath,
+        })),
+      })
+    : [];
+
+  if (!questions) {
+    notFound();
+  }
 
   return (
     <TryoutSectionPageClient
       country={country}
       exam={exam}
       locale={locale}
-      publicPath={sectionPath}
+      preloaded={preloaded}
+      questions={questions}
+      runtime={runtime}
       section={section}
       set={set}
     />

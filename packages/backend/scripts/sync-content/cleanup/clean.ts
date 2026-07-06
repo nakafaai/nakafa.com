@@ -1,3 +1,4 @@
+import path from "node:path";
 import { internal } from "@repo/backend/convex/_generated/api";
 import {
   parseArticlePath,
@@ -11,6 +12,7 @@ import {
 import {
   BATCH_SIZES,
   DeleteResultSchema,
+  parseLocale,
 } from "@repo/backend/scripts/sync-content/contract/schemas";
 import type {
   ConvexConfig,
@@ -24,6 +26,7 @@ import {
 } from "@repo/backend/scripts/sync-content/convex/inspection";
 import { globFiles } from "@repo/backend/scripts/sync-content/runtime/files";
 import { listLessonRows } from "@repo/contents/_types/material/registry";
+import { listPublicTryoutRoutes } from "@repo/contents/_types/route/tryout";
 import { TRYOUT_SOURCES } from "@repo/contents/_types/tryout/source";
 import type {
   DefaultFunctionArgs,
@@ -32,7 +35,9 @@ import type {
 } from "convex/server";
 import { Effect } from "effect";
 
-const QUESTION_MDX_SUFFIX_PATTERN = /\/question\.[a-z]{2}\.mdx$/;
+const QUESTION_FILE_PREFIX = "question.";
+const QUESTION_FILE_SUFFIX = ".mdx";
+const TRYOUT_QUESTION_ROOT = "/question-bank/tryout/";
 
 type DeleteStaleMutation = FunctionReference<
   "mutation",
@@ -55,6 +60,18 @@ type DeleteStaleQuestionArgs = FunctionArgs<
 >;
 type DeleteStaleQuestionSetArgs = FunctionArgs<
   typeof internal.contentSync.mutations.tryouts.deleteStaleQuestionSets
+>;
+type DeleteStaleTryoutCountryArgs = FunctionArgs<
+  typeof internal.contentSync.mutations.tryouts.deleteStaleTryoutCountries
+>;
+type DeleteStaleTryoutExamArgs = FunctionArgs<
+  typeof internal.contentSync.mutations.tryouts.deleteStaleTryoutExams
+>;
+type DeleteStaleTryoutSetArgs = FunctionArgs<
+  typeof internal.contentSync.mutations.tryouts.deleteStaleTryoutSets
+>;
+type DeleteStaleTryoutSectionArgs = FunctionArgs<
+  typeof internal.contentSync.mutations.tryouts.deleteStaleTryoutSections
 >;
 
 /** Builds mutation args for deleting stale article rows. */
@@ -100,6 +117,42 @@ const buildDeleteStaleQuestionSetArgs = (
   })[]
 ): DeleteStaleQuestionSetArgs => ({
   questionSetIds: items.map((item) => item.id),
+});
+
+/** Builds mutation args for deleting stale try-out country rows. */
+const buildDeleteStaleTryoutCountryArgs = (
+  items: readonly (StaleItem & {
+    id: DeleteStaleTryoutCountryArgs["countryIds"][number];
+  })[]
+): DeleteStaleTryoutCountryArgs => ({
+  countryIds: items.map((item) => item.id),
+});
+
+/** Builds mutation args for deleting stale try-out exam rows. */
+const buildDeleteStaleTryoutExamArgs = (
+  items: readonly (StaleItem & {
+    id: DeleteStaleTryoutExamArgs["examIds"][number];
+  })[]
+): DeleteStaleTryoutExamArgs => ({
+  examIds: items.map((item) => item.id),
+});
+
+/** Builds mutation args for deleting stale try-out set rows. */
+const buildDeleteStaleTryoutSetArgs = (
+  items: readonly (StaleItem & {
+    id: DeleteStaleTryoutSetArgs["setIds"][number];
+  })[]
+): DeleteStaleTryoutSetArgs => ({
+  setIds: items.map((item) => item.id),
+});
+
+/** Builds mutation args for deleting stale try-out section rows. */
+const buildDeleteStaleTryoutSectionArgs = (
+  items: readonly (StaleItem & {
+    id: DeleteStaleTryoutSectionArgs["sectionIds"][number];
+  })[]
+): DeleteStaleTryoutSectionArgs => ({
+  sectionIds: items.map((item) => item.id),
 });
 
 /** Deletes stale rows through one generated bounded delete mutation. */
@@ -156,11 +209,17 @@ const collectFilesystemSlugs = Effect.fn("sync.collectFilesystemSlugs")(
     }
 
     const questionSourcePaths = new Set<string>();
+    const questionSourceKeys = new Set<string>();
     for (const file of questionFiles) {
-      questionSourcePaths.add(readQuestionSourcePath(file));
+      const sourcePath = readQuestionSourcePath(file);
+      const locale = yield* readQuestionLocale(file);
+
+      questionSourcePaths.add(sourcePath);
+      questionSourceKeys.add(getQuestionSourceKey(locale, sourcePath));
     }
 
     const curriculumTopicSlugs = listLessonRows().map((topic) => topic.slug);
+    const tryoutPaths = yield* collectTryoutPaths();
     const questionSetSourcePaths = TRYOUT_SOURCES.flatMap((source) =>
       source.sets.flatMap((set) =>
         set.sections.map((section) => section.questionSourcePath)
@@ -172,24 +231,68 @@ const collectFilesystemSlugs = Effect.fn("sync.collectFilesystemSlugs")(
       curriculumTopicSlugs,
       curriculumLessonSlugs,
       questionSetSourcePaths,
+      questionSourceKeys: [...questionSourceKeys],
       questionSourcePaths: [...questionSourcePaths],
+      ...tryoutPaths,
     };
   }
 );
 
+/** Collects source-owned public try-out paths grouped by catalog table. */
+const collectTryoutPaths = Effect.fn("sync.collectTryoutPaths")(function* () {
+  const routes = yield* listPublicTryoutRoutes();
+
+  return {
+    tryoutCountryPaths: routes
+      .filter((route) => route.kind === "tryout-country")
+      .map((route) => route.publicPath),
+    tryoutExamPaths: routes
+      .filter((route) => route.kind === "tryout-exam")
+      .map((route) => route.publicPath),
+    tryoutSectionPaths: routes
+      .filter((route) => route.kind === "tryout-section")
+      .map((route) => route.publicPath),
+    tryoutSetPaths: routes
+      .filter((route) => route.kind === "tryout-set")
+      .map((route) => route.publicPath),
+  };
+});
+
 /** Reads the question source path from an absolute MDX file path. */
 function readQuestionSourcePath(file: string) {
   const normalized = file.replaceAll("\\", "/");
-  const marker = "/question-bank/tryout/";
-  const markerIndex = normalized.indexOf(marker);
+  const markerIndex = normalized.indexOf(TRYOUT_QUESTION_ROOT);
 
   if (markerIndex < 0) {
     return normalized;
   }
 
-  return normalized
-    .slice(markerIndex + 1)
-    .replace(QUESTION_MDX_SUFFIX_PATTERN, "");
+  const relativeFile = normalized.slice(markerIndex + 1);
+  const basename = readBasename(normalized);
+
+  return relativeFile.slice(0, -`/${basename}`.length);
+}
+
+/** Reads the locale segment from one try-out question MDX filename. */
+const readQuestionLocale = Effect.fn("sync.readQuestionLocale")(function* (
+  file: string
+) {
+  const basename = path.basename(file);
+  const start = QUESTION_FILE_PREFIX.length;
+  const end = basename.length - QUESTION_FILE_SUFFIX.length;
+  const locale = basename.slice(start, end);
+
+  return yield* parseLocale(locale, basename);
+});
+
+/** Builds the locale-qualified source key used for stale question cleanup. */
+function getQuestionSourceKey(locale: string, sourcePath: string) {
+  return `${locale}:${sourcePath}`;
+}
+
+/** Reads the final path segment from a normalized POSIX-style path. */
+function readBasename(file: string) {
+  return file.slice(file.lastIndexOf("/") + 1);
 }
 
 /** Deletes authors that no longer have content links when clean is forced. */
@@ -266,6 +369,10 @@ export const clean = Effect.fn("sync.clean")(function* (
   log(`  Curriculum lessons on disk: ${slugs.curriculumLessonSlugs.length}`);
   log(`  Question sets on disk: ${slugs.questionSetSourcePaths.length}`);
   log(`  Questions on disk: ${slugs.questionSourcePaths.length}`);
+  log(`  Try-out countries on disk: ${slugs.tryoutCountryPaths.length}`);
+  log(`  Try-out exams on disk: ${slugs.tryoutExamPaths.length}`);
+  log(`  Try-out sets on disk: ${slugs.tryoutSetPaths.length}`);
+  log(`  Try-out sections on disk: ${slugs.tryoutSectionPaths.length}`);
 
   log("\nQuerying database for stale content...");
   const stale = yield* getStaleContent(config, slugs);
@@ -275,7 +382,11 @@ export const clean = Effect.fn("sync.clean")(function* (
     stale.staleCurriculumTopics.length +
     stale.staleCurriculumLessons.length +
     stale.staleQuestionSets.length +
-    stale.staleQuestions.length;
+    stale.staleQuestions.length +
+    stale.staleTryoutCountries.length +
+    stale.staleTryoutExams.length +
+    stale.staleTryoutSets.length +
+    stale.staleTryoutSections.length;
 
   let hasStale = false;
   let deleted = 0;
@@ -290,6 +401,10 @@ export const clean = Effect.fn("sync.clean")(function* (
     logStaleItems("\nStale curriculum lessons", stale.staleCurriculumLessons);
     logStaleItems("\nStale question sets", stale.staleQuestionSets);
     logStaleItems("\nStale questions", stale.staleQuestions);
+    logStaleItems("\nStale try-out countries", stale.staleTryoutCountries);
+    logStaleItems("\nStale try-out exams", stale.staleTryoutExams);
+    logStaleItems("\nStale try-out sets", stale.staleTryoutSets);
+    logStaleItems("\nStale try-out sections", stale.staleTryoutSections);
 
     if (options.force) {
       log("\nDeleting stale content...");
@@ -333,6 +448,38 @@ export const clean = Effect.fn("sync.clean")(function* (
         stale.staleQuestionSets,
         "stale question sets",
         BATCH_SIZES.staleQuestionSets
+      );
+      deleted += yield* deleteStaleItems(
+        config,
+        internal.contentSync.mutations.tryouts.deleteStaleTryoutSections,
+        buildDeleteStaleTryoutSectionArgs,
+        stale.staleTryoutSections,
+        "stale try-out sections",
+        BATCH_SIZES.staleTryoutSections
+      );
+      deleted += yield* deleteStaleItems(
+        config,
+        internal.contentSync.mutations.tryouts.deleteStaleTryoutSets,
+        buildDeleteStaleTryoutSetArgs,
+        stale.staleTryoutSets,
+        "stale try-out sets",
+        BATCH_SIZES.staleTryoutSets
+      );
+      deleted += yield* deleteStaleItems(
+        config,
+        internal.contentSync.mutations.tryouts.deleteStaleTryoutExams,
+        buildDeleteStaleTryoutExamArgs,
+        stale.staleTryoutExams,
+        "stale try-out exams",
+        BATCH_SIZES.staleTryoutExams
+      );
+      deleted += yield* deleteStaleItems(
+        config,
+        internal.contentSync.mutations.tryouts.deleteStaleTryoutCountries,
+        buildDeleteStaleTryoutCountryArgs,
+        stale.staleTryoutCountries,
+        "stale try-out countries",
+        BATCH_SIZES.staleTryoutCountries
       );
     } else if (options.prod) {
       log("\nTo delete stale content, run:");

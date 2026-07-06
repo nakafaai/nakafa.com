@@ -1,29 +1,56 @@
 "use client";
 
-import { api } from "@repo/backend/convex/_generated/api";
-import { Button } from "@repo/design-system/components/ui/button";
-import { cn } from "@repo/design-system/lib/utils";
-import { useMutation } from "convex/react";
-import type { FunctionReturnType } from "convex/server";
-import { Effect } from "effect";
-import { useTranslations } from "next-intl";
-import { useTransition } from "react";
-import { toast } from "sonner";
-import { TryoutQuestionMarkdown } from "@/components/tryout/question-markdown";
+import { useMemo } from "react";
+import { useTryoutClock } from "@/components/tryout/clock";
+import type { TryoutQuestionContent } from "@/components/tryout/content";
+import { TryoutRuntimeControls } from "@/components/tryout/controls.client";
+import { TryoutRuntimeQuestion } from "@/components/tryout/question.client";
+import type {
+  TryoutSectionRuntime,
+  TryoutSectionRuntimeArgs,
+} from "@/components/tryout/types";
 
-type SectionRuntime = NonNullable<
-  FunctionReturnType<typeof api.tryouts.queries.attempt.getSectionRuntime>
->;
-type RuntimeQuestion = SectionRuntime["questions"][number];
+interface TryoutRuntimeProps {
+  questions: readonly TryoutQuestionContent[];
+  returnHref: string;
+  runtime: TryoutSectionRuntime;
+  runtimeQueryArgs: TryoutSectionRuntimeArgs;
+}
 
 /** Renders the active Convex-backed try-out section runtime. */
-export function TryoutRuntime({ runtime }: { runtime: SectionRuntime }) {
+export function TryoutRuntime({
+  questions,
+  returnHref,
+  runtime,
+  runtimeQueryArgs,
+}: TryoutRuntimeProps) {
+  const remainingSeconds = useRemainingSeconds(runtime.expiresAt);
+  const isExpired = remainingSeconds === 0;
+  const contentBySourcePath = useMemo(
+    () =>
+      new Map(
+        questions.map((question) => [question.sourcePath, question.content])
+      ),
+    [questions]
+  );
+
   return (
-    <section className="space-y-4">
+    <section className="space-y-12">
+      <TryoutRuntimeControls
+        isExpired={isExpired}
+        remainingSeconds={remainingSeconds}
+        returnHref={returnHref}
+        runtime={runtime}
+      />
+
       {runtime.questions.map((question) => (
         <TryoutRuntimeQuestion
+          content={contentBySourcePath.get(question.sourcePath) ?? null}
+          isExpired={isExpired}
           key={question.placementId}
           question={question}
+          runtime={runtime}
+          runtimeQueryArgs={runtimeQueryArgs}
           sectionStartedAt={runtime.section.startedAt}
         />
       ))}
@@ -31,90 +58,9 @@ export function TryoutRuntime({ runtime }: { runtime: SectionRuntime }) {
   );
 }
 
-/** Renders one question and saves choice selections through Convex. */
-function TryoutRuntimeQuestion({
-  question,
-  sectionStartedAt,
-}: {
-  question: RuntimeQuestion;
-  sectionStartedAt: number;
-}) {
-  const saveResponse = useMutation(api.tryouts.mutations.attempts.saveResponse);
-  const tExercises = useTranslations("Exercises");
-  const [isPending, startTransition] = useTransition();
+/** Tracks remaining section seconds from the Convex expiry timestamp. */
+function useRemainingSeconds(expiresAt: number) {
+  const now = useTryoutClock(true);
 
-  function saveChoice(optionKey: string) {
-    startTransition(async () => {
-      await Effect.runPromise(
-        Effect.tryPromise({
-          try: () =>
-            saveResponse({
-              placementId: question.placementId,
-              selectedOptionId: optionKey,
-              timeSpent: getElapsedSeconds(sectionStartedAt),
-            }),
-          catch: (cause) => cause,
-        }).pipe(
-          Effect.catchAll(() =>
-            Effect.sync(() => {
-              toast.error(tExercises("submit-answer-error"), {
-                position: "bottom-center",
-              });
-            })
-          )
-        )
-      );
-    });
-  }
-
-  return (
-    <article className="space-y-5 rounded-xl border bg-card p-5 shadow-sm">
-      <div className="space-y-3">
-        <div className="font-medium text-muted-foreground text-sm">
-          {tExercises("number-count", { count: question.questionOrder })}
-        </div>
-        <TryoutQuestionMarkdown
-          body={question.questionBody}
-          id={question.questionId}
-        />
-      </div>
-
-      <div className="grid gap-2">
-        {question.choices.map((choice) => {
-          const isSelected =
-            question.response?.selectedOptionId === choice.optionKey;
-
-          return (
-            <Button
-              aria-pressed={isSelected}
-              className={cn(
-                "h-auto justify-start whitespace-normal px-4 py-3 text-left",
-                isSelected && "border-primary bg-primary/10 text-foreground"
-              )}
-              disabled={isPending}
-              key={choice.optionKey}
-              onClick={() => saveChoice(choice.optionKey)}
-              type="button"
-              variant={isSelected ? "outline" : "ghost"}
-            >
-              <span className="font-medium">{getChoiceMarker(choice)}.</span>
-              <span>{choice.label}</span>
-            </Button>
-          );
-        })}
-      </div>
-    </article>
-  );
-}
-
-function getElapsedSeconds(startedAt: number) {
-  return Math.max(0, Math.floor((Date.now() - startedAt) / 1000));
-}
-
-function getChoiceMarker(choice: RuntimeQuestion["choices"][number]) {
-  if (choice.order < 1 || choice.order > 26) {
-    return choice.optionKey;
-  }
-
-  return String.fromCharCode(64 + choice.order);
+  return Math.max(0, Math.ceil((expiresAt - now) / 1000));
 }

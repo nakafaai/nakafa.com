@@ -3,6 +3,7 @@
 import { Rocket01Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
@@ -14,6 +15,8 @@ import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { toast } from "sonner";
+import { useTryoutClock } from "@/components/tryout/clock";
+import { isTryoutActive } from "@/components/tryout/status";
 
 type CurrentAttempt = FunctionReturnType<
   typeof api.tryouts.queries.attempt.getCurrent
@@ -44,7 +47,16 @@ export function StartTryoutButton({
   const [isPending, startTransition] = useTransition();
   const [isDialogOpen, { close: closeDialog, open: openDialog }] =
     useDisclosure(false);
-  const hasActiveAttempt = attempt?.status === "in-progress";
+  const authRedirectHref = `/${locale}${firstSectionHref}`;
+  const now = useTryoutClock(attempt?.status === "in-progress");
+  const hasActiveAttempt = Boolean(
+    attempt &&
+      isTryoutActive({
+        expiresAt: attempt.expiresAt,
+        now,
+        status: attempt.status,
+      })
+  );
   const hasFinishedAttempt = Boolean(attempt && !hasActiveAttempt);
   const isAttemptLoading = isAuthenticated && attempt === undefined;
   const isBusy = isLoading || isPending || isAttemptLoading;
@@ -70,7 +82,7 @@ export function StartTryoutButton({
     }
 
     if (!isAuthenticated) {
-      router.push(`/auth?redirect=${encodeURIComponent(firstSectionHref)}`);
+      router.push(`/auth?redirect=${encodeURIComponent(authRedirectHref)}`);
       return;
     }
 
@@ -89,7 +101,7 @@ export function StartTryoutButton({
 
     if (!isAuthenticated) {
       closeDialog();
-      router.push(`/auth?redirect=${encodeURIComponent(firstSectionHref)}`);
+      router.push(`/auth?redirect=${encodeURIComponent(authRedirectHref)}`);
       return;
     }
 
@@ -167,5 +179,62 @@ export function StartTryoutButton({
         title={dialogTitle}
       />
     </>
+  );
+}
+
+interface StartSectionButtonProps {
+  attemptId: Id<"tryoutAttempts">;
+  sectionKey: string;
+}
+
+/** Starts the selected section inside an already-active try-out attempt. */
+export function StartSectionButton({
+  attemptId,
+  sectionKey,
+}: StartSectionButtonProps) {
+  const startSection = useMutation(api.tryouts.mutations.sections.start);
+  const tTryouts = useTranslations("Tryouts");
+  const [isPending, startTransition] = useTransition();
+
+  /** Starts this section timer and lets the Convex runtime subscription update. */
+  function onStart() {
+    if (isPending) {
+      return;
+    }
+
+    startTransition(async () => {
+      await Effect.runPromise(
+        Effect.tryPromise({
+          try: () =>
+            startSection({
+              attemptId,
+              sectionKey,
+            }),
+          catch: (cause) => cause,
+        }).pipe(
+          Effect.tap(() =>
+            Effect.sync(() => {
+              toast.success(tTryouts("start-part-success"), {
+                position: "bottom-center",
+              });
+            })
+          ),
+          Effect.catchAll(() =>
+            Effect.sync(() => {
+              toast.error(tTryouts("start-part-error"), {
+                position: "bottom-center",
+              });
+            })
+          )
+        )
+      );
+    });
+  }
+
+  return (
+    <Button disabled={isPending} onClick={onStart} type="button">
+      <Spinner className="size-4" icon={Rocket01Icon} isLoading={isPending} />
+      {tTryouts("start-part-cta")}
+    </Button>
   );
 }
