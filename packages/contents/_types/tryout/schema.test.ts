@@ -33,6 +33,7 @@ const validTryoutSource = {
           questionSourcePath:
             "question-bank/tryout/indonesia/snbt/general-reasoning/set-1",
           routeSlugs: { en: "general-reasoning", id: "penalaran-umum" },
+          timeLimitSeconds: 1800,
           translations: {
             en: { title: "General Reasoning" },
             id: { title: "Penalaran Umum" },

@@ -1,5 +1,6 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
+import { TRYOUT_CHOICE_LIMIT } from "@repo/backend/convex/tryouts/questions";
 import {
   tryoutRouteKeyValidator,
   tryoutScoringStrategyValidator,
@@ -8,7 +9,6 @@ import { readTryoutCountryCode } from "@repo/contents/_types/tryout/countries";
 import { ConvexError, v } from "convex/values";
 
 const CATALOG_PAGE_LIMIT = 100;
-const CHOICE_LIMIT_PER_QUESTION = 10;
 
 const publicChoiceValidator = v.object({
   label: v.string(),
@@ -65,6 +65,7 @@ const publicTryoutSectionValidator = v.object({
   publicPath: v.string(),
   questionCount: v.number(),
   sectionKey: tryoutRouteKeyValidator,
+  timeLimitSeconds: v.number(),
   title: v.string(),
 });
 
@@ -338,6 +339,7 @@ export const getSetPage = query({
         publicPath: section.publicPath,
         questionCount: section.questionCount,
         sectionKey: section.sectionKey,
+        timeLimitSeconds: section.timeLimitSeconds,
         title: section.title,
       })),
     };
@@ -413,7 +415,7 @@ export const getSectionPage = query({
           .withIndex("by_questionId_and_locale", (q) =>
             q.eq("questionId", question._id).eq("locale", args.locale)
           )
-          .take(CHOICE_LIMIT_PER_QUESTION);
+          .take(TRYOUT_CHOICE_LIMIT);
         const orderedChoices = [...choices].sort(
           (left, right) => left.order - right.order
         );
@@ -449,6 +451,7 @@ export const getSectionPage = query({
         publicPath: section.publicPath,
         questionCount: section.questionCount,
         sectionKey: section.sectionKey,
+        timeLimitSeconds: section.timeLimitSeconds,
         title: section.title,
       },
       set: {

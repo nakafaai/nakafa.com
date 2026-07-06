@@ -69,6 +69,7 @@ export const TryoutSectionSourceSchema = Schema.Struct({
   questionCount: Schema.Int.pipe(Schema.positive()),
   questionSourcePath: TryoutSourcePathSchema,
   routeSlugs: PublicRouteSlugMapSchema,
+  timeLimitSeconds: Schema.Int.pipe(Schema.positive()),
   translations: TryoutTranslationMapSchema,
 });
 

@@ -136,6 +136,7 @@ const tables = {
     questionCount: v.number(),
     order: v.number(),
     sourceRevision: v.string(),
+    timeLimitSeconds: v.number(),
     syncedAt: v.number(),
   })
     .index("by_locale_and_publicPath", ["locale", "publicPath"])

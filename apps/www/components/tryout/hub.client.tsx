@@ -52,7 +52,7 @@ export function TryoutHubClient({ locale }: TryoutHubClientProps) {
         setPreferredTryout,
         source: "tryout-country-card",
       })
-    ).catch(() => undefined);
+    ).then(() => undefined);
   }
 
   return (

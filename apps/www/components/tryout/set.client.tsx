@@ -38,6 +38,17 @@ export function TryoutSetPageClient({
     locale,
     publicPath,
   });
+  const attempt = useQuery(
+    api.tryouts.queries.attempt.getCurrent,
+    page
+      ? {
+          countryKey: page.set.countryKey,
+          examKey: page.set.examKey,
+          locale,
+          setKey: page.set.setKey,
+        }
+      : "skip"
+  );
   const tCommon = useTranslations("Common");
   const tTryouts = useTranslations("Tryouts");
 
@@ -64,12 +75,12 @@ export function TryoutSetPageClient({
           {firstSection ? (
             <div>
               <StartTryoutButton
+                attempt={attempt}
                 countryKey={page.set.countryKey}
                 examKey={page.set.examKey}
                 firstSectionHref={getTryoutPublicPathHref(
                   firstSection.publicPath
                 )}
-                label={tTryouts("start-cta")}
                 locale={locale}
                 setKey={page.set.setKey}
               />

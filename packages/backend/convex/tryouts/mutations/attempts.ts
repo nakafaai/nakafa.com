@@ -3,6 +3,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
+import { requireActiveTryoutSet } from "@repo/backend/convex/tryouts/read";
 import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/schema";
 import { ConvexError, v } from "convex/values";
 
@@ -12,37 +13,6 @@ const CHOICE_LIMIT_PER_QUESTION = 10;
 
 type TryoutSet = Doc<"tryoutSets">;
 type TryoutSection = Doc<"tryoutSections">;
-
-/** Loads one active set by the public try-out identity. */
-async function loadActiveSet(
-  ctx: MutationCtx,
-  args: {
-    countryKey: string;
-    examKey: string;
-    locale: "id" | "en";
-    setKey: string;
-  }
-) {
-  const set = await ctx.db
-    .query("tryoutSets")
-    .withIndex("by_countryKey_and_examKey_and_setKey_and_locale", (q) =>
-      q
-        .eq("countryKey", args.countryKey)
-        .eq("examKey", args.examKey)
-        .eq("setKey", args.setKey)
-        .eq("locale", args.locale)
-    )
-    .unique();
-
-  if (!set?.isActive) {
-    throw new ConvexError({
-      code: "TRYOUT_SET_NOT_FOUND",
-      message: "Try-out set not found.",
-    });
-  }
-
-  return set;
-}
 
 /** Loads and validates ordered section rows for one set snapshot. */
 async function loadSections(ctx: MutationCtx, set: TryoutSet) {
@@ -115,7 +85,7 @@ export const startAttempt = mutation({
   }),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuth(ctx);
-    const set = await loadActiveSet(ctx, args);
+    const set = await requireActiveTryoutSet(ctx, args);
     const sections = await loadSections(ctx, set);
     const attemptNumber = await getNextAttemptNumber(ctx, {
       tryoutSetId: set._id,

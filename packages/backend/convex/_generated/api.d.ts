@@ -271,7 +271,10 @@ import type * as triggers_subscriptions_impl from "../triggers/subscriptions/imp
 import type * as triggers_subscriptions_spec from "../triggers/subscriptions/spec.js";
 import type * as triggers_subscriptions_subscriptions from "../triggers/subscriptions/subscriptions.js";
 import type * as tryouts_mutations_attempts from "../tryouts/mutations/attempts.js";
+import type * as tryouts_queries_attempt from "../tryouts/queries/attempt.js";
 import type * as tryouts_queries_catalog from "../tryouts/queries/catalog.js";
+import type * as tryouts_questions from "../tryouts/questions.js";
+import type * as tryouts_read from "../tryouts/read.js";
 import type * as users_mutations from "../users/mutations.js";
 import type * as users_queries from "../users/queries.js";
 import type * as users_roles from "../users/roles.js";
@@ -559,7 +562,10 @@ declare const fullApi: ApiFromModules<{
   "triggers/subscriptions/spec": typeof triggers_subscriptions_spec;
   "triggers/subscriptions/subscriptions": typeof triggers_subscriptions_subscriptions;
   "tryouts/mutations/attempts": typeof tryouts_mutations_attempts;
+  "tryouts/queries/attempt": typeof tryouts_queries_attempt;
   "tryouts/queries/catalog": typeof tryouts_queries_catalog;
+  "tryouts/questions": typeof tryouts_questions;
+  "tryouts/read": typeof tryouts_read;
   "users/mutations": typeof users_mutations;
   "users/queries": typeof users_queries;
   "users/roles": typeof users_roles;

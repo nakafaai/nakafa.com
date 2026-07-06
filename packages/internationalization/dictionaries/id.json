@@ -200,7 +200,7 @@
       "auth-cta": "Masuk ke Nakafa"
     },
     "kind": {
-      "school-curriculum": "Kurikulum sekolah",
+      "school-curriculum": "Kurikulum",
       "assessment": "Latihan soal",
       "admission-exam": "Ujian masuk",
       "custom-program": "Program khusus",
@@ -337,7 +337,8 @@
   "Tryouts": {
     "title": "Mau coba try out apa hari ini?",
     "metadata-description": "Pilih negara, ujian, dan set try out dari Nakafa.",
-    "country-selector-label": "Negara try out",
+    "country-selector-label": "Negara",
+    "exam-selector-label": "Ujian",
     "country-count": "{count, plural, =0 {Belum ada negara} =1 {# negara} other {# negara}}",
     "exam-count": "{count, plural, =0 {Belum ada ujian} =1 {# ujian} other {# ujian}}",
     "set-count": "{count, plural, =0 {Belum ada set} =1 {# set} other {# set}}",

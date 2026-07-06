@@ -1,7 +1,10 @@
 import { readStaticPublicTryoutRoutes } from "@repo/contents/_types/route/tryout/static";
 import { readTryoutCountryCode } from "@repo/contents/_types/tryout/countries";
 import type { Locale } from "next-intl";
-import type { TryoutCountrySelectorOption } from "@/components/tryout/selector.client";
+import type {
+  TryoutCountrySelectorOption,
+  TryoutExamSelectorOption,
+} from "@/components/tryout/selector.client";
 
 /** Reads one source-projected try-out route for static header context. */
 export function readStaticTryoutRoute({
@@ -40,6 +43,34 @@ export function readStaticTryoutCountryOptions(
       {
         countryCode,
         countryKey: route.countryKey,
+        href: `/${locale}/${route.publicPath}`,
+        title: route.title,
+        value: route.publicPath,
+      },
+    ];
+  });
+}
+
+/** Reads source-projected try-out exam selector options for one country page. */
+export function readStaticTryoutExamOptions({
+  countryPath,
+  locale,
+}: {
+  countryPath: string;
+  locale: Locale;
+}): readonly TryoutExamSelectorOption[] {
+  return readStaticPublicTryoutRoutes().flatMap((route) => {
+    if (
+      route.kind !== "tryout-exam" ||
+      route.locale !== locale ||
+      route.parentPath !== countryPath
+    ) {
+      return [];
+    }
+
+    return [
+      {
+        examKey: route.examKey,
         href: `/${locale}/${route.publicPath}`,
         title: route.title,
         value: route.publicPath,

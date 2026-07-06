@@ -1,5 +1,7 @@
 import { defineTryoutExamSource } from "@repo/contents/_types/tryout/schema";
 
+const TKA_SECONDS_PER_QUESTION = 90;
+
 /** Source-controlled TKA try-out catalog and question placements. */
 export const tkaTryoutSource = defineTryoutExamSource({
   countryCode: "ID",
@@ -36,6 +38,7 @@ export const tkaTryoutSource = defineTryoutExamSource({
         questionCount: 40,
         questionSourcePath: `question-bank/tryout/indonesia/tka/mathematics/set-${setNumber}`,
         routeSlugs: { en: "mathematics", id: "matematika" },
+        timeLimitSeconds: 40 * TKA_SECONDS_PER_QUESTION,
         translations: {
           en: { title: "Mathematics" },
           id: { title: "Matematika" },

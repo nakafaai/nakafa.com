@@ -4,7 +4,11 @@ import { LayoutMaterial } from "@/components/shared/material/layout";
 import { TryoutHeader } from "@/components/tryout/chrome";
 import { TryoutExamPageClient } from "@/components/tryout/exam.client";
 import { getTryoutHref } from "@/components/tryout/routes";
-import { readStaticTryoutRoute } from "@/components/tryout/static";
+import { TryoutExamSelector } from "@/components/tryout/selector.client";
+import {
+  readStaticTryoutExamOptions,
+  readStaticTryoutRoute,
+} from "@/components/tryout/static";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 /** Renders active try-out sets for one country and exam family. */
@@ -13,8 +17,14 @@ export default async function Page(props: {
 }) {
   const { country, exam, locale: localeParam } = await props.params;
   const locale = getLocaleOrThrow(localeParam);
+  const countryPath = getTryoutHref({ country }).slice(1);
   const examPath = getTryoutHref({ country, exam }).slice(1);
   const tCommon = await getTranslations({ locale, namespace: "Common" });
+  const tTryouts = await getTranslations({ locale, namespace: "Tryouts" });
+  const examOptions = readStaticTryoutExamOptions({
+    countryPath,
+    locale,
+  });
   const route = readStaticTryoutRoute({
     kind: "tryout-exam",
     locale,
@@ -25,6 +35,13 @@ export default async function Page(props: {
     <LayoutMaterial>
       <LayoutMaterialContent>
         <TryoutHeader
+          action={
+            <TryoutExamSelector
+              currentValue={examPath}
+              label={tTryouts("exam-selector-label")}
+              options={examOptions}
+            />
+          }
           homeLabel={tCommon("home")}
           items={[
             {

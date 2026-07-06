@@ -1,5 +1,7 @@
 import { defineTryoutExamSource } from "@repo/contents/_types/tryout/schema";
 
+const SNBT_SECONDS_PER_QUESTION = 90;
+
 const snbtSections = [
   {
     key: "quantitative-knowledge",
@@ -8,6 +10,7 @@ const snbtSections = [
       en: "quantitative-knowledge",
       id: "pengetahuan-kuantitatif",
     },
+    timeLimitSeconds: 20 * SNBT_SECONDS_PER_QUESTION,
     translations: {
       en: { title: "Quantitative Knowledge" },
       id: { title: "Pengetahuan Kuantitatif" },
@@ -20,6 +23,7 @@ const snbtSections = [
       en: "mathematical-reasoning",
       id: "penalaran-matematika",
     },
+    timeLimitSeconds: 20 * SNBT_SECONDS_PER_QUESTION,
     translations: {
       en: { title: "Mathematical Reasoning" },
       id: { title: "Penalaran Matematika" },
@@ -29,6 +33,7 @@ const snbtSections = [
     key: "general-reasoning",
     questionCount: 20,
     routeSlugs: { en: "general-reasoning", id: "penalaran-umum" },
+    timeLimitSeconds: 20 * SNBT_SECONDS_PER_QUESTION,
     translations: {
       en: { title: "General Reasoning" },
       id: { title: "Penalaran Umum" },
@@ -38,6 +43,7 @@ const snbtSections = [
     key: "indonesian-language",
     questionCount: 30,
     routeSlugs: { en: "indonesian-language", id: "bahasa-indonesia" },
+    timeLimitSeconds: 30 * SNBT_SECONDS_PER_QUESTION,
     translations: {
       en: { title: "Indonesian Language" },
       id: { title: "Bahasa Indonesia" },
@@ -47,6 +53,7 @@ const snbtSections = [
     key: "english-language",
     questionCount: 20,
     routeSlugs: { en: "english-language", id: "bahasa-inggris" },
+    timeLimitSeconds: 20 * SNBT_SECONDS_PER_QUESTION,
     translations: {
       en: { title: "English Language" },
       id: { title: "Bahasa Inggris" },
@@ -56,6 +63,7 @@ const snbtSections = [
     key: "general-knowledge",
     questionCount: 20,
     routeSlugs: { en: "general-knowledge", id: "pengetahuan-umum" },
+    timeLimitSeconds: 20 * SNBT_SECONDS_PER_QUESTION,
     translations: {
       en: { title: "General Knowledge" },
       id: { title: "Pengetahuan Umum" },
@@ -68,6 +76,7 @@ const snbtSections = [
       en: "reading-and-writing-skills",
       id: "literasi-membaca-menulis",
     },
+    timeLimitSeconds: 20 * SNBT_SECONDS_PER_QUESTION,
     translations: {
       en: { title: "Reading and Writing Skills" },
       id: { title: "Literasi Membaca dan Menulis" },

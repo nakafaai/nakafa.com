@@ -60,6 +60,7 @@ export const syncedTryoutSectionValidator = v.object({
   sectionKey: v.string(),
   setKey: v.string(),
   sourceRevision: v.string(),
+  timeLimitSeconds: v.number(),
   title: v.string(),
 });
 

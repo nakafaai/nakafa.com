@@ -1,6 +1,7 @@
 "use client";
 
 import { api } from "@repo/backend/convex/_generated/api";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Select,
   SelectContent,
@@ -15,11 +16,19 @@ import { useConvexAuth, useMutation } from "convex/react";
 import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { CountryFlagIcon } from "@/components/shared/country-flag";
+import { getTryoutExamIcon } from "@/components/tryout/icons";
 import { saveTryoutPreference } from "@/components/tryout/preference.client";
 
 export type TryoutCountrySelectorOption = Readonly<{
   countryCode: string;
   countryKey: string;
+  href: string;
+  title: string;
+  value: string;
+}>;
+
+export type TryoutExamSelectorOption = Readonly<{
+  examKey: string;
   href: string;
   title: string;
   value: string;
@@ -109,6 +118,80 @@ export function TryoutCountrySelector({
           {options.map((option) => (
             <SelectItem key={option.value} value={option.value}>
               <CountryFlagIcon countryCode={option.countryCode} />
+              <span className="min-w-0 whitespace-normal leading-snug sm:whitespace-nowrap">
+                {option.title}
+              </span>
+            </SelectItem>
+          ))}
+        </SelectGroup>
+      </SelectContent>
+    </Select>
+  );
+}
+
+/** Renders the try-out exam selector used by exam-level pages. */
+export function TryoutExamSelector({
+  currentValue,
+  label,
+  options,
+}: {
+  currentValue: string;
+  label: string;
+  options: readonly TryoutExamSelectorOption[];
+}) {
+  const router = useRouter();
+  const items = options.map((option) => ({
+    label: option.title,
+    value: option.value,
+  }));
+  const currentOption = options.find((option) => option.value === currentValue);
+  const currentIcon = getTryoutExamIcon(currentOption?.examKey ?? "");
+
+  function handleValueChange(value: string | null) {
+    if (!value || value === currentValue) {
+      return;
+    }
+
+    const selectedOption = options.find((option) => option.value === value);
+
+    if (!selectedOption) {
+      return;
+    }
+
+    router.push(normalizeLocalizedInternalHref(selectedOption.href));
+  }
+
+  return (
+    <Select
+      items={items}
+      onValueChange={handleValueChange}
+      value={currentValue}
+    >
+      <SelectTrigger
+        aria-label={label}
+        className="w-full min-w-0 sm:w-auto sm:max-w-[min(32rem,calc(100vw-2rem))]"
+      >
+        <span
+          className="flex min-w-0 items-center gap-2"
+          data-slot="select-value"
+        >
+          <HugeIcons className="size-4 shrink-0" icon={currentIcon} />
+          <span className="truncate">{currentOption?.title ?? label}</span>
+        </span>
+      </SelectTrigger>
+      <SelectContent
+        align="end"
+        alignItemWithTrigger={false}
+        className="max-w-(--available-width) sm:w-max sm:min-w-(--anchor-width)"
+      >
+        <SelectGroup>
+          <SelectLabel>{label}</SelectLabel>
+          {options.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              <HugeIcons
+                className="size-4 shrink-0"
+                icon={getTryoutExamIcon(option.examKey)}
+              />
               <span className="min-w-0 whitespace-normal leading-snug sm:whitespace-nowrap">
                 {option.title}
               </span>

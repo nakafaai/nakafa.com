@@ -29,7 +29,7 @@ export function TryoutExamPageClient({
   }
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-6 py-20 sm:py-24">
+    <div className="mx-auto w-full max-w-3xl px-6 pt-6 pb-24">
       <TryoutList
         emptyLabel={tTryouts("list-empty")}
         rows={page.sets.map((set) => ({

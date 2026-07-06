@@ -193,6 +193,7 @@ const projectTryoutRows = Effect.fn("sync.projectTryoutRows")(function* (
             sectionKey: section.key,
             setKey: set.key,
             sourceRevision: source.sourceRevision,
+            timeLimitSeconds: section.timeLimitSeconds,
             title: sectionTranslation.title,
           });
           questions.push(
