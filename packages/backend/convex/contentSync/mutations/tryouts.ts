@@ -6,6 +6,7 @@ import {
   syncedQuestionValidator,
   syncedTryoutCountryValidator,
   syncedTryoutExamValidator,
+  syncedTryoutRouteValidator,
   syncedTryoutSectionValidator,
   syncedTryoutSetValidator,
 } from "@repo/backend/convex/contentSync/tryouts/spec";
@@ -25,6 +26,7 @@ export const bulkSyncTryouts = internalMutation({
   args: {
     countries: v.array(syncedTryoutCountryValidator),
     exams: v.array(syncedTryoutExamValidator),
+    routes: v.array(syncedTryoutRouteValidator),
     sets: v.array(syncedTryoutSetValidator),
     questionSets: v.array(syncedQuestionSetValidator),
     questions: v.array(syncedQuestionValidator),

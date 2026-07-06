@@ -23,6 +23,22 @@ export const TryoutKeySchema = Schema.String.pipe(
 
 export type TryoutKey = SchemaType<typeof TryoutKeySchema>;
 
+/** Stable route kinds owned by the try-out catalog. */
+export const TRYOUT_ROUTE_KIND_VALUES = [
+  "tryout-country",
+  "tryout-exam",
+  "tryout-set",
+  "tryout-section",
+] as const;
+
+/** Runtime schema for try-out route projection kinds. */
+export const TryoutRouteKindSchema = Schema.Literal(
+  ...TRYOUT_ROUTE_KIND_VALUES
+);
+
+/** Try-out route projection kind derived from the runtime schema. */
+export type TryoutRouteKind = SchemaType<typeof TryoutRouteKindSchema>;
+
 export const CountryCodeSchema = Schema.String.pipe(
   Schema.pattern(COUNTRY_CODE_PATTERN, {
     identifier: "CountryCode",

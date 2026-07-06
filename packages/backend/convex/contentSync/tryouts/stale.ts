@@ -2,7 +2,10 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
-import { deleteQuestion } from "@repo/backend/convex/contentSync/lib/syncHelpers";
+import {
+  deleteContentProjectionsBySourcePath,
+  deleteQuestion,
+} from "@repo/backend/convex/contentSync/lib/syncHelpers";
 import { ConvexError } from "convex/values";
 
 /** Deletes one bounded stale question batch with sync-owned choice rows. */
@@ -57,11 +60,12 @@ export async function deleteStaleTryoutSectionsImpl(
     unit: "try-out sections",
   });
 
+  let deleted = 0;
   for (const sectionId of args.sectionIds) {
-    await ctx.db.delete("tryoutSections", sectionId);
+    deleted += await deleteTryoutSection(ctx, sectionId);
   }
 
-  return { deleted: args.sectionIds.length };
+  return { deleted };
 }
 
 /** Deletes one bounded stale try-out set batch with direct section rows. */
@@ -78,8 +82,7 @@ export async function deleteStaleTryoutSetsImpl(
 
   let deleted = 0;
   for (const setId of args.setIds) {
-    await deleteTryoutSet(ctx, setId);
-    deleted++;
+    deleted += await deleteTryoutSet(ctx, setId);
   }
 
   return { deleted };
@@ -97,11 +100,12 @@ export async function deleteStaleTryoutExamsImpl(
     unit: "try-out exams",
   });
 
+  let deleted = 0;
   for (const examId of args.examIds) {
-    await ctx.db.delete("tryoutExams", examId);
+    deleted += await deleteTryoutExam(ctx, examId);
   }
 
-  return { deleted: args.examIds.length };
+  return { deleted };
 }
 
 /** Deletes one bounded stale try-out country batch. */
@@ -116,11 +120,12 @@ export async function deleteStaleTryoutCountriesImpl(
     unit: "try-out countries",
   });
 
+  let deleted = 0;
   for (const countryId of args.countryIds) {
-    await ctx.db.delete("tryoutCountries", countryId);
+    deleted += await deleteTryoutCountry(ctx, countryId);
   }
 
-  return { deleted: args.countryIds.length };
+  return { deleted };
 }
 
 async function deleteQuestionSet(
@@ -153,13 +158,41 @@ async function deleteQuestionSet(
     });
   }
 
-  for (const section of sections) {
-    await ctx.db.delete(section._id);
+  if (sections.length > 0) {
+    throw new ConvexError({
+      code: "TRYOUT_SYNC_QUESTION_SET_HAS_SECTIONS",
+      message: "Delete stale try-out sections before their question set.",
+    });
   }
+
   await ctx.db.delete("questionSets", questionSetId);
 }
 
+async function deleteTryoutSection(
+  ctx: MutationCtx,
+  sectionId: Id<"tryoutSections">
+) {
+  const section = await ctx.db.get(sectionId);
+
+  if (!section) {
+    return 0;
+  }
+
+  await deleteContentProjectionsBySourcePath(ctx, {
+    locale: section.locale,
+    route: section.publicPath,
+  });
+  await ctx.db.delete("tryoutSections", sectionId);
+  return 1;
+}
+
 async function deleteTryoutSet(ctx: MutationCtx, setId: Id<"tryoutSets">) {
+  const set = await ctx.db.get(setId);
+
+  if (!set) {
+    return 0;
+  }
+
   const sections = await ctx.db
     .query("tryoutSections")
     .withIndex("by_tryoutSetId_and_order", (q) => q.eq("tryoutSetId", setId))
@@ -172,8 +205,50 @@ async function deleteTryoutSet(ctx: MutationCtx, setId: Id<"tryoutSets">) {
     });
   }
 
-  for (const section of sections) {
-    await ctx.db.delete(section._id);
+  if (sections.length > 0) {
+    throw new ConvexError({
+      code: "TRYOUT_SYNC_SET_HAS_SECTIONS",
+      message: "Delete stale try-out sections before their set.",
+    });
   }
+
+  await deleteContentProjectionsBySourcePath(ctx, {
+    locale: set.locale,
+    route: set.publicPath,
+  });
   await ctx.db.delete("tryoutSets", setId);
+  return 1;
+}
+
+async function deleteTryoutExam(ctx: MutationCtx, examId: Id<"tryoutExams">) {
+  const exam = await ctx.db.get(examId);
+
+  if (!exam) {
+    return 0;
+  }
+
+  await deleteContentProjectionsBySourcePath(ctx, {
+    locale: exam.locale,
+    route: exam.publicPath,
+  });
+  await ctx.db.delete("tryoutExams", examId);
+  return 1;
+}
+
+async function deleteTryoutCountry(
+  ctx: MutationCtx,
+  countryId: Id<"tryoutCountries">
+) {
+  const country = await ctx.db.get(countryId);
+
+  if (!country) {
+    return 0;
+  }
+
+  await deleteContentProjectionsBySourcePath(ctx, {
+    locale: country.locale,
+    route: country.publicPath,
+  });
+  await ctx.db.delete("tryoutCountries", countryId);
+  return 1;
 }

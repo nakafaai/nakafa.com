@@ -1,6 +1,8 @@
 import { syncedAuthorValidator } from "@repo/backend/convex/contentSync/lib/syncHelpers";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
+import { TRYOUT_ROUTE_KIND_VALUES } from "@repo/contents/_types/tryout/schema";
 import { type Infer, v } from "convex/values";
+import { literals } from "convex-helpers/validators";
 
 const tryoutCatalogRowValidator = v.object({
   countryKey: v.string(),
@@ -64,6 +66,17 @@ export const syncedTryoutSectionValidator = v.object({
   title: v.string(),
 });
 
+export const syncedTryoutRouteValidator = v.object({
+  contentHash: v.string(),
+  description: v.optional(v.string()),
+  kind: literals(...TRYOUT_ROUTE_KIND_VALUES),
+  locale: localeValidator,
+  publicPath: v.string(),
+  sourcePath: v.string(),
+  text: v.string(),
+  title: v.string(),
+});
+
 export const syncedQuestionChoiceValidator = v.object({
   isCorrect: v.boolean(),
   label: v.string(),
@@ -100,6 +113,7 @@ export const deleteResultValidator = v.object({
 
 export type SyncedTryoutCountry = Infer<typeof syncedTryoutCountryValidator>;
 export type SyncedTryoutExam = Infer<typeof syncedTryoutExamValidator>;
+export type SyncedTryoutRoute = Infer<typeof syncedTryoutRouteValidator>;
 export type SyncedTryoutSet = Infer<typeof syncedTryoutSetValidator>;
 export type SyncedQuestionSet = Infer<typeof syncedQuestionSetValidator>;
 export type SyncedTryoutSection = Infer<typeof syncedTryoutSectionValidator>;

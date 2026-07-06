@@ -443,19 +443,19 @@ export const clean = Effect.fn("sync.clean")(function* (
       );
       deleted += yield* deleteStaleItems(
         config,
-        internal.contentSync.mutations.tryouts.deleteStaleQuestionSets,
-        buildDeleteStaleQuestionSetArgs,
-        stale.staleQuestionSets,
-        "stale question sets",
-        BATCH_SIZES.staleQuestionSets
-      );
-      deleted += yield* deleteStaleItems(
-        config,
         internal.contentSync.mutations.tryouts.deleteStaleTryoutSections,
         buildDeleteStaleTryoutSectionArgs,
         stale.staleTryoutSections,
         "stale try-out sections",
         BATCH_SIZES.staleTryoutSections
+      );
+      deleted += yield* deleteStaleItems(
+        config,
+        internal.contentSync.mutations.tryouts.deleteStaleQuestionSets,
+        buildDeleteStaleQuestionSetArgs,
+        stale.staleQuestionSets,
+        "stale question sets",
+        BATCH_SIZES.staleQuestionSets
       );
       deleted += yield* deleteStaleItems(
         config,

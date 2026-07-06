@@ -5,6 +5,7 @@ import type {
   SyncedQuestionSet,
   SyncedTryoutCountry,
   SyncedTryoutExam,
+  SyncedTryoutRoute,
   SyncedTryoutSection,
   SyncedTryoutSet,
 } from "@repo/backend/convex/contentSync/tryouts/spec";
@@ -31,6 +32,7 @@ import type {
 } from "@repo/backend/scripts/sync-content/contract/types";
 import { callConvexMutation } from "@repo/backend/scripts/sync-content/convex/client";
 import { CONTENTS_DIR } from "@repo/backend/scripts/sync-content/runtime/paths";
+import type { TryoutRouteKind } from "@repo/contents/_types/tryout/schema";
 import { TRYOUT_SOURCES } from "@repo/contents/_types/tryout/source";
 import { type Locale, locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
@@ -40,6 +42,7 @@ interface TryoutSyncArgs {
   exams: SyncedTryoutExam[];
   questionSets: SyncedQuestionSet[];
   questions: SyncedQuestion[];
+  routes: SyncedTryoutRoute[];
   sections: SyncedTryoutSection[];
   sets: SyncedTryoutSet[];
 }
@@ -97,6 +100,7 @@ const projectTryoutRows = Effect.fn("sync.projectTryoutRows")(function* (
 ) {
   const countries = new Map<string, TryoutSyncArgs["countries"][number]>();
   const exams: TryoutSyncArgs["exams"] = [];
+  const routes = new Map<string, SyncedTryoutRoute>();
   const sets: TryoutSyncArgs["sets"] = [];
   const sections: TryoutSyncArgs["sections"] = [];
   const questionSets: TryoutSyncArgs["questionSets"] = [];
@@ -108,42 +112,56 @@ const projectTryoutRows = Effect.fn("sync.projectTryoutRows")(function* (
       const examSlug = source.examRouteSlugs[locale];
       const countryTranslation = source.countryTranslations[locale];
       const examTranslation = source.examTranslations[locale];
+      const countryPublicPath = `try-out/${countrySlug}`;
+      const examPublicPath = `${countryPublicPath}/${examSlug}`;
 
-      countries.set(`${locale}:${source.countryKey}`, {
+      const countryRow = {
         countryKey: source.countryKey,
         description: countryTranslation.description,
         isActive: true,
         locale,
         order: 1,
-        publicPath: `try-out/${countrySlug}`,
+        publicPath: countryPublicPath,
         sourceRevision: source.sourceRevision,
         title: countryTranslation.title,
+      };
+      countries.set(`${locale}:${source.countryKey}`, countryRow);
+      addTryoutRoute(routes, {
+        ...countryRow,
+        kind: "tryout-country",
       });
-      exams.push({
+
+      const examRow = {
         countryKey: source.countryKey,
         description: examTranslation.description,
         examKey: source.examKey,
         isActive: true,
         locale,
         order: 1,
-        publicPath: `try-out/${countrySlug}/${examSlug}`,
+        publicPath: examPublicPath,
         scoringStrategy: source.scoringStrategy,
         sourceRevision: source.sourceRevision,
         title: examTranslation.title,
+      };
+      exams.push(examRow);
+      addTryoutRoute(routes, {
+        ...examRow,
+        kind: "tryout-exam",
       });
 
       for (const set of source.sets) {
         const setSlug = set.routeSlugs[locale];
         const setTranslation = set.translations[locale];
+        const setPublicPath = `${examPublicPath}/${setSlug}`;
 
-        sets.push({
+        const setRow = {
           countryKey: source.countryKey,
           description: setTranslation.description,
           examKey: source.examKey,
           isActive: true,
           locale,
           order: set.order,
-          publicPath: `try-out/${countrySlug}/${examSlug}/${setSlug}`,
+          publicPath: setPublicPath,
           scoringStrategy: source.scoringStrategy,
           sectionCount: set.sections.length,
           setKey: set.key,
@@ -153,12 +171,17 @@ const projectTryoutRows = Effect.fn("sync.projectTryoutRows")(function* (
             (total, section) => total + section.questionCount,
             0
           ),
+        };
+        sets.push(setRow);
+        addTryoutRoute(routes, {
+          ...setRow,
+          kind: "tryout-set",
         });
 
         for (const section of set.sections) {
           const sectionSlug = section.routeSlugs[locale];
           const sectionTranslation = section.translations[locale];
-          const publicPath = `try-out/${countrySlug}/${examSlug}/${setSlug}/${sectionSlug}`;
+          const publicPath = `${setPublicPath}/${sectionSlug}`;
 
           questionSets.push({
             contentHash: computeHash(
@@ -196,6 +219,14 @@ const projectTryoutRows = Effect.fn("sync.projectTryoutRows")(function* (
             timeLimitSeconds: section.timeLimitSeconds,
             title: sectionTranslation.title,
           });
+          addTryoutRoute(routes, {
+            description: sectionTranslation.description,
+            kind: "tryout-section",
+            locale,
+            publicPath,
+            sourceRevision: source.sourceRevision,
+            title: sectionTranslation.title,
+          });
           questions.push(
             ...(yield* readSectionQuestions({
               countryKey: source.countryKey,
@@ -217,11 +248,64 @@ const projectTryoutRows = Effect.fn("sync.projectTryoutRows")(function* (
     countries: [...countries.values()],
     exams,
     sets,
+    routes: [...routes.values()],
     questionSets,
     questions,
     sections,
   };
 });
+
+function addTryoutRoute(
+  routes: Map<string, SyncedTryoutRoute>,
+  source: {
+    description?: string;
+    kind: TryoutRouteKind;
+    locale: Locale;
+    publicPath: string;
+    sourceRevision: string;
+    title: string;
+  }
+) {
+  const row = {
+    contentHash: createTryoutRouteHash(source),
+    description: source.description,
+    kind: source.kind,
+    locale: source.locale,
+    publicPath: source.publicPath,
+    sourcePath: source.publicPath,
+    text: createTryoutRouteText(source),
+    title: source.title,
+  };
+
+  routes.set(`${row.locale}:${row.publicPath}`, row);
+}
+
+function createTryoutRouteHash(source: {
+  description?: string;
+  kind: TryoutRouteKind;
+  locale: Locale;
+  publicPath: string;
+  sourceRevision: string;
+  title: string;
+}) {
+  return computeHash(
+    JSON.stringify({
+      description: source.description,
+      kind: source.kind,
+      locale: source.locale,
+      publicPath: source.publicPath,
+      sourceRevision: source.sourceRevision,
+      title: source.title,
+    })
+  );
+}
+
+function createTryoutRouteText(source: {
+  description?: string;
+  title: string;
+}) {
+  return [source.title, source.description].filter(Boolean).join("\n");
+}
 
 const readSectionQuestions = Effect.fn("sync.readSectionQuestions")(
   function* (source: {
@@ -349,6 +433,7 @@ function chunkTryoutRows(rows: ProjectedTryoutRows): TryoutSyncArgs[] {
   const max = Math.max(
     rows.countries.length,
     rows.exams.length,
+    rows.routes.length,
     rows.sets.length,
     rows.questionSets.length,
     rows.questions.length,
@@ -359,6 +444,7 @@ function chunkTryoutRows(rows: ProjectedTryoutRows): TryoutSyncArgs[] {
     batches.push({
       countries: rows.countries.slice(index, index + BATCH_SIZES.questionSets),
       exams: rows.exams.slice(index, index + BATCH_SIZES.questionSets),
+      routes: rows.routes.slice(index, index + BATCH_SIZES.questionSets),
       sets: rows.sets.slice(index, index + BATCH_SIZES.questionSets),
       questionSets: rows.questionSets.slice(
         index,

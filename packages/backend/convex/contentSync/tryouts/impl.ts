@@ -14,9 +14,13 @@ import type {
   SyncedQuestionSet,
   SyncedTryoutCountry,
   SyncedTryoutExam,
+  SyncedTryoutRoute,
   SyncedTryoutSection,
   SyncedTryoutSet,
 } from "@repo/backend/convex/contentSync/tryouts/spec";
+import { getContentGraphIdentity } from "@repo/backend/convex/contents/graph";
+import { syncContentRoute } from "@repo/backend/convex/contents/helpers/routes/write";
+import { syncContentSearch } from "@repo/backend/convex/contents/helpers/search/write";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { ConvexError } from "convex/values";
 
@@ -33,6 +37,7 @@ export interface BulkSyncTryoutsArgs {
   exams: SyncedTryoutExam[];
   questionSets: SyncedQuestionSet[];
   questions: SyncedQuestion[];
+  routes: SyncedTryoutRoute[];
   sections: SyncedTryoutSection[];
   sets: SyncedTryoutSet[];
 }
@@ -47,6 +52,9 @@ export async function bulkSyncTryoutsImpl(
   const now = Date.now();
   const totals: SyncTotals = { created: 0, unchanged: 0, updated: 0 };
 
+  for (const route of args.routes) {
+    await syncTryoutRoute(ctx, route, now);
+  }
   for (const country of args.countries) {
     addOutcome(totals, await syncCountry(ctx, country, now));
   }
@@ -92,6 +100,12 @@ function assertTryoutBatchSizes(args: BulkSyncTryoutsArgs) {
   });
   assertContentSyncBatchSize({
     functionName: "bulkSyncTryouts",
+    limit: CONTENT_SYNC_BATCH_LIMITS.tryoutSets,
+    received: args.routes.length,
+    unit: "try-out route projections",
+  });
+  assertContentSyncBatchSize({
+    functionName: "bulkSyncTryouts",
     limit: CONTENT_SYNC_BATCH_LIMITS.questionSets,
     received: args.questionSets.length,
     unit: "question sets",
@@ -106,6 +120,44 @@ function assertTryoutBatchSizes(args: BulkSyncTryoutsArgs) {
 
 function addOutcome(totals: SyncTotals, outcome: SyncOutcome) {
   totals[outcome]++;
+}
+
+async function syncTryoutRoute(
+  ctx: MutationCtx,
+  route: SyncedTryoutRoute,
+  syncedAt: number
+) {
+  const graph = getContentGraphIdentity({
+    kind: route.kind,
+    locale: route.locale,
+    route: route.sourcePath,
+  });
+
+  await syncContentSearch(ctx, {
+    ...graph,
+    contentHash: route.contentHash,
+    description: route.description,
+    locale: route.locale,
+    route: route.publicPath,
+    section: "tryout",
+    sourcePath: route.sourcePath,
+    syncedAt,
+    text: route.text,
+    title: route.title,
+  });
+  await syncContentRoute(ctx, {
+    ...graph,
+    contentHash: route.contentHash,
+    description: route.description,
+    kind: route.kind,
+    locale: route.locale,
+    markdown: false,
+    publicPath: route.publicPath,
+    section: "tryout",
+    sourcePath: route.sourcePath,
+    syncedAt,
+    title: route.title,
+  });
 }
 
 async function syncCountry(
