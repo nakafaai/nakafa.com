@@ -165,7 +165,9 @@ function buildLocalizedLlmsEntriesFromRows({
   section: Exclude<LlmsSection, "site">;
 }) {
   return Effect.forEach(
-    [...rows].sort((a, b) => a.route.localeCompare(b.route)),
+    rows
+      .filter((row) => row.markdown)
+      .sort((a, b) => a.route.localeCompare(b.route)),
     (row) => buildLocalizedLlmsEntryFromRow({ locale, row }),
     { concurrency: LLMS_ENTRY_BUILD_CONCURRENCY }
   ).pipe(
@@ -192,7 +194,7 @@ const buildLocalizedLlmsEntryFromRow = Effect.fn("www.llms.rowEntry")(
 
     return {
       description: row.description,
-      href: row.markdown ? `${hrefBase}.md` : hrefBase,
+      href: `${hrefBase}.md`,
       route: publicRoute,
       section,
       segments: routeSegments,

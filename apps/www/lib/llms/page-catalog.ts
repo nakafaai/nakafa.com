@@ -2,7 +2,6 @@ import { getArticleSummaries } from "@repo/contents/_lib/articles/slug";
 import { getAllSurah, getSurahName } from "@repo/contents/_lib/quran";
 import { isMaterialLessonRoute } from "@repo/contents/_types/route/content";
 import { readStaticPublicContentRoutes } from "@repo/contents/_types/route/content/static";
-import { readStaticPublicTryoutRoutes } from "@repo/contents/_types/route/tryout/static";
 import { ARTICLE_CATEGORIES } from "@repo/contents/_types/taxonomy";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
@@ -89,7 +88,6 @@ function getLocalePageCatalogEntries(locale: Locale) {
     readArticlePageCatalogEntries(locale),
     Effect.sync(() => readMaterialPageCatalogEntries(locale)),
     Effect.sync(() => readQuranPageCatalogEntries(locale)),
-    Effect.sync(() => readTryoutPageCatalogEntries(locale)),
   ]).pipe(Effect.map((entrySets) => sortUniqueEntries(entrySets.flat())));
 }
 
@@ -103,7 +101,6 @@ function readArticlePageCatalogEntries(locale: Locale) {
           articles.map((article) =>
             buildPageCatalogEntry({
               description: article.description,
-              hasMarkdown: true,
               locale,
               publicPath: `articles/${category}/${article.slug}`,
               section: "articles",
@@ -124,7 +121,6 @@ function readMaterialPageCatalogEntries(locale: Locale) {
     .map((route) =>
       buildPageCatalogEntry({
         description: route.description,
-        hasMarkdown: true,
         locale,
         publicPath: route.publicPath,
         section: "material",
@@ -138,7 +134,6 @@ function readQuranPageCatalogEntries(locale: Locale) {
   return getAllSurah().map((surah) =>
     buildPageCatalogEntry({
       description: surah.name.translation[locale],
-      hasMarkdown: true,
       locale,
       publicPath: `quran/${surah.number}`,
       section: "quran",
@@ -147,33 +142,15 @@ function readQuranPageCatalogEntries(locale: Locale) {
   );
 }
 
-/** Reads source-backed try-out catalog pages without calling Convex. */
-function readTryoutPageCatalogEntries(locale: Locale) {
-  return readStaticPublicTryoutRoutes()
-    .filter((route) => route.locale === locale && route.sitemap)
-    .map((route) =>
-      buildPageCatalogEntry({
-        description: route.description,
-        hasMarkdown: false,
-        locale,
-        publicPath: route.publicPath,
-        section: "tryout",
-        title: route.title,
-      })
-    );
-}
-
 /** Builds one page-catalog entry from source-projected public route metadata. */
 function buildPageCatalogEntry({
   description,
-  hasMarkdown,
   locale,
   publicPath,
   section,
   title,
 }: {
   description: string | undefined;
-  hasMarkdown: boolean;
   locale: Locale;
   publicPath: string;
   section: LlmsSection;
@@ -183,7 +160,7 @@ function buildPageCatalogEntry({
 
   return {
     description,
-    href: hasMarkdown ? `${hrefBase}.md` : hrefBase,
+    href: `${hrefBase}.md`,
     route: `/${publicPath}`,
     section,
     segments: publicPath.split("/").filter(Boolean),

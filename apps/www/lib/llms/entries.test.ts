@@ -134,6 +134,12 @@ const routeRows = [
     title: "Framing Dynastic Politics in Local Elections within Asian Values",
   }),
   routeRow({
+    description: "A short article fixture.",
+    route: "articles/politics/aaa-short-fixture",
+    section: "articles",
+    title: "A Short Fixture",
+  }),
+  routeRow({
     description: "Try-out set",
     markdown: false,
     route: "try-out/indonesia/snbt/set-1",
@@ -237,7 +243,7 @@ describe("llms entries", () => {
     ]);
   });
 
-  it("builds page entries with markdown links only for exact markdown routes", async () => {
+  it("builds page entries only for markdown-capable source routes", async () => {
     const entries = await Effect.runPromise(
       Effect.all([
         getContentPageLlmsEntries({
@@ -276,14 +282,7 @@ describe("llms entries", () => {
           "Framing Dynastic Politics in Local Elections within Asian Values",
       })
     );
-    expect(entries).toContainEqual(
-      expect.objectContaining({
-        href: `${BASE_URL}/en/articles/politics/fail`,
-        route: "/articles/politics/fail",
-        section: "articles",
-        title: "Fail",
-      })
-    );
+    expect(hrefs).not.toContain(`${BASE_URL}/en/articles/politics/fail`);
     expect(entries).toContainEqual(
       expect.objectContaining({
         description: "Green Chemistry",
@@ -293,23 +292,9 @@ describe("llms entries", () => {
         title: "Definition of Green Chemistry",
       })
     );
-    expect(entries).toContainEqual(
-      expect.objectContaining({
-        description: "Try-out set",
-        href: `${BASE_URL}/en/try-out/indonesia/snbt/set-1`,
-        route: "/try-out/indonesia/snbt/set-1",
-        section: "tryout",
-        title: "Try-out Set 1",
-      })
-    );
-    expect(entries).toContainEqual(
-      expect.objectContaining({
-        description: "Try-out section",
-        href: `${BASE_URL}/en/try-out/indonesia/snbt/set-1/quantitative-knowledge`,
-        route: "/try-out/indonesia/snbt/set-1/quantitative-knowledge",
-        section: "tryout",
-        title: "Quantitative Knowledge",
-      })
+    expect(hrefs).not.toContain(`${BASE_URL}/en/try-out/indonesia/snbt/set-1`);
+    expect(hrefs).not.toContain(
+      `${BASE_URL}/en/try-out/indonesia/snbt/set-1/quantitative-knowledge`
     );
     expect(entries).toContainEqual(
       expect.objectContaining({

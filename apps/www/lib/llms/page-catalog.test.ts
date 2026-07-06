@@ -18,11 +18,13 @@ describe("llms page catalog artifacts", () => {
     expect(paths).toEqual(["llms/en/pages/llms.txt", "llms/id/pages/llms.txt"]);
     expect(english?.text).toContain("# Nakafa English Page Catalog");
     expect(english?.text).toContain(
-      `${BASE_URL}/en/try-out/indonesia/snbt/set-1/quantitative-knowledge`
+      `${BASE_URL}/en/subjects/ai-ds/ai-programming/markdown-cli.md`
     );
+    expect(english?.text).not.toContain(`${BASE_URL}/en/try-out/`);
     expect(indonesian?.text).toContain("# Nakafa Indonesian Page Catalog");
     expect(indonesian?.text).toContain(
-      `${BASE_URL}/id/try-out/indonesia/snbt/set-1/pengetahuan-kuantitatif`
+      `${BASE_URL}/id/materi/ai-ds/pemrograman-ai/markdown-dan-command-line-interfaces.md`
     );
+    expect(indonesian?.text).not.toContain(`${BASE_URL}/id/try-out/`);
   });
 });

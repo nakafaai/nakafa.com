@@ -143,9 +143,7 @@ describe("llms indexes", () => {
     expect(text).toContain(
       `${BASE_URL}/en/subjects/ai-ds/ai-programming/markdown-cli.md`
     );
-    expect(text).toContain(
-      `${BASE_URL}/en/try-out/indonesia/snbt/set-1/quantitative-knowledge`
-    );
+    expect(text).not.toContain(`${BASE_URL}/en/try-out/`);
     expect(text).toContain(`${BASE_URL}/en/quran/1.md`);
     expect(text).not.toContain(
       "This English page catalog currently has no markdown entries."
