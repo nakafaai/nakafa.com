@@ -7,13 +7,13 @@ import { useConvexAuth, usePreloadedQuery, useQuery } from "convex/react";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { isTryoutActive } from "@/components/tryout/active";
 import { useTryoutClock } from "@/components/tryout/clock";
 import type { TryoutQuestionContent } from "@/components/tryout/content";
 import { TryoutPageHeader } from "@/components/tryout/header";
 import { TryoutMeta } from "@/components/tryout/meta";
 import { getTryoutHref } from "@/components/tryout/routes";
 import { TryoutRuntime } from "@/components/tryout/runtime.client";
-import { isTryoutActive } from "@/components/tryout/status";
 import { TryoutSectionSummary } from "@/components/tryout/summary.client";
 
 type SectionPageQuery = typeof api.tryouts.queries.catalog.getSectionPage;

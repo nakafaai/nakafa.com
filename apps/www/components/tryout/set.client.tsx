@@ -6,6 +6,7 @@ import { useConvexAuth, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
+import { isTryoutActive } from "@/components/tryout/active";
 import { useTryoutClock } from "@/components/tryout/clock";
 import { TryoutCountdown } from "@/components/tryout/countdown";
 import { TryoutPageHeader } from "@/components/tryout/header";
@@ -16,7 +17,6 @@ import {
   getTryoutPublicPathHref,
 } from "@/components/tryout/routes";
 import { StartTryoutButton } from "@/components/tryout/start-button";
-import { isTryoutActive } from "@/components/tryout/status";
 
 interface TryoutSetPageClientProps {
   country: string;

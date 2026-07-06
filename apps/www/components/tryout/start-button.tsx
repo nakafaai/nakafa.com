@@ -15,8 +15,8 @@ import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { toast } from "sonner";
+import { isTryoutActive } from "@/components/tryout/active";
 import { useTryoutClock } from "@/components/tryout/clock";
-import { isTryoutActive } from "@/components/tryout/status";
 
 type CurrentAttempt = FunctionReturnType<
   typeof api.tryouts.queries.attempt.getCurrent

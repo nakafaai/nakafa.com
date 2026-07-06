@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import { useTryoutClock } from "@/components/tryout/clock";
 import type { TryoutQuestionContent } from "@/components/tryout/content";
 import { TryoutRuntimeControls } from "@/components/tryout/controls.client";
@@ -26,12 +25,8 @@ export function TryoutRuntime({
 }: TryoutRuntimeProps) {
   const remainingSeconds = useRemainingSeconds(runtime.expiresAt);
   const isExpired = remainingSeconds === 0;
-  const contentBySourcePath = useMemo(
-    () =>
-      new Map(
-        questions.map((question) => [question.sourcePath, question.content])
-      ),
-    [questions]
+  const contentBySourcePath = new Map(
+    questions.map((question) => [question.sourcePath, question.content])
   );
 
   return (

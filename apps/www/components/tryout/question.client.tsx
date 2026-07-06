@@ -115,7 +115,7 @@ function TryoutChoices({
         runtimeQueryArgs
       ) ?? runtime;
 
-    const selectedAt = Date.now();
+    const selectedAt = currentRuntime.section.startedAt + args.timeSpent * 1000;
     let foundQuestion = false;
     let answeredFirstTime = false;
     const questions = currentRuntime.questions.map((runtimeQuestion) => {

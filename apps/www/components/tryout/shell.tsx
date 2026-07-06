@@ -7,8 +7,8 @@ import { useParams } from "next/navigation";
 import { hasLocale } from "next-intl";
 import type { ReactNode } from "react";
 import { AppShell } from "@/components/sidebar/app-shell";
+import { isTryoutActive } from "@/components/tryout/active";
 import { useTryoutClock } from "@/components/tryout/clock";
-import { isTryoutActive } from "@/components/tryout/status";
 
 /** Locks the app shell while the current try-out attempt is running. */
 export function TryoutShell({ children }: { children: ReactNode }) {
