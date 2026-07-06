@@ -51,16 +51,10 @@ export default async function Page(props: {
     api.tryouts.queries.attempt.getSectionRuntime,
     runtimeArgs
   );
-  const runtimePage = preloadedQueryResult(runtime);
-  const questions = runtimePage
-    ? await loadTryoutQuestionContent({
-        locale,
-        questions: runtimePage.questions.map((question) => ({
-          number: question.questionOrder,
-          sourcePath: question.sourcePath,
-        })),
-      })
-    : [];
+  const questions = await loadTryoutQuestionContent({
+    locale,
+    questions: page.questions,
+  });
 
   if (!questions) {
     notFound();

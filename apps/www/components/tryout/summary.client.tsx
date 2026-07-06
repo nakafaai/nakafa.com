@@ -43,6 +43,7 @@ interface TryoutSectionSummaryProps {
   locale: Locale;
   page: SectionPage;
   section: string;
+  sectionFinished?: boolean;
   set: string;
 }
 
@@ -55,16 +56,19 @@ export function TryoutSectionSummary({
   locale,
   page,
   section,
+  sectionFinished: sectionFinishedProp,
   set,
 }: TryoutSectionSummaryProps) {
   const tTryouts = useTranslations("Tryouts");
   const returnHref = getTryoutHref({ country, exam, set });
   const sectionAttempt = attempt?.section ?? null;
-  const sectionFinished = Boolean(
-    sectionAttempt &&
-      (sectionAttempt.status === "completed" ||
-        sectionAttempt.status === "expired")
-  );
+  const sectionFinished =
+    sectionFinishedProp ??
+    Boolean(
+      sectionAttempt &&
+        (sectionAttempt.status === "completed" ||
+          sectionAttempt.status === "expired")
+    );
 
   return (
     <TryoutPartSummary>

@@ -68,6 +68,10 @@ export function TryoutSectionPageClient({
   }
 
   const currentAttempt = attempt ?? null;
+  const sectionAttempt = currentAttempt?.section ?? null;
+  const sectionExpiredLocally = Boolean(
+    sectionAttempt?.status === "in-progress" && now >= sectionAttempt.expiresAt
+  );
   let activeAttempt: typeof currentAttempt = null;
 
   if (
@@ -109,12 +113,6 @@ export function TryoutSectionPageClient({
   ) {
     activeRuntime = runtime;
   }
-  const hasStaleSection =
-    currentAttempt?.section?.status === "in-progress" && !activeSection;
-
-  if (hasStaleSection) {
-    return null;
-  }
 
   if (activeSection && !activeRuntime) {
     return null;
@@ -124,16 +122,17 @@ export function TryoutSectionPageClient({
     return null;
   }
 
-  const sectionAttempt = currentAttempt?.section ?? null;
   const sectionFinished = Boolean(
     sectionAttempt &&
       (sectionAttempt.status === "completed" ||
-        sectionAttempt.status === "expired")
+        sectionAttempt.status === "expired" ||
+        sectionExpiredLocally)
   );
   const sectionTimeExpired = Boolean(
     sectionAttempt &&
       (sectionAttempt.endReason === "time-expired" ||
-        sectionAttempt.status === "expired")
+        sectionAttempt.status === "expired" ||
+        sectionExpiredLocally)
   );
   const attemptFinished = Boolean(
     currentAttempt &&
@@ -169,6 +168,7 @@ export function TryoutSectionPageClient({
       locale={locale}
       page={page}
       section={section}
+      sectionFinished={sectionFinished}
       set={set}
     />
   );

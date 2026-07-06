@@ -1,27 +1,22 @@
 "use client";
 
-import { api } from "@repo/backend/convex/_generated/api";
-import { useQuery } from "convex/react";
-import type { Locale } from "next-intl";
+import type { api } from "@repo/backend/convex/_generated/api";
+import type { Preloaded } from "convex/react";
+import { usePreloadedQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { getTryoutSetIcon } from "@/components/tryout/icons";
 import { TryoutList } from "@/components/tryout/list";
 import { getTryoutPublicPathHref } from "@/components/tryout/routes";
 
-interface TryoutExamPageClientProps {
-  locale: Locale;
-  publicPath: string;
-}
+type ExamPageQuery = typeof api.tryouts.queries.catalog.getExamPage;
 
 /** Renders one realtime try-out exam page from Convex. */
 export function TryoutExamPageClient({
-  locale,
-  publicPath,
-}: TryoutExamPageClientProps) {
-  const page = useQuery(api.tryouts.queries.catalog.getExamPage, {
-    locale,
-    publicPath,
-  });
+  preloaded,
+}: {
+  preloaded: Preloaded<ExamPageQuery>;
+}) {
+  const page = usePreloadedQuery(preloaded);
   const tTryouts = useTranslations("Tryouts");
 
   if (!page) {

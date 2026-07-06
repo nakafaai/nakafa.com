@@ -1,3 +1,6 @@
+import { api } from "@repo/backend/convex/_generated/api";
+import { preloadedQueryResult, preloadQuery } from "convex/nextjs";
+import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { FooterContent } from "@/components/shared/footer-content";
 import { LayoutContent } from "@/components/shared/layout-content";
@@ -19,6 +22,19 @@ export default async function Page(props: {
   const { country, locale: localeParam } = await props.params;
   const locale = getLocaleOrThrow(localeParam);
   const countryPath = getTryoutHref({ country }).slice(1);
+  const preloaded = await preloadQuery(
+    api.tryouts.queries.catalog.getCountryPage,
+    {
+      locale,
+      publicPath: countryPath,
+    }
+  );
+  const page = preloadedQueryResult(preloaded);
+
+  if (!page) {
+    notFound();
+  }
+
   const [tCommon, tTryouts] = await Promise.all([
     getTranslations({ locale, namespace: "Common" }),
     getTranslations({ locale, namespace: "Tryouts" }),
@@ -43,7 +59,7 @@ export default async function Page(props: {
           title={tCommon("try-out")}
         />
         <LayoutContent>
-          <TryoutCountryPageClient locale={locale} publicPath={countryPath} />
+          <TryoutCountryPageClient preloaded={preloaded} />
         </LayoutContent>
         <FooterContent>
           <RefContent

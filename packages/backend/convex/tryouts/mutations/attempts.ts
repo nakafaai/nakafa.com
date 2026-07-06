@@ -10,7 +10,11 @@ import {
   getAttemptAccessFields,
   requireActiveEntitlement,
 } from "@repo/backend/convex/tryouts/runtime/access";
-import { expireAttempt } from "@repo/backend/convex/tryouts/runtime/finish";
+import {
+  expireAttemptAtEffectiveTime,
+  finalizeSectionAttempt,
+  getAttemptExpiresAt,
+} from "@repo/backend/convex/tryouts/runtime/finish";
 import {
   finalizeAttemptScore,
   requireOwnedAttempt,
@@ -22,6 +26,7 @@ const ATTEMPT_DURATION_MS = 3 * 24 * 60 * 60 * 1000;
 const MAX_ATTEMPTS_PER_USER_SET = 100;
 
 type TryoutSet = Doc<"tryoutSets">;
+type TryoutAttempt = Doc<"tryoutAttempts">;
 
 /** Loads and validates ordered section rows for one set snapshot. */
 async function loadSections(ctx: MutationCtx, set: TryoutSet) {
@@ -62,6 +67,39 @@ async function getNextAttemptNumber(
   return attempts.length + 1;
 }
 
+/** Loads the latest attempt for one user and set. */
+async function loadLatestAttempt(
+  ctx: MutationCtx,
+  args: { tryoutSetId: Id<"tryoutSets">; userId: Id<"users"> }
+) {
+  const attempts = await ctx.db
+    .query("tryoutAttempts")
+    .withIndex("by_userId_and_tryoutSetId_and_startedAt", (q) =>
+      q.eq("userId", args.userId).eq("tryoutSetId", args.tryoutSetId)
+    )
+    .order("desc")
+    .take(1);
+
+  return attempts.at(0) ?? null;
+}
+
+/** Returns true when every snapshot is already completed or expired. */
+function hasCompletedEverySection(attempt: TryoutAttempt) {
+  const completedKeys = new Set(attempt.completedSectionKeys);
+
+  return attempt.sectionSnapshots.every((section) =>
+    completedKeys.has(section.sectionKey)
+  );
+}
+
+/** Returns the entitlement-bounded attempt expiry for a new attempt. */
+function getNewAttemptExpiresAt(
+  now: number,
+  entitlement: Doc<"tryoutEntitlements">
+) {
+  return Math.min(now + ATTEMPT_DURATION_MS, entitlement.endsAt);
+}
+
 /** Starts one bounded try-out attempt from synced section and question rows. */
 export const startAttempt = mutation({
   args: {
@@ -77,12 +115,8 @@ export const startAttempt = mutation({
     const { appUser } = await requireAuth(ctx);
     const set = await requireActiveTryoutSet(ctx, args);
     const now = Date.now();
-    const [sections, attemptNumber, entitlement] = await Promise.all([
+    const [sections, entitlement, latestAttempt] = await Promise.all([
       loadSections(ctx, set),
-      getNextAttemptNumber(ctx, {
-        tryoutSetId: set._id,
-        userId: appUser._id,
-      }),
       requireActiveEntitlement(ctx, {
         countryKey: args.countryKey,
         examKey: args.examKey,
@@ -90,8 +124,28 @@ export const startAttempt = mutation({
         setKey: args.setKey,
         userId: appUser._id,
       }),
+      loadLatestAttempt(ctx, {
+        tryoutSetId: set._id,
+        userId: appUser._id,
+      }),
     ]);
-    const expiresAt = now + ATTEMPT_DURATION_MS;
+
+    if (latestAttempt?.status === "in-progress") {
+      if (now < getAttemptExpiresAt(latestAttempt)) {
+        return { attemptId: latestAttempt._id };
+      }
+
+      await expireAttemptAtEffectiveTime(ctx, {
+        attempt: latestAttempt,
+        now,
+      });
+    }
+
+    const attemptNumber = await getNextAttemptNumber(ctx, {
+      tryoutSetId: set._id,
+      userId: appUser._id,
+    });
+    const expiresAt = getNewAttemptExpiresAt(now, entitlement);
     const access = getAttemptAccessFields(entitlement);
 
     const attemptId = await ctx.db.insert("tryoutAttempts", {
@@ -188,8 +242,8 @@ export const saveResponse = mutation({
 
     const now = Date.now();
 
-    if (now >= attempt.expiresAt) {
-      await expireAttempt(ctx, { attempt, now });
+    if (now >= getAttemptExpiresAt(attempt)) {
+      await expireAttemptAtEffectiveTime(ctx, { attempt, now });
       throw new ConvexError({
         code: "TRYOUT_EXPIRED",
         message: "Try-out attempt time has expired.",
@@ -197,6 +251,12 @@ export const saveResponse = mutation({
     }
 
     if (now >= section.expiresAt) {
+      await finalizeSectionAttempt(ctx, {
+        attempt,
+        endReason: "time-expired",
+        now,
+        section,
+      });
       throw new ConvexError({
         code: "TRYOUT_EXPIRED",
         message: "Try-out attempt time has expired.",
@@ -293,8 +353,21 @@ export const finalizeAttempt = mutation({
       userId: appUser._id,
     });
 
-    if (attempt.status === "in-progress" && now >= attempt.expiresAt) {
-      return expireAttempt(ctx, { attempt, now });
+    if (
+      attempt.status === "in-progress" &&
+      now >= getAttemptExpiresAt(attempt)
+    ) {
+      return expireAttemptAtEffectiveTime(ctx, { attempt, now });
+    }
+
+    if (
+      attempt.status === "in-progress" &&
+      !hasCompletedEverySection(attempt)
+    ) {
+      throw new ConvexError({
+        code: "TRYOUT_ATTEMPT_NOT_COMPLETE",
+        message: "Try-out attempt still has unfinished sections.",
+      });
     }
 
     return finalizeAttemptScore(ctx, { attempt, now });

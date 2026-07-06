@@ -3,7 +3,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { tryoutEntitlementSourceKindCompetition } from "@repo/backend/convex/tryoutAccess/schema";
 import { ConvexError } from "convex/values";
 
-const ENTITLEMENT_LOOKUP_LIMIT = 10;
+const ENTITLEMENT_LOOKUP_LIMIT = 50;
 
 interface AttemptAccessFields {
   accessCampaignId?: Id<"tryoutAccessCampaigns">;
@@ -66,7 +66,7 @@ export async function requireActiveEntitlement(
   });
 }
 
-/** Loads the newest active entitlement for one exact target. */
+/** Loads the earliest still-active entitlement for one exact target. */
 async function loadActiveEntitlement(
   ctx: MutationCtx,
   args: {
@@ -80,19 +80,19 @@ async function loadActiveEntitlement(
   const entitlements = await ctx.db
     .query("tryoutEntitlements")
     .withIndex(
-      "by_userId_and_countryKey_and_examKey_and_setKey_and_startsAt",
+      "by_userId_and_countryKey_and_examKey_and_setKey_and_endsAt",
       (q) =>
         q
           .eq("userId", args.userId)
           .eq("countryKey", args.countryKey)
           .eq("examKey", args.examKey)
           .eq("setKey", args.setKey)
-          .lte("startsAt", args.now)
+          .gt("endsAt", args.now)
     )
-    .order("desc")
+    .order("asc")
     .take(ENTITLEMENT_LOOKUP_LIMIT);
 
   return (
-    entitlements.find((entitlement) => entitlement.endsAt > args.now) ?? null
+    entitlements.find((entitlement) => entitlement.startsAt <= args.now) ?? null
   );
 }

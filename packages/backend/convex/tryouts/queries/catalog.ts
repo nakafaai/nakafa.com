@@ -1,4 +1,5 @@
-import { query } from "@repo/backend/convex/_generated/server";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import { type QueryCtx, query } from "@repo/backend/convex/_generated/server";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import {
   tryoutRouteKeyValidator,
@@ -49,6 +50,11 @@ const publicTryoutSectionValidator = v.object({
   sectionKey: tryoutRouteKeyValidator,
   timeLimitSeconds: v.number(),
   title: v.string(),
+});
+
+const publicTryoutQuestionContentValidator = v.object({
+  number: v.number(),
+  sourcePath: v.string(),
 });
 
 /** Reads the localized country-first try-out hub page model. */
@@ -242,6 +248,31 @@ function readSourceCountryCode(countryKey: string) {
   return countryCode;
 }
 
+/** Loads ordered question source paths for server-side MDX rendering. */
+async function loadQuestionContentRows(
+  ctx: QueryCtx,
+  section: Doc<"tryoutSections">
+) {
+  const questions = await ctx.db
+    .query("questions")
+    .withIndex("by_questionSetId_and_number", (q) =>
+      q.eq("questionSetId", section.questionSetId)
+    )
+    .take(section.questionCount + 1);
+
+  if (questions.length !== section.questionCount) {
+    throw new ConvexError({
+      code: "TRYOUT_QUESTION_COUNT_MISMATCH",
+      message: "Try-out section question count is not synced.",
+    });
+  }
+
+  return questions.map((question) => ({
+    number: question.number,
+    sourcePath: question.sourcePath,
+  }));
+}
+
 /** Reads one try-out set and its ordered sections. */
 export const getSetPage = query({
   args: {
@@ -338,6 +369,7 @@ export const getSectionPage = query({
     v.null(),
     v.object({
       exam: publicTryoutExamValidator,
+      questions: v.array(publicTryoutQuestionContentValidator),
       section: publicTryoutSectionValidator,
       set: publicTryoutSetValidator,
     })
@@ -354,7 +386,10 @@ export const getSectionPage = query({
       return null;
     }
 
-    const set = await ctx.db.get(section.tryoutSetId);
+    const [set, questions] = await Promise.all([
+      ctx.db.get(section.tryoutSetId),
+      loadQuestionContentRows(ctx, section),
+    ]);
 
     if (!set?.isActive) {
       return null;
@@ -390,6 +425,7 @@ export const getSectionPage = query({
         timeLimitSeconds: section.timeLimitSeconds,
         title: section.title,
       },
+      questions,
       set: {
         countryKey: set.countryKey,
         description: set.description,

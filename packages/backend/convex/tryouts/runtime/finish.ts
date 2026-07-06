@@ -10,6 +10,39 @@ type TryoutAttempt = Doc<"tryoutAttempts">;
 type TryoutSectionAttempt = Doc<"tryoutSectionAttempts">;
 type TryoutEndReason = NonNullable<TryoutAttempt["endReason"]>;
 
+/** Returns the earliest timestamp that can end an attempt. */
+export function getAttemptExpiresAt(attempt: TryoutAttempt) {
+  return Math.min(attempt.expiresAt, attempt.accessEndsAt ?? attempt.expiresAt);
+}
+
+/** Expires an attempt using its entitlement-bounded timer. */
+export async function expireAttemptAtEffectiveTime(
+  ctx: MutationCtx,
+  args: { attempt: TryoutAttempt; now: number }
+) {
+  const expiresAt = getAttemptExpiresAt(args.attempt);
+
+  if (expiresAt === args.attempt.expiresAt) {
+    return expireAttempt(ctx, args);
+  }
+
+  await ctx.db.patch(args.attempt._id, {
+    expiresAt,
+    lastActivityAt: args.now,
+  });
+
+  const currentAttempt = await ctx.db.get(args.attempt._id);
+
+  if (!currentAttempt) {
+    throw new ConvexError({
+      code: "TRYOUT_ATTEMPT_NOT_FOUND",
+      message: "Try-out attempt not found.",
+    });
+  }
+
+  return expireAttempt(ctx, { attempt: currentAttempt, now: args.now });
+}
+
 /** Loads bounded responses for one section attempt before finalizing it. */
 async function loadSectionResponses(
   ctx: MutationCtx,

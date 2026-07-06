@@ -1,30 +1,25 @@
 "use client";
 
-import { api } from "@repo/backend/convex/_generated/api";
+import type { api } from "@repo/backend/convex/_generated/api";
 import { GradientBlock } from "@repo/design-system/components/ui/gradient-block";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { useQuery } from "convex/react";
-import type { Locale } from "next-intl";
+import type { Preloaded } from "convex/react";
+import { usePreloadedQuery } from "convex/react";
 import { choiceCardVariants } from "@/components/shared/choice-card";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { getTryoutExamIcon } from "@/components/tryout/icons";
 import { getTryoutPublicPathHref } from "@/components/tryout/routes";
 
-interface TryoutCountryPageClientProps {
-  locale: Locale;
-  publicPath: string;
-}
+type CountryPageQuery = typeof api.tryouts.queries.catalog.getCountryPage;
 
 /** Renders one realtime try-out country page from Convex. */
 export function TryoutCountryPageClient({
-  locale,
-  publicPath,
-}: TryoutCountryPageClientProps) {
-  const page = useQuery(api.tryouts.queries.catalog.getCountryPage, {
-    locale,
-    publicPath,
-  });
+  preloaded,
+}: {
+  preloaded: Preloaded<CountryPageQuery>;
+}) {
+  const page = usePreloadedQuery(preloaded);
 
   if (!page) {
     return null;

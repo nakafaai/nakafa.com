@@ -2,7 +2,8 @@
 
 import { api } from "@repo/backend/convex/_generated/api";
 import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
-import { useConvexAuth, useQuery } from "convex/react";
+import type { Preloaded } from "convex/react";
+import { useConvexAuth, usePreloadedQuery, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
@@ -22,12 +23,11 @@ interface TryoutSetPageClientProps {
   country: string;
   exam: string;
   locale: Locale;
-  publicPath: string;
+  preloaded: Preloaded<SetPageQuery>;
 }
 
-type SetPage = NonNullable<
-  FunctionReturnType<typeof api.tryouts.queries.catalog.getSetPage>
->;
+type SetPageQuery = typeof api.tryouts.queries.catalog.getSetPage;
+type SetPage = NonNullable<FunctionReturnType<SetPageQuery>>;
 type SetSection = SetPage["sections"][number];
 type CurrentAttempt = FunctionReturnType<
   typeof api.tryouts.queries.attempt.getCurrent
@@ -38,13 +38,10 @@ export function TryoutSetPageClient({
   country,
   exam,
   locale,
-  publicPath,
+  preloaded,
 }: TryoutSetPageClientProps) {
   const { isAuthenticated, isLoading } = useConvexAuth();
-  const page = useQuery(api.tryouts.queries.catalog.getSetPage, {
-    locale,
-    publicPath,
-  });
+  const page = usePreloadedQuery(preloaded);
   const attempt = useQuery(
     api.tryouts.queries.attempt.getCurrent,
     page && isAuthenticated && !isLoading

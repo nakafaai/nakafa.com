@@ -5,8 +5,9 @@ import { mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { TRYOUT_CHOICE_LIMIT } from "@repo/backend/convex/tryouts/questions";
 import {
-  expireAttempt,
+  expireAttemptAtEffectiveTime,
   finalizeSectionAttempt,
+  getAttemptExpiresAt,
 } from "@repo/backend/convex/tryouts/runtime/finish";
 import { requireOwnedAttempt } from "@repo/backend/convex/tryouts/runtime/score";
 import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/schema";
@@ -125,6 +126,69 @@ function loadSectionAttempt(
     .unique();
 }
 
+/** Loads all section attempts for one attempt snapshot. */
+async function loadSectionAttempts(ctx: MutationCtx, attempt: TryoutAttempt) {
+  const sections = await ctx.db
+    .query("tryoutSectionAttempts")
+    .withIndex("by_tryoutAttemptId_and_sectionOrder", (q) =>
+      q.eq("tryoutAttemptId", attempt._id)
+    )
+    .take(attempt.sectionSnapshots.length + 1);
+
+  if (sections.length > attempt.sectionSnapshots.length) {
+    throw new ConvexError({
+      code: "TRYOUT_SECTION_ATTEMPT_COUNT_EXCEEDED",
+      message: "Try-out section attempt count exceeds the attempt snapshot.",
+    });
+  }
+
+  return sections;
+}
+
+/** Rejects or expires any other in-progress section timer. */
+async function requireNoParallelSectionTimer(
+  ctx: MutationCtx,
+  args: { attempt: TryoutAttempt; now: number; sectionKey: string }
+) {
+  const sections = await loadSectionAttempts(ctx, args.attempt);
+
+  for (const section of sections) {
+    if (section.sectionKey === args.sectionKey) {
+      continue;
+    }
+
+    if (section.status !== "in-progress") {
+      continue;
+    }
+
+    if (args.now >= section.expiresAt) {
+      await finalizeSectionAttempt(ctx, {
+        attempt: args.attempt,
+        endReason: "time-expired",
+        now: args.now,
+        section,
+      });
+      continue;
+    }
+
+    throw new ConvexError({
+      code: "TRYOUT_SECTION_IN_PROGRESS",
+      message: "Another try-out section is already in progress.",
+    });
+  }
+
+  const currentAttempt = await ctx.db.get(args.attempt._id);
+
+  if (currentAttempt?.status !== "in-progress") {
+    throw new ConvexError({
+      code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
+      message: "Try-out attempt is not active.",
+    });
+  }
+
+  return currentAttempt;
+}
+
 /** Loads the ordered question rows for one section. */
 async function loadSectionQuestions(ctx: MutationCtx, section: TryoutSection) {
   const questions = await ctx.db
@@ -236,8 +300,8 @@ export const start = mutation({
       });
     }
 
-    if (now >= attempt.expiresAt) {
-      await expireAttempt(ctx, { attempt, now });
+    if (now >= getAttemptExpiresAt(attempt)) {
+      await expireAttemptAtEffectiveTime(ctx, { attempt, now });
       throw new ConvexError({
         code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
         message: "Try-out attempt time has expired.",
@@ -273,12 +337,20 @@ export const start = mutation({
       });
     }
 
-    const snapshot = requireSectionSnapshot(attempt, args.sectionKey);
-    const section = await requireSnapshotSection(ctx, { attempt, snapshot });
+    const currentAttempt = await requireNoParallelSectionTimer(ctx, {
+      attempt,
+      now,
+      sectionKey: args.sectionKey,
+    });
+    const snapshot = requireSectionSnapshot(currentAttempt, args.sectionKey);
+    const section = await requireSnapshotSection(ctx, {
+      attempt: currentAttempt,
+      snapshot,
+    });
     const questions = await loadSectionQuestions(ctx, section);
     const expiresAt = Math.min(
       now + section.timeLimitSeconds * 1000,
-      attempt.expiresAt
+      getAttemptExpiresAt(currentAttempt)
     );
     const sectionAttemptId = await ctx.db.insert("tryoutSectionAttempts", {
       answeredCount: 0,
@@ -292,7 +364,7 @@ export const start = mutation({
       startedAt: now,
       status: "in-progress",
       totalQuestions: section.questionCount,
-      tryoutAttemptId: attempt._id,
+      tryoutAttemptId: currentAttempt._id,
       tryoutSectionId: section._id,
     });
     const sectionAttempt = await ctx.db.get(sectionAttemptId);
@@ -305,12 +377,12 @@ export const start = mutation({
     }
 
     await createSectionPlacements(ctx, {
-      attempt,
+      attempt: currentAttempt,
       questions,
       section,
       sectionAttempt,
     });
-    await ctx.db.patch(attempt._id, {
+    await ctx.db.patch(currentAttempt._id, {
       lastActivityAt: now,
     });
     await ctx.scheduler.runAfter(
@@ -348,8 +420,8 @@ export const complete = mutation({
 
     const now = Date.now();
 
-    if (now >= attempt.expiresAt) {
-      await expireAttempt(ctx, { attempt, now });
+    if (now >= getAttemptExpiresAt(attempt)) {
+      await expireAttemptAtEffectiveTime(ctx, { attempt, now });
       throw new ConvexError({
         code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
         message: "Try-out attempt time has expired.",

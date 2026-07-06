@@ -1,3 +1,6 @@
+import { api } from "@repo/backend/convex/_generated/api";
+import { preloadedQueryResult, preloadQuery } from "convex/nextjs";
+import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
@@ -19,6 +22,19 @@ export default async function Page(props: {
   const locale = getLocaleOrThrow(localeParam);
   const countryPath = getTryoutHref({ country }).slice(1);
   const examPath = getTryoutHref({ country, exam }).slice(1);
+  const preloaded = await preloadQuery(
+    api.tryouts.queries.catalog.getExamPage,
+    {
+      locale,
+      publicPath: examPath,
+    }
+  );
+  const page = preloadedQueryResult(preloaded);
+
+  if (!page) {
+    notFound();
+  }
+
   const tCommon = await getTranslations({ locale, namespace: "Common" });
   const tTryouts = await getTranslations({ locale, namespace: "Tryouts" });
   const examOptions = readStaticTryoutExamOptions({
@@ -52,7 +68,7 @@ export default async function Page(props: {
           ]}
           title={route?.title ?? tCommon("try-out")}
         />
-        <TryoutExamPageClient locale={locale} publicPath={examPath} />
+        <TryoutExamPageClient preloaded={preloaded} />
       </LayoutMaterialContent>
     </LayoutMaterial>
   );
