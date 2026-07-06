@@ -17,7 +17,6 @@ import { toast } from "sonner";
 import type {
   TryoutRuntimeQuestion as RuntimeQuestion,
   TryoutRuntimeChoice,
-  TryoutSectionRuntime,
   TryoutSectionRuntimeArgs,
 } from "@/components/tryout/types";
 
@@ -25,7 +24,6 @@ interface TryoutRuntimeQuestionProps {
   content: ReactNode;
   isExpired: boolean;
   question: RuntimeQuestion;
-  runtime: TryoutSectionRuntime;
   runtimeQueryArgs: TryoutSectionRuntimeArgs;
   sectionStartedAt: number;
 }
@@ -35,7 +33,6 @@ export function TryoutRuntimeQuestion({
   content,
   isExpired,
   question,
-  runtime,
   runtimeQueryArgs,
   sectionStartedAt,
 }: TryoutRuntimeQuestionProps) {
@@ -79,7 +76,6 @@ export function TryoutRuntimeQuestion({
         <TryoutChoices
           isExpired={isExpired}
           question={question}
-          runtime={runtime}
           runtimeQueryArgs={runtimeQueryArgs}
           sectionStartedAt={sectionStartedAt}
         />
@@ -92,13 +88,11 @@ export function TryoutRuntimeQuestion({
 function TryoutChoices({
   isExpired,
   question,
-  runtime,
   runtimeQueryArgs,
   sectionStartedAt,
 }: {
   isExpired: boolean;
   question: RuntimeQuestion;
-  runtime: TryoutSectionRuntime;
   runtimeQueryArgs: TryoutSectionRuntimeArgs;
   sectionStartedAt: number;
 }) {
@@ -109,11 +103,14 @@ function TryoutChoices({
       return;
     }
 
-    const currentRuntime =
-      localStore.getQuery(
-        api.tryouts.queries.attempt.getSectionRuntime,
-        runtimeQueryArgs
-      ) ?? runtime;
+    const currentRuntime = localStore.getQuery(
+      api.tryouts.queries.attempt.getSectionRuntime,
+      runtimeQueryArgs
+    );
+
+    if (!currentRuntime) {
+      return;
+    }
 
     const selectedAt = currentRuntime.section.startedAt + args.timeSpent * 1000;
     let foundQuestion = false;

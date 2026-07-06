@@ -44,7 +44,6 @@ export function TryoutRuntime({
           isExpired={isExpired}
           key={question.placementId}
           question={question}
-          runtime={runtime}
           runtimeQueryArgs={runtimeQueryArgs}
           sectionStartedAt={runtime.section.startedAt}
         />
