@@ -312,6 +312,8 @@ describe("tryouts/runtime/finish", () => {
         updatedAt: NOW - 5000,
       });
 
+      await ctx.db.delete(secondSectionId);
+
       const attempt = await ctx.db.get(attemptId);
 
       if (!attempt) {
@@ -364,7 +366,7 @@ describe("tryouts/runtime/finish", () => {
       sectionKey: "penalaran-matematika",
       status: "expired",
     });
-    expect(snapshot.placements).toHaveLength(2);
+    expect(snapshot.placements).toHaveLength(1);
     expect(snapshot.score).toMatchObject({
       rawScore: 50,
       scoringStrategy: "irt",

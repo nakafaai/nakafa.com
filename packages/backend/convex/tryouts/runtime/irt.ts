@@ -35,22 +35,21 @@ export async function scoreIrtAttempt(
     scaleVersionId: args.attempt.scaleVersionId,
     tryoutSetId: args.attempt.tryoutSetId,
   });
-  const placements = await loadAttemptPlacements(ctx, args.attempt);
+  const [items, placements] = await Promise.all([
+    loadScaleItems(ctx, {
+      scale,
+      totalQuestions: args.attempt.totalQuestions,
+    }),
+    loadAttemptPlacements(ctx, args.attempt),
+  ]);
 
-  if (placements.length !== args.attempt.totalQuestions) {
-    throw new ConvexError({
-      code: "TRYOUT_PLACEMENT_COUNT_MISMATCH",
-      message: "IRT scoring requires every try-out question placement.",
-    });
-  }
-
-  const itemResponses = await loadIrtItemResponses(ctx, {
+  const itemResponses = loadIrtItemResponses({
+    items,
     placements,
     responses: args.responses,
-    scaleVersionId: scale._id,
   });
   const estimate = estimateTheta(itemResponses);
-  const correctAnswers = args.responses.filter(
+  const correctAnswers = itemResponses.filter(
     (response) => response.isCorrect
   ).length;
   const publishedScore = getPublishedIrtScore(estimate.theta);
@@ -126,52 +125,88 @@ async function loadAttemptPlacements(ctx: MutationCtx, attempt: TryoutAttempt) {
   return placements;
 }
 
-/** Loads and validates all item parameters for a completed IRT attempt. */
-function loadIrtItemResponses(
+/** Loads every item in the attempt's scale snapshot. */
+async function loadScaleItems(
   ctx: MutationCtx,
   args: {
-    placements: TryoutPlacement[];
-    responses: TryoutResponse[];
-    scaleVersionId: Id<"irtScaleVersions">;
+    scale: Doc<"irtScaleVersions">;
+    totalQuestions: number;
   }
 ) {
+  if (args.scale.questionCount !== args.totalQuestions) {
+    throw new ConvexError({
+      code: "TRYOUT_IRT_SCALE_COUNT_MISMATCH",
+      message: "IRT scale question count does not match the attempt.",
+    });
+  }
+
+  const items = await ctx.db
+    .query("irtScaleItems")
+    .withIndex("by_scaleVersionId_and_questionSourceKey", (q) =>
+      q.eq("scaleVersionId", args.scale._id)
+    )
+    .take(args.totalQuestions + 1);
+
+  if (items.length !== args.totalQuestions) {
+    throw new ConvexError({
+      code: "TRYOUT_IRT_ITEM_COUNT_MISMATCH",
+      message: "IRT scale item count does not match the attempt.",
+    });
+  }
+
+  return items;
+}
+
+/** Builds the complete IRT item response vector from scale and placement snapshots. */
+function loadIrtItemResponses(args: {
+  items: Doc<"irtScaleItems">[];
+  placements: TryoutPlacement[];
+  responses: TryoutResponse[];
+}) {
   const responsesByPlacement = new Map(
     args.responses.map((response) => [response.placementId, response])
   );
+  const placementsBySourceKey = getPlacementsBySourceKey(args.placements);
 
-  return Promise.all(
-    args.placements.map(async (placement) => {
-      const item = await ctx.db
-        .query("irtScaleItems")
-        .withIndex("by_scaleVersionId_and_questionSourceKey", (q) =>
-          q
-            .eq("scaleVersionId", args.scaleVersionId)
-            .eq("questionSourceKey", placement.questionSourceKey)
-        )
-        .unique();
+  return args.items.map((item) => {
+    const placement = placementsBySourceKey.get(item.questionSourceKey);
 
-      if (!item) {
-        throw new ConvexError({
-          code: "TRYOUT_IRT_ITEM_NOT_FOUND",
-          message: "IRT scale item is missing for one try-out question.",
-        });
-      }
+    if (!placement) {
+      return { isCorrect: false, item };
+    }
 
-      if (!matchesPlacementSnapshot(item, placement)) {
-        throw new ConvexError({
-          code: "TRYOUT_IRT_ITEM_STALE",
-          message: "IRT scale item is stale for one try-out question.",
-        });
-      }
+    if (!matchesPlacementSnapshot(item, placement)) {
+      throw new ConvexError({
+        code: "TRYOUT_IRT_ITEM_STALE",
+        message: "IRT scale item is stale for one try-out question.",
+      });
+    }
 
-      const response = responsesByPlacement.get(placement._id);
+    const response = responsesByPlacement.get(placement._id);
 
-      return {
-        isCorrect: Boolean(response?.isCorrect),
-        item,
-      };
-    })
-  );
+    return {
+      isCorrect: Boolean(response?.isCorrect),
+      item,
+    };
+  });
+}
+
+/** Indexes placement snapshots by source key and rejects duplicate rows. */
+function getPlacementsBySourceKey(placements: TryoutPlacement[]) {
+  const placementsBySourceKey = new Map<string, TryoutPlacement>();
+
+  for (const placement of placements) {
+    if (placementsBySourceKey.has(placement.questionSourceKey)) {
+      throw new ConvexError({
+        code: "TRYOUT_PLACEMENT_DUPLICATE",
+        message: "Try-out placement has a duplicate question source key.",
+      });
+    }
+
+    placementsBySourceKey.set(placement.questionSourceKey, placement);
+  }
+
+  return placementsBySourceKey;
 }
 
 /** Verifies that an IRT item belongs to the exact placed source snapshot. */

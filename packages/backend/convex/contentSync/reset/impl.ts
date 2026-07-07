@@ -1,4 +1,5 @@
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { deleteQuestion } from "@repo/backend/convex/contentSync/lib/syncHelpers";
 import {
   batchDeleteResultValidator,
   contentSearchResetBatchSize,
@@ -7,6 +8,9 @@ import {
   resetBatchSize,
 } from "@repo/backend/convex/contentSync/reset/spec";
 import { internalMutation } from "@repo/backend/convex/functions";
+import { SUPPORTED_CONTENT_LOCALES } from "@repo/backend/convex/lib/validators/contents";
+
+const TRYOUT_SECTION = "tryout";
 
 /** Deletes one bounded batch from a resettable content-derived table. */
 export async function deleteBatchFromTable(
@@ -113,6 +117,176 @@ export async function deleteTryoutEntitlementRows(ctx: MutationCtx) {
     deleted: entitlements.length,
     hasMore,
   };
+}
+
+/** Deletes one bounded batch of try-out route projections. */
+export async function deleteTryoutContentRouteRows(ctx: MutationCtx) {
+  const docs = await ctx.db
+    .query("contentRoutes")
+    .withIndex("by_section", (q) => q.eq("section", TRYOUT_SECTION))
+    .take(resetBatchSize);
+  let deleted = 0;
+
+  for (const doc of docs) {
+    await ctx.db.delete(doc._id);
+    deleted += 1;
+  }
+
+  const hasMore =
+    (await ctx.db
+      .query("contentRoutes")
+      .withIndex("by_section", (q) => q.eq("section", TRYOUT_SECTION))
+      .first()) !== null;
+
+  return { deleted, hasMore };
+}
+
+/** Deletes one bounded batch of try-out search projections. */
+export async function deleteTryoutContentSearchRows(ctx: MutationCtx) {
+  let deleted = 0;
+
+  for (const locale of SUPPORTED_CONTENT_LOCALES) {
+    if (deleted >= contentSearchResetBatchSize) {
+      break;
+    }
+
+    const docs = await ctx.db
+      .query("contentSearch")
+      .withIndex("by_locale_and_section_and_title", (q) =>
+        q.eq("locale", locale).eq("section", TRYOUT_SECTION)
+      )
+      .take(contentSearchResetBatchSize - deleted);
+
+    for (const doc of docs) {
+      await ctx.db.delete(doc._id);
+      deleted += 1;
+    }
+  }
+
+  return {
+    deleted,
+    hasMore: await hasTryoutContentSearchRows(ctx),
+  };
+}
+
+/** Deletes one bounded batch of try-out route count rows. */
+export async function deleteTryoutContentRouteCountRows(ctx: MutationCtx) {
+  let deleted = 0;
+
+  for (const locale of SUPPORTED_CONTENT_LOCALES) {
+    const row = await ctx.db
+      .query("contentRouteCounts")
+      .withIndex("by_locale_and_section", (q) =>
+        q.eq("locale", locale).eq("section", TRYOUT_SECTION)
+      )
+      .unique();
+
+    if (!row) {
+      continue;
+    }
+
+    await ctx.db.delete(row._id);
+    deleted += 1;
+  }
+
+  return {
+    deleted,
+    hasMore: await hasTryoutContentRouteCountRows(ctx),
+  };
+}
+
+/** Deletes one bounded batch of try-out route page rows. */
+export async function deleteTryoutContentRoutePageRows(ctx: MutationCtx) {
+  let deleted = 0;
+
+  for (const locale of SUPPORTED_CONTENT_LOCALES) {
+    if (deleted >= resetBatchSize) {
+      break;
+    }
+
+    const docs = await ctx.db
+      .query("contentRoutePages")
+      .withIndex("by_locale_and_section", (q) =>
+        q.eq("locale", locale).eq("section", TRYOUT_SECTION)
+      )
+      .take(resetBatchSize - deleted);
+
+    for (const doc of docs) {
+      await ctx.db.delete(doc._id);
+      deleted += 1;
+    }
+  }
+
+  return {
+    deleted,
+    hasMore: await hasTryoutContentRoutePageRows(ctx),
+  };
+}
+
+/** Deletes questions through their dependent cleanup helper. */
+export async function deleteQuestionRows(ctx: MutationCtx) {
+  const questions = await ctx.db.query("questions").take(resetBatchSize);
+  let deleted = 0;
+
+  for (const question of questions) {
+    await deleteQuestion(ctx, question._id);
+    deleted += 1;
+  }
+
+  const hasMore = (await ctx.db.query("questions").first()) !== null;
+
+  return { deleted, hasMore };
+}
+
+async function hasTryoutContentSearchRows(ctx: MutationCtx) {
+  for (const locale of SUPPORTED_CONTENT_LOCALES) {
+    const row = await ctx.db
+      .query("contentSearch")
+      .withIndex("by_locale_and_section_and_title", (q) =>
+        q.eq("locale", locale).eq("section", TRYOUT_SECTION)
+      )
+      .first();
+
+    if (row) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+async function hasTryoutContentRouteCountRows(ctx: MutationCtx) {
+  for (const locale of SUPPORTED_CONTENT_LOCALES) {
+    const row = await ctx.db
+      .query("contentRouteCounts")
+      .withIndex("by_locale_and_section", (q) =>
+        q.eq("locale", locale).eq("section", TRYOUT_SECTION)
+      )
+      .first();
+
+    if (row) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+async function hasTryoutContentRoutePageRows(ctx: MutationCtx) {
+  for (const locale of SUPPORTED_CONTENT_LOCALES) {
+    const row = await ctx.db
+      .query("contentRoutePages")
+      .withIndex("by_locale_and_section", (q) =>
+        q.eq("locale", locale).eq("section", TRYOUT_SECTION)
+      )
+      .first();
+
+    if (row) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 /** Creates one small internal mutation that deletes a single bounded batch. */

@@ -2,6 +2,11 @@ import {
   createBatchDeleteMutation,
   deleteContentAudioRows,
   deleteContentSearchRows,
+  deleteQuestionRows,
+  deleteTryoutContentRouteCountRows,
+  deleteTryoutContentRoutePageRows,
+  deleteTryoutContentRouteRows,
+  deleteTryoutContentSearchRows,
   deleteTryoutEntitlementRows,
   deleteTryoutRuntimeRows,
 } from "@repo/backend/convex/contentSync/reset/impl";
@@ -101,6 +106,30 @@ export const deleteContentRouteCountsBatch =
   createBatchDeleteMutation("contentRouteCounts");
 export const deleteContentRoutePagesBatch =
   createBatchDeleteMutation("contentRoutePages");
+/** Delete one bounded batch of try-out route projection rows. */
+export const deleteTryoutContentRoutesBatch = internalMutation({
+  args: {},
+  returns: batchDeleteResultValidator,
+  handler: deleteTryoutContentRouteRows,
+});
+/** Delete one bounded batch of try-out search projection rows. */
+export const deleteTryoutContentSearchBatch = internalMutation({
+  args: {},
+  returns: batchDeleteResultValidator,
+  handler: deleteTryoutContentSearchRows,
+});
+/** Delete one bounded batch of try-out route count rows. */
+export const deleteTryoutContentRouteCountsBatch = internalMutation({
+  args: {},
+  returns: batchDeleteResultValidator,
+  handler: deleteTryoutContentRouteCountRows,
+});
+/** Delete one bounded batch of try-out route artifact pages. */
+export const deleteTryoutContentRoutePagesBatch = internalMutation({
+  args: {},
+  returns: batchDeleteResultValidator,
+  handler: deleteTryoutContentRoutePageRows,
+});
 export const deleteQuranVersesBatch = createBatchDeleteMutation("quranVerses");
 export const deleteQuranSurahsBatch = createBatchDeleteMutation("quranSurahs");
 export const deleteArticleReferencesBatch =
@@ -186,6 +215,12 @@ export const deleteIrtScaleVersionsBatch =
 export const deleteIrtCalibrationRunsBatch =
   createBatchDeleteMutation("irtCalibrationRuns");
 export const deleteQuestionsBatch = createBatchDeleteMutation("questions");
+/** Delete one bounded question batch through dependent cleanup. */
+export const deleteQuestionsWithDependentsBatch = internalMutation({
+  args: {},
+  returns: batchDeleteResultValidator,
+  handler: deleteQuestionRows,
+});
 export const deleteQuestionSetsBatch =
   createBatchDeleteMutation("questionSets");
 export const deleteCurriculumLessonsBatch =

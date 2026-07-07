@@ -143,13 +143,33 @@ const RESET_TRYOUT_STEPS: ResetStep[] = [
     resultLabel: "try-out access campaigns",
   },
   {
+    label: "Deleting try-out content routes...",
+    mutation: reset.deleteTryoutContentRoutesBatch,
+    resultLabel: "try-out content routes",
+  },
+  {
+    label: "Deleting try-out content search...",
+    mutation: reset.deleteTryoutContentSearchBatch,
+    resultLabel: "try-out content search rows",
+  },
+  {
+    label: "Deleting try-out route counts...",
+    mutation: reset.deleteTryoutContentRouteCountsBatch,
+    resultLabel: "try-out route count rows",
+  },
+  {
+    label: "Deleting try-out route pages...",
+    mutation: reset.deleteTryoutContentRoutePagesBatch,
+    resultLabel: "try-out route page rows",
+  },
+  {
     label: "Deleting try-out sections...",
     mutation: reset.deleteTryoutSectionsBatch,
     resultLabel: "try-out sections",
   },
   {
-    label: "Deleting questions...",
-    mutation: reset.deleteQuestionsBatch,
+    label: "Deleting questions and dependents...",
+    mutation: reset.deleteQuestionsWithDependentsBatch,
     resultLabel: "questions",
   },
   {
@@ -313,7 +333,7 @@ export const resetTryouts = Effect.fn("sync.resetTryouts")(function* (
 
   log(`\n  Total tryout + IRT rows: ${totalTryoutAndIrtRows}`);
 
-  if (totalTryoutAndIrtRows === 0) {
+  if (totalTryoutAndIrtRows === 0 && !options.force) {
     logSuccess("\nTryout and IRT sync-managed data is already empty.");
     yield* clearSyncState(options.prod ?? false);
     log("Cleared sync state file");
@@ -328,6 +348,12 @@ export const resetTryouts = Effect.fn("sync.resetTryouts")(function* (
       log("  pnpm --filter @repo/backend sync:reset:tryouts --force");
     }
     return;
+  }
+
+  if (totalTryoutAndIrtRows === 0) {
+    logWarning(
+      "\nNo tryout/IRT source rows found; continuing because --force was passed so stale try-out projections can be cleared."
+    );
   }
 
   log("\nDeleting tryout + IRT data (in dependency order)...\n");

@@ -1,10 +1,6 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
-  createSectionPlacements,
-  requireSnapshotSection,
-} from "@repo/backend/convex/tryouts/runtime/placement";
-import {
   finalizeAttemptScore,
   summarizeResponses,
 } from "@repo/backend/convex/tryouts/runtime/score";
@@ -79,11 +75,7 @@ async function createExpiredSectionAttempt(
     snapshot: TryoutSectionSnapshot;
   }
 ) {
-  const section = await requireSnapshotSection(ctx, {
-    attempt: args.attempt,
-    snapshot: args.snapshot,
-  });
-  const sectionAttemptId = await ctx.db.insert("tryoutSectionAttempts", {
+  await ctx.db.insert("tryoutSectionAttempts", {
     answeredCount: 0,
     completedAt: args.attempt.expiresAt,
     correctAnswers: 0,
@@ -97,20 +89,6 @@ async function createExpiredSectionAttempt(
     totalQuestions: args.snapshot.questionCount,
     tryoutAttemptId: args.attempt._id,
     tryoutSectionId: args.snapshot.tryoutSectionId,
-  });
-  const sectionAttempt = await ctx.db.get(sectionAttemptId);
-
-  if (!sectionAttempt) {
-    throw new ConvexError({
-      code: "TRYOUT_SECTION_NOT_FOUND",
-      message: "Try-out section attempt not found.",
-    });
-  }
-
-  await createSectionPlacements(ctx, {
-    attempt: args.attempt,
-    section,
-    sectionAttempt,
   });
 }
 

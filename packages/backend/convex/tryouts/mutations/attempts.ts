@@ -44,6 +44,21 @@ async function loadSections(ctx: MutationCtx, set: TryoutSet) {
     });
   }
 
+  const totalQuestionCount = sections.reduce(
+    (total, section) => total + section.questionCount,
+    0
+  );
+  const hasMixedRevision = sections.some(
+    (section) => section.sourceRevision !== set.sourceRevision
+  );
+
+  if (totalQuestionCount !== set.totalQuestionCount || hasMixedRevision) {
+    throw new ConvexError({
+      code: "TRYOUT_SECTION_SNAPSHOT_MISMATCH",
+      message: "Try-out set sections are not fully synced.",
+    });
+  }
+
   return sections;
 }
 
