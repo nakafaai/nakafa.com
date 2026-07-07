@@ -13,6 +13,7 @@ export const tryoutAccessGrantStatusActive = "active";
 export const tryoutAccessGrantStatusExpired = "expired";
 export const tryoutEntitlementSourceKindCompetition = "competition";
 export const tryoutEntitlementSourceKindAccessPass = "access-pass";
+export const tryoutEntitlementSourceKindSubscription = "subscription";
 
 export const tryoutAccessCampaignKindValidator = literals(
   tryoutAccessCampaignKindCompetition,
@@ -35,7 +36,8 @@ export const tryoutAccessGrantStatusValidator = literals(
 
 export const tryoutEntitlementSourceKindValidator = literals(
   tryoutEntitlementSourceKindCompetition,
-  tryoutEntitlementSourceKindAccessPass
+  tryoutEntitlementSourceKindAccessPass,
+  tryoutEntitlementSourceKindSubscription
 );
 
 export const tryoutAccessCampaignValidator = v.object({
@@ -86,6 +88,7 @@ export const tryoutEntitlementValidator = v.object({
   sourceKind: tryoutEntitlementSourceKindValidator,
   accessCampaignId: v.optional(v.id("tryoutAccessCampaigns")),
   accessGrantId: v.optional(v.id("tryoutAccessGrants")),
+  subscriptionId: v.optional(v.string()),
   startsAt: v.number(),
   endsAt: v.number(),
 });
@@ -136,6 +139,14 @@ const tables = {
       "examKey",
       "setKey",
       "startsAt",
+    ])
+    .index("by_user_subscription_scope", [
+      "userId",
+      "sourceKind",
+      "subscriptionId",
+      "countryKey",
+      "examKey",
+      "setKey",
     ]),
 };
 

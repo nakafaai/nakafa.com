@@ -8,6 +8,7 @@ import {
   syncContentAuthorsWithCache,
 } from "@repo/backend/convex/contentSync/lib/syncHelpers";
 import { hasSameSyncValues } from "@repo/backend/convex/contentSync/lib/syncValues";
+import { syncIrtScaleForSet } from "@repo/backend/convex/contentSync/tryouts/irt";
 import type {
   SyncedQuestion,
   SyncedQuestionChoice,
@@ -83,6 +84,7 @@ export async function bulkSyncTryoutsImpl(
   for (const section of args.sections) {
     addOutcome(totals, await syncSection(ctx, section, now));
   }
+  await syncIrtScalesForSections(ctx, args.sections, now);
 
   return totals;
 }
@@ -386,6 +388,25 @@ async function syncSection(
 
   await ctx.db.insert("tryoutSections", writeValues);
   return "created";
+}
+
+async function syncIrtScalesForSections(
+  ctx: MutationCtx,
+  sections: SyncedTryoutSection[],
+  syncedAt: number
+) {
+  const syncedSetIds = new Set<string>();
+
+  for (const section of sections) {
+    const set = await getTryoutSet(ctx, section);
+
+    if (syncedSetIds.has(set._id)) {
+      continue;
+    }
+
+    syncedSetIds.add(set._id);
+    await syncIrtScaleForSet(ctx, { set, syncedAt });
+  }
 }
 
 async function getTryoutSet(

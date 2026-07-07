@@ -1,5 +1,6 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { SyncedQuestion } from "@repo/backend/convex/contentSync/tryouts/spec";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
@@ -139,6 +140,46 @@ function buildSyncPayload() {
   };
 }
 
+/** Builds one synced try-out question fixture for the IRT scale snapshot. */
+function buildQuestion(number: number): SyncedQuestion {
+  const sourcePath = `${SECTION_SOURCE}/question-${number}`;
+
+  return {
+    answerBody: `Answer ${number}`,
+    authors: [],
+    choices: [
+      {
+        isCorrect: true,
+        label: "A",
+        optionKey: "a",
+        order: 1,
+      },
+      {
+        isCorrect: false,
+        label: "B",
+        optionKey: "b",
+        order: 2,
+      },
+    ],
+    contentHash: `question-${number}:hash`,
+    date: 0,
+    description: `Question ${number}`,
+    locale: "id",
+    number,
+    questionBody: `Question ${number}`,
+    questionSetSourcePath: SECTION_SOURCE,
+    sourceKey: `${SECTION_SOURCE}:question-${number}`,
+    sourcePath,
+    sourceRevision: "2026",
+    title: `Question ${number}`,
+  };
+}
+
+/** Builds the complete question payload for the one-section fixture. */
+function buildQuestions() {
+  return Array.from({ length: 20 }, (_, index) => buildQuestion(index + 1));
+}
+
 /** Returns the graph identity for a test route. */
 function getGraphIdentity(route: string) {
   const identity = createLearningGraphIdentityFromRoute({
@@ -261,5 +302,64 @@ describe("contentSync/mutations/tryouts", () => {
       search: null,
       section: null,
     });
+  });
+
+  it("provisions one source-snapshot IRT scale for synced questions", async () => {
+    const t = convexTest(schema, convexModules);
+    const payload = {
+      ...buildSyncPayload(),
+      questions: buildQuestions(),
+    };
+
+    const firstResult = await t.mutation(
+      internal.contentSync.mutations.tryouts.bulkSyncTryouts,
+      payload
+    );
+    const secondResult = await t.mutation(
+      internal.contentSync.mutations.tryouts.bulkSyncTryouts,
+      payload
+    );
+    const snapshot = await t.query(async (ctx) => {
+      const set = await ctx.db
+        .query("tryoutSets")
+        .withIndex("by_locale_and_publicPath", (q) =>
+          q.eq("locale", "id").eq("publicPath", SET_ROUTE)
+        )
+        .unique();
+
+      if (!set) {
+        throw new Error("Expected synced try-out set.");
+      }
+
+      const scales = await ctx.db
+        .query("irtScaleVersions")
+        .withIndex("by_tryoutSetId_and_publishedAt", (q) =>
+          q.eq("tryoutSetId", set._id)
+        )
+        .take(2);
+
+      if (scales.length !== 1) {
+        return { itemCount: 0, scales };
+      }
+
+      const items = await ctx.db
+        .query("irtScaleItems")
+        .withIndex("by_scaleVersionId_and_questionSourceKey", (q) =>
+          q.eq("scaleVersionId", scales[0]._id)
+        )
+        .take(21);
+
+      return { itemCount: items.length, scales };
+    });
+
+    expect(firstResult).toEqual({ created: 25, unchanged: 0, updated: 0 });
+    expect(secondResult).toEqual({ created: 0, unchanged: 25, updated: 0 });
+    expect(snapshot.scales).toHaveLength(1);
+    expect(snapshot.scales[0]).toMatchObject({
+      model: "2pl",
+      questionCount: 20,
+      status: "provisional",
+    });
+    expect(snapshot.itemCount).toBe(20);
   });
 });

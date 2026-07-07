@@ -22,7 +22,7 @@ interface IrtItemResponse {
   item: Doc<"irtScaleItems">;
 }
 
-/** Scores an IRT set from the latest published item scale. */
+/** Scores an IRT set from the attempt scale snapshot or current set scale. */
 export async function scoreIrtAttempt(
   ctx: MutationCtx,
   args: {
@@ -31,7 +31,10 @@ export async function scoreIrtAttempt(
     scoringStrategy: TryoutScoringStrategy;
   }
 ): Promise<AttemptScore> {
-  const scale = await loadLatestScaleVersion(ctx, args.attempt);
+  const scale = await requireIrtScaleVersion(ctx, {
+    scaleVersionId: args.attempt.scaleVersionId,
+    tryoutSetId: args.attempt.tryoutSetId,
+  });
   const placements = await loadAttemptPlacements(ctx, args.attempt);
 
   if (placements.length !== args.attempt.totalQuestions) {
@@ -65,15 +68,31 @@ export async function scoreIrtAttempt(
   };
 }
 
-/** Loads the latest IRT scale for one set before publishing an IRT score. */
-async function loadLatestScaleVersion(
+/** Loads the IRT scale that should be used for one set or attempt snapshot. */
+export async function requireIrtScaleVersion(
   ctx: MutationCtx,
-  attempt: TryoutAttempt
+  args: {
+    scaleVersionId?: Id<"irtScaleVersions">;
+    tryoutSetId: Id<"tryoutSets">;
+  }
 ) {
+  if (args.scaleVersionId) {
+    const scale = await ctx.db.get(args.scaleVersionId);
+
+    if (scale?.tryoutSetId === args.tryoutSetId) {
+      return scale;
+    }
+
+    throw new ConvexError({
+      code: "TRYOUT_IRT_SCALE_REQUIRED",
+      message: "Attempt IRT scale is missing for this try-out.",
+    });
+  }
+
   const scale = await ctx.db
     .query("irtScaleVersions")
     .withIndex("by_tryoutSetId_and_publishedAt", (q) =>
-      q.eq("tryoutSetId", attempt.tryoutSetId)
+      q.eq("tryoutSetId", args.tryoutSetId)
     )
     .order("desc")
     .first();

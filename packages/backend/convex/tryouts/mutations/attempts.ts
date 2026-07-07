@@ -15,6 +15,7 @@ import {
   finalizeSectionAttempt,
   getAttemptExpiresAt,
 } from "@repo/backend/convex/tryouts/runtime/finish";
+import { requireIrtScaleVersion } from "@repo/backend/convex/tryouts/runtime/irt";
 import {
   finalizeAttemptScore,
   requireOwnedAttempt,
@@ -27,6 +28,7 @@ const MAX_ATTEMPTS_PER_USER_SET = 100;
 
 type TryoutSet = Doc<"tryoutSets">;
 type TryoutAttempt = Doc<"tryoutAttempts">;
+type TryoutAttemptInsert = Omit<TryoutAttempt, "_creationTime" | "_id">;
 
 /** Loads and validates ordered section rows for one set snapshot. */
 async function loadSections(ctx: MutationCtx, set: TryoutSet) {
@@ -145,10 +147,12 @@ export const startAttempt = mutation({
       tryoutSetId: set._id,
       userId: appUser._id,
     });
+    const scaleVersion = await loadAttemptScaleVersion(ctx, set);
     const expiresAt = getNewAttemptExpiresAt(now, entitlement);
     const access = getAttemptAccessFields(entitlement);
-
-    const attemptId = await ctx.db.insert("tryoutAttempts", {
+    const attemptStatus = "in-progress";
+    const scoreStatus = "provisional";
+    const attemptValues: TryoutAttemptInsert = {
       attemptNumber,
       ...access,
       completedAt: null,
@@ -156,8 +160,9 @@ export const startAttempt = mutation({
       endReason: null,
       expiresAt,
       lastActivityAt: now,
-      scoreStatus: "provisional",
+      scoreStatus,
       sectionSnapshots: sections.map((section) => ({
+        publicPath: section.publicPath,
         questionCount: section.questionCount,
         questionSetId: section.questionSetId,
         questionSourcePath: section.questionSourcePath,
@@ -167,41 +172,84 @@ export const startAttempt = mutation({
         tryoutSectionId: section._id,
       })),
       startedAt: now,
-      status: "in-progress",
+      status: attemptStatus,
       totalCorrect: 0,
       totalQuestions: set.totalQuestionCount,
       tryoutSetId: set._id,
       userId: appUser._id,
-    });
+    };
+    if (scaleVersion) {
+      attemptValues.scaleVersionId = scaleVersion._id;
+    }
 
-    await ctx.scheduler.runAfter(
-      Math.max(0, expiresAt - now),
-      internal.tryouts.mutations.expiry.attempt,
-      {
-        attemptId,
-        expiresAt,
-      }
-    );
+    const attemptId = await ctx.db.insert("tryoutAttempts", attemptValues);
 
-    await captureProductEvent(ctx, {
-      distinctId: appUser._id,
-      event: {
-        name: "tryout attempt started",
-        properties: {
-          attempt_number: attemptNumber,
-          country_key: set.countryKey,
-          exam_key: set.examKey,
-          locale: set.locale,
-          score_status: "provisional",
-          set_key: set.setKey,
-        },
-      },
-      timestamp: new Date(now),
+    await scheduleAttemptExpiry(ctx, { attemptId, expiresAt, now });
+    await trackAttemptStarted(ctx, {
+      appUserId: appUser._id,
+      attemptNumber,
+      now,
+      set,
     });
 
     return { attemptId };
   },
 });
+
+/** Loads the score scale that must be snapshotted before starting an IRT set. */
+async function loadAttemptScaleVersion(ctx: MutationCtx, set: TryoutSet) {
+  if (set.scoringStrategy !== "irt") {
+    return null;
+  }
+
+  return await requireIrtScaleVersion(ctx, { tryoutSetId: set._id });
+}
+
+/** Schedules the attempt expiry mutation for the exact stored attempt deadline. */
+async function scheduleAttemptExpiry(
+  ctx: MutationCtx,
+  args: {
+    attemptId: Id<"tryoutAttempts">;
+    expiresAt: number;
+    now: number;
+  }
+) {
+  await ctx.scheduler.runAfter(
+    Math.max(0, args.expiresAt - args.now),
+    internal.tryouts.mutations.expiry.attempt,
+    {
+      attemptId: args.attemptId,
+      expiresAt: args.expiresAt,
+    }
+  );
+}
+
+/** Records the existing analytics event for a newly-started try-out attempt. */
+async function trackAttemptStarted(
+  ctx: MutationCtx,
+  args: {
+    appUserId: Id<"users">;
+    attemptNumber: number;
+    now: number;
+    set: TryoutSet;
+  }
+) {
+  await captureProductEvent(ctx, {
+    distinctId: args.appUserId,
+    event: {
+      name: "tryout attempt started",
+      properties: {
+        attempt_number: args.attemptNumber,
+        country_key: args.set.countryKey,
+        exam_key: args.set.examKey,
+        locale: args.set.locale,
+        score_status: "provisional",
+        set_key: args.set.setKey,
+      },
+    },
+    timestamp: new Date(args.now),
+  });
+}
 
 /** Saves one selected multiple-choice answer for a try-out placement. */
 export const saveResponse = mutation({

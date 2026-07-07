@@ -131,6 +131,7 @@ import type * as contentSync_reset_internal from "../contentSync/reset/internal.
 import type * as contentSync_reset_spec from "../contentSync/reset/spec.js";
 import type * as contentSync_tables from "../contentSync/tables.js";
 import type * as contentSync_tryouts_impl from "../contentSync/tryouts/impl.js";
+import type * as contentSync_tryouts_irt from "../contentSync/tryouts/irt.js";
 import type * as contentSync_tryouts_spec from "../contentSync/tryouts/spec.js";
 import type * as contentSync_tryouts_stale from "../contentSync/tryouts/stale.js";
 import type * as contents_actions_queue from "../contents/actions/queue.js";
@@ -282,6 +283,8 @@ import type * as tryouts_questions from "../tryouts/questions.js";
 import type * as tryouts_read from "../tryouts/read.js";
 import type * as tryouts_runtime_access from "../tryouts/runtime/access.js";
 import type * as tryouts_runtime_finish from "../tryouts/runtime/finish.js";
+import type * as tryouts_runtime_irt from "../tryouts/runtime/irt.js";
+import type * as tryouts_runtime_result from "../tryouts/runtime/result.js";
 import type * as tryouts_runtime_score from "../tryouts/runtime/score.js";
 import type * as users_mutations from "../users/mutations.js";
 import type * as users_queries from "../users/queries.js";
@@ -430,6 +433,7 @@ declare const fullApi: ApiFromModules<{
   "contentSync/reset/spec": typeof contentSync_reset_spec;
   "contentSync/tables": typeof contentSync_tables;
   "contentSync/tryouts/impl": typeof contentSync_tryouts_impl;
+  "contentSync/tryouts/irt": typeof contentSync_tryouts_irt;
   "contentSync/tryouts/spec": typeof contentSync_tryouts_spec;
   "contentSync/tryouts/stale": typeof contentSync_tryouts_stale;
   "contents/actions/queue": typeof contents_actions_queue;
@@ -581,6 +585,8 @@ declare const fullApi: ApiFromModules<{
   "tryouts/read": typeof tryouts_read;
   "tryouts/runtime/access": typeof tryouts_runtime_access;
   "tryouts/runtime/finish": typeof tryouts_runtime_finish;
+  "tryouts/runtime/irt": typeof tryouts_runtime_irt;
+  "tryouts/runtime/result": typeof tryouts_runtime_result;
   "tryouts/runtime/score": typeof tryouts_runtime_score;
   "users/mutations": typeof users_mutations;
   "users/queries": typeof users_queries;

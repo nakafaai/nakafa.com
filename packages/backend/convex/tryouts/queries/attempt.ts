@@ -27,6 +27,7 @@ const currentAttemptValidator = v.object({
   completedSectionKeys: v.array(tryoutRouteKeyValidator),
   expiresAt: v.number(),
   lastActivityAt: v.number(),
+  resumeSectionPublicPath: v.union(v.string(), v.null()),
   resumeSectionKey: v.union(tryoutRouteKeyValidator, v.null()),
   section: v.union(currentSectionValidator, v.null()),
   startedAt: v.number(),
@@ -165,6 +166,11 @@ export const getCurrent = query({
     const nextSection = attempt.sectionSnapshots.find(
       (snapshot) => !completedSections.has(snapshot.sectionKey)
     );
+    const resumeSection = inProgressSection
+      ? attempt.sectionSnapshots.find(
+          (snapshot) => snapshot.sectionKey === inProgressSection.sectionKey
+        )
+      : nextSection;
 
     return {
       attemptId: attempt._id,
@@ -172,8 +178,8 @@ export const getCurrent = query({
       completedSectionKeys: attempt.completedSectionKeys,
       expiresAt: attempt.expiresAt,
       lastActivityAt: attempt.lastActivityAt,
-      resumeSectionKey:
-        inProgressSection?.sectionKey ?? nextSection?.sectionKey ?? null,
+      resumeSectionKey: resumeSection?.sectionKey ?? null,
+      resumeSectionPublicPath: resumeSection?.publicPath ?? null,
       section: section
         ? {
             answeredCount: section.answeredCount,

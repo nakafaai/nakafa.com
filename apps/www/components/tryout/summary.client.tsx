@@ -22,7 +22,10 @@ import {
   TryoutPartStats,
   TryoutPartSummary,
 } from "@/components/tryout/part-summary";
-import { getTryoutHref } from "@/components/tryout/routes";
+import {
+  getTryoutHref,
+  getTryoutPublicPathHref,
+} from "@/components/tryout/routes";
 import {
   StartSectionButton,
   StartTryoutButton,
@@ -137,6 +140,28 @@ function TryoutSectionCta({
   }
 
   if (activeAttempt && !activeAttempt.section) {
+    if (
+      activeAttempt.resumeSectionKey &&
+      activeAttempt.resumeSectionKey !== page.section.sectionKey
+    ) {
+      let resumeHref = returnHref;
+
+      if (activeAttempt.resumeSectionPublicPath) {
+        resumeHref = getTryoutPublicPathHref(
+          activeAttempt.resumeSectionPublicPath
+        );
+      }
+
+      return (
+        <Link
+          className={cn(buttonVariants(), "w-full sm:w-auto")}
+          href={resumeHref}
+        >
+          {tTryouts("continue-cta")}
+        </Link>
+      );
+    }
+
     return (
       <StartSectionButton
         attemptId={activeAttempt.attemptId}

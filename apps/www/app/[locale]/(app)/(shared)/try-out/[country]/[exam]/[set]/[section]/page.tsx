@@ -47,17 +47,16 @@ export default async function Page(props: {
     sectionKey: page.section.sectionKey,
     setKey: page.set.setKey,
   };
-  const runtime = await preloadAuthQuery(
-    api.tryouts.queries.attempt.getSectionRuntime,
-    runtimeArgs
-  );
-  const runtimeResult = preloadedQueryResult(runtime);
-  const questions = runtimeResult
-    ? await loadTryoutQuestionContent({
-        locale,
-        questions: page.questions,
-      })
-    : [];
+  const [runtime, questions] = await Promise.all([
+    preloadAuthQuery(
+      api.tryouts.queries.attempt.getSectionRuntime,
+      runtimeArgs
+    ),
+    loadTryoutQuestionContent({
+      locale,
+      questions: page.questions,
+    }),
+  ]);
 
   if (!questions) {
     notFound();

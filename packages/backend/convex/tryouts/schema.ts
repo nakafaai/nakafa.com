@@ -36,6 +36,7 @@ export const tryoutRouteKeyValidator = v.string();
 export type TryoutRouteKey = Infer<typeof tryoutRouteKeyValidator>;
 
 export const tryoutSectionSnapshotValidator = v.object({
+  publicPath: v.string(),
   questionCount: v.number(),
   questionSetId: v.id("questionSets"),
   questionSourcePath: v.string(),
@@ -158,6 +159,7 @@ const tables = {
     scaleVersionId: v.optional(v.id("irtScaleVersions")),
     accessCampaignId: v.optional(v.id("tryoutAccessCampaigns")),
     accessGrantId: v.optional(v.id("tryoutAccessGrants")),
+    accessSubscriptionId: v.optional(v.string()),
     accessEndsAt: v.optional(v.number()),
     countsForCompetition: v.optional(v.boolean()),
     scoreStatus: tryoutScoreStatusValidator,
