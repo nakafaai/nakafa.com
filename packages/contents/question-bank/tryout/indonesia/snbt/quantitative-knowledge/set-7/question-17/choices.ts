@@ -1,0 +1,20 @@
+import type { QuestionChoices } from "@repo/contents/_types/question-bank/choices";
+
+const choices: QuestionChoices = {
+  id: [
+    { label: "$$1, 2, 3$$", value: false },
+    { label: "$$1, 3$$", value: false },
+    { label: "$$2, 4$$", value: false },
+    { label: "$$4$$ saja", value: false },
+    { label: "semua", value: true },
+  ],
+  en: [
+    { label: "$$1, 2, 3$$", value: false },
+    { label: "$$1, 3$$", value: false },
+    { label: "$$2, 4$$", value: false },
+    { label: "$$4$$ only", value: false },
+    { label: "all", value: true },
+  ],
+};
+
+export default choices;

@@ -1,0 +1,28 @@
+export const metadata = {
+  title: "Answer Explanation 13",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "2026-01-21",
+};
+
+To determine the number of possible password arrangements, we can break down the problem by analyzing the possibilities for each digit position separately.
+
+#### Position Analysis
+
+Each position has specific criteria limiting the characters that can be used. Here is the breakdown of possibilities for each position:
+
+| Position | Condition | Valid Choices | Possibilities |
+| :--- | :--- | :--- | :---: |
+| <InlineMath math="1" /> | Letters forming "ZIVA" | Z, I, V, A | <InlineMath math="4" /> |
+| <InlineMath math="2" /> | Factors of <InlineMath math="9" /> | <InlineMath math="1" />, <InlineMath math="3" />, <InlineMath math="9" /> | <InlineMath math="3" /> |
+| <InlineMath math="3" /> | Odd prime numbers (<InlineMath math="1" /> digit) | <InlineMath math="3" />, <InlineMath math="5" />, <InlineMath math="7" /> | <InlineMath math="3" /> |
+| <InlineMath math="4" /> | Members of set <InlineMath math="\{2, 3, 4\}" /> | <InlineMath math="2" />, <InlineMath math="3" />, <InlineMath math="4" /> | <InlineMath math="3" /> |
+
+#### Total Calculation
+
+Based on the multiplication principle (counting slot rule), the total number of password arrangements is the product of the possibilities in each position.
+
+<MathContainer>
+  <BlockMath math="\text{Total} = 4 \times 3 \times 3 \times 3 = 108" />
+</MathContainer>
+
+So, there are <InlineMath math="108" /> possible password arrangements.

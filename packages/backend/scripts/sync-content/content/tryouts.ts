@@ -2,12 +2,7 @@ import path from "node:path";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type {
   SyncedQuestion,
-  SyncedQuestionSet,
-  SyncedTryoutCountry,
-  SyncedTryoutExam,
   SyncedTryoutRoute,
-  SyncedTryoutSection,
-  SyncedTryoutSet,
 } from "@repo/backend/convex/contentSync/tryouts/spec";
 import { ScriptFailureError } from "@repo/backend/scripts/lib/errors";
 import {
@@ -21,10 +16,7 @@ import {
   log,
   logError,
 } from "@repo/backend/scripts/sync-content/cli/logging";
-import {
-  BATCH_SIZES,
-  TryoutSyncResultSchema,
-} from "@repo/backend/scripts/sync-content/contract/schemas";
+import { TryoutSyncResultSchema } from "@repo/backend/scripts/sync-content/contract/schemas";
 import type {
   ConvexConfig,
   SyncOptions,
@@ -32,24 +24,16 @@ import type {
 } from "@repo/backend/scripts/sync-content/contract/types";
 import { callConvexMutation } from "@repo/backend/scripts/sync-content/convex/client";
 import { CONTENTS_DIR } from "@repo/backend/scripts/sync-content/runtime/paths";
+import {
+  chunkTryoutRows,
+  type TryoutSyncArgs,
+} from "@repo/backend/scripts/sync-content/tryout/batch";
 import type { TryoutRouteKind } from "@repo/contents/_types/tryout/schema";
 import { TRYOUT_SOURCES } from "@repo/contents/_types/tryout/source";
 import { type Locale, locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
 
-interface TryoutSyncArgs {
-  countries: SyncedTryoutCountry[];
-  exams: SyncedTryoutExam[];
-  questionSets: SyncedQuestionSet[];
-  questions: SyncedQuestion[];
-  routes: SyncedTryoutRoute[];
-  sections: SyncedTryoutSection[];
-  sets: SyncedTryoutSet[];
-}
-
 type TryoutQuestionPayload = SyncedQuestion;
-
-interface ProjectedTryoutRows extends TryoutSyncArgs {}
 
 /** Syncs source-authored try-out catalogs and question-bank rows into Convex. */
 export const syncTryouts = Effect.fn("sync.tryouts")(function* (
@@ -112,6 +96,8 @@ const projectTryoutRows = Effect.fn("sync.projectTryoutRows")(function* (
       const examSlug = source.examRouteSlugs[locale];
       const countryTranslation = source.countryTranslations[locale];
       const examTranslation = source.examTranslations[locale];
+      const countrySourcePath = `tryout/${source.countryKey}`;
+      const examSourcePath = `${countrySourcePath}/${source.examKey}`;
       const countryPublicPath = `try-out/${countrySlug}`;
       const examPublicPath = `${countryPublicPath}/${examSlug}`;
 
@@ -129,6 +115,7 @@ const projectTryoutRows = Effect.fn("sync.projectTryoutRows")(function* (
       addTryoutRoute(routes, {
         ...countryRow,
         kind: "tryout-country",
+        sourcePath: countrySourcePath,
       });
 
       const examRow = {
@@ -147,11 +134,13 @@ const projectTryoutRows = Effect.fn("sync.projectTryoutRows")(function* (
       addTryoutRoute(routes, {
         ...examRow,
         kind: "tryout-exam",
+        sourcePath: examSourcePath,
       });
 
       for (const set of source.sets) {
         const setSlug = set.routeSlugs[locale];
         const setTranslation = set.translations[locale];
+        const setSourcePath = `${examSourcePath}/${set.key}`;
         const setPublicPath = `${examPublicPath}/${setSlug}`;
 
         const setRow = {
@@ -176,11 +165,13 @@ const projectTryoutRows = Effect.fn("sync.projectTryoutRows")(function* (
         addTryoutRoute(routes, {
           ...setRow,
           kind: "tryout-set",
+          sourcePath: setSourcePath,
         });
 
         for (const section of set.sections) {
           const sectionSlug = section.routeSlugs[locale];
           const sectionTranslation = section.translations[locale];
+          const sectionSourcePath = `${setSourcePath}/${section.key}`;
           const publicPath = `${setPublicPath}/${sectionSlug}`;
 
           questionSets.push({
@@ -224,6 +215,7 @@ const projectTryoutRows = Effect.fn("sync.projectTryoutRows")(function* (
             kind: "tryout-section",
             locale,
             publicPath,
+            sourcePath: sectionSourcePath,
             sourceRevision: source.sourceRevision,
             title: sectionTranslation.title,
           });
@@ -262,6 +254,7 @@ function addTryoutRoute(
     kind: TryoutRouteKind;
     locale: Locale;
     publicPath: string;
+    sourcePath: string;
     sourceRevision: string;
     title: string;
   }
@@ -272,7 +265,7 @@ function addTryoutRoute(
     kind: source.kind,
     locale: source.locale,
     publicPath: source.publicPath,
-    sourcePath: source.publicPath,
+    sourcePath: source.sourcePath,
     text: createTryoutRouteText(source),
     title: source.title,
   };
@@ -285,6 +278,7 @@ function createTryoutRouteHash(source: {
   kind: TryoutRouteKind;
   locale: Locale;
   publicPath: string;
+  sourcePath: string;
   sourceRevision: string;
   title: string;
 }) {
@@ -294,6 +288,7 @@ function createTryoutRouteHash(source: {
       kind: source.kind,
       locale: source.locale,
       publicPath: source.publicPath,
+      sourcePath: source.sourcePath,
       sourceRevision: source.sourceRevision,
       title: source.title,
     })
@@ -427,33 +422,3 @@ const readQuestion = Effect.fn("sync.readQuestion")(function* (
     title: question.metadata.title,
   };
 });
-
-function chunkTryoutRows(rows: ProjectedTryoutRows): TryoutSyncArgs[] {
-  const batches: TryoutSyncArgs[] = [];
-  const max = Math.max(
-    rows.countries.length,
-    rows.exams.length,
-    rows.routes.length,
-    rows.sets.length,
-    rows.questionSets.length,
-    rows.questions.length,
-    rows.sections.length
-  );
-
-  for (let index = 0; index < max; index += BATCH_SIZES.questions) {
-    batches.push({
-      countries: rows.countries.slice(index, index + BATCH_SIZES.questionSets),
-      exams: rows.exams.slice(index, index + BATCH_SIZES.questionSets),
-      routes: rows.routes.slice(index, index + BATCH_SIZES.questionSets),
-      sets: rows.sets.slice(index, index + BATCH_SIZES.questionSets),
-      questionSets: rows.questionSets.slice(
-        index,
-        index + BATCH_SIZES.questionSets
-      ),
-      questions: rows.questions.slice(index, index + BATCH_SIZES.questions),
-      sections: rows.sections.slice(index, index + BATCH_SIZES.questionSets),
-    });
-  }
-
-  return batches;
-}

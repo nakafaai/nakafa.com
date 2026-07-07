@@ -1,5 +1,5 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import { query } from "@repo/backend/convex/_generated/server";
+import { type QueryCtx, query } from "@repo/backend/convex/_generated/server";
 import { attemptEndReasonValidator } from "@repo/backend/convex/lib/attempts";
 import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
@@ -63,6 +63,28 @@ const sectionRuntimeValidator = v.object({
   section: currentSectionValidator,
 });
 
+/** Loads bounded section attempt rows for resume-state derivation. */
+async function loadSectionAttempts(
+  ctx: QueryCtx,
+  attempt: Doc<"tryoutAttempts">
+) {
+  const sections = await ctx.db
+    .query("tryoutSectionAttempts")
+    .withIndex("by_tryoutAttemptId_and_sectionOrder", (q) =>
+      q.eq("tryoutAttemptId", attempt._id)
+    )
+    .take(attempt.sectionSnapshots.length + 1);
+
+  if (sections.length > attempt.sectionSnapshots.length) {
+    throw new ConvexError({
+      code: "TRYOUT_SECTION_ATTEMPT_COUNT_EXCEEDED",
+      message: "Try-out section attempt count exceeds the attempt snapshot.",
+    });
+  }
+
+  return sections;
+}
+
 /** Reads the current user's latest try-out attempt for a public set identity. */
 export const getCurrent = query({
   args: {
@@ -110,8 +132,12 @@ export const getCurrent = query({
         .unique();
     }
 
+    const sections = await loadSectionAttempts(ctx, attempt);
+    const inProgressSection = sections.find(
+      (sectionAttempt) => sectionAttempt.status === "in-progress"
+    );
     const completedSections = new Set(attempt.completedSectionKeys);
-    const resumeSection = attempt.sectionSnapshots.find(
+    const nextSection = attempt.sectionSnapshots.find(
       (snapshot) => !completedSections.has(snapshot.sectionKey)
     );
 
@@ -121,7 +147,8 @@ export const getCurrent = query({
       completedSectionKeys: attempt.completedSectionKeys,
       expiresAt: attempt.expiresAt,
       lastActivityAt: attempt.lastActivityAt,
-      resumeSectionKey: resumeSection?.sectionKey ?? null,
+      resumeSectionKey:
+        inProgressSection?.sectionKey ?? nextSection?.sectionKey ?? null,
       section: section
         ? {
             answeredCount: section.answeredCount,

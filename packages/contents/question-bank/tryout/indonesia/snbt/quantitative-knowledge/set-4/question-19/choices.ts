@@ -1,0 +1,50 @@
+import type { QuestionChoices } from "@repo/contents/_types/question-bank/choices";
+
+const choices: QuestionChoices = {
+  id: [
+    {
+      label: "$$2.5$$ liter",
+      value: false,
+    },
+    {
+      label: "$$5$$ liter",
+      value: false,
+    },
+    {
+      label: "$$7.5$$ liter",
+      value: false,
+    },
+    {
+      label: "$$10$$ liter",
+      value: false,
+    },
+    {
+      label: "$$12.5$$ liter",
+      value: true,
+    },
+  ],
+  en: [
+    {
+      label: "$$2.5$$ liters",
+      value: false,
+    },
+    {
+      label: "$$5$$ liters",
+      value: false,
+    },
+    {
+      label: "$$7.5$$ liters",
+      value: false,
+    },
+    {
+      label: "$$10$$ liters",
+      value: false,
+    },
+    {
+      label: "$$12.5$$ liters",
+      value: true,
+    },
+  ],
+};
+
+export default choices;
