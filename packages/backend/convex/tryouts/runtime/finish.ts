@@ -1,6 +1,10 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
+  createSectionPlacements,
+  requireSnapshotSection,
+} from "@repo/backend/convex/tryouts/runtime/placement";
+import {
   finalizeAttemptScore,
   summarizeResponses,
 } from "@repo/backend/convex/tryouts/runtime/score";
@@ -9,6 +13,7 @@ import { ConvexError } from "convex/values";
 type TryoutAttempt = Doc<"tryoutAttempts">;
 type TryoutSectionAttempt = Doc<"tryoutSectionAttempts">;
 type TryoutEndReason = NonNullable<TryoutAttempt["endReason"]>;
+type TryoutSectionSnapshot = TryoutAttempt["sectionSnapshots"][number];
 
 /** Returns the earliest timestamp that can end an attempt. */
 export function getAttemptExpiresAt(attempt: TryoutAttempt) {
@@ -63,6 +68,76 @@ async function loadSectionResponses(
   }
 
   return responses;
+}
+
+/** Creates an expired section attempt for a section the user never opened. */
+async function createExpiredSectionAttempt(
+  ctx: MutationCtx,
+  args: {
+    attempt: TryoutAttempt;
+    now: number;
+    snapshot: TryoutSectionSnapshot;
+  }
+) {
+  const section = await requireSnapshotSection(ctx, {
+    attempt: args.attempt,
+    snapshot: args.snapshot,
+  });
+  const sectionAttemptId = await ctx.db.insert("tryoutSectionAttempts", {
+    answeredCount: 0,
+    completedAt: args.attempt.expiresAt,
+    correctAnswers: 0,
+    endReason: "time-expired",
+    expiresAt: args.attempt.expiresAt,
+    lastActivityAt: args.now,
+    sectionKey: args.snapshot.sectionKey,
+    sectionOrder: args.snapshot.sectionOrder,
+    startedAt: args.attempt.expiresAt,
+    status: "expired",
+    totalQuestions: args.snapshot.questionCount,
+    tryoutAttemptId: args.attempt._id,
+    tryoutSectionId: args.snapshot.tryoutSectionId,
+  });
+  const sectionAttempt = await ctx.db.get(sectionAttemptId);
+
+  if (!sectionAttempt) {
+    throw new ConvexError({
+      code: "TRYOUT_SECTION_NOT_FOUND",
+      message: "Try-out section attempt not found.",
+    });
+  }
+
+  await createSectionPlacements(ctx, {
+    attempt: args.attempt,
+    section,
+    sectionAttempt,
+  });
+}
+
+/** Creates expired attempts for unopened sections before final scoring. */
+async function createMissingExpiredSectionAttempts(
+  ctx: MutationCtx,
+  args: {
+    attempt: TryoutAttempt;
+    now: number;
+    sections: TryoutSectionAttempt[];
+  }
+) {
+  const attemptedSectionKeys = new Set(
+    args.sections.map((section) => section.sectionKey)
+  );
+
+  for (const snapshot of args.attempt.sectionSnapshots) {
+    if (attemptedSectionKeys.has(snapshot.sectionKey)) {
+      continue;
+    }
+
+    await createExpiredSectionAttempt(ctx, {
+      attempt: args.attempt,
+      now: args.now,
+      snapshot,
+    });
+  }
 }
 
 /** Finalizes one section attempt and finalizes the parent attempt if complete. */
@@ -154,6 +229,12 @@ export async function expireAttempt(
       status: "expired",
     });
   }
+
+  await createMissingExpiredSectionAttempts(ctx, {
+    attempt: args.attempt,
+    now: args.now,
+    sections,
+  });
 
   await ctx.db.patch(args.attempt._id, {
     completedSectionKeys: args.attempt.sectionSnapshots.map(

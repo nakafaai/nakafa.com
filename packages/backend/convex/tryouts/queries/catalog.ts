@@ -332,6 +332,10 @@ export const getSetPage = query({
       });
     }
 
+    if (sections.length < set.sectionCount) {
+      return null;
+    }
+
     return {
       exam: {
         description: exam.description,
