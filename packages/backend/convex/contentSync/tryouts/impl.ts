@@ -20,7 +20,7 @@ import type {
 } from "@repo/backend/convex/contentSync/tryouts/spec";
 import { getContentGraphIdentity } from "@repo/backend/convex/contents/graph";
 import { syncContentRoute } from "@repo/backend/convex/contents/helpers/routes/write";
-import { syncContentSearch } from "@repo/backend/convex/contents/helpers/search/write";
+import { deleteContentSearchByRoute } from "@repo/backend/convex/contents/helpers/search/write";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { ConvexError } from "convex/values";
 
@@ -133,17 +133,9 @@ async function syncTryoutRoute(
     route: route.sourcePath,
   });
 
-  await syncContentSearch(ctx, {
-    ...graph,
-    contentHash: route.contentHash,
-    description: route.description,
+  await deleteContentSearchByRoute(ctx, {
     locale: route.locale,
     route: route.publicPath,
-    section: "tryout",
-    sourcePath: route.sourcePath,
-    syncedAt,
-    text: route.text,
-    title: route.title,
   });
   await syncContentRoute(ctx, {
     ...graph,

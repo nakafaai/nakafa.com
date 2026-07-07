@@ -51,10 +51,13 @@ export default async function Page(props: {
     api.tryouts.queries.attempt.getSectionRuntime,
     runtimeArgs
   );
-  const questions = await loadTryoutQuestionContent({
-    locale,
-    questions: page.questions,
-  });
+  const runtimeResult = preloadedQueryResult(runtime);
+  const questions = runtimeResult
+    ? await loadTryoutQuestionContent({
+        locale,
+        questions: page.questions,
+      })
+    : [];
 
   if (!questions) {
     notFound();

@@ -53,8 +53,10 @@ const publicTryoutSectionValidator = v.object({
 });
 
 const publicTryoutQuestionContentValidator = v.object({
-  number: v.number(),
+  contentHash: v.string(),
+  questionOrder: v.number(),
   sourcePath: v.string(),
+  sourceRevision: v.string(),
 });
 
 /** Reads the localized country-first try-out hub page model. */
@@ -248,7 +250,7 @@ function readSourceCountryCode(countryKey: string) {
   return countryCode;
 }
 
-/** Loads ordered question source paths for server-side MDX rendering. */
+/** Loads bounded public question content keys for server-side MDX rendering. */
 async function loadQuestionContentRows(
   ctx: QueryCtx,
   section: Doc<"tryoutSections">
@@ -268,8 +270,10 @@ async function loadQuestionContentRows(
   }
 
   return questions.map((question) => ({
-    number: question.number,
+    contentHash: question.contentHash,
+    questionOrder: question.number,
     sourcePath: question.sourcePath,
+    sourceRevision: question.sourceRevision,
   }));
 }
 
@@ -386,24 +390,24 @@ export const getSectionPage = query({
       return null;
     }
 
-    const [set, questions] = await Promise.all([
-      ctx.db.get(section.tryoutSetId),
-      loadQuestionContentRows(ctx, section),
-    ]);
+    const set = await ctx.db.get(section.tryoutSetId);
 
     if (!set?.isActive) {
       return null;
     }
 
-    const exam = await ctx.db
-      .query("tryoutExams")
-      .withIndex("by_countryKey_and_examKey_and_locale", (q) =>
-        q
-          .eq("countryKey", set.countryKey)
-          .eq("examKey", set.examKey)
-          .eq("locale", args.locale)
-      )
-      .unique();
+    const [exam, questions] = await Promise.all([
+      ctx.db
+        .query("tryoutExams")
+        .withIndex("by_countryKey_and_examKey_and_locale", (q) =>
+          q
+            .eq("countryKey", set.countryKey)
+            .eq("examKey", set.examKey)
+            .eq("locale", args.locale)
+        )
+        .unique(),
+      loadQuestionContentRows(ctx, section),
+    ]);
 
     if (!exam?.isActive) {
       return null;
@@ -417,6 +421,7 @@ export const getSectionPage = query({
         scoringStrategy: exam.scoringStrategy,
         title: exam.title,
       },
+      questions,
       section: {
         description: section.description,
         publicPath: section.publicPath,
@@ -425,7 +430,6 @@ export const getSectionPage = query({
         timeLimitSeconds: section.timeLimitSeconds,
         title: section.title,
       },
-      questions,
       set: {
         countryKey: set.countryKey,
         description: set.description,

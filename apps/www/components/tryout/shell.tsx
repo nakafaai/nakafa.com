@@ -7,8 +7,6 @@ import { useParams } from "next/navigation";
 import { hasLocale } from "next-intl";
 import type { ReactNode } from "react";
 import { AppShell } from "@/components/sidebar/app-shell";
-import { isTryoutActive } from "@/components/tryout/active";
-import { useTryoutClock } from "@/components/tryout/clock";
 
 /** Locks the app shell while the current try-out attempt is running. */
 export function TryoutShell({ children }: { children: ReactNode }) {
@@ -37,20 +35,11 @@ export function TryoutShell({ children }: { children: ReactNode }) {
         }
       : "skip"
   );
-  const now = useTryoutClock(attempt?.status === "in-progress");
+  const locked = attempt?.status === "in-progress";
 
   if (shouldLoadAttempt && attempt === undefined) {
     return null;
   }
-
-  const locked = Boolean(
-    attempt &&
-      isTryoutActive({
-        expiresAt: attempt.expiresAt,
-        now,
-        status: attempt.status,
-      })
-  );
 
   return <AppShell locked={locked}>{children}</AppShell>;
 }

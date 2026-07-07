@@ -26,7 +26,7 @@ import { getTryoutHref } from "@/components/tryout/routes";
 import {
   StartSectionButton,
   StartTryoutButton,
-} from "@/components/tryout/start-button";
+} from "@/components/tryout/start";
 import { TryoutStatus } from "@/components/tryout/status";
 
 type SectionPageQuery = typeof api.tryouts.queries.catalog.getSectionPage;
@@ -140,6 +140,12 @@ function TryoutSectionCta({
     return (
       <StartSectionButton
         attemptId={activeAttempt.attemptId}
+        sectionHref={getTryoutHref({
+          country,
+          exam,
+          section,
+          set,
+        })}
         sectionKey={page.section.sectionKey}
       />
     );

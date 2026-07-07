@@ -1,28 +1,20 @@
 "use client";
 
 import { ArrowDown01Icon } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/convex/_generated/api";
-import { Response } from "@repo/design-system/components/ai/response";
 import { Button } from "@repo/design-system/components/ui/button";
-import { Checkbox } from "@repo/design-system/components/ui/checkbox";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Label } from "@repo/design-system/components/ui/label";
-import { buttonVariants } from "@repo/design-system/lib/button";
-import { cn } from "@repo/design-system/lib/utils";
-import { useMutation } from "convex/react";
-import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
-import { toast } from "sonner";
+import { TryoutChoices } from "@/components/tryout/choice";
 import type {
   TryoutRuntimeQuestion as RuntimeQuestion,
-  TryoutRuntimeChoice,
   TryoutSectionRuntimeArgs,
 } from "@/components/tryout/types";
 
 interface TryoutRuntimeQuestionProps {
   content: ReactNode;
-  isExpired: boolean;
+  isLocked: boolean;
+  isReviewMode: boolean;
   question: RuntimeQuestion;
   runtimeQueryArgs: TryoutSectionRuntimeArgs;
   sectionStartedAt: number;
@@ -31,7 +23,8 @@ interface TryoutRuntimeQuestionProps {
 /** Renders one question with the original production exercise answer styling. */
 export function TryoutRuntimeQuestion({
   content,
-  isExpired,
+  isLocked,
+  isReviewMode,
   question,
   runtimeQueryArgs,
   sectionStartedAt,
@@ -74,7 +67,8 @@ export function TryoutRuntimeQuestion({
 
       <section className="my-8">
         <TryoutChoices
-          isExpired={isExpired}
+          isLocked={isLocked}
+          isReviewMode={isReviewMode}
           question={question}
           runtimeQueryArgs={runtimeQueryArgs}
           sectionStartedAt={sectionStartedAt}
@@ -82,172 +76,4 @@ export function TryoutRuntimeQuestion({
       </section>
     </article>
   );
-}
-
-/** Renders and saves selectable answers for one runtime question. */
-function TryoutChoices({
-  isExpired,
-  question,
-  runtimeQueryArgs,
-  sectionStartedAt,
-}: {
-  isExpired: boolean;
-  question: RuntimeQuestion;
-  runtimeQueryArgs: TryoutSectionRuntimeArgs;
-  sectionStartedAt: number;
-}) {
-  const saveResponse = useMutation(
-    api.tryouts.mutations.attempts.saveResponse
-  ).withOptimisticUpdate((localStore, args) => {
-    if (!args.selectedOptionId) {
-      return;
-    }
-
-    const currentRuntime = localStore.getQuery(
-      api.tryouts.queries.attempt.getSectionRuntime,
-      runtimeQueryArgs
-    );
-
-    if (!currentRuntime) {
-      return;
-    }
-
-    const selectedAt = currentRuntime.section.startedAt + args.timeSpent * 1000;
-    let foundQuestion = false;
-    let answeredFirstTime = false;
-    const questions = currentRuntime.questions.map((runtimeQuestion) => {
-      if (runtimeQuestion.placementId !== args.placementId) {
-        return runtimeQuestion;
-      }
-
-      foundQuestion = true;
-
-      if (!runtimeQuestion.response) {
-        answeredFirstTime = true;
-      }
-
-      return {
-        ...runtimeQuestion,
-        response: {
-          answeredAt: runtimeQuestion.response?.answeredAt ?? selectedAt,
-          selectedOptionId: args.selectedOptionId,
-          updatedAt: selectedAt,
-        },
-      };
-    });
-
-    if (!foundQuestion) {
-      return;
-    }
-
-    const answeredCount = answeredFirstTime
-      ? Math.min(
-          currentRuntime.section.totalQuestions,
-          currentRuntime.section.answeredCount + 1
-        )
-      : currentRuntime.section.answeredCount;
-
-    localStore.setQuery(
-      api.tryouts.queries.attempt.getSectionRuntime,
-      runtimeQueryArgs,
-      {
-        ...currentRuntime,
-        questions,
-        section: {
-          ...currentRuntime.section,
-          answeredCount,
-        },
-      }
-    );
-  });
-  const tExercises = useTranslations("Exercises");
-
-  /** Saves one selected choice through Convex with elapsed section time. */
-  function saveChoice(choice: TryoutRuntimeChoice) {
-    if (isExpired) {
-      return;
-    }
-
-    Effect.runPromise(
-      Effect.tryPromise({
-        try: () =>
-          saveResponse({
-            placementId: question.placementId,
-            selectedOptionId: choice.optionKey,
-            timeSpent: getElapsedSeconds(sectionStartedAt),
-          }),
-        catch: (cause) => cause,
-      }).pipe(
-        Effect.catchAll(() =>
-          Effect.sync(() => {
-            toast.error(tExercises("submit-answer-error"), {
-              position: "bottom-center",
-            });
-          })
-        )
-      )
-    );
-  }
-
-  return (
-    <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-      {question.choices.map((choice) => (
-        <TryoutChoice
-          choice={choice}
-          disabled={isExpired}
-          key={choice.optionKey}
-          onSelect={() => saveChoice(choice)}
-          question={question}
-        />
-      ))}
-    </div>
-  );
-}
-
-/** Renders one selectable answer option in the production exercise style. */
-function TryoutChoice({
-  choice,
-  disabled,
-  onSelect,
-  question,
-}: {
-  choice: TryoutRuntimeChoice;
-  disabled: boolean;
-  onSelect: () => void;
-  question: RuntimeQuestion;
-}) {
-  const checked = question.response?.selectedOptionId === choice.optionKey;
-
-  return (
-    <Label
-      className={cn(
-        buttonVariants({
-          variant: checked ? "default-outline" : "outline",
-        }),
-        "h-auto min-w-0 whitespace-normal text-left font-normal text-base"
-      )}
-    >
-      <Checkbox
-        checked={checked}
-        className="mt-1 shrink-0 cursor-pointer"
-        disabled={disabled}
-        onCheckedChange={(nextChecked) => {
-          if (nextChecked) {
-            onSelect();
-          }
-        }}
-      />
-      <Response
-        className="wrap-anywhere h-auto min-w-0 flex-1 whitespace-normal"
-        id={`${question.questionId}-${choice.optionKey}`}
-      >
-        {choice.label}
-      </Response>
-    </Label>
-  );
-}
-
-/** Calculates elapsed whole seconds since a Convex section start timestamp. */
-function getElapsedSeconds(startedAt: number) {
-  return Math.max(0, Math.floor((Date.now() - startedAt) / 1000));
 }

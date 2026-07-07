@@ -96,8 +96,6 @@ const projectTryoutRows = Effect.fn("sync.projectTryoutRows")(function* (
       const examSlug = source.examRouteSlugs[locale];
       const countryTranslation = source.countryTranslations[locale];
       const examTranslation = source.examTranslations[locale];
-      const countrySourcePath = `tryout/${source.countryKey}`;
-      const examSourcePath = `${countrySourcePath}/${source.examKey}`;
       const countryPublicPath = `try-out/${countrySlug}`;
       const examPublicPath = `${countryPublicPath}/${examSlug}`;
 
@@ -115,7 +113,6 @@ const projectTryoutRows = Effect.fn("sync.projectTryoutRows")(function* (
       addTryoutRoute(routes, {
         ...countryRow,
         kind: "tryout-country",
-        sourcePath: countrySourcePath,
       });
 
       const examRow = {
@@ -134,13 +131,11 @@ const projectTryoutRows = Effect.fn("sync.projectTryoutRows")(function* (
       addTryoutRoute(routes, {
         ...examRow,
         kind: "tryout-exam",
-        sourcePath: examSourcePath,
       });
 
       for (const set of source.sets) {
         const setSlug = set.routeSlugs[locale];
         const setTranslation = set.translations[locale];
-        const setSourcePath = `${examSourcePath}/${set.key}`;
         const setPublicPath = `${examPublicPath}/${setSlug}`;
 
         const setRow = {
@@ -165,13 +160,11 @@ const projectTryoutRows = Effect.fn("sync.projectTryoutRows")(function* (
         addTryoutRoute(routes, {
           ...setRow,
           kind: "tryout-set",
-          sourcePath: setSourcePath,
         });
 
         for (const section of set.sections) {
           const sectionSlug = section.routeSlugs[locale];
           const sectionTranslation = section.translations[locale];
-          const sectionSourcePath = `${setSourcePath}/${section.key}`;
           const publicPath = `${setPublicPath}/${sectionSlug}`;
 
           questionSets.push({
@@ -215,7 +208,6 @@ const projectTryoutRows = Effect.fn("sync.projectTryoutRows")(function* (
             kind: "tryout-section",
             locale,
             publicPath,
-            sourcePath: sectionSourcePath,
             sourceRevision: source.sourceRevision,
             title: sectionTranslation.title,
           });
@@ -254,19 +246,18 @@ function addTryoutRoute(
     kind: TryoutRouteKind;
     locale: Locale;
     publicPath: string;
-    sourcePath: string;
     sourceRevision: string;
     title: string;
   }
 ) {
+  const sourcePath = source.publicPath;
   const row = {
-    contentHash: createTryoutRouteHash(source),
+    contentHash: createTryoutRouteHash({ ...source, sourcePath }),
     description: source.description,
     kind: source.kind,
     locale: source.locale,
     publicPath: source.publicPath,
-    sourcePath: source.sourcePath,
-    text: createTryoutRouteText(source),
+    sourcePath,
     title: source.title,
   };
 
@@ -293,13 +284,6 @@ function createTryoutRouteHash(source: {
       title: source.title,
     })
   );
-}
-
-function createTryoutRouteText(source: {
-  description?: string;
-  title: string;
-}) {
-  return [source.title, source.description].filter(Boolean).join("\n");
 }
 
 const readSectionQuestions = Effect.fn("sync.readSectionQuestions")(

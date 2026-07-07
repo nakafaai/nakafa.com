@@ -99,22 +99,6 @@ beforeEach(() => {
       });
     }
 
-    if (route === "try-out/indonesia/snbt/set-1") {
-      return Effect.succeed({
-        description: "Try-out set",
-        markdown: false,
-        title: "Try-out Set 1",
-      });
-    }
-
-    if (route === "try-out/indonesia/snbt/set-1/quantitative-knowledge") {
-      return Effect.succeed({
-        description: "Try-out section",
-        markdown: false,
-        title: "Quantitative Knowledge",
-      });
-    }
-
     return Effect.succeed(null);
   });
 });
@@ -138,20 +122,6 @@ const routeRows = [
     route: "articles/politics/aaa-short-fixture",
     section: "articles",
     title: "A Short Fixture",
-  }),
-  routeRow({
-    description: "Try-out set",
-    markdown: false,
-    route: "try-out/indonesia/snbt/set-1",
-    section: "tryout",
-    title: "Try-out Set 1",
-  }),
-  routeRow({
-    description: "Try-out section",
-    markdown: false,
-    route: "try-out/indonesia/snbt/set-1/quantitative-knowledge",
-    section: "tryout",
-    title: "Quantitative Knowledge",
   }),
   routeRow({
     description: "Quran index",
@@ -228,7 +198,7 @@ describe("llms entries", () => {
     expect(getRouteSection("/subjects/chemistry/green-chemistry")).toBe(
       "material"
     );
-    expect(getRouteSection("/try-out/indonesia/snbt")).toBe("tryout");
+    expect(getRouteSection("/try-out/indonesia/snbt")).toBe("site");
     expect(getRouteSection("/site/about")).toBe("site");
     expect(getRouteSection("/")).toBe("site");
     expect(isLlmsSection("articles")).toBe(true);
@@ -239,7 +209,6 @@ describe("llms entries", () => {
       "material",
       "quran",
       "site",
-      "tryout",
     ]);
   });
 
@@ -250,11 +219,6 @@ describe("llms entries", () => {
           locale: "en",
           page: 0,
           section: "articles",
-        }),
-        getContentPageLlmsEntries({
-          locale: "en",
-          page: 0,
-          section: "tryout",
         }),
         getContentPageLlmsEntries({
           locale: "en",
@@ -292,10 +256,6 @@ describe("llms entries", () => {
         title: "Definition of Green Chemistry",
       })
     );
-    expect(hrefs).not.toContain(`${BASE_URL}/en/try-out/indonesia/snbt/set-1`);
-    expect(hrefs).not.toContain(
-      `${BASE_URL}/en/try-out/indonesia/snbt/set-1/quantitative-knowledge`
-    );
     expect(entries).toContainEqual(
       expect.objectContaining({
         description: "Quran index",
@@ -314,7 +274,6 @@ describe("llms entries", () => {
       })
     );
     expect(hrefs).not.toContain(`${BASE_URL}/en/articles/politics.md`);
-    expect(hrefs).not.toContain(`${BASE_URL}/en/try-out/indonesia/snbt.md`);
     expect(mockGetRuntimeContentRoute).not.toHaveBeenCalled();
     expect(mockGetRuntimeContentRouteArtifactPage).toHaveBeenCalledWith({
       locale: "en",

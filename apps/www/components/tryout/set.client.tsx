@@ -7,7 +7,6 @@ import { useConvexAuth, usePreloadedQuery, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
-import { isTryoutActive } from "@/components/tryout/active";
 import { useTryoutClock } from "@/components/tryout/clock";
 import { TryoutCountdown } from "@/components/tryout/countdown";
 import { TryoutPageHeader } from "@/components/tryout/header";
@@ -17,7 +16,7 @@ import {
   getTryoutHref,
   getTryoutPublicPathHref,
 } from "@/components/tryout/routes";
-import { StartTryoutButton } from "@/components/tryout/start-button";
+import { StartTryoutButton } from "@/components/tryout/start";
 
 interface TryoutSetPageClientProps {
   country: string;
@@ -63,18 +62,11 @@ export function TryoutSetPageClient({
   }
 
   const firstSection = page.sections[0];
-  let activeAttempt: typeof currentAttempt = null;
-
-  if (
-    currentAttempt &&
-    isTryoutActive({
-      expiresAt: currentAttempt.expiresAt,
-      now,
-      status: currentAttempt.status,
-    })
-  ) {
-    activeAttempt = currentAttempt;
-  }
+  const activeAttempt = getActiveAttempt(currentAttempt, now);
+  const actionAttempt =
+    currentAttempt?.status === "in-progress" && !activeAttempt
+      ? null
+      : currentAttempt;
 
   const resumeSectionKey = activeAttempt?.resumeSectionKey ?? null;
   const resumeSection =
@@ -102,7 +94,7 @@ export function TryoutSetPageClient({
           <TryoutSetAction
             activeAttempt={activeAttempt}
             countryKey={page.set.countryKey}
-            currentAttempt={currentAttempt}
+            currentAttempt={actionAttempt}
             entryHref={entryHref}
             examKey={page.set.examKey}
             firstSection={firstSection}
@@ -112,15 +104,27 @@ export function TryoutSetPageClient({
         </div>
 
         <TryoutSectionRows
-          attempt={currentAttempt}
+          attempt={actionAttempt}
           emptyLabel={tTryouts("list-empty")}
-          now={now}
           questionUnitLabel={tTryouts("question-unit")}
           sections={page.sections}
         />
       </div>
     </div>
   );
+}
+
+/** Returns the current attempt only while its Convex expiry is still active. */
+function getActiveAttempt(attempt: CurrentAttempt, now: number) {
+  if (attempt?.status !== "in-progress") {
+    return null;
+  }
+
+  if (now >= attempt.expiresAt) {
+    return null;
+  }
+
+  return attempt;
 }
 
 /** Renders the only valid set-page action for the current attempt state. */
@@ -185,28 +189,15 @@ function TryoutSetAction({
 function TryoutSectionRows({
   attempt,
   emptyLabel,
-  now,
   questionUnitLabel,
   sections,
 }: {
   attempt: FunctionReturnType<typeof api.tryouts.queries.attempt.getCurrent>;
   emptyLabel: string;
-  now: number;
   questionUnitLabel: string;
   sections: readonly SetSection[];
 }) {
-  let activeAttempt: typeof attempt = null;
-
-  if (
-    attempt &&
-    isTryoutActive({
-      expiresAt: attempt.expiresAt,
-      now,
-      status: attempt.status,
-    })
-  ) {
-    activeAttempt = attempt;
-  }
+  const activeAttempt = attempt?.status === "in-progress" ? attempt : null;
 
   const completedSections = new Set(activeAttempt?.completedSectionKeys ?? []);
   const currentSectionKey = activeAttempt?.resumeSectionKey ?? null;

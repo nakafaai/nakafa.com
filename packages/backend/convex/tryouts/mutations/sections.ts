@@ -76,7 +76,11 @@ async function requireSnapshotSection(
   if (
     !section ||
     section.tryoutSetId !== args.attempt.tryoutSetId ||
-    section.sectionKey !== args.snapshot.sectionKey
+    section.sectionKey !== args.snapshot.sectionKey ||
+    section.questionSetId !== args.snapshot.questionSetId ||
+    section.questionSourcePath !== args.snapshot.questionSourcePath ||
+    section.questionCount !== args.snapshot.questionCount ||
+    section.sourceRevision !== args.snapshot.sourceRevision
   ) {
     throw new ConvexError({
       code: "TRYOUT_SECTION_NOT_FOUND",

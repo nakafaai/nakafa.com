@@ -84,6 +84,31 @@ export async function deleteContentSearchBySourcePath(
   }
 }
 
+/** Deletes every search row attached to one public route projection. */
+export async function deleteContentSearchByRoute(
+  ctx: MutationCtx,
+  args: { locale: Doc<"contentSearch">["locale"]; route: string }
+) {
+  const rows = await ctx.db
+    .query("contentSearch")
+    .withIndex("by_locale_and_route", (q) =>
+      q.eq("locale", args.locale).eq("route", args.route)
+    )
+    .take(duplicateSearchRepairLimit);
+
+  if (rows.length >= duplicateSearchRepairLimit) {
+    throw new ConvexError({
+      code: "CONTENT_SEARCH_DELETE_LIMIT_EXCEEDED",
+      message:
+        "Content search route has too many projections to delete safely.",
+    });
+  }
+
+  for (const row of rows) {
+    await ctx.db.delete(row._id);
+  }
+}
+
 /** Removes duplicate search rows before one route projection is inserted. */
 async function deleteDuplicateContentSearchRows(
   ctx: MutationCtx,

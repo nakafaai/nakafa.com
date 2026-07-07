@@ -81,4 +81,5 @@ function stopClockIfIdle() {
 
   window.clearInterval(timer);
   timer = null;
+  currentNow = 0;
 }

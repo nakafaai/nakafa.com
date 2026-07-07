@@ -13,7 +13,6 @@ export const SECTION_LABELS = {
   material: "Material",
   quran: "Quran",
   site: "Site Pages",
-  tryout: "Try Out",
 };
 
 export type LlmsSection = keyof typeof SECTION_LABELS;

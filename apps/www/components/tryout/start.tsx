@@ -15,8 +15,6 @@ import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { toast } from "sonner";
-import { isTryoutActive } from "@/components/tryout/active";
-import { useTryoutClock } from "@/components/tryout/clock";
 
 type CurrentAttempt = FunctionReturnType<
   typeof api.tryouts.queries.attempt.getCurrent
@@ -48,15 +46,7 @@ export function StartTryoutButton({
   const [isDialogOpen, { close: closeDialog, open: openDialog }] =
     useDisclosure(false);
   const authRedirectHref = `/${locale}${firstSectionHref}`;
-  const now = useTryoutClock(attempt?.status === "in-progress");
-  const hasActiveAttempt = Boolean(
-    attempt &&
-      isTryoutActive({
-        expiresAt: attempt.expiresAt,
-        now,
-        status: attempt.status,
-      })
-  );
+  const hasActiveAttempt = attempt?.status === "in-progress";
   const hasFinishedAttempt = Boolean(attempt && !hasActiveAttempt);
   const isAttemptLoading = isAuthenticated && attempt === undefined;
   const isBusy = isLoading || isPending || isAttemptLoading;
@@ -184,14 +174,17 @@ export function StartTryoutButton({
 
 interface StartSectionButtonProps {
   attemptId: Id<"tryoutAttempts">;
+  sectionHref: string;
   sectionKey: string;
 }
 
 /** Starts the selected section inside an already-active try-out attempt. */
 export function StartSectionButton({
   attemptId,
+  sectionHref,
   sectionKey,
 }: StartSectionButtonProps) {
+  const router = useRouter();
   const startSection = useMutation(api.tryouts.mutations.sections.start);
   const tTryouts = useTranslations("Tryouts");
   const [isPending, startTransition] = useTransition();
@@ -214,6 +207,7 @@ export function StartSectionButton({
         }).pipe(
           Effect.tap(() =>
             Effect.sync(() => {
+              router.replace(sectionHref);
               toast.success(tTryouts("start-part-success"), {
                 position: "bottom-center",
               });

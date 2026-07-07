@@ -94,46 +94,12 @@ describe("llms full document", () => {
             section: "material",
             title: "Blank Lesson",
           }),
-        ]);
-      }
-
-      if (section === "tryout") {
-        return Effect.succeed([
           createEntry({
             markdown: false,
-            route: "/try-out/indonesia/snbt/set-1/quantitative-knowledge",
-            section: "tryout",
-            title: "Quantitative Knowledge",
+            route: "/subjects/chemistry/web",
+            section: "material",
+            title: "Web Lesson",
           }),
-          createEntry({
-            markdown: false,
-            route: "/try-out/indonesia/snbt/set-1",
-            section: "tryout",
-            title: "Set 1",
-          }),
-          createEntry({
-            markdown: false,
-            route: "/try-out/indonesia/snbt/blank",
-            section: "tryout",
-            title: "Blank Try-out",
-          }),
-          {
-            ...createEntry({
-              markdown: false,
-              route: "/try-out/blank",
-              section: "tryout",
-              title: "Blank",
-            }),
-            segments: ["try-out", ""],
-          },
-          {
-            ...createEntry({
-              route: "/try-out/indonesia/snbt/set-1/notes",
-              section: "tryout",
-              title: "Notes",
-            }),
-            href: `${BASE_URL}/en/try-out/indonesia/snbt/set-1/notes`,
-          },
         ]);
       }
 
@@ -150,19 +116,9 @@ describe("llms full document", () => {
       ({ cleanSlug, locale }) => {
         if (
           cleanSlug === "articles/story/missing" ||
-          cleanSlug === "subjects/chemistry/blank" ||
-          cleanSlug === "try-out/indonesia/snbt/set-1" ||
-          cleanSlug === "try-out/indonesia/snbt/blank" ||
-          cleanSlug === "try-out/blank"
+          cleanSlug === "subjects/chemistry/blank"
         ) {
           return Effect.succeed(null);
-        }
-        if (
-          cleanSlug === "try-out/indonesia/snbt/set-1/quantitative-knowledge"
-        ) {
-          return Effect.succeed(
-            `${locale}:try-out section body\n\n### Questions\n\n- A. First choice`
-          );
         }
         return Effect.succeed(`${locale}:${cleanSlug}: full markdown`);
       }
@@ -218,10 +174,7 @@ describe("llms full document", () => {
     const fullShardText = artifacts.shards
       .map((artifact) => artifact.text)
       .join("\n");
-    expect(fullShardText).not.toContain("en:try-out section body");
-    expect(fullShardText).not.toContain("- A. First choice");
     expect(fullShardText).not.toContain(`${BASE_URL}/en/try-out/`);
-    expect(fullShardText).not.toContain("notes: full markdown");
     expect(manifestData.entrypoint).toBe(`${BASE_URL}/llms-full.txt`);
     expect(manifestData.manifest).toBe(`${BASE_URL}/llms-full/index.json`);
     expect(manifestData.totals.documents).toBe(3);
@@ -239,13 +192,11 @@ describe("llms full document", () => {
       page: 0,
       section: "material",
     });
-    expect(mockGetContentPageLlmsEntries).toHaveBeenCalledWith({
-      id: "content_en_tryout_0",
-      kind: "content",
-      locale: "en",
-      page: 0,
-      section: "tryout",
-    });
+    expect(mockGetContentPageLlmsEntries).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        section: "tryout",
+      })
+    );
     expect(mockGetContentPageLlmsEntries).toHaveBeenCalledWith({
       id: "content_id_quran_1",
       kind: "content",

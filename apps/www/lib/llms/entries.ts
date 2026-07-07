@@ -39,11 +39,6 @@ const materialRouteNamespaces = new Set<string>(
     (surface) => Object.values(surface.routeSlugs)
   )
 );
-const tryoutRouteNamespaces = new Set<string>(
-  PUBLIC_ROUTE_SURFACES.filter((surface) => surface.key === "tryout").flatMap(
-    (surface) => Object.values(surface.routeSlugs)
-  )
-);
 
 /** Classifies a sitemap route into the llms section that owns it. */
 export function getRouteSection(route: string): LlmsSection {
@@ -55,10 +50,6 @@ export function getRouteSection(route: string): LlmsSection {
 
   if (materialRouteNamespaces.has(firstSegment ?? "")) {
     return "material";
-  }
-
-  if (tryoutRouteNamespaces.has(firstSegment ?? "")) {
-    return "tryout";
   }
 
   return "site";
@@ -324,11 +315,7 @@ const getRouteMetadata = Effect.fn("www.llms.routeMetadata")(function* ({
   route: string;
   section: LlmsSection;
 }) {
-  if (
-    section === "articles" ||
-    section === "material" ||
-    section === "tryout"
-  ) {
+  if (section === "articles" || section === "material") {
     const metadata = yield* getContentRouteMetadata({ locale, route });
 
     if (metadata) {

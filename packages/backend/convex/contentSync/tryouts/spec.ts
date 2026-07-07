@@ -73,7 +73,6 @@ export const syncedTryoutRouteValidator = v.object({
   locale: localeValidator,
   publicPath: v.string(),
   sourcePath: v.string(),
-  text: v.string(),
   title: v.string(),
 });
 

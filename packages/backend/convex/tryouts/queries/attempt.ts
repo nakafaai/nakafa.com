@@ -35,6 +35,7 @@ const currentAttemptValidator = v.object({
 });
 
 const runtimeChoiceValidator = v.object({
+  isCorrect: v.optional(v.boolean()),
   label: v.string(),
   optionKey: v.string(),
   order: v.number(),
@@ -48,11 +49,13 @@ const runtimeResponseValidator = v.object({
 
 const runtimeQuestionValidator = v.object({
   choices: v.array(runtimeChoiceValidator),
+  contentHash: v.string(),
   placementId: v.id("tryoutAttemptPlacements"),
   questionId: v.id("questions"),
   questionOrder: v.number(),
   response: v.union(runtimeResponseValidator, v.null()),
   sourcePath: v.string(),
+  sourceRevision: v.string(),
   title: v.string(),
 });
 
@@ -83,6 +86,28 @@ async function loadSectionAttempts(
   }
 
   return sections;
+}
+
+/** Loads bounded runtime responses for one section attempt. */
+async function loadRuntimeResponses(
+  ctx: QueryCtx,
+  section: Doc<"tryoutSectionAttempts">
+) {
+  const responses = await ctx.db
+    .query("tryoutResponses")
+    .withIndex("by_tryoutSectionAttemptId_and_questionId", (q) =>
+      q.eq("tryoutSectionAttemptId", section._id)
+    )
+    .take(section.totalQuestions + 1);
+
+  if (responses.length > section.totalQuestions) {
+    throw new ConvexError({
+      code: "TRYOUT_RESPONSE_COUNT_EXCEEDED",
+      message: "Try-out response count exceeds the section question count.",
+    });
+  }
+
+  return new Map(responses.map((response) => [response.placementId, response]));
 }
 
 /** Reads the current user's latest try-out attempt for a public set identity. */
@@ -168,7 +193,7 @@ export const getCurrent = query({
   },
 });
 
-/** Reads the current user's active section runtime with placements and answers. */
+/** Reads the current user's section runtime with placements and answers. */
 export const getSectionRuntime = query({
   args: {
     countryKey: tryoutRouteKeyValidator,
@@ -199,7 +224,7 @@ export const getSectionRuntime = query({
       .order("desc")
       .first();
 
-    if (attempt?.status !== "in-progress") {
+    if (!attempt) {
       return null;
     }
 
@@ -210,7 +235,16 @@ export const getSectionRuntime = query({
       )
       .unique();
 
-    if (section?.status !== "in-progress") {
+    if (!section) {
+      return null;
+    }
+
+    const isActiveRuntime =
+      attempt.status === "in-progress" && section.status === "in-progress";
+    const isReviewRuntime =
+      attempt.status !== "in-progress" && section.status !== "in-progress";
+
+    if (!(isActiveRuntime || isReviewRuntime)) {
       return null;
     }
 
@@ -228,42 +262,36 @@ export const getSectionRuntime = query({
       });
     }
 
-    const questions = await Promise.all(
-      placements.map(async (placement) => {
-        const response = await ctx.db
-          .query("tryoutResponses")
-          .withIndex("by_tryoutSectionAttemptId_and_questionId", (q) =>
-            q
-              .eq("tryoutSectionAttemptId", section._id)
-              .eq("questionId", placement.questionId)
-          )
-          .unique();
+    const responses = await loadRuntimeResponses(ctx, section);
+    const questions = placements.map((placement) => {
+      const response = responses.get(placement._id) ?? null;
+      const choices = [...placement.choiceSnapshots].sort(
+        (left, right) => left.order - right.order
+      );
 
-        const choices = [...placement.choiceSnapshots].sort(
-          (left, right) => left.order - right.order
-        );
-
-        return {
-          choices: choices.map((choice) => ({
-            label: choice.label,
-            optionKey: choice.optionKey,
-            order: choice.order,
-          })),
-          placementId: placement._id,
-          questionId: placement.questionId,
-          questionOrder: placement.questionOrder,
-          response: response
-            ? {
-                answeredAt: response.answeredAt,
-                selectedOptionId: response.selectedOptionId,
-                updatedAt: response.updatedAt,
-              }
-            : null,
-          sourcePath: placement.sourcePath,
-          title: placement.title,
-        };
-      })
-    );
+      return {
+        choices: choices.map((choice) => ({
+          ...(isReviewRuntime ? { isCorrect: choice.isCorrect } : {}),
+          label: choice.label,
+          optionKey: choice.optionKey,
+          order: choice.order,
+        })),
+        contentHash: placement.contentHash,
+        placementId: placement._id,
+        questionId: placement.questionId,
+        questionOrder: placement.questionOrder,
+        response: response
+          ? {
+              answeredAt: response.answeredAt,
+              selectedOptionId: response.selectedOptionId,
+              updatedAt: response.updatedAt,
+            }
+          : null,
+        sourcePath: placement.sourcePath,
+        sourceRevision: placement.sourceRevision,
+        title: placement.title,
+      };
+    });
 
     return {
       attemptId: attempt._id,

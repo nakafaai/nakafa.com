@@ -159,8 +159,11 @@ export const startAttempt = mutation({
       scoreStatus: "provisional",
       sectionSnapshots: sections.map((section) => ({
         questionCount: section.questionCount,
+        questionSetId: section.questionSetId,
+        questionSourcePath: section.questionSourcePath,
         sectionKey: section.sectionKey,
         sectionOrder: section.order,
+        sourceRevision: section.sourceRevision,
         tryoutSectionId: section._id,
       })),
       startedAt: now,

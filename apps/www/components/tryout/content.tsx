@@ -4,12 +4,16 @@ import { importContentModuleOrNull } from "@/lib/content/module";
 
 export interface TryoutQuestionContent {
   content: ReactNode;
+  contentHash: string;
   sourcePath: string;
+  sourceRevision: string;
 }
 
 interface TryoutQuestionSource {
-  number: number;
+  contentHash: string;
+  questionOrder: number;
   sourcePath: string;
+  sourceRevision: string;
 }
 
 /**
@@ -30,7 +34,7 @@ export async function loadTryoutQuestionContent({
     questions.map(async (question) => {
       const module = await importContentModuleOrNull({
         context: {
-          question_number: question.number,
+          question_number: question.questionOrder,
           source_path: question.sourcePath,
         },
         filePath: `${question.sourcePath}/question`,
@@ -46,7 +50,9 @@ export async function loadTryoutQuestionContent({
 
       return {
         content: <Question />,
+        contentHash: question.contentHash,
         sourcePath: question.sourcePath,
+        sourceRevision: question.sourceRevision,
       };
     })
   );

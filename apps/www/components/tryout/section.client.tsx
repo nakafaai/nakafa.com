@@ -4,10 +4,10 @@ import { api } from "@repo/backend/convex/_generated/api";
 import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 import type { Preloaded } from "convex/react";
 import { useConvexAuth, usePreloadedQuery, useQuery } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
-import { isTryoutActive } from "@/components/tryout/active";
 import { useTryoutClock } from "@/components/tryout/clock";
 import type { TryoutQuestionContent } from "@/components/tryout/content";
 import { TryoutPageHeader } from "@/components/tryout/header";
@@ -18,6 +18,10 @@ import { TryoutSectionSummary } from "@/components/tryout/summary.client";
 
 type SectionPageQuery = typeof api.tryouts.queries.catalog.getSectionPage;
 type SectionRuntimeQuery = typeof api.tryouts.queries.attempt.getSectionRuntime;
+type CurrentAttempt = FunctionReturnType<
+  typeof api.tryouts.queries.attempt.getCurrent
+>;
+type SectionRuntime = FunctionReturnType<SectionRuntimeQuery>;
 
 interface TryoutSectionPageClientProps {
   country: string;
@@ -58,8 +62,9 @@ export function TryoutSectionPageClient({
   );
   const tCommon = useTranslations("Common");
   const tTryouts = useTranslations("Tryouts");
+  const currentAttempt = attempt ?? null;
   const now = useTryoutClock(
-    attempt?.status === "in-progress" ||
+    currentAttempt?.status === "in-progress" ||
       runtime?.section.status === "in-progress"
   );
 
@@ -67,54 +72,18 @@ export function TryoutSectionPageClient({
     return null;
   }
 
-  const currentAttempt = attempt ?? null;
-  const sectionAttempt = currentAttempt?.section ?? null;
-  const sectionExpiredLocally = Boolean(
-    sectionAttempt?.status === "in-progress" && now >= sectionAttempt.expiresAt
-  );
-  let activeAttempt: typeof currentAttempt = null;
+  const activeAttempt = getActiveAttempt(currentAttempt, now);
+  const actionAttempt =
+    currentAttempt?.status === "in-progress" && !activeAttempt
+      ? null
+      : currentAttempt;
+  const sectionAttempt = actionAttempt?.section ?? null;
+  const activeRuntime = getActiveRuntime(runtime, activeAttempt, now);
+  const reviewRuntime =
+    runtime && runtime.section.status !== "in-progress" ? runtime : null;
+  const hasActiveSection = activeAttempt?.section?.status === "in-progress";
 
-  if (
-    currentAttempt &&
-    isTryoutActive({
-      expiresAt: currentAttempt.expiresAt,
-      now,
-      status: currentAttempt.status,
-    })
-  ) {
-    activeAttempt = currentAttempt;
-  }
-
-  let activeSection: NonNullable<
-    NonNullable<typeof currentAttempt>["section"]
-  > | null = null;
-
-  if (
-    activeAttempt?.section &&
-    isTryoutActive({
-      expiresAt: activeAttempt.section.expiresAt,
-      now,
-      status: activeAttempt.section.status,
-    })
-  ) {
-    activeSection = activeAttempt.section;
-  }
-
-  let activeRuntime: typeof runtime | null = null;
-
-  if (
-    activeSection &&
-    runtime &&
-    isTryoutActive({
-      expiresAt: runtime.expiresAt,
-      now,
-      status: runtime.section.status,
-    })
-  ) {
-    activeRuntime = runtime;
-  }
-
-  if (activeSection && !activeRuntime) {
+  if (hasActiveSection && !activeRuntime) {
     return null;
   }
 
@@ -125,22 +94,15 @@ export function TryoutSectionPageClient({
   const sectionFinished = Boolean(
     sectionAttempt &&
       (sectionAttempt.status === "completed" ||
-        sectionAttempt.status === "expired" ||
-        sectionExpiredLocally)
+        sectionAttempt.status === "expired")
   );
   const sectionTimeExpired = Boolean(
     sectionAttempt &&
       (sectionAttempt.endReason === "time-expired" ||
-        sectionAttempt.status === "expired" ||
-        sectionExpiredLocally)
+        sectionAttempt.status === "expired")
   );
   const attemptFinished = Boolean(
-    currentAttempt &&
-      !isTryoutActive({
-        expiresAt: currentAttempt.expiresAt,
-        now,
-        status: currentAttempt.status,
-      })
+    currentAttempt && currentAttempt.status !== "in-progress"
   );
 
   let status = tTryouts("part-head-needs-tryout");
@@ -162,7 +124,7 @@ export function TryoutSectionPageClient({
   let sectionContent: ReactNode = (
     <TryoutSectionSummary
       activeAttempt={activeAttempt}
-      attempt={currentAttempt}
+      attempt={actionAttempt}
       country={country}
       exam={exam}
       locale={locale}
@@ -176,6 +138,7 @@ export function TryoutSectionPageClient({
   if (activeRuntime) {
     sectionContent = (
       <TryoutRuntime
+        isExpired={false}
         questions={questions}
         returnHref={getTryoutHref({ country, exam, set })}
         runtime={activeRuntime}
@@ -187,6 +150,25 @@ export function TryoutSectionPageClient({
           setKey: page.set.setKey,
         }}
       />
+    );
+  } else if (reviewRuntime && questions.length > 0) {
+    sectionContent = (
+      <>
+        {sectionContent}
+        <TryoutRuntime
+          isExpired={true}
+          questions={questions}
+          returnHref={getTryoutHref({ country, exam, set })}
+          runtime={reviewRuntime}
+          runtimeQueryArgs={{
+            countryKey: page.set.countryKey,
+            examKey: page.set.examKey,
+            locale,
+            sectionKey: page.section.sectionKey,
+            setKey: page.set.setKey,
+          }}
+        />
+      </>
     );
   }
 
@@ -208,6 +190,40 @@ export function TryoutSectionPageClient({
       </div>
     </div>
   );
+}
+
+/** Returns the current attempt only while its Convex expiry is still active. */
+function getActiveAttempt(attempt: CurrentAttempt, now: number) {
+  if (attempt?.status !== "in-progress") {
+    return null;
+  }
+
+  if (now >= attempt.expiresAt) {
+    return null;
+  }
+
+  return attempt;
+}
+
+/** Returns an active section runtime only while both timers are still active. */
+function getActiveRuntime(
+  runtime: SectionRuntime,
+  activeAttempt: NonNullable<CurrentAttempt> | null,
+  now: number
+) {
+  if (!activeAttempt) {
+    return null;
+  }
+
+  if (runtime?.section.status !== "in-progress") {
+    return null;
+  }
+
+  if (now >= runtime.expiresAt) {
+    return null;
+  }
+
+  return runtime;
 }
 
 /** Selects the production header copy for finished try-out sections. */

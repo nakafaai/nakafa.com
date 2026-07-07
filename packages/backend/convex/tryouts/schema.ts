@@ -37,8 +37,11 @@ export type TryoutRouteKey = Infer<typeof tryoutRouteKeyValidator>;
 
 export const tryoutSectionSnapshotValidator = v.object({
   questionCount: v.number(),
+  questionSetId: v.id("questionSets"),
+  questionSourcePath: v.string(),
   sectionKey: tryoutRouteKeyValidator,
   sectionOrder: v.number(),
+  sourceRevision: v.string(),
   tryoutSectionId: v.id("tryoutSections"),
 });
 export type TryoutSectionSnapshot = Infer<
