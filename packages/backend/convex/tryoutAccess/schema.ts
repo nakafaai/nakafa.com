@@ -58,6 +58,7 @@ export const tryoutAccessTargetValidator = v.object({
   campaignId: v.id("tryoutAccessCampaigns"),
   countryKey: v.string(),
   examKey: v.string(),
+  trackKey: v.optional(v.string()),
   setKey: v.optional(v.string()),
   campaignKind: tryoutAccessCampaignKindValidator,
   startsAt: v.number(),
@@ -84,6 +85,7 @@ export const tryoutEntitlementValidator = v.object({
   userId: v.id("users"),
   countryKey: v.string(),
   examKey: v.string(),
+  trackKey: v.optional(v.string()),
   setKey: v.optional(v.string()),
   sourceKind: tryoutEntitlementSourceKindValidator,
   accessCampaignId: v.optional(v.id("tryoutAccessCampaigns")),
@@ -107,9 +109,10 @@ const tables = {
 
   tryoutAccessTargets: defineTable(tryoutAccessTargetValidator)
     .index("by_campaignId", ["campaignId"])
-    .index("by_countryKey_and_examKey_and_setKey_and_campaignKind", [
+    .index("by_countryKey_and_examKey_and_trackKey_and_setKey_and_kind", [
       "countryKey",
       "examKey",
+      "trackKey",
       "setKey",
       "campaignKind",
     ]),
@@ -126,17 +129,19 @@ const tables = {
   tryoutEntitlements: defineTable(tryoutEntitlementValidator)
     .index("by_accessGrantId", ["accessGrantId"])
     .index("by_sourceKind_and_endsAt", ["sourceKind", "endsAt"])
-    .index("by_userId_and_countryKey_and_examKey_and_setKey_and_endsAt", [
+    .index("by_user_tryout_scope_endsAt", [
       "userId",
       "countryKey",
       "examKey",
+      "trackKey",
       "setKey",
       "endsAt",
     ])
-    .index("by_userId_and_countryKey_and_examKey_and_setKey_and_startsAt", [
+    .index("by_user_tryout_scope_startsAt", [
       "userId",
       "countryKey",
       "examKey",
+      "trackKey",
       "setKey",
       "startsAt",
     ])
@@ -146,6 +151,7 @@ const tables = {
       "subscriptionId",
       "countryKey",
       "examKey",
+      "trackKey",
       "setKey",
     ]),
 };

@@ -158,6 +158,7 @@ export const startAttempt = mutation({
         examKey: args.examKey,
         now,
         setKey: args.setKey,
+        trackKey: args.trackKey,
         userId: appUser._id,
       }),
       loadLatestAttempt(ctx, {

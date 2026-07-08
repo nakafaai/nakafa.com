@@ -162,10 +162,7 @@ async function deleteUserTryoutEntitlementsBatch(
 ) {
   const entitlements = await ctx.db
     .query("tryoutEntitlements")
-    .withIndex(
-      "by_userId_and_countryKey_and_examKey_and_setKey_and_endsAt",
-      (q) => q.eq("userId", userId)
-    )
+    .withIndex("by_user_tryout_scope_endsAt", (q) => q.eq("userId", userId))
     .take(TRYOUT_ENTITLEMENT_CLEANUP_BATCH_SIZE);
 
   for (const entitlement of entitlements) {

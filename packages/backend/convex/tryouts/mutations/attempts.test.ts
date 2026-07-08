@@ -111,6 +111,7 @@ async function seedTryoutSet(
     setKey: SET,
     sourceKind: tryoutEntitlementSourceKindCompetition,
     startsAt: NOW,
+    trackKey: TRACK,
     userId: args.userId,
   });
 
