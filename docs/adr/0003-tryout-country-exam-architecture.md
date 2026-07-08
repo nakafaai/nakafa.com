@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted.
+Accepted. Amended on 2026-07-08 to insert the canonical try-out track layer.
 
 ## Context
 
@@ -20,10 +20,10 @@ The product direction is country-first try-out discovery:
 Use one try-out route grammar:
 
 ```text
-/[locale]/try-out/[country]/[exam]/[set]/[section]
+/[locale]/try-out/[country]/[exam]/[track]/[set]/[section]
 ```
 
-Use stable exam-family keys without yearly suffixes. For example, use `snbt` and `tka`, not `snbt-2026` or `tka-2026`.
+Use stable exam-family keys without yearly suffixes. For example, use `snbt` and `tka`, not `snbt-2026` or `tka-2026`. Model year, subject, or future exam-offer groupings as try-out tracks between exam and set.
 
 Move authored try-out source to country and exam folders:
 
@@ -35,7 +35,7 @@ packages/contents/question-bank/tryout/[country]/[exam]
 Use these Convex table families:
 
 - `questionSets`, `questions`, `questionChoices` for immutable source-backed question bank rows.
-- `tryoutCountries`, `tryoutExams`, `tryoutSets`, `tryoutSections` for public catalog routes.
+- `tryoutCountries`, `tryoutExams`, `tryoutTracks`, `tryoutSets`, `tryoutSections` for public catalog routes.
 - `tryoutAttempts`, `tryoutSectionAttempts`, `tryoutAttemptPlacements`, `tryoutResponses`, `tryoutScores` for realtime runtime state.
 - `tryoutAccessCampaigns`, `tryoutAccessTargets`, `tryoutAccessLinks`, `tryoutAccessGrants`, `tryoutEntitlements` for premium access.
 - `irtCalibration*` and `irtScale*` for scoring calibration and immutable scale versions.
@@ -49,7 +49,7 @@ flowchart TD
   Source["Source files"]
   Bank["Question bank rows"]
   Catalog["Try-out catalog rows"]
-  Route["Country exam set section routes"]
+  Route["Country exam track set section routes"]
   Attempt["Realtime attempt state"]
   Score["Scoring strategy"]
   IRT["IRT scale version"]
@@ -82,5 +82,7 @@ After the PR code is deployed and the new sync has populated the new tables, del
 - The public practice/exercise pages are intentionally removed.
 - The app has one try-out vocabulary from source to Convex to UI.
 - Attempt routes can scale by indexed catalog and attempt tables instead of route parsing or unbounded scans.
+- Exam pages list tracks, and track pages paginate ready sets through indexed Convex read models.
+- Old direct exam-to-set URLs are intentionally not supported.
 - IRT is a strategy under try-out scoring, not an SNBT-only subsystem.
 - Backward compatibility is intentionally not supported for removed practice/exercise URLs.

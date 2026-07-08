@@ -265,28 +265,55 @@ packages/contents/assessment/{category}/{type}/{material}/
     choices.ts
 ```
 
-**⚠️ IMPORTANT**: When adding new exercise questions, you MUST define the set in the typed Material source:
+**⚠️ IMPORTANT**: When adding new try-out questions, you MUST attach the question-bank source to the typed try-out source:
 
 1. Create question directories under `question-bank/tryout/{country}/{exam}/{section}/{set}/{number}/`
 2. Add MDX files and choices
-3. **Add set and section placement** to `packages/contents/tryout/{country}/{exam}/source.ts`:
+3. **Add track, set, and section placement** to `packages/contents/tryout/{country}/{exam}/source.ts`:
 
 ```typescript
 {
-  slug: "set-2",
+  key: "2027",
+  kind: "year",
+  order: 1,
+  routeSlugs: { en: "2027", id: "2027" },
   translations: {
-    en: { title: "Set 2" },
-    id: { title: "Set 2" },
+    en: { title: "Year 2027" },
+    id: { title: "Tahun 2027" },
   },
+  sets: [
+    {
+      key: "set-2",
+      order: 2,
+      routeSlugs: { en: "set-2", id: "set-2" },
+      translations: {
+        en: { title: "Set 2" },
+        id: { title: "Set 2" },
+      },
+      sections: [
+        {
+          key: "quantitative-knowledge",
+          order: 1,
+          questionCount: 20,
+          questionSourcePath:
+            "question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-2",
+          routeSlugs: {
+            en: "quantitative-knowledge",
+            id: "pengetahuan-kuantitatif",
+          },
+          timeLimitSeconds: 1800,
+          translations: {
+            en: { title: "Quantitative Knowledge" },
+            id: { title: "Pengetahuan Kuantitatif" },
+          },
+        },
+      ],
+    },
+  ],
 }
 ```
 
-If you forget step 3, the sync will report:
-```
-ERROR: X questions SKIPPED (missing try-out section placement)
-ERROR: Missing question source: country/exam/section/set-name
-ERROR: Add these sections to the typed try-out source before syncing.
-```
+If you forget step 3, sync verification reports missing question-bank source paths. Add the missing paths to the typed try-out source before syncing.
 
 ## Performance
 
