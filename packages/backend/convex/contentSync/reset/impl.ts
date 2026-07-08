@@ -4,6 +4,7 @@ import {
   batchDeleteResultValidator,
   contentSearchResetBatchSize,
   eventTryoutEntitlementBatchSize,
+  questionResetBatchSize,
   type ResettableTableName,
   resetBatchSize,
 } from "@repo/backend/convex/contentSync/reset/spec";
@@ -225,7 +226,9 @@ export async function deleteTryoutContentRoutePageRows(ctx: MutationCtx) {
 
 /** Deletes questions through their dependent cleanup helper. */
 export async function deleteQuestionRows(ctx: MutationCtx) {
-  const questions = await ctx.db.query("questions").take(resetBatchSize);
+  const questions = await ctx.db
+    .query("questions")
+    .take(questionResetBatchSize);
   let deleted = 0;
 
   for (const question of questions) {

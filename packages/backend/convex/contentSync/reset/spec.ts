@@ -3,6 +3,7 @@ import { v } from "convex/values";
 
 export const resetBatchSize = 500;
 export const contentSearchResetBatchSize = 100;
+export const questionResetBatchSize = 100;
 export const eventTryoutEntitlementBatchSize = 500;
 
 export const batchDeleteResultValidator = v.object({
