@@ -28,11 +28,7 @@ export function TryoutRuntimeQuestion({
   const id = `question-${question.questionOrder}`;
 
   return (
-    <article
-      aria-labelledby={`${id}-title`}
-      className="content-auto-exercise"
-      id={`exercise-${id}`}
-    >
+    <article aria-labelledby={`${id}-title`} id={`exercise-${id}`}>
       <div className="flex items-center gap-4">
         <a
           className="flex w-full flex-1 shrink-0 scroll-mt-44 outline-none ring-0"
