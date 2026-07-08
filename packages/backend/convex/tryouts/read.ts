@@ -83,3 +83,62 @@ export async function requireActiveTryoutSet(
 
   return set;
 }
+
+/** Loads one active ready try-out set whose country, exam, and track are public. */
+export async function requireActiveReadyTryoutSet(
+  ctx: MutationCtx | QueryCtx,
+  args: TryoutSetIdentity
+): Promise<TryoutSet> {
+  const set = await requireActiveTryoutSet(ctx, args);
+
+  if (!set.isReady) {
+    throw new ConvexError({
+      code: "TRYOUT_SET_NOT_READY",
+      message: "Try-out set is not ready.",
+    });
+  }
+
+  const [country, exam, track] = await Promise.all([
+    ctx.db
+      .query("tryoutCountries")
+      .withIndex("by_countryKey_and_locale", (q) =>
+        q.eq("countryKey", set.countryKey).eq("locale", set.locale)
+      )
+      .unique(),
+    ctx.db
+      .query("tryoutExams")
+      .withIndex("by_countryKey_and_examKey_and_locale", (q) =>
+        q
+          .eq("countryKey", set.countryKey)
+          .eq("examKey", set.examKey)
+          .eq("locale", set.locale)
+      )
+      .unique(),
+    ctx.db
+      .query("tryoutTracks")
+      .withIndex("by_countryKey_and_examKey_and_trackKey_and_locale", (q) =>
+        q
+          .eq("countryKey", set.countryKey)
+          .eq("examKey", set.examKey)
+          .eq("trackKey", set.trackKey)
+          .eq("locale", set.locale)
+      )
+      .unique(),
+  ]);
+
+  if (!(country?.isActive && exam?.isActive && track?.isActive)) {
+    throw new ConvexError({
+      code: "TRYOUT_SET_NOT_FOUND",
+      message: "Try-out set not found.",
+    });
+  }
+
+  if (!track.isReady) {
+    throw new ConvexError({
+      code: "TRYOUT_SET_NOT_READY",
+      message: "Try-out set is not ready.",
+    });
+  }
+
+  return set;
+}

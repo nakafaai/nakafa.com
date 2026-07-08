@@ -5,7 +5,7 @@ import { captureProductEvent } from "@repo/backend/convex/analytics/capture";
 import { mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
-import { requireActiveTryoutSet } from "@repo/backend/convex/tryouts/read";
+import { requireActiveReadyTryoutSet } from "@repo/backend/convex/tryouts/read";
 import {
   getAttemptAccessFields,
   requireActiveEntitlement,
@@ -149,15 +149,7 @@ export const startAttempt = mutation({
   }),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuth(ctx);
-    const set = await requireActiveTryoutSet(ctx, args);
-
-    if (!set.isReady) {
-      throw new ConvexError({
-        code: "TRYOUT_SET_NOT_READY",
-        message: "Try-out set is not ready.",
-      });
-    }
-
+    const set = await requireActiveReadyTryoutSet(ctx, args);
     const now = Date.now();
     const [sections, entitlement, latestAttempt] = await Promise.all([
       loadSections(ctx, set),
