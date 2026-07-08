@@ -122,24 +122,24 @@ describe("LearningCapability tool schemas", () => {
 
   it("renders only populated specialist sections", () => {
     const task = formatSpecialistToolTask({
-      deliverables: ["exercise evidence", "answer key"],
-      objective: "Find a suitable Nakafa exercise set.",
-      request: "SNBT pola bilangan practice",
+      deliverables: ["try-out evidence", "answer key"],
+      objective: "Find a suitable Nakafa try-out section.",
+      request: "SNBT pola bilangan try out",
       requirements: [],
     });
 
     expect(task).toContain(dedent`
       # Request
 
-      SNBT pola bilangan practice
+      SNBT pola bilangan try out
 
       # Objective
 
-      Find a suitable Nakafa exercise set.
+      Find a suitable Nakafa try-out section.
 
       # Deliverables
 
-      - exercise evidence
+      - try-out evidence
       - answer key
     `);
     expect(task).not.toContain("# Requirements");

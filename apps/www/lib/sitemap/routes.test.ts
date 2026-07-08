@@ -54,7 +54,11 @@ beforeEach(() => {
   runtimeMocks.getRuntimeContentRouteCounts.mockImplementation(({ locale }) =>
     Effect.succeed(
       locale === "en"
-        ? [countRow("en", "articles", 1), countRow("en", "material", 2)]
+        ? [
+            countRow("en", "articles", 1),
+            countRow("en", "material", 2),
+            countRow("en", "tryout", 2),
+          ]
         : [countRow("id", "quran", 101)]
     )
   );
@@ -102,6 +106,13 @@ describe("sitemap route discovery", () => {
         locale: "en",
         page: 0,
         section: "material",
+      },
+      {
+        id: "content_en_tryout_0",
+        kind: "content",
+        locale: "en",
+        page: 0,
+        section: "tryout",
       },
       { id: "public_id", kind: "public", locale: "id" },
       {
@@ -160,13 +171,7 @@ describe("sitemap route discovery", () => {
 
     const routes = await getSitemapRoutes("content_en_material_0");
 
-    expect(routes).toEqual([
-      "/practice/snbt",
-      "/practice/snbt/quantitative-knowledge",
-      "/practice/snbt/quantitative-knowledge/tryout-2026/set-1",
-      "/practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-1",
-      "/subjects/chemistry/green-chemistry/definition",
-    ]);
+    expect(routes).toEqual(["/subjects/chemistry/green-chemistry/definition"]);
     expect(
       runtimeMocks.getRuntimeContentRouteArtifactPage
     ).toHaveBeenCalledWith({
@@ -174,6 +179,11 @@ describe("sitemap route discovery", () => {
       page: 0,
       section: "material",
     });
+
+    await expect(getSitemapRoutes("content_en_tryout_0")).resolves.toEqual([
+      "/try-out/indonesia/snbt/set-1",
+      "/try-out/indonesia/snbt/set-1/quantitative-knowledge",
+    ]);
 
     await expect(getSitemapRoutes("public_en")).resolves.toEqual([
       "/curriculum/merdeka/class-10/mathematics",
@@ -232,26 +242,24 @@ describe("sitemap route discovery", () => {
     ).resolves.toEqual([
       "/articles/politics",
       "/articles/politics/dynastic-politics-asian-values",
-      "/practice/snbt",
-      "/practice/snbt/quantitative-knowledge",
-      "/practice/snbt/quantitative-knowledge/tryout-2026/set-1",
-      "/practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-1",
       "/quran/1",
       "/subjects/chemistry/green-chemistry/definition",
+      "/try-out/indonesia/snbt/set-1",
+      "/try-out/indonesia/snbt/set-1/quantitative-knowledge",
     ]);
   });
 
-  it("does not create public practice routes for stale source paths", async () => {
+  it("does not create public routes for stale source paths", async () => {
     await expect(
       Effect.runPromise(
         buildSitemapContentPageRoutes([
           routeProjectionRow(
             {
               locale: "en",
-              route: "practice/snbt/quantitative-knowledge/tryout-2026/set-1",
+              route: "subjects/chemistry/green-chemistry/definition",
               section: "material",
             },
-            "material/practice/assessment/snbt/quantitative-knowledge/try-out/set-1"
+            "material/lesson/chemistry/green-chemistry/missing-definition"
           ),
         ])
       )
@@ -285,17 +293,13 @@ const routeRows = [
   }),
   routeRow({
     locale: "en",
-    route: "practice/snbt/quantitative-knowledge/tryout-2026/set-1",
-    section: "material",
-    sourcePath:
-      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
+    route: "try-out/indonesia/snbt/set-1",
+    section: "tryout",
   }),
   routeRow({
     locale: "en",
-    route: "practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-1",
-    section: "material",
-    sourcePath:
-      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/1",
+    route: "try-out/indonesia/snbt/set-1/quantitative-knowledge",
+    section: "tryout",
   }),
   routeRow({
     locale: "en",
@@ -316,10 +320,10 @@ const incompleteRouteRows = [
   routeProjectionRow(
     {
       locale: "en",
-      route: "practice/snbt/quantitative-knowledge/tryout-2026/set-1",
+      route: "subjects/chemistry/green-chemistry/definition",
       section: "material",
     },
-    "material/practice/assessment/snbt/quantitative-knowledge/try-out-2027/set-1"
+    "material/lesson/chemistry/green-chemistry/missing-definition"
   ),
 ];
 

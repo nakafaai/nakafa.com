@@ -1,6 +1,5 @@
 import {
   getContentPathCandidates,
-  getExerciseApiParams,
   getLocaleParams,
   getLocaleSlugs,
   getStaticParams,
@@ -21,7 +20,6 @@ export const buildContentRouteParamManifest = Effect.fn(
 
   return {
     version,
-    exerciseApiParams: getExerciseApiParams(localeSlugs),
     localeParams,
     staticParams,
   };

@@ -1,5 +1,3 @@
-import { MATERIAL_ROUTE_DOMAINS } from "@repo/contents/_types/material/domain";
-import { MATERIAL_SOURCES } from "@repo/contents/_types/material/source";
 import { readStaticPublicContentRoutes } from "@repo/contents/_types/route/content/static";
 import { readStaticPublicCurriculumRoutes } from "@repo/contents/_types/route/curriculum/static";
 import {
@@ -11,6 +9,7 @@ import {
   type PublicLearningIndex,
 } from "@repo/contents/_types/route/learning/public";
 import { listPublicRoutes } from "@repo/contents/_types/route/projection";
+import { readStaticPublicTryoutRoutes } from "@repo/contents/_types/route/tryout/static";
 import { Effect } from "effect";
 
 let staticPublicLearningIndex: PublicLearningIndex | undefined;
@@ -29,9 +28,10 @@ export function readStaticPublicLearningIndex() {
 
   const contentRoutes = readStaticPublicContentRoutes();
   const curriculumRoutes = readStaticPublicCurriculumRoutes();
+  const tryoutRoutes = readStaticPublicTryoutRoutes();
 
   staticPublicLearningIndex = createPublicLearningIndex({
-    routes: [...contentRoutes, ...curriculumRoutes],
+    routes: [...contentRoutes, ...curriculumRoutes, ...tryoutRoutes],
   });
 
   return staticPublicLearningIndex;
@@ -54,8 +54,6 @@ export const loadStaticPublicLearningIndex = Effect.fn(
   const routes = yield* listPublicRoutes(inputs);
 
   return createPublicLearningIndex({
-    domains: inputs.domains ?? MATERIAL_ROUTE_DOMAINS,
-    materials: inputs.materials ?? MATERIAL_SOURCES,
     routes,
   });
 });

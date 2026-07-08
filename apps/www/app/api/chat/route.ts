@@ -44,8 +44,6 @@ const possibleVerifiedUrls = [
   "/kurikulum",
   "/subjects",
   "/materi",
-  "/practice",
-  "/latihan",
 ] as const;
 
 /**

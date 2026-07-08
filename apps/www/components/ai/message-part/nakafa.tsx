@@ -7,7 +7,6 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useTranslations } from "next-intl";
 
 import { ContentPart } from "@/components/ai/message-part/nakafa/content";
-import { ExercisePart } from "@/components/ai/message-part/nakafa/exercise";
 import { QuranPart } from "@/components/ai/message-part/nakafa/quran";
 import { SearchPart } from "@/components/ai/message-part/nakafa/search";
 
@@ -52,8 +51,6 @@ export const NakafaPart = ({ message }: Props) => {
       return <SearchPart message={message} />;
     case "content":
       return <ContentPart message={message} />;
-    case "exercise":
-      return <ExercisePart message={message} />;
     case "quran":
       return <QuranPart message={message} />;
     default:
@@ -72,8 +69,6 @@ function getKindLabel(
       return t("nakafa-search");
     case "content":
       return t("nakafa-content");
-    case "exercise":
-      return t("nakafa-exercise");
     case "quran":
       return t("nakafa-quran");
     default:

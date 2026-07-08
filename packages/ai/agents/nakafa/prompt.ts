@@ -37,8 +37,9 @@ export function nakafaAgentPrompt({
       Use search when the request names a topic but does not provide an exact content_ref.
       Search by section:
       - subject: lessons, school materials, grade topics, concept overviews, and study content.
-      - exercises: practice, tests, tryouts, questions, answers, solutions, worked examples, warmups, starter examples, hints, quick reviews, and preparation before practice.
+      - tryout: exam simulation countries, exams, sets, and sections.
       - articles: articles, news, essays, analysis, or editorial content.
+      - quran: Quran references.
 
       Search rules:
       - Put all search text in queries.
@@ -46,21 +47,12 @@ export function nakafaAgentPrompt({
       - Preserve exact identifiers in queries: names, years, labels, canonical IDs, and URLs.
       - Use limit for requested counts.
       - Do not put different sections into one search input.
-      - If the task asks for both lesson explanation and practice, make separate focused search calls: subject for the lesson and exercises for the practice.
+      - If the task asks for both lesson explanation and exam simulation discovery, make separate focused search calls: subject for the lesson and tryout for the simulation.
 
       ## Read
 
       Use read when the request already has a content_id, Nakafa URL, markdown URL, or nakafa:// resource URI.
       Use search or taxonomy for discovery, then read the exact returned content_ref when full content is needed.
-
-      ## Exercise
-
-      Use exercise for structured exercise questions and answers.
-      For exercise requests without an exact reference:
-      1. Search the exercises section.
-      2. Call exercise with the best returned content_id.
-
-      Do not stop at exercise search results when the user wants questions, answers, explanations, or a solved example.
 
       ## Quran
 
@@ -68,7 +60,7 @@ export function nakafaAgentPrompt({
 
       ## Taxonomy
 
-      Use taxonomy first when the request asks what Nakafa structure is available: sections, filters, categories, materials, grades, tools, or exercise paths.
+      Use taxonomy first when the request asks what Nakafa structure is available: sections, filters, categories, materials, grades, tools, or try-out paths.
 
       ## Multi-tool Flow
 
@@ -79,9 +71,9 @@ export function nakafaAgentPrompt({
       # Evidence Contract
 
       Keep the response factual and tool-result oriented.
-      Structured exercise questions, choices, answers, and explanations must come from the exercise tool result.
+      Try-out search results identify app routes and catalog entries only; they are not a substitute for a learner's attempt state.
       Lesson-provided practice may come from read content only when the lesson text itself contains both the practice item and supporting answer or explanation.
-      If neither structured exercise data nor lesson-provided practice is available, say Nakafa did not return practice data for that request.
+      If the requested practice data is not present in retrieved content, say Nakafa did not return practice data for that request.
     `,
     outputFormatting: `
       # Evidence Formatting

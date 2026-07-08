@@ -5,8 +5,6 @@ import { describe, expect, it, vi } from "vitest";
 
 const ARTICLE_CONTENT_REF =
   "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values";
-const EXERCISE_CONTENT_REF =
-  "https://nakafa.com/en/practice/snbt/general-knowledge/tryout-2026/set-2";
 
 vi.mock("@repo/contents/_lib/agent/taxonomy/read", async () => {
   const { Effect } = await import("effect");
@@ -24,21 +22,7 @@ vi.mock("@repo/contents/_lib/agent/read/markdown", async () => {
 
   return {
     getNakafaAgentMarkdown: (contentRef: string) => {
-      if (contentRef.includes("/missing") || contentRef.includes("set-404")) {
-        return Effect.succeed(Option.none());
-      }
-
-      return Effect.succeed(Option.some({ contentRef }));
-    },
-  };
-});
-
-vi.mock("@repo/contents/_lib/agent/exercise/read", async () => {
-  const { Effect, Option } = await import("effect");
-
-  return {
-    getNakafaAgentExercise: (contentRef: string) => {
-      if (contentRef.includes("set-404")) {
+      if (contentRef.includes("/missing")) {
         return Effect.succeed(Option.none());
       }
 
@@ -65,11 +49,10 @@ vi.mock("@repo/contents/_lib/quran", async () => {
 });
 
 describe("Nakafa service", () => {
-  it("exposes the shared read, exercise, Quran, taxonomy, and verify contract", async () => {
+  it("exposes the shared read, Quran, taxonomy, and verify contract", async () => {
     const result = await Effect.runPromise(
       Effect.gen(function* () {
         const read = yield* Nakafa.read(ARTICLE_CONTENT_REF);
-        const exercise = yield* Nakafa.exercise(EXERCISE_CONTENT_REF);
         const quran = yield* Nakafa.quran({
           from_verse: 1,
           locale: "en",
@@ -78,29 +61,18 @@ describe("Nakafa service", () => {
         });
         const taxonomy = yield* Nakafa.taxonomy("en");
         const validPage = yield* Nakafa.verify(ARTICLE_CONTENT_REF);
-        const validExerciseSet = yield* Nakafa.verify(EXERCISE_CONTENT_REF);
-        const validExercise = yield* Nakafa.verify(
-          `${EXERCISE_CONTENT_REF}/question-1`
-        );
         const validQuran = yield* Nakafa.verify(
           "https://nakafa.com/en/quran/1"
-        );
-        const invalidExercise = yield* Nakafa.verify(
-          "https://nakafa.com/en/practice/snbt/general-knowledge/tryout-2026/set-404"
         );
         const invalidPage = yield* Nakafa.verify(
           "https://nakafa.com/en/articles/politics/missing"
         );
 
         return {
-          exercise,
           invalidPage,
           quran,
           read,
           taxonomy,
-          invalidExercise,
-          validExercise,
-          validExerciseSet,
           validPage,
           validQuran,
         };
@@ -108,14 +80,10 @@ describe("Nakafa service", () => {
     );
 
     expect(Option.isSome(result.read)).toBe(true);
-    expect(Option.isSome(result.exercise)).toBe(true);
     expect(Option.isSome(result.quran)).toBe(true);
     expect(result.taxonomy.sections).toContain("articles");
     expect(result.validPage).toBe(true);
-    expect(result.validExerciseSet).toBe(true);
-    expect(result.validExercise).toBe(true);
     expect(result.validQuran).toBe(true);
-    expect(result.invalidExercise).toBe(false);
     expect(result.invalidPage).toBe(false);
   });
 
@@ -145,9 +113,9 @@ describe("Nakafa service", () => {
     });
   });
 
-  it("returns false when exercise verification cannot read the set", async () => {
+  it("returns false when page verification cannot read the content", async () => {
     const verified = await Effect.runPromise(
-      verifyNakafaContent(EXERCISE_CONTENT_REF, () =>
+      verifyNakafaContent(ARTICLE_CONTENT_REF, () =>
         Effect.fail(
           new NakafaAgentDataReadError({
             cause: "broken",

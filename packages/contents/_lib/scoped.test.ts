@@ -171,7 +171,7 @@ describe("scoped content helpers", () => {
         getScopedContent(
           "material",
           "en",
-          "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-1/question",
+          "material/lesson/mathematics/linear-equation-inequality/system-linear-equation",
           { includeMDX: false }
         )
       )

@@ -6,7 +6,6 @@ import type {
   NakafaAgentSearchResult,
 } from "@repo/contents/_lib/agent/schema/search";
 import type { Locale } from "@repo/contents/_types/content";
-import { isPracticeQuestionPath } from "@repo/contents/_types/route/practice/path";
 import type { UIMessageStreamWriter } from "ai";
 import { Effect, Either } from "effect";
 
@@ -53,11 +52,7 @@ export const search = Effect.fn("nakafa.search")(function* ({
         .search(searchInput)
         .pipe(
           Effect.map((result) =>
-            rankSearchResult(
-              searchInput,
-              result,
-              getSearchTokens(searchInput.queries ?? [])
-            )
+            rankSearchResult(result, getSearchTokens(searchInput.queries ?? []))
           )
         )
     ).pipe(
@@ -175,7 +170,6 @@ function combineSearchResults(
   }
 
   const ranked = rankSearchItems(
-    input,
     interleaveSearchItems(results.map((result) => result.items)),
     queryTokens
   );
@@ -225,20 +219,15 @@ function interleaveSearchItems(groups: NakafaAgentSearchResult["items"][]) {
 }
 
 /** Applies query relevance before the UI and agent consume search evidence. */
-function rankSearchResult(
-  input: SearchInput,
-  result: NakafaAgentSearchResult,
-  tokens: string[]
-) {
+function rankSearchResult(result: NakafaAgentSearchResult, tokens: string[]) {
   return {
     ...result,
-    items: rankSearchItems(input, result.items, tokens),
+    items: rankSearchItems(result.items, tokens),
   };
 }
 
 /** Applies query relevance after search and multi-query merging. */
 function rankSearchItems(
-  input: SearchInput,
   items: NakafaAgentSearchResult["items"],
   tokens: string[]
 ) {
@@ -254,11 +243,7 @@ function rankSearchItems(
       return scoreDelta;
     }
 
-    if (input.section !== "material") {
-      return 0;
-    }
-
-    return getExerciseSetPriority(right) - getExerciseSetPriority(left);
+    return 0;
   });
 }
 
@@ -295,17 +280,6 @@ function getSearchScore(
 
     return score;
   }, 0);
-}
-
-/** Prefers set/material/category rows over question rows for equal matches. */
-function getExerciseSetPriority(
-  item: NakafaAgentSearchResult["items"][number]
-) {
-  if (isPracticeQuestionPath(item.route)) {
-    return 0;
-  }
-
-  return 1;
 }
 
 /** Adds query context to the markdown returned to the Nakafa sub-agent. */

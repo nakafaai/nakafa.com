@@ -70,33 +70,28 @@ describe("learning graph identity", () => {
     expect(first.assetId).toBe(second.assetId);
   });
 
-  it("keeps exam alignment separate from concrete exercise objects", () => {
-    const group = readGraphIdentityFixture({
-      kind: "exercise-group",
+  it("keeps exam alignment separate from concrete try-out objects", () => {
+    const exam = readGraphIdentityFixture({
+      kind: "tryout-exam",
       locale: "en",
-      route:
-        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026",
+      route: "try-out/indonesia/snbt",
     });
     const set = readGraphIdentityFixture({
-      kind: "exercise-set",
+      kind: "tryout-set",
       locale: "en",
-      route:
-        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
+      route: "try-out/indonesia/snbt/set-1",
     });
-    const question = readGraphIdentityFixture({
-      kind: "exercise-question",
+    const section = readGraphIdentityFixture({
+      kind: "tryout-section",
       locale: "en",
-      route:
-        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-7",
+      route: "try-out/indonesia/snbt/set-1/quantitative-knowledge",
     });
 
-    expect(group.lensId).toBe(
-      "lens:exercise:high-school:snbt:quantitative-knowledge"
-    );
-    expect(set.lensId).toBe(group.lensId);
-    expect(question.lensId).toBe(group.lensId);
-    expect(question.assetId).toBe(
-      "asset:en:exercise:high-school:snbt:quantitative-knowledge:exercise-question:snbt:quantitative-knowledge:try-out-2026:set-1:7"
+    expect(exam.lensId).toBe("lens:tryout:indonesia:snbt");
+    expect(set.lensId).toBe(exam.lensId);
+    expect(section.lensId).toBe(exam.lensId);
+    expect(section.assetId).toBe(
+      "asset:en:tryout:indonesia:snbt:tryout-section:indonesia:snbt:set-1:quantitative-knowledge"
     );
   });
 
@@ -139,26 +134,25 @@ describe("learning graph identity", () => {
     expect(
       getLearningObjectKindForRoute("material/lesson/physics/waves/sound")
     ).toBe("curriculum-lesson");
+    expect(getLearningObjectKindForRoute("try-out/indonesia")).toBe(
+      "tryout-country"
+    );
+    expect(getLearningObjectKindForRoute("try-out/indonesia/snbt")).toBe(
+      "tryout-exam"
+    );
+    expect(getLearningObjectKindForRoute("try-out/indonesia/snbt/set-1")).toBe(
+      "tryout-set"
+    );
     expect(
       getLearningObjectKindForRoute(
-        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026"
+        "try-out/indonesia/snbt/set-1/quantitative-knowledge"
       )
-    ).toBe("exercise-group");
-    expect(
-      getLearningObjectKindForRoute(
-        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1"
-      )
-    ).toBe("exercise-set");
-    expect(
-      getLearningObjectKindForRoute(
-        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-7"
-      )
-    ).toBe("exercise-question");
+    ).toBe("tryout-section");
     expect(getLearningObjectKindForRoute("assessment/high-school")).toBeNull();
     expect(getLearningObjectKindForRoute("assessment/set-1/7")).toBeNull();
     expect(
       getLearningObjectKindForRoute(
-        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/not-a-set/extra"
+        "try-out/indonesia/snbt/set-1/quantitative-knowledge/extra"
       )
     ).toBeNull();
   });

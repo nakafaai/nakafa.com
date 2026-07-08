@@ -33,16 +33,6 @@ const AnswerFromContentPromptArgsSchema = Schema.Struct({
   }),
 }).pipe(Schema.mutable);
 
-const ExplainExercisePromptArgsSchema = Schema.Struct({
-  content_ref: NakafaAgentContentRefInputSchema,
-  exercise_number: Schema.optional(
-    NonEmptyPromptStringSchema.annotations({
-      description:
-        "Optional exercise number when the content ID points to a set.",
-    })
-  ),
-}).pipe(Schema.mutable);
-
 const QuranReferencePromptArgsSchema = Schema.Struct({
   from_verse: Schema.optionalWith(NonEmptyPromptStringSchema, {
     default: () => "1",
@@ -89,14 +79,6 @@ const NAKAFA_MCP_PROMPTS: readonly NakafaMcpPrompt[] = [
     get: getAnswerFromContentPrompt,
     name: "nakafa_answer_from_content",
     title: "Answer From Nakafa Content",
-  },
-  {
-    argsSchema: ExplainExercisePromptArgsSchema,
-    description:
-      "Guide an agent to explain a Nakafa exercise from its structured question, choices, answer, and explanation.",
-    get: getExplainExercisePrompt,
-    name: "nakafa_explain_exercise",
-    title: "Explain Nakafa Exercise",
   },
   {
     argsSchema: QuranReferencePromptArgsSchema,
@@ -189,32 +171,6 @@ function getAnswerFromContentPrompt(args: unknown) {
             `Answer this question from Nakafa content: ${question}`,
             `Content reference: ${content_ref}`,
             "Use `nakafa_get_content`, answer only from the returned markdown, and cite the canonical URL.",
-          ].join("\n"),
-          type: "text" as const,
-        },
-        role: "user" as const,
-      },
-    ],
-  };
-}
-
-/** Builds a prompt for explaining one Nakafa exercise. */
-function getExplainExercisePrompt(args: unknown) {
-  const { content_ref, exercise_number } = decodePromptArguments(
-    ExplainExercisePromptArgsSchema,
-    args,
-    "nakafa_explain_exercise"
-  );
-
-  return {
-    messages: [
-      {
-        content: {
-          text: [
-            "Explain this Nakafa exercise step by step.",
-            `Content reference: ${content_ref}`,
-            `Exercise number: ${exercise_number ?? "use the question in the content ID"}`,
-            "Use `nakafa_get_exercise`, preserve the published answer, and cite the canonical URL.",
           ].join("\n"),
           type: "text" as const,
         },

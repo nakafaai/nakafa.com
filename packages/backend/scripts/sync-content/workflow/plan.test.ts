@@ -2,27 +2,25 @@ import { readIncrementalSyncPlan } from "@repo/backend/scripts/sync-content/work
 import { describe, expect, it } from "vitest";
 
 describe("readIncrementalSyncPlan", () => {
-  it("plans material and practice row resyncs when route projection modules change", () => {
+  it("plans curriculum and try-out row resyncs when route projection modules change", () => {
     expect(
-      readIncrementalSyncPlan([
-        "packages/contents/_types/route/practice/path.ts",
-      ])
+      readIncrementalSyncPlan(["packages/contents/_types/route/tryout.ts"])
     ).toEqual({
       cleanBeforeRouteArtifacts: true,
       refreshGeneratedReadModels: true,
-      rowPhases: ["curriculum", "exercises"],
+      rowPhases: ["curriculum", "tryouts"],
     });
   });
 
   it("normalizes absolute route projection paths before planning row resyncs", () => {
     expect(
       readIncrementalSyncPlan([
-        "/Users/nabilfatih/.codex/worktrees/5c82/nakafa.com/packages/contents/_types/route/practice/path.ts",
+        "/Users/nabilfatih/.codex/worktrees/5c82/nakafa.com/packages/contents/_types/route/tryout.ts",
       ])
     ).toEqual({
       cleanBeforeRouteArtifacts: true,
       refreshGeneratedReadModels: true,
-      rowPhases: ["curriculum", "exercises"],
+      rowPhases: ["curriculum", "tryouts"],
     });
   });
 
@@ -32,7 +30,7 @@ describe("readIncrementalSyncPlan", () => {
     ).toEqual({
       cleanBeforeRouteArtifacts: true,
       refreshGeneratedReadModels: true,
-      rowPhases: ["articles", "curriculum", "exercises"],
+      rowPhases: ["articles", "curriculum", "tryouts"],
     });
   });
 
@@ -44,27 +42,27 @@ describe("readIncrementalSyncPlan", () => {
     ).toEqual({
       cleanBeforeRouteArtifacts: true,
       refreshGeneratedReadModels: true,
-      rowPhases: ["articles", "curriculum", "exercises"],
+      rowPhases: ["articles", "curriculum", "tryouts"],
     });
   });
 
-  it("plans curriculum and exercise rows when shared material route domains change", () => {
+  it("plans curriculum and try-out rows when shared material route domains change", () => {
     expect(
       readIncrementalSyncPlan(["packages/contents/_types/material/domain.ts"])
     ).toEqual({
       cleanBeforeRouteArtifacts: true,
       refreshGeneratedReadModels: true,
-      rowPhases: ["curriculum", "exercises"],
+      rowPhases: ["curriculum", "tryouts"],
     });
   });
 
-  it("plans curriculum and exercise rows when shared material registry entries change", () => {
+  it("plans curriculum and try-out rows when shared material registry entries change", () => {
     expect(
       readIncrementalSyncPlan(["packages/contents/_types/material/source.ts"])
     ).toEqual({
       cleanBeforeRouteArtifacts: true,
       refreshGeneratedReadModels: true,
-      rowPhases: ["curriculum", "exercises"],
+      rowPhases: ["curriculum", "tryouts"],
     });
   });
 
@@ -74,7 +72,7 @@ describe("readIncrementalSyncPlan", () => {
     ).toEqual({
       cleanBeforeRouteArtifacts: true,
       refreshGeneratedReadModels: true,
-      rowPhases: ["articles", "curriculum", "exercises"],
+      rowPhases: ["articles", "curriculum", "tryouts"],
     });
   });
 
@@ -84,41 +82,41 @@ describe("readIncrementalSyncPlan", () => {
     ).toEqual({
       cleanBeforeRouteArtifacts: true,
       refreshGeneratedReadModels: true,
-      rowPhases: ["articles", "curriculum", "exercises"],
+      rowPhases: ["articles", "curriculum", "tryouts"],
     });
   });
 
-  it("plans curriculum and exercise rows when program catalog entries change", () => {
+  it("plans curriculum and try-out rows when program catalog entries change", () => {
     expect(
       readIncrementalSyncPlan(["packages/contents/_types/program/catalog.ts"])
     ).toEqual({
       cleanBeforeRouteArtifacts: true,
       refreshGeneratedReadModels: true,
-      rowPhases: ["curriculum", "exercises"],
+      rowPhases: ["curriculum", "tryouts"],
     });
   });
 
-  it("plans curriculum and exercise rows when practice content changes", () => {
+  it("plans try-out rows when try-out source content changes", () => {
     expect(
       readIncrementalSyncPlan([
-        "packages/contents/material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-1/question.id.mdx",
+        "packages/contents/question-bank/tryout/indonesia/snbt/general-reasoning/set-1/question-1/question.id.mdx",
       ])
     ).toEqual({
       cleanBeforeRouteArtifacts: true,
       refreshGeneratedReadModels: true,
-      rowPhases: ["curriculum", "exercises"],
+      rowPhases: ["tryouts"],
     });
   });
 
-  it("normalizes content-root relative practice paths before planning row resyncs", () => {
+  it("normalizes content-root relative try-out paths before planning row resyncs", () => {
     expect(
       readIncrementalSyncPlan([
-        "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-1/question.id.mdx",
+        "question-bank/tryout/indonesia/snbt/general-reasoning/set-1/question-1/question.id.mdx",
       ])
     ).toEqual({
       cleanBeforeRouteArtifacts: true,
       refreshGeneratedReadModels: true,
-      rowPhases: ["curriculum", "exercises"],
+      rowPhases: ["tryouts"],
     });
   });
 

@@ -10,11 +10,6 @@ import {
   NakafaAgentDataReadError,
 } from "@repo/contents/_lib/agent/errors";
 import { NakafaAgentTaxonomySchema } from "@repo/contents/_lib/agent/schema/taxonomy";
-import {
-  getExerciseCategoryOptions,
-  getExerciseMaterialOptions,
-  getExerciseTypeOptions,
-} from "@repo/contents/_lib/assessment/label";
 import { getAllSurah } from "@repo/contents/_lib/quran";
 import type { Locale } from "@repo/contents/_types/content";
 import {
@@ -25,6 +20,7 @@ import {
   NUMERIC_GRADES,
   SUBJECT_CATEGORIES,
 } from "@repo/contents/_types/taxonomy";
+import { TRYOUT_SOURCES } from "@repo/contents/_types/tryout/source";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect, Schema } from "effect";
 
@@ -56,10 +52,9 @@ export function buildNakafaAgentTaxonomy({
       recommended: NAKAFA_MCP_RECOMMENDED_ENDPOINT,
       root_note: `${NAKAFA_MCP_INFORMATIONAL_ROOT} is informational only.`,
     },
-    exercises: {
-      categories: getExerciseCategoryOptions(locale),
-      materials: getExerciseMaterialOptions(locale),
-      types: getExerciseTypeOptions(locale),
+    tryout: {
+      countries: getTryoutCountryOptions(locale),
+      exams: getTryoutExamOptions(locale),
     },
     locale,
     locales: routing.locales,
@@ -76,10 +71,28 @@ export function buildNakafaAgentTaxonomy({
       "nakafa_search_content",
       "nakafa_get_content",
       "nakafa_get_taxonomy",
-      "nakafa_get_exercise",
       "nakafa_get_quran_reference",
     ],
   });
+}
+
+/** Derives supported try-out countries from source-controlled exam programs. */
+function getTryoutCountryOptions(locale: Locale) {
+  const options = new Map<string, string>();
+
+  for (const source of TRYOUT_SOURCES) {
+    options.set(source.countryKey, source.countryTranslations[locale].title);
+  }
+
+  return Array.from(options, ([id, label]) => ({ id, label }));
+}
+
+/** Derives supported try-out exams from source-controlled exam programs. */
+function getTryoutExamOptions(locale: Locale) {
+  return TRYOUT_SOURCES.map((source) => ({
+    id: source.examKey,
+    label: source.examTranslations[locale].title,
+  }));
 }
 
 /** Counts indexed content once for each supported locale. */

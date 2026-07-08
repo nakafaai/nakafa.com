@@ -27,63 +27,74 @@ async function scheduleCleanupRetry(
   );
 }
 
-/** Deletes one tryout-owned exercise attempt, its answers, and the parent part row. */
-async function deleteTryoutPartAttemptRuntime(
-  ctx: Pick<MutationCtx, "db">,
-  partAttempt: Doc<"tryoutPartAttempts">
-) {
-  const setAttempt = await ctx.db.get(
-    "exerciseAttempts",
-    partAttempt.setAttemptId
-  );
-
-  if (setAttempt) {
-    const answers = await ctx.db
-      .query("exerciseAnswers")
-      .withIndex("by_attemptId_and_exerciseNumber", (q) =>
-        q.eq("attemptId", setAttempt._id)
-      )
-      .take(setAttempt.totalExercises + 1);
-
-    if (answers.length > setAttempt.totalExercises) {
-      throw new ConvexError({
-        code: "TRYOUT_EXERCISE_ANSWER_COUNT_EXCEEDED",
-        message:
-          "Tryout exercise answer count exceeds the exercise attempt total exercises.",
-      });
-    }
-
-    for (const answer of answers) {
-      await ctx.db.delete("exerciseAnswers", answer._id);
-    }
-
-    await ctx.db.delete("exerciseAttempts", setAttempt._id);
-  }
-
-  await ctx.db.delete("tryoutPartAttempts", partAttempt._id);
-}
-
 /** Deletes one tryout attempt together with every linked part runtime row. */
 async function deleteTryoutAttemptRuntime(
   ctx: Pick<MutationCtx, "db">,
   tryoutAttempt: Doc<"tryoutAttempts">
 ) {
-  const partAttempts = await ctx.db
-    .query("tryoutPartAttempts")
-    .withIndex("by_tryoutAttemptId_and_partIndex", (q) =>
+  const sectionAttempts = await ctx.db
+    .query("tryoutSectionAttempts")
+    .withIndex("by_tryoutAttemptId_and_sectionOrder", (q) =>
       q.eq("tryoutAttemptId", tryoutAttempt._id)
     )
-    .take(tryoutAttempt.partSetSnapshots.length + 1);
+    .take(tryoutAttempt.sectionSnapshots.length + 1);
 
-  if (partAttempts.length > tryoutAttempt.partSetSnapshots.length) {
+  if (sectionAttempts.length > tryoutAttempt.sectionSnapshots.length) {
     throw new ConvexError({
       code: "INVALID_TRYOUT_STATE",
-      message: "Tryout attempt has more part attempts than snapshot parts.",
+      message: "Tryout attempt has more section attempts than snapshots.",
     });
   }
 
-  for (const partAttempt of partAttempts) {
-    await deleteTryoutPartAttemptRuntime(ctx, partAttempt);
+  for (const sectionAttempt of sectionAttempts) {
+    const responses = await ctx.db
+      .query("tryoutResponses")
+      .withIndex("by_tryoutSectionAttemptId_and_questionId", (q) =>
+        q.eq("tryoutSectionAttemptId", sectionAttempt._id)
+      )
+      .take(sectionAttempt.totalQuestions + 1);
+
+    if (responses.length > sectionAttempt.totalQuestions) {
+      throw new ConvexError({
+        code: "INVALID_TRYOUT_STATE",
+        message: "Tryout section attempt has more responses than questions.",
+      });
+    }
+
+    for (const response of responses) {
+      await ctx.db.delete("tryoutResponses", response._id);
+    }
+
+    const placements = await ctx.db
+      .query("tryoutAttemptPlacements")
+      .withIndex("by_tryoutSectionAttemptId_and_questionOrder", (q) =>
+        q.eq("tryoutSectionAttemptId", sectionAttempt._id)
+      )
+      .take(sectionAttempt.totalQuestions + 1);
+
+    if (placements.length > sectionAttempt.totalQuestions) {
+      throw new ConvexError({
+        code: "INVALID_TRYOUT_STATE",
+        message: "Tryout section attempt has more placements than questions.",
+      });
+    }
+
+    for (const placement of placements) {
+      await ctx.db.delete("tryoutAttemptPlacements", placement._id);
+    }
+
+    await ctx.db.delete("tryoutSectionAttempts", sectionAttempt._id);
+  }
+
+  const score = await ctx.db
+    .query("tryoutScores")
+    .withIndex("by_tryoutAttemptId", (q) =>
+      q.eq("tryoutAttemptId", tryoutAttempt._id)
+    )
+    .unique();
+
+  if (score) {
+    await ctx.db.delete("tryoutScores", score._id);
   }
 
   await ctx.db.delete("tryoutAttempts", tryoutAttempt._id);
@@ -113,7 +124,7 @@ async function deleteTryoutLeaderboardEntriesBatch(
 ) {
   const leaderboardEntries = await ctx.db
     .query("tryoutLeaderboardEntries")
-    .withIndex("by_userId_and_leaderboardNamespace_and_completedAt", (q) =>
+    .withIndex("by_userId_and_leaderboardScopeId_and_completedAt", (q) =>
       q.eq("userId", userId)
     )
     .take(TRYOUT_LEADERBOARD_CLEANUP_BATCH_SIZE);
@@ -125,20 +136,20 @@ async function deleteTryoutLeaderboardEntriesBatch(
   return leaderboardEntries.length === TRYOUT_LEADERBOARD_CLEANUP_BATCH_SIZE;
 }
 
-/** Deletes one bounded batch of personal tryout stats for a deleted user. */
-async function deleteUserTryoutStatsBatch(
+/** Deletes one bounded batch of personal try-out leaderboard stats for a deleted user. */
+async function deleteTryoutLeaderboardUserStatsBatch(
   ctx: Pick<MutationCtx, "db">,
   userId: Id<"users">
 ) {
   const tryoutStats = await ctx.db
-    .query("userTryoutStats")
-    .withIndex("by_userId_and_product_and_leaderboardNamespace", (q) =>
+    .query("tryoutLeaderboardUserStats")
+    .withIndex("by_userId_and_leaderboardScopeId", (q) =>
       q.eq("userId", userId)
     )
     .take(TRYOUT_STATS_CLEANUP_BATCH_SIZE);
 
   for (const tryoutStat of tryoutStats) {
-    await ctx.db.delete("userTryoutStats", tryoutStat._id);
+    await ctx.db.delete("tryoutLeaderboardUserStats", tryoutStat._id);
   }
 
   return tryoutStats.length === TRYOUT_STATS_CLEANUP_BATCH_SIZE;
@@ -150,14 +161,15 @@ async function deleteUserTryoutEntitlementsBatch(
   userId: Id<"users">
 ) {
   const entitlements = await ctx.db
-    .query("userTryoutEntitlements")
-    .withIndex("by_userId_and_product_and_sourceKind_and_endsAt", (q) =>
-      q.eq("userId", userId)
+    .query("tryoutEntitlements")
+    .withIndex(
+      "by_userId_and_countryKey_and_examKey_and_setKey_and_endsAt",
+      (q) => q.eq("userId", userId)
     )
     .take(TRYOUT_ENTITLEMENT_CLEANUP_BATCH_SIZE);
 
   for (const entitlement of entitlements) {
-    await ctx.db.delete("userTryoutEntitlements", entitlement._id);
+    await ctx.db.delete("tryoutEntitlements", entitlement._id);
   }
 
   return entitlements.length === TRYOUT_ENTITLEMENT_CLEANUP_BATCH_SIZE;
@@ -276,7 +288,7 @@ export const cleanupDeletedUser = internalMutation({
       return null;
     }
 
-    if (await deleteUserTryoutStatsBatch(ctx, args.userId)) {
+    if (await deleteTryoutLeaderboardUserStatsBatch(ctx, args.userId)) {
       await scheduleCleanupRetry(ctx, args);
       return null;
     }

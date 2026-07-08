@@ -15,9 +15,7 @@ const englishSubjectGraph = getGraphIdentity(
   "material/lesson/chemistry/atomic-structure",
   "en"
 );
-const snbtGraph = getGraphIdentity(
-  "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1"
-);
+const snbtGraph = getGraphIdentity("try-out/indonesia/snbt/set-1");
 
 describe("learningPrograms/mutations", () => {
   it("creates an authenticated profile and graph-backed first plan", async () => {
@@ -99,7 +97,7 @@ describe("learningPrograms/mutations", () => {
       graph: snbtGraph,
       lensScope: "exam",
       locale: "id",
-      programKey: "snbt-2026",
+      programKey: "snbt",
     });
 
     const authed = t.withIdentity({
@@ -111,7 +109,7 @@ describe("learningPrograms/mutations", () => {
       {
         interests: ["exam-prep", "exam-prep"],
         locale: "id",
-        primaryProgramKey: "snbt-2026",
+        primaryProgramKey: "snbt",
       }
     );
 
@@ -120,7 +118,7 @@ describe("learningPrograms/mutations", () => {
       authed.mutation(api.learningPrograms.mutations.selectLearningProgram, {
         interests: ["school-curriculum"],
         locale: "id",
-        primaryProgramKey: "snbt-2026",
+        primaryProgramKey: "snbt",
       })
     ).rejects.toThrow("LEARNING_PROGRAM_INTEREST_MISMATCH");
   });
@@ -235,7 +233,7 @@ describe("learningPrograms/mutations", () => {
       authed.mutation(api.learningPrograms.mutations.selectLearningProgram, {
         interests: ["assessment-prep"],
         locale: "id",
-        primaryProgramKey: "tka-2026",
+        primaryProgramKey: "tka",
       })
     ).rejects.toThrow("LEARNING_PROGRAM_NOT_SELECTABLE");
 

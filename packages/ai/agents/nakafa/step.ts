@@ -1,95 +1,10 @@
 import { createPrompt } from "@repo/ai/prompt/utils";
 import { NAKAFA_AGENT_MAX_QUERIES } from "@repo/contents/_lib/agent/constants";
-import { getNakafaExerciseSetRoute } from "@repo/contents/_lib/agent/exercise/ref";
 import type {
   NakafaAgentSearchInput,
   NakafaAgentSearchResult,
 } from "@repo/contents/_lib/agent/schema/search";
-import { readPracticeSourceRouteByPath } from "@repo/contents/_types/route/practice/identity";
 import type { ModelMessage } from "ai";
-import { Option } from "effect";
-
-/**
- * Selects the graph exercise reference to read after an exercise-scoped search.
- * Set-level search rows are preferred when present; otherwise the first
- * exercise hit keeps its returned graph ID and resolves through the route catalog.
- */
-export function selectExerciseRef(
-  input: NakafaAgentSearchInput,
-  result: NakafaAgentSearchResult | null
-) {
-  if (result === null) {
-    return Option.none();
-  }
-
-  if (input.section !== "material") {
-    return Option.none();
-  }
-
-  const items = result.items.flatMap((item) => {
-    const sourceRoute = readPracticeSearchSourceRoute(item);
-
-    return sourceRoute ? [{ item, sourceRoute }] : [];
-  });
-  const firstItem = items.at(0);
-
-  if (!firstItem) {
-    return Option.none();
-  }
-
-  const setRoute = getNakafaExerciseSetRoute(firstItem.sourceRoute);
-  const setItem = items.find(({ sourceRoute }) => sourceRoute === setRoute);
-
-  return Option.some(setItem?.item.content_id ?? firstItem.item.content_id);
-}
-
-/**
- * Builds the AI SDK step override that completes search -> exercise retrieval.
- */
-export function prepareExerciseStep(
-  ref: Option.Option<string>,
-  messages: ModelMessage[],
-  hasExerciseToolCall: boolean
-) {
-  if (Option.isNone(ref)) {
-    return;
-  }
-
-  if (hasExerciseToolCall) {
-    return;
-  }
-
-  const input = JSON.stringify({
-    content_ref: ref.value,
-  });
-  const message = {
-    role: "user",
-    content: createPrompt({
-      taskContext: `
-        # Required Next Step
-
-        Call exactly one exercise tool with this content_ref and wait for the result before answering.
-      `,
-      backgroundData: `
-        # Content Reference
-
-        ${input}
-      `,
-      toolUsageGuidelines: `
-        # Tool Constraints
-
-        - Do not call exercise with any other content_ref.
-        - Include exercise_number only when the original user asked for one specific question.
-      `,
-    }),
-  } satisfies ModelMessage;
-
-  return {
-    activeTools: ["exercise" as const],
-    messages: [...messages, message],
-    toolChoice: { toolName: "exercise", type: "tool" } as const,
-  };
-}
 
 /**
  * Detects search results that need a full content read before Nina answers.
@@ -107,41 +22,20 @@ export function shouldReadAfterSearch(
   }
 
   return result.items.some(
-    (item) =>
-      item.section === "articles" ||
-      (item.section === "material" && !readPracticeSearchSourceRoute(item))
+    (item) => item.section === "articles" || item.section === "material"
   );
 }
 
 /**
- * Classifies the forced follow-up tools needed after one Nakafa search result.
- *
- * Mixed material results can contain both concrete lessons and practice rows;
- * callers must preserve both intents so Nina reads lesson context instead of
- * answering from snippets after selecting an exercise reference.
+ * Classifies the forced follow-up work needed after one Nakafa search result.
  */
 export function readSearchFollowup(
   input: NakafaAgentSearchInput,
   result: NakafaAgentSearchResult | null
 ) {
   return {
-    exerciseRef: selectExerciseRef(input, result),
     shouldReadContent: shouldReadAfterSearch(input, result),
   };
-}
-
-/** Resolves practice search rows whether search stored source or public route identity. */
-function readPracticeSearchSourceRoute(
-  item: NakafaAgentSearchResult["items"][number]
-) {
-  if (item.section !== "material") {
-    return;
-  }
-
-  return readPracticeSourceRouteByPath({
-    locale: item.locale,
-    route: item.route,
-  })?.sourcePath;
 }
 
 /**

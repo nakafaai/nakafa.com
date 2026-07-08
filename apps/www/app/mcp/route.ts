@@ -15,9 +15,9 @@ const MCP_DISCOVERY_TEXT = [
   `Direct endpoint: ${NAKAFA_MCP_DIRECT_ENDPOINT}.`,
   `${NAKAFA_MCP_INFORMATIONAL_ROOT} is informational only and is not an MCP transport endpoint.`,
   "MCP clients should send JSON-RPC POST requests with Accept: application/json, text/event-stream and Content-Type: application/json.",
-  "Available tools: nakafa_search_content, nakafa_get_content, nakafa_get_taxonomy, nakafa_get_exercise, nakafa_get_quran_reference.",
+  "Available tools: nakafa_search_content, nakafa_get_content, nakafa_get_taxonomy, nakafa_get_quran_reference.",
   "Resources: nakafa://usage, nakafa://taxonomy, nakafa://content/{contentId}.",
-  "Prompts: nakafa_find_lesson, nakafa_answer_from_content, nakafa_explain_exercise, nakafa_quran_reference.",
+  "Prompts: nakafa_find_lesson, nakafa_answer_from_content, nakafa_quran_reference.",
   "",
 ].join("\n");
 

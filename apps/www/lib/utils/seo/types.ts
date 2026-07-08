@@ -2,9 +2,6 @@ import type { ProgramNavigationLevel } from "@repo/contents/_types/program/schem
 import type { Surah } from "@repo/contents/_types/quran";
 import type {
   ArticleCategory,
-  ExercisesCategory,
-  ExercisesMaterial,
-  ExercisesType,
   Grade,
   Material,
   SubjectCategory,
@@ -36,23 +33,6 @@ export type SEOContext =
       grade: Grade;
       material: Material;
       chapter?: string;
-      data: ContentSEOData;
-    }
-  | {
-      type: "exercise";
-      category: ExercisesCategory;
-      exam: ExercisesType;
-      material: ExercisesMaterial;
-      group?: string; // Exercise group name (e.g., "Try Out")
-      set?: string; // Exercise set name (e.g., "Set 1")
-      number?: number; // Exercise number for specific questions (e.g., 1, 2, 3)
-      questionCount?: number;
-      data: ContentSEOData;
-    }
-  | {
-      type: "exercise-program";
-      category: ExercisesCategory;
-      exam: ExercisesType;
       data: ContentSEOData;
     }
   | {

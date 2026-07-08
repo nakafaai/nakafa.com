@@ -5,6 +5,13 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 ## Learning Engagement
 
 - **Canonical asset**: A material, question, article, or Quran asset owned by the content system. Other product surfaces group or navigate over references to these assets.
+- **Question bank**: The source-owned pool of immutable question assets. A question bank item is reusable by try-outs and is not a public practice page.
+- **Try-out**: A premium exam simulation surface organized by country, exam, set, and section. Try-out routes use `/try-out/[country]/[exam]/[set]/[section]`.
+- **Try-out country**: The country-scoped discovery node for exam families, such as Indonesia. It owns localized country page copy and route slugs.
+- **Try-out exam**: A stable exam-family key under one country, such as `snbt` or `tka`. Exam keys do not include yearly suffixes.
+- **Try-out set**: One attemptable exam package under a try-out exam. It owns section membership, scoring strategy, and public set copy.
+- **Try-out section**: One timed question group inside a try-out set. Sections reference question bank source paths and are the smallest attempt route.
+- **IRT scale version**: An immutable scoring scale for one try-out set. Published attempts keep the exact scale version and item parameters used for scoring.
 - **Learning program**: A durable educational pathway such as a school curriculum, assessment preparation track, or institution program. Public curriculum pages present Learning programs through localized routes.
 - **Curriculum preference**: A signed-in learner's default school curriculum for browsing curriculum surfaces. It does not replace an explicit curriculum URL and it is not the source of generated learning plans.
 - **Curriculum index**: A public discovery surface that lists school curricula and links to their curriculum roots. It is not personalized.

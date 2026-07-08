@@ -3,7 +3,6 @@ import {
   NakafaAgentDataReadError,
   NakafaAgentInputError,
 } from "@repo/contents/_lib/agent/errors";
-import { NakafaAgentExerciseResultSchema } from "@repo/contents/_lib/agent/schema/exercise";
 import {
   NakafaAgentQuranReferenceOptionsSchema,
   NakafaAgentQuranReferenceSchema,
@@ -20,19 +19,6 @@ export function decodeNakafaMarkdown(markdown: unknown) {
         new NakafaAgentDataReadError({
           cause: getUnknownErrorMessage(error),
           message: "Unable to build Nakafa agent markdown.",
-        })
-    )
-  );
-}
-
-/** Decodes structured exercise output into the public schema shape. */
-export function decodeNakafaExerciseResult(exercise: unknown) {
-  return Schema.decodeUnknown(NakafaAgentExerciseResultSchema)(exercise).pipe(
-    Effect.mapError(
-      (error) =>
-        new NakafaAgentDataReadError({
-          cause: getUnknownErrorMessage(error),
-          message: "Unable to build Nakafa exercise read model.",
         })
     )
   );

@@ -129,22 +129,6 @@ describe("route catalog static params", () => {
     });
   });
 
-  it("uses dated exercise question rows to prerender parent set routes", async () => {
-    await expect(
-      getStaticParams({
-        basePath: "material",
-        isDeep: true,
-        paramNames: ["category", "type", "material", "slug"],
-        slugParam: "slug",
-      })
-    ).resolves.toContainEqual({
-      category: "practice",
-      material: "snbt",
-      slug: ["quantitative-knowledge", "try-out-2026", "set-1"],
-      type: "assessment",
-    });
-  });
-
   it("skips malformed or nonmatching static-param routes", async () => {
     routeMocks.listRuntimeLatestContentRoutes.mockReturnValueOnce(
       Effect.succeed([
@@ -212,13 +196,11 @@ const routeRows = [
     section: "material",
   }),
   routeRow({
-    kind: "exercise-question",
+    kind: "tryout-section",
     locale: "en",
-    parentRoute:
-      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
-    route:
-      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1/question-1",
-    section: "material",
+    parentRoute: "try-out/indonesia/snbt/set-1",
+    route: "try-out/indonesia/snbt/set-1/quantitative-knowledge",
+    section: "tryout",
   }),
 ];
 

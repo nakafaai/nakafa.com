@@ -22,7 +22,10 @@ const LEADING_LINE_SPACES_PATTERN = /\n[ \t]+/g;
 const REPEATED_SPACES_PATTERN = /[ \t]{2,}/g;
 const EXCESS_BLANK_LINES_PATTERN = /\n{3,}/g;
 const FENCED_MATH_BLOCK_PATTERN = /```math[\s\S]*?```/g;
+const INLINE_MATH_COMPONENT_PATTERN =
+  /<InlineMath\s+math=(?:"[^"]*"|'[^']*'|\{[^}]*\})\s*\/?>/g;
 const INLINE_MATH_MARKDOWN_PATTERN = /\$\$[\s\S]*?\$\$/g;
+const JSX_SPACING_EXPRESSION_PATTERN = /\{\s*["'`]([^"'`}]*)["'`]\s*\}/g;
 const MdxPositionSchema = Schema.Struct({
   start: Schema.Struct({
     offset: Schema.Number,
@@ -328,8 +331,10 @@ function appendVisibleTextVariant(markdown: string) {
 /** Extracts rendered-visible prose by removing math-only source blocks. */
 function readVisibleText(markdown: string) {
   return markdown
+    .replace(INLINE_MATH_COMPONENT_PATTERN, "")
     .replace(FENCED_MATH_BLOCK_PATTERN, "")
     .replace(INLINE_MATH_MARKDOWN_PATTERN, "")
+    .replace(JSX_SPACING_EXPRESSION_PATTERN, "$1")
     .replace(EXCESS_BLANK_LINES_PATTERN, "\n\n")
     .replace(REPEATED_SPACES_PATTERN, " ")
     .trim();

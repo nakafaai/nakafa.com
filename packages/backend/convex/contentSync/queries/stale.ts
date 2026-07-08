@@ -11,22 +11,30 @@ const staleContentTableNameValidator = literals(
   "articleContents",
   "curriculumTopics",
   "curriculumLessons",
-  "exerciseSets",
-  "exerciseQuestions"
+  "questionSets",
+  "questions",
+  "tryoutCountries",
+  "tryoutExams",
+  "tryoutSets",
+  "tryoutSections"
 );
 
 const staleContentIdValidator = v.union(
   v.id("articleContents"),
   v.id("curriculumTopics"),
   v.id("curriculumLessons"),
-  v.id("exerciseSets"),
-  v.id("exerciseQuestions")
+  v.id("questionSets"),
+  v.id("questions"),
+  v.id("tryoutCountries"),
+  v.id("tryoutExams"),
+  v.id("tryoutSets"),
+  v.id("tryoutSections")
 );
 
 const staleContentItemValidator = v.object({
   id: staleContentIdValidator,
   locale: localeValidator,
-  slug: v.string(),
+  sourcePath: v.string(),
 });
 
 /** Return one paginated page of existing content rows for stale-content detection. */
@@ -46,8 +54,25 @@ export const listStaleContentPage = internalQuery({
       page: page.page.map((item) => ({
         id: item._id,
         locale: item.locale,
-        slug: item.slug,
+        sourcePath: getStaleSourcePath(item),
       })),
     };
   },
 });
+
+/** Returns the source identity used for stale content comparison. */
+function getStaleSourcePath(item: {
+  publicPath?: string;
+  slug?: string;
+  sourcePath?: string;
+}) {
+  if (item.sourcePath) {
+    return item.sourcePath;
+  }
+
+  if (item.publicPath) {
+    return item.publicPath;
+  }
+
+  return item.slug ?? "";
+}

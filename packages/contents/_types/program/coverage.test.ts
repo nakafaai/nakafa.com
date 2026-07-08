@@ -29,14 +29,13 @@ const subjectRoute = decodeRoute({
 });
 
 const snbtRoute = decodeRoute({
-  assetId: "asset:id:exercise:high-school:snbt:quantitative:exercise-set:set-1",
-  conceptId: "concept:exercise:quantitative-knowledge:try-out",
-  kind: "exercise-set",
-  lensId: "lens:exercise:high-school:snbt:quantitative-knowledge",
+  assetId: "asset:id:tryout:indonesia:snbt:tryout-set:indonesia:snbt:set-1",
+  conceptId: "concept:tryout:indonesia:snbt:set-1",
+  kind: "tryout-set",
+  lensId: "lens:tryout:indonesia:snbt",
   locale: "id",
-  route: "latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1",
-  sourcePath:
-    "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
+  route: "try-out/indonesia/snbt/set-1",
+  sourcePath: "try-out/indonesia/snbt/set-1",
 });
 
 const englishSubjectRoute = decodeRoute({
@@ -50,7 +49,7 @@ const englishSubjectRoute = decodeRoute({
 describe("program/coverage", () => {
   it("keeps assessment route rules separate from curriculum mappings", () => {
     expect(getProgramKeysForCoverageRoute(subjectRoute)).toEqual([]);
-    expect(getProgramKeysForCoverageRoute(snbtRoute)).toEqual(["snbt-2026"]);
+    expect(getProgramKeysForCoverageRoute(snbtRoute)).toEqual(["snbt"]);
   });
 
   it("maps curriculum topics through curriculum-owned material references", () => {
@@ -85,7 +84,7 @@ describe("program/coverage", () => {
     const unmatchedRoute = decodeRoute({
       assetId: "asset:id:article:learning:general",
       conceptId: "concept:article:learning",
-      kind: "exercise-set",
+      kind: "tryout-set",
       lensId: "lens:article:general",
       locale: "id",
       route: "articles/learning/general",
@@ -111,7 +110,7 @@ describe("program/coverage", () => {
     expect(
       getProgramKeysForCoverageRoute(snbtRoute, [
         {
-          match: { routeKinds: ["exercise-set"] },
+          match: { routeKinds: ["tryout-set"] },
           programKey: LearningProgramKeySchema.make("fixture-program"),
         },
       ])
@@ -120,7 +119,7 @@ describe("program/coverage", () => {
       getProgramKeysForCoverageRoute(snbtRoute, [
         {
           match: { lensSegments: ["tka"] },
-          programKey: LearningProgramKeySchema.make("tka-2026"),
+          programKey: LearningProgramKeySchema.make("tka"),
         },
       ])
     ).toEqual([]);
@@ -128,7 +127,7 @@ describe("program/coverage", () => {
       getProgramKeysForCoverageRoute(snbtRoute, [
         {
           match: { lensSegments: ["snbt"], routeSegments: ["missing"] },
-          programKey: LearningProgramKeySchema.make("snbt-2026"),
+          programKey: LearningProgramKeySchema.make("snbt"),
         },
       ])
     ).toEqual([]);
@@ -148,8 +147,8 @@ describe("program/coverage", () => {
       coverageStatus: "partial",
       lensScope: "curriculum",
     });
-    expect(rowsByProgram["snbt-2026"]).toMatchObject({ lensScope: "exam" });
-    expect(JSON.stringify(rows)).not.toContain("assessment/high-school/snbt");
+    expect(rowsByProgram.snbt).toMatchObject({ lensScope: "exam" });
+    expect(JSON.stringify(rows)).not.toContain("material/practice");
   });
 
   it("projects program coverage through the Effect sync entrypoint", async () => {
@@ -167,7 +166,7 @@ describe("program/coverage", () => {
     expect(rowsByProgram.merdeka).toMatchObject({
       lensScope: "curriculum",
     });
-    expect(rowsByProgram["snbt-2026"]).toMatchObject({ lensScope: "exam" });
+    expect(rowsByProgram.snbt).toMatchObject({ lensScope: "exam" });
   });
 
   it("preserves explicit available catalog status for real program coverage", () => {
@@ -335,7 +334,7 @@ describe("program/coverage", () => {
 
   it("projects archived and unknown programs without inventing availability", () => {
     const programs = LEARNING_PROGRAM_CATALOG.map((program) => {
-      if (program.key !== "snbt-2026") {
+      if (program.key !== "snbt") {
         return program;
       }
 
@@ -346,7 +345,7 @@ describe("program/coverage", () => {
       alignments: [
         {
           match: { routeSegments: ["snbt"] },
-          programKey: LearningProgramKeySchema.make("snbt-2026"),
+          programKey: LearningProgramKeySchema.make("snbt"),
         },
         {
           match: { routeSegments: ["snbt"] },
@@ -361,7 +360,7 @@ describe("program/coverage", () => {
       rows.map((row) => [row.programKey, row])
     );
 
-    expect(rowsByProgram["snbt-2026"]).toMatchObject({
+    expect(rowsByProgram.snbt).toMatchObject({
       coverageStatus: "archived",
     });
     expect(rowsByProgram["unknown-exam"]).toMatchObject({

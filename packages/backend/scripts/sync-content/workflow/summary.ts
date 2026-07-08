@@ -14,8 +14,6 @@ export function logSyncSummary(
   articleResult: SyncResult,
   curriculumTopicResult: SyncResult,
   curriculumLessonResult: SyncResult,
-  exerciseSetResult: SyncResult,
-  exerciseQuestionResult: SyncResult,
   quranResult: SyncResult,
   tryoutResult: SyncResult,
   routePageResult: SyncResult,
@@ -26,8 +24,6 @@ export function logSyncSummary(
     articleResult.created +
     curriculumTopicResult.created +
     curriculumLessonResult.created +
-    exerciseSetResult.created +
-    exerciseQuestionResult.created +
     quranResult.created +
     tryoutResult.created +
     routePageResult.created +
@@ -37,8 +33,6 @@ export function logSyncSummary(
     articleResult.updated +
     curriculumTopicResult.updated +
     curriculumLessonResult.updated +
-    exerciseSetResult.updated +
-    exerciseQuestionResult.updated +
     quranResult.updated +
     tryoutResult.updated +
     routePageResult.updated +
@@ -50,8 +44,6 @@ export function logSyncSummary(
     articleResult.unchanged +
     curriculumTopicResult.unchanged +
     curriculumLessonResult.unchanged +
-    exerciseSetResult.unchanged +
-    exerciseQuestionResult.unchanged +
     quranResult.unchanged +
     tryoutResult.unchanged +
     routePageResult.unchanged +
@@ -59,8 +51,7 @@ export function logSyncSummary(
     learningProgramResult.unchanged;
   const totalAuthorLinksCreated =
     (articleResult.authorLinksCreated || 0) +
-    (curriculumLessonResult.authorLinksCreated || 0) +
-    (exerciseQuestionResult.authorLinksCreated || 0);
+    (curriculumLessonResult.authorLinksCreated || 0);
 
   log("\n=== SYNC SUMMARY ===\n");
   log("Primary Content:");
@@ -72,12 +63,6 @@ export function logSyncSummary(
   );
   log(
     `  Curriculum Lessons:   ${curriculumLessonResult.created + curriculumLessonResult.updated + curriculumLessonResult.unchanged} (${curriculumLessonResult.created} new, ${curriculumLessonResult.updated} updated)`
-  );
-  log(
-    `  Exercise Sets:      ${exerciseSetResult.created + exerciseSetResult.updated + exerciseSetResult.unchanged} (${exerciseSetResult.created} new, ${exerciseSetResult.updated} updated)`
-  );
-  log(
-    `  Exercise Questions: ${exerciseQuestionResult.created + exerciseQuestionResult.updated + exerciseQuestionResult.unchanged} (${exerciseQuestionResult.created} new, ${exerciseQuestionResult.updated} updated)`
   );
   log(
     `  Quran:              ${quranResult.created + quranResult.updated + quranResult.unchanged} (${quranResult.created} new, ${quranResult.updated} updated)`
@@ -101,11 +86,6 @@ export function logSyncSummary(
   }
   if ((articleResult.referencesCreated || 0) > 0) {
     log(`  Article References:   ${articleResult.referencesCreated || 0}`);
-  }
-  if ((exerciseQuestionResult.choicesCreated || 0) > 0) {
-    log(
-      `  Exercise Choices:     ${exerciseQuestionResult.choicesCreated || 0}`
-    );
   }
   if (totalAuthorLinksCreated > 0) {
     log(`  Content-Author Links: ${totalAuthorLinksCreated}`);

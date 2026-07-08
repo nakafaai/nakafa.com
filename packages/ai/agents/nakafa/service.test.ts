@@ -4,7 +4,6 @@ import { describe, expect, it } from "vitest";
 
 describe("Nakafa service", () => {
   it("fails fast without an injected runtime", async () => {
-    await expectDefaultRuntimeFailure(Nakafa.exercise("en/assessment/example"));
     await expectDefaultRuntimeFailure(Nakafa.quran({ surah: 1 }));
     await expectDefaultRuntimeFailure(Nakafa.read("en/articles/example"));
     await expectDefaultRuntimeFailure(Nakafa.taxonomy("en"));

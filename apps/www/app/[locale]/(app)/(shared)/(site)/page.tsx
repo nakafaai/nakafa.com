@@ -13,10 +13,6 @@ import { Logos } from "@/components/marketing/about/logos";
 import { Pricing } from "@/components/marketing/about/pricing";
 import { Schools } from "@/components/marketing/about/schools";
 import {
-  exercisesMenu,
-  getExercisesMenuHref,
-} from "@/components/sidebar/data/exercises";
-import {
   getSubjectMenuHref,
   subjectMenu,
 } from "@/components/sidebar/data/subject";
@@ -84,10 +80,9 @@ export default function Page(props: PageProps<"/[locale]">) {
  * navigation data that powers the app entry points.
  */
 async function MarketingHomePageContent({ locale }: { locale: Locale }) {
-  const [tMetadata, tSubject, tExercises, tFaq] = await Promise.all([
+  const [tMetadata, tSubject, tFaq] = await Promise.all([
     getTranslations({ locale, namespace: "Metadata" }),
     getTranslations({ locale, namespace: "Subject" }),
-    getTranslations({ locale, namespace: "Exercises" }),
     getTranslations({ locale, namespace: "Faq" }),
   ]);
 
@@ -101,17 +96,6 @@ async function MarketingHomePageContent({ locale }: { locale: Locale }) {
         const description = tSubject("grade-description");
         return {
           url: `https://nakafa.com/${locale}${getSubjectMenuHref(item, locale)}`,
-          name,
-          description,
-        };
-      })
-    ),
-    ...exercisesMenu.flatMap((category) =>
-      category.items.map((item) => {
-        const name = `${tExercises(item.title)}`;
-        const description = tExercises("type-description");
-        return {
-          url: `https://nakafa.com/${locale}${getExercisesMenuHref(item, locale)}`,
           name,
           description,
         };

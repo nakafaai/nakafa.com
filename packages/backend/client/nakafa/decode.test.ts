@@ -1,5 +1,4 @@
 import {
-  decodeNakafaExerciseResult,
   decodeNakafaMarkdown,
   decodeNakafaQuranReference,
   decodeNakafaTaxonomy,
@@ -22,12 +21,6 @@ describe("Nakafa runtime decoders", () => {
       locale: "en",
       text: "Body",
       title: "Title",
-    });
-    await expect(
-      Effect.runPromise(decodeNakafaExerciseResult(exerciseResult()))
-    ).resolves.toMatchObject({
-      count: 1,
-      exercises: [{ number: 1 }],
     });
     await expect(
       Effect.runPromise(decodeNakafaQuranReference(quranReference()))
@@ -59,10 +52,6 @@ describe("Nakafa runtime decoders", () => {
 
   it("maps invalid output and input into typed Nakafa errors", async () => {
     await expectDecodeError(decodeNakafaMarkdown({}), NakafaAgentDataReadError);
-    await expectDecodeError(
-      decodeNakafaExerciseResult({}),
-      NakafaAgentDataReadError
-    );
     await expectDecodeError(
       decodeNakafaQuranReference({}),
       NakafaAgentDataReadError
@@ -103,32 +92,6 @@ function markdown() {
   };
 }
 
-/** Builds a minimal valid exercise payload for schema decoding. */
-function exerciseResult() {
-  return {
-    ...readNakafaContentRefFixture(
-      "id",
-      "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1",
-      "material"
-    ),
-    count: 1,
-    exercises: [
-      {
-        answer: {
-          raw: "Answer",
-          title: "Answer title",
-        },
-        choices: [{ correct: true, label: "A. Benar" }],
-        number: 1,
-        question: {
-          raw: "Question",
-          title: "Question title",
-        },
-      },
-    ],
-  };
-}
-
 /** Builds a minimal valid Quran reference payload for schema decoding. */
 function quranReference() {
   return {
@@ -163,11 +126,6 @@ function taxonomy() {
       recommended: "https://nakafa.com/mcp",
       root_note: "Root is informational only.",
     },
-    exercises: {
-      categories: [{ id: "high-school", label: "High school" }],
-      materials: [{ id: "mathematics", label: "Mathematics" }],
-      types: [{ id: "snbt", label: "SNBT" }],
-    },
     locale: "en",
     locales: Array.from(locales),
     quran: { surah_count: 114 },
@@ -176,6 +134,10 @@ function taxonomy() {
       categories: ["high-school"],
       grades: ["10"],
       materials: ["mathematics"],
+    },
+    tryout: {
+      countries: [{ id: "indonesia", label: "Indonesia" }],
+      exams: [{ id: "snbt", label: "SNBT" }],
     },
     tools: ["nakafa_search_content"],
   };

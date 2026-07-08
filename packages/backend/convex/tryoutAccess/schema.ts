@@ -1,4 +1,3 @@
-import { tryoutProductValidator } from "@repo/backend/convex/tryouts/products";
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
@@ -12,8 +11,9 @@ export const tryoutAccessCampaignResultsStatusPending = "pending";
 export const tryoutAccessCampaignResultsStatusFinalized = "finalized";
 export const tryoutAccessGrantStatusActive = "active";
 export const tryoutAccessGrantStatusExpired = "expired";
-export const userTryoutEntitlementSourceKindCompetition = "competition";
-export const userTryoutEntitlementSourceKindAccessPass = "access-pass";
+export const tryoutEntitlementSourceKindCompetition = "competition";
+export const tryoutEntitlementSourceKindAccessPass = "access-pass";
+export const tryoutEntitlementSourceKindSubscription = "subscription";
 
 export const tryoutAccessCampaignKindValidator = literals(
   tryoutAccessCampaignKindCompetition,
@@ -34,9 +34,10 @@ export const tryoutAccessGrantStatusValidator = literals(
   tryoutAccessGrantStatusExpired
 );
 
-export const userTryoutEntitlementSourceKindValidator = literals(
-  userTryoutEntitlementSourceKindCompetition,
-  userTryoutEntitlementSourceKindAccessPass
+export const tryoutEntitlementSourceKindValidator = literals(
+  tryoutEntitlementSourceKindCompetition,
+  tryoutEntitlementSourceKindAccessPass,
+  tryoutEntitlementSourceKindSubscription
 );
 
 export const tryoutAccessCampaignValidator = v.object({
@@ -53,9 +54,11 @@ export const tryoutAccessCampaignValidator = v.object({
   grantDurationDays: v.optional(v.number()),
 });
 
-export const tryoutAccessCampaignProductValidator = v.object({
+export const tryoutAccessTargetValidator = v.object({
   campaignId: v.id("tryoutAccessCampaigns"),
-  product: tryoutProductValidator,
+  countryKey: v.string(),
+  examKey: v.string(),
+  setKey: v.optional(v.string()),
   campaignKind: tryoutAccessCampaignKindValidator,
   startsAt: v.number(),
   endsAt: v.number(),
@@ -77,12 +80,15 @@ export const tryoutAccessGrantValidator = v.object({
   status: tryoutAccessGrantStatusValidator,
 });
 
-export const userTryoutEntitlementValidator = v.object({
+export const tryoutEntitlementValidator = v.object({
   userId: v.id("users"),
-  product: tryoutProductValidator,
-  sourceKind: userTryoutEntitlementSourceKindValidator,
+  countryKey: v.string(),
+  examKey: v.string(),
+  setKey: v.optional(v.string()),
+  sourceKind: tryoutEntitlementSourceKindValidator,
   accessCampaignId: v.optional(v.id("tryoutAccessCampaigns")),
   accessGrantId: v.optional(v.id("tryoutAccessGrants")),
+  subscriptionId: v.optional(v.string()),
   startsAt: v.number(),
   endsAt: v.number(),
 });
@@ -99,14 +105,13 @@ const tables = {
     .index("by_redeemStatus_and_startsAt", ["redeemStatus", "startsAt"])
     .index("by_redeemStatus_and_endsAt", ["redeemStatus", "endsAt"]),
 
-  tryoutAccessCampaignProducts: defineTable(
-    tryoutAccessCampaignProductValidator
-  )
+  tryoutAccessTargets: defineTable(tryoutAccessTargetValidator)
     .index("by_campaignId", ["campaignId"])
-    .index("by_product_and_campaignKind_and_startsAt", [
-      "product",
+    .index("by_countryKey_and_examKey_and_setKey_and_campaignKind", [
+      "countryKey",
+      "examKey",
+      "setKey",
       "campaignKind",
-      "startsAt",
     ]),
 
   tryoutAccessLinks: defineTable(tryoutAccessLinkValidator)
@@ -118,14 +123,30 @@ const tables = {
     .index("by_userId_and_campaignId", ["userId", "campaignId"])
     .index("by_status_and_endsAt", ["status", "endsAt"]),
 
-  userTryoutEntitlements: defineTable(userTryoutEntitlementValidator)
+  tryoutEntitlements: defineTable(tryoutEntitlementValidator)
     .index("by_accessGrantId", ["accessGrantId"])
     .index("by_sourceKind_and_endsAt", ["sourceKind", "endsAt"])
-    .index("by_userId_and_product_and_sourceKind_and_endsAt", [
+    .index("by_userId_and_countryKey_and_examKey_and_setKey_and_endsAt", [
       "userId",
-      "product",
-      "sourceKind",
+      "countryKey",
+      "examKey",
+      "setKey",
       "endsAt",
+    ])
+    .index("by_userId_and_countryKey_and_examKey_and_setKey_and_startsAt", [
+      "userId",
+      "countryKey",
+      "examKey",
+      "setKey",
+      "startsAt",
+    ])
+    .index("by_user_subscription_scope", [
+      "userId",
+      "sourceKind",
+      "subscriptionId",
+      "countryKey",
+      "examKey",
+      "setKey",
     ]),
 };
 

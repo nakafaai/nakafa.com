@@ -1,0 +1,20 @@
+import type { QuestionChoices } from "@repo/contents/_types/question-bank/choices";
+
+const choices: QuestionChoices = {
+  id: [
+    { label: "$$90 - x$$", value: false },
+    { label: "$$90 - 2x$$", value: false },
+    { label: "$$180 - x$$", value: false },
+    { label: "$$180 - 2x$$", value: true },
+    { label: "Tidak diketahui", value: false },
+  ],
+  en: [
+    { label: "$$90 - x$$", value: false },
+    { label: "$$90 - 2x$$", value: false },
+    { label: "$$180 - x$$", value: false },
+    { label: "$$180 - 2x$$", value: true },
+    { label: "Unknown", value: false },
+  ],
+};
+
+export default choices;

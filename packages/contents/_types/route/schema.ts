@@ -7,6 +7,7 @@ import {
   ProgramNavigationLevelSchema,
 } from "@repo/contents/_types/program/schema";
 import { PublicRoutePathSchema } from "@repo/contents/_types/route/segment";
+import { TryoutKeySchema } from "@repo/contents/_types/tryout/schema";
 import { Schema } from "effect";
 
 type SchemaType<T extends Schema.Schema.Any> = Schema.Schema.Type<T>;
@@ -34,10 +35,12 @@ const PublicCurriculumRouteBaseSchema = Schema.extend(
 
 export const PUBLIC_ROUTE_KIND_VALUES = [
   "curriculum-context",
-  "exercise-question",
-  "exercise-set",
   "subject-lesson",
   "subject-topic",
+  "tryout-country",
+  "tryout-exam",
+  "tryout-section",
+  "tryout-set",
 ] as const;
 
 export const PublicRouteKindSchema = Schema.Literal(
@@ -56,14 +59,6 @@ const PublicContentRouteBaseSchema = Schema.extend(
   })
 );
 
-export const PublicPracticeQuestionRouteSchema = Schema.extend(
-  Schema.extend(PublicContentRouteBaseSchema, PublicRouteParentSchema),
-  Schema.Struct({ kind: Schema.Literal("exercise-question") })
-);
-export type PublicPracticeQuestionRoute = SchemaType<
-  typeof PublicPracticeQuestionRouteSchema
->;
-
 export const PublicContentRouteSchema = Schema.Union(
   Schema.extend(
     PublicContentRouteBaseSchema,
@@ -72,12 +67,7 @@ export const PublicContentRouteSchema = Schema.Union(
   Schema.extend(
     Schema.extend(PublicContentRouteBaseSchema, PublicRouteParentSchema),
     Schema.Struct({ kind: Schema.Literal("subject-lesson") })
-  ),
-  Schema.extend(
-    Schema.extend(PublicContentRouteBaseSchema, PublicRouteParentSchema),
-    Schema.Struct({ kind: Schema.Literal("exercise-set") })
-  ),
-  PublicPracticeQuestionRouteSchema
+  )
 );
 
 export type PublicContentRoute = SchemaType<typeof PublicContentRouteSchema>;
@@ -105,9 +95,54 @@ export type PublicCurriculumRoute = SchemaType<
   typeof PublicCurriculumRouteSchema
 >;
 
+const PublicTryoutRouteBaseSchema = Schema.extend(
+  PublicRouteBaseSchema,
+  Schema.Struct({
+    countryKey: TryoutKeySchema,
+    order: Schema.Int.pipe(Schema.nonNegative()),
+    sourceRevision: Schema.String,
+  })
+);
+
+export const PublicTryoutRouteSchema = Schema.Union(
+  Schema.extend(
+    PublicTryoutRouteBaseSchema,
+    Schema.Struct({
+      kind: Schema.Literal("tryout-country"),
+    })
+  ),
+  Schema.extend(
+    Schema.extend(PublicTryoutRouteBaseSchema, PublicRouteParentSchema),
+    Schema.Struct({
+      examKey: TryoutKeySchema,
+      kind: Schema.Literal("tryout-exam"),
+    })
+  ),
+  Schema.extend(
+    Schema.extend(PublicTryoutRouteBaseSchema, PublicRouteParentSchema),
+    Schema.Struct({
+      examKey: TryoutKeySchema,
+      kind: Schema.Literal("tryout-set"),
+      setKey: TryoutKeySchema,
+    })
+  ),
+  Schema.extend(
+    Schema.extend(PublicTryoutRouteBaseSchema, PublicRouteParentSchema),
+    Schema.Struct({
+      examKey: TryoutKeySchema,
+      kind: Schema.Literal("tryout-section"),
+      sectionKey: TryoutKeySchema,
+      setKey: TryoutKeySchema,
+    })
+  )
+);
+
+export type PublicTryoutRoute = SchemaType<typeof PublicTryoutRouteSchema>;
+
 export const PublicRouteSchema = Schema.Union(
   PublicContentRouteSchema,
-  PublicCurriculumRouteSchema
+  PublicCurriculumRouteSchema,
+  PublicTryoutRouteSchema
 );
 
 export type PublicRoute = SchemaType<typeof PublicRouteSchema>;

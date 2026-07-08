@@ -6,13 +6,13 @@ import {
   ContentAuthorIntegrityPageSchema,
   CurriculumLessonIntegrityPageSchema,
   DataIntegritySchema,
-  ExerciseChoiceIntegrityPageSchema,
-  ExerciseQuestionIntegrityPageSchema,
   GraphIdentityIntegrityPageSchema,
   GraphIdentityIntegritySchema,
+  QuestionChoiceIntegrityPageSchema,
+  QuestionIntegrityPageSchema,
   StaleContentPageSchema,
   StaleContentSchema,
-  TryoutScaleIntegritySchema,
+  TryoutScaleIntegrityPageSchema,
   UnusedAuthorsSchema,
 } from "@repo/backend/scripts/sync-content/contract/schemas";
 import type {
@@ -34,7 +34,7 @@ export const GRAPH_IDENTITY_TARGETS = [
   "contentRoutes",
   "contentSearch",
   "contentRoutePages",
-  "parts",
+  "messageParts",
   "learningViews",
   "learningEngagementQueue",
   "userLearningRecents",
@@ -128,7 +128,7 @@ function getGraphIdentityPageSize(target: GraphIdentityTarget) {
     return 500;
   }
 
-  if (target === "parts") {
+  if (target === "messageParts") {
     return 100;
   }
 
@@ -208,16 +208,24 @@ export const getStaleContent = Effect.fn("sync.getStaleContent")(function* (
   const curriculumLessonSlugSet = new Set(
     filesystemSlugs.curriculumLessonSlugs
   );
-  const exerciseSetSlugSet = new Set(filesystemSlugs.exerciseSetSlugs);
-  const exerciseQuestionSlugSet = new Set(
-    filesystemSlugs.exerciseQuestionSlugs
+  const questionSetSourcePathSet = new Set(
+    filesystemSlugs.questionSetSourcePaths
   );
+  const questionSourceKeySet = new Set(filesystemSlugs.questionSourceKeys);
+  const tryoutCountryPathSet = new Set(filesystemSlugs.tryoutCountryPaths);
+  const tryoutExamPathSet = new Set(filesystemSlugs.tryoutExamPaths);
+  const tryoutSetPathSet = new Set(filesystemSlugs.tryoutSetPaths);
+  const tryoutSectionPathSet = new Set(filesystemSlugs.tryoutSectionPaths);
   const [
     articles,
     curriculumTopics,
     curriculumLessons,
-    exerciseSets,
-    exerciseQuestions,
+    questionSets,
+    questions,
+    tryoutCountries,
+    tryoutExams,
+    tryoutSets,
+    tryoutSections,
   ] = yield* Effect.all([
     collectPages(
       config,
@@ -240,30 +248,68 @@ export const getStaleContent = Effect.fn("sync.getStaleContent")(function* (
     collectPages(
       config,
       internal.contentSync.queries.stale.listStaleContentPage,
-      buildStaleContentArgs("exerciseSets"),
+      buildStaleContentArgs("questionSets"),
       StaleContentPageSchema
     ),
     collectPages(
       config,
       internal.contentSync.queries.stale.listStaleContentPage,
-      buildStaleContentArgs("exerciseQuestions"),
+      buildStaleContentArgs("questions"),
+      StaleContentPageSchema
+    ),
+    collectPages(
+      config,
+      internal.contentSync.queries.stale.listStaleContentPage,
+      buildStaleContentArgs("tryoutCountries"),
+      StaleContentPageSchema
+    ),
+    collectPages(
+      config,
+      internal.contentSync.queries.stale.listStaleContentPage,
+      buildStaleContentArgs("tryoutExams"),
+      StaleContentPageSchema
+    ),
+    collectPages(
+      config,
+      internal.contentSync.queries.stale.listStaleContentPage,
+      buildStaleContentArgs("tryoutSets"),
+      StaleContentPageSchema
+    ),
+    collectPages(
+      config,
+      internal.contentSync.queries.stale.listStaleContentPage,
+      buildStaleContentArgs("tryoutSections"),
       StaleContentPageSchema
     ),
   ]);
 
   return Schema.decodeUnknownSync(StaleContentSchema)({
-    staleArticles: articles.filter((item) => !articleSlugSet.has(item.slug)),
+    staleArticles: articles.filter(
+      (item) => !articleSlugSet.has(item.sourcePath)
+    ),
     staleCurriculumTopics: curriculumTopics.filter(
-      (item) => !curriculumTopicSlugSet.has(item.slug)
+      (item) => !curriculumTopicSlugSet.has(item.sourcePath)
     ),
     staleCurriculumLessons: curriculumLessons.filter(
-      (item) => !curriculumLessonSlugSet.has(item.slug)
+      (item) => !curriculumLessonSlugSet.has(item.sourcePath)
     ),
-    staleExerciseSets: exerciseSets.filter(
-      (item) => !exerciseSetSlugSet.has(item.slug)
+    staleQuestionSets: questionSets.filter(
+      (item) => !questionSetSourcePathSet.has(item.sourcePath)
     ),
-    staleExerciseQuestions: exerciseQuestions.filter(
-      (item) => !exerciseQuestionSlugSet.has(item.slug)
+    staleQuestions: questions.filter(
+      (item) => !questionSourceKeySet.has(getQuestionSourceKey(item))
+    ),
+    staleTryoutCountries: tryoutCountries.filter(
+      (item) => !tryoutCountryPathSet.has(item.sourcePath)
+    ),
+    staleTryoutExams: tryoutExams.filter(
+      (item) => !tryoutExamPathSet.has(item.sourcePath)
+    ),
+    staleTryoutSets: tryoutSets.filter(
+      (item) => !tryoutSetPathSet.has(item.sourcePath)
+    ),
+    staleTryoutSections: tryoutSections.filter(
+      (item) => !tryoutSectionPathSet.has(item.sourcePath)
     ),
   });
 });
@@ -279,19 +325,19 @@ export const getDataIntegrity = Effect.fn("sync.getDataIntegrity")(function* (
     references,
     articles,
     sections,
-    tryoutScaleIntegrity,
+    tryoutScales,
   ] = yield* Effect.all([
     collectPages(
       config,
-      internal.contentSync.queries.integrity.listIntegrityExerciseQuestionsPage,
+      internal.contentSync.queries.integrity.listIntegrityQuestionsPage,
       (paginationOpts) => ({ paginationOpts }),
-      ExerciseQuestionIntegrityPageSchema
+      QuestionIntegrityPageSchema
     ),
     collectPages(
       config,
-      internal.contentSync.queries.integrity.listIntegrityExerciseChoicesPage,
+      internal.contentSync.queries.integrity.listIntegrityQuestionChoicesPage,
       (paginationOpts) => ({ paginationOpts }),
-      ExerciseChoiceIntegrityPageSchema
+      QuestionChoiceIntegrityPageSchema
     ),
     collectPages(
       config,
@@ -319,9 +365,9 @@ export const getDataIntegrity = Effect.fn("sync.getDataIntegrity")(function* (
     ),
     collectPages(
       config,
-      internal.contentSync.queries.tryouts.getTryoutScaleIntegrity,
+      internal.contentSync.queries.integrity.listIntegrityTryoutScalesPage,
       (paginationOpts) => ({ paginationOpts }),
-      TryoutScaleIntegritySchema
+      TryoutScaleIntegrityPageSchema
     ),
   ]);
   const questionIdsWithChoices = new Set(
@@ -329,7 +375,7 @@ export const getDataIntegrity = Effect.fn("sync.getDataIntegrity")(function* (
   );
   const questionIdsWithAuthors = new Set(
     contentAuthors
-      .filter((authorLink) => authorLink.contentType === "material")
+      .filter((authorLink) => authorLink.contentType === "question")
       .map((authorLink) => authorLink.contentId)
   );
   const articleIdsWithReferences = new Set(
@@ -339,24 +385,34 @@ export const getDataIntegrity = Effect.fn("sync.getDataIntegrity")(function* (
   return Schema.decodeUnknownSync(DataIntegritySchema)({
     questionsWithoutChoices: questions
       .filter((question) => !questionIdsWithChoices.has(question.id))
-      .map((question) => `${question.slug} (${question.locale})`),
+      .map((question) => `${question.sourcePath} (${question.locale})`),
     questionsWithoutAuthors: questions
       .filter((question) => !questionIdsWithAuthors.has(question.id))
-      .map((question) => `${question.slug} (${question.locale})`),
+      .map((question) => `${question.sourcePath} (${question.locale})`),
     articlesWithoutReferences: articles
       .filter((article) => !articleIdsWithReferences.has(article.id))
-      .map((article) => `${article.slug} (${article.locale})`),
+      .map((article) => `${article.sourcePath} (${article.locale})`),
     sectionsWithoutTopics: sections
       .filter((section) => !section.topicId)
       .map((section) => `${section.slug} (${section.locale})`),
-    activeTryoutsWithoutScale: tryoutScaleIntegrity.map(
-      (tryout) => `${tryout.product}/${tryout.locale}/${tryout.slug}`
-    ),
+    activeTryoutsWithoutScale: tryoutScales
+      .filter(
+        (set) =>
+          set.isActive &&
+          set.scoringStrategy === "irt" &&
+          !set.hasPublishedScale
+      )
+      .map((set) => `${set.publicPath} (${set.locale})`),
     totalQuestions: questions.length,
     totalArticles: articles.length,
     totalSections: sections.length,
   });
 });
+
+/** Builds the locale-qualified source key for one persisted question row. */
+function getQuestionSourceKey(item: { locale: string; sourcePath: string }) {
+  return `${item.locale}:${item.sourcePath}`;
+}
 
 /** Summarizes graph identity violations across persisted read models and chat previews. */
 export const getGraphIdentityIntegrity = Effect.fn(

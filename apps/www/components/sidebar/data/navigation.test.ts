@@ -48,15 +48,23 @@ describe("sidebar navigation", () => {
   });
 
   it("uses localized hrefs only when a navigation item owns them", () => {
-    const [subject, , askNina] = getForYouNavigationItems("teacher");
+    const [subject, tryOut, askNina] = getForYouNavigationItems("teacher");
 
     expect(subject).toBeDefined();
+    expect(tryOut).toBeDefined();
     expect(askNina).toBeDefined();
     expect(getForYouNavigationHref(subject, "id")).toBe("/kurikulum");
     expect(getForYouNavigationHref(subject, "en")).toBe("/curriculum");
     expect(
-      getForYouNavigationHref(subject, "id", "/kurikulum/amerika-serikat")
+      getForYouNavigationHref(subject, "id", {
+        preferredCurriculumHref: "/kurikulum/amerika-serikat",
+      })
     ).toBe("/kurikulum/amerika-serikat");
+    expect(
+      getForYouNavigationHref(tryOut, "id", {
+        preferredTryoutHref: "/try-out/indonesia",
+      })
+    ).toBe("/try-out/indonesia");
     expect(getForYouNavigationHref(askNina, "id")).toBe("/chat");
   });
 });

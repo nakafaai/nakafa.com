@@ -12,17 +12,11 @@ import {
   polarCheckoutLocaleValidator,
 } from "@repo/backend/convex/customers/checkout/localization";
 import {
-  exerciseAttemptModeValidator,
-  exerciseAttemptOriginValidator,
-  exerciseAttemptScopeValidator,
-} from "@repo/backend/convex/exercises/schema";
-import {
   contentTypeValidator,
   localeValidator,
 } from "@repo/backend/convex/lib/validators/contents";
-import { tryoutProductValidator } from "@repo/backend/convex/tryouts/products";
 import {
-  tryoutAccessKindValidator,
+  tryoutRouteKeyValidator,
   tryoutScoreStatusValidator,
 } from "@repo/backend/convex/tryouts/schema";
 import { userPlanValidator } from "@repo/backend/convex/users/schema";
@@ -56,53 +50,29 @@ export const productAnalyticsEventValidator = v.union(
     }),
   }),
   v.object({
-    name: v.literal("exercise attempt started"),
-    properties: v.object({
-      exercise_number: optionalNumber,
-      mode: exerciseAttemptModeValidator,
-      origin: exerciseAttemptOriginValidator,
-      scope: exerciseAttemptScopeValidator,
-      slug: v.string(),
-      total_exercises: v.number(),
-    }),
-  }),
-  v.object({
-    name: v.literal("exercise attempt completed"),
-    properties: v.object({
-      answered_count: v.number(),
-      correct_answers: v.number(),
-      mode: exerciseAttemptModeValidator,
-      origin: exerciseAttemptOriginValidator,
-      score_percentage: v.number(),
-      scope: exerciseAttemptScopeValidator,
-      slug: v.string(),
-      total_exercises: v.number(),
-      total_time: v.number(),
-    }),
-  }),
-  v.object({
     name: v.literal("tryout attempt started"),
     properties: v.object({
-      access_kind: v.optional(tryoutAccessKindValidator),
       attempt_number: v.number(),
+      country_key: tryoutRouteKeyValidator,
+      exam_key: tryoutRouteKeyValidator,
       locale: localeValidator,
-      product: tryoutProductValidator,
       score_status: tryoutScoreStatusValidator,
-      tryout_slug: v.string(),
+      set_key: tryoutRouteKeyValidator,
     }),
   }),
   v.object({
     name: v.literal("tryout attempt completed"),
     properties: v.object({
       attempt_number: v.number(),
+      country_key: tryoutRouteKeyValidator,
+      exam_key: tryoutRouteKeyValidator,
       locale: localeValidator,
-      product: tryoutProductValidator,
       raw_score_percentage: v.number(),
       score_status: tryoutScoreStatusValidator,
-      theta: v.number(),
+      set_key: tryoutRouteKeyValidator,
+      theta: optionalNumber,
       total_correct: v.number(),
       total_questions: v.number(),
-      tryout_slug: v.string(),
     }),
   }),
   v.object({

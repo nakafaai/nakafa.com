@@ -1,4 +1,3 @@
-import { getNakafaAgentExercise } from "@repo/contents/_lib/agent/exercise/read";
 import { getNakafaAgentQuranReference } from "@repo/contents/_lib/agent/quran/read";
 import { getNakafaAgentMarkdown } from "@repo/contents/_lib/agent/read/markdown";
 import { resolveNakafaContentRef } from "@repo/contents/_lib/agent/refs";
@@ -44,7 +43,6 @@ function verifyNakafaQuranRoute(route: string, loadSurah: typeof getSurah) {
 export class Nakafa extends Effect.Service<Nakafa>()("Nakafa", {
   accessors: true,
   succeed: {
-    exercise: getNakafaAgentExercise,
     quran: getNakafaAgentQuranReference,
     read: getNakafaAgentMarkdown,
     taxonomy: getNakafaAgentTaxonomy,

@@ -30,6 +30,7 @@ __pycache__/
 # generated agent files
 apps/www/public/llms-full.txt
 apps/www/public/llms-full/
+apps/www/public/llms/
 
 # Thumbnails
 ._*

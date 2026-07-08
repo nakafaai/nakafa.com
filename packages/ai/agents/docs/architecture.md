@@ -78,36 +78,36 @@ sequenceDiagram
 ```mermaid
 flowchart LR
   User["User request"] --> Search["Nakafa search"]
-  Search --> SetRef["exercise set ref"]
+  User --> Taxonomy["taxonomy tool"]
+  Search --> TryoutRef["try-out catalog ref"]
   Search --> ReadRef["content ref"]
-  SetRef --> Exercise["exercise tool"]
+  Taxonomy --> TryoutRef
   ReadRef --> Read["read tool"]
-  Exercise --> StepResults["AI SDK step toolResults"]
+  TryoutRef --> StepResults["AI SDK step toolResults"]
   Read --> StepResults
   StepResults --> Evidence["Nakafa capability evidence text"]
   Evidence --> Envelope["EvidenceEnvelope"]
   Envelope --> Final["Nina answer synthesis"]
 ```
 
-Search can return question-level exercise hits, but the handoff to the exercise
-tool uses the parent set reference. A specific question number remains structured
-tool input (`exercise_number`) instead of local prompt parsing. The Nakafa
-capability returns collected AI SDK tool-result evidence, so user-facing prose is
-composed by Nina from retrieved content rather than invented inside retrieval.
-Exercise discovery uses the model-provided search input directly before
-`selectExerciseRef` chooses a parent set. The Nakafa capability task is the
-single Nakafa evidence request; there is no second raw-request planning layer
-that can override or contaminate the search query.
+Search returns source-backed lesson, article, Quran, and try-out catalog rows.
+Try-out rows identify countries, exams, sets, and sections; attempt state and
+question presentation stay in the Convex try-out runtime. The Nakafa capability
+returns collected AI SDK tool-result evidence, so user-facing prose is composed
+by Nina from retrieved content rather than invented inside retrieval. Try-out
+discovery uses the model-provided search input directly. The Nakafa capability
+task is the single Nakafa evidence request; there is no second raw-request
+planning layer that can override or contaminate the search query.
 
 ## Contracts
 
-- `packages/contents/_lib/agent` owns `read`, `exercise`, `quran`, `taxonomy`,
-  and `verify`.
+- `packages/contents/_lib/agent` owns `read`, `quran`, `taxonomy`, and
+  `verify`.
 - Convex owns runtime search through `contentSearch`.
 - Nina and MCP use the same search result contract.
 - Nina stores one UI data envelope: `data-nakafa`.
-- `data-nakafa.kind` decides the renderer: `search`, `content`, `exercise`,
-  `quran`, or `taxonomy`.
+- `data-nakafa.kind` decides the renderer: `search`, `content`, `quran`, or
+  `taxonomy`.
 - Search UI parts are query-scoped: one executed query writes one loading part
   and reconciles that same part to done or error.
 - Research runs Firecrawl first for inspectable source rows, then Google Search
@@ -124,8 +124,8 @@ that can override or contaminate the search query.
   partial check is not a fully verified final derivation.
 - Current-page fetch is deterministic through AI SDK `prepareStep`, `toolChoice`,
   and `activeTools`.
-- Nakafa exercise search normalizes question-level refs to parent set refs before
-  the exercise tool runs.
+- Nakafa try-out search returns catalog refs only; interactive attempts run
+  through the Convex try-out runtime.
 - Nakafa capability output is derived from AI SDK step `toolResults`, not from
   retrieval free-form prose.
 - Explicit external source references are extracted by `@repo/ai/lib/source`.

@@ -57,7 +57,7 @@ const loadContentTarget = Effect.fn("contents.views.loadContentTarget")(
     if (
       route.kind === "article" ||
       route.kind === "curriculum-lesson" ||
-      route.kind === "exercise-set"
+      route.kind === "tryout-set"
     ) {
       return route;
     }

@@ -31,6 +31,39 @@ import { cleanSlug } from "@repo/utilities/helper";
 import { Effect, Option } from "effect";
 import type { Locale } from "next-intl";
 
+const materialIconByKey = {
+  "ai-ds": NeuralNetworkIcon,
+  biology: DnaIcon,
+  chemistry: TestTubeIcon,
+  "computer-science": AiProgrammingIcon,
+  economy: BankIcon,
+  "english-language": LanguageSkillIcon,
+  "game-engineering": GameIcon,
+  "general-knowledge": BookEditIcon,
+  "general-reasoning": Brain02Icon,
+  geography: GlobeIcon,
+  geospatial: MapPinIcon,
+  history: ScrollIcon,
+  "indonesian-language": ChatQuestionIcon,
+  informatics: SourceCodeIcon,
+  "informatics-engineering": LaptopIcon,
+  "international-relations": Globe02Icon,
+  "mathematical-reasoning": PuzzleIcon,
+  mathematics: PiIcon,
+  physics: PhysicsIcon,
+  "political-science": CourtLawIcon,
+  "quantitative-knowledge": AbsoluteIcon,
+  "reading-and-writing-skills": File01Icon,
+  sociology: UserGroupIcon,
+  "technology-electro-medical": ElectricWireIcon,
+};
+
+type MaterialIconKey = keyof typeof materialIconByKey;
+
+function isMaterialIconKey(value: string): value is MaterialIconKey {
+  return Object.hasOwn(materialIconByKey, value);
+}
+
 /**
  * Loads the localized material list for a curriculum lesson.
  *
@@ -49,64 +82,17 @@ export const getMaterials = Effect.fn("Contents.Subject.getMaterials")(
 );
 
 /**
- * Resolves the icon used for a subject or exercises material slug.
+ * Resolves the icon used for a subject material slug.
  *
  * @param material - Material slug to map to an icon
  * @returns Hugeicons icon for the material
  */
 export function getMaterialIcon(material: string) {
-  switch (material) {
-    case "mathematics":
-      return PiIcon;
-    case "physics":
-      return PhysicsIcon;
-    case "chemistry":
-      return TestTubeIcon;
-    case "biology":
-      return DnaIcon;
-    case "geography":
-      return GlobeIcon;
-    case "economy":
-      return BankIcon;
-    case "history":
-      return ScrollIcon;
-    case "sociology":
-      return UserGroupIcon;
-    case "informatics":
-      return SourceCodeIcon;
-    case "geospatial":
-      return MapPinIcon;
-    case "ai-ds":
-      return NeuralNetworkIcon;
-    case "game-engineering":
-      return GameIcon;
-    case "political-science":
-      return CourtLawIcon;
-    case "computer-science":
-      return AiProgrammingIcon;
-    case "technology-electro-medical":
-      return ElectricWireIcon;
-    case "informatics-engineering":
-      return LaptopIcon;
-    case "international-relations":
-      return Globe02Icon;
-    case "quantitative-knowledge":
-      return AbsoluteIcon;
-    case "mathematical-reasoning":
-      return PuzzleIcon;
-    case "general-reasoning":
-      return Brain02Icon;
-    case "indonesian-language":
-      return ChatQuestionIcon;
-    case "english-language":
-      return LanguageSkillIcon;
-    case "general-knowledge":
-      return BookEditIcon;
-    case "reading-and-writing-skills":
-      return File01Icon;
-    default:
-      return BulbIcon;
+  if (!isMaterialIconKey(material)) {
+    return BulbIcon;
   }
+
+  return materialIconByKey[material];
 }
 
 /**

@@ -4,10 +4,6 @@ import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import {
-  getCachedLlmsExerciseText,
-  getLlmsExerciseText,
-} from "@/lib/llms/exercises";
-import {
   getCachedLlmsSectionIndexText,
   getLlmsSectionIndexText,
 } from "@/lib/llms/indexes";
@@ -28,8 +24,8 @@ const PROJECTED_PUBLIC_ROUTE_SEGMENTS: ReadonlySet<string> = new Set(
  * Resolves cached markdown for one agent-facing route.
  *
  * The source chain is ordered from concrete page sources to derived indexes:
- * Quran, exercises, MDX content, legal MDX, then sitemap-derived section or
- * listing indexes. A null result means the route has no markdown source.
+ * Quran, MDX content, legal MDX, then sitemap-derived section or listing
+ * indexes. A null result means the route has no markdown source.
  */
 export const getLlmsMarkdownText = Effect.fn("www.llms.markdown.cached")(
   function* ({ cleanSlug, locale }: { cleanSlug: string; locale: Locale }) {
@@ -41,19 +37,6 @@ export const getLlmsMarkdownText = Effect.fn("www.llms.markdown.cached")(
     const source = yield* getLlmsMarkdownSource({ cleanSlug, locale });
     if (!source) {
       return null;
-    }
-
-    const exerciseText = yield* Effect.tryPromise({
-      try: () =>
-        getCachedLlmsExerciseText({
-          cleanSlug: source.cleanSlug,
-          locale,
-          publicSlug: source.publicSlug,
-        }),
-      catch: (error) => error,
-    });
-    if (exerciseText) {
-      return exerciseText;
     }
 
     const mdxText = yield* Effect.tryPromise({
@@ -103,15 +86,6 @@ export const getLlmsSourceMarkdownText = Effect.fn("www.llms.markdown.source")(
       return null;
     }
 
-    const exerciseText = yield* getLlmsExerciseText({
-      cleanSlug: source.cleanSlug,
-      locale,
-      publicSlug: source.publicSlug,
-    });
-    if (exerciseText) {
-      return exerciseText;
-    }
-
     const mdxText = yield* getLlmsMdxText({
       cleanSlug: source.cleanSlug,
       locale,
@@ -130,7 +104,7 @@ export const getLlmsSourceMarkdownText = Effect.fn("www.llms.markdown.source")(
   }
 );
 
-/** Resolves public material/practice paths to the internal markdown source path. */
+/** Resolves projected public content paths to the internal markdown source path. */
 const getLlmsMarkdownSource = Effect.fn("www.llms.markdown.sourcePath")(
   function* ({ cleanSlug, locale }: { cleanSlug: string; locale: Locale }) {
     if (!isProjectedPublicMarkdownRoute(cleanSlug)) {
@@ -161,6 +135,10 @@ function getPublicContentMarkdownSource(
   cleanSlug: string
 ): LlmsMarkdownSource | null {
   if (route.kind === "curriculum-context") {
+    return null;
+  }
+
+  if (!("sourcePath" in route)) {
     return null;
   }
 

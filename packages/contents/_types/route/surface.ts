@@ -9,8 +9,8 @@ type SchemaType<T extends Schema.Schema.Any> = Schema.Schema.Type<T>;
 
 export const PublicRouteSurfaceKeySchema = Schema.Literal(
   "curriculum",
-  "exercises",
-  "subject"
+  "subject",
+  "tryout"
 );
 
 export type PublicRouteSurfaceKey = SchemaType<
@@ -32,14 +32,14 @@ const publicRouteSurfaceInput = [
     routeSlugs: { en: "curriculum", id: "kurikulum" },
   },
   {
-    appSegment: "practice",
-    key: "exercises",
-    routeSlugs: { en: "practice", id: "latihan" },
-  },
-  {
     appSegment: "materials",
     key: "subject",
     routeSlugs: { en: "subjects", id: "materi" },
+  },
+  {
+    appSegment: "try-out",
+    key: "tryout",
+    routeSlugs: { en: "try-out", id: "try-out" },
   },
 ];
 

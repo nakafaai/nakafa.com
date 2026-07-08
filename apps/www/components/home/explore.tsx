@@ -19,6 +19,7 @@ import {
 } from "@/components/sidebar/data/navigation";
 import { useUser } from "@/lib/context/use-user";
 import { usePreferredCurriculumHref } from "@/lib/curriculum/preferences";
+import { usePreferredTryoutHref } from "@/lib/tryout/preferences";
 
 const homeExploreCardVisualVariants = cva(
   "flex aspect-[1/0.95] w-full items-center justify-center rounded-xl transition-all ease-out",
@@ -121,15 +122,22 @@ export function HomeExplore() {
   const viewer = getAppNavigationViewer({ isPending, role });
   const items = getForYouNavigationItems(viewer);
   const preferredCurriculumHref = usePreferredCurriculumHref(locale);
+  const preferredTryoutHref = usePreferredTryoutHref(locale);
   const visibleCardIds = new Set(items.map((item) => item.id));
   const subjectNavigationItem = items.find((item) => item.id === "subject");
+  const tryoutNavigationItem = items.find((item) => item.id === "tryOut");
   const subjectHref = subjectNavigationItem
-    ? getForYouNavigationHref(
-        subjectNavigationItem,
-        locale,
-        preferredCurriculumHref
-      )
+    ? getForYouNavigationHref(subjectNavigationItem, locale, {
+        preferredCurriculumHref,
+        preferredTryoutHref,
+      })
     : "/curriculum";
+  const tryoutHref = tryoutNavigationItem
+    ? getForYouNavigationHref(tryoutNavigationItem, locale, {
+        preferredCurriculumHref,
+        preferredTryoutHref,
+      })
+    : "/try-out";
   const cards = [
     {
       href: subjectHref,
@@ -138,7 +146,7 @@ export function HomeExplore() {
       visual: <SubjectIcon />,
     },
     {
-      href: "/try-out",
+      href: tryoutHref,
       id: "tryOut",
       title: tCommon("try-out"),
       visual: <TryoutIcon />,

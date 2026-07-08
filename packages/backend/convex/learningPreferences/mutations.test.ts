@@ -72,6 +72,51 @@ describe("learningPreferences", () => {
     ).resolves.toMatchObject(saved);
   });
 
+  it("saves and reads the authenticated user's preferred try-out country", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const identity = await t.mutation((ctx) =>
+      seedAuthenticatedUser(ctx, { now: NOW })
+    );
+
+    await syncTryoutCountries(t);
+
+    await expect(
+      t.query(api.learningPreferences.queries.getCurrentTryout, {
+        locale: "id",
+      })
+    ).resolves.toBeNull();
+
+    const authed = t.withIdentity({
+      sessionId: identity.sessionId,
+      subject: identity.authUserId,
+    });
+    const saved = await authed.mutation(
+      api.learningPreferences.mutations.setPreferredTryoutCountry,
+      {
+        locale: "id",
+        preferredTryoutCountryKey: "indonesia",
+      }
+    );
+
+    expect(saved).toMatchObject({
+      country: {
+        countryCode: "ID",
+        key: "indonesia",
+        publicPath: "try-out/indonesia",
+        title: "Indonesia",
+      },
+      preferredTryoutCountryKey: "indonesia",
+    });
+    await expect(
+      authed.query(api.learningPreferences.queries.getCurrentTryout, {
+        locale: "id",
+      })
+    ).resolves.toMatchObject(saved);
+    await expect(
+      authed.query(api.learningPreferences.queries.getCurrent, { locale: "id" })
+    ).resolves.toBeNull();
+  });
+
   it("reads an existing school curriculum profile before a preference row exists", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation((ctx) =>
@@ -134,7 +179,7 @@ describe("learningPreferences", () => {
       authed.mutation(
         api.learningPreferences.mutations.setPreferredCurriculum,
         {
-          preferredCurriculumProgramKey: "snbt-2026",
+          preferredCurriculumProgramKey: "snbt",
         }
       )
     ).rejects.toThrow("CURRICULUM_PROGRAM_NOT_SUPPORTED");
@@ -148,5 +193,23 @@ async function syncPrograms(
   await t.mutation(internal.learningPrograms.sync.syncLearningPrograms, {
     programs: getLearningProgramCatalogInputs(),
     syncedAt: NOW,
+  });
+}
+
+/** Syncs the source-owned try-out country needed by preference tests. */
+async function syncTryoutCountries(
+  t: ReturnType<typeof createConvexTestWithBetterAuth>
+) {
+  await t.mutation(async (ctx) => {
+    await ctx.db.insert("tryoutCountries", {
+      countryKey: "indonesia",
+      isActive: true,
+      locale: "id",
+      order: 1,
+      publicPath: "try-out/indonesia",
+      sourceRevision: "test",
+      syncedAt: NOW,
+      title: "Indonesia",
+    });
   });
 }

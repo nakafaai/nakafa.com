@@ -21,11 +21,6 @@ import {
 } from "@repo/backend/convex/contents/runtime/catalog";
 import { getCurriculumPageImpl } from "@repo/backend/convex/contents/runtime/curriculum";
 import {
-  getExerciseGroupPageImpl,
-  getExerciseQuestionPageImpl,
-  getExerciseSetPageImpl,
-} from "@repo/backend/convex/contents/runtime/exercises";
-import {
   getQuranReferenceImpl,
   getQuranSurahPageImpl,
   listQuranSurahsImpl,
@@ -53,12 +48,6 @@ import {
   getContentRouteReturnValidator,
   getCurriculumPageArgsValidator,
   getCurriculumPageReturnValidator,
-  getExerciseGroupPageArgsValidator,
-  getExerciseGroupPageReturnValidator,
-  getExerciseQuestionPageArgsValidator,
-  getExerciseQuestionPageReturnValidator,
-  getExerciseSetPageArgsValidator,
-  getExerciseSetPageReturnValidator,
   getQuranReferenceArgsValidator,
   getQuranReferenceReturnValidator,
   getQuranSurahPageArgsValidator,
@@ -94,33 +83,6 @@ export const getCurriculumPage = query({
   args: getCurriculumPageArgsValidator,
   returns: getCurriculumPageReturnValidator,
   handler: getCurriculumPageImpl,
-});
-
-/**
- * Loads one published exercise set from the durable content read model.
- */
-export const getExerciseSetPage = query({
-  args: getExerciseSetPageArgsValidator,
-  returns: getExerciseSetPageReturnValidator,
-  handler: getExerciseSetPageImpl,
-});
-
-/**
- * Loads one published exercise question from the durable content read model.
- */
-export const getExerciseQuestionPage = query({
-  args: getExerciseQuestionPageArgsValidator,
-  returns: getExerciseQuestionPageReturnValidator,
-  handler: getExerciseQuestionPageImpl,
-});
-
-/**
- * Loads one exercise group route from synced exercise set rows.
- */
-export const getExerciseGroupPage = query({
-  args: getExerciseGroupPageArgsValidator,
-  returns: getExerciseGroupPageReturnValidator,
-  handler: getExerciseGroupPageImpl,
 });
 
 /** Lists concrete content routes matching one locale, section, and prefix. */

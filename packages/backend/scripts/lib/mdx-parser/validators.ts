@@ -1,8 +1,4 @@
-import { EXERCISE_YEAR_SEGMENT_REGEX } from "@repo/backend/scripts/lib/mdx-parser/constants";
 import { ArticleCategorySchema } from "@repo/contents/_types/articles/category";
-import { ExercisesCategorySchema } from "@repo/contents/_types/assessment/category";
-import { ExercisesMaterialSchema } from "@repo/contents/_types/assessment/material";
-import { ExercisesTypeSchema } from "@repo/contents/_types/assessment/type";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { SubjectCategorySchema } from "@repo/contents/_types/curriculum/category";
 import { GradeSchema } from "@repo/contents/_types/curriculum/grade";
@@ -90,60 +86,4 @@ export const validateMaterial = Effect.fn("mdx.validateMaterial")(function* (
     filePath,
     "Invalid material"
   );
-});
-
-/** Validates an exercise category segment from a content path. */
-export const validateExercisesCategory = Effect.fn(
-  "mdx.validateExercisesCategory"
-)(function* (value: string, filePath: string) {
-  return yield* parseWithSchema(
-    ExercisesCategorySchema,
-    value,
-    filePath,
-    "Invalid exercises category"
-  );
-});
-
-/** Validates an exercise type segment from a content path. */
-export const validateExercisesType = Effect.fn("mdx.validateExercisesType")(
-  function* (value: string, filePath: string) {
-    return yield* parseWithSchema(
-      ExercisesTypeSchema,
-      value,
-      filePath,
-      "Invalid exercises type"
-    );
-  }
-);
-
-/** Validates an exercise material segment from a content path. */
-export const validateExercisesMaterial = Effect.fn(
-  "mdx.validateExercisesMaterial"
-)(function* (value: string, filePath: string) {
-  return yield* parseWithSchema(
-    ExercisesMaterialSchema,
-    value,
-    filePath,
-    "Invalid exercises material"
-  );
-});
-
-/** Parses an optional four-digit exercise year path segment. */
-export const parseExerciseYear = Effect.fn("mdx.parseExerciseYear")(function* (
-  value: string | undefined,
-  context: string
-) {
-  if (value === undefined) {
-    return;
-  }
-
-  if (!EXERCISE_YEAR_SEGMENT_REGEX.test(value)) {
-    return yield* Effect.fail(
-      new MdxPathValidationError({
-        message: `Invalid exercise year "${value}" in ${context}. Expected a 4-digit year segment.`,
-      })
-    );
-  }
-
-  return Number.parseInt(value, 10);
 });

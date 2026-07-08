@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { BASE_URL } from "@/lib/llms/constants";
 import type { LlmsEntry } from "@/lib/llms/entries";
 import {
   buildRootLlmsIndexText,
@@ -93,16 +94,16 @@ describe("llms indexes", () => {
     const text = buildRootLlmsIndexText();
 
     expect(text.startsWith("# Nakafa\n\n> ")).toBe(true);
-    expect(text).toContain("https://nakafa.com/llms/en/llms.txt");
-    expect(text).toContain("https://nakafa.com/llms/en/articles/llms.txt");
-    expect(text).toContain("https://nakafa.com/llms/en/pages/llms.txt");
-    expect(text).toContain("https://nakafa.com/llms/id/llms.txt");
-    expect(text).toContain("https://nakafa.com/llms/id/site/llms.txt");
-    expect(text).toContain("https://nakafa.com/llms/id/pages/llms.txt");
+    expect(text).toContain(`${BASE_URL}/llms/en/llms.txt`);
+    expect(text).toContain(`${BASE_URL}/llms/en/articles/llms.txt`);
+    expect(text).toContain(`${BASE_URL}/llms/en/pages/llms.txt`);
+    expect(text).toContain(`${BASE_URL}/llms/id/llms.txt`);
+    expect(text).toContain(`${BASE_URL}/llms/id/site/llms.txt`);
+    expect(text).toContain(`${BASE_URL}/llms/id/pages/llms.txt`);
     expect(text).toContain("https://nakafa.com/mcp");
-    expect(text).toContain("https://nakafa.com/skill.md");
-    expect(text).toContain("https://nakafa.com/llms-full.txt");
-    expect(text).toContain("https://nakafa.com/llms-full/index.json");
+    expect(text).toContain(`${BASE_URL}/skill.md`);
+    expect(text).toContain(`${BASE_URL}/llms-full.txt`);
+    expect(text).toContain(`${BASE_URL}/llms-full/index.json`);
   });
 
   it("builds locale indexes with direct starter pages", async () => {
@@ -110,11 +111,11 @@ describe("llms indexes", () => {
 
     expect(text).toContain("# Nakafa English Content");
     expect(text).toContain("## Catalog");
-    expect(text).toContain("https://nakafa.com/llms/en/pages/llms.txt");
+    expect(text).toContain(`${BASE_URL}/llms/en/pages/llms.txt`);
     expect(text).toContain("## Sections");
     expect(text).toContain("## Starter Pages");
     expect(text).toContain(
-      "- [Dynastic Politics](https://nakafa.com/en/articles/politics/dynastic-politics.md)"
+      `- [Dynastic Politics](${BASE_URL}/en/articles/politics/dynastic-politics.md)`
     );
     expect(mockGetContentPageLlmsEntries).toHaveBeenCalled();
   });
@@ -128,24 +129,8 @@ describe("llms indexes", () => {
     expect(text).not.toContain("## Starter Pages");
   });
 
-  it("builds locale page catalogs from sitemap content pages", async () => {
-    mockGetContentPageLlmsEntries.mockImplementation(
-      ({ page }: { page: number }) =>
-        Effect.succeed([
-          createFixtureEntry({
-            route: "/articles/politics/dynastic-politics",
-            title: "Dynastic Politics",
-          }),
-          ...(page === 0
-            ? []
-            : [
-                createFixtureEntry({
-                  route: "/articles/politics/asian-values",
-                  title: "Asian Values",
-                }),
-              ]),
-        ])
-    );
+  it("builds locale page catalogs from source-backed public routes", async () => {
+    mockGetContentPageLlmsEntries.mockClear();
 
     const text = await Effect.runPromise(
       getLlmsSectionIndexText("llms/en/pages/llms.txt")
@@ -153,34 +138,17 @@ describe("llms indexes", () => {
 
     expect(text).toContain("# Nakafa English Page Catalog");
     expect(text).toContain(
-      "- [Asian Values](https://nakafa.com/en/articles/politics/asian-values.md)"
+      `${BASE_URL}/en/articles/politics/dynastic-politics-asian-values.md`
     );
     expect(text).toContain(
-      "- [Dynastic Politics](https://nakafa.com/en/articles/politics/dynastic-politics.md)"
+      `${BASE_URL}/en/subjects/ai-ds/ai-programming/markdown-cli.md`
     );
-    expect(mockGetContentPageLlmsEntries).toHaveBeenCalledWith({
-      locale: "en",
-      page: 0,
-      section: "articles",
-    });
-    expect(mockGetContentPageLlmsEntries).toHaveBeenCalledWith({
-      locale: "en",
-      page: 1,
-      section: "articles",
-    });
-  });
-
-  it("renders an explicit empty locale page catalog", async () => {
-    mockGetContentPageLlmsEntries.mockReturnValue(Effect.succeed([]));
-
-    const text = await Effect.runPromise(
-      getLlmsSectionIndexText("llms/en/pages/llms.txt")
-    );
-
-    expect(text).toContain("# Nakafa English Page Catalog");
-    expect(text).toContain(
+    expect(text).not.toContain(`${BASE_URL}/en/try-out/`);
+    expect(text).toContain(`${BASE_URL}/en/quran/1.md`);
+    expect(text).not.toContain(
       "This English page catalog currently has no markdown entries."
     );
+    expect(mockGetContentPageLlmsEntries).not.toHaveBeenCalled();
   });
 
   it("builds section page-map indexes without reading content pages", async () => {
@@ -192,10 +160,10 @@ describe("llms indexes", () => {
 
     expect(sectionIndex).toContain("# Nakafa English Articles Pages");
     expect(sectionIndex).toContain(
-      "https://nakafa.com/llms/en/articles/page/0/llms.txt"
+      `${BASE_URL}/llms/en/articles/page/0/llms.txt`
     );
     expect(sectionIndex).toContain(
-      "https://nakafa.com/llms/en/articles/page/1/llms.txt"
+      `${BASE_URL}/llms/en/articles/page/1/llms.txt`
     );
     expect(mockGetContentPageLlmsEntries).not.toHaveBeenCalled();
   });
@@ -217,7 +185,7 @@ describe("llms indexes", () => {
 
     expect(text).toContain("# Nakafa English Articles Page 7");
     expect(text).toContain(
-      "- [Dynastic Politics](https://nakafa.com/en/articles/politics/dynastic-politics.md)"
+      `- [Dynastic Politics](${BASE_URL}/en/articles/politics/dynastic-politics.md)`
     );
     expect(mockGetContentPageLlmsEntries).toHaveBeenCalledWith({
       locale: "en",
@@ -242,7 +210,7 @@ describe("llms indexes", () => {
 
     expect(text).toContain("# Politics Articles");
     expect(text).toContain(
-      "- [Dynastic Politics](https://nakafa.com/en/articles/politics/dynastic-politics.md)"
+      `- [Dynastic Politics](${BASE_URL}/en/articles/politics/dynastic-politics.md)`
     );
     expect(mockGetContentListingLlmsEntries).toHaveBeenCalledWith({
       locale: "en",
@@ -282,7 +250,7 @@ describe("llms indexes", () => {
     );
 
     expect(text).toContain("# Nakafa English Site Pages");
-    expect(text).toContain("https://nakafa.com/en/search");
+    expect(text).toContain(`${BASE_URL}/en/search`);
     expect(mockGetSiteLlmsEntries).toHaveBeenCalledWith("en");
     expect(mockGetContentPageLlmsEntries).not.toHaveBeenCalled();
   });
@@ -334,8 +302,8 @@ function createFixtureEntry({
     entrySection === "site" ? ["site", ...routeSegments] : routeSegments;
   const href =
     entrySection === "site"
-      ? `https://nakafa.com/en${route === "/" ? "" : route}`
-      : `https://nakafa.com/en${route}.md`;
+      ? `${BASE_URL}/en${route === "/" ? "" : route}`
+      : `${BASE_URL}/en${route}.md`;
 
   return {
     description,

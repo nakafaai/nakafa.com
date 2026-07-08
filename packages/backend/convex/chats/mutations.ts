@@ -111,14 +111,14 @@ export const saveMessage = mutation({
     message: tables.messages.validator,
     parts: v.array(
       v.object({
-        ...tables.parts.validator.fields,
+        ...tables.messageParts.validator.fields,
         messageId: v.optional(vv.id("messages")),
       })
     ),
   },
   returns: v.object({
     messageId: vv.id("messages"),
-    partIds: v.array(vv.id("parts")),
+    partIds: v.array(vv.id("messageParts")),
   }),
   handler: async (ctx, args) => {
     const { message, parts } = args;
@@ -174,7 +174,7 @@ export const createChatWithMessage = mutation({
     }),
     parts: v.array(
       v.object({
-        ...tables.parts.validator.fields,
+        ...tables.messageParts.validator.fields,
         messageId: v.optional(vv.id("messages")),
       })
     ),
@@ -182,7 +182,7 @@ export const createChatWithMessage = mutation({
   returns: v.object({
     chatId: vv.id("chats"),
     messageId: vv.id("messages"),
-    partIds: v.array(vv.id("parts")),
+    partIds: v.array(vv.id("messageParts")),
   }),
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
@@ -252,14 +252,14 @@ export const saveAssistantResponse = internalMutation({
     message: tables.messages.validator,
     parts: v.array(
       v.object({
-        ...tables.parts.validator.fields,
+        ...tables.messageParts.validator.fields,
         messageId: v.optional(vv.id("messages")),
       })
     ),
   },
   returns: v.object({
     messageId: vv.id("messages"),
-    partIds: v.array(vv.id("parts")),
+    partIds: v.array(vv.id("messageParts")),
     credits: v.number(),
     newBalance: v.number(),
   }),

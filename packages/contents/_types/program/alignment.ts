@@ -24,14 +24,14 @@ export const LEARNING_PROGRAM_COVERAGE_ALIGNMENTS = Schema.decodeUnknownSync(
       lensSegments: ["tka"],
       routeSegments: ["tka"],
     },
-    programKey: LEARNING_PROGRAM_KEYS.tka2026,
+    programKey: LEARNING_PROGRAM_KEYS.tka,
   },
   {
     match: {
       lensSegments: ["snbt"],
       routeSegments: ["snbt"],
     },
-    programKey: LEARNING_PROGRAM_KEYS.snbt2026,
+    programKey: LEARNING_PROGRAM_KEYS.snbt,
   },
 ] as const);
 

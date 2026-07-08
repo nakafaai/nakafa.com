@@ -23,6 +23,7 @@ import {
 } from "@repo/design-system/components/ui/select";
 import { useControllableState } from "@repo/design-system/hooks/use-controllable-state";
 import { filenameIconMap } from "@repo/design-system/lib/programming";
+import { preserveShikiLineBreaks } from "@repo/design-system/lib/shiki";
 import { cn } from "@repo/design-system/lib/utils";
 import {
   transformerNotationDiff,
@@ -34,7 +35,7 @@ import {
 import { cva } from "class-variance-authority";
 import { useTranslations } from "next-intl";
 import type { ComponentProps, HTMLAttributes, ReactNode } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import {
   type BundledLanguage,
   type CodeOptionsMultipleThemes,
@@ -98,7 +99,7 @@ function highlight(
         matchAlgorithm: "v3",
       }),
     ],
-  });
+  }).then(preserveShikiLineBreaks);
 }
 
 export interface CodeBlockData {
@@ -387,19 +388,19 @@ export const CodeBlockCopyButton = ({
 type CodeBlockFallbackProps = HTMLAttributes<HTMLDivElement>;
 
 function CodeBlockFallback({ children, ...props }: CodeBlockFallbackProps) {
+  const lines = children?.toString().split("\n") ?? [];
+
   return (
     <div {...props}>
       <pre className="w-full">
         <code>
-          {children
-            ?.toString()
-            .split("\n")
-            .map((line, i) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: Line content may repeat, need index for uniqueness
-              <span className="line" key={`${i}-${line}`}>
-                {line}
-              </span>
-            ))}
+          {lines.map((line, index) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: Line content may repeat, need index for uniqueness
+            <Fragment key={`${index}-${line}`}>
+              <span className="line">{line}</span>
+              {index < lines.length - 1 ? "\n" : null}
+            </Fragment>
+          ))}
         </code>
       </pre>
     </div>

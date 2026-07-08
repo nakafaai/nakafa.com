@@ -1,8 +1,5 @@
 import { MATERIAL_ROUTE_DOMAINS } from "@repo/contents/_types/material/domain";
-import type {
-  LessonMaterialSource,
-  PracticeMaterialSource,
-} from "@repo/contents/_types/material/schema";
+import type { LessonMaterialSource } from "@repo/contents/_types/material/schema";
 import { MATERIAL_SOURCES } from "@repo/contents/_types/material/source";
 import {
   comparePublicRouteOrder,
@@ -10,10 +7,6 @@ import {
   readDomainSlug,
   readNamespaceSegment,
 } from "@repo/contents/_types/route/path";
-import {
-  getPracticeSourceGroupSlug,
-  toPublicPracticeGroupSegment,
-} from "@repo/contents/_types/route/practice/path";
 import {
   type PublicContentRoute,
   PublicContentRouteSchema,
@@ -33,12 +26,7 @@ export function readStaticPublicContentRoutes() {
   const routes: PublicContentRoute[] = [];
 
   for (const material of MATERIAL_SOURCES) {
-    if (material.kind === "lesson") {
-      routes.push(...readStaticLessonPublicRoutes(material));
-      continue;
-    }
-
-    routes.push(...readStaticPracticePublicRoutes(material));
+    routes.push(...readStaticLessonPublicRoutes(material));
   }
 
   return routes.sort(comparePublicRouteOrder);
@@ -86,53 +74,6 @@ function readStaticLessonPublicRoutes(material: LessonMaterialSource) {
           title: section.translations[locale].title,
         })
       );
-    }
-  }
-
-  return routes;
-}
-
-/** Projects one source-controlled practice material without starting an Effect runtime. */
-function readStaticPracticePublicRoutes(material: PracticeMaterialSource) {
-  const routes: PublicContentRoute[] = [];
-
-  for (const locale of locales) {
-    for (const group of material.groups) {
-      const groupPath = makePathSync([
-        readNamespaceSegment("exercises", locale),
-        material.assessment,
-        readDomainSlug(
-          MATERIAL_ROUTE_DOMAINS,
-          "practice",
-          material.domain,
-          locale
-        ),
-        toPublicPracticeGroupSegment(group, locale),
-      ]);
-
-      for (const [setIndex, set] of group.sets.entries()) {
-        const setPath = makePathSync([groupPath, set.routeSlugs[locale]]);
-
-        routes.push(
-          Schema.decodeUnknownSync(PublicContentRouteSchema)({
-            description: group.translations[locale].description,
-            kind: "exercise-set",
-            locale,
-            materialKey: material.key,
-            order: setIndex + 1,
-            parentPath: groupPath,
-            publicPath: setPath,
-            sectionKey: set.slug,
-            sitemap: true,
-            sourcePath: makePathSync([
-              material.assetRoot,
-              getPracticeSourceGroupSlug(group),
-              set.slug,
-            ]),
-            title: set.translations[locale].title,
-          })
-        );
-      }
     }
   }
 

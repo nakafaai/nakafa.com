@@ -43,7 +43,8 @@ describe("content author sync", () => {
     expect(globCalls).toEqual([
       "articles/**/id.mdx",
       "material/lesson/**/id.mdx",
-      "material/practice/**/question.id.mdx",
+      "question-bank/tryout/**/question.id.mdx",
+      "question-bank/tryout/**/answer.id.mdx",
     ]);
     expect(globCalls).not.toContain("curriculum/**/id.mdx");
     expect(globCalls).not.toContain("assessment/**/_question/id.mdx");

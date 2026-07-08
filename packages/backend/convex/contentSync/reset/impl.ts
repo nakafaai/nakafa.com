@@ -1,4 +1,5 @@
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { deleteQuestion } from "@repo/backend/convex/contentSync/lib/syncHelpers";
 import {
   batchDeleteResultValidator,
   contentSearchResetBatchSize,
@@ -7,7 +8,9 @@ import {
   resetBatchSize,
 } from "@repo/backend/convex/contentSync/reset/spec";
 import { internalMutation } from "@repo/backend/convex/functions";
-import { ConvexError } from "convex/values";
+import { SUPPORTED_CONTENT_LOCALES } from "@repo/backend/convex/lib/validators/contents";
+
+const TRYOUT_SECTION = "tryout";
 
 /** Deletes one bounded batch from a resettable content-derived table. */
 export async function deleteBatchFromTable(
@@ -50,50 +53,20 @@ export async function deleteContentSearchRows(ctx: MutationCtx) {
   return { deleted, hasMore };
 }
 
-/**
- * Deletes tryout part attempts together with their owned exercise attempts and
- * exercise answers.
- */
+/** Deletes one bounded batch of section attempts owned by tryout attempts. */
 export async function deleteTryoutRuntimeRows(ctx: MutationCtx) {
-  const partAttempts = await ctx.db
-    .query("tryoutPartAttempts")
+  const sectionAttempts = await ctx.db
+    .query("tryoutSectionAttempts")
     .take(resetBatchSize);
   let deleted = 0;
 
-  for (const partAttempt of partAttempts) {
-    const exerciseAttempt = await ctx.db.get(
-      "exerciseAttempts",
-      partAttempt.setAttemptId
-    );
-
-    if (exerciseAttempt) {
-      const answers = await ctx.db
-        .query("exerciseAnswers")
-        .withIndex("by_attemptId_and_exerciseNumber", (q) =>
-          q.eq("attemptId", exerciseAttempt._id)
-        )
-        .take(exerciseAttempt.totalExercises + 1);
-
-      if (answers.length > exerciseAttempt.totalExercises) {
-        throw new ConvexError({
-          code: "TRYOUT_EXERCISE_ANSWER_COUNT_EXCEEDED",
-          message:
-            "Tryout exercise answer count exceeds the exercise attempt total exercises.",
-        });
-      }
-
-      for (const answer of answers) {
-        await ctx.db.delete("exerciseAnswers", answer._id);
-      }
-
-      await ctx.db.delete("exerciseAttempts", exerciseAttempt._id);
-    }
-
-    await ctx.db.delete("tryoutPartAttempts", partAttempt._id);
+  for (const sectionAttempt of sectionAttempts) {
+    await ctx.db.delete("tryoutSectionAttempts", sectionAttempt._id);
     deleted += 1;
   }
 
-  const hasMore = (await ctx.db.query("tryoutPartAttempts").first()) !== null;
+  const hasMore =
+    (await ctx.db.query("tryoutSectionAttempts").first()) !== null;
 
   return { deleted, hasMore };
 }
@@ -131,20 +104,189 @@ export async function deleteContentAudioRows(ctx: MutationCtx) {
 /** Deletes one bounded batch of stored tryout entitlements. */
 export async function deleteTryoutEntitlementRows(ctx: MutationCtx) {
   const entitlements = await ctx.db
-    .query("userTryoutEntitlements")
+    .query("tryoutEntitlements")
     .take(eventTryoutEntitlementBatchSize);
 
   for (const entitlement of entitlements) {
-    await ctx.db.delete("userTryoutEntitlements", entitlement._id);
+    await ctx.db.delete("tryoutEntitlements", entitlement._id);
   }
 
-  const hasMore =
-    (await ctx.db.query("userTryoutEntitlements").first()) !== null;
+  const hasMore = (await ctx.db.query("tryoutEntitlements").first()) !== null;
 
   return {
     deleted: entitlements.length,
     hasMore,
   };
+}
+
+/** Deletes one bounded batch of try-out route projections. */
+export async function deleteTryoutContentRouteRows(ctx: MutationCtx) {
+  const docs = await ctx.db
+    .query("contentRoutes")
+    .withIndex("by_section", (q) => q.eq("section", TRYOUT_SECTION))
+    .take(resetBatchSize);
+  let deleted = 0;
+
+  for (const doc of docs) {
+    await ctx.db.delete(doc._id);
+    deleted += 1;
+  }
+
+  const hasMore =
+    (await ctx.db
+      .query("contentRoutes")
+      .withIndex("by_section", (q) => q.eq("section", TRYOUT_SECTION))
+      .first()) !== null;
+
+  return { deleted, hasMore };
+}
+
+/** Deletes one bounded batch of try-out search projections. */
+export async function deleteTryoutContentSearchRows(ctx: MutationCtx) {
+  let deleted = 0;
+
+  for (const locale of SUPPORTED_CONTENT_LOCALES) {
+    if (deleted >= contentSearchResetBatchSize) {
+      break;
+    }
+
+    const docs = await ctx.db
+      .query("contentSearch")
+      .withIndex("by_locale_and_section_and_title", (q) =>
+        q.eq("locale", locale).eq("section", TRYOUT_SECTION)
+      )
+      .take(contentSearchResetBatchSize - deleted);
+
+    for (const doc of docs) {
+      await ctx.db.delete(doc._id);
+      deleted += 1;
+    }
+  }
+
+  return {
+    deleted,
+    hasMore: await hasTryoutContentSearchRows(ctx),
+  };
+}
+
+/** Deletes one bounded batch of try-out route count rows. */
+export async function deleteTryoutContentRouteCountRows(ctx: MutationCtx) {
+  let deleted = 0;
+
+  for (const locale of SUPPORTED_CONTENT_LOCALES) {
+    const row = await ctx.db
+      .query("contentRouteCounts")
+      .withIndex("by_locale_and_section", (q) =>
+        q.eq("locale", locale).eq("section", TRYOUT_SECTION)
+      )
+      .unique();
+
+    if (!row) {
+      continue;
+    }
+
+    await ctx.db.delete(row._id);
+    deleted += 1;
+  }
+
+  return {
+    deleted,
+    hasMore: await hasTryoutContentRouteCountRows(ctx),
+  };
+}
+
+/** Deletes one bounded batch of try-out route page rows. */
+export async function deleteTryoutContentRoutePageRows(ctx: MutationCtx) {
+  let deleted = 0;
+
+  for (const locale of SUPPORTED_CONTENT_LOCALES) {
+    if (deleted >= resetBatchSize) {
+      break;
+    }
+
+    const docs = await ctx.db
+      .query("contentRoutePages")
+      .withIndex("by_locale_and_section", (q) =>
+        q.eq("locale", locale).eq("section", TRYOUT_SECTION)
+      )
+      .take(resetBatchSize - deleted);
+
+    for (const doc of docs) {
+      await ctx.db.delete(doc._id);
+      deleted += 1;
+    }
+  }
+
+  return {
+    deleted,
+    hasMore: await hasTryoutContentRoutePageRows(ctx),
+  };
+}
+
+/** Deletes questions through their dependent cleanup helper. */
+export async function deleteQuestionRows(ctx: MutationCtx) {
+  const questions = await ctx.db.query("questions").take(resetBatchSize);
+  let deleted = 0;
+
+  for (const question of questions) {
+    await deleteQuestion(ctx, question._id);
+    deleted += 1;
+  }
+
+  const hasMore = (await ctx.db.query("questions").first()) !== null;
+
+  return { deleted, hasMore };
+}
+
+async function hasTryoutContentSearchRows(ctx: MutationCtx) {
+  for (const locale of SUPPORTED_CONTENT_LOCALES) {
+    const row = await ctx.db
+      .query("contentSearch")
+      .withIndex("by_locale_and_section_and_title", (q) =>
+        q.eq("locale", locale).eq("section", TRYOUT_SECTION)
+      )
+      .first();
+
+    if (row) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+async function hasTryoutContentRouteCountRows(ctx: MutationCtx) {
+  for (const locale of SUPPORTED_CONTENT_LOCALES) {
+    const row = await ctx.db
+      .query("contentRouteCounts")
+      .withIndex("by_locale_and_section", (q) =>
+        q.eq("locale", locale).eq("section", TRYOUT_SECTION)
+      )
+      .first();
+
+    if (row) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+async function hasTryoutContentRoutePageRows(ctx: MutationCtx) {
+  for (const locale of SUPPORTED_CONTENT_LOCALES) {
+    const row = await ctx.db
+      .query("contentRoutePages")
+      .withIndex("by_locale_and_section", (q) =>
+        q.eq("locale", locale).eq("section", TRYOUT_SECTION)
+      )
+      .first();
+
+    if (row) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 /** Creates one small internal mutation that deletes a single bounded batch. */

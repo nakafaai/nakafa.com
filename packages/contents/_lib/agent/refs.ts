@@ -108,7 +108,7 @@ export function parseNakafaUrlRoute(input: string) {
   });
 }
 
-/** Resolves public material/practice URLs through route projection first. */
+/** Resolves public material URLs through route projection first. */
 export const resolveNakafaContentRef = Effect.fn(
   "contents.agent.parseContentRef"
 )(function* (input: string) {
@@ -126,12 +126,7 @@ export const resolveNakafaContentRef = Effect.fn(
   if (Option.isSome(publicRoute)) {
     const route = publicRoute.value;
 
-    if (
-      route.kind === "exercise-question" ||
-      route.kind === "exercise-set" ||
-      route.kind === "subject-lesson" ||
-      route.kind === "subject-topic"
-    ) {
+    if (route.kind === "subject-lesson" || route.kind === "subject-topic") {
       return createNakafaContentRefFromSourceRoute({
         locale: parsed.value.locale,
         publicRoute: route.publicPath,

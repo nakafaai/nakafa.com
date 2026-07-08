@@ -1,12 +1,6 @@
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import type { ContentMetadata } from "@repo/contents/_types/content";
-import type {
-  ArticleCategory,
-  ExercisesCategory,
-  ExercisesMaterial,
-  ExercisesType,
-  Material,
-} from "@repo/contents/_types/taxonomy";
+import type { ArticleCategory, Material } from "@repo/contents/_types/taxonomy";
 
 /** Parsed MDX file with extracted metadata and content hash for change detection. */
 export interface ParsedMdx {
@@ -32,24 +26,4 @@ export interface MaterialLessonParsedPath {
   slug: string;
   topic: string;
   type: "material-lesson";
-}
-
-/** Parsed path info for exercise files. */
-export interface ExerciseParsedPath {
-  category: ExercisesCategory;
-  examType: ExercisesType;
-  exerciseType: string;
-  isQuestion: boolean;
-  locale: Locale;
-  material: ExercisesMaterial;
-  number: number;
-  setName: string;
-  slug: string;
-  type: "exercise";
-  year?: number;
-}
-
-export interface ExerciseChoicesByLocale {
-  en: Array<{ label: string; value: boolean }>;
-  id: Array<{ label: string; value: boolean }>;
 }

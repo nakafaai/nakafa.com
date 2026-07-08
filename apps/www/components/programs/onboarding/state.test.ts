@@ -12,7 +12,7 @@ describe("components/programs/onboarding/state", () => {
       decodeOnboardingValue({
         focusKey: "student-exam",
         interests: ["exam-prep", "assessment-prep"],
-        primaryProgramKey: "snbt-2026",
+        primaryProgramKey: "snbt",
         role: "student",
       }).pipe(Effect.either)
     );
@@ -25,7 +25,7 @@ describe("components/programs/onboarding/state", () => {
     expect(result.right).toEqual({
       focusKey: "student-exam",
       interests: ["exam-prep", "assessment-prep"],
-      primaryProgramKey: "snbt-2026",
+      primaryProgramKey: "snbt",
       role: "student",
     });
   });
@@ -33,7 +33,7 @@ describe("components/programs/onboarding/state", () => {
   it("rejects incomplete program onboarding values", () => {
     const result = Effect.runSync(
       decodeOnboardingValue({
-        primaryProgramKey: "snbt-2026",
+        primaryProgramKey: "snbt",
       }).pipe(Effect.either)
     );
 

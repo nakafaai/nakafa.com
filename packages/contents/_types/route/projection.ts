@@ -1,6 +1,4 @@
 import type { Locale } from "@repo/contents/_types/content";
-import { MATERIAL_ROUTE_DOMAINS } from "@repo/contents/_types/material/domain";
-import { MATERIAL_SOURCES } from "@repo/contents/_types/material/source";
 import { listPublicContentRoutes } from "@repo/contents/_types/route/content";
 import { readStaticPublicContentRoutes } from "@repo/contents/_types/route/content/static";
 import { listPublicCurriculumRoutes } from "@repo/contents/_types/route/curriculum";
@@ -18,6 +16,8 @@ import {
   normalizePublicPath,
   uniqueRoutes,
 } from "@repo/contents/_types/route/path";
+import { listPublicTryoutRoutes } from "@repo/contents/_types/route/tryout";
+import { readStaticPublicTryoutRoutes } from "@repo/contents/_types/route/tryout/static";
 import { Effect, Option } from "effect";
 
 let defaultPublicLearningIndex: PublicLearningIndex | undefined;
@@ -29,6 +29,7 @@ export const listPublicRoutes = Effect.fn("contents.route.listAll")(function* (
   const routes = yield* Effect.all([
     listPublicContentRoutes(inputs),
     listPublicCurriculumRoutes(inputs),
+    listPublicTryoutRoutes(inputs),
   ]);
 
   return yield* uniqueRoutes(routes.flat());
@@ -47,8 +48,6 @@ export const findPublicRouteByPath = Effect.fn("contents.route.findByPath")(
 
     const routes = yield* listPublicRoutes(inputs);
     const index = createPublicLearningIndex({
-      domains: inputs.domains ?? MATERIAL_ROUTE_DOMAINS,
-      materials: inputs.materials ?? MATERIAL_SOURCES,
       routes,
     });
 
@@ -72,6 +71,7 @@ function readDefaultPublicLearningIndex() {
     routes: [
       ...readStaticPublicContentRoutes(),
       ...readStaticPublicCurriculumRoutes(),
+      ...readStaticPublicTryoutRoutes(),
     ],
   });
 

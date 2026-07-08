@@ -29,7 +29,7 @@ describe("program/catalog", () => {
     );
     const singaporeProgram = findLearningProgramByKey("singapore-moe");
     const unitedStatesProgram = findLearningProgramByKey("united-states");
-    const examProgram = findLearningProgramByKey("snbt-2026");
+    const examProgram = findLearningProgramByKey("snbt");
 
     for (const program of [
       schoolProgram,
@@ -46,8 +46,8 @@ describe("program/catalog", () => {
       model: "curriculum-tree",
     });
     expect(examProgram?.navigation).toEqual({
-      levels: ["section", "domain", "practice-set"],
-      model: "exam-domain-practice-set",
+      levels: ["section", "domain", "set"],
+      model: "exam-domain-set",
     });
     expect(cambridgeProgram?.navigation).toEqual({
       levels: ["stage", "course", "unit", "lesson"],
@@ -82,10 +82,10 @@ describe("program/catalog", () => {
       "cambridge-international",
       "singapore-moe",
       "united-states",
-      "tka-2026",
-      "snbt-2026",
+      "tka",
+      "snbt",
     ]);
-    expect(findLearningProgramByKey("snbt-2026")).toMatchObject({
+    expect(findLearningProgramByKey("snbt")).toMatchObject({
       kind: "admission-exam",
     });
     expect(findLearningProgramByKey("missing-program")).toBeNull();

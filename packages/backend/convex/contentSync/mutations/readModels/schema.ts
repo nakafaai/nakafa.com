@@ -25,7 +25,7 @@ export const deleteResultValidator = v.object({
   deleted: v.number(),
 });
 
-const materialKindValidator = literals("lesson", "practice");
+const materialKindValidator = literals("lesson");
 const coverageStatusValidator = literals(...COVERAGE_STATUS_VALUES);
 const programKindValidator = literals(...LEARNING_PROGRAM_KIND_VALUES);
 const providerKindValidator = literals(...PROGRAM_PROVIDER_KIND_VALUES);

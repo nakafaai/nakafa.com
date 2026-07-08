@@ -1,19 +1,15 @@
 import {
-  formatExercise,
   formatQuran,
   formatRead,
   formatSearch,
   formatTaxonomy,
 } from "@repo/ai/agents/nakafa/format";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
-import type { NakafaAgentExerciseResult } from "@repo/contents/_lib/agent/schema/exercise";
 import { defaultLocale, locales } from "@repo/utilities/locales";
 import { describe, expect, it } from "vitest";
 
 const subjectRoute =
   "material/lesson/mathematics/example-topic/example-section";
-const exerciseRoute =
-  "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-1";
 
 describe("Nakafa formatter", () => {
   it("formats search results", () => {
@@ -53,35 +49,6 @@ describe("Nakafa formatter", () => {
     expect(text).not.toContain(`https://nakafa.com/id/${subjectRoute}`);
     expect(text).not.toContain("Markdown URL:");
     expect(text).toContain("Isi materi lengkap.");
-  });
-
-  it("formats structured exercises", () => {
-    const result = {
-      ...readNakafaContentRefFixture("id", exerciseRoute, "material"),
-      count: 1,
-      exercise_number: 2,
-      exercises: [
-        {
-          answer: { raw: "Jawaban B", title: "Pembahasan 2" },
-          choices: [
-            { correct: false, label: "A" },
-            { correct: true, label: "B" },
-          ],
-          number: 2,
-          question: { raw: "Berapa 1 + 1?", title: "Soal 2" },
-        },
-      ],
-    } satisfies NakafaAgentExerciseResult;
-    const text = formatExercise(result);
-
-    expect(text).toContain("# Nakafa Exercises");
-    expect(text).not.toContain("Inline citation:");
-    expect(text).not.toContain(`https://nakafa.com/id/${exerciseRoute}`);
-    expect(text).toContain("Exercise number: 2");
-    expect(text).toContain("Correct: Yes");
-    expect(text).toContain("Correct: No");
-    const { exercise_number, ...wholeSetResult } = result;
-    expect(formatExercise(wholeSetResult)).toContain("Exercise number: all");
   });
 
   it("formats Quran references with and without tafsir", () => {
@@ -126,13 +93,6 @@ describe("Nakafa formatter", () => {
         recommended: "https://nakafa.com/mcp",
         root_note: "Use /mcp for MCP transport.",
       },
-      exercises: {
-        categories: [{ id: "high-school", label: "SMA" }],
-        materials: [
-          { id: "mathematical-reasoning", label: "Penalaran Matematika" },
-        ],
-        types: [{ id: "snbt", label: "SNBT" }],
-      },
       locale: "id",
       locales: Array.from(locales),
       quran: {
@@ -144,12 +104,16 @@ describe("Nakafa formatter", () => {
         grades: ["10"],
         materials: ["chemistry"],
       },
-      tools: ["nakafa_search_content", "nakafa_get_exercise"],
+      tryout: {
+        countries: [{ id: "indonesia", label: "Indonesia" }],
+        exams: [{ id: "snbt", label: "SNBT" }],
+      },
+      tools: ["nakafa_search_content"],
     });
 
     expect(text).toContain("# Nakafa Taxonomy");
-    expect(text).toContain("nakafa_get_exercise");
-    expect(text).toContain("mathematical-reasoning (Penalaran Matematika)");
+    expect(text).toContain("indonesia (Indonesia)");
+    expect(text).toContain("snbt (SNBT)");
     expect(text).toContain("chemistry");
   });
 });

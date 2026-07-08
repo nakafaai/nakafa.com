@@ -1,9 +1,6 @@
 import { getGradeNonNumeric } from "@repo/contents/_lib/curriculum/grade";
 import type {
   ArticleCategory,
-  ExercisesCategory,
-  ExercisesMaterial,
-  ExercisesType,
   Grade,
   Material,
 } from "@repo/contents/_types/taxonomy";
@@ -29,10 +26,6 @@ const fetchMetadataTranslations = (locale: Locale) =>
 /** Fetches translations for the Subject namespace. */
 const fetchSubjectTranslations = (locale: Locale) =>
   fetchSEOTranslationsNamespace(locale, "Subject");
-
-/** Fetches translations for the Exercises namespace. */
-const fetchExercisesTranslations = (locale: Locale) =>
-  fetchSEOTranslationsNamespace(locale, "Exercises");
 
 /** Fetches translations for the Articles namespace. */
 const fetchArticlesTranslations = (locale: Locale) =>
@@ -95,37 +88,6 @@ const translateSubjectMaterial = Effect.fn("SEO.translateSubjectMaterial")(
 );
 
 /**
- * Translates material name from Exercises namespace.
- */
-const translateExerciseMaterial = Effect.fn("SEO.translateExerciseMaterial")(
-  (material: ExercisesMaterial, locale: Locale) =>
-    Effect.gen(function* () {
-      const tExercises = yield* fetchExercisesTranslations(locale);
-      return tExercises(material);
-    })
-);
-
-/** Translates exercise category from Exercises namespace. */
-const translateExerciseCategory = Effect.fn("SEO.translateExerciseCategory")(
-  (category: ExercisesCategory, locale: Locale) =>
-    Effect.gen(function* () {
-      const tExercises = yield* fetchExercisesTranslations(locale);
-      return tExercises(category);
-    })
-);
-
-/**
- * Translates exam type from Exercises namespace.
- */
-const translateExerciseType = Effect.fn("SEO.translateExerciseType")(
-  (type: ExercisesType, locale: Locale) =>
-    Effect.gen(function* () {
-      const tExercises = yield* fetchExercisesTranslations(locale);
-      return tExercises(type);
-    })
-);
-
-/**
  * Translates category name from Articles namespace.
  */
 const translateArticleCategory = Effect.fn("SEO.translateArticleCategory")(
@@ -150,13 +112,6 @@ function getContentDescription(data: ContentSEOData) {
 /** Converts optional metadata fields into the non-empty token ICU select expects. */
 function readOptionalSelectValue(value: string | undefined) {
   return value?.trim() || EMPTY_SELECT_VALUE;
-}
-
-/** Formats the optional question total used only when runtime counts are available. */
-function readQuestionTotalSelectValue(questionCount: number | undefined) {
-  return questionCount && questionCount > 0
-    ? `/${questionCount}`
-    : EMPTY_SELECT_VALUE;
 }
 
 /**
@@ -198,104 +153,6 @@ const generateSubjectMetadata = Effect.fn("SEO.generateSubjectMetadata")(
             chapter: chapterValue,
             material: materialDisplayName,
             grade: gradeDisplay,
-          })
-        ),
-      };
-    })
-);
-
-/** Generates SEO metadata for practice assessment roots. */
-const generateExerciseProgramMetadata = Effect.fn(
-  "SEO.generateExerciseProgramMetadata"
-)(
-  (
-    context: Extract<SEOContext, { type: "exercise-program" }>,
-    locale: Locale
-  ) =>
-    Effect.gen(function* () {
-      const { category, data, exam } = context;
-      const [t, effectiveTitle, categoryDisplayName, examDisplayName] =
-        yield* Effect.all([
-          fetchSEOTranslations(locale),
-          getEffectiveTitle(data, locale),
-          translateExerciseCategory(category, locale),
-          translateExerciseType(exam, locale),
-        ]);
-
-      return {
-        title: t("exercise-program.title", {
-          category: categoryDisplayName,
-          exam: examDisplayName,
-          title: effectiveTitle,
-        }),
-        description:
-          getContentDescription(data) ??
-          t("exercise-program.description", {
-            category: categoryDisplayName,
-            exam: examDisplayName,
-            title: effectiveTitle,
-          }),
-        keywords: createSEOKeywords(
-          t("exercise-program.keywords", {
-            category: categoryDisplayName,
-            exam: examDisplayName,
-            title: effectiveTitle,
-          })
-        ),
-      };
-    })
-);
-
-/**
- * Generates SEO metadata for exercise content.
- */
-const generateExerciseMetadata = Effect.fn("SEO.generateExerciseMetadata")(
-  (context: Extract<SEOContext, { type: "exercise" }>, locale: Locale) =>
-    Effect.gen(function* () {
-      const { data, material, exam, group, set, number, questionCount } =
-        context;
-
-      const [t, effectiveTitle, materialDisplayName, examDisplayName] =
-        yield* Effect.all([
-          fetchSEOTranslations(locale),
-          getEffectiveTitle(data, locale),
-          translateExerciseMaterial(material, locale),
-          translateExerciseType(exam, locale),
-        ]);
-
-      const groupValue = readOptionalSelectValue(group);
-      const setValue = readOptionalSelectValue(set);
-      const numberValue = number && number > 0 ? String(number) : "0";
-      const questionTotalValue = readQuestionTotalSelectValue(questionCount);
-
-      return {
-        title: t("exercise.title", {
-          exam: examDisplayName,
-          group: groupValue,
-          set: setValue,
-          number: numberValue,
-          questionTotal: questionTotalValue,
-          questionCount: questionCount ?? 0,
-          material: materialDisplayName,
-          title: effectiveTitle,
-        }),
-        description:
-          getContentDescription(data) ??
-          t("exercise.description", {
-            exam: examDisplayName,
-            group: groupValue,
-            set: setValue,
-            material: materialDisplayName,
-            questionCount: questionCount ?? 0,
-            title: effectiveTitle,
-          }),
-        keywords: createSEOKeywords(
-          t("exercise.keywords", {
-            exam: examDisplayName,
-            group: groupValue,
-            set: setValue,
-            material: materialDisplayName,
-            title: effectiveTitle,
           })
         ),
       };
@@ -392,14 +249,6 @@ export async function generateSEOMetadata(
   const effect = Effect.gen(function* () {
     if (type === "material-lesson") {
       return yield* generateSubjectMetadata(context, locale);
-    }
-
-    if (type === "exercise") {
-      return yield* generateExerciseMetadata(context, locale);
-    }
-
-    if (type === "exercise-program") {
-      return yield* generateExerciseProgramMetadata(context, locale);
     }
 
     if (type === "curriculum-context") {

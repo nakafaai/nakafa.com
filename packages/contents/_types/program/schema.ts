@@ -56,7 +56,7 @@ export type LearningProgramKind = SchemaType<typeof LearningProgramKindSchema>;
 export const PROGRAM_NAVIGATION_MODEL_VALUES = [
   "curriculum-tree",
   "course-unit-lesson",
-  "exam-domain-practice-set",
+  "exam-domain-set",
   "track-topic",
 ] as const;
 
@@ -74,9 +74,9 @@ export const PROGRAM_NAVIGATION_LEVEL_VALUES = [
   "domain",
   "lesson",
   "phase",
-  "practice-set",
   "section",
   "stage",
+  "set",
   "subject",
   "topic",
   "track",
@@ -221,11 +221,12 @@ export type LearningPlanItemStatus = SchemaType<
 >;
 
 const CoverageRouteKindSchema = Schema.Literal(
-  "exercise-group",
-  "exercise-question",
-  "exercise-set",
   "curriculum-lesson",
-  "curriculum-topic"
+  "curriculum-topic",
+  "tryout-country",
+  "tryout-exam",
+  "tryout-set",
+  "tryout-section"
 );
 
 const LearningProgramCoverageRouteSchemaFields = {

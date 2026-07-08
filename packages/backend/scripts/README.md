@@ -267,9 +267,9 @@ packages/contents/assessment/{category}/{type}/{material}/
 
 **⚠️ IMPORTANT**: When adding new exercise questions, you MUST define the set in the typed Material source:
 
-1. Create question directories: `{category}/{type}/{material}/{exerciseType}/{year?}/{set}/{number}/`
+1. Create question directories under `question-bank/tryout/{country}/{exam}/{section}/{set}/{number}/`
 2. Add MDX files and choices
-3. **Add set definition** to `packages/contents/_types/material/source/assessment/{category}/{type}/{material}.ts`:
+3. **Add set and section placement** to `packages/contents/tryout/{country}/{exam}/source.ts`:
 
 ```typescript
 {
@@ -283,9 +283,9 @@ packages/contents/assessment/{category}/{type}/{material}/
 
 If you forget step 3, the sync will report:
 ```
-ERROR: X questions SKIPPED (missing exercise sets)
-ERROR: Missing sets: category/type/material/exerciseType/set-name
-ERROR: Add these sets to the typed Material source before syncing.
+ERROR: X questions SKIPPED (missing try-out section placement)
+ERROR: Missing question source: country/exam/section/set-name
+ERROR: Add these sections to the typed try-out source before syncing.
 ```
 
 ## Performance

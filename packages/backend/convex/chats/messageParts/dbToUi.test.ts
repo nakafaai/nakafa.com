@@ -60,7 +60,7 @@ describe("mapDBPartToUIMessagePart", () => {
         identifier: "assistant-1",
       });
 
-      await ctx.db.insert("parts", {
+      await ctx.db.insert("messageParts", {
         messageId,
         order: 0,
         type: "tool-nakafa",
@@ -71,7 +71,7 @@ describe("mapDBPartToUIMessagePart", () => {
         toolNakafaOutput: "done",
         toolResultProviderMetadata,
       });
-      await ctx.db.insert("parts", {
+      await ctx.db.insert("messageParts", {
         messageId,
         order: 1,
         type: "tool-math",
@@ -82,7 +82,7 @@ describe("mapDBPartToUIMessagePart", () => {
         toolMathOutput: "contradicted",
         toolResultProviderMetadata,
       });
-      await ctx.db.insert("parts", {
+      await ctx.db.insert("messageParts", {
         messageId,
         order: 2,
         type: "data-math",
@@ -146,7 +146,7 @@ describe("mapDBPartToUIMessagePart", () => {
           summary: "A deterministic numeric counterexample was found.",
         },
       });
-      await ctx.db.insert("parts", {
+      await ctx.db.insert("messageParts", {
         messageId,
         order: 3,
         type: "data-nakafa",
@@ -164,7 +164,7 @@ describe("mapDBPartToUIMessagePart", () => {
           },
         },
       });
-      await ctx.db.insert("parts", {
+      await ctx.db.insert("messageParts", {
         messageId,
         order: 4,
         type: "data-nakafa",
@@ -181,7 +181,7 @@ describe("mapDBPartToUIMessagePart", () => {
           },
         },
       });
-      await ctx.db.insert("parts", {
+      await ctx.db.insert("messageParts", {
         messageId,
         order: 5,
         type: "data-nakafa",
@@ -211,7 +211,7 @@ describe("mapDBPartToUIMessagePart", () => {
           },
         },
       });
-      await ctx.db.insert("parts", {
+      await ctx.db.insert("messageParts", {
         messageId,
         order: 6,
         type: "data-scrape-url",
@@ -225,7 +225,7 @@ describe("mapDBPartToUIMessagePart", () => {
         dataScrapeUrlStatus: "done",
       });
       return await ctx.db
-        .query("parts")
+        .query("messageParts")
         .withIndex("by_messageId_and_order", (q) =>
           q.eq("messageId", messageId)
         )

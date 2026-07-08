@@ -82,28 +82,14 @@ function getStaticParamRoutes(config: ParamConfig) {
         }),
       { concurrency: routing.locales.length }
     );
-    const routes = routeGroups
-      .flat()
-      .map((route) => getStaticParamRoutePath(route, config));
+    const routes = routeGroups.flat().map(getStaticParamRoutePath);
 
     return new Set(routes);
   });
 }
 
 /** Selects the concrete URL path to prerender from one latest-content row. */
-function getStaticParamRoutePath(
-  route: LatestContentRoute,
-  config: ParamConfig
-) {
-  if (
-    config.basePath === "material" &&
-    config.isDeep &&
-    route.kind === "exercise-question" &&
-    route.parentRoute
-  ) {
-    return `/${route.parentRoute}`;
-  }
-
+function getStaticParamRoutePath(route: LatestContentRoute) {
   return `/${route.route}`;
 }
 

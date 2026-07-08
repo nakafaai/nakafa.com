@@ -20,7 +20,7 @@ export const scheduleSaveAssistantResponse = action({
     message: tables.messages.validator,
     parts: v.array(
       v.object({
-        ...tables.parts.validator.fields,
+        ...tables.messageParts.validator.fields,
         messageId: v.optional(vv.id("messages")),
       })
     ),

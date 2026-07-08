@@ -2,7 +2,6 @@ import type {
   NakafaAgentDataReadError,
   NakafaAgentInputError,
 } from "@repo/contents/_lib/agent/errors";
-import type { NakafaAgentExerciseResult } from "@repo/contents/_lib/agent/schema/exercise";
 import type { NakafaAgentQuranReference } from "@repo/contents/_lib/agent/schema/quran";
 import type { NakafaAgentMarkdown } from "@repo/contents/_lib/agent/schema/read";
 import type { NakafaAgentTaxonomy } from "@repo/contents/_lib/agent/schema/taxonomy";
@@ -13,10 +12,6 @@ type NakafaReadError = NakafaAgentDataReadError | NakafaAgentInputError;
 
 /** Runtime-injected Nakafa content read model used by AI, chat, and MCP. */
 export interface NakafaRuntime {
-  exercise: (
-    input: string,
-    exerciseNumber?: number
-  ) => Effect.Effect<Option.Option<NakafaAgentExerciseResult>, NakafaReadError>;
   quran: (
     input: unknown
   ) => Effect.Effect<Option.Option<NakafaAgentQuranReference>, NakafaReadError>;
@@ -30,9 +25,6 @@ export interface NakafaRuntime {
 }
 
 const missingNakafaRuntime: NakafaRuntime = {
-  /** Fails fast when no app-owned Nakafa runtime adapter was provided. */
-  exercise: (_input, _exerciseNumber) =>
-    Effect.dieMessage("Nakafa runtime service was not provided."),
   /** Fails fast when no app-owned Nakafa runtime adapter was provided. */
   quran: (_input) =>
     Effect.dieMessage("Nakafa runtime service was not provided."),

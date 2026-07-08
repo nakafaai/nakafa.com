@@ -1,5 +1,5 @@
 /** Content row sync phases that must finish before route artifacts are rebuilt. */
-export type IncrementalSyncRowPhase = "articles" | "curriculum" | "exercises";
+export type IncrementalSyncRowPhase = "articles" | "curriculum" | "tryouts";
 
 /**
  * Ordered work plan for one incremental sync pass.
@@ -46,12 +46,12 @@ export function readIncrementalSyncPlan(
     hasProgramCatalogChanges ||
     sourcePaths.some(isMaterialSourcePath) ||
     sourcePaths.some(isCurriculumSourcePath);
-  const exerciseRowsChanged =
+  const tryoutRowsChanged =
     hasContentProjectionChanges ||
     hasSharedContentContractChanges ||
     hasMaterialRegistryChanges ||
     hasProgramCatalogChanges ||
-    sourcePaths.some(isExerciseSourcePath);
+    sourcePaths.some(isTryoutSourcePath);
   const rowPhases: IncrementalSyncRowPhase[] = [];
 
   if (articleRowsChanged) {
@@ -60,13 +60,13 @@ export function readIncrementalSyncPlan(
   if (curriculumRowsChanged) {
     rowPhases.push("curriculum");
   }
-  if (exerciseRowsChanged) {
-    rowPhases.push("exercises");
+  if (tryoutRowsChanged) {
+    rowPhases.push("tryouts");
   }
 
   return {
     cleanBeforeRouteArtifacts: rowPhases.length > 0,
-    refreshGeneratedReadModels: curriculumRowsChanged || exerciseRowsChanged,
+    refreshGeneratedReadModels: curriculumRowsChanged || tryoutRowsChanged,
     rowPhases,
   };
 }
@@ -110,8 +110,12 @@ function isCurriculumSourcePath(file: string) {
   return file.includes("/curriculum/");
 }
 
-function isExerciseSourcePath(file: string) {
-  return file.includes("/material/practice/") || file.includes("/assessment/");
+function isTryoutSourcePath(file: string) {
+  return (
+    file.includes("/tryout/") ||
+    file.includes("/question-bank/tryout/") ||
+    file.startsWith("packages/contents/_types/question-bank/")
+  );
 }
 
 function isGraphProjectionPath(file: string) {
@@ -121,7 +125,6 @@ function isGraphProjectionPath(file: string) {
 function isMaterialRegistryPath(file: string) {
   return (
     file.startsWith("packages/contents/_types/material/") ||
-    file === "packages/contents/_types/assessment/material.ts" ||
     file === "packages/contents/_types/curriculum/material.ts"
   );
 }

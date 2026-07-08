@@ -1,7 +1,7 @@
 import { availableParallelism } from "node:os";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
-import type { LlmsSection } from "@/lib/llms/constants";
+import { type LlmsSection, SECTION_LABELS } from "@/lib/llms/constants";
 import { getLlmsSourceMarkdownText } from "@/lib/llms/content";
 import { getContentPageLlmsEntries, type LlmsEntry } from "@/lib/llms/entries";
 import {
@@ -31,6 +31,11 @@ const LLMS_FULL_ENTRY_CONCURRENCY = 2;
 interface LlmsFullArtifactOptions {
   shardTargetBytes?: number;
 }
+
+type LlmsContentSection = Exclude<LlmsSection, "site">;
+type LlmsContentSitemapPage = ContentSitemapPage & {
+  section: LlmsContentSection;
+};
 
 /** Builds the compact full-corpus entrypoint from existing llms markdown sources. */
 export const getLlmsFullText = Effect.fn("llms.getLlmsFullText")(function* () {
@@ -107,7 +112,7 @@ function getLlmsFullRoutePageDescriptors() {
   return readSitemapPageDescriptors().pipe(
     Effect.map((descriptors) =>
       descriptors.filter(
-        (descriptor): descriptor is ContentSitemapPage =>
+        (descriptor): descriptor is LlmsContentSitemapPage =>
           "section" in descriptor && isContentSection(descriptor.section)
       )
     )
@@ -116,9 +121,9 @@ function getLlmsFullRoutePageDescriptors() {
 
 /** Checks whether one llms section can contain content markdown documents. */
 function isContentSection(
-  section: LlmsSection
-): section is Exclude<LlmsSection, "site"> {
-  return section !== "site";
+  section: ContentSitemapPage["section"]
+): section is LlmsContentSection {
+  return Object.hasOwn(SECTION_LABELS, section);
 }
 
 /** Builds ordered full-document chunks for one locale. */

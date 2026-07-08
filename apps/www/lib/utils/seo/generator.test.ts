@@ -36,11 +36,6 @@ const translations: TranslationNamespaces = {
   Articles: {
     politics: "Politics",
   },
-  Exercises: {
-    "high-school": "High School",
-    "quantitative-knowledge": "Quantitative Knowledge",
-    snbt: "SNBT",
-  },
   Metadata: {
     title: "Nakafa",
   },
@@ -74,35 +69,6 @@ const translations: TranslationNamespaces = {
       const programText = program === "__EMPTY__" ? "" : ` (${program})`;
 
       return `${getValue(values, "title")}${parentText}${programText} | Nakafa`;
-    },
-    "exercise-program.description": (values) =>
-      `Choose ${getValue(values, "exam")} practice domains for ${getValue(values, "category")}.`,
-    "exercise-program.keywords": (values) =>
-      `${getValue(values, "exam")}, ${getValue(values, "category")}, practice questions`,
-    "exercise-program.title": (values) =>
-      `${getValue(values, "exam")} Practice Questions | Nakafa`,
-    "exercise.description": (values) => {
-      const count = getValue(values, "questionCount");
-      const countLabel =
-        count === "0" ? "practice questions" : `${count} questions`;
-
-      return `Take ${getValue(values, "material")} ${getValue(values, "exam")} exercise with ${countLabel} and explanations for checking your reasoning.`;
-    },
-    "exercise.keywords": (values) =>
-      `${getValue(values, "material")}, ${getValue(values, "exam")}, exercise`,
-    "exercise.title": (values) => {
-      const number = getValue(values, "number");
-      const questionTotal = getValue(values, "questionTotal");
-      const total = questionTotal === "__EMPTY__" ? "" : questionTotal;
-      const questionPrefix =
-        number === "0" ? "" : `Question ${number}${total}: `;
-      const set = getValue(values, "set");
-      const setPrefix =
-        set === "__EMPTY__" ? "" : `${set}${number === "0" ? ": " : " - "}`;
-      const group = getValue(values, "group");
-      const groupPrefix = group === "__EMPTY__" ? "" : `${group} - `;
-
-      return `${questionPrefix}${setPrefix}${groupPrefix}${getValue(values, "material")} (${getValue(values, "exam")}) | Nakafa`;
     },
     "quran.description": (values) =>
       `Read Surah ${getValue(values, "name")} with ${getValue(values, "numberOfVerses")} verses.`,
@@ -296,93 +262,6 @@ describe("generateSEOMetadata", () => {
     );
   });
 
-  it("keeps exercise metadata tied to exam, material, and question count", async () => {
-    const result = await generateSEOMetadata(
-      {
-        type: "exercise",
-        category: "high-school",
-        exam: "snbt",
-        material: "quantitative-knowledge",
-        number: 9,
-        questionCount: 20,
-        data: {
-          title: "Question 9",
-        },
-      },
-      "en"
-    );
-
-    expect(result.title).toBe(
-      "Question 9/20: Quantitative Knowledge (SNBT) | Nakafa"
-    );
-    expect(result.description).toBe(
-      "Take Quantitative Knowledge SNBT exercise with 20 questions and explanations for checking your reasoning."
-    );
-  });
-
-  it("uses authored exercise descriptions before generated fallback copy", async () => {
-    const result = await generateSEOMetadata(
-      {
-        type: "exercise",
-        category: "high-school",
-        exam: "snbt",
-        material: "quantitative-knowledge",
-        group: "Try Out 2026",
-        set: "Set 1",
-        data: {
-          title: "Set 1",
-          description: "Authored route description for the practice set.",
-        },
-      },
-      "en"
-    );
-
-    expect(result.description).toBe(
-      "Authored route description for the practice set."
-    );
-  });
-
-  it("uses exercise defaults when optional route data is absent", async () => {
-    const result = await generateSEOMetadata(
-      {
-        type: "exercise",
-        category: "high-school",
-        exam: "snbt",
-        material: "quantitative-knowledge",
-        group: "Try Out",
-        set: "Set 1",
-        data: {
-          title: "Practice Set",
-        },
-      },
-      "en"
-    );
-
-    expect(result.title).toBe(
-      "Set 1: Try Out - Quantitative Knowledge (SNBT) | Nakafa"
-    );
-    expect(result.description).toBe(
-      "Take Quantitative Knowledge SNBT exercise with practice questions and explanations for checking your reasoning."
-    );
-  });
-
-  it("generates assessment-root metadata without borrowing a material title", async () => {
-    const result = await generateSEOMetadata(
-      {
-        type: "exercise-program",
-        category: "high-school",
-        exam: "snbt",
-        data: { title: "SNBT" },
-      },
-      "en"
-    );
-
-    expect(result.title).toBe("SNBT Practice Questions | Nakafa");
-    expect(result.description).toBe(
-      "Choose SNBT practice domains for High School."
-    );
-  });
-
   it("generates curriculum metadata from source-owned route context", async () => {
     const nested = await generateSEOMetadata(
       {
@@ -413,26 +292,6 @@ describe("generateSEOMetadata", () => {
     ]);
     expect(root.title).toBe("Mathematics | Nakafa");
     expect(root.description).toBe("Browse Mathematics.");
-  });
-
-  it("omits the question total when metadata has no runtime count", async () => {
-    const result = await generateSEOMetadata(
-      {
-        type: "exercise",
-        category: "high-school",
-        exam: "snbt",
-        material: "quantitative-knowledge",
-        group: "Try Out 2026",
-        set: "Set 1",
-        number: 9,
-        data: { title: "Set 1" },
-      },
-      "en"
-    );
-
-    expect(result.title).toBe(
-      "Question 9: Set 1 - Try Out 2026 - Quantitative Knowledge (SNBT) | Nakafa"
-    );
   });
 
   it("generates Quran metadata from the surah payload", async () => {

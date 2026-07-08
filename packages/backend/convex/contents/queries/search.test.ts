@@ -271,32 +271,29 @@ describe("contents/queries/search:search", () => {
     ]);
   });
 
-  it("prioritizes exercise context over generic exercise titles", async () => {
+  it("prioritizes try-out context over generic section titles", async () => {
     const t = createConvexTestWithBetterAuth();
 
     await t.mutation(async (ctx) => {
       await insertContentSearch(ctx, {
-        contentHash: "hash-english-11",
+        contentHash: "hash-english-section",
         description: "",
         locale: "id",
-        route:
-          "material/practice/assessment/snbt/english-language/try-out-2026/set-2/question-11",
-        section: "material",
+        route: "try-out/indonesia/snbt/set-2/english-language",
+        section: "tryout",
         syncedAt: 1,
-        text: "Soal 11 english-language try-out set-2 reading passage",
-        title: "Soal 11",
+        text: "english-language try-out set-2 reading passage",
+        title: "Bahasa Inggris",
       });
       await insertContentSearch(ctx, {
-        contentHash: "hash-quantitative-11",
-        description:
-          "SMA SNBT Pengetahuan Kuantitatif try out 2026 set 2 Nomor 11",
+        contentHash: "hash-quantitative-section",
+        description: "SMA SNBT Pengetahuan Kuantitatif try out 2026 set 2",
         locale: "id",
-        route:
-          "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-2/question-11",
-        section: "material",
+        route: "try-out/indonesia/snbt/set-2/quantitative-knowledge",
+        section: "tryout",
         syncedAt: 1,
-        text: "Soal 11 Nomor 11 quantitative-knowledge Pengetahuan Kuantitatif try-out try out 2026 set-2 set 2 fungsi tangga",
-        title: "Soal 11",
+        text: "quantitative-knowledge Pengetahuan Kuantitatif try-out try out 2026 set-2 set 2 fungsi tangga",
+        title: "Pengetahuan Kuantitatif",
       });
     });
 
@@ -304,140 +301,40 @@ describe("contents/queries/search:search", () => {
       limit: 10,
       locale: "id",
       offset: 0,
-      queries: ["SNBT Pengetahuan Kuantitatif try out 2026 set 2 nomor 11"],
-      section: "material",
+      queries: ["SNBT Pengetahuan Kuantitatif try out 2026 set 2"],
+      section: "tryout",
     });
 
     expect(result.items[0]).toEqual(
       expect.objectContaining({
         content_id: searchContentId(
           "id",
-          "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-2/question-11"
+          "try-out/indonesia/snbt/set-2/quantitative-knowledge"
         ),
       })
     );
   });
 
-  it("indexes exercise sets as set-level refs for broad retrieval", async () => {
-    const t = createConvexTestWithBetterAuth();
-
-    await t.mutation(
-      internal.contentSync.mutations.exercises.bulkSyncExerciseSets,
-      {
-        sets: [
-          {
-            category: "high-school",
-            contentHash: "hash-set",
-            description: "Kumpulan latihan fungsi rasional.",
-            exerciseType: "try-out",
-            exerciseTypeTitle: "Try Out",
-            groupContentHash: "hash-group",
-            groupPublicPath:
-              "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026",
-            locale: "id",
-            material: "quantitative-knowledge",
-            publicPath:
-              "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-2",
-            questionCount: 20,
-            searchDescription:
-              "SMA SNBT Pengetahuan Kuantitatif Try Out 2026 Set 2 20 soal",
-            searchText:
-              "SNBT Pengetahuan Kuantitatif try-out try out 2026 set-2 set 2 fungsi rasional 20 soal",
-            searchTitle: "SNBT Pengetahuan Kuantitatif Try Out 2026 Set 2",
-            setName: "set-2",
-            slug: "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-2",
-            title: "Set 2",
-            type: "snbt",
-          },
-        ],
-      }
-    );
-
-    const result = await t.query(api.contents.queries.search.search, {
-      limit: 10,
-      locale: "id",
-      offset: 0,
-      queries: ["latihan fungsi rasional"],
-      section: "material",
-    });
-
-    expect(result.items[0]).toEqual(
-      expect.objectContaining({
-        content_id: searchContentId(
-          "id",
-          "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-2"
-        ),
-        title: "SNBT Pengetahuan Kuantitatif Try Out 2026 Set 2",
-      })
-    );
-  });
-
-  it("does not index empty exercise sets for retrieval", async () => {
-    const t = createConvexTestWithBetterAuth();
-
-    await t.mutation(
-      internal.contentSync.mutations.exercises.bulkSyncExerciseSets,
-      {
-        sets: [
-          {
-            category: "middle-school",
-            contentHash: "hash-empty-set",
-            description: "Belum ada soal.",
-            exerciseType: "semester-1",
-            exerciseTypeTitle: "Semester 1",
-            groupContentHash: "hash-empty-group",
-            groupPublicPath:
-              "material/practice/assessment/grade-9/mathematics/semester-1",
-            locale: "id",
-            material: "mathematics",
-            publicPath:
-              "material/practice/assessment/grade-9/mathematics/semester-1/set-1",
-            questionCount: 0,
-            searchDescription: "SMP Kelas 9 Matematika Semester 1 Set 1 0 soal",
-            searchText: "kelas 9 matematika semester 1 0 soal",
-            searchTitle: "Kelas 9 Matematika Semester 1 Set 1",
-            setName: "set-1",
-            slug: "material/practice/assessment/grade-9/mathematics/semester-1/set-1",
-            title: "Set 1",
-            type: "grade-9",
-          },
-        ],
-      }
-    );
-
-    const result = await t.query(api.contents.queries.search.search, {
-      limit: 10,
-      locale: "id",
-      offset: 0,
-      queries: ["kelas 9 matematika"],
-      section: "material",
-    });
-
-    expect(result.items).toEqual([]);
-  });
-
-  it("prefers exercise set rows over generic question body hits for broad searches", async () => {
+  it("prefers metadata-matching try-out section rows over generic body hits", async () => {
     const t = createConvexTestWithBetterAuth();
 
     await t.mutation(async (ctx) => {
       await insertContentSearch(ctx, {
-        contentHash: "hash-language-question",
+        contentHash: "hash-language-section",
         description: "",
         locale: "id",
-        route:
-          "material/practice/assessment/snbt/indonesian-language/try-out-2026/set-1/question-1",
-        section: "material",
+        route: "try-out/indonesia/snbt/set-1/indonesian-language",
+        section: "tryout",
         syncedAt: 1,
-        text: "Soal bacaan yang menyebut pola bilangan sebagai contoh.",
-        title: "Soal 1",
+        text: "Bagian bacaan yang menyebut pola bilangan sebagai contoh.",
+        title: "Bahasa Indonesia",
       });
       await insertContentSearch(ctx, {
-        contentHash: "hash-math-set",
+        contentHash: "hash-math-section",
         description: "SNBT Penalaran Matematika Try Out 2026 Set 1 20 soal",
         locale: "id",
-        route:
-          "material/practice/assessment/snbt/mathematical-reasoning/try-out-2026/set-1",
-        section: "material",
+        route: "try-out/indonesia/snbt/set-1/mathematical-reasoning",
+        section: "tryout",
         syncedAt: 1,
         text: "Latihan pola bilangan untuk penalaran matematika.",
         title: "SNBT Penalaran Matematika Try Out 2026 Set 1",
@@ -448,42 +345,40 @@ describe("contents/queries/search:search", () => {
       limit: 10,
       locale: "id",
       offset: 0,
-      queries: ["pola bilangan"],
-      section: "material",
+      queries: ["pola bilangan penalaran matematika"],
+      section: "tryout",
     });
 
     expect(result.items[0]).toEqual(
       expect.objectContaining({
         content_id: searchContentId(
           "id",
-          "material/practice/assessment/snbt/mathematical-reasoning/try-out-2026/set-1"
+          "try-out/indonesia/snbt/set-1/mathematical-reasoning"
         ),
       })
     );
   });
 
-  it("does not let grade numbers dominate exercise topic searches", async () => {
+  it("does not let grade numbers dominate try-out topic searches", async () => {
     const t = createConvexTestWithBetterAuth();
 
     await t.mutation(async (ctx) => {
       await insertContentSearch(ctx, {
-        contentHash: "hash-question-11",
+        contentHash: "hash-general-reasoning-section",
         description: "SMA SNBT Penalaran Umum Try Out 2026 Set 3 Nomor 11",
         locale: "id",
-        route:
-          "material/practice/assessment/snbt/general-reasoning/try-out-2026/set-3/question-11",
-        section: "material",
+        route: "try-out/indonesia/snbt/set-3/general-reasoning",
+        section: "tryout",
         syncedAt: 1,
-        text: "Soal umum nomor 11.",
-        title: "SNBT Penalaran Umum Try Out 2026 Set 3 Soal 11",
+        text: "Bagian umum nomor 11.",
+        title: "SNBT Penalaran Umum Try Out 2026 Set 3",
       });
       await insertContentSearch(ctx, {
-        contentHash: "hash-rational-set",
+        contentHash: "hash-rational-section",
         description: "SMA TKA Matematika Try Out 2026 Set 1 20 soal",
         locale: "id",
-        route:
-          "material/practice/assessment/tka/mathematics/try-out-2026/set-1",
-        section: "material",
+        route: "try-out/indonesia/tka/set-1/mathematics",
+        section: "tryout",
         syncedAt: 1,
         text: "Latihan fungsi rasional kelas 11.",
         title: "TKA Matematika Try Out 2026 Set 1",
@@ -495,30 +390,29 @@ describe("contents/queries/search:search", () => {
       locale: "id",
       offset: 0,
       queries: ["fungsi rasional kelas 11"],
-      section: "material",
+      section: "tryout",
     });
 
     expect(result.items[0]).toEqual(
       expect.objectContaining({
         content_id: searchContentId(
           "id",
-          "material/practice/assessment/tka/mathematics/try-out-2026/set-1"
+          "try-out/indonesia/tka/set-1/mathematics"
         ),
       })
     );
   });
 
-  it("drops weak exercise hits when only one semantic query token matches", async () => {
+  it("drops weak try-out hits when only one semantic query token matches", async () => {
     const t = createConvexTestWithBetterAuth();
 
     await t.mutation(async (ctx) => {
       await insertContentSearch(ctx, {
-        contentHash: "hash-class-question",
+        contentHash: "hash-class-section",
         description: "SMA SNBT Penalaran Umum Try Out 2026 Set 3 Nomor 11",
         locale: "id",
-        route:
-          "material/practice/assessment/snbt/general-reasoning/try-out-2026/set-3/question-11",
-        section: "material",
+        route: "try-out/indonesia/snbt/set-3/general-reasoning",
+        section: "tryout",
         syncedAt: 1,
         text: "Semua siswa kelas 9 mengikuti ujian sekolah.",
         title: "SNBT Penalaran Umum Try Out 2026 Set 3 Soal 11",
@@ -530,80 +424,7 @@ describe("contents/queries/search:search", () => {
       locale: "id",
       offset: 0,
       queries: ["fungsi rasional kelas 11"],
-      section: "material",
-    });
-
-    expect(result.items).toEqual([]);
-  });
-
-  it("removes exercise set search rows when stale sets are deleted", async () => {
-    const t = createConvexTestWithBetterAuth();
-
-    await t.mutation(
-      internal.contentSync.mutations.exercises.bulkSyncExerciseSets,
-      {
-        sets: [
-          {
-            category: "high-school",
-            contentHash: "hash-stale-set",
-            description: "Kumpulan latihan fungsi kuadrat.",
-            exerciseType: "try-out",
-            exerciseTypeTitle: "Try Out",
-            groupContentHash: "hash-stale-group",
-            groupPublicPath:
-              "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026",
-            locale: "id",
-            material: "quantitative-knowledge",
-            publicPath:
-              "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-3",
-            questionCount: 0,
-            searchDescription:
-              "SMA SNBT Pengetahuan Kuantitatif Try Out 2026 Set 3 0 soal",
-            searchText:
-              "SNBT Pengetahuan Kuantitatif try-out try out 2026 set-3 set 3 fungsi kuadrat 0 soal",
-            searchTitle: "SNBT Pengetahuan Kuantitatif Try Out 2026 Set 3",
-            setName: "set-3",
-            slug: "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-3",
-            title: "Set 3",
-            type: "snbt",
-          },
-        ],
-      }
-    );
-
-    const setId = await t.query(async (ctx) => {
-      const exerciseSet = await ctx.db
-        .query("exerciseSets")
-        .withIndex("by_locale_and_slug", (q) =>
-          q
-            .eq("locale", "id")
-            .eq(
-              "slug",
-              "material/practice/assessment/snbt/quantitative-knowledge/try-out-2026/set-3"
-            )
-        )
-        .unique();
-
-      if (!exerciseSet) {
-        expect.fail("Expected synced exercise set.");
-      }
-
-      return exerciseSet._id;
-    });
-
-    await t.mutation(
-      internal.contentSync.mutations.exercises.deleteStaleExerciseSets,
-      {
-        setIds: [setId],
-      }
-    );
-
-    const result = await t.query(api.contents.queries.search.search, {
-      limit: 10,
-      locale: "id",
-      offset: 0,
-      queries: ["fungsi kuadrat"],
-      section: "material",
+      section: "tryout",
     });
 
     expect(result.items).toEqual([]);

@@ -16,7 +16,6 @@ import {
   defineCurriculum,
   defineCurriculumTree,
 } from "@repo/contents/_types/curriculum/schema";
-import { definePracticeMaterial } from "@repo/contents/_types/material/schema";
 import { MATERIAL_SOURCES } from "@repo/contents/_types/material/source";
 import { Effect, Either, ParseResult, Schema } from "effect";
 import { describe, expect, it } from "vitest";
@@ -494,116 +493,6 @@ describe("curriculum registry", () => {
         },
       }),
     ]);
-  });
-
-  it("projects one-group practice material copy and rejects ambiguous practice copy", () => {
-    const practice = MATERIAL_SOURCES.find(
-      (source) =>
-        source.key === "practice.assessment.snbt.quantitative-knowledge"
-    );
-
-    if (practice?.kind !== "practice") {
-      expect(practice?.kind).toBe("practice");
-      return;
-    }
-
-    const practiceGroup = practice.groups[0];
-    if (!practiceGroup) {
-      expect(practice.groups.length).toBeGreaterThan(0);
-      return;
-    }
-
-    const oneGroupPractice = defineCurriculum({
-      programKey: "fixture-program",
-      tree: [
-        {
-          key: "practice-target",
-          level: "topic",
-          materialKeys: [practice.key],
-          order: 1,
-        },
-      ],
-    });
-    const multiGroupPractice = definePracticeMaterial({
-      ...practice,
-      groups: [
-        ...practice.groups,
-        {
-          ...practice.groups[0],
-          exerciseType: "review",
-          routeSlugs: {
-            en: "review",
-            id: "ulasan",
-          },
-          translations: {
-            en: { description: "Review focused reasoning.", title: "Review" },
-            id: {
-              description: "Ulas kembali penalaran terarah.",
-              title: "Ulasan",
-            },
-          },
-        },
-      ],
-    });
-
-    expect(
-      listCurriculumNodes({ curricula: [oneGroupPractice] })[0]?.translations
-    ).toEqual({
-      en: {
-        title: practiceGroup.translations.en.title,
-        routeSlug: practiceGroup.routeSlugs.en,
-      },
-      id: {
-        title: practiceGroup.translations.id.title,
-        routeSlug: practiceGroup.routeSlugs.id,
-      },
-    });
-    expect(
-      getCurriculumSourceIssues({
-        curricula: [oneGroupPractice],
-        materials: [multiGroupPractice],
-      })
-    ).toEqual([
-      "Curriculum node fixture-program:practice-target references material practice.assessment.snbt.quantitative-knowledge without projectable material copy.",
-    ]);
-
-    const overridePractice = defineCurriculum({
-      programKey: "fixture-program",
-      tree: [
-        {
-          displayOverride: {
-            en: {
-              routeSlug: "practice-review",
-              title: "Practice review",
-            },
-            id: {
-              routeSlug: "ulasan-latihan",
-              title: "Ulasan latihan",
-            },
-          },
-          key: "practice-target",
-          level: "topic",
-          materialKeys: [practice.key],
-          order: 1,
-        },
-      ],
-    });
-
-    expect(
-      listCurriculumNodes({
-        curricula: [overridePractice],
-        materials: [multiGroupPractice],
-      })[0]?.translations
-    ).toEqual({
-      en: {
-        routeSlug: "practice-review",
-        title: "Practice review",
-      },
-      id: {
-        routeSlug: "ulasan-latihan",
-        title: "Ulasan latihan",
-      },
-    });
   });
 
   it("reports defensive duplicate issues for decoded source data", () => {

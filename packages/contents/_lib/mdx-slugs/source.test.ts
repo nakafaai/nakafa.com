@@ -118,16 +118,16 @@ describe("readMdxSlugManifest", () => {
     expect(getMdxSlugsFromManifest(manifest, "en")).toStrictEqual([]);
   });
 
-  it("keeps practice question and answer MDX slugs under material", async () => {
+  it("keeps localized file-stem MDX slugs under material lessons", async () => {
     mockReadContentDirectoryPaths.mockImplementation(
       (directoryPath: string) => {
         if (directoryPath === "/virtual/contents/material") {
           return Effect.succeed([
-            "practice/assessment/snbt/set-1/question-1/question.en.mdx",
-            "practice/assessment/snbt/set-1/question-1/question.id.mdx",
-            "practice/assessment/snbt/set-1/question-1/asset",
-            "practice/assessment/snbt/set-1/question-1/answer.en.mdx",
-            "practice/assessment/snbt/set-1/question-1/answer.id.mdx",
+            "lesson/mathematics/linear-equation/question.en.mdx",
+            "lesson/mathematics/linear-equation/question.id.mdx",
+            "lesson/mathematics/linear-equation/asset",
+            "lesson/mathematics/linear-equation/answer.en.mdx",
+            "lesson/mathematics/linear-equation/answer.id.mdx",
           ]);
         }
 
@@ -138,8 +138,8 @@ describe("readMdxSlugManifest", () => {
     const manifest = await Effect.runPromise(readMdxSlugManifest());
 
     expect(getMdxSlugsFromManifest(manifest, "en")).toStrictEqual([
-      "material/practice/assessment/snbt/set-1/question-1/answer",
-      "material/practice/assessment/snbt/set-1/question-1/question",
+      "material/lesson/mathematics/linear-equation/answer",
+      "material/lesson/mathematics/linear-equation/question",
     ]);
   });
 

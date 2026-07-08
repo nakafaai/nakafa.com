@@ -29,129 +29,173 @@ interface ResetStep {
   resultLabel: string;
 }
 
+const reset = internal.contentSync.reset.internal;
+
 const RESET_TRYOUT_STEPS: ResetStep[] = [
   {
-    label: "Deleting tryout runtime attempts and answers...",
-    mutation: internal.contentSync.reset.internal.deleteTryoutRuntimeBatch,
-    resultLabel: "tryout runtime rows",
+    label: "Deleting try-out responses...",
+    mutation: reset.deleteTryoutResponsesBatch,
+    resultLabel: "try-out responses",
   },
   {
-    label: "Deleting tryout leaderboard entries...",
-    mutation:
-      internal.contentSync.reset.internal.deleteTryoutLeaderboardEntriesBatch,
-    resultLabel: "tryout leaderboard entries",
+    label: "Deleting try-out attempt placements...",
+    mutation: reset.deleteTryoutAttemptPlacementsBatch,
+    resultLabel: "try-out attempt placements",
   },
   {
-    label: "Deleting user tryout stats...",
-    mutation: internal.contentSync.reset.internal.deleteUserTryoutStatsBatch,
-    resultLabel: "user tryout stats",
+    label: "Deleting try-out section attempts...",
+    mutation: reset.deleteTryoutSectionAttemptsBatch,
+    resultLabel: "try-out section attempts",
+  },
+  {
+    label: "Deleting try-out runtime rows...",
+    mutation: reset.deleteTryoutRuntimeBatch,
+    resultLabel: "try-out runtime rows",
+  },
+  {
+    label: "Deleting try-out scores...",
+    mutation: reset.deleteTryoutScoresBatch,
+    resultLabel: "try-out scores",
+  },
+  {
+    label: "Deleting try-out leaderboard entries...",
+    mutation: reset.deleteTryoutLeaderboardEntriesBatch,
+    resultLabel: "try-out leaderboard entries",
+  },
+  {
+    label: "Deleting try-out leaderboard user stats...",
+    mutation: reset.deleteTryoutLeaderboardUserStatsBatch,
+    resultLabel: "try-out leaderboard user stats",
+  },
+  {
+    label: "Deleting try-out leaderboard scopes...",
+    mutation: reset.deleteTryoutLeaderboardScopesBatch,
+    resultLabel: "try-out leaderboard scopes",
   },
   {
     label: "Deleting IRT scale publication queue...",
-    mutation:
-      internal.contentSync.reset.internal.deleteIrtScalePublicationQueueBatch,
+    mutation: reset.deleteIrtScalePublicationQueueBatch,
     resultLabel: "IRT scale publication queue entries",
   },
   {
-    label: "Deleting IRT scale version items...",
-    mutation:
-      internal.contentSync.reset.internal.deleteIrtScaleVersionItemsBatch,
-    resultLabel: "IRT scale version items",
+    label: "Deleting IRT scale items...",
+    mutation: reset.deleteIrtScaleItemsBatch,
+    resultLabel: "IRT scale items",
   },
   {
     label: "Deleting IRT scale quality checks...",
-    mutation:
-      internal.contentSync.reset.internal.deleteIrtScaleQualityChecksBatch,
+    mutation: reset.deleteIrtScaleQualityChecksBatch,
     resultLabel: "IRT scale quality checks",
   },
   {
     label: "Deleting IRT scale quality refresh queue...",
-    mutation:
-      internal.contentSync.reset.internal
-        .deleteIrtScaleQualityRefreshQueueBatch,
+    mutation: reset.deleteIrtScaleQualityRefreshQueueBatch,
     resultLabel: "IRT scale quality refresh queue entries",
   },
   {
     label: "Deleting IRT calibration queue...",
-    mutation:
-      internal.contentSync.reset.internal.deleteIrtCalibrationQueueBatch,
+    mutation: reset.deleteIrtCalibrationQueueBatch,
     resultLabel: "IRT calibration queue entries",
   },
   {
     label: "Deleting IRT calibration attempts...",
-    mutation:
-      internal.contentSync.reset.internal.deleteIrtCalibrationAttemptsBatch,
+    mutation: reset.deleteIrtCalibrationAttemptsBatch,
     resultLabel: "IRT calibration attempts",
   },
   {
     label: "Deleting IRT calibration cache stats...",
-    mutation:
-      internal.contentSync.reset.internal.deleteIrtCalibrationCacheStatsBatch,
+    mutation: reset.deleteIrtCalibrationCacheStatsBatch,
     resultLabel: "IRT calibration cache stats",
   },
   {
-    label: "Deleting exercise item parameters...",
-    mutation:
-      internal.contentSync.reset.internal.deleteExerciseItemParametersBatch,
-    resultLabel: "exercise item parameters",
-  },
-  {
-    label: "Deleting tryout attempts...",
-    mutation: internal.contentSync.reset.internal.deleteTryoutAttemptsBatch,
-    resultLabel: "tryout attempts",
-  },
-  {
-    label: "Deleting tryout entitlements...",
-    mutation: internal.contentSync.reset.internal.deleteTryoutEntitlementsBatch,
-    resultLabel: "tryout entitlements",
-  },
-  {
-    label: "Deleting tryout access grants...",
-    mutation: internal.contentSync.reset.internal.deleteTryoutAccessGrantsBatch,
-    resultLabel: "tryout access grants",
-  },
-  {
-    label: "Deleting tryout access campaign products...",
-    mutation:
-      internal.contentSync.reset.internal
-        .deleteTryoutAccessCampaignProductsBatch,
-    resultLabel: "tryout access campaign products",
-  },
-  {
-    label: "Deleting tryout access links...",
-    mutation: internal.contentSync.reset.internal.deleteTryoutAccessLinksBatch,
-    resultLabel: "tryout access links",
-  },
-  {
-    label: "Deleting tryout access campaigns...",
-    mutation:
-      internal.contentSync.reset.internal.deleteTryoutAccessCampaignsBatch,
-    resultLabel: "tryout access campaigns",
-  },
-  {
-    label: "Deleting tryout catalog meta...",
-    mutation: internal.contentSync.reset.internal.deleteTryoutCatalogMetaBatch,
-    resultLabel: "tryout catalog meta rows",
-  },
-  {
-    label: "Deleting tryout part sets...",
-    mutation: internal.contentSync.reset.internal.deleteTryoutPartSetsBatch,
-    resultLabel: "tryout part sets",
-  },
-  {
-    label: "Deleting IRT scale versions...",
-    mutation: internal.contentSync.reset.internal.deleteIrtScaleVersionsBatch,
-    resultLabel: "IRT scale versions",
-  },
-  {
     label: "Deleting IRT calibration runs...",
-    mutation: internal.contentSync.reset.internal.deleteIrtCalibrationRunsBatch,
+    mutation: reset.deleteIrtCalibrationRunsBatch,
     resultLabel: "IRT calibration runs",
   },
   {
-    label: "Deleting tryouts...",
-    mutation: internal.contentSync.reset.internal.deleteTryoutsBatch,
-    resultLabel: "tryouts",
+    label: "Deleting try-out attempts...",
+    mutation: reset.deleteTryoutAttemptsBatch,
+    resultLabel: "try-out attempts",
+  },
+  {
+    label: "Deleting try-out entitlements...",
+    mutation: reset.deleteTryoutEntitlementsBatch,
+    resultLabel: "try-out entitlements",
+  },
+  {
+    label: "Deleting try-out access grants...",
+    mutation: reset.deleteTryoutAccessGrantsBatch,
+    resultLabel: "try-out access grants",
+  },
+  {
+    label: "Deleting try-out access links...",
+    mutation: reset.deleteTryoutAccessLinksBatch,
+    resultLabel: "try-out access links",
+  },
+  {
+    label: "Deleting try-out access targets...",
+    mutation: reset.deleteTryoutAccessTargetsBatch,
+    resultLabel: "try-out access targets",
+  },
+  {
+    label: "Deleting try-out access campaigns...",
+    mutation: reset.deleteTryoutAccessCampaignsBatch,
+    resultLabel: "try-out access campaigns",
+  },
+  {
+    label: "Deleting try-out content routes...",
+    mutation: reset.deleteTryoutContentRoutesBatch,
+    resultLabel: "try-out content routes",
+  },
+  {
+    label: "Deleting try-out content search...",
+    mutation: reset.deleteTryoutContentSearchBatch,
+    resultLabel: "try-out content search rows",
+  },
+  {
+    label: "Deleting try-out route counts...",
+    mutation: reset.deleteTryoutContentRouteCountsBatch,
+    resultLabel: "try-out route count rows",
+  },
+  {
+    label: "Deleting try-out route pages...",
+    mutation: reset.deleteTryoutContentRoutePagesBatch,
+    resultLabel: "try-out route page rows",
+  },
+  {
+    label: "Deleting try-out sections...",
+    mutation: reset.deleteTryoutSectionsBatch,
+    resultLabel: "try-out sections",
+  },
+  {
+    label: "Deleting questions and dependents...",
+    mutation: reset.deleteQuestionsWithDependentsBatch,
+    resultLabel: "questions",
+  },
+  {
+    label: "Deleting question sets...",
+    mutation: reset.deleteQuestionSetsBatch,
+    resultLabel: "question sets",
+  },
+  {
+    label: "Deleting try-out sets...",
+    mutation: reset.deleteTryoutSetsBatch,
+    resultLabel: "try-out sets",
+  },
+  {
+    label: "Deleting try-out exams...",
+    mutation: reset.deleteTryoutExamsBatch,
+    resultLabel: "try-out exams",
+  },
+  {
+    label: "Deleting try-out countries...",
+    mutation: reset.deleteTryoutCountriesBatch,
+    resultLabel: "try-out countries",
+  },
+  {
+    label: "Deleting IRT scale versions...",
+    mutation: reset.deleteIrtScaleVersionsBatch,
+    resultLabel: "IRT scale versions",
   },
 ];
 
@@ -226,56 +270,70 @@ export const resetTryouts = Effect.fn("sync.resetTryouts")(function* (
   const counts = yield* getContentCounts(config);
 
   log("Current tryout + IRT database contents:\n");
-  log(`  Tryout Access Campaigns: ${counts.tryoutAccessCampaigns}`);
-  log(`  Tryout Access Products:  ${counts.tryoutAccessCampaignProducts}`);
+  log(`  Question Sets:          ${counts.questionSets}`);
+  log(`  Questions:              ${counts.questions}`);
+  log(`  Question Choices:       ${counts.questionChoices}`);
+  log(`  Tryout Access Campaigns:${counts.tryoutAccessCampaigns}`);
+  log(`  Tryout Access Targets:  ${counts.tryoutAccessTargets}`);
   log(`  Tryout Access Links:    ${counts.tryoutAccessLinks}`);
   log(`  Tryout Access Grants:   ${counts.tryoutAccessGrants}`);
-  log(`  Tryouts:               ${counts.tryouts}`);
-  log(`  Tryout Catalog Meta:   ${counts.tryoutCatalogMeta}`);
-  log(`  User Entitlements:     ${counts.userTryoutEntitlements}`);
-  log(`  Tryout Part Sets:      ${counts.tryoutPartSets}`);
-  log(`  Tryout Attempts:       ${counts.tryoutAttempts}`);
-  log(`  Tryout Part Attempts:  ${counts.tryoutPartAttempts}`);
-  log(`  Tryout Leaderboard:    ${counts.tryoutLeaderboardEntries}`);
-  log(`  User Tryout Stats:     ${counts.userTryoutStats}`);
+  log(`  Tryout Countries:       ${counts.tryoutCountries}`);
+  log(`  Tryout Exams:           ${counts.tryoutExams}`);
+  log(`  Tryout Sets:            ${counts.tryoutSets}`);
+  log(`  Tryout Sections:        ${counts.tryoutSections}`);
+  log(`  Tryout Entitlements:    ${counts.tryoutEntitlements}`);
+  log(`  Tryout Attempts:        ${counts.tryoutAttempts}`);
+  log(`  Tryout Section Attempts:${counts.tryoutSectionAttempts}`);
+  log(`  Tryout Placements:      ${counts.tryoutAttemptPlacements}`);
+  log(`  Tryout Responses:       ${counts.tryoutResponses}`);
+  log(`  Tryout Scores:          ${counts.tryoutScores}`);
+  log(`  Tryout Leaderboards:    ${counts.tryoutLeaderboardScopes}`);
+  log(`  Tryout Leaderboard Rows:${counts.tryoutLeaderboardEntries}`);
+  log(`  Tryout Leaderboard Stats:${counts.tryoutLeaderboardUserStats}`);
   log(`  IRT Calibration Queue: ${counts.irtCalibrationQueue}`);
   log(`  IRT Calibration Rows:  ${counts.irtCalibrationAttempts}`);
   log(`  IRT Cache Stats:       ${counts.irtCalibrationCacheStats}`);
   log(`  IRT Calibration Runs:  ${counts.irtCalibrationRuns}`);
   log(`  IRT Scale Quality:     ${counts.irtScaleQualityChecks}`);
   log(`  IRT Scale Quality Q:   ${counts.irtScaleQualityRefreshQueue}`);
-  log(`  IRT Item Params:       ${counts.exerciseItemParameters}`);
   log(`  IRT Scale Queue:       ${counts.irtScalePublicationQueue}`);
   log(`  IRT Scale Versions:    ${counts.irtScaleVersions}`);
-  log(`  IRT Scale Items:       ${counts.irtScaleVersionItems}`);
+  log(`  IRT Scale Items:       ${counts.irtScaleItems}`);
 
   const totalTryoutAndIrtRows =
+    counts.questionSets +
+    counts.questions +
+    counts.questionChoices +
     counts.tryoutAccessCampaigns +
-    counts.tryoutAccessCampaignProducts +
+    counts.tryoutAccessTargets +
     counts.tryoutAccessLinks +
     counts.tryoutAccessGrants +
-    counts.userTryoutEntitlements +
-    counts.tryouts +
-    counts.tryoutCatalogMeta +
-    counts.tryoutPartSets +
+    counts.tryoutEntitlements +
+    counts.tryoutCountries +
+    counts.tryoutExams +
+    counts.tryoutSets +
+    counts.tryoutSections +
     counts.tryoutAttempts +
-    counts.tryoutPartAttempts +
+    counts.tryoutSectionAttempts +
+    counts.tryoutAttemptPlacements +
+    counts.tryoutResponses +
+    counts.tryoutScores +
+    counts.tryoutLeaderboardScopes +
     counts.tryoutLeaderboardEntries +
-    counts.userTryoutStats +
+    counts.tryoutLeaderboardUserStats +
     counts.irtCalibrationQueue +
     counts.irtCalibrationAttempts +
     counts.irtCalibrationCacheStats +
     counts.irtCalibrationRuns +
     counts.irtScaleQualityChecks +
     counts.irtScaleQualityRefreshQueue +
-    counts.exerciseItemParameters +
     counts.irtScalePublicationQueue +
     counts.irtScaleVersions +
-    counts.irtScaleVersionItems;
+    counts.irtScaleItems;
 
   log(`\n  Total tryout + IRT rows: ${totalTryoutAndIrtRows}`);
 
-  if (totalTryoutAndIrtRows === 0) {
+  if (totalTryoutAndIrtRows === 0 && !options.force) {
     logSuccess("\nTryout and IRT sync-managed data is already empty.");
     yield* clearSyncState(options.prod ?? false);
     log("Cleared sync state file");
@@ -290,6 +348,12 @@ export const resetTryouts = Effect.fn("sync.resetTryouts")(function* (
       log("  pnpm --filter @repo/backend sync:reset:tryouts --force");
     }
     return;
+  }
+
+  if (totalTryoutAndIrtRows === 0) {
+    logWarning(
+      "\nNo tryout/IRT source rows found; continuing because --force was passed so stale try-out projections can be cleared."
+    );
   }
 
   log("\nDeleting tryout + IRT data (in dependency order)...\n");

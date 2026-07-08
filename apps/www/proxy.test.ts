@@ -13,7 +13,6 @@ const mockLocaleRouting = vi.hoisted(() => ({
       })
   ),
 }));
-const mockGetRuntimeExerciseQuestionPage = vi.hoisted(() => vi.fn());
 const mockGetRuntimeContentRoute = vi.hoisted(() => vi.fn());
 const mockGetRuntimeContentRouteKindPage = vi.hoisted(() => vi.fn());
 const mockGetRuntimeContentRouteParentPage = vi.hoisted(() => vi.fn());
@@ -29,10 +28,6 @@ vi.mock("next-intl/middleware", () => ({
   default: vi.fn(() => mockLocaleRouting.localeMiddleware),
 }));
 
-vi.mock("@/lib/content/runtime/pages", () => ({
-  getRuntimeExerciseQuestionPage: mockGetRuntimeExerciseQuestionPage,
-}));
-
 vi.mock("@/lib/content/runtime/routes", () => ({
   getRuntimeContentRoute: mockGetRuntimeContentRoute,
   getRuntimeContentRouteKindPage: mockGetRuntimeContentRouteKindPage,
@@ -41,13 +36,9 @@ vi.mock("@/lib/content/runtime/routes", () => ({
 
 describe("proxy", () => {
   beforeEach(() => {
-    mockGetRuntimeExerciseQuestionPage.mockReset();
     mockGetRuntimeContentRoute.mockReset();
     mockGetRuntimeContentRouteKindPage.mockReset();
     mockGetRuntimeContentRouteParentPage.mockReset();
-    mockGetRuntimeExerciseQuestionPage.mockReturnValue(
-      Effect.succeed({ exercise: { number: 1 } })
-    );
     mockGetRuntimeContentRoute.mockReturnValue(
       Effect.succeed({ route: "fixture" })
     );

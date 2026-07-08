@@ -1,4 +1,3 @@
-import { NakafaAgentExerciseOptionsSchema } from "@repo/contents/_lib/agent/schema/exercise";
 import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agent/schema/quran";
 import { NakafaAgentReadOptionsSchema } from "@repo/contents/_lib/agent/schema/read";
 import {
@@ -22,21 +21,8 @@ const ContentSummarySchema = NakafaAgentContentSummarySchema;
 const SearchInputSchema = NakafaAgentSearchOptionsSchema;
 const SearchResultSchema = NakafaAgentSearchResultSchema;
 const ReadInputSchema = NakafaAgentReadOptionsSchema;
-const ExerciseInputSchema = NakafaAgentExerciseOptionsSchema;
 const QuranInputSchema = NakafaAgentQuranReferenceOptionsSchema;
 const TaxonomyInputSchema = NakafaAgentTaxonomyOptionsSchema;
-
-const ExercisePreviewSchema = NakafaAgentContentRefSchema.pipe(
-  Schema.extend(
-    Schema.Struct({
-      count: Schema.Number,
-      exercise_number: Schema.optional(Schema.Number),
-      numbers: Schema.Array(Schema.Number).pipe(Schema.mutable),
-      title: Schema.String,
-    })
-  ),
-  Schema.mutable
-);
 
 const QuranPreviewSchema = NakafaAgentContentRefSchema.pipe(
   Schema.extend(
@@ -108,28 +94,6 @@ const NakafaContentErrorSchema = Schema.Struct({
   status: Schema.Literal("error"),
 }).pipe(Schema.mutable);
 
-const nakafaExerciseLoadingFields = {
-  input: ExerciseInputSchema,
-  kind: Schema.Literal("exercise"),
-  status: Schema.Literal("loading"),
-};
-
-const NakafaExerciseLoadingSchema = Schema.Struct(
-  nakafaExerciseLoadingFields
-).pipe(Schema.mutable);
-
-const NakafaExerciseDoneSchema = Schema.Struct({
-  ...nakafaExerciseLoadingFields,
-  result: ExercisePreviewSchema,
-  status: Schema.Literal("done"),
-}).pipe(Schema.mutable);
-
-const NakafaExerciseErrorSchema = Schema.Struct({
-  ...nakafaExerciseLoadingFields,
-  error: Schema.String,
-  status: Schema.Literal("error"),
-}).pipe(Schema.mutable);
-
 const nakafaQuranLoadingFields = {
   input: QuranInputSchema,
   kind: Schema.Literal("quran"),
@@ -184,9 +148,6 @@ export const NakafaDataSchema = Schema.Union(
   NakafaContentLoadingSchema,
   NakafaContentDoneSchema,
   NakafaContentErrorSchema,
-  NakafaExerciseLoadingSchema,
-  NakafaExerciseDoneSchema,
-  NakafaExerciseErrorSchema,
   NakafaQuranLoadingSchema,
   NakafaQuranDoneSchema,
   NakafaQuranErrorSchema,

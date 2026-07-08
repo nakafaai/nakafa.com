@@ -1,13 +1,7 @@
 import { CONTENT_ROUTE_KINDS } from "@repo/backend/convex/contents/constants";
-import {
-  graphContentIdValidator,
-  learningGraphIdentityValidator,
-} from "@repo/backend/convex/contents/graph";
+import { learningGraphIdentityValidator } from "@repo/backend/convex/contents/graph";
 import {
   articleCategoryValidator,
-  exercisesCategoryValidator,
-  exercisesMaterialValidator,
-  exercisesTypeValidator,
   localeValidator,
   materialValidator,
   nakafaSectionValidator,
@@ -43,16 +37,6 @@ const runtimeContentBaseValidator = v.object({
   metadata: contentMetadataValidator,
   slug: v.string(),
   syncedAt: v.number(),
-});
-
-const exerciseChoiceValidator = v.object({
-  label: v.string(),
-  value: v.boolean(),
-});
-
-const exerciseChoicesValidator = v.object({
-  en: v.array(exerciseChoiceValidator),
-  id: v.array(exerciseChoiceValidator),
 });
 
 const localizedTextValidator = v.object({
@@ -189,30 +173,6 @@ const paginatedApiContentValidator = v.object({
   page: v.array(apiContentItemValidator),
 });
 
-const runtimeExerciseGraphProjectionValidator = v.object({
-  ...learningGraphIdentityValidator.fields,
-  content_id: graphContentIdValidator,
-  locale: localeValidator,
-  route: v.string(),
-  sourcePath: v.string(),
-  url: v.string(),
-});
-
-export const runtimeExerciseValidator = v.object({
-  ...runtimeExerciseGraphProjectionValidator.fields,
-  answer: v.object({
-    metadata: contentMetadataValidator,
-    raw: v.string(),
-  }),
-  choices: exerciseChoicesValidator,
-  contentHash: v.string(),
-  number: v.number(),
-  question: v.object({
-    metadata: contentMetadataValidator,
-    raw: v.string(),
-  }),
-});
-
 export const getArticlePageArgsValidator = {
   locale: localeValidator,
   slug: v.string(),
@@ -237,85 +197,6 @@ export const getCurriculumPageReturnValidator = nullable(
     ...runtimeContentBaseValidator.fields,
     section: v.string(),
     topic: v.string(),
-  })
-);
-
-export const getExerciseSetPageArgsValidator = {
-  locale: localeValidator,
-  slug: v.string(),
-};
-
-const runtimeExerciseSetValidator = v.object({
-  ...runtimeExerciseGraphProjectionValidator.fields,
-  category: exercisesCategoryValidator,
-  description: v.optional(v.string()),
-  exerciseType: v.string(),
-  exercises: v.array(runtimeExerciseValidator),
-  material: exercisesMaterialValidator,
-  questionCount: v.number(),
-  setName: v.string(),
-  slug: v.string(),
-  syncedAt: v.number(),
-  title: v.string(),
-  type: exercisesTypeValidator,
-  year: v.optional(v.string()),
-});
-
-export const getExerciseSetPageReturnValidator = nullable(
-  runtimeExerciseSetValidator
-);
-
-export const getExerciseQuestionPageArgsValidator = {
-  locale: localeValidator,
-  slug: v.string(),
-};
-
-export const getExerciseQuestionPageReturnValidator = nullable(
-  v.object({
-    exercise: runtimeExerciseValidator,
-    exerciseCount: v.number(),
-    set: v.object({
-      ...runtimeExerciseGraphProjectionValidator.fields,
-      category: exercisesCategoryValidator,
-      description: v.optional(v.string()),
-      exerciseType: v.string(),
-      material: exercisesMaterialValidator,
-      questionCount: v.number(),
-      setName: v.string(),
-      slug: v.string(),
-      title: v.string(),
-      type: exercisesTypeValidator,
-      year: v.optional(v.string()),
-    }),
-  })
-);
-
-export const getExerciseGroupPageArgsValidator = {
-  category: exercisesCategoryValidator,
-  exerciseType: v.string(),
-  locale: localeValidator,
-  material: exercisesMaterialValidator,
-  type: exercisesTypeValidator,
-  year: v.optional(v.string()),
-};
-
-export const getExerciseGroupPageReturnValidator = nullable(
-  v.object({
-    category: exercisesCategoryValidator,
-    exerciseType: v.string(),
-    material: exercisesMaterialValidator,
-    sets: v.array(
-      v.object({
-        ...runtimeExerciseGraphProjectionValidator.fields,
-        questionCount: v.number(),
-        setName: v.string(),
-        slug: v.string(),
-        title: v.string(),
-        year: v.optional(v.string()),
-      })
-    ),
-    type: exercisesTypeValidator,
-    year: v.optional(v.string()),
   })
 );
 

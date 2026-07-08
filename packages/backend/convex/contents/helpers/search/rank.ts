@@ -1,5 +1,4 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import { readSourcePracticeRoutePath } from "@repo/contents/_types/route/practice/path";
 
 /** Minimal persisted search fields required by deterministic reranking. */
 export type ContentSearchRankDocument = Pick<
@@ -47,15 +46,10 @@ export function rankContentSearchDocuments<
         getDocumentMetadataSearchText(document),
         semanticTokens
       ),
-      setPriority: getExerciseSetPriority(document),
     }))
     .sort((left, right) => {
       if (left.metadataSemanticScore !== right.metadataSemanticScore) {
         return right.metadataSemanticScore - left.metadataSemanticScore;
-      }
-
-      if (left.setPriority !== right.setPriority) {
-        return right.setPriority - left.setPriority;
       }
 
       if (left.bodySemanticScore !== right.bodySemanticScore) {
@@ -100,17 +94,6 @@ function getDocumentMetadataSearchText(document: ContentSearchRankDocument) {
   return [document.title, document.description, document.route]
     .join(" ")
     .replaceAll(routeSeparatorPattern, " ");
-}
-
-/** Prefers set/material exercise rows over question rows for semantic searches. */
-function getExerciseSetPriority(document: ContentSearchRankDocument) {
-  if (document.section !== "material") {
-    return 0;
-  }
-
-  const practiceRoute = readSourcePracticeRoutePath(document.sourcePath);
-
-  return practiceRoute?.kind === "set" ? 1 : 0;
 }
 
 /** Tokenizes multilingual query and document text for deterministic ranking. */

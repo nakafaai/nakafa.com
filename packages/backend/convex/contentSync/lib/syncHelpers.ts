@@ -40,26 +40,26 @@ export type SyncedArticleReference = Infer<
   typeof syncedArticleReferenceValidator
 >;
 
-/** Convex validator for localized exercise choices from source metadata. */
-export const syncedExerciseChoiceValidator = v.object({
+/** Convex validator for localized question choices from source metadata. */
+export const syncedQuestionChoiceValidator = v.object({
   isCorrect: v.boolean(),
   label: v.string(),
   optionKey: v.string(),
   order: v.number(),
 });
 
-/** Localized exercise choice imported from source content metadata. */
-export type SyncedExerciseChoice = Infer<typeof syncedExerciseChoiceValidator>;
+/** Localized question choice imported from source content metadata. */
+export type SyncedQuestionChoice = Infer<typeof syncedQuestionChoiceValidator>;
 
-/** Convex validator for locale-keyed exercise choice groups. */
-export const syncedExerciseChoicesValidator = v.record(
+/** Convex validator for locale-keyed question choice groups. */
+export const syncedQuestionChoicesValidator = v.record(
   localeValidator,
-  v.array(syncedExerciseChoiceValidator)
+  v.array(syncedQuestionChoiceValidator)
 );
 
-/** Locale-keyed exercise choices derived from the Convex validator. */
-export type SyncedExerciseChoices = Infer<
-  typeof syncedExerciseChoicesValidator
+/** Locale-keyed question choices derived from the Convex validator. */
+export type SyncedQuestionChoices = Infer<
+  typeof syncedQuestionChoicesValidator
 >;
 
 /** Load existing authors into a lookup map keyed by author name. */
@@ -183,29 +183,29 @@ export async function replaceArticleReferences(
 }
 
 /** Replace one question's multiple-choice options within the bounded sync limits. */
-export async function replaceExerciseChoices(
+export async function replaceQuestionChoices(
   ctx: MutationCtx,
   args: {
-    choices: SyncedExerciseChoices;
-    questionId: Id<"exerciseQuestions">;
+    choices: SyncedQuestionChoices;
+    questionId: Id<"questions">;
   }
 ): Promise<number> {
   for (const locale of SUPPORTED_CONTENT_LOCALES) {
     assertContentSyncBatchSize({
-      functionName: "replaceExerciseChoices",
-      limit: CONTENT_SYNC_BATCH_LIMITS.exerciseChoices,
+      functionName: "replaceQuestionChoices",
+      limit: CONTENT_SYNC_BATCH_LIMITS.questionChoices,
       received: args.choices[locale].length,
-      unit: `${locale} exercise choices`,
+      unit: `${locale} question choices`,
     });
   }
 
-  await deleteExerciseChoicesForQuestion(ctx, args.questionId);
+  await deleteQuestionChoicesForQuestion(ctx, args.questionId);
 
   let created = 0;
 
   for (const locale of SUPPORTED_CONTENT_LOCALES) {
     for (const choice of args.choices[locale]) {
-      await ctx.db.insert("exerciseChoices", {
+      await ctx.db.insert("questionChoices", {
         isCorrect: choice.isCorrect,
         label: choice.label,
         locale,
@@ -269,13 +269,13 @@ export async function deleteArticleReferencesForArticle(
 }
 
 /** Delete all choices for one question under the sync safety limits. */
-export async function deleteExerciseChoicesForQuestion(
+export async function deleteQuestionChoicesForQuestion(
   ctx: MutationCtx,
-  questionId: Id<"exerciseQuestions">
+  questionId: Id<"questions">
 ) {
-  const choiceLimit = CONTENT_SYNC_BATCH_LIMITS.exerciseChoices * 2;
+  const choiceLimit = CONTENT_SYNC_BATCH_LIMITS.questionChoices * 2;
   const existingChoices = await ctx.db
-    .query("exerciseChoices")
+    .query("questionChoices")
     .withIndex("by_questionId_and_locale", (q) =>
       q.eq("questionId", questionId)
     )
@@ -284,12 +284,12 @@ export async function deleteExerciseChoicesForQuestion(
   if (existingChoices.length > choiceLimit) {
     throw new ConvexError({
       code: "CONTENT_SYNC_CHOICE_COUNT_EXCEEDED",
-      message: "Existing exercise choice count exceeds the safe sync limit.",
+      message: "Existing question choice count exceeds the safe sync limit.",
     });
   }
 
   for (const choice of existingChoices) {
-    await ctx.db.delete("exerciseChoices", choice._id);
+    await ctx.db.delete("questionChoices", choice._id);
   }
 }
 
@@ -304,23 +304,23 @@ export async function deleteContentProjectionsBySourcePath(
   await deleteContentRoutesBySourcePath(ctx, source);
 }
 
-/** Delete one exercise question together with its sync-managed dependent rows. */
-export async function deleteExerciseQuestion(
+/** Delete one question together with its sync-managed dependent rows. */
+export async function deleteQuestion(
   ctx: MutationCtx,
-  questionId: Id<"exerciseQuestions">
+  questionId: Id<"questions">
 ) {
   const question = await ctx.db.get(questionId);
 
   if (question) {
     await deleteContentProjectionsBySourcePath(ctx, {
       locale: question.locale,
-      route: question.slug,
+      route: question.sourcePath,
     });
   }
 
-  await deleteContentAuthorLinks(ctx, questionId, "material");
-  await deleteExerciseChoicesForQuestion(ctx, questionId);
-  await ctx.db.delete("exerciseQuestions", questionId);
+  await deleteContentAuthorLinks(ctx, questionId, "question");
+  await deleteQuestionChoicesForQuestion(ctx, questionId);
+  await ctx.db.delete("questions", questionId);
 }
 
 /** Delete one curriculum lesson together with its sync-managed author links. */

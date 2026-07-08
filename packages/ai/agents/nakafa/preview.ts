@@ -1,10 +1,7 @@
-import { formatNakafaRouteTitle } from "@repo/contents/_lib/agent/format";
-import type { NakafaAgentExerciseResult } from "@repo/contents/_lib/agent/schema/exercise";
 import type { NakafaAgentQuranReference } from "@repo/contents/_lib/agent/schema/quran";
 import type { NakafaAgentMarkdown } from "@repo/contents/_lib/agent/schema/read";
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
 import type { NakafaAgentTaxonomy } from "@repo/contents/_lib/agent/schema/taxonomy";
-import { Option } from "effect";
 
 /** Builds the bounded UI preview for a full content read. */
 export function previewRead(result: NakafaAgentMarkdown) {
@@ -12,27 +9,6 @@ export function previewRead(result: NakafaAgentMarkdown) {
     ...previewContentRef(result),
     description: result.description,
     title: result.title,
-  };
-}
-
-/** Builds the bounded UI preview for an exercise read. */
-export function previewExercise(result: NakafaAgentExerciseResult) {
-  const preview = {
-    ...previewContentRef(result),
-    count: result.count,
-    numbers: result.exercises.map((exercise) => exercise.number),
-    title: formatNakafaRouteTitle(result.route, result.locale),
-  };
-
-  const exerciseNumber = Option.fromNullable(result.exercise_number);
-
-  if (Option.isNone(exerciseNumber)) {
-    return preview;
-  }
-
-  return {
-    ...preview,
-    exercise_number: exerciseNumber.value,
   };
 }
 

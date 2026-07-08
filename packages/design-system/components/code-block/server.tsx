@@ -1,3 +1,4 @@
+import { preserveShikiLineBreaks } from "@repo/design-system/lib/shiki";
 import {
   transformerNotationDiff,
   transformerNotationErrorLevel,
@@ -27,30 +28,32 @@ export const CodeBlockContent = async ({
   ...props
 }: CodeBlockContentProps) => {
   const html = syntaxHighlighting
-    ? await codeToHtml(children as string, {
-        lang: language ?? "typescript",
-        themes: themes ?? {
-          light: "github-light",
-          dark: "github-dark-default",
-        },
-        transformers: [
-          transformerNotationDiff({
-            matchAlgorithm: "v3",
-          }),
-          transformerNotationHighlight({
-            matchAlgorithm: "v3",
-          }),
-          transformerNotationWordHighlight({
-            matchAlgorithm: "v3",
-          }),
-          transformerNotationFocus({
-            matchAlgorithm: "v3",
-          }),
-          transformerNotationErrorLevel({
-            matchAlgorithm: "v3",
-          }),
-        ],
-      })
+    ? preserveShikiLineBreaks(
+        await codeToHtml(children as string, {
+          lang: language ?? "typescript",
+          themes: themes ?? {
+            light: "github-light",
+            dark: "github-dark-default",
+          },
+          transformers: [
+            transformerNotationDiff({
+              matchAlgorithm: "v3",
+            }),
+            transformerNotationHighlight({
+              matchAlgorithm: "v3",
+            }),
+            transformerNotationWordHighlight({
+              matchAlgorithm: "v3",
+            }),
+            transformerNotationFocus({
+              matchAlgorithm: "v3",
+            }),
+            transformerNotationErrorLevel({
+              matchAlgorithm: "v3",
+            }),
+          ],
+        })
+      )
     : children;
 
   return (

@@ -19,7 +19,7 @@ describe("public route projection", () => {
     expect(kinds.has("subject-lesson")).toBe(true);
     expect(kinds.has("curriculum-context")).toBe(true);
     expect(kinds.has("assessment-context")).toBe(false);
-    expect(kinds.has("exercise-set")).toBe(true);
+    expect(kinds.has("tryout-set")).toBe(true);
   });
 
   it("decodes branded public segments and paths at the route boundary", () => {
@@ -46,7 +46,7 @@ describe("public route projection", () => {
     const invalidPaths = [
       "material/lesson/mathematics/integral/riemann-sum",
       "subject/matematika/integral/jumlahan-riemann",
-      "assessment/snbt/pengetahuan-kuantitatif/tryout-2026",
+      "try-out/indonesia/snbt/set-1/unknown-section",
       "ujian/snbt/pengetahuan-kuantitatif",
       "exams/snbt/quantitative-knowledge",
     ];

@@ -9,12 +9,12 @@ import {
   REFERENCES_REGEX,
 } from "@repo/backend/scripts/lib/mdx-parser/constants";
 import { parseContentDate } from "@repo/contents/_shared/date";
-import { ExercisesChoicesSchema } from "@repo/contents/_types/assessment/choices";
 import {
   ContentMetadataSchema,
   type Reference,
   ReferenceSchema,
 } from "@repo/contents/_types/content";
+import { QuestionChoicesSchema } from "@repo/contents/_types/question-bank/choices";
 import { Effect, Option, Schema } from "effect";
 
 class MdxReadError extends Schema.TaggedError<MdxReadError>()("MdxReadError", {
@@ -102,10 +102,10 @@ export const readMdxFile = Effect.fn("mdx.readMdxFile")(function* (
   };
 });
 
-/** Reads optional exercise choices, returning null when no valid choices exist. */
-export const readExerciseChoices = Effect.fn("mdx.readExerciseChoices")(
-  function* (exerciseDir: string) {
-    const choicesPath = join(exerciseDir, "choices.ts");
+/** Reads optional question choices, returning null when no valid choices exist. */
+export const readQuestionChoices = Effect.fn("mdx.readQuestionChoices")(
+  function* (questionDir: string) {
+    const choicesPath = join(questionDir, "choices.ts");
     const file = yield* Effect.either(
       Effect.tryPromise({
         try: () => readFile(choicesPath, "utf8"),
@@ -142,7 +142,7 @@ export const readExerciseChoices = Effect.fn("mdx.readExerciseChoices")(
       return null;
     }
 
-    const parseResult = Schema.decodeUnknownOption(ExercisesChoicesSchema)(
+    const parseResult = Schema.decodeUnknownOption(QuestionChoicesSchema)(
       choicesObject.right
     );
 

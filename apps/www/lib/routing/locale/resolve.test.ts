@@ -89,42 +89,41 @@ describe("resolveLocalizedNavigationHref", () => {
     );
   });
 
-  it("projects practice root and domain pages from concrete practice route identity", () => {
-    expect(resolveHref("/id/latihan/snbt", "en")).toBe("/practice/snbt");
-    expect(resolveHref("/en/practice/snbt", "id")).toBe("/latihan/snbt");
-
-    expect(resolveHref("/id/latihan/snbt/pengetahuan-kuantitatif", "en")).toBe(
-      "/practice/snbt/quantitative-knowledge"
+  it("keeps canonical try-out discovery paths stable across locale switching", () => {
+    expect(resolveHref("/id/try-out/indonesia", "en")).toBe(
+      "/try-out/indonesia"
+    );
+    expect(resolveHref("/en/try-out/indonesia", "id")).toBe(
+      "/try-out/indonesia"
     );
 
-    expect(resolveHref("/en/practice/snbt/quantitative-knowledge", "id")).toBe(
-      "/latihan/snbt/pengetahuan-kuantitatif"
+    expect(resolveHref("/id/try-out/indonesia/snbt", "en")).toBe(
+      "/try-out/indonesia/snbt"
+    );
+
+    expect(resolveHref("/en/try-out/indonesia/snbt", "id")).toBe(
+      "/try-out/indonesia/snbt"
     );
   });
 
-  it("projects concrete practice set and question URLs without old split or mock route shapes", () => {
-    expect(
-      resolveHref(
-        "/id/latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1",
-        "en"
-      )
-    ).toBe("/practice/snbt/quantitative-knowledge/tryout-2026/set-1");
-
-    expect(
-      resolveHref(
-        "/id/latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1/soal-1",
-        "en"
-      )
-    ).toBe(
-      "/practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-1"
+  it("keeps concrete try-out set and section URLs canonical across locale switching", () => {
+    expect(resolveHref("/id/try-out/indonesia/snbt/set-1", "en")).toBe(
+      "/try-out/indonesia/snbt/set-1"
     );
 
     expect(
       resolveHref(
-        "/en/practice/snbt/quantitative-knowledge/tryout-2026/set-1/question-1",
+        "/id/try-out/indonesia/snbt/set-1/pengetahuan-kuantitatif",
+        "en"
+      )
+    ).toBe("/try-out/indonesia/snbt/set-1/quantitative-knowledge");
+
+    expect(
+      resolveHref(
+        "/en/try-out/indonesia/snbt/set-1/quantitative-knowledge",
         "id"
       )
-    ).toBe("/latihan/snbt/pengetahuan-kuantitatif/tryout-2026/set-1/soal-1");
+    ).toBe("/try-out/indonesia/snbt/set-1/pengetahuan-kuantitatif");
   });
 
   it("keeps static app pages on normal localized path switching with safe state", () => {
@@ -148,6 +147,12 @@ describe("resolveLocalizedNavigationHref", () => {
     );
 
     expect(result._tag).toBe("Failure");
+  });
+
+  it("keeps unknown non-projected app paths on normal localized path switching", () => {
+    expect(
+      resolveHref("/id/internal-preview/alpha?source=meeting#top", "en")
+    ).toBe("/internal-preview/alpha?source=meeting#top");
   });
 
   it("fails malformed hrefs with a typed route-localization failure", () => {
@@ -174,8 +179,6 @@ describe("resolveLocalizedNavigationHref", () => {
 
     const index: PublicLearningIndex = {
       projectMaterialContextToLocale: () => undefined,
-      projectPracticeDomainPath: () => undefined,
-      projectPracticeRootPath: () => undefined,
       projectRouteToLocale: () => undefined,
       resolveMaterialHeaderLink: () => undefined,
       resolveRouteByPath: () => idOnlyRoute,

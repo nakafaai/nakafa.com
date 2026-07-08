@@ -6,6 +6,7 @@ import {
 } from "@repo/backend/convex/contents/constants";
 import { CONTENT_TYPE_VALUES } from "@repo/backend/convex/lib/validators/contents";
 import { MaterialSchema } from "@repo/contents/_types/curriculum/material";
+import { TryoutScoringStrategySchema } from "@repo/contents/_types/tryout/schema";
 import { locales } from "@repo/utilities/locales";
 import { Effect, Schema } from "effect";
 
@@ -27,7 +28,7 @@ export const ConvexIdSchema = <const TableName extends TableNames>(
 const ContentIdSchema = Schema.Union(
   ConvexIdSchema("articleContents"),
   ConvexIdSchema("curriculumLessons"),
-  ConvexIdSchema("exerciseQuestions")
+  ConvexIdSchema("questions")
 );
 
 /** Builds a decoded mutable array schema for generated Convex return types. */
@@ -39,8 +40,8 @@ export const BATCH_SIZES = {
   authors: CONTENT_SYNC_BATCH_LIMITS.authors,
   curriculumTopics: CONTENT_SYNC_BATCH_LIMITS.curriculumTopics,
   curriculumLessons: CONTENT_SYNC_BATCH_LIMITS.curriculumLessons,
-  exerciseSets: CONTENT_SYNC_BATCH_LIMITS.exerciseSets,
-  exerciseQuestions: CONTENT_SYNC_BATCH_LIMITS.exerciseQuestions,
+  questionSets: CONTENT_SYNC_BATCH_LIMITS.questionSets,
+  questions: CONTENT_SYNC_BATCH_LIMITS.questions,
   generatedAssessmentNodes: CONTENT_SYNC_BATCH_LIMITS.generatedAssessmentNodes,
   generatedAssessments: CONTENT_SYNC_BATCH_LIMITS.generatedAssessments,
   generatedCurricula: CONTENT_SYNC_BATCH_LIMITS.generatedCurricula,
@@ -56,8 +57,12 @@ export const BATCH_SIZES = {
   staleArticles: CONTENT_SYNC_BATCH_LIMITS.staleArticles,
   staleCurriculumTopics: CONTENT_SYNC_BATCH_LIMITS.staleCurriculumTopics,
   staleCurriculumLessons: CONTENT_SYNC_BATCH_LIMITS.staleCurriculumLessons,
-  staleExerciseSets: CONTENT_SYNC_BATCH_LIMITS.staleExerciseSets,
-  staleExerciseQuestions: CONTENT_SYNC_BATCH_LIMITS.staleExerciseQuestions,
+  staleQuestionSets: CONTENT_SYNC_BATCH_LIMITS.staleQuestionSets,
+  staleQuestions: CONTENT_SYNC_BATCH_LIMITS.staleQuestions,
+  staleTryoutCountries: CONTENT_SYNC_BATCH_LIMITS.staleTryoutCountries,
+  staleTryoutExams: CONTENT_SYNC_BATCH_LIMITS.staleTryoutExams,
+  staleTryoutSections: CONTENT_SYNC_BATCH_LIMITS.staleTryoutSections,
+  staleTryoutSets: CONTENT_SYNC_BATCH_LIMITS.staleTryoutSets,
   unusedAuthors: CONTENT_SYNC_BATCH_LIMITS.unusedAuthors,
 } as const;
 
@@ -125,7 +130,7 @@ export const CurriculumLessonSyncResultSchema = Schema.mutable(
   })
 );
 
-export const ExerciseQuestionSyncResultSchema = Schema.mutable(
+export const QuestionSyncResultSchema = Schema.mutable(
   Schema.Struct({
     authorLinksCreated: Schema.Number,
     choicesCreated: Schema.Number,
@@ -370,7 +375,7 @@ export const ContentSearchResultSchema = Schema.mutable(
 
 export const TryoutSyncResultSchema = SyncSummarySchema;
 
-export const ExerciseSetSyncResultSchema = SyncSummarySchema;
+export const QuestionSetSyncResultSchema = SyncSummarySchema;
 
 export const CurriculumTopicSyncResultSchema = SyncSummarySchema;
 
@@ -402,12 +407,9 @@ export const ContentCountsSchema = Schema.Struct({
   contentSearch: Schema.Number,
   learningEngagementQueue: Schema.Number,
   learningViews: Schema.Number,
-  exerciseAnswers: Schema.Number,
-  exerciseAttempts: Schema.Number,
-  exerciseChoices: Schema.Number,
-  exerciseItemParameters: Schema.Number,
-  exerciseQuestions: Schema.Number,
-  exerciseSets: Schema.Number,
+  questionChoices: Schema.Number,
+  questions: Schema.Number,
+  questionSets: Schema.Number,
   irtCalibrationAttempts: Schema.Number,
   irtCalibrationCacheStats: Schema.Number,
   irtCalibrationQueue: Schema.Number,
@@ -415,7 +417,7 @@ export const ContentCountsSchema = Schema.Struct({
   irtScalePublicationQueue: Schema.Number,
   irtScaleQualityChecks: Schema.Number,
   irtScaleQualityRefreshQueue: Schema.Number,
-  irtScaleVersionItems: Schema.Number,
+  irtScaleItems: Schema.Number,
   irtScaleVersions: Schema.Number,
   assessmentNodes: Schema.Number,
   assessments: Schema.Number,
@@ -436,18 +438,23 @@ export const ContentCountsSchema = Schema.Struct({
   curriculumLessons: Schema.Number,
   userLearningRecents: Schema.Number,
   curriculumTopics: Schema.Number,
-  tryoutAccessCampaignProducts: Schema.Number,
   tryoutAccessCampaigns: Schema.Number,
+  tryoutAccessTargets: Schema.Number,
   tryoutAccessGrants: Schema.Number,
   tryoutAccessLinks: Schema.Number,
   tryoutAttempts: Schema.Number,
-  tryoutCatalogMeta: Schema.Number,
+  tryoutAttemptPlacements: Schema.Number,
+  tryoutCountries: Schema.Number,
+  tryoutExams: Schema.Number,
   tryoutLeaderboardEntries: Schema.Number,
-  tryoutPartAttempts: Schema.Number,
-  tryoutPartSets: Schema.Number,
-  tryouts: Schema.Number,
-  userTryoutEntitlements: Schema.Number,
-  userTryoutStats: Schema.Number,
+  tryoutLeaderboardScopes: Schema.Number,
+  tryoutLeaderboardUserStats: Schema.Number,
+  tryoutResponses: Schema.Number,
+  tryoutScores: Schema.Number,
+  tryoutSectionAttempts: Schema.Number,
+  tryoutSections: Schema.Number,
+  tryoutSets: Schema.Number,
+  tryoutEntitlements: Schema.Number,
 });
 
 export const DataIntegritySchema = Schema.Struct({
@@ -501,61 +508,74 @@ export const GraphIdentityIntegritySchema = Schema.Struct({
   scannedRows: Schema.Number,
 });
 
-export const TryoutScaleIntegritySchema = Schema.mutable(
-  Schema.Struct({
-    continueCursor: Schema.String,
-    isDone: Schema.Boolean,
-    page: mutableArraySchema(
-      Schema.Struct({
-        cycleKey: Schema.String,
-        locale: SyncLocaleSchema,
-        product: Schema.Literal("snbt"),
-        slug: Schema.String,
-      })
-    ),
-  })
-);
-
 const StaleItemSchema = Schema.Struct({
   id: Schema.Union(
     ConvexIdSchema("articleContents"),
     ConvexIdSchema("curriculumTopics"),
     ConvexIdSchema("curriculumLessons"),
-    ConvexIdSchema("exerciseSets"),
-    ConvexIdSchema("exerciseQuestions")
+    ConvexIdSchema("questionSets"),
+    ConvexIdSchema("questions"),
+    ConvexIdSchema("tryoutCountries"),
+    ConvexIdSchema("tryoutExams"),
+    ConvexIdSchema("tryoutSets"),
+    ConvexIdSchema("tryoutSections")
   ),
-  slug: Schema.String,
   locale: SyncLocaleSchema,
+  sourcePath: Schema.String,
 });
 
 const StaleArticleSchema = Schema.Struct({
   id: ConvexIdSchema("articleContents"),
-  slug: Schema.String,
   locale: SyncLocaleSchema,
+  sourcePath: Schema.String,
 });
 
 const StaleCurriculumTopicSchema = Schema.Struct({
   id: ConvexIdSchema("curriculumTopics"),
-  slug: Schema.String,
   locale: SyncLocaleSchema,
+  sourcePath: Schema.String,
 });
 
 const StaleCurriculumLessonSchema = Schema.Struct({
   id: ConvexIdSchema("curriculumLessons"),
-  slug: Schema.String,
   locale: SyncLocaleSchema,
+  sourcePath: Schema.String,
 });
 
-const StaleExerciseSetSchema = Schema.Struct({
-  id: ConvexIdSchema("exerciseSets"),
-  slug: Schema.String,
+const StaleQuestionSetSchema = Schema.Struct({
+  id: ConvexIdSchema("questionSets"),
   locale: SyncLocaleSchema,
+  sourcePath: Schema.String,
 });
 
-const StaleExerciseQuestionSchema = Schema.Struct({
-  id: ConvexIdSchema("exerciseQuestions"),
-  slug: Schema.String,
+const StaleQuestionSchema = Schema.Struct({
+  id: ConvexIdSchema("questions"),
   locale: SyncLocaleSchema,
+  sourcePath: Schema.String,
+});
+
+const StaleTryoutCountrySchema = Schema.Struct({
+  id: ConvexIdSchema("tryoutCountries"),
+  locale: SyncLocaleSchema,
+  sourcePath: Schema.String,
+});
+
+const StaleTryoutExamSchema = Schema.Struct({
+  id: ConvexIdSchema("tryoutExams"),
+  locale: SyncLocaleSchema,
+  sourcePath: Schema.String,
+});
+
+const StaleTryoutSetSchema = Schema.Struct({
+  id: ConvexIdSchema("tryoutSets"),
+  locale: SyncLocaleSchema,
+  sourcePath: Schema.String,
+});
+
+const StaleTryoutSectionSchema = Schema.Struct({
+  id: ConvexIdSchema("tryoutSections"),
+  locale: SyncLocaleSchema,
+  sourcePath: Schema.String,
 });
 
 const PaginationPageSchema = Schema.Struct({
@@ -567,8 +587,12 @@ export const StaleContentSchema = Schema.Struct({
   staleArticles: Schema.Array(StaleArticleSchema),
   staleCurriculumTopics: Schema.Array(StaleCurriculumTopicSchema),
   staleCurriculumLessons: Schema.Array(StaleCurriculumLessonSchema),
-  staleExerciseSets: Schema.Array(StaleExerciseSetSchema),
-  staleExerciseQuestions: Schema.Array(StaleExerciseQuestionSchema),
+  staleQuestionSets: Schema.Array(StaleQuestionSetSchema),
+  staleQuestions: Schema.Array(StaleQuestionSchema),
+  staleTryoutCountries: Schema.Array(StaleTryoutCountrySchema),
+  staleTryoutExams: Schema.Array(StaleTryoutExamSchema),
+  staleTryoutSections: Schema.Array(StaleTryoutSectionSchema),
+  staleTryoutSets: Schema.Array(StaleTryoutSetSchema),
 });
 
 export const StaleContentPageSchema = Schema.mutable(
@@ -589,28 +613,28 @@ export const ArticleIntegrityPageSchema = Schema.mutable(
   )
 );
 
-export const ExerciseQuestionIntegrityPageSchema = Schema.mutable(
+export const QuestionIntegrityPageSchema = Schema.mutable(
   Schema.extend(
     PaginationPageSchema,
     Schema.Struct({
       page: mutableArraySchema(
         Schema.Struct({
-          id: ConvexIdSchema("exerciseQuestions"),
+          id: ConvexIdSchema("questions"),
           locale: SyncLocaleSchema,
-          slug: Schema.String,
+          sourcePath: Schema.String,
         })
       ),
     })
   )
 );
 
-export const ExerciseChoiceIntegrityPageSchema = Schema.mutable(
+export const QuestionChoiceIntegrityPageSchema = Schema.mutable(
   Schema.extend(
     PaginationPageSchema,
     Schema.Struct({
       page: mutableArraySchema(
         Schema.Struct({
-          questionId: ConvexIdSchema("exerciseQuestions"),
+          questionId: ConvexIdSchema("questions"),
         })
       ),
     })
@@ -654,6 +678,24 @@ export const CurriculumLessonIntegrityPageSchema = Schema.mutable(
           locale: SyncLocaleSchema,
           slug: Schema.String,
           topicId: Schema.optional(ConvexIdSchema("curriculumTopics")),
+        })
+      ),
+    })
+  )
+);
+
+export const TryoutScaleIntegrityPageSchema = Schema.mutable(
+  Schema.extend(
+    PaginationPageSchema,
+    Schema.Struct({
+      page: mutableArraySchema(
+        Schema.Struct({
+          id: ConvexIdSchema("tryoutSets"),
+          isActive: Schema.Boolean,
+          locale: SyncLocaleSchema,
+          publicPath: Schema.String,
+          scoringStrategy: TryoutScoringStrategySchema,
+          hasPublishedScale: Schema.Boolean,
         })
       ),
     })

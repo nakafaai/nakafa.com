@@ -10,8 +10,6 @@ import { describe, expect, it, vi } from "vitest";
 
 const ARTICLE_CONTENT_REF =
   "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values";
-const EXERCISE_CONTENT_REF =
-  "https://nakafa.com/en/practice/snbt/general-knowledge/tryout-2026/set-2";
 const FIXTURE_DATE = Schema.decodeSync(DateOnlySchema)("2026-01-01");
 
 vi.mock("@repo/contents/_lib/metadata", async () => {
@@ -32,47 +30,6 @@ vi.mock("@repo/contents/_lib/metadata", async () => {
         },
         raw: "## Article body",
       });
-    },
-  };
-});
-
-vi.mock("@repo/contents/_lib/agent/exercise/read", async () => {
-  const { Effect, Option } = await import("effect");
-
-  return {
-    getNakafaAgentExercise: (contentId: string) => {
-      if (!contentId.startsWith("https://nakafa.com/")) {
-        return Effect.succeed(Option.none());
-      }
-
-      if (contentId.includes("set-404")) {
-        return Effect.succeed(Option.none());
-      }
-
-      return Effect.succeed(
-        Option.some({
-          count: 1,
-          exercises: [
-            {
-              answer: {
-                raw: "Answer body",
-                title: "Answer",
-              },
-              choices: [
-                { correct: true, label: "A" },
-                { correct: false, label: "B" },
-              ],
-              number: 1,
-              question: {
-                raw: "Question body",
-                title: "Question",
-              },
-            },
-          ],
-          route:
-            "material/practice/assessment/snbt/general-knowledge/try-out-2026/set-2",
-        })
-      );
     },
   };
 });
@@ -118,12 +75,9 @@ vi.mock("@repo/contents/_lib/agent/quran/read", async () => {
 });
 
 describe("Nakafa agent markdown", () => {
-  it("retrieves markdown for MDX, exercise, and Quran content", async () => {
+  it("retrieves markdown for MDX and Quran content", async () => {
     const mdxContent = await Effect.runPromise(
       getNakafaAgentMarkdown(ARTICLE_CONTENT_REF)
-    );
-    const exerciseContent = await Effect.runPromise(
-      getNakafaAgentMarkdown(EXERCISE_CONTENT_REF)
     );
     const quranContent = await Effect.runPromise(
       getNakafaAgentMarkdown("https://nakafa.com/en/quran/1")
@@ -133,11 +87,6 @@ describe("Nakafa agent markdown", () => {
     );
     const invalidContent = await Effect.runPromise(
       getNakafaAgentMarkdown("https://example.com/en/quran/1")
-    );
-    const missingExercise = await Effect.runPromise(
-      getNakafaAgentMarkdown(
-        "https://nakafa.com/en/practice/snbt/general-knowledge/tryout-2026/set-404"
-      )
     );
     const missingSurah = await Effect.runPromise(
       getNakafaAgentMarkdown("https://nakafa.com/en/quran/999")
@@ -164,29 +113,15 @@ describe("Nakafa agent markdown", () => {
     expect(Option.getOrUndefined(mdxContent)?.text).not.toContain(
       "Markdown URL:"
     );
-    expect(Option.getOrUndefined(exerciseContent)?.text).toContain(
-      "### Choices"
-    );
     expect(Option.getOrUndefined(quranContent)?.text).toContain("## Verses");
     expect(Option.isNone(missingContent)).toBe(true);
     expect(Option.isNone(invalidContent)).toBe(true);
-    expect(Option.isNone(missingExercise)).toBe(true);
     expect(Option.isNone(missingSurah)).toBe(true);
     expect(Option.isNone(malformedSurah)).toBe(true);
     expect(Option.isNone(partialSurah)).toBe(true);
     expect(Option.isNone(nestedSurah)).toBe(true);
     expect(Option.isNone(zeroPaddedSurah)).toBe(true);
     expect(Option.isNone(alphabeticSurah)).toBe(true);
-  });
-
-  it("returns none when a projected practice route has no exercise payload", async () => {
-    const missingExercise = await Effect.runPromise(
-      getNakafaAgentMarkdown(EXERCISE_CONTENT_REF, {
-        readExercise: () => Effect.succeed(Option.none()),
-      })
-    );
-
-    expect(Option.isNone(missingExercise)).toBe(true);
   });
 
   it("uses subject metadata when description metadata is absent", async () => {

@@ -2,8 +2,6 @@ import {
   getUnknownErrorMessage,
   NakafaAgentDataReadError,
 } from "@repo/contents/_lib/agent/errors";
-import { getNakafaAgentExercise } from "@repo/contents/_lib/agent/exercise/read";
-import { formatNakafaRouteTitle } from "@repo/contents/_lib/agent/format";
 import { getNakafaAgentQuranReference } from "@repo/contents/_lib/agent/quran/read";
 import { resolveNakafaContentRef } from "@repo/contents/_lib/agent/refs";
 import { NakafaAgentMarkdownSchema } from "@repo/contents/_lib/agent/schema/read";
@@ -17,11 +15,8 @@ import { Effect, Option, Schema } from "effect";
 interface NakafaMarkdownReaders {
   readonly loadContent?: typeof getContentMetadataWithRaw;
   readonly loadSurah?: typeof getSurah;
-  readonly readExercise?: typeof getNakafaAgentExercise;
   readonly readQuran?: typeof getNakafaAgentQuranReference;
 }
-
-const practiceMaterialRoutePrefix = "material/practice/";
 
 /** Retrieves full agent-readable markdown by canonical Nakafa URL projection. */
 export const getNakafaAgentMarkdown = Effect.fn("NakafaAgent.getMarkdown")(
@@ -34,13 +29,6 @@ export const getNakafaAgentMarkdown = Effect.fn("NakafaAgent.getMarkdown")(
 
     if (ref.value.section === "quran") {
       return yield* renderNakafaQuranMarkdown(ref.value, readers);
-    }
-
-    if (
-      ref.value.section === "material" &&
-      ref.value.route.startsWith(practiceMaterialRoutePrefix)
-    ) {
-      return yield* renderNakafaExerciseMarkdown(ref.value, readers);
     }
 
     return yield* renderNakafaMdxMarkdown(ref.value, readers);
@@ -72,51 +60,6 @@ function renderNakafaMdxMarkdown(
         content.value.raw.trim(),
       ].join("\n"),
       title: content.value.metadata.title,
-    });
-
-    return Option.some(markdown);
-  });
-}
-
-/** Renders an exercise set as agent markdown with answers included. */
-function renderNakafaExerciseMarkdown(
-  ref: NakafaAgentContentRef,
-  readers: NakafaMarkdownReaders
-) {
-  return Effect.gen(function* () {
-    const readExercise = readers.readExercise ?? getNakafaAgentExercise;
-    const exercise = yield* readExercise(ref.url);
-
-    if (Option.isNone(exercise)) {
-      return Option.none();
-    }
-
-    const markdown = yield* decodeNakafaAgentMarkdown({
-      ...ref,
-      description: `${exercise.value.count} exercises`,
-      text: [
-        `# ${formatNakafaRouteTitle(exercise.value.route, ref.locale)}`,
-        "",
-        ...exercise.value.exercises.flatMap((item) => [
-          `## Exercise ${item.number}`,
-          "",
-          "### Question",
-          "",
-          item.question.raw.trim(),
-          "",
-          "### Choices",
-          "",
-          ...item.choices.map(
-            (choice) => `- [${choice.correct ? "x" : " "}] ${choice.label}`
-          ),
-          "",
-          "### Answer & Explanation",
-          "",
-          item.answer.raw.trim(),
-          "",
-        ]),
-      ].join("\n"),
-      title: formatNakafaRouteTitle(exercise.value.route, ref.locale),
     });
 
     return Option.some(markdown);

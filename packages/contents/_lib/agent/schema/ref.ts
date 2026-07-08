@@ -148,7 +148,7 @@ export const NakafaAgentSectionSchema = Schema.Literal(
   ...NAKAFA_AGENT_SECTIONS
 ).annotations({
   description:
-    'Public Nakafa content section: "material" lessons and practice assets, "articles" editorial/news content, or "quran" Quran references.',
+    'Public Nakafa content section: "material" lessons, "tryout" exam simulations, "articles" editorial/news content, or "quran" Quran references.',
 });
 
 /** Runtime schema for a canonical content reference used across agent tools. */

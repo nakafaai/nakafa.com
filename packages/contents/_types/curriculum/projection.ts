@@ -3,7 +3,6 @@ import {
   type CurriculumNode,
   CurriculumNodeSchema,
   type CurriculumNodeTranslationMap,
-  CurriculumNodeTranslationMapSchema,
   type CurriculumSource,
   type CurriculumTreeNode,
 } from "@repo/contents/_types/curriculum/schema";
@@ -15,11 +14,10 @@ import {
 import type {
   MaterialLocale,
   MaterialSource,
-  PracticeMaterialGroup,
 } from "@repo/contents/_types/material/schema";
 import { MATERIAL_SOURCES } from "@repo/contents/_types/material/source";
 import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
-import { Effect, Option, Schema } from "effect";
+import { Effect, Schema } from "effect";
 
 export class CurriculumProjectionError extends Schema.TaggedError<CurriculumProjectionError>()(
   "CurriculumProjectionError",
@@ -118,9 +116,7 @@ export function getProgramKeysForMaterialRouteFromNodes({
   route: string;
 }) {
   const normalizedRoute = normalizeMaterialRoute(route);
-  const material =
-    findMaterialSourceByRoute(materials, "lesson", normalizedRoute) ??
-    findMaterialSourceByRoute(materials, "practice", normalizedRoute);
+  const material = findMaterialSourceByRoute(materials, normalizedRoute);
 
   if (!material) {
     return [];
@@ -342,19 +338,6 @@ function resolveMaterialReferenceTranslations({
   const [material] = materials;
   const materialTranslations = readMaterialTranslations(material);
 
-  if (!materialTranslations) {
-    if (!node.displayOverride) {
-      failures.push(
-        new CurriculumProjectionError({
-          message: `Curriculum node ${curriculum.programKey}:${node.key} references material ${material.key} without projectable material copy.`,
-        })
-      );
-      return null;
-    }
-
-    return node.displayOverride;
-  }
-
   if (
     node.displayOverride &&
     isDuplicatedDisplay(node.displayOverride, materialTranslations)
@@ -371,41 +354,19 @@ function resolveMaterialReferenceTranslations({
 }
 
 /** Reads learner-facing copy from material sources when a curriculum leaf maps to one material. */
-function readMaterialTranslations(material: MaterialSource) {
-  const decode = Schema.decodeUnknownOption(CurriculumNodeTranslationMapSchema);
-
-  if (material.kind === "lesson") {
-    const translations = {
-      en: {
-        title: material.translations.en.title,
-        routeSlug: material.routeSlugs.en,
-      },
-      id: {
-        title: material.translations.id.title,
-        routeSlug: material.routeSlugs.id,
-      },
-    };
-
-    return Option.getOrNull(decode(translations));
-  }
-
-  if (hasSinglePracticeGroup(material.groups)) {
-    const [group] = material.groups;
-    const translations = {
-      en: {
-        title: group.translations.en.title,
-        routeSlug: group.routeSlugs.en,
-      },
-      id: {
-        title: group.translations.id.title,
-        routeSlug: group.routeSlugs.id,
-      },
-    };
-
-    return Option.getOrNull(decode(translations));
-  }
-
-  return null;
+function readMaterialTranslations(
+  material: MaterialSource
+): CurriculumNodeTranslationMap {
+  return {
+    en: {
+      title: material.translations.en.title,
+      routeSlug: material.routeSlugs.en,
+    },
+    id: {
+      title: material.translations.id.title,
+      routeSlug: material.routeSlugs.id,
+    },
+  };
 }
 
 /** Detects forbidden single-material overrides that repeat material-owned display copy. */
@@ -475,11 +436,4 @@ function hasSingleMaterial(
   materials: readonly MaterialSource[]
 ): materials is readonly [MaterialSource] {
   return materials.length === 1;
-}
-
-/** Narrows one-practice-group leaves before inheriting exercise set copy. */
-function hasSinglePracticeGroup(
-  groups: readonly PracticeMaterialGroup[]
-): groups is readonly [PracticeMaterialGroup] {
-  return groups.length === 1;
 }

@@ -6,7 +6,6 @@ import {
   isMaterialContentRoute,
   isMaterialLessonRoute,
   isMaterialTopicRoute,
-  isPracticeSetRoute,
   listPublicContentRoutes,
   readContentPathSegments,
   readContentPathWithoutNamespace,
@@ -109,16 +108,6 @@ describe("public content routes", () => {
     expect(isMaterialContentRoute(topic)).toBe(true);
     expect(isMaterialTopicRoute(topic)).toBe(true);
     expect(isMaterialLessonRoute(topic)).toBe(false);
-    expect(
-      isMaterialContentRoute(
-        routes.find((route) => route.kind === "exercise-set") ?? topic
-      )
-    ).toBe(false);
-    expect(
-      isPracticeSetRoute(
-        routes.find((route) => route.kind === "exercise-set") ?? topic
-      )
-    ).toBe(true);
     expect(isMaterialLessonRoute(firstLesson)).toBe(true);
     expect(toLocalizedContentHref(firstLesson)).toBe(
       "/id/materi/matematika/barisan-dan-deret/konsep-barisan"
@@ -186,32 +175,47 @@ describe("public content routes", () => {
   });
 
   it("finds public content routes by localized path and source path", () => {
-    expect(
-      Option.getOrNull(
-        Effect.runSync(
-          findPublicContentRouteByPath(
-            "materi/matematika/integral/jumlahan-riemann",
-            "id"
-          )
-        )
+    const routeByPath = Effect.runSync(
+      findPublicContentRouteByPath(
+        "materi/matematika/integral/jumlahan-riemann",
+        "id"
       )
-    ).toMatchObject({
+    );
+    const routeBySourcePath = Effect.runSync(
+      findPublicContentRouteBySourcePath(
+        "material/lesson/mathematics/integral/riemann-sum",
+        "id"
+      )
+    );
+
+    expect(Option.isSome(routeByPath)).toBe(true);
+    expect(Option.getOrNull(routeByPath)).toMatchObject({
       kind: "subject-lesson",
       sourcePath: "material/lesson/mathematics/integral/riemann-sum",
     });
+    expect(Option.isSome(routeBySourcePath)).toBe(true);
+    expect(Option.getOrNull(routeBySourcePath)).toMatchObject({
+      kind: "subject-lesson",
+      publicPath: "materi/matematika/integral/jumlahan-riemann",
+    });
+  });
+
+  it("returns none for missing public content route lookups", () => {
     expect(
-      Option.getOrNull(
+      Option.isNone(
+        Effect.runSync(findPublicContentRouteByPath("materi/tidak-ada", "id"))
+      )
+    ).toBe(true);
+    expect(
+      Option.isNone(
         Effect.runSync(
           findPublicContentRouteBySourcePath(
-            "material/lesson/mathematics/integral/riemann-sum",
+            "material/lesson/mathematics/missing",
             "id"
           )
         )
       )
-    ).toMatchObject({
-      kind: "subject-lesson",
-      publicPath: "materi/matematika/integral/jumlahan-riemann",
-    });
+    ).toBe(true);
   });
 
   it("fails with typed errors when source slugs are missing", () => {

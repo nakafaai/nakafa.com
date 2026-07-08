@@ -39,38 +39,6 @@ export function createNakafaTestService(
 }
 
 const nakafaTestRuntime = {
-  /** Returns deterministic structured exercises for service-injection tests. */
-  exercise: (input, exerciseNumber) => {
-    const ref = resolveNakafaTestContentRef(input);
-
-    if (Option.isNone(ref) || exerciseNumber === 99_999) {
-      return Effect.succeed(Option.none());
-    }
-
-    return Effect.succeed(
-      Option.some({
-        ...ref.value,
-        count: 1,
-        ...(exerciseNumber === undefined
-          ? {}
-          : { exercise_number: exerciseNumber }),
-        exercises: [
-          {
-            answer: {
-              raw: "The answer is explained from the synced runtime row.",
-              title: "Answer",
-            },
-            choices: [{ correct: true, label: "A" }],
-            number: exerciseNumber ?? 1,
-            question: {
-              raw: "What does the synced question ask?",
-              title: "Question",
-            },
-          },
-        ],
-      })
-    );
-  },
   /** Returns deterministic Quran references and missing ranges for tests. */
   quran: (input) => {
     const parsed = Schema.decodeUnknownOption(
@@ -143,15 +111,14 @@ const nakafaTestRuntime = {
         recommended: "https://nakafa.com/mcp",
         root_note: "https://mcp.nakafa.com is informational only.",
       },
-      exercises: {
-        categories: [{ id: "high-school", label: "High School" }],
-        materials: [{ id: "mathematics", label: "Mathematics" }],
-        types: [{ id: "snbt", label: "SNBT" }],
+      tryout: {
+        countries: [{ id: "indonesia", label: "Indonesia" }],
+        exams: [{ id: "snbt", label: "SNBT" }],
       },
       locale,
       locales: Array.from(locales),
       quran: { surah_count: 114 },
-      sections: ["articles", "material", "quran"],
+      sections: ["articles", "material", "tryout", "quran"],
       subject: {
         categories: ["high-school"],
         grades: ["10"],
@@ -161,7 +128,6 @@ const nakafaTestRuntime = {
         "nakafa_search_content",
         "nakafa_get_content",
         "nakafa_get_taxonomy",
-        "nakafa_get_exercise",
         "nakafa_get_quran_reference",
       ],
     }),
@@ -177,11 +143,7 @@ const nakafaTestRefs = [
     "articles"
   ),
   readNakafaContentRefFixture("en", "articles/politics/missing", "articles"),
-  readNakafaContentRefFixture(
-    "en",
-    "material/practice/assessment/snbt/general-knowledge/try-out-2026/set-2",
-    "material"
-  ),
+  readNakafaContentRefFixture("en", "try-out/indonesia/snbt/set-2", "tryout"),
 ] as const;
 
 /** Resolves graph content IDs and public URL projections for injected tests. */

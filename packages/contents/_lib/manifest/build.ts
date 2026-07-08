@@ -1,7 +1,6 @@
 import { PUBLIC_CONTENT_BASE_ROUTES } from "@repo/contents/_lib/manifest/constants";
 import {
   getContentPathCandidates,
-  getExerciseApiParams,
   getLocaleParams,
   getLocaleSlugs,
   getStaticParams,
@@ -27,7 +26,6 @@ export const buildContentRouteManifest = Effect.fn(
   const contentRouteCandidates = yield* getContentPathCandidates(source);
   const staticParams = getStaticParams(localeSlugs, contentRouteCandidates);
   const localeParams = getLocaleParams(localeSlugs, contentRouteCandidates);
-  const exerciseApiParams = getExerciseApiParams(localeSlugs);
   const routeSets = yield* getContentRouteSets(source, localeSlugs);
   const quranRoutes = yield* source.getQuranRoutes;
   const contentRoutes = [...routeSets.pages, ...quranRoutes];
@@ -43,7 +41,6 @@ export const buildContentRouteManifest = Effect.fn(
     {
       version,
       contentRoutes,
-      exerciseApiParams,
       localeParams,
       publicRequestRoutes,
       quranRoutes,

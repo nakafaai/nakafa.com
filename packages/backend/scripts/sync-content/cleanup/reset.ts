@@ -103,36 +103,38 @@ export const reset = Effect.fn("sync.reset")(function* (
   log(`  Quran Verses:          ${counts.quranVerses}`);
   log(`  Content Authors:       ${counts.contentAuthors}`);
   log(`  Article References:    ${counts.articleReferences}`);
-  log(`  Exercise Choices:      ${counts.exerciseChoices}`);
+  log(`  Question Sets:         ${counts.questionSets}`);
+  log(`  Questions:             ${counts.questions}`);
+  log(`  Question Choices:      ${counts.questionChoices}`);
   log(`  Audio Content Sources: ${counts.audioContentSources}`);
   log(`  Content Audios:        ${counts.contentAudios}`);
   log(`  Audio Queue:           ${counts.audioGenerationQueue}`);
-  log(`  Exercise Answers:      ${counts.exerciseAnswers}`);
-  log(`  Exercise Questions:    ${counts.exerciseQuestions}`);
-  log(`  Exercise Attempts:     ${counts.exerciseAttempts}`);
-  log(`  Exercise Sets:         ${counts.exerciseSets}`);
-  log(`  Tryout Access Campaigns:${counts.tryoutAccessCampaigns}`);
-  log(`  Tryout Access Products: ${counts.tryoutAccessCampaignProducts}`);
-  log(`  Tryout Access Links:    ${counts.tryoutAccessLinks}`);
-  log(`  Tryout Access Grants:   ${counts.tryoutAccessGrants}`);
-  log(`  Tryouts:               ${counts.tryouts}`);
-  log(`  Tryout Catalog Meta:   ${counts.tryoutCatalogMeta}`);
-  log(`  User Entitlements:     ${counts.userTryoutEntitlements}`);
-  log(`  Tryout Part Sets:      ${counts.tryoutPartSets}`);
+  log(`  Tryout Access Campaigns: ${counts.tryoutAccessCampaigns}`);
+  log(`  Tryout Access Targets:   ${counts.tryoutAccessTargets}`);
+  log(`  Tryout Access Links:     ${counts.tryoutAccessLinks}`);
+  log(`  Tryout Access Grants:    ${counts.tryoutAccessGrants}`);
+  log(`  Tryout Countries:      ${counts.tryoutCountries}`);
+  log(`  Tryout Exams:          ${counts.tryoutExams}`);
+  log(`  Tryout Sets:           ${counts.tryoutSets}`);
+  log(`  Tryout Sections:       ${counts.tryoutSections}`);
+  log(`  Tryout Entitlements:   ${counts.tryoutEntitlements}`);
   log(`  Tryout Attempts:       ${counts.tryoutAttempts}`);
-  log(`  Tryout Part Attempts:  ${counts.tryoutPartAttempts}`);
-  log(`  Tryout Leaderboard:    ${counts.tryoutLeaderboardEntries}`);
-  log(`  User Tryout Stats:     ${counts.userTryoutStats}`);
+  log(`  Tryout Section Attempts:${counts.tryoutSectionAttempts}`);
+  log(`  Tryout Placements:     ${counts.tryoutAttemptPlacements}`);
+  log(`  Tryout Responses:      ${counts.tryoutResponses}`);
+  log(`  Tryout Scores:         ${counts.tryoutScores}`);
+  log(`  Tryout Leaderboards:   ${counts.tryoutLeaderboardScopes}`);
+  log(`  Tryout Leaderboard Rows:${counts.tryoutLeaderboardEntries}`);
+  log(`  Tryout Leaderboard Stats:${counts.tryoutLeaderboardUserStats}`);
   log(`  IRT Calibration Queue: ${counts.irtCalibrationQueue}`);
   log(`  IRT Calibration Rows:  ${counts.irtCalibrationAttempts}`);
   log(`  IRT Cache Stats:       ${counts.irtCalibrationCacheStats}`);
   log(`  IRT Calibration Runs:  ${counts.irtCalibrationRuns}`);
   log(`  IRT Scale Quality:     ${counts.irtScaleQualityChecks}`);
   log(`  IRT Scale Quality Q:   ${counts.irtScaleQualityRefreshQueue}`);
-  log(`  IRT Item Params:       ${counts.exerciseItemParameters}`);
   log(`  IRT Scale Queue:       ${counts.irtScalePublicationQueue}`);
   log(`  IRT Scale Versions:    ${counts.irtScaleVersions}`);
-  log(`  IRT Scale Items:       ${counts.irtScaleVersionItems}`);
+  log(`  IRT Scale Items:       ${counts.irtScaleItems}`);
   log(`  Curriculum Lessons:    ${counts.curriculumLessons}`);
   log(`  Curriculum Topics:     ${counts.curriculumTopics}`);
   log(`  Articles:              ${counts.articles}`);
@@ -142,38 +144,38 @@ export const reset = Effect.fn("sync.reset")(function* (
     counts.articles +
     counts.curriculumTopics +
     counts.curriculumLessons +
-    counts.exerciseSets +
-    counts.exerciseQuestions;
+    counts.questionSets +
+    counts.questions +
+    counts.tryoutCountries +
+    counts.tryoutExams +
+    counts.tryoutSets +
+    counts.tryoutSections;
   const totalRelated =
-    counts.contentAuthors +
-    counts.articleReferences +
-    counts.exerciseChoices +
-    counts.exerciseAnswers;
+    counts.contentAuthors + counts.articleReferences + counts.questionChoices;
   const totalRuntime =
-    counts.exerciseAttempts +
     counts.audioGenerationQueue +
     counts.tryoutAccessCampaigns +
-    counts.tryoutAccessCampaignProducts +
+    counts.tryoutAccessTargets +
     counts.tryoutAccessLinks +
     counts.tryoutAccessGrants +
-    counts.tryouts +
-    counts.tryoutCatalogMeta +
-    counts.userTryoutEntitlements +
-    counts.tryoutPartSets +
+    counts.tryoutEntitlements +
     counts.tryoutAttempts +
-    counts.tryoutPartAttempts +
+    counts.tryoutSectionAttempts +
+    counts.tryoutAttemptPlacements +
+    counts.tryoutResponses +
+    counts.tryoutScores +
+    counts.tryoutLeaderboardScopes +
     counts.tryoutLeaderboardEntries +
-    counts.userTryoutStats +
+    counts.tryoutLeaderboardUserStats +
     counts.irtCalibrationQueue +
     counts.irtCalibrationAttempts +
     counts.irtCalibrationCacheStats +
     counts.irtCalibrationRuns +
     counts.irtScaleQualityChecks +
     counts.irtScaleQualityRefreshQueue +
-    counts.exerciseItemParameters +
     counts.irtScalePublicationQueue +
     counts.irtScaleVersions +
-    counts.irtScaleVersionItems;
+    counts.irtScaleItems;
   const totalDerived =
     counts.contentSearch +
     counts.learningViews +

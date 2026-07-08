@@ -122,7 +122,7 @@ const syncMaterials = Effect.fn("sync.generatedMaterials")(function* (
   });
 });
 
-/** Writes localized lesson and practice material rows for the selected locale scope. */
+/** Writes localized lesson material rows for the selected locale scope. */
 const syncMaterialLocales = Effect.fn("sync.generatedMaterialLocales")(
   function* (config: ConvexConfig, syncedAt: number, options: SyncOptions) {
     const rows = yield* readMaterialLocaleRows(options);
