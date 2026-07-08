@@ -16,6 +16,7 @@ import { useMemo } from "react";
  */
 export default function NavigationLink({
   href,
+  prefetch = true,
   ...props
 }: ComponentProps<typeof Link>) {
   const selectedLayoutSegment = useSelectedLayoutSegment();
@@ -55,8 +56,8 @@ export default function NavigationLink({
     <Link
       aria-current={ariaCurrent}
       href={cleanHref}
+      prefetch={prefetch}
       {...props}
-      prefetch // always prefetch the link
     />
   );
 }
