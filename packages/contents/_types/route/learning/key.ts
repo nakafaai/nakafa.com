@@ -26,10 +26,23 @@ function readRouteIdentityKey(route: PublicRoute) {
     return ["tryout-exam", route.countryKey, route.examKey].join(":");
   }
 
+  if (route.kind === "tryout-track") {
+    return [
+      "tryout-track",
+      route.countryKey,
+      route.examKey,
+      route.trackKey,
+    ].join(":");
+  }
+
   if (route.kind === "tryout-set") {
-    return ["tryout-set", route.countryKey, route.examKey, route.setKey].join(
-      ":"
-    );
+    return [
+      "tryout-set",
+      route.countryKey,
+      route.examKey,
+      route.trackKey,
+      route.setKey,
+    ].join(":");
   }
 
   if (route.kind === "tryout-section") {
@@ -37,6 +50,7 @@ function readRouteIdentityKey(route: PublicRoute) {
       "tryout-section",
       route.countryKey,
       route.examKey,
+      route.trackKey,
       route.setKey,
       route.sectionKey,
     ].join(":");

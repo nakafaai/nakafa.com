@@ -79,42 +79,68 @@ function readStaticExamTryoutRoutes({
       })
     );
 
-    for (const set of source.sets) {
-      const setPath = makePathSync([examPath, set.routeSlugs[locale]]);
+    for (const track of source.tracks) {
+      const trackPath = makePathSync([examPath, track.routeSlugs[locale]]);
 
       routes.push(
         decodeTryoutRouteSync({
           countryKey: source.countryKey,
           examKey: source.examKey,
-          kind: "tryout-set",
+          kind: "tryout-track",
           locale,
-          order: set.order,
+          order: track.order,
           parentPath: examPath,
-          publicPath: setPath,
-          setKey: set.key,
+          publicPath: trackPath,
           sitemap: true,
           sourceRevision: source.sourceRevision,
-          title: set.translations[locale].title,
+          title: track.translations[locale].title,
+          trackKey: track.key,
         })
       );
 
-      for (const section of set.sections) {
+      for (const set of track.sets) {
+        const setPath = makePathSync([trackPath, set.routeSlugs[locale]]);
+
         routes.push(
           decodeTryoutRouteSync({
             countryKey: source.countryKey,
             examKey: source.examKey,
-            kind: "tryout-section",
+            kind: "tryout-set",
             locale,
-            order: section.order,
-            parentPath: setPath,
-            publicPath: makePathSync([setPath, section.routeSlugs[locale]]),
-            sectionKey: section.key,
+            order: set.order,
+            parentPath: trackPath,
+            publicPath: setPath,
             setKey: set.key,
             sitemap: true,
             sourceRevision: source.sourceRevision,
-            title: section.translations[locale].title,
+            title: set.translations[locale].title,
+            trackKey: track.key,
           })
         );
+
+        for (const section of set.sections) {
+          if (section.visibility === "internal-entry") {
+            continue;
+          }
+
+          routes.push(
+            decodeTryoutRouteSync({
+              countryKey: source.countryKey,
+              examKey: source.examKey,
+              kind: "tryout-section",
+              locale,
+              order: section.order,
+              parentPath: setPath,
+              publicPath: makePathSync([setPath, section.routeSlugs[locale]]),
+              sectionKey: section.key,
+              setKey: set.key,
+              sitemap: true,
+              sourceRevision: source.sourceRevision,
+              title: section.translations[locale].title,
+              trackKey: track.key,
+            })
+          );
+        }
       }
     }
   }

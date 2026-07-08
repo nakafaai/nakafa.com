@@ -184,7 +184,7 @@ function createMaterialProjection(route: string, segments: readonly string[]) {
 
 /** Projects a try-out public route into graph metadata. */
 function createTryoutProjection(route: string, segments: readonly string[]) {
-  const [country, exam, set, section, ...extraSegments] = segments;
+  const [country, exam, track, set, section, ...extraSegments] = segments;
 
   if (!country || extraSegments.length > 0) {
     return null;
@@ -192,7 +192,8 @@ function createTryoutProjection(route: string, segments: readonly string[]) {
 
   const countryRoute = joinRoute("try-out", country);
   const examRoute = exam ? joinRoute(countryRoute, exam) : countryRoute;
-  const setRoute = set ? joinRoute(examRoute, set) : examRoute;
+  const trackRoute = track ? joinRoute(examRoute, track) : examRoute;
+  const setRoute = set ? joinRoute(trackRoute, set) : trackRoute;
   const lensSegments = exam
     ? ["tryout", country, exam]
     : ["tryout", country, "catalog"];
@@ -208,7 +209,7 @@ function createTryoutProjection(route: string, segments: readonly string[]) {
     } satisfies SourceRouteProjectionDraft;
   }
 
-  if (!set) {
+  if (!track) {
     return {
       conceptSegments: ["tryout", country, exam],
       kind: "tryout-exam",
@@ -219,21 +220,39 @@ function createTryoutProjection(route: string, segments: readonly string[]) {
     } satisfies SourceRouteProjectionDraft;
   }
 
-  if (!section) {
+  if (!set) {
     return {
-      conceptSegments: ["tryout", country, exam, set],
-      kind: "tryout-set",
-      learningObjectSegments: ["tryout-set", country, exam, set],
+      conceptSegments: ["tryout", country, exam, track],
+      kind: "tryout-track",
+      learningObjectSegments: ["tryout-track", country, exam, track],
       lensSegments,
       parentRoute: examRoute,
       route,
     } satisfies SourceRouteProjectionDraft;
   }
 
+  if (!section) {
+    return {
+      conceptSegments: ["tryout", country, exam, track, set],
+      kind: "tryout-set",
+      learningObjectSegments: ["tryout-set", country, exam, track, set],
+      lensSegments,
+      parentRoute: trackRoute,
+      route,
+    } satisfies SourceRouteProjectionDraft;
+  }
+
   return {
-    conceptSegments: ["tryout", country, exam, section],
+    conceptSegments: ["tryout", country, exam, track, section],
     kind: "tryout-section",
-    learningObjectSegments: ["tryout-section", country, exam, set, section],
+    learningObjectSegments: [
+      "tryout-section",
+      country,
+      exam,
+      track,
+      set,
+      section,
+    ],
     lensSegments,
     parentRoute: setRoute,
     route,

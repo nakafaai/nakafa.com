@@ -23,11 +23,28 @@ describe("public try-out routes", () => {
       expect.objectContaining({
         countryKey: "indonesia",
         examKey: "snbt",
+        kind: "tryout-track",
+        locale: "id",
+        publicPath: "try-out/indonesia/snbt/2027",
+        trackKey: "2027",
+      })
+    );
+    expect(routes).toContainEqual(
+      expect.objectContaining({
+        countryKey: "indonesia",
+        examKey: "snbt",
         kind: "tryout-section",
         locale: "id",
-        publicPath: "try-out/indonesia/snbt/set-1/pengetahuan-kuantitatif",
+        publicPath: "try-out/indonesia/snbt/2027/set-1/pengetahuan-kuantitatif",
         sectionKey: "quantitative-knowledge",
         setKey: "set-1",
+        trackKey: "2027",
+      })
+    );
+    expect(routes).not.toContainEqual(
+      expect.objectContaining({
+        kind: "tryout-section",
+        publicPath: "try-out/indonesia/tka/matematika/set-1/matematika",
       })
     );
   });

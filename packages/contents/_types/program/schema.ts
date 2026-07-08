@@ -225,6 +225,7 @@ const CoverageRouteKindSchema = Schema.Literal(
   "curriculum-topic",
   "tryout-country",
   "tryout-exam",
+  "tryout-track",
   "tryout-set",
   "tryout-section"
 );

@@ -27,6 +27,7 @@ export type TryoutKey = SchemaType<typeof TryoutKeySchema>;
 export const TRYOUT_ROUTE_KIND_VALUES = [
   "tryout-country",
   "tryout-exam",
+  "tryout-track",
   "tryout-set",
   "tryout-section",
 ] as const;
@@ -79,6 +80,19 @@ export type TryoutScoringStrategy = SchemaType<
   typeof TryoutScoringStrategySchema
 >;
 
+export const TryoutTrackKindSchema = Schema.Literal("subject", "year");
+
+export type TryoutTrackKind = SchemaType<typeof TryoutTrackKindSchema>;
+
+export const TryoutSectionVisibilitySchema = Schema.Literal(
+  "internal-entry",
+  "visible"
+);
+
+export type TryoutSectionVisibility = SchemaType<
+  typeof TryoutSectionVisibilitySchema
+>;
+
 export const TryoutSectionSourceSchema = Schema.Struct({
   key: TryoutKeySchema,
   order: Schema.Int.pipe(Schema.positive()),
@@ -87,6 +101,9 @@ export const TryoutSectionSourceSchema = Schema.Struct({
   routeSlugs: PublicRouteSlugMapSchema,
   timeLimitSeconds: Schema.Int.pipe(Schema.positive()),
   translations: TryoutTranslationMapSchema,
+  visibility: Schema.optionalWith(TryoutSectionVisibilitySchema, {
+    default: () => "visible" as const,
+  }),
 });
 
 export type TryoutSectionSource = SchemaType<typeof TryoutSectionSourceSchema>;
@@ -105,6 +122,20 @@ export const TryoutSetSourceSchema = Schema.Struct({
 export type TryoutSetSource = SchemaType<typeof TryoutSetSourceSchema>;
 export type TryoutSetSourceInput = SchemaEncoded<typeof TryoutSetSourceSchema>;
 
+export const TryoutTrackSourceSchema = Schema.Struct({
+  key: TryoutKeySchema,
+  kind: TryoutTrackKindSchema,
+  order: Schema.Int.pipe(Schema.positive()),
+  routeSlugs: PublicRouteSlugMapSchema,
+  sets: Schema.Array(TryoutSetSourceSchema),
+  translations: TryoutTranslationMapSchema,
+});
+
+export type TryoutTrackSource = SchemaType<typeof TryoutTrackSourceSchema>;
+export type TryoutTrackSourceInput = SchemaEncoded<
+  typeof TryoutTrackSourceSchema
+>;
+
 export const TryoutExamSourceSchema = Schema.Struct({
   countryCode: CountryCodeSchema,
   countryKey: TryoutKeySchema,
@@ -114,8 +145,8 @@ export const TryoutExamSourceSchema = Schema.Struct({
   examRouteSlugs: PublicRouteSlugMapSchema,
   examTranslations: TryoutTranslationMapSchema,
   scoringStrategy: TryoutScoringStrategySchema,
-  sets: Schema.Array(TryoutSetSourceSchema),
   sourceRevision: PublicRouteSegmentSchema,
+  tracks: Schema.Array(TryoutTrackSourceSchema),
 });
 
 export type TryoutExamSource = SchemaType<typeof TryoutExamSourceSchema>;

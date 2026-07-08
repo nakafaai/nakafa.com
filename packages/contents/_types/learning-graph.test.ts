@@ -76,22 +76,28 @@ describe("learning graph identity", () => {
       locale: "en",
       route: "try-out/indonesia/snbt",
     });
+    const track = readGraphIdentityFixture({
+      kind: "tryout-track",
+      locale: "en",
+      route: "try-out/indonesia/snbt/2027",
+    });
     const set = readGraphIdentityFixture({
       kind: "tryout-set",
       locale: "en",
-      route: "try-out/indonesia/snbt/set-1",
+      route: "try-out/indonesia/snbt/2027/set-1",
     });
     const section = readGraphIdentityFixture({
       kind: "tryout-section",
       locale: "en",
-      route: "try-out/indonesia/snbt/set-1/quantitative-knowledge",
+      route: "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge",
     });
 
     expect(exam.lensId).toBe("lens:tryout:indonesia:snbt");
+    expect(track.lensId).toBe(exam.lensId);
     expect(set.lensId).toBe(exam.lensId);
     expect(section.lensId).toBe(exam.lensId);
     expect(section.assetId).toBe(
-      "asset:en:tryout:indonesia:snbt:tryout-section:indonesia:snbt:set-1:quantitative-knowledge"
+      "asset:en:tryout:indonesia:snbt:tryout-section:indonesia:snbt:2027:set-1:quantitative-knowledge"
     );
   });
 
@@ -140,19 +146,22 @@ describe("learning graph identity", () => {
     expect(getLearningObjectKindForRoute("try-out/indonesia/snbt")).toBe(
       "tryout-exam"
     );
-    expect(getLearningObjectKindForRoute("try-out/indonesia/snbt/set-1")).toBe(
-      "tryout-set"
+    expect(getLearningObjectKindForRoute("try-out/indonesia/snbt/2027")).toBe(
+      "tryout-track"
     );
     expect(
+      getLearningObjectKindForRoute("try-out/indonesia/snbt/2027/set-1")
+    ).toBe("tryout-set");
+    expect(
       getLearningObjectKindForRoute(
-        "try-out/indonesia/snbt/set-1/quantitative-knowledge"
+        "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge"
       )
     ).toBe("tryout-section");
     expect(getLearningObjectKindForRoute("assessment/high-school")).toBeNull();
     expect(getLearningObjectKindForRoute("assessment/set-1/7")).toBeNull();
     expect(
       getLearningObjectKindForRoute(
-        "try-out/indonesia/snbt/set-1/quantitative-knowledge/extra"
+        "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge/extra"
       )
     ).toBeNull();
   });

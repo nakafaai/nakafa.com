@@ -41,6 +41,7 @@ export const PUBLIC_ROUTE_KIND_VALUES = [
   "tryout-exam",
   "tryout-section",
   "tryout-set",
+  "tryout-track",
 ] as const;
 
 export const PublicRouteKindSchema = Schema.Literal(
@@ -122,8 +123,17 @@ export const PublicTryoutRouteSchema = Schema.Union(
     Schema.extend(PublicTryoutRouteBaseSchema, PublicRouteParentSchema),
     Schema.Struct({
       examKey: TryoutKeySchema,
+      kind: Schema.Literal("tryout-track"),
+      trackKey: TryoutKeySchema,
+    })
+  ),
+  Schema.extend(
+    Schema.extend(PublicTryoutRouteBaseSchema, PublicRouteParentSchema),
+    Schema.Struct({
+      examKey: TryoutKeySchema,
       kind: Schema.Literal("tryout-set"),
       setKey: TryoutKeySchema,
+      trackKey: TryoutKeySchema,
     })
   ),
   Schema.extend(
@@ -133,6 +143,7 @@ export const PublicTryoutRouteSchema = Schema.Union(
       kind: Schema.Literal("tryout-section"),
       sectionKey: TryoutKeySchema,
       setKey: TryoutKeySchema,
+      trackKey: TryoutKeySchema,
     })
   )
 );

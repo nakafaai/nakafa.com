@@ -54,10 +54,11 @@ describe("source route projection", () => {
     });
   });
 
-  it("projects try-out countries, exams, sets, and sections with named parent routes", () => {
+  it("projects try-out countries, exams, tracks, sets, and sections with named parent routes", () => {
     const countryRoute = "try-out/indonesia";
     const examRoute = `${countryRoute}/snbt`;
-    const setRoute = `${examRoute}/set-1`;
+    const trackRoute = `${examRoute}/2027`;
+    const setRoute = `${trackRoute}/set-1`;
     const sectionRoute = `${setRoute}/quantitative-knowledge`;
 
     expect(getSourceRouteProjectionForRoute(countryRoute)).toMatchObject({
@@ -74,11 +75,18 @@ describe("source route projection", () => {
       parentRoute: countryRoute,
       sourceRoot: "tryout",
     });
-    expect(getSourceRouteProjectionForRoute(setRoute)).toMatchObject({
-      conceptSegments: ["tryout", "indonesia", "snbt", "set-1"],
-      kind: "tryout-set",
+    expect(getSourceRouteProjectionForRoute(trackRoute)).toMatchObject({
+      conceptSegments: ["tryout", "indonesia", "snbt", "2027"],
+      kind: "tryout-track",
       lensSegments: ["tryout", "indonesia", "snbt"],
       parentRoute: examRoute,
+      sourceRoot: "tryout",
+    });
+    expect(getSourceRouteProjectionForRoute(setRoute)).toMatchObject({
+      conceptSegments: ["tryout", "indonesia", "snbt", "2027", "set-1"],
+      kind: "tryout-set",
+      lensSegments: ["tryout", "indonesia", "snbt"],
+      parentRoute: trackRoute,
       sourceRoot: "tryout",
     });
     expect(getSourceRouteProjectionForRoute(sectionRoute)).toMatchObject({
@@ -86,6 +94,7 @@ describe("source route projection", () => {
         "tryout",
         "indonesia",
         "snbt",
+        "2027",
         "quantitative-knowledge",
       ],
       kind: "tryout-section",
@@ -99,12 +108,12 @@ describe("source route projection", () => {
     expect(getSourceRouteProjectionForRoute("quran")).toBeNull();
     expect(
       getSourceRouteProjectionForRoute(
-        "try-out/indonesia/snbt/set-1/unknown-section/extra"
+        "try-out/indonesia/snbt/2027/set-1/unknown-section/extra"
       )
     ).toBeNull();
     expect(
       getSourceRouteProjectionForRoute(
-        "try-out/indonesia/snbt/set-1/extra/path"
+        "try-out/indonesia/snbt/2027/set-1/extra/path"
       )
     ).toBeNull();
     expect(
@@ -113,20 +122,23 @@ describe("source route projection", () => {
     expect(getSourceRouteProjectionForRoute("quran/not-number")).toBeNull();
     expect(
       getSourceRouteProjectionForRoute(
-        "try-out/indonesia/snbt/set-1/quantitative-knowledge/extra"
+        "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge/extra"
       )
     ).toBeNull();
     expect(
-      getSourceRouteProjectionForRoute("try-out/indonesia/snbt/set-1")
+      getSourceRouteProjectionForRoute("try-out/indonesia/snbt/2027")
+    ).toMatchObject({ kind: "tryout-track" });
+    expect(
+      getSourceRouteProjectionForRoute("try-out/indonesia/snbt/2027/set-1")
     ).toMatchObject({ kind: "tryout-set" });
     expect(
       getSourceRouteProjectionForRoute(
-        "try-out/indonesia/snbt/set-1/quantitative-knowledge"
+        "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge"
       )
     ).toMatchObject({ kind: "tryout-section" });
     expect(getSourceRouteProjectionForRoute("material/video/topic")).toBeNull();
     expect(
-      getSourceRouteProjectionForRoute("try-out/indonesia/snbt/set-1/1")
+      getSourceRouteProjectionForRoute("try-out/indonesia/snbt/2027/set-1/1")
     ).toMatchObject({ kind: "tryout-section" });
   });
 
@@ -218,6 +230,7 @@ describe("source route projection", () => {
       "curriculum"
     );
     expect(getCurriculumLensScopeForKind("tryout-set")).toBe("exam");
+    expect(getCurriculumLensScopeForKind("tryout-track")).toBe("exam");
   });
 
   it("owns Quran route selectors used by agent readers", () => {

@@ -47,6 +47,7 @@ describe("public route projection", () => {
       "material/lesson/mathematics/integral/riemann-sum",
       "subject/matematika/integral/jumlahan-riemann",
       "try-out/indonesia/snbt/set-1/unknown-section",
+      "try-out/indonesia/snbt/set-1",
       "ujian/snbt/pengetahuan-kuantitatif",
       "exams/snbt/quantitative-knowledge",
     ];
