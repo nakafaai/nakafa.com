@@ -150,6 +150,14 @@ export const startAttempt = mutation({
   handler: async (ctx, args) => {
     const { appUser } = await requireAuth(ctx);
     const set = await requireActiveTryoutSet(ctx, args);
+
+    if (!set.isReady) {
+      throw new ConvexError({
+        code: "TRYOUT_SET_NOT_READY",
+        message: "Try-out set is not ready.",
+      });
+    }
+
     const now = Date.now();
     const [sections, entitlement, latestAttempt] = await Promise.all([
       loadSections(ctx, set),

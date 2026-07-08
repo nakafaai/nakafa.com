@@ -24,6 +24,7 @@ interface TryoutSetPageClientProps {
   exam: string;
   locale: Locale;
   preloaded: Preloaded<SetPageQuery>;
+  set: string;
   track: string;
 }
 
@@ -43,6 +44,7 @@ export function TryoutSetPageClient({
   exam,
   locale,
   preloaded,
+  set,
   track,
 }: TryoutSetPageClientProps) {
   const { isAuthenticated, isLoading } = useConvexAuth();
@@ -107,10 +109,10 @@ export function TryoutSetPageClient({
         country,
         entrySection: resumeSection,
         exam,
-        set: page.set.setKey,
+        set,
         track,
       })
-    : getTryoutHref({ country, exam, set: page.set.setKey, track });
+    : getTryoutHref({ country, exam, set, track });
   const activeRuntime = isInternalEntry
     ? getActiveRuntime(runtime ?? null, activeAttempt, now)
     : null;
@@ -162,7 +164,7 @@ export function TryoutSetPageClient({
             returnHref={getTryoutHref({
               country,
               exam,
-              set: page.set.setKey,
+              set,
               track,
             })}
             runtime={runtimeContent}

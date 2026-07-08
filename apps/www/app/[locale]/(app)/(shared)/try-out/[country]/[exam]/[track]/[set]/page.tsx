@@ -70,6 +70,7 @@ export default async function Page(props: {
       exam={exam}
       locale={locale}
       preloaded={preloaded}
+      set={set}
       track={track}
     />
   );

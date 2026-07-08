@@ -19,10 +19,14 @@ const SET_ROUTE = `try-out/${COUNTRY}/${EXAM}/${TRACK}/${SET}`;
 
 type SectionVisibility = "internal-entry" | "visible";
 
-/** Seeds the smallest ready try-out set needed by attempt start mutations. */
+/** Seeds the smallest try-out set needed by attempt start mutations. */
 async function seedTryoutSet(
   ctx: MutationCtx,
-  args: { userId: Id<"users">; visibility: SectionVisibility }
+  args: {
+    isReady?: boolean;
+    userId: Id<"users">;
+    visibility: SectionVisibility;
+  }
 ) {
   const questionSetId = await ctx.db.insert("questionSets", {
     contentHash: "question-set-hash",
@@ -67,7 +71,7 @@ async function seedTryoutSet(
     internalEntrySectionKey:
       args.visibility === "internal-entry" ? SECTION : undefined,
     isActive: true,
-    isReady: true,
+    isReady: args.isReady ?? true,
     locale: "id",
     order: 1,
     publicPath: SET_ROUTE,
@@ -213,5 +217,44 @@ describe("tryouts/mutations/attempts", () => {
         trackKey: TRACK,
       })
     ).rejects.toThrow("TRYOUT_ENTRY_SECTION_NOT_FOUND");
+  });
+
+  it("rejects attempts for active sets that are not ready", async () => {
+    vi.setSystemTime(new Date(NOW));
+
+    const t = createConvexTestWithBetterAuth();
+    const identity = await t.mutation(async (ctx) => {
+      const user = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "tryout-unready",
+      });
+      await seedTryoutSet(ctx, {
+        isReady: false,
+        userId: user.userId,
+        visibility: "visible",
+      });
+      return user;
+    });
+    const authed = t.withIdentity({
+      sessionId: identity.sessionId,
+      subject: identity.authUserId,
+    });
+
+    await expect(
+      authed.mutation(api.tryouts.mutations.attempts.startAttempt, {
+        countryKey: COUNTRY,
+        examKey: EXAM,
+        locale: "id",
+        setKey: SET,
+        trackKey: TRACK,
+      })
+    ).rejects.toThrow("TRYOUT_SET_NOT_READY");
+
+    const attemptCount = await t.query(async (ctx) => {
+      const attempts = await ctx.db.query("tryoutAttempts").collect();
+      return attempts.length;
+    });
+
+    expect(attemptCount).toBe(0);
   });
 });

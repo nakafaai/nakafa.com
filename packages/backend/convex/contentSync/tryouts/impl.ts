@@ -148,6 +148,7 @@ async function syncCountry(
   const nextValues = { ...country, syncedAt };
 
   if (existing) {
+    await deleteChangedPublicPathProjection(ctx, existing, nextValues);
     await ctx.db.replace("tryoutCountries", existing._id, nextValues);
     return "updated";
   }
@@ -178,6 +179,7 @@ async function syncExam(
   const nextValues = { ...exam, syncedAt };
 
   if (existing) {
+    await deleteChangedPublicPathProjection(ctx, existing, nextValues);
     await ctx.db.replace("tryoutExams", existing._id, nextValues);
     return "updated";
   }
@@ -212,6 +214,7 @@ async function syncSet(
   const nextValues = { ...set, syncedAt };
 
   if (existing) {
+    await deleteChangedPublicPathProjection(ctx, existing, nextValues);
     await ctx.db.replace("tryoutSets", existing._id, nextValues);
     return "updated";
   }
@@ -243,6 +246,7 @@ async function syncTrack(
   const nextValues = { ...track, syncedAt };
 
   if (existing) {
+    await deleteChangedPublicPathProjection(ctx, existing, nextValues);
     await ctx.db.replace("tryoutTracks", existing._id, nextValues);
     return "updated";
   }
@@ -282,13 +286,7 @@ async function syncSection(
   const writeValues = { ...nextValues, syncedAt };
 
   if (existing) {
-    if (existing.publicPath && existing.publicPath !== nextValues.publicPath) {
-      await deleteContentProjectionsBySourcePath(ctx, {
-        locale: existing.locale,
-        route: existing.publicPath,
-      });
-    }
-
+    await deleteChangedPublicPathProjection(ctx, existing, nextValues);
     await ctx.db.replace("tryoutSections", existing._id, writeValues);
     return "updated";
   }
@@ -379,4 +377,24 @@ function hasSameSectionValues(
     hasSameDescribedValues(nextValues, existing) &&
     existing?.publicPath === nextValues.publicPath
   );
+}
+
+async function deleteChangedPublicPathProjection(
+  ctx: MutationCtx,
+  existing:
+    | { locale: SyncedTryoutCountry["locale"]; publicPath?: string }
+    | null
+    | undefined,
+  nextValues: { publicPath?: string }
+) {
+  if (
+    !(existing?.publicPath && existing.publicPath !== nextValues.publicPath)
+  ) {
+    return;
+  }
+
+  await deleteContentProjectionsBySourcePath(ctx, {
+    locale: existing.locale,
+    route: existing.publicPath,
+  });
 }

@@ -111,13 +111,20 @@ export type TryoutSectionSourceInput = SchemaEncoded<
   typeof TryoutSectionSourceSchema
 >;
 
-export const TryoutSetSourceSchema = Schema.Struct({
+const TryoutSetSourceFieldsSchema = Schema.Struct({
   key: TryoutKeySchema,
   order: Schema.Int.pipe(Schema.positive()),
   routeSlugs: PublicRouteSlugMapSchema,
   sections: Schema.Array(TryoutSectionSourceSchema),
   translations: TryoutTranslationMapSchema,
 });
+
+export const TryoutSetSourceSchema = TryoutSetSourceFieldsSchema.pipe(
+  Schema.filter(hasReachableTryoutSections, {
+    message: () =>
+      "Internal-entry try-out sections must be the only section in a set.",
+  })
+);
 
 export type TryoutSetSource = SchemaType<typeof TryoutSetSourceSchema>;
 export type TryoutSetSourceInput = SchemaEncoded<typeof TryoutSetSourceSchema>;
@@ -153,6 +160,20 @@ export type TryoutExamSource = SchemaType<typeof TryoutExamSourceSchema>;
 export type TryoutExamSourceInput = SchemaEncoded<
   typeof TryoutExamSourceSchema
 >;
+
+function hasReachableTryoutSections(source: {
+  sections: readonly { visibility: TryoutSectionVisibility }[];
+}) {
+  const internalEntryCount = source.sections.filter(
+    (section) => section.visibility === "internal-entry"
+  ).length;
+
+  if (internalEntryCount === 0) {
+    return true;
+  }
+
+  return internalEntryCount === 1 && source.sections.length === 1;
+}
 
 /** Decodes one authored try-out exam source at module load time. */
 export function defineTryoutExamSource(input: TryoutExamSourceInput) {

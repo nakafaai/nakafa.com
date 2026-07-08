@@ -124,4 +124,50 @@ describe("tryout/schema", () => {
       ).toContain("Invalid try-out question source path.");
     }
   });
+
+  it("rejects internal-entry sections that are not the only set section", () => {
+    const invalidInternalEntryShape = Schema.decodeUnknownEither(
+      TryoutExamSourceSchema
+    )({
+      ...validTryoutSource,
+      tracks: [
+        {
+          ...validTryoutSource.tracks[0],
+          sets: [
+            {
+              ...validTryoutSource.tracks[0].sets[0],
+              sections: [
+                {
+                  ...validTryoutSource.tracks[0].sets[0].sections[0],
+                  visibility: "internal-entry",
+                },
+                {
+                  ...validTryoutSource.tracks[0].sets[0].sections[0],
+                  key: "quantitative-reasoning",
+                  questionSourcePath:
+                    "question-bank/tryout/indonesia/snbt/quantitative-reasoning/set-1",
+                  routeSlugs: {
+                    en: "quantitative-reasoning",
+                    id: "penalaran-kuantitatif",
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(Either.isLeft(invalidInternalEntryShape)).toBe(true);
+
+    if (Either.isLeft(invalidInternalEntryShape)) {
+      expect(
+        ParseResult.TreeFormatter.formatErrorSync(
+          invalidInternalEntryShape.left
+        )
+      ).toContain(
+        "Internal-entry try-out sections must be the only section in a set."
+      );
+    }
+  });
 });
