@@ -215,31 +215,6 @@ function TryoutSectionCta({
   );
 }
 
-/** Selects the production header copy for finished try-out sections. */
-export function getTryoutFinishedSectionStatus({
-  attemptFinished,
-  sectionTimeExpired,
-  tTryouts,
-}: {
-  attemptFinished: boolean;
-  sectionTimeExpired: boolean;
-  tTryouts: ReturnType<typeof useTranslations>;
-}) {
-  if (sectionTimeExpired && attemptFinished) {
-    return tTryouts("part-head-completed-time-expired");
-  }
-
-  if (sectionTimeExpired) {
-    return tTryouts("part-head-completed-time-expired-pending-review");
-  }
-
-  if (attemptFinished) {
-    return tTryouts("part-head-completed");
-  }
-
-  return tTryouts("part-head-completed-pending-review");
-}
-
 /** Sends completed visible-section pages back to their set overview. */
 function BackToSetLink({ href }: { href: string }) {
   const tTryouts = useTranslations("Tryouts");

@@ -10,14 +10,12 @@ import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useTryoutClock } from "@/components/tryout/clock";
 import type { TryoutQuestionContent } from "@/components/tryout/content";
+import { getTryoutFinishedSectionStatus } from "@/components/tryout/finished-status";
 import { TryoutPageHeader } from "@/components/tryout/header";
 import { TryoutMeta } from "@/components/tryout/meta";
 import { getTryoutHref } from "@/components/tryout/routes";
 import { TryoutRuntime } from "@/components/tryout/runtime.client";
-import {
-  getTryoutFinishedSectionStatus,
-  TryoutSectionSummary,
-} from "@/components/tryout/summary.client";
+import { TryoutSectionSummary } from "@/components/tryout/summary.client";
 
 type SectionPageQuery = typeof api.tryouts.queries.catalog.getSectionPage;
 type SectionRuntimeQuery = typeof api.tryouts.queries.attempt.getSectionRuntime;

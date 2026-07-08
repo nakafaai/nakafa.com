@@ -8,6 +8,7 @@ import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { useTryoutClock } from "@/components/tryout/clock";
 import type { TryoutQuestionContent } from "@/components/tryout/content";
+import { getTryoutFinishedSectionStatus } from "@/components/tryout/finished-status";
 import { TryoutPageHeader } from "@/components/tryout/header";
 import { TryoutMeta } from "@/components/tryout/meta";
 import {
@@ -17,10 +18,7 @@ import {
 import { TryoutRuntime } from "@/components/tryout/runtime.client";
 import { TryoutSetAction } from "@/components/tryout/set-action.client";
 import { TryoutSectionRows } from "@/components/tryout/set-sections.client";
-import {
-  getTryoutFinishedSectionStatus,
-  TryoutEntrySummary,
-} from "@/components/tryout/summary.client";
+import { TryoutEntrySummary } from "@/components/tryout/summary.client";
 
 interface TryoutSetPageClientProps {
   country: string;
