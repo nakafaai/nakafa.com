@@ -192,14 +192,7 @@ export async function loadReadySections(ctx: QueryCtx, set: Doc<"tryoutSets">) {
     .withIndex("by_tryoutSetId_and_order", (q) => q.eq("tryoutSetId", set._id))
     .take(set.sectionCount + 1);
 
-  if (sections.length > set.sectionCount) {
-    throw new ConvexError({
-      code: "TRYOUT_SECTION_COUNT_EXCEEDED",
-      message: "Try-out set has more sections than its snapshot count.",
-    });
-  }
-
-  if (sections.length < set.sectionCount) {
+  if (sections.length !== set.sectionCount) {
     return null;
   }
 

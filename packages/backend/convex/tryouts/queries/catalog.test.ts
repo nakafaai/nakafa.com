@@ -238,7 +238,15 @@ describe("tryouts/queries/catalog", () => {
       await insertCountry(ctx);
       await insertExam(ctx);
       await insertTrack(ctx);
-      await insertSet(ctx);
+      const setId = await insertSet(ctx);
+      const questionSetId = await insertQuestionSource(ctx);
+
+      await insertSection(ctx, {
+        publicPath: SNBT_SECTION_PATH,
+        questionSetId,
+        tryoutSetId: setId,
+      });
+
       await insertSet(ctx, {
         isReady: false,
         publicPath: `${SNBT_TRACK_PATH}/set-2`,
@@ -255,6 +263,37 @@ describe("tryouts/queries/catalog", () => {
     });
 
     expect(page.page.map((set) => set.setKey)).toEqual(["set-1"]);
+  });
+
+  it("hides listed sets until every section row is synced", async () => {
+    const t = convexTest(schema, convexModules);
+
+    await t.mutation(async (ctx) => {
+      await insertCountry(ctx);
+      await insertExam(ctx);
+      await insertTrack(ctx);
+      const setId = await insertSet(ctx, {
+        sectionCount: 2,
+        totalQuestionCount: 2,
+      });
+      const questionSetId = await insertQuestionSource(ctx);
+
+      await insertSection(ctx, {
+        publicPath: SNBT_SECTION_PATH,
+        questionSetId,
+        tryoutSetId: setId,
+      });
+    });
+
+    const page = await t.query(api.tryouts.queries.catalog.listTrackSets, {
+      countryKey: "indonesia",
+      examKey: "snbt",
+      locale: "id",
+      paginationOpts: { cursor: null, numItems: 10 },
+      trackKey: "2027",
+    });
+
+    expect(page.page).toEqual([]);
   });
 
   it("hides ready child sets when their parent track is not ready", async () => {

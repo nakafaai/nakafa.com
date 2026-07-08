@@ -262,9 +262,21 @@ export const listTrackSets = query({
       )
       .paginate(args.paginationOpts);
 
+    const readySets: ReturnType<typeof toPublicTryoutSet>[] = [];
+
+    for (const set of page.page) {
+      const readySections = await loadReadySections(ctx, set);
+
+      if (!readySections) {
+        continue;
+      }
+
+      readySets.push(toPublicTryoutSet(set));
+    }
+
     return {
       ...page,
-      page: page.page.map(toPublicTryoutSet),
+      page: readySets,
     };
   },
 });
