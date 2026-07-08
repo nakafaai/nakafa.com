@@ -245,4 +245,50 @@ describe("tryouts/runtime/access", () => {
       )
     ).rejects.toThrow("Try-out access is required for this set.");
   });
+
+  it("accepts track entitlements for sets in the same track", async () => {
+    const t = convexTest(schema, convexModules);
+    const userId = await t.mutation(async (ctx) => {
+      const insertedUserId = await insertUser(ctx);
+
+      await ctx.db.insert("tryoutEntitlements", {
+        countryKey: "indonesia",
+        endsAt: PERIOD_END,
+        examKey: "snbt",
+        sourceKind: tryoutEntitlementSourceKindCompetition,
+        startsAt: NOW,
+        trackKey: "2027",
+        userId: insertedUserId,
+      });
+
+      return insertedUserId;
+    });
+    const matching = await t.mutation(async (ctx) =>
+      requireActiveEntitlement(ctx, {
+        countryKey: "indonesia",
+        examKey: "snbt",
+        now: NOW,
+        setKey: "set-2",
+        trackKey: "2027",
+        userId,
+      })
+    );
+
+    expect(matching).toMatchObject({
+      trackKey: "2027",
+    });
+    expect(matching).not.toHaveProperty("setKey");
+    await expect(
+      t.mutation(async (ctx) =>
+        requireActiveEntitlement(ctx, {
+          countryKey: "indonesia",
+          examKey: "snbt",
+          now: NOW,
+          setKey: "set-2",
+          trackKey: "2028",
+          userId,
+        })
+      )
+    ).rejects.toThrow("Try-out access is required for this set.");
+  });
 });

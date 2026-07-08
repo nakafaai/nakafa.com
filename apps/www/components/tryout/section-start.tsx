@@ -48,6 +48,7 @@ export function StartSectionButton({
           Effect.tap(() =>
             Effect.sync(() => {
               router.replace(sectionHref);
+              router.refresh();
               toast.success(tTryouts("start-part-success"), {
                 position: "bottom-center",
               });

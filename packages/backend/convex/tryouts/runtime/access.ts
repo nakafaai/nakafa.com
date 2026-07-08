@@ -64,6 +64,15 @@ export async function requireActiveEntitlement(
     return setEntitlement;
   }
 
+  const trackEntitlement = await loadActiveEntitlement(ctx, {
+    ...args,
+    setKey: undefined,
+  });
+
+  if (trackEntitlement) {
+    return trackEntitlement;
+  }
+
   const examEntitlement = await loadActiveEntitlement(ctx, {
     ...args,
     setKey: undefined,
